@@ -10,10 +10,10 @@ Avant de choisir la stack, on voulait savoir si le robot d'entrée (celui qui re
 
 ## La réponse courte
 
-1. **Le robot coûte peu, à condition de filtrer le bruit et de travailler en cascade.** Un petit modèle trie tout, un modèle plus fort n'écrit que les fiches. Ça revient à **1 à 3,50 $ par collaborateur et par mois** en coût variable. Opus sur tout coûte 4 à 6 fois plus, ce qui reste vendable. Le vrai danger est de faire passer le bruit dans le modèle : un dev dont on ingère les sessions de code brutes coûte **121 $/mois** avec Opus.
+1. **Le robot coûte peu, à condition de filtrer le bruit et de travailler en cascade.** Un petit modèle trie tout, un modèle plus fort n'écrit que les fiches. Ça revient à **1 à 3,50 $ par collaborateur et par mois** en coût variable. Opus sur tout coûte 5 à 9 fois plus selon le profil (5,5 fois pour un dev, 7,3 fois au bureau, 9,1 fois sur le terrain) : ça reste vendable, mais seulement au-dessus d'environ 25 € par siège. Le vrai danger est de faire passer le bruit dans le modèle : un dev dont on ingère les sessions de code brutes coûte **121 $/mois** avec Opus.
 2. **Au démarrage, ce sont les coûts fixes qui comptent, pas l'IA.** La plateforme coûte environ 500 $/mois (serveurs, audit Google pour lire Gmail, outillage). Avec un seul client, ça fait 30 € par collaborateur ; dès 10 clients, moins de 5 €.
 3. **Le fine-tuning n'est pas rentable au début.** Avec nos hypothèses, il ne bat l'API qu'à partir d'environ **130 clients** de 15 personnes en GPU à la seconde, et d'environ 200 en GPU dédiés. Ce n'est pas le prix des GPU qui coûte, c'est l'ingénieur nécessaire pour le faire tourner. Dans le cas pessimiste, le seuil tombe à 20 clients : il faut donc mesurer les vrais volumes pendant les pilotes.
-4. **Les marges sont confortables.** À 25 € par siège, la cascade laisse 90 % de marge brute à 10 clients, et 2 clients de 15 personnes couvrent les coûts fixes de la plateforme (hors salaires).
+4. **Les marges sont confortables.** À 25 € par siège, la cascade laisse 80 % de marge brute à 10 clients, et 2 clients de 15 personnes couvrent les coûts fixes de la plateforme (hors salaires).
 
 **Recommandation : démarrer en API avec la cascade optimisée (R2b), mesurer pendant les pilotes, et préparer le fine-tuning pour plus tard.** Les pilotes produiront justement les données d'entraînement. Le fine-tuning garde un intérêt indépendant du coût : la souveraineté (un modèle hébergé en France) et un tri adapté à chaque secteur.
 
@@ -126,9 +126,9 @@ Repères chez les concurrents (détail dans l'onglet Concurrents et [`annexes/05
 
 | Prix par siège | Marge brute R2b (10 clients tech) | Marge brute R1 (10 clients tech) | Clients pour couvrir les coûts fixes (R2b) |
 |---|---|---|---|
-| 15 € | 84 % | 17 % | 3 |
-| 25 € | 90 % | 50 % | 2 |
-| 35 € | 93 % | 64 % | 1 |
+| 15 € | 67 % | 0 % | 3 |
+| 25 € | 80 % | 40 % | 2 |
+| 35 € | 86 % | 57 % | 1 |
 
 **Proposition à discuter** : environ 25 € par siège et par mois. Ça place Leon comme une couche au-dessus de l'abonnement LLM que le client paie déjà, pas comme un concurrent de ChatGPT ou de Claude.
 - **Ingestion lourde.** L'abonnement inclut un volume d'ingestion. Les gros consommateurs, comme les sessions de code brutes ou les réunions, paient des crédits en plus. C'est le modèle « siège + crédits » qui s'impose chez les concurrents. Il concilie aussi les deux positions de la réunion : un abonnement simple, et l'assurance de ne jamais perdre d'argent sur un gros utilisateur.
@@ -177,4 +177,4 @@ Seules les cellules **bleues** se modifient. Les cellules à fond **jaune** sont
 
 Il s'ouvre dans Excel, Numbers ou Google Sheets ; les formules se recalculent à l'ouverture. Le fichier n'enregistre pas les valeurs calculées, donc l'aperçu GitHub l'affichera vide.
 
-**Vérification.** Le classeur a été recalculé avec un moteur de formules indépendant : aucune erreur sur 1 372 cellules. 84 résultats ont été comparés à un calcul refait à part, sans aucun écart.
+**Vérification.** Le classeur a été recalculé avec un moteur de formules indépendant : aucune erreur sur 1 372 cellules. 128 résultats (coûts par collaborateur, historique, marges, pilote, point mort) ont été comparés à un calcul refait à part, sans aucun écart.

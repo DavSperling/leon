@@ -11,7 +11,7 @@ Quatre produits ressemblent à Leon : Glean, Qontext, Sentra et memory.store. On
 ## La réponse courte
 
 1. **Le marché existe, et il est jeune.** Glean prouve que des entreprises paient des dizaines de milliers de dollars par an pour un contexte unifié (300 M$ d'ARR). Les trois autres ont levé 8 M$ cumulés en 2026 sur la thèse « mémoire partagée humains + agents » et n'ont **aucun avis utilisateur public**. Qontext a sorti sa 1.0 le 6 octobre. Tout le monde part en même temps.
-2. **Personne ne capte les conversations LLM des employés.** Les quatre listent Claude, ChatGPT et Cursor comme destinations de lecture, jamais comme sources. Chez les quatre, un fait énoncé dans un chat n'entre en mémoire que si le LLM pense à appeler l'outil d'écriture. C'est le vide le plus net du tableau, et c'est le cœur de Leon.
+2. **Personne ne capte les conversations LLM des employés.** Les quatre listent Claude, ChatGPT et Cursor comme destinations de lecture, jamais comme sources. Chez les quatre, un fait énoncé dans un chat n'entre en mémoire que si le LLM pense à appeler l'outil d'écriture. C'est le vide le plus net du tableau, et c'est le cœur de Leon. Les extensions qui le font (Conxt, OpenMemory…) sont des projets personnels sans utilisateurs, voir plus bas.
 3. **Le segment PME française est vide.** Glean refuse de fait les moins de 100 sièges. Qontext vend par démo à partir de 500 €/mois à des équipes IA. Sentra affiche 2-20 sièges mais vise l'enterprise. memory.store est à 150 $ par siège pour des startups de San Francisco. Aucun n'a de présence en France.
 4. **L'argument UE ne suffit pas seul.** Qontext est à Francfort avec ISO 27001. Glean ouvre un bureau en France. L'hébergement UE est nécessaire, pas différenciant.
 5. **La preuve de paiement en PME reste à faire.** Les clients payants connus sont des grands comptes (Glean, Lenskart chez Sentra). Sentra offre son plan Team au lancement, memory.store n'a pas de client nommé. Le premier à faire payer une PME aura un vrai signal.
@@ -72,6 +72,20 @@ Elle n'est pas celle de Sentra. Le dirigeant en rénovation énergétique rencon
 C'est un problème plus petit, plus concret, et ce profil de client a déjà payé 20 000 € par mois pour la solution précédente de David.
 
 **Le produit reste la mémoire unifiée**, c'est le vide que montre le tableau. Mais un dirigeant de PME n'achète pas « une mémoire unifiée », il ne sait pas ce que c'est (le CEO de Sentra le reconnaît lui-même). Il achète le premier résultat concret qu'il voit. Le cas « historique client » est donc la porte d'entrée pour vendre, et le pilote lui fait découvrir le reste : ce qu'on a dit à ChatGPT, ce qu'il y a dans les mails, les décisions prises. C'est ainsi que le use case « se construit avec le produit » (Amos, réunion du 11/10). Il faudra une porte d'entrée par secteur.
+
+## Conxt et les extensions de capture
+
+L'annexe 5 de l'étude de coûts cite Conxt comme le seul produit qui capte les conversations ChatGPT, Claude et Gemini, et le classe parmi les mémoires d'équipe à 15-39 $ par siège. Vérification du 12/10 : ce n'est pas un concurrent.
+
+- **Comment ça marche** : une extension Chrome lit les conversations sur claude.ai, chatgpt.com et Gemini, en extrait des souvenirs structurés (décisions, préférences, entités) sans rien demander au LLM, puis les restitue soit par un clic « Inject context into this tab » dans le navigateur, soit par un serveur MCP pour Cursor, Windsurf et Claude Code. Un « team vault » avec file d'approbation sépare la mémoire d'équipe des mémoires personnelles (https://www.conxt.dev/).
+- **Traction** : un fondateur seul, sans financement, extension publiée le 14 mai 2026, **13 utilisateurs** en août 2026, aucun avis sur Reddit, HN ou Product Hunt, gratuit pendant la bêta. Le fondateur écrit qu'il lancera sur Product Hunt « quand la capture ChatGPT sera stable » (https://chrome-stats.com/d/dlkioeiedbkgdkmindkbkbcajgapknpn ; https://tracxn.com/d/companies/conxt/__gqh4XeZWK5ezQQroTErHEEbtN9fcq7rn7sbM60u5KbA).
+- **Le créneau est encombré et vide à la fois** : OpenMemory (Mem0), Maximem, LLM Context Bridge, RememberMyContext et des projets open source comme `personal-ai-memory` font la même chose, tous gratuits ou presque, aucun avec des utilisateurs.
+
+Ce qu'il faut en retenir :
+1. **La capture par extension est à la portée d'une personne seule.** Ce n'est pas une barrière technique. La barrière, c'est de la rendre stable face aux changements d'interface de ChatGPT et Claude, et c'est là que Conxt bloque.
+2. **Une mémoire personnelle de chats ne se vend pas seule.** La valeur est dans la mémoire unifiée complète, avec les sources de l'entreprise et les droits, pas dans la brique « capture des chats » isolée.
+3. **Deux idées à reprendre** : l'extraction structurée au lieu du texte brut (ce qui réduit aussi les tokens à trier), et la file d'approbation avant d'entrer dans la mémoire d'équipe.
+4. Le dépôt open source `personal-ai-memory` (https://github.com/marswangyang/personal-ai-memory) montre comment lire les pages de ChatGPT, Claude, Gemini, Grok et Perplexity : une base pour le test de capture.
 
 ## Positionnement proposé
 

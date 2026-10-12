@@ -46,8 +46,10 @@ git push --force-with-lease                # après un rebase, sur SA branche un
 cd ~/leon
 git pull --ff-only
 git worktree remove .claude/worktrees/<sujet>
-git branch -d <prenom>/<sujet>
+git branch -D <prenom>/<sujet>
 ```
+
+- `-D` et non `-d` : après une fusion en squash, Git ne reconnaît pas la branche comme fusionnée et refuse `-d`. Ne supprimer la branche qu'une fois la PR fusionnée sur GitHub (`gh pr list --state merged`).
 
 ## Pièges connus
 

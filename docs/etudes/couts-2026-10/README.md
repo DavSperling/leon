@@ -177,4 +177,6 @@ Seules les cellules **bleues** se modifient. Les cellules à fond **jaune** sont
 
 Il s'ouvre dans Excel, Numbers ou Google Sheets ; les formules se recalculent à l'ouverture. Le fichier n'enregistre pas les valeurs calculées, donc l'aperçu GitHub l'affichera vide.
 
-**Vérification.** Le classeur a été recalculé avec un moteur de formules indépendant : aucune erreur sur 1 372 cellules. 128 résultats (coûts par collaborateur, historique, marges, pilote, point mort) ont été comparés à un calcul refait à part, sans aucun écart.
+**Vérification.** Le classeur a été recalculé avec un moteur de formules indépendant : aucune erreur sur 1 372 cellules. 152 résultats (coûts par collaborateur et par profil, historique, marges, pilote, point mort) ont été comparés à un calcul refait à part, sans aucun écart.
+
+**Scripts.** Le générateur du tableur, la vérification et le calcul de sensibilité sont dans [`outils/`](outils/), avec leur mode d'emploi.

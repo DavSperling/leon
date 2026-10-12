@@ -69,7 +69,9 @@ Elle n'est pas celle de Sentra. Le dirigeant en rénovation énergétique rencon
 
 > « Demander à mon Claude l'historique de ce client (ce qu'on lui a posé, à quel prix, s'il paie encore) sans fouiller mon CRM et mes mails. »
 
-C'est un problème plus petit, plus concret, et ce profil de client a déjà payé 20 000 € par mois pour la solution précédente de David. C'est ça qu'il faut vendre, pas le concept de mémoire.
+C'est un problème plus petit, plus concret, et ce profil de client a déjà payé 20 000 € par mois pour la solution précédente de David.
+
+**Le produit reste la mémoire unifiée**, c'est le vide que montre le tableau. Mais un dirigeant de PME n'achète pas « une mémoire unifiée », il ne sait pas ce que c'est (le CEO de Sentra le reconnaît lui-même). Il achète le premier résultat concret qu'il voit. Le cas « historique client » est donc la porte d'entrée pour vendre, et le pilote lui fait découvrir le reste : ce qu'on a dit à ChatGPT, ce qu'il y a dans les mails, les décisions prises. C'est ainsi que le use case « se construit avec le produit » (Amos, réunion du 11/10). Il faudra une porte d'entrée par secteur.
 
 ## Positionnement proposé
 
@@ -92,7 +94,7 @@ Trois piliers, dans cet ordre :
 
 - **Au moins un pilote doit payer**, même peu. C'est le signal que personne n'a encore sur le segment PME.
 - **La démo de capture** (une info dite à ChatGPT, retrouvée dans Claude) doit être prête avant le premier appel de découverte : c'est l'argument que les quatre concurrents ne peuvent pas tenir.
-- **Commencer par la rénovation énergétique**, avec le use case « historique client », plutôt que par une boîte tech dont le besoin ressemble à celui de memory.store.
+- **Commencer par la rénovation énergétique**, avec le use case « historique client » comme porte d'entrée, plutôt que par une boîte tech dont le besoin ressemble à celui de memory.store. Le pilote sert ensuite à montrer la mémoire unifiée complète.
 
 ## Méthode et limites
 

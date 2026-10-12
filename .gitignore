@@ -9,5 +9,9 @@
 .env.*
 !.env.example
 
+# Python
+.venv/
+__pycache__/
+
 # macOS
 .DS_Store

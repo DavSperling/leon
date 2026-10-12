@@ -137,9 +137,20 @@ Repères chez les concurrents (détail dans l'onglet Concurrents et [`annexes/05
 ## Risques et inconnues
 
 1. **Les hypothèses du pipeline ne sont pas mesurées** : part de donnée pertinente, contexte relu par fiche, fréquence des briefings. Ce sont les leviers n°1 du coût. Ils sont à mesurer en premier pendant les pilotes.
-2. **La capture des conversations LLM** passe par une API propre seulement sur les offres Enterprise (ChatGPT, Claude, M365 Copilot). Sinon, il faut un agent local (Claude Code, Codex, Cursor) et une extension navigateur pour les versions web. C'est faisable, mais fragile à chaque changement d'interface. Le même agent et la même extension serviraient à injecter le briefing.
+2. **Capter les conversations LLM des employés.** Ces conversations se font sur les comptes ChatGPT, Claude, etc. **du client**. C'est donc son abonnement qui décide **comment** on les récupère ; ni lui ni nous n'avons à acheter quoi que ce soit en plus.
+   - **Si le client a une offre Enterprise** (ChatGPT Enterprise, Claude Enterprise, Microsoft 365 Copilot), son admin donne un accès à Leon. On récupère tout côté serveur, sans rien installer sur les postes. C'est rare dans les PME.
+   - **Sinon** (Plus, Pro, Team, comptes perso), il n'existe pas d'accès serveur. Il faut installer Leon sur chaque poste :
+     - un petit programme qui lit l'historique laissé sur la machine par Claude Code, Codex ou Cursor ;
+     - une extension navigateur qui lit les conversations sur chatgpt.com, claude.ai ou Gemini.
+
+   C'est faisable mais fragile, car il faut suivre chaque changement d'interface ou de format. Ce n'est pas un surcoût : ce programme et cette extension servent aussi à **injecter** le briefing. Il faut les prévoir dès la V1.
 3. **L'historique local disparaît.** Claude Code efface ses sessions après 30 jours par défaut. L'agent local doit capter au fil de l'eau.
-4. **Pas d'hébergement européen chez Anthropic en direct**, seulement « global » ou « US ». Via Bedrock ou Vertex en Europe, c'est +10 %. Ça peut peser face à des PME françaises sensibles au RGPD.
+4. **Où transite la donnée quand Claude la lit.** La donnée est **stockée chez nous**. Mais pour la trier et écrire les fiches, le robot envoie chaque texte à Claude, qui ne tourne pas sur nos serveurs mais chez Anthropic, AWS ou Google. Claude renvoie le résultat (catégorie, droits, faits), et nous rangeons le tout dans notre base. Le texte **transite** donc par ces serveurs, même s'il n'y reste pas : Anthropic n'entraîne pas ses modèles dessus, et la conservation est limitée.
+   - **Anthropic en direct** ne propose que « global » ou « US » : rien ne garantit que le texte reste en Europe.
+   - **Claude via AWS Bedrock ou Google Vertex en région européenne** : c'est le même modèle, et le texte reste en Europe, pour environ 10 % de plus. Ça représente quelques centimes par collaborateur.
+   - **Seul un modèle fine-tuné sur nos propres GPU en France** garantit que le texte ne quitte jamais notre infrastructure. C'est l'argument « souveraineté » du fine-tuning, indépendant de son coût.
+
+   Certains clients exigeront que tout reste en Europe : la santé, les experts-comptables, les avocats. Pour la santé, l'hébergement doit en plus être certifié HDS, un point à vérifier avec un juriste. **Bedrock en Europe est probablement le bon choix par défaut**, d'autant que les crédits AWS Activate couvrent Claude.
 5. **Opus 5.5 ne permet pas de désactiver son raisonnement.** Les tokens de réflexion sont facturés, donc R1 est sous-estimé.
 6. **Les prix bougent** : les prix de Gemini Flash doublent au 01/01/2027, et certains prix OpenAI sont promotionnels.
 7. **Slack**, pour plus tard : les conditions de l'API (pas d'export massif, rétention minimale) et une limite d'environ 21 600 messages par jour hors Marketplace. Pour entrer sur la Marketplace, il faut déjà 10 installations.

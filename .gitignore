@@ -1,0 +1,13 @@
+# Worktrees locaux : une tâche = une branche = un worktree (voir CLAUDE.md)
+.claude/worktrees/
+
+# Réglages Claude Code personnels
+.claude/settings.local.json
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store

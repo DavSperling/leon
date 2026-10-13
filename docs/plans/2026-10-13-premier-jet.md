@@ -1959,7 +1959,7 @@ export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>
 ### T22a · Intégration : fusion des pistes et contrats d'exécution
 
 - **Piste** integration · **Modèle** sonnet, effort high (réparer la fusion dans un périmètre borné et poser des tests de contrat ; les fichiers de droits sont protégés) · **Dépend de** T13, T14, T16, T17, T21 · **Sensible** oui
-- **Fichiers** — créer : `src/test/contracts/env-contract.test.ts`, `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/host-permissions.test.ts`, `src/test/contracts/ui-imports.test.ts`, `src/test/contracts/privileges.test.ts`, `src/test/contracts/scripts-contract.test.ts` ; modifier : seulement ce que la fusion casse (voir « Périmètre des corrections ») ; supprimer : les composants `src/components/ui/*.tsx` qu'aucun fichier n'importe.
+- **Fichiers** — créer : `src/test/contracts/env-contract.test.ts`, `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/host-permissions.test.ts`, `src/test/contracts/ui-imports.test.ts`, `src/test/contracts/privileges.test.ts`, `src/test/contracts/scripts-contract.test.ts`, `src/test/contracts/page-links.test.ts` ; modifier : seulement ce que la fusion casse (voir « Périmètre des corrections ») ; supprimer : les composants `src/components/ui/*.tsx` qu'aucun fichier n'importe.
 
 **Contexte.** L'orchestrateur vient de fusionner les cinq pistes sur `amos/premier-jet`. Cette tâche remet tout au vert et pose les contrats demandés par la spec (`auditing-runtime-contracts`). Le test de bout en bout est T22b.
 
@@ -1975,7 +1975,8 @@ export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>
 - [ ] 4. `host-permissions.test.ts` : `hostPermissionsFor(DEFAULT_SERVER_URL)` contient l'origine du serveur et exactement les deux hôtes de capture, jamais `<all_urls>` ; les deux scripts de contenu prennent leurs `matches` dans `CAPTURE_HOSTS` (vérifié par lecture du fichier : aucune URL de site en dur dans `extension/entrypoints/`). `ui-imports.test.ts` : aucun fichier de `src/app/**` ni `src/components/**` n'importe `@/server/db`, `pg` ou `drizzle-orm` ; un fichier qui commence par `'use client'` n'importe de `@/server/**` que des types (`import type`).
 - [ ] 5. `privileges.test.ts` (lecture des fichiers) : `set_config(` n'apparaît que dans `src/server/db/with-tenant.ts` ; `adminDb` et `adminPool` n'apparaissent que dans `src/test/**` et les `*.db.test.ts` ; `DATABASE_URL_ADMIN` n'apparaît que dans `src/server/db/migrate-cli.ts`, `src/test/**`, les `*.db.test.ts` et `.env.example`.
 - [ ] 6. `scripts-contract.test.ts` (dans `src/test/contracts/`, lecture de `package.json`) : chaque chemin `src/**.ts` ou `extension/**` cité par un script existe sur disque.
-- [ ] 7. Supprimer les composants shadcn non importés ; build de vérification et `pnpm ext:build`.
+- [ ] 7. `page-links.test.ts` (lecture des fichiers) : le chemin de `cardUrl('00000000-0000-4000-8000-000000000000')` (lien des résultats MCP `search` et `fetch`, D10), segment id remplacé par `[id]`, correspond à un `page.tsx` de `src/app/**`, groupes de routes `(x)` ignorés (aujourd'hui `src/app/(app)/fiches/[id]/page.tsx`).
+- [ ] 8. Supprimer les composants shadcn non importés ; build de vérification et `pnpm ext:build`.
 
 **Critères d'acceptation**
 

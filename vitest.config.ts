@@ -14,6 +14,16 @@ export default defineConfig({
           exclude: ['**/*.db.test.ts', '**/node_modules/**'],
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'db',
+          include: ['src/**/*.db.test.ts'],
+          globalSetup: ['src/test/global-setup.ts'],
+          testTimeout: 20_000,
+          maxWorkers: 4,
+        },
+      },
     ],
   },
 });

@@ -71,6 +71,18 @@ export async function startStep(
   });
 }
 
+// Étape en attente d'un run `queued`, ou null. Sert à une reprise dont l'étape est déjà faite : si la mise en
+// file de l'étape suivante a échoué après la validation, c'est ici qu'on la retrouve.
+export async function queuedStep(ctx: TenantContext, runId: string): Promise<PipelineStep | null> {
+  return withTenant(ctx, async (tx) => {
+    const [run] = await tx
+      .select({ step: ingestRuns.step })
+      .from(ingestRuns)
+      .where(and(eq(ingestRuns.id, runId), eq(ingestRuns.status, 'queued')));
+    return run && run.step !== 'done' ? (run.step as PipelineStep) : null;
+  });
+}
+
 // `done` termine le run ; sinon le run attend l'étape suivante.
 export async function advanceRun(
   tx: Tx,

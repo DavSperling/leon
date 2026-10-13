@@ -1,0 +1,8 @@
+data: {"message": {"id": "ccc7f8a9-0000-4000-8000-0000000000a2", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1792054203.0, "content": {"content_type": "text", "parts": ["Dix jours"]}, "status": "in_progress", "end_turn": null, "metadata": {}, "recipient": "all"}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}
+
+data: {"message": {"id": "ccc7f8a9-0000-4000-8000-0000000000a2", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1792054203.0, "content": {"content_type": "text", "parts": ["Dix jours de livraison, c'est court."]}, "status": "in_progress", "end_turn": null, "metadata": {}, "recipient": "all"}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}
+
+data: {"message": {"id": "ccc7f8a9-0000-4000-8000-0000000000a2", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1792054203.0, "content": {"content_type": "text", "parts": ["Dix jours de livraison, c'est court."]}, "status": "finished_successfully", "end_turn": true, "metadata": {}, "recipient": "all"}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}
+
+data: [DONE]
+

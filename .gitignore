@@ -20,6 +20,8 @@ __pycache__/
 node_modules/
 .next/
 next-env.d.ts
+# Généré par next dev (rappel aux agents de lire la doc de Next 16)
+/AGENTS.md
 *.tsbuildinfo
 .pnpm-store/
 

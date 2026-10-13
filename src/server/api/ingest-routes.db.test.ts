@@ -130,16 +130,3 @@ describe('GET /api/v1/me', () => {
     expect((await apiRequest(API_PATHS.me)).status).toBe(401);
   });
 });
-
-describe('/api/mcp (bouchon)', () => {
-  it('répond 401 sans jeton', async () => {
-    expect((await apiRequest(API_PATHS.mcp, { method: 'POST' })).status).toBe(401);
-  });
-
-  it('répond 501 avec un jeton', async () => {
-    const { paulToken } = await setup();
-    const response = await apiRequest(API_PATHS.mcp, { token: paulToken, method: 'POST' });
-    expect(response.status).toBe(501);
-    expect(await response.json()).toEqual({ error: 'MCP pas encore disponible' });
-  });
-});

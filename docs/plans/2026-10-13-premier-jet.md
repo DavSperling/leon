@@ -16,7 +16,7 @@
 
 | Piste | Tâches | Branche | Worktree (sous `/Users/amoskoskas/leon/`) | Quand |
 |---|---|---|---|---|
-| fondation | T01 → T08d (T01, T02, T03, T04, T05, T06a, T06b, T07, T08, T08b, T08c, T08d) | `amos/premier-jet` | `.claude/worktrees/premier-jet` | d'abord, en séquence |
+| fondation | T01 → T08e (T01, T02, T03, T04, T05, T06a, T06b, T07, T08, T08b, T08c, T08d, T08e) | `amos/premier-jet` | `.claude/worktrees/premier-jet` | d'abord, en séquence |
 | pipeline | T09 → T13 | `amos/premier-jet-pipeline` | `.claude/worktrees/premier-jet-pipeline` | en parallèle, après T08 |
 | capture | T14 | `amos/premier-jet-capture` | `.claude/worktrees/premier-jet-capture` | en parallèle, après T08 |
 | extension | T15 → T16 | `amos/premier-jet-extension` | `.claude/worktrees/premier-jet-extension` | en parallèle, après T08 |
@@ -682,7 +682,7 @@ export type FactBrief = { id: string; statement: string; quote: string; authorNa
 export type CardBrief = { id: string; title: string; typeLabel: string; factCount: number; firstFact: FactBrief | null };
 export type ReviewItemView = {
   id: string; status: 'open' | 'resolved'; createdAt: Date;
-  resolvedAt: Date | null; resolvedByName: string | null; resolution: ReviewResolution | null;
+  resolvedAt: Date | null; resolvedByName: string | null; resolution: ReviewResolution | { kind: 'obsolete' } | null; // obsolete : clos sans décision par T08d
   detail:
     | { kind: 'sensitive_fact'; fact: FactBrief; cardId: string; cardTitle: string; category: SensitiveCategory | null }
     | { kind: 'entity_match'; newCard: CardBrief; candidateCard: CardBrief }
@@ -1485,6 +1485,28 @@ après le commit : enqueuePipelineStep('triage', …) ; un échec de mise en fil
 - `pnpm test` (hors sandbox) vert, dont toute la matrice Paul / Marie ; `pnpm typecheck`, `pnpm lint` verts ; build de vérification : succès.
 
 **Hors périmètre.** Interface (T20 affiche les éléments clos « Devenu sans objet ») ; validation des clés `not valid` de 0005.
+
+---
+
+### T08e · Durcissement : port ou mot de passe, visibilité des clôtures
+
+- **Piste** fondation · **Modèle** sonnet, effort high (deux corrections ciblées et leurs tests) · **Dépend de** T08d · **Sensible** oui
+- **Fichiers** — modifier : `src/capture/mask-secrets.ts`, `src/capture/mask-secrets.test.ts`, `src/server/memory/review-items.db.test.ts`.
+
+**Contexte.** Points laissés par T08d :
+1. *Mot de passe pris pour un port.* L'exception « un port n'est pas un mot de passe » (`(?!\d{1,5}[/?#])`) vaut pour tous les schémas : `postgres://app:2024#Paris@db.acme.fr:5432/prod`, `postgres://app:1234/abcd@db.acme.fr` et `redis://default:42?xY@cache:6379` sortent en clair. Or un `@` dans le chemin ou la requête n'est courant que dans les URL web.
+2. *Clôture sans objet sans test de droits.* `closeObsoleteItems` balaie les éléments ouverts sous la RLS ; aucun test ne montre qu'une décision de Marie ne clôt pas un élément de Paul qu'elle ne voit pas.
+
+**Étapes**
+
+- [ ] 1. Test d'abord, `mask-secrets.test.ts` : les trois URL ci-dessus ont leur mot de passe masqué ; `http://localhost:3000/api/users?email=paul@acme.fr`, `https://example.com:8080/@alice` et `ws://localhost:3000/socket?u=a@b` restent inchangés ; le test de temps linéaire reste vert. Puis `mask-secrets.ts` : l'exception du port ne vaut que pour `http`, `https`, `ws` et `wss` (par exemple un remplacement par fonction qui reçoit le schéma ; insensible à la casse).
+- [ ] 2. Test d'abord, `review-items.db.test.ts` : un élément `sensitive_fact` de Paul (ACL `[paul]`) sur un fait déjà tranché, puis Marie résout un élément d'équipe → l'élément de Paul reste `open` ; Paul résout ensuite un de ses éléments → celui-ci passe `resolved` avec `{ kind: 'obsolete' }`.
+
+**Critères d'acceptation**
+
+- `pnpm test` (hors sandbox) vert ; `pnpm typecheck`, `pnpm lint` verts.
+
+**Hors périmètre.** Tout autre motif de masquage.
 
 ---
 

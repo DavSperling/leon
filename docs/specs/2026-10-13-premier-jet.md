@@ -140,7 +140,7 @@ Le rendu Markdown de la fiche se fait à la lecture, sous la RLS du lecteur : `r
 - Sessions Better Auth (cookies `httpOnly`, `SameSite`) ; server actions protégées par la session.
 - Pas de CORS ouvert : l'extension appelle le serveur depuis son service worker grâce à `host_permissions`.
 - Pas de texte de conversation ni de secret dans les journaux.
-- Masquage des secrets à l'entrée, en temps linéaire : il reconnaît des formes (clés connues, blocs PEM et PGP, mots de passe d'URL, en-têtes `Bearer`/`Basic`, affectations nommées comme `password=`). Un secret sans forme ni nom reste en clair dans le texte brut, qui reste privé à son auteur ; l'extraction rejette tout fait qui contiendrait un secret reconnu, pour que rien de tel ne devienne visible de l'équipe.
+- Masquage des secrets à l'entrée, en temps linéaire : il reconnaît des formes (clés connues, blocs PEM et PGP, mots de passe d'URL, en-têtes `Bearer`/`Basic`, affectations nommées comme `password=`). Un secret sans forme ni nom reste en clair dans le texte brut (de même, dans une URL web, un mot de passe non encodé qui commence par des chiffres suivis de `/`, `?` ou `#` est pris pour un port), qui reste privé à son auteur ; l'extraction rejette tout fait qui contiendrait un secret reconnu, pour que rien de tel ne devienne visible de l'équipe.
 - Contenus des sources délimités dans les prompts (injection de prompt).
 - Variables d'environnement validées au démarrage (zod) ; `.env.example` à jour ; aucun secret dans le dépôt.
 

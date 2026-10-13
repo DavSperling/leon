@@ -40,13 +40,17 @@ export type ResolveResult =
   | { ok: false; reason: 'introuvable' | 'deja_traite' | 'incoherent' };
 
 const OK: ResolveResult = { ok: true };
+// Résolution des éléments clos sans décision, parce qu'une autre décision les a rendus sans objet.
+const OBSOLETE = { kind: 'obsolete' } as const;
 const INCOHERENT: ResolveResult = { ok: false, reason: 'incoherent' };
 
-// Passe d'abord l'élément de `open` à `resolved` (mise à jour conditionnelle : de deux résolutions
-// simultanées, la seconde attend la première puis ne trouve plus d'élément ouvert), puis applique la
-// décision. Une précondition d'état qui ne tient plus annule toute la transaction : « incohérent ».
-// Les préconditions verrouillent les lignes qu'elles lisent : deux éléments qui partagent un fait ou
-// une fiche se résolvent l'un après l'autre, et le second relit l'état laissé par le premier.
+// Les décisions d'un tenant passent l'une après l'autre (verrou consultatif de transaction) : une
+// décision clôt des éléments et réactive des faits que la suivante relit ; sans ce verrou, deux
+// décisions qui se croisent (l'une tient l'élément, l'autre le fait) s'interbloqueraient.
+// Passe d'abord l'élément de `open` à `resolved` (mise à jour conditionnelle : un élément déjà traité
+// ou devenu sans objet n'est plus ouvert), puis applique la décision. Une précondition d'état qui ne
+// tient plus annule toute la transaction : « incohérent ». Les préconditions verrouillent aussi les
+// lignes qu'elles lisent, face aux écritures concurrentes du pipeline.
 export async function resolveReviewItem(
   ctx: TenantContext,
   itemId: string,
@@ -55,6 +59,9 @@ export async function resolveReviewItem(
   const resolution = ReviewResolutionSchema.parse(input);
   try {
     return await withTenant(ctx, async (tx) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext('review_items'), hashtext(${ctx.tenantId}))`,
+      );
       const [item] = await tx
         .update(reviewItems)
         .set({ status: 'resolved', resolution, resolvedBy: ctx.userId, resolvedAt: new Date() })
@@ -63,6 +70,7 @@ export async function resolveReviewItem(
       if (!item) return unclaimedReason(tx, itemId);
       const payload = ReviewPayloadSchema.parse(item.payload);
       if (!(await applyResolution(tx, ctx, payload, resolution))) tx.rollback();
+      await settleAfterDecision(tx, ctx, payload);
       return OK;
     });
   } catch (error) {
@@ -78,6 +86,64 @@ async function unclaimedReason(tx: Tx, itemId: string): Promise<ResolveResult> {
     .from(reviewItems)
     .where(eq(reviewItems.id, itemId));
   return { ok: false, reason: item ? 'deja_traite' : 'introuvable' };
+}
+
+// Après une décision : clôt les éléments devenus sans objet, puis rend actif chaque fait sorti de la
+// décision (gardé, ou partenaire d'un élément clos) qui n'est plus cité par aucun élément `conflict`
+// ouvert ; activateFact revérifie ses chevauchements.
+async function settleAfterDecision(
+  tx: Tx,
+  ctx: TenantContext,
+  payload: ReviewPayload,
+): Promise<void> {
+  const closed = await closeObsoleteItems(tx, ctx);
+  const released = [payload, ...closed].flatMap((p) => (p.kind === 'conflict' ? p.factIds : []));
+  for (const factId of new Set(released)) await releaseFact(tx, ctx, factId);
+}
+
+// Un élément ouvert est sans objet quand sa décision ne peut plus s'appliquer : un de ses faits est
+// écarté (conflict), son fait est déjà tranché (sensitive_fact), sa nouvelle fiche est confirmée ou
+// une de ses fiches fusionnée (entity_match), son type est validé (proposed_type). Conditions
+// positives : sous la RLS, un fait ou une fiche invisible ne rend jamais un élément sans objet.
+async function closeObsoleteItems(tx: Tx, ctx: TenantContext): Promise<ReviewPayload[]> {
+  const { rows } = await tx.execute<{ payload: unknown }>(sql`
+    update review_items ri
+    set status = 'resolved', resolution = ${JSON.stringify(OBSOLETE)}::jsonb,
+      resolved_by = ${ctx.userId}, resolved_at = now()
+    where ri.status = 'open' and case ri.kind
+      when 'conflict' then exists (select 1 from facts f where f.status = 'superseded'
+        and f.id in ((ri.payload #>> '{factIds,0}')::uuid, (ri.payload #>> '{factIds,1}')::uuid))
+      when 'sensitive_fact' then exists (select 1 from facts f where f.status <> 'pending_review'
+        and f.id = (ri.payload ->> 'factId')::uuid)
+      when 'entity_match' then exists (select 1 from cards c
+        where (c.id = (ri.payload ->> 'newCardId')::uuid and c.status = 'confirmed')
+          or (c.merged_into is not null and c.id in
+            ((ri.payload ->> 'newCardId')::uuid, (ri.payload ->> 'candidateCardId')::uuid)))
+      when 'proposed_type' then exists (select 1 from card_types t where t.status = 'validated'
+        and t.id = (ri.payload ->> 'typeId')::uuid)
+    end
+    returning ri.payload`);
+  return rows.map((row) => ReviewPayloadSchema.parse(row.payload));
+}
+
+async function releaseFact(tx: Tx, ctx: TenantContext, factId: string): Promise<void> {
+  const [fact] = await tx
+    .select({ acl: facts.acl })
+    .from(facts)
+    .where(and(eq(facts.id, factId), eq(facts.status, 'conflict')));
+  if (!fact) return;
+  const [live] = await tx
+    .select({ id: reviewItems.id })
+    .from(reviewItems)
+    .where(
+      and(
+        eq(reviewItems.status, 'open'),
+        eq(reviewItems.kind, 'conflict'),
+        sql`${reviewItems.payload} -> 'factIds' @> ${JSON.stringify([factId])}::jsonb`,
+      ),
+    )
+    .limit(1);
+  if (!live) await activateFact(tx, ctx, factId, fact.acl);
 }
 
 // Inatteignable après ReviewResolutionSchema.parse ; `never` garde les switch exhaustifs.
@@ -102,7 +168,7 @@ async function applyResolution(
       return resolveProposedType(tx, payload.typeId, resolution.decision);
     case 'conflict':
       if (payload.kind !== 'conflict') return false;
-      return resolveConflict(tx, ctx, payload.factIds, resolution.decision);
+      return resolveConflict(tx, payload.factIds, resolution.decision);
     default:
       throw unknownDecision(resolution);
   }
@@ -279,18 +345,16 @@ async function moveCardsToParent(tx: Tx, typeId: string, parentSlug: string): Pr
   return true;
 }
 
-// Les deux faits doivent être encore en contradiction : un fait déjà écarté (par un autre élément
-// qui le contenait) ne redevient jamais actif. keep_first / keep_second : l'écarté est remplacé par
-// le gardé, que activateFact réactive à son ACL actuelle (après la fermeture de l'écarté : règle 3
-// de facts.ts). both_wrong : les deux sont fermés.
+// Les deux faits doivent être encore en contradiction : un fait déjà écarté ne redevient jamais
+// actif. keep_first / keep_second : l'écarté est remplacé par le gardé ; both_wrong : les deux sont
+// fermés. Le gardé redevient actif ensuite, dans settleAfterDecision, s'il n'est plus contredit.
 async function resolveConflict(
   tx: Tx,
-  ctx: TenantContext,
   [first, second]: [string, string],
   decision: 'keep_first' | 'keep_second' | 'both_wrong',
 ): Promise<boolean> {
   const inConflict = await tx
-    .select({ id: facts.id, acl: facts.acl })
+    .select({ id: facts.id })
     .from(facts)
     .where(and(inArray(facts.id, [first, second]), eq(facts.status, 'conflict')))
     .for('update');
@@ -303,10 +367,7 @@ async function resolveConflict(
     case 'keep_first':
     case 'keep_second': {
       const [kept, dropped] = decision === 'keep_first' ? [first, second] : [second, first];
-      const keptFact = inConflict.find((fact) => fact.id === kept);
-      if (!keptFact) return false;
       await retireFact(tx, dropped, kept);
-      await activateFact(tx, ctx, kept, keptFact.acl);
       return true;
     }
     default:

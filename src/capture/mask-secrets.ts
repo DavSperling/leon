@@ -25,9 +25,10 @@ const WHOLE_SECRETS: RegExp[] = [
 
 // Le nom reste lisible, seule la valeur est masquée.
 // URL de tout schéma. Un mot de passe collé n'est pas encodé : il peut contenir « / ? # ».
-// Sa borne à 128 caractères garde le temps linéaire.
+// Sa borne à 128 caractères garde le temps linéaire. Un port suivi d'un chemin, d'une requête ou
+// d'une ancre (« localhost:3000/…?email=paul@… ») n'est pas un mot de passe.
 const URL_PASSWORD =
-  /(?<![A-Za-z0-9+.-])([A-Za-z][A-Za-z0-9+.-]{0,30}):\/\/([^:\s/?#@]{1,256}):([^@\s]{1,128})@/g;
+  /(?<![A-Za-z0-9+.-])([A-Za-z][A-Za-z0-9+.-]{0,30}):\/\/([^:\s/?#@]{1,256}):(?!\d{1,5}[/?#])([^@\s]{1,128})@/g;
 const AUTH_SCHEME = /\b(Bearer|Basic)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/g;
 // Valeur entre guillemets (espaces permis) jusqu'au guillemet fermant ou à la fin de la ligne,
 // ou valeur nue jusqu'au premier blanc. Sans borne haute : ce qui est lu est consommé.

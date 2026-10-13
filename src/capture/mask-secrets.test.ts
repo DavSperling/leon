@@ -137,6 +137,15 @@ describe('maskSecrets : contournements', () => {
   });
 
   it.each([
+    'http://localhost:3000/api/users?email=paul@acme.fr',
+    'http://localhost:3000/api/users/paul@acme.fr',
+    'https://example.com:8080/@alice',
+    'voir http://127.0.0.1:8080#paul@acme.fr',
+  ])('ne prend pas un port pour un mot de passe : %s', (url) => {
+    expect(maskSecrets(url)).toBe(url);
+  });
+
+  it.each([
     ['password: "correct horse battery staple"', `password: "${SECRET_MASK}"`],
     ['"api_key": "a b c d e f g h"', `"api_key": "${SECRET_MASK}"`],
     ["secret = 'deux mots de passe'", `secret = '${SECRET_MASK}'`],

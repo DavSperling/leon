@@ -15,11 +15,17 @@ import { adminDb } from '@/test/db';
 import { createTestTenant, seedCard, seedFact, seedSource } from '@/test/fixtures';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { unionAcl } from './acl';
-import { createReviewItem, type ReviewPayload } from './review-item-write';
+import { buildBriefing } from './briefing';
+import { activateFact } from './facts';
+import { fetchCard } from './fetch-card';
+import { createReviewItem, type ReviewPayload, ReviewPayloadSchema } from './review-item-write';
 import { type ReviewResolution, resolveReviewItem } from './review-items';
 
 const OCT_1 = new Date('2026-10-01T09:00:00Z');
+const OCT_3 = new Date('2026-10-03T09:00:00Z');
 const OCT_10 = new Date('2026-10-10T09:00:00Z');
+const YEAR_2030 = new Date('2030-01-01T00:00:00Z');
+const OBSOLETE = { kind: 'obsolete' } as const;
 
 const readFact = async (id: string) =>
   (await adminDb.select().from(facts).where(eq(facts.id, id)))[0];
@@ -44,7 +50,11 @@ const seesCard = async (ctx: TenantContext, id: string) =>
   (await withTenant(ctx, (tx) => tx.select({ id: cards.id }).from(cards).where(eq(cards.id, id))))
     .length === 1;
 
-async function expectResolved(itemId: string, by: TenantContext, resolution: ReviewResolution) {
+async function expectResolved(
+  itemId: string,
+  by: TenantContext,
+  resolution: ReviewResolution | typeof OBSOLETE,
+) {
   const item = await readItem(itemId);
   expect(item).toMatchObject({ status: 'resolved', resolution, resolvedBy: by.userId });
   expect(item?.resolvedAt).toBeInstanceOf(Date);
@@ -122,6 +132,95 @@ async function setup() {
     withTenant(paul, (tx) => createReviewItem(tx, paul, payload, acl));
 
   return { tenantId, paul, marie, card, pipelineFact, alias, item };
+}
+
+const openItems = async (tenantId: string) =>
+  (
+    await adminDb
+      .select({ id: reviewItems.id, payload: reviewItems.payload, acl: reviewItems.acl })
+      .from(reviewItems)
+      .where(and(eq(reviewItems.tenantId, tenantId), eq(reviewItems.status, 'open')))
+  ).map((item) => ({ ...item, payload: ReviewPayloadSchema.parse(item.payload) }));
+
+type Validity = { validFrom: Date; validTo: Date | null };
+const end = (validTo: Date | null) => validTo?.getTime() ?? Number.POSITIVE_INFINITY;
+const overlaps = (x: Validity, y: Validity) =>
+  x.validFrom.getTime() < end(y.validTo) && y.validFrom.getTime() < end(x.validTo);
+
+// Après toute résolution : aucun élément ouvert ne cite un fait écarté ; un fait est en contradiction
+// si et seulement si un élément ouvert le cite ; jamais deux valeurs actives d'équipe qui se
+// chevauchent ; Marie (équipe) voit ces contradictions dans fetchCard et dans le briefing.
+async function expectCoherent(tenantId: string, marie: TenantContext, cardId: string) {
+  const cardFacts = await adminDb.select().from(facts).where(eq(facts.cardId, cardId));
+  const open = await openItems(tenantId);
+  const cited = open.flatMap(({ payload }) => (payload.kind === 'conflict' ? payload.factIds : []));
+  const idsWith = (status: string) =>
+    cardFacts.filter((fact) => fact.status === status).map((fact) => fact.id);
+  expect(idsWith('superseded').filter((id) => cited.includes(id))).toEqual([]);
+  expect([...new Set(cited)].sort()).toEqual(idsWith('conflict').sort());
+  const activeTeam = cardFacts.filter(
+    (fact) => fact.status === 'active' && fact.singleValued && fact.acl.includes(tenantId),
+  );
+  for (const x of activeTeam) {
+    for (const y of activeTeam) {
+      if (x.id !== y.id && x.predicate === y.predicate) expect(overlaps(x, y)).toBe(false);
+    }
+  }
+  const conflicts = idsWith('conflict').length;
+  const fetched = await fetchCard(marie, { id: cardId, client: 'interface' });
+  const flagged = fetched?.text.split('\n').filter((line) => line.includes(' (contradiction)'));
+  expect(flagged).toHaveLength(conflicts);
+  const briefing = await buildBriefing(marie);
+  const entry = briefing.entries.find((e) => e.cardId === cardId);
+  expect(entry?.hasConflict).toBe(conflicts > 0);
+  const seenByMarie = open.filter(
+    ({ acl }) => acl.includes(tenantId) || acl.includes(marie.userId),
+  );
+  expect(briefing.reviewCount).toBe(seenByMarie.length);
+}
+
+// A (soixante jours, depuis le 3 octobre) contredit B (quarante-cinq jours, du 1er octobre à 2030)
+// et C (trente jours, à partir de 2030) : B et C ne se chevauchent pas, ils étaient actifs ensemble.
+// L'activation de A crée les éléments [B,A] et [C,A].
+async function threeWayConflict() {
+  const scenario = await setup();
+  const { tenantId, paul, card, pipelineFact } = scenario;
+  const cardId = await card('confirmed', [tenantId]);
+  const paiement = {
+    predicate: 'paiement',
+    singleValued: true,
+    acl: [tenantId],
+    factAcl: [tenantId],
+  };
+  const { factId: b } = await pipelineFact(cardId, {
+    ...paiement,
+    statement: 'ACME paie à quarante-cinq jours.',
+    status: 'active',
+    validFrom: OCT_1,
+  });
+  await adminDb.update(facts).set({ validTo: YEAR_2030 }).where(eq(facts.id, b));
+  const { factId: c } = await pipelineFact(cardId, {
+    ...paiement,
+    statement: 'ACME paie à trente jours.',
+    status: 'active',
+    validFrom: YEAR_2030,
+  });
+  const { factId: a } = await pipelineFact(cardId, {
+    ...paiement,
+    statement: 'ACME paie à soixante jours.',
+    status: 'pending_review',
+    validFrom: OCT_3,
+  });
+  await withTenant(paul, (tx) => activateFact(tx, paul, a, [tenantId]));
+  const items = await openItems(tenantId);
+  const itemFor = (first: string) => {
+    const found = items.find(
+      ({ payload }) => payload.kind === 'conflict' && payload.factIds[0] === first,
+    );
+    if (!found) throw new Error('élément conflict de test absent');
+    return found.id;
+  };
+  return { ...scenario, cardId, a, b, c, ba: itemFor(b), ca: itemFor(c) };
 }
 
 describe('createReviewItem', () => {
@@ -235,7 +334,7 @@ describe('resolveReviewItem : garde-fous', () => {
 });
 
 describe('resolveReviewItem : état revérifié avant chaque effet', () => {
-  it("refuse un sensitive_fact dont le fait n'est plus à valider, sans effet", async () => {
+  it('clôt sans objet un second sensitive_fact sur un fait déjà tranché', async () => {
     const { paul, marie, ids } = await seedRightsScenario();
     const again = await withTenant(paul, (tx) =>
       createReviewItem(
@@ -245,18 +344,18 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
         [paul.userId],
       ),
     );
+
     await resolveReviewItem(paul, ids.paulReview, {
       kind: 'sensitive_fact',
       decision: 'keep_private',
     });
 
+    await expectResolved(again, paul, OBSOLETE);
     const result = await resolveReviewItem(paul, again, {
       kind: 'sensitive_fact',
       decision: 'share',
     });
-
-    expect(result).toEqual({ ok: false, reason: 'incoherent' });
-    expect(await readItem(again)).toMatchObject({ status: 'open', resolution: null });
+    expect(result).toEqual({ ok: false, reason: 'deja_traite' });
     expect(await readFact(ids.acmePaulFact)).toMatchObject({
       status: 'active',
       acl: [paul.userId],
@@ -264,7 +363,35 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
     expect(await seesFact(marie, ids.acmePaulFact)).toBe(false);
   });
 
-  it("refuse un conflict dont un fait n'est plus en contradiction, sans effet", async () => {
+  it("refuse un sensitive_fact dont le fait n'est plus à valider, sans effet", async () => {
+    const { paul, ids } = await seedRightsScenario();
+    await resolveReviewItem(paul, ids.paulReview, {
+      kind: 'sensitive_fact',
+      decision: 'keep_private',
+    });
+    const late = await withTenant(paul, (tx) =>
+      createReviewItem(
+        tx,
+        paul,
+        { kind: 'sensitive_fact', factId: ids.acmePaulFact, category: null },
+        [paul.userId],
+      ),
+    );
+
+    const result = await resolveReviewItem(paul, late, {
+      kind: 'sensitive_fact',
+      decision: 'share',
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'incoherent' });
+    expect(await readItem(late)).toMatchObject({ status: 'open', resolution: null });
+    expect(await readFact(ids.acmePaulFact)).toMatchObject({
+      status: 'active',
+      acl: [paul.userId],
+    });
+  });
+
+  it('clôt sans objet un second conflict sur la même paire', async () => {
     const { tenantId, marie, ids } = await seedRightsScenario();
     const twin = await withTenant(marie, (tx) =>
       createReviewItem(
@@ -274,26 +401,28 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
         [tenantId],
       ),
     );
-    await resolveReviewItem(marie, ids.teamReview, { kind: 'conflict', decision: 'keep_first' });
-    const before = await readFact(ids.acmeConflictFact);
 
+    await resolveReviewItem(marie, ids.teamReview, { kind: 'conflict', decision: 'keep_first' });
+
+    await expectResolved(twin, marie, OBSOLETE);
+    const before = await readFact(ids.acmeConflictFact);
     const result = await resolveReviewItem(marie, twin, {
       kind: 'conflict',
       decision: 'keep_second',
     });
-
-    expect(result).toEqual({ ok: false, reason: 'incoherent' });
-    expect(await readItem(twin)).toMatchObject({ status: 'open', resolution: null });
+    expect(result).toEqual({ ok: false, reason: 'deja_traite' });
     expect(await readFact(ids.acmeConflictFact)).toEqual(before);
     expect(await readFact(ids.acmeTeamFact)).toMatchObject({
       status: 'active',
       supersededBy: null,
     });
+    await expectCoherent(tenantId, marie, ids.acmeCard);
   });
 
   // A est en contradiction avec B et avec C. Le test tient B verrouillé le temps que Marie (garder B,
-  // écarter A) et Paul (garder A, écarter C) soient tous deux lancés : leurs résolutions se chevauchent.
-  it('de deux conflicts simultanés qui partagent un fait, applique le premier et refuse le second', async () => {
+  // écarter A) et Paul (garder A, écarter C) soient tous deux lancés : les décisions d'un tenant se
+  // prennent l'une après l'autre, celle de Marie rend celle de Paul sans objet, sans interblocage.
+  it('de deux conflicts simultanés qui partagent un fait, le second devient sans objet', async () => {
     const { tenantId, paul, marie, ids } = await seedRightsScenario();
     const [b, a] = [ids.acmeTeamFact, ids.acmeConflictFact];
     const c = await seedFact(tenantId, {
@@ -338,17 +467,20 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
     await pause();
     releaseB();
     await holdB;
-    const results = await Promise.all([marieResult, paulResult]);
 
-    expect(results).toContainEqual({ ok: true });
-    expect(results).toContainEqual({ ok: false, reason: 'incoherent' });
-    const [kept, dropped, untouched] = results[0]?.ok ? [b, a, c] : [a, c, b];
-    expect(await readFact(dropped)).toMatchObject({ status: 'superseded', supersededBy: kept });
-    expect((await readFact(kept))?.status).toBe('active');
-    expect((await readFact(untouched))?.status).toBe('conflict');
+    expect(await Promise.all([marieResult, paulResult])).toEqual([
+      { ok: true },
+      { ok: false, reason: 'deja_traite' },
+    ]);
+    expect(await readFact(a)).toMatchObject({ status: 'superseded', supersededBy: b });
+    await expectResolved(otherItem, marie, OBSOLETE);
+    // C, libéré, est revérifié face à B gardé : les deux valeurs se chevauchent, d'où un nouvel élément.
+    expect((await readFact(b))?.status).toBe('conflict');
+    expect((await readFact(c))?.status).toBe('conflict');
+    await expectCoherent(tenantId, marie, ids.acmeCard);
   });
 
-  it('refuse un entity_match sur une fiche déjà confirmée, sans effet', async () => {
+  it('clôt sans objet un second entity_match sur une fiche déjà confirmée', async () => {
     const { tenantId, paul, card, pipelineFact, item } = await setup();
     const newCard = await card('unconfirmed', [paul.userId], 'ACME SA');
     const first = await card('confirmed', [tenantId], 'ACME');
@@ -366,17 +498,37 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
       { kind: 'entity_match', newCardId: newCard, candidateCardId: other },
       [paul.userId],
     );
+
     await resolveReviewItem(paul, firstItem, { kind: 'entity_match', decision: 'different' });
 
+    await expectResolved(otherItem, paul, OBSOLETE);
     const result = await resolveReviewItem(paul, otherItem, {
       kind: 'entity_match',
       decision: 'same',
     });
-
-    expect(result).toEqual({ ok: false, reason: 'incoherent' });
-    expect(await readItem(otherItem)).toMatchObject({ status: 'open', resolution: null });
+    expect(result).toEqual({ ok: false, reason: 'deja_traite' });
     expect(await readCard(newCard)).toMatchObject({ status: 'confirmed', mergedInto: null });
     expect(await readFact(factId)).toMatchObject({ cardId: newCard, status: 'active' });
+  });
+
+  it('clôt sans objet un entity_match qui cite une fiche fusionnée', async () => {
+    const { tenantId, paul, card, item } = await setup();
+    const newCard = await card('unconfirmed', [paul.userId], 'ACME SA');
+    const candidate = await card('confirmed', [tenantId], 'ACME');
+    const third = await card('unconfirmed', [paul.userId], 'ACME Sud');
+    const mergeItem = await item(
+      { kind: 'entity_match', newCardId: newCard, candidateCardId: candidate },
+      [paul.userId],
+    );
+    const citingMerged = await item(
+      { kind: 'entity_match', newCardId: third, candidateCardId: newCard },
+      [paul.userId],
+    );
+
+    await resolveReviewItem(paul, mergeItem, { kind: 'entity_match', decision: 'same' });
+
+    await expectResolved(citingMerged, paul, OBSOLETE);
+    expect((await readCard(third))?.status).toBe('unconfirmed');
   });
 });
 
@@ -608,6 +760,22 @@ describe('proposed_type', () => {
     await expectResolved(itemId, paul, resolution);
   });
 
+  it('validate : un second élément sur le même type est clos sans objet', async () => {
+    const { paul, ids } = await seedRightsScenario();
+    const proposeType = () =>
+      withTenant(paul, (tx) =>
+        createReviewItem(tx, paul, { kind: 'proposed_type', typeId: ids.proposedType }, [
+          paul.userId,
+        ]),
+      );
+    const first = await proposeType();
+    const second = await proposeType();
+
+    await resolveReviewItem(paul, first, { kind: 'proposed_type', decision: 'validate' });
+
+    await expectResolved(second, paul, OBSOLETE);
+  });
+
   it('use_parent : les fiches visibles du type passent au type parent', async () => {
     const { tenantId, paul, marie, ids } = await seedRightsScenario();
     const paulCard = await seedCard(tenantId, {
@@ -679,5 +847,70 @@ describe('conflict', () => {
       expect(fact).toMatchObject({ status: 'superseded', supersededBy: null });
       expect(fact?.validTo).toEqual(fact?.validFrom);
     }
+  });
+});
+
+describe('conflict : un fait contredit par deux autres', () => {
+  it('keep_first sur [B,A] : [C,A] devient sans objet et C redevient actif', async () => {
+    const { tenantId, marie, cardId, a, b, c, ba, ca } = await threeWayConflict();
+
+    expect(
+      await resolveReviewItem(marie, ba, { kind: 'conflict', decision: 'keep_first' }),
+    ).toEqual({ ok: true });
+
+    expect(await readFact(a)).toMatchObject({ status: 'superseded', supersededBy: b });
+    expect((await readFact(b))?.status).toBe('active');
+    expect((await readFact(c))?.status).toBe('active');
+    await expectResolved(ca, marie, OBSOLETE);
+    await expectCoherent(tenantId, marie, cardId);
+  });
+
+  it('keep_second sur [B,A] : A reste en contradiction tant que [C,A] est ouvert', async () => {
+    const { tenantId, marie, cardId, a, b, c, ba, ca } = await threeWayConflict();
+
+    await resolveReviewItem(marie, ba, { kind: 'conflict', decision: 'keep_second' });
+
+    expect(await readFact(b)).toMatchObject({ status: 'superseded', supersededBy: a });
+    expect((await readFact(a))?.status).toBe('conflict');
+    expect((await readFact(c))?.status).toBe('conflict');
+    expect((await readItem(ca))?.status).toBe('open');
+    await expectCoherent(tenantId, marie, cardId);
+
+    expect(
+      await resolveReviewItem(marie, ca, { kind: 'conflict', decision: 'keep_second' }),
+    ).toEqual({ ok: true });
+
+    expect(await readFact(c)).toMatchObject({ status: 'superseded', supersededBy: a });
+    expect((await readFact(a))?.status).toBe('active');
+    await expectCoherent(tenantId, marie, cardId);
+  });
+
+  it('both_wrong sur [B,A] : [C,A] devient sans objet et C redevient actif', async () => {
+    const { tenantId, marie, cardId, a, b, c, ba, ca } = await threeWayConflict();
+
+    await resolveReviewItem(marie, ba, { kind: 'conflict', decision: 'both_wrong' });
+
+    for (const id of [a, b]) {
+      expect(await readFact(id)).toMatchObject({ status: 'superseded', supersededBy: null });
+    }
+    expect((await readFact(c))?.status).toBe('active');
+    await expectResolved(ca, marie, OBSOLETE);
+    await expectCoherent(tenantId, marie, cardId);
+  });
+
+  it("la résolution d'un élément devenu sans objet n'a aucun effet", async () => {
+    const { tenantId, marie, cardId, a, b, c, ba, ca } = await threeWayConflict();
+    await resolveReviewItem(marie, ba, { kind: 'conflict', decision: 'keep_first' });
+    const before = await Promise.all([a, b, c].map(readFact));
+
+    const result = await resolveReviewItem(marie, ca, {
+      kind: 'conflict',
+      decision: 'keep_second',
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'deja_traite' });
+    expect(await Promise.all([a, b, c].map(readFact))).toEqual(before);
+    expect((await readItem(ca))?.resolution).toEqual(OBSOLETE);
+    await expectCoherent(tenantId, marie, cardId);
   });
 });

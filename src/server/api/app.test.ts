@@ -1,0 +1,43 @@
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as log from '@/server/log';
+import { app, handleApiError } from './app';
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('app', () => {
+  it('répond à /api/health', async () => {
+    const response = await app.request('/api/health');
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+  });
+
+  it('répond 404 en JSON sur une route inconnue', async () => {
+    const response = await app.request('/api/inconnu');
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Introuvable' });
+  });
+});
+
+describe('handleApiError', () => {
+  const failing = (error: Error) =>
+    new Hono().onError(handleApiError).get('/', () => {
+      throw error;
+    });
+
+  it("garde le statut d'une HTTPException", async () => {
+    const response = await failing(new HTTPException(418, { message: 'théière' })).request('/');
+    expect(response.status).toBe(418);
+  });
+
+  it("n'expose pas le message d'une erreur inattendue et la journalise", async () => {
+    const spy = vi.spyOn(log, 'logError').mockImplementation(() => {});
+    const response = await failing(new Error('fuite')).request('/');
+    expect(response.status).toBe(500);
+    const text = await response.text();
+    expect(JSON.parse(text)).toEqual({ error: 'Erreur interne' });
+    expect(text).not.toContain('fuite');
+    expect(spy).toHaveBeenCalledOnce();
+  });
+});

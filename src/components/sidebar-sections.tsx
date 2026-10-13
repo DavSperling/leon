@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-const SECTIONS: Array<{ href: string; label: string; icon: LucideIcon }> = [
+export const SECTIONS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: '/a-verifier', label: 'À vérifier', icon: ClipboardCheck },
   { href: '/sources', label: 'Sources', icon: Inbox },
   { href: '/journal', label: 'Journal', icon: BookOpen },

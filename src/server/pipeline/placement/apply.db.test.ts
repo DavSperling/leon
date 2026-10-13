@@ -20,6 +20,7 @@ import { fetchCard } from '@/server/memory/fetch-card';
 import type { ReviewKind } from '@/server/memory/review-item-write';
 import { resolveReviewItem } from '@/server/memory/review-items';
 import { searchMemory } from '@/server/memory/search';
+import { listCardTree } from '@/server/memory/tree';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedCard, seedFact, seedSource } from '@/test/fixtures';
 import { applyPlacement } from './apply';
@@ -153,6 +154,39 @@ const itemsOfTenant = (tenantId: string, kind: ReviewKind) =>
     .select()
     .from(reviewItems)
     .where(and(eq(reviewItems.tenantId, tenantId), eq(reviewItems.kind, kind)));
+
+// Type proposé privé de Paul, au libellé né d'un candidat sensible (T12b).
+async function seedPrivateLitigeType(t: Team) {
+  const [type] = await adminDb
+    .insert(cardTypes)
+    .values({
+      tenantId: t.tenantId,
+      slug: 'litige-prudhommes',
+      label: 'Litige prud homal',
+      parentSlug: 'projet',
+      status: 'proposed',
+      acl: [t.paul.userId],
+    })
+    .returning();
+  if (!type) throw new Error('type de test non créé');
+  return type;
+}
+
+async function socleTypeId(slug: string): Promise<string | undefined> {
+  const [type] = await adminDb
+    .select({ id: cardTypes.id })
+    .from(cardTypes)
+    .where(and(eq(cardTypes.slug, slug), isNull(cardTypes.tenantId)));
+  return type?.id;
+}
+
+async function typeAcl(typeId: string): Promise<string[] | null | undefined> {
+  const [type] = await adminDb
+    .select({ acl: cardTypes.acl })
+    .from(cardTypes)
+    .where(eq(cardTypes.id, typeId));
+  return type?.acl;
+}
 
 const seedTeamCard = (t: Team, title: string) =>
   seedCard(t.tenantId, {
@@ -699,6 +733,138 @@ describe('applyPlacement', () => {
       (card) => card.title !== 'Litige Paul',
     );
     expect(teamCards.map((card) => card.typeId)).toEqual([projet?.id, projet?.id]);
+  });
+
+  it('range sous le parent du socle une fiche d équipe qui choisit un type privé (T12b)', async () => {
+    const t = await setupTeam();
+    const litige = await seedPrivateLitigeType(t);
+    const team = await seedCandidate(t, {
+      statement: 'Le dossier Sud est ouvert.',
+      predicate: 'note',
+    });
+    const personal = await seedCandidate(t, {
+      statement: 'Paul consulte un avocat.',
+      predicate: 'note',
+      sensitive: 'juridique',
+    });
+
+    await apply(
+      t,
+      [team, personal],
+      [
+        place(team, newCard('Dossier Sud', 'litige-prudhommes')),
+        place(personal, newCard('Avocat de Paul', 'litige-prudhommes')),
+      ],
+    );
+
+    const allCards = await cardsOfTenant(t.tenantId);
+    const teamCard = allCards.find((card) => card.title === 'Dossier Sud');
+    const privateCard = allCards.find((card) => card.title === 'Avocat de Paul');
+    expect(teamCard).toMatchObject({ typeId: await socleTypeId('projet'), acl: [t.tenantId] });
+    expect(privateCard).toMatchObject({ typeId: litige.id, acl: [t.paul.userId] });
+    expect(await typeAcl(litige.id)).toEqual([t.paul.userId]);
+
+    const tree = await listCardTree(t.marie);
+    expect(JSON.stringify(tree)).not.toMatch(/litige/i);
+    const projetNode = tree.find((node) => node.slug === 'projet');
+    expect(projetNode?.cards.map((card) => card.title)).toEqual(['Dossier Sud']);
+    const fetched = await fetchCard(t.marie, { id: teamCard?.id ?? '', client: 'interface' });
+    expect(fetched?.text).toContain('# Dossier Sud (projet)');
+    expect(fetched?.text).not.toMatch(/litige/i);
+    const results = await searchMemory(t.marie, { query: 'dossier Sud' });
+    expect(results.map((r) => [r.id, r.typeSlug, r.typeLabel])).toEqual([
+      [teamCard?.id, 'projet', 'Projet'],
+    ]);
+    const byHiddenType = { query: 'dossier Sud', type: 'litige-prudhommes' };
+    expect(await searchMemory(t.marie, byHiddenType)).toEqual([]);
+  });
+
+  it('reprend pour une action d équipe la fiche privée de même titre, sous le parent (T12b)', async () => {
+    const t = await setupTeam();
+    const litige = await seedPrivateLitigeType(t);
+    const personal = await seedCandidate(t, {
+      statement: 'Paul consulte un avocat pour le dossier Sud.',
+      predicate: 'note',
+      sensitive: 'juridique',
+    });
+    const team = await seedCandidate(t, {
+      statement: 'Le dossier Sud est ouvert.',
+      predicate: 'note',
+    });
+
+    await apply(
+      t,
+      [personal, team],
+      [
+        place(personal, newCard('Dossier Sud', 'litige-prudhommes')),
+        place(team, newCard('Dossier Sud', 'litige-prudhommes')),
+      ],
+    );
+
+    expect(await typeAcl(litige.id)).toEqual([t.paul.userId]);
+    const allCards = await cardsOfTenant(t.tenantId);
+    expect(allCards).toHaveLength(1);
+    expect(allCards[0]).toMatchObject({
+      title: 'Dossier Sud',
+      typeId: await socleTypeId('projet'),
+    });
+    expect(allCards[0]?.acl).toContain(t.tenantId);
+    expect(JSON.stringify(await listCardTree(t.marie))).not.toMatch(/litige/i);
+  });
+
+  it('range sous le parent une fiche existante au type privé qui reçoit un fait d équipe (T12b)', async () => {
+    const t = await setupTeam();
+    const litige = await seedPrivateLitigeType(t);
+    const lawyer = await seedCard(t.tenantId, {
+      title: 'Avocat de Paul',
+      typeSlug: 'litige-prudhommes',
+      acl: [t.paul.userId],
+      createdBy: t.paul.userId,
+    });
+    const row = await seedCandidate(t, {
+      statement: 'L avocat de Paul suit aussi le dossier Sud.',
+      predicate: 'note',
+      subject: subject('Avocat de Paul'),
+    });
+
+    await apply(t, [row], [place(row, existingCard(lawyer))]);
+
+    expect(await typeAcl(litige.id)).toEqual([t.paul.userId]);
+    const [card] = await cardsOfTenant(t.tenantId);
+    expect(card).toMatchObject({ typeId: await socleTypeId('projet') });
+    expect(card?.acl).toContain(t.tenantId);
+    const tree = await listCardTree(t.marie);
+    expect(JSON.stringify(tree)).not.toMatch(/litige/i);
+    const projetNode = tree.find((node) => node.slug === 'projet');
+    expect(projetNode?.cards.map((c) => c.title)).toEqual(['Avocat de Paul']);
+    const fetched = await fetchCard(t.marie, { id: lawyer, client: 'interface' });
+    expect(fetched?.text).toContain('# Avocat de Paul (projet)');
+  });
+
+  it('garde un type proposé d équipe choisi par une action d équipe', async () => {
+    const t = await setupTeam();
+    const [chantier] = await adminDb
+      .insert(cardTypes)
+      .values({
+        tenantId: t.tenantId,
+        slug: 'chantier',
+        label: 'Chantier',
+        parentSlug: 'projet',
+        status: 'proposed',
+        acl: [t.tenantId],
+      })
+      .returning();
+    const row = await seedCandidate(t, {
+      statement: 'Le chantier Nord démarre.',
+      predicate: 'note',
+    });
+
+    await apply(t, [row], [place(row, newCard('Chantier Nord', 'chantier'))]);
+
+    const [card] = await cardsOfTenant(t.tenantId);
+    expect(card).toMatchObject({ typeId: chantier?.id, acl: [t.tenantId] });
+    const fetched = await fetchCard(t.marie, { id: card?.id ?? '', client: 'interface' });
+    expect(fetched?.text).toContain('# Chantier Nord (chantier)');
   });
 
   it('voit au moment d écrire un fait concurrent inséré après le contexte (vigilance 4)', async () => {

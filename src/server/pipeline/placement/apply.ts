@@ -3,7 +3,7 @@ import type { SourceKind } from '@/capture/turn';
 import type { CardStatus } from '@/lib/enums';
 import { slugify } from '@/lib/slug';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { cardTypes, factCandidates, facts, sources, turns } from '@/server/db/schema/memory';
+import { cards, cardTypes, factCandidates, facts, sources, turns } from '@/server/db/schema/memory';
 import type { Tx } from '@/server/db/with-tenant';
 import { authorAcl, isTeamAcl } from '@/server/memory/acl';
 import { addCardAliases, createCard } from '@/server/memory/cards';
@@ -75,21 +75,42 @@ function catalogTypeId(state: ApplyState, slug: string): string {
   return catalogType.id;
 }
 
-// Sans type proposé utilisable, la fiche prend le type parent. Elle le prend aussi quand son type
-// propre au tenant ne couvre pas l'ACL de l'action : createCard l'élargirait, et un libellé né d'un
-// candidat privé deviendrait visible sans qu'aucun fait partagé n'arrive sur sa fiche.
-async function typeIdFor(state: ApplyState, type: TypeChoice, acl: string[]): Promise<string> {
-  const proposedId = type.kind === 'proposed' ? await proposeType(state, type, acl) : null;
-  const typeId =
-    proposedId ?? catalogTypeId(state, type.kind === 'proposed' ? type.parentSlug : type.slug);
+// Le rangement n'élargit jamais un type privé : une fiche d'équipe ne porte qu'un type d'équipe,
+// sinon createCard ou widenCardAcl élargiraient son type, et un libellé né d'un candidat privé
+// deviendrait visible de tous. Renvoie le type parent du socle à prendre à la place d'un type
+// propre au tenant qui n'est pas d'équipe ; null si typeId peut rester.
+async function teamFallbackTypeId(state: ApplyState, typeId: string): Promise<string | null> {
   const [tenantType] = await state.tx
     .select({ acl: cardTypes.acl, parentSlug: cardTypes.parentSlug })
     .from(cardTypes)
     .where(and(eq(cardTypes.id, typeId), isNotNull(cardTypes.tenantId)));
-  if (!tenantType?.parentSlug) return typeId;
-  const typeAcl = tenantType.acl ?? [];
-  const covers = isTeamAcl(typeAcl, state.ctx.tenantId) || acl.every((p) => typeAcl.includes(p));
-  return covers ? typeId : catalogTypeId(state, tenantType.parentSlug);
+  if (!tenantType?.parentSlug || isTeamAcl(tenantType.acl ?? [], state.ctx.tenantId)) return null;
+  return catalogTypeId(state, tenantType.parentSlug);
+}
+
+// Sans type proposé utilisable, la fiche prend le type parent ; une fiche d'équipe le prend aussi
+// à la place d'un type privé.
+async function typeIdFor(state: ApplyState, type: TypeChoice, acl: string[]): Promise<string> {
+  const proposedId = type.kind === 'proposed' ? await proposeType(state, type, acl) : null;
+  const typeId =
+    proposedId ?? catalogTypeId(state, type.kind === 'proposed' ? type.parentSlug : type.slug);
+  if (!isTeamAcl(acl, state.ctx.tenantId)) return typeId;
+  return (await teamFallbackTypeId(state, typeId)) ?? typeId;
+}
+
+// Une fiche qui va recevoir un fait d'équipe passe sous le type parent si son type est privé :
+// facts.ts élargira la fiche, et le type resterait sinon à élargir avec elle. Vaut pour une fiche
+// existante comme pour une fiche privée créée plus tôt dans le même rangement.
+async function keepTypePrivate(state: ApplyState, cardId: string): Promise<void> {
+  const [card] = await state.tx
+    .select({ typeId: cards.typeId })
+    .from(cards)
+    .where(eq(cards.id, cardId));
+  if (!card) throw new Error('fiche introuvable ou invisible');
+  const fallbackId = await teamFallbackTypeId(state, card.typeId);
+  if (fallbackId) {
+    await state.tx.update(cards).set({ typeId: fallbackId }).where(eq(cards.id, cardId));
+  }
 }
 
 async function newCardId(state: ApplyState, target: NewTarget, acl: string[]): Promise<string> {
@@ -203,10 +224,9 @@ async function placeCandidate(state: ApplyState, row: FactCandidateRow, action: 
   }
   const { status, typeSlug } = describeTarget(state, row.id, action);
   const acl = sensitive || status === 'unconfirmed' ? authorAcl(state.ctx.userId) : row.factAcl;
-  const cardId =
-    action.target.kind === 'existing'
-      ? action.target.cardId
-      : await newCardId(state, action.target, acl);
+  const { target } = action;
+  const cardId = target.kind === 'existing' ? target.cardId : await newCardId(state, target, acl);
+  if (isTeamAcl(acl, state.ctx.tenantId)) await keepTypePrivate(state, cardId);
   await addCardAliases(state.tx, state.ctx, cardId, action.aliases, acl);
   const fact = newFact(state, row, { cardId, typeSlug }, action.predicate);
   if (sensitive) await writeSensitiveFact(state, row, { ...fact, status: 'pending_review' }, acl);

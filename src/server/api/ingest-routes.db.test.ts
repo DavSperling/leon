@@ -84,17 +84,21 @@ describe('POST /api/v1/ingest', () => {
     expect(await response.json()).toEqual({ error: 'Requête trop volumineuse' });
   });
 
-  it('répond 409 quand la conversation appartient à un autre utilisateur', async () => {
+  it('isole la même conversation envoyée par deux collègues, sans rien révéler', async () => {
+    // Une source par propriétaire : rien ne révèle qu'un collègue a déjà envoyé la même conversation.
     const { paulToken, marieToken } = await setup();
     const body = validBody();
-    await apiRequest(API_PATHS.ingest, { token: paulToken, body });
+    const send = async (token: string) =>
+      IngestResultSchema.parse(await (await apiRequest(API_PATHS.ingest, { token, body })).json());
+    const fromPaul = await send(paulToken);
 
     const response = await apiRequest(API_PATHS.ingest, { token: marieToken, body });
 
-    expect(response.status).toBe(409);
-    expect(await response.json()).toEqual({
-      error: 'Cette conversation appartient à un autre utilisateur',
-    });
+    expect(response.status).toBe(202);
+    const fromMarie = IngestResultSchema.parse(await response.json());
+    expect(fromMarie).toMatchObject({ inserted: 1, skipped: 0 });
+    expect(fromMarie.sourceId).not.toBe(fromPaul.sourceId);
+    expect(await send(paulToken)).toMatchObject({ sourceId: fromPaul.sourceId, inserted: 0 });
   });
 
   it("n'envoie aucun en-tête CORS", async () => {

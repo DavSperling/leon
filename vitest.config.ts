@@ -12,6 +12,8 @@ export default defineConfig({
           name: 'unit',
           include: ['src/**/*.test.ts', 'extension/**/*.test.ts'],
           exclude: ['**/*.db.test.ts', '**/node_modules/**'],
+          // Un groupe par projet : Vitest refuse deux maxWorkers différents dans un même groupe.
+          sequence: { groupOrder: 0 },
         },
       },
       {
@@ -22,6 +24,7 @@ export default defineConfig({
           globalSetup: ['src/test/global-setup.ts'],
           testTimeout: 20_000,
           maxWorkers: 4,
+          sequence: { groupOrder: 1 },
         },
       },
     ],

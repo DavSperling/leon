@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { INGEST_BODY_MAX_BYTES, IngestPayloadSchema, type IngestResult } from '@/capture/turn';
 import { getViewerProfile } from '@/server/auth/viewer';
-import { ingestTurns, SourceOwnershipError } from '@/server/ingest/ingest-turns';
+import { ingestTurns } from '@/server/ingest/ingest-turns';
 import { type ApiEnv, requireApiToken } from './require-api-token';
 
 export const ingestRoutes = new Hono<ApiEnv>()
@@ -25,13 +25,8 @@ export const ingestRoutes = new Hono<ApiEnv>()
         }));
         return c.json({ error: 'Requête invalide', issues }, 400);
       }
-      try {
-        const result: IngestResult = await ingestTurns(c.var.ctx, parsed.data);
-        return c.json(result, 202);
-      } catch (error) {
-        if (!(error instanceof SourceOwnershipError)) throw error;
-        return c.json({ error: 'Cette conversation appartient à un autre utilisateur' }, 409);
-      }
+      const result: IngestResult = await ingestTurns(c.var.ctx, parsed.data);
+      return c.json(result, 202);
     },
   )
   .get('/me', requireApiToken, async (c) => c.json(await getViewerProfile(c.var.ctx)));

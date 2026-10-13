@@ -10,6 +10,10 @@ describe('maskSecrets : secrets entiers', () => {
       'clé privée PEM',
       '-----BEGIN RSA PRIVATE KEY-----\nMIIEow\nabcdef\n-----END RSA PRIVATE KEY-----',
     ],
+    [
+      'clé privée PGP',
+      '-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nlQOYBF\nabcdef\n-----END PGP PRIVATE KEY BLOCK-----',
+    ],
     ['clé Anthropic', `sk-ant-${alnum(30)}`],
     ['clé OpenAI', `sk-${alnum(30)}`],
     ['clé OpenAI de projet', `sk-proj-${alnum(30)}`],
@@ -93,5 +97,89 @@ describe('maskSecrets : propriétés', () => {
     const start = performance.now();
     maskSecrets(text);
     expect(performance.now() - start).toBeLessThan(200);
+  });
+});
+
+describe('maskSecrets : contournements', () => {
+  it('masque une clé PEM sans ligne END jusqu’à la fin du texte', () => {
+    const text = 'Ma clé :\n-----BEGIN PRIVATE KEY-----\nMIIEvQ\nabcdef\nencore';
+    expect(maskSecrets(text)).toBe(`Ma clé :\n${SECRET_MASK}`);
+  });
+
+  it('masque une clé PGP sans ligne END jusqu’à la fin du texte', () => {
+    const text = 'Ma clé :\n-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nlQOYBF\nencore';
+    expect(maskSecrets(text)).toBe(`Ma clé :\n${SECRET_MASK}`);
+  });
+
+  it.each(['https', 'ftp', 'redis', 'mongodb+srv', 'smtp'])(
+    'masque le mot de passe d’une URL %s://utilisateur:mot@',
+    (scheme) => {
+      expect(maskSecrets(`voir ${scheme}://alice:s3cr3t-pass@exemple.fr/x`)).toBe(
+        `voir ${scheme}://alice:${SECRET_MASK}@exemple.fr/x`,
+      );
+    },
+  );
+
+  it.each([
+    [
+      'postgres://admin:Ab3/xyz+Q==@db.example.com:5432/app',
+      `postgres://admin:${SECRET_MASK}@db.example.com:5432/app`,
+    ],
+    ['postgres://admin:Pa#ss123word@db.local/app', `postgres://admin:${SECRET_MASK}@db.local/app`],
+    [
+      'mongodb+srv://app:p#ssw0rd!x@cluster0.mongodb.net/db',
+      `mongodb+srv://app:${SECRET_MASK}@cluster0.mongodb.net/db`,
+    ],
+    ['redis://default:abc?def123@redis:6379', `redis://default:${SECRET_MASK}@redis:6379`],
+    ['mysql://root:abc?def12@localhost', `mysql://root:${SECRET_MASK}@localhost`],
+  ])('masque un mot de passe d’URL contenant « / », « # » ou « ? » : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+  });
+
+  it.each([
+    ['password: "correct horse battery staple"', `password: "${SECRET_MASK}"`],
+    ['"api_key": "a b c d e f g h"', `"api_key": "${SECRET_MASK}"`],
+    ["secret = 'deux mots de passe'", `secret = '${SECRET_MASK}'`],
+  ])('masque une valeur entre guillemets avec espaces : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+  });
+
+  it('masque une valeur entre guillemets de plus de 1 000 caractères', () => {
+    const value = 'mot '.repeat(400);
+    expect(maskSecrets(`password: "${value}" fin`)).toBe(`password: "${SECRET_MASK}" fin`);
+  });
+
+  it('reste idempotent sur ces formes', () => {
+    const text = [
+      '-----BEGIN PRIVATE KEY-----\nabc',
+      'https://alice:s3cr3t-pass@exemple.fr',
+      'password: "correct horse battery staple"',
+    ].join('\n');
+    const once = maskSecrets(text);
+    expect(maskSecrets(once)).toBe(once);
+  });
+});
+
+// Entrées piégées : des milliers de débuts de motif sans fin. Le masquage doit rester linéaire.
+const TWO_MB = 2 * 1024 * 1024;
+const TRAPS = [
+  '-----BEGIN PRIVATE KEY-----',
+  '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+  'postgres://a:',
+  'https://a:b',
+  'x://a:',
+  'password=',
+  'password: "a',
+  'eyJabcdefgh-',
+  'a-',
+];
+const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
+
+describe('maskSecrets : temps linéaire', () => {
+  it.each(TRAPS)('traite 2 Mo de « %s » répété en moins de 300 ms', (unit) => {
+    const text = trapText(unit);
+    const start = performance.now();
+    maskSecrets(text);
+    expect(performance.now() - start).toBeLessThan(300);
   });
 });

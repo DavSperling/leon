@@ -6,7 +6,7 @@ import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { createTestTenant } from '@/test/fixtures';
-import { ingestTurns, SourceOwnershipError } from './ingest-turns';
+import { ingestTurns } from './ingest-turns';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -142,13 +142,22 @@ describe('ingestTurns', () => {
     expect(await readTurns(paul, result.sourceId)).toHaveLength(1);
   });
 
-  it("refuse la conversation d'un autre utilisateur", async () => {
+  it('donne à chacun sa source quand deux membres envoient la même conversation', async () => {
     const { paul, marie, externalId } = await setup();
-    await ingestTurns(paul, payload(externalId, [newTurn(1)]));
+    const fromPaul = await ingestTurns(paul, payload(externalId, [newTurn(1)]));
 
-    await expect(ingestTurns(marie, payload(externalId, [newTurn(2)]))).rejects.toBeInstanceOf(
-      SourceOwnershipError,
-    );
+    const fromMarie = await ingestTurns(marie, payload(externalId, [newTurn(1), newTurn(2)]));
+
+    expect(fromMarie).toMatchObject({ inserted: 2, skipped: 0 });
+    expect(fromMarie.sourceId).not.toBe(fromPaul.sourceId);
+    expect((await readSource(marie, fromMarie.sourceId))[0]?.ownerUserId).toBe(marie.userId);
+    expect(await readTurns(marie, fromMarie.sourceId)).toHaveLength(2);
+    expect(await readTurns(paul, fromPaul.sourceId)).toHaveLength(1);
+    expect(await readSource(marie, fromPaul.sourceId)).toHaveLength(0);
+    expect(await readSource(paul, fromMarie.sourceId)).toHaveLength(0);
+
+    const again = await ingestTurns(paul, payload(externalId, [newTurn(3)]));
+    expect(again).toMatchObject({ sourceId: fromPaul.sourceId, inserted: 1 });
   });
 
   it('fixe last_turn_at au plus grand ts, même si un lot arrive dans le désordre', async () => {

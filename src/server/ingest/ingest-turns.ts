@@ -8,11 +8,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 
-// La conversation existe déjà et n'est pas visible de l'appelant : elle appartient à quelqu'un d'autre.
-export class SourceOwnershipError extends Error {
-  override name = 'SourceOwnershipError';
-}
-
+// Chaque membre a sa propre source pour une conversation : la relecture ne trouve que la sienne.
 async function upsertSource(
   tx: Tx,
   ctx: TenantContext,
@@ -29,7 +25,9 @@ async function upsertSource(
       title: title ?? null,
       acl: [ctx.userId],
     })
-    .onConflictDoNothing({ target: [sources.tenantId, sources.kind, sources.externalId] })
+    .onConflictDoNothing({
+      target: [sources.tenantId, sources.ownerUserId, sources.kind, sources.externalId],
+    })
     .returning({ id: sources.id });
   if (created) return created.id;
   const [existing] = await tx
@@ -38,11 +36,12 @@ async function upsertSource(
     .where(
       and(
         eq(sources.tenantId, ctx.tenantId),
+        eq(sources.ownerUserId, ctx.userId),
         eq(sources.kind, source.kind),
         eq(sources.externalId, source.external_id),
       ),
     );
-  if (!existing) throw new SourceOwnershipError();
+  if (!existing) throw new Error('source introuvable après insertion');
   return existing.id;
 }
 

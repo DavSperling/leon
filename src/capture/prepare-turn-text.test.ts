@@ -37,3 +37,38 @@ describe('prepareTurnText', () => {
     expect(prepareTurnText('<system-reminder>Rappel</system-reminder>')).toBeNull();
   });
 });
+
+describe('prepareTurnText : entrées énormes', () => {
+  it('retire un system-reminder plus long que la borne d’entrée', () => {
+    const text = `<system-reminder>${'x'.repeat(50_000)}</system-reminder>Bonjour`;
+    expect(prepareTurnText(text)).toBe('Bonjour');
+  });
+
+  it('masque tout le texte avant de le tronquer', () => {
+    const result = prepareTurnText(`Début password=${'a'.repeat(100_000)} fin`);
+    expect(result).toBe(`Début password=${SECRET_MASK} fin`);
+  });
+
+  it('ne laisse aucun fragment de secret coupé à une limite', () => {
+    const alnum = 'aB3dE5gH7jK9mN1pQ2sT4vW6xY8zC0fL'.repeat(2);
+    const prefix = `password=${'x'.repeat(39_980)} `;
+    expect(prepareTurnText(`${prefix}ghp_${alnum.slice(0, 40)}`)).toBe(
+      `password=${SECRET_MASK} ${SECRET_MASK}`,
+    );
+  });
+
+  const TWO_MB = 2 * 1024 * 1024;
+  it.each([
+    '<system-reminder>',
+    '-----BEGIN PRIVATE KEY-----',
+    '-----BEGIN PGP PRIVATE KEY BLOCK-----',
+    'postgres://a:',
+    'https://a:b',
+    'password=',
+  ])('traite 2 Mo de « %s » répété en moins de 300 ms', (unit) => {
+    const text = unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
+    const start = performance.now();
+    prepareTurnText(text);
+    expect(performance.now() - start).toBeLessThan(300);
+  });
+});

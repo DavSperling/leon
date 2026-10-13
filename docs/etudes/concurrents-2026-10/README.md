@@ -99,7 +99,7 @@ Trois piliers, dans cet ordre :
 
 ## Points de vigilance
 
-- **Sentra est le concurrent le plus dangereux.** Même thèse d'ingestion proactive, même tranche de prix, un cas client sérieux et un discours très abouti sur les faits contradictoires et leur versionnage dans le temps (« write-time resolution », faits marqués « superseded » plutôt qu'effacés). Leon doit avoir une réponse crédible à « que se passe-t-il quand une fiche contredit l'ancienne », et ne pas se contenter d'une arborescence de fichiers.
+- **Sentra est le concurrent le plus dangereux.** Même thèse d'ingestion proactive, même tranche de prix, un cas client sérieux et un discours très abouti sur les faits contradictoires et leur versionnage dans le temps (« write-time resolution », faits marqués « superseded » plutôt qu'effacés). Leon doit avoir une réponse crédible à « que se passe-t-il quand une fiche contredit l'ancienne », et ne pas se contenter d'une arborescence de fichiers. Le test du 13 octobre nuance ce point : rien de ce versionnage n'apparaît dans ce que Sentra expose aux agents, et c'est un agent de recherche lent (30 s à 3 min) qui relit les sources (annexe 3, section 11).
 - **Le vrai concurrent d'une PME, c'est Notion, Google Workspace et Microsoft 365**, déjà installés. Le pitch ne doit pas être « mieux que Glean » mais « ce que votre Google Workspace ne fait pas ».
 - **Deux idées d'UX à égaler**, vues chez memory.store : des « Briefs » qui se mettent à jour quand de nouvelles mémoires arrivent, et un « checkin » automatique en début de session.
 - **Glean itère vite** (mémoire « activity-based » le 8 octobre 2026) et arrive en France par des partenaires d'ici fin 2027. Un « Glean Business » self-serve changerait la donne.
@@ -112,4 +112,4 @@ Trois piliers, dans cet ordre :
 
 ## Méthode et limites
 
-Quatre agents Claude ont travaillé en parallèle, un par concurrent, avec la même grille de dix questions (produit, capture, restitution, droits, cible, prix, hébergement, traction, faiblesses, implications). Chaque fait est marqué dans les annexes comme vérifié sur une page officielle, issu d'un tiers ou déduit. Les chiffres de traction des jeunes sociétés sont auto-déclarés ou viennent d'annuaires. Aucun des quatre produits n'a été testé en main : c'est la prochaine étape utile, au moins pour Sentra (plan Team gratuit) et Qontext (plan Explore gratuit).
+Quatre agents Claude ont travaillé en parallèle, un par concurrent, avec la même grille de dix questions (produit, capture, restitution, droits, cible, prix, hébergement, traction, faiblesses, implications). Chaque fait est marqué dans les annexes comme vérifié sur une page officielle, issu d'un tiers ou déduit. Les chiffres de traction des jeunes sociétés sont auto-déclarés ou viennent d'annuaires. Seul Sentra a été testé en main, le 13 octobre, sans données : questions au chat et lecture de ses 24 outils MCP (annexe 3, section 11). Qontext (plan Explore gratuit) reste à tester.

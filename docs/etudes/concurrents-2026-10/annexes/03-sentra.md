@@ -56,3 +56,39 @@ Créée en 2025, SF, entité Dynamis Labs Inc. ; seed 5 M$ le 28/01/2026 co-men�
 Concurrence frontale : même thèse (ingestion proactive côté serveur, graphe de faits, lecture via MCP dans Claude/Cursor/ChatGPT), même point d'entrée tarifaire (16 $ vs ~25 €), même tranche 2–20 sièges en self-service. Sentra a 5 M$, un cas Lenskart et un storytelling « write-time resolution » très abouti ; Leon doit avoir une réponse crédible sur la résolution des contradictions et le versionnage des faits.
 
 Différenciation réelle pour Leon : (1) capture des conversations LLM des employés sans dépendre d'un tool call, Sentra ne le fait pas, c'est le vide le plus net ; (2) hébergement UE, DPA, RGPD natif, contrat en français ; (3) tout inclus dès le premier siège (API, droits fins, audit) là où Sentra les réserve à l'Enterprise ; (4) fiches lisibles par un humain avec droits propres plutôt qu'un graphe filtré à la requête ; (5) Windows/multi-plateforme si un agent local est prévu. Risque : si Sentra ouvre une région UE et une extension de capture, l'écart se réduit à la proximité commerciale et au prix.
+
+## 11. Test en main, 13 octobre 2026
+
+David a ouvert un compte gratuit, sans connecter aucune source. On a d'abord interrogé le chat de Sentra sur son fonctionnement, puis branché leur serveur MCP dans Claude Code pour lire la liste exacte des outils qu'ils exposent aux agents : 24 outils, avec leurs paramètres et leurs descriptions. Aucun outil n'a été appelé et aucune donnée n'a été échangée. Ce qui suit vient donc de ce que le produit montre vraiment, et non de son site. Une limite : le MCP montre ce que Sentra expose, pas forcément tout ce qui existe en interne.
+
+### Un graphe, mais pas celui du site
+
+Le cœur de Sentra est une liste d'entités : des personnes, des entreprises, des projets, dont chaque organisation peut définir les types. À chaque entité sont rattachés des faits, qui sont en réalité des extraits de texte avec leur source, et non des relations structurées du type « Amos a décidé X ». Entre les entités, il existe deux sortes de liens : ceux que le LLM a extraits des conversations, et la co-présence en réunion, calculée sur les 180 derniers jours, qui dit seulement que deux personnes se croisent souvent.
+
+Aucun outil ne permet de parcourir ce graphe : on ne peut pas demander le chemin entre deux entités, ni l'état d'un fait à une date passée. Le seul filtre dans le temps porte sur la date de mise à jour des entités. La recherche elle-même ne porte que sur les noms des entités et des réunions, pas sur le contenu des faits.
+
+L'intelligence est ailleurs : dans un agent de recherche (`memory_agent_start`) qui met entre 30 secondes et 3 minutes à répondre. Il fouille les extraits, croise les sources et rédige une réponse avec ses citations. Quand le chat affirme pouvoir « restituer l'état d'un projet à une date donnée », c'est cet agent qui relit l'historique. Le graphe ne garde pas de versions.
+
+### Ce qui nuance l'annexe
+
+Le site parle d'un graphe bi-temporel et de faits marqués « superseded » plutôt qu'effacés. Rien de cela n'apparaît dans ce que Sentra expose : aucun champ de validité, aucune version d'un fait, aucune requête « à telle date ». C'est peut-être stocké en interne, mais un agent client ne peut pas s'en servir. Leur avance sur le versionnage des faits, citée comme leur point fort dans la synthèse, est donc surtout un discours tant qu'on ne l'a pas vue marcher.
+
+Les faits ne se corrigent pas à la main. Pour retirer une erreur, il faut supprimer la source, passer la réunion en privé, dire le contraire dans une nouvelle conversation, ou écrire au support. Sentra valide pourtant les entités : chacune est « proposée » par le LLM, puis « confirmée » ou « rejetée » par un humain. Il existe aussi une source « manuelle » qui permet à un membre d'écrire un fait lui-même.
+
+Les contradictions sont traitées au moment de la réponse. Le plus récent l'emporte, une décision compte plus qu'une proposition, et si deux équipes se contredisent, Sentra le signale sans trancher. Dans les vues projet, ces contradictions remontent comme des alertes, avec un score de confiance qui est la part de votes d'un ensemble de modèles, pas une probabilité.
+
+Le MCP est disponible sur le plan gratuit, par connexion OAuth ou par clé d'API. L'annexe le croyait réservé à l'offre Enterprise.
+
+### Ce qui est solide
+
+Les droits d'accès sont repris de chaque outil source : les membres d'un canal Slack, la permission de voir un projet Jira, le propriétaire d'une fiche HubSpot, les droits ERPNext. Un fait cité à la fois dans un canal public et dans un canal privé reste visible de tous, mais la réponse ne s'appuie que sur les sources que la personne a le droit de voir. Ce travail d'intégration est lourd, et c'est probablement leur meilleure protection.
+
+Les vues projet (« swimlanes ») produisent un résumé à jour, une liste d'alertes, et un fil d'événements typés : décision, blocage, mise en production, projet à l'arrêt. Chaque événement est marqué comme observé ou déduit. Comme les droits diffèrent d'une personne à l'autre, tout cela est généré séparément pour chaque utilisateur, ce qui coûte cher en calcul.
+
+Les réunions sont enregistrées par Recall.ai, pas par un robot maison. Les sources montrent une orientation commerciale nette : douze types d'objets HubSpot, plus ERPNext. Le MCP ne sert qu'à lire, avec une limite de 120 requêtes par minute.
+
+### Ce que ça veut dire pour Leon
+
+Sentra reste le concurrent le plus proche, mais son point fort annoncé, la mémoire des faits dans le temps, n'est pas accessible de l'extérieur. Leon peut en faire une vraie différence : des faits datés, corrigeables par un humain, et qu'un agent peut interroger « à telle date » sans attendre trois minutes.
+
+Trois idées méritent d'être reprises : la validation humaine des entités proposées par le LLM, un fait rattaché à toutes ses sources avec un contrôle d'accès sur chacune, et la distinction entre ce qui est observé et ce qui est déduit. En revanche, reproduire les droits de chaque outil source demande beaucoup de travail. Pour un premier produit en PME, il vaut mieux commencer avec peu de sources.

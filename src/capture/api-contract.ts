@@ -18,3 +18,19 @@ export const ViewerProfileSchema = z.object({
   organizationName: z.string(),
 });
 export type ViewerProfile = z.infer<typeof ViewerProfileSchema>;
+
+export const BriefingResponseSchema = z.object({
+  markdown: z.string(),
+  reviewCount: z.number().int(),
+  entries: z.array(
+    z.object({
+      cardId: z.uuid(),
+      title: z.string(),
+      typeLabel: z.string(),
+      lastFactAt: z.iso.datetime(),
+      latestStatement: z.string(),
+      hasConflict: z.boolean(),
+    }),
+  ),
+});
+export type BriefingResponse = z.infer<typeof BriefingResponseSchema>;

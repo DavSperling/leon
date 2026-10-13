@@ -16,7 +16,7 @@
 
 | Piste | Tâches | Branche | Worktree (sous `/Users/amoskoskas/leon/`) | Quand |
 |---|---|---|---|---|
-| fondation | T01 → T08c (T01, T02, T03, T04, T05, T06a, T06b, T07, T08, T08b, T08c) | `amos/premier-jet` | `.claude/worktrees/premier-jet` | d'abord, en séquence |
+| fondation | T01 → T08d (T01, T02, T03, T04, T05, T06a, T06b, T07, T08, T08b, T08c, T08d) | `amos/premier-jet` | `.claude/worktrees/premier-jet` | d'abord, en séquence |
 | pipeline | T09 → T13 | `amos/premier-jet-pipeline` | `.claude/worktrees/premier-jet-pipeline` | en parallèle, après T08 |
 | capture | T14 | `amos/premier-jet-capture` | `.claude/worktrees/premier-jet-capture` | en parallèle, après T08 |
 | extension | T15 → T16 | `amos/premier-jet-extension` | `.claude/worktrees/premier-jet-extension` | en parallèle, après T08 |
@@ -1463,6 +1463,31 @@ après le commit : enqueuePipelineStep('triage', …) ; un échec de mise en fil
 
 ---
 
+### T08d · Durcissement : contradictions orphelines et masquage des URL
+
+- **Piste** fondation · **Modèle** opus, effort high (logique d'état des faits sous contrainte EXCLUDE) · **Dépend de** T08c · **Sensible** oui
+- **Fichiers** — modifier : `src/server/memory/review-items.ts`, `src/server/memory/review-items.db.test.ts`, `src/capture/mask-secrets.ts`, `src/capture/mask-secrets.test.ts` ; `src/server/memory/facts.ts` seulement si un petit export y manque.
+
+**Contexte.** Deux défauts laissés par T08b et T08c :
+1. *Contradiction orpheline.* Un fait A activé face à deux faits d'équipe B et C crée deux éléments `conflict`, [B,A] et [C,A]. Une fois [B,A] résolu, [C,A] est refusé pour toujours (« incoherent ») et reste ouvert ; C garde le statut `conflict` et son drapeau « (contradiction) » sans aucune décision possible, jusque dans le briefing. Même blocage pour un second `entity_match` sur une fiche déjà confirmée, ou un second `sensitive_fact` sur un fait déjà tranché.
+2. *Port pris pour un mot de passe.* `http://localhost:3000/api/users?email=paul@acme.fr` devient `http://localhost:[secret masqué]@acme.fr` : le port et le chemin sont perdus, sans aucun secret.
+
+**Règle.** Un élément `conflict` [X, Y] reste **vivant** tant qu'aucun de ses deux faits n'est écarté (`superseded`). Quand une résolution écarte un fait, chaque autre élément ouvert qui le cite devient **sans objet** : il passe `resolved` avec `resolution = { kind: 'obsolete' }`, dans la même transaction. Un fait qui sort d'une résolution (gardé, ou partenaire d'un élément devenu sans objet) ne redevient `active` que s'il n'a plus aucun élément `conflict` vivant ouvert ; il passe alors par `activateFact`, qui revérifie les chevauchements. Les autres types d'éléments devenus sans objet (entité déjà confirmée, fait sensible déjà tranché) sont clos de la même façon, sans autre effet.
+
+**Étapes**
+
+- [ ] 1. Test d'abord, `review-items.db.test.ts`, scénario A face à B et C (faits d'équipe, même prédicat mono-valué, validités qui se chevauchent), pour chaque ordre de résolution : [B,A] `keep_first` (A écarté) → [C,A] passe sans objet et C redevient `active` ; [B,A] `keep_second` (B écarté) → A reste `conflict` tant que [C,A] est ouvert, puis [C,A] se résout normalement ; [B,A] `both_wrong` → [C,A] sans objet, C redevient `active`. Après chaque scénario : aucun élément ouvert ne cite un fait écarté, jamais deux valeurs actives qui se chevauchent pour l'équipe, et Marie (équipe) voit des drapeaux cohérents dans `fetchCard` et le briefing. Plus : un second `entity_match` sur une fiche déjà confirmée et un second `sensitive_fact` sur un fait déjà tranché sont clos sans objet au lieu de rester ouverts.
+- [ ] 2. `review-items.ts` : une fonction courte qui, après chaque résolution, clôt les éléments devenus sans objet et réactive les partenaires libérés selon la règle ; la résolution d'un élément déjà sans objet n'a aucun effet.
+- [ ] 3. Test d'abord, `mask-secrets.test.ts` : `http://localhost:3000/api/users?email=paul@acme.fr`, `…/api/users/paul@acme.fr` et `https://example.com:8080/@alice` restent inchangés ; les mots de passe d'URL déjà testés restent masqués ; le test de temps linéaire reste vert. Puis `mask-secrets.ts` : ne pas prendre un port pour un mot de passe (par exemple `(?!\d{1,5}(?:[/?#]|$))` devant le groupe du mot de passe).
+
+**Critères d'acceptation**
+
+- `pnpm test` (hors sandbox) vert, dont toute la matrice Paul / Marie ; `pnpm typecheck`, `pnpm lint` verts ; build de vérification : succès.
+
+**Hors périmètre.** Interface (T20 affiche les éléments clos « Devenu sans objet ») ; validation des clés `not valid` de 0005.
+
+---
+
 ### T09 · Client Anthropic et triage
 
 - **Piste** pipeline · **Modèle** sonnet, effort high (le prompt de triage est dicté à l'étape 5 et la sensibilité échoue fermé ; le reste est du câblage testé : client du SDK, machine d'état des runs, fenêtres, formatage) · **Dépend de** T08 · **Sensible** oui
@@ -1573,6 +1598,7 @@ export async function runExtraction(job: PipelineJob, llm: Llm): Promise<Pipelin
 - [ ] 5. `extraction.ts` : `startStep`, `loadCatalog` sous l'auteur, un appel par fenêtre hors transaction, puis une seule `withTenant` qui insère les candidats et appelle `advanceRun`. `mentions` = `{ subject, others: otherMentions }`. Sensibilité et `fact_acl` : les deux lignes du Contexte, pas de module à part.
 
 - [ ] 6. Avant l'écriture des candidats, l'énoncé, le prédicat, la valeur et le nom du sujet passent par `oneLine` (T08c) : aucun retour à la ligne ne doit pouvoir fabriquer de structure dans le rendu. La citation reste littérale (elle est vérifiée contre le tour). Test : un énoncé du faux LLM qui contient « \n# Fausse fiche » est stocké sur une ligne.
+- [ ] 7. Aucun secret dans un fait : le prompt d'extraction interdit de reprendre un mot de passe, une clé, un jeton, un identifiant de connexion ou un numéro de carte ; après la sortie du LLM, `maskSecrets` est appliqué à l'énoncé et à la valeur, et si le résultat diffère, le candidat est `rejected` avec `rejection_reason = 'secret détecté'` (le masquage reconnaît des formes, pas tous les secrets : cette barrière couvre ce qui pourrait devenir visible de l'équipe). Test : un faux LLM qui renvoie un énoncé contenant `sk-ant-…` ou `password=…` donne un candidat rejeté et aucun fait.
 
 **Critères d'acceptation**
 
@@ -1984,7 +2010,7 @@ export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>
 
 - [ ] 1. Test d'abord, `review-list.db.test.ts` (scénario) : `open` pour Paul contient `paulReview` (détail `sensitive_fact` avec l'énoncé et la fiche ACME) et `teamReview` (détail `conflict`, deux `FactBrief`, libellé de prédicat « Paiement ») ; **pour Marie, seulement `teamReview`** ; après résolution par Paul, l'élément passe dans `resolved` avec `resolvedByName = 'Paul Martin'` ; un élément dont une ligne référencée n'est plus visible est omis sans lever. Puis `review-list.ts` (une `withTenant`, lectures sous RLS seulement).
 - [ ] 2. Test d'abord, `actions.test.ts` (`vi.mock` de la session et de `resolveReviewItem`) : `itemId` non UUID ou résolution invalide → refus sans appel ; succès → `revalidatePath('/a-verifier')` et `revalidatePath('/', 'layout')` (compteur de la barre latérale) ; le `ctx` passé est celui de la session. Puis `actions.ts`.
-- [ ] 3. Page : onglets « À traiter {n} » / « Traités » (`listReviewItems`) ; `ReviewItemCard` par type avec les libellés exacts du design doc (« Garder privé » / « Partager », « Non, garder deux fiches » / « Oui, fusionner », « Ranger sous {libellé du parent} » / « Valider le type » avec la question « Garder ce nouveau type, ou ranger ses {n} fiches sous {parent} ? », « Garder le premier » / « Garder le second » / « Les deux sont faux ») ; l'action qui élargit l'audience en bouton `default`, l'autre en `outline` ; confirmation sur place pour « Partager » et « Oui, fusionner », puis toast « Partage enregistré. » (ou « Fiches fusionnées. ») ; « Traités » en lecture avec qui a tranché et quand ; vide → « Rien à vérifier. ».
+- [ ] 3. Page : onglets « À traiter {n} » / « Traités » (`listReviewItems`) ; `ReviewItemCard` par type avec les libellés exacts du design doc (« Garder privé » / « Partager », « Non, garder deux fiches » / « Oui, fusionner », « Ranger sous {libellé du parent} » / « Valider le type » avec la question « Garder ce nouveau type, ou ranger ses {n} fiches sous {parent} ? », « Garder le premier » / « Garder le second » / « Les deux sont faux ») ; l'action qui élargit l'audience en bouton `default`, l'autre en `outline` ; confirmation sur place pour « Partager » et « Oui, fusionner », puis toast « Partage enregistré. » (ou « Fiches fusionnées. ») ; « Traités » en lecture avec qui a tranché et quand (un élément clos par T08d avec `resolution.kind = 'obsolete'` s'affiche « Devenu sans objet ») ; vide → « Rien à vérifier. ».
 
 **Critères d'acceptation**
 
@@ -2028,7 +2054,7 @@ export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>
 
 **Contexte.** L'orchestrateur vient de fusionner les cinq pistes sur `amos/premier-jet`. Cette tâche remet tout au vert et pose les contrats demandés par la spec (`auditing-runtime-contracts`). Le test de bout en bout est T22b.
 
-**Périmètre des corrections.** On ne corrige que ce que la fusion a cassé (import, type, nom, test qui ne compile plus). **Aucun changement de contrat C1 à C14, aucune migration, et aucune modification des fichiers protégés** : `src/server/db/migrations/**`, `src/server/db/with-tenant.ts`, `src/server/memory/acl.ts`, `src/server/memory/facts.ts`, `src/server/memory/review-items.ts`, `src/test/fixtures.ts`, `src/test/rights-scenario.ts`, et les assertions de tout `*.db.test.ts`. Si l'un d'eux semble devoir changer, ou si une assertion de droits échoue : s'arrêter et le remonter à l'orchestrateur, sans rien modifier. Le compte rendu liste chaque fichier modifié avec sa raison.
+**Périmètre des corrections.** On ne corrige que ce que la fusion a cassé (import, type, nom, test qui ne compile plus). **Aucun changement de contrat C1 à C14, aucune migration, et aucune modification des fichiers protégés** : `src/server/db/migrations/**`, `src/server/db/with-tenant.ts`, `src/server/memory/acl.ts`, `src/server/memory/facts.ts`, `src/server/memory/review-items.ts`, `src/server/memory/review-item-write.ts`, `src/test/fixtures.ts`, `src/test/rights-scenario.ts`, et les assertions de tout `*.db.test.ts`. Si l'un d'eux semble devoir changer, ou si une assertion de droits échoue : s'arrêter et le remonter à l'orchestrateur, sans rien modifier. Le compte rendu liste chaque fichier modifié avec sa raison.
 
 **Interfaces.** Consomme : tout. Produit : les tests de contrat.
 

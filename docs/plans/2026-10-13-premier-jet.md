@@ -17,7 +17,7 @@
 | Piste | Tâches | Branche | Worktree (sous `/Users/amoskoskas/leon/`) | Quand |
 |---|---|---|---|---|
 | fondation | T01 → T08e (T01, T02, T03, T04, T05, T06a, T06b, T07, T08, T08b, T08c, T08d, T08e) | `amos/premier-jet` | `.claude/worktrees/premier-jet` | d'abord, en séquence |
-| pipeline | T09 → T13 | `amos/premier-jet-pipeline` | `.claude/worktrees/premier-jet-pipeline` | en parallèle, après T08 |
+| pipeline | T09 → T13, puis T12b | `amos/premier-jet-pipeline` | `.claude/worktrees/premier-jet-pipeline` | en parallèle, après T08 |
 | capture | T14 | `amos/premier-jet-capture` | `.claude/worktrees/premier-jet-capture` | en parallèle, après T08 |
 | extension | T15 → T16 | `amos/premier-jet-extension` | `.claude/worktrees/premier-jet-extension` | en parallèle, après T08 |
 | mcp | T17 | `amos/premier-jet-mcp` | `.claude/worktrees/premier-jet-mcp` | en parallèle, après T08 |
@@ -1762,6 +1762,26 @@ export function planPlacement(context: PlacementContext, output: z.infer<typeof 
 - Build de vérification : succès.
 
 **Hors périmètre.** Test de bout en bout (T22b), exécution avec la vraie clé (T24), écrans de santé (T21).
+
+---
+
+### T12b · Rangement : un type privé ne passe jamais à l'équipe
+
+- **Piste** pipeline · **Modèle** opus, effort high (droits des dérivés) · **Dépend de** T13 · **Sensible** oui
+- **Fichiers** — modifier : `src/server/pipeline/placement/apply.ts`, `src/server/pipeline/placement/apply.db.test.ts`.
+
+**Contexte.** Revue de sécurité automatique du commit de T12 (« ACL leak », mineur pour la revue de T12). Un type proposé né d'un candidat sensible ou d'une fiche non confirmée a l'ACL `[auteur]` (D13), et son libellé vient du contenu (par exemple « litige-prudhommes »). Si le modèle choisit plus tard ce type pour une fiche d'équipe, `createCard` élargit le type à l'équipe (« une fiche visible a un type visible ») et son libellé devient visible de Marie. C'est contraire à la règle « tout dérivé porte l'ACL la plus restrictive de ses entrées ».
+
+**Étapes**
+
+- [ ] 1. Test d'abord, `apply.db.test.ts` : Paul a un type proposé privé `litige-prudhommes` (ACL `[paul]`) ; une action d'équipe de Paul qui choisit ce type crée une fiche rangée sous le type parent du socle ; Marie voit la fiche avec le libellé du parent et jamais `litige-prudhommes` (arbre, `fetchCard`, recherche) ; le type reste `[paul]`. Un type proposé d'équipe se comporte comme avant.
+- [ ] 2. `apply.ts` : quand l'ACL effective de l'action est d'équipe et que le type visé n'est pas visible de l'équipe (type de tenant dont l'ACL ne contient pas le tenant), se replier sur son type parent du socle. Le partage explicite d'un fait par son auteur (T06b) reste la seule voie qui élargit un type privé.
+
+**Critères d'acceptation**
+
+- `pnpm test` (hors sandbox) vert ; `pnpm typecheck`, `pnpm lint` verts.
+
+**Hors périmètre.** La décision « Partager » de T06b.
 
 ---
 

@@ -7,13 +7,15 @@ import { formatDate, formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { FactView } from '@/server/memory/card-data';
 
-// « depuis le … », « à partir du … » (fait futur) ou « remplacé le … » (fait remplacé et terminé).
+// « depuis le … », « à partir du … » (fait futur), « remplacé le … » (fait remplacé et terminé)
+// ou « terminé le … » (fait terminé sans remplaçant).
 export function validityLabel(
   fact: Pick<FactView, 'status' | 'validFrom' | 'validTo'>,
   now: Date = new Date(),
 ): string {
-  if (fact.status === 'superseded' && fact.validTo && fact.validTo <= now) {
-    return `remplacé le ${formatDate(fact.validTo)}`;
+  if (fact.validTo && fact.validTo <= now) {
+    const ended = fact.status === 'superseded' ? 'remplacé le' : 'terminé le';
+    return `${ended} ${formatDate(fact.validTo)}`;
   }
   return `${fact.validFrom > now ? 'à partir du' : 'depuis le'} ${formatDate(fact.validFrom)}`;
 }

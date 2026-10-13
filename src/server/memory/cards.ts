@@ -3,6 +3,7 @@ import type { CardStatus } from '@/lib/enums';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { cardAliases, cards, cardTypes } from '@/server/db/schema/memory';
 import type { Tx } from '@/server/db/with-tenant';
+import { isTeamAcl } from './acl';
 
 export type CardCandidate = {
   id: string;
@@ -119,4 +120,39 @@ export async function widenCardAcl(tx: Tx, cardId: string, acl: readonly string[
     .returning({ typeId: cards.typeId });
   if (!card) throw new Error('fiche introuvable ou invisible');
   await widenTenantTypeAcl(tx, card.typeId, acl);
+}
+
+// Seul le partage explicite élargit un type privé : une fiche d'équipe ne porte qu'un type d'équipe,
+// sinon createCard ou widenCardAcl élargiraient son type, et un libellé né d'un candidat privé
+// deviendrait visible de tous. Renvoie le type parent du socle à prendre à la place d'un type
+// propre au tenant qui n'est pas d'équipe ; null si typeId peut rester.
+export async function teamFallbackTypeId(
+  tx: Tx,
+  ctx: TenantContext,
+  typeId: string,
+): Promise<string | null> {
+  const [tenantType] = await tx
+    .select({ acl: cardTypes.acl, parentSlug: cardTypes.parentSlug })
+    .from(cardTypes)
+    .where(and(eq(cardTypes.id, typeId), isNotNull(cardTypes.tenantId)));
+  if (!tenantType?.parentSlug || isTeamAcl(tenantType.acl ?? [], ctx.tenantId)) return null;
+  const [baseType] = await tx
+    .select({ id: cardTypes.id })
+    .from(cardTypes)
+    .where(and(isNull(cardTypes.tenantId), eq(cardTypes.slug, tenantType.parentSlug)));
+  if (!baseType) throw new Error('type parent absent du socle');
+  return baseType.id;
+}
+
+// Une fiche qui va recevoir un fait d'équipe passe sous le type parent si son type est privé :
+// widenCardAcl élargira la fiche, et le type resterait sinon à élargir avec elle.
+export async function keepCardTypePrivate(
+  tx: Tx,
+  ctx: TenantContext,
+  cardId: string,
+): Promise<void> {
+  const [card] = await tx.select({ typeId: cards.typeId }).from(cards).where(eq(cards.id, cardId));
+  if (!card) throw new Error('fiche introuvable ou invisible');
+  const fallbackId = await teamFallbackTypeId(tx, ctx, card.typeId);
+  if (fallbackId) await tx.update(cards).set({ typeId: fallbackId }).where(eq(cards.id, cardId));
 }

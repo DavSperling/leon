@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import {
@@ -20,6 +20,7 @@ import { activateFact } from './facts';
 import { fetchCard } from './fetch-card';
 import { createReviewItem, type ReviewPayload, ReviewPayloadSchema } from './review-item-write';
 import { type ReviewResolution, resolveReviewItem } from './review-items';
+import { listCardTree } from './tree';
 
 const OCT_1 = new Date('2026-10-01T09:00:00Z');
 const OCT_3 = new Date('2026-10-03T09:00:00Z');
@@ -764,6 +765,88 @@ describe('entity_match', () => {
     expect(await seesFact(marie, shared.factId)).toBe(true);
     expect(await seesFact(marie, pending.factId)).toBe(false);
     await expectResolved(itemId, paul, resolution);
+  });
+});
+
+// Type propre au tenant, privé à Paul : son libellé ne doit jamais devenir visible de Marie.
+async function privateLitigeType(tenantId: string, paul: TenantContext) {
+  const [type] = await adminDb
+    .insert(cardTypes)
+    .values({
+      tenantId,
+      slug: 'litige-prudhommes',
+      label: 'Litige prud’hommes',
+      parentSlug: 'projet',
+      status: 'proposed',
+      acl: [paul.userId],
+    })
+    .returning({ id: cardTypes.id });
+  const [base] = await adminDb
+    .select({ id: cardTypes.id })
+    .from(cardTypes)
+    .where(and(eq(cardTypes.slug, 'projet'), isNull(cardTypes.tenantId)));
+  if (!type || !base) throw new Error('types de test absents');
+  return { typeId: type.id, baseId: base.id };
+}
+
+async function expectTypeStaysPrivate(
+  paul: TenantContext,
+  marie: TenantContext,
+  cardId: string,
+  types: { typeId: string; baseId: string },
+) {
+  const [type] = await adminDb
+    .select({ acl: cardTypes.acl })
+    .from(cardTypes)
+    .where(eq(cardTypes.id, types.typeId));
+  expect(type?.acl).toEqual([paul.userId]);
+  expect((await readCard(cardId))?.typeId).toBe(types.baseId);
+  expect(JSON.stringify(await listCardTree(marie)).toLowerCase()).not.toContain('litige');
+  const fetched = await fetchCard(marie, { id: cardId, client: 'interface' });
+  expect(fetched).not.toBeNull();
+  expect(JSON.stringify(fetched).toLowerCase()).not.toContain('litige');
+}
+
+describe('entity_match : un type privé reste privé', () => {
+  it("different : la fiche passe sous le type parent du socle, le type garde l'ACL de Paul", async () => {
+    const { tenantId, paul, marie, card, pipelineFact, item } = await setup();
+    const types = await privateLitigeType(tenantId, paul);
+    const newCard = await card('unconfirmed', [paul.userId], 'ACME SA');
+    await adminDb.update(cards).set({ typeId: types.typeId }).where(eq(cards.id, newCard));
+    const candidateCard = await card('confirmed', [tenantId], 'ACME');
+    await pipelineFact(newCard, { acl: [paul.userId], factAcl: [tenantId], status: 'active' });
+    const itemId = await item(
+      { kind: 'entity_match', newCardId: newCard, candidateCardId: candidateCard },
+      [paul.userId],
+    );
+
+    expect(
+      await resolveReviewItem(paul, itemId, { kind: 'entity_match', decision: 'different' }),
+    ).toEqual({ ok: true });
+
+    await expectTypeStaysPrivate(paul, marie, newCard, types);
+  });
+
+  it('same vers une fiche privée de type privé : la fiche cible passe sous le type parent', async () => {
+    const { tenantId, paul, marie, card, pipelineFact, item } = await setup();
+    const types = await privateLitigeType(tenantId, paul);
+    const newCard = await card('unconfirmed', [paul.userId], 'ACME SA');
+    const candidateCard = await card('confirmed', [paul.userId], 'ACME');
+    await adminDb
+      .update(cards)
+      .set({ typeId: types.typeId })
+      .where(inArray(cards.id, [newCard, candidateCard]));
+    await pipelineFact(newCard, { acl: [paul.userId], factAcl: [tenantId], status: 'active' });
+    const itemId = await item(
+      { kind: 'entity_match', newCardId: newCard, candidateCardId: candidateCard },
+      [paul.userId],
+    );
+
+    expect(
+      await resolveReviewItem(paul, itemId, { kind: 'entity_match', decision: 'same' }),
+    ).toEqual({ ok: true });
+
+    await expectTypeStaysPrivate(paul, marie, candidateCard, types);
   });
 });
 

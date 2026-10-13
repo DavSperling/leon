@@ -15,7 +15,7 @@ export function CardHistory({ facts }: { facts: FactView[] }) {
           aria-hidden="true"
           className="group-data-[state=open]:rotate-90"
         />
-        Historique : {facts.length} {facts.length > 1 ? 'faits remplacés' : 'fait remplacé'}
+        Historique : {facts.length} {facts.length > 1 ? 'faits passés' : 'fait passé'}
       </CollapsibleTrigger>
       <CollapsibleContent>
         <ul>

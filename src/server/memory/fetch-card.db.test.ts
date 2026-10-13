@@ -138,6 +138,28 @@ describe('fetchCard', () => {
     expect(forPaul?.card.updatedAt).toEqual(privateRecordedAt);
   });
 
+  it("range dans l'historique un fait actif terminé, jamais effacé de la fiche", async () => {
+    const { tenantId, paul, marie, ids } = await seedRightsScenario();
+    const ended = await seedFact(tenantId, {
+      cardId: ids.acmeCard,
+      sourceId: ids.paulSource,
+      turnId: ids.paulTurn,
+      authorId: paul.userId,
+      predicate: 'note',
+      statement: 'Le chantier pilote a duré trois mois.',
+      validFrom: new Date('2026-01-01T00:00:00Z'),
+      acl: [tenantId],
+    });
+    await adminDb
+      .update(facts)
+      .set({ validTo: new Date('2026-04-01T00:00:00Z') })
+      .where(eq(facts.id, ended));
+
+    const result = await fetchCard(marie, { id: ids.acmeCard, client: 'interface' });
+    expect(result?.card.facts.map((f) => f.id)).not.toContain(ended);
+    expect(result?.card.history.map((f) => f.id)).toContain(ended);
+  });
+
   it('suit une fiche fusionnée vers la fiche survivante', async () => {
     const { tenantId, paul, ids } = await seedRightsScenario();
     const merged = await seedCard(tenantId, {

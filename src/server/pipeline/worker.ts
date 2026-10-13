@@ -65,12 +65,14 @@ async function processJob(step: PipelineStep, data: unknown, llm: Llm): Promise<
   if (next) await enqueuePipelineStep(next, job);
 }
 
+// pg-boss teste la présence de la clé : `pollingIntervalSeconds: undefined` y est refusé.
 async function registerWorkers(llm: Llm, pollingIntervalSeconds: number | undefined) {
   const boss = await getBoss();
+  const polling = pollingIntervalSeconds === undefined ? {} : { pollingIntervalSeconds };
   for (const step of Object.keys(PIPELINE_QUEUES) as PipelineStep[]) {
     await boss.work(
       PIPELINE_QUEUES[step],
-      { batchSize: 1, localConcurrency: 1, pollingIntervalSeconds },
+      { batchSize: 1, localConcurrency: 1, ...polling },
       async ([job]) => processJob(step, job?.data, llm),
     );
   }

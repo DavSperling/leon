@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { basename, sep } from 'node:path';
 import { API_PATHS } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import {
@@ -53,7 +53,11 @@ async function loadSession(
 ): Promise<ClaudeCodeSession | null> {
   const session = parseClaudeCodeSession(await readFile(file, 'utf8'));
   if (!session) return null;
-  if (options.project && !session.cwd?.startsWith(options.project)) return null;
+  // Le dossier lui-même ou l'un de ses sous-dossiers, jamais un voisin comme /x/acme-bis.
+  const { cwd } = session;
+  if (options.project && !(cwd === options.project || cwd?.startsWith(options.project + sep))) {
+    return null;
+  }
   const { since } = options;
   const turns = since ? session.turns.filter((turn) => new Date(turn.ts) >= since) : session.turns;
   return turns.length > 0 ? { ...session, turns } : null;

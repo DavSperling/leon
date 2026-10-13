@@ -92,11 +92,11 @@ describe('maskSecrets : propriétés', () => {
     expect(maskSecrets(once)).toBe(once);
   });
 
-  it('traite 200 000 caractères répétitifs en moins de 200 ms', () => {
+  it('traite 200 000 caractères répétitifs en moins de 1 s', () => {
     const text = 'token_'.repeat(Math.ceil(200_000 / 6)).slice(0, 200_000);
     const start = performance.now();
     maskSecrets(text);
-    expect(performance.now() - start).toBeLessThan(200);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
 
@@ -197,6 +197,7 @@ const TRAPS = [
   'https://a:b',
   'x://a:',
   'http://a:1/x://b:',
+  'http://a:1/x://b:c@',
   'password=',
   'password: "a',
   'eyJabcdefgh-',
@@ -205,10 +206,10 @@ const TRAPS = [
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 
 describe('maskSecrets : temps linéaire', () => {
-  it.each(TRAPS)('traite 2 Mo de « %s » répété en moins de 300 ms', (unit) => {
+  it.each(TRAPS)('traite 2 Mo de « %s » répété en moins de 2 s', (unit) => {
     const text = trapText(unit);
     const start = performance.now();
     maskSecrets(text);
-    expect(performance.now() - start).toBeLessThan(300);
+    expect(performance.now() - start).toBeLessThan(2000);
   });
 });

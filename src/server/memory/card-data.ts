@@ -123,6 +123,6 @@ export async function loadCardData(
     updatedAt,
     readCount: await countReads(tx, card.id),
     facts: current,
-    history: inSection.filter((f) => f.status === 'superseded' && !current.includes(f)),
+    history: inSection.filter((f) => !current.includes(f)),
   };
 }

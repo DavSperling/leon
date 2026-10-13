@@ -27,6 +27,16 @@ describe('validityLabel', () => {
     expect(validityLabel(fact, NOW)).toBe('remplacé le 3 oct. 2026');
   });
 
+  it('dit « terminé le » pour un fait actif dont la validité est passée', () => {
+    const fact = {
+      status: 'active',
+      validFrom: day('2026-01-01'),
+      validTo: day('2026-04-01'),
+    } as const;
+
+    expect(validityLabel(fact, NOW)).toBe('terminé le 1 avr. 2026');
+  });
+
   it('garde « depuis le » pour un fait remplacé qui vaut encore', () => {
     const fact = { status: 'superseded', validFrom: day('2026-09-02'), validTo: null } as const;
 

@@ -1,4 +1,4 @@
-import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -83,6 +83,25 @@ describe('importClaudeCode', () => {
 
     expect(summary.sessions).toBe(1);
     expect(send.mock.calls[0]?.[0].source.external_id).toBe(ACME_SESSION);
+  });
+
+  it('ignore un dossier voisin dont le nom prolonge celui de project', async () => {
+    const acme = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    await writeFile(
+      join(projectDir, 'acme-bis.jsonl'),
+      acme
+        .replaceAll('/Users/demo/projets/acme', '/Users/demo/projets/acme-bis')
+        .replaceAll(ACME_SESSION, '44444444-4444-4444-8444-444444444444'),
+    );
+    const { deps, send } = makeDeps();
+
+    const summary = await importClaudeCode(
+      { baseDir, dryRun: false, project: '/Users/demo/projets/acme' },
+      deps,
+    );
+
+    expect(summary.sessions).toBe(1);
+    expect(send.mock.calls.map(([p]) => p.source.external_id)).toEqual([ACME_SESSION]);
   });
 
   it('since écarte les tours plus anciens et les sessions sans tour récent', async () => {

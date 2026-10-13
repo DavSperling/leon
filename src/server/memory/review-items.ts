@@ -10,8 +10,8 @@ import {
   reviewItems,
 } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { teamAcl } from './acl';
-import { widenCardAcl } from './cards';
+import { isTeamAcl, teamAcl } from './acl';
+import { keepCardTypePrivate, widenCardAcl } from './cards';
 import { activateFact, wantedAcl } from './facts';
 import { type ReviewPayload, ReviewPayloadSchema } from './review-item-write';
 
@@ -244,9 +244,21 @@ async function resolveEntityMatch(
   }
 }
 
-// Les faits actifs prennent leur ACL voulue ; les faits à valider restent tels quels.
-async function activateCardFacts(tx: Tx, ctx: TenantContext, factIds: string[]): Promise<void> {
-  for (const id of factIds) await activateFact(tx, ctx, id, await wantedAcl(tx, id));
+// Les faits actifs prennent leur ACL voulue ; les faits à valider restent tels quels. Comme au
+// rangement, une fiche qui reçoit un fait d'équipe quitte d'abord un type privé : seul le partage
+// explicite (shareFact) élargit un type privé.
+async function activateCardFacts(
+  tx: Tx,
+  ctx: TenantContext,
+  cardId: string,
+  factIds: string[],
+): Promise<void> {
+  const wanted: Array<{ id: string; acl: string[] }> = [];
+  for (const id of factIds) wanted.push({ id, acl: await wantedAcl(tx, id) });
+  if (wanted.some(({ acl }) => isTeamAcl(acl, ctx.tenantId))) {
+    await keepCardTypePrivate(tx, ctx, cardId);
+  }
+  for (const { id, acl } of wanted) await activateFact(tx, ctx, id, acl);
 }
 
 async function confirmCard(tx: Tx, ctx: TenantContext, cardId: string): Promise<void> {
@@ -258,6 +270,7 @@ async function confirmCard(tx: Tx, ctx: TenantContext, cardId: string): Promise<
   await activateCardFacts(
     tx,
     ctx,
+    cardId,
     active.map((fact) => fact.id),
   );
 }
@@ -279,6 +292,7 @@ async function mergeCard(
   await activateCardFacts(
     tx,
     ctx,
+    targetId,
     moved.map((fact) => fact.id),
   );
   await copyAliases(tx, ctx, cardId, targetId);

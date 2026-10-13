@@ -1,0 +1,21 @@
+{
+  "prompt": "Le client ACME veut passer le paiement à soixante jours. On accepte ?",
+  "parent_message_uuid": "7c1d2e3f-0000-4000-8000-00000000a001",
+  "timezone": "Europe/Paris",
+  "locale": "fr-FR",
+  "turn_message_uuids": {
+    "human_message_uuid": "7c1d2e3f-0000-4000-8000-00000000a002",
+    "assistant_message_uuid": "7c1d2e3f-0000-4000-8000-00000000a003"
+  },
+  "attachments": [
+    {
+      "file_name": "contrat-acme.txt",
+      "file_type": "text/plain",
+      "file_size": 52,
+      "extracted_content": "PIECE-JOINTE-7f3a : clause de paiement à quarante-cinq jours."
+    }
+  ],
+  "files": ["PIECE-JOINTE-7f3a-file-uuid"],
+  "sync_sources": [],
+  "rendering_mode": "messages"
+}

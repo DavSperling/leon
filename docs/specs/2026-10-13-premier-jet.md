@@ -42,7 +42,7 @@ TypeScript, Node 24+ (Node 26 en local), pnpm. Next.js 16 (App Router), shadcn/u
 
 ## Reporté
 
-Agent Rust, capture Codex, Cursor et Gemini, connecteurs (Notion d'abord), OAuth MCP et annuaires, embeddings, résumés LLM, chatbot de recherche, groupes autres que « l'équipe », configuration distante des sélecteurs de l'extension, capture DOM de secours, Firefox et Safari, déploiement.
+Agent Rust, capture Codex, Cursor et Gemini, connecteurs (Notion d'abord), OAuth MCP et annuaires, embeddings, résumés LLM, chatbot de recherche, groupes autres que « l'équipe », configuration distante des sélecteurs de l'extension, capture DOM de secours, Firefox et Safari, déploiement, recherche à chaque prompt (hook `UserPromptSubmit`) et déduplication du contexte déjà injecté (comme claude-supermemory et codemem).
 
 ## Composants
 
@@ -122,7 +122,7 @@ Le rendu Markdown de la fiche se fait à la lecture, sous la RLS du lecteur : `r
 ## La lecture
 
 - **Serveur MCP** sur `/api/mcp` (Streamable HTTP, jeton `Bearer`). Quatre outils aux noms littéraux : `search(query, type?, since?, limit?)`, `fetch(id, section?, as_of?)` (écrit `read_log`), `briefing()`, `remember(text, about?)`. Réponses en Markdown + `structuredContent`, fiche ≤ 600 tokens. Le contenu des sources est présenté comme des données, jamais comme des consignes.
-- **Briefing** déterministe : fiches touchées sur 7 jours visibles par l'utilisateur, une ligne chacune, + nombre d'éléments à vérifier, ≤ 3 000 caractères.
+- **Briefing** déterministe : fiches touchées sur 7 jours visibles par l'utilisateur, une ligne chacune, + nombre d'éléments à vérifier, ≤ 3 000 caractères. Il est servi par l'outil MCP `briefing`, par `GET /api/v1/briefing`, et injecté au démarrage de chaque session Claude Code par un hook `SessionStart` qui appelle `pnpm leon briefing`, sans attendre un appel MCP que le modèle peut oublier.
 - **Interface** :
   - arborescence des fiches par type, façon éditeur de code ;
   - fiche : faits datés avec citation et source, contradictions signalées, onglet « Brut » (exactement ce que `fetch` renvoie au LLM) ;

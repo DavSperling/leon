@@ -1,5 +1,7 @@
 import { browser, defineContentScript } from '#imports';
 import { forwardCaptureMessage } from '../lib/bridge';
+import { browserStore } from '../lib/browser-store';
+import { relayIfAllowed } from '../lib/capture';
 import { CAPTURE_HOSTS } from '../lib/permissions';
 
 // Monde isolé : relaie au service worker les échanges postés par le script du monde MAIN.
@@ -12,8 +14,7 @@ export default defineContentScript({
         event,
         { source: window, origin: window.location.origin },
         (message) => {
-          // Service worker sans écouteur ou extension rechargée : l'échange est perdu, la page n'en sait rien.
-          browser.runtime.sendMessage(message).catch(() => {});
+          void relayIfAllowed(browserStore, message, (m) => browser.runtime.sendMessage(m));
         },
       );
     });

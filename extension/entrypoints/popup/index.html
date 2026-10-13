@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Leon</title>
+    <link rel="stylesheet" href="../../assets/leon.css" />
+  </head>
+  <body class="popup">
+    <main class="stack">
+      <header class="row">
+        <h1>Leon</h1>
+        <span id="state" class="badge"></span>
+      </header>
+      <p id="hint" class="muted" hidden>
+        <span id="hint-text"></span>
+        <button type="button" class="link" data-open-options>Ouvrir les options</button>
+      </p>
+      <div id="paused-banner" class="banner row" hidden>
+        <span>Capture en pause</span>
+        <button type="button" class="button" data-toggle-pause>Reprendre</button>
+      </div>
+      <hr />
+      <ul class="sites">
+        <li>
+          <label>
+            <span>claude.ai <span class="muted" data-last="claude_ai"></span></span>
+            <input type="checkbox" data-site="claude_ai" aria-label="Capturer claude.ai" />
+          </label>
+        </li>
+        <li>
+          <label>
+            <span>ChatGPT <span class="muted" data-last="chatgpt"></span></span>
+            <input type="checkbox" data-site="chatgpt" aria-label="Capturer ChatGPT" />
+          </label>
+        </li>
+      </ul>
+      <hr />
+      <p id="pending" class="muted"></p>
+      <div class="row">
+        <button type="button" id="pause-button" class="button" data-toggle-pause>Mettre en pause</button>
+        <button type="button" id="open-briefing" class="link">Briefing →</button>
+      </div>
+      <button type="button" class="link" data-open-options>Options</button>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

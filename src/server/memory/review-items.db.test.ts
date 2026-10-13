@@ -363,6 +363,30 @@ describe('resolveReviewItem : état revérifié avant chaque effet', () => {
     expect(await seesFact(marie, ids.acmePaulFact)).toBe(false);
   });
 
+  it("la clôture reste sous la RLS : Marie ne clôt pas l'élément de Paul qu'elle ne voit pas", async () => {
+    const { paul, marie, ids } = await seedRightsScenario();
+    // orionFact est déjà actif : cet élément de Paul est sans objet, mais invisible de Marie.
+    const stale = await withTenant(paul, (tx) =>
+      createReviewItem(
+        tx,
+        paul,
+        { kind: 'sensitive_fact', factId: ids.orionFact, category: null },
+        [paul.userId],
+      ),
+    );
+
+    await resolveReviewItem(marie, ids.teamReview, { kind: 'conflict', decision: 'keep_first' });
+
+    expect(await readItem(stale)).toMatchObject({ status: 'open', resolution: null });
+
+    await resolveReviewItem(paul, ids.paulReview, {
+      kind: 'sensitive_fact',
+      decision: 'keep_private',
+    });
+
+    await expectResolved(stale, paul, OBSOLETE);
+  });
+
   it("refuse un sensitive_fact dont le fait n'est plus à valider, sans effet", async () => {
     const { paul, ids } = await seedRightsScenario();
     await resolveReviewItem(paul, ids.paulReview, {

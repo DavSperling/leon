@@ -132,6 +132,22 @@ describe('maskSecrets : contournements', () => {
     ],
     ['redis://default:abc?def123@redis:6379', `redis://default:${SECRET_MASK}@redis:6379`],
     ['mysql://root:abc?def12@localhost', `mysql://root:${SECRET_MASK}@localhost`],
+    // Un mot de passe qui commence comme un port : l'exception ne vaut que pour les URL web.
+    [
+      'postgres://app:2024#Paris@db.acme.fr:5432/prod',
+      `postgres://app:${SECRET_MASK}@db.acme.fr:5432/prod`,
+    ],
+    ['postgres://app:1234/abcd@db.acme.fr', `postgres://app:${SECRET_MASK}@db.acme.fr`],
+    ['redis://default:42?xY@cache:6379', `redis://default:${SECRET_MASK}@cache:6379`],
+    // Une URL à identifiants imbriquée dans une URL web dont le « mot de passe » ressemble à un port.
+    [
+      'http://localhost:8081/?url=postgres://app:Sup3rS3cret@db:5432/prod',
+      `http://localhost:8081/?url=postgres://app:${SECRET_MASK}@db:5432/prod`,
+    ],
+    [
+      'https://proxy.acme.fr:443/fwd?to=https://admin:hunter2xyz@api.acme.fr/v1',
+      `https://proxy.acme.fr:443/fwd?to=https://admin:${SECRET_MASK}@api.acme.fr/v1`,
+    ],
   ])('masque un mot de passe d’URL contenant « / », « # » ou « ? » : %s', (input, expected) => {
     expect(maskSecrets(input)).toBe(expected);
   });
@@ -141,6 +157,9 @@ describe('maskSecrets : contournements', () => {
     'http://localhost:3000/api/users/paul@acme.fr',
     'https://example.com:8080/@alice',
     'voir http://127.0.0.1:8080#paul@acme.fr',
+    'ws://localhost:3000/socket?u=a@b',
+    'wss://localhost:3000/socket?u=a@b',
+    'HTTP://localhost:3000/api/users?email=paul@acme.fr',
   ])('ne prend pas un port pour un mot de passe : %s', (url) => {
     expect(maskSecrets(url)).toBe(url);
   });
@@ -177,6 +196,7 @@ const TRAPS = [
   'postgres://a:',
   'https://a:b',
   'x://a:',
+  'http://a:1/x://b:',
   'password=',
   'password: "a',
   'eyJabcdefgh-',

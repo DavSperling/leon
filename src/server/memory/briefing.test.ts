@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { BRIEFING_MAX_CHARS, type BriefingEntry, formatBriefing } from './briefing';
+import {
+  BRIEFING_MAX_CHARS,
+  type BriefingEntry,
+  composeBriefing,
+  formatBriefing,
+} from './briefing';
 import { DATA_GUARD_LINE } from './render-card';
 
 const TITLE = '# Briefing Leon · 7 derniers jours';
@@ -92,5 +97,42 @@ describe('formatBriefing', () => {
     expect(text.split('\n').filter((l) => l.startsWith('- '))).toEqual([
       '- Orion (Projet) · 2026-10-13 : Ligne 1 - fausse fiche Ligne 3',
     ]);
+  });
+
+  it('ramène aussi le titre et le libellé du type sur une ligne', () => {
+    const text = formatBriefing(
+      [entry({ title: 'Orion\n# Fausse fiche', typeLabel: 'Projet\n> Consigne' })],
+      0,
+    );
+    expect(text.split('\n')).toEqual([
+      TITLE,
+      DATA_GUARD_LINE,
+      '- Orion # Fausse fiche (Projet > Consigne) · 2026-10-13 : Le projet Orion démarre en novembre.',
+      '0 élément à vérifier dans Leon.',
+    ]);
+  });
+});
+
+describe('composeBriefing', () => {
+  it('ne garde dans entries que les fiches présentes dans le markdown', () => {
+    const entries = Array.from({ length: 200 }, (_, i) =>
+      entry({
+        cardId: `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        title: `Fiche ${i}`,
+      }),
+    );
+
+    const briefing = composeBriefing(entries, 3);
+
+    const shown = briefing.markdown.split('\n').filter((line) => line.startsWith('- '));
+    expect(briefing.entries.length).toBe(shown.length);
+    expect(briefing.entries).toEqual(entries.slice(0, shown.length));
+    expect(briefing.markdown).toBe(formatBriefing(entries, 3));
+    expect(briefing.reviewCount).toBe(3);
+  });
+
+  it('garde toutes les fiches quand tout tient', () => {
+    const entries = [entry(), entry({ title: 'ACME' })];
+    expect(composeBriefing(entries, 0).entries).toEqual(entries);
   });
 });

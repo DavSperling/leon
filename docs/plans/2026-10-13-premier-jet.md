@@ -618,13 +618,17 @@ export async function supersedeFact(tx: Tx, ctx: TenantContext, oldFactId: strin
 export async function insertConflictingFact(tx: Tx, ctx: TenantContext, existingFactId: string, fact: NewFact): Promise<{ factId: string; reviewItemId: string }>;
 export async function activateFact(tx: Tx, ctx: TenantContext, factId: string, acl: string[]): Promise<'active' | 'conflict'>;
 
-// review-items.ts
+// review-item-write.ts (séparé de review-items.ts depuis T08c : facts.ts l'importe sans cycle)
 export type ReviewKind = 'sensitive_fact' | 'entity_match' | 'proposed_type' | 'conflict';
 export type ReviewPayload =
   | { kind: 'sensitive_fact'; factId: string; category: SensitiveCategory | null }
   | { kind: 'entity_match'; newCardId: string; candidateCardId: string }
   | { kind: 'proposed_type'; typeId: string }
   | { kind: 'conflict'; factIds: [string, string] };                 // [existant, nouveau]
+export const ReviewPayloadSchema: z.ZodType<ReviewPayload>;
+export async function createReviewItem(tx: Tx, ctx: TenantContext, payload: ReviewPayload, acl: string[]): Promise<string>;
+
+// review-items.ts
 export type ReviewResolution =
   | { kind: 'sensitive_fact'; decision: 'share' | 'keep_private' }
   | { kind: 'entity_match'; decision: 'same' | 'different' }
@@ -632,7 +636,6 @@ export type ReviewResolution =
   | { kind: 'conflict'; decision: 'keep_first' | 'keep_second' | 'both_wrong' };
 export const ReviewResolutionSchema: z.ZodType<ReviewResolution>;
 export type ResolveResult = { ok: true } | { ok: false; reason: 'introuvable' | 'deja_traite' | 'incoherent' };
-export async function createReviewItem(tx: Tx, ctx: TenantContext, payload: ReviewPayload, acl: string[]): Promise<string>;
 export async function resolveReviewItem(ctx: TenantContext, itemId: string, resolution: ReviewResolution): Promise<ResolveResult>;
 ```
 
@@ -1654,7 +1657,7 @@ export function planPlacement(context: PlacementContext, output: z.infer<typeof 
 
 **Contexte.** Rien n'est tranché en silence, rien n'est effacé ; écriture en une transaction sous les droits de l'auteur. Lire D13 et D14 : `facts.ts` (T06a) calcule l'ACL écrite de chaque fait et transforme tout chevauchement d'équipe en contradiction ; `apply.ts` ne fait que choisir la fiche, le type, le statut et la relation.
 
-**Interfaces.** Consomme : T06a (`cards`, `facts`, `catalog`, `acl`), T06b (`createReviewItem`), T11. Produit : `applyPlacement(tx: Tx, ctx: TenantContext, context: PlacementContext, candidates: FactCandidateRow[], actions: PlacementAction[]): Promise<void>` ; `runPlacement(job: PipelineJob, llm: Llm): Promise<null>`.
+**Interfaces.** Consomme : T06a (`cards`, `facts`, `catalog`, `acl`), T06b/T08c (`createReviewItem`, dans `review-item-write.ts`), T11. Produit : `applyPlacement(tx: Tx, ctx: TenantContext, context: PlacementContext, candidates: FactCandidateRow[], actions: PlacementAction[]): Promise<void>` ; `runPlacement(job: PipelineJob, llm: Llm): Promise<null>`.
 
 **Étapes**
 

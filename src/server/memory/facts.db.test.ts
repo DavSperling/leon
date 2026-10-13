@@ -187,33 +187,71 @@ describe('supersedeFact', () => {
 });
 
 describe('insertConflictingFact', () => {
-  it('met les deux faits en contradiction avec un élément au plus restrictif', async () => {
+  it("met les deux faits d'équipe en contradiction, avec un élément d'équipe", async () => {
     const { tenantId, paul, newFact, seedExisting } = await setup();
     const existing = await seedExisting([tenantId]);
 
     const result = await withTenant(paul, (tx) =>
-      insertConflictingFact(tx, paul, existing, newFact({ acl: [paul.userId] })),
+      insertConflictingFact(tx, paul, existing, newFact()),
     );
 
     expect((await readFact(existing))?.status).toBe('conflict');
-    expect(await readFact(result.factId)).toMatchObject({
-      status: 'conflict',
-      acl: [paul.userId],
-    });
+    expect(await readFact(result.factId)).toMatchObject({ status: 'conflict', acl: [tenantId] });
     const [review] = await adminDb
       .select()
       .from(reviewItems)
       .where(eq(reviewItems.id, result.reviewItemId));
     expect(review).toMatchObject({
       kind: 'conflict',
+      status: 'open',
       payload: { kind: 'conflict', factIds: [existing, result.factId] },
-      acl: [paul.userId],
+      acl: [tenantId],
     });
   });
 });
 
-describe('garde-fou D14 : jamais face à un fait privé', () => {
-  it('supersedeFact et insertConflictingFact lèvent et ne changent rien', async () => {
+describe('garde-fou D14 : jamais un fait privé face à un fait d’équipe', () => {
+  it('lèvent sur un nouveau fait privé et ne changent rien', async () => {
+    const { tenantId, paul, cardId, newFact, seedExisting } = await setup();
+    const teamFact = await seedExisting([tenantId]);
+    const privateFact = newFact({ acl: [paul.userId] });
+
+    await expect(
+      withTenant(paul, (tx) => supersedeFact(tx, paul, teamFact, privateFact)),
+    ).rejects.toThrow("nouveau fait hors de l'équipe");
+    await expect(
+      withTenant(paul, (tx) => insertConflictingFact(tx, paul, teamFact, privateFact)),
+    ).rejects.toThrow("nouveau fait hors de l'équipe");
+
+    expect(await readFact(teamFact)).toMatchObject({
+      status: 'active',
+      validTo: null,
+      supersededBy: null,
+    });
+    const cardFacts = await adminDb.select().from(facts).where(eq(facts.cardId, cardId));
+    expect(cardFacts).toHaveLength(1);
+    expect(await readCardAcl(cardId)).toEqual([paul.userId]);
+    expect(await reviewsOf(tenantId)).toEqual([]);
+  });
+
+  it("lèvent sur une fiche non confirmée, où l'ACL effective du nouveau fait est privée", async () => {
+    const { tenantId, paul, cardId, newFact, seedExisting } = await setup('unconfirmed');
+    const teamFact = await seedExisting([tenantId]);
+
+    await expect(
+      withTenant(paul, (tx) => supersedeFact(tx, paul, teamFact, newFact())),
+    ).rejects.toThrow("nouveau fait hors de l'équipe");
+    await expect(
+      withTenant(paul, (tx) => insertConflictingFact(tx, paul, teamFact, newFact())),
+    ).rejects.toThrow("nouveau fait hors de l'équipe");
+
+    expect(await readFact(teamFact)).toMatchObject({ status: 'active', validTo: null });
+    const cardFacts = await adminDb.select().from(facts).where(eq(facts.cardId, cardId));
+    expect(cardFacts).toHaveLength(1);
+    expect(await reviewsOf(tenantId)).toEqual([]);
+  });
+
+  it('lèvent sur un fait existant privé et ne changent rien', async () => {
     const { tenantId, paul, cardId, newFact, seedExisting } = await setup();
     const privateFact = await seedExisting([paul.userId]);
 

@@ -1,6 +1,6 @@
 import type { FactStatus } from '@/lib/enums';
 import type { CardData, FactView } from './card-data';
-import { isoDate } from './labels';
+import { isoDate, oneLine } from './labels';
 
 // Rendu Markdown déterministe d'une fiche (C11) : MCP fetch, onglet Brut, panneau de l'extension.
 
@@ -20,7 +20,7 @@ function header(card: CardData, asOf: Date | undefined): string[] {
     card.status === 'confirmed' ? 'fiche confirmée' : 'fiche non confirmée (visible par vous seul)';
   const state = asOf ? ` · état au ${isoDate(asOf)}` : '';
   return [
-    `# ${card.title} (${card.typeLabel.toLowerCase()})`,
+    `# ${oneLine(card.title)} (${oneLine(card.typeLabel).toLowerCase()})`,
     `id : ${card.id} · ${status}${state}`,
     DATA_GUARD_LINE,
   ];
@@ -36,8 +36,9 @@ function compareFacts(a: FactView, b: FactView): number {
 
 function factLine(fact: FactView, now: Date): string {
   const future = fact.validFrom > now ? ` (à partir du ${isoDate(fact.validFrom)})` : '';
-  const origin = `[${fact.sourceKindLabel} · ${fact.authorName}, ${isoDate(fact.validFrom)}]`;
-  return `- ${fact.predicateLabel} : ${fact.statement}${STATUS_FLAGS[fact.status]}${future} ${origin}`;
+  const origin = `[${fact.sourceKindLabel} · ${oneLine(fact.authorName)}, ${isoDate(fact.validFrom)}]`;
+  const statement = oneLine(fact.statement);
+  return `- ${oneLine(fact.predicateLabel)} : ${statement}${STATUS_FLAGS[fact.status]}${future} ${origin}`;
 }
 
 const omittedLine = (count: number) => `… ${count} autres faits : préciser section=<prédicat>`;

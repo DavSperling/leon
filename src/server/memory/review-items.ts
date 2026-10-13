@@ -1,6 +1,5 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql, TransactionRollbackError } from 'drizzle-orm';
 import { z } from 'zod';
-import { SENSITIVE_CATEGORIES } from '@/lib/enums';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import {
   cardAliases,
@@ -14,27 +13,11 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { teamAcl } from './acl';
 import { widenCardAcl } from './cards';
 import { activateFact, wantedAcl } from './facts';
+import { type ReviewPayload, ReviewPayloadSchema } from './review-item-write';
 
 // Décisions « À vérifier ». L'ACL d'un fait n'est jamais calculée ici : elle passe par
 // activateFact (facts.ts), qui applique l'ACL effective (D13). Ce module ne déplace un fait,
 // ne change son statut ou ne ferme sa validité qu'en laissant son ACL intacte.
-
-const ReviewPayloadSchema = z.discriminatedUnion('kind', [
-  z
-    .object({
-      kind: z.literal('sensitive_fact'),
-      factId: z.uuid(),
-      category: z.enum(SENSITIVE_CATEGORIES).nullable(),
-    })
-    .strict(),
-  z
-    .object({ kind: z.literal('entity_match'), newCardId: z.uuid(), candidateCardId: z.uuid() })
-    .strict(),
-  z.object({ kind: z.literal('proposed_type'), typeId: z.uuid() }).strict(),
-  z.object({ kind: z.literal('conflict'), factIds: z.tuple([z.uuid(), z.uuid()]) }).strict(), // [existant, nouveau]
-]);
-export type ReviewPayload = z.infer<typeof ReviewPayloadSchema>;
-export type ReviewKind = ReviewPayload['kind'];
 
 export const ReviewResolutionSchema = z.discriminatedUnion('kind', [
   z
@@ -59,74 +42,70 @@ export type ResolveResult =
 const OK: ResolveResult = { ok: true };
 const INCOHERENT: ResolveResult = { ok: false, reason: 'incoherent' };
 
-export async function createReviewItem(
-  tx: Tx,
-  ctx: TenantContext,
-  payload: ReviewPayload,
-  acl: string[],
-): Promise<string> {
-  const valid = ReviewPayloadSchema.parse(payload);
-  const [item] = await tx
-    .insert(reviewItems)
-    .values({ tenantId: ctx.tenantId, kind: valid.kind, payload: valid, acl })
-    .returning({ id: reviewItems.id });
-  if (!item) throw new Error('élément « À vérifier » non créé');
-  return item.id;
-}
-
-// Relit l'élément sous RLS : un élément invisible est « introuvable », jamais « interdit ».
+// Passe d'abord l'élément de `open` à `resolved` (mise à jour conditionnelle : de deux résolutions
+// simultanées, la seconde attend la première puis ne trouve plus d'élément ouvert), puis applique la
+// décision. Une précondition d'état qui ne tient plus annule toute la transaction : « incohérent ».
+// Les préconditions verrouillent les lignes qu'elles lisent : deux éléments qui partagent un fait ou
+// une fiche se résolvent l'un après l'autre, et le second relit l'état laissé par le premier.
 export async function resolveReviewItem(
   ctx: TenantContext,
   itemId: string,
-  resolution: ReviewResolution,
+  input: ReviewResolution,
 ): Promise<ResolveResult> {
-  return withTenant(ctx, async (tx) => {
-    // FOR UPDATE : deux résolutions simultanées s'attendent, la seconde lit « resolved ».
-    const [item] = await tx
-      .select({ kind: reviewItems.kind, status: reviewItems.status, payload: reviewItems.payload })
-      .from(reviewItems)
-      .where(eq(reviewItems.id, itemId))
-      .for('update');
-    if (!item) return { ok: false, reason: 'introuvable' };
-    if (item.status === 'resolved') return { ok: false, reason: 'deja_traite' };
-    if (resolution.kind !== item.kind) return INCOHERENT;
-    const result = await applyResolution(
-      tx,
-      ctx,
-      ReviewPayloadSchema.parse(item.payload),
-      resolution,
-    );
-    if (!result.ok) return result;
-    await tx
-      .update(reviewItems)
-      .set({ status: 'resolved', resolution, resolvedBy: ctx.userId, resolvedAt: new Date() })
-      .where(eq(reviewItems.id, itemId));
-    return result;
-  });
+  const resolution = ReviewResolutionSchema.parse(input);
+  try {
+    return await withTenant(ctx, async (tx) => {
+      const [item] = await tx
+        .update(reviewItems)
+        .set({ status: 'resolved', resolution, resolvedBy: ctx.userId, resolvedAt: new Date() })
+        .where(and(eq(reviewItems.id, itemId), eq(reviewItems.status, 'open')))
+        .returning({ payload: reviewItems.payload });
+      if (!item) return unclaimedReason(tx, itemId);
+      const payload = ReviewPayloadSchema.parse(item.payload);
+      if (!(await applyResolution(tx, ctx, payload, resolution))) tx.rollback();
+      return OK;
+    });
+  } catch (error) {
+    if (error instanceof TransactionRollbackError) return INCOHERENT;
+    throw error;
+  }
 }
 
-// Une résolution « incohérente » est rendue avant toute écriture.
+// Relu sous RLS : un élément invisible est « introuvable », jamais « interdit ».
+async function unclaimedReason(tx: Tx, itemId: string): Promise<ResolveResult> {
+  const [item] = await tx
+    .select({ id: reviewItems.id })
+    .from(reviewItems)
+    .where(eq(reviewItems.id, itemId));
+  return { ok: false, reason: item ? 'deja_traite' : 'introuvable' };
+}
+
+// Inatteignable après ReviewResolutionSchema.parse ; `never` garde les switch exhaustifs.
+const unknownDecision = (_decision: never) => new Error('décision inconnue');
+
+// false : la décision ne s'applique pas à cet élément, ou son état a changé depuis sa création.
 async function applyResolution(
   tx: Tx,
   ctx: TenantContext,
   payload: ReviewPayload,
   resolution: ReviewResolution,
-): Promise<ResolveResult> {
-  if (payload.kind === 'sensitive_fact' && resolution.kind === 'sensitive_fact') {
-    await resolveSensitiveFact(tx, ctx, payload.factId, resolution.decision);
-    return OK;
+): Promise<boolean> {
+  switch (resolution.kind) {
+    case 'sensitive_fact':
+      if (payload.kind !== 'sensitive_fact') return false;
+      return resolveSensitiveFact(tx, ctx, payload.factId, resolution.decision);
+    case 'entity_match':
+      if (payload.kind !== 'entity_match') return false;
+      return resolveEntityMatch(tx, ctx, payload, resolution.decision);
+    case 'proposed_type':
+      if (payload.kind !== 'proposed_type') return false;
+      return resolveProposedType(tx, payload.typeId, resolution.decision);
+    case 'conflict':
+      if (payload.kind !== 'conflict') return false;
+      return resolveConflict(tx, ctx, payload.factIds, resolution.decision);
+    default:
+      throw unknownDecision(resolution);
   }
-  if (payload.kind === 'entity_match' && resolution.kind === 'entity_match') {
-    return resolveEntityMatch(tx, ctx, payload, resolution.decision);
-  }
-  if (payload.kind === 'proposed_type' && resolution.kind === 'proposed_type') {
-    return resolveProposedType(tx, payload.typeId, resolution.decision);
-  }
-  if (payload.kind === 'conflict' && resolution.kind === 'conflict') {
-    await resolveConflict(tx, ctx, payload.factIds, resolution.decision);
-    return OK;
-  }
-  return INCOHERENT;
 }
 
 // share : l'ACL voulue passe d'abord à l'équipe (elle servira à la confirmation d'une fiche non
@@ -136,42 +115,67 @@ async function resolveSensitiveFact(
   ctx: TenantContext,
   factId: string,
   decision: 'share' | 'keep_private',
-): Promise<void> {
-  if (decision === 'keep_private') {
-    await activateFact(tx, ctx, factId, await wantedAcl(tx, factId));
-    return;
-  }
-  const team = teamAcl(ctx.tenantId);
+): Promise<boolean> {
   const [fact] = await tx
     .select({ candidateId: facts.candidateId })
     .from(facts)
-    .where(eq(facts.id, factId));
-  if (!fact) throw new Error('fait introuvable ou invisible');
-  if (fact.candidateId) {
+    .where(and(eq(facts.id, factId), eq(facts.status, 'pending_review')))
+    .for('update');
+  if (!fact) return false;
+  switch (decision) {
+    case 'keep_private':
+      await activateFact(tx, ctx, factId, await wantedAcl(tx, factId));
+      return true;
+    case 'share':
+      await shareFact(tx, ctx, factId, fact.candidateId);
+      return true;
+    default:
+      throw unknownDecision(decision);
+  }
+}
+
+async function shareFact(
+  tx: Tx,
+  ctx: TenantContext,
+  factId: string,
+  candidateId: string | null,
+): Promise<void> {
+  const team = teamAcl(ctx.tenantId);
+  if (candidateId) {
     const updated = await tx
       .update(factCandidates)
       .set({ factAcl: team })
-      .where(eq(factCandidates.id, fact.candidateId))
+      .where(eq(factCandidates.id, candidateId))
       .returning({ id: factCandidates.id });
     if (updated.length === 0) throw new Error('candidat du fait invisible');
   }
   await activateFact(tx, ctx, factId, team);
 }
 
+// La fiche nouvelle doit être encore non confirmée ; les deux fiches visibles et non fusionnées.
 async function resolveEntityMatch(
   tx: Tx,
   ctx: TenantContext,
   { newCardId, candidateCardId }: { newCardId: string; candidateCardId: string },
   decision: 'same' | 'different',
-): Promise<ResolveResult> {
+): Promise<boolean> {
   const visible = await tx
-    .select({ id: cards.id })
+    .select({ id: cards.id, status: cards.status })
     .from(cards)
-    .where(and(inArray(cards.id, [newCardId, candidateCardId]), isNull(cards.mergedInto)));
-  if (visible.length !== 2) return INCOHERENT;
-  if (decision === 'different') await confirmCard(tx, ctx, newCardId);
-  else await mergeCard(tx, ctx, newCardId, candidateCardId);
-  return OK;
+    .where(and(inArray(cards.id, [newCardId, candidateCardId]), isNull(cards.mergedInto)))
+    .for('update');
+  const newCard = visible.find((card) => card.id === newCardId);
+  if (visible.length !== 2 || newCard?.status !== 'unconfirmed') return false;
+  switch (decision) {
+    case 'different':
+      await confirmCard(tx, ctx, newCardId);
+      return true;
+    case 'same':
+      await mergeCard(tx, ctx, newCardId, candidateCardId);
+      return true;
+    default:
+      throw unknownDecision(decision);
+  }
 }
 
 // Les faits actifs prennent leur ACL voulue ; les faits à valider restent tels quels.
@@ -233,33 +237,38 @@ async function copyAliases(
     .onConflictDoNothing();
 }
 
+// Le type doit être encore proposé (et visible).
 async function resolveProposedType(
   tx: Tx,
   typeId: string,
   decision: 'validate' | 'use_parent',
-): Promise<ResolveResult> {
-  const isProposed = and(eq(cardTypes.id, typeId), eq(cardTypes.status, 'proposed'));
-  if (decision === 'validate') {
-    const updated = await tx
-      .update(cardTypes)
-      .set({ status: 'validated' })
-      .where(isProposed)
-      .returning({ id: cardTypes.id });
-    return updated.length === 1 ? OK : INCOHERENT;
-  }
+): Promise<boolean> {
   const [type] = await tx
     .select({ parentSlug: cardTypes.parentSlug })
     .from(cardTypes)
-    .where(isProposed);
-  if (!type?.parentSlug) return INCOHERENT;
+    .where(and(eq(cardTypes.id, typeId), eq(cardTypes.status, 'proposed')));
+  if (!type) return false;
+  switch (decision) {
+    case 'validate':
+      await tx.update(cardTypes).set({ status: 'validated' }).where(eq(cardTypes.id, typeId));
+      return true;
+    case 'use_parent':
+      if (!type.parentSlug) return false;
+      return moveCardsToParent(tx, typeId, type.parentSlug);
+    default:
+      throw unknownDecision(decision);
+  }
+}
+
+async function moveCardsToParent(tx: Tx, typeId: string, parentSlug: string): Promise<boolean> {
   // Type visible de ce slug : celui du tenant l'emporte sur celui du socle.
   const [parent] = await tx
     .select({ id: cardTypes.id })
     .from(cardTypes)
-    .where(eq(cardTypes.slug, type.parentSlug))
+    .where(eq(cardTypes.slug, parentSlug))
     .orderBy(sql`${cardTypes.tenantId} nulls last`)
     .limit(1);
-  if (!parent) return INCOHERENT;
+  if (!parent) return false;
   const moved = await tx
     .update(cards)
     .set({ typeId: parent.id })
@@ -267,27 +276,42 @@ async function resolveProposedType(
     .returning({ id: cards.id, acl: cards.acl });
   // Une fiche visible a toujours un type visible (D13) : un parent propre au tenant suit ses fiches.
   for (const card of moved) await widenCardAcl(tx, card.id, card.acl);
-  return OK;
+  return true;
 }
 
-// keep_first / keep_second : l'écarté est remplacé par le gardé, que activateFact réactive à son
-// ACL actuelle (après la fermeture de l'écarté : règle 3 de facts.ts). both_wrong : les deux sont fermés.
+// Les deux faits doivent être encore en contradiction : un fait déjà écarté (par un autre élément
+// qui le contenait) ne redevient jamais actif. keep_first / keep_second : l'écarté est remplacé par
+// le gardé, que activateFact réactive à son ACL actuelle (après la fermeture de l'écarté : règle 3
+// de facts.ts). both_wrong : les deux sont fermés.
 async function resolveConflict(
   tx: Tx,
   ctx: TenantContext,
   [first, second]: [string, string],
   decision: 'keep_first' | 'keep_second' | 'both_wrong',
-): Promise<void> {
-  if (decision === 'both_wrong') {
-    await retireFact(tx, first, null);
-    await retireFact(tx, second, null);
-    return;
+): Promise<boolean> {
+  const inConflict = await tx
+    .select({ id: facts.id, acl: facts.acl })
+    .from(facts)
+    .where(and(inArray(facts.id, [first, second]), eq(facts.status, 'conflict')))
+    .for('update');
+  if (inConflict.length !== 2) return false;
+  switch (decision) {
+    case 'both_wrong':
+      await retireFact(tx, first, null);
+      await retireFact(tx, second, null);
+      return true;
+    case 'keep_first':
+    case 'keep_second': {
+      const [kept, dropped] = decision === 'keep_first' ? [first, second] : [second, first];
+      const keptFact = inConflict.find((fact) => fact.id === kept);
+      if (!keptFact) return false;
+      await retireFact(tx, dropped, kept);
+      await activateFact(tx, ctx, kept, keptFact.acl);
+      return true;
+    }
+    default:
+      throw unknownDecision(decision);
   }
-  const [kept, dropped] = decision === 'keep_first' ? [first, second] : [second, first];
-  await retireFact(tx, dropped, kept);
-  const [fact] = await tx.select({ acl: facts.acl }).from(facts).where(eq(facts.id, kept));
-  if (!fact) throw new Error('fait introuvable ou invisible');
-  await activateFact(tx, ctx, kept, fact.acl);
 }
 
 // Validité vide (valid_to = valid_from) : le fait n'a jamais été vrai ; il reste dans l'historique.

@@ -2,7 +2,7 @@ import { count, eq, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { reviewItems } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { isoDate } from './labels';
+import { isoDate, oneLine } from './labels';
 import { DATA_GUARD_LINE } from './render-card';
 
 // Briefing déterministe (C11) : fiches touchées sur 7 jours, une ligne chacune, sous la RLS du lecteur.
@@ -21,16 +21,13 @@ export type BriefingEntry = {
 };
 export type Briefing = { markdown: string; entries: BriefingEntry[]; reviewCount: number };
 
-// Une ligne par fiche : un saut de ligne dans un énoncé ne doit pas fabriquer une fausse entrée.
-const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim();
-
 function truncate(text: string): string {
   return text.length <= STATEMENT_MAX ? text : `${text.slice(0, STATEMENT_MAX - 1)}…`;
 }
 
 function entryLine(entry: BriefingEntry): string {
   const flag = entry.hasConflict ? ' · contradiction à vérifier' : '';
-  const head = `${oneLine(entry.title)} (${entry.typeLabel}) · ${isoDate(entry.lastFactAt)}`;
+  const head = `${oneLine(entry.title)} (${oneLine(entry.typeLabel)}) · ${isoDate(entry.lastFactAt)}`;
   return `- ${head} : ${truncate(oneLine(entry.latestStatement))}${flag}`;
 }
 
@@ -39,10 +36,16 @@ const reviewLine = (count: number) =>
 const omittedLine = (count: number) => `… ${count} autres fiches`;
 
 export function formatBriefing(entries: BriefingEntry[], reviewCount: number): string {
+  return composeBriefing(entries, reviewCount).markdown;
+}
+
+// Pure : le markdown (format de C11) et, dans `entries`, les seules fiches qu'il montre.
+export function composeBriefing(entries: BriefingEntry[], reviewCount: number): Briefing {
   const head = ['# Briefing Leon · 7 derniers jours', DATA_GUARD_LINE];
   const tail = reviewLine(reviewCount);
   if (entries.length === 0) {
-    return [...head, 'Aucune fiche modifiée ces 7 derniers jours.', tail].join('\n');
+    const markdown = [...head, 'Aucune fiche modifiée ces 7 derniers jours.', tail].join('\n');
+    return { markdown, entries, reviewCount };
   }
   // On s'arrête avant la ligne qui ferait dépasser, mention des fiches omises comprise.
   const lines: string[] = [];
@@ -51,14 +54,17 @@ export function formatBriefing(entries: BriefingEntry[], reviewCount: number): s
     const line = entryLine(entry);
     const reserved = omittedLine(entries.length - index - 1).length + 1;
     const isLast = index === entries.length - 1;
-    if (length + line.length + 1 + (isLast ? 0 : reserved) > BRIEFING_MAX_CHARS) {
-      lines.push(omittedLine(entries.length - index));
-      break;
-    }
+    if (length + line.length + 1 + (isLast ? 0 : reserved) > BRIEFING_MAX_CHARS) break;
     lines.push(line);
     length += line.length + 1;
   }
-  return [...head, ...lines, tail].join('\n');
+  const omitted = entries.length - lines.length;
+  const body = omitted > 0 ? [...lines, omittedLine(omitted)] : lines;
+  return {
+    markdown: [...head, ...body, tail].join('\n'),
+    entries: entries.slice(0, lines.length),
+    reviewCount,
+  };
 }
 
 type Row = {
@@ -110,5 +116,5 @@ export async function buildBriefing(ctx: TenantContext, now: Date = new Date()):
     entries: await recentEntries(tx, since),
     reviewCount: await countOpenReviews(tx),
   }));
-  return { markdown: formatBriefing(entries, reviewCount), entries, reviewCount };
+  return composeBriefing(entries, reviewCount);
 }

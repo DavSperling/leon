@@ -15,12 +15,8 @@ import { adminDb } from '@/test/db';
 import { createTestTenant, seedCard, seedFact, seedSource } from '@/test/fixtures';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { unionAcl } from './acl';
-import {
-  createReviewItem,
-  type ReviewPayload,
-  type ReviewResolution,
-  resolveReviewItem,
-} from './review-items';
+import { createReviewItem, type ReviewPayload } from './review-item-write';
+import { type ReviewResolution, resolveReviewItem } from './review-items';
 
 const OCT_1 = new Date('2026-10-01T09:00:00Z');
 const OCT_10 = new Date('2026-10-10T09:00:00Z');
@@ -201,6 +197,186 @@ describe('resolveReviewItem : garde-fous', () => {
 
     expect(result).toEqual({ ok: false, reason: 'incoherent' });
     expect((await readItem(ids.teamReview))?.status).toBe('open');
+  });
+
+  it('lève sur une résolution mal formée et ne change rien', async () => {
+    const { paul, ids } = await seedRightsScenario();
+    const invalid = { kind: 'sensitive_fact', decision: 'private' } as unknown as ReviewResolution;
+
+    await expect(resolveReviewItem(paul, ids.paulReview, invalid)).rejects.toThrow();
+
+    expect(await readItem(ids.paulReview)).toMatchObject({ status: 'open', resolution: null });
+    expect(await readFact(ids.acmePaulFact)).toMatchObject({
+      status: 'pending_review',
+      acl: [paul.userId],
+    });
+  });
+
+  it("n'applique qu'une de deux résolutions simultanées du même élément", async () => {
+    const { paul, marie, ids } = await seedRightsScenario();
+    const first: ReviewResolution = { kind: 'conflict', decision: 'keep_first' };
+    const second: ReviewResolution = { kind: 'conflict', decision: 'keep_second' };
+
+    const results = await Promise.all([
+      resolveReviewItem(marie, ids.teamReview, first),
+      resolveReviewItem(paul, ids.teamReview, second),
+    ]);
+
+    expect(results).toContainEqual({ ok: true });
+    expect(results).toContainEqual({ ok: false, reason: 'deja_traite' });
+    const applied = results[0]?.ok ? first : second;
+    expect((await readItem(ids.teamReview))?.resolution).toEqual(applied);
+    const statuses = [
+      (await readFact(ids.acmeTeamFact))?.status,
+      (await readFact(ids.acmeConflictFact))?.status,
+    ].sort();
+    expect(statuses).toEqual(['active', 'superseded']);
+  });
+});
+
+describe('resolveReviewItem : état revérifié avant chaque effet', () => {
+  it("refuse un sensitive_fact dont le fait n'est plus à valider, sans effet", async () => {
+    const { paul, marie, ids } = await seedRightsScenario();
+    const again = await withTenant(paul, (tx) =>
+      createReviewItem(
+        tx,
+        paul,
+        { kind: 'sensitive_fact', factId: ids.acmePaulFact, category: null },
+        [paul.userId],
+      ),
+    );
+    await resolveReviewItem(paul, ids.paulReview, {
+      kind: 'sensitive_fact',
+      decision: 'keep_private',
+    });
+
+    const result = await resolveReviewItem(paul, again, {
+      kind: 'sensitive_fact',
+      decision: 'share',
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'incoherent' });
+    expect(await readItem(again)).toMatchObject({ status: 'open', resolution: null });
+    expect(await readFact(ids.acmePaulFact)).toMatchObject({
+      status: 'active',
+      acl: [paul.userId],
+    });
+    expect(await seesFact(marie, ids.acmePaulFact)).toBe(false);
+  });
+
+  it("refuse un conflict dont un fait n'est plus en contradiction, sans effet", async () => {
+    const { tenantId, marie, ids } = await seedRightsScenario();
+    const twin = await withTenant(marie, (tx) =>
+      createReviewItem(
+        tx,
+        marie,
+        { kind: 'conflict', factIds: [ids.acmeTeamFact, ids.acmeConflictFact] },
+        [tenantId],
+      ),
+    );
+    await resolveReviewItem(marie, ids.teamReview, { kind: 'conflict', decision: 'keep_first' });
+    const before = await readFact(ids.acmeConflictFact);
+
+    const result = await resolveReviewItem(marie, twin, {
+      kind: 'conflict',
+      decision: 'keep_second',
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'incoherent' });
+    expect(await readItem(twin)).toMatchObject({ status: 'open', resolution: null });
+    expect(await readFact(ids.acmeConflictFact)).toEqual(before);
+    expect(await readFact(ids.acmeTeamFact)).toMatchObject({
+      status: 'active',
+      supersededBy: null,
+    });
+  });
+
+  // A est en contradiction avec B et avec C. Le test tient B verrouillé le temps que Marie (garder B,
+  // écarter A) et Paul (garder A, écarter C) soient tous deux lancés : leurs résolutions se chevauchent.
+  it('de deux conflicts simultanés qui partagent un fait, applique le premier et refuse le second', async () => {
+    const { tenantId, paul, marie, ids } = await seedRightsScenario();
+    const [b, a] = [ids.acmeTeamFact, ids.acmeConflictFact];
+    const c = await seedFact(tenantId, {
+      cardId: ids.acmeCard,
+      sourceId: ids.paulSource,
+      turnId: ids.paulTurn,
+      authorId: paul.userId,
+      predicate: 'paiement',
+      singleValued: true,
+      statement: 'ACME paie ses factures à trente jours.',
+      status: 'conflict',
+      acl: [tenantId],
+    });
+    const otherItem = await withTenant(paul, (tx) =>
+      createReviewItem(tx, paul, { kind: 'conflict', factIds: [c, a] }, [tenantId]),
+    );
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+    let releaseB = () => {};
+    const bReleased = new Promise<void>((resolve) => {
+      releaseB = resolve;
+    });
+    let bLocked = () => {};
+    const bIsLocked = new Promise<void>((resolve) => {
+      bLocked = resolve;
+    });
+    const holdB = adminDb.transaction(async (tx) => {
+      await tx.select({ id: facts.id }).from(facts).where(eq(facts.id, b)).for('update');
+      bLocked();
+      await bReleased;
+    });
+    await bIsLocked;
+
+    const marieResult = resolveReviewItem(marie, ids.teamReview, {
+      kind: 'conflict',
+      decision: 'keep_first',
+    });
+    await pause();
+    const paulResult = resolveReviewItem(paul, otherItem, {
+      kind: 'conflict',
+      decision: 'keep_second',
+    });
+    await pause();
+    releaseB();
+    await holdB;
+    const results = await Promise.all([marieResult, paulResult]);
+
+    expect(results).toContainEqual({ ok: true });
+    expect(results).toContainEqual({ ok: false, reason: 'incoherent' });
+    const [kept, dropped, untouched] = results[0]?.ok ? [b, a, c] : [a, c, b];
+    expect(await readFact(dropped)).toMatchObject({ status: 'superseded', supersededBy: kept });
+    expect((await readFact(kept))?.status).toBe('active');
+    expect((await readFact(untouched))?.status).toBe('conflict');
+  });
+
+  it('refuse un entity_match sur une fiche déjà confirmée, sans effet', async () => {
+    const { tenantId, paul, card, pipelineFact, item } = await setup();
+    const newCard = await card('unconfirmed', [paul.userId], 'ACME SA');
+    const first = await card('confirmed', [tenantId], 'ACME');
+    const other = await card('confirmed', [tenantId], 'ACME Groupe');
+    const { factId } = await pipelineFact(newCard, {
+      acl: [paul.userId],
+      factAcl: [tenantId],
+      status: 'active',
+    });
+    const firstItem = await item(
+      { kind: 'entity_match', newCardId: newCard, candidateCardId: first },
+      [paul.userId],
+    );
+    const otherItem = await item(
+      { kind: 'entity_match', newCardId: newCard, candidateCardId: other },
+      [paul.userId],
+    );
+    await resolveReviewItem(paul, firstItem, { kind: 'entity_match', decision: 'different' });
+
+    const result = await resolveReviewItem(paul, otherItem, {
+      kind: 'entity_match',
+      decision: 'same',
+    });
+
+    expect(result).toEqual({ ok: false, reason: 'incoherent' });
+    expect(await readItem(otherItem)).toMatchObject({ status: 'open', resolution: null });
+    expect(await readCard(newCard)).toMatchObject({ status: 'confirmed', mergedInto: null });
+    expect(await readFact(factId)).toMatchObject({ cardId: newCard, status: 'active' });
   });
 });
 

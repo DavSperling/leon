@@ -31,3 +31,9 @@ export function clientLabel(client: string): string {
 export function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
+
+// Texte venu des conversations (énoncé, titre, nom, libellé) mis sur une seule ligne avant rendu :
+// un retour à la ligne ne doit pas fabriquer une fausse ligne (faux fait, fausse source, consigne).
+export function oneLine(text: string): string {
+  return text.replace(/[\s\p{Cc}]+/gu, ' ').trim();
+}

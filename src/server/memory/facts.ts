@@ -1,10 +1,12 @@
 import { and, desc, eq, ne, sql } from 'drizzle-orm';
 import type { SourceKind } from '@/capture/turn';
+import type { CardStatus } from '@/lib/enums';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { cards, factCandidates, facts, reviewItems } from '@/server/db/schema/memory';
+import { cards, factCandidates, facts } from '@/server/db/schema/memory';
 import type { Tx } from '@/server/db/with-tenant';
 import { authorAcl, isTeamAcl, mostRestrictiveAcl } from './acl';
 import { widenCardAcl } from './cards';
+import { createReviewItem } from './review-item-write';
 
 // Seul endroit qui écrit l'ACL d'un fait. Règles :
 // 1. ACL effective (D13) : chaque écriture lit d'abord la fiche cible sous RLS (invisible ou absente
@@ -18,7 +20,9 @@ import { widenCardAcl } from './cards';
 // 3. Ordre des écritures : d'abord fermer ou passer en `conflict` l'ancien, ensuite insérer ou
 //    activer le nouveau. La contrainte EXCLUDE n'est jamais violée par ce code : une violation vient
 //    d'une écriture concurrente, la transaction échoue et pg-boss reprend.
-// 4. D14 : supersedeFact et insertConflictingFact lèvent si le fait existant n'est pas d'équipe.
+// 4. D14 : supersedeFact et insertConflictingFact lèvent, avant d'écrire, si le fait existant ou
+//    l'ACL effective du nouveau fait n'est pas d'équipe.
+// 5. Les éléments `conflict` passent par createReviewItem (validation zod du payload).
 
 export type NewFact = {
   cardId: string;
@@ -52,19 +56,29 @@ export type ActiveFact = {
 
 const isTeamFact = sql`${facts.acl} @> array[${facts.tenantId}]`;
 
-// Règle 1 : calcule l'ACL écrite et élargit la fiche si elle est confirmée.
-async function applyEffectiveAcl(tx: Tx, cardId: string, wanted: string[]): Promise<string[]> {
+type TargetCard = { status: CardStatus; createdBy: string | null };
+
+async function readCard(tx: Tx, cardId: string): Promise<TargetCard> {
   const [card] = await tx
     .select({ status: cards.status, createdBy: cards.createdBy })
     .from(cards)
     .where(eq(cards.id, cardId));
   if (!card) throw new Error('fiche introuvable ou invisible');
-  if (card.status === 'confirmed') {
-    await widenCardAcl(tx, cardId, wanted);
-    return wanted;
-  }
+  return card;
+}
+
+function effectiveAcl(card: TargetCard, wanted: string[]): string[] {
+  if (card.status === 'confirmed') return wanted;
   if (!card.createdBy) throw new Error('fiche non confirmée sans créateur');
   return authorAcl(card.createdBy);
+}
+
+// Règle 1 : calcule l'ACL écrite et élargit la fiche si elle est confirmée.
+async function applyEffectiveAcl(tx: Tx, cardId: string, wanted: string[]): Promise<string[]> {
+  const card = await readCard(tx, cardId);
+  const acl = effectiveAcl(card, wanted);
+  if (card.status === 'confirmed') await widenCardAcl(tx, cardId, acl);
+  return acl;
 }
 
 async function insertRow(
@@ -82,35 +96,19 @@ async function insertRow(
   return { id: row.id, acl };
 }
 
-// Payload de forme ReviewPayload 'conflict' (C10) : [existant, nouveau].
-async function createConflictItem(
-  tx: Tx,
-  ctx: TenantContext,
-  factIds: [string, string],
-  acl: string[],
-): Promise<string> {
-  const [item] = await tx
-    .insert(reviewItems)
-    .values({
-      tenantId: ctx.tenantId,
-      kind: 'conflict',
-      payload: { kind: 'conflict', factIds },
-      acl,
-    })
-    .returning({ id: reviewItems.id });
-  if (!item) throw new Error('élément « À vérifier » non créé');
-  return item.id;
-}
-
-// Fait existant visible et d'équipe (D14), sinon erreur.
-async function readTeamFact(tx: Tx, ctx: TenantContext, factId: string) {
-  const [fact] = await tx
+// D14, avant toute écriture : le fait existant est visible et d'équipe, et l'ACL effective du
+// nouveau fait l'est aussi (sinon un fait privé ferait perdre sa valeur à l'équipe et trahirait
+// son existence). Renvoie le fait existant.
+async function assertTeamPair(tx: Tx, ctx: TenantContext, existingId: string, fact: NewFact) {
+  const [existing] = await tx
     .select({ validFrom: facts.validFrom, acl: facts.acl })
     .from(facts)
-    .where(eq(facts.id, factId));
-  if (!fact) throw new Error('fait introuvable ou invisible');
-  if (!isTeamAcl(fact.acl, ctx.tenantId)) throw new Error("fait existant hors de l'équipe");
-  return fact;
+    .where(eq(facts.id, existingId));
+  if (!existing) throw new Error('fait introuvable ou invisible');
+  if (!isTeamAcl(existing.acl, ctx.tenantId)) throw new Error("fait existant hors de l'équipe");
+  const acl = effectiveAcl(await readCard(tx, fact.cardId), fact.acl);
+  if (!isTeamAcl(acl, ctx.tenantId)) throw new Error("nouveau fait hors de l'équipe");
+  return existing;
 }
 
 // Lit la fiche sous RLS (invisible ou absente → erreur), écrit l'ACL effective ; un statut 'active' passe par activateFact.
@@ -163,7 +161,7 @@ export async function supersedeFact(
   oldFactId: string,
   fact: NewFact,
 ): Promise<string> {
-  const old = await readTeamFact(tx, ctx, oldFactId);
+  const old = await assertTeamPair(tx, ctx, oldFactId, fact);
   const validTo = old.validFrom > fact.validFrom ? old.validFrom : fact.validFrom;
   await tx.update(facts).set({ status: 'superseded', validTo }).where(eq(facts.id, oldFactId));
   const newId = await insertFact(tx, ctx, fact);
@@ -177,11 +175,16 @@ export async function insertConflictingFact(
   existingFactId: string,
   fact: NewFact,
 ): Promise<{ factId: string; reviewItemId: string }> {
-  const existing = await readTeamFact(tx, ctx, existingFactId);
+  const existing = await assertTeamPair(tx, ctx, existingFactId, fact);
   await tx.update(facts).set({ status: 'conflict' }).where(eq(facts.id, existingFactId));
   const inserted = await insertRow(tx, ctx, fact, 'conflict');
   const acl = mostRestrictiveAcl([existing.acl, inserted.acl], ctx.tenantId);
-  const reviewItemId = await createConflictItem(tx, ctx, [existingFactId, inserted.id], acl);
+  const reviewItemId = await createReviewItem(
+    tx,
+    ctx,
+    { kind: 'conflict', factIds: [existingFactId, inserted.id] },
+    acl,
+  );
   return { factId: inserted.id, reviewItemId };
 }
 
@@ -234,7 +237,7 @@ export async function activateFact(
   await tx.update(facts).set({ status, acl: effective }).where(eq(facts.id, factId));
   for (const other of overlapping) {
     const itemAcl = mostRestrictiveAcl([other.acl, effective], ctx.tenantId);
-    await createConflictItem(tx, ctx, [other.id, factId], itemAcl);
+    await createReviewItem(tx, ctx, { kind: 'conflict', factIds: [other.id, factId] }, itemAcl);
   }
   return status;
 }

@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { withTenant } from '@/server/db/with-tenant';
 import { cardUrl } from './card-url';
+import { oneLine } from './labels';
 
 export type SearchResult = {
   id: string;
@@ -34,7 +35,8 @@ const containsPattern = (query: string) => `%${query.replace(/[\\%_]/g, '\\$&')}
 
 function snippetOf(statement: string | null): string {
   if (!statement) return '';
-  return statement.length <= SNIPPET_MAX ? statement : `${statement.slice(0, SNIPPET_MAX - 1)}…`;
+  const text = oneLine(statement);
+  return text.length <= SNIPPET_MAX ? text : `${text.slice(0, SNIPPET_MAX - 1)}…`;
 }
 
 // Une requête, sous la RLS du lecteur : faits qui répondent au plein texte, réunis aux fiches dont
@@ -89,9 +91,9 @@ export async function searchMemory(
   const { rows } = await withTenant(ctx, (tx) => tx.execute<Row>(searchQuery({ ...input, limit })));
   return rows.map((row) => ({
     id: row.id,
-    title: row.title,
+    title: oneLine(row.title),
     typeSlug: row.type_slug,
-    typeLabel: row.type_label,
+    typeLabel: oneLine(row.type_label),
     snippet: snippetOf(row.fact_statement ?? row.latest_statement),
     matchedFact:
       row.fact_id && row.fact_statement ? { id: row.fact_id, statement: row.fact_statement } : null,

@@ -30,9 +30,11 @@ const SYSTEM = `Tu ranges des faits dans la mémoire d’une entreprise. Chaque 
 
 Le contexte, en JSON, contient :
 - catalog : les types de fiches (types) et leurs prédicats (predicates) ; un type dérivé (parentSlug) a les prédicats de son parent ; isBase marque les types du socle ;
-- candidates : les faits à ranger. Chacun a son énoncé, son prédicat, un type suggéré (typeHint), son sujet (subject), sa citation, fixedCardId et cardOptions, les fiches existantes qui pourraient être ce sujet, avec leurs faits actifs (activeFacts) sur le même prédicat.
+- candidates : les faits à ranger. Chacun a son énoncé, son prédicat, un type suggéré (typeHint), son sujet (subject), sa citation, fixedCardId et cardOptions, les fiches existantes qui pourraient être ce sujet, avec leurs faits actifs (activeFacts), tous prédicats confondus, chacun avec son prédicat.
 
 Rends une décision par candidat, avec son candidateId recopié tel quel.
+
+Granularité : une fiche décrit une entité précise (un client, un concurrent, un projet, une décision, une règle, une étude). Ne range pas sur la fiche de l’entreprise ou de son produit en général un fait qui porte sur une entité plus précise (un protocole de test, une étude, un plan de lancement, un concurrent, une offre) : crée ou choisis la fiche de cette entité. Deux candidats sur la même entité vont sur la même fiche, sous le même titre.
 
 Fiche :
 - si fixedCardId est donné, la fiche est déjà trouvée par un e-mail ou un domaine : decision existing et cardId = fixedCardId ;
@@ -48,9 +50,10 @@ Nouvelle fiche (new ou ambiguous) :
 Pour existing, newCardTitle, typeSlug et proposedType valent null.
 
 Relation, face aux activeFacts de la fiche choisie :
-- duplicate : la même information est déjà là ;
-- supersedes : une nouvelle valeur remplace l’ancienne dans le temps ;
-- contradicts : les deux sont incompatibles, sans succession claire ;
+- duplicate : la même information est déjà là, même sous un autre prédicat ou formulée autrement ;
+- supersedes : une nouvelle valeur du même attribut, sur le même prédicat, remplace l’ancienne dans le temps ;
+- contradicts : sur le même prédicat, les deux sont incompatibles sans succession claire ;
+Deux avis de personnes ou de sources différentes ne se remplacent pas : ils coexistent (new), ou se contredisent s’ils portent sur la même valeur.
 - new : aucun des cas précédents.
 relatedFactId est l’id du fait actif concerné ; null pour new et pour une nouvelle fiche.
 

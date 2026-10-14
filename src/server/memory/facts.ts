@@ -241,3 +241,23 @@ export async function activateFact(
   }
   return status;
 }
+
+// Faits actifs d'équipe de toute la fiche, les plus récents d'abord : le rangement y cherche les doublons,
+// quel que soit leur prédicat.
+export async function findActiveTeamFactsOfCard(
+  tx: Tx,
+  cardId: string,
+  limit: number,
+): Promise<Array<{ id: string; predicate: string; statement: string; validFrom: Date }>> {
+  return tx
+    .select({
+      id: facts.id,
+      predicate: facts.predicate,
+      statement: facts.statement,
+      validFrom: facts.validFrom,
+    })
+    .from(facts)
+    .where(and(eq(facts.cardId, cardId), eq(facts.status, 'active'), isTeamFact))
+    .orderBy(desc(facts.validFrom), facts.id)
+    .limit(limit);
+}

@@ -8,6 +8,7 @@ import { authorAcl, teamAcl } from '@/server/memory/acl';
 import { type Catalog, loadCatalog } from '@/server/memory/catalog';
 import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import {
+  type AssertionKind,
   buildExtractionPrompt,
   type ExtractedFact,
   ExtractionOutputSchema,
@@ -38,23 +39,33 @@ function validity(fact: ExtractedFact): { validFrom: Date | null; validTo: Date 
   return { validFrom, validTo: validFrom && validTo && validTo <= validFrom ? null : validTo };
 }
 
-// Sensibilité au plus restrictif (D6) ; l'ACL voulue du fait en découle (D13).
+// Sensibilité jugée fait par fait (D6 révisée) : le tri signale les tours sensibles à l'extraction, qui
+// marque chaque fait ; un fait sans rapport tiré d'un tour signalé reste partageable. L'ACL voulue du fait
+// en découle (D13).
 function factAccess(run: PipelineRun, ctx: TenantContext, fact: ExtractedFact) {
   const triageEntry = run.triage?.sensitiveTurns.find(
     (entry) => entry.turnExternalId === fact.turnExternalId,
   );
-  const turnSensitive = triageEntry !== undefined;
-  const sensitive = turnSensitive || fact.sensitive || fact.sensitiveCategory !== null;
+  const sensitive = fact.sensitive || fact.sensitiveCategory !== null;
   const factAcl = sensitive ? authorAcl(ctx.userId) : teamAcl(ctx.tenantId);
   return {
     sensitivity: sensitive ? ('sensitive' as const) : ('shareable' as const),
-    sensitiveCategory: fact.sensitiveCategory ?? triageEntry?.category ?? null,
+    sensitiveCategory: sensitive ? (fact.sensitiveCategory ?? triageEntry?.category ?? null) : null,
     factAcl,
   };
 }
 
+// Seul un fait établi entre dans la mémoire : une proposition, une supposition ou une action de session
+// présentée comme un fait d'équipe diffuserait une erreur avec assurance.
+const ASSERTION_REJECTIONS: Record<Exclude<AssertionKind, 'etabli'>, string> = {
+  propose: 'proposition non validée',
+  suppose: 'supposition',
+  session: 'action de session',
+};
+
 function rejectionReason(input: {
   turn: RunTurn | undefined;
+  assertion: AssertionKind;
   statement: string;
   hasSecret: boolean;
   quoteFound: boolean;
@@ -64,6 +75,7 @@ function rejectionReason(input: {
     return 'énoncé invalide';
   if (input.hasSecret) return 'secret détecté';
   if (!input.quoteFound) return 'citation introuvable';
+  if (input.assertion !== 'etabli') return ASSERTION_REJECTIONS[input.assertion];
   return null;
 }
 
@@ -77,7 +89,13 @@ function toCandidate(run: PipelineRun, ctx: TenantContext, { fact, window }: Win
   const maskedValue = value === null ? null : maskSecrets(value);
   const range = turn ? verifyQuote(turn.text, fact.quote) : null;
   const hasSecret = maskedStatement !== statement || maskedValue !== value;
-  const reason = rejectionReason({ turn, statement, hasSecret, quoteFound: range !== null });
+  const reason = rejectionReason({
+    turn,
+    assertion: fact.assertion,
+    statement,
+    hasSecret,
+    quoteFound: range !== null,
+  });
   return {
     tenantId: ctx.tenantId,
     ingestRunId: run.id,
@@ -103,14 +121,26 @@ function toCandidate(run: PipelineRun, ctx: TenantContext, { fact, window }: Win
   } satisfies NewCandidate;
 }
 
+// Tous les tours, sauf ceux que le tri désigne comme du bruit : un oubli du tri coûte un peu plus cher,
+// il ne fait jamais perdre un fait. Si le tri range tout en bruit alors qu'il garde la conversation,
+// tous les tours passent.
+export function selectTurns(turns: RunTurn[], noiseIds: readonly string[]): RunTurn[] {
+  const noise = new Set(noiseIds);
+  const kept = turns.filter((turn) => !noise.has(turn.externalId));
+  return kept.length > 0 ? kept : turns;
+}
+
 async function extractFacts(run: PipelineRun, catalog: Catalog, llm: Llm) {
   const extracted: WindowFact[] = [];
-  for (const window of windowTurns(run.turns, WINDOW_MAX_CHARS)) {
+  // Un run trié avant l'ajout de noiseTurns n'a pas ce champ : tous ses tours passent.
+  const turns = selectTurns(run.turns, run.triage?.noiseTurns ?? []);
+  for (const window of windowTurns(turns, WINDOW_MAX_CHARS)) {
     const prompt = buildExtractionPrompt({
       catalog,
       sourceKindLabel: SOURCE_KIND_LABELS[run.sourceKind],
       title: run.sourceTitle,
       turns: window,
+      flaggedTurns: run.triage?.sensitiveTurns ?? [],
     });
     const output = await llm.generateObject({
       step: 'extraction',

@@ -8,6 +8,7 @@ import { listCardTree, type TreeType } from './tree';
 
 const BASE_SLUGS = [
   'client',
+  'concurrent',
   'decision',
   'fournisseur',
   'outil',

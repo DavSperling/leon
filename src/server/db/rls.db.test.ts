@@ -122,6 +122,7 @@ describe('catalogue', () => {
       );
       expect(rows.map((row) => row.slug).sort()).toEqual([
         'client',
+        'concurrent',
         'decision',
         'fournisseur',
         'outil',

@@ -9,7 +9,7 @@ import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { LlmRequest } from '@/server/llm/llm';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
-import { runExtraction } from './extraction';
+import { runExtraction, selectTurns } from './extraction';
 import type { ExtractedFact } from './prompts/extraction';
 import type { TriageResult } from './prompts/triage';
 import { enqueuePipelineStep, type PipelineJob } from './queue';
@@ -34,6 +34,7 @@ const turn = (n: number, text: string): Turn => ({
 async function setup(
   turnList: Turn[] = [turn(1, PAYMENT_TEXT), turn(2, 'Noté.')],
   sensitiveTurns: TriageResult['sensitiveTurns'] = [],
+  noiseTurns: string[] = [],
 ) {
   const { tenantId, members } = await createTestTenant(['Paul']);
   const [paul] = members as [TenantContext];
@@ -43,7 +44,12 @@ async function setup(
   });
   if (!ingestRunId) throw new Error('run non créé');
   const job: PipelineJob = { ingestRunId, tenantId, userId: paul.userId };
-  const triageLlm = createFakeLlm(() => ({ keep: true, reason: 'Un délai.', sensitiveTurns }));
+  const triageLlm = createFakeLlm(() => ({
+    keep: true,
+    reason: 'Un délai.',
+    sensitiveTurns,
+    noiseTurns,
+  }));
   if ((await runTriage(job, triageLlm)) !== 'extraction') throw new Error('triage non passé');
   return { tenantId, paul, job };
 }
@@ -60,6 +66,7 @@ const fact = (override: Partial<ExtractedFact> = {}): ExtractedFact => ({
   validFrom: '2026-10-13',
   validTo: null,
   confidence: 0.9,
+  assertion: 'etabli',
   sensitive: false,
   sensitiveCategory: null,
   ...override,
@@ -125,8 +132,32 @@ describe('runExtraction', () => {
     });
   });
 
-  it('rend sensible un fait dont le tour est marqué au triage', async () => {
-    const { paul, candidate } = await extractOne({}, [
+  it('signale à l extraction les tours marqués au triage', async () => {
+    const { job } = await setup(undefined, [{ turnExternalId: 'msg-1', category: 'remuneration' }]);
+    const llm = llmReturning([fact()]);
+
+    await runExtraction(job, llm);
+
+    const prompt = llm.calls[0]?.prompt ?? '';
+    expect(prompt).toContain('<signalements>');
+    expect(prompt).toContain('{"turnExternalId":"msg-1","category":"remuneration"}');
+  });
+
+  it('laisse partageable un fait sans rapport tiré d un tour marqué au triage', async () => {
+    const { tenantId, candidate } = await extractOne({}, [
+      { turnExternalId: 'msg-1', category: 'remuneration' },
+    ]);
+
+    expect(candidate).toMatchObject({
+      sensitivity: 'shareable',
+      sensitiveCategory: null,
+      factAcl: [tenantId],
+      status: 'pending',
+    });
+  });
+
+  it('reprend la catégorie du triage pour un fait sensible sans catégorie', async () => {
+    const { paul, candidate } = await extractOne({ sensitive: true, sensitiveCategory: null }, [
       { turnExternalId: 'msg-1', category: 'remuneration' },
     ]);
 
@@ -134,7 +165,6 @@ describe('runExtraction', () => {
       sensitivity: 'sensitive',
       sensitiveCategory: 'remuneration',
       factAcl: [paul.userId],
-      status: 'pending',
     });
   });
 
@@ -152,6 +182,17 @@ describe('runExtraction', () => {
       sensitiveCategory: 'rh',
       factAcl: [paul.userId],
     });
+  });
+
+  it.each([
+    ['propose', 'proposition non validée'],
+    ['suppose', 'supposition'],
+    ['session', 'action de session'],
+  ] as const)('rejette un fait dont l assertion est %s', async (assertion, reason) => {
+    const { paul, job, candidate } = await extractOne({ assertion });
+
+    expect(candidate).toMatchObject({ status: 'rejected', rejectionReason: reason });
+    expect(await readRun(paul, job.ingestRunId)).toMatchObject({ status: 'done', step: 'done' });
   });
 
   it('rejette une citation introuvable', async () => {
@@ -297,5 +338,44 @@ describe('runExtraction', () => {
     expect(JSON.stringify(candidates)).not.toContain('Tr0ub4dour');
     const factRows = await adminDb.select().from(facts).where(eq(facts.tenantId, job.tenantId));
     expect(factRows).toHaveLength(0);
+  });
+});
+
+describe('selectTurns', () => {
+  const runTurn = (n: number) => ({
+    id: `id-${n}`,
+    externalId: `msg-${n}`,
+    role: 'user' as const,
+    text: `Tour ${n}`,
+    ts: new Date(),
+  });
+  const turns = Array.from({ length: 5 }, (_, i) => runTurn(i + 1));
+  const ids = (list: Array<{ externalId: string }>) => list.map((t) => t.externalId);
+
+  it('écarte les tours désignés comme du bruit', () => {
+    expect(ids(selectTurns(turns, ['msg-2', 'msg-4']))).toEqual(['msg-1', 'msg-3', 'msg-5']);
+  });
+
+  it('garde tous les tours sans bruit connu, ou si tout est désigné comme du bruit', () => {
+    expect(selectTurns(turns, [])).toHaveLength(5);
+    expect(selectTurns(turns, ['msg-inconnu'])).toHaveLength(5);
+    expect(selectTurns(turns, ids(turns))).toHaveLength(5);
+  });
+});
+
+describe('runExtraction : bruit écarté', () => {
+  it('n envoie pas à l extraction les tours désignés comme du bruit par le tri', async () => {
+    const turnList = Array.from({ length: 4 }, (_, i) => turn(i + 1, `Contenu ${i + 1}.`));
+    turnList[0] = turn(1, PAYMENT_TEXT);
+    const { job } = await setup(turnList, [], ['msg-2', 'msg-3']);
+    const llm = llmReturning([fact()]);
+
+    await runExtraction(job, llm);
+
+    const prompt = llm.calls.map((call) => call.prompt).join('\n');
+    expect(prompt).toContain('id="msg-1"');
+    expect(prompt).toContain('id="msg-4"');
+    expect(prompt).not.toContain('id="msg-2"');
+    expect(prompt).not.toContain('id="msg-3"');
   });
 });

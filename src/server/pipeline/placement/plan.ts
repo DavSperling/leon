@@ -106,15 +106,34 @@ function choosePredicate(catalog: Catalog, typeSlug: string, predicate: string):
   return known ? predicate : 'note';
 }
 
-// Une relation ne vise qu'un fait actif de la fiche choisie, au prédicat retenu ; sinon le fait est nouveau.
+// Comparaison d'énoncés insensible aux accents, à la casse et à la ponctuation.
+export function normalizeStatement(statement: string): string {
+  return statement
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+// Un énoncé identique à un fait actif de la fiche est un doublon, quoi qu'en dise le modèle. Sinon,
+// un doublon vise n'importe quel fait actif de la fiche ; un remplacement ou une contradiction, un fait
+// du prédicat retenu seulement. Une relation hors de ces faits devient un fait nouveau.
 function chooseRelation(
   option: CardOption | undefined,
   predicate: string,
+  candidate: PlacementCandidate,
   decision: Decision,
 ): Relation {
-  if (!option || decision.relation === 'new') return { kind: 'new' };
+  if (!option) return { kind: 'new' };
+  const statement = normalizeStatement(candidate.statement);
+  const same = option.activeFacts.find((fact) => normalizeStatement(fact.statement) === statement);
+  if (same) return { kind: 'duplicate', factId: same.id };
+  if (decision.relation === 'new') return { kind: 'new' };
   const related = option.activeFacts.find(
-    (fact) => fact.id === decision.relatedFactId && fact.predicate === predicate,
+    (fact) =>
+      fact.id === decision.relatedFactId &&
+      (decision.relation === 'duplicate' || fact.predicate === predicate),
   );
   return related ? { kind: decision.relation, factId: related.id } : { kind: 'new' };
 }
@@ -146,7 +165,7 @@ function planCandidate(
     candidateId,
     target,
     predicate,
-    relation: chooseRelation(option, predicate, decision),
+    relation: chooseRelation(option, predicate, candidate, decision),
     aliases: subjectAliases(candidate.subject),
   };
 }
@@ -164,4 +183,28 @@ export function planPlacement(
   return context.candidates.map((candidate) =>
     planCandidate(context.catalog, candidate, decisions.get(candidate.candidateId)),
   );
+}
+
+// Deux candidats d'un même rangement qui disent la même chose, avec la même sensibilité, ne font qu'un
+// fait : le premier est rangé, les suivants sont rejetés. Un fait privé ne masque jamais un fait d'équipe.
+export function dropRepeatedStatements(
+  context: PlacementContext,
+  actions: PlacementAction[],
+): PlacementAction[] {
+  const candidates = new Map(context.candidates.map((c) => [c.candidateId, c]));
+  const seen = new Set<string>();
+  return actions.map((action) => {
+    const candidate = candidates.get(action.candidateId);
+    if (action.kind === 'reject' || !candidate) return action;
+    const key = `${candidate.sensitive}|${normalizeStatement(candidate.statement)}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      return action;
+    }
+    return {
+      kind: 'reject',
+      candidateId: action.candidateId,
+      reason: 'doublon d’un autre candidat',
+    };
+  });
 }

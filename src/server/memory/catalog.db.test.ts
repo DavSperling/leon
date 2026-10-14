@@ -8,6 +8,7 @@ import { createProposedType, loadCatalog, predicatesForType } from './catalog';
 
 const BASE_SLUGS = [
   'client',
+  'concurrent',
   'decision',
   'fournisseur',
   'outil',
@@ -37,7 +38,7 @@ describe('loadCatalog', () => {
     const catalog = await withTenant(marie, (tx) => loadCatalog(tx));
 
     expect(catalog.types.map((type) => type.slug)).not.toContain('chantier');
-    expect(catalog.types.filter((type) => type.isBase)).toHaveLength(8);
+    expect(catalog.types.filter((type) => type.isBase)).toHaveLength(9);
   });
 });
 

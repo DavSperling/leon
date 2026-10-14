@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Catalog } from '@/server/memory/catalog';
 import type { PlacementOutput } from '../prompts/placement';
 import type { PlacementCandidate, PlacementContext } from './context';
-import { planPlacement } from './plan';
+import {
+  dropRepeatedStatements,
+  normalizeStatement,
+  type PlacementAction,
+  planPlacement,
+} from './plan';
 
 type Decision = PlacementOutput['decisions'][number];
 
@@ -318,5 +323,102 @@ describe('planPlacement : relation, prédicat, alias', () => {
       relation: { kind: 'contradicts', factId: ACME_FACT },
       aliases: [{ alias: 'ACME', kind: 'name' }],
     });
+  });
+});
+
+describe('planPlacement : doublons', () => {
+  const NOTE_FACT = {
+    id: 'fact-acme-note',
+    predicate: 'note',
+    statement: 'ACME est un client historique.',
+    validFrom: '2026-09-01T00:00:00.000Z',
+  };
+  const acmeWithNote = [{ ...ACME_OPTION, activeFacts: [...ACME_OPTION.activeFacts, NOTE_FACT] }];
+
+  it('garde un doublon vers un fait de la fiche rangé sous un autre prédicat', () => {
+    expect(
+      planOne([decision({ relation: 'duplicate', relatedFactId: NOTE_FACT.id })], {
+        cardOptions: acmeWithNote,
+      }),
+    ).toMatchObject({ relation: { kind: 'duplicate', factId: NOTE_FACT.id } });
+  });
+
+  it('ramène à new un remplacement ou une contradiction vers un autre prédicat', () => {
+    for (const relation of ['supersedes', 'contradicts'] as const) {
+      expect(
+        planOne([decision({ relation, relatedFactId: NOTE_FACT.id })], {
+          cardOptions: acmeWithNote,
+        }),
+      ).toMatchObject({ relation: { kind: 'new' } });
+    }
+  });
+
+  it('fait un doublon d un énoncé identique, même si le modèle dit new', () => {
+    expect(
+      planOne([decision({ relation: 'new' })], {
+        statement: 'Acme est un client  historique',
+        predicate: 'paiement',
+        cardOptions: acmeWithNote,
+      }),
+    ).toMatchObject({ relation: { kind: 'duplicate', factId: NOTE_FACT.id } });
+  });
+});
+
+describe('normalizeStatement', () => {
+  it('ignore accents, casse, ponctuation et espaces', () => {
+    expect(normalizeStatement('  Léon : la mémoire, unifiée !')).toBe(
+      normalizeStatement('leon la memoire unifiee'),
+    );
+  });
+});
+
+describe('dropRepeatedStatements', () => {
+  const place = (candidateId: string): PlacementAction => ({
+    kind: 'place',
+    candidateId,
+    target: { kind: 'existing', cardId: ACME },
+    predicate: 'note',
+    relation: { kind: 'new' },
+    aliases: [],
+  });
+  const contextOf = (...list: Array<Partial<PlacementCandidate>>): PlacementContext => ({
+    catalog,
+    candidates: list.map((override) => candidate(override)),
+  });
+
+  it('rejette le second candidat qui dit la même chose', () => {
+    const context = contextOf(
+      { candidateId: 'a', statement: 'Le panel compte 18 acheteurs.' },
+      { candidateId: 'b', statement: 'le panel compte 18 acheteurs' },
+      { candidateId: 'c', statement: 'Le panel compte 82 refus.' },
+    );
+
+    expect(dropRepeatedStatements(context, [place('a'), place('b'), place('c')])).toEqual([
+      place('a'),
+      { kind: 'reject', candidateId: 'b', reason: 'doublon d’un autre candidat' },
+      place('c'),
+    ]);
+  });
+
+  it('ne laisse pas un fait sensible masquer le même fait partageable', () => {
+    const context = contextOf(
+      { candidateId: 'a', statement: 'Même énoncé.', sensitive: true },
+      { candidateId: 'b', statement: 'Même énoncé.', sensitive: false },
+    );
+
+    expect(dropRepeatedStatements(context, [place('a'), place('b')])).toEqual([
+      place('a'),
+      place('b'),
+    ]);
+  });
+
+  it('garde le second quand le premier a été rejeté', () => {
+    const context = contextOf(
+      { candidateId: 'a', statement: 'Même énoncé.' },
+      { candidateId: 'b', statement: 'Même énoncé.' },
+    );
+    const rejected: PlacementAction = { kind: 'reject', candidateId: 'a', reason: 'type inconnu' };
+
+    expect(dropRepeatedStatements(context, [rejected, place('b')])).toEqual([rejected, place('b')]);
   });
 });

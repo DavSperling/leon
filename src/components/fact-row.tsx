@@ -23,54 +23,52 @@ export function validityLabel(
 function Visibility({ visibility }: { visibility: FactView['visibility'] }) {
   const Icon = visibility === 'team' ? Users : Lock;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] leading-[18px] text-muted-foreground">
-      <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5">
+      <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
       {visibility === 'team' ? 'Équipe' : 'Privé (vous)'}
     </span>
   );
 }
 
-// Un fait : prédicat, énoncé, validité, statut, citation, source et visibilité.
-export function FactRow({ fact }: { fact: FactView }) {
+// Un fait se lit comme un paragraphe : l'énoncé, la citation, puis en petit la validité,
+// la source et la visibilité. Le prédicat est le titre de section, sauf dans l'historique.
+export function FactRow({
+  fact,
+  showPredicate = false,
+}: {
+  fact: FactView;
+  showPredicate?: boolean;
+}) {
   return (
-    <li className="grid grid-cols-[160px_minmax(0,1fr)_160px] gap-x-4 border-b py-3">
-      <p className="pt-[3px] text-[13px] leading-[18px] text-muted-foreground">
-        {fact.predicateLabel}
+    <li className="space-y-3">
+      <p
+        className={cn(
+          'text-base leading-7 text-pretty',
+          fact.status === 'superseded' && 'text-muted-foreground',
+        )}
+      >
+        {showPredicate && <span className="mr-2 font-medium">{fact.predicateLabel} :</span>}
+        {fact.statement}
       </p>
-      <div className="space-y-2">
-        <p
-          className={cn(
-            'max-w-[72ch] text-[15px] leading-6',
-            fact.status === 'superseded' && 'text-muted-foreground',
-          )}
-        >
-          {fact.statement}
-        </p>
-        <QuoteBlock quote={fact.quote} />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <SourceChip
-            kind={fact.sourceKind}
-            label={fact.sourceKindLabel}
-            authorName={fact.authorName}
-            at={fact.recordedAt}
-          />
-          <Visibility visibility={fact.visibility} />
-        </div>
-      </div>
-      <div className="flex flex-col items-end gap-1 pt-[3px]">
+      <QuoteBlock quote={fact.quote} />
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-[18px] text-muted-foreground">
         <time
           dateTime={fact.validFrom.toISOString()}
           title={formatDateTime(fact.validFrom)}
-          className="text-[13px] leading-[18px] whitespace-nowrap text-muted-foreground tabular-nums"
+          className="whitespace-nowrap tabular-nums"
         >
           {validityLabel(fact)}
         </time>
+        <SourceChip
+          kind={fact.sourceKind}
+          label={fact.sourceKindLabel}
+          authorName={fact.authorName}
+          at={fact.recordedAt}
+        />
+        <Visibility visibility={fact.visibility} />
         {fact.status !== 'active' && <StatusBadge status={fact.status} />}
         {fact.status === 'conflict' && (
-          <Link
-            href="/a-verifier"
-            className="text-[13px] leading-[18px] text-primary hover:underline"
-          >
+          <Link href="/a-verifier" className="text-primary hover:underline">
             À vérifier →
           </Link>
         )}

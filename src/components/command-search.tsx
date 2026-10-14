@@ -74,10 +74,10 @@ export function CommandSearch() {
         variant="outline"
         aria-keyshortcuts="Meta+K Control+K"
         onClick={() => setOpen(true)}
-        className="w-full justify-start font-normal text-muted-foreground"
+        className="h-9 w-full justify-start rounded-lg bg-card font-normal text-muted-foreground shadow-xs transition-colors"
       >
         <Search size={16} strokeWidth={1.5} aria-hidden="true" />
-        <span className="flex-1 text-left">Rechercher une fiche, un fait…</span>
+        <span className="flex-1 text-left">Rechercher…</span>
         <kbd className="font-mono text-xs leading-4">⌘K</kbd>
       </Button>
       <CommandDialog

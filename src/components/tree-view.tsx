@@ -1,18 +1,6 @@
 'use client';
 
-import {
-  Building2,
-  ChevronRight,
-  Folder,
-  FolderKanban,
-  Gavel,
-  type LucideIcon,
-  Package,
-  ScrollText,
-  Truck,
-  User,
-  Wrench,
-} from 'lucide-react';
+import { FileText, Folder, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type KeyboardEvent, useRef, useState } from 'react';
@@ -21,17 +9,6 @@ import { StatusBadge } from '@/components/status-badge';
 import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { TreeType } from '@/server/memory/tree';
-
-const TYPE_ICONS: Record<string, LucideIcon> = {
-  client: Building2,
-  projet: FolderKanban,
-  personne: User,
-  decision: Gavel,
-  regle: ScrollText,
-  fournisseur: Truck,
-  produit: Package,
-  outil: Wrench,
-};
 
 type RowBase = { key: string; level: number; parentKey: string | null };
 export type TreeRow = RowBase &
@@ -107,22 +84,38 @@ function typeKeysAbove(types: TreeType[], cardId: string): string[] {
 }
 
 const ROW_CLASS =
-  'flex h-7 w-full items-center gap-1.5 border-l-2 border-transparent pr-3 text-[13px] leading-[18px] hover:bg-accent';
+  'relative mx-2 flex h-9 items-center gap-2.5 rounded-lg pr-2 text-[15px] leading-5 text-foreground-2 transition-colors duration-150 hover:bg-accent hover:text-foreground';
+
+const INDENT = 20;
+const rowPadding = (level: number) => ({ paddingLeft: 10 + (level - 1) * INDENT });
+
+// Un trait vertical sous chaque dossier parent, aligné sur son icône, comme dans un explorateur.
+function Guides({ level }: { level: number }) {
+  return Array.from({ length: level - 1 }, (_, index) => (
+    <span
+      // biome-ignore lint/suspicious/noArrayIndexKey: un trait par niveau, fixes
+      key={index}
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-y-0 w-px bg-border"
+      style={{ left: 18 + index * INDENT }}
+    />
+  ));
+}
 
 function TypeLabel({ row }: { row: Extract<TreeRow, { kind: 'type' }> }) {
-  const Icon = TYPE_ICONS[row.type.slug] ?? Folder;
+  const Icon = row.open ? FolderOpen : Folder;
   return (
     <>
-      <ChevronRight
-        size={14}
+      <Guides level={row.level} />
+      <Icon
+        size={17}
         strokeWidth={1.5}
         aria-hidden="true"
-        className={cn('shrink-0', !row.expandable && 'invisible', row.open && 'rotate-90')}
+        className="shrink-0 text-muted-foreground"
       />
-      <Icon size={14} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
       <span className="min-w-0 truncate">{row.type.label}</span>
       {row.type.status === 'proposed' && <StatusBadge status="proposed" />}
-      <span className="ml-auto font-mono text-xs leading-4 text-muted-foreground">
+      <span className="ml-auto text-xs leading-4 text-muted-foreground/70 tabular-nums">
         {formatNumber(row.count)}
         <span className="sr-only"> {row.count > 1 ? 'fiches' : 'fiche'}</span>
       </span>
@@ -183,10 +176,10 @@ export function TreeView({ tree }: { tree: TreeType[] }) {
   };
 
   return (
-    <div ref={containerRef} role="tree" aria-label="Fiches par type" className="py-2">
+    <div ref={containerRef} role="tree" aria-label="Fiches par type">
       {rows.map((row, index) => {
         const tabIndex = row.key === tabbableKey ? 0 : -1;
-        const style = { paddingLeft: 12 + (row.level - 1) * 12 };
+        const style = rowPadding(row.level);
         if (row.kind === 'type') {
           return (
             <div
@@ -220,17 +213,29 @@ export function TreeView({ tree }: { tree: TreeType[] }) {
             tabIndex={tabIndex}
             style={style}
             title={row.card.title}
-            className={cn(ROW_CLASS, current && 'border-primary bg-primary-soft text-primary')}
+            className={cn(
+              ROW_CLASS,
+              current && 'bg-primary-soft text-foreground hover:bg-primary-soft',
+            )}
             onFocus={() => setFocusKey(row.key)}
             onKeyDown={(event) => handleKeyDown(event, index)}
           >
-            <span className="w-3.5 shrink-0" aria-hidden="true" />
+            <Guides level={row.level} />
+            <FileText
+              size={17}
+              strokeWidth={1.5}
+              aria-hidden="true"
+              className={cn('shrink-0 text-muted-foreground', current && 'text-primary')}
+            />
             <span className={cn('min-w-0 truncate', row.card.status === 'unconfirmed' && 'italic')}>
               {row.card.title}
             </span>
             {row.card.status === 'unconfirmed' && (
-              <span className="ml-auto shrink-0 text-xs leading-4 text-muted-foreground">
-                non confirmée
+              <span
+                title="Non confirmée"
+                className="ml-auto size-1.5 shrink-0 rounded-full bg-warning/60"
+              >
+                <span className="sr-only">non confirmée</span>
               </span>
             )}
           </Link>

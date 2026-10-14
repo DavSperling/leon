@@ -14,7 +14,7 @@ export function QuoteBlock({ quote }: { quote: string }) {
 
   return (
     <div>
-      <blockquote className="border-l-2 border-input bg-quote px-3 py-2 font-serif text-sm leading-5 italic">
+      <blockquote className="border-l-2 border-border pl-4 text-[15px] leading-6 text-muted-foreground">
         <p ref={measure} className={cn('whitespace-pre-line', !expanded && 'line-clamp-3')}>
           {`«\u00a0${quote}\u00a0»`}
         </p>

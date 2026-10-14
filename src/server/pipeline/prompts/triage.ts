@@ -9,6 +9,7 @@ export const TriageOutputSchema = z.object({
   sensitiveTurns: z.array(
     z.object({ turnExternalId: z.string(), category: z.enum(SENSITIVE_CATEGORIES) }),
   ),
+  usefulTurns: z.array(z.string()),
 });
 export type TriageResult = z.infer<typeof TriageOutputSchema>; // stocké tel quel dans ingest_runs.triage
 
@@ -23,9 +24,10 @@ export const NOT_SENSITIVE =
 
 const SYSTEM = `Tu tries des conversations entre des employés et un assistant, pour alimenter la mémoire de leur entreprise.
 
-Tu réponds avec trois champs.
+Tu réponds avec quatre champs.
 - keep : true s’il y a au moins une information durable utile à l’auteur ou à l’équipe (une décision, un engagement, un fait sur un client, un fournisseur, un projet, une personne, un produit, un outil, une règle, un chiffre convenu). false pour du code pur, du débogage sans décision, des questions génériques ou du bavardage.
 - reason : une phrase courte qui justifie keep.
+- usefulTurns : les ids des tours (attribut id, recopié tel quel) qui contiennent une information durable, ou qui confirment, acceptent, refusent ou corrigent une information d’un autre tour. Laisse de côté les tours de code, de débogage, de sorties d’outils, de questions génériques et de bavardage. Liste vide si keep est false.
 - sensitiveTurns : les tours sensibles, chacun avec son id (l’attribut id de la balise tour, recopié tel quel) et sa catégorie. Un tour est sensible s’il touche à :
   - rh : embauche, départ, évaluation, conflit, concernant une personne de l’entreprise ;
   - remuneration : salaire, prime ou rémunération d’une personne (fondateurs compris) ;

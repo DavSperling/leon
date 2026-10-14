@@ -9,7 +9,7 @@ import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { LlmRequest } from '@/server/llm/llm';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
-import { runExtraction } from './extraction';
+import { runExtraction, selectTurns } from './extraction';
 import type { ExtractedFact } from './prompts/extraction';
 import type { TriageResult } from './prompts/triage';
 import { enqueuePipelineStep, type PipelineJob } from './queue';
@@ -34,6 +34,7 @@ const turn = (n: number, text: string): Turn => ({
 async function setup(
   turnList: Turn[] = [turn(1, PAYMENT_TEXT), turn(2, 'Noté.')],
   sensitiveTurns: TriageResult['sensitiveTurns'] = [],
+  usefulTurns: string[] = [],
 ) {
   const { tenantId, members } = await createTestTenant(['Paul']);
   const [paul] = members as [TenantContext];
@@ -43,7 +44,12 @@ async function setup(
   });
   if (!ingestRunId) throw new Error('run non créé');
   const job: PipelineJob = { ingestRunId, tenantId, userId: paul.userId };
-  const triageLlm = createFakeLlm(() => ({ keep: true, reason: 'Un délai.', sensitiveTurns }));
+  const triageLlm = createFakeLlm(() => ({
+    keep: true,
+    reason: 'Un délai.',
+    sensitiveTurns,
+    usefulTurns,
+  }));
   if ((await runTriage(job, triageLlm)) !== 'extraction') throw new Error('triage non passé');
   return { tenantId, paul, job };
 }
@@ -332,5 +338,49 @@ describe('runExtraction', () => {
     expect(JSON.stringify(candidates)).not.toContain('Tr0ub4dour');
     const factRows = await adminDb.select().from(facts).where(eq(facts.tenantId, job.tenantId));
     expect(factRows).toHaveLength(0);
+  });
+});
+
+describe('selectTurns', () => {
+  const runTurn = (n: number) => ({
+    id: `id-${n}`,
+    externalId: `msg-${n}`,
+    role: 'user' as const,
+    text: `Tour ${n}`,
+    ts: new Date(),
+  });
+  const turns = Array.from({ length: 10 }, (_, i) => runTurn(i + 1));
+  const ids = (list: Array<{ externalId: string }>) => list.map((t) => t.externalId);
+
+  it('garde les tours utiles et leurs voisins immédiats', () => {
+    expect(ids(selectTurns(turns, ['msg-5']))).toEqual(['msg-4', 'msg-5', 'msg-6']);
+    expect(ids(selectTurns(turns, ['msg-1', 'msg-10']))).toEqual([
+      'msg-1',
+      'msg-2',
+      'msg-9',
+      'msg-10',
+    ]);
+  });
+
+  it('garde tous les tours sans désignation connue', () => {
+    expect(selectTurns(turns, [])).toHaveLength(10);
+    expect(selectTurns(turns, ['msg-inconnu'])).toHaveLength(10);
+  });
+});
+
+describe('runExtraction : tours utiles', () => {
+  it('n envoie à l extraction que les tours désignés par le tri et leurs voisins', async () => {
+    const turnList = Array.from({ length: 6 }, (_, i) => turn(i + 1, `Contenu ${i + 1}.`));
+    turnList[0] = turn(1, PAYMENT_TEXT);
+    const { job } = await setup(turnList, [], ['msg-1']);
+    const llm = llmReturning([fact()]);
+
+    await runExtraction(job, llm);
+
+    const prompt = llm.calls.map((call) => call.prompt).join('\n');
+    expect(prompt).toContain('id="msg-1"');
+    expect(prompt).toContain('id="msg-2"');
+    expect(prompt).not.toContain('id="msg-3"');
+    expect(prompt).not.toContain('id="msg-6"');
   });
 });

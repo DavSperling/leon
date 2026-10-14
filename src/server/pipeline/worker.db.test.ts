@@ -19,7 +19,8 @@ const FACT_TEXT = 'ACME paie ses factures à soixante jours.';
 // Le worker est un singleton par process : un seul faux LLM, aiguillé par l'étape et le texte du tour.
 const llm = createFakeLlm((request) => {
   if (request.prompt.includes(FAILING_TEXT)) throw new LlmError('refus du modèle');
-  if (request.step === 'triage') return { keep: true, reason: 'Un tarif.', sensitiveTurns: [] };
+  if (request.step === 'triage')
+    return { keep: true, reason: 'Un tarif.', sensitiveTurns: [], usefulTurns: [] };
   if (request.step === 'extraction') {
     const turnExternalId = /<tour id="([^"]+)"/.exec(request.prompt)?.[1];
     return {

@@ -49,7 +49,12 @@ async function triageWindow(
     schema: TriageOutputSchema,
     maxTokens: TRIAGE_MAX_TOKENS,
   });
-  return { ...result, sensitiveTurns: failClosed(windowTurnList, result.sensitiveTurns) };
+  const known = new Set(windowTurnList.map((turn) => turn.externalId));
+  return {
+    ...result,
+    sensitiveTurns: failClosed(windowTurnList, result.sensitiveTurns),
+    usefulTurns: result.usefulTurns.filter((id) => known.has(id)),
+  };
 }
 
 function mergeResults(results: TriageResult[]): TriageResult {
@@ -62,6 +67,7 @@ function mergeResults(results: TriageResult[]): TriageResult {
     keep: results.some((result) => result.keep),
     reason: results.map((result) => result.reason).join(' / '),
     sensitiveTurns: [...unique.values()],
+    usefulTurns: [...new Set(results.flatMap((result) => result.usefulTurns))],
   };
 }
 

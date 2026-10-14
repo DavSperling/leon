@@ -45,6 +45,7 @@ const verdict = (override: Partial<TriageResult> = {}): TriageResult => ({
   keep: true,
   reason: 'Un tarif a été convenu.',
   sensitiveTurns: [],
+  usefulTurns: [],
   ...override,
 });
 
@@ -128,6 +129,21 @@ describe('runTriage', () => {
       ]),
     );
     expect(stored.sensitiveTurns).toHaveLength(2);
+  });
+
+  it('garde les tours utiles connus, réunis sur les fenêtres, et ignore les ids inconnus', async () => {
+    const turnList = Array.from({ length: 60 }, (_, i) => turn(i + 1, 'x'.repeat(5000)));
+    const { paul, job } = await setup(turnList);
+    const llm = createFakeLlm((request) =>
+      request.prompt.includes('id="msg-60"')
+        ? verdict({ usefulTurns: ['msg-60', 'msg-inventé'] })
+        : verdict({ usefulTurns: ['msg-2', 'msg-60'] }),
+    );
+
+    await runTriage(job, llm);
+
+    const stored = (await readRun(paul, job.ingestRunId))?.triage as TriageResult;
+    expect(stored.usefulTurns).toEqual(['msg-2', 'msg-60']);
   });
 
   it('ne rappelle pas le LLM quand l étape est déjà passée', async () => {

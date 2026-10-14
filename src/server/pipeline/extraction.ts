@@ -121,9 +121,22 @@ function toCandidate(run: PipelineRun, ctx: TenantContext, { fact, window }: Win
   } satisfies NewCandidate;
 }
 
+// Les tours désignés utiles par le tri, avec leurs voisins immédiats (une confirmation ou une
+// correction se lit avec le tour qu'elle vise). Sans désignation connue, tous les tours : le tri
+// ne fait qu'économiser, il ne fait jamais perdre une conversation entière.
+export function selectTurns(turns: RunTurn[], usefulIds: readonly string[]): RunTurn[] {
+  const useful = new Set(usefulIds);
+  const indexes = turns.flatMap((turn, i) => (useful.has(turn.externalId) ? [i] : []));
+  if (indexes.length === 0) return turns;
+  const kept = new Set(indexes.flatMap((i) => [i - 1, i, i + 1]));
+  return turns.filter((_turn, i) => kept.has(i));
+}
+
 async function extractFacts(run: PipelineRun, catalog: Catalog, llm: Llm) {
   const extracted: WindowFact[] = [];
-  for (const window of windowTurns(run.turns, WINDOW_MAX_CHARS)) {
+  // Un run trié avant l'ajout de usefulTurns n'a pas ce champ : tous ses tours passent.
+  const turns = selectTurns(run.turns, run.triage?.usefulTurns ?? []);
+  for (const window of windowTurns(turns, WINDOW_MAX_CHARS)) {
     const prompt = buildExtractionPrompt({
       catalog,
       sourceKindLabel: SOURCE_KIND_LABELS[run.sourceKind],

@@ -121,21 +121,19 @@ function toCandidate(run: PipelineRun, ctx: TenantContext, { fact, window }: Win
   } satisfies NewCandidate;
 }
 
-// Les tours désignés utiles par le tri, avec leurs voisins immédiats (une confirmation ou une
-// correction se lit avec le tour qu'elle vise). Sans désignation connue, tous les tours : le tri
-// ne fait qu'économiser, il ne fait jamais perdre une conversation entière.
-export function selectTurns(turns: RunTurn[], usefulIds: readonly string[]): RunTurn[] {
-  const useful = new Set(usefulIds);
-  const indexes = turns.flatMap((turn, i) => (useful.has(turn.externalId) ? [i] : []));
-  if (indexes.length === 0) return turns;
-  const kept = new Set(indexes.flatMap((i) => [i - 1, i, i + 1]));
-  return turns.filter((_turn, i) => kept.has(i));
+// Tous les tours, sauf ceux que le tri désigne comme du bruit : un oubli du tri coûte un peu plus cher,
+// il ne fait jamais perdre un fait. Si le tri range tout en bruit alors qu'il garde la conversation,
+// tous les tours passent.
+export function selectTurns(turns: RunTurn[], noiseIds: readonly string[]): RunTurn[] {
+  const noise = new Set(noiseIds);
+  const kept = turns.filter((turn) => !noise.has(turn.externalId));
+  return kept.length > 0 ? kept : turns;
 }
 
 async function extractFacts(run: PipelineRun, catalog: Catalog, llm: Llm) {
   const extracted: WindowFact[] = [];
-  // Un run trié avant l'ajout de usefulTurns n'a pas ce champ : tous ses tours passent.
-  const turns = selectTurns(run.turns, run.triage?.usefulTurns ?? []);
+  // Un run trié avant l'ajout de noiseTurns n'a pas ce champ : tous ses tours passent.
+  const turns = selectTurns(run.turns, run.triage?.noiseTurns ?? []);
   for (const window of windowTurns(turns, WINDOW_MAX_CHARS)) {
     const prompt = buildExtractionPrompt({
       catalog,

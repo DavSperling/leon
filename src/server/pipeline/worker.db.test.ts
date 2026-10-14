@@ -20,7 +20,7 @@ const FACT_TEXT = 'ACME paie ses factures à soixante jours.';
 const llm = createFakeLlm((request) => {
   if (request.prompt.includes(FAILING_TEXT)) throw new LlmError('refus du modèle');
   if (request.step === 'triage')
-    return { keep: true, reason: 'Un tarif.', sensitiveTurns: [], usefulTurns: [] };
+    return { keep: true, reason: 'Un tarif.', sensitiveTurns: [], noiseTurns: [] };
   if (request.step === 'extraction') {
     const turnExternalId = /<tour id="([^"]+)"/.exec(request.prompt)?.[1];
     return {

@@ -9,7 +9,7 @@ export const TriageOutputSchema = z.object({
   sensitiveTurns: z.array(
     z.object({ turnExternalId: z.string(), category: z.enum(SENSITIVE_CATEGORIES) }),
   ),
-  usefulTurns: z.array(z.string()),
+  noiseTurns: z.array(z.string()),
 });
 export type TriageResult = z.infer<typeof TriageOutputSchema>; // stocké tel quel dans ingest_runs.triage
 
@@ -27,7 +27,7 @@ const SYSTEM = `Tu tries des conversations entre des employés et un assistant, 
 Tu réponds avec quatre champs.
 - keep : true s’il y a au moins une information durable utile à l’auteur ou à l’équipe (une décision, un engagement, un fait sur un client, un fournisseur, un projet, une personne, un produit, un outil, une règle, un chiffre convenu). false pour du code pur, du débogage sans décision, des questions génériques ou du bavardage.
 - reason : une phrase courte qui justifie keep.
-- usefulTurns : les ids des tours (attribut id, recopié tel quel) qui contiennent une information durable, ou qui confirment, acceptent, refusent ou corrigent une information d’un autre tour. Laisse de côté les tours de code, de débogage, de sorties d’outils, de questions génériques et de bavardage. Liste vide si keep est false.
+- noiseTurns : les ids des tours (attribut id, recopié tel quel) qui ne sont que du bruit : code, débogage sans décision, sorties d’outils, commandes, questions génériques, bavardage. En cas de doute, le tour n’est pas du bruit. Un tour qui relaie le rapport d’un autre agent ou d’une autre session (balise teammate-message), une synthèse ou un résultat de recherche n’est jamais du bruit, même long. Liste vide si aucun tour n’est du bruit.
 - sensitiveTurns : les tours sensibles, chacun avec son id (l’attribut id de la balise tour, recopié tel quel) et sa catégorie. Un tour est sensible s’il touche à :
   - rh : embauche, départ, évaluation, conflit, concernant une personne de l’entreprise ;
   - remuneration : salaire, prime ou rémunération d’une personne (fondateurs compris) ;

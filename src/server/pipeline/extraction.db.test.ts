@@ -34,7 +34,7 @@ const turn = (n: number, text: string): Turn => ({
 async function setup(
   turnList: Turn[] = [turn(1, PAYMENT_TEXT), turn(2, 'Noté.')],
   sensitiveTurns: TriageResult['sensitiveTurns'] = [],
-  usefulTurns: string[] = [],
+  noiseTurns: string[] = [],
 ) {
   const { tenantId, members } = await createTestTenant(['Paul']);
   const [paul] = members as [TenantContext];
@@ -48,7 +48,7 @@ async function setup(
     keep: true,
     reason: 'Un délai.',
     sensitiveTurns,
-    usefulTurns,
+    noiseTurns,
   }));
   if ((await runTriage(job, triageLlm)) !== 'extraction') throw new Error('triage non passé');
   return { tenantId, paul, job };
@@ -349,38 +349,33 @@ describe('selectTurns', () => {
     text: `Tour ${n}`,
     ts: new Date(),
   });
-  const turns = Array.from({ length: 10 }, (_, i) => runTurn(i + 1));
+  const turns = Array.from({ length: 5 }, (_, i) => runTurn(i + 1));
   const ids = (list: Array<{ externalId: string }>) => list.map((t) => t.externalId);
 
-  it('garde les tours utiles et leurs voisins immédiats', () => {
-    expect(ids(selectTurns(turns, ['msg-5']))).toEqual(['msg-4', 'msg-5', 'msg-6']);
-    expect(ids(selectTurns(turns, ['msg-1', 'msg-10']))).toEqual([
-      'msg-1',
-      'msg-2',
-      'msg-9',
-      'msg-10',
-    ]);
+  it('écarte les tours désignés comme du bruit', () => {
+    expect(ids(selectTurns(turns, ['msg-2', 'msg-4']))).toEqual(['msg-1', 'msg-3', 'msg-5']);
   });
 
-  it('garde tous les tours sans désignation connue', () => {
-    expect(selectTurns(turns, [])).toHaveLength(10);
-    expect(selectTurns(turns, ['msg-inconnu'])).toHaveLength(10);
+  it('garde tous les tours sans bruit connu, ou si tout est désigné comme du bruit', () => {
+    expect(selectTurns(turns, [])).toHaveLength(5);
+    expect(selectTurns(turns, ['msg-inconnu'])).toHaveLength(5);
+    expect(selectTurns(turns, ids(turns))).toHaveLength(5);
   });
 });
 
-describe('runExtraction : tours utiles', () => {
-  it('n envoie à l extraction que les tours désignés par le tri et leurs voisins', async () => {
-    const turnList = Array.from({ length: 6 }, (_, i) => turn(i + 1, `Contenu ${i + 1}.`));
+describe('runExtraction : bruit écarté', () => {
+  it('n envoie pas à l extraction les tours désignés comme du bruit par le tri', async () => {
+    const turnList = Array.from({ length: 4 }, (_, i) => turn(i + 1, `Contenu ${i + 1}.`));
     turnList[0] = turn(1, PAYMENT_TEXT);
-    const { job } = await setup(turnList, [], ['msg-1']);
+    const { job } = await setup(turnList, [], ['msg-2', 'msg-3']);
     const llm = llmReturning([fact()]);
 
     await runExtraction(job, llm);
 
     const prompt = llm.calls.map((call) => call.prompt).join('\n');
     expect(prompt).toContain('id="msg-1"');
-    expect(prompt).toContain('id="msg-2"');
+    expect(prompt).toContain('id="msg-4"');
+    expect(prompt).not.toContain('id="msg-2"');
     expect(prompt).not.toContain('id="msg-3"');
-    expect(prompt).not.toContain('id="msg-6"');
   });
 });

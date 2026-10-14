@@ -63,7 +63,7 @@ const llm = createFakeLlm((request) => {
       keep: true,
       reason: 'Des faits durables.',
       sensitiveTurns: sensitive.map((turn) => ({ turnExternalId: turn.id, category: 'rh' })),
-      usefulTurns: [],
+      noiseTurns: [],
     };
   }
   if (request.step === 'extraction') {

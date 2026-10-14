@@ -38,7 +38,9 @@ describe('createAnthropicLlm', () => {
       expect(params).toMatchObject({
         model: MODEL_BY_STEP[step],
         max_tokens: 1234,
-        system: 'Consignes du système',
+        system: [
+          { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },
+        ],
         messages: [{ role: 'user', content: 'Question ordinaire' }],
         output_config: { effort: EFFORT_BY_STEP[step], format: { type: 'json_schema' } },
       });
@@ -79,12 +81,14 @@ describe('createAnthropicLlm', () => {
     },
   );
 
-  it('ne met pas de cache_control dans le prompt système', async () => {
+  it('met en cache les consignes, pas le contenu capté', async () => {
     const { llm, parse } = setup(() => ok);
 
     await llm.generateObject(request('triage'));
 
-    expect(JSON.stringify(parse.mock.calls[0]?.[0])).not.toContain('cache_control');
+    const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
+    expect(JSON.stringify(params.system)).toContain('cache_control');
+    expect(JSON.stringify(params.messages)).not.toContain('cache_control');
   });
 
   it.each([

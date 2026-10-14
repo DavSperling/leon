@@ -92,7 +92,8 @@ async function parseOrThrow<T>(client: AnthropicLike, request: LlmRequest<T>) {
     return await client.beta.messages.parse({
       model: MODEL_BY_STEP[step],
       max_tokens: request.maxTokens,
-      system: request.system,
+      // Consignes identiques d'un appel à l'autre (catalogue compris) : en cache, relues à 0,05x.
+      system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: request.prompt }],
       output_config: { format: betaZodOutputFormat(request.schema), effort: EFFORT_BY_STEP[step] },
       ...(hasRefusalFallback(MODEL_BY_STEP[step]) ? REFUSAL_FALLBACK : {}),

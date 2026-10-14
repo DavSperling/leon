@@ -64,6 +64,10 @@ describe('buildExtractionPrompt', () => {
     expect(system).toContain('qu’il est simulé');
   });
 
+  it('demande le prédicat le plus précis, note en dernier recours', () => {
+    expect(build().system).toContain('note seulement si aucun ne convient');
+  });
+
   it('reprend la liste de ce qui n est pas sensible', () => {
     expect(build().system).toContain(NOT_SENSITIVE);
   });

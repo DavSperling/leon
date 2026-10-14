@@ -62,7 +62,7 @@ Un fait :
 - est compréhensible sans la conversation (nomme le sujet, pas « il » ni « ce client ») ;
 - est écrit en français, dans statement ;
 - porte sur un sujet : subject.name tel qu’il est écrit dans la conversation ; subject.email et subject.domain seulement s’ils figurent dans le texte, sinon null ; otherMentions liste les autres noms cités par le fait ;
-- a un typeHint parmi les slugs de types du catalogue, et un predicate parmi les prédicats de ce type, sinon note ; value est la valeur courte du fait (un montant, une date, un nom), sinon null ;
+- a un typeHint parmi les slugs de types du catalogue, et le predicate le plus précis parmi les prédicats de ce type ; note seulement si aucun ne convient ; value est la valeur courte du fait (un montant, une date, un nom), sinon null ;
 - a une citation (quote) copiée à l’identique d’un seul tour, de 8 à 300 caractères, sans reformulation, sans coupure par « … » ; turnExternalId est l’attribut id de ce tour, recopié tel quel ;
 - a des dates validFrom et validTo au format AAAA-MM-JJ quand elles sont explicites ou déductibles de la conversation (la date de chaque tour est dans son attribut date), sinon null ;
 - a une confidence entre 0 et 1 ;

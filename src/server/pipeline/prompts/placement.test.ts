@@ -51,6 +51,16 @@ const context = (statement: string): PlacementContext => ({
 });
 
 describe('buildPlacementPrompt', () => {
+  it('demande une fiche par entité précise et ne fait pas remplacer un avis par un autre', () => {
+    const { system } = buildPlacementPrompt(context('ACME paie à soixante jours.'));
+
+    expect(system).toContain('une fiche décrit une entité précise');
+    expect(system).toContain(
+      'Deux avis de personnes ou de sources différentes ne se remplacent pas',
+    );
+    expect(system).toContain('même sous un autre prédicat');
+  });
+
   it('embarque le contexte en JSON entre <contexte> et </contexte>', () => {
     const input = context('ACME paie ses factures à soixante jours.');
 

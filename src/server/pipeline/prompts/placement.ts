@@ -34,6 +34,8 @@ Le contexte, en JSON, contient :
 
 Rends une décision par candidat, avec son candidateId recopié tel quel.
 
+Granularité : une fiche décrit une entité précise (un client, un concurrent, un projet, une décision, une règle, une étude). Ne range pas sur la fiche de l’entreprise ou de son produit en général un fait qui porte sur une entité plus précise (un protocole de test, une étude, un plan de lancement, un concurrent, une offre) : crée ou choisis la fiche de cette entité. Deux candidats sur la même entité vont sur la même fiche, sous le même titre.
+
 Fiche :
 - si fixedCardId est donné, la fiche est déjà trouvée par un e-mail ou un domaine : decision existing et cardId = fixedCardId ;
 - existing : le sujet est l’entité d’une des cardOptions ; cardId est l’id de cette option ;
@@ -51,6 +53,7 @@ Relation, face aux activeFacts de la fiche choisie :
 - duplicate : la même information est déjà là, même sous un autre prédicat ou formulée autrement ;
 - supersedes : une nouvelle valeur du même attribut, sur le même prédicat, remplace l’ancienne dans le temps ;
 - contradicts : sur le même prédicat, les deux sont incompatibles sans succession claire ;
+Deux avis de personnes ou de sources différentes ne se remplacent pas : ils coexistent (new), ou se contredisent s’ils portent sur la même valeur.
 - new : aucun des cas précédents.
 relatedFactId est l’id du fait actif concerné ; null pour new et pour une nouvelle fiche.
 

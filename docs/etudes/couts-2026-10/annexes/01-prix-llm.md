@@ -12,12 +12,13 @@ Source keys: [A] https://platform.claude.com/docs/en/about-claude/pricing · [O]
 |---|---|---|---|---|
 | Fable 5.1 | 10 | 50 | 12.50 / 20 / 0.25 · 5 / 25 | A |
 | Opus 5.5 | 4 | 20 | 5 / 8 / 0.20 · 2 / 10 | A |
-| Sonnet 5.5 | 2 | 10 | 2.50 / 4 / 0.10–0.20 (sources differ) · 1 / 5 | A |
+| Sonnet 5.5 | 2 | 10 | 2.50 / 4 / 0.10 · 1 / 5 | A |
 | Sonnet 5 | 2 | 10 | 2.50 / 4 / 0.20 · 1 / 5 | A |
 | Haiku 5.5, prompt ≤100k | 0.10 | 0.50 | 0.125 / 0.20 / 0.01 · 0.05 / 0.25 | A |
 | Haiku 5.5, prompt >100k | 0.50 | 2.50 | 0.625 / 1 / 0.05 · 0.25 / 1.25 | A |
 | Haiku 4.5 | 1 | 5 | 1.25 / 2 / 0.10 · 0.50 / 2.50 | A |
 
+- **Revérifié le 14/10/2026** sur [A] : tous les prix Anthropic ci-dessus sont inchangés. Le prix de lecture du cache de Sonnet 5.5, noté « 0.10–0.20 (sources differ) » le 12/10, vaut 0,10 $ : la lecture du cache coûte 0,05x le prix d'entrée sur Opus 5.5 et Sonnet 5.5, et 0,025x sur Fable 5.1. Coûts mesurés sur de vraies conversations : [annexe 6](06-couts-mesures-pipeline.md).
 - Batch is −50%. Long context: no surcharge up to 1M tokens from 4.6 on, except Haiku 5.5 above 100k tokens (whole request billed at the higher rate).
 - Opus 5.5: thinking cannot be disabled; thinking tokens are billed as output.
 

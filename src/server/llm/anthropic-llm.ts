@@ -25,8 +25,9 @@ const REFUSAL_FALLBACK = {
 
 const TRUNCATED_STOP_REASONS = ['max_tokens', 'model_context_window_exceeded'];
 
-// Tarifs en dollars par million de tokens (platform.claude.com/docs/en/about-claude/pricing, 14/10/2026),
-// prompts de moins de 100 000 tokens pour Haiku 5.5. Ils servent à estimer le coût de chaque appel.
+// Tarifs en dollars par million de tokens, recopiés de la référence docs/etudes/couts-2026-10/annexes/01-prix-llm.md
+// (page officielle des tarifs, revérifiée le 14/10/2026) : on met l'annexe à jour d'abord, puis cette table.
+// Prompts de moins de 100 000 tokens pour Haiku 5.5. Ils servent à estimer le coût de chaque appel.
 const PRICE_PER_MTOK: Record<
   string,
   { input: number; output: number; cacheRead: number; cacheWrite: number }

@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Catalog } from '@/server/memory/catalog';
 import type { PlacementOutput } from '../prompts/placement';
 import type { PlacementCandidate, PlacementContext } from './context';
-import { dropRepeatedStatements, normalizeStatement, planPlacement } from './plan';
+import {
+  dropRepeatedStatements,
+  normalizeStatement,
+  type PlacementAction,
+  planPlacement,
+} from './plan';
 
 type Decision = PlacementOutput['decisions'][number];
 
@@ -368,15 +373,14 @@ describe('normalizeStatement', () => {
 });
 
 describe('dropRepeatedStatements', () => {
-  const place = (candidateId: string) =>
-    ({
-      kind: 'place',
-      candidateId,
-      target: { kind: 'existing', cardId: ACME },
-      predicate: 'note',
-      relation: { kind: 'new' },
-      aliases: [],
-    }) as const;
+  const place = (candidateId: string): PlacementAction => ({
+    kind: 'place',
+    candidateId,
+    target: { kind: 'existing', cardId: ACME },
+    predicate: 'note',
+    relation: { kind: 'new' },
+    aliases: [],
+  });
   const contextOf = (...list: Array<Partial<PlacementCandidate>>): PlacementContext => ({
     catalog,
     candidates: list.map((override) => candidate(override)),
@@ -413,7 +417,7 @@ describe('dropRepeatedStatements', () => {
       { candidateId: 'a', statement: 'Même énoncé.' },
       { candidateId: 'b', statement: 'Même énoncé.' },
     );
-    const rejected = { kind: 'reject', candidateId: 'a', reason: 'type inconnu' } as const;
+    const rejected: PlacementAction = { kind: 'reject', candidateId: 'a', reason: 'type inconnu' };
 
     expect(dropRepeatedStatements(context, [rejected, place('b')])).toEqual([rejected, place('b')]);
   });

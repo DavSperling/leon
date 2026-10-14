@@ -25,7 +25,9 @@ export const auth = betterAuth({
   },
   plugins: [
     // Rien n'est effacé : la suppression d'une organisation emporterait toute sa mémoire en cascade.
-    organization({ disableOrganizationDeletion: true }),
+    // Une invitation ne s'accepte qu'avec un e-mail vérifié : sinon, quiconque s'inscrit avec
+    // l'adresse invitée rejoint l'organisation (aucun e-mail n'est vérifié dans ce jet).
+    organization({ disableOrganizationDeletion: true, requireEmailVerificationOnInvitation: true }),
     nextCookies(), // en dernier : cookies posés par les server actions
   ],
 });

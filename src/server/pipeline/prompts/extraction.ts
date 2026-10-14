@@ -4,6 +4,7 @@ import { type Catalog, predicatesForType } from '@/server/memory/catalog';
 import { oneLine } from '@/server/memory/labels';
 import type { RunTurn } from '../runs';
 import { formatTurnsForPrompt } from './format-turns';
+import { NOT_SENSITIVE } from './triage';
 
 // Statut de l'affirmation dans la conversation : seul un fait établi entre dans la mémoire.
 export const ASSERTION_KINDS = ['etabli', 'propose', 'suppose', 'session'] as const;
@@ -77,7 +78,7 @@ Le sujet (subject.name) est l’entité la plus précise dont parle le fait : un
 
 N’invente rien : chaque fait doit figurer dans la conversation. Ignore le code, les traces, les sorties d’outils, et les faits sur l’assistant lui-même.
 Ne reprends jamais un mot de passe, une clé, un jeton, un identifiant de connexion ou un numéro de carte, ni dans statement, ni dans value.
-Marque sensitive à true, avec sa catégorie (sensitiveCategory), tout fait qui touche aux RH (rh), à la rémunération (remuneration), au juridique (juridique), à la santé (sante) ou à la vie personnelle (perso) ; sinon sensitive à false et sensitiveCategory à null. En cas de doute, le fait est sensible.
+Marque sensitive à true, avec sa catégorie (sensitiveCategory), tout fait qui touche aux RH d’une personne (rh), à la rémunération d’une personne (remuneration), à un litige, un contentieux ou une clause confidentielle de l’entreprise (juridique), à la santé (sante) ou à la vie personnelle (perso) d’une personne ; sinon sensitive à false et sensitiveCategory à null. ${NOT_SENSITIVE} En cas de doute sur un de ces cas, le fait est sensible.
 30 faits au plus. Liste vide s’il n’y a rien à retenir.
 
 Catalogue (type : prédicats) :

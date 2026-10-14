@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Catalog } from '@/server/memory/catalog';
 import type { RunTurn } from '../runs';
 import { buildExtractionPrompt, ExtractionOutputSchema } from './extraction';
+import { NOT_SENSITIVE } from './triage';
 
 const catalog: Catalog = {
   types: [
@@ -61,6 +62,10 @@ describe('buildExtractionPrompt', () => {
     for (const kind of ['etabli', 'propose', 'suppose', 'session']) expect(system).toContain(kind);
     expect(system).toContain('seule sa version corrigée l’est');
     expect(system).toContain('qu’il est simulé');
+  });
+
+  it('reprend la liste de ce qui n est pas sensible', () => {
+    expect(build().system).toContain(NOT_SENSITIVE);
   });
 
   it('liste chaque type et chaque prédicat du catalogue dans le système', () => {

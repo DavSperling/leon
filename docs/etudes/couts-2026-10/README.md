@@ -4,7 +4,7 @@
 
 Tableur : [`leon-modele-couts.xlsx`](leon-modele-couts.xlsx) · Sources détaillées : [`annexes/`](annexes/)
 
-> **Mise à jour du 14/10 : premiers coûts mesurés.** Sur 4 jours de sessions Claude Code réelles, le pipeline du premier jet coûtait environ 17 $ par collaborateur et par mois avec Opus au rangement. Il coûte environ 5,50 $ après optimisation (rangement sur Haiku 5.5, consignes en cache, extraction limitée aux tours utiles). L'étude prévoyait 3,46 $ pour un dev en cascade R2b. Détail, sources et méthode : [annexe 6](annexes/06-couts-mesures-pipeline.md).
+> **Mise à jour du 14/10 : premiers coûts mesurés.** Sur 4 jours de sessions Claude Code réelles, le pipeline du premier jet coûtait environ 17 $ par collaborateur et par mois avec Opus au rangement. Il coûte environ 7,70 $ après optimisation (rangement sur Haiku 5.5, consignes en cache, bruit écarté avant l'extraction), à qualité égale : 137 faits contre 144. L'étude prévoyait 3,46 $ pour un dev en cascade R2b. Détail, sources et méthode : [annexe 6](annexes/06-couts-mesures-pipeline.md).
 
 ## La question
 

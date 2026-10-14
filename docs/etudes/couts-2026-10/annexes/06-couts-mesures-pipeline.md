@@ -93,6 +93,26 @@ Tout est mesuré [M] par les lignes `llm.usage`, sur 14 lots sur 17. Les 3 autre
 - L'extraction fait maintenant 93 % du coût, dont plus de la moitié en sortie : Sonnet écrit en entier les propositions et suppositions que le code rejette ensuite.
 - **Qualité :** 87 faits gardés sur 14 lots, contre 144 sur 16 lots à l'essai précédent. La part de la sélection des tours dans cette baisse reste à mesurer sur les lots complets.
 
+## Essai 6 : passage complet, sélection corrigée
+
+L'essai 4 sélectionnait les tours **utiles**. Au passage complet suivant (0,99 $ [M], 94 faits), les faits sur les concurrents avaient disparu : les rapports d'agents coéquipiers qui les portaient n'avaient pas été désignés utiles par le tri. La sélection a donc été inversée : le tri désigne le **bruit**, et tout le reste passe à l'extraction. Un oubli du tri coûte maintenant un peu plus cher, mais ne fait plus perdre de faits.
+
+Passage complet : 672 tours, 16 lots sur 17 (le dernier est une session d'agent refusée par Haiku au tri), tout mesuré [M] :
+
+| Étape | Appels | Entrée | Sortie | Cache lu | Coût |
+|---|---|---|---|---|---|
+| Tri (Haiku 5.5) | 21 | 348 643 | 8 399 | 23 940 | 0,040 $ |
+| Extraction (Sonnet 5.5) | 27 | 325 031 | 72 081 | 88 325 | 1,397 $ |
+| Rangement (Haiku 5.5) | 17 | 116 770 | 48 264 | 35 428 | 0,036 $ |
+| **Total** | 65 | | | | **1,47 $** |
+
+Qualité :
+- **137 faits gardés**, contre 144 avant optimisation ;
+- **40 faits sur les concurrents** ;
+- les salaires des fondateurs sont classés sensibles par l'extraction (puis rejetés comme hypothèses) : rien de sensible n'est passé à l'équipe.
+
+Le gain vient surtout du rangement sur Haiku. La sélection ne retire plus que 23 % de l'entrée de l'extraction, qui fait maintenant 95 % du coût.
+
 ## Par collaborateur et par mois
 
 Ces chiffres sont des estimations [E]. Hypothèses : 4 jours de données, 21 jours ouvrés par mois, une seule personne au profil de dev chargé.
@@ -100,13 +120,14 @@ Ces chiffres sont des estimations [E]. Hypothèses : 4 jours de données, 21 jou
 | | Par jour | Par mois |
 |---|---|---|
 | Pipeline d'origine | ~0,83 $ | **~17 $** |
-| Après optimisation | ~0,26 $ | **~5,50 $** |
+| Essai 4 (sélection des tours utiles, perte de faits) | ~0,26 $ | ~5,50 $ |
+| **Essai 6 (bruit écarté, sans perte de faits)** | **~0,37 $** | **~7,70 $** |
 | Étude, profil dev, cascade R2b (pour comparaison) | | 3,46 $ |
 | Étude, profil dev, Opus partout (pour comparaison) | | 19,03 $ |
 
 ## Ce qu'ont coûté les essais du 14/10
 
-Environ 9 $ au total [D], qui se répartissent ainsi :
+Environ 9 $ jusqu'à l'essai 4 [D], puis 2,46 $ pour les essais 5 et 6 [M]. Le détail :
 
 | Poste | Coût | Source |
 |---|---|---|
@@ -114,6 +135,8 @@ Environ 9 $ au total [D], qui se répartissent ainsi :
 | Passage complet avec les corrections de qualité | ~3,30 $ | [E] |
 | Expérience modèles et efforts | 1,56 $ | [M] |
 | Passage optimisé (essai 4, 14 lots) | 0,92 $ | [M] |
+| Passage complet, sélection des tours utiles (essai 5) | 0,99 $ | [M] |
+| Passage complet, bruit écarté (essai 6) | 1,47 $ | [M] |
 
 ## Leviers suivants
 

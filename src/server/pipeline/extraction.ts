@@ -39,17 +39,18 @@ function validity(fact: ExtractedFact): { validFrom: Date | null; validTo: Date 
   return { validFrom, validTo: validFrom && validTo && validTo <= validFrom ? null : validTo };
 }
 
-// Sensibilité au plus restrictif (D6) ; l'ACL voulue du fait en découle (D13).
+// Sensibilité jugée fait par fait (D6 révisée) : le tri signale les tours sensibles à l'extraction, qui
+// marque chaque fait ; un fait sans rapport tiré d'un tour signalé reste partageable. L'ACL voulue du fait
+// en découle (D13).
 function factAccess(run: PipelineRun, ctx: TenantContext, fact: ExtractedFact) {
   const triageEntry = run.triage?.sensitiveTurns.find(
     (entry) => entry.turnExternalId === fact.turnExternalId,
   );
-  const turnSensitive = triageEntry !== undefined;
-  const sensitive = turnSensitive || fact.sensitive || fact.sensitiveCategory !== null;
+  const sensitive = fact.sensitive || fact.sensitiveCategory !== null;
   const factAcl = sensitive ? authorAcl(ctx.userId) : teamAcl(ctx.tenantId);
   return {
     sensitivity: sensitive ? ('sensitive' as const) : ('shareable' as const),
-    sensitiveCategory: fact.sensitiveCategory ?? triageEntry?.category ?? null,
+    sensitiveCategory: sensitive ? (fact.sensitiveCategory ?? triageEntry?.category ?? null) : null,
     factAcl,
   };
 }
@@ -128,6 +129,7 @@ async function extractFacts(run: PipelineRun, catalog: Catalog, llm: Llm) {
       sourceKindLabel: SOURCE_KIND_LABELS[run.sourceKind],
       title: run.sourceTitle,
       turns: window,
+      flaggedTurns: run.triage?.sensitiveTurns ?? [],
     });
     const output = await llm.generateObject({
       step: 'extraction',

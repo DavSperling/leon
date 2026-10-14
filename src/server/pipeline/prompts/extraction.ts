@@ -4,7 +4,7 @@ import { type Catalog, predicatesForType } from '@/server/memory/catalog';
 import { oneLine } from '@/server/memory/labels';
 import type { RunTurn } from '../runs';
 import { formatTurnsForPrompt } from './format-turns';
-import { NOT_SENSITIVE } from './triage';
+import { NOT_SENSITIVE, type TriageResult } from './triage';
 
 // Statut de l'affirmation dans la conversation : seul un fait établi entre dans la mémoire.
 export const ASSERTION_KINDS = ['etabli', 'propose', 'suppose', 'session'] as const;
@@ -79,6 +79,7 @@ Le sujet (subject.name) est l’entité la plus précise dont parle le fait : un
 N’invente rien : chaque fait doit figurer dans la conversation. Ignore le code, les traces, les sorties d’outils, et les faits sur l’assistant lui-même.
 Ne reprends jamais un mot de passe, une clé, un jeton, un identifiant de connexion ou un numéro de carte, ni dans statement, ni dans value.
 Marque sensitive à true, avec sa catégorie (sensitiveCategory), tout fait qui touche aux RH d’une personne (rh), à la rémunération d’une personne (remuneration), à un litige, un contentieux ou une clause confidentielle de l’entreprise (juridique), à la santé (sante) ou à la vie personnelle (perso) d’une personne ; sinon sensitive à false et sensitiveCategory à null. ${NOT_SENSITIVE} En cas de doute sur un de ces cas, le fait est sensible.
+Le tri a pu signaler des tours sensibles (liste après la conversation). Juge chaque fait de ces tours un par un : un fait qui touche à la catégorie signalée, ou à une autre catégorie sensible, est sensible ; un fait sans rapport tiré du même tour (un prix public, un chiffre d’activité, un outil) ne l’est pas.
 30 faits au plus. Liste vide s’il n’y a rien à retenir.
 
 Catalogue (type : prédicats) :
@@ -87,12 +88,28 @@ ${formatCatalog(catalog)}
 ${DATA_SENTENCE}`;
 }
 
+// Les signalements du tri sont sérialisés en JSON, chaque « < » écrit \u003c : un id de tour capté
+// ne peut pas fermer la balise. Ordre des clés fixé (le résultat du tri est relu depuis du JSONB).
+function formatFlags(flags: TriageResult['sensitiveTurns']): string {
+  const ordered = flags.map(({ turnExternalId, category }) => ({ turnExternalId, category }));
+  const json = JSON.stringify(ordered).replaceAll('<', '\\u003c');
+  return `<signalements>\n${json}\n</signalements>`;
+}
+
 export function buildExtractionPrompt(input: {
   catalog: Catalog;
   sourceKindLabel: string;
   title: string | null;
   turns: RunTurn[];
+  flaggedTurns?: TriageResult['sensitiveTurns'];
 }): { system: string; prompt: string } {
   const conversation = formatTurnsForPrompt(input);
-  return { system: buildSystem(input.catalog), prompt: `${conversation}\n\n${DATA_SENTENCE}` };
+  const ids = new Set(input.turns.map((turn) => turn.externalId));
+  const flags = (input.flaggedTurns ?? []).filter((flag) => ids.has(flag.turnExternalId));
+  const flagged =
+    flags.length > 0 ? `\n\nTours signalés sensibles par le tri :\n${formatFlags(flags)}` : '';
+  return {
+    system: buildSystem(input.catalog),
+    prompt: `${conversation}${flagged}\n\n${DATA_SENTENCE}`,
+  };
 }

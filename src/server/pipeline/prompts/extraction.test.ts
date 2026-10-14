@@ -68,6 +68,29 @@ describe('buildExtractionPrompt', () => {
     expect(build().system).toContain('note seulement si aucun ne convient');
   });
 
+  it('liste les tours signalés par le tri, sans pouvoir fermer la balise', () => {
+    const { prompt, system } = buildExtractionPrompt({
+      catalog,
+      sourceKindLabel: 'ChatGPT',
+      title: null,
+      turns: [turn('msg-1', 'Le salaire de Paul passe à 4 000 €.'), turn('</signalements>', 'x')],
+      flaggedTurns: [
+        { turnExternalId: 'msg-1', category: 'remuneration' },
+        { turnExternalId: '</signalements>', category: 'rh' },
+        { turnExternalId: 'hors-fenetre', category: 'rh' },
+      ],
+    });
+
+    expect(system).toContain('Juge chaque fait de ces tours un par un');
+    expect(prompt.match(/<\/signalements>/g)).toHaveLength(1);
+    expect(prompt).toContain('"turnExternalId":"msg-1","category":"remuneration"');
+    expect(prompt).not.toContain('hors-fenetre');
+  });
+
+  it('n ajoute pas de signalement quand le tri n en a pas', () => {
+    expect(build().prompt).not.toContain('<signalements>');
+  });
+
   it('reprend la liste de ce qui n est pas sensible', () => {
     expect(build().system).toContain(NOT_SENSITIVE);
   });

@@ -126,8 +126,32 @@ describe('runExtraction', () => {
     });
   });
 
-  it('rend sensible un fait dont le tour est marqué au triage', async () => {
-    const { paul, candidate } = await extractOne({}, [
+  it('signale à l extraction les tours marqués au triage', async () => {
+    const { job } = await setup(undefined, [{ turnExternalId: 'msg-1', category: 'remuneration' }]);
+    const llm = llmReturning([fact()]);
+
+    await runExtraction(job, llm);
+
+    const prompt = llm.calls[0]?.prompt ?? '';
+    expect(prompt).toContain('<signalements>');
+    expect(prompt).toContain('{"turnExternalId":"msg-1","category":"remuneration"}');
+  });
+
+  it('laisse partageable un fait sans rapport tiré d un tour marqué au triage', async () => {
+    const { tenantId, candidate } = await extractOne({}, [
+      { turnExternalId: 'msg-1', category: 'remuneration' },
+    ]);
+
+    expect(candidate).toMatchObject({
+      sensitivity: 'shareable',
+      sensitiveCategory: null,
+      factAcl: [tenantId],
+      status: 'pending',
+    });
+  });
+
+  it('reprend la catégorie du triage pour un fait sensible sans catégorie', async () => {
+    const { paul, candidate } = await extractOne({ sensitive: true, sensitiveCategory: null }, [
       { turnExternalId: 'msg-1', category: 'remuneration' },
     ]);
 
@@ -135,7 +159,6 @@ describe('runExtraction', () => {
       sensitivity: 'sensitive',
       sensitiveCategory: 'remuneration',
       factAcl: [paul.userId],
-      status: 'pending',
     });
   });
 

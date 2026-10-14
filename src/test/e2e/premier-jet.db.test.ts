@@ -54,8 +54,8 @@ function extractedFact(turnExternalId: string, input: Record<string, unknown>) {
 }
 
 // Le triage ne marque que le tour du licenciement ; l'extraction ne tire un fait que des deux
-// tours scénarisés, sans marquer le fait sensible lui-même (c'est au triage de le transmettre) ;
-// le rangement crée une fiche par candidat.
+// tours scénarisés et marque sensible le licenciement, comme le demande le signalement du tri (D6
+// révisée : la sensibilité se juge fait par fait) ; le rangement crée une fiche par candidat.
 const llm = createFakeLlm((request) => {
   if (request.step === 'triage') {
     const sensitive = promptTurns(request.prompt).filter((turn) => turn.text.includes(DISMISSAL));
@@ -75,6 +75,8 @@ const llm = createFakeLlm((request) => {
             predicate: 'note',
             subject: { name: 'Jean Dupont', email: null, domain: null },
             quote: DISMISSAL,
+            sensitive: true,
+            sensitiveCategory: 'rh',
           }),
         ];
       }

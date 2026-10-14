@@ -12,7 +12,7 @@ import type { PipelineJob } from '../queue';
 import { advanceRun, startStep } from '../runs';
 import { applyPlacement } from './apply';
 import { buildPlacementContext, type PlacementContext } from './context';
-import { type PlacementAction, planPlacement } from './plan';
+import { dropRepeatedStatements, type PlacementAction, planPlacement } from './plan';
 
 const PLACEMENT_MAX_TOKENS = 16_000;
 
@@ -48,7 +48,8 @@ export async function runPlacement(job: PipelineJob, llm: Llm): Promise<null> {
       .orderBy(asc(factCandidates.createdAt), asc(factCandidates.id));
     return { candidates: rows, context: await buildPlacementContext(tx, rows) };
   });
-  const actions = await planInBatches(context, llm); // appels LLM hors transaction
+  // Appels LLM hors transaction ; les doublons entre lots sont écartés sur le rangement entier.
+  const actions = dropRepeatedStatements(context, await planInBatches(context, llm));
   await withTenant(ctx, async (tx) => {
     await applyPlacement(tx, ctx, context, candidates, actions);
     await advanceRun(tx, run.id, 'done');

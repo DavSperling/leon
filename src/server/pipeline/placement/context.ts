@@ -4,7 +4,7 @@ import { cardAliases, cards, cardTypes, type factCandidates } from '@/server/db/
 import type { Tx } from '@/server/db/with-tenant';
 import { findCardCandidates, findCardsByHardKey } from '@/server/memory/cards';
 import { type Catalog, loadCatalog } from '@/server/memory/catalog';
-import { findActiveTeamFacts } from '@/server/memory/facts';
+import { findActiveTeamFactsOfCard } from '@/server/memory/facts';
 
 export type FactCandidateRow = typeof factCandidates.$inferSelect;
 
@@ -35,6 +35,7 @@ export type PlacementContext = { catalog: Catalog; candidates: PlacementCandidat
 type CardSummary = Omit<CardOption, 'activeFacts'>;
 
 const CARD_OPTIONS_MAX = 5;
+const ACTIVE_FACTS_MAX = 30; // par fiche proposée : borne la taille du prompt
 
 async function loadCardSummaries(tx: Tx, ids: string[]): Promise<CardSummary[]> {
   if (ids.length === 0) return [];
@@ -74,13 +75,14 @@ async function findCardsForSubject(tx: Tx, subject: Subject) {
 }
 
 // Faits actifs d'équipe seulement (D14) : un fait privé n'est jamais relié à un fait d'équipe.
-async function withActiveFacts(tx: Tx, card: CardSummary, predicate: string): Promise<CardOption> {
-  const activeFacts = await findActiveTeamFacts(tx, card.id, predicate);
+// Tous les prédicats de la fiche : une même information rangée sous un autre prédicat reste un doublon.
+async function withActiveFacts(tx: Tx, card: CardSummary): Promise<CardOption> {
+  const activeFacts = await findActiveTeamFactsOfCard(tx, card.id, ACTIVE_FACTS_MAX);
   return {
     ...card,
     activeFacts: activeFacts.map((fact) => ({
       id: fact.id,
-      predicate,
+      predicate: fact.predicate,
       statement: fact.statement,
       validFrom: fact.validFrom.toISOString(),
     })),
@@ -91,7 +93,7 @@ async function placementCandidate(tx: Tx, row: FactCandidateRow): Promise<Placem
   const { name, email, domain } = row.mentions.subject;
   const { fixedCardId, summaries } = await findCardsForSubject(tx, { name, email, domain });
   const cardOptions: CardOption[] = [];
-  for (const card of summaries) cardOptions.push(await withActiveFacts(tx, card, row.predicate));
+  for (const card of summaries) cardOptions.push(await withActiveFacts(tx, card));
   return {
     candidateId: row.id,
     statement: row.statement,

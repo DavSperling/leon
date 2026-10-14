@@ -110,7 +110,7 @@ describe('buildPlacementContext', () => {
     });
   });
 
-  it("ne donne que les faits actifs d'équipe du prédicat du candidat", async () => {
+  it("donne les faits actifs d'équipe de toute la fiche, quel que soit leur prédicat", async () => {
     const s = await seedRightsScenario();
     const contact = { cardId: s.ids.acmeCard, predicate: 'contact', ...paulSource(s) } as const;
     const teamFact = await seedFact(s.tenantId, {
@@ -132,6 +132,13 @@ describe('buildPlacementContext', () => {
       status: 'superseded',
       acl: [s.tenantId],
     });
+    const noteFact = await seedFact(s.tenantId, {
+      ...contact,
+      predicate: 'note',
+      authorId: s.paul.userId,
+      statement: 'ACME est un client historique.',
+      acl: [s.tenantId],
+    });
     const row = await seedCandidate(s.paul, paulSource(s), {
       subject: subject('ACME', 'acme.fr'),
       predicate: 'contact',
@@ -140,14 +147,19 @@ describe('buildPlacementContext', () => {
     const context = await withTenant(s.paul, (tx) => buildPlacementContext(tx, [row]));
 
     const acme = context.candidates[0]?.cardOptions.find((o) => o.id === s.ids.acmeCard);
-    expect(acme?.activeFacts).toEqual([
-      {
-        id: teamFact,
-        predicate: 'contact',
-        statement: 'Le contact ACME est Jeanne.',
-        validFrom: expect.any(String),
-      },
-    ]);
+    const statements = acme?.activeFacts.map((fact) => [fact.id, fact.predicate, fact.statement]);
+    expect(statements).toEqual(
+      expect.arrayContaining([
+        [teamFact, 'contact', 'Le contact ACME est Jeanne.'],
+        [noteFact, 'note', 'ACME est un client historique.'],
+      ]),
+    );
+    expect(acme?.activeFacts.map((fact) => fact.statement)).not.toContain(
+      'Le contact privé ACME est Hugo.',
+    );
+    expect(acme?.activeFacts.map((fact) => fact.statement)).not.toContain('Ancien contact ACME.');
+    // Faits du scénario hors contradiction : aucun fait privé de Paul (« zanzibar ») n'y figure.
+    expect(JSON.stringify(acme?.activeFacts)).not.toContain('zanzibar');
   });
 
   it("n'expose pas un fait actif privé de Paul (Orion, D14)", async () => {

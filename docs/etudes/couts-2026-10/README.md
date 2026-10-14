@@ -4,6 +4,8 @@
 
 Tableur : [`leon-modele-couts.xlsx`](leon-modele-couts.xlsx) · Sources détaillées : [`annexes/`](annexes/)
 
+> **Mise à jour du 14/10 : premiers coûts mesurés.** Sur 4 jours de sessions Claude Code réelles, le pipeline du premier jet coûtait environ 17 $ par collaborateur et par mois avec Opus au rangement. Il coûte environ 5,50 $ après optimisation (rangement sur Haiku 5.5, consignes en cache, extraction limitée aux tours utiles). L'étude prévoyait 3,46 $ pour un dev en cascade R2b. Détail, sources et méthode : [annexe 6](annexes/06-couts-mesures-pipeline.md).
+
 ## La question
 
 Avant de choisir la stack, on voulait savoir si le robot d'entrée (celui qui reçoit toute la donnée, la trie et l'organise en fiches) est finançable. Trois options étaient sur la table : un agent Claude via l'API (type Opus), un modèle moins cher, ou un modèle fine-tuné par nous sur nos propres GPU. Il fallait aussi chiffrer le stockage, le contexte injecté au début des sessions, l'import de l'historique, et en déduire un prix par collaborateur.

@@ -36,6 +36,7 @@ const llm = createFakeLlm((request) => {
           validFrom: null,
           validTo: null,
           confidence: 0.9,
+          assertion: 'etabli',
           sensitive: false,
           sensitiveCategory: null,
         },

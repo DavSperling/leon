@@ -8,6 +8,7 @@ import { authorAcl, teamAcl } from '@/server/memory/acl';
 import { type Catalog, loadCatalog } from '@/server/memory/catalog';
 import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import {
+  type AssertionKind,
   buildExtractionPrompt,
   type ExtractedFact,
   ExtractionOutputSchema,
@@ -53,8 +54,17 @@ function factAccess(run: PipelineRun, ctx: TenantContext, fact: ExtractedFact) {
   };
 }
 
+// Seul un fait établi entre dans la mémoire : une proposition, une supposition ou une action de session
+// présentée comme un fait d'équipe diffuserait une erreur avec assurance.
+const ASSERTION_REJECTIONS: Record<Exclude<AssertionKind, 'etabli'>, string> = {
+  propose: 'proposition non validée',
+  suppose: 'supposition',
+  session: 'action de session',
+};
+
 function rejectionReason(input: {
   turn: RunTurn | undefined;
+  assertion: AssertionKind;
   statement: string;
   hasSecret: boolean;
   quoteFound: boolean;
@@ -64,6 +74,7 @@ function rejectionReason(input: {
     return 'énoncé invalide';
   if (input.hasSecret) return 'secret détecté';
   if (!input.quoteFound) return 'citation introuvable';
+  if (input.assertion !== 'etabli') return ASSERTION_REJECTIONS[input.assertion];
   return null;
 }
 
@@ -77,7 +88,13 @@ function toCandidate(run: PipelineRun, ctx: TenantContext, { fact, window }: Win
   const maskedValue = value === null ? null : maskSecrets(value);
   const range = turn ? verifyQuote(turn.text, fact.quote) : null;
   const hasSecret = maskedStatement !== statement || maskedValue !== value;
-  const reason = rejectionReason({ turn, statement, hasSecret, quoteFound: range !== null });
+  const reason = rejectionReason({
+    turn,
+    assertion: fact.assertion,
+    statement,
+    hasSecret,
+    quoteFound: range !== null,
+  });
   return {
     tenantId: ctx.tenantId,
     ingestRunId: run.id,

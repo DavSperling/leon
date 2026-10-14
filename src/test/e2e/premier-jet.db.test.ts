@@ -46,6 +46,7 @@ function extractedFact(turnExternalId: string, input: Record<string, unknown>) {
     validFrom: null,
     validTo: null,
     confidence: 0.9,
+    assertion: 'etabli',
     sensitive: false,
     sensitiveCategory: null,
     ...input,

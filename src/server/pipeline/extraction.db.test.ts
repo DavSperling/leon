@@ -60,6 +60,7 @@ const fact = (override: Partial<ExtractedFact> = {}): ExtractedFact => ({
   validFrom: '2026-10-13',
   validTo: null,
   confidence: 0.9,
+  assertion: 'etabli',
   sensitive: false,
   sensitiveCategory: null,
   ...override,
@@ -152,6 +153,17 @@ describe('runExtraction', () => {
       sensitiveCategory: 'rh',
       factAcl: [paul.userId],
     });
+  });
+
+  it.each([
+    ['propose', 'proposition non validée'],
+    ['suppose', 'supposition'],
+    ['session', 'action de session'],
+  ] as const)('rejette un fait dont l assertion est %s', async (assertion, reason) => {
+    const { paul, job, candidate } = await extractOne({ assertion });
+
+    expect(candidate).toMatchObject({ status: 'rejected', rejectionReason: reason });
+    expect(await readRun(paul, job.ingestRunId)).toMatchObject({ status: 'done', step: 'done' });
   });
 
   it('rejette une citation introuvable', async () => {

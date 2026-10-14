@@ -55,6 +55,14 @@ const build = () =>
   });
 
 describe('buildExtractionPrompt', () => {
+  it('demande le statut de chaque affirmation et la version corrigée seulement', () => {
+    const { system } = build();
+
+    for (const kind of ['etabli', 'propose', 'suppose', 'session']) expect(system).toContain(kind);
+    expect(system).toContain('seule sa version corrigée l’est');
+    expect(system).toContain('qu’il est simulé');
+  });
+
   it('liste chaque type et chaque prédicat du catalogue dans le système', () => {
     const { system } = build();
 
@@ -115,6 +123,7 @@ describe('ExtractionOutputSchema', () => {
       validFrom: null,
       validTo: null,
       confidence: 0.9,
+      assertion: 'etabli',
       sensitive: false,
       sensitiveCategory: 'politique',
     };

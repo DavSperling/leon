@@ -1,6 +1,6 @@
 'use client';
 
-import { Code, FileText, History, Link2, ScanEye, SquareTerminal } from 'lucide-react';
+import { Code, FileText, History, Link2, ScanEye } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -164,14 +164,6 @@ export function CardView({ card, text, initialTab }: CardViewProps) {
           <RawCard text={text} />
         </TabsContent>
       </article>
-      <button
-        type="button"
-        onClick={() => copy(text, 'Fiche copiée : collez-la dans votre assistant.')}
-        className="sticky bottom-6 z-10 mr-6 mb-6 ml-auto inline-flex h-12 items-center gap-2.5 self-end rounded-xl bg-foreground px-5 font-mono text-[15px] font-semibold text-background shadow-lg transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
-      >
-        <SquareTerminal size={18} strokeWidth={1.75} aria-hidden="true" />
-        Utiliser dans un agent
-      </button>
     </Tabs>
   );
 }

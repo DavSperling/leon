@@ -7,20 +7,20 @@ import type { FactView } from '@/server/memory/card-data';
 export function CardHistory({ facts }: { facts: FactView[] }) {
   if (facts.length === 0) return null;
   return (
-    <Collapsible className="mt-4">
-      <CollapsibleTrigger className="group flex items-center gap-1 text-[13px] leading-[18px] text-muted-foreground hover:text-foreground">
+    <Collapsible id="historique" className="mt-16 scroll-mt-24 border-t pt-6">
+      <CollapsibleTrigger className="group flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ChevronRight
           size={14}
           strokeWidth={1.5}
           aria-hidden="true"
-          className="group-data-[state=open]:rotate-90"
+          className="transition-transform duration-200 group-data-[state=open]:rotate-90"
         />
         Historique : {facts.length} {facts.length > 1 ? 'faits passés' : 'fait passé'}
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <ul>
+        <ul className="mt-6 space-y-8">
           {facts.map((fact) => (
-            <FactRow key={fact.id} fact={fact} />
+            <FactRow key={fact.id} fact={fact} showPredicate />
           ))}
         </ul>
       </CollapsibleContent>

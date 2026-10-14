@@ -7,7 +7,7 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-plex-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
@@ -48,36 +48,37 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
 
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
-  --radius-xl: 6px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 
-  /* Aucune ombre sur le contenu ; une seule pour ce qui flotte (menus, dialogues, toasts). */
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow-md: 0 4px 16px rgb(28 27 25 / 0.08), 0 0 0 1px rgb(28 27 25 / 0.06);
-  --shadow-lg: 0 4px 16px rgb(28 27 25 / 0.08), 0 0 0 1px rgb(28 27 25 / 0.06);
+  /* Ombres à peine visibles pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts). */
+  --shadow-xs: 0 1px 2px rgb(23 23 23 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(23 23 23 / 0.05), 0 0 0 1px rgb(23 23 23 / 0.04);
+  --shadow-md: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
+  --shadow-lg: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
 }
 
 :root {
-  --background: #faf9f7;
-  --foreground: #1c1b19;
-  --foreground-2: #45423d;
+  /* Fond gris neutre autour d'un panneau blanc ; accent indigo pour les liens et la sélection. */
+  --background: #f5f5f4;
+  --foreground: #171717;
+  --foreground-2: #3f3f46;
   --card: #ffffff;
-  --card-foreground: #1c1b19;
+  --card-foreground: #171717;
   --popover: #ffffff;
-  --popover-foreground: #1c1b19;
-  --primary: #0b5d5b;
+  --popover-foreground: #171717;
+  --primary: #4f46c8;
   --primary-foreground: #ffffff;
-  --primary-soft: #d8e9e6;
+  --primary-soft: #eeedfc;
   --secondary: #ffffff;
-  --secondary-foreground: #1c1b19;
-  --muted: #f3f1ec;
-  --muted-foreground: #6a665f;
-  --accent: #eae6de;
-  --accent-foreground: #1c1b19;
-  --quote: #f6efd9;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f4;
+  --muted-foreground: #71717a;
+  --accent: #f0f0ef;
+  --accent-foreground: #171717;
+  --quote: #fafaf9;
   --success: #1f6b35;
   --success-soft: #e6f2e8;
   --warning: #8a4b00;
@@ -86,18 +87,18 @@
   --destructive-soft: #fbe9e6;
   --info: #24519c;
   --info-soft: #e7eef9;
-  --border: #e5e2dc;
-  --input: #8c877e;
-  --ring: #0b5d5b;
-  --radius: 4px;
-  --sidebar: #f3f1ec;
-  --sidebar-foreground: #1c1b19;
-  --sidebar-primary: #0b5d5b;
+  --border: #e7e7e5;
+  --input: #a1a1aa;
+  --ring: #4f46c8;
+  --radius: 8px;
+  --sidebar: #f5f5f4;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #4f46c8;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eae6de;
-  --sidebar-accent-foreground: #1c1b19;
-  --sidebar-border: #e5e2dc;
-  --sidebar-ring: #0b5d5b;
+  --sidebar-accent: #ebebea;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e7e7e5;
+  --sidebar-ring: #4f46c8;
 }
 
 @layer base {
@@ -108,7 +109,9 @@
     @apply bg-background text-sm text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
   }
 }
 

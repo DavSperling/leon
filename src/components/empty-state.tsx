@@ -8,9 +8,9 @@ type EmptyStateProps = {
 
 export function EmptyState({ reason, nextStep, children }: EmptyStateProps) {
   return (
-    <div className="space-y-1 py-8">
-      <p className="text-[15px] leading-6 font-medium">{reason}</p>
-      <p className="text-[15px] leading-6 text-foreground-2">{nextStep}</p>
+    <div className="space-y-1 py-10">
+      <p className="text-base leading-7 font-medium">{reason}</p>
+      <p className="text-base leading-7 text-muted-foreground">{nextStep}</p>
       {children && <div className="pt-3">{children}</div>}
     </div>
   );

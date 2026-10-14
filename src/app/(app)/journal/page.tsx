@@ -37,17 +37,25 @@ export default async function JournalPage({
   if (last) next.set('before', last.at.toISOString());
 
   return (
-    <div className="max-w-4xl space-y-4 p-6">
-      <header className="flex items-end justify-between gap-4">
-        <h1 className="text-base leading-6 font-semibold">Journal</h1>
+    <div className="mx-auto w-full max-w-[1000px] space-y-6 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+      <header className="flex items-end justify-between gap-4 border-b pb-7">
+        <div>
+          <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Journal</h1>
+          <p className="mt-1 text-base text-muted-foreground">
+            Qui a lu quelle fiche, et avec quel assistant
+          </p>
+        </div>
         {(fiche || before) && (
-          <Link href="/journal" className="text-[13px] leading-[18px] text-primary hover:underline">
+          <Link
+            href="/journal"
+            className="text-[15px] leading-6 text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+          >
             Voir toutes les lectures récentes
           </Link>
         )}
       </header>
       {fiche && entries[0] && (
-        <p className="text-[13px] leading-[18px] text-muted-foreground">
+        <p className="text-[15px] leading-6 text-muted-foreground">
           Lectures de la fiche «&nbsp;{entries[0].cardTitle}&nbsp;» seulement.
         </p>
       )}
@@ -60,7 +68,7 @@ export default async function JournalPage({
         <ReadLogTable entries={entries} />
       )}
       {rows.length > PAGE_SIZE && (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" className="rounded-lg">
           <Link href={`/journal?${next}`}>Voir plus</Link>
         </Button>
       )}

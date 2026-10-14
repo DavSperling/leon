@@ -10,10 +10,10 @@ export default async function SourcesPage() {
   const ctx = await requireUserContext();
   const { channels, sources } = await listSources(ctx);
   return (
-    <div className="max-w-4xl space-y-4 p-6">
-      <header className="flex items-end justify-between gap-4">
-        <h1 className="text-base leading-6 font-semibold">Sources</h1>
-        <p className="text-[13px] leading-[18px] text-muted-foreground">
+    <div className="mx-auto w-full max-w-[1000px] space-y-8 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+      <header className="border-b pb-7">
+        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Sources</h1>
+        <p className="mt-1 text-base text-muted-foreground">
           Les conversations brutes restent privées.
         </p>
       </header>

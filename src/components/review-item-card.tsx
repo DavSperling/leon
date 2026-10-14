@@ -130,7 +130,10 @@ const countOf = (n: number, one: string, many: string) => `${n} ${n > 1 ? many :
 
 function CardLink({ id, title }: { id: string; title: string }) {
   return (
-    <Link href={`/fiches/${id}`} className="text-primary hover:underline">
+    <Link
+      href={`/fiches/${id}`}
+      className="text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+    >
       {title}
     </Link>
   );
@@ -166,7 +169,7 @@ function Subject({ detail }: { detail: Detail }) {
 function FactBlock({ fact }: { fact: FactBrief }) {
   return (
     <div className="min-w-0 space-y-2">
-      <p className="text-[15px] leading-6">{fact.statement}</p>
+      <p className="text-base leading-7 text-pretty">{fact.statement}</p>
       <QuoteBlock quote={fact.quote} />
       <p className="text-[13px] leading-[18px] text-muted-foreground">
         {fact.sourceKindLabel} · {fact.authorName} ·{' '}
@@ -181,7 +184,7 @@ function FactBlock({ fact }: { fact: FactBrief }) {
 function CardBlock({ card }: { card: CardBrief }) {
   return (
     <div className="min-w-0 space-y-2">
-      <p className="text-[15px] leading-6 font-medium">
+      <p className="text-base leading-7 font-medium">
         <CardLink id={card.id} title={card.title} />
       </p>
       <p className="text-[13px] leading-[18px] text-muted-foreground">
@@ -205,9 +208,14 @@ function Content({ detail }: { detail: Detail }) {
       return <FactBlock fact={detail.fact} />;
     case 'entity_match':
       return (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-6">
           <CardBlock card={detail.newCard} />
-          <ArrowLeftRight size={16} strokeWidth={1.5} aria-label="correspond peut-être à" />
+          <ArrowLeftRight
+            size={16}
+            strokeWidth={1.5}
+            aria-label="correspond peut-être à"
+            className="mt-1.5 text-muted-foreground"
+          />
           <CardBlock card={detail.candidateCard} />
         </div>
       );
@@ -215,10 +223,10 @@ function Content({ detail }: { detail: Detail }) {
       return null;
     case 'conflict':
       return (
-        <div className="grid grid-cols-2 gap-x-6">
+        <div className="grid grid-cols-2 gap-x-8">
           {detail.facts.map((fact, index) => (
-            <div key={fact.id} className="space-y-1">
-              <p className="text-[13px] leading-[18px] font-medium text-foreground-2">
+            <div key={fact.id} className="space-y-1.5">
+              <p className="text-xs leading-4 font-medium tracking-wide text-muted-foreground uppercase">
                 {index === 0 ? 'Premier fait' : 'Second fait'}
               </p>
               <FactBlock fact={fact} />
@@ -285,14 +293,25 @@ function ReviewActions({ itemId, detail }: { itemId: string; detail: Detail }) {
     pending && choice === action ? 'Envoi…' : action.label;
 
   return (
-    <fieldset ref={group} tabIndex={-1} className="flex gap-2">
+    <fieldset ref={group} tabIndex={-1} className="flex shrink-0 gap-2">
       <legend className="sr-only">Réponses</legend>
       {confirming ? (
         <>
-          <Button variant="outline" size="sm" disabled={pending} onClick={() => setChoice(null)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={pending}
+            onClick={() => setChoice(null)}
+          >
             Annuler
           </Button>
-          <Button size="sm" disabled={pending} onClick={() => submit(confirming)}>
+          <Button
+            size="sm"
+            className="rounded-lg"
+            disabled={pending}
+            onClick={() => submit(confirming)}
+          >
             {pending ? 'Envoi…' : confirming.confirm}
           </Button>
         </>
@@ -302,6 +321,7 @@ function ReviewActions({ itemId, detail }: { itemId: string; detail: Detail }) {
             key={action.label}
             variant={action.confirm ? 'default' : 'outline'}
             size="sm"
+            className="rounded-lg"
             disabled={pending}
             onClick={() => choose(action)}
           >
@@ -334,10 +354,10 @@ function Outcome({ item }: { item: ReviewItemView }) {
 export function ReviewItemCard({ item }: { item: ReviewItemView }) {
   const { icon: Icon, label } = HEADS[item.detail.kind];
   return (
-    <li className="space-y-3 border-b py-4">
-      <div className="flex items-center gap-2 text-[13px] leading-[18px]">
+    <li className="space-y-4 rounded-xl border bg-card p-5 transition-colors hover:border-input/60">
+      <div className="flex items-center gap-2 text-sm leading-5">
         <Icon size={16} strokeWidth={1.5} aria-hidden="true" className="text-foreground-2" />
-        <h2 className="font-medium">{label}</h2>
+        <h2 className="text-[15px] font-semibold">{label}</h2>
         <p className="text-muted-foreground">
           <Subject detail={item.detail} />
         </p>
@@ -353,8 +373,8 @@ export function ReviewItemCard({ item }: { item: ReviewItemView }) {
       </div>
       <Content detail={item.detail} />
       {item.status === 'open' ? (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm leading-5 text-foreground-2">{questionOf(item.detail)}</p>
+        <div className="-mx-5 -mb-5 flex items-center justify-between gap-4 rounded-b-xl border-t bg-muted/60 px-5 py-3">
+          <p className="text-[15px] leading-6 font-medium">{questionOf(item.detail)}</p>
           <ReviewActions itemId={item.id} detail={item.detail} />
         </div>
       ) : (

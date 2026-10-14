@@ -13,8 +13,8 @@ export const metadata: Metadata = { title: 'Réglages' };
 function Section({ title, children }: { title: string; children: ReactNode }) {
   const id = `section-${title.toLowerCase().replaceAll(' ', '-')}`;
   return (
-    <section aria-labelledby={id} className="space-y-3 border-t pt-4">
-      <h2 id={id} className="text-base leading-6 font-semibold">
+    <section aria-labelledby={id} className="mt-12 space-y-4">
+      <h2 id={id} className="text-2xl leading-8 font-semibold tracking-tight">
         {title}
       </h2>
       {children}
@@ -24,8 +24,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function CodeLine({ text }: { text: string }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <code className="min-w-0 flex-1 rounded-sm border bg-card p-3 font-mono text-xs leading-4 break-all">
+    <div className="flex items-start justify-between gap-3 rounded-xl border bg-muted/60 p-2 pl-4">
+      <code className="min-w-0 flex-1 py-1.5 font-mono text-[13px] leading-5 break-all">
         {text}
       </code>
       <CopyButton text={text} />
@@ -40,27 +40,30 @@ export default async function SettingsPage() {
   const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
 
   return (
-    <div className="max-w-4xl space-y-6 p-6">
-      <h1 className="text-base leading-6 font-semibold">Réglages</h1>
+    <div className="mx-auto w-full max-w-[780px] px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+      <header className="border-b pb-7">
+        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Réglages</h1>
+        <p className="mt-1 text-base text-muted-foreground">
+          Jetons d'accès et branchement des assistants
+        </p>
+      </header>
 
       <Section title="Jetons personnels">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-[13px] leading-[18px] text-foreground-2">
+          <p className="text-base leading-7 text-foreground-2">
             Un jeton donne accès à ce que vous voyez. Il n'est montré qu'une fois.
           </p>
           <CreateTokenDialog />
         </div>
         {tokens.length === 0 ? (
-          <p className="text-[13px] leading-[18px] text-muted-foreground">
-            Aucun jeton pour l'instant.
-          </p>
+          <p className="text-base leading-7 text-muted-foreground">Aucun jeton pour l'instant.</p>
         ) : (
           <TokenList tokens={tokens} />
         )}
       </Section>
 
       <Section title="Brancher Claude Code">
-        <p className="text-[13px] leading-[18px] text-foreground-2">
+        <p className="text-base leading-7 text-foreground-2">
           Lancez cette commande dans un terminal, en remplaçant le jeton par l'un des vôtres.
         </p>
         <CodeLine
@@ -69,20 +72,34 @@ export default async function SettingsPage() {
       </Section>
 
       <Section title="Extension navigateur">
-        <ol className="list-decimal space-y-2 pl-5 text-sm leading-5 text-foreground-2">
+        <ol className="list-decimal space-y-2 pl-5 text-base leading-7 text-foreground-2 marker:text-muted-foreground">
           <li>
-            Construisez l'extension avec <code className="font-mono text-xs">pnpm ext:build</code>.
+            Construisez l'extension avec{' '}
+            <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[13px]">
+              pnpm ext:build
+            </code>
+            .
           </li>
           <li>
-            Dans Chrome, ouvrez <code className="font-mono text-xs">chrome://extensions</code>,
-            activez le mode développeur, puis « Charger l'extension non empaquetée » et choisissez
-            le dossier <code className="font-mono text-xs">extension/.output/chrome-mv3</code>.
+            Dans Chrome, ouvrez{' '}
+            <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[13px]">
+              chrome://extensions
+            </code>
+            , activez le mode développeur, puis « Charger l'extension non empaquetée » et choisissez
+            le dossier{' '}
+            <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[13px]">
+              extension/.output/chrome-mv3
+            </code>
+            .
           </li>
           <li>Dans les options de l'extension, collez un jeton créé ci-dessus.</li>
         </ol>
-        <p className="text-[13px] leading-[18px] text-foreground-2">
+        <p className="text-base leading-7 text-foreground-2">
           Adresse du serveur, fixée à la construction de l'extension (variable{' '}
-          <code className="font-mono text-xs">WXT_PUBLIC_LEON_URL</code>) :
+          <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[13px]">
+            WXT_PUBLIC_LEON_URL
+          </code>
+          ) :
         </p>
         <CodeLine text={serverUrl} />
       </Section>

@@ -21,7 +21,7 @@ export function SourceChip({ kind, label, authorName, at }: SourceChipProps) {
   const Icon = ICONS[kind];
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] leading-[18px] text-muted-foreground">
-      <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+      <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
       <span>
         {label}
         {authorName && ` · ${authorName}`}

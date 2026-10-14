@@ -18,7 +18,7 @@ function Items({ items, empty }: { items: ReviewItemView[]; empty: string }) {
     );
   }
   return (
-    <ul>
+    <ul className="space-y-4 pt-6">
       {items.map((item) => (
         <ReviewItemCard key={item.id} item={item} />
       ))}
@@ -31,21 +31,33 @@ function Items({ items, empty }: { items: ReviewItemView[]; empty: string }) {
 // que celui de la barre latérale, qui compte tous les éléments ouverts.
 export function ReviewList({ open, resolved }: ReviewListProps) {
   return (
-    <Tabs defaultValue="a-traiter" className="max-w-4xl gap-4 p-6">
-      <header className="flex items-end justify-between gap-4">
-        <h1 className="text-base leading-6 font-semibold">À vérifier</h1>
-        <TabsList>
-          <TabsTrigger value="a-traiter">
+    <Tabs
+      defaultValue="a-traiter"
+      className="mx-auto w-full max-w-[1000px] gap-0 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2"
+    >
+      <header className="flex items-end justify-between gap-4 border-b pb-7">
+        <div>
+          <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">À vérifier</h1>
+          <p className="mt-1 text-base text-muted-foreground">
+            Les questions que Leon ne tranche pas seul
+          </p>
+        </div>
+        <TabsList className="h-9 rounded-lg p-1">
+          <TabsTrigger value="a-traiter" className="gap-1.5 rounded-md px-3">
             À traiter
-            <span className="font-mono text-xs leading-4">{formatNumber(open.length)}</span>
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-soft px-1.5 text-xs leading-4 font-medium text-primary tabular-nums">
+              {formatNumber(open.length)}
+            </span>
           </TabsTrigger>
-          <TabsTrigger value="traites">Traités</TabsTrigger>
+          <TabsTrigger value="traites" className="rounded-md px-3">
+            Traités
+          </TabsTrigger>
         </TabsList>
       </header>
-      <TabsContent value="a-traiter" className="border-t">
+      <TabsContent value="a-traiter">
         <Items items={open} empty="Rien à vérifier." />
       </TabsContent>
-      <TabsContent value="traites" className="border-t">
+      <TabsContent value="traites">
         <Items items={resolved} empty="Aucun élément traité pour l’instant." />
       </TabsContent>
     </Tabs>

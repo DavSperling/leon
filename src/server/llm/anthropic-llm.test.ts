@@ -5,6 +5,7 @@ import {
   type AnthropicLike,
   createAnthropicLlm,
   EFFORT_BY_STEP,
+  logUsage,
   MODEL_BY_STEP,
 } from './anthropic-llm';
 import { LlmError, type LlmRequest, type LlmStep } from './llm';
@@ -151,5 +152,45 @@ describe('createAnthropicLlm', () => {
       const error = await llm.generateObject(request('triage', secret)).catch((e: unknown) => e);
       expect((error as Error).message).not.toContain(secret);
     }
+  });
+});
+
+describe('logUsage', () => {
+  it('journalise les tokens et le coût estimé, sans contenu', () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    logUsage('placement', 'claude-opus-5-5', {
+      input_tokens: 1_000_000,
+      output_tokens: 100_000,
+      cache_read_input_tokens: 0,
+      cache_creation_input_tokens: 0,
+    });
+
+    const [, event, json] = info.mock.calls[0] as [string, string, string];
+    expect(event).toBe('llm.usage');
+    expect(JSON.parse(json)).toEqual({
+      step: 'placement',
+      model: 'claude-opus-5-5',
+      inputTokens: 1_000_000,
+      outputTokens: 100_000,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costUsd: 6,
+    });
+    info.mockRestore();
+  });
+
+  it('journalise l usage de chaque appel réussi', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm } = setup(() => ({
+      ...ok,
+      model: 'claude-haiku-5-5',
+      usage: { input_tokens: 10, output_tokens: 5 },
+    }));
+
+    await llm.generateObject(request('triage', 'zanzibar'));
+
+    expect(info).toHaveBeenCalledOnce();
+    expect(JSON.stringify(info.mock.calls)).not.toContain('zanzibar');
+    info.mockRestore();
   });
 });

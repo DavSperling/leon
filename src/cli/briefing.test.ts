@@ -1,0 +1,57 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { API_PATHS, type BriefingResponse } from '../capture/api-contract';
+import { fetchBriefingText } from './briefing';
+
+const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+
+const briefing: BriefingResponse = {
+  markdown: '# Briefing Leon · 7 derniers jours\n- ACME (Client)\n0 élément à vérifier dans Leon.',
+  reviewCount: 0,
+  entries: [],
+};
+
+const fetchReturning = (response: Response) => vi.fn(async () => response);
+const asFetch = (fn: unknown) => fn as typeof fetch;
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('fetchBriefingText', () => {
+  it('renvoie le markdown d’une réponse conforme, en présentant le jeton', async () => {
+    const fetchImpl = fetchReturning(Response.json(briefing));
+
+    const text = await fetchBriefingText(asFetch(fetchImpl), env);
+
+    expect(text).toBe(briefing.markdown);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.href).toBe(new URL(API_PATHS.briefing, env.url).href);
+    expect(init.headers).toEqual({ Authorization: `Bearer ${env.token}` });
+  });
+
+  it.each([
+    ['un 401', new Response('{}', { status: 401 })],
+    ['un 500', new Response('{}', { status: 500 })],
+    ['un corps non conforme', Response.json({ markdown: 3 })],
+    ['un corps non JSON', new Response('<html>', { status: 200 })],
+  ])('renvoie null sur %s', async (_name, response) => {
+    expect(await fetchBriefingText(asFetch(fetchReturning(response)), env)).toBeNull();
+  });
+
+  it('renvoie null sur une erreur réseau', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError('fetch failed');
+    });
+
+    expect(await fetchBriefingText(asFetch(fetchImpl), env)).toBeNull();
+  });
+
+  it('renvoie null quand le délai de 3 secondes est dépassé', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(AbortSignal.timeout(20));
+    const neverAnswers = (_url: URL, init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      });
+
+    expect(await fetchBriefingText(asFetch(neverAnswers), env)).toBeNull();
+    expect(timeout).toHaveBeenCalledWith(3000);
+  });
+});

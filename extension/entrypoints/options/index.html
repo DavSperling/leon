@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="manifest.open_in_tab" content="true" />
+    <title>Leon : options</title>
+    <link rel="stylesheet" href="../../assets/leon.css" />
+  </head>
+  <body class="page">
+    <main>
+      <section id="consent" class="stack" hidden>
+        <h1>Leon capte vos conversations sur claude.ai et chatgpt.com</h1>
+        <p>
+          Ce qui est envoyé à votre serveur Leon : le texte de vos messages et des réponses.
+          Votre serveur le fait analyser par l'API d'Anthropic (Claude) pour en extraire des faits.
+        </p>
+        <p>
+          Ce qui ne l'est jamais : pièces jointes, fenêtres privées. Les clés d'API et jetons
+          reconnus sont masqués avant envoi.
+        </p>
+        <p>
+          La conversation brute reste visible par vous seul. Seuls les faits jugés partageables
+          sont visibles par votre équipe ; les sujets sensibles attendent votre accord.
+        </p>
+        <p>Vous pouvez couper la capture par site ou la mettre en pause à tout moment.</p>
+        <div class="row">
+          <button type="button" id="refuse" class="button">Refuser</button>
+          <button type="button" id="accept" class="button primary">J'accepte et je continue</button>
+        </div>
+        <p id="refused" role="status" class="banner" hidden>
+          Capture désactivée : rien n'est envoyé. Cet écran reste disponible dans les options de
+          l'extension.
+        </p>
+      </section>
+
+      <section id="settings" class="stack" hidden>
+        <h1>Options de Leon</h1>
+        <div class="field">
+          <h2>Adresse du serveur</h2>
+          <code id="server-url"></code>
+          <p class="muted">Fixée à la construction de l'extension.</p>
+        </div>
+        <hr />
+        <form id="token-form" class="field">
+          <label for="token"><h2>Jeton personnel</h2></label>
+          <div class="field-row">
+            <input id="token" type="password" autocomplete="off" spellcheck="false" />
+            <button type="button" id="show-token" class="button">Voir</button>
+          </div>
+          <div class="field-row">
+            <button type="submit" class="button">Enregistrer le jeton</button>
+            <button type="button" id="test-connection" class="button">Tester la connexion</button>
+          </div>
+          <p id="token-message" role="status"></p>
+        </form>
+        <hr />
+        <div class="field">
+          <h2>Sites captés</h2>
+          <label class="row">
+            <span>claude.ai</span>
+            <input type="checkbox" data-site="claude_ai" aria-label="Capturer claude.ai" />
+          </label>
+          <label class="row">
+            <span>ChatGPT</span>
+            <input type="checkbox" data-site="chatgpt" aria-label="Capturer ChatGPT" />
+          </label>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

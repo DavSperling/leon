@@ -1,0 +1,281 @@
+/* Couleurs du design de Leon (docs/specs/2026-10-13-design.md), copiées ici : pas de Tailwind dans l'extension. */
+:root {
+  --background: #faf9f7;
+  --card: #ffffff;
+  --muted: #f3f1ec;
+  --accent: #eae6de;
+  --border: #e5e2dc;
+  --input: #8c877e;
+  --foreground: #1c1b19;
+  --muted-foreground: #6a665f;
+  --primary: #0b5d5b;
+  --primary-foreground: #ffffff;
+  --success: #1f6b35;
+  --success-soft: #e6f2e8;
+  --warning: #8a4b00;
+  --warning-soft: #fbf0dc;
+  --destructive: #a8261b;
+  --destructive-soft: #fbe9e6;
+  --info: #24519c;
+  --info-soft: #e7eef9;
+  --radius: 4px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font:
+    13px / 1.5 ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 15px;
+}
+
+h2 {
+  font-size: 14px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+a,
+.link {
+  color: var(--primary);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.muted {
+  color: var(--muted-foreground);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+hr {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Boutons */
+button {
+  font: inherit;
+}
+
+.button {
+  padding: 6px 12px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--accent);
+}
+
+.button.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.button.primary:hover {
+  background: #094a48;
+}
+
+/* Champs */
+input[type="password"],
+input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--foreground);
+  font: inherit;
+}
+
+/* Interrupteur : une case à cocher habillée (data-site) */
+input[type="checkbox"][data-site] {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--input);
+  border-radius: 9px;
+  background: var(--card);
+  cursor: pointer;
+}
+
+input[type="checkbox"][data-site]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--input);
+}
+
+input[type="checkbox"][data-site]:checked {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+input[type="checkbox"][data-site]:checked::after {
+  left: 16px;
+  background: var(--primary-foreground);
+}
+
+/* États */
+.badge {
+  padding: 1px 8px;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.badge.success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.badge.warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badge.danger {
+  background: var(--destructive-soft);
+  color: var(--destructive);
+}
+
+.badge.info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.banner {
+  padding: 8px;
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+.error {
+  color: var(--destructive);
+}
+
+.ok {
+  color: var(--success);
+}
+
+/* Popup */
+body.popup {
+  width: 320px;
+  padding: 12px;
+}
+
+.sites {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sites label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Options et consentement */
+body.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 16px;
+  font-size: 14px;
+}
+
+body.page h1 {
+  font-size: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+
+code {
+  font-family: ui-monospace, monospace;
+}
+
+/* Panneau latéral */
+body.panel {
+  padding: 12px;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entries .title {
+  font-weight: 600;
+}
+
+/* Après les règles de mise en page, pour que `hidden` l'emporte. */
+[hidden] {
+  display: none;
+}

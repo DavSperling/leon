@@ -1,0 +1,41 @@
+event: delta_encoding
+data: "v1"
+
+event: delta
+data: {"p": "", "o": "add", "v": {"message": {"id": "sys-0000", "author": {"role": "system", "name": null, "metadata": {}}, "create_time": null, "content": {"content_type": "text", "parts": ["SYSTEME-CACHE"]}, "status": "finished_successfully", "end_turn": true, "recipient": "all", "metadata": {}}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}, "c": 0}
+
+event: delta
+data: {"p": "", "o": "add", "v": {"message": {"id": "thk-0001", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1792054201.5, "content": {"content_type": "thoughts", "thoughts": [], "source_analysis_msg_id": "x"}, "status": "in_progress", "end_turn": null, "recipient": "all", "metadata": {}}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}, "c": 1}
+
+event: delta
+data: {"p": "/message/content/thoughts", "o": "append", "v": [{"summary": "Délais", "content": "PENSEE-CACHEE"}]}
+
+event: delta
+data: {"p": "", "o": "patch", "v": [{"p": "/message/status", "o": "replace", "v": "finished_successfully"}]}
+
+event: delta
+data: {"p": "", "o": "add", "v": {"message": {"id": "tool-0002", "author": {"role": "tool", "name": "web.run", "metadata": {}}, "create_time": 1792054202.0, "content": {"content_type": "text", "parts": ["OUTIL-CACHE"]}, "status": "finished_successfully", "end_turn": null, "recipient": "all", "metadata": {}}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}, "c": 2}
+
+event: delta
+data: {"p": "", "o": "add", "v": {"message": {"id": "bbb4d5e6-0000-4000-8000-0000000000a1", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1792054203.0, "content": {"content_type": "text", "parts": [""]}, "status": "in_progress", "end_turn": null, "recipient": "all", "metadata": {}}, "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de", "error": null}, "c": 3}
+
+event: delta
+data: {"p": "/message/content/parts/0", "o": "append", "v": "Dix jours "}
+
+event: delta
+data: {"v": "de livraison, "}
+
+: ping
+
+event: delta
+data: {"v": "c'est court."}
+
+data: {"type": "title_generation", "title": "Délais du fournisseur Orion", "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de"}
+
+event: delta
+data: {"p": "", "o": "patch", "v": [{"p": "/message/content/parts/0", "o": "append", "v": " Prévoyez une marge."}, {"p": "/message/status", "o": "replace", "v": "finished_successfully"}, {"p": "/message/end_turn", "o": "replace", "v": true}]}
+
+data: {"type": "message_stream_complete", "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de"}
+
+data: [DONE]
+

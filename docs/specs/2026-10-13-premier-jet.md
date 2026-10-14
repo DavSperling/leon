@@ -24,7 +24,7 @@ Critères de succès :
 
 ## Ce qu'on garde de l'architecture
 
-TypeScript, Node 24+ (Node 26 en local), pnpm. Next.js 16 (App Router), shadcn/ui sur Radix, Tailwind 4. Hono pour l'API et le MCP, monté dans Next.js. Postgres 17 (image `pgvector/pgvector:pg17`) avec RLS par fait, temps bi-temporel, `EXCLUDE USING gist`. Drizzle pour les requêtes, migrations SQL écrites à la main. pg-boss pour le pipeline. Better Auth pour les comptes et les organisations. SDK MCP TypeScript officiel, transport Streamable HTTP. SDK Anthropic, modèles Claude 5.5 (Haiku au triage, Sonnet à l'extraction, Opus au rangement). WXT pour l'extension.
+TypeScript, Node 24+ (Node 26 en local), pnpm. Next.js 16 (App Router), shadcn/ui sur Radix, Tailwind 4. Hono pour l'API et le MCP, monté dans Next.js. Postgres 17 (image `pgvector/pgvector:pg17`) avec RLS par fait, temps bi-temporel, `EXCLUDE USING gist`. Drizzle pour les requêtes, migrations SQL écrites à la main. pg-boss pour le pipeline. Better Auth pour les comptes et les organisations. SDK MCP TypeScript officiel, transport Streamable HTTP. SDK Anthropic, modèles Claude 5.5 (Haiku au triage, Sonnet à l'extraction, Haiku au rangement depuis le 14/10 : voir D15 du plan). WXT pour l'extension.
 
 ## Ce qui s'écarte de l'architecture, et pourquoi
 
@@ -99,7 +99,7 @@ Le filtre se fait à l'entrée ; ensuite trois jobs pg-boss (triage, extraction,
 1. **Filtre mécanique** (sans IA) : côté poste dans l'import et l'extension (on ne garde que le texte des tours `user` / `assistant`, jamais `tool_result`, `thinking`, pièces jointes, entrées d'outils), refait côté serveur en défense. Masquage des secrets (clés d'API, jetons) avant envoi et à la réception.
 2. **Triage** (Haiku 5.5, sortie structurée) : y a-t-il quelque chose à retenir ? `partageable` ou `sensible` (liste fermée : RH, rémunération, juridique, santé, perso).
 3. **Extraction** (Sonnet 5.5, sortie structurée stricte) : faits atomiques avec mentions (pas d'identités), prédicat du catalogue, dates, et **citation littérale vérifiée dans le tour source** ; sinon rejet. Calcul de l'ACL du fait.
-4. **Rangement** : d'abord la résolution déterministe (clés dures : email, domaine ; candidats par similarité de nom parmi les fiches visibles de l'auteur ; fusion automatique seulement sur clé dure). Puis un appel Opus 5.5 à sortie structurée choisit la fiche (existante, nouvelle, ou ambiguë → `entity_match`), propose un type dérivé si rien ne colle, et qualifie chaque fait face aux faits actifs de la même fiche et du même prédicat : nouveau, doublon, `supersedes` (on ferme l'ancien) ou `contradicts` (les deux en `conflict` + élément « à vérifier »). Rien n'est tranché en silence, rien n'est effacé. Écriture dans une transaction.
+4. **Rangement** : d'abord la résolution déterministe (clés dures : email, domaine ; candidats par similarité de nom parmi les fiches visibles de l'auteur ; fusion automatique seulement sur clé dure). Puis un appel à sortie structurée (Haiku 5.5, voir D15 du plan) choisit la fiche (existante, nouvelle, ou ambiguë → `entity_match`), propose un type dérivé si rien ne colle, et qualifie chaque fait face aux faits actifs de la même fiche et du même prédicat : nouveau, doublon, `supersedes` (on ferme l'ancien) ou `contradicts` (les deux en `conflict` + élément « à vérifier »). Rien n'est tranché en silence, rien n'est effacé. Écriture dans une transaction.
 
 Le rendu Markdown de la fiche se fait à la lecture, sous la RLS du lecteur : `renderCard(card, asOf)`, une ligne par fait, terminée par `[source, date]`.
 

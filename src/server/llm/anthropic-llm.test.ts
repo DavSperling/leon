@@ -50,34 +50,34 @@ describe('createAnthropicLlm', () => {
     expect(MODEL_BY_STEP).toEqual({
       triage: 'claude-haiku-5-5',
       extraction: 'claude-sonnet-5-5',
-      placement: 'claude-opus-5-5',
+      placement: 'claude-haiku-5-5',
     });
-    expect(EFFORT_BY_STEP).toEqual({ triage: 'low', extraction: 'medium', placement: 'high' });
+    expect(EFFORT_BY_STEP).toEqual({ triage: 'low', extraction: 'medium', placement: 'medium' });
   });
 
-  it.each(['extraction', 'placement'] as const)(
-    'active le repli serveur des refus pour %s',
+  it.each(['extraction'] as const)('active le repli serveur des refus pour %s', async (step) => {
+    const { llm, parse } = setup(() => ok);
+
+    await llm.generateObject(request(step));
+
+    expect(parse.mock.calls[0]?.[0]).toMatchObject({
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+    });
+  });
+
+  it.each(['triage', 'placement'] as const)(
+    'n active pas le repli pour %s (Haiku)',
     async (step) => {
       const { llm, parse } = setup(() => ok);
 
       await llm.generateObject(request(step));
 
-      expect(parse.mock.calls[0]?.[0]).toMatchObject({
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-      });
+      const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
+      expect(params).not.toHaveProperty('betas');
+      expect(params).not.toHaveProperty('fallbacks');
     },
   );
-
-  it('n active pas le repli pour le triage', async () => {
-    const { llm, parse } = setup(() => ok);
-
-    await llm.generateObject(request('triage'));
-
-    const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
-    expect(params).not.toHaveProperty('betas');
-    expect(params).not.toHaveProperty('fallbacks');
-  });
 
   it('ne met pas de cache_control dans le prompt système', async () => {
     const { llm, parse } = setup(() => ok);

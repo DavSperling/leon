@@ -2,18 +2,22 @@ import Anthropic, { AnthropicError, APIError } from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { type Llm, LlmError, type LlmRequest, type LlmStep } from './llm';
 
+// Rangement sur Haiku 5.5 (14/10) : sur 24 décisions réelles, Haiku 5.5 a choisi la même fiche et la
+// même relation qu'Opus 5.5 en effort high, pour 0,009 $ au lieu de 0,298 $. L'extraction reste sur
+// Sonnet : Haiku y invente une citation sur trois, que la vérification rejette.
 export const MODEL_BY_STEP = {
   triage: 'claude-haiku-5-5',
   extraction: 'claude-sonnet-5-5',
-  placement: 'claude-opus-5-5',
+  placement: 'claude-haiku-5-5',
 } as const;
 
-// Opus 5.5 réfléchit toujours (pensée adaptative) et son effort par défaut est `medium` : on le fixe.
-export const EFFORT_BY_STEP = { triage: 'low', extraction: 'medium', placement: 'high' } as const;
+// L'effort est fixé à chaque étape (son défaut varie selon le modèle).
+export const EFFORT_BY_STEP = { triage: 'low', extraction: 'medium', placement: 'medium' } as const;
 
 export type AnthropicLike = Pick<Anthropic, 'beta'>;
 
 // Repli serveur des refus (D12) : Sonnet et Opus seulement, Haiku n'en a pas.
+const hasRefusalFallback = (model: string) => !model.startsWith('claude-haiku');
 const REFUSAL_FALLBACK = {
   betas: ['server-side-fallback-2026-07-01'],
   fallbacks: 'default' as const,
@@ -91,7 +95,7 @@ async function parseOrThrow<T>(client: AnthropicLike, request: LlmRequest<T>) {
       system: request.system,
       messages: [{ role: 'user', content: request.prompt }],
       output_config: { format: betaZodOutputFormat(request.schema), effort: EFFORT_BY_STEP[step] },
-      ...(step === 'triage' ? {} : REFUSAL_FALLBACK),
+      ...(hasRefusalFallback(MODEL_BY_STEP[step]) ? REFUSAL_FALLBACK : {}),
     });
   } catch (error) {
     // Le SDK analyse la sortie pendant l'appel et son message la cite : on ne le garde pas.

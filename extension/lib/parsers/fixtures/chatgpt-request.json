@@ -1,0 +1,37 @@
+{
+  "action": "next",
+  "messages": [
+    {
+      "id": "aaa1b2c3-0000-4000-8000-0000000000u1",
+      "author": { "role": "user" },
+      "create_time": 1792054200.123,
+      "content": {
+        "content_type": "multimodal_text",
+        "parts": [
+          {
+            "content_type": "image_asset_pointer",
+            "asset_pointer": "file-service://file-PIECE-JOINTE-7f3a",
+            "width": 800,
+            "height": 600
+          },
+          "Le fournisseur Orion livre en 10 jours.",
+          "Il faut prévoir la marge."
+        ]
+      },
+      "metadata": {
+        "attachments": [
+          {
+            "id": "file-PIECE-JOINTE-7f3a",
+            "name": "PIECE-JOINTE-7f3a.png",
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ],
+  "conversation_id": "6710a1b2-0000-4000-8000-00000000c0de",
+  "parent_message_id": "aaa1b2c3-0000-4000-8000-0000000000p0",
+  "model": "auto",
+  "timezone_offset_min": -120,
+  "conversation_mode": { "kind": "primary_assistant" }
+}

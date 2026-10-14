@@ -1,0 +1,63 @@
+{
+  "name": "leon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.0.8",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p extension",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:db": "vitest run --project db",
+    "db:migrate": "node --env-file-if-exists=.env.local --import tsx src/server/db/migrate-cli.ts",
+    "leon": "node --env-file-if-exists=.env.local --import tsx src/cli/leon.ts",
+    "ext:dev": "wxt extension",
+    "ext:build": "wxt build extension",
+    "postinstall": "wxt prepare extension"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "@modelcontextprotocol/server": "2.3.1",
+    "better-auth": "1.7.7",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "cmdk": "1.1.1",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.13",
+    "lucide-react": "1.56.0",
+    "next": "16.4.0",
+    "pg": "8.23.1",
+    "pg-boss": "12.37.1",
+    "radix-ui": "1.8.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "shadcn": "4.21.4",
+    "sonner": "2.0.8",
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@modelcontextprotocol/client": "2.3.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.5",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "tw-animate-css": "1.4.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4",
+    "wxt": "0.21.4"
+  }
+}

@@ -74,7 +74,7 @@ export function CommandSearch() {
         variant="outline"
         aria-keyshortcuts="Meta+K Control+K"
         onClick={() => setOpen(true)}
-        className="h-9 w-full justify-start rounded-lg bg-card font-normal text-muted-foreground shadow-xs transition-colors"
+        className="h-10 w-full justify-start rounded-xl bg-card text-[15px] font-normal text-muted-foreground shadow-xs transition-colors"
       >
         <Search size={16} strokeWidth={1.5} aria-hidden="true" />
         <span className="flex-1 text-left">Rechercher…</span>

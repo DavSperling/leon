@@ -84,10 +84,10 @@ function typeKeysAbove(types: TreeType[], cardId: string): string[] {
 }
 
 const ROW_CLASS =
-  'relative mx-2 flex h-9 items-center gap-2.5 rounded-lg pr-2 text-[15px] leading-5 text-foreground-2 transition-colors duration-150 hover:bg-accent hover:text-foreground';
+  'relative mx-3 flex h-[40px] items-center gap-3 rounded-xl pr-3 text-[15px] leading-5 text-foreground-2 transition-colors duration-150 hover:bg-accent hover:text-foreground';
 
-const INDENT = 20;
-const rowPadding = (level: number) => ({ paddingLeft: 10 + (level - 1) * INDENT });
+const INDENT = 22;
+const rowPadding = (level: number) => ({ paddingLeft: 12 + (level - 1) * INDENT });
 
 // Un trait vertical sous chaque dossier parent, aligné sur son icône, comme dans un explorateur.
 function Guides({ level }: { level: number }) {
@@ -97,7 +97,7 @@ function Guides({ level }: { level: number }) {
       key={index}
       aria-hidden="true"
       className="pointer-events-none absolute inset-y-0 w-px bg-border"
-      style={{ left: 18 + index * INDENT }}
+      style={{ left: 21 + index * INDENT }}
     />
   ));
 }
@@ -108,7 +108,7 @@ function TypeLabel({ row }: { row: Extract<TreeRow, { kind: 'type' }> }) {
     <>
       <Guides level={row.level} />
       <Icon
-        size={17}
+        size={19}
         strokeWidth={1.5}
         aria-hidden="true"
         className="shrink-0 text-muted-foreground"
@@ -222,7 +222,7 @@ export function TreeView({ tree }: { tree: TreeType[] }) {
           >
             <Guides level={row.level} />
             <FileText
-              size={17}
+              size={19}
               strokeWidth={1.5}
               aria-hidden="true"
               className={cn('shrink-0 text-muted-foreground', current && 'text-primary')}

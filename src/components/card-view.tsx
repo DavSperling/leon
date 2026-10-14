@@ -1,19 +1,13 @@
 'use client';
 
-import { ArrowRight, Code, FileText } from 'lucide-react';
+import { Code, FileText, History, Link2, ScanEye, SquareTerminal } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { toast } from 'sonner';
 import { CardHistory } from '@/components/card-history';
 import { FactRow } from '@/components/fact-row';
 import { RawCard } from '@/components/raw-card';
 import { StatusBadge } from '@/components/status-badge';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDate, formatNumber } from '@/lib/format';
 import type { CardData, FactView } from '@/server/memory/card-data';
@@ -39,16 +33,27 @@ export function groupByPredicate(facts: FactView[]): Array<{ label: string; fact
   return groups;
 }
 
+async function copy(value: string, done: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    toast.success(done);
+  } catch {
+    toast.error('Impossible de copier. Sélectionnez le texte à la main.');
+  }
+}
+
+const TOOL_BUTTON =
+  'inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3.5 text-[15px] text-foreground-2 shadow-xs transition-colors hover:bg-accent hover:text-foreground';
+const ICON_BUTTON =
+  'inline-flex size-10 items-center justify-center rounded-xl border bg-card text-foreground-2 shadow-xs transition-colors hover:bg-accent hover:text-foreground';
+
 function SummaryRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <tr className="border-b last:border-b-0">
-      <th
-        scope="row"
-        className="w-44 bg-muted/60 px-5 py-3 text-left align-top text-[15px] leading-6 font-medium"
-      >
+    <tr className="border-t">
+      <th scope="row" className="w-52 border-r px-6 py-3.5 text-left align-top font-normal">
         {label}
       </th>
-      <td className="px-5 py-3 text-[15px] leading-6">{children}</td>
+      <td className="px-6 py-3.5">{children}</td>
     </tr>
   );
 }
@@ -57,37 +62,72 @@ type CardViewProps = { card: CardData; text: string; initialTab: 'fiche' | 'brut
 
 export function CardView({ card, text, initialTab }: CardViewProps) {
   return (
-    <Tabs defaultValue={initialTab} className="gap-0">
-      <div className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b bg-card/85 px-5 backdrop-blur">
-        <Breadcrumb aria-label="Fil d'Ariane" className="min-w-0">
-          <BreadcrumbList className="flex-nowrap gap-1.5 text-sm text-muted-foreground sm:gap-1.5">
-            <BreadcrumbItem className="shrink-0">{card.typeLabel}</BreadcrumbItem>
-            <BreadcrumbSeparator>/</BreadcrumbSeparator>
-            <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="truncate">{card.title}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <TabsList className="h-9 shrink-0 rounded-lg p-1">
-          <TabsTrigger value="fiche" className="gap-1.5 rounded-md px-2.5">
-            <FileText size={15} strokeWidth={1.5} aria-hidden="true" />
-            Fiche
-          </TabsTrigger>
-          <TabsTrigger value="brut" className="gap-1.5 rounded-md px-2.5">
-            <Code size={15} strokeWidth={1.5} aria-hidden="true" />
-            Brut
-          </TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue={initialTab} className="min-h-full gap-0">
+      <div className="sticky top-0 z-10 flex h-[68px] items-center justify-between gap-3 border-b bg-card/90 px-4 backdrop-blur">
+        <div className="flex min-w-0 items-center gap-2.5">
+          {card.history.length > 0 && (
+            <a href="#historique" className={TOOL_BUTTON}>
+              <History size={18} strokeWidth={1.5} aria-hidden="true" />
+              Historique
+              <span className="text-muted-foreground tabular-nums">{card.history.length}</span>
+            </a>
+          )}
+          <Link href={`/journal?fiche=${card.id}`} className={TOOL_BUTTON}>
+            <ScanEye size={18} strokeWidth={1.5} aria-hidden="true" />
+            Journal de lecture
+            <span className="text-muted-foreground tabular-nums">{card.readCount}</span>
+          </Link>
+        </div>
+        <div className="flex shrink-0 items-center gap-2.5">
+          <button
+            type="button"
+            title="Copier le lien de la fiche"
+            aria-label="Copier le lien de la fiche"
+            onClick={() => copy(window.location.href.split('?')[0] ?? '', 'Lien copié.')}
+            className={ICON_BUTTON}
+          >
+            <Link2 size={18} strokeWidth={1.5} aria-hidden="true" />
+          </button>
+          <TabsList className="h-10 rounded-xl bg-muted p-1">
+            <TabsTrigger
+              value="fiche"
+              title="Fiche"
+              className="h-8 w-10 flex-none rounded-lg px-0 data-[state=active]:shadow-sm"
+            >
+              <FileText size={18} strokeWidth={1.5} aria-hidden="true" />
+              <span className="sr-only">Fiche</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="brut"
+              title="Brut : ce que reçoit un assistant"
+              className="h-8 w-10 flex-none rounded-lg px-0 data-[state=active]:shadow-sm"
+            >
+              <Code size={18} strokeWidth={1.5} aria-hidden="true" />
+              <span className="sr-only">Brut</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
       </div>
-      <article className="mx-auto w-full max-w-[780px] px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
-        <header className="border-b pb-7">
-          <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight text-balance">
+      <article className="mx-auto w-full max-w-[880px] px-12 pt-16 pb-32 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+        <header className="border-b pb-8">
+          <h1 className="text-[36px] leading-[44px] font-semibold tracking-[-0.02em] text-balance">
             {card.title}
+            <span className="font-normal text-muted-foreground/70"> · {card.typeLabel}</span>
           </h1>
         </header>
-        <TabsContent value="fiche" className="text-base">
-          <div className="mt-8 overflow-hidden rounded-xl border">
-            <table className="w-full border-collapse">
+        <TabsContent value="fiche" className="text-[17px] leading-8">
+          <div className="mt-10 overflow-hidden rounded-xl border">
+            <table className="w-full border-collapse text-base">
+              <thead className="bg-muted/70">
+                <tr>
+                  <th scope="col" className="w-52 border-r px-6 py-3.5 text-left font-semibold">
+                    Propriété
+                  </th>
+                  <th scope="col" className="px-6 py-3.5 text-left font-semibold">
+                    Valeur
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 <SummaryRow label="Type">{card.typeLabel}</SummaryRow>
                 <SummaryRow label="Statut">
@@ -100,24 +140,18 @@ export function CardView({ card, text, initialTab }: CardViewProps) {
                 <SummaryRow label="Faits">{formatNumber(card.factCount)}</SummaryRow>
                 <SummaryRow label="Mise à jour">{formatDate(card.updatedAt)}</SummaryRow>
                 <SummaryRow label="Lectures">
-                  Lue {formatNumber(card.readCount)} fois ·{' '}
-                  <Link
-                    href={`/journal?fiche=${card.id}`}
-                    className="inline-flex items-center gap-1 text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
-                  >
-                    Journal
-                    <ArrowRight size={14} strokeWidth={1.5} aria-hidden="true" />
-                  </Link>
+                  {formatNumber(card.readCount)} {card.readCount > 1 ? 'lectures' : 'lecture'} par
+                  un assistant ou l'interface
                 </SummaryRow>
               </tbody>
             </table>
           </div>
           {groupByPredicate(card.facts).map((group) => (
             <section key={group.label} aria-label={group.label}>
-              <h2 className="mt-12 mb-5 text-2xl leading-8 font-semibold tracking-tight">
+              <h2 className="mt-14 mb-5 text-[28px] leading-9 font-semibold tracking-[-0.02em]">
                 {group.label}
               </h2>
-              <ul className="space-y-8">
+              <ul className="space-y-9">
                 {group.facts.map((fact) => (
                   <FactRow key={fact.id} fact={fact} />
                 ))}
@@ -126,10 +160,18 @@ export function CardView({ card, text, initialTab }: CardViewProps) {
           ))}
           <CardHistory facts={card.history} />
         </TabsContent>
-        <TabsContent value="brut" className="mt-8">
+        <TabsContent value="brut" className="mt-10">
           <RawCard text={text} />
         </TabsContent>
       </article>
+      <button
+        type="button"
+        onClick={() => copy(text, 'Fiche copiée : collez-la dans votre assistant.')}
+        className="sticky bottom-6 z-10 mr-6 mb-6 ml-auto inline-flex h-12 items-center gap-2.5 self-end rounded-xl bg-foreground px-5 font-mono text-[15px] font-semibold text-background shadow-lg transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+      >
+        <SquareTerminal size={18} strokeWidth={1.75} aria-hidden="true" />
+        Utiliser dans un agent
+      </button>
     </Tabs>
   );
 }

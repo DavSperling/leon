@@ -7,7 +7,7 @@ import type { FactView } from '@/server/memory/card-data';
 export function CardHistory({ facts }: { facts: FactView[] }) {
   if (facts.length === 0) return null;
   return (
-    <Collapsible className="mt-14 border-t pt-6">
+    <Collapsible id="historique" className="mt-16 scroll-mt-24 border-t pt-6">
       <CollapsibleTrigger className="group flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ChevronRight
           size={14}

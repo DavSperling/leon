@@ -52,13 +52,17 @@ export function failureMessage(step: NonNullable<SourceRow['lastRun']>['step']):
 export function ChannelLines({ channels }: { channels: ChannelHealth[] }) {
   const now = new Date();
   return (
-    <ul className="space-y-1 text-[13px] leading-[18px]">
+    <ul className="flex flex-wrap gap-2 text-sm leading-5">
       {channels.map((channel) => {
         const { text, late } = channelLine(channel, now);
         return (
           <li
             key={channel.kind}
-            className={late ? 'flex items-center gap-1.5 text-warning' : 'text-foreground-2'}
+            className={
+              late
+                ? 'flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-warning'
+                : 'rounded-full border bg-card px-3 py-1 text-foreground-2'
+            }
           >
             {late && <TriangleAlert size={16} strokeWidth={1.5} aria-hidden="true" />}
             {text}
@@ -95,48 +99,58 @@ function PipelineCell({ run }: { run: SourceRow['lastRun'] }) {
 export function SourcesTable({ sources }: { sources: SourceRow[] }) {
   const now = new Date();
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted hover:bg-muted">
-          <TableHead scope="col">Origine</TableHead>
-          <TableHead scope="col">Conversation</TableHead>
-          <TableHead scope="col">Dernier tour</TableHead>
-          <TableHead scope="col" className="text-right">
-            Tours
-          </TableHead>
-          <TableHead scope="col">Pipeline</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sources.map((source) => (
-          <TableRow key={source.id} className="h-9 align-top">
-            <TableCell>
-              <SourceChip kind={source.kind} label={source.kindLabel} />
-            </TableCell>
-            <TableCell className="max-w-[40ch] whitespace-normal">
-              {source.title ?? <span className="text-muted-foreground">Sans titre</span>}
-            </TableCell>
-            <TableCell className="tabular-nums">
-              {source.lastTurnAt ? (
-                <time
-                  dateTime={source.lastTurnAt.toISOString()}
-                  title={formatDateTime(source.lastTurnAt)}
-                >
-                  {formatRelative(source.lastTurnAt, now)}
-                </time>
-              ) : (
-                '—'
-              )}
-            </TableCell>
-            <TableCell className="text-right tabular-nums">
-              {formatNumber(source.turnCount)}
-            </TableCell>
-            <TableCell>
-              <PipelineCell run={source.lastRun} />
-            </TableCell>
+    <div className="overflow-hidden rounded-xl border">
+      <Table className="text-[15px]">
+        <TableHeader>
+          <TableRow className="bg-muted/60 hover:bg-muted/60">
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Origine
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Conversation
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Dernier tour
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium text-right">
+              Tours
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Pipeline
+            </TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {sources.map((source) => (
+            <TableRow key={source.id} className="align-top transition-colors">
+              <TableCell className="px-5 py-3">
+                <SourceChip kind={source.kind} label={source.kindLabel} />
+              </TableCell>
+              <TableCell className="px-5 py-3 max-w-[40ch] whitespace-normal">
+                {source.title ?? <span className="text-muted-foreground">Sans titre</span>}
+              </TableCell>
+              <TableCell className="px-5 py-3 tabular-nums">
+                {source.lastTurnAt ? (
+                  <time
+                    dateTime={source.lastTurnAt.toISOString()}
+                    title={formatDateTime(source.lastTurnAt)}
+                  >
+                    {formatRelative(source.lastTurnAt, now)}
+                  </time>
+                ) : (
+                  '—'
+                )}
+              </TableCell>
+              <TableCell className="px-5 py-3 text-right tabular-nums">
+                {formatNumber(source.turnCount)}
+              </TableCell>
+              <TableCell className="px-5 py-3">
+                <PipelineCell run={source.lastRun} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

@@ -40,10 +40,10 @@ export function FactRow({
   showPredicate?: boolean;
 }) {
   return (
-    <li className="space-y-3">
+    <li className="space-y-3.5">
       <p
         className={cn(
-          'text-base leading-7 text-pretty',
+          'text-[17px] leading-8 text-pretty',
           fact.status === 'superseded' && 'text-muted-foreground',
         )}
       >
@@ -51,7 +51,7 @@ export function FactRow({
         {fact.statement}
       </p>
       <QuoteBlock quote={fact.quote} />
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] leading-[18px] text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm leading-5 text-muted-foreground">
         <time
           dateTime={fact.validFrom.toISOString()}
           title={formatDateTime(fact.validFrom)}

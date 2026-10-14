@@ -11,9 +11,9 @@ export default async function HomePage() {
   const { entries } = await buildBriefing(ctx);
 
   return (
-    <div className="mx-auto w-full max-w-[780px] px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+    <div className="mx-auto w-full max-w-[880px] px-12 pt-16 pb-32 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
       <header className="border-b pb-7">
-        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Briefing</h1>
+        <h1 className="text-[36px] leading-[44px] font-semibold tracking-[-0.02em]">Briefing</h1>
         <p className="mt-1 text-base text-muted-foreground">Ce qui a changé ces 7 derniers jours</p>
       </header>
       {entries.length === 0 ? (
@@ -34,7 +34,7 @@ export default async function HomePage() {
                 className="group block space-y-1.5 rounded-xl px-4 py-4 transition-colors duration-150 hover:bg-muted"
               >
                 <div className="flex items-baseline gap-2.5">
-                  <span className="text-[17px] leading-6 font-semibold tracking-tight group-hover:text-primary">
+                  <span className="text-lg leading-7 font-semibold tracking-tight group-hover:text-primary">
                     {entry.title}
                   </span>
                   <span className="text-[13px] leading-[18px] text-muted-foreground">
@@ -48,7 +48,7 @@ export default async function HomePage() {
                     {formatRelative(entry.lastFactAt)}
                   </time>
                 </div>
-                <p className="text-base leading-7 text-foreground-2 text-pretty">
+                <p className="text-[17px] leading-8 text-foreground-2 text-pretty">
                   {entry.latestStatement}
                 </p>
                 {entry.hasConflict && <StatusBadge status="conflict" />}

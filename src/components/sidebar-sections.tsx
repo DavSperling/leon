@@ -28,14 +28,14 @@ export function SidebarSections({ reviewCount }: { reviewCount: number }) {
               href={href}
               aria-current={current ? 'page' : undefined}
               className={cn(
-                'flex h-10 items-center gap-3 rounded-lg px-3 text-[15px] leading-5 text-foreground-2 transition-colors hover:bg-sidebar-accent hover:text-foreground',
+                'flex h-11 items-center gap-3.5 rounded-xl px-3.5 text-base leading-5 text-foreground-2 transition-colors hover:bg-sidebar-accent hover:text-foreground',
                 current && 'bg-sidebar-accent font-medium text-primary hover:text-primary',
               )}
             >
-              <Icon size={18} strokeWidth={1.5} aria-hidden="true" />
+              <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
               {label}
               {href === '/a-verifier' && reviewCount > 0 && (
-                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-soft px-1.5 text-xs leading-4 font-medium text-primary tabular-nums">
+                <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-soft px-1.5 text-xs leading-4 font-medium text-primary tabular-nums">
                   {formatNumber(reviewCount)}
                 </span>
               )}

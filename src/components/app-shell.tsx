@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ShellFrame } from '@/components/shell-frame';
 import { SidebarSections } from '@/components/sidebar-sections';
 import { WorkspaceMenu } from '@/components/workspace-menu';
 
@@ -24,31 +25,41 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex h-dvh min-w-5xl gap-2 bg-background p-2">
+    <>
       <a
         href="#contenu"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2"
       >
         Aller au contenu
       </a>
-      <nav aria-label="Navigation principale" className="flex w-[232px] shrink-0 flex-col gap-4">
-        <WorkspaceMenu
-          organizationName={organizationName}
-          userName={userName}
-          userEmail={userEmail}
-        />
-        {search}
-        <SidebarSections reviewCount={reviewCount} />
-      </nav>
-      <div className="flex min-w-0 flex-1 overflow-hidden rounded-xl border bg-card shadow-xs">
-        <aside aria-label="Fiches" className="flex w-[288px] shrink-0 flex-col border-r bg-card">
-          <p className="px-5 pt-4 pb-2 text-[15px] leading-5 text-muted-foreground">Mémoire</p>
-          <div className="min-h-0 flex-1 overflow-y-auto pb-4">{tree}</div>
-        </aside>
-        <main id="contenu" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto scroll-smooth">
-          {children}
-        </main>
-      </div>
-    </div>
+      <ShellFrame
+        rail={
+          <nav aria-label="Navigation principale" className="flex flex-col gap-5">
+            <WorkspaceMenu
+              organizationName={organizationName}
+              userName={userName}
+              userEmail={userEmail}
+            />
+            {search}
+            <SidebarSections reviewCount={reviewCount} />
+          </nav>
+        }
+        panel={
+          <div className="flex min-w-0 flex-1 overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <aside aria-label="Fiches" className="flex w-[300px] shrink-0 flex-col border-r">
+              <p className="px-6 pt-5 pb-3 text-base text-muted-foreground">Mémoire partagée</p>
+              <div className="min-h-0 flex-1 overflow-y-auto pb-4">{tree}</div>
+            </aside>
+            <main
+              id="contenu"
+              tabIndex={-1}
+              className="relative min-w-0 flex-1 overflow-y-auto scroll-smooth"
+            >
+              {children}
+            </main>
+          </div>
+        }
+      />
+    </>
   );
 }

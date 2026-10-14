@@ -18,33 +18,46 @@ const CHIP_KINDS: Record<string, SourceChipKind> = {
 
 export function ReadLogTable({ entries }: { entries: ReadLogEntry[] }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted hover:bg-muted">
-          <TableHead scope="col">Quand</TableHead>
-          <TableHead scope="col">Qui</TableHead>
-          <TableHead scope="col">Avec</TableHead>
-          <TableHead scope="col">Fiche</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {entries.map((entry) => (
-          <TableRow key={entry.id} className="h-9">
-            <TableCell className="tabular-nums">
-              <time dateTime={entry.at.toISOString()}>{formatDateTime(entry.at)}</time>
-            </TableCell>
-            <TableCell>{entry.readerName}</TableCell>
-            <TableCell>
-              <SourceChip kind={CHIP_KINDS[entry.client] ?? 'other'} label={entry.clientLabel} />
-            </TableCell>
-            <TableCell>
-              <Link href={`/fiches/${entry.cardId}`} className="text-primary hover:underline">
-                {entry.cardTitle}
-              </Link>
-            </TableCell>
+    <div className="overflow-hidden rounded-xl border">
+      <Table className="text-[15px]">
+        <TableHeader>
+          <TableRow className="bg-muted/60 hover:bg-muted/60">
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Quand
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Qui
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Avec
+            </TableHead>
+            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+              Fiche
+            </TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {entries.map((entry) => (
+            <TableRow key={entry.id} className="transition-colors">
+              <TableCell className="px-5 py-3 tabular-nums">
+                <time dateTime={entry.at.toISOString()}>{formatDateTime(entry.at)}</time>
+              </TableCell>
+              <TableCell className="px-5 py-3">{entry.readerName}</TableCell>
+              <TableCell className="px-5 py-3">
+                <SourceChip kind={CHIP_KINDS[entry.client] ?? 'other'} label={entry.clientLabel} />
+              </TableCell>
+              <TableCell className="px-5 py-3">
+                <Link
+                  href={`/fiches/${entry.cardId}`}
+                  className="text-primary underline decoration-primary/30 underline-offset-4 transition-colors hover:decoration-primary"
+                >
+                  {entry.cardTitle}
+                </Link>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

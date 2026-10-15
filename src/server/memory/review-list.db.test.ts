@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { reviewItems } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { seedCard, seedFact, seedSource } from '@/test/fixtures';
+import { seedGithubFact } from '@/test/github-fact';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { resolveReviewItem } from './review-items';
 import { listReviewItems } from './review-list';
@@ -221,5 +222,63 @@ describe('listReviewItems', () => {
       type: { id: s.proposedType, slug: 'chantier', label: 'Chantier', parentLabel: 'Projet' },
       cardCount: 1,
     });
+  });
+});
+
+describe("listReviewItems · faits tirés d'un outil", () => {
+  it("attribue le fait à l'auteur du tour cité, pas à celui qui a branché la connexion", async () => {
+    const { tenantId, amos, david, cardId, factId, sourceId, turnId } = await seedGithubFact({
+      url: 'https://github.com/acme/leon/issues/12',
+    });
+    const otherFactId = await seedFact(tenantId, {
+      cardId,
+      sourceId,
+      turnId,
+      authorId: amos.userId,
+      predicate: 'note',
+      statement: 'On passe à MySQL.',
+      acl: [tenantId],
+      sourceKind: 'github',
+    });
+    const candidateId = await seedCard(tenantId, {
+      title: 'Leon bis',
+      typeSlug: 'projet',
+      acl: [tenantId],
+    });
+    const insert = async (
+      kind: 'sensitive_fact' | 'conflict' | 'entity_match',
+      payload: object,
+    ) => {
+      const [item] = await adminDb
+        .insert(reviewItems)
+        .values({ tenantId, kind, payload: { kind, ...payload }, acl: [tenantId] })
+        .returning({ id: reviewItems.id });
+      if (!item) throw new Error('élément non créé');
+      return item.id;
+    };
+    const sensitiveId = await insert('sensitive_fact', { factId, category: 'rh' });
+    const conflictId = await insert('conflict', { factIds: [factId, otherFactId] });
+    const matchId = await insert('entity_match', {
+      newCardId: cardId,
+      candidateCardId: candidateId,
+    });
+
+    for (const reader of [david, amos]) {
+      const items = await listReviewItems(reader, { status: 'open' });
+      const detail = (id: string) => items.find((item) => item.id === id)?.detail;
+
+      expect(detail(sensitiveId)).toMatchObject({
+        kind: 'sensitive_fact',
+        fact: { id: factId, authorName: 'David', sourceKindLabel: 'GitHub' },
+      });
+      expect(detail(conflictId)).toMatchObject({
+        kind: 'conflict',
+        facts: [{ authorName: 'David' }, { authorName: 'David' }],
+      });
+      expect(detail(matchId)).toMatchObject({
+        kind: 'entity_match',
+        newCard: { firstFact: { authorName: 'David' } },
+      });
+    }
   });
 });

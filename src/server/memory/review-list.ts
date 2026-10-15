@@ -2,10 +2,10 @@ import { and, asc, count, desc, eq, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { users } from '@/server/db/schema/auth';
-import { cards, cardTypes, facts, reviewItems } from '@/server/db/schema/memory';
+import { cards, cardTypes, facts, reviewItems, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { type Catalog, loadCatalog, predicatesForType } from './catalog';
-import { SENSITIVE_CATEGORY_LABELS, SOURCE_KIND_LABELS } from './labels';
+import { factAuthorName, SENSITIVE_CATEGORY_LABELS, SOURCE_KIND_LABELS } from './labels';
 import { type ReviewPayload, ReviewPayloadSchema } from './review-item-write';
 import { type ReviewResolution, ReviewResolutionSchema } from './review-items';
 
@@ -131,16 +131,22 @@ async function readFact(tx: Tx, factId: string): Promise<FactRow | null> {
       predicate: facts.predicate,
       statement: facts.statement,
       quote: facts.quote,
-      authorName: users.name,
+      userName: users.name,
+      turnAuthorName: turns.authorName,
       validFrom: facts.validFrom,
       sourceKind: facts.sourceKind,
     })
     .from(facts)
     .innerJoin(users, eq(users.id, facts.authorId))
+    .leftJoin(turns, eq(turns.id, facts.turnId))
     .where(eq(facts.id, factId));
   if (!row) return null;
-  const { sourceKind, ...fact } = row;
-  return { ...fact, sourceKindLabel: SOURCE_KIND_LABELS[sourceKind] };
+  const { sourceKind, userName, turnAuthorName, ...fact } = row;
+  return {
+    ...fact,
+    authorName: factAuthorName({ sourceKind, userName, turnAuthorName }),
+    sourceKindLabel: SOURCE_KIND_LABELS[sourceKind],
+  };
 }
 
 // Une fiche visible a toujours un type visible (D13) : la jointure interne ne perd rien.

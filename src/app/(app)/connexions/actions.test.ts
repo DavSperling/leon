@@ -13,6 +13,8 @@ import {
   setConnectionPaused,
 } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
+import { githubCatalog } from '@/server/connectors/github/catalog';
+import { githubConnector } from '@/server/connectors/github/connector';
 import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
@@ -70,6 +72,14 @@ const catalogItem = {
     { name: 'teams', label: 'Équipes', kind: 'list' },
   ],
 } as CatalogItem;
+
+// Les messages que les connecteurs écrivent exprès pour la personne qui saisit (jamais ceux de
+// l'outil, jamais une clé ni une adresse) : l'écran doit les montrer tels quels.
+const CONNECTOR_MESSAGES: Array<[number | null, string]> = [
+  [404, 'Dépôt inaccessible : acme/leon'],
+  [404, 'Site Jira introuvable : vérifiez le nom du site'],
+  [null, 'En-tête invalide : vérifiez la clé de GitHub'],
+];
 
 const connect = (override: Partial<Parameters<typeof connectAction>[0]> = {}) =>
   connectAction({
@@ -146,9 +156,9 @@ describe('connectAction', () => {
     expect(createConnection).not.toHaveBeenCalled();
   });
 
-  it('dit que l’outil ne répond pas pour toute autre panne, sans journaliser la clé', async () => {
+  it('dit que l’outil ne répond pas pour une panne inconnue, sans journaliser la clé', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    verify.mockRejectedValue(new ConnectorHttpError(503, 'Linear a répondu 503'));
+    verify.mockRejectedValue(new TypeError('fetch failed'));
 
     await expect(connect()).resolves.toEqual({
       error: 'Linear ne répond pas, réessayez dans un moment.',
@@ -158,6 +168,21 @@ describe('connectAction', () => {
     expect(JSON.stringify(spy.mock.calls)).not.toContain(KEY);
     spy.mockRestore();
   });
+
+  it.each(CONNECTOR_MESSAGES)(
+    'montre tel quel le message écrit par le connecteur (%s) : %s',
+    async (status, message) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      verify.mockRejectedValue(new ConnectorHttpError(status, message));
+
+      const result = await connect();
+
+      expect(result).toEqual({ error: message });
+      expect(JSON.stringify(result)).not.toContain(KEY);
+      expect(createConnection).not.toHaveBeenCalled();
+      spy.mockRestore();
+    },
+  );
 
   it('teste avec un client HTTP réel et la configuration validée, puis enregistre', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -221,6 +246,62 @@ describe('connectAction', () => {
   });
 });
 
+// Sans simulation du connecteur : le vrai connecteur GitHub, le vrai client HTTP, et seulement
+// `fetch` remplacé. Prouve que le message écrit dans le connecteur arrive jusqu'à l'action.
+describe('connectAction avec le vrai connecteur GitHub', () => {
+  const TOKEN = 'github_pat_cle-de-test-qui-ne-doit-jamais-etre-affichee';
+  const github = { ...catalogItem, id: 'github', label: 'GitHub', fields: githubCatalog.fields };
+  const fetchStub = vi.fn();
+  const connectGithub = (token: string) =>
+    connect({ provider: 'github', fields: { token, repos: 'acme/leon' } });
+
+  beforeEach(() => {
+    vi.mocked(getConnector).mockReturnValue(githubConnector as AnyConnector);
+    vi.mocked(listCatalog).mockReturnValue([github as CatalogItem]);
+    fetchStub.mockImplementation(async (url: string) =>
+      new URL(url).pathname === '/user'
+        ? Response.json({ login: 'david' })
+        : Response.json({ message: 'Not Found' }, { status: 404 }),
+    );
+    vi.stubGlobal('fetch', fetchStub);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    fetchStub.mockReset();
+  });
+
+  it('dit quel dépôt est inaccessible quand GitHub répond 404', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const result = await connectGithub(TOKEN);
+
+    expect(result).toEqual({ error: 'Dépôt inaccessible : acme/leon' });
+    expect(fetchStub.mock.calls.map(([url]) => url)).toEqual([
+      'https://api.github.com/user',
+      'https://api.github.com/repos/acme/leon',
+    ]);
+    expect(JSON.stringify(result)).not.toContain(TOKEN);
+    expect(JSON.stringify(spy.mock.calls)).not.toContain(TOKEN);
+    expect(createConnection).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('dit de vérifier la clé quand un retour à la ligne s’est glissé au milieu, sans appeler GitHub', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const pasted = `${TOKEN.slice(0, 20)}\n${TOKEN.slice(20)}`;
+
+    const result = await connectGithub(pasted);
+
+    expect(result).toEqual({ error: 'En-tête invalide : vérifiez la clé de GitHub' });
+    expect(fetchStub).not.toHaveBeenCalled();
+    expect(JSON.stringify(result)).not.toContain(TOKEN.slice(0, 20));
+    expect(JSON.stringify(spy.mock.calls)).not.toContain(TOKEN.slice(0, 20));
+    expect(createConnection).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});
+
 describe('replaceKeyAction', () => {
   const stored = {
     id: ID,
@@ -265,6 +346,21 @@ describe('replaceKeyAction', () => {
     expect(replaceConnectionSecret).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
   });
+
+  it.each(CONNECTOR_MESSAGES)(
+    'montre tel quel le message écrit par le connecteur (%s) : %s',
+    async (status, message) => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      verify.mockRejectedValue(new ConnectorHttpError(status, message));
+
+      const result = await replace();
+
+      expect(result).toEqual({ error: message });
+      expect(JSON.stringify(result)).not.toContain(KEY);
+      expect(replaceConnectionSecret).not.toHaveBeenCalled();
+      spy.mockRestore();
+    },
+  );
 
   it('nomme les champs invalides sans répéter la saisie', async () => {
     await expect(replace({ apiKey: 'court' })).resolves.toEqual({

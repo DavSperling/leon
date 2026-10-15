@@ -22,7 +22,11 @@ import {
   setConnectionPaused,
 } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
-import { ConnectorAuthError, createConnectorHttp } from '@/server/connectors/http';
+import {
+  ConnectorAuthError,
+  ConnectorHttpError,
+  createConnectorHttp,
+} from '@/server/connectors/http';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import { logError } from '@/server/log';
@@ -30,7 +34,8 @@ import { oneLine } from '@/server/memory/labels';
 
 // Toutes les actions passent par requireUserContext et valident leurs entrées avec zod. Aucune ne
 // laisse remonter d'exception à l'interface (sauf la redirection vers la connexion), et aucune ne
-// répète une valeur saisie dans un message ou dans un journal.
+// répète une clé saisie dans un message ou dans un journal. Seuls les messages écrits par les
+// connecteurs peuvent nommer un champ non secret déjà validé par leur schéma (un dépôt, un site).
 
 const NOT_CONFIGURED =
   'Les connecteurs ne sont pas configurés sur ce serveur (LEON_CONNECTORS_KEY).';
@@ -89,6 +94,10 @@ async function checkConnection(
   } catch (error) {
     if (error instanceof ConnectorAuthError) return { error: `Clé refusée par ${label}.` };
     logError('connector.verify_failed', error, { provider });
+    // Le message d'une ConnectorHttpError est écrit par nous (http.ts et les connecteurs), jamais
+    // celui de l'outil, et il ne porte ni clé ni adresse : « Dépôt inaccessible : acme/leon » dit
+    // quoi corriger. Toute autre erreur est inconnue : on n'en montre rien.
+    if (error instanceof ConnectorHttpError) return { error: error.message };
     return { error: `${label} ne répond pas, réessayez dans un moment.` };
   }
 }

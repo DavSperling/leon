@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { cards, facts, readLog, sources, turns } from '@/server/db/schema/memory';
+import { cards, facts, readLog } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
-import { createTestTenant, seedCard, seedFact } from '@/test/fixtures';
+import { seedCard, seedFact } from '@/test/fixtures';
+import { seedGithubFact } from '@/test/github-fact';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { cardUrl } from './card-url';
 import { fetchCard } from './fetch-card';
@@ -14,53 +15,6 @@ const readsOf = (cardId: string, userId: string) =>
     .select()
     .from(readLog)
     .where(and(eq(readLog.cardId, cardId), eq(readLog.userId, userId)));
-
-// Un fait tiré d'un commentaire de David (auteur du tour) sur une source GitHub qu'Amos a branchée.
-async function seedGithubFact(metadata: Record<string, unknown>) {
-  const { tenantId, members } = await createTestTenant(['Amos', 'David']);
-  const [amos, david] = members;
-  if (!amos || !david) throw new Error('membres non créés');
-  const [source] = await adminDb
-    .insert(sources)
-    .values({
-      tenantId,
-      kind: 'github',
-      externalId: randomUUID(),
-      ownerUserId: amos.userId,
-      title: 'Ticket 12',
-      acl: [tenantId],
-      metadata,
-    })
-    .returning({ id: sources.id });
-  if (!source) throw new Error('source non créée');
-  const [turn] = await adminDb
-    .insert(turns)
-    .values({
-      tenantId,
-      sourceId: source.id,
-      externalId: 'comment:456',
-      role: 'participant',
-      text: 'On garde Postgres.',
-      ts: new Date(),
-      captureMode: 'connector',
-      authorName: 'David',
-      acl: [tenantId],
-    })
-    .returning({ id: turns.id });
-  if (!turn) throw new Error('tour non créé');
-  const cardId = await seedCard(tenantId, { title: 'Leon', typeSlug: 'projet', acl: [tenantId] });
-  const factId = await seedFact(tenantId, {
-    cardId,
-    sourceId: source.id,
-    turnId: turn.id,
-    authorId: amos.userId,
-    predicate: 'note',
-    statement: 'On garde Postgres.',
-    acl: [tenantId],
-    sourceKind: 'github',
-  });
-  return { amos, david, cardId, factId };
-}
 
 describe('fetchCard', () => {
   it("ne rend pas une fiche privée de Paul à Marie et n'écrit aucune lecture", async () => {

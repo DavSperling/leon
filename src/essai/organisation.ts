@@ -1,5 +1,5 @@
 import { hashPassword } from 'better-auth/crypto';
-import { and, eq, inArray, like, sql } from 'drizzle-orm';
+import { and, eq, inArray, like, ne, sql } from 'drizzle-orm';
 import { generateApiToken, hashApiToken } from '@/server/auth/api-tokens';
 import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members, organizations, users } from '@/server/db/schema/auth';
@@ -19,6 +19,20 @@ export async function remettreAZero(
     throw new Error('Remise à zéro refusée : ce n est pas l organisation d essai.');
   const password = await hashPassword(entreprise.motDePasse);
   return db.transaction(async (tx) => {
+    // Un compte d'essai a pu être ajouté à une autre organisation par erreur (ou par un essai
+    // manuel) : la remise à zéro ne doit pas effacer un compte qui porte la mémoire de quelqu'un
+    // d'autre.
+    const ailleurs = await tx
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(members, eq(members.userId, users.id))
+      .innerJoin(organizations, eq(organizations.id, members.organizationId))
+      .where(and(like(users.email, `%@${ESSAI_DOMAINE}`), ne(organizations.slug, ESSAI_SLUG)));
+    if (ailleurs.length > 0)
+      throw new Error(
+        "Remise à zéro refusée : un compte d'essai appartient à une autre organisation.",
+      );
+
     // L'organisation d'abord : les faits référencent leurs auteurs sans cascade.
     await tx.delete(organizations).where(eq(organizations.slug, ESSAI_SLUG));
     await tx.delete(users).where(like(users.email, `%@${ESSAI_DOMAINE}`));
@@ -70,11 +84,23 @@ export async function tenantEssai(db: AdminDb): Promise<string | null> {
   return org?.id ?? null;
 }
 
-export async function runsEnCours(db: AdminDb, slug = ESSAI_SLUG): Promise<number> {
+// Au-delà, un run encore queued/running est considéré bloqué (worker mort en cours de route,
+// enqueue raté) plutôt qu'actif : le CLI ne doit pas refuser de lancer un passage pour ça, la
+// remise à zéro les efface de toute façon.
+export const RUN_BLOQUE_APRES_MINUTES = 15;
+
+export async function runsEnCours(
+  db: AdminDb,
+  slug = ESSAI_SLUG,
+): Promise<{ actifs: number; bloques: number }> {
+  const seuil = new Date(Date.now() - RUN_BLOQUE_APRES_MINUTES * 60_000);
   const [row] = await db
-    .select({ n: sql<number>`count(*)::int` })
+    .select({
+      actifs: sql<number>`count(*) filter (where ${ingestRuns.updatedAt} > ${seuil})::int`,
+      bloques: sql<number>`count(*) filter (where ${ingestRuns.updatedAt} <= ${seuil})::int`,
+    })
     .from(ingestRuns)
     .innerJoin(organizations, eq(organizations.id, ingestRuns.tenantId))
     .where(and(eq(organizations.slug, slug), inArray(ingestRuns.status, ['queued', 'running'])));
-  return row?.n ?? 0;
+  return row ?? { actifs: 0, bloques: 0 };
 }

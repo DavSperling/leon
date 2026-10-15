@@ -28,8 +28,18 @@ export async function envoyer(
   for (const [index, c] of ordreEnvoi(conversations).entries()) {
     const token = jetons.get(c.personnage);
     if (!token) throw new Error(`Aucun jeton pour le personnage ${c.personnage}.`);
-    for (const lot of lots(c.payload)) {
-      const result = await send(token, lot);
+    const lotsDeC = lots(c.payload);
+    for (const [i, lot] of lotsDeC.entries()) {
+      let result: IngestResult;
+      try {
+        result = await send(token, lot);
+      } catch (error) {
+        // Les envois déjà faits sont payants et déjà en base : le message dit où reprendre.
+        throw new Error(
+          `Envoi interrompu à ${c.cle}, lot ${i + 1}/${lotsDeC.length} (${bilan.envois} envois faits).`,
+          { cause: error },
+        );
+      }
       bilan.envois += 1;
       bilan.tours += lot.turns.length;
       bilan.inseres += result.inserted;

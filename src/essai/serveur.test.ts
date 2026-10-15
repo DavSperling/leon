@@ -53,6 +53,34 @@ describe('verifierServeur', () => {
     ).toMatch(/injoignable/);
   });
 
+  it('refuse un serveur qui répond une erreur HTTP', async () => {
+    expect(
+      await verifierServeur({
+        fetch: repond({}, 500),
+        url: 'http://localhost:3002',
+        head: HEAD,
+        srcModifie: false,
+      }),
+    ).toBe(
+      'Le serveur sur http://localhost:3002 répond 500 à /api/version : redémarre-le sur HEAD.',
+    );
+  });
+
+  it('refuse une réponse qui n est pas le JSON attendu', async () => {
+    const repondInvalide = (async () =>
+      new Response('pas du JSON', { status: 200 })) as unknown as typeof fetch;
+    expect(
+      await verifierServeur({
+        fetch: repondInvalide,
+        url: 'http://localhost:3002',
+        head: HEAD,
+        srcModifie: false,
+      }),
+    ).toBe(
+      'Réponse inattendue de http://localhost:3002/api/version : redémarre le serveur sur HEAD.',
+    );
+  });
+
   it('signale un serveur sans commit (production ou hors dépôt Git)', async () => {
     expect(
       await verifierServeur({

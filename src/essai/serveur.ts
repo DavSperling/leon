@@ -18,12 +18,21 @@ export async function verifierServeur(input: {
 }): Promise<string | null> {
   if (input.srcModifie)
     return 'Modifications non commitées sous src/ : commite-les (WIP) pour que le passage corresponde à un commit.';
-  let commit: string | null;
+  let response: Response;
   try {
-    const response = await input.fetch(new URL('/api/version', input.url));
-    commit = VersionSchema.parse(await response.json()).commit;
+    response = await input.fetch(new URL('/api/version', input.url), {
+      signal: AbortSignal.timeout(5_000),
+    });
   } catch {
     return `Serveur Leon injoignable sur ${input.url} (lance « pnpm dev » ou règle LEON_URL).`;
+  }
+  if (!response.ok)
+    return `Le serveur sur ${input.url} répond ${response.status} à /api/version : redémarre-le sur HEAD.`;
+  let commit: string | null;
+  try {
+    commit = VersionSchema.parse(await response.json()).commit;
+  } catch {
+    return `Réponse inattendue de ${input.url}/api/version : redémarre le serveur sur HEAD.`;
   }
   if (commit === null)
     return "Le serveur n'a pas de commit (production ou hors dépôt Git) : lance « pnpm dev ».";

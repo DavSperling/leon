@@ -1,6 +1,7 @@
 import Anthropic, { AnthropicError, APIError } from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { type Llm, LlmError, type LlmRequest, type LlmStep, type LlmUsage } from './llm';
+import { logLlmUsage } from './log-usage';
 
 // Rangement sur Haiku 5.5 (14/10) : sur 24 décisions réelles, Haiku 5.5 a choisi la même fiche et la
 // même relation qu'Opus 5.5 en effort high, pour 0,009 $ au lieu de 0,298 $. L'extraction reste sur
@@ -77,23 +78,25 @@ export function usageOf(step: LlmStep, model: string, usage: Usage): LlmUsage {
 export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): LlmUsage | null {
   if (!usage) return null;
   const line = usageOf(step, model, usage);
-  const costUsd = line.costUsd === null ? null : Number(line.costUsd.toFixed(5));
-  console.info('[leon]', 'llm.usage', JSON.stringify({ ...line, costUsd }));
+  logLlmUsage(line);
   return line;
 }
 
-export function createAnthropicLlm(options: { apiKey: string } | { client: AnthropicLike }): Llm {
+// models remplace le modèle de certaines étapes (voir config.ts) ; l'effort de l'étape reste le même.
+export function createAnthropicLlm(
+  options: ({ apiKey: string } | { client: AnthropicLike }) & {
+    models?: Partial<Record<LlmStep, string>>;
+  },
+): Llm {
   const client: AnthropicLike =
     'client' in options ? options.client : new Anthropic({ apiKey: options.apiKey });
+  const modelOf = (step: LlmStep) => options.models?.[step] ?? MODEL_BY_STEP[step];
 
   return {
     async generateObject<T>(request: LlmRequest<T>): Promise<T> {
-      const message = await parseOrThrow(client, request);
-      const usage = logUsage(
-        request.step,
-        message.model ?? MODEL_BY_STEP[request.step],
-        message.usage,
-      );
+      const model = modelOf(request.step);
+      const message = await parseOrThrow(client, model, request);
+      const usage = logUsage(request.step, message.model ?? model, message.usage);
       // Un appel dont le SDK n'a pas pu analyser la réponse est facturé mais n'est pas compté : le SDK ne rend pas son usage.
       // onUsage ne doit jamais lever ici : l'appel est déjà payé, le faire échouer le ferait payer deux fois par pg-boss.
       if (usage && request.onUsage) await request.onUsage(usage).catch(() => {});
@@ -107,17 +110,17 @@ export function createAnthropicLlm(options: { apiKey: string } | { client: Anthr
   };
 }
 
-async function parseOrThrow<T>(client: AnthropicLike, request: LlmRequest<T>) {
+async function parseOrThrow<T>(client: AnthropicLike, model: string, request: LlmRequest<T>) {
   const step: LlmStep = request.step;
   try {
     return await client.beta.messages.parse({
-      model: MODEL_BY_STEP[step],
+      model,
       max_tokens: request.maxTokens,
       // Consignes identiques d'un appel à l'autre (catalogue compris) : en cache, relues à 0,05x.
       system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: request.prompt }],
       output_config: { format: betaZodOutputFormat(request.schema), effort: EFFORT_BY_STEP[step] },
-      ...(hasRefusalFallback(MODEL_BY_STEP[step]) ? REFUSAL_FALLBACK : {}),
+      ...(hasRefusalFallback(model) ? REFUSAL_FALLBACK : {}),
     });
   } catch (error) {
     // Le SDK analyse la sortie pendant l'appel et son message la cite : on ne le garde pas.

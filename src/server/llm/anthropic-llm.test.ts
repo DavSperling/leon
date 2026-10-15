@@ -63,6 +63,35 @@ describe('createAnthropicLlm', () => {
     });
   });
 
+  it('prend le modèle donné pour une étape, garde les autres et l effort par défaut', async () => {
+    const parse = vi.fn(async (_params: unknown) => ok);
+    const client = { beta: { messages: { parse } } } as unknown as AnthropicLike;
+    const llm = createAnthropicLlm({ client, models: { extraction: 'claude-opus-5-5' } });
+
+    await llm.generateObject(request('extraction'));
+    await llm.generateObject(request('triage'));
+
+    const [extraction, triage] = parse.mock.calls.map(
+      ([params]) => params as Record<string, unknown>,
+    );
+    expect(extraction).toMatchObject({
+      model: 'claude-opus-5-5',
+      output_config: { effort: 'medium' },
+      fallbacks: 'default',
+    });
+    expect(triage).toMatchObject({ model: MODEL_BY_STEP.triage });
+  });
+
+  it('n active pas le repli quand l étape passe sur Haiku', async () => {
+    const parse = vi.fn(async (_params: unknown) => ok);
+    const client = { beta: { messages: { parse } } } as unknown as AnthropicLike;
+    const llm = createAnthropicLlm({ client, models: { extraction: 'claude-haiku-5-5' } });
+
+    await llm.generateObject(request('extraction'));
+
+    expect(parse.mock.calls[0]?.[0]).not.toHaveProperty('fallbacks');
+  });
+
   it.each(['extraction'] as const)('active le repli serveur des refus pour %s', async (step) => {
     const { llm, parse } = setup(() => ok);
 

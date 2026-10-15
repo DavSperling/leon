@@ -29,6 +29,9 @@ beforeAll(async () => {
   tenantId = team.tenantId;
   [paul] = team.members as [TenantContext];
   tenantIds.push(tenantId);
+  // leon_test garde la ligne de cron des lancements précédents : sans ce retrait, le test du
+  // calendrier réussirait même si le démarrage ne planifiait plus rien.
+  await (await getBoss()).unschedule(CONNECTOR_QUEUES.tick);
   await startConnectorWorker(
     {
       getConnector: () => fakeConnector({ items: 3, pageSize: 3 }),
@@ -90,6 +93,19 @@ describe('worker de relève', () => {
     const boss = await getBoss();
 
     await boss.send(CONNECTOR_QUEUES.sync, jobOf(id), { singletonKey: id });
+
+    const count = await waitFor(
+      () => sourceCount(id),
+      (n) => n === 3,
+    );
+    expect(count).toBe(3);
+  });
+
+  it('relève une connexion due quand un tic arrive, sans attendre le cron', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const boss = await getBoss();
+
+    await boss.send(CONNECTOR_QUEUES.tick, {});
 
     const count = await waitFor(
       () => sourceCount(id),

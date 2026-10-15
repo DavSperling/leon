@@ -25,8 +25,8 @@ function catalogProblems(entry: CatalogEntry, connector: AnyConnector): string[]
 describe('listCatalog', () => {
   const items = listCatalog();
 
-  it('rend les 35 outils, une fois chacun', () => {
-    expect(items).toHaveLength(35);
+  it('rend les 39 outils, une fois chacun', () => {
+    expect(items).toHaveLength(39);
     expect(items.map((item) => item.id).sort()).toEqual([...PROVIDER_IDS].sort());
   });
 
@@ -58,12 +58,15 @@ describe('listCatalog', () => {
     expect(labelsOf('projet')).toEqual([
       'Airtable',
       'Asana',
+      'Basecamp',
       'ClickUp',
       'Confluence',
       'GitLab',
       'Jira',
+      'Miro',
       'monday.com',
       'Plane',
+      'Productboard',
       'Sentry',
       'Shortcut',
       'Trello',
@@ -79,6 +82,7 @@ describe('listCatalog', () => {
       'Plain',
       'Zendesk',
     ]);
+    expect(labelsOf('mails')).toEqual(['Outlook']);
   });
 
   it('marque disponible un outil dont le connecteur existe', () => {

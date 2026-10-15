@@ -1,8 +1,15 @@
 import type { ProviderId } from '@/capture/turn';
 
-// Libellés et familles des 35 outils branchables. Données pures : lues par l'interface, le pipeline et les libellés.
+// Libellés et familles des 39 outils branchables. Données pures : lues par l'interface, le pipeline et les libellés.
 
-export const PROVIDER_FAMILIES_ORDER = ['dev', 'reunions', 'projet', 'crm', 'support'] as const;
+export const PROVIDER_FAMILIES_ORDER = [
+  'dev',
+  'reunions',
+  'projet',
+  'crm',
+  'support',
+  'mails',
+] as const;
 export type ProviderFamily = (typeof PROVIDER_FAMILIES_ORDER)[number];
 
 export const FAMILY_LABELS: Record<ProviderFamily, string> = {
@@ -11,6 +18,7 @@ export const FAMILY_LABELS: Record<ProviderFamily, string> = {
   projet: 'Projet',
   crm: 'CRM',
   support: 'Support',
+  mails: 'Mails et agenda',
 };
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
@@ -49,6 +57,10 @@ export const PROVIDER_LABELS: Record<ProviderId, string> = {
   plain: 'Plain',
   crisp: 'Crisp',
   missive: 'Missive',
+  basecamp: 'Basecamp',
+  miro: 'Miro',
+  productboard: 'Productboard',
+  outlook: 'Outlook',
 };
 
 export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
@@ -87,4 +99,8 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   plain: 'support',
   crisp: 'support',
   missive: 'support',
+  basecamp: 'projet',
+  miro: 'projet',
+  productboard: 'projet',
+  outlook: 'mails',
 };

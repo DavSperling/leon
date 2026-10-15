@@ -4,7 +4,7 @@ import { listCatalog } from '@/server/connectors/catalog';
 import { pathExists, productionSources, readText } from './files';
 
 // La documentation des connecteurs (README, guide de vérification) recopie des données que le code
-// porte : la liste des 35 outils et leur état « essayé en réel », les libellés des boutons. Sans
+// porte : la liste des 39 outils et leur état « essayé en réel », les libellés des boutons. Sans
 // cette garde, un outil passé à « essayé en réel » ou un bouton renommé laisse la doc fausse.
 
 const GUIDE = 'docs/guides/connecteurs-verification.md';
@@ -43,7 +43,7 @@ describe('README : section Connecteurs', () => {
     expect(section).toContain(`(${GUIDE})`);
   });
 
-  it('liste chacun des 35 outils, avec sa famille et son état, une fois', () => {
+  it('liste chacun des 39 outils, avec sa famille et son état, une fois', () => {
     const rows = toolRows(section).filter(
       (cells) => cells[0] !== 'Outil' && !/^-+$/.test(cells[0] ?? ''),
     );
@@ -53,7 +53,7 @@ describe('README : section Connecteurs', () => {
       item.triedForReal ? 'oui' : 'non',
     ]);
 
-    expect(expected).toHaveLength(35);
+    expect(expected).toHaveLength(39);
     expect(rows).toEqual(expected);
   });
 });

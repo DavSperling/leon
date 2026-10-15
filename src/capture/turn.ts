@@ -41,6 +41,10 @@ export const PROVIDER_IDS = [
   'plain',
   'crisp',
   'missive',
+  'basecamp',
+  'miro',
+  'productboard',
+  'outlook',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 export const SOURCE_KINDS = [...CAPTURE_KINDS, ...PROVIDER_IDS] as const;

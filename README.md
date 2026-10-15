@@ -50,7 +50,7 @@ pnpm dev                              # puis la page « Connexions » de la barr
 - **Visibilité** : tout ce qu'une connexion lit est visible de toute l'équipe (un fait sensible reste privé et passe par « À vérifier »), et la page Sources l'affiche avec un lien « Ouvrir dans » suivi du nom de l'outil. Supprimer une connexion efface sa clé, mais garde les sources déjà captées.
 - **Sans clé Anthropic**, les éléments entrent quand même : leurs runs attendent que le pipeline tourne.
 
-Les 35 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a branché avec une vraie clé ; sinon le connecteur est testé sur des réponses d'exemple tirées de la doc officielle, rien de plus.
+Les 39 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a branché avec une vraie clé ; sinon le connecteur est testé sur des réponses d'exemple tirées de la doc officielle, rien de plus.
 
 | Outil | Famille | Essayé en réel |
 | --- | --- | --- |
@@ -67,12 +67,15 @@ Les 35 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | tl;dv | Réunions | non |
 | Airtable | Projet | non |
 | Asana | Projet | non |
+| Basecamp | Projet | non |
 | ClickUp | Projet | non |
 | Confluence | Projet | non |
 | GitLab | Projet | non |
 | Jira | Projet | non |
+| Miro | Projet | non |
 | monday.com | Projet | non |
 | Plane | Projet | non |
+| Productboard | Projet | non |
 | Sentry | Projet | non |
 | Shortcut | Projet | non |
 | Trello | Projet | non |
@@ -89,6 +92,7 @@ Les 35 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | Missive | Support | non |
 | Plain | Support | non |
 | Zendesk | Support | non |
+| Outlook | Mails et agenda | non |
 
 Pour chaque connecteur, l'en-tête de `src/server/connectors/<outil>/connector.ts` note les pages de doc lues et ce qui n'a pas pu être vérifié. Les conditions d'utilisation de Fathom, tl;dv, ClickUp, Front, monday.com et Sentry sont à faire confirmer par écrit avant tout client. Les instances hébergées chez le client (GitLab, Jira Data Center, Mattermost) ne sont pas prises en charge : l'adresse de chaque outil est fixée dans le connecteur.
 

@@ -8,6 +8,7 @@ import {
 import { airtableCatalog } from './airtable/catalog';
 import { asanaCatalog } from './asana/catalog';
 import { attioCatalog } from './attio/catalog';
+import { basecampCatalog } from './basecamp/catalog';
 import { circlebackCatalog } from './circleback/catalog';
 import { claapCatalog } from './claap/catalog';
 import { clickupCatalog } from './clickup/catalog';
@@ -29,12 +30,15 @@ import { intercomCatalog } from './intercom/catalog';
 import { jiraCatalog } from './jira/catalog';
 import { leexiCatalog } from './leexi/catalog';
 import { linearCatalog } from './linear/catalog';
+import { miroCatalog } from './miro/catalog';
 import { missiveCatalog } from './missive/catalog';
 import { mondayCatalog } from './monday/catalog';
 import { notionCatalog } from './notion/catalog';
+import { outlookCatalog } from './outlook/catalog';
 import { pipedriveCatalog } from './pipedrive/catalog';
 import { plainCatalog } from './plain/catalog';
 import { planeCatalog } from './plane/catalog';
+import { productboardCatalog } from './productboard/catalog';
 import { getConnector } from './registry';
 import { sentryCatalog } from './sentry/catalog';
 import { shortcutCatalog } from './shortcut/catalog';
@@ -87,6 +91,10 @@ const ENTRIES: Record<ProviderId, CatalogEntry> = {
   plain: plainCatalog,
   crisp: crispCatalog,
   missive: missiveCatalog,
+  basecamp: basecampCatalog,
+  miro: miroCatalog,
+  productboard: productboardCatalog,
+  outlook: outlookCatalog,
 };
 
 // Par famille, puis par libellé.

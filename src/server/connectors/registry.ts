@@ -2,6 +2,7 @@ import type { ProviderId } from '@/capture/turn';
 import { airtableConnector } from './airtable/connector';
 import { asanaConnector } from './asana/connector';
 import { attioConnector } from './attio/connector';
+import { basecampConnector } from './basecamp/connector';
 import { circlebackConnector } from './circleback/connector';
 import { claapConnector } from './claap/connector';
 import { clickupConnector } from './clickup/connector';
@@ -23,12 +24,15 @@ import { intercomConnector } from './intercom/connector';
 import { jiraConnector } from './jira/connector';
 import { leexiConnector } from './leexi/connector';
 import { linearConnector } from './linear/connector';
+import { miroConnector } from './miro/connector';
 import { missiveConnector } from './missive/connector';
 import { mondayConnector } from './monday/connector';
 import { notionConnector } from './notion/connector';
+import { outlookConnector } from './outlook/connector';
 import { pipedriveConnector } from './pipedrive/connector';
 import { plainConnector } from './plain/connector';
 import { planeConnector } from './plane/connector';
+import { productboardConnector } from './productboard/connector';
 import { sentryConnector } from './sentry/connector';
 import { shortcutConnector } from './shortcut/connector';
 import { tldvConnector } from './tldv/connector';
@@ -36,7 +40,7 @@ import { trelloConnector } from './trello/connector';
 import type { AnyConnector } from './types';
 import { zendeskConnector } from './zendesk/connector';
 
-// Les 35 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
+// Les 39 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
 export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   github: githubConnector,
   notion: notionConnector,
@@ -73,6 +77,10 @@ export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   plain: plainConnector,
   crisp: crispConnector,
   missive: missiveConnector,
+  basecamp: basecampConnector,
+  miro: miroConnector,
+  productboard: productboardConnector,
+  outlook: outlookConnector,
 };
 
 export function getConnector(id: ProviderId): AnyConnector | null {

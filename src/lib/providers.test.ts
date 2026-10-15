@@ -44,6 +44,9 @@ describe('providers', () => {
       'plane',
       'airtable',
       'sentry',
+      'basecamp',
+      'miro',
+      'productboard',
     ]);
     expect(ofFamily('crm')).toEqual(['hubspot', 'attio', 'folk', 'pipedrive', 'close']);
     expect(ofFamily('support')).toEqual([
@@ -56,6 +59,7 @@ describe('providers', () => {
       'crisp',
       'missive',
     ]);
+    expect(ofFamily('mails')).toEqual(['outlook']);
   });
 
   it('écrit les noms comme les éditeurs', () => {
@@ -66,6 +70,10 @@ describe('providers', () => {
     expect(PROVIDER_LABELS.gitlab).toBe('GitLab');
     expect(PROVIDER_LABELS.hubspot).toBe('HubSpot');
     expect(PROVIDER_LABELS.github).toBe('GitHub');
+    expect(PROVIDER_LABELS.basecamp).toBe('Basecamp');
+    expect(PROVIDER_LABELS.miro).toBe('Miro');
+    expect(PROVIDER_LABELS.productboard).toBe('Productboard');
+    expect(PROVIDER_LABELS.outlook).toBe('Outlook');
   });
 
   it('nomme les familles, dans leur ordre', () => {
@@ -75,6 +83,7 @@ describe('providers', () => {
       'Projet',
       'CRM',
       'Support',
+      'Mails et agenda',
     ]);
   });
 });

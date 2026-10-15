@@ -16,6 +16,18 @@ const connectorFor = (hosts: (config: Record<string, unknown>) => string[]): Any
 });
 
 describe('fakeFetch', () => {
+  it('relit un corps de formulaire comme un objet', async () => {
+    const fetchImpl = fakeFetch([{ method: 'POST', url: URL_A, json: { ok: true } }]);
+
+    await fetchImpl(URL_A, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ code: 'a b', grant_type: 'authorization_code' }).toString(),
+    });
+
+    expect(fetchImpl.calls[0]?.body).toEqual({ code: 'a b', grant_type: 'authorization_code' });
+  });
+
   it('sert chaque route une fois, puis la suivante qui correspond', async () => {
     const fetchImpl = fakeFetch([
       { url: URL_A, json: { page: 1 } },

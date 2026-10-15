@@ -13,6 +13,7 @@ export type HttpRequest = {
   // Ajoutée à celle de url ; un tableau répète le paramètre.
   query?: Record<string, string | number | boolean | string[] | undefined>;
   body?: unknown; // envoyé en JSON
+  form?: Record<string, string>; // envoyé en application/x-www-form-urlencoded ; jamais avec body
   // Ex. [400] : le corps est validé par le schéma et rendu au connecteur au lieu de lever.
   acceptStatus?: number[];
 };
@@ -164,6 +165,9 @@ export function createConnectorHttp(input: {
     try {
       const headers = new Headers({ accept: 'application/json' });
       if (request.body !== undefined) headers.set('content-type', 'application/json');
+      if (request.form !== undefined) {
+        headers.set('content-type', 'application/x-www-form-urlencoded');
+      }
       for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value);
       return headers;
     } catch {
@@ -172,6 +176,10 @@ export function createConnectorHttp(input: {
   }
 
   function buildBody(request: HttpRequest): string | undefined {
+    if (request.form !== undefined) {
+      if (request.body !== undefined) throw new ConnectorHttpError(null, 'Requête invalide');
+      return new URLSearchParams(request.form).toString();
+    }
     if (request.body === undefined) return undefined;
     try {
       return JSON.stringify(request.body);

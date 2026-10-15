@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { AuthorSide, ProviderId } from '@/capture/turn';
 import type { ConnectorHttp } from './http';
+import type { OAuthAppKey } from './oauth-env';
 
 // Le contrat d'un connecteur : un module sans base ni état, qui rend des éléments normalisés.
 // Le socle (chiffrement, relève, normalisation, ingestion) fait tout le reste.
@@ -38,6 +39,43 @@ export type ConnectorItem = {
 export type SyncState = { cursor: string | null; since: Date };
 export type SyncPage = { items: ConnectorItem[]; cursor: string };
 
+// Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
+export type OAuthTokens = {
+  accessToken: string;
+  refreshToken: string | null;
+  expiresAt: string | null; // ISO 8601
+  scope: string | null;
+  raw: Record<string, unknown>;
+};
+
+// Le bouton « Se connecter avec… » d'un connecteur : tout ce que le socle OAuth doit savoir de l'éditeur.
+export type OAuthSpec = {
+  appKey: OAuthAppKey; // 'GITHUB', 'ATLASSIAN'… : les variables LEON_OAUTH_<APPLI>_*
+  authorizeUrl: string; // https, hôte fixe
+  tokenUrl: string; // https, hôte fixe
+  scopes: string[]; // [] : aucun paramètre scope
+  scopeSeparator?: ' ' | ','; // ' ' par défaut
+  pkce: boolean; // S256
+  clientAuth: 'body' | 'basic'; // identifiant et secret avec les autres paramètres, ou en Basic
+  tokenBody?: 'form' | 'json' | 'query'; // 'form' par défaut ; 'query' : paramètres d'adresse, corps vide
+  extraAuthorizeParams?: Record<string, string>;
+  // Ajoutés à l'échange du code et au renouvellement.
+  extraTokenParams?: { code?: Record<string, string>; refresh?: Record<string, string> };
+  preFields: string[]; // champs non secrets demandés avant le clic : clés du configSchema
+  setupHosts: string[]; // hôtes exacts que toConfig peut appeler ; [] s'il n'appelle rien
+  // Refus faute d'accord de l'administrateur (Microsoft), et lien pour le donner.
+  adminConsent?: {
+    isConsentError(input: { error: string; description: string | null }): boolean;
+    url(clientId: string, redirectUri: string): string;
+  };
+  // Champs propres à l'outil (cloudId, site, compte…), à partir des jetons et des champs saisis avant le clic.
+  toConfig(
+    tokens: OAuthTokens,
+    preFields: Record<string, unknown>,
+    http: ConnectorHttp,
+  ): Promise<Record<string, unknown>>;
+};
+
 // Syntaxe de méthode, exprès : elle rend un Connector<Config> assignable à AnyConnector.
 export type Connector<Config> = {
   id: ProviderId;
@@ -47,6 +85,7 @@ export type Connector<Config> = {
   minIntervalMs?: number; // écart minimal entre deux requêtes (Notion : 350)
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string }>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;
+  oauth?: OAuthSpec; // le bouton ; absent : l'outil ne se branche que par clé
 };
 export type AnyConnector = Connector<Record<string, unknown>>;
 
@@ -65,5 +104,7 @@ export type CatalogEntry = {
   keyHelp: string; // « Dans Linear : Réglages › Sécurité et accès › Clés d'API personnelles. »
   docsUrl: string; // page officielle qui explique la clé
   triedForReal: boolean; // false tant qu'Amos ou David ne l'a pas branché
+  oauthHelp?: string; // ce que l'utilisateur verra chez l'éditeur ; exigé quand le connecteur a `oauth`
+  keyAccepted?: boolean; // faux pour un outil qui ne se branche que par bouton ; absent = vrai
   warning?: string; // « Plan Business requis », « Conditions à faire confirmer »
 };

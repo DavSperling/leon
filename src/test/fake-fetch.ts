@@ -13,7 +13,7 @@ export type FakeRoute = {
   headers?: Record<string, string>;
 };
 
-// Les noms d'en-tête sont en minuscules ; body est le JSON envoyé, déjà relu.
+// Les noms d'en-tête sont en minuscules ; body est le JSON (ou le formulaire) envoyé, déjà relu.
 export type FakeCall = {
   method: string;
   url: string;
@@ -24,6 +24,13 @@ export type FakeCall = {
 function requestUrl(input: string | URL | Request): string {
   if (typeof input === 'string') return input;
   return input instanceof URL ? input.toString() : input.url;
+}
+
+function parseBody(raw: string, contentType: string | undefined): unknown {
+  if (contentType?.startsWith('application/x-www-form-urlencoded')) {
+    return Object.fromEntries(new URLSearchParams(raw));
+  }
+  return JSON.parse(raw);
 }
 
 function matches(route: FakeRoute, call: FakeCall): boolean {
@@ -51,11 +58,12 @@ export function fakeFetch(
   const calls: FakeCall[] = [];
   const impl = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const raw = typeof init?.body === 'string' ? init.body : undefined;
+    const headers = Object.fromEntries(new Headers(init?.headers).entries());
     const call: FakeCall = {
       method: init?.method ?? 'GET',
       url: requestUrl(input),
-      headers: Object.fromEntries(new Headers(init?.headers).entries()),
-      body: raw === undefined ? undefined : JSON.parse(raw),
+      headers,
+      body: raw === undefined ? undefined : parseBody(raw, headers['content-type']),
     };
     calls.push(call);
     if (spec) expect.soft(callProblems(spec, call), `${call.method} ${call.url}`).toEqual([]);

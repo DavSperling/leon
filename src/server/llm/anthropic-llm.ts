@@ -44,6 +44,9 @@ const PRICE_PER_MTOK: Record<
   'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
 };
 
+// Un modèle sans tarif aurait un coût inconnu (null) dans llm_usage : config.ts le refuse au démarrage.
+export const hasAnthropicPrice = (model: string) => model in PRICE_PER_MTOK;
+
 type Usage = {
   input_tokens: number;
   output_tokens: number;

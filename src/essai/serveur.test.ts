@@ -148,6 +148,6 @@ describe('verifierServeur', () => {
           srcModifie: false,
         }),
       ),
-    ).toMatch(/modèles/);
+    ).toMatch(/le pipeline ne tourne pas/);
   });
 });

@@ -1,7 +1,14 @@
 import type { Env } from '@/server/env';
-import { type AnthropicLike, createAnthropicLlm, MODEL_BY_STEP } from './anthropic-llm';
+import {
+  type AnthropicLike,
+  createAnthropicLlm,
+  EFFORT_BY_STEP,
+  hasAnthropicPrice,
+  MODEL_BY_STEP,
+} from './anthropic-llm';
 import type { Llm, LlmRequest, LlmStep, PipelineLlmStep } from './llm';
-import { createOpenRouterLlm } from './openrouter-llm';
+import { createOpenRouterLlm, type ReasoningEffort } from './openrouter-llm';
+import { fetchOpenRouterCatalog, type OpenRouterCatalog } from './openrouter-models';
 
 // Choix du modèle de chaque étape du pipeline, par variable d'environnement, pour comparer des
 // modèles d'Anthropic, d'OpenAI et de Mistral (via OpenRouter) sans toucher au code. Le juge du jeu
@@ -50,13 +57,36 @@ export function llmChoices(env: LlmEnv): Record<PipelineLlmStep, LlmChoice> {
   ) as Record<PipelineLlmStep, LlmChoice>;
 }
 
-// « fournisseur:modèle » de chaque étape, jamais de clé : exposé par /api/version au jeu d'essai.
+// Effort de raisonnement des étapes sur OpenRouter dont le modèle le règle, d'après le catalogue :
+// le même que chez Anthropic (EFFORT_BY_STEP). Sans catalogue, aucun.
+function openRouterEfforts(
+  choices: Record<PipelineLlmStep, LlmChoice>,
+  catalog: OpenRouterCatalog | null | undefined,
+): Partial<Record<LlmStep, ReasoningEffort>> {
+  return Object.fromEntries(
+    STEPS.filter(
+      (step) =>
+        choices[step].provider === 'openrouter' && catalog?.get(choices[step].model)?.reasoning,
+    ).map((step) => [step, EFFORT_BY_STEP[step]]),
+  );
+}
+
+// « fournisseur:modèle » de chaque étape, avec l'effort envoyé à OpenRouter s'il y en a un, jamais de
+// clé : exposé par /api/version au jeu d'essai.
 export type LlmConfigDescription = Record<PipelineLlmStep, string>;
 
-export function describeLlmConfig(env: LlmEnv): LlmConfigDescription {
+export function describeLlmConfig(
+  env: LlmEnv,
+  catalog?: OpenRouterCatalog | null,
+): LlmConfigDescription {
   const choices = llmChoices(env);
+  const efforts = openRouterEfforts(choices, catalog);
   return Object.fromEntries(
-    STEPS.map((step) => [step, `${choices[step].provider}:${choices[step].model}`]),
+    STEPS.map((step) => {
+      const { provider, model } = choices[step];
+      const effort = efforts[step];
+      return [step, `${provider}:${model}${effort ? ` (effort ${effort})` : ''}`];
+    }),
   ) as LlmConfigDescription;
 }
 
@@ -64,6 +94,16 @@ export function describeLlmConfig(env: LlmEnv): LlmConfigDescription {
 export function missingLlmKeys(env: LlmEnv): string[] {
   const providers = new Set(Object.values(llmChoices(env)).map((c) => c.provider));
   return [...providers].map((p) => KEY_BY_PROVIDER[p]).filter((key) => !env[key]);
+}
+
+// Ce qui empêche de démarrer le pipeline, sans jamais une valeur de clé : clé absente d'un fournisseur
+// configuré, ou modèle Anthropic sans tarif (son coût serait inconnu dans llm_usage).
+export function llmConfigProblems(env: LlmEnv): string[] {
+  const choices = llmChoices(env);
+  const unpriced = STEPS.map((step) => choices[step])
+    .filter((c) => c.provider === 'anthropic' && !hasAnthropicPrice(c.model))
+    .map((c) => `modèle Anthropic sans tarif (coût inconnu) : ${c.model}`);
+  return [...missingLlmKeys(env).map((key) => `${key} absente`), ...new Set(unpriced)];
 }
 
 function modelsOf(choices: Record<PipelineLlmStep, LlmChoice>, provider: LlmProvider) {
@@ -75,18 +115,28 @@ function modelsOf(choices: Record<PipelineLlmStep, LlmChoice>, provider: LlmProv
   ) as Partial<Record<LlmStep, string>>;
 }
 
-// Un client qui envoie chaque requête au fournisseur de son étape. Lève au démarrage, avec le nom de
-// la clé et jamais sa valeur, si un fournisseur configuré n'a pas de clé. deps sert aux tests.
+// Un client qui envoie chaque requête au fournisseur de son étape. Lève, sans jamais une valeur de
+// clé, si la configuration ne permet pas de démarrer, ou si un modèle OpenRouter manque au catalogue
+// (fail closed : un identifiant mal recopié ne doit pas faire échouer chaque run). deps sert aux tests.
 export function createConfiguredLlm(
   env: LlmEnv,
-  deps: { anthropic?: AnthropicLike; fetch?: typeof fetch } = {},
+  deps: {
+    anthropic?: AnthropicLike;
+    fetch?: typeof fetch;
+    catalog?: OpenRouterCatalog | null;
+  } = {},
 ): Llm {
-  const missing = missingLlmKeys(env);
-  if (missing.length > 0)
-    throw new Error(
-      `Configuration des modèles : ${missing.join(', ')} manquante pour les étapes configurées.`,
-    );
+  const problems = llmConfigProblems(env);
+  if (problems.length > 0) throw new Error(`Configuration des modèles : ${problems.join(' ; ')}.`);
   const choices = llmChoices(env);
+  const { catalog } = deps;
+  const unlisted = STEPS.map((step) => choices[step])
+    .filter((c) => c.provider === 'openrouter' && catalog && !catalog.has(c.model))
+    .map((c) => c.model);
+  if (unlisted.length > 0)
+    throw new Error(
+      `Configuration des modèles : absent(s) du catalogue OpenRouter : ${[...new Set(unlisted)].join(', ')}.`,
+    );
 
   // Le juge passe toujours par Anthropic, avec son modèle par défaut (pas de surcharge pour lui).
   const anthropicModels = modelsOf(choices, 'anthropic');
@@ -100,6 +150,7 @@ export function createConfiguredLlm(
     ? createOpenRouterLlm({
         apiKey: env.OPENROUTER_API_KEY,
         models: openRouterModels,
+        efforts: openRouterEfforts(choices, catalog),
         fetch: deps.fetch,
       })
     : null;
@@ -114,5 +165,27 @@ export function createConfiguredLlm(
         );
       return client.generateObject(request);
     },
+  };
+}
+
+// Au démarrage du serveur : lit une fois le catalogue public d'OpenRouter si une étape y passe, puis
+// crée le client et sa description. Catalogue injoignable : on prévient et on n'envoie aucun réglage
+// de raisonnement (jamais un paramètre qu'un modèle pourrait refuser).
+export async function startConfiguredLlm(
+  env: LlmEnv,
+  deps: { anthropic?: AnthropicLike; fetch?: typeof fetch } = {},
+): Promise<{ llm: Llm; description: LlmConfigDescription }> {
+  const usesOpenRouter = Object.values(llmChoices(env)).some((c) => c.provider === 'openrouter');
+  let catalog: OpenRouterCatalog | null = null;
+  if (usesOpenRouter) {
+    catalog = await fetchOpenRouterCatalog(deps.fetch ?? fetch);
+    if (!catalog)
+      console.warn(
+        '[leon] Catalogue OpenRouter injoignable : aucun effort de raisonnement ne sera envoyé.',
+      );
+  }
+  return {
+    llm: createConfiguredLlm(env, { ...deps, catalog }),
+    description: describeLlmConfig(env, catalog),
   };
 }

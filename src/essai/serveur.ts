@@ -65,6 +65,7 @@ async function refusServeur(input: {
     return 'Le serveur a démarré avec des modifications non commitées : commite-les puis redémarre-le.';
   if (commit !== input.head)
     return `Le serveur a démarré sur ${commit.slice(0, 7)}, HEAD est ${input.head.slice(0, 7)} : redémarre-le.`;
-  if (!llm) return 'Le serveur ne donne pas ses modèles dans /api/version : redémarre-le sur HEAD.';
+  if (!llm)
+    return 'Le serveur ne donne pas ses modèles : le pipeline ne tourne pas (clé manquante ou modèle refusé, voir ses logs au démarrage).';
   return { llm };
 }

@@ -6,9 +6,12 @@ import {
   describeLlmConfig,
   type LlmEnv,
   llmChoices,
+  llmConfigProblems,
   missingLlmKeys,
+  startConfiguredLlm,
 } from './config';
 import type { LlmStep } from './llm';
+import type { OpenRouterCatalog } from './openrouter-models';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -22,16 +25,38 @@ function fakes() {
     parsed_output: { answer: 'anthropic' },
   }));
   const anthropic = { beta: { messages: { parse } } } as unknown as AnthropicLike;
-  const fetch = vi.fn(
-    async (_url: string | URL | Request, _init?: RequestInit) =>
-      new Response(
-        JSON.stringify({
-          choices: [{ finish_reason: 'stop', message: { content: '{"answer":"openrouter"}' } }],
-        }),
-      ),
+  // Aiguillé par l'URL : la liste publique des modèles, ou un appel au modèle.
+  const fetch = vi.fn(async (url: string | URL | Request, _init?: RequestInit) =>
+    String(url).endsWith('/models')
+      ? new Response(JSON.stringify(CATALOGUE))
+      : new Response(
+          JSON.stringify({
+            choices: [{ finish_reason: 'stop', message: { content: '{"answer":"openrouter"}' } }],
+          }),
+        ),
   );
   return { parse, anthropic, fetch: fetch as unknown as typeof globalThis.fetch, fetchMock: fetch };
 }
+
+const CATALOGUE = {
+  data: [
+    { id: 'openai/gpt-6-sol', supported_parameters: ['reasoning', 'structured_outputs'] },
+    { id: 'mistralai/mistral-large-4-0', supported_parameters: ['structured_outputs'] },
+    { id: 'openai/gpt-5.4-mini', supported_parameters: ['structured_outputs'] },
+  ],
+};
+
+const catalogue = (reasoning: string[], autres: string[] = []): OpenRouterCatalog => {
+  const info = (r: boolean) => ({
+    reasoning: r,
+    promptUsdPerToken: null,
+    completionUsdPerToken: null,
+  });
+  return new Map([
+    ...reasoning.map((id): [string, ReturnType<typeof info>] => [id, info(true)]),
+    ...autres.map((id): [string, ReturnType<typeof info>] => [id, info(false)]),
+  ]);
+};
 
 const AVEC_CLES: LlmEnv = { ANTHROPIC_API_KEY: 'cle-a', OPENROUTER_API_KEY: 'cle-o' };
 
@@ -170,5 +195,121 @@ describe('createConfiguredLlm', () => {
 
     expect(await ask(llm, 'triage')).toEqual({ answer: 'openrouter' });
     await expect(ask(llm, 'juge')).rejects.toThrow(/ANTHROPIC_API_KEY/);
+  });
+});
+
+describe('llmConfigProblems', () => {
+  it('nomme les clés manquantes et les modèles Anthropic sans tarif, jamais une clé', () => {
+    expect(llmConfigProblems(AVEC_CLES)).toEqual([]);
+    const problemes = llmConfigProblems({
+      OPENROUTER_API_KEY: 'cle-o',
+      LEON_LLM_EXTRACTION: 'anthropic:claude-inconnu-9',
+    });
+    expect(problemes).toEqual([
+      'ANTHROPIC_API_KEY absente',
+      'modèle Anthropic sans tarif (coût inconnu) : claude-inconnu-9',
+    ]);
+    expect(problemes.join(' ')).not.toContain('cle-o');
+  });
+
+  it('refuse de créer le client avec un modèle Anthropic sans tarif', () => {
+    expect(() =>
+      createConfiguredLlm({ ...AVEC_CLES, LEON_LLM_TRIAGE: 'anthropic:claude-inconnu-9' }),
+    ).toThrow(/claude-inconnu-9/);
+  });
+});
+
+describe('effort de raisonnement OpenRouter', () => {
+  const env: LlmEnv = {
+    ...AVEC_CLES,
+    LEON_LLM_EXTRACTION: 'openrouter:openai/gpt-6-sol',
+    LEON_LLM_RANGEMENT: 'openrouter:mistralai/mistral-large-4-0',
+  };
+  const bodies = (f: ReturnType<typeof fakes>) =>
+    f.fetchMock.mock.calls
+      .filter(([url]) => !String(url).endsWith('/models'))
+      .map(([, init]) => JSON.parse((init as RequestInit).body as string));
+
+  it('n envoie l effort de l étape qu aux modèles qui le règlent', async () => {
+    const f = fakes();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const llm = createConfiguredLlm(env, {
+      anthropic: f.anthropic,
+      fetch: f.fetch,
+      catalog: catalogue(['openai/gpt-6-sol'], ['mistralai/mistral-large-4-0']),
+    });
+
+    await ask(llm, 'extraction');
+    await ask(llm, 'placement');
+
+    const [extraction, placement] = bodies(f);
+    expect(extraction.reasoning).toEqual({ effort: 'medium' });
+    expect(placement).not.toHaveProperty('reasoning');
+  });
+
+  it('décrit l effort des modèles OpenRouter qui raisonnent', () => {
+    expect(
+      describeLlmConfig(env, catalogue(['openai/gpt-6-sol'], ['mistralai/mistral-large-4-0'])),
+    ).toEqual({
+      triage: 'anthropic:claude-haiku-5-5',
+      extraction: 'openrouter:openai/gpt-6-sol (effort medium)',
+      placement: 'openrouter:mistralai/mistral-large-4-0',
+    });
+  });
+
+  it('refuse un modèle OpenRouter absent du catalogue', () => {
+    expect(() =>
+      createConfiguredLlm(env, { fetch: fakes().fetch, catalog: catalogue(['openai/gpt-6-sol']) }),
+    ).toThrow(/mistralai\/mistral-large-4-0/);
+  });
+
+  it('au démarrage, lit le catalogue public une fois et décrit la configuration', async () => {
+    const f = fakes();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const { llm, description } = await startConfiguredLlm(env, {
+      anthropic: f.anthropic,
+      fetch: f.fetch,
+    });
+    await ask(llm, 'extraction');
+
+    const modelsCalls = f.fetchMock.mock.calls.filter(([url]) => String(url).endsWith('/models'));
+    expect(modelsCalls).toHaveLength(1);
+    expect(description.extraction).toBe('openrouter:openai/gpt-6-sol (effort medium)');
+    expect(bodies(f)[0].reasoning).toEqual({ effort: 'medium' });
+  });
+
+  it('au démarrage, sans catalogue, prévient et n envoie aucun raisonnement', async () => {
+    const f = fakes();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) =>
+      String(url).endsWith('/models')
+        ? Promise.reject(new TypeError('fetch failed'))
+        : f.fetch(url, init),
+    ) as unknown as typeof globalThis.fetch;
+
+    const { llm, description } = await startConfiguredLlm(env, { anthropic: f.anthropic, fetch });
+    await ask(llm, 'extraction');
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(description.extraction).toBe('openrouter:openai/gpt-6-sol');
+    expect(bodies(f)[0]).not.toHaveProperty('reasoning');
+  });
+
+  it('au démarrage, refuse un modèle absent du catalogue', async () => {
+    const f = fakes();
+    await expect(
+      startConfiguredLlm(
+        { ...env, LEON_LLM_TRIAGE: 'openrouter:inconnu/modele-9' },
+        { anthropic: f.anthropic, fetch: f.fetch },
+      ),
+    ).rejects.toThrow(/inconnu\/modele-9/);
+  });
+
+  it('au démarrage, ne lit pas le catalogue sans étape sur OpenRouter', async () => {
+    const f = fakes();
+    await startConfiguredLlm(AVEC_CLES, { anthropic: f.anthropic, fetch: f.fetch });
+    expect(f.fetchMock).not.toHaveBeenCalled();
   });
 });

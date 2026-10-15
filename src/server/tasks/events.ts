@@ -8,7 +8,8 @@ export type TaskActor = { kind: TaskActorKind; userId: string; client?: string }
 
 // payload : le avant (`from`) et l'après (`to`) du champ changé, jamais la description.
 //   title, priority, due_date : valeurs ; status : libellés ; assignee : identifiants d'utilisateurs ;
-//   parent, project : références (LEO-12) ; labels : { added, removed } (noms) ; autres : {}.
+//   parent, project : références (LEO-12) ; labels : { added, removed } (noms) ;
+//   comment : { commentId } (jamais le texte) ; autres : {}.
 export type TaskEventDraft = { kind: TaskEventKind; payload?: Record<string, unknown> };
 
 // Dans la transaction de l'écriture qui les cause : un échec annule les deux.

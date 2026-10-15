@@ -1,0 +1,19 @@
+{
+  "id": "user_7Hq2ZpWk9sRtLxVb4nYdEc1aGfJm8uXoP3iKcTvNw5s",
+  "first_name": "Marie",
+  "last_name": "Durand",
+  "email": "marie@acme.test",
+  "date_created": "2025-01-10T09:00:00.000000+00:00",
+  "date_updated": "2026-09-30T08:12:44.512000+00:00",
+  "organizations": [
+    {
+      "id": "orga_3RtYuIoPqWeAsDfGhJkLzXcVbNm1QwErTyUiOpAsDfG",
+      "name": "Acme",
+      "date_created": "2025-01-10T09:00:00.000000+00:00",
+      "date_updated": "2026-09-30T08:12:44.512000+00:00",
+      "lead_statuses": [
+        { "id": "stat_1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEf", "label": "Potentiel" }
+      ]
+    }
+  ]
+}

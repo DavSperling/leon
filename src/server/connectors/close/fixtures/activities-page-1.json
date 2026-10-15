@@ -1,0 +1,97 @@
+{
+  "data": [
+    {
+      "_type": "Email",
+      "id": "acti_Em1IncomingDevisDubois00000000000000000000001",
+      "lead_id": "lead_DuboisConseil000000000000000000000000000001",
+      "date_created": "2026-10-14T16:20:05.123456+00:00",
+      "activity_at": "2026-10-14T16:20:00.000000+00:00",
+      "user_name": "Marie Durand",
+      "created_by_name": null,
+      "subject": "Re: Devis formation équipe",
+      "body_text": "Bonjour Marie,\n\nNous validons le devis de 12 000 € HT, à condition que la formation soit incluse.\n\nClaire Dubois",
+      "direction": "incoming",
+      "sender": "claire.dubois@dubois.test",
+      "status": "inbox",
+      "envelope": {
+        "from": [{ "email": "claire.dubois@dubois.test", "name": "Claire Dubois" }],
+        "to": [{ "email": "marie@acme.test", "name": "" }],
+        "subject": "Re: Devis formation équipe"
+      }
+    },
+    {
+      "_type": "LeadStatusChange",
+      "id": "acti_Lsc1StatusChangeDubois00000000000000000000002",
+      "lead_id": "lead_DuboisConseil000000000000000000000000000001",
+      "date_created": "2026-10-14T15:00:00.500000+00:00",
+      "activity_at": "2026-10-14T15:00:00.500000+00:00",
+      "user_name": "Marie Durand"
+    },
+    {
+      "_type": "Call",
+      "id": "acti_Ca1OutboundQualifDubois0000000000000000000003",
+      "lead_id": "lead_DuboisConseil000000000000000000000000000001",
+      "date_created": "2026-10-14T10:05:40.000000+00:00",
+      "activity_at": "2026-10-14T10:00:00+00:00",
+      "user_name": "Marie Durand",
+      "note": "Appel de qualification : budget confirmé.",
+      "direction": "outbound",
+      "status": "completed",
+      "duration": 312,
+      "recording_transcript": {
+        "utterances": [
+          {
+            "speaker_label": "Marie Durand",
+            "speaker_side": "close-user",
+            "start": 0.1,
+            "end": 2.4,
+            "text": "Bonjour Claire, merci de me répondre."
+          },
+          {
+            "speaker_label": "Marie Durand",
+            "speaker_side": "close-user",
+            "start": 2.5,
+            "end": 5.0,
+            "text": "Je voulais faire le point sur le devis."
+          },
+          {
+            "speaker_label": "Claire Dubois",
+            "speaker_side": "contact",
+            "start": 5.2,
+            "end": 9.8,
+            "text": "Bonjour Marie. Oui, le budget est validé pour cette année."
+          }
+        ],
+        "summary_text": "Claire confirme le budget de 12 000 € pour cette année.",
+        "summary_html": "<p>Claire confirme le budget de 12 000 € pour cette année.</p>"
+      },
+      "voicemail_transcript": null
+    },
+    {
+      "_type": "SMS",
+      "id": "acti_Sm1InboundDemoGarnier0000000000000000000000004",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-13T18:30:00.250000+00:00",
+      "activity_at": "2026-10-13T18:30:00.250000+00:00",
+      "user_name": "David Martin",
+      "text": "Peut-on décaler la démo à jeudi ?",
+      "direction": "inbound",
+      "status": "inbox"
+    },
+    {
+      "_type": "Email",
+      "id": "acti_Em2DraftGarnier000000000000000000000000000005",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-13T09:00:00.000000+00:00",
+      "activity_at": "2026-10-13T09:00:00.000000+00:00",
+      "user_name": "David Martin",
+      "subject": "Brouillon : proposition",
+      "body_text": "Texte pas encore envoyé.",
+      "direction": "outgoing",
+      "sender": "david@acme.test",
+      "status": "draft",
+      "envelope": null
+    }
+  ],
+  "has_more": true
+}

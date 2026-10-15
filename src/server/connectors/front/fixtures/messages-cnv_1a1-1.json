@@ -1,0 +1,169 @@
+{
+  "_pagination": {
+    "next": "https://acme.api.frontapp.com/conversations/cnv_1a1/messages?limit=50&page_token=tok_messages_2"
+  },
+  "_links": {
+    "self": "https://acme.api.frontapp.com/conversations/cnv_1a1/messages"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/messages/msg_1a15",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "message_replied_to": "https://acme.api.frontapp.com/messages/msg_1a13",
+          "message_seen": "https://acme.api.frontapp.com/messages/msg_1a15/seen"
+        }
+      },
+      "id": "msg_1a15",
+      "message_uid": "1eab543f84a0785f7b6b8967cc000015",
+      "type": "email",
+      "is_inbound": false,
+      "draft_mode": "shared",
+      "error_type": null,
+      "version": "551ba368f3e7803cce51503ee3e58ef0-26028-1791796080000-0015",
+      "created_at": 1791796080,
+      "subject": "Re: Livraison de la commande 4512",
+      "blurb": "Brouillon : proposition de remise de 10 % sur la prochaine commande",
+      "author": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/teammates/tea_marie"
+        },
+        "id": "tea_marie",
+        "email": "marie@acme.test",
+        "username": "marie",
+        "first_name": "Marie",
+        "last_name": "Durand",
+        "is_admin": false,
+        "is_available": true,
+        "is_blocked": false,
+        "type": "user",
+        "custom_fields": {}
+      },
+      "recipients": [
+        {
+          "_links": {
+            "related": {
+              "contact": "https://acme.api.frontapp.com/contacts/crd_9x1"
+            }
+          },
+          "name": "Julie Lefevre",
+          "handle": "julie@client.test",
+          "role": "to"
+        }
+      ],
+      "body": "<p>Brouillon : proposition de remise de 10 % sur la prochaine commande.</p>",
+      "text": "Brouillon : proposition de remise de 10 % sur la prochaine commande.",
+      "attachments": [],
+      "metadata": {}
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/messages/msg_1a13",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "message_replied_to": "https://acme.api.frontapp.com/messages/msg_1a14",
+          "message_seen": "https://acme.api.frontapp.com/messages/msg_1a13/seen"
+        }
+      },
+      "id": "msg_1a13",
+      "message_uid": "1eab543f84a0785f7b6b8967cc000013",
+      "type": "email",
+      "is_inbound": true,
+      "draft_mode": null,
+      "error_type": null,
+      "version": "551ba368f3e7803cce51503ee3e58ef0-26028-1791796020000-0013",
+      "created_at": 1791796020,
+      "subject": "Re: Livraison de la commande 4512",
+      "blurb": "Merci beaucoup ! Et pour la prochaine commande, avez-vous une remise ?",
+      "author": null,
+      "recipients": [
+        {
+          "_links": {
+            "related": {
+              "contact": "https://acme.api.frontapp.com/contacts/crd_9x1"
+            }
+          },
+          "name": "Julie Lefevre",
+          "handle": "julie@client.test",
+          "role": "from"
+        },
+        {
+          "_links": {
+            "related": {
+              "contact": null
+            }
+          },
+          "name": "Support Acme",
+          "handle": "support@acme.test",
+          "role": "to"
+        }
+      ],
+      "body": "<p>Merci beaucoup !</p><p>Et pour la <b>prochaine</b> commande, avez-vous une remise&nbsp;?</p>",
+      "text": null,
+      "attachments": [],
+      "metadata": {}
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/messages/msg_1a14",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "message_replied_to": "https://acme.api.frontapp.com/messages/msg_1a11",
+          "message_seen": "https://acme.api.frontapp.com/messages/msg_1a14/seen"
+        }
+      },
+      "id": "msg_1a14",
+      "message_uid": "1eab543f84a0785f7b6b8967cc000014",
+      "type": "email",
+      "is_inbound": false,
+      "draft_mode": null,
+      "error_type": null,
+      "version": "551ba368f3e7803cce51503ee3e58ef0-26028-1791795810000-0014",
+      "created_at": 1791795810,
+      "subject": "Re: Livraison de la commande 4512",
+      "blurb": "Bonjour Julie, le transporteur a un jour de retard.",
+      "author": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/teammates/tea_marie"
+        },
+        "id": "tea_marie",
+        "email": "marie@acme.test",
+        "username": "marie",
+        "first_name": "Marie",
+        "last_name": "Durand",
+        "is_admin": false,
+        "is_available": true,
+        "is_blocked": false,
+        "type": "user",
+        "custom_fields": {}
+      },
+      "recipients": [
+        {
+          "_links": {
+            "related": {
+              "contact": null
+            }
+          },
+          "name": "Support Acme",
+          "handle": "support@acme.test",
+          "role": "from"
+        },
+        {
+          "_links": {
+            "related": {
+              "contact": "https://acme.api.frontapp.com/contacts/crd_9x1"
+            }
+          },
+          "name": "Julie Lefevre",
+          "handle": "julie@client.test",
+          "role": "to"
+        }
+      ],
+      "body": "<p>Bonjour Julie,</p><p>Le transporteur a un jour de retard. Votre colis arrive demain avant midi. Nous vous remboursons les frais de port.</p><p>Marie</p>",
+      "text": "Bonjour Julie,\n\nLe transporteur a un jour de retard. Votre colis arrive demain avant midi. Nous vous remboursons les frais de port.\n\nMarie",
+      "attachments": [],
+      "metadata": {}
+    }
+  ]
+}

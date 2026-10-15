@@ -1,10 +1,16 @@
 import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ProviderId } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import type { LoadedConnection } from './connections';
+import { githubOAuth } from './github/oauth';
 import { createConnectorHttp } from './http';
+import { hubspotOAuth } from './hubspot/oauth';
+import { atlassianOAuth } from './jira/oauth';
+import { miroOAuth } from './miro/oauth';
+import { notionOAuth } from './notion/oauth';
 import {
   authorizeUrl,
   ensureFreshTokens,
@@ -13,8 +19,10 @@ import {
   OAuthRefusedError,
   redirectUri,
   refreshTokens,
+  tokenHttp,
 } from './oauth';
 import type { OAuthPending } from './oauth-cookie';
+import { outlookOAuth } from './outlook/oauth';
 import type { AnyConnector, OAuthSpec } from './types';
 
 const saveOAuthTokens = vi.hoisted(() => vi.fn(async () => true));
@@ -320,6 +328,90 @@ describe('refreshTokens', () => {
     const { http } = httpWith([tokenRoute({ access_token: 'acces-2' })]);
 
     expect((await refreshTokens(spec(), CLIENT, 'rafraichir-1', http)).expiresAt).toBeNull();
+  });
+});
+
+// Le refus de chaque éditeur, sous la forme que sa documentation décrit : celle de la RFC 6749
+// (`error`) pour la plupart, une autre pour Notion (`object: 'error'`, `code`) et Miro (`type: 'error'`,
+// `code`). Ni l'échange du code ni le renouvellement ne doivent le prendre pour une panne.
+describe('refus documenté par chaque éditeur', () => {
+  const cases: [ProviderId, OAuthSpec, number, Record<string, unknown>][] = [
+    [
+      'notion',
+      notionOAuth,
+      400,
+      { object: 'error', status: 400, code: 'invalid_grant', message: 'texte-secret-xyz' },
+    ],
+    [
+      'miro',
+      miroOAuth,
+      401,
+      {
+        status: 401,
+        code: 'oauthError',
+        message: 'Invalid authorization code: texte-secret-xyz',
+        type: 'error',
+      },
+    ],
+    [
+      'hubspot',
+      hubspotOAuth,
+      400,
+      { error: 'invalid_grant', status: 'BAD_REFRESH_TOKEN', message: 'texte-secret-xyz' },
+    ],
+    ['github', githubOAuth, 200, { error: 'bad_refresh_token' }],
+    ['jira', atlassianOAuth([]), 403, { error: 'invalid_grant' }],
+    [
+      'outlook',
+      outlookOAuth,
+      400,
+      { error: 'invalid_grant', error_description: 'AADSTS70000: texte-secret-xyz' },
+    ],
+  ];
+
+  const run = (
+    provider: ProviderId,
+    spec: OAuthSpec,
+    status: number,
+    body: Record<string, unknown>,
+    action: 'exchange' | 'refresh',
+  ) => {
+    const http = tokenHttp(
+      spec,
+      provider,
+      fakeFetch([{ method: 'POST', url: spec.tokenUrl, status, json: body }]),
+    );
+    return action === 'exchange'
+      ? exchangeCode(spec, CLIENT, 'code-1', 'verificateur-1', http)
+      : refreshTokens(spec, CLIENT, 'rafraichir-1', http);
+  };
+
+  it.each(cases)('%s : à l’échange du code', async (provider, spec, status, body) => {
+    const error = await run(provider, spec, status, body, 'exchange').catch((e) => e);
+
+    expect(error).toBeInstanceOf(OAuthRefusedError);
+    expect(error.message).toBe("Autorisation refusée par l'éditeur");
+  });
+
+  it.each(cases)('%s : au renouvellement', async (provider, spec, status, body) => {
+    const error = await run(provider, spec, status, body, 'refresh').catch((e) => e);
+
+    expect(error).toBeInstanceOf(OAuthRefusedError);
+    expect(error.message).toBe("Autorisation refusée par l'éditeur");
+  });
+
+  it('ne prend pas pour un refus une réponse sans jeton qui ne porte aucune erreur', async () => {
+    const { http } = httpWith([tokenRoute({ token_type: 'bearer', code: 12 })]);
+
+    const error = await exchangeCode(spec(), CLIENT, 'code-1', null, http).catch((e) => e);
+
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', message: 'Réponse inattendue' });
+  });
+
+  it('garde une réponse qui porte un jeton, même avec un champ code', async () => {
+    const { http } = httpWith([tokenRoute({ access_token: 'acces-1', code: 'oauthError' })]);
+
+    expect((await exchangeCode(spec(), CLIENT, 'code-1', null, http)).accessToken).toBe('acces-1');
   });
 });
 

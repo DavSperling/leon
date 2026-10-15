@@ -19,10 +19,8 @@ import type { OAuthSpec } from '../types';
 //
 // Forme d'un refus, tranchée par la doc : { object: 'error', status, code, message }, en 400
 // (invalid_grant, invalid_request…) ou en 401 (invalid_client), sans `error` ni `error_description`.
-// Écart connu, à corriger dans le socle (T45) : `requestTokens` ne compte comme refus qu'une réponse
-// portant `error`, et lève donc « Réponse inattendue » sur la forme de Notion (voir les tests
-// `it.fails` de oauth.test.ts). Tant que le socle n'est pas corrigé, un jeton de rafraîchissement
-// refusé met la connexion en 'error' (essai chaque heure) et non en 'auth_error'.
+// Le socle (`requestTokens`) la compte comme un refus : au retour, le code est `refuse`, et un jeton
+// de rafraîchissement refusé met la connexion en 'auth_error' (« Reconnectez Notion »).
 //
 // Non vérifié : l'en-tête Notion-Version, que la référence marque obligatoire sur /v1/oauth/token
 // alors que le guide d'autorisation n'en met dans aucun exemple (le socle n'en envoie pas) ; la

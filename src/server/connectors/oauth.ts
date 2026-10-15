@@ -57,7 +57,9 @@ export function authorizeUrl(
   return url.toString();
 }
 
-// `error` signe le refus (RFC 6749, § 5.2), quel que soit le statut : GitHub répond en 200.
+// Un refus se lit à `error` (RFC 6749, § 5.2), quel que soit le statut : GitHub répond en 200. Notion
+// (`object: 'error'`, `code`) et Miro (`type: 'error'`, `code`) répondent sans `error`. `status`, que
+// plusieurs éditeurs ajoutent, n'est pas lu : le statut HTTP suffit.
 const TokenResponseSchema = z.looseObject({
   access_token: z.string().min(1).nullish(),
   refresh_token: z.string().min(1).nullish(),
@@ -65,10 +67,23 @@ const TokenResponseSchema = z.looseObject({
   scope: z.string().nullish(),
   error: z.unknown().optional(),
   error_description: z.string().nullish(),
+  object: z.unknown().optional(),
+  type: z.unknown().optional(),
+  code: z.unknown().optional(),
+  status: z.unknown().optional(),
 });
 type TokenResponse = z.infer<typeof TokenResponseSchema>;
 
 type Client = { id: string; secret: string };
+
+const isString = (value: unknown): value is string => typeof value === 'string' && value !== '';
+
+// Un refus : `error` renseigné, ou, faute de jeton d'accès, la forme d'erreur de Notion ou de Miro.
+function isRefusal(data: TokenResponse): boolean {
+  if (data.error !== undefined && data.error !== null && data.error !== '') return true;
+  if (data.access_token) return false;
+  return data.object === 'error' || data.type === 'error' || isString(data.code);
+}
 
 // Le client des échanges de jetons : un seul hôte, celui de l'adresse de jeton.
 export const tokenHttp = (spec: OAuthSpec, provider: ProviderId, fetchImpl?: typeof fetch) =>
@@ -98,7 +113,7 @@ async function requestTokens(
     },
     TokenResponseSchema,
   );
-  if (data.error !== undefined && data.error !== null && data.error !== '') {
+  if (isRefusal(data)) {
     const error = typeof data.error === 'string' ? data.error : 'erreur';
     const consent = spec.adminConsent?.isConsentError({
       error,
@@ -158,8 +173,6 @@ export async function refreshTokens(
   };
   return toTokens(await requestTokens(spec, client, grant, http), refreshToken);
 }
-
-const isString = (value: unknown): value is string => typeof value === 'string' && value !== '';
 
 // Avant chaque passage : sur une connexion OAuth, renouvelle l'accès s'il expire dans moins de
 // 5 minutes (ou si `force`) et enregistre les nouveaux jetons AVANT de rendre la config : un éditeur

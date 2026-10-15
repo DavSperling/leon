@@ -18,8 +18,14 @@
   @apply mt-4 text-lg leading-7 font-semibold tracking-tight;
 }
 
-.markdown-content h3 {
+.markdown-content h3,
+.markdown-content h4 {
   @apply mt-4 text-base leading-6 font-semibold;
+}
+
+.markdown-content h5,
+.markdown-content h6 {
+  @apply mt-4 text-sm leading-6 font-semibold;
 }
 
 .markdown-content > :first-child {
@@ -76,6 +82,11 @@
 
 .markdown-content a {
   @apply text-primary underline underline-offset-2;
+}
+
+/* Un lien refusé (voir isAllowedLink) n'a plus d'adresse : il reste du texte, sans clic. */
+.markdown-content a[href=""] {
+  @apply pointer-events-none text-inherit no-underline;
 }
 
 .markdown-content code {

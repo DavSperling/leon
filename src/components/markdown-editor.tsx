@@ -5,8 +5,9 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import './markdown-editor.css';
-import { markdownExtensions } from './markdown-extensions';
+import { editorCanHold, markdownExtensions, toStoredMarkdown } from './markdown-extensions';
 import { SlashMenu, useSlashMenu } from './slash-menu';
+import { Textarea } from './ui/textarea';
 
 type MarkdownEditorProps = {
   value: string; // le Markdown de départ : l'éditeur ne le relit pas, on ne co-édite pas
@@ -14,6 +15,7 @@ type MarkdownEditorProps = {
   placeholder?: string;
   maxLength?: number; // la borne du champ, relayée comme le `maxLength` d'une zone de texte
   readOnly?: boolean;
+  focusOnMount?: boolean; // donne le focus dès l'affichage : un éditeur remonté à neuf après un envoi
   onChange?: (markdown: string) => void;
   onBlur?: () => void;
   onSubmit?: () => void; // ⌘Entrée
@@ -54,14 +56,58 @@ function editorProps(
   return props;
 }
 
-// Un éditeur de texte riche dont le Markdown est la seule forme stockée : description, commentaire
-// et création de tâche l'emploient, et la lecture d'un commentaire en est la version `readOnly`.
-export function MarkdownEditor({
+// Le Markdown tel quel, comme avant l'éditeur riche : une zone de texte, ou un bloc de texte en lecture.
+function PlainMarkdown({
+  value,
+  label,
+  placeholder,
+  maxLength,
+  readOnly,
+  onChange,
+  onBlur,
+  onSubmit,
+  className,
+}: MarkdownEditorProps) {
+  if (readOnly) {
+    return (
+      <pre
+        role="document"
+        aria-label={label}
+        className={cn('font-mono text-[13px] leading-5 break-words whitespace-pre-wrap', className)}
+      >
+        {value}
+      </pre>
+    );
+  }
+  return (
+    <Textarea
+      defaultValue={value}
+      aria-label={label}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      onChange={(event) => onChange?.(event.target.value)}
+      onBlur={onBlur}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && !event.defaultPrevented) {
+          event.preventDefault();
+          event.currentTarget.blur();
+        } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && onSubmit) {
+          event.preventDefault();
+          onSubmit();
+        }
+      }}
+      className={className}
+    />
+  );
+}
+
+function RichEditor({
   value,
   label,
   placeholder = '',
   maxLength,
   readOnly = false,
+  focusOnMount = false,
   onChange,
   onBlur,
   onSubmit,
@@ -85,10 +131,13 @@ export function MarkdownEditor({
     contentType: 'markdown',
     editable: !readOnly,
     editorProps: props,
+    autofocus: focusOnMount ? 'end' : false,
     immediatelyRender: false, // rendu serveur sans éditeur : pas de décalage à l'hydratation
     shouldRerenderOnTransaction: false,
-    // Le paragraphe vide que l'éditeur garde sous une liste ou un bloc de code s'écrit en lignes vides.
-    onUpdate: ({ editor }) => onChange?.(editor.getMarkdown().trimEnd()),
+    // Le texte est réécrit par le gestionnaire Markdown de TipTap : « & » devient « &amp; » et
+    // « _ » devient « \_ ». C'est le même Markdown, mais le texte brut qu'un agent lit en est un
+    // peu pollué, et rien dans une extension ne permet de l'éviter.
+    onUpdate: ({ editor }) => onChange?.(toStoredMarkdown(editor.getMarkdown())),
     onBlur,
   });
 
@@ -98,4 +147,13 @@ export function MarkdownEditor({
       <SlashMenu menu={slash.menu} editor={editor} onHover={slash.hover} />
     </>
   );
+}
+
+// Un éditeur de texte riche dont le Markdown est la seule forme stockée : description, commentaire
+// et création de tâche l'emploient, et la lecture d'un commentaire en est la version `readOnly`.
+// Un Markdown que l'éditeur ne sait pas relire (tableau, image, HTML) reste du texte brut : le
+// réécrire par l'éditeur le ferait perdre. Le choix se fait au départ, `value` n'étant que le départ.
+export function MarkdownEditor(props: MarkdownEditorProps) {
+  const [rich] = useState(() => editorCanHold(props.value));
+  return rich ? <RichEditor {...props} /> : <PlainMarkdown {...props} />;
 }

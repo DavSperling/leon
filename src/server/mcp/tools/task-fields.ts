@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TASK_PRIORITIES, type TaskPriority } from '@/lib/enums';
+import { DESCRIPTION_MAX_CHARS } from '@/lib/tasks/limits';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { findLabelsByName, listLabels } from '@/server/tasks/labels';
@@ -13,7 +14,6 @@ import { ToolInputError } from './guarded';
 // Ce fichier porte leurs schémas et leur traduction. Pour un champ qu'on peut vider, `null` ou
 // « aucun » le vide ; un champ absent reste inchangé.
 const CLEAR_WORD = 'aucun';
-const DESCRIPTION_MAX_CHARS = 100_000;
 // Le nom d'une priorité, en entrée comme en sortie : task_list rend ce que task_update accepte.
 export const PRIORITY_NAMES = {
   urgent: 'urgente',

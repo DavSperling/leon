@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { productionSources } from './files';
+import { productionSources, readText } from './files';
 
 const sources = productionSources('src/components/**/*.{ts,tsx}');
 
@@ -18,5 +18,20 @@ describe('attributs data-* du DOM', () => {
     const written = new Set(namesIn(WRITTEN));
     expect(read.length).toBeGreaterThan(0);
     expect(read.filter((name) => !written.has(name))).toEqual([]);
+  });
+});
+
+// Un commentaire lu est un éditeur en lecture seule : ProseMirror écrit alors contenteditable="false"
+// sur sa racine. Si les touches C, X et Échap le prenaient pour un champ, elles s'éteindraient dès
+// qu'un lien du commentaire a le focus.
+describe('touches et éditeur en lecture seule', () => {
+  it('seul un contenteditable modifiable compte comme un champ', () => {
+    expect(readText('src/components/tasks/typing.ts')).toContain(
+      '[contenteditable]:not([contenteditable="false"])',
+    );
+  });
+
+  it('un éditeur en lecture seule n’est pas modifiable', () => {
+    expect(readText('src/components/markdown-editor.tsx')).toContain('editable: !readOnly');
   });
 });

@@ -10,7 +10,7 @@ import { COMMENT_MAX_CHARS } from '@/lib/tasks/limits';
 import { safely } from './safely';
 
 // Le commentaire (Markdown, dans l'éditeur riche) : ⌘Entrée ou le bouton l'envoie ; une erreur le
-// garde pour réessayer. Après l'envoi, l'éditeur repart à neuf (sa clé change).
+// garde pour réessayer. Après l'envoi, l'éditeur repart à neuf (sa clé change) et reprend le focus.
 export function CommentForm({ taskId }: { taskId: string }) {
   const [body, setBody] = useState('');
   const [sent, setSent] = useState(0);
@@ -39,6 +39,7 @@ export function CommentForm({ taskId }: { taskId: string }) {
         label="Commentaire"
         placeholder="Écrire un commentaire…"
         maxLength={COMMENT_MAX_CHARS}
+        focusOnMount={sent > 0}
         onChange={setBody}
         onSubmit={submit}
         className="max-h-60 min-h-16 overflow-y-auto border-input bg-transparent text-sm shadow-xs dark:bg-input/30"

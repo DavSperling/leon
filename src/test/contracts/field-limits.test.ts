@@ -5,7 +5,7 @@ import {
   LABEL_NAME_MAX_CHARS,
   TITLE_MAX_CHARS,
 } from '@/lib/tasks/limits';
-import { readText } from './files';
+import { productionSources, readText } from './files';
 
 const MIGRATION = readText('src/server/db/migrations/0007-taches.sql');
 
@@ -46,6 +46,29 @@ describe('bornes des champs des tâches', () => {
       'src/components/tasks/comment-form.tsx',
     ]) {
       expect(readText(path), path).toMatch(imported);
+    }
+  });
+
+  it('la description : l’action, l’outil MCP et les deux champs importent la même borne', () => {
+    const imported = /import \{[^}]*\bDESCRIPTION_MAX_CHARS\b[^}]*\} from '@\/lib\/tasks\/limits'/;
+    for (const path of [
+      'src/app/(taches)/taches/actions.ts',
+      'src/server/mcp/tools/task-fields.ts',
+      'src/components/tasks/description-field.tsx',
+      'src/components/tasks/create-task-dialog.tsx',
+    ]) {
+      expect(readText(path), path).toMatch(imported);
+    }
+  });
+
+  it('un éditeur modifiable relaie toujours la borne de son champ', () => {
+    const editors = productionSources('src/components/**/*.tsx').flatMap(({ path, text }) =>
+      [...text.matchAll(/<MarkdownEditor\b[\s\S]*?\/>/g)].map(([element]) => ({ path, element })),
+    );
+    const editable = editors.filter(({ element }) => !/\breadOnly\b/.test(element));
+    expect(editable.length).toBeGreaterThanOrEqual(3);
+    for (const { path, element } of editable) {
+      expect(element, path).toMatch(/\bmaxLength=\{/);
     }
   });
 

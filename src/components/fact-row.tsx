@@ -2,6 +2,7 @@ import { Lock, Users } from 'lucide-react';
 import Link from 'next/link';
 import { QuoteBlock } from '@/components/quote-block';
 import { SourceChip } from '@/components/source-chip';
+import { SourceLink } from '@/components/source-link';
 import { StatusBadge } from '@/components/status-badge';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -65,6 +66,7 @@ export function FactRow({
           authorName={fact.authorName}
           at={fact.recordedAt}
         />
+        {fact.sourceUrl && <SourceLink url={fact.sourceUrl} label={fact.sourceKindLabel} />}
         <Visibility visibility={fact.visibility} />
         {fact.status !== 'active' && <StatusBadge status={fact.status} />}
         {fact.status === 'conflict' && (

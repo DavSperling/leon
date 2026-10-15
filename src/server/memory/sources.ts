@@ -1,18 +1,20 @@
-import { count, desc, eq, sql } from 'drizzle-orm';
-import { CAPTURE_KINDS, type SourceKind } from '@/capture/turn';
+import { count, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { SOURCE_KIND_LABELS } from './labels';
 
-// Page « Sources » : santé de la capture de l'utilisateur. Rien de ce qui est lu ici ne sort du
-// titre : ni texte de tour, ni message d'erreur du pipeline.
+// Page « Sources » : santé de la capture de l'utilisateur, plus ce que lisent les connexions aux
+// outils (visible de toute l'équipe). Rien de ce qui est lu ici ne sort du titre et du lien vers
+// l'original : ni texte de tour, ni message d'erreur du pipeline.
 
 export type SourceRow = {
   id: string;
   kind: SourceKind;
   kindLabel: string;
   title: string | null;
+  url: string | null; // lien vers l'original d'une source d'outil, en https seulement
   lastTurnAt: Date | null;
   turnCount: number;
   lastRun: {
@@ -32,10 +34,14 @@ export async function listSources(
         id: sources.id,
         kind: sources.kind,
         title: sources.title,
+        url: sql<string | null>`${sources.metadata}->>'url'`,
         lastTurnAt: sources.lastTurnAt,
       })
       .from(sources)
-      .where(eq(sources.ownerUserId, ctx.userId))
+      // Les conversations restent à leur propriétaire, même posées avec une ACL d'équipe ; les
+      // sources d'outils sont celles que la RLS laisse voir. Pas `connection_id` : il devient nul
+      // quand la connexion est supprimée.
+      .where(or(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, PROVIDER_IDS)))
       .orderBy(sql`${sources.lastTurnAt} desc nulls last`, desc(sources.id));
     const turnCounts = await tx
       .select({ sourceId: turns.sourceId, turnCount: count() })
@@ -53,8 +59,9 @@ export async function listSources(
 
     const countBySource = new Map(turnCounts.map((row) => [row.sourceId, row.turnCount]));
     const runBySource = new Map(runs.map(({ sourceId, ...run }) => [sourceId, run]));
-    const sourceRows = rows.map((row) => ({
+    const sourceRows = rows.map(({ url, ...row }) => ({
       ...row,
+      url: url?.startsWith('https://') ? url : null,
       kindLabel: SOURCE_KIND_LABELS[row.kind],
       turnCount: countBySource.get(row.id) ?? 0,
       lastRun: runBySource.get(row.id) ?? null,

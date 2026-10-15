@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import {
   clientLabel,
+  factAuthorName,
   isoDate,
   oneLine,
   SENSITIVE_CATEGORY_LABELS,
@@ -42,5 +43,28 @@ describe('labels', () => {
 
   it('remplace espaces blancs et caractères de contrôle par une espace, puis retire les bords', () => {
     expect(oneLine('  a\r\n\tb\u2028c\u0085d\u0000e\u001bf\u007fg  ')).toBe('a b c d e f g');
+  });
+});
+
+describe('factAuthorName', () => {
+  it('garde le nom de la personne qui a tenu la conversation pour un type de capture', () => {
+    expect(
+      factAuthorName({ sourceKind: 'claude_code', userName: 'Paul Martin', turnAuthorName: null }),
+    ).toBe('Paul Martin');
+    expect(
+      factAuthorName({ sourceKind: 'chatgpt', userName: 'Paul Martin', turnAuthorName: 'Marie' }),
+    ).toBe('Paul Martin');
+  });
+
+  it("prend l'auteur du tour cité pour un outil, pas la personne qui a branché la connexion", () => {
+    expect(
+      factAuthorName({ sourceKind: 'github', userName: 'Amos', turnAuthorName: 'David' }),
+    ).toBe('David');
+  });
+
+  it("dit « auteur inconnu » quand le tour d'un outil n'a pas d'auteur", () => {
+    expect(factAuthorName({ sourceKind: 'notion', userName: 'Amos', turnAuthorName: null })).toBe(
+      'auteur inconnu',
+    );
   });
 });

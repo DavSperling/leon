@@ -1,13 +1,13 @@
-import { and, count, desc, eq, lte } from 'drizzle-orm';
+import { and, count, desc, eq, lte, sql } from 'drizzle-orm';
 import type { SourceKind } from '@/capture/turn';
 import type { CardStatus, FactStatus } from '@/lib/enums';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { users } from '@/server/db/schema/auth';
-import { cards, cardTypes, facts, readLog } from '@/server/db/schema/memory';
+import { cards, cardTypes, facts, readLog, sources, turns } from '@/server/db/schema/memory';
 import type { Tx } from '@/server/db/with-tenant';
 import { isTeamAcl } from './acl';
 import { loadCatalog, predicatesForType } from './catalog';
-import { SOURCE_KIND_LABELS } from './labels';
+import { factAuthorName, SOURCE_KIND_LABELS } from './labels';
 
 export type FactView = {
   id: string;
@@ -22,6 +22,7 @@ export type FactView = {
   recordedAt: Date;
   sourceKind: SourceKind;
   sourceKindLabel: string;
+  sourceUrl: string | null; // lien vers l'original d'une source d'outil, en https seulement
   authorName: string;
   visibility: 'team' | 'private';
   supersededBy: string | null;
@@ -59,6 +60,8 @@ async function readCard(tx: Tx, cardId: string) {
 
 // Faits visibles de la fiche, enregistrés au plus tard à asOf s'il est donné (sans asOf, aucun
 // filtre : l'horloge de Postgres, qui date recorded_at, peut avancer sur celle de l'app).
+// Jointures gauches sur la source et le tour cités : sous la RLS, une source ou un tour privés
+// restent invisibles, et le fait partagé doit s'afficher quand même.
 async function readFacts(tx: Tx, cardId: string, asOf: Date | undefined) {
   return tx
     .select({
@@ -72,12 +75,16 @@ async function readFacts(tx: Tx, cardId: string, asOf: Date | undefined) {
       validTo: facts.validTo,
       recordedAt: facts.recordedAt,
       sourceKind: facts.sourceKind,
-      authorName: users.name,
+      sourceUrl: sql<string | null>`${sources.metadata}->>'url'`,
+      userName: users.name,
+      turnAuthorName: turns.authorName,
       acl: facts.acl,
       supersededBy: facts.supersededBy,
     })
     .from(facts)
     .innerJoin(users, eq(users.id, facts.authorId))
+    .leftJoin(sources, eq(sources.id, facts.sourceId))
+    .leftJoin(turns, eq(turns.id, facts.turnId))
     .where(and(eq(facts.cardId, cardId), asOf && lte(facts.recordedAt, asOf)))
     .orderBy(desc(facts.validFrom), facts.id);
 }
@@ -101,8 +108,10 @@ export async function loadCardData(
   const labels = new Map(
     predicatesForType(await loadCatalog(tx), card.typeSlug).map((p) => [p.slug, p.label]),
   );
-  const views: FactView[] = rows.map(({ acl, ...row }) => ({
+  const views: FactView[] = rows.map(({ acl, userName, turnAuthorName, sourceUrl, ...row }) => ({
     ...row,
+    authorName: factAuthorName({ sourceKind: row.sourceKind, userName, turnAuthorName }),
+    sourceUrl: sourceUrl?.startsWith('https://') ? sourceUrl : null,
     predicateLabel: labels.get(row.predicate) ?? row.predicate,
     sourceKindLabel: SOURCE_KIND_LABELS[row.sourceKind],
     visibility: isTeamAcl(acl, ctx.tenantId) ? 'team' : 'private',

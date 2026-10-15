@@ -1,4 +1,4 @@
-import type { SourceKind } from '@/capture/turn';
+import { CAPTURE_KINDS, type SourceKind } from '@/capture/turn';
 import type { SensitiveCategory } from '@/lib/enums';
 import { PROVIDER_LABELS } from '@/lib/providers';
 
@@ -11,6 +11,17 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   mcp_remember: 'Note MCP',
   ...PROVIDER_LABELS,
 };
+
+// Auteur affiché d'un fait. Une conversation est celle de la personne qui l'a tenue ; pour un outil,
+// la connexion appartient à celui qui l'a branchée, mais le fait vient de l'auteur du tour cité.
+export function factAuthorName(input: {
+  sourceKind: SourceKind;
+  userName: string;
+  turnAuthorName: string | null;
+}): string {
+  if ((CAPTURE_KINDS as readonly SourceKind[]).includes(input.sourceKind)) return input.userName;
+  return input.turnAuthorName ?? 'auteur inconnu';
+}
 
 export const SENSITIVE_CATEGORY_LABELS: Record<SensitiveCategory, string> = {
   rh: 'RH',

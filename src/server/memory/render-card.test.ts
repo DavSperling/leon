@@ -20,6 +20,7 @@ function fact(override: Partial<FactView>): FactView {
     recordedAt: new Date('2026-10-13T12:00:00Z'),
     sourceKind: 'claude_code',
     sourceKindLabel: 'Claude Code',
+    sourceUrl: null,
     authorName: 'Paul Martin',
     visibility: 'team',
     supersededBy: null,

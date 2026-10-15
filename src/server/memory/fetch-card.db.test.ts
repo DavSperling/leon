@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { cards, facts, readLog } from '@/server/db/schema/memory';
+import { cards, facts, readLog, sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
-import { seedCard, seedFact } from '@/test/fixtures';
+import { createTestTenant, seedCard, seedFact } from '@/test/fixtures';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { cardUrl } from './card-url';
 import { fetchCard } from './fetch-card';
@@ -14,6 +14,53 @@ const readsOf = (cardId: string, userId: string) =>
     .select()
     .from(readLog)
     .where(and(eq(readLog.cardId, cardId), eq(readLog.userId, userId)));
+
+// Un fait tiré d'un commentaire de David (auteur du tour) sur une source GitHub qu'Amos a branchée.
+async function seedGithubFact(metadata: Record<string, unknown>) {
+  const { tenantId, members } = await createTestTenant(['Amos', 'David']);
+  const [amos, david] = members;
+  if (!amos || !david) throw new Error('membres non créés');
+  const [source] = await adminDb
+    .insert(sources)
+    .values({
+      tenantId,
+      kind: 'github',
+      externalId: randomUUID(),
+      ownerUserId: amos.userId,
+      title: 'Ticket 12',
+      acl: [tenantId],
+      metadata,
+    })
+    .returning({ id: sources.id });
+  if (!source) throw new Error('source non créée');
+  const [turn] = await adminDb
+    .insert(turns)
+    .values({
+      tenantId,
+      sourceId: source.id,
+      externalId: 'comment:456',
+      role: 'participant',
+      text: 'On garde Postgres.',
+      ts: new Date(),
+      captureMode: 'connector',
+      authorName: 'David',
+      acl: [tenantId],
+    })
+    .returning({ id: turns.id });
+  if (!turn) throw new Error('tour non créé');
+  const cardId = await seedCard(tenantId, { title: 'Leon', typeSlug: 'projet', acl: [tenantId] });
+  const factId = await seedFact(tenantId, {
+    cardId,
+    sourceId: source.id,
+    turnId: turn.id,
+    authorId: amos.userId,
+    predicate: 'note',
+    statement: 'On garde Postgres.',
+    acl: [tenantId],
+    sourceKind: 'github',
+  });
+  return { amos, david, cardId, factId };
+}
 
 describe('fetchCard', () => {
   it("ne rend pas une fiche privée de Paul à Marie et n'écrit aucune lecture", async () => {
@@ -182,6 +229,46 @@ describe('fetchCard', () => {
     });
     await adminDb.update(cards).set({ mergedInto: ids.orionCard }).where(eq(cards.id, merged));
     expect(await fetchCard(marie, { id: merged, client: 'interface' })).toBeNull();
+  });
+});
+
+describe("fetchCard · faits tirés d'un outil", () => {
+  const URL = 'https://github.com/acme/leon/issues/12';
+
+  it("donne l'auteur du tour cité, pas celui qui a branché la connexion, et le lien de l'élément", async () => {
+    const { amos, david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL });
+
+    for (const reader of [david, amos]) {
+      const result = await fetchCard(reader, { id: cardId, client: 'interface' });
+      expect(result?.card.facts).toHaveLength(1);
+      expect(result?.card.facts[0]).toMatchObject({
+        authorName: 'David',
+        sourceKindLabel: 'GitHub',
+        sourceUrl: URL,
+      });
+      expect(result?.text).toContain('[GitHub · David,');
+    }
+  });
+
+  it.each([['http://exemple.test/a'], ['javascript:alert(1)']])(
+    'ne garde pas le lien %s, mais montre quand même le fait',
+    async (url) => {
+      const { david, cardId } = await seedGithubFact({ url });
+
+      const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+      expect(result?.card.facts).toHaveLength(1);
+      expect(result?.card.facts[0]?.sourceUrl).toBeNull();
+    },
+  );
+
+  it("montre le fait d'équipe tiré d'une conversation que Marie ne voit pas, sans lien et avec le nom de son auteur", async () => {
+    const { marie, ids } = await seedRightsScenario();
+
+    const result = await fetchCard(marie, { id: ids.acmeCard, client: 'interface' });
+
+    const fact = result?.card.facts.find((f) => f.id === ids.acmeConflictFact);
+    expect(fact).toMatchObject({ sourceUrl: null, authorName: 'Paul Martin' });
   });
 });
 

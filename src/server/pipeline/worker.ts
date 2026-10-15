@@ -1,5 +1,6 @@
 import { resolveTenantContext } from '@/server/auth/tenant-context';
 import type { Llm } from '@/server/llm/llm';
+import { recordingUsage } from '@/server/llm/record-usage';
 import { logError, safeErrorSummary } from '@/server/log';
 import { runExtraction } from './extraction';
 import { runPlacement } from './placement/run-placement';
@@ -55,7 +56,7 @@ async function processJob(step: PipelineStep, data: unknown, llm: Llm): Promise<
   const job = PipelineJobSchema.parse(data);
   let next: PipelineStep | null;
   try {
-    next = await runPipelineStep(step, job, llm);
+    next = await runPipelineStep(step, job, recordingUsage(llm, job));
   } catch (error) {
     return handleFailure(step, job, error);
   }

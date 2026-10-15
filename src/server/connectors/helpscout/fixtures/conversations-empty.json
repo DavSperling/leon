@@ -1,0 +1,9 @@
+{
+  "_links": {
+    "self": { "href": "https://api.helpscout.net/v2/conversations?page=1" },
+    "first": { "href": "https://api.helpscout.net/v2/conversations?page=1" },
+    "last": { "href": "https://api.helpscout.net/v2/conversations?page=0" },
+    "page": { "href": "https://api.helpscout.net/v2/conversations{?page}", "templated": true }
+  },
+  "page": { "size": 25, "totalElements": 0, "totalPages": 0, "number": 0 }
+}

@@ -1,0 +1,16 @@
+{
+  "_links": { "self": { "href": "https://api.helpscout.net/v2/users/4" } },
+  "id": 4,
+  "firstName": "Marie",
+  "lastName": "Durand",
+  "email": "marie@acme.test",
+  "role": "owner",
+  "timezone": "Europe/Paris",
+  "type": "user",
+  "mention": "marie",
+  "initials": "MD",
+  "jobTitle": "Responsable du support",
+  "createdAt": "2024-04-01T03:18:33Z",
+  "updatedAt": "2026-07-24T20:18:33Z",
+  "companyId": 1
+}

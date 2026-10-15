@@ -1,0 +1,97 @@
+{
+  "_embedded": {
+    "conversations": [
+      {
+        "_links": { "web": { "href": "https://secure.helpscout.net/conversation/4003/14" } },
+        "id": 4003,
+        "number": 14,
+        "threads": 1,
+        "type": "phone",
+        "status": "pending",
+        "state": "published",
+        "subject": "Rappel client : migration",
+        "mailboxId": 14,
+        "assignee": { "id": 7, "type": "team", "first": "Équipe", "last": "Onboarding" },
+        "createdAt": "2026-10-15T09:10:00Z",
+        "userUpdatedAt": "2026-10-15T09:40:00Z",
+        "tags": [],
+        "primaryCustomer": {
+          "id": 238710,
+          "type": "customer",
+          "first": "Luc",
+          "last": "Girard",
+          "email": "luc@client.test"
+        },
+        "_embedded": {
+          "threads": [
+            {
+              "id": 90020,
+              "type": "phone",
+              "status": "pending",
+              "state": "published",
+              "body": "<p>Appel de 10 minutes : le client migre le 3 novembre et veut un accompagnement.</p>",
+              "createdAt": "2026-10-15T09:40:00Z",
+              "createdBy": {
+                "id": 99,
+                "type": "user",
+                "first": "Paul",
+                "last": "Martin",
+                "email": "paul@acme.test"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 4004,
+        "number": 15,
+        "type": "email",
+        "status": "spam",
+        "state": "published",
+        "subject": "Gagnez un iPhone",
+        "mailboxId": 13,
+        "createdAt": "2026-10-15T09:20:00Z",
+        "_embedded": {
+          "threads": [
+            {
+              "id": 90030,
+              "type": "customer",
+              "state": "published",
+              "body": "<p>Cliquez ici pour gagner.</p>",
+              "createdAt": "2026-10-15T09:20:00Z",
+              "createdBy": { "id": 1, "type": "customer", "email": "spam@pub.test" }
+            }
+          ]
+        }
+      },
+      {
+        "id": 4005,
+        "number": 16,
+        "type": "email",
+        "status": "active",
+        "state": "published",
+        "subject": "Sans texte",
+        "mailboxId": 13,
+        "createdAt": "2026-10-15T09:30:00Z",
+        "_embedded": {
+          "threads": [
+            {
+              "id": 90040,
+              "type": "lineitem",
+              "state": "published",
+              "action": { "type": "changeAssignee" },
+              "createdAt": "2026-10-15T09:31:00Z"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": { "href": "https://api.helpscout.net/v2/conversations?page=2" },
+    "first": { "href": "https://api.helpscout.net/v2/conversations?page=1" },
+    "last": { "href": "https://api.helpscout.net/v2/conversations?page=2" },
+    "page": { "href": "https://api.helpscout.net/v2/conversations{?page}", "templated": true }
+  },
+  "page": { "size": 25, "totalElements": 5, "totalPages": 2, "number": 2 }
+}

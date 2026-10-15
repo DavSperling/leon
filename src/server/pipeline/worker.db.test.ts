@@ -15,10 +15,12 @@ import { startPipelineWorker } from './worker';
 
 const FAILING_TEXT = 'Texte confidentiel du tour qui fait échouer le triage.';
 const FACT_TEXT = 'ACME paie ses factures à soixante jours.';
+const TRANSIENT_TEXT = 'Texte confidentiel du tour qui fait échouer le réseau.';
 
 // Le worker est un singleton par process : un seul faux LLM, aiguillé par l'étape et le texte du tour.
 const llm = createFakeLlm((request) => {
   if (request.prompt.includes(FAILING_TEXT)) throw new LlmError('refus du modèle');
+  if (request.prompt.includes(TRANSIENT_TEXT)) throw new Error('OpenRouter : HTTP 503');
   if (request.step === 'triage')
     return { keep: true, reason: 'Un tarif.', sensitiveTurns: [], noiseTurns: [] };
   if (request.step === 'extraction') {
@@ -134,11 +136,41 @@ describe('worker du pipeline', () => {
     expect(run).toMatchObject({ status: 'done', step: 'done' });
   });
 
-  it('marque le run failed sans texte de tour et ne laisse aucun job à reprendre', async () => {
-    const { paul, job } = await seedTriageRun(FAILING_TEXT);
+  it('marque le run failed sans texte de tour et ne reprend pas un échec du modèle (LlmError)', async () => {
+    // Texte propre à ce test : les appels du faux LLM se comptent par run.
+    const text = `${FAILING_TEXT} ${crypto.randomUUID()}`;
+    const { paul, job } = await seedTriageRun(text);
+    const callsOfRun = () => llm.calls.filter((call) => call.prompt.includes(text)).length;
 
     const boss = await getBoss();
-    const jobId = await boss.send(PIPELINE_QUEUES.triage, job, { retryLimit: 0 });
+    const jobId = await boss.send(PIPELINE_QUEUES.triage, job, { retryLimit: 3, retryDelay: 1 });
+    if (!jobId) throw new Error('job non créé');
+
+    const run = await waitFor(
+      () => readRun(paul, job.ingestRunId),
+      (r) => r?.status === 'failed',
+    );
+    expect(run?.status).toBe('failed');
+    expect(run?.error).toBe('LlmError: refus du modèle');
+    expect(run?.error).not.toContain(FAILING_TEXT);
+    const pgJob = await waitFor(
+      () => boss.getJobById(PIPELINE_QUEUES.triage, jobId),
+      (j) => j?.state === 'completed',
+    );
+    expect(pgJob?.state).toBe('completed');
+    // Une reprise aurait lieu après retryDelay (1 s) : on laisse passer ce délai avant de compter.
+    await new Promise((resolve) => setTimeout(resolve, 2_500));
+    expect(callsOfRun()).toBe(1);
+    expect((await boss.getJobById(PIPELINE_QUEUES.triage, jobId))?.state).toBe('completed');
+  });
+
+  it('reprend un échec ordinaire (réseau, 429, 5xx) et finit failed après les reprises', async () => {
+    const text = `${TRANSIENT_TEXT} ${crypto.randomUUID()}`;
+    const { paul, job } = await seedTriageRun(text);
+    const callsOfRun = () => llm.calls.filter((call) => call.prompt.includes(text)).length;
+
+    const boss = await getBoss();
+    const jobId = await boss.send(PIPELINE_QUEUES.triage, job, { retryLimit: 1, retryDelay: 1 });
     if (!jobId) throw new Error('job non créé');
 
     const pgJob = await waitFor(
@@ -146,10 +178,10 @@ describe('worker du pipeline', () => {
       (j) => j?.state === 'failed',
     );
     expect(pgJob?.state).toBe('failed');
+    expect(callsOfRun()).toBe(2);
     const run = await readRun(paul, job.ingestRunId);
     expect(run?.status).toBe('failed');
-    expect(run?.error).toBe('LlmError: refus du modèle');
-    expect(run?.error).not.toContain(FAILING_TEXT);
+    expect(run?.error).not.toContain(TRANSIENT_TEXT);
   });
 });
 

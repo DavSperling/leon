@@ -1,5 +1,5 @@
 import { resolveTenantContext } from '@/server/auth/tenant-context';
-import type { Llm } from '@/server/llm/llm';
+import { type Llm, LlmError } from '@/server/llm/llm';
 import { recordingUsage } from '@/server/llm/record-usage';
 import { logError, safeErrorSummary } from '@/server/log';
 import { runExtraction } from './extraction';
@@ -30,18 +30,26 @@ export function runPipelineStep(
   return STEPS[step](job, llm);
 }
 
-// Le run finit `failed` avec un résumé sans texte de conversation (failRun) ; l'échec est ensuite
-// relancé à pg-boss, qui reprend le job. pg-boss stocke ce qu'on relance : jamais l'erreur d'origine,
-// dont le message peut contenir du texte capté.
-async function handleFailure(step: PipelineStep, job: PipelineJob, error: unknown): Promise<never> {
+// Le run finit `failed` avec un résumé sans texte de conversation (failRun). Un échec ordinaire (réseau,
+// 429, 5xx, délai) est ensuite relancé à pg-boss, qui reprend le job. Une LlmError (refus, réponse
+// tronquée, sortie non conforme, requête refusée) se reproduirait à chaque reprise et serait facturée à
+// chaque fois : le job s'arrête là, une seule fois payé. Si le run n'a pas pu être marqué, on relance
+// quand même : un run qui resterait `running` sans job serait bloqué pour de bon. pg-boss stocke ce
+// qu'on relance : jamais l'erreur d'origine, dont le message peut contenir du texte capté.
+async function handleFailure(step: PipelineStep, job: PipelineJob, error: unknown): Promise<void> {
   const ids = { runId: job.ingestRunId, step };
   logError('pipeline.step_failed', error, ids);
+  let marked = false;
   try {
     const ctx = await resolveTenantContext(job.userId, job.tenantId);
-    if (ctx) await failRun(ctx, job.ingestRunId, error);
+    if (ctx) {
+      await failRun(ctx, job.ingestRunId, error);
+      marked = true;
+    }
   } catch (markError) {
     logError('pipeline.mark_failed', markError, ids);
   }
+  if (error instanceof LlmError && marked) return;
   throw new Error(safeErrorSummary(error));
 }
 

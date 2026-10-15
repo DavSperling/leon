@@ -1,0 +1,17 @@
+# Historique des essais du pipeline
+
+Un passage par ligne, ajouté par `pnpm essai noter`. Coûts **mesurés** (table `llm_usage`, tarifs de `docs/etudes/couts-2026-10/annexes/01-prix-llm.md`), hors coût du juge. Détail de chaque passage dans `passages/`.
+
+| Date | Libellé | Commit | Jeu | Modèles | Tours | Coût pipeline | Coût / tour | Rappel | Précision | Faux faits | Doublons (faits, dont redits recréés) | Tour juste | Fiche juste | Fiches dispersées | Remplacements | Conflits | Fuites sensibles | Sur-signalés | Secrets | Runs échoués | Hors jeu | Erreurs juge | Durée |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-10-15 | mini sonnet-5.5 direct (référence 1) | 8400166 | mini | triage haiku-5-5 · extraction sonnet-5-5 · rangement haiku-5-5 | 104 | 0,23 $ | 0,0022 $ | 97 % | 67 % | 6 | 5 (2) | 97 % | 60 % | 8 | 1/2 | 0/1 | 0 | 3 | 0 | 0 | 0 | 0 | 2 min |
+| 2026-10-15 | mini sonnet-5.5 direct (référence 2) | 8400166 | mini | triage haiku-5-5 · extraction sonnet-5-5 · rangement haiku-5-5 | 104 | 0,23 $ | 0,0022 $ | 97 % | 65 % | 3 | 3 (0) | 100 % | 64 % | 5 | 1/2 | 0/1 | 0 | 1 | 0 | 0 | 0 | 0 | 2 min |
+| 2026-10-15 | mini haiku-5.5 direct | 8400166 | mini | triage haiku-5-5 · extraction haiku-5-5 · rangement haiku-5-5 | 104 | 0,03 $ | 0,0003 $ | 87 % | 71 % | 3 | 3 (0) | 100 % | 73 % | 2 | 1/2 | 1/1 | 0 | 1 | 0 | 0 | 0 | 0 | 2 min |
+| 2026-10-15 | mini gpt-6-sol openrouter | 8400166 | mini | triage haiku-5-5 · extraction openai/gpt-6-sol (effort medium) · rangement haiku-5-5 | 104 | 0,29 $ | 0,0028 $ | 97 % | 46 % | 4 | 9 (2) | 100 % | 56 % | 8 | 0/2 | 1/1 | 0 | 3 | 0 | 0 | 0 | 0 | 3 min |
+| 2026-10-15 | mini gpt-6-luna openrouter | 8400166 | mini | triage haiku-5-5 · extraction openai/gpt-6-luna (effort medium) · rangement haiku-5-5 | 104 | 0,04 $ | 0,0004 $ | 97 % | 59 % | 5 | 10 (1) | 100 % | 53 % | 9 | 0/2 | 0/1 | 0 | 1 | 0 | 0 | 0 | 0 | 5 min |
+| 2026-10-15 | mini gpt-5.6-luna openrouter | 8400166 | mini | triage haiku-5-5 · extraction openai/gpt-5.6-luna (effort medium) · rangement haiku-5-5 | 104 | 0,07 $ | 0,0006 $ | 90 % | 46 % | 4 | 9 (2) | 97 % | 65 % | 6 | 0/2 | 1/1 | 0 | 2 | 0 | 0 | 0 | 0 | 5 min |
+| 2026-10-15 | mini mistral-large-4-0 openrouter | 8400166 | mini | triage haiku-5-5 · extraction mistralai/mistral-large-4-0 (effort medium) · rangement haiku-5-5 | 104 | 0,24 $ | 0,0023 $ | 100 % | 44 % | 4 | 8 (1) | 97 % | 62 % | 9 | 0/2 | 1/1 | 0 | 0 | 0 | 0 | 0 | 0 | 18 min |
+| 2026-10-15 | mini mistral-medium-3-5 openrouter | 8400166 | mini | triage haiku-5-5 · extraction mistralai/mistral-medium-3-5 (effort medium) · rangement haiku-5-5 | 104 | 0,84 $ | 0,0081 $ | 94 % | 46 % | 4 | 10 (1) | 92 % | 56 % | 9 | 0/2 | 0/1 | 0 | 5 | 0 | 0 | 0 | 0 | 10 min |
+| 2026-10-15 | complet sonnet-5.5 direct | 8400166 | complet | triage haiku-5-5 · extraction sonnet-5-5 · rangement haiku-5-5 | 659 | 1,48 $ | 0,0023 $ | 93 % | 62 % | 19 | 25 (5) | 97 % | 47 % | 57 | 2/7 | 0/6 | 0 | 4 | 0 | 0 | 0 | 0 | 11 min |
+| 2026-10-15 | complet haiku-5.5 direct | 8400166 | complet | triage haiku-5-5 · extraction haiku-5-5 · rangement haiku-5-5 | 659 | 0,22 $ | 0,0003 $ | 91 % | 68 % | 14 | 27 (3) | 99 % | 54 % | 47 | 2/7 | 1/6 | 0 | 10 | 0 | 0 | 0 | 0 | 10 min |
+| 2026-10-15 | complet gpt-6-luna openrouter | 8400166 | complet | triage haiku-5-5 · extraction openai/gpt-6-luna (effort medium) · rangement haiku-5-5 | 659 | 0,28 $ | 0,0004 $ | 92 % | 51 % | 18 | 56 (8) | 97 % | 46 % | 53 | 1/7 | 2/6 | 0 | 11 | 0 | 0 | 0 | 0 | 41 min |

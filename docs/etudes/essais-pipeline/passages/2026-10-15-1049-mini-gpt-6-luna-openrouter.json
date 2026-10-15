@@ -1,0 +1,508 @@
+{
+  "id": "2026-10-15-1049-mini-gpt-6-luna-openrouter",
+  "date": "2026-10-15T10:49:22.632Z",
+  "label": "mini gpt-6-luna openrouter",
+  "commit": "84001666d3b2287335273e62beb5b887103e5614",
+  "jeu": "mini",
+  "modeles": {
+    "triage": "anthropic:claude-haiku-5-5",
+    "extraction": "openrouter:openai/gpt-6-luna (effort medium)",
+    "placement": "anthropic:claude-haiku-5-5",
+    "juge": "anthropic:claude-haiku-5-5"
+  },
+  "modelesVus": {
+    "triage": [
+      "claude-haiku-5-5"
+    ],
+    "extraction": [
+      "openai/gpt-6-luna@OpenAI"
+    ],
+    "placement": [
+      "claude-haiku-5-5"
+    ]
+  },
+  "tours": 104,
+  "dureeMinutes": 5,
+  "runs": {
+    "total": 10,
+    "done": 10,
+    "failed": 0,
+    "enCours": 0,
+    "fin": "2026-10-15T10:54:16.288Z",
+    "bloques": 0
+  },
+  "usage": {
+    "triage": {
+      "appels": 10,
+      "inputTokens": 40079,
+      "outputTokens": 1484,
+      "cacheReadTokens": 12600,
+      "cacheWriteTokens": 0,
+      "coutsManquants": 0,
+      "costUsd": 0.0048759
+    },
+    "extraction": {
+      "appels": 10,
+      "inputTokens": 30,
+      "outputTokens": 31400,
+      "cacheReadTokens": 16300,
+      "cacheWriteTokens": 19152,
+      "coutsManquants": 0,
+      "costUsd": 0.01826
+    },
+    "placement": {
+      "appels": 10,
+      "inputTokens": 55762,
+      "outputTokens": 21892,
+      "cacheReadTokens": 20840,
+      "cacheWriteTokens": 0,
+      "coutsManquants": 0,
+      "costUsd": 0.0167306
+    }
+  },
+  "coutJuge": 0.0022382999999999995,
+  "jugeErreurs": [],
+  "appariements": {
+    "32767444-17da-47fa-b091-27ee616db246": "F004",
+    "4bbf0fb9-54a4-45b3-81b5-186320aaee09": "F004",
+    "7142d798-4b00-4053-9f3d-b11c305a7aea": "F006",
+    "9007850c-bca2-4454-a850-89a5bd002716": "N003",
+    "df205ba7-eca5-4b82-a5a3-886f15b71427": "F005",
+    "0144aa49-efe1-4856-8749-77ccae7fd8b7": "F034",
+    "04bc1476-050d-4461-9739-3b87a2a92dc8": "F035",
+    "17813101-40b5-4e6b-b2fa-da616487024d": "F034",
+    "601d070c-b45f-4378-9ea1-cbf514aad5ae": "F029",
+    "628984cf-71c9-4beb-abc8-02910492df7e": null,
+    "82105a8a-7b64-413f-9806-7e4a8fd6ba07": "F034",
+    "af6ecb07-7a08-401c-a5ff-964eb2218a78": null,
+    "0b209b3f-7795-43a6-89da-df2ea56bef95": "F120",
+    "473eb446-e67e-4f31-9fa8-5b3ab494bc68": "F123",
+    "5ac528f2-1042-48d0-b7cd-f28ae1e22aa2": null,
+    "5fe6bb5f-a948-4723-86d9-32107f7372f1": null,
+    "65aeafbb-f0b2-4ade-aa8f-7a91ea344bf3": "F121",
+    "8059c525-d8dd-4a4a-8ee2-ecb067d6e8b7": null,
+    "87cfce46-59b7-4531-89ec-e5cc61c2bd9b": null,
+    "8a14f63e-238f-47d8-b85f-cadfd42ff665": null,
+    "8d705baf-bbef-44ae-af17-28d9beeb69c1": "N043",
+    "8eb0072b-a901-44c1-90aa-a8f0b898c2b1": "F122",
+    "97d3fc36-34ee-42c6-a32b-b8838cb4f23d": "N043",
+    "c9c9f2fc-2355-4a94-869e-d3f448af7eef": null,
+    "cb6a687f-83c4-4008-bd60-fe40ac5ddd9b": null,
+    "f8733cb5-d129-44c0-b1e7-a9950d647d5d": null,
+    "09659a37-a2cb-4ff5-ae2c-3d3b04de06b7": null,
+    "0a6aa86f-5485-4ad5-9054-9bd840f5a9c5": null,
+    "2cbd7115-4979-4ce0-9ea7-e49bc9dc4ef5": "F140",
+    "36ad14f2-10ce-465e-a366-26e5b68e7d98": null,
+    "4dfa775b-a78f-4a0f-b2f7-87405771c9f0": "F141",
+    "597484ee-e042-403a-8f05-9b21524b9dba": "F140",
+    "71cbcd1c-2816-4c75-9d8f-aea6a588b6b4": null,
+    "97096fb4-9d23-434c-9713-c7dccaab1f9c": null,
+    "9842d3e5-8688-4a96-8468-a005839dd302": "F142",
+    "b7cb524e-a03f-443a-b580-9fc18d409c34": "F141",
+    "edf7e7f2-de40-47cd-844e-9bda1a1cc439": null,
+    "ef314385-9fad-4c83-86db-03f4b633abeb": null,
+    "0753e757-226e-45a0-9e50-a6a5ef7225b7": "F073",
+    "3fed65ea-c77b-4d67-be43-0975c4f6bd7f": "F075",
+    "4dbce5ab-ffa7-48b3-898b-013060bfa0ef": "F074",
+    "868c8751-8183-422c-8810-2afe9fcb744c": "F074",
+    "0289f44c-13af-4e30-be52-302cd0981fc8": "F321",
+    "260b98da-8daa-47ef-9dd5-16aaba6fffa8": null,
+    "2b475da8-8b7f-4c04-8454-27ac82105798": "F320",
+    "a95d41fd-ec0f-4537-bd50-54d5e2f73aca": null,
+    "437f16ed-b668-41fb-83a4-c6cbcce471b2": "N101",
+    "7c5daf12-ee74-4913-be5c-95e015d20c24": "F238",
+    "ad5bbcb3-ed06-42a8-8c76-8052ce424477": "F250",
+    "cbd21b41-239c-4c7d-a047-5c2554fbb5c8": "F240",
+    "05150db6-b6c6-4c20-a1ab-67efc61d6ce3": "F239",
+    "2bb596ed-96d1-4398-8ebd-0d011233fe95": null,
+    "337c8d0d-e588-4263-b3ba-71abe16da407": null,
+    "7ef622cf-6b16-4063-b556-b4bc4029ee3c": "F236",
+    "86bf8039-7fd1-4f90-a18f-04f8b854fcd6": "F237",
+    "d92ccad1-49cf-4143-af83-b75d7538b5f8": "F237",
+    "18efbe3c-fd20-41ff-9c4a-de531f0cfccc": "F255",
+    "3ec383a1-a587-4ec8-9a25-9fb1a9f79145": "F253",
+    "6ab86080-fecc-49c8-b4ab-62e75822da6d": "F254",
+    "76f0ceca-e395-4d96-9f3a-ef3024b0cb40": "F258",
+    "845f0bfe-ad47-42bd-8a8e-6e878968946f": "F258",
+    "abbbe036-2454-4517-84b3-bcf72d3251ad": null,
+    "af3d4119-2a5c-4766-9faa-f0978d01188a": null,
+    "dfacdad5-1f13-4967-aafc-d7250958dd2c": "F253",
+    "21c19ebd-cff4-464a-822f-b891e6242b36": "F266",
+    "352af3dc-09ef-4656-9162-54b388f6281d": "N108",
+    "ba37cb6e-1377-4604-b459-535c458bdd69": "F267",
+    "c687fbfa-66c4-46f8-8207-a63edea11850": "F256"
+  },
+  "notes": {
+    "attendus": 31,
+    "retrouves": 30,
+    "rappel": 0.967741935483871,
+    "produits": 68,
+    "horsJeu": 0,
+    "apparies": 40,
+    "precision": 0.5882352941176471,
+    "fauxFaits": 5,
+    "doublonsFaits": 10,
+    "redits": 5,
+    "reditsRecrees": 1,
+    "tourCorrect": {
+      "ok": 40,
+      "sur": 40
+    },
+    "ficheCorrecte": {
+      "ok": 21,
+      "sur": 40
+    },
+    "typeCorrect": {
+      "ok": 30,
+      "sur": 40
+    },
+    "fichesDispersees": 9,
+    "remplacements": {
+      "trouves": 0,
+      "attendus": 2
+    },
+    "conflits": {
+      "trouves": 0,
+      "attendus": 1
+    },
+    "sensibles": {
+      "marques": 2,
+      "attendus": 2,
+      "retrouves": 2
+    },
+    "sensiblesProduitsPartages": 0,
+    "fuitesSensibles": 0,
+    "surSignales": 1,
+    "secretsFuites": 0,
+    "parConversation": [
+      {
+        "cle": "claire/2026-09-22-strategie-salon",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "9007850c-bca2-4454-a850-89a5bd002716"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La présence au Salon des Artisans de l'Ouest est maintenue et le webinaire est abandonné comme solution de remplacement.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Salon des Artisans de l'Ouest",
+            "correspond": "N003"
+          }
+        ]
+      },
+      {
+        "cle": "claire/2026-10-08-comite-direction",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 7,
+        "manques": [
+          "F031"
+        ],
+        "enTrop": [
+          "628984cf-71c9-4beb-abc8-02910492df7e",
+          "af6ecb07-7a08-401c-a5ff-964eb2218a78"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "La hausse de Mutuelle Atlantique Santé est à intégrer au budget.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Intégration de la hausse de Mutuelle Atlantique Santé au budget",
+            "correspond": null
+          },
+          {
+            "statement": "Hugo organise l'équipe en fonction de la priorité donnée au connecteur Chorus Pro.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Connecteur Chorus Pro",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-09-23-geocodage-mapeo",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 14,
+        "manques": [],
+        "enTrop": [
+          "5ac528f2-1042-48d0-b7cd-f28ae1e22aa2",
+          "5fe6bb5f-a948-4723-86d9-32107f7372f1",
+          "8059c525-d8dd-4a4a-8ee2-ecb067d6e8b7",
+          "87cfce46-59b7-4531-89ec-e5cc61c2bd9b",
+          "8a14f63e-238f-47d8-b85f-cadfd42ff665",
+          "c9c9f2fc-2355-4a94-869e-d3f448af7eef",
+          "cb6a687f-83c4-4008-bd60-fe40ac5ddd9b",
+          "f8733cb5-d129-44c0-b1e7-a9950d647d5d"
+        ],
+        "fauxFaits": [
+          "8d705baf-bbef-44ae-af17-28d9beeb69c1",
+          "97d3fc36-34ee-42c6-a32b-b8838cb4f23d"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Le géocodage des chantiers vise à permettre l’affichage d’une carte des interventions et le calcul des temps de trajet.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers avec Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "La table `chantiers` stocke l’adresse en texte libre et ne contient pas de coordonnées géographiques.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers avec Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Le module de géocodage demandé doit renvoyer la latitude, la longitude et un niveau de précision pour une adresse.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers avec Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Environ 4 % des adresses de chantier de la base de recette n’ont pas de code postal détectable.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Géocodage des chantiers avec Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "La décision de choisir entre le cache Postgres et le cache mémoire est reportée jusqu’à l’observation du trafic réel en production.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Choix du cache de géocodage",
+            "correspond": null
+          },
+          {
+            "statement": "Le projet prévoit un script de rattrapage pour géocoder les chantiers existants.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers avec Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Les deux prototypes de cache restent de côté et ne sont pas retenus pour la livraison actuelle.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Prototypes de cache de géocodage",
+            "correspond": null
+          },
+          {
+            "statement": "La livraison du géocodage est prévue sans cache, avec le recul exponentiel et la prise en compte de `Retry-After`.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Livraison du géocodage sans cache",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Lors du rejeu simulé avec deux processus, le prototype de cache mémoire a entraîné 1 604 appels à Mapéo.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Prototype de cache de géocodage en mémoire",
+            "correspond": "N043"
+          },
+          {
+            "statement": "Lors du rejeu simulé en un seul processus, le prototype de cache mémoire a entraîné 1 131 appels à Mapéo.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Prototype de cache de géocodage en mémoire",
+            "correspond": "N043"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-06-bascule-terracarte",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 12,
+        "manques": [],
+        "enTrop": [
+          "09659a37-a2cb-4ff5-ae2c-3d3b04de06b7",
+          "0a6aa86f-5485-4ad5-9054-9bd840f5a9c5",
+          "36ad14f2-10ce-465e-a366-26e5b68e7d98",
+          "71cbcd1c-2816-4c75-9d8f-aea6a588b6b4",
+          "97096fb4-9d23-434c-9713-c7dccaab1f9c",
+          "edf7e7f2-de40-47cd-844e-9bda1a1cc439",
+          "ef314385-9fad-4c83-86db-03f4b633abeb"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le cache de géocodage en table Postgres est conservé tel quel avec TerraCarte.",
+            "turnExternalId": "t-012",
+            "ficheTitre": "Prototype de cache de géocodage en table Postgres",
+            "correspond": null
+          },
+          {
+            "statement": "La bascule doit conserver le code des appelants inchangé pour la création de chantier, l’import d’adresses et le recalcul des tournées.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Bascule du géocodage de Chantier+",
+            "correspond": null
+          },
+          {
+            "statement": "Le retour à l’ancien géocodeur doit pouvoir se faire au moyen d’une variable d’environnement pendant la première semaine.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Bascule du géocodage de Chantier+",
+            "correspond": null
+          },
+          {
+            "statement": "Sophie a résilié le contrat avec Mapéo le 5 octobre 2026.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "L’architecture retenue prévoit une interface Geocoder avec les implémentations Mapéo et TerraCarte, sélectionnées selon GEOCODER, et les trois appelants passent par getGeocoder().",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Bascule du géocodage de Chantier+",
+            "correspond": null
+          },
+          {
+            "statement": "Le contrat avec TerraCarte est signé.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "TerraCarte",
+            "correspond": null
+          },
+          {
+            "statement": "La variable d’environnement GEOCODER est réglée sur terracarte.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "GEOCODER",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-10-07-salon-decale",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-09-relances-clients",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "260b98da-8daa-47ef-9dd5-16aaba6fffa8",
+          "a95d41fd-ec0f-4537-bd50-54d5e2f73aca"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L’employé prévoit de consulter Inès sur ce qui peut être montré sans risque lors de la démonstration de Charpentes Morvan.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Charpentes Morvan",
+            "correspond": null
+          },
+          {
+            "statement": "Un courriel a été envoyé à Gérard le lundi 5 octobre 2026 au sujet de la date de la deuxième session de formation de Menuiserie Dupont, sans réponse au 9 octobre.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-09-24-mutuelle",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "437f16ed-b668-41fb-83a4-c6cbcce471b2"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La note d’information aux salariés sur la mutuelle collective sera retravaillée puis soumise à Claire avant diffusion.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Note d'information aux salariés",
+            "correspond": "N101"
+          }
+        ]
+      },
+      {
+        "cle": "sophie/2026-09-28-arret-maladie",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "2bb596ed-96d1-4398-8ebd-0d011233fe95",
+          "337c8d0d-e588-4263-b3ba-71abe16da407"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "La personne employeuse ne communiquera pas à l'équipe le motif de l'arrêt de Julien Lefort.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Confidentialité des arrêts de travail",
+            "correspond": null
+          },
+          {
+            "statement": "Julien Lefort travaille au support client.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Julien Lefort",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-05-cartographie",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 8,
+        "manques": [],
+        "enTrop": [
+          "abbbe036-2454-4517-84b3-bcf72d3251ad",
+          "af3d4119-2a5c-4766-9faa-f0978d01188a"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "La résiliation du contrat avec Mapéo sera envoyée par courriel et par lettre recommandée.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Le préavis de résiliation du contrat Mapéo est d’un mois.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-08-budget-2027",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "352af3dc-09ef-4656-9162-54b388f6281d"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La projection de trésorerie mensuelle pour 2027 est conservée comme piste de travail et n'est pas validée.",
+            "turnExternalId": "t-009",
+            "ficheTitre": "Projection de trésorerie mensuelle 2027",
+            "correspond": "N108"
+          }
+        ]
+      }
+    ]
+  }
+}

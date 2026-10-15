@@ -1,0 +1,2135 @@
+{
+  "id": "2026-10-15-1135-complet-sonnet-5-5-direct",
+  "date": "2026-10-15T11:35:24.491Z",
+  "label": "complet sonnet-5.5 direct",
+  "commit": "84001666d3b2287335273e62beb5b887103e5614",
+  "jeu": "complet",
+  "modeles": {
+    "triage": "anthropic:claude-haiku-5-5",
+    "extraction": "anthropic:claude-sonnet-5-5",
+    "placement": "anthropic:claude-haiku-5-5",
+    "juge": "anthropic:claude-haiku-5-5"
+  },
+  "modelesVus": {
+    "triage": [
+      "claude-haiku-5-5"
+    ],
+    "extraction": [
+      "claude-sonnet-5-5"
+    ],
+    "placement": [
+      "claude-haiku-5-5"
+    ]
+  },
+  "tours": 659,
+  "dureeMinutes": 11,
+  "runs": {
+    "total": 60,
+    "done": 60,
+    "failed": 0,
+    "enCours": 0,
+    "fin": "2026-10-15T11:45:55.221Z",
+    "bloques": 0
+  },
+  "usage": {
+    "triage": {
+      "appels": 60,
+      "inputTokens": 241579,
+      "outputTokens": 9507,
+      "cacheReadTokens": 74340,
+      "cacheWriteTokens": 1260,
+      "coutsManquants": 0,
+      "costUsd": 0.0298123
+    },
+    "extraction": {
+      "appels": 60,
+      "inputTokens": 210863,
+      "outputTokens": 88944,
+      "cacheReadTokens": 204210,
+      "cacheWriteTokens": 6989,
+      "coutsManquants": 0,
+      "costUsd": 1.3490595
+    },
+    "placement": {
+      "appels": 60,
+      "inputTokens": 369337,
+      "outputTokens": 133750,
+      "cacheReadTokens": 125040,
+      "cacheWriteTokens": 0,
+      "coutsManquants": 0,
+      "costUsd": 0.1050591
+    }
+  },
+  "coutJuge": 0.010036500000000004,
+  "jugeErreurs": [],
+  "appariements": {
+    "01cb1898-81f2-4da5-8145-82ee03c5337f": "F001",
+    "34dd8967-1925-415b-b3fd-2dd0bbf07a5b": "F032",
+    "52723e75-da5e-4b08-b974-4e832c4cac18": "F002",
+    "819ef244-0935-47d0-b08d-4dbc31a0baee": null,
+    "dc19fb9c-b246-4c78-944b-d24fdf9f1607": "F003",
+    "49b97c56-c532-41ca-a9ab-f45b668a271c": "N003",
+    "60735677-38ff-49e4-93f2-a662462f73b4": "F005",
+    "657e287a-d9b8-4455-9e60-74d43b2d2825": "F004",
+    "975431b2-b37e-43e5-8096-f84776315b95": "F006",
+    "38780436-8b55-427d-aded-3ec5a1c0aee5": null,
+    "6f365809-8064-447f-9dc0-6ff315264540": "F009",
+    "7e9d0c81-07af-4b4e-be27-dade1a7b955e": "F010",
+    "9f94255a-6298-40ac-8493-fa3b9501f527": null,
+    "f5d6ee50-b8d9-4bc6-abd2-7c6bea6000ee": null,
+    "0efe27ba-d9db-4182-a5e7-064623a5d19f": "F015",
+    "25ad78f9-16e1-4532-aa3e-f093b4966a6a": "F013",
+    "34d0d487-7ccb-4b92-86f4-6c6803bc12d2": "F012",
+    "5d46afeb-e880-4150-a6cc-00d89eb1b58f": "N005",
+    "a8f997cc-37a1-4965-843a-2eb3f566d82a": null,
+    "b3af51a3-babf-495d-9ec0-e206e1f6076b": "F014",
+    "063dee0f-2c66-4601-bf64-949950243f36": "F018",
+    "31f7dbfb-fc03-4a4e-80e7-e64ecf68706d": null,
+    "a2bde30c-59ba-4b10-89fc-801562e07551": "F016",
+    "d2ed7e65-9944-406d-ac23-cdf73d184b49": "F016",
+    "e17d7d45-9503-4dd6-aedc-df82e365d1d9": "F019",
+    "f29ac59a-f400-4466-adf2-2b413ce07207": "F017",
+    "5ef8174b-8564-4307-ae2e-06b6d72e2a28": null,
+    "91100cd2-9a65-4dec-addf-5f3a6b3392fa": "F021",
+    "c33c6368-5c74-4443-8edf-6c0a208ca5f1": "F020",
+    "d34909ac-7aba-4cfa-9466-7c26cbe20739": null,
+    "a3aece57-7afb-442b-b568-c4e39fb5f415": "F023",
+    "a535ef1c-fb7d-4286-b2f3-863512e63c9a": "F036",
+    "c1581f73-2e46-49c4-a0d4-a2fb8894c2ec": "F033",
+    "ccf49874-3cd1-45f4-a2a1-f8731fef849e": "F025",
+    "ff881b8e-b0c9-4df4-92de-84f5e2e10711": "F024",
+    "3f4ad385-497d-473a-af51-9472e79f23cb": "N008",
+    "9cb93a6a-1f8b-4645-98f3-4f1747c55dd6": null,
+    "cc07ed69-07c1-434e-aa93-75121881c27c": "F028",
+    "d0cd33c9-3130-46f6-8cbc-3f14096311f6": "F027",
+    "e93bc162-445f-47c0-8fb4-e9a3032826e3": "F026",
+    "007613b1-720a-491e-a58c-a49fbd7ecbbc": "F035",
+    "13c40fe8-5bbb-4a14-82c5-0dec94cb477d": "F034",
+    "303e2b7f-346e-46f0-ae2f-fb6e1cae606c": null,
+    "66a48920-9c28-464e-ae0d-5c07a14d28bb": "F034",
+    "a8c7f401-1a41-49dc-b2e1-b5e48df1cfc6": "F030",
+    "c8dab3cc-3175-485f-ae78-02b875976616": "F031",
+    "f006a0fd-36a7-4f54-a7f9-addd535e5d02": "F029",
+    "0dfa8076-5a7d-43ec-90c4-396e3dff85e8": "F103",
+    "1d19347c-fdb7-42b3-bdaf-0dd336de89c7": "N040",
+    "1e06d49f-28b2-4e58-9775-52314b1c5465": "F101",
+    "a643399d-4376-4462-a34b-32d7cfe2f7f0": "F100",
+    "cae5ee06-d03c-4eb6-9e0d-e0a332746dd1": null,
+    "f05db2c1-bb65-4ff3-91c0-e7fd6421ae94": "F102",
+    "120b15e9-8657-44fb-94f1-c43bc71c3f3e": "F123",
+    "2ccd724f-527e-48ab-a845-03aa91bcacf5": null,
+    "45b9f4fd-ba12-40d9-9afe-410c710f4a74": "F121",
+    "79419680-4333-4471-bf02-3568ce0d2fa1": "F122",
+    "88fa4cd8-b24b-4c4e-9490-ebbf02aade54": null,
+    "8fcdc86d-1e84-4bd6-b218-5e0833063db8": null,
+    "af0c03fb-1690-4c0d-8778-3d84131a5590": null,
+    "f2561970-1891-4403-811e-5b1d81dca2b6": null,
+    "fe11f83a-65e1-4f05-8ecd-00e3f73fecda": "N043",
+    "27471d5f-25a5-436d-ab6e-d5068fbbe78f": "F150",
+    "51603b13-7df0-4351-b7d4-8ce3f5b8f944": null,
+    "6cc34000-701c-428b-8ccf-a52f0e51f9c6": "F153",
+    "70441ead-1c01-4801-a30f-7807a53bc2a6": null,
+    "7c389452-c677-45c8-849d-966cda474b54": "F124",
+    "840a6c27-3674-485a-a8ff-cdfd75129825": "F126",
+    "b8b857fa-c15d-4bfa-aef6-3905ca189cd2": "N060",
+    "c7cf5c9d-fe24-45fd-bf65-9fed73f84802": "F155",
+    "caa92fac-e825-44ee-acba-c608b97ffc5f": "F127",
+    "f13c3f0d-aebb-4ad7-b0fd-01e577a644dd": "F125",
+    "073d16ca-d103-46cf-b8a8-4a5d6e0ad795": "F130",
+    "2f0324bf-21e2-4c8f-ae93-002f87abc7f0": null,
+    "4663f67b-deab-4ac9-8fb9-534562177d71": "F156",
+    "4e3dd9c0-e8b0-4e76-b77e-1cda114cdf9a": "F131",
+    "7b90aa83-ac45-4b9e-9393-6d31cb844390": "F113",
+    "89c00ed5-8184-48f4-a94d-05fe84d0cc66": "F130",
+    "f5d6959b-ea31-43b5-8dd1-a5488975862d": "F113",
+    "0c2f70b0-0168-46a1-868b-66c439c566a7": "F129",
+    "1fb1168f-ba38-48dc-b60d-91dbb821663a": null,
+    "472f9b90-1da6-4af0-b653-252a04c95a9f": null,
+    "49f68011-4a43-4e12-9163-e3cc6f9ef191": "F128",
+    "6b340abf-90ae-4599-83d0-2ccb7206363a": null,
+    "971fc101-a864-4e56-b2be-498997cedfb5": null,
+    "ed7f516a-16eb-4737-854b-43981b2e0a81": null,
+    "42d51821-f924-4407-be6a-7beb895ffef7": "F133",
+    "5be3a581-f80c-4810-bc99-76f5c863377e": null,
+    "6d2d74aa-7bc9-463e-b5b9-ef021f4825da": "N061",
+    "8861de75-c360-43ee-9069-2bc7f270065a": "F117",
+    "89d3b2de-b5f4-4bbd-9dee-3481cb79f6c3": "F132",
+    "be74a54c-439c-4557-8064-be98e39ebc0e": "F134",
+    "f68c3f9d-9a9b-47d6-92ad-4cb0e9052927": "F134",
+    "1c5ec5e1-3c97-4e8b-9e07-c3b6e2b324ed": "F135",
+    "61e1b911-280d-429b-a1a1-10794debf68e": "F136",
+    "63fc36e9-7982-4fe1-8785-75e78164eefa": null,
+    "710b1697-61ba-4296-85ab-ae0d58646632": "F135",
+    "ba5f52cd-48f3-44e8-8266-ab6bd310d6c7": null,
+    "ce2f0dd4-f1eb-4467-9233-4a24b8988da4": "N051",
+    "ddff9167-b0f3-4e0d-807f-9572f205ec7b": "F151",
+    "e5a71863-4978-49bb-a1d0-b6dfd3dccffb": null,
+    "fe139024-a22d-4fbf-a1a1-4ab6c91b2281": null,
+    "1082ca8e-401b-4c66-98f6-abd3650b61d5": null,
+    "9f09f063-9877-4261-8565-82763996d82c": "F137",
+    "a13cde74-b01d-4a6a-8f1d-1473279cd76e": "F138",
+    "ce30eaa7-a666-4221-bfca-9cd0f09ddfb2": null,
+    "d70c0e2f-d2d8-47f8-a786-2bb50fd1787b": "F139",
+    "221cfc3d-6437-4686-9730-1021d4d89ed0": "F140",
+    "3e44ee54-23dc-42e4-a92d-1fc5a39ca0b8": null,
+    "8575adaa-a2a8-472e-9dbf-3cbb217f1476": null,
+    "9615fe93-f21a-493f-80e1-5c976c87b801": "F142",
+    "aa4fe1d1-ce5d-4792-8706-a695f16aa559": "F141",
+    "be303eac-864c-42a9-b401-83a0e5e753f2": null,
+    "25bcfeb9-38f4-480d-9b74-d17db2576cc1": "F144",
+    "3d8e0e2d-7e6f-4fa5-b9a5-376ad3c780a1": "F143",
+    "5aa777f5-c6c9-473f-8a82-4a308ebedb33": "F143",
+    "6594b270-27fc-4754-a189-e33140b95457": "N055",
+    "781a8de7-cf8e-47fc-bc85-cad1eb7b9529": "F145",
+    "896ce72b-d94f-4133-bd6a-f80f069802ff": "F144",
+    "9042cca5-eafb-497b-8a30-6ef09dbd1fde": null,
+    "df4d4c36-fa06-454f-af51-070e99cc5333": "F154",
+    "06eb8827-f22d-402c-bb7c-9669d197bfa7": "F147",
+    "18cc8510-70cd-46bc-9c31-c282699ca436": "F148",
+    "61be97de-d9b0-421a-952d-d0c2208b733a": "F149",
+    "633111fb-6b14-4b7b-8545-77fb5baf3773": null,
+    "771b6ae7-9da2-4bc3-99ee-e1a347b04771": null,
+    "a7168acc-b2ea-40f4-860f-376add856495": "N056",
+    "e040be18-6111-442a-9271-c6adc1ab3aa5": "F146",
+    "097ee853-d7e0-4f3d-9399-1d85ab165e87": null,
+    "3eb46c20-e9f3-4303-aaca-3a66ca94bdc6": null,
+    "594dd06a-5dfe-47b0-8735-740289a8f16a": "F180",
+    "5c2ca1c1-58e4-4e76-8f17-4233c56f2b82": null,
+    "75bd6d6b-fed0-4414-8b7e-fdd1948d1136": "F181",
+    "8e6a64fb-df73-41e8-9f07-d8c8c67ddbcb": "F182",
+    "ba5aed6f-3de6-4293-81fc-62f66619ef88": null,
+    "e94b6cfb-5e8c-4d5b-9903-080992a14e5b": "F183",
+    "f1cdcac0-cca0-484b-bfb7-379ffbd3e4af": null,
+    "f9c00ee0-68c1-42dd-9a1a-9a438e64dfb2": null,
+    "3e3a72ac-0346-4250-965e-c353bd3441e6": null,
+    "576582a9-ec54-4891-a841-1d82ab211138": "F184",
+    "579c1b52-4e43-4b66-930a-1ef082608afb": "F199",
+    "d38cf977-ec89-45fa-a314-f4b72b26f0a8": null,
+    "f4a68b18-01c0-4c08-8e24-a4901b954107": null,
+    "f71375ba-0e43-4e68-8814-9532b95ddb99": "F184",
+    "36cfe575-a98b-49b0-9a0a-404c1e533ffb": null,
+    "488baa88-baf7-4ac4-b12a-75d0ad7ae7ba": null,
+    "7d21cd0c-5cf2-4a02-b4d1-87d69e628cf4": "F187",
+    "7dff2e53-fa1e-405f-962b-c008caf6f918": null,
+    "8e28ccfc-d05a-4162-a462-346d6dde4a77": null,
+    "95d04e13-21f3-47ac-8ce6-f3c403af1997": null,
+    "a1e2eae3-f98f-48d6-b2da-4e5f44071d5f": null,
+    "2899398f-5211-4b3f-a867-18d2fe314c1d": null,
+    "3ae811b3-c07c-42af-a630-f0adad7a1fab": null,
+    "20e5398a-6659-4733-8f7f-7af25d292ad9": null,
+    "2fc93889-265e-42c9-9dc2-60ea9c21fb98": null,
+    "5f259b3f-b6e8-4076-84c8-2d053162d698": "F190",
+    "81c53d52-aa16-4b25-8860-5af7f3b7ae26": "F192",
+    "9ce5fa04-3938-4038-a2f1-3e3c13f50b78": "F201",
+    "a561f6d6-73da-466f-af7b-d8b88c0898f9": null,
+    "a8c89ba7-49bd-4e6f-b38f-55f0f1599109": null,
+    "aa0043de-e80a-4970-9c1c-4dc261b46d8e": "F191",
+    "eb2ff3fb-ba45-4b51-82d5-41c154cd8c1d": "F192",
+    "99158daa-ab35-49e7-bb46-7769b3f4eaef": "F194",
+    "a4f78317-88e8-4969-8c66-a09ef9a150bb": null,
+    "a82a1e1a-de34-43e7-b5d2-3092d72c399e": "F193",
+    "2de0ca2c-515d-4e1b-8abe-873b5605240d": null,
+    "32910f28-9aa0-406f-a274-fa33a52ca9cd": "F196",
+    "6bed8472-ba1b-426d-a645-35e96225c496": "F202",
+    "873647e0-32aa-4c44-9877-76dfe5572d01": null,
+    "d01b519b-3a92-4e21-bb39-b9146adeb3ec": "F195",
+    "050b59af-8759-491f-978d-cd02b745da5a": "F197",
+    "125c3eca-4a50-4d38-b2b1-0d45c9df2059": "F203",
+    "4805569f-c49d-4fcc-9c7a-9b6e01316d12": null,
+    "759a7901-c35a-4a36-a974-93c1ccde5924": null,
+    "966807c4-0f3c-4e6e-a4ed-11b06802dc02": "N087",
+    "a2046d5b-7738-4b2d-a7b2-5617ec404639": null,
+    "af2edc3d-b719-4b05-be3d-37b04835f1a3": null,
+    "e6c9767c-7d33-41ac-a0b3-cf5901c40cb2": "F198",
+    "0d0265df-456e-40c1-9c9e-847f6c1102a4": null,
+    "4d544e33-790f-414f-b3d9-2ca0a5712ad8": "F213",
+    "b8b99622-d732-4a3b-a4e9-d121f1a91316": "F214",
+    "bc26e99a-2227-4547-8452-fb8fbfa81ef1": null,
+    "beb330cb-6d87-435d-944c-3b09d6b67c40": null,
+    "f620c6c9-e567-44db-a392-b6bbdf4d1162": null,
+    "0faa9b76-d6c8-4acd-98e7-c6fcd02859f0": null,
+    "7ec973f1-afb8-491b-8ede-2ba8fccd3651": "F216",
+    "8586687d-cef8-458f-b58a-6057c7cc7574": null,
+    "97489453-4d5a-4a41-8bca-6be8106fd743": "F205",
+    "99cb4606-04ee-44cc-8b90-4d5d893f81e0": "F215",
+    "a703c6b7-3425-46a2-8eca-324e4c4db0ce": null,
+    "30b36a0b-3976-4584-8e15-a010c5fd9cb6": "F051",
+    "8bb9d703-3be1-4db8-813e-4670557ea38b": "F050",
+    "cf257a67-090c-48ea-9ec0-2dd466a66ce5": "F079",
+    "f317d89d-b17d-4c64-bd6b-f20046d0cc31": null,
+    "092d7557-fd38-4956-8af7-1b58d300c11d": "F054",
+    "1f5ffc40-2275-4f0c-822f-296ba40b12e9": "F055",
+    "c029c769-f97b-4207-aba2-d89b9debf55a": "F052",
+    "edb44695-36fd-4433-809b-901e4e0e8841": "F053",
+    "381c1041-d29a-4ac9-ab04-cd9b1758e250": "F058",
+    "64091110-b4a9-419c-b680-897306657576": "F080",
+    "f0431358-bbc2-4bd1-a995-a33b4febee1f": "F058",
+    "919f4b45-62c4-4f42-adb7-bad7f3a446a4": "N023",
+    "97bfd568-54be-451d-a4f8-5a24fc523186": "F060",
+    "9c6f4cec-1269-40b9-916d-6f064e48eed3": "F059",
+    "308303f8-1572-4390-b410-f123bccf1a4d": "F062",
+    "b2602339-7555-4560-8e25-8e74861869c9": "F061",
+    "c59ec58d-c692-4969-ac4d-180711dbba5e": "F063",
+    "7715af65-efbf-4116-ba3d-c7da5677ee34": "F081",
+    "d426122b-bb5c-4a7d-842e-8f9f5fc8a9da": "F065",
+    "986a69ff-bb34-4e45-89ce-e36119f4a7c2": "F068",
+    "b8cfa460-6da5-4216-b9c4-77ba99aa8206": null,
+    "c1d2c659-75f3-4afb-bba8-077b53b68821": "N026",
+    "e869df31-672a-4e23-9930-6d7ad35b2ec3": "F067",
+    "0c9c62d8-1baa-42ee-bb5b-d9936ce7fe48": "F071",
+    "9b874c42-7974-4f53-b108-f6617f1bd3c4": "F069",
+    "c96f7513-9abc-4bdb-8806-55b7657648df": "F071",
+    "e85e2bad-9873-4280-91e7-942a00797082": "F087",
+    "ea11d286-5156-47ed-ba14-816f49d64b5f": "F070",
+    "281fb1db-b580-4726-8385-5436f88f0200": "F075",
+    "7686f05e-3a7e-4a34-bbd0-30f47af56277": "F074",
+    "8bca8478-3819-462a-854e-57d57b5a7f28": "F073",
+    "06d4cc99-ee56-423f-a642-747d3bd28a6c": "F077",
+    "33fbed3f-3924-4202-829d-8d079c2fa427": "F083",
+    "371eeb09-a6e4-4b02-957e-9188ce16302b": "F078",
+    "74cab7ee-c504-443a-941f-a18410fb8dc7": null,
+    "81ec7f45-2eef-4022-8a52-786fae049489": "F082",
+    "a89b03df-7431-419b-a0bc-0c0eaa105aeb": "F076",
+    "0a34cc58-4752-4a65-924f-a1cba6ae1f6c": "F280",
+    "0b5bc6b1-6780-4629-8d9a-d167e8c43d8f": null,
+    "1f18f9d5-c27c-4a78-9273-e6e306132330": "F282",
+    "3783497a-56d8-43c9-b7ac-71a7491a92c9": null,
+    "67304c68-14e2-409a-ad8a-3156eb41d930": "F293",
+    "67b77001-cc7f-40dc-8dfc-8a020a0cdb89": null,
+    "c97495ad-f9ea-4c95-967d-ae790f05f279": "F292",
+    "d2c9dbb2-0b29-4405-91fd-99efd0715677": "F281",
+    "e22755e3-b264-4a67-9780-d3bc1a282711": null,
+    "08f4548e-b8be-4de2-aedf-582dc3d70b58": null,
+    "24c06b53-683d-44df-8625-1d987c1c3b5a": null,
+    "2747d0eb-9ac8-4846-b0c3-db2e48865d7e": "F285",
+    "2a4180dd-c5d8-474f-8731-3030a11f361d": null,
+    "44d02a50-ddd2-4fef-b147-29a19c8f2e10": null,
+    "672d4aa1-0eac-4eec-a6b1-f560bc1d419f": null,
+    "ba62e14c-9d7c-4bd7-9b48-86db78027747": "F284",
+    "c6f44ae3-5cee-4031-9e86-ee8e7fb2b79e": "F286",
+    "f2485ce3-d9db-489c-9b9d-23dd631b7232": "F283",
+    "32f71485-7754-4295-8164-64c457a7b479": "F288",
+    "b3f6d22a-924b-4a9f-b54b-66053e1b3ae4": "F287",
+    "d11ee93d-2f71-4072-8d09-663912838e93": "N121",
+    "edc5b08f-5b59-42f3-93f6-ed5711669050": null,
+    "22323648-aecd-4d43-a185-5db454f2677b": null,
+    "2ff2613c-5dd3-496a-b33c-9dada594098a": null,
+    "87c6d42d-6ded-4071-84e9-634763ecb8ba": null,
+    "8ea673ed-3470-4cd4-9915-dfd1b361ca21": "F290",
+    "90bff41c-b4da-408d-8aaf-48eff2e46574": null,
+    "977ca6fe-d292-4265-b5f0-9ff3472cd6c2": "F291",
+    "a0100de8-f2db-47db-b55a-f80bd3096b14": null,
+    "bbc4badd-8d9a-4bef-91c8-c38480a8d9bc": "N122",
+    "cea56be0-6dda-492e-ba28-6ac45d190a33": null,
+    "1ea90e06-6b58-4cb3-aad1-d2b99461ba04": null,
+    "6dc04e63-159b-4048-93e7-b25a2265e169": "F304",
+    "91c6465c-fca7-4813-ad48-d64230971911": "F305",
+    "3457bad9-6a83-4880-af3a-6f99c30e363b": "F307",
+    "81756c7b-10de-42f6-bf78-e1d19b599d11": "F309",
+    "b13f599d-0716-462e-a8c8-123c5149345c": "F308",
+    "7177dcce-acda-40d3-a5d2-29d4f8536047": "F301",
+    "746f8007-a480-41a3-bea9-d2145f38123b": "F298",
+    "79600951-36d2-4eee-ba30-168a925a5f10": "F299",
+    "7fbfd2a6-1706-4662-86a6-cfb43fcd2aee": "F300",
+    "fb378d72-36fd-44b0-a147-6fb6081e9791": "F299",
+    "3fec2d7d-c005-44cb-b51a-ae7bec56db09": "N124",
+    "9deeaa91-a8bb-439f-8a01-5ac87a3f9b3b": "F313",
+    "b21c659a-f0b8-46fc-8df7-85d216f12cfc": null,
+    "c7bc9a0f-746b-4568-aa8c-298cefe094db": null,
+    "fa58dc4f-fb1d-406d-983e-772e43cfda96": "F306",
+    "16bba1ac-9c3a-496c-8ab3-032511edee90": null,
+    "21328a15-9406-4d10-a3f1-6863ada2994c": null,
+    "a0ba2b99-c83b-4f3a-9ada-f953d183ce20": "F310",
+    "a5932a2a-ad69-485f-baba-79c3c49f0535": null,
+    "d8f51c48-5e9f-4df7-a91e-8695c27fc1ea": "F314",
+    "f5c8562b-c1fa-46b7-8603-24fbd3ad6d08": "F311",
+    "8117d86e-7bb3-46b6-b8a2-1750ea99bd3d": "F321",
+    "bc8ae036-e196-45a4-be8d-114fdbca2e75": null,
+    "0dbd63f1-72e7-4626-9e60-42ad5a1e2b45": "F230",
+    "0f67f30b-2cab-4279-9eae-496d601bdf06": "F232",
+    "149d805b-3f82-402c-a77a-9977a86642bf": "F233",
+    "30b5aa6f-0ff2-46cd-8fde-f702b59444cf": "F244",
+    "4ea97d49-244c-497b-b6a3-22a9ad233da7": null,
+    "54a835e7-718c-448c-8906-c7c6019ff607": "F231",
+    "7c8d9633-6b06-4cbb-8fef-bf2d4b568c21": "F231",
+    "b24f096c-c268-4d67-b6be-88afac9afdab": null,
+    "e6a75e16-f474-4b0b-9dd4-394f6d2b41c5": "F232",
+    "fd143165-a8e2-43ad-8409-f05ff3cba38f": null,
+    "01a44a9e-3307-49a1-b0ba-531d53fe15bb": "F235",
+    "156f5c58-6805-4814-ab25-c0f6d2302d47": "F234",
+    "305affa0-580d-4a1a-8481-c2056031fea9": "F245",
+    "7ce6e033-ce84-40d2-976e-8a9e05c08408": "N100",
+    "88f397b4-31e4-4cfa-a49f-ded4da641801": "F234",
+    "023dc4c3-20b6-4ea6-ab12-795d62463b3a": "F250",
+    "986bf889-9980-476a-b8fd-c0ef45d7cb5c": "N101",
+    "c59c038b-0222-4582-b903-ee8c3987fd7b": "F240",
+    "db5fdde3-a189-455e-9d49-50942e449f6a": "F238",
+    "17cfd97c-d44f-4ced-badb-8d1778d06a84": null,
+    "345af4d1-bbbb-4e60-ad30-387379ffaed3": null,
+    "72baa71c-b819-4a25-805c-38147f5b18a2": "F237",
+    "e0444eb4-2777-499c-8cfa-177b1b85133f": "F236",
+    "fdb9f7db-d2e3-49f5-972b-c08981f2dce2": "F239",
+    "04a91ebf-e197-4895-98d1-0c401be2f17f": null,
+    "2786e57b-ef2d-4aa1-bd3e-f0fd71bcbff0": "F242",
+    "7d138553-09a9-48c4-9132-d0af0cf4e54f": "F243",
+    "f5a39e65-ff4b-4718-8783-ef6e88e19a7f": "F241",
+    "30743e51-99b8-49db-9181-749cbe1001ce": "F247",
+    "860d4ab0-8013-4c43-9c04-e75596d6eab8": "F246",
+    "9ca47967-25a7-4bf8-aeb8-3a17ff531e5d": null,
+    "de00702a-75b2-415d-bb2d-e19ed114f3d1": "F246",
+    "fe84eeb9-66f4-410d-8260-8e395a7e9761": "F248",
+    "08aa5f3c-ad37-415b-85fb-63ba26366316": "F255",
+    "4e1ebbb4-759a-480c-abaf-5dc090e00ea9": "F253",
+    "5db3db21-d99b-4552-ab2d-eee268ddeae4": null,
+    "722b759b-fd09-4a0e-8a1d-7450a0c6b60b": null,
+    "a5626d85-8579-4194-96bd-2dad3ef72f8a": "F254",
+    "ddac605b-f87a-4fec-8a7f-6cabe1d85909": "F258",
+    "45fe63cb-41aa-4c6a-bd5e-1e125f2bafa7": "F265",
+    "65f8909a-89af-4f4c-b44a-165e5a6af633": "F264",
+    "84f5165a-f439-421e-9dc5-fb7f49e08a7c": "F263",
+    "9e284a95-8ce1-4b58-a59c-d591275edb3b": "N106",
+    "0bc3a3a8-84bf-4ccb-a2f7-2078eae99852": "F266",
+    "2d984cb6-e5a8-465f-9775-30f9122e88e1": "F267",
+    "90f0574b-4016-4314-8cc3-b861e202155d": "F256"
+  },
+  "notes": {
+    "attendus": 191,
+    "retrouves": 177,
+    "rappel": 0.9267015706806283,
+    "produits": 328,
+    "horsJeu": 0,
+    "apparies": 202,
+    "precision": 0.6158536585365854,
+    "fauxFaits": 19,
+    "doublonsFaits": 25,
+    "redits": 24,
+    "reditsRecrees": 5,
+    "tourCorrect": {
+      "ok": 196,
+      "sur": 202
+    },
+    "ficheCorrecte": {
+      "ok": 95,
+      "sur": 202
+    },
+    "typeCorrect": {
+      "ok": 125,
+      "sur": 202
+    },
+    "fichesDispersees": 57,
+    "remplacements": {
+      "trouves": 2,
+      "attendus": 7
+    },
+    "conflits": {
+      "trouves": 0,
+      "attendus": 6
+    },
+    "sensibles": {
+      "marques": 24,
+      "attendus": 24,
+      "retrouves": 24
+    },
+    "sensiblesProduitsPartages": 0,
+    "fuitesSensibles": 0,
+    "surSignales": 4,
+    "secretsFuites": 0,
+    "parConversation": [
+      {
+        "cle": "claire/2026-09-21-plan-recrutement",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "819ef244-0935-47d0-b08d-4dbc31a0baee"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'annonce de recrutement du développeur mobile ne doit pas mentionner de salaire.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Recrutement du développeur mobile",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "claire/2026-09-22-strategie-salon",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "49b97c56-c532-41ca-a9ab-f45b668a271c"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Décision de ne pas remplacer le salon par un webinaire et de garder le Salon des Artisans de l'Ouest.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Abandon du webinaire",
+            "correspond": "N003"
+          }
+        ]
+      },
+      {
+        "cle": "claire/2026-09-24-point-clients",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "38780436-8b55-427d-aded-3ec5a1c0aee5",
+          "9f94255a-6298-40ac-8493-fa3b9501f527",
+          "f5d6ee50-b8d9-4bc6-abd2-7c6bea6000ee"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'entreprise a réalisé 1,1 M€ de chiffre d'affaires en 2025.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Chiffre d'affaires 2025",
+            "correspond": null
+          },
+          {
+            "statement": "Sophie doit facturer Peinture & Déco Lambert.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Peinture & Déco Lambert",
+            "correspond": null
+          },
+          {
+            "statement": "Un devis est en cours pour Menuiserie Dupont, suivi par Karim.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "claire/2026-09-25-embauche-bastien",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "a8f997cc-37a1-4965-843a-2eb3f566d82a"
+        ],
+        "fauxFaits": [
+          "5d46afeb-e880-4150-a6cc-00d89eb1b58f"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Talents Ouest a présenté le profil de Bastien Royer à l'entreprise.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Bastien Royer",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Claire Lebrun enverra la lettre de proposition d'embauche à Bastien Royer le 26 septembre 2026.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Bastien Royer",
+            "correspond": "N005"
+          }
+        ]
+      },
+      {
+        "cle": "claire/2026-09-29-litige-le-goff",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "31f7dbfb-fc03-4a4e-80e7-e64ecf68706d"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'employée transmet le plafond de transaction à Maître Vasseur le soir du 29 septembre 2026.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Plafond de transaction prud'homale",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "claire/2026-10-01-tarifs-2027",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "5ef8174b-8564-4307-ae2e-06b6d72e2a28",
+          "d34909ac-7aba-4cfa-9466-7c26cbe20739"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le prix actuel de Chantier+ est de 55 € HT par utilisateur et par mois.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Chantier+",
+            "correspond": null
+          },
+          {
+            "statement": "Batinova démarche actuellement les clients de Chantier+.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Batinova",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "claire/2026-10-02-entretien-marion",
+        "attendus": 5,
+        "retrouves": 5,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "claire/2026-10-06-negociation-thomas",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "9cb93a6a-1f8b-4645-98f3-4f1747c55dd6"
+        ],
+        "fauxFaits": [
+          "3f4ad385-497d-473a-af51-9472e79f23cb"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Thomas Guérin souhaite rester en CDI après son alternance.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Thomas Guérin",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La réponse à Thomas Guérin ne sera pas envoyée le soir du 6 octobre 2026, l'employeur veut la relire à froid.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Réponse à Thomas Guérin",
+            "correspond": "N008"
+          }
+        ]
+      },
+      {
+        "cle": "claire/2026-10-08-comite-direction",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 7,
+        "manques": [],
+        "enTrop": [
+          "303e2b7f-346e-46f0-ae2f-fb6e1cae606c"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Hugo organise l'équipe autour de la priorité au connecteur Chorus Pro.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Connecteur Chorus Pro",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-09-21-migration-postgres",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "cae5ee06-d03c-4eb6-9e0d-e0a332746dd1"
+        ],
+        "fauxFaits": [
+          "1d19347c-fdb7-42b3-bdaf-0dd336de89c7"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Chantier+ garde l'extension uuid-ossp lors de la migration, bien que gen_random_uuid() soit utilisé partout, pour ne changer qu'une chose à la fois.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Conservation de uuid-ossp",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La base de prod utilise cinq extensions : pg_trgm 1.6, pgcrypto 1.3, plpgsql 1.0, unaccent 1.1 et uuid-ossp 1.1.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Base de prod Chantier+",
+            "correspond": "N040"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-09-23-geocodage-mapeo",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 9,
+        "manques": [
+          "F120"
+        ],
+        "enTrop": [
+          "2ccd724f-527e-48ab-a845-03aa91bcacf5",
+          "88fa4cd8-b24b-4c4e-9490-ebbf02aade54",
+          "8fcdc86d-1e84-4bd6-b218-5e0833063db8",
+          "af0c03fb-1690-4c0d-8778-3d84131a5590",
+          "f2561970-1891-4403-811e-5b1d81dca2b6"
+        ],
+        "fauxFaits": [
+          "fe11f83a-65e1-4f05-8ecd-00e3f73fecda"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Le cache mémoire du géocodage n'est pas partagé entre processus : avec deux processus on remonte à 1 604 appels contre 1 131 avec un seul, et le cache est perdu à chaque redémarrage.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Cache mémoire du géocodage",
+            "correspond": null
+          },
+          {
+            "statement": "Le géocodage est livré sans cache, avec recul exponentiel et prise en compte de Retry-After ; les deux branches de cache restent de côté.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Livraison du géocodage sans cache",
+            "correspond": null
+          },
+          {
+            "statement": "Le géocodage ne doit pas bloquer la création ou modification d'un chantier : si Mapéo répond mal, le chantier est enregistré quand même et le géocodage est réessayé plus tard.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers",
+            "correspond": null
+          },
+          {
+            "statement": "Les adresses de chantier étaient stockées uniquement en texte libre dans chantiers.adresse, sans coordonnées, d'où l'impossibilité d'afficher la carte des interventions ou de calculer un temps de trajet.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des chantiers",
+            "correspond": null
+          },
+          {
+            "statement": "La migration 0041 ajoute à la table chantiers les colonnes nullables lat, lng, precision_geo et geocode_le.",
+            "turnExternalId": "t-016a",
+            "ficheTitre": "Géocodage des chantiers",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le choix entre cache Postgres et cache mémoire pour le géocodage est reporté jusqu'à observation du trafic réel en production.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Choix du cache de géocodage",
+            "correspond": "N043"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-09-24-module-devis-schema",
+        "attendus": 7,
+        "retrouves": 7,
+        "produits": 10,
+        "manques": [],
+        "enTrop": [
+          "51603b13-7df0-4351-b7d4-8ce3f5b8f944",
+          "70441ead-1c01-4801-a30f-7807a53bc2a6"
+        ],
+        "fauxFaits": [
+          "b8b857fa-c15d-4bfa-aef6-3905ca189cd2"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Les 12 devis de 2023 et 2024 présentant un écart d'un centime à la reprise gardent leur total stocké ; la liste des écarts est écrite dans un fichier pour que le responsable tranche.",
+            "turnExternalId": "t-016",
+            "ficheTitre": "Écarts d'un centime à la reprise des devis",
+            "correspond": null
+          },
+          {
+            "statement": "Sur la copie de prod, environ 11 % des prix unitaires du jsonb des devis sont stockés en chaîne (44 398 lignes, dont 217 null) et la TVA existe sous deux conventions (fraction et pourcentage en chaîne).",
+            "turnExternalId": "t-004a",
+            "ficheTitre": "Reprise des données des devis",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La simulation de reprise sur la copie de prod a lu 41 208 devis, extrait 396 517 lignes, créé 41 208 versions et relevé 12 écarts de total d'un centime.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Reprise des données des devis",
+            "correspond": "N060"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-09-28-chorus-pro-recherche",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 7,
+        "manques": [],
+        "enTrop": [
+          "2f0324bf-21e2-4c8f-ae93-002f87abc7f0"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Sur l'environnement de qualification Chorus Pro, la recherche renvoie un 401 car le compte technique n'est rattaché à aucune structure active ; le jeton OAuth et les identifiants sont reconnus.",
+            "turnExternalId": "t-012a",
+            "ficheTitre": "Connecteur Chorus Pro",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-09-28-debug-export-pdf",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 7,
+        "manques": [],
+        "enTrop": [
+          "1fb1168f-ba38-48dc-b60d-91dbb821663a",
+          "472f9b90-1da6-4af0-b653-252a04c95a9f",
+          "6b340abf-90ae-4599-83d0-2ccb7206363a",
+          "971fc101-a864-4e56-b2be-498997cedfb5",
+          "ed7f516a-16eb-4737-854b-43981b2e0a81"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'envoi du devis par courriel génère le même PDF que l'export pour la pièce jointe, donc toute modification du gabarit touche aussi les devis envoyés par mail.",
+            "turnExternalId": "t-002a",
+            "ficheTitre": "Gabarit PDF des devis",
+            "correspond": null
+          },
+          {
+            "statement": "Dans le gabarit PDF des devis, le pied de page est positionné en absolu et recouvre le bas de la dernière page au lieu de réserver de la place.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Gabarit PDF des devis",
+            "correspond": null
+          },
+          {
+            "statement": "Le gabarit PDF des devis limite le tableau à MAX_LIGNES = 50 lignes avec un commentaire TODO pagination, et ne rend que les 50 premières lignes.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Gabarit PDF des devis",
+            "correspond": null
+          },
+          {
+            "statement": "Le correctif consistant à supprimer la coupe à 50 lignes a été annulé : il coupait une ligne en bas de page, répétait l'en-tête n'importe où et masquait 3 lignes sous le pied de page.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Correctif de suppression de la coupe à 50 lignes",
+            "correspond": null
+          },
+          {
+            "statement": "Décision de ne plus toucher au générateur PDF aujourd'hui et de repenser proprement la génération des PDF plutôt que de poser une rustine sur le gabarit.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Refonte de la génération des PDF",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-09-29-debat-generation-pdf",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 7,
+        "manques": [],
+        "enTrop": [
+          "5be3a581-f80c-4810-bc99-76f5c863377e"
+        ],
+        "fauxFaits": [
+          "6d2d74aa-7bc9-463e-b5b9-ef021f4825da"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "La file de jobs pg-boss vit dans le Postgres existant (schéma pgboss), sans Redis ni file externe, avec 3 essais de reprise à délai croissant.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "pg-boss",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Référence prod sur une semaine : 1184 exports PDF de devis, médiane 1,3 s, p95 d'environ 5,9 s, max 11,2 s.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Export PDF des devis",
+            "correspond": "N061"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-01-api-mobile-auth",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 9,
+        "manques": [],
+        "enTrop": [
+          "63fc36e9-7982-4fe1-8785-75e78164eefa",
+          "ba5f52cd-48f3-44e8-8266-ab6bd310d6c7",
+          "e5a71863-4978-49bb-a1d0-b6dfd3dccffb",
+          "fe139024-a22d-4fbf-a1a1-4ab6c91b2281"
+        ],
+        "fauxFaits": [
+          "ce2f0dd4-f1eb-4467-9233-4a24b8988da4"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Le jeton de rafraîchissement de l'API mobile est renouvelé (rotation) à chaque refresh.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Jeton de rafraîchissement mobile",
+            "correspond": null
+          },
+          {
+            "statement": "Le web utilise une session par cookie httpOnly (src/server/auth/session.ts) qui ne doit pas être modifiée pour l'authentification mobile.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Session web par cookie",
+            "correspond": null
+          },
+          {
+            "statement": "L'authentification de l'API mobile utilise des jetons plutôt qu'un cookie de session, car le mobile (React Native, requêtes en arrière-plan, mode hors ligne) ne peut pas vivre avec un cookie.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Authentification de l'API mobile",
+            "correspond": null
+          },
+          {
+            "statement": "La limite de débit de l'API mobile s'applique par utilisateur (id du compte) et non par IP, car les compagnons partagent souvent la même connexion 4G du camion.",
+            "turnExternalId": "t-012",
+            "ficheTitre": "Limite de débit de l'API mobile",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le CORS en mode web d'Expo bloque les appels vers /api/v2 (le preflight OPTIONS reçoit un 401) ; Hugo a retiré son handler OPTIONS et laisse le problème de côté, car il n'existe pas sur un vrai téléphone.",
+            "turnExternalId": "t-010",
+            "ficheTitre": "Authentification de l'API mobile",
+            "correspond": "N051"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-02-astreinte-incident",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [
+          "F152"
+        ],
+        "enTrop": [
+          "1082ca8e-401b-4c66-98f6-abd3650b61d5",
+          "ce30eaa7-a666-4221-bfca-9cd0f09ddfb2"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "La cause de l'incident du 2 octobre 2026 : les journaux applicatifs s'accumulaient sans rotation et aucune alerte ne surveillait l'occupation du disque.",
+            "turnExternalId": "t-016",
+            "ficheTitre": "Incident disque plein du 2 octobre 2026",
+            "correspond": null
+          },
+          {
+            "statement": "L'astreinte technique tourne chaque semaine entre l'employé, Baptiste Kerjean et Antoine Pellerin.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Astreinte technique",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-10-06-bascule-terracarte",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "3e44ee54-23dc-42e4-a92d-1fc5a39ca0b8",
+          "8575adaa-a2a8-472e-9dbf-3cbb217f1476",
+          "be303eac-864c-42a9-b401-83a0e5e753f2"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Dans les journaux de la semaine dernière, Mapéo échouait déjà sur la ligne 143 (lieu-dit Le Pas de la Herse), donc l'échec n'est pas propre à TerraCarte.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "La bascule vers TerraCarte doit pouvoir être annulée par une variable d'environnement (GEOCODER) si TerraCarte pose problème la première semaine.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Bascule du géocodage sur TerraCarte",
+            "correspond": null
+          },
+          {
+            "statement": "Lors de la recette TerraCarte sur 200 adresses, 198 ont réussi et 2 lieux-dits ont échoué (La Noë Brûlée au Cellier : aucun résultat ; Le Pas de la Herse à Pontchâteau : score 0.41 sous le seuil de 0.6).",
+            "turnExternalId": "t-014",
+            "ficheTitre": "TerraCarte",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-10-07-revue-code-devis",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 8,
+        "manques": [],
+        "enTrop": [
+          "9042cca5-eafb-497b-8a30-6ef09dbd1fde"
+        ],
+        "fauxFaits": [
+          "6594b270-27fc-4754-a189-e33140b95457"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Un PATCH sur un devis signé renvoie une erreur 409, avec dans la réponse le lien vers la création d'avenant.",
+            "turnExternalId": "t-006",
+            "ficheTitre": "PATCH sur un devis signé",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Décision de renommer qte, pu et tot en quantite, prixUnitaire et totalLigne dans tout le module devis, sans changement de comportement, dans un commit séparé pour que Baptiste puisse le survoler.",
+            "turnExternalId": "t-014",
+            "ficheTitre": "Renommage qte, pu, tot du module devis",
+            "correspond": "N055"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-08-revue-agents-chorus",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 7,
+        "manques": [],
+        "enTrop": [
+          "633111fb-6b14-4b7b-8545-77fb5baf3773",
+          "771b6ae7-9da2-4bc3-99ee-e1a347b04771"
+        ],
+        "fauxFaits": [
+          "a7168acc-b2ea-40f4-860f-376add856495"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Le client HTTP du connecteur Chorus Pro ne reprend pas sur erreur 429 et le statut de dépôt SUSPENDUE est mal mappé (inconnu) ; relecteur-api recommande de corriger les deux.",
+            "turnExternalId": "t-006",
+            "ficheTitre": "Client HTTP Chorus Pro",
+            "correspond": null
+          },
+          {
+            "statement": "Le report des acomptes du connecteur Chorus Pro à la v2 est motivé par le manque de temps pour chercher la cause du rejet avant la livraison.",
+            "turnExternalId": "t-008",
+            "ficheTitre": "Report des factures d'acompte à la v2",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "L'hypothèse de relecteur-api sur les rejets d'acompte ne doit figurer nulle part tant qu'elle n'a pas été vérifiée en bac à sable.",
+            "turnExternalId": "t-017",
+            "ficheTitre": "Hypothèse sur les rejets d'acompte",
+            "correspond": "N056"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-10-bilan-semaine",
+        "attendus": 2,
+        "retrouves": 0,
+        "produits": 2,
+        "manques": [
+          "F161",
+          "F162"
+        ],
+        "enTrop": [
+          "097ee853-d7e0-4f3d-9399-1d85ab165e87",
+          "3eb46c20-e9f3-4303-aaca-3a66ca94bdc6"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le géocodage a basculé sur TerraCarte durant la semaine du bilan (quatre commits).",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Géocodage des chantiers",
+            "correspond": null
+          },
+          {
+            "statement": "La génération des PDF utilise un worker pg-boss, et le correctif du ticket 482 a été appliqué en production.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Refonte de la génération des PDF",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-09-21-mobile-navigation",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 8,
+        "manques": [],
+        "enTrop": [
+          "5c2ca1c1-58e4-4e76-8f17-4233c56f2b82",
+          "ba5aed6f-3de6-4293-81fc-62f66619ef88",
+          "f1cdcac0-cca0-484b-bfb7-379ffbd3e4af",
+          "f9c00ee0-68c1-42dd-9a1a-9a438e64dfb2"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Les libellés d'onglets de l'application mobile sont en français, avec une majuscule initiale seulement (« Chantiers », pas « CHANTIERS »).",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Libellés des onglets de l'application mobile",
+            "correspond": null
+          },
+          {
+            "statement": "La navigation est structurée avec un fichier par pile (ChantiersStack, DevisStack, PlanningStack, ProfilStack) et un RootTabs.tsx qui assemble le tout.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Navigation de l'application mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "Sur l'émulateur Android API 31, la barre d'onglets de l'application mobile passe sous la barre de navigation système et les icônes sont à moitié masquées.",
+            "turnExternalId": "t-010",
+            "ficheTitre": "Navigation de l'application mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "Pour corriger la zone de sécurité, la décision est d'utiliser le module existant theme/zones.ts sans ajouter de nouvelle dépendance.",
+            "turnExternalId": "t-010",
+            "ficheTitre": "Zone de sécurité de l'application mobile",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-09-22-choix-graphiques",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "3e3a72ac-0346-4250-965e-c353bd3441e6",
+          "d38cf977-ec89-45fa-a314-f4b72b26f0a8",
+          "f4a68b18-01c0-4c08-8e24-a4901b954107"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'employé a décidé de réaliser un composant générique GraphiqueBarres qui enveloppe la bibliothèque de graphiques dans un seul fichier, pour pouvoir en changer sans toucher aux écrans.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "GraphiqueBarres",
+            "correspond": null
+          },
+          {
+            "statement": "rn-quickcharts est une bibliothèque petite avec une API très simple, dont les couleurs passent par props (thème facile) et dont l'accessibilité est moyenne, les libellés pouvant être ajoutés manuellement.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "rn-quickcharts",
+            "correspond": null
+          },
+          {
+            "statement": "graphiko-native est plus complet mais plus lourd, avec une API plus verbeuse, et sa documentation ne montre pas d'exemple de barres horizontales.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "graphiko-native",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-09-24-hors-ligne",
+        "attendus": 2,
+        "retrouves": 1,
+        "produits": 7,
+        "manques": [
+          "F188"
+        ],
+        "enTrop": [
+          "36cfe575-a98b-49b0-9a0a-404c1e533ffb",
+          "488baa88-baf7-4ac4-b12a-75d0ad7ae7ba",
+          "7dff2e53-fa1e-405f-962b-c008caf6f918",
+          "8e28ccfc-d05a-4162-a462-346d6dde4a77",
+          "95d04e13-21f3-47ac-8ce6-f3c403af1997",
+          "a1e2eae3-f98f-48d6-b2da-4e5f44071d5f"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Les compagnons de SARL Bati-Ouest travaillent souvent sur des chantiers sans réseau (sous-sols, zones rurales en Vendée), d'où le besoin d'un mode hors ligne pour le pilote.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Bati-Ouest",
+            "correspond": null
+          },
+          {
+            "statement": "Le test de synchro a validé la correction de réécriture des identifiants sur six scénarios simples sur simulateur iOS ; Android, arrêt brutal et réseau instable n'ont pas été testés.",
+            "turnExternalId": "t-009a",
+            "ficheTitre": "Correction de réécriture des identifiants local → serveur",
+            "correspond": null
+          },
+          {
+            "statement": "Les migrations locales de l'appli mobile doivent être numérotées comme côté serveur (001-…, 002-…).",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Migrations locales de l'application mobile",
+            "correspond": null
+          },
+          {
+            "statement": "La gestion des doublons de CREATE après arrêt brutal n'est pas décidée : clé d'idempotence côté API ou marquage de l'opération comme envoyée avant l'appel ; à discuter avec Hugo car cela touche l'API.",
+            "turnExternalId": "t-010",
+            "ficheTitre": "Gestion des doublons de CREATE après arrêt brutal",
+            "correspond": null
+          },
+          {
+            "statement": "La synchronisation (synchro.ts) ne doit jamais bloquer l'interface : tout se fait en tâche de fond, avec un indicateur dans l'en-tête (« synchronisé », « en attente », « hors ligne »).",
+            "turnExternalId": "t-004",
+            "ficheTitre": "synchro.ts",
+            "correspond": null
+          },
+          {
+            "statement": "Si l'appli est tuée pendant la synchro après la réponse 201 du serveur, le CREATE du devis est rejoué au relancement et crée un doublon côté serveur.",
+            "turnExternalId": "t-010",
+            "ficheTitre": "Mode hors ligne de l'application mobile v2",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-09-28-ticket-perrin",
+        "attendus": 2,
+        "retrouves": 0,
+        "produits": 2,
+        "manques": [
+          "F189",
+          "F200"
+        ],
+        "enTrop": [
+          "2899398f-5211-4b3f-a867-18d2fe314c1d",
+          "3ae811b3-c07c-42af-a630-f0adad7a1fab"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Les applications web et mobile n'envoient que l'identifiant du devis à POST /api/devis/:id/pdf : aucune ne tronque les lignes du devis.",
+            "turnExternalId": "t-003a",
+            "ficheTitre": "Export PDF des devis",
+            "correspond": null
+          },
+          {
+            "statement": "La fonction chargerDevisComplet côté serveur renvoie toutes les lignes d'un devis : vérifié avec la fixture de 63 lignes, 63 lignes en sortie.",
+            "turnExternalId": "t-003a",
+            "ficheTitre": "chargerDevisComplet",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-09-30-abandon-quickcharts",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 9,
+        "manques": [],
+        "enTrop": [
+          "20e5398a-6659-4733-8f7f-7af25d292ad9",
+          "2fc93889-265e-42c9-9dc2-60ea9c21fb98",
+          "a561f6d6-73da-466f-af7b-d8b88c0898f9",
+          "a8c89ba7-49bd-4e6f-b38f-55f0f1599109"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Avec graphiko-native, l'écran d'accueil de l'appli mobile ne plante plus sur les émulateurs Android API 31, 33, 34 et 35 (dix ouvertures à froid chacun).",
+            "turnExternalId": "t-009a",
+            "ficheTitre": "Application mobile v2 de Chantier+",
+            "correspond": null
+          },
+          {
+            "statement": "Avec graphiko-native, les barres horizontales sont rendues de bas en haut par défaut ; il faut ordre=\"haut-bas\" pour les inverser.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "graphiko-native",
+            "correspond": null
+          },
+          {
+            "statement": "Dans graphiko-native, la propriété d'accessibilité des barres s'appelle accessibilityLabel et non libelleAccessible.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "graphiko-native",
+            "correspond": null
+          },
+          {
+            "statement": "graphiko-native propose des barres horizontales, simplement mal rangées dans sa documentation.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "graphiko-native",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-10-01-api-montants",
+        "attendus": 1,
+        "retrouves": 1,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [
+          "a4f78317-88e8-4969-8c66-a09ef9a150bb"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'employé crée un module montants.ts (depuisApi, additionner, formater) pour manipuler les montants des devis dans l'appli mobile v2.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Application mobile v2 de Chantier+",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-10-02-design-maquettes",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "2de0ca2c-515d-4e1b-8abe-873b5605240d",
+          "873647e0-32aa-4c44-9877-76dfe5572d01"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Lucas Fabre est le designer de Chantier+.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Lucas Fabre",
+            "correspond": null
+          },
+          {
+            "statement": "Lucas Fabre tranchera la variante sombre de la couleur d'accent dans ses maquettes.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Variante sombre de la couleur accent",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-10-05-notifications-push",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 8,
+        "manques": [],
+        "enTrop": [
+          "4805569f-c49d-4fcc-9c7a-9b6e01316d12",
+          "759a7901-c35a-4a36-a974-93c1ccde5924",
+          "a2046d5b-7738-4b2d-a7b2-5617ec404639",
+          "af2edc3d-b719-4b05-be3d-37b04835f1a3"
+        ],
+        "fauxFaits": [
+          "966807c4-0f3c-4e6e-a4ed-11b06802dc02"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Hugo a exposé l'endpoint POST /api/appareils, qui prend un jeton et une plateforme et les rattache à l'utilisateur connecté.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "POST /api/appareils",
+            "correspond": null
+          },
+          {
+            "statement": "Hugo gère l'envoi serveur de la notification « devis signé » ; côté appli mobile, on ne fait que la réception et l'ouverture du bon écran, le détail du devis dans l'onglet devis.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Répartition de la notification devis signé",
+            "correspond": null
+          },
+          {
+            "statement": "Décision : ne rien changer côté jetons pour l'instant, en attendant les logs serveur de Hugo.",
+            "turnExternalId": "t-009",
+            "ficheTitre": "Gel des modifications côté jetons",
+            "correspond": null
+          },
+          {
+            "statement": "Sur iOS, la notification de test envoyée par Hugo a été reçue et le tap ouvre le bon devis.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Notifications push iOS",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Sur Android, l'envoi serveur répond « jeton invalide » même après réinstallation, avec un seul renouvellement et un POST en 201 ; le 409 n'est donc pas la seule cause et la cause reste inconnue, à reprendre avec les logs serveur de Hugo.",
+            "turnExternalId": "t-009",
+            "ficheTitre": "Notifications push Android",
+            "correspond": "N087"
+          }
+        ]
+      },
+      {
+        "cle": "ines/2026-10-07-tests-pilote",
+        "attendus": 1,
+        "retrouves": 0,
+        "produits": 6,
+        "manques": [
+          "F204"
+        ],
+        "enTrop": [
+          "0d0265df-456e-40c1-9c9e-847f6c1102a4",
+          "bc26e99a-2227-4547-8452-fb8fbfa81ef1",
+          "beb330cb-6d87-435d-944c-3b09d6b67c40",
+          "f620c6c9-e567-44db-a392-b6bbdf4d1162"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "La logique de synchro de l'appli mobile ne sera pas modifiée à moins de deux semaines du pilote.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Délai du test e2e hors ligne",
+            "correspond": null
+          },
+          {
+            "statement": "L'employé forme lui-même les 10 compagnons de Bati-Ouest le 16 octobre 2026, sur place, avant le pilote.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Pilote Bati-Ouest",
+            "correspond": null
+          },
+          {
+            "statement": "Décision : le délai du test e2e hors ligne est monté à 120 s avec un commentaire explicatif, sans toucher à la logique de synchro.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Délai du test e2e hors ligne",
+            "correspond": null
+          },
+          {
+            "statement": "Le test e2e hors ligne de l'appli mobile v2 échoue car l'indicateur de synchronisation n'apparaît qu'après le rafraîchissement complet de la base locale, qui peut dépasser 60 s sur l'émulateur.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Test e2e hors ligne",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "ines/2026-10-09-revue-accessibilite",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "0faa9b76-d6c8-4acd-98e7-c6fcd02859f0",
+          "8586687d-cef8-458f-b58a-6057c7cc7574",
+          "a703c6b7-3425-46a2-8eca-324e4c4db0ce"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'équipe réalise sa propre revue d'accessibilité de l'appli mobile v2 avant le pilote, à partir des maquettes de Lucas.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Revue d'accessibilité de l'appli mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "L'appli mobile v2 ne respecte pas aujourd'hui la taille de texte définie dans les réglages du système ; ce point est noté pour la revue d'accessibilité.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Revue d'accessibilité de l'appli mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "Dans l'appli mobile v2, le bouton « appeler le client » de la fiche chantier est une icône seule de 24 px, pour laquelle il faut une zone tactile de 44 px.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Bouton « appeler le client »",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-09-21-relance-prospects",
+        "attendus": 5,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [
+          "F084",
+          "F085"
+        ],
+        "enTrop": [
+          "f317d89d-b17d-4c64-bd6b-f20046d0cc31"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Sandrine Rousseau, gérante de Plomberie Rousseau, est très prise en ce moment ; il faut la relancer gentiment.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Plomberie Rousseau",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-09-22-devis-dupont",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [
+          "F086"
+        ],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-09-23-signature-lambert",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-09-25-prospect-rousseau",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "919f4b45-62c4-4f42-adb7-bad7f3a446a4"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Une remise de 15 % sur le devis Plomberie Rousseau n'est qu'une idée en réserve : l'employé en parlera à Claire avant de proposer quoi que ce soit au client.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Remise de 15 % pour Plomberie Rousseau",
+            "correspond": "N023"
+          }
+        ]
+      },
+      {
+        "cle": "karim/2026-09-28-ticket-perrin",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-09-30-fournier-concurrent",
+        "attendus": 3,
+        "retrouves": 2,
+        "produits": 2,
+        "manques": [
+          "F066"
+        ],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-10-01-renegociation-dupont",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "b8cfa460-6da5-4216-b9c4-77ba99aa8206"
+        ],
+        "fauxFaits": [
+          "c1d2c659-75f3-4afb-bba8-077b53b68821"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Aucune contrepartie particulière n'a été obtenue de Dupont en échange de la baisse de prix.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le mail de proposition finale à Dupont ne sera envoyé qu'après le feu vert de Claire.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Mail de proposition finale à Dupont",
+            "correspond": "N026"
+          }
+        ]
+      },
+      {
+        "cle": "karim/2026-10-05-bati-ouest-contrat",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-10-07-salon-decale",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-10-09-concurrents",
+        "attendus": 5,
+        "retrouves": 5,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "74cab7ee-c504-443a-941f-a18410fb8dc7"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Ouvrio ne propose qu'une application mobile.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Ouvrio",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-09-21-planning-mobile",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 9,
+        "manques": [],
+        "enTrop": [
+          "0b5bc6b1-6780-4629-8d9a-d167e8c43d8f",
+          "3783497a-56d8-43c9-b7ac-71a7491a92c9",
+          "67b77001-cc7f-40dc-8dfc-8a020a0cdb89",
+          "e22755e3-b264-4a67-9780-d3bc1a282711"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le gel fonctionnel et la recette interne de l'appli mobile v2 sont fusionnés, faute de monde pour les faire séparément.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Gel fonctionnel et recette interne de l'appli mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "Pour l'appli mobile v2, la recette avec le client pilote est décalée à J-8 car J-5 est trop serré.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Recette pilote de l'appli mobile v2",
+            "correspond": null
+          },
+          {
+            "statement": "La ligne « version candidate » est supprimée du rétroplanning de l'appli mobile v2, Inès ne travaillant pas ainsi.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Suppression de la version candidate",
+            "correspond": null
+          },
+          {
+            "statement": "Le design de l'appli mobile v2 n'est pas encore calé au 21 septembre 2026.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Application mobile v2 de Chantier+",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-09-22-onboarding-dupont",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 9,
+        "manques": [],
+        "enTrop": [
+          "08f4548e-b8be-4de2-aedf-582dc3d70b58",
+          "24c06b53-683d-44df-8625-1d987c1c3b5a",
+          "2a4180dd-c5d8-474f-8731-3030a11f361d",
+          "44d02a50-ddd2-4fef-b147-29a19c8f2e10",
+          "672d4aa1-0eac-4eec-a6b1-f560bc1d419f"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Menuiserie Dupont possède un catalogue d'articles sous tableur.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Menuiserie Dupont",
+            "correspond": null
+          },
+          {
+            "statement": "L'employé relancera Gérard Dupont la veille de chaque session de formation.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Relance de Gérard Dupont avant chaque session",
+            "correspond": null
+          },
+          {
+            "statement": "Gérard Dupont veut être tenu informé à chaque étape de l'onboarding de Menuiserie Dupont.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Gérard Dupont",
+            "correspond": null
+          },
+          {
+            "statement": "Le contenu des deux sessions (prise en main et devis, puis planning et facturation) est validé, Camille Rivet est d'accord.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Contenu des deux sessions de formation",
+            "correspond": null
+          },
+          {
+            "statement": "La date de la deuxième session n'est pas fixée : elle dépendra de l'avancée de Menuiserie Dupont.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Deuxième session de formation Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-09-23-budget-design",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "edc5b08f-5b59-42f3-93f6-ed5711669050"
+        ],
+        "fauxFaits": [
+          "d11ee93d-2f71-4072-8d09-663912838e93"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Lucas Fabre travaille seul et a déjà fait des applis métier.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Lucas Fabre",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Pour le design de l'appli v2, la décision est de rester sur Lucas Fabre plutôt que de passer par une agence.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Design de l'appli v2",
+            "correspond": "N121"
+          }
+        ]
+      },
+      {
+        "cle": "nadia/2026-09-25-tableau-suivi",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 9,
+        "manques": [],
+        "enTrop": [
+          "22323648-aecd-4d43-a185-5db454f2677b",
+          "2ff2613c-5dd3-496a-b33c-9dada594098a",
+          "87c6d42d-6ded-4071-84e9-634763ecb8ba",
+          "90bff41c-b4da-408d-8aaf-48eff2e46574",
+          "a0100de8-f2db-47db-b55a-f80bd3096b14",
+          "cea56be0-6dda-492e-ba28-6ac45d190a33"
+        ],
+        "fauxFaits": [
+          "bbc4badd-8d9a-4bef-91c8-c38480a8d9bc"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Hugo est responsable du projet Connecteur Chorus Pro, qui est à lancer.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Connecteur Chorus Pro",
+            "correspond": null
+          },
+          {
+            "statement": "Dans les documents de l'entreprise, les dates s'affichent au format JJ/MM suivi de l'heure, pas au format américain.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Format d'affichage des dates",
+            "correspond": null
+          },
+          {
+            "statement": "Nadia mettra à jour les statuts du YAML des projets lundi.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "projets.yaml",
+            "correspond": null
+          },
+          {
+            "statement": "Les statuts de projet normalisés sont uniquement OK, à risque et en retard, avec accent et casse exacts ; toute autre valeur doit être signalée sans correspondance automatique.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Statuts normalisés des projets",
+            "correspond": null
+          },
+          {
+            "statement": "Hugo est responsable du projet Refonte du module devis, actuellement en cours.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Refonte du module devis",
+            "correspond": null
+          },
+          {
+            "statement": "Inès est responsable du projet Application mobile v2.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Application mobile v2 de Chantier+",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le script de tableau de suivi doit écrire directement dans le fichier de suivi, avec une copie de l'ancien en .bak, et accepter une option --date pour simuler un autre jour.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Script tableau_suivi.py",
+            "correspond": "N122"
+          }
+        ]
+      },
+      {
+        "cle": "nadia/2026-09-29-planning-chorus",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [
+          "1ea90e06-6b58-4cb3-aad1-d2b99461ba04"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le contact de Bati-Ouest pour les tests du connecteur Chorus Pro est Karim.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Bati-Ouest",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-01-absences-equipe",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-02-replanification-mobile",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-05-planning-devis",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "b21c659a-f0b8-46fc-8df7-85d216f12cfc",
+          "c7bc9a0f-746b-4568-aa8c-298cefe094db"
+        ],
+        "fauxFaits": [
+          "3fec2d7d-c005-44cb-b51a-ae7bec56db09"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Les échéances client sont saisies dans pilotage/echeances.yaml, une ligne par client avec le projet et la date.",
+            "turnExternalId": "t-006",
+            "ficheTitre": "echeances.yaml",
+            "correspond": null
+          },
+          {
+            "statement": "Le contrôle des échéances du script de planning doit afficher l'avertissement à la fin de la sortie, une ligne par jalon concerné, sans bloquer l'écriture du planning, et sans erreur si echeances.yaml est absent.",
+            "turnExternalId": "t-006",
+            "ficheTitre": "maj_planning.py",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Les messages du script de planning doivent être en français car l'équipe lit le fichier de sortie.",
+            "turnExternalId": "t-008",
+            "ficheTitre": "maj_planning.py",
+            "correspond": "N124"
+          }
+        ]
+      },
+      {
+        "cle": "nadia/2026-10-07-comite-projet",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "16bba1ac-9c3a-496c-8ab3-032511edee90",
+          "21328a15-9406-4d10-a3f1-6863ada2994c",
+          "a5932a2a-ad69-485f-baba-79c3c49f0535"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Les détails du contrat de Bastien Royer ne figurent pas dans le compte rendu du comité projet ; Claire s'en occupe.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Bastien Royer",
+            "correspond": null
+          },
+          {
+            "statement": "L'arrivée de Bastien Royer est retirée de la version du compte rendu diffusée à toute l'équipe ; une version complète est réservée à Claire et Inès, l'équipe l'apprendra quand Claire l'annoncera.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Diffusion des comptes rendus de comité",
+            "correspond": null
+          },
+          {
+            "statement": "Le module devis et l'appli mobile v2 n'ont pas de changement par rapport au planning lors du comité du 7 octobre 2026.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Refonte du module devis",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-09-relances-clients",
+        "attendus": 2,
+        "retrouves": 1,
+        "produits": 2,
+        "manques": [
+          "F320"
+        ],
+        "enTrop": [
+          "bc8ae036-e196-45a4-be8d-114fdbca2e75"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Un mail a été envoyé lundi à Gérard de Menuiserie Dupont pour fixer la date de la deuxième session de formation, sans réponse au 9 octobre 2026.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Deuxième session de formation Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-09-21-contrats-fournisseurs",
+        "attendus": 5,
+        "retrouves": 5,
+        "produits": 10,
+        "manques": [],
+        "enTrop": [
+          "4ea97d49-244c-497b-b6a3-22a9ad233da7",
+          "b24f096c-c268-4d67-b6be-88afac9afdab",
+          "fd143165-a8e2-43ad-8409-f05ff3cba38f"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "OVH est l'hébergeur de Chantier+ (serveur applicatif et base Postgres managée).",
+            "turnExternalId": "t-003",
+            "ficheTitre": "OVH",
+            "correspond": null
+          },
+          {
+            "statement": "Mapéo fournit l'API de cartographie utilisée par les développeurs pour géocoder les adresses de chantier.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Le préavis de résiliation du contrat OVH reste à vérifier dans l'espace client.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "OVH",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-09-23-facture-lambert",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [
+          "F249"
+        ],
+        "enTrop": [],
+        "fauxFaits": [
+          "7ce6e033-ce84-40d2-976e-8a9e05c08408"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La vente de licences de logiciel à une entreprise du bâtiment ne relève pas de l'autoliquidation de TVA : la facture est émise avec TVA au taux normal.",
+            "turnExternalId": "t-004",
+            "ficheTitre": "Autoliquidation de TVA",
+            "correspond": "N100"
+          }
+        ]
+      },
+      {
+        "cle": "sophie/2026-09-24-mutuelle",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "986bf889-9980-476a-b8fd-c0ef45d7cb5c"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "La note d'information aux salariés sur la hausse de la mutuelle doit être validée par Claire avant tout envoi.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Note d'information aux salariés sur la hausse de la mutuelle",
+            "correspond": "N101"
+          }
+        ]
+      },
+      {
+        "cle": "sophie/2026-09-28-arret-maladie",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "17cfd97c-d44f-4ced-badb-8d1778d06a84",
+          "345af4d1-bbbb-4e60-ad30-387379ffaed3"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Julien Lefort occupe un poste de salarié du support client.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Julien Lefort",
+            "correspond": null
+          },
+          {
+            "statement": "Le motif de l'arrêt de Julien Lefort ne sera pas détaillé à l'équipe.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Confidentialité des motifs d'absence",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-09-30-prudhommes",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "04a91ebf-e197-4895-98d1-0c401be2f17f"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'entreprise est défendue dans le dossier prud'homal par Maître Hélène Vasseur, du Cabinet Vasseur Avocats.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Hélène Vasseur",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-01-prestataires-acces",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [
+          "9ca47967-25a7-4bf8-aeb8-3a17ff531e5d"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Sophie va changer immédiatement le mot de passe du compte OVH et discutera d'abord avec Hugo des accès délégués.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "OVH",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-05-cartographie",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "5db3db21-d99b-4552-ab2d-eee268ddeae4",
+          "722b759b-fd09-4a0e-8a1d-7450a0c6b60b"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le contrat avec Mapéo prévoit un préavis de résiliation d'un mois.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "La résiliation de Mapéo sera envoyée à la fois par courriel et par lettre recommandée.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Résiliation du contrat Mapéo",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-06-relance-dupont",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "9e284a95-8ce1-4b58-a59c-d591275edb3b"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le modèle de première relance courtoise est enregistré comme modèle dans Comptaflow.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Comptaflow",
+            "correspond": "N106"
+          }
+        ]
+      },
+      {
+        "cle": "sophie/2026-10-08-budget-2027",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      }
+    ]
+  }
+}

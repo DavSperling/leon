@@ -1,0 +1,371 @@
+{
+  "id": "2026-10-15-1031-mini-haiku-5-5-direct",
+  "date": "2026-10-15T10:31:06.802Z",
+  "label": "mini haiku-5.5 direct",
+  "commit": "84001666d3b2287335273e62beb5b887103e5614",
+  "jeu": "mini",
+  "modeles": {
+    "triage": "anthropic:claude-haiku-5-5",
+    "extraction": "anthropic:claude-haiku-5-5",
+    "placement": "anthropic:claude-haiku-5-5",
+    "juge": "anthropic:claude-haiku-5-5"
+  },
+  "modelesVus": {
+    "triage": [
+      "claude-haiku-5-5"
+    ],
+    "extraction": [
+      "claude-haiku-5-5"
+    ],
+    "placement": [
+      "claude-haiku-5-5"
+    ]
+  },
+  "tours": 104,
+  "dureeMinutes": 2,
+  "runs": {
+    "total": 10,
+    "done": 10,
+    "failed": 0,
+    "enCours": 0,
+    "fin": "2026-10-15T10:32:55.729Z",
+    "bloques": 0
+  },
+  "usage": {
+    "triage": {
+      "appels": 10,
+      "inputTokens": 40079,
+      "outputTokens": 1297,
+      "cacheReadTokens": 12600,
+      "cacheWriteTokens": 0,
+      "coutsManquants": 0,
+      "costUsd": 0.0047824
+    },
+    "extraction": {
+      "appels": 10,
+      "inputTokens": 34595,
+      "outputTokens": 21459,
+      "cacheReadTokens": 30825,
+      "cacheWriteTokens": 3425,
+      "coutsManquants": 0,
+      "costUsd": 0.01492538
+    },
+    "placement": {
+      "appels": 10,
+      "inputTokens": 40754,
+      "outputTokens": 14671,
+      "cacheReadTokens": 20840,
+      "cacheWriteTokens": 0,
+      "coutsManquants": 0,
+      "costUsd": 0.0116193
+    }
+  },
+  "coutJuge": 0.0015181,
+  "jugeErreurs": [],
+  "appariements": {
+    "7c0b83cc-ddad-4011-8200-2a796ae52d8b": "F006",
+    "bd119be4-5fc3-4d39-b1b4-9e1cfe25bcd8": "F004",
+    "c05c856b-8737-4c29-a89b-f03eff7e2bd9": "N003",
+    "ec81825a-5246-4b65-bf58-23048e4a7fc9": "F005",
+    "1d9d0f39-c4c6-497b-9594-127783bf9cb9": "F034",
+    "39bb2c2d-ffc8-406b-82cf-38c5376dad5a": "F029",
+    "659f809f-5388-4185-8ddb-6ef3ae540342": "F035",
+    "8123d439-de23-4c43-a55c-6a6e9fcbc977": "F031",
+    "dd1730c5-6c8b-482d-a94c-71742866a012": "F034",
+    "1af688e4-46e4-4e79-91a2-58a83c086dbf": "F122",
+    "2326ccca-0799-4de8-8f7a-f19fe0fcfa5c": null,
+    "3c950104-2286-45bb-929c-fef212a4de64": null,
+    "ac2c0a4d-4e51-4dfc-9892-345a1016bc0e": "F121",
+    "bf408758-300e-410c-a815-310688306358": "N043",
+    "3ec1e6fb-e9af-423d-855b-12e2db5dc96b": null,
+    "42724acc-b025-4c52-a9fc-41cc3c3a210f": "F140",
+    "68ce49e4-41b9-4673-89ba-2a8a5c315417": "F141",
+    "80af2a0b-c4a7-4e04-b3bc-fa44c8518b0c": "F142",
+    "f14d5045-1d30-461b-9953-39cfdc3f10ff": null,
+    "ffe29e70-8c36-40e7-a6e1-d117b62ab066": null,
+    "5299851f-0158-40bb-a195-b2ab0cea74ef": "F075",
+    "6a97c6cb-e5bd-40f3-9902-00c17c12d8a0": "F073",
+    "76694f79-b08f-49f7-af0c-cfd9cbc620d7": "F074",
+    "b83b1b71-1a2b-4fc9-b6fc-16e2de3bbc8d": "F074",
+    "3a73a2cf-8a8d-4c78-87f3-c473b533a22c": "F320",
+    "408cb33f-66e5-4c61-bc85-8e76ca2cbf4b": "N126",
+    "54d10c30-d479-461f-8208-8e850cae9352": "F321",
+    "566fa06a-fa9e-41a4-99fd-61f7f9e3a527": null,
+    "dd654ddf-b3bf-4d06-a93d-20a138daf7cc": "F238",
+    "eecff20f-9da4-4b08-b30a-98982c09a53b": "F240",
+    "2f32911f-a683-4d30-932d-c2ddfbe590a9": "F239",
+    "6f4a6e35-01db-4e10-b4f7-89d2006e5a95": null,
+    "b65910df-3c70-44f5-8e56-1fa763f4b812": "F236",
+    "f2e255aa-0af1-4d96-9b9d-797697ec7b93": "F237",
+    "348d3e90-a69c-496f-a783-6526282d0b9f": "F255",
+    "4fbdee8d-fe0c-4407-9ff1-b3007403ff23": null,
+    "6784c949-ecf2-4c40-9380-6724d0b9117a": null,
+    "94ad9aec-d825-4145-ba6f-83b386d37e58": "F254",
+    "a5d42c66-13cf-4277-94dc-69d8c50fc6f6": "F253",
+    "25a8615b-338d-4333-926a-2d235fbaee0d": "F267",
+    "895a3049-9f8f-4cac-b060-16ad1cc5e7cc": "F266",
+    "b4a8052c-5177-4da2-9049-8c94e69017ee": "F256"
+  },
+  "notes": {
+    "attendus": 31,
+    "retrouves": 27,
+    "rappel": 0.8709677419354839,
+    "produits": 42,
+    "horsJeu": 0,
+    "apparies": 30,
+    "precision": 0.7142857142857143,
+    "fauxFaits": 3,
+    "doublonsFaits": 3,
+    "redits": 5,
+    "reditsRecrees": 0,
+    "tourCorrect": {
+      "ok": 30,
+      "sur": 30
+    },
+    "ficheCorrecte": {
+      "ok": 22,
+      "sur": 30
+    },
+    "typeCorrect": {
+      "ok": 22,
+      "sur": 30
+    },
+    "fichesDispersees": 2,
+    "remplacements": {
+      "trouves": 1,
+      "attendus": 2
+    },
+    "conflits": {
+      "trouves": 1,
+      "attendus": 1
+    },
+    "sensibles": {
+      "marques": 2,
+      "attendus": 2,
+      "retrouves": 2
+    },
+    "sensiblesProduitsPartages": 0,
+    "fuitesSensibles": 0,
+    "surSignales": 1,
+    "secretsFuites": 0,
+    "parConversation": [
+      {
+        "cle": "claire/2026-09-22-strategie-salon",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [
+          "c05c856b-8737-4c29-a89b-f03eff7e2bd9"
+        ],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": [
+          {
+            "statement": "L'employé a décidé de renoncer au webinaire et de garder le Salon des Artisans de l'Ouest comme action principale.",
+            "turnExternalId": "t-007",
+            "ficheTitre": "Abandon du webinaire au profit du salon",
+            "correspond": "N003"
+          }
+        ]
+      },
+      {
+        "cle": "claire/2026-10-08-comite-direction",
+        "attendus": 4,
+        "retrouves": 4,
+        "produits": 5,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "hugo/2026-09-23-geocodage-mapeo",
+        "attendus": 4,
+        "retrouves": 2,
+        "produits": 5,
+        "manques": [
+          "F120",
+          "F123"
+        ],
+        "enTrop": [
+          "2326ccca-0799-4de8-8f7a-f19fe0fcfa5c",
+          "3c950104-2286-45bb-929c-fef212a4de64"
+        ],
+        "fauxFaits": [
+          "bf408758-300e-410c-a815-310688306358"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Le chantier stocke son adresse en texte libre dans chantiers.adresse, sans coordonnées, ce qui empêche d'afficher la carte des interventions ou de calculer un temps de trajet.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Géocodage des adresses de chantier",
+            "correspond": null
+          },
+          {
+            "statement": "Décision : le géocodage est livré sans cache, avec le recul exponentiel et la prise en compte de Retry-After, et les deux branches de cache restent de côté en attendant de voir le trafic réel.",
+            "turnExternalId": "t-015",
+            "ficheTitre": "Géocodage sans cache",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le cache de géocodage en mémoire passe à 1 604 appels à Mapéo lors du rejeu avec deux processus, contre 1 131 avec un seul processus.",
+            "turnExternalId": "t-013",
+            "ficheTitre": "Cache de géocodage en mémoire",
+            "correspond": "N043"
+          }
+        ]
+      },
+      {
+        "cle": "hugo/2026-10-06-bascule-terracarte",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 6,
+        "manques": [],
+        "enTrop": [
+          "3ec1e6fb-e9af-423d-855b-12e2db5dc96b",
+          "f14d5045-1d30-461b-9953-39cfdc3f10ff",
+          "ffe29e70-8c36-40e7-a6e1-d117b62ab066"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Le contrat du fournisseur TerraCarte pour le géocodage est signé.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "TerraCarte",
+            "correspond": null
+          },
+          {
+            "statement": "Le contrat avec Mapéo a été résilié par Sophie.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "La variable d'environnement GEOCODER est fixée à terracarte pour choisir le fournisseur de géocodage.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "GEOCODER",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "karim/2026-10-07-salon-decale",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "nadia/2026-10-09-relances-clients",
+        "attendus": 2,
+        "retrouves": 2,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "566fa06a-fa9e-41a4-99fd-61f7f9e3a527"
+        ],
+        "fauxFaits": [
+          "408cb33f-66e5-4c61-bc85-8e76ca2cbf4b"
+        ],
+        "faitsEnTrop": [
+          {
+            "statement": "Un mail a été envoyé lundi à Gérard Dupont de Menuiserie Dupont pour fixer la date de la deuxième session de formation, sans réponse à ce jour.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Menuiserie Dupont",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": [
+          {
+            "statement": "Le mail de relance pour Gérard Dupont (deuxième session de formation) doit être envoyé lundi ; il est enregistré en brouillon.",
+            "turnExternalId": "t-005",
+            "ficheTitre": "Relance de Gérard Dupont sur la deuxième session de formation",
+            "correspond": "N126"
+          }
+        ]
+      },
+      {
+        "cle": "sophie/2026-09-24-mutuelle",
+        "attendus": 3,
+        "retrouves": 2,
+        "produits": 2,
+        "manques": [
+          "F250"
+        ],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-09-28-arret-maladie",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 4,
+        "manques": [],
+        "enTrop": [
+          "6f4a6e35-01db-4e10-b4f7-89d2006e5a95"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "Julien Lefort est salarié du support client.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Julien Lefort",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-05-cartographie",
+        "attendus": 4,
+        "retrouves": 3,
+        "produits": 5,
+        "manques": [
+          "F258"
+        ],
+        "enTrop": [
+          "4fbdee8d-fe0c-4407-9ff1-b3007403ff23",
+          "6784c949-ecf2-4c40-9380-6724d0b9117a"
+        ],
+        "fauxFaits": [],
+        "faitsEnTrop": [
+          {
+            "statement": "L'entreprise doit résilier son contrat avec Mapéo.",
+            "turnExternalId": "t-001",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          },
+          {
+            "statement": "Le préavis de résiliation du contrat Mapéo est d'un mois.",
+            "turnExternalId": "t-003",
+            "ficheTitre": "Mapéo",
+            "correspond": null
+          }
+        ],
+        "fauxFaitsDetail": []
+      },
+      {
+        "cle": "sophie/2026-10-08-budget-2027",
+        "attendus": 3,
+        "retrouves": 3,
+        "produits": 3,
+        "manques": [],
+        "enTrop": [],
+        "fauxFaits": [],
+        "faitsEnTrop": [],
+        "fauxFaitsDetail": []
+      }
+    ]
+  }
+}

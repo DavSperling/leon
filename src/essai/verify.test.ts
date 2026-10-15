@@ -257,6 +257,44 @@ describe('verifierJeu', () => {
     );
   });
 
+  it('refuse un doublonDe sur un fait sensible, un canonique sensible, ou un canonique remplacé', () => {
+    const a = conversation('hugo/2026-09-22-migration');
+    const [fa] = a.attendu.faits;
+    if (!fa) throw new Error('fait manquant');
+    a.attendu.faits = [
+      fa, // F001, canonique sain
+      { ...fa, id: 'F002' }, // F002, sera remplacé par F003
+      { ...fa, id: 'F003' },
+      { ...fa, id: 'F004', sensible: true }, // F004, canonique sensible
+    ];
+    a.attendu.remplace = [{ ancien: 'F002', nouveau: 'F003' }];
+    const b = conversation('hugo/2026-09-23-suite', {
+      payload: {
+        ...a.payload,
+        source: { kind: 'claude_code', external_id: 'essai-hugo/2026-09-23-suite' },
+        turns: a.payload.turns.map((t) => ({ ...t, ts: '2026-09-23T09:00:00+02:00' })),
+      },
+      attendu: {
+        faits: [
+          { ...fa, id: 'F040', doublonDe: 'F001', sensible: true }, // le redit lui-même est sensible
+          { ...fa, id: 'F041', doublonDe: 'F004' }, // le canonique F004 est sensible
+          { ...fa, id: 'F042', doublonDe: 'F002' }, // le canonique F002 est l'ancien d'un remplacement
+        ],
+        pasRetenir: [],
+        remplace: [],
+        conflits: [],
+      },
+    });
+    const problemes = verifierJeu(jeu([a, b], [a.cle]));
+    expect(problemes).toContain(
+      "hugo/2026-09-23-suite : F040 : doublon d'un fait sensible, à garder distinct",
+    );
+    expect(problemes).toContain('hugo/2026-09-23-suite : F041 : doublon de F004, qui est sensible');
+    expect(problemes).toContain(
+      'hugo/2026-09-23-suite : F042 : doublon de F002, qui est remplacé par un autre fait',
+    );
+  });
+
   it('signale une entrée en double dans mini.json', () => {
     const c = conversation('hugo/2026-09-22-migration');
     expect(

@@ -8,8 +8,16 @@ export function verifierJeu(jeu: JeuEssai): string[] {
   const faitsConnus = new Set<string>();
   const vus = new Set<string>();
   const sources = new Set<string>();
-  // Pour contrôler doublonDe : conversation et premier tour de chaque fait.
-  const faitInfo = new Map<string, { cle: string; doublonDe?: string; debut: number }>();
+  // Pour contrôler doublonDe : conversation, premier tour et sensibilité de chaque fait.
+  const faitInfo = new Map<
+    string,
+    { cle: string; doublonDe?: string; debut: number; sensible: boolean }
+  >();
+  // Un fait remplacé (ancien d'un remplace) a déjà une suite propre : il ne doit pas aussi servir de
+  // canonique à un redit, les deux mécanismes se chevaucheraient.
+  const anciens = new Set(
+    jeu.conversations.flatMap((c) => c.attendu.remplace.map((r) => r.ancien)),
+  );
 
   for (const c of jeu.conversations) {
     const ici = (message: string) => problemes.push(`${c.cle} : ${message}`);
@@ -29,7 +37,7 @@ export function verifierJeu(jeu: JeuEssai): string[] {
       if (id.startsWith('F')) faitsConnus.add(id);
     }
     for (const f of c.attendu.faits)
-      faitInfo.set(f.id, { cle: c.cle, doublonDe: f.doublonDe, debut });
+      faitInfo.set(f.id, { cle: c.cle, doublonDe: f.doublonDe, debut, sensible: f.sensible });
     // Un secret ne doit jamais être recopié dans la réponse attendue : le juge le verrait en clair.
     for (const f of c.attendu.faits)
       for (const secret of jeu.entreprise.secrets)
@@ -69,6 +77,12 @@ export function verifierJeu(jeu: JeuEssai): string[] {
       }
       if (!(cible.debut < (faitInfo.get(f.id)?.debut ?? Number.NaN)))
         ici(`${f.id} : doublon de ${f.doublonDe}, qui n'est pas antérieur`);
+      // Un fait sensible garde sa propre revue à chaque occurrence ; un canonique sensible ou déjà
+      // remplacé ne doit pas servir de cible à un dédoublonnage.
+      if (f.sensible) ici(`${f.id} : doublon d'un fait sensible, à garder distinct`);
+      if (cible.sensible) ici(`${f.id} : doublon de ${f.doublonDe}, qui est sensible`);
+      if (anciens.has(f.doublonDe))
+        ici(`${f.id} : doublon de ${f.doublonDe}, qui est remplacé par un autre fait`);
     }
   }
 

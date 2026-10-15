@@ -338,7 +338,7 @@ describe('redits (doublonDe)', () => {
           fiche: 'Dupont',
           alias: [],
           typeFiche: 'client',
-          tour: 't-001',
+          tour: 't-099', // différent du tour du canonique F001 (t-001)
           extrait: '',
           sensible: false,
           doublonDe: 'F001',
@@ -384,5 +384,53 @@ describe('redits (doublonDe)', () => {
     });
     expect(notes.reditsRecrees).toBe(1);
     expect(notes.doublonsFaits).toBe(1); // deux faits produits pour le même F canonique
+  });
+
+  it('reditsRecrees exige aussi que le canonique soit actif et partagé', () => {
+    // Le redit est bien apparié directement (p2 → F010), mais ce fait produit n'est ni actif ni
+    // partagé : on ne peut pas le distinguer avec certitude d'un simple brouillon privé.
+    const produits = [
+      p('p2', { sourceExternalId: 'essai-karim/2026-09-25-rappel', partage: false }),
+    ];
+    const paires = new Map([['p2', 'F010']]);
+    const notes = calculerNotes({
+      conversations: [premiere, seconde],
+      produits,
+      paires,
+      secrets: [],
+    });
+    expect(notes.reditsRecrees).toBe(0);
+  });
+
+  it('tourCorrect compare un produit apparié à un redit au tour du redit, pas du canonique', () => {
+    const produits = [
+      p('p1', { sourceExternalId: 'essai-karim/2026-09-22-devis', turnExternalId: 't-001' }),
+      p('p2', { sourceExternalId: 'essai-karim/2026-09-25-rappel', turnExternalId: 't-099' }),
+    ];
+    const paires = new Map([
+      ['p1', 'F001'],
+      ['p2', 'F010'],
+    ]);
+    const notes = calculerNotes({
+      conversations: [premiere, seconde],
+      produits,
+      paires,
+      secrets: [],
+    });
+    // p1 : tour t-001 == tour de F001 ; p2 : tour t-099 == tour de F010 (le redit, pas F001).
+    expect(notes.tourCorrect).toEqual({ ok: 2, sur: 2 });
+  });
+
+  it('un redit est exclu des attendus/retrouves de sa propre conversation', () => {
+    const produits = [p('p1', { sourceExternalId: 'essai-karim/2026-09-22-devis' })];
+    const paires = new Map([['p1', 'F001']]);
+    const notes = calculerNotes({
+      conversations: [premiere, seconde],
+      produits,
+      paires,
+      secrets: [],
+    });
+    const secondeNotes = notes.parConversation.find((n) => n.cle === seconde.cle);
+    expect(secondeNotes).toMatchObject({ attendus: 0, retrouves: 0 });
   });
 });

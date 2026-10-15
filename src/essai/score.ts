@@ -81,18 +81,29 @@ export function calculerNotes(input: {
   );
 
   const parAttendu = new Map<string, FaitProduit[]>();
+  const brutPar = new Map<string, FaitAttendu>(); // produit.id -> F réellement apparié (avant résolution du canonique)
   for (const produit of produits) {
     const cible = paires.get(produit.id);
-    if (cible?.startsWith('F'))
-      parAttendu.set(canonique(cible), [...(parAttendu.get(canonique(cible)) ?? []), produit]);
+    if (cible?.startsWith('F')) {
+      const can = canonique(cible);
+      parAttendu.set(can, [...(parAttendu.get(can) ?? []), produit]);
+      const brut = attendusBruts.get(cible);
+      if (brut) brutPar.set(produit.id, brut);
+    }
   }
   const apparies = [...parAttendu.entries()].flatMap(([id, liste]) =>
-    liste.map((p) => ({ attendu: attendus.get(id), produit: p })),
+    liste.map((p) => ({ attendu: attendus.get(id), brut: brutPar.get(p.id), produit: p })),
   );
   const compte = (test: (a: FaitAttendu, p: FaitProduit) => boolean): Ratio => ({
     ok: apparies.filter(({ attendu, produit }) => attendu && test(attendu, produit)).length,
     sur: apparies.length,
   });
+  // Un produit apparié à un redit se juge sur le tour du redit lui-même : son canonique peut être
+  // dans une tout autre conversation, à un autre tour.
+  const tourCorrect: Ratio = {
+    ok: apparies.filter(({ brut, produit }) => brut && brut.tour === produit.turnExternalId).length,
+    sur: apparies.length,
+  };
 
   // Les fiches « en attente de revue » sont privées par construction : on les ignore pour la dispersion.
   const appariesVisibles = apparies.filter(({ produit }) => produit.status !== 'pending_review');
@@ -121,10 +132,12 @@ export function calculerNotes(input: {
     apparies: nombreApparies,
     precision: ratio(nombreApparies, produits.length),
     fauxFaits: produits.filter((p) => paires.get(p.id)?.startsWith('N')).length,
+    // Un redit recréé gonfle les deux compteurs : c'est un vrai fait (il compte pour la précision),
+    // mais aussi un doublon que le dédoublonnage aurait dû absorber.
     doublonsFaits: [...parAttendu.values()].reduce((sum, liste) => sum + liste.length - 1, 0),
     redits: redits.length,
-    reditsRecrees: redits.filter((f) => parAttenduDirect(paires, f.id)).length,
-    tourCorrect: compte((a, p) => a.tour === p.turnExternalId),
+    reditsRecrees: redits.filter((f) => reditRecree(f, paires, faitsAttendu, canonique)).length,
+    tourCorrect,
     ficheCorrecte: compte((a, p) => ficheAttendue(a, p.ficheTitre)),
     typeCorrect: compte((a, p) => a.typeFiche === p.typeFiche),
     fichesDispersees: [...fichesParAttendue.values()].reduce(
@@ -182,6 +195,20 @@ function parAttenduDirect(paires: Map<string, string | null>, faitReditId: strin
   return false;
 }
 
+// Un redit compte comme recréé seulement si Leon a vraiment posé un second fait visible pour lui :
+// un fait produit sur le redit lui-même, ET le canonique a bien un fait actif et partagé (sinon on ne
+// saurait pas distinguer un redit simplement « non retrouvé » d'un redit « dédoublonné comme prévu »).
+function reditRecree(
+  f: FaitAttendu,
+  paires: Map<string, string | null>,
+  faitsAttendu: (id: string) => FaitProduit[],
+  canonique: (id: string) => string,
+): boolean {
+  const canoniques = faitsAttendu(canonique(f.id));
+  const actifPartage = canoniques.some((p) => p.status === 'active' && p.partage);
+  return actifPartage && parAttenduDirect(paires, f.id);
+}
+
 function notesConversation(
   c: ConversationEssai,
   produits: FaitProduit[],
@@ -191,14 +218,14 @@ function notesConversation(
 ): NotesConversation {
   const siens = faitsDeConversation(c, produits);
   const reditsIds = new Set(redits.map((f) => f.id));
-  // Un redit n'est jamais « manquant » : seul son canonique doit être retrouvé.
-  const manques = c.attendu.faits
-    .filter((f) => !reditsIds.has(f.id) && !parAttendu.has(f.id))
-    .map((f) => f.id);
+  // Un redit est exclu des attendus de sa conversation, pas seulement des manques : il n'est pas
+  // un fait distinct, cohérent avec le calcul global.
+  const faitsCanon = c.attendu.faits.filter((f) => !reditsIds.has(f.id));
+  const manques = faitsCanon.filter((f) => !parAttendu.has(f.id)).map((f) => f.id);
   return {
     cle: c.cle,
-    attendus: c.attendu.faits.length,
-    retrouves: c.attendu.faits.length - manques.length,
+    attendus: faitsCanon.length,
+    retrouves: faitsCanon.length - manques.length,
     produits: siens.length,
     manques,
     enTrop: siens.filter((p) => !paires.get(p.id)).map((p) => p.id),

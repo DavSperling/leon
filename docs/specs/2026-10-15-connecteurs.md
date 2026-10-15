@@ -98,8 +98,8 @@ type Connector<Config> = {
 
 ### Erreurs
 
-- Client HTTP commun : délai de 30 s, réponse limitée à 10 Mo, redirections refusées vers un autre hôte, trois reprises sur 429 et 5xx en respectant `Retry-After`.
-- 401 ou 403 : statut `error` avec « Clé refusée par <outil> : vérifiez-la ou remplacez-la. », et plus d'échéance (plus de relance automatique). Autre échec : statut `error`, échéance dans une heure. Le tic prend les connexions `active` et `error` dont l'échéance est passée ; une connexion en pause n'a pas d'échéance.
+- Client HTTP commun : délai de 30 s, réponse limitée à 10 Mo, redirections refusées vers un autre hôte, trois reprises sur 429, 5xx, limite de débit signalée par un 403 et erreur réseau, en respectant `Retry-After`.
+- 401, ou 403 qui n'est pas une limite de débit (GitHub signale une limite dépassée par un 403 avec `x-ratelimit-remaining: 0` ou `Retry-After`, traité comme un 429) : statut `error` avec « Clé refusée par <outil> : vérifiez-la ou remplacez-la. », et plus d'échéance (plus de relance automatique jusqu'au remplacement de la clé, qui relance la connexion). Autre échec : statut `error`, échéance dans une heure. Le tic prend les connexions `active` et `error` dont l'échéance est passée ; une connexion en pause n'a pas d'échéance.
 - `last_error` et les journaux contiennent l'outil, le code HTTP et un message court écrit par nous, jamais le corps de la réponse ni la clé.
 
 ## Le pipeline

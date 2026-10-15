@@ -5,12 +5,25 @@ export const PIPELINE_LLM_STEPS = ['triage', 'extraction', 'placement'] as const
 export type PipelineLlmStep = (typeof PIPELINE_LLM_STEPS)[number];
 export type LlmStep = PipelineLlmStep | 'juge';
 
+// Compteurs et coût estimé d'un appel, jamais son contenu.
+export type LlmUsage = {
+  step: LlmStep;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  costUsd: number | null;
+};
+
 export type LlmRequest<T> = {
   step: LlmStep;
   system: string;
   prompt: string;
   schema: z.ZodType<T>;
   maxTokens: number;
+  // Appelé après chaque appel facturé ; ne doit jamais lever (voir record-usage.ts).
+  onUsage?: (usage: LlmUsage) => Promise<void>;
 };
 
 // Le client réel (anthropic-llm.ts) et le faux des tests sont les deux implémentations.

@@ -1,6 +1,6 @@
 import Anthropic, { AnthropicError, APIError } from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
-import { type Llm, LlmError, type LlmRequest, type LlmStep } from './llm';
+import { type Llm, LlmError, type LlmRequest, type LlmStep, type LlmUsage } from './llm';
 
 // Rangement sur Haiku 5.5 (14/10) : sur 24 décisions réelles, Haiku 5.5 a choisi la même fiche et la
 // même relation qu'Opus 5.5 en effort high, pour 0,009 $ au lieu de 0,298 $. L'extraction reste sur
@@ -9,10 +9,16 @@ export const MODEL_BY_STEP = {
   triage: 'claude-haiku-5-5',
   extraction: 'claude-sonnet-5-5',
   placement: 'claude-haiku-5-5',
+  juge: 'claude-haiku-5-5', // notation du jeu d'essai (src/essai/judge.ts)
 } as const;
 
 // L'effort est fixé à chaque étape (son défaut varie selon le modèle).
-export const EFFORT_BY_STEP = { triage: 'low', extraction: 'medium', placement: 'medium' } as const;
+export const EFFORT_BY_STEP = {
+  triage: 'low',
+  extraction: 'medium',
+  placement: 'medium',
+  juge: 'low',
+} as const;
 
 export type AnthropicLike = Pick<Anthropic, 'beta'>;
 
@@ -44,9 +50,8 @@ type Usage = {
   cache_creation_input_tokens?: number | null;
 };
 
-// Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu.
-export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): void {
-  if (!usage) return;
+// Compteurs et coût estimé d'un appel, sans arrondi : la somme de centaines d'appels doit rester juste.
+export function usageOf(step: LlmStep, model: string, usage: Usage): LlmUsage {
   const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
   const cacheWriteTokens = usage.cache_creation_input_tokens ?? 0;
   const price = PRICE_PER_MTOK[model];
@@ -57,16 +62,24 @@ export function logUsage(step: LlmStep, model: string, usage: Usage | undefined)
         cacheWriteTokens * price.cacheWrite) /
       1_000_000
     : null;
-  const line = {
+  return {
     step,
     model,
     inputTokens: usage.input_tokens,
     outputTokens: usage.output_tokens,
     cacheReadTokens,
     cacheWriteTokens,
-    costUsd: costUsd === null ? null : Number(costUsd.toFixed(5)),
+    costUsd,
   };
-  console.info('[leon]', 'llm.usage', JSON.stringify(line));
+}
+
+// Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu.
+export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): LlmUsage | null {
+  if (!usage) return null;
+  const line = usageOf(step, model, usage);
+  const costUsd = line.costUsd === null ? null : Number(line.costUsd.toFixed(5));
+  console.info('[leon]', 'llm.usage', JSON.stringify({ ...line, costUsd }));
+  return line;
 }
 
 export function createAnthropicLlm(options: { apiKey: string } | { client: AnthropicLike }): Llm {
@@ -76,7 +89,12 @@ export function createAnthropicLlm(options: { apiKey: string } | { client: Anthr
   return {
     async generateObject<T>(request: LlmRequest<T>): Promise<T> {
       const message = await parseOrThrow(client, request);
-      logUsage(request.step, message.model ?? MODEL_BY_STEP[request.step], message.usage);
+      const usage = logUsage(
+        request.step,
+        message.model ?? MODEL_BY_STEP[request.step],
+        message.usage,
+      );
+      if (usage && request.onUsage) await request.onUsage(usage);
       if (message.stop_reason === 'refusal') throw new LlmError('refus du modèle');
       if (message.stop_reason && TRUNCATED_STOP_REASONS.includes(message.stop_reason))
         throw new LlmError('réponse tronquée');

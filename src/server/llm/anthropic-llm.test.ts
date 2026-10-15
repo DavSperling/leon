@@ -53,8 +53,14 @@ describe('createAnthropicLlm', () => {
       triage: 'claude-haiku-5-5',
       extraction: 'claude-sonnet-5-5',
       placement: 'claude-haiku-5-5',
+      juge: 'claude-haiku-5-5',
     });
-    expect(EFFORT_BY_STEP).toEqual({ triage: 'low', extraction: 'medium', placement: 'medium' });
+    expect(EFFORT_BY_STEP).toEqual({
+      triage: 'low',
+      extraction: 'medium',
+      placement: 'medium',
+      juge: 'low',
+    });
   });
 
   it.each(['extraction'] as const)('active le repli serveur des refus pour %s', async (step) => {
@@ -181,6 +187,31 @@ describe('logUsage', () => {
       costUsd: 6,
     });
     info.mockRestore();
+  });
+
+  it('transmet l usage non arrondi à onUsage', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm } = setup(() => ({
+      ...ok,
+      model: 'claude-haiku-5-5',
+      usage: { input_tokens: 10, output_tokens: 5 },
+    }));
+    const onUsage = vi.fn(async () => {});
+
+    await llm.generateObject({ ...request('triage'), onUsage });
+
+    expect(onUsage).toHaveBeenCalledOnce();
+    const [usage] = onUsage.mock.calls[0] as unknown as [Record<string, unknown>];
+    expect(usage).toMatchObject({
+      step: 'triage',
+      model: 'claude-haiku-5-5',
+      inputTokens: 10,
+      outputTokens: 5,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
+    expect(usage.costUsd).toBeCloseTo(0.0000035, 10);
+    vi.restoreAllMocks();
   });
 
   it('journalise l usage de chaque appel réussi', async () => {

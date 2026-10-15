@@ -1,0 +1,125 @@
+{
+  "data": [
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "thread_id": "a9a9a9a9-0000-4000-8000-0000000000a1"
+      },
+      "created_at": "2026-10-03T10:00:00.000000000Z",
+      "comments": [
+        {
+          "id": {
+            "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+            "comment_id": "c1c1c1c1-0000-4000-8000-0000000000b1"
+          },
+          "thread_id": "a9a9a9a9-0000-4000-8000-0000000000a1",
+          "content_plaintext": "Je propose de lui envoyer la grille tarifaire avant la démo.",
+          "entry": null,
+          "record": {
+            "record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+            "object_id": "97052eb9-e65e-443f-a297-f2d9a4a7f795"
+          },
+          "resolved_at": null,
+          "resolved_by": { "id": null, "type": null },
+          "created_at": "2026-10-03T10:00:00.000000000Z",
+          "author": { "type": "workspace-member", "id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b" }
+        },
+        {
+          "id": {
+            "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+            "comment_id": "c2c2c2c2-0000-4000-8000-0000000000b2"
+          },
+          "thread_id": "a9a9a9a9-0000-4000-8000-0000000000a1",
+          "content_plaintext": "D'accord, mais pas de remise avant la validation de marie@acme.test.",
+          "entry": null,
+          "record": {
+            "record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+            "object_id": "97052eb9-e65e-443f-a297-f2d9a4a7f795"
+          },
+          "resolved_at": null,
+          "resolved_by": { "id": null, "type": null },
+          "created_at": "2026-10-03T11:20:30.500000000Z",
+          "author": { "type": "workspace-member", "id": "6a1e8d52-0b7c-4e39-9a4f-2c8d5b1f7e03" }
+        }
+      ]
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "thread_id": "a8a8a8a8-0000-4000-8000-0000000000a2"
+      },
+      "created_at": "2026-10-11T16:45:00.000000000Z",
+      "comments": [
+        {
+          "id": {
+            "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+            "comment_id": "c3c3c3c3-0000-4000-8000-0000000000b3"
+          },
+          "thread_id": "a8a8a8a8-0000-4000-8000-0000000000a2",
+          "content_plaintext": "Le comité de décision a lieu le 15 octobre.",
+          "entry": null,
+          "record": {
+            "record_id": "c3d4e5f6-a7b8-4c9d-8e0f-1a2b3c4d5e6f",
+            "object_id": "5e2f9a10-7c3d-4b68-8f41-0d9a6c3b1e57"
+          },
+          "resolved_at": null,
+          "resolved_by": { "id": null, "type": null },
+          "created_at": "2026-10-11T16:45:00.000000000Z",
+          "author": { "type": "workspace-member", "id": "6a1e8d52-0b7c-4e39-9a4f-2c8d5b1f7e03" }
+        }
+      ]
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "thread_id": "a7a7a7a7-0000-4000-8000-0000000000a3"
+      },
+      "created_at": "2026-10-06T09:00:00.000000000Z",
+      "comments": [
+        {
+          "id": {
+            "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+            "comment_id": "c4c4c4c4-0000-4000-8000-0000000000b4"
+          },
+          "thread_id": "a7a7a7a7-0000-4000-8000-0000000000a3",
+          "content_plaintext": "",
+          "entry": null,
+          "record": {
+            "record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+            "object_id": "97052eb9-e65e-443f-a297-f2d9a4a7f795"
+          },
+          "resolved_at": null,
+          "resolved_by": { "id": null, "type": null },
+          "created_at": "2026-10-06T09:00:00.000000000Z",
+          "author": { "type": "workspace-member", "id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b" }
+        }
+      ]
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "thread_id": "a6a6a6a6-0000-4000-8000-0000000000a4"
+      },
+      "created_at": "2026-08-02T09:00:00.000000000Z",
+      "comments": [
+        {
+          "id": {
+            "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+            "comment_id": "c5c5c5c5-0000-4000-8000-0000000000b5"
+          },
+          "thread_id": "a6a6a6a6-0000-4000-8000-0000000000a4",
+          "content_plaintext": "Ancien commentaire, avant la date de départ.",
+          "entry": null,
+          "record": {
+            "record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+            "object_id": "97052eb9-e65e-443f-a297-f2d9a4a7f795"
+          },
+          "resolved_at": null,
+          "resolved_by": { "id": null, "type": null },
+          "created_at": "2026-08-02T09:00:00.000000000Z",
+          "author": { "type": "workspace-member", "id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b" }
+        }
+      ]
+    }
+  ]
+}

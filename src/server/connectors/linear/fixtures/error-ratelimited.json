@@ -1,0 +1,13 @@
+{
+  "errors": [
+    {
+      "message": "Rate limit exceeded for key lin_api_secret-detail",
+      "extensions": {
+        "type": "ratelimited",
+        "code": "RATELIMITED",
+        "userError": true,
+        "userPresentableMessage": "Too many requests, texte-de-l-outil"
+      }
+    }
+  ]
+}

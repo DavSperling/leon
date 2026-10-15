@@ -1,0 +1,68 @@
+{
+  "data": {
+    "issues": {
+      "nodes": [
+        {
+          "id": "6f1b7c52-0a3e-4d8e-9c11-2a5d0e7b9a01",
+          "identifier": "LEO-12",
+          "title": "Passer au plan Business",
+          "description": "Il faut décider du plan avant la fin du mois.\n\n## Contexte\n\n- 12 personnes utilisent l'outil\n- le plan actuel limite l'historique",
+          "url": "https://linear.app/acme/issue/LEO-12/passer-au-plan-business",
+          "updatedAt": "2026-10-14T16:20:00.000Z",
+          "creator": {
+            "name": "Marie Durand",
+            "email": "marie@acme.test"
+          },
+          "team": {
+            "name": "Produit"
+          },
+          "project": {
+            "name": "Site vitrine"
+          },
+          "comments": {
+            "nodes": [
+              {
+                "id": "c2d3e4f5-0000-4000-8000-000000000002",
+                "body": "OK, on part sur le plan Business dès le 1er novembre.",
+                "createdAt": "2026-10-14T16:20:00.000Z",
+                "user": {
+                  "name": "Marie Durand",
+                  "email": "marie@acme.test"
+                }
+              },
+              {
+                "id": "c1d3e4f5-0000-4000-8000-000000000001",
+                "body": "Le plan Business coûte 12 euros par personne et par mois.",
+                "createdAt": "2026-10-13T09:00:00.000Z",
+                "user": {
+                  "name": "David Martin",
+                  "email": "david@acme.test"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "6f1b7c52-0a3e-4d8e-9c11-2a5d0e7b9a02",
+          "identifier": "LEO-11",
+          "title": "Corriger la faute dans le pied de page",
+          "description": null,
+          "url": "https://linear.app/acme/issue/LEO-11/corriger-la-faute-dans-le-pied-de-page",
+          "updatedAt": "2026-10-14T08:00:00.000Z",
+          "creator": null,
+          "team": {
+            "name": "Produit"
+          },
+          "project": null,
+          "comments": {
+            "nodes": []
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "cursor-issues-1"
+      }
+    }
+  }
+}

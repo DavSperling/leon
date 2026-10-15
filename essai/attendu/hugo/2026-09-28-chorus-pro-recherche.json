@@ -1,0 +1,60 @@
+{
+  "faits": [
+    {
+      "id": "F113",
+      "enonce": "Le connecteur Chorus Pro doit être livré le 1er décembre 2026 pour SARL Bati-Ouest et Couverture Le Bihan, qui en ont besoin pour facturer des acheteurs publics.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "le connecteur Chorus Pro doit être livré le 1er décembre, pour Bati-Ouest et Le Bihan. Les deux en ont besoin pour facturer des acheteurs publics",
+      "sensible": false
+    },
+    {
+      "id": "F130",
+      "enonce": "Décision : le connecteur Chorus Pro utilise un compte technique dédié par client.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-013",
+      "extrait": "décision : un compte technique dédié par client",
+      "sensible": false
+    },
+    {
+      "id": "F131",
+      "enonce": "Le connecteur Chorus Pro envoie les factures au format Factur-X.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-009",
+      "extrait": "on envoie les factures au format Factur-X",
+      "sensible": false
+    },
+    {
+      "id": "F156",
+      "enonce": "Avec le connecteur Chorus Pro, l'artisan dépose sa facture sur Chorus Pro en un clic depuis Chantier+ et en voit remonter le statut, sans saisie en double sur le portail.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "l'artisan dépose sa facture sur Chorus Pro en un clic, et voit remonter le statut dans l'appli. Pas de saisie en double sur le portail",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N045",
+      "enonce": "Présentation générale de Chorus Pro et de l'obligation de facturation électronique.",
+      "tour": "t-002",
+      "pourquoi": "question générale"
+    },
+    {
+      "id": "N049",
+      "enonce": "Résultats de recherche web bruts, non vérifiés.",
+      "tour": "t-006",
+      "pourquoi": "recherche non vérifiée"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

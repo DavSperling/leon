@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-09-25-prospect-rousseau",
+    "title": "Devis Plomberie Rousseau"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "jprepare le devis plomberie rousseau : 12 licences, 9600 HT. tu peux me faire un argumentaire pour vendre un logiciel aux plombiers en general ? genre les arguments qui marchent avec eux",
+      "ts": "2026-09-25T11:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici un argumentaire général pour des entreprises de plomberie :\n\n**1. Gagner du temps sur les devis**\nLes plombiers font beaucoup de petits devis (dépannage, remplacement de chauffe-eau, salle de bains). Une bibliothèque d'articles et de forfaits réutilisables divise le temps de rédaction.\n\n**2. Ne plus perdre d'interventions**\nLe planning partagé évite les doubles réservations et les oublis, surtout avec des urgences qui bousculent la journée.\n\n**3. Facturer plus vite**\nTransformer un devis accepté en facture en un clic raccourcit le délai d'encaissement, un sujet sensible pour les petites structures.\n\n**4. Le terrain connecté**\nLe technicien voit son intervention, prend une photo, fait signer le client sur place.\n\n**5. Une image plus professionnelle**\nDes devis propres et homogènes rassurent les particuliers comme les syndics.\n\n**Objections fréquentes**\n- « J'ai pas le temps de me former » → mettre en avant la prise en main accompagnée.\n- « Mon tableur me suffit » → chiffrer le temps passé chaque semaine sur les devis.\n\nTu veux que je l'adapte au cas précis de ton prospect ?",
+      "ts": "2026-09-25T11:30:34+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "ok top. sandrine m'a confirmé au tel qu'elle signe mi-octobre, elle attend juste la fin de son gros chantier",
+      "ts": "2026-09-25T11:32:30+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Très bonne nouvelle. Pour sécuriser la signature :\n\n- **Envoie le devis rapidement**, pour qu'elle l'ait sous la main au moment de décider.\n- **Fixe dès maintenant un rendez-vous** (téléphone ou visite) autour de la date prévue, plutôt que d'attendre qu'elle revienne vers toi.\n- **Prépare les éléments administratifs** (bon de commande, conditions générales) pour qu'il n'y ait plus rien à faire que signer.\n- **Évite de relancer pendant son chantier** : une seule prise de nouvelles légère, sans pression.",
+      "ts": "2026-09-25T11:33:06+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "jme dis que si on leur fait -15 % ils signent direct, t'en penses quoi ? cest juste une idée hein jai rien proposé",
+      "ts": "2026-09-25T11:36:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Une remise peut accélérer une décision, mais attention :\n\n**Le calcul**\n- Montant actuel : 9 600 € HT\n- Avec −15 % : 9 600 × 0,85 = **8 160 € HT**, soit 1 440 € de moins.\n\n**Les risques**\n- **Elle semble déjà décidée** : une remise maintenant, c'est de la marge perdue sans contrepartie.\n- **Précédent** : elle s'attendra à la même remise au renouvellement.\n- **Signal** : une baisse spontanée peut faire douter de la valeur du prix initial.\n\n**Si tu veux un levier**, préfère une contrepartie : remise conditionnée à une signature avant une date, ou un service offert (session de formation supplémentaire) plutôt qu'un pourcentage.\n\nDans tous les cas, valide avec ta direction avant d'en parler au client.",
+      "ts": "2026-09-25T11:37:01+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "ouais t'as raison je garde l'idée sous le coude, jen parle a claire avant de proposer quoi que ce soit",
+      "ts": "2026-09-25T11:41:28+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Bonne approche. Si tu lui en parles, arrive avec le calcul et deux options (remise conditionnée ou service offert) : la décision sera plus rapide.",
+      "ts": "2026-09-25T11:41:36+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

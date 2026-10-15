@@ -1,0 +1,39 @@
+{
+  "faits": [
+    {
+      "id": "F067",
+      "enonce": "Le devis de Menuiserie Dupont est renégocié à 16 900 € HT.",
+      "fiche": "Menuiserie Dupont",
+      "alias": ["Dupont"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "on passe de 18.4k a 16 900 HT",
+      "sensible": false
+    },
+    {
+      "id": "F068",
+      "enonce": "Menuiserie Dupont exige que la refonte du module devis lui soit livrée avant le 30 octobre 2026 ; c'est sa condition pour signer.",
+      "fiche": "Menuiserie Dupont",
+      "alias": ["Dupont"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "gerard veut absolument la refonte du module devis livrée avant le 30/10, c sa condition pour signer",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N026",
+      "enonce": "Brouillon de mail « proposition finale » non envoyé.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [
+    {
+      "ancien": "F052",
+      "nouveau": "F067"
+    }
+  ],
+  "conflits": []
+}

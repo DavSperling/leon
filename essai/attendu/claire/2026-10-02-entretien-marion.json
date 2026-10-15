@@ -1,0 +1,57 @@
+{
+  "faits": [
+    {
+      "id": "F023",
+      "enonce": "L'entretien annuel de Marion Caradec a eu lieu le 2 octobre 2026.",
+      "fiche": "Marion Caradec",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "entretien annuel de Marion Caradec, aujourd'hui 2 octobre",
+      "sensible": true
+    },
+    {
+      "id": "F024",
+      "enonce": "Marion Caradec souhaite devenir référente back-end ; Claire y est favorable, mais pas tout de suite.",
+      "fiche": "Marion Caradec",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Elle souhaite devenir référente back-end. J'y suis favorable, mais pas tout de suite",
+      "sensible": true
+    },
+    {
+      "id": "F025",
+      "enonce": "Objectif fixé à Marion Caradec : livrer la partie API du connecteur Chorus Pro avant décembre.",
+      "fiche": "Marion Caradec",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-005",
+      "extrait": "livrer la partie API du connecteur Chorus Pro avant décembre",
+      "sensible": true
+    },
+    {
+      "id": "F033",
+      "enonce": "Marion Caradec reprend les tests du connecteur Chorus Pro.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "elle reprend les tests du connecteur, Hugo lui passe la main",
+      "sensible": false
+    },
+    {
+      "id": "F036",
+      "enonce": "Le bilan annuel de Marion Caradec est très bon : elle est rigoureuse et fiable.",
+      "fiche": "Marion Caradec",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Bilan très bon, rigoureuse, fiable",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [],
+  "conflits": []
+}

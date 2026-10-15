@@ -1,0 +1,60 @@
+{
+  "faits": [
+    {
+      "id": "F143",
+      "enonce": "Le module devis gère les lignes en variante (option ou alternative).",
+      "fiche": "Refonte du module devis",
+      "alias": ["module devis"],
+      "typeFiche": "projet",
+      "tour": "t-008",
+      "extrait": "le module devis gère les lignes en variante, soit en option (le client coche ou pas), soit en alternative",
+      "sensible": false
+    },
+    {
+      "id": "F144",
+      "enonce": "La remise globale d'un devis est plafonnée à 30 %.",
+      "fiche": "Remise maximale sur un devis",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-004",
+      "extrait": "la remise globale d'un devis est plafonnée à 30 %",
+      "sensible": false
+    },
+    {
+      "id": "F145",
+      "enonce": "Toute modification du module devis passe par une relecture de code avant fusion.",
+      "fiche": "Relecture de code",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-001",
+      "extrait": "toute modification du module devis passe par une relecture de code avant fusion",
+      "sensible": false
+    },
+    {
+      "id": "F154",
+      "enonce": "Un devis signé n'est plus modifiable : toute modification crée un avenant.",
+      "fiche": "Avenants de devis",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-006",
+      "extrait": "un devis signé n'est plus modifiable. si le client veut changer quoi que ce soit après signature, ça crée un avenant",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N054",
+      "enonce": "Sorties de tests et diff.",
+      "tour": "t-012",
+      "pourquoi": "sortie d'outil"
+    },
+    {
+      "id": "N055",
+      "enonce": "Renommages de variables sans portée fonctionnelle.",
+      "tour": "t-014",
+      "pourquoi": "session"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

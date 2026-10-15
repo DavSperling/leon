@@ -1,0 +1,45 @@
+{
+  "faits": [
+    {
+      "id": "F186",
+      "enonce": "Karim a relayé le ticket 482 d'Électricité Perrin : l'export PDF des devis coupe au-delà de 50 lignes.",
+      "fiche": "Électricité Perrin",
+      "alias": ["Perrin"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Karim vient de me relayer un ticket client, le ticket 482 d'Électricité Perrin : l'export PDF des devis coupe au-delà de 50 lignes.",
+      "sensible": false,
+      "doublonDe": "F061"
+    },
+    {
+      "id": "F189",
+      "enonce": "Le ticket 482 est confié à Hugo Martin, car il touche au générateur PDF côté serveur.",
+      "fiche": "Électricité Perrin",
+      "alias": ["Perrin"],
+      "typeFiche": "client",
+      "tour": "t-004",
+      "extrait": "Je confie le ticket 482 à Hugo, ça touche au générateur PDF côté serveur",
+      "sensible": false
+    },
+    {
+      "id": "F200",
+      "enonce": "Damien Perrin a envoyé un devis de 63 lignes pour reproduire le ticket 482.",
+      "fiche": "Électricité Perrin",
+      "alias": ["Perrin"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Damien Perrin nous a envoyé un devis de 63 lignes pour qu'on puisse reproduire",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N083",
+      "enonce": "Contournement provisoire testé (export en deux PDF).",
+      "tour": "t-007",
+      "pourquoi": "session"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

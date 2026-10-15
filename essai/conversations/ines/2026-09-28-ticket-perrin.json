@@ -1,0 +1,93 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-ines-2026-09-28-ticket-perrin",
+    "title": "Ticket 482 : export PDF tronqué"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Karim vient de me relayer un ticket client, le ticket 482 d'Électricité Perrin : l'export PDF des devis coupe au-delà de 50 lignes. Le client exporte un devis, le PDF s'arrête net à la ligne 50, pas de page suivante, pas de total. Damien Perrin nous a envoyé un devis de 63 lignes pour qu'on puisse reproduire, je l'ai mis dans `fixtures/tickets/482-devis-perrin.json` (j'ai anonymisé les prix unitaires, la structure est intacte).\n\nAvant de me lancer : je veux savoir si le problème est côté interface (le bouton d'export de l'appli web ou de l'appli mobile qui tronquerait les données envoyées) ou côté serveur. Regarde le chemin complet de l'export, du bouton jusqu'à la génération du fichier, et dis-moi où les lignes pourraient se perdre. Ne modifie rien.",
+      "ts": "2026-09-28T15:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je suis le chemin de l'export depuis le bouton de l'écran devis jusqu'à l'appel API.",
+      "ts": "2026-09-28T15:01:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Côté interface, rien ne tronque : le bouton envoie seulement l'identifiant du devis à `POST /api/devis/:id/pdf`. Les lignes sont relues côté serveur, dans `server/pdf/genererDevis.ts`.",
+      "ts": "2026-09-28T15:04:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"trace-export\">\nRapport : chemin complet de l'export PDF d'un devis, du bouton au fichier\n\nCe que j'ai fait\n- Suivi l'appel depuis l'écran devis de l'appli web, puis depuis l'écran devis de l'appli mobile, jusqu'à la réponse de l'API.\n- Cherché dans tout le dépôt les endroits où des lignes de devis sont filtrées, découpées ou limitées.\n- Lu le gabarit et le module de rendu sans rien modifier.\n\nChemin côté web\n```\napps/web/src/devis/BoutonExport.tsx\n  -> exporterPdf(devisId)                    apps/web/src/devis/api.ts:41\n  -> POST /api/devis/:id/pdf                 (corps vide, seul l'identifiant est dans l'URL)\n```\n\nChemin côté mobile\n```\napps/mobile/src/devis/DevisDetail.tsx\n  -> partagerPdf(devisId)                    apps/mobile/src/devis/partage.ts:17\n  -> POST /api/devis/:id/pdf                 (même appel que le web)\n  -> enregistrement du fichier puis feuille de partage du système\n```\n\nChemin côté serveur\n```\nserver/routes/devis.ts:212          route POST /api/devis/:id/pdf\nserver/devis/charger.ts:58          chargerDevisComplet(id) : en-tête, lignes, totaux\nserver/pdf/genererDevis.ts:23       genererDevis(devis, gabarit)\nserver/pdf/gabarits/devis-standard.ts\nserver/pdf/rendu/tableau.ts         rendu du tableau des lignes\n```\n\nRecherches\n```\n$ rg -n \"slice\\(|limit|take\\(\" apps/web/src/devis apps/mobile/src/devis\n(aucun résultat)\n$ rg -n \"lignes\\.length\" server/pdf\nserver/pdf/genererDevis.ts:47:  log.debug(`devis ${devis.id} : ${devis.lignes.length} lignes chargées`)\nserver/pdf/rendu/tableau.ts:88:  const total = devis.lignes.length\n```\n\nCommandes lancées\n```\n$ rg -n \"api/devis/.*/pdf\" apps server\napps/web/src/devis/api.ts:41:  return post(`/api/devis/${devisId}/pdf`)\napps/mobile/src/devis/partage.ts:17:  const reponse = await api.post(`/api/devis/${devisId}/pdf`)\nserver/routes/devis.ts:212:router.post('/api/devis/:id/pdf', exigerSession, async (req, res) => {\n\n$ rg -n \"chargerDevisComplet\" server\nserver/devis/charger.ts:58:export async function chargerDevisComplet(id: string) {\nserver/routes/devis.ts:214:  const devis = await chargerDevisComplet(req.params.id)\nserver/routes/devis.ts:331:  const devis = await chargerDevisComplet(req.params.id)\n\n$ pnpm --filter web test -- devis/charger\n PASS  server/devis/__tests__/charger.test.ts\n  chargerDevisComplet\n    ✓ renvoie l'en-tête du devis (12 ms)\n    ✓ renvoie toutes les lignes dans l'ordre (9 ms)\n    ✓ renvoie les totaux (4 ms)\nTests:       3 passed, 3 total\n```\n\nVérification avec la fixture du ticket\n```\n$ node scripts/compter-lignes.mjs fixtures/tickets/482-devis-perrin.json\nfixture : 63 lignes\nchargerDevisComplet(test-482) : 63 lignes\n```\n\nConstats\n- Aucun des deux clients ne transporte les lignes : ils n'envoient que l'identifiant du devis.\n- Les lignes sont relues en base côté serveur dans `chargerDevisComplet`, qui les renvoie toutes (vérifié avec un devis de 63 lignes : 63 en sortie).\n- La perte se produit donc pendant le rendu, dans `server/pdf/`. Je ne suis pas allé plus loin dans le module de rendu, qui n'est pas dans le périmètre demandé.\n\nRecommandation\nLaisser l'interface de côté et faire regarder le module de rendu PDF du serveur.\n</teammate-message>",
+      "ts": "2026-09-28T15:05:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003b",
+      "role": "assistant",
+      "text": "Le rapport recoupe ce que j'ai vu : web et mobile n'envoient que l'identifiant, les 63 lignes sont bien chargées côté serveur, la perte a lieu au rendu dans `server/pdf/`.",
+      "ts": "2026-09-28T15:07:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Ok donc ça ne vient pas de chez moi. J'ai quand même lancé l'export en local avec le devis de Perrin pour voir :\n\n$ pnpm --filter web dev\n[api] POST /api/devis/test-482/pdf 200 in 1840ms\n[pdf] devis test-482 : 63 lignes chargées\n[pdf] rendu page 1 : 50 lignes\n[pdf] fin du rendu, 1 page, 41 Ko\n\nDonc les 63 lignes arrivent bien, mais le rendu s'arrête après 50 et ne crée jamais de page 2. C'est dans le générateur PDF côté serveur, c'est le terrain de Hugo, pas le mien.\n\nJe confie le ticket 482 à Hugo, ça touche au générateur PDF côté serveur. Prépare-moi un résumé court que je lui colle dans le ticket : symptôme, fichier concerné, comment reproduire avec la fixture.\n\nPS : pour que tu voies la tête de la fixture, voilà le début et la fin du fichier (prix unitaires remplacés par des XX, le reste est tel que reçu) :\n\n```json\n{\n  \"id\": \"test-482\",\n  \"client\": \"Électricité Perrin\",\n  \"objet\": \"Rénovation électrique, maison individuelle\",\n  \"lignes\": [\n    { \"n\": 1,  \"designation\": \"Dépose de l'ancien tableau électrique\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 2,  \"designation\": \"Fourniture et pose tableau 3 rangées\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 3,  \"designation\": \"Disjoncteur différentiel 30 mA type A\", \"quantite\": 2, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 4,  \"designation\": \"Disjoncteur différentiel 30 mA type AC\", \"quantite\": 2, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 5,  \"designation\": \"Disjoncteur divisionnaire 16 A\", \"quantite\": 12, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 6,  \"designation\": \"Disjoncteur divisionnaire 20 A\", \"quantite\": 6, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 7,  \"designation\": \"Disjoncteur divisionnaire 32 A\", \"quantite\": 2, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 8,  \"designation\": \"Peigne d'alimentation\", \"quantite\": 3, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 9,  \"designation\": \"Câble R2V 3G2,5\", \"quantite\": 120, \"unite\": \"m\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 10, \"designation\": \"Câble R2V 3G1,5\", \"quantite\": 90, \"unite\": \"m\", \"prixUnitaireHT\": \"XX\" },\n    ...\n    { \"n\": 48, \"designation\": \"Prise RJ45 catégorie 6\", \"quantite\": 6, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 49, \"designation\": \"Coffret de communication\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 50, \"designation\": \"Saignées et rebouchage, pièces de vie\", \"quantite\": 14, \"unite\": \"h\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 51, \"designation\": \"Saignées et rebouchage, chambres\", \"quantite\": 9, \"unite\": \"h\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 52, \"designation\": \"Point lumineux extérieur avec détecteur\", \"quantite\": 2, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 53, \"designation\": \"Prise extérieure étanche\", \"quantite\": 2, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 54, \"designation\": \"Ligne dédiée plaque de cuisson 32 A\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 55, \"designation\": \"Ligne dédiée four\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 56, \"designation\": \"Ligne dédiée lave-linge\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 57, \"designation\": \"Ligne dédiée lave-vaisselle\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 58, \"designation\": \"Ligne dédiée chauffe-eau avec contacteur jour/nuit\", \"quantite\": 1, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 59, \"designation\": \"Liaison équipotentielle salle de bains\", \"quantite\": 1, \"unite\": \"forfait\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 60, \"designation\": \"Mise à la terre, contrôle et barrette\", \"quantite\": 1, \"unite\": \"forfait\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 61, \"designation\": \"Évacuation des déchets de chantier\", \"quantite\": 1, \"unite\": \"forfait\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 62, \"designation\": \"Attestation de conformité\", \"quantite\": 1, \"unite\": \"forfait\", \"prixUnitaireHT\": \"XX\" },\n    { \"n\": 63, \"designation\": \"Déplacement\", \"quantite\": 4, \"unite\": \"u\", \"prixUnitaireHT\": \"XX\" }\n  ],\n  \"tauxTVA\": \"XX\",\n  \"remiseGlobale\": null\n}\n```\n\nEt le journal serveur en mode verbeux pendant l'export, si jamais ça sert à Hugo :\n\n```\n$ DEBUG=pdf:* pnpm --filter web dev\n[pdf:charge] devis test-482 : 63 lignes, 1 bloc totaux, 0 remise\n[pdf:gabarit] gabarit devis-standard, marges 18/18/22/18 mm\n[pdf:rendu] page 1 : en-tête OK\n[pdf:rendu] page 1 : tableau, lignes 1 à 50\n[pdf:rendu] page 1 : hauteur restante 212 pt\n[pdf:rendu] fin du tableau\n[pdf:rendu] bloc totaux ignoré (aucune page disponible)\n[pdf:sortie] 1 page, 41 Ko, 1840 ms\n```\n\nEt pour comparer, le même export sur un devis court de la base de démo, qui sort normalement :\n\n```\n$ DEBUG=pdf:* curl -s -X POST localhost:3000/api/devis/demo-017/pdf -o /tmp/demo-017.pdf\n[pdf:charge] devis demo-017 : 12 lignes, 1 bloc totaux, 0 remise\n[pdf:gabarit] gabarit devis-standard, marges 18/18/22/18 mm\n[pdf:rendu] page 1 : en-tête OK\n[pdf:rendu] page 1 : tableau, lignes 1 à 12\n[pdf:rendu] page 1 : bloc totaux\n[pdf:sortie] 1 page, 33 Ko, 702 ms\n```",
+      "ts": "2026-09-28T15:08:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "Voici le résumé pour le ticket :",
+      "ts": "2026-09-28T15:09:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Ticket 482, Électricité Perrin.\nSymptôme : export PDF d'un devis de 63 lignes, le PDF s'arrête à la ligne 50, une seule page, pas de total.\nCôté interface : rien à signaler, seul l'identifiant du devis est envoyé.\nCôté serveur : `server/pdf/genererDevis.ts` charge bien les 63 lignes, le rendu s'arrête à 50 sans saut de page.\nReproduire : `fixtures/tickets/482-devis-perrin.json`, puis `POST /api/devis/test-482/pdf`.",
+      "ts": "2026-09-28T15:11:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait, collé dans le ticket. Pendant que Hugo regarde, je veux un truc à proposer à Romain au support si Perrin rappelle avant le correctif. J'ai testé un contournement à la main : dupliquer le devis, supprimer les lignes 51 à 63 dans le premier et les lignes 1 à 50 dans le second, exporter les deux. Ça donne deux PDF :\n\n[pdf] devis test-482-a : 50 lignes chargées, 1 page, 39 Ko\n[pdf] devis test-482-b : 13 lignes chargées, 1 page, 18 Ko\n\nÇa marche, mais le total du second PDF ne porte que sur 13 lignes, donc c'est bancal. Tu vois un moyen plus propre sans toucher au serveur ?\n\nLe texte extrait des deux PDF pour vérifier qu'aucune ligne ne manque :\n\n```\n$ pdftotext test-482-a.pdf - | grep -c \"^[0-9]\\{1,2\\} \"\n50\n$ pdftotext test-482-b.pdf - | grep -c \"^[0-9]\\{1,2\\} \"\n13\n$ pdftotext test-482-b.pdf - | head -4\nDevis test-482-b\nÉlectricité Perrin\nRénovation électrique, maison individuelle\n1 Saignées et rebouchage, chambres\n```\n\nLes 63 lignes sont bien là au total, mais la numérotation repart à 1 dans le second PDF, ce qui ajoute encore à la confusion.",
+      "ts": "2026-09-28T15:14:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Pas sans toucher au serveur : le total est calculé dans le même rendu. Le plus propre côté support est d'indiquer le total général à la main dans le mail d'envoi des deux PDF.",
+      "ts": "2026-09-28T15:16:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "Ok, on laisse tomber, c'est trop bricolé, Romain dira juste au client que le correctif arrive. Je supprime les devis de test `test-482-a` et `test-482-b` de ma base locale, tu peux me rappeler la commande du script de nettoyage ?\n\nCe que j'ai en local avant nettoyage :\n\n```\n$ pnpm --filter web db:lister -- --prefixe test-\nid            lignes  cree_le\ntest-482      63      2026-09-28 15:05\ntest-482-a    50      2026-09-28 15:12\ntest-482-b    13      2026-09-28 15:13\ntest-relance  4       2026-09-17 09:40\n```\n\nJe garde `test-482` (c'est la fixture) et `test-relance`, je ne veux supprimer que les deux copies.",
+      "ts": "2026-09-28T15:19:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "`pnpm --filter web db:nettoyer -- --prefixe test-482` supprime en local tous les devis dont l'identifiant commence par `test-482`.",
+      "ts": "2026-09-28T15:20:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

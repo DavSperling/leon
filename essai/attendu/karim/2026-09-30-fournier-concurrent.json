@@ -1,0 +1,55 @@
+{
+  "faits": [
+    {
+      "id": "F066",
+      "enonce": "L'interlocuteur chez Maçonnerie Fournier est Patrick Fournier, le gérant.",
+      "fiche": "Maçonnerie Fournier",
+      "alias": ["Fournier"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "patrick fournier (le gerant de maconnerie fournier)",
+      "sensible": false
+    },
+    {
+      "id": "F064",
+      "enonce": "Maçonnerie Fournier menace de partir chez Batinova.",
+      "fiche": "Maçonnerie Fournier",
+      "alias": ["Fournier"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "il menace de partir chez batinova",
+      "sensible": false,
+      "doublonDe": "F010"
+    },
+    {
+      "id": "F065",
+      "enonce": "Batinova propose 39 € HT par utilisateur et par mois.",
+      "fiche": "Batinova",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-003",
+      "extrait": "batinova est a 39 HT par user par mois",
+      "sensible": false
+    },
+    {
+      "id": "F081",
+      "enonce": "Maçonnerie Fournier utilise 20 licences Chantier+.",
+      "fiche": "Maçonnerie Fournier",
+      "alias": ["Fournier"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "fournier a 20 licences chez nous",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N025",
+      "enonce": "Comparatif général des CRM du marché.",
+      "tour": "t-006",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

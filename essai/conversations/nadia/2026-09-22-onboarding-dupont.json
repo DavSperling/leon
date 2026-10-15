@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-09-22-onboarding-dupont",
+    "title": "Onboarding Menuiserie Dupont"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour ! Karim envoie aujourd'hui le devis à Menuiserie Dupont, et je veux préparer leur arrivée tout de suite pour ne pas perdre de temps s'ils signent.\n\nCôté client, notre interlocuteur c'est Gérard Dupont, le gérant. C'est lui qui décide de tout et qui veut être dans la boucle sur chaque étape.\n\nTu peux m'aider à structurer l'onboarding ?",
+      "ts": "2026-09-22T09:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Avec plaisir. Pour structurer l'onboarding, j'ai besoin de quelques précisions :\n\n1. **Format de la formation** : sur site, à distance, ou un mélange ?\n2. **Nombre de sessions** : une session longue ou plusieurs plus courtes ?\n3. **Qui forme** : quelqu'un de chez vous en particulier ?\n4. **Données à reprendre** : ont-ils un catalogue d'articles, une liste de clients, des devis en cours à importer ?\n5. **Calendrier** : y a-t-il une date de démarrage souhaitée ?\n\nAvec ça je te fais un plan d'onboarding complet.",
+      "ts": "2026-09-22T09:32:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "- formation : on part sur 2 sessions sur site, chez eux à Angers. Les menuisiers ne viendront jamais à Nantes et à distance ça ne marche pas avec eux\n- c'est Camille Rivet qui assure la formation, elle connaît bien les menuisiers\n- données : ils ont un catalogue sous tableur, je ne sais pas pour le reste\n- date : je vois avec Camille",
+      "ts": "2026-09-22T09:36:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Merci. Voici une proposition de contenu pour les deux sessions (à valider avec Camille) :\n\n**Session 1 : prise en main et devis**\n- création des comptes et premiers pas dans Chantier+\n- paramétrage de l'entreprise (logo, mentions, conditions)\n- catalogue d'articles : vérification après import\n- premiers devis réels avec les utilisateurs\n\n**Session 2 : planning et facturation**\n- planning des chantiers et affectation des équipes\n- passage du devis à la facture\n- relances et suivi des paiements\n- questions de la première période d'utilisation\n\nEntre les deux sessions, prévois un point téléphonique court pour lever les blocages. Tu veux que je prépare aussi la liste de ce qu'il faut leur demander avant la session 1 ?",
+      "ts": "2026-09-22T09:39:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Ok pour le contenu, Camille est d'accord.\nPour la date c'est calé : la première session aura lieu le 13 octobre. La deuxième on verra selon leur avancée, je ne veux pas la fixer trop tôt.\n\nOui pour la liste de ce qu'il faut leur demander.",
+      "ts": "2026-09-22T09:45:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici la liste à envoyer au client avant la première session :\n\n**À demander au client**\n- la liste des utilisateurs (nom, prénom, adresse mail, rôle)\n- le catalogue d'articles au format tableur (référence, désignation, unité, prix HT, taux de TVA)\n- le logo en bonne qualité\n- les mentions légales à faire figurer sur les devis et factures\n- les conditions générales de vente, s'ils en ont\n\n**À faire de notre côté**\n- créer les comptes dans Atelier Admin\n- importer le catalogue et vérifier les taux de TVA\n- préparer un jeu de devis d'exemple pour la session 1\n- réserver le déplacement de Camille à Angers\n\nJe te conseille de demander le catalogue au moins une semaine avant, l'import révèle souvent des surprises (unités incohérentes, doublons).",
+      "ts": "2026-09-22T09:47:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Ajoute une ligne « je relance Gérard la veille de chaque session ». Et pour le catalogue, c'est quoi les surprises classiques ? Que je prévienne Camille.",
+      "ts": "2026-09-22T09:52:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "C'est ajouté à la liste « À faire de notre côté » : relance de Gérard Dupont la veille de chaque session.\n\nLes surprises classiques sur un import de catalogue :\n- **unités incohérentes** : « m2 », « m² », « M2 » pour la même chose ;\n- **doublons** : la même référence avec deux prix différents ;\n- **prix TTC** mélangés avec des prix HT ;\n- **taux de TVA absents** ou un seul taux pour tout, alors que les travaux de rénovation ont souvent un taux réduit ;\n- **désignations trop longues**, coupées à l'affichage ;\n- **articles obsolètes** jamais nettoyés.\n\nLe plus efficace : Camille passe vingt minutes sur le fichier avant l'import et renvoie les questions au client en une seule fois.",
+      "ts": "2026-09-22T09:55:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

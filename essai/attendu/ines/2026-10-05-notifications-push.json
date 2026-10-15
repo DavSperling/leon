@@ -1,0 +1,44 @@
+{
+  "faits": [
+    {
+      "id": "F197",
+      "enonce": "Le chef de chantier reçoit une notification push quand un devis est signé.",
+      "fiche": "Application mobile v2",
+      "alias": ["appli v2", "appli mobile"],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "le chef de chantier reçoit une notification push quand un devis est signé",
+      "sensible": false
+    },
+    {
+      "id": "F198",
+      "enonce": "Les notifications push sont désactivables par type dans le profil.",
+      "fiche": "Application mobile v2",
+      "alias": ["appli v2", "appli mobile"],
+      "typeFiche": "projet",
+      "tour": "t-009",
+      "extrait": "les notifications push sont désactivables par type dans le profil",
+      "sensible": false
+    },
+    {
+      "id": "F203",
+      "enonce": "Le client signe le devis sur le téléphone du chef de chantier, dans l'application mobile v2.",
+      "fiche": "Application mobile v2",
+      "alias": ["appli v2", "appli mobile"],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "le client signe le devis sur le téléphone du chef de chantier, directement dans l'appli mobile v2",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N087",
+      "enonce": "Débogage des jetons de notification sans décision.",
+      "tour": "t-007",
+      "pourquoi": "débogage sans décision"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

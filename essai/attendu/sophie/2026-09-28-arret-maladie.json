@@ -1,0 +1,44 @@
+{
+  "faits": [
+    {
+      "id": "F236",
+      "enonce": "Julien Lefort est en arrêt maladie du 28 septembre au 16 octobre 2026.",
+      "fiche": "Julien Lefort",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "il est en arrêt maladie du 28 septembre au 16 octobre 2026 inclus",
+      "sensible": true
+    },
+    {
+      "id": "F237",
+      "enonce": "L'entreprise maintient le salaire de Julien Lefort pendant son arrêt (subrogation).",
+      "fiche": "Julien Lefort",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-005",
+      "extrait": "l'entreprise maintient le salaire de Julien pendant tout son arrêt, en subrogation",
+      "sensible": true
+    },
+    {
+      "id": "F239",
+      "enonce": "Pendant l'absence de Julien Lefort, Romain Tessier assure seul le support client.",
+      "fiche": "Support client",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-007",
+      "extrait": "pendant l'absence de Julien, Romain Tessier assure seul le support client",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N102",
+      "enonce": "Délai de carence d'un arrêt maladie, en général.",
+      "tour": "t-004",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

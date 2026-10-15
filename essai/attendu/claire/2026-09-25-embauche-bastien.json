@@ -1,0 +1,54 @@
+{
+  "faits": [
+    {
+      "id": "F012",
+      "enonce": "Bastien Royer est embauché comme développeur mobile en CDI.",
+      "fiche": "Bastien Royer",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "j'embauche Bastien Royer comme développeur mobile, en CDI",
+      "sensible": true
+    },
+    {
+      "id": "F013",
+      "enonce": "Le salaire de Bastien Royer est de 46 000 € brut annuel.",
+      "fiche": "Bastien Royer",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Salaire : 46 000 € brut annuel",
+      "sensible": true
+    },
+    {
+      "id": "F014",
+      "enonce": "Bastien Royer commence le 2 novembre 2026.",
+      "fiche": "Bastien Royer",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Il arrive le 2 novembre",
+      "sensible": true
+    },
+    {
+      "id": "F015",
+      "enonce": "La période d'essai de Bastien Royer est de 3 mois.",
+      "fiche": "Bastien Royer",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-005",
+      "extrait": "Période d'essai : 3 mois",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N005",
+      "enonce": "Brouillon de lettre de proposition d'embauche.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

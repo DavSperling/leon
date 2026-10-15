@@ -1,0 +1,64 @@
+{
+  "faits": [
+    {
+      "id": "F230",
+      "enonce": "OVH facture 412 € HT par mois pour l'hébergement de Chantier+.",
+      "fiche": "OVH",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Nous payons 412 € HT par mois pour l'hébergement de Chantier+",
+      "sensible": false
+    },
+    {
+      "id": "F244",
+      "enonce": "Le contrat OVH se renouvelle chaque année au 1er mars.",
+      "fiche": "OVH",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Le contrat se renouvelle chaque année au 1er mars",
+      "sensible": false
+    },
+    {
+      "id": "F231",
+      "enonce": "Le contrat Mapéo coûte 290 € HT par mois, avec un préavis de résiliation d'un mois.",
+      "fiche": "Mapéo",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "Le contrat Mapéo est à 290 € HT par mois, avec un préavis de résiliation d'un mois",
+      "sensible": false
+    },
+    {
+      "id": "F232",
+      "enonce": "L'expert-comptable de l'entreprise est le Cabinet Ferrand & Associés, interlocuteur Michel Ferrand.",
+      "fiche": "Cabinet Ferrand & Associés",
+      "alias": ["Ferrand"],
+      "typeFiche": "fournisseur",
+      "tour": "t-007",
+      "extrait": "notre expert-comptable, le Cabinet Ferrand & Associés. Mon interlocuteur est Michel Ferrand",
+      "sensible": false
+    },
+    {
+      "id": "F233",
+      "enonce": "L'exercice comptable de l'entreprise se clôt au 31 décembre.",
+      "fiche": "Clôture comptable",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-007",
+      "extrait": "notre exercice comptable se clôt au 31 décembre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N107",
+      "enonce": "Tableau d'échéances proposé par l'assistant à titre d'exemple.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

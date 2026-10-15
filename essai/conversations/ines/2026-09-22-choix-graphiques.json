@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-ines-2026-09-22-choix-graphiques",
+    "title": "Bibliothèque de graphiques React Native"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Question un peu générale pour commencer : React Native ou Flutter, en 2026, c'est quoi les vrais arguments de l'un contre l'autre ? Pas pour changer quoi que ce soit chez nous, c'est juste que la question revient tout le temps et je veux une réponse propre.",
+      "ts": "2026-09-22T11:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici les arguments qui pèsent vraiment, en général :\n\n| Critère | React Native | Flutter |\n|---|---|---|\n| Langage | JavaScript / TypeScript | Dart |\n| Rendu | composants natifs de la plateforme | moteur de rendu propre, pixels dessinés par Flutter |\n| Partage avec le web | fort si l'équipe fait déjà du React | faible, sauf Flutter web |\n| Cohérence visuelle iOS/Android | dépend des composants natifs | identique au pixel près |\n| Recrutement | vivier JS très large | vivier plus petit mais en croissance |\n| Performances | très bonnes depuis la nouvelle architecture | très bonnes, surtout sur les animations |\n\nEn résumé : React Native est le choix naturel quand l'équipe fait déjà du React côté web ; Flutter quand on veut un rendu strictement identique partout et qu'on accepte un langage à part.",
+      "ts": "2026-09-22T11:20:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Ok merci, ça confirme ce que je pensais. Maintenant la vraie question. Sur l'appli mobile v2 on a besoin de graphiques. Il y en aura deux sur l'écran d'accueil : l'avancement des chantiers (pourcentage par chantier, barres horizontales) et le montant signé du mois (une courbe ou des barres par semaine). J'hésite entre deux bibliothèques : rn-quickcharts et graphiko-native. Tu peux me faire un pour/contre ? Critères pour moi : poids, facilité de thème (les couleurs de la charte), accessibilité (lecteur d'écran), et à quel point c'est simple à brancher.",
+      "ts": "2026-09-22T11:23:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Je ne peux pas vérifier l'état actuel de ces deux bibliothèques, donc je te donne une grille de comparaison à remplir avec ce que tu constates dans leurs dépôts :\n\n| Critère | Ce qu'il faut regarder |\n|---|---|\n| Poids | taille du paquet, dépendances natives (une dépendance SVG en plus ?) |\n| Thème | les couleurs passent-elles par props ou par un thème global ? |\n| Accessibilité | chaque barre ou point a-t-il un libellé lisible par le lecteur d'écran ? |\n| Simplicité | combien de lignes pour une barre horizontale avec pourcentage ? |\n| Maintenance | date du dernier commit, issues ouvertes, réactivité sur les nouvelles versions d'Android et d'iOS |\n\nPour deux graphiques simples (barres horizontales et barres par semaine), la simplicité et le thème comptent plus que la richesse fonctionnelle.",
+      "ts": "2026-09-22T11:24:24+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "J'ai regardé les deux. rn-quickcharts : petit, API très simple, les couleurs passent par props donc le thème est facile, accessibilité moyenne mais on peut ajouter les libellés nous-mêmes. graphiko-native : plus complet, plus lourd, l'API est plus verbeuse, et je n'ai pas trouvé d'exemple de barres horizontales dans la doc.\n\nBon, je tranche : on prend rn-quickcharts pour les graphiques de l'appli mobile v2. C'est le plus simple à brancher et on n'a besoin que de deux graphiques. Tu peux me donner la structure d'un composant générique `GraphiqueBarres` qui prend une liste de valeurs et un libellé, pour que je puisse l'utiliser pour les deux écrans ?",
+      "ts": "2026-09-22T11:30:24+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici une structure possible, indépendante de la bibliothèque sous-jacente :\n\n- `GraphiqueBarres` reçoit `donnees: { libelle: string; valeur: number }[]`, `orientation: 'horizontale' | 'verticale'`, `unite: '%' | '€'` et `titre`.\n- Le composant enveloppe la bibliothèque dans un seul fichier, pour pouvoir en changer sans toucher aux écrans.\n- Il calcule lui-même le libellé accessible de chaque barre (« Chantier Rezé : 65 % ») et le passe à l'élément correspondant.\n- Les couleurs viennent du thème actif, jamais codées en dur.\n\nGarder l'enveloppe fine est le meilleur investissement : si un jour la bibliothèque pose problème, seul ce fichier change.",
+      "ts": "2026-09-22T11:31:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Bonne idée l'enveloppe, je la fais comme ça. Dernière chose : pour le montant signé du mois, tu formaterais comment l'axe ? Les montants vont de quelques centaines à plusieurs dizaines de milliers d'euros.",
+      "ts": "2026-09-22T11:33:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Pour une échelle aussi large :\n\n- abrège sur l'axe : « 800 € », « 12 k€ », « 45 k€ » ;\n- garde le montant complet dans le libellé accessible et dans l'infobulle (« 12 350 € ») ;\n- fixe le maximum de l'axe au palier rond au-dessus de la plus grande valeur, pour éviter un axe qui saute d'une semaine à l'autre ;\n- utilise les séparateurs français (espace insécable pour les milliers, virgule pour les décimales).",
+      "ts": "2026-09-22T11:34:30+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

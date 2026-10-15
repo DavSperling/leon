@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-09-21-relance-prospects",
+    "title": "Mails de relance prospects"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "salut, jdois relancer 2 prospects ce matin. tu peux me faire un mail de relance type, court, pas trop commercial stp",
+      "ts": "2026-09-21T09:40:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bien sûr. Voici un projet de mail de relance générique, à adapter à chaque prospect :\n\n---\n**Objet :** Suite à notre échange\n\nBonjour [Prénom],\n\nJe me permets de revenir vers vous suite à notre dernier échange au sujet de Chantier+.\n\nAvez-vous eu le temps d'y réfléchir ? Si vous avez des questions, ou si vous souhaitez revoir un point précis (devis, planning, facturation), je peux vous rappeler quand cela vous arrange, ou passer vous voir.\n\nBonne journée,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---\n\nQuelques conseils :\n- **Objet court et neutre** : évite « Relance » dans l'objet, ça sonne comme un rappel de facture.\n- **Une seule question** à la fin, pour faciliter la réponse.\n- **Personnalise la première phrase** avec un détail de votre échange (un besoin évoqué, une contrainte).\n\nTu veux que je le décline pour tes deux prospects ? Donne-moi le nom et le contexte de chacun.",
+      "ts": "2026-09-21T09:40:15+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "ok merci. alors le 1er c plomberie rousseau a st nazaire, mon contact c sandrine rousseau la gerante. faut la relancer gentiment elle est tres prise en ce moment",
+      "ts": "2026-09-21T09:41:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici une version pour Sandrine Rousseau :\n\n---\n**Objet :** Chantier+ : on en reparle ?\n\nBonjour Madame Rousseau,\n\nJe sais que la période est chargée, alors je serai bref : je voulais simplement savoir si vous aviez pu regarder notre proposition pour Plomberie Rousseau.\n\nSi c'est plus simple pour vous, je peux vous appeler 10 minutes en fin de journée, au moment qui vous convient.\n\nBien cordialement,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---\n\nJ'ai gardé un ton léger et un appel court comme seule demande, puisqu'elle a peu de temps. Tu peux aussi remplacer « Madame Rousseau » par « Sandrine » si vous vous tutoyez déjà.",
+      "ts": "2026-09-21T09:41:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "top. le 2e c charpentes morvan a quimper, erwan morvan le gerant. boite de 30 salaries donc gros potentiel pour nous",
+      "ts": "2026-09-21T09:43:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici une version pour Erwan Morvan, un peu plus orientée « structure » vu la taille de l'entreprise :\n\n---\n**Objet :** Chantier+ pour vos équipes\n\nBonjour Monsieur Morvan,\n\nJe reviens vers vous au sujet de Chantier+. Avec une équipe de votre taille, l'intérêt principal est de centraliser les devis, le planning des chantiers et la facturation au même endroit, et de donner l'accès aux équipes sur le terrain.\n\nSeriez-vous disponible pour une démonstration, chez vous ou à distance ? Je m'adapte à votre agenda.\n\nBien cordialement,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---\n\nAvec une entreprise de cette taille, pense à demander qui d'autre participe à la décision (chef de chantier, personne en charge de l'administratif) : ça t'évitera une deuxième démo.",
+      "ts": "2026-09-21T09:44:10+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "nickel merci. question con : c koi la diff entre cordialement et bien cordialement mdr jai toujours un doute",
+      "ts": "2026-09-21T09:45:45+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Pas une question bête, beaucoup de gens hésitent :\n\n- **Cordialement** : neutre, standard, convient à presque tous les échanges professionnels.\n- **Bien cordialement** : un peu plus chaleureux, souvent utilisé quand on connaît déjà l'interlocuteur ou qu'on veut adoucir le ton.\n- **Très cordialement** : encore un cran au-dessus, plus rare.\n\nPour une relance commerciale, « Bien cordialement » est un bon choix : poli sans être distant.",
+      "ts": "2026-09-21T09:45:59+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

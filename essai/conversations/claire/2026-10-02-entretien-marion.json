@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-10-02-entretien-marion",
+    "title": "Entretien annuel"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Je sors de l'entretien annuel de Marion Caradec, aujourd'hui 2 octobre. Dev back. Aidez-moi à en tirer un compte rendu propre. Par quoi commencer ?",
+      "ts": "2026-10-02T15:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Un compte rendu d'entretien annuel tient en général en cinq parties :\n\n1. **Bilan de l'année** : réalisations, points forts, difficultés rencontrées.\n2. **Compétences** : ce qui est acquis, ce qui reste à développer.\n3. **Souhaits de la salariée** : évolution, mobilité, formation.\n4. **Objectifs pour l'année à venir** : deux ou trois, précis, datés, mesurables.\n5. **Formation** : actions prévues pour atteindre les objectifs.\n\nCommencez par me dire, en quelques mots, ce que vous retenez du bilan et ce que Marion a exprimé comme souhait. Je m'occupe de la mise en forme.",
+      "ts": "2026-10-02T15:00:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Bilan très bon, rigoureuse, fiable. Elle souhaite devenir référente back-end. J'y suis favorable, mais pas tout de suite.",
+      "ts": "2026-10-02T15:03:19+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "C'est un souhait légitime, et votre position est saine : reconnaître l'ambition sans promettre une date. Pour la rendre concrète, je vous suggère de définir ce qu'on attend d'une référente back-end chez vous, par exemple :\n\n- **Technique** : être capable de concevoir et de relire les évolutions de la base et des API.\n- **Transmission** : relire le code des autres, aider les nouveaux arrivants.\n- **Fiabilité** : tenir les engagements de livraison sur un sujet confié de bout en bout.\n\nL'objectif de l'année peut alors servir de marche : un sujet confié en entier, avec une échéance, qui montre qu'elle tient ce rôle. Avez-vous un sujet en tête ?",
+      "ts": "2026-10-02T15:03:52+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui. Objectif fixé : livrer la partie API du connecteur Chorus Pro avant décembre. Et dès maintenant, elle reprend les tests du connecteur, Hugo lui passe la main.",
+      "ts": "2026-10-02T15:06:13+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est un bon choix d'objectif : un sujet complet, visible, avec une échéance claire. Pour qu'il soit évaluable l'an prochain, précisez dans le compte rendu :\n\n- **Le livrable** : ce que recouvre exactement « la partie API » (appels, gestion des erreurs, documentation).\n- **Le critère de réussite** : par exemple, tous les tests passent et la partie API est en production.\n- **Les moyens** : temps dégagé sur ses autres sujets, interlocuteur pour les arbitrages.\n- **Un point d'étape** : un échange à mi-parcours pour ajuster si besoin.\n\nLa reprise des tests est un bon point d'entrée : elle lui donne une vue complète du connecteur avant d'en porter la partie API.",
+      "ts": "2026-10-02T15:06:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Comment formuler l'évolution vers référente dans le compte rendu sans m'engager sur une augmentation ?",
+      "ts": "2026-10-02T15:10:14+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Quelques formulations prudentes, qui reconnaissent le souhait sans créer d'engagement :\n\n- « Marion a exprimé le souhait d'évoluer vers un rôle de référente back-end. Ce souhait a été entendu et sera réexaminé lors du prochain entretien, au regard de l'atteinte des objectifs fixés. »\n- « L'évolution vers ce rôle dépendra des besoins de l'équipe et de la réussite des objectifs de l'année. »\n\nÀ éviter :\n- toute date ferme (« d'ici six mois ») ;\n- toute mention de rémunération (« avec une revalorisation ») ;\n- les formules au futur certain (« Marion deviendra référente »).\n\nEnfin, rappelez qu'un compte rendu d'entretien est relu et signé par la salariée : elle peut y ajouter ses observations. Mieux vaut des phrases qu'elle puisse signer sans réserve.",
+      "ts": "2026-10-02T15:10:51+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

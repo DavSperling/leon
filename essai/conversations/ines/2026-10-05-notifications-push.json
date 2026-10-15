@@ -1,0 +1,107 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-ines-2026-10-05-notifications-push",
+    "title": "Notifications push de l'application mobile v2"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Sujet du jour sur l'appli mobile v2 : les notifications push. Le cas principal, c'est la signature des devis. Sur le chantier, le client signe le devis sur le téléphone du chef de chantier, directement dans l'appli mobile v2 (écran de signature au doigt, déjà fait la semaine dernière). Ce qui manque : le chef de chantier reçoit une notification push quand un devis est signé, y compris quand c'est un collègue ou le bureau qui a fait signer, pour qu'il sache qu'il peut lancer les travaux.\n\nPour commencer, regarde ce qu'on a déjà : il y a un début de module `src/notifications/` qu'Antoine avait posé, je ne sais pas dans quel état il est. Fais-moi l'inventaire, sans rien changer.",
+      "ts": "2026-10-05T09:10:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je parcours `src/notifications/` et les endroits où il est importé.",
+      "ts": "2026-10-05T09:11:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Il y a `enregistrement.ts` qui demande la permission et récupère un jeton d'appareil, mais le jeton n'est jamais envoyé à l'API. Rien n'est importé ailleurs, le module est mort pour l'instant.",
+      "ts": "2026-10-05T09:13:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Ok. Côté API, Hugo a déjà exposé `POST /api/appareils` qui prend `{ jeton, plateforme }` et le rattache à l'utilisateur connecté. Branche l'envoi du jeton après la connexion et à chaque renouvellement du jeton. Côté serveur, c'est Hugo qui envoie la notification « devis signé », moi je m'occupe juste de la réception et de l'ouverture du bon écran quand on tape dessus : la notification contient `{ type: \"devis_signe\", devisId }` et doit ouvrir le détail du devis dans l'onglet devis.\n\nLe contrat de l'appel tel qu'il est décrit dans la PR de Hugo, je te le colle pour que tu ne devines pas :\n\n```\nPOST /api/appareils\nAuthorization: Bearer <jeton de session>\nContent-Type: application/json\n\n{ \"jeton\": \"<jeton d'appareil>\", \"plateforme\": \"ios\" | \"android\" }\n\nRéponses\n  201  { \"id\": \"app_…\", \"plateforme\": \"android\", \"cree_le\": \"…\" }\n  400  { \"erreur\": \"corps_invalide\" }\n  401  { \"erreur\": \"non_authentifie\" }\n  409  { \"erreur\": \"appareil_deja_enregistre\" }\n```\n\nEt le format de la notification reçue, d'après ses tests :\n\n```\n{\n  \"titre\": \"Devis signé\",\n  \"corps\": \"Le devis D-… a été signé.\",\n  \"donnees\": { \"type\": \"devis_signe\", \"devisId\": \"…\" }\n}\n```",
+      "ts": "2026-10-05T09:16:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "J'envoie le jeton après la connexion et au renouvellement, et j'ajoute la redirection vers le détail du devis au tap.",
+      "ts": "2026-10-05T09:18:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est en place : `enregistrement.ts` appelle `POST /api/appareils` après la connexion et à chaque renouvellement, et `ouverture.ts` ouvre `DevisDetail` dans l'onglet devis pour `type: \"devis_signe\"`.",
+      "ts": "2026-10-05T09:22:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Sur iOS ça marche, j'ai reçu la notification de test envoyée par Hugo et le tap ouvre le bon devis. Sur Android rien n'arrive. Logs :\n\n[notif] permission accordée\n[notif] jeton obtenu (android) longueur=163\n[api] POST /api/appareils 201\n[notif] jeton renouvelé (android) longueur=163\n[api] POST /api/appareils 409 Conflict {\"erreur\":\"appareil_deja_enregistre\"}\n\nEt côté serveur, Hugo me dit que l'envoi vers mon Android répond « jeton invalide ». J'ai l'impression que le jeton est renouvelé juste après la connexion et que le serveur garde l'ancien à cause du 409. Mais je ne suis pas sûre que ce soit la cause.\n\nLe détail côté appli, avec les horodatages :\n\n```\n09:24:51.102 [auth] connexion réussie, utilisateur ines\n09:24:51.388 [notif] demande de permission\n09:24:53.904 [notif] permission accordée\n09:24:54.217 [notif] jeton obtenu (android) longueur=163 debut=dQw8…\n09:24:54.530 [api] POST /api/appareils 201 in 312ms\n09:24:55.011 [notif] jeton renouvelé (android) longueur=163 debut=eKx2…\n09:24:55.246 [api] POST /api/appareils 409 Conflict in 235ms {\"erreur\":\"appareil_deja_enregistre\"}\n09:24:55.247 [notif] échec de mise à jour du jeton, on garde l'état local\n09:26:12.880 [notif] aucune notification reçue (attente 60 s)\n```\n\nEt ce que Hugo voit côté serveur au moment de l'envoi de test :\n\n```\n[notif] envoi devis_signe -> utilisateur ines, 2 appareils\n[notif] appareil app_31 (ios) : accepté\n[notif] appareil app_32 (android) : refusé, jeton invalide\n```",
+      "ts": "2026-10-05T09:28:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Le 409 empêche bien la mise à jour : le serveur refuse le second jeton pour le même appareil et garde le premier. Mais l'ancien jeton devrait rester valide quelques minutes, donc ça n'explique peut-être pas tout.",
+      "ts": "2026-10-05T09:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"diag-jetons\">\nRapport : notifications Android, « jeton invalide » à l'envoi\n\nCe que j'ai fait\n- Rejoué la séquence connexion → permission → enregistrement du jeton sur l'émulateur API 34 et sur l'émulateur API 35, appli désinstallée entre chaque essai.\n- Comparé les jetons envoyés à `POST /api/appareils` avec ceux que le serveur tente d'utiliser (début et longueur seulement, je n'ai pas recopié les jetons entiers).\n- Relu `enregistrement.ts` et le gestionnaire de renouvellement.\n\nSéquences observées\n```\nessai 1 (API 34)\n  jeton A obtenu, POST 201\n  jeton B renouvelé 0,8 s après, POST 409\n  envoi serveur sur jeton A : refusé, jeton invalide\n\nessai 2 (API 34, appli réinstallée)\n  jeton C obtenu, POST 201\n  pas de renouvellement\n  envoi serveur sur jeton C : refusé, jeton invalide\n\nessai 3 (API 35)\n  jeton D obtenu, POST 201\n  jeton E renouvelé 1,1 s après, POST 409\n  envoi serveur sur jeton D : refusé, jeton invalide\n```\n\nCommandes lancées\n```\n$ adb uninstall fr.essai.chantierplus.mobile\n$ pnpm --filter mobile android --deviceId emulateur-api34\n$ adb logcat -s ReactNativeJS:V | grep \"\\[notif\\]\"\n$ pnpm --filter web dev   # API locale, journal du proxy activé\n```\n\nExtrait du journal du proxy local (corps tronqués)\n```\nPOST /api/appareils  201  {\"jeton\":\"dQw8…(163)\",\"plateforme\":\"android\"}\nPOST /api/appareils  409  {\"jeton\":\"eKx2…(163)\",\"plateforme\":\"android\"}\nPOST /api/appareils  201  {\"jeton\":\"fT9m…(163)\",\"plateforme\":\"android\"}\nPOST /api/appareils  201  {\"jeton\":\"h3Lq…(163)\",\"plateforme\":\"android\"}\nPOST /api/appareils  409  {\"jeton\":\"jW0z…(163)\",\"plateforme\":\"android\"}\n```\n\nVérifications faites\n- Longueur des jetons : 163 caractères partout, identique entre l'appli et la base serveur.\n- Pas d'espace ni de retour à la ligne parasite dans le corps envoyé (corps relu octet par octet dans le journal du proxy local).\n- La plateforme est bien enregistrée « android » pour ces appareils.\n- Le renouvellement immédiat après la connexion se produit dans 2 essais sur 3, pas toujours.\n\nPistes non vérifiées\n- Le serveur utiliserait peut-être un identifiant de projet de notifications différent de celui de la build Android de debug.\n- La build de debug pourrait être signée avec une clé différente de celle déclarée pour les notifications.\n- Le 409 empêche la mise à jour du jeton, mais l'essai 2 montre qu'il n'explique pas tout.\n\nCe que je n'ai pas pu faire\n- Accéder aux logs détaillés de l'envoi côté serveur : je n'ai que la ligne « refusé, jeton invalide ».\n\nRecommandation\nAucune cause confirmée. Reprendre avec Hugo et les logs détaillés de l'envoi côté serveur avant de modifier quoi que ce soit dans `enregistrement.ts`.\n</teammate-message>",
+      "ts": "2026-10-05T09:31:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008b",
+      "role": "assistant",
+      "text": "Le rapport ne trouve pas de cause : le jeton arrive intact au serveur et l'envoi échoue même sans 409. Les deux pistes de configuration restent à vérifier avec les logs serveur de Hugo.",
+      "ts": "2026-10-05T09:33:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "J'ai réinstallé l'appli pour repartir de zéro, et cette fois le jeton n'est renouvelé qu'une fois, le POST passe en 201, et Hugo a toujours « jeton invalide » à l'envoi. Donc le 409 n'était pas la seule cause, ou pas la cause du tout. Je n'ai plus le temps ce matin, on reprendra avec Hugo quand il aura les logs serveur. Ne change rien côté jetons pour l'instant.\n\nPar contre il y a un truc que je veux faire maintenant : les notifications push sont désactivables par type dans le profil. Un interrupteur par type dans l'écran profil : pour l'instant il n'y a que « Devis signés », mais prévois la liste pour les types qui viendront. Par défaut tout est activé. Le réglage est envoyé à l'API avec `PATCH /api/moi/preferences`.",
+      "ts": "2026-10-05T09:35:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "J'ajoute la section « Notifications » à l'écran profil avec un interrupteur par type, branchée sur `PATCH /api/moi/preferences`.",
+      "ts": "2026-10-05T09:36:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "Fait : la liste des types est générique, avec « Devis signés » pour l'instant, activé par défaut, chaque changement envoyé à `PATCH /api/moi/preferences`. Si l'appel échoue, l'interrupteur revient à sa position précédente avec un message.",
+      "ts": "2026-10-05T09:40:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "Ce qui reste ouvert :\n- Android : la notification de test n'arrive pas, le serveur répond « jeton invalide » ; le 409 sur `POST /api/appareils` n'est pas la seule cause, à reprendre avec les logs serveur ;\n- iOS : réception et ouverture du détail du devis validées ;\n- profil : interrupteurs par type en place, à vérifier une fois les autres types ajoutés.\n\nFichiers modifiés pendant la session :\n\n```\n$ git diff --stat\n apps/mobile/src/notifications/enregistrement.ts   | 38 +++++++++++++++-----\n apps/mobile/src/notifications/ouverture.ts        | 44 +++++++++++++++++++++++\n apps/mobile/src/notifications/types.ts            | 12 ++++++\n apps/mobile/src/ecrans/profil/Notifications.tsx   | 67 +++++++++++++++++++++++++++++++++\n apps/mobile/src/ecrans/profil/ProfilScreen.tsx    |  6 ++-\n apps/mobile/src/lib/api.ts                        | 14 +++++++\n 6 files changed, 171 insertions(+), 10 deletions(-)\n```\n\nLe rapport de diagnostic sur les jetons Android n'a pas trouvé de cause, ses pistes restent à confirmer avec les logs serveur.\n\nEn reprenant la session dans l'ordre :\n- inventaire de `src/notifications/` : le jeton était obtenu mais jamais envoyé, module non branché ;\n- envoi du jeton à `POST /api/appareils` après la connexion et à chaque renouvellement ;\n- ouverture du détail du devis dans l'onglet devis au tap sur une notification `devis_signe` ;\n- validation sur iOS avec la notification de test ;\n- sur Android, échec à l'envoi côté serveur (« jeton invalide »), d'abord attribué au 409, puis reproduit sans 409 après réinstallation ; le rapport de diagnostic n'a pas trouvé de cause, rien n'a été changé côté jetons ;\n- section « Notifications » de l'écran profil avec un interrupteur par type, branchée sur `PATCH /api/moi/preferences`, retour à l'état précédent en cas d'échec.",
+      "ts": "2026-10-05T09:41:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

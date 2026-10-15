@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-09-22-strategie-salon",
+    "title": "Stratégie salon artisans"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Je prépare notre présence au Salon des Artisans de l'Ouest. Il aura lieu les 13 et 14 novembre, au parc des expositions de Nantes. Comment rendre le salon rentable ? Je veux du concret.",
+      "ts": "2026-09-22T14:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Pour qu'un salon soit rentable, il faut le piloter comme une campagne commerciale, avec un objectif chiffré et un suivi après coup. Concrètement :\n\n**Avant le salon**\n- **Fixer un objectif mesurable** : nombre de démonstrations, de rendez-vous pris, de devis envoyés dans le mois qui suit.\n- **Inviter vos prospects** : un courriel personnalisé trois semaines avant, une relance la semaine précédente, avec la possibilité de réserver un créneau de démonstration.\n- **Préparer une démonstration courte** : 10 à 12 minutes, sur un cas réel d'artisan (un devis, un planning, une facture). Les visiteurs ne restent pas plus longtemps.\n\n**Pendant le salon**\n- **Un stand pensé pour la démo** : deux postes de démonstration, une tablette pour montrer l'application mobile, un écran visible depuis l'allée.\n- **Une fiche contact rapide** : nom, entreprise, nombre de salariés, logiciel actuel, besoin principal, niveau d'intérêt. Saisie immédiate, pas de cartes de visite qui s'accumulent dans une boîte.\n- **Une équipe en rotation** : au moins deux personnes en permanence, dont une capable de répondre aux questions techniques.\n\n**Après le salon**\n- **Relance sous 48 heures** de tous les contacts chauds.\n- **Bilan chiffré** à un mois : coût total divisé par le nombre de clients signés.\n\nQuel budget avez-vous prévu pour le stand, et quel objectif visez-vous ?",
+      "ts": "2026-09-22T14:30:33+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Budget stand : 3 000 € HT, c'est tranché. Objectif : 40 démonstrations de Chantier+ sur les deux jours.",
+      "ts": "2026-09-22T14:33:40+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "C'est un objectif ambitieux mais tenable. Quelques repères pour l'organiser :\n\n| | Jour 1 | Jour 2 |\n|---|---|---|\n| Démonstrations visées | 20 | 20 |\n| Heures d'ouverture (estimation) | 8 h | 8 h |\n| Rythme nécessaire | 2,5 par heure | 2,5 par heure |\n\nAvec des démonstrations de 12 minutes, il vous faut **deux postes de démo occupés en continu** : un seul ne suffira pas aux heures de pointe (fin de matinée, début d'après-midi).\n\nPour atteindre le chiffre :\n- **Réservez à l'avance** une partie des créneaux : si 15 démonstrations sont déjà prises avant l'ouverture, il ne vous en reste que 25 à capter sur place.\n- **Comptez une démo seulement si elle est complète** (le visiteur a vu un devis et un planning), pas une simple discussion.\n- **Affichez le compteur** pour l'équipe sur le stand : cela motive.\n\nPour le budget, gardez à l'esprit que le stand n'est qu'une partie du coût réel : déplacements, impression, goodies et temps de l'équipe s'ajoutent. Il est utile de les suivre à part pour le bilan.",
+      "ts": "2026-09-22T14:34:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Et si on faisait plutôt un webinaire à la place du salon ? Je me pose la question. Moins cher, pas de déplacement.",
+      "ts": "2026-09-22T14:36:59+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est une idée qui se défend sur le coût, mais je vous la déconseille pour remplacer le salon, au moins cette année :\n\n**Ce qu'un webinaire fait bien**\n- toucher des prospects éloignés à faible coût ;\n- montrer une nouveauté à des clients existants ;\n- se rejouer en différé.\n\n**Ce qu'il fait mal pour votre cible**\n- les artisans du bâtiment sont peu disponibles en journée et assistent rarement à des webinaires ;\n- le taux de présence d'un webinaire gratuit tourne souvent autour d'un tiers des inscrits ;\n- il ne crée pas la relation de confiance qu'apporte une poignée de main et une démonstration sur place.\n\n**Ce que je vous propose**\nGardez le salon comme action principale, et utilisez un webinaire éventuellement en complément, après le salon, pour les contacts qui n'ont pas pu voir une démonstration complète.",
+      "ts": "2026-09-22T14:37:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Vous avez raison. On oublie le webinaire, on garde le salon.",
+      "ts": "2026-09-22T14:39:44+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

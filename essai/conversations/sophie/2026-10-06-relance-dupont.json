@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-10-06-relance-dupont",
+    "title": "Échéances et relances clients"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nJe prépare le suivi des encaissements de deux clients dans Comptaflow. Pour Menuiserie Dupont, les factures sont payables à 30 jours fin de mois.\n\nPouvez-vous me rappeler comment se calcule l'échéance dans ce cas ?",
+      "ts": "2026-10-06T16:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nIl existe deux lectures de « 30 jours fin de mois », et c'est une source fréquente de malentendus :\n\n**1. La méthode la plus courante : 30 jours, puis fin de mois**\nOn ajoute 30 jours à la date de facture, puis on reporte à la fin du mois obtenu.\n- Exemple : facture du 10 mars → 9 avril → échéance le **30 avril**.\n\n**2. L'autre lecture : fin de mois, puis 30 jours**\nOn se place à la fin du mois de la facture, puis on ajoute 30 jours.\n- Exemple : facture du 10 mars → 31 mars → échéance le **30 avril**.\n\nLes deux méthodes donnent souvent le même résultat, mais pas toujours, notamment pour les factures émises en fin de mois.\n\nRappel : entre professionnels, le délai de paiement convenu ne peut dépasser 45 jours fin de mois ou 60 jours à compter de la date de facture.\n\nDans Comptaflow, vous pouvez en général paramétrer cette condition au niveau de la fiche client : l'échéance sera alors calculée automatiquement sur chaque facture.",
+      "ts": "2026-10-06T16:20:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci, c'est clair.\n\nSecond client : SARL Bati-Ouest, dont la facture annuelle est payée en 4 échéances trimestrielles. Comment présenter cela proprement dans un échéancier ?",
+      "ts": "2026-10-06T16:23:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici une présentation simple pour l'échéancier :\n\n| Échéance | Période couverte | Montant HT | Date d'échéance | Statut |\n|---|---|---|---|---|\n| 1/4 | Trimestre 1 | 25 % du montant annuel | [date] | à encaisser |\n| 2/4 | Trimestre 2 | 25 % | [date] | à encaisser |\n| 3/4 | Trimestre 3 | 25 % | [date] | à encaisser |\n| 4/4 | Trimestre 4 | 25 % | [date] | à encaisser |\n\nConseils :\n- mentionnez l'échéancier complet sur la facture annuelle, ou émettez une facture par échéance, selon ce que prévoit le contrat ;\n- ajoutez une colonne « date d'encaissement réelle » pour suivre les retards ;\n- programmez un rappel interne une semaine avant chaque échéance.",
+      "ts": "2026-10-06T16:24:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Très bien. Notre règle interne : les relances de factures impayées partent 10 jours après l'échéance.\n\nPourriez-vous me proposer un modèle de relance courtois, que je puisse réutiliser ?",
+      "ts": "2026-10-06T16:27:45+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un modèle de première relance, courtois et réutilisable :\n\n---\n\n**Objet : Facture n° [numéro] du [date] – rappel d'échéance**\n\nMadame, Monsieur,\n\nSauf erreur de notre part, la facture n° [numéro] d'un montant de [montant] € TTC, arrivée à échéance le [date], n'a pas encore été réglée.\n\nIl s'agit peut-être d'un simple oubli : nous vous remercions de bien vouloir procéder au règlement par virement dans les meilleurs délais, en rappelant le numéro de facture dans le libellé.\n\nSi votre paiement a été effectué entre-temps, nous vous prions de ne pas tenir compte de ce message.\n\nVous trouverez la facture en pièce jointe. Je reste à votre disposition pour toute question.\n\nBien cordialement,\n\nSophie Garnier\nAdministration et finances\nAtelier Numérique Lebrun\n\n---\n\nPour une deuxième relance, le ton peut devenir plus ferme et rappeler les pénalités de retard et l'indemnité forfaitaire de 40 €.",
+      "ts": "2026-10-06T16:28:20+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Merci beaucoup, c'est exactement le ton que je cherchais. Je l'enregistre comme modèle dans Comptaflow.",
+      "ts": "2026-10-06T16:31:12+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-10-07-comite-projet",
+    "title": "Comité projet du 7 octobre"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Hello, comité projet dans une heure (exceptionnellement mercredi cette semaine, Claire n'était pas là hier).\nPrépare-moi un ordre du jour : appli v2, module devis, Chorus Pro, arrivées dans l'équipe. 1 h max.",
+      "ts": "2026-10-07T10:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici un projet d'ordre du jour :\n\n**Comité projet (brouillon d'ordre du jour)**\n1. Tour de table express (5 min)\n2. Application mobile v2 : avancement, préparation du pilote (15 min)\n3. Refonte du module devis : avancement, risques sur le calendrier (15 min)\n4. Connecteur Chorus Pro : avancement, prochaines étapes avec les clients (10 min)\n5. Arrivées dans l'équipe : organisation de l'accueil (5 min)\n6. Points divers et décisions à acter (10 min)\n\nTu veux que je prévoie un responsable par point ?",
+      "ts": "2026-10-07T10:02:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Non, c'est bon. Le comité est fini (on a tenu en 50 min, record). Points à noter pour le CR :\n- Chorus Pro : la démo chez Bati-Ouest est fixée au 4 novembre\n- arrivée : Bastien Royer arrive le 2 novembre et rejoint l'équipe de l'appli mobile v2. Pas de détails sur son contrat dans le CR, c'est Claire qui gère ça\n- module devis et appli v2 : rien de nouveau par rapport au planning",
+      "ts": "2026-10-07T10:07:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Bien noté. Une remarque sur l'arrivée : même sans détails de contrat, une embauche n'est pas toujours annoncée à toute l'équipe avant que la direction l'ait fait officiellement. Tu sais à qui le CR va être diffusé ?\n\nVoici en attendant la structure du CR :\n\n**Compte rendu du comité projet**\n- **Connecteur Chorus Pro** : date de démo client fixée (voir relevé)\n- **Arrivée** : nouvelle recrue sur l'appli mobile v2 (voir relevé)\n- **Module devis / appli v2** : pas de changement de planning\n- **Décisions** : à compléter\n- **Actions** : à compléter",
+      "ts": "2026-10-07T10:10:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Bonne remarque, j'y reviens. Autre chose : on a acté une règle aujourd'hui, le CR de chaque comité projet part le jour même, plus le lendemain comme avant. Mets-le en bas du CR, en rappel.",
+      "ts": "2026-10-07T10:14:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est ajouté. Bas du CR :\n\n> *Rappel : le compte rendu de chaque comité projet est diffusé le jour même.*\n\nJe te conseille de bloquer 20 minutes dans ton agenda juste après chaque comité pour tenir la règle, sinon elle tient deux semaines.",
+      "ts": "2026-10-07T10:16:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Ha, c'est exactement ce qui va se passer. Ok pour le créneau.\nEt pour ta remarque : retire la ligne sur Bastien de la version qui part à toute l'équipe. Je fais une version complète pour Claire et Inès seulement, l'équipe l'apprendra quand Claire l'annoncera.",
+      "ts": "2026-10-07T10:19:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Entendu, deux versions :\n\n**Version équipe**\n- Connecteur Chorus Pro : date de démo client fixée\n- Module devis / appli v2 : pas de changement de planning\n- Rappel en bas sur la diffusion le jour même\n\n**Version Claire et Inès**\n- tout ce qui précède\n- la ligne sur l'arrivée dans l'équipe de l'appli mobile v2\n\nPense à vérifier la liste de diffusion avant d'envoyer, c'est l'erreur classique quand on a deux versions d'un même document.",
+      "ts": "2026-10-07T10:21:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

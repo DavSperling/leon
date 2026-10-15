@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-09-28-arret-maladie",
+    "title": "Arrêt maladie d'un salarié"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nUn de nos salariés du support client, Julien Lefort, m'a transmis ce matin son avis d'arrêt de travail : il est en arrêt maladie du 28 septembre au 16 octobre 2026 inclus.\n\nQuelles sont les démarches à faire côté employeur, et dans quel ordre ?",
+      "ts": "2026-09-28T09:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nVoici les démarches employeur, dans l'ordre :\n\n1. **Réception de l'avis d'arrêt** : le salarié doit vous adresser le volet 3 dans les 48 heures. Conservez-le dans son dossier, en accès restreint.\n2. **Signalement de l'arrêt via la DSN** : vous devez déclarer l'arrêt par une DSN « signalement d'arrêt de travail » dans les 5 jours suivant la connaissance de l'arrêt. Cette déclaration tient lieu d'attestation de salaire et permet à la CPAM de calculer les indemnités journalières.\n3. **Prévoyance** : si votre contrat de prévoyance prévoit des garanties incapacité, vérifiez les conditions de déclaration ; pour un arrêt de moins d'un mois, elles ne jouent généralement pas encore.\n4. **Paie** : préparez le traitement de l'absence sur le bulletin (absence, indemnités journalières, éventuel maintien de salaire).\n5. **Organisation** : prévoyez la répartition de sa charge de travail pendant l'absence.\n\nPour un arrêt de moins de 30 jours, aucune visite de reprise auprès de la médecine du travail n'est obligatoire.\n\nSouhaitez-vous que je détaille l'un de ces points ?",
+      "ts": "2026-09-28T09:00:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci, c'est très clair. Une question générale au passage : comment fonctionne le délai de carence pour un arrêt maladie ? Je mélange toujours la carence de la Sécurité sociale et celle du maintien de salaire par l'employeur.",
+      "ts": "2026-09-28T09:03:43+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "C'est une confusion fréquente, car il y a deux mécanismes distincts.\n\n**1. La carence de la Sécurité sociale**\n- Les indemnités journalières (IJSS) ne sont versées qu'à partir du **4e jour** d'arrêt : les 3 premiers jours sont des jours de carence.\n- Exceptions principales : accident du travail, maladie professionnelle, certaines affections de longue durée en cas d'arrêts successifs liés à la même affection.\n\n**2. La carence du maintien de salaire légal**\n- Le Code du travail prévoit un complément employeur (environ 90 % puis 66 % du brut), sous condition d'un an d'ancienneté.\n- Ce complément ne démarre qu'à partir du **8e jour** d'arrêt : c'est un délai de carence de 7 jours.\n\n**3. La convention collective et les usages**\n- Beaucoup de conventions collectives ou d'accords d'entreprise réduisent ou suppriment ces carences, et prévoient un maintien plus favorable.\n- C'est toujours la règle la plus favorable au salarié qui s'applique.\n\nEn pratique, il faut donc vérifier dans l'ordre : la loi, la convention collective, puis les accords ou usages de l'entreprise.",
+      "ts": "2026-09-28T09:04:27+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "C'est clair, merci. Chez nous, l'entreprise maintient le salaire de Julien pendant tout son arrêt, en subrogation : nous percevons directement les indemnités journalières à sa place.\n\nComment cela doit-il apparaître sur son bulletin de paie ?",
+      "ts": "2026-09-28T09:07:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Avec la subrogation, le bulletin se présente en trois temps :\n\n1. **Le salaire de base du mois**, comme d'habitude.\n2. **La déduction de l'absence** : une ligne « Absence maladie du … au … » qui retire du brut la rémunération correspondant aux jours d'absence.\n3. **Le maintien de salaire** : une ligne « Indemnité complémentaire maladie » (ou « Maintien de salaire ») qui réintègre le montant garanti.\n\nPuis, en bas de bulletin, avant le net :\n- une ligne **« IJSS brutes »** en déduction (ou en information selon votre logiciel), puisque vous les encaissez à sa place ;\n- les IJSS nettes étant soumises à la CSG et à la CRDS, votre logiciel de paie fera la régularisation.\n\nRésultat : le net perçu par le salarié reste stable, et l'entreprise récupère les indemnités journalières directement auprès de la CPAM. Pensez à cocher la subrogation dans la DSN de signalement, faute de quoi la CPAM versera les indemnités au salarié.",
+      "ts": "2026-09-28T09:08:23+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait. Dernier point d'organisation : pendant l'absence de Julien, Romain Tessier assure seul le support client. Je ne détaillerai évidemment rien du motif de l'arrêt à l'équipe.\n\nComment formuler un message très court à l'équipe, sans aucune information médicale ?",
+      "ts": "2026-09-28T09:11:19+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici une formulation sobre, qui respecte la confidentialité :\n\n> Bonjour à tous,\n> Julien est absent jusqu'au 16 octobre inclus. Pendant cette période, Romain prend en charge les demandes du support client. Merci de lui adresser directement vos sollicitations et de faire preuve de patience si les délais de réponse s'allongent un peu.\n> Bonne journée,\n> Sophie\n\nQuelques réflexes à garder :\n- ne jamais employer le mot « maladie » ou « arrêt » dans un message collectif : « absent » suffit ;\n- ne pas répondre aux questions de collègues sur le motif ;\n- conserver les documents médicaux dans un dossier séparé, accessible uniquement aux personnes chargées de la paie.\n\nBon courage à Romain pour ces trois semaines.",
+      "ts": "2026-09-28T09:11:46+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

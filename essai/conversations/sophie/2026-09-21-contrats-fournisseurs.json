@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-09-21-contrats-fournisseurs",
+    "title": "Tableau de suivi des contrats fournisseurs"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nJe fais le point sur nos contrats fournisseurs en ce début d'automne et j'aimerais construire un tableau de suivi propre, que je pourrai tenir à jour toute l'année : fournisseur, objet du contrat, montant, date de renouvellement, préavis. Pourriez-vous me proposer une structure de colonnes adaptée à une petite entreprise ?\n\nMerci d'avance.",
+      "ts": "2026-09-21T08:50:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nBien sûr. Voici une structure simple et suffisante pour une PME, à tenir dans un tableur :\n\n| Colonne | Contenu | Remarque |\n|---|---|---|\n| Fournisseur | Raison sociale | une ligne par contrat, pas par fournisseur |\n| Objet | Ce que couvre le contrat | ex. hébergement, logiciel, conseil |\n| Montant | Montant HT et périodicité | mensuel, annuel, forfait |\n| Date de début | Date de signature ou de prise d'effet | |\n| Renouvellement | Date anniversaire, tacite reconduction ou non | |\n| Préavis | Durée et forme (LRAR, courriel, espace client) | |\n| Date limite de résiliation | Renouvellement moins préavis | colonne calculée, la plus utile |\n| Interlocuteur | Nom, courriel | |\n| Commentaires | Points à revoir | |\n\nPour vous donner une idée du rendu, voici un tableau d'exemple, avec des valeurs purement fictives :\n\n| Fournisseur | Objet | Montant | Renouvellement | Préavis | Date limite |\n|---|---|---|---|---|---|\n| Fournisseur A | Maintenance imprimantes | 150 € HT/mois | 01/01, tacite | 3 mois | 01/10 |\n| Fournisseur B | Logiciel de paie | 1 200 € HT/an | 01/06, tacite | 2 mois | 01/04 |\n| Fournisseur C | Ménage des bureaux | 600 € HT/mois | sans engagement | 1 mois | à tout moment |\n\nJe vous conseille aussi une mise en forme conditionnelle : la ligne passe en orange quand la date limite de résiliation approche à moins de 60 jours.\n\nVoulez-vous me donner vos contrats un par un pour que je remplisse le tableau avec vous ?",
+      "ts": "2026-09-21T08:50:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Très bien, merci. Commençons par les vrais contrats.\n\nNotre hébergeur est OVH. Nous payons 412 € HT par mois pour l'hébergement de Chantier+ (le serveur applicatif et la base Postgres managée). Le contrat se renouvelle chaque année au 1er mars.",
+      "ts": "2026-09-21T08:53:44+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici la première ligne :\n\n| Fournisseur | Objet | Montant | Renouvellement | Préavis | Date limite |\n|---|---|---|---|---|---|\n| OVH | Hébergement de Chantier+ (serveur applicatif + Postgres managé) | 412 € HT/mois | 1er mars, annuel | à préciser | à calculer |\n\nQuelques remarques :\n- Sur une base annuelle, cela représente 4 944 € HT, à reporter tel quel dans votre budget.\n- Il manque le préavis : chez les hébergeurs, il dépend souvent de l'offre souscrite et figure dans les conditions particulières ou dans l'espace client. Sans lui, la colonne « date limite » ne peut pas être calculée.\n\nAvez-vous le préavis sous la main, ou passons-nous au contrat suivant ?",
+      "ts": "2026-09-21T08:54:28+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Je vérifierai le préavis OVH dans l'espace client, je vous le donnerai plus tard.\n\nDeuxième ligne : l'API de cartographie Mapéo, que les développeurs utilisent pour géocoder les adresses de chantier. Le contrat Mapéo est à 290 € HT par mois, avec un préavis de résiliation d'un mois.",
+      "ts": "2026-09-21T08:57:50+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Ligne ajoutée :\n\n| Fournisseur | Objet | Montant | Renouvellement | Préavis | Date limite |\n|---|---|---|---|---|---|\n| OVH | Hébergement de Chantier+ | 412 € HT/mois | 1er mars, annuel | à préciser | à calculer |\n| Mapéo | API de géocodage et de cartographie | 290 € HT/mois | mensuel | 1 mois | à tout moment, avec 1 mois de préavis |\n\nAvec un préavis d'un mois sur un abonnement mensuel, vous gardez une grande souplesse : en cas de changement de prestataire, il faut simplement compter un mois de double abonnement si le nouveau service démarre avant la fin du préavis.\n\nPetite astuce : notez dans « Commentaires » la forme exigée pour la résiliation (courriel, lettre recommandée, formulaire en ligne). C'est souvent ce détail qui fait perdre du temps le jour où l'on en a besoin.",
+      "ts": "2026-09-21T08:58:25+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait. Dernière ligne pour aujourd'hui : notre expert-comptable, le Cabinet Ferrand & Associés. Mon interlocuteur est Michel Ferrand.\n\nPour mémoire, notre exercice comptable se clôt au 31 décembre. Pourriez-vous ajouter une colonne « à revoir avant clôture » pour que je repère les contrats à examiner avec le cabinet ?",
+      "ts": "2026-09-21T09:01:23+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici le tableau complet, avec la nouvelle colonne :\n\n| Fournisseur | Objet | Montant | Renouvellement | Préavis | Interlocuteur | À revoir avant clôture |\n|---|---|---|---|---|---|---|\n| OVH | Hébergement de Chantier+ | 412 € HT/mois | 1er mars, annuel | à préciser | — | non |\n| Mapéo | API de géocodage | 290 € HT/mois | mensuel | 1 mois | — | non |\n| Cabinet Ferrand & Associés | Expertise comptable | à préciser | à préciser | à préciser | Michel Ferrand | oui |\n\nAvec une clôture au 31 décembre, je vous suggère :\n1. de cocher « à revoir avant clôture » pour tout contrat dont le montant ou les conditions ont changé dans l'année, afin que le cabinet puisse vérifier les charges constatées d'avance et les factures non parvenues ;\n2. de faire une revue du tableau début décembre, avant votre échange avec le cabinet ;\n3. de compléter le montant de la lettre de mission du cabinet dès que vous l'avez sous les yeux.\n\nBonne journée, et n'hésitez pas à revenir vers moi pour les contrats suivants.",
+      "ts": "2026-09-21T09:01:50+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

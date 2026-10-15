@@ -1,0 +1,40 @@
+{
+  "faits": [
+    {
+      "id": "F059",
+      "enonce": "Le devis de Plomberie Rousseau s'élève à 9 600 € HT pour 12 licences.",
+      "fiche": "Plomberie Rousseau",
+      "alias": ["Rousseau"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "12 licences, 9600 HT",
+      "sensible": false
+    },
+    {
+      "id": "F060",
+      "enonce": "Plomberie Rousseau doit signer mi-octobre 2026.",
+      "fiche": "Plomberie Rousseau",
+      "alias": ["Rousseau"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "sandrine m'a confirmé au tel qu'elle signe mi-octobre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N022",
+      "enonce": "Argumentaire général pour vendre un logiciel aux plombiers.",
+      "tour": "t-002",
+      "pourquoi": "question générale"
+    },
+    {
+      "id": "N023",
+      "enonce": "« Si on leur fait -15 % ils signent direct » : piste non décidée.",
+      "tour": "t-005",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

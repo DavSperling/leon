@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-10-01-renegociation-dupont",
+    "title": "Renégociation devis Dupont"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "dupont a renegocié, on passe de 18.4k a 16 900 HT. jai validé avec lui ce matin",
+      "ts": "2026-10-01T15:45:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "C'est noté. Pour mémoire, l'écart :\n- 18 400 − 16 900 = **1 500 € HT** de moins,\n- soit une baisse d'environ **8,2 %**.\n\nC'est une concession raisonnable si elle sécurise la signature. As-tu obtenu une contrepartie (signature rapide, engagement de durée) ?",
+      "ts": "2026-10-01T15:45:30+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "pas vraiment. par contre gerard veut absolument la refonte du module devis livrée avant le 30/10, c sa condition pour signer",
+      "ts": "2026-10-01T15:50:06+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Attention à ce point : c'est un engagement de livraison, donc il ne dépend pas que de toi.\n\nAvant de le confirmer par écrit :\n1. **Vérifie le planning** de la refonte auprès de l'équipe technique et de la cheffe de projet.\n2. **Précise ce qu'il attend** exactement par « livrée » : en production pour tous ? accessible pour son équipe ? formation faite ?\n3. **Évite une pénalité** liée à la date dans le contrat, ou alors négocie-la explicitement.\n\nSi le planning confirme, tu peux t'en servir comme argument : il obtient le nouveau module dès le départ.",
+      "ts": "2026-10-01T15:50:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "ok. fais moi un mail proposition finale, je l'envoie pas tout de suite jattends le feu vert de claire",
+      "ts": "2026-10-01T15:54:10+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un projet de mail « proposition finale », à garder en brouillon :\n\n---\n**Objet :** Proposition finale Chantier+ pour Menuiserie Dupont\n\nBonjour Monsieur Dupont,\n\nSuite à nos échanges, j'ai le plaisir de vous adresser notre proposition finale, qui reprend les conditions dont nous avons convenu ensemble.\n\nVous trouverez le devis mis à jour en pièce jointe. Concernant le nouveau module devis, nous vous confirmerons très prochainement le calendrier de mise à disposition.\n\nJe reste à votre disposition pour toute question et me réjouis de démarrer ce projet avec vous.\n\nBien cordialement,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---\n\nJ'ai laissé la date de livraison en suspens, le temps que tu aies la confirmation interne.",
+      "ts": "2026-10-01T15:54:34+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "trop formel, il est cash gerard. plus direct stp",
+      "ts": "2026-10-01T15:59:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Version plus directe :\n\n---\n**Objet :** Notre proposition finale\n\nBonjour Gérard,\n\nComme promis, voici le devis mis à jour avec ce qu'on s'est dit au téléphone.\n\nPour le nouveau module devis, je vous confirme la date dans les prochains jours.\n\nSi c'est bon pour vous, on peut lancer le projet dès la signature.\n\nBonne journée,\n\nKarim\n---\n\nCourt, sans formule superflue. Tu peux l'envoyer tel quel une fois le feu vert obtenu.",
+      "ts": "2026-10-01T15:59:10+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

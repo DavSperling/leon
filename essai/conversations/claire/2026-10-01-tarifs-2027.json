@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-10-01-tarifs-2027",
+    "title": "Prix de Chantier+ en 2027"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Je dois trancher le prix de Chantier+ pour 2027. Aujourd'hui, c'est 55 € HT par utilisateur et par mois. J'envisage d'augmenter. Les arguments pour et contre, en bref.",
+      "ts": "2026-10-01T10:15:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "**Pour une hausse**\n- **Inflation des coûts** : salaires, hébergement, outils. Un prix figé depuis plusieurs années, c'est une baisse réelle.\n- **Valeur ajoutée** : si vous avez livré des fonctionnalités importantes (application mobile, connecteurs), la hausse se justifie et s'explique.\n- **Effet sur la marge** : quelques euros par licence, multipliés par l'ensemble de votre parc, représentent un montant significatif sur l'année.\n\n**Contre une hausse**\n- **Risque de départ** : un client déjà tenté par un concurrent peut saisir l'occasion pour partir.\n- **Argument commercial** : en prospection, un prix plus élevé que la concurrence demande un discours de valeur solide.\n- **Image** : une hausse mal annoncée crée de la défiance.\n\n**Points pour décider**\n- Où se situent vos concurrents ?\n- Quelle part de vos clients arrive en renouvellement dans l'année ?\n- Pouvez-vous protéger vos clients actuels pendant une période de transition ?\n\nConnaissez-vous les prix pratiqués par vos concurrents directs ?",
+      "ts": "2026-10-01T10:15:31+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Batinova est à 39 € HT par utilisateur et par mois. Ils démarchent nos clients en ce moment.",
+      "ts": "2026-10-01T10:18:03+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "L'écart est donc important, et il va se creuser si vous augmentez. Cela ne vous empêche pas de monter, mais il faut le faire avec méthode :\n\n1. **Ne pas courir après le prix bas.** Vous ne gagnerez pas une guerre des prix contre un concurrent installé à ce niveau. Votre terrain, c'est le service, l'accompagnement local et l'intégration devis, planning, facturation.\n2. **Monter modérément.** Une hausse de quelques euros reste acceptable si elle est expliquée. Une hausse de plus de 10 % se remarque davantage.\n3. **Protéger la base installée.** Le plus gros risque, ce sont vos clients actuels. Leur garder l'ancien prix jusqu'à leur renouvellement limite les départs et vous laisse le temps d'argumenter.\n4. **Annoncer tôt.** Trois mois avant l'entrée en vigueur au minimum.\n\nQuel niveau envisagez-vous ?",
+      "ts": "2026-10-01T10:18:39+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Décision : on passe de 55 € à 59 € HT au 1er janvier 2027. Les clients existants gardent 55 € jusqu'au renouvellement de leur contrat.",
+      "ts": "2026-10-01T10:22:13+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est une décision cohérente : environ 7 % de hausse, sous le seuil qui déclenche en général des renégociations, et une protection claire des clients actuels.\n\nVoici un plan d'annonce :\n\n**Octobre**\n- Mettre à jour la grille tarifaire et les conditions générales de vente.\n- Préparer un argumentaire pour l'équipe commerciale : ce qui justifie la hausse, comment répondre à « Batinova est moins cher ».\n\n**Novembre**\n- Courriel d'information aux clients existants : nouveau prix pour les nouveaux contrats, maintien de leur prix jusqu'au renouvellement.\n- Mise à jour des devis en cours : tout devis signé après le 1er janvier se fait au nouveau prix.\n\n**Décembre**\n- Rappel aux prospects : signer avant la fin de l'année permet de bénéficier du prix actuel. C'est un bon levier de clôture.\n\nVoulez-vous que je rédige le courriel aux clients ?",
+      "ts": "2026-10-01T10:22:41+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Plus tard. Deux questions. Pour ce courriel, qu'impose le RGPD, en général, sur ce genre d'envoi ? Et un jour peut-être, on pourrait proposer un forfait illimité par entreprise. Pas maintenant, je note juste l'idée.",
+      "ts": "2026-10-01T10:25:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "**Le RGPD et un courriel d'information tarifaire**\n\nEn général, le RGPD n'interdit pas ce type d'envoi :\n- informer vos clients d'une évolution de prix relève de l'**exécution du contrat** qui vous lie à eux : vous n'avez pas besoin de leur consentement ;\n- il faut en revanche n'utiliser que des adresses collectées dans le cadre de la relation client, et ne pas mélanger ce courriel d'information avec de la prospection commerciale ;\n- si vous ajoutez des offres promotionnelles dans le même courriel, il devient en partie commercial, et les règles de la prospection s'appliquent : lien de désinscription, notamment.\n\nPour le délai de prévenance et les modalités de la hausse, ce sont vos **conditions générales** et vos contrats qui font foi, pas le RGPD.\n\n**Le forfait illimité**\n\nC'est une piste qui peut séduire les entreprises en croissance. Deux points de vigilance, pour le jour où vous l'étudierez : le prix d'équilibre (à partir de combien d'utilisateurs le forfait vous fait perdre de l'argent), et le risque de cannibaliser vos plus gros clients actuels.",
+      "ts": "2026-10-01T10:26:29+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-09-29-litige-le-goff",
+    "title": "Prud'hommes : préparation"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Dossier sensible. Yann Le Goff, notre ancien commercial, licencié en mars 2026, a saisi les prud'hommes contre nous. Je veux comprendre comment ça se déroule, étape par étape.",
+      "ts": "2026-09-29T11:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici le déroulé général d'une procédure devant le conseil de prud'hommes. Votre avocat vous précisera ce qui s'applique à votre dossier.\n\n**1. La saisine**\nLe salarié dépose une requête au greffe du conseil de prud'hommes. L'employeur reçoit une convocation.\n\n**2. Le bureau de conciliation et d'orientation**\n- Première audience, en principe obligatoire, en présence des deux parties (ou de leurs représentants).\n- Elle a lieu à huis clos, devant deux conseillers : un représentant des salariés, un représentant des employeurs.\n- Objectif : trouver un accord. Si les parties s'entendent, un procès-verbal de conciliation met fin au litige.\n- Sinon, l'affaire est renvoyée devant le bureau de jugement, avec un calendrier d'échange des pièces et des conclusions.\n\n**3. La mise en état**\nChaque partie communique ses pièces et ses arguments écrits à l'autre, dans les délais fixés.\n\n**4. Le bureau de jugement**\n- Audience publique, devant quatre conseillers.\n- Chaque partie plaide. Le jugement est rendu le jour même ou, plus souvent, quelques semaines plus tard.\n- En cas de partage des voix, l'affaire est rejugée sous la présidence d'un juge professionnel (le juge départiteur), ce qui rallonge les délais.\n\n**5. Les recours**\nL'appel est possible dans un délai d'un mois après la notification du jugement, si les demandes dépassent un certain montant.\n\n**Délais**\nEntre la saisine et le jugement, il faut souvent compter de un à deux ans selon les conseils.\n\n**Indemnités**\nEn cas de licenciement jugé sans cause réelle et sérieuse, les indemnités sont encadrées par un barème fixé par le Code du travail, qui dépend de l'ancienneté du salarié et de la taille de l'entreprise.",
+      "ts": "2026-09-29T11:00:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "L'audience de conciliation est fixée au 13 novembre. Nous sommes défendus par Maître Hélène Vasseur, du cabinet Vasseur Avocats. Comment je prépare ça avec elle ?",
+      "ts": "2026-09-29T11:04:37+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici comment préparer cette audience avec votre avocate :\n\n**Rassembler le dossier**\n- contrat de travail et avenants ;\n- bulletins de paie des douze derniers mois ;\n- procédure de licenciement : convocation à l'entretien préalable, compte rendu, lettre de licenciement ;\n- éléments à l'appui du motif (courriels, objectifs, comptes rendus) ;\n- solde de tout compte et attestation remise au salarié.\n\n**Fixer votre position avant l'audience**\n- Êtes-vous prête à transiger, et jusqu'à quel montant ?\n- Préférez-vous un accord rapide, ou aller au jugement par principe ?\n- Qui sera présent : vous, votre avocate, ou votre avocate seule avec un mandat écrit ?\n\n**Lui donner un mandat clair**\nL'avocate ne peut pas engager un accord sans votre autorisation. Si vous fixez un plafond, elle saura jusqu'où négocier pendant l'audience, sans devoir vous appeler.\n\n**Rester discrète en interne**\nLimitez le nombre de personnes informées. Les éléments du dossier sont personnels et doivent rester confidentiels.",
+      "ts": "2026-09-29T11:05:15+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Sur la transaction, ma ligne est claire : pas un euro au-delà de 8 000 €. Au-delà, on va au jugement.",
+      "ts": "2026-09-29T11:08:13+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est une position nette, et c'est exactement ce dont votre avocate a besoin. Quelques points à regarder avec elle avant l'audience :\n\n- **Le coût d'un jugement** : honoraires supplémentaires, temps passé, durée de la procédure. Comparez-le au montant que vous êtes prête à verser.\n- **Le risque** : votre avocate peut vous donner une fourchette du montant auquel vous seriez condamnée si le licenciement était jugé sans cause réelle et sérieuse.\n- **Le régime de l'indemnité** : selon sa nature, une indemnité transactionnelle n'est pas soumise aux mêmes charges sociales et fiscales. Faites-le chiffrer.\n- **La forme** : un accord trouvé en conciliation est constaté par procès-verbal ; il met fin au litige de façon définitive.\n\nTransmettez-lui votre plafond par écrit.",
+      "ts": "2026-09-29T11:08:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Bien. Je transmets à Maître Vasseur ce soir.",
+      "ts": "2026-09-29T11:10:23+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

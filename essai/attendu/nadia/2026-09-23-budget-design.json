@@ -1,0 +1,34 @@
+{
+  "faits": [
+    {
+      "id": "F287",
+      "enonce": "Le TJM de Lucas Fabre est de 550 € HT.",
+      "fiche": "Lucas Fabre",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "son TJM est de 550 € HT",
+      "sensible": false
+    },
+    {
+      "id": "F288",
+      "enonce": "Lucas Fabre est engagé pour 12 jours sur l'application mobile v2.",
+      "fiche": "Lucas Fabre",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "on a validé 12 jours pour lui sur l'appli v2",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N121",
+      "enonce": "« Si on prenait une agence plutôt qu'un freelance ? » : piste non retenue.",
+      "tour": "t-005",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

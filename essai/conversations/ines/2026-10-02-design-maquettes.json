@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-ines-2026-10-02-design-maquettes",
+    "title": "Thème et maquettes de l'appli mobile"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Je prépare l'arrivée des maquettes de l'appli mobile v2. Lucas Fabre, notre designer, livre les maquettes le 9 octobre. D'ici là je veux que le code soit prêt à les recevoir : thème centralisé, tokens de couleurs, typo, espacements. Tu peux me proposer une structure de fichier de thème pour React Native, avec des tokens nommés par usage (fond, texte, accent…) plutôt que par couleur ?",
+      "ts": "2026-10-02T11:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici une structure courante et facile à faire évoluer :\n\n- `theme/couleurs.ts` : les tokens par usage (`fond`, `fondCarte`, `texte`, `texteSecondaire`, `accent`, `succes`, `alerte`, `bordure`) ;\n- `theme/typo.ts` : tailles et graisses (`titre`, `sousTitre`, `corps`, `legende`) ;\n- `theme/espaces.ts` : une échelle fixe (4, 8, 12, 16, 24, 32) ;\n- `theme/index.ts` : assemble le tout et l'expose via un contexte et un hook `useTheme()`.\n\nLes écrans n'importent jamais une couleur brute : uniquement `theme.couleurs.accent`, etc. Quand les maquettes arrivent, seules les valeurs changent.",
+      "ts": "2026-10-02T11:00:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Ça me va. Pour les valeurs que je connais déjà : la couleur principale de Chantier+ est le bleu #1F4E79, c'est celle du logo et de l'appli web, donc `accent` = #1F4E79 quoi qu'il arrive. Et autre point acté : l'appli mobile v2 propose un mode sombre, les compagnons l'utilisent le soir et dans les sous-sols. Donc il me faut deux jeux de valeurs, clair et sombre. Comment je structure ça pour que le passage de l'un à l'autre soit propre, et qu'on puisse suivre le réglage du téléphone ?",
+      "ts": "2026-10-02T11:04:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Structure proposée :\n\n- `theme/couleurs.ts` exporte deux objets de même forme : `clair` et `sombre` ;\n- un réglage utilisateur à trois valeurs : `systeme` (par défaut), `clair`, `sombre` ;\n- le fournisseur de thème lit le réglage ; en mode `systeme`, il suit l'apparence du téléphone et se met à jour quand elle change ;\n- un test vérifie que `clair` et `sombre` ont exactement les mêmes clés, pour qu'aucun token ne manque d'un côté.\n\nPoint d'attention : un bleu foncé comme #1F4E79 manque de contraste sur un fond sombre. En mode sombre, il faudra sans doute une variante plus claire pour `accent` utilisé comme texte, tout en gardant #1F4E79 pour les grandes surfaces si les maquettes le prévoient.",
+      "ts": "2026-10-02T11:05:12+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Bien vu pour le contraste, je laisse Lucas trancher la variante sombre dans ses maquettes. Autre chose : je dois mettre des textes provisoires sur l'écran d'accueil en attendant les vrais. Tu peux m'écrire un premier jet : titre de bienvenue, sous-titre, et les libellés des deux graphiques (avancement des chantiers, montant signé du mois) ? Ton direct, tutoiement, c'est pour des artisans.",
+      "ts": "2026-10-02T11:09:12+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un premier jet de textes provisoires pour l'écran d'accueil :\n\n- Titre : « Salut, prêt pour la journée ? »\n- Sous-titre : « Tes chantiers, tes devis et ton planning, au même endroit. »\n- Graphique 1 : « Où en sont tes chantiers »\n- Graphique 2 : « Signé ce mois-ci »\n- Écran vide : « Aucun chantier pour l'instant. Ajoute ton premier chantier pour commencer. »\n\nÀ adapter selon les maquettes de Lucas et la longueur réelle des libellés sur petit écran.",
+      "ts": "2026-10-02T11:09:54+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Je les mets en dur avec un `// TODO textes définitifs`. Dernière question : comment je nomme les fichiers d'images que Lucas va exporter, pour que ça reste rangé quand il y en aura des dizaines ?",
+      "ts": "2026-10-02T11:11:54+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Une convention simple : `ecran-element-variante@2x.png`, en minuscules, avec des tirets, sans accents. Par exemple `accueil-illustration-vide@2x.png` ou `profil-avatar-defaut@3x.png`. Range-les par écran dans `assets/images/<ecran>/` et garde les icônes à part dans `assets/icons/`.",
+      "ts": "2026-10-02T11:12:30+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

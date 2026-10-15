@@ -1,0 +1,56 @@
+{
+  "faits": [
+    {
+      "id": "F318",
+      "enonce": "Une démonstration est prévue chez Charpentes Morvan le 20 octobre 2026.",
+      "fiche": "Charpentes Morvan",
+      "alias": ["Morvan"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "la démo chez eux est confirmée pour le 20 octobre",
+      "sensible": false,
+      "doublonDe": "F075"
+    },
+    {
+      "id": "F319",
+      "enonce": "Couverture Le Bihan renouvelle son contrat pour 2027.",
+      "fiche": "Couverture Le Bihan",
+      "alias": ["Le Bihan"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "ils renouvellent pour 2027",
+      "sensible": false,
+      "doublonDe": "F029"
+    },
+    {
+      "id": "F320",
+      "enonce": "Nadia Benali relance chaque client sans réponse au bout de 5 jours ouvrés.",
+      "fiche": "Relance clients",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-001",
+      "extrait": "je relance tout client sans réponse au bout de 5 jours ouvrés",
+      "sensible": false
+    },
+    {
+      "id": "F321",
+      "enonce": "Erwan Morvan veut voir l'application mobile pendant la démonstration du 20 octobre.",
+      "fiche": "Charpentes Morvan",
+      "alias": ["Morvan"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "Erwan Morvan veut absolument voir l'appli mobile pendant la démo",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N126",
+      "enonce": "Brouillon de mail de relance.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

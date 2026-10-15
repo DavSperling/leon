@@ -1,0 +1,54 @@
+{
+  "faits": [
+    {
+      "id": "F016",
+      "enonce": "Yann Le Goff, ancien commercial licencié en mars 2026, a saisi les prud'hommes contre l'entreprise.",
+      "fiche": "Yann Le Goff",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "licencié en mars 2026, a saisi les prud'hommes contre nous",
+      "sensible": true
+    },
+    {
+      "id": "F017",
+      "enonce": "L'audience de conciliation du litige Le Goff est fixée au 13 novembre 2026.",
+      "fiche": "Yann Le Goff",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "L'audience de conciliation est fixée au 13 novembre",
+      "sensible": true
+    },
+    {
+      "id": "F018",
+      "enonce": "L'entreprise est défendue par Maître Hélène Vasseur dans le litige Le Goff.",
+      "fiche": "Cabinet Vasseur Avocats",
+      "alias": ["Vasseur"],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Nous sommes défendus par Maître Hélène Vasseur",
+      "sensible": true
+    },
+    {
+      "id": "F019",
+      "enonce": "Claire refuse toute transaction au-delà de 8 000 € dans le litige Le Goff.",
+      "fiche": "Yann Le Goff",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-005",
+      "extrait": "pas un euro au-delà de 8 000 €",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N006",
+      "enonce": "Explication générale de la procédure prud'homale.",
+      "tour": "t-002",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

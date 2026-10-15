@@ -1,0 +1,79 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-10-09-concurrents",
+    "title": "Veille concurrents"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "jdois faire une fiche veille concurrents pour claire. 3 noms reviennent tout le temps chez les clients : batinova, ouvrio, planika btp. aide moi a structurer",
+      "ts": "2026-10-09T16:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici une structure simple, une colonne par concurrent :\n\n| Critère | Batinova | Ouvrio | Planika BTP |\n|---|---|---|---|\n| Siège | | | |\n| Offre (web, mobile, les deux) | | | |\n| Prix | | | |\n| Cible | | | |\n| Actualité | | | |\n| Points forts | | | |\n| Points faibles | | | |\n| Nos arguments face à eux | | | |\n\nDonne-moi ce que tu sais sur chacun et je remplis.",
+      "ts": "2026-10-09T16:00:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "batinova cest des lyonnais (basés a lyon). ouvrio basé a bordeaux, ils font que l'appli mobile, 29 HT par user par mois",
+      "ts": "2026-10-09T16:01:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Je remplis ce que tu m'as donné :\n\n| Critère | Batinova | Ouvrio | Planika BTP |\n|---|---|---|---|\n| Siège | Lyon | Bordeaux | ? |\n| Offre | ? | application mobile uniquement | ? |\n| Prix | ? | 29 € HT / utilisateur / mois | ? |\n\nPour Ouvrio, un argument se dessine : une application mobile seule ne couvre pas la partie bureau (devis détaillés, facturation, suivi). Face à eux, insiste sur le fait que Chantier+ couvre web **et** mobile.\n\nEt pour Planika BTP ?",
+      "ts": "2026-10-09T16:02:08+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "planika btp a levé 4M€ en septembre. ils visent les boites de + de 50 salariés",
+      "ts": "2026-10-09T16:06:49+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Je complète :\n\n| Critère | Planika BTP |\n|---|---|\n| Actualité | levée de fonds de 4 M€ |\n| Cible | entreprises de plus de 50 salariés |\n\n**Lecture** : leur cible est plus grosse que le cœur de votre clientèle d'artisans. Ce n'est pas forcément un concurrent frontal aujourd'hui, mais une levée de fonds signifie souvent un recrutement commercial et du marketing dans les mois qui suivent. À surveiller sur tes plus gros comptes.",
+      "ts": "2026-10-09T16:07:03+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "perso je pense que ouvrio va surement couler d'ici un an, mobile seul ça tient pas. et le marché des logiciels btp en france ça pese combien ? je veux mettre un chiffre en intro",
+      "ts": "2026-10-09T16:09:40+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Deux remarques :\n\n**Sur Ouvrio** : c'est une intuition, pas une information. Dans une fiche de veille pour ta direction, je te conseille de ne pas l'écrire comme une prévision. Tu peux formuler : « positionnement mobile seul, à surveiller ».\n\n**Sur la taille du marché** : je n'ai pas de chiffre fiable à te donner. On voit circuler des estimations de l'ordre de quelques centaines de millions d'euros par an pour les logiciels de gestion du bâtiment en France, peut-être un peu plus, mais je ne peux pas le vérifier. Si tu veux un chiffre en intro, cite une source identifiée (étude sectorielle, fédération professionnelle), sinon mieux vaut t'en passer.",
+      "ts": "2026-10-09T16:10:05+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "dsl jai renversé mon cafe sur le clavier mdr. bref. claire veut aussi un argumentaire differenciant, c koi exactement ?",
+      "ts": "2026-10-09T16:13:01+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "Un **argumentaire différenciant**, c'est l'ensemble des arguments qui expliquent pourquoi un client devrait te choisir **toi** plutôt qu'un concurrent, et pas seulement pourquoi il devrait acheter un logiciel.\n\n**Ce qui le distingue d'un argumentaire classique**\n- Argumentaire classique : « notre logiciel vous fait gagner du temps sur vos devis » (tout le monde peut le dire).\n- Argumentaire différenciant : ce que toi seul fais, ou fais mieux, et qui compte pour le client.\n\n**Comment le construire**\n1. Lister ce que les clients apprécient vraiment chez vous (demande-leur).\n2. Comparer avec chaque concurrent : garder seulement ce qu'ils n'ont pas ou font moins bien.\n3. Le traduire en bénéfice client, avec une preuve (témoignage, chiffre).\n\n**Format** : trois ou quatre arguments maximum, chacun en une phrase, avec sa preuve.",
+      "ts": "2026-10-09T16:13:32+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

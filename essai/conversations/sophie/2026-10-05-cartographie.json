@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-10-05-cartographie",
+    "title": "Résiliation Mapéo et contrat TerraCarte"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nÀ partir d'aujourd'hui, 5 octobre 2026, notre fournisseur de géocodage et de cartographie est TerraCarte. Je dois donc résilier notre contrat avec Mapéo.\n\nPourriez-vous me préparer un brouillon de lettre de résiliation ?",
+      "ts": "2026-10-05T09:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nVoici un brouillon de lettre de résiliation, à adapter :\n\n---\n\nAtelier Numérique Lebrun\n[Adresse]\n[Numéro client Mapéo]\n\nMapéo\nService clients\n[Adresse]\n\nNantes, le [date]\n\n**Objet : Résiliation du contrat n° [référence]**\n\nMadame, Monsieur,\n\nPar la présente, je vous informe de notre décision de résilier le contrat d'abonnement à vos services de géocodage et de cartographie, référencé ci-dessus.\n\nConformément aux conditions contractuelles, cette résiliation prendra effet à l'issue du préavis prévu au contrat, soit le [date d'effet].\n\nJe vous remercie de bien vouloir m'adresser une confirmation écrite de cette résiliation ainsi que la date de la dernière facture.\n\nJe vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\nSophie Garnier\nAdministration et finances\n\n---\n\nPour compléter la date d'effet, pouvez-vous me rappeler le préavis prévu par le contrat ?",
+      "ts": "2026-10-05T09:30:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci. Le préavis est d'un mois : j'envoie la résiliation aujourd'hui, le 5 octobre, elle prendra donc effet le 5 novembre 2026.\n\nFaut-il obligatoirement l'envoyer en recommandé ?",
+      "ts": "2026-10-05T09:33:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Pas forcément : tout dépend de ce que prévoit le contrat.\n\n- **Si le contrat impose une forme** (lettre recommandée avec accusé de réception, formulaire dans l'espace client, courriel à une adresse dédiée), c'est celle-ci qu'il faut respecter, sans quoi la résiliation pourrait être contestée.\n- **Si le contrat ne dit rien**, un courriel peut suffire juridiquement, mais la preuve de la date d'envoi et de réception est moins solide.\n\nMes conseils pratiques :\n1. vérifiez la clause « résiliation » des conditions générales ;\n2. à défaut de précision, envoyez par courriel **et** par lettre recommandée électronique ou papier le même jour : vous gardez une preuve datée ;\n3. conservez l'accusé de réception avec le contrat, dans votre tableau de suivi ;\n4. surveillez la dernière facture, pour vérifier qu'aucun mois supplémentaire n'est facturé après le 5 novembre.",
+      "ts": "2026-10-05T09:34:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Très bien, je ferai les deux.\n\nCôté TerraCarte, l'abonnement est à 180 € HT par mois. Il est sans durée minimale et résiliable à tout moment. Comment l'enregistrer dans mon tableau de suivi des contrats ?",
+      "ts": "2026-10-05T09:37:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici les deux lignes à jour pour votre tableau :\n\n| Fournisseur | Objet | Montant | Renouvellement | Préavis | Statut |\n|---|---|---|---|---|---|\n| TerraCarte | API de géocodage et de cartographie | 180 € HT/mois | mensuel, sans durée minimale | résiliable à tout moment | actif depuis le 05/10/2026 |\n| Mapéo | API de géocodage et de cartographie | selon contrat | — | 1 mois | résilié le 05/10/2026, fin le 05/11/2026 |\n\nDeux remarques :\n- pendant le préavis, du 5 octobre au 5 novembre, vous paierez les deux abonnements : pensez-y dans le suivi des charges du mois d'octobre ;\n- je vous conseille de garder la ligne Mapéo jusqu'à réception de la dernière facture et de la confirmation de résiliation, puis de la basculer dans un onglet « contrats terminés ».",
+      "ts": "2026-10-05T09:38:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Bonne remarque pour le double abonnement. Une question générale pour finir : sans engagement, un fournisseur peut-il augmenter ses prix du jour au lendemain ?",
+      "ts": "2026-10-05T09:41:14+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "En règle générale, non, pas du jour au lendemain, mais il en a beaucoup plus la liberté :\n\n- **Entre professionnels**, les conditions générales prévoient le plus souvent qu'une modification tarifaire est notifiée au client avec un délai (souvent 30 jours) ; le client peut alors résilier avant l'entrée en vigueur du nouveau tarif.\n- **Sans durée minimale**, la contrepartie est symétrique : vous pouvez partir à tout moment, le fournisseur peut faire évoluer son offre plus librement.\n- **En pratique**, lisez la clause « modification des conditions » de ses conditions générales et notez le délai de prévenance dans la colonne « Commentaires » de votre tableau.\n\nBonne journée, et bonne transition.",
+      "ts": "2026-10-05T09:41:41+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

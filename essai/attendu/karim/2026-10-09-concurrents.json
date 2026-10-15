@@ -1,0 +1,76 @@
+{
+  "faits": [
+    {
+      "id": "F083",
+      "enonce": "Batinova est basé à Lyon.",
+      "fiche": "Batinova",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-003",
+      "extrait": "batinova cest des lyonnais (basés a lyon)",
+      "sensible": false
+    },
+    {
+      "id": "F082",
+      "enonce": "Ouvrio est basé à Bordeaux.",
+      "fiche": "Ouvrio",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-003",
+      "extrait": "ouvrio basé a bordeaux",
+      "sensible": false
+    },
+    {
+      "id": "F076",
+      "enonce": "Ouvrio vend une application mobile seule à 29 € HT par utilisateur et par mois.",
+      "fiche": "Ouvrio",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-003",
+      "extrait": "ils font que l'appli mobile, 29 HT par user par mois",
+      "sensible": false
+    },
+    {
+      "id": "F077",
+      "enonce": "Planika BTP a levé 4 millions d'euros en septembre 2026.",
+      "fiche": "Planika BTP",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-005",
+      "extrait": "planika btp a levé 4M€ en septembre",
+      "sensible": false
+    },
+    {
+      "id": "F078",
+      "enonce": "Planika BTP vise les entreprises du bâtiment de plus de 50 salariés.",
+      "fiche": "Planika BTP",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-005",
+      "extrait": "ils visent les boites de + de 50 salariés",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N029",
+      "enonce": "« Ouvrio va sûrement couler d'ici un an. »",
+      "tour": "t-007",
+      "pourquoi": "spéculation"
+    },
+    {
+      "id": "N028",
+      "enonce": "Taille du marché des logiciels du bâtiment en France, chiffre non vérifié.",
+      "tour": "t-008",
+      "pourquoi": "hypothèse non sourcée"
+    },
+    {
+      "id": "N030",
+      "enonce": "Définition générale d'un argumentaire différenciant.",
+      "tour": "t-010",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

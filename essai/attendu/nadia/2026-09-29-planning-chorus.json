@@ -1,0 +1,43 @@
+{
+  "faits": [
+    {
+      "id": "F289",
+      "enonce": "Le connecteur Chorus Pro doit être livré le 1er décembre 2026 pour SARL Bati-Ouest et Couverture Le Bihan.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "livraison le 1er décembre, pour Bati-Ouest et Le Bihan",
+      "sensible": false,
+      "doublonDe": "F113"
+    },
+    {
+      "id": "F304",
+      "enonce": "Plomberie Rousseau doit signer en novembre 2026.",
+      "fiche": "Plomberie Rousseau",
+      "alias": ["Rousseau"],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "Plomberie Rousseau : ils signent en novembre",
+      "sensible": false
+    },
+    {
+      "id": "F305",
+      "enonce": "L'interlocutrice chez Couverture Le Bihan est Maëlle Le Bihan, la gérante.",
+      "fiche": "Couverture Le Bihan",
+      "alias": ["Le Bihan"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "mon contact c'est Maëlle Le Bihan, la gérante",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [],
+  "conflits": [
+    {
+      "a": "F060",
+      "b": "F304"
+    }
+  ]
+}

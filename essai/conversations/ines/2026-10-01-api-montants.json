@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-ines-2026-10-01-api-montants",
+    "title": "Montants de l'API et PDF de devis"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Petite question de culture générale d'abord : float et decimal, c'est quoi exactement la différence, et pourquoi on dit toujours de ne pas stocker de l'argent en float ?",
+      "ts": "2026-10-01T14:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "En résumé :\n\n- **float** (virgule flottante binaire) : le nombre est stocké en base 2. Beaucoup de décimales simples comme 0,1 n'ont pas de représentation exacte en binaire, d'où les fameux `0.1 + 0.2 = 0.30000000000000004`. C'est rapide et adapté aux mesures physiques.\n- **decimal** (virgule fixe ou décimale) : le nombre est stocké en base 10 avec une précision choisie (par exemple 2 chiffres après la virgule). 0,1 est exact. C'est plus lent mais exact pour les montants.\n\nPour l'argent, une erreur d'un centime répétée sur des milliers de lignes finit par se voir dans un total ou une TVA. D'où la règle : jamais de float pour stocker ou additionner des montants ; on utilise un type décimal, ou des entiers en plus petite unité.",
+      "ts": "2026-10-01T14:20:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci. Maintenant mon cas concret. Dans l'appli mobile v2 j'affiche des devis. Les montants renvoyés par l'API de Chantier+ sont en euros décimaux, par exemple `\"total_ht\": \"1234.50\"` (une chaîne, avec deux décimales). Côté React Native, je dois afficher « 1 234,50 € » et parfois additionner des lignes pour un sous-total affiché en direct pendant la saisie. Comment je gère ça proprement en TypeScript sans réintroduire des erreurs de float ?",
+      "ts": "2026-10-01T14:24:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Quelques règles simples pour ton cas :\n\n1. **Ne convertis pas la chaîne en `number` pour calculer.** Pour additionner, convertis chaque montant en entier de centimes au moment du calcul (`\"1234.50\"` → `123450`), additionne des entiers, puis reformate.\n2. **Pour l'affichage**, `Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })` donne « 1 234,50 € » avec l'espace insécable.\n3. **Le sous-total affiché en direct** n'est qu'un aperçu : le montant qui fait foi reste celui recalculé par le serveur.\n4. **Isole tout ça dans un petit module** `montants.ts` (`depuisApi`, `additionner`, `formater`), pour ne jamais manipuler les chaînes directement dans les écrans.\n\nExemple de conversion sûre : découper sur le point, compléter la partie décimale à deux chiffres, puis `parseInt(euros) * 100 + parseInt(centimes)`.",
+      "ts": "2026-10-01T14:25:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Ok je fais le module `montants.ts` comme ça. Autre sujet lié : l'export du devis en PDF depuis l'appli. Avec Hugo on a décidé que les PDF de devis sont générés côté serveur par une file de jobs (pg-boss), plus rien n'est généré sur le téléphone. Donc côté mobile je fais juste une demande de génération puis j'attends que le PDF soit prêt. C'est quoi le meilleur schéma pour attendre côté appli : je redemande toutes les X secondes, ou autre chose ?",
+      "ts": "2026-10-01T14:28:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Trois options classiques :\n\n| Option | Principe | Pour | Contre |\n|---|---|---|---|\n| Interrogation régulière | l'appli redemande l'état toutes les 2 à 3 s | simple, marche partout | requêtes inutiles, latence de quelques secondes |\n| Connexion persistante | le serveur pousse « PDF prêt » | instantané | plus complexe, fragile en réseau mobile instable |\n| Notification push | le serveur envoie une notification quand le job est fini | marche même appli fermée | plus lourd à mettre en place, délai variable |\n\nPour une génération qui prend quelques secondes, l'interrogation régulière avec un plafond (par exemple toutes les 2 s pendant 30 s, puis abandon avec un message) est le meilleur rapport simplicité/fiabilité, surtout sur des chantiers où le réseau est instable.",
+      "ts": "2026-10-01T14:29:24+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "L'interrogation régulière me paraît la plus raisonnable, j'en reparlerai avec Hugo. Et pendant l'attente, tu afficherais quoi ? Un spinner bloquant ou autre chose ?",
+      "ts": "2026-10-01T14:31:54+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Évite le spinner bloquant :\n\n- affiche une ligne d'état non bloquante sur la fiche du devis (« PDF en préparation… ») ;\n- laisse l'utilisateur continuer à naviguer ;\n- quand le PDF est prêt, remplace la ligne par un bouton « Envoyer au client » ;\n- en cas d'échec ou de dépassement du délai, propose « Réessayer » plutôt qu'un message d'erreur technique.",
+      "ts": "2026-10-01T14:32:30+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

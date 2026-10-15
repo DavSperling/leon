@@ -1,0 +1,44 @@
+{
+  "faits": [
+    {
+      "id": "F026",
+      "enonce": "Thomas Guérin demande 36 000 € brut annuel pour un CDI à la fin de son alternance.",
+      "fiche": "Thomas Guérin",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "demande 36 000 € brut annuel",
+      "sensible": true
+    },
+    {
+      "id": "F027",
+      "enonce": "Claire propose à Thomas Guérin 34 000 € brut annuel et une prime de 1 500 €.",
+      "fiche": "Thomas Guérin",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Je propose 34 000 € brut annuel, plus une prime de 1 500 €",
+      "sensible": true
+    },
+    {
+      "id": "F028",
+      "enonce": "L'alternance de Thomas Guérin se termine le 31 décembre 2026.",
+      "fiche": "Thomas Guérin",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "finit son alternance le 31 décembre",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N008",
+      "enonce": "Brouillon de réponse à Thomas Guérin, non envoyé.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

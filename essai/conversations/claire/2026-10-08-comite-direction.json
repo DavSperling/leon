@@ -1,0 +1,72 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-10-08-comite-direction",
+    "title": "Comité de direction"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "On démarre le comité de direction. Pour mémoire, il se tient désormais tous les jeudis à 8 h 30. Je vous donne les points au fil de l'eau ; vous me faites le relevé de décisions à la fin.",
+      "ts": "2026-10-08T08:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Entendu. Envoyez les points au fur et à mesure ; je les classerai en trois rubriques : décisions, informations, actions (avec un porteur et une échéance quand vous me les donnez).",
+      "ts": "2026-10-08T08:30:17+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Point clients. Couverture Le Bihan renouvelle pour 2027, Maëlle Le Bihan l'a confirmé. Et Fournier reste chez nous, avec une remise de 10 %.",
+      "ts": "2026-10-08T08:35:29+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Noté, deux bonnes nouvelles côté clients.\n\nUne suggestion pour la remise accordée à Maçonnerie Fournier : formalisez-la par écrit (avenant ou courrier), avec sa durée et ses conditions, pour éviter qu'elle ne soit réclamée par d'autres ou reconduite tacitement. Voulez-vous que je l'ajoute en action ?",
+      "ts": "2026-10-08T08:35:51+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui, action pour Karim. Point charges : la Mutuelle Atlantique Santé augmente de 6 % au 1er janvier 2027. À intégrer au budget.",
+      "ts": "2026-10-08T08:39:55+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Noté en information, avec une action implicite pour le budget 2027.\n\nDeux points à garder en tête :\n- **Information des salariés** : une hausse de cotisation de la mutuelle collective modifie aussi la part retenue sur leur bulletin. Prévenez-les avant la paie de janvier.\n- **Mise en concurrence** : si la hausse vous paraît élevée, la période de renouvellement est le bon moment pour demander un devis à un ou deux autres organismes, en respectant le préavis de résiliation prévu au contrat.",
+      "ts": "2026-10-08T08:40:20+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Point produit, décision : jusqu'au 1er décembre, le connecteur Chorus Pro passe avant tout le reste. La refonte du module devis termine sa mise en production comme prévu, puis plus aucune évolution du module devis avant décembre. Hugo organise l'équipe en conséquence.",
+      "ts": "2026-10-08T08:45:58+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Noté comme décision.\n\nLa mise en production de la refonte du module devis n'est donc pas remise en cause : ce sont les évolutions suivantes du module qui attendent décembre.\n\nVoici le relevé du comité :\n\n**Décisions**\n- Priorité au connecteur Chorus Pro jusqu'au 1er décembre ; après la mise en production de la refonte, plus d'évolution du module devis avant décembre.\n\n**Informations**\n- Renouvellement de Couverture Le Bihan pour 2027.\n- Maintien de Maçonnerie Fournier, avec remise.\n- Hausse de la cotisation mutuelle au 1er janvier.\n\n**Actions**\n- Karim : formaliser par écrit la remise de Maçonnerie Fournier.\n- Budget 2027 : intégrer la hausse de la mutuelle.\n- Hugo : réorganiser le travail de l'équipe autour du connecteur Chorus Pro.\n\nSouhaitez-vous que je le mette en forme pour l'envoyer à l'équipe ?",
+      "ts": "2026-10-08T08:46:29+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "Parfait, c'est ce que j'envoie. Une idée en passant, pas pour aujourd'hui : peut-être un jour un comité produit mensuel à part. On verra.",
+      "ts": "2026-10-08T08:48:35+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "faits": [
+    {
+      "id": "F266",
+      "enonce": "Le budget formation 2027 est de 6 000 €.",
+      "fiche": "Budget 2027",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-003",
+      "extrait": "le budget formation 2027 est de 6 000 €",
+      "sensible": false
+    },
+    {
+      "id": "F257",
+      "enonce": "Le budget du stand au Salon des Artisans de l'Ouest est confirmé à 3 000 € HT.",
+      "fiche": "Salon des Artisans de l'Ouest",
+      "alias": ["salon", "SAO"],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "le budget du stand est confirmé à 3 000 € HT",
+      "sensible": false,
+      "doublonDe": "F005"
+    },
+    {
+      "id": "F267",
+      "enonce": "Le budget 2027 prévoit l'embauche d'un deuxième commercial au second semestre.",
+      "fiche": "Budget 2027",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-005",
+      "extrait": "le budget prévoit l'embauche d'un deuxième commercial au second semestre 2027",
+      "sensible": false
+    },
+    {
+      "id": "F256",
+      "enonce": "Sophie Garnier a rendez-vous avec Michel Ferrand le 15 octobre 2026 pour préparer la clôture.",
+      "fiche": "Cabinet Ferrand & Associés",
+      "alias": ["Ferrand"],
+      "typeFiche": "fournisseur",
+      "tour": "t-009",
+      "extrait": "Je verrai tout cela avec Michel Ferrand : j'ai rendez-vous avec lui le 15 octobre pour préparer la clôture",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N108",
+      "enonce": "Projection de trésorerie non validée.",
+      "tour": "t-008",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

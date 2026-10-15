@@ -1,0 +1,54 @@
+{
+  "faits": [
+    {
+      "id": "F137",
+      "enonce": "Le 2 octobre 2026, Chantier+ a été indisponible 47 minutes à cause d'un disque plein sur le serveur OVH.",
+      "fiche": "Chantier+",
+      "alias": ["Chantier plus", "l'appli"],
+      "typeFiche": "produit",
+      "tour": "t-009",
+      "extrait": "Chantier+ a été indisponible 47 minutes à cause du disque plein sur le serveur OVH",
+      "sensible": false
+    },
+    {
+      "id": "F138",
+      "enonce": "Une alerte se déclenche quand le disque du serveur dépasse 80 %.",
+      "fiche": "Surveillance du serveur",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-013",
+      "extrait": "une alerte se déclenche dès que le disque du serveur dépasse 80 %",
+      "sensible": false
+    },
+    {
+      "id": "F139",
+      "enonce": "Les journaux applicatifs de Chantier+ sont conservés 7 jours.",
+      "fiche": "Surveillance du serveur",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-011",
+      "extrait": "Les journaux applicatifs de Chantier+ sont conservés 7 jours",
+      "sensible": false
+    },
+    {
+      "id": "F152",
+      "enonce": "L'astreinte technique tourne chaque semaine entre Hugo Martin, Baptiste Kerjean et Antoine Pellerin.",
+      "fiche": "Astreinte technique",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-015",
+      "extrait": "l'astreinte technique tourne chaque semaine entre moi, Baptiste Kerjean et Antoine Pellerin",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N052",
+      "enonce": "Sorties de `df -h` et `journalctl`.",
+      "tour": "t-003",
+      "pourquoi": "sortie d'outil"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

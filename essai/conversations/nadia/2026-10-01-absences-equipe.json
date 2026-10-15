@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-10-01-absences-equipe",
+    "title": "Absences équipe octobre-novembre"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Coucou ! Je suis encore cassée du week-end : on a fait un bout de la Loire à vélo avec les enfants, 40 km samedi, le petit a râlé tout le long et il a plu au retour 😅 Bref, trois jours après j'ai encore mal aux cuisses.",
+      "ts": "2026-10-01T09:15:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Ha, 40 km avec des enfants, c'est un vrai exploit, pluie comprise ! Le petit en parlera sûrement avec fierté dans quelques semaines.\n\nQu'est-ce que je peux faire pour toi aujourd'hui ?",
+      "ts": "2026-10-01T09:16:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Planning d'équipe pour octobre-novembre, j'ai deux sujets à intégrer :\n- Julien Lefort est absent jusqu'au 16 octobre. Je n'en sais pas plus et je ne demande pas, Sophie gère.\n- Léa Brossard m'a prévenue hier qu'elle déménage à Rennes, son conjoint y est muté. Elle reste chez nous.\n\nIl faut que je réorganise sans faire de vagues.",
+      "ts": "2026-10-01T09:19:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Merci pour le contexte. Quelques réflexes pour gérer ça sereinement :\n\n**Pour l'absence**\n- dans le planning partagé, indique seulement les dates d'absence, sans motif ;\n- prévois la répartition de ses tâches pour la période, et dis à l'équipe qui contacter à sa place ;\n- ne relaie aucune information sur la raison, même si on te pose la question.\n\n**Pour le déménagement**\n- c'est une information personnelle : c'est à elle de décider ce qu'elle partage et quand ;\n- la question pratique, c'est l'organisation du travail à distance. Est-ce que quelque chose a été convenu avec la direction ?",
+      "ts": "2026-10-01T09:21:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui, avec Claire c'est acté : Léa passe en télétravail 3 jours par semaine à partir de novembre, elle vient à Nantes les deux autres jours.\nIl faut que je recale les rituels de l'équipe commerciale en fonction.",
+      "ts": "2026-10-01T09:25:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Bonne nouvelle que ce soit déjà calé. Pour les rituels, quelques pistes :\n\n- placer les réunions d'équipe commerciale **les jours où elle est présente** à Nantes ;\n- garder les points courts en visio les autres jours, avec une caméra correcte dans la salle de réunion ;\n- vérifier que ses outils (CRM, téléphonie) fonctionnent bien à distance avant novembre ;\n- prévoir un point avec elle au bout d'un mois pour ajuster.\n\nTu veux que je t'aide à refaire le tableau des rituels ?",
+      "ts": "2026-10-01T09:28:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Plus tard. Là ce qui m'inquiète c'est le planning partagé : tout le monde le voit. Comment je formule les deux situations sans rien dire de perso ?",
+      "ts": "2026-10-01T09:32:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Formulations neutres pour le planning partagé :\n\n- **Absence** : « Absent » sur les dates concernées, sans autre mention. Si besoin : « Contact pendant l'absence : [nom] ».\n- **Organisation de travail** : « Télétravail » sur les jours concernés, comme pour n'importe qui. Pas besoin de mentionner la ville ni la raison.\n\nEt si quelqu'un pose des questions, une réponse simple suffit : « c'est organisé, rien de particulier à savoir pour le planning ». Le reste appartient aux personnes concernées.",
+      "ts": "2026-10-01T09:34:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

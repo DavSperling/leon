@@ -1,0 +1,44 @@
+{
+  "faits": [
+    {
+      "id": "F307",
+      "enonce": "Léa Brossard déménage à Rennes parce que son conjoint y est muté.",
+      "fiche": "Léa Brossard",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Léa Brossard m'a prévenue hier qu'elle déménage à Rennes, son conjoint y est muté",
+      "sensible": true
+    },
+    {
+      "id": "F309",
+      "enonce": "Léa Brossard passe en télétravail 3 jours par semaine à partir de novembre 2026.",
+      "fiche": "Léa Brossard",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-005",
+      "extrait": "Léa passe en télétravail 3 jours par semaine à partir de novembre",
+      "sensible": true
+    },
+    {
+      "id": "F308",
+      "enonce": "Julien Lefort est absent jusqu'au 16 octobre 2026.",
+      "fiche": "Julien Lefort",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Julien Lefort est absent jusqu'au 16 octobre",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N123",
+      "enonce": "Bavardage sur le week-end.",
+      "tour": "t-001",
+      "pourquoi": "bavardage"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

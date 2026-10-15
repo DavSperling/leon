@@ -1,0 +1,59 @@
+{
+  "faits": [
+    {
+      "id": "F253",
+      "enonce": "TerraCarte remplace Mapéo comme fournisseur de géocodage et de cartographie à partir du 5 octobre 2026.",
+      "fiche": "TerraCarte",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "À partir d'aujourd'hui, 5 octobre 2026, notre fournisseur de géocodage et de cartographie est TerraCarte",
+      "sensible": false
+    },
+    {
+      "id": "F255",
+      "enonce": "La résiliation de Mapéo est envoyée le 5 octobre 2026 et prend effet le 5 novembre 2026.",
+      "fiche": "Mapéo",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "j'envoie la résiliation aujourd'hui, le 5 octobre, elle prendra donc effet le 5 novembre 2026",
+      "sensible": false
+    },
+    {
+      "id": "F254",
+      "enonce": "L'abonnement TerraCarte coûte 180 € HT par mois.",
+      "fiche": "TerraCarte",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "l'abonnement est à 180 € HT par mois",
+      "sensible": false
+    },
+    {
+      "id": "F258",
+      "enonce": "L'abonnement TerraCarte est sans durée minimale et résiliable à tout moment.",
+      "fiche": "TerraCarte",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "Il est sans durée minimale et résiliable à tout moment",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N105",
+      "enonce": "Brouillon de lettre de résiliation.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [
+    {
+      "ancien": "F120",
+      "nouveau": "F253"
+    }
+  ],
+  "conflits": []
+}

@@ -1,0 +1,44 @@
+{
+  "faits": [
+    {
+      "id": "F240",
+      "enonce": "La cotisation de la Mutuelle Atlantique Santé augmente de 4,5 % au 1er janvier 2027.",
+      "fiche": "Mutuelle Atlantique Santé",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "la cotisation augmente de 4,5 % au 1er janvier 2027",
+      "sensible": false
+    },
+    {
+      "id": "F238",
+      "enonce": "L'employeur prend en charge 60 % de la cotisation de la mutuelle.",
+      "fiche": "Mutuelle Atlantique Santé",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "L'employeur prend en charge 60 % de la cotisation",
+      "sensible": false
+    },
+    {
+      "id": "F250",
+      "enonce": "La cotisation de la Mutuelle Atlantique Santé est forfaitaire.",
+      "fiche": "Mutuelle Atlantique Santé",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "La cotisation est forfaitaire.",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N101",
+      "enonce": "Brouillon de note d'information aux salariés sur la mutuelle.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

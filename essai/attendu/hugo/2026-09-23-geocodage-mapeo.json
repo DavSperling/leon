@@ -1,0 +1,60 @@
+{
+  "faits": [
+    {
+      "id": "F120",
+      "enonce": "Le géocodage des adresses de chantier de Chantier+ passe par l'API Mapéo.",
+      "fiche": "Mapéo",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "on branche le géocodage des adresses de chantier sur l'API Mapéo",
+      "sensible": false
+    },
+    {
+      "id": "F121",
+      "enonce": "L'API Mapéo limite à 10 requêtes par seconde.",
+      "fiche": "Mapéo",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Mapéo nous limite à 10 requêtes par seconde",
+      "sensible": false
+    },
+    {
+      "id": "F122",
+      "enonce": "Un agent mesure que le cache de géocodage réduit d'environ 70 % les appels à Mapéo.",
+      "fiche": "Cache de géocodage",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-011",
+      "extrait": "soit environ 70 % d'appels en moins vers Mapéo",
+      "sensible": false
+    },
+    {
+      "id": "F123",
+      "enonce": "La durée du cache de géocodage est fixée à 30 jours, quelle que soit la solution de cache retenue.",
+      "fiche": "Cache de géocodage",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-009",
+      "extrait": "Point fixé, quelle que soit la solution : les résultats de géocodage sont mis en cache 30 jours",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N042",
+      "enonce": "Débogage d'erreurs 429 sans décision.",
+      "tour": "t-005",
+      "pourquoi": "débogage sans décision"
+    },
+    {
+      "id": "N043",
+      "enonce": "Proposition d'un agent de passer à un cache mémoire, non tranchée.",
+      "tour": "t-013",
+      "pourquoi": "proposition non retenue"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-09-24-point-clients",
+    "title": "Point clients du jeudi"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Point clients avec Karim et Nadia à 10 h. Aidez-moi à structurer mes notes. Je vous les donne en vrac.",
+      "ts": "2026-09-24T08:45:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Volontiers. Envoyez vos notes telles quelles, je les classerai par client avec, pour chacun, la situation, le point à trancher et la personne qui s'en charge.",
+      "ts": "2026-09-24T08:45:19+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Voilà :\n- Menuiserie Dupont : c'est Gérard Dupont, le gérant, qui suit le dossier Chantier+ de bout en bout. Devis en cours côté Karim.\n- Bati-Ouest : ils seront le client pilote de l'appli mobile v2. Ils tournent sur 48 licences aujourd'hui. Voir avec Nadia ce qu'on leur demande pendant le pilote.\n- Peinture & Déco Lambert : signé hier 23/09, 6 licences, 4 200 € HT. Sophie doit facturer.\n- Rien sur les prospects, Karim fera le point.",
+      "ts": "2026-09-24T08:47:47+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici une trame pour votre réunion de 10 h.\n\n**1. Menuiserie Dupont**\n- Situation : devis en cours, interlocuteur unique côté client.\n- À trancher : où en est le devis, et quelle est la prochaine étape avec le client ?\n- Porteur : Karim.\n\n**2. SARL Bati-Ouest**\n- Situation : client pilote de la nouvelle application mobile.\n- À trancher : périmètre du pilote, nombre d'utilisateurs concernés, et retours attendus de leur part.\n- Porteuse : Nadia.\n\n**3. Peinture & Déco Lambert**\n- Situation : nouveau client.\n- À trancher : date de facturation, puis date de formation et de mise en route.\n- Porteurs : Sophie pour la facture, Nadia pour la mise en route.\n\n**4. Prospects**\n- Tour de table par Karim.\n\nJe vous suggère de terminer par une minute de récapitulatif des actions, avec un porteur et une date pour chacune. Voulez-vous ajouter d'autres clients ?",
+      "ts": "2026-09-24T08:48:24+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "J'oubliais Maçonnerie Fournier. Patrick Fournier m'a appelée hier soir : il menace de partir chez Batinova. Que lui proposer ?",
+      "ts": "2026-09-24T08:50:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est le point le plus urgent de votre réunion. Quelques principes avant de proposer quoi que ce soit :\n\n1. **Comprendre la vraie raison.** Une menace de départ porte rarement sur le prix seul. Demandez-lui ce qui l'a amené à regarder ailleurs : prix, fonctionnalité manquante, souci de support, démarchage insistant du concurrent ?\n2. **Ne pas répondre à chaud par une remise.** Une remise accordée sans contrepartie installe l'idée que vos prix sont négociables à chaque échéance.\n3. **Rappeler la valeur.** Ce qu'il perdrait en partant : historique de devis, paramétrage, formation de ses équipes, temps de migration.\n4. **Proposer une contrepartie si geste il y a.** Si une remise devient nécessaire, liez-la à un engagement : durée, nombre de licences, ou témoignage client.\n\nPour la réunion :\n- **Qui l'appelle** : vous, plutôt que Karim, puisqu'il s'est adressé à vous.\n- **Quand** : dans la journée.\n- **Avec quoi** : une écoute d'abord, une proposition ensuite, après en avoir parlé avec Karim.",
+      "ts": "2026-09-24T08:50:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "D'accord. Dernière chose pour la réunion : combien de clients faudrait-il signer pour atteindre 1,5 M€ de chiffre d'affaires ? Nous avons fait 1,1 M€ en 2025. Une estimation grossière suffit.",
+      "ts": "2026-09-24T08:54:07+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici une estimation à grands traits, à prendre comme un ordre de grandeur et non comme une prévision.\n\n**Hypothèses**\n- Écart à combler : 1,5 M€ − 1,1 M€ = **400 000 €** de chiffre d'affaires supplémentaire par an.\n- Je suppose, pour le calcul, qu'une licence rapporte environ 55 € HT par mois, soit **660 € par an**.\n- Je suppose un client moyen à **15 licences**, soit environ **9 900 € par an** et par client.\n\n**Calcul**\n- 400 000 € ÷ 660 € ≈ **600 licences** supplémentaires.\n- 600 ÷ 15 ≈ **40 nouveaux clients** de taille moyenne.\n\n**Limites**\n- Je ne tiens compte ni du chiffre d'affaires de services (intégration, formation), ni des départs de clients, ni d'une éventuelle évolution de prix.\n- Si une partie de la croissance vient de clients existants qui ajoutent des licences, le nombre de nouveaux clients nécessaires baisse d'autant.\n\nC'est donc une piste de réflexion pour la réunion, pas un objectif à graver.",
+      "ts": "2026-09-24T08:54:55+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-ines-2026-10-09-revue-accessibilite",
+    "title": "Revue d'accessibilité de l'appli mobile"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Question générale pour commencer : le RGAA, c'est quoi exactement, et à qui ça s'applique ? On me le cite souvent mais je n'ai jamais lu le texte.",
+      "ts": "2026-10-09T10:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Le RGAA (Référentiel général d'amélioration de l'accessibilité) est le référentiel français qui traduit en critères vérifiables les exigences d'accessibilité numérique, sur la base des règles internationales d'accessibilité du web.\n\n- **Ce qu'il contient** : une centaine de critères regroupés par thèmes (images, couleurs, formulaires, navigation, structure…), chacun avec une méthode de test.\n- **À qui il s'applique** : historiquement aux services publics, puis à certaines grandes entreprises, et le champ s'est élargi aux services numériques grand public.\n- **Ce qu'il impose** : une déclaration d'accessibilité indiquant le taux de conformité, et un plan d'amélioration.\n\nMême quand il n'est pas obligatoire, c'est une bonne grille de travail pour une application.",
+      "ts": "2026-10-09T10:30:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci. Pour l'appli mobile v2 on fait notre propre revue d'accessibilité avant le pilote, avec les maquettes de Lucas qui viennent d'arriver. J'ai fixé trois règles pour toute l'appli :\n- la taille de police minimale de l'appli mobile v2 est de 16 px, rien en dessous, même pour les mentions légales ;\n- les boutons font au moins 44 px de haut, les compagnons ont des gants ou les mains sales ;\n- les contrastes de couleur respectent un ratio d'au moins 4,5 pour 1, en mode clair comme en mode sombre.\n\nEst-ce que ces trois règles te paraissent cohérentes avec les bonnes pratiques, et qu'est-ce que j'oublie d'important pour une appli utilisée sur chantier ?",
+      "ts": "2026-10-09T10:33:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Tes trois règles sont cohérentes avec les recommandations courantes (taille de cible tactile, contraste minimal pour le texte courant). Ce qui manque souvent sur une application de terrain :\n\n| Point | Pourquoi sur chantier |\n|---|---|\n| Respect de la taille de texte du système | certains compagnons agrandissent le texte dans les réglages du téléphone |\n| Information jamais portée par la couleur seule | lumière forte, écran sale, daltonisme |\n| Libellés pour le lecteur d'écran | icônes seules sans nom lisible |\n| Retours non visuels | vibration à la validation, utile avec du bruit |\n| Espacement entre cibles | éviter les touches voisines avec des gants |\n| Messages d'erreur explicites | pas de « Erreur 422 » à l'écran |",
+      "ts": "2026-10-09T10:34:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Bon point pour la taille de texte du système, on ne la respecte pas aujourd'hui, je le note pour la revue. Concrètement, comment je vérifie le ratio de contraste sur toutes les paires de couleurs du thème sans tout faire à la main ?",
+      "ts": "2026-10-09T10:38:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Le plus simple est un test automatique sur ton fichier de thème :\n\n1. liste les paires réellement utilisées (`texte` sur `fond`, `texte` sur `fondCarte`, `accent` sur `fond`, texte des boutons sur `accent`…) ;\n2. calcule la luminance relative de chaque couleur puis le ratio `(L1 + 0,05) / (L2 + 0,05)` ;\n3. fais échouer le test si une paire passe sous ton seuil, pour le thème clair et pour le thème sombre.\n\nComme les deux thèmes ont les mêmes clés, le même test couvre les deux. Toute nouvelle couleur des maquettes sera vérifiée automatiquement.",
+      "ts": "2026-10-09T10:39:30+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Je vais faire ce test. Dernière chose : pour les boutons, 44 px c'est la hauteur, mais pour une icône seule (genre le bouton « appeler le client » sur la fiche chantier), l'icône fait 24 px. Je fais comment pour garder une icône de 24 px avec une zone de 44 ?",
+      "ts": "2026-10-09T10:42:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Garde l'icône à 24 px et agrandis seulement la zone tactile : enveloppe-la dans un élément pressable de 44 × 44 px avec l'icône centrée, ou ajoute une zone de toucher étendue autour de l'icône. Visuellement rien ne change, mais le doigt a sa cible de 44 px. Pense aussi à donner un libellé accessible au bouton, « Appeler le client », puisque l'icône seule n'en a pas.",
+      "ts": "2026-10-09T10:42:36+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

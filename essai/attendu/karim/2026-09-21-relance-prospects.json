@@ -1,0 +1,64 @@
+{
+  "faits": [
+    {
+      "id": "F050",
+      "enonce": "L'interlocutrice chez Plomberie Rousseau est Sandrine Rousseau, la gérante.",
+      "fiche": "Plomberie Rousseau",
+      "alias": ["Rousseau"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "mon contact c sandrine rousseau la gerante",
+      "sensible": false
+    },
+    {
+      "id": "F051",
+      "enonce": "L'interlocuteur chez Charpentes Morvan est Erwan Morvan, le gérant.",
+      "fiche": "Charpentes Morvan",
+      "alias": ["Morvan"],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "erwan morvan le gerant",
+      "sensible": false
+    },
+    {
+      "id": "F079",
+      "enonce": "Charpentes Morvan compte 30 salariés.",
+      "fiche": "Charpentes Morvan",
+      "alias": ["Morvan"],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "boite de 30 salaries",
+      "sensible": false
+    },
+    {
+      "id": "F084",
+      "enonce": "Plomberie Rousseau est basée à Saint-Nazaire.",
+      "fiche": "Plomberie Rousseau",
+      "alias": ["Rousseau"],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "plomberie rousseau a st nazaire",
+      "sensible": false
+    },
+    {
+      "id": "F085",
+      "enonce": "Charpentes Morvan est basée à Quimper.",
+      "fiche": "Charpentes Morvan",
+      "alias": ["Morvan"],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "charpentes morvan a quimper",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N020",
+      "enonce": "Brouillon de mail de relance générique.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

@@ -1,0 +1,121 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-10-10-bilan-semaine",
+    "title": "Bilan technique de la semaine"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "samedi matin, café, je rattrape ce que j'ai sauté hier. je rédige un bilan technique chaque vendredi pour l'équipe, et cette semaine entre la revue Chorus et le module devis je ne l'ai pas envoyé. aide-moi à le faire à partir du log de la semaine, regroupé par sujet, court, lisible par Nadia et Claire.\n\n$ git log --oneline --since=2026-10-05 --until=2026-10-10 --all --no-merges\ne41b7d2 devis: commit de renommage qte/pu/tot\n9a03c5f devis: total calculé sur les lignes retenues\n77d2e10 devis: route de création d'avenant\n5c8a1f4 devis: 409 sur PATCH d'un devis signé\nb2f6e93 devis: borne de remise globale (schéma + formulaire)\n0d94a7c devis: composant LigneVariante et migration 0029\n3fa61b8 chorus: README, limites connues\nc71d0e2 chorus: cas d'acompte ignorés en bac à sable\na8e45f1 chorus: ignore un jeton expiré dans le cache local\n6b1f3d9 chorus: script de chargement des comptes de test\nf0c2a57 docs: note de passation des tests Chorus\n1d7e8b4 geocoding: interface Geocoder et implémentation TerraCarte\n92ab6c0 geocoding: ordre longitude/latitude\ne5d01f8 geocoding: throttle paramétrable par fournisseur\n44c9b27 geocoding: appelants via getGeocoder()\n2b9c4d3 pdf: worker pg-boss, reprise sur échec\n7ea3f51 pdf: correctif ticket 482 déployé\nd06b8c2 ci: suite bac à sable Chorus hors CI par défaut\na51e7f9 deps: next 15.0.4\n6c38b0e test: fixture devis-cuisine\n19f4a2d chore: nettoyage des scripts de recette\n\net le détail par commit si tu veux voir ce qui a bougé où :\n\n```\n$ git log --stat --format='%h %s' --since=2026-10-05 --until=2026-10-10 --all --no-merges\ne41b7d2 devis: commit de renommage qte/pu/tot\n src/server/devis/lignes.ts                 |   18 +++++++++---------\n src/app/(app)/devis/[id]/LigneVariante.tsx |   24 ++++++++++++------------\n src/app/(app)/devis/[id]/TotalDevis.tsx    |   12 ++++++------\n src/server/devis/calcul.ts                 |   14 +++++++-------\n src/server/devis/calcul.test.ts            |    6 +++---\n 5 files changed, 37 insertions(+), 37 deletions(-)\n\n9a03c5f devis: total calculé sur les lignes retenues\n src/server/devis/calcul.ts      |   17 ++++++++++++++---\n src/server/devis/calcul.test.ts |   46 ++++++++++++++++++++++++++++++++++++++++--\n 2 files changed, 58 insertions(+), 5 deletions(-)\n\n77d2e10 devis: route de création d'avenant\n src/app/api/devis/[id]/avenants/route.ts |   38 ++++++++++++++++++++++++++++++++++++++\n src/server/devis/service.ts              |   13 ++++++++++++-\n 2 files changed, 50 insertions(+), 1 deletions(-)\n\n5c8a1f4 devis: 409 sur PATCH d'un devis signé\n src/app/api/devis/[id]/route.ts  |   12 ++++++++++--\n src/server/devis/service.ts      |   10 +++++++++-\n src/server/devis/service.test.ts |   27 +++++++++++++++++++++++++++\n 3 files changed, 46 insertions(+), 3 deletions(-)\n\nb2f6e93 devis: borne de remise globale (schéma + formulaire)\n src/server/devis/schema.ts                 |    6 +++++-\n src/app/(app)/devis/[id]/RemiseGlobale.tsx |    9 ++++++++-\n 2 files changed, 13 insertions(+), 2 deletions(-)\n\n0d94a7c devis: composant LigneVariante et migration 0029\n db/migrations/0029_devis_lignes_variantes.sql |   14 ++++++++++++++\n src/app/(app)/devis/[id]/LigneVariante.tsx    |   88 ++++++++++++++++++++++++++++++++++++++++\n src/app/(app)/devis/[id]/page.tsx             |   34 ++++++++++++++++++++++++++++++----\n 3 files changed, 132 insertions(+), 4 deletions(-)\n\n3fa61b8 chorus: README, limites connues\n src/server/chorus/README.md |   23 ++++++++++++++++++++++-\n 1 files changed, 22 insertions(+), 1 deletions(-)\n\nc71d0e2 chorus: cas d'acompte ignorés en bac à sable\n tests/chorus/sandbox.test.ts |    9 ++++++---\n 1 files changed, 6 insertions(+), 3 deletions(-)\n\na8e45f1 chorus: ignore un jeton expiré dans le cache local\n src/server/chorus/client.ts      |   11 ++++++++---\n src/server/chorus/client.test.ts |   24 ++++++++++++++++++++++++\n 2 files changed, 32 insertions(+), 3 deletions(-)\n\n6b1f3d9 chorus: script de chargement des comptes de test\n scripts/chorus-comptes-sandbox.ts |   57 ++++++++++++++++++++++++++++++++++++++++\n 1 files changed, 57 insertions(+), 0 deletions(-)\n\nf0c2a57 docs: note de passation des tests Chorus\n docs/chorus/passation-tests.md |   41 ++++++++++++++++++++++++++++++++++++++++\n 1 files changed, 41 insertions(+), 0 deletions(-)\n\n1d7e8b4 geocoding: interface Geocoder et implémentation TerraCarte\n src/server/geocoding/types.ts           |    9 +++++++++\n src/server/geocoding/terracarte.ts      |   72 ++++++++++++++++++++++++++++++++++++++++\n src/server/geocoding/terracarte.test.ts |   61 ++++++++++++++++++++++++++++++++++++++++\n src/server/geocoding/index.ts           |   24 ++++++++++++++++++++++++\n 4 files changed, 166 insertions(+), 0 deletions(-)\n\n92ab6c0 geocoding: ordre longitude/latitude\n src/server/geocoding/terracarte.ts      |    5 +++--\n src/server/geocoding/terracarte.test.ts |   14 ++++++++++++++\n 2 files changed, 17 insertions(+), 2 deletions(-)\n\ne5d01f8 geocoding: throttle paramétrable par fournisseur\n src/server/geocoding/throttle.ts      |   17 +++++++++++------\n src/server/geocoding/throttle.test.ts |   11 +++++++++--\n 2 files changed, 20 insertions(+), 8 deletions(-)\n\n44c9b27 geocoding: appelants via getGeocoder()\n src/server/chantiers/create.ts  |    4 ++--\n src/server/import/adresses.ts   |    4 ++--\n src/server/planning/tournees.ts |    7 ++++---\n 3 files changed, 8 insertions(+), 7 deletions(-)\n\n2b9c4d3 pdf: worker pg-boss, reprise sur échec\n src/pdf/worker.ts      |   23 +++++++++++++++++++----\n src/pdf/worker.test.ts |   33 +++++++++++++++++++++++++++++++++\n 2 files changed, 52 insertions(+), 4 deletions(-)\n\n7ea3f51 pdf: correctif ticket 482 déployé\n src/pdf/gabarit-devis.test.tsx |    2 +-\n CHANGELOG.md                   |    3 +++\n 2 files changed, 4 insertions(+), 1 deletions(-)\n\nd06b8c2 ci: suite bac à sable Chorus hors CI par défaut\n vitest.workspace.ts |    8 ++++++--\n package.json        |    1 +\n .ci/pipeline.yml    |    4 ++--\n 3 files changed, 9 insertions(+), 4 deletions(-)\n\na51e7f9 deps: next 15.0.4\n package.json   |    2 +-\n pnpm-lock.yaml |   76 ++++++++++++++++++++++++++++++++++++++--------------------\n 2 files changed, 39 insertions(+), 39 deletions(-)\n\n6c38b0e test: fixture devis-cuisine\n src/server/devis/__fixtures__/devis-cuisine.ts |   46 ++++++++++++++++++++++++++++++++++++++++\n 1 files changed, 46 insertions(+), 0 deletions(-)\n\n19f4a2d chore: nettoyage des scripts de recette\n scripts/recette-geocodage.ts |   14 +++-----------\n scripts/recette-pdf.ts       |   64 --------------------\n 2 files changed, 3 insertions(+), 75 deletions(-)\n```",
+      "ts": "2026-10-10T10:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je regroupe les commits par sujet.",
+      "ts": "2026-10-10T10:00:35+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Cinq sujets se dégagent :\n\n1. **Module devis** : variantes, borne de remise, devis signés et avenants, renommage. Six commits, branche en relecture chez Baptiste.\n2. **Connecteur Chorus Pro** : revue par deux relecteurs, acomptes sortis du périmètre de la première version, passation des tests.\n3. **Géocodage** : bascule sur TerraCarte, quatre commits.\n4. **Génération des PDF** : worker pg-boss et correctif du ticket 482 en production.\n5. **Divers** : mise à jour de Next, suite Chorus sortie de la CI, nettoyage des scripts de recette.\n\nPour que le bilan serve à Nadia et Claire, il me manque deux choses : où en est la refonte du module devis en avancement, et les prochaines dates à annoncer.",
+      "ts": "2026-10-10T10:02:25+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003a",
+      "role": "user",
+      "text": "pour la partie divers, ci-veille m'a fait le récap des pipelines de la semaine, prends ce qui sert :\n\n<teammate-message teammate_id=\"ci-veille\">\nRécapitulatif ci-veille : pipelines de la semaine, toutes branches\n\n| Branche | pipelines | verts | rouges | durée médiane |\n|---|---|---|---|---|\n| main | 9 | 9 | 0 | 2 min 41 s |\n| hugo/devis-variantes | 7 | 5 | 2 | 2 min 49 s |\n| hugo/chorus-connecteur | 6 | 3 | 3 | 2 min 58 s |\n| hugo/bascule-terracarte | 4 | 4 | 0 | 2 min 37 s |\n| hugo/pdf-file-jobs | 3 | 3 | 0 | 2 min 44 s |\n| deps/next-15.0.4 | 2 | 1 | 1 | 3 min 02 s |\n\nCauses des rouges\n- hugo/devis-variantes : 1 échec de tests (fixture des alternatives), 1 échec de lint (un import et une constante inutilisés). Les deux corrigés dans la même branche.\n- hugo/chorus-connecteur : 3 échecs de lint, tous sur des avertissements (`console.log`, constante inutilisée, ordre d'imports) ; aucun échec de tests unitaires.\n- deps/next-15.0.4 : 1 échec de typecheck à la montée de version, corrigé au pipeline suivant.\n\nTests instables relevés\n```\n$ grep -h \"retry\" ci-logs/*.log | sort | uniq -c | sort -rn | head -5\n      3 ↻ src/server/geocoding/throttle.test.ts > met en file au-delà du débit (retry 1/2)\n      2 ↻ src/server/pdf/worker.test.ts > reprend un job en échec (retry 1/2)\n      1 ↻ src/server/auth/session.test.ts > expire une session (retry 1/2)\n```\nLes trois dépendent d'un délai réel (minuteries) ; ils sont passés au deuxième essai à chaque fois.\n\nCache de dépendances : 34 restaurations sur 35 pipelines, une installation complète après la mise à jour du fichier de verrouillage.\n\nRien à signaler sur le build : même nombre de pages générées toute la semaine, aucun avertissement de taille de bundle.\n</teammate-message>",
+      "ts": "2026-10-10T10:03:11+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003b",
+      "role": "assistant",
+      "text": "Je garde une ligne pour la partie divers : pipelines verts sur main toute la semaine, les rouges des branches corrigés dans les branches elles-mêmes. Le détail des tests instables n'intéresse pas Nadia et Claire, je le laisse de côté.",
+      "ts": "2026-10-10T10:03:58+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "module devis : on était à 70 % hier soir, vendredi 9. il reste l'interface des avenants et les exports.\n\nl'état des branches ce matin, au cas où :\n\n```\n$ git branch -vv\n  hugo/bascule-terracarte    44c9b27 [origin/hugo/bascule-terracarte: gone] geocoding: appelants via getGeocoder()\n  hugo/chorus-connecteur     a8e45f1 [origin/hugo/chorus-connecteur] chorus: ignore un jeton expiré dans le cache local\n* hugo/devis-variantes       e41b7d2 [origin/hugo/devis-variantes] devis: commit de renommage qte/pu/tot\n  hugo/pdf-a-la-volee        3e7c90d [origin/hugo/pdf-a-la-volee: gone] pdf: pagination du gabarit\n  hugo/pdf-file-jobs         2b9c4d3 [origin/hugo/pdf-file-jobs: gone] pdf: worker pg-boss, reprise sur échec\n  main                       7ea3f51 [origin/main] pdf: correctif ticket 482 déployé\n\n$ git status -sb\n## hugo/devis-variantes...origin/hugo/devis-variantes\n```",
+      "ts": "2026-10-10T10:04:45+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "Noté. Et pour Chorus Pro, une échéance à mettre en avant ?",
+      "ts": "2026-10-10T10:05:15+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "user",
+      "text": "oui : la démo du connecteur Chorus Pro chez Bati-Ouest est prévue le 4 novembre. mets-la en gras, c'est la seule date qui compte pour les autres.",
+      "ts": "2026-10-10T10:06:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "assistant",
+      "text": "Bilan écrit dans `docs/bilans/2026-s41.md`, dans l'ordre des cinq sujets, avec l'avancement et la date que tu m'as donnés. Il fait une trentaine de lignes, sans jargon dans les deux premiers paragraphes.",
+      "ts": "2026-10-10T10:09:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007a",
+      "role": "user",
+      "text": "j'ai passé le fichier à l'agent de relecture avant de le lire moi-même :\n\n<teammate-message teammate_id=\"relecture\">\nRelecture de forme : docs/bilans/2026-s41.md\n\nJe n'ai relu que la forme (orthographe, typographie, mise en page), pas le contenu.\n\nTypographie\n- l. 3, 9, 14, 22 : espace insécable manquante avant « : ».\n- l. 7 : « pg-boss » écrit une fois « PG-Boss » ; le reste du document et du dépôt écrit « pg-boss ».\n- l. 11 : guillemets droits \"…\" au lieu de « … » autour de « Limites connues ».\n- l. 18 : « Factur-X » écrit « FacturX » sans tiret.\n- l. 25 : double espace après le point.\n\nOrthographe et accords\n- l. 6 : « les lignes retenue » → « retenues ».\n- l. 16 : « les deux relecteurs ont rendu leur rapports » → « leurs rapports ».\n- l. 20 : « a été basculé » : le sujet est « le géocodage », l'accord est bon ; rien à changer, je le note seulement parce que l'outil le signalait.\n\nMise en page\n- Les titres de section alternent `##` et `###` sans raison ; les cinq sujets sont au même niveau, je mettrais `##` partout.\n- Le paragraphe « Divers » est une liste à puces alors que les autres sujets sont en phrases ; à harmoniser ou à laisser, au choix.\n- Deux liens relatifs vers `docs/chorus/passation-tests.md` : le premier est cassé (`docs/chorus/passation.md`).\n\n```\n$ npx markdownlint docs/bilans/2026-s41.md\ndocs/bilans/2026-s41.md:5 MD001/heading-increment Heading levels should only increment by one level at a time [Expected: h2; Actual: h3]\ndocs/bilans/2026-s41.md:27 MD009/no-trailing-spaces Trailing spaces [Expected: 0 or 2; Actual: 1]\ndocs/bilans/2026-s41.md:31 MD047/single-trailing-newline Files should end with a single newline character\n\n$ npx markdown-link-check docs/bilans/2026-s41.md\nFILE: docs/bilans/2026-s41.md\n  [✖] ../chorus/passation.md → Status: 400 [Error: ENOENT: no such file or directory]\n  [✓] ../chorus/passation-tests.md\n  [✓] ../incidents/2026-10-02-disque-plein.md\n  3 links checked.\n  ERROR: 1 dead links found!\n```\n\nJe n'ai rien modifié.\n</teammate-message>",
+      "ts": "2026-10-10T10:11:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007b",
+      "role": "assistant",
+      "text": "Corrigé : espaces insécables, accords, graphie de pg-boss et Factur-X, titres tous en `##`, lien cassé remplacé. Le contenu n'a pas bougé.",
+      "ts": "2026-10-10T10:14:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "user",
+      "text": "relu, c'est bon. franchement cette semaine j'en ai ma claque de TypeScript et des types qui cassent à chaque montée de version. il faudrait peut-être réécrire tout le back en Go un jour, un seul binaire à déployer sur le serveur et on n'en parle plus.\n\npour mémoire, ce que la montée de next m'a sorti cette semaine :\n\n```\n$ pnpm typecheck\n> tsc --noEmit -p tsconfig.json\n\nsrc/app/(app)/devis/[id]/page.tsx(12,38): error TS2344: Type '{ params: { id: string; }; }' does not satisfy the constraint 'PageProps'.\n  Types of property 'params' are incompatible.\n    Type '{ id: string; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]\nsrc/app/(app)/chantiers/[id]/page.tsx(9,40): error TS2344: Type '{ params: { id: string; }; }' does not satisfy the constraint 'PageProps'.\nsrc/app/api/devis/[id]/route.ts(28,52): error TS2345: Argument of type 'Ctx' is not assignable to parameter of type '{ params: Promise<{ id: string; }>; }'.\nsrc/app/api/chorus/depots/[id]/statut/route.ts(7,49): error TS2345: Argument of type 'Ctx' is not assignable to parameter of type '{ params: Promise<{ id: string; }>; }'.\n\nFound 4 errors in 4 files.\n```\n\nquatre fichiers à reprendre pour une version mineure.",
+      "ts": "2026-10-10T10:16:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Ce serait un très gros chantier pour un gain à démontrer : tout le métier du module devis, la file pg-boss et le connecteur seraient à réécrire, et le web comme le mobile partagent aujourd'hui les types avec le back. Si c'est le déploiement qui pèse, un build autonome de Next.js règle une bonne partie du problème.",
+      "ts": "2026-10-10T10:17:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "oui oui je rigole à moitié. bon j'y vais, marché puis vélo si la pluie se calme. bon week-end !",
+      "ts": "2026-10-10T10:18:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "Bon week-end, et bonne balade.",
+      "ts": "2026-10-10T10:19:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "user",
+      "text": "envoyé sur le canal de l'équipe. merci",
+      "ts": "2026-10-10T10:22:10+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

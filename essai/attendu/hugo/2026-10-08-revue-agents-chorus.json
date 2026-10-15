@@ -1,0 +1,55 @@
+{
+  "faits": [
+    {
+      "id": "F146",
+      "enonce": "Décision : les factures d'acompte sont reportées à une version 2 du connecteur Chorus Pro.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-008",
+      "extrait": "on reporte les factures d'acompte à une version 2 du connecteur Chorus Pro",
+      "sensible": false
+    },
+    {
+      "id": "F147",
+      "enonce": "Rapport d'agent : 3 des 5 cas de test du connecteur Chorus Pro échouent sur les factures d'acompte.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-004",
+      "extrait": "3 des 5 cas de test du connecteur échouent, et les trois échecs portent sur des factures d'acompte",
+      "sensible": false
+    },
+    {
+      "id": "F148",
+      "enonce": "Rapport d'agent : le connecteur ne gère pas encore les avoirs.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-006",
+      "extrait": "Le connecteur ne gère pas encore les avoirs",
+      "sensible": false
+    },
+    {
+      "id": "F149",
+      "enonce": "Marion Caradec reprend les tests du connecteur Chorus Pro.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": ["Chorus Pro"],
+      "typeFiche": "projet",
+      "tour": "t-012",
+      "extrait": "Marion Caradec reprend les tests du connecteur Chorus Pro",
+      "sensible": false,
+      "doublonDe": "F033"
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N056",
+      "enonce": "Hypothèse d'un agent sur une cause de rejet, non confirmée.",
+      "tour": "t-006",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

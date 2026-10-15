@@ -1,0 +1,54 @@
+{
+  "faits": [
+    {
+      "id": "F234",
+      "enonce": "Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences, à 4 200 € HT la première année ; la facture est émise le 24 septembre 2026.",
+      "fiche": "Peinture & Déco Lambert",
+      "alias": ["Lambert"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Ils ont signé aujourd'hui pour 6 licences, 4 200 € HT pour la première année. Je dois émettre la facture demain, le 24 septembre",
+      "sensible": false
+    },
+    {
+      "id": "F235",
+      "enonce": "Les factures sont émises dans Comptaflow.",
+      "fiche": "Comptaflow",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-003",
+      "extrait": "Les factures sont émises dans Comptaflow",
+      "sensible": false
+    },
+    {
+      "id": "F245",
+      "enonce": "Les clients de l'entreprise paient uniquement par virement.",
+      "fiche": "Facturation clients",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-005",
+      "extrait": "chez nous, les clients paient uniquement par virement, ni chèque ni prélèvement",
+      "sensible": false
+    },
+    {
+      "id": "F249",
+      "enonce": "Peinture & Déco Lambert est basée à Laval.",
+      "fiche": "Peinture & Déco Lambert",
+      "alias": ["Lambert"],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Peinture & Déco Lambert, une entreprise de Laval",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N100",
+      "enonce": "Explication générale de l'autoliquidation de TVA dans le BTP.",
+      "tour": "t-004",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

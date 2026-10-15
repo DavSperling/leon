@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-10-07-salon-decale",
+    "title": "Salon décalé et prospects"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "news : le salon des artisans de l'ouest est decalé, on passe du 13-14 nov au 27-28 nov. faut que je previenne mes prospects que javais invités, tu me fais un petit mail ?",
+      "ts": "2026-10-07T13:15:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici un mail court pour tes prospects :\n\n---\n**Objet :** Salon des Artisans de l'Ouest : nouvelles dates\n\nBonjour [Prénom],\n\nPetite mise à jour : le Salon des Artisans de l'Ouest change de dates. Il se tiendra désormais les **27 et 28 novembre**.\n\nNous serons ravis de vous accueillir sur notre stand pour vous montrer Chantier+. Dites-moi si vous souhaitez réserver un créneau de démonstration.\n\nBien cordialement,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---",
+      "ts": "2026-10-07T13:15:31+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "merci. bonne nouvelle aussi : fournier reste chez nous, on lui a fait 10 % de remise. ouf",
+      "ts": "2026-10-07T13:18:58+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Excellente nouvelle, bravo ! Garder un client qui regardait la concurrence, c'est souvent plus rentable qu'en signer un nouveau.\n\nPour consolider :\n- **Confirme par écrit** les nouvelles conditions, pour éviter tout malentendu à la facturation.\n- **Prévois un point** dans deux ou trois mois pour vérifier qu'il est satisfait.\n- **Note dans ton suivi** pourquoi il a failli partir : ce sera utile au prochain renouvellement.",
+      "ts": "2026-10-07T13:19:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "et jai calé une demo chez charpentes morvan le 20/10 !",
+      "ts": "2026-10-07T13:23:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Super ! Pour préparer la démo :\n\n1. **Avant** : liste ses besoins (devis, planning, équipes sur le terrain) et prépare un compte de démonstration avec des exemples proches de la charpente.\n2. **Pendant** : commence par son problème principal, pas par le tour complet du logiciel. Laisse-le manipuler.\n3. **Après** : envoie un récapitulatif sous 24 h avec les prochaines étapes.\n\nPense à demander qui sera présent, pour adapter le niveau de détail.",
+      "ts": "2026-10-07T13:23:30+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "au fait tu as des conseils pour reussir un pitch sur un salon en general ? on a jamais été tres bons la dessus",
+      "ts": "2026-10-07T13:24:41+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici des conseils généraux pour pitcher sur un salon :\n\n**Accrocher en 10 secondes**\n- Une question plutôt qu'une présentation : « Combien de temps vous passez sur vos devis le soir ? »\n- Évite « Je peux vous renseigner ? », qui appelle un « non merci ».\n\n**Pitch de 30 secondes**\n- Le problème du visiteur, puis ta solution, puis une preuve (un client du même métier).\n\n**Qualifier vite**\n- Métier, taille de l'équipe, outil actuel : en deux minutes, tu sais si ça vaut une démo.\n\n**Toujours repartir avec une suite**\n- Rendez-vous noté, carte récupérée, ou démo sur place.\n\n**Le stand**\n- Un écran avec une démo qui tourne, peu de texte, et toujours quelqu'un debout, jamais derrière une table.",
+      "ts": "2026-10-07T13:25:03+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

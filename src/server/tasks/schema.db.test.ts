@@ -1,6 +1,7 @@
 import { eq, type SQL, sql } from 'drizzle-orm';
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { TASK_STATUS_CATEGORIES } from '@/lib/enums';
 import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import * as tasksSchema from '@/server/db/schema/tasks';
@@ -30,6 +31,7 @@ type Ids = {
   project: string;
   todo: string;
   otherProjectTodo: string;
+  privateProject: string;
   task: string;
   privateTask: string;
   label: string;
@@ -110,6 +112,7 @@ async function seedTeamTasks(ctx: TenantContext): Promise<Ids> {
     project: leo.projectId,
     todo: leo.statusIds.todo,
     otherProjectTodo: ops.statusIds.todo,
+    privateProject: secret.projectId,
     task,
     privateTask: await seedTask({ projectId: secret.projectId, statusId: secret.statusIds.todo }),
     label,
@@ -270,6 +273,21 @@ describe('droits de leon_app sur les tâches', () => {
     },
   );
 
+  it("aucune table n'ouvre la modification de l'organisation, de l'ACL ni de l'auteur", async () => {
+    const { rows } = await adminPool.query(
+      `select table_name, column_name
+         from information_schema.column_privileges
+        where grantee = 'leon_app' and privilege_type = 'UPDATE' and table_schema = 'public'
+          and table_name = any($1) and column_name = any($2)
+        order by 1, 2`,
+      [
+        Object.keys(TABLES),
+        ['id', 'tenant_id', 'acl', 'owner_id', 'creator_id', 'author_id', 'actor_id', 'origin'],
+      ],
+    );
+    expect(rows).toEqual([]);
+  });
+
   it.each(['acl', 'tenant_id', 'creator_id', 'origin'])(
     'refuse de modifier tasks.%s : 42501',
     async (name) => {
@@ -351,6 +369,29 @@ describe('rattachement à une tâche ou une étiquette invisible', () => {
   });
 });
 
+describe('lecture de ce qui se rattache au projet privé de Paul', () => {
+  it('Marie ne lit ni ses statuts, ni les commentaires, le journal et les étiquettes de sa tâche', async () => {
+    const label = await seedTaskLabel(paul.tenantId, { name: 'Sur tâche privée' });
+    await insertLink(paul, ids.privateTask, label);
+    await insertComment(paul, ids.privateTask);
+    await insertEvent(paul, ids.privateTask);
+    const counts = (ctx: TenantContext) =>
+      withTenant(ctx, async (tx) => ({
+        statuses: await tx.$count(taskStatuses, eq(taskStatuses.projectId, ids.privateProject)),
+        links: await tx.$count(taskLabelLinks, eq(taskLabelLinks.taskId, ids.privateTask)),
+        comments: await tx.$count(taskComments, eq(taskComments.taskId, ids.privateTask)),
+        events: await tx.$count(taskEvents, eq(taskEvents.taskId, ids.privateTask)),
+      }));
+    expect(await counts(paul)).toEqual({
+      statuses: TASK_STATUS_CATEGORIES.length,
+      links: 1,
+      comments: 1,
+      events: 1,
+    });
+    expect(await counts(marie)).toEqual({ statuses: 0, links: 0, comments: 0, events: 0 });
+  });
+});
+
 describe('auteur des commentaires et du journal', () => {
   it('Marie ne crée ni commentaire ni événement au nom de Paul : 42501', async () => {
     await expect(insertComment(marie, ids.task, paul.userId)).rejects.toMatchObject(DENIED);
@@ -398,6 +439,50 @@ describe('intégrité des tâches', () => {
     expect(await adminDb.$count(taskEvents, eq(taskEvents.taskId, taskId))).toBe(0);
     expect(await adminDb.$count(taskComments, eq(taskComments.taskId, taskId))).toBe(0);
     expect(await adminDb.$count(taskLabelLinks, eq(taskLabelLinks.taskId, taskId))).toBe(0);
+  });
+});
+
+// Les clés étrangères ignorent la RLS : seules les clés composées (tenant_id, …) empêchent une
+// tâche de Zoé de viser un projet, un statut ou un parent de Paul.
+describe('références vers une autre organisation', () => {
+  let zoeProject: Awaited<ReturnType<typeof seedTaskProject>>;
+
+  beforeAll(async () => {
+    zoeProject = await seedTaskProject(zoe.tenantId, { key: 'ZOE' });
+  });
+
+  function insertZoeTask(overrides: Partial<typeof tasks.$inferInsert>) {
+    return withTenant(zoe, (tx) =>
+      tx.insert(tasks).values({
+        tenantId: zoe.tenantId,
+        projectId: zoeProject.projectId,
+        statusId: zoeProject.statusIds.todo,
+        number: 1000,
+        title: 'Tâche liée à Paul',
+        position: 0,
+        origin: 'ui',
+        acl: [zoe.tenantId],
+        ...overrides,
+      }),
+    );
+  }
+
+  const FOREIGN_REFERENCES: Array<[string, () => Partial<typeof tasks.$inferInsert>]> = [
+    ['un projet', () => ({ projectId: ids.project, statusId: ids.todo })],
+    ['un statut', () => ({ statusId: ids.todo })],
+    ['un parent', () => ({ parentId: ids.task })],
+  ];
+
+  it.each(FOREIGN_REFERENCES)(
+    "tasks refuse %s de l'organisation de Paul : 23503",
+    async (_kind, overrides) => {
+      await expect(insertZoeTask(overrides())).rejects.toMatchObject(FOREIGN_KEY);
+    },
+  );
+
+  // sans référence étrangère, la même tâche passe : seule la clé étrangère refusait
+  it('tasks accepte la même tâche sans référence étrangère', async () => {
+    await expect(insertZoeTask({ number: 1 })).resolves.toBeDefined();
   });
 });
 

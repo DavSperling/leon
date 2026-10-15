@@ -1,5 +1,6 @@
 import type { TurnRole } from '@/capture/turn';
-import type { RunTurn } from '../runs';
+import { oneLine } from '@/server/memory/labels';
+import type { ItemNature, RunTurn } from '../runs';
 
 const ROLE_LABELS: Record<TurnRole, string> = {
   user: 'utilisateur',
@@ -18,9 +19,10 @@ function escapeAttribute(value: string): string {
     .replaceAll('"', '&quot;');
 }
 
-// Un texte ne peut pas refermer la balise qui le contient.
+// Un texte ne peut pas refermer la balise qui le contient. `conversation` est l'ancien nom de <source> :
+// un texte capté avant le changement de format peut encore le porter.
 function neutralizeClosingTags(text: string): string {
-  return text.replace(/<\/(tour|conversation)\s*>/gi, '<\\/$1>');
+  return text.replace(/<\/(tour|source|conversation|contexte-source)\s*>/gi, '<\\/$1>');
 }
 
 function formatTurn(turn: RunTurn, maxCharsPerTurn: number | undefined): string {
@@ -28,25 +30,41 @@ function formatTurn(turn: RunTurn, maxCharsPerTurn: number | undefined): string 
     maxCharsPerTurn !== undefined && turn.text.length > maxCharsPerTurn
       ? `${turn.text.slice(0, maxCharsPerTurn)}${TRUNCATION_MARK}`
       : turn.text;
+  const author = turn.authorName === null ? '' : oneLine(turn.authorName);
   const attributes = [
     `id="${escapeAttribute(turn.externalId)}"`,
     `role="${ROLE_LABELS[turn.role]}"`,
+    ...(author === '' ? [] : [`auteur="${escapeAttribute(author)}"`]),
     `date="${turn.ts.toISOString()}"`,
   ].join(' ');
   return `<tour ${attributes}>\n${neutralizeClosingTags(text)}\n</tour>`;
 }
 
+const CONTEXT_SENTENCE = 'Le contexte n’est pas citable : chaque fait cite un tour de <source>.';
+
+// Le contexte rappelle l'état déjà connu d'un élément dont le run ne porte que des tours nouveaux.
+function formatContext(context: string | null | undefined): string[] {
+  if (context === null || context === undefined || context === '') return [];
+  return [
+    CONTEXT_SENTENCE,
+    `<contexte-source>\n${neutralizeClosingTags(context)}\n</contexte-source>`,
+  ];
+}
+
 export function formatTurnsForPrompt(input: {
   sourceKindLabel: string;
+  nature: ItemNature;
   title: string | null;
   turns: RunTurn[];
+  context?: string | null;
   maxCharsPerTurn?: number;
 }): string {
-  const source = escapeAttribute(input.sourceKindLabel);
-  const title = escapeAttribute(input.title ?? '');
+  const tool = escapeAttribute(oneLine(input.sourceKindLabel));
+  const title = escapeAttribute(oneLine(input.title ?? ''));
   return [
-    `<conversation source="${source}" titre="${title}">`,
+    ...formatContext(input.context),
+    `<source outil="${tool}" nature="${input.nature}" titre="${title}">`,
     ...input.turns.map((turn) => formatTurn(turn, input.maxCharsPerTurn)),
-    '</conversation>',
+    '</source>',
   ].join('\n');
 }

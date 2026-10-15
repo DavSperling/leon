@@ -138,8 +138,10 @@ async function extractFacts(run: PipelineRun, catalog: Catalog, llm: Llm) {
     const prompt = buildExtractionPrompt({
       catalog,
       sourceKindLabel: SOURCE_KIND_LABELS[run.sourceKind],
+      nature: run.nature,
       title: run.sourceTitle,
       turns: window,
+      context: run.context,
       flaggedTurns: run.triage?.sensitiveTurns ?? [],
     });
     const output = await llm.generateObject({

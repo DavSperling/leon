@@ -9,6 +9,7 @@ import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { LlmRequest } from '@/server/llm/llm';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
+import { seedToolRun } from '@/test/seed-tool-run';
 import { runExtraction, selectTurns } from './extraction';
 import type { ExtractedFact } from './prompts/extraction';
 import type { TriageResult } from './prompts/triage';
@@ -346,6 +347,7 @@ describe('selectTurns', () => {
     id: `id-${n}`,
     externalId: `msg-${n}`,
     role: 'user' as const,
+    authorName: null,
     text: `Tour ${n}`,
     ts: new Date(),
   });
@@ -377,5 +379,90 @@ describe('runExtraction : bruit écarté', () => {
     expect(prompt).toContain('id="msg-4"');
     expect(prompt).not.toContain('id="msg-2"');
     expect(prompt).not.toContain('id="msg-3"');
+  });
+});
+
+describe('runExtraction : source d outil', () => {
+  const BODY = 'Le délai de paiement d’ACME est de quarante-cinq jours.';
+  const COMMENT = 'OK, on part sur soixante jours dès le prochain contrat.';
+
+  // Run d'un seul commentaire : le corps du ticket est déjà connu (hors du run), il ne sert que de contexte.
+  async function setupTicket() {
+    const { members } = await createTestTenant(['Paul']);
+    const [paul] = members as [TenantContext];
+    const { job, turnIds } = await seedToolRun(paul, {
+      nature: 'ticket',
+      turns: [
+        {
+          externalId: 'body#a1',
+          role: 'document',
+          authorName: 'Marie Durand',
+          text: BODY,
+          ts: '2026-10-13T09:00:00Z',
+          inRun: false,
+        },
+        {
+          externalId: 'comment:1#b2',
+          role: 'participant',
+          authorName: 'Paul Martin',
+          text: COMMENT,
+          ts: '2026-10-14T10:00:00Z',
+          inRun: true,
+        },
+      ],
+    });
+    const triage = createFakeLlm(() => ({
+      keep: true,
+      reason: 'Une décision.',
+      sensitiveTurns: [],
+      noiseTurns: [],
+    }));
+    if ((await runTriage(job, triage)) !== 'extraction') throw new Error('triage non passé');
+    return { paul, job, turnIds, triageCall: triage.calls[0] };
+  }
+
+  it('donne au tri et à l extraction la nature, l auteur et le corps du ticket en contexte', async () => {
+    const { job, triageCall } = await setupTicket();
+    const llm = llmReturning([]);
+
+    await runExtraction(job, llm);
+
+    for (const prompt of [triageCall?.prompt ?? '', llm.calls[0]?.prompt ?? '']) {
+      expect(prompt).toContain(
+        '<source outil="GitHub" nature="ticket" titre="Délai de paiement ACME">',
+      );
+      expect(prompt).toContain('role="participant" auteur="Paul Martin"');
+      expect(prompt).toContain(`<contexte-source>\n${BODY}\n</contexte-source>`);
+      expect(prompt).toContain(COMMENT);
+    }
+  });
+
+  it('rejette un fait qui cite le corps du ticket, présent seulement en contexte', async () => {
+    const { paul, job } = await setupTicket();
+    const cited = fact({
+      turnExternalId: 'body#a1',
+      statement: 'Le délai de paiement d’ACME est de quarante-cinq jours.',
+      quote: 'Le délai de paiement d’ACME est de quarante-cinq jours.',
+    });
+
+    const next = await runExtraction(job, llmReturning([cited]));
+
+    expect(next).toBeNull();
+    const [candidate] = await readCandidates(paul, job.ingestRunId);
+    expect(candidate).toMatchObject({ status: 'rejected', rejectionReason: 'tour inconnu' });
+  });
+
+  it('garde un fait qui cite le commentaire du run', async () => {
+    const { paul, job } = await setupTicket();
+    const cited = fact({
+      turnExternalId: 'comment:1#b2',
+      statement: 'ACME passe à soixante jours de délai de paiement.',
+      quote: 'on part sur soixante jours dès le prochain contrat',
+    });
+
+    expect(await runExtraction(job, llmReturning([cited]))).toBe('placement');
+
+    const [candidate] = await readCandidates(paul, job.ingestRunId);
+    expect(candidate).toMatchObject({ status: 'pending', rejectionReason: null });
   });
 });

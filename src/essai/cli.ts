@@ -3,11 +3,12 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { createAnthropicLlm, MODEL_BY_STEP } from '@/server/llm/anthropic-llm';
+import { describeLlmConfig } from '@/server/llm/config';
 import type { LlmUsage } from '@/server/llm/llm';
 import { createIngestSender } from '../cli/import-claude-code';
 import { openAdminDb } from './admin-db';
 import { type Bilan, envoyer } from './charger';
-import { etatRuns, lireFaits, lireUsage } from './collect';
+import { etatRuns, lireFaits, lireModeles, lireUsage } from './collect';
 import { ESSAI_DIR, loadJeu, toursDe } from './dataset';
 import {
   comparerPassages,
@@ -85,8 +86,9 @@ async function runCharger(args: string[]): Promise<number> {
     : jeu.conversations;
 
   const head = gitHead();
-  const refus = await verifierServeur({ fetch, url: leonUrl(), head, srcModifie: srcModifie() });
-  if (refus) throw new Error(refus);
+  const serveur = await verifierServeur({ fetch, url: leonUrl(), head, srcModifie: srcModifie() });
+  if ('refus' in serveur) throw new Error(serveur.refus);
+  const { llm } = serveur;
 
   const admin = openAdminDb();
   try {
@@ -100,6 +102,10 @@ async function runCharger(args: string[]): Promise<number> {
         `Avertissement : ${runs.bloques} run(s) bloqué(s) depuis plus de 15 min, seront supprimés par la remise à zéro.`,
       );
 
+    // Les modèles changent par variable d'environnement, sans commit : seul le serveur sait lesquels il appelle.
+    console.log(
+      `Modèles du serveur : triage ${llm.triage} · extraction ${llm.extraction} · rangement ${llm.placement}.`,
+    );
     const tours = toursDe(conversations);
     const parTour = (await coutParTourPrecedent()) ?? COUT_PAR_TOUR_14_10;
     console.log(
@@ -133,6 +139,7 @@ async function runCharger(args: string[]): Promise<number> {
       envois: 0,
       toursEnvoyes: 0,
       runs: 0,
+      llm,
     };
     const ecrirePassage = (bilan: Partial<Bilan>, complet: boolean) =>
       writeFile(
@@ -235,6 +242,7 @@ async function runNoter(): Promise<number> {
     }
     const produits = await lireFaits(admin.db, tenantId);
     const usage = await lireUsage(admin.db, tenantId);
+    const modelesVus = await lireModeles(admin.db, tenantId);
 
     const llm = createAnthropicLlm({ apiKey });
     let coutJuge = 0;
@@ -279,7 +287,12 @@ async function runNoter(): Promise<number> {
       label: passage.label,
       commit: passage.commit,
       jeu: passage.jeu,
-      modeles: { ...MODEL_BY_STEP },
+      // Le juge passe toujours par Anthropic (createAnthropicLlm ci-dessus), sur son modèle par défaut.
+      modeles: {
+        ...(passage.llm ?? describeLlmConfig({})),
+        juge: `anthropic:${MODEL_BY_STEP.juge}`,
+      },
+      modelesVus,
       tours: passage.toursEnvoyes,
       dureeMinutes: fin ? Math.round((fin.getTime() - Date.parse(passage.debut)) / 60_000) : null,
       runs,

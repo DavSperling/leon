@@ -81,5 +81,8 @@ export const DernierPassageSchema = z.object({
   envois: z.number().int(),
   toursEnvoyes: z.number().int(),
   runs: z.number().int(),
+  // Modèles du serveur au chargement (/api/version). Absent d'un passage chargé avant le 15/10 : le
+  // serveur tournait alors forcément sur les modèles Anthropic par défaut.
+  llm: z.object({ triage: z.string(), extraction: z.string(), placement: z.string() }).optional(),
 });
 export type DernierPassage = z.infer<typeof DernierPassageSchema>;

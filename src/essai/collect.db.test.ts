@@ -4,7 +4,7 @@ import { facts, ingestRuns } from '@/server/db/schema/memory';
 import { llmUsage } from '@/server/db/schema/usage';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedCard, seedSource } from '@/test/fixtures';
-import { etatRuns, lireFaits, lireUsage } from './collect';
+import { etatRuns, lireFaits, lireModeles, lireUsage } from './collect';
 
 async function seed() {
   const { tenantId, members } = await createTestTenant(['Paul']);
@@ -103,6 +103,25 @@ describe('collect', () => {
       costUsd: expect.closeTo(0.00045, 8),
     });
     expect(usage.triage.appels).toBe(0);
+  });
+
+  it('liste les modèles réellement appelés à chaque étape', async () => {
+    const { tenantId } = await seed();
+    await adminDb.insert(llmUsage).values({
+      tenantId,
+      step: 'extraction',
+      model: 'mistralai/mistral-large-4-0',
+      inputTokens: 1,
+      outputTokens: 1,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costUsd: null,
+    });
+    expect(await lireModeles(adminDb, tenantId)).toEqual({
+      triage: [],
+      extraction: ['claude-sonnet-5-5', 'mistralai/mistral-large-4-0'],
+      placement: [],
+    });
   });
 
   it('compte les runs par statut', async () => {

@@ -8,6 +8,7 @@ import {
   coutParTourPrecedent,
   detaillerNotes,
   enregistrerPassage,
+  modelesCompacts,
   type Passage,
   passagePrecedent,
 } from './history';
@@ -209,5 +210,31 @@ describe('comparaison avec le passage précédent', () => {
     expect(lignes.join('\n')).toContain('Précision : 89 % → n/d');
     expect(lignes.join('\n')).toContain('Faux faits : 5 → 2');
     expect(lignes.join('\n')).toContain('Coût pipeline : 1,30 $ → 0,60 $');
+  });
+});
+
+describe('modelesCompacts', () => {
+  it('abrège les modèles des passages avant le choix du fournisseur', () => {
+    expect(
+      modelesCompacts({
+        triage: 'claude-haiku-5-5',
+        extraction: 'claude-sonnet-5-5',
+        placement: 'claude-haiku-5-5',
+        juge: 'claude-haiku-5-5',
+      }),
+    ).toBe('triage haiku-5-5 · extraction sonnet-5-5 · rangement haiku-5-5');
+  });
+
+  it('garde le fournisseur des modèles servis par OpenRouter', () => {
+    expect(
+      modelesCompacts({
+        triage: 'anthropic:claude-haiku-5-5',
+        extraction: 'openrouter:mistralai/mistral-large-4-0',
+        placement: 'openrouter:openai/gpt-5.4-mini',
+        juge: 'anthropic:claude-haiku-5-5',
+      }),
+    ).toBe(
+      'triage haiku-5-5 · extraction mistralai/mistral-large-4-0 · rangement openai/gpt-5.4-mini',
+    );
   });
 });

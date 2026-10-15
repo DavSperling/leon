@@ -1,8 +1,8 @@
 import { appendFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { MODEL_BY_STEP } from '@/server/llm/anthropic-llm';
-import type { etatRuns, FaitProduit, UsageParEtape } from './collect';
+import type { LlmStep } from '@/server/llm/llm';
+import type { etatRuns, FaitProduit, ModelesParEtape, UsageParEtape } from './collect';
 import type { Notes, NotesConversation } from './score';
 
 export const HISTORIQUE_DIR = fileURLToPath(
@@ -30,7 +30,10 @@ export type Passage = {
   label: string;
   commit: string;
   jeu: 'complet' | 'mini';
-  modeles: Record<keyof typeof MODEL_BY_STEP, string>;
+  // Modèle de chaque étape annoncé par le serveur (« fournisseur:modèle »), juge compris. Les passages
+  // d'avant le 15/10 n'ont que l'identifiant Anthropic (« claude-… »).
+  modeles: Record<LlmStep, string>;
+  modelesVus?: ModelesParEtape; // modèles réellement rendus par l'API (llm_usage), pour vérification
   tours: number;
   dureeMinutes: number | null;
   runs: Awaited<ReturnType<typeof etatRuns>>;
@@ -93,7 +96,9 @@ const ETAPE_LABEL: Partial<Record<keyof Passage['modeles'], string>> = {
   extraction: 'extraction',
   placement: 'rangement',
 };
-const modeleCourt = (modele: string) => modele.replace(/^claude-/, '');
+// « anthropic:claude-haiku-5-5 » → « haiku-5-5 » ; « openrouter:mistralai/… » → « mistralai/… ».
+const modeleCourt = (modele: string) =>
+  modele.replace(/^openrouter:/, '').replace(/^(anthropic:)?claude-/, '');
 
 export function modelesCompacts(modeles: Passage['modeles']): string {
   return (Object.keys(ETAPE_LABEL) as Array<keyof Passage['modeles']>)

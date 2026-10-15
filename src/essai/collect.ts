@@ -90,6 +90,23 @@ export async function lireUsage(db: AdminDb, tenantId: string): Promise<UsagePar
   return usage;
 }
 
+// Modèles réellement appelés à chaque étape (llm_usage.model, tel que rendu par l'API) : vérifie que
+// le passage a tourné sur les modèles que le serveur annonçait.
+export type ModelesParEtape = Record<PipelineLlmStep, string[]>;
+
+export async function lireModeles(db: AdminDb, tenantId: string): Promise<ModelesParEtape> {
+  const rows = await db
+    .selectDistinct({ step: llmUsage.step, model: llmUsage.model })
+    .from(llmUsage)
+    .where(eq(llmUsage.tenantId, tenantId))
+    .orderBy(llmUsage.step, llmUsage.model);
+  const modeles = Object.fromEntries(
+    PIPELINE_LLM_STEPS.map((step) => [step, [] as string[]]),
+  ) as ModelesParEtape;
+  for (const { step, model } of rows) modeles[step].push(model);
+  return modeles;
+}
+
 export async function etatRuns(db: AdminDb, tenantId: string) {
   const [row] = await db
     .select({

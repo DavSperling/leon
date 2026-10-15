@@ -1,0 +1,13 @@
+{
+  "user": {
+    "id": 101,
+    "username": "Marie Durand",
+    "email": "marie@acme.test",
+    "color": "#1e90ff",
+    "profilePicture": null,
+    "initials": "MD",
+    "week_start_day": 1,
+    "global_font_support": false,
+    "timezone": "Europe/Paris"
+  }
+}

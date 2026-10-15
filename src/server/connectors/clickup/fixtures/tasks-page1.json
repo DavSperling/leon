@@ -1,0 +1,50 @@
+{
+  "tasks": [
+    {
+      "id": "86b1abc",
+      "custom_id": null,
+      "name": "Refonte de la page d'accueil",
+      "text_content": "Objectif : une page d'accueil plus claire.\n\nLivrables : maquette, texte, mise en ligne.",
+      "description": "Objectif : une page d'accueil plus claire.\n\nLivrables : maquette, texte, mise en ligne.",
+      "markdown_description": "**Objectif** : une page d'accueil plus claire.\n\n- Livrables : maquette, texte, mise en ligne.",
+      "status": { "status": "en cours", "type": "custom", "orderindex": 1, "color": "#4194f6" },
+      "date_created": "1790845200000",
+      "date_updated": "1791999000000",
+      "creator": {
+        "id": 101,
+        "username": "Marie Durand",
+        "color": "#1e90ff",
+        "email": "marie@acme.test",
+        "profilePicture": null
+      },
+      "list": { "id": "5001", "name": "Site web", "access": true },
+      "folder": { "id": "4001", "name": "Marketing", "hidden": false, "access": true },
+      "space": { "id": "3001" },
+      "url": "https://app.clickup.com/t/86b1abc",
+      "parent": null
+    },
+    {
+      "id": "86b1abd",
+      "custom_id": "ACME-12",
+      "name": "Corriger le bug de connexion",
+      "text_content": "",
+      "description": "",
+      "status": { "status": "à faire", "type": "open", "orderindex": 0, "color": "#d3d3d3" },
+      "date_created": "1791210000000",
+      "date_updated": "1791457800000",
+      "creator": {
+        "id": 102,
+        "username": "David Martin",
+        "color": "#ff8c00",
+        "email": "david@acme.test",
+        "profilePicture": null
+      },
+      "list": { "id": "5001", "name": "Site web", "access": true },
+      "folder": { "id": "4001", "name": "Marketing", "hidden": false, "access": true },
+      "space": { "id": "3001" },
+      "url": "https://app.clickup.com/t/86b1abd",
+      "parent": null
+    }
+  ],
+  "last_page": false
+}

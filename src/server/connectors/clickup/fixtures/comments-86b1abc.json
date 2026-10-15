@@ -1,0 +1,40 @@
+{
+  "comments": [
+    {
+      "id": "90210002",
+      "comment": [{ "text": "Je propose de garder le bandeau actuel." }, { "text": "\n" }],
+      "comment_text": "Je propose de garder le bandeau actuel.\n",
+      "user": {
+        "id": 102,
+        "username": "David Martin",
+        "initials": "DM",
+        "email": "david@acme.test",
+        "color": "#ff8c00",
+        "profilePicture": null
+      },
+      "resolved": false,
+      "assignee": null,
+      "assigned_by": null,
+      "reactions": [],
+      "date": "1791982800000"
+    },
+    {
+      "id": "90210001",
+      "comment": [{ "text": "Maquette envoyée à David pour relecture." }],
+      "comment_text": "Maquette envoyée à David pour relecture.",
+      "user": {
+        "id": 101,
+        "username": "Marie Durand",
+        "initials": "MD",
+        "email": "marie@acme.test",
+        "color": "#1e90ff",
+        "profilePicture": null
+      },
+      "resolved": false,
+      "assignee": null,
+      "assigned_by": null,
+      "reactions": [],
+      "date": "1791877500000"
+    }
+  ]
+}

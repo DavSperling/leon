@@ -40,22 +40,19 @@ function CardHead({
   projectName,
   handle,
 }: PartProps & { projectName: string; handle?: ReactNode }) {
-  if (!shows('id') && !shows('project') && !shows('assignee') && !handle) return null;
+  const parent = shows('parent') ? row.parentRef : null;
+  if (!shows('id') && !parent && !shows('project') && !shows('assignee') && !handle) return null;
   return (
     <div className="flex min-h-6 items-center gap-1">
       <span className="flex min-w-0 items-baseline gap-1.5 text-xs text-muted-foreground">
-        {shows('id') && (
+        {parent && (
           <span className="shrink-0 font-mono">
-            {shows('parent') && row.parentRef && (
-              <>
-                <span className="sr-only">Sous-tâche de </span>
-                {row.parentRef}
-                <span aria-hidden="true"> › </span>
-              </>
-            )}
-            {row.ref}
+            <span className="sr-only">Sous-tâche de </span>
+            {parent}
+            {shows('id') && <span aria-hidden="true"> ›</span>}
           </span>
         )}
+        {shows('id') && <span className="shrink-0 font-mono">{row.ref}</span>}
         {shows('project') && <span className="truncate">{projectName}</span>}
       </span>
       <span className="ml-auto flex items-center gap-1">

@@ -1,4 +1,5 @@
 import { TASK_PRIORITIES, type TaskPriority, type ViewGrouping } from '@/lib/enums';
+import { NONE_KEY } from '@/lib/tasks/group';
 import type { ListContext } from './list-context';
 
 // Une tâche choisie comme parent : de quoi l'afficher et en hériter le projet et la priorité.
@@ -46,7 +47,7 @@ export function groupPrefill(
     case 'priority':
       return priority ? { priority } : {};
     case 'assignee':
-      if (key === 'none') return { assigneeId: null };
+      if (key === NONE_KEY) return { assigneeId: null };
       return has(context.members, key) ? { assigneeId: key } : {};
     case 'label':
       return label ? { labels: [label] } : {};

@@ -5,7 +5,7 @@ import {
   type ViewGrouping,
   type ViewOrdering,
 } from '@/lib/enums';
-import type { TaskGroup } from '@/lib/tasks/group';
+import { NONE_KEY, type TaskGroup } from '@/lib/tasks/group';
 import type { TaskRow } from '@/server/tasks/task-row';
 import type { TaskPatch } from '@/server/tasks/tasks';
 import { type ListContext, shownStatus } from './list-context';
@@ -70,7 +70,7 @@ export function columnChange(
       return priority ? { field: 'priority', value: priority } : null;
     }
     case 'assignee': {
-      if (key === 'none') return { field: 'assignee', value: null };
+      if (key === NONE_KEY) return { field: 'assignee', value: null };
       return context.members.some((member) => member.id === key)
         ? { field: 'assignee', value: key }
         : null;

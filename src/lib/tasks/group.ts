@@ -47,7 +47,8 @@ type Grouping = {
   noneLabel?: string;
 };
 
-const NONE_KEY = 'none';
+// Clé du groupe des tâches sans valeur : les colonnes du tableau et « + » de groupe la relisent.
+export const NONE_KEY = 'none';
 const OTHER_KEY = 'other';
 const OTHER_LABEL = 'Autre';
 

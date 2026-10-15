@@ -51,6 +51,30 @@ function useSaveDrop(
   };
 }
 
+// Le tableau que montre l'écran, et la tâche (avec ce que le dépôt en a changé) de chaque identifiant.
+function useBoard(groups: TaskGroup<TaskRow>[]) {
+  const base = useMemo<Board>(() => ({ columns: toColumns(groups), changes: {} }), [groups]);
+  const rows = useMemo(
+    () => new Map(groups.flatMap((group) => group.rows).map((row) => [row.id, row])),
+    [groups],
+  );
+  const [shown, show] = useOptimistic(base, (_current: Board, next: Board) => next);
+  const rowOf = (id: string): TaskRow | undefined => {
+    const row = rows.get(id);
+    const change = shown.changes[id];
+    return row && change ? { ...row, ...change } : row;
+  };
+  return { shown, show, rows, rowOf };
+}
+
+// dnd-kit retient le clic qui suit un glissement, mais pas son action par défaut : le lien du titre,
+// sous le pointeur, ouvrirait la tâche par une navigation complète. Le clic vient juste après.
+function cancelNextClick() {
+  const cancel = (event: MouseEvent) => event.preventDefault();
+  window.addEventListener('click', cancel, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener('click', cancel, { capture: true }), 50);
+}
+
 // L'état du tableau pendant qu'on glisse une carte : les colonnes que le glissement réarrange en direct,
 // puis, au dépôt, le changement envoyé au serveur.
 export function useBoardDrag(
@@ -58,20 +82,9 @@ export function useBoardDrag(
   config: ViewConfig,
   context: ListContext,
 ) {
-  const base = useMemo<Board>(() => ({ columns: toColumns(groups), changes: {} }), [groups]);
-  const rows = useMemo(
-    () => new Map(groups.flatMap((group) => group.rows).map((row) => [row.id, row])),
-    [groups],
-  );
-  const [shown, show] = useOptimistic(base, (_current: Board, next: Board) => next);
+  const { shown, show, rows, rowOf } = useBoard(groups);
   const [drag, setDrag] = useState<Drag | null>(null);
   const save = useSaveDrop(shown, show, config, context);
-
-  const rowOf = (id: string): TaskRow | undefined => {
-    const row = rows.get(id);
-    const change = shown.changes[id];
-    return row && change ? { ...row, ...change } : row;
-  };
   const dragged = drag ? rows.get(drag.id) : undefined;
 
   const onDragStart = ({ active }: DragStartEvent) =>
@@ -86,6 +99,7 @@ export function useBoardDrag(
   };
 
   const onDragEnd = ({ over }: DragEndEvent) => {
+    cancelNextClick();
     const current = drag;
     setDrag(null);
     const row = current && rows.get(current.id);

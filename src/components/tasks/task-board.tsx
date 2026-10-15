@@ -6,7 +6,6 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
   pointerWithin,
   useSensor,
   useSensors,
@@ -19,6 +18,7 @@ import type { TaskRow } from '@/server/tasks/task-row';
 import { boardAnnouncements, SCREEN_READER_INSTRUCTIONS } from './board-announcements';
 import { BoardColumn } from './board-column';
 import { canDragCards } from './board-move';
+import { CardPointerSensor } from './card-pointer-sensor';
 import { groupPrefill } from './create-draft';
 import { useCreateTask } from './create-task-provider';
 import type { ListContext } from './list-context';
@@ -35,6 +35,25 @@ const detectCollisions: CollisionDetection = (args) => {
   const hits = pointerWithin(args);
   return hits.length > 0 ? hits : closestCorners(args);
 };
+
+// Les props d'une carte du tableau : ce que la vue affiche, et le nom du projet de la tâche.
+function cardPropsOf(config: ViewConfig, context: ListContext, now: Date) {
+  const projectNames = new Map(context.projects.map((project) => [project.id, project.name]));
+  return (row: TaskRow): CardProps => ({
+    row,
+    properties: config.properties,
+    projectName: projectNames.get(row.projectId) ?? row.projectKey,
+    context,
+    now,
+  });
+}
+
+function useBoardSensors() {
+  return useSensors(
+    useSensor(CardPointerSensor, { activationConstraint: { distance: DRAG_DISTANCE } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+}
 
 type TaskBoardProps = {
   groups: TaskGroup<TaskRow>[];
@@ -84,20 +103,10 @@ function BoardColumns({ groups, config, context, drag, cardProps }: BoardColumns
 // assigné) et, en tri manuel, dans leur colonne. Les groupes arrivent déjà ordonnés.
 export function TaskBoard({ groups, config, base, hiddenCount, context, now }: TaskBoardProps) {
   const dndId = useId(); // même identifiant côté serveur et côté client : les attributs ARIA concordent
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_DISTANCE } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const sensors = useBoardSensors();
   const drag = useBoardDrag(groups, config, context);
-  const projectNames = new Map(context.projects.map((project) => [project.id, project.name]));
+  const cardProps = cardPropsOf(config, context, now);
   const labels = new Map(groups.map((group) => [group.key, group.label]));
-  const cardProps = (row: TaskRow): CardProps => ({
-    row,
-    properties: config.properties,
-    projectName: projectNames.get(row.projectId) ?? row.projectKey,
-    context,
-    now,
-  });
 
   if (!groups.some((group) => group.rows.length > 0)) {
     return <EmptyList hiddenCount={hiddenCount} config={config} base={base} />;

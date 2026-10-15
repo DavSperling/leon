@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TASK_PRIORITIES, type ViewGrouping } from '@/lib/enums';
 import { formatNumber } from '@/lib/format';
+import { NONE_KEY } from '@/lib/tasks/group';
 import { Avatar } from './avatar';
 import { LabelDot } from './label-chip';
 import type { ListContext } from './list-context';
@@ -24,7 +25,7 @@ export function GroupIcon({ groupBy, groupKey, context }: GroupIconProps) {
     return priority && <PriorityIcon priority={priority} />;
   }
   if (groupBy === 'assignee') {
-    if (groupKey === 'none') return <Avatar person={null} />;
+    if (groupKey === NONE_KEY) return <Avatar person={null} />;
     const member = context.members.find((candidate) => candidate.id === groupKey);
     return member && <Avatar person={member} />;
   }

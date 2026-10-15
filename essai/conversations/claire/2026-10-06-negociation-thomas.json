@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-10-06-negociation-thomas",
+    "title": "Négociation CDI alternant"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Thomas Guérin, notre alternant dev, finit son alternance le 31 décembre. Il veut rester en CDI et demande 36 000 € brut annuel. Votre avis ?",
+      "ts": "2026-10-06T18:40:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "C'est une demande à prendre au sérieux : un alternant qui connaît déjà votre code, vos outils et votre équipe vous fait gagner plusieurs mois par rapport à un recrutement externe.\n\nQuelques repères pour vous positionner :\n- **Le coût de l'alternative** : recruter un développeur à l'extérieur coûte du temps, éventuellement des honoraires de cabinet, et une période de prise en main.\n- **La cohérence interne** : comparez sa demande avec la rémunération des développeurs de l'équipe à niveau d'expérience proche. Un écart mal placé crée vite des tensions.\n- **La trajectoire** : un premier CDI après une alternance n'est pas le salaire de toute une carrière. Vous pouvez prévoir un rendez-vous de révision à un horizon donné.\n\nOù se situe votre budget pour ce poste ?",
+      "ts": "2026-10-06T18:40:34+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Je ne monte pas à 36. Je propose 34 000 € brut annuel, plus une prime de 1 500 €.",
+      "ts": "2026-10-06T18:43:20+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "C'est une contre-proposition raisonnable : l'écart sur le fixe est réduit, et la prime montre que vous faites un effort. Pour la présenter :\n\n- **Commencez par la reconnaissance** : vous voulez le garder, et vous le lui dites clairement.\n- **Expliquez le fixe** : la cohérence avec l'équipe, plutôt qu'un refus sec.\n- **Précisez la prime** : versée à la signature, ou à la fin de la période d'essai ? Une prime à la signature est plus lisible ; une prime à six mois fidélise davantage.\n- **Ouvrez une perspective** : un point sur sa rémunération à une échéance que vous fixez.\n\nAttendez-vous à ce qu'il négocie encore un peu. Décidez dès maintenant si vous avez une marge, et laquelle, pour ne pas improviser.",
+      "ts": "2026-10-06T18:43:49+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Rédigez une réponse à Thomas. Je ne l'enverrai pas ce soir, je veux la relire à froid.",
+      "ts": "2026-10-06T18:46:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un projet de message, à relire demain :\n\n---\n\nBonjour Thomas,\n\nMerci pour ton message et pour la clarté de ta demande.\n\nJe veux te le dire simplement : nous souhaitons que tu restes avec nous après ton alternance. Ton travail cette année a compté, et l'équipe compte sur toi.\n\nJ'ai étudié ta demande avec attention. Je ne peux pas aller jusqu'au montant que tu proposes, pour rester cohérente avec la grille de l'équipe. Je te propose en revanche :\n- un CDI à 34 000 € brut annuel ;\n- une prime de 1 500 € ;\n- un point sur ta rémunération après une première année en CDI.\n\nJe suis disponible cette semaine pour en parler de vive voix si tu le souhaites.\n\nClaire\n\n---\n\nJ'ai utilisé le tutoiement ; adaptez si vous le vouvoyez.",
+      "ts": "2026-10-06T18:47:23+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Trop formel pour moi. Je la reprendrai demain à tête reposée. Merci.",
+      "ts": "2026-10-06T18:50:41+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

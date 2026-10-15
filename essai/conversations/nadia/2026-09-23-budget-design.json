@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-09-23-budget-design",
+    "title": "Budget design appli v2"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Hello. Je dois budgéter la partie design de l'appli v2 pour Claire.\nOn a reçu l'offre de Lucas Fabre, designer UX freelance : son TJM est de 550 € HT. Il travaille seul, il a déjà fait des applis métier.\nTu m'aides à présenter ça proprement ?",
+      "ts": "2026-09-23T14:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Oui. Pour présenter un budget clair à Claire, il me manque :\n\n- **le nombre de jours** prévu pour sa mission ;\n- **le périmètre** : parcours utilisateurs, maquettes, prototype cliquable, tests utilisateurs ?\n- **les conditions** : paiement, livrables intermédiaires.\n\nAvec le nombre de jours et le périmètre, je te propose une présentation en trois blocs : besoin, offre, risques.",
+      "ts": "2026-09-23T14:02:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Avec Inès on a fait l'estimation et on a validé 12 jours pour lui sur l'appli v2 : parcours, maquettes des écrans principaux, et un prototype cliquable pour le pilote.\nPour les conditions je n'ai pas encore la réponse.",
+      "ts": "2026-09-23T14:06:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Merci. Voici une proposition de répartition, à confirmer avec Lucas et Inès (ce n'est qu'une suggestion) :\n\n| Bloc | Jours (suggestion) |\n|---|---|\n| Ateliers et parcours utilisateurs | 3 |\n| Maquettes des écrans principaux | 6 |\n| Prototype cliquable | 2 |\n| Ajustements après retours | 1 |\n\nEt pour la présentation à Claire :\n\n**Besoin** : l'appli v2 doit être utilisable sur chantier, avec des gants, en plein soleil, par des compagnons pas forcément à l'aise avec le numérique. Le design n'est pas un bonus.\n\n**Offre** : un freelance expérimenté en applis métier, au TJM proposé, sur le nombre de jours estimé avec Inès.\n\n**Risques** : dépendance à une seule personne (absence, retard), et maquettes à caler avant que le développement n'avance trop.",
+      "ts": "2026-09-23T14:09:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Question un peu bête : si on prenait une agence plutôt qu'un freelance ? Ça changerait quoi ? Claire va peut-être me poser la question.",
+      "ts": "2026-09-23T14:14:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Pas bête du tout, c'est la question qu'elle risque de poser. En général :\n\n**Agence**\n- + plusieurs profils (UX, UI, parfois tests utilisateurs), continuité en cas d'absence\n- + process cadré, livrables formalisés\n- − tarif journalier nettement plus élevé\n- − plus de temps de cadrage et de coordination\n- − l'interlocuteur n'est pas toujours celui qui produit\n\n**Freelance**\n- + coût plus bas, échanges directs avec la personne qui produit\n- + plus souple sur le calendrier\n- − risque de dépendance à une seule personne\n- − moins de capacité si le périmètre grossit\n\nPour une mission courte et bien cadrée comme la vôtre, le freelance est souvent le choix le plus raisonnable.",
+      "ts": "2026-09-23T14:17:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Ok, c'est ce que je pensais, l'agence c'était juste pour avoir la réponse prête. On reste sur Lucas.\nFais-moi un petit paragraphe pour Claire, 5 lignes max, elle ne lit pas plus.",
+      "ts": "2026-09-23T14:21:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici :\n\n> Claire, pour le design de l'appli v2 on propose de travailler avec Lucas Fabre, designer UX indépendant qui a déjà conçu des applis métier. Le périmètre (parcours, maquettes, prototype pour le pilote) a été estimé avec Inès. Une agence coûterait nettement plus cher pour une mission de cette taille. Le principal risque est la dépendance à une seule personne : on le limite avec des livrables intermédiaires. Je t'envoie le budget détaillé dans le tableau de suivi.\n\nTu peux ajuster la dernière phrase selon l'endroit où tu ranges le budget.",
+      "ts": "2026-09-23T14:23:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

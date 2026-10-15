@@ -1,0 +1,50 @@
+{
+  "faits": [
+    {
+      "id": "F140",
+      "enonce": "Le géocodage de Chantier+ passe désormais par l'API TerraCarte.",
+      "fiche": "TerraCarte",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "à partir de maintenant le géocodage de Chantier+ passe par l'API TerraCarte",
+      "sensible": false
+    },
+    {
+      "id": "F141",
+      "enonce": "L'API TerraCarte autorise 50 requêtes par seconde.",
+      "fiche": "TerraCarte",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-004",
+      "extrait": "TerraCarte autorise 50 requêtes par seconde",
+      "sensible": false
+    },
+    {
+      "id": "F142",
+      "enonce": "Le cache de géocodage de 30 jours est conservé avec TerraCarte.",
+      "fiche": "Cache de géocodage",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-012",
+      "extrait": "le cache de géocodage de 30 jours est conservé tel quel avec TerraCarte",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N047",
+      "enonce": "Contenu du fichier `.env.local` affiché, avec la clé d'API TerraCarte.",
+      "tour": "t-009",
+      "pourquoi": "secret"
+    },
+    {
+      "id": "N053",
+      "enonce": "« Peut-être que TerraCarte gère mal les lieux-dits » : supposition non vérifiée.",
+      "tour": "t-014",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

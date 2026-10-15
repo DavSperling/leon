@@ -1,0 +1,41 @@
+{
+  "faits": [
+    {
+      "id": "F193",
+      "enonce": "Avec Hugo, il est décidé que les PDF de devis sont générés côté serveur par une file de jobs.",
+      "fiche": "Génération des PDF de devis",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-005",
+      "extrait": "Avec Hugo on a décidé que les PDF de devis sont générés côté serveur par une file de jobs (pg-boss)",
+      "sensible": false
+    },
+    {
+      "id": "F194",
+      "enonce": "Les montants renvoyés par l'API de Chantier+ sont en euros décimaux.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "Les montants renvoyés par l'API de Chantier+ sont en euros décimaux",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N085",
+      "enonce": "Différence générale entre float et decimal.",
+      "tour": "t-001",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": [
+    {
+      "a": "F124",
+      "b": "F194"
+    }
+  ]
+}

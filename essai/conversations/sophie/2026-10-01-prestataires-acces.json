@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-10-01-prestataires-acces",
+    "title": "Avenant prestataire et accès OVH"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nJe mets à jour le dossier de notre designer UX indépendant, Lucas Fabre, qui travaille sur l'application mobile v2. Nous avons renégocié son tarif : son TJM passe à 500 € HT.\n\nPourriez-vous m'aider à rédiger un avenant simple à son contrat de prestation ?",
+      "ts": "2026-10-01T11:15:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nBien sûr. Un avenant tarifaire peut rester très court. Voici la structure habituelle :\n\n1. **Les parties** : votre société (dénomination, siège, représentant) et le prestataire (nom, statut, SIRET).\n2. **Le rappel du contrat initial** : « Les parties ont conclu le [date] un contrat de prestation de services portant sur … ».\n3. **L'objet de l'avenant** : modification du tarif journalier.\n4. **La nouvelle clause** : « À compter du [date d'effet], le tarif journalier est fixé à 500 € HT. »\n5. **Le maintien des autres clauses** : « Les autres stipulations du contrat demeurent inchangées. »\n6. **Date, lieu et signatures**.\n\nUne question avant de rédiger la version définitive : les conditions de paiement restent-elles les mêmes ? Si oui, il suffit de ne pas y toucher ; sinon, il faut les reprendre dans l'avenant.",
+      "ts": "2026-10-01T11:15:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Elles ne changent pas : il est payé à 30 jours, je garde la même clause. La date d'effet est aujourd'hui, 1er octobre.",
+      "ts": "2026-10-01T11:18:40+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici l'avenant prêt à adapter :\n\n---\n\n**Avenant n° 1 au contrat de prestation de services**\n\nEntre Atelier Numérique Lebrun, SAS, représentée par [représentant], ci-après « le Client »,\net M. Lucas Fabre, designer UX indépendant, SIRET [à compléter], ci-après « le Prestataire ».\n\n**Article 1 – Objet**\nLe présent avenant modifie le tarif prévu à l'article [n°] du contrat de prestation de services conclu le [date].\n\n**Article 2 – Tarif**\nÀ compter du 1er octobre 2026, le tarif journalier du Prestataire est fixé à 500 € HT.\n\n**Article 3 – Autres stipulations**\nToutes les autres stipulations du contrat, notamment les conditions de paiement, demeurent inchangées.\n\nFait à Nantes, le [date], en deux exemplaires.\n\nPour le Client — Pour le Prestataire\n\n---\n\nPensez à vérifier le numéro de l'article tarifaire dans le contrat initial.",
+      "ts": "2026-10-01T11:19:24+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Merci, c'est parfait.\n\nAutre sujet : c'est moi qui gère le compte client OVH de l'entreprise (contrats, factures, accès). Je voudrais une procédure pour qu'un développeur puisse intervenir en cas d'urgence. Pour que vous voyiez comment je me connecte aujourd'hui, voici mes accès : identifiant : sophie@essai.leon.local password=MotDePasseOVH-Lebrun2026!\n\nQuelle procédure me conseillez-vous ?",
+      "ts": "2026-10-01T11:22:48+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Avant toute chose : **je vous recommande de changer ce mot de passe dès maintenant.** Il vient d'être écrit en clair dans une conversation, et un mot de passe d'accès à l'hébergement ne doit jamais circuler ainsi (ni par chat, ni par courriel). Ne le réutilisez nulle part ailleurs.\n\nEnsuite, pour la procédure d'accès d'urgence, voici les bonnes pratiques générales :\n\n1. **Ne jamais partager votre propre identifiant.** Le compte principal doit rester personnel.\n2. **Utiliser les comptes délégués** proposés par l'hébergeur : chaque personne a son propre accès, avec des droits limités à ce dont elle a besoin (technique seulement, sans la facturation).\n3. **Activer la double authentification** sur le compte principal et sur chaque compte délégué.\n4. **Stocker les accès dans un gestionnaire de mots de passe** partagé, avec un coffre réservé à l'équipe technique.\n5. **Tracer les accès** : qui a un compte, depuis quand, et le retirer au départ d'une personne.\n\nSouhaitez-vous que je vous prépare une check-list pour le changement de mot de passe ?",
+      "ts": "2026-10-01T11:23:23+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Vous avez raison, c'était maladroit de ma part. Oui, je veux bien la check-list : je change le mot de passe tout de suite. Pour les accès délégués, j'en parlerai d'abord avec Hugo.",
+      "ts": "2026-10-01T11:26:17+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici la check-list :\n\n1. **Changer le mot de passe** depuis l'espace client : au moins 16 caractères, généré par un gestionnaire de mots de passe, jamais réutilisé.\n2. **Activer la double authentification** (application d'authentification de préférence au SMS), et conserver les codes de secours dans un endroit sûr.\n3. **Déconnecter les sessions ouvertes** si l'option existe.\n4. **Vérifier l'historique de connexion** dans les jours qui suivent pour repérer toute connexion inhabituelle.\n5. **Vérifier l'adresse de récupération** du compte : elle doit être une adresse que vous contrôlez.\n6. **Supprimer ce message** de vos notes ou brouillons si vous l'aviez copié ailleurs.\n\nEt pour la discussion avec Hugo, la question à trancher est simple : quels droits minimaux un développeur doit-il avoir pour intervenir en urgence, sans accès à la facturation ni aux contrats.",
+      "ts": "2026-10-01T11:26:44+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

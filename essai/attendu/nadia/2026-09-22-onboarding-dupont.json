@@ -1,0 +1,55 @@
+{
+  "faits": [
+    {
+      "id": "F283",
+      "enonce": "Gérard Dupont, le gérant, est l'interlocuteur de Menuiserie Dupont.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "notre interlocuteur c'est Gérard Dupont, le gérant",
+      "sensible": false
+    },
+    {
+      "id": "F284",
+      "enonce": "La formation de Menuiserie Dupont se fait en 2 sessions sur site, à Angers.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "on part sur 2 sessions sur site, chez eux à Angers",
+      "sensible": false
+    },
+    {
+      "id": "F285",
+      "enonce": "Camille Rivet assure la formation de Menuiserie Dupont.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "c'est Camille Rivet qui assure la formation",
+      "sensible": false
+    },
+    {
+      "id": "F286",
+      "enonce": "La première session de formation chez Menuiserie Dupont a lieu le 13 octobre 2026.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "la première session aura lieu le 13 octobre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [],
+  "conflits": []
+}

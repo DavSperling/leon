@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-10-02-replanification-mobile",
+    "title": "Replanification appli mobile v2"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bon, on glisse sur l'appli v2. On passe du 15 octobre au 5 novembre pour la livraison.\nJe dois l'annoncer à l'équipe et au client pilote aujourd'hui. Tu m'aides ?",
+      "ts": "2026-10-02T10:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Oui. Pour un message de replanification qui passe bien, il faut trois choses :\n\n1. **la raison**, dite simplement et sans chercher de coupable ;\n2. **l'impact** : qu'est-ce qui change concrètement pour chacun ;\n3. **ce qui ne change pas** : c'est souvent ce qui rassure le plus.\n\nQuelles sont les raisons du décalage ?",
+      "ts": "2026-10-02T10:32:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Deux raisons : les maquettes de Lucas arrivent en retard, et Inès a dû abandonner rn-quickcharts, donc refaire les graphiques avec une autre bibliothèque.\nAucune des deux n'est dramatique mais les deux tombent en même temps.",
+      "ts": "2026-10-02T10:36:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Compris. Et pour le client pilote : est-ce que le démarrage de leurs tests bouge aussi, ou seulement la version finale ? C'est le point qui les concerne le plus.",
+      "ts": "2026-10-02T10:38:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Non, et c'est la bonne nouvelle : le pilote chez Bati-Ouest démarre le 19 octobre comme prévu, avec 10 compagnons qui testeront sur leurs chantiers. Ils auront une version de test, pas la finale.",
+      "ts": "2026-10-02T10:41:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Parfait, c'est exactement le « ce qui ne change pas » qu'il te fallait. Voici une proposition de message pour l'équipe :\n\n> Bonjour à tous,\n>\n> On décale la livraison de l'appli mobile v2 de trois semaines. Deux raisons : les maquettes arrivent plus tard que prévu, et la bibliothèque de graphiques a dû être remplacée, ce qui demande de reprendre une partie des écrans.\n>\n> Ce qui ne change pas : le pilote démarre à la date prévue, sur une version de test.\n>\n> Le planning détaillé est à jour dans le fichier de suivi. Merci à Inès pour la réactivité sur les graphiques.\n>\n> Nadia\n\nJe te prépare la version pour le client ?",
+      "ts": "2026-10-02T10:44:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Oui. Claire a validé le nouveau planning ce matin (le 2), donc je peux envoyer dans la foulée.\nPour le client, raccourcis : ils n'ont pas besoin du détail des bibliothèques.",
+      "ts": "2026-10-02T10:49:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici la version client :\n\n> Bonjour,\n>\n> Petit point sur l'application mobile : le démarrage du pilote avec vos équipes est maintenu à la date prévue, sur une version de test. La version finale arrivera quelques semaines plus tard, le temps d'intégrer les derniers écrans.\n>\n> Vos retours pendant le pilote nous seront très utiles pour cette version finale. Je reste votre contact pour toute question.\n>\n> Bien cordialement,\n> Nadia Benali\n\nTu peux ajouter le nom de ton contact chez eux en en-tête.",
+      "ts": "2026-10-02T10:51:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

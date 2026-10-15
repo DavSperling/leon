@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-10-05-bati-ouest-contrat",
+    "title": "Contrat Bati-Ouest nouvelle DSI"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "point bati-ouest. ils ont 60 licences, contrat annuel 42k HT, cest notre plus gros client. jdois faire un mail de presentation a leur nouvelle interlocutrice",
+      "ts": "2026-10-05T10:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "D'accord. Un premier mail à une nouvelle interlocutrice sur un compte stratégique, c'est important de bien le soigner. Dis-moi :\n\n1. **Son nom et son poste.**\n2. **L'objectif du mail** : simple prise de contact, ou proposition de rendez-vous ?\n3. **Les sujets en cours** que tu veux mentionner.",
+      "ts": "2026-10-05T10:00:37+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "stephanie caron, nouvelle DSI, cest elle notre contact depuis le 1er octobre. objectif : rdv pour se presenter",
+      "ts": "2026-10-05T10:03:54+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici une proposition :\n\n---\n**Objet :** Prise de contact : Atelier Numérique Lebrun\n\nBonjour Madame Caron,\n\nJe suis Karim Haddad, votre interlocuteur commercial chez Atelier Numérique Lebrun, l'éditeur de Chantier+ utilisé par vos équipes.\n\nJe serais ravi de vous rencontrer pour me présenter, faire le point sur votre utilisation de Chantier+ et échanger sur vos priorités pour les mois à venir.\n\nSeriez-vous disponible pour un rendez-vous, dans vos locaux ou en visio, dans les prochaines semaines ?\n\nBien cordialement,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---",
+      "ts": "2026-10-05T10:04:09+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "ajoute un mot sur chorus pro, ils en ont besoin pour facturer leurs marchés publics, le connecteur est prevu pour le 1er decembre",
+      "ts": "2026-10-05T10:09:05+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici le paragraphe à insérer avant la demande de rendez-vous :\n\n---\nJe sais que la facturation de vos marchés publics est un sujet important pour vous : notre connecteur Chorus Pro avance bien, et ce rendez-vous serait l'occasion de vous présenter son fonctionnement et son calendrier.\n---\n\nÇa donne une raison concrète d'accepter le rendez-vous, sans t'engager par écrit sur une date dès le premier mail.",
+      "ts": "2026-10-05T10:09:37+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "parfait. question bete, je la vouvoie ? je sais pas comment ils fonctionnent la bas",
+      "ts": "2026-10-05T10:10:57+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Oui, **vouvoie-la par défaut** : c'est un premier contact, avec une DSI d'un client important. Si elle te tutoie ou signe ses réponses d'un simple prénom, tu pourras t'aligner ensuite. C'est toujours plus facile de passer au tutoiement que de revenir au vouvoiement.",
+      "ts": "2026-10-05T10:11:23+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

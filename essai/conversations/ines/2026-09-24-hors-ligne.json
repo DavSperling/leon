@@ -1,0 +1,107 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-ines-2026-09-24-hors-ligne",
+    "title": "Mode hors ligne de l'application mobile v2"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "On attaque le mode hors ligne de l'appli mobile v2 aujourd'hui. C'est le point qui compte le plus pour le pilote : SARL Bati-Ouest est notre client pilote pour la v2, et leurs compagnons sont souvent sur des chantiers sans réseau (sous-sols, zones rurales en Vendée). Si l'appli ne marche pas sans réseau, le pilote est mort.\n\nLe principe qu'on a retenu : l'appli fonctionne entièrement hors ligne et se synchronise au retour du réseau. Les données sont stockées localement en SQLite sur le téléphone, et une file d'opérations en attente est rejouée vers l'API quand la connexion revient.\n\nCommence par me proposer le découpage des fichiers dans `apps/mobile/src/horsligne/` : la couche base locale, la file d'opérations, le détecteur de réseau. Juste le découpage, pas de code pour l'instant.",
+      "ts": "2026-09-24T13:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je regarde comment les écrans chargent les données aujourd'hui avant de proposer le découpage.",
+      "ts": "2026-09-24T13:31:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Proposition :\n- `base.ts` : ouverture de la base SQLite, migrations locales, accès typé aux tables ;\n- `file.ts` : file d'opérations en attente (création, modification, suppression), avec horodatage et nombre d'essais ;\n- `reseau.ts` : détection de l'état du réseau et événement « retour en ligne » ;\n- `synchro.ts` : rejoue la file vers l'API puis rafraîchit les tables locales.\nLes écrans ne lisent plus que la base locale.",
+      "ts": "2026-09-24T13:33:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Le découpage me va. Deux précisions : les migrations locales doivent être numérotées comme côté serveur (`001-…`, `002-…`), pour qu'on s'y retrouve. Et `synchro.ts` ne doit jamais bloquer l'interface : tout se fait en tâche de fond, avec un petit indicateur dans l'en-tête (« synchronisé », « en attente », « hors ligne »).\n\nVas-y pour `base.ts` et `file.ts`, avec les tables chantiers et devis pour commencer.\n\nPour la numérotation, voilà ce que ça donne côté serveur, c'est ce format qu'il faut reprendre :\n\n```\n$ ls server/migrations\n001-init.sql\n002-utilisateurs.sql\n003-chantiers.sql\n004-devis.sql\n005-index-recherche.sql\n006-preferences.sql\n```\n\nEt pour l'indicateur, regarde l'en-tête actuel dans `src/composants/EnTete.tsx`, il y a déjà un emplacement à droite du titre qu'on utilisait pour un badge de test, tu peux le recycler.",
+      "ts": "2026-09-24T13:36:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "J'écris `base.ts` avec la migration `001-chantiers-devis` et `file.ts`.",
+      "ts": "2026-09-24T13:38:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "C'est fait. `base.ts` ouvre la base, applique les migrations numérotées et expose `chantiers` et `devis`. `file.ts` enregistre chaque opération avec un identifiant local et un compteur d'essais.",
+      "ts": "2026-09-24T13:42:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "J'ai branché la synchro à la main pour tester, et ça part en vrille. Scénario : je passe en mode avion, je crée un devis, je modifie le même devis, je repasse en ligne. Résultat : deux devis côté serveur, et un message d'erreur sur le second rejeu.\n\nLogs de l'appli :\n\n[synchro] retour en ligne, 2 opérations en attente\n[synchro] rejeu op#1 CREATE devis local-7f3a -> 201 id=serveur-1184\n[synchro] rejeu op#2 UPDATE devis local-7f3a -> 404 Not Found\n[synchro] op#2 échec (essai 1/5), nouvel essai dans 4 s\n[synchro] rejeu op#2 UPDATE devis local-7f3a -> 404 Not Found\n[file] op#2 réinsérée, essais=2\n[synchro] rafraîchissement : 3 devis reçus, 2 en local\n\nJe pense que l'UPDATE garde l'identifiant local au lieu de l'identifiant serveur reçu au CREATE, mais je ne vois pas où on fait la correspondance.\n\nLe contenu de la file au moment du retour en ligne, sorti avec la console de débogage SQLite :\n\n```\nsqlite> .headers on\nsqlite> .mode column\nsqlite> SELECT id, operation, table_cible, id_cible, essais, cree_le FROM operations_en_attente;\nid  operation  table_cible  id_cible     essais  cree_le\n--  ---------  -----------  -----------  ------  -------------------\n1   CREATE     devis        local-7f3a   0       2026-09-24 13:44:12\n2   UPDATE     devis        local-7f3a   0       2026-09-24 13:44:39\n\nsqlite> SELECT id, statut, maj_le FROM devis ORDER BY maj_le DESC LIMIT 3;\nid          statut      maj_le\n----------  ----------  -------------------\nlocal-7f3a  brouillon   2026-09-24 13:44:39\nserveur-1179 envoye     2026-09-23 17:02:51\nserveur-1175 signe      2026-09-22 10:18:03\n```\n\nEt les requêtes vues côté API (logs du serveur local) :\n\n```\n[api] POST /api/devis 201 in 84ms  body.idLocal=local-7f3a -> id=serveur-1184\n[api] PATCH /api/devis/local-7f3a 404 in 6ms\n[api] PATCH /api/devis/local-7f3a 404 in 5ms\n[api] GET /api/devis?depuis=2026-09-23T17:02:51Z 200 in 41ms (3 éléments)\n```",
+      "ts": "2026-09-24T13:48:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "C'est ça : la correspondance identifiant local → identifiant serveur n'est enregistrée nulle part. J'ajoute une table de correspondance remplie au retour du CREATE.",
+      "ts": "2026-09-24T13:50:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Ajouté dans `synchro.ts` : après chaque CREATE réussi, les opérations suivantes de la file qui visent l'identifiant local sont réécrites avec l'identifiant serveur.",
+      "ts": "2026-09-24T13:53:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"test-synchro\">\nRapport : rejeu des scénarios hors ligne après la correction des identifiants\n\nCe que j'ai fait\n- Récupéré la version de `synchro.ts` avec la réécriture identifiant local → identifiant serveur.\n- Rejoué six scénarios sur le simulateur iOS, base locale vidée entre chaque scénario, API locale relancée à chaque fois.\n- Compté les devis côté serveur après chaque scénario avec `GET /api/devis?depuis=…`.\n\nRésultats\n| # | Scénario | Opérations en file | Devis attendus côté serveur | Devis obtenus | Erreurs |\n|---|---|---|---|---|---|\n| 1 | Créer hors ligne, repasser en ligne | 1 | 1 | 1 | 0 |\n| 2 | Créer puis modifier hors ligne | 2 | 1 | 1 | 0 |\n| 3 | Créer, modifier deux fois, repasser en ligne | 3 | 1 | 1 | 0 |\n| 4 | Créer deux devis différents hors ligne | 2 | 2 | 2 | 0 |\n| 5 | Modifier un devis déjà synchronisé, hors ligne | 1 | 0 nouveau | 0 nouveau | 0 |\n| 6 | Créer hors ligne, supprimer hors ligne | 2 | 0 | 0 | 0 |\n\nExtraits de journal (scénario 3)\n```\n[synchro] retour en ligne, 3 opérations en attente\n[synchro] rejeu op#1 CREATE devis local-a204 -> 201 id=serveur-1185\n[synchro] correspondance local-a204 -> serveur-1185, 2 opérations réécrites\n[synchro] rejeu op#2 UPDATE devis serveur-1185 -> 200\n[synchro] rejeu op#3 UPDATE devis serveur-1185 -> 200\n[synchro] rafraîchissement : 4 devis reçus, 4 en local\n```\n\nEnvironnement et commandes\n```\n# réinitialisation entre deux scénarios\nxcrun simctl uninstall booted fr.essai.chantierplus.mobile\npnpm --filter mobile ios\npnpm --filter web db:nettoyer -- --prefixe serveur-118\n\n# coupure et retour du réseau côté appli\nproxy local en mode « refuser tout » puis « laisser passer »\n\n# comptage côté serveur\ncurl -s \"http://localhost:3000/api/devis?depuis=2026-09-24T00:00:00Z\" | jq length\n```\n\nDurées relevées (du retour du réseau à l'indicateur « synchronisé »)\n```\nscénario 1 : 1,4 s\nscénario 2 : 1,9 s\nscénario 3 : 2,3 s\nscénario 4 : 2,0 s\nscénario 5 : 1,2 s\nscénario 6 : 1,6 s\n```\n\nContenu de la file après chaque scénario\n```\nsqlite> SELECT COUNT(*) FROM operations_en_attente;\n0\n```\n(identique pour les six scénarios : la file est vidée à chaque fois)\n\nCe que je n'ai pas couvert\n- Arrêt de l'appli pendant la synchro : non testé.\n- Réseau instable (coupures pendant le rejeu) : non testé, le simulateur ne le reproduit pas proprement.\n- Android : non testé dans ce passage.\n\nRecommandation\nLa correction tient sur les six scénarios simples. Avant d'aller plus loin, rejouer les mêmes scénarios sur Android et ajouter le cas de l'arrêt brutal.\n</teammate-message>",
+      "ts": "2026-09-24T13:55:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009b",
+      "role": "assistant",
+      "text": "Les six scénarios simples passent avec la correspondance des identifiants. Restent non couverts : l'arrêt pendant la synchro, le réseau instable et Android.",
+      "ts": "2026-09-24T13:57:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "Mieux pour le cas simple, l'UPDATE passe. Mais j'ai encore un doublon dans un autre scénario : je crée le devis hors ligne, je repasse en ligne, et pendant que la synchro tourne je tue l'appli. Au relancement, le CREATE est rejoué une seconde fois.\n\n[synchro] rejeu op#1 CREATE devis local-91bc -> 201 id=serveur-1187\n[app] arrêt brutal\n[synchro] retour en ligne, 1 opération en attente\n[synchro] rejeu op#1 CREATE devis local-91bc -> 201 id=serveur-1188\n\nJe ne sais pas encore comment on veut gérer ça : clé d'idempotence côté API, ou marquer l'opération comme envoyée avant l'appel. Il faut que j'en parle avec Hugo parce que ça touche l'API. Pour l'instant ne change rien là-dessus, ajoute juste un log plus clair pour qu'on voie le cas.\n\nLogcat côté Android au moment où je tue l'appli puis la relance :\n\n```\nI/ReactNativeJS: [synchro] retour en ligne, 1 opération en attente\nI/ReactNativeJS: [synchro] rejeu op#1 CREATE devis local-91bc\nI/ActivityManager: Killing 18322:fr.essai.chantierplus.mobile/u0a191 (adj 0): stop fr.essai.chantierplus.mobile due to from pid 4120\nI/ActivityManager: Start proc 18517:fr.essai.chantierplus.mobile/u0a191 for top-activity\nI/ReactNativeJS: [base] ouverture chantierplus.db, migrations à jour (001)\nI/ReactNativeJS: [file] 1 opération en attente (op#1 CREATE devis local-91bc, essais=0)\nI/ReactNativeJS: [synchro] retour en ligne, 1 opération en attente\nI/ReactNativeJS: [synchro] rejeu op#1 CREATE devis local-91bc\n```\n\nOn voit que `essais` est toujours à 0 au redémarrage : la réponse 201 est arrivée côté serveur mais l'appli est morte avant de retirer l'opération de la file.",
+      "ts": "2026-09-24T14:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "J'ajoute un log explicite quand une opération CREATE est rejouée après un redémarrage, sans changer la logique.",
+      "ts": "2026-09-24T14:01:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "Fait. Résumé :\n- `base.ts`, `file.ts` et la migration `001-chantiers-devis` en place ;\n- correspondance identifiant local → serveur corrigée, l'UPDATE après CREATE fonctionne ;\n- le doublon après arrêt brutal n'est pas réglé : un log `[synchro] CREATE rejoué après redémarrage` le signale ;\n- `reseau.ts` et l'indicateur d'en-tête restent à faire.\n\nPour reprendre plus tard, les commandes qui reproduisent les deux scénarios :\n\n```\n# scénario 1 : création puis modification hors ligne\nxcrun simctl status_bar booted override --dataNetwork hide\n# créer un devis, le modifier, puis rétablir le réseau\nxcrun simctl status_bar booted clear\n\n# scénario 2 : arrêt brutal pendant la synchro (Android)\nadb shell am force-stop fr.essai.chantierplus.mobile\nadb shell monkey -p fr.essai.chantierplus.mobile 1\n```\n\nFichiers modifiés : `src/horsligne/base.ts`, `src/horsligne/file.ts`, `src/horsligne/synchro.ts`, `src/horsligne/migrations/001-chantiers-devis.ts`.\n\nRécapitulatif de la session pour la reprise :\n1. Découpage validé de `src/horsligne/` en quatre fichiers : `base.ts`, `file.ts`, `reseau.ts`, `synchro.ts`, les écrans ne lisant plus que la base locale.\n2. Migrations locales numérotées comme côté serveur ; la première, `001-chantiers-devis`, crée les tables chantiers et devis.\n3. `file.ts` enregistre chaque opération avec un identifiant local, un horodatage et un compteur d'essais.\n4. Premier bug : l'UPDATE qui suit un CREATE gardait l'identifiant local et finissait en 404. Corrigé par la réécriture des opérations suivantes avec l'identifiant serveur ; le rapport de rejeu confirme les six scénarios simples.\n5. Second bug, ouvert : si l'appli est tuée pendant la synchro, le CREATE est rejoué au relancement et crée un doublon. Deux pistes évoquées, rien n'est tranché ; seul un log a été ajouté.\n6. Reste à écrire : `reseau.ts` et l'indicateur d'en-tête, puis rejouer les scénarios sur Android.",
+      "ts": "2026-09-24T14:04:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "faits": [
+    {
+      "id": "F185",
+      "enonce": "SARL Bati-Ouest est le client pilote de l'application mobile v2.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "SARL Bati-Ouest est notre client pilote pour la v2",
+      "sensible": false
+    },
+    {
+      "id": "F187",
+      "enonce": "L'application mobile v2 fonctionne hors ligne et se synchronise au retour du réseau.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "l'appli fonctionne entièrement hors ligne et se synchronise au retour du réseau",
+      "sensible": false
+    },
+    {
+      "id": "F188",
+      "enonce": "Les données hors ligne de l'application mobile v2 sont stockées en SQLite.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "Les données sont stockées localement en SQLite sur le téléphone",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N082",
+      "enonce": "Débogage de la synchronisation sans décision.",
+      "tour": "t-010",
+      "pourquoi": "débogage sans décision"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

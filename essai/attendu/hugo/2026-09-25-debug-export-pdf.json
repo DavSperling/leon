@@ -1,0 +1,45 @@
+{
+  "faits": [
+    {
+      "id": "F128",
+      "enonce": "Le bug du ticket 482 vient d'une limite de 50 lignes codée en dur dans le générateur PDF.",
+      "fiche": "Électricité Perrin",
+      "alias": [
+        "Perrin"
+      ],
+      "typeFiche": "client",
+      "tour": "t-009",
+      "extrait": "le bug du 482 c'est juste une limite de 50 lignes codée en dur dans le générateur PDF",
+      "sensible": false
+    },
+    {
+      "id": "F129",
+      "enonce": "Le bug du ticket 482 touche tous les devis de plus de 50 lignes, pas seulement ceux d'Électricité Perrin.",
+      "fiche": "Chantier+",
+      "alias": [
+        "Chantier plus",
+        "l'appli"
+      ],
+      "typeFiche": "produit",
+      "tour": "t-011",
+      "extrait": "ça touche tous les devis de plus de 50 lignes, pas seulement ceux de Perrin",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N046",
+      "enonce": "Traces de pile et sorties de test.",
+      "tour": "t-005",
+      "pourquoi": "sortie d'outil"
+    },
+    {
+      "id": "N048",
+      "enonce": "Correctif tenté puis annulé (`git checkout`).",
+      "tour": "t-014",
+      "pourquoi": "débogage sans décision"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

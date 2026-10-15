@@ -1,0 +1,149 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-09-25-debug-export-pdf",
+    "title": "Ticket 482 : export PDF tronqué"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Débogage cet après-midi. Il y a le ticket 482 dans Atelier Admin, côté Électricité Perrin : l'export PDF d'un de leurs devis s'arrête avant la fin, il manque des lignes et le total en bas n'apparaît pas. Pas de message d'erreur côté utilisateur, le PDF se télécharge normalement.\n\nJe veux comprendre d'où ça vient avant de toucher quoi que ce soit. Trouve où on génère le PDF des devis et explique-moi le chemin complet, du clic sur « Exporter » jusqu'au fichier.",
+      "ts": "2026-09-25T14:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je cherche le générateur PDF et le point d'entrée de l'export.",
+      "ts": "2026-09-25T14:02:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002a",
+      "role": "user",
+      "text": "l'explorateur a déjà fait le tour du chemin, je te le colle :\n\n<teammate-message teammate_id=\"explorateur\">\nExploration : chemin de l'export PDF d'un devis, du bouton au fichier\n\n1. Interface\n- `src/app/(app)/devis/[id]/BarreActions.tsx`, ligne 41 : le bouton « Exporter » est un simple lien `<a href={`/api/devis/${id}/pdf`} download>`. Pas d'appel JavaScript, pas d'état de chargement.\n\n2. Route\n- `src/app/api/devis/[id]/pdf/route.ts` (38 lignes) : `GET` → `requireSession()` → `chargerDevisPourPdf(id)` → `rendreDevis(donnees)` → réponse `application/pdf` avec `Content-Disposition: attachment`.\n- Le rendu est fait dans la requête, en mémoire (tampon complet), puis renvoyé d'un bloc.\n\n3. Données\n- `src/server/pdf/donnees.ts` : relit `devis.contenu.lignes` dans le jsonb, joint le client et le chantier, calcule les totaux de son côté (indépendamment de `src/devis/calcul.ts`).\n- Les lignes sont passées telles quelles au gabarit, sans tri ni filtre.\n\n4. Rendu\n- `src/server/pdf/rendre.ts` : appelle la bibliothèque de rendu React vers PDF avec le gabarit, retourne un `Buffer`, journalise `pdf: gabarit=… lignes=… pages=… taille=…`.\n- `src/pdf/gabarit-devis.tsx` (142 lignes) : en-tête (logo, coordonnées, numéro), tableau des lignes, bloc des totaux, conditions de paiement, pied de page fixe.\n- `src/pdf/styles.ts` : styles du gabarit.\n- `src/pdf/polices/` : deux polices embarquées.\n\n```\n$ grep -rn \"rendreDevis\\|chargerDevisPourPdf\" src | grep -v test\nsrc/app/api/devis/[id]/pdf/route.ts:4:import { rendreDevis } from '@/server/pdf/rendre';\nsrc/app/api/devis/[id]/pdf/route.ts:5:import { chargerDevisPourPdf } from '@/server/pdf/donnees';\nsrc/app/api/devis/[id]/pdf/route.ts:22:  const donnees = await chargerDevisPourPdf(params.id, session.entrepriseId);\nsrc/app/api/devis/[id]/pdf/route.ts:23:  const pdf = await rendreDevis(donnees);\nsrc/server/pdf/rendre.ts:11:export async function rendreDevis(donnees: DonneesPdf): Promise<Buffer> {\nsrc/server/pdf/donnees.ts:19:export async function chargerDevisPourPdf(id: string, entrepriseId: string) {\nsrc/server/mail/envoi-devis.ts:33:  const pdf = await rendreDevis(await chargerDevisPourPdf(devis.id, devis.entrepriseId));\n```\n\nDeuxième appelant : l'envoi du devis par courriel (`envoi-devis.ts`) génère le même PDF pour la pièce jointe. Tout ce qui touche au gabarit touche donc aussi les devis envoyés par mail.\n\n5. Tests existants\n```\n$ ls src/pdf src/server/pdf | grep test\ngabarit-devis.test.tsx\nrendre.test.ts\n$ pnpm test src/pdf src/server/pdf --reporter=dot\n·······\n\n Test Files  2 passed (2)\n      Tests  7 passed (7)\n```\n- `gabarit-devis.test.tsx` : 3 tests (en-tête, conditions de paiement, devis de 12 lignes). Aucun devis long dans les fixtures.\n- `rendre.test.ts` : 4 tests sur le type MIME, la taille non nulle, le nom de fichier, la journalisation.\n\n6. Historique\n```\n$ git log --oneline --follow src/pdf/gabarit-devis.tsx | tail -6\nb31e09c pdf: logo en en-tête\n8f02d1a pdf: conditions de paiement sous les totaux\n41ac7e5 pdf: polices embarquées\n2d9b6f0 pdf: styles extraits dans styles.ts\nc7e1a44 pdf: tableau des lignes\n0a3f5d2 pdf: premier gabarit d'export des devis\n```\n\nJe n'ai pas encore regardé le contenu du tableau ligne par ligne ; rien modifié.\n</teammate-message>",
+      "ts": "2026-09-25T14:04:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002b",
+      "role": "assistant",
+      "text": "Merci, ça donne le chemin complet : lien direct, route, données relues dans le jsonb, rendu en mémoire. Je note le deuxième appelant (envoi par courriel). Je regarde le gabarit lui-même.",
+      "ts": "2026-09-25T14:07:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "bon j'ai reproduit en local avec un devis de test de 64 lignes : le PDF s'arrête à la ligne 50, pas de page 3, pas de total. côté serveur rien d'anormal :\n\n```\n[14:09:12.481] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11/pdf 200 1873ms\n[14:09:12.482] DEBUG pdf: gabarit=devis lignes=64 pages=2 taille=48213o\n```\n\nlignes=64 mais pages=2, alors qu'avec 64 lignes il en faudrait 3.\n\nle journal autour, si tu veux le contexte :\n\n```\n[14:08:41.751] INFO  GET /_next/static/chunks/app/devis.js 304 4ms\n[14:08:42.727] INFO  GET /_next/static/chunks/app/devis.js 304 4ms\n[14:08:43.207] INFO  GET /api/session 200 10ms\n[14:08:44.948] INFO  GET /devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 211ms\n[14:08:47.318] INFO  GET /devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 232ms\n[14:08:50.454] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 40ms\n[14:08:51.249] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 49ms\n[14:08:54.084] INFO  GET /devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 232ms\n[14:08:55.820] INFO  GET /_next/static/chunks/app/devis.js 304 2ms\n[14:08:56.735] INFO  GET /devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 124ms\n[14:08:58.474] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 19ms\n[14:08:59.628] INFO  GET /devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 211ms\n[14:09:01.220] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 37ms\n[14:09:03.445] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11 200 34ms\n[14:09:10.607] DEBUG pdf: chargement devis=7c1e0b2a lignes=64 client=ok chantier=ok\n[14:09:10.611] DEBUG pdf: rendu démarré gabarit=devis\n[14:09:12.479] DEBUG pdf: rendu terminé 1868ms\n[14:09:12.481] INFO  GET /api/devis/7c1e0b2a-4f4d-4a51-9a9e-2d3f6c0e8b11/pdf 200 1873ms\n```",
+      "ts": "2026-09-25T14:10:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Le journal dit que le gabarit reçoit bien 64 lignes : la perte se fait pendant le rendu, pas dans la requête. Je lis src/pdf/.",
+      "ts": "2026-09-25T14:13:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "j'ai ajouté un test avec 64 lignes pour avoir un truc reproductible, voilà ce que ça donne :\n\n```\n$ pnpm test src/pdf\n ❯ src/pdf/gabarit-devis.test.tsx (4 tests | 1 failed) 912ms\n   ✓ rend l'en-tête du devis\n   ✓ rend les conditions de paiement\n   ✓ rend un devis de 12 lignes\n   × rend toutes les lignes d'un devis long (64 lignes)\n     → expected 50 to be 64\n\n FAIL  src/pdf/gabarit-devis.test.tsx > rend toutes les lignes d'un devis long (64 lignes)\nAssertionError: expected 50 to be 64 // Object.is equality\n\n- Expected\n+ Received\n\n- 64\n+ 50\n\n ❯ src/pdf/gabarit-devis.test.tsx:57:34\n     55|     const pdf = await rendreDevis(devisLong(64));\n     56|     const lignes = extraireLignes(pdf);\n     57|     expect(lignes.length).toBe(64);\n       |                                  ^\n     58|   });\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n```",
+      "ts": "2026-09-25T14:19:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Le test confirme : 50 lignes rendues sur 64, sans erreur. Je cherche une constante ou une coupe dans le gabarit.",
+      "ts": "2026-09-25T14:21:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "```\n$ grep -rn \"50\" src/pdf\nsrc/pdf/gabarit-devis.tsx:12:const MAX_LIGNES = 50; // TODO pagination\nsrc/pdf/gabarit-devis.tsx:88:      {lignes.slice(0, MAX_LIGNES).map((l) => (\nsrc/pdf/styles.ts:31:  marginTop: 50,\nsrc/pdf/styles.ts:77:  width: '50%',\n```\n\nc'est ça non ?\n\net le blame autour :\n\n```\n$ git blame -L 8,16 src/pdf/gabarit-devis.tsx\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100  8) import { Document, Page, View, Text } from './rendu';\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100  9) import { styles } from './styles';\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100 10) import type { DonneesPdf } from '@/server/pdf/donnees';\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100 11)\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100 12) const MAX_LIGNES = 50; // TODO pagination\n0a3f5d21 (dev-chantier 2024-03-11 17:42:08 +0100 13)\n2d9b6f04 (dev-chantier 2024-04-02 10:15:51 +0200 14) export function GabaritDevis({ devis, lignes, totaux }: DonneesPdf) {\n2d9b6f04 (dev-chantier 2024-04-02 10:15:51 +0200 15)   const toutesRendues = lignes.length <= MAX_LIGNES;\n2d9b6f04 (dev-chantier 2024-04-02 10:15:51 +0200 16)   return (\n```",
+      "ts": "2026-09-25T14:25:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Oui, c'est la ligne 88 : le gabarit ne garde que les 50 premières lignes et jette le reste sans rien signaler. D'après git blame, la constante date de la première version de l'export, avec un « TODO pagination » jamais traité. Le total est rendu après la boucle, dans un bloc qui ne s'affiche que si toutes les lignes ont été rendues, d'où sa disparition.",
+      "ts": "2026-09-25T14:27:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "ok donc le bug du 482 c'est juste une limite de 50 lignes codée en dur dans le générateur PDF. génial. avant de corriger quoi que ce soit, regarde sur la copie de prod combien de devis dépassent 50 lignes, je veux savoir si c'est un cas isolé.",
+      "ts": "2026-09-25T14:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "Je compte les devis de plus de 50 lignes sur la copie de prod, regroupés par client.",
+      "ts": "2026-09-25T14:32:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "user",
+      "text": "j'ai lancé ta requête :\n\n```\nchantier=> select c.id as client_id, count(*) as devis_longs\nchantier->   from devis d join clients c on c.id = d.client_id\nchantier->  where jsonb_array_length(d.contenu->'lignes') > 50\nchantier->  group by c.id order by 2 desc limit 8;\n              client_id               | devis_longs\n--------------------------------------+-------------\n 3b0f9a64-1c2e-4d7a-8f61-0e5b2c9d4a17 |          41\n a92c7e10-58d3-4b0e-b6a4-77f1d2e3c905 |          17\n 5e6d4c3b-2a19-4f08-9e7d-c6b5a4938271 |          12\n 0d1e2f3a-4b5c-4d6e-8f70-81a2b3c4d5e6 |           9\n f7e6d5c4-b3a2-4918-8076-5e4d3c2b1a09 |           6\n 19283746-5afe-4c0d-b1e2-f3a4b5c6d7e8 |           4\n c0ffee12-3456-4789-abcd-ef0123456789 |           3\n 7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d |           2\n(8 rows)\n```\n\nPerrin c'est la deuxième ligne. donc ça touche tous les devis de plus de 50 lignes, pas seulement ceux de Perrin, les autres clients ne s'en sont juste pas encore plaints.",
+      "ts": "2026-09-25T14:39:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "En effet. Je tente un correctif rapide : retirer la coupe à 50 lignes et laisser la bibliothèque de rendu répartir le tableau sur plusieurs pages.",
+      "ts": "2026-09-25T14:42:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-013",
+      "role": "user",
+      "text": "j'ai regardé le PDF généré avec ton correctif, c'est pire :\n\n```\n$ pnpm test src/pdf\n ❯ src/pdf/gabarit-devis.test.tsx (4 tests | 2 failed) 1388ms\n   × rend l'en-tête du devis\n     → snapshot mismatch: en-tête répété au milieu de la page 2\n   ✓ rend les conditions de paiement\n   ✓ rend un devis de 12 lignes\n   × rend toutes les lignes d'un devis long (64 lignes)\n     → expected 61 to be 64\n```\n\nle tableau est coupé au milieu d'une ligne en bas de page 1, l'en-tête se répète n'importe où, et il manque encore 3 lignes qui passent sous le pied de page. annule.\n\nverif-tests a fait le tour complet en même temps :\n\n<teammate-message teammate_id=\"verif-tests\">\nVérification du correctif « suppression de la coupe à 50 lignes » (copie de travail, non commitée)\n\n```\n$ pnpm test src/pdf src/server/pdf src/server/mail\n RUN  v2.1.4 /home/hugo/dev/chantier\n\n ❯ src/pdf/gabarit-devis.test.tsx (4 tests | 2 failed) 1388ms\n   × rend l'en-tête du devis\n     → snapshot mismatch: en-tête répété au milieu de la page 2\n   ✓ rend les conditions de paiement 50ms\n   ✓ rend un devis de 12 lignes 40ms\n   × rend toutes les lignes d'un devis long (64 lignes)\n     → expected 61 to be 64\n ✓ src/server/pdf/rendre.test.ts (4 tests) 402ms\n   ✓ renvoie application/pdf 2ms\n   ✓ renvoie un tampon non vide 44ms\n   ✓ nomme le fichier avec le numéro du devis 19ms\n   ✓ journalise lignes et pages 35ms\n ✓ src/server/mail/envoi-devis.test.ts (3 tests) 288ms\n   ✓ joint le PDF du devis 10ms\n   ✓ n'envoie pas sans adresse client 52ms\n   ✓ trace l'envoi dans le journal 13ms\n\n Test Files  1 failed | 2 passed (3)\n      Tests  2 failed | 9 passed (11)\n   Start at  13:17:29\n   Duration  5.28s (transform 218ms, setup 73ms, collect 1878ms, tests 4987ms, environment 16ms, prepare 432ms)\n\n FAIL  src/pdf/gabarit-devis.test.tsx > rend l'en-tête du devis\nError: Snapshot `rend l'en-tête du devis 1` mismatched\n\n- Expected\n+ Received\n\n@@ -14,6 +14,9 @@\n     <Text style=\"numero\">D-TEST-0001</Text>\n   </View>\n+  <View style=\"entete\" break>\n+    <Text style=\"numero\">D-TEST-0001</Text>\n+  </View>\n\n ❯ src/pdf/gabarit-devis.test.tsx:21:22\n```\n\nRelevé page par page sur le devis de test de 64 lignes\n\n```\n$ pnpm tsx scripts/pdf-inspecter.ts tmp/devis-64.pdf\npage 1 : en-tête, lignes 1 à 27, ligne 28 coupée au pied de page\npage 2 : lignes 28 (fin) à 55, en-tête répété après la ligne 41\npage 3 : lignes 56 à 61, bloc des totaux absent\nlignes manquantes : 62, 63, 64 (rendues sous la zone du pied de page fixe)\n```\n\nConstats\n- Le pied de page est positionné en absolu, il recouvre le bas de la dernière page au lieu de réserver de la place.\n- L'en-tête répété vient de l'attribut `break` posé sur la vue d'en-tête par le correctif, pas d'une option de la bibliothèque.\n- L'envoi par courriel utilise le même gabarit : ses tests passent mais ne couvrent pas de devis long.\n\nJe n'ai rien modifié ; le correctif est dans la copie de travail.\n</teammate-message>",
+      "ts": "2026-09-25T14:51:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014",
+      "role": "assistant",
+      "text": "J'annule le correctif avec `git checkout -- src/pdf/gabarit-devis.tsx` : le gabarit revient exactement à son état d'avant. Le test des 64 lignes, lui, est conservé.",
+      "ts": "2026-09-25T14:53:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014a",
+      "role": "user",
+      "text": "verif-tests confirme l'état après l'annulation :\n\n<teammate-message teammate_id=\"verif-tests\">\nContrôle après `git checkout -- src/pdf/gabarit-devis.tsx`\n\n```\n$ git status --short\n M src/pdf/gabarit-devis.test.tsx\n?? tmp/devis-64.pdf\n\n$ git diff --stat\n src/pdf/gabarit-devis.test.tsx |   19 +++++++++++++++++++\n 1 files changed, 19 insertions(+), 0 deletions(-)\n\n$ git diff src/pdf/gabarit-devis.tsx\n(aucune sortie)\n\n$ pnpm test src/pdf src/server/pdf src/server/mail\n RUN  v2.1.4 /home/hugo/dev/chantier\n\n ❯ src/pdf/gabarit-devis.test.tsx (4 tests | 1 failed) 912ms\n   ✓ rend l'en-tête du devis 35ms\n   ✓ rend les conditions de paiement 35ms\n   ✓ rend un devis de 12 lignes 25ms\n   × rend toutes les lignes d'un devis long (64 lignes)\n     → expected 50 to be 64\n ✓ src/server/pdf/rendre.test.ts (4 tests) 398ms\n   ✓ renvoie application/pdf 27ms\n   ✓ renvoie un tampon non vide 56ms\n   ✓ nomme le fichier avec le numéro du devis 10ms\n   ✓ journalise lignes et pages 42ms\n ✓ src/server/mail/envoi-devis.test.ts (3 tests) 291ms\n   ✓ joint le PDF du devis 42ms\n   ✓ n'envoie pas sans adresse client 15ms\n   ✓ trace l'envoi dans le journal 5ms\n\n Test Files  1 failed | 2 passed (3)\n      Tests  1 failed | 10 passed (11)\n   Start at  15:04:09\n   Duration  3.52s (transform 532ms, setup 300ms, collect 1775ms, tests 256ms, environment 20ms, prepare 216ms)\n```\n\nConstats\n- Le gabarit est revenu à l'identique de `main` ; seul le fichier de test porte le nouveau cas de 64 lignes.\n- On retrouve l'état d'avant le correctif : 50 lignes rendues sur 64, les autres tests verts.\n- `tmp/devis-64.pdf` est un fichier de travail non suivi, ignoré par Git via `tmp/`.\n\nRien modifié de mon côté.\n</teammate-message>",
+      "ts": "2026-09-25T14:54:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014b",
+      "role": "assistant",
+      "text": "C'est conforme : gabarit identique à `main`, seul le test ajouté reste en modification, et on retrouve l'échec d'origine (50 sur 64).",
+      "ts": "2026-09-25T14:55:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-015",
+      "role": "user",
+      "text": "ok. on touche plus au générateur aujourd'hui, je veux pas d'une rustine sur ce gabarit, il faut repenser la génération des PDF proprement. passe juste le test des 64 lignes en skip avec le numéro du ticket dans le libellé pour qu'on le retrouve.",
+      "ts": "2026-09-25T14:57:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016",
+      "role": "assistant",
+      "text": "C'est fait : le test est marqué `it.skip` avec le libellé « ticket 482 : rend toutes les lignes d'un devis long (64 lignes) ». Aucun autre fichier n'est modifié, `git status` ne montre que le fichier de test.\n\nRécapitulatif de l'après-midi, pour le ticket 482 :\n\n**Symptôme** : chez Électricité Perrin, l'export PDF d'un devis long s'arrête avant la fin, sans message d'erreur, et le total n'apparaît pas.\n\n**Chemin de l'export** : lien « Exporter » → `GET /api/devis/[id]/pdf` → `chargerDevisPourPdf` (relecture du jsonb) → `rendreDevis` avec `gabarit-devis.tsx`, rendu en mémoire dans la requête. L'envoi du devis par courriel passe par le même gabarit.\n\n**Reproduction** : devis de test de 64 lignes en local ; le journal annonce 64 lignes mais seulement 2 pages, et le test ajouté échoue à 50 sur 64.\n\n**Cause** : la constante `MAX_LIGNES = 50` en ligne 12 du gabarit, avec un `slice` en ligne 88 qui jette le reste sans rien signaler ; le bloc des totaux ne s'affiche que si toutes les lignes ont été rendues. La constante date du premier gabarit, avec un « TODO pagination » jamais traité.\n\n**Portée** : sur la copie de prod, des devis de plus de 50 lignes existent chez plusieurs clients ; Perrin est le deuxième par le nombre. Tous les devis de plus de 50 lignes sont touchés.\n\n**Correctif tenté** : retrait de la coupe et pagination automatique. Résultat pire (ligne coupée en bas de page, en-tête répété au milieu, 3 lignes sous le pied de page). Annulé par `git checkout`, gabarit identique à `main`.\n\n**État laissé** : seul le test des 64 lignes est ajouté, en `it.skip` avec le numéro du ticket dans le libellé. Pas de rustine sur le gabarit : la génération des PDF est à repenser.",
+      "ts": "2026-09-25T14:59:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

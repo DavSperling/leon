@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-09-29-planning-chorus",
+    "title": "Planning connecteur Chorus Pro"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour ! Je cale le planning du connecteur Chorus Pro, Hugo est dessus.\nL'engagement : livraison le 1er décembre, pour Bati-Ouest et Le Bihan qui en ont besoin pour facturer leurs clients publics.\nJe veux un découpage en jalons que je puisse suivre au comité du mardi. Tu peux me proposer une trame ?",
+      "ts": "2026-09-29T10:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici une trame de découpage, à affiner avec Hugo :\n\n1. **Cadrage technique** : lecture de la documentation de la plateforme, choix du mode d'échange, accès à l'environnement de test.\n2. **Génération des factures au bon format** : production des fichiers attendus depuis Chantier+.\n3. **Envoi et suivi des statuts** : dépôt des factures, récupération des statuts (déposée, rejetée, mise en paiement).\n4. **Tests sur l'environnement de qualification** avec des factures réalistes.\n5. **Tests avec les clients concernés** sur leurs vrais cas.\n6. **Mise en production et accompagnement.**\n\nPour chaque jalon, je te conseille de noter un critère de « fini » vérifiable (par exemple : « une facture de test acceptée sur l'environnement de qualification »), sinon le suivi au comité devient flou.\n\nLes tests avec les clients sont le point délicat : il faudra un contact chez chacun.",
+      "ts": "2026-09-29T10:03:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Pour Bati-Ouest je vois avec Karim. Côté Le Bihan, mon contact c'est Maëlle Le Bihan, la gérante, je l'appelle cette semaine pour caler leurs tests.\nQu'est-ce que je dois lui demander ?",
+      "ts": "2026-09-29T10:07:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Pour l'appel, je te propose ces questions :\n\n- **Volume** : combien de factures par mois vers des clients publics, à peu près ?\n- **Organisation** : qui chez eux dépose aujourd'hui les factures, et comment ?\n- **Données** : ont-ils les identifiants des structures publiques à facturer (numéro d'engagement, code service) ?\n- **Disponibilité** : qui pourra tester, et sur quelle période ?\n- **Cas particuliers** : avoirs, factures avec retenue de garantie, sous-traitance ?\n\nNote les réponses dans un document partagé avec Hugo, ça lui évitera de les redemander.",
+      "ts": "2026-09-29T10:09:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Merci. Autre chose dans le même planning, j'ai une colonne « clients à venir » pour anticiper la charge de formation.\nPlomberie Rousseau : ils signent en novembre, donc je ne prévois rien pour eux avant. Tu peux me rappeler comment je présente cette colonne pour que ce soit lisible ?",
+      "ts": "2026-09-29T10:14:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Pour une colonne « clients à venir » lisible, je te propose ce format par ligne :\n\n| Client | Étape | Charge prévue | Qui suit |\n|---|---|---|---|\n| (nom) | prospect / devis envoyé / signature attendue | formation, import, rien | commercial ou toi |\n\nConseils :\n- garde **une seule étape** par client, la plus récente ;\n- ne mets de charge que si la signature est acquise, sinon tu surestimes ;\n- relis la colonne chaque semaine avec le commercial, ce sont les infos qui bougent le plus.\n\nJe peux te faire la même chose pour la partie Chorus Pro si tu veux une vue unique.",
+      "ts": "2026-09-29T10:17:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Non ça ira. Fais-moi plutôt la liste des questions à poser à Hugo pour découper les phases, je le vois à 14 h.",
+      "ts": "2026-09-29T10:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici les questions pour Hugo :\n\n1. Quel mode d'échange avec la plateforme envisage-t-il, et pourquoi ?\n2. Combien de temps estime-t-il pour obtenir un accès à l'environnement de test ?\n3. Quelles parties du code de facturation actuel faut-il modifier ?\n4. Quels sont les cas qu'il exclut de la première version ?\n5. A-t-il besoin d'aide pour les tests, et de qui ?\n6. Quel est le jalon le plus risqué selon lui ?\n7. Qu'est-ce qui pourrait nous faire rater la date de livraison, et à quel moment on le saurait ?\n\nLa dernière question est la plus utile pour toi : elle te donne la date à partir de laquelle tu devras alerter.",
+      "ts": "2026-09-29T10:22:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

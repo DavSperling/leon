@@ -1,0 +1,34 @@
+{
+  "faits": [
+    {
+      "id": "F290",
+      "enonce": "Les comités projet ont lieu le mardi à 10 h.",
+      "fiche": "Comité projet",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-003",
+      "extrait": "Les comités projet c'est le mardi à 10 h",
+      "sensible": false
+    },
+    {
+      "id": "F291",
+      "enonce": "Le suivi des projets est un fichier suivi-projets.md mis à jour chaque lundi.",
+      "fiche": "Suivi des projets",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-001",
+      "extrait": "le suivi des projets, c'est le fichier suivi-projets.md dans le dossier pilotage/, je le mets à jour chaque lundi matin",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N122",
+      "enonce": "Script de génération du tableau et sa sortie.",
+      "tour": "t-004",
+      "pourquoi": "code"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

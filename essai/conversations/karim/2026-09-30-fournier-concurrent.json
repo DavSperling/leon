@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-09-30-fournier-concurrent",
+    "title": "Fournier tenté par Batinova"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "galere ce matin. patrick fournier (le gerant de maconnerie fournier) m'appelle, il menace de partir chez batinova. jdois le rappeler, aide moi a preparer",
+      "ts": "2026-09-30T09:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "On va préparer ça. Pour construire ton argumentaire, j'ai besoin de savoir :\n\n1. **Ce que propose Batinova** : prix, fonctionnalités mises en avant.\n2. **La taille du compte** : combien d'utilisateurs chez Fournier.\n3. **La vraie raison** : le prix seul, ou une insatisfaction (bug, support, fonctionnalité manquante) ?\n\nEn général, un client qui « menace » de partir appelle d'abord pour négocier : c'est plutôt bon signe, il te laisse une chance.",
+      "ts": "2026-09-30T09:20:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "batinova est a 39 HT par user par mois, on est plus cher. fournier a 20 licences chez nous. je pense cest surtout le prix, il a pas eu de souci particulier",
+      "ts": "2026-09-30T09:24:36+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Si c'est surtout le prix, voici comment aborder l'appel :\n\n**1. Écouter d'abord**\nLaisse-le dérouler ce qu'on lui a proposé. Demande ce qui est inclus dans l'offre concurrente : formation, reprise des données, support, application mobile.\n\n**2. Ramener au coût total, pas au prix unitaire**\nChanger de logiciel a un coût : migration des devis et des clients, formation de 20 personnes, période de rodage. Sur un compte de cette taille, quelques jours de perturbation coûtent vite plus que l'écart de prix sur l'année.\n\n**3. Rappeler ce qu'il a déjà**\nSes habitudes, son historique, ses modèles de devis : tout est en place.\n\n**4. Garder une marge de manœuvre**\nSi un geste commercial est nécessaire, ne le propose pas pendant ce premier appel : dis que tu vas voir ce qui est possible en interne. Ça te laisse le temps d'en parler à ta direction.\n\nVeux-tu que je te prépare une liste de questions à lui poser ?",
+      "ts": "2026-09-30T09:25:05+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "non ça va. au passage par curiosité c koi les grands types de CRM pour une PME ? on se pose jamais la question",
+      "ts": "2026-09-30T09:26:31+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un panorama général, par grandes familles :\n\n| Type | Pour qui | Points forts | Limites |\n|---|---|---|---|\n| **CRM généraliste en ligne** | toute PME | complet, nombreuses intégrations | peut être lourd à paramétrer |\n| **CRM léger / pipeline** | petites équipes commerciales | simple, visuel, rapide à adopter | peu de fonctions avancées |\n| **CRM intégré à une suite** (gestion, compta) | PME qui veulent un seul outil | données centralisées | souvent moins ergonomique |\n| **CRM métier** (vertical) | un secteur précis | adapté au vocabulaire du métier | écosystème plus restreint |\n\n**Critères de choix** : nombre d'utilisateurs, intégration avec la messagerie et la comptabilité, application mobile, prix par utilisateur, facilité d'export des données si on change un jour.",
+      "ts": "2026-09-30T09:26:44+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "ok merci. bon je rappelle fournier cet aprem",
+      "ts": "2026-09-30T09:29:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Bon courage ! Trois réflexes pour l'appel :\n- prends des notes de ce qu'il dit sur l'offre concurrente ;\n- ne t'engage sur aucun chiffre pendant l'appel ;\n- termine en fixant une date pour lui revenir avec une proposition.",
+      "ts": "2026-09-30T09:29:35+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

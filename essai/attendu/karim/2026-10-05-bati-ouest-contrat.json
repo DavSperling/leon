@@ -1,0 +1,65 @@
+{
+  "faits": [
+    {
+      "id": "F069",
+      "enonce": "SARL Bati-Ouest a 60 licences Chantier+.",
+      "fiche": "SARL Bati-Ouest",
+      "alias": [
+        "Bati-Ouest"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "ils ont 60 licences",
+      "sensible": false
+    },
+    {
+      "id": "F070",
+      "enonce": "Le contrat annuel de SARL Bati-Ouest s'élève à 42 000 € HT.",
+      "fiche": "SARL Bati-Ouest",
+      "alias": [
+        "Bati-Ouest"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "contrat annuel 42k HT",
+      "sensible": false
+    },
+    {
+      "id": "F071",
+      "enonce": "Depuis le 1er octobre 2026, l'interlocutrice chez SARL Bati-Ouest est Stéphanie Caron, nouvelle DSI.",
+      "fiche": "SARL Bati-Ouest",
+      "alias": [
+        "Bati-Ouest"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "stephanie caron, nouvelle DSI, cest elle notre contact depuis le 1er octobre",
+      "sensible": false
+    },
+    {
+      "id": "F072",
+      "enonce": "SARL Bati-Ouest a besoin du connecteur Chorus Pro, attendu le 1er décembre, pour facturer ses marchés publics.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": [
+        "Chorus Pro"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "ils en ont besoin pour facturer leurs marchés publics, le connecteur est prevu pour le 1er decembre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [
+    {
+      "ancien": "F282",
+      "nouveau": "F071"
+    }
+  ],
+  "conflits": [
+    {
+      "a": "F009",
+      "b": "F069"
+    }
+  ]
+}

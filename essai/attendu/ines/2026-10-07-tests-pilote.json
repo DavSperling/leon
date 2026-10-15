@@ -1,0 +1,53 @@
+{
+  "faits": [
+    {
+      "id": "F213",
+      "enonce": "Le pilote de l'application mobile v2 chez SARL Bati-Ouest démarre le 19 octobre 2026 avec 10 compagnons.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "le pilote chez SARL Bati-Ouest démarre le 19 octobre avec 10 compagnons",
+      "sensible": false
+    },
+    {
+      "id": "F214",
+      "enonce": "La livraison de l'application mobile v2 est décalée au 5 novembre 2026.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "la livraison de l'application mobile v2 est décalée au 5 novembre",
+      "sensible": false
+    },
+    {
+      "id": "F204",
+      "enonce": "Inès Moreau forme les 10 compagnons de SARL Bati-Ouest le 16 octobre 2026, avant le pilote.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "je forme moi-même les 10 compagnons de Bati-Ouest le 16 octobre, sur place",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N089",
+      "enonce": "Sortie des tests end-to-end.",
+      "tour": "t-004",
+      "pourquoi": "sortie d'outil"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

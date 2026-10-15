@@ -1,0 +1,163 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-10-08-revue-agents-chorus",
+    "title": "Revue du connecteur Chorus Pro par agents"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Revue du connecteur Chorus Pro, branche hugo/chorus-connecteur. Je veux un regard extérieur avant d'aller plus loin.\n\nLance deux relecteurs en parallèle :\n- relecteur-api : client HTTP (src/server/chorus/client.ts), authentification du compte technique, construction du Factur-X (src/server/chorus/facturx.ts), gestion des erreurs et des statuts de dépôt ;\n- relecteur-tests : la suite en bac à sable (tests/chorus/sandbox.test.ts), les 5 cas de test qu'on a écrits, avec les retours bruts de la plateforme quand ça échoue.\n\nChacun te rend un rapport avec constats, chiffres et recommandation. Tu me fais la synthèse ensuite. Ils ne modifient rien sur la branche.",
+      "ts": "2026-10-08T09:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je lance relecteur-api et relecteur-tests, en lecture seule sur la branche.",
+      "ts": "2026-10-08T09:30:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Les deux relecteurs tournent. En attendant je relis le journal du dernier dépôt en bac à sable.",
+      "ts": "2026-10-08T09:31:15+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003a",
+      "role": "user",
+      "text": "en attendant les deux relecteurs, ci-veille a fini de regarder le dernier pipeline de la branche :\n\n<teammate-message teammate_id=\"ci-veille\">\nRapport ci-veille : dernier pipeline sur hugo/chorus-connecteur (commit 7c1e9a2)\n\nPérimètre : jobs lint, typecheck, tests unitaires et build. Le job d'intégration en bac à sable n'est pas couvert par ce rapport, c'est le travail de relecteur-tests.\n\nRésumé\n| Étape | Résultat | Durée |\n|---|---|---|\n| checkout | ok | 3 s |\n| install | ok | 12 s |\n| lint | **échec** (4 avertissements, `--max-warnings=0`) | 23 s |\n| typecheck | ok | 37 s |\n| tests unitaires | ok, 457 tests | 51 s |\n| build | ok | 1 min 12 s |\n\nJournal brut\n```\n2026-10-08T07:12:05.0000000Z ##[group]Run actions/checkout\n2026-10-08T07:12:05.4970000Z Syncing repository: atelier/chantier\n2026-10-08T07:12:06.3110000Z Fetching the repository\n2026-10-08T07:12:08.3610000Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7c1e9a2:refs/remotes/origin/hugo/chorus-connecteur\n2026-10-08T07:12:10.5690000Z HEAD is now at 7c1e9a2 chorus: dépôt et suivi des statuts\n2026-10-08T07:12:10.5690000Z ##[endgroup]\n2026-10-08T07:12:24.5690000Z ##[group]Run pnpm install --frozen-lockfile\n2026-10-08T07:12:25.0700000Z Lockfile is up to date, resolution step is skipped\n2026-10-08T07:12:26.1270000Z Progress: resolved 1219, reused 1216, downloaded 3, added 1219, done\n2026-10-08T07:12:26.8060000Z .../node_modules/esbuild postinstall: Done\n2026-10-08T07:12:27.8400000Z Done in 12.1s\n2026-10-08T07:12:27.8400000Z ##[endgroup]\n2026-10-08T07:12:35.8400000Z ##[group]Run pnpm lint\n2026-10-08T07:12:38.3090000Z > chantier@2026.10.1 lint /home/runner/work/chantier\n2026-10-08T07:12:38.9460000Z > eslint . --max-warnings=0\n2026-10-08T07:12:41.2410000Z \n2026-10-08T07:12:41.3390000Z /home/runner/work/chantier/src/server/chorus/client.ts\n2026-10-08T07:12:41.6340000Z   23:7   warning  'DELAI_MAX_MS' is assigned a value but never used  @typescript-eslint/no-unused-vars\n2026-10-08T07:12:42.2970000Z   301:5  warning  Unexpected console statement                       no-console\n2026-10-08T07:12:44.4120000Z \n2026-10-08T07:12:45.0470000Z /home/runner/work/chantier/src/server/chorus/facturx.ts\n2026-10-08T07:12:46.5120000Z   14:1   warning  Import \"node:zlib\" should occur before import of \"./xml\"  import/order\n2026-10-08T07:12:46.6640000Z   402:9  warning  Prefer template literal                            prefer-template\n2026-10-08T07:12:46.7150000Z \n2026-10-08T07:12:48.3640000Z ✖ 4 problems (0 errors, 4 warnings)\n2026-10-08T07:12:50.7870000Z \n2026-10-08T07:12:51.6530000Z ESLint found too many warnings (maximum: 0).\n2026-10-08T07:12:53.2690000Z ##[error]Process completed with exit code 1.\n2026-10-08T07:12:53.2690000Z ##[endgroup]\n2026-10-08T07:13:08.2690000Z ##[group]Run pnpm typecheck\n2026-10-08T07:13:09.6660000Z > tsc --noEmit -p tsconfig.json\n2026-10-08T07:13:11.5340000Z Done in 36.9s\n2026-10-08T07:13:11.5340000Z ##[endgroup]\n2026-10-08T07:13:26.5340000Z ##[group]Run pnpm test --project unit --reporter=dot\n2026-10-08T07:13:27.5820000Z > vitest run --project unit --reporter=dot\n2026-10-08T07:13:29.0350000Z ·································································\n2026-10-08T07:13:30.9660000Z ·································································\n2026-10-08T07:13:31.6580000Z ··························\n2026-10-08T07:13:32.9720000Z  Test Files  61 passed (61)\n2026-10-08T07:13:33.2190000Z       Tests  457 passed (457)\n2026-10-08T07:13:34.7070000Z    Duration  51.06s\n2026-10-08T07:13:34.7070000Z ##[endgroup]\n2026-10-08T07:13:51.7070000Z ##[group]Run pnpm build\n2026-10-08T07:13:51.9610000Z > next build\n2026-10-08T07:13:52.4840000Z    ▲ Next.js 15.0.3\n2026-10-08T07:13:54.3750000Z  ✓ Compiled successfully\n2026-10-08T07:13:56.2170000Z  ✓ Generating static pages (34/34)\n2026-10-08T07:13:58.0040000Z ƒ /api/chorus/depots                       0 B                0 B\n2026-10-08T07:13:58.9450000Z ƒ /api/chorus/depots/[id]/statut          0 B                0 B\n2026-10-08T07:13:58.9450000Z ##[endgroup]\n```\n\nLe seul rouge est le lint, et uniquement pour des avertissements :\n- `client.ts:23` : constante `DELAI_MAX_MS` déclarée mais jamais lue (le délai est passé en dur plus bas, l. 288) ;\n- `client.ts:301` : un `console.log` de débogage resté dans la boucle de sondage des statuts ;\n- `facturx.ts:14` : ordre des imports ;\n- `facturx.ts:402` : concaténation de chaînes au lieu d'un gabarit.\nAucun ne change le comportement.\n\nInventaire de la branche\n```\n$ wc -l src/server/chorus/*.ts tests/chorus/*.ts\n   121 src/server/chorus/comptes.ts\n    74 src/server/chorus/comptes.test.ts\n   412 src/server/chorus/client.ts\n   233 src/server/chorus/client.test.ts\n    58 src/server/chorus/erreurs.ts\n   538 src/server/chorus/facturx.ts\n   187 src/server/chorus/facturx.test.ts\n    31 src/server/chorus/index.ts\n    96 src/server/chorus/statuts.ts\n    64 src/server/chorus/statuts.test.ts\n   142 tests/chorus/sandbox.test.ts\n  1956 total\n\n$ ls tests/chorus/fixtures\ncas-1.json  cas-2.json  cas-3.json  cas-4.json  cas-5.json  structure-test.json\n\n$ git log --oneline main..hugo/chorus-connecteur\n7c1e9a2 chorus: dépôt et suivi des statuts\n5d0b4e8 chorus: suite bac à sable, cinq cas\na17f3c6 chorus: génération Factur-X (PDF/A-3 + XML)\ne9c2d71 chorus: table chorus_comptes et lecture des identifiants\n40f8b19 chorus: client HTTP et jeton du compte technique\n1b6a0e3 chorus: squelette du module\n\n$ git diff --stat main...hugo/chorus-connecteur\n db/migrations/0030_chorus_comptes.sql      |  18 +\n db/migrations/0032_chorus_depots.sql       |  22 +\n package.json                               |   3 +-\n pnpm-lock.yaml                             |  41 +-\n src/app/api/chorus/depots/[id]/statut/route.ts |  37 +\n src/app/api/chorus/depots/route.ts         |  64 +\n src/server/chorus/client.test.ts           | 233 +\n src/server/chorus/client.ts                | 412 +\n src/server/chorus/comptes.test.ts          |  74 +\n src/server/chorus/comptes.ts               | 121 +\n src/server/chorus/erreurs.ts               |  58 +\n src/server/chorus/facturx.test.ts          | 187 +\n src/server/chorus/facturx.ts               | 538 +\n src/server/chorus/index.ts                 |  31 +\n src/server/chorus/statuts.test.ts          |  64 +\n src/server/chorus/statuts.ts               |  96 +\n tests/chorus/sandbox.test.ts               | 142 +\n vitest.workspace.ts                        |  12 +-\n 18 files changed, 2149 insertions(+), 5 deletions(-)\n```\n\nRemarques sur la forme\n- `client.ts` et `facturx.ts` dépassent 400 lignes ; c'est au-dessus du reste du dépôt (médiane autour de 120 lignes par fichier dans `src/server`), sans que ce soit un problème en soi.\n- Les numéros de migration sautent de 0030 à 0032 : la 0031 est celle des jetons mobiles, fusionnée sur main entre-temps. Pas de conflit, l'ordre d'application reste bon.\n- `vitest.workspace.ts` sépare déjà les projets `unit` et `integration` ; la commande de la CI ne lance que `unit` à cette étape.\n- `pnpm-lock.yaml` : trois paquets ajoutés (génération PDF/A et validation XML), aucune mise à jour de version sur les paquets existants.\n- Prettier : aucun fichier hors format sur la branche.\n\nDurée totale du pipeline : 2 min 58 s, contre 2 min 41 s en moyenne sur main cette semaine ; l'écart vient de l'installation des trois paquets et du build des deux nouvelles routes.\n\nJe n'ai rien modifié.\n</teammate-message>",
+      "ts": "2026-10-08T09:35:55+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003b",
+      "role": "assistant",
+      "text": "Reçu : pipeline vert hors lint, et le lint ne tombe que sur quatre avertissements de forme (constante inutilisée, `console.log`, ordre d'import, concaténation). Je les corrigerai à la fin de la revue, pas maintenant pour ne pas toucher la branche pendant que les relecteurs la lisent.",
+      "ts": "2026-10-08T09:40:35+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"relecteur-tests\">\nRapport relecteur-tests : suite bac à sable du connecteur Chorus Pro (branche hugo/chorus-connecteur, commit 7c1e9a2)\n\nCe que j'ai fait\n- Lancé `pnpm test tests/chorus/sandbox.test.ts` trois fois de suite pour écarter les échecs aléatoires (résultats identiques aux trois passages).\n- Relevé pour chaque cas le statut de dépôt renvoyé par le bac à sable et le motif de rejet quand il y en a un.\n- Relu les fixtures `tests/chorus/fixtures/*.json`.\n\nRésultats\n\n| Cas | Fixture | Résultat | Retour plateforme |\n|---|---|---|---|\n| 1 | facture simple, un taux de TVA | OK | DEPOSEE puis MISE_A_DISPOSITION en 38 s |\n| 2 | facture multi-taux (10 % et 20 %) | OK | DEPOSEE puis MISE_A_DISPOSITION en 41 s |\n| 3 | facture d'acompte 30 % | ÉCHEC | REJETEE, « Type de facture incohérent avec le cadre de facturation » |\n| 4 | facture de solde après acompte | ÉCHEC | REJETEE, « Référence à la facture d'acompte introuvable » |\n| 5 | facture d'acompte avec retenue de garantie | ÉCHEC | REJETEE, « Type de facture incohérent avec le cadre de facturation » |\n\nConstat principal : 3 des 5 cas de test du connecteur échouent, et les trois échecs portent sur des factures d'acompte (cas 3 et 5 directement, cas 4 parce que le solde référence un acompte qui n'a jamais été accepté). Les deux cas sans acompte passent de façon stable.\n\nAutres constats\n- Le cas 4 dépend du cas 3 : tant que l'acompte est rejeté, le solde ne peut pas passer. Il faudrait l'isoler avec une facture d'acompte créée par la fixture plutôt que par le cas 3.\n- Les tests attendent la mise à disposition par sondage toutes les 5 s pendant 120 s maximum ; la suite complète prend 3 min 50. Acceptable pour un test d'intégration, pas pour la CI à chaque push.\n- Aucun test ne couvre un rejet pour SIRET destinataire inconnu, alors que le client HTTP a une branche dédiée pour ce cas.\n\nRecommandation\n- Ne pas considérer le connecteur comme prêt pour les acomptes en l'état.\n- Sortir la suite bac à sable de la CI par défaut et la lancer à la demande (`pnpm test:chorus`).\n- Ajouter un cas de rejet SIRET.\n</teammate-message>",
+      "ts": "2026-10-08T09:45:15+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "Le rapport de relecteur-tests est arrivé. J'attends relecteur-api.",
+      "ts": "2026-10-08T09:45:55+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"relecteur-api\">\nRapport relecteur-api : client Chorus Pro et génération Factur-X (branche hugo/chorus-connecteur, commit 7c1e9a2)\n\nPérimètre relu : `src/server/chorus/client.ts` (412 lignes), `src/server/chorus/facturx.ts` (538 lignes), `src/server/chorus/statuts.ts` (96 lignes), `src/server/chorus/comptes.ts` (121 lignes).\n\n1. Authentification\n- Le jeton du compte technique est récupéré au premier appel et mis en mémoire, avec renouvellement 60 s avant l'expiration annoncée. Correct.\n- Les identifiants sont lus dans `comptes.ts` et stockés chiffrés en base. Rien en clair dans le code ni dans les journaux : j'ai vérifié les 14 appels à `logger`.\n\n2. Client HTTP\n- Reprises sur 502, 503 et 504 avec attente exponentielle, 4 essais maximum. Correct.\n- Pas de reprise sur 429 : la plateforme peut limiter en cas de dépôt groupé. À ajouter, mais non bloquant à court terme.\n- Les statuts de dépôt sont bien mappés vers nos statuts internes, sauf `SUSPENDUE`, qui tombe dans `inconnu`.\n\n3. Factur-X\n- Le XML embarqué dans le PDF/A-3 est valide pour les factures standard : les deux factures des cas 1 et 2 passent le validateur hors ligne sans avertissement.\n- Le connecteur ne gère pas encore les avoirs : `facturx.ts` ne connaît qu'un seul type de document, aucun champ de facture d'origine n'est prévu, et il n'existe pas de route pour déposer un avoir. Un avoir émis aujourd'hui partirait comme une facture.\n- Pour les acomptes, le type de document est bien positionné, mais le cadre de facturation est toujours le même que pour une facture standard.\n\n4. Hypothèse sur les rejets d'acompte (non vérifiée)\nJe soupçonne que les rejets viennent du cadre de facturation : peut-être que la plateforme attend un cadre différent pour une facture d'acompte et qu'il suffirait de le changer selon le type de document. Je n'ai pas pu le confirmer : la documentation du bac à sable que j'ai trouvée dans le dépôt est ancienne, et je n'ai pas d'accès à la plateforme pour tester.\n\nRecommandation\n- Traiter les avoirs avant toute mise en service, ou bloquer explicitement leur émission vers Chorus Pro.\n- Ajouter la reprise sur 429 et le statut `SUSPENDUE`.\n- Ne pas modifier le cadre de facturation sur la seule base de l'hypothèse ci-dessus sans un essai en bac à sable.\n</teammate-message>",
+      "ts": "2026-10-08T09:51:05+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "assistant",
+      "text": "Synthèse des deux rapports.\n\n**Ce qui marche** : authentification du compte technique, reprises réseau, Factur-X des factures standard, cas 1 et 2 stables en bac à sable.\n\n**Ce qui bloque**\n- les factures d'acompte : tous les échecs relevés par relecteur-tests sont sur ce type, et le cas de solde en dépend ;\n- les avoirs : absents du connecteur, d'après relecteur-api.\n\n**Ce qui est secondaire** : reprise sur 429, statut `SUSPENDUE`, suite bac à sable trop lente pour la CI, cas de rejet SIRET manquant.\n\n**L'hypothèse de relecteur-api** sur le cadre de facturation n'est pas vérifiée ; il recommande lui-même de ne pas s'en servir sans essai.\n\n**Options pour les acomptes**\n- A. Les corriger maintenant : il faut d'abord confirmer la cause en bac à sable, puis isoler les cas 3 à 5. Plusieurs jours, avec une incertitude sur la cause.\n- B. Les sortir du périmètre de la première version et livrer sans.\n\nJe n'ai rien modifié sur la branche.",
+      "ts": "2026-10-08T09:52:35+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "user",
+      "text": "Décision : on reporte les factures d'acompte à une version 2 du connecteur Chorus Pro. On n'a pas le temps de chercher la cause proprement d'ici la livraison, et la v1 doit marcher sur les factures standard. Note-le dans le README du connecteur, section limites connues.",
+      "ts": "2026-10-08T09:55:05+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "J'ajoute la section « Limites connues » au README et je marque les cas 3, 4 et 5 en `skip` avec un renvoi vers le README.",
+      "ts": "2026-10-08T09:55:55+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "$ pnpm test tests/chorus/sandbox.test.ts\n\n ✓ tests/chorus/sandbox.test.ts (5 tests | 3 skipped) 81204ms\n   ✓ cas 1 : facture simple, un taux de TVA  38412ms\n   ✓ cas 2 : facture multi-taux  41187ms\n   ↓ cas 3 : facture d'acompte 30 % [skipped]\n   ↓ cas 4 : facture de solde après acompte [skipped]\n   ↓ cas 5 : facture d'acompte avec retenue de garantie [skipped]\n\n Test Files  1 passed (1)\n      Tests  2 passed | 3 skipped (5)\n   Duration  81.93s\n\net verif-format est passé sur les fichiers touchés :\n\n<teammate-message teammate_id=\"verif-format\">\nRapport verif-format : fichiers modifiés depuis le début de la revue\n\n```\n$ git status --short\n M README.md\n M src/server/chorus/README.md\n M tests/chorus/sandbox.test.ts\n\n$ pnpm prettier --check src/server/chorus/README.md tests/chorus/sandbox.test.ts\nChecking formatting...\n[warn] src/server/chorus/README.md\n[warn] Code style issues found in the above file. Run Prettier with --write to fix.\n\n$ pnpm prettier --write src/server/chorus/README.md\nsrc/server/chorus/README.md 41ms\n\n$ pnpm eslint tests/chorus/sandbox.test.ts\n(aucune sortie)\n\n$ pnpm markdownlint src/server/chorus/README.md\nsrc/server/chorus/README.md:3 MD022/blanks-around-headings Headings should be surrounded by blank lines [Expected: 1; Actual: 0; Below]\nsrc/server/chorus/README.md:27 MD032/blanks-around-lists Lists should be surrounded by blank lines [Context: \"- cas 3\"]\nsrc/server/chorus/README.md:40 MD047/single-trailing-newline Files should end with a single newline character\n```\n\nConstats\n- Prettier ne reformatait que des retours à la ligne dans le tableau du README ; corrigé avec `--write`, aucune modification de contenu.\n- Les trois remarques de markdownlint sont des lignes vides manquantes et le saut de ligne final. Je ne les ai pas corrigées, le dépôt ne lance pas markdownlint en CI.\n- `README.md` à la racine apparaît modifié mais seul le saut de ligne final a changé (éditeur) : `git diff --ignore-all-space README.md` ne renvoie rien. À exclure du commit.\n- Les libellés des `it.skip` respectent la forme des autres tests.\n</teammate-message>",
+      "ts": "2026-10-08T10:00:15+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "Suite verte, trois cas ignorés avec leur motif.",
+      "ts": "2026-10-08T10:00:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "user",
+      "text": "pour les avoirs ouvre un ticket avec le constat de relecteur-api. et autre chose : Marion Caradec reprend les tests du connecteur Chorus Pro, c'est elle qui fera tourner la suite et qui suivra les tickets. prépare-lui une note de passation.",
+      "ts": "2026-10-08T10:02:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-013",
+      "role": "assistant",
+      "text": "Ticket « Connecteur Chorus Pro : avoirs » créé avec le constat de relecteur-api. J'écris la note de passation.",
+      "ts": "2026-10-08T10:03:25+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014",
+      "role": "assistant",
+      "text": "Note de passation écrite dans `docs/chorus/passation-tests.md` :\n\n- **Lancer la suite** : `pnpm test:chorus` (hors CI), environ une minute et demie avec les cas ignorés ;\n- **Variables** : `CHORUS_SANDBOX_URL`, `CHORUS_CLIENT_ID`, `CHORUS_CLIENT_SECRET` dans `.env.local`, à demander à Hugo, jamais dans le dépôt ;\n- **Comptes techniques de test** : chargés par `pnpm tsx scripts/chorus-comptes-sandbox.ts` ;\n- **Fixtures** : `tests/chorus/fixtures/`, une par cas ;\n- **Où regarder quand ça rejette** : la table `chorus_depots` (colonne `motif_rejet`) et le journal `chorus` du serveur ;\n- **Tickets ouverts** : acomptes (reportés, voir le README) et avoirs.\n\nJe n'y ai pas mis l'hypothèse de relecteur-api.",
+      "ts": "2026-10-08T10:06:05+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-015",
+      "role": "user",
+      "text": "Marion a déjà une erreur en lançant la suite :\n\n$ pnpm test:chorus\n FAIL  tests/chorus/sandbox.test.ts > cas 1 : facture simple, un taux de TVA\nChorusAuthError: 401 Unauthorized\n{\n  \"error\": \"invalid_token\",\n  \"error_description\": \"The access token expired\"\n}\n ❯ ChorusClient.request src/server/chorus/client.ts:188:13\n ❯ ChorusClient.deposer src/server/chorus/client.ts:241:20\n ❯ tests/chorus/sandbox.test.ts:44:22\n\nelle a bien les trois variables.\n\nce qu'elle m'a envoyé en plus :\n\n```\n$ printenv | grep '^CHORUS_' | sed 's/=.*/=***/'\nCHORUS_SANDBOX_URL=***\nCHORUS_CLIENT_ID=***\nCHORUS_CLIENT_SECRET=***\n\n$ ls -la .cache/\ntotal 16\ndrwxr-xr-x  3 marion marion 4096 oct.   8 10:24 .\ndrwxr-xr-x 14 marion marion 4096 oct.   8 10:22 ..\n-rw-r--r--  1 marion marion  1187 sept. 30 17:02 chorus-token.json\ndrwxr-xr-x  2 marion marion 4096 oct.   8 10:23 vitest\n\n$ DEBUG=chorus:* pnpm test:chorus 2>&1 | head -20\n  chorus:auth jeton lu depuis .cache/chorus-token.json +0ms\n  chorus:auth jeton présent, pas de renouvellement +1ms\n  chorus:client POST /factures/deposer +0ms\n  chorus:client <- 401 invalid_token +212ms\n  chorus:client pas de reprise sur 401 +0ms\n FAIL  tests/chorus/sandbox.test.ts > cas 1 : facture simple, un taux de TVA\nChorusAuthError: 401 Unauthorized\n    at ChorusClient.request (src/server/chorus/client.ts:188:13)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at ChorusClient.deposer (src/server/chorus/client.ts:241:20)\n    at tests/chorus/sandbox.test.ts:44:22\n    at file:///home/marion/dev/chantier/node_modules/@vitest/runner/dist/index.js:146:14\n    at file:///home/marion/dev/chantier/node_modules/@vitest/runner/dist/index.js:533:5\n    at runTest (file:///home/marion/dev/chantier/node_modules/@vitest/runner/dist/index.js:1056:11)\n```",
+      "ts": "2026-10-08T10:31:05+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016",
+      "role": "assistant",
+      "text": "Le jeton mis en cache dans `.cache/chorus-token.json` par une ancienne session est relu tel quel par les tests sans vérifier sa date. Qu'elle supprime ce fichier ; je corrige la lecture du cache pour ignorer un jeton expiré.",
+      "ts": "2026-10-08T10:31:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-017",
+      "role": "user",
+      "text": "ça passe pour elle, cas 1 et 2 verts. dernier truc : l'hypothèse de relecteur-api sur les rejets, on ne la met nulle part tant que personne ne l'a vérifiée en bac à sable.\n\nle correctif du cache de jeton, de mon côté :\n\n```\n$ git diff --stat\n src/server/chorus/client.ts      | 11 ++++++++---\n src/server/chorus/client.test.ts | 24 ++++++++++++++++++++++++\n 2 files changed, 32 insertions(+), 3 deletions(-)\n\n$ pnpm test src/server/chorus/client.test.ts\n ✓ src/server/chorus/client.test.ts (19 tests) 312ms\n\n Test Files  1 passed (1)\n      Tests  19 passed (19)\n   Duration  1.94s\n\n$ git log --oneline -3\na8e45f1 chorus: ignore un jeton expiré dans le cache local\nc71d0e2 chorus: cas d'acompte ignorés en bac à sable\n3fa61b8 chorus: README, limites connues\n\n$ git show --stat --format='%h %s' HEAD\na8e45f1 chorus: ignore un jeton expiré dans le cache local\n src/server/chorus/client.ts      | 11 ++++++++---\n src/server/chorus/client.test.ts | 24 ++++++++++++++++++++++++\n```",
+      "ts": "2026-10-08T10:41:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-018",
+      "role": "assistant",
+      "text": "D'accord. Elle reste seulement dans le rapport de relecteur-api, pas dans le README ni dans la note de passation.",
+      "ts": "2026-10-08T10:42:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-019",
+      "role": "user",
+      "text": "ok. pousse.\n\nj'ai tenté de pousser moi-même :\n\n```\n$ git push\n> chantier@2026.10.1 prepush /home/hugo/dev/chantier\n> pnpm lint && pnpm typecheck && pnpm test --project unit --reporter=dot\n\n> eslint . --max-warnings=0\n\n/home/hugo/dev/chantier/src/server/chorus/client.ts\n  23:7   warning  'DELAI_MAX_MS' is assigned a value but never used  @typescript-eslint/no-unused-vars\n  301:5  warning  Unexpected console statement                       no-console\n\n✖ 2 problems (0 errors, 2 warnings)\n\nESLint found too many warnings (maximum: 0).\n ELIFECYCLE  Command failed with exit code 1.\nerror: failed to push some refs to 'origin'\n\n$ git status -sb\n## hugo/chorus-connecteur...origin/hugo/chorus-connecteur [ahead 4]\n```\n\nah les avertissements de ci-veille. vire-les et repousse.",
+      "ts": "2026-10-08T10:43:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-020",
+      "role": "assistant",
+      "text": "Poussé sur `hugo/chorus-connecteur` : README avec les limites connues, cas d'acompte ignorés, correctif du cache de jeton, note de passation.",
+      "ts": "2026-10-08T10:43:40+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

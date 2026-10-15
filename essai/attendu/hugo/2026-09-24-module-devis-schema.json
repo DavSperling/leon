@@ -1,0 +1,74 @@
+{
+  "faits": [
+    {
+      "id": "F124",
+      "enonce": "Dans l'API de Chantier+, les montants sont des entiers en centimes.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "dans l'API, les montants sont des entiers en centimes",
+      "sensible": false
+    },
+    {
+      "id": "F125",
+      "enonce": "La mise en production de la refonte du module devis est prévue le 20 octobre 2026.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-013",
+      "extrait": "la mise en production de la refonte du module devis est prévue le 20/10",
+      "sensible": false
+    },
+    {
+      "id": "F126",
+      "enonce": "Les lignes de devis passent dans une table dédiée devis_lignes.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "les lignes de devis sortent du jsonb et passent dans une table dédiée devis_lignes",
+      "sensible": false
+    },
+    {
+      "id": "F127",
+      "enonce": "Hugo Martin est le responsable technique de la refonte du module devis.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "je suis le responsable technique de la refonte du module devis",
+      "sensible": false
+    },
+    {
+      "id": "F150",
+      "enonce": "Chaque devis garde l'historique de ses versions.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-009",
+      "extrait": "chaque devis garde l'historique de ses versions",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N044",
+      "enonce": "Migration SQL et code TypeScript générés.",
+      "tour": "t-008",
+      "pourquoi": "code"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

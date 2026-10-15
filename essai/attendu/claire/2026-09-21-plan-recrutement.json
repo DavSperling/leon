@@ -1,0 +1,60 @@
+{
+  "faits": [
+    {
+      "id": "F001",
+      "enonce": "Atelier Numérique Lebrun recrute un développeur mobile React Native en CDI.",
+      "fiche": "Recrutement développeur mobile",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-001",
+      "extrait": "recruter un développeur mobile React Native, en CDI",
+      "sensible": false
+    },
+    {
+      "id": "F002",
+      "enonce": "Le recrutement du développeur mobile est confié à l'agence Talents Ouest.",
+      "fiche": "Talents Ouest",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Le recrutement est confié à Talents Ouest",
+      "sensible": false
+    },
+    {
+      "id": "F003",
+      "enonce": "Talents Ouest facture 18 % du salaire brut annuel du candidat recruté.",
+      "fiche": "Talents Ouest",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "Ils prennent 18 % du salaire brut annuel du candidat recruté",
+      "sensible": false
+    },
+    {
+      "id": "F032",
+      "enonce": "L'interlocutrice chez Talents Ouest est Camille Joubert.",
+      "fiche": "Talents Ouest",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "Camille Joubert, notre interlocutrice chez Talents Ouest",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N001",
+      "enonce": "Brouillon d'annonce d'offre d'emploi rédigé par l'assistant.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    },
+    {
+      "id": "N002",
+      "enonce": "Durée légale du préavis de démission en CDI.",
+      "tour": "t-008",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

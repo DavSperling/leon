@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-10-09-relances-clients",
+    "title": "Relances clients de la semaine"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Point relances clients de fin de semaine. Ma règle, pour rappel : je relance tout client sans réponse au bout de 5 jours ouvrés. Ni avant, ni après.\nJe te donne la situation et tu m'aides à faire la liste ?",
+      "ts": "2026-10-09T15:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Oui, donne-moi la situation client par client : dernière action, date, et si tu attends une réponse de leur part.",
+      "ts": "2026-10-09T15:31:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "- Charpentes Morvan : la démo chez eux est confirmée pour le 20 octobre. Erwan Morvan veut absolument voir l'appli mobile pendant la démo, il a des équipes sur plusieurs chantiers\n- Couverture Le Bihan : bonne nouvelle, ils renouvellent pour 2027, Maëlle me l'a confirmé au téléphone hier\n- Menuiserie Dupont : mail envoyé lundi à Gérard pour la date de la deuxième session de formation, pas de réponse",
+      "ts": "2026-10-09T15:35:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Merci. Avec ta règle des 5 jours ouvrés :\n\n| Client | Dernière action | Relance ? |\n|---|---|---|\n| Charpentes Morvan | démo confirmée | non, rien en attente de leur côté |\n| Couverture Le Bihan | renouvellement confirmé | non, à acter par écrit côté commercial |\n| Menuiserie Dupont | mail lundi, sans réponse | **lundi prochain** : le délai de 5 jours ouvrés sera atteint |\n\nPour Morvan, un point de préparation : s'il veut voir l'application mobile, il faut vérifier ce qui pourra être montré à ce moment-là, puisqu'elle est en pilote.",
+      "ts": "2026-10-09T15:38:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui je vois avec Inès ce qu'on peut montrer sans risque. Prépare-moi déjà le mail de relance pour Gérard Dupont, ton cordial, court, je l'enverrai lundi.",
+      "ts": "2026-10-09T15:41:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un projet de mail :\n\n> Objet : Deuxième session de formation Chantier+\n>\n> Bonjour Monsieur Dupont,\n>\n> Je me permets de revenir vers vous au sujet de la deuxième session de formation. Pourriez-vous m'indiquer les disponibilités de vos équipes dans les semaines à venir ? Camille s'adaptera à votre planning.\n>\n> N'hésitez pas à me dire si vous préférez en parler par téléphone.\n>\n> Bien cordialement,\n> Nadia Benali\n> Atelier Numérique Lebrun\n\nTu peux l'enregistrer en brouillon pour lundi matin.",
+      "ts": "2026-10-09T15:43:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait, je le mets en brouillon. Il manque quelqu'un dans ma liste ou c'est bon pour cette semaine ?",
+      "ts": "2026-10-09T15:47:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Avec ce que tu m'as donné, c'est complet pour cette semaine. Récapitulatif de tes actions :\n\n- **lundi** : envoyer la relance à Gérard Dupont (brouillon prêt) ;\n- **avant la démo Morvan** : caler avec Inès ce qui peut être montré de l'application mobile ;\n- **Le Bihan** : vérifier avec le commercial que le renouvellement est bien acté par écrit.\n\nBon week-end !",
+      "ts": "2026-10-09T15:49:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

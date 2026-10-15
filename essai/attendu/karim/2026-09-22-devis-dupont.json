@@ -1,0 +1,62 @@
+{
+  "faits": [
+    {
+      "id": "F055",
+      "enonce": "Le devis de Menuiserie Dupont porte sur 25 licences, le déploiement et la formation.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "25 licences + deploiement + formation",
+      "sensible": false
+    },
+    {
+      "id": "F054",
+      "enonce": "Gérard Dupont est le gérant de Menuiserie Dupont.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "gerard dupont, cest le gerant",
+      "sensible": false
+    },
+    {
+      "id": "F052",
+      "enonce": "Le devis de Menuiserie Dupont s'élève à 18 400 € HT.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "total du devis 18 400 € HT",
+      "sensible": false
+    },
+    {
+      "id": "F053",
+      "enonce": "Menuiserie Dupont paie ses factures à 45 jours.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "dupont c 45j, cest ce qu'on a calé avec lui",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N021",
+      "enonce": "Définition générale de l'acompte.",
+      "tour": "t-008",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

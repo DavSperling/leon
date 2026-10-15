@@ -1,0 +1,53 @@
+{
+  "faits": [
+    {
+      "id": "F020",
+      "enonce": "Le prix de Chantier+ passe de 55 € à 59 € HT par utilisateur et par mois au 1er janvier 2027.",
+      "fiche": "Chantier+",
+      "alias": [
+        "Chantier plus",
+        "l'appli"
+      ],
+      "typeFiche": "produit",
+      "tour": "t-005",
+      "extrait": "on passe de 55 € à 59 € HT au 1er janvier 2027",
+      "sensible": false
+    },
+    {
+      "id": "F021",
+      "enonce": "Les clients existants gardent le prix de 55 € jusqu'au renouvellement de leur contrat.",
+      "fiche": "Tarifs Chantier+ 2027",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-005",
+      "extrait": "Les clients existants gardent 55 € jusqu'au renouvellement de leur contrat",
+      "sensible": false
+    },
+    {
+      "id": "F022",
+      "enonce": "Batinova facture 39 € HT par utilisateur et par mois.",
+      "fiche": "Batinova",
+      "alias": [],
+      "typeFiche": "concurrent",
+      "tour": "t-003",
+      "extrait": "Batinova est à 39 € HT par utilisateur et par mois",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N007",
+      "enonce": "Ce que le RGPD impose en général sur une hausse de tarif annoncée par courriel.",
+      "tour": "t-007",
+      "pourquoi": "question générale"
+    },
+    {
+      "id": "N009",
+      "enonce": "Idée d'un forfait illimité « un jour peut-être ».",
+      "tour": "t-007",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

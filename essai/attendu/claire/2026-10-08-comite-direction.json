@@ -1,0 +1,66 @@
+{
+  "faits": [
+    {
+      "id": "F029",
+      "enonce": "Couverture Le Bihan renouvelle son contrat Chantier+ pour 2027.",
+      "fiche": "Couverture Le Bihan",
+      "alias": [
+        "Le Bihan"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "Couverture Le Bihan renouvelle pour 2027",
+      "sensible": false
+    },
+    {
+      "id": "F030",
+      "enonce": "Maçonnerie Fournier reste client avec une remise de 10 %.",
+      "fiche": "Maçonnerie Fournier",
+      "alias": [
+        "Fournier"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "Fournier reste chez nous, avec une remise de 10 %",
+      "sensible": false
+    },
+    {
+      "id": "F031",
+      "enonce": "La cotisation de la Mutuelle Atlantique Santé augmente de 6 % au 1er janvier 2027.",
+      "fiche": "Mutuelle Atlantique Santé",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "la Mutuelle Atlantique Santé augmente de 6 % au 1er janvier 2027",
+      "sensible": false
+    },
+    {
+      "id": "F034",
+      "enonce": "Décision : le connecteur Chorus Pro passe avant la refonte du module devis jusqu'au 1er décembre.",
+      "fiche": "Priorité Chorus Pro",
+      "alias": [],
+      "typeFiche": "decision",
+      "tour": "t-007",
+      "extrait": "le connecteur Chorus Pro passe avant la refonte du module devis, jusqu'au 1er décembre",
+      "sensible": false
+    },
+    {
+      "id": "F035",
+      "enonce": "Le comité de direction a lieu le jeudi à 8 h 30.",
+      "fiche": "Comité de direction",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-001",
+      "extrait": "tous les jeudis à 8 h 30",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [],
+  "conflits": [
+    {
+      "a": "F240",
+      "b": "F031"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "faits": [
+    {
+      "id": "F062",
+      "enonce": "L'interlocuteur chez Électricité Perrin est Damien Perrin, le gérant.",
+      "fiche": "Électricité Perrin",
+      "alias": [
+        "Perrin"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "damien perrin le gerant",
+      "sensible": false
+    },
+    {
+      "id": "F061",
+      "enonce": "Électricité Perrin signale (ticket 482) que l'export PDF des devis coupe les lignes au-delà de 50 postes.",
+      "fiche": "Électricité Perrin",
+      "alias": [
+        "Perrin"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "ticket 482 : quand il exporte un devis en pdf ça coupe au dela de 50 lignes",
+      "sensible": false
+    },
+    {
+      "id": "F063",
+      "enonce": "Électricité Perrin utilise 8 licences Chantier+.",
+      "fiche": "Électricité Perrin",
+      "alias": [
+        "Perrin"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "ils ont 8 licences",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N024",
+      "enonce": "Formule d'excuse type pour un client mécontent.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

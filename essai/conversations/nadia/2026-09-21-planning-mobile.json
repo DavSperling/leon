@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-nadia-2026-09-21-planning-mobile",
+    "title": "Rétroplanning appli mobile v2"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Salut ! Je prépare le planning de l'appli mobile v2 pour le comité de demain matin et je veux partir de la fin.\n\nCe qu'on sait à date :\n- la livraison de l'appli mobile v2 est prévue le 15 octobre, c'est le jalon qu'on a annoncé en interne\n- Inès est responsable du projet, le design n'est pas encore calé\n- le client pilote, c'est Bati-Ouest : ce sont eux qui vont tester l'appli sur leurs chantiers avant tout le monde\n\nTu peux me proposer un rétroplanning à rebours depuis la livraison ? Format liste, avec les jalons.",
+      "ts": "2026-09-21T11:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bien sûr. Voici une première proposition de rétroplanning, à ajuster avec Inès. Je raisonne en jours ouvrés avant la livraison (J) :\n\n**Brouillon de rétroplanning (à valider)**\n- **J-25** : maquettes validées (parcours principaux : chantier du jour, pointage, photos)\n- **J-20** : fin du développement des écrans principaux\n- **J-18** : gel fonctionnel, plus aucune nouvelle demande\n- **J-12** : recette interne (Inès + une personne du support)\n- **J-10** : correction des anomalies bloquantes\n- **J-5** : recette avec le client pilote\n- **J-2** : version candidate\n- **J** : livraison\n\nQuelques remarques :\n- la recette pilote à J-5 laisse peu de marge si le client remonte des anomalies ;\n- le design n'étant pas calé, J-25 est le jalon le plus fragile ;\n- il faudrait un point hebdo court avec Inès pour suivre l'avancement.\n\nTu veux que je le transforme en tableau ?",
+      "ts": "2026-09-21T11:02:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Non, la liste c'est bien. Par contre :\n- la recette pilote à J-5 c'est trop serré, on glisse à J-8\n- fusionne gel fonctionnel et recette interne, on n'a pas assez de monde pour faire les deux séparément\n- vire la ligne « version candidate », Inès ne travaille pas comme ça\n\nEt dans le plan de communication, je mets qui côté client ?",
+      "ts": "2026-09-21T11:06:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici la version modifiée :\n\n**Rétroplanning v2 (brouillon)**\n- **J-25** : maquettes validées\n- **J-20** : fin du développement des écrans principaux\n- **J-15** : gel fonctionnel + recette interne\n- **J-12** : correction des anomalies bloquantes\n- **J-8** : recette avec le client pilote\n- **J-8 à J-1** : corrections issues du pilote\n- **J** : livraison\n\nPour le plan de communication côté client, il te faut :\n1. un **interlocuteur nommé** chez le client pilote, idéalement quelqu'un de technique qui pourra organiser les tests sur chantier ;\n2. une personne de chez vous qui centralise les retours (Inès ou toi) ;\n3. un canal unique pour les remontées (mail dédié ou billets de support).\n\nTu as déjà un nom chez eux ?",
+      "ts": "2026-09-21T11:09:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui, notre contact chez eux c'est Olivier Ménard, leur directeur technique. C'est lui qui organisera les tests avec les équipes.\nCôté nous, c'est moi qui centralise, Inès est déjà bien chargée.",
+      "ts": "2026-09-21T11:14:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Parfait, je l'intègre. Plan de communication proposé :\n\n- **Interlocuteur client** : Olivier Ménard (directeur technique)\n- **Centralisation des retours** : toi\n- **Canal** : un mail récapitulatif par semaine pendant la recette pilote, et les anomalies saisies en billets de support pour garder la trace\n- **Points** : un appel de lancement avant la recette pilote, puis un appel court chaque semaine\n\nJe te suggère aussi de prévenir Olivier Ménard assez tôt pour qu'il réserve du temps aux équipes qui testeront, les chantiers ne s'arrêtent pas pour nous.",
+      "ts": "2026-09-21T11:16:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Top. Fais-moi une version courte en puces que je colle dans le mail à l'équipe. Pas de J-x, juste les grandes étapes dans l'ordre, ils détestent les rétroplannings.",
+      "ts": "2026-09-21T11:22:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici une version courte pour l'équipe :\n\n> Bonjour à tous,\n>\n> Voici les grandes étapes de l'appli mobile v2 d'ici la livraison :\n> - validation des maquettes\n> - développement des écrans principaux\n> - gel fonctionnel et recette interne\n> - recette avec le client pilote, puis corrections\n> - livraison à la date annoncée\n>\n> Je centralise les retours du client pilote. On en reparle au comité.\n>\n> Nadia\n\nTu peux l'envoyer tel quel ou ajouter une ligne sur le point hebdo avec Inès.",
+      "ts": "2026-09-21T11:24:00+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

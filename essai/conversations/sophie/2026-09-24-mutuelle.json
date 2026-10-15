@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-09-24-mutuelle",
+    "title": "Hausse de la mutuelle collective"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nNotre mutuelle collective, la Mutuelle Atlantique Santé, vient de nous envoyer son avis d'échéance : la cotisation augmente de 4,5 % au 1er janvier 2027. Je dois en informer les salariés. Pourriez-vous m'aider à préparer cela ?",
+      "ts": "2026-09-24T10:10:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nAvec plaisir. Avant de rédiger quoi que ce soit, quelques points à clarifier :\n\n1. **La répartition de la cotisation** : quelle part prend en charge l'employeur, et quelle part reste aux salariés ? C'est ce qui détermine l'impact réel sur le bulletin de paie.\n2. **La structure de la cotisation** : est-elle forfaitaire (montant fixe), en pourcentage du plafond de la Sécurité sociale, ou différente selon la situation familiale (isolé, duo, famille) ?\n3. **L'acte juridique de mise en place** : décision unilatérale de l'employeur, accord collectif ou référendum. Une simple hausse tarifaire de l'assureur ne modifie pas cet acte, mais il est utile de savoir où se trouve la clé de répartition.\n4. **Le calendrier** : une information des salariés un à deux mois avant la prise d'effet est une bonne pratique, même si aucun délai légal précis ne s'impose pour une hausse tarifaire.\n\nPouvez-vous me donner ces éléments ?",
+      "ts": "2026-09-24T10:10:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci. L'employeur prend en charge 60 % de la cotisation, les salariés le reste. La cotisation est forfaitaire.\n\nEst-ce que l'employeur a un minimum légal à respecter sur sa part ?",
+      "ts": "2026-09-24T10:13:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Oui. Depuis la généralisation de la complémentaire santé en 2016, l'employeur doit financer **au moins 50 %** de la cotisation correspondant à la couverture minimale obligatoire (le « panier de soins »).\n\nQuelques précisions générales :\n- ce minimum s'apprécie sur la couverture du salarié seul ; l'extension aux ayants droit peut être financée différemment selon l'acte de mise en place ;\n- l'employeur peut évidemment aller au-delà, ce qui est votre cas ;\n- la part patronale est exonérée de cotisations sociales dans certaines limites, mais soumise au forfait social au-delà de 11 salariés, et réintégrée dans le revenu imposable du salarié.\n\nEn cas de hausse tarifaire, si la clé de répartition est exprimée en pourcentage, la hausse se répartit automatiquement selon cette même clé : votre entreprise absorbe donc la majorité de l'augmentation.",
+      "ts": "2026-09-24T10:14:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Très bien, nous sommes donc au-dessus du minimum. Pourriez-vous me rédiger un projet de note d'information aux salariés, sobre et factuelle ?",
+      "ts": "2026-09-24T10:17:44+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un projet de note, à adapter :\n\n---\n\n**Objet : évolution de la cotisation de la mutuelle collective au 1er janvier 2027**\n\nBonjour à toutes et à tous,\n\nNotre organisme de complémentaire santé, la Mutuelle Atlantique Santé, nous a informés d'une évolution de sa cotisation à compter du 1er janvier 2027.\n\nCe qui change :\n- la cotisation augmente de 4,5 % ;\n- les garanties restent identiques ;\n- la répartition entre l'entreprise et les salariés est inchangée : l'entreprise continue de prendre en charge 60 % de la cotisation.\n\nConcrètement, la part restant à votre charge augmentera de quelques euros par mois ; le montant exact figurera sur votre bulletin de paie de janvier 2027.\n\nJe reste à votre disposition pour toute question.\n\n[Prénom Nom]\n[Fonction]\n\n---\n\nVous pouvez ajouter, si vous le souhaitez, un exemple chiffré sur la base du forfait actuel : cela évite beaucoup de questions individuelles.",
+      "ts": "2026-09-24T10:18:19+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Merci, c'est une bonne base. Je vais la retravailler avant de la soumettre à Claire, rien ne part sans sa validation.",
+      "ts": "2026-09-24T10:21:11+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

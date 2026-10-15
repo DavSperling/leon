@@ -1,0 +1,107 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-ines-2026-09-30-abandon-quickcharts",
+    "title": "Remplacement de rn-quickcharts"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Problème sur les graphiques de l'appli mobile v2. Thomas a installé la build de test sur son téléphone perso, un Android 15, et l'écran d'accueil plante dès que les graphiques s'affichent. Voilà le crash remonté :\n\nE/AndroidRuntime: FATAL EXCEPTION: main\nProcess: fr.essai.chantierplus.mobile, PID: 21544\njava.lang.NoSuchMethodError: No virtual method setLayerType(ILandroid/graphics/Paint;Z)V in class Landroid/view/View;\n    at com.rnquickcharts.BarChartView.onAttachedToWindow(BarChartView.java:88)\n    at android.view.View.dispatchAttachedToWindow(View.java:22451)\n    at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3512)\n\nLe crash vient de `com.rnquickcharts`, donc de rn-quickcharts. Sur Android 12 à 14 tout va bien, c'est uniquement Android 15. Regarde dans `node_modules/rn-quickcharts` la version installée et s'il y a une version plus récente qui corrigerait ça.\n\nLa trace complète telle que Thomas me l'a envoyée (logcat filtré sur le process de l'appli) :\n\n```\n--------- beginning of crash\nE/AndroidRuntime: FATAL EXCEPTION: main\nProcess: fr.essai.chantierplus.mobile, PID: 21544\njava.lang.NoSuchMethodError: No virtual method setLayerType(ILandroid/graphics/Paint;Z)V in class Landroid/view/View; or its super classes (declaration of 'android.view.View' appears in /system/framework/framework.jar)\n    at com.rnquickcharts.BarChartView.onAttachedToWindow(BarChartView.java:88)\n    at android.view.View.dispatchAttachedToWindow(View.java:22451)\n    at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3512)\n    at android.view.ViewGroup.addViewInner(ViewGroup.java:5531)\n    at android.view.ViewGroup.addView(ViewGroup.java:5310)\n    at com.facebook.react.views.view.ReactViewGroup.addView(ReactViewGroup.java:524)\n    at com.facebook.react.uimanager.ViewGroupManager.addView(ViewGroupManager.java:38)\n    at com.facebook.react.uimanager.NativeViewHierarchyManager.manageChildren(NativeViewHierarchyManager.java:533)\n    at com.facebook.react.uimanager.UIViewOperationQueue$ManageChildrenOperation.execute(UIViewOperationQueue.java:217)\n    at com.facebook.react.uimanager.UIViewOperationQueue$1.run(UIViewOperationQueue.java:915)\n    at com.facebook.react.uimanager.UIViewOperationQueue.flushPendingBatches(UIViewOperationQueue.java:1028)\n    at com.facebook.react.uimanager.UIViewOperationQueue.access$2600(UIViewOperationQueue.java:47)\n    at com.facebook.react.uimanager.UIViewOperationQueue$DispatchUIFrameCallback.doFrameGuarded(UIViewOperationQueue.java:1088)\n    at com.facebook.react.uimanager.GuardedFrameCallback.doFrame(GuardedFrameCallback.java:29)\n    at com.facebook.react.modules.core.ReactChoreographer$ReactChoreographerDispatcher.doFrame(ReactChoreographer.java:175)\n    at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1337)\n    at android.view.Choreographer.doCallbacks(Choreographer.java:1137)\n    at android.view.Choreographer.doFrame(Choreographer.java:1006)\n    at android.os.Handler.handleCallback(Handler.java:959)\n    at android.os.Handler.dispatchMessage(Handler.java:100)\n    at android.os.Looper.loopOnce(Looper.java:232)\n    at android.os.Looper.loop(Looper.java:317)\n    at android.app.ActivityThread.main(ActivityThread.java:8705)\n    at java.lang.reflect.Method.invoke(Native Method)\nI/Process: Sending signal. PID: 21544 SIG: 9\nW/ActivityTaskManager: Force finishing activity fr.essai.chantierplus.mobile/.MainActivity\n```\n\nCôté JS, juste avant :\n\n```\nI/ReactNativeJS: [accueil] chargement des indicateurs (4 chantiers)\nI/ReactNativeJS: [GraphiqueBarres] rendu orientation=horizontale n=4\nI/ReactNativeJS: [GraphiqueBarres] rendu orientation=verticale n=6\n```",
+      "ts": "2026-09-30T10:45:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je regarde la version installée et le journal des modifications du paquet.",
+      "ts": "2026-09-30T10:46:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Version 2.4.1 installée, c'est la dernière publiée. Le journal des modifications ne mentionne aucune compatibilité Android 15.",
+      "ts": "2026-09-30T10:48:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "J'ai été voir le dépôt de rn-quickcharts directement. Verdict : rn-quickcharts n'est plus maintenue depuis mars 2026. Dernier commit en mars, le mainteneur a archivé le dépôt, et il y a une issue ouverte « crash on Android 15 » sans réponse depuis des semaines. Donc rn-quickcharts plante sur Android 15 et personne ne corrigera.\n\nOn ne va pas maintenir un fork pour deux graphiques. Décision : on passe de rn-quickcharts à graphiko-native pour l'appli mobile v2. J'ai revérifié graphiko-native : elle est publiée sous licence MIT, donc aucun souci pour nous, et finalement il y a bien des barres horizontales, c'était juste mal rangé dans la doc.\n\nHeureusement on avait fait l'enveloppe `GraphiqueBarres`, donc normalement seul `src/composants/GraphiqueBarres.tsx` change. Retire rn-quickcharts, ajoute graphiko-native, et réécris l'enveloppe.",
+      "ts": "2026-09-30T10:53:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "Je retire rn-quickcharts du `package.json`, j'ajoute graphiko-native et je réécris `GraphiqueBarres.tsx`.",
+      "ts": "2026-09-30T10:55:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Dépendance remplacée et `GraphiqueBarres.tsx` réécrit. Les écrans n'ont pas changé. Il reste à réinstaller les dépendances natives côté iOS.",
+      "ts": "2026-09-30T10:59:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Dépendances natives iOS réinstallées. Sur iOS ça s'affiche mais les barres horizontales sont inversées (le premier chantier est en bas) et les libellés accessibles ont disparu, le lecteur d'écran d'iOS lit juste « graphique ». Sur Android 15 plus de crash, c'est déjà ça.\n\n[graphiko] warn: prop \"libelleAccessible\" is not supported on <Barre>, did you mean \"accessibilityLabel\"?\n[graphiko] warn: horizontal bars are rendered bottom-to-top by default, set ordre=\"haut-bas\" to invert\n\nPour info, la sortie de la réinstallation côté iOS, tout est passé sans erreur :\n\n```\n$ cd apps/mobile/ios && pod install\nAuto-linking React Native modules for target `ChantierPlus`: RNGestureHandler, RNScreens, RNSVG, RNSafeArea, graphiko-native\nRemoving rn-quickcharts\nAnalyzing dependencies\nDownloading dependencies\nInstalling graphiko-native (local)\nGenerating Pods project\nIntegrating client project\nPod installation complete! There are 61 dependencies from the Podfile and 74 total pods installed.\n\n$ pnpm --filter mobile ios\ninfo Found Xcode workspace \"ChantierPlus.xcworkspace\"\ninfo Building (using \"xcodebuild -workspace ChantierPlus.xcworkspace -configuration Debug -scheme ChantierPlus\")\nsuccess Successfully built the app\ninfo Installing and launching your app on the simulator\nsuccess Successfully launched the app\n```\n\nEt la capture de ce que lit le lecteur d'écran sur le graphique horizontal, via l'inspecteur d'accessibilité :\n\n```\nÉlément : graphique\n  Rôle : image\n  Libellé : (vide)\n  Enfants accessibles : 0\n```",
+      "ts": "2026-09-30T11:03:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Les deux avertissements donnent la solution. Je passe `accessibilityLabel` sur chaque barre et `ordre=\"haut-bas\"` sur le graphique horizontal.",
+      "ts": "2026-09-30T11:04:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Changements dans `GraphiqueBarres.tsx` :\n- `libelleAccessible` remplacé par `accessibilityLabel` sur chaque `<Barre>` ;\n- `ordre=\"haut-bas\"` quand `orientation` vaut `horizontale` ;\n- les couleurs viennent toujours du thème via `useTheme()`, passées en `couleurBarre` et `couleurAxe`.\nAucun écran touché.",
+      "ts": "2026-09-30T11:07:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"verif-android\">\nRapport : écran d'accueil avec graphiko-native sur les émulateurs Android\n\nCe que j'ai fait\n- Construit la build de debug avec graphiko-native à la place de rn-quickcharts.\n- Lancé l'écran d'accueil sur quatre émulateurs (API 31, 33, 34 et 35), dix ouvertures à froid par émulateur.\n- Relevé les plantages, les avertissements JS et le temps d'affichage des deux graphiques.\n\nRésultats\n| Émulateur | Ouvertures | Plantages | Avertissements | Temps d'affichage moyen des graphiques |\n|---|---|---|---|---|\n| API 31 | 10 | 0 | 2 | 312 ms |\n| API 33 | 10 | 0 | 2 | 298 ms |\n| API 34 | 10 | 0 | 2 | 305 ms |\n| API 35 | 10 | 0 | 2 | 331 ms |\n\nAvertissements relevés (les mêmes partout)\n```\n[graphiko] warn: prop \"libelleAccessible\" is not supported on <Barre>, did you mean \"accessibilityLabel\"?\n[graphiko] warn: horizontal bars are rendered bottom-to-top by default, set ordre=\"haut-bas\" to invert\n```\n\nBuild\n```\n$ pnpm --filter mobile android\n> Task :app:mergeDebugNativeLibs\n> Task :app:stripDebugDebugSymbols\n> Task :app:packageDebug\n> Task :app:installDebug\nInstalling APK 'app-debug.apk' on 'emulateur-api35' for :app:debug\nInstalled on 1 device.\nBUILD SUCCESSFUL in 1m 47s\n412 actionable tasks: 38 executed, 374 up-to-date\n```\n\nCommandes lancées\n```\n$ for api in 31 33 34 35; do\n    emulator -avd emulateur-api$api -no-snapshot-load &\n    adb wait-for-device\n    pnpm --filter mobile android --deviceId emulateur-api$api\n    for i in $(seq 1 10); do\n      adb shell am force-stop fr.essai.chantierplus.mobile\n      adb shell am start -W -n fr.essai.chantierplus.mobile/.MainActivity | grep TotalTime\n    done\n  done\n```\n\nTemps de lancement à froid (TotalTime, moyenne sur dix lancements)\n```\nemulateur-api31 : 1 482 ms\nemulateur-api33 : 1 437 ms\nemulateur-api34 : 1 451 ms\nemulateur-api35 : 1 509 ms\n```\n\nRecherche de plantages dans les journaux\n```\n$ adb logcat -d | grep -c \"FATAL EXCEPTION\"\n0\n```\n\nConstats\n- Plus aucun plantage, y compris sur l'émulateur API 35.\n- Les deux avertissements sont ceux que tu as vus sur iOS, ils ne sont pas propres à Android.\n- La taille de l'APK de debug bouge très peu (+0,4 Mo).\n\nRecommandation\nCorriger les deux propriétés signalées par les avertissements ; rien d'autre à signaler côté Android.\n</teammate-message>",
+      "ts": "2026-09-30T11:08:50+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009b",
+      "role": "assistant",
+      "text": "Le rapport Android est cohérent avec iOS : aucun plantage sur les quatre émulateurs, et les deux avertissements sont ceux que je viens de corriger dans `GraphiqueBarres.tsx`.",
+      "ts": "2026-09-30T11:10:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "Nickel, le lecteur d'écran relit « Chantier Rezé : 65 % » et l'ordre est bon. Dernière chose : il reste des références à rn-quickcharts quelque part ? Je veux que plus rien ne traîne, y compris dans les mocks de test.\n\nSortie de l'inspecteur d'accessibilité après correction, pour garder une trace :\n\n```\nÉlément : graphique\n  Rôle : image\n  Enfants accessibles : 4\n    Barre 1 : « Chantier Rezé : 65 % »\n    Barre 2 : « Chantier Orvault : 40 % »\n    Barre 3 : « Chantier Carquefou : 85 % »\n    Barre 4 : « Chantier Vertou : 20 % »\n```\n\n(Ce sont les chantiers de démo de la base locale, pas des vrais.)",
+      "ts": "2026-09-30T11:11:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "Je cherche toutes les mentions de rn-quickcharts dans le dépôt.",
+      "ts": "2026-09-30T11:13:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "Il en restait deux : un mock dans `__mocks__/rn-quickcharts.ts` et une ligne dans `tests/setup.ts`. Supprimés tous les deux, plus aucune référence. Les tests des écrans d'accueil passent.\n\nLe détail de la recherche et des tests :\n\n```\n$ rg -n \"quickcharts\" --hidden -g '!node_modules' -g '!*.lock'\napps/mobile/__mocks__/rn-quickcharts.ts:1:// mock de rn-quickcharts pour les tests\napps/mobile/tests/setup.ts:14:jest.mock('rn-quickcharts');\n\n(après suppression)\n$ rg -n \"quickcharts\" --hidden -g '!node_modules' -g '!*.lock'\n(aucun résultat)\n\n$ pnpm --filter mobile test -- accueil\n PASS  src/ecrans/__tests__/Accueil.test.tsx\n PASS  src/composants/__tests__/GraphiqueBarres.test.tsx\nTests:       11 passed, 11 total\nTime:        5.102 s\n```\n\nLes identifiants de test des barres dans les tests de bout en bout n'ont pas été touchés dans cette session, ils pointent peut-être encore vers les anciens noms.",
+      "ts": "2026-09-30T11:15:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

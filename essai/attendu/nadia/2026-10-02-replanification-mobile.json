@@ -1,0 +1,64 @@
+{
+  "faits": [
+    {
+      "id": "F298",
+      "enonce": "La livraison de l'application mobile v2 est décalée au 5 novembre 2026.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "On passe du 15 octobre au 5 novembre pour la livraison",
+      "sensible": false
+    },
+    {
+      "id": "F299",
+      "enonce": "Le décalage de l'application mobile v2 vient du retard des maquettes et de l'abandon de rn-quickcharts.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "les maquettes de Lucas arrivent en retard, et Inès a dû abandonner rn-quickcharts",
+      "sensible": false
+    },
+    {
+      "id": "F300",
+      "enonce": "Le pilote chez SARL Bati-Ouest démarre le 19 octobre 2026 avec 10 compagnons.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "le pilote chez Bati-Ouest démarre le 19 octobre comme prévu, avec 10 compagnons",
+      "sensible": false
+    },
+    {
+      "id": "F301",
+      "enonce": "Claire Lebrun a validé le nouveau planning de l'application mobile v2 le 2 octobre 2026.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-007",
+      "extrait": "Claire a validé le nouveau planning ce matin (le 2)",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [],
+  "remplace": [
+    {
+      "ancien": "F280",
+      "nouveau": "F298"
+    }
+  ],
+  "conflits": []
+}

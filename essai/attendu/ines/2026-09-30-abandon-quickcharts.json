@@ -1,0 +1,62 @@
+{
+  "faits": [
+    {
+      "id": "F190",
+      "enonce": "rn-quickcharts n'est plus maintenue depuis mars 2026.",
+      "fiche": "rn-quickcharts",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-004",
+      "extrait": "rn-quickcharts n'est plus maintenue depuis mars 2026",
+      "sensible": false
+    },
+    {
+      "id": "F191",
+      "enonce": "rn-quickcharts plante sur Android 15.",
+      "fiche": "rn-quickcharts",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-004",
+      "extrait": "rn-quickcharts plante sur Android 15",
+      "sensible": false
+    },
+    {
+      "id": "F192",
+      "enonce": "Décision : l'application mobile v2 abandonne rn-quickcharts et passe à graphiko-native.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-004",
+      "extrait": "Décision : on passe de rn-quickcharts à graphiko-native pour l'appli mobile v2.",
+      "sensible": false
+    },
+    {
+      "id": "F201",
+      "enonce": "graphiko-native est publiée sous licence MIT.",
+      "fiche": "graphiko-native",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-004",
+      "extrait": "elle est publiée sous licence MIT",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N084",
+      "enonce": "Code de migration des composants graphiques.",
+      "tour": "t-009",
+      "pourquoi": "code"
+    }
+  ],
+  "remplace": [
+    {
+      "ancien": "F184",
+      "nouveau": "F192"
+    }
+  ],
+  "conflits": []
+}

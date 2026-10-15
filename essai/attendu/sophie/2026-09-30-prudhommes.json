@@ -1,0 +1,46 @@
+{
+  "faits": [
+    {
+      "id": "F241",
+      "enonce": "Yann Le Goff réclame 24 000 € à l'entreprise devant les prud'hommes.",
+      "fiche": "Yann Le Goff",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-001",
+      "extrait": "Yann Le Goff, réclame 24 000 € à l'entreprise devant le conseil de prud'hommes",
+      "sensible": true
+    },
+    {
+      "id": "F242",
+      "enonce": "L'audience de conciliation du dossier Le Goff a lieu le 13 novembre 2026.",
+      "fiche": "Yann Le Goff",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "L'audience de conciliation est fixée au 13 novembre 2026",
+      "sensible": true
+    },
+    {
+      "id": "F243",
+      "enonce": "Maître Hélène Vasseur facture un forfait de 3 500 € HT pour le dossier Le Goff.",
+      "fiche": "Cabinet Vasseur Avocats",
+      "alias": [
+        "Vasseur"
+      ],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "Maître Vasseur nous facture un forfait de 3 500 € HT pour l'ensemble du dossier",
+      "sensible": true
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N103",
+      "enonce": "Brouillon de courrier à l'avocate.",
+      "tour": "t-008",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

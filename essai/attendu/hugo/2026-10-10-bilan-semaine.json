@@ -1,0 +1,54 @@
+{
+  "faits": [
+    {
+      "id": "F160",
+      "enonce": "La démonstration du connecteur Chorus Pro chez SARL Bati-Ouest est prévue le 4 novembre 2026.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": [
+        "Chorus Pro"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-006",
+      "extrait": "la démo du connecteur Chorus Pro chez Bati-Ouest est prévue le 4 novembre",
+      "sensible": false
+    },
+    {
+      "id": "F161",
+      "enonce": "La refonte du module devis est faite à 70 % au 9 octobre 2026.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-004",
+      "extrait": "module devis : on était à 70 % hier soir, vendredi 9",
+      "sensible": false
+    },
+    {
+      "id": "F162",
+      "enonce": "Hugo Martin rédige un bilan technique chaque vendredi pour l'équipe.",
+      "fiche": "Bilan technique hebdomadaire",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-001",
+      "extrait": "je rédige un bilan technique chaque vendredi pour l'équipe",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N057",
+      "enonce": "Bavardage de fin de semaine.",
+      "tour": "t-010",
+      "pourquoi": "bavardage"
+    },
+    {
+      "id": "N058",
+      "enonce": "« Il faudrait peut-être réécrire tout le back en Go. »",
+      "tour": "t-008",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

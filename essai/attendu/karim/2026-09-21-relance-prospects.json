@@ -1,0 +1,50 @@
+{
+  "faits": [
+    {
+      "id": "F050",
+      "enonce": "L'interlocutrice chez Plomberie Rousseau est Sandrine Rousseau, la gérante.",
+      "fiche": "Plomberie Rousseau",
+      "alias": [
+        "Rousseau"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "mon contact c sandrine rousseau la gerante",
+      "sensible": false
+    },
+    {
+      "id": "F051",
+      "enonce": "L'interlocuteur chez Charpentes Morvan est Erwan Morvan, le gérant.",
+      "fiche": "Charpentes Morvan",
+      "alias": [
+        "Morvan"
+      ],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "erwan morvan le gerant",
+      "sensible": false
+    },
+    {
+      "id": "F079",
+      "enonce": "Charpentes Morvan compte 30 salariés.",
+      "fiche": "Charpentes Morvan",
+      "alias": [
+        "Morvan"
+      ],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "boite de 30 salaries",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N020",
+      "enonce": "Brouillon de mail de relance générique.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

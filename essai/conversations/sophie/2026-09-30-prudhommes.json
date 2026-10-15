@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-09-30-prudhommes",
+    "title": "Dossier prud'homal : préparation"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nJe dois suivre, côté administratif, un dossier prud'homal pour l'entreprise. Un ancien commercial, Yann Le Goff, réclame 24 000 € à l'entreprise devant le conseil de prud'hommes.\n\nPourriez-vous m'expliquer comment se prépare la première audience, celle de conciliation ?",
+      "ts": "2026-09-30T14:00:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nVoici comment se prépare, en général, l'audience devant le bureau de conciliation et d'orientation (BCO) :\n\n**Le rôle de l'audience**\nLe BCO, composé d'un conseiller employeur et d'un conseiller salarié, cherche d'abord un accord entre les parties. À défaut, il oriente l'affaire vers le bureau de jugement et peut ordonner des mesures de mise en état (communication de pièces, calendrier).\n\n**Côté entreprise**\n1. **Présence** : l'employeur doit comparaître en personne ou être représenté (par un avocat, ou par un salarié ou dirigeant muni d'un pouvoir écrit).\n2. **Position sur la conciliation** : décider à l'avance, avec votre conseil, si une proposition transactionnelle est envisageable et dans quelle enveloppe.\n3. **Dossier** : rassembler toutes les pièces relatives à la relation de travail et à la rupture.\n4. **Barème** : pour les indemnités de licenciement sans cause réelle et sérieuse, un barème indicatif existe en conciliation, fonction de l'ancienneté.\n\nAvez-vous déjà un avocat sur ce dossier, et connaissez-vous la date d'audience ?",
+      "ts": "2026-09-30T14:00:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Oui. L'audience de conciliation est fixée au 13 novembre 2026. Nous sommes défendus par Maître Hélène Vasseur, du Cabinet Vasseur Avocats.\n\nQuelles pièces dois-je lui rassembler ?",
+      "ts": "2026-09-30T14:03:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici la liste des pièces à préparer pour votre avocate, classées par thème :\n\n**Relation de travail**\n- contrat de travail et avenants ;\n- fiches de poste, objectifs commerciaux et plans de rémunération variable ;\n- bulletins de paie des 12 derniers mois au minimum ;\n- entretiens annuels.\n\n**Procédure de licenciement**\n- convocation à l'entretien préalable (avec preuve d'envoi ou de remise) ;\n- compte rendu ou notes de l'entretien ;\n- lettre de licenciement et accusé de réception ;\n- éventuels avertissements ou sanctions antérieurs.\n\n**Fin de contrat**\n- solde de tout compte, certificat de travail, attestation France Travail ;\n- calcul de l'indemnité de licenciement versée.\n\n**Éléments factuels**\n- échanges écrits pertinents (courriels, comptes rendus) ;\n- attestations éventuelles de collègues, établies selon le formulaire réglementaire.\n\nJe vous conseille de numéroter les pièces et de joindre un bordereau : Maître Vasseur gagnera du temps.",
+      "ts": "2026-09-30T14:04:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Merci. Côté budget, Maître Vasseur nous facture un forfait de 3 500 € HT pour l'ensemble du dossier.\n\nComment comptabiliser ces honoraires, et faut-il envisager une provision pour litige à la clôture ?",
+      "ts": "2026-09-30T14:07:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "**Les honoraires d'avocat**\n- Ils se comptabilisent en charges, au compte 6226 « Honoraires », au fur et à mesure des factures.\n- Si le forfait est facturé en plusieurs fois, chaque facture est rattachée à l'exercice de la prestation correspondante ; une facture non parvenue à la clôture peut nécessiter une charge à payer.\n\n**La provision pour litige**\n- Une provision (compte 1511 « Provisions pour litiges ») se constate lorsqu'il existe, à la clôture, une obligation probable envers un tiers dont le montant peut être estimé de façon fiable.\n- Son montant ne correspond pas forcément à la somme réclamée : il s'agit de la meilleure estimation de la sortie de ressources, à apprécier avec votre avocate.\n- La dotation passe au compte 6875 et doit être justifiée dans l'annexe si elle est significative.\n\nEn pratique, je vous recommande d'aborder ce point avec votre expert-comptable avant la clôture, en lui transmettant l'avis écrit de l'avocate sur le risque. C'est lui qui validera le principe et le montant.",
+      "ts": "2026-09-30T14:08:21+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Très bien. Pourriez-vous me rédiger un brouillon de courrier à Maître Vasseur pour lui transmettre les pièces ? Je l'enverrai par courriel.",
+      "ts": "2026-09-30T14:11:14+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici un brouillon, à compléter :\n\n---\n\n**Objet : Dossier Le Goff – transmission des pièces**\n\nMaître,\n\nDans la perspective de l'audience de conciliation, je vous prie de trouver ci-joint les pièces relatives au dossier de M. Yann Le Goff, numérotées selon le bordereau joint :\n\n1. [Contrat de travail et avenants]\n2. [Bulletins de paie]\n3. [Pièces de la procédure de licenciement]\n4. [Documents de fin de contrat]\n5. [Échanges écrits]\n\nJe reste à votre disposition pour tout document complémentaire et pour convenir d'un échange préparatoire avant l'audience.\n\nJe vous prie d'agréer, Maître, l'expression de mes salutations distinguées.\n\nSophie Garnier\nAdministration et finances\nAtelier Numérique Lebrun\n\n---\n\nPensez à envoyer les pièces dans un seul fichier compressé ou via un lien de partage sécurisé, plutôt qu'en pièces jointes séparées.",
+      "ts": "2026-09-30T14:11:41+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

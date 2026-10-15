@@ -1,0 +1,135 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-09-28-chorus-pro-recherche",
+    "title": "Connecteur Chorus Pro : recherche et cadrage"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "On démarre le connecteur Chorus Pro cette semaine et je pars de zéro sur le sujet. Avant qu'on code quoi que ce soit, rappelle-moi en gros ce qu'est Chorus Pro et où en est l'obligation de facturation électronique en France, public et entre entreprises. Je veux un résumé que je peux lire en cinq minutes, pas un cours de droit.\n\npour situer, voilà ce qu'il y a aujourd'hui côté factures dans le repo :\n\n```\n$ tree -L 2 src/server/factures src/app/api/factures\nsrc/server/factures\n├── calcul.ts\n├── calcul.test.ts\n├── numerotation.ts\n├── numerotation.test.ts\n├── pdf.ts\n├── schema.ts\n└── service.ts\nsrc/app/api/factures\n├── [id]\n│   ├── pdf\n│   │   └── route.ts\n│   └── route.ts\n└── route.ts\n\n3 directories, 10 files\n\n$ wc -l src/server/factures/*.ts | tail -1\n  1184 total\n\n$ git log --oneline -6 -- src/server/factures\nc3d91e0 factures: ventilation TVA par taux dans le calcul\n8be27a4 factures: numéro formaté avec l'année sur quatre chiffres\n41f0d6c factures: test de numérotation en fin d'année\n0a7c5e2 factures: marquerPayee renvoie la facture mise à jour\n9e13b88 factures: annulation au lieu de suppression\n27d4f10 factures: premier jet du rendu PDF\n```",
+      "ts": "2026-09-28T09:45:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici le tableau d'ensemble, en restant général :\n\n**Chorus Pro, c'est quoi**\n- Une plateforme publique, gérée par l'État, qui sert à déposer et suivre les factures adressées au secteur public (État, collectivités, hôpitaux, établissements publics).\n- Un fournisseur du secteur public ne peut plus envoyer une facture papier ou un PDF par courriel : il la dépose sur Chorus Pro, soit à la main sur le portail, soit par un échange automatisé (API ou échange de fichiers).\n- Chaque facture suit un cycle de statuts (déposée, mise à disposition du destinataire, mandatée, mise en paiement, rejetée…), consultable sur la plateforme.\n\n**Qui est concerné**\n- Toutes les entreprises qui facturent un acheteur public, quelle que soit leur taille : l'obligation a été étendue progressivement des grandes entreprises jusqu'aux plus petites.\n- Pour un artisan qui répond à des marchés publics, c'est donc déjà une obligation, pas une option.\n\n**Et entre entreprises**\n- La France généralise la facturation électronique entre entreprises assujetties à la TVA, avec un calendrier par taille d'entreprise qui a été repoussé plusieurs fois. Les factures passeront par des plateformes agréées, et non par Chorus Pro, qui reste centré sur le secteur public.\n- Les formats admis sont des formats structurés ou mixtes (Factur-X, UBL, CII).\n\n**Ce qu'il faut retenir pour un éditeur comme vous**\n- Un connecteur Chorus Pro règle le cas des clients qui facturent le public.\n- La réforme entre entreprises est un autre chantier, qui passera par une plateforme agréée.\n\nJe te conseille de vérifier les dates exactes du calendrier sur les textes officiels avant de les citer à un client : elles ont bougé plusieurs fois.",
+      "ts": "2026-09-28T09:47:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "ok merci, c'est assez clair. maintenant notre cas à nous : le connecteur Chorus Pro doit être livré le 1er décembre, pour Bati-Ouest et Le Bihan. Les deux en ont besoin pour facturer des acheteurs publics. Fonctionnellement je veux : depuis Chantier+, l'artisan dépose sa facture sur Chorus Pro en un clic, et voit remonter le statut dans l'appli. Pas de saisie en double sur le portail.",
+      "ts": "2026-09-28T09:52:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Compris. Je cherche la documentation de l'API Chorus Pro, les modes d'authentification et l'environnement de qualification.",
+      "ts": "2026-09-28T09:54:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "vas-y, fais une recherche web et donne-moi ce que tu trouves en brut, je trierai moi-même.\n\net pendant que tu cherches, j'ai lancé un agent explorateur sur le repo pour voir ce qu'on a déjà, voilà son retour :\n\n<teammate-message teammate_id=\"explorateur\">\nRapport explorateur : ce qui existe déjà dans le dépôt autour de la facturation (lecture seule, branche main, commit a51e2c0)\n\nRecherche brute\n```\n$ git grep -niI \"chorus\" -- ':!node_modules'\nsrc/server/factures/numerotation.ts:7:// TODO chorus ? voir si le format de numéro convient\n$ git grep -niI \"factur-x\\|facturx\\|pdf/a\" -- ':!node_modules'\n(aucun résultat)\n$ git grep -nI \"xml\" -- 'src/**/*.ts' | wc -l\n0\n```\n\nFichiers du module factures\n| Fichier | Lignes | Exports |\n|---|---|---|\n| src/server/factures/service.ts | 312 | creerFacture, lireFacture, listerFactures, marquerPayee, annulerFacture |\n| src/server/factures/calcul.ts | 148 | totalHT, totalTVA, totalTTC, ventilationTVA |\n| src/server/factures/numerotation.ts | 96 | prochainNumero, formaterNumero |\n| src/server/factures/pdf.ts | 221 | rendreFacturePdf |\n| src/server/factures/schema.ts | 174 | FactureSchema, LigneFactureSchema, StatutFacture |\n| src/app/api/factures/route.ts | 88 | GET, POST |\n| src/app/api/factures/[id]/route.ts | 102 | GET, PATCH, DELETE |\n| src/app/api/factures/[id]/pdf/route.ts | 43 | GET |\n\nStructure de la table telle que la voit psql (copie de recette)\n```\nchantier=> \\d factures\n                              Table \"public.factures\"\n     Column      |           Type           | Nullable |      Default\n-----------------+--------------------------+----------+-------------------\n id              | uuid                     | not null | gen_random_uuid()\n client_id       | uuid                     | not null |\n devis_id        | uuid                     |          |\n numero          | text                     | not null |\n statut          | text                     | not null | 'emise'::text\n contenu         | jsonb                    | not null | '{}'::jsonb\n total_ht        | numeric(12,2)            |          |\n total_ttc       | numeric(12,2)            |          |\n emise_le        | date                     | not null | CURRENT_DATE\n cree_le         | timestamp with time zone | not null | now()\nIndexes:\n    \"factures_pkey\" PRIMARY KEY, btree (id)\n    \"factures_numero_key\" UNIQUE CONSTRAINT, btree (numero)\n    \"factures_client_idx\" btree (client_id)\n```\n\nAppelants de rendreFacturePdf\n```\n$ git grep -n \"rendreFacturePdf\"\nsrc/app/api/factures/[id]/pdf/route.ts:4:import { rendreFacturePdf } from '@/server/factures/pdf';\nsrc/app/api/factures/[id]/pdf/route.ts:21:  const pdf = await rendreFacturePdf(facture);\nsrc/server/factures/pdf.ts:58:export async function rendreFacturePdf(facture: Facture) {\n```\n\nStatuts présents dans le code (StatutFacture) : emise, envoyee, payee, annulee. Aucun statut ne correspond à un dépôt sur une plateforme externe.\n\nTests existants\n```\n$ pnpm test src/server/factures\n ✓ src/server/factures/calcul.test.ts (14 tests) 31ms\n ✓ src/server/factures/numerotation.test.ts (6 tests) 9ms\n\n Test Files  2 passed (2)\n      Tests  20 passed (20)\n   Duration  1.12s\n```\n\nCe que je n'ai pas trouvé\n- Aucun code d'appel à une plateforme de facturation externe.\n- Aucune génération de PDF/A ni de XML embarqué.\n- Aucune dépendance XML dans package.json.\n\nRemarque\nInventaire seulement, je n'ai rien modifié et je ne recommande rien à ce stade : le rendu PDF des factures et celui des devis sont deux modules séparés, à garder en tête quand on regardera la génération.\n</teammate-message>",
+      "ts": "2026-09-28T09:57:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici les résultats bruts, dans l'ordre où je les ai trouvés. Je n'ai rien vérifié, certains peuvent être datés :\n\n1. Portail de l'État, page « Raccordement par API » : il faut créer un compte technique, le rattacher à une structure, puis demander l'accès à l'environnement de qualification avant la production. Mentionne une authentification en deux temps (jeton OAuth puis identifiants du compte technique).\n2. Billet de blog d'un éditeur de logiciel de facturation : dit que le raccordement « prend une journée ». Écrit il y a plusieurs années, le ton est commercial.\n3. Fil de discussion sur un forum de développeurs : quelqu'un affirme que l'API ne prend que des PDF simples, un autre répond que les formats structurés sont acceptés. Pas de source citée, contradictoire.\n4. Guide utilisateur en PDF hébergé sur un site d'université : liste des statuts de facture et codes de rejet. Date d'une ancienne version du portail.\n5. Dépôt de code public d'un client d'API non officiel : exemples d'appels, dernière modification il y a longtemps.\n6. Article de presse spécialisée sur la réforme de la facturation électronique entre entreprises : parle des plateformes agréées, pas de Chorus Pro en particulier.\n\nÀ ce stade, seule la source 1 me paraît fiable, et encore, il faudra la confronter à la documentation officielle à jour.",
+      "ts": "2026-09-28T10:03:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "le 3 et le 5 je les jette. le 1 c'est ce que je voulais : l'histoire du compte technique. j'ai lu leur page en diagonale et ils disent ça :\n\n> « Le compte technique est rattaché à une ou plusieurs structures. Il permet à un logiciel tiers d'émettre et de consulter des factures au nom de ces structures, dans la limite des droits accordés par le gestionnaire principal de chaque structure. »\n\ndonc on a deux façons de faire, non ? explique-moi les deux.\n\n(j'ai tout copié d'un coup, il y a le menu avec, désolé)\n\n```\nAccueil  ›  Raccordement  ›  API  ›  Compte technique\nRechercher dans la documentation…            [ OK ]\nMenu : Présentation | Raccordement | Documentation | Foire aux questions | Nous contacter\nCe site utilise des cookies de mesure d'audience. [ Accepter ] [ Refuser ] [ Personnaliser ]\n---------------------------------------------------------------------\nSommaire de la page\n  1. Créer un compte technique\n  2. Rattacher le compte à une structure\n  3. Demander l'accès à l'environnement de qualification\n  4. Passer en production\n---------------------------------------------------------------------\nCette page vous a-t-elle été utile ?   [ Oui ]   [ Non ]\nPartager : [ Courriel ] [ Imprimer ]\nPlan du site | Accessibilité | Mentions légales | Données personnelles\n```",
+      "ts": "2026-09-28T10:10:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Oui, deux montages possibles :\n\n**A. Un compte technique unique au nom d'Atelier Numérique Lebrun**, rattaché à la structure de chaque client qui nous en donne le droit.\n- Plus simple à créer et à maintenir : un seul jeu d'identifiants.\n- Mais tous les clients passent par le même compte : si un client retire ses droits ou part, il faut manipuler le rattachement sans casser les autres, et une erreur de droits peut exposer les factures d'un client à un autre.\n\n**B. Un compte technique dédié par client**, créé par le client (ou avec lui) et rattaché à sa seule structure.\n- Cloisonnement net : chaque client a ses identifiants, ses droits, son historique.\n- Plus de gestion : un jeu d'identifiants par client à stocker et à renouveler, et une étape de mise en place à chaque nouveau client.\n\nPour deux clients aujourd'hui, B est un peu plus long à mettre en place, mais beaucoup plus simple à expliquer et à défendre.",
+      "ts": "2026-09-28T10:13:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "je réfléchis à ça. en attendant, le format : on envoie les factures au format Factur-X. un PDF lisible par l'humain avec le XML embarqué dedans, ça évite de gérer deux fichiers et le service comptable de l'acheteur public voit une facture normale.",
+      "ts": "2026-09-28T10:22:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "Noté. Il faudra produire un PDF/A-3 avec le XML embarqué et choisir le profil Factur-X adapté au niveau de détail qu'on veut transmettre. Je regarde ce qui existe pour générer du PDF/A-3 en Node.",
+      "ts": "2026-09-28T10:24:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "user",
+      "text": "j'ai créé un compte technique de test sur l'environnement de qualification pour voir, et j'ai ça :\n\n```\n$ curl -s -X POST https://qualif.chorus-pro.essai/api/v1/factures/rechercher \\\n    -H \"Authorization: Bearer $JETON\" -H \"cpro-account: $COMPTE_B64\" \\\n    -H \"Content-Type: application/json\" -d '{\"pagination\":{\"nbResultatsParPage\":10}}'\n{\"codeRetour\":401,\"libelle\":\"Le compte technique n'est rattaché à aucune structure active\"}\n```\n\nle jeton passe pourtant, j'ai bien un access_token.\n\npour le jeton, voilà la sortie en verbeux (j'ai masqué le jeton et les identifiants) :\n\n```\n$ curl -v -X POST https://qualif.chorus-pro.essai/oauth/token \\\n    -H \"Content-Type: application/x-www-form-urlencoded\" \\\n    -d \"grant_type=client_credentials&client_id=***&client_secret=***&scope=openid\"\n*   Trying 192.0.2.41:443...\n* Connected to qualif.chorus-pro.essai (192.0.2.41) port 443\n* ALPN: curl offers h2,http/1.1\n* TLSv1.3 (OUT), TLS handshake, Client hello (1):\n* TLSv1.3 (IN), TLS handshake, Server hello (2):\n* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):\n* TLSv1.3 (IN), TLS handshake, Certificate (11):\n* TLSv1.3 (IN), TLS handshake, CERT verify (15):\n* TLSv1.3 (IN), TLS handshake, Finished (20):\n* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):\n* TLSv1.3 (OUT), TLS handshake, Finished (20):\n* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS\n* ALPN: server accepted h2\n* Server certificate:\n*  subject: CN=qualif.chorus-pro.essai\n*  start date: Mar  4 00:00:00 2026 GMT\n*  expire date: Mar  3 23:59:59 2027 GMT\n*  subjectAltName: host \"qualif.chorus-pro.essai\" matched cert's \"qualif.chorus-pro.essai\"\n*  SSL certificate verify ok.\n* using HTTP/2\n> POST /oauth/token HTTP/2\n> Host: qualif.chorus-pro.essai\n> User-Agent: curl/8.5.0\n> Accept: */*\n> Content-Type: application/x-www-form-urlencoded\n> Content-Length: 118\n>\n< HTTP/2 200\n< date: Mon, 28 Sep 2026 08:34:51 GMT\n< content-type: application/json;charset=UTF-8\n< cache-control: no-store\n< pragma: no-cache\n< x-frame-options: DENY\n< strict-transport-security: max-age=31536000\n<\n{\"access_token\":\"***\",\"token_type\":\"Bearer\",\"scope\":\"openid\"}\n* Connection #0 to host qualif.chorus-pro.essai left intact\n```\n\net le même appel de recherche qu'au-dessus, en verbeux, pour les en-têtes de la réponse :\n\n```\n> POST /api/v1/factures/rechercher HTTP/2\n> Host: qualif.chorus-pro.essai\n> Authorization: Bearer ***\n> cpro-account: ***\n> Content-Type: application/json\n> Content-Length: 40\n>\n< HTTP/2 401\n< date: Mon, 28 Sep 2026 08:35:07 GMT\n< content-type: application/json;charset=UTF-8\n< www-authenticate: Basic realm=\"cpro\"\n< x-correlation-id: 5f1c9e2a-7b3d-4e60-a1f8-0c2d4b6e8a91\n< cache-control: no-store\n<\n{\"codeRetour\":401,\"libelle\":\"Le compte technique n'est rattaché à aucune structure active\"}\n```\n\net pour être sûr que c'est pas mon shell qui mange un caractère :\n\n```\n$ echo ${#JETON} ${#COMPTE_B64}\n1184 44\n$ echo -n \"$COMPTE_B64\" | base64 -d | wc -c\n32\n$ env | grep -c '^CHORUS_'\n3\n```",
+      "ts": "2026-09-28T10:36:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "Le jeton OAuth est valide, c'est le compte technique qui ne l'est pas encore : il faut le rattacher à une structure de test depuis le portail de qualification, puis attendre la validation du rattachement.",
+      "ts": "2026-09-28T10:38:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012a",
+      "role": "user",
+      "text": "retour de l'agent que j'ai mis à reproduire le 401 :\n\n<teammate-message teammate_id=\"verif-qualif\">\nRapport verif-qualif : reproduction du 401 sur l'environnement de qualification\n\nCe que j'ai fait\n- Rejoué trois fois l'appel de recherche avec les mêmes en-têtes que Hugo, à une minute d'intervalle, en demandant un nouveau jeton à chaque fois.\n- Vérifié que les variables locales sont bien hors du dépôt : `git check-ignore -v .env.local` renvoie `.gitignore:3:.env*`, et `git grep -nI \"client_secret\"` ne renvoie rien de suivi.\n- Décodé l'en-tête cpro-account (base64 de « identifiant:mot de passe ») pour vérifier qu'il n'y a pas de retour à la ligne parasite : `echo -n \"$COMPTE_B64\" | base64 -d | od -c | tail -2` ne montre pas de `\\n` final.\n\nRésultats\n```\nessai 1  10:41:12  jeton 200  recherche 401  « Le compte technique n'est rattaché à aucune structure active »\nessai 2  10:42:13  jeton 200  recherche 401  « Le compte technique n'est rattaché à aucune structure active »\nessai 3  10:43:15  jeton 200  recherche 401  « Le compte technique n'est rattaché à aucune structure active »\n```\n\nVariantes essayées\n- Sans l'en-tête cpro-account : 401 avec un libellé différent (« En-tête cpro-account absent »), ce qui confirme que la plateforme lit bien l'en-tête qu'on envoie.\n- Avec un identifiant volontairement faux : 401 « Identifiants du compte technique invalides ». Donc nos identifiants sont reconnus, c'est seulement le rattachement qui manque.\n- Avec `\"pagination\":{\"nbResultatsParPage\":1}` : même 401, la taille de page n'y est pour rien.\n\nLecture\nCohérent avec ce que l'assistant a dit : le jeton OAuth est bon, le compte technique est reconnu, il n'est simplement rattaché à aucune structure. Rien à corriger de notre côté tant que le rattachement n'est pas validé sur le portail de qualification. Je n'ai rien modifié et rien demandé sur le portail.\n</teammate-message>",
+      "ts": "2026-09-28T10:44:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012b",
+      "role": "assistant",
+      "text": "Ça confirme le diagnostic : identifiants reconnus, rattachement manquant. Rien à faire de notre côté en attendant la validation.",
+      "ts": "2026-09-28T10:50:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-013",
+      "role": "user",
+      "text": "ok rattachement demandé, je verrai cet après-midi. et j'ai tranché pour les comptes. décision : un compte technique dédié par client. si un client part, on coupe son compte et c'est tout, les droits sont cloisonnés, et on n'a pas à expliquer à un acheteur public pourquoi un tiers a accès à toutes les factures de tout le monde. le compte unique, non.",
+      "ts": "2026-09-28T10:56:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014",
+      "role": "assistant",
+      "text": "Noté. Côté modèle, je prévois une table chorus_comptes (client_id, identifiant du compte technique, structure, statut du rattachement), les mots de passe restant dans le gestionnaire de secrets du serveur, référencés par leur nom.",
+      "ts": "2026-09-28T10:58:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-015",
+      "role": "user",
+      "text": "ok. écris une note de cadrage dans docs/chorus-pro/cadrage.md avec ce qu'on a posé ce matin, plus la liste des questions ouvertes. courte.\n\n<teammate-message teammate_id=\"explorateur\">\nArborescence de docs/ (main, commit a51e2c0), pour ranger la note au bon endroit\n\n```\n$ tree docs -L 2\ndocs\n├── README.md\n├── api\n│   ├── conventions.md\n│   └── erreurs.md\n├── architecture\n│   ├── vue-ensemble.md\n│   └── base-de-donnees.md\n├── chorus-pro\n├── recette\n│   └── checklist.md\n└── runbooks\n    ├── deploiement.md\n    ├── migration-pg16.md\n    └── restauration-base.md\n\n7 directories, 9 files\n```\n\n- `docs/chorus-pro/` existe déjà mais il est vide (créé avec un `.gitkeep` dans un commit de ménage).\n- `docs/README.md` liste les sous-dossiers avec une phrase chacun ; il faudra y ajouter une ligne pour chorus-pro.\n- Les documents existants commencent tous par un titre de niveau 1 et un paragraphe « Contexte », sans front matter.\n</teammate-message>",
+      "ts": "2026-09-28T11:02:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016",
+      "role": "assistant",
+      "text": "La note est écrite dans docs/chorus-pro/cadrage.md. Elle contient :\n\n- le périmètre et l'échéance tels que tu les as donnés ;\n- les deux choix de ce matin (montage des comptes techniques, format d'envoi) avec leur justification en deux lignes ;\n- le parcours cible : dépôt depuis Chantier+, remontée des statuts par interrogation périodique ;\n- les questions ouvertes : traitement des factures d'acompte, des avoirs, des rejets (affichage et nouvelle soumission), fréquence d'interrogation des statuts, profil Factur-X à retenir.\n\nLes sources jetées (forum, client non officiel) n'y figurent pas.",
+      "ts": "2026-09-28T11:06:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

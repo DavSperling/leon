@@ -1,0 +1,55 @@
+{
+  "faits": [
+    {
+      "id": "F306",
+      "enonce": "La mise en production de la refonte du module devis est prévue le 30 octobre 2026.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "mise en production : le 30 octobre",
+      "sensible": false
+    },
+    {
+      "id": "F312",
+      "enonce": "La refonte du module devis a été promise à Menuiserie Dupont avant le 30 octobre 2026.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "la refonte est promise à Menuiserie Dupont avant le 30 octobre",
+      "sensible": false
+    },
+    {
+      "id": "F313",
+      "enonce": "Le gel des développements du module devis commence le 23 octobre 2026.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "gel des développements : le 23 octobre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N124",
+      "enonce": "Sortie du script de mise à jour du planning.",
+      "tour": "t-005",
+      "pourquoi": "sortie d'outil"
+    }
+  ],
+  "remplace": [],
+  "conflits": [
+    {
+      "a": "F125",
+      "b": "F306"
+    }
+  ]
+}

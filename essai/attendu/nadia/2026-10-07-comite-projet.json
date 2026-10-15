@@ -1,0 +1,46 @@
+{
+  "faits": [
+    {
+      "id": "F310",
+      "enonce": "Bastien Royer arrive le 2 novembre 2026 et rejoint l'application mobile v2.",
+      "fiche": "Bastien Royer",
+      "alias": [],
+      "typeFiche": "personne",
+      "tour": "t-003",
+      "extrait": "Bastien Royer arrive le 2 novembre et rejoint l'équipe de l'appli mobile v2",
+      "sensible": true
+    },
+    {
+      "id": "F311",
+      "enonce": "La démonstration du connecteur Chorus Pro chez SARL Bati-Ouest est prévue le 4 novembre 2026.",
+      "fiche": "Connecteur Chorus Pro",
+      "alias": [
+        "Chorus Pro"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "Chorus Pro : la démo chez Bati-Ouest est fixée au 4 novembre",
+      "sensible": false
+    },
+    {
+      "id": "F314",
+      "enonce": "Le compte rendu de chaque comité projet est envoyé le jour même.",
+      "fiche": "Comité projet",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-005",
+      "extrait": "le CR de chaque comité projet part le jour même",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N125",
+      "enonce": "Brouillon d'ordre du jour du comité.",
+      "tour": "t-002",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

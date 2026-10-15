@@ -1,0 +1,63 @@
+{
+  "faits": [
+    {
+      "id": "F100",
+      "enonce": "Chantier+ tourne sur une base Postgres managée chez OVH.",
+      "fiche": "Chantier+",
+      "alias": [
+        "Chantier plus",
+        "l'appli"
+      ],
+      "typeFiche": "produit",
+      "tour": "t-001",
+      "extrait": "Chantier+ tourne sur une base Postgres managée chez OVH",
+      "sensible": false
+    },
+    {
+      "id": "F101",
+      "enonce": "La base de production de Chantier+ est passée de Postgres 15 à Postgres 16 le 21 septembre 2026.",
+      "fiche": "Postgres",
+      "alias": [],
+      "typeFiche": "outil",
+      "tour": "t-015",
+      "extrait": "la base de prod de Chantier+ est passée de Postgres 15 à Postgres 16 ce soir, le 21/09",
+      "sensible": false
+    },
+    {
+      "id": "F102",
+      "enonce": "Les sauvegardes de la base de Chantier+ sont conservées 14 jours.",
+      "fiche": "Sauvegardes de la base",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-005",
+      "extrait": "les sauvegardes sont conservées 14 jours chez OVH",
+      "sensible": false
+    },
+    {
+      "id": "F103",
+      "enonce": "La migration de Postgres se fait hors des heures ouvrées, après 20 h.",
+      "fiche": "Mises en production",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-007",
+      "extrait": "une migration de base se fait hors des heures ouvrées, jamais avant 20 h",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N040",
+      "enonce": "Sorties de `psql` et de `pg_upgrade`.",
+      "tour": "t-011",
+      "pourquoi": "sortie d'outil"
+    },
+    {
+      "id": "N041",
+      "enonce": "« On pourrait passer à Supabase un jour. »",
+      "tour": "t-007",
+      "pourquoi": "hypothèse"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

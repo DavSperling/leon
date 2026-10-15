@@ -1,0 +1,50 @@
+{
+  "faits": [
+    {
+      "id": "F195",
+      "enonce": "Lucas Fabre livre les maquettes de l'application mobile v2 le 9 octobre 2026.",
+      "fiche": "Lucas Fabre",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "Lucas Fabre, notre designer, livre les maquettes le 9 octobre",
+      "sensible": false
+    },
+    {
+      "id": "F196",
+      "enonce": "La couleur principale de Chantier+ est le bleu #1F4E79.",
+      "fiche": "Chantier+",
+      "alias": [
+        "Chantier plus",
+        "l'appli"
+      ],
+      "typeFiche": "produit",
+      "tour": "t-003",
+      "extrait": "la couleur principale de Chantier+ est le bleu #1F4E79",
+      "sensible": false
+    },
+    {
+      "id": "F202",
+      "enonce": "L'application mobile v2 propose un mode sombre.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "l'appli mobile v2 propose un mode sombre",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N086",
+      "enonce": "Brouillon de textes de l'écran d'accueil.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

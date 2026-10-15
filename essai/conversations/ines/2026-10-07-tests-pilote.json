@@ -1,0 +1,100 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-ines-2026-10-07-tests-pilote",
+    "title": "Tests avant le pilote Bati-Ouest"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "On prépare le pilote de l'appli mobile v2. Les dates pour que tu aies le contexte : le pilote chez SARL Bati-Ouest démarre le 19 octobre avec 10 compagnons, et la livraison de l'application mobile v2 est décalée au 5 novembre, donc le pilote sert vraiment à corriger avant la livraison. Avant le pilote, je forme moi-même les 10 compagnons de Bati-Ouest le 16 octobre, sur place.\n\nCe qu'il me faut d'ici là : une suite de tests de bout en bout fiable sur les parcours que les compagnons vont utiliser (connexion, consulter un chantier, créer un devis hors ligne, faire signer, synchroniser). Il y a déjà un dossier `e2e/` mais plusieurs tests sont rouges depuis le passage à graphiko-native. Lance la suite et dis-moi ce qui casse.",
+      "ts": "2026-10-07T16:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je lance la suite de bout en bout sur le simulateur iOS.",
+      "ts": "2026-10-07T16:01:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "Sur 14 tests, 4 échouent : deux cherchent encore l'identifiant de test `quickcharts-bar`, qui n'existe plus, un échoue sur la synchronisation hors ligne et un sur l'écran profil.",
+      "ts": "2026-10-07T16:05:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Je l'ai relancée de mon côté sur Android pour comparer, voilà la sortie :\n\n$ pnpm --filter mobile e2e:android\n PASS  e2e/connexion.e2e.ts (21.4 s)\n PASS  e2e/chantiers-liste.e2e.ts (14.9 s)\n FAIL  e2e/accueil-graphiques.e2e.ts (9.2 s)\n   ● accueil › affiche l'avancement des chantiers\n     Élément introuvable : testID=\"quickcharts-bar-0\"\n FAIL  e2e/accueil-graphiques.e2e.ts\n   ● accueil › affiche le montant signé du mois\n     Élément introuvable : testID=\"quickcharts-bar-0\"\n PASS  e2e/devis-creation.e2e.ts (31.7 s)\n FAIL  e2e/devis-hors-ligne.e2e.ts (62.0 s)\n   ● hors ligne › synchronise le devis au retour du réseau\n     Délai dépassé (60000 ms) en attendant testID=\"indicateur-synchronise\"\n PASS  e2e/signature.e2e.ts (18.3 s)\n FAIL  e2e/profil-notifications.e2e.ts (7.1 s)\n   ● profil › désactive les notifications de devis signés\n     Élément introuvable : testID=\"interrupteur-devis_signe\"\n\nTests : 4 échoués, 10 réussis, 14 au total\nDurée : 3 min 12 s\n\nMême résultat que toi sur iOS, donc ce n'est pas lié à la plateforme.\n\nEt la sortie détaillée des quatre échecs (mode verbeux), avec les captures générées :\n\n```\n FAIL  e2e/accueil-graphiques.e2e.ts (9.2 s)\n  accueil\n    ✕ affiche l'avancement des chantiers (4581 ms)\n    ✕ affiche le montant signé du mois (4402 ms)\n\n  ● accueil › affiche l'avancement des chantiers\n\n    Test Failed: Élément introuvable : testID=\"quickcharts-bar-0\"\n\n    Hiérarchie visible au moment de l'échec (extrait) :\n      <RCTView testID=\"ecran-accueil\">\n        <RCTText text=\"Bonjour Inès\">\n        <RCTView testID=\"carte-avancement\">\n          <RCTText text=\"Avancement des chantiers\">\n          <GraphikoChart testID=\"graphique-avancement\">\n            <GraphikoBar testID=\"graphique-avancement-barre-0\" label=\"Chantier Rezé : 65 %\">\n            <GraphikoBar testID=\"graphique-avancement-barre-1\" label=\"Chantier Orvault : 40 %\">\n            <GraphikoBar testID=\"graphique-avancement-barre-2\" label=\"Chantier Carquefou : 85 %\">\n            <GraphikoBar testID=\"graphique-avancement-barre-3\" label=\"Chantier Vertou : 20 %\">\n\n      41 |   it(\"affiche l'avancement des chantiers\", async () => {\n      42 |     await device.launchApp({ newInstance: true });\n    > 43 |     await expect(element(by.id('quickcharts-bar-0'))).toBeVisible();\n         |                                                       ^\n      44 |     await expect(element(by.id('quickcharts-bar-3'))).toBeVisible();\n      45 |   });\n\n      at Object.<anonymous> (e2e/accueil-graphiques.e2e.ts:43:55)\n\n    Capture : artifacts/android.2026-10-07 16-07-12Z/accueil affiche l'avancement des chantiers/testFailed.png\n\n  ● accueil › affiche le montant signé du mois\n\n    Test Failed: Élément introuvable : testID=\"quickcharts-bar-0\"\n\n      58 |   it('affiche le montant signé du mois', async () => {\n      59 |     await element(by.id('onglet-montant')).tap();\n    > 60 |     await expect(element(by.id('quickcharts-bar-0'))).toBeVisible();\n         |                                                       ^\n      61 |   });\n\n      at Object.<anonymous> (e2e/accueil-graphiques.e2e.ts:60:55)\n\n FAIL  e2e/devis-hors-ligne.e2e.ts (62.0 s)\n  hors ligne\n    ✓ crée un devis sans réseau (8734 ms)\n    ✕ synchronise le devis au retour du réseau (60012 ms)\n\n  ● hors ligne › synchronise le devis au retour du réseau\n\n    Délai dépassé (60000 ms) en attendant testID=\"indicateur-synchronise\"\n\n    Journal de l'appli pendant l'attente :\n      16:06:02.114 [reseau] retour en ligne\n      16:06:02.120 [synchro] 1 opération en attente\n      16:06:02.981 [synchro] rejeu op#1 CREATE devis local-c4e1 -> 201 id=serveur-1302\n      16:06:03.004 [synchro] rafraîchissement : début\n      16:06:31.776 [synchro] rafraîchissement : 214 chantiers reçus\n      16:06:58.420 [synchro] rafraîchissement : 388 devis reçus\n      16:07:02.011 (fin de l'attente du test)\n      16:07:09.633 [synchro] rafraîchissement : terminé\n      16:07:09.640 [entete] indicateur -> synchronisé\n\n      71 |     await device.setURLBlacklist([]);\n      72 |     await device.enableSynchronization();\n    > 73 |     await waitFor(element(by.id('indicateur-synchronise'))).toBeVisible().withTimeout(60000);\n         |                                                             ^\n      74 |   });\n\n FAIL  e2e/profil-notifications.e2e.ts (7.1 s)\n  profil\n    ✓ affiche la section notifications (2210 ms)\n    ✕ désactive les notifications de devis signés (3488 ms)\n\n  ● profil › désactive les notifications de devis signés\n\n    Test Failed: Élément introuvable : testID=\"interrupteur-devis_signe\"\n\n    Hiérarchie visible au moment de l'échec (extrait) :\n      <RCTView testID=\"section-notifications\">\n        <RCTText text=\"Notifications\">\n        <RCTView testID=\"ligne-devis-signe\">\n          <RCTText text=\"Devis signés\">\n          <RCTSwitch testID=\"interrupteur-devis-signe\" value=\"true\">\n\n      22 |   it('désactive les notifications de devis signés', async () => {\n    > 23 |     await element(by.id('interrupteur-devis_signe')).tap();\n         |                                                       ^\n      24 |     await expect(element(by.id('interrupteur-devis_signe'))).toHaveToggleValue(false);\n      25 |   });\n\nArtefacts : 4 captures, 4 hiérarchies de vues, 1 journal d'appareil dans artifacts/android.2026-10-07 16-07-12Z/\n```",
+      "ts": "2026-10-07T16:08:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "Je renomme les identifiants de test des graphiques en `graphique-barre-<n>` dans `GraphiqueBarres.tsx` et dans les tests.",
+      "ts": "2026-10-07T16:10:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Fait. L'interrupteur du profil avait l'identifiant `interrupteur-devis-signe` (tiret) au lieu de `interrupteur-devis_signe` : je l'ai aligné sur le type de notification.",
+      "ts": "2026-10-07T16:12:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"e2e-ios\">\nRapport : suite de bout en bout sur le simulateur iOS après renommage des identifiants\n\nCe que j'ai fait\n- Récupéré les deux correctifs (identifiants `graphique-barre-<n>` et `interrupteur-devis_signe`).\n- Relancé la suite complète trois fois de suite sur le simulateur iOS, appli réinstallée avant chaque passe.\n\nRésultats\n| Fichier | Passe 1 | Passe 2 | Passe 3 |\n|---|---|---|---|\n| connexion | OK | OK | OK |\n| chantiers-liste | OK | OK | OK |\n| accueil-graphiques (2 tests) | OK | OK | OK |\n| devis-creation | OK | OK | OK |\n| devis-hors-ligne (2 tests) | 1 échec | 1 échec | 1 échec |\n| signature | OK | OK | OK |\n| profil-notifications (2 tests) | OK | OK | OK |\n\nÉchec restant\n```\n● hors ligne › synchronise le devis au retour du réseau\n  Délai dépassé (60000 ms) en attendant testID=\"indicateur-synchronise\"\n  passe 1 : indicateur visible à 71,2 s (après la fin du test)\n  passe 2 : indicateur visible à 68,9 s\n  passe 3 : indicateur visible à 74,5 s\n```\n\nCommandes lancées\n```\n$ xcrun simctl erase all\n$ pnpm --filter mobile e2e:build:ios\n$ for i in 1 2 3; do pnpm --filter mobile e2e:ios --cleanup; done\n```\n\nDurées par passe\n```\npasse 1 : 14 tests, 13 réussis, 1 échoué, 3 min 14 s\npasse 2 : 14 tests, 13 réussis, 1 échoué, 3 min 09 s\npasse 3 : 14 tests, 13 réussis, 1 échoué, 3 min 17 s\n```\n\nJournal de l'appli pendant le test hors ligne (passe 1, extrait)\n```\n16:31:04.220 [reseau] retour en ligne\n16:31:05.118 [synchro] rejeu op#1 CREATE devis local-e07a -> 201\n16:31:05.140 [synchro] rafraîchissement : début\n16:32:14.902 [synchro] rafraîchissement : terminé\n16:32:15.410 [entete] indicateur -> synchronisé\n```\n\nConstats\n- Les graphiques et le profil sont réglés de façon stable sur trois passes.\n- Le test hors ligne échoue toujours de la même façon : la synchro aboutit, mais l'indicateur arrive après la limite de 60 s.\n- Aucun test instable observé (pas de résultat qui change d'une passe à l'autre).\n\nRecommandation\nLe seul échec restant est un problème de délai sur le test hors ligne, pas une régression fonctionnelle.\n</teammate-message>",
+      "ts": "2026-10-07T16:13:45+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006b",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"e2e-android\">\nRapport : suite de bout en bout sur l'émulateur Android (API 34) après renommage des identifiants\n\nCe que j'ai fait\n- Même protocole que pour iOS : trois passes complètes, appli réinstallée avant chaque passe, émulateur redémarré avant la première.\n\nRésultats\n```\npasse 1 : 13 réussis, 1 échoué (devis-hors-ligne › synchronise le devis au retour du réseau)\npasse 2 : 13 réussis, 1 échoué (même test)\npasse 3 : 13 réussis, 1 échoué (même test)\ndurée moyenne d'une passe : 3 min 08 s\n```\n\nDétail du test hors ligne\n```\npasse 1 : rejeu 0,9 s, rafraîchissement 66,3 s, indicateur à 67,4 s\npasse 2 : rejeu 1,1 s, rafraîchissement 72,8 s, indicateur à 74,0 s\npasse 3 : rejeu 0,8 s, rafraîchissement 69,5 s, indicateur à 70,4 s\n```\n\nJournal de l'émulateur pendant le rafraîchissement (passe 2, extrait)\n```\nI/ReactNativeJS: [synchro] rafraîchissement : début\nI/ReactNativeJS: [synchro] rafraîchissement : page 1/9 chantiers\nI/ReactNativeJS: [synchro] rafraîchissement : page 9/9 chantiers (214)\nI/ReactNativeJS: [synchro] rafraîchissement : page 1/16 devis\nI/ReactNativeJS: [synchro] rafraîchissement : page 16/16 devis (388)\nI/ReactNativeJS: [base] écriture locale 602 lignes en 3,9 s\nI/ReactNativeJS: [entete] indicateur -> synchronisé\n```\n\nCommandes lancées\n```\n$ adb -s emulateur-api34 emu kill && emulator -avd emulateur-api34 -wipe-data &\n$ pnpm --filter mobile e2e:build:android\n$ for i in 1 2 3; do pnpm --filter mobile e2e:android --cleanup; done\n```\n\nConstats\n- Même comportement que sur iOS : le rejeu est rapide, c'est le rafraîchissement complet de la base locale qui prend plus d'une minute sur l'émulateur.\n- La base de test contient beaucoup plus de chantiers et de devis qu'un compte réel, ce qui allonge le rafraîchissement.\n\nRecommandation\nAllonger le délai d'attente du test plutôt que de toucher à la synchro.\n</teammate-message>",
+      "ts": "2026-10-07T16:15:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006c",
+      "role": "assistant",
+      "text": "Les deux rapports concordent : graphiques et profil stables sur six passes, et le seul échec est le délai du test hors ligne, l'indicateur arrivant entre 67 et 75 s selon la plateforme.",
+      "ts": "2026-10-07T16:16:15+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Graphiques et profil passent. Reste le hors ligne : le test attend `indicateur-synchronise` mais l'indicateur d'en-tête n'apparaît qu'après le rafraîchissement complet, ce qui peut prendre plus de 60 s sur l'émulateur. Monte le délai de ce test à 120 s et ajoute un commentaire qui explique pourquoi. Je ne veux pas toucher à la logique de synchro maintenant, pas à moins de deux semaines du pilote.\n\nPour que tu voies où c'est, le test en question :\n\n```ts\n// e2e/devis-hors-ligne.e2e.ts\nit('synchronise le devis au retour du réseau', async () => {\n  await device.setURLBlacklist(['.*']);\n  await element(by.id('bouton-nouveau-devis')).tap();\n  await element(by.id('champ-objet')).typeText('Test hors ligne');\n  await element(by.id('bouton-enregistrer')).tap();\n  await expect(element(by.id('indicateur-hors-ligne'))).toBeVisible();\n  await device.setURLBlacklist([]);\n  await device.enableSynchronization();\n  await waitFor(element(by.id('indicateur-synchronise'))).toBeVisible().withTimeout(60000);\n});\n```\n\nLe journal du rapport Android montre bien la fin du rafraîchissement à un peu plus d'une minute, c'est cohérent.",
+      "ts": "2026-10-07T16:17:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Je passe le délai du test hors ligne à 120 s avec un commentaire.",
+      "ts": "2026-10-07T16:19:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Délai porté à 120 s dans `e2e/devis-hors-ligne.e2e.ts`, avec le commentaire : l'indicateur n'apparaît qu'après le rafraîchissement complet, lent sur émulateur.",
+      "ts": "2026-10-07T16:21:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "Toute la suite est verte sur iOS et Android, 14 sur 14. Merci. Je la relancerai la veille de la formation pour être tranquille.\n\nLa sortie de la dernière passe, pour mémoire :\n\n```\n$ pnpm --filter mobile e2e:ios && pnpm --filter mobile e2e:android\n PASS  e2e/connexion.e2e.ts (19.8 s)\n PASS  e2e/chantiers-liste.e2e.ts (13.2 s)\n PASS  e2e/accueil-graphiques.e2e.ts (10.4 s)\n PASS  e2e/devis-creation.e2e.ts (29.9 s)\n PASS  e2e/devis-hors-ligne.e2e.ts (78.6 s)\n PASS  e2e/signature.e2e.ts (17.1 s)\n PASS  e2e/profil-notifications.e2e.ts (6.4 s)\n\nTests : 14 réussis, 14 au total\nDurée : 3 min 01 s\n\n PASS  e2e/connexion.e2e.ts (22.0 s)\n PASS  e2e/chantiers-liste.e2e.ts (15.3 s)\n PASS  e2e/accueil-graphiques.e2e.ts (11.0 s)\n PASS  e2e/devis-creation.e2e.ts (32.4 s)\n PASS  e2e/devis-hors-ligne.e2e.ts (84.1 s)\n PASS  e2e/signature.e2e.ts (18.9 s)\n PASS  e2e/profil-notifications.e2e.ts (7.0 s)\n\nTests : 14 réussis, 14 au total\nDurée : 3 min 21 s\n\n$ git diff --stat\n apps/mobile/e2e/accueil-graphiques.e2e.ts          | 8 ++++----\n apps/mobile/e2e/devis-hors-ligne.e2e.ts            | 4 +++-\n apps/mobile/src/composants/GraphiqueBarres.tsx     | 2 +-\n apps/mobile/src/ecrans/profil/Notifications.tsx    | 2 +-\n 4 files changed, 9 insertions(+), 7 deletions(-)\n```",
+      "ts": "2026-10-07T16:27:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "faits": [
+    {
+      "id": "F264",
+      "enonce": "Menuiserie Dupont paie ses factures à 30 jours fin de mois.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Pour Menuiserie Dupont, les factures sont payables à 30 jours fin de mois",
+      "sensible": false
+    },
+    {
+      "id": "F265",
+      "enonce": "La facture annuelle de SARL Bati-Ouest est payée en 4 échéances trimestrielles.",
+      "fiche": "SARL Bati-Ouest",
+      "alias": [
+        "Bati-Ouest"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "SARL Bati-Ouest, dont la facture annuelle est payée en 4 échéances trimestrielles",
+      "sensible": false
+    },
+    {
+      "id": "F263",
+      "enonce": "Les relances de factures impayées partent 10 jours après l'échéance.",
+      "fiche": "Facturation clients",
+      "alias": [],
+      "typeFiche": "regle",
+      "tour": "t-005",
+      "extrait": "les relances de factures impayées partent 10 jours après l'échéance",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N106",
+      "enonce": "Modèle de relance de facture impayée.",
+      "tour": "t-006",
+      "pourquoi": "brouillon"
+    }
+  ],
+  "remplace": [],
+  "conflits": [
+    {
+      "a": "F053",
+      "b": "F264"
+    }
+  ]
+}

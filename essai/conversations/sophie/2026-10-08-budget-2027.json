@@ -1,0 +1,72 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-10-08-budget-2027",
+    "title": "Préparation du budget 2027"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nJe prépare le budget 2027 de l'entreprise. Je voudrais une trame de tableau par grands postes : personnel, sous-traitance, hébergement et logiciels, marketing et salons, formation, honoraires. Pourriez-vous m'en proposer une ?",
+      "ts": "2026-10-08T14:45:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nVoici une trame simple, à tenir dans un tableur avec un onglet par poste et un onglet de synthèse :\n\n| Poste | Sous-postes | Base de calcul | 2026 (réalisé estimé) | 2027 (budget) | Écart |\n|---|---|---|---|---|---|\n| Personnel | salaires bruts, charges patronales, mutuelle, primes | effectif × salaire × coefficient | | | |\n| Sous-traitance | prestataires indépendants, agences | jours × TJM | | | |\n| Hébergement et logiciels | hébergement, API, licences | abonnements mensuels × 12 | | | |\n| Marketing et salons | stands, supports, déplacements | par événement | | | |\n| Formation | formations externes, certifications | enveloppe | | | |\n| Honoraires | expert-comptable, avocat | lettres de mission | | | |\n\nQuelques conseils :\n- séparez bien les charges récurrentes des charges ponctuelles ;\n- indiquez pour chaque ligne la source du chiffre (contrat, devis, estimation) ;\n- prévoyez une colonne « validé / à valider ».\n\nVoulez-vous que nous remplissions les postes ensemble ?",
+      "ts": "2026-10-08T14:45:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Oui, merci. Quelques chiffres sont déjà arrêtés : le budget formation 2027 est de 6 000 €. Pour le Salon des Artisans de l'Ouest, le budget du stand est confirmé à 3 000 € HT.",
+      "ts": "2026-10-08T14:48:42+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Je les intègre :\n\n| Poste | Ligne | 2027 (budget) | Statut |\n|---|---|---|---|\n| Formation | Enveloppe formation | 6 000 € | validé |\n| Marketing et salons | Stand – Salon des Artisans de l'Ouest | 3 000 € HT | validé |\n\nPour le salon, pensez à prévoir à côté du stand les frais annexes (supports imprimés, déplacements, repas), qui sont souvent oubliés : vous pouvez les laisser en « à valider » pour l'instant.\n\nPour la formation, pensez à vérifier ce qui peut être pris en charge par votre opérateur de compétences : cela n'enlève rien à l'enveloppe, mais peut réduire le coût net.\n\nPassons-nous au poste personnel ?",
+      "ts": "2026-10-08T14:49:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Oui. Côté personnel, le budget prévoit l'embauche d'un deuxième commercial au second semestre 2027.\n\nComment chiffre-t-on le coût employeur d'un poste à partir d'un salaire brut ?",
+      "ts": "2026-10-08T14:52:45+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "La méthode générale :\n\n**Coût employeur annuel = salaire brut annuel × coefficient de charges + avantages**\n\n1. **Le coefficient de charges patronales** : pour un cadre ou un non-cadre au-dessus des seuils de réduction, comptez en première approche entre **1,42 et 1,45** du brut.\n2. **Les avantages** : part employeur de la mutuelle, tickets restaurant, prime sur objectifs pour un commercial, véhicule ou indemnités kilométriques.\n3. **Le prorata** : pour une embauche au second semestre, ne budgétez que les mois effectivement travaillés en 2027, par exemple 6 mois pour une arrivée au 1er juillet.\n4. **Les coûts d'arrivée** : éventuels frais de recrutement, poste de travail, formation initiale.\n\nFormule pour votre tableau : (brut annuel × coefficient / 12) × nombre de mois + avantages au prorata + coûts d'arrivée.\n\nPour un commercial, je vous conseille de budgéter le variable à son niveau cible, et non à zéro.",
+      "ts": "2026-10-08T14:53:20+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Merci. Pourriez-vous aussi esquisser une projection de trésorerie mensuelle pour 2027, à partir de ce que nous avons vu ?",
+      "ts": "2026-10-08T14:56:13+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici une esquisse, **à titre purement indicatif** : elle repose sur des hypothèses que je pose moi-même et qui restent à valider avec vos chiffres réels.\n\n**Hypothèses de travail**\n- chiffre d'affaires 2027 voisin de celui de 2025 (1,1 M€), réparti régulièrement sur l'année ;\n- encaissements décalés d'un mois en moyenne par rapport à la facturation ;\n- masse salariale stable au premier semestre, en hausse au second avec l'arrivée d'un commercial ;\n- salon et formation concentrés sur quelques mois.\n\n| Mois | Encaissements | Décaissements | Solde du mois |\n|---|---|---|---|\n| Janvier | ~90 k€ | ~88 k€ | ~+2 k€ |\n| Février | ~92 k€ | ~85 k€ | ~+7 k€ |\n| … | … | … | … |\n| Juillet | ~92 k€ | ~96 k€ | ~−4 k€ |\n| Novembre | ~95 k€ | ~99 k€ | ~−4 k€ |\n\nCes chiffres ne sont qu'une illustration de la méthode : à remplacer par vos données de Comptaflow avant toute utilisation.",
+      "ts": "2026-10-08T14:56:40+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "Merci, je la garde comme piste de travail, rien n'est validé à ce stade. Je verrai tout cela avec Michel Ferrand : j'ai rendez-vous avec lui le 15 octobre pour préparer la clôture.",
+      "ts": "2026-10-08T14:59:14+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

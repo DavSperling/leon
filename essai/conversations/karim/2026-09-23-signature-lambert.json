@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-09-23-signature-lambert",
+    "title": "Signature Peinture & Déco Lambert"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "yes !! peinture & deco lambert a signé aujourdhui, 6 licences. premiere signature du mois jsuis content",
+      "ts": "2026-09-23T16:50:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bravo, belle signature !\n\nPour bien démarrer la relation, je te propose :\n1. **Un mail de bienvenue** dès aujourd'hui, pour remercier et annoncer les prochaines étapes.\n2. **La mise à jour de ton suivi commercial** pour que l'équipe (administratif, formation) ait l'info.\n3. **Un point de suivi** dans deux ou trois semaines, une fois les utilisateurs lancés.\n\nQui est ton interlocuteur chez eux, pour le mail de bienvenue ?",
+      "ts": "2026-09-23T16:50:40+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "ma contact c aurelie lambert, elle est cogerante. fais un mail de bienvenue stp, simple",
+      "ts": "2026-09-23T16:54:14+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Voici une proposition :\n\n---\n**Objet :** Bienvenue chez Chantier+\n\nBonjour Madame Lambert,\n\nMerci pour votre confiance ! Nous sommes ravis de compter Peinture & Déco Lambert parmi nos clients.\n\nLes prochaines étapes :\n- vous allez recevoir vos accès Chantier+ ;\n- notre équipe vous contactera pour planifier la prise en main ;\n- je reste votre interlocuteur pour toute question.\n\nÀ très bientôt,\n\nKarim Haddad\nAtelier Numérique Lebrun\n---\n\nSimple et chaleureux. Tu peux ajouter une phrase personnelle si vous avez parlé d'un projet précis pendant la négociation.",
+      "ts": "2026-09-23T16:54:23+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "nickel. bon maintenant faut que je la rentre dans prospecta, on saisit tous les nouveaux clients dans prospecta. le montant c 4200 HT la 1ere année, je le mets ou ? dans l'opportunité ou dans la fiche client ?",
+      "ts": "2026-09-23T16:57:46+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "En règle générale, dans un CRM :\n\n- **Le montant va sur l'opportunité** (ou « affaire »), que tu passes à l'étape « gagnée ». C'est elle qui alimente les tableaux de bord de chiffre signé, de taux de transformation, etc.\n- **La fiche client** (ou « compte ») porte les informations stables : raison sociale, adresse, contacts, nombre d'utilisateurs, date de début de contrat.\n\nConcrètement :\n1. Ouvre l'opportunité Peinture & Déco Lambert et passe-la en « gagnée » avec le montant.\n2. Vérifie que le compte est bien en statut client et que le contact principal est renseigné.\n3. Ajoute une tâche de suivi dans quelques semaines.\n\nSi ton CRM a un champ « montant récurrent » distinct du « montant première année », c'est le bon moment pour le remplir correctement, sinon les prévisions de l'an prochain seront faussées.",
+      "ts": "2026-09-23T16:58:06+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "ok merci jfais ça",
+      "ts": "2026-09-23T17:02:09+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

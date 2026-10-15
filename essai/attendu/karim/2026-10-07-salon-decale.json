@@ -1,0 +1,56 @@
+{
+  "faits": [
+    {
+      "id": "F073",
+      "enonce": "Le Salon des Artisans de l'Ouest est décalé aux 27 et 28 novembre 2026.",
+      "fiche": "Salon des Artisans de l'Ouest",
+      "alias": [
+        "salon",
+        "SAO"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "on passe du 13-14 nov au 27-28 nov",
+      "sensible": false
+    },
+    {
+      "id": "F074",
+      "enonce": "Maçonnerie Fournier reste client avec une remise de 10 %.",
+      "fiche": "Maçonnerie Fournier",
+      "alias": [
+        "Fournier"
+      ],
+      "typeFiche": "client",
+      "tour": "t-003",
+      "extrait": "fournier reste chez nous, on lui a fait 10 % de remise",
+      "sensible": false
+    },
+    {
+      "id": "F075",
+      "enonce": "Une démonstration de Chantier+ est prévue chez Charpentes Morvan le 20 octobre 2026.",
+      "fiche": "Charpentes Morvan",
+      "alias": [
+        "Morvan"
+      ],
+      "typeFiche": "client",
+      "tour": "t-005",
+      "extrait": "jai calé une demo chez charpentes morvan le 20/10",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N027",
+      "enonce": "Conseils généraux pour réussir un pitch de salon.",
+      "tour": "t-008",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [
+    {
+      "ancien": "F004",
+      "nouveau": "F073"
+    }
+  ],
+  "conflits": []
+}

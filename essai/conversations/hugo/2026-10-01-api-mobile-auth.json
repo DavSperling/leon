@@ -1,0 +1,135 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-10-01-api-mobile-auth",
+    "title": "Authentification de l'API mobile"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "On attaque l'authentification de l'API mobile pour l'appli v2. Inès doit brancher l'écran de connexion la semaine prochaine, elle a besoin au minimum de login, refresh et logout.\n\nContexte :\n- côté web on a la session par cookie httpOnly dans src/server/auth/session.ts, on n'y touche pas ;\n- le mobile ne peut pas vivre avec un cookie de session (React Native, requêtes en arrière-plan, mode hors ligne), donc il faut des jetons ;\n- convention qu'on a calée avec Inès hier : toutes les routes de l'API mobile sont versionnées sous /api/v2, rien d'autre. On ne mélange pas avec les routes /api/* du web, même quand ça fait doublon.\n\nRegarde ce qu'il y a dans src/server/auth et src/app/api, et propose-moi un découpage avant d'écrire quoi que ce soit.\n\npour gagner du temps, l'arbo actuelle :\n\n```\n$ tree src/server/auth src/app/api -L 2 -I node_modules\nsrc/server/auth\n├── password.ts\n├── password.test.ts\n├── session.ts\n└── session.test.ts\nsrc/app/api\n├── chantiers\n│   ├── [id]\n│   └── route.ts\n├── clients\n│   ├── [id]\n│   └── route.ts\n├── devis\n│   ├── [id]\n│   └── route.ts\n├── factures\n│   ├── [id]\n│   └── route.ts\n├── health\n│   └── route.ts\n├── pdf\n│   └── jobs\n└── planning\n    └── route.ts\n\n15 directories, 11 files\n```",
+      "ts": "2026-10-01T09:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je regarde le module d'auth et les routes existantes.",
+      "ts": "2026-10-01T09:00:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "J'ai fait le tour.\n\nCe qui existe :\n- `src/server/auth/session.ts` : session web, cookie httpOnly `chantier_sid`, table `sessions` ;\n- `src/server/auth/password.ts` : vérification argon2, réutilisable telle quelle ;\n- `src/app/api/` : routes web, aucune notion de version ;\n- aucun middleware commun aux routes API, chaque route appelle `requireSession()`.\n\nDécoupage proposé :\n1. `src/app/api/v2/auth/login/route.ts`, `refresh/route.ts`, `logout/route.ts` ;\n2. `src/server/mobile-auth/tokens.ts` : jeton d'accès signé (JWT HS256, clé dans `MOBILE_JWT_SECRET`) et jeton de rafraîchissement opaque, haché en base ;\n3. migration `0031_mobile_refresh_tokens.sql` : `id`, `user_id`, `token_hash`, `expires_at`, `revoked_at`, `replaced_by` pour la rotation ;\n4. `src/server/mobile-auth/require-mobile-user.ts` : équivalent de `requireSession()` pour les routes /api/v2.\n\nIl me manque les durées de vie des deux jetons, et si tu veux une rotation du jeton de rafraîchissement à chaque usage.",
+      "ts": "2026-10-01T09:03:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Rotation à chaque refresh, oui.\n\nDurées : jeton d'accès 15 minutes, jeton de rafraîchissement 30 jours. Un compagnon qui n'a pas ouvert l'appli depuis un mois se reconnecte, c'est acceptable, Inès est d'accord.\n\nVas-y pour la migration et le service de jetons, je regarde pendant ce temps le schéma de la table users.",
+      "ts": "2026-10-01T09:04:45+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "J'écris la migration et le service de jetons, puis les trois routes.",
+      "ts": "2026-10-01T09:05:45+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005a",
+      "role": "user",
+      "text": "le retour de l'explorateur que j'ai lancé sur l'auth web, pour être sûr qu'on ne casse rien :\n\n<teammate-message teammate_id=\"explorateur\">\nRapport explorateur : usages de l'authentification web, pour ne rien casser en ajoutant /api/v2 (lecture seule, main)\n\n1. Appels à requireSession()\n```\n$ git grep -n \"requireSession(\" -- 'src/app/api'\nsrc/app/api/chantiers/route.ts:9:  const session = await requireSession(req);\nsrc/app/api/chantiers/route.ts:31:  const session = await requireSession(req);\nsrc/app/api/chantiers/[id]/route.ts:8:  const session = await requireSession(req);\nsrc/app/api/chantiers/[id]/route.ts:27:  const session = await requireSession(req);\nsrc/app/api/chantiers/[id]/route.ts:49:  const session = await requireSession(req);\nsrc/app/api/clients/route.ts:7:  const session = await requireSession(req);\nsrc/app/api/clients/route.ts:22:  const session = await requireSession(req);\nsrc/app/api/clients/[id]/route.ts:6:  const session = await requireSession(req);\nsrc/app/api/clients/[id]/route.ts:24:  const session = await requireSession(req);\nsrc/app/api/devis/route.ts:11:  const session = await requireSession(req);\nsrc/app/api/devis/route.ts:38:  const session = await requireSession(req);\nsrc/app/api/devis/[id]/route.ts:9:  const session = await requireSession(req);\nsrc/app/api/devis/[id]/route.ts:33:  const session = await requireSession(req);\nsrc/app/api/devis/[id]/pdf/route.ts:12:  const session = await requireSession(req);\nsrc/app/api/factures/route.ts:8:  const session = await requireSession(req);\nsrc/app/api/factures/route.ts:29:  const session = await requireSession(req);\nsrc/app/api/factures/[id]/route.ts:7:  const session = await requireSession(req);\nsrc/app/api/factures/[id]/route.ts:30:  const session = await requireSession(req);\nsrc/app/api/factures/[id]/pdf/route.ts:10:  const session = await requireSession(req);\nsrc/app/api/pdf/jobs/[id]/route.ts:8:  const session = await requireSession(req);\nsrc/app/api/planning/route.ts:14:  const session = await requireSession(req);\nsrc/app/api/planning/route.ts:52:  const session = await requireSession(req);\n$ git grep -n \"requireSession(\" -- 'src/app/api' | wc -l\n22\n```\n22 appels dans 13 fichiers de route. Aucun n'est sous un dossier versionné. La route `health` n'appelle pas `requireSession()`, c'est voulu (sonde de disponibilité).\n\n2. Ce qu'exporte session.ts\n```\n$ grep -n \"^export\" src/server/auth/session.ts\n4:export const COOKIE_SESSION = 'chantier_sid';\n12:export type Session = { id: string; userId: string; role: Role; expiresAt: Date };\n18:export async function creerSession(userId: string): Promise<Session> {\n41:export async function lireSession(req: Request): Promise<Session | null> {\n63:export async function requireSession(req: Request): Promise<Session> {\n77:export async function detruireSession(id: string): Promise<void> {\n```\n`requireSession()` lève une `HttpError(401)` attrapée par l'enveloppe `withErreurs()` de `src/server/http.ts` ; c'est cette enveloppe qui transforme les erreurs en réponses JSON. Les nouvelles routes /api/v2 peuvent la réutiliser telle quelle.\n\n3. password.ts\n```\n$ grep -n \"^export\" src/server/auth/password.ts\n3:export async function hacherMotDePasse(clair: string): Promise<string> {\n9:export async function verifierMotDePasse(hache: string, clair: string): Promise<boolean> {\n```\nAucune dépendance au cookie ni à la requête : réutilisable directement par la route de login mobile.\n\n4. Middleware\n```\n$ ls src/middleware.ts middleware.ts 2>&1\nls: src/middleware.ts: No such file or directory\nls: middleware.ts: No such file or directory\n```\nPas de middleware Next.js : rien n'interceptera les routes /api/v2 avant leur propre code.\n\n5. Tests existants de l'auth\n```\n$ pnpm test src/server/auth\n ✓ src/server/auth/password.test.ts (4 tests) 412ms\n ✓ src/server/auth/session.test.ts (12 tests) 96ms\n\n Test Files  2 passed (2)\n      Tests  16 passed (16)\n   Duration  1.38s\n```\n\n6. Variables d'environnement lues par le module auth\n```\n$ git grep -n \"process.env\" -- src/server/auth\nsrc/server/auth/session.ts:7:const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;\nsrc/server/auth/session.ts:8:const COOKIE_SECURE = process.env.NODE_ENV === 'production';\n```\n`MOBILE_JWT_SECRET` n'existe encore nulle part, ni dans `.env.example` ni dans la configuration de déploiement : il faudra l'ajouter aux deux.\n\nRemarque\nInventaire seulement, rien modifié.\n</teammate-message>",
+      "ts": "2026-10-01T09:09:08+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005b",
+      "role": "assistant",
+      "text": "Merci. Je réutilise `withErreurs()` pour les routes /api/v2 et j'ajoute `MOBILE_JWT_SECRET` à `.env.example`. Les 22 appels web ne sont pas touchés.",
+      "ts": "2026-10-01T09:12:31+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "user",
+      "text": "$ pnpm test src/server/mobile-auth\n\n RUN  v2.1.4 /home/hugo/dev/chantier\n\n ✓ src/server/mobile-auth/tokens.test.ts (9 tests) 41ms\n ❯ src/app/api/v2/auth/refresh/route.test.ts (6 tests | 2 failed) 88ms\n   × rejette une requête sans jeton avec 401\n     → expected 401 to be 500\n   × rejette un jeton mal formé avec 401\n     → expected 401 to be 500\n\n FAIL  src/app/api/v2/auth/refresh/route.test.ts > rejette une requête sans jeton avec 401\nTypeError: Cannot read properties of undefined (reading 'sub')\n ❯ requireMobileUser src/server/mobile-auth/require-mobile-user.ts:22:31\n     20|   const raw = req.headers.get('authorization')?.split(' ')[1];\n     21|   const payload = verifyAccessToken(raw);\n     22|   const user = await findUser(payload.sub);\n       |                               ^\n ❯ POST src/app/api/v2/auth/refresh/route.ts:14:18\n\n Test Files  1 failed | 1 passed (2)\n      Tests  2 failed | 13 passed (15)\n\ndeux rouges, le reste passe",
+      "ts": "2026-10-01T09:15:55+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "assistant",
+      "text": "`verifyAccessToken` renvoie `undefined` quand l'en-tête manque ou n'a pas le préfixe `Bearer`, et on lit `.sub` sans vérifier. Je fais lever une erreur dédiée et je la traduis en 401.",
+      "ts": "2026-10-01T09:16:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "user",
+      "text": "ok vert de mon côté. par contre Inès me remonte ça depuis le simulateur, en mode web d'Expo :\n\nAccess to fetch at 'http://localhost:3000/api/v2/auth/login' from origin 'http://localhost:8081' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\n\net dans les logs du serveur :\n\n[next] OPTIONS /api/v2/auth/login 401 in 3ms\n[next] OPTIONS /api/v2/auth/login 401 in 2ms\n[next] OPTIONS /api/v2/auth/login 401 in 2ms\n\ntu vois d'où ça vient ?\n\nl'agent que j'ai mis à reproduire chez moi confirme, avec plus de détails :\n\n<teammate-message teammate_id=\"verif-mobile\">\nRapport verif-mobile : reproduction de l'erreur CORS en mode web d'Expo (poste local, branche hugo/api-mobile-auth)\n\nEnvironnement\n- serveur Next.js en dev sur http://localhost:3000 ;\n- appli lancée avec `npx expo start --web`, servie sur http://localhost:8081 ;\n- navigateur de développement, cache désactivé.\n\nConsole du navigateur\n```\nAccess to fetch at 'http://localhost:3000/api/v2/auth/login' from origin 'http://localhost:8081' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.\nPOST http://localhost:3000/api/v2/auth/login net::ERR_FAILED\nTypeError: Failed to fetch\n    at login (http://localhost:8081/src/api/auth.ts:14:23)\n    at onSubmit (http://localhost:8081/src/screens/Connexion.tsx:41:11)\n    at handlePress (http://localhost:8081/node_modules/react-native-web/dist/exports/Pressable/index.js:92:7)\n```\n\nRequête de contrôle préalable, telle que l'onglet réseau la montre\n```\nOPTIONS /api/v2/auth/login HTTP/1.1\nHost: localhost:3000\nOrigin: http://localhost:8081\nAccess-Control-Request-Method: POST\nAccess-Control-Request-Headers: content-type\nSec-Fetch-Mode: cors\n\nHTTP/1.1 401 Unauthorized\ncontent-type: application/json\ndate: Thu, 01 Oct 2026 07:24:58 GMT\ncontent-length: 34\n\n{\"error\":\"unauthorized\",\"code\":401}\n```\n\nJournal du serveur pendant la reproduction\n```\n[next] OPTIONS /api/v2/auth/login 401 in 3ms\n[next] OPTIONS /api/v2/auth/login 401 in 2ms\n[next] OPTIONS /api/v2/auth/login 401 in 2ms\n```\n\nContre-épreuve\n- Le même appel fait avec curl, sans en-tête Origin, répond 200 avec la paire de jetons : la route elle-même fonctionne.\n- Depuis le simulateur iOS (appli native, pas le mode web), la connexion passe sans erreur.\n\nLecture\nLa requête OPTIONS reçoit un 401 sans aucun en-tête Access-Control-*, le navigateur abandonne avant le POST. Je n'ai rien modifié.\n</teammate-message>",
+      "ts": "2026-10-01T09:25:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Le preflight `OPTIONS` passe par `requireMobileUser`, qui répond 401 avant qu'aucun en-tête CORS ne soit posé. Je regarde si on traite `OPTIONS` à part ou si on met les en-têtes dans `next.config`.",
+      "ts": "2026-10-01T09:26:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "user",
+      "text": "j'ai essayé d'ajouter un handler OPTIONS dans login/route.ts qui renvoie 204 avec Access-Control-Allow-Origin: *, maintenant c'est :\n\nAccess to fetch at 'http://localhost:3000/api/v2/auth/login' from origin 'http://localhost:8081' has been blocked by CORS policy: Request header field authorization is not allowed by Access-Control-Allow-Headers in preflight response.\n\nbon. sur un vrai téléphone il n'y a pas de CORS de toute façon, c'est seulement le mode web d'Expo qui râle. j'enlève mon handler, on verra si ça gêne vraiment Inès. on passe à la limite de débit.\n\nle preflight à la main avec mon handler, pour que tu voies ce qui manque :\n\n```\n$ curl -i -X OPTIONS http://localhost:3000/api/v2/auth/login \\\n    -H \"Origin: http://localhost:8081\" \\\n    -H \"Access-Control-Request-Method: POST\" \\\n    -H \"Access-Control-Request-Headers: authorization,content-type\"\nHTTP/1.1 204 No Content\naccess-control-allow-origin: *\nvary: RSC, Next-Router-State-Tree, Next-Router-Prefetch\ndate: Thu, 01 Oct 2026 07:28:41 GMT\nconnection: keep-alive\nkeep-alive: timeout=5\n\n$ curl -i -X OPTIONS http://localhost:3000/api/v2/auth/refresh \\\n    -H \"Origin: http://localhost:8081\" \\\n    -H \"Access-Control-Request-Method: POST\"\nHTTP/1.1 401 Unauthorized\ncontent-type: application/json\ndate: Thu, 01 Oct 2026 07:28:47 GMT\ncontent-length: 34\n\n{\"error\":\"unauthorized\",\"code\":401}\n```",
+      "ts": "2026-10-01T09:29:30+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "assistant",
+      "text": "D'accord, je retire le handler `OPTIONS`. Pour la limite de débit : quelle valeur, et comptée par utilisateur ou par adresse IP ?",
+      "ts": "2026-10-01T09:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "user",
+      "text": "Par utilisateur, sur l'id du compte, pas sur l'IP : sur un chantier les compagnons partagent souvent la même connexion 4G du camion, on bloquerait toute l'équipe.\n\nL'API mobile limite chaque utilisateur à 100 requêtes par minute. Au-delà, 429 avec un en-tête Retry-After.",
+      "ts": "2026-10-01T09:32:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-013",
+      "role": "assistant",
+      "text": "J'ajoute un compteur à fenêtre glissante dans `require-mobile-user.ts`, stocké dans Postgres pour ne pas dépendre d'un Redis qu'on n'a pas, avec le `Retry-After` calculé sur la fenêtre.",
+      "ts": "2026-10-01T09:33:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014",
+      "role": "user",
+      "text": "$ pnpm test src/server/mobile-auth src/app/api/v2\n\n ✓ src/server/mobile-auth/tokens.test.ts (9 tests) 39ms\n ✓ src/server/mobile-auth/rate-limit.test.ts (5 tests) 212ms\n ✓ src/app/api/v2/auth/login/route.test.ts (4 tests) 97ms\n ✓ src/app/api/v2/auth/refresh/route.test.ts (6 tests) 102ms\n ✓ src/app/api/v2/auth/logout/route.test.ts (2 tests) 44ms\n\n Test Files  5 passed (5)\n      Tests  26 passed (26)\n\n$ pnpm lint\nsrc/server/mobile-auth/rate-limit.ts\n  3:10  warning  'sql' is defined but never used  @typescript-eslint/no-unused-vars\n\n✖ 1 problem (0 errors, 1 warning)\n\nvire le warning et fais-moi un récap pour Inès\n\n<teammate-message teammate_id=\"relecteur-diff\">\nRelecture relecteur-diff : branche hugo/api-mobile-auth contre main (remarques de forme)\n\n```\n$ git diff --stat main...hugo/api-mobile-auth\n db/migrations/0031_mobile_refresh_tokens.sql  |   18 ++++++++++++++++++\n src/app/api/v2/auth/login/route.ts            |   46 ++++++++++++++++++++++++++++++++++++++++\n src/app/api/v2/auth/login/route.test.ts       |   58 ++++++++++++++++++++++++++++++++++++++++\n src/app/api/v2/auth/logout/route.ts           |   29 +++++++++++++++++++++++++++++\n src/app/api/v2/auth/logout/route.test.ts      |   31 +++++++++++++++++++++++++++++++\n src/app/api/v2/auth/refresh/route.ts          |   52 ++++++++++++++++++++++++++++++++++++++++\n src/app/api/v2/auth/refresh/route.test.ts     |   84 ++++++++++++++++++++++++++++++++++++++++\n src/server/mobile-auth/config.ts              |    9 +++++++++\n src/server/mobile-auth/rate-limit.ts          |   61 ++++++++++++++++++++++++++++++++++++++++\n src/server/mobile-auth/rate-limit.test.ts     |   72 ++++++++++++++++++++++++++++++++++++++++\n src/server/mobile-auth/require-mobile-user.ts |   47 ++++++++++++++++++++++++++++++++++++++++\n src/server/mobile-auth/tokens.ts              |   88 ++++++++++++++++++++++++++++++++++++++++\n src/server/mobile-auth/tokens.test.ts         |  103 ++++++++++++++++++++++++++++++++++++++++\n .env.example                                  |    1 +\n 14 files changed, 699 insertions(+), 0 deletions(-)\n```\n\n1. Nommage\n- `tokens.ts` mélange anglais et français : `signAccessToken`, `verifyAccessToken`, mais `creerRefresh` et `revoquerChaine`. À harmoniser dans un sens ou dans l'autre, peu importe lequel.\n- `rate-limit.ts` exporte `checkRateLimit` ; la route l'appelle `limiteur` à l'import. Un seul nom suffirait.\n\n2. Lisibilité\n- Dans `refresh/route.ts`, la rotation (révocation de l'ancien, création du nouveau, lien `replaced_by`) se fait en trois requêtes successives sans transaction explicite ; elles passent par `db.tx()` plus haut mais ce n'est pas visible à la lecture. Un commentaire d'une ligne aiderait.\n- Les durées sont bien centralisées dans `config.ts`, rien en dur dans les routes.\n\n3. Tests\n- Les noms de tests sont en français sauf deux dans `tokens.test.ts` (`rejects expired token`, `rejects bad signature`).\n- `rate-limit.test.ts` utilise de vrais délais (`setTimeout`) : 212 ms aujourd'hui, ça grossira. Les faux minuteurs de vitest éviteraient ça.\n\n4. Migration\n- `0031` n'a pas de migration descendante ; les autres migrations récentes en ont une.\n\nRien de bloquant.\n</teammate-message>",
+      "ts": "2026-10-01T09:45:10+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-015",
+      "role": "assistant",
+      "text": "Import inutile retiré, lint propre.\n\nRécap pour Inès :\n\n**Routes disponibles**\n- `POST /api/v2/auth/login` : `{ email, password }` → `{ accessToken, refreshToken, expiresIn }`\n- `POST /api/v2/auth/refresh` : `{ refreshToken }` → nouvelle paire ; l'ancien jeton de rafraîchissement est invalidé\n- `POST /api/v2/auth/logout` : `{ refreshToken }` → 204, révoque la chaîne\n\n**Côté appli**\n- envoyer `Authorization: Bearer <accessToken>` sur toutes les routes /api/v2 ;\n- sur un 401, appeler `refresh` une seule fois puis rejouer la requête ; si `refresh` répond 401, retour à l'écran de connexion ;\n- sur un 429, respecter `Retry-After` avant de réessayer, en particulier pendant la synchronisation hors ligne qui envoie beaucoup de requêtes d'un coup.\n\n**Durées et limites** : celles que tu as fixées plus haut, dans `src/server/mobile-auth/config.ts`.\n\n**Non traité** : le CORS en mode web d'Expo, laissé de côté.\n\n26 tests verts, migration `0031` à appliquer en local avec `pnpm db:migrate`.",
+      "ts": "2026-10-01T09:46:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016",
+      "role": "user",
+      "text": "ok merci, je pousse la branche et je lui envoie ça.",
+      "ts": "2026-10-01T09:47:55+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

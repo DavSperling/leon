@@ -1,0 +1,49 @@
+{
+  "faits": [
+    {
+      "id": "F246",
+      "enonce": "Le TJM de Lucas Fabre est renégocié à 500 € HT.",
+      "fiche": "Lucas Fabre",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-001",
+      "extrait": "Nous avons renégocié son tarif : son TJM passe à 500 € HT",
+      "sensible": false
+    },
+    {
+      "id": "F247",
+      "enonce": "Lucas Fabre est payé à 30 jours.",
+      "fiche": "Lucas Fabre",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "il est payé à 30 jours",
+      "sensible": false
+    },
+    {
+      "id": "F248",
+      "enonce": "Le compte client OVH de l'entreprise est géré par Sophie Garnier.",
+      "fiche": "OVH",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-005",
+      "extrait": "c'est moi qui gère le compte client OVH de l'entreprise",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N104",
+      "enonce": "Identifiant et mot de passe d'accès OVH collés dans le message.",
+      "tour": "t-005",
+      "pourquoi": "secret"
+    }
+  ],
+  "remplace": [
+    {
+      "ancien": "F287",
+      "nouveau": "F246"
+    }
+  ],
+  "conflits": []
+}

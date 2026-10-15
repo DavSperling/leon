@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-sophie-2026-09-23-facture-lambert",
+    "title": "Facture Peinture & Déco Lambert"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Bonjour,\n\nNous venons de signer un nouveau client, Peinture & Déco Lambert, une entreprise de Laval. Ils ont signé aujourd'hui pour 6 licences, 4 200 € HT pour la première année. Je dois émettre la facture demain, le 24 septembre.\n\nPourriez-vous me rappeler les mentions obligatoires d'une facture entre professionnels, pour que je vérifie notre modèle ?",
+      "ts": "2026-09-23T15:30:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Bonjour,\n\nFélicitations pour ce nouveau client. Voici les mentions obligatoires d'une facture entre professionnels en France :\n\n**Identification**\n- numéro de facture unique, selon une séquence chronologique continue ;\n- date d'émission ;\n- dénomination, adresse, numéro SIREN et numéro de TVA intracommunautaire du vendeur ;\n- dénomination et adresse du client (et son numéro de TVA intracommunautaire s'il en a un) ;\n- forme juridique et montant du capital pour une société.\n\n**Prestation**\n- désignation précise : ici, par exemple « Licences Chantier+, 6 utilisateurs, période du … au … » ;\n- quantité, prix unitaire HT ;\n- taux de TVA applicable et montant de la TVA ;\n- total HT et total TTC.\n\n**Paiement**\n- date d'échéance du règlement ;\n- conditions d'escompte (ou la mention « pas d'escompte pour paiement anticipé ») ;\n- taux des pénalités de retard ;\n- indemnité forfaitaire pour frais de recouvrement de 40 €.\n\nSi votre modèle comporte déjà tout cela, il ne vous restera qu'à vérifier la période couverte par les licences.",
+      "ts": "2026-09-23T15:30:38+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Merci. Les factures sont émises dans Comptaflow, notre logiciel de comptabilité, et la plupart de ces mentions sont déjà dans le modèle.\n\nUne question à part : la gérante m'a demandé si l'autoliquidation de TVA s'appliquait, puisqu'ils travaillent dans le bâtiment. Pouvez-vous m'expliquer le principe en général ?",
+      "ts": "2026-09-23T15:33:45+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Volontiers. Voici le principe général de l'autoliquidation de TVA dans le BTP.\n\n**Le principe**\nDepuis 2014, en cas de **sous-traitance de travaux de construction**, ce n'est plus le sous-traitant qui collecte la TVA mais l'entreprise donneuse d'ordre qui l'« autoliquide » : le sous-traitant facture hors taxe avec la mention « Autoliquidation », et le donneur d'ordre déclare la TVA due et la déduit dans le même temps.\n\n**Les conditions cumulatives**\n1. un contrat de sous-traitance (une entreprise travaille pour le compte d'une autre entreprise, elle-même titulaire du marché) ;\n2. des **travaux de construction** : réalisation, réparation, nettoyage, entretien, démolition d'un immeuble ;\n3. un donneur d'ordre assujetti à la TVA.\n\n**Ce qui n'est pas concerné**\n- les ventes de matériaux sans pose ;\n- les prestations intellectuelles (études, bureau d'études, sauf exceptions) ;\n- les ventes de logiciels ou d'abonnements, qui ne sont pas des travaux immobiliers.\n\nDans votre cas, la vente de licences d'un logiciel à une entreprise du bâtiment ne relève pas de l'autoliquidation : vous facturez avec la TVA au taux normal, comme d'habitude.",
+      "ts": "2026-09-23T15:34:29+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "C'est bien ce que je pensais, merci pour la confirmation.\n\nPour les conditions de règlement, je reprends notre règle habituelle : chez nous, les clients paient uniquement par virement, ni chèque ni prélèvement. Pourriez-vous me proposer une formulation claire pour le pied de facture ?",
+      "ts": "2026-09-23T15:37:51+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici une proposition de pied de facture :\n\n> **Conditions de règlement** : paiement par virement bancaire uniquement, à l'échéance indiquée ci-dessus.\n> IBAN : FR76 XXXX XXXX XXXX XXXX XXXX XXX – BIC : XXXXXXXX\n> Merci de rappeler le numéro de facture dans le libellé du virement.\n> Pas d'escompte pour paiement anticipé.\n> En cas de retard de paiement, des pénalités calculées au taux de trois fois le taux d'intérêt légal seront exigibles, ainsi qu'une indemnité forfaitaire pour frais de recouvrement de 40 € (articles L441-10 et D441-5 du Code de commerce).\n\nDeux conseils :\n- demander le numéro de facture dans le libellé facilite beaucoup le rapprochement bancaire ;\n- si Comptaflow le permet, enregistrez ce texte comme pied de page par défaut pour qu'il apparaisse sur toutes les factures.",
+      "ts": "2026-09-23T15:38:26+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait, c'est exactement ce qu'il me fallait. Je l'enregistre comme pied de page par défaut dans Comptaflow. Merci beaucoup et bonne fin de journée.",
+      "ts": "2026-09-23T15:41:19+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

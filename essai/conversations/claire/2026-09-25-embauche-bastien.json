@@ -1,0 +1,65 @@
+{
+  "source": {
+    "kind": "claude_ai",
+    "external_id": "essai-claire-2026-09-25-embauche-bastien",
+    "title": "Embauche développeur mobile"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Talents Ouest m'a présenté un excellent profil. Décision prise : j'embauche Bastien Royer comme développeur mobile, en CDI. Qu'est-ce que je dois préparer ?",
+      "ts": "2026-09-25T17:20:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Félicitations. Voici ce qu'il faut préparer, dans l'ordre :\n\n1. **La proposition écrite** : une lettre de proposition d'embauche (ou promesse) qui précise le poste, la rémunération, la date d'arrivée, la durée de la période d'essai et le lieu de travail. Une fois acceptée, elle engage les deux parties.\n2. **Le contrat de travail** : à remettre au plus tard dans les deux jours ouvrables suivant l'embauche, idéalement signé le premier jour.\n3. **Les formalités** : déclaration préalable à l'embauche, affiliation à la mutuelle et à la prévoyance, visite d'information et de prévention.\n4. **L'arrivée** : matériel, accès, parrain technique, programme de la première semaine.\n\nPour rédiger la proposition, il me manque trois éléments : la rémunération, la date d'arrivée et la durée de la période d'essai.",
+      "ts": "2026-09-25T17:20:27+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "Salaire : 46 000 € brut annuel. Il arrive le 2 novembre.",
+      "ts": "2026-09-25T17:22:25+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Noté. Deux remarques :\n\n- **Le versement** : précisez dans la lettre si le salaire est versé sur 12 mois ou sur 13 mois. Sans précision, on comprend 12 mensualités.\n- **L'honoraire du cabinet** sera dû à la prise de poste ou à la signature selon votre accord avec lui. Vérifiez la date pour votre trésorerie.\n\nEt la période d'essai ? Pour un poste de développeur, la convention collective fixe en général une durée maximale selon le statut (employé, technicien ou cadre). Quelle durée souhaitez-vous ?",
+      "ts": "2026-09-25T17:22:49+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "Période d'essai : 3 mois. Rédigez la lettre de proposition.",
+      "ts": "2026-09-25T17:24:15+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Voici un projet de lettre de proposition d'embauche, à relire avant envoi :\n\n---\n\nAtelier Numérique Lebrun\nQuai de la Fosse, Nantes\n\nÀ l'attention de Monsieur Bastien Royer\n\nObjet : proposition d'embauche\n\nMonsieur,\n\nÀ la suite de nos échanges, j'ai le plaisir de vous proposer de rejoindre Atelier Numérique Lebrun en qualité de développeur mobile, dans le cadre d'un contrat à durée indéterminée.\n\nLes conditions de cette proposition sont les suivantes :\n- **Poste** : développeur mobile, au sein de l'équipe produit ;\n- **Rémunération** : 46 000 € brut annuel, versés en 12 mensualités ;\n- **Date d'entrée** : 2 novembre 2026 ;\n- **Période d'essai** : 3 mois ;\n- **Lieu de travail** : nos bureaux de Nantes, quai de la Fosse.\n\nJe vous remercie de bien vouloir me faire part de votre réponse par retour de courrier ou par courriel avant le [date limite].\n\nDans l'attente, je vous prie d'agréer, Monsieur, l'expression de mes salutations distinguées.\n\nClaire Lebrun\nPrésidente\n\n---\n\nPensez à fixer une date limite de réponse raisonnable, une semaine en général.",
+      "ts": "2026-09-25T17:24:59+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "Parfait, je l'envoie demain. Côté administratif, que dois-je faire avant son arrivée ?",
+      "ts": "2026-09-25T17:28:22+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "Voici la liste, à cocher :\n\n- **Déclaration préalable à l'embauche** : au plus tôt huit jours avant l'arrivée, au plus tard le jour même avant la prise de poste.\n- **Registre unique du personnel** : l'inscrire dès son arrivée.\n- **Mutuelle et prévoyance** : prévenir l'organisme pour l'affiliation dès le premier jour.\n- **Visite d'information et de prévention** : à organiser auprès de votre service de santé au travail dans les trois mois suivant la prise de poste.\n- **Contrat de travail** : le préparer pour signature le premier jour.\n- **Matériel et accès** : ordinateur, téléphone de test iOS et Android, comptes sur vos outils.\n\nJe vous conseille de confier la liste à la personne qui gère l'administratif, avec une date pour chaque ligne.",
+      "ts": "2026-09-25T17:28:51+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-hugo-2026-09-23-geocodage-mapeo",
+    "title": "Géocodage des chantiers avec Mapéo"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "Nouveau chantier aujourd'hui : on branche le géocodage des adresses de chantier sur l'API Mapéo. Aujourd'hui on stocke l'adresse en texte libre dans chantiers.adresse et rien d'autre, donc impossible d'afficher la carte des interventions ou de calculer un temps de trajet.\n\nCe que je veux :\n- un module src/geo/geocoder.ts avec une fonction geocoder(adresse) qui renvoie lat, lng et un niveau de précision ;\n- l'appel au moment de la création ou de la modification d'un chantier (pas bloquant : si Mapéo répond mal, on enregistre le chantier quand même et on réessaie plus tard) ;\n- un script de rattrapage pour les chantiers existants ;\n- des tests avec un bouchon, je veux pas taper l'API réelle dans la CI.\n\nLa clé est déjà dans le gestionnaire de secrets du serveur, en local tu as un bouchon dans .env.example. Commence par regarder le modèle chantiers.",
+      "ts": "2026-09-23T10:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je regarde le modèle chantiers et les endroits où l'adresse est écrite.",
+      "ts": "2026-09-23T10:02:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "je te colle la partie utile de leur doc (le PDF qu'ils nous ont envoyé avec le contrat) :\n\n```\nGET /v2/geocode?q=<adresse>&country=FR\nRéponse 200 :\n{ \"results\": [ { \"lat\": 47.2134, \"lng\": -1.5621, \"precision\": \"housenumber\", \"label\": \"...\" } ] }\nCodes d'erreur : 400 (requête invalide), 401 (clé absente ou invalide), 429 (quota dépassé, voir l'en-tête Retry-After), 5xx.\n```\n\net surtout : Mapéo nous limite à 10 requêtes par seconde, c'est écrit dans notre contrat. Le script de rattrapage doit donc être bridé, sinon on va se faire jeter dès le premier lot.\n\net l'explorateur a rendu son tour du modèle :\n\n<teammate-message teammate_id=\"explorateur\">\nExploration : modèle `chantiers` et endroits où l'adresse est écrite\n\nSchéma actuel (base de recette)\n\n```\nchantier=> \\d chantiers\n                              Table \"public.chantiers\"\n     Column      |           Type           | Nullable |      Default\n-----------------+--------------------------+----------+-------------------\n id              | uuid                     | not null | gen_random_uuid()\n client_id       | uuid                     | not null |\n nom             | text                     | not null |\n adresse         | text                     | not null |\n statut          | text                     | not null | 'prevu'::text\n debut_prevu     | date                     |          |\n fin_prevue      | date                     |          |\n cree_le         | timestamp with time zone | not null | now()\n modifie_le      | timestamp with time zone | not null | now()\nIndexes:\n    \"chantiers_pkey\" PRIMARY KEY, btree (id)\n    \"chantiers_client_idx\" btree (client_id)\n    \"chantiers_adresse_trgm_idx\" gin (adresse gin_trgm_ops)\nForeign-key constraints:\n    \"chantiers_client_id_fkey\" FOREIGN KEY (client_id) REFERENCES clients(id)\n```\n\nAucune colonne de coordonnées, aucun champ de précision. L'adresse est un texte libre d'une seule ligne, code postal et ville compris.\n\nÉcritures de `chantiers.adresse`\n\n```\n$ grep -rn \"adresse\" src --include=*.ts | grep -v test | grep -i \"chantier\"\nsrc/server/chantiers/create.ts:27:    adresse: input.adresse.trim(),\nsrc/server/chantiers/update.ts:41:  if (patch.adresse !== undefined) values.adresse = patch.adresse.trim();\nsrc/server/import/adresses.ts:63:      adresse: [ligne.rue, ligne.cp, ligne.ville].filter(Boolean).join(' '),\nsrc/server/chantiers/schema.ts:12:  adresse: z.string().min(5).max(300),\nsrc/app/(app)/chantiers/nouveau/FormulaireChantier.tsx:88:          name=\"adresse\"\nsrc/app/(app)/chantiers/[id]/EditionChantier.tsx:54:          name=\"adresse\"\n```\n\nTrois points d'entrée écrivent l'adresse : la création, la mise à jour partielle et l'import CSV. Les deux formulaires passent par les deux premiers.\n\nLectures de l'adresse\n- `src/server/planning/tournees.ts` : affiche l'adresse, ne calcule aucune distance (commentaire « TODO trajets quand on aura des coordonnées »).\n- `src/server/pdf/` : l'adresse du chantier apparaît dans l'en-tête des devis.\n- `src/app/(app)/chantiers/[id]/page.tsx` : affichage simple.\n\nQualité des adresses en recette\n\n```\nchantier=> select count(*) as total,\nchantier->        count(*) filter (where adresse !~ '\\d{5}') as sans_code_postal,\nchantier->        count(distinct lower(adresse)) as distinctes\nchantier->   from chantiers;\n total | sans_code_postal | distinctes\n-------+------------------+------------\n  3204 |              137 |       2361\n(1 row)\n```\n\nEnviron 4 % des adresses n'ont pas de code postal détectable (souvent « chantier rue des Lilas, derrière la mairie »). Le géocodeur devra accepter une précision faible plutôt que d'échouer.\n\nTests existants\n- `src/server/chantiers/create.test.ts` (6 tests) et `update.test.ts` (5 tests) : aucun ne mocke de service externe, ils n'appellent que la base de test.\n- Pas encore de dossier `src/geo/`.\n\nJe n'ai rien modifié.\n</teammate-message>",
+      "ts": "2026-09-23T10:07:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Compris. Je mets un limiteur de débit commun dans le module (jeton par intervalle, réglé un peu sous la limite pour garder de la marge), utilisé à la fois par le serveur et par le script de rattrapage. Je code le module et le bouchon.",
+      "ts": "2026-09-23T10:10:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "j'ai lancé le rattrapage sur la base de recette pour voir, ça crache des 429 quand même :\n\n```\n$ pnpm tsx scripts/rattrapage-geocodage.ts --env recette --lot 200\n[10:24:03] lot 1/16 : 200 adresses\n[10:24:24] lot 1/16 : 200 ok\n[10:24:24] lot 2/16 : 200 adresses\n[10:24:31] WARN geocoder 429 Too Many Requests (adresse #241) retry-after=2\n[10:24:31] WARN geocoder 429 Too Many Requests (adresse #242) retry-after=2\n[10:24:31] WARN geocoder 429 Too Many Requests (adresse #243) retry-after=2\n[10:24:33] WARN geocoder 429 Too Many Requests (adresse #244) retry-after=1\n[10:24:33] ERROR geocoder abandon après 3 essais (adresse #243)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:24:47] lot 2/16 : 196 ok, 4 en erreur\n[10:24:47] lot 3/16 : 200 adresses\n[10:24:52] WARN geocoder 429 Too Many Requests (adresse #455) retry-after=2\n...\n```\n\nle limiteur sert à rien ou quoi\n\nla suite du journal jusqu'à ce que je coupe, pour que tu voies que c'est pas seulement le lot 2 :\n\n```\n$ tail -n 60 ~/logs/rattrapage-recette.log\n[10:24:52] lot 3/16 : 200 adresses\n[10:24:54] WARN geocoder 429 Too Many Requests (adresse #474) retry-after=2\n[10:24:54] ERROR geocoder abandon après 3 essais (adresse #474)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:25:14] lot 3/16 : 199 ok, 1 en erreur\n[10:25:14] lot 4/16 : 200 adresses\n[10:25:17] WARN geocoder 429 Too Many Requests (adresse #649) retry-after=1\n[10:25:21] WARN geocoder 429 Too Many Requests (adresse #664) retry-after=1\n[10:25:24] WARN geocoder 429 Too Many Requests (adresse #684) retry-after=2\n[10:25:24] ERROR geocoder abandon après 3 essais (adresse #684)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:25:24] ERROR geocoder abandon après 3 essais (adresse #683)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:25:24] ERROR geocoder abandon après 3 essais (adresse #682)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:25:38] lot 4/16 : 197 ok, 3 en erreur\n[10:25:38] lot 5/16 : 200 adresses\n[10:25:43] WARN geocoder 429 Too Many Requests (adresse #808) retry-after=2\n[10:25:47] WARN geocoder 429 Too Many Requests (adresse #833) retry-after=1\n[10:25:50] WARN geocoder 429 Too Many Requests (adresse #859) retry-after=1\n[10:25:56] WARN geocoder 429 Too Many Requests (adresse #871) retry-after=1\n[10:26:19] lot 5/16 : 200 ok\n[10:26:19] lot 6/16 : 200 adresses\n[10:26:25] WARN geocoder 429 Too Many Requests (adresse #1024) retry-after=2\n[10:26:31] WARN geocoder 429 Too Many Requests (adresse #1027) retry-after=2\n[10:26:34] WARN geocoder 429 Too Many Requests (adresse #1050) retry-after=2\n[10:26:34] ERROR geocoder abandon après 3 essais (adresse #1050)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:26:57] lot 6/16 : 199 ok, 1 en erreur\n[10:26:57] lot 7/16 : 200 adresses\n[10:27:00] WARN geocoder 429 Too Many Requests (adresse #1277) retry-after=1\n[10:27:06] WARN geocoder 429 Too Many Requests (adresse #1288) retry-after=1\n[10:27:06] ERROR geocoder abandon après 3 essais (adresse #1288)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:27:06] ERROR geocoder abandon après 3 essais (adresse #1287)\n    at geocoder (src/geo/geocoder.ts:58:13)\n    at async traiterLot (scripts/rattrapage-geocodage.ts:41:22)\n[10:27:29] lot 7/16 : 198 ok, 2 en erreur\n[10:27:29] lot 8/16 : 200 adresses\n[10:27:34] WARN geocoder 429 Too Many Requests (adresse #1410) retry-after=2\n[10:27:57] lot 8/16 : 200 ok\n```",
+      "ts": "2026-09-23T10:28:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Les 429 arrivent par rafales au début de chaque lot. Je vérifie si le limiteur est bien partagé ou si chaque lot en crée un nouveau.",
+      "ts": "2026-09-23T10:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "c'est pas ça, j'ai mis un console.log, c'est la même instance. par contre regarde les en-têtes d'une réponse 429 que j'ai récupérée avec curl :\n\n```\nHTTP/2 429\ncontent-type: application/json\nretry-after: 2\nx-ratelimit-limit: 10\nx-ratelimit-remaining: 0\nx-ratelimit-reset: 1758616093\n{\"error\":\"rate_limited\",\"message\":\"Too many requests\"}\n```\n\net aussi : le serveur de recette tourne en même temps et géocode à chaque sauvegarde de chantier, donc on est peut-être deux à consommer le même quota.\n\nl'agent analyse-logs a regardé les journaux en parallèle, ça va dans le même sens :\n\n<teammate-message teammate_id=\"analyse-logs\">\nAnalyse : réponses 429 du serveur de recette et du script, ce matin entre 10:20 et 10:30\n\n```\n$ grep -h \"geocoder\" /var/log/chantier/recette-app-2026-09-23.log ~/logs/rattrapage-recette.log \\\n    | awk '{print substr($1,2,5), $3}' | sort | uniq -c | sort -k2\n     115 10:20 INFO\n      82 10:21 INFO\n      53 10:22 INFO\n      87 10:23 INFO\n      76 10:24 INFO\n      12 10:24 WARN\n      98 10:25 INFO\n       9 10:25 WARN\n      73 10:26 INFO\n       7 10:26 WARN\n      53 10:27 INFO\n       6 10:27 WARN\n     103 10:28 INFO\n      10 10:28 WARN\n      82 10:29 INFO\n       7 10:29 WARN\n     115 10:30 INFO\n       6 10:30 WARN\n```\n\nRépartition des appels à l'API de géocodage par processus (même fenêtre)\n\n```\n processus          | appels | 429 | part des 429\n--------------------+--------+-----+--------------\n serveur recette    |    211 |   0 |        0 %\n rattrapage (lots)  |   2894 |  71 |      100 %\n(2 rows)\n```\n\nLecture\n- Le serveur de recette consomme peu (création et modification de chantiers par les testeurs), mais ses appels tombent n'importe quand, y compris au milieu d'une rafale du script.\n- Toutes les 429 sont prises par le script, au début des lots : c'est là qu'il envoie à pleine cadence.\n- L'en-tête `x-ratelimit-remaining` tombe à 0 sans que le limiteur local du script le sache, puisqu'il ne lit pas cet en-tête.\n\nCe que je n'ai pas pu établir\n- Si le quota est compté par seconde glissante ou par seconde calendaire : les horodatages des journaux sont à la seconde, pas assez fins pour trancher.\n\nPas de recommandation de ma part au-delà de ce constat ; je n'ai rien modifié.\n</teammate-message>",
+      "ts": "2026-09-23T10:39:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "assistant",
+      "text": "C'est ça : le quota est par clé, et deux processus (le serveur de recette et le script) consomment la même clé avec chacun leur limiteur. Chacun croit avoir de la marge. J'ajoute la prise en compte de Retry-After et un recul exponentiel avec un peu d'aléa, ce qui suffit à ne plus abandonner d'adresses.\n\nAutre constat en relisant ton journal : sur les 3 200 adresses du rattrapage, beaucoup reviennent plusieurs fois (même adresse de client pour plusieurs chantiers, mêmes adresses de dépôt). Un cache devant Mapéo réduirait fortement le nombre d'appels, et donc les 429.",
+      "ts": "2026-09-23T10:43:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "user",
+      "text": "ok. lance deux agents en parallèle sur le cache :\n- cache-postgres : prototype d'un cache en table Postgres ;\n- cache-memoire : prototype d'un cache en mémoire dans le process.\nMême normalisation d'adresse pour les deux, et ils mesurent tous les deux sur le rejeu du journal de recette d'hier, contre le bouchon, pour qu'on compare des choses comparables.\n\nPoint fixé, quelle que soit la solution : les résultats de géocodage sont mis en cache 30 jours. Au-delà on regéocode, les adresses bougent (lotissements neufs, rues renommées).\n\npour qu'ils partent de la même base, la normalisation actuelle :\n\n```ts\n// src/geo/normaliser.ts\nconst ABREVIATIONS: Record<string, string> = { av: 'avenue', 'r.': 'rue', che: 'chemin', imp: 'impasse' };\n\nexport function normaliserAdresse(brute: string): string {\n  let a = brute\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .replace(/[,;.]/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  const cp = a.match(/\\b\\d{5}\\b/)?.[0];\n  if (cp) a = `${cp} ${a.replace(cp, '').trim()}`;\n  return a\n    .split(' ')\n    .map((mot) => ABREVIATIONS[mot] ?? mot)\n    .join(' ');\n}\n```",
+      "ts": "2026-09-23T10:49:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-010",
+      "role": "assistant",
+      "text": "Je lance les deux agents avec le même protocole de mesure : rejeu du journal de recette d'hier, bouchon de Mapéo qui compte les appels, même fonction de normalisation.",
+      "ts": "2026-09-23T10:51:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-011",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"cache-postgres\">\nRapport : prototype de cache de géocodage en table Postgres\n\nCe que j'ai fait\n- Migration 0042_geocodage_cache.sql : table geocodage_cache (cle_adresse text primary key, lat double precision, lng double precision, precision text, cree_le timestamptz not null default now()).\n- Clé = adresse normalisée : minuscules, accents retirés avec unaccent, ponctuation et espaces compactés, code postal placé en tête quand il est détecté.\n- Dans geocoder() : lecture du cache avant l'appel, écriture (upsert) après une réponse 200. Les entrées plus vieilles que la durée fixée sont ignorées à la lecture, et une purge nocturne les supprime.\n- Branche : hugo/geo-cache-postgres (non fusionnée).\n\nMesure (rejeu du journal de recette d'hier, bouchon Mapéo qui compte les appels)\n- Demandes de géocodage rejouées : 3 412\n- Appels à Mapéo sans cache : 3 412\n- Appels à Mapéo avec cache : 1 019, soit environ 70 % d'appels en moins vers Mapéo\n- Latence de lecture du cache : p50 1,8 ms, p95 4,1 ms (base de recette)\n- Réponses 429 pendant le rejeu : 0 (avec le recul exponentiel ajouté ce matin)\n\nLimites constatées\n- La normalisation rate des équivalences : « bd » et « boulevard », « st » et « saint », numéros « bis ». Sur l'échantillon, j'estime 3 à 4 % d'appels qui auraient pu être évités avec une meilleure normalisation.\n- Une table de plus à migrer et à purger.\n- Les écritures concurrentes sur la même clé sont gérées par l'upsert, pas de verrou à prévoir.\n\nRecommandation\nUn cache en table survit aux redémarrages et aux déploiements, et il est partagé entre le serveur et le script de rattrapage, qui sont deux processus distincts. Je recommande cette option.\n</teammate-message>",
+      "ts": "2026-09-23T11:18:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-012",
+      "role": "assistant",
+      "text": "Rapport de cache-postgres reçu. J'attends celui de cache-memoire avant de comparer.",
+      "ts": "2026-09-23T11:20:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-013",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"cache-memoire\">\nRapport : prototype de cache de géocodage en mémoire\n\nCe que j'ai fait\n- Cache LRU en mémoire dans le process (5 000 entrées max), même fonction de normalisation que cache-postgres pour que la comparaison tienne.\n- Expiration par entrée selon la durée fixée par Hugo.\n- Aucune migration, aucune purge : le cache vit et meurt avec le process.\n- Branche : hugo/geo-cache-memoire (non fusionnée).\n\nMesure (même rejeu, même bouchon)\n- Demandes rejouées : 3 412\n- Appels à Mapéo avec cache, en un seul process : 1 131\n- Latence de lecture : négligeable (sous 0,05 ms)\n- Mais : en rejouant avec deux process (serveur + script de rattrapage, comme en recette), chacun a son propre cache et on remonte à 1 604 appels.\n- Après un redémarrage simulé à mi-parcours : le cache repart de zéro, 1 388 appels.\n- Taux de succès du cache par tranche de 500 demandes (un seul process) : 31 %, 58 %, 66 %, 71 %, 74 %, 76 %, 77 %. Le cache se remplit vite parce que les adresses de dépôt et de siège reviennent sans arrêt.\n- Rejeu complet en 41 s contre 44 s pour la version table, l'écart vient uniquement des lectures en base.\n\nLimites constatées\n- Perdu à chaque déploiement et à chaque redémarrage du serveur.\n- Pas partagé entre le serveur et les scripts.\n- Mémoire : environ 2 Mo pour 5 000 entrées, sans souci.\n\nProposition\nJe propose quand même de passer à un cache mémoire : c'est beaucoup plus simple, pas de table à créer ni à purger, et pour le trafic courant du serveur (hors rattrapage, qui est ponctuel) l'écart avec la table est faible. Si un jour le partage devient nécessaire, on pourra ajouter une couche Postgres derrière.\n</teammate-message>",
+      "ts": "2026-09-23T11:26:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-014",
+      "role": "assistant",
+      "text": "Les deux rapports sont là. En résumé :\n\n- Table Postgres : moins d'appels, survit aux déploiements, partagée entre processus ; coût : une table, une migration, une purge.\n- Mémoire : plus simple, plus rapide en lecture, mais perdue au redémarrage et non partagée, ce qui la rend nettement moins efficace dès qu'il y a deux processus.\n\nLes deux agents ne sont pas d'accord et les deux arguments tiennent. Les deux prototypes restent sur leurs branches, rien n'est fusionné. Tu veux trancher maintenant ?",
+      "ts": "2026-09-23T11:30:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-015",
+      "role": "user",
+      "text": "non, on verra plus tard. c'est pas urgent et je veux d'abord voir le trafic réel une fois le géocodage en prod. pour aujourd'hui : on livre le géocodage sans cache, avec le recul exponentiel et le Retry-After. les deux branches de cache restent de côté.",
+      "ts": "2026-09-23T11:33:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016",
+      "role": "assistant",
+      "text": "D'accord. La branche du géocodage ne contient que le module, le limiteur, le recul exponentiel et le script de rattrapage. Je relance les tests.",
+      "ts": "2026-09-23T11:36:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016a",
+      "role": "user",
+      "text": "retour de verif-tests sur la branche :\n\n<teammate-message teammate_id=\"verif-tests\">\nVérification de la branche du géocodage (sans les branches de cache)\n\nCe que j'ai lancé\n- `pnpm test src/geo src/server/chantiers`\n- `pnpm lint`\n- `pnpm tsc --noEmit`\n- un `git diff --stat main...` pour vérifier qu'aucun fichier des prototypes de cache n'est resté\n\n```\n$ pnpm test src/geo src/server/chantiers\n RUN  v2.1.4 /home/hugo/dev/chantier\n\n ✓ src/geo/geocoder.test.ts (9 tests) 41ms\n   ✓ renvoie lat, lng et précision 55ms\n   ✓ renvoie null si aucun résultat 2ms\n   ✓ lève sur 401 9ms\n   ✓ réessaie sur 429 en respectant Retry-After 53ms\n   ✓ recul exponentiel borné 25ms\n   ✓ abandonne après 3 essais 56ms\n   ✓ ne bloque pas la création de chantier 50ms\n   ✓ marque le chantier à regéocoder 21ms\n   ✓ journalise sans adresse complète 49ms\n ✓ src/geo/normaliser.test.ts (6 tests) 7ms\n   ✓ retire les accents 50ms\n   ✓ compacte les espaces 59ms\n   ✓ place le code postal en tête 37ms\n   ✓ remplace les abréviations 15ms\n   ✓ garde les numéros bis 14ms\n   ✓ ignore la ponctuation 50ms\n ✓ src/geo/limiteur.test.ts (4 tests) 1204ms\n   ✓ laisse passer sous la limite 52ms\n   ✓ retarde au-delà de la limite 37ms\n   ✓ partage le jeton entre appels concurrents 50ms\n   ✓ se réinitialise après une pause 20ms\n ✓ src/server/chantiers/create.test.ts (6 tests) 188ms\n   ✓ crée un chantier 27ms\n   ✓ refuse une adresse vide 30ms\n   ✓ rattache au client 50ms\n   ✓ déclenche le géocodage sans attendre 21ms\n   ✓ enregistre même si le géocodage échoue 46ms\n   ✓ trim de l'adresse 37ms\n ✓ src/server/chantiers/update.test.ts (5 tests) 142ms\n   ✓ met à jour le nom 49ms\n   ✓ regéocode si l'adresse change 42ms\n   ✓ ne regéocode pas sinon 19ms\n   ✓ refuse un statut inconnu 48ms\n   ✓ met à jour modifie_le 43ms\n\n Test Files  5 passed (5)\n      Tests  30 passed (30)\n   Start at  14:07:36\n   Duration  2.19s (transform 371ms, setup 196ms, collect 845ms, tests 2350ms, environment 22ms, prepare 103ms)\n\n$ pnpm tsc --noEmit\n(aucune sortie)\n\n$ pnpm lint\nscripts/rattrapage-geocodage.ts\n  4:10  warning  'setTimeout' is defined but never used  @typescript-eslint/no-unused-vars\n  77:5  warning  Unexpected console statement  no-console\n\n✖ 2 problems (0 errors, 2 warnings)\n\n$ git diff --stat main...\n src/geo/geocoder.ts                          |  112 ++++++++++++++++++++++++++++++++++++++++\n src/geo/limiteur.ts                          |   48 ++++++++++++++++++++++++++++++++++++++++\n src/geo/normaliser.ts                        |   27 +++++++++++++++++++++++++++\n src/geo/geocoder.test.ts                     |  141 ++++++++++++++++++++++++++++++++++++++++\n src/geo/limiteur.test.ts                     |   63 ++++++++++++++++++++++++++++++++++++++++\n src/geo/normaliser.test.ts                   |   39 +++++++++++++++++++++++++++++++++++++++\n src/server/chantiers/create.ts               |   10 +++++++++-\n src/server/chantiers/update.ts               |    8 +++++++-\n db/migrations/0041_chantiers_coordonnees.sql |    9 +++++++++\n scripts/rattrapage-geocodage.ts              |   96 ++++++++++++++++++++++++++++++++++++++++\n 10 files changed, 551 insertions(+), 2 deletions(-)\n```\n\nConstats\n- Tout est vert, typage propre.\n- Deux avertissements de lint dans le script de rattrapage : un import inutilisé et un `console.log` laissé pendant le débogage de ce matin. À retirer.\n- Aucun fichier `geocodage_cache` ni migration 0042 dans le diff : les prototypes sont bien restés sur leurs branches.\n- La migration 0041 ajoute `lat`, `lng`, `precision_geo` et `geocode_le` à `chantiers`, toutes nullables.\n\nRien modifié de mon côté.\n</teammate-message>",
+      "ts": "2026-09-23T11:37:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-016b",
+      "role": "assistant",
+      "text": "Je retire l'import inutilisé et le `console.log` du script de rattrapage, puis je relance les tests du module.",
+      "ts": "2026-09-23T11:39:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-017",
+      "role": "user",
+      "text": "```\n$ pnpm test src/geo\n ✓ src/geo/geocoder.test.ts (9 tests) 41ms\n ✓ src/geo/normaliser.test.ts (6 tests) 7ms\n ✓ src/geo/limiteur.test.ts (4 tests) 1204ms\n\n Test Files  3 passed (3)\n      Tests  19 passed (19)\n   Duration  2.38s\n```\n\nok c'est vert. prépare-moi la commande pour lancer le rattrapage en prod ce soir, en tâche de fond, avec un journal dans un fichier.\n\net la CI sur la branche, verte aussi :\n\n```\n2026-09-23T09:39:12.0000000Z ##[group]Run pnpm install --frozen-lockfile\n2026-09-23T09:39:12.7640000Z Lockfile is up to date, resolution step is skipped\n2026-09-23T09:39:14.9650000Z Progress: resolved 1171, reused 1168, downloaded 3, added 1171, done\n2026-09-23T09:39:15.9600000Z .../node_modules/esbuild postinstall$ node install.js\n2026-09-23T09:39:17.9920000Z .../node_modules/esbuild postinstall: Done\n2026-09-23T09:39:20.2980000Z .../sharp@0.33.5/node_modules/sharp install$ node install/check\n2026-09-23T09:39:21.1850000Z .../sharp@0.33.5/node_modules/sharp install: Done\n2026-09-23T09:39:21.5760000Z \n2026-09-23T09:39:22.0450000Z dependencies:\n2026-09-23T09:39:23.1950000Z + next 15.0.4\n2026-09-23T09:39:24.2030000Z + pg 8.13.1\n2026-09-23T09:39:24.3110000Z + pg-boss 10.1.5\n2026-09-23T09:39:24.6760000Z + react 19.0.0\n2026-09-23T09:39:25.7010000Z + zod 3.23.8\n2026-09-23T09:39:26.6810000Z \n2026-09-23T09:39:27.8960000Z devDependencies:\n2026-09-23T09:39:28.4250000Z + @typescript-eslint/eslint-plugin 8.15.0\n2026-09-23T09:39:30.4470000Z + typescript 5.6.3\n2026-09-23T09:39:31.8140000Z + vitest 2.1.4\n2026-09-23T09:39:32.7580000Z \n2026-09-23T09:39:33.1650000Z Done in 8.3s\n2026-09-23T09:39:33.1650000Z ##[endgroup]\n2026-09-23T09:39:43.1650000Z ##[group]Run pnpm lint\n2026-09-23T09:39:45.2010000Z > chantier@0.0.0 lint /home/runner/work/chantier\n2026-09-23T09:39:47.4060000Z > eslint . --max-warnings 0\n2026-09-23T09:39:48.0690000Z \n2026-09-23T09:39:48.0690000Z ##[endgroup]\n2026-09-23T09:40:08.0690000Z ##[group]Run pnpm tsc --noEmit\n2026-09-23T09:40:09.4900000Z > chantier@0.0.0 typecheck\n2026-09-23T09:40:10.8190000Z > tsc --noEmit\n2026-09-23T09:40:10.8190000Z ##[endgroup]\n2026-09-23T09:40:14.8190000Z ##[group]Run pnpm test --reporter=dot\n2026-09-23T09:40:16.9260000Z ····························································\n2026-09-23T09:40:18.8250000Z ·········································\n2026-09-23T09:40:19.9860000Z \n2026-09-23T09:40:21.7210000Z  Test Files  38 passed (38)\n2026-09-23T09:40:21.9180000Z       Tests  412 passed (412)\n2026-09-23T09:40:23.6100000Z    Duration  21.84s\n2026-09-23T09:40:23.6100000Z ##[endgroup]\n```",
+      "ts": "2026-09-23T11:41:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-018",
+      "role": "assistant",
+      "text": "Voici la commande, à lancer sur le serveur applicatif :\n\n`nohup pnpm tsx scripts/rattrapage-geocodage.ts --env production --lot 200 > ~/logs/rattrapage-geocodage-$(date +%F).log 2>&1 &`\n\nLe script reprend là où il s'est arrêté (il saute les chantiers qui ont déjà des coordonnées), donc tu peux l'interrompre sans risque.\n\nRécapitulatif de la session, pour la description de la PR :\n\n**Ce qui part en production**\n- `src/geo/geocoder.ts` : `geocoder(adresse)` appelle l'API Mapéo et renvoie latitude, longitude et niveau de précision ; en cas d'échec, le chantier est enregistré quand même et marqué pour être regéocodé.\n- `src/geo/limiteur.ts` : limiteur de débit commun au serveur et au script, réglé un peu sous la limite de 10 requêtes par seconde de Mapéo.\n- Prise en compte de l'en-tête `Retry-After` et recul exponentiel avec aléa : plus d'adresse abandonnée sur le rejeu.\n- `scripts/rattrapage-geocodage.ts` : rattrapage par lots, reprenable (il saute les chantiers déjà géocodés), journal dans un fichier.\n- Tests avec bouchon, aucun appel à l'API réelle dans la CI.\n\n**Ce qui ne part pas**\n- Les deux prototypes de cache (`hugo/geo-cache-postgres` et `hugo/geo-cache-memoire`) restent sur leurs branches. Les rapports des deux agents sont dans cette session : environ 70 % d'appels en moins pour la table Postgres sur le rejeu, moins efficace pour le cache mémoire dès qu'il y a deux processus. Rien n'est tranché, tu as choisi d'attendre de voir le trafic réel.\n- Quelle que soit la solution retenue plus tard, la durée de cache que tu as fixée ce matin reste celle de 30 jours.\n\n**Pourquoi les 429 de ce matin**\n- Le quota est par clé, et le serveur de recette et le script consommaient la même clé avec chacun leur limiteur. Le recul exponentiel et le Retry-After règlent le symptôme ; le partage du quota entre processus reste à traiter si le volume augmente.\n\n**À faire ce soir**\n- Lancer la commande ci-dessus sur le serveur applicatif, suivre le journal, vérifier le lendemain matin le nombre de chantiers encore sans coordonnées.",
+      "ts": "2026-09-23T11:43:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

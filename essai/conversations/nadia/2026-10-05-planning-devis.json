@@ -1,0 +1,86 @@
+{
+  "source": {
+    "kind": "claude_code",
+    "external_id": "essai-nadia-2026-10-05-planning-devis",
+    "title": "Mise à jour planning module devis"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "J'ai besoin de mettre à jour la section module devis de pilotage/planning-projets.md avec mon script pilotage/maj_planning.py.\n\nCe qui est calé pour la refonte du module devis :\n- gel des développements : le 23 octobre\n- mise en production : le 30 octobre\n- contrainte client : la refonte est promise à Menuiserie Dupont avant le 30 octobre, Karim s'y est engagé auprès d'eux, donc zéro glissement possible\n\nLis d'abord le planning et le script avant de toucher à quoi que ce soit.\n\nL'aide du script, pour que tu voies les options :\n\n```\n$ python pilotage/maj_planning.py --help\nusage: maj_planning.py [-h] [--section SECTION] [--fichier FICHIER] [--simulation] [--sans-copie]\n\nMet à jour une section de pilotage/planning-projets.md à partir des jalons saisis.\n\noptions:\n  -h, --help          affiche cette aide\n  --section SECTION   identifiant de la section (module-devis, appli-mobile, chorus-pro)\n  --fichier FICHIER   fichier de planning à mettre à jour (défaut : pilotage/planning-projets.md)\n  --simulation        affiche le résultat sans rien écrire\n  --sans-copie        n'écrit pas de copie .bak avant la mise à jour\n```",
+      "ts": "2026-10-05T11:00:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Je lis pilotage/planning-projets.md et pilotage/maj_planning.py.",
+      "ts": "2026-10-05T11:01:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-003",
+      "role": "assistant",
+      "text": "La section « Refonte du module devis » utilise encore l'ancien format (colonne « Échéance » au lieu de « Date », pas de colonne « Remarque »). Le script lit les colonnes par leur nom, il faut donc aligner l'en-tête avant de le lancer. Je n'ai rien modifié pour l'instant.",
+      "ts": "2026-10-05T11:02:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-004",
+      "role": "user",
+      "text": "Ok, aligne. Attention : le script plante quand une ligne n'a pas de statut, mets « à venir » par défaut.\nJe veux exactement ce format pour la section (je te le colle tel qu'il est dans les autres sections) :\n\n```\n### Refonte du module devis\n| Jalon | Date | Statut | Remarque |\n|---|---|---|---|\n```\n\nEt tu mets l'engagement client dans la colonne Remarque de la ligne mise en production.\n\nLe plantage dont je parle, la dernière fois que je l'ai lancé sur la section appli mobile :\n\n```\n$ python pilotage/maj_planning.py --section appli-mobile --simulation\n[maj] lecture de pilotage/planning-projets.md\n[maj] section « Application mobile v2 » : 4 lignes\nTraceback (most recent call last):\n  File \"/Users/nadia/atelier/pilotage/maj_planning.py\", line 112, in <module>\n    main()\n  File \"/Users/nadia/atelier/pilotage/maj_planning.py\", line 98, in main\n    lignes = [normaliser(l) for l in section.lignes]\n              ^^^^^^^^^^^^^\n  File \"/Users/nadia/atelier/pilotage/maj_planning.py\", line 64, in normaliser\n    statut = ligne[\"Statut\"].strip().lower()\n             ^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'strip'\n```\n\nUne case vide dans la colonne Statut suffit à tout arrêter.",
+      "ts": "2026-10-05T11:06:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005",
+      "role": "assistant",
+      "text": "J'ai ajouté le statut par défaut « à venir » dans maj_planning.py, réécrit l'en-tête de la section au nouveau format et ajouté la remarque sur l'engagement client. Je lance le script :\n\n```\n$ python pilotage/maj_planning.py --section module-devis\n[maj] lecture de pilotage/planning-projets.md\n[maj] section « Refonte du module devis » : en-tête au format courant\n[maj] 2 jalons mis à jour, 1 remarque ajoutée, 0 statut manquant\n[maj] contrôle des dates : OK\n[maj] écrit : pilotage/planning-projets.md (copie : planning-projets.md.bak)\n```",
+      "ts": "2026-10-05T11:09:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005a",
+      "role": "user",
+      "text": "<teammate-message teammate_id=\"relecture-planning\">\nRapport de relecture : mise à jour de la section module devis et de maj_planning.py\n\nCe que j'ai fait\n- Comparé `pilotage/planning-projets.md` avec sa copie `.bak` après l'exécution du script.\n- Relu la modification de `maj_planning.py` (statut par défaut).\n- Relancé le script en mode simulation sur les trois sections pour vérifier qu'aucune autre section n'a bougé.\n\nDifférences\n```\n$ git diff --stat\n pilotage/maj_planning.py      |  6 ++++--\n pilotage/planning-projets.md  |  8 ++++----\n 2 files changed, 8 insertions(+), 6 deletions(-)\n\n$ diff pilotage/planning-projets.md.bak pilotage/planning-projets.md | head -12\n41c41\n< | Jalon | Échéance | Statut |\n---\n> | Jalon | Date | Statut | Remarque |\n42c42\n< |---|---|---|\n---\n> |---|---|---|---|\n```\n\nSimulation sur les autres sections\n```\n$ python pilotage/maj_planning.py --section appli-mobile --simulation\n[maj] section « Application mobile v2 » : 4 lignes, aucun changement\n[maj] contrôle des dates : OK\n$ python pilotage/maj_planning.py --section chorus-pro --simulation\n[maj] section « Connecteur Chorus Pro » : 3 lignes, aucun changement\n[maj] contrôle des dates : OK\n```\n\nCommandes lancées\n```\n$ cp pilotage/planning-projets.md /tmp/planning-avant.md\n$ python pilotage/maj_planning.py --section module-devis --simulation\n$ python pilotage/maj_planning.py --section appli-mobile --simulation\n$ python pilotage/maj_planning.py --section chorus-pro --simulation\n$ python -m pyflakes pilotage/maj_planning.py\n(aucun avertissement)\n$ wc -l pilotage/planning-projets.md pilotage/planning-projets.md.bak\n     148 pilotage/planning-projets.md\n     148 pilotage/planning-projets.md.bak\n```\n\nConstats\n- Seule la section « Refonte du module devis » a changé : en-tête au nouveau format, deux jalons repris tels que dans ta consigne, une remarque ajoutée sur la ligne mise en production.\n- Le statut par défaut « à venir » s'applique bien aux lignes sans statut, la section appli mobile ne plante plus en simulation.\n- La copie `.bak` est écrasée à chaque exécution : seule la dernière version précédente est conservée.\n\nRecommandation\nRien à corriger sur la mise à jour elle-même. La copie `.bak` unique est à garder en tête si on lance le script plusieurs fois de suite.\n</teammate-message>",
+      "ts": "2026-10-05T11:10:20+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-005b",
+      "role": "assistant",
+      "text": "Le rapport confirme que seule la section module devis a bougé, que le statut par défaut évite le plantage, et rappelle que la copie `.bak` ne garde que la version précédente.",
+      "ts": "2026-10-05T11:11:40+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-006",
+      "role": "user",
+      "text": "Bien. Ajoute un contrôle dans le script : si une date de jalon tombe après une échéance client, il affiche un avertissement bien visible.\nLes échéances client je vais les mettre dans pilotage/echeances.yaml, une ligne par client avec le projet et la date. Crée le fichier vide avec un exemple commenté, je le remplirai.\n\nCe que je veux voir dans la sortie quand ça coince, pour que tu aies l'idée :\n- l'avertissement à la fin de la sortie, après « contrôle des dates », pas noyé au milieu ;\n- une ligne par jalon concerné, pas un message global ;\n- le script ne doit pas refuser d'écrire le planning à cause de l'avertissement, c'est juste une alerte ;\n- et si echeances.yaml n'existe pas du tout (par exemple sur le poste de quelqu'un d'autre), pas d'erreur non plus.",
+      "ts": "2026-10-05T11:13:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-007",
+      "role": "assistant",
+      "text": "C'est fait :\n- nouvelle fonction `verifier_echeances()` dans maj_planning.py, appelée après la mise à jour de chaque section ;\n- `pilotage/echeances.yaml` créé avec un exemple en commentaire (client, projet, date) et aucune entrée active ;\n- tant que le fichier est vide, le contrôle affiche « aucune échéance client déclarée » et ne bloque rien.\n\nLe script passe toujours sur le planning actuel.",
+      "ts": "2026-10-05T11:16:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-008",
+      "role": "user",
+      "text": "Dernier truc : le message s'affiche en anglais (« WARNING: milestone after deadline »), je veux du français, l'équipe lit ce fichier de sortie.\n\nLa sortie complète de ma dernière exécution, avec un exemple de test que j'ai mis temporairement dans echeances.yaml (je l'ai retiré depuis) :\n\n```\n$ python pilotage/maj_planning.py --section module-devis --simulation\n[maj] lecture de pilotage/planning-projets.md\n[maj] section « Refonte du module devis » : en-tête au format courant\n[maj] 2 jalons lus, 0 statut manquant\n[maj] contrôle des dates : OK\n[maj] lecture de pilotage/echeances.yaml : 1 échéance (exemple de test)\nWARNING: milestone after deadline\n  project: Refonte du module devis\n  milestone: exemple\n  client: exemple\n[maj] simulation : rien n'est écrit\nNo changes written (dry run).\n```\n\nEt il y a aussi « No changes written (dry run). » à la fin, en anglais.",
+      "ts": "2026-10-05T11:19:00+02:00",
+      "capture_mode": "file"
+    },
+    {
+      "external_id": "t-009",
+      "role": "assistant",
+      "text": "Changé : le message est maintenant « Attention : jalon après l'échéance client », suivi du nom du projet, du jalon et du client concerné. J'ai aussi traduit les deux autres messages restés en anglais dans le script.",
+      "ts": "2026-10-05T11:20:00+02:00",
+      "capture_mode": "file"
+    }
+  ]
+}

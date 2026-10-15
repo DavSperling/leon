@@ -1,0 +1,58 @@
+{
+  "source": {
+    "kind": "chatgpt",
+    "external_id": "essai-karim-2026-09-28-ticket-perrin",
+    "title": "Client mécontent ticket 482"
+  },
+  "turns": [
+    {
+      "external_id": "t-001",
+      "role": "user",
+      "text": "client pas content : electricite perrin. damien perrin le gerant m'a appelé enervé. ticket 482 : quand il exporte un devis en pdf ça coupe au dela de 50 lignes, il a envoyé un devis tronqué a un client. tu me fais une formule d'excuse type ?",
+      "ts": "2026-09-28T14:10:00+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-002",
+      "role": "assistant",
+      "text": "Voici une formule d'excuse type, à adapter :\n\n---\nBonjour Monsieur Perrin,\n\nJe vous remercie de nous avoir signalé ce problème, et je suis sincèrement désolé pour la gêne occasionnée, d'autant plus qu'elle vous a mis en difficulté auprès de votre client.\n\nVotre demande est enregistrée et transmise à notre équipe technique, qui la traite en priorité. Je reviens vers vous dès que nous avons une solution, et au plus tard pour vous donner un point d'avancement.\n\nEn attendant, n'hésitez pas à m'appeler directement si vous avez besoin d'envoyer un devis urgent : nous trouverons une solution ensemble.\n\nBien cordialement,\n\nKarim Haddad\n---\n\nLes trois ingrédients : **reconnaître** le problème sans minimiser, **montrer** qu'il est pris en charge, **proposer** une solution de contournement immédiate.",
+      "ts": "2026-09-28T14:10:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-003",
+      "role": "user",
+      "text": "merci. ils ont 8 licences, cest pas notre plus gros client mais il connait tout le monde dans le coin. je transmets a ines",
+      "ts": "2026-09-28T14:14:16+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-004",
+      "role": "assistant",
+      "text": "Bonne idée de transmettre vite. Pour qu'Inès puisse reproduire sans te re-solliciter, voici un modèle de signalement :\n\n- **Client** : Électricité Perrin\n- **Ticket** : 482\n- **Symptôme** : export PDF d'un devis tronqué\n- **Étapes pour reproduire** : créer ou ouvrir un devis long, lancer l'export PDF, comparer avec l'écran\n- **Attendu** : toutes les lignes dans le PDF\n- **Obtenu** : le PDF s'arrête en cours de route\n- **Impact** : devis incomplet envoyé à un client final\n- **Pièce jointe** : le PDF tronqué et une capture du devis à l'écran",
+      "ts": "2026-09-28T14:14:51+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-005",
+      "role": "user",
+      "text": "c koi le raccourci pour faire une capture d'ecran sur mac deja, juste une zone",
+      "ts": "2026-09-28T14:17:18+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-006",
+      "role": "assistant",
+      "text": "Sur Mac :\n- **Cmd + Maj + 4** : tu sélectionnes une zone à la souris, l'image va sur le bureau.\n- **Cmd + Maj + 4 puis Espace** : capture d'une fenêtre précise.\n- **Cmd + Maj + 5** : ouvre le panneau complet (zone, fenêtre, écran, vidéo).\n\nAjoute **Ctrl** (Cmd + Ctrl + Maj + 4) pour copier la capture dans le presse-papier au lieu de créer un fichier.",
+      "ts": "2026-09-28T14:17:43+02:00",
+      "capture_mode": "network"
+    },
+    {
+      "external_id": "t-007",
+      "role": "user",
+      "text": "merci t'es un chef",
+      "ts": "2026-09-28T14:19:22+02:00",
+      "capture_mode": "network"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "faits": [
+    {
+      "id": "F184",
+      "enonce": "Décision : l'application mobile v2 utilise la bibliothèque rn-quickcharts pour ses graphiques.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "on prend rn-quickcharts pour les graphiques de l'appli mobile v2",
+      "sensible": false
+    },
+    {
+      "id": "F199",
+      "enonce": "Les graphiques de l'application mobile v2 montrent l'avancement des chantiers et le montant signé du mois.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-003",
+      "extrait": "l'avancement des chantiers (pourcentage par chantier, barres horizontales) et le montant signé du mois",
+      "sensible": false
+    }
+  ],
+  "pasRetenir": [
+    {
+      "id": "N081",
+      "enonce": "React Native contre Flutter en général.",
+      "tour": "t-001",
+      "pourquoi": "question générale"
+    }
+  ],
+  "remplace": [],
+  "conflits": []
+}

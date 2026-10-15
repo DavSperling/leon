@@ -1,0 +1,8 @@
+{
+  "object": "user",
+  "id": "3f8e2c71-5a04-4b9d-8c16-72d0a9e45b11",
+  "type": "person",
+  "name": "Marie Durand",
+  "avatar_url": null,
+  "person": { "email": "marie@acme.test", "email_verified": true }
+}

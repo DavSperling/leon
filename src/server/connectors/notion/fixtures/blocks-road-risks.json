@@ -1,0 +1,27 @@
+{
+  "object": "list",
+  "type": "block",
+  "block": {},
+  "results": [
+    {
+      "object": "block",
+      "id": "1a2b3c4d-0021-4000-8000-000000000021",
+      "type": "paragraph",
+      "has_children": true,
+      "in_trash": false,
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": { "content": "Dépendance au calendrier du prestataire", "link": null },
+            "plain_text": "Dépendance au calendrier du prestataire",
+            "href": null
+          }
+        ],
+        "color": "default"
+      }
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
+}

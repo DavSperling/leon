@@ -1,0 +1,8 @@
+{
+  "object": "user",
+  "id": "9b0d6e24-1c73-4f58-a2e9-480c5d17f622",
+  "type": "person",
+  "name": "Paul Martin",
+  "avatar_url": null,
+  "person": { "email": "paul@acme.test", "email_verified": true }
+}

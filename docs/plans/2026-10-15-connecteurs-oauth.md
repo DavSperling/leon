@@ -29,7 +29,7 @@
 4. **Atlassian avec plusieurs sites** : choisir le site saisi avant le clic s'il y en a un, sinon le premier, et le dire dans le compte affiché (« Connecté : acme.atlassian.net, 2 autres sites disponibles »). Test : T52.
 5. **Outlook sans accord de l'administrateur** : Microsoft renvoie une erreur de consentement, ou affiche sa propre page « Approbation de l'administrateur requise » (AADSTS90094) sans revenir vers Leon. Message : « L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon. », avec le lien d'accord administrateur, affiché au retour **et** avant le bouton d'Outlook. Test : T60, T46.
 6. **Un lien piégé** (`…/github/debut?repos=victime/prive`) : GitHub et d'autres renvoient aussitôt quand l'appli est déjà autorisée, ce qui brancherait un outil à l'insu de l'utilisateur. `/debut` n'accepte donc qu'un POST venu de Leon (origine vérifiée). Test : T45.
-7. **La boîte Outlook visible de l'équipe** : par D3 (ACL d'équipe), les courriers et événements lus deviennent visibles de toute l'équipe. **Décision à confirmer par Amos et David avant T60** ; en attendant, T60 suit sa ligne (boîte de réception et éléments envoyés seulement, `warning` qui le dit).
+7. **La boîte Outlook** : tranché après T60. Le texte brut reste privé à celui qui branche (`privateRaw: true` sur le connecteur, ACL `[créateur]` pour la source, ses tours et son run), et seuls les faits remontent à l'équipe selon les règles du pipeline. Les événements marqués `personal`, `private` ou `confidential` (toute casse) ne sont pas lus. Tests : `ingest-items.db.test.ts` (Marie ne voit ni la source, ni les tours, ni le run de Paul), `outlook/connector.test.ts`.
 
 ## Contrats
 

@@ -79,7 +79,8 @@ async function readPages(
   let read = 0;
   for await (const page of connector.sync(config, state, http)) {
     const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
-    if (items.length > 0) await ingestConnectorItems(ctx, connection, items);
+    if (items.length > 0)
+      await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
     await saveSyncProgress(ctx, connection.id, page.cursor, items.length);
     read += page.items.length;
     if (read >= SYNC_ITEMS_MAX) return 'soon';

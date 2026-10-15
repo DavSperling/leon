@@ -112,6 +112,7 @@ export const outlookConnector: Connector<Config> = {
   secretFields: [],
   hosts: () => ['graph.microsoft.com'],
   oauth: outlookOAuth,
+  privateRaw: true, // une boîte mail et un agenda sont personnels
 
   async verify(config, http) {
     const me = await graphClient(config, http).me();

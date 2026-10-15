@@ -6,7 +6,8 @@ import { withTenant } from '@/server/db/with-tenant';
 import { SOURCE_KIND_LABELS } from './labels';
 
 // Page « Sources » : santé de la capture de l'utilisateur, plus ce que lisent les connexions aux
-// outils (visible de toute l'équipe). Rien de ce qui est lu ici ne sort du titre et du lien vers
+// outils (visible de toute l'équipe, sauf une source au texte brut privé, que la RLS réserve à son
+// propriétaire). Rien de ce qui est lu ici ne sort du titre et du lien vers
 // l'original : ni texte de tour, ni message d'erreur du pipeline.
 
 export type SourceRow = {

@@ -12,7 +12,9 @@ import me from './fixtures/me.json';
 import inbox1 from './fixtures/messages-inbox-1.json';
 import inbox2 from './fixtures/messages-inbox-2.json';
 import sent from './fixtures/messages-sent.json';
+import { eventToItem } from './map';
 import { outlookOAuth } from './oauth';
+import type { GraphEvent } from './schemas';
 
 // Un jeton généré à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const ACCESS = `eyJ.${randomBytes(12).toString('hex')}`;
@@ -85,11 +87,10 @@ describe('outlookConnector : configuration', () => {
 describe('outlookConnector : catalogue', () => {
   const item = listCatalog().find((entry) => entry.id === 'outlook');
 
-  it('est disponible, sans clé collée, et prévient que l’équipe verra les courriers', () => {
+  it('est disponible, sans clé collée, et dit que le texte reste privé et que les faits sont partagés', () => {
     expect(item).toMatchObject({ available: true, keyAccepted: false, fields: [] });
-    expect(item?.warning).toBe(
-      'Les courriers et événements lus deviennent visibles de toute l’équipe.',
-    );
+    expect(item?.warning).toContain('reste privé');
+    expect(item?.warning).toContain('faits qu’on en tire sont partagés avec l’équipe');
   });
 
   it('explique à l’utilisateur qu’il faut d’abord l’accord de l’administrateur Microsoft', () => {
@@ -363,6 +364,17 @@ describe('outlookConnector.sync : agenda', () => {
       at: '2026-10-12T09:10:00.000Z',
       seen: ['AAMkAGEx-event-annule'],
     });
+  });
+
+  it('laisse aussi de côté un événement personnel ou confidentiel, quelle que soit la casse', () => {
+    for (const sensitivity of ['personal', 'confidential', 'Private', 'PERSONAL']) {
+      expect(eventToItem({ ...events.value[0], sensitivity } as GraphEvent)).toBeNull();
+    }
+    expect(eventToItem({ ...events.value[0], sensitivity: 'normal' } as GraphEvent)).not.toBeNull();
+  });
+
+  it('garde le texte brut des courriers et de l’agenda privé à celui qui branche', () => {
+    expect(outlookConnector.privateRaw).toBe(true);
   });
 
   it('écrit l’heure d’un fuseau autre que UTC avec son nom', async () => {

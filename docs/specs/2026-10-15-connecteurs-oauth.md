@@ -17,7 +17,7 @@ Sous le bouton, le lien « ou coller une clé » ouvre le formulaire actuel, qua
 | Asana, ClickUp, monday.com, Airtable, HubSpot, Help Scout | HubSpot : appli publique non listée sur la place de marché |
 | Attio | revue d'Attio au-delà de 25 espaces : assez pour nos pilotes |
 | **Nouveaux** : Basecamp, Miro, Productboard | ne se branchent que par bouton |
-| **Nouveau** : Outlook (Microsoft 365 : courrier et agenda) | l'administrateur Microsoft du client doit donner son accord une fois |
+| **Nouveau** : Outlook (Microsoft 365 : courrier et agenda) | l'administrateur Microsoft du client doit donner son accord une fois ; le texte des courriers et de l'agenda reste privé à celui qui branche, seuls les faits remontent à l'équipe (exception de la spec des connecteurs) |
 
 Restent à clé collée, faute de bouton sans vérification : les outils de réunion (Fathom, Fireflies, tl;dv, Granola, Circleback, Claap, Leexi, Gong), Trello (son autorisation rend la clé dans l'adresse côté navigateur, pas au serveur), Shortcut, Plane, Sentry, folk, Pipedrive, Close, Intercom, Zendesk, Freshdesk, Front, Plain, Crisp, Missive.
 

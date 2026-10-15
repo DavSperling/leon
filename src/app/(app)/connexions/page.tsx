@@ -78,7 +78,8 @@ export default async function ConnectionsPage({
       <header className="border-b pb-7">
         <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Connexions</h1>
         <p className="mt-1 text-base text-muted-foreground">
-          Ce que Leon lit dans vos outils est visible de toute l'équipe.
+          Ce que Leon lit dans vos outils est visible de toute l'équipe, sauf le texte des boîtes
+          mail, qui reste privé comme une conversation.
         </p>
       </header>
       {notice && <ReturnNotice notice={notice} consentUrl={consentUrl} />}

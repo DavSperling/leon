@@ -83,6 +83,9 @@ export type Connector<Config> = {
   secretFields: readonly string[]; // noms des champs à chiffrer
   hosts(config: Config): string[]; // hôtes exacts autorisés, ex. ['api.github.com']
   minIntervalMs?: number; // écart minimal entre deux requêtes (Notion : 350)
+  // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle) ; les faits
+  // qu'on en tire suivent les règles du pipeline. Absent : visible de l'équipe.
+  privateRaw?: boolean;
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string }>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;
   oauth?: OAuthSpec; // le bouton ; absent : l'outil ne se branche que par clé

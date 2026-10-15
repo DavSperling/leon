@@ -99,7 +99,41 @@ export function verifierJeu(jeu: JeuEssai): string[] {
     if (!textes.some((t) => t.includes(secret)))
       problemes.push(`secret absent de toutes les conversations : ${secret.slice(0, 4)}…`);
 
+  verifierMiniFerme(jeu, faitInfo, problemes);
+
   return problemes;
+}
+
+// mini.json doit former un sous-ensemble clos : aucun fait d'une conversation de mini.json ne doit
+// dépendre (doublonDe, remplace, conflits) d'un fait d'une conversation hors mini, ni l'inverse — sinon
+// un passage lancé avec --mini juge un fait sans jamais voir l'autre bout de la relation.
+function verifierMiniFerme(
+  jeu: JeuEssai,
+  faitInfo: Map<string, { cle: string }>,
+  problemes: string[],
+): void {
+  const mini = new Set(jeu.mini);
+  const signales = new Set<string>();
+  const verifierPaire = (idA: string, idB: string) => {
+    const cleA = faitInfo.get(idA)?.cle;
+    const cleB = faitInfo.get(idB)?.cle;
+    if (!cleA || !cleB || cleA === cleB) return;
+    const miniA = mini.has(cleA);
+    const miniB = mini.has(cleB);
+    if (miniA === miniB) return; // les deux dans mini, ou les deux hors mini : rien à signaler
+    const cleMini = miniA ? cleA : cleB;
+    const cleAutre = miniA ? cleB : cleA;
+    const idAutre = miniA ? idB : idA;
+    const cle = `${cleMini}\u0000${cleAutre}\u0000${idAutre}`;
+    if (signales.has(cle)) return;
+    signales.add(cle);
+    problemes.push(`mini.json : ${cleMini} dépend de ${cleAutre} (${idAutre})`);
+  };
+  for (const c of jeu.conversations) {
+    for (const f of c.attendu.faits) if (f.doublonDe) verifierPaire(f.id, f.doublonDe);
+    for (const r of c.attendu.remplace) verifierPaire(r.ancien, r.nouveau);
+    for (const k of c.attendu.conflits) verifierPaire(k.a, k.b);
+  }
 }
 
 function verifierTours(c: ConversationEssai, ici: (message: string) => void): void {

@@ -6,7 +6,9 @@ const VersionSchema = z.object({ commit: z.string().nullable() });
 export const gitHead = () =>
   execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 export const srcModifie = () =>
-  execFileSync('git', ['status', '--porcelain', '--', 'src'], { encoding: 'utf8' }).trim() !== '';
+  execFileSync('git', ['status', '--porcelain', '--', 'src', 'essai'], {
+    encoding: 'utf8',
+  }).trim() !== '';
 
 // Null si le serveur traite les runs avec le code de HEAD ; sinon la raison du refus (piège du 14/10 :
 // le worker ne recharge pas le code à chaud, un passage a été facturé sur l'ancien code).
@@ -17,7 +19,7 @@ export async function verifierServeur(input: {
   srcModifie: boolean;
 }): Promise<string | null> {
   if (input.srcModifie)
-    return 'Modifications non commitées sous src/ : commite-les (WIP) pour que le passage corresponde à un commit.';
+    return 'Modifications non commitées sous src/ ou essai/ : commite-les (WIP) pour que le passage corresponde à un commit.';
   let response: Response;
   try {
     response = await input.fetch(new URL('/api/version', input.url), {

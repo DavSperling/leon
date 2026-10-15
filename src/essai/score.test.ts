@@ -402,6 +402,27 @@ describe('redits (doublonDe)', () => {
     expect(notes.reditsRecrees).toBe(0);
   });
 
+  it('seul le produit du redit existe (actif, partagé) : pas de recréation sans fait sur le canonique', () => {
+    // p2 est apparié directement au redit (F010), actif et partagé, mais aucun fait produit ne
+    // correspond au canonique F001 lui-même : on ne peut pas dire que Leon a « recréé » le canonique,
+    // puisqu'il n'y a même pas de fait sur le canonique à côté duquel le redit serait un doublon.
+    const produits = [
+      p('p2', {
+        sourceExternalId: 'essai-karim/2026-09-25-rappel',
+        status: 'active',
+        partage: true,
+      }),
+    ];
+    const paires = new Map([['p2', 'F010']]);
+    const notes = calculerNotes({
+      conversations: [premiere, seconde],
+      produits,
+      paires,
+      secrets: [],
+    });
+    expect(notes.reditsRecrees).toBe(0);
+  });
+
   it('tourCorrect compare un produit apparié à un redit au tour du redit, pas du canonique', () => {
     const produits = [
       p('p1', { sourceExternalId: 'essai-karim/2026-09-22-devis', turnExternalId: 't-001' }),

@@ -89,10 +89,21 @@ describe('historique', () => {
     expect(md.match(/^\| 2026-10-16 /gm)).toHaveLength(2);
     expect(md).toContain('| 1,30 $ |');
     expect(md).toContain('| 75 % |');
+    expect(md).toContain('triage haiku-5-5 · extraction sonnet-5-5 · rangement haiku-5-5');
     const json = JSON.parse(
       await readFile(join(dir, 'passages/2026-10-16-1000-reference.json'), 'utf8'),
     );
     expect(json.label).toBe('référence');
+  });
+
+  it('échappe le | et réduit les espaces multiples dans le libellé', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'historique-'));
+    await enregistrerPassage(
+      passage('2026-10-16-1000-reference', 1.3, { label: 'a | b   c' }),
+      dir,
+    );
+    const md = await readFile(join(dir, 'historique.md'), 'utf8');
+    expect(md).toContain('a \\| b c');
   });
 
   it('marque les erreurs de juge dans la ligne d historique', async () => {

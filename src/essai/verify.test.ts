@@ -301,6 +301,42 @@ describe('verifierJeu', () => {
       verifierJeu(jeu([c], ['hugo/2026-09-22-migration', 'hugo/2026-09-22-migration'])),
     ).toContain('mini.json : hugo/2026-09-22-migration en double');
   });
+
+  it('signale mini.json non clos par un remplacement vers une conversation hors mini', () => {
+    const a = conversation('hugo/2026-09-22-migration'); // F001, dans mini
+    const [fa] = a.attendu.faits;
+    if (!fa) throw new Error('fait manquant');
+    const b = conversation('hugo/2026-09-23-suite', {
+      attendu: {
+        faits: [{ ...fa, id: 'F002' }], // F002, hors mini
+        pasRetenir: [],
+        remplace: [{ ancien: 'F001', nouveau: 'F002' }], // relie mini (F001) à hors mini (F002)
+        conflits: [],
+      },
+    });
+    const problemes = verifierJeu(jeu([a, b], [a.cle]));
+    expect(problemes).toContain(
+      'mini.json : hugo/2026-09-22-migration dépend de hugo/2026-09-23-suite (F002)',
+    );
+  });
+
+  it('signale mini.json non clos par un doublonDe depuis une conversation hors mini', () => {
+    const a = conversation('hugo/2026-09-22-migration'); // F001, dans mini
+    const [fa] = a.attendu.faits;
+    if (!fa) throw new Error('fait manquant');
+    const b = conversation('hugo/2026-09-23-suite', {
+      attendu: {
+        faits: [{ ...fa, id: 'F010', doublonDe: 'F001' }], // hors mini, redit du canonique dans mini
+        pasRetenir: [],
+        remplace: [],
+        conflits: [],
+      },
+    });
+    const problemes = verifierJeu(jeu([a, b], [a.cle]));
+    expect(problemes).toContain(
+      'mini.json : hugo/2026-09-22-migration dépend de hugo/2026-09-23-suite (F010)',
+    );
+  });
 });
 
 describe('volumes', () => {

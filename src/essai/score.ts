@@ -136,7 +136,7 @@ export function calculerNotes(input: {
     // mais aussi un doublon que le dédoublonnage aurait dû absorber.
     doublonsFaits: [...parAttendu.values()].reduce((sum, liste) => sum + liste.length - 1, 0),
     redits: redits.length,
-    reditsRecrees: redits.filter((f) => reditRecree(f, paires, faitsAttendu, canonique)).length,
+    reditsRecrees: redits.filter((f) => reditRecree(f, produits, paires, canonique)).length,
     tourCorrect,
     ficheCorrecte: compte((a, p) => ficheAttendue(a, p.ficheTitre)),
     typeCorrect: compte((a, p) => a.typeFiche === p.typeFiche),
@@ -196,16 +196,19 @@ function parAttenduDirect(paires: Map<string, string | null>, faitReditId: strin
 }
 
 // Un redit compte comme recréé seulement si Leon a vraiment posé un second fait visible pour lui :
-// un fait produit sur le redit lui-même, ET le canonique a bien un fait actif et partagé (sinon on ne
-// saurait pas distinguer un redit simplement « non retrouvé » d'un redit « dédoublonné comme prévu »).
+// un fait produit apparié directement au redit lui-même, ET un fait produit apparié au canonique
+// (la paire du juge vise le canonique, pas le redit) qui est actif et partagé. Sans ce second fait
+// sur le canonique, on ne saurait pas distinguer un redit « recréé en double » d'un redit simplement
+// « non retrouvé » dont le canonique lui-même n'a jamais été produit.
 function reditRecree(
   f: FaitAttendu,
+  produits: FaitProduit[],
   paires: Map<string, string | null>,
-  faitsAttendu: (id: string) => FaitProduit[],
   canonique: (id: string) => string,
 ): boolean {
-  const canoniques = faitsAttendu(canonique(f.id));
-  const actifPartage = canoniques.some((p) => p.status === 'active' && p.partage);
+  const can = canonique(f.id);
+  const versCanonique = produits.filter((p) => paires.get(p.id) === can);
+  const actifPartage = versCanonique.some((p) => p.status === 'active' && p.partage);
   return actifPartage && parAttenduDirect(paires, f.id);
 }
 

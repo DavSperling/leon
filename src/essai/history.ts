@@ -29,13 +29,31 @@ const EN_TETE = `# Historique des essais du pipeline
 
 Un passage par ligne, ajouté par \`pnpm essai noter\`. Coûts **mesurés** (table \`llm_usage\`, tarifs de \`docs/etudes/couts-2026-10/annexes/01-prix-llm.md\`), hors coût du juge. Détail de chaque passage dans \`passages/\`.
 
-| Date | Libellé | Commit | Jeu | Tours | Coût pipeline | Coût / tour | Rappel | Précision | Faux faits | Doublons (faits, dont redits recréés) | Tour juste | Fiche juste | Fiches dispersées | Remplacements | Conflits | Fuites sensibles | Sur-signalés | Secrets | Runs échoués | Hors jeu | Erreurs juge | Durée |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Date | Libellé | Commit | Jeu | Modèles | Tours | Coût pipeline | Coût / tour | Rappel | Précision | Faux faits | Doublons (faits, dont redits recréés) | Tour juste | Fiche juste | Fiches dispersées | Remplacements | Conflits | Fuites sensibles | Sur-signalés | Secrets | Runs échoués | Hors jeu | Erreurs juge | Durée |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 `;
 
 const euros = (n: number, d = 2) => `${n.toFixed(d).replace('.', ',')} $`;
 const pct = (n: number | null) => (n === null ? 'n/d' : `${Math.round(n * 100)} %`);
 const sur = (a: number, b: number) => `${a}/${b}`;
+
+// Un | casserait la table Markdown ; des espaces multiples (retour à la ligne collé, saisie
+// distraite) l'abîmeraient visuellement sans la casser.
+export const echapperCellule = (s: string) => s.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+
+const ETAPE_LABEL: Partial<Record<keyof Passage['modeles'], string>> = {
+  triage: 'triage',
+  extraction: 'extraction',
+  placement: 'rangement',
+};
+const modeleCourt = (modele: string) => modele.replace(/^claude-/, '');
+
+export function modelesCompacts(modeles: Passage['modeles']): string {
+  return (Object.keys(ETAPE_LABEL) as Array<keyof Passage['modeles']>)
+    .filter((etape) => etape in modeles)
+    .map((etape) => `${ETAPE_LABEL[etape]} ${modeleCourt(modeles[etape])}`)
+    .join(' · ');
+}
 
 export const coutPipeline = (usage: UsageParEtape) =>
   Object.values(usage).reduce((sum, u) => sum + u.costUsd, 0);
@@ -45,9 +63,10 @@ export function ligneHistorique(p: Passage): string {
   const cout = coutPipeline(p.usage);
   return `| ${[
     p.date.slice(0, 10),
-    p.label,
+    echapperCellule(p.label),
     p.commit.slice(0, 7),
     p.jeu,
+    modelesCompacts(p.modeles),
     p.tours,
     euros(cout),
     euros(cout / Math.max(p.tours, 1), 4),

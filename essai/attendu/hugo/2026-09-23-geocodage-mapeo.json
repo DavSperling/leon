@@ -32,12 +32,12 @@
     },
     {
       "id": "F123",
-      "enonce": "Les résultats de géocodage sont mis en cache 30 jours.",
+      "enonce": "La durée du cache de géocodage est fixée à 30 jours, quelle que soit la solution de cache retenue.",
       "fiche": "Cache de géocodage",
       "alias": [],
       "typeFiche": "outil",
       "tour": "t-009",
-      "extrait": "les résultats de géocodage sont mis en cache 30 jours",
+      "extrait": "Point fixé, quelle que soit la solution : les résultats de géocodage sont mis en cache 30 jours",
       "sensible": false
     }
   ],

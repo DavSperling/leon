@@ -46,7 +46,8 @@
       "typeFiche": "projet",
       "tour": "t-012",
       "extrait": "Marion Caradec reprend les tests du connecteur Chorus Pro",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F033"
     }
   ],
   "pasRetenir": [

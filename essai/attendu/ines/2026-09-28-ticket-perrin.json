@@ -10,7 +10,8 @@
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "Karim vient de me relayer un ticket client, le ticket 482 d'Électricité Perrin : l'export PDF des devis coupe au-delà de 50 lignes.",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F061"
     },
     {
       "id": "F189",

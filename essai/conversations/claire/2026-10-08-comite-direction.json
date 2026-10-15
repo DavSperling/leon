@@ -50,14 +50,14 @@
     {
       "external_id": "t-007",
       "role": "user",
-      "text": "Point produit, décision : le connecteur Chorus Pro passe avant la refonte du module devis, jusqu'au 1er décembre. Hugo organise l'équipe en conséquence.",
+      "text": "Point produit, décision : jusqu'au 1er décembre, le connecteur Chorus Pro passe avant tout le reste. La refonte du module devis termine sa mise en production comme prévu, puis plus aucune évolution du module devis avant décembre. Hugo organise l'équipe en conséquence.",
       "ts": "2026-10-08T08:45:58+02:00",
       "capture_mode": "network"
     },
     {
       "external_id": "t-008",
       "role": "assistant",
-      "text": "Noté comme décision.\n\nUn point d'attention : si des engagements de date ont été pris auprès de clients sur la refonte du module devis, cette priorité peut les fragiliser. Il peut être utile de les passer en revue.\n\nVoici le relevé du comité :\n\n**Décisions**\n- Priorité au connecteur Chorus Pro sur la refonte du module devis, jusqu'au 1er décembre.\n\n**Informations**\n- Renouvellement de Couverture Le Bihan pour 2027.\n- Maintien de Maçonnerie Fournier, avec remise.\n- Hausse de la cotisation mutuelle au 1er janvier.\n\n**Actions**\n- Karim : formaliser par écrit la remise de Maçonnerie Fournier.\n- Budget 2027 : intégrer la hausse de la mutuelle.\n- Hugo : réorganiser le travail de l'équipe autour du connecteur Chorus Pro.\n\nSouhaitez-vous que je le mette en forme pour l'envoyer à l'équipe ?",
+      "text": "Noté comme décision.\n\nLa mise en production de la refonte du module devis n'est donc pas remise en cause : ce sont les évolutions suivantes du module qui attendent décembre.\n\nVoici le relevé du comité :\n\n**Décisions**\n- Priorité au connecteur Chorus Pro jusqu'au 1er décembre ; après la mise en production de la refonte, plus d'évolution du module devis avant décembre.\n\n**Informations**\n- Renouvellement de Couverture Le Bihan pour 2027.\n- Maintien de Maçonnerie Fournier, avec remise.\n- Hausse de la cotisation mutuelle au 1er janvier.\n\n**Actions**\n- Karim : formaliser par écrit la remise de Maçonnerie Fournier.\n- Budget 2027 : intégrer la hausse de la mutuelle.\n- Hugo : réorganiser le travail de l'équipe autour du connecteur Chorus Pro.\n\nSouhaitez-vous que je le mette en forme pour l'envoyer à l'équipe ?",
       "ts": "2026-10-08T08:46:29+02:00",
       "capture_mode": "network"
     },

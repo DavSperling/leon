@@ -8,7 +8,8 @@
       "typeFiche": "fournisseur",
       "tour": "t-001",
       "extrait": "à partir de maintenant le géocodage de Chantier+ passe par l'API TerraCarte",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F253"
     },
     {
       "id": "F141",
@@ -22,12 +23,12 @@
     },
     {
       "id": "F142",
-      "enonce": "Le cache de géocodage de 30 jours est conservé avec TerraCarte.",
+      "enonce": "Le cache de géocodage en table Postgres, d'une durée de 30 jours, est conservé avec TerraCarte.",
       "fiche": "Cache de géocodage",
       "alias": [],
       "typeFiche": "outil",
       "tour": "t-012",
-      "extrait": "le cache de géocodage de 30 jours est conservé tel quel avec TerraCarte",
+      "extrait": "le cache de géocodage en table Postgres qu'on a mis en prod la semaine dernière, avec ses 30 jours, est conservé tel quel avec TerraCarte",
       "sensible": false
     }
   ],

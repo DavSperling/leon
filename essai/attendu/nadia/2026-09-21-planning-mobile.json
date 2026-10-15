@@ -37,6 +37,33 @@
       "tour": "t-005",
       "extrait": "notre contact chez eux c'est Olivier Ménard, leur directeur technique",
       "sensible": false
+    },
+    {
+      "id": "F292",
+      "enonce": "Nadia Benali centralise les retours du client pilote de l'application mobile v2.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-005",
+      "extrait": "Côté nous, c'est moi qui centralise, Inès est déjà bien chargée",
+      "sensible": false
+    },
+    {
+      "id": "F293",
+      "enonce": "Inès Moreau est responsable de l'application mobile v2.",
+      "fiche": "Application mobile v2",
+      "alias": [
+        "appli v2",
+        "appli mobile"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-001",
+      "extrait": "Inès est responsable du projet",
+      "sensible": false,
+      "doublonDe": "F181"
     }
   ],
   "pasRetenir": [

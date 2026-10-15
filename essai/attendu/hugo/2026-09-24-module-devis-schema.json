@@ -59,6 +59,30 @@
       "tour": "t-009",
       "extrait": "chaque devis garde l'historique de ses versions",
       "sensible": false
+    },
+    {
+      "id": "F153",
+      "enonce": "Dans la refonte du module devis, les taux de TVA sont stockés en points de base (2000 pour 20 %).",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-007",
+      "extrait": "oui, points de base",
+      "sensible": false
+    },
+    {
+      "id": "F155",
+      "enonce": "Dans la refonte du module devis, les quantités sont stockées en millièmes.",
+      "fiche": "Refonte du module devis",
+      "alias": [
+        "module devis"
+      ],
+      "typeFiche": "projet",
+      "tour": "t-009",
+      "extrait": "ok pour les millièmes",
+      "sensible": false
     }
   ],
   "pasRetenir": [
@@ -67,6 +91,12 @@
       "enonce": "Migration SQL et code TypeScript générés.",
       "tour": "t-008",
       "pourquoi": "code"
+    },
+    {
+      "id": "N060",
+      "enonce": "Résultats de la simulation de reprise des anciens devis (comptages et écarts d'un centime).",
+      "tour": "t-015",
+      "pourquoi": "sortie d'outil"
     }
   ],
   "remplace": [],

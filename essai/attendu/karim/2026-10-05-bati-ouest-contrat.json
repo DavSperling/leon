@@ -46,6 +46,19 @@
       "typeFiche": "projet",
       "tour": "t-005",
       "extrait": "ils en ont besoin pour facturer leurs marchés publics, le connecteur est prevu pour le 1er decembre",
+      "sensible": false,
+      "doublonDe": "F113"
+    },
+    {
+      "id": "F087",
+      "enonce": "SARL Bati-Ouest est le plus gros client d'Atelier Numérique Lebrun.",
+      "fiche": "SARL Bati-Ouest",
+      "alias": [
+        "Bati-Ouest"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "cest notre plus gros client",
       "sensible": false
     }
   ],

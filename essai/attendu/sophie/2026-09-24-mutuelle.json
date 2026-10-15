@@ -19,6 +19,16 @@
       "tour": "t-003",
       "extrait": "L'employeur prend en charge 60 % de la cotisation",
       "sensible": false
+    },
+    {
+      "id": "F250",
+      "enonce": "La cotisation de la Mutuelle Atlantique Santé est forfaitaire.",
+      "fiche": "Mutuelle Atlantique Santé",
+      "alias": [],
+      "typeFiche": "fournisseur",
+      "tour": "t-003",
+      "extrait": "La cotisation est forfaitaire.",
+      "sensible": false
     }
   ],
   "pasRetenir": [

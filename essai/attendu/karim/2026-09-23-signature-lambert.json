@@ -10,7 +10,8 @@
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "peinture & deco lambert a signé aujourdhui, 6 licences",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F234"
     },
     {
       "id": "F058",
@@ -44,7 +45,8 @@
       "typeFiche": "client",
       "tour": "t-005",
       "extrait": "4200 HT la 1ere année",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F234"
     }
   ],
   "pasRetenir": [],

@@ -14,7 +14,7 @@
     },
     {
       "id": "F129",
-      "enonce": "Le bug du ticket 482 touche tous les devis de plus de 50 lignes, pas seulement ceux d'Électricité Perrin.",
+      "enonce": "L'export PDF de Chantier+ coupe tous les devis de plus de 50 lignes, quel que soit le client, pas seulement ceux d'Électricité Perrin.",
       "fiche": "Chantier+",
       "alias": [
         "Chantier plus",
@@ -38,6 +38,12 @@
       "enonce": "Correctif tenté puis annulé (`git checkout`).",
       "tour": "t-014",
       "pourquoi": "débogage sans décision"
+    },
+    {
+      "id": "N059",
+      "enonce": "Comptage, sur la copie de prod, des devis de plus de 50 lignes par client (sortie psql).",
+      "tour": "t-011",
+      "pourquoi": "sortie d'outil"
     }
   ],
   "remplace": [],

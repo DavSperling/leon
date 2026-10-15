@@ -10,7 +10,8 @@
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "livraison le 1er décembre, pour Bati-Ouest et Le Bihan",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F113"
     },
     {
       "id": "F304",

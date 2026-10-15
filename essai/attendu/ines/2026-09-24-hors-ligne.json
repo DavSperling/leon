@@ -11,7 +11,8 @@
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "SARL Bati-Ouest est notre client pilote pour la v2",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F281"
     },
     {
       "id": "F187",

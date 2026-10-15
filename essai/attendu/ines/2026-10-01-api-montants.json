@@ -8,7 +8,8 @@
       "typeFiche": "decision",
       "tour": "t-005",
       "extrait": "Avec Hugo on a décidé que les PDF de devis sont générés côté serveur par une file de jobs (pg-boss)",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F117"
     },
     {
       "id": "F194",

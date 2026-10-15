@@ -10,7 +10,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "c'est Gérard Dupont, le gérant, qui suit le dossier Chantier+",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F283"
     },
     {
       "id": "F008",
@@ -23,7 +24,8 @@
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "ils seront le client pilote de l'appli mobile v2",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F281"
     },
     {
       "id": "F009",
@@ -59,7 +61,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "signé hier 23/09, 6 licences, 4 200 € HT",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F234"
     }
   ],
   "pasRetenir": [

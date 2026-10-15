@@ -39,6 +39,12 @@
       "enonce": "Brouillon d'ordre du jour du comité.",
       "tour": "t-002",
       "pourquoi": "brouillon"
+    },
+    {
+      "id": "N127",
+      "enonce": "Le comité projet a lieu exceptionnellement un mercredi cette semaine.",
+      "tour": "t-001",
+      "pourquoi": "exception ponctuelle, la règle reste le mardi"
     }
   ],
   "remplace": [],

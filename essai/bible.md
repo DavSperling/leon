@@ -123,7 +123,7 @@ Chaque ligne : ce qui se passe, qui le dit, dans quelle conversation, avec la va
 
 **Mercredi 23/09**
 - Karim fait signer Peinture & Déco Lambert : 6 licences, 4 200 € HT (`karim/2026-09-23-signature-lambert`). D3.
-- Hugo branche le géocodage sur **Mapéo**, 10 req/s ; débat d'agents A1 sur le cache (`hugo/2026-09-23-geocodage-mapeo`). R3 ancien.
+- Hugo branche le géocodage sur **Mapéo**, 10 req/s ; débat d'agents A1 sur le cache, sans décision sur le stockage ; la durée de cache est fixée à 30 jours, mais le géocodage part sans cache ce jour-là (`hugo/2026-09-23-geocodage-mapeo`). R3 ancien.
 - Nadia budgète Lucas Fabre à **550 €/jour**, 12 jours (`nadia/2026-09-23-budget-design`). R5 ancien.
 - Sophie prépare la facture Lambert (émise le 24/09) (`sophie/2026-09-23-facture-lambert`). D3.
 
@@ -136,11 +136,11 @@ Chaque ligne : ce qui se passe, qui le dit, dans quelle conversation, avec la va
 **Vendredi 25/09**
 - Karim : devis Rousseau 9 600 € HT, signature **mi-octobre** (`karim/2026-09-25-prospect-rousseau`). C1 a.
 - Claire valide l'embauche de Bastien Royer : 46 000 € brut annuel, arrivée le 02/11 (`claire/2026-09-25-embauche-bastien`). S1.
-- Hugo débogue l'export PDF (ticket 482) : limite de 50 lignes codée en dur (`hugo/2026-09-25-debug-export-pdf`).
 - Nadia écrit un script de suivi des projets ; comités le mardi à 10 h (`nadia/2026-09-25-tableau-suivi`).
 
 **Lundi 28/09**
-- Karim reçoit le ticket 482 de Damien Perrin et le relaie à Inès (`karim/2026-09-28-ticket-perrin`, `ines/2026-09-28-ticket-perrin`). D6.
+- Karim reçoit le ticket 482 de Damien Perrin et le relaie à Inès (14 h 10), qui le confie à Hugo (15 h) (`karim/2026-09-28-ticket-perrin`, `ines/2026-09-28-ticket-perrin`). D6.
+- Hugo débogue l'export PDF (ticket 482) l'après-midi (16 h) : limite de 50 lignes codée en dur, tous les devis longs touchés (`hugo/2026-09-28-debug-export-pdf`).
 - Sophie : arrêt maladie de Julien Lefort du 28/09 au 16/10 (`sophie/2026-09-28-arret-maladie`). S2.
 - Hugo étudie Chorus Pro : livraison 01/12, Bati-Ouest et Le Bihan (`hugo/2026-09-28-chorus-pro-recherche`). D4.
 
@@ -176,7 +176,7 @@ Chaque ligne : ce qui se passe, qui le dit, dans quelle conversation, avec la va
 - Inès : notifications push (`ines/2026-10-05-notifications-push`).
 
 **Mardi 06/10**
-- Hugo bascule le code sur TerraCarte ; il affiche par erreur `.env.local` avec `TERRACARTE_API_KEY=sk-essai-9fKx2LmQ7vNw4RtY8pZa3BcD` (`hugo/2026-10-06-bascule-terracarte`). D11, secret 1.
+- Hugo bascule le code sur TerraCarte ; il affiche par erreur `.env.local` avec `TERRACARTE_API_KEY=sk-essai-9fKx2LmQ7vNw4RtY8pZa3BcD` (`hugo/2026-10-06-bascule-terracarte`) ; le cache de géocodage en table Postgres (mis en production entre le 29/09 et le 06/10, hors conversation) est conservé avec ses 30 jours. D11, secret 1.
 - Sophie relance Dupont : paiement à **30 jours fin de mois** (`sophie/2026-10-06-relance-dupont`). C4 b.
 - Claire : négociation de Thomas Guérin (`claire/2026-10-06-negociation-thomas`). S6.
 
@@ -184,11 +184,11 @@ Chaque ligne : ce qui se passe, qui le dit, dans quelle conversation, avec la va
 - Karim : salon décalé aux **27 et 28 novembre** ; Fournier reste avec 10 % ; démo Morvan le 20/10 (`karim/2026-10-07-salon-decale`). R6 nouveau, D9, D14.
 - Inès : pilote Bati-Ouest le 19/10, livraison au 05/11 (`ines/2026-10-07-tests-pilote`). D12, D13.
 - Hugo : revue du module devis, remise plafonnée à 30 % (`hugo/2026-10-07-revue-code-devis`).
-- Nadia : comité projet, démo Chorus Pro le 04/11 (`nadia/2026-10-07-comite-projet`). D15.
+- Nadia : comité projet, exceptionnellement un mercredi (Claire absente le mardi ; la règle F290 reste le mardi, N127), démo Chorus Pro le 04/11 (`nadia/2026-10-07-comite-projet`). D15.
 
 **Jeudi 08/10**
 - Hugo, débat d'agents A3 sur le connecteur Chorus Pro (`hugo/2026-10-08-revue-agents-chorus`).
-- Claire : comité de direction ; mutuelle **+6 %** (C6 b) ; Le Bihan renouvelle (D16) ; Fournier 10 % (D9) (`claire/2026-10-08-comite-direction`).
+- Claire : comité de direction ; mutuelle **+6 %** (C6 b) ; Le Bihan renouvelle (D16) ; Fournier 10 % (D9) ; priorité au connecteur Chorus Pro jusqu'au 01/12, la refonte du module devis gardant sa mise en production prévue (sans date, donc ni R ni C avec C5 et D19) puis plus d'évolution avant décembre (`claire/2026-10-08-comite-direction`).
 - Sophie : budget 2027, stand 3 000 € (`sophie/2026-10-08-budget-2027`).
 
 **Vendredi 09/10**
@@ -203,29 +203,33 @@ Chaque ligne : ce qui se passe, qui le dit, dans quelle conversation, avec la va
 
 ### Doublons : même information, plusieurs voix (fiches à fusionner, pas de conflit)
 
-| # | Information | Faits | Conversations |
-|---|---|---|---|
-| D1 | Gérard Dupont est le gérant et l'interlocuteur de Menuiserie Dupont | F007, F054, F283 | claire 24/09, karim 22/09, nadia 22/09 |
-| D2 | Bati-Ouest est le client pilote de l'appli mobile v2 | F008, F185, F281 | claire 24/09, ines 24/09, nadia 21/09 |
-| D3 | Lambert a signé le 23/09 pour 6 licences, 4 200 € HT | F011, F056, F234 | claire 24/09, karim 23/09, sophie 23/09 |
-| D4 | Connecteur Chorus Pro livré le 01/12 pour Bati-Ouest et Le Bihan | F113, F072, F289 | hugo 28/09, karim 05/10, nadia 29/09 |
-| D5 | Maçonnerie Fournier menace de partir chez Batinova | F010, F064 | claire 24/09, karim 30/09 |
-| D6 | Ticket 482 : l'export PDF de Perrin coupe au-delà de 50 lignes | F061, F186 | karim 28/09, ines 28/09 |
-| D7 | Décision : PDF générés côté serveur par une file pg-boss | F117, F193 | hugo 29/09, ines 01/10 |
-| D8 | Audience de conciliation Le Goff le 13/11/2026 | F017, F242 | claire 29/09, sophie 30/09 |
-| D9 | Fournier reste client avec une remise de 10 % | F074, F030 | karim 07/10, claire 08/10 |
-| D10 | Batinova facture 39 € HT par utilisateur et par mois | F065, F022 | karim 30/09, claire 01/10 |
-| D11 | Le géocodage passe par TerraCarte | F253, F140 | sophie 05/10, hugo 06/10 |
-| D12 | Livraison de l'appli v2 décalée au 05/11 | F298, F214 | nadia 02/10, ines 07/10 |
-| D13 | Pilote Bati-Ouest à partir du 19/10 avec 10 compagnons | F300, F213 | nadia 02/10, ines 07/10 |
-| D14 | Démo Charpentes Morvan le 20/10 | F075, F318 | karim 07/10, nadia 09/10 |
-| D15 | Démo du connecteur Chorus Pro à Bati-Ouest le 04/11 | F311, F160 | nadia 07/10, hugo 10/10 |
-| D16 | Couverture Le Bihan renouvelle pour 2027 | F029, F319 | claire 08/10, nadia 09/10 |
-| D17 | Marion Caradec reprend les tests du connecteur Chorus Pro | F033, F149 | claire 02/10, hugo 08/10 |
-| D18 | Stand du salon : 3 000 € HT | F005, F257 | claire 22/09, sophie 08/10 |
-| D19 | Refonte du module devis promise à Dupont avant le 30/10 | F068, F312 | karim 01/10, nadia 05/10 |
-| D20 | Bastien Royer arrive le 02/11/2026 (sensible des deux côtés) | F014, F310 | claire 25/09, nadia 07/10 |
-| D21 | Ticket 482 : limite de 50 lignes | F128, F061, F186 | hugo 25/09 (cause technique), karim 28/09, ines 28/09 |
+Dans les attendus, chaque redit porte `doublonDe` : l'identifiant du fait **canonique**, celui de la conversation dont le premier tour est le plus ancien. Leon doit rejeter le redit comme doublon d'un fait d'équipe actif ; un redit rejeté ne compte pas comme manqué. Pas de `doublonDe` quand un des faits est sensible (chaque occurrence garde sa propre revue) : D8, D20, et les absences de Julien Lefort (F236, F308).
+
+| # | Information | Canonique | Redits (`doublonDe`) | Conversations (canonique d'abord) |
+|---|---|---|---|---|
+| D1 | Gérard Dupont est le gérant et l'interlocuteur de Menuiserie Dupont | F283 | F054, F007 | nadia 22/09, karim 22/09, claire 24/09 |
+| D2 | Bati-Ouest est le client pilote de l'appli mobile v2 | F281 | F008, F185 | nadia 21/09, claire 24/09, ines 24/09 |
+| D3 | Lambert a signé le 23/09 pour 6 licences, 4 200 € HT la première année | F234 | F056, F057, F011 | sophie 23/09 15 h 30, karim 23/09 16 h 50, claire 24/09 |
+| D4 | Connecteur Chorus Pro livré le 01/12 pour Bati-Ouest et Le Bihan (acheteurs publics) | F113 | F289, F072 | hugo 28/09, nadia 29/09, karim 05/10 |
+| D5 | Maçonnerie Fournier menace de partir chez Batinova | F010 | F064 | claire 24/09, karim 30/09 |
+| D6 | Ticket 482 : l'export PDF de Perrin coupe au-delà de 50 lignes | F061 | F186 | karim 28/09, ines 28/09 |
+| D7 | Décision : PDF générés côté serveur par une file pg-boss | F117 | F193 | hugo 29/09, ines 01/10 |
+| D8 | Audience de conciliation Le Goff le 13/11/2026 (sensible) | F017 | aucun (F242 reste distinct) | claire 29/09, sophie 30/09 |
+| D9 | Fournier reste client avec une remise de 10 % | F074 | F030 | karim 07/10, claire 08/10 |
+| D10 | Batinova facture 39 € HT par utilisateur et par mois | F065 | F022 | karim 30/09, claire 01/10 |
+| D11 | Le géocodage passe par TerraCarte | F253 | F140 | sophie 05/10, hugo 06/10 |
+| D12 | Livraison de l'appli v2 décalée au 05/11 | F298 | F214 | nadia 02/10, ines 07/10 |
+| D13 | Pilote Bati-Ouest à partir du 19/10 avec 10 compagnons | F300 | F213 | nadia 02/10, ines 07/10 |
+| D14 | Démo Charpentes Morvan le 20/10 | F075 | F318 | karim 07/10, nadia 09/10 |
+| D15 | Démo du connecteur Chorus Pro à Bati-Ouest le 04/11 | F311 | F160 | nadia 07/10, hugo 10/10 |
+| D16 | Couverture Le Bihan renouvelle pour 2027 | F029 | F319 | claire 08/10, nadia 09/10 |
+| D17 | Marion Caradec reprend les tests du connecteur Chorus Pro | F033 | F149 | claire 02/10, hugo 08/10 |
+| D18 | Stand du salon : 3 000 € HT | F005 | F257 | claire 22/09, sophie 08/10 |
+| D19 | Refonte du module devis à livrer à Dupont avant le 30/10 | F068 | F312 | karim 01/10, nadia 05/10 |
+| D20 | Bastien Royer arrive le 02/11/2026 (sensible des deux côtés) | F014 | aucun (F310 reste distinct) | claire 25/09, nadia 07/10 |
+| D22 | Inès Moreau est responsable de l'application mobile v2 | F181 | F293 | ines 21/09, nadia 21/09 |
+
+D21 (ticket 482, limite de 50 lignes) n'est plus un groupe de doublons : depuis que la session de Hugo se tient le 28/09 après le relais de Karim et d'Inès, F128 (la cause technique : limite codée en dur dans le générateur) et F129 (la portée : tous les devis de plus de 50 lignes) apportent chacun une information nouvelle par rapport au symptôme F061. Ce sont deux faits distincts, l'un sur la fiche du client (cause de son ticket), l'autre sur le produit.
 
 ### Remplacements (`remplace` : déclaré dans la conversation de la **nouvelle** valeur)
 
@@ -259,7 +263,7 @@ Dans la conversation qui déclare, le personnage ne signale **pas** la contradic
 | S1 | Embauche et salaire de Bastien Royer | rh, remuneration | F012-F015, F310 |
 | S2 | Arrêt maladie de Julien Lefort | sante | F236, F237, F308 |
 | S3 | Litige prud'homal Yann Le Goff | juridique | F016-F019, F241-F243 |
-| S4 | Entretien annuel de Marion Caradec | rh | F023-F025 |
+| S4 | Entretien annuel de Marion Caradec | rh | F023-F025, F036 |
 | S5 | Situation personnelle de Léa Brossard | perso, rh | F307, F309 |
 | S6 | Négociation salariale de Thomas Guérin | remuneration, rh | F026-F028 |
 
@@ -276,7 +280,7 @@ Hypothèses (« on pourrait passer à Supabase » N041, « -15 % et ils signent 
 
 ### Débats d'agents (Hugo)
 
-- **A1** `hugo/2026-09-23-geocodage-mapeo` : deux coéquipiers (`teammate_id="cache-postgres"`, `teammate_id="cache-memoire"`) comparent un cache en table Postgres et un cache mémoire. Un rapport mesure −70 % d'appels (F122). Pas de décision : Hugo dit « on verra plus tard ».
+- **A1** `hugo/2026-09-23-geocodage-mapeo` : deux coéquipiers (`teammate_id="cache-postgres"`, `teammate_id="cache-memoire"`) comparent un cache en table Postgres et un cache mémoire. Un rapport mesure −70 % d'appels (F122). Pas de décision sur le stockage : Hugo dit « on verra plus tard » et livre sans cache ; seule la durée de 30 jours est fixée (F123). La table Postgres est retenue plus tard, hors conversation, et le 06/10 Hugo la mentionne en passant (F142).
 - **A2** `hugo/2026-09-29-debat-generation-pdf` : trois coéquipiers (`teammate_id="pdf-a-la-volee"`, `teammate_id="pdf-file-jobs"`, `teammate_id="pdf-service-externe"`) défendent chacun une option, avec mesures. **Décision** de Hugo : file pg-boss côté serveur (F117).
 - **A3** `hugo/2026-10-08-revue-agents-chorus` : deux relecteurs (`teammate_id="relecteur-api"`, `teammate_id="relecteur-tests"`) rendent un rapport sur le connecteur. Faits tirés des rapports (F147, F148).
 
@@ -288,7 +292,7 @@ Format : `clé` · source.kind · date et heure de début · nombre de tours vis
 
 Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensible** (S), **secret**, **faux ami**, **agents** (A).
 
-### Claire (claude_ai) : 9 conversations, 70 tours, bloc F001-F049, N001-N019
+### Claire (claude_ai) : 9 conversations, 70 tours, bloc F001-F049, N001-N019 (redits : F007, F008, F011, F022, F030)
 
 #### `claire/2026-09-21-plan-recrutement` · claude_ai · 21/09 09:10 · 8 tours · faux ami
 - F001 · Atelier Numérique Lebrun recrute un développeur mobile React Native en CDI. · Recrutement développeur mobile (decision) · non
@@ -335,7 +339,8 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 
 #### `claire/2026-10-02-entretien-marion` · claude_ai · 02/10 15:00 · 8 tours · sensible (S4), doublon (D17)
 - F023 · L'entretien annuel de Marion Caradec a eu lieu le 2 octobre 2026. · Marion Caradec (personne) · oui (rh)
-- F024 · Marion Caradec souhaite devenir référente back-end. · Marion Caradec (personne) · oui (rh)
+- F024 · Marion Caradec souhaite devenir référente back-end ; Claire y est favorable, mais pas tout de suite. · Marion Caradec (personne) · oui (rh)
+- F036 · Le bilan annuel de Marion Caradec est très bon : elle est rigoureuse et fiable. · Marion Caradec (personne) · oui (rh)
 - F025 · Objectif fixé à Marion Caradec : livrer la partie API du connecteur Chorus Pro avant décembre. · Marion Caradec (personne) · oui (rh)
 - F033 · Marion Caradec reprend les tests du connecteur Chorus Pro. · Connecteur Chorus Pro (projet) · non
 
@@ -349,16 +354,19 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 - F029 · Couverture Le Bihan renouvelle son contrat Chantier+ pour 2027. · Couverture Le Bihan (client) · non
 - F030 · Maçonnerie Fournier reste client avec une remise de 10 %. · Maçonnerie Fournier (client) · non
 - F031 · La cotisation de la Mutuelle Atlantique Santé augmente de 6 % au 1er janvier 2027. · Mutuelle Atlantique Santé (fournisseur) · non
-- F034 · Décision : le connecteur Chorus Pro passe avant la refonte du module devis jusqu'au 1er décembre. · Priorité Chorus Pro (decision) · non
+- F034 · Décision : jusqu'au 1er décembre, le connecteur Chorus Pro est prioritaire ; après la mise en production de sa refonte, le module devis ne reçoit plus d'évolution avant décembre. · Priorité Chorus Pro (decision) · non
 - F035 · Le comité de direction a lieu le jeudi à 8 h 30. · Comité de direction (regle) · non
+- N010 · Idée d'un comité produit mensuel, « peut-être un jour ». · hypothèse
 - conflits : `{ a: F240, b: F031 }` (C6)
 
-### Karim (chatgpt) : 10 conversations, 80 tours, bloc F050-F099, N020-N039
+### Karim (chatgpt) : 10 conversations, 80 tours, bloc F050-F099, N020-N039 (redits : F054, F056, F057, F064, F072)
 
 #### `karim/2026-09-21-relance-prospects` · chatgpt · 21/09 09:40 · 7 tours · faux ami, bruit
 - F050 · L'interlocutrice chez Plomberie Rousseau est Sandrine Rousseau, la gérante. · Plomberie Rousseau (client) · non
 - F051 · L'interlocuteur chez Charpentes Morvan est Erwan Morvan, le gérant. · Charpentes Morvan (client) · non
 - F079 · Charpentes Morvan compte 30 salariés. · Charpentes Morvan (client) · non
+- F084 · Plomberie Rousseau est basée à Saint-Nazaire. · Plomberie Rousseau (client) · non
+- F085 · Charpentes Morvan est basée à Quimper. · Charpentes Morvan (client) · non
 - N020 · Brouillon de mail de relance générique. · brouillon
 
 #### `karim/2026-09-22-devis-dupont` · chatgpt · 22/09 10:05 · 9 tours · change (R1 ancien), conflit (C4 a), doublon (D1), faux ami
@@ -366,6 +374,7 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 - F053 · Menuiserie Dupont paie ses factures à 45 jours. · Menuiserie Dupont (client) · non
 - F054 · Gérard Dupont est le gérant de Menuiserie Dupont. · Menuiserie Dupont (client) · non
 - F055 · Le devis de Menuiserie Dupont porte sur 25 licences, le déploiement et la formation. · Menuiserie Dupont (client) · non
+- F086 · Menuiserie Dupont est basée à Angers. · Menuiserie Dupont (client) · non
 - N021 · Définition générale de l'acompte. · question générale
 
 #### `karim/2026-09-23-signature-lambert` · chatgpt · 23/09 16:50 · 7 tours · doublon (D3)
@@ -380,7 +389,7 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 - N022 · Argumentaire général pour vendre un logiciel aux plombiers. · question générale
 - N023 · « Si on leur fait -15 % ils signent direct » : piste non décidée. · hypothèse
 
-#### `karim/2026-09-28-ticket-perrin` · chatgpt · 28/09 14:10 · 7 tours · doublon (D6, D21), bruit
+#### `karim/2026-09-28-ticket-perrin` · chatgpt · 28/09 14:10 · 7 tours · doublon (D6), bruit
 - F061 · Électricité Perrin signale (ticket 482) que l'export PDF des devis coupe les lignes au-delà de 50 postes. · Électricité Perrin (client) · non
 - F062 · L'interlocuteur chez Électricité Perrin est Damien Perrin, le gérant. · Électricité Perrin (client) · non
 - F063 · Électricité Perrin utilise 8 licences Chantier+. · Électricité Perrin (client) · non
@@ -395,7 +404,7 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 
 #### `karim/2026-10-01-renegociation-dupont` · chatgpt · 01/10 15:45 · 8 tours · change (R1 nouveau), doublon (D19), faux ami
 - F067 · Le devis de Menuiserie Dupont est renégocié à 16 900 € HT. · Menuiserie Dupont (client) · non
-- F068 · Gérard Dupont veut la refonte du module devis livrée avant le 30 octobre 2026. · Menuiserie Dupont (client) · non
+- F068 · Menuiserie Dupont exige que la refonte du module devis lui soit livrée avant le 30 octobre 2026 ; c'est sa condition pour signer. · Menuiserie Dupont (client) · non
 - N026 · Brouillon de mail « proposition finale » non envoyé. · brouillon
 - remplace : `{ ancien: F052, nouveau: F067 }` (R1)
 
@@ -404,6 +413,7 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 - F070 · Le contrat annuel de SARL Bati-Ouest s'élève à 42 000 € HT. · SARL Bati-Ouest (client) · non
 - F071 · Depuis le 1er octobre 2026, l'interlocutrice chez SARL Bati-Ouest est Stéphanie Caron, nouvelle DSI. · SARL Bati-Ouest (client) · non
 - F072 · SARL Bati-Ouest a besoin du connecteur Chorus Pro, attendu le 1er décembre, pour facturer ses marchés publics. · Connecteur Chorus Pro (projet) · non
+- F087 · SARL Bati-Ouest est le plus gros client d'Atelier Numérique Lebrun. · SARL Bati-Ouest (client) · non
 - remplace : `{ ancien: F282, nouveau: F071 }` (R7) · conflits : `{ a: F009, b: F069 }` (C2)
 
 #### `karim/2026-10-07-salon-decale` · chatgpt · 07/10 13:15 · 8 tours · change (R6 nouveau), doublon (D9, D14), faux ami
@@ -423,7 +433,7 @@ Pièges : **bruit**, **doublon** (D), **change** (R), **conflit** (C), **sensibl
 - N029 · « Ouvrio va sûrement couler d'ici un an. » · spéculation
 - N030 · Définition générale d'un argumentaire différenciant. · question générale
 
-### Hugo (claude_code) : 12 conversations, 204 tours, bloc F100-F179, N040-N079
+### Hugo (claude_code) : 12 conversations, 204 tours, bloc F100-F179, N040-N079 (redits : F140, F149, F160)
 
 Sessions longues : l'assistant répond avec du code, des commandes, des sorties (`$ pnpm test`, `psql`, `df -h`, traces). Au moins un tiers des tours est du bruit sans entrée. Les faits sont dits par Hugo ou dans une synthèse de l'assistant validée par Hugo (« ok, on garde ça »).
 
@@ -439,7 +449,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F120 · Le géocodage des adresses de chantier de Chantier+ passe par l'API Mapéo. · Mapéo (fournisseur) · non
 - F121 · L'API Mapéo limite à 10 requêtes par seconde. · Mapéo (fournisseur) · non
 - F122 · Un agent mesure que le cache de géocodage réduit d'environ 70 % les appels à Mapéo. · Cache de géocodage (outil) · non
-- F123 · Les résultats de géocodage sont mis en cache 30 jours. · Cache de géocodage (outil) · non
+- F123 · La durée du cache de géocodage est fixée à 30 jours, quelle que soit la solution de cache retenue. · Cache de géocodage (outil) · non
 - N042 · Débogage d'erreurs 429 sans décision. · débogage sans décision
 - N043 · Proposition d'un agent de passer à un cache mémoire, non tranchée. · proposition non retenue
 
@@ -449,18 +459,23 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F126 · Les lignes de devis passent dans une table dédiée devis_lignes. · Refonte du module devis (projet) · non
 - F127 · Hugo Martin est le responsable technique de la refonte du module devis. · Refonte du module devis (projet) · non
 - F150 · Chaque devis garde l'historique de ses versions. · Refonte du module devis (projet) · non
+- F153 · Dans la refonte du module devis, les taux de TVA sont stockés en points de base (2000 pour 20 %). · Refonte du module devis (projet) · non
+- F155 · Dans la refonte du module devis, les quantités sont stockées en millièmes. · Refonte du module devis (projet) · non
 - N044 · Migration SQL et code TypeScript générés. · code
+- N060 · Résultats de la simulation de reprise des anciens devis (comptages et écarts d'un centime). · sortie d'outil
 
-#### `hugo/2026-09-25-debug-export-pdf` · claude_code · 25/09 14:00 · 16 tours · doublon (D21), bruit
+#### `hugo/2026-09-28-debug-export-pdf` · claude_code · 28/09 16:00 · 16 tours · bruit
 - F128 · Le bug du ticket 482 vient d'une limite de 50 lignes codée en dur dans le générateur PDF. · Électricité Perrin (client) · non
-- F129 · Le bug du ticket 482 touche tous les devis de plus de 50 lignes, pas seulement ceux d'Électricité Perrin. · Chantier+ (produit) · non
+- F129 · L'export PDF de Chantier+ coupe tous les devis de plus de 50 lignes, quel que soit le client, pas seulement ceux d'Électricité Perrin. · Chantier+ (produit) · non
 - N046 · Traces de pile et sorties de test. · sortie d'outil
 - N048 · Correctif tenté puis annulé (`git checkout`). · débogage sans décision
+- N059 · Comptage, sur la copie de prod, des devis de plus de 50 lignes par client (sortie psql). · sortie d'outil
 
 #### `hugo/2026-09-28-chorus-pro-recherche` · claude_code · 28/09 09:45 · 16 tours · doublon (D4), faux ami
-- F113 · Le connecteur Chorus Pro doit être livré le 1er décembre 2026 pour SARL Bati-Ouest et Couverture Le Bihan. · Connecteur Chorus Pro (projet) · non
+- F113 · Le connecteur Chorus Pro doit être livré le 1er décembre 2026 pour SARL Bati-Ouest et Couverture Le Bihan, qui en ont besoin pour facturer des acheteurs publics. · Connecteur Chorus Pro (projet) · non
 - F130 · Décision : le connecteur Chorus Pro utilise un compte technique dédié par client. · Connecteur Chorus Pro (projet) · non
 - F131 · Le connecteur Chorus Pro envoie les factures au format Factur-X. · Connecteur Chorus Pro (projet) · non
+- F156 · Avec le connecteur Chorus Pro, l'artisan dépose sa facture sur Chorus Pro en un clic depuis Chantier+ et en voit remonter le statut, sans saisie en double sur le portail. · Connecteur Chorus Pro (projet) · non
 - N045 · Présentation générale de Chorus Pro et de l'obligation de facturation électronique. · question générale
 - N049 · Résultats de recherche web bruts, non vérifiés. · recherche non vérifiée
 
@@ -470,6 +485,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F133 · Le correctif du ticket 482 d'Électricité Perrin est prévu pour le 6 octobre 2026, avec la nouvelle génération des PDF. · Électricité Perrin (client) · non
 - F134 · Option rejetée : un service externe de génération de PDF, pour des raisons de coût et de données clients. · Génération des PDF de devis (decision) · non
 - N050 · Code du worker pg-boss. · code
+- N061 · Statistiques brutes des temps d'export PDF relevées dans les journaux de prod de la semaine précédente. · sortie d'outil, relevé ponctuel
 
 #### `hugo/2026-10-01-api-mobile-auth` · claude_code · 01/10 09:00 · 16 tours · bruit
 - F135 · Les jetons d'accès de l'API mobile durent 15 minutes et le jeton de rafraîchissement 30 jours. · Application mobile v2 (projet) · non
@@ -487,7 +503,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 #### `hugo/2026-10-06-bascule-terracarte` · claude_code · 06/10 10:20 · 18 tours · secret (sk-essai, t-009), doublon (D11), bruit
 - F140 · Le géocodage de Chantier+ passe désormais par l'API TerraCarte. · TerraCarte (fournisseur) · non
 - F141 · L'API TerraCarte autorise 50 requêtes par seconde. · TerraCarte (fournisseur) · non
-- F142 · Le cache de géocodage de 30 jours est conservé avec TerraCarte. · Cache de géocodage (outil) · non
+- F142 · Le cache de géocodage en table Postgres, d'une durée de 30 jours, est conservé avec TerraCarte. · Cache de géocodage (outil) · non
 - N047 · Contenu du fichier `.env.local` affiché, avec la clé d'API TerraCarte. · secret
 - N053 · « Peut-être que TerraCarte gère mal les lieux-dits » : supposition non vérifiée. · hypothèse
 
@@ -513,9 +529,9 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - N057 · Bavardage de fin de semaine. · bavardage
 - N058 · « Il faudrait peut-être réécrire tout le back en Go. » · hypothèse
 
-### Inès (claude_code et chatgpt) : 10 conversations, 100 tours, bloc F180-F229, N080-N099
+### Inès (claude_code et chatgpt) : 10 conversations, 100 tours, bloc F180-F229, N080-N099 (redits : F185, F186, F193, F213, F214)
 
-#### `ines/2026-09-21-mobile-navigation` · claude_code · 21/09 10:00 · 12 tours · bruit
+#### `ines/2026-09-21-mobile-navigation` · claude_code · 21/09 10:00 · 12 tours · bruit, doublon (D22, canonique)
 - F180 · L'application mobile v2 est développée en React Native. · Application mobile v2 (projet) · non
 - F181 · Inès Moreau est responsable de l'application mobile v2. · Application mobile v2 (projet) · non
 - F182 · L'application mobile v2 a quatre onglets : chantiers, devis, planning, profil. · Application mobile v2 (projet) · non
@@ -533,7 +549,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F188 · Les données hors ligne de l'application mobile v2 sont stockées en SQLite. · Application mobile v2 (projet) · non
 - N082 · Débogage de la synchronisation sans décision. · débogage sans décision
 
-#### `ines/2026-09-28-ticket-perrin` · claude_code · 28/09 15:00 · 10 tours · doublon (D6, D21), bruit
+#### `ines/2026-09-28-ticket-perrin` · claude_code · 28/09 15:00 · 10 tours · doublon (D6), bruit
 - F186 · Karim a relayé le ticket 482 d'Électricité Perrin : l'export PDF des devis coupe au-delà de 50 lignes. · Électricité Perrin (client) · non
 - F189 · Le ticket 482 est confié à Hugo Martin, car il touche au générateur PDF côté serveur. · Électricité Perrin (client) · non
 - F200 · Damien Perrin a envoyé un devis de 63 lignes pour reproduire le ticket 482. · Électricité Perrin (client) · non
@@ -577,7 +593,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F205 · Les contrastes de couleur de l'application mobile v2 respectent un ratio d'au moins 4,5 pour 1. · Application mobile v2 (projet) · non
 - N088 · Ce qu'est le RGAA, en général. · question générale
 
-### Sophie (chatgpt) : 9 conversations, 70 tours, bloc F230-F279, N100-N119
+### Sophie (chatgpt) : 9 conversations, 70 tours, bloc F230-F279, N100-N119 (redit : F257)
 
 #### `sophie/2026-09-21-contrats-fournisseurs` · chatgpt · 21/09 08:50 · 8 tours · faux ami
 - F230 · OVH facture 412 € HT par mois pour l'hébergement de Chantier+. · OVH (fournisseur) · non
@@ -588,7 +604,8 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - N107 · Tableau d'échéances proposé par l'assistant à titre d'exemple. · brouillon
 
 #### `sophie/2026-09-23-facture-lambert` · chatgpt · 23/09 15:30 · 7 tours · doublon (D3), faux ami
-- F234 · Peinture & Déco Lambert a signé pour 6 licences à 4 200 € HT ; la facture est émise le 24 septembre 2026. · Peinture & Déco Lambert (client) · non
+- F234 · Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences, à 4 200 € HT la première année ; la facture est émise le 24 septembre 2026. · Peinture & Déco Lambert (client) · non
+- F249 · Peinture & Déco Lambert est basée à Laval. · Peinture & Déco Lambert (client) · non
 - F235 · Les factures sont émises dans Comptaflow. · Comptaflow (outil) · non
 - F245 · Les clients de l'entreprise paient uniquement par virement. · Facturation clients (regle) · non
 - N100 · Explication générale de l'autoliquidation de TVA dans le BTP. · question générale
@@ -596,6 +613,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 #### `sophie/2026-09-24-mutuelle` · chatgpt · 24/09 10:10 · 7 tours · conflit (C6 a), faux ami
 - F240 · La cotisation de la Mutuelle Atlantique Santé augmente de 4,5 % au 1er janvier 2027. · Mutuelle Atlantique Santé (fournisseur) · non
 - F238 · L'employeur prend en charge 60 % de la cotisation de la mutuelle. · Mutuelle Atlantique Santé (fournisseur) · non
+- F250 · La cotisation de la Mutuelle Atlantique Santé est forfaitaire. · Mutuelle Atlantique Santé (fournisseur) · non
 - N101 · Brouillon de note d'information aux salariés sur la mutuelle. · brouillon
 
 #### `sophie/2026-09-28-arret-maladie` · chatgpt · 28/09 09:00 · 8 tours · sensible (S2), faux ami
@@ -639,12 +657,14 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F267 · Le budget 2027 prévoit l'embauche d'un deuxième commercial au second semestre. · Budget 2027 (decision) · non
 - N108 · Projection de trésorerie non validée. · hypothèse
 
-### Nadia (claude_ai et claude_code) : 10 conversations, 80 tours, bloc F280-F329, N120-N139
+### Nadia (claude_ai et claude_code) : 10 conversations, 80 tours, bloc F280-F329, N120-N139 (redits : F289, F293, F312, F318, F319)
 
-#### `nadia/2026-09-21-planning-mobile` · claude_ai · 21/09 11:00 · 8 tours · change (R2 ancien, R7 ancien), doublon (D2)
+#### `nadia/2026-09-21-planning-mobile` · claude_ai · 21/09 11:00 · 8 tours · change (R2 ancien, R7 ancien), doublon (D2, D22)
 - F280 · La livraison de l'application mobile v2 est prévue le 15 octobre 2026. · Application mobile v2 (projet) · non
 - F281 · SARL Bati-Ouest est le client pilote de l'application mobile v2. · Application mobile v2 (projet) · non
 - F282 · L'interlocuteur chez SARL Bati-Ouest est Olivier Ménard, directeur technique. · SARL Bati-Ouest (client) · non
+- F292 · Nadia Benali centralise les retours du client pilote de l'application mobile v2. · Application mobile v2 (projet) · non
+- F293 · Inès Moreau est responsable de l'application mobile v2. · Application mobile v2 (projet) · non · doublonDe F181
 - N120 · Brouillon de rétroplanning proposé par l'assistant puis modifié. · brouillon
 
 #### `nadia/2026-09-22-onboarding-dupont` · claude_ai · 22/09 09:30 · 8 tours · doublon (D1)
@@ -684,7 +704,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 
 #### `nadia/2026-10-05-planning-devis` · claude_code · 05/10 11:00 · 8 tours · conflit (C5 b), doublon (D19), bruit
 - F306 · La mise en production de la refonte du module devis est prévue le 30 octobre 2026. · Refonte du module devis (projet) · non
-- F312 · La refonte du module devis a été promise à Menuiserie Dupont avant le 30 octobre 2026. · Menuiserie Dupont (client) · non
+- F312 · La refonte du module devis doit être livrée à Menuiserie Dupont avant le 30 octobre 2026 ; Karim s'y est engagé. · Menuiserie Dupont (client) · non
 - F313 · Le gel des développements du module devis commence le 23 octobre 2026. · Refonte du module devis (projet) · non
 - N124 · Sortie du script de mise à jour du planning. · sortie d'outil
 - conflits : `{ a: F125, b: F306 }` (C5)
@@ -694,6 +714,7 @@ Sessions longues : l'assistant répond avec du code, des commandes, des sorties 
 - F311 · La démonstration du connecteur Chorus Pro chez SARL Bati-Ouest est prévue le 4 novembre 2026. · Connecteur Chorus Pro (projet) · non
 - F314 · Le compte rendu de chaque comité projet est envoyé le jour même. · Comité projet (regle) · non
 - N125 · Brouillon d'ordre du jour du comité. · brouillon
+- N127 · Le comité projet a lieu exceptionnellement un mercredi cette semaine. · exception ponctuelle, la règle reste le mardi
 
 #### `nadia/2026-10-09-relances-clients` · claude_ai · 09/10 15:30 · 8 tours · doublon (D14, D16)
 - F318 · Une démonstration est prévue chez Charpentes Morvan le 20 octobre 2026. · Charpentes Morvan (client) · non

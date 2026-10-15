@@ -31,7 +31,8 @@
       "typeFiche": "concurrent",
       "tour": "t-003",
       "extrait": "Batinova est à 39 € HT par utilisateur et par mois",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F065"
     }
   ],
   "pasRetenir": [

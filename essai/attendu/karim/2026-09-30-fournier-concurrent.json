@@ -22,7 +22,8 @@
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "il menace de partir chez batinova",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F010"
     },
     {
       "id": "F065",

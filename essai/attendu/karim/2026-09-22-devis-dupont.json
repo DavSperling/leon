@@ -22,7 +22,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "gerard dupont, cest le gerant",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F283"
     },
     {
       "id": "F052",
@@ -46,6 +47,18 @@
       "typeFiche": "client",
       "tour": "t-005",
       "extrait": "dupont c 45j, cest ce qu'on a calé avec lui",
+      "sensible": false
+    },
+    {
+      "id": "F086",
+      "enonce": "Menuiserie Dupont est basée à Angers.",
+      "fiche": "Menuiserie Dupont",
+      "alias": [
+        "Dupont"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "menuiserie dupont (angers)",
       "sensible": false
     }
   ],

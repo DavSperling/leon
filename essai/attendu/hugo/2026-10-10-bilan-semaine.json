@@ -10,7 +10,8 @@
       "typeFiche": "projet",
       "tour": "t-006",
       "extrait": "la démo du connecteur Chorus Pro chez Bati-Ouest est prévue le 4 novembre",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F311"
     },
     {
       "id": "F161",

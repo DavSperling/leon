@@ -2,7 +2,7 @@
   "faits": [
     {
       "id": "F234",
-      "enonce": "Peinture & Déco Lambert a signé pour 6 licences à 4 200 € HT ; la facture est émise le 24 septembre 2026.",
+      "enonce": "Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences, à 4 200 € HT la première année ; la facture est émise le 24 septembre 2026.",
       "fiche": "Peinture & Déco Lambert",
       "alias": [
         "Lambert"
@@ -30,6 +30,18 @@
       "typeFiche": "regle",
       "tour": "t-005",
       "extrait": "chez nous, les clients paient uniquement par virement, ni chèque ni prélèvement",
+      "sensible": false
+    },
+    {
+      "id": "F249",
+      "enonce": "Peinture & Déco Lambert est basée à Laval.",
+      "fiche": "Peinture & Déco Lambert",
+      "alias": [
+        "Lambert"
+      ],
+      "typeFiche": "client",
+      "tour": "t-001",
+      "extrait": "Peinture & Déco Lambert, une entreprise de Laval",
       "sensible": false
     }
   ],

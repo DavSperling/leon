@@ -14,14 +14,14 @@
     },
     {
       "id": "F068",
-      "enonce": "Gérard Dupont veut la refonte du module devis livrée avant le 30 octobre 2026.",
+      "enonce": "Menuiserie Dupont exige que la refonte du module devis lui soit livrée avant le 30 octobre 2026 ; c'est sa condition pour signer.",
       "fiche": "Menuiserie Dupont",
       "alias": [
         "Dupont"
       ],
       "typeFiche": "client",
       "tour": "t-003",
-      "extrait": "gerard veut absolument la refonte du module devis livrée avant le 30/10",
+      "extrait": "gerard veut absolument la refonte du module devis livrée avant le 30/10, c sa condition pour signer",
       "sensible": false
     }
   ],

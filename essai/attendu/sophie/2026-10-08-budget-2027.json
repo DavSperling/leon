@@ -21,7 +21,8 @@
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "le budget du stand est confirmé à 3 000 € HT",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F005"
     },
     {
       "id": "F267",

@@ -14,15 +14,16 @@
     },
     {
       "id": "F312",
-      "enonce": "La refonte du module devis a été promise à Menuiserie Dupont avant le 30 octobre 2026.",
+      "enonce": "La refonte du module devis doit être livrée à Menuiserie Dupont avant le 30 octobre 2026 ; Karim s'y est engagé.",
       "fiche": "Menuiserie Dupont",
       "alias": [
         "Dupont"
       ],
       "typeFiche": "client",
       "tour": "t-001",
-      "extrait": "la refonte est promise à Menuiserie Dupont avant le 30 octobre",
-      "sensible": false
+      "extrait": "la refonte est promise à Menuiserie Dupont avant le 30 octobre, Karim s'y est engagé auprès d'eux",
+      "sensible": false,
+      "doublonDe": "F068"
     },
     {
       "id": "F313",

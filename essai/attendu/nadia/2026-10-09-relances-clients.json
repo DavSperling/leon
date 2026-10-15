@@ -10,7 +10,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "la démo chez eux est confirmée pour le 20 octobre",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F075"
     },
     {
       "id": "F319",
@@ -22,7 +23,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "ils renouvellent pour 2027",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F029"
     },
     {
       "id": "F320",

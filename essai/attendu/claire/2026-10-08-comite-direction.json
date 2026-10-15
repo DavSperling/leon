@@ -22,7 +22,8 @@
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "Fournier reste chez nous, avec une remise de 10 %",
-      "sensible": false
+      "sensible": false,
+      "doublonDe": "F074"
     },
     {
       "id": "F031",
@@ -36,12 +37,12 @@
     },
     {
       "id": "F034",
-      "enonce": "Décision : le connecteur Chorus Pro passe avant la refonte du module devis jusqu'au 1er décembre.",
+      "enonce": "Décision : jusqu'au 1er décembre, le connecteur Chorus Pro est prioritaire ; après la mise en production de sa refonte, le module devis ne reçoit plus d'évolution avant décembre.",
       "fiche": "Priorité Chorus Pro",
       "alias": [],
       "typeFiche": "decision",
       "tour": "t-007",
-      "extrait": "le connecteur Chorus Pro passe avant la refonte du module devis, jusqu'au 1er décembre",
+      "extrait": "jusqu'au 1er décembre, le connecteur Chorus Pro passe avant tout le reste. La refonte du module devis termine sa mise en production comme prévu, puis plus aucune évolution du module devis avant décembre",
       "sensible": false
     },
     {
@@ -55,7 +56,14 @@
       "sensible": false
     }
   ],
-  "pasRetenir": [],
+  "pasRetenir": [
+    {
+      "id": "N010",
+      "enonce": "Idée d'un comité produit mensuel, « peut-être un jour ».",
+      "tour": "t-009",
+      "pourquoi": "hypothèse"
+    }
+  ],
   "remplace": [],
   "conflits": [
     {

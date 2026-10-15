@@ -49,6 +49,12 @@
       "enonce": "Code du worker pg-boss.",
       "tour": "t-018",
       "pourquoi": "code"
+    },
+    {
+      "id": "N061",
+      "enonce": "Statistiques brutes des temps d'export PDF relevées dans les journaux de prod de la semaine précédente.",
+      "tour": "t-003",
+      "pourquoi": "sortie d'outil, relevé ponctuel"
     }
   ],
   "remplace": [],

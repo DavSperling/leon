@@ -1,0 +1,22 @@
+{
+  "requestId": "4al018gzaztcr8nbukz",
+  "records": { "totalRecords": 1, "currentPageSize": 1, "currentPageNumber": 0 },
+  "callTranscripts": [
+    {
+      "callId": "7782342274025937897",
+      "transcript": [
+        {
+          "speakerId": "6432345678555530068",
+          "topic": "Bilan",
+          "sentences": [
+            {
+              "start": 3000,
+              "end": 7000,
+              "text": "Le chiffre d'affaires du trimestre est en hausse de douze pour cent."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

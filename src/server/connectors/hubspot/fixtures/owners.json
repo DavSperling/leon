@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "id": "1001",
+      "email": "marie@acme.test",
+      "firstName": "Marie",
+      "lastName": "Durand",
+      "userId": 2001,
+      "userIdIncludingInactive": 2001,
+      "createdAt": "2025-01-10T09:00:00.000Z",
+      "updatedAt": "2026-03-02T10:00:00.000Z",
+      "archived": false,
+      "type": "PERSON",
+      "teams": [{ "id": "301", "name": "Ventes", "primary": true }]
+    },
+    {
+      "id": "1002",
+      "email": "david@acme.test",
+      "firstName": "David",
+      "lastName": "Martin",
+      "userId": 2002,
+      "userIdIncludingInactive": 2002,
+      "createdAt": "2025-02-14T09:00:00.000Z",
+      "updatedAt": "2026-04-12T10:00:00.000Z",
+      "archived": false,
+      "type": "PERSON",
+      "teams": [{ "id": "301", "name": "Ventes", "primary": true }]
+    }
+  ]
+}

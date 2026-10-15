@@ -1,0 +1,18 @@
+{
+  "total": 3,
+  "results": [
+    {
+      "id": "51003",
+      "properties": {
+        "createdate": "2026-10-12T15:40:00.000Z",
+        "hs_lastmodifieddate": "2026-10-12T15:45:00.000Z",
+        "hs_note_body": "<p>Client Beta : demande une remise de 10&nbsp;% sur l&#39;offre annuelle, à valider par David.</p>",
+        "hs_object_id": "51003",
+        "hubspot_owner_id": "1003"
+      },
+      "createdAt": "2026-10-12T15:40:00.000Z",
+      "updatedAt": "2026-10-12T15:45:00.000Z",
+      "archived": false
+    }
+  ]
+}

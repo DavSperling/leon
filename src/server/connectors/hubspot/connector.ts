@@ -4,6 +4,7 @@ import type { Connector, SyncPage, SyncState } from '../types';
 import { type HubspotClient, hubspotClient } from './client';
 import { cursorAfter, readCursor, searchStart } from './cursor';
 import { ENGAGEMENTS, readable, toItem } from './map';
+import { hubspotOAuth } from './oauth';
 import { linkedRecords, once, optional, searchPages } from './read';
 import type { Person } from './schemas';
 
@@ -29,6 +30,7 @@ import type { Person } from './schemas';
 //     onglet Scopes, onglet Auth › Show token ; en-tête « Authorization: Bearer »)
 //   /docs/developer-tooling/platform/versioning (les adresses /v3 et /v4 restent « supportées » sans
 //     date de fin ; HubSpot annonce que v4 devient « unsupported » le 30/03/2027)
+// Le bouton « Se connecter avec HubSpot » (jeton OAuth, même en-tête « Bearer ») : voir oauth.ts.
 //
 // Écarts au plan, d'après la doc :
 // - Les adresses sont celles de la version datée 2026-03 (/crm/objects/2026-03/…), pas /crm/v3/… : la doc
@@ -61,8 +63,26 @@ import type { Person } from './schemas';
 // par lecture groupée (la doc ne le donne pas). Ni les pièces jointes ni les transcriptions d'appel ne
 // sont lues.
 
-const ConfigSchema = z.object({ token: z.string().trim().min(1).max(500) });
+// Deux façons de se brancher : la clé collée (`token`, jeton d'appli privée) ou le bouton
+// (`accessToken`, que le socle OAuth renouvelle). Une connexion enregistrée avant le bouton n'a pas
+// d'`authMode` : c'est une clé. Un `z.object` raffiné : le catalogue lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Les deux jetons s'envoient pareil (« Authorization: Bearer »), seul le champ change.
+const tokenOf = (config: Config): string =>
+  (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 async function* syncEngagements(
   hubspot: HubspotClient,
@@ -107,7 +127,7 @@ export const hubspotConnector: Connector<Config> = {
 
   // Une recherche par sorte d'activité : elle prouve que le jeton a toutes les portées utiles.
   async verify(config: Config, http: ConnectorHttp) {
-    const hubspot = hubspotClient(config.token, http);
+    const hubspot = hubspotClient(tokenOf(config), http);
     for (const spec of ENGAGEMENTS) {
       await hubspot.search(spec.type, spec.properties, { from: Date.now(), limit: 1 });
     }
@@ -117,6 +137,8 @@ export const hubspotConnector: Connector<Config> = {
   },
 
   sync(config: Config, state, http: ConnectorHttp) {
-    return syncEngagements(hubspotClient(config.token, http), state);
+    return syncEngagements(hubspotClient(tokenOf(config), http), state);
   },
+
+  oauth: hubspotOAuth,
 };

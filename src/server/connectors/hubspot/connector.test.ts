@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from '../http';
@@ -16,6 +17,7 @@ import searchEmails from './fixtures/search-emails.json';
 import searchMeetings from './fixtures/search-meetings.json';
 import searchNotes1 from './fixtures/search-notes-page1.json';
 import searchNotes2 from './fixtures/search-notes-page2.json';
+import { hubspotOAuth } from './oauth';
 import type { EngagementType } from './schemas';
 
 const ROOT = 'https://api.hubapi.com';
@@ -23,7 +25,15 @@ const OBJECTS = `${ROOT}/crm/objects/2026-03`;
 const OWNERS = `${ROOT}/crm/owners/2026-03`;
 const ACCOUNT = `${ROOT}/account-info/2026-03/details`;
 const TOKEN = 'pat-eu1-JETONDETEST-0123456789';
-const config = { token: TOKEN };
+const OAUTH_TOKEN = 'CJoauthJETONDETEST0123456789';
+// Deux façons de se brancher : la clé collée (jeton d'appli privée) ou le bouton (jeton OAuth).
+const config = { authMode: 'key' as const, token: TOKEN };
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: OAUTH_TOKEN,
+  refreshToken: 'eu1-rafraichissement-de-test',
+  expiresAt: '2026-10-15T10:00:00.000Z',
+};
 const SINCE = new Date('2026-09-15T00:00:00Z');
 const ms = (iso: string) => Date.parse(iso);
 
@@ -102,11 +112,16 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: typeof config | typeof oauthConfig;
+  } = {},
 ) {
-  const { http, calls } = testHttp(hubspotConnector, config, routes);
+  const used = overrides.config ?? config;
+  const { http, calls } = testHttp(hubspotConnector, used, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(hubspotConnector.sync(config, state, http));
+  const pages = await collect(hubspotConnector.sync(used, state, http));
   return { pages, calls };
 }
 
@@ -121,8 +136,8 @@ const bodyOf = (call: { body: unknown } | undefined) => call?.body as Record<str
 describe('hubspot : configuration', () => {
   const schema = hubspotConnector.configSchema;
 
-  it('accepte un jeton d’appli privée, sans les espaces autour', () => {
-    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ token: TOKEN });
+  it('accepte un jeton d’appli privée, sans les espaces autour, et le prend pour une clé', () => {
+    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
   });
 
   it('refuse une configuration incomplète', () => {
@@ -840,5 +855,103 @@ describe('hubspot : dates', () => {
       notes: ms('2026-10-06T10:00:00.000Z') - OVERLAP_MS,
       done: 1,
     });
+  });
+});
+
+describe('hubspot : configuration du bouton', () => {
+  const schema = hubspotConnector.configSchema;
+
+  it('accepte la forme OAuth, jetons compris', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    const sansEcheance = { ...oauthConfig, refreshToken: null, expiresAt: null };
+    expect(schema.parse(sansEcheance)).toEqual(sansEcheance);
+  });
+
+  it('refuse une forme OAuth sans jeton d’accès, et une clé sans jeton, en nommant le champ', () => {
+    const oauthIssues = schema.safeParse({ authMode: 'oauth' });
+    const keyIssues = schema.safeParse({ authMode: 'key', accessToken: OAUTH_TOKEN });
+    expect(oauthIssues.error?.issues.map((issue) => issue.path)).toEqual([['accessToken']]);
+    expect(keyIssues.error?.issues.map((issue) => issue.path)).toEqual([['token']]);
+    // Une clé collée ne vaut pas pour une connexion OAuth, ni l'inverse.
+    expect(schema.safeParse({ authMode: 'oauth', token: TOKEN }).success).toBe(false);
+    expect(schema.safeParse({ accessToken: OAUTH_TOKEN }).success).toBe(false);
+  });
+
+  it('accepte un jeton d’accès plus long que la clé collée', () => {
+    const long = `CJ${'a'.repeat(900)}`;
+    expect(schema.safeParse({ ...oauthConfig, accessToken: long }).success).toBe(true);
+  });
+
+  it('reste un objet à champs lisibles, et ne met aucun jeton OAuth dans les champs à chiffrer', () => {
+    const shape = (schema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual(
+      ['accessToken', 'authMode', 'expiresAt', 'refreshToken', 'token'].sort(),
+    );
+    expect(hubspotConnector.secretFields).toEqual(['token']);
+  });
+
+  it('garde l’hôte de l’API pour les deux formes', () => {
+    expect(hubspotConnector.hosts(config)).toEqual(['api.hubapi.com']);
+    expect(hubspotConnector.hosts(oauthConfig)).toEqual(['api.hubapi.com']);
+  });
+});
+
+describe('hubspot : description du bouton', () => {
+  it('est portée par le connecteur', () => {
+    expect(hubspotConnector.oauth).toBe(hubspotOAuth);
+  });
+
+  it('est annoncée dans le catalogue, avec ce que l’utilisateur verra chez HubSpot', () => {
+    const entry = listCatalog().find((item) => item.id === 'hubspot');
+    expect(entry?.oauthHelp).toMatch(/administrateur/);
+    expect(entry?.oauthHelp).toMatch(/lecture|lire/);
+    // La clé collée reste acceptée, avec son mode d'emploi.
+    expect(entry?.keyAccepted ?? true).toBe(true);
+    expect(entry?.keyHelp).toMatch(/Applis héritées/);
+  });
+});
+
+describe('hubspot : jeton OAuth', () => {
+  const emptySearch = { total: 0, results: [] };
+  const verifyRoutes = (): FakeRoute[] => [
+    searchRoute('notes', emptySearch),
+    searchRoute('calls', emptySearch),
+    searchRoute('meetings', emptySearch),
+    searchRoute('emails', emptySearch),
+    { url: ACCOUNT, json: account },
+  ];
+
+  it('verify l’envoie en « Bearer » à chaque requête, et nomme le compte', async () => {
+    const { http, calls } = testHttp(hubspotConnector, oauthConfig, verifyRoutes());
+
+    const result = await hubspotConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'Compte HubSpot 12345678' });
+    expect(calls).toHaveLength(5);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('refuse un accès retiré (401)', async () => {
+    const { http } = testHttp(hubspotConnector, oauthConfig, [
+      { method: 'POST', url: `${OBJECTS}/notes/search`, status: 401 },
+    ]);
+
+    await expect(hubspotConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('sync l’envoie en « Bearer » sur la recherche, les propriétaires, les liens et les noms', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(), { config: oauthConfig });
+
+    expect(calls.length).toBeGreaterThan(10);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+    expect(itemOf(pages, 'note:51001')).toBeDefined();
+  });
+
+  it('laisse la clé collée envoyer son jeton comme avant', async () => {
+    const { calls } = await runSync(firstPassRoutes());
+
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${TOKEN}`);
   });
 });

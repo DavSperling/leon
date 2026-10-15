@@ -1,19 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { cardUrl } from '@/server/memory/card-url';
-import { listFiles, productionSources } from './files';
+import { pageRoutes, productionSources } from './files';
 
 const CARD_ID = '00000000-0000-4000-8000-000000000000';
 
-// Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
-const routeOf = (file: string): string =>
-  `/${file
-    .replace(/^src\/app\//, '')
-    .split('/')
-    .slice(0, -1)
-    .filter((segment) => !/^\(.*\)$/.test(segment))
-    .join('/')}`;
-
-const ROUTES = listFiles('src/app/**/page.tsx').map(routeOf);
+const ROUTES = pageRoutes();
 
 // Un segment dynamique [x] de la route accepte n'importe quel segment du lien.
 function matchesRoute(path: string): boolean {

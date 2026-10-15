@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_VIEW_CONFIG, parseViewParams } from '@/lib/tasks/view-config';
+import { DEFAULT_VIEW_CONFIG, parseViewParams, toViewParams } from '@/lib/tasks/view-config';
+import { pageRoutes } from '@/test/contracts/files';
 import { currentNavKey, FIXED_ITEMS, projectHref, viewHref } from './task-nav';
 
 const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
@@ -43,6 +44,15 @@ describe('navigation des tâches', () => {
     );
   });
 
+  it('ignore un identifiant invalide, comme la liste', () => {
+    expect(currentNavKey('/taches', new URLSearchParams('projet=zzz'))).toBe('all');
+    expect(currentNavKey('/taches', new URLSearchParams('vue=zzz'))).toBe('all');
+    expect(currentNavKey('/taches', new URLSearchParams(`vue=zzz&projet=${ID}`))).toBe(
+      `project:${ID}`,
+    );
+    expect(currentNavKey('/taches', new URLSearchParams('projet=zzz&assigne=moi'))).toBe('mine');
+  });
+
   it('ne marque rien hors de la liste', () => {
     expect(currentNavKey('/taches/LEO-12', new URLSearchParams())).toBeNull();
     expect(currentNavKey('/taches/reglages', new URLSearchParams())).toBeNull();
@@ -54,5 +64,19 @@ describe('navigation des tâches', () => {
     const base = DEFAULT_VIEW_CONFIG;
     expect(parseViewParams(paramsOf(mine?.href ?? ''), base).filters.assignee).toBe('me');
     expect(parseViewParams(paramsOf(projectHref(ID)), base).filters.projectId).toBe(ID);
+  });
+
+  it('relit les paramètres que la liste écrit', () => {
+    const base = DEFAULT_VIEW_CONFIG;
+    const written = (filters: Partial<typeof base.filters>) =>
+      toViewParams({ ...base, filters: { ...base.filters, ...filters } }, base);
+    expect(currentNavKey('/taches', written({ assignee: 'me' }))).toBe('mine');
+    expect(currentNavKey('/taches', written({ creator: 'me' }))).toBe('mine');
+    expect(currentNavKey('/taches', written({ projectId: ID }))).toBe(`project:${ID}`);
+  });
+
+  it('mène chaque lien de la navigation à une page qui existe', () => {
+    const hrefs = [...FIXED_ITEMS.map((item) => item.href), projectHref(ID), viewHref(ID)];
+    for (const href of hrefs) expect(pageRoutes()).toContain(pathOf(href));
   });
 });

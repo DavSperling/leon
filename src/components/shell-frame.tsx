@@ -28,6 +28,49 @@ export function isRailShortcut(
   return modifier && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'b';
 }
 
+function Brand() {
+  return (
+    <span className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
+      <span
+        aria-hidden="true"
+        className="flex size-7 items-center justify-center rounded-full bg-foreground text-[13px] font-bold text-background"
+      >
+        L
+      </span>
+      Leon
+    </span>
+  );
+}
+
+// Le bouton glisse avec la barre latérale : il reste à son bord quand elle est dépliée.
+function RailToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  const label = open ? 'Replier la barre latérale' : 'Déplier la barre latérale';
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          aria-expanded={open}
+          aria-controls="barre-laterale"
+          aria-keyshortcuts="Meta+B Control+B"
+          onClick={onToggle}
+          className={cn(
+            'flex size-8 items-center justify-center rounded-md text-muted-foreground transition-[margin,color,background-color] duration-300 ease-out hover:bg-accent hover:text-foreground',
+            open ? 'ml-[148px]' : 'ml-2',
+          )}
+        >
+          <PanelLeft size={18} strokeWidth={1.5} aria-hidden="true" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {label}
+        <Kbd>⌘B</Kbd>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 // Bandeau du haut (marque, bouton qui replie la barre latérale) et disposition barre + panneau.
 // L'état replié vient du cookie lu par le serveur et y est réécrit à chaque changement.
 export function ShellFrame({ rail, panel, defaultRailOpen }: ShellFrameProps) {
@@ -48,41 +91,11 @@ export function ShellFrame({ rail, panel, defaultRailOpen }: ShellFrameProps) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const toggleLabel = railOpen ? 'Replier la barre latérale' : 'Déplier la barre latérale';
   return (
     <div className="flex h-dvh min-w-5xl flex-col bg-background">
       <div className="flex h-14 shrink-0 items-center gap-3 px-5">
-        <span className="flex items-center gap-2 text-[17px] font-semibold tracking-tight">
-          <span
-            aria-hidden="true"
-            className="flex size-7 items-center justify-center rounded-full bg-foreground text-[13px] font-bold text-background"
-          >
-            L
-          </span>
-          Leon
-        </span>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label={toggleLabel}
-              aria-expanded={railOpen}
-              aria-controls="barre-laterale"
-              aria-keyshortcuts="Meta+B Control+B"
-              onClick={() => setRailOpen(!railOpen)}
-              className={cn(
-                'flex size-8 items-center justify-center rounded-md text-muted-foreground transition-[margin,color,background-color] duration-300 ease-out hover:bg-accent hover:text-foreground',
-                railOpen ? 'ml-[148px]' : 'ml-2',
-              )}
-            >
-              <PanelLeft size={18} strokeWidth={1.5} aria-hidden="true" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {toggleLabel}
-            <Kbd>⌘B</Kbd>
-          </TooltipContent>
-        </Tooltip>
+        <Brand />
+        <RailToggle open={railOpen} onToggle={() => setRailOpen(!railOpen)} />
       </div>
       <div className="flex min-h-0 flex-1 px-2 pb-2">
         <div

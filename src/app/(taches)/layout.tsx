@@ -8,7 +8,11 @@ import { getViewerProfile } from '@/server/auth/viewer';
 import { buildBriefing } from '@/server/memory/briefing';
 import { ensureDefaultProject, listProjects } from '@/server/tasks/projects';
 import { countOpenByProject } from '@/server/tasks/task-list';
-import { listViews } from '@/server/tasks/views';
+import { listViews, type ViewRow } from '@/server/tasks/views';
+
+// La navigation n'a besoin que du nom et de l'identifiant : la configuration d'une vue ne part pas au client.
+const navViews = (views: ViewRow[], team: boolean) =>
+  views.filter((view) => view.team === team).map(({ id, name }) => ({ id, name }));
 
 export default async function TasksLayout({ children }: { children: ReactNode }) {
   const ctx = await requireUserContext();
@@ -35,8 +39,8 @@ export default async function TasksLayout({ children }: { children: ReactNode })
               ...project,
               openCount: openCounts[project.id] ?? 0,
             }))}
-            personalViews={views.filter((view) => !view.team)}
-            teamViews={views.filter((view) => view.team)}
+            personalViews={navViews(views, false)}
+            teamViews={navViews(views, true)}
           />
         </Panel>
       }

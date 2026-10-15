@@ -4,6 +4,7 @@ import { ListChecks, ListFilter, type LucideIcon, UserRound } from 'lucide-react
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { z } from 'zod';
 import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -21,15 +22,23 @@ export const FIXED_ITEMS: Array<{ key: NavKey; href: string; label: string; icon
 export const projectHref = (projectId: string): string => `/taches?projet=${projectId}`;
 export const viewHref = (viewId: string): string => `/taches?vue=${viewId}`;
 
+const Uuid = z.uuid();
+
+// Comme la liste, qui ignore un identifiant invalide : il ne désigne alors aucune entrée.
+function uuidParam(params: URLSearchParams, name: string): string | null {
+  const raw = params.get(name);
+  return raw !== null && Uuid.safeParse(raw).success ? raw.toLowerCase() : null;
+}
+
 // L'URL décrit l'affichage : l'entrée de navigation courante s'en déduit, la vue enregistrée et le
 // projet d'abord, puis « Mes tâches » (assignées, créées, activité). Hors de la liste (page d'une
 // tâche, réglages), aucune n'est courante.
 export function currentNavKey(pathname: string, params: URLSearchParams): NavKey | null {
   if (pathname !== '/taches') return null;
-  const view = params.get('vue');
-  if (view) return `view:${view.toLowerCase()}`;
-  const project = params.get('projet');
-  if (project) return `project:${project.toLowerCase()}`;
+  const view = uuidParam(params, 'vue');
+  if (view) return `view:${view}`;
+  const project = uuidParam(params, 'projet');
+  if (project) return `project:${project}`;
   const mine =
     params.get('assigne') === 'moi' ||
     params.get('createur') === 'moi' ||
@@ -78,20 +87,35 @@ function NavSection({ title, children }: { title: string; children: ReactNode })
   );
 }
 
+function ViewSection({
+  title,
+  views,
+  current,
+}: {
+  title: string;
+  views: NavView[];
+  current: NavKey | null;
+}) {
+  if (views.length === 0) return null;
+  return (
+    <NavSection title={title}>
+      {views.map((view) => (
+        <NavLink
+          key={view.id}
+          href={viewHref(view.id)}
+          current={current === `view:${view.id}`}
+          icon={<ListFilter size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />}
+          label={view.name}
+        />
+      ))}
+    </NavSection>
+  );
+}
+
 // Colonne de gauche des pages de tâches : Mes tâches, Toutes les tâches, puis les projets (avec
 // leurs tâches ouvertes) et les vues enregistrées, personnelles d'abord.
 export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
   const current = currentNavKey(usePathname(), useSearchParams());
-  const viewLinks = (views: NavView[]) =>
-    views.map((view) => (
-      <NavLink
-        key={view.id}
-        href={viewHref(view.id)}
-        current={current === `view:${view.id}`}
-        icon={<ListFilter size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />}
-        label={view.name}
-      />
-    ));
   return (
     <nav aria-label="Navigation des tâches" className="px-3">
       <ul className="space-y-0.5">
@@ -121,12 +145,8 @@ export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
           />
         ))}
       </NavSection>
-      {personalViews.length > 0 && (
-        <NavSection title="Mes vues">{viewLinks(personalViews)}</NavSection>
-      )}
-      {teamViews.length > 0 && (
-        <NavSection title="Vues de l’équipe">{viewLinks(teamViews)}</NavSection>
-      )}
+      <ViewSection title="Mes vues" views={personalViews} current={current} />
+      <ViewSection title="Vues de l’équipe" views={teamViews} current={current} />
     </nav>
   );
 }

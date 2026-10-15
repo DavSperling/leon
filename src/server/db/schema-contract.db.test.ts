@@ -4,12 +4,14 @@ import { adminPool } from '@/test/db';
 import * as apiTokensSchema from './schema/api-tokens';
 import * as authSchema from './schema/auth';
 import * as memorySchema from './schema/memory';
+import * as usageSchema from './schema/usage';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
 const tables: PgTable[] = [
   ...Object.values(authSchema),
   ...Object.values(apiTokensSchema),
   ...Object.values(memorySchema),
+  ...Object.values(usageSchema),
 ];
 
 async function databaseColumns(table: string): Promise<string[]> {

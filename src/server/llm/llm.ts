@@ -1,6 +1,9 @@
 import type { z } from 'zod';
 
-export type LlmStep = 'triage' | 'extraction' | 'placement';
+// Étapes du pipeline, dont l'usage est enregistré dans llm_usage ; « juge » sert à la notation du jeu d'essai.
+export const PIPELINE_LLM_STEPS = ['triage', 'extraction', 'placement'] as const;
+export type PipelineLlmStep = (typeof PIPELINE_LLM_STEPS)[number];
+export type LlmStep = PipelineLlmStep | 'juge';
 
 export type LlmRequest<T> = {
   step: LlmStep;

@@ -1,0 +1,22 @@
+[
+  {
+    "app_url": "https://app.shortcut.com/acme/story/104#activity-9020",
+    "author_id": "5f1c0a00-0000-4000-8000-000000000001",
+    "blocker": false,
+    "created_at": "2026-10-12T13:00:00Z",
+    "deleted": false,
+    "entity_type": "story-comment",
+    "external_id": null,
+    "group_mention_ids": [],
+    "id": 9020,
+    "linked_to_slack": false,
+    "member_mention_ids": [],
+    "mention_ids": [],
+    "parent_id": null,
+    "position": 9020,
+    "story_id": 104,
+    "text": "   ",
+    "unblocks_parent": false,
+    "updated_at": "2026-10-12T13:00:00Z"
+  }
+]

@@ -1,0 +1,229 @@
+{
+  "nextPageToken": "page-2-token",
+  "isLast": false,
+  "issues": [
+    {
+      "id": "10001",
+      "key": "ACME-12",
+      "self": "https://acme.atlassian.net/rest/api/3/issue/10001",
+      "fields": {
+        "summary": "Choisir la durée de relève des outils",
+        "description": {
+          "version": 1,
+          "type": "doc",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": { "level": 2 },
+              "content": [{ "type": "text", "text": "Contexte" }]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "Décision à prendre avec " },
+                {
+                  "type": "mention",
+                  "attrs": {
+                    "id": "5b10ac8d82e05b22cc7d4ef5",
+                    "text": "@Paul Martin",
+                    "userType": "DEFAULT"
+                  }
+                },
+                { "type": "text", "text": " avant vendredi.", "marks": [{ "type": "strong" }] }
+              ]
+            },
+            {
+              "type": "bulletList",
+              "content": [
+                {
+                  "type": "listItem",
+                  "content": [
+                    { "type": "paragraph", "content": [{ "type": "text", "text": "15 minutes" }] }
+                  ]
+                },
+                {
+                  "type": "listItem",
+                  "content": [
+                    { "type": "paragraph", "content": [{ "type": "text", "text": "30 minutes" }] },
+                    {
+                      "type": "bulletList",
+                      "content": [
+                        {
+                          "type": "listItem",
+                          "content": [
+                            {
+                              "type": "paragraph",
+                              "content": [{ "type": "text", "text": "si la charge le permet" }]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "codeBlock",
+              "attrs": { "language": "sql" },
+              "content": [{ "type": "text", "text": "select 1" }]
+            },
+            { "type": "paragraph", "content": [{ "type": "text", "text": "Fin." }] }
+          ]
+        },
+        "comment": {
+          "comments": [
+            {
+              "self": "https://acme.atlassian.net/rest/api/3/issue/10001/comment/20001",
+              "id": "20001",
+              "author": {
+                "accountId": "5b10ac8d82e05b22cc7d4ef5",
+                "displayName": "Paul Martin",
+                "emailAddress": "paul@acme.test",
+                "active": true
+              },
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [{ "type": "text", "text": "Plutôt 30 minutes, non ?" }]
+                  }
+                ]
+              },
+              "created": "2026-10-09T10:00:00.000+0200",
+              "updated": "2026-10-09T10:00:00.000+0200"
+            },
+            {
+              "self": "https://acme.atlassian.net/rest/api/3/issue/10001/comment/20002",
+              "id": "20002",
+              "author": {
+                "accountId": "5b10a2844c20165700ede21g",
+                "displayName": "Marie Durand",
+                "emailAddress": "marie@acme.test",
+                "active": true
+              },
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      { "type": "text", "text": "Non, 15 minutes : c’est décidé." },
+                      { "type": "hardBreak" },
+                      { "type": "text", "text": "Merci " },
+                      { "type": "emoji", "attrs": { "shortName": ":thumbsup:", "text": "👍" } }
+                    ]
+                  }
+                ]
+              },
+              "created": "2026-10-10T08:50:00.000+0200",
+              "updated": "2026-10-10T08:50:00.000+0200"
+            }
+          ],
+          "self": "https://acme.atlassian.net/rest/api/3/issue/10001/comment",
+          "maxResults": 2,
+          "total": 2,
+          "startAt": 0
+        },
+        "creator": {
+          "accountId": "5b10a2844c20165700ede21g",
+          "displayName": "Marie Durand",
+          "emailAddress": "marie@acme.test",
+          "active": true
+        },
+        "reporter": {
+          "accountId": "5b10a2844c20165700ede21g",
+          "displayName": "Marie Durand",
+          "emailAddress": "marie@acme.test",
+          "active": true
+        },
+        "project": { "id": "10000", "key": "ACME", "name": "Plateforme Acme" },
+        "updated": "2026-10-10T09:00:00.000+0200"
+      }
+    },
+    {
+      "id": "10002",
+      "key": "ACME-13",
+      "self": "https://acme.atlassian.net/rest/api/3/issue/10002",
+      "fields": {
+        "summary": "Ticket sans texte",
+        "description": null,
+        "comment": {
+          "comments": [],
+          "self": "https://acme.atlassian.net/rest/api/3/issue/10002/comment",
+          "maxResults": 0,
+          "total": 0,
+          "startAt": 0
+        },
+        "creator": {
+          "accountId": "5b10a2844c20165700ede21g",
+          "displayName": "Marie Durand",
+          "emailAddress": "marie@acme.test",
+          "active": true
+        },
+        "reporter": null,
+        "project": { "id": "10000", "key": "ACME", "name": "Plateforme Acme" },
+        "updated": "2026-10-10T11:30:00.000+0200"
+      }
+    },
+    {
+      "id": "10003",
+      "key": "ACME-14",
+      "self": "https://acme.atlassian.net/rest/api/3/issue/10003",
+      "fields": {
+        "summary": "Un long fil de discussion",
+        "description": {
+          "version": 1,
+          "type": "doc",
+          "content": [
+            { "type": "paragraph", "content": [{ "type": "text", "text": "Le fil est long." }] }
+          ]
+        },
+        "comment": {
+          "comments": [
+            {
+              "self": "https://acme.atlassian.net/rest/api/3/issue/10003/comment/20003",
+              "id": "20003",
+              "author": {
+                "accountId": "5b10ac8d82e05b22cc7d4ef5",
+                "displayName": "Paul Martin",
+                "active": true
+              },
+              "body": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [{ "type": "text", "text": "Premier message." }]
+                  }
+                ]
+              },
+              "created": "2026-10-11T09:00:00.000+0200",
+              "updated": "2026-10-11T09:00:00.000+0200"
+            }
+          ],
+          "self": "https://acme.atlassian.net/rest/api/3/issue/10003/comment",
+          "maxResults": 1,
+          "total": 3,
+          "startAt": 0
+        },
+        "creator": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Paul Martin",
+          "active": true
+        },
+        "reporter": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Paul Martin",
+          "active": true
+        },
+        "project": { "id": "10000", "key": "ACME", "name": "Plateforme Acme" },
+        "updated": "2026-10-11T10:45:00.000+0200"
+      }
+    }
+  ]
+}

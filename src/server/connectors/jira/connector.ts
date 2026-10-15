@@ -1,4 +1,137 @@
-import type { AnyConnector } from '../types';
+import { z } from 'zod';
+import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
+import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
+import { type Comment, type Issue, type JiraClient, jiraClient } from './client';
+import { updatedSinceJql } from './jql';
+import { toItem } from './map';
 
-// Bouchon : la tâche de ce connecteur le remplace (recette R1 du plan Connecteurs v1).
-export const jiraConnector: AnyConnector | null = null;
+// Doc lue le 15/10/2026 :
+//   https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/ (spécification OpenAPI :
+//     dac-static.atlassian.com/cloud/jira/platform/swagger-v3.v3.json), recherche GET /rest/api/3/search/jql
+//   https://developer.atlassian.com/cloud/jira/platform/search-and-reconcile/
+//   https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/
+//   https://developer.atlassian.com/cloud/jira/platform/rate-limiting/
+//   https://developer.atlassian.com/cloud/jira/platform/apis/document/structure/ (et nodes/mention, inlineCard, emoji)
+//   https://support.atlassian.com/jira-software-cloud/docs/jql-fields/ (champ « Updated » : date à la minute)
+//   https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
+// Choix qui diffèrent du plan, d'après la doc : l'élément porte l'id du ticket (« issue:10001 ») et non
+// sa clé, qui change quand le ticket change de projet ; la recherche exige un fuseau, lu par
+// GET /myself à chaque passage (jql.ts) ; le jeton doit être un jeton d'API ordinaire, un jeton « avec
+// portées » ne passe que par api.atlassian.com ; le champ `created` n'est pas demandé (inutile).
+// Un 403 sur les commentaires d'un ticket (page de rattrapage) est attrapé : le ticket sort avec les
+// commentaires que la recherche a rendus. Un ticket sans texte sort sans tours (le socle l'écarte).
+//
+// Non vérifié : si les commentaires de la recherche sont tronqués au-delà d'un nombre (la doc ne le dit
+// pas : on compare `total` aux commentaires rendus et on lit le reste par /issue/{id}/comment) ; que le
+// fuseau de la date JQL est bien celui de `myself.timeZone` (la doc dit « your configured time zone ») ;
+// le code exact d'un site mal orthographié (404 ou redirection : les deux sont traités) ; l'index de
+// recherche est « cohérent à terme » (secondes à minutes) : un ticket qui n'apparaît qu'après une minute
+// de retard sur un ticket plus récent, déjà passé, n'est repris qu'à sa prochaine modification ;
+// l'heure d'automne, où une heure locale se répète, peut faire manquer jusqu'à une heure de tickets.
+
+const ConfigSchema = z.object({
+  // Un seul sous-domaine : ni point, ni chemin, ni port (l'adresse appelée est fixée par ce champ).
+  site: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9][a-z0-9-]{0,62}$/),
+  email: z.string().trim().max(320).pipe(z.email()),
+  apiToken: z.string().trim().min(1).max(500),
+});
+type Config = z.infer<typeof ConfigSchema>;
+
+const RESCAN_MS = 60_000; // la date de la requête est à la minute : on relit depuis une minute avant le curseur
+
+// L'instant du dernier ticket lu et les id déjà lus à cet instant.
+const CursorSchema = z.object({ at: z.iso.datetime(), seen: z.array(z.string()) });
+type Mark = z.infer<typeof CursorSchema>;
+
+function readCursor(text: string | null): Mark | undefined {
+  if (text === null) return undefined;
+  try {
+    const parsed = CursorSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Déjà lu : plus ancien que le curseur, ou lu à l'instant même du curseur.
+function isDone(mark: Mark | undefined, issue: Issue): boolean {
+  if (mark === undefined) return false;
+  const elapsed = Date.parse(issue.fields.updated) - Date.parse(mark.at);
+  return elapsed < 0 || (elapsed === 0 && mark.seen.includes(issue.id));
+}
+
+function advance(mark: Mark | undefined, issue: Issue): Mark {
+  const at = new Date(issue.fields.updated).toISOString();
+  const elapsed = mark === undefined ? 1 : Date.parse(at) - Date.parse(mark.at);
+  if (mark === undefined || elapsed > 0) return { at, seen: [issue.id] };
+  if (elapsed < 0 || mark.seen.includes(issue.id)) return mark;
+  return { at: mark.at, seen: [...mark.seen, issue.id] };
+}
+
+// La recherche rend les commentaires d'un ticket ; s'il y en a plus (`total`), on lit la liste entière.
+async function allComments(jira: JiraClient, issue: Issue): Promise<Comment[]> {
+  const found = issue.fields.comment;
+  const inSearch = found?.comments ?? [];
+  if (!found || found.total <= inSearch.length) return inSearch;
+  try {
+    const rows = await jira.comments(issue.id);
+    return rows.length > inSearch.length ? rows : inSearch;
+  } catch (error) {
+    if (error instanceof ConnectorAuthError && error.status === 403) return inSearch;
+    throw error;
+  }
+}
+
+async function* syncIssues(
+  jira: JiraClient,
+  site: string,
+  state: SyncState,
+): AsyncGenerator<SyncPage> {
+  let mark = readCursor(state.cursor);
+  const { timeZone } = await jira.myself();
+  const from = mark ? new Date(Date.parse(mark.at) - RESCAN_MS) : state.since;
+  for await (const issues of jira.search(updatedSinceJql(from, timeZone))) {
+    const items: ConnectorItem[] = [];
+    for (const issue of issues) {
+      if (!isDone(mark, issue)) {
+        items.push(toItem(site, issue, await allComments(jira, issue)));
+      }
+      mark = advance(mark, issue);
+    }
+    if (items.length > 0) yield { items, cursor: JSON.stringify(mark) };
+  }
+}
+
+// Un site mal écrit répond 404 ou renvoie vers une page de connexion.
+function isUnknownSite(error: unknown): boolean {
+  if (!(error instanceof ConnectorHttpError) || error.status === null) return false;
+  return error.status === 404 || (error.status >= 300 && error.status < 400);
+}
+
+export const jiraConnector: Connector<Config> = {
+  id: 'jira',
+  configSchema: ConfigSchema,
+  secretFields: ['apiToken'],
+  hosts: (config) => [`${config.site}.atlassian.net`],
+
+  async verify(config: Config, http: ConnectorHttp) {
+    try {
+      const me = await jiraClient(config, http).myself();
+      return { account: `${me.displayName || me.emailAddress || config.email} (${config.site})` };
+    } catch (error) {
+      if (!isUnknownSite(error)) throw error;
+      throw new ConnectorHttpError(
+        (error as ConnectorHttpError).status,
+        'Site Jira introuvable : vérifiez le nom du site',
+      );
+    }
+  },
+
+  sync(config: Config, state: SyncState, http: ConnectorHttp) {
+    return syncIssues(jiraClient(config, http), config.site, state);
+  },
+};

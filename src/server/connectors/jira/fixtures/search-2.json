@@ -1,0 +1,61 @@
+{
+  "isLast": true,
+  "issues": [
+    {
+      "id": "10004",
+      "key": "OPS-3",
+      "self": "https://acme.atlassian.net/rest/api/3/issue/10004",
+      "fields": {
+        "summary": "Renouveler le certificat",
+        "description": {
+          "version": 1,
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "Le certificat expire en novembre." }]
+            }
+          ]
+        },
+        "comment": { "comments": [], "maxResults": 0, "total": 0, "startAt": 0 },
+        "creator": null,
+        "reporter": {
+          "accountId": "5b10ac8d82e05b22cc7d4ef5",
+          "displayName": "Paul Martin",
+          "emailAddress": "paul@acme.test",
+          "active": true
+        },
+        "project": { "id": "10001", "key": "OPS", "name": "Exploitation" },
+        "updated": "2026-10-12T16:00:00.000+0200"
+      }
+    },
+    {
+      "id": "10005",
+      "key": "OPS-4",
+      "self": "https://acme.atlassian.net/rest/api/3/issue/10005",
+      "fields": {
+        "summary": "Sauvegarde de la base",
+        "description": {
+          "version": 1,
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [{ "type": "text", "text": "La sauvegarde tourne chaque nuit." }]
+            }
+          ]
+        },
+        "comment": { "comments": [], "maxResults": 0, "total": 0, "startAt": 0 },
+        "creator": {
+          "accountId": "5b10a2844c20165700ede21g",
+          "displayName": "Marie Durand",
+          "emailAddress": "marie@acme.test",
+          "active": true
+        },
+        "reporter": null,
+        "project": { "id": "10001", "key": "OPS", "name": "Exploitation" },
+        "updated": "2026-10-12T16:00:00.000+0200"
+      }
+    }
+  ]
+}

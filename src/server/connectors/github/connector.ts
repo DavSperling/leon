@@ -3,6 +3,7 @@ import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../h
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
 import { type GithubClient, githubClient, type Issue } from './client';
 import { type Discussion, toItem } from './map';
+import { githubOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://docs.github.com/en/rest/issues/issues#list-repository-issues
@@ -42,12 +43,28 @@ import { type Discussion, toItem } from './map';
 
 const REPO_PATTERN = /^(?!\.{1,2}\/)(?!.*\/\.{1,2}$)[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
 
-const ConfigSchema = z.object({
-  token: z.string().trim().min(1).max(500),
-  // Propriétaire/nom ; ni « . » ni « .. » seuls, qui changeraient l'adresse appelée.
-  repos: z.array(z.string().trim().regex(REPO_PATTERN)).min(1).max(20),
-});
+// Deux façons de se brancher : une clé collée (`token`) ou le bouton (`accessToken`, `refreshToken`,
+// `expiresAt`, voir `oauth.ts`). Une connexion enregistrée avant le bouton n'a pas d'`authMode` : elle
+// est à clé. Les deux jetons du bouton ne sont pas dans `secretFields` : le socle les scelle avec lui.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().trim().min(1).max(500).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    // Propriétaire/nom ; ni « . » ni « .. » seuls, qui changeraient l'adresse appelée.
+    repos: z.array(z.string().trim().regex(REPO_PATTERN)).min(1).max(20),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Le jeton de GitHub s'envoie de la même façon, clé collée ou jeton d'accès du bouton.
+const bearerOf = (config: Config): string =>
+  (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
 const CursorSchema = z.record(
@@ -149,15 +166,16 @@ export const githubConnector: Connector<Config> = {
   configSchema: ConfigSchema,
   secretFields: ['token'],
   hosts: () => ['api.github.com'],
+  oauth: githubOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
-    const github = githubClient(config.token, http);
+    const github = githubClient(bearerOf(config), http);
     const { login } = await github.account();
     for (const repo of config.repos) await github.checkRepo(repo);
     return { account: login };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncRepos(githubClient(config.token, http), config.repos, state);
+    return syncRepos(githubClient(bearerOf(config), http), config.repos, state);
   },
 };

@@ -32,9 +32,12 @@ describe('privilèges', () => {
     expect(offenders(/\badmin(?:Db|Pool)\b/, isTestSupport)).toEqual([]);
   });
 
-  it('limite DATABASE_URL_ADMIN aux migrations, aux tests et à .env.example', () => {
+  it('limite DATABASE_URL_ADMIN aux migrations, aux tests, au jeu d essai et à .env.example', () => {
     const allowed = (path: string) =>
-      isTestSupport(path) || path === 'src/server/db/migrate-cli.ts' || path === '.env.example';
+      isTestSupport(path) ||
+      path === 'src/server/db/migrate-cli.ts' ||
+      path === 'src/essai/admin-db.ts' || // le jeu d'essai remet à zéro sa propre organisation, hors RLS
+      path === '.env.example';
     expect(offenders(/DATABASE_URL_ADMIN/, allowed)).toEqual([]);
   });
 });

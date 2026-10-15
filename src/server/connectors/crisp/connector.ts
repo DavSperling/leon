@@ -30,9 +30,11 @@ import { toIso, toItem } from './map';
 //
 // Non vérifié :
 //   - l'unité des dates (la doc ne la dit pas ; les exemples ont 13 chiffres : millisecondes) ;
-//   - le sens des tris, la taille d'un lot de messages, la réponse à une page de liste au-delà de la
-//     dernière (on suppose une liste vide ; un 404 ferait échouer le passage), si les bornes de dates
-//     sont incluses (on relit une seconde avant le curseur) ;
+//   - le sens des tris, la taille d'un lot de messages, si les bornes de dates sont incluses (on
+//     relit une seconde avant le curseur) ;
+//   - la réponse à une page de liste au-delà de la dernière : la doc liste 404 et 416 (Requested Range
+//     Not Satisfiable) sans dire quand. Une page pleine est suivie de la page suivante ; une liste
+//     vide, un 404 ou un 416 sur une page autre que la première sont pris pour la fin de la liste ;
 //   - le code HTTP d'un jeton refusé (`invalid_session` : la doc ne liste aucun 401 et donne 403 et
 //     406 pour Get A Website ; 401 et 403 sont traités comme un refus de la clé, un 406 ne l'est pas) ;
 //   - les limites par minute d'un jeton de site (non chiffrées dans la doc : 250 ms entre deux

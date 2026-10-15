@@ -61,18 +61,29 @@ export function crispClient(credentials: Credentials, http: ConnectorHttp) {
     async conversations(from: Date, until?: Date): Promise<Conversation[]> {
       const rows = new Map<string, Conversation>();
       for (let page = 1; ; page++) {
-        const { data } = await http.json(
-          {
-            url: `${site}/conversations/${page}`,
-            headers,
-            query: {
-              per_page: PER_PAGE,
-              filter_date_start: from.toISOString(),
-              filter_date_end: until?.toISOString(),
+        let data: Conversation[];
+        try {
+          ({ data } = await http.json(
+            {
+              url: `${site}/conversations/${page}`,
+              headers,
+              query: {
+                per_page: PER_PAGE,
+                filter_date_start: from.toISOString(),
+                filter_date_end: until?.toISOString(),
+              },
             },
-          },
-          envelope(z.array(ConversationSchema)),
-        );
+            envelope(z.array(ConversationSchema)),
+          ));
+        } catch (error) {
+          // La doc liste 404 et 416 sans dire ce que Crisp rend au-delà de la dernière page : quand
+          // la page précédente était pleine, c'est la fin de la liste, pas une erreur. Sur la
+          // première page, un 404 reste une erreur.
+          const outOfRange =
+            error instanceof ConnectorHttpError && (error.status === 404 || error.status === 416);
+          if (page > 1 && outOfRange) return [...rows.values()];
+          throw error;
+        }
         const known = rows.size;
         for (const row of data) rows.set(row.session_id, row);
         // Une page courte est la dernière ; une page qui n'apporte rien de nouveau coupe court

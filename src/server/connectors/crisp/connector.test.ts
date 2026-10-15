@@ -458,6 +458,33 @@ describe('crisp : sync, fenêtres, pages et curseur', () => {
     expect(itemsOf(pages)).toHaveLength(50);
   });
 
+  it('prend un 404 ou un 416 sur la page suivante pour la fin de la liste, et rend les conversations déjà lues', async () => {
+    for (const status of [404, 416]) {
+      const { pages, calls } = await runSync(
+        [
+          listRoute(envelope(range(0, 50).map(bare)), 1),
+          { url: `${API}/conversations/2`, status },
+          ...bareRoutes(range(0, 50)),
+        ],
+        { since: new Date('2026-10-14T00:00:00Z') },
+      );
+
+      expect(lists(calls)).toHaveLength(2);
+      expect(itemsOf(pages)).toHaveLength(50);
+      expect(cursorOf(pages.at(-1))).toEqual({ at: minute(49), seen: [bareId(49)] });
+    }
+  });
+
+  it('ne prend pas un 404 sur la première page pour une liste vide', async () => {
+    const { http } = testHttp(crispConnector, config, [
+      { url: `${API}/conversations/1`, status: 404 },
+    ]);
+
+    const run = collect(crispConnector.sync(config, { cursor: null, since: SINCE }, http));
+
+    await expect(run).rejects.toMatchObject({ name: 'ConnectorHttpError', status: 404 });
+  });
+
   it('reprend après la première page sans la relire', async () => {
     const since = new Date('2026-10-14T00:00:00Z');
     const rows = range(0, 120);

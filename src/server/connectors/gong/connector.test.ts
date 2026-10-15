@@ -39,9 +39,9 @@ type Body = {
 };
 const bodyOf = (call: { body: unknown } | undefined) => call?.body as Body;
 
-async function run(routes: FakeRoute[], cursor: string | null = null) {
+async function run(routes: FakeRoute[], cursor: string | null = null, since = SINCE) {
   const { http, calls } = testHttp(gongConnector, CONFIG, routes);
-  const pages = await collect(gongConnector.sync(CONFIG, { cursor, since: SINCE }, http));
+  const pages = await collect(gongConnector.sync(CONFIG, { cursor, since }, http));
   return { pages, calls };
 }
 
@@ -380,7 +380,7 @@ describe('sync : transcriptions', () => {
     const { pages } = await run([listing(page(recent)), nothing(TRANSCRIPT)]);
 
     expect(items(pages)[0]?.turns.map((turn) => turn.role)).toEqual(['document']);
-    expect(finalAfter(pages)).toBe('2026-10-15T10:00:00.000Z');
+    expect(finalAfter(pages)).toBe('2026-10-15T06:00:00.000Z');
   });
 
   it('lève ConnectorAuthError quand la clé n’a pas le droit de lire les transcriptions', async () => {
@@ -440,7 +440,7 @@ describe('sync : pages et curseur', () => {
     });
   });
 
-  it('le curseur final repart juste après l’appel le plus récent, sans refaire la première page', async () => {
+  it('quand l’appel le plus récent date de plus de six heures, le curseur final repart juste après lui, sans refaire la première page', async () => {
     const first = await run(both());
     expect(finalAfter(first.pages)).toBe('2026-10-14T16:00:00.001Z');
     vi.setSystemTime(new Date('2026-10-15T12:15:00Z'));
@@ -478,15 +478,61 @@ describe('sync : pages et curseur', () => {
   });
 });
 
+describe('sync : appel listé en retard', () => {
+  // A (10h00 à 11h00) est traité par Gong après B (10h30 à 10h45, plus court) : le passage de
+  // midi ne voit que B. Gong filtre sur l'heure de début, donc A n'est relu que si le départ
+  // du passage suivant reste plus tôt que lui.
+  const early = () => call({ id: 'B', started: '2026-10-15T10:30:00Z' });
+  const late = () => call({ id: 'A', started: '2026-10-15T10:00:00Z' });
+  const spokenBy = (callId: string, text: string) => ({
+    callId,
+    transcript: [talk(MARIE, 2000, text)],
+  });
+
+  it('relit les six heures qui précèdent la fin du parcours : un appel plus ancien que le plus récent, listé au passage suivant, est rendu', async () => {
+    const first = await run([
+      listing(page(early())),
+      speech(transcriptOf('B', talk(PAUL, 1000, 'B.'))),
+    ]);
+    expect(finalAfter(first.pages)).toBe('2026-10-15T06:00:00.000Z');
+    vi.setSystemTime(new Date('2026-10-15T12:15:00Z'));
+
+    const { pages, calls } = await run(
+      [
+        listing(page(early(), late())),
+        speech({
+          records: {},
+          callTranscripts: [spokenBy('B', 'Déjà vu.'), spokenBy('A', 'Enfin listé.')],
+        }),
+      ],
+      first.pages.at(-1)?.cursor,
+    );
+
+    const from = bodyOf(calls[0]).filter.fromDateTime ?? '';
+    expect(Date.parse(from)).toBeLessThanOrEqual(Date.parse(late().metaData.started));
+    expect(items(pages).map((item) => item.externalId)).toContain('call:A');
+    expect(finalAfter(pages)).toBe('2026-10-15T06:15:00.000Z');
+  });
+
+  it('ne recule jamais avant since', async () => {
+    const since = new Date('2026-10-15T09:00:00Z');
+    const spoken = speech(transcriptOf('B', talk(PAUL, 1000, 'B.')));
+
+    const { pages } = await run([listing(page(early())), spoken], null, since);
+
+    expect(finalAfter(pages)).toBe('2026-10-15T09:00:00.000Z');
+  });
+});
+
 describe('sync : appel pas encore traité', () => {
   const pending = () => call({ id: '99', started: '2026-10-15T10:00:00Z', content: {} });
   const spoken = () => transcriptOf('99', talk(MARIE, 4000, 'Enfin le texte.'));
 
-  it('retient le départ sur un appel récent sans texte, pour le relire plus tard', async () => {
+  it('garde un appel récent sans texte dans la fenêtre de relecture, pour le relire plus tard', async () => {
     const { pages } = await run([listing(page(calls1.calls[0], pending())), speech(transcripts1)]);
 
     expect(items(pages).map((item) => item.externalId)).toEqual([`call:${CALL_A}`]);
-    expect(finalAfter(pages)).toBe('2026-10-15T10:00:00.000Z');
+    expect(finalAfter(pages)).toBe('2026-10-15T06:00:00.000Z');
   });
 
   it('le rend au passage suivant, quand son texte est arrivé', async () => {
@@ -498,8 +544,22 @@ describe('sync : appel pas encore traité', () => {
       first.pages.at(-1)?.cursor,
     );
 
-    expect(bodyOf(calls[0]).filter.fromDateTime).toBe('2026-10-15T10:00:00.000Z');
+    expect(bodyOf(calls[0]).filter.fromDateTime).toBe('2026-10-15T06:00:00.000Z');
     expect(items(pages).map((item) => item.externalId)).toEqual(['call:99']);
+    expect(finalAfter(pages)).toBe('2026-10-15T06:15:00.000Z');
+  });
+
+  it('cesse de le relire quand il sort de la fenêtre des six heures, toujours sans texte', async () => {
+    const first = await run([listing(page(pending())), nothing(TRANSCRIPT)]);
+    vi.setSystemTime(new Date('2026-10-15T16:15:00Z'));
+
+    const { pages, calls } = await run(
+      [listing(page(pending())), nothing(TRANSCRIPT)],
+      first.pages.at(-1)?.cursor,
+    );
+
+    expect(bodyOf(calls[0]).filter.fromDateTime).toBe('2026-10-15T06:00:00.000Z');
+    expect(items(pages)).toEqual([]);
     expect(finalAfter(pages)).toBe('2026-10-15T10:00:00.001Z');
   });
 

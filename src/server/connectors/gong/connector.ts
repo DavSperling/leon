@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Connector } from '../types';
 import { gongClient } from './client';
 import { advance, startWalk } from './cursor';
-import { hasSpeech, toItem } from './map';
+import { toItem } from './map';
 
 // Doc lue le 15/10/2026 :
 //   https://help.gong.io/apidocs (authentification Basic, adresse de base, limites, pagination)
@@ -22,25 +22,27 @@ import { hasSpeech, toItem } from './map';
 //     client (« company-17.api.gong.io » dans l'exemple), d'où le sous-domaine obligatoire.
 //
 // Choix à cause de la doc :
-//   - pas de filtre « modifié depuis » : une période seulement. L'ordre de la liste n'est pas
-//     documenté : voir cursor.ts ;
+//   - pas de filtre « modifié depuis » : une période seulement, sur l'heure prévue pour une
+//     visioconférence et sur l'heure de début sinon. L'ordre de la liste n'est pas documenté et
+//     le délai de traitement non plus : chaque parcours relit les six dernières heures (cursor.ts) ;
 //   - 404 = aucun appel (ou aucune transcription) pour la demande : lu comme une réponse vide ;
 //   - 3 appels par seconde et 10 000 par jour : 350 ms entre deux requêtes ; un passage de 200 appels
-//     coûte une dizaine de requêtes ;
+//     coûte une dizaine de requêtes, et la relecture des six dernières heures toutes les 15 minutes
+//     reste très en dessous de la limite du jour ;
 //   - transcriptions demandées par lots de 50 identifiants (le maximum n'est pas documenté) ;
 //   - aucun point d'accès ne dit à qui est la clé : verify lit une heure d'appels et rend le
 //     sous-domaine ;
 //   - la transcription est le contenu principal, pas une ressource secondaire : un 401 ou 403 sur
 //     elle remonte (clé sans le droit de lire les transcriptions) ;
 //   - sans transcription, le résumé de Gong devient un tour document ; ni l'un ni l'autre : l'appel
-//     n'est pas rendu. Un appel récent sans transcription retient le départ du curseur.
+//     n'est pas rendu, mais la relecture des six dernières heures le reprend quand son texte arrive.
 //
-// Non vérifié (aucun appel réel) : l'ordre de la liste ; que fromDateTime filtre sur l'heure de début
-// et non sur l'heure prévue ; que Gong liste un appel avant la fin de son traitement ; qu'un curseur
-// de page reste valable d'une relève à l'autre ; le nombre d'appels par page (100 dans les exemples)
-// et le maximum d'identifiants par requête de transcription ; que les portées de la clé
-// (api:calls:read:extensive, api:calls:read:transcript) suffisent ; que « start » d'une phrase part
-// de l'heure de début de l'appel ; la forme du corps d'un 403.
+// Non vérifié (aucun appel réel) : l'ordre de la liste ; le délai entre la fin d'un appel et son
+// apparition dans la liste (six heures par prudence) ; que Gong liste un appel avant la fin de son
+// traitement ; qu'un curseur de page reste valable d'une relève à l'autre ; le nombre d'appels par
+// page (100 dans les exemples) et le maximum d'identifiants par requête de transcription ; que les
+// portées de la clé (api:calls:read:extensive, api:calls:read:transcript) suffisent ; que « start »
+// d'une phrase part de l'heure de début de l'appel ; la forme du corps d'un 403.
 
 const configSchema = z.object({
   baseUrlHost: z
@@ -83,13 +85,12 @@ export const gongConnector: Connector<Config> = {
         details: true,
       });
       const speech = await gong.transcripts(calls.map((call) => call.metaData.id));
-      const converted = calls.map((call) => ({
-        started: new Date(call.metaData.started).toISOString(),
-        item: toItem(call, speech.get(call.metaData.id) ?? []),
-      }));
-      const ready = converted.map(({ started, item }) => ({ started, ready: hasSpeech(item) }));
-      walk = advance(walk, ready, next);
-      const items = converted.flatMap(({ item }) => (item === null ? [] : [item]));
+      const started = calls.map((call) => new Date(call.metaData.started).toISOString());
+      walk = advance(walk, started, next, state.since);
+      const items = calls.flatMap((call) => {
+        const item = toItem(call, speech.get(call.metaData.id) ?? []);
+        return item === null ? [] : [item];
+      });
       yield { items, cursor: JSON.stringify(walk) };
     } while (walk.next !== null);
   },

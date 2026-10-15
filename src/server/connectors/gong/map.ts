@@ -93,7 +93,3 @@ export function toItem(call: Call, monologues: Monologue[]): ConnectorItem | nul
     turns,
   };
 }
-
-export function hasSpeech(item: ConnectorItem | null): boolean {
-  return item?.turns.some((turn) => turn.role === 'participant') ?? false;
-}

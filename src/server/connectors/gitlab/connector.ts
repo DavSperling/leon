@@ -16,10 +16,12 @@ import { toItem } from './map';
 //   https://docs.gitlab.com/security/tokens/access_token_scopes/ (portée read_api)
 //   https://docs.gitlab.com/user/gitlab_com/rate_limits/      (429, Retry-After)
 //   https://docs.gitlab.com/user/reserved_names/              (forme des chemins de projet)
-// Choix qui diffèrent du plan, d'après la doc : les pages suivantes se lisent par l'en-tête Link
-// (pagination par décalage, la seule documentée avec un tri par date de modification) ; `scope=all`
-// est explicite ; les sous-groupes (groupe/sous-groupe/projet) sont acceptés ; les dates de GitLab
-// sont de l'ISO 8601 en UTC (« Z »), sans conversion à faire.
+// Choix qui diffèrent du plan, d'après la doc : les pages suivantes se lisent par l'en-tête Link ;
+// les tickets sont lus par curseur (`pagination=keyset`, avec `order_by=updated_at` : documenté
+// depuis GitLab 18.3), les demandes de fusion par décalage faute de mention dans la liste des
+// ressources à curseur de la doc ; `scope=all` est explicite ; les sous-groupes
+// (groupe/sous-groupe/projet) sont acceptés ; les dates de GitLab sont de l'ISO 8601 en UTC (« Z »),
+// sans conversion à faire.
 // Les notes système sont écartées (`system: true`) ; l'exemple de la doc marque pourtant `system: true`
 // une note qui est un vrai commentaire, ce qui ressemble à une faute de la doc. Un 403 sur les notes
 // d'un élément est attrapé : l'élément sort sans elles. Un élément sans texte sort sans tours (le
@@ -35,8 +37,9 @@ import { toItem } from './map';
 //   - si `updated_after` accepte les millisecondes (on envoie des secondes) ;
 //   - la forme exacte des liens `next` (adresses /projects/<id>/… dans les fixtures, construites
 //     d'après la doc).
-// Limite connue : un élément modifié pendant que les pages d'un même projet sont lues peut décaler
-// les pages et en faire manquer un autre, qui ne reviendra qu'à sa prochaine modification.
+// Limite connue, pour les demandes de fusion seulement (lues par décalage, curseur non documenté
+// pour elles) : une demande modifiée pendant que les pages d'un même projet sont lues peut décaler
+// les pages et en faire manquer une autre, qui ne reviendra qu'à sa prochaine modification.
 
 // Segments séparés par « / » (jusqu'à 20 sous-groupes) : lettres, chiffres, « _ », « . » et « - »,
 // sans commencer par « . » ou « - », ce qui exclut « . » et « .. » qui changeraient l'adresse appelée.

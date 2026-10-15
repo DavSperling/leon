@@ -75,6 +75,9 @@ export function gitlabClient(token: string, http: ConnectorHttp) {
 
     // Tickets ou demandes de fusion modifiés depuis `since` (AAAA-MM-JJTHH:MM:SSZ, inclus), du plus
     // ancien au plus récent. `scope` est explicite : la valeur par défaut varie selon le point d'accès.
+    // Les tickets se lisent par curseur (`pagination=keyset`, documenté depuis GitLab 18.3) : un
+    // ticket modifié pendant la lecture ne décale pas les pages. La doc n'en dit rien pour les
+    // demandes de fusion, qui restent lues par décalage.
     list: (project: string, stream: Stream, since: string) =>
       pages(
         {
@@ -87,6 +90,7 @@ export function gitlabClient(token: string, http: ConnectorHttp) {
             sort: 'asc',
             updated_after: since,
             per_page: LIST_PER_PAGE,
+            ...(stream === 'issues' ? { pagination: 'keyset' } : {}),
           },
         },
         z.array(ListedSchema),

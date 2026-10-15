@@ -31,6 +31,11 @@ const next = (url: string) => ({
   link: `<${url}?page=2&per_page=50>; rel="next", <${url}?page=1&per_page=50>; rel="first"`,
 });
 
+// Les tickets se lisent par curseur : GitLab donne l'adresse de la page suivante avec un « cursor ».
+const nextKeyset = (url: string) => ({
+  link: `<${url}?pagination=keyset&per_page=50&order_by=updated_at&sort=asc&cursor=eyJpZCI6IjE2In0>; rel="next"`,
+});
+
 const issuesRoute = (json: unknown, extra: Partial<FakeRoute> = {}): FakeRoute => ({
   url: ISSUES,
   json,
@@ -49,7 +54,7 @@ const mergeRequestRoutes = (): FakeRoute[] => [
 // Toutes les routes d'un premier passage : deux pages de tickets, puis les demandes de fusion.
 function firstPassRoutes(): FakeRoute[] {
   return [
-    issuesRoute(issuesPage1, { headers: next(`${BY_ID}/issues`) }),
+    issuesRoute(issuesPage1, { headers: nextKeyset(`${BY_ID}/issues`) }),
     {
       url: `${ISSUES}/12/notes`,
       json: issueNotes12Page1,
@@ -204,6 +209,7 @@ describe('gitlab : sync, premier passage', () => {
       sort: 'asc',
       updated_after: '2026-09-15T00:00:00Z',
       per_page: '50',
+      pagination: 'keyset',
     });
     const mergeRequests = calls.find((call) => withoutQuery(call.url) === MERGE_REQUESTS);
     expect(Object.fromEntries(new URL(mergeRequests?.url ?? '').searchParams)).toEqual({
@@ -345,7 +351,9 @@ describe('gitlab : sync, premier passage', () => {
     expect(idsOf(pages.slice(1, 2))).toEqual(['issue:acme/leon#15', 'issue:acme/leon#16']);
     expect(idsOf(pages.slice(2))).toEqual(['mr:acme/leon!7', 'mr:acme/leon!8']);
     const pageTwo = calls.find((call) => call.url.startsWith(`${BY_ID}/issues?`));
-    expect(pageTwo?.url).toBe(`${BY_ID}/issues?page=2&per_page=50`);
+    expect(pageTwo?.url).toBe(
+      `${BY_ID}/issues?pagination=keyset&per_page=50&order_by=updated_at&sort=asc&cursor=eyJpZCI6IjE2In0`,
+    );
   });
 
   it('garde un curseur par projet et par sorte d’élément', async () => {

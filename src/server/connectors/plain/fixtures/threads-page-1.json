@@ -1,0 +1,30 @@
+{
+  "data": {
+    "threads": {
+      "edges": [
+        {
+          "node": {
+            "id": "th_01J9Z8K3M4N5P6Q7R8S9T0V1W2",
+            "ref": "T-101",
+            "title": "Impossible de se connecter à l’espace Acme",
+            "updatedAt": { "iso8601": "2026-10-14T16:20:00.000Z" },
+            "customer": { "fullName": "Marie Durand" }
+          }
+        },
+        {
+          "node": {
+            "id": "th_01J9Z8K3M4N5P6Q7R8S9T0V1W3",
+            "ref": "T-102",
+            "title": "Facture d’octobre en double",
+            "updatedAt": { "iso8601": "2026-10-14T17:05:00.000Z" },
+            "customer": { "fullName": "Paul Bernard" }
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "eyJpZCI6InRoXzAxSjlaOEszTTRONVA2UTdSOFM5VDBWMVczIn0"
+      }
+    }
+  }
+}

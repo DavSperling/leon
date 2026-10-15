@@ -1,0 +1,38 @@
+{
+  "data": {
+    "thread": {
+      "timelineEntries": {
+        "edges": [
+          {
+            "node": {
+              "id": "te_01J9Z8M1A1B2C3D4E5F6G7H8J1",
+              "timestamp": { "iso8601": "2026-10-13T08:15:00.000Z" },
+              "actor": {
+                "customer": { "fullName": "Marie Durand", "email": { "email": "marie@acme.test" } }
+              },
+              "entry": {
+                "email": "Bonjour,\n\nDepuis hier soir je n’arrive plus à me connecter à l’espace Acme : le mot de passe est refusé.\n\nMarie Durand"
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "te_01J9Z8M1A1B2C3D4E5F6G7H8J2",
+              "timestamp": { "iso8601": "2026-10-13T09:00:00.000Z" },
+              "actor": {
+                "user": { "fullName": "David Martin", "email": "david@acme.test" }
+              },
+              "entry": {
+                "note": "Compte verrouillé après cinq essais. Je le débloque et je lui propose l’authentification en deux étapes."
+              }
+            }
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "eyJ0ZSI6IjAxSjlaOE0xQTFCMkMzRDRFNUY2RzdIOEoyIn0"
+        }
+      }
+    }
+  }
+}

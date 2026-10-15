@@ -1,0 +1,28 @@
+{
+  "comments": [
+    {
+      "id": "comeNPu0X9K4Rxzid",
+      "author": { "id": "usrsOEchC9xuwRgKk", "email": "david@acme.test", "name": "David Martin" },
+      "text": "D'accord, je prépare le devis. Merci @[usrL2PNC5o3H4lBEi]",
+      "createdTime": "2026-10-11T10:00:00.000Z",
+      "lastUpdatedTime": null,
+      "parentCommentId": "comB5z37Mg9zaEPw6",
+      "mentioned": {
+        "usrL2PNC5o3H4lBEi": {
+          "id": "usrL2PNC5o3H4lBEi",
+          "type": "user",
+          "displayName": "Marie Durand",
+          "email": "marie@acme.test"
+        }
+      }
+    },
+    {
+      "id": "comB5z37Mg9zaEPw6",
+      "author": { "id": "usrL2PNC5o3H4lBEi", "email": "marie@acme.test", "name": "Marie Durand" },
+      "text": "Le client veut un devis avant fin octobre.",
+      "createdTime": "2026-10-11T09:00:00.000Z",
+      "lastUpdatedTime": null
+    }
+  ],
+  "offset": null
+}

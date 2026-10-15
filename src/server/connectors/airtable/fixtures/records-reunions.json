@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "id": "recRu3nIo5kBd7WqE",
+      "createdTime": "2026-10-13T13:00:00.000Z",
+      "commentCount": 0,
+      "fields": {
+        "Titre": "Point trimestriel Acme",
+        "Compte rendu": "## Décisions\n\n- Reconduire le contrat pour un an.\n- Marie prépare l'avenant.",
+        "Modifié par": {
+          "id": "usrL2PNC5o3H4lBEi",
+          "email": "marie@acme.test",
+          "name": "Marie Durand"
+        }
+      }
+    }
+  ]
+}

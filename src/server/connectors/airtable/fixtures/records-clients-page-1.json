@@ -1,0 +1,49 @@
+{
+  "records": [
+    {
+      "id": "recKfM3xQ8wTn2PzA",
+      "createdTime": "2026-09-02T08:15:00.000Z",
+      "commentCount": 2,
+      "fields": {
+        "Nom": "Acme SAS",
+        "Notes": "Renouvellement du contrat prévu en janvier.\nContact principal : Marie Durand.",
+        "Statut": "Client actif",
+        "Tags": ["industrie", "Paris"],
+        "Contact": {
+          "id": "usrL2PNC5o3H4lBEi",
+          "email": "marie@acme.test",
+          "name": "Marie Durand"
+        },
+        "Contrat": [
+          {
+            "id": "attQm7Zr2Vb9Kd4Xc",
+            "type": "application/pdf",
+            "filename": "contrat-acme.pdf",
+            "size": 48211,
+            "url": "https://v5.airtableusercontent.com/v3/u/acme/contrat-acme.pdf"
+          }
+        ],
+        "Projets": ["recPr0jet00000001A"],
+        "Créé par": {
+          "id": "usrsOEchC9xuwRgKk",
+          "email": "david@acme.test",
+          "name": "David Martin"
+        },
+        "Actif": true,
+        "Montant": 12000,
+        "Dernier échange": "2026-10-12T09:30:00.000Z",
+        "Ouvrir": { "label": "Ouvrir la fiche", "url": "https://acme.test/fiche/1" }
+      }
+    },
+    {
+      "id": "recNb4tYc7sLw1QeD",
+      "createdTime": "2026-09-20T14:00:00.000Z",
+      "commentCount": 0,
+      "fields": {
+        "Nom": "Beta Conseil",
+        "Notes": "Premier rendez-vous le 3 novembre."
+      }
+    }
+  ],
+  "offset": "itrP4kZ0aVx2Lm9Qe/recNb4tYc7sLw1QeD"
+}

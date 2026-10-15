@@ -1,0 +1,35 @@
+{
+  "tables": [
+    {
+      "id": "tblClients00000001",
+      "name": "Clients",
+      "primaryFieldId": "fldNom0000000001",
+      "fields": [
+        { "id": "fldNom0000000001", "name": "Nom", "type": "singleLineText" },
+        { "id": "fldNotes000000001", "name": "Notes", "type": "multilineText" },
+        { "id": "fldStatut00000001", "name": "Statut", "type": "singleSelect" },
+        { "id": "fldTags0000000001", "name": "Tags", "type": "multipleSelects" },
+        { "id": "fldContact0000001", "name": "Contact", "type": "singleCollaborator" },
+        { "id": "fldContrat0000001", "name": "Contrat", "type": "multipleAttachments" },
+        { "id": "fldProjets0000001", "name": "Projets", "type": "multipleRecordLinks" },
+        { "id": "fldCreePar0000001", "name": "Créé par", "type": "createdBy" },
+        { "id": "fldActif000000001", "name": "Actif", "type": "checkbox" },
+        { "id": "fldMontant0000001", "name": "Montant", "type": "currency" },
+        { "id": "fldEchange0000001", "name": "Dernier échange", "type": "dateTime" },
+        { "id": "fldOuvrir00000001", "name": "Ouvrir", "type": "button" }
+      ],
+      "views": [{ "id": "viwGrille0000001", "name": "Grille", "type": "grid" }]
+    },
+    {
+      "id": "tblReunions0000001",
+      "name": "Réunions",
+      "primaryFieldId": "fldTitre0000000001",
+      "fields": [
+        { "id": "fldTitre0000000001", "name": "Titre", "type": "singleLineText" },
+        { "id": "fldCompte00000001", "name": "Compte rendu", "type": "richText" },
+        { "id": "fldModif000000001", "name": "Modifié par", "type": "lastModifiedBy" }
+      ],
+      "views": [{ "id": "viwGrille0000002", "name": "Grille", "type": "grid" }]
+    }
+  ]
+}

@@ -200,7 +200,10 @@ async function lireDernierPassage(): Promise<DernierPassage> {
   } catch {
     throw new Error('Aucun passage chargé : lance « pnpm essai charger ».');
   }
-  return DernierPassageSchema.parse(JSON.parse(raw));
+  const parsed = DernierPassageSchema.safeParse(JSON.parse(raw));
+  if (!parsed.success)
+    throw new Error('Passage chargé dans un ancien format : relance « pnpm essai charger ».');
+  return parsed.data;
 }
 
 async function dejaNote(id: string): Promise<boolean> {
@@ -226,7 +229,7 @@ async function runNoter(): Promise<number> {
     const runs = await attendreRuns(admin.db, tenantId);
     if (runs.bloques > 0) {
       console.error(
-        `${runs.bloques} run(s) bloqué(s) : redémarre le serveur et relance « pnpm essai charger ».`,
+        `${runs.bloques} run(s) bloqué(s) : redémarre le serveur puis relance « pnpm essai noter » (pg-boss reprend les jobs) ; « charger » effacerait les runs déjà payés.`,
       );
       return 1;
     }
@@ -286,8 +289,9 @@ async function runNoter(): Promise<number> {
       appariements: Object.fromEntries(paires),
       notes: detaillerNotes(notes, produitsPourNotes, paires),
     };
-    const precedent = await passagePrecedent(passage.jeu, passage.id);
+    // Le juge est payé : on enregistre d'abord, un historique illisible ne doit rien faire perdre.
     const json = await enregistrerPassage(detail);
+    const precedent = await passagePrecedent(passage.jeu, passage.id).catch(() => null);
     console.log(
       `Rappel ${pct(notes.rappel)}, précision ${pct(notes.precision)}, ${notes.fauxFaits} faux faits, ${runs.failed} run(s) échoué(s).`,
     );

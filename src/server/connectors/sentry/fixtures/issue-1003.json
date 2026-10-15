@@ -1,0 +1,79 @@
+{
+  "id": "1003",
+  "shortId": "WEB-31",
+  "title": "ReferenceError: panier is not defined",
+  "culprit": "static/js/checkout.js in submitOrder",
+  "permalink": "https://acme.sentry.io/issues/1003/",
+  "level": "error",
+  "status": "unresolved",
+  "numComments": 2,
+  "userReportCount": 0,
+  "participants": [],
+  "seenBy": [],
+  "tags": [{ "key": "browser", "name": "Browser", "totalValues": 310 }],
+  "activity": [
+    {
+      "id": "9305",
+      "type": "set_regression",
+      "dateCreated": "2026-10-15T08:02:00.000000Z",
+      "user": null,
+      "data": { "version": "web@2.14.0" }
+    },
+    {
+      "id": "9306",
+      "type": "set_unresolved",
+      "dateCreated": "2026-10-15T10:45:00.000000Z",
+      "user": { "id": "7", "name": "Paul Martin", "email": "paul@acme.test" },
+      "data": { "text": "TEXTE-D-UNE-AUTRE-ACTIVITE" }
+    },
+    {
+      "id": "9304",
+      "type": "note",
+      "commentId": "9304",
+      "dateCreated": "2026-10-15T10:40:00.000000Z",
+      "user": null,
+      "data": { "text": "Rattaché au ticket 2210 côté support." }
+    },
+    {
+      "id": "9303",
+      "type": "note",
+      "commentId": "9303",
+      "dateCreated": "2026-10-15T10:30:00.000000Z",
+      "user": { "id": "7", "name": "Paul Martin", "email": "paul@acme.test", "username": "paul" },
+      "data": { "text": "   " }
+    },
+    {
+      "id": "9302",
+      "type": "note",
+      "commentId": "9302",
+      "dateCreated": "2026-10-15T10:10:00.000000Z",
+      "user": {
+        "id": "8",
+        "name": "Marie Durand",
+        "email": "marie@acme.test",
+        "username": "marie"
+      },
+      "data": {
+        "text": "Confirmé : 54 clients touchés sur la page de paiement. Je préviens le support.",
+        "mentions": ["user:7"]
+      }
+    },
+    {
+      "id": "9301",
+      "type": "note",
+      "commentId": "9301",
+      "dateCreated": "2026-10-15T09:30:00.000000Z",
+      "user": { "id": "7", "name": "Paul Martin", "email": "paul@acme.test", "username": "paul" },
+      "data": {
+        "text": "Ça vient du déploiement de ce matin : on a renommé la variable du panier. Je corrige et je redéploie avant midi."
+      }
+    },
+    {
+      "id": "0",
+      "type": "first_seen",
+      "dateCreated": "2026-10-14T08:02:11.482000Z",
+      "user": null,
+      "data": {}
+    }
+  ]
+}

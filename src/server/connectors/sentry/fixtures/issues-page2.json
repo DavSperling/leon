@@ -1,0 +1,63 @@
+[
+  {
+    "id": "1001",
+    "shortId": "API-7",
+    "title": "TimeoutError: la passerelle de paiement ne répond pas",
+    "culprit": "api/paiement in appelerPasserelle",
+    "permalink": "https://acme.sentry.io/issues/1001/",
+    "level": "warning",
+    "status": "ignored",
+    "substatus": "archived_until_escalating",
+    "project": {
+      "id": "6",
+      "name": "API",
+      "slug": "api",
+      "platform": "python"
+    },
+    "type": "error",
+    "metadata": {
+      "type": "TimeoutError",
+      "value": "la passerelle de paiement ne répond pas",
+      "filename": "api/paiement.py"
+    },
+    "numComments": 1,
+    "assignedTo": {
+      "type": "team",
+      "id": "3",
+      "name": "backend"
+    },
+    "isUnhandled": false,
+    "count": "48",
+    "userCount": 9,
+    "firstSeen": "2026-09-28T13:00:00.000000Z",
+    "lastSeen": "2026-10-02T07:05:09.500000Z"
+  },
+  {
+    "id": "1000",
+    "shortId": "API-3",
+    "title": "MemoryError",
+    "culprit": "",
+    "permalink": "https://acme.sentry.io/issues/1000/",
+    "level": "fatal",
+    "status": "unresolved",
+    "substatus": "ongoing",
+    "project": {
+      "id": "6",
+      "name": "API",
+      "slug": "api",
+      "platform": "python"
+    },
+    "type": "error",
+    "metadata": {
+      "type": "MemoryError",
+      "value": ""
+    },
+    "numComments": 0,
+    "assignedTo": null,
+    "isUnhandled": true,
+    "count": "2",
+    "userCount": 0,
+    "firstSeen": "2026-09-20T22:40:00Z",
+    "lastSeen": "2026-09-20T22:41:00Z"
+  }
+]

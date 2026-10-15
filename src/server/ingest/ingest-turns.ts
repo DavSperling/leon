@@ -45,14 +45,31 @@ async function upsertSource(
   return existing.id;
 }
 
-// Les tours déjà connus (même source, même identifiant) et les tours vides après nettoyage sont ignorés.
-async function insertNewTurns(
+export type TurnRow = typeof turns.$inferInsert;
+
+// Partagé avec l'ingestion des connecteurs. Les tours déjà connus (même source, même identifiant)
+// sont ignorés ; renvoie les ids des tours nouveaux et la date du plus récent des tours reçus.
+export async function insertNewTurns(
   tx: Tx,
+  rows: TurnRow[],
+): Promise<{ ids: string[]; lastTs: Date | null }> {
+  if (rows.length === 0) return { ids: [], lastTs: null };
+  const inserted = await tx
+    .insert(turns)
+    .values(rows)
+    .onConflictDoNothing({ target: [turns.sourceId, turns.externalId] })
+    .returning({ id: turns.id });
+  const lastTs = new Date(Math.max(...rows.map((row) => row.ts.getTime())));
+  return { ids: inserted.map((row) => row.id), lastTs };
+}
+
+// Les tours vides après nettoyage sont ignorés.
+function captureRows(
   ctx: TenantContext,
   sourceId: string,
   payloadTurns: IngestPayload['turns'],
-): Promise<{ ids: string[]; lastTs: Date | null }> {
-  const rows = payloadTurns.flatMap((turn) => {
+): TurnRow[] {
+  return payloadTurns.flatMap((turn) => {
     const text = prepareTurnText(turn.text);
     if (text === null) return [];
     return [
@@ -68,17 +85,9 @@ async function insertNewTurns(
       },
     ];
   });
-  if (rows.length === 0) return { ids: [], lastTs: null };
-  const inserted = await tx
-    .insert(turns)
-    .values(rows)
-    .onConflictDoNothing({ target: [turns.sourceId, turns.externalId] })
-    .returning({ id: turns.id });
-  const lastTs = new Date(Math.max(...rows.map((row) => row.ts.getTime())));
-  return { ids: inserted.map((row) => row.id), lastTs };
 }
 
-async function updateSource(
+export async function updateSource(
   tx: Tx,
   sourceId: string,
   title: string | undefined,
@@ -94,7 +103,22 @@ async function updateSource(
     await tx.update(sources).set(set).where(eq(sources.id, sourceId));
 }
 
-async function enqueueTriage(ctx: TenantContext, ingestRunId: string): Promise<void> {
+export async function createIngestRun(
+  tx: Tx,
+  ctx: TenantContext,
+  sourceId: string,
+  turnIds: string[],
+  acl: string[],
+): Promise<string> {
+  const [run] = await tx
+    .insert(ingestRuns)
+    .values({ tenantId: ctx.tenantId, sourceId, turnIds, acl })
+    .returning({ id: ingestRuns.id });
+  if (!run) throw new Error('ingest_run non créé');
+  return run.id;
+}
+
+export async function enqueueTriage(ctx: TenantContext, ingestRunId: string): Promise<void> {
   try {
     await enqueuePipelineStep('triage', {
       ingestRunId,
@@ -114,15 +138,11 @@ export async function ingestTurns(
   const title = payload.source.title === undefined ? undefined : maskSecrets(payload.source.title);
   const { sourceId, newTurnIds, ingestRunId } = await withTenant(ctx, async (tx) => {
     const sourceId = await upsertSource(tx, ctx, payload.source, title);
-    const { ids, lastTs } = await insertNewTurns(tx, ctx, sourceId, payload.turns);
+    const { ids, lastTs } = await insertNewTurns(tx, captureRows(ctx, sourceId, payload.turns));
     await updateSource(tx, sourceId, title, lastTs);
     if (ids.length === 0) return { sourceId, newTurnIds: ids, ingestRunId: null };
-    const [run] = await tx
-      .insert(ingestRuns)
-      .values({ tenantId: ctx.tenantId, sourceId, turnIds: ids, acl: [ctx.userId] })
-      .returning({ id: ingestRuns.id });
-    if (!run) throw new Error('ingest_run non créé');
-    return { sourceId, newTurnIds: ids, ingestRunId: run.id };
+    const ingestRunId = await createIngestRun(tx, ctx, sourceId, ids, [ctx.userId]);
+    return { sourceId, newTurnIds: ids, ingestRunId };
   });
   if (ingestRunId !== null) await enqueueTriage(ctx, ingestRunId);
   return {

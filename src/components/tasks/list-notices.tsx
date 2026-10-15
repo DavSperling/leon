@@ -2,11 +2,11 @@
 
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
-import { Kbd } from '@/components/ui/kbd';
 import { formatNumber } from '@/lib/format';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import { cn } from '@/lib/utils';
 import { useCreateTask } from './create-task-provider';
+import { KeyCaps } from './shortcut-hint';
 import { useViewNavigation } from './use-view-navigation';
 
 const NO_FILTERS: ViewConfig['filters'] = {
@@ -54,7 +54,7 @@ export function EmptyList({ hiddenCount, config, base }: NoticeProps) {
         <EmptyState reason="Aucune tâche." nextStep="Créez la première pour démarrer.">
           <Button variant="outline" size="sm" onClick={() => openCreate()}>
             Créer une tâche
-            <Kbd>C</Kbd>
+            <KeyCaps id="create" />
           </Button>
         </EmptyState>
       )}

@@ -6,6 +6,7 @@ import { groupStatuses, type ListContext, type OpenView } from '@/components/tas
 import { MyActivity } from '@/components/tasks/my-activity';
 import { TaskBoard } from '@/components/tasks/task-board';
 import { TaskList } from '@/components/tasks/task-list';
+import { TaskShortcuts } from '@/components/tasks/task-shortcuts';
 import type { SavedView } from '@/components/tasks/view-bar';
 import { ViewToolbar } from '@/components/tasks/view-toolbar';
 import { groupTasks } from '@/lib/tasks/group';
@@ -94,7 +95,8 @@ async function ListPage({ ctx, params, now }: ListPageProps) {
   const { list, context, groupContext, breakdown } = await loadList(ctx, config, now);
   const View = config.layout === 'board' ? TaskBoard : TaskList;
   return (
-    <CreateTaskProvider config={config} context={context} now={now}>
+    <CreateTaskProvider projectId={config.filters.projectId} context={context} now={now}>
+      <TaskShortcuts />
       {/* Le tableau remplit la hauteur de la page : chaque colonne défile seule. La liste la remplit
           au moins, pour que la barre d'actions groupées colle au bas de la page. */}
       <div className={cn('flex', config.layout === 'board' ? 'h-full' : 'min-h-full')}>

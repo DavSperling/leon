@@ -1,13 +1,29 @@
 'use client';
 
-import { ListChecks, ListFilter, type LucideIcon, Settings, UserRound } from 'lucide-react';
+import {
+  Keyboard,
+  ListChecks,
+  ListFilter,
+  type LucideIcon,
+  Settings,
+  UserRound,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { formatNumber } from '@/lib/format';
-import { projectHref, SETTINGS_PATH, viewHref } from '@/lib/tasks/task-links';
+import {
+  ALL_TASKS_HREF,
+  MY_TASKS_HREF,
+  projectHref,
+  SETTINGS_PATH,
+  viewHref,
+} from '@/lib/tasks/task-links';
 import { cn } from '@/lib/utils';
+import { KeyCaps } from './shortcut-hint';
+import { ariaKeys } from './shortcuts';
+import { useShortcutRegistry } from './use-task-shortcuts';
 
 type NavProject = { id: string; key: string; name: string; openCount: number };
 type NavView = { id: string; name: string };
@@ -16,8 +32,8 @@ type TaskNavProps = { projects: NavProject[]; personalViews: NavView[]; teamView
 type NavKey = 'mine' | 'all' | `project:${string}` | `view:${string}`;
 
 export const FIXED_ITEMS: Array<{ key: NavKey; href: string; label: string; icon: LucideIcon }> = [
-  { key: 'mine', href: '/taches?assigne=moi', label: 'Mes tâches', icon: UserRound },
-  { key: 'all', href: '/taches', label: 'Toutes les tâches', icon: ListChecks },
+  { key: 'mine', href: MY_TASKS_HREF, label: 'Mes tâches', icon: UserRound },
+  { key: 'all', href: ALL_TASKS_HREF, label: 'Toutes les tâches', icon: ListChecks },
 ];
 
 const Uuid = z.uuid();
@@ -44,6 +60,9 @@ export function currentNavKey(pathname: string, params: URLSearchParams): NavKey
   return mine ? 'mine' : 'all';
 }
 
+const ITEM =
+  'flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm text-foreground-2 transition-colors hover:bg-accent hover:text-foreground';
+
 type NavLinkProps = {
   href: string;
   current: boolean;
@@ -58,10 +77,7 @@ function NavLink({ href, current, icon, label, openCount = 0 }: NavLinkProps) {
       <Link
         href={href}
         aria-current={current ? 'page' : undefined}
-        className={cn(
-          'flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm text-foreground-2 transition-colors hover:bg-accent hover:text-foreground',
-          current && 'bg-accent font-medium text-foreground',
-        )}
+        className={cn(ITEM, current && 'bg-accent font-medium text-foreground')}
       >
         {icon}
         <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -114,6 +130,7 @@ function ViewSection({
 // leurs tâches ouvertes) et les vues enregistrées, personnelles d'abord ; les réglages en dernier.
 export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
   const pathname = usePathname();
+  const shortcuts = useShortcutRegistry();
   const current = currentNavKey(pathname, useSearchParams());
   return (
     <nav aria-label="Navigation des tâches" className="px-3">
@@ -153,6 +170,18 @@ export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
           icon={<Settings size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />}
           label="Réglages"
         />
+        <li>
+          <button
+            type="button"
+            aria-keyshortcuts={ariaKeys('help')}
+            onClick={() => shortcuts?.run('help')}
+            className={cn(ITEM, 'w-full')}
+          >
+            <Keyboard size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
+            <span className="min-w-0 flex-1 truncate text-left">Raccourcis clavier</span>
+            <KeyCaps id="help" />
+          </button>
+        </li>
       </ul>
     </nav>
   );

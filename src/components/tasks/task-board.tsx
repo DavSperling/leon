@@ -127,7 +127,10 @@ export function TaskBoard({ groups, config, base, hiddenCount, context, now }: T
         {...drag.handlers}
       >
         {/* relative : les textes pour lecteurs d'écran (sr-only) restent dans le tableau, sinon ils élargissent la page */}
-        <div className="relative flex min-h-0 flex-1 gap-3 overflow-x-auto px-5 py-4">
+        <div
+          data-dragging={drag.draggedRow ? '' : undefined}
+          className="relative flex min-h-0 flex-1 gap-3 overflow-x-auto px-5 py-4"
+        >
           <BoardColumns
             groups={groups}
             config={config}

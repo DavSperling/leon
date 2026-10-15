@@ -16,6 +16,8 @@ import { FilterMenu } from './filter-menu';
 import { ListBreadcrumb } from './list-breadcrumb';
 import type { FilterPatch, ListContext, OpenView } from './list-context';
 import { myTasksTab } from './my-tasks-tabs';
+import { ShortcutHint } from './shortcut-hint';
+import { useTaskShortcuts } from './use-task-shortcuts';
 import { useViewNavigation } from './use-view-navigation';
 import { type SavedView, ViewBar } from './view-bar';
 import { type ViewDialogKind, ViewDialogs } from './view-dialogs';
@@ -108,6 +110,8 @@ export function ViewToolbar({ view, views, config, base, context }: ViewToolbarP
   const navigate = useViewNavigation(base);
   const openCreate = useCreateTask();
   const [dialog, setDialog] = useState<ViewDialogKind | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  useTaskShortcuts({ filter: () => setFilterOpen(true) });
   const viewName = view?.name ?? null;
   const { reference, modified, isTeamDefault } = viewStatus(config, base, view);
   const change = (patch: Partial<ViewConfig>) => navigate({ ...config, ...patch });
@@ -118,7 +122,13 @@ export function ViewToolbar({ view, views, config, base, context }: ViewToolbarP
         <ListBreadcrumb title={listTitle(viewName, config, context)} />
         <div className="ml-auto flex flex-wrap items-center gap-1">
           <SearchField query={config.filters.q} onSearch={(q) => filter({ q })} />
-          <FilterMenu config={config} context={context} onChange={filter} />
+          <FilterMenu
+            config={config}
+            context={context}
+            onChange={filter}
+            open={filterOpen}
+            onOpenChange={setFilterOpen}
+          />
           <DisplayMenu
             config={config}
             base={base}
@@ -130,10 +140,12 @@ export function ViewToolbar({ view, views, config, base, context }: ViewToolbarP
             pressed={config.showBreakdown}
             onToggle={() => change({ showBreakdown: !config.showBreakdown })}
           />
-          <Button size="sm" aria-keyshortcuts="C" onClick={() => openCreate()} className="ml-1">
-            <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
-            Nouvelle tâche
-          </Button>
+          <ShortcutHint id="create">
+            <Button size="sm" onClick={() => openCreate()} className="ml-1">
+              <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
+              Nouvelle tâche
+            </Button>
+          </ShortcutHint>
         </div>
       </div>
       <ViewBar

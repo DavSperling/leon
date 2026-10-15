@@ -1,11 +1,10 @@
 'use client';
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
-import type { ViewConfig } from '@/lib/tasks/view-config';
+import { createContext, type ReactNode, useContext, useState } from 'react';
 import type { TaskPrefill } from './create-draft';
 import { CreateTaskDialog } from './create-task-dialog';
 import type { ListContext } from './list-context';
-import { isTypingOrBusy } from './typing';
+import { useTaskShortcuts } from './use-task-shortcuts';
 
 type OpenCreate = (prefill?: TaskPrefill) => void;
 
@@ -19,15 +18,15 @@ export function useCreateTask(): OpenCreate {
 }
 
 type CreateTaskProviderProps = {
-  config: ViewConfig;
+  projectId: string | null; // le projet de la liste filtrée ou de la tâche ouverte : celui des nouvelles tâches
   context: ListContext;
   now: Date;
   children: ReactNode;
 };
 
-// Un seul dialogue pour toute la page : le bouton « Nouvelle tâche », les « + » des groupes et la
-// touche C (sauf quand on écrit quelque part ou qu'un menu ou un dialogue a la main) l'ouvrent.
-export function CreateTaskProvider({ config, context, now, children }: CreateTaskProviderProps) {
+// Un seul dialogue pour toute la page : le bouton « Nouvelle tâche », les « + » des groupes, la
+// touche C et la palette l'ouvrent.
+export function CreateTaskProvider({ projectId, context, now, children }: CreateTaskProviderProps) {
   const [open, setOpen] = useState(false);
   const [prefill, setPrefill] = useState<TaskPrefill>({});
   const openCreate: OpenCreate = (next = {}) => {
@@ -35,17 +34,7 @@ export function CreateTaskProvider({ config, context, now, children }: CreateTas
     setOpen(true);
   };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const plain = !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
-      if (event.key.toLowerCase() !== 'c' || !plain || event.repeat || isTypingOrBusy()) return;
-      event.preventDefault();
-      setPrefill({});
-      setOpen(true);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
+  useTaskShortcuts({ create: () => openCreate() });
 
   return (
     <CreateTaskContext value={openCreate}>
@@ -54,7 +43,7 @@ export function CreateTaskProvider({ config, context, now, children }: CreateTas
         open={open}
         onOpenChange={setOpen}
         prefill={prefill}
-        filterProjectId={config.filters.projectId}
+        filterProjectId={projectId}
         context={context}
         now={now}
       />

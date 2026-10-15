@@ -1,8 +1,9 @@
 'use client';
 
-import { ChevronsUpDown, Monitor, Moon, Sun } from 'lucide-react';
+import { ChevronsUpDown } from 'lucide-react';
 import { startTransition } from 'react';
 import { setThemeAction, signOutAction } from '@/app/(app)/actions';
+import { THEME_CHOICES } from '@/components/theme-choices';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,12 +15,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Theme } from '@/lib/theme-cookie';
-
-const THEME_CHOICES = [
-  { value: 'clair', label: 'Clair', Icon: Sun },
-  { value: 'sombre', label: 'Sombre', Icon: Moon },
-  { value: 'systeme', label: 'Système', Icon: Monitor },
-] satisfies Array<{ value: Theme; label: string; Icon: typeof Sun }>;
 
 type WorkspaceMenuProps = {
   organizationName: string;

@@ -20,7 +20,9 @@ import { PriorityPicker } from './pickers/priority-picker';
 import { ProjectPicker } from './pickers/project-picker';
 import { StatusPicker } from './pickers/status-picker';
 import { PriorityIcon } from './priority-icon';
+import type { PickerKind } from './row-targets';
 import { safely } from './safely';
+import { ShortcutHint } from './shortcut-hint';
 import { StatusIcon } from './status-icon';
 import { TaskTitle } from './task-title';
 import { type TaskEdit, useTaskEdit } from './use-task-edit';
@@ -37,17 +39,30 @@ function Property({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-// Le déclencheur d'un sélecteur : toute la valeur est cliquable, sur au moins 28 px de haut.
-function PropertyButton({ className, ...props }: ComponentProps<'button'>) {
-  return (
+// Le déclencheur d'un sélecteur : toute la valeur est cliquable, sur au moins 28 px de haut. Celui
+// d'une propriété qu'une touche change (`picker`) porte l'infobulle de cette touche.
+function PropertyButton({
+  className,
+  picker,
+  ...props
+}: ComponentProps<'button'> & { picker?: PickerKind }) {
+  const button = (
     <button
       type="button"
+      data-picker={picker}
       className={cn(
         'flex min-h-7 w-full min-w-0 items-center gap-2 rounded-md px-2 py-0.5 text-left text-sm outline-none transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-accent',
         className,
       )}
       {...props}
     />
+  );
+  return picker ? (
+    <ShortcutHint id={picker} side="left">
+      {button}
+    </ShortcutHint>
+  ) : (
+    button
   );
 }
 
@@ -67,7 +82,7 @@ function StatusProperty({ task, context, edit }: PartProps) {
   return (
     <Property label="Statut">
       <StatusPicker statuses={own} value={task.statusId} onChange={change}>
-        <PropertyButton aria-label={`Statut : ${task.statusLabel}`}>
+        <PropertyButton picker="status" aria-label={`Statut : ${task.statusLabel}`}>
           <StatusIcon category={task.statusCategory} color={task.statusColor} />
           <span className="truncate">{task.statusLabel}</span>
         </PropertyButton>
@@ -83,7 +98,10 @@ function PriorityProperty({ task, edit }: PartProps) {
         value={task.priority}
         onChange={(priority) => edit({ priority }, { priority })}
       >
-        <PropertyButton aria-label={`Priorité : ${PRIORITY_LABELS[task.priority]}`}>
+        <PropertyButton
+          picker="priority"
+          aria-label={`Priorité : ${PRIORITY_LABELS[task.priority]}`}
+        >
           <PriorityIcon priority={task.priority} />
           {PRIORITY_LABELS[task.priority]}
         </PropertyButton>
@@ -103,7 +121,10 @@ function AssigneeProperty({ task, context, edit }: PartProps) {
         value={task.assignee?.id ?? null}
         onChange={change}
       >
-        <PropertyButton aria-label={`Assigné : ${task.assignee?.name ?? 'personne'}`}>
+        <PropertyButton
+          picker="assignee"
+          aria-label={`Assigné : ${task.assignee?.name ?? 'personne'}`}
+        >
           <Avatar person={task.assignee} />
           {task.assignee ? (
             <span className="truncate">{task.assignee.name}</span>
@@ -131,7 +152,7 @@ function LabelsProperty({ task, context, edit }: PartProps) {
         value={task.labels.map((label) => label.id)}
         onToggle={toggle}
       >
-        <PropertyButton aria-label={`Étiquettes : ${names}`} className="flex-wrap">
+        <PropertyButton picker="labels" aria-label={`Étiquettes : ${names}`} className="flex-wrap">
           {task.labels.length === 0 && (
             <>
               {glyph(Tag)}
@@ -185,6 +206,7 @@ function DueProperty({ task, edit, now }: Omit<PartProps, 'context'> & { now: Da
         onChange={(dueDate) => edit({ dueDate }, { dueDate })}
       >
         <PropertyButton
+          picker="due"
           aria-label={`Échéance : ${label}${overdue ? ' (en retard)' : ''}`}
           className={cn(overdue && 'text-destructive')}
         >

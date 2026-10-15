@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { projectHref, taskHref } from '@/lib/tasks/task-links';
 import type { TaskDetail } from '@/server/tasks/tasks';
+import { ShortcutHint } from './shortcut-hint';
 
 type TaskHeaderProps = {
   task: Pick<TaskDetail, 'ref' | 'projectId' | 'projectKey' | 'parent'>;
@@ -23,11 +24,13 @@ type TaskHeaderProps = {
 export function TaskHeader({ task, back, listQuery }: TaskHeaderProps) {
   return (
     <header className="sticky top-0 z-10 flex min-h-12 items-center gap-2 border-b bg-card px-5 py-2">
-      <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5 text-muted-foreground">
-        <Link href={back} aria-label="Retour à la liste">
-          <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" />
-        </Link>
-      </Button>
+      <ShortcutHint id="escape" label="Retour à la liste">
+        <Button asChild variant="ghost" size="icon-sm" className="-ml-1.5 text-muted-foreground">
+          <Link href={back} aria-label="Retour à la liste">
+            <ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" />
+          </Link>
+        </Button>
+      </ShortcutHint>
       <Breadcrumb aria-label="Fil d’Ariane">
         <BreadcrumbList className="gap-1.5 sm:gap-1.5">
           <BreadcrumbItem>

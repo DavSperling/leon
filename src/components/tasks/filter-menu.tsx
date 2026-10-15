@@ -18,6 +18,7 @@ import { DUE_FILTERS, TASK_PRIORITIES, TASK_STATUS_CATEGORIES } from '@/lib/enum
 import { DUE_FILTER_LABELS, PRIORITY_LABELS, STATUS_CATEGORY_LABELS } from '@/lib/tasks/labels';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import type { FilterPatch, ListContext } from './list-context';
+import { ShortcutHint } from './shortcut-hint';
 
 const ALL = 'all';
 
@@ -85,20 +86,24 @@ type FilterMenuProps = {
   config: ViewConfig;
   context: ListContext;
   onChange: (patch: FilterPatch) => void;
+  open: boolean; // la touche F l'ouvre depuis la barre d'outils
+  onOpenChange: (open: boolean) => void;
 };
 
-export function FilterMenu({ config, context, onChange }: FilterMenuProps) {
+export function FilterMenu({ config, context, onChange, open, onOpenChange }: FilterMenuProps) {
   const f = config.filters;
   const named = (items: readonly { id: string; name: string }[]): Choice[] =>
     items.map(({ id, name }) => ({ value: id, label: name }));
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <ListFilter size={16} strokeWidth={1.5} aria-hidden="true" />
-          Filtrer
-        </Button>
-      </DropdownMenuTrigger>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+      <ShortcutHint id="filter">
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <ListFilter size={16} strokeWidth={1.5} aria-hidden="true" />
+            Filtrer
+          </Button>
+        </DropdownMenuTrigger>
+      </ShortcutHint>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel>Filtrer par</DropdownMenuLabel>
         <StatusSub selected={f.statuses} onChange={(statuses) => onChange({ statuses })} />

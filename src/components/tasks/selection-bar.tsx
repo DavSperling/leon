@@ -27,9 +27,11 @@ import { DueDatePicker } from './pickers/due-date-picker';
 import { LabelsPicker } from './pickers/labels-picker';
 import { PriorityPicker } from './pickers/priority-picker';
 import { StatusPicker } from './pickers/status-picker';
+import type { PickerKind } from './row-targets';
 import { safely } from './safely';
 import { commonValue } from './selection';
 import { useSelection } from './selection-provider';
+import { ShortcutHint } from './shortcut-hint';
 
 const tasksLabel = (count: number): string =>
   `${formatNumber(count)} ${count > 1 ? 'tâches' : 'tâche'}`;
@@ -37,8 +39,16 @@ const tasksLabel = (count: number): string =>
 type BarProps = { rows: TaskRow[]; context: ListContext; now: Date };
 type EditProps = { edit: (patch: BulkPatch) => void; disabled: boolean };
 
-function BarButton(props: ComponentProps<typeof Button>) {
-  return <Button type="button" variant="ghost" size="sm" {...props} />;
+// Le bouton d'une propriété qu'une touche change (`picker`) porte l'infobulle de cette touche.
+function BarButton({ picker, ...props }: ComponentProps<typeof Button> & { picker?: PickerKind }) {
+  const button = <Button type="button" variant="ghost" size="sm" data-picker={picker} {...props} />;
+  return picker ? (
+    <ShortcutHint id={picker} side="top">
+      {button}
+    </ShortcutHint>
+  ) : (
+    button
+  );
 }
 
 // Les statuts sont ceux d'un projet : une sélection de plusieurs projets n'en a pas de commun.
@@ -62,7 +72,9 @@ function StatusAction({ rows, context, edit, disabled }: BarProps & EditProps) {
       value={commonValue(rows, (row) => row.statusId)}
       onChange={(statusId) => edit({ statusId })}
     >
-      <BarButton disabled={disabled}>Statut</BarButton>
+      <BarButton picker="status" disabled={disabled}>
+        Statut
+      </BarButton>
     </StatusPicker>
   );
 }
@@ -81,7 +93,9 @@ function LabelsAction({ rows, context, edit, disabled }: BarProps & EditProps) {
         edit(selected ? { addLabelIds: [label.id] } : { removeLabelIds: [label.id] })
       }
     >
-      <BarButton disabled={disabled}>Étiquettes</BarButton>
+      <BarButton picker="labels" disabled={disabled}>
+        Étiquettes
+      </BarButton>
     </LabelsPicker>
   );
 }
@@ -155,7 +169,9 @@ function BarActions({ rows, context, now, edit, disabled, remove }: ActionsProps
         value={commonValue(rows, (row) => row.priority)}
         onChange={(priority) => edit({ priority })}
       >
-        <BarButton disabled={disabled}>Priorité</BarButton>
+        <BarButton picker="priority" disabled={disabled}>
+          Priorité
+        </BarButton>
       </PriorityPicker>
       <AssigneePicker
         members={context.members}
@@ -163,7 +179,9 @@ function BarActions({ rows, context, now, edit, disabled, remove }: ActionsProps
         value={commonValue(rows, (row) => row.assignee?.id ?? null)}
         onChange={(assigneeId) => edit({ assigneeId })}
       >
-        <BarButton disabled={disabled}>Assigné</BarButton>
+        <BarButton picker="assignee" disabled={disabled}>
+          Assigné
+        </BarButton>
       </AssigneePicker>
       <LabelsAction {...bar} />
       <DueDatePicker
@@ -171,7 +189,9 @@ function BarActions({ rows, context, now, edit, disabled, remove }: ActionsProps
         now={now}
         onChange={(dueDate) => edit({ dueDate })}
       >
-        <BarButton disabled={disabled}>Échéance</BarButton>
+        <BarButton picker="due" disabled={disabled}>
+          Échéance
+        </BarButton>
       </DueDatePicker>
       <Separator orientation="vertical" className="mx-1 h-5" />
       <DeleteAction rows={rows} disabled={disabled} onConfirm={remove} />
@@ -191,6 +211,7 @@ export function SelectionBar({ context, now }: { context: ListContext; now: Date
     <div className="pointer-events-none sticky bottom-4 z-10 flex justify-center px-5">
       <div
         role="toolbar"
+        data-bulk-actions=""
         aria-label="Actions groupées"
         aria-busy={pending}
         className="pointer-events-auto flex max-w-full flex-wrap items-center gap-0.5 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-lg"

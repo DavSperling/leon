@@ -30,6 +30,7 @@ export function PriorityCell({ row, edit }: { row: TaskRow; edit: TaskEdit }) {
     <PriorityPicker value={row.priority} onChange={(priority) => edit({ priority }, { priority })}>
       <button
         type="button"
+        data-picker="priority"
         aria-label={`Priorité : ${PRIORITY_LABELS[row.priority]}`}
         className={cn(CELL, '-ml-1')}
       >
@@ -49,7 +50,12 @@ export function StatusCell({ row, statuses, edit }: StatusCellProps) {
   };
   return (
     <StatusPicker statuses={own} value={row.statusId} onChange={change}>
-      <button type="button" aria-label={`Statut : ${row.statusLabel}`} className={CELL}>
+      <button
+        type="button"
+        data-picker="status"
+        aria-label={`Statut : ${row.statusLabel}`}
+        className={CELL}
+      >
         <StatusIcon category={row.statusCategory} color={row.statusColor} />
       </button>
     </StatusPicker>
@@ -70,6 +76,7 @@ export function AssigneeCell({ row, context, edit }: AssigneeCellProps) {
     >
       <button
         type="button"
+        data-picker="assignee"
         aria-label={`Assigné : ${row.assignee?.name ?? 'personne'}`}
         className={CELL}
       >
@@ -100,6 +107,7 @@ export function LabelsCell({ row, labels, edit, className }: LabelsCellProps) {
     <LabelsPicker labels={labels} value={row.labels.map((label) => label.id)} onToggle={toggle}>
       <button
         type="button"
+        data-picker="labels"
         aria-label={`Étiquettes : ${row.labels.map((label) => label.name).join(', ') || 'aucune'}`}
         className={cn(
           CELL,
@@ -133,6 +141,7 @@ export function DueCell({ row, now, edit, className }: DueCellProps) {
     >
       <button
         type="button"
+        data-picker="due"
         aria-label={`Échéance : ${label}${overdue ? ' (en retard)' : ''}`}
         className={cn(
           CELL,

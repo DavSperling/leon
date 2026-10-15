@@ -3,12 +3,14 @@ import { notFound } from 'next/navigation';
 import { ActivityFeed } from '@/components/tasks/activity-feed';
 import { BackOnEscape } from '@/components/tasks/back-on-escape';
 import { CommentForm } from '@/components/tasks/comment-form';
+import { CreateTaskProvider } from '@/components/tasks/create-task-provider';
 import { DescriptionField } from '@/components/tasks/description-field';
 import { type ListContext, projectStatuses } from '@/components/tasks/list-context';
 import { SubtaskList } from '@/components/tasks/subtask-list';
 import { TaskActions } from '@/components/tasks/task-actions';
 import { TaskHeader } from '@/components/tasks/task-header';
 import { TaskProperties } from '@/components/tasks/task-properties';
+import { TaskShortcuts } from '@/components/tasks/task-shortcuts';
 import { TaskTitleField } from '@/components/tasks/task-title-field';
 import { formatRelative } from '@/lib/format';
 import { backHref, cleanListQuery, RETURN_PARAM } from '@/lib/tasks/task-links';
@@ -69,50 +71,54 @@ export default async function TaskPage({ params, searchParams }: PageProps) {
   const agentMarkdown = renderTaskMarkdown({ task, activity, statuses, labels: context.labels });
 
   return (
-    <div className="@container flex min-h-full flex-col">
-      <BackOnEscape href={back} />
-      <TaskHeader task={task} back={back} listQuery={listQuery} />
-      <div className="flex flex-1 flex-col @2xl:flex-row">
-        <div className="min-w-0 flex-1 px-5 py-6 @2xl:px-10 @2xl:py-8">
-          <div className="mx-auto max-w-[720px] space-y-8">
-            <div className="space-y-2">
-              <TaskTitleField task={{ id: task.id, title: task.title }} />
-              <DescriptionField key={task.id} taskId={task.id} value={descriptionMd} />
+    <CreateTaskProvider projectId={task.projectId} context={context} now={now}>
+      <div className="@container flex min-h-full flex-col">
+        <BackOnEscape href={back} />
+        <TaskShortcuts />
+        <TaskHeader task={task} back={back} listQuery={listQuery} />
+        <div className="flex flex-1 flex-col @2xl:flex-row">
+          <div className="min-w-0 flex-1 px-5 py-6 @2xl:px-10 @2xl:py-8">
+            <div className="mx-auto max-w-[720px] space-y-8">
+              <div className="space-y-2">
+                <TaskTitleField task={{ id: task.id, title: task.title }} />
+                <DescriptionField key={task.id} taskId={task.id} value={descriptionMd} />
+              </div>
+              <SubtaskList
+                parentId={task.id}
+                subtasks={subtasks}
+                doneCount={task.subtaskDoneCount}
+                context={context}
+                listQuery={listQuery}
+              />
+              <section aria-labelledby="activite" className="space-y-4">
+                <h2 id="activite" className="text-sm font-medium">
+                  Activité
+                </h2>
+                <ActivityFeed items={activity} members={context.members} now={now} />
+                <CommentForm taskId={task.id} />
+              </section>
             </div>
-            <SubtaskList
-              parentId={task.id}
-              subtasks={subtasks}
-              doneCount={task.subtaskDoneCount}
-              context={context}
+          </div>
+          <aside
+            aria-label="Propriétés et actions"
+            data-task-page=""
+            className="w-full shrink-0 space-y-4 border-t px-5 py-4 @2xl:w-[280px] @2xl:border-t-0 @2xl:border-l"
+          >
+            <TaskProperties task={properties} context={context} now={now} listQuery={listQuery} />
+            <TaskActions
+              task={{ id: task.id, ref: task.ref, title: task.title }}
+              firstName={firstName}
+              agentMarkdown={agentMarkdown}
               listQuery={listQuery}
             />
-            <section aria-labelledby="activite" className="space-y-4">
-              <h2 id="activite" className="text-sm font-medium">
-                Activité
-              </h2>
-              <ActivityFeed items={activity} members={context.members} now={now} />
-              <CommentForm taskId={task.id} />
-            </section>
-          </div>
+            {creator && (
+              <p className="text-xs text-muted-foreground">
+                Créée par {creator.name} · {formatRelative(task.createdAt, now)}
+              </p>
+            )}
+          </aside>
         </div>
-        <aside
-          aria-label="Propriétés et actions"
-          className="w-full shrink-0 space-y-4 border-t px-5 py-4 @2xl:w-[280px] @2xl:border-t-0 @2xl:border-l"
-        >
-          <TaskProperties task={properties} context={context} now={now} listQuery={listQuery} />
-          <TaskActions
-            task={{ id: task.id, ref: task.ref, title: task.title }}
-            firstName={firstName}
-            agentMarkdown={agentMarkdown}
-            listQuery={listQuery}
-          />
-          {creator && (
-            <p className="text-xs text-muted-foreground">
-              Créée par {creator.name} · {formatRelative(task.createdAt, now)}
-            </p>
-          )}
-        </aside>
       </div>
-    </div>
+    </CreateTaskProvider>
   );
 }

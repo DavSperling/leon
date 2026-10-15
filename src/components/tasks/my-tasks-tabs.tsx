@@ -1,10 +1,11 @@
+import { MY_TASKS_HREF } from '@/lib/tasks/task-links';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import type { ViewTab } from './view-tabs';
 
 export type MyTasksTab = 'assigned' | 'created' | 'activity';
 
 export const TABS: Array<{ tab: MyTasksTab; label: string; href: string }> = [
-  { tab: 'assigned', label: 'Assignées', href: '/taches?assigne=moi' },
+  { tab: 'assigned', label: 'Assignées', href: MY_TASKS_HREF },
   { tab: 'created', label: 'Créées', href: '/taches?createur=moi' },
   { tab: 'activity', label: 'Activité', href: '/taches?onglet=activite' },
 ];

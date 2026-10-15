@@ -157,10 +157,11 @@ export function TaskCard({ draggable, droppable, ...card }: TaskCardProps) {
     <li
       ref={setNodeRef}
       {...listeners}
+      data-task-id={card.row.id}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         CARD,
-        'group/item shadow-xs hover:shadow-sm has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50',
+        'group/item scroll-mt-40 shadow-xs hover:shadow-sm has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring',
         sortable.isDragging && 'opacity-40',
       )}
     >

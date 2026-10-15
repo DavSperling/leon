@@ -39,6 +39,10 @@ export function taskHref(ref: string, listQuery: string): string {
   return `/taches/${ref}?${new URLSearchParams({ [RETURN_PARAM]: listQuery })}`;
 }
 
+// La liste de toutes les tâches, et « Mes tâches » : la navigation et les raccourcis G T et G M y vont.
+export const ALL_TASKS_HREF = '/taches';
+export const MY_TASKS_HREF = '/taches?assigne=moi';
+
 // Les adresses d'une liste de projet et d'une vue enregistrée : la navigation et le fil d'Ariane de
 // la page d'une tâche les écrivent, la liste les relit.
 export const projectHref = (projectId: string): string => `/taches?projet=${projectId}`;

@@ -57,7 +57,7 @@ export function TaskRowItem({
         if (event.shiftKey) event.preventDefault();
       }}
       className={cn(
-        'group/item relative flex h-9 items-center gap-1.5 pr-5 pl-8 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60',
+        'group/item relative flex h-9 scroll-mt-40 scroll-mb-20 items-center gap-1.5 pr-5 pl-8 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent has-[a:focus-visible]:shadow-[inset_2px_0_0_var(--ring)]',
         selected && 'bg-primary-soft hover:bg-primary-soft',
       )}
     >

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { CommandSearch } from '@/components/command-search';
 import { Panel } from '@/components/panel';
+import { ShortcutsProvider } from '@/components/tasks/shortcuts-provider';
 import { TaskNav } from '@/components/tasks/task-nav';
 import { requireUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
@@ -25,27 +26,31 @@ export default async function TasksLayout({ children }: { children: ReactNode })
     countOpenByProject(ctx),
     listViews(ctx),
   ]);
+  const personalViews = navViews(views, false);
+  const teamViews = navViews(views, true);
   return (
-    <AppShell
-      organizationName={profile.organizationName}
-      userName={profile.userName}
-      userEmail={profile.email}
-      reviewCount={briefing.reviewCount}
-      search={<CommandSearch />}
-      column={
-        <Panel label="Tâches" title="Tâches">
-          <TaskNav
-            projects={projects.map((project) => ({
-              ...project,
-              openCount: openCounts[project.id] ?? 0,
-            }))}
-            personalViews={navViews(views, false)}
-            teamViews={navViews(views, true)}
-          />
-        </Panel>
-      }
-    >
-      {children}
-    </AppShell>
+    <ShortcutsProvider>
+      <AppShell
+        organizationName={profile.organizationName}
+        userName={profile.userName}
+        userEmail={profile.email}
+        reviewCount={briefing.reviewCount}
+        search={<CommandSearch views={[...personalViews, ...teamViews]} />}
+        column={
+          <Panel label="Tâches" title="Tâches">
+            <TaskNav
+              projects={projects.map((project) => ({
+                ...project,
+                openCount: openCounts[project.id] ?? 0,
+              }))}
+              personalViews={personalViews}
+              teamViews={teamViews}
+            />
+          </Panel>
+        }
+      >
+        {children}
+      </AppShell>
+    </ShortcutsProvider>
   );
 }

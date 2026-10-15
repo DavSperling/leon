@@ -35,6 +35,22 @@ LEON_URL=http://localhost:3002 pnpm essai noter
 - `charger` et `noter` se lancent dans le même worktree : `.env.local` (clé Anthropic, `DATABASE_URL_ADMIN`) et `essai/.dernier-passage.json` sont propres à chaque worktree.
 - `noter` ajoute une ligne à `docs/etudes/essais-pipeline/historique.md` et le détail dans `passages/` : à commiter.
 
+## Comparer des modèles
+
+Le modèle de chaque étape se choisit au démarrage du serveur, par variable d'environnement : `LEON_LLM_TRIAGE`, `LEON_LLM_EXTRACTION`, `LEON_LLM_RANGEMENT`, au format `anthropic:<modèle>` ou `openrouter:<fournisseur>/<modèle>` (identifiants sur [openrouter.ai/models](https://openrouter.ai/models)). Une étape sans variable garde son modèle Anthropic habituel ; le juge reste toujours sur Claude Haiku, pour que les notes restent comparables.
+
+```bash
+LEON_LLM_EXTRACTION=openrouter:mistralai/mistral-large-4-0 pnpm dev --port 3002
+LEON_URL=http://localhost:3002 pnpm essai charger --mini --label "extraction mistral-large-4-0"
+LEON_URL=http://localhost:3002 pnpm essai noter
+```
+
+- OpenRouter demande `OPENROUTER_API_KEY` dans `.env.local` ; le serveur ne lance pas le pipeline s'il manque la clé d'un fournisseur configuré.
+- **Une configuration = un redémarrage du serveur.** `charger` affiche les modèles annoncés par le serveur avant de demander confirmation : les relire.
+- **Toujours mettre le modèle dans `--label`.** Changer de modèle ne change pas le commit (la vérification du commit ne couvre que le code) : sans le libellé, deux passages ne se distinguent dans l'historique que par la colonne Modèles.
+- Le coût enregistré pour un appel OpenRouter est celui qu'OpenRouter facture (`usage.cost`) ; celui d'un appel Anthropic direct est estimé avec les tarifs de l'étude de coûts. Le coût annoncé par `charger` vient du dernier passage complet, quels que soient ses modèles.
+- `noter` garde dans le détail du passage (`passages/*.json`) les modèles annoncés (`modeles`) et ceux réellement servis, lus dans `llm_usage` (`modelesVus`).
+
 ## Se connecter comme un personnage
 
 Après `charger`, l'interface accepte les six comptes, avec le mot de passe de développement `essai-leon-2026` :

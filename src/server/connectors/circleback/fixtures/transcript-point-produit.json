@@ -1,0 +1,18 @@
+[
+  {
+    "speaker": "Marie Durand",
+    "text": "Bonjour Paul, on commence par la feuille de route ?",
+    "timestamp": 4.56
+  },
+  {
+    "speaker": "Marie Durand",
+    "text": "Je propose de livrer l’export CSV avant la fin du mois.",
+    "timestamp": 9.2
+  },
+  {
+    "speaker": "Paul Martin",
+    "text": "D’accord, je m’engage à préparer la maquette d’ici jeudi.",
+    "timestamp": 18.32
+  },
+  { "speaker": "Marie Durand", "text": "Parfait, on se revoit vendredi.", "timestamp": 31 }
+]

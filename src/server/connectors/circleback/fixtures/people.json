@@ -1,0 +1,11 @@
+[
+  {
+    "id": 11,
+    "email": "marie@acme.test",
+    "firstName": "Marie",
+    "lastName": "Durand",
+    "title": "Directrice produit",
+    "companyName": "Acme",
+    "companyId": 3
+  }
+]

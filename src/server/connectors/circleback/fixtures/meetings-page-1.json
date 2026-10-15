@@ -1,0 +1,85 @@
+[
+  {
+    "id": "rN4kQ8xT2vLpB7mZc1HsA",
+    "name": "Point produit Acme",
+    "createdAt": "2026-10-14T09:00:00.000Z",
+    "updatedAt": "2026-10-14T10:05:30.120Z",
+    "duration": 3300.5,
+    "url": "https://meet.google.com/abc-defg-hij",
+    "recordingUrl": null,
+    "tags": [{ "id": 1, "name": "Produit", "description": null }],
+    "icalUid": "point-produit-acme@google.com",
+    "attendees": [
+      {
+        "profileId": 11,
+        "name": "Marie Durand",
+        "email": "marie@acme.test",
+        "title": "Directrice produit",
+        "companyName": "Acme",
+        "isCalendarEventOrganizer": true,
+        "isCalendarInvitee": true
+      },
+      {
+        "profileId": 12,
+        "name": "Paul Martin",
+        "email": "paul@acme.test",
+        "title": "Développeur",
+        "companyName": "Acme",
+        "isCalendarEventOrganizer": false,
+        "isCalendarInvitee": true
+      }
+    ],
+    "notes": "#### Résumé\n- L’export CSV sort avant la fin du mois.\n- Paul prépare la maquette d’ici jeudi.",
+    "privateNotes": "Rappel perso : demander une augmentation à Marie.",
+    "actionItems": [
+      {
+        "id": 301,
+        "title": "Préparer la maquette",
+        "description": "Pour jeudi",
+        "status": "PENDING",
+        "assignee": {
+          "profileId": 12,
+          "name": "Paul Martin",
+          "title": "Développeur",
+          "companyName": "Acme",
+          "email": "paul@acme.test"
+        }
+      }
+    ],
+    "insights": {},
+    "linkAccess": "Viewer",
+    "calendarEvent": null,
+    "sharedWith": [
+      { "profileId": 11, "name": "Marie Durand", "email": "marie@acme.test", "access": "Owner" }
+    ]
+  },
+  {
+    "id": "Gd7eW3sUq9YfK2nVx5JtR",
+    "name": "Appel client Initech",
+    "createdAt": "2026-10-13T14:00:00.000Z",
+    "updatedAt": "2026-10-13T15:02:11.450Z",
+    "duration": 1800,
+    "url": null,
+    "recordingUrl": null,
+    "tags": [],
+    "icalUid": null,
+    "attendees": [
+      {
+        "profileId": 11,
+        "name": "Marie Durand",
+        "email": "marie@acme.test",
+        "title": null,
+        "companyName": "Acme",
+        "isCalendarEventOrganizer": true,
+        "isCalendarInvitee": true
+      }
+    ],
+    "notes": "#### Résumé\n- Initech veut un devis pour 40 postes avant le 30 octobre.",
+    "privateNotes": "",
+    "actionItems": [],
+    "insights": {},
+    "linkAccess": null,
+    "calendarEvent": null,
+    "sharedWith": []
+  }
+]

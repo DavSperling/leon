@@ -4,11 +4,12 @@ import { type Llm, LlmError, type LlmRequest, type LlmStep, type LlmUsage } from
 import { logLlmUsage } from './log-usage';
 
 // Rangement sur Haiku 5.5 (14/10) : sur 24 décisions réelles, Haiku 5.5 a choisi la même fiche et la
-// même relation qu'Opus 5.5 en effort high, pour 0,009 $ au lieu de 0,298 $. L'extraction reste sur
-// Sonnet : Haiku y invente une citation sur trois, que la vérification rejette.
+// même relation qu'Opus 5.5 en effort high, pour 0,009 $ au lieu de 0,298 $. Extraction sur Haiku 5.5
+// (15/10, D16) : sur le jeu d'essai complet, rappel 91 % contre 93 % pour Sonnet 5.5, précision 68 %
+// contre 62 %, pour 0,22 $ au lieu de 1,48 $ (docs/etudes/essais-pipeline/README.md).
 export const MODEL_BY_STEP = {
   triage: 'claude-haiku-5-5',
-  extraction: 'claude-sonnet-5-5',
+  extraction: 'claude-haiku-5-5',
   placement: 'claude-haiku-5-5',
   juge: 'claude-haiku-5-5', // notation du jeu d'essai (src/essai/judge.ts)
 } as const;

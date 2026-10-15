@@ -267,7 +267,7 @@ describe('modelesNouveaux', () => {
 
   it('compare aux modèles par défaut sans passage complet', () => {
     expect(modelesNouveaux(serveur, null)).toEqual([
-      'extraction : anthropic:claude-sonnet-5-5 → openrouter:openai/gpt-6-sol (effort medium)',
+      'extraction : anthropic:claude-haiku-5-5 → openrouter:openai/gpt-6-sol (effort medium)',
     ]);
   });
 });

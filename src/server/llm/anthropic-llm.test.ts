@@ -51,7 +51,7 @@ describe('createAnthropicLlm', () => {
   it('utilise les bons modèles et efforts', () => {
     expect(MODEL_BY_STEP).toEqual({
       triage: 'claude-haiku-5-5',
-      extraction: 'claude-sonnet-5-5',
+      extraction: 'claude-haiku-5-5',
       placement: 'claude-haiku-5-5',
       juge: 'claude-haiku-5-5',
     });
@@ -92,18 +92,21 @@ describe('createAnthropicLlm', () => {
     expect(parse.mock.calls[0]?.[0]).not.toHaveProperty('fallbacks');
   });
 
-  it.each(['extraction'] as const)('active le repli serveur des refus pour %s', async (step) => {
-    const { llm, parse } = setup(() => ok);
+  it('active le repli serveur des refus sur une étape confiée à Sonnet', async () => {
+    const parse = vi.fn(async (_params: unknown) => ok);
+    const client = { beta: { messages: { parse } } } as unknown as AnthropicLike;
+    const llm = createAnthropicLlm({ client, models: { extraction: 'claude-sonnet-5-5' } });
 
-    await llm.generateObject(request(step));
+    await llm.generateObject(request('extraction'));
 
     expect(parse.mock.calls[0]?.[0]).toMatchObject({
+      model: 'claude-sonnet-5-5',
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
     });
   });
 
-  it.each(['triage', 'placement'] as const)(
+  it.each(['triage', 'extraction', 'placement'] as const)(
     'n active pas le repli pour %s (Haiku)',
     async (step) => {
       const { llm, parse } = setup(() => ok);

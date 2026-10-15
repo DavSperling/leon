@@ -1,0 +1,48 @@
+{
+  "messages": [
+    {
+      "id": "9c2d7e10-4b6a-4d3f-a5e8-1f7b0c3d6a24",
+      "subject": "Re: Facture de septembre",
+      "draft": false,
+      "preview": "Bonjour Marc, voici la facture rectifiée.",
+      "type": "email",
+      "delivered_at": 1792060200,
+      "updated_at": 1792060200,
+      "created_at": 1792060195,
+      "email_message_id": "<c3a9f1d2-77e0-4c1b-8d52-0a6e4b9f2c11@acme.test>",
+      "in_reply_to": ["<b81d0e5a-33f4-4a72-9c06-5d1e7a2f8b30@client.test>"],
+      "references": ["<b81d0e5a-33f4-4a72-9c06-5d1e7a2f8b30@client.test>"],
+      "from_field": { "name": "Support Acme", "address": "support@acme.test" },
+      "to_fields": [{ "name": "Marc Lefèvre", "address": "marc@client.test" }],
+      "cc_fields": [],
+      "bcc_fields": [],
+      "reply_to_fields": [],
+      "attachments": [],
+      "author": {
+        "id": "b2f4d6a8-0c1e-4a3b-9d5f-7e8a9b0c1d2e",
+        "name": "Julie Martin",
+        "email": "julie@acme.test",
+        "avatar_url": "https://example.test/avatars/julie.png"
+      }
+    },
+    {
+      "id": "3fa4bcf5-e57e-47a4-9422-de2cce5f802e",
+      "subject": "Facture de septembre",
+      "draft": false,
+      "preview": "Bonjour, il y a une erreur sur la facture de septembre.",
+      "type": "email",
+      "delivered_at": 1791968400,
+      "updated_at": 1791968400,
+      "created_at": 1791968395,
+      "email_message_id": "<b81d0e5a-33f4-4a72-9c06-5d1e7a2f8b30@client.test>",
+      "in_reply_to": [],
+      "references": [],
+      "from_field": { "name": "Marc Lefèvre", "address": "marc@client.test" },
+      "to_fields": [{ "name": "Support Acme", "address": "support@acme.test" }],
+      "cc_fields": [],
+      "bcc_fields": [],
+      "reply_to_fields": [],
+      "attachments": []
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": "dc3c4104-eced-4206-b532-ef84b331778a",
+      "me": false,
+      "email": "paul@acme.test",
+      "name": "Paul Durand",
+      "avatar_url": "https://example.test/avatars/paul.png"
+    },
+    {
+      "id": "a41a00fd-453d-49d7-a487-9765c35a3b70",
+      "me": true,
+      "email": "marie@acme.test",
+      "name": "Marie Durand",
+      "avatar_url": "https://example.test/avatars/marie.png"
+    }
+  ]
+}

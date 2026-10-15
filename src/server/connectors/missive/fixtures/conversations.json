@@ -1,0 +1,83 @@
+{
+  "conversations": [
+    {
+      "id": "6d3c9b1c-7067-4a28-8ea6-ea91340b67cc",
+      "created_at": 1791968400,
+      "subject": null,
+      "latest_message_subject": "Re: Facture de septembre",
+      "organization": { "id": "96cafdc6-ec6a-4439-9b0c-f55a1133b1e7", "name": "Acme" },
+      "color": null,
+      "authors": [
+        { "name": "Marc Lefèvre", "address": "marc@client.test" },
+        { "name": "Julie Martin", "address": "julie@acme.test" }
+      ],
+      "external_authors": [{ "name": "Marc Lefèvre", "address": "marc@client.test" }],
+      "users": [
+        {
+          "id": "dc3c4104-eced-4206-b532-ef84b331778a",
+          "name": "Paul Durand",
+          "email": "paul@acme.test",
+          "assigned": false,
+          "unassigned": false,
+          "closed": false,
+          "archived": false,
+          "flagged": false,
+          "snoozed": false,
+          "trashed": false,
+          "junked": false
+        }
+      ],
+      "assignees": [],
+      "assignee_names": "",
+      "assignee_emails": "",
+      "shared_labels": [{ "id": "7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d", "name": "Facturation" }],
+      "shared_label_names": "Facturation",
+      "team": {
+        "id": "f36b7570-078e-408e-9cb8-2b4441ad93c0",
+        "name": "Support",
+        "organization": "96cafdc6-ec6a-4439-9b0c-f55a1133b1e7",
+        "active_members": ["dc3c4104-eced-4206-b532-ef84b331778a"],
+        "observers": []
+      },
+      "messages_count": 2,
+      "drafts_count": 0,
+      "send_later_messages_count": 0,
+      "attachments_count": 0,
+      "tasks_count": 0,
+      "completed_tasks_count": 0,
+      "last_activity_at": 1792060200,
+      "web_url": "https://mail.missiveapp.com/#inbox/conversations/6d3c9b1c-7067-4a28-8ea6-ea91340b67cc",
+      "app_url": "missive://mail.missiveapp.com/#inbox/conversations/6d3c9b1c-7067-4a28-8ea6-ea91340b67cc"
+    },
+    {
+      "id": "0b8d3a52-5c1e-4f0a-9d63-2f4a8e7c1b90",
+      "last_activity_at": 1792054800
+    },
+    {
+      "id": "a7c1e2f4-3b5d-4e86-8f19-6c0d2b9a4e31",
+      "created_at": 1791792000,
+      "subject": "Livraison du 12 octobre",
+      "latest_message_subject": "",
+      "organization": { "id": "96cafdc6-ec6a-4439-9b0c-f55a1133b1e7", "name": "Acme" },
+      "color": null,
+      "authors": [],
+      "external_authors": [],
+      "users": [],
+      "assignees": [],
+      "assignee_names": "",
+      "assignee_emails": "",
+      "shared_labels": [],
+      "shared_label_names": "",
+      "team": null,
+      "messages_count": 1,
+      "drafts_count": 0,
+      "send_later_messages_count": 0,
+      "attachments_count": 0,
+      "tasks_count": 0,
+      "completed_tasks_count": 0,
+      "last_activity_at": 1791792000,
+      "web_url": "https://mail.missiveapp.com/#inbox/conversations/a7c1e2f4-3b5d-4e86-8f19-6c0d2b9a4e31",
+      "app_url": "missive://mail.missiveapp.com/#inbox/conversations/a7c1e2f4-3b5d-4e86-8f19-6c0d2b9a4e31"
+    }
+  ]
+}

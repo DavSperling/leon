@@ -182,7 +182,7 @@ describe('asana : sync, premier passage', () => {
 
     const tasks = tasksCalls(calls);
     expect(tasks).toHaveLength(3);
-    const fields = 'name,notes,modified_at,created_by.name,permalink_url';
+    const fields = 'name,notes,modified_at,created_by,permalink_url';
     const base = { modified_since: '2026-09-15T00:00:00.000Z', limit: '100', opt_fields: fields };
     expect(paramsOf(tasks[0])).toEqual({ ...base, project: '3001' });
     expect(paramsOf(tasks[1])).toEqual({ ...base, project: '3001', offset: OFFSET_TASKS });

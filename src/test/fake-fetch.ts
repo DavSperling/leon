@@ -1,6 +1,7 @@
 import { expect } from 'vitest';
 import { type ConnectorHttp, createConnectorHttp } from '@/server/connectors/http';
 import type { AnyConnector, SyncPage } from '@/server/connectors/types';
+import { callProblems, loadVendorSpec, type VendorSpec } from './contracts/vendor-spec';
 
 export type FakeRoute = {
   method?: 'GET' | 'POST';
@@ -40,8 +41,12 @@ function respond(route: FakeRoute): Response {
 
 // Une route sert une fois, puis laisse la place à la suivante qui correspond.
 // Une requête sans route reçoit un 599 et fait échouer le test (sans lever : le code testé
-// pourrait avaler l'erreur).
-export function fakeFetch(routes: FakeRoute[]): typeof fetch & { calls: FakeCall[] } {
+// pourrait avaler l'erreur). Avec `spec` (l'extrait de la spec officielle du fournisseur), une
+// requête que la spec ne permet pas (chemin, paramètre, valeur, champ de corps) le fait échouer aussi.
+export function fakeFetch(
+  routes: FakeRoute[],
+  spec?: VendorSpec,
+): typeof fetch & { calls: FakeCall[] } {
   const pending = [...routes];
   const calls: FakeCall[] = [];
   const impl = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
@@ -53,6 +58,7 @@ export function fakeFetch(routes: FakeRoute[]): typeof fetch & { calls: FakeCall
       body: raw === undefined ? undefined : JSON.parse(raw),
     };
     calls.push(call);
+    if (spec) expect.soft(callProblems(spec, call), `${call.method} ${call.url}`).toEqual([]);
     const index = pending.findIndex((route) => matches(route, call));
     const route = pending[index];
     if (!route) {
@@ -83,7 +89,7 @@ export function testHttp(
 ): { http: ConnectorHttp; calls: FakeCall[] } {
   const hosts = connector.hosts(connector.configSchema.parse(config));
   expectHostsWellFormed(hosts);
-  const fetchImpl = fakeFetch(routes);
+  const fetchImpl = fakeFetch(routes, loadVendorSpec(connector.id));
   const http = createConnectorHttp({
     provider: connector.id,
     hosts,

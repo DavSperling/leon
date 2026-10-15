@@ -1,0 +1,38 @@
+{
+  "sources": ["https://developer.clickup.com/openapi/clickup-api-v2-reference.json"],
+  "versions": ["2.0"],
+  "operations": {
+    "GET /api/v2/user": { "query": {} },
+    "GET /api/v2/team": { "query": {} },
+    "GET /api/v2/team/{team_Id}/task": {
+      "query": {
+        "assignees[]": { "list": true },
+        "custom_fields": { "list": true },
+        "custom_items[]": { "list": true },
+        "date_created_gt": {},
+        "date_created_lt": {},
+        "date_done_gt": {},
+        "date_done_lt": {},
+        "date_updated_gt": {},
+        "date_updated_lt": {},
+        "due_date_gt": {},
+        "due_date_lt": {},
+        "include_closed": {},
+        "include_markdown_description": {},
+        "list_ids[]": { "list": true },
+        "order_by": {},
+        "page": {},
+        "parent": {},
+        "project_ids[]": { "list": true },
+        "reverse": {},
+        "space_ids[]": { "list": true },
+        "statuses[]": { "list": true },
+        "subtasks": {},
+        "tags[]": { "list": true }
+      }
+    },
+    "GET /api/v2/task/{task_id}/comment": {
+      "query": { "custom_task_ids": {}, "start": {}, "start_id": {}, "team_id": {} }
+    }
+  }
+}

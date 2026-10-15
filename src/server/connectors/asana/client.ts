@@ -94,10 +94,11 @@ export function asanaClient(token: string, http: ConnectorHttp) {
     // Une page de tâches d'un projet modifiées depuis `modifiedSince` (ISO 8601, UTC). Asana ne
     // documente aucun ordre. Un offset périmé est refusé (400) : on reprend alors la première page.
     async tasks(project: string, modifiedSince: string, offset: string | null): Promise<TasksPage> {
+      // Seul `created_by` est listé dans les `opt_fields` de la doc, pas `created_by.name`.
       const query = {
         project,
         modified_since: modifiedSince,
-        opt_fields: 'name,notes,modified_at,created_by.name,permalink_url',
+        opt_fields: 'name,notes,modified_at,created_by,permalink_url',
       };
       try {
         const { rows, next } = await page('/tasks', TaskSchema, query, offset ?? undefined);

@@ -35,11 +35,13 @@ import { syncProjects } from './projects';
 // fait reprendre le projet à sa première page, ce code d'erreur est supposé) ; le tri de GET
 // /projects ; que GET /users/me rende `workspaces` à un jeton sans autre portée ; les réponses
 // d'exemple sont construites d'après les schémas de la doc, qui ne donne pas d'exemple complet.
-// Le chemin `created_by.name` demandé à GET /tasks n'est pas listé dans les `opt_fields` de la doc
-// (seul `created_by` l'est, et son schéma ne porte que `gid` et `resource_type` ; sur les histoires,
-// `created_by.name` est bien listé). Si Asana ignore le chemin, l'auteur du tour `document` reste
-// nul, ce que le code tolère ; s'il le refuse en 400, la lecture des tâches échoue. La forme de
-// `created_by` (avec un `name`) dans les exemples de tâches est donc supposée, pas tirée de la doc.
+// GET /tasks demande `created_by`, que la doc liste dans ses `opt_fields` ; `created_by.name` n'y est
+// pas (il l'est sur les histoires), et un chemin hors doc risque un 400 qui ferait échouer toute
+// lecture de tâches. Le schéma de `created_by` ne porte que `gid` et `resource_type` : on compte sur
+// le `name` que porte d'ordinaire un utilisateur « compact » (les exemples de tâches en ont un, sans
+// que la doc le garantisse) ; sans nom, l'auteur du tour `document` reste nul, ce que le code tolère.
+// Les requêtes de ce connecteur sont confrontées à un extrait de la spec officielle, voir
+// src/test/contracts/vendor-spec.ts.
 // Se vérifie à l'essai réel (T44).
 
 const ConfigSchema = z.object({

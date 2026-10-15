@@ -1,8 +1,15 @@
 import { z } from 'zod';
 import { ConnectorAuthError, type ConnectorHttp } from '../http';
 import type { Connector, ConnectorItem, SyncPage } from '../types';
-import { fetchAccount, fetchIssues, fetchProjectUpdates, type Stream } from './client';
+import {
+  authorizationOf,
+  fetchAccount,
+  fetchIssues,
+  fetchProjectUpdates,
+  type Stream,
+} from './client';
 import { issueToItem, projectUpdateToItem } from './map';
+import { linearOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://linear.app/developers/graphql (adresse, en-tête Authorization sans « Bearer » pour une clé
@@ -34,7 +41,20 @@ import { issueToItem, projectUpdateToItem } from './map';
 // d'un curseur `after` dont l'élément a été modifié ou supprimé entre deux relèves ; si les
 // réponses à un commentaire sont dans `comments` ou seulement dans `children` (non lues ici).
 
-const configSchema = z.object({ apiKey: z.string().trim().min(1) });
+// Deux façons de se brancher : la clé personnelle (une connexion sans `authMode` est à clé) ou le
+// bouton, dont le socle OAuth tient les jetons. Un `z.object` raffiné : le catalogue lit `.shape`.
+const configSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    apiKey: z.string().trim().min(1).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'apiKey';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof configSchema>;
 
 const stream = z.object({
@@ -84,13 +104,13 @@ function summarize<N extends { updatedAt: string }>(
 const STREAMS = [
   {
     key: 'issues',
-    fetch: async (http: ConnectorHttp, apiKey: string, from: Stream) =>
-      summarize(await fetchIssues(http, apiKey, from), issueToItem),
+    fetch: async (http: ConnectorHttp, authorization: string, from: Stream) =>
+      summarize(await fetchIssues(http, authorization, from), issueToItem),
   },
   {
     key: 'updates',
-    fetch: async (http: ConnectorHttp, apiKey: string, from: Stream) =>
-      summarize(await fetchProjectUpdates(http, apiKey, from), projectUpdateToItem),
+    fetch: async (http: ConnectorHttp, authorization: string, from: Stream) =>
+      summarize(await fetchProjectUpdates(http, authorization, from), projectUpdateToItem),
   },
 ] as const;
 
@@ -99,19 +119,21 @@ export const linearConnector: Connector<Config> = {
   configSchema,
   secretFields: ['apiKey'],
   hosts: () => ['api.linear.app'],
+  oauth: linearOAuth,
 
   async verify(config, http) {
-    return { account: await fetchAccount(http, config.apiKey) };
+    return { account: await fetchAccount(http, authorizationOf(config)) };
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {
+    const authorization = authorizationOf(config);
     let state = readCursor(cursor, since);
     for (const { key, fetch } of STREAMS) {
       for (;;) {
         const current = state[key];
         let page: Fetched;
         try {
-          page = await fetch(http, config.apiKey, current);
+          page = await fetch(http, authorization, current);
         } catch (error) {
           if (key === 'updates' && error instanceof ConnectorAuthError && error.status === 403)
             break;

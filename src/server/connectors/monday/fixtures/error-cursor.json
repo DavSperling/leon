@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "message": "CursorExpiredError: The cursor provided for pagination has expired.",
+      "extensions": { "code": "CursorException", "status_code": 200 }
+    }
+  ],
+  "data": null,
+  "account_id": 1234567
+}

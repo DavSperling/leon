@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil : Complexity budget exhausted, query cost 5500000 budget remaining 0",
+      "extensions": { "code": "COMPLEXITY_BUDGET_EXHAUSTED", "status_code": 429 }
+    }
+  ],
+  "account_id": 1234567
+}

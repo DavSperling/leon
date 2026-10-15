@@ -1,0 +1,84 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": "nte_91118b73-5a75-480b-b8e3-a33671c35cdc",
+        "entity": {
+          "id": "per_55175e81-9a52-4ac3-930e-82792c23499b",
+          "entityType": "person",
+          "fullName": "Claire Dubois"
+        },
+        "visibility": "public",
+        "content": "## Point du 14/10\n\nClaire valide le devis de 12 000 € HT. Elle veut une démo avec son équipe technique avant le 30/10.\n\nProchaine étape : Marie envoie le planning de démo.",
+        "author": {
+          "type": "user",
+          "id": "usr_bc984b3f-0386-434d-82d7-a91eb6badd71",
+          "fullName": "Marie Durand",
+          "email": "marie@acme.test",
+          "deleted": false
+        },
+        "createdAt": "2026-10-14T16:20:00.000Z",
+        "parentNote": null
+      },
+      {
+        "id": "nte_2f6c0d1e-7b3a-4c58-9e41-0a5d8b7c6f23",
+        "entity": {
+          "id": "com_3b7e5a90-1c24-4d6f-8a35-9e0f1d2c4b68",
+          "entityType": "company",
+          "fullName": "Dubois Conseil"
+        },
+        "visibility": "public",
+        "content": "D'accord pour 12 000 €, mais seulement si la formation est incluse.",
+        "author": {
+          "type": "user",
+          "id": "usr_14c18444-a0c7-459a-86b0-ccd70ebcd65c",
+          "fullName": "David Martin",
+          "email": "david@acme.test",
+          "deleted": false
+        },
+        "createdAt": "2026-10-13T09:30:00.000Z",
+        "parentNote": {
+          "id": "nte_6d0a9c47-3e12-4b85-a7f6-1c8e5d2b9034",
+          "entity": {
+            "id": "com_3b7e5a90-1c24-4d6f-8a35-9e0f1d2c4b68",
+            "entityType": "company",
+            "fullName": "Dubois Conseil"
+          },
+          "content": "Devis envoyé : 12 000 € HT, formation en option.",
+          "visibility": "public",
+          "author": {
+            "type": "user",
+            "id": "usr_bc984b3f-0386-434d-82d7-a91eb6badd71",
+            "fullName": "Marie Durand",
+            "email": "marie@acme.test",
+            "deleted": false
+          },
+          "createdAt": "2026-10-12T14:00:00.000Z",
+          "deleted": false
+        }
+      },
+      {
+        "id": "nte_c4e81f56-9a07-4d3b-b2c8-5f6a0e1d7389",
+        "entity": {
+          "id": "per_55175e81-9a52-4ac3-930e-82792c23499b",
+          "entityType": "person",
+          "fullName": "Claire Dubois"
+        },
+        "visibility": "private",
+        "content": "Note personnelle de Marie : ne pas partager.",
+        "author": {
+          "type": "user",
+          "id": "usr_bc984b3f-0386-434d-82d7-a91eb6badd71",
+          "fullName": "Marie Durand",
+          "email": "marie@acme.test",
+          "deleted": false
+        },
+        "createdAt": "2026-10-13T09:00:00.000Z",
+        "parentNote": null
+      }
+    ],
+    "pagination": {
+      "nextLink": "https://api.folk.app/v1/notes?limit=50&createdAfter=2026-09-15T00%3A00%3A00.000Z&cursor=eyJvZmZzZXQiOjUwfQ%3D%3D"
+    }
+  }
+}

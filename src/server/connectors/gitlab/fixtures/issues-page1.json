@@ -1,0 +1,68 @@
+[
+  {
+    "id": 76,
+    "iid": 12,
+    "project_id": 278964,
+    "title": "Choisir la durée de relève",
+    "description": "On relève les outils toutes les 15 minutes.\n\n## Pourquoi\n\nLes webhooks sont peu fiables.",
+    "state": "closed",
+    "created_at": "2026-10-08T09:00:00.081Z",
+    "updated_at": "2026-10-10T09:00:00.123Z",
+    "closed_at": "2026-10-10T09:00:00.000Z",
+    "labels": ["relève"],
+    "author": {
+      "id": 1,
+      "username": "marie-durand",
+      "name": "Marie Durand",
+      "state": "active",
+      "avatar_url": null,
+      "web_url": "https://gitlab.com/marie-durand"
+    },
+    "assignees": [],
+    "user_notes_count": 2,
+    "web_url": "https://gitlab.com/acme/leon/-/issues/12",
+    "references": { "short": "#12", "relative": "#12", "full": "acme/leon#12" },
+    "confidential": false,
+    "issue_type": "issue"
+  },
+  {
+    "id": 77,
+    "iid": 13,
+    "project_id": 278964,
+    "title": "Ticket sans description",
+    "description": null,
+    "state": "opened",
+    "created_at": "2026-10-11T08:00:00.000Z",
+    "updated_at": "2026-10-11T08:45:00.000Z",
+    "author": {
+      "id": 2,
+      "username": "paul-martin",
+      "name": "Paul Martin",
+      "state": "active",
+      "web_url": "https://gitlab.com/paul-martin"
+    },
+    "user_notes_count": 0,
+    "web_url": "https://gitlab.com/acme/leon/-/issues/13",
+    "references": { "short": "#13", "relative": "#13", "full": "acme/leon#13" }
+  },
+  {
+    "id": 78,
+    "iid": 14,
+    "project_id": 278964,
+    "title": "Fenêtre du premier passage",
+    "description": "Le délai de 30 jours est trop court pour le premier passage.",
+    "state": "opened",
+    "created_at": "2026-10-11T09:00:00.000Z",
+    "updated_at": "2026-10-11T10:00:00.500Z",
+    "author": {
+      "id": 2,
+      "username": "paul-martin",
+      "name": "Paul Martin",
+      "state": "active",
+      "web_url": "https://gitlab.com/paul-martin"
+    },
+    "user_notes_count": 1,
+    "web_url": "https://gitlab.com/acme/leon/-/issues/14",
+    "references": { "short": "#14", "relative": "#14", "full": "acme/leon#14" }
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "user": {
+    "id": 9000,
+    "name": "Marie Durand",
+    "email": "marie@acme.test",
+    "role": "admin",
+    "active": true,
+    "time_zone": "Paris",
+    "url": "https://acme.zendesk.com/api/v2/users/9000.json"
+  }
+}

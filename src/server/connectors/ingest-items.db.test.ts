@@ -6,7 +6,7 @@ import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
-import { createTestTenant } from '@/test/fixtures';
+import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { type ConnectionRef, ingestConnectorItems } from './ingest-items';
 import { type NormalizedItem, normalizeItem } from './normalize';
 import type { ConnectorItem, ConnectorTurn } from './types';
@@ -14,7 +14,7 @@ import type { ConnectorItem, ConnectorTurn } from './types';
 vi.mock('@/server/pipeline/queue');
 
 // Organisation Paul + Marie (Paul branche l'outil), une autre organisation (Zoé).
-// La connexion est insérée par le propriétaire de la base, hors RLS, en attendant connections.ts (T05).
+// Les connexions viennent de la fixture `seedConnection` (insertion hors RLS, jamais due).
 
 const tenantIds: string[] = [];
 let tenantId: string;
@@ -38,14 +38,9 @@ afterAll(async () => {
 
 beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 
-async function seedConnection(ctx: TenantContext): Promise<ConnectionRef> {
-  const id = randomUUID();
-  await adminPool.query(
-    `insert into connections (id, tenant_id, created_by, provider, label, secret, secret_hint, since, acl)
-     values ($1, $2, $3, 'github', 'Connexion de test', 'v1:aaaa:bbbb:cccc', 'abcd', now(), array[$2::uuid])`,
-    [id, ctx.tenantId, ctx.userId],
-  );
-  return { id, provider: 'github', createdBy: ctx.userId };
+// Une connexion GitHub de l'équipe, créée par `ctx` (fixture partagée, secret chiffré).
+async function connectionOf(ctx: TenantContext): Promise<ConnectionRef> {
+  return { id: await seedConnection(ctx), provider: 'github', createdBy: ctx.userId };
 }
 
 const body = (text: string): ConnectorTurn => ({
@@ -102,7 +97,7 @@ async function sourceIdOf(ctx: TenantContext, externalId: string): Promise<strin
 
 describe('ingestConnectorItems', () => {
   it('crée la source, ses tours et un run pour un élément à deux tours', async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;
     const item = normalized(
       connectorItem(externalId, [body('Le site plante au chargement.'), comment(1, 'Je regarde.')]),
@@ -152,7 +147,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it("montre la source, ses tours et son run à toute l'équipe, à personne d'autre", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;
     await ingestConnectorItems(paul, connection, [
       normalized(connectorItem(externalId, [body('Texte partagé.')])),
@@ -168,7 +163,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it('ne crée ni tour ni run quand le même élément revient', async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const item = normalized(
       connectorItem(`issue:${randomUUID()}`, [
         body('Texte stable.'),
@@ -185,7 +180,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it("ne traite que le commentaire ajouté et met le titre à jour quand l'élément s'allonge", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;
     await ingestConnectorItems(paul, connection, [
       normalized(connectorItem(externalId, [body('Texte stable.')], 'Ancien titre')),
@@ -214,7 +209,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it("ne crée qu'un tour quand un seul paragraphe d'une longue page change", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `page:${randomUUID()}`;
     const paragraph = (word: string) => `${word} bêta gamma. `.repeat(350).trim();
     const page = (second: string) =>
@@ -235,7 +230,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it('crée une source et un run par élément quand trois arrivent en un appel', async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const items = [1, 2, 3].map((n) =>
       normalized(
         connectorItem(`issue:${randomUUID()}`, [body(`Ticket numéro ${n}.`)], `Ticket ${n}`),
@@ -255,7 +250,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it('range un titre vide comme « sans titre » plutôt que comme un texte vide', async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;
 
     await ingestConnectorItems(paul, connection, [
@@ -267,7 +262,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it("n'échoue pas quand la mise en file échoue : le run reste queued", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;
     vi.mocked(enqueuePipelineStep).mockRejectedValueOnce(new Error('file indisponible'));
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -284,7 +279,7 @@ describe('ingestConnectorItems', () => {
   });
 
   it("accepte un élément dont le texte, le titre, l'auteur, les identifiants, l'origine et l'adresse portent un octet nul", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const nul = '\u0000';
     const externalId = `issue:${randomUUID()}`;
     const dirty = connectorItem(
@@ -318,7 +313,7 @@ describe('ingestConnectorItems', () => {
 
   // JSON.stringify écrit la moitié isolée d'un emoji « \ud83d » : un jsonb la refuse, un text non.
   it("accepte un élément dont le titre, l'origine et l'adresse portent la moitié isolée d'un emoji", async () => {
-    const connection = await seedConnection(paul);
+    const connection = await connectionOf(paul);
     const half = '\ud83d';
     const externalId = `issue:${randomUUID()}`;
     const dirty = connectorItem(

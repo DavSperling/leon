@@ -8,7 +8,10 @@ import {
 } from '@/capture/turn';
 import type { CardStatus, FactStatus } from '@/lib/enums';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
+import type { ConnectionStatus } from '@/server/connectors/connections';
+import { encryptSecret } from '@/server/connectors/crypto';
 import { members, organizations, users } from '@/server/db/schema/auth';
+import { connections } from '@/server/db/schema/connections';
 import { cards, cardTypes, facts, sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from './db';
 
@@ -172,4 +175,31 @@ export async function seedFact(
     .returning({ id: facts.id });
   if (!fact) throw new Error('fait de test non créé');
   return fact.id;
+}
+
+// Une connexion de test, secret chiffré comme en production (clé de TEST_ENV). Elle n'est pas due
+// par défaut (`nextSyncAt` nul) : voir « Connexions dans les tests » dans le plan des connecteurs.
+export async function seedConnection(
+  ctx: TenantContext,
+  input: { provider?: ProviderId; status?: ConnectionStatus; nextSyncAt?: Date | null } = {},
+): Promise<string> {
+  const id = randomUUID();
+  const secret = encryptSecret(
+    JSON.stringify({ token: 'secret-de-test' }),
+    `${ctx.tenantId}:${id}`,
+  );
+  await adminDb.insert(connections).values({
+    id,
+    tenantId: ctx.tenantId,
+    createdBy: ctx.userId,
+    provider: input.provider ?? 'github',
+    label: 'Connexion de test',
+    secret,
+    secretHint: 'test',
+    status: input.status ?? 'active',
+    since: new Date(Date.now() - 30 * 24 * 3_600_000),
+    nextSyncAt: input.nextSyncAt ?? null,
+    acl: [ctx.tenantId],
+  });
+  return id;
 }

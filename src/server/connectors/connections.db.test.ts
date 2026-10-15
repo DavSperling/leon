@@ -1,0 +1,467 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { TenantContext } from '@/server/auth/tenant-context';
+import { adminPool } from '@/test/db';
+import { createTestTenant, seedConnection, seedSource } from '@/test/fixtures';
+import {
+  claimConnection,
+  createConnection,
+  deleteConnection,
+  finishSync,
+  listConnections,
+  replaceConnectionSecret,
+  requestSyncNow,
+  saveSyncProgress,
+  setConnectionPaused,
+} from './connections';
+
+// Organisation Paul + Marie, une autre organisation (Zoé). La base de test est partagée :
+// on ne retire que nos connexions (voir « Connexions dans les tests » dans le plan).
+
+const DUE = new Date('2000-01-01T00:00:00Z');
+const DAY_MS = 24 * 3_600_000;
+
+const tenantIds: string[] = [];
+let paul: TenantContext;
+let marie: TenantContext;
+let zoe: TenantContext;
+
+beforeAll(async () => {
+  const team = await createTestTenant(['Paul', 'Marie']);
+  const other = await createTestTenant(['Zoé']);
+  [paul, marie] = team.members as [TenantContext, TenantContext];
+  [zoe] = other.members as [TenantContext];
+  tenantIds.push(team.tenantId, other.tenantId);
+});
+
+afterAll(async () => {
+  await adminPool.query('delete from connections where tenant_id = any($1)', [tenantIds]);
+});
+
+type Row = {
+  status: string;
+  secret: string;
+  secret_hint: string;
+  config: Record<string, unknown>;
+  cursor: string | null;
+  next_sync_at: Date | null;
+  sync_lock_at: Date | null;
+  last_sync_at: Date | null;
+  last_error: string | null;
+  items_synced: number;
+  acl: string[];
+  created_by: string;
+  seconds_to_next: number | null;
+};
+
+async function readRow(id: string): Promise<Row> {
+  const { rows } = await adminPool.query<Row>(
+    `select status, secret, secret_hint, config, cursor, next_sync_at, sync_lock_at, last_sync_at,
+            last_error, items_synced, acl, created_by,
+            extract(epoch from next_sync_at - now())::float as seconds_to_next
+     from connections where id = $1`,
+    [id],
+  );
+  if (!rows[0]) throw new Error('connexion introuvable');
+  return rows[0];
+}
+
+const makeDue = (id: string) =>
+  adminPool.query('update connections set next_sync_at = $2 where id = $1', [id, DUE]);
+const makeNotDue = (id: string) =>
+  adminPool.query('update connections set next_sync_at = null where id = $1', [id]);
+
+const atlassian = {
+  provider: 'jira' as const,
+  label: 'Jira Acme',
+  config: { site: 'acme', email: 'marie@acme.test', apiToken: 'jeton-atlassian-AB12' },
+  secretFields: ['apiToken'],
+  since: new Date(Date.now() - 30 * DAY_MS),
+};
+
+describe('createConnection', () => {
+  it('chiffre le secret et garde les autres champs en clair', async () => {
+    const id = await createConnection(paul, atlassian);
+    await makeNotDue(id);
+
+    const row = await readRow(id);
+    expect(row.config).toEqual({ site: 'acme', email: 'marie@acme.test' });
+    expect(row.secret.startsWith('v1:')).toBe(true);
+    expect(row.secret).not.toContain('jeton-atlassian');
+    expect(row.secret_hint).toBe('AB12');
+    expect(row.status).toBe('active');
+    expect(row.acl).toEqual([paul.tenantId]);
+    expect(row.created_by).toBe(paul.userId);
+    expect(row.items_synced).toBe(0);
+  });
+
+  it("met l'échéance à maintenant : le tic suivant la prend", async () => {
+    const id = await createConnection(paul, atlassian);
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.next_sync_at).not.toBeNull();
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+  });
+
+  it("prend l'indice dans le premier champ secret, tous les secrets sont chiffrés ensemble", async () => {
+    const id = await createConnection(paul, {
+      provider: 'leexi',
+      label: 'Leexi',
+      config: { keyId: 'identifiant-0001', keySecret: 'secret-leexi-9999' },
+      secretFields: ['keyId', 'keySecret'],
+      since: atlassian.since,
+    });
+    await makeDue(id);
+
+    const row = await readRow(id);
+    expect(row.config).toEqual({});
+    expect(row.secret_hint).toBe('0001');
+    const loaded = await claimConnection(paul, id);
+    expect(loaded?.config).toEqual({ keyId: 'identifiant-0001', keySecret: 'secret-leexi-9999' });
+  });
+});
+
+describe('listConnections', () => {
+  it('montre la connexion à toute l’équipe, sans jamais renvoyer le secret', async () => {
+    const id = await createConnection(paul, atlassian);
+    await makeNotDue(id);
+    const stored = (await readRow(id)).secret;
+
+    const seenByMarie = (await listConnections(marie)).find((view) => view.id === id);
+
+    expect(seenByMarie).toMatchObject({
+      provider: 'jira',
+      label: 'Jira Acme',
+      config: { site: 'acme', email: 'marie@acme.test' },
+      secretHint: 'AB12',
+      status: 'active',
+      itemsSynced: 0,
+      lastError: null,
+      createdBy: { id: paul.userId, name: 'Paul' },
+    });
+    const json = JSON.stringify(seenByMarie);
+    expect(json).not.toContain('jeton-atlassian');
+    expect(json).not.toContain(stored);
+    expect(Object.keys(seenByMarie ?? {})).not.toContain('secret');
+  });
+
+  it('ne montre rien à une autre organisation', async () => {
+    const id = await seedConnection(paul);
+
+    expect((await listConnections(zoe)).find((view) => view.id === id)).toBeUndefined();
+  });
+});
+
+describe('claimConnection', () => {
+  it('réserve une connexion échue et rend la configuration fusionnée, secret déchiffré', async () => {
+    const id = await createConnection(paul, atlassian);
+    await makeDue(id);
+
+    const loaded = await claimConnection(paul, id);
+
+    expect(loaded).toMatchObject({
+      id,
+      provider: 'jira',
+      createdBy: paul.userId,
+      config: { site: 'acme', email: 'marie@acme.test', apiToken: 'jeton-atlassian-AB12' },
+      cursor: null,
+    });
+    expect(loaded?.since).toEqual(atlassian.since);
+    const row = await readRow(id);
+    expect(row.sync_lock_at).not.toBeNull();
+  });
+
+  it('ne réserve pas deux fois la même connexion', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+
+    expect(await claimConnection(paul, id)).not.toBeNull();
+    expect(await claimConnection(paul, id)).toBeNull();
+  });
+
+  it('reprend une réservation abandonnée depuis plus de 30 minutes', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await adminPool.query(
+      "update connections set sync_lock_at = now() - interval '31 minutes' where id = $1",
+      [id],
+    );
+
+    expect(await claimConnection(paul, id)).not.toBeNull();
+  });
+
+  it("ne réserve ni une connexion en pause, ni une connexion qui n'est pas échue", async () => {
+    const paused = await seedConnection(paul, { status: 'paused', nextSyncAt: DUE });
+    const later = await seedConnection(paul, { nextSyncAt: new Date(Date.now() + DAY_MS) });
+    const never = await seedConnection(paul, { status: 'error', nextSyncAt: null });
+
+    expect(await claimConnection(paul, paused)).toBeNull();
+    expect(await claimConnection(paul, later)).toBeNull();
+    expect(await claimConnection(paul, never)).toBeNull();
+  });
+
+  it('réserve aussi une connexion en erreur dont l’échéance est passée', async () => {
+    const id = await seedConnection(paul, { status: 'error', nextSyncAt: DUE });
+
+    expect(await claimConnection(paul, id)).not.toBeNull();
+  });
+
+  it('ne réserve pas la connexion d’une autre organisation', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+
+    expect(await claimConnection(zoe, id)).toBeNull();
+    expect((await readRow(id)).sync_lock_at).toBeNull();
+  });
+
+  it('refuse un secret recopié sur une autre connexion, sans le montrer, et garde la réservation', async () => {
+    const source = await createConnection(paul, atlassian);
+    const target = await seedConnection(paul, { nextSyncAt: DUE });
+    const copied = (await readRow(source)).secret;
+    await adminPool.query('update connections set secret = $2 where id = $1', [target, copied]);
+    await makeNotDue(source);
+
+    const error = await claimConnection(paul, target).then(
+      () => null,
+      (e: unknown) => e,
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    expect(String((error as Error).message)).not.toContain('jeton-atlassian');
+    // La réservation reste posée : la relève la libère par finishSync.
+    expect((await readRow(target)).sync_lock_at).not.toBeNull();
+  });
+});
+
+describe('saveSyncProgress', () => {
+  it('enregistre le curseur et additionne les éléments', async () => {
+    const id = await seedConnection(paul);
+
+    await saveSyncProgress(paul, id, 'curseur-1', 100);
+    await saveSyncProgress(paul, id, 'curseur-2', 30);
+
+    const row = await readRow(id);
+    expect(row.cursor).toBe('curseur-2');
+    expect(row.items_synced).toBe(130);
+  });
+});
+
+describe('finishSync', () => {
+  it('ok « soon » : active, sans erreur, prochaine échéance dans environ 1 minute, réservation libérée', async () => {
+    const id = await seedConnection(paul, { status: 'error', nextSyncAt: DUE });
+    await adminPool.query("update connections set last_error = 'ancienne erreur' where id = $1", [
+      id,
+    ]);
+    await claimConnection(paul, id);
+
+    await finishSync(paul, id, { kind: 'ok', again: 'soon' });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('active');
+    expect(row.last_error).toBeNull();
+    expect(row.last_sync_at).not.toBeNull();
+    expect(row.sync_lock_at).toBeNull();
+    expect(row.seconds_to_next).toBeGreaterThan(30);
+    expect(row.seconds_to_next).toBeLessThanOrEqual(60);
+  });
+
+  it('ok « later » : prochaine échéance dans environ 15 minutes', async () => {
+    const id = await seedConnection(paul);
+
+    await finishSync(paul, id, { kind: 'ok', again: 'later' });
+
+    const row = await readRow(id);
+    expect(row.seconds_to_next).toBeGreaterThan(14 * 60);
+    expect(row.seconds_to_next).toBeLessThanOrEqual(15 * 60);
+  });
+
+  it('auth_error : en erreur, sans échéance, le message est gardé et la réservation libérée', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+
+    await finishSync(paul, id, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('error');
+    expect(row.next_sync_at).toBeNull();
+    expect(row.last_error).toBe('Clé refusée par GitHub.');
+    expect(row.sync_lock_at).toBeNull();
+    expect(row.last_sync_at).toBeNull();
+  });
+
+  it('error : en erreur, nouvel essai dans environ 1 heure, message coupé à 300 caractères', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+
+    await finishSync(paul, id, { kind: 'error', message: 'x'.repeat(500) });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('error');
+    expect(row.last_error).toBe('x'.repeat(300));
+    expect(row.seconds_to_next).toBeGreaterThan(59 * 60);
+    expect(row.seconds_to_next).toBeLessThanOrEqual(3_600);
+  });
+
+  it("une pause demandée pendant le passage l'emporte", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+
+    await setConnectionPaused(paul, id, true);
+    await finishSync(paul, id, { kind: 'ok', again: 'soon' });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('paused');
+    expect(row.next_sync_at).toBeNull();
+    expect(row.sync_lock_at).toBeNull();
+    expect(row.last_sync_at).not.toBeNull();
+  });
+
+  it("une pause l'emporte aussi sur une erreur, dont le message est gardé", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+
+    await setConnectionPaused(paul, id, true);
+    await finishSync(paul, id, { kind: 'error', message: 'GitHub a répondu 500' });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('paused');
+    expect(row.next_sync_at).toBeNull();
+    expect(row.last_error).toBe('GitHub a répondu 500');
+    expect(row.sync_lock_at).toBeNull();
+  });
+});
+
+describe('requestSyncNow', () => {
+  it("met l'échéance à maintenant et repasse une connexion en erreur à active", async () => {
+    const id = await seedConnection(paul, { status: 'error', nextSyncAt: null });
+
+    expect(await requestSyncNow(paul, id)).toBe(true);
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.status).toBe('active');
+    expect(row.next_sync_at).not.toBeNull();
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+  });
+
+  it("ne réveille pas une connexion en pause (elle n'a pas d'échéance)", async () => {
+    const id = await seedConnection(paul, { status: 'paused' });
+
+    expect(await requestSyncNow(paul, id)).toBe(false);
+
+    const row = await readRow(id);
+    expect(row.status).toBe('paused');
+    expect(row.next_sync_at).toBeNull();
+  });
+
+  it('refuse la connexion d’une autre organisation', async () => {
+    const id = await seedConnection(paul);
+
+    expect(await requestSyncNow(zoe, id)).toBe(false);
+    expect((await readRow(id)).next_sync_at).toBeNull();
+  });
+});
+
+describe('setConnectionPaused', () => {
+  it("met en pause (sans échéance) puis reprend (échéance maintenant), au nom de n'importe quel membre", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+
+    expect(await setConnectionPaused(marie, id, true)).toBe(true);
+    const paused = await readRow(id);
+    expect(paused.status).toBe('paused');
+    expect(paused.next_sync_at).toBeNull();
+
+    expect(await setConnectionPaused(marie, id, false)).toBe(true);
+    const resumed = await readRow(id);
+    await makeNotDue(id);
+    expect(resumed.status).toBe('active');
+    expect(resumed.next_sync_at).not.toBeNull();
+    expect(resumed.seconds_to_next).toBeLessThanOrEqual(0);
+  });
+
+  it("ne fait rien sur la connexion d'une autre organisation", async () => {
+    const id = await seedConnection(paul);
+
+    expect(await setConnectionPaused(zoe, id, true)).toBe(false);
+    expect((await readRow(id)).status).toBe('active');
+  });
+});
+
+describe('replaceConnectionSecret', () => {
+  it('change le secret et son indice, la relève lit le nouveau', async () => {
+    const id = await createConnection(paul, atlassian);
+    await makeNotDue(id);
+    const before = (await readRow(id)).secret;
+
+    const replaced = await replaceConnectionSecret(
+      marie,
+      id,
+      { ...atlassian.config, apiToken: 'nouveau-jeton-ZZ99' },
+      atlassian.secretFields,
+    );
+
+    expect(replaced).toBe(true);
+    const row = await readRow(id);
+    expect(row.secret).not.toBe(before);
+    expect(row.secret_hint).toBe('ZZ99');
+    expect(row.config).toEqual({ site: 'acme', email: 'marie@acme.test' });
+    await makeDue(id);
+    expect((await claimConnection(paul, id))?.config.apiToken).toBe('nouveau-jeton-ZZ99');
+  });
+
+  it('relance une connexion refusée (« Clé refusée ») : active, sans erreur, échéance maintenant', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+    await finishSync(paul, id, { kind: 'auth_error', message: 'Clé refusée par Jira.' });
+
+    await replaceConnectionSecret(paul, id, { token: 'autre-jeton-1234' }, ['token']);
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.status).toBe('active');
+    expect(row.last_error).toBeNull();
+    expect(row.next_sync_at).not.toBeNull();
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+  });
+
+  it('laisse une connexion en pause en pause, sans échéance', async () => {
+    const id = await seedConnection(paul, { status: 'paused' });
+
+    await replaceConnectionSecret(paul, id, { token: 'autre-jeton-1234' }, ['token']);
+
+    const row = await readRow(id);
+    expect(row.status).toBe('paused');
+    expect(row.next_sync_at).toBeNull();
+    expect(row.secret_hint).toBe('1234');
+  });
+
+  it("ne touche pas la connexion d'une autre organisation", async () => {
+    const id = await seedConnection(paul);
+    const before = (await readRow(id)).secret;
+
+    expect(await replaceConnectionSecret(zoe, id, { token: 'pirate-0000' }, ['token'])).toBe(false);
+    expect((await readRow(id)).secret).toBe(before);
+  });
+});
+
+describe('deleteConnection', () => {
+  it('supprime la connexion et laisse les sources déjà captées', async () => {
+    const id = await seedConnection(paul);
+    const { sourceId } = await seedSource(paul, { kind: 'github' });
+    await adminPool.query('update sources set connection_id = $2 where id = $1', [sourceId, id]);
+
+    expect(await deleteConnection(marie, id)).toBe(true);
+
+    const { rowCount } = await adminPool.query('select 1 from connections where id = $1', [id]);
+    expect(rowCount).toBe(0);
+    const kept = await adminPool.query<{ connection_id: string | null }>(
+      'select connection_id from sources where id = $1',
+      [sourceId],
+    );
+    expect(kept.rows).toHaveLength(1);
+    expect(kept.rows[0]?.connection_id).toBeNull();
+  });
+
+  it("ne supprime pas la connexion d'une autre organisation", async () => {
+    const id = await seedConnection(paul);
+
+    expect(await deleteConnection(zoe, id)).toBe(false);
+    expect((await readRow(id)).status).toBe('active');
+  });
+});

@@ -100,9 +100,27 @@ describe('collect', () => {
       outputTokens: 15,
       cacheReadTokens: 20,
       cacheWriteTokens: 0,
+      coutsManquants: 0,
       costUsd: expect.closeTo(0.00045, 8),
     });
     expect(usage.triage.appels).toBe(0);
+  });
+
+  it('compte les appels dont le coût est inconnu', async () => {
+    const { tenantId } = await seed();
+    await adminDb.insert(llmUsage).values({
+      tenantId,
+      step: 'extraction',
+      model: 'modele-sans-tarif',
+      inputTokens: 1,
+      outputTokens: 1,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      costUsd: null,
+    });
+    const usage = await lireUsage(adminDb, tenantId);
+    expect(usage.extraction).toMatchObject({ appels: 3, coutsManquants: 1 });
+    expect(usage.triage.coutsManquants).toBe(0);
   });
 
   it('liste les modèles réellement appelés à chaque étape', async () => {

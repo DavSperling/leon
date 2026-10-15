@@ -1,7 +1,8 @@
 import { appendFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { LlmStep } from '@/server/llm/llm';
+import { describeLlmConfig } from '@/server/llm/config';
+import { type LlmStep, PIPELINE_LLM_STEPS } from '@/server/llm/llm';
 import type { etatRuns, FaitProduit, ModelesParEtape, UsageParEtape } from './collect';
 import type { Notes, NotesConversation } from './score';
 
@@ -154,10 +155,29 @@ export async function enregistrerPassage(p: Passage, dir = HISTORIQUE_DIR): Prom
   return json;
 }
 
+export async function dernierPassageComplet(dir = HISTORIQUE_DIR): Promise<Passage | null> {
+  return (await lirePassages(dir)).filter((x) => x.jeu === 'complet' && x.tours > 0).at(-1) ?? null;
+}
+
 // Coût mesuré par tour du dernier passage complet, pour annoncer le coût du suivant.
 export async function coutParTourPrecedent(dir = HISTORIQUE_DIR): Promise<number | null> {
-  const p = (await lirePassages(dir)).filter((x) => x.jeu === 'complet' && x.tours > 0).at(-1);
+  const p = await dernierPassageComplet(dir);
   return p ? coutPipeline(p.usage) / p.tours : null;
+}
+
+// Étapes dont le modèle du serveur diffère de celui du dernier passage complet (ou du modèle par
+// défaut, sans passage) : le coût annoncé, mesuré sur d'autres modèles, n'est alors pas fiable.
+// « claude-… » (passages d'avant le 15/10) et « anthropic:claude-… » désignent le même modèle.
+export function modelesNouveaux(
+  serveur: Record<(typeof PIPELINE_LLM_STEPS)[number], string>,
+  precedent: Passage | null,
+): string[] {
+  const reference: Record<string, string> = precedent?.modeles ?? describeLlmConfig({});
+  const sansFournisseurAnthropic = (m: string | undefined) => m?.replace(/^anthropic:/, '');
+  return PIPELINE_LLM_STEPS.filter(
+    (etape) =>
+      sansFournisseurAnthropic(reference[etape]) !== sansFournisseurAnthropic(serveur[etape]),
+  ).map((etape) => `${ETAPE_LABEL[etape] ?? etape} : ${reference[etape]} → ${serveur[etape]}`);
 }
 
 async function lirePassages(dir: string): Promise<Passage[]> {

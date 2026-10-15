@@ -6,9 +6,11 @@ import type { FaitProduit } from './collect';
 import {
   comparerPassages,
   coutParTourPrecedent,
+  dernierPassageComplet,
   detaillerNotes,
   enregistrerPassage,
   modelesCompacts,
+  modelesNouveaux,
   type Passage,
   passagePrecedent,
 } from './history';
@@ -63,6 +65,7 @@ const passage = (id: string, coutTotal: number, surcharge: Partial<Passage> = {}
       outputTokens: 1,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      coutsManquants: 0,
       costUsd: 0.05,
     },
     extraction: {
@@ -71,6 +74,7 @@ const passage = (id: string, coutTotal: number, surcharge: Partial<Passage> = {}
       outputTokens: 1,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      coutsManquants: 0,
       costUsd: coutTotal - 0.1,
     },
     placement: {
@@ -79,6 +83,7 @@ const passage = (id: string, coutTotal: number, surcharge: Partial<Passage> = {}
       outputTokens: 1,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      coutsManquants: 0,
       costUsd: 0.05,
     },
   },
@@ -236,5 +241,43 @@ describe('modelesCompacts', () => {
     ).toBe(
       'triage haiku-5-5 · extraction mistralai/mistral-large-4-0 · rangement openai/gpt-5.4-mini',
     );
+  });
+});
+
+describe('modelesNouveaux', () => {
+  const serveur = {
+    triage: 'anthropic:claude-haiku-5-5',
+    extraction: 'openrouter:openai/gpt-6-sol (effort medium)',
+    placement: 'anthropic:claude-haiku-5-5',
+  };
+
+  it('liste les étapes dont le modèle diffère du dernier passage complet', () => {
+    // Passage d'avant le 15/10 : modèles sans préfixe de fournisseur.
+    expect(modelesNouveaux(serveur, passage('2026-10-16-1000-reference', 1.3))).toEqual([
+      'extraction : claude-sonnet-5-5 → openrouter:openai/gpt-6-sol (effort medium)',
+    ]);
+  });
+
+  it('ne signale rien quand les modèles sont ceux du dernier passage complet', () => {
+    const precedent = passage('2026-10-16-1000-reference', 1.3, {
+      modeles: { ...serveur, juge: 'anthropic:claude-haiku-5-5' },
+    });
+    expect(modelesNouveaux(serveur, precedent)).toEqual([]);
+  });
+
+  it('compare aux modèles par défaut sans passage complet', () => {
+    expect(modelesNouveaux(serveur, null)).toEqual([
+      'extraction : anthropic:claude-sonnet-5-5 → openrouter:openai/gpt-6-sol (effort medium)',
+    ]);
+  });
+});
+
+describe('dernierPassageComplet', () => {
+  it('ignore les passages mini', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'historique-'));
+    expect(await dernierPassageComplet(dir)).toBeNull();
+    await enregistrerPassage(passage('2026-10-16-1000-reference', 1.2), dir);
+    await enregistrerPassage(passage('2026-10-16-1100-mini', 0.2, { jeu: 'mini' }), dir);
+    expect((await dernierPassageComplet(dir))?.id).toBe('2026-10-16-1000-reference');
   });
 });

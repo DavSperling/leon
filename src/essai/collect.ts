@@ -55,6 +55,7 @@ export type UsageEtape = {
   outputTokens: number;
   cacheReadTokens: number;
   cacheWriteTokens: number;
+  coutsManquants: number; // appels au coût inconnu (cost_usd null) : le coût de l'étape est sous-estimé
   costUsd: number;
 };
 export type UsageParEtape = Record<PipelineLlmStep, UsageEtape>;
@@ -65,6 +66,7 @@ const zero = (): UsageEtape => ({
   outputTokens: 0,
   cacheReadTokens: 0,
   cacheWriteTokens: 0,
+  coutsManquants: 0,
   costUsd: 0,
 });
 
@@ -77,6 +79,7 @@ export async function lireUsage(db: AdminDb, tenantId: string): Promise<UsagePar
       outputTokens: sql<number>`sum(${llmUsage.outputTokens})::int`,
       cacheReadTokens: sql<number>`sum(${llmUsage.cacheReadTokens})::int`,
       cacheWriteTokens: sql<number>`sum(${llmUsage.cacheWriteTokens})::int`,
+      coutsManquants: sql<number>`count(*) filter (where ${llmUsage.costUsd} is null)::int`,
       costUsd: sql<string>`coalesce(sum(${llmUsage.costUsd}), 0)`,
     })
     .from(llmUsage)

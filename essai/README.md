@@ -48,7 +48,9 @@ LEON_URL=http://localhost:3002 pnpm essai noter
 - OpenRouter demande `OPENROUTER_API_KEY` dans `.env.local` ; le serveur ne lance pas le pipeline s'il manque la clé d'un fournisseur configuré.
 - **Une configuration = un redémarrage du serveur.** `charger` affiche les modèles annoncés par le serveur avant de demander confirmation : les relire.
 - **Toujours mettre le modèle dans `--label`.** Changer de modèle ne change pas le commit (la vérification du commit ne couvre que le code) : sans le libellé, deux passages ne se distinguent dans l'historique que par la colonne Modèles.
-- Le coût enregistré pour un appel OpenRouter est celui qu'OpenRouter facture (`usage.cost`) ; celui d'un appel Anthropic direct est estimé avec les tarifs de l'étude de coûts. Le coût annoncé par `charger` vient du dernier passage complet, quels que soient ses modèles.
+- Le coût enregistré pour un appel OpenRouter est celui qu'OpenRouter facture (`usage.cost`, plus le coût amont avec une clé propre) ; celui d'un appel Anthropic direct est estimé avec les tarifs de l'étude de coûts. `noter` signale les appels au coût inconnu (`coutsManquants` dans le détail du passage).
+- Le coût annoncé par `charger` est mesuré sur les modèles du dernier passage complet. Si un modèle diffère, `charger` affiche les prix OpenRouter des modèles configurés et refuse le jeu complet : lancer d'abord un `--mini` pour mesurer, ou passer `--oui-complet`.
+- Effort de raisonnement : les modèles OpenRouter qui le règlent reçoivent celui de l'étape (low, medium, medium) ; il apparaît dans les modèles affichés (« (effort medium) »). Les variantes `:batch` et les modèles `-pro` sont refusés.
 - `noter` garde dans le détail du passage (`passages/*.json`) les modèles annoncés (`modeles`) et ceux réellement servis, lus dans `llm_usage` (`modelesVus`).
 
 ## Se connecter comme un personnage

@@ -4,7 +4,8 @@ import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { createAnthropicLlm, MODEL_BY_STEP } from '@/server/llm/anthropic-llm';
 import { describeLlmConfig } from '@/server/llm/config';
-import type { LlmUsage } from '@/server/llm/llm';
+import { type LlmUsage, PIPELINE_LLM_STEPS } from '@/server/llm/llm';
+import { fetchOpenRouterCatalog } from '@/server/llm/openrouter-models';
 import { createIngestSender } from '../cli/import-claude-code';
 import { openAdminDb } from './admin-db';
 import { type Bilan, envoyer } from './charger';
@@ -14,9 +15,11 @@ import {
   comparerPassages,
   coutParTourPrecedent,
   coutPipeline,
+  dernierPassageComplet,
   detaillerNotes,
   enregistrerPassage,
   HISTORIQUE_DIR,
+  modelesNouveaux,
   type Passage,
   passagePrecedent,
   pct,
@@ -31,8 +34,9 @@ import { verifierJeu, volumes } from './verify';
 const HELP = `Usage : pnpm essai <commande>
 
   verifier                    contrôle le jeu essai/ (aucun appel)
-  charger [--mini] [--label "…"] [--oui]
-                              remet l'organisation d'essai à zéro et envoie les conversations au serveur
+  charger [--mini] [--label "…"] [--oui] [--oui-complet]
+                              remet l'organisation d'essai à zéro et envoie les conversations au serveur ;
+                              --oui-complet : jeu complet sur des modèles jamais mesurés (coût inconnu)
   noter                       attend la fin des runs, note le passage et l'ajoute à l'historique
 
 Variables : LEON_URL (défaut http://localhost:3000), DATABASE_URL_ADMIN, ANTHROPIC_API_KEY (noter).`;
@@ -73,7 +77,12 @@ async function runVerifier(): Promise<number> {
 async function runCharger(args: string[]): Promise<number> {
   const { values } = parseArgs({
     args,
-    options: { mini: { type: 'boolean' }, label: { type: 'string' }, oui: { type: 'boolean' } },
+    options: {
+      mini: { type: 'boolean' },
+      label: { type: 'string' },
+      oui: { type: 'boolean' },
+      'oui-complet': { type: 'boolean' },
+    },
   });
   const jeu = await loadJeu();
   const problemes = verifierJeu(jeu);
@@ -106,6 +115,17 @@ async function runCharger(args: string[]): Promise<number> {
     console.log(
       `Modèles du serveur : triage ${llm.triage} · extraction ${llm.extraction} · rangement ${llm.placement}.`,
     );
+    await afficherPrixOpenRouter(llm);
+    // Le coût annoncé est mesuré sur les modèles du dernier passage complet : sur d'autres modèles, il
+    // ne vaut rien. Un --mini le mesure pour pas cher ; le complet demande un accord explicite.
+    const nouveaux = modelesNouveaux(llm, await dernierPassageComplet().catch(() => null));
+    if (nouveaux.length > 0) {
+      console.log(`Modèles jamais mesurés sur le jeu complet : ${nouveaux.join(' ; ')}.`);
+      if (!values.mini && !values['oui-complet'])
+        throw new Error(
+          "Coût du jeu complet inconnu sur ces modèles : lance d'abord un --mini pour le mesurer, ou relance avec --oui-complet.",
+        );
+    }
     const tours = toursDe(conversations);
     const parTour = (await coutParTourPrecedent()) ?? COUT_PAR_TOUR_14_10;
     console.log(
@@ -179,6 +199,27 @@ async function runCharger(args: string[]): Promise<number> {
     return 0;
   } finally {
     await admin.close();
+  }
+}
+
+// Prix par million de tokens des modèles OpenRouter du serveur, lus sur la liste publique (sans clé).
+async function afficherPrixOpenRouter(llm: Record<string, string>): Promise<void> {
+  const modeles = [
+    ...new Set(
+      Object.values(llm)
+        .filter((m) => m.startsWith('openrouter:'))
+        .map((m) => m.replace(/^openrouter:/, '').replace(/ \(effort \w+\)$/, '')),
+    ),
+  ];
+  if (modeles.length === 0) return;
+  const catalogue = await fetchOpenRouterCatalog(fetch);
+  const parMTok = (n: number | null | undefined) =>
+    n === null || n === undefined ? 'n/d' : `${(n * 1_000_000).toFixed(2)} $`;
+  for (const modele of modeles) {
+    const info = catalogue?.get(modele);
+    console.log(
+      `Prix OpenRouter ${modele} : entrée ${parMTok(info?.promptUsdPerToken)}, sortie ${parMTok(info?.completionUsdPerToken)} par million de tokens.`,
+    );
   }
 }
 
@@ -312,6 +353,11 @@ async function runNoter(): Promise<number> {
       `Doublons : ${notes.doublonsFaits} (dont ${notes.reditsRecrees} redit(s) recréé(s)) ; fuites sensibles : ${notes.fuitesSensibles} ; hors jeu : ${notes.horsJeu}.`,
     );
     console.log(`Coût du pipeline : ${cout.toFixed(3)} $ ; juge : ${coutJuge.toFixed(3)} $.`);
+    const manquants = PIPELINE_LLM_STEPS.filter((etape) => usage[etape].coutsManquants > 0);
+    if (manquants.length > 0)
+      console.error(
+        `Attention : appels au coût inconnu (${manquants.map((e) => `${e} ${usage[e].coutsManquants}`).join(', ')}) : le coût du pipeline est sous-estimé.`,
+      );
     if (jugeErreurs.length > 0)
       console.error(
         `${jugeErreurs.length} conversation(s) sans jugement (passage incomplet) : ${jugeErreurs.join(', ')}.`,

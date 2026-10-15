@@ -5,6 +5,7 @@ import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
+import { asanaCatalog } from './catalog';
 import { asanaConnector } from './connector';
 import projectsPage1 from './fixtures/projects-page-1.json';
 import projectsPage2 from './fixtures/projects-page-2.json';
@@ -19,7 +20,15 @@ import me from './fixtures/user-me.json';
 
 const API = 'https://app.asana.com/api/1.0';
 const TOKEN = 'jeton-de-test-0123456789';
-const config = { token: TOKEN };
+const OAUTH_TOKEN = 'acces-oauth-de-test-0123456789';
+// La forme que `runConnectorSync` passe au connecteur : la configuration lue par le schéma.
+const config = { authMode: 'key' as const, token: TOKEN };
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: OAUTH_TOKEN,
+  refreshToken: 'rafraichissement-de-test-0123',
+  expiresAt: '2026-10-15T10:00:00.000Z',
+};
 const SINCE = new Date('2026-09-15T00:00:00.000Z');
 const OFFSET_PROJECTS = 'cHJvamV0cy1wYWdlLTI';
 const OFFSET_TASKS = 'dGFza3MtMzAwMS1wYWdlLTI';
@@ -53,7 +62,7 @@ async function runSync(
   overrides: {
     cursor?: string | null;
     since?: Date;
-    config?: { token: string; workspace?: string };
+    config?: Parameters<typeof asanaConnector.sync>[0];
   } = {},
 ) {
   const cfg = overrides.config ?? config;
@@ -75,8 +84,9 @@ describe('asana : configuration', () => {
   const schema = asanaConnector.configSchema;
 
   it('accepte un jeton seul, sans les espaces autour, et un espace facultatif', () => {
-    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ token: TOKEN });
+    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
     expect(schema.parse({ token: TOKEN, workspace: ' Acme ' })).toEqual({
+      authMode: 'key',
       token: TOKEN,
       workspace: 'Acme',
     });
@@ -635,5 +645,86 @@ describe('asana : sync, erreurs', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).not.toContain(TOKEN);
+  });
+});
+
+describe('asana : connexion par le bouton', () => {
+  const schema = asanaConnector.configSchema;
+  const issuePaths = (input: unknown) => [
+    ...new Set((schema.safeParse(input).error?.issues ?? []).map((issue) => issue.path.join('.'))),
+  ];
+
+  it('accepte la forme du bouton et l’ancienne forme à clé, sans authMode', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    expect(schema.parse({ ...oauthConfig, refreshToken: null, expiresAt: null })).toMatchObject({
+      authMode: 'oauth',
+      refreshToken: null,
+      expiresAt: null,
+    });
+    expect(
+      schema.parse({ authMode: 'oauth', accessToken: OAUTH_TOKEN, workspace: ' Acme ' }),
+    ).toEqual({
+      authMode: 'oauth',
+      accessToken: OAUTH_TOKEN,
+      workspace: 'Acme',
+    });
+    expect(schema.parse({ token: TOKEN }).authMode).toBe('key');
+  });
+
+  it('refuse une forme incomplète, en nommant le champ qui manque', () => {
+    expect(issuePaths({ authMode: 'oauth' })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'oauth', accessToken: '   ' })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'oauth', token: TOKEN })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'key', accessToken: OAUTH_TOKEN })).toEqual(['token']);
+    expect(issuePaths({ authMode: 'autre', token: TOKEN })).toEqual(['authMode']);
+  });
+
+  it('reste un z.object (le catalogue lit ses champs) et ne chiffre que le champ de clé', () => {
+    expect(Object.keys((schema as unknown as { shape: object }).shape).sort()).toEqual([
+      'accessToken',
+      'authMode',
+      'expiresAt',
+      'refreshToken',
+      'token',
+      'workspace',
+    ]);
+    // Le socle ajoute lui-même accessToken et refreshToken au scellement.
+    expect(asanaConnector.secretFields).toEqual(['token']);
+    expect(asanaConnector.hosts(oauthConfig)).toEqual(['app.asana.com']);
+  });
+
+  it('verify lit le compte avec le jeton d’accès, pas avec la clé', async () => {
+    const { http, calls } = testHttp(asanaConnector, oauthConfig, [route('/users/me', me)]);
+
+    const result = await asanaConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(calls[0]?.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('sync envoie le jeton d’accès sur chaque requête et rend les mêmes éléments qu’avec une clé', async () => {
+    const withToken = await runSync(firstPassRoutes(), { config: oauthConfig });
+    const withKey = await runSync(firstPassRoutes());
+
+    expect(withToken.calls.length).toBeGreaterThan(5);
+    for (const call of withToken.calls) {
+      expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+    }
+    expect(idsOf(withToken.pages)).toEqual(idsOf(withKey.pages));
+  });
+
+  it('garde l’espace choisi avant le clic', async () => {
+    const cfg = { ...oauthConfig, workspace: 'Perso' };
+    const { http } = testHttp(asanaConnector, cfg, [route('/users/me', me)]);
+
+    const result = await asanaConnector.verify(cfg, http);
+
+    expect(result.account).toBe('Marie Durand (Perso)');
+  });
+
+  it('dit dans son catalogue ce que l’utilisateur verra chez Asana, et garde la clé en secours', () => {
+    expect(asanaCatalog.oauthHelp).toMatch(/Asana/);
+    expect(asanaCatalog.keyAccepted).not.toBe(false);
+    expect(asanaCatalog.fields.find((field) => field.name === 'workspace')?.kind).toBe('text');
   });
 });

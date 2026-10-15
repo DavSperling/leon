@@ -19,6 +19,8 @@ export const asanaCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Sur app.asana.com/0/my-apps (console des développeurs d’Asana) : Jetons d’accès personnels › Créer un jeton, puis donnez-lui un nom.',
+  oauthHelp:
+    'Asana vous demande d’autoriser Leon à lire vos tâches, vos projets, leurs commentaires et votre profil, en lecture seule. Leon ne lit que ce que votre compte Asana voit.',
   docsUrl: 'https://developers.asana.com/docs/personal-access-token',
   triedForReal: false,
 };

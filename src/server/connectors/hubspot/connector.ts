@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { ConnectorHttp } from '../http';
 import type { Connector, SyncPage, SyncState } from '../types';
 import { type HubspotClient, hubspotClient } from './client';
-import { readCursor, searchStart } from './cursor';
+import { cursorAfter, readCursor, searchStart } from './cursor';
 import { ENGAGEMENTS, readable, toItem } from './map';
 import { linkedRecords, once, optional, searchPages } from './read';
 import type { Person } from './schemas';
@@ -42,7 +42,10 @@ import type { Person } from './schemas';
 //   un mail reçu d'un client ne doit pas porter le nom d'un collègue. Sans en-têtes lisibles, c'est le
 //   propriétaire.
 // - Aucun lien vers l'original : la doc ne donne pas le format d'une adresse de fiche.
-// - Le curseur recule de 5 minutes (cursor.ts) : la doc prévient que la recherche indexe avec retard.
+// - Le curseur recule de 5 minutes à la fin de la recherche de chaque sorte (cursor.ts) : la doc prévient
+//   que la recherche indexe avec retard. En cours de route il reste exact, pour qu'un passage coupé à
+//   200 éléments avance ; et il retient combien de sortes sont lues en entier dans le tour (`done`),
+//   pour que la reprise ne relise pas leur fenêtre de recul avant d'atteindre les suivantes.
 // Un 403 sur les propriétaires, les liens ou les noms est attrapé (portée manquante) : l'élément sort sans
 // auteur ou sans fiche liée. Un 403 sur la recherche d'une sorte d'activité remonte : sinon des appels ou
 // des e-mails manqueraient sans que personne le sache.
@@ -67,10 +70,12 @@ async function* syncEngagements(
 ): AsyncGenerator<SyncPage> {
   const cursor = readCursor(state.cursor);
   const owners = once(() => optional(() => hubspot.owners(), new Map<string, Person>()));
-  for (const spec of ENGAGEMENTS) {
+  for (const [index, spec] of ENGAGEMENTS.entries()) {
+    if (index < (cursor.done ?? 0)) continue; // lue en entier avant l'arrêt du passage précédent
     const start = searchStart(cursor[spec.type], state.since);
-    for await (const { hits, reached } of searchPages(hubspot, spec, start)) {
-      cursor[spec.type] = Math.max(cursor[spec.type] ?? 0, reached);
+    for await (const { hits, reached, last } of searchPages(hubspot, spec, start)) {
+      cursor[spec.type] = cursorAfter(start, reached, last);
+      cursor.done = last ? index + 1 : index;
       const rows = readable(spec, hits);
       const people = rows.length > 0 ? await owners() : new Map<string, Person>();
       const linked =
@@ -84,6 +89,12 @@ async function* syncEngagements(
       const items = rows.map((row) => toItem(spec, row, people, linked.get(row.hit.id)));
       yield { items, cursor: JSON.stringify(cursor) };
     }
+  }
+  // Le tour est fini : le suivant reprendra chaque sorte à sa borne. Une page sans élément ne se rend
+  // que si elle fait avancer le curseur.
+  if (cursor.done !== undefined) {
+    cursor.done = undefined;
+    yield { items: [], cursor: JSON.stringify(cursor) };
   }
 }
 

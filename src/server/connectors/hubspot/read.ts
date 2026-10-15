@@ -29,25 +29,25 @@ export function once<T>(load: () => Promise<T>): () => Promise<T> {
   };
 }
 
-// Les pages de la recherche, avec l'instant de la dernière fiche lue. La recherche de HubSpot
-// s'arrête à 10 000 résultats : après 100 pages, on la relance à la date de la dernière fiche lue
-// (et on s'arrête si cette date n'a pas avancé, faute de pouvoir progresser).
+// Les pages de la recherche, avec l'instant de la dernière fiche lue et `last` à la dernière page.
+// La recherche de HubSpot s'arrête à 10 000 résultats : après 100 pages, on la relance à la date de
+// la dernière fiche lue (et on s'arrête si cette date n'a pas avancé, faute de pouvoir progresser).
 export async function* searchPages(
   hubspot: HubspotClient,
   spec: EngagementSpec,
   from: number,
-): AsyncGenerator<{ hits: Hit[]; reached: number }> {
+): AsyncGenerator<{ hits: Hit[]; reached: number; last: boolean }> {
   let start = from;
   for (;;) {
     let after: string | undefined;
     let reached = start;
     for (let page = 0; page < SEARCH_PAGES_MAX; page++) {
       const reply = await hubspot.search(spec.type, spec.properties, { from: start, after });
-      const last = reply.results.at(-1);
-      if (!last) return;
-      reached = modifiedAt(last);
-      yield { hits: reply.results, reached };
+      const newest = reply.results.at(-1);
+      if (!newest) return;
+      reached = modifiedAt(newest);
       after = reply.paging?.next?.after;
+      yield { hits: reply.results, reached, last: !after };
       if (!after) return;
     }
     if (reached <= start) return;

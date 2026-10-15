@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
-import { ConnectorAuthError, ConnectorHttpError } from '../http';
+import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
@@ -16,6 +16,7 @@ import searchEmails from './fixtures/search-emails.json';
 import searchMeetings from './fixtures/search-meetings.json';
 import searchNotes1 from './fixtures/search-notes-page1.json';
 import searchNotes2 from './fixtures/search-notes-page2.json';
+import type { EngagementType } from './schemas';
 
 const ROOT = 'https://api.hubapi.com';
 const OBJECTS = `${ROOT}/crm/objects/2026-03`;
@@ -323,7 +324,7 @@ describe('hubspot : sync, premier passage', () => {
 
     expect(itemOf(pages, 'note:51002')).toBeUndefined();
     expect(pages[0]?.items.map((item) => item.externalId)).toEqual(['note:51001']);
-    expect(cursorOf(pages[0])).toEqual({ notes: ms('2026-10-09T08:30:00.000Z') });
+    expect(cursorOf(pages[0])).toEqual({ notes: ms('2026-10-09T08:30:00.000Z'), done: 0 });
   });
 
   it('ne demande les affaires et les contacts que pour les fiches sans entreprise', async () => {
@@ -361,7 +362,7 @@ describe('hubspot : sync, pages et curseur', () => {
   it('rend une page par page de recherche, la seconde reprenant par le jeton de page', async () => {
     const { pages, calls } = await runSync(firstPassRoutes());
 
-    expect(pages).toHaveLength(5); // 2 pages de notes, appels, réunions, e-mails
+    expect(pages).toHaveLength(6); // 2 pages de notes, appels, réunions, e-mails, puis la page qui clôt le tour
     const notesSearches = calls.filter((call) => call.url === `${OBJECTS}/notes/search`);
     expect(notesSearches).toHaveLength(2);
     expect(bodyOf(notesSearches[0])).not.toHaveProperty('after');
@@ -369,23 +370,44 @@ describe('hubspot : sync, pages et curseur', () => {
     expect(pages.every((page) => page.items.length <= 100)).toBe(true);
   });
 
-  it('range, par sorte d’activité, l’instant de la dernière fiche lue', async () => {
+  it('range, par sorte d’activité, la borne de la prochaine recherche : exacte en cours de recherche, reculée à la fin', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
-    expect(cursorOf(pages[1])).toEqual({ notes: ms('2026-10-12T15:45:00.000Z') });
-    expect(cursorOf(pages[2])).toEqual({
-      notes: ms('2026-10-12T15:45:00.000Z'),
-      calls: ms('2026-10-10T09:15:00.000Z'),
+    // Première page de notes : la recherche continue, la borne est la dernière fiche lue.
+    expect(cursorOf(pages[0])).toEqual({ notes: ms('2026-10-09T08:30:00.000Z'), done: 0 });
+    // Fin d'une sorte : la borne recule du délai d'indexation, et la sorte est comptée comme finie.
+    expect(cursorOf(pages[1])).toEqual({
+      notes: ms('2026-10-12T15:45:00.000Z') - OVERLAP_MS,
+      done: 1,
     });
-    expect(cursorOf(pages.at(-1))).toEqual({
-      notes: ms('2026-10-12T15:45:00.000Z'),
-      calls: ms('2026-10-10T09:15:00.000Z'),
-      meetings: ms('2026-10-11T14:00:00.000Z'),
-      emails: ms('2026-10-14T10:00:00.000Z'),
+    expect(cursorOf(pages[2])).toEqual({
+      notes: ms('2026-10-12T15:45:00.000Z') - OVERLAP_MS,
+      calls: ms('2026-10-10T09:15:00.000Z') - OVERLAP_MS,
+      done: 2,
+    });
+    expect(cursorOf(pages[4])).toEqual({
+      notes: ms('2026-10-12T15:45:00.000Z') - OVERLAP_MS,
+      calls: ms('2026-10-10T09:15:00.000Z') - OVERLAP_MS,
+      meetings: ms('2026-10-11T14:00:00.000Z') - OVERLAP_MS,
+      emails: ms('2026-10-14T10:00:00.000Z') - OVERLAP_MS,
+      done: 4,
     });
   });
 
-  it('repart du dernier curseur, reculé du délai d’indexation, sans refaire la première page', async () => {
+  it('clôt le tour par une page sans élément, dont le curseur ne retient plus de sorte finie', async () => {
+    const { pages } = await runSync(firstPassRoutes());
+
+    const closing = pages.at(-1);
+    expect(closing?.items).toEqual([]);
+    expect(cursorOf(closing)).toEqual({
+      notes: ms('2026-10-12T15:45:00.000Z') - OVERLAP_MS,
+      calls: ms('2026-10-10T09:15:00.000Z') - OVERLAP_MS,
+      meetings: ms('2026-10-11T14:00:00.000Z') - OVERLAP_MS,
+      emails: ms('2026-10-14T10:00:00.000Z') - OVERLAP_MS,
+    });
+  });
+
+  it('repart du curseur rendu à la fin du tour, reculé du délai d’indexation, sans refaire la première page', async () => {
     const first = await runSync(firstPassRoutes());
     const cursor = first.pages.at(-1)?.cursor ?? null;
     const empty = { total: 0, results: [] };
@@ -409,7 +431,7 @@ describe('hubspot : sync, pages et curseur', () => {
   });
 
   it('ne remonte jamais avant since, même avec un curseur ancien', async () => {
-    const cursor = JSON.stringify({ notes: SINCE.getTime() + 60_000 });
+    const cursor = JSON.stringify({ notes: SINCE.getTime() - 3_600_000 });
     const empty = { total: 0, results: [] };
 
     const { calls } = await runSync(
@@ -482,6 +504,225 @@ describe('hubspot : sync, pages et curseur', () => {
 
     const notes = calls.filter((call) => call.url === `${OBJECTS}/notes/search`);
     expect(notes).toHaveLength(SEARCH_PAGES_MAX);
+  });
+});
+
+// Le socle arrête un passage à 200 éléments et le reprend avec le curseur rendu : une fausse API
+// HubSpot (filtre `hs_lastmodifieddate GTE`, tri croissant, jeton de page = décalage) et un passage
+// coupé comme le fait le socle.
+describe('hubspot : sync, reprise sous le plafond d’un passage', () => {
+  const ITEMS_MAX = 200; // SYNC_ITEMS_MAX du socle
+  const DENSE_STEP_MS = 1000; // bien moins de 1,5 s : plus de 200 fiches tiennent dans OVERLAP_MS
+  const FIRST_AT = SINCE.getTime() + 3_600_000;
+  const TEXT_PROPERTY: Record<EngagementType, string> = {
+    notes: 'hs_note_body',
+    calls: 'hs_call_body',
+    meetings: 'hs_meeting_body',
+    emails: 'hs_email_text',
+  };
+  const PREFIX: Record<EngagementType, string> = {
+    notes: 'note',
+    calls: 'call',
+    meetings: 'meeting',
+    emails: 'email',
+  };
+  type Rows = Array<{ id: number; at: number }>;
+
+  // `count` fiches espacées de `step` (une seconde par défaut) dont le premier identifiant est `first`.
+  const denseRows = (first: number, count: number, step = DENSE_STEP_MS): Rows =>
+    Array.from({ length: count }, (_, i) => ({ id: first + i, at: FIRST_AT + i * step }));
+  const idsOf = (type: EngagementType, rows: Rows) =>
+    rows.map((row) => `${PREFIX[type]}:${row.id}`);
+
+  function denseHubspot(rows: Partial<Record<EngagementType, Rows>>) {
+    const searched: Record<string, number> = {};
+    const fetchImpl = (async (input: string | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      const json = (value: unknown) =>
+        new Response(JSON.stringify(value), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      const type = /\/crm\/objects\/2026-03\/(\w+)\/search$/.exec(url.pathname)?.[1] as
+        | EngagementType
+        | undefined;
+      if (type) {
+        searched[type] = (searched[type] ?? 0) + 1;
+        const from = Number(body.filterGroups[0].filters[0].value);
+        const found = (rows[type] ?? []).filter((row) => row.at >= from);
+        const offset = Number(body.after ?? 0);
+        const page = found.slice(offset, offset + body.limit);
+        const more = offset + body.limit < found.length;
+        return json({
+          results: page.map((row) => ({
+            id: String(row.id),
+            properties: {
+              hs_lastmodifieddate: new Date(row.at).toISOString(),
+              [TEXT_PROPERTY[type]]: `<p>Texte ${row.id}</p>`,
+              hubspot_owner_id: null,
+            },
+            createdAt: '2026-10-01T00:00:00.000Z',
+            updatedAt: new Date(row.at).toISOString(),
+            archived: false,
+          })),
+          ...(more ? { paging: { next: { after: String(offset + body.limit) } } } : {}),
+        });
+      }
+      if (url.pathname === '/crm/owners/2026-03' || url.pathname.endsWith('/batch/read'))
+        return json({ results: [] });
+      expect.soft(url.pathname, 'requête sans route').toBe('une route déclarée');
+      return new Response('', { status: 599 });
+    }) as typeof fetch;
+    const http = createConnectorHttp({
+      provider: 'hubspot',
+      hosts: ['api.hubapi.com'],
+      fetchImpl,
+      sleep: async () => {},
+    });
+    return { http, searched };
+  }
+
+  // Un passage du socle : les pages sont rendues jusqu'à 200 éléments, puis il s'arrête.
+  async function pass(http: ReturnType<typeof denseHubspot>['http'], cursor: string | null) {
+    const ids: string[] = [];
+    let saved = cursor;
+    let cut = false;
+    for await (const page of hubspotConnector.sync(config, { cursor, since: SINCE }, http)) {
+      ids.push(...page.items.map((item) => item.externalId));
+      saved = page.cursor;
+      if (ids.length >= ITEMS_MAX) {
+        cut = true;
+        break;
+      }
+    }
+    return { ids, cursor: saved, cut, saved: JSON.parse(saved ?? '{}') };
+  }
+
+  // Les passages que le socle enchaîne (« reprend une minute plus tard ») jusqu'à la fin de la lecture.
+  async function passesUntilDone(http: ReturnType<typeof denseHubspot>['http'], max: number) {
+    const passes: Awaited<ReturnType<typeof pass>>[] = [];
+    let cursor: string | null = null;
+    while (passes.length < max) {
+      const result = await pass(http, cursor);
+      expect(new Set(result.ids).size, 'doublon dans un même passage').toBe(result.ids.length);
+      passes.push(result);
+      cursor = result.cursor;
+      if (!result.cut) break;
+    }
+    return passes;
+  }
+
+  it('avance à chaque passage coupé à 200 éléments, et sort toutes les fiches denses', async () => {
+    const notes = denseRows(60_000, 450);
+    const { http, searched } = denseHubspot({ notes });
+
+    const passes = await passesUntilDone(http, 6);
+
+    // Trois passages : 200, 200, puis les 52 dernières fiches (la fiche de la frontière est relue).
+    expect(passes).toHaveLength(3);
+    expect(passes.map((p) => p.cut)).toEqual([true, true, false]);
+    const reached = passes.map((p) => p.saved.notes);
+    expect(reached[0]).toBe(FIRST_AT + 199 * DENSE_STEP_MS);
+    expect(reached[1]).toBe(FIRST_AT + 398 * DENSE_STEP_MS);
+    expect(reached[0]).toBeLessThan(reached[1]);
+    // La dernière page de la sorte recule du délai, sans passer avant le départ de ce passage.
+    expect(reached[2]).toBe(reached[1]);
+    const ids = passes.flatMap((p) => p.ids);
+    expect(new Set(ids)).toEqual(new Set(idsOf('notes', notes)));
+    // Seules les deux fiches de la frontière sont lues deux fois (le filtre est « à partir de »).
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual(['note:60199', 'note:60398']);
+    // Le dernier passage va jusqu'aux appels, réunions et e-mails.
+    expect([searched.calls, searched.meetings, searched.emails]).toEqual([1, 1, 1]);
+  });
+
+  // Les écarts du constat de revue : le blocage vient du nombre de fiches dans OVERLAP_MS (300 000 ms),
+  // donc de tous les écarts sous 1 500 ms ; à 10 s la lecture passait déjà.
+  it.each([100, 1000, 1500, 10_000])(
+    'lit 1 000 fiches espacées de %i ms en six passages, chacun plus loin que le précédent',
+    async (step) => {
+      const notes = denseRows(60_000, 1000, step);
+      const { http } = denseHubspot({ notes });
+
+      const passes = await passesUntilDone(http, 8);
+
+      expect(passes).toHaveLength(6);
+      expect(passes.map((p) => p.cut)).toEqual([true, true, true, true, true, false]);
+      const cuts = passes.slice(0, 5).map((p) => p.saved.notes as number);
+      expect(cuts).toEqual([...cuts].sort((a, b) => a - b));
+      expect(new Set(cuts).size).toBe(5);
+      expect(new Set(passes.flatMap((p) => p.ids))).toEqual(new Set(idsOf('notes', notes)));
+    },
+  );
+
+  it('garde le curseur exact en cours de recherche, et le recule de OVERLAP_MS à la dernière page', async () => {
+    const { http } = denseHubspot({ notes: denseRows(60_000, 450) });
+
+    const first = await pass(http, null);
+    expect(first.cut).toBe(true);
+    expect(first.saved).toEqual({ notes: FIRST_AT + 199 * DENSE_STEP_MS, done: 0 });
+
+    // Fiches espacées de 10 minutes : la recherche s'achève, le curseur recule du délai.
+    const sparse: Rows = Array.from({ length: 5 }, (_, i) => ({
+      id: 70_000 + i,
+      at: FIRST_AT + i * 600_000,
+    }));
+    const done = await pass(denseHubspot({ notes: sparse }).http, null);
+    expect(done.cut).toBe(false);
+    expect(done.saved).toEqual({ notes: FIRST_AT + 4 * 600_000 - OVERLAP_MS });
+  });
+
+  it('ne recule pas avant le départ de la recherche', async () => {
+    const close: Rows = [{ id: 71_000, at: SINCE.getTime() + 60_000 }];
+
+    const done = await pass(denseHubspot({ notes: close }).http, null);
+
+    expect(done.saved).toEqual({ notes: SINCE.getTime() });
+  });
+
+  // Les activités d'un CRM importé d'un coup sont serrées dans chaque sorte : relire la fenêtre de
+  // recul des premières sortes à chaque passage épuiserait le plafond avant les suivantes.
+  it('atteint les appels, réunions et e-mails sans relire les sortes déjà lues', async () => {
+    const rows = {
+      notes: denseRows(60_000, 150),
+      calls: denseRows(61_000, 80),
+      meetings: denseRows(62_000, 5),
+      emails: denseRows(63_000, 5),
+    };
+    const { http, searched } = denseHubspot(rows);
+
+    const passes = await passesUntilDone(http, 4);
+
+    expect(passes.map((p) => p.cut)).toEqual([true, false]);
+    // Coupé après les appels : les notes et les appels sont lus en entier, le curseur recule.
+    expect(passes[0]?.saved).toEqual({
+      notes: FIRST_AT + 149 * DENSE_STEP_MS - OVERLAP_MS,
+      calls: FIRST_AT + 79 * DENSE_STEP_MS - OVERLAP_MS,
+      done: 2,
+    });
+    const ids = passes.flatMap((p) => p.ids);
+    const all = (Object.keys(rows) as EngagementType[]).flatMap((t) => idsOf(t, rows[t]));
+    expect(ids.slice().sort()).toEqual(all.slice().sort());
+    expect(searched).toEqual({ notes: 2, calls: 1, meetings: 1, emails: 1 });
+    // Le tour fini, le curseur ne garde plus rien à reprendre.
+    expect(passes[1]?.saved).not.toHaveProperty('done');
+  });
+
+  it('ne relit rien quand le passage est coupé à la dernière page de la dernière sorte', async () => {
+    const rows = {
+      notes: denseRows(60_000, 100),
+      calls: denseRows(61_000, 90),
+      emails: denseRows(63_000, 20),
+    };
+    const { http, searched } = denseHubspot(rows);
+
+    const passes = await passesUntilDone(http, 4);
+
+    expect(passes.map((p) => p.cut)).toEqual([true, false]);
+    expect(passes[0]?.saved).toMatchObject({ done: 4 });
+    expect(passes[1]?.ids).toEqual([]);
+    expect(passes[1]?.saved).not.toHaveProperty('done');
+    expect(searched).toEqual({ notes: 1, calls: 1, meetings: 1, emails: 1 });
   });
 });
 
@@ -595,6 +836,9 @@ describe('hubspot : dates', () => {
 
     expect(itemOf(pages, 'note:1')?.updatedAt).toBe('2026-10-05T10:00:00.000Z');
     expect(itemOf(pages, 'note:2')?.updatedAt).toBe('2026-10-06T10:00:00.000Z');
-    expect(cursorOf(pages[0])).toEqual({ notes: ms('2026-10-06T10:00:00.000Z') });
+    expect(cursorOf(pages[0])).toEqual({
+      notes: ms('2026-10-06T10:00:00.000Z') - OVERLAP_MS,
+      done: 1,
+    });
   });
 });

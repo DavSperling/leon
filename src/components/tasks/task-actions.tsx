@@ -36,8 +36,8 @@ function DeleteTask({ task, listQuery }: DeleteProps) {
   const remove = () =>
     startTransition(async () => {
       const result = await safely(deleteTaskAction(task.id, listQuery));
-      // Une redirection ne rend rien : seule une erreur revient.
-      if (result?.error) toast.error(result.error);
+      // Une suppression réussie redirige : la promesse est rejetée et safely la laisse passer.
+      if (!result.ok) toast.error(result.error);
     });
   return (
     <AlertDialog>

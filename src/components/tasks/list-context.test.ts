@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
-import { groupStatuses } from './list-context';
+import { groupStatuses, projectStatuses } from './list-context';
 
 const STATUSES = [
   {
@@ -45,5 +45,12 @@ describe('groupStatuses', () => {
     };
     const kept = groupStatuses(STATUSES, TWO, config);
     expect(kept.map((s) => [s.id, s.label])).toEqual([['s1', 'Backlog']]);
+  });
+});
+
+describe('projectStatuses', () => {
+  it('ne garde que les statuts du projet de la tâche', () => {
+    expect(projectStatuses(STATUSES, 'p2').map((s) => s.id)).toEqual(['s2']);
+    expect(projectStatuses(STATUSES, 'p3')).toEqual([]);
   });
 });

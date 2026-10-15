@@ -14,11 +14,12 @@ const DEBOUNCE_MS = 200;
 type ParentPickerProps = PickerSlot & {
   value: ParentChoice | null;
   onChange: (parent: ParentChoice | null) => void;
+  taskId?: string; // la tâche dont on choisit le parent : elle ne peut pas l'être d'elle-même
 };
 
 // Recherche par identifiant ou par titre, côté serveur ; le menu garde les résultats précédents
 // jusqu'à l'arrivée des nouveaux, et son filtre masque ceux qui ne correspondent plus.
-export function ParentPicker({ value, onChange, ...slot }: ParentPickerProps) {
+export function ParentPicker({ value, onChange, taskId, ...slot }: ParentPickerProps) {
   const [query, setQuery] = useState('');
   const [found, setFound] = useState<ParentChoice[]>([]);
   const text = query.trim();
@@ -42,7 +43,7 @@ export function ParentPicker({ value, onChange, ...slot }: ParentPickerProps) {
 
   const choices = [
     ...(value ? [value] : []),
-    ...(searching ? found.filter((task) => task.id !== value?.id) : []),
+    ...(searching ? found.filter((task) => task.id !== value?.id && task.id !== taskId) : []),
   ];
   return (
     <Picker

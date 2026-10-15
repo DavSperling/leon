@@ -9,7 +9,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import { taskHref } from '@/lib/tasks/task-links';
+import { projectHref, taskHref } from '@/lib/tasks/task-links';
 import type { TaskDetail } from '@/server/tasks/tasks';
 
 type TaskHeaderProps = {
@@ -32,7 +32,7 @@ export function TaskHeader({ task, back, listQuery }: TaskHeaderProps) {
         <BreadcrumbList className="gap-1.5 sm:gap-1.5">
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href={`/taches?projet=${task.projectId}`} className="font-mono text-xs">
+              <Link href={projectHref(task.projectId)} className="font-mono text-xs">
                 {task.projectKey}
               </Link>
             </BreadcrumbLink>

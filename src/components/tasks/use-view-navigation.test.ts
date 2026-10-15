@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { PAGE_PARAMS } from '@/lib/tasks/task-links';
+import { PAGE_PARAMS, viewHref } from '@/lib/tasks/task-links';
 import { DEFAULT_VIEW_CONFIG, parseViewParams } from '@/lib/tasks/view-config';
 import { pageRoutes, readText } from '@/test/contracts/files';
-import { viewHref } from './task-nav';
 import { listHref } from './use-view-navigation';
 
 const BASE = DEFAULT_VIEW_CONFIG;

@@ -38,3 +38,8 @@ export function taskHref(ref: string, listQuery: string): string {
   if (listQuery === '') return `/taches/${ref}`;
   return `/taches/${ref}?${new URLSearchParams({ [RETURN_PARAM]: listQuery })}`;
 }
+
+// Les adresses d'une liste de projet et d'une vue enregistrée : la navigation et le fil d'Ariane de
+// la page d'une tâche les écrivent, la liste les relit.
+export const projectHref = (projectId: string): string => `/taches?projet=${projectId}`;
+export const viewHref = (viewId: string): string => `/taches?vue=${viewId}`;

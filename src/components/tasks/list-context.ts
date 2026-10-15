@@ -24,13 +24,18 @@ export function groupStatuses(
   config: ViewConfig,
 ): StatusRow[] {
   const { projectId } = config.filters;
-  if (projectId !== null) return statuses.filter((status) => status.projectId === projectId);
+  if (projectId !== null) return projectStatuses(statuses, projectId);
   if (projects.length < 2) return [...statuses];
   const keys = new Map(projects.map((project) => [project.id, project.key]));
   return statuses.map((status) => ({
     ...status,
     label: `${status.label} · ${keys.get(status.projectId) ?? '?'}`,
   }));
+}
+
+// Les statuts qu'une tâche peut prendre : ceux de son projet.
+export function projectStatuses(statuses: readonly StatusRow[], projectId: string): StatusRow[] {
+  return statuses.filter((status) => status.projectId === projectId);
 }
 
 // Ce qu'une ligne ou une carte montre d'un statut, en attendant que le serveur confirme le changement.

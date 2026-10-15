@@ -4,7 +4,7 @@ import { ActivityFeed } from '@/components/tasks/activity-feed';
 import { BackOnEscape } from '@/components/tasks/back-on-escape';
 import { CommentForm } from '@/components/tasks/comment-form';
 import { DescriptionField } from '@/components/tasks/description-field';
-import type { ListContext } from '@/components/tasks/list-context';
+import { type ListContext, projectStatuses } from '@/components/tasks/list-context';
 import { SubtaskList } from '@/components/tasks/subtask-list';
 import { TaskActions } from '@/components/tasks/task-actions';
 import { TaskHeader } from '@/components/tasks/task-header';
@@ -13,6 +13,7 @@ import { TaskTitleField } from '@/components/tasks/task-title-field';
 import { formatRelative } from '@/lib/format';
 import { backHref, cleanListQuery, RETURN_PARAM } from '@/lib/tasks/task-links';
 import { requireUserContext } from '@/server/auth/session';
+import type { TenantContext } from '@/server/auth/tenant-context';
 import { listActivity } from '@/server/tasks/activity';
 import { listLabels } from '@/server/tasks/labels';
 import { listMembers } from '@/server/tasks/members';
@@ -28,6 +29,27 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+// L'activité de la tâche et l'entourage des sélecteurs. Les statuts sont ceux de tous les projets :
+// une sous-tâche peut être d'un autre projet que son parent, et sa ligne choisit parmi les siens.
+async function loadSurroundings(ctx: TenantContext, taskId: string) {
+  const [activity, statuses, members, labels, projects] = await Promise.all([
+    listActivity(ctx, taskId),
+    listStatuses(ctx),
+    listMembers(ctx),
+    listLabels(ctx),
+    listProjects(ctx),
+  ]);
+  const context: ListContext = {
+    statuses,
+    members: members.map(({ id, name, initials }) => ({ id, name, initials })),
+    labels,
+    projects,
+    viewerId: ctx.userId,
+  };
+  const firstName = members.find((member) => member.id === ctx.userId)?.firstName ?? '';
+  return { activity, context, firstName };
+}
+
 // Deux colonnes : le titre, la description, les sous-tâches et l'activité ; à droite, les propriétés
 // et les actions. Une référence mal formée, inconnue ou invisible donne la même réponse. `retour`
 // (la requête de la liste d'où l'on vient) vient de l'URL : cleanListQuery n'en garde que des
@@ -41,22 +63,10 @@ export default async function TaskPage({ params, searchParams }: PageProps) {
   const now = new Date();
   const listQuery = cleanListQuery([query[RETURN_PARAM]].flat()[0]);
   const back = backHref(listQuery);
-  const [activity, statuses, members, labels, projects] = await Promise.all([
-    listActivity(ctx, task.id),
-    listStatuses(ctx, task.projectId),
-    listMembers(ctx),
-    listLabels(ctx),
-    listProjects(ctx),
-  ]);
-  const context: ListContext = {
-    statuses,
-    members: members.map(({ id, name, initials }) => ({ id, name, initials })),
-    labels,
-    projects,
-    viewerId: ctx.userId,
-  };
+  const { activity, context, firstName } = await loadSurroundings(ctx, task.id);
   const { descriptionMd, subtasks, creator, ...properties } = task;
-  const agentMarkdown = renderTaskMarkdown({ task, activity, statuses, labels });
+  const statuses = projectStatuses(context.statuses, task.projectId);
+  const agentMarkdown = renderTaskMarkdown({ task, activity, statuses, labels: context.labels });
 
   return (
     <div className="@container flex min-h-full flex-col">
@@ -92,7 +102,7 @@ export default async function TaskPage({ params, searchParams }: PageProps) {
           <TaskProperties task={properties} context={context} now={now} listQuery={listQuery} />
           <TaskActions
             task={{ id: task.id, ref: task.ref, title: task.title }}
-            firstName={members.find((member) => member.id === ctx.userId)?.firstName ?? ''}
+            firstName={firstName}
             agentMarkdown={agentMarkdown}
             listQuery={listQuery}
           />

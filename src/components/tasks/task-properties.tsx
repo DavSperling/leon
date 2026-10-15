@@ -11,7 +11,7 @@ import type { TaskRow } from '@/server/tasks/task-row';
 import type { TaskDetail } from '@/server/tasks/tasks';
 import { Avatar } from './avatar';
 import { LabelChip } from './label-chip';
-import { type ListContext, shownStatus } from './list-context';
+import { type ListContext, projectStatuses, shownStatus } from './list-context';
 import { AssigneePicker } from './pickers/assignee-picker';
 import { DueDatePicker } from './pickers/due-date-picker';
 import { LabelsPicker } from './pickers/labels-picker';
@@ -59,13 +59,14 @@ const glyph = (Icon: typeof Folder) => (
 type PartProps = { task: PropertiesTask; context: ListContext; edit: TaskEdit<PropertiesTask> };
 
 function StatusProperty({ task, context, edit }: PartProps) {
+  const own = projectStatuses(context.statuses, task.projectId);
   const change = (statusId: string) => {
-    const status = context.statuses.find((candidate) => candidate.id === statusId);
+    const status = own.find((candidate) => candidate.id === statusId);
     if (status) edit({ statusId }, shownStatus(status));
   };
   return (
     <Property label="Statut">
-      <StatusPicker statuses={context.statuses} value={task.statusId} onChange={change}>
+      <StatusPicker statuses={own} value={task.statusId} onChange={change}>
         <PropertyButton aria-label={`Statut : ${task.statusLabel}`}>
           <StatusIcon category={task.statusCategory} color={task.statusColor} />
           <span className="truncate">{task.statusLabel}</span>
@@ -157,8 +158,8 @@ function ProjectProperty({
   const change = (projectId: string) =>
     startTransition(async () => {
       const result = await safely(changeProjectAction(task.id, projectId, listQuery));
-      // Une redirection ne rend rien : seule une erreur revient.
-      if (result?.error) toast.error(result.error);
+      // Un changement réussi redirige : la promesse est rejetée et safely la laisse passer.
+      if (!result.ok) toast.error(result.error);
     });
   return (
     <Property label="Projet">
@@ -200,6 +201,7 @@ function ParentProperty({ task, edit }: Omit<PartProps, 'context'>) {
   return (
     <Property label="Parent">
       <ParentPicker
+        taskId={task.id}
         value={parent}
         onChange={(next) =>
           edit({ parentId: next?.id ?? null }, { parent: next, parentRef: next?.ref ?? null })

@@ -8,8 +8,8 @@ import { taskUrl } from './task-url';
 import type { TaskDetail } from './tasks';
 
 // La tâche en Markdown, pour un agent : l'outil MCP task_get et le bouton « Copier pour un agent ».
-const DESCRIPTION_MAX_CHARS = 3_000;
-const COMMENT_MAX_CHARS = 500;
+const DESCRIPTION_EXCERPT_CHARS = 3_000;
+const COMMENT_EXCERPT_CHARS = 500;
 const COMMENTS_SHOWN = 5;
 
 export type TaskMarkdownInput = {
@@ -49,7 +49,7 @@ function recentComments(activity: readonly ActivityItem[]): string[] {
     .slice(-COMMENTS_SHOWN)
     .map(
       (item) =>
-        `- ${isoDate(item.createdAt)} · ${oneLine(actorLabel(item))} : ${truncate(oneLine(item.body ?? ''), COMMENT_MAX_CHARS)}`,
+        `- ${isoDate(item.createdAt)} · ${oneLine(actorLabel(item))} : ${truncate(oneLine(item.body ?? ''), COMMENT_EXCERPT_CHARS)}`,
     );
 }
 
@@ -70,7 +70,7 @@ export function renderTaskMarkdown({
     ...properties(task),
     ...section(
       'Description',
-      description === '' ? [] : [truncate(description, DESCRIPTION_MAX_CHARS)],
+      description === '' ? [] : [truncate(description, DESCRIPTION_EXCERPT_CHARS)],
     ),
     ...section(
       'Sous-tâches',

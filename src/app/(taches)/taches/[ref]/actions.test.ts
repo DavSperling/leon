@@ -127,10 +127,10 @@ describe('deleteTaskAction', () => {
     ['un schéma', 'javascript:alert(1)'],
     ['un réglage inconnu', 'redirect=//exemple.com'],
     ['rien', ''],
-  ])('ne mène jamais ailleurs qu’à /taches : %s dans `retour`', async (_name, retour) => {
+  ])('ne mène jamais ailleurs qu’à /taches : %s dans `retour`', async (_name, returnQuery) => {
     vi.mocked(deleteTasks).mockResolvedValue(1);
 
-    await expect(deleteTaskAction(ID, retour)).rejects.toThrow('NEXT_REDIRECT /taches');
+    await expect(deleteTaskAction(ID, returnQuery)).rejects.toThrow('NEXT_REDIRECT /taches');
 
     expect(vi.mocked(redirect).mock.calls).toEqual([['/taches']]);
   });
@@ -138,8 +138,8 @@ describe('deleteTaskAction', () => {
   it.each([
     ['un identifiant qui n’est pas un UUID', 'LEO-12', ''],
     ['un `retour` démesuré', ID, 'a'.repeat(2_001)],
-  ])('refuse %s sans rien supprimer ni rediriger', async (_name, id, retour) => {
-    await expect(deleteTaskAction(id, retour)).resolves.toEqual(INVALID);
+  ])('refuse %s sans rien supprimer ni rediriger', async (_name, id, returnQuery) => {
+    await expect(deleteTaskAction(id, returnQuery)).resolves.toEqual(INVALID);
 
     expect(deleteTasks).not.toHaveBeenCalled();
     expect(redirect).not.toHaveBeenCalled();

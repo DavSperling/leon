@@ -38,6 +38,17 @@ describe('bornes des champs des tâches', () => {
     );
   });
 
+  it('le commentaire : la page, l’outil MCP et le formulaire importent la même borne', () => {
+    const imported = /import \{[^}]*\bCOMMENT_MAX_CHARS\b[^}]*\} from '@\/lib\/tasks\/limits'/;
+    for (const path of [
+      'src/app/(taches)/taches/[ref]/actions.ts',
+      'src/server/mcp/tools/task-comment-tool.ts',
+      'src/components/tasks/comment-form.tsx',
+    ]) {
+      expect(readText(path), path).toMatch(imported);
+    }
+  });
+
   it('la sélection groupée : la barre et les actions partagent un seul plafond', () => {
     const imported = /import \{[^}]*\bMAX_IDS\b[^}]*\} from '@\/lib\/tasks\/limits'/;
     for (const path of [

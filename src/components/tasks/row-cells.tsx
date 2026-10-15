@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { TaskRow } from '@/server/tasks/task-row';
 import { Avatar } from './avatar';
 import { LabelChip } from './label-chip';
-import { type ListContext, shownStatus } from './list-context';
+import { type ListContext, projectStatuses, shownStatus } from './list-context';
 import { AssigneePicker } from './pickers/assignee-picker';
 import { DueDatePicker } from './pickers/due-date-picker';
 import { LabelsPicker } from './pickers/labels-picker';
@@ -42,7 +42,7 @@ export function PriorityCell({ row, edit }: { row: TaskRow; edit: TaskEdit }) {
 type StatusCellProps = { row: TaskRow; statuses: ListContext['statuses']; edit: TaskEdit };
 
 export function StatusCell({ row, statuses, edit }: StatusCellProps) {
-  const own = statuses.filter((status) => status.projectId === row.projectId);
+  const own = projectStatuses(statuses, row.projectId);
   const change = (statusId: string) => {
     const status = own.find((candidate) => candidate.id === statusId);
     if (status) edit({ statusId }, shownStatus(status));

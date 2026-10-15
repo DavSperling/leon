@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { formatNumber } from '@/lib/format';
+import { projectHref, viewHref } from '@/lib/tasks/task-links';
 import { cn } from '@/lib/utils';
 
 type NavProject = { id: string; key: string; name: string; openCount: number };
@@ -18,9 +19,6 @@ export const FIXED_ITEMS: Array<{ key: NavKey; href: string; label: string; icon
   { key: 'mine', href: '/taches?assigne=moi', label: 'Mes tâches', icon: UserRound },
   { key: 'all', href: '/taches', label: 'Toutes les tâches', icon: ListChecks },
 ];
-
-export const projectHref = (projectId: string): string => `/taches?projet=${projectId}`;
-export const viewHref = (viewId: string): string => `/taches?vue=${viewId}`;
 
 const Uuid = z.uuid();
 

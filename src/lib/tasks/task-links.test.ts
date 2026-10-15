@@ -115,7 +115,9 @@ describe('paramètres de la page de liste', () => {
     expect(page).toContain('params.onglet');
   });
 
-  it('la page d’une tâche lit le paramètre que taskHref écrit', () => {
-    expect(readText('src/app/(taches)/taches/[ref]/page.tsx')).toContain('RETURN_PARAM');
+  it('la page d’une tâche lit le paramètre que taskHref écrit, et le nettoie avant de s’en servir', () => {
+    const page = readText('src/app/(taches)/taches/[ref]/page.tsx');
+    expect(page).toContain('RETURN_PARAM');
+    expect(page).toContain('cleanListQuery(');
   });
 });

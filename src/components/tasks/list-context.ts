@@ -4,12 +4,13 @@ import type { ProjectRow } from '@/server/tasks/projects';
 import type { StatusRow } from '@/server/tasks/statuses';
 import type { Person } from '@/server/tasks/task-row';
 
-// Ce que la liste connaît de son entourage : de quoi regrouper, nommer et filtrer.
+// Ce que la liste connaît de son entourage : de quoi regrouper, nommer, filtrer et modifier.
 export type ListContext = {
-  statuses: StatusRow[];
+  statuses: StatusRow[]; // ceux de tous les projets, libellés tels que saisis
   members: Person[];
   labels: LabelRow[];
   projects: ProjectRow[];
+  viewerId: string; // « Moi » dans les sélecteurs
 };
 
 // Un changement de filtres, que les menus et les pastilles demandent à la barre d'outils.

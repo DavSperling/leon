@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import { cn } from '@/lib/utils';
+import { useCreateTask } from './create-task-provider';
 import { DisplayMenu } from './display-menu';
 import { activeFilters, FilterChips } from './filter-chips';
 import { FilterMenu } from './filter-menu';
@@ -86,6 +87,7 @@ type ViewToolbarProps = {
 // des filtres actifs. Chaque changement est une navigation (retour arrière compris).
 export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProps) {
   const navigate = useViewNavigation(base);
+  const openCreate = useCreateTask();
   const change = (patch: Partial<ViewConfig>) => navigate({ ...config, ...patch });
   const filter = (patch: FilterPatch) => change({ filters: { ...config.filters, ...patch } });
   return (
@@ -125,8 +127,7 @@ export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProp
             </TooltipTrigger>
             <TooltipContent side="bottom">Panneau de répartition</TooltipContent>
           </Tooltip>
-          {/* La création rapide arrive avec les sélecteurs. */}
-          <Button size="sm" disabled className="ml-1">
+          <Button size="sm" aria-keyshortcuts="C" onClick={() => openCreate()} className="ml-1">
             <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
             Nouvelle tâche
           </Button>

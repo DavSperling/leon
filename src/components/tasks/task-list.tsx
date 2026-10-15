@@ -2,10 +2,13 @@
 
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
+import { Kbd } from '@/components/ui/kbd';
 import { formatNumber } from '@/lib/format';
 import type { TaskGroup } from '@/lib/tasks/group';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import type { TaskRow } from '@/server/tasks/task-row';
+import { groupPrefill } from './create-draft';
+import { useCreateTask } from './create-task-provider';
 import type { ListContext } from './list-context';
 import { GroupIcon, TaskGroupSection } from './task-group';
 import { TaskRowItem } from './task-row';
@@ -34,10 +37,11 @@ type TaskListProps = {
   now: Date;
 };
 
-// La liste en lecture : groupes repliables, lignes, puis le nombre de tâches masquées. Les groupes
+// La liste : groupes repliables, lignes modifiables sur place, puis le nombre de tâches masquées. Les groupes
 // arrivent déjà ordonnés (groupTasks, côté serveur). La disposition « tableau » vient plus tard.
 export function TaskList({ groups, config, base, hiddenCount, context, now }: TaskListProps) {
   const navigate = useViewNavigation(base);
+  const openCreate = useCreateTask();
   const showAll = () => navigate({ ...config, showSubtasks: true, filters: NO_FILTERS });
   const projectNames = new Map(context.projects.map((project) => [project.id, project.name]));
 
@@ -54,10 +58,12 @@ export function TaskList({ groups, config, base, hiddenCount, context, now }: Ta
             </Button>
           </EmptyState>
         ) : (
-          <EmptyState
-            reason="Aucune tâche."
-            nextStep="Créez la première avec « Nouvelle tâche »."
-          />
+          <EmptyState reason="Aucune tâche." nextStep="Créez la première pour démarrer.">
+            <Button variant="outline" size="sm" onClick={() => openCreate()}>
+              Créer une tâche
+              <Kbd>C</Kbd>
+            </Button>
+          </EmptyState>
         )}
       </div>
     );
@@ -70,6 +76,7 @@ export function TaskList({ groups, config, base, hiddenCount, context, now }: Ta
           label={group.label}
           count={group.rows.length}
           icon={<GroupIcon groupBy={config.groupBy} groupKey={group.key} context={context} />}
+          onCreate={() => openCreate(groupPrefill(config.groupBy, group.key, context))}
         >
           {group.rows.map((row) => (
             <TaskRowItem
@@ -77,6 +84,7 @@ export function TaskList({ groups, config, base, hiddenCount, context, now }: Ta
               row={row}
               properties={config.properties}
               projectName={projectNames.get(row.projectId) ?? row.projectKey}
+              context={context}
               now={now}
             />
           ))}

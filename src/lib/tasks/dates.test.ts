@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueFilterRange, formatDue, isOverdue, todayInParis } from './dates';
+import { dueFilterRange, dueSuggestions, formatDue, isOverdue, todayInParis } from './dates';
 
 describe('todayInParis', () => {
   it('bascule à minuit heure de Paris en été (UTC+2)', () => {
@@ -96,5 +96,38 @@ describe('isOverdue', () => {
   it('suit le jour de Paris, pas celui de UTC', () => {
     const lateEvening = new Date('2026-10-14T22:30:00Z'); // 00 h 30 le 15 à Paris
     expect(isOverdue({ dueDate: '2026-10-14', statusCategory: 'todo' }, lateEvening)).toBe(true);
+  });
+});
+
+describe('dueSuggestions', () => {
+  const dates = (iso: string) =>
+    dueSuggestions(new Date(iso)).map(({ label, date }) => [label, date]);
+
+  it('propose aujourd’hui, demain, vendredi et lundi prochain (lundi 12 octobre 2026)', () => {
+    expect(dates('2026-10-12T10:00:00Z')).toEqual([
+      ["Aujourd'hui", '2026-10-12'],
+      ['Demain', '2026-10-13'],
+      ['Vendredi', '2026-10-16'],
+      ['Semaine prochaine', '2026-10-19'],
+    ]);
+  });
+
+  it('n’offre pas un vendredi qui est demain ou déjà passé', () => {
+    const labels = (iso: string) => dueSuggestions(new Date(iso)).map(({ label }) => label);
+    expect(labels('2026-10-15T10:00:00Z')).not.toContain('Vendredi'); // jeudi : demain
+    expect(labels('2026-10-16T10:00:00Z')).not.toContain('Vendredi'); // vendredi
+    expect(labels('2026-10-17T10:00:00Z')).not.toContain('Vendredi'); // samedi
+  });
+
+  it('le dimanche, la semaine prochaine commence demain', () => {
+    expect(dates('2026-10-18T10:00:00Z')).toEqual([
+      ["Aujourd'hui", '2026-10-18'],
+      ['Demain', '2026-10-19'],
+      ['Semaine prochaine', '2026-10-19'],
+    ]);
+  });
+
+  it('compte à l’heure de Paris : après minuit à Paris, c’est déjà le jour suivant', () => {
+    expect(dates('2026-10-14T22:30:00Z')[0]).toEqual(["Aujourd'hui", '2026-10-15']);
   });
 });

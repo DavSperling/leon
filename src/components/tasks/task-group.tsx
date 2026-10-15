@@ -1,5 +1,6 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { TASK_PRIORITIES, type ViewGrouping } from '@/lib/enums';
 import { formatNumber } from '@/lib/format';
@@ -34,28 +35,52 @@ export function GroupIcon({ groupBy, groupKey, context }: GroupIconProps) {
   return null;
 }
 
-type TaskGroupSectionProps = { label: string; count: number; icon: ReactNode; children: ReactNode };
+type TaskGroupSectionProps = {
+  label: string;
+  count: number;
+  icon: ReactNode;
+  onCreate: () => void; // « + » : crée une tâche dans ce groupe
+  children: ReactNode;
+};
 
-// Un groupe repliable : icône, nom, compteur. Le titre est un bouton, comme dans un accordéon.
-export function TaskGroupSection({ label, count, icon, children }: TaskGroupSectionProps) {
+// Un groupe repliable : icône, nom, compteur. Le titre est un bouton, comme dans un accordéon ;
+// le « + » est à côté de lui, jamais dedans.
+export function TaskGroupSection({
+  label,
+  count,
+  icon,
+  onCreate,
+  children,
+}: TaskGroupSectionProps) {
   return (
     <Collapsible defaultOpen>
-      <h2 className="text-sm font-normal">
-        <CollapsibleTrigger className="group/trigger flex h-9 w-full items-center gap-2 bg-muted px-5 text-left transition-colors hover:bg-accent">
-          <ChevronRight
-            size={14}
-            strokeWidth={1.5}
-            aria-hidden="true"
-            className="shrink-0 text-muted-foreground transition-transform group-data-[state=open]/trigger:rotate-90"
-          />
-          {icon}
-          <span className="font-medium">{label}</span>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {formatNumber(count)}
-            <span className="sr-only"> {count > 1 ? 'tâches' : 'tâche'}</span>
-          </span>
-        </CollapsibleTrigger>
-      </h2>
+      <div className="relative">
+        <h2 className="text-sm font-normal">
+          <CollapsibleTrigger className="group/trigger flex h-9 w-full items-center gap-2 bg-muted px-5 text-left transition-colors hover:bg-accent">
+            <ChevronRight
+              size={14}
+              strokeWidth={1.5}
+              aria-hidden="true"
+              className="shrink-0 text-muted-foreground transition-transform group-data-[state=open]/trigger:rotate-90"
+            />
+            {icon}
+            <span className="font-medium">{label}</span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {formatNumber(count)}
+              <span className="sr-only"> {count > 1 ? 'tâches' : 'tâche'}</span>
+            </span>
+          </CollapsibleTrigger>
+        </h2>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={`Nouvelle tâche dans ${label}`}
+          onClick={onCreate}
+          className="absolute top-1/2 right-4 -translate-y-1/2"
+        >
+          <Plus size={14} strokeWidth={1.5} aria-hidden="true" />
+        </Button>
+      </div>
       <CollapsibleContent>{count > 0 && <ul aria-label={label}>{children}</ul>}</CollapsibleContent>
     </Collapsible>
   );

@@ -22,6 +22,8 @@ const dueFormat = new Intl.DateTimeFormat(LOCALE, {
 const toUtcMs = (day: string): number => Date.parse(`${day}T00:00:00Z`);
 const fromUtcMs = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
 const addDays = (day: string, days: number): string => fromUtcMs(toUtcMs(day) + days * DAY_MS);
+const mondayOf = (day: string): string =>
+  addDays(day, -((new Date(toUtcMs(day)).getUTCDay() + 6) % 7));
 
 // « 2026-10-15 » : le jour qu'il est à Paris à l'instant `now`.
 export function todayInParis(now: Date): string {
@@ -36,17 +38,36 @@ export type DueRange = { from: string | null; to: string };
 export function dueFilterRange(filter: Exclude<DueFilter, 'none'>, now: Date): DueRange {
   const today = todayInParis(now);
   if (filter === 'overdue') return { from: null, to: addDays(today, -1) };
-  const sinceMonday = (new Date(toUtcMs(today)).getUTCDay() + 6) % 7;
-  const monday = addDays(today, -sinceMonday);
+  const monday = mondayOf(today);
   return { from: monday, to: addDays(monday, 6) };
 }
+
+// « ven. 17 oct. »
+export const formatDay = (date: string): string => dueFormat.format(toUtcMs(date));
 
 // « Aujourd'hui », « Demain », « ven. 17 oct. »
 export function formatDue(date: string, now: Date): string {
   const today = todayInParis(now);
   if (date === today) return "Aujourd'hui";
   if (date === addDays(today, 1)) return 'Demain';
-  return dueFormat.format(toUtcMs(date));
+  return formatDay(date);
+}
+
+export type DueSuggestion = { label: string; date: string };
+
+// Les échéances que le sélecteur propose. « Vendredi » (de cette semaine) n'est proposé que s'il
+// reste après demain ; « Semaine prochaine » est le lundi qui vient.
+export function dueSuggestions(now: Date): DueSuggestion[] {
+  const today = todayInParis(now);
+  const tomorrow = addDays(today, 1);
+  const monday = mondayOf(today);
+  const friday = addDays(monday, 4);
+  return [
+    { label: "Aujourd'hui", date: today },
+    { label: 'Demain', date: tomorrow },
+    ...(friday > tomorrow ? [{ label: 'Vendredi', date: friday }] : []),
+    { label: 'Semaine prochaine', date: addDays(monday, 7) },
+  ];
 }
 
 // En retard dès le lendemain de l'échéance ; une tâche terminée ou annulée ne l'est jamais.

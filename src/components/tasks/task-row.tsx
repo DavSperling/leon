@@ -1,18 +1,15 @@
+'use client';
+
 import { ListTree } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { ViewProperty } from '@/lib/enums';
 import { formatDate, formatRelative } from '@/lib/format';
-import { formatDue, isOverdue } from '@/lib/tasks/dates';
-import { cn } from '@/lib/utils';
 import type { TaskRow } from '@/server/tasks/task-row';
-import { Avatar } from './avatar';
-import { LabelChip } from './label-chip';
-import { PriorityIcon } from './priority-icon';
-import { StatusIcon } from './status-icon';
+import type { ListContext } from './list-context';
+import { AssigneeCell, DueCell, LabelsCell, PriorityCell, StatusCell } from './row-cells';
 import { TaskTitle } from './task-title';
-
-const MAX_LABELS = 2;
+import { useTaskEdit } from './use-task-edit';
 
 // Une date d'information, avec son intitulé pour les lecteurs d'écran.
 function DateCell({ label, children }: { label: string; children: ReactNode }) {
@@ -24,49 +21,36 @@ function DateCell({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Labels({ labels }: { labels: TaskRow['labels'] }) {
-  const hidden = labels.slice(MAX_LABELS);
-  return (
-    <span className="hidden shrink-0 items-center gap-1 @2xl:flex">
-      {labels.slice(0, MAX_LABELS).map((label) => (
-        <LabelChip key={label.id} label={label} />
-      ))}
-      {hidden.length > 0 && (
-        <span
-          title={hidden.map((label) => label.name).join(', ')}
-          className="text-xs text-muted-foreground"
-        >
-          +{hidden.length}
-        </span>
-      )}
-    </span>
-  );
-}
-
 type TaskRowItemProps = {
   row: TaskRow;
   properties: readonly ViewProperty[]; // ce que la vue affiche
   projectName: string;
+  context: ListContext;
   now: Date;
 };
 
-// Une ligne de 36 px. Toute la ligne ouvre la tâche par le lien du titre (son ::after la recouvre) :
-// les icônes interactives viendront en `relative z-10` par-dessus.
-export function TaskRowItem({ row, properties, projectName, now }: TaskRowItemProps) {
+// Une ligne de 36 px. Toute la ligne ouvre la tâche par le lien du titre (son ::after la recouvre) ;
+// les cellules modifiables passent par-dessus (row-cells). Un changement s'affiche tout de suite,
+// puis la liste se rafraîchit : la ligne change de groupe si son statut ou son assigné a changé.
+export function TaskRowItem({
+  row: current,
+  properties,
+  projectName,
+  context,
+  now,
+}: TaskRowItemProps) {
+  const { row, edit } = useTaskEdit(current);
   const shows = (property: ViewProperty) => properties.includes(property);
-  const overdue = isOverdue(row, now);
   return (
-    <li className="relative flex h-9 items-center gap-2.5 px-5 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60">
-      {shows('priority') && <PriorityIcon priority={row.priority} />}
+    <li className="group/row relative flex h-9 items-center gap-1.5 px-5 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60">
+      {shows('priority') && <PriorityCell row={row} edit={edit} />}
       {shows('id') && (
-        <span className="w-[4.5rem] shrink-0 font-mono text-xs text-muted-foreground">
+        <span className="w-[4.5rem] shrink-0 pl-1 font-mono text-xs text-muted-foreground">
           {row.ref}
         </span>
       )}
-      {shows('status') && (
-        <StatusIcon category={row.statusCategory} color={row.statusColor} label={row.statusLabel} />
-      )}
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      {shows('status') && <StatusCell row={row} statuses={context.statuses} edit={edit} />}
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 pl-1">
         {shows('parent') && row.parentRef && (
           <span className="shrink-0 font-mono text-xs text-muted-foreground">
             <span className="sr-only">Sous-tâche de </span>
@@ -82,7 +66,7 @@ export function TaskRowItem({ row, properties, projectName, now }: TaskRowItemPr
           <TaskTitle title={row.title} />
         </Link>
       </div>
-      {shows('labels') && row.labels.length > 0 && <Labels labels={row.labels} />}
+      {shows('labels') && <LabelsCell row={row} labels={context.labels} edit={edit} />}
       {shows('subtasks') && row.subtaskCount > 0 && (
         <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground tabular-nums">
           <ListTree size={12} strokeWidth={1.5} aria-hidden="true" />
@@ -95,18 +79,8 @@ export function TaskRowItem({ row, properties, projectName, now }: TaskRowItemPr
           {projectName}
         </span>
       )}
-      {shows('assignee') && <Avatar person={row.assignee} />}
-      {shows('due_date') && (
-        <span
-          className={cn(
-            'w-[5.5rem] shrink-0 text-right text-xs text-muted-foreground tabular-nums',
-            overdue && 'text-destructive',
-          )}
-        >
-          {row.dueDate && formatDue(row.dueDate, now)}
-          {overdue && <span className="sr-only"> (en retard)</span>}
-        </span>
-      )}
+      {shows('assignee') && <AssigneeCell row={row} context={context} edit={edit} />}
+      {shows('due_date') && <DueCell row={row} now={now} edit={edit} />}
       {shows('status_age') && (
         <DateCell label="Dans ce statut depuis">
           {formatRelative(row.statusChangedAt, now)}

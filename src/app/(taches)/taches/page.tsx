@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { z } from 'zod';
+import { CreateTaskProvider } from '@/components/tasks/create-task-provider';
 import { groupStatuses, type ListContext } from '@/components/tasks/list-context';
 import { TaskList } from '@/components/tasks/task-list';
 import { ViewToolbar } from '@/components/tasks/view-toolbar';
@@ -39,22 +40,25 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     listProjects(ctx),
   ]);
   const context: ListContext = {
-    statuses: groupStatuses(statuses, projects, config),
+    statuses,
     members: members.map(({ id, name, initials }) => ({ id, name, initials })),
     labels,
     projects,
+    viewerId: ctx.userId,
   };
+  // Seuls les groupes distinguent les statuts de même nom de deux projets (« Backlog · LEO »).
+  const groupContext = { ...context, statuses: groupStatuses(statuses, projects, config) };
   return (
-    <>
+    <CreateTaskProvider config={config} context={context} now={now}>
       <ViewToolbar viewName={view?.name ?? null} config={config} base={base} context={context} />
       <TaskList
-        groups={groupTasks(list.rows, config, context)}
+        groups={groupTasks(list.rows, config, groupContext)}
         config={config}
         base={base}
         hiddenCount={list.hiddenCount}
         context={context}
         now={now}
       />
-    </>
+    </CreateTaskProvider>
   );
 }

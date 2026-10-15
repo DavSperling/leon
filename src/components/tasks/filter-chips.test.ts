@@ -5,6 +5,7 @@ import { activeFilters } from './filter-chips';
 const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
 const CONTEXT = {
   statuses: [],
+  viewerId: 'paul',
   members: [{ id: ID, name: 'Marie Durand', initials: 'MD' }],
   labels: [{ id: ID, name: 'Bug', color: '#dc2626' }],
   projects: [{ id: ID, key: 'LEO', name: 'Leon' }],

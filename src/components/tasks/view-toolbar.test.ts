@@ -5,6 +5,7 @@ import { listTitle } from './view-toolbar';
 const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
 const CONTEXT = {
   statuses: [],
+  viewerId: 'paul',
   members: [],
   labels: [],
   projects: [{ id: ID, key: 'LEO', name: 'Leon' }],

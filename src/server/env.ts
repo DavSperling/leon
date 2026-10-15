@@ -5,15 +5,12 @@ const emptyIsAbsent = (value: unknown) => (value === '' ? undefined : value);
 
 // Modèle d'une étape du pipeline (voir src/server/llm/config.ts) : « anthropic:<modèle> » ou
 // « openrouter:<fournisseur>/<modèle> ». Absent, l'étape garde son modèle Anthropic par défaut.
-const llmChoice = z.preprocess(
-  emptyIsAbsent,
-  z
-    .string()
-    .regex(/^(anthropic:[a-z0-9][a-z0-9.-]*|openrouter:[a-z0-9-]+\/[a-z0-9][a-z0-9.:_-]*)$/i, {
-      message: 'format attendu : anthropic:<modèle> ou openrouter:<fournisseur>/<modèle>',
-    })
-    .optional(),
-);
+const llmChoice = z
+  .string()
+  .regex(/^(anthropic:[a-z0-9][a-z0-9.-]*|openrouter:[a-z0-9-]+\/[a-z0-9][a-z0-9.:_-]*)$/i, {
+    message: 'format attendu : anthropic:<modèle> ou openrouter:<fournisseur>/<modèle>',
+  })
+  .optional();
 
 export const EnvSchema = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//),
@@ -21,9 +18,9 @@ export const EnvSchema = z.object({
   BETTER_AUTH_URL: z.url(),
   ANTHROPIC_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
   OPENROUTER_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
-  LEON_LLM_TRIAGE: llmChoice,
-  LEON_LLM_EXTRACTION: llmChoice,
-  LEON_LLM_RANGEMENT: llmChoice,
+  LEON_LLM_TRIAGE: z.preprocess(emptyIsAbsent, llmChoice),
+  LEON_LLM_EXTRACTION: z.preprocess(emptyIsAbsent, llmChoice),
+  LEON_LLM_RANGEMENT: z.preprocess(emptyIsAbsent, llmChoice),
 });
 export type Env = z.infer<typeof EnvSchema>;
 

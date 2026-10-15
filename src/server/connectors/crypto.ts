@@ -7,6 +7,7 @@ const VERSION = 'v1';
 const ALGORITHM = 'aes-256-gcm';
 const KEY_BYTES = 32;
 const IV_BYTES = 12;
+const TAG_BYTES = 16;
 
 export class SecretKeyMissingError extends Error {
   constructor() {
@@ -48,10 +49,13 @@ export function decryptSecret(stored: string, aad: string, key?: Buffer): string
     Buffer,
     Buffer,
   ];
+  // GCM accepte un vecteur de n'importe quelle longueur et, selon la version de Node, une
+  // étiquette tronquée : on impose donc ici les longueurs du format v1.
+  if (iv.length !== IV_BYTES || tag.length !== TAG_BYTES) throw new Error('Secret illisible');
   try {
-    const decipher = createDecipheriv(ALGORITHM, resolved, iv);
+    const decipher = createDecipheriv(ALGORITHM, resolved, iv, { authTagLength: TAG_BYTES });
     decipher.setAAD(Buffer.from(aad));
-    decipher.setAuthTag(tag); // Node refuse une étiquette de moins de 16 octets
+    decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
   } catch {
     throw new Error('Secret illisible');

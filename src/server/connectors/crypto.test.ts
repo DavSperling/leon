@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createCipheriv, randomBytes } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { connectorsKey, decryptSecret, encryptSecret, SecretKeyMissingError } from './crypto';
 
@@ -93,12 +93,37 @@ describe('encryptSecret / decryptSecret', () => {
     expect(() => decryptSecret('v1:a:b:c:d', AAD, KEY)).toThrow();
   });
 
-  it('refuse une étiquette d’authenticité tronquée', () => {
+  // Un tag tronqué reste valide pour GCM : Node 24 l'accepte (avec un simple avertissement),
+  // Node 26 le refuse. Le contrôle doit donc venir du code, pas de la version de Node.
+  it.each([4, 8, 12])('refuse une étiquette d’authenticité tronquée à %i octets', (length) => {
     const stored = encryptSecret(PLAIN, AAD, KEY);
     const parts = stored.split(':');
-    const short = Buffer.from(parts[2] as string, 'base64url').subarray(0, 4);
+    const short = Buffer.from(parts[2] as string, 'base64url').subarray(0, length);
     parts[2] = short.toString('base64url');
     expectRefused(() => decryptSecret(parts.join(':'), AAD, KEY), stored);
+  });
+
+  it('refuse une étiquette d’authenticité trop longue (17 octets)', () => {
+    const stored = encryptSecret(PLAIN, AAD, KEY);
+    const parts = stored.split(':');
+    parts[2] = Buffer.concat([
+      Buffer.from(parts[2] as string, 'base64url'),
+      Buffer.alloc(1),
+    ]).toString('base64url');
+    expectRefused(() => decryptSecret(parts.join(':'), AAD, KEY), stored);
+  });
+
+  // Secret chiffré honnêtement, mais avec un vecteur d'initialisation d'une autre longueur :
+  // GCM l'accepterait, le format v1 impose 12 octets.
+  it.each([8, 16])('refuse un vecteur d’initialisation de %i octets', (length) => {
+    const iv = randomBytes(length);
+    const cipher = createCipheriv('aes-256-gcm', KEY, iv);
+    cipher.setAAD(Buffer.from(AAD));
+    const encrypted = Buffer.concat([cipher.update(PLAIN, 'utf8'), cipher.final()]);
+    const stored = ['v1', iv, cipher.getAuthTag(), encrypted]
+      .map((part) => (typeof part === 'string' ? part : part.toString('base64url')))
+      .join(':');
+    expectRefused(() => decryptSecret(stored, AAD, KEY), stored);
   });
 
   it('refuse une clé qui ne fait pas 32 octets', () => {

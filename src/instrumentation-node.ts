@@ -5,6 +5,8 @@ export async function startNodeInstrumentation() {
   const { env } = await import('@/server/env');
   // Next exécute register() pendant `next build` : le worker ne doit jamais y démarrer.
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
+  const { recordStartCommit } = await import('@/server/version');
+  recordStartCommit();
   if (!env.ANTHROPIC_API_KEY) {
     console.warn('[leon] ANTHROPIC_API_KEY absente : le pipeline ne tourne pas.');
     return;

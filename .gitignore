@@ -28,3 +28,6 @@ next-env.d.ts
 # Extension
 extension/.output/
 extension/.wxt/
+
+# Jeu d'essai : passage en cours (jetons exclus, mais local à chaque poste)
+essai/.dernier-passage.json

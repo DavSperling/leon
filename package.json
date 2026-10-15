@@ -19,6 +19,7 @@
     "test:db": "vitest run --project db",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx src/server/db/migrate-cli.ts",
     "leon": "node --env-file-if-exists=.env.local --import tsx src/cli/leon.ts",
+    "essai": "node --env-file-if-exists=.env.local --import tsx src/essai/cli.ts",
     "ext:dev": "wxt extension",
     "ext:build": "wxt build extension",
     "postinstall": "wxt prepare extension"

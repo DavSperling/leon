@@ -37,6 +37,7 @@ describe('privilèges', () => {
       isTestSupport(path) ||
       path === 'src/server/db/migrate-cli.ts' ||
       path === 'src/essai/admin-db.ts' || // le jeu d'essai remet à zéro sa propre organisation, hors RLS
+      path === 'src/essai/cli.ts' || // documente la variable dans l'aide de la CLI
       path === '.env.example';
     expect(offenders(/DATABASE_URL_ADMIN/, allowed)).toEqual([]);
   });

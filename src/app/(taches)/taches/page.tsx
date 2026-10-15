@@ -2,13 +2,15 @@ import type { Metadata } from 'next';
 import { z } from 'zod';
 import { BreakdownPanel } from '@/components/tasks/breakdown-panel';
 import { CreateTaskProvider } from '@/components/tasks/create-task-provider';
-import { groupStatuses, type ListContext } from '@/components/tasks/list-context';
+import { groupStatuses, type ListContext, type OpenView } from '@/components/tasks/list-context';
 import { MyActivity } from '@/components/tasks/my-activity';
 import { TaskBoard } from '@/components/tasks/task-board';
 import { TaskList } from '@/components/tasks/task-list';
+import type { SavedView } from '@/components/tasks/view-bar';
 import { ViewToolbar } from '@/components/tasks/view-toolbar';
 import { groupTasks } from '@/lib/tasks/group';
 import { parseViewParams, type ViewConfig } from '@/lib/tasks/view-config';
+import { viewContextOf } from '@/lib/tasks/view-context';
 import { cn } from '@/lib/utils';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -18,7 +20,7 @@ import { listMembers } from '@/server/tasks/members';
 import { listProjects } from '@/server/tasks/projects';
 import { listStatuses } from '@/server/tasks/statuses';
 import { countBreakdown, listTasks } from '@/server/tasks/task-list';
-import { getTeamDefaultConfig, getView } from '@/server/tasks/views';
+import { getTeamDefaultConfig, getView, listViews, type ViewRow } from '@/server/tasks/views';
 
 export const metadata: Metadata = { title: 'Tâches' };
 
@@ -29,6 +31,23 @@ async function openedView(ctx: TenantContext, params: SearchParams) {
   const id = z.uuid().safeParse([params.vue].flat()[0]);
   return id.success ? getView(ctx, id.data) : null;
 }
+
+// Ce que la barre d'outils sait de la vue ouverte ; seul l'auteur l'enregistre, la renomme, la supprime.
+const toOpenView = (ctx: TenantContext, view: ViewRow): OpenView => ({
+  id: view.id,
+  name: view.name,
+  team: view.team,
+  isTeamDefault: view.isTeamDefault,
+  owned: view.ownerId === ctx.userId,
+});
+
+// Les onglets d'un contexte sont les vues enregistrées que ses filtres désignent ; la configuration
+// d'une vue ne part pas au client.
+const toSavedView = ({ id, name, config }: ViewRow): SavedView => ({
+  id,
+  name,
+  context: viewContextOf(config),
+});
 
 const ACTIVITY_LIMIT = 50;
 
@@ -68,7 +87,7 @@ async function loadList(ctx: TenantContext, config: ViewConfig, now: Date) {
 type ListPageProps = { ctx: TenantContext; params: SearchParams; now: Date };
 
 async function ListPage({ ctx, params, now }: ListPageProps) {
-  const view = await openedView(ctx, params);
+  const [view, views] = await Promise.all([openedView(ctx, params), listViews(ctx)]);
   const base = view?.config ?? (await getTeamDefaultConfig(ctx));
   const config = parseViewParams(params, base);
   const { list, context, groupContext, breakdown } = await loadList(ctx, config, now);
@@ -80,7 +99,8 @@ async function ListPage({ ctx, params, now }: ListPageProps) {
       <div className={cn('flex', config.layout === 'board' ? 'h-full' : 'min-h-full')}>
         <div className="flex min-w-0 flex-1 flex-col">
           <ViewToolbar
-            viewName={view?.name ?? null}
+            view={view && toOpenView(ctx, view)}
+            views={views.map(toSavedView)}
             config={config}
             base={base}
             context={context}

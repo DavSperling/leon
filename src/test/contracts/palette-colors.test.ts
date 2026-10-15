@@ -7,9 +7,13 @@ const SQL_COLOR_CHECK = /color text not null check \(color ~ '([^']+)'\)/g;
 const sqlPatterns = listFiles('src/server/db/migrations/*.sql').flatMap((path) =>
   [...readText(path).matchAll(SQL_COLOR_CHECK)].map((match) => match[1] as string),
 );
-const zodPattern = /color: z\.string\(\)\.regex\(\/(.+)\/\)/.exec(
-  readText('src/app/(taches)/taches/actions.ts'),
-)?.[1];
+// Les actions qui reçoivent une couleur : `color: z.string().regex(/…/)` ou `const Color = z.string().regex(/…/)`.
+const COLOR_ACTIONS = [
+  'src/app/(taches)/taches/actions.ts',
+  'src/app/(taches)/taches/reglages/actions.ts',
+];
+const zodPattern = (path: string) =>
+  /[cC]olor(?:: |\s*=\s*)z\.string\(\)\.regex\(\/(.+)\/\)/.exec(readText(path))?.[1];
 
 describe('couleurs de la palette', () => {
   it('trouve les contraintes des statuts et des étiquettes', () => {
@@ -22,7 +26,7 @@ describe('couleurs de la palette', () => {
     expect(COLOR_PALETTE.filter((color) => !pattern.test(color))).toEqual([]);
   });
 
-  it('l’action de création d’étiquette applique le même motif que la base', () => {
-    expect(zodPattern).toBe(sqlPatterns[0]);
+  it.each(COLOR_ACTIONS)('%s applique le même motif que la base', (path) => {
+    expect(zodPattern(path)).toBe(sqlPatterns[0]);
   });
 });

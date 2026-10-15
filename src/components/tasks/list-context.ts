@@ -13,6 +13,15 @@ export type ListContext = {
   viewerId: string; // « Moi » dans les sélecteurs
 };
 
+// La vue enregistrée que la liste a ouverte (`?vue=`), et ce que le lecteur peut en faire.
+export type OpenView = {
+  id: string;
+  name: string;
+  team: boolean; // vue d'équipe : visible de tous
+  isTeamDefault: boolean;
+  owned: boolean; // seul l'auteur l'enregistre, la renomme et la supprime
+};
+
 // Un changement de filtres, que les menus et les pastilles demandent à la barre d'outils.
 export type FilterPatch = Partial<ViewConfig['filters']>;
 

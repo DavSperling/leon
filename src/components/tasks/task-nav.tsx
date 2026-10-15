@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, ListFilter, type LucideIcon, UserRound } from 'lucide-react';
+import { ListChecks, ListFilter, type LucideIcon, Settings, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -19,6 +19,8 @@ export const FIXED_ITEMS: Array<{ key: NavKey; href: string; label: string; icon
   { key: 'mine', href: '/taches?assigne=moi', label: 'Mes tâches', icon: UserRound },
   { key: 'all', href: '/taches', label: 'Toutes les tâches', icon: ListChecks },
 ];
+
+export const SETTINGS_HREF = '/taches/reglages';
 
 const Uuid = z.uuid();
 
@@ -111,9 +113,10 @@ function ViewSection({
 }
 
 // Colonne de gauche des pages de tâches : Mes tâches, Toutes les tâches, puis les projets (avec
-// leurs tâches ouvertes) et les vues enregistrées, personnelles d'abord.
+// leurs tâches ouvertes) et les vues enregistrées, personnelles d'abord ; les réglages en dernier.
 export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
-  const current = currentNavKey(usePathname(), useSearchParams());
+  const pathname = usePathname();
+  const current = currentNavKey(pathname, useSearchParams());
   return (
     <nav aria-label="Navigation des tâches" className="px-3">
       <ul className="space-y-0.5">
@@ -145,6 +148,14 @@ export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
       </NavSection>
       <ViewSection title="Mes vues" views={personalViews} current={current} />
       <ViewSection title="Vues de l’équipe" views={teamViews} current={current} />
+      <ul className="mt-5 border-t pt-3">
+        <NavLink
+          href={SETTINGS_HREF}
+          current={pathname === SETTINGS_HREF}
+          icon={<Settings size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />}
+          label="Réglages"
+        />
+      </ul>
     </nav>
   );
 }

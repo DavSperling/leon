@@ -1,4 +1,5 @@
 import { asc, eq, sql } from 'drizzle-orm';
+import { PROJECT_NAME_MAX_CHARS } from '@/lib/tasks/limits';
 import { projectKeyFrom } from '@/lib/tasks/ref';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { taskLabels, taskProjects, taskStatuses } from '@/server/db/schema/tasks';
@@ -8,7 +9,6 @@ import { isEmptyPatch, orConflict, TaskError } from './errors';
 export type ProjectRow = { id: string; key: string; name: string };
 
 const PROJECT_COLUMNS = { id: taskProjects.id, key: taskProjects.key, name: taskProjects.name };
-const NAME_MAX_CHARS = 80;
 const DUPLICATE_KEY_MESSAGE = 'Un projet porte déjà cette clé.';
 
 // Les statuts de Linear, rangés par catégorie.
@@ -76,7 +76,7 @@ export async function ensureDefaultProject(ctx: TenantContext, orgName: string):
       sql`select pg_advisory_xact_lock(('x' || substr(md5(${ctx.tenantId}), 1, 16))::bit(64)::bigint)`,
     );
     if ((await tx.$count(taskProjects)) > 0) return;
-    const name = orgName.trim().slice(0, NAME_MAX_CHARS);
+    const name = orgName.trim().slice(0, PROJECT_NAME_MAX_CHARS);
     const project = await insertProject(tx, ctx, { name, key: projectKeyFrom(name) });
     await insertDefaultStatuses(tx, ctx, project.id);
     await tx

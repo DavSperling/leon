@@ -23,3 +23,22 @@ export function nextColor(taken: readonly string[]): string {
     COLOR_PALETTE[0]
   );
 }
+
+// Le nom de chaque couleur, pour les lecteurs d'écran : une pastille n'a pas d'autre intitulé.
+export const COLOR_NAMES = {
+  '#dc2626': 'Rouge',
+  '#7c3aed': 'Violet',
+  '#2563eb': 'Bleu',
+  '#16a34a': 'Vert',
+  '#ca8a04': 'Jaune',
+  '#db2777': 'Rose',
+  '#0891b2': 'Cyan',
+  '#d97706': 'Orange',
+  '#059669': 'Émeraude',
+  '#4f46c8': 'Indigo',
+  '#6b7280': 'Gris',
+  '#9ca3af': 'Gris clair',
+} as const satisfies Record<(typeof COLOR_PALETTE)[number], string>;
+
+export const colorName = (hex: string): string =>
+  (COLOR_NAMES as Record<string, string>)[hex] ?? hex;

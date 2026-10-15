@@ -6,16 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SEARCH_MAX_CHARS } from '@/lib/tasks/limits';
-import type { ViewConfig } from '@/lib/tasks/view-config';
+import { sameConfig, type ViewConfig } from '@/lib/tasks/view-config';
+import { contextConfig, viewContextOf } from '@/lib/tasks/view-context';
 import { cn } from '@/lib/utils';
 import { useCreateTask } from './create-task-provider';
 import { DisplayMenu } from './display-menu';
 import { activeFilters, FilterChips } from './filter-chips';
 import { FilterMenu } from './filter-menu';
 import { ListBreadcrumb } from './list-breadcrumb';
-import type { FilterPatch, ListContext } from './list-context';
-import { MyTasksTabs, myTasksTab } from './my-tasks-tabs';
+import type { FilterPatch, ListContext, OpenView } from './list-context';
+import { myTasksTab } from './my-tasks-tabs';
 import { useViewNavigation } from './use-view-navigation';
+import { type SavedView, ViewBar } from './view-bar';
+import { type ViewDialogKind, ViewDialogs } from './view-dialogs';
 
 // Le nom de la liste : celui de la vue ouverte, du projet filtré, de « Mes tâches », ou « Toutes ».
 export function listTitle(viewName: string | null, config: ViewConfig, context: ListContext) {
@@ -69,18 +72,25 @@ function SearchField({ query, onSearch }: SearchFieldProps) {
 }
 
 type ViewToolbarProps = {
-  viewName: string | null; // vue enregistrée ouverte
+  view: OpenView | null;
+  views: SavedView[]; // toutes les vues enregistrées visibles ; la barre garde celles de son contexte
   config: ViewConfig;
   base: ViewConfig;
   context: ListContext;
 };
 
-// En-tête collant de la liste : fil d'Ariane, recherche, filtres, affichage, puis les pastilles
-// des filtres actifs. Chaque changement est une navigation (retour arrière compris).
-export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProps) {
+// En-tête collant de la liste : fil d'Ariane, recherche, filtres, affichage, onglets et actions des
+// vues enregistrées, puis les pastilles des filtres actifs. Chaque changement est une navigation
+// (retour arrière compris).
+export function ViewToolbar({ view, views, config, base, context }: ViewToolbarProps) {
   const navigate = useViewNavigation(base);
   const openCreate = useCreateTask();
-  const tab = myTasksTab(viewName, config);
+  const [dialog, setDialog] = useState<ViewDialogKind | null>(null);
+  const viewName = view?.name ?? null;
+  // Une vue ouverte se compare à ses réglages enregistrés (`base`) ; sans vue, à la liste que la
+  // navigation ouvre dans ce contexte.
+  const reference = view ? base : contextConfig(config, base);
+  const modified = !sameConfig(config, reference);
   const change = (patch: Partial<ViewConfig>) => navigate({ ...config, ...patch });
   const filter = (patch: FilterPatch) => change({ filters: { ...config.filters, ...patch } });
   return (
@@ -90,7 +100,13 @@ export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProp
         <div className="ml-auto flex flex-wrap items-center gap-1">
           <SearchField query={config.filters.q} onSearch={(q) => filter({ q })} />
           <FilterMenu config={config} context={context} onChange={filter} />
-          <DisplayMenu config={config} base={base} onChange={change} />
+          <DisplayMenu
+            config={config}
+            base={base}
+            isTeamDefault={view ? view.isTeamDefault && !modified : sameConfig(config, base)}
+            onChange={change}
+            onSetTeamDefault={() => setDialog('default')}
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -112,8 +128,25 @@ export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProp
           </Button>
         </div>
       </div>
-      {tab && <MyTasksTabs active={tab} />}
+      <ViewBar
+        view={view}
+        views={views}
+        context={viewContextOf(view ? base : config)}
+        mineTab={myTasksTab(viewName, config)}
+        config={config}
+        reference={reference}
+        base={base}
+        modified={modified}
+        onDialog={setDialog}
+      />
       <FilterChips chips={activeFilters(config, context)} onClear={filter} />
+      <ViewDialogs
+        kind={dialog}
+        view={view}
+        config={config}
+        modified={modified}
+        onClose={() => setDialog(null)}
+      />
     </div>
   );
 }

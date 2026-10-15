@@ -3,7 +3,11 @@ import {
   COMMENT_MAX_CHARS,
   DESCRIPTION_MAX_CHARS,
   LABEL_NAME_MAX_CHARS,
+  PROJECT_KEY_PATTERN,
+  PROJECT_NAME_MAX_CHARS,
+  STATUS_LABEL_MAX_CHARS,
   TITLE_MAX_CHARS,
+  VIEW_NAME_MAX_CHARS,
 } from '@/lib/tasks/limits';
 import { productionSources, readText } from './files';
 
@@ -36,6 +40,41 @@ describe('bornes des champs des tâches', () => {
     expect(sqlBound('task_labels', /char_length\(name\) between 1 and (\d+)/)).toBe(
       LABEL_NAME_MAX_CHARS,
     );
+  });
+
+  it('le nom d’un projet, le libellé d’un statut, le nom d’une vue', () => {
+    expect(sqlBound('task_projects', /char_length\(name\) between 1 and (\d+)/)).toBe(
+      PROJECT_NAME_MAX_CHARS,
+    );
+    expect(sqlBound('task_statuses', /char_length\(label\) between 1 and (\d+)/)).toBe(
+      STATUS_LABEL_MAX_CHARS,
+    );
+    expect(sqlBound('task_views', /char_length\(name\) between 1 and (\d+)/)).toBe(
+      VIEW_NAME_MAX_CHARS,
+    );
+  });
+
+  it('la clé d’un projet : la base et l’action appliquent le même motif', () => {
+    const body = /create table task_projects \(([\s\S]*?)\n\);/.exec(MIGRATION)?.[1] ?? '';
+    expect(/check \(key ~ '([^']+)'\)/.exec(body)?.[1]).toBe(PROJECT_KEY_PATTERN.source);
+  });
+
+  it('les réglages : l’action, les champs et la base partagent les bornes', () => {
+    const imports = (name: string, path: string) =>
+      expect(readText(path), `${path} : ${name}`).toMatch(
+        new RegExp(`import \\{[^}]*\\b${name}\\b[^}]*\\} from '@/lib/tasks/limits'`),
+      );
+    for (const name of [
+      'PROJECT_NAME_MAX_CHARS',
+      'PROJECT_KEY_PATTERN',
+      'STATUS_LABEL_MAX_CHARS',
+    ]) {
+      imports(name, 'src/app/(taches)/taches/reglages/actions.ts');
+    }
+    imports('PROJECT_NAME_MAX_CHARS', 'src/components/tasks/settings/project-settings.tsx');
+    imports('STATUS_LABEL_MAX_CHARS', 'src/components/tasks/settings/status-settings.tsx');
+    imports('VIEW_NAME_MAX_CHARS', 'src/app/(taches)/taches/view-actions.ts');
+    imports('VIEW_NAME_MAX_CHARS', 'src/components/tasks/view-name-dialog.tsx');
   });
 
   it('le commentaire : la page, l’outil MCP et le formulaire importent la même borne', () => {

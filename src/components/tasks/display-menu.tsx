@@ -1,7 +1,7 @@
 'use client';
 
 import { Columns3, List, SlidersHorizontal } from 'lucide-react';
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -172,14 +172,23 @@ function PropertyPills({ selected, onChange }: PropertyPillsProps) {
 type DisplayMenuProps = {
   config: ViewConfig;
   base: ViewConfig;
+  isTeamDefault: boolean; // l'affichage actuel est déjà celui que l'équipe voit par défaut
   onChange: (patch: Partial<ViewConfig>) => void;
+  onSetTeamDefault: () => void;
 };
 
-export function DisplayMenu({ config, base, onChange }: DisplayMenuProps) {
+export function DisplayMenu({
+  config,
+  base,
+  isTeamDefault,
+  onChange,
+  onSetTeamDefault,
+}: DisplayMenuProps) {
+  const [open, setOpen] = useState(false);
   // « Réinitialiser » ramène l'affichage à celui de la base ; les filtres restent.
   const modified = !sameConfig({ ...config, filters: base.filters }, base);
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="sm">
           <SlidersHorizontal size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -223,7 +232,7 @@ export function DisplayMenu({ config, base, onChange }: DisplayMenuProps) {
             onChange={(properties) => onChange({ properties })}
           />
         </div>
-        <div className="flex justify-end border-t p-2">
+        <div className="flex flex-col items-start border-t p-2">
           <Button
             variant="ghost"
             size="sm"
@@ -231,6 +240,17 @@ export function DisplayMenu({ config, base, onChange }: DisplayMenuProps) {
             onClick={() => onChange({ ...base, filters: config.filters })}
           >
             Réinitialiser
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isTeamDefault}
+            onClick={() => {
+              setOpen(false);
+              onSetTeamDefault();
+            }}
+          >
+            {isTeamDefault ? 'Défaut de l’équipe' : 'Définir par défaut pour l’équipe'}
           </Button>
         </div>
       </PopoverContent>

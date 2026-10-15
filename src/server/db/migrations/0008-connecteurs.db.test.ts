@@ -81,6 +81,14 @@ async function insertSource(
   return id;
 }
 
+// Les identifiants de la connexion que `ctx` voit (la sécurité par ligne filtre).
+async function visibleTo(ctx: TenantContext, id: string): Promise<string[]> {
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<{ id: string }>(sql`select id from connections where id = ${id}`),
+  );
+  return rows.map((row) => row.id);
+}
+
 async function dueConnectionIds(): Promise<Map<string, { tenant_id: string; user_id: string }>> {
   const { rows } = await db.execute<{ connection_id: string; tenant_id: string; user_id: string }>(
     sql`select connection_id, tenant_id, user_id from connector_syncs_due()`,
@@ -136,19 +144,31 @@ describe('sources et tours des connecteurs', () => {
 describe('connections', () => {
   it("est visible d'un autre membre de l'équipe et invisible d'une autre organisation", async () => {
     const id = await seedConnection(paul);
-    const visibleTo = async (ctx: TenantContext) =>
-      (
-        await withTenant(ctx, (tx) =>
-          tx.execute<{ id: string }>(sql`select id from connections where id = ${id}`),
-        )
-      ).rows.map((row) => row.id);
 
-    expect(await visibleTo(paul)).toEqual([id]);
-    expect(await visibleTo(marie)).toEqual([id]);
-    expect(await visibleTo(zoe)).toEqual([]);
+    expect(await visibleTo(paul, id)).toEqual([id]);
+    expect(await visibleTo(marie, id)).toEqual([id]);
+    expect(await visibleTo(zoe, id)).toEqual([]);
+  });
+
+  // Le chemin de createConnection : l'application écrit sous withTenant, pas le propriétaire.
+  it("s'insère sous withTenant, puis est visible d'un autre membre et invisible d'une autre organisation", async () => {
+    const { rows } = await withTenant(paul, (tx) =>
+      tx.execute<{ id: string }>(sql`
+        insert into connections (tenant_id, created_by, provider, label, secret, secret_hint, since, acl)
+        values (${paul.tenantId}, ${paul.userId}, 'github', 'Connexion créée par l''application',
+                'v1:a:b:c', 'abcd', now(), ${`{${paul.tenantId}}`}::uuid[])
+        returning id`),
+    );
+    const id = rows[0]?.id;
+    if (!id) throw new Error('connexion non insérée');
+
+    expect(await visibleTo(paul, id)).toEqual([id]);
+    expect(await visibleTo(marie, id)).toEqual([id]);
+    expect(await visibleTo(zoe, id)).toEqual([]);
   });
 
   it("refuse d'écrire une connexion dans une autre organisation", async () => {
+    // Le message distingue la sécurité par ligne d'un droit d'insertion manquant : les deux rendent 42501.
     await expect(
       withTenant(zoe, (tx) =>
         tx.execute(sql`
@@ -156,7 +176,9 @@ describe('connections', () => {
           values (${paul.tenantId}, ${paul.userId}, 'github', 'x', 'v1:a:b:c', 'abcd', now(),
                   ${`{${paul.tenantId}}`}::uuid[])`),
       ),
-    ).rejects.toMatchObject({ cause: { code: '42501' } });
+    ).rejects.toMatchObject({
+      cause: { code: '42501', message: expect.stringMatching(/row-level security/) },
+    });
   });
 
   it("refuse un secret qui n'est pas chiffré, un indice de plus de 4 caractères et un outil inconnu", async () => {

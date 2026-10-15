@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export type MyTasksTab = 'assigned' | 'created' | 'activity';
 
-const TABS: Array<{ tab: MyTasksTab; label: string; href: string }> = [
+export const TABS: Array<{ tab: MyTasksTab; label: string; href: string }> = [
   { tab: 'assigned', label: 'Assignées', href: '/taches?assigne=moi' },
   { tab: 'created', label: 'Créées', href: '/taches?createur=moi' },
   { tab: 'activity', label: 'Activité', href: '/taches?onglet=activite' },

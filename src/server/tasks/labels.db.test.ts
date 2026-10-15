@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { MAX_IDS } from '@/lib/tasks/limits';
 import { taskLabels } from '@/server/db/schema/tasks';
 import { adminDb } from '@/test/db';
 import { seedTasksScenario } from '@/test/tasks-scenario';
-import { MAX_IDS } from './errors';
 import { createLabel, deleteLabel, findLabelsByName, listLabels, updateLabel } from './labels';
 import { createTask, getTaskByRef } from './tasks';
 

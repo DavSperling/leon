@@ -6,6 +6,7 @@ import { TASK_PRIORITIES } from '@/lib/enums';
 import {
   DESCRIPTION_MAX_CHARS,
   LABEL_NAME_MAX_CHARS,
+  MAX_IDS,
   SEARCH_MAX_CHARS,
   SEARCH_MIN_CHARS,
   TITLE_MAX_CHARS,
@@ -14,7 +15,7 @@ import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { logError } from '@/server/log';
-import { MAX_IDS, TaskError } from '@/server/tasks/errors';
+import { TaskError } from '@/server/tasks/errors';
 import { createLabel, type LabelRow } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
 import {

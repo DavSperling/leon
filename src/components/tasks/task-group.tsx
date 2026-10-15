@@ -40,21 +40,25 @@ type TaskGroupSectionProps = {
   label: string;
   count: number;
   icon: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onCreate: () => void; // « + » : crée une tâche dans ce groupe
   children: ReactNode;
 };
 
-// Un groupe repliable : icône, nom, compteur. Le titre est un bouton, comme dans un accordéon ;
-// le « + » est à côté de lui, jamais dedans.
+// Un groupe repliable : icône, nom, compteur. La liste garde l'état replié, car la sélection en
+// dépend. Le titre est un bouton, comme dans un accordéon ; le « + » est à côté de lui, jamais dedans.
 export function TaskGroupSection({
   label,
   count,
   icon,
+  open,
+  onOpenChange,
   onCreate,
   children,
 }: TaskGroupSectionProps) {
   return (
-    <Collapsible defaultOpen>
+    <Collapsible open={open} onOpenChange={onOpenChange}>
       <div className="relative">
         <h2 className="text-sm font-normal">
           <CollapsibleTrigger className="group/trigger flex h-9 w-full items-center gap-2 bg-muted px-5 text-left transition-colors hover:bg-accent">

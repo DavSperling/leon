@@ -4,6 +4,7 @@ import {
   EMPTY_SELECTION,
   type Selection,
   selectRow,
+  shownRows,
   visibleSelection,
 } from './selection';
 
@@ -51,10 +52,37 @@ describe('selectRow', () => {
     expect(sorted(selectRow(stale, ORDER, 'c', true))).toEqual(['c', 'x']);
   });
 
+  it('garde cochée une tâche déjà cochée quand le point de départ n’est plus affiché', () => {
+    const stale: Selection = { ids: new Set(['a', 'b']), anchor: 'x' };
+    const range = selectRow(stale, ORDER, 'a', true);
+    expect(sorted(range)).toEqual(['a', 'b']);
+    expect(range.anchor).toBe('a');
+  });
+
   it('ne modifie pas la sélection reçue', () => {
     const before = pick(EMPTY_SELECTION, 'a');
     selectRow(before, ORDER, 'b', false);
     expect(sorted(before)).toEqual(['a']);
+  });
+});
+
+describe('shownRows', () => {
+  const group = (key: string, ...ids: string[]) => ({
+    key,
+    label: key,
+    rows: ids.map((id) => ({ id })),
+  });
+  const ids = (rows: Array<{ id: string }>) => rows.map((row) => row.id);
+
+  it('range les tâches dans l’ordre d’affichage, une fois chacune', () => {
+    const groups = [group('bug', 'a', 'b'), group('feature', 'b', 'c')];
+    expect(ids(shownRows(groups, new Set()))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('écarte les tâches d’un groupe replié, sauf celles qu’un autre groupe montre encore', () => {
+    const groups = [group('bug', 'a', 'b'), group('feature', 'b', 'c')];
+    expect(ids(shownRows(groups, new Set(['bug'])))).toEqual(['b', 'c']);
+    expect(shownRows(groups, new Set(['bug', 'feature']))).toEqual([]);
   });
 });
 

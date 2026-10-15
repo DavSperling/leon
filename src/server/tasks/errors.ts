@@ -1,5 +1,4 @@
-// Plafond des listes d'identifiants reçues d'un appelant (sélection groupée, étiquettes, noms).
-export const MAX_IDS = 200;
+import { MAX_IDS } from '@/lib/tasks/limits';
 
 type TaskErrorCode = 'not_found' | 'invalid' | 'conflict';
 

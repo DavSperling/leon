@@ -1,10 +1,23 @@
+import type { TaskGroup } from '@/lib/tasks/group';
+
 // Ce que la sélection multiple retient : les tâches cochées, et la dernière touchée, d'où part une plage.
 export type Selection = { ids: ReadonlySet<string>; anchor: string | null };
 
 export const EMPTY_SELECTION: Selection = { ids: new Set(), anchor: null };
 
+// Les tâches que la liste montre, une fois chacune (une tâche à plusieurs étiquettes figure dans
+// plusieurs groupes), dans l'ordre d'affichage : celles d'un groupe replié n'y sont pas.
+export function shownRows<T extends { id: string }>(
+  groups: readonly TaskGroup<T>[],
+  collapsed: ReadonlySet<string>,
+): T[] {
+  const shown = groups.filter((group) => !collapsed.has(group.key));
+  return [...new Map(shown.flatMap((group) => group.rows).map((row) => [row.id, row])).values()];
+}
+
 // Coche ou décoche `id`. Avec `range`, tout ce qui sépare la dernière tâche touchée de `id`, dans
-// l'ordre d'affichage `order`, est coché ; sans point de départ affiché, `range` coche `id` seul.
+// l'ordre d'affichage `order`, est coché ; sans point de départ affiché, `range` coche `id` seul,
+// même s'il l'était déjà.
 export function selectRow(
   selection: Selection,
   order: readonly string[],
@@ -18,7 +31,7 @@ export function selectRow(
     for (const between of order.slice(Math.min(from, to), Math.max(from, to) + 1)) {
       ids.add(between);
     }
-  } else if (!ids.delete(id)) {
+  } else if (range || !ids.delete(id)) {
     ids.add(id);
   }
   return { ids, anchor: id };

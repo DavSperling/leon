@@ -8,7 +8,7 @@ import { TaskBoard } from '@/components/tasks/task-board';
 import { TaskList } from '@/components/tasks/task-list';
 import { ViewToolbar } from '@/components/tasks/view-toolbar';
 import { groupTasks } from '@/lib/tasks/group';
-import { parseViewParams } from '@/lib/tasks/view-config';
+import { parseViewParams, type ViewConfig } from '@/lib/tasks/view-config';
 import { cn } from '@/lib/utils';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -41,12 +41,9 @@ async function ActivityPage({ ctx, now }: { ctx: TenantContext; now: Date }) {
   return <MyActivity items={items} members={members} now={now} />;
 }
 
-type ListPageProps = { ctx: TenantContext; params: SearchParams; now: Date };
-
-async function ListPage({ ctx, params, now }: ListPageProps) {
-  const view = await openedView(ctx, params);
-  const base = view?.config ?? (await getTeamDefaultConfig(ctx));
-  const config = parseViewParams(params, base);
+// Ce que la liste affiche : les tâches, de quoi les décrire (statuts, membres, étiquettes, projets)
+// et, quand l'affichage le demande, la répartition.
+async function loadList(ctx: TenantContext, config: ViewConfig, now: Date) {
   const [list, statuses, members, labels, projects, breakdown] = await Promise.all([
     listTasks(ctx, config, now),
     listStatuses(ctx),
@@ -65,6 +62,16 @@ async function ListPage({ ctx, params, now }: ListPageProps) {
   // Seuls les groupes se limitent au projet filtré et distinguent les statuts de même nom de deux
   // projets (« Backlog · LEO ») ; la création rapide a besoin des statuts de tous les projets.
   const groupContext = { ...context, statuses: groupStatuses(statuses, projects, config) };
+  return { list, context, groupContext, breakdown };
+}
+
+type ListPageProps = { ctx: TenantContext; params: SearchParams; now: Date };
+
+async function ListPage({ ctx, params, now }: ListPageProps) {
+  const view = await openedView(ctx, params);
+  const base = view?.config ?? (await getTeamDefaultConfig(ctx));
+  const config = parseViewParams(params, base);
+  const { list, context, groupContext, breakdown } = await loadList(ctx, config, now);
   const View = config.layout === 'board' ? TaskBoard : TaskList;
   return (
     <CreateTaskProvider config={config} context={context} now={now}>

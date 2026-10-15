@@ -26,4 +26,14 @@ describe('bornes des champs des tâches', () => {
       LABEL_NAME_MAX_CHARS,
     );
   });
+
+  it('la sélection groupée : la barre et les actions partagent un seul plafond', () => {
+    const imported = /import \{[^}]*\bMAX_IDS\b[^}]*\} from '@\/lib\/tasks\/limits'/;
+    for (const path of [
+      'src/components/tasks/selection-bar.tsx',
+      'src/app/(taches)/taches/actions.ts',
+    ]) {
+      expect(readText(path), path).toMatch(imported);
+    }
+  });
 });

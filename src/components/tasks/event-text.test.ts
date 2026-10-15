@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { TaskEventKind } from '@/lib/enums';
 import type { ActivityItem } from '@/server/tasks/activity';
-import { actorLabel, eventText } from './event-text';
+import { eventText } from './event-text';
 
 const PAUL = { id: 'paul', name: 'Paul Martin', initials: 'PM' };
 const NAMES = new Map([['paul', 'Paul Martin']]);
@@ -17,23 +17,6 @@ const item = (kind: TaskEventKind, payload: ActivityItem['payload'] = {}): Activ
   payload,
   body: null,
   createdAt: new Date('2026-10-15T10:00:00Z'),
-});
-
-describe('actorLabel', () => {
-  it('nomme une personne', () => {
-    expect(actorLabel(item('created'))).toBe('Paul Martin');
-  });
-
-  it('écrit un agent « Claude Code (agent) », et garde le nom d’un client inconnu', () => {
-    const agent = { ...item('created'), actorKind: 'agent' as const, actor: PAUL };
-    expect(actorLabel({ ...agent, client: 'claude-code' })).toBe('Claude Code (agent)');
-    expect(actorLabel({ ...agent, client: 'cursor' })).toBe('cursor (agent)');
-    expect(actorLabel({ ...agent, client: null })).toBe('mcp (agent)');
-  });
-
-  it('dit d’un compte supprimé qu’il l’est', () => {
-    expect(actorLabel({ ...item('created'), actor: null })).toBe('Compte supprimé');
-  });
 });
 
 describe('eventText', () => {

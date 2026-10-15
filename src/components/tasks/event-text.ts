@@ -1,7 +1,6 @@
 import { TASK_PRIORITIES, type TaskPriority } from '@/lib/enums';
 import { formatDay } from '@/lib/tasks/dates';
 import { PRIORITY_LABELS } from '@/lib/tasks/labels';
-import { clientLabel } from '@/server/memory/labels';
 import type { ActivityItem } from '@/server/tasks/activity';
 
 // Les libellés des événements d'une tâche, tels que le fil d'activité les écrit (C8) :
@@ -13,12 +12,6 @@ type Names = ReadonlyMap<string, string>; // identifiant d'utilisateur → nom
 const text = (value: unknown): string | null => (typeof value === 'string' ? value : null);
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
-
-// Qui a écrit : une personne par son nom, un agent par son client, « Claude Code (agent) ».
-export function actorLabel({ actorKind, client, actor }: ActivityItem): string {
-  if (actorKind === 'agent') return `${clientLabel(client ?? 'mcp')} (agent)`;
-  return actor?.name ?? 'Compte supprimé';
-}
 
 const change = (label: string, from: string, to: string) => `${label} : ${from} → ${to}`;
 

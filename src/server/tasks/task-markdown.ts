@@ -1,5 +1,5 @@
 import { EMPTY_GROUP_LABELS, PRIORITY_LABELS } from '@/lib/tasks/labels';
-import { clientLabel, isoDate, oneLine } from '@/server/memory/labels';
+import { actorLabel, isoDate, oneLine } from '@/server/memory/labels';
 import { DATA_GUARD_LINE } from '@/server/memory/render-card';
 import type { ActivityItem } from './activity';
 import type { LabelRow } from './labels';
@@ -43,19 +43,13 @@ function properties(task: TaskDetail): string[] {
   ];
 }
 
-// Un agent s'écrit « Claude Code (agent) », une personne par son nom.
-function authorOf(item: ActivityItem): string {
-  if (item.actorKind === 'agent') return `${clientLabel(item.client ?? 'mcp')} (agent)`;
-  return oneLine(item.actor?.name ?? 'Compte supprimé');
-}
-
 function recentComments(activity: readonly ActivityItem[]): string[] {
   return activity
     .filter((item) => item.kind === 'comment' && item.body !== null)
     .slice(-COMMENTS_SHOWN)
     .map(
       (item) =>
-        `- ${isoDate(item.createdAt)} · ${authorOf(item)} : ${truncate(oneLine(item.body ?? ''), COMMENT_MAX_CHARS)}`,
+        `- ${isoDate(item.createdAt)} · ${oneLine(actorLabel(item))} : ${truncate(oneLine(item.body ?? ''), COMMENT_MAX_CHARS)}`,
     );
 }
 

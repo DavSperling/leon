@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatNumber } from '@/lib/format';
+import { MAX_IDS } from '@/lib/tasks/limits';
 import type { TaskRow } from '@/server/tasks/task-row';
 import type { BulkPatch } from '@/server/tasks/tasks';
 import type { ListContext } from './list-context';
@@ -34,14 +35,14 @@ const tasksLabel = (count: number): string =>
   `${formatNumber(count)} ${count > 1 ? 'tâches' : 'tâche'}`;
 
 type BarProps = { rows: TaskRow[]; context: ListContext; now: Date };
-type EditProps = { edit: (patch: BulkPatch) => void; pending: boolean };
+type EditProps = { edit: (patch: BulkPatch) => void; disabled: boolean };
 
 function BarButton(props: ComponentProps<typeof Button>) {
   return <Button type="button" variant="ghost" size="sm" {...props} />;
 }
 
 // Les statuts sont ceux d'un projet : une sélection de plusieurs projets n'en a pas de commun.
-function StatusAction({ rows, context, edit, pending }: BarProps & EditProps) {
+function StatusAction({ rows, context, edit, disabled }: BarProps & EditProps) {
   const projectIds = new Set(rows.map((row) => row.projectId));
   const [projectId] = projectIds;
   if (projectIds.size !== 1) {
@@ -61,14 +62,14 @@ function StatusAction({ rows, context, edit, pending }: BarProps & EditProps) {
       value={commonValue(rows, (row) => row.statusId)}
       onChange={(statusId) => edit({ statusId })}
     >
-      <BarButton disabled={pending}>Statut</BarButton>
+      <BarButton disabled={disabled}>Statut</BarButton>
     </StatusPicker>
   );
 }
 
 // Une étiquette est cochée quand toutes les tâches la portent ; la cocher l'ajoute à toutes, la
 // décocher la retire de toutes.
-function LabelsAction({ rows, context, edit, pending }: BarProps & EditProps) {
+function LabelsAction({ rows, context, edit, disabled }: BarProps & EditProps) {
   const onAll = context.labels
     .filter((label) => rows.every((row) => row.labels.some((own) => own.id === label.id)))
     .map((label) => label.id);
@@ -80,19 +81,19 @@ function LabelsAction({ rows, context, edit, pending }: BarProps & EditProps) {
         edit(selected ? { addLabelIds: [label.id] } : { removeLabelIds: [label.id] })
       }
     >
-      <BarButton disabled={pending}>Étiquettes</BarButton>
+      <BarButton disabled={disabled}>Étiquettes</BarButton>
     </LabelsPicker>
   );
 }
 
-type DeleteProps = { rows: TaskRow[]; pending: boolean; onConfirm: () => void };
+type DeleteProps = { rows: TaskRow[]; disabled: boolean; onConfirm: () => void };
 
-function DeleteAction({ rows, pending, onConfirm }: DeleteProps) {
+function DeleteAction({ rows, disabled, onConfirm }: DeleteProps) {
   const these = rows.length > 1 ? 'ces tâches' : 'cette tâche';
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <BarButton disabled={pending} className="text-destructive hover:text-destructive">
+        <BarButton disabled={disabled} className="text-destructive hover:text-destructive">
           Supprimer
         </BarButton>
       </AlertDialogTrigger>
@@ -117,7 +118,7 @@ function DeleteAction({ rows, pending, onConfirm }: DeleteProps) {
   );
 }
 
-type BulkActions = EditProps & { remove: () => void };
+type BulkActions = { edit: EditProps['edit']; pending: boolean; remove: () => void };
 
 // Les actions groupées : une transition à la fois, qui désactive la barre jusqu'à ce que la liste
 // ait fini de se rafraîchir. Une erreur s'affiche ; la sélection reste, pour réessayer.
@@ -142,13 +143,50 @@ function useBulkActions(rows: TaskRow[]): BulkActions {
   return { edit, pending, remove };
 }
 
+type ActionsProps = BarProps & EditProps & { remove: () => void };
+
+// Ce qu'on peut faire d'un coup : statut, priorité, assigné, étiquettes, échéance, puis supprimer.
+function BarActions({ rows, context, now, edit, disabled, remove }: ActionsProps) {
+  const bar = { rows, context, now, edit, disabled };
+  return (
+    <>
+      <StatusAction {...bar} />
+      <PriorityPicker
+        value={commonValue(rows, (row) => row.priority)}
+        onChange={(priority) => edit({ priority })}
+      >
+        <BarButton disabled={disabled}>Priorité</BarButton>
+      </PriorityPicker>
+      <AssigneePicker
+        members={context.members}
+        viewerId={context.viewerId}
+        value={commonValue(rows, (row) => row.assignee?.id ?? null)}
+        onChange={(assigneeId) => edit({ assigneeId })}
+      >
+        <BarButton disabled={disabled}>Assigné</BarButton>
+      </AssigneePicker>
+      <LabelsAction {...bar} />
+      <DueDatePicker
+        value={commonValue(rows, (row) => row.dueDate)}
+        now={now}
+        onChange={(dueDate) => edit({ dueDate })}
+      >
+        <BarButton disabled={disabled}>Échéance</BarButton>
+      </DueDatePicker>
+      <Separator orientation="vertical" className="mx-1 h-5" />
+      <DeleteAction rows={rows} disabled={disabled} onConfirm={remove} />
+    </>
+  );
+}
+
 // La barre flottante en bas de la liste : le nombre de tâches cochées et ce qu'on peut leur
-// faire d'un coup. Elle colle au bas de la zone qui défile.
+// faire d'un coup. Elle colle au bas de la zone qui défile. Au-delà de MAX_IDS tâches, le serveur
+// refuserait l'action : la barre la désactive et le dit.
 export function SelectionBar({ context, now }: { context: ListContext; now: Date }) {
   const { selectedRows: rows, clear } = useSelection();
   const { edit, pending, remove } = useBulkActions(rows);
   if (rows.length === 0) return null;
-  const bar = { rows, context, now };
+  const tooMany = rows.length > MAX_IDS;
   return (
     <div className="pointer-events-none sticky bottom-4 z-10 flex justify-center px-5">
       <div
@@ -168,33 +206,19 @@ export function SelectionBar({ context, now }: { context: ListContext; now: Date
         </Button>
         <span aria-live="polite" className="px-2 text-sm tabular-nums">
           {formatNumber(rows.length)} {rows.length > 1 ? 'sélectionnées' : 'sélectionnée'}
+          {tooMany && (
+            <span className="text-muted-foreground"> · {MAX_IDS} tâches au plus par action</span>
+          )}
         </span>
         <Separator orientation="vertical" className="mx-1 h-5" />
-        <StatusAction {...bar} edit={edit} pending={pending} />
-        <PriorityPicker
-          value={commonValue(rows, (row) => row.priority)}
-          onChange={(priority) => edit({ priority })}
-        >
-          <BarButton disabled={pending}>Priorité</BarButton>
-        </PriorityPicker>
-        <AssigneePicker
-          members={context.members}
-          viewerId={context.viewerId}
-          value={commonValue(rows, (row) => row.assignee?.id ?? null)}
-          onChange={(assigneeId) => edit({ assigneeId })}
-        >
-          <BarButton disabled={pending}>Assigné</BarButton>
-        </AssigneePicker>
-        <LabelsAction {...bar} edit={edit} pending={pending} />
-        <DueDatePicker
-          value={commonValue(rows, (row) => row.dueDate)}
+        <BarActions
+          rows={rows}
+          context={context}
           now={now}
-          onChange={(dueDate) => edit({ dueDate })}
-        >
-          <BarButton disabled={pending}>Échéance</BarButton>
-        </DueDatePicker>
-        <Separator orientation="vertical" className="mx-1 h-5" />
-        <DeleteAction rows={rows} pending={pending} onConfirm={remove} />
+          edit={edit}
+          disabled={pending || tooMany}
+          remove={remove}
+        />
       </div>
     </div>
   );

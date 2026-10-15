@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { MAX_IDS } from '@/lib/tasks/limits';
 import { taskProjects, taskStatuses } from '@/server/db/schema/tasks';
 import { adminDb } from '@/test/db';
 import { seedTaskProject } from '@/test/fixtures';
 import { readEvents, readTask, seedTasksScenario } from '@/test/tasks-scenario';
-import { MAX_IDS } from './errors';
 import { createProject } from './projects';
 import { createTask, deleteTasks, getTaskByRef } from './tasks';
 

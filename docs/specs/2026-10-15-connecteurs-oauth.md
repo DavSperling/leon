@@ -25,7 +25,7 @@ Toujours exclus : Google (audit CASA), Slack, Zoom, Figma (revue), Teams, et les
 
 ## Une fois par outil, côté Leon
 
-Amos ou David crée l'appli dans la console développeur de l'éditeur, en suivant `docs/guides/applis-oauth.md` (un paragraphe par outil : où cliquer, adresse de retour, droits à cocher). L'adresse de retour est `<BETTER_AUTH_URL>/api/v1/connexions/oauth/<outil>/retour`, soit `http://localhost:3000/…` en local. L'identifiant et le secret de l'appli vont dans `.env.local` : `LEON_OAUTH_<OUTIL>_ID` et `LEON_OAUTH_<OUTIL>_SECRET`, avec `ATLASSIAN` pour Jira et Confluence. Certains éditeurs demandent une page de confidentialité et des conditions : le guide le signale.
+Amos ou David crée l'appli dans la console développeur de l'éditeur, en suivant `docs/guides/applis-oauth.md` (un paragraphe par outil : où cliquer, adresse de retour, droits à cocher). L'adresse de retour est `<BETTER_AUTH_URL>/api/v1/connexions/oauth/<appli>/retour`, soit `http://localhost:3000/…` en local, `<appli>` étant `atlassian` pour Jira et Confluence (une appli Atlassian n'a qu'une adresse de retour), l'identifiant de l'outil pour les autres. L'identifiant et le secret de l'appli vont dans `.env.local` : `LEON_OAUTH_<OUTIL>_ID` et `LEON_OAUTH_<OUTIL>_SECRET`, avec `ATLASSIAN` pour Jira et Confluence. Certains éditeurs demandent une page de confidentialité et des conditions : le guide le signale.
 
 ## Le déroulé
 

@@ -43,9 +43,6 @@ describe('groupStatuses', () => {
       ...DEFAULT_VIEW_CONFIG,
       filters: { ...DEFAULT_VIEW_CONFIG.filters, projectId: 'p1' },
     };
-    expect(groupStatuses(STATUSES, TWO, config).map((s) => s.label)).toEqual([
-      'Backlog',
-      'Backlog',
-    ]);
+    expect(groupStatuses([STATUSES[0]], TWO, config).map((s) => s.label)).toEqual(['Backlog']);
   });
 });

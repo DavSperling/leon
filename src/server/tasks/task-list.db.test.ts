@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { isOverdue } from '@/lib/tasks/dates';
 import { DEFAULT_VIEW_CONFIG, type ViewConfig } from '@/lib/tasks/view-config';
 import { seedTasksScenario, type TasksScenario } from '@/test/tasks-scenario';
 import { createProject } from './projects';
@@ -192,7 +193,8 @@ describe('listTasks : filtres', () => {
     const week = await listTasks(paul, view({ due: 'week' }), NOW);
     const none = await listTasks(paul, view({ due: 'none' }), NOW);
 
-    expect(refsOf(overdue.rows)).toEqual(['ATE-1', 'ATE-7']);
+    expect(refsOf(overdue.rows)).toEqual(['ATE-1']);
+    expect(overdue.rows.every((row) => isOverdue(row, NOW))).toBe(true);
     expect(refsOf(week.rows)).toEqual(['ATE-1', 'ATE-2', 'ATE-3']);
     expect(refsOf(none.rows)).toEqual(['ATE-4', 'ATE-5', 'ATE-6', 'ATE-9', 'OPS-1']);
   });
@@ -200,7 +202,7 @@ describe('listTasks : filtres', () => {
   it('compte « aujourd’hui » à Paris : après minuit, le 14 est en retard', async () => {
     const overdue = await listTasks(seed.paul, view({ due: 'overdue' }), AFTER_MIDNIGHT);
 
-    expect(refsOf(overdue.rows)).toEqual(['ATE-1', 'ATE-2', 'ATE-7']);
+    expect(refsOf(overdue.rows)).toEqual(['ATE-1', 'ATE-2']);
   });
 
   it('combine les filtres (ET)', async () => {

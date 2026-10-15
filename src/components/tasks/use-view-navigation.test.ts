@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_VIEW_CONFIG, parseViewParams } from '@/lib/tasks/view-config';
-import { listHref } from './use-view-navigation';
+import { pageRoutes, readText } from '@/test/contracts/files';
+import { viewHref } from './task-nav';
+import { listHref, PAGE_PARAMS } from './use-view-navigation';
 
 const BASE = DEFAULT_VIEW_CONFIG;
+const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
 const hrefParams = (href: string) => new URL(href, 'http://leon.test').searchParams;
 
 describe('listHref', () => {
@@ -28,5 +31,21 @@ describe('listHref', () => {
     expect(listHref(BASE, view, new URLSearchParams('vue=abc'))).toBe(
       '/taches?groupe=statut&vue=abc',
     );
+  });
+
+  it('mène à une page qui existe', () => {
+    const config = { ...BASE, groupBy: 'priority' } as const;
+    for (const href of [
+      listHref(BASE, BASE, new URLSearchParams()),
+      listHref(config, BASE, new URLSearchParams()),
+    ]) {
+      expect(pageRoutes()).toContain(new URL(href, 'http://leon.test').pathname);
+    }
+  });
+
+  it('garde le paramètre qui ouvre une vue, celui que la page lit', () => {
+    const [openParam] = [...hrefParams(viewHref(ID)).keys()];
+    expect(PAGE_PARAMS).toContain(openParam);
+    expect(readText('src/app/(taches)/taches/page.tsx')).toContain(`params.${openParam}`);
   });
 });

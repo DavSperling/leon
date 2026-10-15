@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cardUrl } from '@/server/memory/card-url';
+import { taskUrl } from '@/server/tasks/task-url';
 import { pageRoutes, productionSources } from './files';
 
 const CARD_ID = '00000000-0000-4000-8000-000000000000';
@@ -56,6 +57,12 @@ describe('liens entre pages', () => {
   it('mène le lien des résultats MCP (cardUrl) à la page d’une fiche', () => {
     const path = new URL(cardUrl(CARD_ID)).pathname.replace(CARD_ID, '[id]');
     expect(path).toBe('/fiches/[id]');
+    expect(matchesRoute(path)).toBe(true);
+  });
+
+  it('mène le lien des résultats MCP (taskUrl) à la page d’une tâche', () => {
+    const path = new URL(taskUrl('LEO-12')).pathname.replace('LEO-12', '[ref]');
+    expect(path).toBe('/taches/[ref]');
     expect(matchesRoute(path)).toBe(true);
   });
 

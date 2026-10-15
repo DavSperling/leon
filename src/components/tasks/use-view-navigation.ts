@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toViewParams, type ViewConfig } from '@/lib/tasks/view-config';
 
 // Paramètres de la page qui ne sont pas des réglages d'affichage : ils survivent à un changement.
-const PAGE_PARAMS = ['vue', 'onglet'] as const;
+export const PAGE_PARAMS = ['vue', 'onglet'] as const;
 
 // L'adresse de la liste pour `config` : les seuls écarts à `base` (défaut d'équipe ou vue ouverte).
 export function listHref(config: ViewConfig, base: ViewConfig, current: URLSearchParams): string {

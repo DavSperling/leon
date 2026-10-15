@@ -47,10 +47,12 @@ function assigneeCondition(ctx: TenantContext, assignee: NonNullable<Filters['as
 }
 
 // Bornes calculées à Paris par dueFilterRange, jamais par la base. Une tâche sans échéance n'y entre pas.
+// « En retard » exclut les tâches terminées ou annulées, comme isOverdue (dates.ts) qui les met en rouge.
 function dueCondition(due: DueFilter, now: Date): SQL | undefined {
   if (due === 'none') return isNull(tasks.dueDate);
   const { from, to } = dueFilterRange(due, now);
-  return and(from === null ? undefined : gte(tasks.dueDate, from), lte(tasks.dueDate, to));
+  const range = and(from === null ? undefined : gte(tasks.dueDate, from), lte(tasks.dueDate, to));
+  return due === 'overdue' ? and(range, inArray(taskStatuses.category, OPEN_CATEGORIES)) : range;
 }
 
 // Le texte cherché porte sur le titre et sur l'identifiant (`LEO-12`).

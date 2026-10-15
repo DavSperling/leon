@@ -33,7 +33,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const config = parseViewParams(params, base);
   const [list, statuses, members, labels, projects] = await Promise.all([
     listTasks(ctx, config, now),
-    listStatuses(ctx),
+    listStatuses(ctx, config.filters.projectId ?? undefined),
     listMembers(ctx),
     listLabels(ctx),
     listProjects(ctx),

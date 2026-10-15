@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+
 type LabelChipProps = { label: { name: string; color: string } };
 
 // La couleur d'une étiquette est un choix de l'utilisateur, stocké en base : elle ne vient pas des jetons.
@@ -5,7 +7,7 @@ export function LabelDot({ color, className }: { color: string; className?: stri
   return (
     <span
       aria-hidden="true"
-      className={`size-2 shrink-0 rounded-full ${className ?? ''}`}
+      className={cn('size-2 shrink-0 rounded-full', className)}
       style={{ backgroundColor: color }}
     />
   );

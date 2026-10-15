@@ -74,4 +74,22 @@ describe('parseEnv', () => {
       /anthropic:<modèle> ou openrouter:<fournisseur>\/<modèle>/,
     );
   });
+
+  it.each([
+    'openrouter:anthropic/claude-haiku-5.5:batch',
+    'openrouter:openai/gpt-5.5-pro',
+    'openrouter:openai/gpt-5.6-sol-pro',
+    'openrouter:openai/gpt-5.4-pro:batch',
+  ])('rejette la variante %s (lot différé ou modèle -pro hors de prix)', (choix) => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_LLM_EXTRACTION: choix })).toThrow(
+      /variantes :batch et modèles -pro refusés/,
+    );
+  });
+
+  it('accepte un modèle dont le nom contient « pro » ailleurs', () => {
+    expect(
+      parseEnv({ ...TEST_ENV, LEON_LLM_EXTRACTION: 'openrouter:acme/produit-pro2' })
+        .LEON_LLM_EXTRACTION,
+    ).toBe('openrouter:acme/produit-pro2');
+  });
 });

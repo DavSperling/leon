@@ -10,6 +10,10 @@ const llmChoice = z
   .regex(/^(anthropic:[a-z0-9][a-z0-9.-]*|openrouter:[a-z0-9-]+\/[a-z0-9][a-z0-9.:_-]*)$/i, {
     message: 'format attendu : anthropic:<modèle> ou openrouter:<fournisseur>/<modèle>',
   })
+  // :batch répond en différé (des heures), un modèle -pro coûte 10 à 20 fois plus : jamais pour un essai.
+  .refine((value) => !/:batch$|-pro($|[:.-])/i.test(value), {
+    message: 'variantes :batch et modèles -pro refusés',
+  })
   .optional();
 
 export const EnvSchema = z.object({

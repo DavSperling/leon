@@ -1,0 +1,77 @@
+{
+  "type": "conversation.list",
+  "conversations": [
+    {
+      "type": "conversation",
+      "id": "1004",
+      "title": null,
+      "created_at": 1791975600,
+      "updated_at": 1791976200,
+      "waiting_since": null,
+      "snoozed_until": null,
+      "open": true,
+      "state": "open",
+      "read": true,
+      "priority": "priority",
+      "admin_assignee_id": 814865,
+      "team_assignee_id": 5017691,
+      "source": {
+        "type": "conversation",
+        "id": "3004",
+        "delivered_as": "customer_initiated",
+        "subject": "",
+        "body": "<p>Mon site affiche une erreur 500 depuis ce matin.</p>",
+        "author": {
+          "type": "user",
+          "id": "6501a1b2c3d4e5f6a7b8c9d3",
+          "name": "Sophie Bernard",
+          "email": "sophie@bernard.test",
+          "from_ai_agent": false,
+          "is_ai_answer": false
+        },
+        "attachments": [],
+        "url": "https://bernard.test/",
+        "redacted": false
+      },
+      "statistics": { "type": "conversation_statistics", "count_conversation_parts": 3 },
+      "ai_agent_participated": true
+    },
+    {
+      "type": "conversation",
+      "id": "1005",
+      "title": null,
+      "created_at": 1791991800,
+      "updated_at": 1791992700,
+      "waiting_since": 1791992700,
+      "snoozed_until": null,
+      "open": true,
+      "state": "open",
+      "read": false,
+      "priority": "not_priority",
+      "admin_assignee_id": 0,
+      "team_assignee_id": null,
+      "source": {
+        "type": "conversation",
+        "id": "3005",
+        "delivered_as": "customer_initiated",
+        "subject": "",
+        "body": "<p>Pouvez-vous annuler ma commande 4521 ?</p>",
+        "author": {
+          "type": "user",
+          "id": "6501a1b2c3d4e5f6a7b8c9d4",
+          "name": "Paul Girard",
+          "email": "paul@girard.test",
+          "from_ai_agent": false,
+          "is_ai_answer": false
+        },
+        "attachments": [],
+        "url": null,
+        "redacted": false
+      },
+      "statistics": { "type": "conversation_statistics", "count_conversation_parts": 0 },
+      "ai_agent_participated": false
+    }
+  ],
+  "total_count": 5,
+  "pages": { "type": "pages", "page": 2, "per_page": 100, "total_pages": 2 }
+}

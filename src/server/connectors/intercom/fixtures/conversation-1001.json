@@ -1,0 +1,134 @@
+{
+  "type": "conversation",
+  "id": "1001",
+  "title": null,
+  "created_at": 1791622800,
+  "updated_at": 1791624000,
+  "open": false,
+  "state": "closed",
+  "read": true,
+  "priority": "not_priority",
+  "admin_assignee_id": 814865,
+  "team_assignee_id": 5017691,
+  "source": {
+    "type": "conversation",
+    "id": "3001",
+    "delivered_as": "customer_initiated",
+    "subject": "",
+    "body": "<p>Bonjour, je n&#39;arrive plus à exporter mes factures en PDF.</p>",
+    "author": {
+      "type": "user",
+      "id": "6501a1b2c3d4e5f6a7b8c9d0",
+      "name": "Claire Dubois",
+      "email": "claire@dubois.test",
+      "from_ai_agent": false,
+      "is_ai_answer": false
+    },
+    "attachments": [],
+    "url": "https://dubois.test/factures",
+    "redacted": false
+  },
+  "contacts": {
+    "type": "contact.list",
+    "contacts": [{ "type": "contact", "id": "6501a1b2c3d4e5f6a7b8c9d0", "external_id": "70" }]
+  },
+  "teammates": {
+    "type": "admin.list",
+    "teammates": [
+      {
+        "type": "admin",
+        "id": "814865",
+        "name": "Marie Durand",
+        "email": "marie@acme.test"
+      }
+    ]
+  },
+  "conversation_parts": {
+    "type": "conversation_part.list",
+    "conversation_parts": [
+      {
+        "type": "conversation_part",
+        "id": "9001",
+        "part_type": "comment",
+        "body": "<p>Bonjour Claire, nous regardons ça tout de suite.</p><p>Quel navigateur utilisez-vous ?</p>",
+        "created_at": 1791623100,
+        "updated_at": 1791623100,
+        "notified_at": 1791623100,
+        "author": { "type": "admin", "id": "814865" },
+        "attachments": [],
+        "external_id": null,
+        "redacted": false
+      },
+      {
+        "type": "conversation_part",
+        "id": "9002",
+        "part_type": "note",
+        "body": "<p>Bug connu côté export, ticket interne ouvert.</p>",
+        "created_at": 1791623520,
+        "updated_at": 1791623520,
+        "notified_at": 1791623520,
+        "author": {
+          "type": "admin",
+          "id": "814865",
+          "name": "Marie Durand",
+          "email": "marie@acme.test"
+        },
+        "attachments": [],
+        "external_id": null,
+        "redacted": false
+      },
+      {
+        "type": "conversation_part",
+        "id": "9004",
+        "part_type": "assignment",
+        "body": null,
+        "created_at": 1791623520,
+        "updated_at": 1791623520,
+        "notified_at": 1791623520,
+        "assigned_to": { "type": "team", "id": "5017691" },
+        "author": { "type": "admin", "id": "814865" },
+        "attachments": [],
+        "redacted": false
+      },
+      {
+        "type": "conversation_part",
+        "id": "9003",
+        "part_type": "comment",
+        "body": "<p>Chrome, version 141. Merci !</p>",
+        "created_at": 1791623640,
+        "updated_at": 1791623640,
+        "notified_at": 1791623640,
+        "author": { "type": "user", "id": "6501a1b2c3d4e5f6a7b8c9d0" },
+        "attachments": [],
+        "external_id": null,
+        "redacted": false
+      },
+      {
+        "type": "conversation_part",
+        "id": "9006",
+        "part_type": "comment",
+        "body": "<p>Mon numéro est le 06 00 00 00 00.</p>",
+        "created_at": 1791623700,
+        "updated_at": 1791623700,
+        "notified_at": 1791623700,
+        "author": { "type": "user", "id": "6501a1b2c3d4e5f6a7b8c9d0" },
+        "attachments": [],
+        "external_id": null,
+        "redacted": true
+      },
+      {
+        "type": "conversation_part",
+        "id": "9005",
+        "part_type": "close",
+        "body": null,
+        "created_at": 1791624000,
+        "updated_at": 1791624000,
+        "notified_at": 1791624000,
+        "author": { "type": "admin", "id": "814865" },
+        "attachments": [],
+        "redacted": false
+      }
+    ],
+    "total_count": 6
+  }
+}

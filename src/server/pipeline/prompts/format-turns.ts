@@ -1,4 +1,4 @@
-import type { TurnRole } from '@/capture/turn';
+import type { AuthorSide, TurnRole } from '@/capture/turn';
 import { oneLine } from '@/server/memory/labels';
 import type { ItemNature, RunTurn } from '../runs';
 
@@ -8,6 +8,8 @@ const ROLE_LABELS: Record<TurnRole, string> = {
   document: 'document',
   participant: 'participant',
 };
+// Le côté de l'auteur vient d'un champ de l'outil, jamais du nom ni du texte : un tour sans côté n'a pas d'attribut.
+const SIDE_LABELS: Record<AuthorSide, string> = { team: 'equipe', external: 'externe' };
 const TRUNCATION_MARK = '[…]';
 
 // Titre et id viennent du client : toute valeur d'attribut est échappée.
@@ -35,6 +37,8 @@ function formatTurn(turn: RunTurn, maxCharsPerTurn: number | undefined): string 
     `id="${escapeAttribute(turn.externalId)}"`,
     `role="${ROLE_LABELS[turn.role]}"`,
     ...(author === '' ? [] : [`auteur="${escapeAttribute(author)}"`]),
+    ...(turn.authorSide === null ? [] : [`cote="${SIDE_LABELS[turn.authorSide]}"`]),
+    ...(turn.internalNote ? ['interne="oui"'] : []),
     `date="${turn.ts.toISOString()}"`,
   ].join(' ');
   return `<tour ${attributes}>\n${neutralizeClosingTags(text)}\n</tour>`;

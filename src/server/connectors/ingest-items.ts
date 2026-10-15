@@ -71,6 +71,8 @@ export async function ingestConnectorItems(
         captureMode: 'connector' as const,
         authorName: turn.authorName,
         authorEmail: turn.authorEmail,
+        authorSide: turn.authorSide,
+        internalNote: turn.internalNote,
         acl,
       }));
       const { ids, lastTs } = await insertNewTurns(tx, rows);

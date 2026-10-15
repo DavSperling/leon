@@ -48,7 +48,6 @@ import { toItem } from './map';
 //   - que `lastSeen:-Nm` accepte les minutes (la doc cite m, h, d, w pour `age`, et dit que `lastSeen`
 //     fonctionne comme `age`) ; qu'aucune fenêtre par défaut (14 jours) ne s'applique sans `statsPeriod` ;
 //   - que `collapse=stats` ne retire que la série `stats` (c'est ce que la doc dit) ;
-//   - que `count` et `userCount` du premier niveau sont les totaux du problème et non ceux de la fenêtre ;
 //   - la forme d'une note dans `activity` : `type: "note"` et `data.text` viennent du code ouvert de
 //     Sentry, pas des pages de la doc (qui ne montrent que `first_seen`) ;
 //   - les valeurs du statut (`unresolved`, `resolved`, `ignored`) : la doc ne les liste pas ;

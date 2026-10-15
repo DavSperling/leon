@@ -238,6 +238,31 @@ describe('normalizeItem', () => {
     });
   });
 
+  // Le côté et la note interne sont donnés par le connecteur, d'après l'outil : le socle les garde tels
+  // quels, sur chaque morceau d'un tour coupé, et ne les déduit jamais du texte.
+  it('garde le côté et la note interne du tour, sans côté ni note par défaut', () => {
+    const plain = normalize(item([body('Texte')]));
+    const marked = normalize(
+      item([{ ...body('[Note interne] Texte'), side: 'external', internalNote: false }]),
+    );
+    const note = normalize(item([{ ...body('Texte'), side: 'team', internalNote: true }]));
+
+    expect(plain?.turns[0]).toMatchObject({ authorSide: null, internalNote: false });
+    expect(marked?.turns[0]).toMatchObject({ authorSide: 'external', internalNote: false });
+    expect(note?.turns[0]).toMatchObject({ authorSide: 'team', internalNote: true });
+  });
+
+  it('répète le côté et la note interne sur chaque morceau d’un tour trop long', () => {
+    const text = paragraphs(300).join('\n\n');
+
+    const result = normalize(item([{ ...body(text), side: 'external', internalNote: true }]));
+
+    expect(result?.turns.length).toBeGreaterThan(1);
+    for (const piece of result?.turns ?? []) {
+      expect(piece).toMatchObject({ authorSide: 'external', internalNote: true });
+    }
+  });
+
   it('suffixe chaque identifiant de tour de 12 caractères hexadécimaux, stables pour un même texte', () => {
     const first = normalize(item([body('Texte A')]));
     const again = normalize(item([body('Texte A')]));

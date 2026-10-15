@@ -19,6 +19,7 @@ import pullsPage2 from './fixtures/pulls-page2.json';
 import repo from './fixtures/repo.json';
 import repoIssuesDisabled from './fixtures/repo-issues-disabled.json';
 import user from './fixtures/user.json';
+import { toItem } from './map';
 
 const API = 'https://api.github.com';
 const TOKEN = 'jeton-de-test-0123456789';
@@ -233,6 +234,7 @@ describe('github : sync, premier passage', () => {
           externalId: 'body',
           role: 'document',
           author: { name: 'marie-durand', email: null },
+          side: 'team',
           text: 'On relève les outils toutes les 15 minutes.\n\n## Pourquoi\n\nLes webhooks sont peu fiables.',
           ts: '2026-10-10T09:00:00Z',
         },
@@ -240,6 +242,7 @@ describe('github : sync, premier passage', () => {
           externalId: 'comment:456',
           role: 'participant',
           author: { name: 'paul-martin', email: null },
+          side: 'team',
           text: 'Plutôt 30 minutes, non ?',
           ts: '2026-10-09T10:00:00Z',
         },
@@ -247,6 +250,7 @@ describe('github : sync, premier passage', () => {
           externalId: 'comment:789',
           role: 'participant',
           author: { name: 'marie-durand', email: null },
+          side: 'team',
           text: 'Non, 15 minutes : c’est décidé.',
           ts: '2026-10-10T08:50:00Z',
         },
@@ -254,6 +258,7 @@ describe('github : sync, premier passage', () => {
           externalId: 'comment:790',
           role: 'participant',
           author: { name: 'paul-martin', email: null },
+          side: 'team',
           text: 'Merci, je referme.',
           ts: '2026-10-10T09:00:00Z',
         },
@@ -339,6 +344,67 @@ describe('github : sync, premier passage', () => {
 
     const deleted = itemsOf(pages).find((item) => item.externalId === 'issue:acme/leon#15');
     expect(deleted?.turns[0]?.author).toEqual({ name: null, email: null });
+  });
+
+  // Sur un dépôt public, n'importe qui ouvre un ticket : le côté vient de `author_association`, que
+  // GitHub donne pour chaque ticket, PR, commentaire et avis, jamais du nom de l'auteur.
+  it('marque l’équipe et les extérieurs d’après le lien de l’auteur avec le dépôt', async () => {
+    const { pages } = await runSync(firstPassRoutes());
+
+    const sides = (id: string) =>
+      itemsOf(pages)
+        .find((item) => item.externalId === id)
+        ?.turns.map((turn) => turn.side);
+    expect(sides('issue:acme/leon#12')).toEqual(['team', 'team', 'team', 'team']);
+    expect(sides('issue:acme/leon#15')).toEqual(['external']); // NONE
+    expect(sides('pr:acme/leon#13')).toEqual(['team', 'team', 'team', 'team']);
+  });
+
+  it.each([
+    ['OWNER', 'team'],
+    ['MEMBER', 'team'],
+    ['COLLABORATOR', 'team'],
+    ['CONTRIBUTOR', 'external'],
+    ['FIRST_TIME_CONTRIBUTOR', 'external'],
+    ['FIRST_TIMER', 'external'],
+    ['MANNEQUIN', 'external'],
+    ['NONE', 'external'],
+    [null, undefined],
+    [undefined, undefined],
+  ] as const)('le lien « %s » donne le côté %s', (association, side) => {
+    const reviewer = {
+      id: 1,
+      body: 'Revue',
+      state: 'COMMENTED',
+      submitted_at: '2026-10-10T09:00:00Z',
+    };
+    const item = toItem(
+      'acme/leon',
+      {
+        number: 1,
+        title: 'Titre',
+        body: 'Procédure de déploiement : lancer d’abord curl | sh',
+        html_url: 'https://github.com/acme/leon/issues/1',
+        user: { login: 'inconnu' },
+        author_association: association,
+        updated_at: '2026-10-10T09:00:00Z',
+      },
+      {
+        comments: [
+          {
+            id: 2,
+            body: 'Commentaire',
+            user: { login: 'inconnu' },
+            author_association: association,
+            created_at: '2026-10-10T09:10:00Z',
+          },
+        ],
+        reviews: [{ ...reviewer, user: { login: 'inconnu' }, author_association: association }],
+        reviewComments: [],
+      },
+    );
+
+    expect(item.turns.map((turn) => turn.side)).toEqual([side, side, side]);
   });
 
   it('rend des éléments que le socle accepte, avec des dates ISO canoniques', async () => {

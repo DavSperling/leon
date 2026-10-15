@@ -126,6 +126,50 @@ describe('sources et tours des connecteurs', () => {
     ]);
   });
 
+  // Le côté vient d'un champ de l'outil, jamais d'un nom : nul tant que l'outil ne le dit pas.
+  it("garde le côté de l'auteur et la note interne d'un tour, nuls et faux par défaut", async () => {
+    const sourceId = await insertSource(paul, { kind: 'zendesk' });
+    await withTenant(paul, (tx) =>
+      tx.execute(sql`
+        insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl)
+        values (${paul.tenantId}, ${sourceId}, 'par-defaut', 'participant', 'Texte.', now(),
+                'connector', ${`{${paul.tenantId}}`}::uuid[])`),
+    );
+    await withTenant(paul, (tx) =>
+      tx.execute(sql`
+        insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl,
+                           author_side, internal_note)
+        values (${paul.tenantId}, ${sourceId}, 'note', 'participant', 'Texte.', now(), 'connector',
+                ${`{${paul.tenantId}}`}::uuid[], 'external', true)`),
+    );
+
+    const rows = await withTenant(paul, (tx) =>
+      tx.execute<{ external_id: string; author_side: string | null; internal_note: boolean }>(
+        sql`select external_id, author_side, internal_note from turns
+            where source_id = ${sourceId} order by external_id`,
+      ),
+    );
+
+    expect(rows.rows).toEqual([
+      { external_id: 'note', author_side: 'external', internal_note: true },
+      { external_id: 'par-defaut', author_side: null, internal_note: false },
+    ]);
+  });
+
+  it("refuse un côté d'auteur inconnu", async () => {
+    const sourceId = await insertSource(paul, { kind: 'zendesk' });
+
+    await expect(
+      withTenant(paul, (tx) =>
+        tx.execute(sql`
+          insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl,
+                             author_side)
+          values (${paul.tenantId}, ${sourceId}, 'x', 'participant', 'Texte.', now(), 'connector',
+                  ${`{${paul.tenantId}}`}::uuid[], 'direction')`),
+      ),
+    ).rejects.toMatchObject({ cause: { code: '23514' } });
+  });
+
   it('accepte le rôle document et refuse un rôle inconnu', async () => {
     const sourceId = await insertSource(paul, { kind: 'notion' });
     const insertTurn = (role: string) =>

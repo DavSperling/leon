@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { ProviderId } from '@/capture/turn';
+import type { AuthorSide, ProviderId } from '@/capture/turn';
 import type { ConnectorHttp } from './http';
 
 // Le contrat d'un connecteur : un module sans base ni état, qui rend des éléments normalisés.
@@ -11,6 +11,14 @@ export type ConnectorTurn = {
   externalId: string; // stable, sans empreinte : « body », « comment:456 »
   role: 'document' | 'participant';
   author: { name: string | null; email: string | null };
+  // Du côté de qui parle l'auteur, lu dans un champ de l'outil (rôle de l'utilisateur, expéditeur, lien
+  // avec le dépôt…) et jamais déduit d'un nom ni d'un texte : un client peut se nommer comme on veut et
+  // recopier « [Note interne] ». Absent quand l'outil ne le dit pas. Un tour « external » ne donne
+  // jamais un fait établi sur l'entreprise (voir le prompt d'extraction).
+  side?: AuthorSide;
+  // Une note que seule l'équipe voit (le client ne l'a pas lue). Un attribut du tour, pas une marque
+  // dans le texte : le texte d'un client peut imiter n'importe quelle marque.
+  internalNote?: boolean;
   text: string; // texte brut (HTML déjà passé par htmlToText)
   // ISO 8601. Tour document : updatedAt de l'élément (l'état décrit vaut à cette date ; un corps
   // modifié donne un tour daté de la modification). Commentaire ou prise de parole : sa propre date.

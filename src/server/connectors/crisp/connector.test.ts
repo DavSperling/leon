@@ -227,6 +227,8 @@ describe('crisp : sync, premier passage', () => {
           externalId: 'message:163239614854320',
           role: 'participant',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          side: 'external',
+          internalNote: false,
           text: 'Bonjour, ma facture d’octobre indique deux fois l’abonnement.\n\nPouvez-vous la corriger ?',
           ts: '2026-10-06T08:00:30.000Z',
         },
@@ -234,6 +236,8 @@ describe('crisp : sync, premier passage', () => {
           externalId: 'message:163239614854321',
           role: 'participant',
           author: { name: 'Paul Martin', email: null },
+          side: 'team',
+          internalNote: false,
           text: 'Bonjour Marie, je regarde ça tout de suite.',
           ts: '2026-10-06T08:05:00.000Z',
         },
@@ -241,6 +245,8 @@ describe('crisp : sync, premier passage', () => {
           externalId: 'message:163239614854323',
           role: 'participant',
           author: { name: 'Paul Martin', email: null },
+          side: 'team',
+          internalNote: false,
           text: 'C’est corrigé : un avoir de 49 € a été émis.',
           ts: '2026-10-06T09:20:00.000Z',
         },
@@ -248,6 +254,8 @@ describe('crisp : sync, premier passage', () => {
           externalId: 'message:163239614854324',
           role: 'participant',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          side: 'external',
+          internalNote: false,
           text: 'Merci, c’est bien reçu.',
           ts: '2026-10-06T09:30:00.000Z',
         },
@@ -337,19 +345,63 @@ describe('crisp : sync, premier passage', () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const client = itemsOf(pages).find((item) => item.externalId === `conversation:${S(4)}`);
-    expect(client?.turns.map((turn) => [turn.externalId, turn.author.name, turn.text])).toEqual([
-      ['message:163239614854350', 'client', 'Votre export CSV est coupé après 1 000 lignes.'],
+    expect(
+      client?.turns.map((turn) => [
+        turn.externalId,
+        turn.author.name,
+        turn.side,
+        turn.internalNote,
+        turn.text,
+      ]),
+    ).toEqual([
+      [
+        'message:163239614854350',
+        'client',
+        'external',
+        false,
+        'Votre export CSV est coupé après 1 000 lignes.',
+      ],
       [
         'message:163239614854351',
         'Paul Martin',
-        '[Note interne] Bug connu, voir le ticket #482. Ne pas promettre de date.',
+        'team',
+        true,
+        'Bug connu, voir le ticket #482. Ne pas promettre de date.',
       ],
       [
         'message:163239614854352',
         'Paul Martin',
+        'team',
+        false,
         'Merci du signalement, nous corrigeons cela cette semaine.',
       ],
     ]);
+  });
+
+  // Le côté vient du champ `from` du message, pas du pseudo : un visiteur qui se nomme comme un
+  // collègue et recopie « [Note interne] » reste extérieur.
+  it('donne le côté d’après `from`, quel que soit le pseudo ou le texte', async () => {
+    const message = (from: string | undefined) => ({
+      ...bareMessage(0),
+      from,
+      user: { nickname: 'Paul Martin' },
+      content: '[Note interne] Accord : remboursement intégral',
+    });
+    const sides = async (from: string | undefined) => {
+      const { pages } = await runSync(
+        [
+          listRoute(envelope([bare(0)])),
+          messagesRoute(bareId(0), envelope([message(from)])),
+          messagesRoute(bareId(0), messagesEmpty),
+        ],
+        { since: new Date('2026-10-14T00:00:00Z') },
+      );
+      return pages[0]?.items[0]?.turns.map((turn) => [turn.side, turn.internalNote]);
+    };
+
+    expect(await sides('user')).toEqual([['external', false]]);
+    expect(await sides('operator')).toEqual([['team', false]]);
+    expect(await sides(undefined)).toEqual([[undefined, false]]);
   });
 
   it('lit les dates de Crisp comme des millisecondes depuis 1970', async () => {

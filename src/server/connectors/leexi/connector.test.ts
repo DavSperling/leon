@@ -81,10 +81,10 @@ describe('configSchema et hôtes', () => {
     });
   });
 
-  it('déclare l’hôte exact, le secret seul à chiffrer et l’écart entre requêtes', () => {
+  it('déclare l’hôte exact, la paire de la clé à chiffrer (le secret d’abord) et l’écart entre requêtes', () => {
     expect(connector.id).toBe('leexi');
     expect(connector.hosts(config)).toEqual(['public-api.leexi.ai']);
-    expect(connector.secretFields).toEqual(['keySecret']);
+    expect(connector.secretFields).toEqual(['keySecret', 'keyId']);
     // 50 requêtes par minute par clé.
     expect(connector.minIntervalMs).toBeGreaterThanOrEqual(1200);
   });

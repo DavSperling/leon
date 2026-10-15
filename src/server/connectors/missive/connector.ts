@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ConnectorHttp } from '../http';
+import { type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
 import { type MissiveClient, missiveClient, tolerate } from './client';
 import { advance, isDone, readCursor } from './cursor';
@@ -10,7 +10,7 @@ import type { Conversation } from './schemas';
 //   https://missiveapp.com/docs/developers/rest-api (adresse https://public.missiveapp.com/v1,
 //     jeton personnel en Bearer créé dans Préférences › API, forfait Productive requis)
 //   https://missiveapp.com/docs/developers/rest-api/endpoints (GET /conversations, /conversations/:id/messages,
-//     /conversations/:id/comments, GET /messages/:id,:id, /users, /organizations ; dates en secondes Unix)
+//     /conversations/:id/comments, GET /messages/:id,:id, /users, /organizations, /teams ; dates en secondes Unix)
 //   https://missiveapp.com/docs/developers/rest-api/rate-limits (5 requêtes simultanées, 300 par minute,
 //     900 par 15 minutes ; 429 avec Retry-After ; au plus une requête par seconde en continu)
 //   (l'ancienne adresse learn.missiveapp.com/api-documentation/… renvoie par un 301 vers ces pages)
@@ -20,9 +20,12 @@ import type { Conversation } from './schemas';
 //     ancien (`until` = date d'activité de la plus ancienne déjà lue). Comme pour Sentry, un passage lit
 //     les pages jusqu'à `since` (ou au curseur), trie par activité croissante, puis rend des pages de
 //     20 conversations avec leur curseur. Un grand premier passage relit donc la liste à chaque reprise.
-//   - Une boîte est obligatoire : on lit « Tous » (`all=true`). La doc ne dit pas si elle contient les
-//     boîtes partagées et les équipes ; `team_all` par équipe n'est pas lu (le plan disait « boîtes
-//     partagées et équipe »).
+//   - Une boîte est obligatoire. On ne lit pas « Tous » (`all=true`) : elle contient aussi le courrier
+//     personnel de la personne qui a créé le jeton, que Leon rendrait visible de toute l'équipe. On lit
+//     la boîte « Tout » de chaque équipe (`team_all=<id>`, équipes de GET /teams), sans doublon par
+//     identifiant de conversation. Les boîtes partagées hors équipe (`shared_label`) ne sont pas lues
+//     (écart au plan, qui disait « boîtes partagées et équipe ») ; un jeton sans équipe ne lit rien,
+//     et `verify` le refuse. Une équipe que le jeton ne peut pas lire (403, 404) est laissée de côté.
 //   - La liste des messages n'a pas leur corps : `GET /messages/:id,:id` le rend, par groupes de 10 (la
 //     doc ne donne pas de maximum). Avec un seul identifiant, la réponse est un objet
 //     (`{ messages: { … } }`), pas un tableau : une conversation d'un message, ou un dernier groupe
@@ -35,7 +38,8 @@ import type { Conversation } from './schemas';
 //     laisse l'aperçu des messages.
 //
 // Non vérifié (aucune clé réelle) :
-//   - que « Tous » contient les boîtes partagées et les équipes de l'utilisateur ;
+//   - que `team_all` contient les conversations partagées avec l'équipe (la doc ne le détaille pas) et
+//     que GET /teams ne rend que des équipes dont le jeton peut lire la boîte ;
 //   - que `until` est inclus (le client écarte les doublons) et que `last_activity_at` bouge aussi
 //     pour un commentaire ou une étiquette ;
 //   - la forme de `author` d'un message sortant (la doc ne liste pas ses clés ; ses exemples ont
@@ -92,6 +96,12 @@ export const missiveConnector: Connector<Config> = {
     const client = missiveClient(config, http);
     const me = (await client.users()).find((user) => user.me);
     const organizations = (await client.organizations()).map((entry) => entry.name).join(', ');
+    if ((await client.teams()).length === 0) {
+      throw new ConnectorHttpError(
+        null,
+        'Aucune équipe Missive visible avec ce jeton : Leon lit les conversations des équipes, pas le courrier personnel',
+      );
+    }
     const who = me?.name || me?.email;
     if (who) return { account: organizations ? `${who} (${organizations})` : who };
     return { account: organizations ? `organisation ${organizations}` : 'compte Missive' };

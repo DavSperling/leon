@@ -78,6 +78,7 @@ async function readFacts(tx: Tx, cardId: string, asOf: Date | undefined) {
       sourceUrl: sql<string | null>`${sources.metadata}->>'url'`,
       userName: users.name,
       turnAuthorName: turns.authorName,
+      turnAuthorSide: turns.authorSide,
       acl: facts.acl,
       supersededBy: facts.supersededBy,
     })
@@ -108,14 +109,21 @@ export async function loadCardData(
   const labels = new Map(
     predicatesForType(await loadCatalog(tx), card.typeSlug).map((p) => [p.slug, p.label]),
   );
-  const views: FactView[] = rows.map(({ acl, userName, turnAuthorName, sourceUrl, ...row }) => ({
-    ...row,
-    authorName: factAuthorName({ sourceKind: row.sourceKind, userName, turnAuthorName }),
-    sourceUrl: sourceUrl?.startsWith('https://') ? sourceUrl : null,
-    predicateLabel: labels.get(row.predicate) ?? row.predicate,
-    sourceKindLabel: SOURCE_KIND_LABELS[row.sourceKind],
-    visibility: isTeamAcl(acl, ctx.tenantId) ? 'team' : 'private',
-  }));
+  const views: FactView[] = rows.map(
+    ({ acl, userName, turnAuthorName, turnAuthorSide, sourceUrl, ...row }) => ({
+      ...row,
+      authorName: factAuthorName({
+        sourceKind: row.sourceKind,
+        userName,
+        turnAuthorName,
+        turnAuthorSide,
+      }),
+      sourceUrl: sourceUrl?.startsWith('https://') ? sourceUrl : null,
+      predicateLabel: labels.get(row.predicate) ?? row.predicate,
+      sourceKindLabel: SOURCE_KIND_LABELS[row.sourceKind],
+      visibility: isTeamAcl(acl, ctx.tenantId) ? 'team' : 'private',
+    }),
+  );
   const inSection = views.filter((f) => !options.section || f.predicate === options.section);
   const asOf = options.asOf ?? new Date();
   const current = inSection.filter((f) => f.validTo === null || f.validTo > asOf);

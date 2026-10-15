@@ -106,9 +106,9 @@ describe('configSchema et hôtes', () => {
     expect(schema.parse({ ...CONFIG, baseUrlHost: ' US-12345 ' }).baseUrlHost).toBe('us-12345');
   });
 
-  it('ne parle qu’à <sous-domaine>.api.gong.io, et seul le secret est chiffré', () => {
+  it('ne parle qu’à <sous-domaine>.api.gong.io, et chiffre la paire de la clé (le secret d’abord)', () => {
     expect(gongConnector.hosts(CONFIG)).toEqual(['us-12345.api.gong.io']);
-    expect(gongConnector.secretFields).toEqual(['accessKeySecret']);
+    expect(gongConnector.secretFields).toEqual(['accessKeySecret', 'accessKey']);
   });
 
   it('espace les requêtes de plus d’un tiers de seconde (3 par seconde au plus)', () => {

@@ -1,0 +1,22 @@
+{
+  "teams": [
+    {
+      "id": "f36b7570-078e-408e-9cb8-2b4441ad93c0",
+      "name": "Support",
+      "organization": "96cafdc6-ec6a-4439-9b0c-f55a1133b1e7",
+      "active_members": ["dc3c4104-eced-4206-b532-ef84b331778a"],
+      "observers": [],
+      "team_inbox_enabled": true,
+      "chat_room_enabled": true
+    },
+    {
+      "id": "2c9e41a8-6d3b-4f70-9b15-8a0e3d5c7f62",
+      "name": "Facturation",
+      "organization": "96cafdc6-ec6a-4439-9b0c-f55a1133b1e7",
+      "active_members": ["a41a00fd-453d-49d7-a487-9765c35a3b70"],
+      "observers": [],
+      "team_inbox_enabled": true,
+      "chat_room_enabled": false
+    }
+  ]
+}

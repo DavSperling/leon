@@ -302,7 +302,7 @@ describe('sentry : un problème devient un élément', () => {
     });
   });
 
-  it('écrit un tour document court daté de la dernière occurrence, sans trace ni données d’événement', async () => {
+  it('écrit un tour document court daté de la dernière occurrence, sans trace, sans données d’événement, sans compteurs', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const body = itemOf(pages, '1003').turns[0];
@@ -320,14 +320,41 @@ describe('sentry : un problème devient un élément', () => {
       'erreur',
       'static/js/checkout.js in submitOrder',
       '2026-10-14 08:02 UTC',
-      '2026-10-15 11:48 UTC',
-      '310',
-      '54',
       'Paul Martin',
     ]) {
       expect(body?.text, expected).toContain(expected);
     }
     expect(body?.text).not.toMatch(/in-app-only|1792054800/);
+    // Ce qui bouge à chaque événement n'est pas dans le texte : ni dernière occurrence, ni compteurs.
+    expect(body?.text).not.toMatch(/Dernière occurrence|Événements|Utilisateurs touchés|11:48/);
+  });
+
+  // Personne n'a rien modifié : seuls la date de dernière occurrence et les compteurs ont bougé.
+  // Les identifiants de tours portent l'empreinte du texte ; s'ils changent, chaque passage ferait
+  // un tour, un passage de tri et une extraction de plus pour le même problème.
+  it('un problème qui reçoit des événements garde les mêmes tours, donc aucun tour nouveau', async () => {
+    const before = { ...extraIssue('1000', '2026-10-15T10:00:00Z'), count: '2', userCount: 1 };
+    const after = { ...before, count: '310', userCount: 54, lastSeen: '2026-10-15T11:30:00Z' };
+    const turnIds = async (issue: typeof before) => {
+      const { pages } = await runSync([listRoute([issue])]);
+      return normalizeItem(itemOf(pages, '1000'), 'sentry')?.turns.map((turn) => turn.externalId);
+    };
+
+    const first = await turnIds(before);
+
+    expect(first).toHaveLength(1);
+    expect(await turnIds(after)).toEqual(first);
+  });
+
+  it('un changement d’état crée bien un tour nouveau', async () => {
+    const open = extraIssue('1000', '2026-10-15T10:00:00Z');
+    const resolved = { ...open, status: 'resolved', lastSeen: '2026-10-15T11:30:00Z' };
+    const turnIds = async (issue: typeof open) => {
+      const { pages } = await runSync([listRoute([issue])]);
+      return normalizeItem(itemOf(pages, '1000'), 'sentry')?.turns.map((turn) => turn.externalId);
+    };
+
+    expect(await turnIds(resolved)).not.toEqual(await turnIds(open));
   });
 
   it('omet le lieu et l’assignation quand l’outil ne les donne pas', async () => {

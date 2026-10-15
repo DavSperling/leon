@@ -31,9 +31,10 @@ import { readItems } from './read';
 //   - Un message reçu n'a pas d'auteur : l'expéditeur est le destinataire de rôle « from ». Les
 //     brouillons (`draft_mode`) sont laissés de côté.
 //   - Une conversation est un fil sans corps à part : chaque message est un tour `participant`,
-//     daté de son envoi ; chaque commentaire de l'équipe, une note interne signalée dans son texte
-//     (comme le fait Zendesk). Messages et commentaires sont rendus du plus récent au plus ancien :
-//     on les trie.
+//     daté de son envoi ; chaque commentaire de l'équipe, une note interne (attribut `internalNote`
+//     du tour). Le côté du tour (`side`) : un `author` fait un tour de l'équipe, un message reçu
+//     (`is_inbound`) un tour extérieur. Messages et commentaires sont rendus du plus récent au plus
+//     ancien : on les trie.
 //   - Le curseur est celui des événements (voir cursor.ts) : une conversation touchée est relue en
 //     entier (tous ses messages), au plus une fois par passage tant que rien de nouveau ne la touche.
 //   - La boîte (inbox) n'est pas lue : un événement ne la donne que pour un message reçu, et la

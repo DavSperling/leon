@@ -38,8 +38,9 @@ import { toItem } from './map';
 //     est donc un numéro de page, avec la date « modifiée depuis » du passage ; une fois la dernière
 //     page lue, il repart de cinq minutes avant cette lecture (marge pour l'écart d'horloge).
 //   - Le tour `document` donne l'état (statut, canal, client, assigné, étiquettes), les fils sont des
-//     tours `participant` ; une note interne commence par « Note interne : ». Les changements d'état,
-//     brouillons et fils masqués sont écartés ; une conversation sans texte n'est pas rendue.
+//     tours `participant` ; une note interne est marquée par l'attribut `internalNote` du tour, et le
+//     côté du tour (`side`) vient du type du fil (voir map.ts). Les changements d'état, brouillons et
+//     fils masqués sont écartés ; une conversation sans texte n'est pas rendue.
 //   - Il n'y a pas de ressource secondaire (les fils viennent avec la liste) : aucun 403 à attraper.
 //   - Un 400 sur la demande de jeton vaut identifiants refusés (norme OAuth 2 : invalid_client).
 //   - La limite de débit se signale par X-RateLimit-Retry-After, un en-tête que le client HTTP du

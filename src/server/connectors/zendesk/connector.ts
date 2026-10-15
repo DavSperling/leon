@@ -26,8 +26,9 @@ import { toItem } from './map';
 //   ici (son curseur avance quand même).
 // - Le tour `document` est l'état du ticket (objet, statut, priorité, type, étiquettes), signé par
 //   celui qui l'a créé (`submitter_id`, auteur du premier commentaire d'après la doc). Le texte de
-//   la demande est le premier commentaire, repris comme les autres. Une note interne est préfixée
-//   « [Note interne] » pour que les modèles la distinguent d'une réponse au client.
+//   la demande est le premier commentaire, repris comme les autres. Une note interne (`public` faux)
+//   est marquée par l'attribut `internalNote` du tour, jamais dans le texte. Le côté de chaque tour
+//   (`side`) vient du rôle du compte (`end-user` : extérieur ; `agent`, `admin` : l'équipe).
 // - Le curseur du socle est le `after_cursor` de Zendesk, tel quel. Les tickets modifiés par le
 //   système seul (déclencheurs) reviennent aussi : leurs tours sont inchangés, le socle les ignore.
 // - Pas de `minIntervalMs` : il espacerait aussi les lectures de commentaires (un appel par ticket).

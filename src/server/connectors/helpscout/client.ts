@@ -16,9 +16,15 @@ const UserSchema = z.object({
   email: z.string().nullish(),
 });
 
-// Un client, un assigné ou l'auteur d'un fil : le prénom et le nom sont `first` et `last`.
+// Un client, un assigné ou l'auteur d'un fil : le prénom et le nom sont `first` et `last`. `type` dit
+// « user » (l'équipe) ou « customer » (le client).
 const PersonSchema = z
-  .object({ first: z.string().nullish(), last: z.string().nullish(), email: z.string().nullish() })
+  .object({
+    first: z.string().nullish(),
+    last: z.string().nullish(),
+    email: z.string().nullish(),
+    type: z.string().nullish(),
+  })
   .nullish()
   .catch(null);
 export type Person = z.infer<typeof PersonSchema>;

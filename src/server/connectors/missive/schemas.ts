@@ -58,6 +58,8 @@ export const UsersSchema = z.object({
     }),
   ),
 });
+// Les équipes de l'utilisateur du jeton : seul l'identifiant sert, à lire la boîte de chaque équipe.
+export const TeamsSchema = z.object({ teams: z.array(z.object({ id: z.string() })) });
 export const OrganizationsSchema = z.object({
   organizations: z.array(z.object({ name: z.string() })),
 });

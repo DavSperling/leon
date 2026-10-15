@@ -21,16 +21,25 @@ const requesterOf = (ticket: Ticket): Person =>
     ? { name: ticket.requester.name?.trim() || null, email: ticket.requester.email?.trim() || null }
     : NOBODY;
 
-// Le demandeur, puis un agent de l'annuaire, puis l'adresse de l'expéditeur.
-function authorOf(ticket: Ticket, agents: Map<number, Person>, conversation: Conversation): Person {
+type Written = { author: Person; side: ConnectorTurn['side'] };
+
+// Le demandeur, puis un agent de l'annuaire, puis l'adresse de l'expéditeur. Le côté vient de
+// l'annuaire des agents, jamais du nom : un agent est l'équipe, le demandeur est extérieur, et tout
+// autre compte quand l'annuaire est lu est un contact (en copie, par exemple) donc extérieur aussi.
+// Annuaire illisible (403) : le côté n'est connu que pour le demandeur.
+function authorOf(
+  ticket: Ticket,
+  agents: Map<number, Person>,
+  conversation: Conversation,
+): Written {
   const id = conversation.user_id;
-  if (id != null && ticket.requester && id === ticket.requester.id) return requesterOf(ticket);
-  return (
-    (id == null ? undefined : agents.get(id)) ?? {
-      name: null,
-      email: addressOf(conversation.from_email),
-    }
-  );
+  const agent = id == null ? undefined : agents.get(id);
+  if (agent) return { author: agent, side: 'team' };
+  if (id != null && ticket.requester && id === ticket.requester.id) {
+    return { author: requesterOf(ticket), side: 'external' };
+  }
+  const author = { name: null, email: addressOf(conversation.from_email) };
+  return { author, side: id != null && agents.size > 0 ? 'external' : undefined };
 }
 
 function replyTurn(
@@ -43,9 +52,10 @@ function replyTurn(
   return {
     externalId: `conversation:${row.id}`,
     role: 'participant',
-    author: authorOf(ticket, agents, row),
+    ...authorOf(ticket, agents, row),
     // Une note interne n'a pas été lue par le client : le modèle doit le savoir.
-    text: row.private ? `[Note interne]\n${text}` : text,
+    internalNote: row.private === true,
+    text,
     ts: row.created_at,
   };
 }
@@ -66,6 +76,8 @@ export function toItem(
             externalId: 'body',
             role: 'document',
             author: requesterOf(ticket),
+            // La description est la demande du client, même quand le compte a été supprimé.
+            side: 'external',
             text: description,
             ts: ticket.updated_at,
           },

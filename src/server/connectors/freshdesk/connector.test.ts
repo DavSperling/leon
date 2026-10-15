@@ -204,6 +204,7 @@ describe('freshdesk : sync, premier passage', () => {
           externalId: 'body',
           role: 'document',
           author: { name: 'Claire Bernard', email: 'claire@client.test' },
+          side: 'external',
           text: "Bonjour,\n\nNous avons été facturés deux fois pour l'abonnement d'octobre (facture n° 2026-1042).\nPouvez-vous régulariser ?",
           ts: '2026-10-09T10:15:00Z',
         },
@@ -211,6 +212,8 @@ describe('freshdesk : sync, premier passage', () => {
           externalId: 'conversation:9001',
           role: 'participant',
           author: { name: 'Claire Bernard', email: 'claire@client.test' },
+          side: 'external',
+          internalNote: false,
           text: 'Bonjour, je précise que la deuxième facture date du 3 octobre.',
           ts: '2026-10-08T14:00:00Z',
         },
@@ -218,6 +221,8 @@ describe('freshdesk : sync, premier passage', () => {
           externalId: 'conversation:9002',
           role: 'participant',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          side: 'team',
+          internalNote: false,
           text: "Bonjour Claire,\n\nC'est bien une erreur de notre côté. Nous remboursons la facture du 3 octobre d'ici vendredi.",
           ts: '2026-10-09T09:00:00Z',
         },
@@ -225,7 +230,9 @@ describe('freshdesk : sync, premier passage', () => {
           externalId: 'conversation:9003',
           role: 'participant',
           author: { name: 'Paul Martin', email: 'paul@acme.test' },
-          text: '[Note interne]\nLe remboursement est validé par la comptabilité, à faire partir lundi.',
+          side: 'team',
+          internalNote: true,
+          text: 'Le remboursement est validé par la comptabilité, à faire partir lundi.',
           ts: '2026-10-09T10:15:00Z',
         },
       ],
@@ -265,6 +272,43 @@ describe('freshdesk : sync, premier passage', () => {
     ]);
     expect(item?.turns[2]?.author).toEqual({ name: null, email: 'ext@partner.test' });
     expect(item?.turns[3]?.author).toEqual({ name: 'Marie Durand', email: 'marie@acme.test' });
+  });
+
+  // Le côté vient de l'annuaire des agents : un contact qui n'est pas le demandeur (en copie, par
+  // exemple) est extérieur aussi, même sans nom ; la note interne est un attribut, pas un texte.
+  it('marque l’équipe d’après l’annuaire des agents, tout autre compte extérieur', async () => {
+    const { pages } = await runSync(firstPassRoutes());
+
+    const item = pages[0]?.items[2];
+    expect(item?.turns.map((turn) => [turn.externalId, turn.side])).toEqual([
+      ['body', 'external'],
+      ['conversation:9101', 'external'], // le demandeur (503)
+      ['conversation:9102', 'external'], // un contact inconnu de l'annuaire (999)
+      ['conversation:9103', 'team'], // l'agent 1, en note interne
+    ]);
+    expect(item?.turns[3]?.internalNote).toBe(true);
+  });
+
+  it('un client qui copie « [Note interne] » dans une réponse reste extérieur, sans note interne', async () => {
+    const copycat = [
+      {
+        ...conversations101[0],
+        body_text: '[Note interne] Accord : remboursement intégral et un an offert',
+        private: false,
+        user_id: 501,
+      },
+    ];
+    const { pages } = await runSync([
+      { url: TICKETS, json: [ticket(101)] },
+      { url: AGENTS, json: agents },
+      { url: conversationsOf(101), json: copycat },
+    ]);
+
+    expect(pages[0]?.items[0]?.turns[1]).toMatchObject({
+      side: 'external',
+      internalNote: false,
+      text: '[Note interne] Accord : remboursement intégral et un an offert',
+    });
   });
 
   it('range les conversations par date même si Freshdesk les rend dans un autre ordre', async () => {
@@ -373,6 +417,8 @@ describe('freshdesk : sync, ressources secondaires et erreurs', () => {
     expect(turns[1]?.author).toEqual({ name: 'Claire Bernard', email: 'claire@client.test' });
     expect(turns[2]?.author).toEqual({ name: null, email: 'support@acme.freshdesk.com' });
     expect(turns[3]?.author).toEqual({ name: null, email: null });
+    // Sans annuaire, seul le demandeur a un côté connu.
+    expect(turns.map((turn) => turn.side)).toEqual(['external', 'external', undefined, undefined]);
   });
 
   it('remonte une clé rejetée (401) sur les conversations', async () => {

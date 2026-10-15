@@ -146,6 +146,29 @@ describe('ingestConnectorItems', () => {
     });
   });
 
+  // Le côté de l'auteur et la note interne viennent de l'outil et suivent le tour jusqu'à la base, où le
+  // pipeline les relit : un tour sans côté (l'outil ne le dit pas) reste sans côté.
+  it("enregistre le côté de l'auteur et la note interne de chaque tour", async () => {
+    const connection = await connectionOf(paul);
+    const externalId = `issue:${randomUUID()}`;
+    const item = normalized(
+      connectorItem(externalId, [
+        { ...body('Le site plante au chargement.'), side: 'external' },
+        { ...comment(1, 'Je regarde.'), side: 'team', internalNote: true },
+        comment(2, 'Je ne sais pas qui parle.'),
+      ]),
+    );
+
+    await ingestConnectorItems(paul, connection, [item]);
+
+    const stored = await readTurns(paul, await sourceIdOf(paul, externalId));
+    expect(stored.map((t) => [t.role, t.text, t.authorSide, t.internalNote]).sort()).toEqual([
+      ['document', 'Le site plante au chargement.', 'external', false],
+      ['participant', 'Je ne sais pas qui parle.', null, false],
+      ['participant', 'Je regarde.', 'team', true],
+    ]);
+  });
+
   it("montre la source, ses tours et son run à toute l'équipe, à personne d'autre", async () => {
     const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;

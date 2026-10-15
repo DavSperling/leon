@@ -8,6 +8,8 @@ export type ToolTurnSeed = {
   externalId: string;
   role: 'document' | 'participant';
   authorName?: string | null;
+  authorSide?: 'team' | 'external' | null; // le côté que l'outil donne à l'auteur
+  internalNote?: boolean;
   text: string;
   ts: string;
   inRun: boolean; // les tours hors du run sont déjà connus : ils ne servent que de contexte
@@ -41,6 +43,8 @@ export async function seedToolRun(
         externalId: turn.externalId,
         role: turn.role,
         authorName: turn.authorName ?? null,
+        authorSide: turn.authorSide ?? null,
+        internalNote: turn.internalNote ?? false,
         text: turn.text,
         ts: new Date(turn.ts),
         captureMode: 'connector' as const,

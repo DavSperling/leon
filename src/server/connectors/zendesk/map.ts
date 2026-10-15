@@ -37,10 +37,16 @@ function stateText(ticket: Ticket): string {
   return lines.join('\n');
 }
 
-// Un auteur absent de la liste (compte supprimé, système) sort sans nom.
+// Un auteur absent de la liste (compte supprimé, système) sort sans nom ni côté. Le côté vient du
+// rôle du compte : un client (« end-user ») est extérieur, un agent ou un administrateur est l'équipe.
 function authorOf(users: Map<number, User>, id: number | null | undefined) {
   const user = id === null || id === undefined ? undefined : users.get(id);
-  return { name: user?.name || null, email: user?.email || null };
+  const side: ConnectorTurn['side'] = !user?.role
+    ? undefined
+    : user.role === 'end-user'
+      ? 'external'
+      : 'team';
+  return { author: { name: user?.name || null, email: user?.email || null }, side };
 }
 
 // Un ticket sans commentaire lisible sort avec son seul état.
@@ -53,7 +59,8 @@ export function toItem(
     {
       externalId: 'body',
       role: 'document',
-      author: authorOf(users, ticket.submitter_id),
+      // L'objet du ticket est celui de la personne qui l'a ouvert : le tour prend son côté.
+      ...authorOf(users, ticket.submitter_id),
       text: stateText(ticket),
       ts: ticket.updated_at,
     },
@@ -64,8 +71,9 @@ export function toItem(
     turns.push({
       externalId: `comment:${comment.id}`,
       role: 'participant',
-      author: authorOf(users, comment.author_id),
-      text: comment.public === false ? `[Note interne] ${text}` : text,
+      ...authorOf(users, comment.author_id),
+      internalNote: comment.public === false,
+      text,
       ts: comment.created_at,
     });
   }

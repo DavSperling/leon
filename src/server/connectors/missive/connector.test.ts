@@ -13,6 +13,7 @@ import conversations from './fixtures/conversations.json';
 import messagesConv1 from './fixtures/messages-conv1.json';
 import messagesConv3 from './fixtures/messages-conv3.json';
 import organizations from './fixtures/organizations.json';
+import teams from './fixtures/teams.json';
 import users from './fixtures/users.json';
 
 const TOKEN = 'jeton-de-test-0123456789';
@@ -23,6 +24,8 @@ const SINCE_SECONDS = 1789473600;
 
 const API = 'https://public.missiveapp.com/v1';
 const LIST = `${API}/conversations`;
+const TEAM_SUPPORT = teams.teams[0]?.id ?? '';
+const TEAM_BILLING = teams.teams[1]?.id ?? '';
 const C1 = '6d3c9b1c-7067-4a28-8ea6-ea91340b67cc'; // deux courriels et un commentaire
 const C2 = '0b8d3a52-5c1e-4f0a-9d63-2f4a8e7c1b90'; // invité : l'API ne rend que son identifiant et sa date
 const C3 = 'a7c1e2f4-3b5d-4e86-8f19-6c0d2b9a4e31'; // un SMS
@@ -34,6 +37,10 @@ const messagesUrl = (id: string) => `${API}/conversations/${id}/messages`;
 const commentsUrl = (id: string) => `${API}/conversations/${id}/comments`;
 const bodiesUrl = (ids: string[]) => `${API}/messages/${ids.join(',')}`;
 
+const teamsRoute = (list: unknown[] = [teams.teams[0]]): FakeRoute => ({
+  url: `${API}/teams`,
+  json: { teams: list },
+});
 const listRoute = (rows: unknown[]): FakeRoute => ({ url: LIST, json: { conversations: rows } });
 // Les requêtes portent leur chaîne de requête (?limit=10) : l'expression l'accepte.
 const noComments: FakeRoute = {
@@ -57,11 +64,15 @@ function fixtureRoutes(): FakeRoute[] {
   ];
 }
 
+// Par défaut le jeton n'a qu'une équipe : sa boîte est la seule liste de conversations lue.
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: { cursor?: string | null; since?: Date; teams?: unknown[] } = {},
 ) {
-  const { http, calls } = testHttp(missiveConnector, config, routes);
+  const { http, calls } = testHttp(missiveConnector, config, [
+    teamsRoute(overrides.teams),
+    ...routes,
+  ]);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
   const pages = await collect(missiveConnector.sync(config, state, http));
   return { pages, calls };
@@ -123,32 +134,56 @@ describe('missive : configuration', () => {
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => [field.name, field.kind])).toEqual([['token', 'secret']]);
     expect(entry?.warning).toMatch(/Productive/);
+    // La boîte lue est celle des équipes : le catalogue le dit, et prévient que tout devient visible.
+    expect(entry?.fields[0]?.help).toMatch(/pas votre courrier personnel/);
+    expect(entry?.warning).toMatch(/visible de toute l’équipe/);
     expect(entry?.triedForReal).toBe(false);
   });
 });
 
 describe('missive : verify', () => {
-  it('lit les utilisateurs puis les organisations, avec le jeton en Bearer', async () => {
+  it('lit les utilisateurs, les organisations puis les équipes, avec le jeton en Bearer', async () => {
     const { http, calls } = testHttp(missiveConnector, config, [
       { url: `${API}/users`, json: users },
       { url: `${API}/organizations`, json: organizations },
+      teamsRoute(),
     ]);
 
     const result = await missiveConnector.verify(config, http);
 
     expect(result).toEqual({ account: 'Marie Durand (Acme)' });
-    expect(calls.map((call) => pathOf(call.url))).toEqual(['/v1/users', '/v1/organizations']);
+    expect(calls.map((call) => pathOf(call.url))).toEqual([
+      '/v1/users',
+      '/v1/organizations',
+      '/v1/teams',
+    ]);
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
     expect(paramsOf(calls[0]?.url).limit).toBe('200');
+    expect(paramsOf(calls[2]?.url).limit).toBe('200');
   });
 
   it('nomme l’organisation quand le propriétaire du jeton n’est pas dans la liste', async () => {
     const { http } = testHttp(missiveConnector, config, [
       { url: `${API}/users`, json: { users: [users.users[0]] } },
       { url: `${API}/organizations`, json: organizations },
+      teamsRoute(),
     ]);
 
     expect(await missiveConnector.verify(config, http)).toEqual({ account: 'organisation Acme' });
+  });
+
+  // Sans équipe, rien ne serait lu (le courrier personnel ne l'est pas) : mieux vaut le dire tout de suite.
+  it('refuse un jeton sans équipe, en disant pourquoi', async () => {
+    const { http } = testHttp(missiveConnector, config, [
+      { url: `${API}/users`, json: users },
+      { url: `${API}/organizations`, json: organizations },
+      teamsRoute([]),
+    ]);
+
+    await expect(missiveConnector.verify(config, http)).rejects.toMatchObject({
+      name: 'ConnectorHttpError',
+      message: expect.stringContaining('Aucune équipe Missive'),
+    });
   });
 
   it('lève une erreur de clé sur un 401', async () => {
@@ -161,12 +196,71 @@ describe('missive : verify', () => {
 });
 
 describe('missive : premier passage', () => {
-  it('demande la boîte « Tous » par 50, sans `until`, avec le jeton en Bearer', async () => {
+  it('lit les équipes, puis la boîte « Tout » de l’équipe par 50, sans `until`, avec le jeton en Bearer', async () => {
     const { calls } = await runSync(fixtureRoutes());
 
-    expect(pathOf(calls[0]?.url)).toBe('/v1/conversations');
-    expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
-    expect(paramsOf(calls[0]?.url)).toEqual({ all: 'true', limit: '50' });
+    expect(pathOf(calls[0]?.url)).toBe('/v1/teams');
+    expect(pathOf(calls[1]?.url)).toBe('/v1/conversations');
+    expect(calls[1]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
+    expect(paramsOf(calls[1]?.url)).toEqual({ team_all: TEAM_SUPPORT, limit: '50' });
+  });
+
+  // « Tous » (all=true) contient le courrier personnel de la personne qui a créé le jeton : il
+  // deviendrait visible de toute l'équipe dans Leon.
+  it('ne lit jamais la boîte « Tous », qui contient le courrier personnel', async () => {
+    const { calls } = await runSync([...fixtureRoutes(), listRoute([])], { teams: teams.teams });
+
+    for (const call of calls.filter((entry) => pathOf(entry.url) === '/v1/conversations')) {
+      expect(paramsOf(call.url)).not.toHaveProperty('all');
+      expect(paramsOf(call.url)).toHaveProperty('team_all');
+    }
+  });
+
+  it('lit la boîte de chaque équipe, et une conversation partagée avec deux équipes une seule fois', async () => {
+    const [c1, , c3] = conversations.conversations;
+    const { calls, pages } = await runSync(
+      [
+        listRoute([c1]),
+        listRoute([c1, c3]),
+        { url: messagesUrl(C1), json: messagesConv1 },
+        { url: bodiesUrl([M2, M1]), json: bodiesConv1 },
+        { url: commentsUrl(C1), json: commentsConv1 },
+        { url: messagesUrl(C3), json: messagesConv3 },
+        { url: bodiesUrl([SMS]), json: bodiesConv3 },
+        { url: commentsUrl(C3), json: { comments: [] } },
+      ],
+      { teams: teams.teams },
+    );
+
+    const lists = calls.filter((call) => pathOf(call.url) === '/v1/conversations');
+    expect(lists.map((call) => paramsOf(call.url).team_all)).toEqual([TEAM_SUPPORT, TEAM_BILLING]);
+    expect(idsOf(pages)).toEqual([`conversation:${C3}`, `conversation:${C1}`]);
+    expect(
+      calls.filter((call) => pathOf(call.url) === `/v1/conversations/${C1}/messages`),
+    ).toHaveLength(1);
+  });
+
+  it('laisse de côté une équipe dont le jeton ne peut pas lire la boîte (403, 404)', async () => {
+    const { pages } = await runSync(
+      [
+        { url: LIST, status: 403, json: { errors: [{ message: 'refusé' }] } },
+        { url: LIST, status: 404, json: { errors: [{ message: 'introuvable' }] } },
+        listRoute([conversations.conversations[0]]),
+        { url: messagesUrl(C1), json: messagesConv1 },
+        { url: bodiesUrl([M2, M1]), json: bodiesConv1 },
+        { url: commentsUrl(C1), json: commentsConv1 },
+      ],
+      { teams: [teams.teams[0], teams.teams[1], { id: 'c7d8e9f0-1a2b-4c3d-8e4f-5a6b7c8d9e0f' }] },
+    );
+
+    expect(idsOf(pages)).toEqual([`conversation:${C1}`]);
+  });
+
+  it('ne rend rien quand le jeton n’a aucune équipe', async () => {
+    const { pages, calls } = await runSync([], { teams: [] });
+
+    expect(pages).toEqual([]);
+    expect(calls.map((call) => pathOf(call.url))).toEqual(['/v1/teams']);
   });
 
   it('rend les conversations du plus ancien au plus récent, sans l’invité, avec un curseur', async () => {
@@ -201,7 +295,7 @@ describe('missive : premier passage', () => {
     const lists = calls.filter((call) => pathOf(call.url) === '/v1/conversations');
     expect(lists).toHaveLength(2);
     expect(paramsOf(lists[1]?.url)).toEqual({
-      all: 'true',
+      team_all: TEAM_SUPPORT,
       limit: '50',
       until: String(oldestOfFirst),
     });
@@ -295,6 +389,38 @@ describe('missive : une conversation devient un élément', () => {
     // Le message sortant part de l'adresse du support ; l'auteur est la personne qui l'a écrit.
     expect(outgoing?.author).toEqual({ name: 'Julie Martin', email: 'julie@acme.test' });
     expect(itemOf(pages, C3).turns[0]?.author).toEqual({ name: 'Léa Moreau', email: null });
+  });
+
+  // Le côté vient de Missive : seul un message sortant a un `author`. Un message reçu au nom d'un
+  // collègue (en-tête « From » choisi par l'expéditeur) reste extérieur ; un commentaire est une note
+  // interne de l'équipe.
+  it('donne le côté d’après l’auteur du message sortant, pas d’après le nom de l’expéditeur', async () => {
+    const { pages } = await runSync(fixtureRoutes());
+
+    const [incoming, comment, outgoing] = itemOf(pages, C1).turns;
+
+    expect(incoming).toMatchObject({ side: 'external', internalNote: false });
+    expect(outgoing).toMatchObject({ side: 'team', internalNote: false });
+    expect(comment).toMatchObject({ side: 'team', internalNote: true });
+    expect(itemOf(pages, C3).turns[0]?.side).toBe('external');
+  });
+
+  it('un message reçu qui porte le nom d’un collègue reste extérieur', async () => {
+    const spoofed = {
+      ...messagesConv3.messages[0],
+      from_field: { name: 'Julie Martin', address: 'x@pirate.test' },
+    };
+    const { pages } = await runSync([
+      listRoute([conversations.conversations[2]]),
+      { url: messagesUrl(C3), json: { messages: [spoofed] } },
+      { url: bodiesUrl([SMS]), json: bodiesConv3 },
+      { url: commentsUrl(C3), json: { comments: [] } },
+    ]);
+
+    expect(itemOf(pages, C3).turns[0]).toMatchObject({
+      author: { name: 'Julie Martin' },
+      side: 'external',
+    });
   });
 
   it('passe le corps HTML en texte, sans balise ni entité', async () => {
@@ -511,7 +637,7 @@ describe('missive : reprise avec le curseur', () => {
     const { pages, calls } = await runSync([listRoute(conversations.conversations)], { cursor });
 
     expect(pages).toEqual([]);
-    expect(calls).toHaveLength(1);
+    expect(calls.map((call) => pathOf(call.url))).toEqual(['/v1/teams', '/v1/conversations']);
   });
 
   it('le dernier curseur d’un premier passage, repassé à `sync`, ne relit aucune conversation', async () => {
@@ -521,7 +647,10 @@ describe('missive : reprise avec le curseur', () => {
     const second = await runSync([listRoute(conversations.conversations)], { cursor: last });
 
     expect(second.pages).toEqual([]);
-    expect(second.calls.map((call) => pathOf(call.url))).toEqual(['/v1/conversations']);
+    expect(second.calls.map((call) => pathOf(call.url))).toEqual([
+      '/v1/teams',
+      '/v1/conversations',
+    ]);
   });
 
   it('rend une conversation nouvelle, et une autre vue à la même seconde que le curseur', async () => {

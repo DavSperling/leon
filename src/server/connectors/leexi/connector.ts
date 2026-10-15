@@ -48,7 +48,8 @@ function modifiedAfter(state: SyncState): number {
 export const leexiConnector: Connector<Config> = {
   id: 'leexi',
   configSchema: ConfigSchema,
-  secretFields: ['keySecret'],
+  // Le secret d'abord : l'empreinte affichée en est tirée. L'identifiant change avec lui quand on remplace la clé.
+  secretFields: ['keySecret', 'keyId'],
   hosts: () => [HOST],
   minIntervalMs: 1200, // 50 requêtes par minute et par clé
   async verify(config, http) {

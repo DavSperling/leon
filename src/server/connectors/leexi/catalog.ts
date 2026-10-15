@@ -6,8 +6,8 @@ export const leexiCatalog: CatalogEntry = {
     {
       name: 'keyId',
       label: 'Identifiant de la clé',
-      kind: 'text',
-      help: 'Affiché avec le secret à la création de la clé.',
+      kind: 'secret',
+      help: 'Affiché avec le secret à la création de la clé. Une clé remplacée a un nouvel identifiant : il se saisit aussi.',
     },
     {
       name: 'keySecret',

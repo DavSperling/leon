@@ -130,6 +130,27 @@ describe('startStep, sources d outils', () => {
     expect(run?.context).toBe('Paiement à 60 jours.');
   });
 
+  it('rend le côté de l auteur et la note interne des tours, absents par défaut', async () => {
+    const run = await start([
+      body('Paiement à 60 jours.', '2026-10-13T09:00:00Z'),
+      { ...comment, authorSide: 'external' },
+      {
+        ...comment,
+        externalId: 'comment:2',
+        authorSide: 'team',
+        internalNote: true,
+        ts: '2026-10-14T11:00:00Z',
+      },
+      { ...comment, externalId: 'comment:3', ts: '2026-10-14T12:00:00Z' },
+    ]);
+
+    expect(run?.turns.map((t) => [t.externalId, t.authorSide, t.internalNote])).toEqual([
+      ['comment:1', 'external', false],
+      ['comment:2', 'team', true],
+      ['comment:3', null, false],
+    ]);
+  });
+
   it('ne met pas dans le contexte un tour du run, ni un commentaire', async () => {
     const run = await start([
       { ...body('Corps dans le run.', '2026-10-13T09:00:00Z'), inRun: true },

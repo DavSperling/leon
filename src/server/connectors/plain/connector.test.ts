@@ -198,6 +198,7 @@ describe('plainConnector : premier passage', () => {
           externalId: 'entry:te_01J9Z8M1A1B2C3D4E5F6G7H8J1',
           role: 'participant',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          side: 'external',
           text: 'Bonjour,\n\nDepuis hier soir je n’arrive plus à me connecter à l’espace Acme : le mot de passe est refusé.\n\nMarie Durand',
           ts: '2026-10-13T08:15:00.000Z',
         },
@@ -205,6 +206,7 @@ describe('plainConnector : premier passage', () => {
           externalId: 'entry:te_01J9Z8M1A1B2C3D4E5F6G7H8J2',
           role: 'participant',
           author: { name: 'David Martin', email: 'david@acme.test' },
+          side: 'team',
           text: 'Compte verrouillé après cinq essais. Je le débloque et je lui propose l’authentification en deux étapes.',
           ts: '2026-10-13T09:00:00.000Z',
         },
@@ -212,6 +214,7 @@ describe('plainConnector : premier passage', () => {
           externalId: 'entry:te_01J9Z8M1A1B2C3D4E5F6G7H8J3',
           role: 'participant',
           author: { name: 'David Martin', email: 'david@acme.test' },
+          side: 'team',
           text: 'Bonjour Marie,\n\nVotre compte est débloqué. À partir du 1er novembre, l’authentification en deux étapes sera obligatoire pour tous les comptes Acme.\n\nDavid',
           ts: '2026-10-14T16:20:00.000Z',
         },
@@ -239,6 +242,8 @@ describe('plainConnector : premier passage', () => {
       [null, null, 'Merci, j’ai bien reçu le remboursement.'],
     ]);
     expect(item?.turns.every((turn) => turn.role === 'participant')).toBe(true);
+    // Le côté vient du type d'acteur : le client est extérieur, un utilisateur machine n'a pas de côté.
+    expect(item?.turns.map((turn) => turn.side)).toEqual(['external', undefined, undefined]);
   });
 
   it('remet les messages dans l’ordre chronologique si l’outil les rend à l’envers', async () => {

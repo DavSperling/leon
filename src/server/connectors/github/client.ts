@@ -13,6 +13,9 @@ const ISSUES_PER_PAGE = 50;
 const COMMENTS_PER_PAGE = 100; // le maximum de GitHub
 
 const Author = z.object({ login: z.string() }).nullish(); // nul quand le compte a été supprimé
+// Le lien de l'auteur avec le dépôt (OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, NONE…) : GitHub le donne
+// pour un ticket, une PR, un commentaire et un avis. Il dit si l'auteur est de l'équipe, pas son nom.
+const Association = z.string().nullish();
 
 export const IssueSchema = z.object({
   number: z.number(),
@@ -20,6 +23,7 @@ export const IssueSchema = z.object({
   body: z.string().nullish(),
   html_url: z.string(),
   user: Author,
+  author_association: Association,
   updated_at: z.string(),
   comments: z.number().optional(), // nombre de commentaires : 0 évite une requête
   pull_request: z.looseObject({}).nullish(), // présent seulement pour une PR
@@ -28,12 +32,14 @@ export const CommentSchema = z.object({
   id: z.number(),
   body: z.string().nullish(),
   user: Author,
+  author_association: Association,
   created_at: z.string(),
 });
 export const ReviewSchema = z.object({
   id: z.number(),
   body: z.string().nullish(),
   user: Author,
+  author_association: Association,
   state: z.string(),
   submitted_at: z.string().nullish(), // absent tant que l'avis est un brouillon
 });

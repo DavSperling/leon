@@ -9,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
+import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { CARD_STATUSES, FACT_STATUSES, SENSITIVE_CATEGORIES } from '@/lib/enums';
 import { organizations, users } from './auth';
 
@@ -55,6 +55,9 @@ export const turns = pgTable('turns', {
   captureMode: text('capture_mode', { enum: TURN_CAPTURE_MODES }).notNull(),
   authorName: text('author_name'),
   authorEmail: text('author_email'),
+  // Le côté de l'auteur d'après l'outil (nul : l'outil ne le dit pas), et une note que seule l'équipe voit.
+  authorSide: text('author_side', { enum: AUTHOR_SIDES }),
+  internalNote: boolean('internal_note').notNull().default(false),
   acl: acl(),
   createdAt: createdAt(),
 });

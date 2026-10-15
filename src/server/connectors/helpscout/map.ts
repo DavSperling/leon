@@ -68,6 +68,17 @@ function authorOf(thread: Thread): ConnectorTurn['author'] {
   return { name: nameOf(person), email: person?.email ?? null };
 }
 
+// Le côté vient du type du fil : un fil « customer » est du client ; une réponse, une note, un appel
+// ou un transfert sont écrits par l'équipe. Un fil de messagerie (« chat ») peut être des deux : son
+// auteur le dit (`createdBy.type`). Jamais le nom : le client choisit le sien.
+const TEAM_THREADS = new Set(['message', 'note', 'phone', 'forwardparent', 'forwardchild']);
+function sideOf(thread: Thread): ConnectorTurn['side'] {
+  if (thread.type === 'customer') return 'external';
+  if (TEAM_THREADS.has(thread.type)) return 'team';
+  if (thread.createdBy?.type === 'user') return 'team';
+  return thread.createdBy?.type === 'customer' ? 'external' : undefined;
+}
+
 function threadTurn(thread: Thread): ConnectorTurn | null {
   if (SKIPPED_TYPES.has(thread.type) || SKIPPED_STATES.has(thread.state ?? '')) return null;
   const text = htmlToText(thread.body ?? '');
@@ -76,7 +87,9 @@ function threadTurn(thread: Thread): ConnectorTurn | null {
     externalId: `thread:${thread.id}`,
     role: 'participant',
     author: authorOf(thread),
-    text: thread.type === 'note' ? `Note interne : ${text}` : text,
+    side: sideOf(thread),
+    internalNote: thread.type === 'note',
+    text,
     ts: thread.createdAt,
   };
 }
@@ -98,6 +111,8 @@ export function toItem(conversation: Conversation): ConnectorItem | null {
     externalId: 'body',
     role: 'document',
     author: { name: null, email: null },
+    // L'objet et le nom du client sont de celui qui a ouvert la conversation : son premier fil.
+    side: replies[0]?.side,
     text: stateText(conversation, subject),
     ts: updatedAt,
   };

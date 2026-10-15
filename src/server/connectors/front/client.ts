@@ -29,6 +29,7 @@ const MessageSchema = z.object({
   created_at: Seconds,
   draft_mode: z.string().nullish(), // non nul pour un brouillon
   author: TeammateSchema.nullish(), // nul pour un message reçu : l'expéditeur est dans recipients
+  is_inbound: z.boolean().nullish(), // vrai pour un message reçu
   recipients: z
     .array(z.object({ handle: z.string(), role: z.string(), name: z.string().nullish() }))
     .nullish(),

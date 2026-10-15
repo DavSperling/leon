@@ -4,11 +4,14 @@ import type { Comment, Message, Teammate } from './client';
 
 // De la réponse de Front à un élément du socle : une conversation est un fil. Chaque message et
 // chaque note interne est un tour `participant` signé et daté (il n'y a pas de corps à part, donc
-// pas de tour `document`). Une note interne, que le client ne voit pas, est signalée dans son texte.
+// pas de tour `document`). Une note interne, que le client ne voit pas, est marquée par l'attribut
+// `internalNote` du tour, pas dans son texte. Le côté vient de Front, pas du nom : un message écrit
+// par un équipier a un `author`, un message reçu (`is_inbound`) n'en a pas et son expéditeur est
+// extérieur, quel que soit le nom que porte son en-tête « From ».
 
 type Person = ConnectorTurn['author'];
+type Marks = Pick<ConnectorTurn, 'side' | 'internalNote'>;
 const NOBODY: Person = { name: null, email: null };
-const NOTE = '[Note interne] ';
 const OPEN_URL = 'https://app.frontapp.com/open';
 
 const iso = (seconds: number): string => new Date(Math.round(seconds * 1000)).toISOString();
@@ -37,15 +40,21 @@ function senderOf(message: Message): Person {
 const messageText = (message: Message): string =>
   message.text?.trim() || htmlToText(message.body ?? '');
 
+function sideOf(message: Message): ConnectorTurn['side'] {
+  if (message.author) return 'team';
+  return message.is_inbound ? 'external' : undefined;
+}
+
 function turn(
   externalId: string,
   author: Person,
   text: string,
   seconds: number,
+  marks: Marks,
 ): ConnectorTurn | null {
   return text.trim() === ''
     ? null
-    : { externalId, role: 'participant', author, text, ts: iso(seconds) };
+    : { externalId, role: 'participant', author, ...marks, text, ts: iso(seconds) };
 }
 
 const isTurn = (value: ConnectorTurn | null): value is ConnectorTurn => value !== null;
@@ -62,12 +71,21 @@ export function toItem(
     ...messages
       .filter((message) => !message.draft_mode)
       .map((message) =>
-        turn(`message:${message.id}`, senderOf(message), messageText(message), message.created_at),
+        turn(`message:${message.id}`, senderOf(message), messageText(message), message.created_at, {
+          side: sideOf(message),
+          internalNote: false,
+        }),
       ),
     ...comments.map((comment) => {
-      const body = comment.body?.trim() ?? '';
       const author = comment.author ? teammate(comment.author) : NOBODY;
-      return turn(`comment:${comment.id}`, author, body && NOTE + body, comment.posted_at);
+      const marks: Marks = { side: comment.author ? 'team' : undefined, internalNote: true };
+      return turn(
+        `comment:${comment.id}`,
+        author,
+        comment.body?.trim() ?? '',
+        comment.posted_at,
+        marks,
+      );
     }),
   ]
     .filter(isTurn)

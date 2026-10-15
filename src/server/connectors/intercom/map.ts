@@ -4,7 +4,7 @@ import type { Author, Conversation, Part } from './client';
 
 // De la réponse d'Intercom à un élément du socle : un tour participant par message, signé et daté
 // de sa propre date. Le premier message est le « source » de la recherche ; les suivants, les
-// parties du détail. Une note interne est un message de l'équipe, marqué comme tel.
+// parties du détail. Une note interne est un message de l'équipe, marqué par l'attribut `internalNote`.
 
 type Side = 'client' | 'team' | 'bot';
 type Person = { name: string | null; email: string | null };
@@ -16,7 +16,14 @@ const SIDE_LABEL: Record<Side, string> = {
 };
 // Les autres types de parties (affectation, ouverture, fermeture, mise en attente…) n'ont pas de texte.
 const NOTE_TYPES = new Set(['note', 'note_and_reopen']);
-const NOTE_PREFIX = 'Note interne : ';
+
+// Le côté du tour : un client est extérieur, l'équipe est l'équipe ; l'assistant automatique n'est
+// ni l'un ni l'autre.
+const TURN_SIDE: Record<Side, ConnectorTurn['side']> = {
+  client: 'external',
+  team: 'team',
+  bot: undefined,
+};
 
 function sideOf(author: Author): Side {
   if (author.type === 'bot' || author.from_ai_agent || author.is_ai_answer) return 'bot';
@@ -42,21 +49,27 @@ function directoryOf(conversation: Conversation, detail: Conversation | null) {
   return people;
 }
 
+type Speaker = { author: Person; side: ConnectorTurn['side'] };
+
 // Le nom suivi du côté (« Marie Durand (équipe) ») : le modèle attribue les engagements d'après
-// l'auteur, et le fil ne dit pas autrement qui est le client. Sans nom, le côté seul.
+// l'auteur, et le fil ne dit pas autrement qui est le client. Sans nom, le côté seul. Le côté vient du
+// type de l'auteur dans Intercom (admin, équipe, bot, sinon client), pas du nom.
 function speaker(
   author: Author | null | undefined,
   people: Map<string, Person>,
   isNote: boolean,
-): Person {
+): Speaker {
   const side: Side | null = author ? sideOf(author) : isNote ? 'team' : null;
-  if (side === null) return { name: null, email: null };
+  if (side === null) return { author: { name: null, email: null }, side: undefined };
   const known = author?.id ? people.get(`${side}:${author.id}`) : undefined;
   const name = author?.name?.trim() || known?.name;
   const label = SIDE_LABEL[side];
   return {
-    name: name ? `${name} (${label})` : label.charAt(0).toUpperCase() + label.slice(1),
-    email: author?.email?.trim() || known?.email || null,
+    author: {
+      name: name ? `${name} (${label})` : label.charAt(0).toUpperCase() + label.slice(1),
+      email: author?.email?.trim() || known?.email || null,
+    },
+    side: TURN_SIDE[side],
   };
 }
 
@@ -64,14 +77,14 @@ const toIso = (seconds: number): string => new Date(seconds * 1000).toISOString(
 
 function turn(
   externalId: string,
-  author: Person,
+  who: Speaker,
   html: string | null | undefined,
   at: number,
-  prefix = '',
+  internalNote = false,
 ): ConnectorTurn | null {
   const text = htmlToText(html ?? '').trim();
   if (text === '') return null;
-  return { externalId, role: 'participant', author, text: prefix + text, ts: toIso(at) };
+  return { externalId, role: 'participant', ...who, internalNote, text, ts: toIso(at) };
 }
 
 function isTurn(value: ConnectorTurn | null): value is ConnectorTurn {
@@ -101,8 +114,8 @@ export function toItem(conversation: Conversation, detail: Conversation | null):
     : turn('source', speaker(source?.author, people, false), source?.body, conversation.created_at);
   const replies = messageParts(detail).map((part) => {
     const isNote = NOTE_TYPES.has(part.part_type);
-    const author = speaker(part.author, people, isNote);
-    return turn(`part:${part.id}`, author, part.body, part.created_at, isNote ? NOTE_PREFIX : '');
+    const who = speaker(part.author, people, isNote);
+    return turn(`part:${part.id}`, who, part.body, part.created_at, isNote);
   });
   const team = conversation.team_assignee_id;
   return {

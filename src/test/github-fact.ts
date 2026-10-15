@@ -5,7 +5,11 @@ import { createTestTenant, seedCard, seedFact } from '@/test/fixtures';
 
 // Un fait tiré d'un commentaire de David (auteur du tour) sur une source GitHub qu'Amos a branchée :
 // le fait est écrit sous les droits d'Amos (le créateur de la connexion), mais il vient de David.
-export async function seedGithubFact(metadata: Record<string, unknown>) {
+// `authorSide` dit, comme l'outil, si David est de l'équipe ou extérieur (absent : l'outil ne le dit pas).
+export async function seedGithubFact(
+  metadata: Record<string, unknown>,
+  authorSide: 'team' | 'external' | null = null,
+) {
   const { tenantId, members } = await createTestTenant(['Amos', 'David']);
   const [amos, david] = members;
   if (!amos || !david) throw new Error('membres non créés');
@@ -33,6 +37,7 @@ export async function seedGithubFact(metadata: Record<string, unknown>) {
       ts: new Date(),
       captureMode: 'connector',
       authorName: 'David',
+      authorSide,
       acl: [tenantId],
     })
     .returning({ id: turns.id });

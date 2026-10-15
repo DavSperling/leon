@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
-import type { ProviderId } from '@/capture/turn';
+import type { AuthorSide, ProviderId } from '@/capture/turn';
 import { logError } from '@/server/log';
 import type { ConnectorItem, ConnectorTurn } from './types';
 
@@ -22,6 +22,8 @@ export type NormalizedTurn = {
   role: 'document' | 'participant';
   authorName: string | null;
   authorEmail: string | null;
+  authorSide: AuthorSide | null;
+  internalNote: boolean;
   text: string;
   ts: Date;
 };
@@ -335,6 +337,8 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
         role: turn.role,
         authorName: clip(turn.author.name, AUTHOR_NAME_MAX),
         authorEmail: clip(turn.author.email, AUTHOR_EMAIL_MAX),
+        authorSide: turn.side ?? null,
+        internalNote: turn.internalNote === true,
         text,
         ts,
       },

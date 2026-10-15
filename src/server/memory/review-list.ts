@@ -133,6 +133,7 @@ async function readFact(tx: Tx, factId: string): Promise<FactRow | null> {
       quote: facts.quote,
       userName: users.name,
       turnAuthorName: turns.authorName,
+      turnAuthorSide: turns.authorSide,
       validFrom: facts.validFrom,
       sourceKind: facts.sourceKind,
     })
@@ -141,10 +142,10 @@ async function readFact(tx: Tx, factId: string): Promise<FactRow | null> {
     .leftJoin(turns, eq(turns.id, facts.turnId))
     .where(eq(facts.id, factId));
   if (!row) return null;
-  const { sourceKind, userName, turnAuthorName, ...fact } = row;
+  const { sourceKind, userName, turnAuthorName, turnAuthorSide, ...fact } = row;
   return {
     ...fact,
-    authorName: factAuthorName({ sourceKind, userName, turnAuthorName }),
+    authorName: factAuthorName({ sourceKind, userName, turnAuthorName, turnAuthorSide }),
     sourceKindLabel: SOURCE_KIND_LABELS[sourceKind],
   };
 }

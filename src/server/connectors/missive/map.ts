@@ -4,7 +4,10 @@ import type { Comment, Conversation, Message } from './schemas';
 
 // De la réponse de Missive à un élément du socle : une conversation est un fil, chaque message et
 // chaque commentaire un tour `participant` daté de son envoi. Aucun tour `document` : il n'y a pas
-// de corps de page ou de ticket, seulement des échanges.
+// de corps de page ou de ticket, seulement des échanges. Le côté d'un message vient de Missive : seul un
+// message sortant a un `author` (l'utilisateur de l'organisation qui l'a écrit) ; tout autre message
+// vient de l'extérieur, quel que soit le nom de son en-tête « From ». Un commentaire est une note
+// interne d'un utilisateur de l'organisation.
 
 const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
 type Timed = { at: number; turn: ConnectorTurn };
@@ -24,6 +27,8 @@ function messageTurn(message: Message): Timed | null {
     externalId: `message:${message.id}`,
     role: 'participant',
     author,
+    side: writer ? 'team' : 'external',
+    internalNote: false,
     text,
     ts: iso(message.delivered_at),
   };
@@ -37,6 +42,8 @@ function commentTurn(comment: Comment): Timed | null {
     externalId: `comment:${comment.id}`,
     role: 'participant',
     author: { name: comment.author?.name ?? null, email: comment.author?.email ?? null },
+    side: 'team',
+    internalNote: true,
     text,
     ts: iso(comment.created_at),
   };

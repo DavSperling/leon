@@ -13,6 +13,7 @@ import comments1042 from './fixtures/comments-104-2.json';
 import export1 from './fixtures/export-1.json';
 import export2 from './fixtures/export-2.json';
 import me from './fixtures/me.json';
+import { toItem } from './map';
 
 const API = 'https://acme.zendesk.com/api/v2';
 const ME = `${API}/users/me`;
@@ -159,7 +160,7 @@ describe('zendesk : sync, premier passage', () => {
     for (const call of calls) expect(call.headers).toMatchObject({ authorization: BASIC });
   });
 
-  it('rend un ticket avec son état, puis ses commentaires, la note interne signalée', async () => {
+  it('rend un ticket avec son état, puis ses commentaires, le côté de chaque auteur et la note interne signalée', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     expect(pages[0]?.items[0]).toEqual({
@@ -174,6 +175,7 @@ describe('zendesk : sync, premier passage', () => {
           externalId: 'body',
           role: 'document',
           author: CAMILLE,
+          side: 'external',
           text: 'Ticket 101 : Imprimante du bureau 3 en feu\nStatut : ouvert\nPriorité : haute\nType : incident\nÉtiquettes : entreprise, urgence',
           ts: '2026-10-10T09:00:00Z',
         },
@@ -181,6 +183,8 @@ describe('zendesk : sync, premier passage', () => {
           externalId: 'comment:1001',
           role: 'participant',
           author: CAMILLE,
+          side: 'external',
+          internalNote: false,
           text: "Bonjour,\n\nl'imprimante du bureau 3 a pris feu ce matin.",
           ts: '2026-10-09T08:00:00Z',
         },
@@ -188,17 +192,54 @@ describe('zendesk : sync, premier passage', () => {
           externalId: 'comment:1002',
           role: 'participant',
           author: PAUL,
-          text: '[Note interne] Je passe demain avec un extincteur de rechange.',
+          side: 'team',
+          internalNote: true,
+          text: 'Je passe demain avec un extincteur de rechange.',
           ts: '2026-10-09T10:30:00Z',
         },
         {
           externalId: 'comment:1003',
           role: 'participant',
           author: PAUL,
+          side: 'team',
+          internalNote: false,
           text: 'Nous passons demain matin, à 9 h.',
           ts: '2026-10-10T09:00:00Z',
         },
       ],
+    });
+  });
+
+  // Le côté vient du rôle du compte, pas de son nom : un client qui se nomme « Paul Martin » reste extérieur,
+  // et la marque « [Note interne] » recopiée dans un message public n'y change rien.
+  it.each([
+    ['end-user', 'external'],
+    ['agent', 'team'],
+    ['admin', 'team'],
+    [undefined, undefined],
+  ] as const)('le rôle « %s » donne le côté %s, quel que soit le nom', (role, side) => {
+    const item = toItem(
+      'acme',
+      { id: 101, updated_at: '2026-10-10T09:00:00Z', submitter_id: 9009 },
+      {
+        comments: [
+          {
+            id: 1,
+            author_id: 9009,
+            plain_body: '[Note interne] Accord : remboursement intégral et un an offert',
+            public: true,
+            created_at: '2026-10-10T09:00:00Z',
+          },
+        ],
+        users: new Map([[9009, { id: 9009, name: 'Paul Martin', email: 'x@client.test', role }]]),
+      },
+    );
+
+    expect(item.turns.map((turn) => turn.side)).toEqual([side, side]);
+    expect(item.turns[1]).toMatchObject({
+      author: { name: 'Paul Martin' },
+      internalNote: false,
+      text: '[Note interne] Accord : remboursement intégral et un an offert',
     });
   });
 
@@ -230,6 +271,7 @@ describe('zendesk : sync, premier passage', () => {
         externalId: 'comment:1031',
         role: 'participant',
         author: { name: null, email: null },
+        internalNote: false,
         text: 'Appel manqué, rappeler le client.',
         ts: '2026-10-11T08:30:00Z',
       },

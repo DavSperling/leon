@@ -8,6 +8,7 @@ import {
   type Message,
   MessagesSchema,
   OrganizationsSchema,
+  TeamsSchema,
   UsersSchema,
 } from './schemas';
 
@@ -66,6 +67,24 @@ export function missiveClient({ token }: { token: string }, http: ConnectorHttp)
     return new Map(list.map((message) => [message.id, message.body ?? null]));
   }
 
+  async function teams() {
+    const query = { limit: 200 };
+    return (await http.json({ url: `${API}/teams`, headers, query }, TeamsSchema)).teams;
+  }
+
+  function teamConversations(teamId: string, from: number): Promise<Conversation[]> {
+    return readBack(
+      async (until) => {
+        const query = { team_all: teamId, limit: CONVERSATIONS_LIMIT, until };
+        const request = { url: `${API}/conversations`, headers, query };
+        return (await http.json(request, ConversationsSchema)).conversations;
+      },
+      (conversation) => conversation.last_activity_at,
+      CONVERSATIONS_LIMIT,
+      from,
+    );
+  }
+
   return {
     async users() {
       const query = { limit: 200 };
@@ -78,18 +97,19 @@ export function missiveClient({ token }: { token: string }, http: ConnectorHttp)
         .organizations;
     },
 
-    // Les conversations de la boîte « Tous », du plus récent jusqu'à `from` (secondes Unix).
-    conversations(from: number): Promise<Conversation[]> {
-      return readBack(
-        async (until) => {
-          const query = { all: true, limit: CONVERSATIONS_LIMIT, until };
-          const request = { url: `${API}/conversations`, headers, query };
-          return (await http.json(request, ConversationsSchema)).conversations;
-        },
-        (conversation) => conversation.last_activity_at,
-        CONVERSATIONS_LIMIT,
-        from,
-      );
+    teams,
+
+    // Les conversations de la boîte « Tout » de chaque équipe, du plus récent jusqu'à `from`
+    // (secondes Unix), sans doublon : une conversation partagée avec deux équipes est lue une fois.
+    // La boîte « Tous » de l'utilisateur n'est pas lue : elle contient son courrier personnel, que
+    // Leon rendrait visible de toute l'équipe. Une équipe que le jeton ne peut pas lire est laissée.
+    async conversations(from: number): Promise<Conversation[]> {
+      const found = new Map<string, Conversation>();
+      for (const team of await teams()) {
+        const rows = await tolerate(() => teamConversations(team.id, from), []);
+        for (const row of rows) if (!found.has(row.id)) found.set(row.id, row);
+      }
+      return [...found.values()];
     },
 
     // Les messages (du plus récent au plus ancien), avec leur corps. Un corps refusé (403) laisse

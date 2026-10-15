@@ -395,12 +395,43 @@ describe('helpscout : une conversation devient un élément', () => {
     expect(reply?.text).not.toMatch(/<|&nbsp;/);
   });
 
-  it('marque une note comme interne', async () => {
+  it('marque une note comme interne, par un attribut du tour et non dans son texte', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
-    const note = itemOf(pages, 4001).turns[3];
+    const turns = itemOf(pages, 4001).turns;
 
-    expect(note?.text).toBe('Note interne : Remboursement validé par la comptabilité.');
+    expect(turns[3]).toMatchObject({
+      text: 'Remboursement validé par la comptabilité.',
+      internalNote: true,
+    });
+    expect(turns.slice(1, 3).map((turn) => turn.internalNote)).toEqual([false, false]);
+  });
+
+  // Le côté vient du type du fil (et, pour une messagerie, de son auteur), jamais du nom.
+  it('donne le côté de chaque fil : client, équipe, messagerie selon son auteur, appel', async () => {
+    const { pages } = await runSync(firstPassRoutes());
+
+    const sides = (id: number) => itemOf(pages, id).turns.map((turn) => turn.side);
+    // L'état de la conversation prend le côté de celui qui l'a ouverte (son premier fil).
+    expect(sides(4001)).toEqual(['external', 'external', 'team', 'team']);
+    expect(sides(4002)).toEqual(['external', 'external']); // chat écrit par un client
+    expect(sides(4003)).toEqual(['team', 'team']); // appel
+  });
+
+  it('un fil de messagerie sans auteur connu n’a pas de côté', async () => {
+    const chat = {
+      ...page1._embedded.conversations[1],
+      _embedded: {
+        threads: [{ ...page1._embedded.conversations[1]?._embedded.threads[0], createdBy: null }],
+      },
+    };
+
+    const { pages } = await runSync([
+      tokenRoute,
+      listRoute({ ...empty, _embedded: { conversations: [chat] } }),
+    ]);
+
+    expect(itemsOf(pages)[0]?.turns.map((turn) => turn.side)).toEqual([undefined, undefined]);
   });
 
   it('écarte le pourriel et la conversation sans aucun texte', async () => {

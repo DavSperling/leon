@@ -204,6 +204,25 @@ describe("fetchCard · faits tirés d'un outil", () => {
     }
   });
 
+  // Le nom d'un auteur est celui qu'il s'est donné : quand l'outil dit qu'il est extérieur à l'équipe,
+  // la fiche l'écrit, pour qu'un « David » d'un dépôt public ne passe pas pour un collègue.
+  it("écrit « (externe) » après le nom de l'auteur d'un tour que l'outil dit extérieur", async () => {
+    const { david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL }, 'external');
+
+    const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+    expect(result?.card.facts[0]).toMatchObject({ authorName: 'David (externe)' });
+    expect(result?.text).toContain('[GitHub · David (externe),');
+  });
+
+  it("n'ajoute rien au nom d'un auteur de l'équipe", async () => {
+    const { david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL }, 'team');
+
+    const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+    expect(result?.card.facts[0]).toMatchObject({ authorName: 'David' });
+  });
+
   it.each([['http://exemple.test/a'], ['javascript:alert(1)']])(
     'ne garde pas le lien %s, mais montre quand même le fait',
     async (url) => {

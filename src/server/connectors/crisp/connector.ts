@@ -22,8 +22,9 @@ import { toIso, toItem } from './map';
 // modification), toutes les pages d'une fenêtre, trie lui-même et rend cinquante conversations par
 // page. Les messages d'une conversation viennent par lots, du plus récent au plus ancien
 // (`timestamp_before`) : on remonte jusqu'à un lot qui n'apporte rien. Seuls les messages de type
-// `text` et `note` (contenu en chaîne) sont lus, les notes internes préfixées « [Note interne] » ;
-// fichiers, sons et événements sont ignorés. Il n'y a pas de ressource secondaire : les messages sont
+// `text` et `note` (contenu en chaîne) sont lus, les notes internes marquées par l'attribut `internalNote`
+// du tour ; le côté du tour (`side`) vient du champ `from` du message (`operator` : l'équipe, `user` :
+// le visiteur) ; fichiers, sons et événements sont ignorés. Il n'y a pas de ressource secondaire : les messages sont
 // le contenu même de la conversation, donc un 403 dessus remonte (sinon le curseur avancerait sur
 // des conversations vides). Le texte des messages est pris tel quel, sans htmlToText. Une
 // conversation sans message de texte sort sans tours (le socle l'écarte) pour que le curseur avance.

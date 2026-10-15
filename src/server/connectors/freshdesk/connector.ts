@@ -26,7 +26,8 @@ import { toItem } from './map';
 // 200 tickets (socle) : la limite de 300 pages de Freshdesk n'est jamais atteinte, chaque passage
 // repart du curseur. Les conversations (réponses et notes internes) coûtent une requête par ticket
 // (Growth : 100 requêtes par minute pour tout le compte) : minIntervalMs ménage ce budget. Les
-// notes internes portent « [Note interne] » en tête, les réponses n'ont rien. Un 403 sur les
+// notes internes sont marquées par l'attribut `internalNote` du tour. Le côté du tour (`side`) vient
+// de l'annuaire des agents (équipe), du demandeur et des autres contacts (extérieurs). Un 403 sur les
 // conversations d'un ticket ou sur la liste des agents est attrapé (le ticket sort avec sa seule
 // description, ou les auteurs sans nom), de même qu'un 404 sur les conversations (ticket supprimé
 // entre la liste et la lecture). Un ticket sans texte sort sans tours (le socle l'écarte) pour que

@@ -60,7 +60,8 @@ const HOUR_MS = 3600 * 1000;
 export const gongConnector: Connector<Config> = {
   id: 'gong',
   configSchema,
-  secretFields: ['accessKeySecret'],
+  // Le secret d'abord : l'empreinte affichée en est tirée. La clé d'accès change avec lui quand on remplace la clé.
+  secretFields: ['accessKeySecret', 'accessKey'],
   hosts: (config) => [`${config.baseUrlHost}.api.gong.io`],
   minIntervalMs: 350,
 

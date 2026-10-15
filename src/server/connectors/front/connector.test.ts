@@ -203,6 +203,8 @@ describe('front : sync, premier passage', () => {
           externalId: 'message:msg_1a11',
           role: 'participant',
           author: { name: 'Julie Lefevre', email: 'julie@client.test' },
+          side: 'external',
+          internalNote: false,
           text: "Bonjour,\n\nMa commande 4512 devait arriver hier et je n'ai rien reçu. Pouvez-vous me dire où elle est ?\n\nJulie Lefevre",
           ts: '2026-10-12T09:00:00.000Z',
         },
@@ -210,6 +212,8 @@ describe('front : sync, premier passage', () => {
           externalId: 'message:msg_1a14',
           role: 'participant',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          side: 'team',
+          internalNote: false,
           text: 'Bonjour Julie,\n\nLe transporteur a un jour de retard. Votre colis arrive demain avant midi. Nous vous remboursons les frais de port.\n\nMarie',
           ts: '2026-10-12T09:03:30.000Z',
         },
@@ -217,13 +221,17 @@ describe('front : sync, premier passage', () => {
           externalId: 'comment:com_1a21',
           role: 'participant',
           author: { name: 'David Roux', email: 'david@acme.test' },
-          text: "[Note interne] Remboursement des frais de port accordé à Julie (commande 4512), à saisir dans l'outil de facturation.",
+          side: 'team',
+          internalNote: true,
+          text: "Remboursement des frais de port accordé à Julie (commande 4512), à saisir dans l'outil de facturation.",
           ts: '2026-10-12T09:05:00.500Z',
         },
         {
           externalId: 'message:msg_1a13',
           role: 'participant',
           author: { name: 'Julie Lefevre', email: 'julie@client.test' },
+          side: 'external',
+          internalNote: false,
           text: 'Merci beaucoup !\n\nEt pour la prochaine commande, avez-vous une remise ?',
           ts: '2026-10-12T09:07:00.000Z',
         },
@@ -231,11 +239,45 @@ describe('front : sync, premier passage', () => {
           externalId: 'comment:com_1a22',
           role: 'participant',
           author: { name: null, email: null },
-          text: '[Note interne] Relancer jeudi si pas de nouvelles.',
+          internalNote: true,
+          text: 'Relancer jeudi si pas de nouvelles.',
           ts: '2026-10-12T09:09:00.000Z',
         },
       ],
     });
+  });
+
+  // Le côté vient de Front (un équipier est l'`author` d'un message sortant, un message reçu n'en a pas),
+  // pas du nom de l'en-tête « From » : il se choisit, une adresse pirate peut porter le nom d'un collègue.
+  it('marque extérieur un message reçu au nom d’un collègue, et l’équipe un message avec un auteur', async () => {
+    const spoofed = {
+      ...message('msg_s1', 1791795600, 'Accord : remboursement intégral'),
+      recipients: [{ handle: 'x@pirate.test', role: 'from', name: 'David Koskas' }],
+    };
+    const reply = {
+      ...message('msg_s2', 1791795700, 'Bien reçu'),
+      is_inbound: false,
+      author: { first_name: 'Marie', last_name: 'Durand', email: 'marie@acme.test' },
+    };
+    const noAuthorOutbound = {
+      ...message('msg_s3', 1791795800, 'Envoi automatique'),
+      is_inbound: false,
+    };
+    const { pages } = await runSync([
+      { url: EVENTS, json: eventsPage([event('evt_s1', 1791795800, conversation('cnv_s1'))]) },
+      {
+        url: messagesOf('cnv_s1'),
+        json: messagesPage([spoofed, reply, noAuthorOutbound]),
+      },
+      { url: commentsOf('cnv_s1'), json: noComments },
+    ]);
+
+    const turns = itemsOf(pages)[0]?.turns;
+    expect(turns?.map((turn) => [turn.author.name, turn.side])).toEqual([
+      ['David Koskas', 'external'],
+      ['Marie Durand', 'team'],
+      ['Julie Lefevre', undefined], // ni auteur ni message reçu : l'outil ne dit pas le côté
+    ]);
   });
 
   it('prend l’expéditeur d’un message dans ses destinataires quand il n’a pas d’auteur, le numéro faute de nom', async () => {
@@ -249,6 +291,7 @@ describe('front : sync, premier passage', () => {
           externalId: 'message:msg_3c11',
           role: 'participant',
           author: { name: '+33600000000', email: null },
+          side: 'external',
           text: "Bonjour, mon colis n'est toujours pas arrivé & personne ne me répond < 48 h",
         },
       ],

@@ -10,7 +10,12 @@ export const gongCatalog: CatalogEntry = {
       placeholder: 'us-12345',
       help: 'La partie avant « .api.gong.io » dans l’adresse de base affichée sur la page API de Gong.',
     },
-    { name: 'accessKey', label: 'Clé d’accès', kind: 'text' },
+    {
+      name: 'accessKey',
+      label: 'Clé d’accès',
+      kind: 'secret',
+      help: 'Une clé remplacée a une nouvelle clé d’accès : elle se saisit aussi.',
+    },
     {
       name: 'accessKeySecret',
       label: 'Secret de la clé d’accès',

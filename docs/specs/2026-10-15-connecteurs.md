@@ -104,10 +104,11 @@ type Connector<Config> = {
 
 ## Le pipeline
 
-- Le format envoyé aux modèles devient `<source outil="Notion" nature="page" titre="…">` puis `<tour id role auteur date>`, pour les conversations comme pour le reste. Les libellés de rôle : utilisateur, assistant, document, participant. La protection contre l'injection échappe aussi `</source>`.
+- Le format envoyé aux modèles devient `<source outil="Notion" nature="page" titre="…">` puis `<tour id role auteur cote interne date>` (`cote` et `interne` seulement quand l'outil les donne), pour les conversations comme pour le reste. Les libellés de rôle : utilisateur, assistant, document, participant. La protection contre l'injection échappe aussi `</source>`.
 - Les prompts de tri et d'extraction ne parlent plus seulement d'« une conversation entre un employé et un assistant » : ils décrivent chaque nature. Une réunion contient des décisions et des engagements des participants. Une page ou un ticket décrit l'état des choses à sa date. Un commentaire peut proposer, décider ou corriger.
 - La règle de citation ne change pas : chaque fait cite le texte exact d'un tour, sinon il est rejeté.
 - L'auteur d'un tour est donné au modèle : il sert à attribuer décisions et engagements (« David s'engage à… »).
+- Le nom d'un auteur est celui qu'il s'est donné : un client peut s'appeler comme un collègue. Le côté du tour (`cote="equipe"` ou `cote="externe"`) vient donc d'un champ de l'outil, jamais du nom ni du texte (rôle du compte Zendesk, `from` de Crisp, `author` de Front et de Missive, annuaire des agents de Freshdesk, type de fil de Help Scout, type d'acteur de Plain, type d'auteur d'Intercom, `author_association` de GitHub). Un tour `externe` ne donne jamais un fait établi sur l'entreprise, ses procédures ou les engagements de l'équipe, seulement des faits sur son auteur. Une note que seule l'équipe voit est l'attribut `interne="oui"`, non une marque dans le texte (un client peut la recopier). Un fait tiré d'un tour extérieur est affiché avec « (externe) » après le nom de son auteur.
 
 ## L'interface
 
@@ -123,6 +124,7 @@ type Connector<Config> = {
 - Pas d'adresse libre : hôte fixe par connecteur, sous-domaine vérifié par une expression stricte (`^[a-z0-9][a-z0-9-]{0,62}$`), HTTPS seulement.
 - Le texte des outils passe par `prepareTurnText` (masquage des secrets, coupe) comme les conversations, et reste une donnée dans les prompts.
 - Les sources des connecteurs n'entrent que par la tâche de fond, jamais par la route publique.
+- Le texte d'un client, d'un visiteur ou d'un inconnu (support, courriels, tickets d'un dépôt public) entre dans la mémoire partagée comme celui de l'équipe : seuls le côté du tour, donné par l'outil, et les règles des prompts (ci-dessus) les distinguent. Les autres outils (CRM, réunions) ne donnent pas encore de côté.
 
 ## Tests
 

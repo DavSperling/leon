@@ -282,3 +282,28 @@ describe("listReviewItems · faits tirés d'un outil", () => {
     }
   });
 });
+
+describe("listReviewItems · fait tiré d'un tour extérieur", () => {
+  it("écrit « (externe) » après le nom de l'auteur que l'outil dit extérieur", async () => {
+    const { tenantId, david, factId } = await seedGithubFact(
+      { url: 'https://github.com/acme/leon/issues/12' },
+      'external',
+    );
+    const [item] = await adminDb
+      .insert(reviewItems)
+      .values({
+        tenantId,
+        kind: 'sensitive_fact',
+        payload: { kind: 'sensitive_fact', factId, category: 'rh' },
+        acl: [tenantId],
+      })
+      .returning({ id: reviewItems.id });
+
+    const items = await listReviewItems(david, { status: 'open' });
+
+    expect(items.find((entry) => entry.id === item?.id)?.detail).toMatchObject({
+      kind: 'sensitive_fact',
+      fact: { id: factId, authorName: 'David (externe)' },
+    });
+  });
+});

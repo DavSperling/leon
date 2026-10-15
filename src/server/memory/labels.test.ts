@@ -67,4 +67,31 @@ describe('factAuthorName', () => {
       'auteur inconnu',
     );
   });
+
+  // Le nom est celui que l'auteur s'est donné : un client peut s'appeler comme un collègue.
+  it("écrit « (externe) » après le nom d'un auteur que l'outil dit extérieur à l'équipe", () => {
+    const input = {
+      sourceKind: 'zendesk',
+      userName: 'Amos',
+      turnAuthorName: 'Amos Koskas',
+    } as const;
+
+    expect(factAuthorName({ ...input, turnAuthorSide: 'external' })).toBe('Amos Koskas (externe)');
+    expect(factAuthorName({ ...input, turnAuthorSide: 'team' })).toBe('Amos Koskas');
+    expect(factAuthorName({ ...input, turnAuthorSide: null })).toBe('Amos Koskas');
+    expect(factAuthorName({ ...input, turnAuthorName: null, turnAuthorSide: 'external' })).toBe(
+      'auteur inconnu (externe)',
+    );
+  });
+
+  it("ne change pas le nom d'une conversation tenue par un membre, même avec un côté", () => {
+    expect(
+      factAuthorName({
+        sourceKind: 'claude_code',
+        userName: 'Paul Martin',
+        turnAuthorName: 'Marie',
+        turnAuthorSide: 'external',
+      }),
+    ).toBe('Paul Martin');
+  });
 });

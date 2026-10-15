@@ -10,7 +10,20 @@ export type Discussion = {
   reviewComments: ReviewComment[];
 };
 
-type Row = { body?: string | null; user?: { login: string } | null };
+type Row = {
+  body?: string | null;
+  user?: { login: string } | null;
+  author_association?: string | null;
+};
+
+// Sur un dépôt public, n'importe qui ouvre un ticket ou commente : seuls le propriétaire, les membres
+// de l'organisation et les collaborateurs invités sont de l'équipe. Les autres (contributeur passé,
+// première contribution, inconnu) sont extérieurs. Sans le champ, GitHub ne dit rien : pas de côté.
+const TEAM_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+function sideOf(association: string | null | undefined): ConnectorTurn['side'] {
+  if (!association) return undefined;
+  return TEAM_ASSOCIATIONS.has(association) ? 'team' : 'external';
+}
 
 // Un tour sans texte n'existe pas (corps nul, avis qui n'est qu'une approbation).
 function turn(
@@ -26,6 +39,7 @@ function turn(
     externalId,
     role,
     author: { name: row.user?.login ?? null, email: null },
+    side: sideOf(row.author_association),
     text: intro + text,
     ts,
   };

@@ -276,6 +276,8 @@ describe('Intercom : sync, premier passage', () => {
           externalId: 'source',
           role: 'participant',
           author: { name: 'Claire Dubois (client)', email: 'claire@dubois.test' },
+          side: 'external',
+          internalNote: false,
           text: "Bonjour, je n'arrive plus à exporter mes factures en PDF.",
           ts: '2026-10-10T09:00:00.000Z',
         },
@@ -283,6 +285,8 @@ describe('Intercom : sync, premier passage', () => {
           externalId: 'part:9001',
           role: 'participant',
           author: { name: 'Marie Durand (équipe)', email: 'marie@acme.test' },
+          side: 'team',
+          internalNote: false,
           text: 'Bonjour Claire, nous regardons ça tout de suite.\n\nQuel navigateur utilisez-vous ?',
           ts: '2026-10-10T09:05:00.000Z',
         },
@@ -290,13 +294,17 @@ describe('Intercom : sync, premier passage', () => {
           externalId: 'part:9002',
           role: 'participant',
           author: { name: 'Marie Durand (équipe)', email: 'marie@acme.test' },
-          text: 'Note interne : Bug connu côté export, ticket interne ouvert.',
+          side: 'team',
+          internalNote: true,
+          text: 'Bug connu côté export, ticket interne ouvert.',
           ts: '2026-10-10T09:12:00.000Z',
         },
         {
           externalId: 'part:9003',
           role: 'participant',
           author: { name: 'Claire Dubois (client)', email: 'claire@dubois.test' },
+          side: 'external',
+          internalNote: false,
           text: 'Chrome, version 141. Merci !',
           ts: '2026-10-10T09:14:00.000Z',
         },
@@ -492,9 +500,11 @@ describe('Intercom : sync, reprise et cas limites', () => {
 
     const { pages } = await runSync([search(list([searched('2050', T)])), detail(2050, full)]);
 
-    expect(itemsOf(pages)[0]?.turns.map((turn) => [turn.externalId, turn.text])).toEqual([
-      ['source', 'Texte de 2050'],
-      ['part:2', 'Note interne : À reprendre'],
+    expect(
+      itemsOf(pages)[0]?.turns.map((turn) => [turn.externalId, turn.text, turn.internalNote]),
+    ).toEqual([
+      ['source', 'Texte de 2050', false],
+      ['part:2', 'À reprendre', true],
     ]);
   });
 
@@ -515,6 +525,8 @@ describe('Intercom : sync, reprise et cas limites', () => {
       name: 'Fin (assistant automatique)',
       email: null,
     });
+    // L'assistant automatique n'est ni l'équipe ni un client : pas de côté.
+    expect(itemsOf(pages)[0]?.turns[0]?.side).toBeUndefined();
   });
 
   it('tolère les champs en plus et sans titre ni sujet donne un titre par défaut', async () => {

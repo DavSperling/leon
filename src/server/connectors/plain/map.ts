@@ -12,6 +12,13 @@ function author(actor: PlainEntry['actor']): ConnectorTurn['author'] {
   return { name: actor.machineUser?.fullName ?? null, email: null };
 }
 
+// Le côté vient du type d'acteur de Plain : un membre de l'équipe (user) ou un client (customer). Un
+// utilisateur machine (intégration, automatisme) n'est ni l'un ni l'autre.
+function sideOf(actor: PlainEntry['actor']): ConnectorTurn['side'] {
+  if (actor.user) return 'team';
+  return actor.customer ? 'external' : undefined;
+}
+
 // Un seul des champs de `entry` est présent, selon le type du message.
 function messageText(entry: PlainEntry['entry']): string {
   const found = Object.values(entry).find((value) => value?.trim());
@@ -26,6 +33,7 @@ function entryToTurn(entry: PlainEntry): ConnectorTurn[] {
       externalId: `entry:${entry.id}`,
       role: 'participant',
       author: author(entry.actor),
+      side: sideOf(entry.actor),
       text,
       ts: entry.timestamp.iso8601,
     },

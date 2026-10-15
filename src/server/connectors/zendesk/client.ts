@@ -35,6 +35,7 @@ const UserSchema = z.object({
   id: z.number(),
   name: z.string().nullish(),
   email: z.string().nullish(),
+  role: z.string().nullish(), // « end-user » (le client), « agent » ou « admin » (l'équipe)
 });
 export const CommentSchema = z.object({
   id: z.number(),

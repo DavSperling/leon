@@ -17,8 +17,6 @@ export const IssueSchema = z.object({
   permalink: z.string().nullish(),
   level: z.string().nullish(),
   status: z.string().nullish(),
-  count: z.union([z.string(), z.number()]).nullish(), // une chaîne chez Sentry : « "42" »
-  userCount: z.number().nullish(),
   firstSeen: IsoDate.nullish().catch(null),
   lastSeen: IsoDate,
   numComments: z.number().nullish(),

@@ -44,6 +44,9 @@ alter table turns add constraint turns_capture_mode_check
   check (capture_mode in ('file', 'network', 'dom', 'manual', 'connector'));
 alter table turns add column author_name text check (char_length(author_name) <= 200);
 alter table turns add column author_email text check (char_length(author_email) <= 320);
+-- Le côté de l'auteur vient d'un champ de l'outil, jamais d'un nom (chacun choisit le sien) ; nul si l'outil ne le dit pas.
+alter table turns add column author_side text check (author_side in ('team', 'external'));
+alter table turns add column internal_note boolean not null default false;
 
 alter table facts drop constraint facts_source_kind_check;
 alter table facts add constraint facts_source_kind_check check (source_kind in ('claude_code', 'claude_ai', 'chatgpt', 'mcp_remember', 'github', 'notion', 'linear', 'granola', 'fathom', 'fireflies', 'tldv', 'circleback', 'claap', 'leexi', 'gong', 'jira', 'confluence', 'gitlab', 'asana', 'clickup', 'trello', 'monday', 'shortcut', 'plane', 'airtable', 'sentry', 'hubspot', 'attio', 'folk', 'pipedrive', 'close', 'intercom', 'zendesk', 'freshdesk', 'helpscout', 'front', 'plain', 'crisp', 'missive'));

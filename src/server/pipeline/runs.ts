@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import type { SourceKind, TurnRole } from '@/capture/turn';
+import type { AuthorSide, SourceKind, TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -17,6 +17,8 @@ export type RunTurn = {
   externalId: string;
   role: TurnRole;
   authorName: string | null;
+  authorSide: AuthorSide | null;
+  internalNote: boolean;
   text: string;
   ts: Date;
 };
@@ -91,6 +93,8 @@ export async function startStep(
         externalId: turns.externalId,
         role: turns.role,
         authorName: turns.authorName,
+        authorSide: turns.authorSide,
+        internalNote: turns.internalNote,
         text: turns.text,
         ts: turns.ts,
       })

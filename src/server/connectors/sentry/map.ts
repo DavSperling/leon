@@ -1,8 +1,11 @@
 import type { ConnectorItem, ConnectorTurn } from '../types';
 import type { Issue, Note } from './client';
 
-// De la réponse de Sentry à un élément du socle : un tour `document` court (état du problème à sa
-// dernière occurrence, sans trace de pile ni données d'événement), puis une prise de parole par note.
+// De la réponse de Sentry à un élément du socle : un tour `document` court (l'état du problème, sans
+// trace de pile ni données d'événement), puis une prise de parole par note. Le texte du tour ne porte
+// ni la date de dernière occurrence ni les compteurs d'événements : ils changent à chaque événement
+// sans que personne n'ait rien modifié, et chaque changement de texte ferait un tour, un passage et
+// un tri de plus. La date de dernière occurrence ne sert qu'à dater le tour et à ordonner les passages.
 
 const STATUS_LABELS: Record<string, string> = {
   unresolved: 'non résolu',
@@ -21,10 +24,6 @@ const LEVEL_LABELS: Record<string, string> = {
 const when = (iso: string) => `${new Date(iso).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 
 function documentText(issue: Issue): string {
-  const counts = [
-    issue.count != null ? `Événements : ${issue.count}` : null,
-    issue.userCount != null ? `Utilisateurs touchés : ${issue.userCount}` : null,
-  ];
   const state = [
     issue.status ? `Statut : ${STATUS_LABELS[issue.status] ?? issue.status}` : null,
     issue.level ? `Niveau : ${LEVEL_LABELS[issue.level] ?? issue.level}` : null,
@@ -35,8 +34,6 @@ function documentText(issue: Issue): string {
     state.filter(Boolean).join(' · '),
     issue.culprit ? `Lieu : ${issue.culprit}` : null,
     issue.firstSeen ? `Première occurrence : ${when(issue.firstSeen)}` : null,
-    `Dernière occurrence : ${when(issue.lastSeen)}`,
-    counts.filter(Boolean).join(' · '),
     issue.assignedTo?.name ? `Assigné à : ${issue.assignedTo.name}` : null,
   ];
   return lines.filter(Boolean).join('\n');

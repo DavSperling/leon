@@ -50,6 +50,11 @@ export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.
 export const TURN_ROLES = ['user', 'assistant', 'document', 'participant'] as const;
 export type TurnRole = (typeof TURN_ROLES)[number];
+// Du côté de qui parle l'auteur d'un tour d'outil, d'après un champ de l'outil (jamais d'après un nom, que
+// chacun choisit) : l'équipe qui a branché l'outil, ou une personne extérieure (client, visiteur, inconnu).
+// Un tour dont l'outil ne dit pas le côté n'en a pas.
+export const AUTHOR_SIDES = ['team', 'external'] as const;
+export type AuthorSide = (typeof AUTHOR_SIDES)[number];
 export const TURN_CAPTURE_MODES = [...CAPTURE_MODES, 'connector'] as const;
 export type TurnCaptureMode = (typeof TURN_CAPTURE_MODES)[number];
 export const TURN_TEXT_MAX = 20_000; // caractères par tour, après nettoyage

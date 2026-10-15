@@ -17,6 +17,8 @@ function turnOf(message: Message, meta: Meta | null | undefined): ConnectorTurn 
   const text = content.trim();
   if (!text || fingerprint === undefined) return null;
   const visitor = message.from === 'user';
+  // Le côté vient du champ `from` de Crisp, pas du pseudo : le visiteur choisit le sien.
+  const side = visitor ? 'external' : message.from === 'operator' ? 'team' : undefined;
   return {
     externalId: `message:${fingerprint}`,
     role: 'participant',
@@ -25,8 +27,10 @@ function turnOf(message: Message, meta: Meta | null | undefined): ConnectorTurn 
       name: message.user?.nickname?.trim() || (visitor ? meta?.nickname?.trim() : null) || null,
       email: (visitor ? meta?.email?.trim() : null) || null,
     },
+    side,
     // Une note interne n'a pas été envoyée au client : le modèle doit pouvoir le voir.
-    text: type === 'note' ? `[Note interne] ${text}` : text,
+    internalNote: type === 'note',
+    text,
     ts: toIso(message.timestamp),
   };
 }

@@ -17,7 +17,13 @@ import { logError } from '@/server/log';
 import { MAX_IDS, TaskError } from '@/server/tasks/errors';
 import { createLabel, type LabelRow } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
-import { createTask, moveTask, updateTask } from '@/server/tasks/tasks';
+import {
+  bulkUpdateTasks,
+  createTask,
+  deleteTasks,
+  moveTask,
+  updateTask,
+} from '@/server/tasks/tasks';
 
 // Chaque action : la session, zod sur les entrées, une fonction de src/server/tasks, puis le
 // rafraîchissement des pages. Le message d'une erreur attendue (TaskError) est fixe ; toute autre
@@ -62,6 +68,18 @@ const TaskPatchSchema = z.strictObject({
 });
 
 const UpdateTaskSchema = z.strictObject({ id: Id, patch: TaskPatchSchema });
+
+// Les actions groupées : une sélection de 200 tâches au plus, et ce que la barre de sélection change.
+const BulkPatchSchema = TaskPatchSchema.pick({
+  statusId: true,
+  priority: true,
+  assigneeId: true,
+  dueDate: true,
+  addLabelIds: true,
+  removeLabelIds: true,
+});
+const BulkUpdateSchema = z.strictObject({ ids: Ids.min(1), patch: BulkPatchSchema });
+const DeleteTasksSchema = z.strictObject({ ids: Ids.min(1) });
 
 // Glisser une carte : vers une colonne (statut, priorité ou assigné) ou dans la sienne (sans `field`),
 // entre sa voisine du dessus et celle du dessous.
@@ -125,6 +143,22 @@ export async function updateTaskAction(
     await updateTask(ctx, data.id, data.patch, { kind: 'user', userId: ctx.userId });
     return {};
   });
+}
+
+// Tout ou rien : une tâche refusée annule l'ensemble. Renvoie le nombre de tâches modifiées.
+export async function bulkUpdateTasksAction(
+  ids: string[],
+  patch: z.input<typeof BulkPatchSchema>,
+): Promise<ActionResult<{ count: number }>> {
+  return run('bulk_update_tasks', BulkUpdateSchema, { ids, patch }, async (ctx, data) => ({
+    count: await bulkUpdateTasks(ctx, data.ids, data.patch, { kind: 'user', userId: ctx.userId }),
+  }));
+}
+
+export async function deleteTasksAction(ids: string[]): Promise<ActionResult<{ count: number }>> {
+  return run('delete_tasks', DeleteTasksSchema, { ids }, async (ctx, data) => ({
+    count: await deleteTasks(ctx, data.ids),
+  }));
 }
 
 export async function moveTaskAction(

@@ -5,6 +5,7 @@ import type { ViewConfig } from '@/lib/tasks/view-config';
 import type { TaskPrefill } from './create-draft';
 import { CreateTaskDialog } from './create-task-dialog';
 import type { ListContext } from './list-context';
+import { isTypingOrBusy } from './typing';
 
 type OpenCreate = (prefill?: TaskPrefill) => void;
 
@@ -17,13 +18,6 @@ export function useCreateTask(): OpenCreate {
   return open;
 }
 
-// La touche C ouvre la création, sauf quand on écrit quelque part ou qu'un menu ou un dialogue a la main.
-function isTypingOrBusy(): boolean {
-  const target = document.activeElement;
-  const typing = target?.closest('input, textarea, select, [contenteditable]');
-  return Boolean(typing) || document.querySelector('[role="dialog"], [role="menu"]') !== null;
-}
-
 type CreateTaskProviderProps = {
   config: ViewConfig;
   context: ListContext;
@@ -32,7 +26,7 @@ type CreateTaskProviderProps = {
 };
 
 // Un seul dialogue pour toute la page : le bouton « Nouvelle tâche », les « + » des groupes et la
-// touche C l'ouvrent.
+// touche C (sauf quand on écrit quelque part ou qu'un menu ou un dialogue a la main) l'ouvrent.
 export function CreateTaskProvider({ config, context, now, children }: CreateTaskProviderProps) {
   const [open, setOpen] = useState(false);
   const [prefill, setPrefill] = useState<TaskPrefill>({});

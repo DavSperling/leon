@@ -4,10 +4,18 @@ import { requireUserContext } from '@/server/auth/session';
 import { TaskError } from '@/server/tasks/errors';
 import { createLabel } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
-import { createTask, moveTask, updateTask } from '@/server/tasks/tasks';
 import {
+  bulkUpdateTasks,
+  createTask,
+  deleteTasks,
+  moveTask,
+  updateTask,
+} from '@/server/tasks/tasks';
+import {
+  bulkUpdateTasksAction,
   createLabelAction,
   createTaskAction,
+  deleteTasksAction,
   moveTaskAction,
   searchTasksAction,
   updateTaskAction,
@@ -15,7 +23,9 @@ import {
 
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
 vi.mock('@/server/tasks/tasks', () => ({
+  bulkUpdateTasks: vi.fn(),
   createTask: vi.fn(),
+  deleteTasks: vi.fn(),
   moveTask: vi.fn(),
   updateTask: vi.fn(),
 }));
@@ -185,6 +195,128 @@ describe('updateTaskAction', () => {
       error: 'Erreur interne de Leon.',
     });
     expect(String(consoleError.mock.calls[0]?.[1])).toBe('tasks.update_task');
+  });
+});
+
+describe('bulkUpdateTasksAction', () => {
+  it('applique le patch à la sélection, en nom de lecteur, rend le nombre de tâches, puis rafraîchit', async () => {
+    vi.mocked(bulkUpdateTasks).mockResolvedValue(2);
+    const patch = {
+      statusId: OTHER_ID,
+      priority: 'urgent' as const,
+      assigneeId: null,
+      dueDate: '2026-10-20',
+      addLabelIds: [ID],
+      removeLabelIds: [OTHER_ID],
+    };
+
+    await expect(bulkUpdateTasksAction([ID, OTHER_ID], patch)).resolves.toEqual({
+      ok: true,
+      count: 2,
+    });
+
+    expect(bulkUpdateTasks).toHaveBeenCalledWith(ctx, [ID, OTHER_ID], patch, ACTOR);
+    expect(revalidatePath).toHaveBeenCalledWith('/taches', 'layout');
+  });
+
+  it('accepte 200 tâches et refuse la 201e sans rien écrire', async () => {
+    vi.mocked(bulkUpdateTasks).mockResolvedValue(200);
+    const ids = (count: number) =>
+      Array.from({ length: count }, (_, n) => `${n}`.padStart(8, '0') + ID.slice(8));
+
+    await expect(bulkUpdateTasksAction(ids(200), { priority: 'low' })).resolves.toMatchObject({
+      ok: true,
+    });
+    vi.mocked(bulkUpdateTasks).mockClear();
+    await expect(bulkUpdateTasksAction(ids(201), { priority: 'low' })).resolves.toEqual(INVALID);
+
+    expect(bulkUpdateTasks).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['aucune tâche', [], { priority: 'low' }],
+    ['un identifiant qui n’est pas un UUID', ['pas-un-uuid'], { priority: 'low' }],
+    ['une priorité inconnue', [ID], { priority: 'critique' }],
+    ['un projet (hors des actions groupées)', [ID], { projectId: OTHER_ID }],
+    ['un titre (hors des actions groupées)', [ID], { title: 'Titre' }],
+    ['un champ interdit (acl)', [ID], { acl: [ID] }],
+    ['une échéance impossible', [ID], { dueDate: '2026-13-01' }],
+    ['trop d’étiquettes', [ID], { addLabelIds: Array.from({ length: 201 }, () => ID) }],
+  ])('refuse %s sans rien écrire', async (_name, ids, patch) => {
+    await expect(bulkUpdateTasksAction(ids, patch as never)).resolves.toEqual(INVALID);
+
+    expect(bulkUpdateTasks).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("rend le message d'une TaskError (assigné non membre) et ne rafraîchit rien", async () => {
+    vi.mocked(bulkUpdateTasks).mockRejectedValue(new TaskError('not_found', 'Membre introuvable.'));
+
+    await expect(bulkUpdateTasksAction([ID], { assigneeId: OTHER_ID })).resolves.toEqual({
+      ok: false,
+      error: 'Membre introuvable.',
+    });
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('journalise une erreur interne sans le texte saisi et ne montre rien au lecteur', async () => {
+    vi.mocked(bulkUpdateTasks).mockRejectedValue(postgresError());
+
+    await expect(bulkUpdateTasksAction([ID], { priority: 'low' })).resolves.toEqual({
+      ok: false,
+      error: 'Erreur interne de Leon.',
+    });
+    expect(String(consoleError.mock.calls[0]?.[1])).toBe('tasks.bulk_update_tasks');
+  });
+
+  it('ne modifie rien sans session valide', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(bulkUpdateTasksAction([ID], { priority: 'low' })).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+
+    expect(bulkUpdateTasks).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteTasksAction', () => {
+  it('supprime la sélection sous les droits du lecteur, rend le nombre, puis rafraîchit', async () => {
+    vi.mocked(deleteTasks).mockResolvedValue(2);
+
+    await expect(deleteTasksAction([ID, OTHER_ID])).resolves.toEqual({ ok: true, count: 2 });
+
+    expect(deleteTasks).toHaveBeenCalledWith(ctx, [ID, OTHER_ID]);
+    expect(revalidatePath).toHaveBeenCalledWith('/taches', 'layout');
+  });
+
+  it.each([
+    ['aucune tâche', []],
+    ['un identifiant qui n’est pas un UUID', ['pas-un-uuid']],
+    ['201 tâches', Array.from({ length: 201 }, () => ID)],
+  ])('refuse %s sans rien supprimer', async (_name, ids) => {
+    await expect(deleteTasksAction(ids)).resolves.toEqual(INVALID);
+
+    expect(deleteTasks).not.toHaveBeenCalled();
+  });
+
+  it('journalise une erreur interne sans son texte', async () => {
+    vi.mocked(deleteTasks).mockRejectedValue(postgresError());
+
+    await expect(deleteTasksAction([ID])).resolves.toEqual({
+      ok: false,
+      error: 'Erreur interne de Leon.',
+    });
+    expect(String(consoleError.mock.calls[0]?.[1])).toBe('tasks.delete_tasks');
+  });
+
+  it('ne supprime rien sans session valide', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(deleteTasksAction([ID])).rejects.toThrow('NEXT_REDIRECT /connexion');
+
+    expect(deleteTasks).not.toHaveBeenCalled();
   });
 });
 

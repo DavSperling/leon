@@ -1,15 +1,7 @@
 'use client';
 
 import { PanelRight, Plus, Search } from 'lucide-react';
-import Link from 'next/link';
 import { useId, useState } from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -20,16 +12,18 @@ import { useCreateTask } from './create-task-provider';
 import { DisplayMenu } from './display-menu';
 import { activeFilters, FilterChips } from './filter-chips';
 import { FilterMenu } from './filter-menu';
+import { ListBreadcrumb } from './list-breadcrumb';
 import type { FilterPatch, ListContext } from './list-context';
+import { MyTasksTabs, myTasksTab } from './my-tasks-tabs';
 import { useViewNavigation } from './use-view-navigation';
 
 // Le nom de la liste : celui de la vue ouverte, du projet filtré, de « Mes tâches », ou « Toutes ».
 export function listTitle(viewName: string | null, config: ViewConfig, context: ListContext) {
   if (viewName) return viewName;
-  const { projectId, assignee, creator } = config.filters;
+  const { projectId } = config.filters;
   if (projectId)
     return context.projects.find((project) => project.id === projectId)?.name ?? 'Projet';
-  return assignee === 'me' || creator === 'me' ? 'Mes tâches' : 'Toutes les tâches';
+  return myTasksTab(null, config) ? 'Mes tâches' : 'Toutes les tâches';
 }
 
 type SearchFieldProps = { query: string; onSearch: (text: string) => void };
@@ -86,26 +80,13 @@ type ViewToolbarProps = {
 export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProps) {
   const navigate = useViewNavigation(base);
   const openCreate = useCreateTask();
+  const tab = myTasksTab(viewName, config);
   const change = (patch: Partial<ViewConfig>) => navigate({ ...config, ...patch });
   const filter = (patch: FilterPatch) => change({ filters: { ...config.filters, ...patch } });
   return (
     <div className="sticky top-0 z-10 border-b bg-card">
       <div className="flex min-h-12 flex-wrap items-center gap-x-2 gap-y-1 px-5 py-2">
-        <Breadcrumb>
-          <BreadcrumbList className="gap-1.5 sm:gap-1.5">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/taches">Tâches</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <h1 aria-current="page" className="text-sm font-medium text-foreground">
-                {listTitle(viewName, config, context)}
-              </h1>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <ListBreadcrumb title={listTitle(viewName, config, context)} />
         <div className="ml-auto flex flex-wrap items-center gap-1">
           <SearchField query={config.filters.q} onSearch={(q) => filter({ q })} />
           <FilterMenu config={config} context={context} onChange={filter} />
@@ -131,6 +112,7 @@ export function ViewToolbar({ viewName, config, base, context }: ViewToolbarProp
           </Button>
         </div>
       </div>
+      {tab && <MyTasksTabs active={tab} />}
       <FilterChips chips={activeFilters(config, context)} onClear={filter} />
     </div>
   );

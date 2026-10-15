@@ -9,7 +9,7 @@ import { Picker, type PickerSlot } from './picker';
 const NONE = 'none';
 
 type DueDatePickerProps = PickerSlot & {
-  value: string | null; // « AAAA-MM-JJ »
+  value: string | null | undefined; // « AAAA-MM-JJ » ; undefined : dates différentes (sélection multiple)
   onChange: (date: string | null) => void;
   now: Date;
 };

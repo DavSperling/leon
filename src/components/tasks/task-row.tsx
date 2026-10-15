@@ -3,11 +3,14 @@
 import { ListTree } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { ViewProperty } from '@/lib/enums';
+import { cn } from '@/lib/utils';
 import type { TaskRow } from '@/server/tasks/task-row';
 import type { ListContext } from './list-context';
 import { AssigneeCell, DueCell, LabelsCell, PriorityCell, StatusCell } from './row-cells';
 import { rowDates } from './row-dates';
+import { useSelection } from './selection-provider';
 import { TaskTitle } from './task-title';
 import { useTaskEdit } from './use-task-edit';
 
@@ -32,6 +35,7 @@ type TaskRowItemProps = {
 // Une ligne de 36 px. Toute la ligne ouvre la tâche par le lien du titre (son ::after la recouvre) ;
 // les cellules modifiables passent par-dessus (row-cells). Un changement s'affiche tout de suite,
 // puis la liste se rafraîchit : la ligne change de groupe si son statut ou son assigné a changé.
+// La case de sélection se montre au survol, au focus, et sur toutes les lignes dès qu'une est cochée.
 export function TaskRowItem({
   row: current,
   properties,
@@ -40,9 +44,31 @@ export function TaskRowItem({
   now,
 }: TaskRowItemProps) {
   const { row, edit } = useTaskEdit(current);
+  const { selectedRows, isSelected, select } = useSelection();
+  const selected = isSelected(row.id);
   const shows = (property: ViewProperty) => properties.includes(property);
   return (
-    <li className="group/item relative flex h-9 items-center gap-1.5 px-5 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60">
+    <li
+      data-task-id={row.id}
+      onMouseDown={(event) => {
+        // Maj+clic ne doit pas non plus sélectionner le texte entre deux lignes.
+        if (event.shiftKey) event.preventDefault();
+      }}
+      className={cn(
+        'group/item relative flex h-9 items-center gap-1.5 pr-5 pl-8 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60',
+        selected && 'bg-primary-soft hover:bg-primary-soft',
+      )}
+    >
+      <Checkbox
+        checked={selected}
+        aria-label={`Sélectionner ${row.ref}`}
+        onClick={(event) => select(row.id, event.shiftKey)}
+        className={cn(
+          'absolute top-2.5 left-1.5 z-10',
+          selectedRows.length === 0 &&
+            'opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100',
+        )}
+      />
       {shows('priority') && <PriorityCell row={row} edit={edit} />}
       {shows('id') && (
         <span className="w-[4.5rem] shrink-0 pl-1 font-mono text-xs text-muted-foreground">
@@ -61,6 +87,12 @@ export function TaskRowItem({
         <Link
           href={`/taches/${row.ref}`}
           title={row.title}
+          onClick={(event) => {
+            // Maj+clic étend la sélection au lieu d'ouvrir la tâche.
+            if (!event.shiftKey) return;
+            event.preventDefault();
+            select(row.id, true);
+          }}
           className="min-w-0 truncate after:absolute after:inset-0"
         >
           <TaskTitle title={row.title} />

@@ -9,7 +9,7 @@ const NONE = 'none';
 type AssigneePickerProps = PickerSlot & {
   members: readonly Person[];
   viewerId: string;
-  value: string | null;
+  value: string | null | undefined; // undefined : valeurs différentes (sélection multiple), aucune n'est cochée
   onChange: (assigneeId: string | null) => void;
 };
 
@@ -21,6 +21,7 @@ export function AssigneePicker({
   onChange,
   ...slot
 }: AssigneePickerProps) {
+  const current = value === undefined ? undefined : (value ?? NONE);
   const option = (
     id: string,
     label: string,
@@ -31,7 +32,7 @@ export function AssigneePicker({
     label,
     hint,
     icon: <Avatar person={person} />,
-    checked: id === (value ?? NONE),
+    checked: id === current,
   });
   const me = members.find((member) => member.id === viewerId);
   return (

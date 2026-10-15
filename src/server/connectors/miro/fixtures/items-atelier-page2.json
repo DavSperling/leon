@@ -1,0 +1,26 @@
+{
+  "total": 5,
+  "size": 2,
+  "limit": 50,
+  "data": [
+    {
+      "id": "3458764517517819104",
+      "type": "card",
+      "createdAt": "2026-09-03T11:00:00Z",
+      "modifiedAt": "2026-09-03T11:00:00Z",
+      "data": {
+        "title": "Brancher Miro",
+        "description": "Lire les tableaux de l’équipe",
+        "assigneeId": "3074457362577955221"
+      },
+      "parent": { "id": "3458764517517819101" }
+    },
+    {
+      "id": "3458764517517819105",
+      "type": "text",
+      "createdAt": "2026-09-04T09:00:00Z",
+      "modifiedAt": "2026-09-04T09:00:00Z",
+      "data": { "content": "<p>Objectif : 10 clients &amp; 2 partenaires</p>" }
+    }
+  ]
+}

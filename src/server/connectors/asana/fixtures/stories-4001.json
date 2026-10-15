@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "gid": "5001",
+      "resource_type": "story",
+      "created_at": "2026-10-10T14:00:00.000Z",
+      "created_by": { "gid": "1002", "resource_type": "user", "name": "Paul Martin" },
+      "resource_subtype": "comment_added",
+      "text": "Plutôt le 19 novembre, le temps de finir les tests."
+    },
+    {
+      "gid": "5002",
+      "resource_type": "story",
+      "created_at": "2026-10-12T09:30:00.000Z",
+      "created_by": { "gid": "1001", "resource_type": "user", "name": "Marie Durand" },
+      "resource_subtype": "comment_added",
+      "text": "On garde le 12 novembre : c'est décidé."
+    }
+  ],
+  "next_page": null
+}

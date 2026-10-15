@@ -1,22 +1,40 @@
-import { ChevronsUpDown } from 'lucide-react';
-import { signOutAction } from '@/app/(app)/actions';
+'use client';
+
+import { ChevronsUpDown, Monitor, Moon, Sun } from 'lucide-react';
+import { startTransition } from 'react';
+import { setThemeAction, signOutAction } from '@/app/(app)/actions';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { Theme } from '@/lib/theme-cookie';
+
+const THEME_CHOICES = [
+  { value: 'clair', label: 'Clair', Icon: Sun },
+  { value: 'sombre', label: 'Sombre', Icon: Moon },
+  { value: 'systeme', label: 'Système', Icon: Monitor },
+] satisfies Array<{ value: Theme; label: string; Icon: typeof Sun }>;
 
 type WorkspaceMenuProps = {
   organizationName: string;
   userName: string;
   userEmail: string;
+  theme: Theme;
 };
 
-// Haut de la barre latérale : l'organisation, et le menu du compte derrière.
-export function WorkspaceMenu({ organizationName, userName, userEmail }: WorkspaceMenuProps) {
+// Haut de la barre latérale : l'organisation, et le menu du compte derrière (thème, déconnexion).
+export function WorkspaceMenu({
+  organizationName,
+  userName,
+  userEmail,
+  theme,
+}: WorkspaceMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -47,6 +65,20 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Workspa
             {userEmail}
           </span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Thème</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          aria-label="Thème"
+          value={theme}
+          onValueChange={(value) => startTransition(() => setThemeAction(value))}
+        >
+          {THEME_CHOICES.map(({ value, label, Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <form action={signOutAction}>
           <DropdownMenuItem asChild>

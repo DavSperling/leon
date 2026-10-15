@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Mono, IBM_Plex_Serif, Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import { Toaster } from '@/components/ui/sonner';
+import { parseTheme, THEME_CLASS, THEME_COOKIE } from '@/lib/theme-cookie';
+import { cn } from '@/lib/utils';
 import './globals.css';
 
 const inter = Inter({
@@ -26,12 +29,17 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = { title: { default: 'Leon', template: '%s · Leon' } };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// Le thème vient du cookie, lu côté serveur : la classe est dans le HTML, sans flash au chargement.
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="fr" className={`${inter.variable} ${plexSerif.variable} ${plexMono.variable}`}>
+    <html
+      lang="fr"
+      className={cn(inter.variable, plexSerif.variable, plexMono.variable, THEME_CLASS[theme])}
+    >
       <body>
         {children}
-        <Toaster />
+        <Toaster theme={theme} />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { SidebarSections } from '@/components/sidebar-sections';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { WorkspaceMenu } from '@/components/workspace-menu';
 import { isRailOpen, RAIL_COOKIE } from '@/lib/rail-cookie';
+import { parseTheme, THEME_COOKIE } from '@/lib/theme-cookie';
 
 type AppShellProps = {
   organizationName: string;
@@ -27,7 +28,9 @@ export async function AppShell({
   column,
   children,
 }: AppShellProps) {
-  const railOpen = isRailOpen((await cookies()).get(RAIL_COOKIE)?.value);
+  const jar = await cookies();
+  const railOpen = isRailOpen(jar.get(RAIL_COOKIE)?.value);
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
     <TooltipProvider delayDuration={300}>
       <a
@@ -44,6 +47,7 @@ export async function AppShell({
               organizationName={organizationName}
               userName={userName}
               userEmail={userEmail}
+              theme={theme}
             />
             {search}
             <SidebarSections reviewCount={reviewCount} />

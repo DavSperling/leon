@@ -8,6 +8,7 @@ import { toItem } from './map';
 // par pages de 20 enregistrements (soit 20 requêtes de commentaires au plus par page).
 
 const PAGE_ITEMS = 20;
+export const BASES_MAX = 20; // les bases d'une connexion, choisies ou autorisées chez Airtable
 
 type TableRef = { baseId: string; table: Table };
 type Run = {
@@ -72,6 +73,12 @@ async function* syncTable(run: Run, ref: TableRef): AsyncGenerator<SyncPage> {
   if (cursor !== sent) yield { items: [], cursor };
 }
 
+// Les bases choisies, ou à défaut (connexion par bouton, sans base choisie) les premières que le
+// jeton voit : l'utilisateur les a autorisées chez Airtable.
+export function basesToRead(chosen: string[], names: Map<string, string>): string[] {
+  return chosen.length > 0 ? chosen : [...names.keys()].slice(0, BASES_MAX);
+}
+
 export async function* syncBases(
   air: AirtableClient,
   bases: string[],
@@ -79,7 +86,7 @@ export async function* syncBases(
 ): AsyncGenerator<SyncPage> {
   const names = await air.baseNames();
   const refs: TableRef[] = [];
-  for (const baseId of new Set(bases)) {
+  for (const baseId of new Set(basesToRead(bases, names))) {
     for (const table of await air.tables(baseId)) refs.push({ baseId, table });
   }
   const stored = readCursor(state.cursor);

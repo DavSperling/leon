@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, SyncState } from '../types';
 import { type AirtableClient, airtableClient } from './client';
-import { syncBases } from './sync';
+import { airtableOAuth } from './oauth';
+import { BASES_MAX, basesToRead, syncBases } from './sync';
 
 // Doc lue le 15/10/2026 (airtable.com/developers/web/api/) :
 //   /authentication (jeton personnel, en-tête « Authorization: Bearer », créé sur airtable.com/create/tokens,
@@ -16,6 +17,9 @@ import { syncBases } from './sync';
 //     /errors (403 : INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND ; 404 : NOT_FOUND).
 //   support.airtable.com : LAST_MODIFIED_TIME() (dernière modification faite par un utilisateur dans
 //     un champ non calculé), IS_AFTER.
+//
+// Le bouton « Se connecter avec Airtable » (jeton OAuth, `Authorization: Bearer` comme la clé) :
+// voir oauth.ts. Avec lui, les bases sont facultatives : voir sync.ts (`basesToRead`).
 //
 // Écarts au plan, d'après la doc : Airtable ne rend la date de modification d'aucun enregistrement
 // et ne trie pas dessus. On lit donc par fenêtres de 7 jours (cursor.ts) : un enregistrement est
@@ -39,20 +43,41 @@ import { syncBases } from './sync';
 // sans l'illustrer) ; le nom `displayName` de l'objet `mentioned` d'un commentaire ; la forme des
 // cellules de type lien rendues sans option (identifiants d'enregistrement : ignorés).
 
-const ConfigSchema = z.object({
-  token: z.string().trim().min(1).max(500),
-  // Un identifiant de base (« app » et 14 caractères) : il entre dans l'adresse des requêtes.
-  bases: z
-    .array(
-      z
-        .string()
-        .trim()
-        .regex(/^app[A-Za-z0-9]{10,20}$/),
-    )
-    .min(1)
-    .max(20),
-});
+// Deux façons de se brancher : la clé collée (`authMode` 'key', celui d'une connexion enregistrée
+// avant le bouton) ou le bouton ('oauth', avec les jetons). Un z.object raffiné, pas une union : le
+// catalogue lit `.shape`. Les deux jetons s'envoient pareil (`Authorization: Bearer`).
+// Les bases : obligatoires avec une clé (Airtable ne dit pas quelles bases lire), facultatives avec
+// le bouton, où vide veut dire « toutes les bases que l'utilisateur a autorisées chez Airtable ».
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    // Un identifiant de base (« app » et 14 caractères) : il entre dans l'adresse des requêtes.
+    bases: z
+      .array(
+        z
+          .string()
+          .trim()
+          .regex(/^app[A-Za-z0-9]{10,20}$/),
+      )
+      .max(BASES_MAX)
+      .default([]),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (config.authMode === 'key' && config.bases.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['bases'], message: 'Requis' });
+    }
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Le jeton d'accès de la connexion, quelle que soit sa forme ; le schéma garantit qu'il existe.
+const tokenOf = (config: Config): string =>
+  (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Une base que le jeton ne voit pas répond 403 (ou 404) : on dit laquelle.
 async function checkBase(air: AirtableClient, baseId: string): Promise<void> {
@@ -76,15 +101,20 @@ export const airtableConnector: Connector<Config> = {
   minIntervalMs: 220, // 5 requêtes par seconde et par base
 
   async verify(config: Config, http: ConnectorHttp) {
-    const air = airtableClient(config.token, http);
+    const air = airtableClient(tokenOf(config), http);
     const me = await air.whoami();
     const names = await air.baseNames();
+    // Les bases choisies sont contrôlées une à une ; celles que le jeton liste lui sont accessibles.
     for (const baseId of config.bases) await checkBase(air, baseId);
-    const bases = config.bases.map((baseId) => names.get(baseId) ?? baseId).join(', ');
+    const wanted = basesToRead(config.bases, names);
+    if (wanted.length === 0) throw new ConnectorHttpError(null, 'Aucune base Airtable autorisée');
+    const bases = wanted.map((baseId) => names.get(baseId) ?? baseId).join(', ');
     return { account: `${me.email ?? me.id} (${bases})` };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncBases(airtableClient(config.token, http), config.bases, state);
+    return syncBases(airtableClient(tokenOf(config), http), config.bases, state);
   },
+
+  oauth: airtableOAuth,
 };

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
@@ -21,7 +22,15 @@ const OTHER_BASE = 'appSW9R5uCNmRmfl6';
 const CLIENTS = 'tblClients00000001';
 const REUNIONS = 'tblReunions0000001';
 const TOKEN = 'patTESTjeton0123456789.abcdef0123456789abcdef0123456789';
-const config = { token: TOKEN, bases: [BASE] };
+const OAUTH_TOKEN = 'JETONOAUTHDETEST0123456789';
+const config = { authMode: 'key' as const, token: TOKEN, bases: [BASE] };
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: OAUTH_TOKEN,
+  refreshToken: 'REFRESHDETEST0123456789',
+  expiresAt: '2026-10-15T13:00:00.000Z',
+  bases: [] as string[],
+};
 
 const NOW = new Date('2026-10-15T12:00:00.000Z');
 const SINCE = new Date('2026-10-10T00:00:00.000Z'); // une seule fenêtre de 7 jours
@@ -70,11 +79,16 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: typeof config | typeof oauthConfig;
+  } = {},
 ) {
-  const { http, calls } = testHttp(airtableConnector, config, routes);
+  const used = overrides.config ?? config;
+  const { http, calls } = testHttp(airtableConnector, used, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(airtableConnector.sync(config, state, http));
+  const pages = await collect(airtableConnector.sync(used, state, http));
   return { pages, calls };
 }
 
@@ -93,6 +107,7 @@ describe('airtable : configuration', () => {
 
   it('accepte un jeton et des bases, sans les espaces autour', () => {
     expect(schema.parse({ token: `  ${TOKEN} `, bases: [` ${BASE} `] })).toEqual({
+      authMode: 'key',
       token: TOKEN,
       bases: [BASE],
     });
@@ -753,5 +768,201 @@ describe('airtable : fenêtres, pages et curseur', () => {
     const window = { from: SINCE.getTime(), to: NOW.getTime() };
     expect(markOf(first.value)).toEqual({ ...window, after: idOf(20) });
     await expect(iterator.next()).rejects.toBeInstanceOf(ConnectorAuthError);
+  });
+});
+
+describe('airtable : configuration du bouton', () => {
+  const schema = airtableConnector.configSchema;
+
+  it('accepte la forme OAuth, jetons compris, avec ou sans bases choisies', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    const chosen = { ...oauthConfig, bases: [BASE] };
+    expect(schema.parse(chosen)).toEqual(chosen);
+  });
+
+  it('prend aucune base pour « toutes les bases autorisées », même si le champ manque', () => {
+    const { bases: _bases, ...withoutBases } = oauthConfig;
+    expect(schema.parse(withoutBases)).toMatchObject({ authMode: 'oauth', bases: [] });
+  });
+
+  it('refuse une forme OAuth sans jeton d’accès, et une clé sans jeton, en nommant le champ', () => {
+    const oauthIssues = schema.safeParse({ authMode: 'oauth', bases: [] });
+    const keyIssues = schema.safeParse({
+      authMode: 'key',
+      accessToken: OAUTH_TOKEN,
+      bases: [BASE],
+    });
+    expect(oauthIssues.error?.issues.map((issue) => issue.path)).toEqual([['accessToken']]);
+    expect(keyIssues.error?.issues.map((issue) => issue.path)).toEqual([['token']]);
+    // Une clé collée ne vaut pas pour une connexion OAuth, ni l'inverse.
+    expect(schema.safeParse({ authMode: 'oauth', token: TOKEN }).success).toBe(false);
+    expect(schema.safeParse({ accessToken: OAUTH_TOKEN, bases: [BASE] }).success).toBe(false);
+  });
+
+  it('exige toujours une base pour une clé collée, en nommant le champ', () => {
+    const issues = schema.safeParse({ authMode: 'key', token: TOKEN, bases: [] });
+    expect(issues.error?.issues.map((issue) => issue.path)).toEqual([['bases']]);
+    expect(schema.safeParse({ token: TOKEN }).success).toBe(false);
+  });
+
+  it('garde les mêmes règles sur les identifiants de base avec le bouton', () => {
+    expect(schema.safeParse({ ...oauthConfig, bases: ['tblClients00000001'] }).success).toBe(false);
+    const many = Array.from(
+      { length: 21 },
+      (_, i) => `appLkNDICXNqxS${String(i).padStart(3, '0')}`,
+    );
+    expect(schema.safeParse({ ...oauthConfig, bases: many }).success).toBe(false);
+  });
+
+  it('reste un objet à champs lisibles, et ne met aucun jeton OAuth dans les champs à chiffrer', () => {
+    const shape = (schema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual(
+      ['accessToken', 'authMode', 'bases', 'expiresAt', 'refreshToken', 'token'].sort(),
+    );
+    expect(airtableConnector.secretFields).toEqual(['token']);
+  });
+
+  it('garde l’hôte de l’API pour les deux formes', () => {
+    expect(airtableConnector.hosts(config)).toEqual(['api.airtable.com']);
+    expect(airtableConnector.hosts(oauthConfig)).toEqual(['api.airtable.com']);
+  });
+
+  it('annonce le bouton dans le catalogue : ce qu’on verra chez Airtable, bases facultatives, clé gardée', () => {
+    const entry = listCatalog().find((item) => item.id === 'airtable');
+    expect(entry?.oauthHelp).toMatch(/Airtable/);
+    expect(entry?.oauthHelp).toMatch(/bases/);
+    expect(entry?.oauthHelp).toMatch(/lecture/);
+    expect(entry?.keyAccepted ?? true).toBe(true);
+    expect(entry?.keyHelp).toMatch(/airtable\.com\/create\/tokens/);
+    // Le champ sert aux deux formulaires : il dit qu'avec le bouton il peut rester vide.
+    expect(entry?.fields.find((field) => field.name === 'bases')?.help).toMatch(/vide/);
+  });
+});
+
+describe('airtable : jeton OAuth', () => {
+  it('verify l’envoie avec « Bearer » ; sans base choisie, il nomme toutes les bases autorisées', async () => {
+    const { http, calls } = testHttp(airtableConnector, oauthConfig, [
+      { url: `${API}/meta/whoami`, json: whoami },
+      basesRoute,
+    ]);
+
+    const result = await airtableConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'marie@acme.test (Acme CRM, Produit)' });
+    // Les bases viennent de la liste que le jeton voit : inutile de relire leurs tables.
+    expect(calls.map((call) => call.url)).toEqual([`${API}/meta/whoami`, `${API}/meta/bases`]);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('verify contrôle les bases choisies avant le clic', async () => {
+    const chosen = { ...oauthConfig, bases: [BASE] };
+    const { http, calls } = testHttp(airtableConnector, chosen, [
+      { url: `${API}/meta/whoami`, json: { id: whoami.id } },
+      basesRoute,
+      tablesRoute(),
+    ]);
+
+    const result = await airtableConnector.verify(chosen, http);
+
+    expect(result).toEqual({ account: 'usrL2PNC5o3H4lBEi (Acme CRM)' });
+    expect(calls.map((call) => call.url)).toContain(`${API}/meta/bases/${BASE}/tables`);
+  });
+
+  it('verify nomme la base choisie que l’utilisateur n’a pas autorisée chez Airtable', async () => {
+    const chosen = { ...oauthConfig, bases: [OTHER_BASE] };
+    const { http } = testHttp(airtableConnector, chosen, [
+      { url: `${API}/meta/whoami`, json: whoami },
+      basesRoute,
+      { url: `${API}/meta/bases/${OTHER_BASE}/tables`, status: 403 },
+    ]);
+
+    const failure = await airtableConnector.verify(chosen, http).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ConnectorHttpError);
+    expect((failure as Error).message).toBe(`Base Airtable inaccessible : ${OTHER_BASE}`);
+  });
+
+  it('verify refuse une autorisation qui ne donne accès à aucune base', async () => {
+    const { http } = testHttp(airtableConnector, oauthConfig, [
+      { url: `${API}/meta/whoami`, json: whoami },
+      { url: `${API}/meta/bases`, json: { bases: [] } },
+    ]);
+
+    const failure = await airtableConnector
+      .verify(oauthConfig, http)
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ConnectorHttpError);
+    expect((failure as Error).message).toBe('Aucune base Airtable autorisée');
+  });
+
+  it('verify refuse un accès retiré (401)', async () => {
+    const { http } = testHttp(airtableConnector, oauthConfig, [
+      { url: `${API}/meta/whoami`, status: 401 },
+    ]);
+
+    await expect(airtableConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('sync lit toutes les bases autorisées quand aucune n’est choisie, avec « Bearer » partout', async () => {
+    const { calls } = await runSync(
+      [
+        basesRoute,
+        tablesRoute(),
+        tablesRoute(tables, OTHER_BASE),
+        recordsRoute(CLIENTS, { records: [] }),
+        recordsRoute(REUNIONS, { records: [] }),
+        recordsRoute(CLIENTS, { records: [] }, OTHER_BASE),
+        recordsRoute(REUNIONS, { records: [] }, OTHER_BASE),
+      ],
+      { config: oauthConfig },
+    );
+
+    expect(calls.filter((call) => call.url.endsWith('/tables')).map((call) => call.url)).toEqual([
+      `${API}/meta/bases/${BASE}/tables`,
+      `${API}/meta/bases/${OTHER_BASE}/tables`,
+    ]);
+    expect(recordCalls(calls)).toHaveLength(4);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('sync ne lit que les bases choisies avant le clic', async () => {
+    const { calls } = await runSync(
+      [
+        basesRoute,
+        tablesRoute(),
+        recordsRoute(CLIENTS, { records: [] }),
+        recordsRoute(REUNIONS, { records: [] }),
+      ],
+      { config: { ...oauthConfig, bases: [BASE] } },
+    );
+
+    expect(calls.filter((call) => call.url.endsWith('/tables'))).toHaveLength(1);
+    expect(calls.some((call) => call.url.includes(OTHER_BASE))).toBe(false);
+  });
+
+  it('sync s’arrête à 20 bases quand l’utilisateur en autorise davantage', async () => {
+    const ids = Array.from({ length: 22 }, (_, i) => `appLkNDICXNqxS${String(i).padStart(3, '0')}`);
+    const { calls } = await runSync(
+      [
+        {
+          url: `${API}/meta/bases`,
+          json: { bases: ids.map((id) => ({ id, name: id, permissionLevel: 'read' })) },
+        },
+        ...ids.slice(0, 20).map((id) => tablesRoute({ tables: [] }, id)),
+      ],
+      { config: oauthConfig },
+    );
+
+    const asked = calls.filter((call) => call.url.endsWith('/tables')).map((call) => call.url);
+    expect(asked).toEqual(ids.slice(0, 20).map((id) => `${API}/meta/bases/${id}/tables`));
+  });
+
+  it('laisse la clé collée avec « Bearer » aussi : rien ne change pour les connexions existantes', async () => {
+    const { calls } = await runSync(firstPassRoutes());
+
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${TOKEN}`);
   });
 });

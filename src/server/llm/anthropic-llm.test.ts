@@ -214,6 +214,19 @@ describe('logUsage', () => {
     vi.restoreAllMocks();
   });
 
+  it('un onUsage qui rejette ne fait pas échouer un appel déjà facturé', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm } = setup(() => ({ ...ok, usage: { input_tokens: 10, output_tokens: 5 } }));
+    const onUsage = vi.fn(async () => {
+      throw new Error('écriture ratée');
+    });
+
+    const result = await llm.generateObject({ ...request('triage'), onUsage });
+
+    expect(result).toEqual({ answer: 'oui' });
+    vi.restoreAllMocks();
+  });
+
   it('journalise l usage de chaque appel réussi', async () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     const { llm } = setup(() => ({

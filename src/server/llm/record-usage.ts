@@ -21,7 +21,12 @@ export async function recordLlmUsage(job: PipelineJob, usage: LlmUsage): Promise
   if (!isPipelineStep(step)) return;
   try {
     const ctx = await resolveTenantContext(job.userId, job.tenantId);
-    if (!ctx) return;
+    if (!ctx) {
+      logError('llm.usage_record_failed', new Error('contexte du job introuvable'), {
+        runId: job.ingestRunId,
+      });
+      return;
+    }
     await withTenant(ctx, (tx) =>
       tx.insert(llmUsage).values({
         tenantId: ctx.tenantId,

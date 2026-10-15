@@ -94,7 +94,9 @@ export function createAnthropicLlm(options: { apiKey: string } | { client: Anthr
         message.model ?? MODEL_BY_STEP[request.step],
         message.usage,
       );
-      if (usage && request.onUsage) await request.onUsage(usage);
+      // Un appel dont le SDK n'a pas pu analyser la réponse est facturé mais n'est pas compté : le SDK ne rend pas son usage.
+      // onUsage ne doit jamais lever ici : l'appel est déjà payé, le faire échouer le ferait payer deux fois par pg-boss.
+      if (usage && request.onUsage) await request.onUsage(usage).catch(() => {});
       if (message.stop_reason === 'refusal') throw new LlmError('refus du modèle');
       if (message.stop_reason && TRUNCATED_STOP_REASONS.includes(message.stop_reason))
         throw new LlmError('réponse tronquée');

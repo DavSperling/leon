@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns } from '@/server/db/schema/memory';
 import { llmUsage } from '@/server/db/schema/usage';
+import { withTenant } from '@/server/db/with-tenant';
 import * as log from '@/server/log';
 import type { PipelineJob } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
@@ -26,6 +27,25 @@ describe('llm_usage', () => {
     expect(rows).toEqual([
       { rls: true, can_insert: true, can_select: false, can_update: false, can_delete: false },
     ]);
+  });
+
+  it("Paul n'insère pas de ligne dans le tenant de Zoé : 42501", async () => {
+    const { members: paulMembers } = await createTestTenant(['Paul']);
+    const [paul] = paulMembers as [TenantContext];
+    const { tenantId: zoeTenantId } = await createTestTenant(['Zoé']);
+    const insert = withTenant(paul, (tx) =>
+      tx.insert(llmUsage).values({
+        tenantId: zoeTenantId,
+        step: 'triage',
+        model: 'claude-haiku-5-5',
+        inputTokens: 1,
+        outputTokens: 1,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        costUsd: null,
+      }),
+    );
+    await expect(insert).rejects.toMatchObject({ cause: { code: '42501' } });
   });
 });
 
@@ -109,6 +129,18 @@ describe('recordLlmUsage', () => {
     const invalid = { ...USAGE, inputTokens: Number.NaN };
 
     await expect(recordLlmUsage(job, invalid)).resolves.toBeUndefined();
+
+    expect(spy).toHaveBeenCalledWith('llm.usage_record_failed', expect.anything(), {
+      runId: job.ingestRunId,
+    });
+  });
+
+  it('journalise quand le contexte du job est introuvable, sans lever', async () => {
+    const job = await seedJob();
+    const spy = vi.spyOn(log, 'logError').mockImplementation(() => {});
+    const introuvable = { ...job, userId: crypto.randomUUID() };
+
+    await expect(recordLlmUsage(introuvable, USAGE)).resolves.toBeUndefined();
 
     expect(spy).toHaveBeenCalledWith('llm.usage_record_failed', expect.anything(), {
       runId: job.ingestRunId,

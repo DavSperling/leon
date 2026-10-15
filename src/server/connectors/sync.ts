@@ -115,7 +115,9 @@ async function readWithRenewal(
     const { refreshToken } = connection.config;
     const renewable =
       isOAuth(connection) && typeof refreshToken === 'string' && refreshToken !== '';
-    if (!(error instanceof ConnectorAuthError) || !renewable) throw error;
+    // Seul un 401 dit « jeton expiré » ; un 403 est un manque de droits, qu'un nouveau jeton ne
+    // règle pas (et le renouvellement userait pour rien un jeton à usage unique).
+    if (!(error instanceof ConnectorAuthError) || error.status !== 401 || !renewable) throw error;
   }
   const config = await ensureFreshTokens(ctx, connection, ready.connector, {
     ...deps,

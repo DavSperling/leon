@@ -394,12 +394,12 @@ describe('runConnectorSync : une connexion OAuth', () => {
   const hintOf = async (id: string) =>
     (await listConnections(paul)).find((view) => view.id === id)?.secretHint;
 
-  // Un connecteur dont le premier accès est refusé (401) et le second accepté.
-  const refusesOldAccess = (acceptsNew: boolean): AnyConnector => ({
+  // Un connecteur dont le premier accès est refusé (401 par défaut) et le second accepté.
+  const refusesOldAccess = (acceptsNew: boolean, status = 401): AnyConnector => ({
     ...fakeOAuthConnector(),
     async *sync(config): AsyncGenerator<SyncPage> {
       if (config.accessToken === 'acces-ancien-0001' || !acceptsNew) {
-        throw new ConnectorAuthError('GitHub', 401);
+        throw new ConnectorAuthError('GitHub', status);
       }
       yield { items: [], cursor: 'apres-renouvellement' };
     },
@@ -477,6 +477,18 @@ describe('runConnectorSync : une connexion OAuth', () => {
       next_sync_at: null,
       last_error: "Reconnectez GitHub : l'autorisation a été retirée.",
     });
+  });
+
+  it('ne renouvelle pas sur un 403 (droits insuffisants) : aucun appel à l’éditeur, autorisation dite retirée', async () => {
+    const id = await oauthConnection();
+    const fetchImpl = fakeFetch([]);
+
+    expect(await run(id, refusesOldAccess(true, 403), { fetchImpl })).toBe('auth_error');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect((await readRow(id)).last_error).toBe(
+      "Reconnectez GitHub : l'autorisation a été retirée.",
+    );
   });
 
   it('dit que l’autorisation a été retirée, sans renouveler, quand il n’y a pas de jeton de rafraîchissement', async () => {

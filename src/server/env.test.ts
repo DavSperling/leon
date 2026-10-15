@@ -35,4 +35,43 @@ describe('parseEnv', () => {
       'cle-de-test',
     );
   });
+
+  it('traite une clé OpenRouter vide comme une absence', () => {
+    expect(parseEnv({ ...TEST_ENV, OPENROUTER_API_KEY: '' }).OPENROUTER_API_KEY).toBeUndefined();
+  });
+
+  it.each([
+    'anthropic:claude-sonnet-5-5',
+    'openrouter:mistralai/mistral-large-4-0',
+    'openrouter:openai/gpt-5.4-mini',
+    'openrouter:anthropic/claude-haiku-5.5',
+  ])('accepte le modèle %s pour une étape', (choix) => {
+    const env = parseEnv({
+      ...TEST_ENV,
+      LEON_LLM_TRIAGE: choix,
+      LEON_LLM_EXTRACTION: choix,
+      LEON_LLM_RANGEMENT: choix,
+    });
+    expect([env.LEON_LLM_TRIAGE, env.LEON_LLM_EXTRACTION, env.LEON_LLM_RANGEMENT]).toEqual([
+      choix,
+      choix,
+      choix,
+    ]);
+  });
+
+  it('traite un modèle vide comme le modèle par défaut', () => {
+    expect(parseEnv({ ...TEST_ENV, LEON_LLM_EXTRACTION: '' }).LEON_LLM_EXTRACTION).toBeUndefined();
+  });
+
+  it.each([
+    'claude-sonnet-5-5',
+    'mistral:mistral-large',
+    'openrouter:mistral-large-4-0',
+    'anthropic:',
+    'openrouter:mistralai/',
+  ])('rejette le modèle mal formé %s', (choix) => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_LLM_EXTRACTION: choix })).toThrow(
+      /anthropic:<modèle> ou openrouter:<fournisseur>\/<modèle>/,
+    );
+  });
 });

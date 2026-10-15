@@ -20,13 +20,16 @@ import { toItem } from './map';
 // portées » ne passe que par api.atlassian.com ; le champ `created` n'est pas demandé (inutile).
 // Un 403 sur les commentaires d'un ticket (page de rattrapage) est attrapé : le ticket sort avec les
 // commentaires que la recherche a rendus. Un ticket sans texte sort sans tours (le socle l'écarte).
+// Le curseur retient les tickets rendus dans les deux minutes qui précèdent le dernier, avec l'instant
+// de leur modification : la recherche relit depuis une minute avant le curseur, et un ticket que l'index
+// n'avait pas encore (retard de moins d'une minute) est rendu au passage suivant, les autres sont ignorés.
 //
 // Non vérifié : si les commentaires de la recherche sont tronqués au-delà d'un nombre (la doc ne le dit
 // pas : on compare `total` aux commentaires rendus et on lit le reste par /issue/{id}/comment) ; que le
 // fuseau de la date JQL est bien celui de `myself.timeZone` (la doc dit « your configured time zone ») ;
 // le code exact d'un site mal orthographié (404 ou redirection : les deux sont traités) ; l'index de
-// recherche est « cohérent à terme » (secondes à minutes) : un ticket qui n'apparaît qu'après une minute
-// de retard sur un ticket plus récent, déjà passé, n'est repris qu'à sa prochaine modification ;
+// recherche est « cohérent à terme » (secondes à minutes) : un ticket qui n'apparaît qu'après plus d'une
+// minute de retard sur un ticket plus récent, déjà passé, n'est repris qu'à sa prochaine modification ;
 // l'heure d'automne, où une heure locale se répète, peut faire manquer jusqu'à une heure de tickets.
 
 const ConfigSchema = z.object({
@@ -42,9 +45,16 @@ const ConfigSchema = z.object({
 type Config = z.infer<typeof ConfigSchema>;
 
 const RESCAN_MS = 60_000; // la date de la requête est à la minute : on relit depuis une minute avant le curseur
+// La recherche part de la minute pleine qui précède « curseur moins une minute » : elle peut rendre un
+// ticket jusqu'à deux minutes avant le curseur. On retient donc les tickets rendus sur ce temps-là.
+const KEEP_MS = 2 * RESCAN_MS;
 
-// L'instant du dernier ticket lu et les id déjà lus à cet instant.
-const CursorSchema = z.object({ at: z.iso.datetime(), seen: z.array(z.string()) });
+// L'instant du dernier ticket lu, et les tickets déjà rendus dans les deux minutes qui précèdent, avec
+// l'instant de leur modification (un ticket modifié de nouveau est rendu de nouveau).
+const CursorSchema = z.object({
+  at: z.iso.datetime(),
+  seen: z.array(z.object({ id: z.string(), at: z.iso.datetime() })),
+});
 type Mark = z.infer<typeof CursorSchema>;
 
 function readCursor(text: string | null): Mark | undefined {
@@ -57,19 +67,23 @@ function readCursor(text: string | null): Mark | undefined {
   }
 }
 
-// Déjà lu : plus ancien que le curseur, ou lu à l'instant même du curseur.
+// Déjà rendu : le curseur contient ce ticket, dans cet état ou dans un état plus récent. Un ticket plus
+// ancien que le curseur mais pas rendu (la recherche l'a montré en retard) est rendu. Un ticket plus
+// ancien que ce que le curseur retient n'a pas pu être oublié : la recherche ne le rend que par la marge
+// de douze heures d'un compte sans fuseau, et il a été rendu depuis longtemps.
 function isDone(mark: Mark | undefined, issue: Issue): boolean {
   if (mark === undefined) return false;
-  const elapsed = Date.parse(issue.fields.updated) - Date.parse(mark.at);
-  return elapsed < 0 || (elapsed === 0 && mark.seen.includes(issue.id));
+  const updated = Date.parse(issue.fields.updated);
+  if (updated < Date.parse(mark.at) - KEEP_MS) return true;
+  return mark.seen.some((row) => row.id === issue.id && Date.parse(row.at) >= updated);
 }
 
 function advance(mark: Mark | undefined, issue: Issue): Mark {
   const at = new Date(issue.fields.updated).toISOString();
-  const elapsed = mark === undefined ? 1 : Date.parse(at) - Date.parse(mark.at);
-  if (mark === undefined || elapsed > 0) return { at, seen: [issue.id] };
-  if (elapsed < 0 || mark.seen.includes(issue.id)) return mark;
-  return { at: mark.at, seen: [...mark.seen, issue.id] };
+  const latest = mark !== undefined && Date.parse(mark.at) > Date.parse(at) ? mark.at : at;
+  const limit = Date.parse(latest) - KEEP_MS;
+  const seen = [...(mark?.seen ?? []).filter((row) => row.id !== issue.id), { id: issue.id, at }];
+  return { at: latest, seen: seen.filter((row) => Date.parse(row.at) >= limit) };
 }
 
 // La recherche rend les commentaires d'un ticket ; s'il y en a plus (`total`), on lit la liste entière.
@@ -97,9 +111,8 @@ async function* syncIssues(
   for await (const issues of jira.search(updatedSinceJql(from, timeZone))) {
     const items: ConnectorItem[] = [];
     for (const issue of issues) {
-      if (!isDone(mark, issue)) {
-        items.push(toItem(site, issue, await allComments(jira, issue)));
-      }
+      if (isDone(mark, issue)) continue;
+      items.push(toItem(site, issue, await allComments(jira, issue)));
       mark = advance(mark, issue);
     }
     if (items.length > 0) yield { items, cursor: JSON.stringify(mark) };

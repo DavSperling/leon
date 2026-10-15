@@ -50,6 +50,27 @@ const cursorOf = (page: SyncPage | undefined) => JSON.parse(page?.cursor ?? 'nul
 const paramsOf = (url: string | undefined) => new URL(url ?? '').searchParams;
 const jqlOf = (url: string | undefined) => paramsOf(url).get('jql');
 
+// Un ticket réduit à l'essentiel, avec l'instant de sa dernière modification.
+function issueAt(id: string, updated: string) {
+  const paragraph = {
+    type: 'paragraph',
+    content: [{ type: 'text', text: `Texte du ticket ${id}.` }],
+  };
+  return {
+    id,
+    key: `OPS-${id}`,
+    fields: {
+      summary: `Ticket ${id}`,
+      description: { version: 1, type: 'doc', content: [paragraph] },
+      comment: { comments: [], total: 0 },
+      creator: null,
+      reporter: null,
+      project: { key: 'OPS' },
+      updated,
+    },
+  };
+}
+
 describe('jira : configuration', () => {
   const schema = jiraConnector.configSchema;
 
@@ -364,19 +385,31 @@ describe('jira : sync, commentaires que la recherche n’a pas tous rendus', () 
 });
 
 describe('jira : sync, reprise', () => {
-  const cursorAfterFirstPage = JSON.stringify({ at: '2026-10-11T08:45:00.000Z', seen: ['10003'] });
+  const cursorAfterFirstPage = JSON.stringify({
+    at: '2026-10-11T08:45:00.000Z',
+    seen: [{ id: '10003', at: '2026-10-11T08:45:00.000Z' }],
+  });
   const cursorAfterLastPage = JSON.stringify({
     at: '2026-10-12T14:00:00.000Z',
-    seen: ['10004', '10005'],
+    seen: [
+      { id: '10004', at: '2026-10-12T14:00:00.000Z' },
+      { id: '10005', at: '2026-10-12T14:00:00.000Z' },
+    ],
   });
 
-  it('écrit les curseurs : l’instant du dernier ticket et les tickets lus à cet instant', async () => {
+  it('écrit les curseurs : l’instant du dernier ticket et les tickets rendus juste avant', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
-    expect(cursorOf(pages[0])).toEqual({ at: '2026-10-11T08:45:00.000Z', seen: ['10003'] });
+    expect(cursorOf(pages[0])).toEqual({
+      at: '2026-10-11T08:45:00.000Z',
+      seen: [{ id: '10003', at: '2026-10-11T08:45:00.000Z' }],
+    });
     expect(cursorOf(pages[1])).toEqual({
       at: '2026-10-12T14:00:00.000Z',
-      seen: ['10004', '10005'],
+      seen: [
+        { id: '10004', at: '2026-10-12T14:00:00.000Z' },
+        { id: '10005', at: '2026-10-12T14:00:00.000Z' },
+      ],
     });
   });
 
@@ -408,7 +441,10 @@ describe('jira : sync, reprise', () => {
   });
 
   it('ignore le ticket déjà rendu au même instant, et rend l’autre', async () => {
-    const cursor = JSON.stringify({ at: '2026-10-12T14:00:00.000Z', seen: ['10004'] });
+    const cursor = JSON.stringify({
+      at: '2026-10-12T14:00:00.000Z',
+      seen: [{ id: '10004', at: '2026-10-12T14:00:00.000Z' }],
+    });
 
     const { pages } = await runSync(
       [
@@ -421,21 +457,150 @@ describe('jira : sync, reprise', () => {
     expect(idsOf(pages)).toEqual(['issue:10005']);
     expect(cursorOf(pages[0])).toEqual({
       at: '2026-10-12T14:00:00.000Z',
-      seen: ['10004', '10005'],
+      seen: [
+        { id: '10004', at: '2026-10-12T14:00:00.000Z' },
+        { id: '10005', at: '2026-10-12T14:00:00.000Z' },
+      ],
     });
   });
 
-  it('ignore un ticket relu parce que la recherche remonte une minute avant le curseur', async () => {
+  it('rend un ticket apparu en retard dans la minute avant le curseur, et ignore celui déjà rendu', async () => {
+    // Y (rendu) est à 09:00:30 ; X, modifié à 09:00:10, n'était pas encore dans l'index de recherche.
+    const cursor = JSON.stringify({
+      at: '2026-10-14T09:00:30.000Z',
+      seen: [{ id: '20002', at: '2026-10-14T09:00:30.000Z' }],
+    });
+    const search = {
+      isLast: true,
+      issues: [
+        issueAt('20001', '2026-10-14T09:00:10.000Z'),
+        issueAt('20002', '2026-10-14T09:00:30.000Z'),
+      ],
+    };
+
+    const { pages, calls } = await runSync(
+      [
+        { url: MYSELF, json: myself },
+        { url: SEARCH, json: search },
+      ],
+      { cursor },
+    );
+
+    expect(jqlOf(calls[1]?.url)).toBe('updated >= "2026-10-14 10:59" ORDER BY updated ASC');
+    expect(idsOf(pages)).toEqual(['issue:20001']);
+    expect(cursorOf(pages[0])).toEqual({
+      at: '2026-10-14T09:00:30.000Z',
+      seen: [
+        { id: '20002', at: '2026-10-14T09:00:30.000Z' },
+        { id: '20001', at: '2026-10-14T09:00:10.000Z' },
+      ],
+    });
+  });
+
+  it('ignore au passage suivant le ticket apparu en retard, une fois rendu', async () => {
+    const cursor = JSON.stringify({
+      at: '2026-10-14T09:00:30.000Z',
+      seen: [
+        { id: '20002', at: '2026-10-14T09:00:30.000Z' },
+        { id: '20001', at: '2026-10-14T09:00:10.000Z' },
+      ],
+    });
+    const search = {
+      isLast: true,
+      issues: [
+        issueAt('20001', '2026-10-14T09:00:10.000Z'),
+        issueAt('20002', '2026-10-14T09:00:30.000Z'),
+      ],
+    };
+
     const { pages } = await runSync(
       [
         { url: MYSELF, json: myself },
-        { url: SEARCH, json: search1 },
-        { url: SEARCH, json: search2 },
+        { url: SEARCH, json: search },
       ],
-      { cursor: cursorAfterFirstPage },
+      { cursor },
     );
 
-    expect(idsOf(pages)).toEqual(['issue:10004', 'issue:10005']);
+    expect(pages).toEqual([]);
+  });
+
+  it('rend de nouveau un ticket modifié après avoir été rendu', async () => {
+    const cursor = JSON.stringify({
+      at: '2026-10-14T09:00:30.000Z',
+      seen: [{ id: '20002', at: '2026-10-14T09:00:30.000Z' }],
+    });
+
+    const { pages } = await runSync(
+      [
+        { url: MYSELF, json: myself },
+        {
+          url: SEARCH,
+          json: { isLast: true, issues: [issueAt('20002', '2026-10-14T09:00:45.000Z')] },
+        },
+      ],
+      { cursor },
+    );
+
+    expect(idsOf(pages)).toEqual(['issue:20002']);
+    expect(cursorOf(pages[0])).toEqual({
+      at: '2026-10-14T09:00:45.000Z',
+      seen: [{ id: '20002', at: '2026-10-14T09:00:45.000Z' }],
+    });
+  });
+
+  it('oublie dans le curseur les tickets rendus plus de deux minutes avant le dernier', async () => {
+    const cursor = JSON.stringify({
+      at: '2026-10-14T09:00:00.000Z',
+      seen: [
+        { id: '20001', at: '2026-10-14T08:58:30.000Z' },
+        { id: '20002', at: '2026-10-14T09:00:00.000Z' },
+      ],
+    });
+
+    const { pages } = await runSync(
+      [
+        { url: MYSELF, json: myself },
+        {
+          url: SEARCH,
+          json: { isLast: true, issues: [issueAt('20003', '2026-10-14T09:01:00.000Z')] },
+        },
+      ],
+      { cursor },
+    );
+
+    expect(cursorOf(pages[0])).toEqual({
+      at: '2026-10-14T09:01:00.000Z',
+      seen: [
+        { id: '20002', at: '2026-10-14T09:00:00.000Z' },
+        { id: '20003', at: '2026-10-14T09:01:00.000Z' },
+      ],
+    });
+  });
+
+  it('ignore un ticket bien plus ancien que le curseur, que rend la marge d’un compte sans fuseau', async () => {
+    const cursor = JSON.stringify({
+      at: '2026-10-14T09:00:30.000Z',
+      seen: [{ id: '20002', at: '2026-10-14T09:00:30.000Z' }],
+    });
+    const search = {
+      isLast: true,
+      issues: [
+        issueAt('20000', '2026-10-14T03:00:00.000Z'),
+        issueAt('20001', '2026-10-14T09:00:10.000Z'),
+        issueAt('20002', '2026-10-14T09:00:30.000Z'),
+      ],
+    };
+
+    const { pages, calls } = await runSync(
+      [
+        { url: MYSELF, json: { ...myself, timeZone: undefined } },
+        { url: SEARCH, json: search },
+      ],
+      { cursor },
+    );
+
+    expect(jqlOf(calls[1]?.url)).toBe('updated >= "2026-10-13 20:59" ORDER BY updated ASC');
+    expect(idsOf(pages)).toEqual(['issue:20001']);
   });
 
   it('repart de since quand le curseur est illisible', async () => {

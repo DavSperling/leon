@@ -1,0 +1,56 @@
+{
+  "result": {
+    "recordings": [
+      {
+        "id": "Zc2nB7rGq4Lx9TmV6aPwD",
+        "createdAt": "2026-10-14T08:15:30.000Z",
+        "durationSeconds": 95,
+        "labels": [],
+        "state": "Ready",
+        "thumbnailUrl": "https://cdn.claap.test/thumbnails/Zc2nB7rGq4Lx9TmV6aPwD.jpg",
+        "transcriptOnly": false,
+        "url": "https://app.claap.io/acme/zc2nb7rgq4lx9tmv6apwd",
+        "source": "Uploaded",
+        "recorder": {
+          "id": "Us1aB4cD7eF0gH3iJ6kLm",
+          "name": "Marie Durand",
+          "email": "marie@acme.test",
+          "attended": true
+        },
+        "video": { "url": "https://cdn.claap.test/videos/Zc2nB7rGq4Lx9TmV6aPwD.mp4" },
+        "transcripts": [
+          {
+            "isActive": true,
+            "isTranscript": true,
+            "langIso2": "fr",
+            "textUrl": "https://cdn.claap.test/transcripts/Zc2nB7rGq4Lx9TmV6aPwD.txt",
+            "url": "https://cdn.claap.test/transcripts/Zc2nB7rGq4Lx9TmV6aPwD.json"
+          }
+        ],
+        "workspace": { "id": "Ws3kT7vNq2Lx9HdB5mRcY", "name": "Acme" }
+      },
+      {
+        "id": "Lw5yE1kHs8Qd3ZoC9tNfU",
+        "createdAt": "2026-10-14T16:02:00.000Z",
+        "durationSeconds": 12,
+        "title": "Appel manqué",
+        "labels": [],
+        "state": "Ready",
+        "thumbnailUrl": "https://cdn.claap.test/thumbnails/Lw5yE1kHs8Qd3ZoC9tNfU.jpg",
+        "transcriptOnly": false,
+        "url": "https://app.claap.io/acme/appel-manque-c-Lw5yE1kHs8Qd3ZoC9tNfU",
+        "source": "Call",
+        "recorder": {
+          "id": "Us5nO8pQ1rS4tU7vW0xYz",
+          "name": "Karim Benali",
+          "email": "karim@acme.test",
+          "attended": true
+        },
+        "video": { "url": "https://cdn.claap.test/videos/Lw5yE1kHs8Qd3ZoC9tNfU.mp4" },
+        "transcripts": [],
+        "workspace": { "id": "Ws3kT7vNq2Lx9HdB5mRcY", "name": "Acme" }
+      }
+    ],
+    "pagination": { "totalCount": 4 }
+  }
+}

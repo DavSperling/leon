@@ -3,6 +3,7 @@ import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../h
 import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { type ClickupClient, type Comment, clickupClient, type Task } from './client';
 import { toItem } from './map';
+import { clickupOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://developer.clickup.com/docs/authentication (jeton personnel « pk_… », en-tête
@@ -19,6 +20,7 @@ import { toItem } from './map';
 //     Business Plus et Enterprise ; 429 avec X-RateLimit-Reset en secondes depuis 1970 ; pas de Retry-After)
 //   https://clickup.com/terms/developer-terms (§6 : pas d'entraînement de modèles sur les données
 //     des utilisateurs sans leur accord exprès ; suppression des données si l'accord est retiré)
+// Le bouton « Se connecter avec ClickUp » (jeton OAuth, `Authorization: Bearer`) : voir oauth.ts.
 //
 // Écarts au plan, d'après la doc : le sens de `order_by=updated` n'est pas documenté (`reverse`
 // « inverse » sans dire de quoi). On lit donc toutes les tâches modifiées depuis le curseur dans
@@ -42,8 +44,28 @@ import { toItem } from './map';
 // `markdown_description` et `text_content` (le Markdown est préféré) ; que la limite de débit
 // d'un plan Business Plus ou Enterprise est plus large que le rythme choisi (650 ms).
 
-const ConfigSchema = z.object({ token: z.string().trim().min(1).max(500) });
+// Deux façons de se brancher : la clé collée (`token`, jeton personnel « pk_… ») ou le bouton
+// (`accessToken`). Une connexion enregistrée avant le bouton n'a pas d'`authMode` : c'est une clé.
+// Le jeton OAuth n'expire pas chez ClickUp, mais le socle écrit `refreshToken` et `expiresAt`
+// pour tout connecteur à bouton.
+const Secret = z.string().trim().min(1).max(500);
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: Secret.optional(),
+    accessToken: Secret.optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Un jeton OAuth s'envoie avec « Bearer », la clé personnelle « pk_… » seule.
+const authorizationOf = (config: Config): string =>
+  config.authMode === 'oauth' ? `Bearer ${config.accessToken}` : (config.token ?? '');
 
 // Par espace : l'instant de la dernière tâche lue et les identifiants déjà lus à cet instant.
 const CursorSchema = z.record(z.string(), z.object({ at: z.number(), seen: z.array(z.string()) }));
@@ -124,7 +146,7 @@ export const clickupConnector: Connector<Config> = {
   minIntervalMs: 650, // 100 requêtes par minute
 
   async verify(config: Config, http: ConnectorHttp) {
-    const clickup = clickupClient(config.token, http);
+    const clickup = clickupClient(authorizationOf(config), http);
     const name = await clickup.user();
     const teams = await clickup.teams();
     if (teams.length === 0) {
@@ -134,6 +156,8 @@ export const clickupConnector: Connector<Config> = {
   },
 
   sync(config: Config, state, http: ConnectorHttp) {
-    return syncWorkspaces(clickupClient(config.token, http), state.since, state.cursor);
+    return syncWorkspaces(clickupClient(authorizationOf(config), http), state.since, state.cursor);
   },
+
+  oauth: clickupOAuth,
 };

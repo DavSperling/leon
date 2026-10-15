@@ -14,6 +14,8 @@ export const clickupCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Dans ClickUp : cliquez sur votre avatar › Settings › Apps › API Token › Generate, puis copiez le jeton (il commence par pk_ et n’expire pas).',
+  oauthHelp:
+    'ClickUp vous demande de choisir les espaces de travail que Leon peut ouvrir, puis d’autoriser l’accès. ClickUp ne propose pas de droit en lecture seule : l’autorisation donne les mêmes droits que votre compte sur ces espaces, mais Leon ne fait que lire les tâches et leurs commentaires.',
   docsUrl: 'https://developer.clickup.com/docs/authentication',
   triedForReal: false,
   warning:

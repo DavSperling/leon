@@ -44,9 +44,10 @@ const TeamsReply = z.object({ teams: z.array(z.object({ id: z.string(), name: z.
 const TasksReply = z.object({ tasks: z.array(TaskSchema), last_page: z.boolean().optional() });
 const CommentsReply = z.object({ comments: z.array(CommentSchema) });
 
-export function clickupClient(token: string, http: ConnectorHttp) {
-  // Un jeton personnel va seul dans Authorization, sans « Bearer » (réservé à OAuth).
-  const headers = { Authorization: token };
+// `authorization` : la valeur de l'en-tête, qui dépend du jeton. Une clé personnelle (« pk_… ») va
+// seule, sans « Bearer » ; un jeton OAuth s'écrit « Bearer <jeton> ».
+export function clickupClient(authorization: string, http: ConnectorHttp) {
+  const headers = { Authorization: authorization };
   const path = (id: string) => encodeURIComponent(id);
 
   return {

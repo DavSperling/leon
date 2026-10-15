@@ -75,7 +75,7 @@ type Connector<Config> = {
 
 ### Modèle de données (migration `0008-connecteurs.sql`)
 
-- **`connections`** : `id`, `tenant_id`, `created_by`, `provider`, `label`, `config` (jsonb, sans secret : site, e-mail, dépôts, espace), `secret` (texte chiffré), `secret_hint` (4 derniers caractères), `status` (`active`, `paused`, `error`), `cursor`, `since`, `last_sync_started_at`, `last_sync_at`, `last_error` (résumé sans contenu), `items_synced`, `acl`, `created_at`, `updated_at`. RLS comme les autres tables. Toute personne de l'équipe voit les connexions, sans le secret, et peut les gérer.
+- **`connections`** : `id`, `tenant_id`, `created_by`, `provider`, `label`, `config` (jsonb, sans secret : site, e-mail, dépôts, espace), `secret` (texte chiffré), `secret_hint` (4 derniers caractères), `status` (`active`, `paused`, `error`), `cursor`, `since`, `next_sync_at`, `sync_lock_at`, `last_sync_started_at`, `last_sync_at`, `last_error` (résumé sans contenu), `items_synced`, `acl`, `created_at`, `updated_at`. RLS comme les autres tables. Toute personne de l'équipe voit les connexions, sans le secret, et peut les gérer.
 - **`sources`** : `kind` accepte les identifiants des 35 connecteurs ; nouvelle colonne `connection_id` (nulle pour les conversations, `on delete set null`). `metadata` porte `nature`, `url`, `origin`, `updated_at`.
 - **`turns`** : `role` accepte aussi `document` et `participant` ; nouvelles colonnes `author_name`, `author_email` ; `capture_mode` accepte `connector`.
 - **`facts.source_kind`** suit la nouvelle liste.
@@ -89,8 +89,9 @@ type Connector<Config> = {
 
 ### Synchronisation
 
-- File pg-boss `connector-sync`, job `{ connectionId, tenantId, userId }` (`userId` = `created_by`), clé d'unicité par connexion : jamais deux synchronisations de la même connexion en même temps.
-- Chaque job se relance lui-même : à la fin, il programme le suivant dans 15 minutes (`startAfter`). S'il a atteint la limite de 200 éléments par passage et qu'il en reste, dans une minute. Brancher une connexion, ou cliquer « Synchroniser maintenant », lance un job tout de suite. Pas de liste des connexions de tous les tenants : rien ne contourne la RLS.
+- Chaque connexion porte sa prochaine échéance (`next_sync_at`). Un tic pg-boss, chaque minute, demande à la fonction SQL `connector_syncs_due()` les connexions dues et met un job en file pour chacune. Cette fonction est la seule entorse à la RLS : elle ne rend que trois identifiants (connexion, tenant, créateur), jamais de contenu ni de secret.
+- File pg-boss `connector-sync`, job `{ connectionId, tenantId, userId }` (`userId` = `created_by`). Le job se réserve la connexion (`sync_lock_at`, sous la RLS du créateur) : jamais deux synchronisations de la même connexion en même temps ; une réservation de plus de 30 minutes est réputée abandonnée.
+- À la fin d'un passage, l'échéance passe à dans 15 minutes, ou à dans une minute s'il a atteint la limite de 200 éléments et qu'il en reste. Brancher une connexion, ou cliquer « Synchroniser maintenant », met l'échéance à maintenant : le tic suivant la prend.
 - Chaque page rendue par le connecteur passe par l'ingestion commune, extraite de `ingestTurns` : une source par élément (créée ou mise à jour), les tours nouveaux, un `ingest_run`, le triage mis en file. Puis le curseur est enregistré. Une reprise après plantage refait au pire la dernière page, sans doublon.
 - La tâche de fond démarre avec l'app, même sans `ANTHROPIC_API_KEY` : les sources entrent, leurs runs attendent le pipeline.
 - `since` se choisit à la connexion : 7, 30 (défaut), 90 ou 365 jours. Il borne le coût du premier passage.
@@ -98,7 +99,7 @@ type Connector<Config> = {
 ### Erreurs
 
 - Client HTTP commun : délai de 30 s, réponse limitée à 10 Mo, redirections refusées vers un autre hôte, trois reprises sur 429 et 5xx en respectant `Retry-After`.
-- 401 ou 403 : statut `error` avec « Clé refusée par <outil> : vérifiez-la ou remplacez-la. », et plus de relance automatique. Autre échec : statut `error`, nouvel essai dans une heure.
+- 401 ou 403 : statut `error` avec « Clé refusée par <outil> : vérifiez-la ou remplacez-la. », et plus d'échéance (plus de relance automatique). Autre échec : statut `error`, échéance dans une heure. Le tic prend les connexions `active` et `error` dont l'échéance est passée ; une connexion en pause n'a pas d'échéance.
 - `last_error` et les journaux contiennent l'outil, le code HTTP et un message court écrit par nous, jamais le corps de la réponse ni la clé.
 
 ## Le pipeline

@@ -1,7 +1,7 @@
 // Les échéances sont des jours civils (colonne `date`, « AAAA-MM-JJ ») : « aujourd'hui » se calcule
 // à Paris, jamais avec `current_date` de la base ni avec le fuseau du serveur.
 import type { DueFilter } from '@/lib/enums';
-import { TIME_ZONE } from '@/lib/format';
+import { LOCALE, TIME_ZONE } from '@/lib/format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -12,7 +12,7 @@ const parisDayFormat = new Intl.DateTimeFormat('en-US', {
   day: '2-digit',
 });
 // Le jour est formaté en UTC : c'est une date civile, pas un instant.
-const dueFormat = new Intl.DateTimeFormat('fr-FR', {
+const dueFormat = new Intl.DateTimeFormat(LOCALE, {
   timeZone: 'UTC',
   weekday: 'short',
   day: 'numeric',

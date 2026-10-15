@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { PAGE_PARAMS } from '@/lib/tasks/task-links';
 import { DEFAULT_VIEW_CONFIG, parseViewParams, type ViewConfig } from '@/lib/tasks/view-config';
 import { pageRoutes, readText } from '@/test/contracts/files';
 import { myTasksTab, TABS } from './my-tasks-tabs';
 import { currentNavKey } from './task-nav';
-import { PAGE_PARAMS } from './use-view-navigation';
 
 const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
 const withFilters = (filters: Partial<ViewConfig['filters']>): ViewConfig => ({

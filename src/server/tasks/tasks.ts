@@ -65,7 +65,13 @@ export type TaskDetail = TaskRow & {
   descriptionMd: string;
   creator: Person | null;
   subtasks: TaskRow[];
-  parent: { ref: string; title: string } | null;
+  parent: {
+    id: string;
+    ref: string;
+    title: string;
+    projectId: string;
+    priority: TaskPriority;
+  } | null;
 };
 
 type TaskUpdate = Partial<typeof tasks.$inferInsert>;
@@ -515,7 +521,10 @@ export async function getTaskByRef(ctx: TenantContext, ref: string): Promise<Tas
       .select({
         descriptionMd: tasks.descriptionMd,
         creatorName: users.name,
+        parentId: parentTasks.id,
         parentTitle: parentTasks.title,
+        parentProjectId: parentTasks.projectId,
+        parentPriority: parentTasks.priority,
       })
       .from(tasks)
       .leftJoin(users, eq(users.id, tasks.creatorId))
@@ -531,9 +540,24 @@ export async function getTaskByRef(ctx: TenantContext, ref: string): Promise<Tas
           : null,
       subtasks,
       parent:
-        row.parentRef && extra.parentTitle
-          ? { ref: row.parentRef, title: extra.parentTitle }
+        row.parentRef &&
+        extra.parentId &&
+        extra.parentTitle &&
+        extra.parentProjectId &&
+        extra.parentPriority
+          ? {
+              id: extra.parentId,
+              ref: row.parentRef,
+              title: extra.parentTitle,
+              projectId: extra.parentProjectId,
+              priority: extra.parentPriority,
+            }
           : null,
     };
   });
+}
+
+// La référence actuelle d'une tâche : un changement de projet lui donne un nouveau numéro.
+export function getTaskRef(ctx: TenantContext, id: string): Promise<string | null> {
+  return withTenant(ctx, (tx) => refOf(tx, id));
 }

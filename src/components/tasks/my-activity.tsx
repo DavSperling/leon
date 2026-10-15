@@ -1,30 +1,15 @@
-import { Bot } from 'lucide-react';
 import Link from 'next/link';
 import { EmptyState } from '@/components/empty-state';
 import { formatRelative } from '@/lib/format';
+import { taskHref } from '@/lib/tasks/task-links';
 import { actorLabel } from '@/server/memory/labels';
 import type { ActivityItem } from '@/server/tasks/activity';
 import type { Person } from '@/server/tasks/task-row';
-import { Avatar } from './avatar';
+import { ActorAvatar } from './actor-avatar';
 import { eventText } from './event-text';
 import { ListBreadcrumb } from './list-breadcrumb';
 import { MyTasksTabs } from './my-tasks-tabs';
 import { TaskTitle } from './task-title';
-
-function ActorAvatar({ item }: { item: ActivityItem }) {
-  if (item.actorKind === 'user') {
-    return <Avatar person={item.actor ?? { name: actorLabel(item), initials: '?' }} />;
-  }
-  return (
-    <span
-      role="img"
-      aria-label={actorLabel(item)}
-      className="flex size-5 shrink-0 items-center justify-center rounded-full bg-accent text-muted-foreground"
-    >
-      <Bot size={12} strokeWidth={1.5} aria-hidden="true" />
-    </span>
-  );
-}
 
 type ItemProps = { item: ActivityItem; names: ReadonlyMap<string, string>; now: Date };
 
@@ -39,7 +24,10 @@ function ActivityRow({ item, names, now }: ItemProps) {
           <span className="font-medium">{actorLabel(item)}</span> {eventText(item, names)}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          <Link href={`/taches/${item.taskRef}`} className="hover:text-foreground hover:underline">
+          <Link
+            href={taskHref(item.taskRef, 'onglet=activite')}
+            className="hover:text-foreground hover:underline"
+          >
             <span className="font-mono">{item.taskRef}</span> <TaskTitle title={item.taskTitle} />
           </Link>
         </p>

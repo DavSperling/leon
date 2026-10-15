@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
+import { COMMENT_MAX_CHARS } from '@/lib/tasks/limits';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { addComment } from '@/server/tasks/activity';
 import { guarded } from './guarded';
@@ -8,7 +9,7 @@ import { writeResult } from './task-result';
 
 const InputSchema = z.object({
   ref: z.string().max(20).describe('Identifiant de la tâche (LEO-12).'),
-  texte: z.string().trim().min(1).max(20_000).describe('Commentaire en Markdown.'),
+  texte: z.string().trim().min(1).max(COMMENT_MAX_CHARS).describe('Commentaire en Markdown.'),
 });
 
 export function registerTaskCommentTool(

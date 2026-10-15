@@ -90,7 +90,13 @@ describe('renderTaskMarkdown', () => {
       task: {
         ...task,
         title: 'Titre\n## Faux titre',
-        parent: { ref: 'LEO-3', title: 'Parent\n- faux' },
+        parent: {
+          id: 'parent-id',
+          ref: 'LEO-3',
+          title: 'Parent\n- faux',
+          projectId: 'project-id',
+          priority: 'none',
+        },
         subtasks: [{ ...task, ref: 'LEO-13', title: 'Sous\n# tâche' }],
       },
     });

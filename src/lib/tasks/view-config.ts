@@ -242,6 +242,19 @@ export function parseViewParams(params: ViewParamsInput, base: ViewConfig): View
   }, base);
 }
 
+// Les réglages valides de `params`, sous leur forme canonique, sans les comparer à une base : on ne
+// connaît pas toujours le défaut d'équipe (le paramètre `retour` d'une tâche), et une valeur égale
+// au défaut de Leon peut différer de celui de l'équipe. Les autres paramètres sont écartés.
+export function validViewParams(params: ViewParamsInput): URLSearchParams {
+  const valid = new URLSearchParams();
+  for (const p of PARAMS) {
+    const raw = readParam(params, p.name);
+    const config = raw === null ? undefined : p.read(raw, DEFAULT_VIEW_CONFIG);
+    if (config) valid.set(p.name, p.write(config));
+  }
+  return valid;
+}
+
 // Les seuls écarts à `base`, pour des URL courtes : `parseViewParams` les relit à l'identique.
 export function toViewParams(config: ViewConfig, base: ViewConfig): URLSearchParams {
   const params = new URLSearchParams();

@@ -259,7 +259,13 @@ describe('getTaskByRef', () => {
       parent: null,
     });
     expect(detail?.subtasks.map((t) => t.ref)).toEqual(['ATE-2', 'ATE-3']);
-    expect(child?.parent).toEqual({ ref: 'ATE-1', title: 'Chantier' });
+    expect(child?.parent).toEqual({
+      id: parent.id,
+      ref: 'ATE-1',
+      title: 'Chantier',
+      projectId,
+      priority: 'none',
+    });
     expect(child?.parentRef).toBe('ATE-1');
   });
 

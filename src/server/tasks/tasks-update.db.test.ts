@@ -10,6 +10,7 @@ import {
   bulkUpdateTasks,
   createTask,
   getTaskByRef,
+  getTaskRef,
   moveTask,
   type TaskInput,
   updateTask,
@@ -288,6 +289,18 @@ describe('updateTask : changement de projet', () => {
     expect((await readEvents(id)).slice(1)).toEqual([
       expect.objectContaining({ kind: 'project', payload: { from: ref, to: 'OPS-2' } }),
     ]);
+  });
+
+  it('rend la nouvelle référence, et rien pour une tâche d’une autre organisation', async () => {
+    const { paul, zoe, make, actor } = await setup();
+    const ops = await createProject(paul, { name: 'Opérations', key: 'OPS' });
+    const { id, ref } = await make('Voyageuse');
+    expect(await getTaskRef(paul, id)).toBe(ref);
+
+    await updateTask(paul, id, { projectId: ops.id }, actor);
+
+    expect(await getTaskRef(paul, id)).toBe('OPS-1');
+    expect(await getTaskRef(zoe, id)).toBeNull();
   });
 
   it('accepte un statut du projet d’arrivée donné en même temps', async () => {

@@ -22,6 +22,7 @@ import { initialDraft, type TaskDraft, type TaskPrefill } from './create-draft';
 import { DraftPills } from './draft-pills';
 import type { ListContext } from './list-context';
 import { safely } from './safely';
+import { useTaskHref } from './use-task-href';
 
 type FormProps = {
   prefill: TaskPrefill;
@@ -78,6 +79,7 @@ function FormFooter({ pending, onCreateAndContinue }: FooterProps) {
 // Le contenu du dialogue est démonté à la fermeture : chaque ouverture repart du préremplissage.
 function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: FormProps) {
   const router = useRouter();
+  const href = useTaskHref();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [draft, setDraft] = useState(() => initialDraft(prefill, filterProjectId, context));
@@ -97,7 +99,7 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
       const result = await safely(createTaskAction(toInput(title, description, draft)));
       if (!result.ok) return setError(result.error);
       toast.success(`${result.ref} créée`, {
-        action: { label: 'Ouvrir', onClick: () => router.push(`/taches/${result.ref}`) },
+        action: { label: 'Ouvrir', onClick: () => router.push(href(result.ref)) },
       });
       setError(null);
       if (!keepOpen) return onDone();

@@ -13,6 +13,7 @@ import { AssigneeCell, DueCell, LabelsCell, PriorityCell, StatusCell } from './r
 import { rowDates } from './row-dates';
 import { TaskTitle } from './task-title';
 import { type TaskEdit, useTaskEdit } from './use-task-edit';
+import { useTaskHref } from './use-task-href';
 
 export type CardProps = {
   row: TaskRow;
@@ -94,6 +95,7 @@ function CardContent({
   handle,
 }: CardProps & { handle?: ReactNode }) {
   const { row, edit } = useTaskEdit(current);
+  const href = useTaskHref();
   const shows = (property: ViewProperty) => properties.includes(property);
   const part = { row, edit, shows, context };
   const dates = rowDates(row, now).filter(({ property }) => shows(property));
@@ -103,7 +105,7 @@ function CardContent({
       <div className="flex items-start gap-1">
         {shows('status') && <StatusCell row={row} statuses={context.statuses} edit={edit} />}
         <Link
-          href={`/taches/${row.ref}`}
+          href={href(row.ref)}
           title={row.title}
           className="line-clamp-2 min-w-0 flex-1 py-0.5 leading-5 break-words after:absolute after:inset-0"
         >

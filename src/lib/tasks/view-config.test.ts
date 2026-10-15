@@ -6,6 +6,7 @@ import {
   toViewParams,
   type ViewConfig,
   ViewConfigSchema,
+  validViewParams,
 } from './view-config';
 
 const LABEL_ID = '3f2b8c1e-52d4-4a8e-9b0f-7a1c6d5e4f30';
@@ -187,6 +188,45 @@ describe('toViewParams et parseViewParams', () => {
       DEFAULT_VIEW_CONFIG,
     );
     expect(config).toEqual(withFilters({ q: 'bug' }, { layout: 'board', groupBy: 'none' }));
+  });
+});
+
+describe('validViewParams', () => {
+  it('garde les réglages valides sous leur forme canonique, dans l’ordre des paramètres', () => {
+    const params = new URLSearchParams({
+      groupe: 'priorite',
+      disposition: 'tableau',
+      assigne: MEMBER_ID.toUpperCase(),
+      statut: 'started,backlog',
+    });
+    expect(validViewParams(params).toString()).toBe(
+      `disposition=tableau&groupe=priorite&statut=backlog%2Cstarted&assigne=${MEMBER_ID}`,
+    );
+  });
+
+  it('écarte les paramètres inconnus, de page et les valeurs invalides', () => {
+    const params = new URLSearchParams(
+      `vue=${MEMBER_ID}&onglet=activite&inconnu=1&groupe=zzz&q=${'x'.repeat(101)}&//exemple.com`,
+    );
+    expect(validViewParams(params).size).toBe(0);
+  });
+
+  it('garde une valeur égale au défaut de Leon : l’équipe en a peut-être un autre', () => {
+    expect(
+      validViewParams(new URLSearchParams('groupe=statut&props=&statut=tous')).toString(),
+    ).toBe('groupe=statut&props=&statut=tous');
+  });
+
+  it('relit à l’identique, quelle que soit la base', () => {
+    const params = new URLSearchParams('disposition=liste&tri=echeance&assigne=&bruit=1&groupe=x');
+    for (const base of [DEFAULT_VIEW_CONFIG, OTHER_BASE]) {
+      expect(parseViewParams(validViewParams(params), base)).toEqual(parseViewParams(params, base));
+    }
+  });
+
+  it('lit les searchParams d’une page serveur', () => {
+    const params = { groupe: ['aucun', 'statut'], tri: undefined, q: 'bug' };
+    expect(validViewParams(params).toString()).toBe('groupe=aucun&q=bug');
   });
 });
 

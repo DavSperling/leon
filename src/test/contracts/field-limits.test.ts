@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTION_MAX_CHARS, LABEL_NAME_MAX_CHARS, TITLE_MAX_CHARS } from '@/lib/tasks/limits';
+import {
+  COMMENT_MAX_CHARS,
+  DESCRIPTION_MAX_CHARS,
+  LABEL_NAME_MAX_CHARS,
+  TITLE_MAX_CHARS,
+} from '@/lib/tasks/limits';
 import { readText } from './files';
 
 const MIGRATION = readText('src/server/db/migrations/0007-taches.sql');
@@ -19,6 +24,12 @@ describe('bornes des champs des tâches', () => {
 
   it('la description', () => {
     expect(sqlBound('tasks', /char_length\(description_md\) <= (\d+)/)).toBe(DESCRIPTION_MAX_CHARS);
+  });
+
+  it('le commentaire', () => {
+    expect(sqlBound('task_comments', /char_length\(body_md\) between 1 and (\d+)/)).toBe(
+      COMMENT_MAX_CHARS,
+    );
   });
 
   it('le nom d’une étiquette', () => {

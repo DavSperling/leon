@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { TASK_PRIORITIES } from '@/lib/enums';
 import {
@@ -12,10 +11,6 @@ import {
   TITLE_MAX_CHARS,
 } from '@/lib/tasks/limits';
 import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
-import { requireUserContext } from '@/server/auth/session';
-import type { TenantContext } from '@/server/auth/tenant-context';
-import { logError } from '@/server/log';
-import { TaskError } from '@/server/tasks/errors';
 import { createLabel, type LabelRow } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
 import {
@@ -25,15 +20,8 @@ import {
   moveTask,
   updateTask,
 } from '@/server/tasks/tasks';
+import { type ActionResult, run } from './run-action';
 
-// Chaque action : la session, zod sur les entrées, une fonction de src/server/tasks, puis le
-// rafraîchissement des pages. Le message d'une erreur attendue (TaskError) est fixe ; toute autre
-// erreur est journalisée sans son message et le lecteur n'en voit rien. Le texte saisi (titre,
-// description, nom d'étiquette) ne passe ni dans un journal ni dans une réponse d'erreur.
-type ActionResult<T extends object = object> = ({ ok: true } & T) | { ok: false; error: string };
-
-const INVALID_INPUT = 'Saisie invalide.';
-const INTERNAL_ERROR = 'Erreur interne de Leon.';
 const PARENT_RESULTS = 12;
 
 const Id = z.uuid();
@@ -99,33 +87,6 @@ const NewLabelSchema = z.strictObject({
 });
 
 const SearchSchema = z.string().trim().min(SEARCH_MIN_CHARS).max(SEARCH_MAX_CHARS);
-
-type Work<S extends z.ZodType, T extends object> = (
-  ctx: TenantContext,
-  input: z.output<S>,
-) => Promise<T>;
-
-// `refresh` : les pages affichent des tâches, pas la lecture d'une recherche.
-async function run<S extends z.ZodType, T extends object>(
-  name: string,
-  schema: S,
-  input: unknown,
-  work: Work<S, T>,
-  refresh = true,
-): Promise<ActionResult<T>> {
-  const ctx = await requireUserContext();
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: INVALID_INPUT };
-  try {
-    const result = await work(ctx, parsed.data);
-    if (refresh) revalidatePath('/taches', 'layout');
-    return { ok: true, ...result };
-  } catch (error) {
-    if (error instanceof TaskError) return { ok: false, error: error.message };
-    logError(`tasks.${name}`, error);
-    return { ok: false, error: INTERNAL_ERROR };
-  }
-}
 
 export async function createTaskAction(
   input: z.input<typeof CreateTaskSchema>,

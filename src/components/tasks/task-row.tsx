@@ -13,6 +13,7 @@ import { rowDates } from './row-dates';
 import { useSelection } from './selection-provider';
 import { TaskTitle } from './task-title';
 import { useTaskEdit } from './use-task-edit';
+import { useTaskHref } from './use-task-href';
 
 // Une date d'information, avec son intitulé pour les lecteurs d'écran.
 function DateCell({ label, children }: { label: string; children: ReactNode }) {
@@ -44,6 +45,7 @@ export function TaskRowItem({
   now,
 }: TaskRowItemProps) {
   const { row, edit } = useTaskEdit(current);
+  const href = useTaskHref();
   const { selectedRows, isSelected, select } = useSelection();
   const selected = isSelected(row.id);
   const shows = (property: ViewProperty) => properties.includes(property);
@@ -85,7 +87,7 @@ export function TaskRowItem({
           </span>
         )}
         <Link
-          href={`/taches/${row.ref}`}
+          href={href(row.ref)}
           title={row.title}
           onClick={(event) => {
             // Maj+clic étend la sélection au lieu d'ouvrir la tâche.

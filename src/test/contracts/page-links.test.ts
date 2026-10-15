@@ -58,7 +58,7 @@ function writtenPaths(): Array<{ file: string; path: string }> {
 describe('liens entre pages', () => {
   it('connaît les routes de l’application', () => {
     expect(ROUTES).toEqual(
-      expect.arrayContaining(['/', '/fiches/[id]', '/journal', '/a-verifier']),
+      expect.arrayContaining(['/', '/fiches/[id]', '/journal', '/a-verifier', '/taches']),
     );
   });
 

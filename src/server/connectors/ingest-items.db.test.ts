@@ -315,4 +315,44 @@ describe('ingestConnectorItems', () => {
       authorName: 'Marie Durand',
     });
   });
+
+  // JSON.stringify écrit la moitié isolée d'un emoji « \ud83d » : un jsonb la refuse, un text non.
+  it("accepte un élément dont le titre, l'origine et l'adresse portent la moitié isolée d'un emoji", async () => {
+    const connection = await seedConnection(paul);
+    const half = '\ud83d';
+    const externalId = `issue:${randomUUID()}`;
+    const dirty = connectorItem(
+      `${externalId.slice(0, 10)}${half}${externalId.slice(10)}`,
+      [
+        {
+          externalId: `bo${half}dy`,
+          role: 'document',
+          author: { name: `Marie${half} Durand`, email: 'marie@acme.test' },
+          text: `Le texte${half} garde son 😀.`,
+          ts: '2026-10-14T09:00:00Z',
+        },
+      ],
+      `Titre${half} coupé`,
+    );
+    dirty.url = `https://github.com/acme/leon/issues/${half}1`;
+    dirty.origin = { [`re${half}po`]: `acme${half}/leon` };
+
+    const result = await ingestConnectorItems(paul, connection, [normalized(dirty)]);
+
+    expect(result.turns).toBe(1);
+    const sourceId = await sourceIdOf(
+      paul,
+      `${externalId.slice(0, 10)}\ufffd${externalId.slice(10)}`,
+    );
+    const [source] = await readSources(paul, sourceId);
+    expect(source?.title).toBe('Titre\ufffd coupé');
+    expect(source?.metadata).toMatchObject({
+      url: 'https://github.com/acme/leon/issues/\ufffd1',
+      origin: { 're\ufffdpo': 'acme\ufffd/leon' },
+    });
+    expect((await readTurns(paul, sourceId))[0]).toMatchObject({
+      text: 'Le texte\ufffd garde son 😀.',
+      authorName: 'Marie\ufffd Durand',
+    });
+  });
 });

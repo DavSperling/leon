@@ -497,3 +497,93 @@ describe('normalizeItem : caractère nul', () => {
     expect(result?.origin).toEqual({ repo: 'acme/leon' });
   });
 });
+
+// --- Paires de substitution : Postgres refuse dans un jsonb la moitié isolée d'un emoji
+// (`"\ud83d"`), que JSON.stringify écrit telle quelle.
+
+// Toutes les chaînes d'une valeur, clés d'objet comprises (les dates et les nombres sont ignorés).
+function allStrings(value: unknown): string[] {
+  if (typeof value === 'string') return [value];
+  if (Array.isArray(value)) return value.flatMap(allStrings);
+  if (value === null || typeof value !== 'object' || value instanceof Date) return [];
+  return Object.entries(value).flatMap(([key, inner]) => [key, ...allStrings(inner)]);
+}
+
+describe('normalizeItem : moitié de paire de substitution', () => {
+  const half = '\ud83d'; // première moitié de 😀
+  const other = '\ude00'; // seconde moitié de 😀, seule
+  const nul = '\u0000';
+
+  it('ne laisse aucune chaîne mal formée ni octet nul, dans aucun champ', () => {
+    const turn: ConnectorTurn = {
+      externalId: `comment:${half}1`,
+      role: 'participant',
+      author: { name: `Marie${half} Durand`, email: `marie${other}@acme.test` },
+      text: `Bonjour${half} tout${other} le${nul} monde 😀`,
+      ts: '2026-10-15T09:00:00Z',
+    };
+
+    const result = normalize(
+      item([turn, body(`Un autre tour${half}`, `body${other}`)], {
+        externalId: `issue:${half}12`,
+        title: `Choisir${half} la base${other}${nul}`,
+        url: `https://github.com/acme/leon/issues/${half}12`,
+        origin: { [`re${half}po`]: `acme${other}/leon`, [`pa${nul}ge`]: `Plan${half}` },
+      }),
+    );
+
+    expect(result).not.toBeNull();
+    const strings = allStrings(result);
+    expect(strings.length).toBeGreaterThanOrEqual(20); // le parcours ne passe pas à vide
+    for (const text of strings) {
+      expect(text.isWellFormed(), JSON.stringify(text)).toBe(true);
+      expect(text).not.toContain(nul);
+    }
+    expect(result?.url).toBe('https://github.com/acme/leon/issues/�12');
+    expect(result?.origin).toEqual({ 're�po': 'acme�/leon', page: 'Plan�' });
+    expect(result?.turns[0]?.text).toBe('Bonjour� tout� le monde 😀');
+  });
+
+  it('garde un emoji entier', () => {
+    const result = normalize(
+      item([body('Bravo 😀')], { title: 'Fête 😀', origin: { espace: '😀' } }),
+    );
+
+    expect(result?.title).toBe('Fête 😀');
+    expect(result?.origin).toEqual({ espace: '😀' });
+    expect(result?.turns[0]?.text).toBe('Bravo 😀');
+  });
+
+  it('ne coupe pas un emoji en deux en raccourcissant un titre, un nom ou un identifiant', () => {
+    const turn: ConnectorTurn = {
+      externalId: `${'i'.repeat(179)}😀`,
+      role: 'participant',
+      author: { name: `${'n'.repeat(199)}😀`, email: `${'e'.repeat(319)}😀` },
+      text: 'Bonjour',
+      ts: '2026-10-15T09:00:00Z',
+    };
+
+    const result = normalize(item([turn], { title: `${'t'.repeat(299)}😀` }));
+
+    expect(result?.title).toBe('t'.repeat(299));
+    expect(result?.turns[0]?.authorName).toBe('n'.repeat(199));
+    expect(result?.turns[0]?.authorEmail).toBe('e'.repeat(319));
+    expect(result?.turns[0]?.externalId).toMatch(/^i{179}#[0-9a-f]{12}$/);
+    for (const text of allStrings(result)) expect(text.isWellFormed()).toBe(true);
+  });
+
+  it('ne coupe pas un emoji en deux en découpant ou en plafonnant un long texte', () => {
+    const cutInTwo = `${'a'.repeat(CONNECTOR_TURN_MAX - 1)}😀 fin`;
+    const capped = `${'b'.repeat(99_988)}😀${'c'.repeat(50)}`; // le plafond de 100 000 tombe dans l'emoji
+
+    const split = normalize(item([body(cutInTwo)]));
+    const long = normalize(item([body(capped)]));
+
+    expect(split?.turns.map((turn) => turn.text)).toEqual([
+      'a'.repeat(CONNECTOR_TURN_MAX - 1),
+      '😀 fin',
+    ]);
+    for (const text of allStrings(split)) expect(text.isWellFormed()).toBe(true);
+    for (const text of allStrings(long)) expect(text.isWellFormed()).toBe(true);
+  });
+});

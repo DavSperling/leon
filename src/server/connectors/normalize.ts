@@ -27,6 +27,17 @@ export type NormalizedTurn = {
 };
 export type NormalizedItem = Omit<ConnectorItem, 'turns'> & { turns: NormalizedTurn[] };
 
+// Fin d'une coupe à `max` caractères au plus : un cran avant si elle tomberait au milieu d'un emoji
+// (une paire de substitution). Une moitié d'emoji n'est plus du texte valide et un jsonb la refuse.
+function wholeEnd(text: string, max: number): number {
+  const last = text.charCodeAt(max - 1);
+  return max > 1 && last >= 0xd800 && last <= 0xdbff ? max - 1 : max;
+}
+
+function head(text: string, max: number): string {
+  return text.slice(0, wholeEnd(text, max));
+}
+
 // Où couper un texte trop long : avant un titre, sinon à une ligne vide, sinon à une fin de ligne,
 // sinon à la longueur maximale.
 function cutPoint(text: string, max: number): number {
@@ -35,7 +46,7 @@ function cutPoint(text: string, max: number): number {
   const blank = text.lastIndexOf('\n\n', max);
   if (blank > 0) return blank;
   const line = text.lastIndexOf('\n', max);
-  return line > 0 ? line : max;
+  return line > 0 ? line : wholeEnd(text, max);
 }
 
 export function splitText(text: string, max: number): string[] {
@@ -293,28 +304,26 @@ function validDate(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// Postgres refuse l'octet 0x00 dans un text comme dans un jsonb : un seul élément qui en porte un
+// Tout texte venu d'un outil passe par là avant la base. Postgres refuse l'octet 0x00 dans un text
+// comme dans un jsonb, et dans un jsonb la moitié isolée d'un emoji (JSON.stringify l'écrit
+// « \ud83d », le jsonb la rejette ; un text la reçoit en U+FFFD). Un seul élément qui en porte une
 // ferait échouer l'insertion, donc le passage entier, à chaque relève.
-function noNul(value: string): string {
-  return value.replaceAll('\u0000', '');
+function clean(value: string): string {
+  return value.replaceAll('\u0000', '').toWellFormed();
 }
 
 function clip(value: string | null, max: number): string | null {
-  return (
-    noNul(value ?? '')
-      .trim()
-      .slice(0, max) || null
-  );
+  return head(clean(value ?? '').trim(), max) || null;
 }
 
 function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
-  const masked = maskSecrets(noNul(turn.text));
+  const masked = maskSecrets(clean(turn.text));
   const capped =
     masked.length > TURN_TEXT_CAP
-      ? masked.slice(0, TURN_TEXT_CAP - TRUNCATION_MARK.length) + TRUNCATION_MARK
+      ? head(masked, TURN_TEXT_CAP - TRUNCATION_MARK.length) + TRUNCATION_MARK
       : masked;
   const parts = splitText(capped, CONNECTOR_TURN_MAX);
-  const stem = noNul(turn.externalId).slice(0, ID_MAX - ID_ROOM);
+  const stem = head(clean(turn.externalId), ID_MAX - ID_ROOM);
   return parts.flatMap((part, index) => {
     const text = prepareTurnText(part);
     if (text === null) return [];
@@ -347,7 +356,7 @@ function datedTurns(turns: ConnectorTurn[]): Array<{ turn: ConnectorTurn; ts: Da
 
 function cleanOrigin(origin: Record<string, string>): Record<string, string> {
   return Object.fromEntries(
-    Object.entries(origin).map(([key, value]) => [noNul(key), noNul(value)]),
+    Object.entries(origin).map(([key, value]) => [clean(key), clean(value)]),
   );
 }
 
@@ -358,7 +367,7 @@ export function normalizeItem(item: ConnectorItem, provider: ProviderId): Normal
     logError('connector.item_refused', new Error(reason), { provider, ...ids });
     return null;
   };
-  const externalId = noNul(item.externalId);
+  const externalId = clean(item.externalId);
   if (externalId.length > ID_MAX) {
     return refuse('Identifiant d’élément trop long', { length: String(externalId.length) });
   }
@@ -371,8 +380,8 @@ export function normalizeItem(item: ConnectorItem, provider: ProviderId): Normal
   return {
     ...item,
     externalId,
-    title: maskSecrets(noNul(item.title)).trim().slice(0, TITLE_MAX),
-    url: item.url === null ? null : noNul(item.url),
+    title: head(maskSecrets(clean(item.title)).trim(), TITLE_MAX),
+    url: item.url === null ? null : clean(item.url),
     updatedAt: updatedAt.toISOString(),
     origin: cleanOrigin(item.origin),
     turns,

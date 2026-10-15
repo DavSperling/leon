@@ -8,7 +8,7 @@ export const sentryCatalog: CatalogEntry = {
       name: 'token',
       label: 'Jeton d’intégration interne',
       kind: 'secret',
-      help: 'Lecture seule suffit : les portées event:read (problèmes) et org:read (organisation). Leon ne lit ni les traces de pile ni les données des événements.',
+      help: 'Lecture seule suffit : la portée event:read (problèmes). Leon ne lit ni les traces de pile ni les données des événements.',
     },
     {
       name: 'organization',
@@ -29,7 +29,7 @@ export const sentryCatalog: CatalogEntry = {
     },
   ],
   keyHelp:
-    'Dans Sentry : Settings › Developer Settings › New Internal Integration, avec la lecture seule (Read) sur les problèmes (Issue & Event) et sur l’organisation (Organization) ; le jeton s’affiche à la création et n’expire pas.',
+    'Dans Sentry : Settings › Developer Settings › New Internal Integration, avec la lecture seule (Read) sur les problèmes (Issue & Event) ; le jeton s’affiche à la création et n’expire pas.',
   docsUrl:
     'https://docs.sentry.io/organization/integrations/integration-platform/internal-integration/',
   triedForReal: false,

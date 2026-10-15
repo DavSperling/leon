@@ -9,11 +9,10 @@ import { toItem } from './map';
 //   https://docs.sentry.io/api/events/list-an-organizations-issues/ (GET /api/0/organizations/{org}/issues/ :
 //     query, sort, limit ≤ 100, cursor, collapse ; portée event:read ; champs d'un problème)
 //   https://docs.sentry.io/api/events/retrieve-an-issue/ (détail : numComments, activity)
-//   https://docs.sentry.io/api/organizations/retrieve-an-organization/ (GET /api/0/organizations/{org}/ : portée org:read)
 //   https://docs.sentry.io/api/pagination/ (en-tête Link : rel, results="true|false", cursor)
 //   https://docs.sentry.io/api/auth/ et https://docs.sentry.io/api/ (Bearer ; domaines us.sentry.io et de.sentry.io)
 //   https://docs.sentry.io/api/ratelimits/ (limite par appelant et par point d'accès ; en-têtes X-Sentry-Rate-Limit-*)
-//   https://docs.sentry.io/api/permissions/ (portées org:read, event:read)
+//   https://docs.sentry.io/api/permissions/ (portée event:read)
 //   https://docs.sentry.io/concepts/search/searchable-properties/issues/ (lastSeen:-2d, lastSeen:+30d, suffixes m h d w)
 //   https://docs.sentry.io/organization/integrations/integration-platform/internal-integration/ (jeton qui n'expire pas)
 //   https://sentry.io/legal/terms/ (§2.3 b : pas d'usage du service pour le compte de tiers)
@@ -32,6 +31,12 @@ import { toItem } from './map';
 //   - Le plan écrit `sentry.io` pour les États-Unis ; la doc nomme `us.sentry.io`. `sentry.io` reste
 //     proposé comme le plan le dit.
 //   - L'identifiant d'organisation accepte aussi « _ » (le plan n'autorise que « - »).
+//   - La vérification ne lit pas l'organisation (GET /api/0/organizations/{org}/) : la page
+//     https://docs.sentry.io/api/auth/ dit que « Retrieve an Organization » demande un jeton lié à un
+//     compte d'utilisateur et non un jeton d'intégration interne, alors que la page de ce point d'accès
+//     ne cite que les portées org:read, org:write et org:admin. La doc se contredit : seule la lecture
+//     de la liste des problèmes (portée event:read) vérifie le jeton, et le compte affiché est
+//     l'identifiant (slug) saisi.
 //   - La page suivante est redemandée par son seul paramètre `cursor`, à l'hôte configuré : l'hôte
 //     écrit dans l'en-tête Link n'est pas utilisé.
 //
@@ -125,10 +130,8 @@ export const sentryConnector: Connector<Config> = {
   hosts: (config: Config) => [config.region],
 
   async verify(config: Config, http: ConnectorHttp) {
-    const client = sentryClient(config, http);
-    const { name } = await client.organization();
-    await client.checkIssues();
-    return { account: `organisation ${name}` };
+    await sentryClient(config, http).checkIssues();
+    return { account: `organisation ${config.organization}` };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

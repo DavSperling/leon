@@ -10,7 +10,6 @@ import issue1001 from './fixtures/issue-1001.json';
 import issue1003 from './fixtures/issue-1003.json';
 import issuesPage1 from './fixtures/issues-page1.json';
 import issuesPage2 from './fixtures/issues-page2.json';
-import organization from './fixtures/organization.json';
 
 const TOKEN = 'jeton-de-test-0123456789';
 type TestConfig = Parameters<typeof sentryConnector.hosts>[0];
@@ -141,43 +140,40 @@ describe('sentry : configuration', () => {
     expect(region?.kind).toBe('select');
     expect(region?.options?.map((option) => option.value)).toEqual(['sentry.io', 'de.sentry.io']);
     expect(entry?.warning).toMatch(/2\.3/);
+    // Aucune portée d'organisation n'est demandée : la vérification ne lit que les problèmes.
+    expect(JSON.stringify(entry)).not.toMatch(/org:read/);
   });
 });
 
 describe('sentry : verify', () => {
   const issuesCheck: FakeRoute = { url: LIST, json: [] };
 
-  it('lit l’organisation puis vérifie la lecture des problèmes, avec le jeton en Bearer', async () => {
-    const { http, calls } = testHttp(sentryConnector, config, [
-      { url: `${API}/`, json: organization },
-      issuesCheck,
-    ]);
+  // La doc dit que « Retrieve an Organization » demande un jeton d'utilisateur, pas un jeton
+  // d'intégration interne : la vérification ne s'appuie que sur la lecture des problèmes.
+  it('vérifie la lecture des problèmes seule, avec le jeton en Bearer, sans lire l’organisation', async () => {
+    const { http, calls } = testHttp(sentryConnector, config, [issuesCheck]);
 
     const result = await sentryConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'organisation Acme' });
-    expect(calls.map((call) => pathOf(call.url))).toEqual([
-      '/api/0/organizations/acme/',
-      '/api/0/organizations/acme/issues/',
-    ]);
+    expect(result).toEqual({ account: 'organisation acme' });
+    expect(calls.map((call) => pathOf(call.url))).toEqual(['/api/0/organizations/acme/issues/']);
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
-    expect(paramsOf(calls[1]?.url).limit).toBe('1');
+    expect(paramsOf(calls[0]?.url).limit).toBe('1');
   });
 
   it('interroge la région choisie', async () => {
     const { http, calls } = testHttp(sentryConnector, euConfig, [
-      { url: 'https://de.sentry.io/api/0/organizations/acme/', json: organization },
       { url: 'https://de.sentry.io/api/0/organizations/acme/issues/', json: [] },
     ]);
 
     await sentryConnector.verify(euConfig, http);
 
-    expect(calls.map((call) => new URL(call.url).host)).toEqual(['de.sentry.io', 'de.sentry.io']);
+    expect(calls.map((call) => new URL(call.url).host)).toEqual(['de.sentry.io']);
   });
 
   it('lève une erreur de clé sur un 401', async () => {
     const { http } = testHttp(sentryConnector, config, [
-      { url: `${API}/`, status: 401, json: { detail: 'Invalid token' } },
+      { url: LIST, status: 401, json: { detail: 'Invalid token' } },
     ]);
 
     await expect(sentryConnector.verify(config, http)).rejects.toBeInstanceOf(ConnectorAuthError);
@@ -185,7 +181,6 @@ describe('sentry : verify', () => {
 
   it('lève une erreur de clé si le jeton ne peut pas lire les problèmes (403)', async () => {
     const { http } = testHttp(sentryConnector, config, [
-      { url: `${API}/`, json: organization },
       { url: LIST, status: 403, json: { detail: 'You do not have permission' } },
     ]);
 

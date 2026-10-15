@@ -9,8 +9,6 @@ const IsoDate = z.iso.datetime({ offset: true });
 
 export type Access = { token: string; organization: string; region: string };
 
-const OrganizationSchema = z.object({ name: z.string(), slug: z.string() });
-
 export const IssueSchema = z.object({
   id: z.string(),
   shortId: z.string(),
@@ -52,8 +50,6 @@ export function sentryClient({ token, organization, region }: Access, http: Conn
   const base = `https://${region}/api/0/organizations/${encodeURIComponent(organization)}`;
 
   return {
-    organization: () => http.json({ url: `${base}/`, headers }, OrganizationSchema),
-
     // Une lecture de la liste, pour s'assurer que le jeton a la portée event:read.
     async checkIssues(): Promise<void> {
       await http.json(

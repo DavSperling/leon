@@ -6,12 +6,12 @@ import { createAnthropicLlm, MODEL_BY_STEP } from '@/server/llm/anthropic-llm';
 import type { LlmUsage } from '@/server/llm/llm';
 import { createIngestSender } from '../cli/import-claude-code';
 import { openAdminDb } from './admin-db';
-import { envoyer } from './charger';
+import { type Bilan, envoyer } from './charger';
 import { etatRuns, lireFaits, lireUsage } from './collect';
 import { ESSAI_DIR, loadJeu, toursDe } from './dataset';
-import { coutParTourPrecedent, enregistrerPassage } from './history';
+import { coutParTourPrecedent, coutPipeline, enregistrerPassage, HISTORIQUE_DIR } from './history';
 import { juger } from './judge';
-import { remettreAZero, runsEnCours, tenantEssai } from './organisation';
+import { remettreAZero, runsEnCours, runsEnCoursParTenant, tenantEssai } from './organisation';
 import { type DernierPassage, DernierPassageSchema } from './schema';
 import { calculerNotes, faitsDeConversation } from './score';
 import { gitHead, srcModifie, verifierServeur } from './serveur';
@@ -40,6 +40,11 @@ const slugLabel = (label: string) =>
 // Message fixe : jamais le texte de l'erreur du juge, qui pourrait contenir du contenu de la conversation.
 const jugeErreurFixe = (cle: string) =>
   `Jugement de ${cle} impossible (erreur du juge) : voir les logs du run.`;
+
+// Identifiant stable d'un passage, utilisé comme nom de fichier dans l'historique : lisible, trié
+// chronologiquement, et sans rien de plus que le label (en minuscules ASCII) pour le distinguer.
+export const passageId = (debut: Date, label: string): string =>
+  `${debut.toISOString().slice(0, 16).replace('T', '-').replace(':', '')}-${slugLabel(label)}`;
 
 async function runVerifier(): Promise<number> {
   const jeu = await loadJeu();
@@ -103,25 +108,54 @@ async function runCharger(args: string[]): Promise<number> {
     const { comptes } = await remettreAZero(admin.db, jeu.entreprise);
     const label = values.label ?? 'sans libellé';
     const debut = new Date();
+    // « 2026-10-16-1000-reference » (heure UTC). Écrit tout de suite, incomplet : si l'envoi est
+    // interrompu (et même en cas de plantage non rattrapé), « noter » doit pouvoir le constater
+    // plutôt que de noter un passage partiel comme s'il était complet.
     const passage: DernierPassage = {
-      // « 2026-10-16-1000-reference » (heure UTC)
-      id: `${debut.toISOString().slice(0, 16).replace('T', '-').replace(':', '')}-${slugLabel(label)}`,
+      id: passageId(debut, label),
       label,
       commit: head,
       jeu: values.mini ? 'mini' : 'complet',
       conversations: conversations.map((c) => c.cle),
       tours,
       debut: debut.toISOString(),
+      complet: false,
+      envois: 0,
+      toursEnvoyes: 0,
+      runs: 0,
     };
-    await writeFile(DERNIER, `${JSON.stringify(passage, null, 2)}\n`);
+    const ecrirePassage = (bilan: Partial<Bilan>, complet: boolean) =>
+      writeFile(
+        DERNIER,
+        `${JSON.stringify(
+          {
+            ...passage,
+            complet,
+            envois: bilan.envois ?? 0,
+            toursEnvoyes: bilan.tours ?? 0,
+            runs: bilan.runs ?? 0,
+          },
+          null,
+          2,
+        )}\n`,
+      );
+    await ecrirePassage({}, false);
 
     const jetons = new Map(comptes.map((c) => [c.cle, c.token]));
-    const bilan = await envoyer(
-      conversations,
-      jetons,
-      (token, payload) => createIngestSender(fetch, { url: leonUrl(), token })(payload),
-      console.log,
-    );
+    let bilan: Bilan;
+    try {
+      bilan = await envoyer(
+        conversations,
+        jetons,
+        (token, payload) => createIngestSender(fetch, { url: leonUrl(), token })(payload),
+        console.log,
+      );
+    } catch (error) {
+      const partiel = (error as { bilanPartiel?: Bilan }).bilanPartiel ?? {};
+      await ecrirePassage(partiel, false);
+      throw error;
+    }
+    await ecrirePassage(bilan, true);
     console.log(
       `Envoyé : ${bilan.tours} tours en ${bilan.envois} envois, ${bilan.runs} runs. Mot de passe des personnages : essai/README.md.`,
     );
@@ -131,22 +165,45 @@ async function runCharger(args: string[]): Promise<number> {
   }
 }
 
+// S'arrête quand les runs restants (en file ou en cours) sont tous plus vieux que
+// RUN_BLOQUE_APRES_MINUTES : au-delà, ce ne sont plus des runs qu'on attend, mais des runs bloqués
+// (voir organisation.ts) que redémarrer le serveur seul peut relancer.
 async function attendreRuns(db: ReturnType<typeof openAdminDb>['db'], tenantId: string) {
   for (;;) {
     const etat = await etatRuns(db, tenantId);
+    const { actifs, bloques } = await runsEnCoursParTenant(db, tenantId);
     process.stdout.write(
       `\rRuns : ${etat.done} terminés, ${etat.failed} échoués, ${etat.enCours} en cours sur ${etat.total}   `,
     );
-    if (etat.enCours === 0) {
+    if (actifs === 0) {
       process.stdout.write('\n');
-      return etat;
+      return { ...etat, bloques };
     }
     await new Promise((resolve) => setTimeout(resolve, 10_000));
   }
 }
 
+async function lireDernierPassage(): Promise<DernierPassage> {
+  let raw: string;
+  try {
+    raw = await readFile(DERNIER, 'utf8');
+  } catch {
+    throw new Error('Aucun passage chargé : lance « pnpm essai charger ».');
+  }
+  return DernierPassageSchema.parse(JSON.parse(raw));
+}
+
+async function dejaNote(id: string): Promise<boolean> {
+  return readFile(join(HISTORIQUE_DIR, 'passages', `${id}.json`), 'utf8').then(
+    () => true,
+    () => false,
+  );
+}
+
 async function runNoter(): Promise<number> {
-  const passage = DernierPassageSchema.parse(JSON.parse(await readFile(DERNIER, 'utf8')));
+  const passage = await lireDernierPassage();
+  if (!passage.complet) throw new Error('Passage incomplet : relance « pnpm essai charger ».');
+  if (await dejaNote(passage.id)) throw new Error(`Passage déjà noté : ${passage.id}.`);
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY manquante (le juge en a besoin).');
   const jeu = await loadJeu();
@@ -157,6 +214,12 @@ async function runNoter(): Promise<number> {
     if (!tenantId)
       throw new Error('Organisation d essai introuvable : lance « pnpm essai charger ».');
     const runs = await attendreRuns(admin.db, tenantId);
+    if (runs.bloques > 0) {
+      console.error(
+        `${runs.bloques} run(s) bloqué(s) : redémarre le serveur et relance « pnpm essai charger ».`,
+      );
+      return 1;
+    }
     const produits = await lireFaits(admin.db, tenantId);
     const usage = await lireUsage(admin.db, tenantId);
 
@@ -178,13 +241,25 @@ async function runNoter(): Promise<number> {
       }
     }
 
+    // Une conversation sans jugement n'a aucune paire fiable : on la retire des attendus (sinon ses
+    // F compteraient comme manqués) et ses faits produits des notes (sinon ils compteraient comme
+    // « en trop »), plutôt que de fausser rappel et précision avec des données qu'on n'a pas pu juger.
+    const conversationsJugees = conversations.filter((c) => !jugeErreurs.includes(c.cle));
+    const idsExclus = new Set(
+      conversations
+        .filter((c) => jugeErreurs.includes(c.cle))
+        .flatMap((c) => faitsDeConversation(c, produits).map((p) => p.id)),
+    );
+    const produitsPourNotes = produits.filter((p) => !idsExclus.has(p.id));
+
     const notes = calculerNotes({
-      conversations,
-      produits,
+      conversations: conversationsJugees,
+      produits: produitsPourNotes,
       paires,
       secrets: jeu.entreprise.secrets,
     });
     const fin = runs.fin ? new Date(runs.fin) : null;
+    const cout = coutPipeline(usage);
     const json = await enregistrerPassage({
       id: passage.id,
       date: passage.debut,
@@ -192,7 +267,7 @@ async function runNoter(): Promise<number> {
       commit: passage.commit,
       jeu: passage.jeu,
       modeles: { ...MODEL_BY_STEP },
-      tours: passage.tours,
+      tours: passage.toursEnvoyes,
       dureeMinutes: fin ? Math.round((fin.getTime() - Date.parse(passage.debut)) / 60_000) : null,
       runs,
       usage,
@@ -206,17 +281,13 @@ async function runNoter(): Promise<number> {
     console.log(
       `Doublons : ${notes.doublonsFaits} (dont ${notes.reditsRecrees} redit(s) recréé(s)) ; fuites sensibles : ${notes.fuitesSensibles} ; hors jeu : ${notes.horsJeu}.`,
     );
-    console.log(
-      `Coût du pipeline : ${Object.values(usage)
-        .reduce((s, u) => s + u.costUsd, 0)
-        .toFixed(3)} $ ; juge : ${coutJuge.toFixed(3)} $.`,
-    );
+    console.log(`Coût du pipeline : ${cout.toFixed(3)} $ ; juge : ${coutJuge.toFixed(3)} $.`);
     if (jugeErreurs.length > 0)
       console.error(
         `${jugeErreurs.length} conversation(s) sans jugement (passage incomplet) : ${jugeErreurs.join(', ')}.`,
       );
     console.log(`Historique mis à jour ; détail dans ${json}.`);
-    return 0;
+    return jugeErreurs.length > 0 ? 1 : 0;
   } finally {
     await admin.close();
   }
@@ -229,7 +300,10 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'charger') return await runCharger(args);
     if (command === 'noter') return await runNoter();
   } catch (error) {
-    console.error(error instanceof Error ? error.message : 'Erreur inconnue.');
+    // Seule la première ligne : la pile ou un message multi-lignes ne regarde pas l'utilisateur du CLI.
+    console.error(
+      error instanceof Error ? (error.message.split('\n')[0] ?? '') : 'Erreur inconnue.',
+    );
     return 1;
   }
   const asked = command === undefined || command === 'help' || command === '--help';

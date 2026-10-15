@@ -104,3 +104,22 @@ export async function runsEnCours(
     .where(and(eq(organizations.slug, slug), inArray(ingestRuns.status, ['queued', 'running'])));
   return row ?? { actifs: 0, bloques: 0 };
 }
+
+// Même distinction que runsEnCours, mais par id de tenant plutôt que par slug : utilisé par
+// « pnpm essai noter », qui attend la fin des runs de l'organisation déjà créée par charger.
+export async function runsEnCoursParTenant(
+  db: AdminDb,
+  tenantId: string,
+): Promise<{ actifs: number; bloques: number }> {
+  const seuil = new Date(Date.now() - RUN_BLOQUE_APRES_MINUTES * 60_000);
+  const [row] = await db
+    .select({
+      actifs: sql<number>`count(*) filter (where ${ingestRuns.updatedAt} > ${seuil})::int`,
+      bloques: sql<number>`count(*) filter (where ${ingestRuns.updatedAt} <= ${seuil})::int`,
+    })
+    .from(ingestRuns)
+    .where(
+      and(eq(ingestRuns.tenantId, tenantId), inArray(ingestRuns.status, ['queued', 'running'])),
+    );
+  return row ?? { actifs: 0, bloques: 0 };
+}

@@ -9,7 +9,7 @@ import { members, organizations, users } from '@/server/db/schema/auth';
 import { facts, ingestRuns, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedCard, seedSource } from '@/test/fixtures';
-import { remettreAZero, runsEnCours } from './organisation';
+import { remettreAZero, runsEnCours, runsEnCoursParTenant } from './organisation';
 import { type Entreprise, ESSAI_DOMAINE } from './schema';
 
 const ENTREPRISE: Entreprise = {
@@ -170,5 +170,33 @@ describe('runsEnCours', () => {
       .where(eq(ingestRuns.id, vieux.id));
 
     expect(await runsEnCours(adminDb, ENTREPRISE.slug)).toEqual({ actifs: 1, bloques: 1 });
+  });
+});
+
+describe('runsEnCoursParTenant', () => {
+  it('distingue les runs actifs des runs bloqués pour un tenant donné', async () => {
+    const { tenantId, comptes } = await remettreAZero(adminDb, ENTREPRISE);
+    const [claire] = comptes;
+    if (!claire) throw new Error('claire manquante');
+    const { sourceId, turnId } = await seedSource({
+      tenantId,
+      userId: claire.userId,
+      principals: [claire.userId, tenantId],
+    });
+    const [recent] = await adminDb
+      .insert(ingestRuns)
+      .values({ tenantId, sourceId, turnIds: [turnId], acl: [claire.userId] })
+      .returning({ id: ingestRuns.id });
+    const [vieux] = await adminDb
+      .insert(ingestRuns)
+      .values({ tenantId, sourceId, turnIds: [turnId], acl: [claire.userId] })
+      .returning({ id: ingestRuns.id });
+    if (!recent || !vieux) throw new Error('runs de test non créés');
+    await adminDb
+      .update(ingestRuns)
+      .set({ updatedAt: new Date(Date.now() - 60 * 60_000) })
+      .where(eq(ingestRuns.id, vieux.id));
+
+    expect(await runsEnCoursParTenant(adminDb, tenantId)).toEqual({ actifs: 1, bloques: 1 });
   });
 });

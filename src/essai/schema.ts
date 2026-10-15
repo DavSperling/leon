@@ -77,5 +77,9 @@ export const DernierPassageSchema = z.object({
   conversations: z.array(z.string()),
   tours: z.number().int(),
   debut: z.iso.datetime(),
+  complet: z.boolean(), // false si l'envoi a été interrompu : « noter » refuse de noter un passage incomplet
+  envois: z.number().int(),
+  toursEnvoyes: z.number().int(),
+  runs: z.number().int(),
 });
 export type DernierPassage = z.infer<typeof DernierPassageSchema>;

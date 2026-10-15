@@ -136,5 +136,11 @@ describe('envoyer', () => {
       'Envoi interrompu à hugo/2026-09-22-a, lot 2/2 (1 envois faits).',
     );
     expect((erreur as Error).cause).toBe(panne);
+    expect((erreur as Error & { bilanPartiel?: unknown }).bilanPartiel).toEqual({
+      envois: 1,
+      tours: 200,
+      inseres: 1,
+      runs: 1,
+    });
   });
 });

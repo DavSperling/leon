@@ -34,11 +34,14 @@ export async function envoyer(
       try {
         result = await send(token, lot);
       } catch (error) {
-        // Les envois déjà faits sont payants et déjà en base : le message dit où reprendre.
-        throw new Error(
+        // Les envois déjà faits sont payants et déjà en base : le message dit où reprendre, et le
+        // bilan partiel accompagne l'erreur pour que l'appelant puisse l'enregistrer.
+        const erreur = new Error(
           `Envoi interrompu à ${c.cle}, lot ${i + 1}/${lotsDeC.length} (${bilan.envois} envois faits).`,
           { cause: error },
-        );
+        ) as Error & { bilanPartiel?: Bilan };
+        erreur.bilanPartiel = { ...bilan };
+        throw erreur;
       }
       bilan.envois += 1;
       bilan.tours += lot.turns.length;

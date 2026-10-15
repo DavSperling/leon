@@ -1,18 +1,19 @@
 'use client';
 
-import { type FormEvent, useId, useState, useTransition } from 'react';
+import { type FormEvent, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { addCommentAction } from '@/app/(taches)/taches/[ref]/actions';
+import { MarkdownEditor } from '@/components/markdown-editor';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
-import { Textarea } from '@/components/ui/textarea';
 import { COMMENT_MAX_CHARS } from '@/lib/tasks/limits';
 import { safely } from './safely';
 
-// Le commentaire (Markdown) : ⌘Entrée ou le bouton l'envoie ; une erreur le garde pour réessayer.
+// Le commentaire (Markdown, dans l'éditeur riche) : ⌘Entrée ou le bouton l'envoie ; une erreur le
+// garde pour réessayer. Après l'envoi, l'éditeur repart à neuf (sa clé change).
 export function CommentForm({ taskId }: { taskId: string }) {
-  const id = useId();
   const [body, setBody] = useState('');
+  const [sent, setSent] = useState(0);
   const [pending, startTransition] = useTransition();
   const empty = body.trim() === '';
 
@@ -20,8 +21,9 @@ export function CommentForm({ taskId }: { taskId: string }) {
     if (pending || empty) return;
     startTransition(async () => {
       const result = await safely(addCommentAction(taskId, body));
-      if (result.ok) setBody('');
-      else toast.error(result.error);
+      if (!result.ok) return void toast.error(result.error);
+      setBody('');
+      setSent((count) => count + 1);
     });
   };
   const onSubmit = (event: FormEvent) => {
@@ -31,27 +33,15 @@ export function CommentForm({ taskId }: { taskId: string }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-2">
-      <label htmlFor={id} className="sr-only">
-        Commentaire
-      </label>
-      <Textarea
-        id={id}
-        value={body}
-        maxLength={COMMENT_MAX_CHARS}
-        rows={2}
+      <MarkdownEditor
+        key={sent}
+        value=""
+        label="Commentaire"
         placeholder="Écrire un commentaire…"
-        onChange={(event) => setBody(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-            event.preventDefault();
-            submit();
-          } else if (event.key === 'Escape') {
-            // preventDefault : la page ne doit pas aussi revenir à la liste.
-            event.preventDefault();
-            event.currentTarget.blur();
-          }
-        }}
-        className="max-h-60 min-h-16 resize-none text-sm"
+        maxLength={COMMENT_MAX_CHARS}
+        onChange={setBody}
+        onSubmit={submit}
+        className="max-h-60 min-h-16 overflow-y-auto border-input bg-transparent text-sm shadow-xs dark:bg-input/30"
       />
       <div className="flex justify-end">
         <Button

@@ -1,3 +1,4 @@
+import { MarkdownEditor } from '@/components/markdown-editor';
 import { formatDateTime, formatRelative } from '@/lib/format';
 import { actorLabel } from '@/server/memory/labels';
 import type { ActivityItem } from '@/server/tasks/activity';
@@ -19,18 +20,19 @@ function When({ date, now }: { date: Date; now: Date }) {
 
 type ItemProps = { item: ActivityItem; names: ReadonlyMap<string, string>; now: Date };
 
-// Un commentaire : une carte, avec son texte (Markdown, affiché tel quel pour l'instant).
+// Un commentaire : une carte, avec son texte (Markdown, rendu par l'éditeur en lecture seule).
 function CommentItem({ item, now }: Omit<ItemProps, 'names'>) {
+  const author = actorLabel(item);
   return (
     <li className="rounded-lg border bg-card text-sm">
       <div className="flex items-center gap-2.5 px-3 pt-2.5">
         <ActorAvatar item={item} />
-        <span className="min-w-0 flex-1 truncate font-medium">{actorLabel(item)}</span>
+        <span className="min-w-0 flex-1 truncate font-medium">{author}</span>
         <When date={item.createdAt} now={now} />
       </div>
-      <p className="px-3 pt-1.5 pb-2.5 pl-[2.625rem] leading-6 break-words whitespace-pre-wrap">
-        {item.body}
-      </p>
+      <div className="px-3 pt-1.5 pb-2.5 pl-[2.625rem]">
+        <MarkdownEditor readOnly value={item.body ?? ''} label={`Commentaire de ${author}`} />
+      </div>
     </li>
   );
 }

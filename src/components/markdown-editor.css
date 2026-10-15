@@ -1,0 +1,96 @@
+@reference "../app/globals.css";
+
+/* Le rendu du Markdown de l'éditeur riche, en édition comme en lecture. Il ne fixe ni la taille
+   du texte ni les marges extérieures : le composant qui l'emploie les donne. */
+.markdown-content {
+  @apply leading-6 break-words;
+}
+
+.markdown-content > * + * {
+  @apply mt-2;
+}
+
+.markdown-content h1 {
+  @apply mt-5 text-xl leading-7 font-semibold tracking-tight;
+}
+
+.markdown-content h2 {
+  @apply mt-4 text-lg leading-7 font-semibold tracking-tight;
+}
+
+.markdown-content h3 {
+  @apply mt-4 text-base leading-6 font-semibold;
+}
+
+.markdown-content > :first-child {
+  @apply mt-0;
+}
+
+.markdown-content ul {
+  @apply list-disc pl-6;
+}
+
+.markdown-content ol {
+  @apply list-decimal pl-6;
+}
+
+.markdown-content li > * + * {
+  @apply mt-1;
+}
+
+.markdown-content li + li {
+  @apply mt-1;
+}
+
+.markdown-content ul[data-type="taskList"] {
+  @apply list-none pl-0;
+}
+
+.markdown-content li[data-checked] {
+  @apply flex items-start gap-2;
+}
+
+.markdown-content li[data-checked] > label {
+  @apply flex h-6 shrink-0 items-center select-none;
+}
+
+.markdown-content li[data-checked] > div {
+  @apply mt-0 min-w-0 flex-1;
+}
+
+.markdown-content li[data-checked] input {
+  @apply size-4 cursor-pointer accent-primary;
+}
+
+.markdown-content li[data-checked="true"] > div {
+  @apply text-muted-foreground line-through;
+}
+
+.markdown-content blockquote {
+  @apply border-l-2 pl-3 text-foreground-2;
+}
+
+.markdown-content hr {
+  @apply my-4 border-t;
+}
+
+.markdown-content a {
+  @apply text-primary underline underline-offset-2;
+}
+
+.markdown-content code {
+  @apply rounded-sm bg-accent px-1 py-0.5 font-mono text-[0.875em];
+}
+
+.markdown-content pre {
+  @apply rounded-md border bg-quote px-3 py-2 font-mono text-[13px] leading-5;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+
+.markdown-content p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-muted-foreground;
+  content: attr(data-placeholder);
+}

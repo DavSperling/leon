@@ -11,6 +11,7 @@ import {
   CommandShortcut,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { fold } from '@/lib/fold';
 
 export type PickerOption = {
   value: string;
@@ -40,9 +41,6 @@ type PickerProps = PickerSlot & {
   // Hors de la commande : un champ de saisie y garde ses flèches et sa touche Entrée.
   footer?: (close: () => void) => ReactNode;
 };
-
-// Sans accents ni majuscules : « ete » trouve « Été ».
-const fold = (text: string): string => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
 // Un chiffre se lit sur la touche physique : sur AZERTY, la rangée du haut donne « & é " » sans Maj.
 export function pressedKey(event: { key: string; code: string }): string {

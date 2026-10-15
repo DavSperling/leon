@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, type KeyboardEvent, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { createTaskAction } from '@/app/(taches)/taches/actions';
+import { MarkdownEditor } from '@/components/markdown-editor';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
-import { Textarea } from '@/components/ui/textarea';
 import { DESCRIPTION_MAX_CHARS, TITLE_MAX_CHARS } from '@/lib/tasks/limits';
 import { initialDraft, type TaskDraft, type TaskPrefill } from './create-draft';
 import { DraftPills } from './draft-pills';
@@ -82,6 +82,7 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
   const href = useTaskHref();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [created, setCreated] = useState(0); // change la clé de l'éditeur : il repart à neuf
   const [draft, setDraft] = useState(() => initialDraft(prefill, filterProjectId, context));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -105,6 +106,7 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
       if (!keepOpen) return onDone();
       setTitle('');
       setDescription('');
+      setCreated((count) => count + 1);
       titleField.current?.focus();
     });
   };
@@ -114,9 +116,15 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
     submit(false);
   };
   // Les menus des pastilles sont hors du formulaire dans le DOM : leurs touches ne comptent pas.
+  // L'éditeur de la description envoie lui-même sur ⌘Entrée et prend alors la touche.
   const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     const inForm = event.currentTarget.contains(event.target as Node);
-    if (inForm && event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+    if (
+      inForm &&
+      !event.defaultPrevented &&
+      event.key === 'Enter' &&
+      (event.metaKey || event.ctrlKey)
+    ) {
       event.preventDefault();
       submit(false);
     }
@@ -135,14 +143,15 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
           onChange={(event) => setTitle(event.target.value)}
           className="h-10 text-base font-medium"
         />
-        <Textarea
-          value={description}
-          rows={4}
+        <MarkdownEditor
+          key={created}
+          value=""
+          label="Description"
+          placeholder="Description"
           maxLength={DESCRIPTION_MAX_CHARS}
-          placeholder="Description (Markdown)"
-          aria-label="Description"
-          onChange={(event) => setDescription(event.target.value)}
-          className="max-h-60 min-h-24 resize-none text-sm"
+          onChange={setDescription}
+          onSubmit={() => submit(false)}
+          className="max-h-60 min-h-24 overflow-y-auto border-input bg-transparent text-sm shadow-xs dark:bg-input/30"
         />
       </div>
       <DraftPills draft={draft} setDraft={setDraft} context={context} now={now} />

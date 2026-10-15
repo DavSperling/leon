@@ -36,9 +36,9 @@ export const MessageSchema = z.object({
 export const MessagesSchema = z.object({ messages: z.array(MessageSchema) });
 export type Message = z.infer<typeof MessageSchema> & { body: string | null };
 
-export const BodiesSchema = z.object({
-  messages: z.array(z.object({ id: z.string(), body: z.string().nullish() })),
-});
+// Les corps : avec un seul identifiant la doc rend un objet, avec plusieurs un tableau.
+const BodySchema = z.object({ id: z.string(), body: z.string().nullish() });
+export const BodiesSchema = z.object({ messages: z.union([z.array(BodySchema), BodySchema]) });
 
 export const CommentSchema = z.object({
   id: z.string(),

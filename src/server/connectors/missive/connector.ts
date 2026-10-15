@@ -24,8 +24,10 @@ import type { Conversation } from './schemas';
 //     boîtes partagées et les équipes ; `team_all` par équipe n'est pas lu (le plan disait « boîtes
 //     partagées et équipe »).
 //   - La liste des messages n'a pas leur corps : `GET /messages/:id,:id` le rend, par groupes de 10 (la
-//     doc ne donne pas de maximum). Trois requêtes au moins par conversation (messages, corps,
-//     commentaires), d'où `minIntervalMs` à 1 s : 900 requêtes par 15 minutes.
+//     doc ne donne pas de maximum). Avec un seul identifiant, la réponse est un objet
+//     (`{ messages: { … } }`), pas un tableau : une conversation d'un message, ou un dernier groupe
+//     d'un seul (11, 21… messages), prend cette forme. Trois requêtes au moins par conversation
+//     (messages, corps, commentaires), d'où `minIntervalMs` à 1 s : 900 requêtes par 15 minutes.
 //   - Chaque message et chaque commentaire est un tour `participant` ; pas de tour `document`.
 //     Les publications des intégrations (`/posts`) et les brouillons ne sont pas lus.
 //   - Un invité d'une conversation n'en reçoit que l'identifiant : un 403 ou un 404 sur ses messages ou

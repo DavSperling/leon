@@ -61,7 +61,9 @@ export function missiveClient({ token }: { token: string }, http: ConnectorHttp)
   async function bodies(ids: string[]): Promise<Map<string, string | null>> {
     const url = `${API}/messages/${ids.map(encode).join(',')}`;
     const { messages } = await http.json({ url, headers }, BodiesSchema);
-    return new Map(messages.map((message) => [message.id, message.body ?? null]));
+    // Un seul identifiant (une conversation d'un message, ou un dernier groupe d'un) rend un objet.
+    const list = Array.isArray(messages) ? messages : [messages];
+    return new Map(list.map((message) => [message.id, message.body ?? null]));
   }
 
   return {

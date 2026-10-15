@@ -359,6 +359,36 @@ describe('missive : une conversation devient un élément', () => {
     expect(turns[0]?.text).toBe('texte m-1');
   });
 
+  it('lit le corps du dernier groupe même quand il ne compte qu’un message (réponse en objet)', async () => {
+    // La doc : un seul identifiant rend { messages: { … } } (un objet) ; plusieurs, un tableau.
+    const stamp = (n: number) => SINCE_SECONDS + 86_400 + n * 60;
+    const message = (n: number) => ({
+      id: `m-${n}`,
+      type: 'email',
+      delivered_at: stamp(n),
+      preview: `aperçu ${n}`,
+      from_field: { name: 'Marc', address: 'marc@client.test' },
+    });
+    const newest = Array.from({ length: 11 }, (_, index) => message(11 - index)); // m-11 … m-1
+    const firstTen = newest.slice(0, 10).map((m) => m.id);
+    const body = (id: string) => ({ id, body: `<p>texte ${id}</p>` });
+
+    const { pages } = await runSync([
+      listRoute([row('c-onze', stamp(20))]),
+      { url: messagesUrl('c-onze'), json: { messages: newest.slice(0, 10) } },
+      { url: messagesUrl('c-onze'), json: { messages: [newest[9], newest[10]] } },
+      { url: bodiesUrl(firstTen), json: { messages: firstTen.map(body) } },
+      { url: bodiesUrl(['m-1']), json: { messages: body('m-1') } },
+      noComments,
+    ]);
+
+    const turns = itemOf(pages, 'c-onze').turns;
+    expect(turns).toHaveLength(11);
+    // Le message du groupe d'un seul porte son corps, pas seulement son aperçu.
+    expect(turns[0]?.text).toBe('texte m-1');
+    expect(turns[1]?.text).toBe('texte m-2');
+  });
+
   it('lit plus de 10 commentaires par `until`', async () => {
     const stamp = (n: number) => SINCE_SECONDS + 86_400 + n * 60;
     const comment = (n: number) => ({ id: `k-${n}`, body: `note ${n}`, created_at: stamp(n) });
@@ -383,7 +413,7 @@ describe('missive : une conversation devient un élément', () => {
     const { pages } = await runSync([
       listRoute([row('c-vide', SINCE_SECONDS + 200)]),
       { url: messagesUrl('c-vide'), json: { messages: [empty] } },
-      { url: bodiesUrl(['m-vide']), json: { messages: [{ id: 'm-vide', body: '<div> </div>' }] } },
+      { url: bodiesUrl(['m-vide']), json: { messages: { id: 'm-vide', body: '<div> </div>' } } },
       noComments,
     ]);
 

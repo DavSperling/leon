@@ -1,0 +1,61 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 202,
+      "subject": "Préparer la démonstration",
+      "type": "task",
+      "owner_id": 1,
+      "creator_user_id": 1,
+      "is_deleted": false,
+      "add_time": "2026-10-04T08:00:00Z",
+      "update_time": "2026-10-07T09:00:00Z",
+      "deal_id": 7,
+      "person_id": null,
+      "org_id": 3,
+      "due_date": "2026-10-10",
+      "due_time": null,
+      "done": false,
+      "public_description": "",
+      "note": ""
+    },
+    {
+      "id": 203,
+      "subject": "Démonstration chez Acme",
+      "type": "meeting",
+      "owner_id": 1,
+      "creator_user_id": null,
+      "is_deleted": false,
+      "add_time": "2026-10-08T09:00:00Z",
+      "update_time": "2026-10-12T15:00:00Z",
+      "deal_id": 7,
+      "person_id": 5,
+      "org_id": 3,
+      "due_date": "2026-10-12",
+      "due_time": "14:00:00",
+      "done": true,
+      "public_description": "<p>Ordre du jour : démonstration, questions, prochaines étapes.</p>",
+      "note": "<p>Paul a présenté l’import des contacts.</p><p>Marie demande un essai de 15 jours.</p>"
+    },
+    {
+      "id": 204,
+      "subject": "Activité supprimée",
+      "type": "call",
+      "owner_id": 1,
+      "creator_user_id": 1,
+      "is_deleted": true,
+      "add_time": "2026-10-09T09:00:00Z",
+      "update_time": "2026-10-13T10:00:00Z",
+      "deal_id": null,
+      "person_id": null,
+      "org_id": null,
+      "due_date": "2026-10-13",
+      "done": false,
+      "public_description": "",
+      "note": "<p>Ne doit pas sortir.</p>"
+    }
+  ],
+  "additional_data": {
+    "next_cursor": null
+  }
+}

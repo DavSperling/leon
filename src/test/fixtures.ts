@@ -1,10 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import type { CaptureMode, SourceKind } from '@/capture/turn';
-import type { CardStatus, FactStatus } from '@/lib/enums';
+import {
+  type CardStatus,
+  type FactStatus,
+  TASK_STATUS_CATEGORIES,
+  type TaskStatusCategory,
+} from '@/lib/enums';
+import { STATUS_CATEGORY_LABELS } from '@/lib/tasks/labels';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { cards, cardTypes, facts, sources, turns } from '@/server/db/schema/memory';
+import { taskLabels, taskProjects, taskStatuses, tasks } from '@/server/db/schema/tasks';
 import { adminDb } from './db';
 
 // Fixtures : préfixe « seed » = insertion par le rôle propriétaire, hors RLS.
@@ -161,4 +168,84 @@ export async function seedFact(
     .returning({ id: facts.id });
   if (!fact) throw new Error('fait de test non créé');
   return fact.id;
+}
+
+// Un projet et un statut par catégorie, rangés dans l'ordre des catégories. ACL d'équipe par défaut.
+export async function seedTaskProject(
+  tenantId: string,
+  input: { key?: string; name?: string; acl?: string[] } = {},
+): Promise<{ projectId: string; statusIds: Record<TaskStatusCategory, string> }> {
+  const [project] = await adminDb
+    .insert(taskProjects)
+    .values({
+      tenantId,
+      key: input.key ?? 'LEO',
+      name: input.name ?? 'Leon',
+      acl: input.acl ?? [tenantId],
+    })
+    .returning({ id: taskProjects.id });
+  if (!project) throw new Error('projet de test non créé');
+  const statuses = await adminDb
+    .insert(taskStatuses)
+    .values(
+      TASK_STATUS_CATEGORIES.map((category, index) => ({
+        tenantId,
+        projectId: project.id,
+        label: STATUS_CATEGORY_LABELS[category],
+        color: '#6b7280',
+        category,
+        position: index,
+      })),
+    )
+    .returning({ id: taskStatuses.id, category: taskStatuses.category });
+  const statusIds = Object.fromEntries(statuses.map((status) => [status.category, status.id]));
+  return { projectId: project.id, statusIds: statusIds as Record<TaskStatusCategory, string> };
+}
+
+type SeedTaskInput = Pick<typeof tasks.$inferInsert, 'projectId' | 'statusId'> &
+  Partial<Omit<typeof tasks.$inferInsert, 'tenantId' | 'number' | 'acl'>>;
+
+// Numéro suivant du projet, comme createTask ; le tenant et l'ACL sont ceux du projet.
+export async function seedTask(input: SeedTaskInput): Promise<string> {
+  const [project] = await adminDb
+    .update(taskProjects)
+    .set({ lastNumber: sql`${taskProjects.lastNumber} + 1` })
+    .where(eq(taskProjects.id, input.projectId))
+    .returning({
+      tenantId: taskProjects.tenantId,
+      number: taskProjects.lastNumber,
+      acl: taskProjects.acl,
+    });
+  if (!project) throw new Error('projet de la tâche de test introuvable');
+  const [task] = await adminDb
+    .insert(tasks)
+    .values({
+      title: 'Tâche de test',
+      position: project.number,
+      origin: 'ui',
+      ...input,
+      tenantId: project.tenantId,
+      number: project.number,
+      acl: project.acl,
+    })
+    .returning({ id: tasks.id });
+  if (!task) throw new Error('tâche de test non créée');
+  return task.id;
+}
+
+export async function seedTaskLabel(
+  tenantId: string,
+  input: { name: string; color?: string; acl?: string[] },
+): Promise<string> {
+  const [label] = await adminDb
+    .insert(taskLabels)
+    .values({
+      tenantId,
+      name: input.name,
+      color: input.color ?? '#dc2626',
+      acl: input.acl ?? [tenantId],
+    })
+    .returning({ id: taskLabels.id });
+  if (!label) throw new Error('étiquette de test non créée');
+  return label.id;
 }

@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { PROVIDER_LABELS } from '@/lib/providers';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { fetchAccount, fetchBoardIds, fetchItems } from './client';
 import { itemToConnectorItem, toIso } from './map';
+import { mondayOAuth } from './oauth';
 import type { ItemsPage, MondayItem } from './queries';
 
 // Doc lue le 15/10/2026 (https://developer.monday.com/api-reference/) :
@@ -34,8 +36,29 @@ import type { ItemsPage, MondayItem } from './queries';
 // commentaire ajouté sans autre changement ne serait vu qu'à la prochaine modification de l'élément) ;
 // si `boards` rend tous les tableaux visibles du jeton, et son plafond de `limit` (50 demandés).
 
-const configSchema = z.object({ token: z.string().trim().min(1) });
+// Deux façons de se brancher : le jeton personnel collé (une connexion sans `authMode` est à clé) ou
+// le bouton, dont le socle OAuth tient les jetons. Un `z.object` raffiné : le catalogue lit `.shape`.
+const configSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).optional(),
+    accessToken: z.string().trim().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof configSchema>;
+
+// Le jeton d'accès du bouton et le jeton personnel s'envoient tous deux tels quels, sans « Bearer »
+// (en-tête Authorization de api.monday.com/v2). Le schéma garantit que l'un des deux existe.
+function tokenOf(config: Config): string {
+  const token = config.authMode === 'oauth' ? config.accessToken : config.token;
+  if (token === undefined) throw new ConnectorAuthError(PROVIDER_LABELS.monday);
+  return token;
+}
 
 // Où en est le passage : `from` (les éléments modifiés après cette date), `started` (son début),
 // `boards` (les tableaux qui restent à lire, `null` hors passage) et `after` (le curseur de l'outil
@@ -120,24 +143,26 @@ export const mondayConnector: Connector<Config> = {
   configSchema,
   secretFields: ['token'],
   hosts: () => ['api.monday.com'],
+  oauth: mondayOAuth,
 
   async verify(config, http) {
-    return { account: await fetchAccount(http, config.token) };
+    return { account: await fetchAccount(http, tokenOf(config)) };
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {
+    const token = tokenOf(config);
     let state = readCursor(cursor, since);
     if (state.boards === null) {
       // Le début du passage se note avant la première lecture.
       const started = new Date().toISOString();
-      state = { ...state, started, boards: await fetchBoardIds(http, config.token) };
+      state = { ...state, started, boards: await fetchBoardIds(http, token) };
     }
     for (;;) {
       const boardId = state.boards?.[0];
       const step: Step =
         boardId === undefined
           ? { items: [], next: endRound(state) }
-          : await readBoard(http, config.token, boardId, state);
+          : await readBoard(http, token, boardId, state);
       yield { items: step.items, cursor: JSON.stringify(step.next) };
       if (step.next.boards === null) return;
       state = step.next;

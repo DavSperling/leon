@@ -11,6 +11,7 @@ import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { seedConnection } from '@/test/fixtures';
 import { TEST_ENV } from '@/test/test-env';
 import { claimConnection, createConnection, listConnections } from './connections';
+import { ConnectorHttpError } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { createOAuthRoutes } from './oauth-routes';
 import type { AnyConnector, OAuthSpec } from './types';
@@ -430,6 +431,40 @@ describe('GET /:appli/retour : ce qui ne crée rien', () => {
     });
 
     expect(location(response)).toBe('/connexions?erreur=refuse&outil=github');
+    expect(await lonely(paul)).toBe(0);
+  });
+
+  it('« champs » quand la vérification ne trouve pas ce que l’utilisateur a saisi', async () => {
+    const paul = await signUp();
+    const missing: AnyConnector = {
+      ...fakeOAuthConnector(),
+      verify: async () => {
+        throw new ConnectorHttpError(404, 'Dépôt inaccessible : x');
+      },
+    };
+
+    const { response } = await fullRound(paul, { connector: missing });
+
+    expect(location(response)).toBe('/connexions?erreur=champs&outil=github');
+    expect(await lonely(paul)).toBe(0);
+  });
+
+  it.each([
+    ['sans statut', null],
+    ['limite de requêtes', 429],
+    ['panne de l’éditeur', 502],
+  ])('« indisponible » quand la vérification échoue : %s', async (_name, status) => {
+    const paul = await signUp();
+    const down: AnyConnector = {
+      ...fakeOAuthConnector(),
+      verify: async () => {
+        throw new ConnectorHttpError(status, 'GitHub a répondu autre chose');
+      },
+    };
+
+    const { response } = await fullRound(paul, { connector: down });
+
+    expect(location(response)).toBe('/connexions?erreur=indisponible&outil=github');
     expect(await lonely(paul)).toBe(0);
   });
 

@@ -142,6 +142,7 @@ describe('asana : verify', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe('Espace introuvable : Autre');
+    expect((failure as ConnectorHttpError).status).toBe(404); // une erreur de saisie, pas une panne
   });
 
   it('refuse un compte sans espace', async () => {

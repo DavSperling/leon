@@ -87,7 +87,7 @@ async function checkBase(air: AirtableClient, baseId: string): Promise<void> {
     const denied = error instanceof ConnectorAuthError && error.status === 403;
     const missing = error instanceof ConnectorHttpError && error.status === 404;
     if (denied || missing) {
-      throw new ConnectorHttpError(null, `Base Airtable inaccessible : ${baseId}`);
+      throw new ConnectorHttpError(denied ? 403 : 404, `Base Airtable inaccessible : ${baseId}`);
     }
     throw error;
   }

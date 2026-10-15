@@ -14,7 +14,12 @@ import { oneLine } from '@/server/memory/labels';
 import { listCatalog } from './catalog';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
 import { connectorsKey } from './crypto';
-import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
+import {
+  ConnectorAuthError,
+  type ConnectorHttp,
+  ConnectorHttpError,
+  createConnectorHttp,
+} from './http';
 import {
   authorizeUrl,
   exchangeCode,
@@ -43,7 +48,14 @@ export type OAuthRoutesDeps = {
   now?: () => number; // tests
 };
 
-type ReturnCode = 'annule' | 'expire' | 'refuse' | 'indisponible' | 'admin' | 'admin_accorde';
+type ReturnCode =
+  | 'annule'
+  | 'expire'
+  | 'refuse'
+  | 'indisponible'
+  | 'champs'
+  | 'admin'
+  | 'admin_accorde';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACCOUNT_MAX = 120;
@@ -189,6 +201,32 @@ async function oauthConfig(
   return parsed.data;
 }
 
+// La vérification a répondu qu'elle ne trouve pas ce que l'utilisateur a saisi avant le clic (un
+// dépôt, un projet, une base, un espace) : le retour dit de revoir les champs, pas de réessayer.
+class PreFieldsRejected extends Error {
+  override name = 'PreFieldsRejected';
+}
+
+// Une erreur 4xx de l'outil (sauf 429, la limite de requêtes) est une erreur de saisie ; les clés
+// refusées (401, 403 de l'outil) sont déjà des ConnectorAuthError, avant d'arriver ici.
+function isFieldError(error: unknown): error is ConnectorHttpError {
+  if (!(error instanceof ConnectorHttpError) || error.status === null) return false;
+  return error.status >= 400 && error.status < 500 && error.status !== 429;
+}
+
+async function verifyConfig(
+  connector: AnyConnector,
+  config: Record<string, unknown>,
+  http: ConnectorHttp,
+): Promise<{ account: string }> {
+  try {
+    return await connector.verify(config, http);
+  } catch (error) {
+    if (isFieldError(error)) throw new PreFieldsRejected(error.message, { cause: error });
+    throw error;
+  }
+}
+
 // Du code reçu à la connexion créée (ou à la même connexion, reconnectée).
 async function connect(
   ctx: TenantContext,
@@ -207,7 +245,7 @@ async function connect(
     minIntervalMs: connector.minIntervalMs,
     fetchImpl: deps.fetchImpl,
   });
-  const { account } = await connector.verify(config, http);
+  const { account } = await verifyConfig(connector, config, http);
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
     const options = { reconnect: true };
@@ -227,6 +265,7 @@ async function connect(
 function failureCode(error: unknown, provider: ProviderId): ReturnCode {
   logError('connector.oauth_failed', error, { provider });
   if (error instanceof OAuthRefusedError) return error.adminConsent ? 'admin' : 'refuse';
+  if (error instanceof PreFieldsRejected) return 'champs';
   return error instanceof ConnectorAuthError ? 'refuse' : 'indisponible';
 }
 

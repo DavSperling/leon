@@ -209,6 +209,7 @@ describe('airtable : verify', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe(`Base Airtable inaccessible : ${OTHER_BASE}`);
+    expect((failure as ConnectorHttpError).status).toBe(status); // une erreur de saisie, pas une panne
   });
 });
 
@@ -880,6 +881,7 @@ describe('airtable : jeton OAuth', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe(`Base Airtable inaccessible : ${OTHER_BASE}`);
+    expect((failure as ConnectorHttpError).status).toBe(403);
   });
 
   it('verify refuse une autorisation qui ne donne accès à aucune base', async () => {

@@ -78,8 +78,9 @@ function pickWorkspace(workspaces: Workspace[], wanted: string | undefined): Wor
     ? workspaces.find((w) => w.gid === wanted || w.name.toLowerCase() === name)
     : workspaces[0];
   if (found) return found;
+  // 404 seulement si l'utilisateur a saisi l'espace : un compte sans espace n'est pas une saisie.
   throw new ConnectorHttpError(
-    null,
+    wanted ? 404 : null,
     wanted ? `Espace introuvable : ${wanted}` : 'Aucun espace Asana accessible',
   );
 }

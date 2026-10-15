@@ -171,7 +171,7 @@ describe('folk : sync, premier passage', () => {
     });
   });
 
-  it('range une réponse à une note en tour participant, sur la fiche de l’entreprise', async () => {
+  it('range une réponse en deux tours : la note parente (document) puis la réponse (participant)', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const item = itemsOf(pages).find((i) =>
@@ -179,7 +179,15 @@ describe('folk : sync, premier passage', () => {
     );
     expect(item?.title).toBe('Note sur Dubois Conseil');
     expect(item?.origin).toEqual({ entity: 'Dubois Conseil', entityType: 'company' });
+    expect(item?.updatedAt).toBe('2026-10-13T09:30:00.000Z');
     expect(item?.turns).toEqual([
+      {
+        externalId: 'parent',
+        role: 'document',
+        author: { name: 'Marie Durand', email: 'marie@acme.test' },
+        text: 'Devis envoyé : 12 000 € HT, formation en option.',
+        ts: '2026-10-12T14:00:00.000Z',
+      },
       {
         externalId: 'body',
         role: 'participant',
@@ -188,6 +196,47 @@ describe('folk : sync, premier passage', () => {
         ts: '2026-10-13T09:30:00.000Z',
       },
     ]);
+  });
+
+  // La doc ne donne le texte du parent que s'il est visible de la clé ; une note privée de la clé
+  // l'est aussi : elle ne doit pas remonter à l'équipe par la réponse.
+  describe.each([
+    ['privée', { visibility: 'private' }],
+    ['masquée à la clé (texte nul)', { content: null }],
+    ['sans texte', { content: '   ' }],
+    ['sans date', { createdAt: null }],
+    ['à la date sans fuseau', { createdAt: '2026-10-12T14:00:00' }],
+    [
+      'supprimée',
+      { deleted: true, content: undefined, visibility: undefined, createdAt: undefined },
+    ],
+  ])('réponse à une note parente %s', (_label, parentExtra) => {
+    it('sort avec son seul tour participant, sans reprendre le parent', async () => {
+      const parent = {
+        id: 'nte_parent',
+        entity: { id: 'com_x', entityType: 'company', fullName: 'Dubois Conseil' },
+        content: 'Texte du parent, à ne pas reprendre.',
+        visibility: 'public',
+        author: marie,
+        createdAt: '2026-10-12T14:00:00.000Z',
+        deleted: false,
+        ...parentExtra,
+      };
+      const reply = note('nte_reply', '2026-10-13T09:30:00.000Z', { parentNote: parent });
+
+      const { pages } = await runSync([{ url: NOTES, json: list([reply]) }]);
+
+      expect(itemsOf(pages)).toHaveLength(1);
+      expect(itemsOf(pages)[0]?.turns).toEqual([
+        {
+          externalId: 'body',
+          role: 'participant',
+          author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          text: 'Texte de nte_reply',
+          ts: '2026-10-13T09:30:00.000Z',
+        },
+      ]);
+    });
   });
 
   it('nomme l’assistant de folk, et laisse l’auteur sans nom quand son compte est supprimé', async () => {
@@ -223,7 +272,7 @@ describe('folk : sync, premier passage', () => {
     expect(ids).not.toContain('nte_b17c6f83'); // createdAt nul
   });
 
-  it('range le curseur après la dernière note lue, les notes écartées comprises', async () => {
+  it('range le curseur après la dernière note lue', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     expect(cursorOf(pages.at(-1))).toEqual({
@@ -303,6 +352,56 @@ describe('folk : sync, pages et curseur', () => {
     expect(paramsOf(calls[0]?.url).createdAfter).toBe(new Date(mark.at - 1).toISOString());
     expect(idsOf(pages)).toEqual(['note:nte_y', 'note:nte_z']);
     expect(cursorOf(pages.at(-1))).toEqual({ at: Date.parse(at(11)), seen: ['nte_z'] });
+  });
+
+  // Le curseur avance aussi sur les notes qu'on ne rend pas : sinon une note privée ou blanche,
+  // la plus récente, serait relue à chaque passage.
+  it.each([
+    ['privée', { visibility: 'private' }],
+    ['sans texte', { content: '  ' }],
+  ])('range le curseur sur la note la plus récente même si elle est %s', async (_label, extra) => {
+    const routes = [
+      {
+        url: NOTES,
+        json: list([
+          note('nte_old', at(1)),
+          note('nte_last', at(5), extra),
+          note('nte_mid', at(3)),
+        ]),
+      },
+    ];
+
+    const { pages } = await runSync(routes);
+
+    expect(idsOf(pages)).toEqual(['note:nte_old', 'note:nte_mid']);
+    expect(cursorOf(pages.at(-1))).toEqual({ at: Date.parse(at(5)), seen: ['nte_last'] });
+  });
+
+  it('rend une page vide, mais avec son curseur, quand toutes les notes sont écartées', async () => {
+    const routes = [{ url: NOTES, json: list([note('nte_p', at(2), { visibility: 'private' })]) }];
+
+    const { pages } = await runSync(routes);
+
+    expect(pages.map((page) => page.items.length)).toEqual([0]);
+    expect(cursorOf(pages[0])).toEqual({ at: Date.parse(at(2)), seen: ['nte_p'] });
+  });
+
+  it('repasse le dernier curseur rendu : ne refait pas le premier passage, repart de lui', async () => {
+    const first = await runSync(firstPassRoutes());
+    const last = first.pages.at(-1);
+    expect(first.pages).toHaveLength(1);
+    // folk peut rendre la note de la borne (createdAfter incertain) : elle est déjà vue.
+    const lastNote = notesPage1.data.items[0];
+    const routes = [{ url: NOTES, json: list([lastNote]) }];
+
+    const second = await runSync(routes, { cursor: last?.cursor ?? null });
+
+    expect(second.pages).toEqual([]);
+    expect(second.calls).toHaveLength(1);
+    expect(paramsOf(second.calls[0]?.url).createdAfter).toBe(
+      new Date(cursorOf(last).at - 1).toISOString(),
+    );
+    expect(paramsOf(second.calls[0]?.url).createdAfter).not.toBe(SINCE.toISOString());
   });
 
   it('repart de since quand le curseur est illisible', async () => {

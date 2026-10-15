@@ -29,6 +29,11 @@ import { createdAtOf, toItem } from './map';
 //   curseur, on les trie ici, et on les rend par pages de 100. Chaque passage relit donc la liste
 //   depuis le curseur (une requête par 50 notes) : un très gros premier passage en coûte plusieurs.
 //   Une note modifiée après sa création n'est pas relue (comme les activités de Close).
+// - Une réponse à une note (`parentNote`) sort en deux tours : le parent (document, daté de sa
+//   création, avec son auteur) puis la réponse (participant). La doc (schéma du 2025-06-09) rend
+//   le parent entier dans la même réponse ; le plan prévoyait un tour par note, mais une réponse
+//   seule (« D'accord pour 12 000 € ») perd son sens. Le parent est omis s'il est supprimé,
+//   masqué à la clé (texte nul), privé, sans texte ou sans date lisible : la réponse sort seule.
 // - Une note privée (`visibility: private`) n'est pas rendue : tout remonte à l'équipe dans Leon,
 //   et folk la réserve à son auteur. Il n'y a pas de lien vers une note : `url` est nul.
 //

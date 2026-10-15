@@ -14,6 +14,17 @@ const NOTES_PER_PAGE = 50;
 // supprimé (ni l'un ni l'autre).
 const Author = z.object({ fullName: z.string().nullish(), email: z.string().nullish() }).nullish();
 
+// La note parente d'une réponse : folk la rend en entier, sauf si elle est supprimée (alors
+// seulement `id` et `deleted`) ou masquée à la clé (alors `content` est nul).
+const ParentNote = z.object({
+  id: z.string(),
+  content: z.string().nullish(),
+  visibility: z.string().nullish(),
+  author: Author,
+  createdAt: z.string().nullish(),
+  deleted: z.boolean().nullish(),
+});
+
 export const NoteSchema = z.object({
   id: z.string(),
   entity: z.object({ entityType: z.string().nullish(), fullName: z.string().nullish() }).nullish(),
@@ -21,7 +32,7 @@ export const NoteSchema = z.object({
   visibility: z.string().nullish(),
   author: Author,
   createdAt: z.string().nullish(), // nul pour une note ancienne
-  parentNote: z.object({ id: z.string() }).nullish(), // renseigné quand la note répond à une autre
+  parentNote: ParentNote.nullish(), // renseigné quand la note répond à une autre
 });
 export type Note = z.infer<typeof NoteSchema>;
 

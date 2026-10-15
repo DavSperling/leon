@@ -1,0 +1,18 @@
+{
+  "organisation": "Atelier Numérique Lebrun",
+  "slug": "essai-atelier-lebrun",
+  "domaine": "essai.leon.local",
+  "motDePasse": "essai-leon-2026",
+  "personnages": [
+    { "cle": "claire", "nom": "Claire Lebrun", "role": "Dirigeante" },
+    { "cle": "karim", "nom": "Karim Haddad", "role": "Commercial" },
+    { "cle": "hugo", "nom": "Hugo Martin", "role": "Dev (back, données)" },
+    { "cle": "ines", "nom": "Inès Moreau", "role": "Dev (interface, mobile)" },
+    { "cle": "sophie", "nom": "Sophie Garnier", "role": "Admin et finances" },
+    { "cle": "nadia", "nom": "Nadia Benali", "role": "Cheffe de projet" }
+  ],
+  "secrets": [
+    "sk-essai-9fKx2LmQ7vNw4RtY8pZa3BcD",
+    "MotDePasseOVH-Lebrun2026!"
+  ]
+}

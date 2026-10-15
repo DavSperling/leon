@@ -1,0 +1,27 @@
+{
+  "results": [
+    {
+      "id": "262146",
+      "key": "PROD",
+      "name": "Produit",
+      "type": "global",
+      "status": "current",
+      "authorId": "5b10ac8d82e05b22cc7d4ef5",
+      "createdAt": "2026-01-05T08:00:00.000Z",
+      "homepageId": "262300"
+    },
+    {
+      "id": "262200",
+      "key": "OPS",
+      "name": "Exploitation",
+      "type": "global",
+      "status": "current",
+      "authorId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654",
+      "createdAt": "2026-01-05T08:00:00.000Z",
+      "homepageId": "262301"
+    }
+  ],
+  "_links": {
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

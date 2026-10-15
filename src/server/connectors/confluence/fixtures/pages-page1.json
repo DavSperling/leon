@@ -1,0 +1,62 @@
+{
+  "results": [
+    {
+      "id": "10001",
+      "status": "current",
+      "title": "Feuille de route T4",
+      "spaceId": "262146",
+      "parentId": "262300",
+      "parentType": "page",
+      "position": 1,
+      "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+      "ownerId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+      "lastOwnerId": null,
+      "subtype": null,
+      "createdAt": "2026-08-20T10:00:00.000Z",
+      "version": {
+        "createdAt": "2026-10-14T09:30:12.000Z",
+        "message": "",
+        "number": 7,
+        "minorEdit": false,
+        "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab"
+      },
+      "body": {},
+      "_links": {
+        "webui": "/spaces/PROD/pages/10001/Feuille+de+route+T4",
+        "editui": "/pages/resumedraft.action?draftId=10001",
+        "tinyui": "/x/10001"
+      }
+    },
+    {
+      "id": "10002",
+      "status": "current",
+      "title": "Compte rendu du comité produit",
+      "spaceId": "262146",
+      "parentId": "262300",
+      "parentType": "page",
+      "position": 1,
+      "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+      "ownerId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+      "lastOwnerId": null,
+      "subtype": null,
+      "createdAt": "2026-08-20T10:00:00.000Z",
+      "version": {
+        "createdAt": "2026-10-12T16:05:00.000Z",
+        "message": "",
+        "number": 3,
+        "minorEdit": false,
+        "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab"
+      },
+      "body": {},
+      "_links": {
+        "webui": "/spaces/PROD/pages/10002/Compte+rendu+du+comite+produit",
+        "editui": "/pages/resumedraft.action?draftId=10002",
+        "tinyui": "/x/10002"
+      }
+    }
+  ],
+  "_links": {
+    "next": "/wiki/api/v2/pages?cursor=eyJpZCI6IjEwMDAyIiwic29ydCI6Ii1tb2RpZmllZC1kYXRlIn0&limit=250&sort=-modified-date&status=current",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

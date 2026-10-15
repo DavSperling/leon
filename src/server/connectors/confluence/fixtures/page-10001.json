@@ -1,0 +1,31 @@
+{
+  "id": "10001",
+  "status": "current",
+  "title": "Feuille de route T4",
+  "spaceId": "262146",
+  "parentId": "262300",
+  "parentType": "page",
+  "authorId": "5b10ac8d82e05b22cc7d4ef5",
+  "ownerId": "5b10ac8d82e05b22cc7d4ef5",
+  "lastOwnerId": null,
+  "createdAt": "2026-08-20T10:00:00.000Z",
+  "version": {
+    "createdAt": "2026-10-14T09:30:12.000Z",
+    "message": "",
+    "number": 7,
+    "minorEdit": false,
+    "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab"
+  },
+  "body": {
+    "storage": {
+      "representation": "storage",
+      "value": "<h1>Objectifs du quatrième trimestre</h1><p>Nous livrons la <strong>version 2</strong> de l&rsquo;application avant le <time datetime=\"2026-12-15\" />.</p><ul><li><p>Refonte de l&rsquo;onboarding</p></li><li><p>Export CSV des rapports</p></li></ul><ac:structured-macro ac:name=\"info\" ac:schema-version=\"1\" ac:macro-id=\"6c1f0d3a-0000-4000-8000-000000000001\"><ac:parameter ac:name=\"title\">Décision</ac:parameter><ac:rich-text-body><p>Le périmètre est gelé le 31 octobre.</p></ac:rich-text-body></ac:structured-macro><ac:task-list><ac:task><ac:task-id>1</ac:task-id><ac:task-status>incomplete</ac:task-status><ac:task-body>Valider le budget avec la direction</ac:task-body></ac:task><ac:task><ac:task-id>2</ac:task-id><ac:task-status>complete</ac:task-status><ac:task-body>Recruter un second développeur</ac:task-body></ac:task></ac:task-list><ac:structured-macro ac:name=\"code\" ac:schema-version=\"1\" ac:macro-id=\"6c1f0d3a-0000-4000-8000-000000000002\"><ac:parameter ac:name=\"language\">bash</ac:parameter><ac:plain-text-body><![CDATA[pnpm build && pnpm test]]></ac:plain-text-body></ac:structured-macro><p>Voir <ac:link><ri:page ri:content-title=\"Procédure d’astreinte\" /><ac:plain-text-link-body><![CDATA[la procédure d’astreinte]]></ac:plain-text-link-body></ac:link>.</p><table><tbody><tr><th><p>Jalon</p></th><th><p>Date</p></th></tr><tr><td><p>Bêta</p></td><td><p>1er novembre</p></td></tr></tbody></table>"
+    }
+  },
+  "_links": {
+    "webui": "/spaces/PROD/pages/10001/Feuille+de+route+T4",
+    "editui": "/pages/resumedraft.action?draftId=10001",
+    "tinyui": "/x/10001",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "10004",
+  "status": "current",
+  "title": "Page vide",
+  "spaceId": "262146",
+  "parentId": "262300",
+  "parentType": "page",
+  "authorId": "5b10ac8d82e05b22cc7d4ef5",
+  "ownerId": "5b10ac8d82e05b22cc7d4ef5",
+  "lastOwnerId": null,
+  "createdAt": "2026-08-20T10:00:00.000Z",
+  "version": {
+    "createdAt": "2026-09-18T12:00:00.000Z",
+    "message": "",
+    "number": 1,
+    "minorEdit": false,
+    "authorId": "5b10ac8d82e05b22cc7d4ef5"
+  },
+  "body": {
+    "storage": {
+      "representation": "storage",
+      "value": "<p />"
+    }
+  },
+  "_links": {
+    "webui": "/spaces/PROD/pages/10004/Page+vide",
+    "editui": "/pages/resumedraft.action?draftId=10004",
+    "tinyui": "/x/10004",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

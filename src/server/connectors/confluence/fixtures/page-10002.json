@@ -1,0 +1,31 @@
+{
+  "id": "10002",
+  "status": "current",
+  "title": "Compte rendu du comité produit",
+  "spaceId": "262146",
+  "parentId": "262300",
+  "parentType": "page",
+  "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+  "ownerId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+  "lastOwnerId": null,
+  "createdAt": "2026-08-20T10:00:00.000Z",
+  "version": {
+    "createdAt": "2026-10-12T16:05:00.000Z",
+    "message": "",
+    "number": 3,
+    "minorEdit": false,
+    "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab"
+  },
+  "body": {
+    "storage": {
+      "representation": "storage",
+      "value": "<h2>Ordre du jour</h2><ol><li><p>Tarifs</p></li><li><p>Calendrier de la bêta</p></li></ol><p>Paul propose de reporter la bêta au 1er décembre.</p>"
+    }
+  },
+  "_links": {
+    "webui": "/spaces/PROD/pages/10002/Compte+rendu+du+comite+produit",
+    "editui": "/pages/resumedraft.action?draftId=10002",
+    "tinyui": "/x/10002",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

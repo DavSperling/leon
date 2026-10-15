@@ -24,10 +24,7 @@
       "id": "F192",
       "enonce": "Décision : l'application mobile v2 abandonne rn-quickcharts et passe à graphiko-native.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-004",
       "extrait": "Décision : on passe de rn-quickcharts à graphiko-native pour l'appli mobile v2.",

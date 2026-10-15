@@ -4,9 +4,7 @@
       "id": "F056",
       "enonce": "Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "peinture & deco lambert a signé aujourdhui, 6 licences",
@@ -17,9 +15,7 @@
       "id": "F058",
       "enonce": "L'interlocutrice chez Peinture & Déco Lambert est Aurélie Lambert, cogérante.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "aurelie lambert, elle est cogerante",
@@ -39,9 +35,7 @@
       "id": "F057",
       "enonce": "Le contrat de Peinture & Déco Lambert s'élève à 4 200 € HT la première année.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-005",
       "extrait": "4200 HT la 1ere année",

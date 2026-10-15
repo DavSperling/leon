@@ -4,10 +4,7 @@
       "id": "F215",
       "enonce": "La taille de police minimale de l'application mobile v2 est de 16 px.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "la taille de police minimale de l'appli mobile v2 est de 16 px",
@@ -17,10 +14,7 @@
       "id": "F216",
       "enonce": "Les boutons de l'application mobile v2 font au moins 44 px de haut.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "les boutons font au moins 44 px de haut",
@@ -30,10 +24,7 @@
       "id": "F205",
       "enonce": "Les contrastes de couleur de l'application mobile v2 respectent un ratio d'au moins 4,5 pour 1.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "les contrastes de couleur respectent un ratio d'au moins 4,5 pour 1",

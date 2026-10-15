@@ -4,10 +4,7 @@
       "id": "F280",
       "enonce": "La livraison de l'application mobile v2 est prévue le 15 octobre 2026.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "la livraison de l'appli mobile v2 est prévue le 15 octobre",
@@ -17,10 +14,7 @@
       "id": "F281",
       "enonce": "SARL Bati-Ouest est le client pilote de l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "le client pilote, c'est Bati-Ouest",
@@ -30,9 +24,7 @@
       "id": "F282",
       "enonce": "L'interlocuteur chez SARL Bati-Ouest est Olivier Ménard, directeur technique.",
       "fiche": "SARL Bati-Ouest",
-      "alias": [
-        "Bati-Ouest"
-      ],
+      "alias": ["Bati-Ouest"],
       "typeFiche": "client",
       "tour": "t-005",
       "extrait": "notre contact chez eux c'est Olivier Ménard, leur directeur technique",
@@ -42,10 +34,7 @@
       "id": "F292",
       "enonce": "Nadia Benali centralise les retours du client pilote de l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-005",
       "extrait": "Côté nous, c'est moi qui centralise, Inès est déjà bien chargée",
@@ -55,10 +44,7 @@
       "id": "F293",
       "enonce": "Inès Moreau est responsable de l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "Inès est responsable du projet",

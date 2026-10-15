@@ -24,9 +24,7 @@
       "id": "F133",
       "enonce": "Le correctif du ticket 482 d'Électricité Perrin est prévu pour le 6 octobre 2026, avec la nouvelle génération des PDF.",
       "fiche": "Électricité Perrin",
-      "alias": [
-        "Perrin"
-      ],
+      "alias": ["Perrin"],
       "typeFiche": "client",
       "tour": "t-019",
       "extrait": "le correctif du 482 de Perrin part avec la nouvelle génération des PDF, prévu pour le 6 octobre",

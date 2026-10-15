@@ -4,10 +4,7 @@
       "id": "F004",
       "enonce": "Le Salon des Artisans de l'Ouest a lieu les 13 et 14 novembre 2026 au parc des expositions de Nantes.",
       "fiche": "Salon des Artisans de l'Ouest",
-      "alias": [
-        "salon",
-        "SAO"
-      ],
+      "alias": ["salon", "SAO"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "les 13 et 14 novembre, au parc des expositions de Nantes",
@@ -17,10 +14,7 @@
       "id": "F005",
       "enonce": "Le budget du stand au Salon des Artisans de l'Ouest est de 3 000 € HT.",
       "fiche": "Salon des Artisans de l'Ouest",
-      "alias": [
-        "salon",
-        "SAO"
-      ],
+      "alias": ["salon", "SAO"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "Budget stand : 3 000 € HT",
@@ -30,10 +24,7 @@
       "id": "F006",
       "enonce": "L'objectif au Salon des Artisans de l'Ouest est de faire 40 démonstrations de Chantier+.",
       "fiche": "Salon des Artisans de l'Ouest",
-      "alias": [
-        "salon",
-        "SAO"
-      ],
+      "alias": ["salon", "SAO"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "Objectif : 40 démonstrations de Chantier+",

@@ -14,10 +14,7 @@
       "id": "F257",
       "enonce": "Le budget du stand au Salon des Artisans de l'Ouest est confirmé à 3 000 € HT.",
       "fiche": "Salon des Artisans de l'Ouest",
-      "alias": [
-        "salon",
-        "SAO"
-      ],
+      "alias": ["salon", "SAO"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "le budget du stand est confirmé à 3 000 € HT",
@@ -38,9 +35,7 @@
       "id": "F256",
       "enonce": "Sophie Garnier a rendez-vous avec Michel Ferrand le 15 octobre 2026 pour préparer la clôture.",
       "fiche": "Cabinet Ferrand & Associés",
-      "alias": [
-        "Ferrand"
-      ],
+      "alias": ["Ferrand"],
       "typeFiche": "fournisseur",
       "tour": "t-009",
       "extrait": "Je verrai tout cela avec Michel Ferrand : j'ai rendez-vous avec lui le 15 octobre pour préparer la clôture",

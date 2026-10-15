@@ -4,10 +4,7 @@
       "id": "F020",
       "enonce": "Le prix de Chantier+ passe de 55 € à 59 € HT par utilisateur et par mois au 1er janvier 2027.",
       "fiche": "Chantier+",
-      "alias": [
-        "Chantier plus",
-        "l'appli"
-      ],
+      "alias": ["Chantier plus", "l'appli"],
       "typeFiche": "produit",
       "tour": "t-005",
       "extrait": "on passe de 55 € à 59 € HT au 1er janvier 2027",

@@ -4,9 +4,7 @@
       "id": "F124",
       "enonce": "Dans l'API de Chantier+, les montants sont des entiers en centimes.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-005",
       "extrait": "dans l'API, les montants sont des entiers en centimes",
@@ -16,9 +14,7 @@
       "id": "F125",
       "enonce": "La mise en production de la refonte du module devis est prévue le 20 octobre 2026.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-013",
       "extrait": "la mise en production de la refonte du module devis est prévue le 20/10",
@@ -28,9 +24,7 @@
       "id": "F126",
       "enonce": "Les lignes de devis passent dans une table dédiée devis_lignes.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "les lignes de devis sortent du jsonb et passent dans une table dédiée devis_lignes",
@@ -40,9 +34,7 @@
       "id": "F127",
       "enonce": "Hugo Martin est le responsable technique de la refonte du module devis.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "je suis le responsable technique de la refonte du module devis",
@@ -52,9 +44,7 @@
       "id": "F150",
       "enonce": "Chaque devis garde l'historique de ses versions.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-009",
       "extrait": "chaque devis garde l'historique de ses versions",
@@ -64,9 +54,7 @@
       "id": "F153",
       "enonce": "Dans la refonte du module devis, les taux de TVA sont stockés en points de base (2000 pour 20 %).",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-007",
       "extrait": "oui, points de base",
@@ -76,9 +64,7 @@
       "id": "F155",
       "enonce": "Dans la refonte du module devis, les quantités sont stockées en millièmes.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-009",
       "extrait": "ok pour les millièmes",

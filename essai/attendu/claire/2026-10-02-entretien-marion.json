@@ -34,9 +34,7 @@
       "id": "F033",
       "enonce": "Marion Caradec reprend les tests du connecteur Chorus Pro.",
       "fiche": "Connecteur Chorus Pro",
-      "alias": [
-        "Chorus Pro"
-      ],
+      "alias": ["Chorus Pro"],
       "typeFiche": "projet",
       "tour": "t-005",
       "extrait": "elle reprend les tests du connecteur, Hugo lui passe la main",

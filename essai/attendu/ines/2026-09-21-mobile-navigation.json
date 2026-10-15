@@ -4,10 +4,7 @@
       "id": "F180",
       "enonce": "L'application mobile v2 est développée en React Native.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "l'appli est en React Native",
@@ -17,10 +14,7 @@
       "id": "F181",
       "enonce": "Inès Moreau est responsable de l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "c'est moi qui en suis responsable côté équipe",
@@ -30,10 +24,7 @@
       "id": "F182",
       "enonce": "L'application mobile v2 a quatre onglets : chantiers, devis, planning, profil.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "On part sur une barre d'onglets en bas avec quatre onglets : chantiers, devis, planning, profil.",
@@ -43,10 +34,7 @@
       "id": "F183",
       "enonce": "L'application mobile v2 vise au minimum iOS 16 et Android 12.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-004",
       "extrait": "l'application mobile v2 doit tourner au minimum sur iOS 16 et Android 12",

@@ -24,9 +24,7 @@
       "id": "F243",
       "enonce": "Maître Hélène Vasseur facture un forfait de 3 500 € HT pour le dossier Le Goff.",
       "fiche": "Cabinet Vasseur Avocats",
-      "alias": [
-        "Vasseur"
-      ],
+      "alias": ["Vasseur"],
       "typeFiche": "fournisseur",
       "tour": "t-005",
       "extrait": "Maître Vasseur nous facture un forfait de 3 500 € HT pour l'ensemble du dossier",

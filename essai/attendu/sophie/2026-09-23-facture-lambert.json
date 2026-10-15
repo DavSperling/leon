@@ -4,9 +4,7 @@
       "id": "F234",
       "enonce": "Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences, à 4 200 € HT la première année ; la facture est émise le 24 septembre 2026.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "Ils ont signé aujourd'hui pour 6 licences, 4 200 € HT pour la première année. Je dois émettre la facture demain, le 24 septembre",
@@ -36,9 +34,7 @@
       "id": "F249",
       "enonce": "Peinture & Déco Lambert est basée à Laval.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "Peinture & Déco Lambert, une entreprise de Laval",

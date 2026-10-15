@@ -4,10 +4,7 @@
       "id": "F100",
       "enonce": "Chantier+ tourne sur une base Postgres managée chez OVH.",
       "fiche": "Chantier+",
-      "alias": [
-        "Chantier plus",
-        "l'appli"
-      ],
+      "alias": ["Chantier plus", "l'appli"],
       "typeFiche": "produit",
       "tour": "t-001",
       "extrait": "Chantier+ tourne sur une base Postgres managée chez OVH",

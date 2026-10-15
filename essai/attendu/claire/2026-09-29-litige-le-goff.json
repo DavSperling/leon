@@ -24,9 +24,7 @@
       "id": "F018",
       "enonce": "L'entreprise est défendue par Maître Hélène Vasseur dans le litige Le Goff.",
       "fiche": "Cabinet Vasseur Avocats",
-      "alias": [
-        "Vasseur"
-      ],
+      "alias": ["Vasseur"],
       "typeFiche": "fournisseur",
       "tour": "t-003",
       "extrait": "Nous sommes défendus par Maître Hélène Vasseur",

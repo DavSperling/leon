@@ -4,9 +4,7 @@
       "id": "F143",
       "enonce": "Le module devis gère les lignes en variante (option ou alternative).",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-008",
       "extrait": "le module devis gère les lignes en variante, soit en option (le client coche ou pas), soit en alternative",

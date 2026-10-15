@@ -15,9 +15,7 @@
       "id": "F194",
       "enonce": "Les montants renvoyés par l'API de Chantier+ sont en euros décimaux.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "Les montants renvoyés par l'API de Chantier+ sont en euros décimaux",

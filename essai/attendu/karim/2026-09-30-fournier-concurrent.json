@@ -4,9 +4,7 @@
       "id": "F066",
       "enonce": "L'interlocuteur chez Maçonnerie Fournier est Patrick Fournier, le gérant.",
       "fiche": "Maçonnerie Fournier",
-      "alias": [
-        "Fournier"
-      ],
+      "alias": ["Fournier"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "patrick fournier (le gerant de maconnerie fournier)",
@@ -16,9 +14,7 @@
       "id": "F064",
       "enonce": "Maçonnerie Fournier menace de partir chez Batinova.",
       "fiche": "Maçonnerie Fournier",
-      "alias": [
-        "Fournier"
-      ],
+      "alias": ["Fournier"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "il menace de partir chez batinova",
@@ -39,9 +35,7 @@
       "id": "F081",
       "enonce": "Maçonnerie Fournier utilise 20 licences Chantier+.",
       "fiche": "Maçonnerie Fournier",
-      "alias": [
-        "Fournier"
-      ],
+      "alias": ["Fournier"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "fournier a 20 licences chez nous",

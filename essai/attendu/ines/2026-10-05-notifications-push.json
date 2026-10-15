@@ -4,10 +4,7 @@
       "id": "F197",
       "enonce": "Le chef de chantier reçoit une notification push quand un devis est signé.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "le chef de chantier reçoit une notification push quand un devis est signé",
@@ -17,10 +14,7 @@
       "id": "F198",
       "enonce": "Les notifications push sont désactivables par type dans le profil.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-009",
       "extrait": "les notifications push sont désactivables par type dans le profil",
@@ -30,10 +24,7 @@
       "id": "F203",
       "enonce": "Le client signe le devis sur le téléphone du chef de chantier, dans l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "le client signe le devis sur le téléphone du chef de chantier, directement dans l'appli mobile v2",

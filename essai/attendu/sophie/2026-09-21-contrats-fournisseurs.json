@@ -34,9 +34,7 @@
       "id": "F232",
       "enonce": "L'expert-comptable de l'entreprise est le Cabinet Ferrand & Associés, interlocuteur Michel Ferrand.",
       "fiche": "Cabinet Ferrand & Associés",
-      "alias": [
-        "Ferrand"
-      ],
+      "alias": ["Ferrand"],
       "typeFiche": "fournisseur",
       "tour": "t-007",
       "extrait": "notre expert-comptable, le Cabinet Ferrand & Associés. Mon interlocuteur est Michel Ferrand",

@@ -4,9 +4,7 @@
       "id": "F029",
       "enonce": "Couverture Le Bihan renouvelle son contrat Chantier+ pour 2027.",
       "fiche": "Couverture Le Bihan",
-      "alias": [
-        "Le Bihan"
-      ],
+      "alias": ["Le Bihan"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "Couverture Le Bihan renouvelle pour 2027",
@@ -16,9 +14,7 @@
       "id": "F030",
       "enonce": "Maçonnerie Fournier reste client avec une remise de 10 %.",
       "fiche": "Maçonnerie Fournier",
-      "alias": [
-        "Fournier"
-      ],
+      "alias": ["Fournier"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "Fournier reste chez nous, avec une remise de 10 %",

@@ -4,9 +4,7 @@
       "id": "F264",
       "enonce": "Menuiserie Dupont paie ses factures à 30 jours fin de mois.",
       "fiche": "Menuiserie Dupont",
-      "alias": [
-        "Dupont"
-      ],
+      "alias": ["Dupont"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "Pour Menuiserie Dupont, les factures sont payables à 30 jours fin de mois",
@@ -16,9 +14,7 @@
       "id": "F265",
       "enonce": "La facture annuelle de SARL Bati-Ouest est payée en 4 échéances trimestrielles.",
       "fiche": "SARL Bati-Ouest",
-      "alias": [
-        "Bati-Ouest"
-      ],
+      "alias": ["Bati-Ouest"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "SARL Bati-Ouest, dont la facture annuelle est payée en 4 échéances trimestrielles",

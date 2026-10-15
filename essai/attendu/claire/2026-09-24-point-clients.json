@@ -4,9 +4,7 @@
       "id": "F007",
       "enonce": "Gérard Dupont est le gérant de Menuiserie Dupont et l'interlocuteur pour Chantier+.",
       "fiche": "Menuiserie Dupont",
-      "alias": [
-        "Dupont"
-      ],
+      "alias": ["Dupont"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "c'est Gérard Dupont, le gérant, qui suit le dossier Chantier+",
@@ -17,10 +15,7 @@
       "id": "F008",
       "enonce": "SARL Bati-Ouest est le client pilote de l'application mobile v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-003",
       "extrait": "ils seront le client pilote de l'appli mobile v2",
@@ -31,9 +26,7 @@
       "id": "F009",
       "enonce": "SARL Bati-Ouest utilise 48 licences Chantier+.",
       "fiche": "SARL Bati-Ouest",
-      "alias": [
-        "Bati-Ouest"
-      ],
+      "alias": ["Bati-Ouest"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "Ils tournent sur 48 licences aujourd'hui",
@@ -43,9 +36,7 @@
       "id": "F010",
       "enonce": "Maçonnerie Fournier menace de quitter Chantier+ pour Batinova.",
       "fiche": "Maçonnerie Fournier",
-      "alias": [
-        "Fournier"
-      ],
+      "alias": ["Fournier"],
       "typeFiche": "client",
       "tour": "t-005",
       "extrait": "il menace de partir chez Batinova",
@@ -55,9 +46,7 @@
       "id": "F011",
       "enonce": "Peinture & Déco Lambert a signé le 23 septembre 2026 pour 6 licences à 4 200 € HT.",
       "fiche": "Peinture & Déco Lambert",
-      "alias": [
-        "Lambert"
-      ],
+      "alias": ["Lambert"],
       "typeFiche": "client",
       "tour": "t-003",
       "extrait": "signé hier 23/09, 6 licences, 4 200 € HT",

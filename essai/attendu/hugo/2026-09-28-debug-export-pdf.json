@@ -4,9 +4,7 @@
       "id": "F128",
       "enonce": "Le bug du ticket 482 vient d'une limite de 50 lignes codée en dur dans le générateur PDF.",
       "fiche": "Électricité Perrin",
-      "alias": [
-        "Perrin"
-      ],
+      "alias": ["Perrin"],
       "typeFiche": "client",
       "tour": "t-009",
       "extrait": "le bug du 482 c'est juste une limite de 50 lignes codée en dur dans le générateur PDF",
@@ -16,10 +14,7 @@
       "id": "F129",
       "enonce": "L'export PDF de Chantier+ coupe tous les devis de plus de 50 lignes, quel que soit le client, pas seulement ceux d'Électricité Perrin.",
       "fiche": "Chantier+",
-      "alias": [
-        "Chantier plus",
-        "l'appli"
-      ],
+      "alias": ["Chantier plus", "l'appli"],
       "typeFiche": "produit",
       "tour": "t-011",
       "extrait": "ça touche tous les devis de plus de 50 lignes, pas seulement ceux de Perrin",

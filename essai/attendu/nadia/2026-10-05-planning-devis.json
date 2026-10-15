@@ -4,9 +4,7 @@
       "id": "F306",
       "enonce": "La mise en production de la refonte du module devis est prévue le 30 octobre 2026.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "mise en production : le 30 octobre",
@@ -16,9 +14,7 @@
       "id": "F312",
       "enonce": "La refonte du module devis doit être livrée à Menuiserie Dupont avant le 30 octobre 2026 ; Karim s'y est engagé.",
       "fiche": "Menuiserie Dupont",
-      "alias": [
-        "Dupont"
-      ],
+      "alias": ["Dupont"],
       "typeFiche": "client",
       "tour": "t-001",
       "extrait": "la refonte est promise à Menuiserie Dupont avant le 30 octobre, Karim s'y est engagé auprès d'eux",
@@ -29,9 +25,7 @@
       "id": "F313",
       "enonce": "Le gel des développements du module devis commence le 23 octobre 2026.",
       "fiche": "Refonte du module devis",
-      "alias": [
-        "module devis"
-      ],
+      "alias": ["module devis"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "gel des développements : le 23 octobre",

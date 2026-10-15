@@ -4,10 +4,7 @@
       "id": "F137",
       "enonce": "Le 2 octobre 2026, Chantier+ a été indisponible 47 minutes à cause d'un disque plein sur le serveur OVH.",
       "fiche": "Chantier+",
-      "alias": [
-        "Chantier plus",
-        "l'appli"
-      ],
+      "alias": ["Chantier plus", "l'appli"],
       "typeFiche": "produit",
       "tour": "t-009",
       "extrait": "Chantier+ a été indisponible 47 minutes à cause du disque plein sur le serveur OVH",

@@ -4,10 +4,7 @@
       "id": "F135",
       "enonce": "Les jetons d'accès de l'API mobile durent 15 minutes et le jeton de rafraîchissement 30 jours.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-004",
       "extrait": "jeton d'accès 15 minutes, jeton de rafraîchissement 30 jours",
@@ -17,10 +14,7 @@
       "id": "F136",
       "enonce": "L'API de l'application mobile est versionnée sous /api/v2.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-001",
       "extrait": "toutes les routes de l'API mobile sont versionnées sous /api/v2",
@@ -30,10 +24,7 @@
       "id": "F151",
       "enonce": "L'API mobile limite chaque utilisateur à 100 requêtes par minute.",
       "fiche": "Application mobile v2",
-      "alias": [
-        "appli v2",
-        "appli mobile"
-      ],
+      "alias": ["appli v2", "appli mobile"],
       "typeFiche": "projet",
       "tour": "t-012",
       "extrait": "L'API mobile limite chaque utilisateur à 100 requêtes par minute",

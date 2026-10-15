@@ -9,6 +9,7 @@ Mémoire unifiée pour les entreprises (nom de travail). Leon se branche sur les
 - `docs/specs/` : spec et design du premier jet
 - `docs/plans/` : plan d'implémentation du premier jet
 - `docs/guides/` : guides pas à pas (checklist de vérification manuelle)
+- `docs/licences-tiers.md` : licences et projets dont Leon s'inspire
 
 ## Démarrer en local
 
@@ -33,6 +34,23 @@ pnpm test                             # unitaires + intégration ; leon_test est
 ```
 
 Les tests d'intégration (`*.db.test.ts`) se connectent à Postgres : il faut que `docker compose up -d` tourne. Dans un agent Claude Code sandboxé, lancer `pnpm test` hors sandbox.
+
+## Tâches
+
+Le gestionnaire de tâches est sur `/taches` : liste ou tableau, filtres et vues enregistrées, page d'une tâche avec description, sous-tâches et activité, raccourcis clavier (`?` pour l'aide), thème clair ou sombre. Les tâches sont partagées par toute l'organisation. Le premier accès crée un projet, des statuts et des étiquettes par défaut, modifiables dans `/taches/reglages`.
+
+Les agents (Claude Code, Cursor…) les lisent et les écrivent par le serveur MCP de Leon, sous les droits de l'utilisateur du jeton :
+
+| Outil | Rôle |
+|---|---|
+| `task_list` | lister les tâches (projet, statut, `assigne: "moi"`, étiquette, texte) |
+| `task_get` | lire une tâche (`LEO-12`) avec ses commentaires, les statuts et les étiquettes disponibles |
+| `task_create` | créer une tâche |
+| `task_update` | modifier une tâche (statut, priorité, assigné, étiquettes, échéance…) |
+| `task_comment` | commenter une tâche |
+| `task_start` | à appeler avant de coder : assigne la tâche à l'utilisateur, la passe en cours et renvoie le nom de la branche à créer |
+
+Tout se désigne par son nom (statut, étiquette, e-mail d'un membre, clé de projet), jamais par un identifiant interne. Aucun outil ne supprime une tâche. Chaque action d'un agent est inscrite dans l'activité de la tâche avec le nom de son client.
 
 ## Briefing au démarrage de Claude Code
 

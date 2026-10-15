@@ -185,8 +185,12 @@ describe('ariaKeys', () => {
   it('nomme les touches comme aria-keyshortcuts l’attend', () => {
     expect(ariaKeys('create')).toBe('C');
     expect(ariaKeys('escape')).toBe('Escape');
-    expect(ariaKeys('go-tasks')).toBe('G T');
     expect(ariaKeys('palette')).toBe('Meta+K Control+K');
     expect(ariaKeys('next')).toBe('J');
+  });
+
+  it('ne donne rien pour une séquence : l’espace y séparerait des alternatives', () => {
+    expect(ariaKeys('go-tasks')).toBeUndefined();
+    expect(ariaKeys('go-mine')).toBeUndefined();
   });
 });

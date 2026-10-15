@@ -32,6 +32,13 @@ export function backHref(returnQuery: string | null | undefined): string {
   return query === '' ? '/taches' : `/taches?${query}`;
 }
 
+// La requête de la liste d'où l'on vient, lue dans l'adresse affichée : celle de la liste elle-même,
+// ou `retour` sur la page d'une tâche. Sans cela, un lien écrit depuis la page d'une tâche
+// emballerait `retour` dans un second `retour`.
+export function listQueryOf(params: URLSearchParams): string {
+  return params.get(RETURN_PARAM) ?? params.toString();
+}
+
 // L'adresse d'une tâche, avec la requête de la liste d'où l'on y va (Échap y ramène). La page de la
 // tâche la relit et la nettoie : elle n'est pas de confiance.
 export function taskHref(ref: string, listQuery: string): string {

@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { ThemeSchema } from '@/lib/theme-cookie';
 import {
   matchingActions,
   type PaletteAction,
   paletteActions,
   taskRefTarget,
 } from './palette-actions';
+import { THEME_CHOICES } from './theme-choices';
 
 const VIEW = { id: '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90', name: 'Bugs ouverts' };
-const everything = paletteActions({ views: [VIEW], canCreate: true, canHelp: true });
+const everything = paletteActions({ views: [VIEW], canCreate: true, hasShortcuts: true });
 const ids = (actions: PaletteAction[]) => actions.map(({ id }) => id);
 
 describe('taskRefTarget', () => {
@@ -38,8 +40,19 @@ describe('paletteActions', () => {
   });
 
   it('retire ce que la page ne sait pas faire', () => {
-    const bare = paletteActions({ views: [], canCreate: false, canHelp: false });
+    const bare = paletteActions({ views: [], canCreate: false, hasShortcuts: false });
     expect(ids(bare)).toEqual(['mine', 'theme-clair', 'theme-sombre', 'theme-systeme']);
+  });
+
+  it('n’affiche la capsule G M que là où la touche répond', () => {
+    const mine = (hasShortcuts: boolean) =>
+      paletteActions({ views: [], canCreate: false, hasShortcuts }).find(({ id }) => id === 'mine');
+    expect(mine(true)?.key).toBe('go-mine');
+    expect(mine(false)?.key).toBeUndefined();
+  });
+
+  it('propose chaque thème que le cookie accepte', () => {
+    expect(THEME_CHOICES.map(({ value }) => value).sort()).toEqual([...ThemeSchema.options].sort());
   });
 
   it('mène une vue enregistrée à sa page', () => {

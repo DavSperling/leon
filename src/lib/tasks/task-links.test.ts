@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { pageRoutes, readText } from '@/test/contracts/files';
-import { backHref, cleanListQuery, PAGE_PARAMS, RETURN_PARAM, taskHref } from './task-links';
+import {
+  backHref,
+  cleanListQuery,
+  listQueryOf,
+  PAGE_PARAMS,
+  RETURN_PARAM,
+  taskHref,
+} from './task-links';
 import { DEFAULT_VIEW_CONFIG, parseViewParams } from './view-config';
 
 const VIEW_ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
@@ -103,6 +110,22 @@ describe('taskHref', () => {
   it('mène à une page qui existe', () => {
     const path = new URL(taskHref('LEO-12', 'groupe=priorite'), ORIGIN).pathname;
     expect(pageRoutes()).toContain(path.replace('LEO-12', '[ref]'));
+  });
+});
+
+describe('listQueryOf', () => {
+  it('lit la requête de la liste affichée', () => {
+    expect(listQueryOf(new URLSearchParams('groupe=priorite&assigne=moi'))).toBe(
+      'groupe=priorite&assigne=moi',
+    );
+    expect(listQueryOf(new URLSearchParams())).toBe('');
+  });
+
+  it('sur la page d’une tâche, lit la liste d’origine dans `retour`, sans l’emballer une seconde fois', () => {
+    const surLaTache = new URLSearchParams({ [RETURN_PARAM]: 'groupe=priorite' });
+    const href = taskHref('LEO-13', listQueryOf(surLaTache));
+    const returned = new URL(href, ORIGIN).searchParams.get(RETURN_PARAM);
+    expect(backHref(returned)).toBe('/taches?groupe=priorite');
   });
 });
 

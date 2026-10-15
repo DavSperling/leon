@@ -107,7 +107,7 @@ function CardContent({
         <Link
           href={href(row.ref)}
           title={row.title}
-          className="line-clamp-2 min-w-0 flex-1 py-0.5 leading-5 break-words after:absolute after:inset-0"
+          className="line-clamp-2 min-w-0 flex-1 scroll-mt-40 py-0.5 leading-5 break-words after:absolute after:inset-0"
         >
           <TaskTitle title={row.title} />
         </Link>
@@ -161,7 +161,7 @@ export function TaskCard({ draggable, droppable, ...card }: TaskCardProps) {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         CARD,
-        'group/item scroll-mt-40 shadow-xs hover:shadow-sm has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring',
+        'group/item shadow-xs hover:shadow-sm has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-ring',
         sortable.isDragging && 'opacity-40',
       )}
     >

@@ -127,14 +127,14 @@ export function bindingKeys({ key, mod, after }: Binding): string[] {
   return after ? [after.toUpperCase(), name] : [name];
 }
 
-// Pour aria-keyshortcuts, qui nomme les touches comme `event.key` : « S », « Escape », « G T »,
-// « Meta+K Control+K ».
+// Pour aria-keyshortcuts, qui nomme les touches comme `event.key` : « S », « Escape »,
+// « Meta+K Control+K ». Une séquence (« G puis T ») n'a pas de valeur : l'espace y sépare des
+// alternatives, pas des étapes.
 export function ariaKeys(id: ShortcutId): string | undefined {
   const [first] = shortcutOf(id).bindings;
-  if (!first) return undefined;
+  if (!first || first.after) return undefined;
   const key = first.key.length === 1 ? first.key.toUpperCase() : first.key;
-  if (first.mod) return `Meta+${key} Control+${key}`;
-  return first.after ? `${first.after.toUpperCase()} ${key}` : key;
+  return first.mod ? `Meta+${key} Control+${key}` : key;
 }
 
 export type KeyInput = Pick<

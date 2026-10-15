@@ -2,6 +2,7 @@
 
 import { PanelLeft } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
+import { ariaKeys } from '@/components/tasks/shortcuts';
 import { Kbd } from '@/components/ui/kbd';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { railCookie } from '@/lib/rail-cookie';
@@ -53,7 +54,7 @@ function RailToggle({ open, onToggle }: { open: boolean; onToggle: () => void })
           aria-label={label}
           aria-expanded={open}
           aria-controls="barre-laterale"
-          aria-keyshortcuts="Meta+B Control+B"
+          aria-keyshortcuts={ariaKeys('rail')}
           onClick={onToggle}
           className={cn(
             'flex size-8 items-center justify-center rounded-md text-muted-foreground transition-[margin,color,background-color] duration-300 ease-out hover:bg-accent hover:text-foreground',

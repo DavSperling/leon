@@ -22,13 +22,9 @@ export type PickerOption = {
   checked?: boolean;
 };
 
-// Ce que chaque sélecteur accepte en plus de ses données : son déclencheur, et une ouverture
-// qu'un raccourci clavier peut commander.
-export type PickerSlot = {
-  children: ReactElement;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-};
+// Ce que chaque sélecteur accepte en plus de ses données : son déclencheur. Les raccourcis clavier
+// l'ouvrent en cliquant dessus (row-targets) : le déclencheur porte `data-picker`.
+export type PickerSlot = { children: ReactElement };
 
 type PickerProps = PickerSlot & {
   label: string; // « Statut » : nomme le menu
@@ -80,8 +76,7 @@ function PickerItem({ option, onSelect }: { option: PickerOption; onSelect: () =
 }
 
 // Le gabarit de tous les sélecteurs : un menu flottant avec champ de recherche, des options avec
-// icône et raccourci, la navigation aux flèches. Fermé ou ouvert par `open` quand un raccourci
-// le commande, par son déclencheur sinon.
+// icône et raccourci, la navigation aux flèches.
 export function Picker({
   label,
   options,
@@ -91,21 +86,17 @@ export function Picker({
   onSearchChange,
   emptyText = 'Aucun résultat.',
   footer,
-  open,
-  onOpenChange,
   children,
 }: PickerProps) {
-  const [ownOpen, setOwnOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const isOpen = open ?? ownOpen;
 
   const changeSearch = (text: string) => {
     setSearch(text);
     onSearchChange?.(text);
   };
   const changeOpen = (next: boolean) => {
-    setOwnOpen(next);
-    onOpenChange?.(next);
+    setOpen(next);
     if (!next) changeSearch('');
   };
   const extraOptions = extra?.(search) ?? [];
@@ -118,7 +109,7 @@ export function Picker({
     search === '' ? options.find((option) => option.shortcut === key) : undefined;
 
   return (
-    <Popover open={isOpen} onOpenChange={changeOpen}>
+    <Popover open={open} onOpenChange={changeOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent align="start" className="w-64 gap-0 p-0">
         <Command

@@ -13,6 +13,7 @@ import {
 } from '@/components/palette-actions';
 import { SECTIONS } from '@/components/sidebar-sections';
 import { KeyCaps } from '@/components/tasks/shortcut-hint';
+import { ariaKeys } from '@/components/tasks/shortcuts';
 import { useShortcutRegistry } from '@/components/tasks/use-task-shortcuts';
 import { Button } from '@/components/ui/button';
 import {
@@ -119,7 +120,7 @@ export function CommandSearch({ views = [] }: CommandSearchProps) {
     paletteActions({
       views,
       canCreate: shortcuts?.has('create') ?? false,
-      canHelp: shortcuts?.has('help') ?? false,
+      hasShortcuts: shortcuts !== null,
     }),
     query,
   );
@@ -128,7 +129,7 @@ export function CommandSearch({ views = [] }: CommandSearchProps) {
     <>
       <Button
         variant="outline"
-        aria-keyshortcuts="Meta+K Control+K"
+        aria-keyshortcuts={ariaKeys('palette')}
         onClick={() => setOpen(true)}
         className="h-10 w-full justify-start rounded-xl bg-card text-[15px] font-normal text-muted-foreground shadow-xs transition-colors"
       >

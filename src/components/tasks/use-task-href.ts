@@ -1,11 +1,11 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { taskHref } from '@/lib/tasks/task-links';
+import { listQueryOf, taskHref } from '@/lib/tasks/task-links';
 
-// L'adresse d'une tâche depuis la liste affichée : la page de la tâche la relit pour ramener à la
-// même liste (Échap, fil d'Ariane).
+// L'adresse d'une tâche depuis la liste affichée, ou depuis une tâche (le dialogue de création y
+// est monté) : la page de la tâche relit la liste d'origine pour y ramener (Échap, fil d'Ariane).
 export function useTaskHref(): (ref: string) => string {
-  const query = useSearchParams().toString();
+  const query = listQueryOf(useSearchParams());
   return (ref) => taskHref(ref, query);
 }

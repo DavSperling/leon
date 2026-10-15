@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 export type PickerKind = 'status' | 'priority' | 'assignee' | 'labels' | 'due';
 
 const ROW = '[data-task-id]'; // une ligne de la liste, une carte du tableau
+const BULK_BAR = '[data-bulk-actions]';
 
 export function aimedRow(): HTMLElement | null {
   return (
@@ -38,15 +39,16 @@ export function openAimedRow(): boolean {
 // S, P, A, L, D : ouvre le sélecteur de la propriété, là où la page le montre. Les tâches cochées
 // d'abord (la barre d'actions groupées), puis la tâche visée, puis la tâche ouverte.
 export function openPicker(kind: PickerKind): void {
-  const scope =
-    document.querySelector('[data-bulk-actions]') ??
-    aimedRow() ??
-    document.querySelector('[data-task-page]');
+  const bulk = document.querySelector(BULK_BAR);
+  const scope = bulk ?? aimedRow() ?? document.querySelector('[data-task-page]');
   if (!scope) return void toast('Visez d’abord une tâche : J ou K, ou survolez-la.');
   const trigger = scope.querySelector<HTMLElement>(`[data-picker="${kind}"]`);
+  // La barre n'a pas de statut commun à des tâches de projets différents.
+  if (!trigger && bulk) return void toast('Indisponible pour cette sélection.');
   // Une propriété que l'affichage masque n'a pas de déclencheur à ouvrir.
   if (!trigger || trigger.getClientRects().length === 0) {
     return void toast('Cette propriété n’est pas affichée. Ajoutez-la depuis Affichage.');
   }
+  // Sur un bouton désactivé (action en cours, trop de tâches cochées), click() reste sans effet.
   trigger.click();
 }

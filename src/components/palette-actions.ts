@@ -22,65 +22,66 @@ export type PaletteAction = {
 type PaletteInput = {
   views: readonly { id: string; name: string }[]; // les vues enregistrées visibles
   canCreate: boolean; // la page a un dialogue de création à ouvrir
-  canHelp: boolean; // la page sait montrer l'aide des raccourcis
+  hasShortcuts: boolean; // la page est sous ShortcutsProvider : G M et l'aide y répondent
 };
 
-export function paletteActions({ views, canCreate, canHelp }: PaletteInput): PaletteAction[] {
+const CREATE: PaletteAction = {
+  id: 'create',
+  group: 'Tâches',
+  label: 'Créer une tâche',
+  keywords: 'nouvelle',
+  icon: Plus,
+  key: 'create',
+  effect: { shortcut: 'create' },
+};
+
+const HELP: PaletteAction = {
+  id: 'help',
+  group: 'Aide',
+  label: 'Raccourcis clavier',
+  keywords: 'aide touches',
+  icon: Keyboard,
+  key: 'help',
+  effect: { shortcut: 'help' },
+};
+
+// La capsule G M n'a de sens que là où la touche répond.
+const mineAction = (hasShortcuts: boolean): PaletteAction => ({
+  id: 'mine',
+  group: 'Tâches',
+  label: 'Mes tâches',
+  icon: UserRound,
+  key: hasShortcuts ? 'go-mine' : undefined,
+  effect: { href: MY_TASKS_HREF },
+});
+
+const THEMES = THEME_CHOICES.map(
+  ({ value, label, Icon }): PaletteAction => ({
+    id: `theme-${value}`,
+    group: 'Thème',
+    label: `Thème ${label.toLowerCase()}`,
+    keywords: 'apparence',
+    icon: Icon,
+    effect: { theme: value },
+  }),
+);
+
+const viewAction = ({ id, name }: PaletteInput['views'][number]): PaletteAction => ({
+  id: `view-${id}`,
+  group: 'Vues enregistrées',
+  label: name,
+  keywords: 'vue',
+  icon: SquareCheck,
+  effect: { href: viewHref(id) },
+});
+
+export function paletteActions({ views, canCreate, hasShortcuts }: PaletteInput): PaletteAction[] {
   return [
-    ...(canCreate
-      ? [
-          {
-            id: 'create',
-            group: 'Tâches',
-            label: 'Créer une tâche',
-            keywords: 'nouvelle',
-            icon: Plus,
-            key: 'create',
-            effect: { shortcut: 'create' },
-          } satisfies PaletteAction,
-        ]
-      : []),
-    {
-      id: 'mine',
-      group: 'Tâches',
-      label: 'Mes tâches',
-      icon: UserRound,
-      key: 'go-mine',
-      effect: { href: MY_TASKS_HREF },
-    },
-    ...THEME_CHOICES.map(
-      ({ value, label, Icon }): PaletteAction => ({
-        id: `theme-${value}`,
-        group: 'Thème',
-        label: `Thème ${label.toLowerCase()}`,
-        keywords: 'apparence',
-        icon: Icon,
-        effect: { theme: value },
-      }),
-    ),
-    ...views.map(
-      ({ id, name }): PaletteAction => ({
-        id: `view-${id}`,
-        group: 'Vues enregistrées',
-        label: name,
-        keywords: 'vue',
-        icon: SquareCheck,
-        effect: { href: viewHref(id) },
-      }),
-    ),
-    ...(canHelp
-      ? [
-          {
-            id: 'help',
-            group: 'Aide',
-            label: 'Raccourcis clavier',
-            keywords: 'aide touches',
-            icon: Keyboard,
-            key: 'help',
-            effect: { shortcut: 'help' },
-          } satisfies PaletteAction,
-        ]
-      : []),
+    ...(canCreate ? [CREATE] : []),
+    mineAction(hasShortcuts),
+    ...THEMES,
+    ...views.map(viewAction),
+    ...(hasShortcuts ? [HELP] : []),
   ];
 }
 

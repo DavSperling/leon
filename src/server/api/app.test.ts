@@ -20,12 +20,16 @@ describe('app', () => {
   });
 
   it('répond à /api/version avec le commit de démarrage', async () => {
+    // try/finally : une assertion qui échoue ne doit jamais laisser le global pollué pour la suite.
     const global = globalThis as { leonStartCommit?: string | null };
     global.leonStartCommit = 'a'.repeat(40);
-    const response = await app.request('/api/version');
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ commit: 'a'.repeat(40) });
-    global.leonStartCommit = undefined;
+    try {
+      const response = await app.request('/api/version');
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ commit: 'a'.repeat(40) });
+    } finally {
+      global.leonStartCommit = undefined;
+    }
   });
 });
 

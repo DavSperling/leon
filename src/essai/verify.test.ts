@@ -92,8 +92,8 @@ describe('verifierJeu', () => {
       attendu: { ...a.attendu, remplace: [{ ancien: 'F001', nouveau: 'F404' }] },
     });
     const problemes = verifierJeu(jeu([a, b], ['hugo/2026-09-30-absente']));
-    expect(problemes).toContain('F001 défini deux fois');
-    expect(problemes).toContain('hugo/2026-09-23-suite : remplacement vers un fait inconnu F404');
+    expect(problemes).toContain('hugo/2026-09-23-suite : F001 défini deux fois');
+    expect(problemes).toContain('hugo/2026-09-23-suite : remplacement : nouveau inconnu F404');
     expect(problemes).toContain('mini.json : conversation inconnue hugo/2026-09-30-absente');
   });
 
@@ -102,6 +102,123 @@ describe('verifierJeu', () => {
     const j = jeu([c]);
     j.entreprise.secrets.push('mot-de-passe-jamais-dit');
     expect(verifierJeu(j)).toContain('secret absent de toutes les conversations : mot-…');
+  });
+
+  it('signale un secret recopié dans un fait attendu', () => {
+    const c = conversation('hugo/2026-09-22-migration');
+    const [fait] = c.attendu.faits;
+    if (!fait) throw new Error('fait manquant');
+    c.attendu.faits = [{ ...fait, enonce: 'La clé est sk-essai-AAAAAAAAAAAAAAAAAAAAAAAA.' }];
+    const problemes = verifierJeu(jeu([c]));
+    expect(problemes).toContain('hugo/2026-09-22-migration : F001 contient un secret');
+    expect(problemes.join(' ')).not.toContain('sk-essai-AAAAAAAAAAAAAAAAAAAAAAAA');
+  });
+
+  it('signale des tours hors ordre chronologique', () => {
+    const c = conversation('hugo/2026-09-22-migration');
+    const [t1, t2] = c.payload.turns;
+    if (!t1 || !t2) throw new Error('tours manquants');
+    c.payload.turns = [
+      { ...t1, ts: t2.ts },
+      { ...t2, ts: t1.ts },
+    ];
+    expect(verifierJeu(jeu([c]))).toContain(
+      'hugo/2026-09-22-migration : tours hors ordre chronologique',
+    );
+  });
+
+  it('signale un external_id de tour en double', () => {
+    const c = conversation('hugo/2026-09-22-migration');
+    const [t1] = c.payload.turns;
+    if (!t1) throw new Error('tour manquant');
+    c.payload.turns = [t1, { ...t1 }];
+    expect(verifierJeu(jeu([c]))).toContain(
+      'hugo/2026-09-22-migration : external_id de tour en double',
+    );
+  });
+
+  it('signale un external_id de source en double', () => {
+    const a = conversation('hugo/2026-09-22-migration');
+    const b = conversation('hugo/2026-09-23-suite', {
+      payload: { ...a.payload, source: { ...a.payload.source } },
+    });
+    expect(verifierJeu(jeu([a, b]))).toContain(
+      'hugo/2026-09-23-suite : external_id de source en double',
+    );
+  });
+
+  it('signale un tour inconnu dans pasRetenir', () => {
+    const c = conversation('hugo/2026-09-22-migration', {
+      attendu: {
+        faits: [],
+        pasRetenir: [{ id: 'N001', enonce: 'x', tour: 't-999', pourquoi: 'y' }],
+        remplace: [],
+        conflits: [],
+      },
+    });
+    expect(verifierJeu(jeu([c]))).toContain('hugo/2026-09-22-migration : N001, tour inconnu t-999');
+  });
+
+  it('signale un nom de fichier hors convention', () => {
+    const c = conversation('Hugo/Migration', { personnage: 'hugo' });
+    expect(verifierJeu(jeu([c], ['Hugo/Migration']))).toContain(
+      'Hugo/Migration : nom de fichier hors convention (ASCII, AAAA-MM-JJ-sujet)',
+    );
+  });
+
+  it('signale un conflit avec un identifiant inconnu', () => {
+    const c = conversation('hugo/2026-09-22-migration', {
+      attendu: {
+        faits: [
+          {
+            id: 'F001',
+            enonce: 'x',
+            fiche: 'y',
+            alias: [],
+            typeFiche: 'client',
+            tour: 't-001',
+            extrait: 'paie à 45 jours',
+            sensible: false,
+          },
+        ],
+        pasRetenir: [],
+        remplace: [],
+        conflits: [{ a: 'F001', b: 'F999' }],
+      },
+    });
+    expect(verifierJeu(jeu([c]))).toContain('hugo/2026-09-22-migration : conflit : b inconnu F999');
+  });
+
+  it('signale un remplacement d un fait par lui-même', () => {
+    const c = conversation('hugo/2026-09-22-migration', {
+      attendu: {
+        faits: [
+          {
+            id: 'F001',
+            enonce: 'x',
+            fiche: 'y',
+            alias: [],
+            typeFiche: 'client',
+            tour: 't-001',
+            extrait: 'paie à 45 jours',
+            sensible: false,
+          },
+        ],
+        pasRetenir: [],
+        remplace: [{ ancien: 'F001', nouveau: 'F001' }],
+        conflits: [],
+      },
+    });
+    expect(verifierJeu(jeu([c]))).toContain(
+      "hugo/2026-09-22-migration : remplacement d'un fait par lui-même F001",
+    );
+  });
+
+  it('signale une entrée en double dans mini.json', () => {
+    const c = conversation('hugo/2026-09-22-migration');
+    expect(
+      verifierJeu(jeu([c], ['hugo/2026-09-22-migration', 'hugo/2026-09-22-migration'])),
+    ).toContain('mini.json : hugo/2026-09-22-migration en double');
   });
 });
 

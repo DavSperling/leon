@@ -21,25 +21,38 @@ export function verifierJeu(jeu: JeuEssai): string[] {
       ...c.attendu.faits.map((f) => f.id),
       ...c.attendu.pasRetenir.map((n) => n.id),
     ]) {
-      if (vus.has(id)) problemes.push(`${id} défini deux fois`);
+      if (vus.has(id)) ici(`${id} défini deux fois`);
       vus.add(id);
       if (id.startsWith('F')) faitsConnus.add(id);
     }
+    // Un secret ne doit jamais être recopié dans la réponse attendue : le juge le verrait en clair.
+    for (const f of c.attendu.faits)
+      for (const secret of jeu.entreprise.secrets)
+        if (f.enonce.includes(secret) || f.extrait.includes(secret))
+          ici(`${f.id} contient un secret`);
   }
 
   for (const c of jeu.conversations) {
-    for (const r of c.attendu.remplace)
-      for (const id of [r.ancien, r.nouveau])
-        if (!faitsConnus.has(id))
-          problemes.push(`${c.cle} : remplacement vers un fait inconnu ${id}`);
-    for (const k of c.attendu.conflits)
-      for (const id of [k.a, k.b])
-        if (!faitsConnus.has(id)) problemes.push(`${c.cle} : conflit avec un fait inconnu ${id}`);
+    const ici = (message: string) => problemes.push(`${c.cle} : ${message}`);
+    for (const r of c.attendu.remplace) {
+      if (r.ancien === r.nouveau) ici(`remplacement d'un fait par lui-même ${r.ancien}`);
+      if (!faitsConnus.has(r.ancien)) ici(`remplacement : ancien inconnu ${r.ancien}`);
+      if (!faitsConnus.has(r.nouveau)) ici(`remplacement : nouveau inconnu ${r.nouveau}`);
+    }
+    for (const k of c.attendu.conflits) {
+      if (k.a === k.b) ici(`conflit d'un fait avec lui-même ${k.a}`);
+      if (!faitsConnus.has(k.a)) ici(`conflit : a inconnu ${k.a}`);
+      if (!faitsConnus.has(k.b)) ici(`conflit : b inconnu ${k.b}`);
+    }
   }
 
   const cles = new Set(jeu.conversations.map((c) => c.cle));
-  for (const cle of jeu.mini)
+  const miniVus = new Set<string>();
+  for (const cle of jeu.mini) {
     if (!cles.has(cle)) problemes.push(`mini.json : conversation inconnue ${cle}`);
+    else if (miniVus.has(cle)) problemes.push(`mini.json : ${cle} en double`);
+    miniVus.add(cle);
+  }
 
   const textes = jeu.conversations.flatMap((c) => c.payload.turns.map((t) => t.text));
   for (const secret of jeu.entreprise.secrets)

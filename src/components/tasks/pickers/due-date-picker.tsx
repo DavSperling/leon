@@ -15,6 +15,8 @@ type DueDatePickerProps = PickerSlot & {
 };
 
 // Un champ de date natif ne se valide pas à chaque chiffre tapé : on attend OK ou Entrée.
+// Le menu est dans un portail mais reste, pour React, sous le formulaire de création : sans
+// stopPropagation, le submit de ce champ enverrait aussi la création.
 function DateField({ onPick }: { onPick: (date: string) => void }) {
   const id = useId();
   const [date, setDate] = useState('');
@@ -22,6 +24,7 @@ function DateField({ onPick }: { onPick: (date: string) => void }) {
     <form
       className="flex items-center gap-1.5 border-t p-2"
       onSubmit={(event) => {
+        event.stopPropagation();
         event.preventDefault();
         if (date) onPick(date);
       }}

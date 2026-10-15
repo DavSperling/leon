@@ -17,12 +17,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
 import { Textarea } from '@/components/ui/textarea';
+import { DESCRIPTION_MAX_CHARS, TITLE_MAX_CHARS } from '@/lib/tasks/limits';
 import { initialDraft, type TaskDraft, type TaskPrefill } from './create-draft';
 import { DraftPills } from './draft-pills';
 import type { ListContext } from './list-context';
 import { safely } from './safely';
-
-const TITLE_MAX_CHARS = 200;
 
 type FormProps = {
   prefill: TaskPrefill;
@@ -43,6 +42,38 @@ const toInput = (title: string, description: string, draft: TaskDraft) => ({
   dueDate: draft.dueDate,
   labelIds: draft.labels.map((label) => label.id),
 });
+
+type FooterProps = { pending: boolean; onCreateAndContinue: () => void };
+
+function FormFooter({ pending, onCreateAndContinue }: FooterProps) {
+  return (
+    <DialogFooter className="items-center">
+      <DialogClose asChild>
+        <Button type="button" variant="ghost" size="sm">
+          Annuler
+        </Button>
+      </DialogClose>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={pending}
+        onClick={onCreateAndContinue}
+      >
+        Créer et continuer
+      </Button>
+      <Button
+        type="submit"
+        size="sm"
+        disabled={pending}
+        aria-keyshortcuts="Meta+Enter Control+Enter"
+      >
+        {pending ? 'Création…' : 'Créer la tâche'}
+        <Kbd className="bg-primary-foreground/20 text-primary-foreground">⌘↵</Kbd>
+      </Button>
+    </DialogFooter>
+  );
+}
 
 // Le contenu du dialogue est démonté à la fermeture : chaque ouverture repart du préremplissage.
 function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: FormProps) {
@@ -105,6 +136,7 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
         <Textarea
           value={description}
           rows={4}
+          maxLength={DESCRIPTION_MAX_CHARS}
           placeholder="Description (Markdown)"
           aria-label="Description"
           onChange={(event) => setDescription(event.target.value)}
@@ -117,31 +149,7 @@ function CreateTaskForm({ prefill, filterProjectId, context, now, onDone }: Form
           {error}
         </p>
       )}
-      <DialogFooter className="items-center">
-        <DialogClose asChild>
-          <Button type="button" variant="ghost" size="sm">
-            Annuler
-          </Button>
-        </DialogClose>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={() => submit(true)}
-        >
-          Créer et continuer
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={pending}
-          aria-keyshortcuts="Meta+Enter Control+Enter"
-        >
-          {pending ? 'Création…' : 'Créer la tâche'}
-          <Kbd className="bg-primary-foreground/20 text-primary-foreground">⌘↵</Kbd>
-        </Button>
-      </DialogFooter>
+      <FormFooter pending={pending} onCreateAndContinue={() => submit(true)} />
     </form>
   );
 }

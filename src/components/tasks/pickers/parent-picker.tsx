@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { searchTasksAction } from '@/app/(taches)/taches/actions';
+import { SEARCH_MAX_CHARS, SEARCH_MIN_CHARS } from '@/lib/tasks/limits';
 import type { ParentChoice } from '../create-draft';
 import { safely } from '../safely';
 import { Picker, type PickerSlot } from './picker';
 
 const NONE = 'none';
-const MIN_CHARS = 2;
 const DEBOUNCE_MS = 200;
 
 type ParentPickerProps = PickerSlot & {
@@ -22,7 +22,8 @@ export function ParentPicker({ value, onChange, ...slot }: ParentPickerProps) {
   const [query, setQuery] = useState('');
   const [found, setFound] = useState<ParentChoice[]>([]);
   const text = query.trim();
-  const searching = text.length >= MIN_CHARS;
+  // Au-delà de la borne du serveur, la recherche n'est pas lancée : elle ne ferait que refuser.
+  const searching = text.length >= SEARCH_MIN_CHARS && text.length <= SEARCH_MAX_CHARS;
 
   useEffect(() => {
     if (!searching) return;

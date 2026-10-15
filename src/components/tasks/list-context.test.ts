@@ -38,11 +38,12 @@ describe('groupStatuses', () => {
     ]);
   });
 
-  it('garde les libellés quand un filtre de projet est actif', () => {
+  it('ne garde que les statuts du projet filtré, avec leurs libellés', () => {
     const config = {
       ...DEFAULT_VIEW_CONFIG,
       filters: { ...DEFAULT_VIEW_CONFIG.filters, projectId: 'p1' },
     };
-    expect(groupStatuses([STATUSES[0]], TWO, config).map((s) => s.label)).toEqual(['Backlog']);
+    const kept = groupStatuses(STATUSES, TWO, config);
+    expect(kept.map((s) => [s.id, s.label])).toEqual([['s1', 'Backlog']]);
   });
 });

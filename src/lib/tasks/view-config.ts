@@ -14,8 +14,8 @@ import {
   type ViewOrdering,
   type ViewProperty,
 } from '@/lib/enums';
+import { SEARCH_MAX_CHARS } from './limits';
 
-const MAX_QUERY_CHARS = 100;
 const Uuid = z.uuid();
 
 export const ViewConfigSchema = z.strictObject({
@@ -34,7 +34,7 @@ export const ViewConfigSchema = z.strictObject({
     labelId: Uuid.nullable(),
     projectId: Uuid.nullable(),
     due: z.enum(DUE_FILTERS).nullable(),
-    q: z.string().max(MAX_QUERY_CHARS),
+    q: z.string().max(SEARCH_MAX_CHARS),
   }),
 });
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
@@ -159,7 +159,7 @@ const flagCodec: Codec<boolean> = {
   format: (value) => (value ? '1' : '0'),
 };
 const textCodec: Codec<string> = {
-  parse: (raw) => (raw.length <= MAX_QUERY_CHARS ? raw : undefined),
+  parse: (raw) => (raw.length <= SEARCH_MAX_CHARS ? raw : undefined),
   format: (value) => value,
 };
 const uuidCodec: Codec<string> = {

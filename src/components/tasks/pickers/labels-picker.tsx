@@ -3,6 +3,7 @@
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { createLabelAction } from '@/app/(taches)/taches/actions';
+import { LABEL_NAME_MAX_CHARS } from '@/lib/tasks/limits';
 import { nextColor } from '@/lib/tasks/palette';
 import type { LabelRow } from '@/server/tasks/labels';
 import { LabelDot } from '../label-chip';
@@ -10,7 +11,6 @@ import { safely } from '../safely';
 import { Picker, type PickerOption, type PickerSlot } from './picker';
 
 const NEW_PREFIX = 'new:';
-const NAME_MAX_CHARS = 40;
 
 type LabelsPickerProps = PickerSlot & {
   labels: readonly LabelRow[];
@@ -30,7 +30,7 @@ export function LabelsPicker({ labels, value, onToggle, ...slot }: LabelsPickerP
   const creatable = (search: string): PickerOption[] => {
     const name = search.trim();
     const exists = labels.some((label) => label.name.toLowerCase() === name.toLowerCase());
-    if (name === '' || name.length > NAME_MAX_CHARS || exists) return [];
+    if (name === '' || name.length > LABEL_NAME_MAX_CHARS || exists) return [];
     return [
       {
         value: `${NEW_PREFIX}${name}`,

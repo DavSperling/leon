@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SEARCH_MAX_CHARS } from '@/lib/tasks/limits';
 import type { ViewConfig } from '@/lib/tasks/view-config';
 import { cn } from '@/lib/utils';
 import { useCreateTask } from './create-task-provider';
@@ -30,9 +31,6 @@ export function listTitle(viewName: string | null, config: ViewConfig, context: 
     return context.projects.find((project) => project.id === projectId)?.name ?? 'Projet';
   return assignee === 'me' || creator === 'me' ? 'Mes tâches' : 'Toutes les tâches';
 }
-
-// Longueur maximale de `q` dans l'URL (C4) : au-delà, la page ignorerait la recherche.
-const MAX_QUERY_CHARS = 100;
 
 type SearchFieldProps = { query: string; onSearch: (text: string) => void };
 
@@ -66,7 +64,7 @@ function SearchField({ query, onSearch }: SearchFieldProps) {
           id={id}
           type="search"
           value={text}
-          maxLength={MAX_QUERY_CHARS}
+          maxLength={SEARCH_MAX_CHARS}
           placeholder="Rechercher…"
           onChange={(event) => setText(event.target.value)}
           className="h-8 w-44 pl-8 text-sm"

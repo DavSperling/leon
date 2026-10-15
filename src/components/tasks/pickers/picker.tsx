@@ -44,6 +44,11 @@ type PickerProps = PickerSlot & {
 // Sans accents ni majuscules : « ete » trouve « Été ».
 const fold = (text: string): string => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
+// Un chiffre se lit sur la touche physique : sur AZERTY, la rangée du haut donne « & é " » sans Maj.
+export function pressedKey(event: { key: string; code: string }): string {
+  return /^(?:Digit|Numpad)(\d)$/.exec(event.code)?.[1] ?? event.key;
+}
+
 function matching(options: PickerOption[], search: string): PickerOption[] {
   const needle = fold(search.trim());
   if (needle === '') return options;
@@ -123,7 +128,9 @@ export function Picker({
           label={label}
           onKeyDown={(event) => {
             const option =
-              event.metaKey || event.ctrlKey || event.altKey ? undefined : byShortcut(event.key);
+              event.metaKey || event.ctrlKey || event.altKey
+                ? undefined
+                : byShortcut(pressedKey(event));
             if (!option) return;
             event.preventDefault();
             choose(option.value);

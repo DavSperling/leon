@@ -3,6 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { TASK_PRIORITIES } from '@/lib/enums';
+import {
+  DESCRIPTION_MAX_CHARS,
+  LABEL_NAME_MAX_CHARS,
+  SEARCH_MAX_CHARS,
+  SEARCH_MIN_CHARS,
+  TITLE_MAX_CHARS,
+} from '@/lib/tasks/limits';
 import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -21,13 +28,12 @@ type ActionResult<T extends object = object> = ({ ok: true } & T) | { ok: false;
 const INVALID_INPUT = 'Saisie invalide.';
 const INTERNAL_ERROR = 'Erreur interne de Leon.';
 const PARENT_RESULTS = 12;
-const PARENT_QUERY_MIN_CHARS = 2;
 
 const Id = z.uuid();
 const Ids = z.array(Id).max(MAX_IDS);
 const Priority = z.enum(TASK_PRIORITIES);
-const Title = z.string().trim().min(1).max(200);
-const Description = z.string().max(100_000);
+const Title = z.string().trim().min(1).max(TITLE_MAX_CHARS);
+const Description = z.string().max(DESCRIPTION_MAX_CHARS);
 const DueDate = z.iso.date();
 
 const CreateTaskSchema = z.strictObject({
@@ -58,11 +64,11 @@ const TaskPatchSchema = z.strictObject({
 const UpdateTaskSchema = z.strictObject({ id: Id, patch: TaskPatchSchema });
 
 const NewLabelSchema = z.strictObject({
-  name: z.string().trim().min(1).max(40),
+  name: z.string().trim().min(1).max(LABEL_NAME_MAX_CHARS),
   color: z.string().regex(/^#[0-9a-f]{6}$/),
 });
 
-const SearchSchema = z.string().trim().min(PARENT_QUERY_MIN_CHARS).max(100);
+const SearchSchema = z.string().trim().min(SEARCH_MIN_CHARS).max(SEARCH_MAX_CHARS);
 
 type Work<S extends z.ZodType, T extends object> = (
   ctx: TenantContext,

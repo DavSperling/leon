@@ -16,13 +16,16 @@ export type ListContext = {
 // Un changement de filtres, que les menus et les pastilles demandent à la barre d'outils.
 export type FilterPatch = Partial<ViewConfig['filters']>;
 
-// Deux projets ont chacun leur « Backlog » : sans filtre de projet, la clé du projet distingue les groupes.
+// Les statuts dont la liste fait ses groupes : ceux du projet filtré. Deux projets ont chacun leur
+// « Backlog » : sans filtre de projet, la clé du projet distingue les groupes.
 export function groupStatuses(
   statuses: readonly StatusRow[],
   projects: readonly ProjectRow[],
   config: ViewConfig,
 ): StatusRow[] {
-  if (projects.length < 2 || config.filters.projectId !== null) return [...statuses];
+  const { projectId } = config.filters;
+  if (projectId !== null) return statuses.filter((status) => status.projectId === projectId);
+  if (projects.length < 2) return [...statuses];
   const keys = new Map(projects.map((project) => [project.id, project.key]));
   return statuses.map((status) => ({
     ...status,

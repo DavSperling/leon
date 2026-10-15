@@ -34,7 +34,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   const config = parseViewParams(params, base);
   const [list, statuses, members, labels, projects] = await Promise.all([
     listTasks(ctx, config, now),
-    listStatuses(ctx, config.filters.projectId ?? undefined),
+    listStatuses(ctx),
     listMembers(ctx),
     listLabels(ctx),
     listProjects(ctx),
@@ -46,7 +46,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     projects,
     viewerId: ctx.userId,
   };
-  // Seuls les groupes distinguent les statuts de même nom de deux projets (« Backlog · LEO »).
+  // Seuls les groupes se limitent au projet filtré et distinguent les statuts de même nom de deux
+  // projets (« Backlog · LEO ») ; la création rapide a besoin des statuts de tous les projets.
   const groupContext = { ...context, statuses: groupStatuses(statuses, projects, config) };
   return (
     <CreateTaskProvider config={config} context={context} now={now}>

@@ -1,0 +1,119 @@
+{
+  "sources": [
+    "https://developer.atlassian.com/cloud/confluence/openapi-v2.v3.json",
+    "https://developer.atlassian.com/cloud/confluence/swagger.v3.json"
+  ],
+  "versions": ["2.0.0", "1.0.0"],
+  "operations": {
+    "GET /wiki/rest/api/user/current": {
+      "query": {
+        "expand": {
+          "list": true,
+          "values": ["operations", "personalSpace", "isExternalCollaborator"]
+        }
+      }
+    },
+    "GET /wiki/api/v2/pages": {
+      "query": {
+        "body-format": { "values": ["storage", "atlas_doc_format"] },
+        "cursor": {},
+        "id": { "list": true },
+        "limit": {},
+        "sort": {
+          "values": [
+            "id",
+            "-id",
+            "created-date",
+            "-created-date",
+            "modified-date",
+            "-modified-date",
+            "title",
+            "-title"
+          ]
+        },
+        "space-id": { "list": true },
+        "status": { "list": true, "values": ["current", "archived", "deleted", "trashed"] },
+        "subtype": { "values": ["live", "page"] },
+        "title": {}
+      }
+    },
+    "GET /wiki/api/v2/pages/{id}": {
+      "query": {
+        "body-format": {
+          "values": [
+            "storage",
+            "atlas_doc_format",
+            "view",
+            "export_view",
+            "anonymous_export_view",
+            "styled_view",
+            "editor"
+          ]
+        },
+        "get-draft": {},
+        "include-collaborators": {},
+        "include-direct-children": {},
+        "include-favorited-by-current-user-status": {},
+        "include-labels": {},
+        "include-likes": {},
+        "include-operations": {},
+        "include-properties": {},
+        "include-version": {},
+        "include-versions": {},
+        "include-webresources": {},
+        "status": {
+          "list": true,
+          "values": ["current", "archived", "trashed", "deleted", "historical", "draft"]
+        },
+        "version": {}
+      }
+    },
+    "GET /wiki/api/v2/pages/{id}/footer-comments": {
+      "query": {
+        "body-format": { "values": ["storage", "atlas_doc_format"] },
+        "cursor": {},
+        "limit": {},
+        "sort": { "values": ["created-date", "-created-date", "modified-date", "-modified-date"] },
+        "status": {
+          "list": true,
+          "values": ["current", "archived", "trashed", "deleted", "historical", "draft"]
+        }
+      }
+    },
+    "GET /wiki/api/v2/footer-comments/{id}/children": {
+      "query": {
+        "body-format": { "values": ["storage", "atlas_doc_format"] },
+        "cursor": {},
+        "limit": {},
+        "sort": { "values": ["created-date", "-created-date", "modified-date", "-modified-date"] }
+      }
+    },
+    "POST /wiki/api/v2/users-bulk": { "query": {}, "body": ["accountIds"] },
+    "GET /wiki/api/v2/spaces": {
+      "query": {
+        "cursor": {},
+        "description-format": { "values": ["plain", "view"] },
+        "favorited-by": {},
+        "ids": { "list": true },
+        "include-icon": {},
+        "keys": { "list": true },
+        "labels": { "list": true },
+        "limit": {},
+        "not-favorited-by": {},
+        "sort": { "values": ["id", "-id", "key", "-key", "name", "-name"] },
+        "status": { "values": ["current", "archived", "trashed"] },
+        "type": {
+          "values": [
+            "global",
+            "collaboration",
+            "knowledge_base",
+            "personal",
+            "system",
+            "onboarding",
+            "xflow_sample_space"
+          ]
+        }
+      }
+    }
+  }
+}

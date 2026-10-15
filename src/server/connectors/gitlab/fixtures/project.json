@@ -1,0 +1,10 @@
+{
+  "id": 278964,
+  "name": "Leon",
+  "path": "leon",
+  "path_with_namespace": "acme/leon",
+  "visibility": "private",
+  "web_url": "https://gitlab.com/acme/leon",
+  "issues_enabled": true,
+  "merge_requests_enabled": true
+}

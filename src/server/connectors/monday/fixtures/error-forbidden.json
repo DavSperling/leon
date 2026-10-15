@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "User unauthorized to perform action",
+      "extensions": { "code": "UserUnauthorizedException", "status_code": 403 }
+    }
+  ],
+  "account_id": 1234567
+}

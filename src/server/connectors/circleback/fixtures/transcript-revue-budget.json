@@ -1,0 +1,9 @@
+[
+  { "speaker": null, "text": "Je commence l’enregistrement.", "timestamp": 1.5 },
+  {
+    "speaker": "Sophie Bernard",
+    "text": "Le budget 2027 est gelé jusqu’à janvier.",
+    "timestamp": 12
+  },
+  { "speaker": "Marie Durand", "text": "Compris, je préviens l’équipe.", "timestamp": 20.75 }
+]

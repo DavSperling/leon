@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "id": "6a2c9e18-7f4b-4d03-8e65-b1d9a3f7c240",
+      "name": "Corriger le menu sur mobile",
+      "sequence_id": 14,
+      "description_html": "<h2>Constat</h2><p>Le menu ne se ferme pas &amp; reste ouvert.</p>",
+      "created_by_id": "e5b07d93-6c14-4a2f-8d59-1f3a7c9e2b48",
+      "updated_by_id": null,
+      "updated_at": "2026-10-12T16:40:05.902331Z"
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false,
+  "pagination": { "style": "cursor" }
+}

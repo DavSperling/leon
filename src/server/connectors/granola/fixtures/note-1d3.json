@@ -1,0 +1,61 @@
+{
+  "id": "not_1d3tmYTlCICgjy",
+  "object": "note",
+  "title": "Point budget trimestriel",
+  "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+  "created_at": "2026-10-14T15:30:00Z",
+  "updated_at": "2026-10-14T16:45:00Z",
+  "deleted_at": null,
+  "web_url": "https://notes.granola.ai/d/f3e45e0f-24cc-480b-9a6c-8b1f5e3d7a2c",
+  "calendar_event": {
+    "event_title": "Point budget trimestriel",
+    "invitees": [{ "email": "paul@acme.test" }, { "email": "lea@acme.test" }],
+    "organiser": "marie@acme.test",
+    "calendar_event_id": "2su99n6iiik37iiknmb5t4fkfh_20261014T153000Z",
+    "scheduled_start_time": "2026-10-14T15:30:00Z",
+    "scheduled_end_time": "2026-10-14T16:30:00Z"
+  },
+  "attendees": [
+    { "name": "Marie Durand", "email": "marie@acme.test" },
+    { "name": "Paul Martin", "email": "paul@acme.test" },
+    { "name": "Léa Bernard", "email": "lea@acme.test" }
+  ],
+  "folder_membership": [],
+  "space_membership": [],
+  "summary_text": "Le budget du trimestre est maintenu.",
+  "summary_markdown": "## Point budget trimestriel\n\n- Budget maintenu",
+  "private_notes_text": null,
+  "private_notes_markdown": null,
+  "transcript": [
+    {
+      "speaker": { "source": "microphone", "attribution": "me" },
+      "text": "On commence par le budget du trimestre.",
+      "start_time": "2026-10-14T15:30:05Z",
+      "end_time": "2026-10-14T15:30:09Z"
+    },
+    {
+      "speaker": { "source": "microphone", "attribution": "me" },
+      "text": "Paul, tu as les chiffres ?",
+      "start_time": "2026-10-14T15:30:10Z",
+      "end_time": "2026-10-14T15:30:12Z"
+    },
+    {
+      "speaker": { "source": "speaker", "attribution": "them", "name": "Paul Martin" },
+      "text": "Oui : nous avons dépensé 40 000 euros, il reste 12 000 euros.",
+      "start_time": "2026-10-14T15:30:14Z",
+      "end_time": "2026-10-14T15:30:20Z"
+    },
+    {
+      "speaker": { "source": "speaker", "attribution": "them" },
+      "text": "Je m'occupe de la relance des fournisseurs d'ici vendredi.",
+      "start_time": "2026-10-14T15:31:02Z",
+      "end_time": "2026-10-14T15:31:06Z"
+    },
+    {
+      "speaker": { "source": "microphone", "attribution": "me" },
+      "text": "Parfait, on garde le budget actuel.",
+      "start_time": "2026-10-14T15:31:20Z",
+      "end_time": "2026-10-14T15:31:23Z"
+    }
+  ]
+}

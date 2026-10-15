@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil-a-ne-pas-reprendre : la clé n’est pas valide",
+      "extensions": { "code": "UNAUTHENTICATED" }
+    }
+  ],
+  "data": null
+}

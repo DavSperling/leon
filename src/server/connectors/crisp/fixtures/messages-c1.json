@@ -1,0 +1,89 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": [
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "user",
+      "origin": "chat",
+      "content": "Bonjour, ma facture d’octobre indique deux fois l’abonnement.\n\nPouvez-vous la corriger ?",
+      "fingerprint": 163239614854320,
+      "timestamp": 1791273630000,
+      "stamped": true,
+      "user": {
+        "type": "participant",
+        "nickname": "Marie Durand",
+        "user_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "operator",
+      "origin": "chat",
+      "content": "Bonjour Marie, je regarde ça tout de suite.",
+      "fingerprint": 163239614854321,
+      "timestamp": 1791273900000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "event",
+      "from": "operator",
+      "origin": "chat",
+      "content": {
+        "name": "etat",
+        "value": "resolved"
+      },
+      "fingerprint": 163239614854322,
+      "timestamp": 1791277200000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "operator",
+      "origin": "email",
+      "content": "C’est corrigé : un avoir de 49 € a été émis.",
+      "fingerprint": 163239614854323,
+      "timestamp": 1791278400000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "user",
+      "origin": "chat",
+      "content": "Merci, c’est bien reçu.",
+      "fingerprint": 163239614854324,
+      "timestamp": 1791279000000,
+      "stamped": true,
+      "user": {
+        "type": "participant",
+        "nickname": "Marie Durand",
+        "user_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001"
+      }
+    }
+  ]
+}

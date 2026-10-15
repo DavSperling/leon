@@ -1,0 +1,49 @@
+{
+  "tasks": [
+    {
+      "id": "86b1abe",
+      "custom_id": null,
+      "name": "Prendre rendez-vous avec le client Acme",
+      "text_content": "",
+      "description": "",
+      "status": { "status": "à faire", "type": "open", "orderindex": 0, "color": "#d3d3d3" },
+      "date_created": "1791454500000",
+      "date_updated": "1791564000000",
+      "creator": {
+        "id": 101,
+        "username": "Marie Durand",
+        "color": "#1e90ff",
+        "email": "marie@acme.test",
+        "profilePicture": null
+      },
+      "list": { "id": "5002", "name": "Ventes", "access": true },
+      "folder": { "id": "5002", "name": "hidden", "hidden": true, "access": true },
+      "space": { "id": "3002" },
+      "url": "https://app.clickup.com/t/86b1abe",
+      "parent": null
+    },
+    {
+      "id": "86b1abf",
+      "custom_id": null,
+      "name": "Préparer la démo du 20 octobre",
+      "text_content": "Préparer la démo.\n- scénario\n- jeu de données",
+      "description": "Préparer la démo.\n- scénario\n- jeu de données",
+      "status": { "status": "en cours", "type": "custom", "orderindex": 1, "color": "#4194f6" },
+      "date_created": "1791564000000",
+      "date_updated": "1791803100000",
+      "creator": {
+        "id": 102,
+        "username": "David Martin",
+        "color": "#ff8c00",
+        "email": "david@acme.test",
+        "profilePicture": null
+      },
+      "list": { "id": "5002", "name": "Ventes", "access": true },
+      "folder": { "id": "5002", "name": "hidden", "hidden": true, "access": true },
+      "space": { "id": "3002" },
+      "url": "https://app.clickup.com/t/86b1abf",
+      "parent": "86b1abc"
+    }
+  ],
+  "last_page": true
+}

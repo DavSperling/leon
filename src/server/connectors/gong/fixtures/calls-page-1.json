@@ -1,0 +1,102 @@
+{
+  "requestId": "4al018gzaztcr8nbukw",
+  "records": {
+    "totalRecords": 4,
+    "currentPageSize": 2,
+    "currentPageNumber": 0,
+    "cursor": "eyJhbGciOiJIUzI1NiJ9.eyJjYWxsSWQiOiI3NzgyMzQyMjc0MDI1OTM3ODk2In0.c2lnbmF0dXJl"
+  },
+  "calls": [
+    {
+      "metaData": {
+        "id": "7782342274025937895",
+        "url": "https://app.gong.io/call?id=7782342274025937895",
+        "title": "Point produit Acme",
+        "scheduled": "2026-10-12T11:00:00+02:00",
+        "started": "2026-10-12T11:02:00+02:00",
+        "duration": 2400,
+        "primaryUserId": "234599484848423",
+        "direction": "Conference",
+        "system": "Zoom",
+        "scope": "External",
+        "media": "Video",
+        "language": "fra",
+        "workspaceId": "623457276584334",
+        "purpose": "Point d'avancement",
+        "meetingUrl": "https://zoom.us/j/123",
+        "isPrivate": false
+      },
+      "parties": [
+        {
+          "id": "56825452554556",
+          "emailAddress": "marie@acme.test",
+          "name": "Marie Durand",
+          "title": "Directrice produit",
+          "userId": "234599484848423",
+          "speakerId": "6432345678555530067",
+          "affiliation": "Internal",
+          "methods": ["Invitee", "Attendee"]
+        },
+        {
+          "id": "56825452554557",
+          "emailAddress": "paul@dupont.test",
+          "name": "Paul Martin",
+          "speakerId": "6432345678555530068",
+          "affiliation": "External",
+          "methods": ["Invitee", "Attendee"]
+        },
+        {
+          "id": "56825452554558",
+          "emailAddress": "jean@dupont.test",
+          "speakerId": "6432345678555530069",
+          "affiliation": "External",
+          "methods": ["Attendee"]
+        },
+        {
+          "id": "56825452554559",
+          "emailAddress": "lea@dupont.test",
+          "name": "Léa Roux",
+          "affiliation": "External",
+          "methods": ["Invitee"]
+        }
+      ],
+      "content": { "brief": "La livraison est repoussée au 3 novembre." }
+    },
+    {
+      "metaData": {
+        "id": "7782342274025937896",
+        "url": "https://app.gong.io/call?id=7782342274025937896",
+        "title": "Appel client Dupont",
+        "scheduled": "2026-10-13T14:30:00Z",
+        "started": "2026-10-13T14:30:00Z",
+        "duration": 900,
+        "primaryUserId": "234599484848423",
+        "direction": "Outbound",
+        "scope": "External",
+        "media": "Audio",
+        "language": "fra",
+        "isPrivate": false
+      },
+      "parties": [
+        {
+          "id": "56825452554560",
+          "emailAddress": "marie@acme.test",
+          "name": "Marie Durand",
+          "userId": "234599484848423",
+          "speakerId": "6432345678555530067",
+          "affiliation": "Internal",
+          "methods": ["Attendee"]
+        },
+        {
+          "id": "56825452554561",
+          "emailAddress": "jean@dupont.test",
+          "name": "Jean Dupont",
+          "speakerId": "6432345678555530070",
+          "affiliation": "External",
+          "methods": ["Attendee"]
+        }
+      ],
+      "content": { "brief": "Dupont veut une démonstration avant le 20 novembre." }
+    }
+  ]
+}

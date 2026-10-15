@@ -1,0 +1,61 @@
+{
+  "tickets": [
+    {
+      "id": 101,
+      "url": "https://acme.zendesk.com/api/v2/tickets/101.json",
+      "subject": "Imprimante du bureau 3 en feu",
+      "raw_subject": "Imprimante du bureau 3 en feu",
+      "description": "Bonjour, l'imprimante du bureau 3 a pris feu ce matin.",
+      "status": "open",
+      "priority": "high",
+      "type": "incident",
+      "requester_id": 9001,
+      "submitter_id": 9001,
+      "assignee_id": 9002,
+      "tags": ["entreprise", "urgence"],
+      "via": { "channel": "email" },
+      "created_at": "2026-10-09T08:00:00Z",
+      "updated_at": "2026-10-10T09:00:00Z",
+      "generated_timestamp": 1791622800
+    },
+    {
+      "id": 102,
+      "url": "https://acme.zendesk.com/api/v2/tickets/102.json",
+      "subject": "Doublon de la demande 101",
+      "description": "Doublon.",
+      "status": "deleted",
+      "priority": null,
+      "type": null,
+      "requester_id": 9001,
+      "submitter_id": 9001,
+      "assignee_id": null,
+      "tags": [],
+      "created_at": "2026-10-09T08:05:00Z",
+      "updated_at": "2026-10-10T10:00:00Z",
+      "generated_timestamp": 1791626400
+    },
+    {
+      "id": 103,
+      "url": "https://acme.zendesk.com/api/v2/tickets/103.json",
+      "subject": null,
+      "raw_subject": "",
+      "description": "Appel manqué, rappeler le client.",
+      "status": "pending",
+      "priority": null,
+      "type": null,
+      "requester_id": 9003,
+      "submitter_id": 9003,
+      "assignee_id": 9002,
+      "tags": [],
+      "via": { "channel": "voice" },
+      "created_at": "2026-10-11T08:30:00Z",
+      "updated_at": "2026-10-11T08:45:00Z",
+      "generated_timestamp": 1791708300
+    }
+  ],
+  "after_url": "https://acme.zendesk.com/api/v2/incremental/tickets/cursor?cursor=MTc5MTcwODMwMC4wfHwxMDN8",
+  "after_cursor": "MTc5MTcwODMwMC4wfHwxMDN8",
+  "before_url": null,
+  "before_cursor": null,
+  "end_of_stream": false
+}

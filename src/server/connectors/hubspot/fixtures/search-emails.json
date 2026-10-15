@@ -1,0 +1,37 @@
+{
+  "total": 2,
+  "results": [
+    {
+      "id": "54001",
+      "properties": {
+        "createdate": "2026-10-13T09:50:00.000Z",
+        "hs_email_headers": "{\"from\":{\"email\":\"paul@client.test\",\"firstName\":\"Paul\",\"lastName\":\"Lefèvre\"},\"sender\":{\"email\":\"paul@client.test\"},\"to\":[{\"email\":\"marie@acme.test\",\"firstName\":\"Marie\",\"lastName\":\"Durand\"}],\"cc\":[],\"bcc\":[]}",
+        "hs_email_html": null,
+        "hs_email_subject": "Re: Devis T4",
+        "hs_email_text": "Bonjour Marie,\nPouvez-vous confirmer le délai de livraison ? Écrivez-moi à <paul@client.test>.\nCordialement",
+        "hs_lastmodifieddate": "2026-10-13T10:00:00.000Z",
+        "hs_object_id": "54001",
+        "hubspot_owner_id": "1001"
+      },
+      "createdAt": "2026-10-13T09:50:00.000Z",
+      "updatedAt": "2026-10-13T10:00:00.000Z",
+      "archived": false
+    },
+    {
+      "id": "54002",
+      "properties": {
+        "createdate": "2026-10-14T10:00:00.000Z",
+        "hs_email_headers": null,
+        "hs_email_html": "<p>Voici le devis révisé.</p><p>Livraison sous 15 jours.</p>",
+        "hs_email_subject": "Devis T4",
+        "hs_email_text": null,
+        "hs_lastmodifieddate": "2026-10-14T10:00:00.000Z",
+        "hs_object_id": "54002",
+        "hubspot_owner_id": "1002"
+      },
+      "createdAt": "2026-10-14T10:00:00.000Z",
+      "updatedAt": "2026-10-14T10:00:00.000Z",
+      "archived": false
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "5f1c0a00-0000-4000-8000-000000000001",
+  "is_owner": false,
+  "mention_name": "marie",
+  "name": "Marie Durand",
+  "role": "member",
+  "organization2": { "id": "5f1c0a00-0000-4000-8000-0000000000a0" },
+  "workspace2": {
+    "created_at": "2024-03-01T09:00:00Z",
+    "default_workflow_id": 500000001,
+    "estimate_scale": [0, 1, 2, 3, 5, 8],
+    "id": "5f1c0a00-0000-4000-8000-0000000000b0",
+    "korey_enabled": false,
+    "name": "Acme",
+    "url_slug": "acme",
+    "utc_offset": "+01:00"
+  }
+}

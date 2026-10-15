@@ -1,0 +1,8 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil-a-ne-pas-reprendre : Cannot query field \"nope\" on type \"Thread\"",
+      "extensions": { "code": "GRAPHQL_VALIDATION_FAILED" }
+    }
+  ]
+}

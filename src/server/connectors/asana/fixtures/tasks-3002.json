@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "gid": "4005",
+      "resource_type": "task",
+      "name": "Mettre à jour la page d'accueil",
+      "notes": "Nouveau texte d'accroche : « Votre mémoire d'équipe ».",
+      "modified_at": "2026-10-09T10:00:00.000Z",
+      "created_by": { "gid": "1002", "resource_type": "user", "name": "Paul Martin" },
+      "permalink_url": "https://app.asana.com/0/3002/4005"
+    }
+  ],
+  "next_page": null
+}

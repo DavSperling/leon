@@ -1,0 +1,32 @@
+{
+  "total": 3,
+  "results": [
+    {
+      "id": "51001",
+      "properties": {
+        "createdate": "2026-10-01T09:00:00.000Z",
+        "hs_lastmodifieddate": "2026-10-08T11:10:00.000Z",
+        "hs_note_body": "<div style=\"\" dir=\"auto\" data-top-level=\"true\"><p style=\"margin:0;\">Suivi avec Acme : budget validé pour le T4.</p><ul><li>Démo prévue le 22 octobre</li><li>Contrat à envoyer avant vendredi</li></ul></div>",
+        "hs_object_id": "51001",
+        "hubspot_owner_id": "1001"
+      },
+      "createdAt": "2026-10-01T09:00:00.000Z",
+      "updatedAt": "2026-10-08T11:10:00.000Z",
+      "archived": false
+    },
+    {
+      "id": "51002",
+      "properties": {
+        "createdate": "2026-10-09T08:30:00.000Z",
+        "hs_lastmodifieddate": "2026-10-09T08:30:00.000Z",
+        "hs_note_body": null,
+        "hs_object_id": "51002",
+        "hubspot_owner_id": "1001"
+      },
+      "createdAt": "2026-10-09T08:30:00.000Z",
+      "updatedAt": "2026-10-09T08:30:00.000Z",
+      "archived": false
+    }
+  ],
+  "paging": { "next": { "after": "2" } }
+}

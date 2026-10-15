@@ -1,0 +1,75 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 101,
+      "active_flag": true,
+      "add_time": "2026-10-01 09:15:00",
+      "content": "<p>Appel avec <b>Marie Durand</b> :</p><ul><li>budget validé à 12&nbsp;000&nbsp;€</li><li>signature prévue le 20 octobre</li></ul>",
+      "deal": { "title": "Contrat Acme" },
+      "lead_id": null,
+      "deal_id": 7,
+      "last_update_user_id": 2,
+      "org_id": 3,
+      "organization": { "name": "Acme" },
+      "person": { "name": "Marie Durand" },
+      "person_id": 5,
+      "project_id": null,
+      "project": null,
+      "task_id": null,
+      "task": null,
+      "pinned_to_deal_flag": true,
+      "pinned_to_organization_flag": false,
+      "pinned_to_person_flag": false,
+      "pinned_to_project_flag": false,
+      "pinned_to_task_flag": false,
+      "update_time": "2026-10-02 10:00:00",
+      "user": {
+        "email": "paul@acme.test",
+        "icon_url": null,
+        "is_you": false,
+        "name": "Paul Martin"
+      },
+      "user_id": 2
+    },
+    {
+      "id": 102,
+      "active_flag": true,
+      "add_time": "2026-10-05 14:30:12",
+      "content": "Rappeler Marie mardi pour confirmer la date.",
+      "deal": null,
+      "lead_id": null,
+      "deal_id": null,
+      "last_update_user_id": 1,
+      "org_id": null,
+      "organization": null,
+      "person": { "name": "Marie Durand" },
+      "person_id": 5,
+      "project_id": null,
+      "project": null,
+      "task_id": null,
+      "task": null,
+      "pinned_to_deal_flag": false,
+      "pinned_to_organization_flag": false,
+      "pinned_to_person_flag": true,
+      "pinned_to_project_flag": false,
+      "pinned_to_task_flag": false,
+      "update_time": "2026-10-05 14:30:12",
+      "user": {
+        "email": "marie@acme.test",
+        "icon_url": null,
+        "is_you": true,
+        "name": "Marie Durand"
+      },
+      "user_id": 1
+    }
+  ],
+  "additional_data": {
+    "pagination": {
+      "start": 0,
+      "limit": 100,
+      "more_items_in_collection": true,
+      "next_start": 2
+    }
+  }
+}

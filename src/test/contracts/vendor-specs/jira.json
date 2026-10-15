@@ -1,0 +1,29 @@
+{
+  "sources": ["https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json"],
+  "versions": ["1001.0.0-SNAPSHOT-fe911bb6c9773b95ccc4938fe54b8b7edde34525"],
+  "operations": {
+    "GET /rest/api/3/myself": { "query": { "expand": {} } },
+    "GET /rest/api/3/search/jql": {
+      "query": {
+        "expand": {},
+        "failFast": {},
+        "fields": { "list": true },
+        "fieldsByKeys": {},
+        "includeArchivedProjects": {},
+        "jql": {},
+        "maxResults": {},
+        "nextPageToken": {},
+        "properties": { "list": true },
+        "reconcileIssues": { "list": true }
+      }
+    },
+    "GET /rest/api/3/issue/{issueIdOrKey}/comment": {
+      "query": {
+        "expand": {},
+        "maxResults": {},
+        "orderBy": { "values": ["created", "-created", "+created"] },
+        "startAt": {}
+      }
+    }
+  }
+}

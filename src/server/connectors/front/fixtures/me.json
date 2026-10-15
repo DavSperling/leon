@@ -1,0 +1,7 @@
+{
+  "_links": {
+    "self": "https://acme.api.frontapp.com/me"
+  },
+  "id": "cmp_4ac",
+  "name": "Acme"
+}

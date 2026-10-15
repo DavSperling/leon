@@ -1,0 +1,43 @@
+{
+  "data": {
+    "transcript": {
+      "title": "Point hebdo produit",
+      "transcript_url": "https://app.fireflies.ai/view/ff-1001",
+      "organizer_email": "marie@acme.test",
+      "participants": ["marie@acme.test", "paul@acme.test"],
+      "meeting_attendees": [
+        { "displayName": "Marie Durand", "name": "Marie Durand", "email": "marie@acme.test" },
+        { "displayName": null, "name": "Paul Martin", "email": "paul@acme.test" }
+      ],
+      "meeting_info": { "silent_meeting": false, "summary_status": "processed" },
+      "summary": {
+        "overview": "Le lancement passe au 3 novembre.",
+        "short_summary": null,
+        "gist": null,
+        "action_items": "Paul prépare la démo."
+      },
+      "sentences": [
+        {
+          "index": 0,
+          "speaker_name": "Marie Durand",
+          "text": "Bonjour à tous.",
+          "start_time": 0.5
+        },
+        {
+          "index": 1,
+          "speaker_name": "Marie Durand",
+          "text": "On décale le lancement au 3 novembre.",
+          "start_time": 3.2
+        },
+        {
+          "index": 2,
+          "speaker_name": "Paul Martin",
+          "text": "D'accord, je prépare la démo.",
+          "start_time": 41.25
+        },
+        { "index": 3, "speaker_name": "Marie Durand", "text": "Merci Paul.", "start_time": "63.5" },
+        { "index": 4, "speaker_name": "Camille", "text": "   ", "start_time": 70 }
+      ]
+    }
+  }
+}

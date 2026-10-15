@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "id": "20001",
+      "status": "current",
+      "title": "Re: Compte rendu du comité produit",
+      "pageId": "10002",
+      "version": {
+        "createdAt": "2026-10-12T17:20:00.000Z",
+        "message": "",
+        "number": 1,
+        "minorEdit": false,
+        "authorId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab"
+      },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<p>Je suis d&rsquo;accord pour reporter, mais pas au-delà du 15 décembre.</p>"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/PROD/pages/10002/Compte+rendu+du+comite+produit?focusedCommentId=20001"
+      }
+    }
+  ],
+  "_links": {
+    "next": "/wiki/api/v2/pages/10002/footer-comments?cursor=eyJpZCI6IjIwMDAxIn0&limit=250&body-format=storage",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

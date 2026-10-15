@@ -1,0 +1,23 @@
+{
+  "page": 2,
+  "pages": 2,
+  "total": 3,
+  "pageSize": 2,
+  "results": [
+    {
+      "id": "meeting-100",
+      "name": "Revue de sprint",
+      "happenedAt": "2026-10-01T08:00:00.000Z",
+      "url": "https://tldv.io/app/meetings/meeting-100",
+      "duration": 1800,
+      "organizer": { "name": "Marie Durand", "email": "marie@acme.test" },
+      "invitees": [
+        { "name": "Paul Martin", "email": "paul@acme.test" },
+        { "name": "Sophie Bernard", "email": "sophie@acme.test" }
+      ],
+      "template": "Revue",
+      "extraProperties": { "conferenceId": "uvw-xyza-bcd" },
+      "phoneNumber": "+33 1 00 00 00 00"
+    }
+  ]
+}

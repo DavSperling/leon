@@ -1,0 +1,32 @@
+{
+  "id": "1001",
+  "shortId": "API-7",
+  "title": "TimeoutError: la passerelle de paiement ne répond pas",
+  "numComments": 1,
+  "activity": [
+    {
+      "id": "9201",
+      "type": "note",
+      "commentId": "9201",
+      "dateCreated": "2026-10-02T08:00:00Z",
+      "user": { "id": "9", "name": "Julie Bernard", "email": "julie@acme.test" },
+      "data": {
+        "text": "On archive : la passerelle a prévenu d'une maintenance, ça ne se reproduira pas."
+      }
+    },
+    {
+      "id": "9200",
+      "type": "set_ignored",
+      "dateCreated": "2026-10-02T08:00:05Z",
+      "user": { "id": "9", "name": "Julie Bernard", "email": "julie@acme.test" },
+      "data": { "ignoreDuration": null }
+    },
+    {
+      "id": "0",
+      "type": "first_seen",
+      "dateCreated": "2026-09-28T13:00:00.000000Z",
+      "user": null,
+      "data": {}
+    }
+  ]
+}

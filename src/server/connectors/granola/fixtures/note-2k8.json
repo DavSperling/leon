@@ -1,0 +1,35 @@
+{
+  "id": "not_2k8Qw3ZnLp5RtA",
+  "object": "note",
+  "title": "Appel fournisseur",
+  "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+  "created_at": "2026-10-13T10:00:00Z",
+  "updated_at": "2026-10-13T10:05:00Z",
+  "deleted_at": null,
+  "web_url": "https://notes.granola.ai/d/0a1b2c3d-24cc-480b-9a6c-8b1f5e3d7a2c",
+  "calendar_event": null,
+  "attendees": [
+    { "name": "Marie Durand", "email": "marie@acme.test" },
+    { "name": "Sophie Lambert", "email": "sophie@fournisseur.test" }
+  ],
+  "folder_membership": [],
+  "space_membership": [],
+  "summary_text": "Livraison confirmée pour le 30.",
+  "summary_markdown": "- Livraison confirmée pour le 30",
+  "private_notes_text": null,
+  "private_notes_markdown": null,
+  "transcript": [
+    {
+      "speaker": { "source": "speaker", "attribution": "them" },
+      "text": "Bonjour Marie, la livraison partira lundi.",
+      "start_time": "2026-10-13T10:00:03Z",
+      "end_time": "2026-10-13T10:00:07Z"
+    },
+    {
+      "speaker": { "source": "microphone", "attribution": "me" },
+      "text": "Très bien, merci.",
+      "start_time": "2026-10-13T10:00:09Z",
+      "end_time": "2026-10-13T10:00:10Z"
+    }
+  ]
+}

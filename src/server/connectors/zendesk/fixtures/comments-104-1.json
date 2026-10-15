@@ -1,0 +1,36 @@
+{
+  "comments": [
+    {
+      "id": 1041,
+      "type": "Comment",
+      "author_id": 9001,
+      "body": "Quelle est la date d'échéance de la facture 2026-118 ?",
+      "plain_body": "Quelle est la date d'échéance de la facture 2026-118 ?",
+      "public": true,
+      "attachments": [],
+      "via": { "channel": "email" },
+      "created_at": "2026-10-12T09:00:00Z"
+    },
+    {
+      "id": 1042,
+      "type": "Comment",
+      "author_id": 9001,
+      "body": "",
+      "plain_body": "",
+      "public": true,
+      "attachments": [
+        { "id": 498483, "file_name": "facture.pdf", "content_type": "application/pdf" }
+      ],
+      "via": { "channel": "email" },
+      "created_at": "2026-10-12T09:01:00Z"
+    }
+  ],
+  "users": [
+    { "id": 9001, "name": "Camille Bernard", "email": "camille@client.test", "role": "end-user" }
+  ],
+  "meta": { "has_more": true, "after_cursor": "Zm9v", "before_cursor": null },
+  "links": {
+    "prev": null,
+    "next": "https://acme.zendesk.com/api/v2/tickets/104/comments?include=users&page%5Bafter%5D=Zm9v&page%5Bsize%5D=100&sort=created_at"
+  }
+}

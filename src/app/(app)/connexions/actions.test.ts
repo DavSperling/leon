@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { requireUserContext } from '@/server/auth/session';
-import type { CatalogItem } from '@/server/connectors/catalog';
+import type { CatalogField, CatalogItem } from '@/server/connectors/catalog';
 import { listCatalog } from '@/server/connectors/catalog';
 import {
   createConnection,
@@ -15,7 +15,11 @@ import {
 import { connectorsKey } from '@/server/connectors/crypto';
 import { githubCatalog } from '@/server/connectors/github/catalog';
 import { githubConnector } from '@/server/connectors/github/connector';
+import { gongCatalog } from '@/server/connectors/gong/catalog';
+import { gongConnector } from '@/server/connectors/gong/connector';
 import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http';
+import { leexiCatalog } from '@/server/connectors/leexi/catalog';
+import { leexiConnector } from '@/server/connectors/leexi/connector';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import {
@@ -80,6 +84,16 @@ const CONNECTOR_MESSAGES: Array<[number | null, string]> = [
   [404, 'Site Jira introuvable : vérifiez le nom du site'],
   [null, 'En-tête invalide : vérifiez la clé de GitHub'],
 ];
+
+// Un outil dont la clé est une paire, et ce que le remplacement doit chiffrer (le secret en premier).
+type KeyPairCase = {
+  provider: string;
+  entry: { fields: CatalogField[] };
+  real: AnyConnector;
+  stored: Record<string, unknown>;
+  fields: Record<string, string>;
+  secretFields: string[];
+};
 
 const connect = (override: Partial<Parameters<typeof connectAction>[0]> = {}) =>
   connectAction({
@@ -337,6 +351,45 @@ describe('replaceKeyAction', () => {
       'apiKey',
     ]);
   });
+
+  // Leexi et Gong donnent une paire à la création de la clé (identifiant + secret, clé d'accès + secret).
+  // Une fois la clé révoquée, la paire entière change : l'identifiant se saisit avec le secret,
+  // sinon « Remplacer la clé » échoue toujours et il ne reste qu'à supprimer puis rebrancher.
+  it.each<KeyPairCase>([
+    {
+      provider: 'leexi',
+      entry: leexiCatalog,
+      real: leexiConnector,
+      stored: { keyId: 'ancien_id' },
+      fields: { keyId: 'nouvel_id', keySecret: 'nouveau_secret_9' },
+      secretFields: ['keySecret', 'keyId'],
+    },
+    {
+      provider: 'gong',
+      entry: gongCatalog,
+      real: gongConnector,
+      stored: { baseUrlHost: 'us-12345', accessKey: 'ancienne-cle' },
+      fields: { accessKey: 'nouvelle-cle', accessKeySecret: 'nouveau-secret-9' },
+      secretFields: ['accessKeySecret', 'accessKey'],
+    },
+  ])(
+    'remplace aussi l’identifiant d’une clé en deux parties ($provider)',
+    async ({ provider, entry, real, stored: config, fields, secretFields }) => {
+      vi.mocked(getConnector).mockReturnValue({ ...real, verify } as unknown as AnyConnector);
+      vi.mocked(listCatalog).mockReturnValue([
+        { ...catalogItem, id: provider, label: provider, fields: entry.fields } as CatalogItem,
+      ]);
+      vi.mocked(listConnections).mockResolvedValue([{ ...stored, provider, config }] as never);
+
+      await expect(replace(fields)).resolves.toEqual({ ok: true, account: 'David (acme)' });
+
+      const sent = { ...config, ...fields };
+      expect(verify).toHaveBeenCalledWith(sent, expect.anything());
+      // La paire entière est chiffrée, le secret d'abord : l'empreinte affichée en est tirée.
+      expect(replaceConnectionSecret).toHaveBeenCalledWith(ctx, ID, sent, secretFields);
+      expect(real.secretFields).toEqual(secretFields);
+    },
+  );
 
   it('garde l’ancienne clé quand l’outil refuse la nouvelle', async () => {
     verify.mockRejectedValue(new ConnectorAuthError('Linear', 401));

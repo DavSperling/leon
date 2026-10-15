@@ -1,0 +1,54 @@
+{
+  "id": "6710c0000000000000000005",
+  "name": "Répondre à Durand SA",
+  "desc": "Le client demande un devis pour 12 postes.",
+  "url": "https://trello.com/c/Yz1Ab2Cd/3-repondre-a-durand-sa",
+  "shortUrl": "https://trello.com/c/Yz1Ab2Cd",
+  "idList": "5f2b3c4d5e6f7a8b9c0d11b1",
+  "actions": [
+    {
+      "id": "6710e0000000000000000002",
+      "idMemberCreator": "5f2b3c4d5e6f7a8b9c0d1e2f",
+      "type": "commentCard",
+      "date": "2026-10-12T10:15:00.000Z",
+      "data": {
+        "text": "Devis envoyé le 12 octobre, relance prévue lundi.",
+        "card": {
+          "id": "6710c0000000000000000005",
+          "name": "Répondre à Durand SA",
+          "idShort": 3,
+          "shortLink": "Yz1Ab2Cd"
+        }
+      },
+      "memberCreator": {
+        "id": "5f2b3c4d5e6f7a8b9c0d1e2f",
+        "fullName": "Marie Durand",
+        "username": "mariedurand",
+        "initials": "MD",
+        "avatarHash": null
+      }
+    },
+    {
+      "id": "6710e0000000000000000001",
+      "idMemberCreator": "5f2b3c4d5e6f7a8b9c0d2a3b",
+      "type": "createCard",
+      "date": "2026-10-12T09:45:00.000Z",
+      "data": {
+        "card": {
+          "id": "6710c0000000000000000005",
+          "name": "Répondre à Durand SA",
+          "idShort": 3,
+          "shortLink": "Yz1Ab2Cd"
+        },
+        "list": { "id": "5f2b3c4d5e6f7a8b9c0d11b1", "name": "Demandes" }
+      },
+      "memberCreator": {
+        "id": "5f2b3c4d5e6f7a8b9c0d2a3b",
+        "fullName": "Paul Martin",
+        "username": "paulmartin",
+        "initials": "PM",
+        "avatarHash": null
+      }
+    }
+  ]
+}

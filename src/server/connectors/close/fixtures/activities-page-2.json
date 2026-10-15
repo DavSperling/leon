@@ -1,0 +1,72 @@
+{
+  "data": [
+    {
+      "_type": "Note",
+      "id": "acti_No1SalonDubois0000000000000000000000000006",
+      "lead_id": "lead_DuboisConseil000000000000000000000000000001",
+      "date_created": "2026-10-12T09:15:00.000000+00:00",
+      "activity_at": "2026-10-12T09:15:00.000000+00:00",
+      "user_name": "David Martin",
+      "created_by_name": "David Martin",
+      "note": "Premier contact au salon. Intéressée par la formation.\n\nÀ rappeler la semaine prochaine."
+    },
+    {
+      "_type": "WhatsAppMessage",
+      "id": "acti_Wa1OutgoingLienDemoGarnier000000000000000000007",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-11T14:00:00.000000+00:00",
+      "activity_at": "2026-10-11T14:00:00.000000+00:00",
+      "user_name": "David Martin",
+      "text": "Bonjour, voici le lien de la démo.",
+      "direction": "outgoing"
+    },
+    {
+      "_type": "Email",
+      "id": "acti_Em3OutgoingDemoGarnier0000000000000000000000008",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-10T10:00:05.000000+02:00",
+      "activity_at": "2026-10-10T10:00:00+02:00",
+      "user_name": "David Martin",
+      "subject": "Démo de Leon",
+      "body_text": "Bonjour Paul,\n\nVoici les créneaux pour la démo : mardi 14h ou jeudi 10h.\n\nDavid",
+      "direction": "outgoing",
+      "sender": "david@acme.test",
+      "status": "sent",
+      "envelope": {
+        "from": [{ "email": "david@acme.test", "name": "David Martin" }],
+        "to": [{ "email": "paul.garnier@garnier.test", "name": "Paul Garnier" }],
+        "subject": "Démo de Leon"
+      }
+    },
+    {
+      "_type": "Note",
+      "id": "acti_No2VideDubois00000000000000000000000000009",
+      "lead_id": "lead_DuboisConseil000000000000000000000000000001",
+      "date_created": "2026-10-09T12:00:00.000000+00:00",
+      "activity_at": "2026-10-09T12:00:00.000000+00:00",
+      "user_name": "David Martin",
+      "note": ""
+    },
+    {
+      "_type": "Call",
+      "id": "acti_Ca2SansNoteGarnier00000000000000000000000010",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-08T12:00:00.000000+00:00",
+      "activity_at": "2026-10-08T12:00:00+00:00",
+      "user_name": "David Martin",
+      "note": "",
+      "direction": "outbound",
+      "status": "no-answer",
+      "duration": 0
+    },
+    {
+      "_type": "Created",
+      "id": "acti_Cr1CreationGarnier00000000000000000000000000011",
+      "lead_id": "lead_GarnierSA00000000000000000000000000000000002",
+      "date_created": "2026-10-07T08:00:00.000000+00:00",
+      "activity_at": "2026-10-07T08:00:00.000000+00:00",
+      "user_name": "David Martin"
+    }
+  ],
+  "has_more": false
+}

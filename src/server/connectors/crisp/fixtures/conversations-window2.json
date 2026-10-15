@@ -1,0 +1,67 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": [
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000004",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "inbox_id": null,
+      "people_id": null,
+      "state": "unresolved",
+      "status": 1,
+      "is_verified": false,
+      "is_blocked": false,
+      "availability": "online",
+      "active": {
+        "now": false
+      },
+      "last_message": "",
+      "preview_message": null,
+      "topic": null,
+      "verifications": [],
+      "participants": [],
+      "mentions": [],
+      "created_at": 1791970200000,
+      "updated_at": 1791972000000,
+      "waiting_since": null,
+      "compose": {},
+      "unread": {},
+      "assigned": null,
+      "meta": {
+        "email": "client@exemple.test"
+      },
+      "segments": []
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000003",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "inbox_id": null,
+      "people_id": null,
+      "state": "unresolved",
+      "status": 1,
+      "is_verified": false,
+      "is_blocked": false,
+      "availability": "online",
+      "active": {
+        "now": false
+      },
+      "last_message": "",
+      "preview_message": null,
+      "topic": null,
+      "verifications": [],
+      "participants": [],
+      "mentions": [],
+      "created_at": 1791648000000,
+      "updated_at": 1791650700000,
+      "waiting_since": null,
+      "compose": {},
+      "unread": {},
+      "assigned": null,
+      "meta": {
+        "nickname": "Léa Bernard",
+        "email": "lea@acme.test"
+      },
+      "segments": []
+    }
+  ]
+}

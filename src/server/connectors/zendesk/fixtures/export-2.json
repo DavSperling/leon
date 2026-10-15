@@ -1,0 +1,26 @@
+{
+  "tickets": [
+    {
+      "id": 104,
+      "url": "https://acme.zendesk.com/api/v2/tickets/104.json",
+      "subject": "Question sur la facture 2026-118",
+      "raw_subject": "Question sur la facture 2026-118",
+      "description": "Quelle est la date d'échéance de la facture 2026-118 ?",
+      "status": "solved",
+      "priority": "normal",
+      "type": "question",
+      "requester_id": 9001,
+      "submitter_id": 9001,
+      "assignee_id": 9002,
+      "tags": [],
+      "created_at": "2026-10-12T09:00:00Z",
+      "updated_at": "2026-10-12T14:00:00Z",
+      "generated_timestamp": 1791813600
+    }
+  ],
+  "after_url": "https://acme.zendesk.com/api/v2/incremental/tickets/cursor?cursor=MTc5MTgxMzYwMC4wfHwxMDR8",
+  "after_cursor": "MTc5MTgxMzYwMC4wfHwxMDR8",
+  "before_url": null,
+  "before_cursor": null,
+  "end_of_stream": true
+}

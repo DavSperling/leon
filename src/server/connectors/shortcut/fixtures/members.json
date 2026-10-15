@@ -1,0 +1,68 @@
+[
+  {
+    "created_at": "2024-03-01T09:00:00Z",
+    "disabled": false,
+    "entity_type": "member",
+    "group_ids": [],
+    "id": "5f1c0a00-0000-4000-8000-000000000001",
+    "role": "member",
+    "state": "full",
+    "updated_at": "2026-09-01T08:00:00Z",
+    "profile": {
+      "deactivated": false,
+      "display_icon": null,
+      "email_address": "marie@acme.test",
+      "entity_type": "profile",
+      "gravatar_hash": "0123456789abcdef0123456789abcdef",
+      "id": "5f1c0a00-0000-4000-8000-000000000001",
+      "is_owner": false,
+      "mention_name": "marie",
+      "name": "Marie Durand",
+      "two_factor_auth_activated": true
+    }
+  },
+  {
+    "created_at": "2024-03-02T09:00:00Z",
+    "disabled": false,
+    "entity_type": "member",
+    "group_ids": [],
+    "id": "5f1c0a00-0000-4000-8000-000000000002",
+    "role": "member",
+    "state": "full",
+    "updated_at": "2026-09-01T08:00:00Z",
+    "profile": {
+      "deactivated": false,
+      "display_icon": null,
+      "email_address": "paul@acme.test",
+      "entity_type": "profile",
+      "gravatar_hash": "fedcba9876543210fedcba9876543210",
+      "id": "5f1c0a00-0000-4000-8000-000000000002",
+      "is_owner": false,
+      "mention_name": "paul",
+      "name": "Paul Martin",
+      "two_factor_auth_activated": false
+    }
+  },
+  {
+    "created_at": "2025-01-10T09:00:00Z",
+    "disabled": false,
+    "entity_type": "member",
+    "group_ids": [],
+    "id": "5f1c0a00-0000-4000-8000-000000000003",
+    "role": "observer",
+    "state": "full",
+    "updated_at": "2026-09-01T08:00:00Z",
+    "profile": {
+      "deactivated": false,
+      "display_icon": null,
+      "email_address": null,
+      "entity_type": "profile",
+      "gravatar_hash": null,
+      "id": "5f1c0a00-0000-4000-8000-000000000003",
+      "is_owner": false,
+      "mention_name": "lea",
+      "name": null,
+      "two_factor_auth_activated": false
+    }
+  }
+]

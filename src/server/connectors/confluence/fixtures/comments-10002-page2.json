@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "id": "20002",
+      "status": "current",
+      "title": "Re: Compte rendu du comité produit",
+      "pageId": "10002",
+      "version": {
+        "createdAt": "2026-10-13T09:00:00.000Z",
+        "message": "",
+        "number": 1,
+        "minorEdit": false,
+        "authorId": "5b10ac8d82e05b22cc7d4ef5"
+      },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<p>Décision : la bêta est reportée au 1er décembre.</p>"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/PROD/pages/10002/Compte+rendu+du+comite+produit?focusedCommentId=20002"
+      }
+    }
+  ],
+  "_links": {
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

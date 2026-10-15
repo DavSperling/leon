@@ -1,0 +1,31 @@
+{
+  "page": 1,
+  "pages": 2,
+  "total": 3,
+  "pageSize": 2,
+  "results": [
+    {
+      "id": "meeting-300",
+      "name": "Point produit",
+      "happenedAt": "2026-10-12T14:00:00.000Z",
+      "url": "https://tldv.io/app/meetings/meeting-300",
+      "duration": 1500,
+      "organizer": { "name": "Marie Durand", "email": "marie@acme.test" },
+      "invitees": [{ "name": "Paul Martin", "email": "paul@acme.test" }],
+      "template": "Réunion d'équipe",
+      "extraProperties": { "conferenceId": "abc-defg-hij" },
+      "metadata": { "crmRecordId": "rec_123" }
+    },
+    {
+      "id": "meeting-200",
+      "name": "Atelier tarifs",
+      "happenedAt": "2026-10-08T11:30:00+02:00",
+      "url": "https://tldv.io/app/meetings/meeting-200",
+      "duration": 3600,
+      "organizer": { "name": "Paul Martin", "email": "paul@acme.test" },
+      "invitees": [{ "name": "Marie Durand", "email": "marie@acme.test" }],
+      "template": "Atelier",
+      "extraProperties": { "conferenceId": "klm-nopq-rst" }
+    }
+  ]
+}

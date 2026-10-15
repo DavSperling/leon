@@ -1,0 +1,44 @@
+[
+  {
+    "id": 31,
+    "iid": 7,
+    "project_id": 278964,
+    "title": "Ajouter la relève périodique",
+    "description": "Ajoute le tic de chaque minute et la relève des connexions.",
+    "state": "merged",
+    "created_at": "2026-10-10T16:00:00.000Z",
+    "updated_at": "2026-10-11T08:30:00.000Z",
+    "merged_at": "2026-10-11T08:30:00.000Z",
+    "author": {
+      "id": 2,
+      "username": "paul-martin",
+      "name": "Paul Martin",
+      "state": "active",
+      "web_url": "https://gitlab.com/paul-martin"
+    },
+    "user_notes_count": 2,
+    "draft": false,
+    "web_url": "https://gitlab.com/acme/leon/-/merge_requests/7",
+    "references": { "short": "!7", "relative": "!7", "full": "acme/leon!7" }
+  },
+  {
+    "id": 32,
+    "iid": 8,
+    "project_id": 278964,
+    "title": "Draft: piste pour un autre outil",
+    "description": "",
+    "state": "opened",
+    "created_at": "2026-10-12T10:00:00.000Z",
+    "updated_at": "2026-10-12T10:00:00.000Z",
+    "author": {
+      "id": 2,
+      "username": "paul-martin",
+      "name": "Paul Martin",
+      "state": "active",
+      "web_url": "https://gitlab.com/paul-martin"
+    },
+    "user_notes_count": 0,
+    "draft": true,
+    "web_url": "https://gitlab.com/acme/leon/-/merge_requests/8"
+  }
+]

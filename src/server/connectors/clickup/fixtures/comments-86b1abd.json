@@ -1,0 +1,40 @@
+{
+  "comments": [
+    {
+      "id": "90220002",
+      "comment": [],
+      "comment_text": "",
+      "user": {
+        "id": 101,
+        "username": "Marie Durand",
+        "initials": "MD",
+        "email": "marie@acme.test",
+        "color": "#1e90ff",
+        "profilePicture": null
+      },
+      "resolved": false,
+      "assignee": null,
+      "assigned_by": null,
+      "reactions": [],
+      "date": "1791457800000"
+    },
+    {
+      "id": "90220001",
+      "comment": [{ "text": "Le bug vient du cookie de session ; correctif prévu jeudi." }],
+      "comment_text": "Le bug vient du cookie de session ; correctif prévu jeudi.",
+      "user": {
+        "id": 101,
+        "username": "Marie Durand",
+        "initials": "MD",
+        "email": "marie@acme.test",
+        "color": "#1e90ff",
+        "profilePicture": null
+      },
+      "resolved": false,
+      "assignee": null,
+      "assigned_by": null,
+      "reactions": [],
+      "date": "1791454500000"
+    }
+  ]
+}

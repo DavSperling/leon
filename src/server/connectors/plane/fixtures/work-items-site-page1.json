@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "c4e81a37-52d9-4b06-a3f1-9e7d2c5b8a14",
+      "name": "Refonte de la page d'accueil",
+      "sequence_id": 12,
+      "description_html": "<p>Objectif : une page d'accueil plus claire.</p><ul><li><p>Maquette</p></li><li><p>Texte &amp; visuels</p></li></ul>",
+      "created_by_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "updated_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "updated_at": "2026-10-08T09:15:22.341907Z"
+    },
+    {
+      "id": "91d6f0b2-3a8e-4c75-b4d9-6f2e1a7c3d58",
+      "name": "Mettre à jour les mentions légales",
+      "sequence_id": 13,
+      "description_html": "<p></p>",
+      "created_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "updated_by_id": null,
+      "updated_at": "2026-10-09T14:02:10.118452Z"
+    }
+  ],
+  "next_cursor": "b3A9MjAyNi0xMC0wOVQxNDowMjoxMC4xMTg0NTJa",
+  "has_more": true,
+  "pagination": { "style": "cursor" }
+}

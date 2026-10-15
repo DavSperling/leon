@@ -1,0 +1,63 @@
+{
+  "limit": 10,
+  "next_cursor": null,
+  "items": [
+    {
+      "title": "Revue de sprint",
+      "meeting_title": "Revue de sprint 42",
+      "meeting_type": "internal",
+      "recording_id": 123456791,
+      "url": "https://fathom.video/calls/123456791",
+      "share_url": "https://fathom.video/share/pQ2rS4tU",
+      "created_at": "2026-10-14T14:00:00Z",
+      "scheduled_start_time": "2026-10-14T14:00:00Z",
+      "scheduled_end_time": "2026-10-14T14:30:00Z",
+      "recording_start_time": "2026-10-14T14:00:30Z",
+      "recording_end_time": "2026-10-14T14:29:00Z",
+      "calendar_invitees_domains_type": "only_internal",
+      "shared_with": "no_teams",
+      "transcript_language": "fr",
+      "transcript": [
+        {
+          "speaker": {
+            "display_name": "Paul Martin",
+            "matched_calendar_invitee_email": "paul@acme.test"
+          },
+          "text": "Le correctif de la facturation est livré.",
+          "timestamp": "00:02:10"
+        },
+        {
+          "speaker": {
+            "display_name": "Marie Durand",
+            "matched_calendar_invitee_email": "marie@acme.test"
+          },
+          "text": "Je valide la mise en production lundi.",
+          "timestamp": "00:02:40"
+        }
+      ],
+      "default_summary": null,
+      "action_items": null,
+      "calendar_invitees": [
+        {
+          "name": "Paul Martin",
+          "email": "paul@acme.test",
+          "email_domain": "acme.test",
+          "is_external": false
+        },
+        {
+          "name": "Marie Durand",
+          "email": "marie@acme.test",
+          "email_domain": "acme.test",
+          "is_external": false
+        }
+      ],
+      "recorded_by": {
+        "name": "Paul Martin",
+        "email": "paul@acme.test",
+        "email_domain": "acme.test",
+        "team": "Produit"
+      },
+      "crm_matches": null
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "boards": [
+      {
+        "items_page": {
+          "cursor": null,
+          "items": [
+            {
+              "id": "5550000006",
+              "name": "Préparer le séminaire",
+              "url": "https://acme.monday.com/boards/3333333333/pulses/5550000006",
+              "created_at": "2026-10-02T08:00:00Z",
+              "updated_at": "2026-10-11T12:00:00+02:00",
+              "creator": { "name": "Marie Durand", "email": "marie@acme.test" },
+              "board": { "name": "Événements", "workspace": null },
+              "group": null,
+              "column_values": [
+                { "type": "date", "text": "2026-12-04", "column": { "title": "Date" } }
+              ],
+              "updates": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "account_id": 1234567
+}

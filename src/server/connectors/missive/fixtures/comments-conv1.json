@@ -1,0 +1,16 @@
+{
+  "comments": [
+    {
+      "id": "5e1f8a37-2d4c-4b90-86a3-7d9c0e2f1b45",
+      "body": "Marc a raison, j’ai refait la facture. À envoyer avant vendredi.",
+      "created_at": 1792058400,
+      "mentions": [],
+      "author": {
+        "id": "dc3c4104-eced-4206-b532-ef84b331778a",
+        "name": "Paul Durand",
+        "email": "paul@acme.test",
+        "avatar_url": "https://example.test/avatars/paul.png"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "active": true,
+  "scope": "comment:read note:read object_configuration:read record_permission:read user_management:read",
+  "client_id": "9b6f3c1e-2d54-4f0a-8a37-5c1d0e7b2a44",
+  "token_type": "Bearer",
+  "exp": null,
+  "iat": 1760000000,
+  "sub": "14beef7a-99f7-4534-a87e-70b564330a4c",
+  "aud": "9b6f3c1e-2d54-4f0a-8a37-5c1d0e7b2a44",
+  "iss": "attio.com",
+  "token_level": "workspace",
+  "authorized_by_workspace_member_id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b",
+  "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+  "workspace_name": "Acme",
+  "workspace_slug": "acme",
+  "workspace_logo_url": null
+}

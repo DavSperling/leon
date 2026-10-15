@@ -1,0 +1,28 @@
+{
+  "teams": [
+    {
+      "id": "9001",
+      "name": "Acme",
+      "color": "#1e90ff",
+      "avatar": null,
+      "members": [
+        {
+          "user": {
+            "id": 101,
+            "username": "Marie Durand",
+            "color": "#1e90ff",
+            "profilePicture": null
+          }
+        },
+        {
+          "user": {
+            "id": 102,
+            "username": "David Martin",
+            "color": "#ff8c00",
+            "profilePicture": null
+          }
+        }
+      ]
+    }
+  ]
+}

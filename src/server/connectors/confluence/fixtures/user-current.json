@@ -1,0 +1,10 @@
+{
+  "type": "known",
+  "accountId": "5b10ac8d82e05b22cc7d4ef5",
+  "accountType": "atlassian",
+  "email": "marie@acme.test",
+  "publicName": "Marie",
+  "displayName": "Marie Durand",
+  "timeZone": "Europe/Paris",
+  "isExternalCollaborator": false
+}

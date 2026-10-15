@@ -1,0 +1,56 @@
+{
+  "data": {
+    "thread": {
+      "timelineEntries": {
+        "edges": [
+          {
+            "node": {
+              "id": "te_01J9Z8M2A1B2C3D4E5F6G7H8J1",
+              "timestamp": { "iso8601": "2026-10-14T09:10:00.000Z" },
+              "actor": {
+                "customer": { "fullName": "Paul Bernard", "email": { "email": "paul@client.test" } }
+              },
+              "entry": {
+                "chat": "Bonjour, ma facture d’octobre apparaît deux fois (500 euros au lieu de 250)."
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "te_01J9Z8M2A1B2C3D4E5F6G7H8J2",
+              "timestamp": { "iso8601": "2026-10-14T09:11:00.000Z" },
+              "actor": {
+                "machineUser": { "fullName": "Résumé automatique" }
+              },
+              "entry": { "note": "   " }
+            }
+          },
+          {
+            "node": {
+              "id": "te_01J9Z8M2A1B2C3D4E5F6G7H8J3",
+              "timestamp": { "iso8601": "2026-10-14T10:00:00.000Z" },
+              "actor": {
+                "machineUser": { "fullName": "Assistant facturation" }
+              },
+              "entry": {
+                "note": "Doublon confirmé dans Stripe : un remboursement de 250 euros est lancé."
+              }
+            }
+          },
+          {
+            "node": {
+              "id": "te_01J9Z8M2A1B2C3D4E5F6G7H8J4",
+              "timestamp": { "iso8601": "2026-10-14T17:05:00.000Z" },
+              "actor": {},
+              "entry": { "discord": "Merci, j’ai bien reçu le remboursement." }
+            }
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJ0ZSI6IjAxSjlaOE0yQTFCMkMzRDRFNUY2RzdIOEo0In0"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "data": {
+    "boards": [
+      {
+        "items_page": {
+          "cursor": "cursor-1",
+          "items": [
+            {
+              "id": "5550000001",
+              "name": "Refonte du site vitrine",
+              "url": "https://acme.monday.com/boards/1111111111/pulses/5550000001",
+              "created_at": "2026-09-02T08:00:00Z",
+              "updated_at": "2026-10-14T16:20:00Z",
+              "creator": { "name": "Marie Durand", "email": "marie@acme.test" },
+              "board": { "name": "Site vitrine", "workspace": { "name": "Marketing" } },
+              "group": { "title": "En cours" },
+              "column_values": [
+                { "type": "name", "text": "Refonte du site vitrine", "column": { "title": "Nom" } },
+                { "type": "status", "text": "En cours", "column": { "title": "Statut" } },
+                {
+                  "type": "people",
+                  "text": "Marie Durand, David Martin",
+                  "column": { "title": "Responsables" }
+                },
+                { "type": "date", "text": "2026-11-30", "column": { "title": "Échéance" } },
+                { "type": "status", "text": null, "column": { "title": "Priorité" } },
+                { "type": "long_text", "text": "", "column": { "title": "Notes" } },
+                {
+                  "type": "last_updated",
+                  "text": "Marie Durand, 2026-10-14 16:20",
+                  "column": { "title": "Dernière mise à jour" }
+                }
+              ],
+              "updates": [
+                {
+                  "id": "9001",
+                  "body": "<p>Le budget est validé : 12&nbsp;000 &euro;.</p><p>On lance la production lundi.</p>",
+                  "created_at": "2026-10-13T09:00:00Z",
+                  "creator": { "name": "David Martin", "email": "david@acme.test" },
+                  "replies": [
+                    {
+                      "id": "9101",
+                      "body": "<p>Merci, on part sur le plan Business.</p>",
+                      "created_at": "2026-10-13T10:30:00Z",
+                      "creator": { "name": "Marie Durand", "email": "marie@acme.test" }
+                    }
+                  ]
+                },
+                {
+                  "id": "9002",
+                  "body": "<p>Les maquettes sont livrées.</p>",
+                  "created_at": "2026-10-10T14:00:00Z",
+                  "creator": { "name": "Marie Durand", "email": "marie@acme.test" },
+                  "replies": []
+                }
+              ]
+            },
+            {
+              "id": "5550000002",
+              "name": "Rédiger les mentions légales",
+              "url": "https://acme.monday.com/boards/1111111111/pulses/5550000002",
+              "created_at": "2026-10-01T08:00:00Z",
+              "updated_at": "2026-10-14T09:00:00Z",
+              "creator": { "name": "David Martin", "email": "david@acme.test" },
+              "board": { "name": "Site vitrine", "workspace": { "name": "Marketing" } },
+              "group": { "title": "À faire" },
+              "column_values": [
+                {
+                  "type": "name",
+                  "text": "Rédiger les mentions légales",
+                  "column": { "title": "Nom" }
+                },
+                { "type": "status", "text": "À faire", "column": { "title": "Statut" } }
+              ],
+              "updates": []
+            },
+            {
+              "id": "5550000003",
+              "name": "Idée en vrac",
+              "url": "https://acme.monday.com/boards/1111111111/pulses/5550000003",
+              "created_at": "2026-10-05T08:00:00Z",
+              "updated_at": "2026-10-13T08:00:00Z",
+              "creator": null,
+              "board": { "name": "Site vitrine", "workspace": { "name": "Marketing" } },
+              "group": { "title": "À faire" },
+              "column_values": [
+                { "type": "name", "text": "Idée en vrac", "column": { "title": "Nom" } },
+                { "type": "status", "text": null, "column": { "title": "Statut" } }
+              ],
+              "updates": []
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "account_id": 1234567
+}

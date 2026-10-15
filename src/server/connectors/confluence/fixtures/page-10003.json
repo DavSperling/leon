@@ -1,0 +1,31 @@
+{
+  "id": "10003",
+  "status": "current",
+  "title": "Procédure d’astreinte",
+  "spaceId": "262200",
+  "parentId": "262300",
+  "parentType": "page",
+  "authorId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654",
+  "ownerId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654",
+  "lastOwnerId": null,
+  "createdAt": "2026-08-20T10:00:00.000Z",
+  "version": {
+    "createdAt": "2026-09-20T08:00:00.000Z",
+    "message": "",
+    "number": 12,
+    "minorEdit": false,
+    "authorId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654"
+  },
+  "body": {
+    "storage": {
+      "representation": "storage",
+      "value": "<p>L&rsquo;astreinte tourne chaque lundi &agrave; 9&nbsp;h entre l&rsquo;&eacute;quipe API et l&rsquo;&eacute;quipe web.</p>"
+    }
+  },
+  "_links": {
+    "webui": "/spaces/PROD/pages/10003/Procedure+d-astreinte",
+    "editui": "/pages/resumedraft.action?draftId=10003",
+    "tinyui": "/x/10003",
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

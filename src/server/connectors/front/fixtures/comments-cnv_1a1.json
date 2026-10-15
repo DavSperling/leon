@@ -1,0 +1,52 @@
+{
+  "_links": {
+    "self": "https://acme.api.frontapp.com/conversations/cnv_1a1/comments"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/comments/com_1a22",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "mentions": "https://acme.api.frontapp.com/comments/com_1a22/mentions",
+          "comment_replied_to": null
+        }
+      },
+      "id": "com_1a22",
+      "author": null,
+      "body": "Relancer jeudi si pas de nouvelles.",
+      "posted_at": 1791796140,
+      "attachments": [],
+      "is_pinned": false
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/comments/com_1a21",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "mentions": "https://acme.api.frontapp.com/comments/com_1a21/mentions",
+          "comment_replied_to": null
+        }
+      },
+      "id": "com_1a21",
+      "author": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/teammates/tea_david"
+        },
+        "id": "tea_david",
+        "email": "david@acme.test",
+        "username": "david",
+        "first_name": "David",
+        "last_name": "Roux",
+        "is_admin": true,
+        "is_available": true,
+        "is_blocked": false,
+        "type": "user"
+      },
+      "body": "Remboursement des frais de port accordé à Julie (commande 4512), à saisir dans l'outil de facturation.",
+      "posted_at": 1791795900.5,
+      "attachments": [],
+      "is_pinned": true
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+[
+  {
+    "id": "Hx6tN0wEq1LaV8yKd4RbJ",
+    "name": null,
+    "createdAt": "2026-10-12T08:00:00.000Z",
+    "updatedAt": "2026-10-12T08:01:00.000Z",
+    "duration": null,
+    "url": null,
+    "recordingUrl": null,
+    "tags": [],
+    "icalUid": null,
+    "attendees": [],
+    "notes": null,
+    "privateNotes": "",
+    "actionItems": [],
+    "insights": {},
+    "linkAccess": null,
+    "calendarEvent": null,
+    "sharedWith": []
+  },
+  {
+    "id": "Pm8cH1zXa4TbE6oLy0UwQ",
+    "name": "Revue budget",
+    "createdAt": "2026-10-10T08:30:00.000Z",
+    "updatedAt": "2026-10-10T09:40:00.000Z",
+    "duration": 2400,
+    "url": "https://meet.google.com/xyz-uvwx-rst",
+    "recordingUrl": null,
+    "tags": [],
+    "icalUid": null,
+    "attendees": [
+      {
+        "profileId": 13,
+        "name": null,
+        "email": "sophie@acme.test",
+        "title": null,
+        "companyName": "Acme",
+        "isCalendarEventOrganizer": false,
+        "isCalendarInvitee": true
+      },
+      {
+        "profileId": 11,
+        "name": "Marie Durand",
+        "email": "marie@acme.test",
+        "title": null,
+        "companyName": "Acme",
+        "isCalendarEventOrganizer": true,
+        "isCalendarInvitee": true
+      }
+    ],
+    "notes": "#### Résumé\n- Le budget 2027 est gelé jusqu’à la revue de janvier.",
+    "privateNotes": "",
+    "actionItems": [],
+    "insights": {},
+    "linkAccess": null,
+    "calendarEvent": null,
+    "sharedWith": []
+  },
+  {
+    "id": "Zk2vB5nJr7SdC9pGf3MhX",
+    "name": "Atelier de septembre",
+    "createdAt": "2026-09-01T10:00:00.000Z",
+    "updatedAt": "2026-09-02T10:00:00.000Z",
+    "duration": 600,
+    "url": null,
+    "recordingUrl": null,
+    "tags": [],
+    "icalUid": null,
+    "attendees": [],
+    "notes": "#### Résumé\n- Réunion trop ancienne pour la fenêtre de 30 jours.",
+    "privateNotes": "",
+    "actionItems": [],
+    "insights": {},
+    "linkAccess": null,
+    "calendarEvent": null,
+    "sharedWith": []
+  }
+]

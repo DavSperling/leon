@@ -1,0 +1,56 @@
+{
+  "sources": [
+    "https://raw.githubusercontent.com/getsentry/sentry-api-schema/main/openapi-derefed.json"
+  ],
+  "versions": ["v0"],
+  "operations": {
+    "GET /api/0/organizations/{organization_id_or_slug}/issues/": {
+      "query": {
+        "collapse": {
+          "list": true,
+          "values": ["base", "filtered", "lifetime", "stats", "unhandled"]
+        },
+        "cursor": {},
+        "end": {},
+        "environment": { "list": true },
+        "expand": {
+          "list": true,
+          "values": [
+            "inbox",
+            "integrationIssues",
+            "latestEventHasAttachments",
+            "owners",
+            "sentryAppIssues",
+            "sessions"
+          ]
+        },
+        "groupStatsPeriod": { "values": ["", "14d", "24h", "auto"] },
+        "limit": {},
+        "project": { "list": true },
+        "query": {},
+        "shortIdLookup": { "values": ["0", "1"] },
+        "sort": { "values": ["date", "freq", "inbox", "new", "recommended", "trends", "user"] },
+        "start": {},
+        "statsPeriod": {},
+        "viewId": {}
+      }
+    },
+    "GET /api/0/organizations/{organization_id_or_slug}/issues/{issue_id}/": {
+      "query": {
+        "collapse": { "list": true, "values": ["release", "stats", "tags"] },
+        "environment": { "list": true },
+        "expand": {
+          "list": true,
+          "values": [
+            "forecast",
+            "inbox",
+            "integrationIssues",
+            "latestEventHasAttachments",
+            "owners",
+            "sentryAppIssues"
+          ]
+        }
+      }
+    }
+  }
+}

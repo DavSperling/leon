@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil-a-ne-pas-reprendre : Too Many Requests - Rate limit exceeded",
+      "extensions": { "code": "RATE_LIMITED" }
+    }
+  ],
+  "data": null
+}

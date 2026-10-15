@@ -1,0 +1,42 @@
+[
+  {
+    "app_url": "https://app.shortcut.com/acme/story/103#activity-9010",
+    "author_id": "5f1c0a00-0000-4000-8000-0000000000ff",
+    "blocker": false,
+    "created_at": "2026-10-10T09:30:00Z",
+    "deleted": false,
+    "entity_type": "story-comment",
+    "external_id": null,
+    "group_mention_ids": [],
+    "id": 9010,
+    "linked_to_slack": false,
+    "member_mention_ids": [],
+    "mention_ids": [],
+    "parent_id": null,
+    "position": 9010,
+    "story_id": 103,
+    "text": "Reçu, je regarde ça demain.",
+    "unblocks_parent": false,
+    "updated_at": "2026-10-10T09:30:00Z"
+  },
+  {
+    "app_url": "https://app.shortcut.com/acme/story/103#activity-9011",
+    "author_id": null,
+    "blocker": false,
+    "created_at": "2026-10-11T09:00:00Z",
+    "deleted": false,
+    "entity_type": "story-comment",
+    "external_id": null,
+    "group_mention_ids": [],
+    "id": 9011,
+    "linked_to_slack": false,
+    "member_mention_ids": [],
+    "mention_ids": [],
+    "parent_id": null,
+    "position": 9011,
+    "story_id": 103,
+    "text": "Importé depuis GitHub : le bouton ne répond plus.",
+    "unblocks_parent": false,
+    "updated_at": "2026-10-11T09:00:00Z"
+  }
+]

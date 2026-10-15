@@ -1,0 +1,69 @@
+{
+  "_pagination": {
+    "next": null
+  },
+  "_links": {
+    "self": "https://acme.api.frontapp.com/conversations/cnv_1a1/messages?limit=50&page_token=tok_messages_2"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/messages/msg_1a11",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_1a1",
+          "message_replied_to": null,
+          "message_seen": "https://acme.api.frontapp.com/messages/msg_1a11/seen"
+        }
+      },
+      "id": "msg_1a11",
+      "message_uid": "1eab543f84a0785f7b6b8967cc000011",
+      "type": "email",
+      "is_inbound": true,
+      "draft_mode": null,
+      "error_type": null,
+      "version": "551ba368f3e7803cce51503ee3e58ef0-26028-1791795600000-0011",
+      "created_at": 1791795600,
+      "subject": "Livraison de la commande 4512",
+      "blurb": "Bonjour, ma commande 4512 devait arriver hier et je n'ai rien reçu.",
+      "author": null,
+      "recipients": [
+        {
+          "_links": {
+            "related": {
+              "contact": "https://acme.api.frontapp.com/contacts/crd_9x1"
+            }
+          },
+          "name": "Julie Lefevre",
+          "handle": "julie@client.test",
+          "role": "from"
+        },
+        {
+          "_links": {
+            "related": {
+              "contact": null
+            }
+          },
+          "name": "Support Acme",
+          "handle": "support@acme.test",
+          "role": "to"
+        }
+      ],
+      "body": "<p>Bonjour,</p><p>Ma commande 4512 devait arriver hier et je n'ai rien reçu. Pouvez-vous me dire où elle est ?</p><p>Julie Lefevre</p>",
+      "text": "Bonjour,\n\nMa commande 4512 devait arriver hier et je n'ai rien reçu. Pouvez-vous me dire où elle est ?\n\nJulie Lefevre",
+      "attachments": [
+        {
+          "id": "fil_3q8a7mby",
+          "filename": "photo-colis.png",
+          "url": "https://acme.api.frontapp.com/download/fil_3q8a7mby",
+          "content_type": "image/png",
+          "size": 4405,
+          "metadata": {
+            "is_inline": false,
+            "cid": "526b45586d0e6b1c484afab63d1ef0be"
+          }
+        }
+      ],
+      "metadata": {}
+    }
+  ]
+}

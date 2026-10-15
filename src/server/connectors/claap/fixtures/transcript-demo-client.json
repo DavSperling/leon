@@ -1,0 +1,21 @@
+{
+  "result": {
+    "segments": [
+      {
+        "startedAt": 42,
+        "endedAt": 47.5,
+        "speaker": "speaker_1",
+        "text": "Voici le tableau de bord que nous livrons à Dupont.",
+        "languageCode": "fr"
+      },
+      {
+        "startedAt": 48,
+        "endedAt": 53,
+        "speaker": "speaker_1",
+        "text": "La mise en service est prévue la semaine du 20 octobre.",
+        "languageCode": "fr"
+      }
+    ],
+    "languageCode": "fr"
+  }
+}

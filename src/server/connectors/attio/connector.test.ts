@@ -5,6 +5,7 @@ import { ConnectorAuthError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
+import { attioCatalog } from './catalog';
 import { attioConnector } from './connector';
 import members from './fixtures/members.json';
 import notesPage1 from './fixtures/notes-page-1.json';
@@ -18,7 +19,16 @@ import threadsPage1 from './fixtures/threads-page-1.json';
 
 const API = 'https://api.attio.com/v2';
 const TOKEN = 'attio_jeton_de_test_0123456789';
-const config = { token: TOKEN };
+const OAUTH_TOKEN = 'acces-oauth-de-test-0123456789';
+// La forme que `runConnectorSync` passe au connecteur : la configuration lue par le schéma.
+const config = { authMode: 'key' as const, token: TOKEN };
+// Un jeton d'espace du bouton : il n'expire pas et n'a pas de jeton de rafraîchissement.
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: OAUTH_TOKEN,
+  refreshToken: null,
+  expiresAt: null,
+};
 const SINCE = new Date('2026-09-15T00:00:00Z');
 const WORKSPACE = '14beef7a-99f7-4534-a87e-70b564330a4c';
 const PERSON = '891dcbfc-9141-415d-9b2a-2238a6cc012d';
@@ -80,11 +90,16 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: Parameters<typeof attioConnector.sync>[0];
+  } = {},
 ) {
-  const { http, calls } = testHttp(attioConnector, config, routes);
+  const cfg = overrides.config ?? config;
+  const { http, calls } = testHttp(attioConnector, cfg, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(attioConnector.sync(config, state, http));
+  const pages = await collect(attioConnector.sync(cfg, state, http));
   return { pages, calls };
 }
 
@@ -101,7 +116,7 @@ describe('attio : configuration', () => {
   const schema = attioConnector.configSchema;
 
   it('accepte un jeton, sans les espaces autour', () => {
-    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ token: TOKEN });
+    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
   });
 
   it('refuse une configuration incomplète', () => {
@@ -504,5 +519,93 @@ describe('attio : sync, ressources secondaires et erreurs', () => {
     await expect(
       collect(attioConnector.sync(config, { cursor: null, since: SINCE }, http)),
     ).rejects.toBeInstanceOf(ConnectorAuthError);
+  });
+});
+
+describe('attio : connexion par le bouton', () => {
+  const schema = attioConnector.configSchema;
+  const issuePaths = (input: unknown) => [
+    ...new Set((schema.safeParse(input).error?.issues ?? []).map((issue) => issue.path.join('.'))),
+  ];
+
+  it('accepte la forme du bouton et l’ancienne forme à clé, sans authMode', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    expect(schema.parse({ authMode: 'oauth', accessToken: ` ${OAUTH_TOKEN} ` })).toEqual({
+      authMode: 'oauth',
+      accessToken: OAUTH_TOKEN,
+    });
+    expect(schema.parse({ token: TOKEN }).authMode).toBe('key');
+  });
+
+  it('refuse une forme incomplète, en nommant le champ qui manque', () => {
+    expect(issuePaths({ authMode: 'oauth' })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'oauth', accessToken: '   ' })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'oauth', token: TOKEN })).toEqual(['accessToken']);
+    expect(issuePaths({ authMode: 'key', accessToken: OAUTH_TOKEN })).toEqual(['token']);
+    expect(issuePaths({ authMode: 'autre', token: TOKEN })).toEqual(['authMode']);
+  });
+
+  it('reste un z.object (le catalogue lit ses champs) et ne chiffre que le champ de clé', () => {
+    expect(Object.keys((schema as unknown as { shape: object }).shape).sort()).toEqual([
+      'accessToken',
+      'authMode',
+      'expiresAt',
+      'refreshToken',
+      'token',
+    ]);
+    // Le socle ajoute lui-même accessToken et refreshToken au scellement.
+    expect(attioConnector.secretFields).toEqual(['token']);
+    expect(attioConnector.hosts(oauthConfig)).toEqual(['api.attio.com']);
+  });
+
+  it('verify lit l’espace avec le jeton d’accès, pas avec la clé', async () => {
+    const { http, calls } = testHttp(attioConnector, oauthConfig, [
+      { url: `${API}/self`, json: self },
+      { url: `${API}/notes`, json: { data: [] } },
+    ]);
+
+    const result = await attioConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'Attio (espace Acme)' });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('verify refuse un jeton d’accès révoqué (active: false)', async () => {
+    const { http } = testHttp(attioConnector, oauthConfig, [
+      { url: `${API}/self`, json: selfInactive },
+    ]);
+
+    await expect(attioConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('sync envoie le jeton d’accès sur chaque requête et rend les mêmes éléments qu’avec une clé', async () => {
+    const withToken = await runSync(firstPassRoutes(), { config: oauthConfig });
+    const withKey = await runSync(firstPassRoutes());
+
+    expect(withToken.calls.length).toBeGreaterThan(5);
+    for (const call of withToken.calls) {
+      expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+    }
+    expect(idsOf(withToken.pages)).toEqual(idsOf(withKey.pages));
+  });
+
+  it('remonte un 401 du jeton d’accès comme une clé refusée : le socle propose alors de reconnecter', async () => {
+    const { http } = testHttp(attioConnector, oauthConfig, [
+      { url: `${API}/notes`, status: 401, json: { status_code: 401, code: 'unauthorized' } },
+    ]);
+
+    await expect(
+      collect(attioConnector.sync(oauthConfig, { cursor: null, since: SINCE }, http)),
+    ).rejects.toBeInstanceOf(ConnectorAuthError);
+  });
+
+  it('dit dans son catalogue ce que l’utilisateur verra chez Attio, garde la clé en secours et signale la limite de 25 espaces', () => {
+    expect(attioCatalog.oauthHelp).toMatch(/Attio/);
+    expect(attioCatalog.oauthHelp).toMatch(/administrateur/);
+    expect(attioCatalog.keyAccepted).not.toBe(false);
+    expect(attioCatalog.warning).toMatch(/25 espaces/);
   });
 });

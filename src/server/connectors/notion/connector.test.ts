@@ -22,7 +22,7 @@ import userPaul from './fixtures/user-paul.json';
 
 // Un jeton fabriqué à chaque lancement : aucun secret dans le dépôt.
 const TOKEN = `ntn_${randomBytes(16).toString('hex')}`;
-const CONFIG = { token: TOKEN };
+const CONFIG = { authMode: 'key' as const, token: TOKEN };
 const SINCE = new Date('2026-09-15T00:00:00Z');
 const API = 'https://api.notion.com/v1';
 
@@ -137,7 +137,7 @@ describe('configuration', () => {
     expect(schema.safeParse({}).success).toBe(false);
     expect(schema.safeParse({ token: '' }).success).toBe(false);
     expect(schema.safeParse({ token: '   ' }).success).toBe(false);
-    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ token: TOKEN });
+    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
     expect(notionConnector.secretFields).toEqual(['token']);
   });
 

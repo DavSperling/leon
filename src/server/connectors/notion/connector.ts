@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { Connector, ConnectorItem } from '../types';
 import { type Api, fetchMe, type NotionPage, searchPages } from './client';
 import { createAuthors, pageToItem } from './map';
+import { notionOAuth } from './oauth';
 
 // Notion : pages (texte des blocs) et commentaires.
 //
@@ -40,8 +41,28 @@ import { createAuthors, pageToItem } from './map';
 // de recherche partiel (seulement id) sans la capacité « Lire le contenu » : il est refusé par le
 // schéma, « Réponse inattendue » ; un essai en réel.
 
-const ConfigSchema = z.object({ token: z.string().trim().min(1) });
+// Deux façons de se brancher : la clé collée (`token`), ou le bouton (`accessToken` et ce que
+// `notionOAuth.toConfig` rend). Une connexion sans `authMode` est à clé. Les jetons du bouton
+// ne sont pas dans `secretFields` : le socle les chiffre à part.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    workspaceName: z.string().nullable().optional(),
+    botId: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Le jeton qui part dans l'en-tête ; le schéma garantit qu'il est là.
+const bearer = (config: Config) =>
+  (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Pages lues avant d'enregistrer le curseur : un plantage refait au pire ce lot.
 const PAGES_PER_BATCH = 10;
@@ -97,16 +118,17 @@ export const notionConnector: Connector<Config> = {
   secretFields: ['token'],
   hosts: () => ['api.notion.com'],
   minIntervalMs: 350,
+  oauth: notionOAuth,
 
   async verify(config, http) {
-    const me = await fetchMe({ http, token: config.token });
+    const me = await fetchMe({ http, token: bearer(config) });
     const name = me.name ?? 'Intégration';
     const workspace = me.bot?.workspace_name;
     return { account: workspace ? `${name} (${workspace})` : name };
   },
 
   async *sync(config, state, http) {
-    const api = { http, token: config.token };
+    const api = { http, token: bearer(config) };
     const previous = readMark(state.cursor, state.since);
     const pages = await pagesSince(api, previous);
     const authors = createAuthors(api);

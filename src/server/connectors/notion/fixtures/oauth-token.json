@@ -1,0 +1,21 @@
+{
+  "access_token": "acces-exemple-notion",
+  "token_type": "bearer",
+  "refresh_token": "rafraichir-exemple-notion-1",
+  "bot_id": "d4a17c93-6e2b-4085-9f31-0b8e5c2a7d33",
+  "workspace_id": "1f2e3d4c-5b6a-4980-9234-56789abcdef0",
+  "workspace_name": "Acme",
+  "workspace_icon": null,
+  "owner": {
+    "type": "user",
+    "user": {
+      "object": "user",
+      "id": "3f8e2c71-5a04-4b9d-8c16-72d0a9e45b11",
+      "name": "Marie Durand",
+      "type": "person",
+      "person": { "email": "marie@acme.example" }
+    }
+  },
+  "duplicated_template_id": null,
+  "request_id": "6c1b9a42-0f57-4e83-b7d1-93a5e2c80f14"
+}

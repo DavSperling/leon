@@ -1,0 +1,37 @@
+[
+  {
+    "id": 301,
+    "node_id": "PRR_kwDOAB1Pjs4AAAEt",
+    "user": { "login": "marie-durand", "id": 4101, "type": "User" },
+    "body": "Ça me va, on fusionne.",
+    "state": "APPROVED",
+    "html_url": "https://github.com/acme/leon/pull/13#pullrequestreview-301",
+    "pull_request_url": "https://api.github.com/repos/acme/leon/pulls/13",
+    "submitted_at": "2026-10-11T08:00:00Z",
+    "commit_id": "ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091",
+    "author_association": "MEMBER"
+  },
+  {
+    "id": 302,
+    "node_id": "PRR_kwDOAB1Pjs4AAAEu",
+    "user": { "login": "marie-durand", "id": 4101, "type": "User" },
+    "body": "Brouillon : à ne pas lire.",
+    "state": "PENDING",
+    "html_url": "https://github.com/acme/leon/pull/13#pullrequestreview-302",
+    "pull_request_url": "https://api.github.com/repos/acme/leon/pulls/13",
+    "commit_id": "ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091",
+    "author_association": "MEMBER"
+  },
+  {
+    "id": 303,
+    "node_id": "PRR_kwDOAB1Pjs4AAAEv",
+    "user": { "login": "paul-martin", "id": 4102, "type": "User" },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/acme/leon/pull/13#pullrequestreview-303",
+    "pull_request_url": "https://api.github.com/repos/acme/leon/pulls/13",
+    "submitted_at": "2026-10-11T08:05:00Z",
+    "commit_id": "ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091",
+    "author_association": "MEMBER"
+  }
+]

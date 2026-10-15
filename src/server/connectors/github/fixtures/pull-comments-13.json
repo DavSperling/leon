@@ -1,0 +1,18 @@
+[
+  {
+    "id": 501,
+    "node_id": "PRRC_kwDOAB1Pjs4AAAH1",
+    "url": "https://api.github.com/repos/acme/leon/pulls/comments/501",
+    "html_url": "https://github.com/acme/leon/pull/13#discussion_r501",
+    "pull_request_review_id": 303,
+    "path": "src/server/connectors/sync.ts",
+    "diff_hunk": "@@ -1,3 +1,5 @@",
+    "line": 42,
+    "side": "RIGHT",
+    "body": "Ici, plutôt 60 jours que 30.",
+    "user": { "login": "paul-martin", "id": 4102, "type": "User" },
+    "created_at": "2026-10-11T08:10:00Z",
+    "updated_at": "2026-10-11T08:10:00Z",
+    "author_association": "MEMBER"
+  }
+]

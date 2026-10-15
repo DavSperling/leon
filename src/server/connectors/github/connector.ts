@@ -1,4 +1,134 @@
-import type { AnyConnector } from '../types';
+import { z } from 'zod';
+import { ConnectorAuthError, type ConnectorHttp } from '../http';
+import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
+import { type GithubClient, githubClient, type Issue } from './client';
+import { type Discussion, toItem } from './map';
 
-// Bouchon : la tâche de ce connecteur le remplace (recette R1 du plan Connecteurs v1).
-export const githubConnector: AnyConnector | null = null;
+// Doc lue le 15/10/2026 :
+//   https://docs.github.com/en/rest/issues/issues#list-repository-issues
+//   https://docs.github.com/en/rest/issues/comments#list-issue-comments
+//   https://docs.github.com/en/rest/pulls/reviews#list-reviews-for-a-pull-request
+//   https://docs.github.com/en/rest/pulls/comments#list-review-comments-on-a-pull-request
+//   https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api
+//   https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
+//   https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api
+//   https://docs.github.com/en/rest/about-the-rest-api/api-versions
+//   https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens
+// Choix qui diffèrent du plan, d'après la doc : l'en-tête User-Agent est obligatoire (une requête
+// sans lui est refusée) ; le curseur garde aussi les numéros vus à l'instant du dernier élément.
+// Version d'API 2022-11-28, prise en charge jusqu'au 10/03/2028 ; la 2026-03-10 existe et ne change
+// aucun champ lu ici.
+// Un 403 sur les commentaires, les avis ou les commentaires de revue (jeton sans « Pull requests »
+// ou « Issues ») est attrapé : l'élément sort sans ces tours. Un avis en brouillon est ignoré.
+// Un ticket sans texte sort sans tours (le socle l'écarte) pour que le curseur avance.
+//
+// Non vérifié : si `since` inclut l'instant donné (la doc dit seulement « mis à jour après » : on
+// recule d'une seconde et on écarte les éléments déjà vus) ; que GET /user répond à un jeton à
+// grain fin sans autre permission que Metadata (la doc ne le dit pas) ; la forme des liens `next`
+// (adresses /repositories/<id>/… dans les fixtures, construites d'après la doc, sans exemple).
+// Limite connue : un élément modifié pendant que les pages d'un même dépôt sont lues peut décaler
+// les pages et en faire manquer un autre, qui ne reviendra qu'à sa prochaine modification.
+
+const REPO_PATTERN = /^(?!\.{1,2}\/)(?!.*\/\.{1,2}$)[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
+
+const ConfigSchema = z.object({
+  token: z.string().trim().min(1).max(500),
+  // Propriétaire/nom ; ni « . » ni « .. » seuls, qui changeraient l'adresse appelée.
+  repos: z.array(z.string().trim().regex(REPO_PATTERN)).min(1).max(20),
+});
+type Config = z.infer<typeof ConfigSchema>;
+
+// Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
+const CursorSchema = z.record(
+  z.string(),
+  z.object({ at: z.iso.datetime(), seen: z.array(z.number()) }),
+);
+type Cursor = z.infer<typeof CursorSchema>;
+type Mark = Cursor[string];
+
+function readCursor(text: string | null): Cursor {
+  if (text === null) return {};
+  try {
+    const parsed = CursorSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data : {};
+  } catch {
+    return {};
+  }
+}
+
+// Déjà lu : plus ancien que le curseur, ou lu à l'instant même du curseur.
+function isDone(mark: Mark | undefined, issue: Issue): boolean {
+  if (mark === undefined) return false;
+  const elapsed = Date.parse(issue.updated_at) - Date.parse(mark.at);
+  return elapsed < 0 || (elapsed === 0 && mark.seen.includes(issue.number));
+}
+
+function advance(mark: Mark | undefined, issue: Issue): Mark {
+  const elapsed = mark === undefined ? 1 : Date.parse(issue.updated_at) - Date.parse(mark.at);
+  if (mark === undefined || elapsed > 0) return { at: issue.updated_at, seen: [issue.number] };
+  if (elapsed < 0 || mark.seen.includes(issue.number)) return mark;
+  return { at: mark.at, seen: [...mark.seen, issue.number] };
+}
+
+// GitHub veut AAAA-MM-JJTHH:MM:SSZ, sans millisecondes.
+const apiTime = (date: Date): string => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+async function optional<T>(read: () => Promise<T[]>): Promise<T[]> {
+  try {
+    return await read();
+  } catch (error) {
+    if (error instanceof ConnectorAuthError && error.status === 403) return [];
+    throw error;
+  }
+}
+
+async function readItem(github: GithubClient, repo: string, issue: Issue): Promise<ConnectorItem> {
+  const { number } = issue;
+  const discussion: Discussion = { comments: [], reviews: [], reviewComments: [] };
+  if (issue.comments !== 0) {
+    discussion.comments = await optional(() => github.issueComments(repo, number));
+  }
+  if (issue.pull_request) {
+    discussion.reviews = await optional(() => github.reviews(repo, number));
+    discussion.reviewComments = await optional(() => github.reviewComments(repo, number));
+  }
+  return toItem(repo, issue, discussion);
+}
+
+async function* syncRepos(
+  github: GithubClient,
+  repos: string[],
+  state: SyncState,
+): AsyncGenerator<SyncPage> {
+  const cursor = readCursor(state.cursor);
+  for (const repo of repos) {
+    const mark = cursor[repo];
+    const from = mark ? new Date(Date.parse(mark.at) - 1000) : state.since;
+    for await (const issues of github.issues(repo, apiTime(from))) {
+      const items: ConnectorItem[] = [];
+      for (const issue of issues) {
+        if (!isDone(cursor[repo], issue)) items.push(await readItem(github, repo, issue));
+        cursor[repo] = advance(cursor[repo], issue);
+      }
+      if (items.length > 0) yield { items, cursor: JSON.stringify(cursor) };
+    }
+  }
+}
+
+export const githubConnector: Connector<Config> = {
+  id: 'github',
+  configSchema: ConfigSchema,
+  secretFields: ['token'],
+  hosts: () => ['api.github.com'],
+
+  async verify(config: Config, http: ConnectorHttp) {
+    const github = githubClient(config.token, http);
+    const { login } = await github.account();
+    for (const repo of config.repos) await github.checkRepo(repo);
+    return { account: login };
+  },
+
+  sync(config: Config, state: SyncState, http: ConnectorHttp) {
+    return syncRepos(githubClient(config.token, http), config.repos, state);
+  },
+};

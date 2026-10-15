@@ -9,7 +9,12 @@ import type { OAuthSpec } from '../types';
 //   https://developers.miro.com/reference/exchange-authorization-code-with-access-token (spec :
 //     grant_type, client_id, client_secret, code, redirect_uri, tous « in: query », aucun corps ;
 //     réponse access_token, refresh_token, expires_in, scope, team_id, user_id, token_type ;
-//     seule erreur décrite : 400 « Failed to exchange the authorization code »)
+//     la spec n'y décrit que le 400 « Failed to exchange the authorization code »)
+//   https://developers.miro.com/docs/troubleshooting-oauth20 (code invalide ou adresse de retour
+//     qui ne correspond pas : « 4XX », avec en exemple un 401 de code `oauthError`, corps
+//     { status, code, message, type: 'error' } ; message « Invalid authorization code: … » ou
+//     « Redirect URI mismatch. » ; le jeton de rafraîchissement, à usage unique, devient invalide
+//     une fois utilisé, à la désinstallation de l'appli ou si l'accès est retiré, sans corps décrit)
 //   https://developers.miro.com/reference/create-authorization-request-link (state facultatif,
 //     rendu tel quel ; team_id facultatif, qui ne fait que présélectionner l'équipe affichée)
 //   https://developers.miro.com/reference/scopes (boards:read lit tableaux et éléments)
@@ -23,10 +28,17 @@ import type { OAuthSpec } from '../types';
 // changer ensuite : sans elle, la réponse n'a ni `refresh_token` ni `expires_in`, le jeton dure
 // jusqu'à la désinstallation de l'appli, et le socle ne le renouvelle jamais.
 //
+// Le refus de Miro n'a pas la forme de la RFC 6749 : aucun champ `error`, mais { status, code, message }.
+// Le socle (`requestTokens`) ne compte comme refus qu'un `error` dans le corps : un refus de Miro y
+// devient « Réponse inattendue ». Au retour, le code est alors `indisponible` et non `refuse` ; au
+// renouvellement, la connexion passe en erreur (nouvel essai toutes les heures) au lieu de demander
+// de reconnecter Miro. Écart du socle, signalé : cette tâche ne le corrige pas (les tests le gardent
+// écrit, voir `oauth.test.ts`).
+//
 // Non vérifié : le renouvellement, que la page de référence montre en formulaire alors que le guide
 // et la spec de l'échange l'envoient dans l'adresse (le socle n'a qu'un mode par outil : adresse) ;
-// la forme d'un refus (la doc ne décrit que le 400 de l'échange, et le socle ne reconnaît qu'un
-// `error` dans le corps) ; si Miro accepte une adresse de retour en http://localhost ; un essai en réel.
+// le corps d'un refus au renouvellement (la doc n'en décrit aucun) ; si Miro accepte une adresse de
+// retour en http://localhost ; un essai en réel.
 
 const textOrNull = (value: unknown): string | null =>
   typeof value === 'string' && value !== '' ? value : null;

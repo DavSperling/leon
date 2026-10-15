@@ -160,7 +160,9 @@ describe('échange du code et renouvellement', () => {
     expect(result.expiresAt).not.toBeNull();
   });
 
-  it('lit un refus (400 avec error) comme un refus de l’éditeur, sans reprendre son texte', async () => {
+  // Ce test ne dit rien de ce que Miro envoie : la forme { error, error_description } est celle que
+  // le socle sait lire (RFC 6749), pas celle de la doc Miro (voir plus bas).
+  it("lit un refus au format RFC 6749 ({ error: 'invalid_grant' }) sans reprendre son texte", async () => {
     const refusal = {
       error: 'invalid_grant',
       error_description: `Le jeton ${REFRESH} est périmé.`,
@@ -176,6 +178,45 @@ describe('échange du code et renouvellement', () => {
 
     expect(failure).toBeInstanceOf(OAuthRefusedError);
     expect((failure as Error).message).not.toContain(REFRESH);
+  });
+
+  // La forme que la doc Miro décrit (docs/troubleshooting-oauth20) pour un code invalide et pour
+  // une adresse de retour qui ne correspond pas : un 401 { status, code: 'oauthError', message,
+  // type }, sans champ `error`. Le socle ne compte pas encore comme refus une réponse sans `error` :
+  // il lève ConnectorHttpError « Réponse inattendue », donc /retour répond 'indisponible' au lieu de
+  // 'refuse', et un renouvellement forcé met la connexion en 'error' (nouvel essai chaque heure) au
+  // lieu de 'auth_error' (« Reconnectez Miro »). Les tests « actuel » gardent ce comportement écrit
+  // (et le fait que le texte de Miro n'est jamais repris) ; `it.fails` garde l'écart : quand le
+  // socle lira `code`, il passera « à l'envers » et signalera qu'il faut retirer `.fails` et les
+  // tests « actuel ».
+  describe.each([
+    { cas: 'code invalide', message: `Invalid authorization code: ${REFRESH}` },
+    { cas: 'adresse de retour différente', message: 'Redirect URI mismatch.' },
+  ])('refus documenté par Miro ($cas)', ({ message }) => {
+    const refusal = { status: 401, code: 'oauthError', message, type: 'error' };
+
+    const exchange = () =>
+      exchangeCode(
+        miroOAuth,
+        CLIENT,
+        'code-1',
+        null,
+        tokenHttp(miroOAuth, 'miro', fakeFetch([tokenRoute(refusal, 401)])),
+      ).catch((error: unknown) => error);
+
+    it('actuel : « Réponse inattendue », sans reprendre le texte de Miro', async () => {
+      const failure = await exchange();
+
+      expect(failure).toMatchObject({ name: 'ConnectorHttpError', message: 'Réponse inattendue' });
+      expect((failure as Error).message).not.toContain(message);
+    });
+
+    it.fails("à l'échange du code, rend un refus de l'éditeur sans reprendre son texte", async () => {
+      const failure = await exchange();
+
+      expect(failure).toBeInstanceOf(OAuthRefusedError);
+      expect((failure as Error).message).not.toContain(REFRESH);
+    });
   });
 });
 

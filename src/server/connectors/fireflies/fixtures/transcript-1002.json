@@ -1,0 +1,21 @@
+{
+  "data": {
+    "transcript": {
+      "title": "Appel client Acme",
+      "transcript_url": "https://app.fireflies.ai/view/ff-1002",
+      "organizer_email": "paul@acme.test",
+      "participants": ["paul@acme.test", "client@exemple.test"],
+      "meeting_attendees": [
+        { "displayName": "Paul Martin", "name": "Paul Martin", "email": "paul@acme.test" }
+      ],
+      "meeting_info": { "silent_meeting": false, "summary_status": "processed" },
+      "summary": {
+        "overview": null,
+        "short_summary": "Le client valide le devis de novembre.",
+        "gist": "Devis validé.",
+        "action_items": "Envoyer le contrat avant vendredi."
+      },
+      "sentences": null
+    }
+  }
+}

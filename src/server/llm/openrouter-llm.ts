@@ -12,6 +12,24 @@ const isRetryable = (status: number) => status === 408 || status === 429 || stat
 // Au-delà, l'appel est abandonné et repris par pg-boss : une extraction longue reste bien en deçà.
 const TIMEOUT_MS = 600_000;
 
+export type ReasoningEffort = 'low' | 'medium' | 'high';
+
+// Les tokens de raisonnement comptent dans max_tokens : la limite de l'étape, prévue pour la seule
+// sortie, est multipliée, dans un plafond raisonnable.
+const REASONING_MAX_TOKENS = 32_000;
+const reasoningMaxTokens = (maxTokens: number) => Math.min(REASONING_MAX_TOKENS, maxTokens * 4);
+
+// Consignes identiques d'un appel à l'autre : mises en cache chez Anthropic, qui demande un marqueur
+// explicite (OpenAI et Mistral mettent en cache tout seuls).
+function systemMessage(model: string, system: string) {
+  return model.startsWith('anthropic/')
+    ? {
+        role: 'system',
+        content: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      }
+    : { role: 'system', content: system };
+}
+
 // JSON Schema de la sortie, au format du mode strict (OpenAI) : zod ferme déjà chaque objet et rend
 // obligatoires ses champs non facultatifs ; un nullable devient type [x, "null"] ou anyOf. Seul
 // « $schema » est retiré, que le mode strict ne connaît pas. Les quatre schémas de sortie (triage,
@@ -87,9 +105,13 @@ function httpError(status: number): Error {
   return isRetryable(status) ? new Error(message) : new LlmError(message);
 }
 
+// efforts : l'effort de raisonnement des étapes dont le modèle le règle (voir config.ts, qui le lit
+// dans le catalogue d'OpenRouter). Jamais pour un autre modèle : avec require_parameters, OpenRouter
+// ne trouverait aucun fournisseur et répondrait 404.
 export function createOpenRouterLlm(options: {
   apiKey: string;
   models: Partial<Record<LlmStep, string>>;
+  efforts?: Partial<Record<LlmStep, ReasoningEffort>>;
   fetch?: typeof fetch;
 }): Llm {
   const doFetch = options.fetch ?? fetch;
@@ -99,13 +121,12 @@ export function createOpenRouterLlm(options: {
       const model = options.models[request.step];
       if (!model)
         throw new Error(`Aucun modèle OpenRouter configuré pour l'étape ${request.step}.`);
+      const effort = options.efforts?.[request.step];
       const raw = await post(doFetch, options.apiKey, {
         model,
-        max_tokens: request.maxTokens,
-        messages: [
-          { role: 'system', content: request.system },
-          { role: 'user', content: request.prompt },
-        ],
+        max_tokens: effort ? reasoningMaxTokens(request.maxTokens) : request.maxTokens,
+        ...(effort ? { reasoning: { effort } } : {}),
+        messages: [systemMessage(model, request.system), { role: 'user', content: request.prompt }],
         response_format: {
           type: 'json_schema',
           json_schema: { name: 'sortie', strict: true, schema: strictJsonSchema(request.schema) },

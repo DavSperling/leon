@@ -329,6 +329,59 @@ describe('createOpenRouterLlm', () => {
     expect((error as Error).message).toBe('OpenRouter : délai dépassé');
   });
 
+  it('règle le raisonnement et élargit la limite pour une étape à effort', async () => {
+    quiet();
+    const fetch = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      json(completion()),
+    );
+    const llm = createOpenRouterLlm({
+      apiKey: 'cle-de-test',
+      models: { extraction: 'openai/gpt-6-sol', triage: MODEL },
+      efforts: { extraction: 'medium' },
+      fetch: fetch as unknown as typeof globalThis.fetch,
+    });
+    const bodyOf = (i: number) =>
+      JSON.parse((fetch.mock.calls[i] as [string, RequestInit])[1].body as string);
+
+    await llm.generateObject(request('extraction'));
+    await llm.generateObject({ ...request('extraction'), maxTokens: 16_000 });
+    await llm.generateObject(request('triage'));
+
+    // Les tokens de raisonnement comptent dans max_tokens : 4 fois la limite, plafonnée à 32 000.
+    expect(bodyOf(0)).toMatchObject({ reasoning: { effort: 'medium' }, max_tokens: 4936 });
+    expect(bodyOf(1)).toMatchObject({ max_tokens: 32_000 });
+    expect(bodyOf(2)).not.toHaveProperty('reasoning');
+    expect(bodyOf(2).max_tokens).toBe(1234);
+  });
+
+  it('met en cache les consignes des modèles anthropic/*, et seulement eux', async () => {
+    quiet();
+    const fetch = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      json(completion()),
+    );
+    const llm = createOpenRouterLlm({
+      apiKey: 'cle-de-test',
+      models: { extraction: 'anthropic/claude-sonnet-5.5', triage: MODEL },
+      fetch: fetch as unknown as typeof globalThis.fetch,
+    });
+    const messagesOf = (i: number) =>
+      JSON.parse((fetch.mock.calls[i] as [string, RequestInit])[1].body as string).messages;
+
+    await llm.generateObject(request('extraction'));
+    await llm.generateObject(request('triage'));
+
+    expect(messagesOf(0)).toEqual([
+      {
+        role: 'system',
+        content: [
+          { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },
+        ],
+      },
+      { role: 'user', content: 'Question ordinaire' },
+    ]);
+    expect(messagesOf(1)[0]).toEqual({ role: 'system', content: 'Consignes du système' });
+  });
+
   it('ne cite jamais la clé ni le prompt dans les messages d erreur', async () => {
     quiet();
     const replies = [

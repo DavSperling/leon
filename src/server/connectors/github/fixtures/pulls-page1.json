@@ -1,0 +1,36 @@
+[
+  {
+    "id": 990022,
+    "node_id": "PR_kwDOAB1Pjs4ADZ5a",
+    "url": "https://api.github.com/repos/acme/site/pulls/22",
+    "html_url": "https://github.com/acme/site/pull/22",
+    "number": 22,
+    "state": "open",
+    "draft": false,
+    "title": "Corriger la page d’accueil",
+    "user": { "login": "paul-martin", "id": 4102, "type": "User" },
+    "body": "Le titre de la page d’accueil était coupé sur mobile.",
+    "created_at": "2026-10-13T08:00:00Z",
+    "updated_at": "2026-10-14T10:00:00Z",
+    "closed_at": null,
+    "merged_at": null,
+    "author_association": "MEMBER"
+  },
+  {
+    "id": 990021,
+    "node_id": "PR_kwDOAB1Pjs4ADZ5Z",
+    "url": "https://api.github.com/repos/acme/site/pulls/21",
+    "html_url": "https://github.com/acme/site/pull/21",
+    "number": 21,
+    "state": "closed",
+    "draft": false,
+    "title": "Ajouter la page des tarifs",
+    "user": { "login": "marie-durand", "id": 4101, "type": "User" },
+    "body": "Une page par offre, avec le prix par mois.",
+    "created_at": "2026-10-05T08:00:00Z",
+    "updated_at": "2026-10-13T09:00:00Z",
+    "closed_at": "2026-10-13T09:00:00Z",
+    "merged_at": "2026-10-13T09:00:00Z",
+    "author_association": "MEMBER"
+  }
+]

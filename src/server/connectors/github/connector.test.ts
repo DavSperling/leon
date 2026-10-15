@@ -9,11 +9,15 @@ import { githubConnector } from './connector';
 import issueComments12Page1 from './fixtures/issue-comments-12-page1.json';
 import issueComments12Page2 from './fixtures/issue-comments-12-page2.json';
 import issueComments13 from './fixtures/issue-comments-13.json';
+import issuesDisabled from './fixtures/issues-disabled-410.json';
 import issuesPage1 from './fixtures/issues-page1.json';
 import issuesPage2 from './fixtures/issues-page2.json';
 import pullComments13 from './fixtures/pull-comments-13.json';
 import pullReviews13 from './fixtures/pull-reviews-13.json';
+import pullsPage1 from './fixtures/pulls-page1.json';
+import pullsPage2 from './fixtures/pulls-page2.json';
 import repo from './fixtures/repo.json';
+import repoIssuesDisabled from './fixtures/repo-issues-disabled.json';
 import user from './fixtures/user.json';
 
 const API = 'https://api.github.com';
@@ -159,6 +163,21 @@ describe('github : verify', () => {
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
       expect((failure as Error).message).toBe('Dépôt inaccessible : acme/site');
     }
+  });
+});
+
+describe('github : verify, dépôt sans tickets', () => {
+  it('accepte un dépôt dont les tickets sont désactivés (has_issues à false)', async () => {
+    const cfg = { ...config, repos: ['acme/site'] };
+    const { http, calls } = testHttp(githubConnector, cfg, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/repos/acme/site`, json: repoIssuesDisabled },
+    ]);
+
+    const result = await githubConnector.verify(cfg, http);
+
+    expect(result).toEqual({ account: 'marie-durand' });
+    expect(calls.map((call) => call.url)).toEqual([`${API}/user`, `${API}/repos/acme/site`]);
   });
 });
 
@@ -447,5 +466,122 @@ describe('github : sync, erreurs', () => {
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as ConnectorHttpError).status).toBe(404);
     expect((failure as Error).message).not.toContain('secret-xyz');
+  });
+});
+
+describe('github : sync, dépôt dont les tickets sont désactivés (410)', () => {
+  const SITE = `${API}/repos/acme/site`;
+  const PULLS_PAGE_2 = `${API}/repositories/1296270/pulls`;
+  const issuesOff = (): FakeRoute => ({ url: `${SITE}/issues`, status: 410, json: issuesDisabled });
+  // Les trois lectures d'une PR ; par défaut sans aucun commentaire.
+  const quiet = (number: number, comments: unknown[] = []): FakeRoute[] => [
+    { url: `${SITE}/issues/${number}/comments`, json: comments },
+    { url: `${SITE}/pulls/${number}/reviews`, json: [] },
+    { url: `${SITE}/pulls/${number}/comments`, json: [] },
+  ];
+  const comment = {
+    id: 601,
+    body: 'Merci, c’est en ligne.',
+    user: { login: 'paul-martin' },
+    created_at: '2026-10-13T08:55:00Z',
+  };
+  // Deux pages de PR (la seconde finit par une PR plus ancienne que since) et une troisième
+  // annoncée que personne ne doit demander.
+  const pullPages = (): FakeRoute[] => [
+    { url: `${SITE}/pulls`, json: pullsPage1, headers: next(PULLS_PAGE_2) },
+    {
+      url: PULLS_PAGE_2,
+      json: pullsPage2,
+      headers: { link: `<${PULLS_PAGE_2}?page=3>; rel="next"` },
+    },
+  ];
+  const siteOnly = { repos: ['acme/site'] };
+
+  it('lit les PR à la place, de la plus ancienne à la plus récente, et s’arrête à la première trop ancienne', async () => {
+    const { pages, calls } = await runSync(
+      [issuesOff(), ...pullPages(), ...quiet(20), ...quiet(21, [comment]), ...quiet(22)],
+      siteOnly,
+    );
+
+    expect(idsOf(pages)).toEqual(['pr:acme/site#20', 'pr:acme/site#21', 'pr:acme/site#22']);
+    const pr21 = itemsOf(pages).find((item) => item.externalId === 'pr:acme/site#21');
+    expect(pr21?.title).toBe('#21 Ajouter la page des tarifs');
+    expect(pr21?.turns.map((turn) => turn.externalId)).toEqual(['body', 'comment:601']);
+    expect(pages).toHaveLength(1);
+    expect(cursorOf(pages[0])).toEqual({
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
+    });
+    // Après le 410, la liste des PR : du plus récent au plus ancien, sans paramètre since.
+    const urls = calls.map((call) => call.url);
+    expect(urls[0]?.startsWith(`${SITE}/issues?`)).toBe(true);
+    const pulls = new URL(urls[1] ?? '');
+    expect(pulls.origin + pulls.pathname).toBe(`${SITE}/pulls`);
+    expect(Object.fromEntries(pulls.searchParams)).toEqual({
+      state: 'all',
+      sort: 'updated',
+      direction: 'desc',
+      per_page: '50',
+    });
+    expect(urls.some((url) => url.includes('page=3'))).toBe(false);
+    expect(urls.some((url) => /\/(issues|pulls)\/19\//.test(url))).toBe(false);
+  });
+
+  it('reprend après le curseur : ignore la PR déjà lue et ne remonte pas plus loin que lui', async () => {
+    const cursor = JSON.stringify({ 'acme/site': { at: '2026-10-13T09:00:00Z', seen: [21] } });
+
+    const { pages, calls } = await runSync([issuesOff(), ...pullPages(), ...quiet(22)], {
+      ...siteOnly,
+      cursor,
+    });
+
+    expect(sinceOf(calls[0]?.url)).toBe('2026-10-13T08:59:59Z');
+    expect(idsOf(pages)).toEqual(['pr:acme/site#22']);
+    expect(cursorOf(pages[0])).toEqual({
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
+    });
+    expect(calls.some((call) => /\/(issues|pulls)\/(20|21)\//.test(call.url))).toBe(false);
+    expect(calls.some((call) => call.url.includes('page=3'))).toBe(false);
+  });
+
+  it('ne lève pas et passe au dépôt suivant, qui rend ses tickets', async () => {
+    const { pages } = await runSync(
+      [
+        issuesOff(),
+        ...pullPages(),
+        ...quiet(20),
+        ...quiet(21, [comment]),
+        ...quiet(22),
+        issuesRoute(issuesPage2),
+      ],
+      { repos: ['acme/site', 'acme/leon'] },
+    );
+
+    expect(idsOf(pages)).toEqual([
+      'pr:acme/site#20',
+      'pr:acme/site#21',
+      'pr:acme/site#22',
+      'issue:acme/leon#15',
+      'issue:acme/leon#16',
+    ]);
+    expect(cursorOf(pages.at(-1))).toEqual({
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+    });
+  });
+
+  it('ne rend rien et ne lève pas quand le dépôt n’a aucune PR récente', async () => {
+    const { pages, calls } = await runSync(
+      [issuesOff(), { url: `${SITE}/pulls`, json: [] }],
+      siteOnly,
+    );
+
+    expect(pages).toEqual([]);
+    expect(calls).toHaveLength(2);
+  });
+
+  it('remonte toujours un 404 sur la liste des tickets, sans lire les PR', async () => {
+    const run = runSync([{ url: `${SITE}/issues`, status: 404 }], siteOnly);
+
+    await expect(run).rejects.toMatchObject({ status: 404 });
   });
 });

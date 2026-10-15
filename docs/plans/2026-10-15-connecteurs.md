@@ -558,7 +558,7 @@ Règles communes du lot : R1, « Lot A (T09 à T11) ».
 - **Lecture** : `verify` = `GET /user` (compte : `login`) puis `GET /repos/{repo}` pour chaque dépôt (403/404 → « Dépôt inaccessible : <repo> »). `sync` : pour chaque dépôt, `GET /repos/{repo}/issues?state=all&sort=updated&direction=asc&since=<date>&per_page=50` (tickets et PR) ; pour chaque élément, `GET …/issues/{n}/comments`, et pour une PR `GET …/pulls/{n}/reviews` et `GET …/pulls/{n}/comments`. Élément `issue:<repo>#<n>` ou `pr:<repo>#<n>`, titre `#<n> <titre>`, `origin: { repo }`, corps = tour `document` (auteur = `user.login`), commentaires et avis = tours `participant`.
 - **Curseur** : JSON `{ "<repo>": "<updated_at du dernier élément>" }`, repris par `since`.
 - **Clé** : « github.com › Settings › Developer settings › Fine-grained tokens : accès en lecture aux dépôts choisis (Issues, Pull requests, Metadata). »
-- **Pièges** : `since` filtre sur `updated_at` et inclut les égalités : ignorer l'élément déjà rendu au même instant (comparer à l'identifiant). Le corps peut être nul.
+- **Pièges** : `since` filtre sur `updated_at` et inclut les égalités : ignorer l'élément déjà rendu au même instant (comparer à l'identifiant). Le corps peut être nul. Dépôt à tickets désactivés : la liste des tickets répond 410 (à confirmer en réel, T44) ; on lit alors les PR seules par `GET /repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=50` (pas de `since` : arrêt à la première PR plus ancienne que le curseur), et on passe au dépôt suivant au lieu de faire échouer la connexion.
 
 ### T10 · Connecteur Notion
 
@@ -731,6 +731,7 @@ Règles communes du lot (nature `reunion`, locuteurs, dates, participants, résu
 - [ ] 1. `pnpm test` (hors sandbox), `pnpm typecheck`, `pnpm lint`, build de vérification : tout vert.
 - [ ] 2. README : section « Connecteurs » (générer `LEON_CONNECTORS_KEY`, page Connexions, relève toutes les 15 minutes, liste des 35 outils par famille avec « essayé en réel » ou non).
 - [ ] 3. Guide de vérification : brancher GitHub, Notion, Linear et l'outil de réunion d'Amos ; attendre un passage ; vérifier la page Sources (liens), les runs, puis les faits (avec une clé Anthropic de workspace) ; vérifier qu'un fait tiré d'un outil porte sa citation, l'auteur du tour et le lien « Ouvrir dans <outil> » ; mettre en pause, reprendre, remplacer la clé par une fausse (→ « Clé refusée »), puis par la vraie (→ actif, passage relancé), supprimer.
+- [ ] 3 bis. GitHub, dépôt à tickets désactivés : brancher un dépôt dont les tickets sont désactivés (Settings › Features › Issues décoché) et noter la réponse exacte de GitHub à `GET /repos/{repo}/issues` (statut et corps : on attend 410 « Issues are disabled for this repo », que la doc de cette route ne liste pas). Vérifier que la connexion reste active, que les PR du dépôt arrivent avec leurs commentaires (`/issues/{n}/comments` lisible sans tickets ?) et que les dépôts suivants de la liste sont lus. Puis corriger l'en-tête « Non vérifié » de `src/server/connectors/github/connector.ts`.
 - [ ] 4. Rapport : par connecteur, ce que la doc a confirmé ou contredit, et ce qui reste non vérifié.
 
 ## Couverture de la spec

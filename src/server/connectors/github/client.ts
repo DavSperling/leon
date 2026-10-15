@@ -107,6 +107,31 @@ export function githubClient(token: string, http: ConnectorHttp) {
         z.array(IssueSchema),
       ),
 
+    // Les PR seules, avec le même contrat que `issues` (modifiées depuis `since`, de la plus ancienne à
+    // la plus récente) : pour un dépôt dont les tickets sont désactivés. La liste des PR n'a pas de
+    // paramètre `since` : on la lit de la plus récente à la plus ancienne, on s'arrête à la première
+    // plus ancienne que `since`, puis on remet l'ordre. Elle n'a ni `comments` ni `pull_request` :
+    // le second est ajouté, le premier reste absent (les commentaires sont alors toujours demandés).
+    async *pullRequests(repo: string, since: string): AsyncGenerator<Issue[]> {
+      const limit = Date.parse(since);
+      const request = {
+        url: `${API}/repos/${repo}/pulls`,
+        headers,
+        query: { state: 'all', sort: 'updated', direction: 'desc', per_page: ISSUES_PER_PAGE },
+      };
+      const recent: Issue[] = [];
+      read: for await (const page of pages(request, z.array(IssueSchema))) {
+        for (const pull of page) {
+          if (Date.parse(pull.updated_at) < limit) break read;
+          recent.push({ ...pull, pull_request: {} });
+        }
+      }
+      recent.reverse();
+      for (let start = 0; start < recent.length; start += ISSUES_PER_PAGE) {
+        yield recent.slice(start, start + ISSUES_PER_PAGE);
+      }
+    },
+
     issueComments: (repo: string, number: number) =>
       all(`/repos/${repo}/issues/${number}/comments`, z.array(CommentSchema)),
     reviews: (repo: string, number: number) =>

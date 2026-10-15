@@ -1,5 +1,6 @@
 import { TriangleAlert } from 'lucide-react';
 import { SourceChip } from '@/components/source-chip';
+import { SourceLink } from '@/components/source-link';
 import { type BadgeStatus, StatusBadge } from '@/components/status-badge';
 import {
   Table,
@@ -107,7 +108,7 @@ export function SourcesTable({ sources }: { sources: SourceRow[] }) {
               Origine
             </TableHead>
             <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
-              Conversation
+              Titre
             </TableHead>
             <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
               Dernier tour
@@ -128,6 +129,13 @@ export function SourcesTable({ sources }: { sources: SourceRow[] }) {
               </TableCell>
               <TableCell className="px-5 py-3 max-w-[40ch] whitespace-normal">
                 {source.title ?? <span className="text-muted-foreground">Sans titre</span>}
+                {source.url && (
+                  <SourceLink
+                    url={source.url}
+                    label={source.kindLabel}
+                    className="mt-0.5 flex w-fit text-[13px] leading-[18px]"
+                  />
+                )}
               </TableCell>
               <TableCell className="px-5 py-3 tabular-nums">
                 {source.lastTurnAt ? (

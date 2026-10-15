@@ -1,20 +1,34 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
-import type { CaptureMode, SourceKind } from '@/capture/turn';
+import {
+  PROVIDER_IDS,
+  type ProviderId,
+  type SourceKind,
+  type TurnCaptureMode,
+} from '@/capture/turn';
 import type { CardStatus, FactStatus } from '@/lib/enums';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
+import type { ConnectionStatus } from '@/server/connectors/connections';
+import { encryptSecret } from '@/server/connectors/crypto';
 import { members, organizations, users } from '@/server/db/schema/auth';
+import { connections } from '@/server/db/schema/connections';
 import { cards, cardTypes, facts, sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from './db';
 
 // Fixtures : préfixe « seed » = insertion par le rôle propriétaire, hors RLS.
 // Chaque appel crée ses propres lignes (ids aléatoires) : la base de test est partagée.
 
-const CAPTURE_MODE_BY_KIND: Record<SourceKind, CaptureMode> = {
+const CONNECTOR_MODES = Object.fromEntries(PROVIDER_IDS.map((id) => [id, 'connector'])) as Record<
+  ProviderId,
+  'connector'
+>;
+
+const CAPTURE_MODE_BY_KIND: Record<SourceKind, TurnCaptureMode> = {
   claude_code: 'file',
   claude_ai: 'network',
   chatgpt: 'network',
   mcp_remember: 'manual',
+  ...CONNECTOR_MODES,
 };
 
 // Pas de compte `account` : les fixtures n'ont jamais de mot de passe.
@@ -161,4 +175,31 @@ export async function seedFact(
     .returning({ id: facts.id });
   if (!fact) throw new Error('fait de test non créé');
   return fact.id;
+}
+
+// Une connexion de test, secret chiffré comme en production (clé de TEST_ENV). Elle n'est pas due
+// par défaut (`nextSyncAt` nul) : voir « Connexions dans les tests » dans le plan des connecteurs.
+export async function seedConnection(
+  ctx: TenantContext,
+  input: { provider?: ProviderId; status?: ConnectionStatus; nextSyncAt?: Date | null } = {},
+): Promise<string> {
+  const id = randomUUID();
+  const secret = encryptSecret(
+    JSON.stringify({ token: 'secret-de-test' }),
+    `${ctx.tenantId}:${id}`,
+  );
+  await adminDb.insert(connections).values({
+    id,
+    tenantId: ctx.tenantId,
+    createdBy: ctx.userId,
+    provider: input.provider ?? 'github',
+    label: 'Connexion de test',
+    secret,
+    secretHint: 'test',
+    status: input.status ?? 'active',
+    since: new Date(Date.now() - 30 * 24 * 3_600_000),
+    nextSyncAt: input.nextSyncAt ?? null,
+    acl: [ctx.tenantId],
+  });
+  return id;
 }

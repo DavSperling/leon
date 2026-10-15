@@ -1,0 +1,8 @@
+{
+  "errors": [
+    {
+      "message": "forbidden: texte-de-l-outil",
+      "extensions": { "type": "forbidden", "code": "FORBIDDEN", "userError": true }
+    }
+  ]
+}

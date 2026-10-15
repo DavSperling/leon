@@ -1,6 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { SOURCE_KINDS } from '@/capture/turn';
+import type { SourceKind } from '@/capture/turn';
+import { CAPTURE_KINDS } from '@/capture/turn';
+import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { seedSource } from '@/test/fixtures';
@@ -9,6 +12,28 @@ import { listSources } from './sources';
 
 const lastCapture = (channels: Array<{ kind: string; lastCaptureAt: Date | null }>, kind: string) =>
   channels.find((channel) => channel.kind === kind)?.lastCaptureAt;
+
+// Une source visible de toute l'équipe, comme celles que posent les connexions.
+async function seedTeamSource(
+  owner: TenantContext,
+  input: { kind: SourceKind; title: string; metadata?: Record<string, unknown> },
+): Promise<string> {
+  const [source] = await adminDb
+    .insert(sources)
+    .values({
+      tenantId: owner.tenantId,
+      kind: input.kind,
+      externalId: randomUUID(),
+      ownerUserId: owner.userId,
+      title: input.title,
+      acl: [owner.tenantId],
+      metadata: input.metadata ?? {},
+      lastTurnAt: new Date(),
+    })
+    .returning({ id: sources.id });
+  if (!source) throw new Error('source de test non créée');
+  return source.id;
+}
 
 describe('listSources', () => {
   it("ne donne à Paul que sa source, avec ses tours et l'état de son pipeline", async () => {
@@ -63,7 +88,7 @@ describe('listSources', () => {
     const { channels } = await listSources(paul);
     const forMarie = await listSources(marie);
 
-    expect(channels.map((channel) => channel.kind)).toEqual([...SOURCE_KINDS]);
+    expect(channels.map((channel) => channel.kind)).toEqual([...CAPTURE_KINDS]);
     expect(channels.map((channel) => channel.kindLabel)).toEqual([
       'Claude Code',
       'claude.ai',
@@ -132,5 +157,63 @@ describe('listSources', () => {
     const { sources: rows } = await listSources(paul);
 
     expect(rows.at(-1)?.title).toBe('Vieille session');
+  });
+
+  it("donne à Marie la source d'outil de Paul, avec le lien vers l'original", async () => {
+    const { marie, paul, ids } = await seedRightsScenario();
+    const github = await seedTeamSource(paul, {
+      kind: 'github',
+      title: 'Ticket 12 : choisir la base',
+      metadata: { nature: 'ticket', url: 'https://github.com/acme/leon/issues/12' },
+    });
+
+    const { sources: rows } = await listSources(marie);
+
+    expect(rows.map((row) => row.id).sort()).toEqual([ids.marieSource, github].sort());
+    expect(rows.find((row) => row.id === github)).toMatchObject({
+      kind: 'github',
+      kindLabel: 'GitHub',
+      title: 'Ticket 12 : choisir la base',
+      url: 'https://github.com/acme/leon/issues/12',
+    });
+    expect(rows.find((row) => row.id === ids.marieSource)?.url).toBeNull();
+  });
+
+  it("ne donne pas à Marie une conversation de Paul, même posée avec une ACL d'équipe", async () => {
+    const { marie, paul } = await seedRightsScenario();
+    const shared = await seedTeamSource(paul, { kind: 'claude_code', title: 'Session partagée' });
+
+    const { sources: rows, channels } = await listSources(marie);
+
+    expect(rows.map((row) => row.id)).not.toContain(shared);
+    expect(lastCapture(channels, 'claude_code')).toBeNull();
+  });
+
+  it("ne donne rien d'une source d'outil à l'autre organisation", async () => {
+    const { zoe, paul, ids } = await seedRightsScenario();
+    const page = await seedTeamSource(paul, { kind: 'notion', title: 'Page produit' });
+
+    const { sources: rows } = await listSources(zoe);
+
+    expect(rows.map((row) => row.id)).not.toContain(page);
+    expect(rows.map((row) => row.id)).not.toContain(ids.paulSource);
+  });
+
+  it.each([
+    ['une adresse http', 'http://exemple.test/a'],
+    ['un lien javascript', 'javascript:alert(1)'],
+    ['une valeur qui n’est pas du texte', 42],
+    ['aucune adresse', undefined],
+  ])('ne garde pas le lien quand il est %s', async (_label, url) => {
+    const { paul } = await seedRightsScenario();
+    const source = await seedTeamSource(paul, {
+      kind: 'linear',
+      title: 'Ticket sans lien sûr',
+      metadata: url === undefined ? {} : { url },
+    });
+
+    const { sources: rows } = await listSources(paul);
+
+    expect(rows.find((row) => row.id === source)?.url).toBeNull();
   });
 });

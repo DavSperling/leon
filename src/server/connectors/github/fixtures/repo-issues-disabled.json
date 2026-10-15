@@ -1,0 +1,11 @@
+{
+  "id": 1296270,
+  "node_id": "R_kgDOAB1Pjw",
+  "name": "site",
+  "full_name": "acme/site",
+  "private": true,
+  "owner": { "login": "acme", "id": 9001, "type": "Organization" },
+  "html_url": "https://github.com/acme/site",
+  "default_branch": "main",
+  "has_issues": false
+}

@@ -6,6 +6,7 @@ import { ingestRuns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { ingestTurns } from '@/server/ingest/ingest-turns';
 import { createTestTenant } from '@/test/fixtures';
+import { seedToolRun } from '@/test/seed-tool-run';
 import { enqueuePipelineStep } from './queue';
 import { advanceRun, failRun, startStep } from './runs';
 
@@ -88,6 +89,111 @@ describe('startStep', () => {
 
     expect(await startStep(marie, runId, 'triage')).toBeNull();
     expect((await readRun(paul, runId))?.status).toBe('queued');
+  });
+});
+
+describe('startStep, sources d outils', () => {
+  const body = (text: string, ts: string, externalId = 'body') => ({
+    externalId,
+    role: 'document' as const,
+    authorName: 'Marie Durand',
+    text,
+    ts,
+    inRun: false,
+  });
+  const comment = {
+    externalId: 'comment:1',
+    role: 'participant' as const,
+    authorName: 'Paul Martin',
+    text: 'OK, on part là-dessus.',
+    ts: '2026-10-14T10:00:00Z',
+    inRun: true,
+  };
+
+  async function start(turnList: Parameters<typeof seedToolRun>[1]['turns'], nature?: unknown) {
+    const { members } = await createTestTenant(['Paul']);
+    const [paul] = members as [TenantContext];
+    const { job } = await seedToolRun(paul, { nature, turns: turnList });
+    return startStep(paul, job.ingestRunId, 'triage');
+  }
+
+  it('rend la nature, l auteur des tours et le corps absent du run comme contexte', async () => {
+    const run = await start([body('Paiement à 60 jours.', '2026-10-13T09:00:00Z'), comment]);
+
+    expect(run).toMatchObject({ sourceKind: 'github', nature: 'ticket' });
+    expect(run?.turns).toHaveLength(1);
+    expect(run?.turns[0]).toMatchObject({
+      externalId: 'comment:1',
+      role: 'participant',
+      authorName: 'Paul Martin',
+    });
+    expect(run?.context).toBe('Paiement à 60 jours.');
+  });
+
+  it('rend le côté de l auteur et la note interne des tours, absents par défaut', async () => {
+    const run = await start([
+      body('Paiement à 60 jours.', '2026-10-13T09:00:00Z'),
+      { ...comment, authorSide: 'external' },
+      {
+        ...comment,
+        externalId: 'comment:2',
+        authorSide: 'team',
+        internalNote: true,
+        ts: '2026-10-14T11:00:00Z',
+      },
+      { ...comment, externalId: 'comment:3', ts: '2026-10-14T12:00:00Z' },
+    ]);
+
+    expect(run?.turns.map((t) => [t.externalId, t.authorSide, t.internalNote])).toEqual([
+      ['comment:1', 'external', false],
+      ['comment:2', 'team', true],
+      ['comment:3', null, false],
+    ]);
+  });
+
+  it('ne met pas dans le contexte un tour du run, ni un commentaire', async () => {
+    const run = await start([
+      { ...body('Corps dans le run.', '2026-10-13T09:00:00Z'), inRun: true },
+      { ...comment, inRun: false, externalId: 'comment:0', text: 'Un commentaire déjà connu.' },
+      comment,
+    ]);
+
+    expect(run?.turns.map((t) => t.externalId)).toEqual(['body', 'comment:1']);
+    expect(run?.context).toBeNull();
+  });
+
+  it('range le contexte du plus récent au plus ancien et le borne à 4 000 caractères', async () => {
+    const run = await start([
+      body('ancien '.repeat(300), '2026-10-01T09:00:00Z', 'body#old'),
+      body('récent '.repeat(300), '2026-10-12T09:00:00Z', 'body#new'),
+      comment,
+    ]);
+
+    const context = run?.context ?? '';
+    expect(context.length).toBeLessThanOrEqual(4_000);
+    expect(context.startsWith('récent récent')).toBe(true);
+    expect(context).toContain('\n\nancien ancien');
+    expect(context.endsWith('[…]')).toBe(true);
+  });
+
+  it('prend nature conversation et pas de contexte pour une conversation de capture', async () => {
+    const { members } = await createTestTenant(['Paul']);
+    const [paul] = members as [TenantContext];
+    const { ingestRunId } = await ingestTurns(paul, {
+      source: { kind: 'claude_code', external_id: crypto.randomUUID(), title: 'Session' },
+      turns: [turn(1, 'user')],
+    });
+
+    const run = await startStep(paul, ingestRunId as string, 'triage');
+
+    expect(run).toMatchObject({ nature: 'conversation', context: null });
+    expect(run?.turns[0]?.authorName).toBeNull();
+  });
+
+  it('retombe sur conversation quand la nature enregistrée est inconnue', async () => {
+    const run = await start([comment], 'inconnue');
+
+    expect(run?.nature).toBe('conversation');
   });
 });
 

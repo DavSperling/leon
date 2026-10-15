@@ -1,0 +1,156 @@
+import { sql } from 'drizzle-orm';
+import type { ProviderId } from '@/capture/turn';
+import { PROVIDER_LABELS } from '@/lib/providers';
+import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { db } from '@/server/db/client';
+import { logError, safeErrorSummary } from '@/server/log';
+import { getBoss } from '@/server/pipeline/queue';
+import {
+  claimConnection,
+  finishSync,
+  type LoadedConnection,
+  saveSyncProgress,
+} from './connections';
+import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
+import { ingestConnectorItems } from './ingest-items';
+import { normalizeItem } from './normalize';
+import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
+import type { AnyConnector } from './types';
+
+// Un passage lit au plus 200 éléments : le premier passage d'un gros dépôt se fait en plusieurs fois.
+export const SYNC_ITEMS_MAX = 200;
+
+export type SyncDeps = {
+  getConnector: (id: ProviderId) => AnyConnector | null;
+  fetchImpl?: typeof fetch; // tests
+  sleep?: (ms: number) => Promise<void>; // tests
+};
+export type SyncResult = 'skipped' | 'ok' | 'auth_error' | 'error';
+
+const UNREADABLE_KEY = 'Clé illisible : remplacez-la.';
+
+// `claimConnection` pose la réservation avant de déchiffrer : seule cette erreur-là laisse une
+// réservation à libérer. Toute autre (la base indisponible) n'a rien réservé et remonte.
+const isUnreadableSecret = (error: unknown) =>
+  error instanceof Error && error.message === 'Secret illisible';
+
+async function claim(
+  ctx: TenantContext,
+  id: string,
+): Promise<LoadedConnection | 'unreadable' | null> {
+  try {
+    return await claimConnection(ctx, id);
+  } catch (error) {
+    if (!isUnreadableSecret(error)) throw error;
+    logError('connector.sync_failed', error, { connectionId: id });
+    return 'unreadable';
+  }
+}
+
+type Ready = { connector: AnyConnector; config: Record<string, unknown> };
+
+// Le connecteur et sa configuration validée, ou la raison pour laquelle on ne peut pas synchroniser.
+function prepare(connection: LoadedConnection, deps: SyncDeps): Ready | { message: string } {
+  const connector = deps.getConnector(connection.provider);
+  if (!connector) return { message: 'Connecteur indisponible' };
+  const parsed = connector.configSchema.safeParse(connection.config);
+  if (!parsed.success) return { message: "Configuration illisible : rebranchez l'outil" };
+  return { connector, config: parsed.data };
+}
+
+// Une page après l'autre : ingestion, puis curseur. Une reprise après plantage refait au pire la
+// dernière page, l'ingestion ne crée aucun doublon. Renvoie « soon » quand la limite est atteinte.
+async function readPages(
+  ctx: TenantContext,
+  connection: LoadedConnection,
+  deps: SyncDeps,
+  ready: Ready,
+): Promise<'soon' | 'later'> {
+  const { connector, config } = ready;
+  const http = createConnectorHttp({
+    provider: connection.provider,
+    hosts: connector.hosts(config),
+    minIntervalMs: connector.minIntervalMs,
+    fetchImpl: deps.fetchImpl,
+    sleep: deps.sleep,
+  });
+  const state = { cursor: connection.cursor, since: connection.since };
+  let read = 0;
+  for await (const page of connector.sync(config, state, http)) {
+    const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
+    if (items.length > 0) await ingestConnectorItems(ctx, connection, items);
+    await saveSyncProgress(ctx, connection.id, page.cursor, items.length);
+    read += page.items.length;
+    if (read >= SYNC_ITEMS_MAX) return 'soon';
+  }
+  return 'later';
+}
+
+// Le message de `last_error` est écrit par nous : celui d'une ConnectorHttpError, ou le résumé
+// d'une erreur inconnue. Jamais le corps d'une réponse, ni la clé.
+async function recordFailure(
+  ctx: TenantContext,
+  connection: LoadedConnection,
+  error: unknown,
+): Promise<'auth_error' | 'error'> {
+  logError('connector.sync_failed', error, {
+    connectionId: connection.id,
+    provider: connection.provider,
+  });
+  if (error instanceof ConnectorAuthError) {
+    const label = PROVIDER_LABELS[connection.provider];
+    const message = `Clé refusée par ${label} : vérifiez-la ou remplacez-la.`;
+    await finishSync(ctx, connection.id, { kind: 'auth_error', message });
+    return 'auth_error';
+  }
+  const message = error instanceof ConnectorHttpError ? error.message : safeErrorSummary(error);
+  await finishSync(ctx, connection.id, { kind: 'error', message });
+  return 'error';
+}
+
+// Toute issue d'une connexion réservée passe par `finishSync`, qui libère la réservation.
+export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): Promise<SyncResult> {
+  const ctx = await resolveTenantContext(job.userId, job.tenantId);
+  if (!ctx) return 'skipped';
+  const connection = await claim(ctx, job.connectionId);
+  if (connection === null) return 'skipped';
+  if (connection === 'unreadable') {
+    await finishSync(ctx, job.connectionId, { kind: 'error', message: UNREADABLE_KEY });
+    return 'error';
+  }
+  const ready = prepare(connection, deps);
+  if ('message' in ready) {
+    await finishSync(ctx, connection.id, { kind: 'error', message: ready.message });
+    return 'error';
+  }
+  let again: 'soon' | 'later';
+  try {
+    again = await readPages(ctx, connection, deps, ready);
+  } catch (error) {
+    return recordFailure(ctx, connection, error);
+  }
+  await finishSync(ctx, connection.id, { kind: 'ok', again });
+  return 'ok';
+}
+
+type DueRow = { connection_id: string; tenant_id: string; user_id: string };
+
+// Un job par connexion due. `connector_syncs_due()` ne rend que des identifiants ; la file
+// `connector-sync` (politique « short ») garde un seul job en attente par connexion.
+export async function enqueueDueSyncs(): Promise<number> {
+  const { rows } = await db.execute<DueRow>(
+    sql`select connection_id, tenant_id, user_id from connector_syncs_due()`,
+  );
+  const boss = await getBoss();
+  let queued = 0;
+  for (const row of rows) {
+    const job: ConnectorSyncJob = {
+      connectionId: row.connection_id,
+      tenantId: row.tenant_id,
+      userId: row.user_id,
+    };
+    const jobId = await boss.send(CONNECTOR_QUEUES.sync, job, { singletonKey: job.connectionId });
+    if (jobId) queued += 1;
+  }
+  return queued;
+}

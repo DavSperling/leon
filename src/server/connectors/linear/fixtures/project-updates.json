@@ -1,0 +1,25 @@
+{
+  "data": {
+    "projectUpdates": {
+      "nodes": [
+        {
+          "id": "9a8b7c6d-0000-4000-8000-0000000000a1",
+          "body": "Le site vitrine est en bonne voie : la maquette est validée, la mise en ligne est prévue le 20 novembre.",
+          "url": "https://linear.app/acme/project/site-vitrine-1a2b3c/updates",
+          "updatedAt": "2026-10-14T12:30:00.000Z",
+          "user": {
+            "name": "David Martin",
+            "email": "david@acme.test"
+          },
+          "project": {
+            "name": "Site vitrine"
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": "cursor-updates-1"
+      }
+    }
+  }
+}

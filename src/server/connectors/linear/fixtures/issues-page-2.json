@@ -1,0 +1,40 @@
+{
+  "data": {
+    "issues": {
+      "nodes": [
+        {
+          "id": "6f1b7c52-0a3e-4d8e-9c11-2a5d0e7b9a03",
+          "identifier": "LEO-9",
+          "title": "Choisir l'hébergeur",
+          "description": "Comparer trois hébergeurs européens.",
+          "url": "https://linear.app/acme/issue/LEO-9/choisir-l-hebergeur",
+          "updatedAt": "2026-10-12T10:00:00.000Z",
+          "creator": {
+            "name": "David Martin",
+            "email": "david@acme.test"
+          },
+          "team": {
+            "name": "Produit"
+          },
+          "project": {
+            "name": "Site vitrine"
+          },
+          "comments": {
+            "nodes": [
+              {
+                "id": "c3d3e4f5-0000-4000-8000-000000000003",
+                "body": "Décision : on prend le premier.",
+                "createdAt": "2026-10-12T10:00:00.000Z",
+                "user": null
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": "cursor-issues-2"
+      }
+    }
+  }
+}

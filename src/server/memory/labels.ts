@@ -1,5 +1,6 @@
-import type { SourceKind } from '@/capture/turn';
+import { type AuthorSide, CAPTURE_KINDS, type SourceKind } from '@/capture/turn';
 import type { SensitiveCategory } from '@/lib/enums';
+import { PROVIDER_LABELS } from '@/lib/providers';
 
 // Libellés d'affichage. Module pur : n'importe ni env ni la base.
 
@@ -8,7 +9,22 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note MCP',
+  ...PROVIDER_LABELS,
 };
+
+// Auteur affiché d'un fait. Une conversation est celle de la personne qui l'a tenue ; pour un outil,
+// la connexion appartient à celui qui l'a branchée, mais le fait vient de l'auteur du tour cité. Ce nom
+// est celui que l'auteur s'est donné : quand l'outil dit qu'il est extérieur à l'équipe, on l'écrit.
+export function factAuthorName(input: {
+  sourceKind: SourceKind;
+  userName: string;
+  turnAuthorName: string | null;
+  turnAuthorSide?: AuthorSide | null;
+}): string {
+  if ((CAPTURE_KINDS as readonly SourceKind[]).includes(input.sourceKind)) return input.userName;
+  const name = input.turnAuthorName ?? 'auteur inconnu';
+  return input.turnAuthorSide === 'external' ? `${name} (externe)` : name;
+}
 
 export const SENSITIVE_CATEGORY_LABELS: Record<SensitiveCategory, string> = {
   rh: 'RH',

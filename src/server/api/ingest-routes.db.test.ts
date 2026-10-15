@@ -67,6 +67,20 @@ describe('POST /api/v1/ingest', () => {
     });
   });
 
+  it("répond 400 au type d'un connecteur : un jeton d'appareil ne fabrique pas de source github", async () => {
+    const { paulToken } = await setup();
+    const body = validBody();
+    const bad = { ...body, source: { ...body.source, kind: 'github' } };
+
+    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+
+    expect(response.status).toBe(400);
+    expect(JSON.parse(await response.text())).toEqual({
+      error: 'Requête invalide',
+      issues: [{ path: 'source.kind', code: 'invalid_value' }],
+    });
+  });
+
   it('répond 400 à un corps vide', async () => {
     const { paulToken } = await setup();
     const response = await apiRequest(API_PATHS.ingest, { token: paulToken, method: 'POST' });

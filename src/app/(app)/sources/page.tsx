@@ -14,7 +14,8 @@ export default async function SourcesPage() {
       <header className="border-b pb-7">
         <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Sources</h1>
         <p className="mt-1 text-base text-muted-foreground">
-          Les conversations brutes restent privées.
+          Les conversations brutes restent privées ; ce que lisent les connexions est visible de
+          l'équipe.
         </p>
       </header>
       <ChannelLines channels={channels} />

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { cards, facts, readLog } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { seedCard, seedFact } from '@/test/fixtures';
+import { seedGithubFact } from '@/test/github-fact';
 import { seedRightsScenario } from '@/test/rights-scenario';
 import { cardUrl } from './card-url';
 import { fetchCard } from './fetch-card';
@@ -182,6 +183,65 @@ describe('fetchCard', () => {
     });
     await adminDb.update(cards).set({ mergedInto: ids.orionCard }).where(eq(cards.id, merged));
     expect(await fetchCard(marie, { id: merged, client: 'interface' })).toBeNull();
+  });
+});
+
+describe("fetchCard · faits tirés d'un outil", () => {
+  const URL = 'https://github.com/acme/leon/issues/12';
+
+  it("donne l'auteur du tour cité, pas celui qui a branché la connexion, et le lien de l'élément", async () => {
+    const { amos, david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL });
+
+    for (const reader of [david, amos]) {
+      const result = await fetchCard(reader, { id: cardId, client: 'interface' });
+      expect(result?.card.facts).toHaveLength(1);
+      expect(result?.card.facts[0]).toMatchObject({
+        authorName: 'David',
+        sourceKindLabel: 'GitHub',
+        sourceUrl: URL,
+      });
+      expect(result?.text).toContain('[GitHub · David,');
+    }
+  });
+
+  // Le nom d'un auteur est celui qu'il s'est donné : quand l'outil dit qu'il est extérieur à l'équipe,
+  // la fiche l'écrit, pour qu'un « David » d'un dépôt public ne passe pas pour un collègue.
+  it("écrit « (externe) » après le nom de l'auteur d'un tour que l'outil dit extérieur", async () => {
+    const { david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL }, 'external');
+
+    const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+    expect(result?.card.facts[0]).toMatchObject({ authorName: 'David (externe)' });
+    expect(result?.text).toContain('[GitHub · David (externe),');
+  });
+
+  it("n'ajoute rien au nom d'un auteur de l'équipe", async () => {
+    const { david, cardId } = await seedGithubFact({ nature: 'ticket', url: URL }, 'team');
+
+    const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+    expect(result?.card.facts[0]).toMatchObject({ authorName: 'David' });
+  });
+
+  it.each([['http://exemple.test/a'], ['javascript:alert(1)']])(
+    'ne garde pas le lien %s, mais montre quand même le fait',
+    async (url) => {
+      const { david, cardId } = await seedGithubFact({ url });
+
+      const result = await fetchCard(david, { id: cardId, client: 'interface' });
+
+      expect(result?.card.facts).toHaveLength(1);
+      expect(result?.card.facts[0]?.sourceUrl).toBeNull();
+    },
+  );
+
+  it("montre le fait d'équipe tiré d'une conversation que Marie ne voit pas, sans lien et avec le nom de son auteur", async () => {
+    const { marie, ids } = await seedRightsScenario();
+
+    const result = await fetchCard(marie, { id: ids.acmeCard, client: 'interface' });
+
+    const fact = result?.card.facts.find((f) => f.id === ids.acmeConflictFact);
+    expect(fact).toMatchObject({ sourceUrl: null, authorName: 'Paul Martin' });
   });
 });
 

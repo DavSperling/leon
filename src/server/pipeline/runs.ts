@@ -1,5 +1,6 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
-import type { SourceKind } from '@/capture/turn';
+import { and, asc, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { z } from 'zod';
+import type { AuthorSide, SourceKind, TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -7,10 +8,17 @@ import { safeErrorSummary } from '@/server/log';
 import type { TriageResult } from './prompts/triage';
 import type { PipelineStep } from './queue';
 
+// Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan des connecteurs).
+export const ITEM_NATURES = ['conversation', 'reunion', 'page', 'ticket', 'fil', 'note'] as const;
+export type ItemNature = (typeof ITEM_NATURES)[number];
+
 export type RunTurn = {
   id: string;
   externalId: string;
-  role: 'user' | 'assistant';
+  role: TurnRole;
+  authorName: string | null;
+  authorSide: AuthorSide | null;
+  internalNote: boolean;
   text: string;
   ts: Date;
 };
@@ -20,6 +28,8 @@ export type PipelineRun = {
   sourceId: string;
   sourceKind: SourceKind;
   sourceTitle: string | null;
+  nature: ItemNature;
+  context: string | null;
   step: string;
   status: string;
   triage: TriageResult | null;
@@ -27,6 +37,32 @@ export type PipelineRun = {
 };
 
 const ERROR_MAX_CHARS = 200;
+const CONTEXT_MAX_CHARS = 4_000;
+const CONTEXT_MAX_TURNS = 50;
+const CONTEXT_TRUNCATION_MARK = '[…]';
+// La nature vient d'un champ libre (metadata) : une valeur inconnue vaut conversation.
+const NatureSchema = z.enum(ITEM_NATURES).catch('conversation');
+
+// Un run ne porte que les tours nouveaux : pour une source d'outil, le texte des tours `document` déjà connus
+// (du plus récent au plus ancien) rappelle l'état que ces tours commentent ou corrigent. Il n'est pas citable.
+async function loadContext(tx: Tx, sourceId: string, runTurnIds: string[]): Promise<string | null> {
+  const known = await tx
+    .select({ text: turns.text })
+    .from(turns)
+    .where(
+      and(
+        eq(turns.sourceId, sourceId),
+        eq(turns.role, 'document'),
+        notInArray(turns.id, runTurnIds),
+      ),
+    )
+    .orderBy(desc(turns.ts), asc(turns.externalId))
+    .limit(CONTEXT_MAX_TURNS);
+  if (known.length === 0) return null;
+  const text = known.map((row) => row.text).join('\n\n');
+  if (text.length <= CONTEXT_MAX_CHARS) return text;
+  return `${text.slice(0, CONTEXT_MAX_CHARS - CONTEXT_TRUNCATION_MARK.length)}${CONTEXT_TRUNCATION_MARK}`;
+}
 
 // Passe l'étape en `running` et charge le run avec ses tours. Une étape appelée alors que le run a avancé
 // (reprise d'une étape déjà faite) ne trouve rien : null. Un run invisible pour ctx ne se démarre pas non plus.
@@ -43,7 +79,11 @@ export async function startStep(
       .returning();
     if (!run) return null;
     const [source] = await tx
-      .select({ kind: sources.kind, title: sources.title })
+      .select({
+        kind: sources.kind,
+        title: sources.title,
+        nature: sql<string | null>`${sources.metadata}->>'nature'`,
+      })
       .from(sources)
       .where(eq(sources.id, run.sourceId));
     if (!source) throw new Error('source du run introuvable');
@@ -52,17 +92,23 @@ export async function startStep(
         id: turns.id,
         externalId: turns.externalId,
         role: turns.role,
+        authorName: turns.authorName,
+        authorSide: turns.authorSide,
+        internalNote: turns.internalNote,
         text: turns.text,
         ts: turns.ts,
       })
       .from(turns)
       .where(inArray(turns.id, run.turnIds))
       .orderBy(asc(turns.ts), asc(turns.externalId));
+    const nature = NatureSchema.parse(source.nature);
     return {
       id: run.id,
       sourceId: run.sourceId,
       sourceKind: source.kind,
       sourceTitle: source.title,
+      nature,
+      context: nature === 'conversation' ? null : await loadContext(tx, run.sourceId, run.turnIds),
       step: run.step,
       status: run.status,
       triage: run.triage as TriageResult | null,

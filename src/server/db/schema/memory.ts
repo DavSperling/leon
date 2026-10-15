@@ -9,7 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { CAPTURE_MODES, SOURCE_KINDS } from '@/capture/turn';
+import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { CARD_STATUSES, FACT_STATUSES, SENSITIVE_CATEGORIES } from '@/lib/enums';
 import { organizations, users } from './auth';
 
@@ -35,6 +35,8 @@ export const sources = pgTable('sources', {
     .references(() => users.id, { onDelete: 'cascade' }),
   title: text('title'),
   acl: acl(),
+  // Connexion d'origine (nulle pour les conversations) ; clé étrangère composée (tenant_id, connection_id) en SQL.
+  connectionId: uuid('connection_id'),
   metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
   lastTurnAt: timestamp('last_turn_at', { withTimezone: true }),
   createdAt: createdAt(),
@@ -47,10 +49,15 @@ export const turns = pgTable('turns', {
     .notNull()
     .references(() => sources.id, { onDelete: 'cascade' }),
   externalId: text('external_id').notNull(),
-  role: text('role', { enum: ['user', 'assistant'] }).notNull(),
+  role: text('role', { enum: TURN_ROLES }).notNull(),
   text: text('text').notNull(),
   ts: timestamp('ts', { withTimezone: true }).notNull(),
-  captureMode: text('capture_mode', { enum: CAPTURE_MODES }).notNull(),
+  captureMode: text('capture_mode', { enum: TURN_CAPTURE_MODES }).notNull(),
+  authorName: text('author_name'),
+  authorEmail: text('author_email'),
+  // Le côté de l'auteur d'après l'outil (nul : l'outil ne le dit pas), et une note que seule l'équipe voit.
+  authorSide: text('author_side', { enum: AUTHOR_SIDES }),
+  internalNote: boolean('internal_note').notNull().default(false),
   acl: acl(),
   createdAt: createdAt(),
 });

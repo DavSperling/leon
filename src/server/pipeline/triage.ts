@@ -40,8 +40,10 @@ async function triageWindow(
 ): Promise<TriageResult> {
   const prompt = buildTriagePrompt({
     sourceKindLabel: SOURCE_KIND_LABELS[run.sourceKind],
+    nature: run.nature,
     title: run.sourceTitle,
     turns: windowTurnList,
+    context: run.context,
   });
   const result = await llm.generateObject({
     step: 'triage',

@@ -17,7 +17,7 @@ import { logError } from '@/server/log';
 import { MAX_IDS, TaskError } from '@/server/tasks/errors';
 import { createLabel, type LabelRow } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
-import { createTask, updateTask } from '@/server/tasks/tasks';
+import { createTask, moveTask, updateTask } from '@/server/tasks/tasks';
 
 // Chaque action : la session, zod sur les entrées, une fonction de src/server/tasks, puis le
 // rafraîchissement des pages. Le message d'une erreur attendue (TaskError) est fixe ; toute autre
@@ -62,6 +62,17 @@ const TaskPatchSchema = z.strictObject({
 });
 
 const UpdateTaskSchema = z.strictObject({ id: Id, patch: TaskPatchSchema });
+
+// Glisser une carte : vers une colonne (statut, priorité ou assigné) ou dans la sienne (sans `field`),
+// entre sa voisine du dessus et celle du dessous.
+const Neighbors = { beforeId: Id.nullable(), afterId: Id.nullable() };
+const MoveSchema = z.union([
+  z.strictObject({ field: z.literal('status'), value: Id, ...Neighbors }),
+  z.strictObject({ field: z.literal('priority'), value: Priority, ...Neighbors }),
+  z.strictObject({ field: z.literal('assignee'), value: Id.nullable(), ...Neighbors }),
+  z.strictObject(Neighbors),
+]);
+const MoveTaskSchema = z.strictObject({ id: Id, move: MoveSchema });
 
 const NewLabelSchema = z.strictObject({
   name: z.string().trim().min(1).max(LABEL_NAME_MAX_CHARS),
@@ -112,6 +123,16 @@ export async function updateTaskAction(
 ): Promise<ActionResult> {
   return run('update_task', UpdateTaskSchema, { id, patch }, async (ctx, data) => {
     await updateTask(ctx, data.id, data.patch, { kind: 'user', userId: ctx.userId });
+    return {};
+  });
+}
+
+export async function moveTaskAction(
+  id: string,
+  move: z.input<typeof MoveSchema>,
+): Promise<ActionResult> {
+  return run('move_task', MoveTaskSchema, { id, move }, async (ctx, data) => {
+    await moveTask(ctx, data.id, data.move, { kind: 'user', userId: ctx.userId });
     return {};
   });
 }

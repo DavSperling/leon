@@ -4,16 +4,21 @@ import { requireUserContext } from '@/server/auth/session';
 import { TaskError } from '@/server/tasks/errors';
 import { createLabel } from '@/server/tasks/labels';
 import { listTasks } from '@/server/tasks/task-list';
-import { createTask, updateTask } from '@/server/tasks/tasks';
+import { createTask, moveTask, updateTask } from '@/server/tasks/tasks';
 import {
   createLabelAction,
   createTaskAction,
+  moveTaskAction,
   searchTasksAction,
   updateTaskAction,
 } from './actions';
 
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
-vi.mock('@/server/tasks/tasks', () => ({ createTask: vi.fn(), updateTask: vi.fn() }));
+vi.mock('@/server/tasks/tasks', () => ({
+  createTask: vi.fn(),
+  moveTask: vi.fn(),
+  updateTask: vi.fn(),
+}));
 vi.mock('@/server/tasks/labels', () => ({ createLabel: vi.fn() }));
 vi.mock('@/server/tasks/task-list', () => ({ listTasks: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -180,6 +185,77 @@ describe('updateTaskAction', () => {
       error: 'Erreur interne de Leon.',
     });
     expect(String(consoleError.mock.calls[0]?.[1])).toBe('tasks.update_task');
+  });
+});
+
+describe('moveTaskAction', () => {
+  const NEIGHBORS = { beforeId: ID, afterId: null };
+
+  it.each([
+    ['le statut', { field: 'status', value: OTHER_ID, ...NEIGHBORS }],
+    ['la priorité', { field: 'priority', value: 'urgent', ...NEIGHBORS }],
+    ['l’assigné', { field: 'assignee', value: OTHER_ID, ...NEIGHBORS }],
+    ['la tâche sans assigné', { field: 'assignee', value: null, ...NEIGHBORS }],
+    ['seulement la place dans la colonne', { beforeId: null, afterId: null }],
+  ] as const)(
+    'range la tâche en changeant %s, en nom de lecteur, puis rafraîchit',
+    async (_name, move) => {
+      vi.mocked(moveTask).mockResolvedValue(undefined);
+
+      await expect(moveTaskAction(ID, move)).resolves.toEqual({ ok: true });
+
+      expect(moveTask).toHaveBeenCalledWith(ctx, ID, move, ACTOR);
+      expect(revalidatePath).toHaveBeenCalledWith('/taches', 'layout');
+    },
+  );
+
+  it.each([
+    ['un identifiant qui n’est pas un UUID', 'pas-un-uuid', NEIGHBORS],
+    ['une voisine qui n’est pas un UUID', ID, { beforeId: 'pas-un-uuid', afterId: null }],
+    ['des voisines absentes', ID, {}],
+    ['une seule voisine', ID, { beforeId: ID }],
+    ['un champ inconnu', ID, { field: 'project', value: OTHER_ID, ...NEIGHBORS }],
+    ['une priorité inconnue', ID, { field: 'priority', value: 'critique', ...NEIGHBORS }],
+    ['un statut qui n’est pas un UUID', ID, { field: 'status', value: 'En cours', ...NEIGHBORS }],
+    ['un statut nul', ID, { field: 'status', value: null, ...NEIGHBORS }],
+    ['un champ sans valeur', ID, { field: 'assignee', ...NEIGHBORS }],
+    ['une valeur sans champ', ID, { value: OTHER_ID, ...NEIGHBORS }],
+    ['un champ interdit (acl)', ID, { acl: [ID], ...NEIGHBORS }],
+  ])('refuse %s sans rien écrire', async (_name, id, move) => {
+    await expect(moveTaskAction(id, move as never)).resolves.toEqual(INVALID);
+
+    expect(moveTask).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("rend le message d'une TaskError (assigné non membre, voisine disparue)", async () => {
+    vi.mocked(moveTask).mockRejectedValue(new TaskError('not_found', 'Tâche introuvable.'));
+
+    await expect(moveTaskAction(ID, { beforeId: OTHER_ID, afterId: null })).resolves.toEqual({
+      ok: false,
+      error: 'Tâche introuvable.',
+    });
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('journalise une erreur interne sans son texte et ne montre rien au lecteur', async () => {
+    vi.mocked(moveTask).mockRejectedValue(postgresError());
+
+    await expect(moveTaskAction(ID, NEIGHBORS)).resolves.toEqual({
+      ok: false,
+      error: 'Erreur interne de Leon.',
+    });
+    expect(String(consoleError.mock.calls[0]?.[1])).toBe('tasks.move_task');
+    expect(consoleError.mock.calls[0]?.[2]).toContain('code=22001');
+  });
+
+  it('ne déplace rien sans session valide', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(moveTaskAction(ID, NEIGHBORS)).rejects.toThrow('NEXT_REDIRECT /connexion');
+
+    expect(moveTask).not.toHaveBeenCalled();
   });
 });
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { z } from 'zod';
 import { CreateTaskProvider } from '@/components/tasks/create-task-provider';
 import { groupStatuses, type ListContext } from '@/components/tasks/list-context';
+import { TaskBoard } from '@/components/tasks/task-board';
 import { TaskList } from '@/components/tasks/task-list';
 import { ViewToolbar } from '@/components/tasks/view-toolbar';
 import { groupTasks } from '@/lib/tasks/group';
@@ -49,17 +50,21 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
   // Seuls les groupes se limitent au projet filtré et distinguent les statuts de même nom de deux
   // projets (« Backlog · LEO ») ; la création rapide a besoin des statuts de tous les projets.
   const groupContext = { ...context, statuses: groupStatuses(statuses, projects, config) };
+  const View = config.layout === 'board' ? TaskBoard : TaskList;
   return (
     <CreateTaskProvider config={config} context={context} now={now}>
-      <ViewToolbar viewName={view?.name ?? null} config={config} base={base} context={context} />
-      <TaskList
-        groups={groupTasks(list.rows, config, groupContext)}
-        config={config}
-        base={base}
-        hiddenCount={list.hiddenCount}
-        context={context}
-        now={now}
-      />
+      {/* Le tableau remplit la hauteur de la page : chaque colonne défile seule */}
+      <div className={config.layout === 'board' ? 'flex h-full flex-col' : undefined}>
+        <ViewToolbar viewName={view?.name ?? null} config={config} base={base} context={context} />
+        <View
+          groups={groupTasks(list.rows, config, groupContext)}
+          config={config}
+          base={base}
+          hiddenCount={list.hiddenCount}
+          context={context}
+          now={now}
+        />
+      </div>
     </CreateTaskProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hiddenLabel } from './task-list';
+import { hiddenLabel } from './list-notices';
 
 describe('hiddenLabel', () => {
   it('accorde le mot avec le nombre', () => {

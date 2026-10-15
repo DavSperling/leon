@@ -4,10 +4,10 @@ import { ListTree } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import type { ViewProperty } from '@/lib/enums';
-import { formatDate, formatRelative } from '@/lib/format';
 import type { TaskRow } from '@/server/tasks/task-row';
 import type { ListContext } from './list-context';
 import { AssigneeCell, DueCell, LabelsCell, PriorityCell, StatusCell } from './row-cells';
+import { rowDates } from './row-dates';
 import { TaskTitle } from './task-title';
 import { useTaskEdit } from './use-task-edit';
 
@@ -42,7 +42,7 @@ export function TaskRowItem({
   const { row, edit } = useTaskEdit(current);
   const shows = (property: ViewProperty) => properties.includes(property);
   return (
-    <li className="group/row relative flex h-9 items-center gap-1.5 px-5 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60">
+    <li className="group/item relative flex h-9 items-center gap-1.5 px-5 text-sm transition-colors hover:bg-accent/60 has-[a:focus-visible]:bg-accent/60">
       {shows('priority') && <PriorityCell row={row} edit={edit} />}
       {shows('id') && (
         <span className="w-[4.5rem] shrink-0 pl-1 font-mono text-xs text-muted-foreground">
@@ -81,15 +81,13 @@ export function TaskRowItem({
       )}
       {shows('assignee') && <AssigneeCell row={row} context={context} edit={edit} />}
       {shows('due_date') && <DueCell row={row} now={now} edit={edit} />}
-      {shows('status_age') && (
-        <DateCell label="Dans ce statut depuis">
-          {formatRelative(row.statusChangedAt, now)}
-        </DateCell>
-      )}
-      {shows('created') && <DateCell label="Créée le">{formatDate(row.createdAt)}</DateCell>}
-      {shows('updated') && (
-        <DateCell label="Mise à jour">{formatRelative(row.updatedAt, now)}</DateCell>
-      )}
+      {rowDates(row, now)
+        .filter(({ property }) => shows(property))
+        .map(({ property, label, value }) => (
+          <DateCell key={property} label={label}>
+            {value}
+          </DateCell>
+        ))}
     </li>
   );
 }

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import type { TaskRow } from '@/server/tasks/task-row';
 import { Avatar } from './avatar';
 import { LabelChip } from './label-chip';
-import type { ListContext } from './list-context';
+import { type ListContext, shownStatus } from './list-context';
 import { AssigneePicker } from './pickers/assignee-picker';
 import { DueDatePicker } from './pickers/due-date-picker';
 import { LabelsPicker } from './pickers/labels-picker';
@@ -23,7 +23,7 @@ const CELL =
   'relative z-10 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-md outline-none transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-accent';
 // Une cellule encore vide ne se montre qu'au survol, au focus et quand son menu est ouvert.
 const FAINT =
-  'text-muted-foreground opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100';
+  'text-muted-foreground opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100';
 
 export function PriorityCell({ row, edit }: { row: TaskRow; edit: TaskEdit }) {
   return (
@@ -45,16 +45,7 @@ export function StatusCell({ row, statuses, edit }: StatusCellProps) {
   const own = statuses.filter((status) => status.projectId === row.projectId);
   const change = (statusId: string) => {
     const status = own.find((candidate) => candidate.id === statusId);
-    if (!status) return;
-    edit(
-      { statusId },
-      {
-        statusId,
-        statusLabel: status.label,
-        statusColor: status.color,
-        statusCategory: status.category,
-      },
-    );
+    if (status) edit({ statusId }, shownStatus(status));
   };
   return (
     <StatusPicker statuses={own} value={row.statusId} onChange={change}>
@@ -88,11 +79,16 @@ export function AssigneeCell({ row, context, edit }: AssigneeCellProps) {
   );
 }
 
-type LabelsCellProps = { row: TaskRow; labels: ListContext['labels']; edit: TaskEdit };
+type LabelsCellProps = {
+  row: TaskRow;
+  labels: ListContext['labels'];
+  edit: TaskEdit;
+  className?: string; // la liste les cache quand elle est étroite ; une carte les montre toujours
+};
 
 const MAX_LABELS = 2;
 
-export function LabelsCell({ row, labels, edit }: LabelsCellProps) {
+export function LabelsCell({ row, labels, edit, className }: LabelsCellProps) {
   const toggle = (label: ListContext['labels'][number], selected: boolean) =>
     edit(selected ? { addLabelIds: [label.id] } : { removeLabelIds: [label.id] }, {
       labels: selected
@@ -105,7 +101,12 @@ export function LabelsCell({ row, labels, edit }: LabelsCellProps) {
       <button
         type="button"
         aria-label={`Étiquettes : ${row.labels.map((label) => label.name).join(', ') || 'aucune'}`}
-        className={cn(CELL, 'hidden gap-1 @2xl:flex', row.labels.length > 0 ? 'px-1' : FAINT)}
+        className={cn(
+          CELL,
+          'hidden gap-1 @2xl:flex',
+          row.labels.length > 0 ? 'px-1' : FAINT,
+          className,
+        )}
       >
         {row.labels.length === 0 && <Tag size={14} strokeWidth={1.5} aria-hidden="true" />}
         {row.labels.slice(0, MAX_LABELS).map((label) => (
@@ -119,7 +120,9 @@ export function LabelsCell({ row, labels, edit }: LabelsCellProps) {
   );
 }
 
-export function DueCell({ row, now, edit }: { row: TaskRow; now: Date; edit: TaskEdit }) {
+type DueCellProps = { row: TaskRow; now: Date; edit: TaskEdit; className?: string };
+
+export function DueCell({ row, now, edit, className }: DueCellProps) {
   const overdue = isOverdue(row, now);
   const label = row.dueDate ? formatDue(row.dueDate, now) : 'aucune';
   return (
@@ -136,6 +139,7 @@ export function DueCell({ row, now, edit }: { row: TaskRow; now: Date; edit: Tas
           'w-[5.5rem] justify-end px-1.5 text-xs tabular-nums',
           row.dueDate ? 'text-muted-foreground' : FAINT,
           overdue && 'text-destructive',
+          className,
         )}
       >
         {row.dueDate ? label : <CalendarPlus size={14} strokeWidth={1.5} aria-hidden="true" />}

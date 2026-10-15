@@ -2,7 +2,7 @@ import type { ViewConfig } from '@/lib/tasks/view-config';
 import type { LabelRow } from '@/server/tasks/labels';
 import type { ProjectRow } from '@/server/tasks/projects';
 import type { StatusRow } from '@/server/tasks/statuses';
-import type { Person } from '@/server/tasks/task-row';
+import type { Person, TaskRow } from '@/server/tasks/task-row';
 
 // Ce que la liste connaît de son entourage : de quoi regrouper, nommer, filtrer et modifier.
 export type ListContext = {
@@ -31,4 +31,16 @@ export function groupStatuses(
     ...status,
     label: `${status.label} · ${keys.get(status.projectId) ?? '?'}`,
   }));
+}
+
+// Ce qu'une ligne ou une carte montre d'un statut, en attendant que le serveur confirme le changement.
+export function shownStatus(
+  status: StatusRow,
+): Pick<TaskRow, 'statusId' | 'statusLabel' | 'statusColor' | 'statusCategory'> {
+  return {
+    statusId: status.id,
+    statusLabel: status.label,
+    statusColor: status.color,
+    statusCategory: status.category,
+  };
 }

@@ -5,15 +5,21 @@ export async function startNodeInstrumentation() {
   const { env } = await import('@/server/env');
   // Next exécute register() pendant `next build` : le worker ne doit jamais y démarrer.
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
-  const { recordStartCommit } = await import('@/server/version');
+  const [
+    { recordStartCommit, recordStartLlm },
+    { createConfiguredLlm, describeLlmConfig, missingLlmKeys },
+  ] = await Promise.all([import('@/server/version'), import('@/server/llm/config')]);
   recordStartCommit();
-  if (!env.ANTHROPIC_API_KEY) {
-    console.warn('[leon] ANTHROPIC_API_KEY absente : le pipeline ne tourne pas.');
+  const llmConfig = describeLlmConfig(env);
+  recordStartLlm(llmConfig);
+  // Le pipeline ne tourne que si chaque fournisseur configuré a sa clé : on dit lesquelles manquent,
+  // jamais leurs valeurs.
+  const missing = missingLlmKeys(env);
+  if (missing.length > 0) {
+    console.warn(`[leon] ${missing.join(', ')} absente(s) : le pipeline ne tourne pas.`);
     return;
   }
-  const [{ createAnthropicLlm }, { startPipelineWorker }] = await Promise.all([
-    import('@/server/llm/anthropic-llm'),
-    import('@/server/pipeline/worker'),
-  ]);
-  await startPipelineWorker(createAnthropicLlm({ apiKey: env.ANTHROPIC_API_KEY }));
+  console.info('[leon]', 'llm.config', JSON.stringify(llmConfig));
+  const { startPipelineWorker } = await import('@/server/pipeline/worker');
+  await startPipelineWorker(createConfiguredLlm(env));
 }

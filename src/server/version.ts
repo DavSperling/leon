@@ -2,7 +2,10 @@ import { execFileSync } from 'node:child_process';
 
 // Le worker du pipeline ne recharge pas le code à chaud : le commit au démarrage du serveur dit quel
 // code traite les runs. Le jeu d'essai refuse de lancer un passage payant s'il diffère de HEAD.
-const globalForVersion = globalThis as typeof globalThis & { leonStartCommit?: string | null };
+const globalForVersion = globalThis as typeof globalThis & {
+  leonStartCommit?: string | null;
+  leonStartLlm?: Record<string, string> | null;
+};
 
 // stdin/stderr ignorés et délai court : jamais de blocage ni de fuite d'un message git imprévu.
 const GIT_OPTIONS: { encoding: 'utf8'; stdio: ['ignore', 'pipe', 'ignore']; timeout: number } = {
@@ -47,4 +50,19 @@ export function recordStartCommit(): void {
 
 export function startCommit(): string | null {
   return globalForVersion.leonStartCommit ?? null;
+}
+
+// Modèle de chaque étape au démarrage (« fournisseur:modèle », sans clé, voir llm/config.ts) : le jeu
+// d'essai l'enregistre avec le passage, car changer de modèle ne change pas le commit. Comme le
+// commit, rien en production, et le premier enregistrement reste (rechargement à chaud).
+export function recordStartLlm(llm: Record<string, string>): void {
+  if (process.env.NODE_ENV === 'production') {
+    globalForVersion.leonStartLlm ??= null;
+    return;
+  }
+  globalForVersion.leonStartLlm ??= llm;
+}
+
+export function startLlm(): Record<string, string> | null {
+  return globalForVersion.leonStartLlm ?? null;
 }

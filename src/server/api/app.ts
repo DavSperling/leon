@@ -2,7 +2,7 @@ import type { ErrorHandler } from 'hono';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { logError } from '@/server/log';
-import { startCommit } from '@/server/version';
+import { startCommit, startLlm } from '@/server/version';
 import { authRoutes } from './auth-routes';
 import { briefingRoutes } from './briefing-routes';
 import { ingestRoutes } from './ingest-routes';
@@ -19,7 +19,7 @@ export const handleApiError: ErrorHandler = (error, c) => {
 };
 
 app.get('/health', (c) => c.json({ ok: true }));
-app.get('/version', (c) => c.json({ commit: startCommit() }));
+app.get('/version', (c) => c.json({ commit: startCommit(), llm: startLlm() }));
 app.route('/auth', authRoutes);
 app.route('/v1', ingestRoutes);
 app.route('/v1', briefingRoutes);

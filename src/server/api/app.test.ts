@@ -19,17 +19,32 @@ describe('app', () => {
     expect(await response.json()).toEqual({ error: 'Introuvable' });
   });
 
-  it('répond à /api/version avec le commit de démarrage', async () => {
+  it('répond à /api/version avec le commit et les modèles de démarrage', async () => {
     // try/finally : une assertion qui échoue ne doit jamais laisser le global pollué pour la suite.
-    const global = globalThis as { leonStartCommit?: string | null };
+    const global = globalThis as {
+      leonStartCommit?: string | null;
+      leonStartLlm?: Record<string, string> | null;
+    };
+    const llm = {
+      triage: 'anthropic:claude-haiku-5-5',
+      extraction: 'openrouter:mistralai/mistral-large-4-0',
+      placement: 'anthropic:claude-haiku-5-5',
+    };
     global.leonStartCommit = 'a'.repeat(40);
+    global.leonStartLlm = llm;
     try {
       const response = await app.request('/api/version');
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({ commit: 'a'.repeat(40) });
+      expect(await response.json()).toEqual({ commit: 'a'.repeat(40), llm });
     } finally {
       global.leonStartCommit = undefined;
+      global.leonStartLlm = undefined;
     }
+  });
+
+  it('répond llm null sur /api/version tant que les modèles ne sont pas connus', async () => {
+    const response = await app.request('/api/version');
+    expect(await response.json()).toEqual({ commit: null, llm: null });
   });
 });
 

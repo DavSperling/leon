@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readGitCommit, startCommitFrom } from './version';
+import { readGitCommit, recordStartLlm, startCommitFrom, startLlm } from './version';
 
 describe('readGitCommit', () => {
   it('renvoie le commit courant du dépôt', () => {
@@ -18,5 +18,19 @@ describe('startCommitFrom', () => {
 
   it('renvoie null sans suffixe quand le commit est inconnu', () => {
     expect(startCommitFrom(null, true)).toBeNull();
+  });
+});
+
+describe('recordStartLlm', () => {
+  it('garde les premiers modèles enregistrés (rechargement à chaud)', () => {
+    const global = globalThis as { leonStartLlm?: Record<string, string> | null };
+    const premiers = { triage: 'a:1', extraction: 'a:2', placement: 'a:3' };
+    try {
+      recordStartLlm(premiers);
+      recordStartLlm({ triage: 'b:1', extraction: 'b:2', placement: 'b:3' });
+      expect(startLlm()).toEqual(premiers);
+    } finally {
+      global.leonStartLlm = undefined;
+    }
   });
 });

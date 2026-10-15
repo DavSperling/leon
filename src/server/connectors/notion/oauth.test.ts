@@ -163,7 +163,9 @@ describe('échange du code et renouvellement', () => {
     expect(result.expiresAt).toBeNull();
   });
 
-  it("lit un refus d'invalid_grant (400) comme un refus de l'éditeur, sans reprendre son texte", async () => {
+  // Ce test ne dit rien de ce que Notion envoie : la forme { error, error_description } est celle
+  // que le socle sait lire (RFC 6749), pas celle de la doc Notion (voir plus bas).
+  it("lit un refus au format RFC 6749 ({ error: 'invalid_grant' }) sans reprendre son texte", async () => {
     const refusal = {
       error: 'invalid_grant',
       error_description: `Le jeton ${REFRESH} est périmé.`,
@@ -179,6 +181,48 @@ describe('échange du code et renouvellement', () => {
 
     expect(failure).toBeInstanceOf(OAuthRefusedError);
     expect((failure as Error).message).not.toContain(REFRESH);
+  });
+
+  // La forme que la doc Notion décrit (reference/create-a-token, refresh-a-token, status-codes) :
+  // { object: 'error', status, code, message }, en 400 pour invalid_grant et en 401 pour
+  // invalid_client. Le socle (T45) ne compte pas encore comme refus une réponse sans `error` : il lève
+  // ConnectorHttpError « Réponse inattendue », donc la connexion passe en 'error' (nouvel essai chaque
+  // heure) au lieu de 'auth_error' (« Reconnectez Notion »), et /retour répond 'indisponible' au lieu
+  // de 'refuse'. `it.fails` garde l'écart écrit : quand le socle lira `code`, ces tests passeront
+  // « à l'envers » et signaleront qu'il faut retirer `.fails`.
+  describe.each([
+    { status: 400, code: 'invalid_grant' },
+    { status: 401, code: 'invalid_client' },
+  ])('refus documenté par Notion ($status $code)', ({ status, code }) => {
+    const refusal = { object: 'error', status, code, message: `Le jeton ${REFRESH} est périmé.` };
+
+    it.fails("au renouvellement, rend un refus de l'éditeur sans reprendre son texte", async () => {
+      const fetchImpl = fakeFetch([tokenRoute(refusal, status)]);
+
+      const failure = await refreshTokens(
+        notionOAuth,
+        CLIENT,
+        REFRESH,
+        tokenHttp(notionOAuth, 'notion', fetchImpl),
+      ).catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(OAuthRefusedError);
+      expect((failure as Error).message).not.toContain(REFRESH);
+    });
+
+    it.fails("à l'échange du code, rend un refus de l'éditeur", async () => {
+      const fetchImpl = fakeFetch([tokenRoute(refusal, status)]);
+
+      const failure = await exchangeCode(
+        notionOAuth,
+        CLIENT,
+        'code-1',
+        null,
+        tokenHttp(notionOAuth, 'notion', fetchImpl),
+      ).catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(OAuthRefusedError);
+    });
   });
 });
 

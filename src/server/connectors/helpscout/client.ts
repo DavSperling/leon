@@ -7,7 +7,14 @@ import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../h
 const BASE = 'https://api.helpscout.net/v2';
 const IsoDate = z.iso.datetime({ offset: true });
 
-export type Access = { appId: string; appSecret: string };
+// Ce que les requêtes lisent de la configuration : l'identifiant et le secret de l'appli (clé
+// collée), ou le jeton du bouton. Le schéma garantit les champs de la forme choisie.
+export type Access = {
+  authMode: 'key' | 'oauth';
+  appId?: string;
+  appSecret?: string;
+  accessToken?: string;
+};
 
 const TokenSchema = z.object({ access_token: z.string().min(1) });
 const UserSchema = z.object({
@@ -82,9 +89,13 @@ export type ConversationsPage = { conversations: Conversation[]; totalPages: num
 
 // Le jeton se demande une fois par passage (il dure deux jours) et reste en mémoire. Help Scout ne
 // documente pas l'erreur d'un identifiant refusé ; la norme OAuth 2 en fait un 400 (invalid_client).
-async function accessToken({ appId, appSecret }: Access, http: ConnectorHttp): Promise<string> {
+async function requestToken(access: Access, http: ConnectorHttp): Promise<string> {
   try {
-    const body = { grant_type: 'client_credentials', client_id: appId, client_secret: appSecret };
+    const body = {
+      grant_type: 'client_credentials',
+      client_id: access.appId ?? '',
+      client_secret: access.appSecret ?? '',
+    };
     const answer = await http.json(
       { url: `${BASE}/oauth2/token`, method: 'POST', body },
       TokenSchema,
@@ -98,8 +109,12 @@ async function accessToken({ appId, appSecret }: Access, http: ConnectorHttp): P
   }
 }
 
+// Avec le bouton, le socle a déjà renouvelé le jeton avant le passage : il sert tel quel, sans appel
+// pour en demander un. Un 401 remonte comme une clé refusée (le socle renouvelle alors une fois).
 export async function helpscoutClient(access: Access, http: ConnectorHttp) {
-  const headers = { authorization: `Bearer ${await accessToken(access, http)}` };
+  const token =
+    access.authMode === 'oauth' ? (access.accessToken ?? '') : await requestToken(access, http);
+  const headers = { authorization: `Bearer ${token}` };
 
   return {
     user: () => http.json({ url: `${BASE}/users/me`, headers }, UserSchema),

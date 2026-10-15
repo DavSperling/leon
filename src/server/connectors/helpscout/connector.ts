@@ -4,6 +4,7 @@ import type { Connector, SyncPage, SyncState } from '../types';
 import { type Access, helpscoutClient } from './client';
 import { apiDate, type Cursor, readCursor } from './cursor';
 import { toItem } from './map';
+import { helpscoutOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://developer.helpscout.com/mailbox-api/overview/authentication/ (flux « Client
@@ -63,10 +64,25 @@ import { toItem } from './map';
 //     courant écrit `firstName` et `lastName`) ;
 //   - la taille d'une page de 25 conversations avec leurs fils (limite du client : 10 Mo).
 
-const ConfigSchema = z.object({
-  appId: z.string().trim().min(1).max(200),
-  appSecret: z.string().trim().min(1).max(500),
-});
+// Deux façons de se brancher : l'identifiant et le secret d'une appli (une connexion sans `authMode`
+// est à clé) ou le bouton, dont le socle OAuth tient les jetons. Un `z.object` raffiné : le catalogue
+// lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    appId: z.string().trim().min(1).max(200).optional(),
+    appSecret: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const fields =
+      config.authMode === 'oauth' ? (['accessToken'] as const) : (['appId', 'appSecret'] as const);
+    for (const field of fields) {
+      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    }
+  });
 type Config = z.infer<typeof ConfigSchema>;
 
 const OVERLAP_MS = 5 * 60_000;
@@ -111,6 +127,7 @@ export const helpscoutConnector: Connector<Config> = {
   configSchema: ConfigSchema,
   secretFields: ['appSecret'],
   hosts: () => ['api.helpscout.net'],
+  oauth: helpscoutOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
     const client = await helpscoutClient(config, http);

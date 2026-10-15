@@ -114,4 +114,91 @@ describe('collect', () => {
       enCours: 0,
     });
   });
+
+  it('lit supersededBy et départage un même horodatage par l id', async () => {
+    const { tenantId, members } = await createTestTenant(['Paul']);
+    const [paul] = members as [TenantContext];
+    const { sourceId, turnId } = await seedSource(paul, {
+      title: 'Devis',
+      text: 'Dupont paie à 45 jours puis à 60 jours.',
+    });
+    const cardId = await seedCard(tenantId, {
+      title: 'Menuiserie Dupont',
+      typeSlug: 'client',
+      acl: [tenantId],
+    });
+    const base = {
+      tenantId,
+      cardId,
+      predicate: 'note',
+      quote: 'paie',
+      sourceId,
+      turnId,
+      quoteStart: 0,
+      quoteEnd: 4,
+      sourceKind: 'claude_code' as const,
+      authorId: paul.userId,
+      validFrom: new Date(),
+      sensitivity: 'shareable' as const,
+      singleValued: false,
+      confidence: 0.9,
+      acl: [tenantId],
+    };
+    const [nouveau] = await adminDb
+      .insert(facts)
+      .values({ ...base, statement: 'Dupont paie à 60 jours.', status: 'active' })
+      .returning({ id: facts.id });
+    if (!nouveau) throw new Error('fait non créé');
+    await adminDb.insert(facts).values({
+      ...base,
+      statement: 'Dupont paie à 45 jours.',
+      status: 'superseded',
+      supersededBy: nouveau.id,
+    });
+    const lus = await lireFaits(adminDb, tenantId);
+    expect(lus).toHaveLength(2);
+    const ancien = lus.find((f) => f.status === 'superseded');
+    const recent = lus.find((f) => f.status === 'active');
+    expect(ancien?.supersededBy).toBe(nouveau.id);
+    expect(recent?.supersededBy).toBeNull();
+  });
+
+  it('un fait sensible en attente de revue n est pas partagé', async () => {
+    const { tenantId, members } = await createTestTenant(['Paul']);
+    const [paul] = members as [TenantContext];
+    const { sourceId, turnId } = await seedSource(paul, {
+      title: 'RH',
+      text: 'Le salaire de Hugo est de 52 000 euros.',
+    });
+    const cardId = await seedCard(tenantId, {
+      title: 'Hugo Martin',
+      typeSlug: 'personne',
+      acl: [tenantId],
+    });
+    await adminDb.insert(facts).values({
+      tenantId,
+      cardId,
+      predicate: 'note',
+      statement: 'Le salaire de Hugo est de 52 000 euros.',
+      quote: '52 000 euros',
+      sourceId,
+      turnId,
+      quoteStart: 0,
+      quoteEnd: 12,
+      sourceKind: 'claude_code',
+      authorId: paul.userId,
+      validFrom: new Date(),
+      status: 'pending_review',
+      sensitivity: 'sensitive',
+      singleValued: false,
+      confidence: 0.9,
+      acl: [paul.userId], // privé à son auteur : jamais à l'organisation
+    });
+    const [fait] = await lireFaits(adminDb, tenantId);
+    expect(fait).toMatchObject({
+      status: 'pending_review',
+      sensitivity: 'sensitive',
+      partage: false,
+    });
+  });
 });

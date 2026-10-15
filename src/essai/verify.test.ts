@@ -214,6 +214,49 @@ describe('verifierJeu', () => {
     );
   });
 
+  it('signale un doublonDe inconnu, sur soi-même, non canonique ou non antérieur', () => {
+    const a = conversation('hugo/2026-09-22-migration'); // tours à 09:00–09:01
+    const [fa] = a.attendu.faits;
+    if (!fa) throw new Error('fait manquant');
+    a.attendu.faits = [
+      fa,
+      { ...fa, id: 'F010', doublonDe: 'F999' }, // inconnu
+      { ...fa, id: 'F011', doublonDe: 'F011' }, // lui-même
+    ];
+    const b = conversation('hugo/2026-09-23-suite', {
+      payload: {
+        ...a.payload,
+        source: { kind: 'claude_code', external_id: 'essai-hugo/2026-09-23-suite' },
+        turns: a.payload.turns.map((t) => ({ ...t, ts: '2026-09-23T09:00:00+02:00' })),
+      },
+      attendu: {
+        ...a.attendu,
+        faits: [
+          { ...fa, id: 'F020', doublonDe: 'F001' }, // canonique et antérieur : valide
+          { ...fa, id: 'F021', doublonDe: 'F020' }, // F020 est déjà un doublon : non canonique
+          { ...fa, id: 'F022', doublonDe: 'F022' },
+        ],
+      },
+    });
+    const c = conversation('hugo/2026-09-21-avant', {
+      payload: {
+        ...a.payload,
+        source: { kind: 'claude_code', external_id: 'essai-hugo/2026-09-21-avant' },
+        turns: a.payload.turns.map((t) => ({ ...t, ts: '2026-09-21T09:00:00+02:00' })),
+      },
+      attendu: { ...a.attendu, faits: [{ ...fa, id: 'F030', doublonDe: 'F001' }] }, // antérieur à F001 : refusé
+    });
+    const problemes = verifierJeu(jeu([a, b, c], [a.cle]));
+    expect(problemes).toContain('hugo/2026-09-22-migration : F010 : doublon de inconnu F999');
+    expect(problemes).toContain('hugo/2026-09-22-migration : F011 : doublon de lui-même');
+    expect(problemes).toContain(
+      'hugo/2026-09-23-suite : F021 : doublon de F020, qui est lui-même un doublon (viser le fait canonique)',
+    );
+    expect(problemes).toContain(
+      "hugo/2026-09-21-avant : F030 : doublon de F001, qui n'est pas antérieur",
+    );
+  });
+
   it('signale une entrée en double dans mini.json', () => {
     const c = conversation('hugo/2026-09-22-migration');
     expect(

@@ -48,6 +48,7 @@ export const AttenduSchema = z.object({
       tour: z.string().min(1),
       extrait: z.string().min(1), // morceau exact du texte du tour qui porte le fait
       sensible: z.boolean(),
+      doublonDe: FaitId.optional(), // redit d'un fait déjà posé plus tôt : Leon doit le rejeter, pas le recréer
     }),
   ),
   pasRetenir: z.array(

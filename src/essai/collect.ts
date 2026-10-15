@@ -17,31 +17,36 @@ export type FaitProduit = {
   ficheId: string;
   ficheTitre: string;
   typeFiche: string;
+  supersededBy: string | null;
 };
 
 export async function lireFaits(db: AdminDb, tenantId: string): Promise<FaitProduit[]> {
-  return db
-    .select({
-      id: facts.id,
-      sourceExternalId: sources.externalId,
-      turnExternalId: turns.externalId,
-      statement: facts.statement,
-      value: facts.value,
-      quote: facts.quote,
-      status: facts.status,
-      sensitivity: facts.sensitivity,
-      partage: sql<boolean>`${facts.acl} @> array[${facts.tenantId}]`,
-      ficheId: cards.id,
-      ficheTitre: cards.title,
-      typeFiche: cardTypes.slug,
-    })
-    .from(facts)
-    .innerJoin(sources, eq(sources.id, facts.sourceId))
-    .innerJoin(turns, eq(turns.id, facts.turnId))
-    .innerJoin(cards, eq(cards.id, facts.cardId))
-    .innerJoin(cardTypes, eq(cardTypes.id, cards.typeId))
-    .where(eq(facts.tenantId, tenantId))
-    .orderBy(facts.recordedAt);
+  return (
+    db
+      .select({
+        id: facts.id,
+        sourceExternalId: sources.externalId,
+        turnExternalId: turns.externalId,
+        statement: facts.statement,
+        value: facts.value,
+        quote: facts.quote,
+        status: facts.status,
+        sensitivity: facts.sensitivity,
+        partage: sql<boolean>`${facts.acl} @> array[${facts.tenantId}]`,
+        ficheId: cards.id,
+        ficheTitre: cards.title,
+        typeFiche: cardTypes.slug,
+        supersededBy: facts.supersededBy,
+      })
+      .from(facts)
+      .innerJoin(sources, eq(sources.id, facts.sourceId))
+      .innerJoin(turns, eq(turns.id, facts.turnId))
+      .innerJoin(cards, eq(cards.id, facts.cardId))
+      .innerJoin(cardTypes, eq(cardTypes.id, cards.typeId))
+      .where(eq(facts.tenantId, tenantId))
+      // Même horodatage possible pour deux faits insérés dans le même lot : l'id départage un ordre stable.
+      .orderBy(facts.recordedAt, facts.id)
+  );
 }
 
 export type UsageEtape = {

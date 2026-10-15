@@ -8,6 +8,8 @@ export function verifierJeu(jeu: JeuEssai): string[] {
   const faitsConnus = new Set<string>();
   const vus = new Set<string>();
   const sources = new Set<string>();
+  // Pour contrôler doublonDe : conversation et premier tour de chaque fait.
+  const faitInfo = new Map<string, { cle: string; doublonDe?: string; debut: number }>();
 
   for (const c of jeu.conversations) {
     const ici = (message: string) => problemes.push(`${c.cle} : ${message}`);
@@ -17,6 +19,7 @@ export function verifierJeu(jeu: JeuEssai): string[] {
     if (sources.has(c.payload.source.external_id)) ici('external_id de source en double');
     sources.add(c.payload.source.external_id);
     verifierTours(c, ici);
+    const debut = Math.min(...c.payload.turns.map((t) => Date.parse(t.ts)));
     for (const id of [
       ...c.attendu.faits.map((f) => f.id),
       ...c.attendu.pasRetenir.map((n) => n.id),
@@ -25,6 +28,8 @@ export function verifierJeu(jeu: JeuEssai): string[] {
       vus.add(id);
       if (id.startsWith('F')) faitsConnus.add(id);
     }
+    for (const f of c.attendu.faits)
+      faitInfo.set(f.id, { cle: c.cle, doublonDe: f.doublonDe, debut });
     // Un secret ne doit jamais être recopié dans la réponse attendue : le juge le verrait en clair.
     for (const f of c.attendu.faits)
       for (const secret of jeu.entreprise.secrets)
@@ -43,6 +48,27 @@ export function verifierJeu(jeu: JeuEssai): string[] {
       if (k.a === k.b) ici(`conflit d'un fait avec lui-même ${k.a}`);
       if (!faitsConnus.has(k.a)) ici(`conflit : a inconnu ${k.a}`);
       if (!faitsConnus.has(k.b)) ici(`conflit : b inconnu ${k.b}`);
+    }
+    // doublonDe doit viser un fait connu, antérieur, et canonique (jamais lui-même un redit).
+    for (const f of c.attendu.faits) {
+      if (!f.doublonDe) continue;
+      if (f.doublonDe === f.id) {
+        ici(`${f.id} : doublon de lui-même`);
+        continue;
+      }
+      const cible = faitInfo.get(f.doublonDe);
+      if (!cible) {
+        ici(`${f.id} : doublon de inconnu ${f.doublonDe}`);
+        continue;
+      }
+      if (cible.doublonDe) {
+        ici(
+          `${f.id} : doublon de ${f.doublonDe}, qui est lui-même un doublon (viser le fait canonique)`,
+        );
+        continue;
+      }
+      if (!(cible.debut < (faitInfo.get(f.id)?.debut ?? Number.NaN)))
+        ici(`${f.id} : doublon de ${f.doublonDe}, qui n'est pas antérieur`);
     }
   }
 

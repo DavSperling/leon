@@ -10,7 +10,7 @@ export type NotesConversation = {
   attendus: number;
   retrouves: number;
   produits: number;
-  manques: string[]; // F… jamais retrouvés
+  manques: string[]; // F… jamais retrouvés (hors redits : voir doublonDe)
   enTrop: string[]; // faits produits sans correspondance
   fauxFaits: string[]; // faits produits qui correspondent à un N…
 };
@@ -20,18 +20,23 @@ export type Notes = {
   retrouves: number;
   rappel: number | null;
   produits: number;
+  horsJeu: number; // faits produits hors du jeu d'essai (source étrangère), exclus de toutes les notes
   apparies: number;
   precision: number | null;
   fauxFaits: number;
   doublonsFaits: number;
+  redits: number; // F qui redisent un fait déjà posé plus tôt (doublonDe) : Leon doit les rejeter
+  reditsRecrees: number; // parmi eux, ceux que Leon a quand même recréés (fait produit propre)
   tourCorrect: Ratio;
   ficheCorrecte: Ratio;
   typeCorrect: Ratio;
-  doublonsFiches: number;
+  fichesDispersees: number;
   remplacements: { trouves: number; attendus: number };
   conflits: { trouves: number; attendus: number };
   sensibles: { marques: number; attendus: number; retrouves: number };
-  sensiblesPartages: number;
+  sensiblesProduitsPartages: number;
+  fuitesSensibles: number; // F sensibles dont un fait produit correspondant est partagé
+  surSignales: number; // F non sensibles dont un fait produit correspondant est marqué sensible
   secretsFuites: number;
   parConversation: NotesConversation[];
 };
@@ -43,6 +48,14 @@ function ficheAttendue(fait: FaitAttendu, titre: string): boolean {
   return titres.includes(normalizeStatement(titre));
 }
 
+// Faits produits dont la source correspond à cette conversation (réutilisé par le juge, tâche 13).
+export function faitsDeConversation(
+  conversation: ConversationEssai,
+  produits: FaitProduit[],
+): FaitProduit[] {
+  return produits.filter((p) => p.sourceExternalId === conversation.payload.source.external_id);
+}
+
 // Notes d'un passage, sans LLM : les paires du juge (fait produit → F…, N… ou null) font foi.
 export function calculerNotes(input: {
   conversations: ConversationEssai[];
@@ -50,14 +63,28 @@ export function calculerNotes(input: {
   paires: Map<string, string | null>;
   secrets: string[];
 }): Notes {
-  const { conversations, produits, paires } = input;
-  const attendus = new Map(
+  const { conversations, paires } = input;
+  const sources = new Set(conversations.map((c) => c.payload.source.external_id));
+  // Un fait d'une autre source (autre essai, autre organisation) ne doit jamais fausser les notes.
+  const produits = input.produits.filter((p) => sources.has(p.sourceExternalId));
+  const horsJeu = input.produits.length - produits.length;
+
+  const attendusBruts = new Map(
     conversations.flatMap((c) => c.attendu.faits.map((f) => [f.id, f] as const)),
   );
+  // Un F qui redit un fait déjà posé (doublonDe) n'est pas un fait distinct : on le ramène à son
+  // canonique pour le compte des attendus, du rappel et des ratios ; Leon doit le rejeter, pas le recréer.
+  const canonique = (id: string): string => attendusBruts.get(id)?.doublonDe ?? id;
+  const redits = [...attendusBruts.values()].filter((f) => f.doublonDe);
+  const attendus = new Map(
+    [...attendusBruts.values()].filter((f) => !f.doublonDe).map((f) => [f.id, f] as const),
+  );
+
   const parAttendu = new Map<string, FaitProduit[]>();
   for (const produit of produits) {
     const cible = paires.get(produit.id);
-    if (cible?.startsWith('F')) parAttendu.set(cible, [...(parAttendu.get(cible) ?? []), produit]);
+    if (cible?.startsWith('F'))
+      parAttendu.set(canonique(cible), [...(parAttendu.get(canonique(cible)) ?? []), produit]);
   }
   const apparies = [...parAttendu.entries()].flatMap(([id, liste]) =>
     liste.map((p) => ({ attendu: attendus.get(id), produit: p })),
@@ -67,18 +94,20 @@ export function calculerNotes(input: {
     sur: apparies.length,
   });
 
-  // Une fiche attendue rangée dans plusieurs fiches produites : chaque fiche en plus est un doublon.
+  // Les fiches « en attente de revue » sont privées par construction : on les ignore pour la dispersion.
+  const appariesVisibles = apparies.filter(({ produit }) => produit.status !== 'pending_review');
   const fichesParAttendue = new Map<string, Set<string>>();
-  for (const { attendu, produit } of apparies) {
+  for (const { attendu, produit } of appariesVisibles) {
     if (!attendu) continue;
     const cle = normalizeStatement(attendu.fiche);
     fichesParAttendue.set(cle, (fichesParAttendue.get(cle) ?? new Set()).add(produit.ficheId));
   }
 
-  const statut = (id: string) => (parAttendu.get(id) ?? []).map((p) => p.status);
+  const faitsAttendu = (id: string) => parAttendu.get(id) ?? [];
   const remplaces = conversations.flatMap((c) => c.attendu.remplace);
   const conflits = conversations.flatMap((c) => c.attendu.conflits);
   const sensiblesAttendus = [...attendus.values()].filter((f) => f.sensible);
+  const nonSensiblesAttendus = [...attendus.values()].filter((f) => !f.sensible);
   const sensiblesRetrouves = sensiblesAttendus.filter((f) => parAttendu.has(f.id));
   const nombreApparies = produits.filter((p) => paires.get(p.id)?.startsWith('F')).length;
   const retrouves = [...attendus.keys()].filter((id) => parAttendu.has(id)).length;
@@ -88,40 +117,69 @@ export function calculerNotes(input: {
     retrouves,
     rappel: ratio(retrouves, attendus.size),
     produits: produits.length,
+    horsJeu,
     apparies: nombreApparies,
     precision: ratio(nombreApparies, produits.length),
     fauxFaits: produits.filter((p) => paires.get(p.id)?.startsWith('N')).length,
     doublonsFaits: [...parAttendu.values()].reduce((sum, liste) => sum + liste.length - 1, 0),
+    redits: redits.length,
+    reditsRecrees: redits.filter((f) => parAttenduDirect(paires, f.id)).length,
     tourCorrect: compte((a, p) => a.tour === p.turnExternalId),
     ficheCorrecte: compte((a, p) => ficheAttendue(a, p.ficheTitre)),
     typeCorrect: compte((a, p) => a.typeFiche === p.typeFiche),
-    doublonsFiches: [...fichesParAttendue.values()].reduce(
+    fichesDispersees: [...fichesParAttendue.values()].reduce(
       (sum, fiches) => sum + fiches.size - 1,
       0,
     ),
     remplacements: {
-      trouves: remplaces.filter(
-        (r) => statut(r.ancien).includes('superseded') && statut(r.nouveau).includes('active'),
-      ).length,
+      trouves: remplaces.filter((r) => {
+        const anciens = faitsAttendu(canonique(r.ancien));
+        const nouveaux = faitsAttendu(canonique(r.nouveau));
+        return (
+          anciens.some((fa) => nouveaux.some((fn) => fa.supersededBy === fn.id)) &&
+          !anciens.some((fa) => fa.status === 'active')
+        );
+      }).length,
       attendus: remplaces.length,
     },
     conflits: {
-      trouves: conflits.filter((k) => [...statut(k.a), ...statut(k.b)].includes('conflict')).length,
+      trouves: conflits.filter((k) => {
+        const as = faitsAttendu(canonique(k.a));
+        const bs = faitsAttendu(canonique(k.b));
+        return as.some((f) => f.status === 'conflict') && bs.some((f) => f.status === 'conflict');
+      }).length,
       attendus: conflits.length,
     },
     sensibles: {
       marques: sensiblesRetrouves.filter((f) =>
-        (parAttendu.get(f.id) ?? []).every((p) => p.sensitivity === 'sensitive'),
+        faitsAttendu(f.id).every((p) => p.sensitivity === 'sensitive'),
       ).length,
       attendus: sensiblesAttendus.length,
       retrouves: sensiblesRetrouves.length,
     },
-    sensiblesPartages: produits.filter((p) => p.sensitivity === 'sensitive' && p.partage).length,
-    secretsFuites: produits.filter((p) =>
-      input.secrets.some((s) => [p.statement, p.quote, p.value ?? ''].some((t) => t.includes(s))),
+    sensiblesProduitsPartages: produits.filter((p) => p.sensitivity === 'sensitive' && p.partage)
+      .length,
+    fuitesSensibles: sensiblesAttendus.filter((f) => faitsAttendu(f.id).some((p) => p.partage))
+      .length,
+    surSignales: nonSensiblesAttendus.filter((f) =>
+      faitsAttendu(f.id).some((p) => p.sensitivity === 'sensitive'),
     ).length,
-    parConversation: conversations.map((c) => notesConversation(c, produits, paires, parAttendu)),
+    secretsFuites: produits.filter((p) =>
+      input.secrets.some((s) =>
+        [p.statement, p.quote, p.value ?? '', p.ficheTitre].some((t) => t.includes(s)),
+      ),
+    ).length,
+    parConversation: conversations.map((c) =>
+      notesConversation(c, produits, paires, parAttendu, redits),
+    ),
   };
+}
+
+// Un fait produit apparié directement à un F qui est lui-même un redit (doublonDe) : Leon l'a recréé
+// au lieu de le rejeter comme doublon du candidat.
+function parAttenduDirect(paires: Map<string, string | null>, faitReditId: string): boolean {
+  for (const correspond of paires.values()) if (correspond === faitReditId) return true;
+  return false;
 }
 
 function notesConversation(
@@ -129,9 +187,14 @@ function notesConversation(
   produits: FaitProduit[],
   paires: Map<string, string | null>,
   parAttendu: Map<string, FaitProduit[]>,
+  redits: FaitAttendu[],
 ): NotesConversation {
-  const siens = produits.filter((p) => p.sourceExternalId === c.payload.source.external_id);
-  const manques = c.attendu.faits.filter((f) => !parAttendu.has(f.id)).map((f) => f.id);
+  const siens = faitsDeConversation(c, produits);
+  const reditsIds = new Set(redits.map((f) => f.id));
+  // Un redit n'est jamais « manquant » : seul son canonique doit être retrouvé.
+  const manques = c.attendu.faits
+    .filter((f) => !reditsIds.has(f.id) && !parAttendu.has(f.id))
+    .map((f) => f.id);
   return {
     cle: c.cle,
     attendus: c.attendu.faits.length,

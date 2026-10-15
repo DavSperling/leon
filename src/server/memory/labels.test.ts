@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PROVIDER_LABELS } from '@/lib/providers';
 import {
   clientLabel,
   isoDate,
@@ -16,6 +17,7 @@ describe('labels', () => {
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
       mcp_remember: 'Note MCP',
+      ...PROVIDER_LABELS,
     });
     expect(SENSITIVE_CATEGORY_LABELS.perso).toBe('Vie personnelle');
     expect(SENSITIVE_CATEGORY_LABELS.remuneration).toBe('Rémunération');

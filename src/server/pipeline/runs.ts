@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
-import type { SourceKind } from '@/capture/turn';
+import type { SourceKind, TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -10,7 +10,7 @@ import type { PipelineStep } from './queue';
 export type RunTurn = {
   id: string;
   externalId: string;
-  role: 'user' | 'assistant';
+  role: TurnRole;
   text: string;
   ts: Date;
 };

@@ -1,6 +1,12 @@
+import type { TurnRole } from '@/capture/turn';
 import type { RunTurn } from '../runs';
 
-const ROLE_LABELS = { user: 'utilisateur', assistant: 'assistant' } as const;
+const ROLE_LABELS: Record<TurnRole, string> = {
+  user: 'utilisateur',
+  assistant: 'assistant',
+  document: 'document',
+  participant: 'participant',
+};
 const TRUNCATION_MARK = '[…]';
 
 // Titre et id viennent du client : toute valeur d'attribut est échappée.

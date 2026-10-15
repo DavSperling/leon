@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { SOURCE_KINDS } from '@/capture/turn';
+import { CAPTURE_KINDS } from '@/capture/turn';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { seedSource } from '@/test/fixtures';
@@ -63,7 +63,7 @@ describe('listSources', () => {
     const { channels } = await listSources(paul);
     const forMarie = await listSources(marie);
 
-    expect(channels.map((channel) => channel.kind)).toEqual([...SOURCE_KINDS]);
+    expect(channels.map((channel) => channel.kind)).toEqual([...CAPTURE_KINDS]);
     expect(channels.map((channel) => channel.kindLabel)).toEqual([
       'Claude Code',
       'claude.ai',

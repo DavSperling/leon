@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
-import type { CaptureMode, SourceKind } from '@/capture/turn';
+import {
+  PROVIDER_IDS,
+  type ProviderId,
+  type SourceKind,
+  type TurnCaptureMode,
+} from '@/capture/turn';
 import type { CardStatus, FactStatus } from '@/lib/enums';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
 import { members, organizations, users } from '@/server/db/schema/auth';
@@ -10,11 +15,17 @@ import { adminDb } from './db';
 // Fixtures : préfixe « seed » = insertion par le rôle propriétaire, hors RLS.
 // Chaque appel crée ses propres lignes (ids aléatoires) : la base de test est partagée.
 
-const CAPTURE_MODE_BY_KIND: Record<SourceKind, CaptureMode> = {
+const CONNECTOR_MODES = Object.fromEntries(PROVIDER_IDS.map((id) => [id, 'connector'])) as Record<
+  ProviderId,
+  'connector'
+>;
+
+const CAPTURE_MODE_BY_KIND: Record<SourceKind, TurnCaptureMode> = {
   claude_code: 'file',
   claude_ai: 'network',
   chatgpt: 'network',
   mcp_remember: 'manual',
+  ...CONNECTOR_MODES,
 };
 
 // Pas de compte `account` : les fixtures n'ont jamais de mot de passe.

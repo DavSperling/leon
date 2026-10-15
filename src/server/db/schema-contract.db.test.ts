@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { adminPool } from '@/test/db';
 import * as apiTokensSchema from './schema/api-tokens';
 import * as authSchema from './schema/auth';
+import * as connectionsSchema from './schema/connections';
 import * as memorySchema from './schema/memory';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
 const tables: PgTable[] = [
   ...Object.values(authSchema),
   ...Object.values(apiTokensSchema),
+  ...Object.values(connectionsSchema),
   ...Object.values(memorySchema),
 ];
 

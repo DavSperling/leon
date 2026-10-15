@@ -1,5 +1,5 @@
 import { count, desc, eq, sql } from 'drizzle-orm';
-import { SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { CAPTURE_KINDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
@@ -65,7 +65,7 @@ export async function listSources(
 
 // Les sources sont triées par dernier tour décroissant : la première d'un canal est sa dernière capture.
 function channelsOf(rows: Array<{ kind: SourceKind; lastTurnAt: Date | null }>): ChannelHealth[] {
-  return SOURCE_KINDS.map((kind) => ({
+  return CAPTURE_KINDS.map((kind) => ({
     kind,
     kindLabel: SOURCE_KIND_LABELS[kind],
     lastCaptureAt: rows.find((row) => row.kind === kind)?.lastTurnAt ?? null,

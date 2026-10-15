@@ -1,5 +1,6 @@
 import type { SourceKind } from '@/capture/turn';
 import type { SensitiveCategory } from '@/lib/enums';
+import { PROVIDER_LABELS } from '@/lib/providers';
 
 // Libellés d'affichage. Module pur : n'importe ni env ni la base.
 
@@ -8,6 +9,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note MCP',
+  ...PROVIDER_LABELS,
 };
 
 export const SENSITIVE_CATEGORY_LABELS: Record<SensitiveCategory, string> = {

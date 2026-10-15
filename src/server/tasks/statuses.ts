@@ -77,9 +77,10 @@ export async function createStatus(
       .from(taskStatuses)
       .where(eq(taskStatuses.projectId, input.projectId));
     const position = positionBetween(last?.position ?? null, null);
+    // Le spread vient d'abord : l'entrée ne peut écraser ni le tenant ni la position.
     const [status] = await tx
       .insert(taskStatuses)
-      .values({ tenantId: ctx.tenantId, position, ...input })
+      .values({ ...input, tenantId: ctx.tenantId, position })
       .returning(STATUS_COLUMNS);
     if (!status) throw new Error('statut non créé');
     return status;

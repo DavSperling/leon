@@ -1,4 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { taskLabels } from '@/server/db/schema/tasks';
+import { adminDb } from '@/test/db';
 import { seedTasksScenario } from '@/test/tasks-scenario';
 import { MAX_IDS } from './errors';
 import { createLabel, deleteLabel, findLabelsByName, listLabels, updateLabel } from './labels';
@@ -24,6 +27,21 @@ describe('listLabels et createLabel', () => {
     const created = await createLabel(paul, { name: 'Dette', color: '#6b7280' });
     expect(created).toEqual({ id: expect.any(String), name: 'Dette', color: '#6b7280' });
     await expect(createLabel(zoe, { name: 'Dette', color: '#6b7280' })).resolves.toBeDefined();
+  });
+});
+
+describe('createLabel : champs réservés au serveur', () => {
+  it('garde l’ACL d’équipe quand l’entrée en porte une autre', async () => {
+    const { paul } = await seedTasksScenario();
+    const input = { name: 'Intrus', color: '#6b7280', acl: [paul.userId] };
+
+    const created = await createLabel(paul, input as never);
+
+    const [row] = await adminDb
+      .select({ acl: taskLabels.acl })
+      .from(taskLabels)
+      .where(eq(taskLabels.id, created.id));
+    expect(row?.acl).toEqual([paul.tenantId]);
   });
 });
 

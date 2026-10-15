@@ -1,4 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { taskProjects } from '@/server/db/schema/tasks';
+import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedTasksScenario } from '@/test/tasks-scenario';
 import { TaskError } from './errors';
@@ -99,6 +102,19 @@ describe('createProject', () => {
     expect(project).toEqual({ id: expect.any(String), key: 'OPS', name: 'Opérations' });
     expect(await listStatuses(paul, project.id)).toHaveLength(7);
     expect((await listProjects(marie)).map((p) => p.key)).toContain('OPS');
+  });
+
+  it('garde l’ACL d’équipe quand l’entrée en porte une autre', async () => {
+    const { paul } = await seedTasksScenario();
+    const input = { name: 'Intrus', key: 'INT', acl: [paul.userId] };
+
+    const project = await createProject(paul, input as never);
+
+    const [row] = await adminDb
+      .select({ acl: taskProjects.acl })
+      .from(taskProjects)
+      .where(eq(taskProjects.id, project.id));
+    expect(row?.acl).toEqual([paul.tenantId]);
   });
 
   it('refuse une clé déjà prise dans l’organisation, pas dans une autre', async () => {

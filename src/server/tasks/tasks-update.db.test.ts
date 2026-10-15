@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { taskEvents } from '@/server/db/schema/tasks';
 import { adminDb } from '@/test/db';
-import { readEvents, readTask, seedTasksScenario } from '@/test/tasks-scenario';
+import { ageTask, readEvents, readTask, seedTasksScenario } from '@/test/tasks-scenario';
 import { listLabels } from './labels';
 import { createProject } from './projects';
 import { listStatuses } from './statuses';
@@ -16,6 +16,8 @@ import {
 } from './tasks';
 
 const MISSING = '00000000-0000-4000-8000-000000000000';
+// Trie après tout identifiant tiré au hasard : la sélection groupée la traite en dernier.
+const MISSING_LAST = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
 
 async function setup() {
   const scenario = await seedTasksScenario();
@@ -104,14 +106,14 @@ describe('updateTask : un événement par champ changé', () => {
   it('met à jour updated_at quand un champ change', async () => {
     const { paul, make, actor } = await setup();
     const { id } = await make('À modifier');
+    await ageTask(id);
     const before = await readTask(id);
 
     await updateTask(paul, id, { title: 'Modifiée' }, actor);
 
-    expect((await readTask(id)).updatedAt.getTime()).toBeGreaterThanOrEqual(
-      before.updatedAt.getTime(),
-    );
-    expect((await readTask(id)).title).toBe('Modifiée');
+    const after = await readTask(id);
+    expect(after.title).toBe('Modifiée');
+    expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
   });
 });
 
@@ -170,21 +172,34 @@ describe('updateTask : statut et date de fin', () => {
   it('pose completed_at en terminé ou annulé, le retire sinon, et date le changement de statut', async () => {
     const { paul, make, actor, status } = await setup();
     const { id } = await make('Cycle de vie');
+    await ageTask(id);
     const created = await readTask(id);
     expect(created.completedAt).toBeNull();
 
     await updateTask(paul, id, { statusId: status.Terminé }, actor);
     const done = await readTask(id);
     expect(done.completedAt).toBeInstanceOf(Date);
-    expect(done.statusChangedAt.getTime()).toBeGreaterThanOrEqual(
-      created.statusChangedAt.getTime(),
-    );
+    expect(done.statusChangedAt.getTime()).toBeGreaterThan(created.statusChangedAt.getTime());
 
     await updateTask(paul, id, { statusId: status['En cours'] }, actor);
     expect((await readTask(id)).completedAt).toBeNull();
 
     await updateTask(paul, id, { statusId: status.Annulé }, actor);
     expect((await readTask(id)).completedAt).toBeInstanceOf(Date);
+  });
+
+  it('garde status_changed_at quand le statut ne change pas', async () => {
+    const { paul, make, actor, status } = await setup();
+    const { id } = await make('Même statut');
+    await ageTask(id);
+    const before = await readTask(id);
+
+    await updateTask(paul, id, { statusId: status.Backlog, priority: 'high' }, actor);
+
+    const after = await readTask(id);
+    expect(after.priority).toBe('high');
+    expect(after.statusChangedAt).toEqual(before.statusChangedAt);
+    expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
   });
 
   it('refuse le statut d’un autre projet', async () => {
@@ -384,12 +399,16 @@ describe('bulkUpdateTasks', () => {
 
   it('annule tout quand une tâche manque', async () => {
     const { paul, make, actor } = await setup();
-    const one = await make('Une');
+    const tasks = [await make('Une'), await make('Deux')];
+    const ids = tasks.map((task) => task.id);
 
-    const bulk = bulkUpdateTasks(paul, [one.id, MISSING], { priority: 'urgent' }, actor);
+    const bulk = bulkUpdateTasks(paul, [...ids, MISSING_LAST], { priority: 'urgent' }, actor);
 
     await expect(bulk).rejects.toMatchObject({ code: 'not_found', message: 'Tâche introuvable.' });
-    expect((await readTask(one.id)).priority).toBe('none');
+    for (const id of ids) {
+      expect((await readTask(id)).priority).toBe('none');
+      expect(await kinds(id)).toEqual(['created']);
+    }
   });
 
   it('refuse un assigné qui n’est pas membre', async () => {

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { tasks } from '@/server/db/schema/tasks';
 import { adminDb } from '@/test/db';
-import { seedTasksScenario } from '@/test/tasks-scenario';
+import { ageTask, seedTasksScenario } from '@/test/tasks-scenario';
 import { createProject } from './projects';
 import { createStatus, deleteStatus, listStatuses, moveStatus, updateStatus } from './statuses';
 import { createTask } from './tasks';
@@ -13,6 +13,7 @@ async function taskState(id: string) {
       statusId: tasks.statusId,
       statusChangedAt: tasks.statusChangedAt,
       completedAt: tasks.completedAt,
+      updatedAt: tasks.updatedAt,
     })
     .from(tasks)
     .where(eq(tasks.id, id));
@@ -59,6 +60,22 @@ describe('createStatus', () => {
     const started = (await listStatuses(paul, projectId)).filter((s) => s.category === 'started');
     expect(started.map((s) => s.label)).toEqual(['En cours', 'En revue', 'En test']);
     expect(status).toMatchObject({ label: 'En test', color: '#0891b2', category: 'started' });
+  });
+
+  it('garde la position en fin de catégorie quand l’entrée en porte une autre', async () => {
+    const { paul, projectId } = await seedTasksScenario();
+    const input = {
+      projectId,
+      label: 'En test',
+      color: '#0891b2',
+      category: 'started',
+      position: -1,
+    };
+
+    await createStatus(paul, input as never);
+
+    const started = (await listStatuses(paul, projectId)).filter((s) => s.category === 'started');
+    expect(started.map((s) => s.label)).toEqual(['En cours', 'En revue', 'En test']);
   });
 
   it("refuse le projet d'une autre organisation", async () => {
@@ -157,6 +174,7 @@ describe('deleteStatus', () => {
       { title: 'Ouverte', projectId, statusId: duplicate },
       actor,
     );
+    await ageTask(open.id);
     const before = await taskState(open.id);
     expect(before.completedAt).toBeInstanceOf(Date);
 
@@ -165,10 +183,23 @@ describe('deleteStatus', () => {
     const after = await taskState(open.id);
     expect(after.statusId).toBe(status['À faire']);
     expect(after.completedAt).toBeNull();
-    expect(after.statusChangedAt.getTime()).toBeGreaterThanOrEqual(
-      before.statusChangedAt.getTime(),
-    );
+    expect(after.statusChangedAt.getTime()).toBeGreaterThan(before.statusChangedAt.getTime());
+    expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
     expect((await listStatuses(paul, projectId)).map((s) => s.id)).not.toContain(duplicate);
+  });
+
+  it('pose la date de fin des tâches déplacées vers un statut terminé', async () => {
+    const { paul, projectId, status } = await seedTasksScenario();
+    const actor = { kind: 'user', userId: paul.userId } as const;
+    const review = status['En revue'];
+    const { id } = await createTask(paul, { title: 'À clore', projectId, statusId: review }, actor);
+    expect((await taskState(id)).completedAt).toBeNull();
+
+    await deleteStatus(paul, review, status.Terminé);
+
+    const after = await taskState(id);
+    expect(after.statusId).toBe(status.Terminé);
+    expect(after.completedAt).toBeInstanceOf(Date);
   });
 
   it('refuse de supprimer le dernier statut de sa catégorie', async () => {

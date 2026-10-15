@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { taskEvents, tasks } from '@/server/db/schema/tasks';
 import { listLabels } from '@/server/tasks/labels';
@@ -79,6 +79,15 @@ export async function readTask(id: string) {
   const [row] = await adminDb.select().from(tasks).where(eq(tasks.id, id));
   if (!row) throw new Error('tâche absente');
   return row;
+}
+
+// Recule updated_at et status_changed_at d'une heure : un test voit alors si une écriture les remet à jour.
+export async function ageTask(id: string): Promise<void> {
+  const anHourAgo = sql`now() - interval '1 hour'`;
+  await adminDb
+    .update(tasks)
+    .set({ updatedAt: anHourAgo, statusChangedAt: anHourAgo })
+    .where(eq(tasks.id, id));
 }
 
 // Les événements d'une même écriture partagent l'heure de la transaction : l'ordre secondaire est le type.

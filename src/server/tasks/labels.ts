@@ -25,9 +25,10 @@ export function createLabel(
 ): Promise<LabelRow> {
   return orConflict(DUPLICATE_MESSAGE, () =>
     withTenant(ctx, async (tx) => {
+      // Le spread vient d'abord : l'entrée ne peut écraser ni le tenant ni l'ACL.
       const [label] = await tx
         .insert(taskLabels)
-        .values({ tenantId: ctx.tenantId, acl: [ctx.tenantId], ...input })
+        .values({ ...input, tenantId: ctx.tenantId, acl: [ctx.tenantId] })
         .returning(LABEL_COLUMNS);
       if (!label) throw new Error('étiquette non créée');
       return label;

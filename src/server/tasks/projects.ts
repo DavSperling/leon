@@ -48,9 +48,10 @@ async function insertProject(
   ctx: TenantContext,
   input: { name: string; key: string },
 ): Promise<ProjectRow> {
+  // Le spread vient d'abord : l'entrée ne peut écraser ni le tenant ni l'ACL.
   const [project] = await tx
     .insert(taskProjects)
-    .values({ tenantId: ctx.tenantId, acl: [ctx.tenantId], ...input })
+    .values({ ...input, tenantId: ctx.tenantId, acl: [ctx.tenantId] })
     .returning(PROJECT_COLUMNS);
   if (!project) throw new Error('projet non créé');
   return project;

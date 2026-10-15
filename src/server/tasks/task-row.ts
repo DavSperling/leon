@@ -45,6 +45,29 @@ export type TaskRow = {
 const parent = alias(tasks, 'parent');
 const parentProject = alias(taskProjects, 'parent_project');
 
+const TASK_COLUMNS = {
+  id: tasks.id,
+  projectId: tasks.projectId,
+  projectKey: taskProjects.key,
+  number: tasks.number,
+  title: tasks.title,
+  statusId: tasks.statusId,
+  statusLabel: taskStatuses.label,
+  statusColor: taskStatuses.color,
+  statusCategory: taskStatuses.category,
+  priority: tasks.priority,
+  assigneeId: tasks.assigneeId,
+  assigneeName: users.name,
+  creatorId: tasks.creatorId,
+  dueDate: tasks.dueDate,
+  parentKey: parentProject.key,
+  parentNumber: parent.number,
+  position: tasks.position,
+  statusChangedAt: tasks.statusChangedAt,
+  createdAt: tasks.createdAt,
+  updatedAt: tasks.updatedAt,
+};
+
 async function labelsByTask(tx: Tx, taskIds: string[]): Promise<Map<string, LabelRef[]>> {
   const links = await tx
     .select({
@@ -81,28 +104,7 @@ async function subtaskCounts(
 // dans l'ordre manuel. Trois requêtes : les tâches, leurs étiquettes, le compte de leurs sous-tâches.
 export async function selectTaskRows(tx: Tx, where?: SQL): Promise<TaskRow[]> {
   const rows = await tx
-    .select({
-      id: tasks.id,
-      projectId: tasks.projectId,
-      projectKey: taskProjects.key,
-      number: tasks.number,
-      title: tasks.title,
-      statusId: tasks.statusId,
-      statusLabel: taskStatuses.label,
-      statusColor: taskStatuses.color,
-      statusCategory: taskStatuses.category,
-      priority: tasks.priority,
-      assigneeId: tasks.assigneeId,
-      assigneeName: users.name,
-      creatorId: tasks.creatorId,
-      dueDate: tasks.dueDate,
-      parentKey: parentProject.key,
-      parentNumber: parent.number,
-      position: tasks.position,
-      statusChangedAt: tasks.statusChangedAt,
-      createdAt: tasks.createdAt,
-      updatedAt: tasks.updatedAt,
-    })
+    .select(TASK_COLUMNS)
     .from(tasks)
     .innerJoin(taskProjects, eq(taskProjects.id, tasks.projectId))
     .innerJoin(taskStatuses, eq(taskStatuses.id, tasks.statusId))

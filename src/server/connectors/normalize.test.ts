@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import {
   CONNECTOR_TURN_MAX,
@@ -214,16 +214,18 @@ const body = (text: string, id = 'body'): ConnectorTurn => ({
   ts: '2026-10-15T09:00:00Z',
 });
 
+const normalize = (value: ConnectorItem) => normalizeItem(value, 'github');
+
 describe('normalizeItem', () => {
   it('garde les champs de l’élément et convertit les tours', () => {
-    const result = normalizeItem(item([body('On prend Postgres.')]));
+    const result = normalize(item([body('On prend Postgres.')]));
 
     expect(result).toMatchObject({
       externalId: 'issue:acme/leon#12',
       nature: 'ticket',
       title: 'Choisir la base',
       url: 'https://github.com/acme/leon/issues/12',
-      updatedAt: '2026-10-15T10:00:00Z',
+      updatedAt: '2026-10-15T10:00:00.000Z',
       origin: { repo: 'acme/leon' },
     });
     expect(result?.turns).toHaveLength(1);
@@ -237,9 +239,9 @@ describe('normalizeItem', () => {
   });
 
   it('suffixe chaque identifiant de tour de 12 caractères hexadécimaux, stables pour un même texte', () => {
-    const first = normalizeItem(item([body('Texte A')]));
-    const again = normalizeItem(item([body('Texte A')]));
-    const edited = normalizeItem(item([body('Texte B')]));
+    const first = normalize(item([body('Texte A')]));
+    const again = normalize(item([body('Texte A')]));
+    const edited = normalize(item([body('Texte B')]));
 
     expect(first?.turns[0]?.externalId).toMatch(/^body#[0-9a-f]{12}$/);
     expect(again?.turns[0]?.externalId).toBe(first?.turns[0]?.externalId);
@@ -250,7 +252,7 @@ describe('normalizeItem', () => {
     const last = 'DERNIER paragraphe'.padEnd(99, 'z');
     const text = [...paragraphs(499), last].join('\n\n');
 
-    const result = normalizeItem(item([body(text)]));
+    const result = normalize(item([body(text)]));
 
     const turns = result?.turns ?? [];
     expect(turns.length).toBeGreaterThanOrEqual(7);
@@ -270,7 +272,7 @@ describe('normalizeItem', () => {
     const filler = `${'l'.repeat(99)}\n`.repeat(78);
     const text = `${filler}${key}\n\n${'fin '.repeat(3000)}`;
 
-    const result = normalizeItem(item([body(text)]));
+    const result = normalize(item([body(text)]));
 
     const all = (result?.turns ?? []).map((t) => t.text).join('\n');
     expect(all).toContain(SECRET_MASK);
@@ -279,7 +281,7 @@ describe('normalizeItem', () => {
   });
 
   it('plafonne un tour à 100 000 caractères et le marque', () => {
-    const result = normalizeItem(item([body(paragraphs(1200).join('\n\n'))]));
+    const result = normalize(item([body(paragraphs(1200).join('\n\n'))]));
 
     const turns = result?.turns ?? [];
     expect(turns.at(-1)?.text.endsWith('[…tronqué]')).toBe(true);
@@ -291,14 +293,14 @@ describe('normalizeItem', () => {
   it('masque les secrets du texte et du titre', () => {
     const key = `sk-ant-${'a'.repeat(30)}`;
 
-    const result = normalizeItem(item([body(`La clé est ${key}`)], { title: `Clé ${key}` }));
+    const result = normalize(item([body(`La clé est ${key}`)], { title: `Clé ${key}` }));
 
     expect(result?.title).toBe(`Clé ${SECRET_MASK}`);
     expect(result?.turns[0]?.text).toBe(`La clé est ${SECRET_MASK}`);
   });
 
   it('coupe le titre à 300 caractères', () => {
-    const result = normalizeItem(item([body('x')], { title: 't'.repeat(400) }));
+    const result = normalize(item([body('x')], { title: 't'.repeat(400) }));
 
     expect(result?.title).toHaveLength(300);
   });
@@ -311,15 +313,15 @@ describe('normalizeItem', () => {
       role: 'participant',
     };
 
-    const result = normalizeItem(item([empty, body('Corps'), reminder, comment]));
+    const result = normalize(item([empty, body('Corps'), reminder, comment]));
 
     expect(result?.turns.map((t) => t.text)).toEqual(['Corps', 'Je suis d’accord.']);
     expect(result?.turns[1]?.externalId).toMatch(/^comment:1#/);
   });
 
   it('rend null quand aucun tour ne reste', () => {
-    expect(normalizeItem(item([body('  \n ')]))).toBeNull();
-    expect(normalizeItem(item([]))).toBeNull();
+    expect(normalize(item([body('  \n ')]))).toBeNull();
+    expect(normalize(item([]))).toBeNull();
   });
 
   it('coupe nom et adresse de l’auteur à la taille de la base', () => {
@@ -328,29 +330,17 @@ describe('normalizeItem', () => {
       author: { name: 'n'.repeat(300), email: `${'e'.repeat(400)}@acme.test` },
     };
 
-    const result = normalizeItem(item([long]));
+    const result = normalize(item([long]));
 
     expect(result?.turns[0]?.authorName).toHaveLength(200);
     expect(result?.turns[0]?.authorEmail).toHaveLength(320);
-  });
-
-  it('remplace la date illisible d’un tour par celle de l’élément', () => {
-    const result = normalizeItem(item([{ ...body('x'), ts: 'hier' }]));
-
-    expect(result?.turns[0]?.ts).toEqual(new Date('2026-10-15T10:00:00Z'));
-  });
-
-  it('refuse un élément dont la date est illisible', () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    expect(normalizeItem(item([body('x')], { updatedAt: 'demain' }), 'github')).toBeNull();
   });
 
   it('refuse un identifiant de plus de 200 caractères et le journalise sans le reprendre', () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const externalId = `issue:${'z'.repeat(250)}`;
 
-    const result = normalizeItem(item([body('x')], { externalId }), 'github');
+    const result = normalize(item([body('x')], { externalId }));
 
     expect(result).toBeNull();
     expect(logged).toHaveBeenCalledTimes(1);
@@ -360,10 +350,150 @@ describe('normalizeItem', () => {
     expect(line).not.toContain('zzzz');
   });
 
+  it('refuse un élément sans date lisible et journalise l’outil et la raison, jamais le contenu', () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(normalize(item([body('Texte confidentiel')], { updatedAt: 'demain' }))).toBeNull();
+    expect(normalize(item([{ ...body('Texte confidentiel'), ts: 'hier' }]))).toBeNull();
+
+    const lines = logged.mock.calls.map((call) => call.join(' '));
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toContain('Date d’élément illisible');
+    expect(lines[1]).toContain('Date de tour illisible');
+    for (const line of lines) {
+      expect(line).toContain('github');
+      expect(line).not.toContain('confidentiel');
+      expect(line).not.toContain('hier');
+    }
+  });
+
   it('garde les identifiants de tour dans la limite de 200 caractères', () => {
-    const result = normalizeItem(item([body('x', 'c'.repeat(300))]));
+    const result = normalize(item([body('x', 'c'.repeat(300))]));
 
     expect(result?.turns[0]?.externalId.length).toBeLessThanOrEqual(200);
     expect(result?.turns[0]?.externalId).toMatch(/#[0-9a-f]{12}$/);
+  });
+});
+
+// --- Dates : ISO 8601 avec fuseau explicite, jamais le fuseau du serveur.
+
+const WITHOUT_ZONE = [
+  '2019-05-29 04:21:51',
+  '2026-10-15T10:00:00',
+  '1567780450202',
+  '1567780450',
+  '10/15/2026',
+  '2026-10-15',
+  'demain',
+  '',
+];
+const INSTANT = '2026-10-15T10:00:00.000Z';
+const WITH_ZONE: Array<[string, string]> = [
+  ['2026-10-15T10:00:00Z', INSTANT],
+  ['2026-10-15T10:00:00.000Z', INSTANT],
+  ['2026-10-15T10:00:00.5Z', '2026-10-15T10:00:00.500Z'],
+  ['2026-10-15T12:00:00+02:00', INSTANT],
+  ['2026-10-15T12:00:00+0200', INSTANT],
+  ['2026-10-15T12:00+02:00', INSTANT],
+  ['2026-10-15T05:00:00-05:00', INSTANT],
+];
+
+describe.each(['Pacific/Auckland', 'UTC'])(
+  'normalizeItem : dates (fuseau du serveur %s)',
+  (zone) => {
+    const before = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = zone;
+    });
+    afterAll(() => {
+      if (before === undefined) delete process.env.TZ;
+      else process.env.TZ = before;
+    });
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    it('change vraiment le fuseau lu par Date (sinon le test ne prouve rien)', () => {
+      const legacy = new Date('2026-10-15T10:00:00').toISOString();
+
+      expect(legacy).toBe(zone === 'UTC' ? '2026-10-15T10:00:00.000Z' : '2026-10-14T21:00:00.000Z');
+    });
+
+    it.each(WITHOUT_ZONE)('refuse « %s » comme date d’élément', (value) => {
+      expect(normalize(item([body('x')], { updatedAt: value }))).toBeNull();
+    });
+
+    it.each(WITHOUT_ZONE)('refuse « %s » comme date de tour, au lieu de la remplacer', (value) => {
+      expect(normalize(item([{ ...body('x'), ts: value }]))).toBeNull();
+    });
+
+    it.each(WITH_ZONE)('accepte « %s » et rend toujours le même instant', (value, instant) => {
+      const result = normalize(item([{ ...body('x'), ts: value }], { updatedAt: value }));
+
+      expect(result?.updatedAt).toBe(instant);
+      expect(result?.turns[0]?.ts.toISOString()).toBe(instant);
+    });
+  },
+);
+
+// --- Caractère nul : Postgres le refuse dans un text comme dans un jsonb.
+
+describe('normalizeItem : caractère nul', () => {
+  const nul = (text: string) => text.replace('|', '\u0000');
+
+  it('le retire de tout ce qui part vers la base', () => {
+    const turn: ConnectorTurn = {
+      externalId: nul('comment:|1'),
+      role: 'participant',
+      author: { name: nul('Marie| Durand'), email: nul('marie|@acme.test') },
+      text: nul('Bonjour| tout le monde'),
+      ts: '2026-10-15T09:00:00Z',
+    };
+
+    const result = normalize(
+      item([turn], {
+        externalId: nul('issue:acme/leon#|12'),
+        title: nul('Choisir| la base'),
+        url: nul('https://github.com/acme/leon/issues/|12'),
+        origin: { [nul('re|po')]: nul('acme/|leon') },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      externalId: 'issue:acme/leon#12',
+      title: 'Choisir la base',
+      url: 'https://github.com/acme/leon/issues/12',
+      origin: { repo: 'acme/leon' },
+    });
+    expect(result?.turns[0]).toMatchObject({
+      authorName: 'Marie Durand',
+      authorEmail: 'marie@acme.test',
+      text: 'Bonjour tout le monde',
+    });
+    expect(result?.turns[0]?.externalId).toMatch(/^comment:1#[0-9a-f]{12}$/);
+    expect(JSON.stringify(result)).not.toContain('\\u0000');
+    expect(JSON.stringify(result)).not.toContain('\u0000');
+  });
+
+  it('calcule l’empreinte sur le texte sans caractère nul', () => {
+    const clean = normalize(item([body('Bonjour')]));
+    const dirty = normalize(item([body(nul('Bon|jour'))]));
+
+    expect(dirty?.turns[0]?.externalId).toBe(clean?.turns[0]?.externalId);
+  });
+
+  it('masque un secret que le caractère nul coupait en deux', () => {
+    const key = `sk-ant-${'a'.repeat(15)}|${'a'.repeat(15)}`;
+
+    const result = normalize(item([body(nul(`La clé est ${key}`))]));
+
+    expect(result?.turns[0]?.text).toBe(`La clé est ${SECRET_MASK}`);
+  });
+
+  it('laisse intact un élément sans caractère nul', () => {
+    const result = normalize(item([body('Texte')], { url: null }));
+
+    expect(result?.url).toBeNull();
+    expect(result?.origin).toEqual({ repo: 'acme/leon' });
   });
 });

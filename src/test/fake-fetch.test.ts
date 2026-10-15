@@ -1,8 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { collect, fakeFetch, testHttp } from './fake-fetch';
+import type { AnyConnector } from '@/server/connectors/types';
+import { collect, expectHostsWellFormed, fakeFetch, testHttp } from './fake-fetch';
 
 const URL_A = 'https://api.x.test/a';
+
+// Un connecteur réduit à ce que testHttp lit : le schéma de la config et les hôtes.
+const connectorFor = (hosts: (config: Record<string, unknown>) => string[]): AnyConnector => ({
+  id: 'github',
+  configSchema: z.object({ site: z.string().trim().toLowerCase().default('api') }),
+  secretFields: [],
+  hosts,
+  verify: async () => ({ account: 'Marie' }),
+  async *sync() {},
+});
 
 describe('fakeFetch', () => {
   it('sert chaque route une fois, puis la suivante qui correspond', async () => {
@@ -49,10 +60,53 @@ describe('fakeFetch', () => {
 
 describe('testHttp et collect', () => {
   it('branche un client sur de fausses routes et rend les appels', async () => {
-    const { http, calls } = testHttp('github', ['api.x.test'], [{ url: URL_A, json: { n: 1 } }]);
+    const connector = connectorFor(() => ['api.x.test']);
+    const { http, calls } = testHttp(connector, {}, [{ url: URL_A, json: { n: 1 } }]);
 
     await expect(http.json({ url: URL_A }, z.object({ n: z.number() }))).resolves.toEqual({ n: 1 });
     expect(calls).toHaveLength(1);
+  });
+
+  it('prend les hôtes du connecteur, pas ceux de l’auteur du test : une route ailleurs échoue', async () => {
+    const connector = connectorFor(() => ['autre.test']);
+    const { http, calls } = testHttp(connector, {}, [{ url: URL_A, json: { n: 1 } }]);
+
+    await expect(http.json({ url: URL_A }, z.unknown())).rejects.toThrow('Adresse non autorisée');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('passe la config par le schéma du connecteur avant de lui demander ses hôtes', async () => {
+    const connector = connectorFor((config) => [`${String(config.site)}.x.test`]);
+    const { http } = testHttp(connector, { site: ' Acme ' }, [
+      { url: 'https://acme.x.test/a', json: { n: 1 } },
+    ]);
+
+    await expect(http.json({ url: 'https://acme.x.test/a' }, z.unknown())).resolves.toEqual({
+      n: 1,
+    });
+  });
+
+  it('refuse une config que le schéma refuse', () => {
+    const connector = connectorFor(() => ['api.x.test']);
+
+    expect(() => testHttp(connector, { site: 3 }, [])).toThrow();
+  });
+
+  it('fait échouer le test quand les hôtes du connecteur sont mal formés', () => {
+    expect(() =>
+      testHttp(
+        connectorFor(() => ['Api.x.test']),
+        {},
+        [],
+      ),
+    ).toThrow();
+    expect(() =>
+      testHttp(
+        connectorFor(() => []),
+        {},
+        [],
+      ),
+    ).toThrow();
   });
 
   it('collect rassemble les pages d’un itérable asynchrone', async () => {
@@ -62,5 +116,26 @@ describe('testHttp et collect', () => {
     }
 
     expect((await collect(pages())).map((page) => page.cursor)).toEqual(['a', 'b']);
+  });
+});
+
+describe('expectHostsWellFormed', () => {
+  it('accepte des hôtes exacts en minuscules', () => {
+    expect(() => expectHostsWellFormed(['api.github.com', 'acme.zendesk.com', 'a'])).not.toThrow();
+  });
+
+  it.each([
+    ['une liste vide', []],
+    ['une chaîne vide', ['']],
+    ['un schéma', ['https://api.x.test']],
+    ['un port', ['api.x.test:8443']],
+    ['un chemin', ['api.x.test/v1']],
+    ['un joker', ['*.x.test']],
+    ['un point final', ['api.x.test.']],
+    ['une majuscule', ['Api.x.test']],
+    ['un tiret bas', ['a_b.x.test']],
+    ['un espace', ['api .x.test']],
+  ])('refuse %s', (_name, hosts) => {
+    expect(() => expectHostsWellFormed(hosts)).toThrow();
   });
 });

@@ -282,23 +282,39 @@ export function mergeSpeakerTurns(turns: ConnectorTurn[]): ConnectorTurn[] {
 
 // --- Éléments
 
+// ISO 8601 avec fuseau explicite (Z, +02:00 ou +0200). Sans fuseau, Date lit l'heure dans celui du
+// serveur : un décalage de plusieurs heures, sans erreur. Époques et dates locales se convertissent
+// dans le connecteur.
+const ISO_WITH_ZONE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$/;
+
 function validDate(value: string): Date | null {
+  if (!ISO_WITH_ZONE.test(value)) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function clip(value: string | null, max: number): string | null {
-  return value?.trim().slice(0, max) || null;
+// Postgres refuse l'octet 0x00 dans un text comme dans un jsonb : un seul élément qui en porte un
+// ferait échouer l'insertion, donc le passage entier, à chaque relève.
+function noNul(value: string): string {
+  return value.replaceAll('\u0000', '');
 }
 
-function normalizeTurn(turn: ConnectorTurn, fallbackTs: Date): NormalizedTurn[] {
-  const masked = maskSecrets(turn.text);
+function clip(value: string | null, max: number): string | null {
+  return (
+    noNul(value ?? '')
+      .trim()
+      .slice(0, max) || null
+  );
+}
+
+function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
+  const masked = maskSecrets(noNul(turn.text));
   const capped =
     masked.length > TURN_TEXT_CAP
       ? masked.slice(0, TURN_TEXT_CAP - TRUNCATION_MARK.length) + TRUNCATION_MARK
       : masked;
   const parts = splitText(capped, CONNECTOR_TURN_MAX);
-  const stem = turn.externalId.slice(0, ID_MAX - ID_ROOM);
+  const stem = noNul(turn.externalId).slice(0, ID_MAX - ID_ROOM);
   return parts.flatMap((part, index) => {
     const text = prepareTurnText(part);
     if (text === null) return [];
@@ -311,26 +327,54 @@ function normalizeTurn(turn: ConnectorTurn, fallbackTs: Date): NormalizedTurn[] 
         authorName: clip(turn.author.name, AUTHOR_NAME_MAX),
         authorEmail: clip(turn.author.email, AUTHOR_EMAIL_MAX),
         text,
-        ts: validDate(turn.ts) ?? fallbackTs,
+        ts,
       },
     ];
   });
 }
 
-// null si l'élément est refusé (identifiant trop long, date illisible) ou si aucun tour ne reste.
-// Un élément refusé est journalisé avec l'outil et la longueur seulement, jamais son contenu.
-export function normalizeItem(item: ConnectorItem, provider?: ProviderId): NormalizedItem | null {
-  const ids: Record<string, string> = provider ? { provider } : {};
-  const updatedAt = validDate(item.updatedAt);
-  if (item.externalId.length > ID_MAX || !updatedAt) {
-    const reason = updatedAt ? 'Identifiant d’élément trop long' : 'Date d’élément illisible';
-    logError('connector.item_refused', new Error(reason), {
-      ...ids,
-      length: String(item.externalId.length),
-    });
-    return null;
+// Chaque tour avec sa date, ou null si l'une est illisible : elle ne se remplace pas par celle de
+// l'élément, le rangement des faits date chacun par le tour qui le cite.
+function datedTurns(turns: ConnectorTurn[]): Array<{ turn: ConnectorTurn; ts: Date }> | null {
+  const dated: Array<{ turn: ConnectorTurn; ts: Date }> = [];
+  for (const turn of turns) {
+    const ts = validDate(turn.ts);
+    if (!ts) return null;
+    dated.push({ turn, ts });
   }
-  const turns = item.turns.flatMap((turn) => normalizeTurn(turn, updatedAt));
+  return dated;
+}
+
+function cleanOrigin(origin: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(origin).map(([key, value]) => [noNul(key), noNul(value)]),
+  );
+}
+
+// null si l'élément est refusé (identifiant trop long, date illisible) ou si aucun tour ne reste.
+// Un élément refusé est journalisé avec l'outil et la raison seulement, jamais son contenu.
+export function normalizeItem(item: ConnectorItem, provider: ProviderId): NormalizedItem | null {
+  const refuse = (reason: string, ids: Record<string, string> = {}): null => {
+    logError('connector.item_refused', new Error(reason), { provider, ...ids });
+    return null;
+  };
+  const externalId = noNul(item.externalId);
+  if (externalId.length > ID_MAX) {
+    return refuse('Identifiant d’élément trop long', { length: String(externalId.length) });
+  }
+  const updatedAt = validDate(item.updatedAt);
+  if (!updatedAt) return refuse('Date d’élément illisible');
+  const dated = datedTurns(item.turns);
+  if (!dated) return refuse('Date de tour illisible');
+  const turns = dated.flatMap(({ turn, ts }) => normalizeTurn(turn, ts));
   if (turns.length === 0) return null;
-  return { ...item, title: maskSecrets(item.title).trim().slice(0, TITLE_MAX), turns };
+  return {
+    ...item,
+    externalId,
+    title: maskSecrets(noNul(item.title)).trim().slice(0, TITLE_MAX),
+    url: item.url === null ? null : noNul(item.url),
+    updatedAt: updatedAt.toISOString(),
+    origin: cleanOrigin(item.origin),
+    turns,
+  };
 }

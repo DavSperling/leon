@@ -51,6 +51,7 @@ const WAIT_MAX_MS = 60_000;
 const BACKOFF_MS = 2000; // puis 4 et 8 secondes
 
 type Answer = { status: number; headers: Headers; text: string };
+type Prepared = { url: string; headers: Headers; body: string | undefined };
 type Attempt =
   | { kind: 'done'; answer: Answer }
   | { kind: 'retry'; waitMs: number; failure: ConnectorHttpError };
@@ -157,6 +158,28 @@ export function createConnectorHttp(input: {
     return url.toString();
   }
 
+  // Les en-têtes portent la clé de l'utilisateur. Quand Node refuse une valeur (retour à la ligne,
+  // caractère hors Latin-1), son erreur cite la valeur entière : elle n'est jamais reprise.
+  function buildHeaders(request: HttpRequest): Headers {
+    try {
+      const headers = new Headers({ accept: 'application/json' });
+      if (request.body !== undefined) headers.set('content-type', 'application/json');
+      for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value);
+      return headers;
+    } catch {
+      throw new ConnectorHttpError(null, `En-tête invalide : vérifiez la clé de ${label}`);
+    }
+  }
+
+  function buildBody(request: HttpRequest): string | undefined {
+    if (request.body === undefined) return undefined;
+    try {
+      return JSON.stringify(request.body);
+    } catch {
+      throw new ConnectorHttpError(null, `Corps de requête invalide pour ${label}`);
+    }
+  }
+
   // Les codes d'erreur : reprise (limite de débit, 5xx), clé refusée, ou erreur définitive.
   function failure(status: number, headers: Headers, number: number): Attempt {
     const retry = (message: string): Attempt => ({
@@ -170,10 +193,11 @@ export function createConnectorHttp(input: {
     throw new ConnectorHttpError(status, `${label} a répondu ${status}`);
   }
 
-  async function attempt(request: HttpRequest, url: string, number: number): Promise<Attempt> {
-    const headers = new Headers({ accept: 'application/json' });
-    if (request.body !== undefined) headers.set('content-type', 'application/json');
-    for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value);
+  async function attempt(
+    request: HttpRequest,
+    { url, headers, body }: Prepared,
+    number: number,
+  ): Promise<Attempt> {
     // Erreur réseau ou délai dépassé : le message de l'erreur d'origine n'est jamais repris.
     const unreachable = (): Attempt => ({
       kind: 'retry',
@@ -185,7 +209,7 @@ export function createConnectorHttp(input: {
       const response = await (input.fetchImpl ?? fetch)(url, {
         method: request.method ?? 'GET',
         headers,
-        body: request.body === undefined ? undefined : JSON.stringify(request.body),
+        body,
         redirect: 'manual',
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
@@ -205,9 +229,11 @@ export function createConnectorHttp(input: {
   }
 
   async function send<T>(request: HttpRequest, schema: z.ZodType<T>) {
+    // Une requête inutilisable échoue ici, avant toute reprise.
     const url = buildUrl(request);
+    const prepared = { url, headers: buildHeaders(request), body: buildBody(request) };
     for (let number = 0; ; number++) {
-      const result = await attempt(request, url, number);
+      const result = await attempt(request, prepared, number);
       if (result.kind === 'retry') {
         if (number >= RETRIES_MAX) throw result.failure;
         await sleep(result.waitMs);

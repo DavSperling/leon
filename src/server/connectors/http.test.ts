@@ -394,6 +394,54 @@ describe('createConnectorHttp : aucun secret dans les erreurs', () => {
   });
 });
 
+describe('createConnectorHttp : requête inutilisable', () => {
+  // Une clé collée avec un retour à la ligne, un point de suspension ou un caractère nul : Node
+  // refuse la valeur et cite la valeur entière dans son erreur. Rien de cela ne doit sortir.
+  const keys = [
+    ['un retour à la ligne', 'Bearer secret-123\nsuite'],
+    ['un caractère hors Latin-1', 'Bearer secret-123…suite'],
+    ['un caractère nul', 'Bearer secret-123\u0000suite'],
+  ] as const;
+
+  it.each(keys)('refuse un en-tête qui contient %s, sans appel ni reprise', async (_name, key) => {
+    const { http, calls, waits } = setup([ok()]);
+
+    const error = await http
+      .json({ url: URL_A, headers: { Authorization: key } }, OBJECT)
+      .catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', status: null });
+    expect((error as Error).message).not.toContain('secret-123');
+    expect((error as Error).message).not.toContain('Bearer');
+    expect(calls).toHaveLength(0);
+    expect(waits).toEqual([]);
+  });
+
+  it('refuse de même un nom d’en-tête invalide, sans reprendre le nom', async () => {
+    const { http, calls } = setup([ok()]);
+
+    const error = await http
+      .json({ url: URL_A, headers: { 'nom invalide': 'x' } }, OBJECT)
+      .catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', status: null });
+    expect((error as Error).message).not.toContain('nom invalide');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuse un corps qui ne se met pas en JSON, sans appel ni reprise', async () => {
+    const { http, calls, waits } = setup([ok({ method: 'POST' })]);
+
+    const error = await http
+      .json({ url: URL_A, method: 'POST', body: { n: 1n } }, OBJECT)
+      .catch((e: unknown) => e);
+
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', status: null });
+    expect(calls).toHaveLength(0);
+    expect(waits).toEqual([]);
+  });
+});
+
 describe('createConnectorHttp : page', () => {
   it('rend l’adresse marquée rel="next" de l’en-tête Link', async () => {
     const link = `<${URL_A}?cursor=1>; rel="prev", <${URL_A}?cursor=3>; rel="next"`;

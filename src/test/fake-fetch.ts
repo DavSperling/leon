@@ -1,7 +1,6 @@
 import { expect } from 'vitest';
-import type { ProviderId } from '@/capture/turn';
 import { type ConnectorHttp, createConnectorHttp } from '@/server/connectors/http';
-import type { SyncPage } from '@/server/connectors/types';
+import type { AnyConnector, SyncPage } from '@/server/connectors/types';
 
 export type FakeRoute = {
   method?: 'GET' | 'POST';
@@ -66,14 +65,31 @@ export function fakeFetch(routes: FakeRoute[]): typeof fetch & { calls: FakeCall
   return Object.assign(impl, { calls }) as typeof fetch & { calls: FakeCall[] };
 }
 
-// Un client HTTP de connecteur branché sur de fausses routes, sans attente entre les reprises.
+// Un hôte exact, en minuscules : ni schéma, ni port, ni chemin, ni joker, ni point final.
+const HOST_PATTERN = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/;
+
+export function expectHostsWellFormed(hosts: string[]): void {
+  expect(hosts.length, 'aucun hôte déclaré').toBeGreaterThan(0);
+  for (const host of hosts) expect(host, 'hôte mal formé').toMatch(HOST_PATTERN);
+}
+
+// Un client HTTP branché sur de fausses routes, sans attente entre les reprises. Les hôtes viennent
+// du connecteur, comme dans `runConnectorSync` (config validée par son schéma, puis `hosts`) : un
+// hôte déclaré de travers ou une fixture qui pointe ailleurs fait échouer le test, comme en vrai.
 export function testHttp(
-  provider: ProviderId,
-  hosts: string[],
+  connector: AnyConnector,
+  config: Record<string, unknown>,
   routes: FakeRoute[],
 ): { http: ConnectorHttp; calls: FakeCall[] } {
+  const hosts = connector.hosts(connector.configSchema.parse(config));
+  expectHostsWellFormed(hosts);
   const fetchImpl = fakeFetch(routes);
-  const http = createConnectorHttp({ provider, hosts, fetchImpl, sleep: async () => {} });
+  const http = createConnectorHttp({
+    provider: connector.id,
+    hosts,
+    fetchImpl,
+    sleep: async () => {},
+  });
   return { http, calls: fetchImpl.calls };
 }
 

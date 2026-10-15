@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canReconnect,
   fieldsFromForm,
   inputTypeFor,
   invalidFieldsMessage,
+  OAUTH_RETURN_CODES,
+  oauthNotice,
+  oauthStartPath,
   otherOwnersNote,
+  panelMode,
   resultMessage,
   statusLine,
 } from './connection-form';
@@ -139,5 +144,122 @@ describe('otherOwnersNote', () => {
   it('se tait pour ses propres connexions ou sans connexion', () => {
     expect(otherOwnersNote([by('amos', 'Amos')], 'amos')).toBeNull();
     expect(otherOwnersNote([], 'amos')).toBeNull();
+  });
+});
+
+describe('oauthStartPath', () => {
+  it('mène au début du déroulé de l’outil', () => {
+    expect(oauthStartPath('linear')).toBe('/api/v1/connexions/oauth/linear/debut');
+    expect(oauthStartPath('helpscout')).toBe('/api/v1/connexions/oauth/helpscout/debut');
+  });
+});
+
+describe('panelMode', () => {
+  it('met le bouton en premier quand l’appli est configurée, avec la clé en secours si elle est acceptée', () => {
+    expect(panelMode({ oauthReady: true, keyAccepted: true })).toBe('oauth+key');
+    expect(panelMode({ oauthReady: true, keyAccepted: false })).toBe('oauth');
+  });
+
+  it('ne propose que la clé quand l’appli n’est pas configurée', () => {
+    expect(panelMode({ oauthReady: false, keyAccepted: true })).toBe('key');
+  });
+
+  it('ne propose rien à un outil sans clé dont l’appli n’est pas configurée', () => {
+    expect(panelMode({ oauthReady: false, keyAccepted: false })).toBe('none');
+  });
+});
+
+describe('canReconnect', () => {
+  it('propose « Reconnecter » à une connexion branchée par le bouton', () => {
+    expect(canReconnect({ config: { authMode: 'oauth', expiresAt: null } })).toBe(true);
+  });
+
+  it('laisse « Remplacer la clé » à une connexion à clé, avec ou sans authMode', () => {
+    expect(canReconnect({ config: { authMode: 'key' } })).toBe(false);
+    expect(canReconnect({ config: { repos: ['acme/leon'] } })).toBe(false);
+  });
+});
+
+describe('oauthNotice', () => {
+  it('annonce un outil branché', () => {
+    expect(oauthNotice({ branche: 'linear' })).toEqual({
+      tone: 'success',
+      text: 'Linear est branché. La première synchronisation démarre dans la minute.',
+      adminConsent: false,
+      tool: 'linear',
+    });
+  });
+
+  it('dit de quel outil il s’agit quand l’adresse le sait', () => {
+    expect(oauthNotice({ erreur: 'admin', outil: 'outlook' })?.tool).toBe('outlook');
+    expect(oauthNotice({ erreur: 'admin' })?.tool).toBeNull();
+    expect(oauthNotice({ erreur: 'expire', outil: 'inconnu' })?.tool).toBeNull();
+  });
+
+  it('dit chaque erreur en français, avec le nom de l’outil', () => {
+    const text = (erreur: string) => oauthNotice({ erreur, outil: 'linear' })?.text;
+    expect(text('annule')).toBe('Connexion à Linear annulée.');
+    expect(text('expire')).toBe('Le lien a expiré, recommencez.');
+    expect(text('refuse')).toBe("Linear a refusé l'autorisation.");
+    expect(text('indisponible')).toBe('Linear ne répond pas, réessayez dans un moment.');
+    expect(text('champs')).toBe('Vérifiez les champs saisis.');
+    expect(text('admin')).toBe(
+      "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.",
+    );
+    expect(text('admin_accorde')).toBe(
+      'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.',
+    );
+  });
+
+  it('couvre chaque code que le retour peut rendre, et rien d’autre', () => {
+    expect([...OAUTH_RETURN_CODES].sort()).toEqual(
+      ['admin', 'admin_accorde', 'annule', 'champs', 'expire', 'indisponible', 'refuse'].sort(),
+    );
+    for (const erreur of OAUTH_RETURN_CODES) {
+      expect(oauthNotice({ erreur, outil: 'outlook' })).not.toBeNull();
+    }
+  });
+
+  it('écrit « l’outil » quand l’adresse ne dit pas lequel', () => {
+    expect(oauthNotice({ erreur: 'annule' })?.text).toBe("Connexion à l'outil annulée.");
+    expect(oauthNotice({ erreur: 'refuse' })?.text).toBe("L'outil a refusé l'autorisation.");
+    expect(oauthNotice({ erreur: 'indisponible', outil: 'inconnu' })?.text).toBe(
+      "L'outil ne répond pas, réessayez dans un moment.",
+    );
+  });
+
+  it('garde l’écriture du nom de l’outil en début de phrase', () => {
+    expect(oauthNotice({ erreur: 'refuse', outil: 'monday' })?.text).toBe(
+      "monday.com a refusé l'autorisation.",
+    );
+  });
+
+  it('marque le refus faute d’accord de l’administrateur, pour que la page joigne le lien', () => {
+    expect(oauthNotice({ erreur: 'admin', outil: 'outlook' })).toMatchObject({
+      tone: 'error',
+      adminConsent: true,
+    });
+    expect(oauthNotice({ erreur: 'refuse', outil: 'outlook' })?.adminConsent).toBe(false);
+  });
+
+  it('ne dit rien d’une valeur inconnue, d’une liste ou d’une adresse vide', () => {
+    expect(oauthNotice({})).toBeNull();
+    expect(oauthNotice({ erreur: 'oups', outil: 'linear' })).toBeNull();
+    expect(oauthNotice({ erreur: ['annule', 'expire'], outil: 'linear' })).toBeNull();
+    expect(oauthNotice({ branche: 'inconnu' })).toBeNull();
+    expect(oauthNotice({ branche: ['linear'] })).toBeNull();
+    expect(oauthNotice({ erreur: undefined, branche: undefined, outil: 'linear' })).toBeNull();
+  });
+
+  it('ne reprend jamais le texte de l’adresse dans le message', () => {
+    const hostile = '<script>alert(1)</script>';
+    for (const params of [{ erreur: hostile, outil: hostile }, { branche: hostile }]) {
+      expect(oauthNotice(params)).toBeNull();
+    }
+    expect(oauthNotice({ erreur: 'annule', outil: hostile })?.text).not.toContain('script');
+  });
+
+  it('préfère l’erreur à la réussite quand l’adresse porte les deux', () => {
+    expect(oauthNotice({ branche: 'linear', erreur: 'expire' })?.tone).toBe('error');
   });
 });

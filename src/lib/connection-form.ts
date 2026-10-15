@@ -1,6 +1,8 @@
-import type { CatalogField } from '@/server/connectors/catalog';
+import type { ProviderId } from '@/capture/turn';
+import type { CatalogField, CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import { formatNumber, formatRelative } from './format';
+import { PROVIDER_LABELS } from './providers';
 
 // Fonctions pures de la page Connexions. Ce module n'est pas un composant client : une action
 // serveur ne peut pas appeler une fonction d'un module client, et la page comme l'action s'en servent.
@@ -93,4 +95,99 @@ export function otherOwnersNote(
   if (list.length === 0) return null;
   const last = list.pop();
   return `Déjà branché par ${list.length === 0 ? last : `${list.join(', ')} et ${last}`}.`;
+}
+
+// Le bouton « Se connecter avec… » : une navigation (formulaire POST), pas une action serveur.
+// L'adresse vient d'ici et jamais d'un littéral dans un composant.
+export const oauthStartPath = (provider: ProviderId): string =>
+  `/api/v1/connexions/oauth/${provider}/debut`;
+
+export type PanelMode = 'oauth+key' | 'oauth' | 'key' | 'none';
+
+// Ce que le panneau d'un outil propose : le bouton d'abord, la clé en secours. `none` : un outil
+// qui ne se branche que par bouton, dont l'appli n'est pas configurée sur ce serveur.
+export function panelMode(item: Pick<CatalogItem, 'oauthReady' | 'keyAccepted'>): PanelMode {
+  if (item.oauthReady) return item.keyAccepted ? 'oauth+key' : 'oauth';
+  return item.keyAccepted ? 'key' : 'none';
+}
+
+export const canReconnect = (view: Pick<ConnectionView, 'config'>): boolean =>
+  view.config.authMode === 'oauth';
+
+// Les codes que le retour de l'éditeur met dans `?erreur=` (voir oauth-routes.ts).
+export const OAUTH_RETURN_CODES = [
+  'annule',
+  'expire',
+  'refuse',
+  'indisponible',
+  'champs',
+  'admin',
+  'admin_accorde',
+] as const;
+type OAuthReturnCode = (typeof OAUTH_RETURN_CODES)[number];
+
+export type OAuthNotice = {
+  tone: 'success' | 'error';
+  text: string;
+  tool: ProviderId | null;
+  adminConsent: boolean; // la page joint le lien d'accord administrateur de l'outil
+};
+
+// Dit au retour d'Outlook (`admin`) et avant son bouton.
+export const ADMIN_CONSENT_MESSAGE =
+  "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.";
+
+const providerOf = (value: unknown): ProviderId | null =>
+  (Object.keys(PROVIDER_LABELS) as ProviderId[]).find((id) => id === value) ?? null;
+
+const codeOf = (value: unknown): OAuthReturnCode | null =>
+  OAUTH_RETURN_CODES.find((code) => code === value) ?? null;
+
+// `subject` ouvre une phrase (« Linear », « L'outil »), `object` la suit (« Linear », « l'outil »).
+function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
+  const subject = tool ? PROVIDER_LABELS[tool] : "L'outil";
+  const object = tool ? PROVIDER_LABELS[tool] : "l'outil";
+  switch (code) {
+    case 'annule':
+      return `Connexion à ${object} annulée.`;
+    case 'expire':
+      return 'Le lien a expiré, recommencez.';
+    case 'refuse':
+      return `${subject} a refusé l'autorisation.`;
+    case 'indisponible':
+      return `${subject} ne répond pas, réessayez dans un moment.`;
+    case 'champs':
+      return 'Vérifiez les champs saisis.';
+    case 'admin':
+      return ADMIN_CONSENT_MESSAGE;
+    case 'admin_accorde':
+      return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
+  }
+}
+
+// Le message du retour de l'éditeur, lu dans l'adresse de la page. Une valeur inconnue (ou qui n'est
+// pas un texte seul) ne dit rien, et rien de l'adresse n'est repris dans le message.
+export function oauthNotice(params: {
+  branche?: unknown;
+  erreur?: unknown;
+  outil?: unknown;
+}): OAuthNotice | null {
+  const code = codeOf(params.erreur);
+  if (code) {
+    const tool = providerOf(params.outil);
+    return {
+      tone: code === 'admin_accorde' ? 'success' : 'error',
+      text: errorText(code, tool),
+      tool,
+      adminConsent: code === 'admin',
+    };
+  }
+  const branche = providerOf(params.branche);
+  if (!branche) return null;
+  return {
+    tone: 'success',
+    text: `${PROVIDER_LABELS[branche]} est branché. La première synchronisation démarre dans la minute.`,
+    tool: branche,
+    adminConsent: false,
+  };
 }

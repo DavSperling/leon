@@ -34,6 +34,8 @@ import { miroCatalog } from './miro/catalog';
 import { missiveCatalog } from './missive/catalog';
 import { mondayCatalog } from './monday/catalog';
 import { notionCatalog } from './notion/catalog';
+import { redirectUri } from './oauth';
+import { oauthClient } from './oauth-env';
 import { outlookCatalog } from './outlook/catalog';
 import { pipedriveCatalog } from './pipedrive/catalog';
 import { plainCatalog } from './plain/catalog';
@@ -44,15 +46,21 @@ import { sentryCatalog } from './sentry/catalog';
 import { shortcutCatalog } from './shortcut/catalog';
 import { tldvCatalog } from './tldv/catalog';
 import { trelloCatalog } from './trello/catalog';
-import type { CatalogEntry } from './types';
+import type { AnyConnector, CatalogEntry } from './types';
 import { zendeskCatalog } from './zendesk/catalog';
 
 export type { CatalogEntry, CatalogField } from './types';
 
-export type CatalogItem = CatalogEntry & {
+export type CatalogItem = Omit<CatalogEntry, 'keyAccepted'> & {
   label: string;
   family: ProviderFamily;
   available: boolean; // le connecteur existe (sinon « bientôt »)
+  oauthReady: boolean; // le connecteur a un bouton et son appli est configurée sur ce serveur
+  keyAccepted: boolean; // la clé collée reste possible
+  oauthPreFields: string[]; // champs non secrets à remplir avant le clic
+  // Lien d'accord de l'administrateur (Outlook). L'identifiant d'une appli n'est pas un secret ;
+  // son secret ne sort jamais d'ici.
+  adminConsentUrl: string | null;
 };
 
 const ENTRIES: Record<ProviderId, CatalogEntry> = {
@@ -97,18 +105,27 @@ const ENTRIES: Record<ProviderId, CatalogEntry> = {
   outlook: outlookCatalog,
 };
 
+export function catalogItem(entry: CatalogEntry, connector: AnyConnector | null): CatalogItem {
+  const spec = connector?.oauth;
+  const client = spec ? oauthClient(spec.appKey) : null;
+  return {
+    ...entry,
+    label: PROVIDER_LABELS[entry.id],
+    family: PROVIDER_FAMILIES[entry.id],
+    available: connector !== null,
+    oauthReady: client !== null,
+    keyAccepted: entry.keyAccepted ?? true,
+    oauthPreFields: spec?.preFields ?? [],
+    adminConsentUrl:
+      spec && client ? (spec.adminConsent?.url(client.id, redirectUri(spec)) ?? null) : null,
+  };
+}
+
 // Par famille, puis par libellé.
 export function listCatalog(): CatalogItem[] {
-  return PROVIDER_IDS.map((id) => ENTRIES[id])
-    .map((entry) => ({
-      ...entry,
-      label: PROVIDER_LABELS[entry.id],
-      family: PROVIDER_FAMILIES[entry.id],
-      available: getConnector(entry.id) !== null,
-    }))
-    .sort(
-      (a, b) =>
-        PROVIDER_FAMILIES_ORDER.indexOf(a.family) - PROVIDER_FAMILIES_ORDER.indexOf(b.family) ||
-        a.label.localeCompare(b.label, 'fr'),
-    );
+  return PROVIDER_IDS.map((id) => catalogItem(ENTRIES[id], getConnector(id))).sort(
+    (a, b) =>
+      PROVIDER_FAMILIES_ORDER.indexOf(a.family) - PROVIDER_FAMILIES_ORDER.indexOf(b.family) ||
+      a.label.localeCompare(b.label, 'fr'),
+  );
 }

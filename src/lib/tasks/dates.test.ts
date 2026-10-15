@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueFilterRange, formatDue, todayInParis } from './dates';
+import { dueFilterRange, formatDue, isOverdue, todayInParis } from './dates';
 
 describe('todayInParis', () => {
   it('bascule à minuit heure de Paris en été (UTC+2)', () => {
@@ -75,5 +75,26 @@ describe('formatDue', () => {
     expect(formatDue('2026-10-17', now)).toBe('sam. 17 oct.');
     expect(formatDue('2026-10-14', now)).toBe('mer. 14 oct.');
     expect(formatDue('2027-03-01', now)).toBe('lun. 1 mars');
+  });
+});
+
+describe('isOverdue', () => {
+  const now = new Date('2026-10-15T10:00:00Z');
+
+  it("est vrai dès le lendemain de l'échéance, pas le jour même", () => {
+    expect(isOverdue({ dueDate: '2026-10-14', statusCategory: 'todo' }, now)).toBe(true);
+    expect(isOverdue({ dueDate: '2026-10-15', statusCategory: 'todo' }, now)).toBe(false);
+    expect(isOverdue({ dueDate: '2026-10-16', statusCategory: 'started' }, now)).toBe(false);
+  });
+
+  it("n'est jamais vrai sans échéance ni pour une tâche terminée ou annulée", () => {
+    expect(isOverdue({ dueDate: null, statusCategory: 'todo' }, now)).toBe(false);
+    expect(isOverdue({ dueDate: '2026-10-01', statusCategory: 'done' }, now)).toBe(false);
+    expect(isOverdue({ dueDate: '2026-10-01', statusCategory: 'canceled' }, now)).toBe(false);
+  });
+
+  it('suit le jour de Paris, pas celui de UTC', () => {
+    const lateEvening = new Date('2026-10-14T22:30:00Z'); // 00 h 30 le 15 à Paris
+    expect(isOverdue({ dueDate: '2026-10-14', statusCategory: 'todo' }, lateEvening)).toBe(true);
   });
 });

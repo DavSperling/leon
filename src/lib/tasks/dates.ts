@@ -1,6 +1,6 @@
 // Les échéances sont des jours civils (colonne `date`, « AAAA-MM-JJ ») : « aujourd'hui » se calcule
 // à Paris, jamais avec `current_date` de la base ni avec le fuseau du serveur.
-import type { DueFilter } from '@/lib/enums';
+import type { DueFilter, TaskStatusCategory } from '@/lib/enums';
 import { LOCALE, TIME_ZONE } from '@/lib/format';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,4 +47,13 @@ export function formatDue(date: string, now: Date): string {
   if (date === today) return "Aujourd'hui";
   if (date === addDays(today, 1)) return 'Demain';
   return dueFormat.format(toUtcMs(date));
+}
+
+// En retard dès le lendemain de l'échéance ; une tâche terminée ou annulée ne l'est jamais.
+export function isOverdue(
+  task: { dueDate: string | null; statusCategory: TaskStatusCategory },
+  now: Date,
+): boolean {
+  const closed = task.statusCategory === 'done' || task.statusCategory === 'canceled';
+  return task.dueDate !== null && !closed && task.dueDate < todayInParis(now);
 }

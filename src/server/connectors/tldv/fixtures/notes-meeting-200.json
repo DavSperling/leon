@@ -1,0 +1,19 @@
+{
+  "structuredNotes": [
+    {
+      "segmentId": "seg-1",
+      "timestamp": 120,
+      "text": "Prix de l'offre Pro fixé à 29 € par mois",
+      "topicId": "topic-1"
+    }
+  ],
+  "markdownContent": "## Résumé\n- Prix de l'offre Pro fixé à 29 € par mois\n- Décision : lancement le 1er novembre",
+  "topics": [
+    {
+      "id": "topic-1",
+      "order": 0,
+      "title": "Tarifs",
+      "summary": "Prix de l'offre Pro."
+    }
+  ]
+}

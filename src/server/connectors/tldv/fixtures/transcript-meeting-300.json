@@ -1,0 +1,12 @@
+{
+  "id": "transcript-300",
+  "meetingId": "meeting-300",
+  "data": [
+    {
+      "speaker": "Marie Durand",
+      "text": "On garde le lancement au 1er novembre.",
+      "startTime": 62,
+      "endTime": 66
+    }
+  ]
+}

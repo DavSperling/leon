@@ -1,0 +1,30 @@
+{
+  "id": "transcript-100",
+  "meetingId": "meeting-100",
+  "data": [
+    {
+      "speaker": "Marie Durand",
+      "text": "Bonjour à tous, on commence la revue de sprint.",
+      "startTime": 0,
+      "endTime": 6.5
+    },
+    {
+      "speaker": "Marie Durand",
+      "text": "Le point principal : la migration de la base est terminée.",
+      "startTime": 6.5,
+      "endTime": 14
+    },
+    {
+      "speaker": "Paul Martin",
+      "text": "Je m'occupe de la documentation d'ici vendredi.",
+      "startTime": 15.2,
+      "endTime": 20
+    },
+    {
+      "speaker": "Speaker 3",
+      "text": "Très bien, merci.",
+      "startTime": 21,
+      "endTime": 23
+    }
+  ]
+}

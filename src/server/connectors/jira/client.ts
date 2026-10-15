@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { ConnectorHttp } from '../http';
+import { type AtlassianConfig, atlassianAccess } from './access';
 
 // Les requêtes vers l'API REST v3 de Jira Cloud et la forme des réponses lues (seulement les champs utiles).
-
-export type JiraAccess = { site: string; email: string; apiToken: string };
+// Avec une clé : l'adresse du site, en Basic. Avec le bouton : api.atlassian.com/ex/jira/<cloudId>, en Bearer.
 
 const SEARCH_PAGE_SIZE = 50; // des descriptions et des commentaires complets : des pages modestes
 const COMMENTS_PAGE_SIZE = 100;
@@ -52,10 +52,10 @@ const MyselfSchema = z.object({
 export type Issue = z.infer<typeof IssueSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 
-export function jiraClient(access: JiraAccess, http: ConnectorHttp) {
-  const base = `https://${access.site}.atlassian.net/rest/api/3`;
-  const credentials = Buffer.from(`${access.email}:${access.apiToken}`).toString('base64');
-  const headers = { Authorization: `Basic ${credentials}` };
+export function jiraClient(config: AtlassianConfig, http: ConnectorHttp) {
+  const { root, authorization } = atlassianAccess(config, 'jira');
+  const base = `${root}/rest/api/3`;
+  const headers = { Authorization: authorization };
 
   return {
     myself: () => http.json({ url: `${base}/myself`, headers }, MyselfSchema),

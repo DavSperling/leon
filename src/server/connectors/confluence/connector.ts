@@ -1,5 +1,13 @@
 import { z } from 'zod';
 import { ConnectorAuthError } from '../http';
+import {
+  atlassianHosts,
+  oauthAccount,
+  oauthShape,
+  requireFields,
+  siteSchema,
+} from '../jira/access';
+import { atlassianOAuth } from '../jira/oauth';
 import type { Connector, ConnectorItem } from '../types';
 import { markAfter, pagesSince, readMark } from './changes';
 import { createApi, fetchMe } from './client';
@@ -29,6 +37,10 @@ import { type Loaded, readPage } from './read';
 // de l'espace. Une page sans texte ni commentaire n'est pas rendue. La date d'un commentaire est celle
 // de sa dernière version (l'API ne donne pas celle de la création).
 //
+// Le bouton (OAuth, voir ../jira/oauth.ts) appelle les mêmes points d'accès par
+// api.atlassian.com/ex/confluence/<cloudId>/wiki, en Bearer, avec les droits fins que l'OpenAPI v2 donne à
+// chaque opération (lue le 15/10/2026) et read:confluence-user pour le compte courant (API v1).
+//
 // Non lu : les commentaires en ligne (sur un passage) ; les réponses au-delà de deux niveaux ; les
 // pièces jointes, images, dessins ; les pages archivées ou en brouillon ; les blogs ; un commentaire
 // ajouté à une page qui n'a pas changé (la date de modification de la page ne bouge pas : il n'entre
@@ -42,15 +54,16 @@ import { type Loaded, readPage } from './read';
 // peut doubler un texte) ; le coût en points des requêtes (65 000 par heure d'après la doc) ; un essai
 // en réel.
 
-const ConfigSchema = z.object({
-  site: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9][a-z0-9-]{0,62}$/),
-  email: z.string().trim().pipe(z.email()),
-  apiToken: z.string().trim().min(1),
-});
+// Une clé (site, e-mail, jeton d'API) ou le bouton (jetons, site et identifiant du site choisis chez
+// Atlassian) : `requireFields` exige les champs de la forme choisie par `authMode`.
+const ConfigSchema = z
+  .object({
+    ...oauthShape,
+    site: siteSchema.optional(),
+    email: z.string().trim().pipe(z.email()).optional(),
+    apiToken: z.string().trim().min(1).optional(),
+  })
+  .superRefine(requireFields);
 type Config = z.infer<typeof ConfigSchema>;
 
 // Pages lues avant d'enregistrer le curseur : un plantage refait au pire ce lot.
@@ -60,13 +73,22 @@ export const confluenceConnector: Connector<Config> = {
   id: 'confluence',
   configSchema: ConfigSchema,
   secretFields: ['apiToken'],
-  hosts: (config) => [`${config.site}.atlassian.net`],
+  hosts: atlassianHosts,
   minIntervalMs: 100,
+  oauth: atlassianOAuth([
+    'read:page:confluence',
+    'read:comment:confluence',
+    'read:space:confluence',
+    'read:user:confluence',
+    'read:confluence-user',
+    'offline_access',
+  ]),
 
   async verify(config, http) {
     const me = await fetchMe(createApi(http, config));
     // Sans identifiants valides, certains sites répondent 200 avec un visiteur anonyme.
     if (me.type === 'anonymous') throw new ConnectorAuthError('Confluence', 401);
+    if (config.authMode === 'oauth') return { account: oauthAccount(config) };
     const name = me.displayName?.trim() || me.publicName?.trim() || 'Compte Atlassian';
     return { account: `${name} (${config.site})` };
   },
@@ -85,7 +107,7 @@ export const confluenceConnector: Connector<Config> = {
       }
       await directory.learn(accountIdsOf(loaded), spaceIdsOf(loaded));
       const items = loaded
-        .map((entry) => pageToItem(config.site, entry, directory))
+        .map((entry) => pageToItem(api.site, entry, directory))
         .filter((item): item is ConnectorItem => item !== null);
       yield { items, cursor: markAfter(stubs.slice(0, end), previous) };
     }

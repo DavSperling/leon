@@ -8,7 +8,7 @@ export const confluenceCatalog: CatalogEntry = {
       label: 'Site Atlassian',
       kind: 'text',
       placeholder: 'acme',
-      help: 'La partie avant .atlassian.net dans l’adresse de votre Confluence (acme pour acme.atlassian.net).',
+      help: 'La partie avant .atlassian.net dans l’adresse de votre Confluence (acme pour acme.atlassian.net). Avec le bouton, facultatif : utile si votre compte a plusieurs sites Atlassian et que vous voulez choisir celui à lire.',
     },
     {
       name: 'email',
@@ -25,6 +25,8 @@ export const confluenceCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Sur id.atlassian.com › Sécurité › Jetons d’API : créer un jeton d’API (sans portées), puis le copier ; Leon lit ce que ce compte peut lire.',
+  oauthHelp:
+    'Atlassian vous demande d’autoriser Leon à lire les pages, les commentaires, les espaces et les profils de votre site Confluence (lecture seule), et de choisir le site si votre compte en a plusieurs. Leon ne peut rien modifier.',
   docsUrl:
     'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
   triedForReal: false,

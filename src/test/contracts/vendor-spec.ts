@@ -41,12 +41,22 @@ const templateMatches = (template: string, path: string): boolean =>
 
 export type SentCall = { method: string; url: string; body?: unknown };
 
+// Par api.atlassian.com, les appels de Jira et de Confluence portent /ex/<produit>/<cloudId> avant le
+// chemin que décrit la spec.
+const ATLASSIAN_GATEWAY_PREFIX = /^\/ex\/(?:jira|confluence)\/[^/]+/;
+
+function specPath(url: URL): string {
+  return url.host === 'api.atlassian.com'
+    ? url.pathname.replace(ATLASSIAN_GATEWAY_PREFIX, '')
+    : url.pathname;
+}
+
 // Ce que la requête envoie de plus que la spec : une liste vide quand tout y figure.
 export function callProblems(spec: VendorSpec, call: SentCall): string[] {
   const url = new URL(call.url);
   const operation = Object.entries(spec.operations).find(([key]) => {
     const [method = '', template = ''] = key.split(' ');
-    return method === call.method && templateMatches(template, url.pathname);
+    return method === call.method && templateMatches(template, specPath(url));
   })?.[1];
   if (!operation) return [`${call.method} ${url.pathname} : absent de la spec`];
 

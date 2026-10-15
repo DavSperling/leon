@@ -2,12 +2,27 @@ import { appendFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promise
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { MODEL_BY_STEP } from '@/server/llm/anthropic-llm';
-import type { etatRuns, UsageParEtape } from './collect';
-import type { Notes } from './score';
+import type { etatRuns, FaitProduit, UsageParEtape } from './collect';
+import type { Notes, NotesConversation } from './score';
 
 export const HISTORIQUE_DIR = fileURLToPath(
   new URL('../../docs/etudes/essais-pipeline', import.meta.url),
 );
+
+// Texte d'un fait produit, gardé dans le JSON pour relire après coup ce que Leon a inventé ou mal
+// classé (jeu fictif : rien de réel ici).
+export type FaitDetail = {
+  statement: string;
+  turnExternalId: string;
+  ficheTitre: string;
+  correspond: string | null; // paire du juge : N… pour un faux fait, null pour un fait en trop
+};
+
+export type NotesDetaillees = Omit<Notes, 'parConversation'> & {
+  parConversation: Array<
+    NotesConversation & { faitsEnTrop: FaitDetail[]; fauxFaitsDetail: FaitDetail[] }
+  >;
+};
 
 export type Passage = {
   id: string; // « 2026-10-16-1000-reference » : nom du fichier JSON
@@ -22,8 +37,40 @@ export type Passage = {
   usage: UsageParEtape; // mesuré (llm_usage)
   coutJuge: number; // mesuré, hors coût du pipeline
   jugeErreurs: string[]; // clés des conversations dont le jugement a échoué : passage incomplet
-  notes: Notes;
+  appariements: Record<string, string | null>; // paires complètes du juge : fait produit → F…, N… ou null
+  notes: NotesDetaillees;
 };
+
+// Ajoute à chaque conversation le texte de ses faits en trop et de ses faux faits.
+export function detaillerNotes(
+  notes: Notes,
+  produits: FaitProduit[],
+  paires: Map<string, string | null>,
+): NotesDetaillees {
+  const parId = new Map(produits.map((p) => [p.id, p]));
+  const detail = (ids: string[]): FaitDetail[] =>
+    ids.flatMap((id) => {
+      const p = parId.get(id);
+      return p
+        ? [
+            {
+              statement: p.statement,
+              turnExternalId: p.turnExternalId,
+              ficheTitre: p.ficheTitre,
+              correspond: paires.get(id) ?? null,
+            },
+          ]
+        : [];
+    });
+  return {
+    ...notes,
+    parConversation: notes.parConversation.map((c) => ({
+      ...c,
+      faitsEnTrop: detail(c.enTrop),
+      fauxFaitsDetail: detail(c.fauxFaits),
+    })),
+  };
+}
 
 const EN_TETE = `# Historique des essais du pipeline
 
@@ -34,7 +81,7 @@ Un passage par ligne, ajouté par \`pnpm essai noter\`. Coûts **mesurés** (tab
 `;
 
 const euros = (n: number, d = 2) => `${n.toFixed(d).replace('.', ',')} $`;
-const pct = (n: number | null) => (n === null ? 'n/d' : `${Math.round(n * 100)} %`);
+export const pct = (n: number | null) => (n === null ? 'n/d' : `${Math.round(n * 100)} %`);
 const sur = (a: number, b: number) => `${a}/${b}`;
 
 // Un | casserait la table Markdown ; des espaces multiples (retour à la ligne collé, saisie
@@ -104,13 +151,38 @@ export async function enregistrerPassage(p: Passage, dir = HISTORIQUE_DIR): Prom
 
 // Coût mesuré par tour du dernier passage complet, pour annoncer le coût du suivant.
 export async function coutParTourPrecedent(dir = HISTORIQUE_DIR): Promise<number | null> {
+  const p = (await lirePassages(dir)).filter((x) => x.jeu === 'complet' && x.tours > 0).at(-1);
+  return p ? coutPipeline(p.usage) / p.tours : null;
+}
+
+async function lirePassages(dir: string): Promise<Passage[]> {
   const fichiers = await readdir(join(dir, 'passages')).catch(() => [] as string[]);
-  for (const fichier of fichiers
-    .filter((f) => f.endsWith('.json'))
-    .sort()
-    .reverse()) {
-    const p = JSON.parse(await readFile(join(dir, 'passages', fichier), 'utf8')) as Passage;
-    if (p.jeu === 'complet' && p.tours > 0) return coutPipeline(p.usage) / p.tours;
-  }
-  return null;
+  return Promise.all(
+    fichiers
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+      .map(async (f) => JSON.parse(await readFile(join(dir, 'passages', f), 'utf8')) as Passage),
+  );
+}
+
+// Dernier passage du même jeu enregistré avant celui-ci (les id se trient chronologiquement).
+export async function passagePrecedent(
+  jeu: Passage['jeu'],
+  id: string,
+  dir = HISTORIQUE_DIR,
+): Promise<Passage | null> {
+  const avant = (await lirePassages(dir)).filter((p) => p.jeu === jeu && p.id < id);
+  return avant.at(-1) ?? null;
+}
+
+export function comparerPassages(precedent: Passage, actuel: Passage): string[] {
+  const a = precedent.notes;
+  const b = actuel.notes;
+  return [
+    `Comparé au passage ${precedent.id} (${echapperCellule(precedent.label)}) :`,
+    `  Rappel : ${pct(a.rappel)} → ${pct(b.rappel)}`,
+    `  Précision : ${pct(a.precision)} → ${pct(b.precision)}`,
+    `  Faux faits : ${a.fauxFaits} → ${b.fauxFaits}`,
+    `  Coût pipeline : ${euros(coutPipeline(precedent.usage))} → ${euros(coutPipeline(actuel.usage))}`,
+  ];
 }

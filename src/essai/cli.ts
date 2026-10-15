@@ -9,7 +9,17 @@ import { openAdminDb } from './admin-db';
 import { type Bilan, envoyer } from './charger';
 import { etatRuns, lireFaits, lireUsage } from './collect';
 import { ESSAI_DIR, loadJeu, toursDe } from './dataset';
-import { coutParTourPrecedent, coutPipeline, enregistrerPassage, HISTORIQUE_DIR } from './history';
+import {
+  comparerPassages,
+  coutParTourPrecedent,
+  coutPipeline,
+  detaillerNotes,
+  enregistrerPassage,
+  HISTORIQUE_DIR,
+  type Passage,
+  passagePrecedent,
+  pct,
+} from './history';
 import { juger } from './judge';
 import { remettreAZero, runsEnCours, runsEnCoursParTenant, tenantEssai } from './organisation';
 import { type DernierPassage, DernierPassageSchema } from './schema';
@@ -260,7 +270,7 @@ async function runNoter(): Promise<number> {
     });
     const fin = runs.fin ? new Date(runs.fin) : null;
     const cout = coutPipeline(usage);
-    const json = await enregistrerPassage({
+    const detail: Passage = {
       id: passage.id,
       date: passage.debut,
       label: passage.label,
@@ -273,10 +283,13 @@ async function runNoter(): Promise<number> {
       usage,
       coutJuge,
       jugeErreurs,
-      notes,
-    });
+      appariements: Object.fromEntries(paires),
+      notes: detaillerNotes(notes, produitsPourNotes, paires),
+    };
+    const precedent = await passagePrecedent(passage.jeu, passage.id);
+    const json = await enregistrerPassage(detail);
     console.log(
-      `Rappel ${Math.round((notes.rappel ?? 0) * 100)} %, précision ${Math.round((notes.precision ?? 0) * 100)} %, ${notes.fauxFaits} faux faits, ${runs.failed} run(s) échoué(s).`,
+      `Rappel ${pct(notes.rappel)}, précision ${pct(notes.precision)}, ${notes.fauxFaits} faux faits, ${runs.failed} run(s) échoué(s).`,
     );
     console.log(
       `Doublons : ${notes.doublonsFaits} (dont ${notes.reditsRecrees} redit(s) recréé(s)) ; fuites sensibles : ${notes.fuitesSensibles} ; hors jeu : ${notes.horsJeu}.`,
@@ -287,6 +300,7 @@ async function runNoter(): Promise<number> {
         `${jugeErreurs.length} conversation(s) sans jugement (passage incomplet) : ${jugeErreurs.join(', ')}.`,
       );
     console.log(`Historique mis à jour ; détail dans ${json}.`);
+    if (precedent) for (const ligne of comparerPassages(precedent, detail)) console.log(ligne);
     return jugeErreurs.length > 0 ? 1 : 0;
   } finally {
     await admin.close();

@@ -2,7 +2,15 @@ import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { coutParTourPrecedent, enregistrerPassage, type Passage } from './history';
+import type { FaitProduit } from './collect';
+import {
+  comparerPassages,
+  coutParTourPrecedent,
+  detaillerNotes,
+  enregistrerPassage,
+  type Passage,
+  passagePrecedent,
+} from './history';
 import type { Notes } from './score';
 
 const notes = (surcharge: Partial<Notes> = {}): Notes => ({
@@ -75,7 +83,8 @@ const passage = (id: string, coutTotal: number, surcharge: Partial<Passage> = {}
   },
   coutJuge: 0.03,
   jugeErreurs: [],
-  notes: notes(),
+  appariements: {},
+  notes: detaillerNotes(notes(), [], new Map()),
   ...surcharge,
 });
 
@@ -121,5 +130,84 @@ describe('historique', () => {
     expect(await coutParTourPrecedent(dir)).toBeNull();
     await enregistrerPassage(passage('2026-10-16-1000-reference', 1.2), dir);
     expect(await coutParTourPrecedent(dir)).toBeCloseTo(0.002);
+  });
+});
+
+const produit = (id: string, statement: string): FaitProduit => ({
+  id,
+  sourceExternalId: 'src',
+  turnExternalId: `t-${id}`,
+  statement,
+  value: null,
+  quote: '',
+  status: 'active',
+  sensitivity: 'normal',
+  partage: true,
+  ficheId: 'fiche',
+  ficheTitre: 'Fiche Dupont',
+  typeFiche: 'client',
+  supersededBy: null,
+});
+
+describe('detaillerNotes', () => {
+  it('ajoute le texte des faits en trop et des faux faits à chaque conversation', () => {
+    const detail = detaillerNotes(
+      notes({
+        parConversation: [
+          {
+            cle: 'hugo/x',
+            attendus: 2,
+            retrouves: 1,
+            produits: 3,
+            manques: ['F2'],
+            enTrop: ['p2'],
+            fauxFaits: ['p3'],
+          },
+        ],
+      }),
+      [produit('p1', 'Vrai'), produit('p2', 'En trop'), produit('p3', 'Faux')],
+      new Map([
+        ['p1', 'F1'],
+        ['p2', null],
+        ['p3', 'N1'],
+      ]),
+    );
+    const c = detail.parConversation[0];
+    expect(c?.faitsEnTrop).toEqual([
+      {
+        statement: 'En trop',
+        turnExternalId: 't-p2',
+        ficheTitre: 'Fiche Dupont',
+        correspond: null,
+      },
+    ]);
+    expect(c?.fauxFaitsDetail).toEqual([
+      { statement: 'Faux', turnExternalId: 't-p3', ficheTitre: 'Fiche Dupont', correspond: 'N1' },
+    ]);
+  });
+});
+
+describe('comparaison avec le passage précédent', () => {
+  it('retrouve le passage précédent du même jeu, pas un mini ni le passage courant', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'historique-'));
+    expect(await passagePrecedent('complet', '2026-10-16-1000-reference', dir)).toBeNull();
+    await enregistrerPassage(passage('2026-10-15-1000-ancien', 1.3), dir);
+    await enregistrerPassage(passage('2026-10-15-1200-mini', 0.2, { jeu: 'mini' }), dir);
+    await enregistrerPassage(passage('2026-10-16-1000-reference', 1.0), dir);
+    const prec = await passagePrecedent('complet', '2026-10-16-1000-reference', dir);
+    expect(prec?.id).toBe('2026-10-15-1000-ancien');
+  });
+
+  it('affiche rappel, précision, faux faits et coût pipeline : précédent → actuel', () => {
+    const lignes = comparerPassages(
+      passage('a', 1.3),
+      passage('b', 0.6, {
+        notes: detaillerNotes(notes({ rappel: 0.8, precision: null, fauxFaits: 2 }), [], new Map()),
+      }),
+    );
+    expect(lignes.join('\n')).toContain('Rappel : 75 % → 80 %');
+    expect(lignes.join('\n')).toContain('Précision : 89 % → n/d');
+    expect(lignes.join('\n')).toContain('Faux faits : 5 → 2');
+    expect(lignes.join('\n')).toContain('Coût pipeline : 1,30 $ → 0,60 $');
   });
 });

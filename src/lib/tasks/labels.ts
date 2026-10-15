@@ -74,3 +74,7 @@ export const EMPTY_GROUP_LABELS = {
   label: 'Sans étiquette',
   project: 'Sans projet',
 } as const;
+
+// Le refus de retirer le dernier statut d'une catégorie : le serveur le dit, et la liste des
+// réglages le répète dans l'infobulle du bouton désactivé.
+export const LAST_OF_CATEGORY_MESSAGE = 'Chaque catégorie garde au moins un statut.';

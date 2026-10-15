@@ -3,11 +3,14 @@
 import { z } from 'zod';
 import { VIEW_NAME_MAX_CHARS } from '@/lib/tasks/limits';
 import { ViewConfigSchema } from '@/lib/tasks/view-config';
+import { withoutContext } from '@/lib/tasks/view-context';
 import { createView, deleteView, setTeamDefault, updateView } from '@/server/tasks/views';
 import { type ActionResult, run } from './run-action';
 
 // Les vues enregistrées. Seul l'auteur modifie ou supprime sa vue (updateView, deleteView) ; choisir
-// le défaut de l'équipe est permis à tout membre, mais seulement parmi les vues d'équipe.
+// le défaut de l'équipe est permis à tout membre, mais seulement parmi les vues d'équipe. Une vue
+// créée pour être le défaut perd son contexte (projet, Mes tâches, recherche), qui n'a pas sa place
+// dans un défaut.
 
 const Id = z.uuid();
 const Name = z.string().trim().min(1).max(VIEW_NAME_MAX_CHARS);
@@ -32,10 +35,10 @@ export async function createViewAction(
   return run('create_view', CreateViewSchema, input, async (ctx, data) => {
     const { id } = await createView(ctx, {
       name: data.name,
-      config: data.config,
+      config: data.makeDefault ? withoutContext(data.config) : data.config,
       team: data.team,
+      makeDefault: data.makeDefault,
     });
-    if (data.makeDefault) await setTeamDefault(ctx, id);
     return { id };
   });
 }

@@ -13,7 +13,7 @@ export type SavedView = { id: string; name: string; context: ViewContext };
 type TabsInput = {
   context: ViewContext;
   viewId: string | null; // la vue ouverte
-  mineTab: Exclude<MyTasksTab, 'activity'> | null;
+  mineTab: MyTasksTab | null;
   views: SavedView[];
 };
 

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_VIEW_CONFIG } from '@/lib/tasks/view-config';
+import { viewContextOf } from '@/lib/tasks/view-context';
 import { requireUserContext } from '@/server/auth/session';
 import { getTeamDefaultConfig, getView, listViews } from '@/server/tasks/views';
 import { seedTasksScenario } from '@/test/tasks-scenario';
@@ -15,6 +16,21 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 const BOARD = { ...DEFAULT_VIEW_CONFIG, layout: 'board', groupBy: 'priority' } as const;
 const NOT_FOUND = { ok: false, error: 'Vue introuvable.' };
+const PROJECT_ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
+// Une liste de projet, de Mes tâches et de recherche à la fois : tout ce qui est du contexte.
+const SCOPED = {
+  ...BOARD,
+  filters: {
+    ...BOARD.filters,
+    projectId: PROJECT_ID,
+    assignee: 'me',
+    creator: 'me',
+    q: 'x',
+    priority: 'high',
+  },
+} as const;
+
+const NO_CONTEXT = { projectId: null, assignee: null, creator: null, q: '' };
 
 // Les actions des vues, de bout en bout : zod, puis la base sous les droits du lecteur. Paul crée.
 async function setup() {
@@ -104,6 +120,35 @@ describe('le défaut de l’équipe', () => {
 
     expect(await getTeamDefaultConfig(paul)).toEqual(second);
     expect((await listViews(paul)).filter((view) => view.isTeamDefault)).toHaveLength(1);
+  });
+
+  it('le défaut créé depuis une liste filtrée ne garde ni projet, ni Mes tâches, ni recherche', async () => {
+    const { paul, marie } = await setup();
+
+    await createViewAction({ name: 'Défaut', config: SCOPED, team: true, makeDefault: true });
+
+    const base = await getTeamDefaultConfig(marie);
+    expect(viewContextOf(base)).toBe('all');
+    expect(base).toEqual({ ...SCOPED, filters: { ...SCOPED.filters, ...NO_CONTEXT } });
+    const [view] = await listViews(paul);
+    expect(view?.config.filters).toMatchObject(NO_CONTEXT);
+  });
+
+  it('une vue d’équipe qui a un contexte peut devenir le défaut : le contexte n’est pas imposé aux autres listes', async () => {
+    const { paul, marie } = await setup();
+    const result = await createViewAction({ name: 'Sprint', config: SCOPED, team: true });
+    if (!result.ok) throw new Error(result.error);
+    vi.mocked(requireUserContext).mockResolvedValue(marie);
+
+    await expect(setTeamDefaultAction(result.id)).resolves.toEqual({ ok: true });
+
+    expect(await getTeamDefaultConfig(marie)).toEqual({
+      ...SCOPED,
+      filters: { ...SCOPED.filters, ...NO_CONTEXT },
+    });
+    expect(viewContextOf((await getView(paul, result.id))?.config ?? BOARD)).toBe(
+      `project:${PROJECT_ID}`,
+    );
   });
 
   it('tout membre choisit une vue d’équipe, jamais une vue personnelle', async () => {

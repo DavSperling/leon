@@ -8,8 +8,9 @@ import type { Person } from '@/server/tasks/task-row';
 import { ActorAvatar } from './actor-avatar';
 import { eventText } from './event-text';
 import { ListBreadcrumb } from './list-breadcrumb';
-import { MyTasksTabs } from './my-tasks-tabs';
 import { TaskTitle } from './task-title';
+import { buildTabs, type SavedView } from './view-bar';
+import { ViewTabs } from './view-tabs';
 
 type ItemProps = { item: ActivityItem; names: ReadonlyMap<string, string>; now: Date };
 
@@ -45,20 +46,26 @@ function ActivityRow({ item, names, now }: ItemProps) {
   );
 }
 
-type MyActivityProps = { items: ActivityItem[]; members: Person[]; now: Date };
+type MyActivityProps = {
+  items: ActivityItem[];
+  members: Person[];
+  views: SavedView[]; // toutes les vues enregistrées visibles ; la barre garde celles de « Mes tâches »
+  now: Date;
+};
 
 // L'onglet Activité de « Mes tâches » : les derniers événements sur les tâches qui me sont assignées
 // ou que j'ai créées, du plus récent au plus ancien. Les filtres et l'affichage de la liste n'y
-// servent à rien : l'en-tête n'a que le fil d'Ariane et les onglets.
-export function MyActivity({ items, members, now }: MyActivityProps) {
+// servent à rien : l'en-tête n'a que le fil d'Ariane et les onglets, les mêmes que sur la liste.
+export function MyActivity({ items, members, views, now }: MyActivityProps) {
   const names = new Map(members.map((member) => [member.id, member.name]));
+  const tabs = buildTabs({ context: 'mine', viewId: null, mineTab: 'activity', views });
   return (
     <>
       <div className="sticky top-0 z-10 border-b bg-card">
         <div className="flex min-h-12 items-center px-5 py-2">
           <ListBreadcrumb title="Mes tâches" />
         </div>
-        <MyTasksTabs active="activity" />
+        <ViewTabs label="Mes tâches" tabs={tabs} className="px-5 pb-2" />
       </div>
       {items.length === 0 ? (
         <div className="px-5">

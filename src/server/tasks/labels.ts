@@ -54,7 +54,9 @@ export function updateLabel(
   );
 }
 
-// Les liens vers les tâches partent avec l'étiquette (cascade).
+// Les liens vers les tâches partent avec l'étiquette (cascade). Les vues enregistrées gardent leur
+// filtre d'étiquette : la RLS cache à celui qui supprime les vues personnelles des autres, aucun
+// nettoyage ne serait complet. Le filtre devient une pastille « Inconnu », que l'on retire.
 export async function deleteLabel(ctx: TenantContext, id: string): Promise<void> {
   const rows = await withTenant(ctx, (tx) =>
     tx.delete(taskLabels).where(eq(taskLabels.id, id)).returning({ id: taskLabels.id }),

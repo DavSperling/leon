@@ -44,6 +44,13 @@ describe('buildTabs', () => {
     expect(currentLabels(mine)).toEqual(['Créées']);
   });
 
+  it('garde les vues de « Mes tâches » sur l’onglet Activité, qui y est courant', () => {
+    const mine = tabs({ context: 'mine', mineTab: 'activity' });
+
+    expect(labels(mine)).toEqual([...TABS.map((tab) => tab.label), 'Mes urgences']);
+    expect(currentLabels(mine)).toEqual(['Activité']);
+  });
+
   it('ne marque aucun onglet de « Mes tâches » quand une vue est ouverte', () => {
     const mine = tabs({ context: 'mine', mineTab: null, viewId: 'v-mine' });
 

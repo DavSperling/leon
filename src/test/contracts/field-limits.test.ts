@@ -3,12 +3,14 @@ import {
   COMMENT_MAX_CHARS,
   DESCRIPTION_MAX_CHARS,
   LABEL_NAME_MAX_CHARS,
+  PROJECT_KEY_MAX_CHARS,
   PROJECT_KEY_PATTERN,
   PROJECT_NAME_MAX_CHARS,
   STATUS_LABEL_MAX_CHARS,
   TITLE_MAX_CHARS,
   VIEW_NAME_MAX_CHARS,
 } from '@/lib/tasks/limits';
+import { parseTaskRef } from '@/lib/tasks/ref';
 import { productionSources, readText } from './files';
 
 const MIGRATION = readText('src/server/db/migrations/0007-taches.sql');
@@ -20,6 +22,12 @@ function sqlBound(table: string, check: RegExp): number {
   expect(bound, `${table} : borne introuvable`).toBeDefined();
   return Number(bound);
 }
+
+// Le fichier `path` importe `name` de limits.ts : il n'en recopie pas la valeur.
+const imports = (name: string, path: string) =>
+  expect(readText(path), `${path} : ${name}`).toMatch(
+    new RegExp(`import \\{[^}]*\\b${name}\\b[^}]*\\} from '@/lib/tasks/limits'`),
+  );
 
 describe('bornes des champs des tâches', () => {
   it('le titre', () => {
@@ -59,22 +67,42 @@ describe('bornes des champs des tâches', () => {
     expect(/check \(key ~ '([^']+)'\)/.exec(body)?.[1]).toBe(PROJECT_KEY_PATTERN.source);
   });
 
+  it('la clé d’un projet : la longueur maximale est celle du motif, de l’identifiant et de la base', () => {
+    const key = (length: number) => 'A'.repeat(length);
+    expect(PROJECT_KEY_PATTERN.test(key(PROJECT_KEY_MAX_CHARS))).toBe(true);
+    expect(PROJECT_KEY_PATTERN.test(key(PROJECT_KEY_MAX_CHARS + 1))).toBe(false);
+    expect(parseTaskRef(`${key(PROJECT_KEY_MAX_CHARS)}-1`)).not.toBeNull();
+    expect(parseTaskRef(`${key(PROJECT_KEY_MAX_CHARS + 1)}-1`)).toBeNull();
+  });
+
   it('les réglages : l’action, les champs et la base partagent les bornes', () => {
-    const imports = (name: string, path: string) =>
-      expect(readText(path), `${path} : ${name}`).toMatch(
-        new RegExp(`import \\{[^}]*\\b${name}\\b[^}]*\\} from '@/lib/tasks/limits'`),
-      );
     for (const name of [
       'PROJECT_NAME_MAX_CHARS',
       'PROJECT_KEY_PATTERN',
       'STATUS_LABEL_MAX_CHARS',
+      'LABEL_NAME_MAX_CHARS',
     ]) {
       imports(name, 'src/app/(taches)/taches/reglages/actions.ts');
     }
     imports('PROJECT_NAME_MAX_CHARS', 'src/components/tasks/settings/project-settings.tsx');
+    imports('PROJECT_KEY_MAX_CHARS', 'src/components/tasks/settings/project-settings.tsx');
+    imports('PROJECT_KEY_PATTERN', 'src/components/tasks/settings/project-settings.tsx');
     imports('STATUS_LABEL_MAX_CHARS', 'src/components/tasks/settings/status-settings.tsx');
+    imports('LABEL_NAME_MAX_CHARS', 'src/components/tasks/settings/label-settings.tsx');
     imports('VIEW_NAME_MAX_CHARS', 'src/app/(taches)/taches/view-actions.ts');
     imports('VIEW_NAME_MAX_CHARS', 'src/components/tasks/view-name-dialog.tsx');
+  });
+
+  it('les outils MCP : la clé du projet, le statut et l’étiquette importent les mêmes bornes', () => {
+    for (const name of [
+      'PROJECT_KEY_MAX_CHARS',
+      'STATUS_LABEL_MAX_CHARS',
+      'LABEL_NAME_MAX_CHARS',
+    ]) {
+      imports(name, 'src/server/mcp/tools/task-fields.ts');
+    }
+    imports('PROJECT_KEY_MAX_CHARS', 'src/server/mcp/tools/task-list-tool.ts');
+    imports('LABEL_NAME_MAX_CHARS', 'src/server/mcp/tools/task-list-tool.ts');
   });
 
   it('le commentaire : la page, l’outil MCP et le formulaire importent la même borne', () => {

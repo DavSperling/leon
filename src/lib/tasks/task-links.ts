@@ -43,3 +43,9 @@ export function taskHref(ref: string, listQuery: string): string {
 // la page d'une tâche les écrivent, la liste les relit.
 export const projectHref = (projectId: string): string => `/taches?projet=${projectId}`;
 export const viewHref = (viewId: string): string => `/taches?vue=${viewId}`;
+
+// La page des réglages ; `?projet=` y choisit le projet dont on règle les statuts.
+export const SETTINGS_PATH = '/taches/reglages';
+export const SETTINGS_PROJECT_PARAM = 'projet';
+export const settingsHref = (projectId: string): string =>
+  `${SETTINGS_PATH}?${SETTINGS_PROJECT_PARAM}=${projectId}`;

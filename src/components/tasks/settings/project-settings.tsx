@@ -6,16 +6,18 @@ import { toast } from 'sonner';
 import { createProjectAction, updateProjectAction } from '@/app/(taches)/taches/reglages/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PROJECT_KEY_PATTERN, PROJECT_NAME_MAX_CHARS } from '@/lib/tasks/limits';
+import {
+  PROJECT_KEY_MAX_CHARS,
+  PROJECT_KEY_PATTERN,
+  PROJECT_NAME_MAX_CHARS,
+} from '@/lib/tasks/limits';
 import { projectKeyFrom } from '@/lib/tasks/ref';
 import type { ProjectRow } from '@/server/tasks/projects';
 import { CommitInput } from './commit-input';
 import { SettingSection } from './setting-section';
 import { succeeded } from './succeeded';
 
-const KEY_MAX_CHARS = 10;
-const KEY_HINT =
-  'La clé compte de 2 à 10 lettres ou chiffres, sans accent, et commence par une lettre.';
+const KEY_HINT = `La clé compte de 2 à ${PROJECT_KEY_MAX_CHARS} lettres ou chiffres, sans accent, et commence par une lettre.`;
 
 // Le serveur ne dit que « Saisie invalide » : le champ explique ce qu'il attend.
 function validKey(key: string): boolean {
@@ -30,7 +32,7 @@ function ProjectLine({ project }: { project: ProjectRow }) {
       <CommitInput
         aria-label={`Clé du projet ${project.name}`}
         value={project.key}
-        maxLength={KEY_MAX_CHARS}
+        maxLength={PROJECT_KEY_MAX_CHARS}
         autoComplete="off"
         onCommit={async (key) =>
           validKey(key) && (await succeeded(updateProjectAction(project.id, { key })))
@@ -75,7 +77,7 @@ function NewProject() {
         aria-label="Clé du nouveau projet"
         value={key}
         placeholder={name.trim() === '' ? 'Clé' : projectKeyFrom(name)}
-        maxLength={KEY_MAX_CHARS}
+        maxLength={PROJECT_KEY_MAX_CHARS}
         autoComplete="off"
         onChange={(event) => setKey(event.target.value)}
         className="h-8 w-24 font-mono uppercase"

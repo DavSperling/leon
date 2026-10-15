@@ -6,8 +6,10 @@ import { listProjects } from '@/server/tasks/projects';
 import { listStatuses } from '@/server/tasks/statuses';
 import { listTasks } from '@/server/tasks/task-list';
 import { createTask, getTaskByRef } from '@/server/tasks/tasks';
+import { getView } from '@/server/tasks/views';
 import { readTask, seedTasksScenario } from '@/test/tasks-scenario';
 import { createLabelAction } from '../actions';
+import { createViewAction } from '../view-actions';
 import {
   createProjectAction,
   createStatusAction,
@@ -211,6 +213,25 @@ describe('étiquettes', () => {
     await expect(deleteLabelAction(label.Bug)).resolves.toEqual({ ok: true });
     expect((await getTaskByRef(paul, task.ref))?.labels).toEqual([]);
     expect((await listLabels(paul)).map((l) => l.name)).not.toContain('Défaut');
+  });
+
+  it('supprimer une étiquette laisse la vue qui la filtre : le filtre reste, sans résultat', async () => {
+    const { paul, label, projectId } = await setup();
+    await createTask(
+      paul,
+      { title: 'Étiquetée', projectId, labelIds: [label.Bug] },
+      { kind: 'user', userId: paul.userId },
+    );
+    const config = { ...ALL_TASKS, filters: { ...ALL_TASKS.filters, labelId: label.Bug } };
+    const created = await createViewAction({ name: 'Bugs', config, team: false });
+    if (!created.ok) throw new Error(created.error);
+    expect((await listTasks(paul, config, new Date())).rows).toHaveLength(1);
+
+    await deleteLabelAction(label.Bug);
+
+    const view = await getView(paul, created.id);
+    expect(view?.config.filters.labelId).toBe(label.Bug);
+    expect((await listTasks(paul, view?.config ?? config, new Date())).rows).toEqual([]);
   });
 
   it('crée une étiquette (action des sélecteurs) ; refuse un nom déjà pris, sans tenir compte de la casse', async () => {

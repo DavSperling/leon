@@ -16,11 +16,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { LAST_OF_CATEGORY_MESSAGE } from '@/lib/tasks/labels';
 import type { StatusRow } from '@/server/tasks/statuses';
 import { NativeSelect } from './native-select';
 import { succeeded } from './succeeded';
-
-const ONLY_ONE_MESSAGE = 'Chaque catégorie garde au moins un statut.';
 
 type DeleteStatusProps = {
   status: StatusRow;
@@ -37,7 +36,7 @@ export function DeleteStatus({ status, others, onlyOne }: DeleteStatusProps) {
   return (
     <AlertDialog>
       {/* Un bouton désactivé n'affiche pas d'infobulle : elle est sur son enveloppe. */}
-      <span title={onlyOne ? ONLY_ONE_MESSAGE : undefined}>
+      <span title={onlyOne ? LAST_OF_CATEGORY_MESSAGE : undefined}>
         <AlertDialogTrigger asChild>
           <Button
             variant="ghost"

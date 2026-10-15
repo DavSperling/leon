@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TASK_STATUS_CATEGORIES,
+  type TaskStatusCategory,
+  VIEW_PROPERTIES,
+  type ViewProperty,
+} from '@/lib/enums';
+import {
   DEFAULT_VIEW_CONFIG,
   parseViewParams,
   sameConfig,
@@ -87,6 +93,23 @@ describe('ViewConfigSchema', () => {
         filters: { ...DEFAULT_VIEW_CONFIG.filters, extra: 1 },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('ViewConfigSchema, listes', () => {
+  it('accepte chaque propriété et chaque catégorie, une fois', () => {
+    const all = withFilters(
+      { statuses: [...TASK_STATUS_CATEGORIES] },
+      { properties: [...VIEW_PROPERTIES] },
+    );
+    expect(ViewConfigSchema.safeParse(all).success).toBe(true);
+  });
+
+  it('refuse une liste de propriétés ou de catégories plus longue que l’énumération', () => {
+    const properties = Array<ViewProperty>(VIEW_PROPERTIES.length + 1).fill('id');
+    const statuses = Array<TaskStatusCategory>(TASK_STATUS_CATEGORIES.length + 1).fill('todo');
+    expect(ViewConfigSchema.safeParse({ ...DEFAULT_VIEW_CONFIG, properties }).success).toBe(false);
+    expect(ViewConfigSchema.safeParse(withFilters({ statuses })).success).toBe(false);
   });
 });
 

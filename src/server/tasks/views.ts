@@ -1,8 +1,9 @@
 import { and, arrayContains, asc, eq, sql } from 'drizzle-orm';
 import { DEFAULT_VIEW_CONFIG, type ViewConfig } from '@/lib/tasks/view-config';
+import { withoutContext } from '@/lib/tasks/view-context';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { taskViews } from '@/server/db/schema/tasks';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { orConflict, TaskError } from './errors';
 
 export type ViewRow = {
@@ -24,6 +25,7 @@ const VIEW_COLUMNS = {
 };
 
 const NOT_FOUND_MESSAGE = 'Vue introuvable.';
+const DEFAULT_CHANGED_MESSAGE = 'Le défaut de l’équipe vient de changer. Réessayez.';
 
 function toView(
   ctx: TenantContext,
@@ -51,22 +53,35 @@ export async function getView(ctx: TenantContext, id: string): Promise<ViewRow |
   return row ? toView(ctx, row) : null;
 }
 
-// Une vue d'équipe a pour ACL l'organisation ; une vue personnelle, son auteur seul.
+// Au plus un défaut par organisation (index unique, non différable) : l'ancien est retiré avant que
+// le nouveau soit posé, dans la même transaction.
+const clearTeamDefault = (tx: Tx) =>
+  tx.update(taskViews).set({ isTeamDefault: false }).where(eq(taskViews.isTeamDefault, true));
+
+// Une vue d'équipe a pour ACL l'organisation ; une vue personnelle, son auteur seul. `makeDefault`
+// (vue d'équipe seulement : la base le vérifie) en fait le défaut de l'équipe, dans la même
+// transaction : si la vue n'est pas créée, l'ancien défaut reste. Seul l'index du défaut peut
+// refuser l'insertion.
 export async function createView(
   ctx: TenantContext,
-  input: { name: string; config: ViewConfig; team: boolean },
+  input: { name: string; config: ViewConfig; team: boolean; makeDefault?: boolean },
 ): Promise<ViewRow> {
-  const [row] = await withTenant(ctx, (tx) =>
-    tx
-      .insert(taskViews)
-      .values({
-        tenantId: ctx.tenantId,
-        ownerId: ctx.userId,
-        name: input.name,
-        config: input.config,
-        acl: [input.team ? ctx.tenantId : ctx.userId],
-      })
-      .returning(VIEW_COLUMNS),
+  const makeDefault = input.makeDefault === true;
+  const [row] = await orConflict(DEFAULT_CHANGED_MESSAGE, () =>
+    withTenant(ctx, async (tx) => {
+      if (makeDefault) await clearTeamDefault(tx);
+      return tx
+        .insert(taskViews)
+        .values({
+          tenantId: ctx.tenantId,
+          ownerId: ctx.userId,
+          name: input.name,
+          config: input.config,
+          acl: [input.team ? ctx.tenantId : ctx.userId],
+          isTeamDefault: makeDefault,
+        })
+        .returning(VIEW_COLUMNS);
+    }),
   );
   if (!row) throw new Error('vue non créée');
   return toView(ctx, row);
@@ -94,16 +109,12 @@ export async function deleteView(ctx: TenantContext, id: string): Promise<void> 
   if (rows.length === 0) throw new TaskError('not_found', NOT_FOUND_MESSAGE);
 }
 
-// Choisir le défaut de l'équipe n'est pas modifier la vue : tout membre le peut. Au plus un
-// défaut par organisation (index unique, non différable) : on retire l'ancien avant de poser le
-// nouveau, dans la même transaction, et `null` ne laisse aucun défaut.
+// Choisir le défaut de l'équipe n'est pas modifier la vue : tout membre le peut. `null` ne laisse
+// aucun défaut.
 export async function setTeamDefault(ctx: TenantContext, viewId: string | null): Promise<void> {
-  await orConflict('Le défaut de l’équipe vient de changer. Réessayez.', () =>
+  await orConflict(DEFAULT_CHANGED_MESSAGE, () =>
     withTenant(ctx, async (tx) => {
-      await tx
-        .update(taskViews)
-        .set({ isTeamDefault: false })
-        .where(eq(taskViews.isTeamDefault, true));
+      await clearTeamDefault(tx);
       if (viewId === null) return;
       const rows = await tx
         .update(taskViews)
@@ -115,7 +126,8 @@ export async function setTeamDefault(ctx: TenantContext, viewId: string | null):
   );
 }
 
-// Le défaut de l'équipe, ou celui de Leon quand l'équipe n'en a pas choisi.
+// Le défaut de l'équipe, ou celui de Leon quand l'équipe n'en a pas choisi. Il ne porte jamais de
+// contexte, même si la vue choisie en a un : chaque liste garde le sien.
 export async function getTeamDefaultConfig(ctx: TenantContext): Promise<ViewConfig> {
   const [row] = await withTenant(ctx, (tx) =>
     tx
@@ -123,5 +135,5 @@ export async function getTeamDefaultConfig(ctx: TenantContext): Promise<ViewConf
       .from(taskViews)
       .where(eq(taskViews.isTeamDefault, true)),
   );
-  return row?.config ?? DEFAULT_VIEW_CONFIG;
+  return row ? withoutContext(row.config) : DEFAULT_VIEW_CONFIG;
 }

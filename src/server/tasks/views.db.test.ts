@@ -15,7 +15,7 @@ const BOARD: ViewConfig = {
   ...DEFAULT_VIEW_CONFIG,
   layout: 'board',
   groupBy: 'priority',
-  filters: { ...DEFAULT_VIEW_CONFIG.filters, assignee: 'me', statuses: [] },
+  filters: { ...DEFAULT_VIEW_CONFIG.filters, priority: 'high', statuses: [] },
 };
 
 describe('createView, listViews, getView', () => {
@@ -139,6 +139,57 @@ describe('setTeamDefault, getTeamDefaultConfig', () => {
     const defaults = (await listViews(paul)).filter((view) => view.isTeamDefault);
     expect(defaults.map((view) => view.id)).toEqual([second.id]);
     expect(await getTeamDefaultConfig(paul)).toEqual(DEFAULT_VIEW_CONFIG);
+  });
+
+  it('crée une vue d’équipe en défaut, en remplaçant l’ancien, en une seule transaction', async () => {
+    const { paul, marie } = await seedTasksScenario();
+    await createView(paul, {
+      name: 'Ancien',
+      config: DEFAULT_VIEW_CONFIG,
+      team: true,
+      makeDefault: true,
+    });
+
+    const created = await createView(marie, {
+      name: 'Nouveau',
+      config: BOARD,
+      team: true,
+      makeDefault: true,
+    });
+
+    expect(created.isTeamDefault).toBe(true);
+    const defaults = (await listViews(paul)).filter((view) => view.isTeamDefault);
+    expect(defaults.map((view) => view.id)).toEqual([created.id]);
+    expect(await getTeamDefaultConfig(paul)).toEqual(BOARD);
+  });
+
+  it('une vue refusée en défaut n’est pas créée et laisse l’ancien défaut', async () => {
+    const { paul } = await seedTasksScenario();
+    const kept = await createView(paul, {
+      name: 'Ancien',
+      config: BOARD,
+      team: true,
+      makeDefault: true,
+    });
+
+    // Une vue personnelle ne peut pas être le défaut : la base refuse après le retrait de l'ancien.
+    await expect(
+      createView(paul, { name: 'Perso', config: BOARD, team: false, makeDefault: true }),
+    ).rejects.toThrow();
+
+    const views = await listViews(paul);
+    expect(views.map((view) => [view.id, view.isTeamDefault])).toEqual([[kept.id, true]]);
+  });
+
+  it('le défaut lu ne porte aucun contexte, même si la vue choisie en a un', async () => {
+    const { paul } = await seedTasksScenario();
+    const scoped = { ...BOARD, filters: { ...BOARD.filters, assignee: 'me', q: 'x' } } as const;
+    const view = await createView(paul, { name: 'Équipe', config: scoped, team: true });
+
+    await setTeamDefault(paul, view.id);
+
+    expect(await getTeamDefaultConfig(paul)).toEqual(BOARD);
+    expect((await getView(paul, view.id))?.config).toEqual(scoped);
   });
 
   it('accepte de reposer le défaut actuel et de n’en laisser aucun', async () => {

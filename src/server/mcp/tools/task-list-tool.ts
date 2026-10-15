@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { TASK_STATUS_CATEGORIES } from '@/lib/enums';
 import { groupTasks } from '@/lib/tasks/group';
 import { DUE_FILTER_LABELS, EMPTY_GROUP_LABELS, PRIORITY_LABELS } from '@/lib/tasks/labels';
+import { LABEL_NAME_MAX_CHARS, PROJECT_KEY_MAX_CHARS } from '@/lib/tasks/limits';
 import { DEFAULT_VIEW_CONFIG, type ViewConfig } from '@/lib/tasks/view-config';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { oneLine } from '@/server/memory/labels';
@@ -15,14 +16,14 @@ import { guarded } from './guarded';
 import { labelIdsOf, PRIORITY_NAMES, pickProject } from './task-fields';
 
 const InputSchema = z.object({
-  projet: z.string().max(10).optional().describe('Clé du projet (LEO).'),
+  projet: z.string().max(PROJECT_KEY_MAX_CHARS).optional().describe('Clé du projet (LEO).'),
   statut: z
     .array(z.enum(TASK_STATUS_CATEGORIES))
     .max(TASK_STATUS_CATEGORIES.length)
     .optional()
     .describe('Catégories de statut. Sans elles : les tâches ouvertes (backlog, todo, started).'),
   assigne: z.enum(['moi', 'aucun']).optional().describe('« moi » ou « aucun » (sans assigné).'),
-  etiquette: z.string().max(40).optional().describe('Nom d’une étiquette.'),
+  etiquette: z.string().max(LABEL_NAME_MAX_CHARS).optional().describe('Nom d’une étiquette.'),
   q: z.string().max(100).optional().describe('Texte cherché dans le titre ou l’identifiant.'),
   limite: z.number().int().min(1).max(100).optional().describe('Nombre de tâches (20 par défaut).'),
 });

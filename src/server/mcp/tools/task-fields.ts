@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { TASK_PRIORITIES, type TaskPriority } from '@/lib/enums';
-import { DESCRIPTION_MAX_CHARS } from '@/lib/tasks/limits';
+import {
+  DESCRIPTION_MAX_CHARS,
+  LABEL_NAME_MAX_CHARS,
+  PROJECT_KEY_MAX_CHARS,
+  STATUS_LABEL_MAX_CHARS,
+} from '@/lib/tasks/limits';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { findLabelsByName, listLabels } from '@/server/tasks/labels';
@@ -30,10 +35,10 @@ export const TaskFields = {
     .max(DESCRIPTION_MAX_CHARS)
     .optional()
     .describe('Description en Markdown.'),
-  projet: z.string().max(10).optional().describe('Clé du projet (LEO).'),
+  projet: z.string().max(PROJECT_KEY_MAX_CHARS).optional().describe('Clé du projet (LEO).'),
   statut: z
     .string()
-    .max(40)
+    .max(STATUS_LABEL_MAX_CHARS)
     .optional()
     .describe(
       'Libellé d’un statut du projet (« En cours ») ou catégorie (backlog, todo, started, done, canceled) : le premier statut de la catégorie.',
@@ -62,7 +67,7 @@ export const TaskFields = {
     .describe('Identifiant de la tâche parente (LEO-3) ; « aucun » ou null pour la retirer.'),
 };
 
-export const LabelNames = z.array(z.string().min(1).max(40)).max(20);
+export const LabelNames = z.array(z.string().min(1).max(LABEL_NAME_MAX_CHARS)).max(20);
 
 export const TaskTitle = z.string().trim().min(1).max(200);
 

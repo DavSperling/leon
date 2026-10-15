@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { formatNumber } from '@/lib/format';
-import { projectHref, viewHref } from '@/lib/tasks/task-links';
+import { projectHref, SETTINGS_PATH, viewHref } from '@/lib/tasks/task-links';
 import { cn } from '@/lib/utils';
 
 type NavProject = { id: string; key: string; name: string; openCount: number };
@@ -19,8 +19,6 @@ export const FIXED_ITEMS: Array<{ key: NavKey; href: string; label: string; icon
   { key: 'mine', href: '/taches?assigne=moi', label: 'Mes tâches', icon: UserRound },
   { key: 'all', href: '/taches', label: 'Toutes les tâches', icon: ListChecks },
 ];
-
-export const SETTINGS_HREF = '/taches/reglages';
 
 const Uuid = z.uuid();
 
@@ -150,8 +148,8 @@ export function TaskNav({ projects, personalViews, teamViews }: TaskNavProps) {
       <ViewSection title="Vues de l’équipe" views={teamViews} current={current} />
       <ul className="mt-5 border-t pt-3">
         <NavLink
-          href={SETTINGS_HREF}
-          current={pathname === SETTINGS_HREF}
+          href={SETTINGS_PATH}
+          current={pathname === SETTINGS_PATH}
           icon={<Settings size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />}
           label="Réglages"
         />

@@ -1,5 +1,6 @@
 import { and, asc, eq, max, sql } from 'drizzle-orm';
 import { TASK_STATUS_CATEGORIES, type TaskStatusCategory } from '@/lib/enums';
+import { LAST_OF_CATEGORY_MESSAGE } from '@/lib/tasks/labels';
 import { positionBetween } from '@/lib/tasks/position';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { taskStatuses, tasks } from '@/server/db/schema/tasks';
@@ -24,7 +25,6 @@ const STATUS_COLUMNS = {
   category: taskStatuses.category,
   position: taskStatuses.position,
 };
-const LAST_OF_CATEGORY_MESSAGE = 'Chaque catégorie garde au moins un statut.';
 
 export const isClosedCategory = (category: TaskStatusCategory): boolean =>
   category === 'done' || category === 'canceled';

@@ -1,5 +1,5 @@
 import type { ViewConfig } from '@/lib/tasks/view-config';
-import { type ViewTab, ViewTabs } from './view-tabs';
+import type { ViewTab } from './view-tabs';
 
 export type MyTasksTab = 'assigned' | 'created' | 'activity';
 
@@ -23,9 +23,4 @@ export function myTasksTab(
 // `active` : l'onglet courant, ou null quand c'est une vue enregistrée qui est ouverte.
 export function myTasksTabs(active: MyTasksTab | null): ViewTab[] {
   return TABS.map(({ tab, label, href }) => ({ key: tab, label, href, current: tab === active }));
-}
-
-// Assignées, Créées, Activité : trois adresses, donc des liens (le retour arrière les retrouve).
-export function MyTasksTabs({ active }: { active: MyTasksTab }) {
-  return <ViewTabs label="Mes tâches" tabs={myTasksTabs(active)} className="px-5 pb-2" />;
 }

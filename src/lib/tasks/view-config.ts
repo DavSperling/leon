@@ -22,12 +22,12 @@ export const ViewConfigSchema = z.strictObject({
   layout: z.enum(VIEW_LAYOUTS),
   groupBy: z.enum(VIEW_GROUPINGS),
   orderBy: z.enum(VIEW_ORDERINGS),
-  properties: z.array(z.enum(VIEW_PROPERTIES)),
+  properties: z.array(z.enum(VIEW_PROPERTIES)).max(VIEW_PROPERTIES.length),
   showSubtasks: z.boolean(),
   showEmptyGroups: z.boolean(),
   showBreakdown: z.boolean(),
   filters: z.strictObject({
-    statuses: z.array(z.enum(TASK_STATUS_CATEGORIES)), // vide : tous les statuts
+    statuses: z.array(z.enum(TASK_STATUS_CATEGORIES)).max(TASK_STATUS_CATEGORIES.length), // vide : tous les statuts
     priority: z.enum(TASK_PRIORITIES).nullable(),
     assignee: z.union([z.enum(['me', 'none']), Uuid]).nullable(),
     creator: z.literal('me').nullable(),

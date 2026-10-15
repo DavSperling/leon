@@ -53,17 +53,34 @@ describe('createViewAction', () => {
     ).resolves.toEqual({ ok: true, id: ID });
 
     expect(createView).toHaveBeenCalledWith(ctx, { name: SECRET, config: CONFIG, team: false });
-    expect(setTeamDefault).not.toHaveBeenCalled();
     expect(revalidatePath).toHaveBeenCalledWith('/taches', 'layout');
   });
 
-  it('pose le défaut de l’équipe sur la vue d’équipe qu’elle vient de créer', async () => {
+  it('crée la vue d’équipe en défaut en une seule écriture, sans contexte', async () => {
     vi.mocked(createView).mockResolvedValue({ id: ID } as never);
+    const scoped = {
+      ...CONFIG,
+      filters: { ...CONFIG.filters, projectId: ID, assignee: 'me', creator: 'me', q: 'x' },
+    } as const;
 
-    await createViewAction({ name: 'Défaut', config: CONFIG, team: true, makeDefault: true });
+    await createViewAction({ name: 'Défaut', config: scoped, team: true, makeDefault: true });
 
-    expect(createView).toHaveBeenCalledWith(ctx, { name: 'Défaut', config: CONFIG, team: true });
-    expect(setTeamDefault).toHaveBeenCalledWith(ctx, ID);
+    expect(createView).toHaveBeenCalledWith(ctx, {
+      name: 'Défaut',
+      config: { ...CONFIG, filters: { ...CONFIG.filters, assignee: null } },
+      team: true,
+      makeDefault: true,
+    });
+    expect(setTeamDefault).not.toHaveBeenCalled();
+  });
+
+  it('garde le contexte d’une vue qui n’est pas le défaut', async () => {
+    vi.mocked(createView).mockResolvedValue({ id: ID } as never);
+    const scoped = { ...CONFIG, filters: { ...CONFIG.filters, projectId: ID, q: 'x' } };
+
+    await createViewAction({ name: 'Sprint', config: scoped, team: true });
+
+    expect(createView).toHaveBeenCalledWith(ctx, { name: 'Sprint', config: scoped, team: true });
   });
 
   it.each([

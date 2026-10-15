@@ -7,7 +7,9 @@ export const LABEL_NAME_MAX_CHARS = 40;
 export const VIEW_NAME_MAX_CHARS = 60;
 export const PROJECT_NAME_MAX_CHARS = 80;
 export const STATUS_LABEL_MAX_CHARS = 40;
-// La clé d'un projet : elle préfixe les identifiants (LEO-12).
+// La clé d'un projet : elle préfixe les identifiants (LEO-12). Le motif et la longueur maximale se
+// valent : src/test/contracts/field-limits.test.ts le vérifie, avec l'identifiant (ref.ts) et la base.
+export const PROJECT_KEY_MAX_CHARS = 10;
 export const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9]{1,9}$/;
 // Le texte de recherche : le filtre `q` d'une liste (URL comprise) et la recherche d'un parent.
 export const SEARCH_MIN_CHARS = 2;

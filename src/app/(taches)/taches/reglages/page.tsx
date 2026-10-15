@@ -5,6 +5,7 @@ import { projectStatuses } from '@/components/tasks/list-context';
 import { LabelSettings } from '@/components/tasks/settings/label-settings';
 import { ProjectSettings } from '@/components/tasks/settings/project-settings';
 import { StatusSettings } from '@/components/tasks/settings/status-settings';
+import { SETTINGS_PROJECT_PARAM } from '@/lib/tasks/task-links';
 import { requireUserContext } from '@/server/auth/session';
 import { listLabels } from '@/server/tasks/labels';
 import { listProjects } from '@/server/tasks/projects';
@@ -23,7 +24,7 @@ export default async function TaskSettingsPage({ searchParams }: PageProps) {
     listStatuses(ctx),
     listLabels(ctx),
   ]);
-  const wanted = z.uuid().safeParse([params.projet].flat()[0]);
+  const wanted = z.uuid().safeParse([params[SETTINGS_PROJECT_PARAM]].flat()[0]);
   const project = projects.find((p) => wanted.success && p.id === wanted.data) ?? projects[0];
   return (
     <div className="flex min-h-full flex-col">

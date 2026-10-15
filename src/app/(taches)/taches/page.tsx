@@ -53,11 +53,12 @@ const ACTIVITY_LIMIT = 50;
 
 // Mes tâches, onglet Activité : le fil des derniers événements, sans liste ni filtres.
 async function ActivityPage({ ctx, now }: { ctx: TenantContext; now: Date }) {
-  const [items, members] = await Promise.all([
+  const [items, members, views] = await Promise.all([
     listMyActivity(ctx, ACTIVITY_LIMIT),
     listMembers(ctx),
+    listViews(ctx),
   ]);
-  return <MyActivity items={items} members={members} now={now} />;
+  return <MyActivity items={items} members={members} views={views.map(toSavedView)} now={now} />;
 }
 
 // Ce que la liste affiche : les tâches, de quoi les décrire (statuts, membres, étiquettes, projets)

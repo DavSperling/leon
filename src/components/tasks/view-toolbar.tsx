@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SEARCH_MAX_CHARS } from '@/lib/tasks/limits';
-import { sameConfig, type ViewConfig } from '@/lib/tasks/view-config';
-import { contextConfig, viewContextOf } from '@/lib/tasks/view-context';
+import type { ViewConfig } from '@/lib/tasks/view-config';
+import { viewContextOf, viewStatus } from '@/lib/tasks/view-context';
 import { cn } from '@/lib/utils';
 import { useCreateTask } from './create-task-provider';
 import { DisplayMenu } from './display-menu';
@@ -71,6 +71,28 @@ function SearchField({ query, onSearch }: SearchFieldProps) {
   );
 }
 
+type BreakdownToggleProps = { pressed: boolean; onToggle: () => void };
+
+function BreakdownToggle({ pressed, onToggle }: BreakdownToggleProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Panneau de répartition"
+          aria-pressed={pressed}
+          onClick={onToggle}
+          className={cn(pressed && 'bg-accent text-foreground')}
+        >
+          <PanelRight size={16} strokeWidth={1.5} aria-hidden="true" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">Panneau de répartition</TooltipContent>
+    </Tooltip>
+  );
+}
+
 type ViewToolbarProps = {
   view: OpenView | null;
   views: SavedView[]; // toutes les vues enregistrées visibles ; la barre garde celles de son contexte
@@ -87,10 +109,7 @@ export function ViewToolbar({ view, views, config, base, context }: ViewToolbarP
   const openCreate = useCreateTask();
   const [dialog, setDialog] = useState<ViewDialogKind | null>(null);
   const viewName = view?.name ?? null;
-  // Une vue ouverte se compare à ses réglages enregistrés (`base`) ; sans vue, à la liste que la
-  // navigation ouvre dans ce contexte.
-  const reference = view ? base : contextConfig(config, base);
-  const modified = !sameConfig(config, reference);
+  const { reference, modified, isTeamDefault } = viewStatus(config, base, view);
   const change = (patch: Partial<ViewConfig>) => navigate({ ...config, ...patch });
   const filter = (patch: FilterPatch) => change({ filters: { ...config.filters, ...patch } });
   return (
@@ -103,25 +122,14 @@ export function ViewToolbar({ view, views, config, base, context }: ViewToolbarP
           <DisplayMenu
             config={config}
             base={base}
-            isTeamDefault={view ? view.isTeamDefault && !modified : sameConfig(config, base)}
+            isTeamDefault={isTeamDefault}
             onChange={change}
             onSetTeamDefault={() => setDialog('default')}
           />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Panneau de répartition"
-                aria-pressed={config.showBreakdown}
-                onClick={() => change({ showBreakdown: !config.showBreakdown })}
-                className={cn(config.showBreakdown && 'bg-accent text-foreground')}
-              >
-                <PanelRight size={16} strokeWidth={1.5} aria-hidden="true" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Panneau de répartition</TooltipContent>
-          </Tooltip>
+          <BreakdownToggle
+            pressed={config.showBreakdown}
+            onToggle={() => change({ showBreakdown: !config.showBreakdown })}
+          />
           <Button size="sm" aria-keyshortcuts="C" onClick={() => openCreate()} className="ml-1">
             <Plus size={16} strokeWidth={1.5} aria-hidden="true" />
             Nouvelle tâche

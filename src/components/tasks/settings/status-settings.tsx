@@ -13,6 +13,7 @@ import { TASK_STATUS_CATEGORIES, type TaskStatusCategory } from '@/lib/enums';
 import { STATUS_CATEGORY_LABELS } from '@/lib/tasks/labels';
 import { STATUS_LABEL_MAX_CHARS } from '@/lib/tasks/limits';
 import { nextColor } from '@/lib/tasks/palette';
+import { settingsHref } from '@/lib/tasks/task-links';
 import type { ProjectRow } from '@/server/tasks/projects';
 import type { StatusRow } from '@/server/tasks/statuses';
 import { StatusIcon } from '../status-icon';
@@ -194,7 +195,7 @@ export function StatusSettings({ projects, projectId, statuses }: StatusSettings
   const tabs = projects.map((project) => ({
     key: project.id,
     label: project.name,
-    href: `/taches/reglages?projet=${project.id}`,
+    href: settingsHref(project.id),
     current: project.id === projectId,
   }));
   return (

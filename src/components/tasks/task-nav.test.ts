@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { cleanListQuery, projectHref, viewHref } from '@/lib/tasks/task-links';
+import {
+  cleanListQuery,
+  projectHref,
+  SETTINGS_PATH,
+  SETTINGS_PROJECT_PARAM,
+  settingsHref,
+  viewHref,
+} from '@/lib/tasks/task-links';
 import { DEFAULT_VIEW_CONFIG, parseViewParams, toViewParams } from '@/lib/tasks/view-config';
-import { pageRoutes } from '@/test/contracts/files';
+import { pageRoutes, readText } from '@/test/contracts/files';
 import { TABS } from './my-tasks-tabs';
-import { currentNavKey, FIXED_ITEMS, SETTINGS_HREF } from './task-nav';
+import { currentNavKey, FIXED_ITEMS } from './task-nav';
 
 const ID = '5b0a8a0e-6b9e-4a54-9d2b-3f6f1c7d8e90';
 const paramsOf = (href: string) => new URL(href, 'http://leon.test').searchParams;
@@ -82,9 +89,22 @@ describe('navigation des tâches', () => {
       ...FIXED_ITEMS.map((item) => item.href),
       projectHref(ID),
       viewHref(ID),
-      SETTINGS_HREF,
+      SETTINGS_PATH,
+      settingsHref(ID),
     ];
     for (const href of hrefs) expect(pageRoutes()).toContain(pathOf(href));
+  });
+
+  it('écrit le projet des réglages dans le paramètre que la page des réglages relit', () => {
+    expect(paramsOf(settingsHref(ID)).get(SETTINGS_PROJECT_PARAM)).toBe(ID);
+    // Aucune de ces adresses n'est recopiée en dur : toutes viennent de task-links.
+    const imports = (name: string, path: string) =>
+      expect(readText(path), `${path} : ${name}`).toMatch(
+        new RegExp(`import \\{[^}]*\\b${name}\\b[^}]*\\} from '@/lib/tasks/task-links'`),
+      );
+    imports('SETTINGS_PROJECT_PARAM', 'src/app/(taches)/taches/reglages/page.tsx');
+    imports('settingsHref', 'src/components/tasks/settings/status-settings.tsx');
+    imports('SETTINGS_PATH', 'src/components/tasks/task-nav.tsx');
   });
 
   it('écrit des adresses que la page d’une tâche garde en `retour` sans en perdre', () => {

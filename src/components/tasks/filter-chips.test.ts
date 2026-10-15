@@ -75,4 +75,13 @@ describe('activeFilters', () => {
     expect(label('none')).toBe('Assigné : Sans assigné');
     expect(label('9d1c6b3e-0000-4000-8000-000000000000')).toBe('Assigné : Inconnu');
   });
+
+  it('garde une pastille « Inconnu », retirable, pour une étiquette supprimée', () => {
+    const gone = '9d1c6b3e-0000-4000-8000-000000000000';
+    const chips = activeFilters(withFilters({ labelId: gone }), CONTEXT);
+
+    expect(chips).toEqual([
+      { id: 'label', label: 'Étiquette : Inconnu', clear: { labelId: null } },
+    ]);
+  });
 });

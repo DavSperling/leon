@@ -1,0 +1,90 @@
+{
+  "data": [
+    {
+      "uuid": "4d5e6f7a-8b9c-4d0e-9f2a-b3c4d5e6f7a8",
+      "title": "Point produit Acme",
+      "description": "Feuille de route du trimestre",
+      "source": "leexi",
+      "source_id": null,
+      "direction": "outbound",
+      "is_video": true,
+      "locale": "fr-FR",
+      "visible": true,
+      "duration": 3300.5,
+      "created_at": "2026-10-14T09:00:00.000Z",
+      "performed_at": "2026-10-14T09:00:00.000Z",
+      "updated_at": "2026-10-14T10:05:30.120Z",
+      "leexi_url": "https://app.leexi.ai/fr/calls/4d5e6f7a-8b9c-4d0e-9f2a-b3c4d5e6f7a8",
+      "owner": {
+        "uuid": "a4ce7181-07f3-451c-8593-c067209efe4c",
+        "name": "Marie Durand",
+        "email": "marie@acme.test"
+      },
+      "participating_users": [
+        {
+          "uuid": "a4ce7181-07f3-451c-8593-c067209efe4c",
+          "name": "Marie Durand",
+          "email": "marie@acme.test"
+        }
+      ],
+      "customers": [
+        {
+          "uuid": "f1a2b3c4-d5e6-4f8a-9b0c-d1e2f3a4b5c7",
+          "name": "Paul Martin",
+          "email": "paul@acme.test",
+          "phone_number": null
+        },
+        {
+          "uuid": "f1a2b3c4-d5e6-4f8a-9b0c-d1e2f3a4b5c8",
+          "name": null,
+          "email": "invite@acme.test",
+          "phone_number": null
+        }
+      ],
+      "speakers": [
+        {
+          "uuid": "22cd0302-e459-468d-9e03-54532d996552",
+          "index": 0,
+          "is_user": true,
+          "name": "Marie Durand",
+          "email_address": "marie@acme.test",
+          "phone_number": null,
+          "duration": 1800,
+          "longest_monologue": 120
+        },
+        {
+          "uuid": "6f9edfb7-dc61-4f27-9c99-3e42f4bb1de0",
+          "index": 1,
+          "is_user": false,
+          "name": "Paul Martin",
+          "email_address": null,
+          "phone_number": null,
+          "duration": 1200,
+          "longest_monologue": 90
+        }
+      ],
+      "prompts": [
+        {
+          "uuid": "5e7f2976-3da1-4bd9-ac61-1109f175a28f",
+          "category": "summary",
+          "title": "summary",
+          "completions": ["Résumé écrit par l’outil, ignoré quand la transcription existe."]
+        }
+      ],
+      "chapters": [
+        {
+          "uuid": "b1c2d3e4-f5a6-4b8c-9d0e-f1a2b3c4d5e6",
+          "index": 0,
+          "title": "Introduction",
+          "text": "Ne doit pas être lu.",
+          "start_time": 0
+        }
+      ],
+      "tags": [
+        { "uuid": "c1d2e3f4-a5b6-4c7d-8e9f-a0b1c2d3e4f5", "name": "Produit", "color": "blue" }
+      ],
+      "simple_transcript": "Marie Durand (00:00 - 00:04)\nBonjour Paul, on commence par la feuille de route ?\nMarie Durand (00:05 - 00:12)\nJe propose de livrer l’export CSV avant la fin du mois.\nEt de le présenter vendredi.\nPaul Martin (00:14 - 00:20)\nD’accord, je m’engage à préparer la maquette d’ici jeudi.\nMarie Durand (00:31 - 00:35)\nParfait, on se revoit vendredi."
+    }
+  ],
+  "pagination": { "count": 5, "items": 4, "page": 2, "pages": 2 }
+}

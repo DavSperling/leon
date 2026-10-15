@@ -1,0 +1,12 @@
+{
+  "id": 1049715913,
+  "name": "Marie Durand",
+  "email_address": "marie@acme.test",
+  "personable_type": "User",
+  "title": "Cheffe de projet",
+  "admin": true,
+  "owner": false,
+  "client": false,
+  "employee": true,
+  "time_zone": "Europe/Paris"
+}

@@ -85,8 +85,9 @@ describe('createOpenRouterLlm', () => {
         json_schema: { name: 'sortie', strict: true, schema: strictJsonSchema(Schema) },
       },
       usage: { include: true },
-      provider: { require_parameters: true },
+      provider: { require_parameters: true, allow_fallbacks: true },
     });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
   it('prend le modèle propre à chaque étape', async () => {
@@ -207,7 +208,7 @@ describe('createOpenRouterLlm', () => {
     expect(onUsage).toHaveBeenCalledOnce();
   });
 
-  it.each([429, 500, 502, 503])(
+  it.each([408, 429, 500, 502, 503])(
     'lève une erreur ordinaire sur un HTTP %i (pg-boss reprendra)',
     async (status) => {
       const { llm } = setup(() => json({ error: { message: 'zanzibar surcharge' } }, status));
@@ -251,6 +252,81 @@ describe('createOpenRouterLlm', () => {
     expect((e1 as Error).message).toBe('OpenRouter : HTTP 502');
     expect(e2).toBeInstanceOf(LlmError);
     expect((e2 as Error).message).toBe('OpenRouter : HTTP 400');
+  });
+
+  it('note le fournisseur qui a servi l appel avec le modèle (modèle@fournisseur)', async () => {
+    const info = quiet();
+    const { llm } = setup(() => json(completion({ provider: 'Mistral' })));
+    const onUsage = vi.fn(async () => {});
+
+    await llm.generateObject({ ...request(), onUsage });
+
+    expect(onUsage).toHaveBeenCalledWith(expect.objectContaining({ model: `${MODEL}@Mistral` }));
+    const [, , line] = info.mock.calls[0] as [string, string, string];
+    expect(JSON.parse(line).model).toBe(`${MODEL}@Mistral`);
+  });
+
+  it('ajoute le coût amont d une clé propre (BYOK) au coût OpenRouter', async () => {
+    quiet();
+    const { llm } = setup(() =>
+      json(
+        completion({
+          usage: {
+            prompt_tokens: 10,
+            completion_tokens: 5,
+            cost: 0.0001,
+            is_byok: true,
+            cost_details: { upstream_inference_cost: 0.002 },
+          },
+        }),
+      ),
+    );
+    const onUsage = vi.fn(async () => {});
+
+    await llm.generateObject({ ...request(), onUsage });
+
+    expect(onUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ costUsd: expect.closeTo(0.0021, 10) }),
+    );
+  });
+
+  it('lève une erreur ordinaire, après avoir compté l appel, sur finish_reason error', async () => {
+    quiet();
+    const body = completion();
+    (body.choices as Body[])[0] = { finish_reason: 'error', message: { content: null } };
+    const { llm } = setup(() => json(body));
+    const onUsage = vi.fn(async () => {});
+
+    const error = await llm.generateObject({ ...request(), onUsage }).catch((e: unknown) => e);
+
+    expect(error).not.toBeInstanceOf(LlmError);
+    expect((error as Error).message).toBe('OpenRouter : erreur du fournisseur');
+    expect(onUsage).toHaveBeenCalledOnce();
+  });
+
+  it('compte l usage présent dans une réponse d erreur ou mal formée', async () => {
+    quiet();
+    const usage = { prompt_tokens: 10, completion_tokens: 5, cost: 0.0004 };
+    for (const body of [
+      { error: { code: 502, message: 'x' }, usage },
+      { choices: 'pas une liste', usage },
+    ]) {
+      const { llm } = setup(() => json(body));
+      const onUsage = vi.fn(async () => {});
+      await llm.generateObject({ ...request(), onUsage }).catch(() => {});
+      expect(onUsage).toHaveBeenCalledWith(expect.objectContaining({ costUsd: 0.0004 }));
+    }
+  });
+
+  it('lève une erreur ordinaire quand OpenRouter dépasse le délai', async () => {
+    const { llm } = setup(() => {
+      throw new DOMException('The operation was aborted due to timeout', 'TimeoutError');
+    });
+
+    const error = await llm.generateObject(request()).catch((e: unknown) => e);
+
+    expect(error).not.toBeInstanceOf(LlmError);
+    expect((error as Error).message).toBe('OpenRouter : délai dépassé');
   });
 
   it('ne cite jamais la clé ni le prompt dans les messages d erreur', async () => {

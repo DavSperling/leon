@@ -7,11 +7,12 @@ import { DEFAULT_VIEW_CONFIG, type ViewConfig } from '@/lib/tasks/view-config';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { oneLine } from '@/server/memory/labels';
 import { DATA_GUARD_LINE } from '@/server/memory/render-card';
+import { listProjects } from '@/server/tasks/projects';
 import { listTasks } from '@/server/tasks/task-list';
 import type { TaskRow } from '@/server/tasks/task-row';
 import { taskUrl } from '@/server/tasks/task-url';
 import { guarded } from './guarded';
-import { labelIdsOf, pickProject, projectsOf } from './task-fields';
+import { labelIdsOf, PRIORITY_NAMES, pickProject } from './task-fields';
 
 const InputSchema = z.object({
   projet: z.string().max(10).optional().describe('Clé du projet (LEO).'),
@@ -34,10 +35,11 @@ const LIST_FRAME_CHARS = 400;
 const ASSIGNEE_FILTER = { moi: 'me', aucun: 'none' } as const;
 const NO_CONTEXT = { statuses: [], members: [], labels: [], projects: [] };
 
+// Une lecture ne crée rien : sans projet, pas même le projet par défaut.
 async function viewOf(ctx: TenantContext, input: Input): Promise<ViewConfig> {
   const { filters } = DEFAULT_VIEW_CONFIG;
   const projectId =
-    input.projet === undefined ? null : pickProject(await projectsOf(ctx), input.projet).id;
+    input.projet === undefined ? null : pickProject(await listProjects(ctx), input.projet).id;
   const labelIds = await labelIdsOf(
     ctx,
     input.etiquette === undefined ? undefined : [input.etiquette],
@@ -46,7 +48,7 @@ async function viewOf(ctx: TenantContext, input: Input): Promise<ViewConfig> {
     ...DEFAULT_VIEW_CONFIG,
     filters: {
       ...filters,
-      statuses: input.statut ?? filters.statuses,
+      statuses: input.statut?.length ? input.statut : filters.statuses,
       assignee: input.assigne ? ASSIGNEE_FILTER[input.assigne] : null,
       labelId: labelIds?.[0] ?? null,
       projectId,
@@ -78,7 +80,7 @@ function structured(row: TaskRow) {
     title: row.title,
     status: row.statusLabel,
     category: row.statusCategory,
-    priority: row.priority,
+    priority: PRIORITY_NAMES[row.priority],
     assignee: row.assignee?.name ?? null,
     dueDate: row.dueDate,
     labels: row.labels.map((label) => label.name),

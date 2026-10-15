@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { TaskPriority } from '@/lib/enums';
+import { TASK_PRIORITIES, type TaskPriority } from '@/lib/enums';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { findLabelsByName, listLabels } from '@/server/tasks/labels';
@@ -14,12 +14,14 @@ import { ToolInputError } from './guarded';
 // « aucun » le vide ; un champ absent reste inchangé.
 const CLEAR_WORD = 'aucun';
 const DESCRIPTION_MAX_CHARS = 100_000;
-const PRIORITY_BY_NAME: Record<string, TaskPriority> = {
-  urgente: 'urgent',
-  haute: 'high',
-  moyenne: 'medium',
-  basse: 'low',
-};
+// Le nom d'une priorité, en entrée comme en sortie : task_list rend ce que task_update accepte.
+export const PRIORITY_NAMES = {
+  urgent: 'urgente',
+  high: 'haute',
+  medium: 'moyenne',
+  low: 'basse',
+  none: CLEAR_WORD,
+} as const satisfies Record<TaskPriority, string>;
 
 // Champs communs à la création et à la modification.
 export const TaskFields = {
@@ -37,7 +39,7 @@ export const TaskFields = {
       'Libellé d’un statut du projet (« En cours ») ou catégorie (backlog, todo, started, done, canceled) : le premier statut de la catégorie.',
     ),
   priorite: z
-    .enum(['urgente', 'haute', 'moyenne', 'basse', CLEAR_WORD])
+    .enum(Object.values(PRIORITY_NAMES))
     .nullable()
     .optional()
     .describe('Priorité ; « aucun » ou null pour la retirer.'),
@@ -74,7 +76,9 @@ export function clearable(value: string | null | undefined): string | null | und
 export function priorityOf(name: string | null | undefined): TaskPriority | undefined {
   const text = clearable(name);
   if (text === undefined) return undefined;
-  return text === null ? 'none' : PRIORITY_BY_NAME[text];
+  return text === null
+    ? 'none'
+    : TASK_PRIORITIES.find((priority) => PRIORITY_NAMES[priority] === text);
 }
 
 // L'organisation qui n'a jamais ouvert /taches n'a pas encore de projet : on crée celui par défaut.
@@ -87,8 +91,9 @@ export async function projectsOf(ctx: TenantContext): Promise<ProjectRow[]> {
 }
 
 // Sans clé, le projet est celui de l'organisation s'il est seul ; sinon l'agent doit choisir.
+// La liste est vide pour task_list dans une organisation qui n'a pas encore de projet.
 export function pickProject(projects: readonly ProjectRow[], key: string | undefined): ProjectRow {
-  const keys = projects.map((project) => project.key).join(', ');
+  const keys = projects.map((project) => project.key).join(', ') || 'aucun';
   const [only] = projects;
   if (key === undefined) {
     if (projects.length === 1 && only) return only;
@@ -114,7 +119,7 @@ export async function parentIdOf(
 }
 
 // Libellé du statut (sans tenir compte de la casse), sinon catégorie : le premier statut de celle-ci.
-export function pickStatus(statuses: readonly StatusRow[], name: string): StatusRow {
+function pickStatus(statuses: readonly StatusRow[], name: string): StatusRow {
   const wanted = name.trim().toLowerCase();
   const found =
     statuses.find((status) => status.label.toLowerCase() === wanted) ??

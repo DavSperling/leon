@@ -23,7 +23,12 @@ export function registerTaskStartTool(server: McpServer, ctx: TenantContext, cli
       description:
         'À appeler avant de coder : assigne la tâche à l’utilisateur, la passe au premier statut « en cours » (elle y reste si elle y est déjà) et renvoie le nom de la branche à créer.',
       inputSchema: InputSchema,
-      annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     guarded('task_start', async ({ ref }) => {
       const task = await findTask(ctx, ref);

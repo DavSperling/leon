@@ -9,7 +9,7 @@ export class ToolInputError extends Error {
   override name = 'ToolInputError';
 }
 
-export function toolError(text: string): CallToolResult {
+function toolError(text: string): CallToolResult {
   return { isError: true, content: [{ type: 'text', text }] };
 }
 

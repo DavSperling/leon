@@ -50,9 +50,18 @@ describe('serveur MCP', () => {
     for (const name of ['search', 'fetch', 'briefing', 'task_list', 'task_get']) {
       expect(annotations[name]).toMatchObject({ readOnlyHint: true, openWorldHint: false });
     }
-    expect(annotations.remember).toMatchObject({
+    for (const name of ['remember', 'task_create', 'task_comment', 'task_start']) {
+      expect(annotations[name]).toMatchObject({
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      });
+    }
+    // task_update remplace la description sans la garder : il se déclare destructeur.
+    expect(annotations.task_update).toMatchObject({
       readOnlyHint: false,
-      destructiveHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
       openWorldHint: false,
     });
     expect(client.getInstructions()).toContain('appelle search puis fetch');

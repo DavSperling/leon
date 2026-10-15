@@ -30,21 +30,26 @@ const InputSchema = z.object({
 });
 type Input = z.infer<typeof InputSchema>;
 
+// Une liste vide ou le projet courant ne changent rien : ils restent hors du patch, pour que
+// « Rien à modifier » se déclenche au lieu d'annoncer une modification qui n'a pas eu lieu.
+const nonEmpty = (ids: string[] | undefined) => (ids?.length ? ids : undefined);
+
 // Seuls les champs donnés changent. Les statuts se lisent dans le projet visé, s'il change.
 async function patchOf(ctx: TenantContext, task: TaskDetail, input: Input): Promise<TaskPatch> {
   const target =
     input.projet === undefined ? undefined : pickProject(await projectsOf(ctx), input.projet);
+  const projectId = target?.id === task.projectId ? undefined : target?.id;
   return {
     title: input.titre,
     descriptionMd: input.description,
-    projectId: target?.id,
-    statusId: await statusIdOf(ctx, target?.id ?? task.projectId, input.statut),
+    projectId,
+    statusId: await statusIdOf(ctx, projectId ?? task.projectId, input.statut),
     priority: priorityOf(input.priorite),
     assigneeId: await assigneeIdOf(ctx, input.assigne),
     dueDate: clearable(input.echeance),
     parentId: await parentIdOf(ctx, input.parent),
-    addLabelIds: await labelIdsOf(ctx, input.etiquettes_ajout),
-    removeLabelIds: await labelIdsOf(ctx, input.etiquettes_retrait),
+    addLabelIds: nonEmpty(await labelIdsOf(ctx, input.etiquettes_ajout)),
+    removeLabelIds: nonEmpty(await labelIdsOf(ctx, input.etiquettes_retrait)),
   };
 }
 
@@ -66,7 +71,13 @@ export function registerTaskUpdateTool(
       description:
         'Modifie les champs donnés d’une tâche, les autres restent. La description remplace la précédente. Changer de projet donne un nouvel identifiant.',
       inputSchema: InputSchema,
-      annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
+      // Destructif : la description remplacée n'est pas conservée dans l'historique.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     guarded('task_update', async (input: Input) => {
       const task = await findTask(ctx, input.ref);
@@ -75,7 +86,7 @@ export function registerTaskUpdateTool(
         throw new ToolInputError('Rien à modifier : précisez au moins un champ.');
       }
       await updateTask(ctx, task.id, patch, { kind: 'agent', userId: ctx.userId, client });
-      if (patch.projectId === undefined || patch.projectId === task.projectId) {
+      if (patch.projectId === undefined) {
         return writeResult(`Tâche ${task.ref} modifiée.`, task.ref);
       }
       const ref = await currentRef(ctx, task);

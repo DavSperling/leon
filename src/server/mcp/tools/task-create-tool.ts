@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { createTask } from '@/server/tasks/tasks';
-import { guarded } from './guarded';
+import { createTask, type TaskDetail } from '@/server/tasks/tasks';
+import { guarded, ToolInputError } from './guarded';
 import {
   assigneeIdOf,
   clearable,
@@ -24,6 +24,22 @@ const InputSchema = z.object({
   etiquettes: LabelNames.optional().describe('Noms d’étiquettes existantes.'),
 });
 
+// Une sous-tâche vit dans le projet de son parent : en demander un autre est refusé, pas ignoré.
+async function projectIdOf(
+  ctx: TenantContext,
+  key: string | undefined,
+  parent: TaskDetail | null,
+): Promise<string> {
+  if (parent && key === undefined) return parent.projectId;
+  const project = pickProject(await projectsOf(ctx), key);
+  if (parent && project.id !== parent.projectId) {
+    throw new ToolInputError(
+      `Une sous-tâche reste dans le projet de son parent (${parent.projectKey}).`,
+    );
+  }
+  return project.id;
+}
+
 export function registerTaskCreateTool(
   server: McpServer,
   ctx: TenantContext,
@@ -34,14 +50,14 @@ export function registerTaskCreateTool(
     {
       title: 'Créer une tâche',
       description:
-        'Crée une tâche. Sans projet : celui du parent, sinon l’unique projet de l’organisation. Sans statut : le premier du backlog. Les étiquettes doivent exister : task_get les liste.',
+        'Crée une tâche. Sans projet : celui du parent (une sous-tâche reste dans le projet de son parent), sinon l’unique projet de l’organisation. Sans statut : le premier du backlog. Les étiquettes doivent exister : task_get les liste.',
       inputSchema: InputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
     guarded('task_create', async (input: z.infer<typeof InputSchema>) => {
       const parentRef = clearable(input.parent);
       const parent = parentRef ? await findTask(ctx, parentRef) : null;
-      const projectId = parent?.projectId ?? pickProject(await projectsOf(ctx), input.projet).id;
+      const projectId = await projectIdOf(ctx, input.projet, parent);
       const created = await createTask(
         ctx,
         {

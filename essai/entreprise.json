@@ -11,8 +11,5 @@
     { "cle": "sophie", "nom": "Sophie Garnier", "role": "Admin et finances" },
     { "cle": "nadia", "nom": "Nadia Benali", "role": "Cheffe de projet" }
   ],
-  "secrets": [
-    "sk-essai-9fKx2LmQ7vNw4RtY8pZa3BcD",
-    "MotDePasseOVH-Lebrun2026!"
-  ]
+  "secrets": ["sk-essai-9fKx2LmQ7vNw4RtY8pZa3BcD", "MotDePasseOVH-Lebrun2026!"]
 }

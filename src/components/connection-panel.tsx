@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, TriangleAlert } from 'lucide-react';
+import { ChevronDown, ExternalLink, TriangleAlert } from 'lucide-react';
 import { useId, useState } from 'react';
 import { connectAction } from '@/app/(app)/connexions/actions';
 import { ConnectionControls } from '@/components/connection-controls';
@@ -12,6 +12,7 @@ import {
   valuesOf,
 } from '@/components/connection-fields';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogContent,
@@ -22,8 +23,11 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
+  ADMIN_CONSENT_MESSAGE,
   DEFAULT_SINCE,
+  oauthStartPath,
   otherOwnersNote,
+  panelMode,
   SINCE_LABELS,
   SINCE_VALUES,
   type SinceDays,
@@ -33,6 +37,31 @@ import type { ConnectionView } from '@/server/connectors/connections';
 
 const sinceOf = (value: FormDataEntryValue | null): SinceDays =>
   SINCE_VALUES.find((candidate) => candidate === value) ?? DEFAULT_SINCE;
+
+// Le choix de la période, commun au bouton et à la clé collée.
+function SinceSelect({ idPrefix, disabled }: { idPrefix: string; disabled?: boolean }) {
+  return (
+    <div className="space-y-1">
+      <Label htmlFor={`${idPrefix}-since`}>Lire ce qui date de</Label>
+      <select
+        id={`${idPrefix}-since`}
+        name="since"
+        defaultValue={DEFAULT_SINCE}
+        disabled={disabled}
+        className={SELECT_CLASS}
+      >
+        {SINCE_VALUES.map((value) => (
+          <option key={value} value={value}>
+            {SINCE_LABELS[value]}
+          </option>
+        ))}
+      </select>
+      <p className="text-[13px] leading-[18px] text-muted-foreground">
+        Borne le premier passage, donc son coût.
+      </p>
+    </div>
+  );
+}
 
 // « Tester et brancher » : la connexion n'est enregistrée qu'après un test réussi.
 function ConnectForm({ entry }: { entry: CatalogItem }) {
@@ -62,30 +91,87 @@ function ConnectForm({ entry }: { entry: CatalogItem }) {
       {entry.fields.map((field) => (
         <FieldInput key={field.name} field={field} idPrefix={idPrefix} disabled={pending} />
       ))}
-      <div className="space-y-1">
-        <Label htmlFor={`${idPrefix}-since`}>Lire ce qui date de</Label>
-        <select
-          id={`${idPrefix}-since`}
-          name="since"
-          defaultValue={DEFAULT_SINCE}
-          disabled={pending}
-          className={SELECT_CLASS}
-        >
-          {SINCE_VALUES.map((value) => (
-            <option key={value} value={value}>
-              {SINCE_LABELS[value]}
-            </option>
-          ))}
-        </select>
-        <p className="text-[13px] leading-[18px] text-muted-foreground">
-          Borne le premier passage, donc son coût.
-        </p>
-      </div>
+      <SinceSelect idPrefix={idPrefix} disabled={pending} />
       <Button type="submit" size="sm" disabled={pending}>
         {pending ? 'Test en cours…' : 'Tester et brancher'}
       </Button>
       <FormMessage result={result} />
     </form>
+  );
+}
+
+// « Se connecter avec… » : une navigation vers l'éditeur (formulaire POST), pas une action serveur.
+// Les champs non secrets et la période partent avec ; les jetons, eux, ne passent jamais ici.
+function OAuthForm({ entry }: { entry: CatalogItem }) {
+  const idPrefix = useId();
+  const fields = entry.fields.filter((field) => entry.oauthPreFields.includes(field.name));
+  return (
+    <form method="post" action={oauthStartPath(entry.id)} className="space-y-4">
+      {entry.oauthHelp && <p className="text-sm leading-6 text-foreground-2">{entry.oauthHelp}</p>}
+      {fields.map((field) => (
+        <FieldInput key={field.name} field={field} idPrefix={idPrefix} />
+      ))}
+      <SinceSelect idPrefix={idPrefix} />
+      <Button type="submit" size="sm">
+        Se connecter avec {entry.label}
+      </Button>
+      {entry.adminConsentUrl && (
+        <p className="text-[13px] leading-[18px] text-foreground-2">
+          {ADMIN_CONSENT_MESSAGE}{' '}
+          <a
+            href={entry.adminConsentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            Lien d'accord pour l'administrateur
+            <ExternalLink size={14} strokeWidth={1.5} aria-hidden="true" />
+            <span className="sr-only"> (s'ouvre dans un nouvel onglet)</span>
+          </a>
+        </p>
+      )}
+    </form>
+  );
+}
+
+// La clé collée, en secours sous le bouton.
+function KeyFallback({ entry }: { entry: CatalogItem }) {
+  return (
+    <Collapsible className="space-y-4">
+      <CollapsibleTrigger asChild>
+        <Button type="button" variant="link" size="sm" className="h-auto p-0">
+          ou coller une clé
+          <ChevronDown
+            size={14}
+            strokeWidth={1.5}
+            aria-hidden="true"
+            className="transition-transform group-aria-expanded/button:rotate-180"
+          />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <ConnectForm entry={entry} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+// Le bouton d'abord, la clé en secours ; la clé seule quand l'appli n'est pas configurée.
+function AddConnection({ entry }: { entry: CatalogItem }) {
+  const mode = panelMode(entry);
+  if (mode === 'none') {
+    return (
+      <p className="text-sm leading-6 text-foreground-2">
+        L'appli {entry.label} n'est pas encore configurée sur ce serveur.
+      </p>
+    );
+  }
+  if (mode === 'key') return <ConnectForm entry={entry} />;
+  return (
+    <div className="space-y-4">
+      <OAuthForm entry={entry} />
+      {mode === 'oauth+key' && <KeyFallback entry={entry} />}
+    </div>
   );
 }
 
@@ -138,6 +224,7 @@ export function ConnectionPanel({
             tool={entry.label}
             secrets={secrets}
             canConnect={canConnect}
+            oauthReady={entry.oauthReady}
           />
         ))}
         {!canConnect && (
@@ -146,7 +233,7 @@ export function ConnectionPanel({
             (voir .env.example), puis redémarrez Leon.
           </p>
         )}
-        {canConnect && (connections.length === 0 || adding) && <ConnectForm entry={entry} />}
+        {canConnect && (connections.length === 0 || adding) && <AddConnection entry={entry} />}
         {canConnect && connections.length > 0 && !adding && (
           <Button variant="ghost" size="sm" className="w-fit" onClick={() => setAdding(true)}>
             Brancher une autre connexion

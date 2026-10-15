@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { ConnectorHttpError } from '../http';
+import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import type { Connector, SyncPage } from '../types';
 import { asanaClient, type Workspace } from './client';
+import { asanaOAuth } from './oauth';
 import { syncProjects } from './projects';
 
 // Doc lue le 15/10/2026 (developers.asana.com) :
@@ -42,13 +43,34 @@ import { syncProjects } from './projects';
 // que la doc le garantisse) ; sans nom, l'auteur du tour `document` reste nul, ce que le code tolère.
 // Les requêtes de ce connecteur sont confrontées à un extrait de la spec officielle, voir
 // src/test/contracts/vendor-spec.ts.
+// Le bouton « Se connecter avec Asana » (adresses, droits, jetons) est décrit dans oauth.ts. Avec lui,
+// le jeton d'accès remplace le jeton personnel dans l'en-tête, rien d'autre ne change.
 // Se vérifie à l'essai réel (T44).
 
-const ConfigSchema = z.object({
-  token: z.string().trim().min(1).max(500),
-  workspace: z.string().trim().max(200).optional(), // nom ou identifiant ; vide : le premier espace
-});
+// Deux façons de se brancher : le jeton personnel collé (`token`, forme d'origine, sans `authMode`) ou
+// le bouton (`accessToken` et ses compagnons, posés par le socle OAuth ; le bouton ne remplit pas
+// `token`). Un z.object raffiné, et non une union : le catalogue lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().trim().min(1).max(2000).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    workspace: z.string().trim().max(200).optional(), // nom ou identifiant ; vide : le premier espace
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Le jeton qui part dans l'en-tête, quelle que soit la façon de se brancher.
+function bearerToken(config: Config): string {
+  const token = config.authMode === 'oauth' ? config.accessToken : config.token;
+  if (!token) throw new ConnectorAuthError('Asana'); // le schéma l'exige déjà : ne se produit pas
+  return token;
+}
 
 function pickWorkspace(workspaces: Workspace[], wanted: string | undefined): Workspace {
   const name = wanted?.toLowerCase();
@@ -56,8 +78,9 @@ function pickWorkspace(workspaces: Workspace[], wanted: string | undefined): Wor
     ? workspaces.find((w) => w.gid === wanted || w.name.toLowerCase() === name)
     : workspaces[0];
   if (found) return found;
+  // 404 seulement si l'utilisateur a saisi l'espace : un compte sans espace n'est pas une saisie.
   throw new ConnectorHttpError(
-    null,
+    wanted ? 404 : null,
     wanted ? `Espace introuvable : ${wanted}` : 'Aucun espace Asana accessible',
   );
 }
@@ -68,15 +91,16 @@ export const asanaConnector: Connector<Config> = {
   secretFields: ['token'],
   hosts: () => ['app.asana.com'],
   minIntervalMs: 400,
+  oauth: asanaOAuth,
 
   async verify(config, http) {
-    const { name, workspaces } = await asanaClient(config.token, http).me();
+    const { name, workspaces } = await asanaClient(bearerToken(config), http).me();
     const workspace = pickWorkspace(workspaces, config.workspace);
     return { account: `${name ?? 'Compte Asana'} (${workspace.name})` };
   },
 
   async *sync(config, state, http): AsyncGenerator<SyncPage> {
-    const asana = asanaClient(config.token, http);
+    const asana = asanaClient(bearerToken(config), http);
     const { workspaces } = await asana.me();
     yield* syncProjects(asana, pickWorkspace(workspaces, config.workspace), state);
   },

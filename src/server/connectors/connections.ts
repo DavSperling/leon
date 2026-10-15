@@ -183,6 +183,41 @@ export async function replaceConnectionSecret(
   return rows.length > 0;
 }
 
+// Jetons d'une connexion OAuth (renouvellement ou « Reconnecter »). Réécrit `config` (champs ouverts :
+// authMode, expiresAt, ceux de toConfig), le secret et son indice. Avec `reconnect`, la connexion
+// repart tout de suite comme après un remplacement de clé (sauf en pause) ; sans, le statut,
+// l'échéance et la réservation ne bougent pas. Jamais par `replaceConnectionSecret`, qui ne
+// réécrit pas les champs ouverts.
+export async function saveOAuthTokens(
+  ctx: TenantContext,
+  id: string,
+  config: Record<string, unknown>,
+  secretFields: readonly string[],
+  options: { reconnect: boolean },
+): Promise<boolean> {
+  const sealed = sealSecrets(config, secretFields, aadOf(ctx.tenantId, id));
+  const restart = options.reconnect
+    ? {
+        status: unlessPaused(sql`'active'::text`, connections.status),
+        lastError: unlessPaused(sql`null::text`, connections.lastError),
+        nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
+      }
+    : {};
+  const rows = await withTenant(ctx, (tx) =>
+    tx
+      .update(connections)
+      .set({
+        ...sealed,
+        config: openConfig(config, secretFields),
+        ...restart,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(connections.id, id))
+      .returning({ id: connections.id }),
+  );
+  return rows.length > 0;
+}
+
 export async function setConnectionPaused(
   ctx: TenantContext,
   id: string,

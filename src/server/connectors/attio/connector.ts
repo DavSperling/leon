@@ -5,6 +5,7 @@ import { type AttioClient, attioClient, type Thread } from './client';
 import { advance, type Cursor, isDone, readCursor, type Stamp } from './cursor';
 import { makeDirectory } from './directory';
 import { noteItem, noteStamp, threadItem, threadStamp } from './map';
+import { attioOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://docs.attio.com/rest-api/guides/authentication (Authorization: Bearer <jeton> ; jeton
@@ -42,9 +43,33 @@ import { noteItem, noteStamp, threadItem, threadStamp } from './map';
 // l'espace (la doc ne le dit pas : un 400 ou un 404 sur la liste des fils est traité comme
 // « pas de fils ») ; l'ordre des listes ; que `note:read` et `comment:read` sont bien les noms
 // des droits dans le formulaire du jeton ; que le jeton d'espace donne accès à toutes les fiches.
+//
+// Le bouton « Se connecter avec Attio » (adresses, droits, jeton) est décrit dans oauth.ts. Avec
+// lui, le jeton d'accès remplace le jeton collé dans l'en-tête, rien d'autre ne change.
 
-const ConfigSchema = z.object({ token: z.string().trim().min(1).max(500) });
+// Deux façons de se brancher : le jeton collé (`token`, forme d'origine, sans `authMode`) ou le
+// bouton (`accessToken` et ses compagnons, posés par le socle OAuth ; le bouton ne remplit pas
+// `token`). Un z.object raffiné, et non une union : le catalogue lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().trim().min(1).max(2000).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Le jeton qui part dans l'en-tête, quelle que soit la façon de se brancher.
+function bearerToken(config: Config): string {
+  const token = config.authMode === 'oauth' ? config.accessToken : config.token;
+  if (!token) throw new ConnectorAuthError('Attio'); // le schéma l'exige déjà : ne se produit pas
+  return token;
+}
 
 const PAGE_ITEMS = 100; // éléments rendus par page, au plus
 
@@ -109,9 +134,10 @@ export const attioConnector: Connector<Config> = {
   secretFields: ['token'],
   hosts: () => ['api.attio.com'],
   minIntervalMs: 120, // 10 requêtes par seconde pour la liste des notes
+  oauth: attioOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
-    const attio = attioClient(config.token, http);
+    const attio = attioClient(bearerToken(config), http);
     const self = await attio.self();
     // Un jeton inconnu ou révoqué reçoit une réponse 200 « active: false ».
     if (!self.active) throw new ConnectorAuthError('Attio', 401);
@@ -122,6 +148,6 @@ export const attioConnector: Connector<Config> = {
   },
 
   sync(config: Config, state, http: ConnectorHttp) {
-    return sync(attioClient(config.token, http), state.since, state.cursor);
+    return sync(attioClient(bearerToken(config), http), state.since, state.cursor);
   },
 };

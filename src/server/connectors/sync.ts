@@ -14,6 +14,7 @@ import {
 import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
 import { ingestConnectorItems } from './ingest-items';
 import { normalizeItem } from './normalize';
+import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
 import type { AnyConnector } from './types';
 
@@ -78,12 +79,61 @@ async function readPages(
   let read = 0;
   for await (const page of connector.sync(config, state, http)) {
     const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
-    if (items.length > 0) await ingestConnectorItems(ctx, connection, items);
+    if (items.length > 0)
+      await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
     await saveSyncProgress(ctx, connection.id, page.cursor, items.length);
     read += page.items.length;
     if (read >= SYNC_ITEMS_MAX) return 'soon';
   }
   return 'later';
+}
+
+const isOAuth = (connection: LoadedConnection) => connection.config.authMode === 'oauth';
+
+// Avant le passage : sur une connexion OAuth, renouvelle l'accès s'il expire bientôt.
+async function withFreshTokens(
+  ctx: TenantContext,
+  connection: LoadedConnection,
+  deps: SyncDeps,
+): Promise<LoadedConnection> {
+  const connector = deps.getConnector(connection.provider);
+  if (!connector?.oauth) return connection;
+  return { ...connection, config: await ensureFreshTokens(ctx, connection, connector, deps) };
+}
+
+// Un accès refusé (401) en plein passage alors qu'on a de quoi le renouveler : un renouvellement
+// forcé, enregistré, puis le passage repart une fois, au curseur d'origine (l'ingestion ne crée
+// aucun doublon). Un second refus remonte.
+async function readWithRenewal(
+  ctx: TenantContext,
+  connection: LoadedConnection,
+  deps: SyncDeps,
+  ready: Ready,
+): Promise<'soon' | 'later'> {
+  try {
+    return await readPages(ctx, connection, deps, ready);
+  } catch (error) {
+    const { refreshToken } = connection.config;
+    const renewable =
+      isOAuth(connection) && typeof refreshToken === 'string' && refreshToken !== '';
+    // Seul un 401 dit « jeton expiré » ; un 403 est un manque de droits, qu'un nouveau jeton ne
+    // règle pas (et le renouvellement userait pour rien un jeton à usage unique).
+    if (!(error instanceof ConnectorAuthError) || error.status !== 401 || !renewable) throw error;
+  }
+  const config = await ensureFreshTokens(ctx, connection, ready.connector, {
+    ...deps,
+    force: true,
+  });
+  const renewed = prepare({ ...connection, config }, deps);
+  if ('message' in renewed) throw new ConnectorHttpError(null, renewed.message);
+  return readPages(ctx, connection, deps, renewed);
+}
+
+function authMessage(connection: LoadedConnection, error: ConnectorAuthError | OAuthRefusedError) {
+  const label = PROVIDER_LABELS[connection.provider];
+  if (error instanceof OAuthRefusedError) return `Reconnectez ${label} : l'autorisation a expiré.`;
+  if (isOAuth(connection)) return `Reconnectez ${label} : l'autorisation a été retirée.`;
+  return `Clé refusée par ${label} : vérifiez-la ou remplacez-la.`;
 }
 
 // Le message de `last_error` est écrit par nous : celui d'une ConnectorHttpError, ou le résumé
@@ -97,9 +147,8 @@ async function recordFailure(
     connectionId: connection.id,
     provider: connection.provider,
   });
-  if (error instanceof ConnectorAuthError) {
-    const label = PROVIDER_LABELS[connection.provider];
-    const message = `Clé refusée par ${label} : vérifiez-la ou remplacez-la.`;
+  if (error instanceof ConnectorAuthError || error instanceof OAuthRefusedError) {
+    const message = authMessage(connection, error);
     await finishSync(ctx, connection.id, { kind: 'auth_error', message });
     return 'auth_error';
   }
@@ -118,16 +167,22 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
     await finishSync(ctx, job.connectionId, { kind: 'error', message: UNREADABLE_KEY });
     return 'error';
   }
-  const ready = prepare(connection, deps);
+  let fresh: LoadedConnection;
+  try {
+    fresh = await withFreshTokens(ctx, connection, deps);
+  } catch (error) {
+    return recordFailure(ctx, connection, error);
+  }
+  const ready = prepare(fresh, deps);
   if ('message' in ready) {
     await finishSync(ctx, connection.id, { kind: 'error', message: ready.message });
     return 'error';
   }
   let again: 'soon' | 'later';
   try {
-    again = await readPages(ctx, connection, deps, ready);
+    again = await readWithRenewal(ctx, fresh, deps, ready);
   } catch (error) {
-    return recordFailure(ctx, connection, error);
+    return recordFailure(ctx, fresh, error);
   }
   await finishSync(ctx, connection.id, { kind: 'ok', again });
   return 'ok';

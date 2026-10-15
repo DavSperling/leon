@@ -1,22 +1,34 @@
+import { randomBytes } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
+import { helpscoutCatalog } from './catalog';
 import { helpscoutConnector } from './connector';
 import empty from './fixtures/conversations-empty.json';
 import page1 from './fixtures/conversations-page1.json';
 import page2 from './fixtures/conversations-page2.json';
 import me from './fixtures/me.json';
 import token from './fixtures/token.json';
+import { helpscoutOAuth } from './oauth';
 
 const APP_ID = 'identifiant-appli-test-01';
 const APP_SECRET = 'secret-appli-test-0123456789';
 const ACCESS_TOKEN = token.access_token;
 type TestConfig = Parameters<typeof helpscoutConnector.hosts>[0];
-const config: TestConfig = { appId: APP_ID, appSecret: APP_SECRET };
+const config: TestConfig = { authMode: 'key', appId: APP_ID, appSecret: APP_SECRET };
+// Le bouton : des jetons générés à l'exécution (aucun secret, même d'exemple, dans le dépôt).
+const OAUTH_ACCESS = `acces-${randomBytes(12).toString('hex')}`;
+const OAUTH_CONFIG = {
+  authMode: 'oauth',
+  accessToken: OAUTH_ACCESS,
+  refreshToken: `rafraichir-${randomBytes(12).toString('hex')}`,
+  expiresAt: '2026-10-17T12:00:00.000Z',
+};
 const NOW = new Date('2026-10-15T12:00:00Z');
 const SINCE = new Date('2026-09-15T12:00:00Z');
 
@@ -31,10 +43,12 @@ const firstPassRoutes = (): FakeRoute[] => [tokenRoute, listRoute(page1), listRo
 async function runSync(
   routes: FakeRoute[],
   overrides: { cursor?: string | null; since?: Date } = {},
+  stored: Record<string, unknown> = config,
 ) {
-  const { http, calls } = testHttp(helpscoutConnector, config, routes);
+  const { http, calls } = testHttp(helpscoutConnector, stored, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(helpscoutConnector.sync(config, state, http));
+  const parsed = helpscoutConnector.configSchema.parse(stored);
+  const pages = await collect(helpscoutConnector.sync(parsed, state, http));
   return { pages, calls };
 }
 
@@ -61,8 +75,34 @@ afterEach(() => {
 describe('helpscout : configuration', () => {
   const schema = helpscoutConnector.configSchema;
 
-  it('accepte un identifiant et un secret d’appli, nettoyés', () => {
+  it('accepte un identifiant et un secret d’appli, nettoyés, et prend une connexion sans authMode pour une clé', () => {
     expect(schema.parse({ appId: `  ${APP_ID} `, appSecret: ` ${APP_SECRET}  ` })).toEqual(config);
+  });
+
+  it('accepte la forme du bouton, avec ou sans jeton de rafraîchissement', () => {
+    expect(schema.parse(OAUTH_CONFIG)).toEqual(OAUTH_CONFIG);
+    const noRefresh = { ...OAUTH_CONFIG, refreshToken: null, expiresAt: null };
+    expect(schema.parse(noRefresh)).toEqual(noRefresh);
+  });
+
+  it('refuse une forme incomplète : jeton d’accès manquant ou vide, clé absente, mode inconnu', () => {
+    expect(schema.safeParse({ authMode: 'oauth' }).success).toBe(false);
+    expect(schema.safeParse({ ...OAUTH_CONFIG, accessToken: '' }).success).toBe(false);
+    expect(schema.safeParse({ authMode: 'key', accessToken: OAUTH_ACCESS }).success).toBe(false);
+    expect(schema.safeParse({ accessToken: OAUTH_ACCESS }).success).toBe(false);
+    expect(schema.safeParse({ ...config, authMode: 'inconnu' }).success).toBe(false);
+  });
+
+  it('garde un schéma d’objet que le catalogue sait lire (.shape)', () => {
+    const shape = (schema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual([
+      'accessToken',
+      'appId',
+      'appSecret',
+      'authMode',
+      'expiresAt',
+      'refreshToken',
+    ]);
   });
 
   it('refuse une configuration incomplète ou vide', () => {
@@ -74,7 +114,16 @@ describe('helpscout : configuration', () => {
 
   it('fixe l’hôte de l’API et le champ à chiffrer', () => {
     expect(helpscoutConnector.hosts(config)).toEqual(['api.helpscout.net']);
+    // Les jetons du bouton rejoignent les secrets par le socle : ils ne figurent pas ici.
     expect(helpscoutConnector.secretFields).toEqual(['appSecret']);
+  });
+
+  it('déclare la description du bouton, et le catalogue dit ce que l’on verra chez Help Scout', () => {
+    expect(helpscoutConnector.oauth).toBe(helpscoutOAuth);
+    expect(helpscoutCatalog.oauthHelp?.trim()).toBeTruthy();
+    // L'identifiant et le secret d'appli restent acceptés, avec leur aide.
+    expect(helpscoutCatalog.keyAccepted).not.toBe(false);
+    expect(helpscoutCatalog.keyHelp).toMatch(/My apps/);
   });
 
   it('est disponible dans le registre et le catalogue', () => {
@@ -156,6 +205,70 @@ describe('helpscout : verify', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe('Réponse inattendue');
+  });
+});
+
+describe('helpscout : connexion par le bouton', () => {
+  const oauthConfig = () => helpscoutConnector.configSchema.parse(OAUTH_CONFIG);
+
+  it('verify lit l’utilisateur avec le jeton du bouton, sans demander de jeton à Help Scout', async () => {
+    const { http, calls } = testHttp(helpscoutConnector, OAUTH_CONFIG, [
+      { url: `${API}/users/me`, json: me },
+    ]);
+
+    await expect(helpscoutConnector.verify(oauthConfig(), http)).resolves.toEqual({
+      account: 'Marie Durand (marie@acme.test)',
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe(`${API}/users/me`);
+    expect(calls[0]?.headers.authorization).toBe(`Bearer ${OAUTH_ACCESS}`);
+  });
+
+  it('sync envoie le jeton du bouton avec « Bearer » à chaque page, sans demander de jeton', async () => {
+    const { pages, calls } = await runSync([listRoute(page1), listRoute(page2)], {}, OAUTH_CONFIG);
+
+    expect(idsOf(pages)).toEqual(['conversation:4001', 'conversation:4002', 'conversation:4003']);
+    expect(calls.filter((call) => call.url === TOKEN_URL)).toHaveLength(0);
+    expect(listCalls(calls)).toHaveLength(2);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_ACCESS}`);
+  });
+
+  it('garde l’identifiant et le secret d’appli : un jeton est encore demandé pour une connexion à clé', async () => {
+    const stored = { appId: APP_ID, appSecret: APP_SECRET };
+    const { http, calls } = testHttp(helpscoutConnector, stored, [
+      tokenRoute,
+      { url: `${API}/users/me`, json: me },
+    ]);
+
+    await helpscoutConnector.verify(helpscoutConnector.configSchema.parse(stored), http);
+
+    expect(calls[0]).toMatchObject({ method: 'POST', url: TOKEN_URL });
+    expect(calls[1]?.headers.authorization).toBe(`Bearer ${ACCESS_TOKEN}`);
+  });
+
+  it.each([401, 403])(
+    'rend un jeton refusé (%s) comme une clé refusée : le socle renouvelle sur le 401',
+    async (status) => {
+      const { http } = testHttp(helpscoutConnector, OAUTH_CONFIG, [
+        { url: `${API}/users/me`, status, json: {} },
+      ]);
+
+      const error = await helpscoutConnector.verify(oauthConfig(), http).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ConnectorAuthError);
+      expect((error as ConnectorAuthError).status).toBe(status);
+    },
+  );
+
+  it('un 401 au milieu d’un passage remonte comme une erreur de clé, au curseur d’origine', async () => {
+    await expect(
+      runSync(
+        [{ url: LIST_URL, status: 401, json: { message: 'Unauthorized' } }],
+        {},
+        OAUTH_CONFIG,
+      ),
+    ).rejects.toMatchObject({ name: 'ConnectorAuthError', status: 401 });
   });
 });
 

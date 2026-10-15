@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
@@ -7,8 +7,11 @@ import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { fakeConnector } from '@/test/fake-connector';
 import { collect, fakeFetch } from '@/test/fake-fetch';
+import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
-import type { ConnectorHttp } from './http';
+import { createConnection, listConnections } from './connections';
+import { ConnectorAuthError, type ConnectorHttp } from './http';
+import { OAUTH_SECRET_FIELDS } from './oauth';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
 import type { AnyConnector, ConnectorItem, SyncPage } from './types';
 
@@ -350,3 +353,153 @@ async function oneItem(): Promise<ConnectorItem> {
   const [page] = await collect(connector.sync({ token: 'x' }, state, undefined as never));
   return page?.items[0] as ConnectorItem;
 }
+
+describe('runConnectorSync : une connexion OAuth', () => {
+  const TOKEN_URL = 'https://github.test/login/oauth/access_token';
+  const inMinutes = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
+  const tokenRoute = (json: unknown, status = 200) => ({
+    method: 'POST' as const,
+    url: TOKEN_URL,
+    status,
+    json,
+  });
+
+  beforeEach(() => {
+    vi.stubEnv('LEON_OAUTH_GITHUB_ID', 'id-appli');
+    vi.stubEnv('LEON_OAUTH_GITHUB_SECRET', 'secret-appli-xyz');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  async function oauthConnection(extra: Record<string, unknown> = {}): Promise<string> {
+    const id = await createConnection(paul, {
+      provider: 'github',
+      label: 'Connexion OAuth',
+      config: {
+        authMode: 'oauth',
+        accessToken: 'acces-ancien-0001',
+        refreshToken: 'rafraichir-ancien',
+        expiresAt: inMinutes(60),
+        repos: ['acme/leon'],
+        ...extra,
+      },
+      secretFields: [...OAUTH_SECRET_FIELDS, 'token'],
+      since: new Date(Date.now() - 30 * 24 * 3_600_000),
+    });
+    await makeDue(id);
+    return id;
+  }
+
+  const storedConfig = async (id: string) =>
+    (await listConnections(paul)).find((view) => view.id === id)?.config;
+  const hintOf = async (id: string) =>
+    (await listConnections(paul)).find((view) => view.id === id)?.secretHint;
+
+  // Un connecteur dont le premier accès est refusé (401 par défaut) et le second accepté.
+  const refusesOldAccess = (acceptsNew: boolean, status = 401): AnyConnector => ({
+    ...fakeOAuthConnector(),
+    async *sync(config): AsyncGenerator<SyncPage> {
+      if (config.accessToken === 'acces-ancien-0001' || !acceptsNew) {
+        throw new ConnectorAuthError('GitHub', status);
+      }
+      yield { items: [], cursor: 'apres-renouvellement' };
+    },
+  });
+
+  it('renouvelle un accès qui expire bientôt, enregistre les nouveaux jetons, et ne renouvelle plus ensuite', async () => {
+    const id = await oauthConnection({ expiresAt: inMinutes(2) });
+    const fetchImpl = fakeFetch([
+      tokenRoute({
+        access_token: 'acces-nouveau-0002',
+        refresh_token: 'rafraichir-2',
+        expires_in: 3600,
+      }),
+    ]);
+
+    expect(await run(id, fakeOAuthConnector(), { fetchImpl })).toBe('ok');
+
+    expect(fetchImpl.calls).toHaveLength(1);
+    const config = await storedConfig(id);
+    expect(Date.parse(String(config?.expiresAt))).toBeGreaterThan(Date.now() + 50 * 60_000);
+    expect(config).not.toHaveProperty('accessToken');
+    expect(await hintOf(id)).toBe('0002');
+
+    await makeDue(id);
+    const idle = fakeFetch([]);
+    expect(await run(id, fakeOAuthConnector(), { fetchImpl: idle })).toBe('ok');
+    expect(idle.calls).toHaveLength(0);
+  });
+
+  it('met la connexion en erreur sans échéance quand le renouvellement est refusé', async () => {
+    const id = await oauthConnection({ expiresAt: inMinutes(1) });
+    const fetchImpl = fakeFetch([tokenRoute({ error: 'invalid_grant' }, 400)]);
+
+    expect(await run(id, fakeOAuthConnector(), { fetchImpl })).toBe('auth_error');
+
+    expect(await readRow(id)).toMatchObject({
+      status: 'error',
+      next_sync_at: null,
+      sync_lock_at: null,
+      last_error: "Reconnectez GitHub : l'autorisation a expiré.",
+    });
+  });
+
+  it('renouvelle de force après un 401 en plein passage, puis relance le passage avec les nouveaux jetons', async () => {
+    const id = await oauthConnection();
+    const fetchImpl = fakeFetch([
+      tokenRoute({
+        access_token: 'acces-nouveau-0002',
+        refresh_token: 'rafraichir-2',
+        expires_in: 3600,
+      }),
+    ]);
+
+    expect(await run(id, refusesOldAccess(true), { fetchImpl })).toBe('ok');
+
+    expect(fetchImpl.calls).toHaveLength(1);
+    expect(await hintOf(id)).toBe('0002');
+    expect(await readRow(id)).toMatchObject({ status: 'active', cursor: 'apres-renouvellement' });
+  });
+
+  it('dit que l’autorisation a été retirée après deux refus de suite', async () => {
+    const id = await oauthConnection();
+    const fetchImpl = fakeFetch([
+      tokenRoute({
+        access_token: 'acces-nouveau-0002',
+        refresh_token: 'rafraichir-2',
+        expires_in: 3600,
+      }),
+    ]);
+
+    expect(await run(id, refusesOldAccess(false), { fetchImpl })).toBe('auth_error');
+
+    expect(await readRow(id)).toMatchObject({
+      status: 'error',
+      next_sync_at: null,
+      last_error: "Reconnectez GitHub : l'autorisation a été retirée.",
+    });
+  });
+
+  it('ne renouvelle pas sur un 403 (droits insuffisants) : aucun appel à l’éditeur, autorisation dite retirée', async () => {
+    const id = await oauthConnection();
+    const fetchImpl = fakeFetch([]);
+
+    expect(await run(id, refusesOldAccess(true, 403), { fetchImpl })).toBe('auth_error');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect((await readRow(id)).last_error).toBe(
+      "Reconnectez GitHub : l'autorisation a été retirée.",
+    );
+  });
+
+  it('dit que l’autorisation a été retirée, sans renouveler, quand il n’y a pas de jeton de rafraîchissement', async () => {
+    const id = await oauthConnection({ refreshToken: null });
+    const fetchImpl = fakeFetch([]);
+
+    expect(await run(id, refusesOldAccess(true), { fetchImpl })).toBe('auth_error');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect((await readRow(id)).last_error).toBe(
+      "Reconnectez GitHub : l'autorisation a été retirée.",
+    );
+  });
+});

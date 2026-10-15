@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
+import type { z } from 'zod';
+import { collect, type FakeRoute, fakeFetch, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
-import { ConnectorAuthError, ConnectorHttpError } from '../http';
+import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from '../http';
 import { normalizeItem } from '../normalize';
+import { authorizeUrl, exchangeCode, redirectUri, tokenHttp } from '../oauth';
+import type { OAuthPending } from '../oauth-cookie';
 import { getConnector } from '../registry';
-import type { ConnectorItem, SyncPage } from '../types';
+import type { ConnectorItem, OAuthTokens, SyncPage } from '../types';
 import { clickupConnector } from './connector';
 import comments86b1abc from './fixtures/comments-86b1abc.json';
 import comments86b1abd from './fixtures/comments-86b1abd.json';
@@ -13,10 +16,18 @@ import tasksPage1 from './fixtures/tasks-page1.json';
 import tasksPage2 from './fixtures/tasks-page2.json';
 import teams from './fixtures/teams.json';
 import user from './fixtures/user.json';
+import { clickupOAuth } from './oauth';
 
 const API = 'https://api.clickup.com/api/v2';
 const TOKEN = 'pk_1234567_JETONDETEST0123456789';
-const config = { token: TOKEN };
+const OAUTH_TOKEN = 'JETONOAUTHDETEST0123456789';
+const config = { authMode: 'key' as const, token: TOKEN };
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: OAUTH_TOKEN,
+  refreshToken: null,
+  expiresAt: null,
+};
 const SINCE = new Date('2026-09-15T00:00:00Z'); // 1789430400000
 const BASE = 1_790_000_000_000;
 
@@ -50,11 +61,16 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: typeof config | typeof oauthConfig;
+  } = {},
 ) {
-  const { http, calls } = testHttp(clickupConnector, config, routes);
+  const used = overrides.config ?? config;
+  const { http, calls } = testHttp(clickupConnector, used, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(clickupConnector.sync(config, state, http));
+  const pages = await collect(clickupConnector.sync(used, state, http));
   return { pages, calls };
 }
 
@@ -96,8 +112,8 @@ function commentRows(count: number, newest: number) {
 describe('clickup : configuration', () => {
   const schema = clickupConnector.configSchema;
 
-  it('accepte un jeton personnel, sans les espaces autour', () => {
-    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ token: TOKEN });
+  it('accepte un jeton personnel, sans les espaces autour, et le prend pour une clé', () => {
+    expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
   });
 
   it('refuse une configuration incomplète', () => {
@@ -523,5 +539,173 @@ describe('clickup : commentaires', () => {
     const url = new URL(calls[2]?.url ?? '');
     expect(url.pathname).toBe('/api/v2/task/a%2F..%2Fb%3Fx%3D1/comment');
     expect(url.search).toBe('');
+  });
+});
+
+describe('clickup : configuration du bouton', () => {
+  const schema = clickupConnector.configSchema;
+
+  it('accepte la forme OAuth, jetons compris', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    const renewed = { ...oauthConfig, expiresAt: '2026-10-16T10:00:00.000Z', refreshToken: 'r' };
+    expect(schema.parse(renewed)).toEqual(renewed);
+  });
+
+  it('refuse une forme OAuth sans jeton d’accès, et une clé sans jeton, en nommant le champ', () => {
+    const oauthIssues = schema.safeParse({ authMode: 'oauth' });
+    const keyIssues = schema.safeParse({ authMode: 'key', accessToken: OAUTH_TOKEN });
+    expect(oauthIssues.error?.issues.map((issue) => issue.path)).toEqual([['accessToken']]);
+    expect(keyIssues.error?.issues.map((issue) => issue.path)).toEqual([['token']]);
+    // Une clé collée ne vaut pas pour une connexion OAuth, ni l'inverse.
+    expect(schema.safeParse({ authMode: 'oauth', token: TOKEN }).success).toBe(false);
+    expect(schema.safeParse({ accessToken: OAUTH_TOKEN }).success).toBe(false);
+  });
+
+  it('reste un objet à champs lisibles, et ne met aucun jeton OAuth dans les champs à chiffrer', () => {
+    const shape = (schema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual(
+      ['accessToken', 'authMode', 'expiresAt', 'refreshToken', 'token'].sort(),
+    );
+    expect(clickupConnector.secretFields).toEqual(['token']);
+  });
+
+  it('garde les hôtes de l’API pour les deux formes', () => {
+    expect(clickupConnector.hosts(config)).toEqual(['api.clickup.com']);
+    expect(clickupConnector.hosts(oauthConfig)).toEqual(['api.clickup.com']);
+  });
+});
+
+describe('clickup : description du bouton (doc lue le 15/10/2026)', () => {
+  const pending: OAuthPending = {
+    provider: 'clickup',
+    userId: 'u',
+    tenantId: 't',
+    state: 'etat-1',
+    verifier: null,
+    since: '30',
+    preFields: {},
+    reconnectId: null,
+    createdAt: 0,
+  };
+  const client = { id: 'id-appli', secret: 'secret-appli-xyz' };
+
+  it('est portée par le connecteur', () => {
+    expect(clickupConnector.oauth).toBe(clickupOAuth);
+  });
+
+  it('reprend les adresses de la doc, sans droit, sans PKCE, identifiants en JSON', () => {
+    expect(clickupOAuth).toMatchObject({
+      appKey: 'CLICKUP',
+      authorizeUrl: 'https://app.clickup.com/api',
+      tokenUrl: 'https://api.clickup.com/api/v2/oauth/token',
+      scopes: [],
+      pkce: false,
+      clientAuth: 'body',
+      tokenBody: 'json',
+      preFields: [],
+      setupHosts: [],
+    });
+    expect(clickupOAuth.extraAuthorizeParams).toBeUndefined();
+    expect(clickupOAuth.extraTokenParams).toBeUndefined();
+  });
+
+  it('envoie vers ClickUp avec l’identifiant de l’appli, l’adresse de retour et le state, sans scope', () => {
+    const url = new URL(authorizeUrl(clickupOAuth, client, pending));
+
+    expect(`${url.origin}${url.pathname}`).toBe('https://app.clickup.com/api');
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      client_id: client.id,
+      redirect_uri: redirectUri(clickupOAuth),
+      state: 'etat-1',
+    });
+    expect(redirectUri(clickupOAuth)).toMatch(/\/api\/v1\/connexions\/oauth\/clickup\/retour$/);
+    expect(url.searchParams.has('scope')).toBe(false);
+    expect(url.searchParams.has('code_challenge')).toBe(false);
+  });
+
+  it('échange le code en JSON, avec l’identifiant et le secret dans le corps, sans Basic', async () => {
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: 'https://api.clickup.com/api/v2/oauth/token',
+        json: { access_token: OAUTH_TOKEN },
+      },
+    ]);
+    const http = tokenHttp(clickupOAuth, 'clickup', fetchImpl);
+
+    const tokens = await exchangeCode(clickupOAuth, client, 'code-1', null, http);
+
+    const [call] = fetchImpl.calls;
+    expect(call?.headers['content-type']).toMatch(/^application\/json/);
+    expect(call?.headers.authorization).toBeUndefined();
+    expect(call?.body).toMatchObject({
+      client_id: client.id,
+      client_secret: client.secret,
+      code: 'code-1',
+    });
+    // Le jeton ne porte ni expiration ni jeton de rafraîchissement : jamais renouvelé.
+    expect(tokens).toMatchObject({ accessToken: OAUTH_TOKEN, refreshToken: null, expiresAt: null });
+  });
+
+  it('ne garde de la réponse que le jeton : aucun champ propre à l’outil', async () => {
+    const tokens: OAuthTokens = {
+      accessToken: OAUTH_TOKEN,
+      refreshToken: null,
+      expiresAt: null,
+      scope: null,
+      raw: {},
+    };
+    // setupHosts est vide : le client ne laisserait passer aucun appel.
+    const fetchImpl = fakeFetch([]);
+    const http = createConnectorHttp({ provider: 'clickup', hosts: [], fetchImpl });
+
+    expect(await clickupOAuth.toConfig(tokens, {}, http)).toEqual({});
+    expect(fetchImpl.calls).toEqual([]);
+  });
+
+  it('est annoncée dans le catalogue, avec ce que l’utilisateur verra chez ClickUp', () => {
+    const entry = listCatalog().find((item) => item.id === 'clickup');
+    expect(entry?.oauthHelp).toMatch(/espaces/);
+    // Pas de droit en lecture seule chez ClickUp : le dire.
+    expect(entry?.oauthHelp).toMatch(/lecture/);
+    expect(entry?.keyAccepted ?? true).toBe(true);
+    expect(entry?.keyHelp).toMatch(/API Token/);
+  });
+});
+
+describe('clickup : jeton OAuth', () => {
+  it('verify l’envoie avec « Bearer » à chaque requête', async () => {
+    const { http, calls } = testHttp(clickupConnector, oauthConfig, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/team`, json: teams },
+    ]);
+
+    const result = await clickupConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+  });
+
+  it('refuse un accès retiré (401)', async () => {
+    const { http } = testHttp(clickupConnector, oauthConfig, [{ url: `${API}/user`, status: 401 }]);
+
+    await expect(clickupConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('sync l’envoie avec « Bearer » sur les espaces, les tâches et les commentaires', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(), { config: oauthConfig });
+
+    expect(calls).toHaveLength(7);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
+    expect(idsOf(pages)).toEqual(['task:86b1abd', 'task:86b1abf', 'task:86b1abc']);
+  });
+
+  it('laisse la clé collée sans « Bearer »', async () => {
+    const { calls } = await runSync(firstPassRoutes());
+
+    for (const call of calls) expect(call.headers.authorization).toBe(TOKEN);
   });
 });

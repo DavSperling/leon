@@ -13,6 +13,9 @@ export async function startNodeInstrumentation() {
   } else {
     console.warn('[leon] LEON_CONNECTORS_KEY absente : les connecteurs ne tournent pas.');
   }
+  // Une paire d'appli OAuth à moitié remplie désactive le bouton sans rien dire : on le dit.
+  const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
+  warnIncompleteOAuthPairs();
   if (!env.ANTHROPIC_API_KEY) {
     console.warn('[leon] ANTHROPIC_API_KEY absente : le pipeline ne tourne pas.');
     return;

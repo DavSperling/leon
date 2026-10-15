@@ -1,0 +1,73 @@
+{
+  "data": [
+    {
+      "id": "3a1f0c52-7d0e-4b8a-9c11-0d6e5f4a3b21",
+      "type": "textNote",
+      "createdAt": "2026-10-12T09:00:00Z",
+      "updatedAt": "2026-10-14T16:30:00Z",
+      "fields": {
+        "name": "Export CSV des rapports",
+        "tags": [{ "name": "export" }, { "name": "reporting" }],
+        "content": "<p>Les clients de <strong>Dupont SA</strong> demandent l&#39;export CSV des rapports.</p><ul><li>Format UTF-8</li><li>Colonnes configurables</li></ul>",
+        "owner": { "id": "e23e4567-e89b-12d3-a456-426614174013", "email": "[redacted]" },
+        "creator": { "id": "e23e4567-e89b-12d3-a456-426614174014", "email": "[redacted]" },
+        "processed": true,
+        "archived": false
+      },
+      "relationships": [
+        {
+          "type": "customer",
+          "target": {
+            "id": "923e4567-e89b-12d3-a456-426614174008",
+            "type": "company",
+            "links": {
+              "self": "https://api.productboard.com/v2/companies/923e4567-e89b-12d3-a456-426614174008"
+            }
+          }
+        }
+      ],
+      "links": {
+        "self": "https://api.productboard.com/v2/notes/3a1f0c52-7d0e-4b8a-9c11-0d6e5f4a3b21",
+        "html": "https://acme.productboard.com/all-notes/notes/42"
+      }
+    },
+    {
+      "id": "7b2e9d14-3c5a-4f60-8a17-1e9c4b7d2a30",
+      "type": "conversationNote",
+      "fields": {
+        "name": "Ticket 4512 : l'export plante",
+        "content": [
+          {
+            "externalId": "msg-1",
+            "authorName": "Léa Martin",
+            "authorType": "customer",
+            "content": "Bonjour, l'export des rapports plante depuis lundi.",
+            "timestamp": "2026-10-10T08:00:00Z"
+          },
+          {
+            "externalId": "msg-2",
+            "authorName": "Marie Durand",
+            "authorType": "agent",
+            "content": "Nous regardons cela, merci du signalement.",
+            "timestamp": "2026-10-10T09:15:00Z"
+          }
+        ],
+        "tags": [{ "name": "support" }],
+        "owner": { "id": "e23e4567-e89b-12d3-a456-426614174013", "email": "[redacted]" },
+        "creator": { "id": "e23e4567-e89b-12d3-a456-426614174014", "email": "[redacted]" },
+        "processed": false,
+        "archived": false,
+        "createdAt": "2026-10-10T08:05:00Z",
+        "updatedAt": "2026-10-10T09:20:00Z"
+      },
+      "relationships": [],
+      "links": {
+        "self": "https://api.productboard.com/v2/notes/7b2e9d14-3c5a-4f60-8a17-1e9c4b7d2a30",
+        "html": "https://acme.productboard.com/all-notes/notes/41"
+      }
+    }
+  ],
+  "links": {
+    "next": "https://api.productboard.com/v2/notes?updatedFrom=2026-09-15T00%3A00%3A00.000Z&pageCursor=curseur-page-2"
+  }
+}

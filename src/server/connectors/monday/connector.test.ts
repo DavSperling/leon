@@ -28,7 +28,16 @@ import me from './fixtures/me.json';
 
 // Un jeton généré à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const TOKEN = `eyJ${randomBytes(18).toString('hex')}`;
-const CONFIG = { token: TOKEN };
+const CONFIG = { authMode: 'key' as const, token: TOKEN };
+// Le bouton : le jeton d'accès remplace la clé collée (le socle OAuth tient aussi le jeton de
+// rafraîchissement et l'échéance).
+const ACCESS = `eyJ${randomBytes(18).toString('hex')}`;
+const OAUTH_CONFIG = {
+  authMode: 'oauth' as const,
+  accessToken: ACCESS,
+  refreshToken: `eyJ${randomBytes(18).toString('hex')}`,
+  expiresAt: null,
+};
 const SINCE = new Date('2026-10-01T00:00:00.000Z');
 const NOW = '2026-10-15T10:00:00.000Z';
 const END_FROM = '2026-10-15T09:55:00.000Z'; // le début du passage, moins 5 minutes de marge
@@ -94,7 +103,42 @@ describe('mondayConnector : configuration', () => {
   });
 
   it('nettoie les espaces autour du jeton', () => {
-    expect(mondayConnector.configSchema.parse({ token: ` ${TOKEN}\n` })).toEqual(CONFIG);
+    expect(mondayConnector.configSchema.parse({ token: ` ${TOKEN}\n` })).toEqual({
+      authMode: 'key',
+      token: TOKEN,
+    });
+  });
+
+  it('accepte la forme du bouton, et l’ancienne forme à clé qui n’a pas de mode', () => {
+    expect(mondayConnector.configSchema.parse(OAUTH_CONFIG)).toEqual(OAUTH_CONFIG);
+    expect(mondayConnector.configSchema.parse({ authMode: 'key', token: TOKEN })).toEqual({
+      authMode: 'key',
+      token: TOKEN,
+    });
+    expect(mondayConnector.configSchema.parse({ token: TOKEN }).authMode).toBe('key');
+  });
+
+  it('refuse une forme incomplète, en nommant le champ manquant', () => {
+    const missing = (input: unknown) => {
+      const result = mondayConnector.configSchema.safeParse(input);
+      if (result.success) return null;
+      return [...new Set(result.error.issues.map((issue) => issue.path.join('.')))];
+    };
+
+    expect(missing({ authMode: 'oauth' })).toEqual(['accessToken']);
+    expect(missing({ authMode: 'oauth', accessToken: '' })).toEqual(['accessToken']);
+    // Une clé collée ne suffit pas à une connexion par bouton, ni l'inverse.
+    expect(missing({ authMode: 'oauth', token: TOKEN })).toEqual(['accessToken']);
+    expect(missing({ authMode: 'key', accessToken: ACCESS })).toEqual(['token']);
+    expect(missing({ authMode: 'inconnu', token: TOKEN })).not.toBeNull();
+  });
+
+  it('reste un z.object que le catalogue peut lire (.shape)', () => {
+    const shape = (mondayConnector.configSchema as unknown as { shape: Record<string, unknown> })
+      .shape;
+    expect(Object.keys(shape)).toEqual(
+      expect.arrayContaining(['authMode', 'token', 'accessToken', 'refreshToken', 'expiresAt']),
+    );
   });
 
   it('déclare un hôte exact et le jeton comme secret', () => {
@@ -118,6 +162,18 @@ describe('mondayConnector : verify', () => {
     expect(calls[0]?.headers.authorization).toBe(TOKEN); // sans « Bearer »
     expect(calls[0]?.headers['api-version']).toBe('2026-07');
     expect(bodyOf(calls[0]).query).toMatch(/\bme\b/);
+  });
+
+  it('envoie le jeton d’accès du bouton tel quel, comme la clé : sans « Bearer »', async () => {
+    const { http, calls } = testHttp(mondayConnector, OAUTH_CONFIG, [api({ json: me })]);
+
+    await expect(mondayConnector.verify(OAUTH_CONFIG, http)).resolves.toEqual({
+      account: 'Marie Durand (Acme)',
+    });
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.headers.authorization).toBe(ACCESS);
+    expect(calls[0]?.headers['api-version']).toBe('2026-07');
   });
 
   it('lève ConnectorAuthError sur un 401', async () => {
@@ -157,6 +213,28 @@ describe('mondayConnector : premier passage', () => {
       undefined,
       ['3333333333'],
     ]);
+  });
+
+  it('lit les tableaux avec le jeton d’accès du bouton, sans « Bearer »', async () => {
+    const { http, calls } = testHttp(mondayConnector, OAUTH_CONFIG, twoBoards());
+
+    await collect(mondayConnector.sync(OAUTH_CONFIG, { cursor: null, since: SINCE }, http));
+
+    expect(calls.length).toBeGreaterThan(1);
+    expect(calls.map((call) => call.headers.authorization)).toEqual(calls.map(() => ACCESS));
+  });
+
+  it('un jeton d’accès refusé au milieu du passage remonte comme une clé refusée (le socle renouvelle)', async () => {
+    const { http } = testHttp(mondayConnector, OAUTH_CONFIG, [
+      api({ json: boards }),
+      api({ status: 401, json: {} }),
+    ]);
+
+    const run = collect(mondayConnector.sync(OAUTH_CONFIG, { cursor: null, since: SINCE }, http));
+
+    const error = await run.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ConnectorAuthError);
+    expect((error as ConnectorAuthError).status).toBe(401);
   });
 
   it('trie les éléments du plus récemment modifié au plus ancien, 25 par page', async () => {

@@ -1,0 +1,12 @@
+{
+  "access_token": "acces-exemple-notion-2",
+  "token_type": "bearer",
+  "refresh_token": "rafraichir-exemple-notion-2",
+  "bot_id": "d4a17c93-6e2b-4085-9f31-0b8e5c2a7d33",
+  "workspace_id": "1f2e3d4c-5b6a-4980-9234-56789abcdef0",
+  "workspace_name": "Acme",
+  "workspace_icon": null,
+  "owner": { "type": "workspace", "workspace": true },
+  "duplicated_template_id": null,
+  "request_id": "b2e4d6f8-1a3c-4e5b-9d7f-0a1b2c3d4e5f"
+}

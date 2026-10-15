@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
@@ -23,7 +24,27 @@ import usersBulk from './fixtures/users-bulk.json';
 const SITE = 'https://acme.atlassian.net';
 const V2 = `${SITE}/wiki/api/v2`;
 const TOKEN = 'jeton-de-test-0123456789';
-const config = { site: 'acme', email: 'marie@acme.test', apiToken: TOKEN };
+// `authMode` : celui que le schéma donne à une connexion enregistrée avant le bouton.
+const config = {
+  authMode: 'key' as const,
+  site: 'acme',
+  email: 'marie@acme.test',
+  apiToken: TOKEN,
+};
+// Le bouton : les appels passent par api.atlassian.com, avec le jeton OAuth.
+const CLOUD_ID = '1324a887-45db-1bf4-1e99-ef0ff456d421';
+const GATEWAY = `https://api.atlassian.com/ex/confluence/${CLOUD_ID}`;
+const GATEWAY_V2 = `${GATEWAY}/wiki/api/v2`;
+const ACCESS = 'acces-oauth-0123456789';
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  site: 'acme',
+  cloudId: CLOUD_ID,
+  accessToken: ACCESS,
+  refreshToken: 'renouvellement-0123',
+  expiresAt: '2026-10-15T11:00:00.000Z',
+  otherSites: 1,
+};
 const BASIC = `Basic ${Buffer.from(`marie@acme.test:${TOKEN}`).toString('base64')}`;
 const SINCE = new Date('2026-09-15T00:00:00Z');
 
@@ -35,49 +56,59 @@ const DAVID = '712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654';
 const linkTo = (next: string) => ({
   link: `<${next}>; rel="next", <${SITE}/wiki>; rel="base"`,
 });
-const listRoute = (json: unknown, next?: string): FakeRoute => ({
-  url: `${V2}/pages`,
+const listRoute = (json: unknown, next?: string, v2 = V2): FakeRoute => ({
+  url: `${v2}/pages`,
   json,
   ...(next ? { headers: linkTo(next) } : {}),
 });
-const pageRoutes = (id: string, page: unknown, comments: unknown = commentsEmpty): FakeRoute[] => [
-  { url: `${V2}/pages/${id}`, json: page },
-  { url: `${V2}/pages/${id}/footer-comments`, json: comments },
+const pageRoutes = (
+  id: string,
+  page: unknown,
+  comments: unknown = commentsEmpty,
+  v2 = V2,
+): FakeRoute[] => [
+  { url: `${v2}/pages/${id}`, json: page },
+  { url: `${v2}/pages/${id}/footer-comments`, json: comments },
 ];
-const directoryRoutes = (): FakeRoute[] => [
-  { method: 'POST', url: `${V2}/users-bulk`, json: usersBulk },
-  { url: `${V2}/spaces`, json: spaces },
+const directoryRoutes = (v2 = V2): FakeRoute[] => [
+  { method: 'POST', url: `${v2}/users-bulk`, json: usersBulk },
+  { url: `${v2}/spaces`, json: spaces },
 ];
 
 // Toutes les routes d'un premier passage sur les fixtures : quatre pages, dont une vide.
-function firstPassRoutes(): FakeRoute[] {
+function firstPassRoutes(v2 = V2): FakeRoute[] {
   return [
-    listRoute(pagesPage1, pagesPage1._links.next),
-    listRoute(pagesPage2),
-    ...pageRoutes('10004', page10004),
-    ...pageRoutes('10003', page10003),
-    { url: `${V2}/pages/10002`, json: page10002 },
+    listRoute(pagesPage1, pagesPage1._links.next, v2),
+    listRoute(pagesPage2, undefined, v2),
+    ...pageRoutes('10004', page10004, commentsEmpty, v2),
+    ...pageRoutes('10003', page10003, commentsEmpty, v2),
+    { url: `${v2}/pages/10002`, json: page10002 },
     {
-      url: `${V2}/pages/10002/footer-comments`,
+      url: `${v2}/pages/10002/footer-comments`,
       json: comments10002Page1,
       headers: linkTo(comments10002Page1._links.next),
     },
-    { url: `${V2}/pages/10002/footer-comments`, json: comments10002Page2 },
-    { url: `${V2}/footer-comments/20001/children`, json: childrenOf20001 },
-    { url: `${V2}/footer-comments/20002/children`, json: commentsEmpty },
-    { url: `${V2}/footer-comments/20003/children`, json: commentsEmpty },
-    ...pageRoutes('10001', page10001),
-    ...directoryRoutes(),
+    { url: `${v2}/pages/10002/footer-comments`, json: comments10002Page2 },
+    { url: `${v2}/footer-comments/20001/children`, json: childrenOf20001 },
+    { url: `${v2}/footer-comments/20002/children`, json: commentsEmpty },
+    { url: `${v2}/footer-comments/20003/children`, json: commentsEmpty },
+    ...pageRoutes('10001', page10001, commentsEmpty, v2),
+    ...directoryRoutes(v2),
   ];
 }
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: typeof config | typeof oauthConfig;
+  } = {},
 ) {
-  const { http, calls } = testHttp(confluenceConnector, config, routes);
+  const cfg = overrides.config ?? config;
+  const { http, calls } = testHttp(confluenceConnector, cfg, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(confluenceConnector.sync(config, state, http));
+  const pages = await collect(confluenceConnector.sync(cfg, state, http));
   return { pages, calls };
 }
 
@@ -98,7 +129,12 @@ describe('confluence : configuration', () => {
       apiToken: ` ${TOKEN} `,
     });
 
-    expect(parsed).toEqual({ site: 'acme', email: 'marie@acme.test', apiToken: TOKEN });
+    expect(parsed).toEqual({
+      authMode: 'key',
+      site: 'acme',
+      email: 'marie@acme.test',
+      apiToken: TOKEN,
+    });
   });
 
   it('refuse une configuration incomplète', () => {
@@ -563,5 +599,202 @@ describe('confluence : ressources manquantes ou refusées', () => {
     await expect(runSync([listRoute(broken)])).rejects.toMatchObject({
       message: 'Réponse inattendue',
     });
+  });
+});
+
+describe('confluence : le bouton, configuration', () => {
+  const schema = confluenceConnector.configSchema;
+
+  it('accepte la forme du bouton, avec ou sans date d’expiration', () => {
+    expect(schema.safeParse(oauthConfig).success).toBe(true);
+    const noExpiry = { ...oauthConfig, refreshToken: null, expiresAt: null };
+    expect(schema.safeParse(noExpiry).success).toBe(true);
+  });
+
+  it('refuse la forme du bouton sans jeton d’accès, sans site ou sans identifiant de site', () => {
+    for (const name of ['accessToken', 'site', 'cloudId']) {
+      const result = schema.safeParse({ ...oauthConfig, [name]: undefined });
+
+      expect(result.success, name).toBe(false);
+      expect(JSON.stringify(result.error?.issues[0]?.path), name).toBe(JSON.stringify([name]));
+    }
+  });
+
+  it('refuse un identifiant de site qui sortirait du chemin appelé', () => {
+    for (const cloudId of ['../x', 'a/b', 'a?b=1', '', 'x'.repeat(65)]) {
+      expect(schema.safeParse({ ...oauthConfig, cloudId }).success, cloudId).toBe(false);
+    }
+  });
+
+  it('garde l’ancienne forme à clé, qui n’a pas de authMode, et exige ses champs', () => {
+    const legacy = { site: 'acme', email: config.email, apiToken: TOKEN };
+
+    expect(schema.parse(legacy)).toEqual(config);
+    expect(schema.safeParse({ authMode: 'key', site: 'acme', email: config.email }).success).toBe(
+      false,
+    );
+    expect(schema.safeParse({ ...oauthConfig, authMode: 'key' }).success).toBe(false);
+  });
+
+  it('appelle api.atlassian.com avec le bouton, le site avec une clé', () => {
+    expect(confluenceConnector.hosts(oauthConfig)).toEqual(['api.atlassian.com']);
+    expect(confluenceConnector.hosts(config)).toEqual(['acme.atlassian.net']);
+  });
+
+  it('ne met aucun jeton OAuth dans les champs à chiffrer du connecteur (le socle les ajoute)', () => {
+    expect(confluenceConnector.secretFields).toEqual(['apiToken']);
+  });
+
+  it('garde un schéma d’objet dont le catalogue lit les champs', () => {
+    const keys = Object.keys((schema as unknown as z.ZodObject).shape);
+
+    expect(keys).toEqual(
+      expect.arrayContaining(['site', 'email', 'apiToken', 'accessToken', 'cloudId']),
+    );
+  });
+});
+
+describe('confluence : le bouton, description', () => {
+  it('demande les droits fins de lecture des pages, commentaires, espaces et personnes', () => {
+    expect(confluenceConnector.oauth).toMatchObject({
+      appKey: 'ATLASSIAN',
+      scopes: [
+        'read:page:confluence',
+        'read:comment:confluence',
+        'read:space:confluence',
+        'read:user:confluence',
+        'read:confluence-user',
+        'offline_access',
+      ],
+      authorizeUrl: 'https://auth.atlassian.com/authorize',
+      tokenUrl: 'https://auth.atlassian.com/oauth/token',
+      pkce: false,
+      tokenBody: 'json',
+      preFields: ['site'],
+      setupHosts: ['api.atlassian.com'],
+    });
+  });
+
+  it('laisse le site facultatif avant le clic, et le vérifie quand il est saisi', () => {
+    const shape = (confluenceConnector.configSchema as unknown as z.ZodObject).shape;
+    const beforeClick = z.object({ site: shape.site });
+
+    expect(beforeClick.safeParse({}).success).toBe(true);
+    expect(beforeClick.parse({ site: ' Acme ' })).toEqual({ site: 'acme' });
+    expect(beforeClick.safeParse({ site: 'evil.com/x' }).success).toBe(false);
+  });
+
+  it('fait expliquer le bouton dans le catalogue, en plus de la clé', () => {
+    const entry = listCatalog().find((item) => item.id === 'confluence');
+
+    expect(entry?.oauthHelp?.trim()).toBeTruthy();
+    expect(entry?.keyAccepted ?? true).toBe(true);
+    expect(entry?.fields.find((field) => field.name === 'site')?.kind).toBe('text');
+  });
+});
+
+describe('confluence : le bouton, verify', () => {
+  const CURRENT = `${GATEWAY}/wiki/rest/api/user/current`;
+
+  it('lit le compte par la passerelle avec le jeton OAuth, et nomme le site', async () => {
+    const { http, calls } = testHttp(confluenceConnector, oauthConfig, [
+      { url: CURRENT, json: userCurrent },
+    ]);
+
+    const result = await confluenceConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'Connecté : acme.atlassian.net, 1 autre site disponible' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe(CURRENT);
+    expect(calls[0]?.headers).toMatchObject({ authorization: `Bearer ${ACCESS}` });
+  });
+
+  it('ne parle pas des autres sites quand il n’y en a pas', async () => {
+    const cfg = { ...oauthConfig, otherSites: 0 };
+    const { http } = testHttp(confluenceConnector, cfg, [{ url: CURRENT, json: userCurrent }]);
+
+    expect(await confluenceConnector.verify(cfg, http)).toEqual({
+      account: 'Connecté : acme.atlassian.net',
+    });
+  });
+
+  it('refuse un jeton rejeté, par un 401 comme par une réponse anonyme', async () => {
+    const refused = testHttp(confluenceConnector, oauthConfig, [{ url: CURRENT, status: 401 }]);
+    await expect(confluenceConnector.verify(oauthConfig, refused.http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+
+    const anonymous = testHttp(confluenceConnector, oauthConfig, [
+      { url: CURRENT, json: { type: 'anonymous', displayName: 'Anonymous' } },
+    ]);
+    await expect(confluenceConnector.verify(oauthConfig, anonymous.http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+});
+
+describe('confluence : le bouton, sync', () => {
+  it('envoie chaque requête à la passerelle avec le jeton OAuth, jamais au site', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(GATEWAY_V2), { config: oauthConfig });
+
+    expect(idsOf(pages)).toEqual(['page:10003', 'page:10002', 'page:10001']);
+    expect(calls.length).toBeGreaterThan(10);
+    for (const call of calls) {
+      expect(call.url.startsWith(`${GATEWAY}/wiki/api/v2/`), call.url).toBe(true);
+      expect(call.headers).toMatchObject({ authorization: `Bearer ${ACCESS}` });
+    }
+  });
+
+  it('rend les mêmes éléments que la clé, avec l’adresse web du site', async () => {
+    const withKey = await runSync(firstPassRoutes());
+    const withButton = await runSync(firstPassRoutes(GATEWAY_V2), { config: oauthConfig });
+
+    expect(itemsOf(withButton.pages)).toEqual(itemsOf(withKey.pages));
+    const roadmap = itemsOf(withButton.pages).find((item) => item.externalId === 'page:10001');
+    expect(roadmap?.url).toBe(`${SITE}/wiki/spaces/PROD/pages/10001/Feuille+de+route+T4`);
+  });
+
+  it('remet le chemin de la passerelle à la page suivante quand le lien Link ne l’a pas', async () => {
+    // La doc donne un lien relatif qui commence par /wiki : vu de api.atlassian.com, il perd /ex/….
+    const { calls } = await runSync(firstPassRoutes(GATEWAY_V2), { config: oauthConfig });
+
+    const lists = calls.filter((call) => call.url.split('?')[0] === `${GATEWAY_V2}/pages`);
+    expect(lists).toHaveLength(2);
+    expect(paramsOf(lists[1]?.url).get('cursor')).toBe(
+      'eyJpZCI6IjEwMDAyIiwic29ydCI6Ii1tb2RpZmllZC1kYXRlIn0',
+    );
+    for (const name of ['sort', 'status', 'limit']) {
+      expect(paramsOf(lists[1]?.url).getAll(name), name).toHaveLength(1);
+    }
+  });
+
+  it('ne double pas le chemin de la passerelle quand le lien Link le porte déjà', async () => {
+    const routes = firstPassRoutes(GATEWAY_V2);
+    const prefixed = `/ex/confluence/${CLOUD_ID}${pagesPage1._links.next}`;
+    routes[0] = listRoute(pagesPage1, prefixed, GATEWAY_V2);
+
+    const { calls } = await runSync(routes, { config: oauthConfig });
+
+    const lists = calls.filter((call) => call.url.split('?')[0] === `${GATEWAY_V2}/pages`);
+    expect(lists).toHaveLength(2);
+  });
+
+  it('refuse toujours une page suivante annoncée sur un autre hôte', async () => {
+    const routes = [
+      listRoute(pagesPage1, 'https://evil.test/wiki/api/v2/pages?cursor=x', GATEWAY_V2),
+    ];
+
+    const error = await runSync(routes, { config: oauthConfig }).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(ConnectorHttpError);
+    expect((error as Error).message).toBe('Adresse non autorisée');
+  });
+
+  it('remonte un jeton refusé (401) sur la liste des pages', async () => {
+    const routes: FakeRoute[] = [{ url: `${GATEWAY_V2}/pages`, status: 401 }];
+
+    await expect(runSync(routes, { config: oauthConfig })).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
   });
 });

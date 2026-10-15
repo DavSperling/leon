@@ -373,4 +373,22 @@ describe('ingestConnectorItems', () => {
       authorName: 'Marie\ufffd Durand',
     });
   });
+
+  // Une bo\u00eete mail est personnelle : son texte brut reste \u00e0 son propri\u00e9taire, comme une conversation.
+  it('garde la source, ses tours et son run priv\u00e9s au cr\u00e9ateur quand le connecteur le demande', async () => {
+    const connection = { ...(await connectionOf(paul)), privateRaw: true };
+    const externalId = `thread:${randomUUID()}`;
+    const item = normalized(connectorItem(externalId, [comment(1, 'Mon contrat de travail.')]));
+
+    const result = await ingestConnectorItems(paul, connection, [item]);
+
+    expect(result.turns).toBe(1);
+    const sourceId = await sourceIdOf(paul, externalId);
+    expect((await readSources(paul, sourceId))[0]?.acl).toEqual([paul.userId]);
+    expect((await readTurns(paul, sourceId))[0]?.acl).toEqual([paul.userId]);
+    expect((await readRuns(paul, sourceId))[0]?.acl).toEqual([paul.userId]);
+    expect(await readSources(marie, sourceId)).toEqual([]);
+    expect(await readTurns(marie, sourceId)).toEqual([]);
+    expect(await readRuns(marie, sourceId)).toEqual([]);
+  });
 });

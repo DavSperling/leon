@@ -4,6 +4,7 @@ import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
 import { type GitlabClient, gitlabClient, type Listed, type Stream } from './client';
 import { advance, apiTime, cursorKey, isDone, readCursor } from './cursor';
 import { toItem } from './map';
+import { gitlabOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://docs.gitlab.com/api/issues/                       (liste des tickets d'un projet)
@@ -14,6 +15,7 @@ import { toItem } from './map';
 //   https://docs.gitlab.com/api/users/                        (GET /user)
 //   https://docs.gitlab.com/user/profile/personal_access_tokens/ (création du jeton, expiration)
 //   https://docs.gitlab.com/security/tokens/access_token_scopes/ (portée read_api)
+//   https://docs.gitlab.com/api/oauth2/ et ./oauth.ts          (le bouton : jeton en Authorization: Bearer)
 //   https://docs.gitlab.com/user/gitlab_com/rate_limits/      (429, Retry-After)
 //   https://docs.gitlab.com/user/reserved_names/              (forme des chemins de projet)
 // Choix qui diffèrent du plan, d'après la doc : les pages suivantes se lisent par l'en-tête Link ;
@@ -28,8 +30,9 @@ import { toItem } from './map';
 // socle l'écarte) pour que le curseur avance.
 //
 // Non vérifié :
-//   - si `GET /user` répond à un jeton qui n'a que la portée read_api (la doc dit que read_api
-//     donne la lecture de l'API et que read_user vise /user, sans trancher) ;
+//   - si `GET /user` répond à un jeton qui n'a que la portée read_api, qu'il soit personnel ou
+//     OAuth (la doc dit que read_api donne la lecture de l'API et que read_user vise /user, sans
+//     trancher) ;
 //   - si `user_notes_count` exclut les notes système (la doc ne le définit pas) : on ne demande
 //     les notes d'un élément que si ce nombre n'est pas 0 ;
 //   - la réponse de GitLab pour un projet dont les tickets ou les demandes de fusion sont
@@ -48,11 +51,30 @@ const PROJECT_PATTERN = new RegExp(`^${SEGMENT}(?:/${SEGMENT}){1,20}$`);
 // L'identifiant d'un élément (« issue:<chemin>#12 ») ne dépasse pas 200 caractères.
 const PROJECT_MAX = 150;
 
-const ConfigSchema = z.object({
-  token: z.string().trim().min(1).max(500),
-  projects: z.array(z.string().trim().max(PROJECT_MAX).regex(PROJECT_PATTERN)).min(1).max(20),
-});
+// Deux façons de se brancher : la clé collée (`authMode` 'key', celui d'une connexion enregistrée
+// avant le bouton) ou le bouton ('oauth', avec les jetons). Un z.object raffiné, pas une union : le
+// catalogue lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    token: z.string().trim().min(1).max(500).optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+    projects: z.array(z.string().trim().max(PROJECT_MAX).regex(PROJECT_PATTERN)).min(1).max(20),
+  })
+  .superRefine((config, ctx) => {
+    const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+  });
 type Config = z.infer<typeof ConfigSchema>;
+
+// Un jeton OAuth va dans `Authorization: Bearer` (la doc réserve `PRIVATE-TOKEN` aux jetons
+// personnels, de projet et de groupe) ; le schéma garantit que le champ de l'un ou de l'autre existe.
+function authHeaders(config: Config): Record<string, string> {
+  if (config.authMode === 'oauth') return { authorization: `Bearer ${config.accessToken ?? ''}` };
+  return { 'PRIVATE-TOKEN': config.token ?? '' };
+}
 
 const STREAMS: Stream[] = ['issues', 'merge_requests'];
 
@@ -110,15 +132,16 @@ export const gitlabConnector: Connector<Config> = {
   configSchema: ConfigSchema,
   secretFields: ['token'],
   hosts: () => ['gitlab.com'],
+  oauth: gitlabOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
-    const gitlab = gitlabClient(config.token, http);
+    const gitlab = gitlabClient(authHeaders(config), http);
     const { username } = await gitlab.account();
     for (const project of config.projects) await gitlab.checkProject(project);
     return { account: username };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncProjects(gitlabClient(config.token, http), config.projects, state);
+    return syncProjects(gitlabClient(authHeaders(config), http), config.projects, state);
   },
 };

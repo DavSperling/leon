@@ -1,0 +1,8 @@
+{
+  "type": "oAuthToken",
+  "team": { "type": "team", "name": "Acme", "id": "3074457362577833142" },
+  "createdBy": { "type": "user", "name": "Marie Durand", "id": "3074457362577955221" },
+  "scopes": ["boards:read"],
+  "organization": { "type": "organization", "name": "Acme", "id": "3074457363786315310" },
+  "user": { "type": "user", "name": "Marie Durand", "id": "3074457362577955221" }
+}

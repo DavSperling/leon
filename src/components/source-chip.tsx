@@ -4,6 +4,7 @@ import {
   KanbanSquare,
   LifeBuoy,
   type LucideIcon,
+  Mail,
   Mic,
   Monitor,
   PenLine,
@@ -32,6 +33,7 @@ const FAMILY_ICONS: Record<ProviderFamily, LucideIcon> = {
   projet: KanbanSquare,
   crm: Users,
   support: LifeBuoy,
+  mails: Mail,
 };
 
 export type SourceChipKind = keyof typeof ICONS | ProviderId;

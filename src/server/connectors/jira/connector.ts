@@ -1,9 +1,18 @@
 import { z } from 'zod';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
+import {
+  atlassianAccess,
+  atlassianHosts,
+  oauthAccount,
+  oauthShape,
+  requireFields,
+  siteSchema,
+} from './access';
 import { type Comment, type Issue, type JiraClient, jiraClient } from './client';
 import { updatedSinceJql } from './jql';
 import { toItem } from './map';
+import { atlassianOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/ (spécification OpenAPI :
@@ -24,6 +33,10 @@ import { toItem } from './map';
 // de leur modification : la recherche relit depuis une minute avant le curseur, et un ticket que l'index
 // n'avait pas encore (retard de moins d'une minute) est rendu au passage suivant, les autres sont ignorés.
 //
+// Le bouton (OAuth, voir oauth.ts) appelle les mêmes points d'accès par api.atlassian.com/ex/jira/<cloudId>,
+// en Bearer, avec les droits classiques read:jira-work (recherche, commentaires) et read:jira-user (/myself),
+// d'après la spec OpenAPI lue le 15/10/2026.
+//
 // Non vérifié : si les commentaires de la recherche sont tronqués au-delà d'un nombre (la doc ne le dit
 // pas : on compare `total` aux commentaires rendus et on lit le reste par /issue/{id}/comment) ; que le
 // fuseau de la date JQL est bien celui de `myself.timeZone` (la doc dit « your configured time zone ») ;
@@ -32,16 +45,17 @@ import { toItem } from './map';
 // minute de retard sur un ticket plus récent, déjà passé, n'est repris qu'à sa prochaine modification ;
 // l'heure d'automne, où une heure locale se répète, peut faire manquer jusqu'à une heure de tickets.
 
-const ConfigSchema = z.object({
-  // Un seul sous-domaine : ni point, ni chemin, ni port (l'adresse appelée est fixée par ce champ).
-  site: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9][a-z0-9-]{0,62}$/),
-  email: z.string().trim().max(320).pipe(z.email()),
-  apiToken: z.string().trim().min(1).max(500),
-});
+// Une clé (site, e-mail, jeton d'API) ou le bouton (jetons, site et identifiant du site choisis chez
+// Atlassian) : `requireFields` exige les champs de la forme choisie par `authMode`.
+const ConfigSchema = z
+  .object({
+    ...oauthShape,
+    // Un seul sous-domaine : ni point, ni chemin, ni port (l'adresse appelée est fixée par ce champ).
+    site: siteSchema.optional(),
+    email: z.string().trim().max(320).pipe(z.email()).optional(),
+    apiToken: z.string().trim().min(1).max(500).optional(),
+  })
+  .superRefine(requireFields);
 type Config = z.infer<typeof ConfigSchema>;
 
 const RESCAN_MS = 60_000; // la date de la requête est à la minute : on relit depuis une minute avant le curseur
@@ -129,14 +143,17 @@ export const jiraConnector: Connector<Config> = {
   id: 'jira',
   configSchema: ConfigSchema,
   secretFields: ['apiToken'],
-  hosts: (config) => [`${config.site}.atlassian.net`],
+  hosts: atlassianHosts,
+  oauth: atlassianOAuth(['read:jira-work', 'read:jira-user', 'offline_access']),
 
   async verify(config: Config, http: ConnectorHttp) {
     try {
       const me = await jiraClient(config, http).myself();
+      if (config.authMode === 'oauth') return { account: oauthAccount(config) };
       return { account: `${me.displayName || me.emailAddress || config.email} (${config.site})` };
     } catch (error) {
-      if (!isUnknownSite(error)) throw error;
+      // Un 404 de la passerelle ne dit rien du nom d'un site : seule une adresse saisie peut être fausse.
+      if (config.authMode === 'oauth' || !isUnknownSite(error)) throw error;
       throw new ConnectorHttpError(
         (error as ConnectorHttpError).status,
         'Site Jira introuvable : vérifiez le nom du site',
@@ -145,6 +162,6 @@ export const jiraConnector: Connector<Config> = {
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncIssues(jiraClient(config, http), config.site, state);
+    return syncIssues(jiraClient(config, http), atlassianAccess(config, 'jira').site, state);
   },
 };

@@ -1,0 +1,8 @@
+{
+  "application": { "uid": "hqAGVdAy9FZX5Ky5cBHUB2FshBdSO6eN75tWMX46ZZd" },
+  "resource_owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+  "space": { "name": "Acme", "domain": "acme" },
+  "scopes": ["notes:read"],
+  "expires_in": 86012,
+  "created_at": 1791964800
+}

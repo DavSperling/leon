@@ -16,10 +16,12 @@ vi.mock('@/server/pipeline/worker', () => ({
     mocks.order.push('pipeline');
   }),
 }));
+vi.mock('@/server/connectors/oauth-env', () => ({ warnIncompleteOAuthPairs: vi.fn() }));
 vi.mock('@/server/llm/anthropic-llm', () => ({ createAnthropicLlm: vi.fn(() => ({})) }));
 
 const { startNodeInstrumentation } = await import('./instrumentation-node');
 const { startConnectorWorker } = await import('@/server/connectors/worker');
+const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
 
 const NO_KEY = 'LEON_CONNECTORS_KEY absente';
 
@@ -28,6 +30,7 @@ beforeEach(() => {
   delete mocks.env.LEON_CONNECTORS_KEY;
   delete mocks.env.ANTHROPIC_API_KEY;
   vi.mocked(startConnectorWorker).mockClear();
+  vi.mocked(warnIncompleteOAuthPairs).mockClear();
 });
 
 afterEach(() => {
@@ -64,6 +67,14 @@ describe('démarrage des tâches de fond', () => {
     expect(mocks.order).toEqual(['pipeline']);
   });
 
+  it('signale les paires OAuth incomplètes au démarrage, avec ou sans clé Anthropic', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await startNodeInstrumentation();
+
+    expect(warnIncompleteOAuthPairs).toHaveBeenCalledOnce();
+  });
+
   it('ne lance rien pendant `next build`', async () => {
     vi.stubEnv('NEXT_PHASE', 'phase-production-build');
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
@@ -72,5 +83,6 @@ describe('démarrage des tâches de fond', () => {
     await startNodeInstrumentation();
 
     expect(mocks.order).toEqual([]);
+    expect(warnIncompleteOAuthPairs).not.toHaveBeenCalled();
   });
 });

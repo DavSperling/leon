@@ -1,0 +1,21 @@
+[
+  {
+    "id": 7003,
+    "status": "active",
+    "visible_to_clients": false,
+    "created_at": "2026-09-20T11:00:00.000Z",
+    "updated_at": "2026-09-20T11:00:00.000Z",
+    "title": "Re: Réunion de suivi",
+    "inherits_status": true,
+    "type": "Comment",
+    "parent": { "id": 5003, "title": "Réunion de suivi", "type": "Message" },
+    "bucket": { "id": 2085958506, "name": "Application mobile", "type": "Project" },
+    "creator": {
+      "id": 1049715913,
+      "name": "Marie Durand",
+      "email_address": "marie@acme.test",
+      "client": false
+    },
+    "content": "Prochaine réunion le 4 octobre."
+  }
+]

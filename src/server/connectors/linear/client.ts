@@ -95,9 +95,19 @@ function failure(errors: z.infer<typeof apiError>[]): Error {
   return new ConnectorHttpError(400, `${LABEL} a refusé la requête`);
 }
 
+// Ce que les requêtes lisent de la configuration : la clé personnelle, ou le jeton du bouton.
+type Credentials = { authMode: 'key' | 'oauth'; apiKey?: string; accessToken?: string };
+
+// L'en-tête Authorization. Une clé personnelle s'envoie telle quelle ; « Bearer » est réservé aux
+// jetons OAuth (doc « Authentication »). Le schéma garantit le champ de la forme choisie.
+export function authorizationOf(config: Credentials): string {
+  if (config.authMode === 'oauth') return `Bearer ${config.accessToken ?? ''}`;
+  return config.apiKey ?? '';
+}
+
 async function graphql<T>(
   http: ConnectorHttp,
-  apiKey: string,
+  authorization: string,
   query: string,
   variables: Record<string, unknown>,
   data: z.ZodType<T>,
@@ -106,8 +116,7 @@ async function graphql<T>(
     {
       url: ENDPOINT,
       method: 'POST',
-      // Une clé personnelle s'envoie telle quelle ; « Bearer » est réservé aux jetons OAuth.
-      headers: { Authorization: apiKey },
+      headers: { Authorization: authorization },
       body: { query, variables },
       acceptStatus: [400], // limite de débit et erreurs de requête
     },
@@ -125,19 +134,29 @@ const pageVariables = (stream: Stream) => ({
   filter: { updatedAt: { gt: stream.from } },
 });
 
-export async function fetchAccount(http: ConnectorHttp, apiKey: string): Promise<string> {
+export async function fetchAccount(http: ConnectorHttp, authorization: string): Promise<string> {
   const schema = z.object({ viewer: named, organization: named });
-  const data = await graphql(http, apiKey, ACCOUNT_QUERY, {}, schema);
+  const data = await graphql(http, authorization, ACCOUNT_QUERY, {}, schema);
   return `${data.viewer.name} (${data.organization.name})`;
 }
 
-export async function fetchIssues(http: ConnectorHttp, apiKey: string, stream: Stream) {
+export async function fetchIssues(http: ConnectorHttp, authorization: string, stream: Stream) {
   const schema = z.object({ issues: connection(issue) });
-  return (await graphql(http, apiKey, ISSUES_QUERY, pageVariables(stream), schema)).issues;
+  return (await graphql(http, authorization, ISSUES_QUERY, pageVariables(stream), schema)).issues;
 }
 
-export async function fetchProjectUpdates(http: ConnectorHttp, apiKey: string, stream: Stream) {
+export async function fetchProjectUpdates(
+  http: ConnectorHttp,
+  authorization: string,
+  stream: Stream,
+) {
   const schema = z.object({ projectUpdates: connection(projectUpdate) });
-  const data = await graphql(http, apiKey, PROJECT_UPDATES_QUERY, pageVariables(stream), schema);
+  const data = await graphql(
+    http,
+    authorization,
+    PROJECT_UPDATES_QUERY,
+    pageVariables(stream),
+    schema,
+  );
   return data.projectUpdates;
 }

@@ -10,15 +10,22 @@ import {
 } from '@/server/ingest/ingest-turns';
 import type { NormalizedItem } from './normalize';
 
-export type ConnectionRef = { id: string; provider: ProviderId; createdBy: string };
+export type ConnectionRef = {
+  id: string;
+  provider: ProviderId;
+  createdBy: string;
+  privateRaw?: boolean; // texte brut privé au créateur (voir Connector.privateRaw)
+};
 
-// Une source par élément, au nom du créateur de la connexion, visible de toute l'équipe : la
-// source garde son origine (outil, nature, lien, espace) pour la future couche de droits.
+// Une source par élément, au nom du créateur de la connexion, visible de toute l'équipe (sauf
+// texte brut privé) : la source garde son origine (outil, nature, lien, espace) pour la future
+// couche de droits.
 async function upsertItemSource(
   tx: Tx,
   ctx: TenantContext,
   connection: ConnectionRef,
   item: NormalizedItem,
+  acl: string[],
 ): Promise<string> {
   const title = item.title || null;
   const metadata = {
@@ -35,7 +42,7 @@ async function upsertItemSource(
       externalId: item.externalId,
       ownerUserId: connection.createdBy,
       title,
-      acl: [ctx.tenantId],
+      acl,
       connectionId: connection.id,
       metadata,
     })
@@ -56,11 +63,11 @@ export async function ingestConnectorItems(
   connection: ConnectionRef,
   items: NormalizedItem[],
 ): Promise<{ sources: number; turns: number; runs: string[] }> {
-  const acl = [ctx.tenantId];
+  const acl = connection.privateRaw ? [connection.createdBy] : [ctx.tenantId];
   const created = await withTenant(ctx, async (tx) => {
     const result = { turns: 0, runs: [] as string[] };
     for (const item of items) {
-      const sourceId = await upsertItemSource(tx, ctx, connection, item);
+      const sourceId = await upsertItemSource(tx, ctx, connection, item, acl);
       const rows = item.turns.map((turn) => ({
         tenantId: ctx.tenantId,
         sourceId,

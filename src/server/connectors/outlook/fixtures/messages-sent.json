@@ -1,0 +1,28 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-4000-8000-000000000001')/mailFolders('sentitems')/messages(id,conversationId,subject,receivedDateTime,from,body,webLink)",
+  "value": [
+    {
+      "@odata.etag": "W/\"CQAAABYAAAB5\"",
+      "id": "AAMkAGEx-sent-1",
+      "conversationId": "AAQkAGEx-conv-devis",
+      "subject": "RE: Devis site web",
+      "receivedDateTime": "2026-10-12T16:05:00Z",
+      "from": { "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" } },
+      "body": {
+        "contentType": "text",
+        "content": "Bonjour Paul,\r\n\r\nVoici le devis : 11 400 euros HT, livraison en décembre.\r\n\r\nMarie"
+      },
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-sent-1&exvsurl=1&viewmodel=ReadMessageItem"
+    },
+    {
+      "@odata.etag": "W/\"CQAAABYAAAB6\"",
+      "id": "AAMkAGEx-sent-2",
+      "conversationId": "AAQkAGEx-conv-vide",
+      "subject": "Transfert",
+      "receivedDateTime": "2026-10-13T07:30:00Z",
+      "from": { "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" } },
+      "body": { "contentType": "text", "content": "" },
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-sent-2&exvsurl=1&viewmodel=ReadMessageItem"
+    }
+  ]
+}

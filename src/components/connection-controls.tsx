@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { canReconnect, oauthStartPath } from '@/lib/connection-form';
 import { formatDate } from '@/lib/format';
 import type { CatalogField } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
@@ -62,6 +63,19 @@ function ReplaceKeyForm({ id, secrets }: { id: string; secrets: CatalogField[] }
   );
 }
 
+// « Reconnecter » refait le déroulé chez l'éditeur et remplace les jetons de la même connexion :
+// une navigation (formulaire POST), pas une action serveur.
+function ReconnectButton({ view, disabled }: { view: ConnectionView; disabled: boolean }) {
+  return (
+    <form method="post" action={oauthStartPath(view.provider)}>
+      <input type="hidden" name="reconnect" value={view.id} />
+      <Button type="submit" variant="outline" size="sm" disabled={disabled}>
+        Reconnecter
+      </Button>
+    </form>
+  );
+}
+
 type DeleteProps = {
   view: ConnectionView;
   tool: string;
@@ -81,8 +95,9 @@ function DeleteButton({ view, tool, pending, onConfirm }: DeleteProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Supprimer «&nbsp;{view.label}&nbsp;» ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Leon ne lira plus {tool} avec cette clé, qui est effacée. Les sources déjà captées
-            restent dans la mémoire.
+            Leon ne lira plus {tool} avec{' '}
+            {canReconnect(view) ? 'ces jetons, qui sont effacés' : 'cette clé, qui est effacée'}.
+            Les sources déjà captées restent dans la mémoire.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -96,29 +111,33 @@ function DeleteButton({ view, tool, pending, onConfirm }: DeleteProps) {
   );
 }
 
-// Une connexion existante : son état, ses boutons, et le remplacement de la clé. La clé n'est
-// jamais réaffichée, seulement ses quatre derniers caractères.
+// Une connexion existante : son état, ses boutons, et le remplacement de la clé (ou « Reconnecter »
+// pour une connexion branchée par le bouton). La clé n'est jamais réaffichée, seulement ses quatre
+// derniers caractères.
 export function ConnectionControls({
   view,
   tool,
   secrets,
   canConnect,
+  oauthReady,
 }: {
   view: ConnectionView;
   tool: string;
   secrets: CatalogField[];
   canConnect: boolean;
+  oauthReady: boolean;
 }) {
   const [replacing, setReplacing] = useState(false);
   const { pending, run } = useManage();
   const paused = view.status === 'paused';
+  const oauth = canReconnect(view);
   return (
     <div className="space-y-3 rounded-xl border p-4">
       <div className="space-y-1">
         <p className="font-medium break-words">{view.label}</p>
         <ConnectionStatus view={view} now={new Date()} />
         <p className="text-[13px] leading-[18px] text-muted-foreground">
-          Clé ••••{view.secretHint} · branché par {view.createdBy.name} le{' '}
+          {oauth ? 'Jeton' : 'Clé'} ••••{view.secretHint} · branché par {view.createdBy.name} le{' '}
           {formatDate(view.createdAt)}
         </p>
       </div>
@@ -151,15 +170,19 @@ export function ConnectionControls({
         >
           {paused ? 'Reprendre' : 'Mettre en pause'}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!canConnect}
-          aria-expanded={replacing}
-          onClick={() => setReplacing((open) => !open)}
-        >
-          Remplacer la clé
-        </Button>
+        {oauth ? (
+          <ReconnectButton view={view} disabled={!canConnect || !oauthReady} />
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!canConnect}
+            aria-expanded={replacing}
+            onClick={() => setReplacing((open) => !open)}
+          >
+            Remplacer la clé
+          </Button>
+        )}
         <DeleteButton
           view={view}
           tool={tool}
@@ -173,6 +196,11 @@ export function ConnectionControls({
           }
         />
       </div>
+      {oauth && canConnect && !oauthReady && (
+        <p className="text-[13px] leading-[18px] text-muted-foreground">
+          L'appli {tool} n'est plus configurée sur ce serveur : impossible de reconnecter.
+        </p>
+      )}
       {replacing && canConnect && <ReplaceKeyForm id={view.id} secrets={secrets} />}
     </div>
   );

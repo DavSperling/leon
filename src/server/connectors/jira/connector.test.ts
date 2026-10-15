@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
@@ -17,27 +18,46 @@ const SEARCH = `${SITE_URL}/rest/api/3/search/jql`;
 const COMMENTS_10003 = `${SITE_URL}/rest/api/3/issue/10003/comment`;
 const TOKEN = 'jeton-de-test-0123456789';
 const EMAIL = 'marie@acme.test';
-const config = { site: 'acme', email: EMAIL, apiToken: TOKEN };
+// `authMode` : celui que le schéma donne à une connexion enregistrée avant le bouton.
+const config = { authMode: 'key' as const, site: 'acme', email: EMAIL, apiToken: TOKEN };
+// Le bouton : les appels passent par api.atlassian.com, avec le jeton OAuth.
+const CLOUD_ID = '1324a887-45db-1bf4-1e99-ef0ff456d421';
+const GATEWAY = `https://api.atlassian.com/ex/jira/${CLOUD_ID}`;
+const ACCESS = 'acces-oauth-0123456789';
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  site: 'acme',
+  cloudId: CLOUD_ID,
+  accessToken: ACCESS,
+  refreshToken: 'renouvellement-0123',
+  expiresAt: '2026-10-15T11:00:00.000Z',
+  otherSites: 2,
+};
 const BASIC = `Basic ${Buffer.from(`${EMAIL}:${TOKEN}`).toString('base64')}`;
 const SINCE = new Date('2026-09-15T00:00:00Z');
 const FIELDS = 'summary,description,comment,creator,reporter,project,updated';
 
 // Toutes les routes d'un premier passage : le compte, deux pages de recherche, et les commentaires
 // du ticket dont la recherche n'a rendu qu'une partie.
-function firstPassRoutes(): FakeRoute[] {
+function firstPassRoutes(base = SITE_URL): FakeRoute[] {
   return [
-    { url: MYSELF, json: myself },
-    { url: SEARCH, json: search1 },
-    { url: COMMENTS_10003, json: comments10003 },
-    { url: SEARCH, json: search2 },
+    { url: `${base}/rest/api/3/myself`, json: myself },
+    { url: `${base}/rest/api/3/search/jql`, json: search1 },
+    { url: `${base}/rest/api/3/issue/10003/comment`, json: comments10003 },
+    { url: `${base}/rest/api/3/search/jql`, json: search2 },
   ];
 }
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date; site?: string } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    site?: string;
+    config?: typeof config | typeof oauthConfig;
+  } = {},
 ) {
-  const cfg = { ...config, site: overrides.site ?? config.site };
+  const cfg = overrides.config ?? { ...config, site: overrides.site ?? config.site };
   const { http, calls } = testHttp(jiraConnector, cfg, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
   const pages = await collect(jiraConnector.sync(cfg, state, http));
@@ -685,5 +705,175 @@ describe('jira : sync, erreurs', () => {
     const failure = await run.catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe('Réponse inattendue');
+  });
+});
+
+describe('jira : le bouton, configuration', () => {
+  const schema = jiraConnector.configSchema;
+
+  it('accepte la forme du bouton, avec ou sans date d’expiration', () => {
+    expect(schema.safeParse(oauthConfig).success).toBe(true);
+    const noExpiry = { ...oauthConfig, refreshToken: null, expiresAt: null };
+    expect(schema.safeParse(noExpiry).success).toBe(true);
+  });
+
+  it('refuse la forme du bouton sans jeton d’accès, sans site ou sans identifiant de site', () => {
+    for (const name of ['accessToken', 'site', 'cloudId']) {
+      const result = schema.safeParse({ ...oauthConfig, [name]: undefined });
+
+      expect(result.success, name).toBe(false);
+      expect(JSON.stringify(result.error?.issues[0]?.path), name).toBe(JSON.stringify([name]));
+    }
+  });
+
+  it('refuse un identifiant de site qui sortirait du chemin appelé', () => {
+    for (const cloudId of ['../x', 'a/b', 'a?b=1', '', 'x'.repeat(65)]) {
+      expect(schema.safeParse({ ...oauthConfig, cloudId }).success, cloudId).toBe(false);
+    }
+  });
+
+  it('garde l’ancienne forme à clé, qui n’a pas de authMode, et exige ses champs', () => {
+    const legacy = { site: 'acme', email: EMAIL, apiToken: TOKEN };
+
+    expect(schema.parse(legacy)).toEqual(config);
+    expect(schema.safeParse({ authMode: 'key', site: 'acme', email: EMAIL }).success).toBe(false);
+    expect(schema.safeParse({ ...oauthConfig, authMode: 'key' }).success).toBe(false);
+  });
+
+  it('appelle api.atlassian.com avec le bouton, le site avec une clé', () => {
+    expect(jiraConnector.hosts(oauthConfig)).toEqual(['api.atlassian.com']);
+    expect(jiraConnector.hosts(config)).toEqual(['acme.atlassian.net']);
+  });
+
+  it('ne met aucun jeton OAuth dans les champs à chiffrer du connecteur (le socle les ajoute)', () => {
+    expect(jiraConnector.secretFields).toEqual(['apiToken']);
+  });
+
+  it('garde un schéma d’objet dont le catalogue lit les champs', () => {
+    const keys = Object.keys((schema as unknown as z.ZodObject).shape);
+
+    expect(keys).toEqual(
+      expect.arrayContaining(['site', 'email', 'apiToken', 'accessToken', 'cloudId']),
+    );
+  });
+});
+
+describe('jira : le bouton, description', () => {
+  const spec = jiraConnector.oauth;
+
+  it('demande la lecture de Jira, des profils et le renouvellement, rien d’autre', () => {
+    expect(spec).toMatchObject({
+      appKey: 'ATLASSIAN',
+      scopes: ['read:jira-work', 'read:jira-user', 'offline_access'],
+      authorizeUrl: 'https://auth.atlassian.com/authorize',
+      tokenUrl: 'https://auth.atlassian.com/oauth/token',
+      pkce: false,
+      tokenBody: 'json',
+      preFields: ['site'],
+      setupHosts: ['api.atlassian.com'],
+    });
+  });
+
+  it('laisse le site facultatif avant le clic, et le vérifie quand il est saisi', () => {
+    const shape = (jiraConnector.configSchema as unknown as z.ZodObject).shape;
+    const beforeClick = z.object({ site: shape.site });
+
+    expect(beforeClick.safeParse({}).success).toBe(true);
+    expect(beforeClick.parse({ site: ' Acme ' })).toEqual({ site: 'acme' });
+    expect(beforeClick.safeParse({ site: 'evil.com/x' }).success).toBe(false);
+  });
+
+  it('fait expliquer le bouton dans le catalogue, en plus de la clé', () => {
+    const entry = listCatalog().find((item) => item.id === 'jira');
+
+    expect(entry?.oauthHelp?.trim()).toBeTruthy();
+    expect(entry?.keyAccepted ?? true).toBe(true);
+    expect(entry?.fields.find((field) => field.name === 'site')?.kind).toBe('text');
+  });
+});
+
+describe('jira : le bouton, verify', () => {
+  it('lit le compte par la passerelle avec le jeton OAuth, et nomme le site', async () => {
+    const { http, calls } = testHttp(jiraConnector, oauthConfig, [
+      { url: `${GATEWAY}/rest/api/3/myself`, json: myself },
+    ]);
+
+    const result = await jiraConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({
+      account: 'Connecté : acme.atlassian.net, 2 autres sites disponibles',
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toBe(`${GATEWAY}/rest/api/3/myself`);
+    expect(calls[0]?.headers).toMatchObject({ authorization: `Bearer ${ACCESS}` });
+  });
+
+  it('accorde « autre site » au singulier, et ne dit rien quand il n’y en a pas', async () => {
+    const accounts: string[] = [];
+    for (const otherSites of [1, 0]) {
+      const cfg = { ...oauthConfig, otherSites };
+      const { http } = testHttp(jiraConnector, cfg, [
+        { url: `${GATEWAY}/rest/api/3/myself`, json: myself },
+      ]);
+      accounts.push((await jiraConnector.verify(cfg, http)).account);
+    }
+
+    expect(accounts).toEqual([
+      'Connecté : acme.atlassian.net, 1 autre site disponible',
+      'Connecté : acme.atlassian.net',
+    ]);
+  });
+
+  it('refuse un jeton rejeté, sans dire que le site est introuvable', async () => {
+    const { http } = testHttp(jiraConnector, oauthConfig, [
+      { url: `${GATEWAY}/rest/api/3/myself`, status: 401 },
+    ]);
+
+    await expect(jiraConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('ne reprend pas « site introuvable » pour un 404 de la passerelle', async () => {
+    const { http } = testHttp(jiraConnector, oauthConfig, [
+      { url: `${GATEWAY}/rest/api/3/myself`, status: 404 },
+    ]);
+
+    const failure = await jiraConnector.verify(oauthConfig, http).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ConnectorHttpError);
+    expect((failure as Error).message).not.toMatch(/introuvable/);
+  });
+});
+
+describe('jira : le bouton, sync', () => {
+  it('envoie chaque requête à la passerelle avec le jeton OAuth, jamais au site', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(GATEWAY), { config: oauthConfig });
+
+    expect(calls).toHaveLength(4);
+    for (const call of calls) {
+      expect(call.url.startsWith(`${GATEWAY}/rest/api/3/`), call.url).toBe(true);
+      expect(call.headers).toMatchObject({ authorization: `Bearer ${ACCESS}` });
+    }
+    expect(idsOf(pages)).toContain('issue:10001');
+  });
+
+  it('rend les mêmes éléments que la clé, avec l’adresse web du site', async () => {
+    const withKey = await runSync(firstPassRoutes());
+    const withButton = await runSync(firstPassRoutes(GATEWAY), { config: oauthConfig });
+
+    expect(itemsOf(withButton.pages)).toEqual(itemsOf(withKey.pages));
+    expect(itemsOf(withButton.pages)[0]?.url).toBe('https://acme.atlassian.net/browse/ACME-12');
+  });
+
+  it('remonte un jeton refusé (401) sur la recherche', async () => {
+    const routes = [
+      { url: `${GATEWAY}/rest/api/3/myself`, json: myself },
+      { url: `${GATEWAY}/rest/api/3/search/jql`, status: 401 },
+    ];
+
+    await expect(runSync(routes, { config: oauthConfig })).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
   });
 });

@@ -62,6 +62,28 @@ describe('callProblems', () => {
     expect(callProblems(asana, get(repeated))).toEqual([]);
   });
 
+  it('retire le préfixe de la passerelle Atlassian avant de chercher l’opération', () => {
+    const gateway = 'https://api.atlassian.com/ex';
+    const id = '1324a887-45db-1bf4-1e99-ef0ff456d421';
+    const jira = specOf('jira');
+    const confluence = specOf('confluence');
+
+    expect(callProblems(jira, get(`${gateway}/jira/${id}/rest/api/3/myself`))).toEqual([]);
+    expect(callProblems(confluence, get(`${gateway}/confluence/${id}/wiki/api/v2/pages`))).toEqual(
+      [],
+    );
+    expect(callProblems(jira, get(`${gateway}/jira/${id}/rest/api/3/inconnu`))).toHaveLength(1);
+    expect(callProblems(jira, get(`${gateway}/jira/${id}/rest/api/3/myself?since=1`))).toEqual([
+      'paramètre « since » absent de la spec',
+    ]);
+  });
+
+  it('ne retire ce préfixe que sur la passerelle Atlassian', () => {
+    const site = 'https://acme.atlassian.net/ex/jira/1324a887/rest/api/3/myself';
+
+    expect(callProblems(specOf('jira'), get(site))).toHaveLength(1);
+  });
+
   it('refuse un champ de corps que la spec ne cite pas', () => {
     const shortcut = specOf('shortcut');
     const url = 'https://api.app.shortcut.com/api/v3/stories/search';

@@ -13,6 +13,9 @@ export const attioCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Dans Attio, en tant qu’administrateur : menu à côté du nom de l’espace › Workspace settings › onglet Developers › + New access token, puis réglez les droits en lecture et copiez le jeton.',
+  oauthHelp:
+    'Attio vous demande d’autoriser Leon à lire les notes, les commentaires, les membres et les fiches de votre espace, en lecture seule. Seul un administrateur de l’espace peut donner cette autorisation. Tant que l’appli n’est pas validée par Attio, un avertissement « pas encore approuvée » s’affiche : vous pouvez continuer.',
   docsUrl: 'https://docs.attio.com/rest-api/guides/authentication',
   triedForReal: false,
+  warning: 'Revue d’Attio nécessaire au-delà de 25 espaces.',
 };

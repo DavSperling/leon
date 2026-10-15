@@ -1,6 +1,8 @@
 import type { ErrorHandler } from 'hono';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { createOAuthRoutes } from '@/server/connectors/oauth-routes';
+import { getConnector } from '@/server/connectors/registry';
 import { logError } from '@/server/log';
 import { authRoutes } from './auth-routes';
 import { briefingRoutes } from './briefing-routes';
@@ -22,5 +24,6 @@ app.route('/auth', authRoutes);
 app.route('/v1', ingestRoutes);
 app.route('/v1', briefingRoutes);
 app.route('/mcp', mcpRoutes);
+app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));
 app.onError(handleApiError);

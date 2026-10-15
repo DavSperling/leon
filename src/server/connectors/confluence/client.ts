@@ -1,21 +1,27 @@
 import { z } from 'zod';
 import type { ConnectorHttp, HttpRequest } from '../http';
+import { type AtlassianConfig, atlassianAccess } from '../jira/access';
 
 // Les requêtes vers l'API de Confluence Cloud et la forme des réponses lues (seulement les champs
 // utiles). Version 1 pour le compte courant (la 2 n'en a pas), version 2 pour tout le reste.
+// Avec une clé : l'adresse du site, en Basic. Avec le bouton : api.atlassian.com/ex/confluence/<cloudId>,
+// en Bearer ; `site` reste le sous-domaine, pour les adresses web des pages.
 
-export type Api = { http: ConnectorHttp; site: string; authorization: string };
+export type Api = {
+  http: ConnectorHttp;
+  site: string;
+  wiki: string;
+  prefix: string;
+  authorization: string;
+};
 
-export function createApi(
-  http: ConnectorHttp,
-  config: { site: string; email: string; apiToken: string },
-): Api {
-  const credentials = Buffer.from(`${config.email}:${config.apiToken}`).toString('base64');
-  return { http, site: config.site, authorization: `Basic ${credentials}` };
+export function createApi(http: ConnectorHttp, config: AtlassianConfig): Api {
+  const { site, root, prefix, authorization } = atlassianAccess(config, 'confluence');
+  return { http, site, wiki: `${root}/wiki`, prefix, authorization };
 }
 
 export const wikiUrl = (site: string) => `https://${site}.atlassian.net/wiki`;
-const v2 = (api: Api) => `${wikiUrl(api.site)}/api/v2`;
+const v2 = (api: Api) => `${api.wiki}/api/v2`;
 
 const PAGE_SIZE = '250'; // le maximum de l'API
 const DateTime = z.iso.datetime({ offset: true });
@@ -58,9 +64,14 @@ const authed = (api: Api, request: HttpRequest): HttpRequest => ({
 });
 
 // L'adresse de la page suivante vient de l'en-tête Link. Les paramètres de la requête d'origine y sont
-// remis (remplacés, jamais répétés) : on ne suppose pas qu'elle les garde tous.
-function withQuery(nextUrl: string, query: Record<string, string>): string {
+// remis (remplacés, jamais répétés) : on ne suppose pas qu'elle les garde tous. Le lien est relatif à
+// /wiki (« </wiki/api/v2/pages?cursor=…> ») : par api.atlassian.com, on ne suppose pas qu'il garde
+// /ex/confluence/<cloudId>, on le remet s'il manque.
+function withQuery(api: Api, nextUrl: string, query: Record<string, string>): string {
   const url = new URL(nextUrl);
+  if (api.prefix !== '' && !url.pathname.startsWith(`${api.prefix}/`)) {
+    url.pathname = `${api.prefix}${url.pathname}`;
+  }
   for (const [name, value] of Object.entries(query)) url.searchParams.set(name, value);
   return url.toString();
 }
@@ -77,7 +88,7 @@ async function* pagesOf<T>(
     const { data, nextUrl } = await api.http.page(request, schema);
     yield data;
     if (nextUrl === null) return;
-    request = authed(api, { url: withQuery(nextUrl, query) });
+    request = authed(api, { url: withQuery(api, nextUrl, query) });
   }
 }
 
@@ -88,7 +99,7 @@ async function readAll<T>(items: AsyncIterable<{ results: T[] }>): Promise<T[]> 
 }
 
 export function fetchMe(api: Api) {
-  return api.http.json(authed(api, { url: `${wikiUrl(api.site)}/rest/api/user/current` }), Me);
+  return api.http.json(authed(api, { url: `${api.wiki}/rest/api/user/current` }), Me);
 }
 
 // Les pages courantes, la plus récemment modifiée d'abord : une réponse par appel.

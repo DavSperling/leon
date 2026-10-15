@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest';
-import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
+import { createHash } from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { collect, type FakeRoute, fakeFetch, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
-import { ConnectorAuthError, ConnectorHttpError } from '../http';
+import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from '../http';
 import { normalizeItem } from '../normalize';
+import { authorizeUrl, exchangeCode, OAuthRefusedError, refreshTokens, tokenHttp } from '../oauth';
+import type { OAuthPending } from '../oauth-cookie';
 import { getConnector } from '../registry';
-import type { ConnectorItem, SyncPage } from '../types';
+import type { ConnectorItem, OAuthSpec, SyncPage } from '../types';
+import { gitlabCatalog } from './catalog';
 import { gitlabConnector } from './connector';
 import issueNotes12Page1 from './fixtures/issue-notes-12-page1.json';
 import issueNotes12Page2 from './fixtures/issue-notes-12-page2.json';
@@ -16,9 +20,12 @@ import mergeRequestsPage1 from './fixtures/merge-requests-page1.json';
 import project from './fixtures/project.json';
 import user from './fixtures/user.json';
 
+// Le socle OAuth enregistre les jetons en base : ces tests n'en ont pas besoin.
+vi.mock('../connections', () => ({ saveOAuthTokens: vi.fn(async () => true) }));
+
 const API = 'https://gitlab.com/api/v4';
 const TOKEN = 'jeton-de-test-0123456789';
-const config = { token: TOKEN, projects: ['acme/leon'] };
+const config = { authMode: 'key' as const, token: TOKEN, projects: ['acme/leon'] };
 const SINCE = new Date('2026-09-15T00:00:00Z');
 
 // Le chemin du projet est encodé ; GitLab écrit les pages suivantes avec l'identifiant numérique.
@@ -69,9 +76,15 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date; projects?: string[] } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    projects?: string[];
+    config?: Parameters<typeof gitlabConnector.verify>[0];
+  } = {},
 ) {
-  const cfg = { ...config, projects: overrides.projects ?? config.projects };
+  const base = overrides.config ?? config;
+  const cfg = { ...base, projects: overrides.projects ?? base.projects };
   const { http, calls } = testHttp(gitlabConnector, cfg, routes);
   const syncState = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
   const pages = await collect(gitlabConnector.sync(cfg, syncState, http));
@@ -98,7 +111,9 @@ describe('gitlab : configuration', () => {
       projects: [' acme/leon ', 'Acme/le.on_x-1', 'acme/equipe/leon'],
     });
 
+    // Une connexion à clé n'a pas de authMode enregistré : le schéma le complète.
     expect(parsed).toEqual({
+      authMode: 'key',
       token: TOKEN,
       projects: ['acme/leon', 'Acme/le.on_x-1', 'acme/equipe/leon'],
     });
@@ -563,5 +578,299 @@ describe('gitlab : sync, erreurs', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as Error).message).toBe('Adresse non autorisée');
+  });
+});
+
+// Le bouton « Se connecter avec GitLab » : la description OAuth, la configuration d'une connexion
+// par bouton, et le jeton OAuth dans l'en-tête Authorization.
+const ACCESS = 'jeton-oauth-0123456789';
+const REFRESH = 'rafraichissement-0123456789';
+const oauthConfig = {
+  authMode: 'oauth' as const,
+  accessToken: ACCESS,
+  refreshToken: REFRESH,
+  expiresAt: '2026-10-15T12:00:00.000Z',
+  projects: ['acme/leon'],
+};
+const CLIENT = { id: 'id-appli-gitlab', secret: 'secret-appli-gitlab' };
+const TOKEN_URL = 'https://gitlab.com/oauth/token';
+const NOW = Date.UTC(2026, 9, 15, 10, 0, 0);
+
+function oauthSpec(): OAuthSpec {
+  const spec = gitlabConnector.oauth;
+  if (!spec) throw new Error('le connecteur GitLab n’a pas de bouton');
+  return spec;
+}
+
+// Réponse de GitLab à l'échange du code (https://docs.gitlab.com/api/oauth2/), jetons inventés.
+const tokenResponse = {
+  access_token: 'jeton-d-acces-gitlab-1',
+  token_type: 'Bearer',
+  expires_in: 7200,
+  refresh_token: 'jeton-de-rafraichissement-gitlab-1',
+  created_at: 1760522400,
+};
+
+describe('gitlab : bouton, description OAuth', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('décrit l’autorisation de gitlab.com : lecture de l’API, PKCE, secret avec les paramètres', () => {
+    const spec = oauthSpec();
+
+    expect(spec).toMatchObject({
+      appKey: 'GITLAB',
+      authorizeUrl: 'https://gitlab.com/oauth/authorize',
+      tokenUrl: TOKEN_URL,
+      scopes: ['read_api'],
+      pkce: true,
+      clientAuth: 'body',
+      tokenBody: 'form',
+      preFields: ['projects'],
+      setupHosts: [],
+    });
+    expect(spec.scopeSeparator).toBeUndefined();
+    expect(spec.extraAuthorizeParams).toBeUndefined();
+    expect(spec.extraTokenParams).toBeUndefined();
+    expect(spec.adminConsent).toBeUndefined();
+  });
+
+  it('demande la portée read_api avec un défi PKCE S256 et l’adresse de retour gitlab', () => {
+    const pending: OAuthPending = {
+      provider: 'gitlab',
+      userId: 'u',
+      tenantId: 't',
+      state: 'etat-1',
+      verifier: 'verificateur-de-test-0123456789-abcdefghijklmnop',
+      since: '30',
+      preFields: { projects: ['acme/leon'] },
+      reconnectId: null,
+      createdAt: NOW,
+    };
+
+    const url = new URL(authorizeUrl(oauthSpec(), { id: CLIENT.id }, pending));
+
+    expect(`${url.origin}${url.pathname}`).toBe('https://gitlab.com/oauth/authorize');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      client_id: CLIENT.id,
+      redirect_uri: expect.stringMatching(/\/api\/v1\/connexions\/oauth\/gitlab\/retour$/),
+      response_type: 'code',
+      state: 'etat-1',
+      scope: 'read_api',
+      code_challenge: createHash('sha256')
+        .update(pending.verifier ?? '')
+        .digest('base64url'),
+      code_challenge_method: 'S256',
+    });
+  });
+
+  it('échange le code en formulaire, avec le vérificateur PKCE et le secret, et lit les jetons', async () => {
+    const spec = oauthSpec();
+    const fetchImpl = fakeFetch([{ method: 'POST', url: TOKEN_URL, json: tokenResponse }]);
+
+    const tokens = await exchangeCode(
+      spec,
+      CLIENT,
+      'code-de-retour',
+      'verificateur-1',
+      tokenHttp(spec, 'gitlab', fetchImpl),
+    );
+
+    const [call] = fetchImpl.calls;
+    expect(call?.headers['content-type']).toBe('application/x-www-form-urlencoded');
+    expect(call?.headers).not.toHaveProperty('authorization');
+    expect(call?.body).toEqual({
+      grant_type: 'authorization_code',
+      code: 'code-de-retour',
+      redirect_uri: expect.stringMatching(/\/api\/v1\/connexions\/oauth\/gitlab\/retour$/),
+      code_verifier: 'verificateur-1',
+      client_id: CLIENT.id,
+      client_secret: CLIENT.secret,
+    });
+    expect(tokens).toMatchObject({
+      accessToken: tokenResponse.access_token,
+      refreshToken: tokenResponse.refresh_token,
+      expiresAt: new Date(NOW + 7200 * 1000).toISOString(),
+      scope: null,
+    });
+    expect(tokens.raw).not.toHaveProperty('access_token');
+    expect(tokens.raw).not.toHaveProperty('refresh_token');
+  });
+
+  it('renouvelle avec le jeton de rafraîchissement et garde le nouveau, qui remplace l’ancien', async () => {
+    const spec = oauthSpec();
+    const rotated = {
+      ...tokenResponse,
+      access_token: 'jeton-d-acces-gitlab-2',
+      refresh_token: 'jeton-de-rafraichissement-gitlab-2',
+    };
+    const fetchImpl = fakeFetch([{ method: 'POST', url: TOKEN_URL, json: rotated }]);
+
+    const tokens = await refreshTokens(
+      spec,
+      CLIENT,
+      tokenResponse.refresh_token,
+      tokenHttp(spec, 'gitlab', fetchImpl),
+    );
+
+    expect(fetchImpl.calls[0]?.body).toEqual({
+      grant_type: 'refresh_token',
+      refresh_token: tokenResponse.refresh_token,
+      client_id: CLIENT.id,
+      client_secret: CLIENT.secret,
+    });
+    expect(tokens).toMatchObject({
+      accessToken: 'jeton-d-acces-gitlab-2',
+      refreshToken: 'jeton-de-rafraichissement-gitlab-2',
+      expiresAt: new Date(NOW + 7200 * 1000).toISOString(),
+    });
+  });
+
+  it('prend pour un refus un jeton de rafraîchissement révoqué ou déjà utilisé (400 invalid_grant)', async () => {
+    const spec = oauthSpec();
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: TOKEN_URL,
+        status: 400,
+        json: { error: 'invalid_grant', error_description: 'The provided grant is revoked.' },
+      },
+    ]);
+
+    const run = refreshTokens(spec, CLIENT, 'ancien', tokenHttp(spec, 'gitlab', fetchImpl));
+
+    await expect(run).rejects.toBeInstanceOf(OAuthRefusedError);
+  });
+
+  it('ne garde que les projets choisis avant le clic, sans rien appeler chez GitLab', async () => {
+    const fetchImpl = fakeFetch([]);
+    const http = createConnectorHttp({ provider: 'gitlab', hosts: [], fetchImpl });
+    const tokens = {
+      accessToken: ACCESS,
+      refreshToken: REFRESH,
+      expiresAt: null,
+      scope: null,
+      raw: {},
+    };
+
+    const fields = await oauthSpec().toConfig(
+      tokens,
+      { projects: ['acme/leon', 'acme/site'] },
+      http,
+    );
+
+    expect(fields).toEqual({ projects: ['acme/leon', 'acme/site'] });
+    expect(fetchImpl.calls).toEqual([]);
+  });
+});
+
+describe('gitlab : bouton, configuration', () => {
+  const schema = gitlabConnector.configSchema;
+
+  it('accepte la forme du bouton, jetons compris', () => {
+    const parsed = schema.parse(oauthConfig);
+
+    expect(parsed).toEqual(oauthConfig);
+  });
+
+  it('accepte un jeton de rafraîchissement et une échéance nuls', () => {
+    const parsed = schema.parse({ ...oauthConfig, refreshToken: null, expiresAt: null });
+
+    expect(parsed).toMatchObject({ refreshToken: null, expiresAt: null });
+  });
+
+  it('refuse la forme du bouton sans jeton d’accès, ou sans projet', () => {
+    const { accessToken: _omitted, ...withoutAccess } = oauthConfig;
+
+    const noAccess = schema.safeParse(withoutAccess);
+    expect(noAccess.success).toBe(false);
+    expect(noAccess.error?.issues.map((issue) => issue.path.join('.'))).toEqual(['accessToken']);
+    expect(schema.safeParse({ ...oauthConfig, accessToken: '' }).success).toBe(false);
+    expect(schema.safeParse({ ...oauthConfig, projects: [] }).success).toBe(false);
+  });
+
+  it('refuse la forme à clé sans clé, même si un jeton OAuth est présent', () => {
+    const failure = schema.safeParse({
+      authMode: 'key',
+      accessToken: ACCESS,
+      projects: ['acme/leon'],
+    });
+
+    expect(failure.success).toBe(false);
+    expect(failure.error?.issues.map((issue) => issue.path.join('.'))).toEqual(['token']);
+    expect(schema.safeParse({ ...oauthConfig, authMode: 'inconnu' }).success).toBe(false);
+  });
+
+  it('reste un objet dont le catalogue lit les clés, et ne chiffre que la clé collée', () => {
+    const shape = (schema as unknown as { shape: Record<string, unknown> }).shape;
+
+    expect(Object.keys(shape).sort()).toEqual(
+      ['accessToken', 'authMode', 'expiresAt', 'projects', 'refreshToken', 'token'].sort(),
+    );
+    expect(gitlabConnector.secretFields).toEqual(['token']);
+    expect(gitlabConnector.hosts(schema.parse(oauthConfig))).toEqual(['gitlab.com']);
+  });
+
+  it('explique au catalogue ce que GitLab demande, et garde la clé collée', () => {
+    expect(gitlabCatalog.oauthHelp).toMatch(/read_api/);
+    expect(gitlabCatalog.oauthHelp?.trim()).not.toBe('');
+    expect(gitlabCatalog.keyAccepted).not.toBe(false);
+    expect(gitlabCatalog.fields.find((field) => field.name === 'projects')?.kind).toBe('list');
+  });
+});
+
+describe('gitlab : bouton, appels avec le jeton OAuth', () => {
+  const bearer = { authorization: `Bearer ${ACCESS}` };
+  const parsedConfig = () => gitlabConnector.configSchema.parse(oauthConfig);
+
+  it('verify envoie Authorization: Bearer, jamais PRIVATE-TOKEN', async () => {
+    const { http, calls } = testHttp(gitlabConnector, oauthConfig, [
+      { url: `${API}/user`, json: user },
+      { url: PROJECT, json: project },
+    ]);
+
+    const result = await gitlabConnector.verify(parsedConfig(), http);
+
+    expect(result).toEqual({ account: 'marie-durand' });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect(call.headers).toMatchObject(bearer);
+      expect(call.headers).not.toHaveProperty('private-token');
+    }
+  });
+
+  it('sync envoie Authorization: Bearer à chaque requête, pages suivantes comprises, jamais dans l’adresse', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(), { config: oauthConfig });
+
+    expect(calls).toHaveLength(7);
+    for (const call of calls) {
+      expect(call.headers).toMatchObject(bearer);
+      expect(call.headers).not.toHaveProperty('private-token');
+      expect(call.url).not.toContain('access_token');
+      expect(call.url).not.toContain(ACCESS);
+    }
+    expect(idsOf(pages)).toEqual([
+      'issue:acme/leon#12',
+      'issue:acme/leon#13',
+      'issue:acme/leon#14',
+      'issue:acme/leon#15',
+      'issue:acme/leon#16',
+      'mr:acme/leon!7',
+      'mr:acme/leon!8',
+    ]);
+  });
+
+  it('remonte un jeton OAuth rejeté (401) pour que le socle tente un renouvellement', async () => {
+    const { http } = testHttp(gitlabConnector, oauthConfig, [{ url: `${API}/user`, status: 401 }]);
+
+    await expect(gitlabConnector.verify(parsedConfig(), http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
   });
 });

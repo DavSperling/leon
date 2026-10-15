@@ -40,9 +40,9 @@ export type Note = z.infer<typeof NoteSchema>;
 // Le chemin « groupe/projet » tient en un seul segment d'adresse : groupe%2Fprojet.
 const projectUrl = (project: string) => `${API}/projects/${encodeURIComponent(project)}`;
 
-export function gitlabClient(token: string, http: ConnectorHttp) {
-  const headers = { 'PRIVATE-TOKEN': token };
-
+// `headers` : l'authentification, `PRIVATE-TOKEN` pour une clé collée ou `Authorization: Bearer` pour
+// un jeton OAuth (voir `authHeaders` dans connector.ts).
+export function gitlabClient(headers: Record<string, string>, http: ConnectorHttp) {
   // Une page à la fois ; la suivante par l'adresse que GitLab donne dans l'en-tête Link.
   async function* pages<T>(first: HttpRequest, schema: z.ZodType<T[]>): AsyncGenerator<T[]> {
     let request: HttpRequest | null = first;

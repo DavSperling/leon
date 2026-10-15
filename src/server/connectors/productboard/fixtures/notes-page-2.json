@@ -1,0 +1,63 @@
+{
+  "data": [
+    {
+      "id": "c4d5e6f7-0a1b-4c2d-8e3f-4a5b6c7d8e90",
+      "type": "textNote",
+      "createdAt": "2026-10-01T10:00:00Z",
+      "updatedAt": "2026-10-02T11:00:00Z",
+      "fields": {
+        "name": "Idée : mode sombre",
+        "tags": [],
+        "content": "Plusieurs utilisateurs réclament un mode sombre.\n\n- tableau de bord\n- éditeur",
+        "owner": { "id": "e23e4567-e89b-12d3-a456-426614174013", "email": "marie@acme.test" },
+        "creator": { "id": "e23e4567-e89b-12d3-a456-426614174014", "email": "paul@acme.test" },
+        "processed": false,
+        "archived": false
+      },
+      "relationships": [],
+      "links": {
+        "self": "https://api.productboard.com/v2/notes/c4d5e6f7-0a1b-4c2d-8e3f-4a5b6c7d8e90",
+        "html": "https://acme.productboard.com/all-notes/notes/38"
+      }
+    },
+    {
+      "id": "d5e6f708-1b2c-4d3e-9f40-5b6c7d8e9fa1",
+      "type": "opportunityNote",
+      "createdAt": "2026-09-18T07:30:00Z",
+      "updatedAt": "2026-09-20T12:00:00Z",
+      "fields": {
+        "name": "Opportunité Dupont SA",
+        "content": [
+          { "id": "amount", "name": "Montant", "value": 12000, "fieldType": "number" },
+          { "id": "company", "name": "Entreprise", "value": "Dupont SA", "fieldType": "string" }
+        ],
+        "tags": [],
+        "processed": false,
+        "archived": false
+      },
+      "relationships": [],
+      "links": {
+        "self": "https://api.productboard.com/v2/notes/d5e6f708-1b2c-4d3e-9f40-5b6c7d8e9fa1",
+        "html": "https://acme.productboard.com/all-notes/notes/35"
+      }
+    },
+    {
+      "id": "e6f70819-2c3d-4e4f-8051-6c7d8e9fa0b2",
+      "type": "textNote",
+      "createdAt": "2026-09-16T08:00:00Z",
+      "updatedAt": "2026-09-16T08:00:00Z",
+      "fields": {
+        "name": "Note vide",
+        "content": "   ",
+        "processed": false,
+        "archived": false
+      },
+      "relationships": [],
+      "links": {
+        "self": "https://api.productboard.com/v2/notes/e6f70819-2c3d-4e4f-8051-6c7d8e9fa0b2",
+        "html": "https://acme.productboard.com/all-notes/notes/34"
+      }
+    }
+  ],
+  "links": { "next": null }
+}

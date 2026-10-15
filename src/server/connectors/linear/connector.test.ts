@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import type { z } from 'zod';
 import {
   collect,
   expectHostsWellFormed,
@@ -10,6 +11,7 @@ import {
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import type { ConnectorItem, SyncPage } from '../types';
+import { linearCatalog } from './catalog';
 import { linearConnector } from './connector';
 import errorAuthentication from './fixtures/error-authentication.json';
 import errorForbidden from './fixtures/error-forbidden.json';
@@ -21,10 +23,18 @@ import issuesPage2 from './fixtures/issues-page-2.json';
 import projectUpdates from './fixtures/project-updates.json';
 import projectUpdatesEmpty from './fixtures/project-updates-empty.json';
 import viewer from './fixtures/viewer.json';
+import { linearOAuth } from './oauth';
 
 // Une clé générée à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const KEY = `lin_api_${randomBytes(12).toString('hex')}`;
-const CONFIG = { apiKey: KEY };
+const CONFIG = { authMode: 'key' as const, apiKey: KEY };
+const ACCESS = `lin_oauth_${randomBytes(12).toString('hex')}`;
+const OAUTH_CONFIG = {
+  authMode: 'oauth',
+  accessToken: ACCESS,
+  refreshToken: `lin_refresh_${randomBytes(12).toString('hex')}`,
+  expiresAt: '2026-10-16T10:00:00.000Z',
+};
 const SINCE = new Date('2026-10-01T00:00:00.000Z');
 const SINCE_ISO = SINCE.toISOString();
 const TOP_ISSUES = '2026-10-14T16:20:00.000Z'; // le plus récent des tickets de la fixture
@@ -60,14 +70,49 @@ describe('linearConnector : configuration', () => {
     expect(linearConnector.configSchema.safeParse({ apiKey: '   ' }).success).toBe(false);
   });
 
-  it('nettoie les espaces autour de la clé', () => {
+  it('nettoie les espaces autour de la clé et prend une connexion sans authMode pour une clé', () => {
     expect(linearConnector.configSchema.parse({ apiKey: ` ${KEY}\n` })).toEqual(CONFIG);
+  });
+
+  it('accepte la forme du bouton, avec ou sans échéance', () => {
+    expect(linearConnector.configSchema.parse(OAUTH_CONFIG)).toEqual(OAUTH_CONFIG);
+    const noExpiry = { ...OAUTH_CONFIG, refreshToken: null, expiresAt: null };
+    expect(linearConnector.configSchema.parse(noExpiry)).toEqual(noExpiry);
+  });
+
+  it('refuse une forme incomplète : jeton d’accès manquant ou vide, clé absente', () => {
+    const parse = (value: unknown) => linearConnector.configSchema.safeParse(value);
+    expect(parse({ authMode: 'oauth' }).success).toBe(false);
+    expect(parse({ ...OAUTH_CONFIG, accessToken: '' }).success).toBe(false);
+    expect(parse({ authMode: 'key', accessToken: ACCESS }).success).toBe(false);
+    expect(parse({ accessToken: ACCESS }).success).toBe(false);
+    expect(parse({ authMode: 'inconnu', apiKey: KEY }).success).toBe(false);
+  });
+
+  it('garde un schéma d’objet que le catalogue sait lire (.shape)', () => {
+    const shape = (linearConnector.configSchema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual([
+      'accessToken',
+      'apiKey',
+      'authMode',
+      'expiresAt',
+      'refreshToken',
+    ]);
   });
 
   it('déclare un hôte exact et sa clé comme secrète', () => {
     expect(linearConnector.hosts(CONFIG)).toEqual(['api.linear.app']);
     expectHostsWellFormed(linearConnector.hosts(CONFIG));
+    // Les jetons du bouton rejoignent les secrets par le socle : ils ne figurent pas ici.
     expect(linearConnector.secretFields).toEqual(['apiKey']);
+  });
+
+  it('déclare la description du bouton, et le catalogue dit ce que l’on verra chez Linear', () => {
+    expect(linearConnector.oauth).toBe(linearOAuth);
+    expect(linearCatalog.oauthHelp?.trim()).toBeTruthy();
+    // La clé reste acceptée, avec son aide.
+    expect(linearCatalog.keyAccepted).not.toBe(false);
+    expect(linearCatalog.keyHelp).toMatch(/Clés d’API personnelles/);
   });
 });
 
@@ -98,6 +143,48 @@ describe('linearConnector : verify', () => {
     ]);
 
     await expect(linearConnector.verify(CONFIG, http)).rejects.toBeInstanceOf(ConnectorAuthError);
+  });
+});
+
+describe('linearConnector : connexion par le bouton', () => {
+  it('verify envoie le jeton OAuth avec « Bearer » et rend le compte', async () => {
+    const { http, calls } = testHttp(linearConnector, OAUTH_CONFIG, [graphql({ json: viewer })]);
+
+    await expect(
+      linearConnector.verify(linearConnector.configSchema.parse(OAUTH_CONFIG), http),
+    ).resolves.toEqual({ account: 'Marie Durand (Acme)' });
+
+    expect(calls[0]?.headers.authorization).toBe(`Bearer ${ACCESS}`);
+  });
+
+  it('sync envoie le jeton OAuth avec « Bearer » à chaque requête', async () => {
+    const config = linearConnector.configSchema.parse(OAUTH_CONFIG);
+    const { http, calls } = testHttp(linearConnector, OAUTH_CONFIG, twoPagesThenUpdates());
+
+    await collect(linearConnector.sync(config, { cursor: null, since: SINCE }, http));
+
+    expect(calls).toHaveLength(3);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${ACCESS}`);
+  });
+
+  it('garde la clé personnelle sans « Bearer » (connexion sans authMode)', async () => {
+    const stored = { apiKey: KEY };
+    const config = linearConnector.configSchema.parse(stored);
+    const { http, calls } = testHttp(linearConnector, stored, [graphql({ json: viewer })]);
+
+    await linearConnector.verify(config, http);
+
+    expect(calls[0]?.headers.authorization).toBe(KEY);
+  });
+
+  it('rend un jeton refusé par un 401 (le socle renouvelle sur ce statut)', async () => {
+    const config = linearConnector.configSchema.parse(OAUTH_CONFIG);
+    const { http } = testHttp(linearConnector, OAUTH_CONFIG, [graphql({ status: 401, json: {} })]);
+
+    const error = await linearConnector.verify(config, http).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ConnectorAuthError);
+    expect((error as ConnectorAuthError).status).toBe(401);
   });
 });
 

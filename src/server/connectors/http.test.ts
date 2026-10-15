@@ -86,6 +86,33 @@ describe('createConnectorHttp : requête', () => {
     expect(calls[0]?.headers.authorization).toBe('Bearer test');
   });
 
+  it('envoie un formulaire encodé, avec son type de contenu', async () => {
+    const { http, calls } = setup([ok({ method: 'POST' })]);
+
+    await http.json(
+      { url: URL_A, method: 'POST', form: { code: 'a b&c', grant_type: 'authorization_code' } },
+      OBJECT,
+    );
+
+    expect(calls[0]?.headers['content-type']).toBe('application/x-www-form-urlencoded');
+    expect(calls[0]?.body).toEqual({ code: 'a b&c', grant_type: 'authorization_code' });
+  });
+
+  it('refuse un formulaire et un corps JSON ensemble, sans appel ni valeur dans le message', async () => {
+    const { http, calls } = setup([ok({ method: 'POST' })]);
+
+    const error = await http
+      .json({ url: URL_A, method: 'POST', form: { code: 'secret-123' }, body: { q: 1 } }, OBJECT)
+      .catch((e: unknown) => e);
+
+    expect(error).toMatchObject({
+      name: 'ConnectorHttpError',
+      status: null,
+      message: 'Requête invalide',
+    });
+    expect(calls).toHaveLength(0);
+  });
+
   it('refuse les redirections et borne la durée de la requête', async () => {
     const seen: RequestInit[] = [];
     const http = createConnectorHttp({

@@ -10,6 +10,7 @@ import {
   listConnections,
   replaceConnectionSecret,
   requestSyncNow,
+  saveOAuthTokens,
   saveSyncProgress,
   setConnectionPaused,
 } from './connections';
@@ -437,6 +438,85 @@ describe('replaceConnectionSecret', () => {
 
     expect(await replaceConnectionSecret(zoe, id, { token: 'pirate-0000' }, ['token'])).toBe(false);
     expect((await readRow(id)).secret).toBe(before);
+  });
+});
+
+describe('saveOAuthTokens', () => {
+  const oauthFields = ['accessToken', 'refreshToken'];
+  const oauthConfig = (extra: Record<string, unknown> = {}) => ({
+    authMode: 'oauth',
+    accessToken: 'acces-nouveau-AB12',
+    refreshToken: 'rafraichir-nouveau',
+    expiresAt: '2026-10-15T12:00:00.000Z',
+    cloudId: 'nuage-1',
+    ...extra,
+  });
+
+  it('sans reconnexion : réécrit jetons et champs ouverts, statut, échéance et réservation inchangés', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+    const before = await readRow(id);
+
+    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: false });
+
+    expect(saved).toBe(true);
+    const row = await readRow(id);
+    expect(row.secret).not.toBe(before.secret);
+    expect(row.secret).not.toContain('acces-nouveau');
+    expect(row.secret_hint).toBe('AB12');
+    expect(row.config).toEqual({
+      authMode: 'oauth',
+      expiresAt: '2026-10-15T12:00:00.000Z',
+      cloudId: 'nuage-1',
+    });
+    expect(row.status).toBe(before.status);
+    expect(row.next_sync_at).toEqual(before.next_sync_at);
+    expect(row.sync_lock_at).toEqual(before.sync_lock_at);
+    expect(row.sync_lock_at).not.toBeNull();
+    await finishSync(paul, id, { kind: 'ok', again: 'later' });
+    await makeDue(id);
+    const loaded = await claimConnection(paul, id);
+    expect(loaded?.config).toMatchObject({
+      accessToken: 'acces-nouveau-AB12',
+      refreshToken: 'rafraichir-nouveau',
+      cloudId: 'nuage-1',
+    });
+  });
+
+  it('avec reconnexion : relance une connexion en erreur, active, sans erreur, échéance maintenant', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    await claimConnection(paul, id);
+    await finishSync(paul, id, { kind: 'auth_error', message: 'Reconnectez Linear.' });
+
+    await saveOAuthTokens(marie, id, oauthConfig(), oauthFields, { reconnect: true });
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.status).toBe('active');
+    expect(row.last_error).toBeNull();
+    expect(row.next_sync_at).not.toBeNull();
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+  });
+
+  it('avec reconnexion : laisse une connexion en pause en pause, sans échéance', async () => {
+    const id = await seedConnection(paul, { status: 'paused' });
+
+    await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: true });
+
+    const row = await readRow(id);
+    expect(row.status).toBe('paused');
+    expect(row.next_sync_at).toBeNull();
+    expect(row.secret_hint).toBe('AB12');
+  });
+
+  it("ne touche pas la connexion d'une autre organisation", async () => {
+    const id = await seedConnection(paul);
+    const before = await readRow(id);
+
+    expect(await saveOAuthTokens(zoe, id, oauthConfig(), oauthFields, { reconnect: true })).toBe(
+      false,
+    );
+    expect(await readRow(id)).toEqual(before);
   });
 });
 

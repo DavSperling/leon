@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
@@ -23,7 +24,7 @@ import { toItem } from './map';
 
 const API = 'https://api.github.com';
 const TOKEN = 'jeton-de-test-0123456789';
-const config = { token: TOKEN, repos: ['acme/leon'] };
+const config = { authMode: 'key' as const, token: TOKEN, repos: ['acme/leon'] };
 const SINCE = new Date('2026-09-15T00:00:00Z');
 
 // GitHub écrit les pages suivantes avec l'identifiant numérique du dépôt.
@@ -78,7 +79,12 @@ describe('github : configuration', () => {
   it('accepte un jeton et des dépôts propriétaire/nom, sans les espaces autour', () => {
     const parsed = schema.parse({ token: `  ${TOKEN} `, repos: [' acme/leon ', 'Acme/le.on_x-1'] });
 
-    expect(parsed).toEqual({ token: TOKEN, repos: ['acme/leon', 'Acme/le.on_x-1'] });
+    // Une connexion à clé, sans `authMode`, est à clé.
+    expect(parsed).toEqual({
+      authMode: 'key',
+      token: TOKEN,
+      repos: ['acme/leon', 'Acme/le.on_x-1'],
+    });
   });
 
   it('refuse une configuration incomplète', () => {
@@ -649,5 +655,161 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
     const run = runSync([{ url: `${SITE}/issues`, status: 404 }], siteOnly);
 
     await expect(run).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+// Le bouton « Se connecter avec GitHub » : une GitHub App, dont le jeton d'accès (ghu_…) s'envoie en
+// Bearer comme un jeton à grain fin.
+describe('github : connexion par le bouton', () => {
+  const ACCESS = 'ghu_exemple-acces-1';
+  const oauthConfig = {
+    authMode: 'oauth' as const,
+    accessToken: ACCESS,
+    refreshToken: 'ghr_exemple-rafraichir-1',
+    expiresAt: '2026-10-15T18:00:00.000Z',
+    repos: ['acme/leon'],
+  };
+  const schema = githubConnector.configSchema;
+  const issuePaths = (input: unknown) =>
+    schema.safeParse(input).error?.issues.map((issue) => issue.path.join('.'));
+
+  it('accepte la forme du bouton, jetons compris', () => {
+    expect(schema.parse(oauthConfig)).toEqual(oauthConfig);
+    expect(schema.parse({ ...oauthConfig, refreshToken: null, expiresAt: null })).toMatchObject({
+      refreshToken: null,
+      expiresAt: null,
+    });
+  });
+
+  it('refuse la forme du bouton sans jeton d’accès, au nom du champ', () => {
+    const { accessToken: _omitted, ...withoutAccess } = oauthConfig;
+
+    expect(issuePaths(withoutAccess)).toEqual(['accessToken']);
+    expect(issuePaths({ ...oauthConfig, accessToken: '   ' })).toContain('accessToken');
+    // Une clé collée ne tient pas lieu de jeton d'accès.
+    expect(issuePaths({ ...withoutAccess, token: TOKEN })).toEqual(['accessToken']);
+  });
+
+  it('refuse la forme à clé sans clé, même avec un jeton d’accès', () => {
+    expect(issuePaths({ authMode: 'key', accessToken: ACCESS, repos: ['acme/leon'] })).toEqual([
+      'token',
+    ]);
+    expect(issuePaths({ accessToken: ACCESS, repos: ['acme/leon'] })).toEqual(['token']);
+  });
+
+  it('refuse un mode inconnu et des dépôts absents', () => {
+    expect(schema.safeParse({ ...oauthConfig, authMode: 'autre' }).success).toBe(false);
+    expect(schema.safeParse({ ...oauthConfig, repos: [] }).success).toBe(false);
+  });
+
+  it('reste un objet à champs nommés, et ne chiffre que la clé collée', () => {
+    const shape = Object.keys((schema as unknown as z.ZodObject).shape);
+
+    expect(shape).toEqual(
+      expect.arrayContaining(['authMode', 'token', 'accessToken', 'refreshToken', 'expiresAt']),
+    );
+    expect(githubConnector.secretFields).toEqual(['token']);
+    expect(githubConnector.hosts(oauthConfig)).toEqual(['api.github.com']);
+  });
+
+  it('verify envoie le jeton d’accès en Bearer', async () => {
+    const { http, calls } = testHttp(githubConnector, oauthConfig, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/repos/acme/leon`, json: repo },
+    ]);
+
+    const result = await githubConnector.verify(oauthConfig, http);
+
+    expect(result).toEqual({ account: 'marie-durand' });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect(call.headers).toMatchObject({
+        authorization: `Bearer ${ACCESS}`,
+        accept: 'application/vnd.github+json',
+        'user-agent': 'Leon',
+      });
+    }
+  });
+
+  it('verify lève un refus d’authentification quand le jeton est rejeté (401), pour que le socle renouvelle', async () => {
+    const { http } = testHttp(githubConnector, oauthConfig, [{ url: `${API}/user`, status: 401 }]);
+
+    await expect(githubConnector.verify(oauthConfig, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
+  });
+
+  it('nomme le dépôt où l’appli n’est pas installée (404)', async () => {
+    const { http } = testHttp(githubConnector, oauthConfig, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/repos/acme/leon`, status: 404 },
+    ]);
+
+    const failure = await githubConnector
+      .verify(oauthConfig, http)
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ConnectorHttpError);
+    expect((failure as Error).message).toBe('Dépôt inaccessible : acme/leon');
+  });
+
+  it('sync envoie le jeton d’accès à chaque requête, pages suivantes comprises', async () => {
+    const { http, calls } = testHttp(githubConnector, oauthConfig, firstPassRoutes());
+
+    const pages = await collect(
+      githubConnector.sync(oauthConfig, { cursor: null, since: SINCE }, http),
+    );
+
+    expect(idsOf(pages)).toEqual([
+      'issue:acme/leon#12',
+      'pr:acme/leon#13',
+      'issue:acme/leon#14',
+      'issue:acme/leon#15',
+      'issue:acme/leon#16',
+    ]);
+    expect(calls.length).toBeGreaterThan(6);
+    for (const call of calls) {
+      expect(call.headers).toMatchObject({
+        authorization: `Bearer ${ACCESS}`,
+        'x-github-api-version': '2022-11-28',
+        'user-agent': 'Leon',
+      });
+    }
+  });
+
+  it('sync remonte le refus d’authentification d’un jeton expiré (401)', async () => {
+    const { http } = testHttp(githubConnector, oauthConfig, [issuesRoute(null, { status: 401 })]);
+
+    const run = collect(githubConnector.sync(oauthConfig, { cursor: null, since: SINCE }, http));
+
+    await expect(run).rejects.toBeInstanceOf(ConnectorAuthError);
+  });
+
+  it('une connexion à clé n’envoie jamais le jeton du bouton', async () => {
+    const mixed = { ...config, accessToken: ACCESS };
+    const { http, calls } = testHttp(githubConnector, mixed, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/repos/acme/leon`, json: repo },
+    ]);
+
+    await githubConnector.verify(githubConnector.configSchema.parse(mixed), http);
+
+    expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
+  });
+});
+
+describe('github : catalogue du bouton', () => {
+  const entry = listCatalog().find((item) => item.id === 'github');
+
+  it('explique ce que l’utilisateur verra chez GitHub, et où installer l’appli', () => {
+    expect(entry?.oauthHelp).toMatch(/installe/i);
+    expect(entry?.oauthHelp).toMatch(/lecture seule/i);
+    expect(entry?.oauthHelp).toContain('Pull requests');
+  });
+
+  it('garde la clé collée en secours, avec son aide', () => {
+    expect(entry?.keyAccepted).not.toBe(false);
+    expect(entry?.keyHelp).toContain('Fine-grained tokens');
+    expect(entry?.fields.map((field) => field.name)).toEqual(['token', 'repos']);
   });
 });

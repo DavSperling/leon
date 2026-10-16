@@ -2,8 +2,19 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Thème clair seulement ; les jetons sont sémantiques, un `.dark` s'ajoutera sans toucher aux composants. */
-@custom-variant dark (&:is(.dark *));
+/* Les jetons sont sémantiques : un composant n'a rien à savoir du thème. La variante `dark:` vaut pour
+   `.dark` (thème sombre) et, quand le système est en sombre, pour `.theme-systeme` (thème système). */
+@custom-variant dark {
+  &:is(.dark *) {
+    @slot;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:is(.theme-systeme *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --font-heading: var(--font-sans);
@@ -53,11 +64,12 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
 
-  /* Ombres à peine visibles pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts). */
-  --shadow-xs: 0 1px 2px rgb(23 23 23 / 0.04);
-  --shadow-sm: 0 1px 2px rgb(23 23 23 / 0.05), 0 0 0 1px rgb(23 23 23 / 0.04);
-  --shadow-md: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
-  --shadow-lg: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
+  /* Ombres à peine visibles pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts).
+     `inline` recopie ces valeurs dans les classes : la couleur passe donc par --shadow-rgb, que chaque thème fixe. */
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-rgb) / 0.04);
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-rgb) / 0.05), 0 0 0 1px rgb(var(--shadow-rgb) / 0.04);
+  --shadow-md: 0 8px 24px rgb(var(--shadow-rgb) / 0.08), 0 0 0 1px rgb(var(--shadow-rgb) / 0.06);
+  --shadow-lg: 0 8px 24px rgb(var(--shadow-rgb) / 0.08), 0 0 0 1px rgb(var(--shadow-rgb) / 0.06);
 }
 
 :root {
@@ -99,6 +111,93 @@
   --sidebar-accent-foreground: #171717;
   --sidebar-border: #e7e7e5;
   --sidebar-ring: #4f46c8;
+  --shadow-rgb: 23 23 23;
+}
+
+/* Thème sombre : posé par `.dark` sur <html>, ou par `.theme-systeme` quand le système est en sombre.
+   Les deux blocs portent les mêmes valeurs (un test de contrat vérifie qu'ils ne divergent pas). */
+.dark {
+  color-scheme: dark;
+  --background: #0f0f11;
+  --foreground: #ededef;
+  --foreground-2: #c2c2c8;
+  --card: #151517;
+  --card-foreground: #ededef;
+  --popover: #1b1b1e;
+  --popover-foreground: #ededef;
+  --primary: #8f88f2;
+  --primary-foreground: #0f0f11;
+  --primary-soft: #25234a;
+  --secondary: #151517;
+  --secondary-foreground: #ededef;
+  --muted: #0f0f11;
+  --muted-foreground: #9a9aa3;
+  --accent: #222226;
+  --accent-foreground: #ededef;
+  --quote: #1b1b1e;
+  --success: #6fcf8e;
+  --success-soft: #132a1b;
+  --warning: #e8a54b;
+  --warning-soft: #2e2210;
+  --destructive: #f0786c;
+  --destructive-soft: #33161a;
+  --info: #7aa7f0;
+  --info-soft: #152238;
+  --border: #2a2a2f;
+  --input: #6b6b74;
+  --ring: #8f88f2;
+  --sidebar: #0f0f11;
+  --sidebar-foreground: #ededef;
+  --sidebar-primary: #8f88f2;
+  --sidebar-primary-foreground: #0f0f11;
+  --sidebar-accent: #222226;
+  --sidebar-accent-foreground: #ededef;
+  --sidebar-border: #2a2a2f;
+  --sidebar-ring: #8f88f2;
+  --shadow-rgb: 0 0 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .theme-systeme {
+    color-scheme: dark;
+    --background: #0f0f11;
+    --foreground: #ededef;
+    --foreground-2: #c2c2c8;
+    --card: #151517;
+    --card-foreground: #ededef;
+    --popover: #1b1b1e;
+    --popover-foreground: #ededef;
+    --primary: #8f88f2;
+    --primary-foreground: #0f0f11;
+    --primary-soft: #25234a;
+    --secondary: #151517;
+    --secondary-foreground: #ededef;
+    --muted: #0f0f11;
+    --muted-foreground: #9a9aa3;
+    --accent: #222226;
+    --accent-foreground: #ededef;
+    --quote: #1b1b1e;
+    --success: #6fcf8e;
+    --success-soft: #132a1b;
+    --warning: #e8a54b;
+    --warning-soft: #2e2210;
+    --destructive: #f0786c;
+    --destructive-soft: #33161a;
+    --info: #7aa7f0;
+    --info-soft: #152238;
+    --border: #2a2a2f;
+    --input: #6b6b74;
+    --ring: #8f88f2;
+    --sidebar: #0f0f11;
+    --sidebar-foreground: #ededef;
+    --sidebar-primary: #8f88f2;
+    --sidebar-primary-foreground: #0f0f11;
+    --sidebar-accent: #222226;
+    --sidebar-accent-foreground: #ededef;
+    --sidebar-border: #2a2a2f;
+    --sidebar-ring: #8f88f2;
+    --shadow-rgb: 0 0 0;
+  }
 }
 
 @layer base {

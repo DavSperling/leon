@@ -1,19 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { cardUrl } from '@/server/memory/card-url';
-import { listFiles, productionSources } from './files';
+import { taskUrl } from '@/server/tasks/task-url';
+import { pageRoutes, productionSources } from './files';
 
 const CARD_ID = '00000000-0000-4000-8000-000000000000';
 
-// Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
-const routeOf = (file: string): string =>
-  `/${file
-    .replace(/^src\/app\//, '')
-    .split('/')
-    .slice(0, -1)
-    .filter((segment) => !/^\(.*\)$/.test(segment))
-    .join('/')}`;
-
-const ROUTES = listFiles('src/app/**/page.tsx').map(routeOf);
+const ROUTES = pageRoutes();
 
 // Un segment dynamique [x] de la route accepte n'importe quel segment du lien.
 function matchesRoute(path: string): boolean {
@@ -58,13 +50,19 @@ function writtenPaths(): Array<{ file: string; path: string }> {
 describe('liens entre pages', () => {
   it('connaît les routes de l’application', () => {
     expect(ROUTES).toEqual(
-      expect.arrayContaining(['/', '/fiches/[id]', '/journal', '/a-verifier']),
+      expect.arrayContaining(['/', '/fiches/[id]', '/journal', '/a-verifier', '/taches']),
     );
   });
 
   it('mène le lien des résultats MCP (cardUrl) à la page d’une fiche', () => {
     const path = new URL(cardUrl(CARD_ID)).pathname.replace(CARD_ID, '[id]');
     expect(path).toBe('/fiches/[id]');
+    expect(matchesRoute(path)).toBe(true);
+  });
+
+  it('mène le lien des résultats MCP (taskUrl) à la page d’une tâche', () => {
+    const path = new URL(taskUrl('LEO-12')).pathname.replace('LEO-12', '[ref]');
+    expect(path).toBe('/taches/[ref]');
     expect(matchesRoute(path)).toBe(true);
   });
 

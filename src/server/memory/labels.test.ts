@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  actorLabel,
   clientLabel,
   isoDate,
   oneLine,
@@ -26,6 +27,16 @@ describe('labels', () => {
     expect(clientLabel('claude-code')).toBe('Claude Code');
     expect(clientLabel('cursor')).toBe('cursor');
     expect(clientLabel('constructor')).toBe('constructor');
+  });
+
+  it('nomme l’auteur d’une écriture : une personne, un agent par son client, un compte supprimé', () => {
+    const person = { actorKind: 'user', client: null, actor: { name: 'Paul Martin' } } as const;
+    const agent = { ...person, actorKind: 'agent' } as const;
+    expect(actorLabel(person)).toBe('Paul Martin');
+    expect(actorLabel({ ...agent, client: 'claude-code' })).toBe('Claude Code (agent)');
+    expect(actorLabel({ ...agent, client: 'cursor' })).toBe('cursor (agent)');
+    expect(actorLabel({ ...agent, client: null })).toBe('mcp (agent)');
+    expect(actorLabel({ ...person, actor: null })).toBe('Compte supprimé');
   });
 
   it('écrit la date en AAAA-MM-JJ, en UTC', () => {

@@ -1,22 +1,35 @@
+'use client';
+
 import { ChevronsUpDown } from 'lucide-react';
-import { signOutAction } from '@/app/(app)/actions';
+import { startTransition } from 'react';
+import { setThemeAction, signOutAction } from '@/app/(app)/actions';
+import { THEME_CHOICES } from '@/components/theme-choices';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import type { Theme } from '@/lib/theme-cookie';
 
 type WorkspaceMenuProps = {
   organizationName: string;
   userName: string;
   userEmail: string;
+  theme: Theme;
 };
 
-// Haut de la barre latérale : l'organisation, et le menu du compte derrière.
-export function WorkspaceMenu({ organizationName, userName, userEmail }: WorkspaceMenuProps) {
+// Haut de la barre latérale : l'organisation, et le menu du compte derrière (thème, déconnexion).
+export function WorkspaceMenu({
+  organizationName,
+  userName,
+  userEmail,
+  theme,
+}: WorkspaceMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -47,6 +60,20 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Workspa
             {userEmail}
           </span>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Thème</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          aria-label="Thème"
+          value={theme}
+          onValueChange={(value) => startTransition(() => setThemeAction(value))}
+        >
+          {THEME_CHOICES.map(({ value, label, Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <form action={signOutAction}>
           <DropdownMenuItem asChild>

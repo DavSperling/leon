@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { CommandSearch } from '@/components/command-search';
+import { Panel } from '@/components/panel';
 import { TreeView } from '@/components/tree-view';
 import { requireUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
@@ -21,7 +22,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       userEmail={profile.email}
       reviewCount={briefing.reviewCount}
       search={<CommandSearch />}
-      tree={<TreeView tree={tree} />}
+      column={
+        <Panel label="Fiches" title="Mémoire partagée">
+          <TreeView tree={tree} />
+        </Panel>
+      }
     >
       {children}
     </AppShell>

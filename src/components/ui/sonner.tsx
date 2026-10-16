@@ -8,11 +8,14 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import type { Theme } from '@/lib/theme-cookie';
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const SONNER_THEME = { clair: 'light', sombre: 'dark', systeme: 'system' } as const;
+
+const Toaster = ({ theme, ...props }: Omit<ToasterProps, 'theme'> & { theme: Theme }) => {
   return (
     <Sonner
-      theme="light"
+      theme={SONNER_THEME[theme]}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

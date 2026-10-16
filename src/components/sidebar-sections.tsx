@@ -1,6 +1,14 @@
 'use client';
 
-import { BookOpen, ClipboardCheck, Inbox, Layers, type LucideIcon, Settings } from 'lucide-react';
+import {
+  BookOpen,
+  ClipboardCheck,
+  Inbox,
+  Layers,
+  type LucideIcon,
+  Settings,
+  SquareCheck,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { formatNumber } from '@/lib/format';
@@ -8,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 export const SECTIONS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: '/', label: 'Briefing', icon: Layers },
+  { href: '/taches', label: 'Tâches', icon: SquareCheck },
   { href: '/a-verifier', label: 'À vérifier', icon: ClipboardCheck },
   { href: '/sources', label: 'Sources', icon: Inbox },
   { href: '/journal', label: 'Journal', icon: BookOpen },

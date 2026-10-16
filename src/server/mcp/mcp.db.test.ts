@@ -1,10 +1,6 @@
-import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { and, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS } from '@/capture/api-contract';
-import { app } from '@/server/api/app';
-import { createApiToken } from '@/server/auth/api-tokens';
-import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { cardUrl } from '@/server/memory/card-url';
 import { CARD_MAX_CHARS, DATA_GUARD_LINE } from '@/server/memory/render-card';
@@ -12,6 +8,7 @@ import * as searchModule from '@/server/memory/search';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
+import { call, closeClients, connect } from '@/test/mcp-client';
 import { seedRightsScenario } from '@/test/rights-scenario';
 
 vi.mock('@/server/pipeline/queue');
@@ -19,39 +16,7 @@ vi.mock('@/server/pipeline/queue');
 beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 afterEach(() => vi.restoreAllMocks());
 
-const clients: Client[] = [];
-afterEach(async () => {
-  await Promise.all(clients.splice(0).map((client) => client.close()));
-});
-
-async function connect(ctx: TenantContext): Promise<Client> {
-  const { token } = await createApiToken(ctx, 'test');
-  const transport = new StreamableHTTPClientTransport(
-    new URL(`http://localhost:3000${API_PATHS.mcp}`),
-    {
-      fetch: async (url, init) => app.request(url.toString(), init),
-      requestInit: {
-        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'claude-code/2.1.296' },
-      },
-    },
-  );
-  const client = new Client({ name: 'test', version: '1.0.0' });
-  await client.connect(transport);
-  clients.push(client);
-  return client;
-}
-
-type ToolResult = {
-  isError?: boolean;
-  content: Array<{ type: string; text?: string }>;
-  structuredContent?: Record<string, unknown>;
-};
-
-async function call(client: Client, name: string, args: Record<string, unknown> = {}) {
-  const result = (await client.callTool({ name, arguments: args })) as ToolResult;
-  const text = result.content.map((block) => block.text ?? '').join('\n');
-  return { ...result, text };
-}
+afterEach(closeClients);
 
 const resultIds = (structured: Record<string, unknown> | undefined) =>
   ((structured?.results ?? []) as Array<{ id: string }>).map((r) => r.id);
@@ -63,7 +28,7 @@ describe('serveur MCP', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
 
-  it('annonce exactement search, fetch, briefing et remember, avec leurs annotations', async () => {
+  it('annonce exactement les outils de la mémoire et des tâches, avec leurs annotations', async () => {
     const { paul } = await seedRightsScenario();
     const client = await connect(paul);
 
@@ -74,17 +39,34 @@ describe('serveur MCP', () => {
       'fetch',
       'remember',
       'search',
+      'task_comment',
+      'task_create',
+      'task_get',
+      'task_list',
+      'task_start',
+      'task_update',
     ]);
     const annotations = Object.fromEntries(tools.map((tool) => [tool.name, tool.annotations]));
-    for (const name of ['search', 'fetch', 'briefing']) {
+    for (const name of ['search', 'fetch', 'briefing', 'task_list', 'task_get']) {
       expect(annotations[name]).toMatchObject({ readOnlyHint: true, openWorldHint: false });
     }
-    expect(annotations.remember).toMatchObject({
+    for (const name of ['remember', 'task_create', 'task_comment', 'task_start']) {
+      expect(annotations[name]).toMatchObject({
+        readOnlyHint: false,
+        destructiveHint: false,
+        openWorldHint: false,
+      });
+    }
+    // task_update remplace la description sans la garder : il se déclare destructeur.
+    expect(annotations.task_update).toMatchObject({
       readOnlyHint: false,
-      destructiveHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
       openWorldHint: false,
     });
     expect(client.getInstructions()).toContain('appelle search puis fetch');
+    expect(client.getInstructions()).toContain('task_list et task_get');
+    expect(client.getInstructions()).toContain('task_start');
   });
 
   it('search : « zanzibar » trouve une fiche pour Paul et aucune pour Marie', async () => {

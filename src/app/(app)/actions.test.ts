@@ -1,13 +1,15 @@
+import { cookies } from 'next/headers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { searchMemory } from '@/server/memory/search';
-import { searchAction, signOutAction } from './actions';
+import { searchAction, setThemeAction, signOutAction } from './actions';
 
 vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
   signOutCurrentUser: vi.fn(),
 }));
 vi.mock('@/server/memory/search', () => ({ searchMemory: vi.fn() }));
+vi.mock('next/headers', () => ({ cookies: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -59,4 +61,31 @@ describe('searchAction', () => {
 
     expect(searchMemory).not.toHaveBeenCalled();
   });
+});
+
+describe('setThemeAction', () => {
+  const set = vi.fn();
+
+  beforeEach(() => {
+    vi.mocked(cookies).mockResolvedValue({ set } as unknown as Awaited<ReturnType<typeof cookies>>);
+  });
+
+  it.each(['clair', 'sombre', 'systeme'])('enregistre le thème %s pour un an', async (theme) => {
+    await setThemeAction(theme);
+
+    expect(set).toHaveBeenCalledWith('leon-theme', theme, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    });
+  });
+
+  it.each(['', 'dark', 'SOMBRE', 'clair; path=/x'])(
+    'refuse la valeur %j sans rien écrire',
+    async (theme) => {
+      await expect(setThemeAction(theme)).rejects.toThrow();
+
+      expect(set).not.toHaveBeenCalled();
+    },
+  );
 });

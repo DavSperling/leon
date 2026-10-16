@@ -1,21 +1,12 @@
 'use client';
 
 import { Copy } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { copyText } from './copy-text';
 
 export function CopyButton({ text }: { text: string }) {
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success('Copié.');
-    } catch {
-      toast.error('Impossible de copier. Sélectionnez le texte à la main.');
-    }
-  }
-
   return (
-    <Button variant="outline" size="sm" onClick={copy}>
+    <Button variant="outline" size="sm" onClick={() => copyText(text)}>
       <Copy size={16} strokeWidth={1.5} aria-hidden="true" />
       Copier
     </Button>

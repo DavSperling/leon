@@ -11,6 +11,18 @@ export function listFiles(pattern: string): string[] {
     .sort();
 }
 
+// Chemin d'URL de chaque page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
+export const pageRoutes = (): string[] =>
+  listFiles('src/app/**/page.tsx').map(
+    (file) =>
+      `/${file
+        .replace(/^src\/app\//, '')
+        .split('/')
+        .slice(0, -1)
+        .filter((segment) => !/^\(.*\)$/.test(segment))
+        .join('/')}`,
+  );
+
 export function readText(path: string): string {
   return readFileSync(`${ROOT}${path}`, 'utf8');
 }

@@ -1,5 +1,5 @@
 import type { SourceKind } from '@/capture/turn';
-import type { SensitiveCategory } from '@/lib/enums';
+import type { SensitiveCategory, TaskActorKind } from '@/lib/enums';
 
 // Libellés d'affichage. Module pur : n'importe ni env ni la base.
 
@@ -26,6 +26,17 @@ const CLIENT_LABELS = new Map([
 // Client du journal de lecture (D9) ; un client inconnu garde son nom.
 export function clientLabel(client: string): string {
   return CLIENT_LABELS.get(client) ?? client;
+}
+
+// Qui a écrit dans une tâche : une personne par son nom, un agent par son client
+// (« Claude Code (agent) »), un compte supprimé comme tel.
+export function actorLabel(item: {
+  actorKind: TaskActorKind;
+  client: string | null;
+  actor: { name: string } | null;
+}): string {
+  if (item.actorKind === 'agent') return `${clientLabel(item.client ?? 'mcp')} (agent)`;
+  return item.actor?.name ?? 'Compte supprimé';
 }
 
 export function isoDate(date: Date): string {

@@ -1,7 +1,11 @@
+import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import { ShellFrame } from '@/components/shell-frame';
 import { SidebarSections } from '@/components/sidebar-sections';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { WorkspaceMenu } from '@/components/workspace-menu';
+import { isRailOpen, RAIL_COOKIE } from '@/lib/rail-cookie';
+import { parseTheme, THEME_COOKIE } from '@/lib/theme-cookie';
 
 type AppShellProps = {
   organizationName: string;
@@ -9,23 +13,26 @@ type AppShellProps = {
   userEmail: string;
   reviewCount: number;
   search?: ReactNode; // champ de recherche de la barre latérale (T19)
-  tree?: ReactNode; // arbre des types, colonne de gauche du panneau (T19)
+  column: ReactNode; // colonne de gauche du panneau : l'arbre des fiches, ou la navigation des tâches
   children: ReactNode;
 };
 
 // Ossature de l'espace connecté : une barre latérale sur fond gris, puis un panneau blanc qui
-// réunit l'arbre des fiches et la page lue. Sous 1024 px la page défile, sans tiroir.
-export function AppShell({
+// réunit une colonne de navigation et la page lue. Sous 1024 px la page défile, sans tiroir.
+export async function AppShell({
   organizationName,
   userName,
   userEmail,
   reviewCount,
   search,
-  tree,
+  column,
   children,
 }: AppShellProps) {
+  const jar = await cookies();
+  const railOpen = isRailOpen(jar.get(RAIL_COOKIE)?.value);
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       <a
         href="#contenu"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2"
@@ -33,12 +40,14 @@ export function AppShell({
         Aller au contenu
       </a>
       <ShellFrame
+        defaultRailOpen={railOpen}
         rail={
           <nav aria-label="Navigation principale" className="flex flex-col gap-5">
             <WorkspaceMenu
               organizationName={organizationName}
               userName={userName}
               userEmail={userEmail}
+              theme={theme}
             />
             {search}
             <SidebarSections reviewCount={reviewCount} />
@@ -46,10 +55,7 @@ export function AppShell({
         }
         panel={
           <div className="flex min-w-0 flex-1 overflow-hidden rounded-2xl border bg-card shadow-sm">
-            <aside aria-label="Fiches" className="flex w-[300px] shrink-0 flex-col border-r">
-              <p className="px-6 pt-5 pb-3 text-base text-muted-foreground">Mémoire partagée</p>
-              <div className="min-h-0 flex-1 overflow-y-auto pb-4">{tree}</div>
-            </aside>
+            {column}
             <main
               id="contenu"
               tabIndex={-1}
@@ -60,6 +66,6 @@ export function AppShell({
           </div>
         }
       />
-    </>
+    </TooltipProvider>
   );
 }

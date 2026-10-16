@@ -26,7 +26,7 @@ export async function firstOrganizationId(userId: string): Promise<string | null
   return row?.organizationId ?? null;
 }
 
-async function isMember(userId: string, tenantId: string): Promise<boolean> {
+export async function isMember(userId: string, tenantId: string): Promise<boolean> {
   const rows = await db
     .select({ id: members.id })
     .from(members)

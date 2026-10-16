@@ -1,6 +1,6 @@
 // Formats français de l'interface. Les dates s'écrivent à l'heure de Paris, quel que soit le fuseau du serveur.
-const LOCALE = 'fr-FR';
-const TIME_ZONE = 'Europe/Paris';
+export const LOCALE = 'fr-FR';
+export const TIME_ZONE = 'Europe/Paris';
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

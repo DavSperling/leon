@@ -590,6 +590,69 @@ describe('numéros, ACL et créateur des tâches', () => {
     await expect(insertTask(marie, team, { creatorId: null })).rejects.toMatchObject(DENIED);
     await expect(insertTask(marie, team)).resolves.toBeDefined();
   });
+
+  it('Marie ne déplace pas une tâche d’équipe vers le projet privé de Paul : 42501', async () => {
+    const task = await insertTask(marie, team);
+    const move = withTenant(marie, (tx) =>
+      tx
+        .update(tasks)
+        .set({ projectId: paulOnly.projectId, statusId: paulOnly.statusIds.todo })
+        .where(eq(tasks.id, task.id)),
+    );
+    await expect(move).rejects.toMatchObject(DENIED);
+  });
+
+  it('Marie ne crée pas de tâche dans le projet privé de Paul, même au bon numéro : 42501', async () => {
+    const [project] = await withTenant(paul, (tx) =>
+      tx
+        .select({ lastNumber: taskProjects.lastNumber })
+        .from(taskProjects)
+        .where(eq(taskProjects.id, paulOnly.projectId)),
+    );
+    if (!project) throw new Error('projet de test invisible');
+    // le numéro est imposé : Marie ne peut pas prendre le compteur d'un projet qu'elle ne voit pas
+    const insert = insertTask(marie, paulOnly, { number: project.lastNumber });
+    await expect(insert).rejects.toMatchObject(DENIED);
+  });
+
+  it('refuse de déplacer une tâche sans prendre le compteur du projet visé : 42501, accepte avec', async () => {
+    // compteur à zéro : le numéro de la tâche (au moins 1) ne peut pas l'égaler par hasard
+    const target = await seedTaskProject(paul.tenantId, { key: 'DEP', acl: [paul.userId] });
+    const task = await insertTask(paul, team);
+    const move = (takeCounter: boolean) =>
+      withTenant(paul, async (tx) =>
+        tx
+          .update(tasks)
+          .set({
+            projectId: target.projectId,
+            statusId: target.statusIds.todo,
+            ...(takeCounter ? { number: await takeNumber(tx, target.projectId) } : {}),
+          })
+          .where(eq(tasks.id, task.id))
+          .returning({ number: tasks.number }),
+      );
+    await expect(move(false)).rejects.toMatchObject(DENIED);
+    await expect(move(true)).resolves.toEqual([{ number: 1 }]);
+  });
+
+  it('refuse de créer un projet avec un compteur non nul : 42501, accepte zéro', async () => {
+    const insertProject = (lastNumber: number) =>
+      withTenant(paul, (tx) =>
+        tx
+          .insert(taskProjects)
+          .values({
+            tenantId: paul.tenantId,
+            key: 'CPT',
+            name: 'Compteur',
+            lastNumber,
+            acl: [paul.tenantId],
+          })
+          .returning({ lastNumber: taskProjects.lastNumber }),
+      );
+    await expect(insertProject(2_147_483_647)).rejects.toMatchObject(DENIED);
+    await expect(insertProject(1)).rejects.toMatchObject(DENIED);
+    await expect(insertProject(0)).resolves.toEqual([{ lastNumber: 0 }]);
+  });
 });
 
 describe('vues enregistrées', () => {

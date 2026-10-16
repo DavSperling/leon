@@ -193,21 +193,28 @@ create policy author_insert on task_comments as restrictive for insert to leon_a
 create policy actor_insert on task_events as restrictive for insert to leon_app
   with check (actor_id = any(app_principals()));
 
--- Le compteur n'avance que d'un pas (takeNumber) : remis à zéro ou poussé au maximum, il bloquerait
--- toute création.
+-- Le compteur part de zéro et n'avance que d'un pas (takeNumber) : posé à la création, remis à zéro
+-- ou poussé au maximum, il bloquerait toute création.
 create function task_projects_guard() returns trigger language plpgsql as $$
 begin
-  if new.last_number not in (old.last_number, old.last_number + 1) then
+  if tg_op = 'INSERT' then
+    if new.last_number <> 0 then
+      raise exception 'compteur de numéros modifié' using errcode = '42501';
+    end if;
+  elsif new.last_number not in (old.last_number, old.last_number + 1) then
     raise exception 'compteur de numéros modifié' using errcode = '42501';
   end if;
   return new;
 end $$;
-create trigger task_projects_guard before update of last_number on task_projects
+create trigger task_projects_guard before insert or update of last_number on task_projects
   for each row execute function task_projects_guard();
 
 -- Numéro et ACL d'une tâche viennent de son projet, lu sous la RLS de l'appelant (security invoker).
--- Le numéro est celui que createTask ou un changement de projet vient de prendre au compteur, dans
--- la même transaction ; sans changement de projet, il ne bouge plus.
+-- À l'insertion et au changement de projet, le numéro doit égaler le compteur courant du projet :
+-- createTask et le changement de projet le prennent toujours au compteur, juste avant. La base
+-- n'exige pas qu'il ait été pris dans la même transaction (le numéro d'une dernière tâche supprimée
+-- peut donc être réattribué) ; seul un bug de code pourrait en profiter. Sans changement de projet,
+-- le numéro ne bouge plus.
 create function tasks_guard() returns trigger language plpgsql as $$
 declare
   project record;

@@ -99,7 +99,10 @@ it('suit une tâche de sa création à sa fin, entre l’interface et un agent, 
     isError: true,
     text: 'Tâche introuvable : ATE-1.',
   });
-  expect(await call(zoeMcp, 'task_start', { ref: 'ATE-1' })).toMatchObject({ isError: true });
+  expect(await call(zoeMcp, 'task_start', { ref: 'ATE-1' })).toMatchObject({
+    isError: true,
+    text: 'Tâche introuvable : ATE-1.',
+  });
 
   // Rien n'a bougé pour Paul.
   const unchanged = await readTask(task.id);

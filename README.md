@@ -50,7 +50,7 @@ Les agents (Claude Code, Cursor…) les lisent et les écrivent par le serveur M
 | `task_comment` | commenter une tâche |
 | `task_start` | à appeler avant de coder : assigne la tâche à l'utilisateur, la passe en cours et renvoie le nom de la branche à créer |
 
-Tout se désigne par son nom (statut, étiquette, e-mail d'un membre, clé de projet), jamais par un identifiant interne. Aucun outil ne supprime une tâche. Chaque action d'un agent est inscrite dans l'activité de la tâche avec le nom de son client.
+Tout se désigne par son nom (statut, étiquette, e-mail d'un membre, clé de projet), jamais par un identifiant interne. Aucun outil ne supprime une tâche. Chaque modification faite par un agent est inscrite dans l'activité de la tâche avec le nom de son client ; les lectures (`task_list`, `task_get`) n'y laissent rien.
 
 ## Briefing au démarrage de Claude Code
 

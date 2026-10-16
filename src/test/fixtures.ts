@@ -202,35 +202,39 @@ export async function seedTaskProject(
   return { projectId: project.id, statusIds: statusIds as Record<TaskStatusCategory, string> };
 }
 
-type SeedTaskInput = Pick<typeof tasks.$inferInsert, 'projectId' | 'statusId'> &
-  Partial<Omit<typeof tasks.$inferInsert, 'tenantId' | 'number' | 'acl'>>;
+type SeedTaskInput = Pick<typeof tasks.$inferInsert, 'projectId' | 'statusId'> & {
+  creatorId: string;
+} & Partial<Omit<typeof tasks.$inferInsert, 'tenantId' | 'number' | 'acl' | 'creatorId'>>;
 
-// Numéro suivant du projet, comme createTask ; le tenant et l'ACL sont ceux du projet.
-export async function seedTask(input: SeedTaskInput): Promise<string> {
-  const [project] = await adminDb
-    .update(taskProjects)
-    .set({ lastNumber: sql`${taskProjects.lastNumber} + 1` })
-    .where(eq(taskProjects.id, input.projectId))
-    .returning({
-      tenantId: taskProjects.tenantId,
-      number: taskProjects.lastNumber,
-      acl: taskProjects.acl,
-    });
-  if (!project) throw new Error('projet de la tâche de test introuvable');
-  const [task] = await adminDb
-    .insert(tasks)
-    .values({
-      title: 'Tâche de test',
-      position: project.number,
-      origin: 'ui',
-      ...input,
-      tenantId: project.tenantId,
-      number: project.number,
-      acl: project.acl,
-    })
-    .returning({ id: tasks.id });
-  if (!task) throw new Error('tâche de test non créée');
-  return task.id;
+// Comme createTask : le numéro est pris au compteur du projet dans la transaction de l'insertion
+// (tasks_guard l'exige), le tenant et l'ACL sont ceux du projet, le créateur est obligatoire.
+export function seedTask(input: SeedTaskInput): Promise<string> {
+  return adminDb.transaction(async (tx) => {
+    const [project] = await tx
+      .update(taskProjects)
+      .set({ lastNumber: sql`${taskProjects.lastNumber} + 1` })
+      .where(eq(taskProjects.id, input.projectId))
+      .returning({
+        tenantId: taskProjects.tenantId,
+        number: taskProjects.lastNumber,
+        acl: taskProjects.acl,
+      });
+    if (!project) throw new Error('projet de la tâche de test introuvable');
+    const [task] = await tx
+      .insert(tasks)
+      .values({
+        title: 'Tâche de test',
+        position: project.number,
+        origin: 'ui',
+        ...input,
+        tenantId: project.tenantId,
+        number: project.number,
+        acl: project.acl,
+      })
+      .returning({ id: tasks.id });
+    if (!task) throw new Error('tâche de test non créée');
+    return task.id;
+  });
 }
 
 export async function seedTaskLabel(

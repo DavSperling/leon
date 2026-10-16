@@ -1,6 +1,7 @@
 -- 0007-taches.sql : projets, statuts, tâches, étiquettes, commentaires, journal, vues enregistrées.
--- Projets, tâches, étiquettes et vues portent une ACL (celle d'une tâche = celle de son projet) ;
--- statuts, liens d'étiquettes, commentaires et journal suivent la visibilité de leur parent.
+-- Projets, tâches, étiquettes et vues portent une ACL (celle d'une tâche = celle de son projet,
+-- posée par tasks_guard) ; statuts, liens d'étiquettes, commentaires et journal suivent la
+-- visibilité de leur parent.
 -- Les clés étrangères ignorent la RLS : le code vérifie la visibilité des lignes visées.
 
 create table task_projects (
@@ -183,14 +184,56 @@ create policy tenant_parent on task_events to leon_app
   with check (tenant_id = app_tenant()
               and exists (select 1 from tasks t where t.id = task_events.task_id));
 
--- À l'insertion, l'auteur est soi (politiques restrictives, combinées en ET avec tenant_parent).
+-- À l'insertion, l'auteur est soi (politiques restrictives, combinées en ET avec celle de la table).
+-- Jamais nul : seule la clé étrangère le met à nul (on delete set null).
+create policy creator_insert on tasks as restrictive for insert to leon_app
+  with check (creator_id = any(app_principals()));
 create policy author_insert on task_comments as restrictive for insert to leon_app
   with check (author_id = any(app_principals()));
 create policy actor_insert on task_events as restrictive for insert to leon_app
-  with check (actor_id is null or actor_id = any(app_principals()));
+  with check (actor_id = any(app_principals()));
+
+-- Le compteur n'avance que d'un pas (takeNumber) : remis à zéro ou poussé au maximum, il bloquerait
+-- toute création.
+create function task_projects_guard() returns trigger language plpgsql as $$
+begin
+  if new.last_number not in (old.last_number, old.last_number + 1) then
+    raise exception 'compteur de numéros modifié' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+create trigger task_projects_guard before update of last_number on task_projects
+  for each row execute function task_projects_guard();
+
+-- Numéro et ACL d'une tâche viennent de son projet, lu sous la RLS de l'appelant (security invoker).
+-- Le numéro est celui que createTask ou un changement de projet vient de prendre au compteur, dans
+-- la même transaction ; sans changement de projet, il ne bouge plus.
+create function tasks_guard() returns trigger language plpgsql as $$
+declare
+  project record;
+begin
+  if tg_op = 'UPDATE' and new.project_id = old.project_id then
+    if new.number <> old.number then
+      raise exception 'numéro de tâche modifié' using errcode = '42501';
+    end if;
+    return new;
+  end if;
+  select acl, last_number into project from task_projects where id = new.project_id;
+  if not found then
+    raise exception 'projet de la tâche invisible' using errcode = '42501';
+  end if;
+  if new.number <> project.last_number then
+    raise exception 'numéro de tâche hors du compteur' using errcode = '42501';
+  end if;
+  new.acl := project.acl;
+  return new;
+end $$;
+create trigger tasks_guard before insert or update of project_id, number on tasks
+  for each row execute function tasks_guard();
 
 -- Droits au plus juste : pas de suppression de projet, commentaires et journal en ajout seul,
--- mises à jour limitées aux colonnes modifiables (jamais tenant_id, acl, creator_id, origin).
+-- mises à jour limitées aux colonnes modifiables (jamais tenant_id, acl, creator_id, origin) ;
+-- last_number et number restent gardés par les déclencheurs ci-dessus.
 grant select, insert on task_projects, task_statuses, tasks, task_labels, task_views,
   task_label_links, task_comments, task_events to leon_app;
 grant update (key, name, last_number) on task_projects to leon_app;

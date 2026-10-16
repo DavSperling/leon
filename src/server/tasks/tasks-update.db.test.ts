@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { taskEvents } from '@/server/db/schema/tasks';
 import { adminDb } from '@/test/db';
+import { seedTaskProject } from '@/test/fixtures';
 import { ageTask, readEvents, readTask, seedTasksScenario } from '@/test/tasks-scenario';
 import { listLabels } from './labels';
 import { createProject } from './projects';
@@ -314,6 +315,22 @@ describe('updateTask : changement de projet', () => {
     expect(await readTask(id)).toMatchObject({ projectId: ops.id, statusId: opsDone?.id });
     expect((await readTask(id)).completedAt).toBeInstanceOf(Date);
     expect(await kinds(id)).toEqual(['created', 'project', 'status']);
+  });
+
+  it('prend le numéro suivant et l’ACL du projet d’arrivée', async () => {
+    const { paul, marie, make, actor } = await setup();
+    const paulOnly = await seedTaskProject(paul.tenantId, { key: 'MOI', acl: [paul.userId] });
+    const { id } = await make('Devient privée');
+
+    await updateTask(paul, id, { projectId: paulOnly.projectId }, actor);
+
+    expect(await readTask(id)).toMatchObject({
+      projectId: paulOnly.projectId,
+      number: 1,
+      acl: [paul.userId],
+    });
+    expect(await getTaskRef(paul, id)).toBe('MOI-1');
+    expect(await getTaskRef(marie, id)).toBeNull();
   });
 
   it('refuse le projet d’une autre organisation sans consommer de numéro', async () => {

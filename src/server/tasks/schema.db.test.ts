@@ -27,6 +27,8 @@ const FOREIGN_KEY = { cause: { code: '23503' } };
 const CHECK = { cause: { code: '23514' } };
 const UNIQUE = { cause: { code: '23505' } };
 
+type SeededProject = Awaited<ReturnType<typeof seedTaskProject>>;
+
 type Ids = {
   project: string;
   todo: string;
@@ -63,7 +65,11 @@ async function insertComment(ctx: TenantContext, taskId: string, authorId = ctx.
   return firstId(rows);
 }
 
-async function insertEvent(ctx: TenantContext, taskId: string, actorId = ctx.userId) {
+async function insertEvent(
+  ctx: TenantContext,
+  taskId: string,
+  actorId: string | null = ctx.userId,
+) {
   const rows = await withTenant(ctx, (tx) =>
     tx
       .insert(taskEvents)
@@ -99,13 +105,55 @@ async function insertView(
   return firstId(rows);
 }
 
+async function takeNumber(tx: Tx, projectId: string): Promise<number> {
+  const [project] = await tx
+    .update(taskProjects)
+    .set({ lastNumber: sql`${taskProjects.lastNumber} + 1` })
+    .where(eq(taskProjects.id, projectId))
+    .returning({ number: taskProjects.lastNumber });
+  if (!project) throw new Error('projet de test invisible');
+  return project.number;
+}
+
+// Une tâche insérée comme le fait createTask : numéro pris au compteur dans la même transaction
+// (sauf numéro imposé), créateur = soi ; `overrides` remplace le reste.
+async function insertTask(
+  ctx: TenantContext,
+  project: SeededProject,
+  overrides: Partial<typeof tasks.$inferInsert> = {},
+) {
+  const [row] = await withTenant(ctx, async (tx) =>
+    tx
+      .insert(tasks)
+      .values({
+        tenantId: ctx.tenantId,
+        projectId: project.projectId,
+        number: overrides.number ?? (await takeNumber(tx, project.projectId)),
+        statusId: project.statusIds.todo,
+        creatorId: ctx.userId,
+        title: 'Tâche de test',
+        position: 0,
+        origin: 'ui',
+        acl: [ctx.tenantId],
+        ...overrides,
+      })
+      .returning({ id: tasks.id, number: tasks.number, acl: tasks.acl }),
+  );
+  if (!row) throw new Error('tâche de test non créée');
+  return row;
+}
+
 // Un projet d'équipe avec une tâche étiquetée, commentée et journalisée, un second projet, un projet
 // et une étiquette privés de Paul, la vue d'équipe par défaut et une vue privée de Paul.
 async function seedTeamTasks(ctx: TenantContext): Promise<Ids> {
   const leo = await seedTaskProject(ctx.tenantId, { key: 'LEO' });
   const ops = await seedTaskProject(ctx.tenantId, { key: 'OPS' });
   const secret = await seedTaskProject(ctx.tenantId, { key: 'PRIV', acl: [ctx.userId] });
-  const task = await seedTask({ projectId: leo.projectId, statusId: leo.statusIds.todo });
+  const task = await seedTask({
+    projectId: leo.projectId,
+    statusId: leo.statusIds.todo,
+    creatorId: ctx.userId,
+  });
   const label = await seedTaskLabel(ctx.tenantId, { name: 'Bug' });
   await insertLink(ctx, task, label);
   return {
@@ -114,7 +162,11 @@ async function seedTeamTasks(ctx: TenantContext): Promise<Ids> {
     otherProjectTodo: ops.statusIds.todo,
     privateProject: secret.projectId,
     task,
-    privateTask: await seedTask({ projectId: secret.projectId, statusId: secret.statusIds.todo }),
+    privateTask: await seedTask({
+      projectId: secret.projectId,
+      statusId: secret.statusIds.todo,
+      creatorId: ctx.userId,
+    }),
     label,
     privateLabel: await seedTaskLabel(ctx.tenantId, { name: 'Perso', acl: [ctx.userId] }),
     comment: await insertComment(ctx, task),
@@ -210,6 +262,7 @@ const TEAM_INSERTS: Record<string, (tx: Tx) => Promise<unknown>> = {
       projectId: ids.project,
       number: 999,
       statusId: ids.todo,
+      creatorId: zoe.userId,
       title: 'Tâche glissée',
       position: 0,
       origin: 'ui',
@@ -398,6 +451,10 @@ describe('auteur des commentaires et du journal', () => {
     await expect(insertEvent(marie, ids.task, paul.userId)).rejects.toMatchObject(DENIED);
   });
 
+  it('refuse un événement sans acteur : 42501', async () => {
+    await expect(insertEvent(marie, ids.task, null)).rejects.toMatchObject(DENIED);
+  });
+
   it('Marie commente et journalise en son nom', async () => {
     await expect(insertComment(marie, ids.task)).resolves.toEqual(expect.any(String));
     await expect(insertEvent(marie, ids.task)).resolves.toEqual(expect.any(String));
@@ -420,8 +477,9 @@ describe('intégrité des tâches', () => {
   });
 
   it('supprimer le parent met parent_id à nul', async () => {
-    const parentId = await seedTask({ projectId: ids.project, statusId: ids.todo });
-    const childId = await seedTask({ projectId: ids.project, statusId: ids.todo, parentId });
+    const seed = { projectId: ids.project, statusId: ids.todo, creatorId: paul.userId };
+    const parentId = await seedTask(seed);
+    const childId = await seedTask({ ...seed, parentId });
     await withTenant(paul, (tx) => tx.delete(tasks).where(eq(tasks.id, parentId)));
     const rows = await adminDb
       .select({ parentId: tasks.parentId })
@@ -431,7 +489,11 @@ describe('intégrité des tâches', () => {
   });
 
   it("la suppression d'une tâche emporte ses événements, commentaires et liens", async () => {
-    const taskId = await seedTask({ projectId: ids.project, statusId: ids.todo });
+    const taskId = await seedTask({
+      projectId: ids.project,
+      statusId: ids.todo,
+      creatorId: paul.userId,
+    });
     await insertEvent(paul, taskId);
     await insertComment(paul, taskId);
     await insertLink(paul, taskId, ids.label);
@@ -443,32 +505,16 @@ describe('intégrité des tâches', () => {
 });
 
 // Les clés étrangères ignorent la RLS : seules les clés composées (tenant_id, …) empêchent une
-// tâche de Zoé de viser un projet, un statut ou un parent de Paul.
+// tâche de Zoé de viser un statut ou un parent de Paul. Un projet de Paul, tasks_guard le lit
+// sous la RLS de Zoé : invisible, il est refusé avant la clé étrangère.
 describe('références vers une autre organisation', () => {
-  let zoeProject: Awaited<ReturnType<typeof seedTaskProject>>;
+  let zoeProject: SeededProject;
 
   beforeAll(async () => {
     zoeProject = await seedTaskProject(zoe.tenantId, { key: 'ZOE' });
   });
 
-  function insertZoeTask(overrides: Partial<typeof tasks.$inferInsert>) {
-    return withTenant(zoe, (tx) =>
-      tx.insert(tasks).values({
-        tenantId: zoe.tenantId,
-        projectId: zoeProject.projectId,
-        statusId: zoeProject.statusIds.todo,
-        number: 1000,
-        title: 'Tâche liée à Paul',
-        position: 0,
-        origin: 'ui',
-        acl: [zoe.tenantId],
-        ...overrides,
-      }),
-    );
-  }
-
   const FOREIGN_REFERENCES: Array<[string, () => Partial<typeof tasks.$inferInsert>]> = [
-    ['un projet', () => ({ projectId: ids.project, statusId: ids.todo })],
     ['un statut', () => ({ statusId: ids.todo })],
     ['un parent', () => ({ parentId: ids.task })],
   ];
@@ -476,13 +522,73 @@ describe('références vers une autre organisation', () => {
   it.each(FOREIGN_REFERENCES)(
     "tasks refuse %s de l'organisation de Paul : 23503",
     async (_kind, overrides) => {
-      await expect(insertZoeTask(overrides())).rejects.toMatchObject(FOREIGN_KEY);
+      await expect(insertTask(zoe, zoeProject, overrides())).rejects.toMatchObject(FOREIGN_KEY);
     },
   );
 
+  it("tasks refuse un projet de l'organisation de Paul : 42501", async () => {
+    const insert = insertTask(zoe, zoeProject, { projectId: ids.project, statusId: ids.todo });
+    await expect(insert).rejects.toMatchObject(DENIED);
+  });
+
   // sans référence étrangère, la même tâche passe : seule la clé étrangère refusait
   it('tasks accepte la même tâche sans référence étrangère', async () => {
-    await expect(insertZoeTask({ number: 1 })).resolves.toBeDefined();
+    await expect(insertTask(zoe, zoeProject)).resolves.toBeDefined();
+  });
+});
+
+// Ce que createTask et updateTask respectent, la base l'impose aussi : tasks_guard,
+// task_projects_guard et creator_insert.
+describe('numéros, ACL et créateur des tâches', () => {
+  let team: SeededProject;
+  let paulOnly: SeededProject;
+
+  beforeAll(async () => {
+    team = await seedTaskProject(paul.tenantId, { key: 'NUM' });
+    paulOnly = await seedTaskProject(paul.tenantId, { key: 'MOI', acl: [paul.userId] });
+  });
+
+  function setCounter(value: number | SQL) {
+    return withTenant(paul, (tx) =>
+      tx
+        .update(taskProjects)
+        .set({ lastNumber: value })
+        .where(eq(taskProjects.id, team.projectId))
+        .returning({ lastNumber: taskProjects.lastNumber }),
+    );
+  }
+
+  it('refuse de remettre le compteur à zéro ou de le pousser au maximum : 42501, accepte le pas suivant', async () => {
+    const { number } = await insertTask(paul, team);
+    await expect(setCounter(0)).rejects.toMatchObject(DENIED);
+    await expect(setCounter(2_147_483_647)).rejects.toMatchObject(DENIED);
+    await expect(setCounter(sql`${taskProjects.lastNumber} + 1`)).resolves.toEqual([
+      { lastNumber: number + 1 },
+    ]);
+  });
+
+  it('refuse un numéro hors du compteur, à l’insertion comme à la mise à jour : 42501', async () => {
+    const task = await insertTask(paul, team);
+    // le numéro que prendra la prochaine création : posé d'avance, il la bloquerait
+    const next = task.number + 1;
+    await expect(insertTask(paul, team, { number: next })).rejects.toMatchObject(DENIED);
+    const update = withTenant(paul, (tx) =>
+      tx.update(tasks).set({ number: next }).where(eq(tasks.id, task.id)),
+    );
+    await expect(update).rejects.toMatchObject(DENIED);
+  });
+
+  it("donne à une tâche l'ACL de son projet, quelle que soit celle posée", async () => {
+    const task = await insertTask(paul, paulOnly, { acl: [paul.tenantId] });
+    expect(task.acl).toEqual([paul.userId]);
+    expect(await withTenant(marie, (tx) => tx.$count(tasks, eq(tasks.id, task.id)))).toBe(0);
+  });
+
+  it('Marie ne crée de tâche ni au nom de Paul ni sans créateur : 42501', async () => {
+    const asPaul = insertTask(marie, team, { creatorId: paul.userId });
+    await expect(asPaul).rejects.toMatchObject(DENIED);
+    await expect(insertTask(marie, team, { creatorId: null })).rejects.toMatchObject(DENIED);
+    await expect(insertTask(marie, team)).resolves.toBeDefined();
   });
 });
 

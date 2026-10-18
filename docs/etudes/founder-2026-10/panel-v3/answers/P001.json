@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est raisonnable comparé à Glean, mais chez nous personne n'utilise même Gemini, et brancher un outil qui garde les réunions et les conversations IA, mes équipes le prendraient comme du flicage. Je ne vais pas créer ce climat pour un besoin que je ne ressens pas encore assez fort.",
+  "objection": "La surveillance : mes ingénieurs vont se demander qui lit leurs réunions et leurs échanges, et la promesse que c'est privé à l'auteur ne suffira pas à les rassurer.",
+  "would_change_my_mind": "Pouvoir démarrer sans les réunions ni les conversations IA, seulement sur Drive et Gmail, avec un document clair à montrer aux salariés et au CSE sur qui voit quoi.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

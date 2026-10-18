@@ -1,0 +1,105 @@
+{
+ "n": 20,
+ "seed": 7,
+ "customer": {
+  "business": "Leon v3 : mémoire d'entreprise persistante, droits par outil, réunions et conversations IA comprises, pour PME sous Google Workspace aux outils mélangés",
+  "target": "Le dirigeant, le DG ou le responsable des opérations d'une entreprise française de 10 à 50 personnes sous Google Workspace qui travaille aussi dans Slack, Notion, Jira ou Linear, Zoom ou Meet et un CRM (HubSpot, Pipedrive) ; tu raisonnes et tu réponds en français, avec un budget d'entreprise",
+  "where": "France, PME de 10 à 50 personnes (agences, cabinets de conseil, éditeurs SaaS, e-commerce, ESN, bureaux d'études), Google Workspace + outils SaaS mélangés",
+  "age": [
+   30,
+   58
+  ],
+  "segments": [
+   {
+    "name": "Dirigeant fondateur d'une PME de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "share": 0.35,
+    "income": [
+     55000,
+     130000
+    ]
+   },
+   {
+    "name": "DG ou COO d'un éditeur SaaS ou d'un e-commerce de 15 à 50 personnes",
+    "share": 0.3,
+    "income": [
+     60000,
+     120000
+    ]
+   },
+   {
+    "name": "Responsable des opérations ou office manager qui gère les outils d'une PME de 10 à 30 personnes",
+    "share": 0.2,
+    "income": [
+     38000,
+     65000
+    ]
+   },
+   {
+    "name": "Associé d'un bureau d'études ou d'un cabinet d'expertise de 10 à 50 personnes",
+    "share": 0.15,
+    "income": [
+     60000,
+     140000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Pas encore équipé en IA",
+    "share": 0.3,
+    "how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT gratuit ou Plus à titre perso ; aucun abonnement IA d'entreprise."
+   },
+   {
+    "name": "A testé ChatGPT Business ou Claude Team",
+    "share": 0.15,
+    "how": "A pris un abonnement IA d'équipe, a branché Drive, trouve les réponses inégales et sans mémoire d'un mois sur l'autre."
+   },
+   {
+    "name": "Noyé dans les outils",
+    "share": 0.15,
+    "how": "Huit à douze SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois."
+   },
+   {
+    "name": "Prudent sécurité et RGPD",
+    "share": 0.12,
+    "how": "Demande où sont les données, qui y accède, fait relire par un avocat ou un DPO externe avant de signer."
+   },
+   {
+    "name": "Compte les euros",
+    "share": 0.12,
+    "how": "Compare chaque abonnement, ne prend que les sièges nécessaires, veut un retour chiffré."
+   },
+   {
+    "name": "Demande à son réseau",
+    "share": 0.1,
+    "how": "Ne prend un outil que si un pair dirigeant le recommande."
+   },
+   {
+    "name": "Sceptique des démos IA",
+    "share": 0.06,
+    "how": "A vu des démos qui hallucinaient sur ses propres données ; veut la preuve avant de payer."
+   }
+  ],
+  "objections": [
+   "ChatGPT Business se branche déjà sur Drive, Slack et Notion pour 20 €, qu'est-ce que vous faites de plus ?",
+   "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+   "Mes salariés vont le vivre comme de la surveillance, surtout l'enregistrement des réunions et des conversations IA",
+   "Est-ce que mon stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+   "Ça va inventer des réponses avec assurance, et personne ne vérifiera la source",
+   "Brancher dix outils, ça va me prendre des semaines",
+   "25 € par personne pour 30 salariés, c'est 750 € par mois : pour quel gain concret ?",
+   "Et si vous fermez, je récupère quoi ?"
+  ],
+  "habits": [
+   "un client conteste un périmètre validé en réunion Zoom il y a deux mois et personne ne retrouve qui a dit quoi",
+   "tu viens de perdre ta cheffe de projet senior et ses clients posent des questions auxquelles personne ne sait répondre",
+   "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion",
+   "tu as huit abonnements SaaS et tu ne sais plus ce que chacun contient",
+   "tu as vu une démo de Glean et le devis commençait à 50 sièges et 60 000 $ par an",
+   "tu prépares un rendez-vous client et tu dois fouiller Gmail, HubSpot, Slack et deux comptes rendus de réunion",
+   "deux nouveaux arrivent le mois prochain et l'onboarding se fait de mémoire",
+   "ton équipe utilise ChatGPT chacun de son côté et rien n'est partagé"
+  ]
+ },
+ "pitch": "Leon, la mémoire de votre entreprise, tous outils confondus. Il se branche à Google Workspace (Gmail, Drive, Meet), Slack, Notion, Jira ou Linear, Zoom, HubSpot ou Pipedrive, et garde ce qui s'y dit et s'y décide, réunions comprises (à partir des transcriptions de Meet et Zoom), ainsi que les conversations de votre équipe avec ChatGPT ou Claude (privées à leur auteur ; seules les décisions qu'il valide d'un clic sont partagées).\nContrairement à ChatGPT Business ou Gemini, qui interrogent chaque outil au moment de la question avec vos seuls accès et ne gardent rien, Leon conserve l'historique de l'entreprise : ce qui a été dit dans une réunion il y a trois mois reste retrouvable, même après le départ de la personne. Chacun ne voit que ce qu'il voit déjà dans l'outil d'origine.\nPosez la question depuis l'interface Leon, ChatGPT ou Claude : « qu'a-t-on promis à Acme en réunion le mois dernier ? », « où en est la décision sur les tarifs ? », « combien de clients se sont plaints du délai de livraison ce trimestre ? ». Leon répond en citant la source exacte (le mail, la minute de la réunion, le message Slack) ou dit « je ne sais pas ».\nLe test des 20 questions : votre équipe écrit 20 questions dont elle connaît la réponse. Moins de 15 bonnes réponses sourcées au bout de 30 jours, vous ne payez rien. Société française, données hébergées à Francfort, contrat de traitement des données (DPA) signable, export complet à tout moment, suppression sous 30 jours.\n25 € HT par utilisateur et par mois, sans engagement (Glean : environ 75 $ et 50 utilisateurs minimum). Installation : connexion aux outils par leurs boutons officiels, outil par outil, en une heure. Les 20 premières entreprises : 19 € garanti 12 mois."
+}

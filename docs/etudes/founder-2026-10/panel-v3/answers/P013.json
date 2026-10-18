@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème, je l'ai : chacun fait son ChatGPT dans son coin et rien n'est partagé. Mais je ne branche pas notre Gmail, notre Drive et nos réunions sur un outil que personne de mon réseau n'utilise, même avec un test gratuit.",
+  "objection": "Il va répondre avec aplomb, et dans la vraie vie personne ne va cliquer sur la source pour vérifier. En plus, je lui donne accès à toutes nos conversations, et la start-up qui le fait peut disparaître dans un an.",
+  "would_change_my_mind": "Qu'un dirigeant de PME que je connais me dise qu'il l'utilise depuis quelques mois et que ses équipes s'en servent vraiment au quotidien.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

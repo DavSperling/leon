@@ -1,0 +1,143 @@
+{
+ "business": "Leon v3 : mémoire d'entreprise persistante, droits par outil, réunions et conversations IA comprises, pour PME sous Google Workspace aux outils mélangés",
+ "seed": 7,
+ "dealt": 20,
+ "answered": 20,
+ "skipped": [],
+ "buys": 5,
+ "passes": 15,
+ "buy_rate": 0.25,
+ "by_segment": [
+  [
+   "Associé d'un bureau d'études ou d'un cabinet d'expertise de 10 à 50 personnes",
+   3,
+   0.6666666666666666
+  ],
+  [
+   "Dirigeant fondateur d'une PME de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+   7,
+   0.2857142857142857
+  ],
+  [
+   "DG ou COO d'un éditeur SaaS ou d'un e-commerce de 15 à 50 personnes",
+   6,
+   0.16666666666666666
+  ],
+  [
+   "Responsable des opérations ou office manager qui gère les outils d'une PME de 10 à 30 personnes",
+   4,
+   0.0
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Noyé dans les outils",
+   3,
+   1.0
+  ],
+  [
+   "Compte les euros",
+   2,
+   0.5
+  ],
+  [
+   "A testé ChatGPT Business ou Claude Team",
+   3,
+   0.3333333333333333
+  ],
+  [
+   "Pas encore équipé en IA",
+   6,
+   0.0
+  ],
+  [
+   "Sceptique des démos IA",
+   1,
+   0.0
+  ],
+  [
+   "Prudent sécurité et RGPD",
+   3,
+   0.0
+  ],
+  [
+   "Demande à son réseau",
+   2,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$94,000 and up",
+   7,
+   0.42857142857142855
+  ],
+  [
+   "$69,000 to $94,000",
+   8,
+   0.25
+  ],
+  [
+   "under $69,000",
+   5,
+   0.0
+  ]
+ ],
+ "why_not": [
+  [
+   "trust",
+   14,
+   [
+    "Le prix est raisonnable comparé à Glean, mais chez nous personne n'utilise même Gemini, et brancher un outil qui garde les réunions et les conversations IA, mes équipes le prendraient comme du flicage. Je ne vais pas créer ce climat pour un besoin que je ne ressens pas encore assez fort.",
+    "Le test des 20 questions est malin, mais brancher Gmail, HubSpot et Slack de toute la boîte à une startup inconnue pour 750 € par mois, je ne le vends pas à mon DG sur une page de présentation. Je veux d'abord voir l'outil marcher sur nos propres données."
+   ],
+   [
+    "P001",
+    "P002"
+   ]
+  ],
+  [
+   "price",
+   1,
+   [
+    "On paie déjà ChatGPT Business, ajouter 25 € par siège pour 20 personnes, ça fait 6 000 € par an de plus pour retrouver des réunions passées. Je ne sais pas chiffrer le temps gagné, donc je ne signe pas ce mois-ci."
+   ],
+   [
+    "P015"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "need",
+   5,
+   [
+    "L'abonnement IA actuel n'a aucune mémoire d'un mois sur l'autre et deux nouveaux arrivent sans qu'on ait rien d'écrit pour eux. Avec le test des 20 questions je ne risque rien : je lance un pilote sur 8 à 10 personnes, pas sur les 30.",
+    "Je viens de perdre ma cheffe de projet senior et personne ne sait répondre à ses clients : c'est exactement ce problème. Avec le test des 20 questions et sans engagement, je le tente, mais uniquement sur les 5 ou 6 sièges de l'équipe projet, au tarif à 19 €."
+   ],
+   [
+    "P004",
+    "P007"
+   ]
+  ]
+ ],
+ "flip": [
+  "Pouvoir démarrer sans les réunions ni les conversations IA, seulement sur Drive et Gmail, avec un document clair à montrer aux salariés et au CSE sur qui voit quoi.",
+  "Une démo en direct sur un échantillon de nos vrais outils, avec des réponses sourcées que je peux vérifier moi-même, plus un retour d'une PME comparable qui l'utilise depuis quelques mois.",
+  "Un DPA validé par mon DPO externe, avec la liste des sous-traitants (dont le fournisseur du modèle d'IA), et la possibilité de choisir les canaux et réunions indexés, en excluant par défaut ce qui est privé, pour que je puisse le présenter à l'équipe sans braquer personne.",
+  "Deux ou trois dirigeants de PME comparables que je peux appeler et qui l'utilisent depuis plusieurs mois, plus un export dans un format lisible sans Leon (décisions et faits avec leurs sources).",
+  "Une démo sur notre propre Drive où je vérifie moi-même qu'un compte stagiaire ne remonte rien de sensible, plus la recommandation d'un dirigeant d'agence comme la mienne qui l'utilise depuis quelques mois.",
+  "Que mon DPO valide le DPA avec la liste complète des sous-traitants, y compris le fournisseur du modèle et l'endroit où il traite les données, plus un audit de sécurité indépendant ou une certification (ISO 27001 ou SOC 2 en cours).",
+  "Un audit des droits avant le branchement qui me montre ce que chaque personne pourra retrouver, avec la possibilité d'exclure des dossiers entiers (paie, RH, marges), et que ça remplace notre abonnement ChatGPT au lieu de s'y ajouter.",
+  "Deux ou trois dirigeants de boîtes comme la mienne qui l'utilisent depuis plusieurs mois et que je peux appeler, plus un essai limité à une équipe de cinq personnes sans brancher toute la boîte.",
+  "Qu'un dirigeant de PME que je connais me dise qu'il l'utilise depuis quelques mois et que ses équipes s'en servent vraiment au quotidien.",
+  "Pouvoir faire le test des 20 questions sur 5 sièges seulement, sans carte bancaire, et ne payer que pour les gens qui s'en servent vraiment.",
+  "La recommandation d'un autre dirigeant de PME que je connais, qui l'utilise depuis quelques mois et qui me montre une vraie réponse sourcée sur ses propres données.",
+  "Pouvoir exclure dossiers, boîtes et canaux sensibles avant toute indexation, avec une démo où je vois concrètement ce qu'un stagiaire peut retrouver, ou le retour d'un dirigeant d'agence que je connais et qui l'utilise.",
+  "Un dossier sécurité complet (DPA, sous-traitants et hébergeur du modèle, audit ou certification) validé par mon DPO, plus la possibilité d'exclure des dossiers ou des canaux entiers avant l'indexation.",
+  "Un pair dirigeant de mon réseau, avec une boîte comme la mienne, qui l'utilise depuis quelques mois et me confirme qu'il n'y a jamais eu de fuite entre collaborateurs.",
+  "Qu'un dirigeant d'une boîte comme la mienne me montre Leon retrouvant, avec la source, un engagement pris dans une réunion antérieure à l'installation, plus des références clients et une sécurité vérifiable."
+ ],
+ "purchases_first_month_per_buyer": 1.0,
+ "price_answers": 20
+}

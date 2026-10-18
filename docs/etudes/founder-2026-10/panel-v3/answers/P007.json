@@ -1,0 +1,13 @@
+{
+  "id": "P007",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre ma cheffe de projet senior et personne ne sait répondre à ses clients : c'est exactement ce problème. Avec le test des 20 questions et sans engagement, je le tente, mais uniquement sur les 5 ou 6 sièges de l'équipe projet, au tarif à 19 €.",
+  "objection": "Est-ce que Leon retrouve ce qui s'est dit avant son installation, dans les mails et les Drive de quelqu'un qui est déjà partie ? Si ça ne garde que ce qui se passe à partir d'aujourd'hui, ça ne règle pas mon problème actuel, et ChatGPT Business à 20 € fait peut-être déjà l'essentiel.",
+  "would_change_my_mind": "Apprendre que l'historique d'avant l'installation n'est pas repris, ou que le compte de la personne partie doit rester actif (et payé) pour que ses échanges restent consultables.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

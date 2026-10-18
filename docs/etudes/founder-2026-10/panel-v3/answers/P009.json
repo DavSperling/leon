@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "L'idée d'une mémoire qui survit aux départs me parle vraiment, surtout avec deux arrivées le mois prochain, mais je paie déjà un abonnement IA d'équipe et je ne vais pas en ajouter un deuxième à 25 € par tête sans être sûre de ce qui remonte. Au mieux je lance le test des 20 questions, je ne paie pas ce mois-ci.",
+  "objection": "« Chacun ne voit que ce qu'il voit déjà », d'accord, mais nos partages Drive sont un vrai bazar : si un dossier paie ou marges client a été partagé trop large un jour, Leon va le servir à mon stagiaire sur un plateau, et c'est moi qui devrai l'expliquer au patron.",
+  "would_change_my_mind": "Un audit des droits avant le branchement qui me montre ce que chaque personne pourra retrouver, avec la possibilité d'exclure des dossiers entiers (paie, RH, marges), et que ça remplace notre abonnement ChatGPT au lieu de s'y ajouter.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche à savoir où est quoi entre mes huit abonnements, et le test des 20 questions me permet d'essayer sans risque : si ça ne retrouve pas ce qu'on s'est dit en réunion il y a trois mois, je ne paie rien.",
+  "objection": "C'est un abonnement de plus alors que j'en cherche un de moins, et je ne suis pas sûr que la différence avec ChatGPT Business, qui se branche déjà sur Drive et Slack, tienne au quotidien une fois passé l'effet démo.",
+  "would_change_my_mind": "Si au bout de 30 jours l'équipe n'utilise pas Leon spontanément, ou si les réponses sourcées sont à côté sur nos vraies questions clients, j'arrête.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

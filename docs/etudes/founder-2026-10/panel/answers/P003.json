@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, on vient de perdre quelqu'un avec tout ce qu'il savait dans la tête, et Francfort plus « pas d'entraînement » cochent mes premières cases. Mais brancher Gmail, Drive et GitHub d'une équipe entière à une société de deux personnes qui existe depuis quelques mois, sans un mot sur la réversibilité, je ne le fais pas sans relecture juridique, et là je ne vois rien à faire relire.",
+  "objection": "Si Leon disparaît dans six mois, qu'est-ce qui reste de ma mémoire d'équipe ? Rien n'est dit sur l'export, la suppression des données, les sous-traitants (quels modèles traitent mes emails, hébergés où ?), le DPA, ni qui chez eux peut lire quoi. Et « chaque conversation reste privée, seules les décisions partageables remontent » : décidé par qui, comment, avec quelle garantie ? Un accès à toute la messagerie de l'équipe, c'est le périmètre le plus sensible de ma boîte.",
+  "would_change_my_mind": "Un DPA et une liste de sous-traitants publiés, un export complet et lisible de toute la mémoire à tout moment (pas seulement à la résiliation), un engagement écrit de suppression, et idéalement la possibilité de commencer sur un périmètre restreint (Notion et Linear seulement, sans Gmail) pour l'essai.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Le problème est réel, je passe mes journées à répéter aux deux nouveaux ce qui est déjà dans les PR et dans Linear, mais je paie déjà Notion Business et ChatGPT Team et je pars du principe que la recherche dans tout ça finira par faire le travail. Je ne vais pas installer un agent sur le poste de chaque dev pour un outil de plus dont je ne connais pas l'éditeur.",
+  "objection": "Un agent qui tourne sur chaque poste et lit les sessions Claude Code et Cursor, même « privé à son auteur », mes devs vont le vivre comme de la surveillance ; il faudra que j'explique ça à l'équipe et au CSE avant même de savoir si l'outil vaut quelque chose, et je ne sais pas qui est derrière cette société ni si elle existera encore dans douze mois.",
+  "would_change_my_mind": "Un retour d'un CTO que je connais qui l'a fait tourner trois mois dans une équipe de la même taille, avec ses devs qui n'ont pas râlé et une preuve concrète que Leon retrouve des choses que Notion et GitHub search ne retrouvent pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

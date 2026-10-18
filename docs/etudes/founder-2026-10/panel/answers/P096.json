@@ -1,0 +1,13 @@
+{
+  "id": "P096",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le départ du mois dernier me fait mal, mais ce que ce gars savait est déjà parti, Leon ne me le rendra pas. Et je ne branche pas Gmail, GitHub et les conversations Claude de toute l'équipe sur l'outil de deux cofondateurs dont personne dans mon Slack n'a entendu parler.",
+  "objection": "Donner accès à tout ce qu'on écrit et dit à une boîte de deux personnes sans historique : si elle ferme dans un an, ou se fait pirater, c'est toute la mémoire de ma boîte qui est dehors. Et il faut encore que je fasse installer une extension sur trente postes.",
+  "would_change_my_mind": "Qu'un CTO que je connais dans mon réseau l'utilise depuis six mois et me dise que ça tient, et que je puisse l'essayer sur trois personnes sans l'extension.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

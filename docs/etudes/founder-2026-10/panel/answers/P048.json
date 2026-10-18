@@ -1,0 +1,13 @@
+{
+  "id": "P048",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Mon vrai problème, c'est de perdre le fil de ce que mes agents décident dans Claude Code, dans le terminal ; or ce que vous captez, c'est le navigateur et les SaaS, pas mes sessions Claude Code. Le reste (Gmail, Linear, GitHub) est sympa mais ce n'est pas ce qui me fait mal cette semaine.",
+  "objection": "Une extension navigateur ne verra jamais ce qui se passe dans mon terminal, et sur nos données en français je m'attends à des réponses fausses dites avec assurance : la citation de source rassure sur le papier, mais je n'ai pas dix minutes à perdre pour vérifier que ça tient.",
+  "would_change_my_mind": "Une capture native des sessions Claude Code (un hook ou un serveur MCP à ajouter en une ligne de config, rien à installer d'autre), avec une démo où je pose trois questions en français sur un vrai dépôt et où les trois réponses citent juste.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

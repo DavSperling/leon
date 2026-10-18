@@ -1,0 +1,13 @@
+{
+  "id": "P095",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le pitch répond pile à ma question sur le périmètre, mais « chacun ne voit que ce à quoi il a déjà accès » est une promesse que tous les outils que j'ai testés faisaient aussi, et je ne vais pas brancher Gmail, GitHub et les conversations ChatGPT de l'équipe sur un produit de deux cofondateurs sans qu'un pair me dise que ça tient. Je paie déjà Notion Business et ChatGPT Team sans savoir ce qu'on utilise vraiment, donc rajouter 25 € par siège passe mal cette semaine.",
+  "objection": "Comment le modèle de droits est réellement implémenté : est-ce qu'il hérite finement des permissions Drive, Linear, GitHub, ou est-ce que c'est un filtre approximatif qui va faire fuiter un email RH ou un message privé à Claude dans une réponse ? Et la pérennité d'une boîte de deux personnes à qui je confie toute la mémoire de l'équipe.",
+  "would_change_my_mind": "Un CTO que je connais dans mon Slack de fondateurs qui l'utilise depuis trois mois et me confirme que le cloisonnement des accès tient, avec une doc technique ou un audit publié sur le modèle de permissions.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

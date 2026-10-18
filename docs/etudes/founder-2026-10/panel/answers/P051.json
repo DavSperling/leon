@@ -1,0 +1,13 @@
+{
+  "id": "P051",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Je prendrais l'essai gratuit, parce que mon litige de périmètre est exactement le cas d'usage, mais je ne signerais pas au bout de trente jours : on m'a déjà vendu une démo brillante qui inventait des choses sur mes propres dossiers, et 750 € par mois pour trente personnes, ça se justifie avec un gain chiffré, pas avec une promesse.",
+  "objection": "Rien ne me prouve qu'il ne va pas halluciner sur mes emails à moi ; et deux cofondateurs qui branchent Gmail, Drive et HubSpot de tout mon cabinet, c'est beaucoup de confiance à accorder à une société qui peut disparaître dans un an.",
+  "would_change_my_mind": "Qu'il retrouve, sur ma boîte mail réelle, l'email précis où le client a validé le périmètre il y a trois mois, avec la bonne citation, et qu'il réponde « je ne sais pas » quand il n'a pas la source plutôt que d'inventer.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}

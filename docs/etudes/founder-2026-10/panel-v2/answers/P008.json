@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Je paie déjà Notion Business et ChatGPT Team, et dans ma tête la mémoire d'équipe, c'est dedans ; je ne vais pas rajouter une ligne de 25 € par tête pour un outil pensé pour des développeurs sous Claude Code alors que mon équipe n'est pas une équipe de dev. Les questions de mes deux nouveaux, ce sont des questions sur les clients et les process, pas sur une PR.",
+  "objection": "On me dit que chaque conversation reste privée et que seules les décisions validées remontent « à l'équipe », mais rien ne dit si je peux limiter qui voit quoi : un stagiaire doit-il voir les décisions de pricing ou de recrutement ? Tant que ce n'est pas réglable par personne ou par groupe, je ne branche pas ça sur ma boîte.",
+  "would_change_my_mind": "Une démo qui montre des droits par personne ou par groupe sur ce qui remonte, et un cas d'usage hors développement (agence, cabinet) où Leon lit nos échanges Notion et répond aux questions des nouveaux embauchés.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

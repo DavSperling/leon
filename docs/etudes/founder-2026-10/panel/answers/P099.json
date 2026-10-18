@@ -1,0 +1,13 @@
+{
+  "id": "P099",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Le problème est exactement le mien : on perd une heure par jour à chercher qui a dit quoi, et « pourquoi on a choisi Postgres » avec la PR en source, c'est ce que je demande à mon équipe sans jamais l'obtenir. Trente jours gratuits, sans engagement, je lance un pilote avec cinq devs dès cette semaine, et je paierai si la citation de source tient vraiment.",
+  "objection": "Une extension navigateur qui lit les conversations ChatGPT et Claude de mes devs, éditée par deux personnes qui viennent de se lancer : avant de la déployer, il me faut le détail de ce qui est capté, où ça transite, et de quoi convaincre le CSE que ce n'est pas de la surveillance. Et Slack n'est pas dans la liste, alors que c'est là que vit la moitié de nos décisions.",
+  "would_change_my_mind": "Si l'extension s'avère une boîte noire (pas de code lisible, pas de contrôle fin sur ce qui remonte) ou si deux de mes devs refusent de l'installer, j'arrête le pilote sans convertir.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

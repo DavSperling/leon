@@ -1,0 +1,13 @@
+{
+  "id": "P083",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je suis en train de fouiller trois mois d'emails pour prouver à un client ce qu'il a validé : si Leon me sort l'email exact en une question depuis Claude Code, ça vaut 25 € par tête sans discussion. Je lance l'essai sur mon compte et deux seniors, pas sur toute la boîte, et je prends l'abonnement si ça tient au bout de 30 jours.",
+  "objection": "Donner un accès Gmail, Drive et GitHub de toute l'équipe à deux cofondateurs : si vous fermez dans six mois ou si vous vous faites pirater, c'est mon problème, pas le vôtre. Francfort et pas d'entraînement, c'est bien, mais je veux voir le SOC 2 ou au moins un audit, l'export complet et la suppression garantie.",
+  "would_change_my_mind": "Rien ne m'empêcherait d'essayer ; ce qui m'empêcherait de payer, c'est une capture d'écran de l'extension qui lit mes conversations Claude sans contrôle fin par conversation, ou des citations fausses sur mes propres données pendant l'essai.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

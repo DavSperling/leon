@@ -1,0 +1,13 @@
+{
+  "id": "P098",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "On paie déjà Workspace, Notion Business et ChatGPT Team, et Gemini cherche déjà dans mon Gmail et mon Drive : je ne vais pas rajouter 25 € par tête pour une couche de plus. Pour mon client qui conteste le périmètre, je retrouve l'email en cinq minutes en cherchant dans Gmail.",
+  "objection": "Je ne vois pas ce que ça fait que mes outils ne font pas déjà, et à 15 personnes ça fait presque 400 € par mois de plus, sans compter le temps à brancher sept outils et à faire installer une extension à toute l'équipe. Et une boîte de deux cofondateurs qui a accès à tous mes emails clients, si elle ferme dans un an, je fais quoi ?",
+  "would_change_my_mind": "Que pendant l'essai gratuit, sur un vrai litige comme celui-ci, Leon me sorte en une question l'email de validation, le compte-rendu de réunion et la ligne du devis que Gemini et Notion n'ont pas retrouvés.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 18,
+  "price_too_expensive": 30
+}

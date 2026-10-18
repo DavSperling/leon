@@ -1,0 +1,13 @@
+{
+  "id": "P100",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Après le devis Glean à 60 000 $ par an, 25 € par siège sans engagement, c'est une somme que je peux engager seule, sans comité. Je lance l'essai sur mon compte et deux ou trois seniors de l'agence, pas sur toute la boîte, et je paie si en trente jours il me ressort vraiment ce qu'on a promis à un client avec l'email en source.",
+  "objection": "Brancher le Gmail et le Drive de toute l'agence, plus ce que mes salariés racontent à ChatGPT, sur une société de deux personnes dont je ne connais ni la forme juridique ni ce qui se passe si elle ferme dans six mois. Francfort c'est bien, mais ça ne remplace pas un contrat, un DPA et une garantie de restitution ou de suppression des données.",
+  "would_change_my_mind": "Rien ne me ferait dire non, mais pour passer de quelques sièges à toute l'agence il me faut un DPA signé, une clause de réversibilité et la preuve qu'ils savent gérer les droits d'accès proprement sur des données clients.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 80
+}

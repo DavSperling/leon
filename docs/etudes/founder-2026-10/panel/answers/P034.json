@@ -1,0 +1,13 @@
+{
+  "id": "P034",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Je paie déjà Google Workspace, Notion Business et ChatGPT Team, et ChatGPT Team se branche déjà sur mon Drive et mon Notion ; à 25 € par siège en plus des 20 € de ChatGPT, ça fait doubler la ligne IA pour une quinzaine de personnes sans que je sois sûr de ce que ça apporte de plus. Le vrai sujet, c'est que mes deux nouveaux me posent des questions toute la journée, mais je me dis que ça se règle en rangeant mieux Notion, pas avec un outil de plus.",
+  "objection": "J'ai du mal à voir ce que Leon fait que ChatGPT Team avec les connecteurs Drive et Notion ne fait pas déjà, et je n'ai pas envie de brancher Gmail et tous les dossiers clients du cabinet sur une boîte de deux personnes dont je ne sais pas si elle existera dans dix-huit mois.",
+  "would_change_my_mind": "Une démo sur mes propres données où Leon répond à une question concrète de mes nouvelles recrues (« qu'est-ce qu'on a promis à tel client ? ») avec la source, là où ChatGPT Team se plante ou invente ; si l'écart est net, je teste les 30 jours sur l'équipe.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P026",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Mon litige de périmètre, je le règle en dix minutes en cherchant l'email de validation dans Gmail, gratuitement. 750 € par mois pour 30 sièges, c'est plus que ce que je paie à Notion, et personne ne me montre le gain mesurable en face.",
+  "objection": "Le prix par siège impose d'équiper tout le monde alors que trois personnes au cabinet posent vraiment ce genre de questions ; et confier les emails de mes clients à une boîte de deux cofondateurs qui peut disparaître dans un an, je n'y suis pas prêt.",
+  "would_change_my_mind": "Une tarification où seuls ceux qui interrogent Leon paient le siège plein, les autres étant connectés gratuitement ou presque, avec un cas chiffré d'un cabinet comparable montrant les heures économisées.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

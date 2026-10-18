@@ -1,0 +1,13 @@
+{
+  "id": "P097",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "25 € HT par siège, c'est le prix de ChatGPT Team posé par-dessus ce qu'on paie déjà pour Notion et ChatGPT, pour un problème que je ne vois pas comme urgent : on est petits, quand on ne retrouve pas un truc on demande dans Slack. Et justement, Slack n'est même pas dans la liste des outils branchés, alors que c'est là que tout se passe chez nous.",
+  "objection": "Pas de Slack, donc la moitié de notre mémoire lui échappe, et une extension navigateur à déployer sur chaque poste pour capter les conversations IA, chez une boîte de deux personnes qui peut disparaître dans six mois avec nos emails et nos deals HubSpot dedans.",
+  "would_change_my_mind": "Un connecteur Slack et un tarif par siège autour de 10 € HT, ou un forfait équipe plutôt qu'un prix par tête, avec la preuve sur l'essai gratuit que trois questions concrètes de mes commerciaux trouvent leur réponse sourcée.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 18,
+  "price_too_expensive": 30
+}

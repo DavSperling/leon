@@ -1,0 +1,13 @@
+{
+  "id": "P040",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je perds du temps chaque semaine à retrouver ce qu'on a promis en réunion client, mais je ne branche pas Gmail, Drive, GitHub et une extension qui lit nos conversations IA sur un éditeur de deux personnes sans DPA, sans audit de sécurité et sans clause de réversibilité écrite. Francfort et « pas d'entraînement », c'est bien, mais ce n'est pas un dossier que je peux faire relire à un avocat.",
+  "objection": "Si la boîte ferme dans six mois, qu'est-ce qui arrive à la mémoire de mon équipe et à toutes les données aspirées depuis nos outils ? Et l'extension navigateur qui capte ce que mes devs disent à Claude et ChatGPT, je ne sais pas ce qu'elle filtre vraiment ni qui y a accès côté Leon.",
+  "would_change_my_mind": "Un DPA signé, une liste précise des sous-traitants, un export complet des données en un clic et un essai en lecture seule sur un seul périmètre (Linear + GitHub, pas Gmail) pour commencer.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

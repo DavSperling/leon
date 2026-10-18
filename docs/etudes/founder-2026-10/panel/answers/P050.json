@@ -1,0 +1,13 @@
+{
+  "id": "P050",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Mon réflexe c'est « on est huit, on se parle », mais la vérité c'est que je passe quatre réunions clients par semaine et je ne retrouve jamais ce qu'on a promis. Si « qu'a-t-on promis à Acme ? » me sort la bonne minute de Meet ou le bon mail, je prends l'essai dès ce soir et je paie après.",
+  "objection": "Ce qui me freine, c'est l'extension navigateur qui lit ce que mon équipe dit à Claude et ChatGPT : même si c'est « privé à l'auteur », je vais devoir convaincre mes devs d'installer ça, et une boîte de deux cofondateurs peut disparaître dans six mois avec toute notre mémoire dedans.",
+  "would_change_my_mind": "Si, au bout de trente jours, les réponses citent la mauvaise source ou ratent les promesses faites à l'oral en réunion, je coupe net : la valeur tient entièrement à la fiabilité des citations.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

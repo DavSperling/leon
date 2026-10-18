@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre un dev qui avait tout dans la tête, et le solo gratuit plus le test des 20 questions font que je ne risque rien à installer ça sur mon poste puis sur ceux de quatre devs. Si ça tourne en dix minutes, je prends cinq sièges à 19 € sans passer par un comité.",
+  "objection": "On me dit que chaque conversation reste privée et que seules les décisions validées remontent, mais pas qui les voit ensuite : tout le monde dans l'équipe, ou par projet ? Et « un petit agent sur chaque poste », c'est moi qui vais devoir relancer chaque dev pour qu'il l'installe.",
+  "would_change_my_mind": "Si l'installation dépasse dix minutes sur un poste, ou si une décision validée est visible par toute l'équipe sans pouvoir la limiter à un projet, je désinstalle et je ne paie pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

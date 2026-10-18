@@ -1,0 +1,13 @@
+{
+  "id": "P066",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Je paie déjà Notion Business et ChatGPT Team sans savoir ce que mon équipe utilise vraiment, et avant d'empiler un troisième abonnement à 25 € par tête je veux d'abord faire le ménage. Les exemples parlent à une CTO (le bug déjà résolu, le choix de Postgres), mais rien ne me prouve que ça marche mieux que la recherche dans GitHub et Linear que j'ai déjà.",
+  "objection": "Une extension navigateur qui capte les conversations de mon équipe avec Claude et ChatGPT, éditée par deux cofondateurs que personne dans mon Slack de fondateurs ne connaît : je ne branche pas ça sur notre Gmail, notre Drive et notre GitHub sans qu'un pair me dise qu'il l'utilise depuis six mois et qu'il n'a pas eu de surprise.",
+  "would_change_my_mind": "Un CTO de mon réseau qui me montre, sur son propre dépôt, Leon répondre juste à « pourquoi on a fait ce choix » avec la PR en source, et qui me dit que son équipe le réclame quand il envisage de résilier.",
+  "price_too_cheap": 4,
+  "price_cheap": 9,
+  "price_expensive": 18,
+  "price_too_expensive": 30
+}

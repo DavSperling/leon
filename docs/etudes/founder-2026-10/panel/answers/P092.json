@@ -1,0 +1,13 @@
+{
+  "id": "P092",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le cas d'usage me parle, j'ai justement un client qui conteste un périmètre validé par email, mais je ne confie pas tous les emails, le Drive et les réunions de mon agence à une boîte de deux personnes sur la foi d'une phrase qui dit que chacun ne voit que ce à quoi il a déjà accès. Les autres outils me disaient la même chose et je n'ai jamais pu régler le périmètre.",
+  "objection": "Qui voit quoi, concrètement : si un junior demande ce qu'on a promis à un client ou ce qu'on a dit en comité de direction, qu'est-ce qui garantit qu'il ne remonte pas un mail de ma boîte ou un salaire ? Je ne peux pas tester ça moi-même en dix minutes, et je n'ai pas le temps de déployer une extension sur quinze postes pour le vérifier.",
+  "would_change_my_mind": "Une démo sur mes propres comptes, en dix minutes, où je vois noir sur blanc ce qu'un collaborateur lambda obtient et n'obtient pas quand il pose la question, plus une agence comme la mienne qui l'utilise déjà et que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

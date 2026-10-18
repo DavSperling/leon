@@ -1,0 +1,13 @@
+{
+  "id": "P068",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Mon équipe perd des heures à chercher dans Gmail et Drive, et je peux brancher ça en dix minutes depuis Claude Code : à 25 € le siège, je prends l'essai sur mon équipe cœur et je paie si ça me ressort vraiment la bonne source. Je n'ai rien à perdre.",
+  "objection": "Il ne se branche pas à Slack alors que c'est là que mon équipe décide tout, et rien ne me dit qu'il signalera qu'une décision a été remplacée par une plus récente au lieu de me citer la vieille avec aplomb.",
+  "would_change_my_mind": "Un connecteur Slack et la garantie visible que chaque réponse indique la date de la source et s'il existe une version plus récente qui la contredit.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 45,
+  "price_too_expensive": 80
+}

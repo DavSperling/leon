@@ -1,0 +1,13 @@
+{
+  "id": "P077",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le départ du mois dernier me fait mal, donc je ferais l'essai gratuit sur trois ou quatre sièges, mais je ne sortirais pas 25 € par siège tant que je n'ai pas vu de mes yeux que le périmètre tient vraiment : on me l'a déjà promis et ça n'a jamais marché. Deux cofondateurs qui se branchent sur mon HubSpot et mon Drive, à ce prix-là, c'est non pour l'instant.",
+  "objection": "« Chacun ne voit que ce à quoi il a déjà accès » : c'est une phrase, pas une preuve. Si un commercial pose une question et tombe sur les marges ou les mails de la direction, c'est moi qui suis responsable. Et à 25 € HT le siège, c'est le prix de ChatGPT Team en plus de ce que je paie déjà à Notion et ChatGPT.",
+  "would_change_my_mind": "Une démo sur mes propres comptes où je crée deux utilisateurs avec des droits différents et où je vérifie moi-même que le second ne voit rien de ce qu'il ne doit pas voir, avec un tarif négocié autour de 15 € le siège.",
+  "price_too_cheap": 4,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 22
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, on vient de perdre quelqu'un avec toute sa mémoire dans la tête, et les dix minutes d'installation me parlent. Mais brancher Gmail, Drive et GitHub de toute la boîte sur un outil de deux cofondateurs, sans rien de plus qu'une phrase sur les droits d'accès, je ne le fais pas sur un coup de tête.",
+  "objection": "« Chacun ne voit que ce à quoi il a déjà accès » : c'est exactement ce que les autres promettaient aussi. Je veux voir comment les droits sont hérités de Drive et de GitHub, ce qui se passe quand on retire un accès à la source, et qui a le contrôle côté éditeur. Tant que je ne peux pas le vérifier moi-même, je n'ouvre pas les vannes.",
+  "would_change_my_mind": "Une démo sur mes propres outils où je constate, droit par droit, qu'un junior ne voit pas les mails de la direction et qu'un accès retiré sur Drive disparaît dans Leon, avec un document de sécurité (DPA, sous-traitants, ce qui est stocké et où) que je peux faire lire.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

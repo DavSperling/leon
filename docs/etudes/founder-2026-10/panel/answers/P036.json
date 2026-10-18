@@ -1,0 +1,13 @@
+{
+  "id": "P036",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le cas d'usage me parle, j'ai justement un client qui conteste un périmètre validé par email, mais je ne branche pas Gmail, Drive et une extension qui capte nos conversations IA sur un outil de deux cofondateurs sans DPA, liste des sous-traitants et doc précise du modèle de droits. Francfort et « pas d'entraînement » ne suffisent pas à mon DPO.",
+  "objection": "« Chacun ne voit que ce à quoi il a déjà accès » : d'accord pour un email ou un doc Drive, mais pour une décision extraite d'une conversation ChatGPT ou d'une réunion Meet, qui décide du périmètre ? Et par quel modèle passent mes questions, et où ? Rien ne le dit.",
+  "would_change_my_mind": "Un DPA signable avec la liste des sous-traitants (y compris le LLM utilisé pour répondre et sa localisation), et une démo où je restreins moi-même le périmètre d'un espace et d'un connecteur avant d'inviter l'équipe.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

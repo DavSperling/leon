@@ -1,0 +1,13 @@
+{
+  "id": "P052",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Je paie déjà Google Workspace, Notion Business et ChatGPT Team, et je ne sais même pas ce que mon équipe utilise vraiment là-dedans ; rajouter une quatrième brique à 750 € par mois pour « retrouver ce qu'on a promis à un client », je ne vois pas le gain que je pourrais présenter au comité de direction.",
+  "objection": "Tout ça existe déjà en partie chez moi : la recherche Drive, Notion AI, l'historique ChatGPT. Je n'arrive pas à chiffrer ce que Leon m'apporte en plus, et je n'ai aucune preuve que les réponses soient fiables sur mes vraies données. Et deux cofondateurs sur une jeune boîte, c'est elle qui tient ma mémoire d'équipe dans deux ans ?",
+  "would_change_my_mind": "Un pilote sur mon équipe commerciale de 6 personnes avec un résultat chiffré : combien d'heures gagnées par semaine ou combien de promesses clients retrouvées, et une facturation limitée aux sièges qui s'en servent vraiment, pas aux 30.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

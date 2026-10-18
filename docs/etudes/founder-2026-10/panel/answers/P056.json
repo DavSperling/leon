@@ -1,0 +1,13 @@
+{
+  "id": "P056",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Je ne mets pas 25 € par tête fois quinze personnes sur une promesse vue en passant, encore moins venant de deux cofondateurs que personne ne connaît. La dernière fois qu'un outil m'a juré qu'il citait ses sources, il m'a inventé une clause de contrat client avec un lien vers le mauvais mail.",
+  "objection": "Que ça réponde faux avec aplomb sur nos mails et nos docs en français, et qu'un junior envoie ça à un client sans vérifier ; la citation de la source ne me rassure que si elle est juste à chaque fois, pas neuf fois sur dix.",
+  "would_change_my_mind": "Brancher l'essai gratuit sur notre vrai Gmail et notre vrai Drive, poser vingt questions dont je connais déjà la réponse, et qu'il réponde juste ou dise « je ne sais pas » à chaque fois, sans une seule invention, avec la bonne source derrière.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

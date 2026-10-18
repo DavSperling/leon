@@ -1,0 +1,257 @@
+{
+ "business": "Leon : la mémoire de l'équipe (brut + étiquetage léger + conversations IA), pour équipes de 5 à 100 personnes",
+ "seed": 7,
+ "dealt": 100,
+ "answered": 100,
+ "skipped": [],
+ "buys": 19,
+ "passes": 81,
+ "buy_rate": 0.19,
+ "by_segment": [
+  [
+   "Fondateur d'une petite équipe de 5 à 15 personnes très utilisatrice d'IA",
+   15,
+   0.26666666666666666
+  ],
+  [
+   "Dirigeant d'une agence ou d'un cabinet (conseil, expertise comptable, agence web ou marketing) de 5 à 40 personnes",
+   25,
+   0.24
+  ],
+  [
+   "CTO ou lead dev d'une startup ou scale-up tech de 10 à 60 personnes",
+   35,
+   0.17142857142857143
+  ],
+  [
+   "Directeur commercial ou des opérations d'une PME de services ou d'un SaaS de 20 à 100 personnes",
+   25,
+   0.12
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Power user IA",
+   20,
+   0.95
+  ],
+  [
+   "Déjà tout équipé",
+   20,
+   0.0
+  ],
+  [
+   "Prudent sécurité et RGPD",
+   15,
+   0.0
+  ],
+  [
+   "Demande à son réseau",
+   10,
+   0.0
+  ],
+  [
+   "Compte les euros",
+   15,
+   0.0
+  ],
+  [
+   "Sceptique des démos IA",
+   15,
+   0.0
+  ],
+  [
+   "Surchargé",
+   5,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "$66,000 to $81,000",
+   32,
+   0.21875
+  ],
+  [
+   "under $66,000",
+   33,
+   0.21212121212121213
+  ],
+  [
+   "$81,000 and up",
+   35,
+   0.14285714285714285
+  ]
+ ],
+ "why_not": [
+  [
+   "trust",
+   60,
+   [
+    "Le problème est réel, je passe mes journées à réexpliquer aux deux nouveaux où sont les choses, mais je ne vais pas installer une extension navigateur qui lit les conversations ChatGPT de mes devs : je sais déjà comment ça sera reçu en interne. Et pour le reste, on a Gemini dans Workspace et Notion AI, je pars du principe que c'est déjà couvert.",
+    "Le problème est réel, je passe mes journées à répéter aux deux nouveaux pourquoi on a fait tel choix, et je testerais l'essai gratuit sur GitHub, Linear et Notion avec mon seul compte dès ce soir. Mais brancher le Gmail et le Drive de la boîte, plus une extension qui lit ce que mes devs disent à Claude, sur un service tenu par deux personnes sans structure derrière, je ne le ferai pas et je ne paierai donc pas de sièges."
+   ],
+   [
+    "P001",
+    "P002"
+   ]
+  ],
+  [
+   "need",
+   8,
+   [
+    "Mon vrai problème c'est Slack, et Slack n'est pas dans la liste. Brancher Gmail et Drive sans Slack, ça me donne une mémoire à moitié vide, et 25 € par siège pour ça, c'est le prix de ChatGPT Team en plus de ce que je paie déjà.",
+    "Je paie déjà Google Workspace, Notion Business et ChatGPT Team, et je suis justement en train de me demander ce qu'on utilise vraiment : ChatGPT Team se branche déjà sur le Drive et Notion a sa recherche IA, donc à mes yeux c'est « déjà inclus ». Rajouter 25 € par tête, soit près de 1 000 € par mois pour mes 40 personnes, pour une quatrième brique qui promet à peu près la même chose, je ne le défends pas en comité de direction."
+   ],
+   [
+    "P007",
+    "P019"
+   ]
+  ],
+  [
+   "habit",
+   6,
+   [
+    "Je paie déjà Google Workspace, Notion Business et ChatGPT Team, et ChatGPT Team se branche déjà sur mon Drive et mon Notion ; à 25 € par siège en plus des 20 € de ChatGPT, ça fait doubler la ligne IA pour une quinzaine de personnes sans que je sois sûr de ce que ça apporte de plus. Le vrai sujet, c'est que mes deux nouveaux me posent des questions toute la journée, mais je me dis que ça se règle en rangeant mieux Notion, pas avec un outil de plus.",
+    "Je paie déjà Workspace, Notion Business et ChatGPT Team, et je pars du principe que la mémoire d'équipe finira dans l'un des trois. Mon vrai problème, c'est de perdre le fil de ce que mes agents décident dans Claude Code, et l'offre parle d'une extension navigateur pour Claude et ChatGPT, pas de mon terminal."
+   ],
+   [
+    "P034",
+    "P055"
+   ]
+  ],
+  [
+   "price",
+   3,
+   [
+    "La promesse me parle, là tout de suite j'ai un client qui conteste un périmètre validé par email, mais ce mail je sais le retrouver dans Gmail en dix minutes. Payer 25 € par tête, soit autant que ChatGPT et deux fois Notion, pour gagner ces dix minutes quelques fois par mois, je ne sais pas le justifier à mon associé.",
+    "Mon litige de périmètre, je le règle en dix minutes en cherchant l'email de validation dans Gmail, gratuitement. 750 € par mois pour 30 sièges, c'est plus que ce que je paie à Notion, et personne ne me montre le gain mesurable en face."
+   ],
+   [
+    "P021",
+    "P026"
+   ]
+  ],
+  [
+   "convenience",
+   3,
+   [
+    "Le prix est raisonnable à côté du devis Glean, mais je paie déjà Workspace, Notion Business et ChatGPT Team, et je pars du principe qu'ils finiront par couvrir ça. Brancher six outils puis déployer une extension navigateur sur quarante postes, ce n'est pas dix minutes, c'est un projet que je n'ai pas le temps de porter ce trimestre.",
+    "Mon équipe vit dans Slack et Slack n'est même pas dans la liste des outils branchés, donc Leon passerait à côté de la moitié de ce qu'on se dit. Et je n'ai ni le temps ni l'envie de faire installer une extension navigateur sur quinze postes pour une boîte de deux personnes que je ne connais pas."
+   ],
+   [
+    "P029",
+    "P062"
+   ]
+  ],
+  [
+   "timing",
+   1,
+   [
+    "Je paie déjà Notion Business et ChatGPT Team sans savoir ce que mon équipe utilise vraiment ; je ne vais pas empiler un troisième abonnement à 25 € par tête avant d'avoir fait le ménage. Et « dix minutes » plus une extension à déployer sur tous les postes, je connais la chanson, je n'ai pas le temps de porter ça."
+   ],
+   [
+    "P094"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "need",
+   19,
+   [
+    "Je perds tous les jours le fil de ce que mes agents ont décidé et de ce qu'on a promis aux clients, et à 25 € le siège sans engagement, je lance l'essai le jour même pour moi et trois personnes : si les citations de source tiennent, je convertis à la fin des 30 jours sans réfléchir.",
+    "Je passe mes journées à répéter aux deux nouveaux pourquoi on a fait tel choix et où est tel bug réglé ; si Leon répond à ça depuis Claude Code en citant la PR ou le ticket, ça me rend des heures. Je prends l'essai sur 5 sièges côté tech, branché seulement sur GitHub, Linear et Notion, sans Gmail ni l'extension."
+   ],
+   [
+    "P009",
+    "P011"
+   ]
+  ]
+ ],
+ "flip": [
+  "Pouvoir déployer Leon uniquement sur Drive, Notion, Linear et GitHub, sans l'extension ni la capture des conversations IA, et constater pendant l'essai que mes deux nouveaux trouvent seuls des réponses sourcées que Gemini et Notion AI ne sortent pas.",
+  "Une société immatriculée avec un DPA signable et une page sécurité sérieuse (chiffrement, sous-traitants, pentest), et la possibilité de choisir connecteur par connecteur, pour démarrer avec GitHub, Linear et Notion sans jamais donner Gmail.",
+  "Un DPA et une liste de sous-traitants publiés, un export complet et lisible de toute la mémoire à tout moment (pas seulement à la résiliation), un engagement écrit de suppression, et idéalement la possibilité de commencer sur un périmètre restreint (Notion et Linear seulement, sans Gmail) pour l'essai.",
+  "Un DPA signable, la liste des sous-traitants (notamment le LLM utilisé et sa localisation), une politique de rétention claire, et un essai limité à un seul outil (Drive ou Notion) sur un périmètre restreint avant de brancher Gmail et les conversations IA.",
+  "Un pair de mon réseau, dans une boîte de notre taille, qui l'utilise depuis trois mois et me dit qu'il répond « je ne sais pas » plutôt que d'inventer ; plus un connecteur Slack.",
+  "Un directeur commercial ou un dirigeant d'agence que je connais qui l'utilise depuis six mois et me dit que ça lui a réellement évité un litige client, et la possibilité de démarrer sur cinq sièges avec Gmail et HubSpot seulement, sans extension à déployer sur toute l'équipe.",
+  "Un connecteur Slack avec le respect des canaux privés, démontré en direct sur mon espace pendant l'essai, et un prix dégressif à partir de 10 sièges.",
+  "Un essai sur mon vrai compte où je crée un accès pour une recrue, je vérifie moi-même qu'elle ne voit rien de ce qu'elle ne devrait pas voir, et je constate qu'en deux semaines elle m'a posé moitié moins de questions.",
+  "Un essai sur mon seul poste, limité à GitHub, Linear et Claude Code, sans Gmail ni extension pour l'équipe, qui me montre en deux semaines qu'il retrouve vraiment pourquoi un agent a pris telle décision ; plus une tarification par équipe ou dégressive et un export complet des données en cas de départ.",
+  "Un pair de mon Slack de fondateurs qui l'utilise depuis trois mois et me dit que ça tient, plus la possibilité de brancher d'abord GitHub, Linear et les conversations Claude Code sans toucher à Gmail.",
+  "Une démo sur mes propres outils où je vérifie moi-même qu'un commercial ne tombe pas sur les dossiers RH ou la marge d'un autre compte, et un tarif autour de 12 à 15 € le siège.",
+  "Un essai sur un périmètre restreint (un seul compte Gmail et un seul dépôt), où je vérifie moi-même vingt questions contre les sources, avec zéro réponse inventée, plus une page sécurité sérieuse (chiffrement, sous-traitants, droit à l'effacement, qui chez eux peut lire quoi).",
+  "Une démo sur mes propres outils où je constate, droit par droit, qu'un junior ne voit pas les mails de la direction et qu'un accès retiré sur Drive disparaît dans Leon, avec un document de sécurité (DPA, sous-traitants, ce qui est stocké et où) que je peux faire lire.",
+  "Un DPA signable, la liste des sous-traitants (quel LLM, quel hébergeur), et une démonstration du réglage des accès par dossier ou par client avant que je connecte quoi que ce soit.",
+  "Une démonstration sur mes propres outils, en essai, où je règle moi-même le périmètre de quelqu'un et je vérifie qu'il ne voit pas une info HubSpot qu'il n'est pas censé voir, et où Leon répond à une question que ChatGPT Team branché sur mon Drive ne sait pas traiter.",
+  "Une tarification qui ne fasse pas payer 30 sièges : par exemple 3 à 5 sièges pour les chefs de projet qui gèrent les clients, avec le reste de l'équipe en lecture gratuite, ou un prix autour de 10 € par siège.",
+  "Un connecteur Slack et une garantie écrite d'export complet de la mémoire à tout moment dans un format ouvert (Markdown ou JSON), pour que la fermeture de la boîte ne me coûte rien ; à ce moment-là je lance l'essai sur 5 sièges de l'équipe tech.",
+  "Une démo sur mes propres données, sur un mois de mes réunions clients, où il retrouve juste ce qui a été promis avec la source à chaque fois, ou le témoignage d'un confrère qui dirige une agence comparable et qui l'utilise depuis six mois.",
+  "Un essai sur nos propres données qui répond juste à une question du type « pourquoi on a choisi cette archi » là où Notion AI et ChatGPT sèchent, plus un rapport de sécurité sérieux (SOC 2 ou pentest externe) et un vrai mécanisme de permissions que je peux vérifier.",
+  "Une tarification où seuls ceux qui interrogent Leon paient le siège plein, les autres étant connectés gratuitement ou presque, avec un cas chiffré d'un cabinet comparable montrant les heures économisées.",
+  "Un export complet et documenté de la mémoire dans un format ouvert, dès l'essai gratuit, avec une clause de réversibilité, et un essai qui me montre sur une vraie question (« pourquoi on a choisi Postgres ? ») une réponse sourcée que Notion AI ne me donne pas.",
+  "Un mode sans extension, uniquement par connecteurs, déployable via Google Workspace en un clic pour toute l'équipe, avec un rapport de sécurité (SOC 2 ou équivalent) que je puisse montrer, et une démo qui répond juste à « pourquoi on a choisi Postgres » depuis nos GitHub et Notion réels.",
+  "Qu'il passe, pendant l'essai et sur mes vraies données, une batterie de dix questions pièges dont je connais déjà la réponse, en citant la bonne source à chaque fois et en disant « je ne sais pas » quand il ne sait pas, au lieu d'inventer.",
+  "Un DPA en bonne et due forme avec la liste des sous-traitants, un connecteur Slack, et deux ou trois clients français de ma taille que je peux appeler.",
+  "Un essai de 30 jours sur mon vrai Gmail et mon vrai HubSpot où, sur dix questions du type « qu'a-t-on promis à X ? », il répond juste neuf fois avec le bon mail, et un prix dégressif ou un tarif autour de 15 € quand on ne prend que trois ou quatre sièges.",
+  "Un export complet et lisible de toute la mémoire (pas un dump technique), garanti contractuellement, et deux ou trois agences comme la mienne qui l'utilisent depuis au moins six mois et que je peux appeler.",
+  "Une démo sur mes propres données où Leon répond à une question concrète de mes nouvelles recrues (« qu'est-ce qu'on a promis à tel client ? ») avec la source, là où ChatGPT Team se plante ou invente ; si l'écart est net, je teste les 30 jours sur l'équipe.",
+  "Un DPA signable, la liste des sous-traitants et un rapport de pentest ou d'audit que mon avocat peut relire, plus un pilote sur trois personnes avec un gain mesuré (temps de recherche économisé par semaine) avant d'engager toute l'équipe.",
+  "Un DPA signable avec la liste des sous-traitants (y compris le LLM utilisé pour répondre et sa localisation), et une démo où je restreins moi-même le périmètre d'un espace et d'un connecteur avant d'inviter l'équipe.",
+  "Un essai sur nos vrais données où je pose vingt questions dont je connais la réponse, et qu'il dise « je ne sais pas » plutôt que d'inventer quand la source n'existe pas.",
+  "Un essai sur mes vraies données, sur un périmètre restreint (un seul client, une seule boîte mail), où je vérifie moi-même chaque réponse contre la source citée pendant les 30 jours, plus une société immatriculée avec un DPA, un contrat de sous-traitance RGPD et une référence client que je peux appeler.",
+  "Un DPA signé, une liste précise des sous-traitants, un export complet des données en un clic et un essai en lecture seule sur un seul périmètre (Linear + GitHub, pas Gmail) pour commencer.",
+  "Un serveur MCP qui capte nativement les sessions Claude Code et les décisions des agents, avec un mode auto-hébergé ou le code ouvert pour que je puisse auditer ce qui sort.",
+  "Un essai sur nos vraies données où je pose vingt questions dont je connais la réponse et où il cite la bonne source à chaque fois, sans inventer, avec un chiffre d'heures gagnées par personne que je peux vérifier.",
+  "Un essai sur nos propres données (Gmail, HubSpot, nos réunions) où je pose dix questions pièges en français et où il répond juste ou dit « je ne sais pas » à chaque fois, et une capture de ce qui se passe dans Claude Code, pas seulement dans le navigateur.",
+  "Un DPA signable avec la liste exacte des sous-traitants (y compris le fournisseur de LLM et sa région), un contrôle d'accès vérifiable qui reprend bien nos permissions Google et GitHub, et un essai sur un périmètre restreint (un seul projet, deux personnes) où je peux vérifier que chaque réponse cite une source réelle.",
+  "Un essai sur nos vraies données où je pose dix questions pièges et où il dit « je ne sais pas » au lieu d'inventer, plus un audit de sécurité ou une version auto-hébergeable, et un tarif dégressif au-delà de cinq sièges.",
+  "Un pilote sur un vrai échantillon de nos données (une boîte mail et un dossier Drive) où je vérifie moi-même une vingtaine de réponses contre les sources, avec le taux d'erreur mesuré, et une référence de PME française que je peux appeler.",
+  "Une capture native des sessions Claude Code (un hook ou un serveur MCP à ajouter en une ligne de config, rien à installer d'autre), avec une démo où je pose trois questions en français sur un vrai dépôt et où les trois réponses citent juste.",
+  "Qu'il retrouve, sur ma boîte mail réelle, l'email précis où le client a validé le périmètre il y a trois mois, avec la bonne citation, et qu'il réponde « je ne sais pas » quand il n'a pas la source plutôt que d'inventer.",
+  "Un pilote sur mon équipe commerciale de 6 personnes avec un résultat chiffré : combien d'heures gagnées par semaine ou combien de promesses clients retrouvées, et une facturation limitée aux sièges qui s'en servent vraiment, pas aux 30.",
+  "Un contrat de sous-traitance (DPA) avec la liste des hébergeurs et sous-traitants, un export complet garanti dans un format lisible et une clause de réversibilité si la société s'arrête, le tout relu par mon avocat.",
+  "Un DPA solide avec sous-traitants listés, une version sans l'extension navigateur (uniquement Gmail, Drive, Linear, GitHub), et deux ou trois clients référents de ma taille en France que je peux appeler.",
+  "Qu'il capte directement les sessions Claude Code (décisions prises par les agents, avec le commit ou la PR en source) et qu'il arrive avec un DPA et une note RGPD prête à montrer au CSE.",
+  "Brancher l'essai gratuit sur notre vrai Gmail et notre vrai Drive, poser vingt questions dont je connais déjà la réponse, et qu'il réponde juste ou dise « je ne sais pas » à chaque fois, sans une seule invention, avec la bonne source derrière.",
+  "Un essai sur nos vraies données où je pose dix questions dont je connais la réponse (ce qu'on a promis à tel client, pourquoi telle décision) et où il répond juste, source à l'appui, avec un prix par siège aligné sur Notion.",
+  "Une démo sur mes propres emails où il retrouve le périmètre validé avec Acme, l'email exact et la date, sans une erreur sur dix questions ; et un tarif autour de 15 € pour trois sièges commerciaux, pas toute l'équipe.",
+  "Un pilote de deux semaines sur cinq de mes commerciaux, avec seulement Gmail et HubSpot branchés et sans extension, où je vérifie moi-même une vingtaine de réponses contre les emails et les fiches clients : si tout est juste et sourcé, je signe pour l'équipe.",
+  "Un DPA signable, la liste des sous-traitants (notamment quel modèle traite nos données et où), une certification ou un audit de sécurité indépendant, et une agence comparable à la nôtre qui l'utilise depuis six mois et accepte de me prendre au téléphone.",
+  "Un connecteur Slack qui marche, et un dirigeant d'agence de mon réseau qui me dit après trois mois d'usage que son équipe retrouve vraiment ce qu'elle cherche.",
+  "Une démo sur mon propre Drive, avec un compte junior qui pose la question piège et se fait refuser, puis un tarif par équipe plutôt que par siège pour que tout le monde soit dedans.",
+  "Qu'on me montre sur mes propres données, en dix minutes, Leon retrouver une promesse faite en réunion client que Gemini et Notion AI n'ont pas trouvée, et que je puisse ne payer que trois ou quatre sièges (moi et les chefs de projet) plutôt que toute l'agence.",
+  "Un DPA signé avec la liste des sous-traitants, une documentation RGPD lisible par mon DPO (base légale, durées de conservation, droits des salariés), et une référence client française de ma taille qui a passé le CSE avec ; à ce moment-là, un pilote sur une seule équipe volontaire.",
+  "Un CTO de mon réseau qui me montre, sur son propre dépôt, Leon répondre juste à « pourquoi on a fait ce choix » avec la PR en source, et qui me dit que son équipe le réclame quand il envisage de résilier.",
+  "Un essai sur mes vraies données, en lecture seule, où je lui pose dix questions dont je connais déjà la réponse et où il tombe juste ou dit qu'il ne sait pas, plus un DPA signé avec une société immatriculée et ses références de sécurité.",
+  "Un essai sur notre dépôt et notre Linear réels où je pose dix questions dont je connais la réponse, y compris trois pièges sans réponse, et où il dit « je ne sais pas » sur les trois.",
+  "Un essai sur mon propre dépôt et mes propres réunions où je vérifie moi-même dix réponses contre leurs sources sans en trouver une fausse, avec un DPA signable et un contrôle visible côté salarié sur ce qui remonte.",
+  "Un DPA et une liste des sous-traitants en ligne, et une démonstration sur mon propre Drive que quelqu'un sans accès à un dossier ne peut pas en obtenir le contenu par une question dans Leon.",
+  "Une démo sur mes propres outils, en trente minutes, où je vérifie moi-même qu'un nouvel embauché ne voit rien de plus que ce que ses droits Drive et HubSpot lui donnent, et qu'il obtient une réponse sourcée à une vraie question qu'il m'a posée cette semaine. Si ça marche, les 25 € par siège sont moins chers que mon temps.",
+  "Un pair de mon Slack de fondateurs qui l'utilise depuis six mois et me dit que ça tient, plus une garantie écrite d'export complet de la mémoire à tout moment.",
+  "Qu'il fonctionne sans extension, avec seulement Google Workspace et Meet branchés, et qu'il me ressorte ce qui a été promis à un client dès la première semaine d'essai.",
+  "Un CTO que je connais qui l'utilise depuis trois mois et me confirme que le cloisonnement tient, plus une capture de ce qui se passe dans Claude Code (pas seulement le navigateur).",
+  "Une démo sur mes propres comptes où je crée deux utilisateurs avec des droits différents et où je vérifie moi-même que le second ne voit rien de ce qu'il ne doit pas voir, avec un tarif négocié autour de 15 € le siège.",
+  "Un essai sur mes vraies données où je pose dix questions dont je connais les réponses, zéro hallucination, chaque réponse sourcée, et une démonstration concrète que mon stagiaire n'obtient rien de ce qu'il ne voit pas déjà dans Drive.",
+  "Qu'on perde un client ou un deal à cause d'une promesse oubliée dans un email, et que je ne retrouve rien dans Notion ni dans Gmail ce jour-là.",
+  "Un DPA signé avec la liste des sous-traitants (y compris les fournisseurs de modèles), un export complet de nos données à tout moment, et un essai sur nos vrais documents en français où je vérifie que chaque réponse cite juste ou dit « je ne sais pas ».",
+  "Une garantie écrite d'export complet (faits, citations, sources) dans un format exploitable, à tout moment, plus un tarif dégressif à partir de dix sièges.",
+  "Un accord de traitement (DPA) signé avec la liste complète des sous-traitants et des sous-processeurs IA, une clause de réversibilité avec export intégral, et un ou deux cabinets comparables au mien qui l'utilisent déjà et que je peux appeler.",
+  "Un DPA et une liste de sous-traitants prêts à être relus par mon DPO, une référence client d'un cabinet comparable au mien, et un essai limité à un seul connecteur (Drive ou Gmail) sans extension, pour voir si l'équipe pose vraiment des questions à l'outil au bout de trente jours.",
+  "Une démo sur mon propre dépôt et mes propres mails où je pose dix questions pièges et où il répond « je ne sais pas » quand il ne sait pas, plus des garanties sérieuses sur la sécurité (périmètre d'accès, audit, ce qui est stocké).",
+  "Une tarification à l'équipe (un forfait fixe pour 10-15 personnes, genre 100 € par mois) plutôt qu'au siège, et une démo sur nos propres repos et notre Drive qui me sort en dix minutes une réponse correcte à une question qu'on s'est vraiment posée, source à l'appui. Ou qu'on passe à 40 personnes et que l'onboarding commence à nous coûter des semaines.",
+  "Un export complet et documenté de toute la mémoire (faits, sources, citations) dans un format ouvert, plus un ou deux CTO de mon réseau qui l'utilisent depuis plusieurs mois et me confirment que les réponses sont fiables.",
+  "Un essai sur une seule boîte mail, la mienne, pendant lequel je lui pose dix questions dont je connais déjà les réponses (ce dossier de périmètre contesté en premier) et où il me donne le bon email à chaque fois ou me dit franchement qu'il ne sait pas, plutôt que d'inventer. S'il passe ce test, je paie.",
+  "Un essai sur mes propres données avec un contrôle que je fais moi-même sur vingt questions dont je connais la réponse, plus un DPA signé, une description technique du stockage et des accès, et un export complet garanti si on arrête.",
+  "Qu'on me montre, sur mes propres sessions Claude Code et mes PR, en dix minutes d'essai, qu'il retrouve une décision d'agent que Notion et ChatGPT ne retrouvent pas, avec une offre solo ou à 2-3 sièges pour commencer sans engager toute l'équipe.",
+  "Une démo sur mes propres comptes, en dix minutes, où je vois noir sur blanc ce qu'un collaborateur lambda obtient et n'obtient pas quand il pose la question, plus une agence comme la mienne qui l'utilise déjà et que je peux appeler.",
+  "Une démo sur mes propres outils, en dix minutes chrono et sans que je touche à une configuration, où je vois noir sur blanc qu'un membre de l'équipe n'obtient rien hors de son périmètre ; et si en prime ça me permet de couper un des abonnements que je paie déjà, je signe.",
+  "Un CTO que je connais dans mon Slack de fondateurs qui l'utilise depuis trois mois et me confirme que le cloisonnement des accès tient, avec une doc technique ou un audit publié sur le modèle de permissions.",
+  "Qu'un CTO que je connais dans mon réseau l'utilise depuis six mois et me dise que ça tient, et que je puisse l'essayer sur trois personnes sans l'extension.",
+  "Un connecteur Slack et un tarif par siège autour de 10 € HT, ou un forfait équipe plutôt qu'un prix par tête, avec la preuve sur l'essai gratuit que trois questions concrètes de mes commerciaux trouvent leur réponse sourcée.",
+  "Que pendant l'essai gratuit, sur un vrai litige comme celui-ci, Leon me sorte en une question l'email de validation, le compte-rendu de réunion et la ligne du devis que Gemini et Notion n'ont pas retrouvés."
+ ],
+ "purchases_first_month_per_buyer": 1.0,
+ "price_answers": 100
+}

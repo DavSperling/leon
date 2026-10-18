@@ -1,0 +1,13 @@
+{
+  "id": "P079",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Je prendrais l'essai gratuit pour le tester sur mes propres dossiers, mais je ne signerais pas pour 25 sièges sur la foi d'une page : la dernière fois, la démo était parfaite et l'outil inventait des chiffres sur mes données. Deux cofondateurs qui branchent Gmail, Drive et HubSpot de mon cabinet, ça demande plus qu'une promesse d'hébergement à Francfort.",
+  "objection": "On me dit « chacun ne voit que ce à quoi il a déjà accès », mais personne ne m'explique comment c'est vérifié : un stagiaire qui demande « qu'a-t-on promis à Acme » et qui tombe sur les marges du dossier, c'est mon cabinet qui saute, pas le leur.",
+  "would_change_my_mind": "Un essai sur mes vraies données où je pose dix questions dont je connais les réponses, zéro hallucination, chaque réponse sourcée, et une démonstration concrète que mon stagiaire n'obtient rien de ce qu'il ne voit pas déjà dans Drive.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

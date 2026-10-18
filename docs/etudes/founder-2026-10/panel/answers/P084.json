@@ -1,0 +1,13 @@
+{
+  "id": "P084",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin, je le vis : Marc est parti le mois dernier avec dix ans de dossiers clients dans la tête, et ça, ni Notion ni ChatGPT ne me l'auraient rendu. Mais brancher une extension navigateur qui lit ce que mes collaborateurs disent à ChatGPT, plus Gmail, Drive et HubSpot, chez une société de deux personnes née hier, je ne signe pas ça sans que mon DPO ait relu un contrat de sous-traitance, et à ce stade il n'y a visiblement rien à relire.",
+  "objection": "Qui est réellement derrière la boîte, où sont listés les sous-traitants (quel LLM lit mes emails ?), et que deviennent toutes mes données si les deux cofondateurs ferment dans dix-huit mois ? Frankfurt et « pas d'entraînement » c'est bien, mais ce n'est qu'une phrase sur une page.",
+  "would_change_my_mind": "Un accord de traitement (DPA) signé avec la liste complète des sous-traitants et des sous-processeurs IA, une clause de réversibilité avec export intégral, et un ou deux cabinets comparables au mien qui l'utilisent déjà et que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

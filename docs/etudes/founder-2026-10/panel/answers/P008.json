@@ -1,0 +1,13 @@
+{
+  "id": "P008",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je passe mes journées à répondre aux deux nouveaux, et la phrase « chacun ne voit que ce à quoi il a déjà accès » est exactement ce que je veux entendre. Mais tous les outils que j'ai testés promettaient la même chose et c'est précisément là qu'ils cassaient ; je ne vais pas brancher Gmail, Drive et HubSpot de toute la boîte sur un produit de deux cofondateurs sur la foi d'une ligne dans une page de présentation.",
+  "objection": "Comment ça marche concrètement, le périmètre ? Si Leon capte un email que j'ai reçu et qu'un nouveau pose une question dessus, qu'est-ce qu'il voit, et qui décide ? Et je paie déjà Workspace, Notion Business et ChatGPT Team, qui me disent chacun qu'ils font de la mémoire d'équipe : 250 € de plus par mois pour une couche en plus, il faut que ce soit indiscutable.",
+  "would_change_my_mind": "Un essai sur mon vrai compte où je crée un accès pour une recrue, je vérifie moi-même qu'elle ne voit rien de ce qu'elle ne devrait pas voir, et je constate qu'en deux semaines elle m'a posé moitié moins de questions.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

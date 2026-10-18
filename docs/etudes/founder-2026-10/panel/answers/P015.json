@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Brancher le Gmail, le Drive et le GitHub de toute la boîte sur un outil édité par deux cofondateurs sans historique, je ne le fais pas sur une promesse. Et pour mon vrai problème, retrouver ce qu'on a promis à un client, un Claude Project avec les notes de réunion fait déjà 80 % du boulot pour ce qu'on paie déjà.",
+  "objection": "Je me suis déjà fait avoir par une démo qui citait des sources très proprement et qui inventait quand même. « Il répond en citant la source exacte » ne me dit rien sur le taux d'erreur sur mes données à moi, et une hallucination sur une promesse client coûte bien plus que 25 € par siège.",
+  "would_change_my_mind": "Un essai sur un périmètre restreint (un seul compte Gmail et un seul dépôt), où je vérifie moi-même vingt questions contre les sources, avec zéro réponse inventée, plus une page sécurité sérieuse (chiffrement, sous-traitants, droit à l'effacement, qui chez eux peut lire quoi).",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

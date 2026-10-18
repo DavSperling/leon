@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Mon vrai trou de mémoire, c'est ce qu'on a promis aux clients en réunion, pas pourquoi on a pris Postgres : ça, c'est dans la PR et dans Linear, et Claude avec le repo en contexte me le retrouve déjà. Je testerais peut-être la version solo gratuite un soir, mais je ne sors pas 75 € par mois pour l'équipe.",
+  "objection": "Un agent qui lit les sessions Claude Code et Cursor de chaque dev et les envoie chez un tiers, même à Francfort, c'est exactement le genre de démo brillante qui m'a déjà eu : je veux voir ce qu'il remonte sur nos données, pas sur une démo, et le test des 20 questions, c'est nous qui devons l'écrire et le vérifier, donc du temps dev que je n'ai pas.",
+  "would_change_my_mind": "Qu'il capture aussi les réunions clients (notes, visio, mails) et que, sur nos 20 questions, il batte Claude avec le repo et Linear déjà branchés ; là je paierais.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

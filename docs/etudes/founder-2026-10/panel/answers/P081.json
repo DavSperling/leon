@@ -1,0 +1,13 @@
+{
+  "id": "P081",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, on vient de perdre quelqu'un avec tout ce qu'il savait, mais je ne branche pas un outil sur Gmail, Drive et nos conversations IA sur la foi d'une page : il me faut le DPA, la liste des sous-traitants et ce que mon avocat en dit, et une boîte de deux personnes qui tiendrait toute notre mémoire, c'est un risque de continuité que je n'ai pas envie de porter. Je ferais peut-être l'essai gratuit sur une boîte mail de test, pas plus.",
+  "objection": "Une extension navigateur qui capte ce que l'équipe dit à Claude et ChatGPT, avec un tri « décisions partageables » fait par un modèle : qui décide ce qui remonte, et si ça hallucine en français, je me retrouve avec des réponses fausses citées comme sûres devant un client.",
+  "would_change_my_mind": "Un DPA signé avec la liste des sous-traitants (y compris les fournisseurs de modèles), un export complet de nos données à tout moment, et un essai sur nos vrais documents en français où je vérifie que chaque réponse cite juste ou dit « je ne sais pas ».",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

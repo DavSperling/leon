@@ -1,0 +1,13 @@
+{
+  "id": "P080",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "On est 40, on se parle, et je paie déjà Notion Business et ChatGPT Team dont je ne sais même pas ce qu'on utilise vraiment. Rajouter 25 € par siège pour une « mémoire » qu'on n'a pas identifiée comme un problème, c'est non.",
+  "objection": "Je suis à peu près sûre que Notion AI ou la recherche de Google Workspace font déjà ça, ou le feront dans six mois, inclus dans ce que je paie déjà ; et brancher Gmail, Drive et HubSpot d'une PME à une société de deux personnes, ça me fait hésiter.",
+  "would_change_my_mind": "Qu'on perde un client ou un deal à cause d'une promesse oubliée dans un email, et que je ne retrouve rien dans Notion ni dans Gmail ce jour-là.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

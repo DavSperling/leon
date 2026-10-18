@@ -1,0 +1,13 @@
+{
+  "id": "P010",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je perds vraiment le fil de ce que mes agents décident, mais je ne vais pas installer un agent sur le poste de chaque dev sans l'avoir testé moi-même ; il y a une version solo gratuite, c'est par là que je commence, et je ne mets pas 75 € par mois sur la table le premier mois.",
+  "objection": "Un agent sur chaque poste qui lit les sessions Claude Code, même avec validation d'un clic, mes devs vont le voir comme de la surveillance ; il me faut quelque chose à montrer au CSE et à l'équipe avant de parler de sièges, et je ne sais pas ce que cet agent capte exactement en dehors des décisions validées.",
+  "would_change_my_mind": "Un mois en solo gratuit où Leon retrouve vraiment mes décisions d'agents avec la bonne source, plus une page claire sur ce que l'agent local capte et ne capte pas, que je puisse donner telle quelle aux devs et au CSE.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

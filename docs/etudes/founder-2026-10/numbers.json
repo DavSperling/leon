@@ -1,0 +1,116 @@
+{
+  "business": "Leon pour les équipes de développement : abonnement par siège (unité = un siège Équipe pendant un mois). Montants en euros HT, 1 $ = 0,92 € (hypothèse, voir cfo-sources.md). Offre v2 du 18/10/2026.",
+  "unit": "siège-mois",
+  "price": 25.0,
+  "variable": [
+    {
+      "label": "Embeddings du flux (voyage-4)",
+      "cost": 0.04
+    },
+    {
+      "label": "Étiquetage léger Haiku 5.5 (contexte, entités, marqueurs décision)",
+      "cost": 0.28
+    },
+    {
+      "label": "Reprise de l'historique GitHub, Linear, Notion et sessions, amortie sur 12 mois",
+      "cost": 0.4
+    },
+    {
+      "label": "Stockage Postgres et pgvector (Supabase)",
+      "cost": 0.09
+    },
+    {
+      "label": "Recherche et rerank (440 requêtes/mois)",
+      "cost": 1.2
+    },
+    {
+      "label": "Génération via MCP : payée par l'abonnement LLM du client",
+      "cost": 0.0
+    },
+    {
+      "label": "Sièges Solo gratuits (1 pour 4 sièges payants, ~2,4 € chacun)",
+      "cost": 0.6
+    },
+    {
+      "label": "Frais de paiement Stripe (1,5 % + 0,25 € par transaction, plus Billing 0,7 % pour les abonnements, réparti)",
+      "cost": 0.56
+    },
+    {
+      "label": "Support, onboarding et test des 20 questions (temps fondateur)",
+      "cost": 1.5
+    },
+    {
+      "label": "Garantie « 15 sur 20 » : 10 % des équipes non facturées le premier mois, réparti",
+      "cost": 0.2
+    }
+  ],
+  "fixed_monthly": [
+    {
+      "label": "Rémunération minimale des deux fondateurs (hypothèse à corriger)",
+      "cost": 5000
+    },
+    {
+      "label": "Hébergement, base, files, LLM de développement",
+      "cost": 650
+    },
+    {
+      "label": "Outils (GitHub, domaine, email, compta, monitoring)",
+      "cost": 150
+    },
+    {
+      "label": "Expert-comptable",
+      "cost": 150
+    },
+    {
+      "label": "Assurance RC pro et cyber",
+      "cost": 120
+    },
+    {
+      "label": "Marketing (LinkedIn, contenu, événements)",
+      "cost": 500
+    },
+    {
+      "label": "Sécurité (pentest annuel amorti, outils de sécurité)",
+      "cost": 200
+    }
+  ],
+  "startup": [
+    {
+      "label": "Immatriculation SAS, statuts, dépôt de capital",
+      "cost": 1000
+    },
+    {
+      "label": "Dépôt de marque INPI",
+      "cost": 250
+    },
+    {
+      "label": "CGV, DPA, politique RGPD, registre des traitements (avocat)",
+      "cost": 2500
+    },
+    {
+      "label": "Site et pages de test",
+      "cost": 500
+    },
+    {
+      "label": "Publicités et outils de lancement",
+      "cost": 1500
+    }
+  ],
+  "days_per_month": 1,
+  "capacity_per_day": 800,
+  "plan_per_day": 500,
+  "ramp_per_day": [
+    0,
+    10,
+    25,
+    45,
+    70,
+    100,
+    140,
+    185,
+    235,
+    290,
+    350,
+    420
+  ]
+}

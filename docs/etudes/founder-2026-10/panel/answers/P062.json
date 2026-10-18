@@ -1,0 +1,13 @@
+{
+  "id": "P062",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "convenience",
+  "reason": "Mon équipe vit dans Slack et Slack n'est même pas dans la liste des outils branchés, donc Leon passerait à côté de la moitié de ce qu'on se dit. Et je n'ai ni le temps ni l'envie de faire installer une extension navigateur sur quinze postes pour une boîte de deux personnes que je ne connais pas.",
+  "objection": "Sans Slack, ça ne couvre pas là où tout se passe chez nous, et l'installation sur chaque poste plus la dépendance à une jeune société de deux cofondateurs, c'est trop de friction et trop de risque pour 375 € par mois.",
+  "would_change_my_mind": "Un connecteur Slack qui marche, et un dirigeant d'agence de mon réseau qui me dit après trois mois d'usage que son équipe retrouve vraiment ce qu'elle cherche.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

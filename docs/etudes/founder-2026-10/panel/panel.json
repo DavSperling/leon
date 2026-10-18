@@ -1,0 +1,107 @@
+{
+ "n": 100,
+ "seed": 7,
+ "customer": {
+  "business": "Leon : la mémoire de l'équipe (brut + étiquetage léger + conversations IA), pour équipes de 5 à 100 personnes",
+  "target": "Le décideur d'une équipe de 5 à 100 personnes en France (CTO, dirigeant d'agence ou de cabinet, directeur commercial ou des opérations) qui jongle entre plusieurs outils et dont l'équipe utilise des assistants IA ; tu raisonnes et tu réponds en français, avec un budget d'entreprise, pas personnel",
+  "where": "France, équipes de 5 à 100 personnes, principalement sous Google Workspace ou Microsoft 365 avec Notion, Linear ou Jira, GitHub, HubSpot",
+  "age": [
+   27,
+   55
+  ],
+  "segments": [
+   {
+    "name": "CTO ou lead dev d'une startup ou scale-up tech de 10 à 60 personnes",
+    "share": 0.35,
+    "income": [
+     55000,
+     110000
+    ]
+   },
+   {
+    "name": "Dirigeant d'une agence ou d'un cabinet (conseil, expertise comptable, agence web ou marketing) de 5 à 40 personnes",
+    "share": 0.25,
+    "income": [
+     45000,
+     120000
+    ]
+   },
+   {
+    "name": "Directeur commercial ou des opérations d'une PME de services ou d'un SaaS de 20 à 100 personnes",
+    "share": 0.25,
+    "income": [
+     45000,
+     90000
+    ]
+   },
+   {
+    "name": "Fondateur d'une petite équipe de 5 à 15 personnes très utilisatrice d'IA",
+    "share": 0.15,
+    "income": [
+     30000,
+     80000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Power user IA",
+    "share": 0.2,
+    "how": "Passe ses journées dans Claude Code ou ChatGPT, essaie chaque nouvel outil, achète vite s'il voit la valeur."
+   },
+   {
+    "name": "Déjà tout équipé",
+    "share": 0.2,
+    "how": "Paie déjà Google Workspace ou Microsoft 365, Notion Business et ChatGPT Team ; part du principe que « c'est déjà inclus »."
+   },
+   {
+    "name": "Prudent sécurité et RGPD",
+    "share": 0.15,
+    "how": "Demande où sont les données, qui y accède, et fait relire par un DPO ou un avocat avant de signer."
+   },
+   {
+    "name": "Compte les euros",
+    "share": 0.15,
+    "how": "Compare le prix par siège à Notion et ChatGPT, négocie, ne prend que les sièges strictement nécessaires."
+   },
+   {
+    "name": "Sceptique des démos IA",
+    "share": 0.15,
+    "how": "S'est déjà fait avoir par une démo brillante qui a halluciné sur ses propres données ; veut la preuve sur ses données avant de payer."
+   },
+   {
+    "name": "Demande à son réseau",
+    "share": 0.1,
+    "how": "Lit les avis, demande dans un Slack de fondateurs ou à un pair avant tout achat d'outil."
+   },
+   {
+    "name": "Surchargé",
+    "share": 0.05,
+    "how": "N'a pas le temps d'installer quoi que ce soit ; si ça ne marche pas en dix minutes, il abandonne."
+   }
+  ],
+  "objections": [
+   "Claude, ChatGPT ou Notion le font déjà pour 20 € par mois, pourquoi payer en plus ?",
+   "Confier mes emails et les conversations de mes salariés à une startup de deux personnes, non immatriculée ?",
+   "Mes salariés vont le vivre comme de la surveillance ; et le CSE, et le RGPD ?",
+   "Et si la startup disparaît dans six mois, je fais quoi de ma mémoire ?",
+   "Ces outils répondent faux avec assurance ; ça va halluciner comme les autres sur nos données en français",
+   "Je n'ai pas le temps de brancher six outils et d'installer une extension sur chaque poste",
+   "25 € fois 30 personnes, c'est 750 € par mois : pour quel gain mesurable ?",
+   "On n'a pas de problème de mémoire, on est petits, on se parle",
+   "Comment je règle qui voit quoi ? Les outils que j'ai essayés ne permettaient pas de limiter le périmètre",
+   "Ça va me ressortir une vieille version d'une décision sans dire qu'elle a changé"
+  ],
+  "habits": [
+   "tu passes deux heures par jour dans Claude Code et tu perds le fil de ce que tes agents ont décidé",
+   "tu as quatre réunions clients par semaine et tu retrouves rarement ce qui a été promis",
+   "tu viens d'embaucher deux personnes et tu passes ton temps à répondre à leurs questions",
+   "un collaborateur clé est parti le mois dernier avec tout ce qu'il savait",
+   "tu paies déjà Notion Business et ChatGPT Team et tu te demandes ce que tu utilises vraiment",
+   "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an",
+   "ton équipe a tout dans Slack, Gmail et Google Drive et personne ne retrouve rien",
+   "tu as un client qui conteste un périmètre validé par email il y a trois mois"
+  ]
+ },
+ "pitch": "Leon, la mémoire de votre équipe. Il se branche à Gmail, Google Drive et Meet, Notion, Linear, GitHub et HubSpot, et capte aussi ce que votre équipe dit à Claude et ChatGPT (chaque conversation reste privée à son auteur ; seules les décisions partageables remontent à l'équipe).\nPosez une question depuis Claude, ChatGPT ou l'interface Leon : « qu'a-t-on promis à Acme ? », « pourquoi on a choisi Postgres ? », « on a déjà eu ce bug, comment on l'avait réglé ? », « combien de clients se sont plaints de l'export ce trimestre ? ». Il répond en citant la source exacte (l'email, la minute de la réunion, la PR), et chacun ne voit que ce à quoi il a déjà accès.\nHébergé en Europe (Francfort), vos données ne servent à entraîner aucun modèle.\n25 € HT par siège et par mois, sans engagement, 30 jours d'essai gratuit. Installation : connexion aux outils en dix minutes, puis une extension navigateur pour les conversations IA.\nÉdité par une jeune société française de deux cofondateurs."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P045",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Brancher Gmail, Drive, GitHub et une extension navigateur qui lit les conversations IA de toute l'équipe, chez une société de deux personnes, je ne le signe pas sans DPA, liste des sous-traitants et audit de sécurité ; « hébergé à Francfort » ne me dit pas où tournent les modèles qui lisent nos données. Et je paie déjà Notion et ChatGPT Team sans savoir ce qu'on en utilise, je ne vais pas ajouter 25 € par tête pour un outil qui va halluciner avec aplomb sur nos docs en français.",
+  "objection": "Qui a accès à quoi, réellement : l'extension capte tout ce qu'on tape dans Claude et ChatGPT, le filtrage « seules les décisions partageables remontent » est fait par qui, et avec quel modèle, hébergé où ? Sans réponse écrite et relue par notre DPO, c'est non.",
+  "would_change_my_mind": "Un DPA signable avec la liste exacte des sous-traitants (y compris le fournisseur de LLM et sa région), un contrôle d'accès vérifiable qui reprend bien nos permissions Google et GitHub, et un essai sur un périmètre restreint (un seul projet, deux personnes) où je peux vérifier que chaque réponse cite une source réelle.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P069",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "On est quinze, on se parle, et je ne vais pas brancher Gmail, GitHub et Linear à une boîte de deux personnes sur la foi d'une page. La dernière démo « qui cite ses sources » a inventé une PR qui n'existait pas sur nos propres données, alors non, pas cette semaine.",
+  "objection": "Que ça réponde avec aplomb et une citation à côté quand la réponse n'est pas dans nos données, et que mes deux nouveaux le croient sans vérifier.",
+  "would_change_my_mind": "Un essai sur notre dépôt et notre Linear réels où je pose dix questions dont je connais la réponse, y compris trois pièges sans réponse, et où il dit « je ne sais pas » sur les trois.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

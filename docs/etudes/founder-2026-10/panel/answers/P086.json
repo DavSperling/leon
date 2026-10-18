@@ -1,0 +1,13 @@
+{
+  "id": "P086",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je passe mes journées à répondre aux deux nouveaux, mais je ne vais pas brancher Gmail, Drive, GitHub et Linear sur l'outil d'une boîte de deux personnes que je découvre, pour obtenir des réponses dont je devrai de toute façon vérifier chaque citation. On a déjà Notion AI et ChatGPT Team, je commencerais par mieux les exploiter.",
+  "objection": "Sur nos données en français, mélange de mails, PR et comptes-rendus, je ne crois pas aux réponses fiables : il va inventer une décision avec aplomb, un junior la prendra pour argent comptant, et je serai responsable. Et donner accès en lecture à tout notre GitHub et notre Gmail à une startup sans historique, mon RSSI de fortune, c'est moi, dit non.",
+  "would_change_my_mind": "Une démo sur mon propre dépôt et mes propres mails où je pose dix questions pièges et où il répond « je ne sais pas » quand il ne sait pas, plus des garanties sérieuses sur la sécurité (périmètre d'accès, audit, ce qui est stocké).",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

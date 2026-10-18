@@ -1,0 +1,13 @@
+{
+  "id": "P004",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin, je l'ai en plein : on vient de perdre quelqu'un et son savoir avec. Mais brancher Gmail, le Drive et les conversations ChatGPT de toute l'équipe sur un outil de deux fondateurs, sans DPA, sans liste de sous-traitants, sans savoir quel modèle lit nos mails et où, mon DPO ne signera pas et moi non plus, même pour un essai gratuit.",
+  "objection": "Francfort, c'est l'hébergement. Mais les questions passent par Claude ou ChatGPT : qui voit quoi, et où ? Et l'extension navigateur qui capte ce que mes commerciaux disent à ChatGPT, ça ressemble à de la surveillance ; « seules les décisions partageables remontent », décidé par qui ? Si ça hallucine une promesse faite à un client, avec une citation bien propre, c'est pire que pas d'outil.",
+  "would_change_my_mind": "Un DPA signable, la liste des sous-traitants (notamment le LLM utilisé et sa localisation), une politique de rétention claire, et un essai limité à un seul outil (Drive ou Notion) sur un périmètre restreint avant de brancher Gmail et les conversations IA.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P065",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, on perd un temps fou à chercher dans Slack et Drive, mais je ne branche pas le Gmail, le Drive et les conversations IA de toute l'équipe sur un outil d'une société de deux personnes sans DPA, sans liste de sous-traitants et sans que mon DPO ait relu. Francfort et « pas d'entraînement », c'est bien, mais ce n'est pas un dossier de conformité.",
+  "objection": "Une extension navigateur qui lit ce que mes salariés disent à ChatGPT, même « privé à son auteur », c'est de la surveillance aux yeux du CSE et je dois pouvoir prouver le contraire : qui a accès côté éditeur, quelle base légale, quel registre de traitement, que se passe-t-il si la boîte ferme dans six mois ?",
+  "would_change_my_mind": "Un DPA signé avec la liste des sous-traitants, une documentation RGPD lisible par mon DPO (base légale, durées de conservation, droits des salariés), et une référence client française de ma taille qui a passé le CSE avec ; à ce moment-là, un pilote sur une seule équipe volontaire.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

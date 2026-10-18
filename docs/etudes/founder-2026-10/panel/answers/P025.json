@@ -1,0 +1,13 @@
+{
+  "id": "P025",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le départ du mois dernier m'a piqué, c'est vrai, mais ma réponse reste de mieux documenter dans Notion, pas d'ajouter un outil de plus à 25 € par tête alors qu'on paie déjà Workspace, Notion et ChatGPT Team. Et je ne branche pas Gmail, Drive et GitHub d'une boîte de 40 personnes sur une extension navigateur éditée par deux cofondateurs que je ne connais pas.",
+  "objection": "Donner à une société de deux personnes un accès en lecture à tous nos emails, notre code et nos réunions, avec une extension installée sur chaque poste : sans audit de sécurité, sans historique, c'est un risque que je ne peux pas justifier devant mon CEO.",
+  "would_change_my_mind": "Un essai sur nos propres données qui répond juste à une question du type « pourquoi on a choisi cette archi » là où Notion AI et ChatGPT sèchent, plus un rapport de sécurité sérieux (SOC 2 ou pentest externe) et un vrai mécanisme de permissions que je peux vérifier.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 30,
+  "price_too_expensive": 50
+}

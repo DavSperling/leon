@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "Mon problème cette semaine, c'est un client qui conteste un périmètre validé par email il y a trois mois : la preuve est dans Gmail, pas dans Claude Code ni dans une PR. Leon est vendu à l'équipe de développement, pas à moi ni à mes commerciaux, et il dit lui-même qu'il ne branche pas la boîte mail.",
+  "objection": "La gestion du périmètre : « chaque conversation reste privée, l'auteur valide d'un clic », d'accord, mais une fois la décision remontée à l'équipe, qui la voit ? Je ne vois ni rôles, ni espaces par projet ou par client, et c'est exactement là que les outils que j'ai essayés ont lâché.",
+  "would_change_my_mind": "Un connecteur mail (Gmail ou Outlook) avec des droits par projet ou par client, pour que la question « qu'est-ce qu'on a validé avec ce client et quand ? » trouve sa réponse avec l'email source ; je testerais le solo gratuit le jour même et je prendrais 3 à 5 sièges si le test des 20 questions passe.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

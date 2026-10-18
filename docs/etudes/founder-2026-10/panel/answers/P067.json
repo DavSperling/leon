@@ -1,0 +1,13 @@
+{
+  "id": "P067",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je passe mes journées à répondre aux questions de mes deux recrues, mais brancher le Gmail et le Drive de toute l'équipe sur une boîte de deux cofondateurs dont je ne sais rien, je ne le fais pas sur une page de présentation. Je lancerais peut-être l'essai sur mon seul compte, mais je ne mettrais pas 25 € par siège derrière avant d'avoir vu qu'il ne me raconte pas n'importe quoi sur mes propres données.",
+  "objection": "Je me suis déjà fait avoir par une démo brillante qui hallucinait sur mes données ; « il cite la source exacte » est exactement la promesse qu'on m'avait faite la dernière fois. Et confier les emails de mes salariés à une structure de deux personnes, sans contrat de traitement des données ni mention d'une société immatriculée, ça me bloque avant même la question du prix.",
+  "would_change_my_mind": "Un essai sur mes vraies données, en lecture seule, où je lui pose dix questions dont je connais déjà la réponse et où il tombe juste ou dit qu'il ne sait pas, plus un DPA signé avec une société immatriculée et ses références de sécurité.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

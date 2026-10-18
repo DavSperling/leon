@@ -1,0 +1,13 @@
+{
+  "id": "P091",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "On paie déjà Workspace, Notion Business et ChatGPT Team, et dans ma tête la mémoire d'équipe est censée être dedans. Le truc qui me parle vraiment, c'est retrouver ce que mes agents ont décidé dans Claude Code, mais ça c'est mon problème à moi, pas une ligne de budget à 25 € par tête pour toute la boîte.",
+  "objection": "Encore un outil à brancher sur tout (Gmail, Drive, HubSpot, GitHub) et à faire adopter par l'équipe, alors qu'on est petits et qu'on se parle ; et confier tout ça à deux cofondateurs dont je ne connais pas la société, sans savoir s'ils existent encore dans un an.",
+  "would_change_my_mind": "Qu'on me montre, sur mes propres sessions Claude Code et mes PR, en dix minutes d'essai, qu'il retrouve une décision d'agent que Notion et ChatGPT ne retrouvent pas, avec une offre solo ou à 2-3 sièges pour commencer sans engager toute l'équipe.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

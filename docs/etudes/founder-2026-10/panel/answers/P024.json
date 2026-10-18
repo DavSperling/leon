@@ -1,0 +1,13 @@
+{
+  "id": "P024",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je passe mes journées à répondre aux mêmes questions de mes deux nouvelles recrues, et un outil qui répond à leur place en citant l'email ou la réunion d'origine, c'est exactement ce qui me manque. Je branche Gmail et Drive seul pendant l'essai, je pose trois vraies questions, et si ça tient je mets les deux nouveaux dessus à 25 € le siège sans discuter.",
+  "objection": "L'extension navigateur sur chaque poste : je n'ai pas le temps de passer sur dix machines, et je sais que la moitié de l'équipe ne l'installera jamais ; si la valeur dépend de ça, l'outil restera à moitié vide. Et confier mon Gmail et mon HubSpot à deux cofondateurs qui peuvent fermer dans un an me fait réfléchir sur la pérennité.",
+  "would_change_my_mind": "Si pendant l'essai il ne trouve pas la réponse à une question dont je connais la source, ou s'il la cite à côté, j'arrête net.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

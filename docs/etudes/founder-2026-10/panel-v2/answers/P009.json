@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je perds le fil de ce que mes agents décident tous les jours, et la réponse à ma première question est écrite noir sur blanc : chaque conversation reste privée, seules les décisions validées remontent. À 19 € le siège sans engagement et avec le test des 20 questions, je prends 3 sièges tout de suite pour tester sur mon équipe ops.",
+  "objection": "Le produit parle à une équipe de développement ; moi je suis côté commercial et opérations, mes agents décident sur des process clients et des devis, pas sur Postgres. Et « privé à son auteur » ne me dit pas si je peux cloisonner par projet ou par équipe une fois les décisions remontées.",
+  "would_change_my_mind": "Si à l'installation je découvre que le périmètre se règle seulement par personne et pas par projet ou par équipe, j'arrête au bout du mois gratuit.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

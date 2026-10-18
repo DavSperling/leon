@@ -1,0 +1,13 @@
+{
+  "id": "P071",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel chez nous et Francfort plus « chacun ne voit que ce à quoi il a accès » répondent exactement à ma première question, mais ce sont des promesses sur une page : une extension qui capte ce que mon équipe dit à ChatGPT et à Claude, éditée par deux personnes, je ne la signe pas sans DPA, liste des sous-traitants et relecture de mon DPO, et ça ne tient pas dans un mois.",
+  "objection": "Qui, concrètement, décide qu'une décision est « partageable » et remonte à l'équipe, et qui chez l'éditeur peut lire ce que l'extension capte ? Les outils que j'ai essayés me disaient aussi qu'ils respectaient les droits d'accès, et ce n'était pas vrai.",
+  "would_change_my_mind": "Un DPA et une liste des sous-traitants en ligne, et une démonstration sur mon propre Drive que quelqu'un sans accès à un dossier ne peut pas en obtenir le contenu par une question dans Leon.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

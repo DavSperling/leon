@@ -1,0 +1,13 @@
+{
+  "id": "P063",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le départ du mois dernier me fait mal, donc je prends l'essai gratuit, mais je ne signe pas : « chacun ne voit que ce à quoi il a déjà accès » est une phrase, pas une preuve, et on m'a déjà vendu ça. À 25 € par siège en plus de Notion et ChatGPT, je ne mettrais que trois ou quatre personnes dessus, et une mémoire d'équipe où il manque les deux tiers de l'équipe ne vaut pas grand-chose.",
+  "objection": "Les droits : si Leon lit tout mon Drive et mon Gmail, qu'est-ce qui garantit qu'un stagiaire n'obtient pas en une question ce que j'ai promis à un client ou le salaire d'un collègue ? Et c'est une boîte de deux personnes, donc qui répond si ça fuit ?",
+  "would_change_my_mind": "Une démo sur mon propre Drive, avec un compte junior qui pose la question piège et se fait refuser, puis un tarif par équipe plutôt que par siège pour que tout le monde soit dedans.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

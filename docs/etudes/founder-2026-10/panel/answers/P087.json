@@ -1,0 +1,13 @@
+{
+  "id": "P087",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "need",
+  "reason": "On est douze, on est dans le même Slack et le même open space, quand je veux savoir pourquoi on a pris Postgres je le demande à voix haute. Je paie déjà Notion Business et ChatGPT Team par siège, je ne vais pas rajouter 25 € par tête pour un troisième outil qui me promet de retrouver des trucs que je retrouve déjà en deux minutes.",
+  "objection": "25 € HT par siège c'est plus cher que Notion et quasiment le prix de ChatGPT Team, pour un outil de deux cofondateurs qui peut disparaître dans un an, et il faudrait en plus que toute l'équipe installe une extension navigateur et branche GitHub, Gmail et Drive dessus. Je ne vois pas quel problème concret ça règle chez nous aujourd'hui.",
+  "would_change_my_mind": "Une tarification à l'équipe (un forfait fixe pour 10-15 personnes, genre 100 € par mois) plutôt qu'au siège, et une démo sur nos propres repos et notre Drive qui me sort en dix minutes une réponse correcte à une question qu'on s'est vraiment posée, source à l'appui. Ou qu'on passe à 40 personnes et que l'onboarding commence à nous coûter des semaines.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

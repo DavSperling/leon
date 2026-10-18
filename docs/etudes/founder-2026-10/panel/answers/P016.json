@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Quatre réunions clients par semaine et je passe mon temps à fouiller Gmail et Meet pour retrouver ce qu'on a promis : si Leon répond vraiment à « qu'a-t-on promis à Acme ? » en citant le mail ou la minute, ça se paie tout seul. L'essai de 30 jours sans engagement ne coûte rien, je branche Gmail, Drive et Meet sur trois ou quatre sièges et je juge sur mes vraies réunions.",
+  "objection": "Claude et ChatGPT ont déjà une mémoire et Notion AI cherche déjà dans mes pages pour 20 € : je crains de payer 25 € par siège pour une couche qui fera doublon dans six mois, et confier tous mes mails clients à deux cofondateurs qui peuvent fermer boutique me freine autant que le prix.",
+  "would_change_my_mind": "Si à la fin de l'essai les réponses sur mes propres réunions sont vagues ou citent la mauvaise source, j'arrête ; à l'inverse, si Claude ou ChatGPT sort une mémoire d'équipe branchée sur Gmail et Meet avec les sources, je n'ai plus de raison de payer en plus.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

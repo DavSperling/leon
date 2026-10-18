@@ -1,0 +1,13 @@
+{
+  "id": "P037",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Je lancerais l'essai gratuit sur un coin de mon Drive, mais je ne mettrais pas 25 € par siège pour toute l'équipe sans avoir vu l'outil répondre juste, en français, sur nos propres mails et comptes-rendus. Une promesse de citation de source, je l'ai déjà entendue dans une démo qui a inventé des chiffres sur nos données.",
+  "objection": "Brancher Gmail, Drive et HubSpot de toute la boîte sur un produit de deux cofondateurs, et découvrir au bout d'un mois qu'il répond faux avec assurance sur un engagement client.",
+  "would_change_my_mind": "Un essai sur nos vrais données où je pose vingt questions dont je connais la réponse, et qu'il dise « je ne sais pas » plutôt que d'inventer quand la source n'existe pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

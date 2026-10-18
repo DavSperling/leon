@@ -1,0 +1,13 @@
+{
+  "id": "P059",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le cas d'usage me parle, j'ai justement un client qui conteste un périmètre validé par email il y a trois mois. Mais brancher le Gmail et le Drive de toute la boîte sur l'outil d'une société de deux personnes que je découvre, à 25 € le siège, je ne le fais pas sans preuve ; je ferais l'essai gratuit sur ma seule boîte mail, et je ne paierais pas au bout des 30 jours sans avoir vu une réponse juste, sourcée, sur mes vrais emails en français.",
+  "objection": "Ces outils répondent faux avec assurance : le jour où il me sort un périmètre inventé avec une citation à côté, je perds le client. Et 25 € par siège, c'est le prix de ChatGPT Team, deux fois Notion, pour une jeune société qui peut disparaître dans un an avec toutes nos données.",
+  "would_change_my_mind": "Une démo sur mes propres emails où il retrouve le périmètre validé avec Acme, l'email exact et la date, sans une erreur sur dix questions ; et un tarif autour de 15 € pour trois sièges commerciaux, pas toute l'équipe.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

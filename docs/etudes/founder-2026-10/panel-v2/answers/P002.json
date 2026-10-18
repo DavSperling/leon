@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je passe mes journées à réexpliquer aux deux nouveaux pourquoi on a fait tel choix, et tout ça dort dans mes sessions Claude Code et nos PR. Le test des 20 questions me coûte zéro si ça ne marche pas, donc je prends 4 sièges tout de suite et je verrai au bout de 30 jours.",
+  "objection": "Un agent qui lit mes sessions Claude Code sur chaque poste, ça reste un accès très intime à notre code et à nos raisonnements, et vous êtes deux ; si vous fermez boutique dans six mois ou si l'agent fuit du contexte qu'on n'a pas validé, c'est moi qui l'explique à mon board.",
+  "would_change_my_mind": "Si à l'install je ne peux pas vérifier moi-même ce que l'agent envoie (trafic en clair, code de l'agent lisible, ou mode local sans sortie réseau), j'arrête avant même les 30 jours.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P073",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je perds le fil de ce que mes agents décident tous les jours, et la capture des conversations Claude plus GitHub plus Linear, c'est exactement là où ça se joue chez nous. 30 jours gratuits, sans engagement, 25 € le siège : je teste la semaine même et je garde si ça répond juste une fois sur dix à « pourquoi on a fait ça ».",
+  "objection": "Une « extension navigateur », ça ne voit pas Claude Code dans mon terminal, là où mes agents prennent vraiment leurs décisions. Et le jour où il me ressort la décision d'il y a trois semaines sans me dire qu'on l'a changée depuis, je perds confiance d'un coup et toute l'équipe arrête de l'interroger.",
+  "would_change_my_mind": "Si, pendant l'essai, il me cite une décision périmée comme si elle était toujours valable, ou s'il ne capte rien de ce qui se passe dans Claude Code, je résilie avant la fin du mois.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

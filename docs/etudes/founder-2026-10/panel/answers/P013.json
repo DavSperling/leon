@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Là, tout de suite, j'ai un client qui conteste un périmètre validé par email il y a trois mois et je perds une demi-journée à fouiller Gmail et les notes de réunion ; si Leon me sort l'email exact avec la citation, ça vaut largement 25 € par siège. L'essai de 30 jours sans engagement ne me coûte rien, je branche mon équipe commerciale et je juge sur la première vraie question.",
+  "objection": "« Chacun ne voit que ce à quoi il a déjà accès » : tous les outils que j'ai essayés disaient ça et en pratique un commercial tombait sur les salaires ou sur un fil RH. Et le tri entre conversation privée et « décision partageable » qui remonte de Claude ou ChatGPT, qui le fait, et comment je l'audite ?",
+  "would_change_my_mind": "Si au premier test un membre de l'équipe obtient une réponse citant un document Drive ou un email auquel il n'a pas accès, j'arrête l'essai le jour même.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

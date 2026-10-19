@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Glean et les PME</title>
+<style>
+  @page { size: A4; margin: 13mm 14mm; }
+  :root {
+    --ink: #1c1f26; --muted: #5d6472; --line: #e3e6ec; --bg-soft: #f6f7f9;
+    --green: #1f8a5b; --green-bg: #e8f5ee;
+    --amber: #b7791f; --amber-bg: #fdf4e3;
+    --red: #c0392b; --red-bg: #fbeceb;
+    --accent: #3b4cca;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); background: #fff; font-size: 9.8pt; line-height: 1.45; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 15pt; margin: 18px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); break-after: avoid; }
+  h3 { font-size: 12pt; margin: 18px 0 8px; break-after: avoid; display: flex; align-items: center; gap: 8px; }
+  p { margin: 6px 0; }
+  .cover { padding: 18px 22px; background: var(--ink); color: #fff; border-radius: 10px; margin-bottom: 18px; }
+  .cover .sub { color: #c9cdd6; font-size: 11pt; }
+  .cover .meta { color: #9aa1ad; font-size: 9pt; margin-top: 10px; }
+  .tldr { border-left: 4px solid var(--accent); background: var(--bg-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; }
+  .tldr b.t { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 4px; }
+  .tldr ul { margin: 4px 0 0; padding-left: 18px; }
+  .pill { display: inline-block; font-size: 8.5pt; font-weight: 700; padding: 2px 9px; border-radius: 99px; }
+  .pill.g { background: var(--green-bg); color: var(--green); }
+  .pill.a { background: var(--amber-bg); color: var(--amber); }
+  .pill.r { background: #fbeceb; color: var(--red); }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 8.9pt; }
+  th { text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); border-bottom: 1.5px solid var(--line); padding: 6px 8px; }
+  td { padding: 5px 7px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr { break-inside: avoid; }
+  td.name { font-weight: 700; width: 24%; }
+  td.verdict { width: 34%; }
+  .fam { break-inside: avoid; border: 1px solid var(--line); border-radius: 10px; padding: 4px 14px 10px; margin: 12px 0; }
+  .fam.g { border-top: 4px solid var(--green); }
+  .fam.a { border-top: 4px solid var(--amber); }
+  .fam.r { border-top: 4px solid var(--red); }
+  .fam .lead { color: var(--muted); font-size: 9.5pt; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; break-inside: avoid; }
+  .card h4 { margin: 0 0 6px; font-size: 10.5pt; }
+  .card ul { margin: 0; padding-left: 16px; }
+  .card li { margin: 3px 0; }
+  .stat { font-size: 17pt; font-weight: 800; color: var(--accent); line-height: 1.1; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
+  .stats .card { text-align: left; }
+  .stats .lbl { font-size: 8.5pt; color: var(--muted); margin-top: 3px; }
+  .callout { background: var(--bg-soft); border-radius: 10px; padding: 12px 16px; margin: 12px 0; break-inside: avoid; }
+  ol.reco { padding-left: 0; list-style: none; counter-reset: r; }
+  ol.reco li { counter-increment: r; position: relative; padding: 8px 0 8px 40px; border-bottom: 1px solid var(--line); break-inside: avoid; }
+  ol.reco li::before { content: counter(r); position: absolute; left: 0; top: 8px; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-weight: 700; text-align: center; line-height: 26px; font-size: 10pt; }
+  .small { font-size: 8.5pt; color: var(--muted); }
+  .sources { font-size: 8.3pt; color: var(--muted); columns: 2; column-gap: 18px; padding-left: 16px; }
+  .sources li { margin: 2px 0; break-inside: avoid; }
+  .sources a { color: var(--accent); text-decoration: none; }
+  .pb { break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Glean : ce qui sert vraiment, et ce que ça veut dire pour une PME</h1>
+  <div class="sub">Les agents, ce que les clients aiment, et l'utilité équipe par équipe dans une société de 20 à 50 personnes</div>
+  <div class="meta">Leon · David Sperling &amp; Amos Koskas · 19 octobre 2026</div>
+</div>
+
+<div class="tldr">
+  <b class="t">En bref</b>
+  <ul>
+    <li>Ce que les clients aiment chez Glean, ce n'est <b>pas les agents</b> : c'est <b>une seule recherche qui trouve tout, dans tous les outils, en respectant les droits</b>, et l'onboarding.</li>
+    <li>Parmi les agents, seuls ceux qui <b>croisent plusieurs sources</b> apportent une vraie valeur (fiche client, rapport de la semaine, onboarding projet). Les autres sont déjà faits par Zendesk, Gong ou GitHub, ou ne sont que de la rédaction.</li>
+    <li>Le problème existe aussi à <b>20-50 personnes</b> : 25 à 55 outils, environ 3 h par semaine perdues à chercher. À 25 € le siège, le gain estimé vaut environ <b>6 fois le prix</b> (hypothèses en partie 5).</li>
+    <li>À cette taille, l'information est surtout dans les <b>conversations</b> plutôt que dans les documents, et il n'y a <b>pas d'équipe IT</b>. Il faut un outil prêt en 15 minutes, utile pour <b>chaque équipe</b>, avec des droits irréprochables.</li>
+  </ul>
+</div>
+
+<div class="callout"><b>Sommaire.</b> 1. Ce qu'est un agent Glean · 2. Les templates un par un · 3. Les agents servent-ils ? · 4. Ce que les clients aiment chez Glean · 5. Et pour une société de 20 à 50 personnes ? · 6. Ce que ça veut dire pour Leon · Sources</div>
+
+<h2>1. Ce qu'est un « agent » chez Glean</h2>
+<p>Un template Glean, c'est un <b>prompt enregistré</b>, branché sur la <b>recherche interne</b> de Glean, avec parfois quelques étapes et un connecteur obligatoire (Salesforce, Calendar…). Dust, leur concurrent, le résume : les agents Glean « dépendent de l'infrastructure de recherche ». Ils sont bons pour retrouver et synthétiser, beaucoup moins pour agir dans plusieurs outils.</p>
+<p>Pour trier les templates, une seule question compte :</p>
+<div class="callout"><b>Est-ce que la valeur vient du fait de croiser plusieurs sources ?</b> Si oui, une mémoire unifiée est indispensable. Sinon, l'outil source ou n'importe quel LLM fait déjà le travail. C'est d'autant plus vrai dans une PME, qui n'achètera pas un outil d'IA par équipe.</div>
+
+<h2 class="pb">2. Les templates, un par un</h2>
+
+<div class="fam g">
+  <h3><span class="pill g">Famille A</span> Utiles, parce qu'ils croisent plusieurs sources</h3>
+  <p class="lead">Exactement notre terrain : aucun outil seul ne peut les faire. Colonne « Équipe » = qui s'en sert dans une PME.</p>
+  <table>
+    <tr><th>Template</th><th>Ce qu'il fait</th><th>Verdict</th></tr>
+    <tr><td class="name">Customer 360<br><span class="small">Sales · CS · Direction</span></td><td>Fiche d'un client : opportunités CRM, tickets, fils Slack, mails, notes de réunion, signaux d'alerte</td><td class="verdict"><span class="pill g">Très utile</span><br>Le cas le plus fort de la liste, à toutes les tailles.</td></tr>
+    <tr><td class="name">Deal loss insights<br><span class="small">Sales · Direction</span></td><td>Pourquoi une affaire a été perdue : appels, Slack, CRM, Drive</td><td class="verdict"><span class="pill g">Utile</span><br>HubSpot a le même agent en natif dès Starter, sur le CRM seul. Ce qui reste : le croisement avec les échanges.</td></tr>
+    <tr><td class="name">Rich Ticket Timeline<br><span class="small">Support · Dev</span></td><td>Chronologie d'un ticket enrichie par d'autres sources</td><td class="verdict"><span class="pill g">Utile</span><br>Fait le lien entre support et dev : « ce bug est-il connu ? »</td></tr>
+    <tr><td class="name">Find Similar Tickets<br><span class="small">Support</span></td><td>Retrouve les tickets ou cas proches</td><td class="verdict"><span class="pill a">Moyen</span><br>Natif dans un seul Zendesk ; utile si l'info est répartie entre plusieurs outils.</td></tr>
+    <tr><td class="name">Engineering Project Onboarding<br><span class="small">Dev · RH</span></td><td>Résume un projet pour un nouvel arrivant</td><td class="verdict"><span class="pill g">Utile</span><br>Réponse éparpillée entre docs, PR, Slack et tickets.</td></tr>
+    <tr><td class="name">Postmortem depuis Slack<br><span class="small">Dev</span></td><td>Rédige le post-mortem d'un incident</td><td class="verdict"><span class="pill g">Utile en PME</span><br>Une PME a rarement incident.io ou Rootly.</td></tr>
+    <tr><td class="name">Weekly work report<br><span class="small">Tous · Direction</span></td><td>Ce que chacun a fait dans la semaine, par projet</td><td class="verdict"><span class="pill g">Utile, sous-estimé</span><br>Le dirigeant suit l'avancement sans réunion. Ne marche qu'avec une mémoire de l'activité.</td></tr>
+    <tr><td class="name">Extract Projects from User Activities</td><td>Sous-agent qui regroupe l'activité par projet sur N mois</td><td class="verdict"><span class="pill a">Brique interne</span><br>La mécanique du précédent.</td></tr>
+    <tr><td class="name">Q&amp;A Chatbot<br><span class="small">Tous · RH</span></td><td>Chatbot qui répond sur un sujet (ex. livret d'accueil)</td><td class="verdict"><span class="pill a">Fonction de base</span><br>Claude, ChatGPT, Notion et Copilot le font vers 20 $ par siège. Ce qui compte : les sources et les droits.</td></tr>
+  </table>
+</div>
+
+<div class="fam a pb">
+  <h3><span class="pill a">Famille B</span> Utiles, mais déjà faits par l'outil source</h3>
+  <p class="lead">Le cœur du travail appartient à l'outil où vit la donnée. Glean n'y ajoute presque rien.</p>
+  <table>
+    <tr><th>Template</th><th>Qui le fait déjà nativement</th></tr>
+    <tr><td class="name">Summarize Ticket · Draft a Response · Customer Sentiment Scorer · Simple Ticket Timeline</td><td><b>Zendesk Copilot</b> (résumés et signaux de sentiment, usage gratuit plafonné dans les offres Professional) et <b>Intercom</b> (résumés, réponses proposées, sentiment en direct)</td></tr>
+    <tr><td class="name">Pull request review · PR style guide reviewer</td><td><b>GitHub Copilot code review</b> fait plus d'une revue sur cinq sur GitHub ; <b>CodeRabbit</b> aussi. Seul ajout de Glean : signaler la doc à mettre à jour.</td></tr>
+    <tr><td class="name">CI/CD GitHub logs debugger</td><td><b>GitHub Copilot</b> : « Explain error » et « Fix with Copilot », qui pousse lui-même la correction</td></tr>
+    <tr><td class="name">Sales Call Coaching</td><td><b>Gong</b>, Modjo et les outils de prise de notes. Gong coûte 1 400 à 1 600 $ par utilisateur et par an, plus des frais de plateforme : rare dans une PME, mais Modjo ou les outils de notes y sont.</td></tr>
+  </table>
+</div>
+
+<div class="fam r">
+  <h3><span class="pill r">Famille C</span> De la génération de texte, la mémoire compte peu</h3>
+  <p class="lead">N'importe quel LLM fait ça.</p>
+  <table>
+    <tr><th>Template</th><th>Commentaire</th></tr>
+    <tr><td class="name">PRD to product comms</td><td>De la rédaction à partir d'un document produit.</td></tr>
+    <tr><td class="name">Draft a competitive brief</td><td>S'appuie surtout sur le web. Il apparaît <b>deux fois</b> dans l'onglet Sales : le catalogue sert à remplir la vitrine.</td></tr>
+    <tr><td class="name">LinkedIn Post Draft, Marketing Event Description…</td><td>Aucun besoin de mémoire.</td></tr>
+  </table>
+</div>
+
+<h2 class="pb">3. Est-ce que les agents servent vraiment ?</h2>
+
+<h3>Ce que dit Glean (chiffres du vendeur, non vérifiés)</h3>
+<div class="grid2">
+  <div class="card"><h4>Zillow</h4><ul><li>3 400+ agents</li><li>80 % d'adoption</li><li>1,5 h gagnée par semaine et par utilisateur</li></ul></div>
+  <div class="card"><h4>GCash</h4><ul><li>2 700+ agents</li><li>90 %+ d'adoption dans certaines équipes</li><li>2 à 3 h gagnées par semaine</li></ul></div>
+</div>
+<p>Glean écrit aussi que « l'adoption est la plus forte quand les agents sont intégrés dans les applis du quotidien », pas dans une galerie.</p>
+
+<h3>Ce que disent les études indépendantes</h3>
+<div class="stats">
+  <div class="card"><div class="stat">40 %+</div><div class="lbl">des projets d'agents annulés d'ici fin 2027 (Gartner)</div></div>
+  <div class="card"><div class="stat">79 à 89 %</div><div class="lbl">des pilotes n'atteignent jamais la production*</div></div>
+  <div class="card"><div class="stat">56 %</div><div class="lbl">des commentaires CodeRabbit rejetés (31 073 analysés)</div></div>
+  <div class="card"><div class="stat">36 %</div><div class="lbl">seulement acceptés par les développeurs</div></div>
+</div>
+<p class="small">* Plusieurs enquêtes, lues à travers des articles de blog : à revérifier avant de citer.</p>
+
+<div class="callout"><b>L'indice le plus parlant :</b> Glean vend maintenant un cadre de gouvernance contre la « prolifération des agents ». Si 3 400 agents chez un seul client posent un problème, c'est que la plupart sont créés une fois puis oubliés. Les agents utilisés sont ceux qui répondent à une <b>question récurrente qui traverse plusieurs outils</b>.</div>
+
+<h2 class="pb">4. Ce que les clients aiment vraiment chez Glean</h2>
+
+<div class="stats" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="card"><div class="stat">4,4 / 5</div><div class="lbl">Gartner Peer Insights, 341 avis</div></div>
+  <div class="card"><div class="stat">4,7 / 5</div><div class="lbl">AWS Marketplace, 348 avis</div></div>
+  <div class="card"><div class="stat">≈ 0</div><div class="lbl">avis qui citent les agents comme raison principale</div></div>
+</div>
+<p class="small">Le dernier chiffre est une observation sur les avis lus, pas une mesure.</p>
+
+<div class="grid2">
+  <div class="card">
+    <h4>👍 Ce qu'ils aiment, dans l'ordre</h4>
+    <ul>
+      <li><b>Chercher partout au même endroit.</b> « J'adore que Glean se connecte à Slack, Gmail, Calendar et mon Drive. » « Un guichet unique. »</li>
+      <li><b>La simplicité.</b> « Intuitif, même pour ceux qui ne connaissent pas l'IA. » D'où l'adoption : 70 % chez Confluent, 93 % sur 2 ans chez Forrester.</li>
+      <li><b>L'onboarding.</b> 36 h gagnées par nouvelle recrue (Forrester), onboarding 20 % plus rapide (Super.com).</li>
+      <li><b>Le support.</b> 5 à 10 min de moins par ticket (Confluent), 20 % de demandes internes en moins (Forrester).</li>
+      <li><b>Une culture du « cherche d'abord ».</b> « Si je ne le trouve pas sur Glean, c'est que ça n'existe pas. »</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>👎 Ce qu'ils n'aiment pas</h4>
+    <ul>
+      <li>« Parfois il ne trouve pas la bonne ressource », « parfois les réponses de l'IA sont fausses ».</li>
+      <li>« Ne se connecte pas facilement à toutes mes sources. »</li>
+      <li>Le prix : élevé et pas public. Contrat minimum d'environ 60 k$ par an, contrat médian d'environ 99 k$.</li>
+      <li>Une mise en place lourde dans les grosses structures.</li>
+      <li>Une gêne sur la vie privée : il marche mieux branché sur tout.</li>
+      <li>Pas d'installation sur les serveurs du client.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Les chiffres de retour sur investissement (tous publiés par Glean ou commandés par lui)</h3>
+<table>
+  <tr><th>Client</th><th>Taille</th><th>Résultat annoncé</th></tr>
+  <tr><td class="name">Forrester TEI (2024, payé par Glean)</td><td>Entreprise type de 10 000 personnes</td><td>ROI de 141 % sur 3 ans · 110 h gagnées par salarié et par an · retour en moins de 6 mois</td></tr>
+  <tr><td class="name">Confluent</td><td>2 000+ personnes, 20+ outils</td><td>15 000 h par mois · 1,5 h par semaine et par personne · dispersion de l'info « résolue à 80 % au moins »</td></tr>
+  <tr><td class="name">Super.com</td><td>n.d.</td><td>« 17x ROI » · 20 min gagnées par jour et par personne</td></tr>
+  <tr><td class="name">Duolingo · Webflow · DBS</td><td>n.d.</td><td>5x ROI · 3x ROI · jusqu'à 10 % du temps libéré</td></tr>
+</table>
+<div class="callout"><b>À lire avec prudence.</b> Ces cas ne sont pas audités : pas de groupe témoin, pas de mesure de départ, des « heures gagnées » plutôt que du chiffre d'affaires, et les clients partis n'apparaissent jamais. Chez Forrester, 23,2 M$ des 26,6 M$ de bénéfices viennent du seul temps de recherche converti en salaire. <b>Verdict de Gartner :</b> ça vaut le coup quand le savoir est très fragmenté et que la recherche est le vrai goulot d'étranglement.</div>
+
+<h2 class="pb">5. Et pour une société de 20 à 50 personnes ?</h2>
+<p>Le problème n'est pas réservé aux grands groupes. Ce qui change, c'est <b>où vit l'information</b> et <b>qui achète</b>.</p>
+
+<div class="stats" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="card"><div class="stat">25 à 55</div><div class="lbl">applications SaaS dans une société de 25 à 55 personnes (PactAlert)</div></div>
+  <div class="card"><div class="stat">3,2 h</div><div class="lbl">par semaine et par personne passées à chercher (Slite 2026)*</div></div>
+  <div class="card"><div class="stat">10 %</div><div class="lbl">de réussite au premier essai quand on cherche en interne (Slite)</div></div>
+</div>
+<p class="small">* Enquête sur environ 100 personnes, dont 44 % dans des sociétés de 21 à 200. McKinsey et Atlassian donnent des chiffres plus élevés (19 à 25 % du temps de travail).</p>
+
+<div class="callout"><b>Le calcul pour 30 personnes</b> (hypothèses : 1 h gagnée par semaine, moins que les 1,5 h annoncées par Glean ; coût chargé d'environ 35 €/h, non vérifié)<br>
+Gain : 30 × 4,3 semaines × 35 € ≈ <b>4 500 € par mois</b> · Coût à 25 € le siège : <b>750 € par mois</b> · <b>environ 6 fois rentable</b>, et toujours rentable si le gain est divisé par deux.</div>
+
+<h3>Équipe par équipe</h3>
+<table>
+  <tr><th>Équipe</th><th>Outils typiques</th><th>Questions auxquelles ça répond</th><th>Utilité</th></tr>
+  <tr><td class="name">Sales</td><td>HubSpot ou Pipedrive, Gmail, Agenda, Slack, Drive</td><td>« Où on en est avec ce client ? » · préparer un rendez-vous · « a-t-on signé un deal comparable ? » · reprendre les comptes d'un commercial qui part</td><td><span class="pill g">Très forte</span><br>Contexte client éparpillé entre le CRM, les mails et Slack.</td></tr>
+  <tr><td class="name">Support / CS</td><td>Zendesk, Intercom ou Crisp, Slack, Notion, Linear</td><td>« Ce bug est-il connu ou corrigé ? » · « qu'a-t-on promis à ce client ? » · l'historique avant de répondre</td><td><span class="pill g">Forte</span><br>Le lien entre support et dev est le vrai manque. Les résumés de tickets sont déjà natifs.</td></tr>
+  <tr><td class="name">Dev</td><td>GitHub, Linear ou Jira, Notion, Slack, Sentry, Claude Code ou Cursor</td><td>« Pourquoi ce choix ? » · « qui connaît ce module ? » · onboarding sur le code · contexte d'un ticket</td><td><span class="pill g">Forte</span><br>Notre différence : la capture des conversations LLM. La revue de PR reste chez GitHub.</td></tr>
+  <tr><td class="name">RH</td><td>Lucca ou Payfit, Drive, livret d'accueil Notion, Welcome to the Jungle</td><td>« Combien de jours de congé ? » · la mutuelle · le parcours d'arrivée</td><td><span class="pill a">Moyenne</span><br>Peu de questions à 30 personnes ; données très sensibles, droits irréprochables.</td></tr>
+  <tr><td class="name">Marketing</td><td>Notion, Drive, Figma, HubSpot, Webflow</td><td>« Où est le dernier deck ? » · « quels clients peut-on citer ? » · « quel message a été validé ? »</td><td><span class="pill a">Moyenne</span><br>Surtout de la recherche de documents.</td></tr>
+  <tr><td class="name">Direction<br><span class="small">(l'acheteur)</span></td><td>Tous les outils, plus Pennylane ou Qonto</td><td>« Que s'est-il passé cette semaine ? » · « qu'a-t-on décidé sur ce sujet ? » · avancement sans réunion</td><td><span class="pill g">Forte</span><br>Décisif : c'est lui qui signe.</td></tr>
+</table>
+<p class="small">Mêmes usages chez les concurrents : chez Dust, un coach RH pour les entretiens annuels est utilisé par environ un tiers de Watershed, et Brevo divise par 5 le temps de recherche avant un e-mail commercial ; Glean met en avant la FAQ RH et l'onboarding.</p>
+
+<h3 class="pb">Ce qui est différent à cette taille</h3>
+<div class="grid2">
+  <div class="card"><h4>📄 Peu de documents, beaucoup de conversations</h4>À 30, on écrit peu : le savoir est dans Slack, les mails, les réunions et les têtes. Un outil qui indexe surtout des documents sert moins qu'une mémoire qui capte aussi les échanges.</div>
+  <div class="card"><h4>🛠️ Pas d'équipe IT</h4>Glean s'appuie sur une équipe IT pour brancher les connecteurs. Une PME n'en a pas : ça doit marcher en 15 minutes.</div>
+  <div class="card"><h4>🧩 Un outil pour toutes les équipes</h4>Le dirigeant n'achètera pas un outil d'IA pour les sales, un pour le support, un pour les devs. Couvrir tout le monde est l'argument de vente.</div>
+  <div class="card"><h4>🔒 La confiance avant tout</h4>Le sur-partage Drive est l'objection n°1 du panel. Avec les RH dans la boucle, « chacun ne voit que ce qu'il a le droit de voir » n'est pas négociable.</div>
+</div>
+
+<h2>6. Ce que ça veut dire pour Leon</h2>
+<ol class="reco">
+  <li><b>Vendre ce que les clients de Glean achètent vraiment : « je trouve tout, tout de suite, sans voir ce que je n'ai pas le droit de voir ».</b> Les agents sont un bonus, pas le produit. Ça va dans le sens de l'hybride « brut + recherche + permissions » de la description produit.</li>
+  <li><b>Ne pas construire un éditeur d'agents à la Glean.</b> C'est là que se concentrent les échecs, et une PME n'a personne pour en créer.</li>
+  <li><b>Livrer des « recettes » prêtes à l'emploi, par équipe</b>, sous forme de prompts MCP ou de skills exécutés par le LLM de l'utilisateur sur notre mémoire :
+    <br>· <b>Sales :</b> fiche client avant un rendez-vous, « pourquoi on a perdu ce deal »
+    <br>· <b>Support :</b> « ce bug est-il connu ? », historique du client
+    <br>· <b>Dev :</b> onboarding projet, « pourquoi ce choix ? »
+    <br>· <b>RH :</b> livret d'accueil interrogeable, parcours d'arrivée
+    <br>· <b>Direction :</b> rapport de la semaine, « qu'a-t-on décidé ? »
+    <br>Quelques jours de travail, pas un produit entier.</li>
+  <li><b>Capter les conversations, pas seulement les documents</b> (Slack, mails, réunions, conversations LLM). C'est là que vit le savoir d'une PME, et c'est notre différence.</li>
+  <li><b>Une installation en 15 minutes, sans IT</b> : connecteurs Google Workspace, Slack, CRM et GitHub en un clic.</li>
+  <li><b>Ignorer la famille B.</b> Se battre contre Zendesk, Gong ou GitHub chez eux est perdu d'avance.</li>
+  <li><b>Vérifier sur le terrain</b>, pendant les 12 entretiens dirigeants : quels outils ils utilisent réellement, quelle équipe souffre le plus, et combien de temps elle perd.</li>
+</ol>
+
+<div class="callout"><b>Limites de cette recherche.</b> Les onglets General et IT du catalogue n'ont pas été vus en entier. Les chiffres d'adoption et de ROI de Glean viennent de Glean ou d'études qu'il a commandées. G2, Gartner et Capterra bloquent la lecture automatique : leurs notes viennent des résultats de recherche. Le nombre d'outils et le temps de recherche à 20-50 personnes reposent sur une source chacun, et le coût horaire de 35 € est une hypothèse.</div>
+
+<h2 class="pb">Sources</h2>
+<ul class="sources">
+  <li><a href="https://docs.glean.com/agents/templates">Glean, templates d'agents (doc)</a></li>
+  <li><a href="https://www.glean.com/agent-library/deal-loss-insights">Glean, Deal loss insights</a></li>
+  <li><a href="https://www.glean.com/agent-library">Glean, bibliothèque d'agents</a></li>
+  <li><a href="https://www.glean.com/blog/emerging-agent-stack-2026">Glean, architecture des agents 2026</a></li>
+  <li><a href="https://www.glean.com/blog/ai-prompt-examples">Glean, cas d'usage par service</a></li>
+  <li><a href="https://tei.forrester.com/go/Glean/workAIplatform/?lang=en-us">Forrester TEI de Glean (2024)</a></li>
+  <li><a href="https://www.glean.com/resources/customer-stories/confluent">Glean, client Confluent</a></li>
+  <li><a href="https://www.glean.com/resources/customer-stories/super">Glean, client Super.com</a></li>
+  <li><a href="https://www.glean.com/resources/customer-stories/duolingo">Glean, client Duolingo</a></li>
+  <li><a href="https://www.glean.com/resources/customer-stories/dbs">Glean, client DBS</a></li>
+  <li><a href="https://aws.amazon.com/marketplace/reviews/reviews-list/prodview-3hxyfnuih42u2">Avis AWS Marketplace</a></li>
+  <li><a href="https://www.gartner.com/reviews/market/enterprise-ai-search/vendor/glean">Gartner Peer Insights</a></li>
+  <li><a href="https://www.g2.com/products/glean-technologies-glean/reviews">Avis G2</a></li>
+  <li><a href="https://www.therevenueaireport.com/capabilities/glean">Revenue AI Report, analyse des cas</a></li>
+  <li><a href="https://www.getmacha.com/blog/glean-ai-pricing-explained">Macha, prix de Glean</a></li>
+  <li><a href="https://www.getmacha.com/blog/glean-ai-complete-guide">Macha, adoption et clients</a></li>
+  <li><a href="https://dust.tt/blog/glean-agents">Dust, sur les agents Glean</a></li>
+  <li><a href="https://dust.tt/blog/ai-agents-examples">Dust, exemples d'agents par équipe</a></li>
+  <li><a href="https://dust.tt/blog/ai-agents-for-hr">Dust, agents RH</a></li>
+  <li><a href="https://www.reworked.co/knowledge-findability/glean-updates-platform-to-support-agent-development-lifecycle/">Reworked, prolifération des agents</a></li>
+  <li><a href="https://knowledge.hubspot.com/ai-tools/use-the-deal-loss-agent">HubSpot, agent Deal Loss</a></li>
+  <li><a href="https://pluno.ai/blog/zendesk-ai-features">Pluno, l'IA de Zendesk</a></li>
+  <li><a href="https://crisp.chat/en/comparisons/intercom-vs-zendesk/">Crisp, Intercom contre Zendesk</a></li>
+  <li><a href="https://quashbugs.com/blog/ai-code-review-statistics">Quash, revue de code par IA</a></li>
+  <li><a href="https://groundy.com/articles/coderabbit-review-study-56-rejection-rate-demands-targeted-scoping/">Groundy, étude CodeRabbit</a></li>
+  <li><a href="https://github.blog/changelog/2026-05-18-one-click-fixes-for-failing-actions-with-copilot-cloud-agent/">GitHub, Fix with Copilot</a></li>
+  <li><a href="https://github.blog/changelog/2025-01-15-copilot-users-can-ask-about-a-failed-actions-job-ga/">GitHub, Explain error</a></li>
+  <li><a href="https://incident.io/blog/best-incident-postmortem-software-2026-guide">incident.io, post-mortems</a></li>
+  <li><a href="https://tldv.io/blog/how-does-gong-work/">tl;dv, fonctionnement de Gong</a></li>
+  <li><a href="https://www.beri.net/article/ai-agent-adoption-enterprise-2026-gartner-idc">Beri, Gartner et IDC</a></li>
+  <li><a href="https://www.deployedlabs.com/blog/why-ai-agent-projects-fail-2026-data">Deployed Labs, échecs des agents</a></li>
+  <li><a href="https://www.innobu.com/en/articles/ai-agent-sprawl-governance-gap-2026.html">Innobu, prolifération des agents</a></li>
+  <li><a href="https://pactalert.com/blog/saas-spending-statistics">PactAlert, dépenses SaaS</a></li>
+  <li><a href="https://stackiq.co/blog/how-many-saas-tools-average-company">StackIQ, outils par taille</a></li>
+  <li><a href="https://slite.com/learn/enterprise-search-survey-findings">Slite, enquête recherche 2026</a></li>
+  <li><a href="https://stealthagents.com/research/ai-knowledge-management-statistics-2026">Stealth Agents, chiffres McKinsey</a></li>
+</ul>
+
+</body>
+</html>

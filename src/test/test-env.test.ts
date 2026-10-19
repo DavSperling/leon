@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { z } from 'zod';
+import { EnvSchema } from '@/server/env';
 import {
   MIGRATIONS_DESTRUCTIVES,
   refuseMigrationsDestructives,
@@ -35,14 +37,43 @@ describe('TEST_ENV', () => {
   });
 
   // Vitest range TEST_ENV dans process.env, et env.ts valide process.env à l'import : une variable exportée dans
-  // le shell (essai d'un fournisseur de vecteurs) changerait l'environnement des tests. Vide vaut absent.
-  it.each(['LEON_EMBEDDINGS', 'VOYAGE_API_KEY', 'MISTRAL_API_KEY', 'LEON_BGE_URL'])(
-    'vide %s : une valeur exportée dans le shell ne passe pas dans les tests',
-    (name) => {
-      expect((TEST_ENV as Record<string, string>)[name]).toBe('');
-      expect(process.env[name]).toBe('');
-    },
-  );
+  // le shell (essai d'un fournisseur de vecteurs, d'une clé Anthropic ou d'un faux modèle) changerait
+  // l'environnement des tests, jusqu'à un appel réseau vers un vrai modèle. Vide vaut absent.
+  it.each([
+    'LEON_EMBEDDINGS',
+    'VOYAGE_API_KEY',
+    'MISTRAL_API_KEY',
+    'LEON_BGE_URL',
+    'LEON_LLM',
+    'ANTHROPIC_API_KEY',
+    'LEON_MODEL_REPONSE',
+    'LEON_MODEL_DISCUSSION',
+    'LEON_MODEL_POINT',
+  ])('vide %s : une valeur exportée dans le shell ne passe pas dans les tests', (name) => {
+    expect((TEST_ENV as Record<string, string>)[name]).toBe('');
+    expect(process.env[name]).toBe('');
+  });
+
+  // Une variable que la tâche suivante ajoute à env.ts ne doit pas pouvoir fuir du shell : elle figure ici dès
+  // son ajout. Obligatoire : une valeur fixe. Facultative : vide (absente), sauf celles qui ont une valeur fixe
+  // de test. NODE_ENV est posé par Vitest lui-même (« test »).
+  it('couvre chaque variable du schéma d’environnement', () => {
+    const FACULTATIVES_A_VALEUR_FIXE = ['LEON_CONNECTORS_KEY'];
+    const fields = EnvSchema.shape as Record<string, z.ZodType>;
+    const values = TEST_ENV as Record<string, string | undefined>;
+    const problems: string[] = [];
+    for (const [name, field] of Object.entries(fields)) {
+      if (name === 'NODE_ENV') continue;
+      const value = values[name];
+      const facultative = field.safeParse(undefined).success;
+      if (value === undefined) problems.push(`${name} : absente de TEST_ENV`);
+      else if (!facultative && value === '') problems.push(`${name} : obligatoire, sans valeur`);
+      else if (facultative && value !== '' && !FACULTATIVES_A_VALEUR_FIXE.includes(name)) {
+        problems.push(`${name} : facultative, elle doit valoir '' dans TEST_ENV`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
 
   it.each([
     'leon',

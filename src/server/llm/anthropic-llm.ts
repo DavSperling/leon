@@ -10,8 +10,11 @@ import {
   LlmError,
   type LlmStep,
 } from './llm';
-import { EFFORT_BY_STEP, modelForStep } from './models';
+import { EFFORT_BY_STEP, modelForStep, modelSpec, SUPPORTED_MODELS } from './models';
 import { executeAgentTool } from './run-tool';
+
+// Adresse de l'API Anthropic : fixe, jamais lue dans l'environnement (voir createAnthropicLlm).
+const ANTHROPIC_URL = 'https://api.anthropic.com';
 
 export type AnthropicLike = Pick<Anthropic, 'beta'>;
 
@@ -19,8 +22,7 @@ type Message = Anthropic.Beta.BetaMessage;
 type ContentBlock = Anthropic.Beta.BetaContentBlock;
 type ToolUseBlock = Anthropic.Beta.BetaToolUseBlock;
 
-// Repli serveur des refus (D12) : Sonnet et Opus seulement, Haiku n'en a pas.
-const hasRefusalFallback = (model: string) => !model.startsWith('claude-haiku');
+// Repli serveur des refus (D12) : la table de models.ts dit quels modèles en ont un (Sonnet et Opus, pas Haiku).
 const REFUSAL_FALLBACK = {
   betas: ['server-side-fallback-2026-07-01'],
   fallbacks: 'default' as const,
@@ -30,18 +32,6 @@ const TRUNCATED_STOP_REASONS = ['max_tokens', 'model_context_window_exceeded'];
 const isTruncated = (stopReason: string | null | undefined) =>
   stopReason != null && TRUNCATED_STOP_REASONS.includes(stopReason);
 
-// Tarifs en dollars par million de tokens, recopiés de la référence docs/etudes/couts-2026-10/annexes/01-prix-llm.md
-// (page officielle des tarifs, revérifiée le 14/10/2026) : on met l'annexe à jour d'abord, puis cette table.
-// Prompts de moins de 100 000 tokens pour Haiku 5.5. Ils servent à estimer le coût de chaque appel.
-const PRICE_PER_MTOK: Record<
-  string,
-  { input: number; output: number; cacheRead: number; cacheWrite: number }
-> = {
-  'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
-  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
-  'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
-};
-
 type Usage = {
   input_tokens: number;
   output_tokens: number;
@@ -49,14 +39,18 @@ type Usage = {
   cache_creation_input_tokens?: number | null;
 };
 
-// Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu.
+// Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu. Le coût vient des tarifs de
+// models.ts ; c'est un minimum : après un repli du serveur, les tentatives refusées (`usage.iterations`) ne sont
+// pas comptées, et un modèle de repli absent de la table n'est pas chiffré.
 // La table llm_usage (PR #13 de David) n'est pas sur cette branche : à la fusion avec main, cette ligne
-// deviendra une écriture dans la table, dont le check sur `step` devra accepter reponse, discussion et point.
+// deviendra une écriture dans la table, dont le check sur `step` devra accepter reponse, discussion et point (un
+// test de contrat le garde dès que la table existe). Cette écriture ne lèvera jamais : try/catch puis logError,
+// car la réponse de l'utilisateur ne doit pas échouer à cause de son journal.
 export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): void {
   if (!usage) return;
   const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
   const cacheWriteTokens = usage.cache_creation_input_tokens ?? 0;
-  const price = PRICE_PER_MTOK[model];
+  const price = modelSpec(model)?.price;
   const costUsd = price
     ? (usage.input_tokens * price.input +
         usage.output_tokens * price.output +
@@ -101,7 +95,18 @@ export function createAnthropicLlm(
   options: ({ apiKey: string } | { client: AnthropicLike }) & { env: Env },
 ): Llm {
   const client: AnthropicLike =
-    'client' in options ? options.client : new Anthropic({ apiKey: options.apiKey });
+    'client' in options
+      ? options.client
+      : new Anthropic({
+          apiKey: options.apiKey,
+          // Le SDK lit en silence ces réglages dans l'environnement du serveur : on les fixe. Une autre adresse
+          // recevrait les passages captés ; un jeton étranger s'ajouterait à la clé ; ANTHROPIC_LOG=debug
+          // écrirait le corps des requêtes dans les journaux, où aucun texte capté ne doit aller. (Les en-têtes
+          // d'ANTHROPIC_CUSTOM_HEADERS, eux, ne partent que vers cette adresse fixe.)
+          baseURL: ANTHROPIC_URL,
+          authToken: null,
+          logLevel: 'warn',
+        });
   const { env } = options;
 
   // Un appel au modèle en flux : rend les morceaux de texte au fil de l'eau (mis en forme par `emit`), puis le
@@ -120,7 +125,7 @@ export function createAnthropicLlm(
         system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
         messages: [...request.messages],
         output_config: { effort: EFFORT_BY_STEP[request.step] },
-        ...(hasRefusalFallback(model) ? REFUSAL_FALLBACK : {}),
+        ...(SUPPORTED_MODELS[model].refusalFallback ? REFUSAL_FALLBACK : {}),
         ...extra,
       },
       { signal: request.signal },
@@ -148,6 +153,59 @@ export function createAnthropicLlm(
     content: message.content,
   });
 
+  // La boucle d'outils est écrite à la main plutôt qu'avec l'outil d'appel d'outils du SDK (bêta) : il nous faut
+  // un évènement par appel, un nombre d'appels exact, et une fin « limite » ou « refus » qu'il n'expose pas.
+  // Les entrées d'outil sont courtes (une requête) : pas de flux anticipé des entrées, elles sont validées de
+  // toute façon par le schéma zod de l'outil avant d'être exécutées.
+  async function* agentLoop(
+    request: Parameters<Llm['runAgent']>[0],
+    tools: Anthropic.Beta.BetaTool[],
+  ): AsyncGenerator<AgentEvent> {
+    const conversation = request.messages.map(toParam);
+    let steps = 0;
+    for (;;) {
+      const message = yield* streamTurn<AgentEvent>(
+        { ...request, messages: conversation },
+        // La conversation grossit à chaque outil et se relit à chaque tour : le cache d'ensemble la rend
+        // 10 fois moins chère dès le deuxième tour.
+        { tools, cache_control: { type: 'ephemeral' } },
+        (delta) => ({ type: 'texte', delta }),
+      );
+      if (message.stop_reason === 'refusal') {
+        yield { type: 'fin', reason: 'refus' };
+        return;
+      }
+      const content = withoutDeclinedPartial(message.content);
+      const toolUses = content.filter((block): block is ToolUseBlock => block.type === 'tool_use');
+      // Un outil coupé net par la limite de longueur a une entrée incomplète : on ne l'exécute pas.
+      if (toolUses.length === 0 || isTruncated(message.stop_reason)) {
+        yield { type: 'fin', reason: isTruncated(message.stop_reason) ? 'limite' : 'fini' };
+        return;
+      }
+      conversation.push({
+        role: 'assistant',
+        content: content as Anthropic.Beta.BetaContentBlockParam[],
+      });
+      const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+      for (const use of toolUses) {
+        if (steps >= request.maxSteps) {
+          yield { type: 'fin', reason: 'limite' };
+          return;
+        }
+        steps += 1;
+        yield { type: 'outil', name: use.name, input: use.input };
+        const result = await executeAgentTool(request.tools, use.name, use.input);
+        results.push({
+          type: 'tool_result',
+          tool_use_id: use.id,
+          content: result.text,
+          ...(result.isError ? { is_error: true } : {}),
+        });
+      }
+      conversation.push({ role: 'user', content: results });
+    }
+  }
+
   return {
     async *streamText(request) {
       const message = yield* streamTurn(
@@ -159,57 +217,9 @@ export function createAnthropicLlm(
       if (isTruncated(message.stop_reason)) throw new LlmError('réponse tronquée');
     },
 
-    // La boucle d'outils est écrite à la main plutôt qu'avec l'outil d'appel d'outils du SDK (bêta) : il nous faut
-    // un évènement par appel, un nombre d'appels exact, et une fin « limite » ou « refus » qu'il n'expose pas.
-    // Les entrées d'outil sont courtes (une requête) : pas de flux anticipé des entrées, elles sont validées de
-    // toute façon par le schéma zod de l'outil avant d'être exécutées.
-    async *runAgent(request): AsyncGenerator<AgentEvent> {
-      const tools = request.tools.map(toToolDefinition);
-      const conversation = request.messages.map(toParam);
-      let steps = 0;
-      for (;;) {
-        const message = yield* streamTurn<AgentEvent>(
-          { ...request, messages: conversation },
-          // La conversation grossit à chaque outil et se relit à chaque tour : le cache d'ensemble la rend
-          // 10 fois moins chère dès le deuxième tour.
-          { tools, cache_control: { type: 'ephemeral' } },
-          (delta) => ({ type: 'texte', delta }),
-        );
-        if (message.stop_reason === 'refusal') {
-          yield { type: 'fin', reason: 'refus' };
-          return;
-        }
-        const content = withoutDeclinedPartial(message.content);
-        const toolUses = content.filter(
-          (block): block is ToolUseBlock => block.type === 'tool_use',
-        );
-        // Un outil coupé net par la limite de longueur a une entrée incomplète : on ne l'exécute pas.
-        if (toolUses.length === 0 || isTruncated(message.stop_reason)) {
-          yield { type: 'fin', reason: isTruncated(message.stop_reason) ? 'limite' : 'fini' };
-          return;
-        }
-        conversation.push({
-          role: 'assistant',
-          content: content as Anthropic.Beta.BetaContentBlockParam[],
-        });
-        const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
-        for (const use of toolUses) {
-          if (steps >= request.maxSteps) {
-            yield { type: 'fin', reason: 'limite' };
-            return;
-          }
-          steps += 1;
-          yield { type: 'outil', name: use.name, input: use.input };
-          const result = await executeAgentTool(request.tools, use.name, use.input);
-          results.push({
-            type: 'tool_result',
-            tool_use_id: use.id,
-            content: result.text,
-            ...(result.isError ? { is_error: true } : {}),
-          });
-        }
-        conversation.push({ role: 'user', content: results });
-      }
+    runAgent(request) {
+      // Un outil que l'API refuserait est un défaut du code : on le dit tout de suite, avant le flux.
+      return agentLoop(request, toolDefinitions(request.tools));
     },
   };
 }
@@ -225,15 +235,31 @@ function withoutDeclinedPartial(content: ContentBlock[]): ContentBlock[] {
   );
 }
 
-function toToolDefinition(tool: AgentTool): Anthropic.Beta.BetaTool {
-  // `io: 'input'` : ce que le modèle doit envoyer (un champ qui a un défaut est facultatif pour lui).
-  const schema = z.toJSONSchema(tool.input, { io: 'input', reused: 'ref' });
-  if (schema.type !== 'object') {
-    throw new Error(`Le schéma de l'outil « ${tool.name} » doit décrire un objet`);
-  }
-  return {
-    name: tool.name,
-    description: tool.description,
-    input_schema: schema as Anthropic.Beta.BetaTool['input_schema'],
-  };
+// Les outils tels que l'API les attend. Elle exige un nom de 1 à 64 caractères (lettres, chiffres, _ et -), un
+// nom unique, et un schéma dont la racine est de type objet : une union (« passageId ou sourceId ») n'a pas de
+// type à la racine, elle s'écrit en un seul objet à champs facultatifs avec un contrôle (.refine). Une erreur
+// ici est un défaut du code, pas une panne du modèle : une erreur franche, pas une LlmError. Un test de
+// contrat de chaque liste d'outils (T11) appelle cette fonction.
+export function toolDefinitions(tools: AgentTool[]): Anthropic.Beta.BetaTool[] {
+  const names = new Set<string>();
+  return tools.map((tool) => {
+    if (!TOOL_NAME.test(tool.name)) {
+      throw new Error(
+        `Le nom de l'outil « ${tool.name} » n'est pas valide (lettres, chiffres, _ et -, 64 caractères au plus)`,
+      );
+    }
+    if (names.has(tool.name)) throw new Error(`Deux outils portent le même nom : « ${tool.name} »`);
+    names.add(tool.name);
+    // `io: 'input'` : ce que le modèle doit envoyer (un champ qui a un défaut est facultatif pour lui).
+    const schema = z.toJSONSchema(tool.input, { io: 'input', reused: 'ref' });
+    if (schema.type !== 'object') {
+      throw new Error(`Le schéma de l'outil « ${tool.name} » doit décrire un objet`);
+    }
+    return {
+      name: tool.name,
+      description: tool.description,
+      input_schema: schema as Anthropic.Beta.BetaTool['input_schema'],
+    };
+  });
 }
+const TOOL_NAME = /^[a-zA-Z0-9_-]{1,64}$/;

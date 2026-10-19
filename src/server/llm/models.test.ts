@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { TEST_ENV } from '@/test/test-env';
 import { parseEnv } from '../env';
-import { EFFORT_BY_STEP, modelForStep } from './models';
+import {
+  EFFORT_BY_STEP,
+  modelForStep,
+  modelSpec,
+  SUPPORTED_MODEL_IDS,
+  SUPPORTED_MODELS,
+} from './models';
 
 describe('modelForStep', () => {
   const env = parseEnv(TEST_ENV);
@@ -41,5 +47,43 @@ describe('modelForStep', () => {
 describe('EFFORT_BY_STEP', () => {
   it('fixe l’effort de chaque étape : son défaut varie selon le modèle', () => {
     expect(EFFORT_BY_STEP).toEqual({ reponse: 'low', discussion: 'medium', point: 'medium' });
+  });
+});
+
+// Un seul endroit dit ce que Leon sait faire de chaque modèle : le repli serveur des refus, le tarif. Un modèle
+// qui n'y figure pas ne peut pas être réglé (env.ts le refuse au démarrage).
+describe('SUPPORTED_MODELS', () => {
+  it('liste les trois modèles de la spec : Haiku 5.5, Sonnet 5.5 et Opus 5.5', () => {
+    expect([...SUPPORTED_MODEL_IDS].sort()).toEqual([
+      'claude-haiku-5-5',
+      'claude-opus-5-5',
+      'claude-sonnet-5-5',
+    ]);
+    expect(Object.keys(SUPPORTED_MODELS).sort()).toEqual([...SUPPORTED_MODEL_IDS].sort());
+  });
+
+  it('donne le repli serveur des refus à Sonnet et à Opus, pas à Haiku', () => {
+    expect(modelSpec('claude-sonnet-5-5')?.refusalFallback).toBe(true);
+    expect(modelSpec('claude-opus-5-5')?.refusalFallback).toBe(true);
+    expect(modelSpec('claude-haiku-5-5')?.refusalFallback).toBe(false);
+  });
+
+  it('chiffre chaque modèle : entrée, sortie, lecture et écriture du cache', () => {
+    for (const id of SUPPORTED_MODEL_IDS) {
+      const { price } = SUPPORTED_MODELS[id];
+      expect(Object.keys(price).sort(), id).toEqual(['cacheRead', 'cacheWrite', 'input', 'output']);
+      expect(
+        Object.values(price).every((value) => value > 0),
+        id,
+      ).toBe(true);
+    }
+  });
+
+  it('ne connaît pas un modèle absent de la table : aucun repli ni tarif supposé', () => {
+    expect(modelSpec('claude-haiku-4-5')).toBeUndefined();
+    expect(modelSpec('claude-sonnet-4-6')).toBeUndefined();
+    expect(modelSpec('')).toBeUndefined();
+    // Une clé de l'objet, pas un modèle.
+    expect(modelSpec('toString')).toBeUndefined();
   });
 });

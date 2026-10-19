@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { EMBEDDER_IDS } from './embeddings/embedder';
+import { SUPPORTED_MODEL_IDS } from './llm/models';
 
 // Une variable laissée vide (« ANTHROPIC_API_KEY= » après cp .env.example) vaut une variable absente.
 const emptyIsAbsent = (value: unknown) => (value === '' ? undefined : value);
@@ -10,6 +11,13 @@ const EMBEDDER_SETTING = {
   mistral: 'MISTRAL_API_KEY',
   'bge-m3': 'LEON_BGE_URL',
 } as const;
+
+// Un modèle de la table de models.ts. Un autre ferait échouer chaque appel (repli ou effort que son API refuse) :
+// on refuse de démarrer, en disant lesquels marchent.
+const supportedModel = (name: string) =>
+  z.enum(SUPPORTED_MODEL_IDS, {
+    error: () => `${name} : modèle pris en charge attendu (${SUPPORTED_MODEL_IDS.join(', ')})`,
+  });
 
 export const EnvSchema = z
   .object({
@@ -22,9 +30,15 @@ export const EnvSchema = z
     // Faux modèle déterministe, sans réseau, pour les essais et les démos sans clé. Absent : le vrai modèle.
     LEON_LLM: z.preprocess(emptyIsAbsent, z.enum(['factice']).optional()),
     // Modèle de chaque étape. Absent : le défaut de models.ts.
-    LEON_MODEL_REPONSE: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
-    LEON_MODEL_DISCUSSION: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
-    LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    LEON_MODEL_REPONSE: z.preprocess(
+      emptyIsAbsent,
+      supportedModel('LEON_MODEL_REPONSE').optional(),
+    ),
+    LEON_MODEL_DISCUSSION: z.preprocess(
+      emptyIsAbsent,
+      supportedModel('LEON_MODEL_DISCUSSION').optional(),
+    ),
+    LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_POINT').optional()),
     // Clé de chiffrement des clés d'API des connecteurs : 32 octets en base64.
     LEON_CONNECTORS_KEY: z.preprocess(
       emptyIsAbsent,

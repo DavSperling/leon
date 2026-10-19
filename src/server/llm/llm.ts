@@ -22,6 +22,20 @@ export type AgentEvent =
 
 // Le client réel (anthropic-llm.ts), le faux des tests et le faux de démonstration (fake-llm.ts) en sont les
 // trois implémentations.
+//
+// Comment un flux se termine, et ce que l'appelant doit en faire (les deux fonctions ne le disent pas pareil) :
+// - streamText rend des morceaux de texte puis s'arrête. Un refus du modèle ou une réponse coupée (limite de
+//   longueur atteinte) lève une LlmError (« refus du modèle », « réponse tronquée ») APRÈS les morceaux déjà rendus :
+//   l'appelant (la réponse en tête, T10) a pu en diffuser, et décide s'il masque ce texte partiel ou le garde.
+// - runAgent signale les mêmes cas sans lever : fin « refus » et fin « limite » (aussi quand le nombre d'étapes est
+//   atteint ou qu'un texte sans outil est coupé). Seule une panne (réseau, 429, 5xx, annulation) lève une LlmError,
+//   et elle peut arriver après des évènements « texte » et « outil » déjà rendus : l'appelant (la discussion,
+//   T11) traite l'évènement « indisponible » et décide du message qu'il garde.
+// - `maxTokens` borne le texte ET la réflexion du modèle (les trois modèles réfléchissent par défaut) : une limite
+//   trop juste coupe la réponse avant son premier mot (streamText lève alors « réponse tronquée » sans aucun
+//   morceau). Les appelants prévoient de la marge au-delà des mots attendus.
+// - Une erreur qui n'est pas une LlmError (un outil au schéma que l'API refuserait, un défaut du code) n'est pas
+//   une panne du modèle : elle passe telle quelle.
 export interface Llm {
   streamText(request: {
     step: LlmStep;

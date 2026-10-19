@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { TEST_ENV } from '@/test/test-env';
 import { parseEnv } from '../env';
-import { type AnthropicLike, createAnthropicLlm, logUsage } from './anthropic-llm';
+import { type AnthropicLike, createAnthropicLlm, logUsage, toolDefinitions } from './anthropic-llm';
 import { type AgentEvent, type AgentTool, type ChatMessage, LlmError, type LlmStep } from './llm';
 import { EFFORT_BY_STEP } from './models';
 
@@ -180,6 +180,23 @@ describe('streamText', () => {
     await collect(haiku.llm.streamText(textRequest('reponse')));
     expect(haiku.params(0)).not.toHaveProperty('betas');
     expect(haiku.params(0)).not.toHaveProperty('fallbacks');
+  });
+
+  // Le repli suit le modèle réglé pour l'étape (la table de models.ts), pas l'étape ni un préfixe de son nom.
+  it.each([
+    ['claude-opus-5-5', true],
+    ['claude-sonnet-5-5', true],
+    ['claude-haiku-5-5', false],
+  ])('décide le repli serveur d’après le modèle réglé : %s → %s', async (model, fallback) => {
+    const { llm, params } = setup([answerTurn('ok')], { LEON_MODEL_DISCUSSION: model });
+
+    await collect(llm.streamText(textRequest('discussion')));
+
+    expect(params(0).model).toBe(model);
+    expect('fallbacks' in params(0)).toBe(fallback);
+    expect('betas' in params(0)).toBe(fallback);
+    // L'effort part avec chacun des modèles de la table.
+    expect(params(0)).toMatchObject({ output_config: { effort: EFFORT_BY_STEP.discussion } });
   });
 
   it('passe le signal d’annulation au SDK', async () => {
@@ -462,6 +479,44 @@ describe('runAgent', () => {
     expect(thrown).toEqual(new LlmError('appel au modèle impossible'));
   });
 
+  // Contrat de flux (voir llm.ts) : une panne en cours de route arrive APRÈS les évènements déjà rendus. L'appelant
+  // (la discussion, T11) les a vus passer, puis doit traiter l'erreur : dire « indisponible », décider du message.
+  it('rend les évènements d’outil déjà produits, puis lève : l’appelant traite les deux', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { llm } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 'x' })),
+      { fail: new APIError(500, { type: 'error' }, 'Panne zanzibar', new Headers()) },
+    ]);
+    const events: AgentEvent[] = [];
+    let thrown: unknown;
+
+    try {
+      for await (const event of llm.runAgent(agentRequest([chercher(async () => 'r')]))) {
+        events.push(event);
+      }
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(events).toEqual([{ type: 'outil', name: 'chercher', input: { requete: 'x' } }]);
+    expect(thrown).toEqual(new LlmError('appel au modèle impossible'));
+  });
+
+  // Un outil que l'API refuserait est un défaut du code : on le dit avant tout appel, pas au premier tour du
+  // flux, et sans passer pour une panne du modèle.
+  it('vérifie les outils dès l’appel, avant tout flux et sans toucher au SDK', () => {
+    const { llm, stream } = setup([answerTurn('ok')]);
+    const lire: AgentTool = {
+      name: 'lire',
+      description: 'Lit un passage ou une source',
+      input: z.union([z.object({ passageId: z.string() }), z.object({ sourceId: z.string() })]),
+      run: async () => 'x',
+    };
+
+    expect(() => llm.runAgent(agentRequest([lire]))).toThrow(/« lire ».*objet/s);
+    expect(stream).not.toHaveBeenCalled();
+  });
+
   it('abandonne l’appel quand le lecteur arrête avant la fin', async () => {
     const { llm, streams } = setup([{ texts: ['a', 'b'] }]);
 
@@ -514,6 +569,74 @@ describe('runAgent', () => {
         toolUse('garde', { requete: 'apres' }),
       ],
     });
+  });
+});
+
+describe('toolDefinitions', () => {
+  const outil = (name: string, input: AgentTool['input']): AgentTool => ({
+    name,
+    description: `Outil ${name}`,
+    input,
+    run: async () => 'x',
+  });
+
+  it('décrit chaque outil : nom, description et schéma de type objet', () => {
+    const definitions = toolDefinitions([
+      outil('chercher', z.object({ requete: z.string(), outil: z.string().optional() })),
+      outil('activite', z.object({})),
+    ]);
+
+    expect(definitions).toMatchObject([
+      {
+        name: 'chercher',
+        description: 'Outil chercher',
+        input_schema: { type: 'object', required: ['requete'] },
+      },
+      { name: 'activite', input_schema: { type: 'object' } },
+    ]);
+  });
+
+  it('refuse une union : la racine du schéma n’a alors pas de type, l’API la refuserait', () => {
+    const union = z.union([
+      z.object({ passageId: z.string() }),
+      z.object({ sourceId: z.string() }),
+    ]);
+
+    expect(() => toolDefinitions([outil('lire', union)])).toThrow(/« lire ».*objet/s);
+  });
+
+  // La forme à écrire pour « l'un ou l'autre » (l'outil lire de T11, comme le fetch de T07) : un seul objet.
+  it('accepte « l’un ou l’autre » écrit en un seul objet à champs facultatifs et un contrôle', () => {
+    const lire = z
+      .object({ passageId: z.string().optional(), sourceId: z.string().optional() })
+      .refine((input) => (input.passageId === undefined) !== (input.sourceId === undefined), {
+        message: 'passageId ou sourceId, pas les deux',
+      });
+
+    const [definition] = toolDefinitions([outil('lire', lire)]);
+
+    expect(definition?.input_schema.type).toBe('object');
+    expect(definition?.input_schema).not.toHaveProperty('required');
+  });
+
+  it.each(['', 'lire un passage', 'écrire', 'a'.repeat(65), 'a.b'])(
+    'refuse le nom « %s » : l’API n’accepte que lettres, chiffres, _ et -, 64 caractères au plus',
+    (name) => {
+      expect(() => toolDefinitions([outil(name, z.object({}))])).toThrow(/nom de l'outil/);
+    },
+  );
+
+  it.each(['chercher', 'lire_source', 'activite-recente', 'a'.repeat(64)])(
+    'accepte le nom « %s »',
+    (name) => {
+      expect(toolDefinitions([outil(name, z.object({}))])[0]?.name).toBe(name);
+    },
+  );
+
+  it('refuse deux outils du même nom', () => {
+    expect(() =>
+      toolDefinitions([outil('chercher', z.object({})), outil('chercher', z.object({}))]),
+    ).toThrow(/même nom|deux outils/i);
   });
 });
 

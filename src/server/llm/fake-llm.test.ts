@@ -192,15 +192,42 @@ describe('createDemoLlm : le faux modèle des démonstrations', () => {
     expect(events.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
   });
 
-  it('répond sans outil quand « chercher » n’est pas fourni, ou que maxSteps vaut 0', async () => {
+  it('répond sans outil quand maxSteps vaut 0 : il n’a aucune étape à dépenser', async () => {
     const run = vi.fn(async () => 'jamais');
     const llm = createDemoLlm();
 
-    const sansOutil = await collect(llm.runAgent(agentRequest([])));
     const sansEtape = await collect(llm.runAgent(agentRequest([chercher(run)], 0)));
 
-    expect(sequence(sansOutil)).toEqual(['texte', 'fin']);
     expect(sequence(sansEtape)).toEqual(['texte', 'fin']);
     expect(run).not.toHaveBeenCalled();
+  });
+
+  // Le faux écrit en dur le nom de l'outil et sa clé : une liste d'outils qui ne les a plus doit se voir tout de
+  // suite, pas donner en silence une démonstration sans recherche.
+  it('lève quand « chercher » n’est pas fourni : un outil renommé ne passe pas en silence', async () => {
+    const llm = createDemoLlm();
+    const renomme: AgentTool = { ...chercher(async () => 'x'), name: 'rechercher' };
+
+    await expect(collect(llm.runAgent(agentRequest([])))).rejects.toThrow(/« chercher »/);
+    await expect(collect(llm.runAgent(agentRequest([renomme])))).rejects.toThrow(/« chercher »/);
+  });
+
+  it('le dit, sans citer [1], quand l’outil refuse sa requête : pas de renvoi vers rien', async () => {
+    const run = vi.fn(async () => 'jamais');
+    const autreCle: AgentTool = {
+      name: 'chercher',
+      description: 'Cherche dans la mémoire',
+      input: z.object({ q: z.string() }),
+      run: run as AgentTool['run'],
+    };
+    const llm = createDemoLlm();
+
+    const events = await collect(llm.runAgent(agentRequest([autreCle])));
+
+    expect(run).not.toHaveBeenCalled();
+    expect(sequence(events)).toEqual(['outil', 'texte', 'fin']);
+    const texte = events.flatMap((event) => (event.type === 'texte' ? [event.delta] : [])).join('');
+    expect(texte).toMatch(/pas pu chercher/);
+    expect(texte).not.toContain('[1]');
   });
 });

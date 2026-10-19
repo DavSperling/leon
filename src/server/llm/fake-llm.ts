@@ -63,11 +63,18 @@ export function createFakeLlm(script: FakeLlmScript): FakeLlm {
 
 // Le faux modèle des démonstrations (LEON_LLM=factice, jamais en production) : déterministe, sans réseau. Il
 // répond toujours la même phrase courte qui cite [1] et, dans la discussion, appelle d'abord une fois l'outil
-// « chercher » avec la dernière question. Il ne lit pas les résultats : il sert à voir l'interface sans clé.
+// « chercher » avec la dernière question. Il ne lit pas les résultats : il sert à voir l'interface sans clé, et
+// son [1] ne renvoie à rien quand la recherche ne trouve rien (l'appelant, lui, écarte tout renvoi hors liste).
+// Il écrit en dur le nom de l'outil et sa clé « requete » : sans « chercher », il lève ; si l'outil refuse la
+// requête ou échoue, il le dit au lieu de citer [1].
 const DEMO_ANSWER = [
   'Réponse du modèle factice (essai sans clé) : ',
   'la mémoire contient des éléments sur votre question, ',
   'voir le premier résultat [1].',
+];
+const DEMO_SEARCH_FAILED = [
+  'Réponse du modèle factice (essai sans clé) : ',
+  "il n'a pas pu chercher dans la mémoire (l'outil « chercher » a refusé sa requête ou échoué).",
 ];
 
 const lastQuestion = (messages: ChatMessage[]): string =>
@@ -79,13 +86,22 @@ export function createDemoLlm(): Llm {
       yield* DEMO_ANSWER;
     },
     async *runAgent(request) {
-      const search: AgentTool | undefined = request.tools.find((tool) => tool.name === 'chercher');
-      if (search && request.maxSteps >= 1) {
+      let answer = DEMO_ANSWER;
+      if (request.maxSteps >= 1) {
+        const search: AgentTool | undefined = request.tools.find(
+          (tool) => tool.name === 'chercher',
+        );
+        if (!search) {
+          throw new Error(
+            "Faux modèle de démonstration : l'outil « chercher » n'est pas fourni (il l'appelle une fois avant de répondre)",
+          );
+        }
         const input = { requete: lastQuestion(request.messages) };
         yield { type: 'outil', name: search.name, input };
-        await executeAgentTool(request.tools, search.name, input);
+        const result = await executeAgentTool(request.tools, search.name, input);
+        if (result.isError) answer = DEMO_SEARCH_FAILED;
       }
-      for (const delta of DEMO_ANSWER) yield { type: 'texte', delta };
+      for (const delta of answer) yield { type: 'texte', delta };
       yield { type: 'fin', reason: 'fini' };
     },
   };

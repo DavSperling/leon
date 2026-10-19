@@ -209,17 +209,18 @@ export interface Embedder {
   readonly model: string; // 'factice-1024', 'voyage-…', 'mistral-embed', 'bge-m3'
   embed(texts: string[], kind: EmbedKind): Promise<number[][]>; // un vecteur de 1 024 par texte, dans l'ordre
 }
+export const EMBEDDER_IDS = ['factice', 'voyage', 'mistral', 'bge-m3'] as const; // dans embedder.ts, feuille sans dépendance : env.ts l'importe sans tirer le registre
 export class EmbedderError extends Error {} // message fixe, jamais celui du fournisseur
 
 // src/server/embeddings/fake-embedder.ts
 export function createFakeEmbedder(): Embedder; // 'factice-1024', déterministe : sac de mots haché, normé
 
 // src/server/embeddings/registry.ts
-export const EMBEDDER_IDS = ['factice', 'voyage', 'mistral', 'bge-m3'] as const;
+export { EMBEDDER_IDS } from './embedder'; // ré-export : les tests et le code importent depuis le registre
 export function getEmbedder(env: Env): Embedder | null; // LEON_EMBEDDINGS absent → null
 ```
 
-`src/server/env.ts` gagne `LEON_EMBEDDINGS` (enum `EMBEDDER_IDS`, optionnel) en T04 ; `VOYAGE_API_KEY`, `MISTRAL_API_KEY`, `LEON_BGE_URL` en T30 ; `LEON_MODEL_REPONSE`, `LEON_MODEL_DISCUSSION`, `LEON_MODEL_POINT` en T08. Chaque variable est listée vide dans `.env.example`.
+`src/server/env.ts` gagne en T04 `LEON_EMBEDDINGS` (enum `EMBEDDER_IDS`, optionnel) **et** `VOYAGE_API_KEY`, `MISTRAL_API_KEY`, `LEON_BGE_URL` (adresse en `http` ou `https` seulement), avec leur contrôle (`EMBEDDER_SETTING` : un fournisseur réel exige son réglage, l'erreur nomme la variable) : T30 n'y touche pas. `LEON_MODEL_REPONSE`, `LEON_MODEL_DISCUSSION`, `LEON_MODEL_POINT` arrivent en T08. Chaque variable est listée vide dans `.env.example`. **Un fournisseur reçoit son réglage en argument de `getEmbedder` et n'importe jamais `env`** (`env.ts` importe `embedder.ts`, jamais le registre : sinon cycle env, registre, fournisseur, env ; un test de contrat le garde).
 
 ### C4. Recherche
 
@@ -541,13 +542,14 @@ T25 ne démarre que si le verdict est `indexable` (décision 14 de la spec).
 
 ### T04 · Interface des vecteurs — Sonnet
 
-**Fichiers :** créer `src/server/embeddings/{embedder,fake-embedder,registry}.ts` et `fake-embedder.test.ts`, `registry.test.ts` ; modifier `src/server/env.ts`, `src/server/env.test.ts`, `.env.example`, `src/test/contracts/env-contract.test.ts` si besoin.
+**Fichiers :** créer `src/server/embeddings/{embedder,fake-embedder,registry}.ts` et `embedder.test.ts`, `fake-embedder.test.ts`, `registry.test.ts` ; modifier `src/server/env.ts`, `src/server/env.test.ts`, `.env.example`, `src/test/contracts/env-contract.test.ts`, `src/test/test-env.ts` (les variables de vecteurs y sont vides : une variable exportée dans le shell ne passe pas dans les tests) et, pour la dimension, `src/server/db/schema-contract.db.test.ts` (la colonne et `EMBEDDING_DIMS` se comparent).
 
 - [ ] **Étape 1 : tests.**
   - `createFakeEmbedder().embed(['contrat OVH', 'contrat OVH'], 'document')` → deux vecteurs identiques de longueur 1 024 et de norme 1 (à 1e-6 près).
   - `cos(embed('contrat OVH renouvelé'), embed('renouvellement du contrat OVH'))` > `cos(embed('contrat OVH renouvelé'), embed('recette de crêpes'))`.
   - `getEmbedder(parseEnv({...base}))` → `null` ; `{ LEON_EMBEDDINGS: 'factice' }` → `model === 'factice-1024'` ; `{ LEON_EMBEDDINGS: 'voyage' }` sans clé → erreur de validation de l'environnement qui nomme `VOYAGE_API_KEY` (le fournisseur lui-même arrive en T30 ; d'ici là, `getEmbedder` lève « fournisseur non livré » pour `voyage`, `mistral` et `bge-m3`).
-  - `.env.example` contient `LEON_EMBEDDINGS=` vide et un commentaire qui dit que le choix est à faire par Amos et David.
+  - `.env.example` contient `LEON_EMBEDDINGS=` vide et un commentaire qui dit que le choix est à faire par Amos et David, qui nomme chaque identifiant de `EMBEDDER_IDS` et qui dit que seul « factice » marche pour l'instant.
+  - `LEON_BGE_URL` n'accepte que `http` ou `https` (« localhost:8080 », « bge-service:8080 », `ftp://…`, `javascript:…`, `file:///…` sont refusées, l'erreur nomme la variable) ; `model.length` du fournisseur factice tient dans 1 à 80 caractères (colonne `passage_vectors.model`).
 - [ ] **Étape 2 :** écrire le code ; `pnpm vitest run src/server/embeddings src/server/env.test.ts` → passe.
 - [ ] **Étape 3 :** commit « T04 · Interface des vecteurs et fournisseur factice ».
 
@@ -567,7 +569,7 @@ T25 ne démarre que si le verdict est `indexable` (décision 14 de la spec).
   - 5 passages sans vecteur dans deux organisations → `embedMissing({ embedder: factice }, 100)` rend 5 et chaque vecteur porte l'ACL de son passage ; un second appel rend 0.
   - passer à un autre modèle factice (`model: 'factice-b'`) → `embedMissing` rend 5 de nouveau ; les vecteurs `factice-1024` restent.
   - un run `queued` depuis 6 minutes est remis en file (par `runs_en_attente(5)`, avec le contexte du propriétaire de la source), un run `queued` depuis 2 minutes ne l'est pas ; deux organisations ont chacune un run en attente → les deux sont repris.
-- [ ] **Étape 3 :** écrire le code. `startSearchWorker` enregistre la file `index` (un job à la fois par processus, quatre au plus en parallèle), un tic par minute qui appelle `requeueStaleRuns(5)` et, si un fournisseur est réglé, `embedMissing(…, 500)`. `instrumentation-node.ts` démarre ce worker **sans condition sur `ANTHROPIC_API_KEY`**. `worker.test.ts` vérifie, avec des dépendances simulées, que le démarrage n'appelle jamais le modèle et ne dépend pas de la clé.
+- [ ] **Étape 3 :** écrire le code. `startSearchWorker` enregistre la file `index` (un job à la fois par processus, quatre au plus en parallèle), un tic par minute qui appelle `requeueStaleRuns(5)` et, si un fournisseur est réglé, `embedMissing(…, 500)`. `instrumentation-node.ts` démarre ce worker **sans condition sur `ANTHROPIC_API_KEY`**. `worker.test.ts` vérifie, avec des dépendances simulées, que le démarrage n'appelle jamais le modèle et ne dépend pas de la clé. **`getEmbedder(env)` lève « fournisseur non livré » pour `voyage`, `mistral` et `bge-m3` jusqu'à T30, alors que l'environnement est valide** : T05 tranche et teste (dans `worker.test.ts`) ce qu'`instrumentation-node.ts` en fait. Par défaut, échec franc au démarrage avec ce message, comme pour une variable d'environnement invalide : un embedder `null` après un simple avertissement laisserait la recherche en plein texte sans que personne le voie (vigilance 5). Si T05 choisit l'autre voie, il le dit et le teste, sans arrêter le worker des connecteurs.
 - [ ] **Étape 4 :** `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/search src/server/ingest` → passe.
 - [ ] **Étape 5 :** commit « T05 · Indexation des tours en passages ».
 
@@ -902,10 +904,10 @@ Après T28 : David écrit une trentaine de questions dans `essai-recherche/quest
 
 ### T30 · Les candidats de vecteurs — Sonnet
 
-**Fichiers :** créer `src/server/embeddings/{voyage,mistral,bge-m3}.ts` et leurs tests, `docker/bge-m3/` (petit service HTTP qui sert bge-m3, réservé à la comparaison, hors de l'image de l'application), script `pnpm essai:comparer` ; modifier `src/server/embeddings/registry.ts`, `src/server/env.ts`, `.env.example`.
+**Fichiers :** créer `src/server/embeddings/{voyage,mistral,bge-m3}.ts` et leurs tests, `docker/bge-m3/` (petit service HTTP qui sert bge-m3, réservé à la comparaison, hors de l'image de l'application), script `pnpm essai:comparer` ; modifier `src/server/embeddings/registry.ts` et le commentaire de `LEON_EMBEDDINGS` dans `.env.example` (voyage, mistral et bge-m3 y sont désormais branchés : `env-contract.test.ts`, qui exige aujourd'hui « pas encore branchés » et « seul « factice » marche », est à mettre à jour). **Ne pas toucher `src/server/env.ts`** : `VOYAGE_API_KEY`, `MISTRAL_API_KEY`, `LEON_BGE_URL` et leur contrôle (`EMBEDDER_SETTING`) existent depuis T04. Un adaptateur reçoit son réglage en argument de `getEmbedder` et n'importe jamais `env` (un test de contrat le garde).
 
 - [ ] **Étape 1 :** relire la doc officielle de chaque fournisseur (URL et date en tête de fichier) : modèle multilingue en 1 024 dimensions, distinction document / requête si elle existe, taille maximale d'un lot, limites de débit, prix.
-- [ ] **Étape 2 : tests** (`fetch` simulé). Chaque adaptateur envoie au plus 64 textes par requête, demande 1 024 dimensions, passe le bon type (document / requête), rend les vecteurs dans l'ordre, transforme 429 et 5xx en `EmbedderError` après 3 reprises, ne journalise ni texte ni clé ; `getEmbedder` construit chaque fournisseur à partir de sa variable.
+- [ ] **Étape 2 : tests** (`fetch` simulé). Chaque adaptateur envoie au plus 64 textes par requête, demande 1 024 dimensions, passe le bon type (document / requête), rend les vecteurs dans l'ordre, transforme 429 et 5xx en `EmbedderError` après 3 reprises, ne journalise ni texte ni clé ; son `model` fait de 1 à 80 caractères (colonne `passage_vectors.model`) ; `getEmbedder` construit chaque fournisseur à partir de sa variable.
 - [ ] **Étape 3 :** `pnpm essai:comparer` lance, pour chaque fournisseur dont la clé ou l'adresse est réglée, une réindexation du corpus puis `essai:noter`, et ajoute la ligne « plein texte seul » ; il écrit un tableau comparatif (deux notes, durée et coût d'indexation, coût par 1 000 recherches) dans `essai-recherche/rapports/`. Il ne règle aucun défaut.
 - [ ] **Étape 4 :** commit « T30 · Trois candidats de vecteurs et leur comparaison ».
 

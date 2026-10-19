@@ -6,6 +6,13 @@
 // dimension demanderait une migration.
 export const EMBEDDING_DIMS = 1024;
 
+// Les fournisseurs que LEON_EMBEDDINGS peut nommer. La liste vit ici, feuille sans dépendance, pour que env.ts
+// l'importe sans tirer le registre ni les fournisseurs (un fournisseur qui importerait env fermerait un cycle).
+// Le choix du fournisseur réel est à faire par Amos et David après la comparaison sur le jeu d'essai : rien
+// n'en fixe un par défaut.
+export const EMBEDDER_IDS = ['factice', 'voyage', 'mistral', 'bge-m3'] as const;
+export type EmbedderId = (typeof EMBEDDER_IDS)[number];
+
 // `document` : le texte d'un passage à indexer ; `requete` : ce que cherche l'utilisateur. Certains
 // fournisseurs fabriquent des vecteurs différents pour les deux.
 export type EmbedKind = 'document' | 'requete';

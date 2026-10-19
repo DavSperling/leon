@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   MIGRATIONS_DESTRUCTIVES,
   refuseMigrationsDestructives,
+  TEST_ENV,
   testDatabaseName,
 } from './test-env';
 
@@ -32,6 +33,16 @@ describe('TEST_ENV', () => {
       'postgres://leon_owner:leon_owner@127.0.0.1:54329/leon_test_glean',
     );
   });
+
+  // Vitest range TEST_ENV dans process.env, et env.ts valide process.env à l'import : une variable exportée dans
+  // le shell (essai d'un fournisseur de vecteurs) changerait l'environnement des tests. Vide vaut absent.
+  it.each(['LEON_EMBEDDINGS', 'VOYAGE_API_KEY', 'MISTRAL_API_KEY', 'LEON_BGE_URL'])(
+    'vide %s : une valeur exportée dans le shell ne passe pas dans les tests',
+    (name) => {
+      expect((TEST_ENV as Record<string, string>)[name]).toBe('');
+      expect(process.env[name]).toBe('');
+    },
+  );
 
   it.each([
     'leon',

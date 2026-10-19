@@ -48,4 +48,11 @@ export const TEST_ENV = {
   BETTER_AUTH_URL: 'http://localhost:3000',
   // Clé fixe de test (32 octets), pas un secret : la même dans tous les workers Vitest.
   LEON_CONNECTORS_KEY: Buffer.alloc(32, 7).toString('base64'),
+  // Vitest range TEST_ENV dans process.env et env.ts le valide à l'import : une variable de fournisseur de
+  // vecteurs exportée dans le shell (essai de Voyage, de Mistral ou de bge-m3) changerait l'environnement des
+  // tests et les ferait échouer à l'import. Vide vaut absent : les tests voient le même environnement partout.
+  LEON_EMBEDDINGS: '',
+  VOYAGE_API_KEY: '',
+  MISTRAL_API_KEY: '',
+  LEON_BGE_URL: '',
 } as const;

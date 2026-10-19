@@ -5,6 +5,7 @@ import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { describe, expect, it, onTestFinished } from 'vitest';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
+import { EMBEDDING_DIMS } from '../embeddings/embedder';
 import { passageVectors } from './schema/search';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
@@ -180,8 +181,9 @@ describe('passages et vecteurs (0011)', () => {
       (column) => column.name === 'embedding',
     );
 
-    expect(rows).toEqual([{ type: 'halfvec(1024)' }]);
-    expect(embedding?.getSQLType()).toBe('halfvec(1024)');
+    // La constante des fournisseurs (EMBEDDING_DIMS) est la même que la colonne : changer l'une sans l'autre échoue ici.
+    expect(rows).toEqual([{ type: `halfvec(${EMBEDDING_DIMS})` }]);
+    expect(embedding?.getSQLType()).toBe(`halfvec(${EMBEDDING_DIMS})`);
   });
 
   // halfvec et halfvec_cosine_ops demandent pgvector 0.7 ; hnsw.iterative_scan, que la recherche pose (T06),

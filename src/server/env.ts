@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EMBEDDER_IDS } from './embeddings/registry';
+import { EMBEDDER_IDS } from './embeddings/embedder';
 
 // Une variable laissée vide (« ANTHROPIC_API_KEY= » après cp .env.example) vaut une variable absente.
 const emptyIsAbsent = (value: unknown) => (value === '' ? undefined : value);
@@ -32,7 +32,9 @@ export const EnvSchema = z
     LEON_EMBEDDINGS: z.preprocess(emptyIsAbsent, z.enum(EMBEDDER_IDS).optional()),
     VOYAGE_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     MISTRAL_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
-    LEON_BGE_URL: z.preprocess(emptyIsAbsent, z.url().optional()),
+    // Adresse du service bge-m3 : http ou https seulement. Sans http:// (« bge-service:8080 »), zod seul
+    // l'accepterait et l'indexation échouerait en silence au premier appel.
+    LEON_BGE_URL: z.preprocess(emptyIsAbsent, z.url({ protocol: /^https?$/ }).optional()),
   })
   .superRefine((env, ctx) => {
     const id = env.LEON_EMBEDDINGS;

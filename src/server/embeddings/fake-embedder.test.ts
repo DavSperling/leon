@@ -14,6 +14,13 @@ describe('createFakeEmbedder', () => {
     expect(embedder.model).toBe('factice-1024');
   });
 
+  // passage_vectors.model : check (char_length(model) between 1 and 80). T30 reprend cette vérification
+  // pour chaque adaptateur.
+  it('porte un nom de modèle que la colonne passage_vectors.model accepte (1 à 80 caractères)', () => {
+    expect(embedder.model.length).toBeGreaterThanOrEqual(1);
+    expect(embedder.model.length).toBeLessThanOrEqual(80);
+  });
+
   it('rend, pour deux textes identiques, deux vecteurs identiques de 1 024 valeurs et de norme 1', async () => {
     const [a, b] = await embedder.embed(['contrat OVH', 'contrat OVH'], 'document');
     expect(a).toHaveLength(EMBEDDING_DIMS);

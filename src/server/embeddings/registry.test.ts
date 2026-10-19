@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { TEST_ENV } from '@/test/test-env';
 import { parseEnv } from '../env';
+import * as embedder from './embedder';
 import { EMBEDDER_IDS, getEmbedder } from './registry';
 
 describe('getEmbedder', () => {
   it('liste les quatre fournisseurs prévus', () => {
     expect([...EMBEDDER_IDS]).toEqual(['factice', 'voyage', 'mistral', 'bge-m3']);
+  });
+
+  it('ré-exporte la liste de embedder.ts, que env.ts importe sans passer par le registre', () => {
+    expect(EMBEDDER_IDS).toBe(embedder.EMBEDDER_IDS);
   });
 
   it('rend null quand LEON_EMBEDDINGS est absent : recherche par le texte seul', () => {

@@ -90,6 +90,36 @@ describe('parseEnv', () => {
     );
   });
 
+  // Une adresse sans http:// (nom de service docker, « localhost:8080 ») ou d'un autre schéma passerait
+  // zod seul, et le fournisseur échouerait en silence à la première indexation : on la refuse au démarrage.
+  it.each([
+    'localhost:8080',
+    'bge-service:8080',
+    'ftp://bge-service:8080',
+    'javascript:alert(1)',
+    'file:///etc/passwd',
+    'pas une adresse',
+  ])('refuse l’adresse « %s » pour LEON_BGE_URL avec LEON_EMBEDDINGS=bge-m3', (adresse) => {
+    expect(() =>
+      parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: 'bge-m3', LEON_BGE_URL: adresse }),
+    ).toThrow(/LEON_BGE_URL/);
+  });
+
+  it.each(['http://127.0.0.1:8080', 'http://bge-service:8080', 'https://bge.example.org/vecteurs'])(
+    'accepte l’adresse « %s » pour LEON_BGE_URL',
+    (adresse) => {
+      expect(
+        parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: 'bge-m3', LEON_BGE_URL: adresse }).LEON_BGE_URL,
+      ).toBe(adresse);
+    },
+  );
+
+  it('refuse une adresse mal écrite même quand un autre fournisseur est choisi', () => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_BGE_URL: 'bge-service:8080' })).toThrow(
+      /LEON_BGE_URL/,
+    );
+  });
+
   it('n’exige aucun réglage de fournisseur quand LEON_EMBEDDINGS est absent', () => {
     expect(() => parseEnv({ ...TEST_ENV, VOYAGE_API_KEY: '' })).not.toThrow();
   });

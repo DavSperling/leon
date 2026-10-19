@@ -1,0 +1,123 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DISCUSSION_REFUSAL, discussionMessagesUrl } from '@/lib/discussion-events';
+import { type ReplyProgress, readReply } from './read-reply';
+
+// Ce que la page d'une discussion comprend de la réponse de la route : chaque issue a son état, et la page ne dit
+// « votre question est gardée » que lorsque le serveur l'a gardée.
+
+const ID = '0b6c1f0e-8a52-4c0e-9d8e-3f1b2a4c5d6e';
+const CITATION = {
+  n: 1,
+  sourceId: ID,
+  passageId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  title: 'Ticket',
+  url: null,
+};
+
+afterEach(() => vi.unstubAllGlobals());
+
+// Un flux d'évènements serveur, en morceaux coupés n'importe où.
+const sse = (...events: unknown[]) => events.map((event) => `data: ${JSON.stringify(event)}\n\n`);
+
+function respond(status: number, chunks: string[] = []) {
+  const fetch = vi.fn(async () => {
+    if (status === 204) return new Response(null, { status });
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const chunk of chunks) controller.enqueue(new TextEncoder().encode(chunk));
+        controller.close();
+      },
+    });
+    return new Response(body, { status, headers: { 'content-type': 'text/event-stream' } });
+  });
+  vi.stubGlobal('fetch', fetch);
+  return fetch;
+}
+
+async function read(onProgress: (progress: ReplyProgress) => void = () => undefined) {
+  return readReply(ID, 'La clause ?', onProgress);
+}
+
+describe('readReply', () => {
+  it('envoie la question à la route de la discussion', async () => {
+    const fetch = respond(204);
+
+    await read();
+
+    expect(fetch).toHaveBeenCalledWith(
+      discussionMessagesUrl(ID),
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ message: 'La clause ?' }) }),
+    );
+  });
+
+  it('rend la réponse finie, ses citations, et chaque étape en chemin', async () => {
+    respond(200, [
+      ...sse({ type: 'outil', name: 'chercher' }, { type: 'texte', delta: 'Acceptée ' }),
+      ...sse({ type: 'texte', delta: '[1].' }, { type: 'citations', items: [CITATION] }),
+      ...sse({ type: 'fin', reason: 'fini' }),
+    ]);
+    const steps: ReplyProgress[] = [];
+
+    const outcome = await read((progress) => steps.push(progress));
+
+    expect(outcome).toEqual({ status: 'finie', content: 'Acceptée [1].', citations: [CITATION] });
+    expect(steps.map((step) => [step.text, step.activity])).toEqual([
+      ['', 'Leon cherche dans la mémoire…'],
+      ['Acceptée ', null],
+      ['Acceptée [1].', null],
+      ['Acceptée [1].', null],
+    ]);
+  });
+
+  it('remplace un refus par la phrase fixe', async () => {
+    respond(200, sse({ type: 'texte', delta: 'Voici' }, { type: 'fin', reason: 'refus' }));
+
+    expect(await read()).toMatchObject({ status: 'finie', content: DISCUSSION_REFUSAL });
+  });
+
+  it('dit « sans modèle » sur 204', async () => {
+    respond(204);
+
+    expect(await read()).toEqual({ status: 'sans-modele' });
+  });
+
+  it('dit qu’une autre réponse est en cours', async () => {
+    respond(200, sse({ type: 'en-cours' }));
+
+    expect(await read()).toEqual({ status: 'en-cours' });
+  });
+
+  // La route a gardé la question avant d'appeler le modèle : elle le dit par l'évènement.
+  it('dit la question gardée seulement quand le flux dit « indisponible »', async () => {
+    respond(200, sse({ type: 'texte', delta: 'Début' }, { type: 'indisponible' }));
+
+    expect(await read()).toEqual({ status: 'indisponible', questionGardee: true });
+  });
+
+  it('distingue la session expirée (401) et l’adresse refusée (403)', async () => {
+    respond(401);
+    expect(await read()).toEqual({ status: 'session' });
+
+    respond(403);
+    expect(await read()).toEqual({ status: 'origine' });
+  });
+
+  // La route a répondu avant de garder quoi que ce soit, ou le flux s'est coupé : rien n'est promis.
+  it('ne promet rien sur un autre refus, un flux coupé ou une panne du réseau', async () => {
+    for (const status of [400, 404, 413, 500]) {
+      respond(status);
+      expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+    }
+
+    respond(200, sse({ type: 'texte', delta: 'Début' }));
+    expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('réseau coupé');
+      }),
+    );
+    expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+  });
+});

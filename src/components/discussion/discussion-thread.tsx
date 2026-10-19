@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowUp, CircleAlert, LoaderCircle, RotateCcw } from 'lucide-react';
+import { ArrowUp, CircleAlert, LoaderCircle, LogIn, RotateCcw } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   type FormEvent,
@@ -18,76 +19,37 @@ import {
 import { type PreviewState, ResultPreview } from '@/components/search/result-preview';
 import { Button } from '@/components/ui/button';
 import {
-  createDiscussionEventReader,
   DISCUSSION_MESSAGE_MAX_CHARS,
+  DISCUSSION_TIMEOUT_MS,
   type DiscussionCitation,
-  discussionMessagesUrl,
-  finalReplyText,
 } from '@/lib/discussion-events';
 import { cn } from '@/lib/utils';
-import { toolActivityLabel } from './message-segments';
-import {
-  AssistantMessage,
-  LeonHeading,
-  MessageText,
-  type OpenCitation,
-  UserMessage,
-} from './message-view';
+import { AssistantMessage, LeonHeading, type OpenCitation, UserMessage } from './message-view';
+import { type ReplyProgress, readReply } from './read-reply';
 
 // Une discussion : ses messages, la réponse de Leon en flux (ce qu'il cherche et lit, puis son texte), la saisie
 // d'une nouvelle question et l'aperçu des passages cités. La route garde la question et la réponse : la page
-// n'écrit rien elle-même. Une page qu'on quitte ne coupe pas la réponse en cours : elle est gardée, et se lit au
-// retour.
+// n'écrit rien elle-même. Une page qu'on quitte ne coupe pas la réponse en cours : le serveur la finit et la garde.
+// Revenu sur la page pendant qu'il répond, on attend cette réponse-là (« en-cours ») au lieu d'en demander une autre.
 
 export type ThreadMessage = DiscussionMessageView;
 
 type Reply =
   | { status: 'repos' }
-  | { status: 'flux'; text: string; citations: DiscussionCitation[]; activity: string | null }
-  | { status: 'indisponible' }
+  | ({ status: 'flux' } & ReplyProgress)
+  // Leon répond déjà dans cette discussion : la page relit la discussion jusqu'à ce que cette réponse y soit.
+  | { status: 'attente'; message: string }
+  // Cette réponse est arrivée, mais la question envoyée pendant qu'elle courait n'a pas été écrite.
+  | { status: 'non-envoyee' }
+  | { status: 'indisponible'; questionGardee: boolean }
+  | { status: 'session' }
+  | { status: 'origine' }
   | { status: 'sans-modele' };
 
-type Finished = { content: string; citations: DiscussionCitation[] };
-
-// La réponse à `message`, lue au fil du flux de la route. Rend la réponse finie, ou l'état où la lecture s'arrête.
-async function readReply(
-  discussionId: string,
-  message: string,
-  onProgress: (reply: Reply) => void,
-): Promise<Finished | 'indisponible' | 'sans-modele'> {
-  const response = await fetch(discussionMessagesUrl(discussionId), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
-    body: JSON.stringify({ message }),
-    cache: 'no-store',
-  });
-  if (response.status === 204) return 'sans-modele';
-  if (!response.ok || !response.body) return 'indisponible';
-  const chunks = response.body.pipeThrough(new TextDecoderStream()).getReader();
-  const reader = createDiscussionEventReader();
-  let text = '';
-  let citations: DiscussionCitation[] = [];
-  let activity: string | null = null;
-  for (;;) {
-    const { done, value } = await chunks.read();
-    if (done) return 'indisponible';
-    for (const event of reader.push(value)) {
-      if (event.type === 'texte') {
-        text += event.delta;
-        activity = null;
-      } else if (event.type === 'outil') {
-        activity = toolActivityLabel(event.name);
-      } else if (event.type === 'citations') {
-        citations = event.items;
-      } else if (event.type === 'fin') {
-        return { content: finalReplyText(text, event.reason), citations };
-      } else {
-        return 'indisponible';
-      }
-      onProgress({ status: 'flux', text, citations, activity });
-    }
-  }
-}
+// Pendant une réponse commencée plus tôt : une relecture toutes les 2 s, pas plus longtemps que le serveur ne la
+// laisse courir.
+const WAIT_POLL_MS = 2000;
+const WAIT_MAX_MS = DISCUSSION_TIMEOUT_MS + 10_000;
 
 const CITATION_HEADER = (citation: DiscussionCitation) => ({
   kind: 'other' as const,
@@ -146,15 +108,18 @@ function useCitationPreview() {
 }
 
 function Composer({
+  value,
+  setValue,
   disabled,
   busy,
   onSend,
 }: {
+  value: string;
+  setValue: (value: string) => void;
   disabled: boolean;
   busy: boolean;
   onSend: (message: string) => void;
 }) {
-  const [value, setValue] = useState('');
   const empty = value.trim() === '';
 
   function submit(event?: FormEvent<HTMLFormElement>) {
@@ -239,14 +204,19 @@ const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: 'Le
 const NO_MODEL =
   'Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La recherche, elle, marche.';
 
+const actionClass = 'h-9 gap-1.5 rounded-lg px-3 text-[15px]';
+
 export function DiscussionThread({
   discussionId,
   initialMessages,
   modelAvailable,
+  appOrigin,
 }: {
   discussionId: string;
   initialMessages: ThreadMessage[];
   modelAvailable: boolean;
+  // L'adresse réglée pour Leon (BETTER_AUTH_URL) : la seule d'où la route accepte une question.
+  appOrigin: string;
 }) {
   // Une discussion ouverte depuis la barre ou la page Discussions arrive avec sa question seule : Leon y répond
   // tout de suite.
@@ -256,11 +226,12 @@ export function DiscussionThread({
   const [reply, setReply] = useState<Reply>(
     !modelAvailable ? { status: 'sans-modele' } : autoStart ? THINKING : { status: 'repos' },
   );
+  const [draft, setDraft] = useState('');
   const preview = useCitationPreview();
   const router = useRouter();
   const bottom = useRef<HTMLDivElement>(null);
   const started = useRef(false);
-  const busy = reply.status === 'flux';
+  const busy = reply.status === 'flux' || reply.status === 'attente';
   const last = messages.at(-1);
   const waiting = last?.role === 'user' && reply.status === 'repos';
 
@@ -279,22 +250,67 @@ export function DiscussionThread({
       ];
     });
     setReply(THINKING);
-    readReply(discussionId, message, setReply)
-      .then((result) => {
-        if (result === 'indisponible' || result === 'sans-modele') {
-          setReply({ status: result });
+    readReply(discussionId, message, (progress) => setReply({ status: 'flux', ...progress }))
+      .then((outcome) => {
+        if (outcome.status === 'en-cours') {
+          setReply({ status: 'attente', message });
           return;
         }
+        if (outcome.status !== 'finie') {
+          setReply(outcome);
+          return;
+        }
+        const { content, citations } = outcome;
         setMessages((current) => [
           ...current,
-          { id: crypto.randomUUID(), role: 'assistant', ...result },
+          { id: crypto.randomUUID(), role: 'assistant', content, citations },
         ]);
         setReply({ status: 'repos' });
         // La page gardée par le navigateur (retour arrière) montrera aussi cette réponse.
         router.refresh();
       })
-      .catch(() => setReply({ status: 'indisponible' }));
+      .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
   }
+
+  // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, puis la montre
+  // telle qu'elle est. Une question envoyée entre-temps n'a pas été écrite : elle revient dans la saisie.
+  useEffect(() => {
+    if (reply.status !== 'attente') return;
+    const { message } = reply;
+    const until = Date.now() + WAIT_MAX_MS;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const check = () => {
+      readDiscussionMessagesAction(discussionId)
+        .then((current) => {
+          if (stopped) return;
+          if (current === null) {
+            setReply({ status: 'indisponible', questionGardee: false });
+            return;
+          }
+          if (current.at(-1)?.role !== 'assistant' && Date.now() < until) {
+            timer = setTimeout(check, WAIT_POLL_MS);
+            return;
+          }
+          setMessages(current);
+          router.refresh();
+          if (current.findLast((item) => item.role === 'user')?.content === message) {
+            setReply({ status: 'repos' });
+            return;
+          }
+          setDraft((typed) => (typed.trim() === '' ? message : typed));
+          setReply({ status: 'non-envoyee' });
+        })
+        .catch(() => {
+          if (!stopped) setReply({ status: 'indisponible', questionGardee: false });
+        });
+    };
+    check();
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [reply, discussionId, router]);
 
   // Une question envoyée, une réponse finie : la fin de la discussion vient en vue.
   // biome-ignore lint/correctness/useExhaustiveDependencies: suit le nombre de messages et l'état de la réponse
@@ -315,9 +331,9 @@ export function DiscussionThread({
         const [question] = current ?? [];
         if (current?.length === 1 && question?.role === 'user') return run(question.content);
         if (current) setMessages(current);
-        setReply(current ? { status: 'repos' } : { status: 'indisponible' });
+        setReply(current ? { status: 'repos' } : { status: 'indisponible', questionGardee: false });
       })
-      .catch(() => setReply({ status: 'indisponible' }));
+      .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
   }, []);
 
   const firstUserId = messages.find((message) => message.role === 'user')?.id;
@@ -347,10 +363,10 @@ export function DiscussionThread({
           </ol>
 
           <div aria-live="polite" aria-busy={busy} className="mt-5 space-y-5">
-            {reply.status === 'flux' && (
+            {(reply.status === 'flux' || reply.status === 'attente') && (
               <div className="rounded-xl border bg-card px-5 py-4 shadow-xs">
                 <LeonHeading />
-                {reply.text === '' ? (
+                {reply.status === 'attente' || reply.text === '' ? (
                   <p className="mt-2 flex items-center gap-2 text-[15px] leading-6 text-muted-foreground">
                     <LoaderCircle
                       size={16}
@@ -358,11 +374,14 @@ export function DiscussionThread({
                       aria-hidden="true"
                       className="animate-spin text-primary"
                     />
-                    {reply.activity ?? 'Leon réfléchit…'}
+                    {reply.status === 'attente'
+                      ? 'Leon termine une réponse commencée plus tôt…'
+                      : (reply.activity ?? 'Leon réfléchit…')}
                   </p>
                 ) : (
                   <p className="mt-2 text-[15px] leading-6 break-words whitespace-pre-wrap text-foreground-2">
-                    <MessageText text={reply.text} citations={[]} onOpen={preview.open} />
+                    {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
+                    {reply.text}
                     <span
                       aria-hidden="true"
                       className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-primary/60 align-[-2px]"
@@ -378,14 +397,50 @@ export function DiscussionThread({
                     type="button"
                     variant="outline"
                     onClick={() => ask(last.content)}
-                    className="h-9 gap-1.5 rounded-lg px-3 text-[15px]"
+                    className={actionClass}
                   >
                     <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
                     Réessayer
                   </Button>
                 }
               >
-                Leon n’a pas pu répondre pour le moment. Votre question est gardée.
+                {reply.questionGardee
+                  ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
+                  : 'Leon n’a pas pu répondre pour le moment.'}
+              </Notice>
+            )}
+            {reply.status === 'session' && (
+              <Notice
+                action={
+                  <Button asChild variant="outline" className={actionClass}>
+                    <Link href="/connexion">
+                      <LogIn size={15} strokeWidth={1.5} aria-hidden="true" />
+                      Se reconnecter
+                    </Link>
+                  </Button>
+                }
+              >
+                Votre session a expiré : la question n’a pas été envoyée. Reconnectez-vous, puis
+                posez-la de nouveau.
+              </Notice>
+            )}
+            {reply.status === 'origine' && (
+              <Notice
+                action={
+                  <Button asChild variant="outline" className={actionClass}>
+                    <a href={`${appOrigin}/discussions/${encodeURIComponent(discussionId)}`}>
+                      Ouvrir à cette adresse
+                    </a>
+                  </Button>
+                }
+              >
+                {`Leon est ouvert ici à une autre adresse que la sienne (${appOrigin}) : la question n’a pas été envoyée.`}
+              </Notice>
+            )}
+            {reply.status === 'non-envoyee' && (
+              <Notice>
+                Leon répondait déjà dans cette discussion : votre question n’a pas été envoyée. Elle
+                vous attend dans la saisie.
               </Notice>
             )}
             {reply.status === 'sans-modele' && <Notice>{NO_MODEL}</Notice>}
@@ -396,7 +451,7 @@ export function DiscussionThread({
                     type="button"
                     variant="outline"
                     onClick={() => ask(last.content)}
-                    className="h-9 gap-1.5 rounded-lg px-3 text-[15px]"
+                    className={actionClass}
                   >
                     <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
                     Demander la réponse
@@ -408,6 +463,8 @@ export function DiscussionThread({
             )}
           </div>
           <Composer
+            value={draft}
+            setValue={setDraft}
             disabled={reply.status === 'sans-modele'}
             busy={busy}
             onSend={(message) => ask(message)}

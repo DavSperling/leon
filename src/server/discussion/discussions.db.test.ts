@@ -143,7 +143,7 @@ describe('les discussions d’un autre', () => {
     const id = await createDiscussion(alice, { question: 'Question privée' });
 
     expect(await startReply(bob, id, 'Je m’invite')).toBeNull();
-    expect(await saveReply(bob, id, { content: 'Réponse', citations: [] })).toBe(false);
+    expect(await saveReply(bob, id, { content: 'Réponse', citations: [] })).toBe('invisible');
     const { rows } = await adminPool.query(
       'select 1 from discussion_messages where discussion_id = $1',
       [id],
@@ -230,21 +230,29 @@ describe('ce que l’app peut changer', () => {
 
 describe('startReply et saveReply', () => {
   it('ajoute la question, puis la réponse et ses citations, et rajeunit la discussion', async () => {
-    const { alice } = await team();
+    const { tenantId, alice } = await team();
+    const ticket = await seedIndexed(alice, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'T',
+      turns: [{ text: 'Le contrat ACME est signé.' }],
+    });
     const id = await createDiscussion(alice, { question: 'Première question' });
     const before = await findDiscussion(alice, id);
 
     const turn = await startReply(alice, id, 'Deuxième question');
     const saved = await saveReply(alice, id, {
       content: 'Réponse [1].',
-      citations: [{ n: 1, sourceId: randomUUID(), passageId: randomUUID(), title: 'T', url: null }],
+      citations: [
+        { n: 1, sourceId: ticket.sourceId, passageId: randomUUID(), title: 'T', url: null },
+      ],
     });
 
     expect(turn?.history).toEqual([
       { role: 'user', content: 'Première question' },
       { role: 'user', content: 'Deuxième question' },
     ]);
-    expect(saved).toBe(true);
+    expect(saved).toBe('gardee');
     const found = await getDiscussion(alice, id);
     expect(found?.messages.map((m) => [m.role, m.content])).toEqual([
       ['user', 'Première question'],
@@ -330,12 +338,106 @@ describe('startReply et saveReply', () => {
     ]);
   });
 
+  // Une réponse répond à la question qui la précède : jamais deux réponses de suite (deux agents lancés pour la
+  // même question, sur deux serveurs ou après un retour sur la page).
+  it('n’écrit pas une seconde réponse à la même question', async () => {
+    const { alice } = await team();
+    const id = await createDiscussion(alice, { question: 'Question' });
+
+    const first = await saveReply(alice, id, { content: 'Réponse', citations: [] });
+    const second = await saveReply(alice, id, { content: 'Doublon', citations: [] });
+
+    expect([first, second]).toEqual(['gardee', 'deja-repondue']);
+    expect((await getDiscussion(alice, id))?.messages.map((m) => m.content)).toEqual([
+      'Question',
+      'Réponse',
+    ]);
+  });
+
+  it('écrites en même temps, une seule réponse et une seule question entrent', async () => {
+    const { alice } = await team();
+    const id = await createDiscussion(alice, { question: 'Question' });
+
+    const saved = await Promise.all(
+      [1, 2, 3].map((n) => saveReply(alice, id, { content: `Réponse ${n}`, citations: [] })),
+    );
+    await Promise.all([1, 2, 3].map(() => startReply(alice, id, 'Suite')));
+
+    expect(saved.toSorted()).toEqual(['deja-repondue', 'deja-repondue', 'gardee']);
+    const { rows } = await adminPool.query<{ role: string }>(
+      'select role from discussion_messages where discussion_id = $1 order by created_at',
+      [id],
+    );
+    expect(rows.map((row) => row.role)).toEqual(['user', 'assistant', 'user']);
+  });
+
   it('rend null pour une discussion inconnue ou un identifiant mal écrit', async () => {
     const { alice } = await team();
 
     expect(await startReply(alice, randomUUID(), 'Question')).toBeNull();
     expect(await startReply(alice, 'pas-un-id', 'Question')).toBeNull();
     expect(await findDiscussion(alice, 'pas-un-id')).toBeNull();
-    expect(await saveReply(alice, 'pas-un-id', { content: 'x', citations: [] })).toBe(false);
+    expect(await saveReply(alice, 'pas-un-id', { content: 'x', citations: [] })).toBe('invisible');
+  });
+});
+
+// Vigilance 3 : une source que l'auteur ne voit plus (part retirée, exclusion, élément supprimé dans l'outil)
+// disparaît aussi des discussions déjà écrites. Le titre et le lien gardés avec la citation ne s'affichent plus.
+describe('une source devenue invisible', () => {
+  // L'accès de la source, de ses tours et de ses passages, comme le recalcule une part retirée (C11).
+  const restrict = async (sourceId: string, acl: string[]) => {
+    for (const table of ['sources', 'turns', 'passages']) {
+      const column = table === 'sources' ? 'id' : 'source_id';
+      await adminPool.query(`update ${table} set acl = $2 where ${column} = $1`, [sourceId, acl]);
+    }
+  };
+
+  async function discussionOnTwoTickets() {
+    const { tenantId, alice, bob } = await team();
+    const kept = await seedIndexed(alice, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket gardé',
+      metadata: { nature: 'ticket', url: 'https://github.com/acme/leon/issues/1' },
+      turns: [{ text: 'Le contrat ACME est signé.' }],
+    });
+    const lost = await seedIndexed(alice, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket retiré',
+      metadata: { nature: 'ticket', url: 'https://github.com/acme/leon/issues/2' },
+      turns: [{ text: 'La relance ACME est prévue.' }],
+    });
+    const id = await createDiscussion(bob, {
+      question: 'ACME ?',
+      seedSourceIds: [kept.sourceId, lost.sourceId],
+    });
+    return { alice, bob, kept, lost, id };
+  }
+
+  it('n’est plus citée, ni dans la réponse ni dans les résultats d’origine', async () => {
+    const { alice, bob, lost, id } = await discussionOnTwoTickets();
+    const seeds = (await getDiscussion(bob, id))?.messages[0]?.citations ?? [];
+    await saveReply(bob, id, { content: 'Signé [1], relance [2].', citations: seeds });
+
+    await restrict(lost.sourceId, [alice.userId]);
+
+    const found = await getDiscussion(bob, id);
+    expect(found?.messages.map((m) => m.citations.map((c) => c.title))).toEqual([
+      ['Ticket gardé'],
+      ['Ticket gardé'],
+    ]);
+    expect(JSON.stringify(found)).not.toContain('Ticket retiré');
+    expect(JSON.stringify(found)).not.toContain(lost.sourceId);
+  });
+
+  // Les résultats joints gardent des numéros qui se suivent : l'agent numérote les sources dans cet ordre.
+  it('n’est plus jointe à la première question envoyée au modèle', async () => {
+    const { bob, kept, lost, id } = await discussionOnTwoTickets();
+
+    await adminPool.query('delete from sources where id = $1', [kept.sourceId]);
+    const turn = await startReply(bob, id, 'ACME ?');
+
+    expect(turn?.seeds.map((seed) => [seed.n, seed.sourceId])).toEqual([[1, lost.sourceId]]);
   });
 });

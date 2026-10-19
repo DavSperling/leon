@@ -342,6 +342,66 @@ describe('POST /api/v1/discussions/:id/messages', () => {
     );
   });
 
+  // Le navigateur envoie toujours `Origin` sur un POST : la page de Leon, à l'adresse de BETTER_AUTH_URL, passe.
+  it('accepte la question de la page, à l’adresse réglée pour Leon', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    agentModel();
+
+    const response = await post(
+      alice,
+      id,
+      { message: 'La clause quetzal ?' },
+      { origin: ORIGIN, 'sec-fetch-site': 'same-origin' },
+    );
+
+    expect(response.status).toBe(200);
+    expect((await discussionEvents(response)).at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+  });
+
+  // On revient sur la page pendant que Leon répond : elle redemande la réponse à la question restée seule.
+  it('rend « en-cours » à une seconde demande pendant une réponse : un seul appel au modèle, une seule réponse', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const calls: number[] = [];
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        calls.push(calls.length);
+        started();
+        await gate;
+        yield { type: 'texte', delta: 'La clause est acceptée.' };
+      },
+    });
+
+    const first = await post(alice, id, { message: 'La clause quetzal ?' });
+    await running;
+    const second = await post(alice, id, { message: 'La clause quetzal ?' });
+    const secondEvents = await discussionEvents(second);
+    release();
+    const firstEvents = await discussionEvents(first);
+
+    expect(second.status).toBe(200);
+    expect(secondEvents).toEqual([{ type: 'en-cours' }]);
+    expect(firstEvents.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(calls).toHaveLength(1);
+    const { rows } = await adminPool.query<{ role: string }>(
+      'select role from discussion_messages where discussion_id = $1 order by created_at',
+      [id],
+    );
+    expect(rows.map((row) => row.role)).toEqual(['user', 'assistant']);
+  });
+
   // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.
   it('répond 404 à Bob dans la discussion d’Alice, sans rien écrire ni appeler le modèle', async () => {
     const { alice, bob } = await setupTeam();

@@ -29,7 +29,7 @@ describe('contrat de la discussion', () => {
 });
 
 describe('parseDiscussionEvent', () => {
-  it('lit les cinq évènements', () => {
+  it('lit les six évènements', () => {
     expect(parseDiscussionEvent('{"type":"texte","delta":"Le contrat"}')).toEqual({
       type: 'texte',
       delta: 'Le contrat',
@@ -47,6 +47,7 @@ describe('parseDiscussionEvent', () => {
       reason: 'limite',
     });
     expect(parseDiscussionEvent('{"type":"indisponible"}')).toEqual({ type: 'indisponible' });
+    expect(parseDiscussionEvent('{"type":"en-cours"}')).toEqual({ type: 'en-cours' });
   });
 
   it('refuse ce qui n’est pas un évènement connu, sans lever', () => {

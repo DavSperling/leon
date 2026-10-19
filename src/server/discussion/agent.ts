@@ -1,4 +1,5 @@
 import {
+  DISCUSSION_TIMEOUT_MS,
   type DiscussionEndReason,
   type DiscussionEvent,
   finalReplyText,
@@ -26,12 +27,18 @@ export type { DiscussionEvent } from '@/lib/discussion-events';
 // Une panne (base, modèle, délai) rend l'évènement « indisponible », qui termine le flux : rien de la réponse
 // n'est gardé, la question reste et peut être reposée. Elle ne se journalise que par logError, sans question,
 // passage ni réponse. Un lecteur qui s'en va interrompt l'appel au modèle, et rien n'est gardé non plus.
+//
+// Une seule réponse à la fois par discussion : une demande qui arrive pendant une réponse (la page quittée puis
+// rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. La garde vit dans
+// ce processus (une seule instance de Leon) ; sur plusieurs, la base refuse toujours une seconde réponse à la même
+// question (saveReply), qui rend alors « en-cours » elle aussi.
 
 // Borne le texte ET la réflexion du modèle (llm.ts) : une réponse de quelques phrases, la réflexion de l'effort
 // « medium » entre deux outils. De la marge, pour ne pas couper une réponse.
 export const DISCUSSION_MAX_TOKENS = 8000;
-// Huit outils et une réponse tiennent largement dans ce délai ; au-delà, l'appel est interrompu.
-export const DISCUSSION_TIMEOUT_MS = 180_000;
+
+// Les discussions où une réponse est en cours, par utilisateur : celle d'un autre ne bloque jamais la sienne.
+const replying = new Set<string>();
 
 export function replyStream(
   ctx: TenantContext,
@@ -45,6 +52,27 @@ export function replyStream(
 }
 
 async function* streamReply(
+  ctx: TenantContext,
+  discussionId: string,
+  message: string,
+  llm: Llm,
+  embedder: Embedder | null,
+): AsyncGenerator<DiscussionEvent> {
+  // Prise avant toute écriture, rendue quand le flux finit, pour toute raison (finally).
+  const key = `${ctx.userId}:${discussionId}`;
+  if (replying.has(key)) {
+    yield { type: 'en-cours' };
+    return;
+  }
+  replying.add(key);
+  try {
+    yield* runReply(ctx, discussionId, message, llm, embedder);
+  } finally {
+    replying.delete(key);
+  }
+}
+
+async function* runReply(
   ctx: TenantContext,
   discussionId: string,
   message: string,
@@ -75,8 +103,9 @@ async function* streamReply(
   });
   const filter = createReferenceFilter(numbering);
 
-  // Le délai interrompt l'appel au modèle (signal), et la lecture n'attend plus rien après lui, même d'un modèle
-  // qui ignorerait le signal. Le lecteur qui s'en va l'interrompt aussi (finally).
+  // Le délai (DISCUSSION_TIMEOUT_MS : huit outils et une réponse y tiennent largement) interrompt l'appel au modèle
+  // (signal), et la lecture n'attend plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui
+  // s'en va l'interrompt aussi (finally).
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISCUSSION_TIMEOUT_MS);
   const deadline = new Promise<never>((_resolve, reject) => {
@@ -135,14 +164,17 @@ async function* streamReply(
 
     const content = finalReplyText(text, reason);
     const citations = reason === 'refus' ? [] : numbering.citations(referencedNumbers(content));
+    let saved: Awaited<ReturnType<typeof saveReply>>;
     try {
-      if (!(await saveReply(ctx, discussionId, { content, citations }))) {
-        yield { type: 'indisponible' };
-        return;
-      }
+      saved = await saveReply(ctx, discussionId, { content, citations });
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'enregistrement' });
       yield { type: 'indisponible' };
+      return;
+    }
+    // Une autre réponse à cette question a été gardée entre-temps (depuis un autre serveur) : c'est elle qui compte.
+    if (saved !== 'gardee') {
+      yield saved === 'deja-repondue' ? { type: 'en-cours' } : { type: 'indisponible' };
       return;
     }
     yield { type: 'citations', items: citations };

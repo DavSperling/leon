@@ -294,3 +294,112 @@ describe('sous le contexte de Bob', () => {
     });
   });
 });
+
+// Un modèle qui attend le feu vert avant de répondre : sa réponse reste en cours tant qu'on ne l'a pas donné.
+function heldModel() {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let started: () => void = () => undefined;
+  const running = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const calls: number[] = [];
+  const llm: Llm = {
+    streamText: () => {
+      throw new Error('non utilisé');
+    },
+    async *runAgent() {
+      calls.push(calls.length);
+      started();
+      await gate;
+      yield text('Réponse.');
+    },
+  };
+  return { llm, calls, running, release };
+}
+
+// Une seule réponse à la fois dans une discussion : celui qui revient sur la page pendant que Leon répond, ou qui
+// redemande, ne lance pas un second agent (un coût doublé, deux réponses gardées).
+describe('une réponse déjà en cours', () => {
+  it('rend « en-cours » à une seconde demande, sans appeler le modèle ni rien écrire', async () => {
+    const { alice } = await setup();
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const model = heldModel();
+
+    const first = collect(reply(alice, id, 'Question', model.llm));
+    await model.running;
+    const again = await collect(reply(alice, id, 'Question', model.llm));
+    const other = await collect(reply(alice, id, 'Autre question', model.llm));
+    model.release();
+
+    expect(again).toEqual([{ type: 'en-cours' }]);
+    expect(other).toEqual([{ type: 'en-cours' }]);
+    expect((await first).at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(model.calls).toHaveLength(1);
+    expect((await getDiscussion(alice, id))?.messages.map((m) => [m.role, m.content])).toEqual([
+      ['user', 'Question'],
+      ['assistant', 'Réponse.'],
+    ]);
+  });
+
+  it('ne gêne ni une autre discussion ni un autre utilisateur', async () => {
+    const { alice, bob } = await setup();
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const elsewhere = await createDiscussion(alice, { question: 'Ailleurs' });
+    const model = heldModel();
+
+    const first = collect(reply(alice, id, 'Question', model.llm));
+    await model.running;
+    const meanwhile = await collect(
+      reply(alice, elsewhere, 'Ailleurs', createFakeLlm({ agent: () => [text('Oui.')] })),
+    );
+    const intruder = await collect(
+      reply(bob, id, 'Je m’invite', createFakeLlm({ agent: () => [text('Non.')] })),
+    );
+    model.release();
+    await first;
+
+    expect(meanwhile.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(intruder).toEqual([{ type: 'indisponible' }]);
+  });
+
+  it('se libère à la fin d’une réponse, après une panne, et quand le lecteur s’en va', async () => {
+    const { alice } = await setup();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const broken: Llm = {
+      streamText: () => {
+        throw new Error('non utilisé');
+      },
+      // biome-ignore lint/correctness/useYield: un modèle en panne avant son premier mot
+      async *runAgent() {
+        throw new LlmError('appel au modèle impossible');
+      },
+    };
+
+    expect(await collect(reply(alice, id, 'Question', broken))).toEqual([{ type: 'indisponible' }]);
+    // Le lecteur s'en va après le premier évènement : rien n'est gardé, la place est libre.
+    const left = reply(alice, id, 'Question', scripted([search('quetzal')], [text('x')]).llm);
+    for await (const event of left ?? []) {
+      expect(event).toEqual({ type: 'outil', name: 'chercher' });
+      break;
+    }
+    const done = await collect(
+      reply(alice, id, 'Question', createFakeLlm({ agent: () => [text('Oui.')] })),
+    );
+    const next = await collect(
+      reply(alice, id, 'Suite', createFakeLlm({ agent: () => [text('Bien.')] })),
+    );
+
+    expect(done.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(next.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect((await getDiscussion(alice, id))?.messages.map((m) => m.content)).toEqual([
+      'Question',
+      'Oui.',
+      'Suite',
+      'Bien.',
+    ]);
+  });
+});

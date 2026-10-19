@@ -49,6 +49,7 @@ export default async function DiscussionPage({ params }: { params: Params }) {
           citations: message.citations,
         }))}
         modelAvailable={getLlm(env) !== null}
+        appOrigin={new URL(env.BETTER_AUTH_URL).origin}
       />
     </div>
   );

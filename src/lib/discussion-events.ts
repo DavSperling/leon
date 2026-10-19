@@ -8,6 +8,10 @@ import { createEventStreamReader } from './event-stream';
 // inconnue, sinon un flux `text/event-stream` d'évènements JSON.
 export const DISCUSSIONS_PATH = '/api/v1/discussions';
 
+// Durée maximale d'une réponse : au-delà, le serveur l'interrompt. La page qui attend une réponse commencée plus
+// tôt (« en-cours ») n'attend pas plus longtemps.
+export const DISCUSSION_TIMEOUT_MS = 180_000;
+
 export function discussionMessagesUrl(discussionId: string): string {
   return `${DISCUSSIONS_PATH}/${encodeURIComponent(discussionId)}/messages`;
 }
@@ -29,13 +33,17 @@ export type DiscussionCitation = {
 export type DiscussionEndReason = 'fini' | 'limite' | 'refus';
 
 // « indisponible » termine le flux : le modèle (ou la recherche) a échoué, rien n'est gardé de la réponse, la
-// question reste dans la discussion et peut être reposée. « citations » arrive juste avant « fin ».
+// question reste dans la discussion et peut être reposée. « citations » arrive juste avant « fin ». « en-cours »
+// est le seul évènement du flux quand Leon répond déjà dans cette discussion (une page quittée puis rouverte, un
+// second onglet) : rien n'est écrit, ni la question ni une réponse, et la page relit la discussion jusqu'à ce que
+// cette réponse y soit.
 export type DiscussionEvent =
   | { type: 'texte'; delta: string }
   | { type: 'outil'; name: string }
   | { type: 'citations'; items: DiscussionCitation[] }
   | { type: 'fin'; reason: DiscussionEndReason }
-  | { type: 'indisponible' };
+  | { type: 'indisponible' }
+  | { type: 'en-cours' };
 
 // Phrases fixes que le serveur garde et que la page affiche à la fin d'une réponse (finalReplyText).
 export const DISCUSSION_REFUSAL = 'Je ne peux pas répondre à cette demande.';
@@ -88,7 +96,7 @@ export function parseDiscussionEvent(data: string): DiscussionEvent | null {
       ? { type, reason: reason as DiscussionEndReason }
       : null;
   }
-  if (type === 'indisponible') return { type };
+  if (type === 'indisponible' || type === 'en-cours') return { type };
   return null;
 }
 

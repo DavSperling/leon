@@ -162,7 +162,23 @@ export async function findDiscussion(
   return withTenant(ctx, (tx) => loadSummary(tx, id));
 }
 
-// La discussion et tous ses messages, dans l'ordre.
+// Les sources que l'auteur voit encore parmi celles des citations (vigilance 3 du plan) : une source retirée,
+// exclue ou supprimée depuis ne garde dans la discussion ni son titre ni son lien. Une requête, sous ses droits.
+async function visibleSourceIds(
+  tx: Tx,
+  ctx: TenantContext,
+  citations: readonly DiscussionCitation[],
+): Promise<Set<string>> {
+  const ids = [...new Set(citations.map((citation) => citation.sourceId))].filter(isUuid);
+  if (ids.length === 0) return new Set();
+  const { rows } = await tx.execute<{ id: string }>(sql`
+    select id from sources
+    where tenant_id = ${ctx.tenantId} and id = any(${textArray(ids)}::uuid[])`);
+  return new Set(rows.map((row) => row.id));
+}
+
+// La discussion et tous ses messages, dans l'ordre. Les citations d'une source que l'auteur ne voit plus sont
+// écartées ; les autres gardent leur numéro, celui du texte de la réponse.
 export async function getDiscussion(
   ctx: TenantContext,
   id: string,
@@ -182,18 +198,34 @@ export async function getDiscussion(
       .from(discussionMessages)
       .where(eq(discussionMessages.discussionId, id))
       .orderBy(asc(discussionMessages.createdAt), asc(discussionMessages.id));
+    const messages = rows.map((row) => ({
+      ...row,
+      citations: parseDiscussionCitations(row.citations),
+    }));
+    const visible = await visibleSourceIds(
+      tx,
+      ctx,
+      messages.flatMap((message) => message.citations),
+    );
     return {
       discussion,
-      messages: rows.map((row) => ({ ...row, citations: parseDiscussionCitations(row.citations) })),
+      messages: messages.map((message) => ({
+        ...message,
+        citations: message.citations.filter((citation) => visible.has(citation.sourceId)),
+      })),
     };
   });
 }
 
-async function loadAcl(tx: Tx, id: string): Promise<string[] | null> {
+// L'accès de la discussion, qu'elle verrouille jusqu'à la fin de la transaction : deux écritures dans la même
+// discussion passent l'une après l'autre, et la seconde voit ce que la première a écrit (ni question ni réponse en
+// double, même depuis deux serveurs). Null pour une discussion invisible.
+async function lockDiscussion(tx: Tx, id: string): Promise<string[] | null> {
   const [row] = await tx
     .select({ acl: discussions.acl })
     .from(discussions)
-    .where(eq(discussions.id, id));
+    .where(eq(discussions.id, id))
+    .for('update');
   return row?.acl ?? null;
 }
 
@@ -209,7 +241,8 @@ const touch = (tx: Tx, id: string) =>
 
 // Avant une réponse : la question entre dans la discussion (sauf si elle y attend déjà sa réponse : une
 // discussion ouverte depuis la barre, une réponse tombée en panne), puis les 20 derniers messages pour le
-// modèle et, tant que la discussion n'a aucune réponse, les résultats d'où elle part.
+// modèle et, tant que la discussion n'a aucune réponse, les résultats d'où elle part que l'auteur voit encore,
+// numérotés de 1 à n dans leur ordre (l'agent les numérote ainsi).
 export async function startReply(
   ctx: TenantContext,
   id: string,
@@ -218,7 +251,7 @@ export async function startReply(
   if (!isUuid(id)) return null;
   const text = cleanQuestion(question);
   return withTenant(ctx, async (tx) => {
-    const acl = await loadAcl(tx, id);
+    const acl = await lockDiscussion(tx, id);
     if (!acl) return null;
     const byId = eq(discussionMessages.discussionId, id);
     const newestFirst = [desc(discussionMessages.createdAt), desc(discussionMessages.id)];
@@ -258,22 +291,38 @@ export async function startReply(
         .where(byId)
         .orderBy(asc(discussionMessages.createdAt), asc(discussionMessages.id))
         .limit(1);
-      seeds = parseDiscussionCitations(first?.citations);
+      const stored = parseDiscussionCitations(first?.citations);
+      const visible = await visibleSourceIds(tx, ctx, stored);
+      seeds = stored
+        .filter((seed) => visible.has(seed.sourceId))
+        .map((seed, index) => ({ ...seed, n: index + 1 }));
     }
     return { history: recent.reverse(), seeds };
   });
 }
 
-// La réponse de l'agent et ses citations. Rend false, sans rien écrire, pour une discussion invisible.
+// 'gardee' : la réponse est écrite ; 'invisible' : la discussion n'est pas à l'auteur ; 'deja-repondue' : le
+// dernier message est déjà une réponse (une autre réponse à la même question a été gardée entre-temps).
+export type SaveReplyResult = 'gardee' | 'invisible' | 'deja-repondue';
+
+// La réponse de l'agent et ses citations, juste après la question à laquelle elle répond : jamais deux réponses
+// de suite. Rien n'est écrit pour une discussion invisible ou déjà répondue.
 export async function saveReply(
   ctx: TenantContext,
   id: string,
   reply: { content: string; citations: DiscussionCitation[] },
-): Promise<boolean> {
-  if (!isUuid(id)) return false;
+): Promise<SaveReplyResult> {
+  if (!isUuid(id)) return 'invisible';
   return withTenant(ctx, async (tx) => {
-    const acl = await loadAcl(tx, id);
-    if (!acl) return false;
+    const acl = await lockDiscussion(tx, id);
+    if (!acl) return 'invisible';
+    const [last] = await tx
+      .select({ role: discussionMessages.role })
+      .from(discussionMessages)
+      .where(eq(discussionMessages.discussionId, id))
+      .orderBy(desc(discussionMessages.createdAt), desc(discussionMessages.id))
+      .limit(1);
+    if (last?.role !== 'user') return 'deja-repondue';
     await tx.insert(discussionMessages).values({
       tenantId: ctx.tenantId,
       discussionId: id,
@@ -284,6 +333,6 @@ export async function saveReply(
       createdAt: nextMessageTime(ctx, id),
     });
     await touch(tx, id);
-    return true;
+    return 'gardee';
   });
 }

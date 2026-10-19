@@ -2,30 +2,41 @@
 
 import { Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { SEARCH_INPUT_ID } from '@/components/search/url-state';
 import { Button } from '@/components/ui/button';
 
-// Entrée de la recherche, présente partout : le bouton et ⌘K mènent à la page « Recherche ».
-// La barre elle-même, avec ses résultats, arrive en T09 (⌘K ouvrira alors /?q=).
+// Entrée de la recherche, présente partout : le bouton et ⌘K mènent à la barre de la page d'accueil (`/?q=`).
+// Si la barre est déjà là, elle reçoit le curseur, son texte sélectionné : on retape sans effacer.
 export function CommandSearch() {
   const router = useRouter();
+
+  const openSearch = useCallback(() => {
+    const input = document.getElementById(SEARCH_INPUT_ID);
+    if (input instanceof HTMLInputElement) {
+      input.focus();
+      input.select();
+    } else {
+      router.push('/?q=');
+    }
+  }, [router]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        router.push('/');
+        openSearch();
       }
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [router]);
+  }, [openSearch]);
 
   return (
     <Button
       variant="outline"
       aria-keyshortcuts="Meta+K Control+K"
-      onClick={() => router.push('/')}
+      onClick={openSearch}
       className="h-10 w-full justify-start rounded-xl bg-card text-[15px] font-normal text-muted-foreground shadow-xs transition-colors"
     >
       <Search size={16} strokeWidth={1.5} aria-hidden="true" />

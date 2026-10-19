@@ -1,11 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { ITEM_NATURES, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { ITEM_NATURES, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
-import { parseQuery } from '@/server/search/parse-query';
 import { searchPassages } from '@/server/search/search';
-import { PAGE_MAX, PAGE_SIZE, type SearchFilters } from '@/server/search/types';
+import { queryWithPerson, readToolFilters } from '@/server/search/tool-filters';
+import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 import { guarded } from './guarded';
 import { SearchOutputSchema } from './output-schemas';
 import { renderSearch, searchStructured } from './render';
@@ -79,53 +79,10 @@ export const SEARCH_FILTERS = ['outil', 'type', 'depuis', 'de'] as const satisfi
 export const SEARCH_DESCRIPTION =
   "Cherche dans toute la mémoire brute de l'entreprise (conversations avec des IA, tickets, pages, réunions, mails, fichiers) par mots-clés et par sens. Rend des sources avec leurs meilleurs passages, leur outil, leur titre, leur date et leur lien. Ne rend que ce que l'utilisateur a le droit de voir. Lire un passage ou une source : fetch.";
 
-// Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
-// guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.
-function clean(value: string | null | undefined): string {
-  return (value ?? '').replace(/[\s\p{Cc}"]+/gu, ' ').trim();
-}
-
 const refusal = (text: string) => ({
   isError: true as const,
   content: [{ type: 'text' as const, text }],
 });
-
-// Les filtres écrits dans les paramètres, lus comme la barre les lit (identifiant ou libellé d'outil, nature au
-// singulier ou au pluriel, durées). Un filtre que Leon ne comprend pas n'est pas ignoré en silence : l'assistant
-// croirait avoir cherché dans un outil, et chercherait partout.
-function readFilters(
-  input: { outil?: string | null; type?: string | null; depuis?: string | null },
-  now: Date,
-): { filters: SearchFilters } | { error: string } {
-  const filters: SearchFilters = {};
-  const outil = clean(input.outil);
-  if (outil !== '') {
-    const tools = parseQuery(`outil:"${outil}"`, now).filters.tools;
-    if (!tools) {
-      return { error: `Outil inconnu : « ${outil} ». Outils connus : ${SOURCE_KINDS.join(', ')}.` };
-    }
-    filters.tools = tools;
-  }
-  const type = clean(input.type);
-  if (type !== '') {
-    const natures = parseQuery(`type:"${type}"`, now).filters.natures;
-    if (!natures) {
-      return { error: `Type inconnu : « ${type} ». Types connus : ${ITEM_NATURES.join(', ')}.` };
-    }
-    filters.natures = natures;
-  }
-  const depuis = clean(input.depuis);
-  if (depuis !== '') {
-    const since = parseQuery(`depuis:"${depuis}"`, now).filters.since;
-    if (!since) {
-      return {
-        error: `Durée inconnue pour depuis : « ${depuis} ». Écrire 7j, 2s, 3m (jours, semaines, mois) ou AAAA-MM-JJ.`,
-      };
-    }
-    filters.since = since;
-  }
-  return { filters };
-}
 
 export function registerSearchTool(
   server: McpServer,
@@ -143,12 +100,10 @@ export function registerSearchTool(
     },
     guarded('search', async ({ query, outil, type, depuis, de, page }) => {
       const now = new Date();
-      const read = readFilters({ outil, type, depuis }, now);
+      const read = readToolFilters({ outil, type, depuis }, now);
       if ('error' in read) return refusal(read.error);
-      // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe. Il se met en tête :
-      // un guillemet non fermé dans la requête ne doit pas avaler le filtre qui le suit.
-      const person = clean(de);
-      const text = `${person === '' ? '' : `de:"${person}" `}${query ?? ''}`;
+      // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe.
+      const text = queryWithPerson(query, de);
       const pageNumber = page ?? 1;
       const result = await searchPassages(ctx, {
         query: text,

@@ -1,5 +1,16 @@
-import { halfvec, integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { organizations } from './auth';
+import { sql } from 'drizzle-orm';
+import {
+  halfvec,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import type { DiscussionCitation } from '@/lib/discussion-events';
+import { organizations, users } from './auth';
 import { sources, turns } from './memory';
 
 // L'index de recherche (0011-passages.sql) : les passages des tours et leurs vecteurs. La colonne générée
@@ -49,3 +60,39 @@ export const passageVectors = pgTable(
   },
   (table) => [primaryKey({ columns: [table.passageId, table.model] })],
 );
+
+// Les discussions avec Leon (0012-discussions.sql, C9 du plan du deuxième jet) : privées à leur auteur
+// (acl = [user_id], contrôlé par la base). Les messages ne se suppriment ni ne se réécrivent ; la discussion ne
+// change que de date (`updated_at`, seule colonne que l'app peut modifier).
+export const discussions = pgTable('discussions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  acl: acl(),
+  createdAt: createdAt(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const discussionMessages = pgTable('discussion_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  // Clé étrangère composée (tenant_id, discussion_id) en SQL.
+  discussionId: uuid('discussion_id')
+    .notNull()
+    .references(() => discussions.id, { onDelete: 'cascade' }),
+  role: text('role', { enum: ['user', 'assistant'] }).notNull(),
+  content: text('content').notNull(),
+  citations: jsonb('citations').$type<DiscussionCitation[]>().notNull().default([]),
+  acl: acl(),
+  // Heure d'écriture de la ligne (clock_timestamp() en SQL) : l'ordre des messages.
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`clock_timestamp()`),
+});

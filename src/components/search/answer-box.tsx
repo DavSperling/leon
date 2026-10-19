@@ -2,6 +2,7 @@
 
 import { Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ContinueInDiscussion } from '@/components/discussion/continue-in-discussion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ANSWER_NOT_ENOUGH, answerUrl, createAnswerEventReader } from '@/lib/answer-events';
 import { cn } from '@/lib/utils';
@@ -9,7 +10,8 @@ import { answerSegments, resultAnchorId } from './answer-text';
 
 // La réponse de l'agent en tête des résultats (T10). Les résultats sont déjà affichés : l'encadré lit ensuite le
 // flux de la route de la réponse, rend les renvois [n] en liens vers les résultats, se masque si aucun modèle
-// n'est branché (204) et dit « Réponse indisponible » si le modèle ou la recherche échoue.
+// n'est branché (204) et dit « Réponse indisponible » si le modèle ou la recherche échoue. Une fois la réponse
+// finie, « Continuer en discussion » (T11) ouvre une discussion qui part de la requête et de ces résultats.
 
 export type AnswerResult = { sourceId: string; title: string | null };
 
@@ -139,10 +141,15 @@ export function AnswerBox({ query, results }: { query: string; results: AnswerRe
           </p>
         )}
       </div>
-      {state.status === 'fini' && !notEnough && (
-        <p className="mt-3 text-[13px] leading-[18px] text-muted-foreground">
-          Rédigée par l’IA à partir des résultats ci-dessous : vérifiez les sources citées.
-        </p>
+      {state.status === 'fini' && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {!notEnough && (
+            <p className="text-[13px] leading-[18px] text-muted-foreground">
+              Rédigée par l’IA à partir des résultats ci-dessous : vérifiez les sources citées.
+            </p>
+          )}
+          <ContinueInDiscussion query={query} sourceIds={resultIds} />
+        </div>
       )}
     </section>
   );

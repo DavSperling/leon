@@ -1,12 +1,13 @@
 'use client';
 
-import { Inbox, type LucideIcon, Plug, Search, Settings } from 'lucide-react';
+import { Inbox, type LucideIcon, MessagesSquare, Plug, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export const SECTIONS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: '/', label: 'Recherche', icon: Search },
+  { href: '/discussions', label: 'Discussions', icon: MessagesSquare },
   { href: '/sources', label: 'Sources', icon: Inbox },
   { href: '/connexions', label: 'Connexions', icon: Plug },
   { href: '/reglages', label: 'Réglages', icon: Settings },

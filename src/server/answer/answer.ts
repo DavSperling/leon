@@ -2,6 +2,7 @@ import { ANSWER_NOT_ENOUGH, type AnswerEvent } from '@/lib/answer-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { type Llm, LlmError } from '@/server/llm/llm';
+import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
 import { searchPassages } from '@/server/search/search';
 import type { SearchPage } from '@/server/search/types';
@@ -61,36 +62,6 @@ function writeCache(key: string, entry: Cached): void {
     if (!oldest.done) cache.delete(oldest.value);
   }
   cache.set(key, entry);
-}
-
-// Un renvoi « [2] » ou une liste « [1, 3] ». Seuls les numéros fournis au modèle restent, un par crochet ; un
-// renvoi qui n'en garde aucun disparaît avec l'espace qui le précède.
-const REFERENCE = /( ?)\[(\d{1,3}(?:\s*[,;]\s*\d{1,3})*)\]/g;
-// Le début d'un renvoi en fin de morceau : on le garde jusqu'au morceau suivant pour le lire en entier.
-const PARTIAL_REFERENCE = / ?\[[\d,;\s]{0,40}$/;
-
-function createReferenceFilter(allowed: ReadonlySet<number>) {
-  let pending = '';
-  const clean = (text: string) =>
-    text.replace(REFERENCE, (_match, space: string, list: string) => {
-      const kept = [...new Set(list.split(/[,;]/).map((n) => Number(n.trim())))].filter((n) =>
-        allowed.has(n),
-      );
-      return kept.length === 0 ? '' : `${space}${kept.map((n) => `[${n}]`).join('')}`;
-    });
-  return {
-    push(delta: string): string {
-      const text = pending + delta;
-      const partial = PARTIAL_REFERENCE.exec(text);
-      pending = partial ? partial[0] : '';
-      return clean(partial ? text.slice(0, partial.index) : text);
-    },
-    flush(): string {
-      const rest = clean(pending);
-      pending = '';
-      return rest;
-    },
-  };
 }
 
 export type AnswerInput = { query: string; resultIds: readonly string[] };

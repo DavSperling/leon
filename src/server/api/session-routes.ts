@@ -1,10 +1,15 @@
 import { Hono, type MiddlewareHandler } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { streamSSE } from 'hono/streaming';
+import { z } from 'zod';
 import { ANSWER_PATH, ANSWER_RESULTS_PARAM, parseAnswerResults } from '@/lib/answer-events';
+import { DISCUSSION_MESSAGE_MAX_CHARS, DISCUSSIONS_PATH } from '@/lib/discussion-events';
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { answerStream } from '@/server/answer/answer';
 import { auth } from '@/server/auth/auth';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { replyStream } from '@/server/discussion/agent';
+import { findDiscussion } from '@/server/discussion/discussions';
 import { getEmbedder } from '@/server/embeddings/registry';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
@@ -45,14 +50,39 @@ export const requireSameOrigin: MiddlewareHandler = async (c, next) => {
   await next();
 };
 
-// Chemin de la route sous /api/v1, où ces routes sont montées (app.ts).
-const ANSWER_ROUTE = ANSWER_PATH.replace(/^\/api\/v1/, '');
+// Chemins des routes sous /api/v1, où ces routes sont montées (app.ts).
+const underV1 = (path: string) => path.replace(/^\/api\/v1/, '');
+const ANSWER_ROUTE = underV1(ANSWER_PATH);
+const DISCUSSION_MESSAGES_ROUTE = `${underV1(DISCUSSIONS_PATH)}/:id/messages`;
 
-export const sessionRoutes = new Hono<SessionEnv>().get(
-  ANSWER_ROUTE,
-  requireSameOrigin,
-  requireSession,
-  (c) => {
+// Un message de la discussion : quelques milliers de caractères, dans un corps borné avant d'être lu.
+const DISCUSSION_BODY_MAX_BYTES = 64 * 1024;
+const DiscussionMessageSchema = z.object({
+  message: z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS),
+});
+
+// Les évènements d'un flux, un par évènement serveur, jusqu'à ce que le lecteur s'en aille.
+function streamEvents(
+  c: Parameters<typeof streamSSE>[0],
+  events: AsyncIterable<unknown>,
+  route: string,
+) {
+  return streamSSE(c, async (stream) => {
+    try {
+      for await (const event of events) {
+        // Le lecteur est parti : on arrête de lire, ce qui interrompt l'appel au modèle.
+        if (stream.aborted) break;
+        await stream.writeSSE({ data: JSON.stringify(event) });
+      }
+    } catch (error) {
+      // Les flux ne lèvent pas ; sans ce filet, Hono écrirait le message de l'erreur dans la console.
+      logError(route, error);
+    }
+  });
+}
+
+export const sessionRoutes = new Hono<SessionEnv>()
+  .get(ANSWER_ROUTE, requireSameOrigin, requireSession, (c) => {
     // La barre tronque déjà la requête à 300 caractères (url-state.ts) : la même requête, la même clé de cache.
     const query = (c.req.query('q') ?? '').slice(0, QUERY_MAX_CHARS);
     if (query.trim() === '') return c.json({ error: 'Requête vide' }, 400);
@@ -66,17 +96,29 @@ export const sessionRoutes = new Hono<SessionEnv>().get(
     );
     // Sans modèle, l'encadré ne s'affiche pas : la recherche marche sans lui.
     if (events === null) return c.body(null, 204);
-    return streamSSE(c, async (stream) => {
-      try {
-        for await (const event of events) {
-          // Le lecteur est parti : on arrête de lire, ce qui interrompt l'appel au modèle.
-          if (stream.aborted) break;
-          await stream.writeSSE({ data: JSON.stringify(event) });
-        }
-      } catch (error) {
-        // answerStream ne lève pas ; sans ce filet, Hono écrirait le message de l'erreur dans la console.
-        logError('answer.route', error);
-      }
-    });
-  },
-);
+    return streamEvents(c, events, 'answer.route');
+  })
+  // Une question dans une discussion de l'utilisateur, et la réponse de l'agent en flux (C8). Une discussion qu'il
+  // ne voit pas (celle d'un autre, inconnue) n'existe pas pour lui : 404, avant tout appel au modèle.
+  .post(
+    DISCUSSION_MESSAGES_ROUTE,
+    requireSameOrigin,
+    requireSession,
+    bodyLimit({
+      maxSize: DISCUSSION_BODY_MAX_BYTES,
+      onError: (c) => c.json({ error: 'Requête trop volumineuse' }, 413),
+    }),
+    async (c) => {
+      const discussion = await findDiscussion(c.var.ctx, c.req.param('id') ?? '');
+      if (!discussion) return c.json({ error: 'Introuvable' }, 404);
+      const parsed = DiscussionMessageSchema.safeParse(await c.req.json().catch(() => undefined));
+      if (!parsed.success) return c.json({ error: 'Message vide ou trop long' }, 400);
+      const events = replyStream(c.var.ctx, discussion.id, parsed.data.message, {
+        llm: getLlm(env),
+        embedder: getEmbedder(env),
+      });
+      // Sans modèle, la page dit qu'aucun modèle n'est branché ; la question n'est pas gardée.
+      if (events === null) return c.body(null, 204);
+      return streamEvents(c, events, 'discussion.route');
+    },
+  );

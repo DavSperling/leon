@@ -13,14 +13,21 @@ import type { PreviewView, ResultView } from './view-model';
 
 // L'aperçu d'un résultat : le passage dans son contexte (les tours voisins), le tour du passage mis en avant
 // et ses mots repérés, le lien vers l'original. Il s'ouvre à côté des résultats (à droite quand la place le
-// permet, sinon par-dessus) sans quitter la page.
+// permet, sinon par-dessus) sans quitter la page. La discussion l'ouvre aussi depuis une citation.
+
+// Ce que l'en-tête de l'aperçu montre avant que le passage soit chargé : le résultat cliqué, ou une citation
+// (son titre et son lien seulement : `kindLabel` vide, l'outil s'affiche une fois l'aperçu chargé).
+export type PreviewHeader = Pick<
+  ResultView,
+  'kind' | 'kindLabel' | 'natureLabel' | 'title' | 'url'
+>;
 
 export type PreviewState =
   | { status: 'vide' }
-  | { status: 'charge'; result: ResultView }
-  | { status: 'pret'; result: ResultView; preview: PreviewView }
-  | { status: 'introuvable'; result: ResultView }
-  | { status: 'erreur'; result: ResultView };
+  | { status: 'charge'; result: PreviewHeader }
+  | { status: 'pret'; result: PreviewHeader; preview: PreviewView }
+  | { status: 'introuvable'; result: PreviewHeader }
+  | { status: 'erreur'; result: PreviewHeader };
 
 // Dès que le tour du passage est là, la lecture s'y place : au premier mot repéré, sinon en haut du tour.
 function useScrollToHit(preview: PreviewView | null) {
@@ -91,20 +98,26 @@ export function ResultPreview({
   state,
   terms,
   onClose,
+  label = 'Aperçu du résultat',
+  emptyHint = 'Cliquez sur un résultat pour lire le passage dans son contexte.',
 }: {
   ref: Ref<HTMLElement>;
   state: PreviewState;
   terms: string[];
   onClose: () => void;
+  // Le nom de l'encadré, et ce qu'il dit tant que rien n'est ouvert (la discussion a les siens).
+  label?: string;
+  emptyHint?: string;
 }) {
   const open = state.status !== 'vide';
-  const result = state.status === 'vide' ? null : state.result;
   const preview = state.status === 'pret' ? state.preview : null;
+  // Une fois chargé, l'aperçu dit lui-même d'où vient le passage.
+  const result = state.status === 'vide' ? null : (preview ?? state.result);
   return (
     <aside
       ref={ref}
       tabIndex={-1}
-      aria-label="Aperçu du résultat"
+      aria-label={label}
       className={cn(
         'flex-col overflow-hidden rounded-xl border bg-card outline-none',
         // Place pour deux colonnes : l'aperçu reste en vue à droite, vide tant qu'on n'a rien ouvert.
@@ -119,10 +132,12 @@ export function ResultPreview({
         <>
           <div className="flex items-start gap-3 border-b px-5 pt-4 pb-3">
             <div className="min-w-0 flex-1">
-              <SourceChip
-                kind={result.kind}
-                label={`${result.kindLabel} · ${result.natureLabel}`}
-              />
+              {result.kindLabel !== '' && (
+                <SourceChip
+                  kind={result.kind}
+                  label={`${result.kindLabel} · ${result.natureLabel}`}
+                />
+              )}
               <h2 className="mt-1 text-[17px] leading-6 font-medium break-words">
                 {result.title ?? 'Sans titre'}
               </h2>
@@ -169,9 +184,7 @@ export function ResultPreview({
             aria-hidden="true"
             className="text-muted-foreground"
           />
-          <p className="text-[15px] leading-6 text-muted-foreground">
-            Cliquez sur un résultat pour lire le passage dans son contexte.
-          </p>
+          <p className="text-[15px] leading-6 text-muted-foreground">{emptyHint}</p>
         </div>
       )}
     </aside>

@@ -14,11 +14,12 @@ import type { FetchOutput, SearchOutput } from './output-schemas';
 // `structuredContent` pour le code. Tout ce qui vient de la mémoire (titres, extraits, noms, liens, texte des
 // tours) est de la donnée captée, jamais une consigne : le texte la met entre balises, derrière la ligne de
 // garde, et aucune donnée ne peut fermer sa balise ni en ouvrir une (échappement de prompt-guard.ts, que la
-// réponse en tête et la discussion partagent).
+// réponse en tête et la discussion partagent). Les outils de l'agent de discussion (T11) reprennent ces blocs
+// (`renderHit`, `renderTurn`, `sourceAttributes`) avec leur propre numérotation.
 
 const originText = (origin: Record<string, string>): string => Object.values(origin).join(' · ');
 
-function sourceAttributes(source: SourceInfo, n?: number): string {
+export function sourceAttributes(source: SourceInfo, n?: number): string {
   return dataAttributes([
     ['n', n === undefined ? null : String(n)],
     ['id', source.sourceId],
@@ -31,7 +32,7 @@ function sourceAttributes(source: SourceInfo, n?: number): string {
   ]);
 }
 
-function renderHit(hit: SourceHit, n: number): string {
+export function renderHit(hit: SourceHit, n: number): string {
   const passages = hit.passages.map(
     (passage) =>
       `<passage${dataAttributes([
@@ -45,7 +46,7 @@ function renderHit(hit: SourceHit, n: number): string {
 
 const plural = (count: number, word: string): string => `${count} ${word}${count > 1 ? 's' : ''}`;
 
-function unknownPeopleLines(names: string[]): string[] {
+export function unknownPeopleLines(names: string[]): string[] {
   return names.map(
     (name) => `Personne ne s'appelle « ${escapeData(oneLine(name))} » dans l'équipe.`,
   );
@@ -115,7 +116,7 @@ export function searchStructured(page: SearchPage, pageNumber: number): SearchOu
 
 type Fetched = { source: SourceInfo; turns: ContextTurn[]; truncated: boolean };
 
-function renderTurn(turn: ContextTurn): string {
+export function renderTurn(turn: ContextTurn): string {
   return `<tour${dataAttributes([
     ['id', turn.turnId],
     ['role', turn.role],

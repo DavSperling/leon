@@ -6,19 +6,26 @@ import {
   type AnswerEvent,
   createAnswerEventReader,
 } from '@/lib/answer-events';
+import {
+  createDiscussionEventReader,
+  DISCUSSION_MESSAGE_MAX_CHARS,
+  type DiscussionEvent,
+  discussionMessagesUrl,
+} from '@/lib/discussion-events';
 import { PAGE_SIZE } from '@/lib/search-limits';
 import { app } from '@/server/api/app';
 import { auth } from '@/server/auth/auth';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
+import { createDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import * as registryModule from '@/server/embeddings/registry';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import * as getLlmModule from '@/server/llm/get-llm';
 import { LlmError } from '@/server/llm/llm';
 import * as searchModule from '@/server/search/search';
-import { adminDb } from '@/test/db';
+import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, seedIndexed } from '@/test/seed-indexed';
 import { TEST_ENV } from '@/test/test-env';
 import { sessionRoutes } from './session-routes';
@@ -266,6 +273,161 @@ describe(`GET ${ANSWER_PATH}`, () => {
 
     await eventsOf(await ask(alice, 'clause quetzal', { results: shown }));
 
+    expect(search).toHaveBeenCalledOnce();
+    expect(search.mock.calls[0]?.[1]).toMatchObject({ query: 'clause quetzal', embedder });
+  });
+});
+
+describe('POST /api/v1/discussions/:id/messages', () => {
+  afterAll(() => adminPool.query('delete from discussions where tenant_id = any($1)', [tenantIds]));
+
+  function post(
+    person: Person | null,
+    id: string,
+    body: unknown,
+    headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' },
+  ) {
+    return app.request(discussionMessagesUrl(id), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(person ? { cookie: person.cookie } : {}),
+        ...headers,
+      },
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    });
+  }
+
+  async function discussionEvents(response: Response): Promise<DiscussionEvent[]> {
+    return createDiscussionEventReader().push(await response.text());
+  }
+
+  const agentModel = () => {
+    const llm = createFakeLlm({
+      agent: (call) =>
+        call === 0
+          ? [{ type: 'outil', name: 'chercher', input: { requete: 'clause quetzal' } }]
+          : [{ type: 'texte', delta: 'La clause est acceptée [1].' }],
+    });
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue(llm);
+    return llm;
+  };
+
+  it('répond 204 quand aucun modèle n’est branché, sans rien écrire', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'Question' });
+
+    const response = await post(alice, id, { message: 'Suite' });
+
+    expect(response.status).toBe(204);
+    expect((await getDiscussion(alice.ctx, id))?.messages).toHaveLength(1);
+  });
+
+  it('rend un flux d’évènements : l’outil, le texte, les citations, puis la fin', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    const llm = agentModel();
+
+    const response = await post(alice, id, { message: 'La clause quetzal ?' });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toMatch(/^text\/event-stream/);
+    const events = await discussionEvents(response);
+    expect(events.map((event) => event.type)).toEqual(['outil', 'texte', 'citations', 'fin']);
+    expect(events[0]).toEqual({ type: 'outil', name: 'chercher' });
+    expect(events.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(llm.calls[0]?.step).toBe('discussion');
+    expect((await getDiscussion(alice.ctx, id))?.messages.at(-1)?.content).toBe(
+      'La clause est acceptée [1].',
+    );
+  });
+
+  // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.
+  it('répond 404 à Bob dans la discussion d’Alice, sans rien écrire ni appeler le modèle', async () => {
+    const { alice, bob } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'Question privée' });
+    const llm = agentModel();
+
+    const response = await post(bob, id, { message: 'Je m’invite' });
+
+    expect(response.status).toBe(404);
+    expect(llm.calls).toHaveLength(0);
+    const { rows } = await adminPool.query(
+      'select content from discussion_messages where discussion_id = $1',
+      [id],
+    );
+    expect(rows).toEqual([{ content: 'Question privée' }]);
+  });
+
+  it('répond 404 à une discussion inconnue ou mal écrite', async () => {
+    const { alice } = await setupTeam();
+    agentModel();
+
+    expect((await post(alice, randomUUID(), { message: 'Question' })).status).toBe(404);
+    expect((await post(alice, 'pas-un-id', { message: 'Question' })).status).toBe(404);
+  });
+
+  it('répond 400 à un message vide, trop long ou illisible', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'Question' });
+    const llm = agentModel();
+
+    const statuses = await Promise.all(
+      [
+        { message: '   ' },
+        { message: 'x'.repeat(DISCUSSION_MESSAGE_MAX_CHARS + 1) },
+        { message: 3 },
+        {},
+        'pas du json',
+      ].map(async (body) => (await post(alice, id, body)).status),
+    );
+
+    expect(statuses).toEqual([400, 400, 400, 400, 400]);
+    expect(llm.calls).toHaveLength(0);
+  });
+
+  it('refuse un corps de plus de 64 Kio', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'Question' });
+    agentModel();
+
+    const response = await post(alice, id, { message: 'x', remplissage: 'y'.repeat(70_000) });
+
+    expect(response.status).toBe(413);
+  });
+
+  // Vigilance 5.
+  it('rend « indisponible » quand le modèle lève', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'Question' });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      // biome-ignore lint/correctness/useYield: un modèle en panne avant son premier mot
+      async *runAgent() {
+        throw new LlmError('appel au modèle impossible');
+      },
+    });
+
+    const response = await post(alice, id, { message: 'Question' });
+
+    expect(await discussionEvents(response)).toEqual([{ type: 'indisponible' }]);
+  });
+
+  // Chaque appelant de searchPassages passe le fournisseur de getEmbedder(env) (C4).
+  it('passe le fournisseur de vecteurs réglé aux recherches de l’agent', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    agentModel();
+    const embedder = createFakeEmbedder();
+    const getEmbedder = vi.spyOn(registryModule, 'getEmbedder').mockReturnValue(embedder);
+    const search = vi.spyOn(searchModule, 'searchPassages');
+
+    await discussionEvents(await post(alice, id, { message: 'La clause quetzal ?' }));
+
+    expect(getEmbedder).toHaveBeenCalled();
     expect(search).toHaveBeenCalledOnce();
     expect(search.mock.calls[0]?.[1]).toMatchObject({ query: 'clause quetzal', embedder });
   });

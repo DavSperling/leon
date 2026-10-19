@@ -51,6 +51,8 @@ export type PreviewTurnView = {
 };
 
 export type PreviewView = {
+  // L'outil, pour son icône (l'aperçu ouvert depuis une citation de la discussion n'a pas de résultat sous la main).
+  kind: SourceKind | 'other';
   kindLabel: string;
   natureLabel: string;
   title: string | null;
@@ -135,6 +137,7 @@ const ROLE_SPEAKERS: Record<ContextTurn['role'], string> = {
 export function toPreviewView(context: { source: SourceInfo; turns: ContextTurn[] }): PreviewView {
   const { source } = context;
   return {
+    kind: knownKind(source.kind),
     ...labelsOf(source),
     title: source.title,
     url: source.url,

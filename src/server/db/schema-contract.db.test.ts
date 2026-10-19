@@ -4,7 +4,7 @@ import { is } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import { adminPool } from '@/test/db';
-import { createTestTenant } from '@/test/fixtures';
+import { createTestTenant, seedSource } from '@/test/fixtures';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
 // Les fichiers de schéma sont lus dans le dossier, sans liste à la main : un nouveau fichier est couvert dès
@@ -67,9 +67,15 @@ const DROPPED_TABLES = [
 describe('schéma Drizzle ↔ migrations', () => {
   it('lit les fichiers du dossier schema et en tire des tables', () => {
     expect(schemaFiles).toEqual(
-      expect.arrayContaining(['api-tokens.ts', 'auth.ts', 'connections.ts', 'memory.ts']),
+      expect.arrayContaining([
+        'api-tokens.ts',
+        'auth.ts',
+        'connections.ts',
+        'memory.ts',
+        'search.ts',
+      ]),
     );
-    expect(tables.length).toBeGreaterThanOrEqual(9);
+    expect(tables.length).toBeGreaterThanOrEqual(11);
   });
 
   it.each(tables.map((table) => [getTableConfig(table).name, table] as const))(
@@ -150,5 +156,85 @@ describe('suppression du tri (0010)', () => {
         [tenantId, paul.userId],
       ),
     ).resolves.toBeDefined();
+  });
+});
+
+describe('passages et vecteurs (0011)', () => {
+  it('les vecteurs sont des halfvec de 1 024 dimensions', async () => {
+    const { rows } = await adminPool.query<{ type: string }>(
+      `select format_type(atttypid, atttypmod) as type from pg_attribute
+        where attrelid = 'public.passage_vectors'::regclass and attname = 'embedding'`,
+    );
+    expect(rows).toEqual([{ type: 'halfvec(1024)' }]);
+  });
+
+  it('le plein texte est une colonne générée, en français et en simple', async () => {
+    const { rows } = await adminPool.query<{ is_generated: string; generation_expression: string }>(
+      `select is_generated, generation_expression from information_schema.columns
+        where table_schema = 'public' and table_name = 'passages' and column_name = 'tsv'`,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.is_generated).toBe('ALWAYS');
+    expect(rows[0]?.generation_expression).toContain("'french'");
+    expect(rows[0]?.generation_expression).toContain("'simple'");
+  });
+
+  it('le plein texte retrouve un mot par sa racine française et un nom tel quel', async () => {
+    const {
+      members: [paul],
+    } = await createTestTenant(['Paul']);
+    if (!paul) throw new Error('membre de test manquant');
+    const { sourceId, turnId } = await seedSource(paul, { text: 'Les contrats OVH sont signés.' });
+    await adminPool.query(
+      `insert into passages (tenant_id, source_id, turn_id, ord, text, char_start, char_end, ts, acl)
+       values ($1, $2, $3, 0, 'Les contrats OVH sont signés.', 0, 29, now(), array[$4::uuid])`,
+      [paul.tenantId, sourceId, turnId, paul.userId],
+    );
+
+    const { rows } = await adminPool.query<{ racine: boolean; nom: boolean }>(
+      `select tsv @@ to_tsquery('french', 'contrat') as racine, tsv @@ to_tsquery('simple', 'ovh') as nom
+         from passages where turn_id = $1`,
+      [turnId],
+    );
+
+    expect(rows).toEqual([{ racine: true, nom: true }]);
+  });
+
+  it('les index de la recherche existent', async () => {
+    const { rows } = await adminPool.query<{ indexdef: string }>(
+      `select indexdef from pg_indexes
+        where schemaname = 'public' and tablename in ('passages', 'passage_vectors')`,
+    );
+    const definitions = rows.map((row) => row.indexdef).join('\n');
+    for (const expected of [
+      'USING gin (tsv)',
+      'USING btree (tenant_id, source_id)',
+      'USING btree (tenant_id, ts DESC)',
+      'USING hnsw (embedding halfvec_cosine_ops)',
+      'USING btree (turn_id, ord)',
+    ]) {
+      expect(definitions, expected).toContain(expected);
+    }
+  });
+
+  it('leon_app lit, écrit et supprime passages et vecteurs, sous la politique tenant_acl', async () => {
+    for (const table of ['passages', 'passage_vectors']) {
+      for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
+        const { rows } = await adminPool.query<{ granted: boolean }>(
+          'select has_table_privilege($1, $2, $3) as granted',
+          ['leon_app', `public.${table}`, privilege],
+        );
+        expect(rows, `${privilege} sur ${table}`).toEqual([{ granted: true }]);
+      }
+    }
+    const { rows } = await adminPool.query<{ tablename: string; policyname: string }>(
+      `select tablename, policyname from pg_policies
+        where schemaname = 'public' and tablename in ('passages', 'passage_vectors')
+        order by tablename`,
+    );
+    expect(rows).toEqual([
+      { tablename: 'passage_vectors', policyname: 'tenant_acl' },
+      { tablename: 'passages', policyname: 'tenant_acl' },
+    ]);
   });
 });

@@ -20,7 +20,8 @@ type AnswerState =
   | { status: 'indisponible' }
   | { status: 'masque' };
 
-function useAnswer(query: string): AnswerState {
+// `url` porte la requête et les résultats affichés : [n] de la réponse renvoie au n-ième de ces résultats.
+function useAnswer(url: string): AnswerState {
   const [state, setState] = useState<AnswerState>({ status: 'charge' });
 
   useEffect(() => {
@@ -28,7 +29,7 @@ function useAnswer(query: string): AnswerState {
     setState({ status: 'charge' });
 
     async function read() {
-      const response = await fetch(answerUrl(query), {
+      const response = await fetch(url, {
         signal: controller.signal,
         headers: { accept: 'text/event-stream' },
         cache: 'no-store',
@@ -61,7 +62,7 @@ function useAnswer(query: string): AnswerState {
       if (!controller.signal.aborted) setState({ status: 'indisponible' });
     });
     return () => controller.abort();
-  }, [query]);
+  }, [url]);
 
   return state;
 }
@@ -87,7 +88,8 @@ function AnswerText({ text, results }: { text: string; results: AnswerResult[] }
 }
 
 export function AnswerBox({ query, results }: { query: string; results: AnswerResult[] }) {
-  const state = useAnswer(query);
+  const resultIds = results.map((result) => result.sourceId);
+  const state = useAnswer(answerUrl(query, resultIds));
   if (state.status === 'masque') return null;
   const busy = state.status === 'charge' || state.status === 'flux';
   const notEnough = state.status === 'fini' && state.text.trim() === ANSWER_NOT_ENOUGH;

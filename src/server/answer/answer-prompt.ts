@@ -1,13 +1,15 @@
 import { ANSWER_NOT_ENOUGH } from '@/lib/answer-events';
-import { stripHighlightMarks } from '@/lib/highlight';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import type { PassageHit, SourceHit } from '@/server/search/types';
 
 // Le prompt de la réponse en tête (T10) : quelques phrases au-dessus des résultats, qui renvoient aux résultats
-// par leur numéro. Le système est fixe (il se met en cache et ne contient rien de capté) ; la recherche et les
-// passages vont dans le message de l'utilisateur, entre balises, derrière la ligne de garde.
+// par leur numéro. Le système est fixe et ne contient rien de capté ; la recherche et les passages vont dans le
+// message de l'utilisateur, entre balises, derrière la ligne de garde. Le système fait environ 400 jetons, sous le
+// minimum du cache de prompt de Haiku 5.5 (512 jetons d'après la skill `claude-api`, à confirmer) : le
+// `cache_control` que pose anthropic-llm.ts n'y fait sans doute rien, ce qui coûte peu à ce tarif. À mesurer à
+// l'essai réel (T31) : `cache_read_input_tokens` sur une deuxième requête identique.
 
 // Contraintes globales du plan : 8 passages, 6 000 caractères de passages, 120 mots de réponse au plus.
 export const ANSWER_MAX_PASSAGES = 8;
@@ -47,40 +49,53 @@ function renderPassage(n: number, hit: SourceHit, passage: PassageHit, text: str
 }
 
 type Picked = { n: number; round: number; hit: SourceHit; passage: PassageHit; block: string };
+type Ranked = { n: number; hit: SourceHit };
 
 // Le meilleur passage de chaque résultat d'abord, dans l'ordre des résultats, puis le deuxième de chacun, et
-// ainsi de suite : avec beaucoup de résultats, les huit premiers ont chacun leur passage ; avec peu, chacun en
-// donne plusieurs. Un passage qui ne tient plus dans la place restante est sauté (un plus court peut tenir).
-function pickPassages(hits: SourceHit[]): Picked[] {
+// ainsi de suite : avec beaucoup de résultats, les premiers ont chacun leur passage ; avec peu, chacun en donne
+// plusieurs. Un passage qui ne tient plus dans la place restante est sauté (un plus court peut tenir), comme un
+// passage dont le texte n'a pas été relu.
+function pickPassages(ranked: Ranked[], texts: ReadonlyMap<string, string>): Picked[] {
   const picked: Picked[] = [];
   let used = 0;
-  const rounds = Math.max(0, ...hits.map((hit) => hit.passages.length));
+  const rounds = Math.max(0, ...ranked.map(({ hit }) => hit.passages.length));
   for (let round = 0; round < rounds; round++) {
-    for (const [index, hit] of hits.entries()) {
+    for (const { n, hit } of ranked) {
       if (picked.length >= ANSWER_MAX_PASSAGES) return picked;
       const passage = hit.passages[round];
       if (!passage) continue;
-      const text = stripHighlightMarks(passage.snippet).trim();
+      const text = texts.get(passage.passageId)?.trim() ?? '';
       if (text === '') continue;
-      const block = renderPassage(index + 1, hit, passage, text);
+      const block = renderPassage(n, hit, passage, text);
       // Les blocs sont joints par un retour à la ligne.
       const cost = block.length + (picked.length > 0 ? 1 : 0);
       if (used + cost > ANSWER_CONTEXT_MAX_CHARS) continue;
       used += cost;
-      picked.push({ n: index + 1, round, hit, passage, block });
+      picked.push({ n, round, hit, passage, block });
     }
   }
   return picked;
 }
 
-// `n` est le rang du résultat sur la première page (1 pour le premier) : l'encadré relie [n] au n-ième
-// résultat. Plusieurs passages d'un même résultat partagent son numéro ; `numbered` les liste tous, dans
-// l'ordre du prompt.
+// `resultIds` : les sources affichées sur la page, dans leur ordre ; `n` est le rang d'un résultat dans cette liste
+// (1 pour le premier), et l'encadré relie [n] au n-ième résultat. La route refait la recherche (`hits`, dans un
+// ordre qui peut différer) : seuls ses résultats affichés sur la page donnent des passages. `texts` : le texte
+// entier des passages, relu sous les droits du lecteur (passage-texts.ts) ; un passage absent est laissé de côté.
+// Plusieurs passages d'un même résultat partagent son numéro ; `numbered` les liste tous, dans l'ordre du prompt.
 export function buildAnswerPrompt(
   query: string,
-  hits: SourceHit[],
+  input: {
+    resultIds: readonly string[];
+    hits: readonly SourceHit[];
+    texts: ReadonlyMap<string, string>;
+  },
 ): { system: string; messages: ChatMessage[]; numbered: NumberedPassage[] } {
-  const picked = pickPassages(hits).sort((a, b) => a.n - b.n || a.round - b.round);
+  const found = new Map(input.hits.map((hit) => [hit.sourceId, hit]));
+  const ranked = input.resultIds.flatMap((sourceId, index) => {
+    const hit = found.get(sourceId);
+    return hit ? [{ n: index + 1, hit }] : [];
+  });
+  const picked = pickPassages(ranked, input.texts).sort((a, b) => a.n - b.n || a.round - b.round);
   const content = [
     `Recherche de l'utilisateur : <recherche>${escapeData(oneLine(query))}</recherche>`,
     '',

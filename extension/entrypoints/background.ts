@@ -7,6 +7,7 @@ import { countPending, flushOutbox } from '../lib/outbox';
 import {
   type CaptureStatus,
   canCapture,
+  hasConsent,
   loadSettings,
   SETTINGS_KEY,
   saveStatus,
@@ -54,7 +55,8 @@ function enqueueTask(task: () => Promise<void>): void {
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(() => {
     enqueueTask(async () => {
-      if ((await loadSettings(store)).consentAt === null) await browser.runtime.openOptionsPage();
+      // À l'installation comme à la mise à jour : sans accord sur le texte actuel, l'écran de consentement s'ouvre.
+      if (!hasConsent(await loadSettings(store))) await browser.runtime.openOptionsPage();
     });
   });
 

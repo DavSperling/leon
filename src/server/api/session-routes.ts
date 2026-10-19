@@ -1,6 +1,6 @@
 import { Hono, type MiddlewareHandler } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { ANSWER_PATH } from '@/lib/answer-events';
+import { ANSWER_PATH, ANSWER_RESULTS_PARAM, parseAnswerResults } from '@/lib/answer-events';
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { answerStream } from '@/server/answer/answer';
 import { auth } from '@/server/auth/auth';
@@ -56,10 +56,14 @@ export const sessionRoutes = new Hono<SessionEnv>().get(
     // La barre tronque déjà la requête à 300 caractères (url-state.ts) : la même requête, la même clé de cache.
     const query = (c.req.query('q') ?? '').slice(0, QUERY_MAX_CHARS);
     if (query.trim() === '') return c.json({ error: 'Requête vide' }, 400);
-    const events = answerStream(c.var.ctx, query, {
-      llm: getLlm(env),
-      embedder: getEmbedder(env),
-    });
+    // Les résultats affichés sur la page, dans leur ordre : [n] de la réponse désigne le n-ième.
+    const resultIds = parseAnswerResults(c.req.query(ANSWER_RESULTS_PARAM));
+    if (resultIds === null) return c.json({ error: 'Liste des résultats invalide' }, 400);
+    const events = answerStream(
+      c.var.ctx,
+      { query, resultIds },
+      { llm: getLlm(env), embedder: getEmbedder(env) },
+    );
     // Sans modèle, l'encadré ne s'affiche pas : la recherche marche sans lui.
     if (events === null) return c.body(null, 204);
     return streamSSE(c, async (stream) => {

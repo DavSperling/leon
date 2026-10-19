@@ -2,6 +2,7 @@ import { browser } from '#imports';
 import { browserStore } from '../../lib/browser-store';
 import {
   type CaptureStatus,
+  hasConsent,
   loadSettings,
   loadStatus,
   type Settings,
@@ -44,7 +45,7 @@ function formatAgo(iso: string | undefined): string {
 
 function displayFor(settings: Settings, status: CaptureStatus): Display {
   if (settings.paused) return { label: '❚❚ En pause', tone: 'info' };
-  if (settings.consentAt === null || settings.token === null) {
+  if (!hasConsent(settings) || settings.token === null) {
     return CONNECTION_DISPLAYS.not_configured;
   }
   return CONNECTION_DISPLAYS[status.connection];

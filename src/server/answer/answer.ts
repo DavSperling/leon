@@ -6,12 +6,18 @@ import { logError } from '@/server/log';
 import { searchPassages } from '@/server/search/search';
 import type { SearchPage } from '@/server/search/types';
 import { buildAnswerPrompt } from './answer-prompt';
+import { readPassageTexts } from './passage-texts';
 
 export type { AnswerEvent } from '@/lib/answer-events';
 
 // La réponse en tête (T10) : la recherche de la page, sous les droits du lecteur, puis quelques phrases du modèle
 // qui renvoient aux résultats par leur numéro, en flux. Elle ne retarde jamais les résultats : la page les
 // affiche d'abord, l'encadré lit ce flux ensuite (route de session-routes.ts).
+//
+// La page et la route font chacune leur recherche, et le classement peut changer entre les deux (une source
+// ingérée entre-temps, le fournisseur de vecteurs lent d'un seul côté). L'encadré donne donc la liste des
+// résultats affichés (`resultIds`) : la numérotation la suit, et seuls ces résultats, retrouvés par la recherche
+// de la route sous les droits du lecteur, donnent des passages au modèle.
 //
 // Une panne (recherche, modèle, délai dépassé) rend l'évènement « indisponible », qui termine le flux : le texte
 // déjà rendu ne vaut plus rien. Elle ne se journalise que par logError, sans requête, passage ni réponse.
@@ -87,22 +93,44 @@ function createReferenceFilter(allowed: ReadonlySet<number>) {
   };
 }
 
+export type AnswerInput = { query: string; resultIds: readonly string[] };
+
 export function answerStream(
   ctx: TenantContext,
-  query: string,
+  input: AnswerInput,
   deps: { llm: Llm | null; embedder: Embedder | null; now?: Date },
 ): AsyncIterable<AnswerEvent> | null {
   const { llm } = deps;
   if (llm === null) return null;
-  return streamAnswer(ctx, query, llm, deps);
+  return streamAnswer(ctx, input, llm, deps);
+}
+
+// La première page de la recherche, et le texte entier des passages de ses résultats affichés sur la page.
+async function gather(
+  ctx: TenantContext,
+  input: AnswerInput,
+  deps: { embedder: Embedder | null; now: Date },
+): Promise<{ page: SearchPage; texts: Map<string, string> }> {
+  const page = await searchPassages(ctx, {
+    query: input.query,
+    page: 1,
+    embedder: deps.embedder,
+    now: deps.now,
+  });
+  const shown = new Set(input.resultIds);
+  const passageIds = page.hits
+    .filter((hit) => shown.has(hit.sourceId))
+    .flatMap((hit) => hit.passages.map((passage) => passage.passageId));
+  return { page, texts: await readPassageTexts(ctx, passageIds) };
 }
 
 async function* streamAnswer(
   ctx: TenantContext,
-  query: string,
+  input: AnswerInput,
   llm: Llm,
   deps: { embedder: Embedder | null; now?: Date },
 ): AsyncGenerator<AnswerEvent> {
+  const { query } = input;
   const now = deps.now ?? new Date();
   // Le délai couvre la recherche et le modèle. Il interrompt l'appel au modèle (signal), et la lecture n'attend
   // plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui s'en va l'interrompt aussi.
@@ -117,19 +145,20 @@ async function* streamAnswer(
   deadline.catch(() => undefined);
   let reading: AsyncIterator<string> | null = null;
   try {
-    let page: SearchPage;
+    let found: Awaited<ReturnType<typeof gather>>;
     try {
-      page = await Promise.race([
-        searchPassages(ctx, { query, page: 1, embedder: deps.embedder, now }),
-        deadline,
-      ]);
+      found = await Promise.race([gather(ctx, input, { embedder: deps.embedder, now }), deadline]);
     } catch (error) {
       logError('answer.indisponible', error, { etape: 'recherche' });
       yield { type: 'indisponible' };
       return;
     }
 
-    const prompt = buildAnswerPrompt(query, page.hits);
+    const prompt = buildAnswerPrompt(query, {
+      resultIds: input.resultIds,
+      hits: found.page.hits,
+      texts: found.texts,
+    });
     if (prompt.numbered.length === 0) {
       yield { type: 'texte', delta: ANSWER_NOT_ENOUGH };
       yield { type: 'fin' };

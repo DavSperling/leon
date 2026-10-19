@@ -2,10 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   ANSWER_NOT_ENOUGH,
   ANSWER_PATH,
+  ANSWER_RESULTS_PARAM,
   answerUrl,
   createAnswerEventReader,
   parseAnswerEvent,
+  parseAnswerResults,
 } from './answer-events';
+import { PAGE_SIZE } from './search-limits';
+
+const ID_A = '0b6c1f0e-8a52-4c0e-9d8e-3f1b2a4c5d6e';
+const ID_B = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+const ids = (count: number) =>
+  Array.from(
+    { length: count },
+    (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+  );
 
 describe('contrat de la réponse en tête', () => {
   it('sert la route de C8 et la phrase exacte du « pas assez »', () => {
@@ -13,8 +24,37 @@ describe('contrat de la réponse en tête', () => {
     expect(ANSWER_NOT_ENOUGH).toBe('Les résultats ne suffisent pas pour répondre.');
   });
 
-  it('met la requête dans l’adresse, encodée', () => {
-    expect(answerUrl('contrat & "OVH"')).toBe('/api/v1/recherche/reponse?q=contrat+%26+%22OVH%22');
+  it('met dans l’adresse la requête, encodée, et les résultats de la page dans leur ordre', () => {
+    expect(ANSWER_RESULTS_PARAM).toBe('r');
+    expect(answerUrl('contrat & "OVH"', [ID_B, ID_A])).toBe(
+      `/api/v1/recherche/reponse?q=contrat+%26+%22OVH%22&r=${ID_B}%2C${ID_A}`,
+    );
+  });
+});
+
+// [n] de la réponse renvoie au n-ième résultat affiché : la page donne à la route la liste de ses résultats.
+describe('parseAnswerResults', () => {
+  it('rend les identifiants dans l’ordre de la page', () => {
+    expect(parseAnswerResults(`${ID_B},${ID_A}`)).toEqual([ID_B, ID_A]);
+    // Aller-retour par l'adresse que l'encadré appelle.
+    const sent = new URL(answerUrl('x', [ID_A, ID_B]), 'https://leon.test').searchParams;
+    expect(parseAnswerResults(sent.get(ANSWER_RESULTS_PARAM) ?? undefined)).toEqual([ID_A, ID_B]);
+    // En minuscules, comme les rend la base : la route les compare aux résultats de sa recherche.
+    expect(parseAnswerResults(ID_A.toUpperCase())).toEqual([ID_A]);
+  });
+
+  it(`accepte ${PAGE_SIZE} résultats, la taille d’une page, et pas plus`, () => {
+    expect(parseAnswerResults(ids(PAGE_SIZE).join(','))).toEqual(ids(PAGE_SIZE));
+    expect(parseAnswerResults(ids(PAGE_SIZE + 1).join(','))).toBeNull();
+  });
+
+  it('refuse une liste absente, vide, mal écrite ou qui répète un résultat', () => {
+    expect(parseAnswerResults(undefined)).toBeNull();
+    expect(parseAnswerResults('')).toBeNull();
+    expect(parseAnswerResults(`${ID_A},`)).toBeNull();
+    expect(parseAnswerResults(`${ID_A},pas-un-identifiant`)).toBeNull();
+    expect(parseAnswerResults(`${ID_A}' or 1=1`)).toBeNull();
+    expect(parseAnswerResults(`${ID_A},${ID_A}`)).toBeNull();
   });
 });
 

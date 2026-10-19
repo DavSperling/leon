@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
-import { ANSWER_PATH, type AnswerEvent, createAnswerEventReader } from '@/lib/answer-events';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  ANSWER_PATH,
+  ANSWER_RESULTS_PARAM,
+  type AnswerEvent,
+  createAnswerEventReader,
+} from '@/lib/answer-events';
+import { PAGE_SIZE } from '@/lib/search-limits';
 import { app } from '@/server/api/app';
 import { auth } from '@/server/auth/auth';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
@@ -15,6 +21,7 @@ import * as searchModule from '@/server/search/search';
 import { adminDb } from '@/test/db';
 import { dropTeams, seedIndexed } from '@/test/seed-indexed';
 import { TEST_ENV } from '@/test/test-env';
+import { sessionRoutes } from './session-routes';
 
 // La route de la réponse en tête (C8) : session Better Auth, même origine, flux d'évènements.
 
@@ -60,13 +67,21 @@ async function signUp(name: string, tenantId?: string): Promise<Person> {
   return { ctx, cookie: headers.get('set-cookie')?.split(';')[0] ?? '' };
 }
 
+// La question de l'encadré : la requête et les résultats affichés sur la page (`results`, une source inconnue par
+// défaut ; `null` pour n'en envoyer aucun). Par défaut, l'en-tête d'un appel du même site.
 function ask(
   person: Person | null,
   q: string | null,
-  headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' },
+  options: { results?: string[] | string | null; headers?: Record<string, string> } = {},
 ) {
-  const query = q === null ? '' : `?${new URLSearchParams({ q }).toString()}`;
-  return app.request(`${ANSWER_PATH}${query}`, {
+  const params = new URLSearchParams();
+  if (q !== null) params.set('q', q);
+  const results = options.results === undefined ? [randomUUID()] : options.results;
+  if (results !== null) {
+    params.set(ANSWER_RESULTS_PARAM, Array.isArray(results) ? results.join(',') : results);
+  }
+  const headers = options.headers ?? { 'sec-fetch-site': 'same-origin' };
+  return app.request(`${ANSWER_PATH}?${params.toString()}`, {
     headers: { ...(person ? { cookie: person.cookie } : {}), ...headers },
   });
 }
@@ -76,21 +91,22 @@ async function eventsOf(response: Response): Promise<AnswerEvent[]> {
 }
 
 // Alice et Bob dans une équipe : un ticket d'équipe et une conversation privée d'Alice, qui partagent des mots.
+// `shown` : les deux sources, comme la page d'Alice les affiche.
 async function setupTeam() {
   const alice = await signUp('Alice');
   const bob = await signUp('Bob', alice.ctx.tenantId);
-  await seedIndexed(alice.ctx, {
+  const conversation = await seedIndexed(alice.ctx, {
     kind: 'claude_ai',
     title: 'Conversation privée',
     turns: [{ text: 'Note personnelle : la clause pénalité quetzal reste entre nous.' }],
   });
-  await seedIndexed(alice.ctx, {
+  const ticket = await seedIndexed(alice.ctx, {
     kind: 'github',
     acl: [alice.ctx.tenantId],
     title: 'Ticket quetzal',
     turns: [{ text: 'Le fournisseur quetzal accepte la clause de pénalité.' }],
   });
-  return { alice, bob };
+  return { alice, bob, shown: [ticket.sourceId, conversation.sourceId] };
 }
 
 const fakeModel = (texts = ['La clause ', 'est acceptée [1].']) => {
@@ -110,10 +126,10 @@ describe(`GET ${ANSWER_PATH}`, () => {
   });
 
   it('rend un flux d’évènements : le texte, puis la fin', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     const llm = fakeModel();
 
-    const response = await ask(alice, 'clause quetzal');
+    const response = await ask(alice, 'clause quetzal', { results: shown });
 
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toMatch(/^text\/event-stream/);
@@ -141,10 +157,10 @@ describe(`GET ${ANSWER_PATH}`, () => {
     const { alice } = await setupTeam();
     const llm = fakeModel();
 
-    const foreign = await ask(alice, 'clause', { origin: 'https://evil.test' });
-    const nullOrigin = await ask(alice, 'clause', { origin: 'null' });
-    const crossSite = await ask(alice, 'clause', { 'sec-fetch-site': 'cross-site' });
-    const sameSite = await ask(alice, 'clause', { 'sec-fetch-site': 'same-site' });
+    const foreign = await ask(alice, 'clause', { headers: { origin: 'https://evil.test' } });
+    const nullOrigin = await ask(alice, 'clause', { headers: { origin: 'null' } });
+    const crossSite = await ask(alice, 'clause', { headers: { 'sec-fetch-site': 'cross-site' } });
+    const sameSite = await ask(alice, 'clause', { headers: { 'sec-fetch-site': 'same-site' } });
 
     expect([foreign.status, nullOrigin.status, crossSite.status, sameSite.status]).toEqual([
       403, 403, 403, 403,
@@ -153,33 +169,50 @@ describe(`GET ${ANSWER_PATH}`, () => {
   });
 
   it('accepte la même origine, et une requête sans en-tête d’origine (GET du même site)', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     fakeModel();
 
     const sameOrigin = await ask(alice, 'clause quetzal', {
-      origin: ORIGIN,
-      'sec-fetch-site': 'same-origin',
+      results: shown,
+      headers: { origin: ORIGIN, 'sec-fetch-site': 'same-origin' },
     });
-    const bare = await ask(alice, 'clause quetzal', {});
+    const bare = await ask(alice, 'clause quetzal', { results: shown, headers: {} });
 
     expect([sameOrigin.status, bare.status]).toEqual([200, 200]);
   });
 
   it('répond 400 sans requête', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     const llm = fakeModel();
 
-    expect((await ask(alice, null)).status).toBe(400);
-    expect((await ask(alice, '   ')).status).toBe(400);
+    expect((await ask(alice, null, { results: shown })).status).toBe(400);
+    expect((await ask(alice, '   ', { results: shown })).status).toBe(400);
+    expect(llm.calls).toHaveLength(0);
+  });
+
+  // [n] renvoie au n-ième résultat affiché : sans la liste de la page, la route ne saurait pas numéroter.
+  it('répond 400 sans la liste des résultats de la page, ou avec une liste invalide', async () => {
+    const { alice, shown } = await setupTeam();
+    const llm = fakeModel();
+    const tooMany = Array.from({ length: PAGE_SIZE + 1 }, () => randomUUID());
+
+    const statuses = await Promise.all(
+      [null, '', 'pas-un-identifiant', `${shown[0]},${shown[0]}`, tooMany].map(
+        async (results) => (await ask(alice, 'clause quetzal', { results })).status,
+      ),
+    );
+
+    expect(statuses).toEqual([400, 400, 400, 400, 400]);
     expect(llm.calls).toHaveLength(0);
   });
 
   // Vigilance 4 : la réponse ne voit que ce que voit le lecteur.
-  it('n’envoie au modèle, pour Bob, aucun passage de la conversation privée d’Alice', async () => {
-    const { bob } = await setupTeam();
+  // La liste des résultats vient du navigateur : y nommer une source d'Alice n'en donne rien à Bob.
+  it('n’envoie au modèle, pour Bob, aucun passage de la conversation privée d’Alice, même nommée dans la liste', async () => {
+    const { bob, shown } = await setupTeam();
     const llm = fakeModel();
 
-    await eventsOf(await ask(bob, 'clause pénalité quetzal'));
+    await eventsOf(await ask(bob, 'clause pénalité quetzal', { results: shown }));
 
     const prompt = JSON.stringify(llm.calls);
     expect(llm.calls).toHaveLength(1);
@@ -190,7 +223,7 @@ describe(`GET ${ANSWER_PATH}`, () => {
 
   // Vigilance 5.
   it('rend « indisponible » puis ferme le flux quand le modèle lève', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
       // biome-ignore lint/correctness/useYield: un modèle en panne avant son premier mot
@@ -202,18 +235,18 @@ describe(`GET ${ANSWER_PATH}`, () => {
       },
     });
 
-    const response = await ask(alice, 'clause quetzal');
+    const response = await ask(alice, 'clause quetzal', { results: shown });
 
     expect(response.status).toBe(200);
     expect(await eventsOf(response)).toEqual([{ type: 'indisponible' }]);
   });
 
   it('la même requête deux fois en 10 minutes : un seul appel au modèle', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     const llm = fakeModel();
 
-    const first = await eventsOf(await ask(alice, 'clause quetzal'));
-    const second = await eventsOf(await ask(alice, 'Clause  quetzal'));
+    const first = await eventsOf(await ask(alice, 'clause quetzal', { results: shown }));
+    const second = await eventsOf(await ask(alice, 'Clause  quetzal', { results: shown }));
 
     expect(llm.calls).toHaveLength(1);
     expect(first.at(-1)).toEqual({ type: 'fin' });
@@ -225,15 +258,59 @@ describe(`GET ${ANSWER_PATH}`, () => {
 
   // Chaque appelant de searchPassages passe le fournisseur de getEmbedder(env) (C4).
   it('passe le fournisseur de vecteurs réglé à la recherche', async () => {
-    const { alice } = await setupTeam();
+    const { alice, shown } = await setupTeam();
     fakeModel();
     const embedder = createFakeEmbedder();
     vi.spyOn(registryModule, 'getEmbedder').mockReturnValue(embedder);
     const search = vi.spyOn(searchModule, 'searchPassages');
 
-    await eventsOf(await ask(alice, 'clause quetzal'));
+    await eventsOf(await ask(alice, 'clause quetzal', { results: shown }));
 
     expect(search).toHaveBeenCalledOnce();
     expect(search.mock.calls[0]?.[1]).toMatchObject({ query: 'clause quetzal', embedder });
+  });
+});
+
+// Chaque route de session (la réponse en tête, puis la discussion en T11) pose ses deux contrôles : la session et
+// la même origine. Une route ajoutée sans l'un d'eux fait échouer l'un de ces tests, quel que soit leur ordre.
+describe('chaque route de session', () => {
+  // Montées sous /api/v1 par app.ts.
+  const routes = [
+    ...new Set(sessionRoutes.routes.map((route) => `${route.method} /api/v1${route.path}`)),
+  ];
+  let alice: Person;
+  beforeAll(async () => {
+    alice = await signUp('Alice');
+  });
+
+  function call(route: string, headers: Record<string, string>) {
+    const [method = 'GET', path = ''] = route.split(' ');
+    const withBody = method !== 'GET' && method !== 'HEAD';
+    return app.request(
+      path.replace(/:[^/]+/g, () => randomUUID()),
+      {
+        method,
+        headers: { ...headers, ...(withBody ? { 'content-type': 'application/json' } : {}) },
+        body: withBody ? '{}' : undefined,
+      },
+    );
+  }
+
+  it('sont servies là où app.ts les monte', () => {
+    const served = new Set(app.routes.map((route) => `${route.method} ${route.path}`));
+    expect(routes.length).toBeGreaterThan(0);
+    for (const route of routes) expect(served).toContain(route);
+  });
+
+  it.each(routes)('%s répond 401 sans session', async (route) => {
+    fakeModel();
+    expect((await call(route, { 'sec-fetch-site': 'same-origin' })).status).toBe(401);
+  });
+
+  it.each(routes)('%s répond 403 à une origine étrangère, même avec une session', async (route) => {
+    const llm = fakeModel();
+    const response = await call(route, { cookie: alice.cookie, origin: 'https://evil.test' });
+    expect(response.status).toBe(403);
+    expect(llm.calls).toHaveLength(0);
   });
 });

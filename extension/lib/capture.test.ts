@@ -3,7 +3,7 @@ import { recordExchange, relayIfAllowed } from './capture';
 import type { CapturedExchange, RuntimeMessage } from './exchange';
 import { createMemoryStore } from './memory-store';
 import { countPending } from './outbox';
-import { loadStatus, saveSettings } from './settings';
+import { CONSENT_VERSION, loadStatus, saveSettings } from './settings';
 
 const exchange: CapturedExchange = {
   site: 'claude_ai',
@@ -13,10 +13,11 @@ const exchange: CapturedExchange = {
   assistant: { messageId: 'a-1', text: 'Bonjour !', ts: '2026-10-13T09:30:00.000Z' },
 };
 const message: RuntimeMessage = { type: 'leon/exchange', exchange };
-const CONSENT = { consentAt: '2026-10-13T09:00:00.000Z' };
+const CONSENT = { consentAt: '2026-10-13T09:00:00.000Z', consentVersion: CONSENT_VERSION };
 
 const refusals = [
   ['sans consentement', {}],
+  ['avec un accord sur un texte plus ancien', { consentAt: CONSENT.consentAt }],
   ['en pause', { ...CONSENT, paused: true }],
   ['avec le site coupé', { ...CONSENT, sites: { claude_ai: false, chatgpt: true } }],
 ] as const;

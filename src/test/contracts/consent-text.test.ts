@@ -5,6 +5,8 @@ import { readText } from './files';
 // (extraction de faits, file « sujets sensibles ») est supprimé pour de bon : le texte ne doit plus le promettre.
 // La réponse en tête (T10) et la discussion (T11) envoient des passages captés au fournisseur du modèle d'IA pour
 // répondre : l'écran le dit, et dit que cela n'arrive que pour les questions de l'utilisateur lui-même.
+// Le texte est lié à CONSENT_VERSION (extension/lib/consent-version.test.ts) : le changer redemande l'accord de
+// ceux qui avaient accepté l'ancien.
 const OPTIONS_PAGE = 'extension/entrypoints/options/index.html';
 
 function consentSection(): string {

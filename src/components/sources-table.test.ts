@@ -41,7 +41,7 @@ describe('channelLine', () => {
 describe('pipelineStatus', () => {
   const run = (status: 'queued' | 'running' | 'done' | 'failed') => ({
     status,
-    step: 'triage' as const,
+    step: 'index' as const,
     updatedAt: NOW,
   });
 
@@ -60,11 +60,7 @@ describe('pipelineStatus', () => {
 });
 
 describe('failureMessage', () => {
-  it.each([
-    ['triage', "Échec à l'étape Tri."],
-    ['extraction', "Échec à l'étape Extraction."],
-    ['placement', "Échec à l'étape Rangement."],
-  ] as const)('nomme l’étape %s sans détail technique', (step, message) => {
-    expect(failureMessage(step)).toBe(message);
+  it('dit que l’indexation a échoué, sans détail technique', () => {
+    expect(failureMessage()).toBe('Échec de l’indexation.');
   });
 });

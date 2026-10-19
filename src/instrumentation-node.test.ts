@@ -11,13 +11,7 @@ vi.mock('@/server/connectors/worker', () => ({
     mocks.order.push('connecteurs');
   }),
 }));
-vi.mock('@/server/pipeline/worker', () => ({
-  startPipelineWorker: vi.fn(async () => {
-    mocks.order.push('pipeline');
-  }),
-}));
 vi.mock('@/server/connectors/oauth-env', () => ({ warnIncompleteOAuthPairs: vi.fn() }));
-vi.mock('@/server/llm/anthropic-llm', () => ({ createAnthropicLlm: vi.fn(() => ({})) }));
 
 const { startNodeInstrumentation } = await import('./instrumentation-node');
 const { startConnectorWorker } = await import('@/server/connectors/worker');
@@ -47,13 +41,23 @@ describe('démarrage des tâches de fond', () => {
     expect(mocks.order).toEqual(['connecteurs']);
   });
 
-  it('lance la relève avant le pipeline quand les deux clés sont là', async () => {
+  // Le tri par modèle n'existe plus : la clé Anthropic ne démarre rien et son absence ne dit rien.
+  it('ne lance que la relève des connecteurs quand la clé Anthropic est là', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
     mocks.env.ANTHROPIC_API_KEY = 'cle-anthropic-de-test';
 
     await startNodeInstrumentation();
 
-    expect(mocks.order).toEqual(['connecteurs', 'pipeline']);
+    expect(mocks.order).toEqual(['connecteurs']);
+  });
+
+  it("ne prévient pas de l'absence de clé Anthropic", async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
+
+    await startNodeInstrumentation();
+
+    expect(warn).not.toHaveBeenCalledWith(expect.stringContaining('ANTHROPIC_API_KEY'));
   });
 
   it('prévient sans lancer la relève quand LEON_CONNECTORS_KEY manque', async () => {
@@ -64,10 +68,10 @@ describe('démarrage des tâches de fond', () => {
 
     expect(startConnectorWorker).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(NO_KEY));
-    expect(mocks.order).toEqual(['pipeline']);
+    expect(mocks.order).toEqual([]);
   });
 
-  it('signale les paires OAuth incomplètes au démarrage, avec ou sans clé Anthropic', async () => {
+  it('signale les paires OAuth incomplètes au démarrage', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await startNodeInstrumentation();

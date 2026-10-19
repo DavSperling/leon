@@ -5,7 +5,6 @@ import { createOAuthRoutes } from '@/server/connectors/oauth-routes';
 import { getConnector } from '@/server/connectors/registry';
 import { logError } from '@/server/log';
 import { authRoutes } from './auth-routes';
-import { briefingRoutes } from './briefing-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
 import type { ApiEnv } from './require-api-token';
@@ -22,7 +21,6 @@ export const handleApiError: ErrorHandler = (error, c) => {
 app.get('/health', (c) => c.json({ ok: true }));
 app.route('/auth', authRoutes);
 app.route('/v1', ingestRoutes);
-app.route('/v1', briefingRoutes);
 app.route('/mcp', mcpRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));

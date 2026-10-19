@@ -19,18 +19,10 @@ export const ViewerProfileSchema = z.object({
 });
 export type ViewerProfile = z.infer<typeof ViewerProfileSchema>;
 
+// Le point du matin d'un projet, préparé à l'avance ; `projet` et `preparedAt` sont nuls quand rien n'est prêt.
 export const BriefingResponseSchema = z.object({
   markdown: z.string(),
-  reviewCount: z.number().int(),
-  entries: z.array(
-    z.object({
-      cardId: z.uuid(),
-      title: z.string(),
-      typeLabel: z.string(),
-      lastFactAt: z.iso.datetime(),
-      latestStatement: z.string(),
-      hasConflict: z.boolean(),
-    }),
-  ),
+  projet: z.string().nullable(),
+  preparedAt: z.iso.datetime().nullable(),
 });
 export type BriefingResponse = z.infer<typeof BriefingResponseSchema>;

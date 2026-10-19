@@ -1,18 +1,16 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import {
   PROVIDER_IDS,
   type ProviderId,
   type SourceKind,
   type TurnCaptureMode,
 } from '@/capture/turn';
-import type { CardStatus, FactStatus } from '@/lib/enums';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
 import type { ConnectionStatus } from '@/server/connectors/connections';
 import { encryptSecret } from '@/server/connectors/crypto';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
-import { cards, cardTypes, facts, sources, turns } from '@/server/db/schema/memory';
+import { sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from './db';
 
 // Fixtures : préfixe « seed » = insertion par le rôle propriétaire, hors RLS.
@@ -93,88 +91,6 @@ export async function seedSource(
     .returning({ id: turns.id });
   if (!turn) throw new Error('tour de test non créé');
   return { sourceId: source.id, turnId: turn.id };
-}
-
-// Le type propre au tenant l'emporte sur le type du socle de même slug.
-export async function seedCard(
-  tenantId: string,
-  input: {
-    title: string;
-    typeSlug: string;
-    acl: string[];
-    status?: CardStatus;
-    createdBy?: string;
-  },
-): Promise<string> {
-  const [type] = await adminDb
-    .select({ id: cardTypes.id })
-    .from(cardTypes)
-    .where(
-      and(
-        eq(cardTypes.slug, input.typeSlug),
-        or(isNull(cardTypes.tenantId), eq(cardTypes.tenantId, tenantId)),
-      ),
-    )
-    .orderBy(sql`${cardTypes.tenantId} nulls last`)
-    .limit(1);
-  if (!type) throw new Error(`type de fiche inconnu : ${input.typeSlug}`);
-  const [card] = await adminDb
-    .insert(cards)
-    .values({
-      tenantId,
-      typeId: type.id,
-      title: input.title,
-      status: input.status ?? 'confirmed',
-      acl: input.acl,
-      createdBy: input.createdBy ?? null,
-    })
-    .returning({ id: cards.id });
-  if (!card) throw new Error('fiche de test non créée');
-  return card.id;
-}
-
-// La citation est l'énoncé lui-même ; recorded_at et valid_from valent maintenant par défaut.
-export async function seedFact(
-  tenantId: string,
-  input: {
-    cardId: string;
-    sourceId: string;
-    turnId: string;
-    authorId: string;
-    predicate: string;
-    statement: string;
-    acl: string[];
-    status?: FactStatus;
-    sensitivity?: 'shareable' | 'sensitive';
-    singleValued?: boolean;
-    sourceKind?: SourceKind;
-    validFrom?: Date;
-  },
-): Promise<string> {
-  const [fact] = await adminDb
-    .insert(facts)
-    .values({
-      tenantId,
-      cardId: input.cardId,
-      predicate: input.predicate,
-      statement: input.statement,
-      quote: input.statement,
-      sourceId: input.sourceId,
-      turnId: input.turnId,
-      quoteStart: 0,
-      quoteEnd: input.statement.length,
-      sourceKind: input.sourceKind ?? 'claude_code',
-      authorId: input.authorId,
-      validFrom: input.validFrom ?? new Date(),
-      status: input.status ?? 'active',
-      sensitivity: input.sensitivity ?? 'shareable',
-      singleValued: input.singleValued ?? false,
-      confidence: 0.9,
-      acl: input.acl,
-    })
-    .returning({ id: facts.id });
-  if (!fact) throw new Error('fait de test non créé');
-  return fact.id;
 }
 
 // Une connexion de test, secret chiffré comme en production (clé de TEST_ENV). Elle n'est pas due

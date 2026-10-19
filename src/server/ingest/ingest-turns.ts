@@ -118,15 +118,16 @@ export async function createIngestRun(
   return run.id;
 }
 
-export async function enqueueTriage(ctx: TenantContext, ingestRunId: string): Promise<void> {
+export async function enqueueIndexing(ctx: TenantContext, ingestRunId: string): Promise<void> {
   try {
-    await enqueuePipelineStep('triage', {
+    await enqueuePipelineStep('index', {
       ingestRunId,
       tenantId: ctx.tenantId,
       userId: ctx.userId,
     });
   } catch (error) {
-    // Le run reste « queued » : la requête a réussi, seul le lancement du triage est à reprendre.
+    // Le run reste « queued » : la requête a réussi, seule la mise en file de l'indexation est à
+    // reprendre (le tic de reprise remet en file les runs restés en attente).
     logError('ingest.enqueue', error, { ingestRunId });
   }
 }
@@ -144,7 +145,7 @@ export async function ingestTurns(
     const ingestRunId = await createIngestRun(tx, ctx, sourceId, ids, [ctx.userId]);
     return { sourceId, newTurnIds: ids, ingestRunId };
   });
-  if (ingestRunId !== null) await enqueueTriage(ctx, ingestRunId);
+  if (ingestRunId !== null) await enqueueIndexing(ctx, ingestRunId);
   return {
     sourceId,
     inserted: newTurnIds.length,

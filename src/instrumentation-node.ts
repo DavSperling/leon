@@ -5,8 +5,9 @@ export async function startNodeInstrumentation() {
   const { env } = await import('@/server/env');
   // Next exécute register() pendant `next build` : le worker ne doit jamais y démarrer.
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
-  // La relève des connecteurs ne dépend pas du pipeline : sans clé Anthropic, les sources entrent
-  // et leurs runs attendent. Elle a besoin de sa propre clé, celle qui déchiffre les clés des outils.
+  // La relève des connecteurs ne dépend d'aucun modèle : elle a besoin de sa propre clé, celle qui déchiffre
+  // les clés des outils. Le worker de l'indexation, lui, arrivera avec la recherche (T05), sans condition
+  // sur la clé Anthropic.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');
     await startConnectorWorker();
@@ -16,13 +17,4 @@ export async function startNodeInstrumentation() {
   // Une paire d'appli OAuth à moitié remplie désactive le bouton sans rien dire : on le dit.
   const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
   warnIncompleteOAuthPairs();
-  if (!env.ANTHROPIC_API_KEY) {
-    console.warn('[leon] ANTHROPIC_API_KEY absente : le pipeline ne tourne pas.');
-    return;
-  }
-  const [{ createAnthropicLlm }, { startPipelineWorker }] = await Promise.all([
-    import('@/server/llm/anthropic-llm'),
-    import('@/server/pipeline/worker'),
-  ]);
-  await startPipelineWorker(createAnthropicLlm({ apiKey: env.ANTHROPIC_API_KEY }));
 }

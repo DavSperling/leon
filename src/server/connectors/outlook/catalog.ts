@@ -11,5 +11,5 @@ export const outlookCatalog: CatalogEntry = {
   docsUrl: 'https://learn.microsoft.com/en-us/graph/auth-v2-user',
   triedForReal: false,
   warning:
-    'Le texte des courriers et de l’agenda reste privé, comme une conversation ; les faits qu’on en tire sont partagés avec l’équipe, sauf les faits sensibles. Les événements personnels, privés ou confidentiels ne sont pas lus.',
+    'Le texte des courriers et de l’agenda reste privé, comme une conversation : vous seul le voyez. Les événements personnels, privés ou confidentiels ne sont pas lus.',
 };

@@ -18,7 +18,7 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext): voi
     {
       title: 'Noter une information',
       description:
-        "Dépose une information dans la mémoire. Elle est d'abord privée à l'utilisateur, puis triée et rangée en faits sourcés. `about` nomme le sujet (client, projet, personne…).",
+        "Dépose une information dans la mémoire. Elle est privée à l'utilisateur, et Leon l'indexe pour qu'on la retrouve. `about` nomme le sujet (client, projet, personne…).",
       inputSchema: InputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
@@ -49,7 +49,7 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext): voi
         content: [
           {
             type: 'text',
-            text: `Noté : Leon va trier cette information (source ${result.sourceId}).`,
+            text: `Noté : Leon va indexer cette information (source ${result.sourceId}).`,
           },
         ],
         structuredContent: { sourceId: result.sourceId, ingestRunId: result.ingestRunId },

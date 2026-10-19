@@ -33,7 +33,7 @@ import { toItem } from './map';
 // - Un message est un tour participant daté de sa propre date (pas de tour document : un message
 //   envoyé ne change plus). Une note interne est un tour de l'équipe, marqué par l'attribut
 //   `internalNote`. L'auteur porte son côté (« Claire Dubois (client) »), et le tour son attribut `side`
-//   (client : extérieur, administrateur ou équipe : l'équipe), pour que le pipeline sache qui s'engage.
+//   (client : extérieur, administrateur ou équipe : l'équipe), pour que la recherche sache de quel côté parle l'auteur.
 // - Le détail ne rend que les 500 dernières parties : une conversation plus longue perd ses débuts.
 // - Une conversation sans texte (appel, pièce jointe seule) sort sans tours, que le socle écarte :
 //   le curseur avance quand même.

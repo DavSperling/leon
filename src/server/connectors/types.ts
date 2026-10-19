@@ -1,12 +1,13 @@
 import type { z } from 'zod';
-import type { AuthorSide, ProviderId } from '@/capture/turn';
+import type { AuthorSide, ItemNature, ProviderId } from '@/capture/turn';
 import type { ConnectorHttp } from './http';
 import type { OAuthAppKey } from './oauth-env';
 
 // Le contrat d'un connecteur : un module sans base ni état, qui rend des éléments normalisés.
 // Le socle (chiffrement, relève, normalisation, ingestion) fait tout le reste.
 
-export type ItemNature = 'conversation' | 'reunion' | 'page' | 'ticket' | 'fil' | 'note';
+// La nature d'un élément se définit dans la capture (ITEM_NATURES) ; on la réexporte pour les connecteurs.
+export type { ItemNature };
 
 export type ConnectorTurn = {
   externalId: string; // stable, sans empreinte : « body », « comment:456 »
@@ -14,8 +15,8 @@ export type ConnectorTurn = {
   author: { name: string | null; email: string | null };
   // Du côté de qui parle l'auteur, lu dans un champ de l'outil (rôle de l'utilisateur, expéditeur, lien
   // avec le dépôt…) et jamais déduit d'un nom ni d'un texte : un client peut se nommer comme on veut et
-  // recopier « [Note interne] ». Absent quand l'outil ne le dit pas. Un tour « external » ne donne
-  // jamais un fait établi sur l'entreprise (voir le prompt d'extraction).
+  // recopier « [Note interne] ». Absent quand l'outil ne le dit pas. Gardé tel quel sur le tour
+  // (author_side), pour la recherche et pour les droits à venir.
   side?: AuthorSide;
   // Une note que seule l'équipe voit (le client ne l'a pas lue). Un attribut du tour, pas une marque
   // dans le texte : le texte d'un client peut imiter n'importe quelle marque.
@@ -83,8 +84,8 @@ export type Connector<Config> = {
   secretFields: readonly string[]; // noms des champs à chiffrer
   hosts(config: Config): string[]; // hôtes exacts autorisés, ex. ['api.github.com']
   minIntervalMs?: number; // écart minimal entre deux requêtes (Notion : 350)
-  // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle) ; les faits
-  // qu'on en tire suivent les règles du pipeline. Absent : visible de l'équipe.
+  // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle).
+  // Absent : visible de l'équipe.
   privateRaw?: boolean;
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string }>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;

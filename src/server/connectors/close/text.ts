@@ -1,6 +1,6 @@
 import type { Activity, Transcript } from './client';
 
-// Le texte d'une activité de Close, tel que le lira le pipeline : une première ligne qui dit de
+// Le texte d'une activité de Close, tel que le liront la recherche et les assistants : une première ligne qui dit de
 // quoi il s'agit et dans quel sens (reçu ou envoyé), puis le contenu.
 
 export type Direction = 'received' | 'sent' | null;

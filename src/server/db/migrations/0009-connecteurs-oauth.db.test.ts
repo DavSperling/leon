@@ -6,9 +6,9 @@ import { withTenant } from '@/server/db/with-tenant';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 
-// Migration 0009 : les quatre nouveaux outils (Basecamp, Miro, Productboard, Outlook) entrent dans les
-// listes de types des sources et des connexions. La liste des faits suit celle des sources : le contrat du
-// schéma (schema-contract.db.test.ts) compare les trois listes à celles du code.
+// Migration 0009 : les quatre nouveaux outils (Basecamp, Miro, Productboard, Outlook) entraient dans les
+// listes de types des sources et des connexions. Depuis 0010, ces listes ne sont plus en base mais dans le code
+// (SOURCE_KINDS, PROVIDER_IDS) : la base accepte tout outil, ces quatre-là comme les autres.
 
 const NEW_TOOLS = ['basecamp', 'miro', 'productboard', 'outlook'];
 const tenantIds: string[] = [];
@@ -51,8 +51,8 @@ describe('sources des nouveaux outils', () => {
     await expect(insertSource(kind)).resolves.toEqual(expect.any(String));
   });
 
-  it('refuse un type de source inconnu', async () => {
-    await expect(insertSource('inconnu')).rejects.toMatchObject({ cause: { code: '23514' } });
+  it('accepte un type de source hors liste : la base ne le valide plus', async () => {
+    await expect(insertSource('inconnu')).resolves.toEqual(expect.any(String));
   });
 });
 
@@ -61,7 +61,7 @@ describe('connexions des nouveaux outils', () => {
     await expect(insertConnection(provider)).resolves.toBeUndefined();
   });
 
-  it('refuse un outil inconnu', async () => {
-    await expect(insertConnection('slack')).rejects.toMatchObject({ code: '23514' });
+  it('accepte un outil hors liste : la base ne le valide plus', async () => {
+    await expect(insertConnection('slack')).resolves.toBeUndefined();
   });
 });

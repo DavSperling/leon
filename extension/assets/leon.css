@@ -257,24 +257,6 @@ code {
   font-family: ui-monospace, monospace;
 }
 
-/* Panneau latéral */
-body.panel {
-  padding: 12px;
-}
-
-.entries {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.entries .title {
-  font-weight: 600;
-}
-
 /* Après les règles de mise en page, pour que `hidden` l'emporte. */
 [hidden] {
   display: none;

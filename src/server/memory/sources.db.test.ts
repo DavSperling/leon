@@ -6,8 +6,7 @@ import { CAPTURE_KINDS } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
-import { seedSource } from '@/test/fixtures';
-import { seedRightsScenario } from '@/test/rights-scenario';
+import { createTestTenant, seedSource } from '@/test/fixtures';
 import { listSources } from './sources';
 
 const lastCapture = (channels: Array<{ kind: string; lastCaptureAt: Date | null }>, kind: string) =>
@@ -35,8 +34,41 @@ async function seedTeamSource(
   return source.id;
 }
 
+// Paul et Marie dans une équipe, Zoé dans une autre. Paul a une session Claude Code (avec un run d'indexation
+// en attente), Marie une conversation ChatGPT, Zoé une conversation à elle.
+async function seedRightsScenario() {
+  const team = await createTestTenant(['Paul Martin', 'Marie Durand']);
+  const other = await createTestTenant(['Zoé Bernard']);
+  const [paul, marie] = team.members as [TenantContext, TenantContext];
+  const [zoe] = other.members as [TenantContext];
+  const paulSource = await seedSource(paul, { kind: 'claude_code', title: 'Session ACME' });
+  const marieSource = await seedSource(marie, { kind: 'chatgpt', title: 'Relance ACME' });
+  await seedSource(zoe, { kind: 'chatgpt', title: 'Relance ACME' });
+  const [run] = await adminDb
+    .insert(ingestRuns)
+    .values({
+      tenantId: paul.tenantId,
+      sourceId: paulSource.sourceId,
+      turnIds: [paulSource.turnId],
+      acl: [paul.userId],
+    })
+    .returning({ id: ingestRuns.id });
+  if (!run) throw new Error('run de test non créé');
+  return {
+    paul,
+    marie,
+    zoe,
+    ids: {
+      paulSource: paulSource.sourceId,
+      paulTurn: paulSource.turnId,
+      marieSource: marieSource.sourceId,
+      paulRun: run.id,
+    },
+  };
+}
+
 describe('listSources', () => {
-  it("ne donne à Paul que sa source, avec ses tours et l'état de son pipeline", async () => {
+  it("ne donne à Paul que sa source, avec ses tours et l'état de son indexation", async () => {
     const { paul, ids } = await seedRightsScenario();
 
     const { sources: rows } = await listSources(paul);
@@ -48,11 +80,11 @@ describe('listSources', () => {
       kindLabel: 'Claude Code',
       title: 'Session ACME',
       turnCount: 1,
-      lastRun: { status: 'queued', step: 'triage' },
+      lastRun: { status: 'queued', step: 'index' },
     });
   });
 
-  it('ne donne à Marie que sa source, sans exécution du pipeline, et rien de celle de Paul', async () => {
+  it('ne donne à Marie que sa source, sans indexation, et rien de celle de Paul', async () => {
     const { marie, ids } = await seedRightsScenario();
 
     const { sources: rows, channels } = await listSources(marie);
@@ -112,14 +144,14 @@ describe('listSources', () => {
       sourceId: ids.paulSource,
       turnIds: [ids.paulTurn],
       status: 'failed',
-      step: 'extraction',
+      step: 'index',
       acl: [paul.userId],
       createdAt: new Date(Date.now() + 60_000),
     });
 
     const { sources: rows } = await listSources(paul);
 
-    expect(rows[0]?.lastRun).toMatchObject({ status: 'failed', step: 'extraction' });
+    expect(rows[0]?.lastRun).toMatchObject({ status: 'failed', step: 'index' });
   });
 
   it('ne laisse sortir ni texte de tour ni message d’erreur', async () => {
@@ -133,7 +165,7 @@ describe('listSources', () => {
       sourceId: secret.sourceId,
       turnIds: [secret.turnId],
       status: 'failed',
-      step: 'placement',
+      step: 'index',
       error: 'message-technique-secret',
       acl: [paul.userId],
     });

@@ -26,7 +26,3 @@ export function postIngest(token: string, payload: IngestPayload): Promise<Respo
 export function getMe(token: string): Promise<Response> {
   return request(API_PATHS.me, token);
 }
-
-export function getBriefing(token: string): Promise<Response> {
-  return request(API_PATHS.briefing, token);
-}

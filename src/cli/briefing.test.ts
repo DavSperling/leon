@@ -5,9 +5,9 @@ import { fetchBriefingText } from './briefing';
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
 
 const briefing: BriefingResponse = {
-  markdown: '# Briefing Leon · 7 derniers jours\n- ACME (Client)\n0 élément à vérifier dans Leon.',
-  reviewCount: 0,
-  entries: [],
+  markdown: '# Point du matin · leon\n- La PR 22 est fusionnée.',
+  projet: 'github.com/davsperling/leon',
+  preparedAt: '2026-10-19T06:30:00.000Z',
 };
 
 const fetchReturning = (response: Response) => vi.fn(async () => response);
@@ -29,6 +29,7 @@ describe('fetchBriefingText', () => {
 
   it.each([
     ['un 401', new Response('{}', { status: 401 })],
+    ['un 404 (route absente du serveur)', new Response('{}', { status: 404 })],
     ['un 500', new Response('{}', { status: 500 })],
     ['un corps non conforme', Response.json({ markdown: 3 })],
     ['un corps non JSON', new Response('<html>', { status: 200 })],

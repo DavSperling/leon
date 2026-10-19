@@ -101,10 +101,9 @@ describe('sources et tours des connecteurs', () => {
     await expect(insertSource(paul, { kind: 'notion' })).resolves.toEqual(expect.any(String));
   });
 
-  it('refuse un type de source inconnu', async () => {
-    await expect(insertSource(paul, { kind: 'inconnu' })).rejects.toMatchObject({
-      cause: { code: '23514' },
-    });
+  // Depuis 0010, la liste des outils se valide dans le code (SOURCE_KINDS) : la base n'en refuse plus.
+  it('accepte un type de source hors liste : la base ne le valide plus', async () => {
+    await expect(insertSource(paul, { kind: 'inconnu' })).resolves.toEqual(expect.any(String));
   });
 
   it('accepte un tour de participant, capté par un connecteur, avec son auteur', async () => {
@@ -225,14 +224,11 @@ describe('connections', () => {
     });
   });
 
-  it("refuse un secret qui n'est pas chiffré, un indice de plus de 4 caractères et un outil inconnu", async () => {
+  it("refuse un secret qui n'est pas chiffré et un indice de plus de 4 caractères", async () => {
     await expect(seedConnection(paul, { secret: 'ghp_en_clair' })).rejects.toMatchObject({
       code: '23514',
     });
     await expect(seedConnection(paul, { secretHint: 'abcde' })).rejects.toMatchObject({
-      code: '23514',
-    });
-    await expect(seedConnection(paul, { provider: 'slack' })).rejects.toMatchObject({
       code: '23514',
     });
   });

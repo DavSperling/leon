@@ -135,11 +135,11 @@ describe('ingestConnectorItems', () => {
     expect(run).toMatchObject({
       id: result.runs[0],
       status: 'queued',
-      step: 'triage',
+      step: 'index',
       acl: [tenantId],
     });
     expect([...(run?.turnIds ?? [])].sort()).toEqual(stored.map((t) => t.id).sort());
-    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('triage', {
+    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('index', {
       ingestRunId: result.runs[0],
       tenantId,
       userId: paul.userId,
@@ -147,7 +147,7 @@ describe('ingestConnectorItems', () => {
   });
 
   // Le côté de l'auteur et la note interne viennent de l'outil et suivent le tour jusqu'à la base, où le
-  // pipeline les relit : un tour sans côté (l'outil ne le dit pas) reste sans côté.
+  // recherche les relira : un tour sans côté (l'outil ne le dit pas) reste sans côté.
   it("enregistre le côté de l'auteur et la note interne de chaque tour", async () => {
     const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;

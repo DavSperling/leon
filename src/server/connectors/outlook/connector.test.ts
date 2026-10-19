@@ -87,10 +87,10 @@ describe('outlookConnector : configuration', () => {
 describe('outlookConnector : catalogue', () => {
   const item = listCatalog().find((entry) => entry.id === 'outlook');
 
-  it('est disponible, sans clé collée, et dit que le texte reste privé et que les faits sont partagés', () => {
+  it('est disponible, sans clé collée, et dit que le texte reste privé à son auteur', () => {
     expect(item).toMatchObject({ available: true, keyAccepted: false, fields: [] });
     expect(item?.warning).toContain('reste privé');
-    expect(item?.warning).toContain('faits qu’on en tire sont partagés avec l’équipe');
+    expect(item?.warning).toContain('vous seul le voyez');
   });
 
   it('explique à l’utilisateur qu’il faut d’abord l’accord de l’administrateur Microsoft', () => {

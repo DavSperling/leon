@@ -48,7 +48,7 @@ function iconOf(kind: SourceChipKind): LucideIcon {
 
 type SourceChipProps = { kind: SourceChipKind; label: string; authorName?: string; at?: Date };
 
-// Origine d'un fait (outil, auteur, date) ou assistant d'une lecture (outil seul). Sans lien dans ce jet.
+// Origine d'une source (outil, auteur, date) ou assistant d'une lecture (outil seul). Sans lien dans ce jet.
 export function SourceChip({ kind, label, authorName, at }: SourceChipProps) {
   const Icon = iconOf(kind);
   return (

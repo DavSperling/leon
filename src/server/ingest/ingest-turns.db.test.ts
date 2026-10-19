@@ -43,7 +43,7 @@ const readRuns = (ctx: TenantContext, sourceId: string) =>
   withTenant(ctx, (tx) => tx.select().from(ingestRuns).where(eq(ingestRuns.sourceId, sourceId)));
 
 describe('ingestTurns', () => {
-  it('insère les tours, crée un run et met le triage en file', async () => {
+  it('insère les tours, crée un run d’indexation en attente et le met en file', async () => {
     const { tenantId, paul, externalId } = await setup();
 
     const result = await ingestTurns(
@@ -56,10 +56,10 @@ describe('ingestTurns', () => {
     expect(runs).toHaveLength(1);
     const [run] = runs;
     const stored = await readTurns(paul, result.sourceId);
-    expect(run).toMatchObject({ status: 'queued', step: 'triage', acl: [paul.userId] });
+    expect(run).toMatchObject({ status: 'queued', step: 'index', acl: [paul.userId] });
     expect([...(run?.turnIds ?? [])].sort()).toEqual(stored.map((t) => t.id).sort());
     expect(result.ingestRunId).toBe(run?.id);
-    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('triage', {
+    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('index', {
       ingestRunId: result.ingestRunId,
       tenantId,
       userId: paul.userId,
@@ -79,7 +79,7 @@ describe('ingestTurns', () => {
     expect(enqueuePipelineStep).not.toHaveBeenCalled();
   });
 
-  it("ne traite que le nouveau tour quand la session s'allonge", async () => {
+  it("n'indexe que le nouveau tour quand la session s'allonge", async () => {
     const { paul, externalId } = await setup();
     const first = await ingestTurns(
       paul,

@@ -331,7 +331,7 @@ describe('sentry : un problème devient un élément', () => {
 
   // Personne n'a rien modifié : seuls la date de dernière occurrence et les compteurs ont bougé.
   // Les identifiants de tours portent l'empreinte du texte ; s'ils changent, chaque passage ferait
-  // un tour, un passage de tri et une extraction de plus pour le même problème.
+  // un tour, un run d'indexation et des passages de plus pour le même problème.
   it('un problème qui reçoit des événements garde les mêmes tours, donc aucun tour nouveau', async () => {
     const before = { ...extraIssue('1000', '2026-10-15T10:00:00Z'), count: '2', userCount: 1 };
     const after = { ...before, count: '310', userCount: 54, lastSeen: '2026-10-15T11:30:00Z' };

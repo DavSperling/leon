@@ -3,6 +3,7 @@ import {
   CAPTURE_KINDS,
   type IngestPayload,
   IngestPayloadSchema,
+  ITEM_NATURES,
   PROVIDER_IDS,
   SOURCE_KINDS,
   TURN_TEXT_MAX,
@@ -97,5 +98,21 @@ describe('listes de types', () => {
   it('SOURCE_KINDS = les types de capture puis les 39 connecteurs, sans doublon', () => {
     expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, ...PROVIDER_IDS]);
     expect(new Set(SOURCE_KINDS).size).toBe(SOURCE_KINDS.length);
+  });
+
+  it('ITEM_NATURES : les dix natures de source (C4), dans cet ordre, sans doublon', () => {
+    expect(ITEM_NATURES).toEqual([
+      'conversation',
+      'reunion',
+      'page',
+      'ticket',
+      'fil',
+      'note',
+      'mail',
+      'fichier',
+      'evenement',
+      'commit',
+    ]);
+    expect(new Set(ITEM_NATURES).size).toBe(ITEM_NATURES.length);
   });
 });

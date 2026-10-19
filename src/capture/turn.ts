@@ -49,6 +49,21 @@ export const PROVIDER_IDS = [
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 export const SOURCE_KINDS = [...CAPTURE_KINDS, ...PROVIDER_IDS] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
+// Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan du deuxième jet).
+// Elle s'écrit dans `sources.metadata.nature` ; une valeur inconnue vaut conversation.
+export const ITEM_NATURES = [
+  'conversation',
+  'reunion',
+  'page',
+  'ticket',
+  'fil',
+  'note',
+  'mail',
+  'fichier',
+  'evenement',
+  'commit',
+] as const;
+export type ItemNature = (typeof ITEM_NATURES)[number];
 export const CAPTURE_MODES = ['file', 'network', 'dom', 'manual'] as const;
 export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.

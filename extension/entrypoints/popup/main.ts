@@ -91,12 +91,4 @@ for (const button of document.querySelectorAll('[data-open-options]')) {
   button.addEventListener('click', () => browser.runtime.openOptionsPage());
 }
 
-// sidePanel.open exige un geste de l'utilisateur : on ne fait que lire la fenêtre courante avant.
-byId('open-briefing').addEventListener('click', async () => {
-  const { id } = await browser.windows.getCurrent();
-  if (id === undefined) return;
-  await browser.sidePanel.open({ windowId: id });
-  window.close();
-});
-
 void render();

@@ -1,18 +1,16 @@
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS } from '@/capture/api-contract';
 import { app } from '@/server/api/app';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { readLog, sources } from '@/server/db/schema/memory';
-import { cardUrl } from '@/server/memory/card-url';
-import { CARD_MAX_CHARS, DATA_GUARD_LINE } from '@/server/memory/render-card';
-import * as searchModule from '@/server/memory/search';
+import { sources } from '@/server/db/schema/memory';
+import * as ingestModule from '@/server/ingest/ingest-turns';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
-import { seedRightsScenario } from '@/test/rights-scenario';
+import { createTestTenant } from '@/test/fixtures';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -53,9 +51,14 @@ async function call(client: Client, name: string, args: Record<string, unknown> 
   return { ...result, text };
 }
 
-const resultIds = (structured: Record<string, unknown> | undefined) =>
-  ((structured?.results ?? []) as Array<{ id: string }>).map((r) => r.id);
+async function setupPaul(): Promise<TenantContext> {
+  const { members } = await createTestTenant(['Paul']);
+  const [paul] = members;
+  if (!paul) throw new Error('membre de test manquant');
+  return paul;
+}
 
+// `search` et `fetch` reviennent sur les passages en T07, `briefing` en T13 : en attendant, `remember` seul.
 describe('serveur MCP', () => {
   it('répond 401 sans jeton', async () => {
     const response = await apiRequest(API_PATHS.mcp, { method: 'POST', body: {} });
@@ -63,124 +66,22 @@ describe('serveur MCP', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
 
-  it('annonce exactement search, fetch, briefing et remember, avec leurs annotations', async () => {
-    const { paul } = await seedRightsScenario();
-    const client = await connect(paul);
+  it('annonce exactement remember, avec ses annotations', async () => {
+    const client = await connect(await setupPaul());
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name).sort()).toEqual([
-      'briefing',
-      'fetch',
-      'remember',
-      'search',
-    ]);
-    const annotations = Object.fromEntries(tools.map((tool) => [tool.name, tool.annotations]));
-    for (const name of ['search', 'fetch', 'briefing']) {
-      expect(annotations[name]).toMatchObject({ readOnlyHint: true, openWorldHint: false });
-    }
-    expect(annotations.remember).toMatchObject({
+    expect(tools.map((tool) => tool.name)).toEqual(['remember']);
+    expect(tools[0]?.annotations).toMatchObject({
       readOnlyHint: false,
       destructiveHint: false,
       openWorldHint: false,
     });
-    expect(client.getInstructions()).toContain('appelle search puis fetch');
+    expect(client.getInstructions()).toContain('remember');
   });
 
-  it('search : « zanzibar » trouve une fiche pour Paul et aucune pour Marie', async () => {
-    const { paul, marie, ids } = await seedRightsScenario();
-
-    const forPaul = await call(await connect(paul), 'search', { query: 'zanzibar' });
-    const forMarie = await call(await connect(marie), 'search', { query: 'zanzibar' });
-
-    expect(resultIds(forPaul.structuredContent)).toEqual([ids.acmeCard]);
-    expect(forPaul.text).toContain(DATA_GUARD_LINE);
-    expect(forPaul.text).toContain(`id ${ids.acmeCard}`);
-    expect(resultIds(forMarie.structuredContent)).toEqual([]);
-    expect(forMarie.text).toBe('Aucune fiche ne correspond à « zanzibar ».');
-  });
-
-  it('search : « Orion » est invisible pour Marie', async () => {
-    const { paul, marie, ids } = await seedRightsScenario();
-
-    const forPaul = await call(await connect(paul), 'search', { query: 'Orion' });
-    const forMarie = await call(await connect(marie), 'search', { query: 'Orion' });
-
-    expect(resultIds(forPaul.structuredContent)).toEqual([ids.orionCard]);
-    expect(forMarie.structuredContent).toEqual({ results: [] });
-    expect(forMarie.text).toBe('Aucune fiche ne correspond à « Orion ».');
-  });
-
-  it('search : le filtre since est une date (minuit UTC)', async () => {
-    const { paul, ids } = await seedRightsScenario();
-    const client = await connect(paul);
-
-    const recent = await call(client, 'search', { query: 'ACME', since: '2000-01-01' });
-    const future = await call(client, 'search', { query: 'ACME', since: '2999-01-01' });
-
-    expect(resultIds(recent.structuredContent)).toContain(ids.acmeCard);
-    expect(resultIds(future.structuredContent)).toEqual([]);
-  });
-
-  it('fetch : Marie ne peut pas lire Orion', async () => {
-    const { marie, ids } = await seedRightsScenario();
-
-    const result = await call(await connect(marie), 'fetch', { id: ids.orionCard });
-
-    expect(result.isError).toBe(true);
-    expect(result.text).toBe('Fiche introuvable ou non visible.');
-  });
-
-  it("fetch : ACME pour Marie, sans « zanzibar », avec l'url et une ligne de lecture", async () => {
-    const { marie, ids } = await seedRightsScenario();
-
-    const result = await call(await connect(marie), 'fetch', { id: ids.acmeCard });
-
-    expect(result.isError).toBeFalsy();
-    expect(result.text).toContain('ACME');
-    expect(result.text).toContain(DATA_GUARD_LINE);
-    expect(result.text).not.toContain('zanzibar');
-    expect(result.text.length).toBeLessThanOrEqual(CARD_MAX_CHARS);
-    expect(result.structuredContent).toMatchObject({
-      id: ids.acmeCard,
-      title: 'ACME',
-      url: cardUrl(ids.acmeCard),
-      metadata: { type: 'client', status: 'confirmed' },
-    });
-    const reads = await adminDb
-      .select({ client: readLog.client })
-      .from(readLog)
-      .where(and(eq(readLog.cardId, ids.acmeCard), eq(readLog.userId, marie.userId)));
-    expect(reads.map((read) => read.client)).toContain('claude-code');
-  });
-
-  it('fetch : un as_of antérieur ne montre aucun fait', async () => {
-    const { paul, ids } = await seedRightsScenario();
-
-    const result = await call(await connect(paul), 'fetch', {
-      id: ids.acmeCard,
-      as_of: '2000-01-01',
-    });
-
-    expect(result.text).not.toMatch(/^- /m);
-    expect(result.text).toContain('état au 2000-01-01');
-  });
-
-  it('briefing : Marie ne voit pas Orion, la ligne de garde est présente', async () => {
-    const { marie, ids } = await seedRightsScenario();
-
-    const result = await call(await connect(marie), 'briefing');
-
-    expect(result.text).toContain(DATA_GUARD_LINE);
-    expect(result.text).toContain('ACME (Client)');
-    expect(result.text).not.toContain('Orion');
-    expect(result.structuredContent).toMatchObject({ reviewCount: 1 });
-    const entries = result.structuredContent?.entries as Array<{ id: string }>;
-    expect(entries.map((entry) => entry.id)).toEqual([ids.acmeCard]);
-  });
-
-  it("remember : dépose une source mcp_remember privée à l'auteur et met le triage en file", async () => {
-    const { paul } = await seedRightsScenario();
+  it("remember : dépose une source mcp_remember privée à l'auteur et met l'indexation en file", async () => {
+    const paul = await setupPaul();
 
     const result = await call(await connect(paul), 'remember', {
       text: 'Le délai de livraison passe à trois semaines.',
@@ -191,14 +92,14 @@ describe('serveur MCP', () => {
       sourceId: string;
       ingestRunId: string;
     };
-    expect(result.text).toBe(`Noté : Leon va trier cette information (source ${sourceId}).`);
+    expect(result.text).toBe(`Noté : Leon va indexer cette information (source ${sourceId}).`);
     const [source] = await adminDb.select().from(sources).where(eq(sources.id, sourceId));
     expect(source).toMatchObject({
       kind: 'mcp_remember',
       acl: [paul.userId],
       ownerUserId: paul.userId,
     });
-    expect(enqueuePipelineStep).toHaveBeenCalledWith('triage', {
+    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', {
       ingestRunId,
       tenantId: paul.tenantId,
       userId: paul.userId,
@@ -206,12 +107,11 @@ describe('serveur MCP', () => {
   });
 
   it("une erreur inattendue d'un outil devient « Erreur interne de Leon. » sans son message", async () => {
-    const { paul } = await seedRightsScenario();
-    const client = await connect(paul);
-    vi.spyOn(searchModule, 'searchMemory').mockRejectedValue(new Error('zanzibar'));
+    const client = await connect(await setupPaul());
+    vi.spyOn(ingestModule, 'ingestTurns').mockRejectedValue(new Error('zanzibar'));
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const result = await call(client, 'search', { query: 'ACME' });
+    const result = await call(client, 'remember', { text: 'Une note.' });
 
     expect(result.isError).toBe(true);
     expect(result.text).toBe('Erreur interne de Leon.');

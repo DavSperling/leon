@@ -1,6 +1,6 @@
 import type { ProviderId } from '@/capture/turn';
 
-// Libellés et familles des 39 outils branchables. Données pures : lues par l'interface, le pipeline et les libellés.
+// Libellés et familles des 39 outils branchables. Données pures : lues par l'interface et les libellés.
 
 export const PROVIDER_FAMILIES_ORDER = [
   'dev',

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, BriefingResponseSchema, ViewerProfileSchema } from '@/capture/api-contract';
+import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
 import { IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -14,11 +14,11 @@ beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 const initialize = { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} };
 
 describe('routes de l’API', () => {
-  // Chaque chemin de API_PATHS avec la méthode de C7 : un chemin ou une méthode qui dérive donnerait 404 ou 405.
+  // Chaque chemin de API_PATHS servi avec la méthode de C7 : un chemin ou une méthode qui dérive donnerait 404 ou 405.
+  // `briefing` n'y figure pas : sa route revient en T13 (le point du matin).
   it.each([
     ['POST', API_PATHS.ingest, { body: {} }],
     ['GET', API_PATHS.me, {}],
-    ['GET', API_PATHS.briefing, {}],
     ['POST', API_PATHS.mcp, { body: initialize }],
   ] as const)('%s %s répond 401 sans jeton', async (method, path, init) => {
     const response = await apiRequest(path, { method, ...init });
@@ -56,12 +56,10 @@ describe('routes de l’API', () => {
     };
 
     const me = await apiRequest(API_PATHS.me, { token });
-    const briefing = await apiRequest(API_PATHS.briefing, { token });
     const ingest = await apiRequest(API_PATHS.ingest, { token, body });
 
-    expect([me.status, briefing.status, ingest.status]).toEqual([200, 200, 202]);
+    expect([me.status, ingest.status]).toEqual([200, 202]);
     expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
-    expect(BriefingResponseSchema.parse(await briefing.json()).entries).toEqual([]);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
   });
 });

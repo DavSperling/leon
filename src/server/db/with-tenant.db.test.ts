@@ -1,15 +1,24 @@
 import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
+import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminDb } from '@/test/db';
-import { seedRightsScenario } from '@/test/rights-scenario';
+import { createTestTenant, seedSource } from '@/test/fixtures';
 import { db, pool } from './client';
-import { facts } from './schema/memory';
+import { sources } from './schema/memory';
 import { withTenant } from './with-tenant';
+
+// Une équipe avec Paul, qui a une source privée.
+async function seedScenario() {
+  const { tenantId, members } = await createTestTenant(['Paul']);
+  const [paul] = members as [TenantContext];
+  const { sourceId } = await seedSource(paul, { title: 'Session ACME' });
+  return { tenantId, paul, sourceId };
+}
 
 describe('withTenant', () => {
   it("hors withTenant, aucune ligne de la mémoire n'est visible", async () => {
-    const { tenantId } = await seedRightsScenario();
-    const count = sql<number>`select count(*)::int as n from facts where tenant_id = ${tenantId}`;
+    const { tenantId } = await seedScenario();
+    const count = sql<number>`select count(*)::int as n from sources where tenant_id = ${tenantId}`;
     const asOwner = await adminDb.execute<{ n: number }>(count);
     expect(asOwner.rows[0]?.n).toBeGreaterThan(0);
     const asApp = await db.execute<{ n: number }>(count);
@@ -17,7 +26,7 @@ describe('withTenant', () => {
   });
 
   it('pose le tenant et les principals dans la transaction', async () => {
-    const { tenantId, paul } = await seedRightsScenario();
+    const { tenantId, paul } = await seedScenario();
     const settings = await withTenant(paul, async (tx) => {
       const result = await tx.execute<{ tenant: string; principals: string[] }>(
         sql`select current_setting('app.tenant') as tenant, app_principals() as principals`,
@@ -28,7 +37,7 @@ describe('withTenant', () => {
   });
 
   it('rend au pool des connexions sans contexte', async () => {
-    const { paul } = await seedRightsScenario();
+    const { paul } = await seedScenario();
     // Autant de transactions que de connexions du pool : chacune a porté un contexte.
     await Promise.all(
       Array.from({ length: 10 }, () => withTenant(paul, (tx) => tx.execute(sql`select 1`))),
@@ -40,7 +49,7 @@ describe('withTenant', () => {
   });
 
   it("lève avant toute requête si un principal n'est pas un UUID", async () => {
-    const { paul } = await seedRightsScenario();
+    const { paul } = await seedScenario();
     const fn = vi.fn(async () => 'atteint');
     for (const bad of ['pas-un-uuid', `${paul.tenantId},${paul.userId}`, `${paul.userId}}`]) {
       await expect(withTenant({ ...paul, principals: [paul.userId, bad] }, fn)).rejects.toThrow();
@@ -51,23 +60,17 @@ describe('withTenant', () => {
   });
 
   it('annule la transaction si fn lève', async () => {
-    const { paul, ids } = await seedRightsScenario();
+    const { paul, sourceId } = await seedScenario();
     await expect(
       withTenant(paul, async (tx) => {
-        await tx
-          .update(facts)
-          .set({ statement: 'modifié' })
-          .where(eq(facts.id, ids.acmeConflictFact));
+        await tx.update(sources).set({ title: 'modifié' }).where(eq(sources.id, sourceId));
         throw new Error('échec voulu');
       }),
     ).rejects.toThrow('échec voulu');
 
     const [row] = await withTenant(paul, (tx) =>
-      tx
-        .select({ statement: facts.statement })
-        .from(facts)
-        .where(eq(facts.id, ids.acmeConflictFact)),
+      tx.select({ title: sources.title }).from(sources).where(eq(sources.id, sourceId)),
     );
-    expect(row?.statement).toBe('ACME paie ses factures à soixante jours.');
+    expect(row?.title).toBe('Session ACME');
   });
 });

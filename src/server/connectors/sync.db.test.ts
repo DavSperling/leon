@@ -108,7 +108,7 @@ describe('runConnectorSync : un passage qui réussit', () => {
     expectDelayAbout(row, 15 * MINUTE);
   });
 
-  it('met chaque élément nouveau en file du pipeline, au nom du créateur de la connexion', async () => {
+  it("met l'indexation de chaque élément nouveau en file, au nom du créateur de la connexion", async () => {
     const id = await dueConnection();
 
     await run(id, fakeConnector({ items: 3, pageSize: 3 }));
@@ -116,7 +116,7 @@ describe('runConnectorSync : un passage qui réussit', () => {
     const calls = vi.mocked(enqueuePipelineStep).mock.calls;
     expect(calls).toHaveLength(3);
     for (const [step, job] of calls) {
-      expect(step).toBe('triage');
+      expect(step).toBe('index');
       expect(job).toMatchObject({ tenantId, userId: paul.userId });
     }
   });

@@ -23,7 +23,7 @@ import { outlookOAuth } from './oauth';
 //   - Un fil ne revient qu'avec les messages lus pendant le passage (ceux reçus depuis le curseur),
 //     pas tous ceux de la conversation : les relire coûterait une requête par fil, et un filtre sur
 //     `conversationId` lirait aussi les brouillons, indésirables et éléments supprimés. L'ingestion
-//     ne crée que les tours nouveaux, et le pipeline garde le contexte du fil déjà connu.
+//     ne crée que les tours nouveaux : le fil déjà connu reste tel quel.
 //   - Un message des éléments envoyés est daté de son envoi (receivedDateTime), un message de la boîte
 //     de réception de sa réception ; un fil dont des messages sont dans les deux dossiers sort en
 //     deux éléments qui portent le même identifiant : ils se rejoignent à l'ingestion.

@@ -4,7 +4,7 @@ import { sources } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
   createIngestRun,
-  enqueueTriage,
+  enqueueIndexing,
   insertNewTurns,
   updateSource,
 } from '@/server/ingest/ingest-turns';
@@ -56,7 +56,7 @@ async function upsertItemSource(
 }
 
 // `ctx` est celui du créateur de la connexion. Les éléments d'un appel entrent dans une seule
-// transaction ; le triage est mis en file après le commit, un échec est journalisé sans faire
+// transaction ; l'indexation est mise en file après le commit, un échec est journalisé sans faire
 // échouer l'ingestion. `sources` compte les sources créées ou mises à jour, `turns` les tours nouveaux.
 export async function ingestConnectorItems(
   ctx: TenantContext,
@@ -89,6 +89,6 @@ export async function ingestConnectorItems(
     }
     return result;
   });
-  for (const runId of created.runs) await enqueueTriage(ctx, runId);
+  for (const runId of created.runs) await enqueueIndexing(ctx, runId);
   return { sources: items.length, ...created };
 }

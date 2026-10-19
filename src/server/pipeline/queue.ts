@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
 
+// Files de l'indexation (C5) : `index` découpe en passages les tours d'un run, `reindex` et `requeue`
+// reprennent ce qui est resté en route (vecteurs manquants, runs jamais mis en file).
 export const PIPELINE_QUEUES = {
-  triage: 'pipeline-triage',
-  extraction: 'pipeline-extraction',
-  placement: 'pipeline-placement',
+  index: 'pipeline-index',
+  reindex: 'pipeline-reindex',
+  requeue: 'pipeline-requeue',
 } as const;
 export type PipelineStep = keyof typeof PIPELINE_QUEUES;
 

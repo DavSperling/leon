@@ -55,4 +55,6 @@ export const TEST_ENV = {
   VOYAGE_API_KEY: '',
   MISTRAL_API_KEY: '',
   LEON_BGE_URL: '',
+  // Même raison pour le faux modèle : exporté dans le shell pour une démo, il changerait les tests.
+  LEON_LLM: '',
 } as const;

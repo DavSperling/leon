@@ -16,7 +16,15 @@ export const EnvSchema = z
     DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.url(),
+    // Lu pour refuser le faux modèle en production ; posé par Next, jamais dans .env.example.
+    NODE_ENV: z.string().optional(),
     ANTHROPIC_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    // Faux modèle déterministe, sans réseau, pour les essais et les démos sans clé. Absent : le vrai modèle.
+    LEON_LLM: z.preprocess(emptyIsAbsent, z.enum(['factice']).optional()),
+    // Modèle de chaque étape. Absent : le défaut de models.ts.
+    LEON_MODEL_REPONSE: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    LEON_MODEL_DISCUSSION: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     // Clé de chiffrement des clés d'API des connecteurs : 32 octets en base64.
     LEON_CONNECTORS_KEY: z.preprocess(
       emptyIsAbsent,
@@ -37,6 +45,15 @@ export const EnvSchema = z
     LEON_BGE_URL: z.preprocess(emptyIsAbsent, z.url({ protocol: /^https?$/ }).optional()),
   })
   .superRefine((env, ctx) => {
+    // Un faux modèle en ligne répondrait à des questions réelles avec du texte factice : on refuse de démarrer.
+    if (env.LEON_LLM === 'factice' && env.NODE_ENV === 'production') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['LEON_LLM'],
+        message:
+          'LEON_LLM=factice : interdit en production (le faux modèle sert aux essais sans clé)',
+      });
+    }
     const id = env.LEON_EMBEDDINGS;
     if (id === undefined || id === 'factice') return;
     const setting = EMBEDDER_SETTING[id];

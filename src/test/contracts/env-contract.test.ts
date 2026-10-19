@@ -69,6 +69,17 @@ describe('variables d’environnement', () => {
     expect(EMBEDDER_IDS.filter((id) => !comment.includes(id))).toEqual([]);
   });
 
+  it('laisse LEON_LLM en commentaire dans .env.example : le faux modèle n’a pas de valeur par défaut', () => {
+    expect(readText('.env.example')).toMatch(/^# LEON_LLM=$/m);
+    expect(readText('.env.example')).not.toMatch(/^LEON_LLM=/m);
+  });
+
+  it('laisse vides les modèles par étape dans .env.example : le défaut vit dans le code', () => {
+    for (const variable of ['LEON_MODEL_REPONSE', 'LEON_MODEL_DISCUSSION', 'LEON_MODEL_POINT']) {
+      expect(readText('.env.example')).toMatch(new RegExp(`^${variable}=$`, 'm'));
+    }
+  });
+
   it('dit, dans le commentaire de LEON_EMBEDDINGS, que seul le fournisseur factice marche pour l’instant', () => {
     // À réécrire quand T30 livre les adaptateurs de Voyage, de Mistral et de bge-m3.
     expect(commentBefore('LEON_EMBEDDINGS')).toMatch(/pas encore branchés/);

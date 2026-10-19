@@ -1,168 +1,526 @@
-import { AnthropicError, APIError } from '@anthropic-ai/sdk';
-import { describe, expect, it, vi } from 'vitest';
+import { AnthropicError, APIConnectionError, APIError, APIUserAbortError } from '@anthropic-ai/sdk';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import {
-  type AnthropicLike,
-  createAnthropicLlm,
-  EFFORT_BY_STEP,
-  logUsage,
-  MODEL_BY_STEP,
-} from './anthropic-llm';
-import { LlmError, type LlmRequest, type LlmStep } from './llm';
+import { TEST_ENV } from '@/test/test-env';
+import { parseEnv } from '../env';
+import { type AnthropicLike, createAnthropicLlm, logUsage } from './anthropic-llm';
+import { type AgentEvent, type AgentTool, type ChatMessage, LlmError, type LlmStep } from './llm';
+import { EFFORT_BY_STEP } from './models';
 
-const Schema = z.object({ answer: z.string() });
+const messages: ChatMessage[] = [{ role: 'user', content: 'Question ordinaire' }];
 
-function request(step: LlmStep, prompt = 'Question ordinaire'): LlmRequest<{ answer: string }> {
-  return { step, system: 'Consignes du système', prompt, schema: Schema, maxTokens: 1234 };
+type Turn = {
+  // Les morceaux de texte que le flux rend avant son message final.
+  texts?: string[];
+  // Ce qui remplace les champs du message final (contenu, stop_reason, usage…).
+  message?: Record<string, unknown>;
+  // Une erreur levée par le flux avant le message final.
+  fail?: Error;
+};
+
+function scriptedStream(turn: Turn) {
+  const abort = vi.fn();
+  return {
+    abort,
+    async *[Symbol.asyncIterator]() {
+      for (const text of turn.texts ?? []) {
+        yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } };
+      }
+      if (turn.fail) throw turn.fail;
+    },
+    finalMessage: async () => ({
+      model: 'claude-sonnet-5-5',
+      role: 'assistant',
+      stop_reason: 'end_turn',
+      content: [],
+      usage: { input_tokens: 10, output_tokens: 5 },
+      ...turn.message,
+    }),
+  };
 }
 
-function setup(reply: () => unknown) {
-  const parse = vi.fn(async (_params: unknown) => reply());
-  const client = { beta: { messages: { parse } } } as unknown as AnthropicLike;
-  return { parse, llm: createAnthropicLlm({ client }) };
+// `turns` : un tour par appel au SDK, le dernier se répète si le modèle est rappelé encore.
+function setup(turns: Turn[], settings: Record<string, string> = {}) {
+  const streams: ReturnType<typeof scriptedStream>[] = [];
+  const stream = vi.fn((_params: unknown, _options?: unknown) => {
+    const turn = turns[Math.min(streams.length, turns.length - 1)] as Turn;
+    const next = scriptedStream(turn);
+    streams.push(next);
+    return next;
+  });
+  const client = { beta: { messages: { stream } } } as unknown as AnthropicLike;
+  const llm = createAnthropicLlm({ client, env: parseEnv({ ...TEST_ENV, ...settings }) });
+  const params = (call: number) => stream.mock.calls[call]?.[0] as Record<string, unknown>;
+  return { llm, stream, streams, params };
 }
 
-const ok = { stop_reason: 'end_turn', parsed_output: { answer: 'oui' } };
+async function collect<T>(stream: AsyncIterable<T>): Promise<T[]> {
+  const items: T[] = [];
+  for await (const item of stream) items.push(item);
+  return items;
+}
 
-describe('createAnthropicLlm', () => {
-  it.each(['triage', 'extraction', 'placement'] as const)(
-    'appelle le modèle, l effort et la limite de l étape %s',
-    async (step) => {
-      const { llm, parse } = setup(() => ok);
+const textRequest = (step: LlmStep = 'reponse', content = 'Question ordinaire') => ({
+  step,
+  system: 'Consignes du système',
+  messages: [{ role: 'user' as const, content }],
+  maxTokens: 1234,
+});
 
-      const result = await llm.generateObject(request(step));
+function chercher(run: (input: { requete: string }) => Promise<string>): AgentTool {
+  return {
+    name: 'chercher',
+    description: 'Cherche dans la mémoire',
+    input: z.object({ requete: z.string().trim().min(1) }),
+    run: run as AgentTool['run'],
+  };
+}
 
-      expect(result).toEqual({ answer: 'oui' });
-      expect(parse).toHaveBeenCalledOnce();
-      const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
-      expect(params).toMatchObject({
-        model: MODEL_BY_STEP[step],
-        max_tokens: 1234,
-        system: [
-          { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },
-        ],
-        messages: [{ role: 'user', content: 'Question ordinaire' }],
-        output_config: { effort: EFFORT_BY_STEP[step], format: { type: 'json_schema' } },
-      });
-      expect(params).not.toHaveProperty('thinking');
+const agentRequest = (tools: AgentTool[], maxSteps = 8) => ({
+  step: 'discussion' as const,
+  system: 'Consignes du système',
+  messages,
+  tools,
+  maxSteps,
+  maxTokens: 2000,
+});
+
+const toolUse = (id: string, input: unknown, name = 'chercher') => ({
+  type: 'tool_use',
+  id,
+  name,
+  input,
+});
+const toolTurn = (...uses: ReturnType<typeof toolUse>[]): Turn => ({
+  message: { stop_reason: 'tool_use', content: uses },
+});
+const answerTurn = (text: string): Turn => ({
+  texts: [text],
+  message: { content: [{ type: 'text', text }] },
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('streamText', () => {
+  it('rend les morceaux du flux dans l’ordre et journalise l’usage, sans contenu', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm } = setup([
+      {
+        texts: ['Un ', 'deux ', 'trois'],
+        message: { usage: { input_tokens: 100, output_tokens: 20 } },
+      },
+    ]);
+
+    const chunks = await collect(llm.streamText(textRequest('reponse', 'zanzibar-dans-le-prompt')));
+
+    expect(chunks).toEqual(['Un ', 'deux ', 'trois']);
+    expect(info).toHaveBeenCalledOnce();
+    const [, event, json] = info.mock.calls[0] as [string, string, string];
+    expect(event).toBe('llm.usage');
+    expect(JSON.parse(json)).toMatchObject({
+      step: 'reponse',
+      model: 'claude-sonnet-5-5',
+      inputTokens: 100,
+      outputTokens: 20,
+    });
+    expect(json).not.toMatch(/zanzibar|Un deux/);
+  });
+
+  it.each([
+    ['reponse', 'claude-haiku-5-5'],
+    ['discussion', 'claude-sonnet-5-5'],
+    ['point', 'claude-sonnet-5-5'],
+  ] as const)('appelle le modèle, l’effort et la limite de l’étape %s', async (step, model) => {
+    const { llm, params, stream } = setup([answerTurn('ok')]);
+
+    await collect(llm.streamText(textRequest(step)));
+
+    expect(params(0)).toMatchObject({
+      model,
+      max_tokens: 1234,
+      messages: [{ role: 'user', content: 'Question ordinaire' }],
+      output_config: { effort: EFFORT_BY_STEP[step] },
+    });
+    expect(params(0)).not.toHaveProperty('thinking');
+    expect(params(0)).not.toHaveProperty('tools');
+    expect(stream.mock.calls[0]?.[1]).toEqual({ signal: undefined });
+  });
+
+  it('prend le modèle réglé par la variable de l’étape', async () => {
+    const { llm, params } = setup([answerTurn('ok')], { LEON_MODEL_REPONSE: 'claude-opus-5-5' });
+
+    await collect(llm.streamText(textRequest('reponse')));
+
+    expect(params(0).model).toBe('claude-opus-5-5');
+  });
+
+  it('met en cache les consignes, pas le contenu capté', async () => {
+    const { llm, params } = setup([answerTurn('ok')]);
+
+    await collect(llm.streamText(textRequest()));
+
+    expect(params(0).system).toEqual([
+      { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(JSON.stringify(params(0).messages)).not.toContain('cache_control');
+    expect(params(0)).not.toHaveProperty('cache_control');
+  });
+
+  it('active le repli serveur des refus pour Sonnet et Opus, pas pour Haiku', async () => {
+    const sonnet = setup([answerTurn('ok')]);
+    await collect(sonnet.llm.streamText(textRequest('discussion')));
+    expect(sonnet.params(0)).toMatchObject({
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+    });
+
+    const haiku = setup([answerTurn('ok')]);
+    await collect(haiku.llm.streamText(textRequest('reponse')));
+    expect(haiku.params(0)).not.toHaveProperty('betas');
+    expect(haiku.params(0)).not.toHaveProperty('fallbacks');
+  });
+
+  it('passe le signal d’annulation au SDK', async () => {
+    const { llm, stream } = setup([answerTurn('ok')]);
+    const controller = new AbortController();
+
+    await collect(llm.streamText({ ...textRequest(), signal: controller.signal }));
+
+    expect(stream.mock.calls[0]?.[1]).toEqual({ signal: controller.signal });
+  });
+
+  it('lève LlmError « refus du modèle » quand le modèle refuse', async () => {
+    const { llm } = setup([{ texts: ['Je '], message: { stop_reason: 'refusal' } }]);
+
+    const error = await collect(llm.streamText(textRequest())).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(LlmError);
+    expect((error as LlmError).message).toBe('refus du modèle');
+  });
+
+  it.each(['max_tokens', 'model_context_window_exceeded'])(
+    'lève LlmError « réponse tronquée » sur le stop_reason %s',
+    async (stopReason) => {
+      const { llm } = setup([{ texts: ['Début'], message: { stop_reason: stopReason } }]);
+
+      const error = await collect(llm.streamText(textRequest())).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(LlmError);
+      expect((error as LlmError).message).toBe('réponse tronquée');
     },
   );
 
-  it('utilise les bons modèles et efforts', () => {
-    expect(MODEL_BY_STEP).toEqual({
-      triage: 'claude-haiku-5-5',
-      extraction: 'claude-sonnet-5-5',
-      placement: 'claude-haiku-5-5',
-    });
-    expect(EFFORT_BY_STEP).toEqual({ triage: 'low', extraction: 'medium', placement: 'medium' });
+  it.each([
+    ['429', new APIError(429, { type: 'error' }, 'Surcharge zanzibar', new Headers())],
+    ['500', new APIError(500, { type: 'error' }, 'Panne zanzibar', new Headers())],
+    ['aucun', new AnthropicError('Impossible de lire « zanzibar »')],
+    ['aucun', new APIConnectionError({ message: 'réseau zanzibar' })],
+  ])(
+    'remplace l’erreur du SDK (état %s) par un LlmError au message fixe',
+    async (status, failure) => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { llm } = setup([{ fail: failure }]);
+
+      const thrown = await collect(llm.streamText(textRequest())).catch((e: unknown) => e);
+
+      expect(thrown).toBeInstanceOf(LlmError);
+      expect((thrown as LlmError).message).toBe('appel au modèle impossible');
+      expect(error).toHaveBeenCalledOnce();
+      const [, event, json] = error.mock.calls[0] as [string, string, string];
+      expect(event).toBe('llm.appel');
+      expect(JSON.parse(json)).toMatchObject({ step: 'reponse', status });
+      expect(json).not.toContain('zanzibar');
+    },
+  );
+
+  it('remplace l’annulation par un LlmError sans bruit dans les journaux', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { llm } = setup([{ fail: new APIUserAbortError() }]);
+
+    const thrown = await collect(llm.streamText(textRequest())).catch((e: unknown) => e);
+
+    expect(thrown).toEqual(new LlmError('appel interrompu'));
+    expect(error).not.toHaveBeenCalled();
   });
 
-  it.each(['extraction'] as const)('active le repli serveur des refus pour %s', async (step) => {
-    const { llm, parse } = setup(() => ok);
+  it('laisse passer une erreur qui n’est pas celle du SDK : c’est un défaut du code', async () => {
+    const { llm } = setup([{ fail: new TypeError('défaut') }]);
 
-    await llm.generateObject(request(step));
+    await expect(collect(llm.streamText(textRequest()))).rejects.toBeInstanceOf(TypeError);
+  });
 
-    expect(parse.mock.calls[0]?.[0]).toMatchObject({
+  it('abandonne l’appel quand le lecteur arrête avant la fin', async () => {
+    const { llm, streams } = setup([{ texts: ['a', 'b', 'c'] }]);
+
+    for await (const _chunk of llm.streamText(textRequest())) break;
+
+    expect(streams[0]?.abort).toHaveBeenCalledOnce();
+  });
+
+  it('n’abandonne rien quand la réponse est allée au bout', async () => {
+    const { llm, streams } = setup([answerTurn('ok')]);
+
+    await collect(llm.streamText(textRequest()));
+
+    expect(streams[0]?.abort).not.toHaveBeenCalled();
+  });
+});
+
+describe('runAgent', () => {
+  it('appelle l’outil, rend son résultat au modèle, puis laisse le texte : outil, texte, fin', async () => {
+    const run = vi.fn(async (_input: { requete: string }) => 'trois résultats');
+    const { llm } = setup([
+      toolTurn(toolUse('toolu_1', { requete: '  acme  ' })),
+      answerTurn('Acme avance [1].'),
+    ]);
+
+    const events = await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+    expect(events).toEqual<AgentEvent[]>([
+      { type: 'outil', name: 'chercher', input: { requete: '  acme  ' } },
+      { type: 'texte', delta: 'Acme avance [1].' },
+      { type: 'fin', reason: 'fini' },
+    ]);
+    // L'outil a reçu son entrée validée par le schéma (espaces retirés), pas celle du modèle.
+    expect(run).toHaveBeenCalledExactlyOnceWith({ requete: 'acme' });
+  });
+
+  it('renvoie au modèle son tour d’outil et le résultat, dans la conversation suivante', async () => {
+    const run = vi.fn(async () => 'trois résultats');
+    const { llm, params } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 'acme' })),
+      answerTurn('Fin.'),
+    ]);
+
+    await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+    expect(params(0).messages).toEqual(messages);
+    expect(params(1).messages).toEqual([
+      ...messages,
+      { role: 'assistant', content: [toolUse('toolu_1', { requete: 'acme' })] },
+      {
+        role: 'user',
+        content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'trois résultats' }],
+      },
+    ]);
+  });
+
+  it('décrit les outils au modèle par le schéma zod, et met en cache la conversation', async () => {
+    const { llm, params } = setup([answerTurn('ok')]);
+
+    await collect(llm.runAgent(agentRequest([chercher(async () => 'x')])));
+
+    expect(params(0)).toMatchObject({
+      model: 'claude-sonnet-5-5',
+      max_tokens: 2000,
+      system: [
+        { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },
+      ],
+      cache_control: { type: 'ephemeral' },
+      output_config: { effort: EFFORT_BY_STEP.discussion },
+      tools: [
+        {
+          name: 'chercher',
+          description: 'Cherche dans la mémoire',
+          input_schema: {
+            type: 'object',
+            properties: { requete: { type: 'string' } },
+            required: ['requete'],
+          },
+        },
+      ],
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
     });
   });
 
-  it.each(['triage', 'placement'] as const)(
-    'n active pas le repli pour %s (Haiku)',
-    async (step) => {
-      const { llm, parse } = setup(() => ok);
+  it('renvoie au modèle une erreur d’outil, sans lever, quand l’entrée est invalide', async () => {
+    const run = vi.fn(async () => 'jamais');
+    const { llm, params } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 42 })),
+      answerTurn('Désolé.'),
+    ]);
 
-      await llm.generateObject(request(step));
+    const events = await collect(llm.runAgent(agentRequest([chercher(run)])));
 
-      const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
-      expect(params).not.toHaveProperty('betas');
-      expect(params).not.toHaveProperty('fallbacks');
+    expect(run).not.toHaveBeenCalled();
+    expect(events.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    const retour = (params(1).messages as Array<{ content: unknown }>).at(-1)?.content;
+    expect(retour).toEqual([
+      {
+        type: 'tool_result',
+        tool_use_id: 'toolu_1',
+        is_error: true,
+        content: expect.stringContaining('Entrée invalide'),
+      },
+    ]);
+  });
+
+  it('exécute tous les outils d’un même tour, dans l’ordre, avec un résultat par appel', async () => {
+    const run = vi.fn(async ({ requete }: { requete: string }) => `résultat de ${requete}`);
+    const { llm, params } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 'a' }), toolUse('toolu_2', { requete: 'b' })),
+      answerTurn('Fin.'),
+    ]);
+
+    await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+    expect(run.mock.calls.map(([input]) => input.requete)).toEqual(['a', 'b']);
+    const retour = (params(1).messages as Array<{ content: unknown }>).at(-1)?.content;
+    expect(retour).toEqual([
+      { type: 'tool_result', tool_use_id: 'toolu_1', content: 'résultat de a' },
+      { type: 'tool_result', tool_use_id: 'toolu_2', content: 'résultat de b' },
+    ]);
+  });
+
+  it('s’arrête à maxSteps appels d’outil : exactement 2, puis la limite', async () => {
+    const run = vi.fn(async () => 'résultat');
+    const { llm, stream } = setup([toolTurn(toolUse('toolu_1', { requete: 'x' }))]);
+
+    const events = await collect(llm.runAgent(agentRequest([chercher(run)], 2)));
+
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(events.filter((event) => event.type === 'outil')).toHaveLength(2);
+    expect(events.at(-1)).toEqual({ type: 'fin', reason: 'limite' });
+    // Le modèle a pu répondre après son 2e outil ; il en demande un 3e : on s’arrête là, sans l’exécuter.
+    expect(stream).toHaveBeenCalledTimes(3);
+  });
+
+  it('respecte la limite même quand un seul tour demande plus d’outils qu’il n’en reste', async () => {
+    const run = vi.fn(async () => 'résultat');
+    const { llm } = setup([
+      toolTurn(
+        toolUse('a', { requete: 'x' }),
+        toolUse('b', { requete: 'x' }),
+        toolUse('c', { requete: 'x' }),
+      ),
+    ]);
+
+    const events = await collect(llm.runAgent(agentRequest([chercher(run)], 2)));
+
+    expect(run).toHaveBeenCalledTimes(2);
+    expect(events.at(-1)).toEqual({ type: 'fin', reason: 'limite' });
+  });
+
+  it('finit sur « refus » quand le modèle refuse, sans exécuter d’outil', async () => {
+    const run = vi.fn(async () => 'jamais');
+    const { llm } = setup([
+      {
+        texts: ['Je '],
+        message: { stop_reason: 'refusal', content: [toolUse('toolu_1', { requete: 'x' })] },
+      },
+    ]);
+
+    const events = await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+    expect(run).not.toHaveBeenCalled();
+    expect(events).toEqual([
+      { type: 'texte', delta: 'Je ' },
+      { type: 'fin', reason: 'refus' },
+    ]);
+  });
+
+  it.each(['max_tokens', 'model_context_window_exceeded'])(
+    'finit sur la limite, sans exécuter l’outil, quand la réponse est coupée (%s)',
+    async (stopReason) => {
+      const run = vi.fn(async () => 'jamais');
+      const { llm } = setup([
+        { message: { stop_reason: stopReason, content: [toolUse('toolu_1', { requete: 'x' })] } },
+      ]);
+
+      const events = await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+      expect(run).not.toHaveBeenCalled();
+      expect(events).toEqual([{ type: 'fin', reason: 'limite' }]);
     },
   );
 
-  it('met en cache les consignes, pas le contenu capté', async () => {
-    const { llm, parse } = setup(() => ok);
+  it('finit sur la limite quand un texte sans outil est coupé', async () => {
+    const { llm } = setup([{ texts: ['Début'], message: { stop_reason: 'max_tokens' } }]);
 
-    await llm.generateObject(request('triage'));
+    const events = await collect(llm.runAgent(agentRequest([])));
 
-    const [params] = parse.mock.calls[0] as unknown as [Record<string, unknown>];
-    expect(JSON.stringify(params.system)).toContain('cache_control');
-    expect(JSON.stringify(params.messages)).not.toContain('cache_control');
+    expect(events).toEqual([
+      { type: 'texte', delta: 'Début' },
+      { type: 'fin', reason: 'limite' },
+    ]);
   });
 
-  it.each([
-    ['refusal', 'refus du modèle'],
-    ['max_tokens', 'réponse tronquée'],
-    ['model_context_window_exceeded', 'réponse tronquée'],
-  ])('transforme le stop_reason %s en LlmError « %s »', async (stopReason, message) => {
-    const { llm } = setup(() => ({ stop_reason: stopReason, parsed_output: null }));
+  it('remplace l’erreur du SDK par un LlmError au message fixe', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { llm } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 'x' })),
+      { fail: new APIError(529, { type: 'error' }, 'Surcharge zanzibar', new Headers()) },
+    ]);
 
-    const error = await llm.generateObject(request('triage')).catch((e: unknown) => e);
-
-    expect(error).toBeInstanceOf(LlmError);
-    expect((error as LlmError).message).toBe(message);
-  });
-
-  it('transforme une sortie absente en LlmError', async () => {
-    const { llm } = setup(() => ({ stop_reason: 'end_turn', parsed_output: null }));
-
-    await expect(llm.generateObject(request('triage'))).rejects.toThrow(
-      new LlmError('sortie non conforme'),
+    const thrown = await collect(llm.runAgent(agentRequest([chercher(async () => 'r')]))).catch(
+      (e: unknown) => e,
     );
+
+    expect(thrown).toEqual(new LlmError('appel au modèle impossible'));
   });
 
-  it('remplace l erreur d analyse du SDK par un message fixe qui ne cite pas la sortie', async () => {
-    const parse = vi
-      .fn()
-      .mockRejectedValue(
-        new AnthropicError(
-          'Failed to parse structured output: SyntaxError … "zanzibar confidentiel"',
-        ),
-      );
-    const llm = createAnthropicLlm({
-      client: { beta: { messages: { parse } } } as unknown as AnthropicLike,
+  it('abandonne l’appel quand le lecteur arrête avant la fin', async () => {
+    const { llm, streams } = setup([{ texts: ['a', 'b'] }]);
+
+    for await (const _event of llm.runAgent(agentRequest([]))) break;
+
+    expect(streams[0]?.abort).toHaveBeenCalledOnce();
+  });
+
+  it('journalise l’usage de chaque tour, sans contenu', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm } = setup([
+      toolTurn(toolUse('toolu_1', { requete: 'zanzibar' })),
+      answerTurn('Fin.'),
+    ]);
+
+    await collect(llm.runAgent(agentRequest([chercher(async () => 'zanzibar-résultat')])));
+
+    expect(info).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(info.mock.calls)).not.toContain('zanzibar');
+  });
+
+  it('n’exécute ni ne renvoie ce qui précède un repli du serveur : seuls les outils d’après comptent', async () => {
+    const run = vi.fn(async ({ requete }: { requete: string }) => `résultat de ${requete}`);
+    const fallback = { type: 'fallback', from: { model: 'a' }, to: { model: 'b' } };
+    const { llm, params } = setup([
+      {
+        message: {
+          stop_reason: 'tool_use',
+          content: [
+            { type: 'thinking', thinking: '', signature: 's' },
+            toolUse('refuse', { requete: 'avant' }),
+            fallback,
+            { type: 'text', text: 'Je cherche.' },
+            toolUse('garde', { requete: 'apres' }),
+          ],
+        },
+      },
+      answerTurn('Fin.'),
+    ]);
+
+    await collect(llm.runAgent(agentRequest([chercher(run)])));
+
+    expect(run).toHaveBeenCalledExactlyOnceWith({ requete: 'apres' });
+    const [, assistant] = params(1).messages as Array<{ role: string; content: unknown }>;
+    expect(assistant).toEqual({
+      role: 'assistant',
+      content: [
+        fallback,
+        { type: 'text', text: 'Je cherche.' },
+        toolUse('garde', { requete: 'apres' }),
+      ],
     });
-
-    const error = await llm.generateObject(request('triage')).catch((e: unknown) => e);
-
-    expect(error).toBeInstanceOf(LlmError);
-    expect((error as LlmError).message).toBe('sortie non conforme');
-    expect((error as LlmError).message).not.toContain('zanzibar');
-  });
-
-  it.each([429, 500])(
-    'relance telle quelle une APIError %i (pg-boss reprendra)',
-    async (status) => {
-      const failure = new APIError(status, { type: 'error' }, 'Surcharge', new Headers());
-      const parse = vi.fn().mockRejectedValue(failure);
-      const llm = createAnthropicLlm({
-        client: { beta: { messages: { parse } } } as unknown as AnthropicLike,
-      });
-
-      await expect(llm.generateObject(request('triage'))).rejects.toBe(failure);
-    },
-  );
-
-  it('ne cite jamais le prompt dans les messages d erreur', async () => {
-    const secret = 'zanzibar-dans-le-prompt';
-    const replies = [
-      { stop_reason: 'refusal', parsed_output: null },
-      { stop_reason: 'max_tokens', parsed_output: null },
-      { stop_reason: 'end_turn', parsed_output: null },
-    ];
-    for (const reply of replies) {
-      const { llm } = setup(() => reply);
-      const error = await llm.generateObject(request('triage', secret)).catch((e: unknown) => e);
-      expect((error as Error).message).not.toContain(secret);
-    }
   });
 });
 
 describe('logUsage', () => {
   it('journalise les tokens et le coût estimé, sans contenu', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    logUsage('placement', 'claude-opus-5-5', {
+    logUsage('discussion', 'claude-opus-5-5', {
       input_tokens: 1_000_000,
       output_tokens: 100_000,
       cache_read_input_tokens: 0,
@@ -172,7 +530,7 @@ describe('logUsage', () => {
     const [, event, json] = info.mock.calls[0] as [string, string, string];
     expect(event).toBe('llm.usage');
     expect(JSON.parse(json)).toEqual({
-      step: 'placement',
+      step: 'discussion',
       model: 'claude-opus-5-5',
       inputTokens: 1_000_000,
       outputTokens: 100_000,
@@ -180,21 +538,20 @@ describe('logUsage', () => {
       cacheWriteTokens: 0,
       costUsd: 6,
     });
-    info.mockRestore();
   });
 
-  it('journalise l usage de chaque appel réussi', async () => {
+  it('compte la lecture et l’écriture du cache, et ne chiffre pas un modèle sans tarif', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-    const { llm } = setup(() => ({
-      ...ok,
-      model: 'claude-haiku-5-5',
-      usage: { input_tokens: 10, output_tokens: 5 },
-    }));
+    logUsage('reponse', 'claude-haiku-5-5', {
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_read_input_tokens: 1_000_000,
+      cache_creation_input_tokens: 1_000_000,
+    });
+    logUsage('reponse', 'un-autre-modele', { input_tokens: 1, output_tokens: 1 });
 
-    await llm.generateObject(request('triage', 'zanzibar'));
-
-    expect(info).toHaveBeenCalledOnce();
-    expect(JSON.stringify(info.mock.calls)).not.toContain('zanzibar');
-    info.mockRestore();
+    const [first, second] = info.mock.calls.map(([, , json]) => JSON.parse(json as string));
+    expect(first.costUsd).toBeCloseTo(0.135);
+    expect(second.costUsd).toBeNull();
   });
 });

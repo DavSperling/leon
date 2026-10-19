@@ -123,4 +123,54 @@ describe('parseEnv', () => {
   it('n’exige aucun réglage de fournisseur quand LEON_EMBEDDINGS est absent', () => {
     expect(() => parseEnv({ ...TEST_ENV, VOYAGE_API_KEY: '' })).not.toThrow();
   });
+
+  it('traite les modèles par étape absents ou vides comme une absence', () => {
+    const env = parseEnv({ ...TEST_ENV, LEON_MODEL_DISCUSSION: '' });
+    expect(env.LEON_MODEL_REPONSE).toBeUndefined();
+    expect(env.LEON_MODEL_DISCUSSION).toBeUndefined();
+    expect(env.LEON_MODEL_POINT).toBeUndefined();
+  });
+
+  it('garde les modèles réglés pour chaque étape', () => {
+    const env = parseEnv({
+      ...TEST_ENV,
+      LEON_MODEL_REPONSE: 'claude-haiku-5-5',
+      LEON_MODEL_DISCUSSION: 'claude-opus-5-5',
+      LEON_MODEL_POINT: 'claude-sonnet-5-5',
+    });
+    expect([env.LEON_MODEL_REPONSE, env.LEON_MODEL_DISCUSSION, env.LEON_MODEL_POINT]).toEqual([
+      'claude-haiku-5-5',
+      'claude-opus-5-5',
+      'claude-sonnet-5-5',
+    ]);
+  });
+
+  it('traite LEON_LLM absent ou vide comme une absence de faux modèle', () => {
+    expect(parseEnv(TEST_ENV).LEON_LLM).toBeUndefined();
+    expect(parseEnv({ ...TEST_ENV, LEON_LLM: '' }).LEON_LLM).toBeUndefined();
+  });
+
+  it('accepte le faux modèle hors production', () => {
+    expect(parseEnv({ ...TEST_ENV, LEON_LLM: 'factice' }).LEON_LLM).toBe('factice');
+    expect(parseEnv({ ...TEST_ENV, LEON_LLM: 'factice', NODE_ENV: 'development' }).LEON_LLM).toBe(
+      'factice',
+    );
+  });
+
+  it('rejette un LEON_LLM inconnu', () => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_LLM: 'autre' })).toThrow(/LEON_LLM/);
+  });
+
+  it('refuse le faux modèle en production, avec un message en français qui nomme la variable', () => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_LLM: 'factice', NODE_ENV: 'production' })).toThrow(
+      /LEON_LLM.*production/s,
+    );
+  });
+
+  it('accepte la production sans faux modèle', () => {
+    expect(() => parseEnv({ ...TEST_ENV, NODE_ENV: 'production' })).not.toThrow();
+    expect(() =>
+      parseEnv({ ...TEST_ENV, NODE_ENV: 'production', ANTHROPIC_API_KEY: 'cle-de-test' }),
+    ).not.toThrow();
+  });
 });

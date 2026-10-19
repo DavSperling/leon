@@ -33,6 +33,10 @@ export async function seedRun(
     acl?: string[];
     status?: 'queued' | 'running' | 'done' | 'failed';
     updatedAt?: Date;
+    title?: string | null;
+    // nature, url, origin… comme les écrit l'ingestion des connecteurs (connectors/ingest-items.ts).
+    metadata?: Record<string, unknown>;
+    lastTurnAt?: Date;
   },
 ): Promise<SeededRun> {
   const acl = input.acl ?? [owner.userId];
@@ -43,8 +47,10 @@ export async function seedRun(
       kind: input.kind ?? 'claude_code',
       externalId: randomUUID(),
       ownerUserId: owner.userId,
-      title: 'Source de test',
+      title: input.title === undefined ? 'Source de test' : input.title,
       acl,
+      metadata: input.metadata ?? {},
+      lastTurnAt: input.lastTurnAt ?? null,
     })
     .returning({ id: sources.id });
   if (!source) throw new Error('source de test non créée');

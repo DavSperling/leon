@@ -6,6 +6,8 @@
 // Un texte fait seulement d'espaces ou de marqueurs ne donne aucun passage : un tour blanc n'est pas
 // cherchable, et son indexation se termine quand même. Tout autre texte donne au moins un passage.
 
+import { stripHighlightMarks } from '@/lib/highlight';
+
 const PASSAGE_TARGET = 1200;
 const PASSAGE_MAX = 1600;
 // Une coupe ne tombe jamais avant : chaque passage, sauf le dernier, a au moins cette taille.
@@ -13,9 +15,6 @@ const PASSAGE_MIN = 1000;
 const PASSAGE_OVERLAP = 150;
 
 export type Chunk = { ord: number; text: string; start: number; end: number };
-
-// U+E000 et U+E001, les marqueurs de début et de fin de surlignage (C6, src/lib/highlight.ts en T06).
-const HIGHLIGHT_MARKS = /[\uE000\uE001]/g;
 
 // Où couper, par ordre de préférence : fin de paragraphe, fin de phrase, espace. La coupe tombe juste
 // après le séparateur.
@@ -69,7 +68,7 @@ export function chunkText(text: string): Chunk[] {
   let start = 0;
   while (start < text.length) {
     const end = text.length - start <= PASSAGE_MAX ? text.length : cutEnd(text, start);
-    const passageText = text.slice(start, end).replace(HIGHLIGHT_MARKS, '');
+    const passageText = stripHighlightMarks(text.slice(start, end));
     // Un morceau fait seulement d'espaces ou de marqueurs n'apporte rien à la recherche.
     if (passageText.trim() !== '') {
       passages.push({ ord: passages.length, text: passageText, start, end });

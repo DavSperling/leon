@@ -31,6 +31,20 @@ describe('chunkText', () => {
     expect(chunkText(`${START}${END}`)).toEqual([]);
   });
 
+  it('rend au moins un passage pour tout texte qui n’est pas blanc, même après beaucoup d’espaces', () => {
+    const source = `${' '.repeat(5000)}fin`;
+
+    const passages = chunkText(source);
+
+    expect(passages.length).toBeGreaterThanOrEqual(1);
+    expect(passages[0]?.ord).toBe(0);
+    expect(passages.at(-1)?.end).toBe(source.length);
+    expect(passages.at(-1)?.text.endsWith('fin')).toBe(true);
+    for (const passage of passages) {
+      expect(passage.text).toBe(source.slice(passage.start, passage.end));
+    }
+  });
+
   it('retire les marqueurs de surlignage du texte, sans changer les positions', () => {
     expect(chunkText(`a${START}b${END}c`)).toEqual([{ ord: 0, text: 'abc', start: 0, end: 5 }]);
   });

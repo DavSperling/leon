@@ -24,6 +24,14 @@ pnpm leon import-claude-code --dry-run
 pnpm ext:build                        # extension non empaquetée dans extension/.output/chrome-mv3
 ```
 
+La recherche demande l'extension Postgres `vector` (pgvector, migration `0011-passages.sql`), que seul un superutilisateur peut créer. Un volume neuf l'a dans toutes ses bases (`docker/postgres/init.sql` la crée dans `template1`). Pour un volume créé avant, il faut la créer une fois, puis relancer `pnpm db:migrate` (qui sinon s'arrête et rappelle cette commande) :
+
+```bash
+for base in template1 leon leon_test; do
+  docker compose exec -T postgres psql -U postgres -d "$base" -c "create extension if not exists vector"
+done
+```
+
 La checklist de vérification manuelle du premier jet est dans [`docs/guides/premier-jet-verification.md`](docs/guides/premier-jet-verification.md) (périmée depuis le deuxième jet, sauf le démarrage, le jeton et l'extension), celle des connecteurs dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
 ## Tester

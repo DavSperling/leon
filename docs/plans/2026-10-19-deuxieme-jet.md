@@ -35,7 +35,7 @@ T02, T03, T04, T05, T06, T07, T08, T09, T10, T11, T12, T13, T14, T15, T15b, T16,
 
 Seules exceptions : **T01** se lance tout de suite, en parallèle de tout (un seul fichier de doc) ; **T27** peut tourner en parallèle de n'importe quelle tâche après T05 (elle ne touche que `Dockerfile`, `.dockerignore`, `docker/deploiement/` et `docs/guides/deploiement.md`, et ne lance pas de test sur base). Dans les groupes parallèles du lot E, chaque tâche ne touche que ses dossiers de connecteur ; T22 seule écrit l'appli `GOOGLE` et le guide OAuth avant T23 et T24, qui y ajoutent leur section ensuite.
 
-**Base de test dédiée.** Ce jet supprime des tables : il ne doit jamais toucher `leon_test`, que partagent `main`, `amos/taches-v1` et les branches de David, ni `leon`. Avant T02, l'orchestrateur crée la base hors sandbox, avec l'extension `vector` créée par le superutilisateur (`leon_owner` n'a peut-être pas le droit de la créer ; la migration 0011 fait alors un `create extension if not exists` sans effet) :
+**Base de test dédiée.** Ce jet supprime des tables : il ne doit jamais toucher `leon_test`, que partagent `main`, `amos/taches-v1` et les branches de David, ni `leon`. Avant T02, l'orchestrateur crée la base hors sandbox, avec l'extension `vector` créée par le superutilisateur (`vector` n'est pas « trusted » : `leon_owner`, qui n'est pas superutilisateur, ne peut pas la créer, et le `create extension if not exists` de la migration 0011 n'est sans effet que si elle existe déjà ; un volume neuf l'a dans toutes ses bases, `docker/postgres/init.sql` la créant dans `template1`, et le README donne la commande pour un volume plus ancien) :
 
 ```bash
 docker exec leon-postgres-1 psql -U postgres \
@@ -64,7 +64,7 @@ T02 rend le nom de la base de test réglable (`LEON_TEST_DATABASE`, défaut `leo
 
 - Node ≥ 24, pnpm 11.0.8, TypeScript strict, fichiers en ASCII minuscules avec tirets. Ne jamais lire ni afficher `.env.local`. Aucun secret dans le dépôt, les journaux ou les tests.
 - Sandbox : tests `*.db.test.ts`, `pnpm db:migrate`, Docker, `pnpm dev`, `gh` et `pnpm install` se lancent hors sandbox.
-- **Passages :** cible **1 200** caractères, maximum **1 600**, chevauchement **150**, coupe de préférence à une fin de paragraphe, puis de phrase, puis d'espace. Un tour non vide donne au moins un passage. Les caractères `` et `` (marqueurs de surlignage, C6) sont retirés du texte des passages.
+- **Passages :** cible **1 200** caractères, maximum **1 600**, chevauchement **150**, coupe de préférence à une fin de paragraphe, puis de phrase, puis d'espace. Un tour qui n'est pas blanc donne au moins un passage ; un tour fait seulement d'espaces ou de marqueurs n'en donne aucun. Les caractères `` et `` (marqueurs de surlignage, C6) sont retirés du texte des passages.
 - **Vecteurs :** `halfvec(1024)`, distance cosinus, au plus **64** textes par appel au fournisseur.
 - **Recherche :** requête tronquée à **300** caractères ; **10** sources par page, **3** passages au plus par source ; fusion RRF avec **k = 60** ; facteur de récence `0,7 + 0,3 × exp(−âge_en_jours / 180)` ; bonus « moi » **+ 10 %**.
 - **Réponse en tête :** **8** passages au plus, **6 000** caractères de contexte au plus, réponse de **120** mots au plus, délai **15 s**, cache **10 min** par (utilisateur, requête normalisée).
@@ -145,7 +145,7 @@ Dockerfile, docs/guides/deploiement.md   (T27)
 | Fichier | Tâche | Contenu |
 |---|---|---|
 | `0010-suppression-tri.sql` | T02 | supprime `review_items`, `facts`, `fact_candidates`, `card_aliases`, `cards`, `predicates`, `card_types` (et leurs fonctions, index, politiques) ; `read_log` : supprime ses lignes (elles pointent vers des fiches), remplace `card_id` par `source_id uuid not null` (clé composée vers `sources`, `on delete cascade`) et `passage_id uuid` facultatif (sans clé étrangère, les passages n'existent qu'en 0011) ; supprime les contraintes `sources_kind_check` et `connections_provider_check` ; `ingest_runs` : supprime la colonne `triage` et la contrainte d'étape, `step` vaut `'index'` par défaut avec `check (step in ('index', 'done'))`, toutes les lignes passent à `step = 'index', status = 'queued'` |
-| `0011-passages.sql` | T03 | `create extension if not exists vector` ; tables `passages` et `passage_vectors` (ci-dessous), sécurité par ligne `tenant_acl`, droits `select, insert, update, delete` à `leon_app` ; index `gin (tsv)`, `(tenant_id, source_id)`, `(tenant_id, ts desc)`, `hnsw (embedding halfvec_cosine_ops)` ; fonctions `passages_sans_vecteur` et `runs_en_attente` |
+| `0011-passages.sql` | T03 | `create extension if not exists vector` ; tables `passages` et `passage_vectors` (ci-dessous), sécurité par ligne `tenant_acl`, droits `select, insert, update, delete` à `leon_app` ; index `gin (tsv)`, `(tenant_id, source_id)`, `(tenant_id, ts desc)`, `hnsw (embedding halfvec_cosine_ops)` ; fonctions `passages_sans_vecteur` et `runs_en_attente`. Écarts acceptés à la relecture de T03 : `check (ord >= 0)`, `check (char_start >= 0 and char_end > char_start)` et l'index partiel `ingest_runs_queued_idx on ingest_runs (updated_at) where status = 'queued'` (pour le tic de `runs_en_attente`). Demande pgvector 0.8 au moins (`halfvec` : 0.7 ; `hnsw.iterative_scan` de T06 : 0.8), vérifié par `schema-contract.db.test.ts`, et l'extension créée par un superutilisateur : `init.sql` en local, le compte d'administration chez un hébergeur, avant la première migration |
 | `0012-discussions.sql` | T11 | `discussions`, `discussion_messages` (privées : `acl = [user_id]`) |
 | `0013-points-du-matin.sql` | T13 | `briefings` ; fonctions `briefings_du_projet`, `briefings_a_rafraichir` |
 | `0014-parts-d-acces.sql` | T16 | `source_grants` ; `sources.shared` et index uniques partiels ; `connections.acl` des connexions personnelles ; fonctions `grant_source_access`, `revoke_connection_grants` ; reprise de l'existant |
@@ -155,7 +155,8 @@ Dockerfile, docs/guides/deploiement.md   (T27)
 | `0018-invitations.sql` | T26 | `invite_links` ; fonctions `invite_link_lookup`, `invite_link_consume` |
 
 Les fonctions `security definer` de ce jet suivent le modèle de `connector_syncs_due` (0008) : `set search_path = public`, `revoke all … from public`, `grant execute … to leon_app`, et elles ne rendent **que des identifiants** quand elles lisent hors sécurité par ligne. Fonctions de parcours (tics) :
-- `runs_en_attente(p_minutes integer)` → `(run_id, tenant_id, user_id)` : runs `queued` depuis plus de `p_minutes`, `user_id` = propriétaire de la source (T05) ;
+- `runs_en_attente(p_minutes integer)` → `(run_id, tenant_id, user_id)` : runs `queued` depuis plus de `p_minutes`, `user_id` = propriétaire de la source (T05). « Depuis » se lit sur `ingest_runs.updated_at`, qu'aucun déclencheur ne tient à jour, et la fonction n'a pas de limite : 0010 a remis tout l'historique en `queued` sans toucher `updated_at` (des milliers de runs dès le premier tic). Qui remet un run en file écrit donc `updated_at = now()` et borne le nombre de runs repris par tic ;
+- `passages_sans_vecteur(p_model text, p_limit integer)` → `(passage_id, tenant_id, user_id)` : passages sans vecteur de ce modèle, les plus récents d'abord, sans mémoire des échecs (un passage que le fournisseur refuse toujours revient en tête à chaque tic) (T03, lue par T05) ;
 - `briefings_du_projet(p_project text)` → `(user_id)` : utilisateurs de **l'organisation courante** (`app_tenant()`) qui ont un point sur ce projet (T13) ;
 - `briefings_a_rafraichir(p_days integer)` → `(tenant_id, user_id, project)` : points lus depuis moins de `p_days` jours (T13) ;
 - `connexions_a_reconcilier()` → `(connection_id, tenant_id, user_id)` : connexions d'équipe actives dont `last_reconciled_at` est nul ou date de plus de 24 h (T18).
@@ -283,6 +284,10 @@ export async function enqueueIndexing(ctx: TenantContext, ingestRunId: string): 
 
 // src/server/search/chunk.ts — pur
 export function chunkText(text: string): Array<{ ord: number; text: string; start: number; end: number }>;
+// start et end en unités UTF-16 (text.slice) : un émoji y vaut 2, 1 pour substr de Postgres ; à ne lire qu'en TypeScript.
+// Texte blanc (espaces, marqueurs seuls) → [] : le tour n'a aucun passage, son run passe quand même à 'done'.
+// Un tour de 8 000 caractères donne 8 passages en texte courant (6 sans aucune espace, 9 au pire théorique).
+// Les marqueurs de C6 sont retirés par une copie littérale, à remplacer par stripHighlightMarks quand highlight.ts existe (T06).
 
 // src/server/search/index-run.ts
 export async function indexIngestRun(job: PipelineJob, deps: { embedder: Embedder | null }): Promise<'indexe' | 'absent'>;
@@ -520,7 +525,7 @@ T25 ne démarre que si le verdict est `indexable` (décision 14 de la spec).
 
 ### T03 · Passages — Opus
 
-**Fichiers :** créer `src/server/db/migrations/0011-passages.sql`, `src/server/db/schema/search.ts` (passages, passageVectors), `src/server/search/chunk.ts`, `src/server/search/chunk.test.ts`, `src/server/search/passages-rls.db.test.ts` ; modifier `schema-contract.db.test.ts`.
+**Fichiers :** créer `src/server/db/migrations/0011-passages.sql`, `src/server/db/schema/search.ts` (passages, passageVectors), `src/server/search/chunk.ts`, `src/server/search/chunk.test.ts`, `src/server/search/passages-rls.db.test.ts` ; modifier `schema-contract.db.test.ts` et `tenant-integrity.db.test.ts` (il énumère les clés composées : celles des passages et des vecteurs s'y ajoutent).
 
 **Interfaces :** produit `chunkText` (C5), les tables de C2, `passages_sans_vecteur`.
 

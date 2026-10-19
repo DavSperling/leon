@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { readdirSync } from 'node:fs';
 import { is } from 'drizzle-orm';
 import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
+import { passageVectors } from './schema/search';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
 // Les fichiers de schéma sont lus dans le dossier, sans liste à la main : un nouveau fichier est couvert dès
@@ -159,13 +160,42 @@ describe('suppression du tri (0010)', () => {
   });
 });
 
+// Comparaison numérique, partie par partie : « 0.10.0 » est plus récent que « 0.8.0 ».
+function versionAtLeast(version: string, minimum: number[]): boolean {
+  const parts = version.split('.').map(Number);
+  for (const [index, wanted] of minimum.entries()) {
+    const part = parts[index] ?? 0;
+    if (part !== wanted) return part > wanted;
+  }
+  return true;
+}
+
 describe('passages et vecteurs (0011)', () => {
-  it('les vecteurs sont des halfvec de 1 024 dimensions', async () => {
+  it('les vecteurs sont des halfvec de 1 024 dimensions, en base comme dans Drizzle', async () => {
     const { rows } = await adminPool.query<{ type: string }>(
       `select format_type(atttypid, atttypmod) as type from pg_attribute
         where attrelid = 'public.passage_vectors'::regclass and attname = 'embedding'`,
     );
+    const embedding = getTableConfig(passageVectors).columns.find(
+      (column) => column.name === 'embedding',
+    );
+
     expect(rows).toEqual([{ type: 'halfvec(1024)' }]);
+    expect(embedding?.getSQLType()).toBe('halfvec(1024)');
+  });
+
+  // halfvec et halfvec_cosine_ops demandent pgvector 0.7 ; hnsw.iterative_scan, que la recherche pose (T06),
+  // demande 0.8. Une base plus ancienne passerait la migration et ferait échouer chaque recherche.
+  it('pgvector est en version 0.8.0 au moins', async () => {
+    expect(versionAtLeast('0.10.0', [0, 8, 0])).toBe(true);
+    expect(versionAtLeast('0.7.4', [0, 8, 0])).toBe(false);
+    const { rows } = await adminPool.query<{ version: string }>(
+      "select extversion as version from pg_extension where extname = 'vector'",
+    );
+
+    expect(rows).toHaveLength(1);
+    const version = rows[0]?.version ?? '';
+    expect(versionAtLeast(version, [0, 8, 0]), `pgvector ${version}`).toBe(true);
   });
 
   it('le plein texte est une colonne générée, en français et en simple', async () => {
@@ -185,6 +215,11 @@ describe('passages et vecteurs (0011)', () => {
     } = await createTestTenant(['Paul']);
     if (!paul) throw new Error('membre de test manquant');
     const { sourceId, turnId } = await seedSource(paul, { text: 'Les contrats OVH sont signés.' });
+    // Le passage, sans vecteur, ne doit pas rester dans la file des autres fichiers (passages_sans_vecteur) :
+    // supprimer la source l'emporte en cascade.
+    onTestFinished(async () => {
+      await adminPool.query('delete from sources where id = $1', [sourceId]);
+    });
     await adminPool.query(
       `insert into passages (tenant_id, source_id, turn_id, ord, text, char_start, char_end, ts, acl)
        values ($1, $2, $3, 0, 'Les contrats OVH sont signés.', 0, 29, now(), array[$4::uuid])`,

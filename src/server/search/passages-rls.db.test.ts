@@ -161,6 +161,8 @@ describe('passages et vecteurs sous la sécurité par ligne', () => {
   it('Bob ne peut pas écrire un passage aux droits d’Alice', async () => {
     const team = await seedTeamSource(bob);
 
+    // Source, tour et ordre sont valides : seule la politique (with check) peut refuser. Le message distingue
+    // la sécurité par ligne d'un droit d'insertion manquant, qui rendrait aussi 42501.
     await expect(
       withTenant(bob, (tx) =>
         tx.insert(passages).values({
@@ -175,7 +177,9 @@ describe('passages et vecteurs sous la sécurité par ligne', () => {
           acl: [alice.userId],
         }),
       ),
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({
+      cause: { code: '42501', message: expect.stringMatching(/row-level security/) },
+    });
   });
 
   it('un passage ne peut pas pointer vers la source d’une autre organisation', async () => {

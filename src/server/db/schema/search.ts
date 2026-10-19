@@ -22,7 +22,9 @@ export const passages = pgTable('passages', {
     .references(() => turns.id, { onDelete: 'cascade' }),
   ord: integer('ord').notNull(),
   text: text('text').notNull(),
-  // Positions dans le texte du tour ; le texte du passage en retire les marqueurs de surlignage.
+  // Positions dans le texte du tour ; le texte du passage en retire les marqueurs de surlignage. En unités
+  // UTF-16 (chunkText, `text.slice`) : un émoji y vaut 2 et 1 pour `substr` de Postgres. À ne lire qu'en
+  // TypeScript, jamais pour découper le tour en SQL.
   charStart: integer('char_start').notNull(),
   charEnd: integer('char_end').notNull(),
   ts: timestamp('ts', { withTimezone: true }).notNull(),

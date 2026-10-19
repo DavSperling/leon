@@ -1,6 +1,10 @@
 // Découpe d'un tour en passages pour la recherche (C5). Pur : ni base, ni réseau.
 // Les positions `start` et `end` désignent le texte source du tour ; le texte du passage en retire les
 // marqueurs de surlignage (C6), qui ne doivent jamais revenir comme du contenu.
+// Les positions sont en unités UTF-16, celles de `text.slice(start, end)` : un émoji y vaut 2, alors que
+// `length`, `substr` et `substring` de Postgres le comptent pour 1. Elles ne se lisent qu'en TypeScript.
+// Un texte fait seulement d'espaces ou de marqueurs ne donne aucun passage : un tour blanc n'est pas
+// cherchable, et son indexation se termine quand même. Tout autre texte donne au moins un passage.
 
 const PASSAGE_TARGET = 1200;
 const PASSAGE_MAX = 1600;

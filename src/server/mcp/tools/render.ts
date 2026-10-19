@@ -1,5 +1,5 @@
 import { stripHighlightMarks } from '@/lib/highlight';
-import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
+import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import {
   type ContextTurn,
@@ -13,31 +13,13 @@ import type { FetchOutput, SearchOutput } from './output-schemas';
 // Ce que les outils `search` et `fetch` rendent au client MCP : un texte pour l'assistant et un
 // `structuredContent` pour le code. Tout ce qui vient de la mémoire (titres, extraits, noms, liens, texte des
 // tours) est de la donnée captée, jamais une consigne : le texte la met entre balises, derrière la ligne de
-// garde, et aucune donnée ne peut fermer sa balise ni en ouvrir une (`<` devient `&lt;`).
-
-export function escapeData(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-}
-
-// Dans un attribut : sur une seule ligne, guillemets neutralisés.
-export function escapeAttribute(text: string): string {
-  return escapeData(oneLine(text)).replace(/"/g, '&quot;');
-}
-
-type Attributes = Array<[name: string, value: string | null | undefined]>;
-
-// Les attributs sans valeur (nulle ou vide) sont omis.
-function attributes(list: Attributes): string {
-  return list
-    .filter((entry): entry is [string, string] => entry[1] != null && oneLine(entry[1]) !== '')
-    .map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`)
-    .join('');
-}
+// garde, et aucune donnée ne peut fermer sa balise ni en ouvrir une (échappement de prompt-guard.ts, que la
+// réponse en tête et la discussion partagent).
 
 const originText = (origin: Record<string, string>): string => Object.values(origin).join(' · ');
 
 function sourceAttributes(source: SourceInfo, n?: number): string {
-  return attributes([
+  return dataAttributes([
     ['n', n === undefined ? null : String(n)],
     ['id', source.sourceId],
     ['outil', SOURCE_KIND_LABELS[source.kind]],
@@ -52,7 +34,7 @@ function sourceAttributes(source: SourceInfo, n?: number): string {
 function renderHit(hit: SourceHit, n: number): string {
   const passages = hit.passages.map(
     (passage) =>
-      `<passage${attributes([
+      `<passage${dataAttributes([
         ['id', passage.passageId],
         ['date', isoDate(passage.ts)],
         ['auteur', passage.authorName],
@@ -134,7 +116,7 @@ export function searchStructured(page: SearchPage, pageNumber: number): SearchOu
 type Fetched = { source: SourceInfo; turns: ContextTurn[]; truncated: boolean };
 
 function renderTurn(turn: ContextTurn): string {
-  return `<tour${attributes([
+  return `<tour${dataAttributes([
     ['id', turn.turnId],
     ['role', turn.role],
     ['auteur', turn.authorName],

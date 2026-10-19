@@ -8,6 +8,7 @@ import { authRoutes } from './auth-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
 import type { ApiEnv } from './require-api-token';
+import { sessionRoutes } from './session-routes';
 
 export const app = new Hono<ApiEnv>().basePath('/api');
 
@@ -21,6 +22,9 @@ export const handleApiError: ErrorHandler = (error, c) => {
 app.get('/health', (c) => c.json({ ok: true }));
 app.route('/auth', authRoutes);
 app.route('/v1', ingestRoutes);
+// Routes de l'interface, au cookie de session : chacune pose ses propres contrôles (jamais un `use` global,
+// qui s'appliquerait aussi aux routes à jeton montées sous /v1).
+app.route('/v1', sessionRoutes);
 app.route('/mcp', mcpRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));

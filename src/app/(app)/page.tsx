@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { EmptyState } from '@/components/empty-state';
+import { AnswerBox } from '@/components/search/answer-box';
 import { EXAMPLES, SYNTAX } from '@/components/search/examples';
 import { ResultList } from '@/components/search/result-list';
 import { runSearch } from '@/components/search/run-search';
@@ -17,6 +18,8 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { requireUserContext } from '@/server/auth/session';
+import { env } from '@/server/env';
+import { getLlm } from '@/server/llm/get-llm';
 import { parseQuery } from '@/server/search/parse-query';
 
 export const metadata: Metadata = { title: 'Recherche' };
@@ -81,6 +84,9 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const found = searching ? await runSearch(ctx, q, page) : null;
   const pages = found ? pageCount(found.totalSources) : 1;
   const unknownPeople = found ? unknownPeopleMessage(found.unknownPeople) : null;
+  // La réponse en tête porte sur la première page, et seulement quand un modèle est branché : sans lui,
+  // l'encadré n'apparaît pas et la recherche marche quand même.
+  const answer = found !== null && found.hits.length > 0 && page === 1 && getLlm(env) !== null;
 
   return (
     <div className="@container mx-auto w-full max-w-[1180px] px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
@@ -97,9 +103,18 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
       {searching && (
         <div className="mt-5 space-y-5">
-          <SearchFilters q={q} now={now} />
-          {/* La réponse de l'agent se pose ici, avant les résultats, sans les retarder (encadré de la tâche T10). */}
-          <div aria-live="polite" data-reponse-en-tete="" />
+          {/* Le fieldset des filtres annule sa marge (m-0) : ce bloc garde l'écart de space-y-5 avec la suite. */}
+          <div>
+            <SearchFilters q={q} now={now} />
+          </div>
+          {/* Avant les résultats, sans les retarder : l'encadré lit la réponse une fois la page affichée. */}
+          {answer && (
+            <AnswerBox
+              key={q}
+              query={q}
+              results={found.hits.map((hit) => ({ sourceId: hit.sourceId, title: hit.title }))}
+            />
+          )}
           {unknownPeople && (
             <p
               role="status"

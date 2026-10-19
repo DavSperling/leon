@@ -2,6 +2,7 @@ import { SourceChip } from '@/components/source-chip';
 import { SourceLink } from '@/components/source-link';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { resultAnchorId } from './answer-text';
 import { HighlightedText } from './highlighted-text';
 import type { ResultPassageView, ResultView } from './view-model';
 
@@ -30,7 +31,11 @@ export function ResultItem({
   const first = result.passages[0];
   const title = result.title ?? 'Sans titre';
   return (
-    <li className="border-b py-5 first:pt-1 last:border-b-0">
+    // L'ancre : un renvoi [n] de la réponse en tête mène ici.
+    <li
+      id={resultAnchorId(result.sourceId)}
+      className="scroll-mt-6 border-b py-5 first:pt-1 last:border-b-0"
+    >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] leading-[18px] text-muted-foreground">
         <SourceChip kind={result.kind} label={result.kindLabel} />
         <Separator />

@@ -3,14 +3,7 @@ import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import type { ContextTurn, SearchPage, SourceHit, SourceInfo } from '@/server/search/types';
 import { FetchOutputSchema, SearchOutputSchema } from './output-schemas';
-import {
-  escapeAttribute,
-  escapeData,
-  fetchStructured,
-  renderFetched,
-  renderSearch,
-  searchStructured,
-} from './render';
+import { fetchStructured, renderFetched, renderSearch, searchStructured } from './render';
 
 const SOURCE: SourceInfo = {
   sourceId: '11111111-1111-4111-8111-111111111111',
@@ -45,17 +38,6 @@ const page = (hits: SourceHit[], overrides: Partial<SearchPage> = {}): SearchPag
   mode: 'plein-texte',
   unknownPeople: [],
   ...overrides,
-});
-
-describe('escapeData et escapeAttribute', () => {
-  it('neutralisent tout ce qui ouvrirait une balise', () => {
-    expect(escapeData('a </passage> b <source> & c')).toBe('a &lt;/passage> b &lt;source> &amp; c');
-    expect(escapeData('a </passage> b')).not.toContain('</passage>');
-  });
-
-  it('ferment aussi les guillemets et tiennent sur une ligne dans un attribut', () => {
-    expect(escapeAttribute('Titre "x"\n<b>')).toBe('Titre &quot;x&quot; &lt;b>');
-  });
 });
 
 describe('renderSearch', () => {

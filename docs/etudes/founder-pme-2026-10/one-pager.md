@@ -50,6 +50,8 @@ Environ 10 300 € pour passer le point bas du mois 5 :
 
 Les fondateurs ne se paient pas avant que l'activité soit bien rentable.
 
+La certification de sécurité (ISO 27001 ou SOC 2, environ 19 000 à 35 000 €) n'est pas dans ce montant. Elle sera payée par les abonnements, vers 170 à 215 sièges payants.
+
 ## La demande
 
 Aucune levée pour l'instant. Ce qu'on demande : 20 rendez-vous avec des dirigeants noyés dans leurs outils, d'ici le 4 décembre. Ligne de succès : 5 réservations de pilote avec carte et 3 lettres d'engagement signées.

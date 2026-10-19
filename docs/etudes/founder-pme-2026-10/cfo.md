@@ -19,6 +19,26 @@
 - [x] *L'unité gagne de l'argent avant les coûts fixes* : oui, 13,55 € par siège-mois.
 - [ ] *L'année 1 rembourse le départ* : non, à −588 € au plan de base ; oui avec l'une des trois améliorations ci-dessus.
 
+## La certification de sécurité, financée par les clients
+
+**Décision des fondateurs (19/10/2026)** : la certification (SOC 2 ou ISO 27001) se fera au fur et à mesure, quand les abonnements des premiers clients la financeront. Elle ne fait donc pas partie de la trésorerie de départ.
+
+**Ce qu'elle coûte** (sources publiques, à faire confirmer par des devis) :
+- **ISO 27001** : 19 000 à 35 000 € tout compris la première année pour une PME en France, en 9 à 14 mois, dont 4 000 à 6 500 € pour l'organisme certificateur ; le certificat vaut 3 ans, avec un audit de surveillance par an ([ayinedjimi-consultants](https://ayinedjimi-consultants.fr/articles/certification-iso-27001-pme-cout-etapes-2026)). Bpifrance propose un Chèque Cybersécurité qui peut couvrir une partie (jusqu'à 50 %, plafond 5 000 € selon cette source, à vérifier sur bpifrance.fr).
+- **SOC 2 Type I** : environ 25 000 à 50 000 $ la première année en tout, logiciel de conformité compris (Vanta ou Drata, 7 500 à 15 000 $ par an), et 2 500 à 15 000 $ pour l'auditeur ([Drata](https://drata.com/learn/soc-2/cost), [Transient Labs](https://transientlabs.ai/blog/soc2-compliance-cost-2026)).
+- Pour des acheteurs français et européens, **ISO 27001 est probablement la plus parlante**. Les acheteurs du panel citaient l'une ou l'autre (« ISO 27001 ou SOC 2 »). À confirmer pendant les entretiens.
+
+**Quand on peut se la payer** (calcul à la main à partir de la contribution de l'outil ; hypothèse de 25 000 € étalés sur 12 mois, soit environ 2 100 € par mois en plus des coûts fixes) :
+
+| prix payé par les clients | contribution par siège | sièges en plus du seuil (60) | sièges payants nécessaires au total |
+|---:|---:|---:|---:|
+| 19 € (lancement) | 13,55 € | environ 155 | **environ 215** |
+| 25 € (prix normal) | 19,55 € | environ 110 | **environ 170** |
+
+Avec la montée en charge du plan (250 sièges au mois 12), le palier est atteint **vers le mois 10 à 12**. La certification démarre donc au début de l'année 2, et elle est obtenue environ 9 à 14 mois plus tard. Le résultat de l'année 1 (7 464 €) ne suffit pas à la payer d'avance : elle se finance mois par mois sur les abonnements de l'année 2.
+
+**Ce qu'elle débloque** : les acheteurs « prudents sur la sécurité et le RGPD » représentent 16 % du panel et n'achètent pas du tout aujourd'hui (0 sur 16). Ils demandent presque tous ISO 27001 ou SOC 2. C'est le segment qui s'ouvre après la certification, surtout parmi les sociétés de 80 à 200 personnes. En attendant, l'audit de sécurité léger par un tiers (4 000 €, dans `numbers.json`) sert de première preuve.
+
 ---
 
 # Unit economics: Leon : mémoire d'entreprise pour sociétés de 10 à 200 personnes (montants en euros HT ; l'outil affiche le signe $). Année 1 au prix de lancement de 19 € (20 premières sociétés, garanti 12 mois).

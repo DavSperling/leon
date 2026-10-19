@@ -75,6 +75,8 @@ Une fuite de droits : quelqu'un voit dans une réponse un document auquel il n'a
 
 ### Ce qu'il faut pour démarrer
 
+- **La certification de sécurité (ISO 27001 ou SOC 2) n'est pas dans la trésorerie de départ** : décision des fondateurs, elle sera financée par les abonnements. Coût estimé de 19 000 à 35 000 € la première année ; on peut se la payer vers 170 à 215 sièges payants, soit vers la fin de l'année 1. Elle ouvre le segment des prudents sur la sécurité (16 % du panel, 0 % d'achat aujourd'hui). Détail dans `cfo.md`.
+
 - **Trésorerie** : environ 10 300 € avant que l'activité s'autofinance, ou environ 6 300 € si l'audit de sécurité tiers est reporté après les premiers pilotes payants (`cfo.md`).
 - **Le premier test** : du 9 novembre au 4 décembre 2026, 20 rendez-vous avec des dirigeants noyés dans les outils. Ligne de succès écrite d'avance : 5 réservations de pilote avec carte ou mandat SEPA, et 3 lettres d'engagement signées (`launch.md`).
 
@@ -567,6 +569,26 @@ Les mêmes 20 acheteurs (P001 à P020 du premier panel, mêmes fiches) ont vu le
 - [ ] *Un coût d'acquisition estimé et un canal reproductible* : **non rempli.** En vente directe par les fondateurs, le coût en argent est presque nul, mais le coût en temps n'est pas chiffré. Le maximum qu'on peut payer pour un client se calcule avec la contribution, voir l'étape marketing.
 - [x] *L'unité gagne de l'argent avant les coûts fixes* : oui, 13,55 € par siège-mois.
 - [ ] *L'année 1 rembourse le départ* : non, à −588 € au plan de base ; oui avec l'une des trois améliorations ci-dessus.
+
+### La certification de sécurité, financée par les clients
+
+**Décision des fondateurs (19/10/2026)** : la certification (SOC 2 ou ISO 27001) se fera au fur et à mesure, quand les abonnements des premiers clients la financeront. Elle ne fait donc pas partie de la trésorerie de départ.
+
+**Ce qu'elle coûte** (sources publiques, à faire confirmer par des devis) :
+- **ISO 27001** : 19 000 à 35 000 € tout compris la première année pour une PME en France, en 9 à 14 mois, dont 4 000 à 6 500 € pour l'organisme certificateur ; le certificat vaut 3 ans, avec un audit de surveillance par an ([ayinedjimi-consultants](https://ayinedjimi-consultants.fr/articles/certification-iso-27001-pme-cout-etapes-2026)). Bpifrance propose un Chèque Cybersécurité qui peut couvrir une partie (jusqu'à 50 %, plafond 5 000 € selon cette source, à vérifier sur bpifrance.fr).
+- **SOC 2 Type I** : environ 25 000 à 50 000 $ la première année en tout, logiciel de conformité compris (Vanta ou Drata, 7 500 à 15 000 $ par an), et 2 500 à 15 000 $ pour l'auditeur ([Drata](https://drata.com/learn/soc-2/cost), [Transient Labs](https://transientlabs.ai/blog/soc2-compliance-cost-2026)).
+- Pour des acheteurs français et européens, **ISO 27001 est probablement la plus parlante**. Les acheteurs du panel citaient l'une ou l'autre (« ISO 27001 ou SOC 2 »). À confirmer pendant les entretiens.
+
+**Quand on peut se la payer** (calcul à la main à partir de la contribution de l'outil ; hypothèse de 25 000 € étalés sur 12 mois, soit environ 2 100 € par mois en plus des coûts fixes) :
+
+| prix payé par les clients | contribution par siège | sièges en plus du seuil (60) | sièges payants nécessaires au total |
+|---:|---:|---:|---:|
+| 19 € (lancement) | 13,55 € | environ 155 | **environ 215** |
+| 25 € (prix normal) | 19,55 € | environ 110 | **environ 170** |
+
+Avec la montée en charge du plan (250 sièges au mois 12), le palier est atteint **vers le mois 10 à 12**. La certification démarre donc au début de l'année 2, et elle est obtenue environ 9 à 14 mois plus tard. Le résultat de l'année 1 (7 464 €) ne suffit pas à la payer d'avance : elle se finance mois par mois sur les abonnements de l'année 2.
+
+**Ce qu'elle débloque** : les acheteurs « prudents sur la sécurité et le RGPD » représentent 16 % du panel et n'achètent pas du tout aujourd'hui (0 sur 16). Ils demandent presque tous ISO 27001 ou SOC 2. C'est le segment qui s'ouvre après la certification, surtout parmi les sociétés de 80 à 200 personnes. En attendant, l'audit de sécurité léger par un tiers (4 000 €, dans `numbers.json`) sert de première preuve.
 
 ---
 

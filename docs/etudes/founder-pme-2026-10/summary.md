@@ -37,6 +37,7 @@ Une fuite de droits : quelqu'un voit dans une réponse un document auquel il n'a
 
 ## Ce qu'il faut pour démarrer
 
+- **La certification de sécurité (ISO 27001 ou SOC 2) n'est pas dans la trésorerie de départ** : décision des fondateurs, elle sera financée par les abonnements. Coût estimé de 19 000 à 35 000 € la première année ; on peut se la payer vers 170 à 215 sièges payants, soit vers la fin de l'année 1. Elle ouvre le segment des prudents sur la sécurité (16 % du panel, 0 % d'achat aujourd'hui). Détail dans `cfo.md`.
 - **Trésorerie** : environ 10 300 € avant que l'activité s'autofinance, ou environ 6 300 € si l'audit de sécurité tiers est reporté après les premiers pilotes payants (`cfo.md`).
 - **Le premier test** : du 9 novembre au 4 décembre 2026, 20 rendez-vous avec des dirigeants noyés dans les outils. Ligne de succès écrite d'avance : 5 réservations de pilote avec carte ou mandat SEPA, et 3 lettres d'engagement signées (`launch.md`).
 

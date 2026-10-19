@@ -49,6 +49,12 @@ export type TurnRow = typeof turns.$inferInsert;
 
 // Partagé avec l'ingestion des connecteurs. Les tours déjà connus (même source, même identifiant)
 // sont ignorés ; renvoie les ids des tours nouveaux et la date du plus récent des tours reçus.
+//
+// Les tours d'un même appel sont datés à l'écriture d'une microseconde d'écart, dans l'ordre reçu. Sans cela,
+// ils auraient tous la date de début de la transaction, et la lecture d'une source (date du tour, puis date
+// d'écriture) ne retrouverait leur ordre que par l'identifiant, tiré au hasard : or un long texte découpé en
+// morceaux (`stem:1`, `stem:2`…, un fichier, un mail) n'arrive qu'avec une seule date. Une date d'écriture déjà
+// donnée par l'appelant est gardée.
 export async function insertNewTurns(
   tx: Tx,
   rows: TurnRow[],
@@ -56,7 +62,12 @@ export async function insertNewTurns(
   if (rows.length === 0) return { ids: [], lastTs: null };
   const inserted = await tx
     .insert(turns)
-    .values(rows)
+    .values(
+      rows.map((row, index) => ({
+        ...row,
+        createdAt: row.createdAt ?? sql`now() + ${index}::float8 * interval '1 microsecond'`,
+      })),
+    )
     .onConflictDoNothing({ target: [turns.sourceId, turns.externalId] })
     .returning({ id: turns.id });
   const lastTs = new Date(Math.max(...rows.map((row) => row.ts.getTime())));

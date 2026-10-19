@@ -1,11 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { passages } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
+import { ingestTurns } from '@/server/ingest/ingest-turns';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { fetchPassageContext, fetchSource } from './context';
+import { indexIngestRun } from './index-run';
+
+// L'ingestion met le run d'indexation en file ; ici on l'indexe à la main.
+vi.mock('@/server/pipeline/queue');
 
 // Le contexte d'un passage et la lecture d'une source, sous les droits du lecteur.
 
@@ -221,5 +226,62 @@ describe('fetchSource', () => {
     expect(await fetchSource(bob, seeded.sourceId)).toBeNull();
     expect(await fetchSource(alice, randomUUID())).toBeNull();
     expect(await fetchSource(alice, 'pas-un-identifiant')).toBeNull();
+  });
+});
+
+// Un long texte découpé en morceaux (`doc:1`, `doc:2`…) arrive en une fois, avec une seule date : les tours n'ont
+// que leur ordre d'écriture pour se départager, comme ceux d'un document de connecteur ou d'un fichier.
+describe('tours qui ont tous la même date', () => {
+  const SAME_DATE = '2026-10-19T08:00:00Z';
+  const PIECES = 12;
+
+  async function ingestedPieces(owner: TenantContext) {
+    const result = await ingestTurns(owner, {
+      source: { kind: 'claude_code', external_id: randomUUID(), title: 'Document découpé' },
+      turns: Array.from({ length: PIECES }, (_, index) => ({
+        external_id: `doc:${index + 1}`,
+        role: 'user' as const,
+        text: `morceau ${index + 1} du document`,
+        ts: SAME_DATE,
+        capture_mode: 'network' as const,
+      })),
+    });
+    if (!result.ingestRunId) throw new Error('aucun run créé');
+    const job = { ingestRunId: result.ingestRunId, tenantId: owner.tenantId, userId: owner.userId };
+    expect(await indexIngestRun(job, { embedder: null })).toBe('indexe');
+    return result.sourceId;
+  }
+
+  const piece = (n: number) => `morceau ${n} du document`;
+
+  it('fetchSource rend les morceaux dans l’ordre où ils ont été écrits', async () => {
+    const { alice } = await team();
+    const sourceId = await ingestedPieces(alice);
+    const result = await fetchSource(alice, sourceId);
+    expect(result?.turns.map((turn) => turn.text)).toEqual(
+      Array.from({ length: PIECES }, (_, index) => piece(index + 1)),
+    );
+  });
+
+  it('fetchSource coupe à la limite sur les premiers morceaux, pas sur des morceaux quelconques', async () => {
+    const { alice } = await team();
+    const sourceId = await ingestedPieces(alice);
+    const result = await fetchSource(alice, sourceId, { maxChars: piece(1).length * 3 });
+    expect(result?.truncated).toBe(true);
+    expect(result?.turns.map((turn) => turn.text)).toEqual([piece(1), piece(2), piece(3)]);
+  });
+
+  it('fetchPassageContext appelle voisins les morceaux d’à côté', async () => {
+    const { alice } = await team();
+    const sourceId = await ingestedPieces(alice);
+    const whole = await fetchSource(alice, sourceId);
+    const sixth = whole?.turns.find((turn) => turn.text === piece(6));
+    const context = await fetchPassageContext(
+      alice,
+      await passageOfTurn(alice, sixth?.turnId as string),
+    );
+    expect(context?.turns.map((turn) => turn.text)).toEqual([4, 5, 6, 7, 8].map(piece));
+    expect(context?.turns.map((turn) => turn.isHit)).toEqual([false, false, true, false, false]);
+    expect(context?.turns[2]?.text).toBe(piece(6));
   });
 });

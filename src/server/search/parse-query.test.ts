@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
+import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { parseQuery } from './parse-query';
 
 const NOW = new Date('2026-10-19T10:00:00Z');
@@ -155,4 +157,29 @@ describe('parseQuery : les entrées bizarres', () => {
   it('replie les espaces du texte', () => {
     expect(parse('  call \t  ACME \n budget ').text).toBe('call ACME budget');
   });
+});
+
+// Les noms d'outils et de types se comparent sans casse, accents ni ponctuation : deux outils dont le nom aplati
+// serait le même (un outil ajouté au catalogue) se confondraient, et `outil:x` filtrerait le mauvais. Le
+// parcours de tout le catalogue le garde.
+describe('parseQuery : le catalogue des outils et des types', () => {
+  it.each(SOURCE_KINDS.map((kind) => [kind]))(
+    'outil:%s se retrouve par son identifiant comme par son libellé, et par eux seuls',
+    (kind) => {
+      const label = SOURCE_KIND_LABELS[kind];
+      expect(parse(`outil:${kind}`).filters.tools, `identifiant ${kind}`).toEqual([kind]);
+      expect(parse(`outil:"${label}"`).filters.tools, `libellé ${label}`).toEqual([kind]);
+      expect(parse(`outil:${label.toUpperCase().replaceAll(' ', '')}`).filters.tools).toEqual([
+        kind,
+      ]);
+    },
+  );
+
+  it.each(ITEM_NATURES.map((nature) => [nature]))(
+    'type:%s se retrouve au singulier comme au pluriel, et par lui seul',
+    (nature) => {
+      expect(parse(`type:${nature}`).filters.natures, `nature ${nature}`).toEqual([nature]);
+      expect(parse(`type:${nature}s`).filters.natures, `pluriel ${nature}s`).toEqual([nature]);
+    },
+  );
 });

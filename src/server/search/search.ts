@@ -43,6 +43,11 @@ const RRF_K = 60;
 const RECENCY_FLOOR = 0.7;
 const RECENCY_RANGE = 0.3;
 const RECENCY_DAYS = 180;
+// L'exposant du facteur de récence ne dépasse pas cette valeur : au-delà, `exp` sort de l'intervalle des
+// nombres à virgule de Postgres (erreur « underflow » vers -745) et ferait échouer toute recherche dont une
+// source est très ancienne. L'ingestion accepte toute date lisible (la « date zéro » `0001-01-01` de Go, de
+// .NET et de Microsoft Graph, par exemple). À 50, le facteur vaut 0,7 à 1e-22 près : un résultat inchangé.
+const RECENCY_EXP_MAX = 50;
 const ME_BONUS = 1.1;
 // Un titre répond à partir de cette ressemblance de trigrammes (0 : rien en commun, 1 : identique), le seuil
 // par défaut de pg_trgm. Titres gardés : une centaine suffit à remplir quelques pages.
@@ -171,6 +176,26 @@ function mineCondition(me: Awaited<ReturnType<typeof myAddresses>>): SQL {
   return parts.length > 0 ? sql`coalesce(${sql.join(parts, sql` or `)}, false)` : sql`false`;
 }
 
+// Les réglages de l'index vectoriel, dans un point de sauvegarde. Une base dont pgvector est trop ancien (avant
+// 0.8, sans `hnsw.iterative_scan`) les refuse, et ce refus abandonnerait toute la transaction : la recherche
+// retombe alors sur le plein texte seul, comme quand le fournisseur de vecteurs tombe. Les réglages posés
+// tiennent jusqu'à la fin de la transaction (`set local`).
+async function tuneVectorIndex(tx: Tx): Promise<boolean> {
+  try {
+    await tx.transaction(async (interne) => {
+      // Les voisins se cherchent par l'index sans qu'un filtre vide la liste : le parcours continue jusqu'à en
+      // avoir assez (pgvector 0.8).
+      await interne.execute(sql`set local hnsw.iterative_scan = relaxed_order`);
+      await interne.execute(sql`set local hnsw.ef_search = ${num(HNSW_EF_SEARCH)}`);
+    });
+    return true;
+  } catch {
+    // Le message de la base n'est pas gardé : la requête peut y figurer.
+    logError('search.vector_settings_failed', new Error('réglage des vecteurs refusé par la base'));
+    return false;
+  }
+}
+
 type SearchRow = {
   total: number;
   source_id: string | null;
@@ -199,8 +224,8 @@ async function rankedSources(
     now: Date;
     offset: number;
   },
-): Promise<{ hits: SourceHit[]; total: number }> {
-  const { text, filters, vector, me } = query;
+): Promise<{ hits: SourceHit[]; total: number; usedVectors: boolean }> {
+  const { text, filters, me } = query;
   const tenant = ctx.tenantId;
   // Une expression sans variable de ligne : Postgres la calcule une fois et peut s'en servir pour l'index.
   const tsq = sql`(websearch_to_tsquery('french', ${text}) || websearch_to_tsquery('simple', ${text}))`;
@@ -213,12 +238,8 @@ async function rankedSources(
 
   // Réglages de cette transaction seulement (`set local`) ; les valeurs sont des constantes du code.
   await tx.execute(sql`set local pg_trgm.similarity_threshold = ${num(TITLE_SIMILARITY)}`);
-  if (vector) {
-    // Les voisins se cherchent par l'index sans qu'un filtre vide la liste : le parcours continue jusqu'à en
-    // avoir assez (pgvector 0.8).
-    await tx.execute(sql`set local hnsw.iterative_scan = relaxed_order`);
-    await tx.execute(sql`set local hnsw.ef_search = ${num(HNSW_EF_SEARCH)}`);
-  }
+  // Sans réglage accepté, plus de vecteurs : le plein texte seul répond (voir `tuneVectorIndex`).
+  const vector = query.vector !== null && (await tuneVectorIndex(tx)) ? query.vector : null;
   const literal = vector ? `[${vector.join(',')}]` : null;
   // Sans filtre, la requête ne lit que les vecteurs : l'index HNSW la sert directement. Avec un filtre sur la
   // source ou le passage, elle les joint : Postgres choisit alors entre un parcours filtré de l'index (qui se
@@ -281,9 +302,9 @@ async function rankedSources(
     ranked as (
       select r.*,
              r.relevance
-               * (${num(RECENCY_FLOOR)} + ${num(RECENCY_RANGE)} * exp(-greatest(0,
+               * (${num(RECENCY_FLOOR)} + ${num(RECENCY_RANGE)} * exp(-least(${num(RECENCY_EXP_MAX)}, greatest(0,
                    extract(epoch from (${query.now.toISOString()}::timestamptz - r.last_ts))::float8 / 86400)
-                   / ${num(RECENCY_DAYS)}))
+                   / ${num(RECENCY_DAYS)})))
                * (case when r.mine then ${num(ME_BONUS)} else 1 end) as score
       from (
         select s.id as source_id, s.kind, s.title, s.metadata, ${LAST_TS_SQL} as last_ts,
@@ -355,7 +376,7 @@ async function rankedSources(
       hit.passages.push(passage);
     }
   }
-  return { hits: [...hits.values()], total: rows[0]?.total ?? 0 };
+  return { hits: [...hits.values()], total: rows[0]?.total ?? 0, usedVectors: vector !== null };
 }
 
 const hasWords = (text: string) => /[\p{L}\p{N}]/u.test(text);
@@ -377,16 +398,7 @@ export async function searchPassages(
   const page = Number.isInteger(requested) && requested >= 1 ? Math.min(requested, PAGE_MAX) : 1;
   const offset = (page - 1) * PAGE_SIZE;
 
-  // Le fournisseur de vecteurs est interrogé tout de suite, pendant que la base répond aux autres questions.
-  const embedding =
-    searchable && input.embedder
-      ? embedQuery(input.embedder, parsed.text.replace(/"/g, ' '))
-      : Promise.resolve(null);
-  const [people, me] = await Promise.all([
-    parsed.people.length > 0 ? resolvePeople(ctx, parsed.people) : null,
-    searchable ? myAddresses(ctx) : null,
-  ]);
-
+  const people = parsed.people.length > 0 ? await resolvePeople(ctx, parsed.people) : null;
   const { filters, impossible } = mergeFilters(input.filters ?? {}, parsed.filters, {
     authorEmails: people?.authorEmails,
     authorNames: people?.authorNames,
@@ -407,14 +419,19 @@ export async function searchPassages(
     return { hits: recent.hits, totalSources: recent.total, mode: 'plein-texte', unknownPeople };
   }
 
-  const vector = await embedding;
+  // Le fournisseur de vecteurs est payant : il n'est interrogé qu'ici, une fois sûr que la recherche a lieu
+  // (ni outils sans rien en commun, ni personne inconnue), pendant que la base donne les adresses du lecteur.
+  const [vector, me] = await Promise.all([
+    input.embedder ? embedQuery(input.embedder, parsed.text.replace(/"/g, ' ')) : null,
+    myAddresses(ctx),
+  ]);
   const found = await withTenant(ctx, (tx) =>
     rankedSources(tx, ctx, {
       text: parsed.text,
       filters,
       vector,
       model: vector ? (input.embedder?.model ?? null) : null,
-      me: me ?? { emails: [], names: [] },
+      me,
       now,
       offset,
     }),
@@ -422,7 +439,7 @@ export async function searchPassages(
   return {
     hits: found.hits,
     totalSources: found.total,
-    mode: vector ? 'hybride' : 'plein-texte',
+    mode: found.usedVectors ? 'hybride' : 'plein-texte',
     unknownPeople,
   };
 }

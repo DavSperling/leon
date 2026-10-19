@@ -8,7 +8,7 @@ import { adminDb, adminPool } from './db';
 import { createTestTenant } from './fixtures';
 import { type SeededRun, seedRun } from './seed-search';
 
-// Fixtures de la recherche : une source (seedRun) déjà découpée en passages et, par défaut, munie des vecteurs
+// Jeux de données de la recherche : une source (seedRun) déjà découpée en passages et, par défaut, munie des vecteurs
 // du fournisseur factice, comme après le passage du worker d'indexation. La base de test est partagée : chaque
 // groupe de tests prend sa propre organisation (newTeam) et la vide à la fin (dropTeams).
 

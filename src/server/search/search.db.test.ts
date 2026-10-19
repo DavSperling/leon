@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
+import { listActivity } from './activity';
 import { EMBED_QUERY_TIMEOUT_MS, searchPassages } from './search';
 import type { SearchFilters, SearchPage } from './types';
 
@@ -461,6 +462,113 @@ describe('modèle de vecteurs en panne', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('fournisseur de vecteurs', () => {
+  // Un appel au fournisseur est payant : il ne part que si la recherche aura lieu.
+  function countingEmbedder() {
+    const embed = vi.fn(async (texts: string[]) => factice.embed(texts, 'requete'));
+    const embedder: Embedder = { model: factice.model, embed };
+    return { embedder, embed };
+  }
+
+  it('est interrogé une fois, avec le texte de la requête, pour une recherche qui a lieu', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, { title: 'Ticket', turns: [{ text: 'quetzalcoatl renouvelé' }] });
+    const { embedder, embed } = countingEmbedder();
+    const page = await search(alice, 'quetzalcoatl', { embedder });
+    expect(page.mode).toBe('hybride');
+    expect(embed).toHaveBeenCalledTimes(1);
+    expect(embed.mock.calls[0]?.[0]).toEqual(['quetzalcoatl']);
+  });
+
+  it.each([
+    ['des outils sans rien en commun', 'outil:notion quetzalcoatl', { tools: ['github' as const] }],
+    ['une personne que personne ne porte', 'de:personne-inconnue quetzalcoatl', {}],
+  ])('n’est pas interrogé quand la recherche n’aura pas lieu (%s)', async (_, query, filters) => {
+    const { alice } = await team();
+    await seedIndexed(alice, { title: 'Ticket', turns: [{ text: 'quetzalcoatl renouvelé' }] });
+    const { embedder, embed } = countingEmbedder();
+    const page = await search(alice, query, { embedder, filters });
+    expect(page.hits).toEqual([]);
+    expect(embed).not.toHaveBeenCalled();
+  });
+});
+
+describe('dates extrêmes', () => {
+  // L'ingestion accepte toute date lisible, dont `0001-01-01`, la « date zéro » de Go, de .NET et de Microsoft
+  // Graph : une seule source ainsi datée ne doit faire échouer ni la recherche ni l'activité.
+  const DAYS = ['9999-12-31', '1659-01-01', '1500-01-01', '0001-01-01'];
+  const expected = DAYS.map((day) => `Source ${day}`);
+
+  async function seedExtremes() {
+    const { tenantId, alice } = await team();
+    for (const day of DAYS) {
+      const at = new Date(`${day}T00:00:00Z`);
+      await seedIndexed(alice, {
+        kind: 'github',
+        acl: [tenantId],
+        title: `Source ${day}`,
+        turns: [{ text: 'ocelotine', ts: at }],
+        lastTurnAt: at,
+      });
+    }
+    // Trouvée par son titre seul, par une requête faite de négations.
+    const zero = new Date('0001-01-01T00:00:00Z');
+    await seedIndexed(alice, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'a b c',
+      turns: [{ text: 'sans rapport', ts: zero }],
+      lastTurnAt: zero,
+    });
+    return alice;
+  }
+
+  it.each([
+    ['plein texte', null],
+    ['hybride', factice],
+  ])('rend les sources les plus récentes d’abord, sans exception (%s)', async (_, embedder) => {
+    const alice = await seedExtremes();
+    const page = await search(alice, 'ocelotine', { embedder });
+    expect(titles(page)).toEqual(expected);
+    // Une date lointaine ne gagne rien sur une autre : seule la dernière activité les départage.
+    expect(page.hits.every((hit) => Number.isFinite(hit.score) && hit.score > 0)).toBe(true);
+  });
+
+  it.each([
+    ['plein texte', null],
+    ['hybride', factice],
+  ])('ne casse pas sur une requête de négations seules (%s)', async (_, embedder) => {
+    const alice = await seedExtremes();
+    for (const query of ['-a -b', '-a -b -c', '-ocelotine']) {
+      const page = await search(alice, query, { embedder });
+      expect(Array.isArray(page.hits)).toBe(true);
+    }
+    expect(titles(await search(alice, '-a -b -c', { embedder }))).toContain('a b c');
+  });
+
+  it('rend l’activité, la plus récente d’abord, sans exception', async () => {
+    const alice = await seedExtremes();
+    const hits = await listActivity(alice, { filters: { tools: ['github'] }, limit: 10 });
+    // Les deux sources du 1er janvier de l'an 1 se départagent sur autre chose que leur date.
+    expect(hits.slice(0, 3).map((hit) => hit.title)).toEqual(expected.slice(0, 3));
+    expect(
+      hits
+        .slice(3)
+        .map((hit) => hit.title)
+        .toSorted(),
+    ).toEqual(['Source 0001-01-01', 'a b c']);
+    expect(hits[0]?.lastTs).toEqual(new Date('9999-12-31T00:00:00Z'));
+    expect(hits.at(-1)?.lastTs).toEqual(new Date('0001-01-01T00:00:00Z'));
+  });
+
+  it('rend, sans mot à chercher, les sources aux dates extrêmes avec des filtres seuls', async () => {
+    const alice = await seedExtremes();
+    const page = await search(alice, 'outil:github');
+    expect(page.totalSources).toBe(5);
+    expect(titles(page).slice(0, 3)).toEqual(expected.slice(0, 3));
   });
 });
 

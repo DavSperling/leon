@@ -1,0 +1,98 @@
+{
+ "n": 20,
+ "seed": 468984,
+ "customer": {
+  "business": "Leon : mémoire d'entreprise qui garde tout ce qui se dit et se décide dans les outils de l'équipe et répond en citant la source, pour sociétés de 10 à 200 personnes aux outils mélangés",
+  "target": "Le dirigeant, le DG ou le responsable des opérations d'une société française de 10 à 200 personnes qui travaille dans Google Workspace et aussi Slack, Notion, Jira ou Linear, Zoom ou Meet et un CRM (HubSpot, Pipedrive) ; tu raisonnes et tu réponds en français, avec un budget d'entreprise",
+  "where": "France, sociétés de 10 à 200 personnes (agences, cabinets de conseil, ESN, éditeurs SaaS, e-commerce, bureaux d'études, PME industrielles et de distribution), outils SaaS mélangés",
+  "age": [
+   29,
+   60
+  ],
+  "segments": [
+   {
+    "name": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "share": 0.3,
+    "income": [
+     55000,
+     130000
+    ]
+   },
+   {
+    "name": "CEO ou COO d'un éditeur SaaS ou d'un e-commerce de 20 à 80 personnes",
+    "share": 0.25,
+    "income": [
+     70000,
+     150000
+    ]
+   },
+   {
+    "name": "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+    "share": 0.25,
+    "income": [
+     90000,
+     200000
+    ]
+   },
+   {
+    "name": "Responsable des opérations ou de l'informatique d'une société de 50 à 200 personnes, qui instruit le dossier pour le DG",
+    "share": 0.2,
+    "income": [
+     50000,
+     90000
+    ]
+   }
+  ],
+  "behaviours": [
+   {
+    "name": "Pas encore équipé en IA",
+    "share": 0.34,
+    "how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT à titre perso ; aucun abonnement IA d'entreprise."
+   },
+   {
+    "name": "A déjà ChatGPT Business, Claude Team ou Copilot",
+    "share": 0.05,
+    "how": "A pris un abonnement IA d'équipe et branché Drive ou Slack ; trouve les réponses inégales et sans mémoire d'un mois sur l'autre, mais ne veut pas payer deux fois."
+   },
+   {
+    "name": "Noyé dans les outils",
+    "share": 0.2,
+    "how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois."
+   },
+   {
+    "name": "Prudent sécurité et RGPD",
+    "share": 0.16,
+    "how": "Demande où sont les données et qui y accède, fait relire par un DPO ou un avocat avant de signer, et refuse ce qui ressemble à de la surveillance."
+   },
+   {
+    "name": "Compte les euros",
+    "share": 0.16,
+    "how": "Compare chaque abonnement, ne prend que les sièges nécessaires, veut un retour chiffré avant de payer."
+   },
+   {
+    "name": "Sceptique des démos IA",
+    "share": 0.09,
+    "how": "A vu des démos qui hallucinaient sur ses propres données ; veut la preuve sur ses données avant de payer."
+   }
+  ],
+  "objections": [
+   "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+   "Est-ce qu'un stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+   "Mes salariés vont le vivre comme de la surveillance",
+   "Ces outils ne trouvent rien ou inventent des réponses avec assurance, j'en ai déjà vu",
+   "Brancher tous nos outils, ça va prendre des semaines et je n'ai pas d'équipe pour ça",
+   "On va payer, et dans deux mois plus personne ne s'en servira"
+  ],
+  "habits": [
+   "un client conteste un périmètre validé en réunion il y a deux mois et personne ne retrouve qui a dit quoi",
+   "tu viens de perdre un chef de projet senior et ses clients posent des questions auxquelles personne ne sait répondre",
+   "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion ou Drive",
+   "tes commerciaux fouillent Gmail, HubSpot, Slack et deux comptes rendus avant chaque rendez-vous",
+   "le support demande aux devs dix fois par semaine si un bug est connu",
+   "trois nouveaux arrivent le mois prochain et l'onboarding se fait de mémoire",
+   "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an",
+   "ton équipe utilise ChatGPT chacun de son côté et rien n'est partagé"
+  ]
+ },
+ "pitch": "Leon, la mémoire de votre entreprise. Il garde ce qui se dit et se décide dans vos outils (Gmail, Drive, Meet, Notion, Jira ou Linear, Zoom, GitHub, HubSpot ou Pipedrive ; Slack est interrogé en direct, car Slack interdit qu'on stocke ses messages) et répond à vos questions en citant la source exacte (le mail, la minute de réunion, le ticket), ou dit « je ne sais pas ». Exemples : « qu'a-t-on promis à ce client en réunion le mois dernier ? », « que suivait le chef de projet qui vient de partir ? », « ce bug est-il connu ? ».\nLe pilote 30 jours : on commence par une seule équipe de 10 personnes maximum, que vous choisissez, gratuitement. Avant de brancher quoi que ce soit, Leon vous remet un audit de vos partages : la liste des documents sensibles (paie, marges, contrats) visibles par trop de monde, à corriger ou à exclure. Paie et finance sont exclues par défaut. Nous installons avec vous en une heure, en visio, et réglons les recettes de l'équipe (fiche client avant rendez-vous, onboarding, rapport de la semaine).\nLe test des 10 questions : votre équipe écrit 10 questions dont elle connaît la réponse. À la fin des 30 jours, vous voyez le score, réponse par réponse, avec les sources. Vous ne payez que si vous décidez de continuer.\nLe dossier confiance, prêt à transmettre à votre DPO et à votre CSE : contrat de traitement des données (DPA) signable, liste des sous-traitants et du modèle d'IA utilisé, hébergement en Europe, note d'information des salariés, journal de qui a demandé quoi, export complet et suppression sous 30 jours à tout moment. La capture des conversations ChatGPT et Claude est une option désactivée par défaut. Pour les plus prudents : instance dédiée ou installation sur votre propre cloud.\nEnsuite : 25 € HT par mois et par utilisateur actif (on ne paie pas pour ceux qui ne s'en servent pas), sans engagement. Les 20 premières sociétés : 19 € garantis 12 mois, pour un contrat signé avant le 31 mars 2027."
+}

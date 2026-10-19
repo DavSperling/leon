@@ -1,0 +1,13 @@
+{
+  "id": "P035",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin existe, mes commerciaux perdent du temps avant chaque rendez-vous, mais je ne branche pas toute la mémoire de l'entreprise, mails et réunions compris, chez une startup que je ne connais pas sans que mon DPO et mon responsable informatique aient tout passé au crible. Un « installation en 15 minutes, sans équipe informatique », c'est justement ce qui m'inquiète.",
+  "objection": "Les droits hérités des outils d'origine, je n'y crois qu'à moitié : chez nous les partages Drive sont mal rangés, et le jour où un stagiaire demande à Leon les marges d'un client ou la paie, il aura la réponse avec la source. Et enregistrer toutes les réunions, mes salariés et le CSE vont y voir de la surveillance.",
+  "would_change_my_mind": "Un pilote limité à l'équipe commerciale (Gmail, HubSpot, comptes rendus) sur une instance dédiée en Europe, avec DPA, sous-traitants listés, audit des droits avant indexation et journal de qui a demandé quoi, validé par mon DPO.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

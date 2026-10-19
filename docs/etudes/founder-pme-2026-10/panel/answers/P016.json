@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je cherche exactement ça depuis des mois et Glean voulait 60 000 $ par an ; à 25 € sans engagement, je lance un pilote payant sur une équipe de 10 personnes (support et sales) pendant un mois, pas sur toute la boîte.",
+  "objection": "Une startup inconnue qui aspire tous nos mails, Drive et réunions, et un moteur qui risque comme les autres de répondre à côté avec assurance ; si au bout de deux semaines le « je ne sais pas » arrive trop souvent ou les citations sont fausses, je coupe.",
+  "would_change_my_mind": "Si le pilote sort une seule réponse fausse présentée comme sûre sur un engagement client, ou si l'équipe ne l'ouvre plus après la première semaine, j'arrête.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 55
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P005",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel et le prix est sans commune mesure avec Glean, mais je ne branche pas les boîtes mail et les Drive de mes clients, avec leurs clauses de confidentialité, sur une société de deux personnes que je découvre aujourd'hui. Cette semaine, je demande une démo, je n'achète pas.",
+  "objection": "Si Leon ferme ou se fait pirater dans un an, ce sont les données de mes clients qui partent avec, et c'est moi qui en réponds devant eux.",
+  "would_change_my_mind": "Un pilote gratuit sur une seule équipe et sans les boîtes mail, avec un DPA signé, un audit de sécurité ou une certification, et deux ou trois agences comparables qui l'utilisent déjà et que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

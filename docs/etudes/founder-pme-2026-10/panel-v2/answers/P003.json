@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, mes commerciaux perdent un temps fou avant chaque rendez-vous, et le pilote gratuit est bien pensé. Mais ouvrir les mails clients et les comptes rendus de mes missions à une société de deux personnes que je ne connais pas, je ne le fais pas sur une pub : mes clients me confient des choses confidentielles, et je cherche moins d'outils, pas un trente-et-unième.",
+  "objection": "Si Leon ferme ou se fait pirater dans un an, ce sont les données de mes clients qui partent, et c'est moi qui en réponds. Un DPA signé par une boîte de deux personnes ne me rassure pas beaucoup.",
+  "would_change_my_mind": "Qu'un confrère dirigeant d'une agence ou d'un cabinet comme le mien me dise qu'il l'utilise depuis quelques mois et que ça tient, et pouvoir le tester d'abord sur Drive et HubSpot seulement, sans les boîtes mail.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

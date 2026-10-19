@@ -1,0 +1,13 @@
+{
+  "id": "P013",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre mon chef de projet senior et ses clients me posent des questions auxquelles personne ne sait répondre : c'est exactement ce problème-là. Un pilote gratuit sur une équipe, payé seulement si le score des 10 questions tient, je le lance, mais je ne m'engage à rien au-delà tant que je n'ai pas vu les réponses.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : un outil qui lit leurs mails et écoute leurs réunions, même avec une note au CSE, ça peut casser la confiance dans une boîte de 25 personnes. Et c'est un outil de plus dans une pile où on ne s'y retrouve déjà plus.",
+  "would_change_my_mind": "Si l'équipe pilote le rejette ou si le CSE bloque, j'arrête ; à l'inverse, s'il retrouve vraiment ce que suivait mon chef de projet parti, avec les sources, je l'étends à toute la boîte.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

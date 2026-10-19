@@ -1,0 +1,13 @@
+{
+  "id": "P091",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Sur le papier c'est exactement ce que je cherche depuis des mois, mais je ne vais pas brancher toutes nos boîtes Gmail et nos Drive sur une startup que je découvre et présenter ça au DG le mois même. J'ai déjà vu trois outils promettre de tout retrouver et répondre à côté avec aplomb.",
+  "objection": "Le « je cite la source ou je dis je ne sais pas », tout le monde le promet ; je veux le voir tenir sur nos vraies données, et je veux savoir qui est derrière cette société française et ce qu'elle fait de nos mails avant de lui ouvrir l'accès.",
+  "would_change_my_mind": "Un essai gratuit de deux semaines sur une équipe pilote avec nos vrais outils, où je pose mes propres questions et je vérifie les sources, plus un document sécurité/RGPD que je peux mettre sous les yeux du DG.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

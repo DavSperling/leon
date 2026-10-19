@@ -1,0 +1,75 @@
+{
+  "business": "Leon : mémoire d'entreprise pour sociétés de 10 à 200 personnes (montants en euros HT ; l'outil affiche le signe $). Année 1 au prix de lancement de 19 € (20 premières sociétés, garanti 12 mois).",
+  "unit": "siège-mois",
+  "price": 19,
+  "variable": [
+    {
+      "label": "Coût de service IA et hébergement par siège (estimation : 2,5 $ si lecture par le LLM du client, 4 à 11 $ avec le chat Leon ; milieu retenu)",
+      "cost": 5.0
+    },
+    {
+      "label": "Frais de paiement Stripe (1,5 % + part des 0,25 € par facture, estimation)",
+      "cost": 0.45
+    }
+  ],
+  "fixed_monthly": [
+    {
+      "label": "Outils et hébergement de base actuels (environ 500 $)",
+      "cost": 460
+    },
+    {
+      "label": "Comptable en ligne (estimation)",
+      "cost": 150
+    },
+    {
+      "label": "Assurance RC pro et cyber (estimation)",
+      "cost": 80
+    },
+    {
+      "label": "Rémunération des fondateurs (aucune tant que l'activité n'est pas bien rentable, décision des fondateurs)",
+      "cost": 0
+    },
+    {
+      "label": "Pilotes gratuits : environ 3 par mois × 10 sièges × 5 € de service IA (estimation)",
+      "cost": 150
+    }
+  ],
+  "startup": [
+    {
+      "label": "Immatriculation de la société (estimation)",
+      "cost": 500
+    },
+    {
+      "label": "Contrats : CGV, DPA, politique de confidentialité, relus par un avocat (estimation)",
+      "cost": 2500
+    },
+    {
+      "label": "Audit de sécurité léger par un tiers (estimation)",
+      "cost": 4000
+    },
+    {
+      "label": "Site, nom de domaine, premières démos (estimation)",
+      "cost": 500
+    },
+    {
+      "label": "Dossier confiance : note CSE, AIPD type, relecture (estimation, en plus des contrats)",
+      "cost": 800
+    }
+  ],
+  "days_per_month": 1,
+  "plan_per_day": 250,
+  "ramp_per_day": [
+    0,
+    10,
+    25,
+    40,
+    60,
+    80,
+    105,
+    130,
+    160,
+    190,
+    220,
+    250
+  ]
+}

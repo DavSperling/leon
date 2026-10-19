@@ -1,0 +1,13 @@
+{
+  "id": "P056",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème, je le vis cette semaine avec ce client qui conteste le périmètre, donc le besoin est réel. Mais ouvrir tous les mails, le Drive, les réunions et le CRM de la boîte à une société de deux personnes que je ne connais pas, je ne le fais pas sur une page de présentation.",
+  "objection": "Qui sont-ils, que deviennent nos données et nos contrats clients s'ils ferment ou se font racheter dans un an, et qui répond si un salarié voit quelque chose qu'il n'aurait pas dû voir.",
+  "would_change_my_mind": "Une recommandation d'un dirigeant que je connais qui l'utilise depuis plusieurs mois, plus un pilote limité à une équipe et à quelques boîtes, avec un engagement écrit sur la suppression des données.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

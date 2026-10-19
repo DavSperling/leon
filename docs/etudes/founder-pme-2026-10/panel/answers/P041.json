@@ -1,0 +1,13 @@
+{
+  "id": "P041",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, mes commerciaux perdent un temps fou avant chaque rendez-vous. Mais je ne paie pas sur une promesse de « source exacte » : j'ai déjà vu des démos IA inventer des choses sur nos propres données.",
+  "objection": "Qu'il réponde à côté ou cite une mauvaise réunion devant un client, et que dans deux mois plus personne ne l'ouvre parce que les commerciaux retournent fouiller HubSpot et Gmail comme avant.",
+  "would_change_my_mind": "Un essai gratuit de deux semaines sur nos vraies données, avec deux ou trois commerciaux, et des réponses justes et sourcées sur des clients que je connais par coeur.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P047",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le livret d'accueil qu'on interroge me parle, j'ai trois arrivées le mois prochain et tout se fait de mémoire. Mais brancher tous nos mails, nos réunions et le Drive de nos clients chez une jeune boîte que je ne connais pas, je ne le fais pas en un clic : mon DPO et mon avocat doivent passer avant, et ça ne tient pas en un mois.",
+  "objection": "Enregistrer et garder tout ce qui se dit en réunion et dans les mails, c'est très proche de la surveillance pour mes équipes, et ce sont aussi les données confidentielles de nos clients. Qui chez eux y a accès, quel sous-traitant fait tourner l'IA, et que deviennent les données si la société ferme dans un an ?",
+  "would_change_my_mind": "Un DPA prêt à signer avec la liste des sous-traitants et un hébergement certifié en France ou en Europe, validé par mon DPO, plus un essai limité au seul Drive de l'onboarding, sans mails ni réunions.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

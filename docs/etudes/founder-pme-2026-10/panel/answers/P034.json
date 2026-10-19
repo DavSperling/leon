@@ -1,0 +1,13 @@
+{
+  "id": "P034",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Je paie déjà ChatGPT Business pour toute l'équipe, et 25 € de plus par tête sur 40 personnes, ça fait 1 000 € par mois pour un deuxième abonnement IA. Le problème de mes commerciaux est réel, mais je ne signe pas une deuxième ligne de budget sur une promesse lue en passant.",
+  "objection": "J'ai l'impression de payer deux fois la même chose : on m'a déjà vendu le branchement Drive et Slack avec ChatGPT, et le « 15 minutes sans informaticien », je l'ai déjà entendu ; je crains que ça finisse en semaines de réglages et en réponses aussi inégales.",
+  "would_change_my_mind": "Un essai gratuit limité à mes commerciaux, branché en une demi-journée sur Gmail et HubSpot, où je vois des fiches client avant rendez-vous nettement meilleures que ce que sort ChatGPT aujourd'hui, avec un prix qui ne facture que ceux qui l'utilisent.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

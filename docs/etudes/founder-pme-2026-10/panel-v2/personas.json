@@ -1,0 +1,222 @@
+[
+  {
+    "id": "P001",
+    "name": "Lena",
+    "age": 37,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 81000,
+    "behaviour": "A déjà ChatGPT Business, Claude Team ou Copilot",
+    "behaviour_how": "A pris un abonnement IA d'équipe et branché Drive ou Slack ; trouve les réponses inégales et sans mémoire d'un mois sur l'autre, mais ne veut pas payer deux fois.",
+    "objection": "Mes salariés vont le vivre comme de la surveillance",
+    "habit": "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion ou Drive"
+  },
+  {
+    "id": "P002",
+    "name": "Poppy",
+    "age": 50,
+    "segment": "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+    "income": 109000,
+    "behaviour": "A déjà ChatGPT Business, Claude Team ou Copilot",
+    "behaviour_how": "A pris un abonnement IA d'équipe et branché Drive ou Slack ; trouve les réponses inégales et sans mémoire d'un mois sur l'autre, mais ne veut pas payer deux fois.",
+    "objection": "Est-ce qu'un stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+    "habit": "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion ou Drive"
+  },
+  {
+    "id": "P003",
+    "name": "Marco",
+    "age": 52,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 62000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+    "habit": "tes commerciaux fouillent Gmail, HubSpot, Slack et deux comptes rendus avant chaque rendez-vous"
+  },
+  {
+    "id": "P004",
+    "name": "Daniel",
+    "age": 35,
+    "segment": "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+    "income": 139000,
+    "behaviour": "Prudent sécurité et RGPD",
+    "behaviour_how": "Demande où sont les données et qui y accède, fait relire par un DPO ou un avocat avant de signer, et refuse ce qui ressemble à de la surveillance.",
+    "objection": "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  },
+  {
+    "id": "P005",
+    "name": "Clara",
+    "age": 47,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 59000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  },
+  {
+    "id": "P006",
+    "name": "Lina",
+    "age": 34,
+    "segment": "Responsable des opérations ou de l'informatique d'une société de 50 à 200 personnes, qui instruit le dossier pour le DG",
+    "income": 61000,
+    "behaviour": "Pas encore équipé en IA",
+    "behaviour_how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT à titre perso ; aucun abonnement IA d'entreprise.",
+    "objection": "Mes salariés vont le vivre comme de la surveillance",
+    "habit": "un client conteste un périmètre validé en réunion il y a deux mois et personne ne retrouve qui a dit quoi"
+  },
+  {
+    "id": "P007",
+    "name": "Zara",
+    "age": 34,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 76000,
+    "behaviour": "Pas encore équipé en IA",
+    "behaviour_how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT à titre perso ; aucun abonnement IA d'entreprise.",
+    "objection": "Est-ce qu'un stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+    "habit": "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion ou Drive"
+  },
+  {
+    "id": "P008",
+    "name": "Noor",
+    "age": 42,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 63000,
+    "behaviour": "Prudent sécurité et RGPD",
+    "behaviour_how": "Demande où sont les données et qui y accède, fait relire par un DPO ou un avocat avant de signer, et refuse ce qui ressemble à de la surveillance.",
+    "objection": "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  },
+  {
+    "id": "P009",
+    "name": "Marcus",
+    "age": 53,
+    "segment": "CEO ou COO d'un éditeur SaaS ou d'un e-commerce de 20 à 80 personnes",
+    "income": 109000,
+    "behaviour": "Pas encore équipé en IA",
+    "behaviour_how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT à titre perso ; aucun abonnement IA d'entreprise.",
+    "objection": "Est-ce qu'un stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+    "habit": "tu viens de perdre un chef de projet senior et ses clients posent des questions auxquelles personne ne sait répondre"
+  },
+  {
+    "id": "P010",
+    "name": "Owen",
+    "age": 37,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 73000,
+    "behaviour": "Pas encore équipé en IA",
+    "behaviour_how": "Paie Google Workspace sans utiliser Gemini ; quelques salariés ont ChatGPT à titre perso ; aucun abonnement IA d'entreprise.",
+    "objection": "Brancher tous nos outils, ça va prendre des semaines et je n'ai pas d'équipe pour ça",
+    "habit": "tes commerciaux fouillent Gmail, HubSpot, Slack et deux comptes rendus avant chaque rendez-vous"
+  },
+  {
+    "id": "P011",
+    "name": "Ben",
+    "age": 59,
+    "segment": "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+    "income": 184000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "On va payer, et dans deux mois plus personne ne s'en servira",
+    "habit": "tu viens de perdre un chef de projet senior et ses clients posent des questions auxquelles personne ne sait répondre"
+  },
+  {
+    "id": "P012",
+    "name": "Ivy",
+    "age": 39,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 61000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "Ces outils ne trouvent rien ou inventent des réponses avec assurance, j'en ai déjà vu",
+    "habit": "un client conteste un périmètre validé en réunion il y a deux mois et personne ne retrouve qui a dit quoi"
+  },
+  {
+    "id": "P013",
+    "name": "Mei",
+    "age": 46,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 95000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "Mes salariés vont le vivre comme de la surveillance",
+    "habit": "tu viens de perdre un chef de projet senior et ses clients posent des questions auxquelles personne ne sait répondre"
+  },
+  {
+    "id": "P014",
+    "name": "Maeve",
+    "age": 30,
+    "segment": "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+    "income": 186000,
+    "behaviour": "Sceptique des démos IA",
+    "behaviour_how": "A vu des démos qui hallucinaient sur ses propres données ; veut la preuve sur ses données avant de payer.",
+    "objection": "Est-ce qu'un stagiaire va tomber sur la paie ou sur les marges d'un client ?",
+    "habit": "un client conteste un périmètre validé en réunion il y a deux mois et personne ne retrouve qui a dit quoi"
+  },
+  {
+    "id": "P015",
+    "name": "Hugo",
+    "age": 54,
+    "segment": "CEO ou COO d'un éditeur SaaS ou d'un e-commerce de 20 à 80 personnes",
+    "income": 86000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "On va payer, et dans deux mois plus personne ne s'en servira",
+    "habit": "tu viens de perdre un chef de projet senior et ses clients posent des questions auxquelles personne ne sait répondre"
+  },
+  {
+    "id": "P016",
+    "name": "Levi",
+    "age": 49,
+    "segment": "CEO ou COO d'un éditeur SaaS ou d'un e-commerce de 20 à 80 personnes",
+    "income": 113000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "Ces outils ne trouvent rien ou inventent des réponses avec assurance, j'en ai déjà vu",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  },
+  {
+    "id": "P017",
+    "name": "Fatima",
+    "age": 35,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 127000,
+    "behaviour": "Compte les euros",
+    "behaviour_how": "Compare chaque abonnement, ne prend que les sièges nécessaires, veut un retour chiffré avant de payer.",
+    "objection": "Brancher tous nos outils, ça va prendre des semaines et je n'ai pas d'équipe pour ça",
+    "habit": "tu passes une heure par jour à répondre dans Slack à des questions dont la réponse est quelque part dans Notion ou Drive"
+  },
+  {
+    "id": "P018",
+    "name": "Caleb",
+    "age": 44,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 120000,
+    "behaviour": "Noyé dans les outils",
+    "behaviour_how": "Dix à trente SaaS, personne ne sait où est quoi, cherche une solution unique depuis des mois.",
+    "objection": "On va payer, et dans deux mois plus personne ne s'en servira",
+    "habit": "tes commerciaux fouillent Gmail, HubSpot, Slack et deux comptes rendus avant chaque rendez-vous"
+  },
+  {
+    "id": "P019",
+    "name": "Yusuf",
+    "age": 55,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 97000,
+    "behaviour": "Prudent sécurité et RGPD",
+    "behaviour_how": "Demande où sont les données et qui y accède, fait relire par un DPO ou un avocat avant de signer, et refuse ce qui ressemble à de la surveillance.",
+    "objection": "Mes salariés vont le vivre comme de la surveillance",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  },
+  {
+    "id": "P020",
+    "name": "Aria",
+    "age": 32,
+    "segment": "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+    "income": 102000,
+    "behaviour": "Prudent sécurité et RGPD",
+    "behaviour_how": "Demande où sont les données et qui y accède, fait relire par un DPO ou un avocat avant de signer, et refuse ce qui ressemble à de la surveillance.",
+    "objection": "Confier Gmail, Drive, Slack et nos réunions à une jeune société de deux personnes ?",
+    "habit": "tu as vu une démo de Glean et le devis commençait à 60 000 $ par an"
+  }
+]

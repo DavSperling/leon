@@ -1,0 +1,13 @@
+{
+  "id": "P024",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je l'ai vécu cette semaine avec ce client qui conteste le périmètre. Mais j'ai déjà vu trop de démos IA inventer des choses sur nos propres données. Je ne présente pas au DG un abonnement pour toute la boîte sur la foi d'une plaquette.",
+  "objection": "« Il cite la source ou dit je ne sais pas » : tout le monde le promet. Tant que je ne l'ai pas vu retrouver, sur nos vrais mails et nos vraies réunions, qui a dit quoi il y a deux mois, sans rien inventer, je n'y crois pas. Et je doute que « 15 minutes sans équipe informatique » tienne avec les droits d'accès Google, Jira et HubSpot.",
+  "would_change_my_mind": "Un pilote gratuit de deux semaines sur un vrai dossier à nous, par exemple ce litige de périmètre, où Leon retrouve la bonne minute de réunion et le bon mail avec la source, et dit « je ne sais pas » quand l'info n'existe pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

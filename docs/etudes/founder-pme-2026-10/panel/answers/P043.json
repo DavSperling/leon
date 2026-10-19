@@ -1,0 +1,13 @@
+{
+  "id": "P043",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "L'idée me parle, chacun bricole avec son ChatGPT et rien n'est partagé, mais « en un clic, 15 minutes » pour brancher Gmail, Drive, Notion, HubSpot et les réunions, je n'y crois pas tant que je ne l'ai pas vu. Et 25 € par tête sur 50 personnes, ça fait plus de 1 000 € par mois pour une boîte qui n'a même pas encore activé Gemini qu'elle paie déjà.",
+  "objection": "Donner à une jeune boîte inconnue l'accès à tous nos mails, nos réunions et notre CRM, sans personne en interne pour vérifier les droits ni gérer le déploiement si ça coince.",
+  "would_change_my_mind": "Un essai gratuit sur une seule équipe (par exemple le support ou les commerciaux), facturé seulement aux utilisateurs actifs, avec un pair dirigeant qui me confirme que l'installation a vraiment pris moins d'une heure.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

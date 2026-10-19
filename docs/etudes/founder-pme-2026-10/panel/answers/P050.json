@@ -1,0 +1,13 @@
+{
+  "id": "P050",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Avec 40 personnes, 25 € par tête ça fait 1 000 € par mois, 12 000 € par an, pour un outil dont je ne sais pas chiffrer le gain. On paie déjà ChatGPT en ordre dispersé, je ne rajoute pas une ligne sans retour mesuré.",
+  "objection": "Je ne vois pas combien d'heures ça fait vraiment gagner, et « installation en 15 minutes » pour brancher Gmail, Drive, HubSpot et Jira, je n'y crois pas : au final c'est moi ou mon COO qui y passerons des jours.",
+  "would_change_my_mind": "Un essai gratuit d'un mois sur une seule équipe, par exemple le support ou les commerciaux, avec un chiffre concret à la fin sur le temps gagné, et la possibilité de ne payer que les sièges qui l'utilisent vraiment.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

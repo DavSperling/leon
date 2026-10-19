@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "L'audit des partages répond pile à ma peur, et le pilote gratuit, je le laisserais peut-être faire à mon responsable informatique. Mais payer 25 € par tête en plus de notre abonnement ChatGPT Business déjà branché sur Drive et Slack, sur 100 personnes ou plus, je ne le signe pas : c'est payer deux fois pour la même promesse.",
+  "objection": "On paie déjà un outil d'IA d'équipe qui lit Drive et Slack. Je ne vois pas pourquoi j'ajouterais une deuxième ligne de facture au lieu d'attendre que ChatGPT ou Copilot ajoutent la mémoire et les citations eux-mêmes, et une jeune boîte qui stocke nos mails et nos réunions, c'est un risque de plus.",
+  "would_change_my_mind": "Que le test des 10 questions batte nettement notre ChatGPT Business sur les mêmes questions, et que Leon remplace cet abonnement au lieu de s'y ajouter, pour qu'on ne paie qu'une fois.",
+  "price_too_cheap": 4,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

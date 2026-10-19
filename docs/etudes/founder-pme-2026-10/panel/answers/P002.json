@@ -1,0 +1,13 @@
+{
+  "id": "P002",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "On paie déjà un abonnement IA d'équipe branché sur Drive et Slack ; à 25 € par tête sur 120 personnes, ça fait 36 000 € par an en plus pour un deuxième outil qui promet de faire mieux le même travail. Je ne signe pas ça sur une promesse, et pas pour toute la boîte.",
+  "objection": "« Chacun ne voit que ce qu'il voit déjà », c'est justement le problème : nos droits Drive sont un fouillis, et un outil qui fouille tout l'historique va faire remonter la paie ou les marges client que quelqu'un a partagées par erreur il y a trois ans. Mon responsable informatique devra auditer avant, donc les « 15 minutes sans équipe informatique », je n'y crois pas.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur une seule équipe (le support ou les commerciaux), avec un rapport préalable des documents sensibles mal partagés, et un tarif qui ne se paie que pour les utilisateurs actifs plutôt que pour tout l'effectif.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

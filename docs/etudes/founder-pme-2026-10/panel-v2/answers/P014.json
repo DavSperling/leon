@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je lance le pilote gratuit sur l'équipe projet, parce que c'est exactement ce que je demande : la preuve sur mes données avant de payer, avec le test des 10 questions et les sources. Le litige de périmètre que personne n'arrive à retracer me coûte plus cher que 25 € par tête.",
+  "objection": "Que l'outil respecte vraiment les droits d'accès : si un stagiaire peut tomber sur une marge client parce qu'un Drive est mal partagé, c'est moi qui porte le problème. Et qu'il invente une réponse plausible au lieu de dire « je ne sais pas ».",
+  "would_change_my_mind": "Si l'audit des partages est superficiel ou si, pendant le pilote, une seule réponse est fausse avec une source qui ne dit pas ça, j'arrête et on ne passe pas en payant.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

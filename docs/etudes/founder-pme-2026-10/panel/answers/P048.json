@@ -1,0 +1,13 @@
+{
+  "id": "P048",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Brancher un outil qui garde tous les mails, les réunions et les échanges de mes consultants, je sais déjà comment ce sera vécu : comme du flicage, et je n'ai pas envie d'abîmer la confiance dans l'équipe pour ça. En plus, à 25 € par personne sur une trentaine de salariés, ça fait près de 9 000 € par an pour un outil dont je ne suis pas sûr qu'on se serve.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : un outil qui enregistre tout ce qui se dit, même avec des exclusions, ça crée de la méfiance, et je devrai le justifier devant toute l'équipe.",
+  "would_change_my_mind": "Un essai gratuit sur un seul projet ou une seule équipe, avec l'accord des gens concernés, qui montre noir sur blanc ce que Leon garde et ce qu'il ne garde pas, et que l'équipe elle-même me dise que ça lui fait gagner du temps.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

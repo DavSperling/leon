@@ -1,0 +1,13 @@
+{
+  "id": "P078",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Un outil qui garde tout ce qui se dit en réunion et dans les mails de toute l'équipe, mes salariés vont le vivre comme de la surveillance, et je ne signe rien de ce genre sans que mon DPO ait épluché le traitement. Le besoin des commerciaux est réel, mais pas au point de prendre ce risque social avec une société que je ne connais pas.",
+  "objection": "L'enregistrement permanent des réunions et des mails : base légale, information des salariés, CSE, durée de conservation, qui chez Leon peut accéder aux données. Une jeune société qui stocke toute la mémoire de mon entreprise, c'est aussi un risque si elle disparaît ou se fait pirater.",
+  "would_change_my_mind": "Un dossier RGPD complet (AIPD, DPA, sous-traitants listés, durées de conservation) validé par mon DPO, plus un pilote limité à l'équipe commerciale, sur la base du volontariat, sans enregistrement des réunions internes.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

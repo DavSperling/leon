@@ -1,0 +1,13 @@
+{
+  "id": "P045",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème du périmètre contesté, je l'ai cette semaine, donc ça me parle. Mais je ne vais pas payer 25 € pour chacun de mes 25 gars sur une promesse : ces outils, je les ai vus inventer avec aplomb, et je n'ai personne en interne pour vérifier que ça marche.",
+  "objection": "Que le jour où le client conteste, Leon me sorte une citation à côté de la plaque ou rate la réunion qui compte. Ça, c'est pire que rien devant un client. Et donner l'accès à tous nos mails et à toutes nos réunions à une jeune boîte, ça me gêne.",
+  "would_change_my_mind": "Un essai gratuit sur notre propre historique, où je pose la question du périmètre contesté et où il me ressort la bonne minute de réunion avec la source, ou bien un « je ne sais pas » honnête.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

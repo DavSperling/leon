@@ -1,0 +1,13 @@
+{
+  "id": "P053",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le livret d'accueil interrogeable tombe pile avec mes trois arrivées, mais je ne donne pas l'accès à tous nos mails, nos Drive et l'enregistrement de nos réunions à une société dont je ne sais rien, installée en 15 minutes sans que mon responsable informatique ni mon DPO aient regardé. Ce mois-ci je fais l'onboarding comme d'habitude, et je regarde le dossier sécurité plus tard.",
+  "objection": "Garder tout ce qui se dit en réunion et dans les mails, ça ressemble à de la surveillance pour mes salariés, et si cette jeune boîte se fait pirater ou disparaît, c'est toute la mémoire de ma société qui part avec elle. Je veux savoir qui y a accès chez eux, quel sous-traitant fait tourner l'IA et où vont les données.",
+  "would_change_my_mind": "Un DPA solide relu par notre DPO, l'instance sur notre propre cloud, et un pilote limité au livret d'accueil et à quelques dossiers Drive, sans mails ni réunions, avec le CSE informé.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

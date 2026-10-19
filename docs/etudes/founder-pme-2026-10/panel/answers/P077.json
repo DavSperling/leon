@@ -1,0 +1,13 @@
+{
+  "id": "P077",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je viens de le vivre avec le départ de mon chef de projet. Mais donner tous nos mails, nos Drive et nos réunions clients à une société dont je n'ai jamais entendu parler, sans que mon responsable informatique ait audité quoi que ce soit, je ne le fais pas sur une annonce.",
+  "objection": "Une jeune boîte qui aspire tout notre historique client : si elle coule ou se fait pirater, c'est moi qui en réponds devant nos clients. Et 25 € par personne sur 120 personnes, c'est 36 000 € par an pour un outil qui n'a fait ses preuves nulle part chez nous.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur une seule équipe en instance dédiée sur notre cloud, validé par mon responsable informatique, avec deux références de PME industrielles comparables que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

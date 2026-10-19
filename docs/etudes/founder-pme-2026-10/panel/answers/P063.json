@@ -1,0 +1,13 @@
+{
+  "id": "P063",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je l'ai cette semaine même avec ce client qui conteste le périmètre. Mais je ne peux pas aller voir le DG pour lui proposer de donner tous nos mails, notre Drive et nos réunions à une boîte inconnue, sans aucune référence, alors qu'on n'a même pas encore de politique IA.",
+  "objection": "Qui est derrière Leon, combien de temps la société va tenir, et que deviennent nos données si elle ferme ou se fait racheter ? Aucune certification, aucun client comparable, et un accès en lecture à toute la messagerie : c'est le pire scénario si ça fuit.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois limité à une équipe et à quelques boîtes, avec un DPA, une certification type ISO 27001 ou SOC 2 au moins en cours, et deux ou trois PME françaises de notre taille que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

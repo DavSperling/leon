@@ -1,0 +1,13 @@
+{
+  "id": "P038",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "C'est dix fois moins cher que Glean, d'accord, mais brancher un outil inconnu sur tout notre Drive et nos mails, quand je sais que nos partages Drive sont un fouillis, c'est trop risqué pour moi aujourd'hui. « Chacun voit ce qu'il voit déjà », justement : chez nous, certains voient déjà trop de choses, et Leon les leur servirait sur un plateau.",
+  "objection": "Qu'un stagiaire ou un consultant pose une question anodine et tombe sur la paie, les marges d'un client ou un mail de la direction parce qu'un dossier a été mal partagé il y a trois ans. Et je ne connais pas cette boîte : si elle ferme dans un an, où vont mes données ?",
+  "would_change_my_mind": "Un audit fait avec moi avant de brancher quoi que ce soit, qui me montre ce que chaque salarié pourrait retrouver, avec la paie et la finance exclues par défaut, plus la recommandation d'un dirigeant d'une société comme la mienne qui l'utilise depuis six mois.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

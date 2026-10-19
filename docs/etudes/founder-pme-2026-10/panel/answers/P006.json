@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème du client qui conteste un périmètre, je l'ai vraiment, mais un outil qui garde tous les mails et toutes les réunions de 120 personnes, je ne le fais pas passer en un mois : il faut informer le CSE, rassurer les équipes et convaincre le DG d'une ligne à près de 3 000 euros par mois pour une société française qu'on ne connaît pas.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : « garde tout ce qui s'y dit, réunions comprises », c'est exactement la phrase qui va bloquer le CSE, et je n'ai aucune preuve que la jeune boîte derrière sera encore là dans deux ans pour gérer nos données.",
+  "would_change_my_mind": "Un pilote gratuit limité à une équipe (les commerciaux et le suivi client), sans mails personnels, avec un modèle de note d'information CSE et un DPA prêts, et une référence d'une PME comparable qui l'utilise depuis six mois.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

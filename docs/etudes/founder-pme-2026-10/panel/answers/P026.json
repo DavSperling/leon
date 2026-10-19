@@ -1,0 +1,13 @@
+{
+  "id": "P026",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre mon chef de projet senior et ses clients me posent des questions auxquelles personne ne sait répondre : si Leon peut fouiller ses mails, ses Meet et son Drive et me dire ce qu'il leur a promis, ça vaut le coup tout de suite. Je le prends sans engagement pour 5 ou 6 personnes, pas pour toute la boîte.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira : personne ici n'utilise l'IA au quotidien, et une fois la crise passée l'équipe retournera chercher dans Gmail comme avant. Et je ne suis pas sûr que Leon voie l'historique d'un compte d'un salarié parti si chacun ne voit que ce qu'il voyait déjà.",
+  "would_change_my_mind": "",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

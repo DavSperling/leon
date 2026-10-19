@@ -1,0 +1,13 @@
+{
+  "id": "P032",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche exactement ça, Glean voulait 60 000 $ et là on parle de quelques centaines d'euros par mois sans engagement. Je le teste sur une équipe d'abord, et si les 15 minutes deviennent trois semaines, j'arrête.",
+  "objection": "Je n'y crois qu'à moitié, au « branché en un clic » et aux réponses fiables : si ça répond à côté deux fois devant mes chefs de projet, plus personne ne l'ouvre. Et confier tous les mails clients du cabinet à une petite boîte française que je ne connais pas, ça me gêne un peu.",
+  "would_change_my_mind": "Si le premier essai demande plus d'une demi-journée de mon temps pour brancher les outils, ou si les réponses citées sont fausses sur des cas que je connais, je ne paie pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 70
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P068",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est raisonnable comparé à Glean, mais brancher tout notre Drive et nos mails sur une boîte que je ne connais pas, alors que nos droits de partage Google sont un bazar, c'est prendre le risque qu'un stagiaire tombe sur la paie ou les marges d'un client. On n'a même pas encore d'abonnement IA, je ne commence pas par celui-là.",
+  "objection": "« Chacun voit ce qu'il voit déjà » ne me rassure pas : je sais que plein de dossiers sensibles sont partagés trop largement chez nous, et Leon rendrait ça trouvable en une question.",
+  "would_change_my_mind": "Un audit avant activation qui me liste les documents sensibles trop partagés, plus un essai gratuit sur une seule équipe avec un client de ma taille qui en témoigne.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

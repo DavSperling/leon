@@ -1,0 +1,13 @@
+{
+  "id": "P006",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je l'ai eu cette semaine avec ce client qui conteste le périmètre, mais brancher Gmail, Meet et Slack de toute la boîte sur un outil inconnu, c'est un dossier que je dois défendre devant le DG et le CSE, et je ne le défends pas sur une simple annonce. Au mieux je mets le pilote gratuit sur ma liste pour le trimestre prochain, je ne signe rien maintenant.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : un outil qui garde tout ce qu'ils disent en réunion et dans leurs mails, avec un journal de qui demande quoi. Le dossier CSE aide, mais il ne suffira pas à éteindre la méfiance, et c'est moi qui porterai le conflit.",
+  "would_change_my_mind": "Une société comparable à la nôtre, en France, qui me raconte son pilote et comment son CSE l'a accepté, plus un pilote limité aux comptes-rendus de réunion et aux tickets, sans les mails individuels.",
+  "price_too_cheap": 4,
+  "price_cheap": 10,
+  "price_expensive": 22,
+  "price_too_expensive": 35
+}

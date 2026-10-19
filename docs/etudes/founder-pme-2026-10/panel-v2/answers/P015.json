@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre mon chef de projet senior et ses clients me posent des questions auxquelles personne ne sait répondre : c'est exactement le cas « que suivait celui qui vient de partir ». Le pilote est gratuit, sur une seule équipe, et je ne paie que les utilisateurs actifs, donc je lance le pilote sur l'équipe projet, mais je ne signe que si le score aux 10 questions est bon.",
+  "objection": "Dans deux mois plus personne ne s'en servira, comme pour la moitié de nos SaaS. Et il ne récupérera pas ce que mon chef de projet avait dans la tête ou dans ses échanges privés, seulement ce qui a été écrit dans les outils.",
+  "would_change_my_mind": "Si au test des 10 questions il se trompe ou dit « je ne sais pas » sur plus de trois questions, ou si l'équipe ne l'utilise plus après deux semaines de pilote, je ne paie pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

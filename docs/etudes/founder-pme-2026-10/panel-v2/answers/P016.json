@@ -1,0 +1,13 @@
+{
+  "id": "P016",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche exactement ça et Glean voulait 60 000 $ par an ; là, un pilote gratuit sur une équipe avec un test de 10 questions dont on connaît la réponse, c'est la seule façon honnête de vérifier si ça trouve vraiment ou si ça invente. Je lance le pilote ; je ne paierai que si le score tient.",
+  "objection": "Ces outils répondent avec aplomb à côté de la plaque, et vous êtes une petite boîte inconnue : si le score des 10 questions est moyen ou si Slack interrogé en direct rate la moitié des échanges, je coupe, et je me demande si vous serez encore là dans deux ans.",
+  "would_change_my_mind": "Un score médiocre au test des 10 questions, ou une seule réponse inventée avec une fausse source pendant le pilote.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 60
+}

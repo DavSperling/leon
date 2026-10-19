@@ -1,0 +1,13 @@
+{
+  "id": "P096",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème du support qui dérange les devs dix fois par semaine est réel, mais j'ai déjà vu trop de démos IA inventer des réponses sur nos propres données. Je ne signe pas pour toute l'équipe sur une promesse marketing de « source exacte ».",
+  "objection": "Que ça hallucine ou cite la mauvaise source sur nos vrais tickets, et que les droits hérités soient mal configurés quelque part dans le Drive : un stagiaire qui tombe sur la paie ou les marges d'un client, c'est fini.",
+  "would_change_my_mind": "Un pilote gratuit de deux ou trois semaines sur notre propre Jira/Linear et notre Drive, limité à l'équipe support, où je vérifie moi-même les réponses et les accès avant de payer.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

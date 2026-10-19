@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche exactement ça : retrouver qui a promis quoi au client en réunion il y a deux mois. Sans engagement, je le teste sur moi et deux chefs de projet, pas sur les 30 personnes d'un coup.",
+  "objection": "J'ai déjà vu ces outils répondre n'importe quoi avec aplomb. Si la première réponse est fausse ou cite une source qui ne dit pas ça, je coupe tout de suite, et ce sera juste un 31e SaaS de plus.",
+  "would_change_my_mind": "Une première semaine où il ne retrouve pas la réunion ou le mail sur le périmètre contesté, ou une seule citation inventée : là j'arrête.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

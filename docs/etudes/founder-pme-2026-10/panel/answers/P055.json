@@ -1,0 +1,13 @@
+{
+  "id": "P055",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, j'ai trois arrivées le mois prochain et tout se fait de mémoire, mais je ne vais pas présenter au DG un outil qui lit tous nos mails et nos réunions sur la seule promesse qu'il « cite ses sources ». À 25 € par tête sur 120 personnes, ça fait plus de 35 000 € par an pour une boîte qui n'a encore aucun abonnement IA, alors ce ne sera pas une décision du mois.",
+  "objection": "J'ai déjà vu ces outils ne rien trouver ou inventer avec aplomb. Et brancher Gmail, Drive et nos réunions sur une jeune société, même française, c'est un sujet de confiance et de RGPD que je dois pouvoir défendre devant la direction.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur un petit groupe, par exemple l'équipe qui accueille les nouveaux, avec nos vraies données, où je vérifie moi-même que les réponses tombent juste et que les droits d'accès sont respectés, et une facturation qui ne compte pas les gens qui ne s'en servent pas.",
+  "price_too_cheap": 4,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 32
+}

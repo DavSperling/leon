@@ -1,0 +1,13 @@
+{
+  "id": "P003",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin, je l'ai, c'est exactement ce que mes commerciaux font à la main avant chaque rendez-vous. Mais ouvrir d'un coup tous les mails, les Drive et les réunions de la boîte, y compris ce qu'on dit sur nos clients, à une société de deux personnes que personne autour de moi ne connaît, je ne le fais pas ce mois-ci.",
+  "objection": "Toutes les données de mes clients et de mes équipes chez une jeune société de deux personnes : qui la tient dans un an, qui y a accès, et qu'est-ce que je dis à mes clients si ça fuit ou si la boîte ferme ?",
+  "would_change_my_mind": "Deux ou trois dirigeants d'agences ou d'ESN françaises comme la mienne qui l'utilisent depuis des mois et que je peux appeler, plus un pilote gratuit d'un mois limité à mon équipe commerciale, avec suppression des données garantie par écrit à la fin.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

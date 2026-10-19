@@ -1,0 +1,13 @@
+{
+  "id": "P012",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je cherche ça depuis des mois et je me bats en ce moment avec un client sur un périmètre validé en réunion que personne ne retrouve. Le pilote est gratuit et le test des 10 questions me permet de vérifier par moi-même s'il trouve vraiment ou s'il invente, donc je lance le pilote sur une équipe ; je ne paierai que si le score tient.",
+  "objection": "J'ai déjà vu ces outils répondre à côté avec assurance. Et c'est un outil de plus dans une pile de vingt : s'il ne remplace rien et que l'équipe ne prend pas le réflexe de l'interroger, ça finit comme les autres.",
+  "would_change_my_mind": "Si au test des 10 questions il se trompe sans le dire, même une ou deux fois, ou s'il répond « je ne sais pas » à la moitié, j'arrête et je ne paie pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

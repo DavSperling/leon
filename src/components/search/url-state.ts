@@ -2,17 +2,15 @@
 // que font les puces de filtre. Pur : ni base, ni serveur, ni navigateur, pour que la page (côté serveur) et les
 // composants (côté navigateur) s'en servent de la même façon.
 
+import { stripHighlightMarks } from '@/lib/highlight';
+import { PAGE_MAX, QUERY_MAX_CHARS } from '@/lib/search-limits';
+
 // Identifiant de la zone de saisie : ⌘K la retrouve par lui pour y mettre le curseur (command-search.tsx).
 export const SEARCH_INPUT_ID = 'barre-de-recherche';
 
-// Longueur maximale de la requête, filtres compris (QUERY_MAX_CHARS de server/search/types.ts : la recherche
-// n'en garde que 300 de texte). Même plafond de pages que la recherche (PAGE_MAX de server/search/search.ts) :
-// au-delà, elle répond avec la dernière page.
-export const QUERY_MAX_CHARS = 300;
-const PAGE_MAX = 50;
+// Longueur maximale de la requête (QUERY_MAX_CHARS) et dernière page (PAGE_MAX) sont ceux de la recherche
+// (src/lib/search-limits.ts) : au-delà de PAGE_MAX, elle répond avec la dernière page.
 
-// Les deux caractères dont Postgres entoure les mots trouvés (src/lib/highlight.ts) : jamais dans une requête.
-const HIGHLIGHT_MARKS = /[]/g;
 const CONTROL_CHARS = /\p{Cc}/gu;
 
 export type SearchUrlState = { q: string; page: number };
@@ -35,7 +33,7 @@ function truncate(text: string, max: number): string {
 // Ce que l'adresse dit, en ne croyant rien : une page qui n'est pas un entier positif vaut 1, une requête
 // trop longue est coupée. `searchParams` de Next donne une chaîne, une liste (paramètre répété) ou rien.
 export function fromSearchParams(source: ParamSource): SearchUrlState {
-  const q = truncate((firstValue(source, 'q') ?? '').replace(HIGHLIGHT_MARKS, ''), QUERY_MAX_CHARS);
+  const q = truncate(stripHighlightMarks(firstValue(source, 'q') ?? ''), QUERY_MAX_CHARS);
   const rawPage = firstValue(source, 'page') ?? '';
   const page = /^\d+$/.test(rawPage) ? Math.min(Number(rawPage), PAGE_MAX) : 1;
   return { q, page: page >= 1 ? page : 1 };

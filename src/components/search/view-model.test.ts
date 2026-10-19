@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { PAGE_MAX } from '@/lib/search-limits';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 import {
   countLabel,
@@ -85,6 +86,27 @@ describe('toResultViews', () => {
 
     expect(view).toMatchObject({ title: null, url: null, passages: [] });
   });
+
+  // Depuis 0010, rien en base ne contraint `sources.kind` : une ligne écrite par une autre version du code (un
+  // outil retiré, un retour à une image plus ancienne) peut porter un outil que celle-ci ne connaît pas. La
+  // page de recherche doit l'afficher, pas tomber.
+  it('affiche une source d’un outil inconnu : libellé non vide, icône de repli', () => {
+    for (const kind of ['ancien_outil', '', 'constructor', '__proto__']) {
+      const [view] = toResultViews([hit({ kind: kind as SourceKind })]);
+
+      expect(view?.kindLabel, `kind=${JSON.stringify(kind)}`).toMatch(/\S/);
+      expect(view?.kind, `kind=${JSON.stringify(kind)}`).toBe('other');
+    }
+    expect(toResultViews([hit({ kind: 'ancien_outil' as SourceKind })])[0]?.kindLabel).toBe(
+      'ancien_outil',
+    );
+  });
+
+  it('garde l’identifiant d’un outil connu, pour son icône', () => {
+    for (const kind of SOURCE_KINDS) {
+      expect(toResultViews([hit({ kind })])[0]?.kind).toBe(kind);
+    }
+  });
 });
 
 describe('toPreviewView', () => {
@@ -124,6 +146,14 @@ describe('toPreviewView', () => {
       title: 'Call ACME',
       url: 'https://fathom.video/calls/1',
     });
+  });
+
+  it('affiche l’aperçu d’une source d’un outil inconnu avec un libellé non vide', () => {
+    for (const kind of ['ancien_outil', '', 'constructor']) {
+      const view = toPreviewView({ source: { ...source, kind: kind as SourceKind }, turns: [] });
+
+      expect(view.kindLabel, `kind=${JSON.stringify(kind)}`).toMatch(/\S/);
+    }
   });
 
   it('dit qui parle : l’auteur quand l’outil le donne, sinon le rôle', () => {
@@ -182,7 +212,7 @@ describe('textes de la page', () => {
     expect(pageCount(10)).toBe(1);
     expect(pageCount(11)).toBe(2);
     expect(pageCount(95)).toBe(10);
-    expect(pageCount(100_000)).toBe(50);
+    expect(pageCount(100_000)).toBe(PAGE_MAX);
   });
 
   it('dit que personne ne porte ce nom dans l’équipe', () => {
@@ -202,6 +232,11 @@ describe('libellés', () => {
     for (const nature of ITEM_NATURES) {
       expect(NATURE_LABELS[nature], nature).toMatch(/\S/);
     }
+  });
+
+  // Les règles du jet : une interface en français, sans anglicisme.
+  it('nomme en français la modification de code, sans l’anglicisme « commit »', () => {
+    expect(NATURE_LABELS.commit).not.toMatch(/commit/i);
   });
 
   it('propose chaque outil une fois, avec son identifiant et son libellé, par ordre alphabétique', () => {

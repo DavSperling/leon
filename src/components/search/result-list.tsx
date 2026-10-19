@@ -20,35 +20,44 @@ export type PaginationLinks = {
 function Pagination({ page, pages, previousHref, nextHref }: PaginationLinks) {
   if (pages <= 1) return null;
   const link = 'h-9 gap-1 rounded-lg px-3 text-[15px]';
+  // Trois colonnes, les deux côtés d'égale largeur : « Page 2 sur 2 » reste au centre quand « Suivant » ou
+  // « Précédent » manque.
   return (
-    <nav aria-label="Pages de résultats" className="flex items-center justify-between pt-6">
+    <nav
+      aria-label="Pages de résultats"
+      className="grid grid-cols-[1fr_auto_1fr] items-center pt-6"
+    >
       {previousHref ? (
         <Link
           href={previousHref}
           rel="prev"
-          className={cn(buttonVariants({ variant: 'outline' }), link)}
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            link,
+            'col-start-1 justify-self-start',
+          )}
         >
           <ChevronLeft size={16} strokeWidth={1.5} aria-hidden="true" />
           Précédent
         </Link>
-      ) : (
-        <span aria-hidden="true" />
-      )}
-      <p className="text-[15px] text-muted-foreground tabular-nums">
+      ) : null}
+      <p className="col-start-2 text-[15px] text-muted-foreground tabular-nums">
         Page {page} sur {pages}
       </p>
       {nextHref ? (
         <Link
           href={nextHref}
           rel="next"
-          className={cn(buttonVariants({ variant: 'outline' }), link)}
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            link,
+            'col-start-3 justify-self-end',
+          )}
         >
           Suivant
           <ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" />
         </Link>
-      ) : (
-        <span aria-hidden="true" />
-      )}
+      ) : null}
     </nav>
   );
 }

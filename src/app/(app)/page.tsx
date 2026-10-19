@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { EmptyState } from '@/components/empty-state';
+import { EXAMPLES, SYNTAX } from '@/components/search/examples';
 import { ResultList } from '@/components/search/result-list';
 import { runSearch } from '@/components/search/run-search';
 import { SearchBar } from '@/components/search/search-bar';
@@ -21,26 +22,6 @@ import { parseQuery } from '@/server/search/parse-query';
 export const metadata: Metadata = { title: 'Recherche' };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-// Des recherches à essayer, qui montrent la syntaxe des filtres sans supposer un nom ni un outil branché.
-const EXAMPLES = [
-  { q: 'outil:github type:ticket', hint: 'Les tickets GitHub, les plus récents d’abord' },
-  { q: 'type:réunion depuis:7j', hint: 'Les réunions de la semaine' },
-  { q: '"renouvellement du contrat"', hint: 'Les mots exacts d’une phrase' },
-  { q: 'budget depuis:3m', hint: 'Un sujet, sur les trois derniers mois' },
-];
-
-const SYNTAX = [
-  { code: 'de:julie', text: 'ce qu’une personne a écrit (son nom ou son e-mail)' },
-  { code: 'outil:github', text: 'un seul outil' },
-  {
-    code: 'type:réunion',
-    text: 'une sorte de source : ticket, page, mail, fichier, conversation…',
-  },
-  { code: 'depuis:7j', text: 'les 7 derniers jours (j), semaines (s) ou mois (m)' },
-  { code: 'avant:2026-10-01', text: 'avant une date' },
-  { code: '"phrase exacte"', text: 'les mots tels quels, dans cet ordre' },
-];
 
 function Code({ children }: { children: string }) {
   return (

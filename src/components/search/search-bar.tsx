@@ -4,7 +4,8 @@ import { LoaderCircle, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { QUERY_MAX_CHARS, SEARCH_INPUT_ID, searchHref } from './url-state';
+import { QUERY_MAX_CHARS } from '@/lib/search-limits';
+import { SEARCH_INPUT_ID, searchHref } from './url-state';
 
 // La barre de recherche. Un formulaire ordinaire (`/?q=…`) : sans JavaScript, il marche encore ; avec, la
 // recherche se fait sans recharger la page, et la barre dit qu'elle travaille.

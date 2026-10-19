@@ -5,7 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { parseQuery } from '@/server/search/parse-query';
 import { searchPassages } from '@/server/search/search';
-import { PAGE_SIZE, type SearchFilters } from '@/server/search/types';
+import { PAGE_MAX, PAGE_SIZE, type SearchFilters } from '@/server/search/types';
 import { guarded } from './guarded';
 import { SearchOutputSchema } from './output-schemas';
 import { renderSearch, searchStructured } from './render';
@@ -16,9 +16,8 @@ import { renderSearch, searchStructured } from './render';
 
 const FILTER_MAX_CHARS = 100;
 
-// Dernière page que la recherche rend : le même nombre que `PAGE_MAX` de `server/search/search.ts` (une page au-delà
-// y est ramenée à celle-ci). Un contrat (`src/test/contracts/mcp-descriptions.test.ts`) compare les deux.
-export const SEARCH_PAGE_MAX = 50;
+// Dernière page que la recherche rend (`PAGE_MAX`, une page au-delà y est ramenée) : l'outil refuse au même endroit.
+export const SEARCH_PAGE_MAX = PAGE_MAX;
 
 // Les outils cités en exemple dans la description de `outil` : tous des outils de Leon (`SourceKind`).
 const EXAMPLE_TOOLS = [

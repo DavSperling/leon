@@ -39,11 +39,15 @@ const FAMILY_ICONS: Record<ProviderFamily, LucideIcon> = {
 export type SourceChipKind = keyof typeof ICONS | ProviderId;
 
 function isProvider(kind: SourceChipKind): kind is ProviderId {
-  return kind in PROVIDER_FAMILIES;
+  return Object.hasOwn(PROVIDER_FAMILIES, kind);
 }
 
+// Un outil que ce code ne connaît pas (`sources.kind` n'a plus de contrainte en base : une ligne d'une autre
+// version du code, d'un outil retiré) prend l'icône d'un outil quelconque. Sans elle, `<Icon />` d'une icône
+// absente fait tomber toute la page qui affiche la puce.
 function iconOf(kind: SourceChipKind): LucideIcon {
-  return isProvider(kind) ? FAMILY_ICONS[PROVIDER_FAMILIES[kind]] : ICONS[kind];
+  if (isProvider(kind)) return FAMILY_ICONS[PROVIDER_FAMILIES[kind]];
+  return Object.hasOwn(ICONS, kind) ? ICONS[kind] : ICONS.other;
 }
 
 type SourceChipProps = { kind: SourceChipKind; label: string; authorName?: string; at?: Date };

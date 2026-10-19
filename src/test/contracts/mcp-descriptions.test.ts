@@ -12,8 +12,7 @@ import {
   SearchInputSchema,
 } from '@/server/mcp/tools/search-tool';
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
-import { PAGE_SIZE } from '@/server/search/types';
-import { readText } from './files';
+import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
 // citent des noms et des chiffres du code. S'ils ne les reprennent pas, ils mentent sans qu'aucun test ne casse.
@@ -54,14 +53,11 @@ describe('description de search', () => {
 
   it('annonce le nombre de sources par page et la dernière page de la recherche', () => {
     expect(description(SearchInputSchema.shape.page)).toContain(`${PAGE_SIZE} sources par page`);
-    const searchSource = readText('src/server/search/search.ts');
-    const pageMax = /\bconst PAGE_MAX = (\d+);/.exec(searchSource)?.[1];
 
     // Une page au-delà de PAGE_MAX est ramenée à PAGE_MAX par la recherche : l'outil doit refuser au même endroit,
-    // sinon il numérote les résultats d'une page qu'il n'a pas rendue. Si cette lecture échoue, PAGE_MAX a changé de
-    // forme : adapter la lecture, ou l'exporter de search.ts et l'importer ici.
-    expect(pageMax).toBeDefined();
-    expect(SEARCH_PAGE_MAX).toBe(Number(pageMax));
+    // sinon il numérote les résultats d'une page qu'il n'a pas rendue. Les deux lisent la même constante
+    // (src/lib/search-limits.ts, gardée par search-limits.test.ts).
+    expect(SEARCH_PAGE_MAX).toBe(PAGE_MAX);
   });
 
   it("n'oblige aucun paramètre", () => {

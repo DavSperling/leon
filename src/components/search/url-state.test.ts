@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
+import { PAGE_MAX, QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { parseQuery } from '@/server/search/parse-query';
 import {
   filterTokens,
@@ -53,27 +55,27 @@ describe('fromSearchParams et toSearchParams', () => {
   });
 
   it('plafonne la page, comme la recherche', () => {
-    expect(fromSearchParams({ q: 'x', page: '50' }).page).toBe(50);
-    expect(fromSearchParams({ q: 'x', page: '51' }).page).toBe(50);
-    expect(fromSearchParams({ q: 'x', page: '99999999999999999999' }).page).toBe(50);
+    expect(fromSearchParams({ q: 'x', page: String(PAGE_MAX) }).page).toBe(PAGE_MAX);
+    expect(fromSearchParams({ q: 'x', page: String(PAGE_MAX + 1) }).page).toBe(PAGE_MAX);
+    expect(fromSearchParams({ q: 'x', page: '99999999999999999999' }).page).toBe(PAGE_MAX);
   });
 
-  it('tronque la requête à 300 caractères', () => {
+  it('tronque la requête au plafond de la recherche', () => {
     const state = fromSearchParams({ q: 'a'.repeat(2000) });
 
-    expect(state.q).toHaveLength(300);
-    expect(toSearchParams(state).get('q')).toHaveLength(300);
+    expect(state.q).toHaveLength(QUERY_MAX_CHARS);
+    expect(toSearchParams(state).get('q')).toHaveLength(QUERY_MAX_CHARS);
   });
 
   it('ne coupe pas un caractère hors du plan de base en deux', () => {
-    const state = fromSearchParams({ q: `${'a'.repeat(299)}😀` });
+    const state = fromSearchParams({ q: `${'a'.repeat(QUERY_MAX_CHARS - 1)}😀` });
 
-    expect(state.q).toBe('a'.repeat(299));
+    expect(state.q).toBe('a'.repeat(QUERY_MAX_CHARS - 1));
   });
 
   it('garde les espaces et les accents tels que tapés, sans les marqueurs de surlignage', () => {
     expect(fromSearchParams({ q: 'Réunion  du budget' }).q).toBe('Réunion  du budget');
-    expect(fromSearchParams({ q: 'abc' }).q).toBe('abc');
+    expect(fromSearchParams({ q: `a${HIGHLIGHT_START}b${HIGHLIGHT_END}c` }).q).toBe('abc');
   });
 });
 

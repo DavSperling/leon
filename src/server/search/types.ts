@@ -59,8 +59,8 @@ export type ContextTurn = {
 
 export type SourceInfo = Omit<SourceHit, 'passages' | 'score'>;
 
-// Sources par page de résultats, et passages montrés sous chacune (contraintes globales du plan).
-export const PAGE_SIZE = 10;
+// Sources par page, dernière page et longueur de la requête : définis dans src/lib/search-limits.ts, que la barre
+// de la page d'accueil lit aussi (le navigateur n'importe rien de `@/server`).
+export { PAGE_MAX, PAGE_SIZE, QUERY_MAX_CHARS } from '@/lib/search-limits';
+// Passages montrés sous chaque source (contraintes globales du plan).
 export const PASSAGES_PER_SOURCE = 3;
-// Longueur maximale du texte d'une requête, filtres retirés.
-export const QUERY_MAX_CHARS = 300;

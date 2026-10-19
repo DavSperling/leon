@@ -17,6 +17,7 @@ import {
 import { parseQuery } from './parse-query';
 import { myAddresses, resolvePeople } from './people';
 import {
+  PAGE_MAX,
   PAGE_SIZE,
   PASSAGES_PER_SOURCE,
   type PassageHit,
@@ -64,7 +65,6 @@ export const MAX_VECTOR_DISTANCE = 0.8;
 export const EMBED_QUERY_TIMEOUT_MS = 3000;
 // Valeurs d'un vecteur que `halfvec` accepte (±65 504).
 const VECTOR_VALUE_MAX = 60_000;
-const PAGE_MAX = 50;
 const SNIPPET_CHARS = 240;
 // Extrait avec les mots trouvés entourés des marqueurs de surlignage (C6), deux morceaux au plus.
 const HEADLINE_OPTIONS = [

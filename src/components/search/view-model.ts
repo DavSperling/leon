@@ -1,12 +1,8 @@
 import { type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { formatNumber } from '@/lib/format';
+import { PAGE_MAX, PAGE_SIZE } from '@/lib/search-limits';
 import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
-import {
-  type ContextTurn,
-  PAGE_SIZE,
-  type SourceHit,
-  type SourceInfo,
-} from '@/server/search/types';
+import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 
 // Ce que la barre montre d'un résultat : les libellés français déjà choisis, les dates, rien d'autre. La page
 // (côté serveur) et l'aperçu (action du serveur) fabriquent ces objets ; les composants du navigateur n'en
@@ -22,7 +18,7 @@ export const NATURE_LABELS: Record<ItemNature, string> = {
   mail: 'Mail',
   fichier: 'Fichier',
   evenement: 'Évènement',
-  commit: 'Commit',
+  commit: 'Modification de code',
 };
 
 export type ResultPassageView = {
@@ -35,7 +31,8 @@ export type ResultPassageView = {
 
 export type ResultView = {
   sourceId: string;
-  kind: SourceKind;
+  // L'outil, pour son icône ; 'other' pour un outil que ce code ne connaît pas (voir `knownKind`).
+  kind: SourceKind | 'other';
   kindLabel: string;
   natureLabel: string;
   title: string | null;
@@ -88,9 +85,24 @@ function originLabel(origin: Record<string, string>): string | null {
   return null;
 }
 
+const KNOWN_KINDS: ReadonlySet<string> = new Set(SOURCE_KINDS);
+
+// `sources.kind` n'a plus de contrainte en base : une ligne écrite par une autre version du code (un outil
+// retiré, un retour à une image plus ancienne) peut porter un outil que celle-ci ne connaît pas. La page doit
+// l'afficher sous son identifiant, avec l'icône d'un outil quelconque, au lieu de tomber.
+function knownKind(kind: string): SourceKind | 'other' {
+  return KNOWN_KINDS.has(kind) ? (kind as SourceKind) : 'other';
+}
+
+function kindLabelOf(kind: string): string {
+  return KNOWN_KINDS.has(kind)
+    ? SOURCE_KIND_LABELS[kind as SourceKind]
+    : kind.trim() || 'Autre outil';
+}
+
 function labelsOf(source: Pick<SourceInfo, 'kind' | 'nature' | 'origin'>) {
   return {
-    kindLabel: SOURCE_KIND_LABELS[source.kind],
+    kindLabel: kindLabelOf(source.kind),
     natureLabel: NATURE_LABELS[source.nature],
     originLabel: originLabel(source.origin),
   };
@@ -99,7 +111,7 @@ function labelsOf(source: Pick<SourceInfo, 'kind' | 'nature' | 'origin'>) {
 export function toResultViews(hits: SourceHit[]): ResultView[] {
   return hits.map((hit) => ({
     sourceId: hit.sourceId,
-    kind: hit.kind,
+    kind: knownKind(hit.kind),
     ...labelsOf(hit),
     title: hit.title,
     url: hit.url,
@@ -160,9 +172,6 @@ export function countLabel(total: number): string {
   const plural = total > 1 ? 'sources' : 'source';
   return total <= PAGE_SIZE ? `${total} ${plural}` : `Environ ${formatNumber(total)} ${plural}`;
 }
-
-// Même plafond de pages que la recherche (voir url-state.ts).
-const PAGE_MAX = 50;
 
 export function pageCount(total: number): number {
   return Math.min(Math.max(Math.ceil(total / PAGE_SIZE), 1), PAGE_MAX);

@@ -1,20 +1,25 @@
 import { randomUUID } from 'node:crypto';
-import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
+import { readdirSync } from 'node:fs';
+import { is } from 'drizzle-orm';
+import { getTableConfig, PgTable } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
-import * as apiTokensSchema from './schema/api-tokens';
-import * as authSchema from './schema/auth';
-import * as connectionsSchema from './schema/connections';
-import * as memorySchema from './schema/memory';
 
 // Contrat « colonnes utilisées ↔ migrations » : chaque colonne Drizzle existe en base sous le même nom.
-const tables: PgTable[] = [
-  ...Object.values(authSchema),
-  ...Object.values(apiTokensSchema),
-  ...Object.values(connectionsSchema),
-  ...Object.values(memorySchema),
-];
+// Les fichiers de schéma sont lus dans le dossier, sans liste à la main : un nouveau fichier est couvert dès
+// qu'il existe, et aucune de ses tables ne peut échapper au contrat.
+const schemaFiles = readdirSync(new URL('./schema', import.meta.url))
+  .filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts'))
+  .sort();
+const schemaModules = await Promise.all(
+  schemaFiles.map((file) => import(`./schema/${file.replace(/\.ts$/, '')}.ts`)),
+);
+const tables: PgTable[] = schemaModules.flatMap((module) =>
+  Object.values(module as Record<string, unknown>).filter((value): value is PgTable =>
+    is(value, PgTable),
+  ),
+);
 
 async function databaseColumns(table: string): Promise<string[]> {
   const { rows } = await adminPool.query<{ column_name: string }>(
@@ -60,6 +65,13 @@ const DROPPED_TABLES = [
 ];
 
 describe('schéma Drizzle ↔ migrations', () => {
+  it('lit les fichiers du dossier schema et en tire des tables', () => {
+    expect(schemaFiles).toEqual(
+      expect.arrayContaining(['api-tokens.ts', 'auth.ts', 'connections.ts', 'memory.ts']),
+    );
+    expect(tables.length).toBeGreaterThanOrEqual(9);
+  });
+
   it.each(tables.map((table) => [getTableConfig(table).name, table] as const))(
     'les colonnes de %s existent en base',
     async (name, table) => {

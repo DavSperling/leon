@@ -24,17 +24,17 @@ pnpm leon import-claude-code --dry-run
 pnpm ext:build                        # extension non empaquetée dans extension/.output/chrome-mv3
 ```
 
-La checklist de vérification manuelle du premier jet est dans [`docs/guides/premier-jet-verification.md`](docs/guides/premier-jet-verification.md), celle des connecteurs dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
+La checklist de vérification manuelle du premier jet est dans [`docs/guides/premier-jet-verification.md`](docs/guides/premier-jet-verification.md) (périmée depuis le deuxième jet, sauf le démarrage, le jeton et l'extension), celle des connecteurs dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
 ## Tester
 
 ```bash
-pnpm test                             # unitaires + intégration ; leon_test est migrée automatiquement
+pnpm test                             # unitaires + intégration ; la base de test est migrée automatiquement (sur cette branche : LEON_TEST_DATABASE=leon_test_glean, voir plus bas)
 ```
 
 Les tests d'intégration (`*.db.test.ts`) se connectent à Postgres : il faut que `docker compose up -d` tourne. Dans un agent Claude Code sandboxé, lancer `pnpm test` hors sandbox.
 
-`LEON_TEST_DATABASE` choisit la base des tests d'intégration (défaut `leon_test`, partagée par les branches). Une branche qui supprime ou change des tables prend la sienne, créée une fois : `LEON_TEST_DATABASE=leon_test_glean pnpm test:db` (le deuxième jet travaille ainsi, voir son plan).
+`LEON_TEST_DATABASE` choisit la base des tests d'intégration (défaut `leon_test`, partagée par les branches). Une branche qui supprime ou change des tables prend la sienne, créée une fois : `LEON_TEST_DATABASE=leon_test_glean pnpm test:db` (le deuxième jet travaille ainsi, voir son plan). Le nom doit commencer par `leon_test`. Sans cette variable, `pnpm test:db` s'arrête avec un message tant que la migration `0010-suppression-tri.sql` (qui supprime les tables du tri) n'est pas appliquée à `leon_test` : rien n'est migré. Seul un accord de l'équipe (`LEON_TEST_ACCEPTE_MIGRATIONS_DESTRUCTIVES=oui`) lève ce garde-fou.
 
 ## Connecteurs
 
@@ -112,9 +112,9 @@ Pour les outils dont l'éditeur le permet sans vérification de sa part, le pann
 
 La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'éditeur, « Reconnecter ») est dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
-## Point du matin au démarrage de Claude Code
+## Briefing au démarrage de Claude Code
 
-Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans appeler d'outil, ajouter ce hook dans `~/.claude/settings.json`. Le serveur ne prépare pas encore ce point (tâche T13 du deuxième jet) : en attendant, la commande ne renvoie rien et ne bloque jamais la session.
+Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans appeler d'outil, ajouter ce hook dans `~/.claude/settings.json`. Le serveur ne prépare pas encore ce point (tâche T13 du deuxième jet) : en attendant, la commande ne renvoie rien (elle écrit seulement « ce serveur ne prépare pas encore de point du matin » sur la sortie d'erreur) et ne bloque jamais la session.
 
 ```json
 {

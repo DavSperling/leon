@@ -146,7 +146,7 @@ describe('ingestConnectorItems', () => {
     });
   });
 
-  // Le côté de l'auteur et la note interne viennent de l'outil et suivent le tour jusqu'à la base, où le
+  // Le côté de l'auteur et la note interne viennent de l'outil et suivent le tour jusqu'à la base, où la
   // recherche les relira : un tour sans côté (l'outil ne le dit pas) reste sans côté.
   it("enregistre le côté de l'auteur et la note interne de chaque tour", async () => {
     const connection = await connectionOf(paul);

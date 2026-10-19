@@ -50,7 +50,8 @@ export type ProviderId = (typeof PROVIDER_IDS)[number];
 export const SOURCE_KINDS = [...CAPTURE_KINDS, ...PROVIDER_IDS] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 // Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan du deuxième jet).
-// Elle s'écrit dans `sources.metadata.nature` ; une valeur inconnue vaut conversation.
+// Elle s'écrit dans `sources.metadata.nature`. Le repli d'une valeur inconnue sur « conversation » (qui vivait dans
+// l'ancien `pipeline/runs.ts`) est à refaire en T06, là où la recherche lit la nature pour `SourceHit.nature`.
 export const ITEM_NATURES = [
   'conversation',
   'reunion',

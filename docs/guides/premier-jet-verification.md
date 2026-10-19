@@ -1,5 +1,7 @@
 # Vérification manuelle du premier jet
 
+> **Périmé depuis le deuxième jet.** Les étapes 3, 4, 6 à 10 décrivent l'arbre des fiches, les faits, « À vérifier », le Journal, l'onglet Brut, le panneau latéral et les outils MCP `search`, `fetch` et `briefing`, que le deuxième jet a supprimés ou refaits. Cette checklist n'est plus exécutable telle quelle. Elle est remplacée par `docs/guides/deuxieme-jet-verification.md` (écrit en T31) ; en attendant, seules les étapes 1, 2 et 5 (démarrage, jeton, extension) restent valables.
+
 À cocher par Amos ou David, dans l'ordre. Chaque case décrit ce qu'on fait puis ce qu'on doit voir. Une case qui échoue : noter l'écart et la sortie de la commande dans la PR concernée.
 
 Prérequis : le dépôt à jour de `main`, `.env.local` renseigné (voir `.env.example`).

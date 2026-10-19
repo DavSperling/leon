@@ -12,6 +12,10 @@ export const PIPELINE_QUEUES = {
 } as const;
 export type PipelineStep = keyof typeof PIPELINE_QUEUES;
 
+// Files du tri supprimé (premier jet) : sur une base déjà utilisée, elles restent avec leurs jobs et sans lecteur.
+// Le démarrage les retire (deleteQueue ne fait rien si la file n'existe pas).
+const LEGACY_QUEUES = ['pipeline-triage', 'pipeline-extraction', 'pipeline-placement'];
+
 export const PipelineJobSchema = z.object({
   ingestRunId: z.uuid(),
   tenantId: z.uuid(),
@@ -32,6 +36,7 @@ async function startBoss(): Promise<PgBoss> {
   });
   boss.on('error', (error) => logError('pgboss.error', error));
   await boss.start();
+  for (const name of LEGACY_QUEUES) await boss.deleteQueue(name);
   for (const name of Object.values(PIPELINE_QUEUES)) await boss.createQueue(name, RETRY);
   return boss;
 }

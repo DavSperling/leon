@@ -1,7 +1,45 @@
 // Environnement des tests : Postgres local de docker compose (mots de passe de développement, pas des secrets).
 // LEON_TEST_DATABASE choisit la base (défaut leon_test) : une branche qui supprime ou change des tables
 // travaille sur sa propre base pour ne pas casser celle que partagent les autres.
-const database = process.env.LEON_TEST_DATABASE ?? 'leon_test';
+
+const SHARED_DATABASE = 'leon_test';
+// Un nom qui commence par leon_test : refuse la base de développement (leon) et tout caractère
+// (/, ?, @, #) qui changerait l'adresse de connexion.
+const DATABASE_NAME = /^leon_test[a-z0-9_]*$/;
+
+// Migrations qui suppriment des données : elles ne s'appliquent jamais par accident à la base partagée.
+export const MIGRATIONS_DESTRUCTIVES = ['0010-suppression-tri.sql'];
+export const ACCEPT_DESTRUCTIVE_VARIABLE = 'LEON_TEST_ACCEPTE_MIGRATIONS_DESTRUCTIVES';
+
+export function testDatabaseName(raw: string | undefined): string {
+  const name = raw ?? SHARED_DATABASE;
+  if (!DATABASE_NAME.test(name)) {
+    throw new Error(
+      `LEON_TEST_DATABASE doit nommer une base de test : « ${SHARED_DATABASE} » ou un nom qui commence par « ${SHARED_DATABASE}_ » (lettres minuscules, chiffres et tirets bas).`,
+    );
+  }
+  return name;
+}
+
+// Renvoie le message de refus (en français) si les migrations en attente supprimeraient des données de la base
+// partagée par les branches ; null sinon. `accepted` : l'équipe a décidé de migrer leon_test.
+export function refuseMigrationsDestructives(input: {
+  database: string;
+  pending: string[];
+  accepted: boolean;
+}): string | null {
+  if (input.database !== SHARED_DATABASE || input.pending.length === 0 || input.accepted) {
+    return null;
+  }
+  return [
+    `La migration ${input.pending.join(', ')} supprime des tables : elle ne s'applique pas à ${SHARED_DATABASE},`,
+    'la base de test que partagent main et les autres branches.',
+    `Lancez les tests avec LEON_TEST_DATABASE=${SHARED_DATABASE}_<nom> (base créée une fois, voir le plan du deuxième jet).`,
+    `Si toute l'équipe est d'accord pour migrer ${SHARED_DATABASE}, ajoutez ${ACCEPT_DESTRUCTIVE_VARIABLE}=oui.`,
+  ].join(' ');
+}
+
+const database = testDatabaseName(process.env.LEON_TEST_DATABASE);
 
 export const TEST_ENV = {
   DATABASE_URL: `postgres://leon_app:leon_app@127.0.0.1:54329/${database}`,

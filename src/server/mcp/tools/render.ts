@@ -8,6 +8,7 @@ import {
   type SourceHit,
   type SourceInfo,
 } from '@/server/search/types';
+import type { FetchOutput, SearchOutput } from './output-schemas';
 
 // Ce que les outils `search` et `fetch` rendent au client MCP : un texte pour l'assistant et un
 // `structuredContent` pour le code. Tout ce qui vient de la mémoire (titres, extraits, noms, liens, texte des
@@ -85,6 +86,13 @@ export function renderSearch(page: SearchPage, pageNumber: number): string {
 
 const iso = (date: Date): string => date.toISOString();
 
+// Le titre que ChatGPT affiche : celui de la source, à défaut le nom de l'outil.
+function displayTitle(source: SourceInfo): string {
+  return source.title !== null && oneLine(source.title) !== ''
+    ? source.title
+    : SOURCE_KIND_LABELS[source.kind];
+}
+
 function structuredSource(source: SourceInfo) {
   return {
     sourceId: source.sourceId,
@@ -98,8 +106,13 @@ function structuredSource(source: SourceInfo) {
   };
 }
 
-export function searchStructured(page: SearchPage, pageNumber: number) {
+export function searchStructured(page: SearchPage, pageNumber: number): SearchOutput {
   return {
+    results: page.hits.map((hit) => ({
+      id: hit.sourceId,
+      title: displayTitle(hit),
+      url: hit.url ?? '',
+    })),
     mode: page.mode,
     page: pageNumber,
     totalSources: page.totalSources,
@@ -144,8 +157,33 @@ export function renderFetched(fetched: Fetched): string {
   ].join('\n');
 }
 
-export function fetchStructured(fetched: Fetched) {
+// Les tours bout à bout, chacun précédé de son auteur et de sa date. C'est le champ `text` du contrat de ChatGPT,
+// de la donnée brute : la ligne de garde et les balises de `content` ne l'accompagnent pas (comme pour `turns`).
+function joinedText(turns: ContextTurn[]): string {
+  return turns
+    .map((turn) => `${turn.authorName ?? turn.role} (${isoDate(turn.ts)}) : ${turn.text}`)
+    .join('\n\n');
+}
+
+function fetchMetadata(fetched: Fetched): Record<string, string> {
+  const { source } = fetched;
+  const origin = originText(source.origin);
   return {
+    outil: SOURCE_KIND_LABELS[source.kind],
+    nature: source.nature,
+    date: isoDate(source.lastTs),
+    ...(origin === '' ? {} : { origine: origin }),
+    ...(fetched.truncated ? { coupee: 'oui' } : {}),
+  };
+}
+
+export function fetchStructured(fetched: Fetched): FetchOutput {
+  return {
+    id: fetched.source.sourceId,
+    title: displayTitle(fetched.source),
+    text: joinedText(fetched.turns),
+    url: fetched.source.url ?? '',
+    metadata: fetchMetadata(fetched),
     source: structuredSource(fetched.source),
     truncated: fetched.truncated,
     turns: fetched.turns.map((turn) => ({

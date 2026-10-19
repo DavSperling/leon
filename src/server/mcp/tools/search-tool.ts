@@ -1,12 +1,13 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { parseQuery } from '@/server/search/parse-query';
 import { searchPassages } from '@/server/search/search';
-import type { SearchFilters } from '@/server/search/types';
+import { PAGE_SIZE, type SearchFilters } from '@/server/search/types';
 import { guarded } from './guarded';
+import { SearchOutputSchema } from './output-schemas';
 import { renderSearch, searchStructured } from './render';
 
 // L'outil `search` : la recherche de la barre de Leon (passages, filtres), sans la réponse de l'agent, puisque
@@ -15,32 +16,49 @@ import { renderSearch, searchStructured } from './render';
 
 const FILTER_MAX_CHARS = 100;
 
-const InputSchema = z.object({
+// Dernière page que la recherche rend : le même nombre que `PAGE_MAX` de `server/search/search.ts` (une page au-delà
+// y est ramenée à celle-ci). Un contrat (`src/test/contracts/mcp-descriptions.test.ts`) compare les deux.
+export const SEARCH_PAGE_MAX = 50;
+
+// Les outils cités en exemple dans la description de `outil` : tous des outils de Leon (`SourceKind`).
+const EXAMPLE_TOOLS = [
+  'github',
+  'linear',
+  'notion',
+  'outlook',
+  'claude_code',
+  'fathom',
+] as const satisfies readonly SourceKind[];
+
+// Les paramètres facultatifs acceptent aussi `null` : des clients l'envoient pour « non renseigné ».
+export const SearchInputSchema = z.object({
   query: z
     .string()
-    .max(1000)
+    // Pas de longueur maximale : une requête de 2 000 caractères collés donne une page de résultats ou « Aucun
+    // résultat », jamais un refus. `parseQuery` ne lit que ses 10 000 premiers caractères et garde 300 de texte.
+    .nullish()
     .describe(
-      'Les mots à chercher, avec « guillemets » pour une expression exacte. Peut être vide si un filtre est donné : on rend alors les sources les plus récentes.',
+      'Les mots à chercher, avec « guillemets » pour une expression exacte. Facultatif quand un filtre est donné : on rend alors les sources les plus récentes.',
     ),
   outil: z
     .string()
     .max(FILTER_MAX_CHARS)
-    .optional()
-    .describe('Limite à un outil : github, linear, notion, outlook, claude_code, fathom…'),
+    .nullish()
+    .describe(`Limite à un outil : ${EXAMPLE_TOOLS.join(', ')}…`),
   type: z
     .string()
     .max(FILTER_MAX_CHARS)
-    .optional()
+    .nullish()
     .describe(`Limite à une nature : ${ITEM_NATURES.join(', ')}.`),
   depuis: z
     .string()
     .max(FILTER_MAX_CHARS)
-    .optional()
+    .nullish()
     .describe('Limite aux passages récents : 7j (jours), 2s (semaines), 3m (mois) ou AAAA-MM-JJ.'),
   de: z
     .string()
     .max(FILTER_MAX_CHARS)
-    .optional()
+    .nullish()
     .describe(
       "Limite à ce qu'une personne a écrit : son nom, son e-mail ou son identifiant d'outil.",
     ),
@@ -48,14 +66,23 @@ const InputSchema = z.object({
     .number()
     .int()
     .min(1)
-    .max(50)
-    .optional()
-    .describe('Page de résultats, 10 sources par page (1 par défaut).'),
+    .max(SEARCH_PAGE_MAX)
+    .nullish()
+    .describe(`Page de résultats, ${PAGE_SIZE} sources par page (1 par défaut).`),
 });
+
+// Les paramètres qui filtrent, tels que MCP_INSTRUCTIONS les nomme : un nom qui n'est pas un paramètre de
+// l'outil ne compile pas.
+export const SEARCH_FILTERS = ['outil', 'type', 'depuis', 'de'] as const satisfies ReadonlyArray<
+  keyof z.input<typeof SearchInputSchema>
+>;
+
+export const SEARCH_DESCRIPTION =
+  "Cherche dans toute la mémoire brute de l'entreprise (conversations avec des IA, tickets, pages, réunions, mails, fichiers) par mots-clés et par sens. Rend des sources avec leurs meilleurs passages, leur outil, leur titre, leur date et leur lien. Ne rend que ce que l'utilisateur a le droit de voir. Lire un passage ou une source : fetch.";
 
 // Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
 // guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.
-function clean(value: string | undefined): string {
+function clean(value: string | null | undefined): string {
   return (value ?? '').replace(/[\s\p{Cc}"]+/gu, ' ').trim();
 }
 
@@ -68,7 +95,7 @@ const refusal = (text: string) => ({
 // singulier ou au pluriel, durées). Un filtre que Leon ne comprend pas n'est pas ignoré en silence : l'assistant
 // croirait avoir cherché dans un outil, et chercherait partout.
 function readFilters(
-  input: { outil?: string; type?: string; depuis?: string },
+  input: { outil?: string | null; type?: string | null; depuis?: string | null },
   now: Date,
 ): { filters: SearchFilters } | { error: string } {
   const filters: SearchFilters = {};
@@ -110,9 +137,9 @@ export function registerSearchTool(
     'search',
     {
       title: 'Chercher dans la mémoire',
-      description:
-        "Cherche dans toute la mémoire brute de l'entreprise (conversations avec des IA, tickets, pages, réunions, mails, fichiers) par mots-clés et par sens. Rend des sources avec leurs meilleurs passages, leur outil, leur titre, leur date et leur lien. Ne rend que ce que l'utilisateur a le droit de voir. Lire un passage ou une source : fetch.",
-      inputSchema: InputSchema,
+      description: SEARCH_DESCRIPTION,
+      inputSchema: SearchInputSchema,
+      outputSchema: SearchOutputSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     guarded('search', async ({ query, outil, type, depuis, de, page }) => {
@@ -122,7 +149,7 @@ export function registerSearchTool(
       // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe. Il se met en tête :
       // un guillemet non fermé dans la requête ne doit pas avaler le filtre qui le suit.
       const person = clean(de);
-      const text = `${person === '' ? '' : `de:"${person}" `}${query}`;
+      const text = `${person === '' ? '' : `de:"${person}" `}${query ?? ''}`;
       const pageNumber = page ?? 1;
       const result = await searchPassages(ctx, {
         query: text,

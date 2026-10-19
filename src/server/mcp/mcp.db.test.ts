@@ -18,6 +18,13 @@ import * as searchModule from '@/server/search/search';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
+import { NEIGHBOUR_TURNS } from './tools/fetch-tool';
+import {
+  type FetchOutput,
+  FetchOutputSchema,
+  type SearchOutput,
+  SearchOutputSchema,
+} from './tools/output-schemas';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -79,33 +86,9 @@ async function setupTeam() {
   return { tenantId, paul, marie, julie, zoe: other.members[0] as TenantContext };
 }
 
-type Hit = {
-  sourceId: string;
-  kind: string;
-  kindLabel: string;
-  nature: string;
-  title: string | null;
-  url: string | null;
-  lastTs: string;
-  passages: Array<{
-    passageId: string;
-    turnId: string;
-    snippet: string;
-    authorName: string | null;
-  }>;
-};
-type SearchStructured = {
-  mode: string;
-  page: number;
-  totalSources: number;
-  unknownPeople: string[];
-  hits: Hit[];
-};
-type FetchStructured = {
-  source: { sourceId: string; title: string | null; kindLabel: string };
-  truncated: boolean;
-  turns: Array<{ turnId: string; text: string; isHit: boolean }>;
-};
+// Les formes viennent des schémas de sortie que le serveur annonce : rien n'est écrit deux fois.
+type SearchStructured = SearchOutput;
+type FetchStructured = FetchOutput;
 
 const found = (result: { structuredContent?: Record<string, unknown> }) =>
   result.structuredContent as unknown as SearchStructured;
@@ -147,6 +130,38 @@ describe('serveur MCP', () => {
     for (const word of ['search', 'fetch', 'remember', 'titre', 'outil', 'date']) {
       expect(instructions).toContain(word);
     }
+  });
+
+  // Le contrat que ChatGPT impose à `search` et `fetch` : un schéma de sortie, `results`, et un `id` pour `fetch`.
+  it('annonce les schémas de sortie de search et fetch, et aucun paramètre obligatoire', async () => {
+    const client = await connect(await setupPaul());
+
+    const { tools } = await client.listTools();
+
+    const byName = new Map(tools.map((tool) => [tool.name, tool]));
+    const search = byName.get('search');
+    const fetch = byName.get('fetch');
+    expect(Object.keys(search?.outputSchema?.properties ?? {})).toEqual(
+      expect.arrayContaining(['results', 'hits', 'mode', 'page', 'totalSources']),
+    );
+    expect(Object.keys(fetch?.outputSchema?.properties ?? {})).toEqual(
+      expect.arrayContaining(['id', 'title', 'text', 'url', 'metadata', 'turns', 'truncated']),
+    );
+    expect(Object.keys(fetch?.inputSchema.properties ?? {}).sort()).toEqual([
+      'id',
+      'passageId',
+      'sourceId',
+    ]);
+    expect(Object.keys(search?.inputSchema.properties ?? {}).sort()).toEqual([
+      'de',
+      'depuis',
+      'outil',
+      'page',
+      'query',
+      'type',
+    ]);
+    expect(search?.inputSchema.required ?? []).toEqual([]);
+    expect(fetch?.inputSchema.required ?? []).toEqual([]);
   });
 
   it("remember : dépose une source mcp_remember privée à l'auteur et met l'indexation en file", async () => {
@@ -356,6 +371,112 @@ describe('outil search', () => {
     const result = await call(await connect(paul), 'search', { query: '', outil: 'linear' });
 
     expect(titlesOf(result)).toEqual(['Ticket du jour', 'Vieux ticket']);
+  });
+
+  // Le schéma annonçait `query` obligatoire alors que sa description dit « facultatif avec un filtre ».
+  it('accepte un appel sans query : un filtre seul rend les sources les plus récentes', async () => {
+    const { tenantId, paul } = await setupTeam();
+    await seedIndexed(paul, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Ticket Linear',
+      turns: [{ text: 'rien', ts: daysAgo(1) }],
+      lastTurnAt: daysAgo(1),
+    });
+    await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket GitHub',
+      turns: [{ text: 'rien', ts: daysAgo(1) }],
+      lastTurnAt: daysAgo(1),
+    });
+
+    const result = await call(await connect(paul), 'search', { outil: 'linear' });
+
+    expect(result.isError).toBeUndefined();
+    expect(titlesOf(result)).toEqual(['Ticket Linear']);
+  });
+
+  it('lit null comme « non renseigné » pour chaque paramètre facultatif', async () => {
+    const { tenantId, paul } = await setupTeam();
+    await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket',
+      turns: [{ text: 'quokkamania partout' }],
+    });
+    const client = await connect(paul);
+
+    const allNull = await call(client, 'search', {
+      query: 'quokkamania',
+      outil: null,
+      type: null,
+      depuis: null,
+      de: null,
+      page: null,
+    });
+    const queryNull = await call(client, 'search', { query: null, outil: 'github' });
+
+    expect(allNull.isError).toBeUndefined();
+    expect(titlesOf(allNull)).toEqual(['Ticket']);
+    expect(found(allNull).page).toBe(1);
+    expect(queryNull.isError).toBeUndefined();
+    expect(titlesOf(queryNull)).toEqual(['Ticket']);
+  });
+
+  // Vigilance 1 : 2 000 caractères collés donnent une page ou « Aucun résultat », jamais un refus du schéma.
+  it('ne refuse pas une requête de 2 000 caractères collés', async () => {
+    const { tenantId, paul } = await setupTeam();
+    await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket',
+      turns: [{ text: 'quokkamania partout' }],
+    });
+    const client = await connect(paul);
+
+    const pasted = await call(client, 'search', { query: 'blorp '.repeat(334) });
+    const huge = await call(client, 'search', { query: 'quokkamania '.repeat(10_000) });
+
+    for (const result of [pasted, huge]) {
+      expect(result.isError).toBeUndefined();
+      expect(SearchOutputSchema.safeParse(result.structuredContent ?? { vide: true }).success).toBe(
+        true,
+      );
+    }
+    expect(pasted.text).toBe('Aucun résultat.');
+  });
+
+  // Le contrat de ChatGPT : `results` d'objets { id, title, url }, un par source, dans l'ordre des résultats.
+  it('rend results {id, title, url} pour chaque source, avec le titre et le lien de la source', async () => {
+    const { tenantId, paul } = await setupTeam();
+    await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket 12',
+      metadata: { nature: 'ticket', url: 'https://github.com/acme/api/issues/12' },
+      turns: [{ text: 'le contrat widgetron' }],
+    });
+    await seedIndexed(paul, {
+      kind: 'claude_code',
+      title: 'Sans lien',
+      turns: [{ text: 'le contrat widgetron aussi' }],
+    });
+
+    const result = await call(await connect(paul), 'search', { query: 'widgetron' });
+
+    const structured = SearchOutputSchema.parse(result.structuredContent);
+    expect(structured.results).toEqual(
+      structured.hits.map((hit) => ({ id: hit.sourceId, title: hit.title, url: hit.url ?? '' })),
+    );
+    expect(structured.results.map((entry) => entry.title).sort()).toEqual([
+      'Sans lien',
+      'Ticket 12',
+    ]);
+    expect(structured.results.find((entry) => entry.title === 'Ticket 12')?.url).toBe(
+      'https://github.com/acme/api/issues/12',
+    );
+    expect(structured.results.find((entry) => entry.title === 'Sans lien')?.url).toBe('');
   });
 
   it('dit quand un filtre est inconnu au lieu de chercher partout', async () => {
@@ -593,19 +714,96 @@ describe('outil fetch', () => {
     }
   });
 
-  it('exige un seul identifiant', async () => {
+  // Le contrat de ChatGPT : search rend results[].id, puis fetch({ id }) rend { id, title, text, url, metadata }.
+  it('contrat ChatGPT : fetch({ id }) lit la source trouvée par search, avec son texte et son lien', async () => {
+    const { tenantId, paul } = await setupTeam();
+    const { sourceId } = await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket 12',
+      metadata: { nature: 'ticket', url: 'https://github.com/acme/api/issues/12' },
+      turns: [
+        { text: 'le contrat widgetron est renouvelé', ts: new Date('2026-10-18T09:00:00Z') },
+        { text: 'merci pour la relance', ts: new Date('2026-10-18T09:05:00Z') },
+      ],
+      lastTurnAt: new Date('2026-10-18T09:05:00Z'),
+    });
+    const client = await connect(paul);
+
+    const searched = await call(client, 'search', { query: 'widgetron' });
+    const [first] = SearchOutputSchema.parse(searched.structuredContent).results;
+    const result = await call(client, 'fetch', { id: first?.id });
+
+    expect(result.isError).toBeUndefined();
+    const structured = FetchOutputSchema.parse(result.structuredContent);
+    expect(structured).toMatchObject({
+      id: sourceId,
+      title: 'Ticket 12',
+      url: 'https://github.com/acme/api/issues/12',
+      metadata: { outil: 'GitHub', nature: 'ticket', date: '2026-10-18' },
+    });
+    expect(structured.text).toContain('le contrat widgetron est renouvelé');
+    expect(structured.text).toContain('merci pour la relance');
+    expect(result.text.startsWith(DATA_GUARD_LINE)).toBe(true);
+    // Une lecture, une ligne : celle de fetch, pas celle de search.
+    expect(await readsOf(sourceId)).toHaveLength(1);
+    expect((await readsOf(sourceId))[0]?.passageId).toBeNull();
+  });
+
+  it('lit null comme « non renseigné » pour les identifiants absents', async () => {
     const { paul, sourceId } = await seedThread();
     const client = await connect(paul);
 
-    const none = await call(client, 'fetch', {});
-    const both = await call(client, 'fetch', {
-      sourceId,
-      passageId: '00000000-0000-4000-8000-000000000000',
-    });
+    const bySource = await call(client, 'fetch', { sourceId, id: null, passageId: null });
+    const byId = await call(client, 'fetch', { id: sourceId, sourceId: null, passageId: null });
 
-    for (const result of [none, both]) {
+    for (const result of [bySource, byId]) {
+      expect(result.isError).toBeUndefined();
+      expect(FetchOutputSchema.parse(result.structuredContent).id).toBe(sourceId);
+    }
+  });
+
+  it('dit « introuvable » pour un id que le porteur du jeton ne voit pas, sans ligne au journal', async () => {
+    const { marie, sourceId } = await seedThread();
+
+    const result = await call(await connect(marie), 'fetch', { id: sourceId });
+
+    expect(result).toMatchObject({ isError: true });
+    expect(result.text).toContain('introuvable');
+    expect(await readsOf(sourceId)).toHaveLength(0);
+  });
+
+  it('rend le passage avec exactement les tours voisins que la description annonce', async () => {
+    const { paul, turnIds } = await seedThread();
+    const client = await connect(paul);
+    const searched = await call(client, 'search', { query: 'quibblezap' });
+    const passageId = found(searched).hits[0]?.passages[0]?.passageId as string;
+
+    const result = await call(client, 'fetch', { passageId });
+
+    const context = FetchOutputSchema.parse(result.structuredContent);
+    expect(context.turns).toHaveLength(2 * NEIGHBOUR_TURNS + 1);
+    expect(context.turns.map((turn) => turn.turnId)).toEqual(
+      turnIds.slice(3 - NEIGHBOUR_TURNS, 4 + NEIGHBOUR_TURNS),
+    );
+  });
+
+  it('exige un seul identifiant', async () => {
+    const { paul, sourceId } = await seedThread();
+    const client = await connect(paul);
+    const unknown = '00000000-0000-4000-8000-000000000000';
+
+    const refused = [
+      await call(client, 'fetch', {}),
+      await call(client, 'fetch', { sourceId, passageId: unknown }),
+      await call(client, 'fetch', { id: sourceId, sourceId }),
+      await call(client, 'fetch', { id: sourceId, passageId: unknown }),
+      await call(client, 'fetch', { id: sourceId, sourceId, passageId: unknown }),
+    ];
+
+    for (const result of refused) {
       expect(result.isError).toBe(true);
-      expect(result.text).toContain('passageId ou sourceId');
+      expect(result.text).toBe('Donne id, passageId ou sourceId, un seul des trois.');
     }
     expect(await readsOf(sourceId)).toHaveLength(0);
   });

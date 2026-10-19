@@ -5,7 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
-import { listReadLog } from './read-log';
+import { listReadLog, recordRead } from './read-log';
 
 const ids = (entries: Array<{ id: string }>) => entries.map((entry) => entry.id);
 
@@ -173,5 +173,60 @@ describe('listReadLog', () => {
 
     expect(await listReadLog(s.paul, {})).toHaveLength(50);
     expect(await listReadLog(s.paul, { limit: 60 })).toHaveLength(52);
+  });
+});
+
+describe('recordRead', () => {
+  const readsOf = (sourceId: string) =>
+    adminDb.select().from(readLog).where(eq(readLog.sourceId, sourceId));
+
+  it('journalise la lecture avec l’accès de la source et le passage lu', async () => {
+    const s = await seedScenario();
+    const passageId = randomUUID();
+
+    const written = await recordRead(s.paul, {
+      sourceId: s.paulSourceId,
+      passageId,
+      client: 'claude-code',
+    });
+
+    expect(written).toBe(true);
+    const rows = await readsOf(s.paulSourceId);
+    const row = rows.find((entry) => entry.passageId === passageId);
+    expect(row).toMatchObject({
+      tenantId: s.paul.tenantId,
+      userId: s.paul.userId,
+      client: 'claude-code',
+      sourceId: s.paulSourceId,
+      acl: [s.paul.userId],
+    });
+  });
+
+  it('journalise une lecture de source entière sans passage, avec l’accès d’équipe d’une source d’équipe', async () => {
+    const s = await seedScenario();
+
+    await recordRead(s.marie, { sourceId: s.teamSourceId, client: 'cursor' });
+
+    const rows = await readsOf(s.teamSourceId);
+    const row = rows.find((entry) => entry.client === 'cursor');
+    expect(row).toMatchObject({ userId: s.marie.userId, passageId: null, acl: [s.marie.tenantId] });
+  });
+
+  it('n’écrit rien et rend false pour une source que le lecteur ne voit pas', async () => {
+    const s = await seedScenario();
+    const before = (await readsOf(s.paulSourceId)).length;
+
+    const written = await recordRead(s.marie, { sourceId: s.paulSourceId, client: 'claude-code' });
+
+    expect(written).toBe(false);
+    expect(await readsOf(s.paulSourceId)).toHaveLength(before);
+  });
+
+  it('n’écrit rien pour une source d’une autre organisation', async () => {
+    const s = await seedScenario();
+
+    expect(await recordRead(s.zoe, { sourceId: s.paulSourceId, client: 'claude-code' })).toBe(
+      false,
+    );
   });
 });

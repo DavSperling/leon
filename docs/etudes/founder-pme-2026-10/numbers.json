@@ -8,7 +8,7 @@
       "cost": 5.0
     },
     {
-      "label": "Frais de paiement Stripe (1,5 % + part des 0,25 € par facture, estimation)",
+      "label": "Frais de paiement Stripe (vérifié par ops le 19/10 sur stripe.com/fr/pricing : carte UE standard 1,5 % + 0,25 € par facture, plus Stripe Billing 0,7 % pour l'abonnement ; à 19 € et 10 sièges par facture ≈ 0,44 €, montant inchangé)",
       "cost": 0.45
     }
   ],
@@ -18,12 +18,16 @@
       "cost": 460
     },
     {
-      "label": "Comptable en ligne (estimation)",
-      "cost": 150
+      "label": "Expert-comptable en ligne (mis à jour par ops le 19/10 : 150 → 99 €, prix public Dougs « Sérénité » pour une SAS, bilan, liasse, TVA et dépôt des comptes inclus)",
+      "cost": 99
     },
     {
-      "label": "Assurance RC pro et cyber (estimation)",
+      "label": "Assurance RC pro et cyber (estimation, à faire chiffrer : les prix publics « à partir de » ne couvrent pas le cyber pour un SaaS qui stocke des données clients)",
       "cost": 80
+    },
+    {
+      "label": "Signature électronique des DPA et contrats (ajout ops le 19/10 : Yousign Plus, 23 € HT par mois en engagement annuel, prix relevé sur une source secondaire, à confirmer)",
+      "cost": 23
     },
     {
       "label": "Rémunération des fondateurs (aucune tant que l'activité n'est pas bien rentable, décision des fondateurs)",
@@ -36,8 +40,8 @@
   ],
   "startup": [
     {
-      "label": "Immatriculation de la société (estimation)",
-      "cost": 500
+      "label": "Immatriculation de la SAS (mis à jour par ops le 19/10 : 500 → 252 €, minimum légal 2026 = guichet unique 33,83 € + annonce légale 199 € HT + bénéficiaires effectifs 19,33 € ; statuts et pacte d'associés par un avocat non inclus, sur devis)",
+      "cost": 252
     },
     {
       "label": "Contrats : CGV, DPA, politique de confidentialité, relus par un avocat (estimation)",

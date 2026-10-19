@@ -62,4 +62,35 @@ describe('parseEnv', () => {
   it('traite une clé des connecteurs vide comme une absence', () => {
     expect(parseEnv({ ...TEST_ENV, LEON_CONNECTORS_KEY: '' }).LEON_CONNECTORS_KEY).toBeUndefined();
   });
+
+  it('traite LEON_EMBEDDINGS absent ou vide comme une absence de fournisseur', () => {
+    expect(parseEnv(TEST_ENV).LEON_EMBEDDINGS).toBeUndefined();
+    expect(parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: '' }).LEON_EMBEDDINGS).toBeUndefined();
+  });
+
+  it('accepte le fournisseur factice sans autre réglage', () => {
+    expect(parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: 'factice' }).LEON_EMBEDDINGS).toBe('factice');
+  });
+
+  it('rejette un fournisseur de vecteurs inconnu', () => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: 'inconnu' })).toThrow(/LEON_EMBEDDINGS/);
+  });
+
+  it.each([
+    ['voyage', 'VOYAGE_API_KEY', 'cle-de-test'],
+    ['mistral', 'MISTRAL_API_KEY', 'cle-de-test'],
+    ['bge-m3', 'LEON_BGE_URL', 'http://127.0.0.1:8080'],
+  ])('exige le réglage du fournisseur %s : %s', (id, variable, valeur) => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: id })).toThrow(new RegExp(variable));
+    expect(() => parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: id, [variable]: '' })).toThrow(
+      new RegExp(variable),
+    );
+    expect(parseEnv({ ...TEST_ENV, LEON_EMBEDDINGS: id, [variable]: valeur }).LEON_EMBEDDINGS).toBe(
+      id,
+    );
+  });
+
+  it('n’exige aucun réglage de fournisseur quand LEON_EMBEDDINGS est absent', () => {
+    expect(() => parseEnv({ ...TEST_ENV, VOYAGE_API_KEY: '' })).not.toThrow();
+  });
 });

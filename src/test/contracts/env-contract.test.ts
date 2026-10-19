@@ -47,4 +47,14 @@ describe('variables d’environnement', () => {
     const read = readVariables();
     expect([...documentedVariables()].filter((name) => !read.has(name))).toEqual([]);
   });
+
+  it('laisse LEON_EMBEDDINGS vide dans .env.example : le fournisseur de vecteurs est à choisir par Amos et David', () => {
+    const lines = readText('.env.example').split('\n');
+    const index = lines.indexOf('LEON_EMBEDDINGS=');
+    expect(index).toBeGreaterThan(-1);
+    // Le commentaire qui précède immédiatement la variable.
+    let start = index;
+    while (start > 0 && lines[start - 1]?.startsWith('#')) start -= 1;
+    expect(lines.slice(start, index).join(' ')).toMatch(/Amos et David/);
+  });
 });

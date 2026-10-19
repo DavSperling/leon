@@ -206,20 +206,25 @@ describe('ce que l’app peut changer', () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'Question' });
 
-    const retitle = withTenant(alice, (tx) =>
-      tx.update(discussions).set({ title: 'Autre' }).where(eq(discussions.id, id)),
-    );
-    const rewrite = withTenant(alice, (tx) =>
-      tx
-        .update(discussionMessages)
-        .set({ content: 'Autre' })
-        .where(eq(discussionMessages.discussionId, id)),
-    );
-    const remove = withTenant(alice, (tx) => tx.delete(discussions).where(eq(discussions.id, id)));
+    // Une écriture à la fois, chacune attendue dès qu'elle part : lancées ensemble, l'une pouvait échouer pendant
+    // qu'on attendait l'autre, et Vitest comptait son refus comme une erreur non traitée.
+    const retitle = () =>
+      withTenant(alice, (tx) =>
+        tx.update(discussions).set({ title: 'Autre' }).where(eq(discussions.id, id)),
+      );
+    const rewrite = () =>
+      withTenant(alice, (tx) =>
+        tx
+          .update(discussionMessages)
+          .set({ content: 'Autre' })
+          .where(eq(discussionMessages.discussionId, id)),
+      );
+    const remove = () =>
+      withTenant(alice, (tx) => tx.delete(discussions).where(eq(discussions.id, id)));
 
-    await expect(retitle).rejects.toMatchObject(RLS_VIOLATION);
-    await expect(rewrite).rejects.toMatchObject(RLS_VIOLATION);
-    await expect(remove).rejects.toMatchObject(RLS_VIOLATION);
+    await expect(retitle()).rejects.toMatchObject(RLS_VIOLATION);
+    await expect(rewrite()).rejects.toMatchObject(RLS_VIOLATION);
+    await expect(remove()).rejects.toMatchObject(RLS_VIOLATION);
   });
 });
 

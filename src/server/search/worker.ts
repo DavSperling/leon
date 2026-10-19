@@ -17,6 +17,10 @@ import { indexIngestRun } from './index-run';
 
 // Jobs d'indexation traités en parallèle dans un processus : chacun lit et écrit sa propre source.
 const INDEX_CONCURRENCY = 4;
+// Un emplacement de pg-boss ne prend qu'un job par sondage : au sondage par défaut (2 s), quatre emplacements
+// vident la file à 2 jobs par seconde, alors qu'une relève de connecteur y met un job par élément (jusqu'à 200
+// par passage) et que le tic de reprise en remet 200 par minute. À 0,5 s (le minimum de pg-boss) : 8 par seconde.
+const INDEX_POLLING_SECONDS = 0.5;
 // Un run « en attente » depuis plus longtemps est remis en file (mise en file ratée ou job perdu).
 const STALE_RUN_MINUTES = 5;
 // Vecteurs complétés à chaque tic.
@@ -49,7 +53,8 @@ async function processIndexJob(data: unknown, deps: { embedder: Embedder | null 
   }
 }
 
-// pg-boss teste la présence de la clé : `pollingIntervalSeconds: undefined` y est refusé.
+// pg-boss teste la présence de la clé : `pollingIntervalSeconds: undefined` y est refusé. Les tics, qui ne
+// passent qu'une fois par minute, gardent le sondage par défaut quand l'appelant n'en donne pas.
 async function registerWorkers(
   deps: { embedder: Embedder | null },
   pollingIntervalSeconds: number | undefined,
@@ -58,7 +63,11 @@ async function registerWorkers(
   const polling = pollingIntervalSeconds === undefined ? {} : { pollingIntervalSeconds };
   await boss.work(
     PIPELINE_QUEUES.index,
-    { batchSize: 1, localConcurrency: INDEX_CONCURRENCY, ...polling },
+    {
+      batchSize: 1,
+      localConcurrency: INDEX_CONCURRENCY,
+      pollingIntervalSeconds: pollingIntervalSeconds ?? INDEX_POLLING_SECONDS,
+    },
     async ([job]) => processIndexJob(job?.data, deps),
   );
 

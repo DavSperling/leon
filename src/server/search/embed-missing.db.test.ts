@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import {
   afterEach,
   beforeAll,
@@ -11,15 +11,16 @@ import {
   vi,
 } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { passageVectors } from '@/server/db/schema/search';
+import { passages, passageVectors } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
-import { type Embedder, EmbedderError } from '@/server/embeddings/embedder';
+import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
-import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedPassages, seedRun } from '@/test/seed-search';
-import { embedMissing, REQUEUE_BATCH, requeueStaleRuns } from './embed-missing';
+import { EMBED_TIMEOUT_MS, embedMissing, REQUEUE_BATCH, requeueStaleRuns } from './embed-missing';
+import { indexIngestRun } from './index-run';
 
 // requeueStaleRuns met en file des jobs d'indexation : ici la file est simulée.
 vi.mock('@/server/pipeline/queue');
@@ -153,11 +154,39 @@ describe('embedMissing', () => {
   it('poursuit avec les autres organisations quand l’écriture échoue pour l’une d’elles, sans rien journaliser du texte', async () => {
     const tokenA = `jeton-a-${randomUUID()}`;
     const tokenB = `jeton-b-${randomUUID()}`;
+    const failing = await seedPassages(alice, { count: 2, token: tokenA });
+    const kept = await seedPassages(zoe, { count: 2, token: tokenB });
+    const factice = createFakeEmbedder();
+    // Un fournisseur qui rend, pour les passages d'Alice, des valeurs hors de la plage d'un `halfvec` : la base
+    // refuse l'écriture, celle de Zoé ne doit pas en pâtir.
+    const embedder: Embedder = {
+      model: 'factice-1024',
+      async embed(texts, kind) {
+        if (texts.every((text) => text.includes(tokenA))) {
+          return texts.map(() => Array.from({ length: EMBEDDING_DIMS }, () => 1e9));
+        }
+        if (!texts.every((text) => text.includes(tokenB))) throw new EmbedderError('texte refusé');
+        return factice.embed(texts, kind);
+      },
+    };
+
+    const done = await embedMissing({ embedder }, BIG);
+
+    expect(done).toBe(2);
+    expect(await vectorsOf(alice, failing.passageIds)).toHaveLength(0);
+    expect(await vectorsOf(zoe, kept.passageIds)).toHaveLength(2);
+    const logged = log.mock.calls.flat().map(String).join('\n');
+    expect(logged).toContain('search.embed_missing_failed');
+    expect(logged).not.toContain(tokenA);
+  });
+
+  it('laisse de côté, sans échouer, les passages qui disparaissent pendant que le fournisseur travaille', async () => {
+    const tokenA = `jeton-a-${randomUUID()}`;
+    const tokenB = `jeton-b-${randomUUID()}`;
     const vanishing = await seedPassages(alice, { count: 2, token: tokenA });
     const kept = await seedPassages(zoe, { count: 2, token: tokenB });
     const factice = createFakeEmbedder();
-    // Les passages d'Alice disparaissent pendant que le fournisseur travaille (source supprimée) : leur
-    // écriture échoue, celle de Zoé ne doit pas en pâtir.
+    // La source d'Alice est supprimée pendant l'appel : ses passages n'existent plus à l'écriture.
     const embedder: Embedder = {
       model: 'factice-1024',
       async embed(texts, kind) {
@@ -174,9 +203,141 @@ describe('embedMissing', () => {
 
     expect(done).toBe(2);
     expect(await vectorsOf(zoe, kept.passageIds)).toHaveLength(2);
-    const logged = log.mock.calls.flat().map(String).join('\n');
-    expect(logged).toContain('search.embed_missing_failed');
-    expect(logged).not.toContain(tokenA);
+    expect(log.mock.calls.flat().map(String).join('\n')).not.toContain(
+      'search.embed_missing_failed',
+    );
+  });
+
+  // Vigilance 5 : un fournisseur en panne ne retarde pas le plein texte, et les vecteurs reviennent ensuite.
+  it('complète, à l’accès de chaque passage, les vecteurs qu’une indexation en panne a laissés', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const run = await seedRun(alice, {
+      acl: [alice.tenantId],
+      turns: [{ text: `Premier tour ${token}` }, { text: `Deuxième tour ${token}` }],
+    });
+    const down: Embedder = {
+      model: 'factice-1024',
+      embed: () => Promise.reject(new EmbedderError('fournisseur indisponible (503)')),
+    };
+    await indexIngestRun(run.job, { embedder: down });
+    const left = await withTenant(alice, (tx) =>
+      tx.select({ id: passages.id }).from(passages).where(eq(passages.sourceId, run.sourceId)),
+    );
+    const ids = left.map((row) => row.id);
+    expect(ids).toHaveLength(2);
+    expect(await vectorsOf(alice, ids)).toHaveLength(0);
+
+    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+
+    expect(done).toBe(2);
+    const vectors = await vectorsOf(alice, ids);
+    expect(vectors).toHaveLength(2);
+    for (const vector of vectors) {
+      expect(vector.model).toBe('factice-1024');
+      expect(vector.acl).toEqual([alice.tenantId]);
+    }
+  });
+
+  // Une part d'accès retirée pendant l'appel au fournisseur (T16) change l'accès du passage : le vecteur porte
+  // l'accès du passage au moment de l'écriture, pas celui qu'on lisait avant l'appel.
+  it('écrit chaque vecteur à l’accès que le passage a au moment de l’écriture', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 2, token, acl: [alice.userId, bob.userId] });
+    const factice = createFakeEmbedder();
+    const embedder: Embedder = {
+      model: 'factice-1024',
+      async embed(texts, kind) {
+        if (!texts.every((text) => text.includes(token))) {
+          throw new EmbedderError('texte refusé');
+        }
+        // Bob perd son accès à la source pendant que le fournisseur travaille.
+        for (const table of ['sources', 'turns', 'passages']) {
+          const column = table === 'sources' ? 'id' : 'source_id';
+          await adminPool.query(`update ${table} set acl = $2 where ${column} = $1`, [
+            seeded.sourceId,
+            [alice.userId],
+          ]);
+        }
+        return factice.embed(texts, kind);
+      },
+    };
+
+    const done = await embedMissing({ embedder }, BIG);
+
+    expect(done).toBe(2);
+    const vectors = await vectorsOf(alice, seeded.passageIds);
+    expect(vectors).toHaveLength(2);
+    for (const vector of vectors) expect(vector.acl).toEqual([alice.userId]);
+    expect(await vectorsOf(bob, seeded.passageIds)).toHaveLength(0);
+  });
+
+  // Le retrait d'une part (T16) met d'abord à jour la source : il attend la fin de l'écriture en cours, puis
+  // propage son accès aux vecteurs qu'elle vient d'écrire.
+  it('attend la fin d’un retrait d’accès en cours avant d’écrire ses vecteurs', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 1, token, acl: [alice.userId, bob.userId] });
+    const revoke = await adminPool.connect();
+    try {
+      await revoke.query('begin');
+      await revoke.query('update sources set acl = $2 where id = $1', [
+        seeded.sourceId,
+        [alice.userId],
+      ]);
+      let finished = false;
+      const running = embedMissing({ embedder: embedderFor(token) }, BIG).then((count) => {
+        finished = true;
+        return count;
+      });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(finished).toBe(false);
+
+      await revoke.query('update turns set acl = $2 where source_id = $1', [
+        seeded.sourceId,
+        [alice.userId],
+      ]);
+      await revoke.query('update passages set acl = $2 where source_id = $1', [
+        seeded.sourceId,
+        [alice.userId],
+      ]);
+      await revoke.query('commit');
+
+      expect(await running).toBe(1);
+    } finally {
+      // Après un échec d'assertion, la transaction ouverte garderait ses verrous et ferait échouer les autres tests.
+      await revoke.query('rollback');
+      revoke.release();
+    }
+    const vectors = await vectorsOf(alice, seeded.passageIds);
+    expect(vectors.map((vector) => vector.acl)).toEqual([[alice.userId]]);
+    expect(await vectorsOf(bob, seeded.passageIds)).toHaveLength(0);
+  });
+
+  describe('quand le fournisseur ne répond jamais', () => {
+    afterEach(() => vi.useRealTimers());
+
+    // Un appel qui pend retiendrait l'unique emplacement du tic jusqu'à l'abandon de la connexion (5 minutes) :
+    // plus aucune reprise, et rien dans les journaux pour le dire.
+    it('rend la main au bout du délai, sans vecteur, et n’interroge pas les autres organisations', async () => {
+      const token = `jeton-${randomUUID()}`;
+      const mine = await seedPassages(alice, { count: 2, token });
+      const theirs = await seedPassages(zoe, { count: 1, token });
+      const hung = { model: 'factice-1024', embed: vi.fn(() => new Promise<number[][]>(() => {})) };
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+      const running = embedMissing({ embedder: hung }, BIG);
+      await vi.waitFor(() => expect(hung.embed).toHaveBeenCalled(), { timeout: 5000 });
+      await vi.advanceTimersByTimeAsync(EMBED_TIMEOUT_MS);
+
+      await expect(running).resolves.toBe(0);
+      // Un seul appel : le fournisseur ne répond pour personne, les autres organisations attendront le tic suivant.
+      expect(hung.embed).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+      expect(await vectorsOf(alice, mine.passageIds)).toHaveLength(0);
+      expect(await vectorsOf(zoe, theirs.passageIds)).toHaveLength(0);
+      const logged = log.mock.calls.flat().map(String).join('\n');
+      expect(logged).toContain('EmbedderError');
+      expect(logged).not.toContain(token);
+    });
   });
 
   it('laisse sans vecteur les passages dont le propriétaire n’est plus membre, sans échouer', async () => {
@@ -201,7 +362,10 @@ describe('embedMissing', () => {
 });
 
 describe('requeueStaleRuns', () => {
-  const jobOf = (run: { job: unknown }) => run.job;
+  // Les runs mis en file, tels que le tic les a nommés (un seul appel par run).
+  const requeued = () =>
+    vi.mocked(enqueuePipelineStep).mock.calls.map(([, job]) => job.ingestRunId);
+  const idOf = (run: { job: { ingestRunId: string } }) => run.job.ingestRunId;
 
   it('remet en file un run en attente depuis 6 minutes, avec le contexte de son propriétaire, et pas un run de 2 minutes', async () => {
     const stale = await seedRun(alice, { updatedAt: new Date(Date.now() - 6 * MINUTE) });
@@ -210,8 +374,8 @@ describe('requeueStaleRuns', () => {
     const done = await requeueStaleRuns(5);
 
     expect(done).toBeGreaterThanOrEqual(1);
-    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', jobOf(stale));
-    expect(enqueuePipelineStep).not.toHaveBeenCalledWith('index', jobOf(recent));
+    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', stale.job, expect.anything());
+    expect(requeued()).not.toContain(idOf(recent));
     const { rows } = await adminPool.query<{ id: string; fresh: boolean }>(
       `select id, updated_at > now() - interval '1 minute' as fresh from ingest_runs where id = any($1)`,
       [[stale.job.ingestRunId, recent.job.ingestRunId]],
@@ -227,8 +391,7 @@ describe('requeueStaleRuns', () => {
 
     await requeueStaleRuns(5);
 
-    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', jobOf(mine));
-    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', jobOf(theirs));
+    expect(requeued()).toEqual(expect.arrayContaining([idOf(mine), idOf(theirs)]));
   });
 
   it('ne reprend ni les runs en cours, ni les terminés, ni les échoués', async () => {
@@ -239,9 +402,7 @@ describe('requeueStaleRuns', () => {
 
     await requeueStaleRuns(5);
 
-    for (const run of [running, done, failed]) {
-      expect(enqueuePipelineStep).not.toHaveBeenCalledWith('index', jobOf(run));
-    }
+    for (const run of [running, done, failed]) expect(requeued()).not.toContain(idOf(run));
   });
 
   it('ne remet pas deux fois de suite le même run en file', async () => {
@@ -251,7 +412,23 @@ describe('requeueStaleRuns', () => {
 
     await requeueStaleRuns(5);
 
-    expect(enqueuePipelineStep).not.toHaveBeenCalledWith('index', jobOf(stale));
+    expect(requeued()).not.toContain(idOf(stale));
+  });
+
+  // La migration 0010 a remis tout l'historique en attente : ces reprises ne doivent pas passer devant un
+  // élément fraîchement capté (priorité de l'ingestion, plus haute).
+  it('met les reprises en file avec une priorité plus basse que celle d’une ingestion neuve', async () => {
+    const stale = await seedRun(alice, { updatedAt: new Date(Date.now() - 6 * MINUTE) });
+
+    await requeueStaleRuns(5);
+
+    expect(INDEX_PRIORITY.reprise).toBeLessThan(INDEX_PRIORITY.ingestion);
+    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', stale.job, {
+      priority: INDEX_PRIORITY.reprise,
+    });
+    for (const call of vi.mocked(enqueuePipelineStep).mock.calls) {
+      expect(call[2]).toEqual({ priority: INDEX_PRIORITY.reprise });
+    }
   });
 
   it('borne le nombre de runs repris à chaque passage', async () => {
@@ -279,6 +456,6 @@ describe('requeueStaleRuns', () => {
     const done = await requeueStaleRuns(5);
 
     expect(done).toBeGreaterThanOrEqual(1);
-    expect(enqueuePipelineStep).toHaveBeenCalledWith('index', jobOf(second));
+    expect(requeued()).toContain(idOf(second));
   });
 });

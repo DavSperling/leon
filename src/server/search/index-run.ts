@@ -6,7 +6,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { Embedder } from '@/server/embeddings/embedder';
 import type { PipelineJob } from '@/server/pipeline/queue';
 import { chunkText } from './chunk';
-import { embedPassages, passagesWithoutVector } from './embed-missing';
+import { embedPassages, lockSources, passagesWithoutVector } from './embed-missing';
 
 // L'indexation d'un run (C5) : découpe les tours qu'il nomme en passages, puis demande leurs vecteurs au
 // fournisseur s'il y en a un. Le plein texte n'a besoin de rien d'autre : la recherche marche dès que les
@@ -36,7 +36,10 @@ async function claimRun(ctx: TenantContext, runId: string): Promise<RunScope | n
 }
 
 // Découpe et écrit les passages de ces tours. Les passages déjà écrits (même tour, même rang) sont laissés.
+// La source est verrouillée avant de lire l'accès des tours qu'on recopie sur les passages : un recalcul d'accès
+// (retrait d'une part, T16) attend alors la fin de cette écriture, ou a déjà corrigé les tours (voir lockSources).
 async function writePassages(tx: Tx, ctx: TenantContext, scope: RunScope, turnIds: string[]) {
+  await lockSources(tx, [scope.sourceId]);
   const rows = await tx
     .select({
       id: turns.id,
@@ -84,7 +87,8 @@ async function embedSlice(ctx: TenantContext, embedder: Embedder, turnIds: strin
 // Rend « indexe » une fois le run traité, « absent » quand il n'y a rien à faire (inconnu, invisible, déjà
 // terminé). Une panne de base remonte : le worker marque le run « failed » et pg-boss relance le job.
 // Une panne du fournisseur de vecteurs, elle, ne fait pas échouer le run : les passages sont écrits, les
-// vecteurs manquants sont complétés plus tard (embedMissing).
+// vecteurs manquants sont complétés plus tard (embedMissing). Un fournisseur qui ne répond pas compte pour une
+// panne au bout de EMBED_TIMEOUT_MS : il ne retient pas l'emplacement de la file et ne retarde pas le plein texte.
 export async function indexIngestRun(
   job: PipelineJob,
   deps: { embedder: Embedder | null },

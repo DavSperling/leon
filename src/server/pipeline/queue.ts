@@ -25,6 +25,11 @@ export type PipelineJob = z.infer<typeof PipelineJobSchema>;
 
 const RETRY = { retryLimit: 3, retryDelay: 30, retryBackoff: true };
 
+// Priorité des jobs de la file `index` (pg-boss lit d'abord la plus grande, puis le plus ancien). Une ingestion
+// neuve passe devant les reprises : la migration 0010 a remis tout l'historique en attente et le tic de reprise
+// le met en file à raison de 200 par minute, sans quoi un élément fraîchement capté attendrait derrière lui.
+export const INDEX_PRIORITY = { ingestion: 10, reprise: 0 } as const;
+
 // Le singleton vit sur globalThis : le rechargement à chaud de Next réimporte ce module.
 const globalForBoss = globalThis as typeof globalThis & { leonBoss?: Promise<PgBoss> };
 
@@ -49,7 +54,12 @@ export function getBoss(): Promise<PgBoss> {
   return globalForBoss.leonBoss;
 }
 
-export async function enqueuePipelineStep(step: PipelineStep, job: PipelineJob): Promise<void> {
+// `priority` : celle d'une ingestion neuve par défaut ; la reprise d'un run en retard passe `INDEX_PRIORITY.reprise`.
+export async function enqueuePipelineStep(
+  step: PipelineStep,
+  job: PipelineJob,
+  options: { priority?: number } = {},
+): Promise<void> {
   const boss = await getBoss();
-  await boss.send(PIPELINE_QUEUES[step], job);
+  await boss.send(PIPELINE_QUEUES[step], job, { priority: INDEX_PRIORITY.ingestion, ...options });
 }

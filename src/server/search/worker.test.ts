@@ -81,22 +81,31 @@ describe('startSearchWorker', () => {
     expect(optionsOf('pipeline-index')).toMatchObject({ batchSize: 1, localConcurrency: 4 });
   });
 
+  // Un emplacement de pg-boss ne prend qu'un job par sondage : au sondage par défaut (2 s), la file `index` se
+  // vide à 2 jobs par seconde (voir worker.db.test.ts, qui le mesure sur le vrai pg-boss).
+  it('sonde la file « index » toutes les 0,5 s, le minimum de pg-boss, quand aucun sondage n’est fourni', async () => {
+    await startSearchWorker({ embedder: null });
+
+    expect(optionsOf('pipeline-index')).toMatchObject({ pollingIntervalSeconds: 0.5 });
+  });
+
   // pg-boss rejette `pollingIntervalSeconds: undefined` (il teste la présence de la clé) :
-  // sans option, la clé doit être absente, sinon le serveur ne démarre pas.
-  it("n'envoie pas pollingIntervalSeconds à pg-boss quand il n'est pas fourni", async () => {
+  // sans option, la clé doit être absente des tics, sinon le serveur ne démarre pas.
+  it('laisse aux tics le sondage par défaut de pg-boss quand aucun sondage n’est fourni', async () => {
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
-    expect(mocks.work.mock.calls.length).toBeGreaterThan(0);
-    for (const [, options] of mocks.work.mock.calls as unknown as Array<[string, object]>) {
-      expect(options).not.toHaveProperty('pollingIntervalSeconds');
-    }
+    const ticks = (mocks.work.mock.calls as unknown as Array<[string, object]>).filter(
+      ([name]) => name !== 'pipeline-index',
+    );
+    expect(ticks.map(([name]) => name).sort()).toEqual(['pipeline-reindex', 'pipeline-requeue']);
+    for (const [, options] of ticks) expect(options).not.toHaveProperty('pollingIntervalSeconds');
   });
 
   it('transmet pollingIntervalSeconds à pg-boss quand il est fourni', async () => {
-    await startSearchWorker({ embedder: null }, { pollingIntervalSeconds: 0.5 });
+    await startSearchWorker({ embedder: null }, { pollingIntervalSeconds: 1 });
 
-    expect(optionsOf('pipeline-index')).toMatchObject({ pollingIntervalSeconds: 0.5 });
-    expect(optionsOf('pipeline-requeue')).toMatchObject({ pollingIntervalSeconds: 0.5 });
+    expect(optionsOf('pipeline-index')).toMatchObject({ pollingIntervalSeconds: 1 });
+    expect(optionsOf('pipeline-requeue')).toMatchObject({ pollingIntervalSeconds: 1 });
   });
 
   it('planifie un tic par minute qui remet en file les runs en attente depuis 5 minutes', async () => {

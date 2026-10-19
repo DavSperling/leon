@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { asc, eq, inArray } from 'drizzle-orm';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngestPayload, Turn } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, turns } from '@/server/db/schema/memory';
@@ -14,6 +14,7 @@ import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedRun } from '@/test/seed-search';
 import { chunkText } from './chunk';
+import { EMBED_TIMEOUT_MS } from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // L'ingestion met en file un job d'indexation ; ici on appelle indexIngestRun à la main.
@@ -382,6 +383,91 @@ describe('indexIngestRun', () => {
         ).toHaveLength(0);
         expect(await readRun(alice, run.job.ingestRunId)).toMatchObject({ status: 'done' });
       }
+    });
+  });
+
+  describe('quand le fournisseur ne répond jamais', () => {
+    afterEach(() => vi.useRealTimers());
+
+    // Quatre runs bloqués sur un fournisseur muet occuperaient les quatre emplacements de la file : plus aucun run
+    // ne serait indexé, et le plein texte s'arrêterait avec les vecteurs.
+    it('rend « indexe » au bout du délai, avec les passages écrits et sans vecteur', async () => {
+      const SECRET = 'Le mot de passe de la banque est violet-éléphant-7731';
+      const hung = { model: 'factice-1024', embed: vi.fn(() => new Promise<number[][]>(() => {})) };
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const run = await seedRun(alice, { turns: [{ text: SECRET }, { text: `${SECRET} bis` }] });
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+
+      const running = indexIngestRun(run.job, { embedder: hung });
+      await vi.waitFor(() => expect(hung.embed).toHaveBeenCalled(), { timeout: 5000 });
+      await vi.advanceTimersByTimeAsync(EMBED_TIMEOUT_MS);
+
+      await expect(running).resolves.toBe('indexe');
+      vi.useRealTimers();
+      const logged = log.mock.calls.flat().map(String).join('\n');
+      log.mockRestore();
+      expect(hung.embed).toHaveBeenCalledTimes(1);
+      const rows = await readPassages(alice, run.sourceId);
+      expect(rows).toHaveLength(2);
+      expect(
+        await readVectors(
+          alice,
+          rows.map((row) => row.id),
+        ),
+      ).toHaveLength(0);
+      expect(await readRun(alice, run.job.ingestRunId)).toMatchObject({ status: 'done' });
+      expect(logged).toContain('EmbedderError');
+      expect(logged).not.toContain('violet');
+    });
+  });
+
+  // Un retrait d'accès (T16) met d'abord à jour la source, puis propage son accès aux tours, passages et vecteurs
+  // existants : il ne voit pas ceux qu'une écriture encore ouverte est en train d'ajouter. L'indexeur attend donc
+  // la fin du retrait, pour lire l'accès des tours une fois à jour (sinon Bob garderait, dans la recherche, le
+  // texte d'un fichier auquel il n'a plus droit).
+  describe('quand un retrait d’accès est en cours sur la source', () => {
+    it('écrit les passages et les vecteurs à l’accès d’après le retrait', async () => {
+      const run = await seedRun(alice, {
+        acl: [alice.userId, bob.userId],
+        turns: [{ text: 'Le contrat partagé entre Alice et Bob.' }],
+      });
+      const revoke = await adminPool.connect();
+      try {
+        await revoke.query('begin');
+        await revoke.query('update sources set acl = $2 where id = $1', [
+          run.sourceId,
+          [alice.userId],
+        ]);
+        let finished = false;
+        const running = indexIngestRun(run.job, { embedder: factice }).then((result) => {
+          finished = true;
+          return result;
+        });
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        expect(finished).toBe(false);
+
+        await revoke.query('update turns set acl = $2 where source_id = $1', [
+          run.sourceId,
+          [alice.userId],
+        ]);
+        await revoke.query('commit');
+
+        expect(await running).toBe('indexe');
+      } finally {
+        // Après un échec d'assertion, la transaction ouverte garderait ses verrous et ferait échouer les autres tests.
+        await revoke.query('rollback');
+        revoke.release();
+      }
+      const rows = await readPassages(alice, run.sourceId);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.acl).toEqual([alice.userId]);
+      const vectors = await readVectors(
+        alice,
+        rows.map((row) => row.id),
+      );
+      expect(vectors.map((vector) => vector.acl)).toEqual([[alice.userId]]);
+      // Bob n'a plus rien de ce fichier dans l'index.
+      expect(await readPassages(bob, run.sourceId)).toHaveLength(0);
     });
   });
 

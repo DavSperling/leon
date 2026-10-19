@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 import { PgBoss } from 'pg-boss';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TEST_ENV } from '@/test/test-env';
-import { enqueuePipelineStep, getBoss, PIPELINE_QUEUES, type PipelineJob } from './queue';
+import {
+  enqueuePipelineStep,
+  getBoss,
+  INDEX_PRIORITY,
+  PIPELINE_QUEUES,
+  type PipelineJob,
+} from './queue';
 
 // Files du tri supprimé (premier jet) : leurs jobs n'ont plus de lecteur.
 const LEGACY_QUEUES = ['pipeline-triage', 'pipeline-extraction', 'pipeline-placement'];
@@ -57,6 +63,34 @@ describe('enqueuePipelineStep', () => {
     await boss.deleteJob(
       'pipeline-index',
       found.map((row) => row.id),
+    );
+  });
+
+  // Une ingestion neuve passe devant les reprises que le tic remet en file (l'historique de la migration 0010).
+  it('écrit une ingestion neuve avec une priorité plus haute que celle d’une reprise', async () => {
+    const fresh: PipelineJob = {
+      ingestRunId: randomUUID(),
+      tenantId: randomUUID(),
+      userId: randomUUID(),
+    };
+    const revived: PipelineJob = { ...fresh, ingestRunId: randomUUID() };
+
+    await enqueuePipelineStep('index', fresh);
+    await enqueuePipelineStep('index', revived, { priority: INDEX_PRIORITY.reprise });
+
+    const boss = await getBoss();
+    const [freshJob] = await boss.findJobs('pipeline-index', {
+      data: { ingestRunId: fresh.ingestRunId },
+    });
+    const [revivedJob] = await boss.findJobs('pipeline-index', {
+      data: { ingestRunId: revived.ingestRunId },
+    });
+    expect(freshJob?.priority).toBe(INDEX_PRIORITY.ingestion);
+    expect(revivedJob?.priority).toBe(INDEX_PRIORITY.reprise);
+    expect(INDEX_PRIORITY.ingestion).toBeGreaterThan(INDEX_PRIORITY.reprise);
+    await boss.deleteJob(
+      'pipeline-index',
+      [freshJob, revivedJob].flatMap((job) => (job ? [job.id] : [])),
     );
   });
 });

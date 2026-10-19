@@ -148,7 +148,7 @@ Dockerfile, docs/guides/deploiement.md   (T27)
 | `0011-passages.sql` | T03 | `create extension if not exists vector` ; tables `passages` et `passage_vectors` (ci-dessous), sécurité par ligne `tenant_acl`, droits `select, insert, update, delete` à `leon_app` ; index `gin (tsv)`, `(tenant_id, source_id)`, `(tenant_id, ts desc)`, `hnsw (embedding halfvec_cosine_ops)` ; fonctions `passages_sans_vecteur` et `runs_en_attente`. Écarts acceptés à la relecture de T03 : `check (ord >= 0)`, `check (char_start >= 0 and char_end > char_start)` et l'index partiel `ingest_runs_queued_idx on ingest_runs (updated_at) where status = 'queued'` (pour le tic de `runs_en_attente`). Demande pgvector 0.8 au moins (`halfvec` : 0.7 ; `hnsw.iterative_scan` de T06 : 0.8), vérifié par `schema-contract.db.test.ts`, et l'extension créée par un superutilisateur : `init.sql` en local, le compte d'administration chez un hébergeur, avant la première migration |
 | `0012-discussions.sql` | T11 | `discussions`, `discussion_messages` (privées : `acl = [user_id]`) |
 | `0013-points-du-matin.sql` | T13 | `briefings` ; fonctions `briefings_du_projet`, `briefings_a_rafraichir` |
-| `0014-parts-d-acces.sql` | T16 | `source_grants` ; `sources.shared` et index uniques partiels ; `connections.acl` des connexions personnelles ; fonctions `grant_source_access`, `revoke_connection_grants` ; reprise de l'existant |
+| `0014-parts-d-acces.sql` | T16 | `source_grants` ; `sources.shared` et index uniques partiels ; `connections.acl` des connexions personnelles ; fonctions `grant_source_access`, `revoke_connection_grants` ; fonction qui passe en `failed` les runs dont le propriétaire n'est plus membre (relevé en T05) ; index trigramme sur `sources.title` ; reprise de l'existant |
 | `0015-exclusions.sql` | T17 | `connection_exclusions` ; `connections.skipped jsonb not null default '{}'` |
 | `0016-reconciliation.sql` | T18 | `connections.last_reconciled_at timestamptz` ; fonction `connexions_a_reconcilier` |
 | `0017-identites.sql` | T19 | `identities` |
@@ -765,6 +765,7 @@ Les garde-fous des réunions (spec, « Les droits ») et les exclusions (T17) s'
   - une source d'équipe ingérée par deux connexions d'équipe (deux comptes GitHub sur le même dépôt) → une source.
   - **(vigilance 3)** après retrait d'une part, `searchPassages` de l'utilisateur retiré ne rend plus la source.
   - reprise de l'existant : une source GitHub d'avant la migration a une part de sa connexion ; une source d'outil sans connexion a disparu.
+  - **membre parti (relevé en T05)** : `requeueStaleRuns` et `embedMissing` sautent (`if (!ctx) continue`) les runs et passages dont le propriétaire n'est plus membre, sans les rajeunir ; rangés « les plus anciens d'abord », 200 runs (ou 500 passages) d'un ex-membre bloquent la tête de `runs_en_attente` (ou de `passages_sans_vecteur`) pour toujours. 0014 ajoute une fonction `security definer` qui passe ces runs en `failed` (`error = 'proprietaire_parti'`) et la file de reprise l'appelle à chaque tic. Tests : « 200 runs d'un ex-membre plus 1 run perdu récent : le récent est repris » ; même chose avec 500 passages sans vecteur ; la fonction ne touche aucun run d'un membre actif.
 - [ ] **Étape 3 :** écrire le code ; `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/connectors src/server/search` → passe.
 - [ ] **Étape 4 :** commit « T16 · Parts d'accès : une source, plusieurs connexions ».
 
@@ -853,7 +854,7 @@ Chaque connecteur suit la recette R1 du plan des connecteurs (doc officielle rel
 **Fichiers :** `src/server/connectors/slack/*`, guide (manifeste d'appli à créer par le client si c'est la voie permise).
 
 - [ ] **Tests :** canaux publics seulement (famille équipe), un fil = une source de nature `fil` ; jamais de canal privé ni de message privé ; respect des limites de débit relevées par T01.
-- [ ] **Si le verdict est `non indexable` :** ne rien coder ; le `catalog.ts` de Slack porte un `warning` « Repoussé : les conditions de Slack ne permettent pas de garder ses messages » et renvoie à l'étude T01.
+- [ ] **Si le verdict est `non indexable` :** ne rien coder ; le `catalog.ts` de Slack porte un `warning` « Repoussé : Slack n'ouvre pas de voie praticable pour garder ses messages » et renvoie à l'étude T01 (formulation revue après la vérification de T01 : aucun texte de Slack ne l'interdit mot pour mot, c'est l'absence de voie praticable qui ferme).
 - [ ] **Commit :** « T25 · Slack » ou « T25 · Slack repoussé ».
 
 ### Lot F · Instance en ligne

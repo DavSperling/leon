@@ -25,6 +25,16 @@ describe('maskSecrets : secrets entiers', () => {
     ['clé Stripe', `sk_live_${alnum(24)}`],
     ['jeton Leon', `leon_${alnum(43)}`],
     ['JWT', `eyJ${alnum(12)}.eyJ${alnum(12)}.${alnum(12)}`],
+    ['clé Linear', `lin_api_${alnum(40)}`],
+    ['jeton Notion', `ntn_${alnum(46)}`],
+    ['ancien jeton Notion', `secret_${alnum(43)}`],
+    ['jeton GitLab', `glpat-${alnum(20)}`],
+    ['webhook Slack', `https://hooks.slack.com/services/T${alnum(8)}/B${alnum(8)}/${alnum(24)}`],
+    ['jeton d’application Slack', `xapp-1-A${alnum(10)}-${alnum(13)}-${alnum(30)}`],
+    ['secret de webhook', `whsec_${alnum(32)}`],
+    ['jeton Hugging Face', `hf_${alnum(34)}`],
+    ['jeton npm', `npm_${alnum(36)}`],
+    ['clé AWS temporaire', `ASIA${'ABCDEFGH12345678'}`],
   ];
 
   it.each(cases)('masque : %s', (_name, secret) => {
@@ -56,6 +66,22 @@ describe('maskSecrets : le nom reste, la valeur est masquée', () => {
     ['API_TOKEN:', `API_TOKEN: ${alnum(20)}`, `API_TOKEN: ${SECRET_MASK}`],
     ['x-api-key:', `x-api-key: ${alnum(20)}`, `x-api-key: ${SECRET_MASK}`],
     ['JSON', `"password": "${alnum(12)}"`, `"password": "${SECRET_MASK}"`],
+    ['en-tête Token', `Authorization: Token ${alnum(22)}`, `Authorization: Token ${SECRET_MASK}`],
+    [
+      'JSON échappé',
+      `{\\"password\\":\\"${alnum(10)}\\"}`,
+      `{\\"password\\":\\"${SECRET_MASK}\\"}`,
+    ],
+    [
+      'URL dont le mot de passe contient « @ »',
+      'postgres://u:p@ss@db.host/x',
+      `postgres://u:${SECRET_MASK}@db.host/x`,
+    ],
+    [
+      'URL suivie d’une adresse e-mail',
+      'postgres://app:pwd123456@db/x?email=paul@acme.fr',
+      `postgres://app:${SECRET_MASK}@db/x?email=paul@acme.fr`,
+    ],
   ];
 
   it.each(cases)('masque : %s', (_name, input, expected) => {
@@ -74,6 +100,10 @@ describe('maskSecrets : texte ordinaire', () => {
     'Basic setup',
     'écrire à paul.martin@example.com',
     '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c5d',
+    'le secret_santa du bureau',
+    'npm_config_registry',
+    'hf_hub_download',
+    'Token de session expiré, reconnecte-toi',
   ])('laisse intact : %s', (text) => {
     expect(maskSecrets(text)).toBe(text);
   });
@@ -198,6 +228,8 @@ const TRAPS = [
   'x://a:',
   'http://a:1/x://b:',
   'http://a:1/x://b:c@',
+  'x://a:b@c',
+  '\\"password\\":\\"a',
   'password=',
   'password: "a',
   'eyJabcdefgh-',

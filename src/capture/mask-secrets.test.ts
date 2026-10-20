@@ -107,6 +107,25 @@ describe('maskSecrets : texte ordinaire', () => {
   ])('laisse intact : %s', (text) => {
     expect(maskSecrets(text)).toBe(text);
   });
+
+  // Faux positifs relevés par le second audit.
+  it.each([
+    'Secretary: Marie-Claire Dupont',
+    'les tokens: lexèmes',
+    'tokenizer: sentencepiece',
+    'Le pwd: /home/paul/projets/leon',
+    'Basic internationalization',
+    'ASIAPACIFICHEADQUARTERS',
+    'const token = getToken(request);',
+    'apiKey: process.env.ANTHROPIC_API_KEY',
+    'password: z.string().min(8)',
+    'PWD=/Users/david/Downloads/leon',
+    'the-sk-learn-classification-model',
+    'jdbc:postgresql://db.acme.fr:5432/prod?user=paul@acme.fr',
+    'git+https://github.com:443/org/repo@main',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
 });
 
 describe('maskSecrets : propriétés', () => {
@@ -162,7 +181,7 @@ describe('maskSecrets : contournements', () => {
     ],
     ['redis://default:abc?def123@redis:6379', `redis://default:${SECRET_MASK}@redis:6379`],
     ['mysql://root:abc?def12@localhost', `mysql://root:${SECRET_MASK}@localhost`],
-    // Un mot de passe qui commence comme un port : l'exception ne vaut que pour les URL web.
+    // Un mot de passe qui commence comme un port : l'exception ne vaut que pour les URL web ou un hôte.
     [
       'postgres://app:2024#Paris@db.acme.fr:5432/prod',
       `postgres://app:${SECRET_MASK}@db.acme.fr:5432/prod`,
@@ -234,6 +253,9 @@ const TRAPS = [
   'password: "a',
   'eyJabcdefgh-',
   'a-',
+  'Basic aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'Secretary: ',
+  'token = a.',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 

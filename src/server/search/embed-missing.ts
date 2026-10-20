@@ -15,7 +15,7 @@ import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { textArray } from './filters-sql';
 
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
-// - embedMissing complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
+// - embedMissingBatch complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
 //   ou modèle changé après coup) ;
 // - requeueStaleRuns remet en file les runs restés « en attente » sans job (mise en file ratée), ou restés
 //   « en cours » ou « échoués » (processus mort, reprises épuisées).
@@ -234,14 +234,10 @@ type MissingRow = { passage_id: string; tenant_id: string; user_id: string; a_ve
 // La liste vient d'une fonction qui ne rend que des identifiants (passages_sans_vecteur) ; le texte est lu
 // ensuite sous les droits du propriétaire de la source, organisation par organisation. Une organisation dont
 // le fournisseur échoue n'empêche pas les suivantes, sauf s'il ne répond plus : le tic s'arrête alors (il
-// attendrait EMBED_TIMEOUT_MS pour chaque organisation) et reprend au suivant. Rend le nombre de vecteurs écrits.
-export async function embedMissing(deps: { embedder: Embedder }, limit: number): Promise<number> {
-  return (await embedMissingBatch(deps, limit)).stored;
-}
-
-// Le même, qui rend aussi le nombre de passages lus dans la file (audit 3 n° 3) et, parmi eux, ceux que la lecture
-// en a sortis sans les rendre à vectoriser (déjà vectorisés, propriétaire parti : audit 4 n° 1). Le tic continue tant
-// que le lot lu est plein et qu'il a avancé.
+// attendrait EMBED_TIMEOUT_MS pour chaque organisation) et reprend au suivant. Rend le nombre de vecteurs écrits
+// (`stored`), celui des passages lus dans la file (`read`, audit 3 n° 3) et, parmi eux, ceux que la lecture en a
+// sortis sans les rendre à vectoriser (`removed` : déjà vectorisés, propriétaire parti, audit 4 n° 1). Le tic
+// continue tant que le lot lu est plein et qu'il a avancé.
 export async function embedMissingBatch(
   deps: { embedder: Embedder },
   limit: number,

@@ -323,6 +323,7 @@ describe('replaceKeyAction', () => {
     config: { teams: ['ENG'] },
     createdBy: { id: 'user', name: 'Amos' },
     canManage: true,
+    isCreator: true,
   };
   const replace = (fields: Record<string, string> = { apiKey: KEY }) =>
     replaceKeyAction({ id: ID, fields });
@@ -435,11 +436,23 @@ describe('replaceKeyAction', () => {
 
   // Audit n° 3 : la clé d'un autre ne se remplace pas, et l'outil n'est même pas appelé.
   it("refuse la connexion d'un autre membre quand on n'est pas administrateur", async () => {
-    vi.mocked(listConnections).mockResolvedValue([{ ...stored, canManage: false }] as never);
+    const other = { ...stored, canManage: false, isCreator: false };
+    vi.mocked(listConnections).mockResolvedValue([other] as never);
 
     await expect(replace()).resolves.toEqual({
-      error:
-        'Seuls la personne qui a branché cet outil et les administrateurs peuvent le modifier.',
+      error: 'Seule la personne qui a branché cet outil peut remplacer sa clé.',
+    });
+
+    expect(verify).not.toHaveBeenCalled();
+    expect(replaceConnectionSecret).not.toHaveBeenCalled();
+  });
+
+  // Audit 2 n° 2 : un administrateur mettrait sa propre clé à la place de celle du créateur.
+  it("refuse la connexion d'un autre membre même à un administrateur", async () => {
+    vi.mocked(listConnections).mockResolvedValue([{ ...stored, isCreator: false }] as never);
+
+    await expect(replace()).resolves.toEqual({
+      error: 'Seule la personne qui a branché cet outil peut remplacer sa clé.',
     });
 
     expect(verify).not.toHaveBeenCalled();

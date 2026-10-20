@@ -38,7 +38,8 @@ export type ConnectionView = {
   itemsSynced: number;
   createdBy: { id: string; name: string };
   createdAt: Date;
-  canManage: boolean; // pause, clé, reconnexion, suppression : créateur ou administrateur
+  canManage: boolean; // pause, suppression : créateur ou administrateur
+  isCreator: boolean; // clé, reconnexion : créateur seul (le secret est celui de son compte)
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -92,14 +93,19 @@ const unlessPaused = (value: SQL | AnyColumn, whenPaused: SQL | AnyColumn) =>
 
 const NO_DATE = sql`null::timestamptz`;
 
-// Seuls le créateur et les administrateurs (owner, admin) de l'organisation gèrent une connexion :
-// sinon un membre pourrait supprimer l'Outlook d'un autre, ou reconnecter son GitHub avec son propre
-// compte. Better Auth peut ranger plusieurs rôles séparés par des virgules.
+// Seuls le créateur et les administrateurs (owner, admin) de l'organisation mettent en pause ou
+// suppriment une connexion : sinon un membre pourrait supprimer l'Outlook d'un autre. Better Auth
+// peut ranger plusieurs rôles séparés par des virgules.
 const manageable = (ctx: TenantContext) =>
   sql`(${connections.createdBy} = ${ctx.userId} or exists (
     select 1 from member
     where "userId" = ${ctx.userId} and "organizationId" = ${ctx.tenantId}
       and string_to_array(role, ',') && array['owner', 'admin']))`;
+
+// La clé et les jetons sont ceux du compte du créateur : un administrateur qui les remplace (ou
+// « Reconnecte ») y mettrait son propre compte, et la connexion lirait avec ses droits à lui. Le
+// renouvellement des jetons passe aussi par ici : la relève travaille au nom du créateur (queue.ts).
+const createdByMe = (ctx: TenantContext) => eq(connections.createdBy, ctx.userId);
 
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
@@ -159,6 +165,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         creatorId: users.id,
         creatorName: users.name,
         canManage: sql<boolean>`${manageable(ctx)}`,
+        isCreator: sql<boolean>`${createdByMe(ctx)}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -189,7 +196,7 @@ export async function replaceConnectionSecret(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
         updatedAt: sql`now()`,
       })
-      .where(and(eq(connections.id, id), manageable(ctx)))
+      .where(and(eq(connections.id, id), createdByMe(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -224,7 +231,7 @@ export async function saveOAuthTokens(
         ...restart,
         updatedAt: sql`now()`,
       })
-      .where(and(eq(connections.id, id), manageable(ctx)))
+      .where(and(eq(connections.id, id), createdByMe(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;

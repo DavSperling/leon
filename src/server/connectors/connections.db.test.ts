@@ -460,7 +460,7 @@ describe('replaceConnectionSecret', () => {
     const before = (await readRow(id)).secret;
 
     const replaced = await replaceConnectionSecret(
-      marie,
+      paul,
       id,
       { ...atlassian.config, apiToken: 'nouveau-jeton-ZZ99' },
       atlassian.secretFields,
@@ -557,7 +557,7 @@ describe('saveOAuthTokens', () => {
     const lock = await claimed(paul, id);
     await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Reconnectez Linear.' });
 
-    await saveOAuthTokens(marie, id, oauthConfig(), oauthFields, { reconnect: true });
+    await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: true });
 
     const row = await readRow(id);
     await makeNotDue(id);
@@ -641,6 +641,29 @@ describe('droits sur une connexion', () => {
     expect(await deleteConnection(bob, id)).toBe(false);
 
     expect(await readRow(id)).toEqual(before);
+  });
+
+  // Audit 2 n° 2 : la clé et les jetons sont ceux du compte du créateur. Une administratrice qui
+  // « Reconnecte » mettrait son propre compte à sa place ; elle garde la pause et la suppression.
+  it('une administratrice ne remplace ni la clé ni les jetons : réservés au créateur (isCreator)', async () => {
+    const id = await seedConnection(paul);
+    const before = await readRow(id);
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-de-marie-0000' };
+    const isCreator = async (ctx: TenantContext) =>
+      (await listConnections(ctx)).find((view) => view.id === id)?.isCreator;
+
+    expect(await isCreator(paul)).toBe(true);
+    expect(await isCreator(marie)).toBe(false);
+    expect(
+      await replaceConnectionSecret(marie, id, { token: 'cle-de-marie-0000' }, ['token']),
+    ).toBe(false);
+    expect(await saveOAuthTokens(marie, id, oauth, ['accessToken'], { reconnect: true })).toBe(
+      false,
+    );
+    expect(await readRow(id)).toEqual(before);
+
+    expect(await setConnectionPaused(marie, id, true)).toBe(true);
+    expect(await deleteConnection(marie, id)).toBe(true);
   });
 
   it('un simple membre peut encore demander « Synchroniser maintenant »', async () => {

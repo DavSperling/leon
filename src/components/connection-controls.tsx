@@ -113,8 +113,9 @@ function DeleteButton({ view, tool, pending, onConfirm }: DeleteProps) {
 
 // Une connexion existante : son état, ses boutons, et le remplacement de la clé (ou « Reconnecter »
 // pour une connexion branchée par le bouton). La clé n'est jamais réaffichée, seulement ses quatre
-// derniers caractères. Pause, clé, reconnexion et suppression ne sont proposées qu'au créateur et aux
-// administrateurs (`canManage`) ; « Synchroniser maintenant » reste ouvert à tous.
+// derniers caractères. Pause et suppression ne sont proposées qu'au créateur et aux administrateurs
+// (`canManage`) ; clé et reconnexion au créateur seul (`isCreator`), car c'est son compte ;
+// « Synchroniser maintenant » reste ouvert à tous.
 export function ConnectionControls({
   view,
   tool,
@@ -173,19 +174,20 @@ export function ConnectionControls({
             >
               {paused ? 'Reprendre' : 'Mettre en pause'}
             </Button>
-            {oauth ? (
-              <ReconnectButton view={view} disabled={!canConnect || !oauthReady} />
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canConnect}
-                aria-expanded={replacing}
-                onClick={() => setReplacing((open) => !open)}
-              >
-                Remplacer la clé
-              </Button>
-            )}
+            {view.isCreator &&
+              (oauth ? (
+                <ReconnectButton view={view} disabled={!canConnect || !oauthReady} />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!canConnect}
+                  aria-expanded={replacing}
+                  onClick={() => setReplacing((open) => !open)}
+                >
+                  Remplacer la clé
+                </Button>
+              ))}
             <DeleteButton
               view={view}
               tool={tool}
@@ -201,12 +203,12 @@ export function ConnectionControls({
           </>
         )}
       </div>
-      {view.canManage && oauth && canConnect && !oauthReady && (
+      {view.isCreator && oauth && canConnect && !oauthReady && (
         <p className="text-[13px] leading-[18px] text-muted-foreground">
           L'appli {tool} n'est plus configurée sur ce serveur : impossible de reconnecter.
         </p>
       )}
-      {replacing && canConnect && view.canManage && (
+      {replacing && canConnect && view.isCreator && (
         <ReplaceKeyForm id={view.id} secrets={secrets} />
       )}
     </div>

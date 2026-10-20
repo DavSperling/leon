@@ -13,13 +13,24 @@ import {
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
-import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
+import {
+  EMBEDDING_DIMS,
+  type Embedder,
+  EmbedderError,
+  EmbedderRefusal,
+} from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedPassages, seedRun } from '@/test/seed-search';
-import { EMBED_TIMEOUT_MS, embedMissing, REQUEUE_BATCH, requeueStaleRuns } from './embed-missing';
+import {
+  dropOldVectors,
+  EMBED_TIMEOUT_MS,
+  embedMissing,
+  REQUEUE_BATCH,
+  requeueStaleRuns,
+} from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // requeueStaleRuns met en file des jobs d'indexation : ici la file est simulée.
@@ -90,6 +101,14 @@ describe('embedMissing', () => {
     const shared = await seedPassages(bob, { count: 1, token, acl: [bob.tenantId] });
     const theirs = await seedPassages(zoe, { count: 1, token });
     const embedder = embedderFor(token);
+    const ids = [...mine.passageIds, ...shared.passageIds, ...theirs.passageIds];
+    const versions = () =>
+      adminPool
+        .query<{ xmin: string }>('select xmin::text from passages where id = any($1) order by id', [
+          ids,
+        ])
+        .then(({ rows }) => rows.map((row) => row.xmin));
+    const written = await versions();
 
     const first = await embedMissing({ embedder }, BIG);
     const second = await embedMissing({ embedder }, BIG);
@@ -107,17 +126,13 @@ describe('embedMissing', () => {
     expect(await vectorsOf(zoe, theirs.passageIds)).toHaveLength(1);
     // L'équipe d'Alice voit le passage partagé, jamais ceux de Zoé ni les passages privés d'Alice pour Bob.
     expect(await vectorsOf(bob, mine.passageIds)).toHaveLength(0);
-    // Audit n° 8 : le passage note le modèle de son vecteur ; le tic ne relit que les autres.
-    const { rows } = await adminPool.query<{ embedded_model: string | null }>(
-      'select embedded_model from passages where id = any($1)',
-      [[...mine.passageIds, ...shared.passageIds, ...theirs.passageIds]],
-    );
-    expect(rows.map((row) => row.embedded_model)).toEqual(Array(5).fill('factice-1024'));
+    // Audit 2 n° 1 : écrire un vecteur ne réécrit pas son passage (index plein texte, mises à jour HOT).
+    expect(await versions()).toEqual(written);
   });
 
-  // Audit n° 7 : la recherche ne lit que les vecteurs du modèle courant ; ceux d'un ancien modèle restaient pour
-  // toujours, et l'index HNSW (global) les parcourait.
-  it('refait des vecteurs pour un autre modèle et retire ceux de l’ancien', async () => {
+  // Audit 2 n° 8 : embedPassages retirait les vecteurs des autres modèles. Deux modèles actifs en même temps (le
+  // serveur et un script d'essai) effaçaient chacun ceux de l'autre. Seul le tic du serveur les retire (n° 7 bis).
+  it('refait des vecteurs pour un autre modèle sans retirer ceux de l’ancien, que le tic retire ensuite', async () => {
     const token = `jeton-${randomUUID()}`;
     const mine = await seedPassages(alice, { count: 2, token });
     const theirs = await seedPassages(zoe, { count: 3, token });
@@ -126,10 +141,55 @@ describe('embedMissing', () => {
     const again = await embedMissing({ embedder: embedderFor(token, 'factice-b') }, BIG);
 
     expect(again).toBe(5);
-    const models = (await vectorsOf(alice, mine.passageIds)).map((vector) => vector.model);
-    expect(models).toEqual(['factice-b', 'factice-b']);
-    const zoeModels = (await vectorsOf(zoe, theirs.passageIds)).map((vector) => vector.model);
-    expect(zoeModels).toEqual(['factice-b', 'factice-b', 'factice-b']);
+    const modelsOf = async (ctx: TenantContext, ids: string[]) =>
+      (await vectorsOf(ctx, ids)).map((vector) => vector.model).sort();
+    expect(await modelsOf(alice, mine.passageIds)).toEqual([
+      'factice-a',
+      'factice-a',
+      'factice-b',
+      'factice-b',
+    ]);
+    await dropOldVectors('factice-b', BIG);
+    expect(await modelsOf(alice, mine.passageIds)).toEqual(['factice-b', 'factice-b']);
+    expect(await modelsOf(zoe, theirs.passageIds)).toEqual(Array(3).fill('factice-b'));
+  });
+
+  // Audit 2 n° 1 (suite) : un vecteur écrit pendant un remplissage de la file (changement de modèle) peut y laisser
+  // son passage ; le tic l'en sort au lieu de le relire à chaque minute.
+  it('sort de la file un passage qui a déjà le vecteur du modèle', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 2, token });
+    await embedMissing({ embedder: embedderFor(token) }, BIG);
+    await adminPool.query(
+      `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
+       select tenant_id, id, created_at from passages where id = any($1)`,
+      [seeded.passageIds],
+    );
+
+    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(0);
+
+    const { rows } = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
+      [seeded.passageIds],
+    );
+    expect(rows[0]?.n).toBe(0);
+  });
+
+  // Audit 2 n° 9 b : l'indexation vectorise elle-même les passages qu'elle vient d'écrire ; le tic les doublait.
+  it('laisse à l’indexation les passages écrits il y a moins de 2 minutes', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const fresh = await seedPassages(alice, { count: 2, token, createdAt: new Date() });
+    const old = await seedPassages(alice, {
+      count: 1,
+      token,
+      createdAt: new Date(Date.now() - 3 * MINUTE),
+    });
+
+    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+
+    expect(done).toBe(1);
+    expect(await vectorsOf(alice, old.passageIds)).toHaveLength(1);
+    expect(await vectorsOf(alice, fresh.passageIds)).toHaveLength(0);
   });
 
   it('ne dépasse pas la limite demandée', async () => {
@@ -156,6 +216,54 @@ describe('embedMissing', () => {
     expect(await vectorsOf(zoe, accepted.passageIds)).toHaveLength(2);
     expect(logged).not.toContain(tokenA);
     expect(logged).not.toContain('Passage');
+  });
+
+  // Audit 2 n° 9 a : un texte que le fournisseur refuse faisait échouer tout son lot, à chaque tic, pour toujours.
+  it('réessaie texte par texte un lot refusé, puis sort de la file les textes encore refusés', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const good = await seedPassages(alice, { count: 3, token });
+    const [refused] = (await seedPassages(alice, { count: 1, token: `${token} illisible` }))
+      .passageIds as [string];
+    const strict = embedderFor(token);
+    const picky: Embedder = {
+      model: strict.model,
+      embed: (texts, kind) =>
+        texts.some((text) => text.includes('illisible'))
+          ? Promise.reject(new EmbedderRefusal('texte refusé'))
+          : strict.embed(texts, kind),
+    };
+
+    const done = await embedMissing({ embedder: picky }, BIG);
+    const again = await embedMissing({ embedder: strict }, BIG);
+
+    expect(done).toBe(3);
+    expect(await vectorsOf(alice, good.passageIds)).toHaveLength(3);
+    // Sorti de la file : même un fournisseur qui l'accepterait ne le revoit plus (le plein texte le trouve).
+    expect(again).toBe(0);
+    expect(await vectorsOf(alice, [refused])).toHaveLength(0);
+  });
+
+  // Un fournisseur qui refuse tous les textes, même un par un, se trompe (réglage, panne) : rien ne sort de la file.
+  // Un fournisseur en panne n'est pas réinterrogé texte par texte.
+  it('laisse dans la file un lot dont aucun texte ne passe, et ne réessaie pas une panne', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 2, token });
+    const refusing: Embedder = {
+      model: 'factice-1024',
+      embed: vi.fn(() => Promise.reject(new EmbedderRefusal('fournisseur mal réglé (400)'))),
+    };
+    const down: Embedder = {
+      model: 'factice-1024',
+      embed: vi.fn(() => Promise.reject(new EmbedderError('fournisseur indisponible (503)'))),
+    };
+
+    expect(await embedMissing({ embedder: refusing }, BIG)).toBe(0);
+    expect(await embedMissing({ embedder: down }, BIG)).toBe(0);
+    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(2);
+    expect(await vectorsOf(alice, seeded.passageIds)).toHaveLength(2);
+    // Les autres fichiers laissent des passages d'autres organisations dans la file : un appel par lot.
+    const calls = vi.mocked(down.embed).mock.calls;
+    expect(calls.filter(([texts]) => texts.some((text) => text.includes(token)))).toHaveLength(1);
   });
 
   it('poursuit avec les autres organisations quand l’écriture échoue pour l’une d’elles, sans rien journaliser du texte', async () => {
@@ -233,6 +341,11 @@ describe('embedMissing', () => {
     const ids = left.map((row) => row.id);
     expect(ids).toHaveLength(2);
     expect(await vectorsOf(alice, ids)).toHaveLength(0);
+    // Le tic laisse à l'indexation les passages de moins de 2 minutes : ceux-ci sont vieillis de 5 minutes.
+    await adminPool.query(
+      `update passages_a_vectoriser set created_at = now() - interval '5 minutes' where passage_id = any($1)`,
+      [ids],
+    );
 
     const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
 
@@ -365,6 +478,43 @@ describe('embedMissing', () => {
       [orphan.passageIds],
     );
     expect(rows[0]?.n).toBe(0);
+  });
+});
+
+// Audit 2 n° 7 bis : les vecteurs d'un ancien modèle des passages qui ont celui du courant ne servent plus.
+describe('dropOldVectors', () => {
+  // Un vecteur de ce modèle pour ces passages, écrit hors de embedPassages (comme par un autre serveur).
+  const seedVectors = (ids: string[], model: string) =>
+    adminPool.query(
+      `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+       select id, tenant_id, $2, array_fill(0.1, array[1024])::halfvec, acl from passages where id = any($1)`,
+      [ids, model],
+    );
+  const modelsOf = async (ids: string[]) => {
+    const { rows } = await adminPool.query<{ passage_id: string; model: string }>(
+      'select passage_id, model from passage_vectors where passage_id = any($1) order by model',
+      [ids],
+    );
+    return ids.map((id) => rows.filter((row) => row.passage_id === id).map((row) => row.model));
+  };
+
+  it('retire, par lots, les vecteurs des autres modèles des passages qui ont celui du modèle courant', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const current = `courant-${randomUUID()}`;
+    const done = await seedPassages(alice, { count: 3, token });
+    const [waiting] = (await seedPassages(zoe, { count: 1, token })).passageIds as [string];
+    await seedVectors(done.passageIds, 'ancien-a');
+    await seedVectors(done.passageIds, 'ancien-z');
+    await seedVectors(done.passageIds, current);
+    await seedVectors([waiting], 'ancien-a');
+
+    const first = await dropOldVectors(current, 4);
+    const second = await dropOldVectors(current, 4);
+
+    expect([first, second]).toEqual([4, 2]);
+    expect(await modelsOf(done.passageIds)).toEqual(Array(3).fill([current]));
+    // Pas encore de vecteur du modèle courant : l'ancien reste.
+    expect(await modelsOf([waiting])).toEqual([['ancien-a']]);
   });
 });
 

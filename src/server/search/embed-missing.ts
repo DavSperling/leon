@@ -4,9 +4,15 @@ import { db } from '@/server/db/client';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
+import {
+  EMBEDDING_DIMS,
+  type Embedder,
+  EmbedderError,
+  EmbedderRefusal,
+} from '@/server/embeddings/embedder';
 import { logError } from '@/server/log';
 import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
+import { textArray } from './filters-sql';
 
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
 // - embedMissing complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
@@ -105,14 +111,55 @@ function logEmbedFailure(error: unknown, ids: Record<string, string>): void {
   );
 }
 
+// Les vecteurs de ces textes, dans l'ordre. Rejette si le fournisseur échoue, répond mal ou trop tard.
+async function embedTexts(embedder: Embedder, rows: PassageToEmbed[]): Promise<number[][]> {
+  const rendered = await withDeadline(
+    embedder.embed(
+      rows.map((row) => row.text),
+      'document',
+    ),
+  );
+  if (!isValid(rendered, rows.length)) {
+    throw new EmbedderError('réponse inattendue du fournisseur');
+  }
+  return rendered;
+}
+
+// Le vecteur de chaque texte demandé seul, `undefined` pour un texte refusé. S'arrête au premier délai dépassé.
+async function embedOneByOne(
+  embedder: Embedder,
+  rows: PassageToEmbed[],
+): Promise<{ vectors: Array<number[] | undefined>; timedOut: boolean }> {
+  const vectors: Array<number[] | undefined> = [];
+  for (const row of rows) {
+    try {
+      vectors.push((await embedTexts(embedder, [row]))[0]);
+    } catch (error) {
+      if (error instanceof EmbedTimeoutError) return { vectors, timedOut: true };
+      vectors.push(undefined);
+    }
+  }
+  return { vectors, timedOut: false };
+}
+
 // Fabrique et écrit les vecteurs de ces passages, 64 textes à la fois. Le fournisseur est appelé hors de
 // toute transaction (un appel réseau ne retient pas de connexion à la base), avec un délai (EMBED_TIMEOUT_MS).
 // Rend le nombre de vecteurs écrits, `failed` si le fournisseur a échoué (le lot en cours et les suivants sont
 // alors laissés à une prochaine reprise) et `timedOut` s'il n'a pas répondu à temps. Les erreurs de base
 // remontent à l'appelant.
 //
-// Les vecteurs d'un autre modèle de ces passages sont retirés dans la même transaction (audit n° 7), et chaque
-// passage note le modèle de son vecteur (audit n° 8).
+// Les vecteurs d'un autre modèle de ces passages restent : seul le tic du serveur, qui connaît le modèle courant,
+// les retire (dropOldVectors). Un script qui vectorise avec un autre modèle (essai, comparaison) n'efface donc plus
+// ceux du serveur ; les siens, eux, sont retirés par le tic dès que le passage a le vecteur du modèle du serveur :
+// un essai qui doit les garder se lance serveur arrêté (audit 2 n° 8). Le passage lui-même n'est pas réécrit : il
+// sort de la file des passages à vectoriser par un déclencheur (0020).
+//
+// Un lot que le fournisseur refuse (EmbedderRefusal, pas une panne ni un délai) est redemandé texte par texte (audit
+// 2 n° 9 a) : un seul texte refusé faisait échouer tout son lot, à chaque tic, pour toujours. Les textes encore
+// refusés sortent de la file des passages à vectoriser (le plein texte les trouve toujours). Si aucun ne passe,
+// c'est le fournisseur qui se trompe (réglage, panne qui se dit refus), pas un texte : rien ne sort de la file et
+// le lot compte pour un échec. Limite connue : un lot d'un seul texte refusé reste donc dans la file, redemandé à
+// chaque tic.
 //
 // Le vecteur prend l'accès que son passage a au moment de l'écriture (sous le verrou de sa source, voir
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
@@ -125,23 +172,22 @@ export async function embedPassages(
   let stored = 0;
   for (let from = 0; from < rows.length; from += EMBED_BATCH) {
     const batch = rows.slice(from, from + EMBED_BATCH);
-    let vectors: number[][];
+    let vectors: Array<number[] | undefined>;
     try {
-      const rendered = await withDeadline(
-        embedder.embed(
-          batch.map((row) => row.text),
-          'document',
-        ),
-      );
-      if (!isValid(rendered, batch.length)) {
-        throw new EmbedderError('réponse inattendue du fournisseur');
-      }
-      vectors = rendered;
+      vectors = await embedTexts(embedder, batch);
     } catch (error) {
       logEmbedFailure(error, { tenantId: ctx.tenantId });
-      return { stored, failed: true, timedOut: error instanceof EmbedTimeoutError };
+      if (!(error instanceof EmbedderRefusal)) {
+        return { stored, failed: true, timedOut: error instanceof EmbedTimeoutError };
+      }
+      const single = await embedOneByOne(embedder, batch);
+      if (single.timedOut || single.vectors.every((vector) => vector === undefined)) {
+        return { stored, failed: true, timedOut: single.timedOut };
+      }
+      vectors = single.vectors;
     }
     const ids = batch.map((row) => row.id);
+    const refused = batch.filter((_, index) => vectors[index] === undefined).map((row) => row.id);
     const written = await withTenant(ctx, async (tx) => {
       const owners = await tx
         .selectDistinct({ sourceId: passages.sourceId })
@@ -158,39 +204,23 @@ export async function embedPassages(
       const aclOf = new Map(current.map((passage) => [passage.id, passage.acl]));
       const values = batch.flatMap((row, index) => {
         const acl = aclOf.get(row.id);
-        if (!acl) return [];
+        const embedding = vectors[index];
+        if (!acl || !embedding) return [];
         return [
-          {
-            passageId: row.id,
-            tenantId: ctx.tenantId,
-            model: embedder.model,
-            embedding: vectors[index] as number[],
-            acl,
-          },
+          { passageId: row.id, tenantId: ctx.tenantId, model: embedder.model, embedding, acl },
         ];
       });
-      if (values.length === 0) return [];
-      // La recherche ne lit que les vecteurs du modèle courant : ceux d'un ancien modèle ne servent plus.
-      await tx
-        .delete(passageVectors)
-        .where(
-          and(inArray(passageVectors.passageId, ids), ne(passageVectors.model, embedder.model)),
+      if (refused.length > 0) {
+        await tx.execute(
+          sql`select sortir_de_la_file(${embedder.model}, ${textArray(refused)}::uuid[])`,
         );
+      }
+      if (values.length === 0) return [];
       const inserted = await tx
         .insert(passageVectors)
         .values(values)
         .onConflictDoNothing()
         .returning({ passageId: passageVectors.passageId });
-      // Le passage note son modèle : passages_sans_vecteur ne le relira plus (audit n° 8).
-      await tx
-        .update(passages)
-        .set({ embeddedModel: embedder.model })
-        .where(
-          inArray(
-            passages.id,
-            values.map((value) => value.passageId),
-          ),
-        );
       return inserted;
     });
     stored += written.length;
@@ -223,9 +253,22 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
       const ctx = await resolveTenantContext(group.userId, group.tenantId);
       // Le propriétaire a quitté l'organisation : personne ne peut lire ces passages sous ses droits.
       if (!ctx) continue;
-      const missing = await withTenant(ctx, (tx) =>
-        passagesWithoutVector(tx, embedder.model, inArray(passages.id, group.ids)),
-      );
+      const missing = await withTenant(ctx, async (tx) => {
+        const rows = await passagesWithoutVector(
+          tx,
+          embedder.model,
+          inArray(passages.id, group.ids),
+        );
+        // Déjà vectorisés (un vecteur écrit pendant un remplissage de la file, 0020) : ils sortent de la file.
+        const listed = new Set(rows.map((row) => row.id));
+        const done = group.ids.filter((id) => !listed.has(id));
+        if (done.length > 0) {
+          await tx.execute(
+            sql`select sortir_de_la_file(${embedder.model}, ${textArray(done)}::uuid[])`,
+          );
+        }
+        return rows;
+      });
       const result = await embedPassages(ctx, embedder, missing);
       total += result.stored;
       if (result.timedOut) break;
@@ -234,6 +277,16 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
     }
   }
   return total;
+}
+
+// Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`
+// (retirer_vieux_vecteurs, 0020 : audit 2 n° 7 bis). Réservé au tic du serveur, qui connaît le modèle courant.
+// Rend le nombre de vecteurs retirés.
+export async function dropOldVectors(model: string, limit: number): Promise<number> {
+  const { rows } = await db.execute<{ n: number }>(
+    sql`select retirer_vieux_vecteurs(${model}, ${limit}) as n`,
+  );
+  return rows[0]?.n ?? 0;
 }
 
 type StaleRunRow = { run_id: string; tenant_id: string; user_id: string };

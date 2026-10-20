@@ -89,6 +89,8 @@ async function seedPassage(
       charEnd: 29,
       ts: new Date(),
       acl: input.acl,
+      // Écrit il y a 5 minutes : passages_sans_vecteur laisse à l'indexation ceux de moins de 2 minutes.
+      createdAt: new Date(Date.now() - 5 * 60_000),
     })
     .returning({ id: passages.id });
   if (!row) throw new Error('passage de test non créé');

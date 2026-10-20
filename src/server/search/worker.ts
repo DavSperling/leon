@@ -8,7 +8,7 @@ import {
   PipelineJobSchema,
 } from '@/server/pipeline/queue';
 import { failRun } from '@/server/pipeline/runs';
-import { embedMissing, requeueStaleRuns } from './embed-missing';
+import { dropOldVectors, embedMissing, requeueStaleRuns } from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // Le worker de la recherche (C5) : il lit la file `index`, et deux tics par minute reprennent ce qui est
@@ -28,6 +28,9 @@ const STALE_RUN_MINUTES = 5;
 // finir le dernier lot avant le tic suivant (un appel au fournisseur attend au plus 30 s, EMBED_TIMEOUT_MS).
 const EMBED_PER_TICK = 500;
 const EMBED_TICK_MS = 45_000;
+// Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis) : un changement de modèle sur un million de
+// passages se nettoie au rythme où les nouveaux vecteurs s'écrivent.
+const OLD_VECTORS_PER_TICK = 5000;
 const EVERY_MINUTE = '* * * * *';
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte
@@ -94,6 +97,9 @@ async function registerWorkers(
           rethrowSummary('search.embed_tick_failed', error),
         );
       }
+      await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
+        rethrowSummary('search.drop_old_vectors_failed', error),
+      );
     });
   } else {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base : il remplirait

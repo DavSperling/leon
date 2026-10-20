@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   unschedule: vi.fn(),
   indexIngestRun: vi.fn(),
   embedMissing: vi.fn(),
+  dropOldVectors: vi.fn(),
   requeueStaleRuns: vi.fn(),
   failRun: vi.fn(),
   resolveTenantContext: vi.fn(),
@@ -32,6 +33,7 @@ vi.mock('@/server/auth/tenant-context', () => ({
 vi.mock('./index-run', () => ({ indexIngestRun: mocks.indexIngestRun }));
 vi.mock('./embed-missing', () => ({
   embedMissing: mocks.embedMissing,
+  dropOldVectors: mocks.dropOldVectors,
   requeueStaleRuns: mocks.requeueStaleRuns,
 }));
 
@@ -66,6 +68,7 @@ beforeEach(() => {
   mocks.unschedule.mockResolvedValue(undefined);
   mocks.indexIngestRun.mockResolvedValue('indexe');
   mocks.embedMissing.mockResolvedValue(0);
+  mocks.dropOldVectors.mockResolvedValue(0);
   mocks.requeueStaleRuns.mockResolvedValue(0);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
 });
@@ -135,6 +138,16 @@ describe('startSearchWorker', () => {
     await handlerOf('pipeline-reindex')();
 
     expect(mocks.embedMissing).toHaveBeenCalledTimes(3);
+  });
+
+  // Audit 2 n° 7 bis : les vecteurs d'un ancien modèle restaient pour toujours à côté de ceux du courant.
+  it('retire à chaque tic, par lot de 5 000, les vecteurs des autres modèles', async () => {
+    const embedder = createFakeEmbedder();
+    await startSearchWorker({ embedder });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.dropOldVectors).toHaveBeenCalledExactlyOnceWith(embedder.model, 5000);
   });
 
   it('rend la main au bout de 45 secondes, même s’il en reste', async () => {

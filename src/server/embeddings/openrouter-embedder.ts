@@ -1,4 +1,4 @@
-import { EMBEDDING_DIMS, type Embedder, EmbedderError } from './embedder';
+import { EMBEDDING_DIMS, type Embedder, EmbedderError, EmbedderRefusal } from './embedder';
 
 // Fournisseur de vecteurs passant par OpenRouter (API compatible OpenAI) : un seul compte pour comparer les
 // candidats du plan (voyageai/voyage-4, mistralai/mistral-embed-2312, baai/bge-m3) et d'autres. Le modèle se
@@ -7,6 +7,8 @@ import { EMBEDDING_DIMS, type Embedder, EmbedderError } from './embedder';
 const URL = 'https://openrouter.ai/api/v1/embeddings';
 const BATCH = 64;
 const TIMEOUT_MS = 30_000;
+// Réponses qui refusent les textes envoyés, pas le service.
+const REFUSALS = [400, 413, 422];
 
 type Response = { data?: { index: number; embedding: number[] }[] };
 
@@ -26,7 +28,12 @@ export function createOpenRouterEmbedder(
     } catch {
       throw new EmbedderError('OpenRouter injoignable');
     }
-    if (!res.ok) throw new EmbedderError(`OpenRouter : réponse ${res.status}`);
+    if (!res.ok) {
+      const message = `OpenRouter : réponse ${res.status}`;
+      throw REFUSALS.includes(res.status)
+        ? new EmbedderRefusal(message)
+        : new EmbedderError(message);
+    }
     const body = (await res.json().catch(() => ({}))) as Response;
     const data = [...(body.data ?? [])].sort((a, b) => a.index - b.index);
     if (data.length !== texts.length)

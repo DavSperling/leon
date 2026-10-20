@@ -66,6 +66,18 @@ const END_REASONS: readonly string[] = ['fini', 'limite', 'refus'] satisfies Dis
 const isNullableString = (value: unknown): value is string | null =>
   value === null || typeof value === 'string';
 
+// Le lien d'une citation finit dans un `href` : seuls http et https passent, comme côté serveur (safeUrl de la
+// recherche). Un autre lien est retiré, la citation reste.
+function linkOf(url: string | null): string | null {
+  if (url === null || url.length > 2000) return null;
+  try {
+    const { protocol } = new URL(url);
+    return protocol === 'https:' || protocol === 'http:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 // Une citation du contrat, avec ses seuls champs connus, ou null.
 function parseCitation(value: unknown): DiscussionCitation | null {
   if (typeof value !== 'object' || value === null) return null;
@@ -73,7 +85,7 @@ function parseCitation(value: unknown): DiscussionCitation | null {
   if (typeof n !== 'number' || !Number.isInteger(n) || n < 1) return null;
   if (typeof sourceId !== 'string' || typeof passageId !== 'string') return null;
   if (!isNullableString(title) || !isNullableString(url)) return null;
-  return { n, sourceId, passageId, title, url };
+  return { n, sourceId, passageId, title, url: linkOf(url) };
 }
 
 // Un évènement du flux, ou null s'il n'est pas du contrat. Seuls ses champs connus sont gardés.

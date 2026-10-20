@@ -75,6 +75,29 @@ describe('parseDiscussionEvent', () => {
       items: [CITATION, { ...CITATION, title: null, url: null }],
     });
   });
+
+  it('garde la citation mais retire un lien qui n’est ni http ni https', () => {
+    const urls = [
+      'javascript:alert(1)',
+      ' JavaScript:alert(1)',
+      'data:text/html,<script>alert(1)</script>',
+      'vbscript:msgbox(1)',
+      '/sources/1',
+      `https://exemple.fr/${'a'.repeat(2000)}`,
+    ];
+    const items = [
+      ...urls.map((url) => ({ ...CITATION, url })),
+      { ...CITATION, url: 'http://intra/1' },
+    ];
+
+    expect(parseDiscussionEvent(JSON.stringify({ type: 'citations', items }))).toEqual({
+      type: 'citations',
+      items: [
+        ...urls.map(() => ({ ...CITATION, url: null })),
+        { ...CITATION, url: 'http://intra/1' },
+      ],
+    });
+  });
 });
 
 describe('createDiscussionEventReader', () => {

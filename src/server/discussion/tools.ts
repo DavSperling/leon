@@ -48,8 +48,14 @@ type NumberedSource = Pick<SourceInfo, 'sourceId' | 'title' | 'url'>;
 
 export type SourceNumbering = {
   // Le numéro de la source, donné à sa première apparition dans la réponse. Le passage cité est le premier
-  // montré, sauf `read` : un passage que l'agent vient de lire en entier le remplace.
-  number(source: NumberedSource, passageId: string, options?: { read?: boolean }): number;
+  // montré, sauf `read` : un passage que l'agent vient de lire en entier le remplace. `n` : le numéro qu'affiche
+  // la question pour un résultat de départ (un résultat devenu invisible laisse un trou) ; sinon le suivant du
+  // plus grand.
+  number(
+    source: NumberedSource,
+    passageId: string,
+    options?: { read?: boolean; n?: number },
+  ): number;
   numberOf(sourceId: string): number | null;
   has(n: number): boolean;
   // Les citations de ces numéros, dans l'ordre croissant ; un numéro inconnu est écarté.
@@ -70,7 +76,7 @@ export function createSourceNumbering(): SourceNumbering {
         return known.n;
       }
       const entry: DiscussionCitation = {
-        n: bySource.size + 1,
+        n: options.n ?? Math.max(0, ...byNumber.keys()) + 1,
         sourceId: source.sourceId,
         passageId,
         title: source.title,

@@ -29,6 +29,18 @@ describe('createSourceNumbering', () => {
     expect(numbering.numberOf('c')).toBeNull();
   });
 
+  // Audit 2 n° 15 c : un résultat de départ devenu invisible laisse un trou ; les autres gardent le numéro
+  // qu'affiche la question, et une source nouvelle prend le numéro suivant le plus grand.
+  it('garde le numéro donné à un résultat de départ, et numérote les suivantes après lui', () => {
+    const numbering = createSourceNumbering();
+
+    expect(numbering.number(source('a'), 'pa1', { n: 1 })).toBe(1);
+    expect(numbering.number(source('c'), 'pc1', { n: 3 })).toBe(3);
+    expect(numbering.number(source('d'), 'pd1')).toBe(4);
+    expect(numbering.has(2)).toBe(false);
+    expect(numbering.citations([3]).map((c) => c.sourceId)).toEqual(['c']);
+  });
+
   it('cite le premier passage montré, ou le dernier que l’agent a lu', () => {
     const numbering = createSourceNumbering();
     numbering.number(source('a', 'Ticket A'), 'pa1');

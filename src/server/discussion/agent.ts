@@ -106,7 +106,7 @@ async function* runReply(
 
   const numbering = createSourceNumbering();
   // Les résultats d'où part la discussion prennent les premiers numéros, ceux qu'affiche la question.
-  for (const seed of turn.seeds) numbering.number(seed, seed.passageId);
+  for (const seed of turn.seeds) numbering.number(seed, seed.passageId, { n: seed.n });
   const tools = discussionTools(ctx, {
     embedder,
     budget: { chars: DISCUSSION_READ_BUDGET },

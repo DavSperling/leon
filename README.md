@@ -53,7 +53,8 @@ Avant stockage, la capture et les connecteurs masquent ce qui se reconnaît à s
 clés à préfixe connu (`sk-ant-`, `ghp_`, `GOCSPX-`…), clés privées, `utilisateur:mot@hôte` dans une URL, en-têtes
 `Authorization`, lignes de `.env` (`DB_PASSWORD=…`). Le texte ordinaire n'est jamais touché : **un mot de passe écrit
 en langage courant (« le mdp c'est … ») ou passé dans du code peut passer.** Les conversations captées restent privées
-à leur auteur.
+à leur auteur ; un élément d'outil (page, ticket, mail d'équipe) garde la visibilité qu'il a dans l'outil : un mot de
+passe écrit en clair dans une page d'équipe y reste lisible de l'équipe, comme dans l'outil d'origine.
 
 ## Tester
 

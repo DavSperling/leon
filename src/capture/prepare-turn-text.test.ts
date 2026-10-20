@@ -58,6 +58,8 @@ describe('prepareTurnText : entrées énormes', () => {
   });
 
   const TWO_MB = 2 * 1024 * 1024;
+  // La borne garde contre une expression en temps quadratique (des minutes sur 2 Mo), pas contre quelques
+  // millisecondes : 2 s, comme les pièges de mask-secrets, tient sur une machine chargée (la suite tourne en parallèle).
   it.each([
     '<system-reminder>',
     '-----BEGIN PRIVATE KEY-----',
@@ -65,10 +67,10 @@ describe('prepareTurnText : entrées énormes', () => {
     'postgres://a:',
     'https://a:b',
     'password=',
-  ])('traite 2 Mo de « %s » répété en moins de 300 ms', (unit) => {
+  ])('traite 2 Mo de « %s » répété en moins de 2 s', (unit) => {
     const text = unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
     const start = performance.now();
     prepareTurnText(text);
-    expect(performance.now() - start).toBeLessThan(300);
+    expect(performance.now() - start).toBeLessThan(2000);
   });
 });

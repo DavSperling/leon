@@ -7,6 +7,7 @@ import { fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
 import { enqueueDueSyncs } from './sync';
+import type { AnyConnector } from './types';
 import { startConnectorWorker } from './worker';
 
 // Le vrai pg-boss de leon_test, mais pas le pipeline : les runs créés ne partent pas en file.
@@ -23,6 +24,7 @@ const DUE = new Date('2000-01-01T00:00:00Z');
 const tenantIds: string[] = [];
 let tenantId: string;
 let paul: TenantContext;
+let connector: AnyConnector = fakeConnector({ items: 3, pageSize: 3 });
 
 beforeAll(async () => {
   const team = await createTestTenant(['Paul']);
@@ -34,7 +36,7 @@ beforeAll(async () => {
   await (await getBoss()).unschedule(CONNECTOR_QUEUES.tick);
   await startConnectorWorker(
     {
-      getConnector: () => fakeConnector({ items: 3, pageSize: 3 }),
+      getConnector: () => connector,
       fetchImpl: fakeFetch([]),
     },
     { pollingIntervalSeconds: 0.5 },
@@ -112,6 +114,40 @@ describe('worker de relève', () => {
       (n) => n === 3,
     );
     expect(count).toBe(3);
+  });
+
+  // Audit n° 17 : un long premier passage ne bloque pas les autres connexions.
+  it('relève plusieurs connexions en même temps', async () => {
+    let running = 0;
+    let most = 0;
+    const base = fakeConnector({ items: 1, pageSize: 1 });
+    connector = {
+      ...base,
+      async *sync(config, state, http) {
+        running += 1;
+        most = Math.max(most, running);
+        // Attend qu'une deuxième relève démarre (5 s au plus), puis rend la main.
+        const deadline = Date.now() + 5_000;
+        while (running < 2 && Date.now() < deadline)
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        yield* base.sync(config, state, http);
+        running -= 1;
+      },
+    };
+    const ids = [
+      await seedConnection(paul, { nextSyncAt: DUE }),
+      await seedConnection(paul, { nextSyncAt: DUE }),
+    ];
+    const boss = await getBoss();
+
+    for (const id of ids) await boss.send(CONNECTOR_QUEUES.sync, jobOf(id), { singletonKey: id });
+    await waitFor(
+      async () => (await Promise.all(ids.map(sourceCount))).every((n) => n === 1),
+      (done) => done,
+    );
+
+    connector = fakeConnector({ items: 3, pageSize: 3 });
+    expect(most).toBe(2);
   });
 
   it('ne met en file qu un job par connexion due, même appelé deux fois', async () => {

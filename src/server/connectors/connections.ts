@@ -185,6 +185,17 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
   }));
 }
 
+// Une clé remplacée ou une reconnexion relance la connexion tout de suite (sauf en pause), et reprend
+// la réservation d'une relève en cours : partie avec l'ancien secret, elle n'écrit plus rien, pas même
+// son échec (finishSync, stillOurs). La relève suivante part du dernier curseur enregistré.
+const RESTART = {
+  status: unlessPaused(sql`'active'::text`, connections.status),
+  lastError: unlessPaused(sql`null::text`, connections.lastError),
+  nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
+  syncLockAt: NO_DATE,
+  lastSyncStartedAt: NO_DATE,
+};
+
 // `config` porte tous les champs secrets de l'outil ; les champs ouverts ne sont pas réécrits.
 // C'est le remède à « Clé refusée » : la connexion repart tout de suite, sauf si elle est en pause.
 export async function replaceConnectionSecret(
@@ -197,13 +208,7 @@ export async function replaceConnectionSecret(
   const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
-      .set({
-        ...sealed,
-        status: unlessPaused(sql`'active'::text`, connections.status),
-        lastError: unlessPaused(sql`null::text`, connections.lastError),
-        nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
-        updatedAt: sql`now()`,
-      })
+      .set({ ...sealed, ...RESTART, updatedAt: sql`now()` })
       .where(and(eq(connections.id, id), createdByMe(ctx)))
       .returning({ id: connections.id }),
   );
@@ -226,13 +231,7 @@ export async function saveOAuthTokens(
   options: { reconnect: true } | { reconnect: false; renewedFrom: string },
 ): Promise<boolean> {
   const sealed = sealSecrets(config, secretFields, aadOf(ctx.tenantId, id));
-  const restart = options.reconnect
-    ? {
-        status: unlessPaused(sql`'active'::text`, connections.status),
-        lastError: unlessPaused(sql`null::text`, connections.lastError),
-        nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
-      }
-    : {};
+  const restart = options.reconnect ? RESTART : {};
   const mine = and(eq(connections.id, id), createdByMe(ctx));
   const rows = await withTenant(ctx, async (tx) => {
     if (!options.reconnect) {

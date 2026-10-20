@@ -125,9 +125,9 @@ describe('embedMissing', () => {
     expect(await versions()).toEqual(written);
   });
 
-  // Audit n° 7 : la recherche ne lit que les vecteurs du modèle courant ; ceux d'un ancien modèle restaient pour
-  // toujours, et l'index HNSW (global) les parcourait.
-  it('refait des vecteurs pour un autre modèle et retire ceux de l’ancien', async () => {
+  // Audit 2 n° 8 : embedPassages retirait les vecteurs des autres modèles. Deux modèles actifs en même temps (le
+  // serveur et un script d'essai) effaçaient chacun ceux de l'autre. Seul le tic du serveur les retire (n° 7 bis).
+  it('refait des vecteurs pour un autre modèle sans retirer ceux de l’ancien, que le tic retire ensuite', async () => {
     const token = `jeton-${randomUUID()}`;
     const mine = await seedPassages(alice, { count: 2, token });
     const theirs = await seedPassages(zoe, { count: 3, token });
@@ -136,10 +136,17 @@ describe('embedMissing', () => {
     const again = await embedMissing({ embedder: embedderFor(token, 'factice-b') }, BIG);
 
     expect(again).toBe(5);
-    const models = (await vectorsOf(alice, mine.passageIds)).map((vector) => vector.model);
-    expect(models).toEqual(['factice-b', 'factice-b']);
-    const zoeModels = (await vectorsOf(zoe, theirs.passageIds)).map((vector) => vector.model);
-    expect(zoeModels).toEqual(['factice-b', 'factice-b', 'factice-b']);
+    const modelsOf = async (ctx: TenantContext, ids: string[]) =>
+      (await vectorsOf(ctx, ids)).map((vector) => vector.model).sort();
+    expect(await modelsOf(alice, mine.passageIds)).toEqual([
+      'factice-a',
+      'factice-a',
+      'factice-b',
+      'factice-b',
+    ]);
+    await dropOldVectors('factice-b', BIG);
+    expect(await modelsOf(alice, mine.passageIds)).toEqual(['factice-b', 'factice-b']);
+    expect(await modelsOf(zoe, theirs.passageIds)).toEqual(Array(3).fill('factice-b'));
   });
 
   it('ne dépasse pas la limite demandée', async () => {

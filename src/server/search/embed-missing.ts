@@ -111,8 +111,11 @@ function logEmbedFailure(error: unknown, ids: Record<string, string>): void {
 // alors laissés à une prochaine reprise) et `timedOut` s'il n'a pas répondu à temps. Les erreurs de base
 // remontent à l'appelant.
 //
-// Les vecteurs d'un autre modèle de ces passages sont retirés dans la même transaction (audit n° 7). Le passage
-// lui-même n'est pas réécrit : il sort de la file des passages à vectoriser par un déclencheur (0020).
+// Les vecteurs d'un autre modèle de ces passages restent : seul le tic du serveur, qui connaît le modèle courant,
+// les retire (dropOldVectors). Un script qui vectorise avec un autre modèle (essai, comparaison) n'efface donc plus
+// ceux du serveur ; les siens, eux, sont retirés par le tic dès que le passage a le vecteur du modèle du serveur :
+// un essai qui doit les garder se lance serveur arrêté (audit 2 n° 8). Le passage lui-même n'est pas réécrit : il
+// sort de la file des passages à vectoriser par un déclencheur (0020).
 //
 // Le vecteur prend l'accès que son passage a au moment de l'écriture (sous le verrou de sa source, voir
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
@@ -170,12 +173,6 @@ export async function embedPassages(
         ];
       });
       if (values.length === 0) return [];
-      // La recherche ne lit que les vecteurs du modèle courant : ceux d'un ancien modèle ne servent plus.
-      await tx
-        .delete(passageVectors)
-        .where(
-          and(inArray(passageVectors.passageId, ids), ne(passageVectors.model, embedder.model)),
-        );
       const inserted = await tx
         .insert(passageVectors)
         .values(values)

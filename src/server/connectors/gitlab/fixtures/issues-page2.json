@@ -1,0 +1,40 @@
+[
+  {
+    "id": 79,
+    "iid": 15,
+    "project_id": 278964,
+    "title": "Reprise après un plantage",
+    "description": "Ticket repris de l'ancien compte.",
+    "state": "opened",
+    "created_at": "2026-10-12T09:00:00.000Z",
+    "updated_at": "2026-10-12T14:00:00.000Z",
+    "author": {
+      "id": 99,
+      "username": "ghost",
+      "name": "Ghost User",
+      "state": "active",
+      "web_url": "https://gitlab.com/ghost"
+    },
+    "user_notes_count": 0,
+    "web_url": "https://gitlab.com/acme/leon/-/issues/15"
+  },
+  {
+    "id": 80,
+    "iid": 16,
+    "project_id": 278964,
+    "title": "Journaliser sans le texte des erreurs",
+    "description": "Rien de plus à dire.",
+    "state": "opened",
+    "created_at": "2026-10-12T09:30:00.000Z",
+    "updated_at": "2026-10-12T14:00:00.000Z",
+    "author": {
+      "id": 1,
+      "username": "marie-durand",
+      "name": "Marie Durand",
+      "state": "active",
+      "web_url": "https://gitlab.com/marie-durand"
+    },
+    "user_notes_count": 0,
+    "web_url": "https://gitlab.com/acme/leon/-/issues/16"
+  }
+]

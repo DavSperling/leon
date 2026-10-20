@@ -1,13 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, type BriefingResponse } from '../capture/api-contract';
-import { fetchBriefingText } from './briefing';
+import { BriefingRouteMissingError, fetchBriefingText } from './briefing';
 
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
 
 const briefing: BriefingResponse = {
-  markdown: '# Briefing Leon · 7 derniers jours\n- ACME (Client)\n0 élément à vérifier dans Leon.',
-  reviewCount: 0,
-  entries: [],
+  markdown: '# Point du matin · leon\n- La PR 22 est fusionnée.',
+  projet: 'github.com/davsperling/leon',
+  preparedAt: '2026-10-19T06:30:00.000Z',
 };
 
 const fetchReturning = (response: Response) => vi.fn(async () => response);
@@ -34,6 +34,19 @@ describe('fetchBriefingText', () => {
     ['un corps non JSON', new Response('<html>', { status: 200 })],
   ])('renvoie null sur %s', async (_name, response) => {
     expect(await fetchBriefingText(asFetch(fetchReturning(response)), env)).toBeNull();
+  });
+
+  // Un 404 n'est ni un jeton refusé ni un serveur injoignable : la route n'existe pas sur ce serveur.
+  // L'erreur remonte pour que la commande le dise (elle sort quand même avec le code 0).
+  it('signale une route absente sur un 404, au lieu de dire « serveur injoignable »', async () => {
+    const fetchImpl = fetchReturning(new Response('{}', { status: 404 }));
+
+    await expect(fetchBriefingText(asFetch(fetchImpl), env)).rejects.toThrow(
+      BriefingRouteMissingError,
+    );
+    await expect(fetchBriefingText(asFetch(fetchImpl), env)).rejects.toThrow(
+      /ne prépare pas encore de point/,
+    );
   });
 
   it('renvoie null sur une erreur réseau', async () => {

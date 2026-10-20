@@ -1,0 +1,112 @@
+{
+  "_pagination": {
+    "next": null
+  },
+  "_links": {
+    "self": "https://acme.api.frontapp.com/events?page_token=tok_events_2"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/events/evt_3c01"
+      },
+      "id": "evt_3c01",
+      "type": "inbound",
+      "emitted_at": 1791900000,
+      "source": {
+        "_meta": {
+          "type": "inboxes"
+        },
+        "data": [
+          {
+            "_links": {
+              "self": "https://acme.api.frontapp.com/inboxes/inb_8k2"
+            },
+            "id": "inb_8k2",
+            "name": "Support",
+            "is_private": false,
+            "is_public": true
+          }
+        ]
+      },
+      "target": {
+        "_meta": {
+          "type": "message"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/messages/msg_3c11"
+          },
+          "id": "msg_3c11",
+          "type": "sms",
+          "is_inbound": true,
+          "created_at": 1791900000
+        }
+      },
+      "conversation": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/conversations/cnv_3c3"
+        },
+        "id": "cnv_3c3",
+        "type": "conversation",
+        "subject": null,
+        "status": "unassigned",
+        "tags": [],
+        "is_private": false,
+        "is_closed": false
+      }
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/events/evt_1a03"
+      },
+      "id": "evt_1a03",
+      "type": "out_reply",
+      "emitted_at": 1791900120.25,
+      "source": {
+        "_meta": {
+          "type": "teammate"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/teammates/tea_marie"
+          },
+          "id": "tea_marie",
+          "email": "marie@acme.test",
+          "username": "marie",
+          "first_name": "Marie",
+          "last_name": "Durand",
+          "is_admin": false,
+          "is_available": true,
+          "is_blocked": false
+        }
+      },
+      "target": {
+        "_meta": {
+          "type": "message"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/messages/msg_1a14"
+          },
+          "id": "msg_1a14",
+          "type": "email",
+          "is_inbound": false,
+          "created_at": 1791795810
+        }
+      },
+      "conversation": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/conversations/cnv_1a1"
+        },
+        "id": "cnv_1a1",
+        "type": "conversation",
+        "subject": "Livraison de la commande 4512",
+        "status": "assigned",
+        "tags": [],
+        "is_private": false,
+        "is_closed": false
+      }
+    }
+  ]
+}

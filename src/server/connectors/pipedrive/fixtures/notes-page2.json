@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 102,
+      "active_flag": true,
+      "add_time": "2026-10-05 14:30:12",
+      "content": "Rappeler Marie mardi pour confirmer la date.",
+      "deal": null,
+      "lead_id": null,
+      "deal_id": null,
+      "org_id": null,
+      "organization": null,
+      "person": { "name": "Marie Durand" },
+      "person_id": 5,
+      "update_time": "2026-10-05 14:30:12",
+      "user": { "email": "marie@acme.test", "is_you": true, "name": "Marie Durand" },
+      "user_id": 1
+    },
+    {
+      "id": 103,
+      "active_flag": true,
+      "add_time": "2026-10-05 14:30:12",
+      "content": "<p>Acme passe à 25 postes au 1er janvier.</p>",
+      "deal": null,
+      "lead_id": null,
+      "deal_id": null,
+      "org_id": 3,
+      "organization": { "name": "Acme" },
+      "person": null,
+      "person_id": null,
+      "update_time": "2026-10-05 14:30:12",
+      "user": { "email": "paul@acme.test", "is_you": false, "name": "Paul Martin" },
+      "user_id": 2
+    },
+    {
+      "id": 104,
+      "active_flag": false,
+      "add_time": "2026-10-06 08:00:00",
+      "content": "<p>Note supprimée.</p>",
+      "deal": null,
+      "lead_id": null,
+      "deal_id": null,
+      "org_id": 3,
+      "organization": { "name": "Acme" },
+      "person": null,
+      "person_id": null,
+      "update_time": "2026-10-08 08:00:00",
+      "user": { "email": "paul@acme.test", "is_you": false, "name": "Paul Martin" },
+      "user_id": 2
+    },
+    {
+      "id": 105,
+      "active_flag": true,
+      "add_time": "2026-10-09 16:45:00",
+      "content": "<p>&nbsp;</p>",
+      "deal": { "title": "Contrat Acme" },
+      "lead_id": null,
+      "deal_id": 7,
+      "org_id": null,
+      "organization": null,
+      "person": null,
+      "person_id": null,
+      "update_time": "2026-10-09 16:45:00",
+      "user": { "email": "paul@acme.test", "is_you": false, "name": "Paul Martin" },
+      "user_id": 2
+    }
+  ],
+  "additional_data": {
+    "pagination": {
+      "start": 0,
+      "limit": 100,
+      "more_items_in_collection": false
+    }
+  }
+}

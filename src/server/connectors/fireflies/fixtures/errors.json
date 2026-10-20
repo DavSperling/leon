@@ -1,0 +1,46 @@
+{
+  "auth_failed": {
+    "data": {},
+    "errors": [
+      {
+        "message": "Clé invalide : secret-xyz",
+        "friendly": true,
+        "code": "auth_failed",
+        "extensions": { "code": "auth_failed", "status": 401 }
+      }
+    ]
+  },
+  "object_not_found": {
+    "data": {},
+    "errors": [
+      {
+        "message": "Transcription introuvable : secret-xyz",
+        "friendly": true,
+        "code": "object_not_found",
+        "extensions": { "code": "object_not_found", "status": 404 }
+      }
+    ]
+  },
+  "too_many_requests": {
+    "data": {},
+    "errors": [
+      {
+        "message": "Trop de requêtes : secret-xyz",
+        "friendly": true,
+        "code": "too_many_requests",
+        "extensions": { "code": "too_many_requests", "status": 429 }
+      }
+    ]
+  },
+  "invalid_arguments": {
+    "data": {},
+    "errors": [
+      {
+        "message": "Arguments invalides : secret-xyz",
+        "friendly": true,
+        "code": "invalid_arguments",
+        "extensions": { "code": "invalid_arguments", "status": 400 }
+      }
+    ]
+  }
+}

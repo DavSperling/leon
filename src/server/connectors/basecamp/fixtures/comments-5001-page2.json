@@ -1,0 +1,21 @@
+[
+  {
+    "id": 7002,
+    "status": "active",
+    "visible_to_clients": false,
+    "created_at": "2026-10-14T09:30:00.000Z",
+    "updated_at": "2026-10-14T09:30:00.000Z",
+    "title": "Re: Lancement du site : calendrier",
+    "inherits_status": true,
+    "type": "Comment",
+    "parent": { "id": 5001, "title": "Lancement du site : calendrier", "type": "Message" },
+    "bucket": { "id": 2085958505, "name": "Refonte du site", "type": "Project" },
+    "creator": {
+      "id": 1049715913,
+      "name": "Marie Durand",
+      "email_address": "marie@acme.test",
+      "client": false
+    },
+    "content": "<div>Merci, c'est noté.<br>On confirme le 3 novembre.</div>"
+  }
+]

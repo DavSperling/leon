@@ -1,0 +1,14 @@
+{
+  "messages": {
+    "id": "d4e6f8a0-1b3c-4d5e-9f70-2a4c6e8b0d13",
+    "preview": "Votre colis arrive mardi entre 9 h et 12 h.",
+    "type": "twilio_message",
+    "delivered_at": 1791792000,
+    "updated_at": 1791792000,
+    "created_at": 1791791990,
+    "body": "<p>Votre colis arrive mardi entre 9 h et 12 h.</p>",
+    "from_field": { "id": "+33100000000", "name": "Léa Moreau", "username": "+33100000000" },
+    "to_fields": [{ "id": "+33100000001", "name": "Acme", "username": "+33100000001" }],
+    "attachments": []
+  }
+}

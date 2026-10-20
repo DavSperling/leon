@@ -1,0 +1,14 @@
+{
+  "data": {
+    "transcript": {
+      "title": "Revue de sprint",
+      "transcript_url": "https://app.fireflies.ai/view/ff-1003",
+      "organizer_email": "marie@acme.test",
+      "participants": ["marie@acme.test"],
+      "meeting_attendees": [],
+      "meeting_info": { "silent_meeting": false, "summary_status": "processing" },
+      "summary": null,
+      "sentences": null
+    }
+  }
+}

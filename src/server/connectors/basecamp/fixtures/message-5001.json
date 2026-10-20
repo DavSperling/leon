@@ -1,0 +1,26 @@
+{
+  "id": 5001,
+  "status": "active",
+  "visible_to_clients": false,
+  "created_at": "2026-10-02T08:15:00.000Z",
+  "updated_at": "2026-10-14T09:30:00.000Z",
+  "title": "Lancement du site : calendrier",
+  "inherits_status": true,
+  "type": "Message",
+  "url": "https://3.basecampapi.com/99999999/buckets/2085958505/messages/5001.json",
+  "app_url": "https://3.basecamp.com/99999999/buckets/2085958505/messages/5001",
+  "comments_count": 2,
+  "comments_url": "https://3.basecampapi.com/99999999/buckets/2085958505/recordings/5001/comments.json",
+  "parent": { "id": 4900, "title": "Tableau de messages", "type": "Message::Board" },
+  "bucket": { "id": 2085958505, "name": "Refonte du site", "type": "Project" },
+  "creator": {
+    "id": 1049715913,
+    "name": "Marie Durand",
+    "email_address": "marie@acme.test",
+    "personable_type": "User",
+    "admin": true,
+    "client": false
+  },
+  "content": "Bonjour à tous,<br><br>Le site ouvre le <strong>3 novembre</strong>. Points à tenir :<ul><li>Maquettes validées</li><li>Recette le 28 octobre</li></ul><bc-attachment sgid=\"BAhbB0kiAbB7ImNsaWVudF9pZCI6IjEyM\" content-type=\"image/png\" filename=\"planning.png\"><figure><img src=\"https://3.basecampapi.com/99999999/blobs/abc/previews/full\"><figcaption>planning.png</figcaption></figure></bc-attachment>",
+  "subject": "Lancement du site : calendrier"
+}

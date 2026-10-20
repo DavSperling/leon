@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "id": "a9c3e7f1-5b24-4d80-96e2-3f8b1d6a0c75",
+      "work_item_id": "c4e81a37-52d9-4b06-a3f1-9e7d2c5b8a14",
+      "parent_id": null,
+      "comment_html": "<p>Gagnez de l'argent facilement : cliquez ici.</p>",
+      "comment_stripped": "Gagnez de l'argent facilement : cliquez ici.",
+      "access": "EXTERNAL",
+      "actor_id": "e5b07d93-6c14-4a2f-8d59-1f3a7c9e2b48",
+      "actor": null,
+      "external_id": null,
+      "external_source": null,
+      "edited_at": null,
+      "hidden_at": "2026-10-13T08:00:00.000000Z",
+      "hidden_by_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "hidden_reason": "spam",
+      "created_at": "2026-10-13T07:45:10.100000Z",
+      "updated_at": "2026-10-13T08:00:00.000000Z",
+      "created_by_id": "e5b07d93-6c14-4a2f-8d59-1f3a7c9e2b48",
+      "updated_by_id": null
+    },
+    {
+      "id": "e2d84b60-91a7-4c35-b8f0-7a5c3e1d9b26",
+      "work_item_id": "c4e81a37-52d9-4b06-a3f1-9e7d2c5b8a14",
+      "parent_id": "3b7f1c85-6d02-4e94-a1b8-0c9e5f2a7d43",
+      "comment_html": "<p>D'accord, je garde le bandeau actuel.</p>",
+      "comment_stripped": "D'accord, je garde le bandeau actuel.",
+      "access": "INTERNAL",
+      "actor_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "actor": {
+        "id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+        "display_name": "Marie Durand",
+        "avatar_url": null,
+        "email": "marie@acme.test"
+      },
+      "external_id": null,
+      "external_source": null,
+      "edited_at": null,
+      "hidden_at": null,
+      "hidden_by_id": null,
+      "hidden_reason": null,
+      "created_at": "2026-10-08T09:10:03.482113Z",
+      "updated_at": "2026-10-08T09:10:03.482113Z",
+      "created_by_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "updated_by_id": null
+    },
+    {
+      "id": "3b7f1c85-6d02-4e94-a1b8-0c9e5f2a7d43",
+      "work_item_id": "c4e81a37-52d9-4b06-a3f1-9e7d2c5b8a14",
+      "parent_id": null,
+      "comment_html": "<p>Je propose de garder le bandeau actuel.</p><ul><li>moins de travail</li><li>déjà validé</li></ul>",
+      "comment_stripped": "Je propose de garder le bandeau actuel.\nmoins de travail\ndéjà validé",
+      "access": "INTERNAL",
+      "actor_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "actor": {
+        "id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+        "display_name": "David Martin",
+        "avatar_url": null,
+        "email": "david@acme.test"
+      },
+      "external_id": null,
+      "external_source": null,
+      "edited_at": "2026-10-07T12:20:00.000000Z",
+      "hidden_at": null,
+      "hidden_by_id": null,
+      "hidden_reason": null,
+      "created_at": "2026-10-07T12:15:41.902300Z",
+      "updated_at": "2026-10-07T12:20:00.000000Z",
+      "created_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "updated_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61"
+    }
+  ],
+  "next": null,
+  "previous": null,
+  "total_count": 3,
+  "pagination": { "style": "offset" }
+}

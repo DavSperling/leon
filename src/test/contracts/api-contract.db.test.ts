@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, BriefingResponseSchema, ViewerProfileSchema } from '@/capture/api-contract';
+import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
 import { IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -13,18 +13,36 @@ beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 
 const initialize = { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} };
 
+// Chaque chemin de API_PATHS est soit servi (il répond 401 sans jeton), soit déclaré « pas encore servi »
+// (il répond 404) : un chemin ajouté au contrat sans route, ou une route servie sans que la liste suive, fait échouer ces tests.
+const SERVED = {
+  ingest: ['POST', { body: {} }],
+  me: ['GET', {}],
+  mcp: ['POST', { body: initialize }],
+} as const;
+// T13 sert la route du point du matin : elle passe alors dans SERVED (la forme de réponse, BriefingResponseSchema,
+// est déjà celle de C8) et ajoute son cas « 200 conforme au schéma » plus bas.
+const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['briefing'];
+
 describe('routes de l’API', () => {
-  // Chaque chemin de API_PATHS avec la méthode de C7 : un chemin ou une méthode qui dérive donnerait 404 ou 405.
-  it.each([
-    ['POST', API_PATHS.ingest, { body: {} }],
-    ['GET', API_PATHS.me, {}],
-    ['GET', API_PATHS.briefing, {}],
-    ['POST', API_PATHS.mcp, { body: initialize }],
-  ] as const)('%s %s répond 401 sans jeton', async (method, path, init) => {
-    const response = await apiRequest(path, { method, ...init });
+  it('chaque chemin de API_PATHS est servi ou déclaré pas encore servi', () => {
+    expect([...Object.keys(SERVED), ...NOT_YET_SERVED].sort()).toEqual(
+      Object.keys(API_PATHS).sort(),
+    );
+  });
+
+  it.each(Object.entries(SERVED))('%s répond 401 sans jeton', async (name, [method, init]) => {
+    const response = await apiRequest(API_PATHS[name as keyof typeof SERVED], { method, ...init });
     expect(response.status).toBe(401);
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
+
+  it.each(NOT_YET_SERVED)(
+    '%s répond 404 : sa route n’existe pas encore (si T13 la sert, la retirer de NOT_YET_SERVED)',
+    async (name) => {
+      expect((await apiRequest(API_PATHS[name])).status).toBe(404);
+    },
+  );
 
   it('GET /api/health répond 200', async () => {
     const response = await apiRequest('/api/health');
@@ -35,6 +53,16 @@ describe('routes de l’API', () => {
   it('GET /api/auth/ok répond 200 : Better Auth est monté', async () => {
     expect((await apiRequest('/api/auth/ok')).status).toBe(200);
   });
+
+  // Audit 2 n° 3 : la connexion et l'inscription ne passent que par les server actions, sous la limite de débit
+  // de rate-limit.ts ; les routes HTTP de Better Auth la contourneraient.
+  it.each(['/api/auth/sign-in/email', '/api/auth/sign-up/email'])(
+    'POST %s répond 404 : seules les pages de Leon connectent et inscrivent',
+    async (path) => {
+      const body = { email: 'paul@example.com', password: 'motdepasse-solide', name: 'Paul' };
+      expect((await apiRequest(path, { body })).status).toBe(404);
+    },
+  );
 
   it('renvoie des réponses conformes aux schémas que la CLI et l’extension valident', async () => {
     const {
@@ -56,12 +84,10 @@ describe('routes de l’API', () => {
     };
 
     const me = await apiRequest(API_PATHS.me, { token });
-    const briefing = await apiRequest(API_PATHS.briefing, { token });
     const ingest = await apiRequest(API_PATHS.ingest, { token, body });
 
-    expect([me.status, briefing.status, ingest.status]).toEqual([200, 200, 202]);
+    expect([me.status, ingest.status]).toEqual([200, 202]);
     expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
-    expect(BriefingResponseSchema.parse(await briefing.json()).entries).toEqual([]);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
   });
 });

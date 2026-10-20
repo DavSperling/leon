@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { ingestTurns } from './ingest-turns';
 
@@ -43,7 +44,7 @@ const readRuns = (ctx: TenantContext, sourceId: string) =>
   withTenant(ctx, (tx) => tx.select().from(ingestRuns).where(eq(ingestRuns.sourceId, sourceId)));
 
 describe('ingestTurns', () => {
-  it('insère les tours, crée un run et met le triage en file', async () => {
+  it('insère les tours, crée un run d’indexation en attente et le met en file', async () => {
     const { tenantId, paul, externalId } = await setup();
 
     const result = await ingestTurns(
@@ -56,10 +57,10 @@ describe('ingestTurns', () => {
     expect(runs).toHaveLength(1);
     const [run] = runs;
     const stored = await readTurns(paul, result.sourceId);
-    expect(run).toMatchObject({ status: 'queued', step: 'triage', acl: [paul.userId] });
+    expect(run).toMatchObject({ status: 'queued', step: 'index', acl: [paul.userId] });
     expect([...(run?.turnIds ?? [])].sort()).toEqual(stored.map((t) => t.id).sort());
     expect(result.ingestRunId).toBe(run?.id);
-    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('triage', {
+    expect(enqueuePipelineStep).toHaveBeenCalledExactlyOnceWith('index', {
       ingestRunId: result.ingestRunId,
       tenantId,
       userId: paul.userId,
@@ -79,7 +80,7 @@ describe('ingestTurns', () => {
     expect(enqueuePipelineStep).not.toHaveBeenCalled();
   });
 
-  it("ne traite que le nouveau tour quand la session s'allonge", async () => {
+  it("n'indexe que le nouveau tour quand la session s'allonge", async () => {
     const { paul, externalId } = await setup();
     const first = await ingestTurns(
       paul,
@@ -179,6 +180,28 @@ describe('ingestTurns', () => {
 
     await ingestTurns(paul, payload(externalId, [newTurn(3)]));
     expect((await readSource(paul, first.sourceId))[0]?.title).toBe('Nouveau');
+  });
+
+  it('date l’écriture des tours reçus dans leur ordre, même quand ils ont tous la même date', async () => {
+    // Un long texte découpé en morceaux (`doc:1`, `doc:2`…) arrive avec une seule date : l'ordre de lecture
+    // d'une source (date du tour, puis date d'écriture) ne se retrouve que si l'écriture suit l'ordre reçu.
+    const { paul, externalId } = await setup();
+    const pieces = Array.from({ length: 12 }, (_, index) =>
+      newTurn(1, { external_id: `doc:${index + 1}`, text: `morceau ${index + 1}` }),
+    );
+
+    const { sourceId } = await ingestTurns(paul, payload(externalId, pieces));
+
+    const { rows } = await adminPool.query<{ external_id: string }>(
+      'select external_id from turns where source_id = $1 order by created_at',
+      [sourceId],
+    );
+    expect(rows.map((row) => row.external_id)).toEqual(pieces.map((piece) => piece.external_id));
+    const distinct = await adminPool.query<{ n: string }>(
+      'select count(distinct created_at) as n from turns where source_id = $1',
+      [sourceId],
+    );
+    expect(Number(distinct.rows[0]?.n)).toBe(12);
   });
 
   it("n'échoue pas quand la mise en file échoue : le run reste queued", async () => {

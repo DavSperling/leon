@@ -1,0 +1,37 @@
+{
+  "messages": [
+    {
+      "id": "9c2d7e10-4b6a-4d3f-a5e8-1f7b0c3d6a24",
+      "subject": "Re: Facture de septembre",
+      "preview": "Bonjour Marc, voici la facture rectifiée.",
+      "type": "email",
+      "delivered_at": 1792060200,
+      "updated_at": 1792060200,
+      "created_at": 1792060195,
+      "body": "<div>Bonjour Marc,</div><div>voici la facture rectifiée :</div><ul><li>Total : 1&nbsp;150 &euro;</li><li>Échéance : 30 octobre</li></ul><div>Cordialement,<br>Julie</div>",
+      "from_field": { "name": "Support Acme", "address": "support@acme.test" },
+      "to_fields": [{ "name": "Marc Lefèvre", "address": "marc@client.test" }],
+      "attachments": [],
+      "conversation": {
+        "id": "6d3c9b1c-7067-4a28-8ea6-ea91340b67cc",
+        "subject": null,
+        "latest_message_subject": "Re: Facture de septembre",
+        "last_activity_at": 1792060200,
+        "web_url": "https://mail.missiveapp.com/#inbox/conversations/6d3c9b1c-7067-4a28-8ea6-ea91340b67cc"
+      }
+    },
+    {
+      "id": "3fa4bcf5-e57e-47a4-9422-de2cce5f802e",
+      "subject": "Facture de septembre",
+      "preview": "Bonjour, il y a une erreur sur la facture de septembre.",
+      "type": "email",
+      "delivered_at": 1791968400,
+      "updated_at": 1791968400,
+      "created_at": 1791968395,
+      "body": "<div>Bonjour,</div><div>il y a une erreur sur la facture de septembre : le total indique 1&nbsp;250 &euro; au lieu de 1&nbsp;150 &euro;.</div><div>Merci de la corriger.</div>",
+      "from_field": { "name": "Marc Lefèvre", "address": "marc@client.test" },
+      "to_fields": [{ "name": "Support Acme", "address": "support@acme.test" }],
+      "attachments": []
+    }
+  ]
+}

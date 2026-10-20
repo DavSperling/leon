@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "Not Authenticated",
+      "extensions": { "code": "Unauthorized", "status_code": 401 }
+    }
+  ],
+  "account_id": null
+}

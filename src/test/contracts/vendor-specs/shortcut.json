@@ -1,0 +1,42 @@
+{
+  "sources": ["https://developer.shortcut.com/api/rest/v3/shortcut.swagger.json"],
+  "versions": ["3.0"],
+  "operations": {
+    "GET /api/v3/member": { "query": {} },
+    "GET /api/v3/members": { "query": { "disabled": {}, "org-public-id": {} } },
+    "POST /api/v3/stories/search": {
+      "query": {},
+      "body": [
+        "archived",
+        "completed_at_end",
+        "completed_at_start",
+        "created_at_end",
+        "created_at_start",
+        "deadline_end",
+        "deadline_start",
+        "epic_id",
+        "epic_ids",
+        "estimate",
+        "external_id",
+        "group_id",
+        "group_ids",
+        "includes_description",
+        "iteration_id",
+        "iteration_ids",
+        "label_ids",
+        "label_name",
+        "owner_id",
+        "owner_ids",
+        "project_id",
+        "project_ids",
+        "requested_by_id",
+        "story_type",
+        "updated_at_end",
+        "updated_at_start",
+        "workflow_state_id",
+        "workflow_state_types"
+      ]
+    },
+    "GET /api/v3/stories/{story-public-id}/comments": { "query": {} }
+  }
+}

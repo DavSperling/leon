@@ -1,21 +1,20 @@
 'use client';
 
-import { BookOpen, ClipboardCheck, Inbox, Layers, type LucideIcon, Settings } from 'lucide-react';
+import { Inbox, type LucideIcon, MessagesSquare, Plug, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export const SECTIONS: Array<{ href: string; label: string; icon: LucideIcon }> = [
-  { href: '/', label: 'Briefing', icon: Layers },
-  { href: '/a-verifier', label: 'À vérifier', icon: ClipboardCheck },
+  { href: '/', label: 'Recherche', icon: Search },
+  { href: '/discussions', label: 'Discussions', icon: MessagesSquare },
   { href: '/sources', label: 'Sources', icon: Inbox },
-  { href: '/journal', label: 'Journal', icon: BookOpen },
+  { href: '/connexions', label: 'Connexions', icon: Plug },
   { href: '/reglages', label: 'Réglages', icon: Settings },
 ];
 
-// Sections de la barre latérale, « À vérifier » avec son compteur.
-export function SidebarSections({ reviewCount }: { reviewCount: number }) {
+// Sections de la barre latérale.
+export function SidebarSections() {
   const pathname = usePathname();
   return (
     <ul className="space-y-0.5">
@@ -34,11 +33,6 @@ export function SidebarSections({ reviewCount }: { reviewCount: number }) {
             >
               <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
               {label}
-              {href === '/a-verifier' && reviewCount > 0 && (
-                <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-soft px-1.5 text-xs leading-4 font-medium text-primary tabular-nums">
-                  {formatNumber(reviewCount)}
-                </span>
-              )}
             </Link>
           </li>
         );

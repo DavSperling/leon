@@ -56,4 +56,28 @@ describe('runMigrations', () => {
     await expect(runMigrations(TEST_ENV.DATABASE_URL_ADMIN, dir)).rejects.toThrow('0001-casse.sql');
     expect(await appliedNames()).not.toContain('0001-casse.sql');
   });
+
+  // file_fdw n'est pas « trusted » : leon_owner, qui n'est pas superutilisateur, ne peut pas la créer. C'est
+  // le cas de vector (0011) sur une base où personne ne l'a créée.
+  it('dit en français quelle extension créer, et comment, quand le rôle ne peut pas la créer', async () => {
+    const name = `0001-extension-${randomUUID().replaceAll('-', '')}.sql`;
+    const dir = await tempMigrationsDir(name, 'create extension if not exists file_fdw;');
+    const database = new URL(TEST_ENV.DATABASE_URL_ADMIN).pathname.slice(1);
+
+    const failure = await runMigrations(TEST_ENV.DATABASE_URL_ADMIN, dir).then(
+      () => null,
+      (error: unknown) => error,
+    );
+
+    expect(failure).toBeInstanceOf(Error);
+    const message = (failure as Error).message;
+    expect(message).toContain(name);
+    expect(message).toContain('« file_fdw »');
+    expect(message).toContain('superutilisateur');
+    expect(message).toContain(
+      `docker compose exec postgres psql -U postgres -d ${database} -c "create extension if not exists file_fdw"`,
+    );
+    expect((failure as Error).cause).toMatchObject({ code: '42501' });
+    expect(await appliedNames()).not.toContain(name);
+  });
 });

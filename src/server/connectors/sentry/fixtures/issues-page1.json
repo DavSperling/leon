@@ -1,0 +1,98 @@
+[
+  {
+    "id": "1003",
+    "shareId": null,
+    "shortId": "WEB-31",
+    "title": "ReferenceError: panier is not defined",
+    "culprit": "static/js/checkout.js in submitOrder",
+    "permalink": "https://acme.sentry.io/issues/1003/",
+    "logger": null,
+    "level": "error",
+    "status": "unresolved",
+    "statusDetails": {},
+    "substatus": "regressed",
+    "isPublic": false,
+    "platform": "javascript",
+    "project": {
+      "id": "5",
+      "name": "Boutique web",
+      "slug": "web",
+      "platform": "javascript"
+    },
+    "type": "error",
+    "metadata": {
+      "type": "ReferenceError",
+      "value": "panier is not defined",
+      "filename": "static/js/checkout.js",
+      "function": "submitOrder",
+      "in_app_frame_mix": "in-app-only"
+    },
+    "numComments": 2,
+    "assignedTo": {
+      "type": "user",
+      "id": "7",
+      "name": "Paul Martin",
+      "email": "paul@acme.test"
+    },
+    "isBookmarked": false,
+    "isSubscribed": true,
+    "hasSeen": false,
+    "annotations": [],
+    "isUnhandled": true,
+    "count": "310",
+    "userCount": 54,
+    "firstSeen": "2026-10-14T08:02:11.482000Z",
+    "lastSeen": "2026-10-15T11:48:27.119000Z",
+    "stats": {
+      "24h": [[1792054800, 120], [1792058400, 190]]
+    },
+    "lifetime": {
+      "count": "310",
+      "userCount": 54,
+      "firstSeen": "2026-10-14T08:02:11.482000Z",
+      "lastSeen": "2026-10-15T11:48:27.119000Z"
+    }
+  },
+  {
+    "id": "1002",
+    "shareId": null,
+    "shortId": "WEB-30",
+    "title": "TypeError: Cannot read properties of undefined (reading 'prix')",
+    "culprit": "app/panier in calculerTotal",
+    "permalink": "https://acme.sentry.io/issues/1002/",
+    "logger": null,
+    "level": "error",
+    "status": "resolved",
+    "statusDetails": {},
+    "substatus": null,
+    "isPublic": false,
+    "platform": "javascript",
+    "project": {
+      "id": "5",
+      "name": "Boutique web",
+      "slug": "web",
+      "platform": "javascript"
+    },
+    "type": "error",
+    "metadata": {
+      "type": "TypeError",
+      "value": "Cannot read properties of undefined (reading 'prix')",
+      "filename": "app/panier.js",
+      "function": "calculerTotal"
+    },
+    "numComments": 0,
+    "assignedTo": null,
+    "isBookmarked": false,
+    "isSubscribed": false,
+    "hasSeen": true,
+    "annotations": [],
+    "isUnhandled": false,
+    "count": "12",
+    "userCount": 3,
+    "firstSeen": "2026-09-30T09:15:00Z",
+    "lastSeen": "2026-10-13T16:20:45Z",
+    "stats": {
+      "24h": [[1792054800, 0]]
+    }
+  }
+]

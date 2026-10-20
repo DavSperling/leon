@@ -1,0 +1,29 @@
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Marie Durand",
+    "default_currency": "EUR",
+    "locale": "fr_FR",
+    "lang": 1,
+    "email": "marie@acme.test",
+    "phone": null,
+    "activated": true,
+    "last_login": "2026-10-14 08:12:45",
+    "created": "2025-03-11 09:00:00",
+    "modified": "2026-09-01 10:30:00",
+    "has_created_company": true,
+    "active_flag": true,
+    "timezone_name": "Europe/Paris",
+    "timezone_offset": "+01:00",
+    "role_id": 1,
+    "icon_url": null,
+    "is_you": true,
+    "is_deleted": false,
+    "company_id": 12,
+    "company_name": "Acme",
+    "company_domain": "acme",
+    "company_country": "FR",
+    "company_industry": "Software"
+  }
+}

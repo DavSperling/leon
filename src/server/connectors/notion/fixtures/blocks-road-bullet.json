@@ -1,0 +1,27 @@
+{
+  "object": "list",
+  "type": "block",
+  "block": {},
+  "results": [
+    {
+      "object": "block",
+      "id": "1a2b3c4d-0011-4000-8000-000000000011",
+      "type": "bulleted_list_item",
+      "has_children": false,
+      "in_trash": false,
+      "bulleted_list_item": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": { "content": "Maquettes validées par Marie", "link": null },
+            "plain_text": "Maquettes validées par Marie",
+            "href": null
+          }
+        ],
+        "color": "default"
+      }
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
+}

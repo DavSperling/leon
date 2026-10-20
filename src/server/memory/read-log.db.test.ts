@@ -1,110 +1,120 @@
+import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { readLog } from '@/server/db/schema/memory';
+import type { TenantContext } from '@/server/auth/tenant-context';
+import { readLog, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
-import { seedRightsScenario } from '@/test/rights-scenario';
-import { listReadLog } from './read-log';
+import { createTestTenant, seedSource } from '@/test/fixtures';
+import { recordRead } from './read-log';
 
-const ids = (entries: Array<{ id: string }>) => entries.map((entry) => entry.id);
+async function seedRead(
+  ctx: TenantContext,
+  input: { sourceId: string; acl: string[]; client?: string; passageId?: string; at?: Date },
+): Promise<string> {
+  const [row] = await adminDb
+    .insert(readLog)
+    .values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      client: input.client ?? 'claude-code',
+      sourceId: input.sourceId,
+      passageId: input.passageId ?? null,
+      acl: input.acl,
+      at: input.at,
+    })
+    .returning({ id: readLog.id });
+  if (!row) throw new Error('lecture de test non créée');
+  return row.id;
+}
 
-describe('listReadLog', () => {
-  it('donne à Paul sa lecture de la fiche Orion et celle de Marie sur ACME', async () => {
-    const { paul, ids: s } = await seedRightsScenario();
-
-    const entries = await listReadLog(paul, {});
-
-    expect(ids(entries).sort()).toEqual([s.paulReadOrion, s.marieReadAcme].sort());
-    expect(entries.find((entry) => entry.id === s.paulReadOrion)).toMatchObject({
-      client: 'claude-code',
-      clientLabel: 'Claude Code',
-      readerName: 'Paul Martin',
-      cardId: s.orionCard,
-      cardTitle: 'Orion',
-    });
-    expect(entries.find((entry) => entry.id === s.marieReadAcme)).toMatchObject({
+// Paul et Marie dans une équipe, Zoé dans une autre. Une source privée à Paul, une source d'équipe (outil),
+// une source de Zoé. Paul lit la sienne, Marie lit celle de l'équipe, Zoé lit la sienne.
+async function seedScenario() {
+  const team = await createTestTenant(['Paul Martin', 'Marie Durand']);
+  const other = await createTestTenant(['Zoé Bernard']);
+  const [paul, marie] = team.members as [TenantContext, TenantContext];
+  const [zoe] = other.members as [TenantContext];
+  const paulSource = await seedSource(paul, { kind: 'claude_code', title: 'Session ACME' });
+  const [teamSource] = await adminDb
+    .insert(sources)
+    .values({
+      tenantId: team.tenantId,
+      kind: 'github',
+      externalId: randomUUID(),
+      ownerUserId: paul.userId,
+      title: 'Ticket 12',
+      acl: [team.tenantId],
+    })
+    .returning({ id: sources.id });
+  if (!teamSource) throw new Error('source d’équipe non créée');
+  const zoeSource = await seedSource(zoe, { kind: 'chatgpt', title: 'Relance ACME' });
+  return {
+    paul,
+    marie,
+    zoe,
+    paulSourceId: paulSource.sourceId,
+    teamSourceId: teamSource.id,
+    paulRead: await seedRead(paul, { sourceId: paulSource.sourceId, acl: [paul.userId] }),
+    marieRead: await seedRead(marie, {
+      sourceId: teamSource.id,
+      acl: [team.tenantId],
       client: 'interface',
-      clientLabel: 'Interface',
-      readerName: 'Marie Durand',
-      cardId: s.acmeCard,
-      cardTitle: 'ACME',
+    }),
+    zoeRead: await seedRead(zoe, { sourceId: zoeSource.sourceId, acl: [zoe.userId] }),
+  };
+}
+
+describe('recordRead', () => {
+  const readsOf = (sourceId: string) =>
+    adminDb.select().from(readLog).where(eq(readLog.sourceId, sourceId));
+
+  it('journalise la lecture avec l’accès de la source et le passage lu', async () => {
+    const s = await seedScenario();
+    const passageId = randomUUID();
+
+    const written = await recordRead(s.paul, {
+      sourceId: s.paulSourceId,
+      passageId,
+      client: 'claude-code',
+    });
+
+    expect(written).toBe(true);
+    const rows = await readsOf(s.paulSourceId);
+    const row = rows.find((entry) => entry.passageId === passageId);
+    expect(row).toMatchObject({
+      tenantId: s.paul.tenantId,
+      userId: s.paul.userId,
+      client: 'claude-code',
+      sourceId: s.paulSourceId,
+      acl: [s.paul.userId],
     });
   });
 
-  it('ne donne pas à Marie la lecture de la fiche privée de Paul', async () => {
-    const { marie, ids: s } = await seedRightsScenario();
+  it('journalise une lecture de source entière sans passage, avec l’accès d’équipe d’une source d’équipe', async () => {
+    const s = await seedScenario();
 
-    const entries = await listReadLog(marie, {});
+    await recordRead(s.marie, { sourceId: s.teamSourceId, client: 'cursor' });
 
-    expect(ids(entries)).toEqual([s.marieReadAcme]);
-    expect(JSON.stringify(entries)).not.toContain('Orion');
+    const rows = await readsOf(s.teamSourceId);
+    const row = rows.find((entry) => entry.client === 'cursor');
+    expect(row).toMatchObject({ userId: s.marie.userId, passageId: null, acl: [s.marie.tenantId] });
   });
 
-  it("ne donne à Zoé rien de l'autre organisation", async () => {
-    const { zoe } = await seedRightsScenario();
+  it('n’écrit rien et rend false pour une source que le lecteur ne voit pas', async () => {
+    const s = await seedScenario();
+    const before = (await readsOf(s.paulSourceId)).length;
 
-    expect(await listReadLog(zoe, {})).toEqual([]);
+    const written = await recordRead(s.marie, { sourceId: s.paulSourceId, client: 'claude-code' });
+
+    expect(written).toBe(false);
+    expect(await readsOf(s.paulSourceId)).toHaveLength(before);
   });
 
-  it('filtre sur une fiche', async () => {
-    const { paul, ids: s } = await seedRightsScenario();
+  it('n’écrit rien pour une source d’une autre organisation', async () => {
+    const s = await seedScenario();
 
-    expect(ids(await listReadLog(paul, { cardId: s.orionCard }))).toEqual([s.paulReadOrion]);
-    expect(ids(await listReadLog(paul, { cardId: s.acmeCard }))).toEqual([s.marieReadAcme]);
-  });
-
-  it('classe la plus récente en premier et pagine avec before et limit', async () => {
-    const { paul, ids: s } = await seedRightsScenario();
-    const at = (day: number) => new Date(`2026-10-${String(day).padStart(2, '0')}T10:00:00Z`);
-    await adminDb
-      .update(readLog)
-      .set({ at: at(1) })
-      .where(eq(readLog.id, s.paulReadOrion));
-    await adminDb
-      .update(readLog)
-      .set({ at: at(2) })
-      .where(eq(readLog.id, s.marieReadAcme));
-    const newer = await adminDb
-      .insert(readLog)
-      .values({
-        tenantId: paul.tenantId,
-        userId: paul.userId,
-        client: 'claude-code',
-        cardId: s.orionCard,
-        acl: [paul.userId],
-        at: at(3),
-      })
-      .returning({ id: readLog.id });
-    const newerId = newer[0]?.id ?? '';
-
-    const firstPage = await listReadLog(paul, { limit: 2 });
-    const rest = await listReadLog(paul, { before: firstPage.at(-1)?.at, limit: 2 });
-
-    expect(ids(firstPage)).toEqual([newerId, s.marieReadAcme]);
-    expect(ids(rest)).toEqual([s.paulReadOrion]);
-  });
-
-  it('nomme un client inconnu tel quel', async () => {
-    const { paul, ids: s } = await seedRightsScenario();
-    await adminDb.update(readLog).set({ client: 'cursor' }).where(eq(readLog.id, s.paulReadOrion));
-
-    const entries = await listReadLog(paul, { cardId: s.orionCard });
-
-    expect(entries[0]).toMatchObject({ client: 'cursor', clientLabel: 'cursor' });
-  });
-
-  it('plafonne la page à 50 lectures par défaut', async () => {
-    const { paul, ids: s } = await seedRightsScenario();
-    await adminDb.insert(readLog).values(
-      Array.from({ length: 50 }, () => ({
-        tenantId: paul.tenantId,
-        userId: paul.userId,
-        client: 'interface',
-        cardId: s.orionCard,
-        acl: [paul.userId],
-      })),
+    expect(await recordRead(s.zoe, { sourceId: s.paulSourceId, client: 'claude-code' })).toBe(
+      false,
     );
-
-    expect(await listReadLog(paul, {})).toHaveLength(50);
-    expect(await listReadLog(paul, { limit: 60 })).toHaveLength(52);
   });
 });

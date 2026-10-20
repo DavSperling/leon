@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil : Parse error on \"query\" (STRING)",
+      "extensions": { "code": "InvalidArgumentException", "status_code": 200 }
+    }
+  ],
+  "account_id": 1234567
+}

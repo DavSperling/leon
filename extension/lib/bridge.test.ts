@@ -24,6 +24,14 @@ describe('forwardCaptureMessage', () => {
     expect(send).toHaveBeenCalledWith({ type: 'leon/exchange', exchange });
   });
 
+  it('relaie un très long message coupé à 200 000 caractères', () => {
+    const send = vi.fn();
+    const long = { ...exchange, assistant: { ...exchange.assistant, text: 'a'.repeat(250_000) } };
+    const event = { ...validEvent, data: { source: CAPTURE_MESSAGE_SOURCE, exchange: long } };
+    expect(forwardCaptureMessage(event, expected, send)).toBe(true);
+    expect(send.mock.calls[0]?.[0].exchange.assistant.text).toHaveLength(200_000);
+  });
+
   it.each([
     ['venu d’une autre fenêtre', { ...validEvent, source: { name: 'iframe' } }],
     ['venu d’une autre origine', { ...validEvent, origin: 'https://evil.example' }],

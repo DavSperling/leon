@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Marie Durand",
+      "email": "marie@acme.test",
+      "activated": true,
+      "active_flag": true,
+      "is_you": true,
+      "is_deleted": false
+    },
+    {
+      "id": 2,
+      "name": "Paul Martin",
+      "email": "paul@acme.test",
+      "activated": true,
+      "active_flag": true,
+      "is_you": false,
+      "is_deleted": false
+    }
+  ]
+}

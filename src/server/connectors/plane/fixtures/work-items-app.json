@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "id": "d3f8b5a6-1e92-4c70-9a4d-2b6e8c0f1a37",
+      "name": "Notifications push",
+      "sequence_id": 3,
+      "description_html": "<p></p>",
+      "created_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "updated_by_id": null,
+      "updated_at": "2026-10-11T08:30:00.554210Z"
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false,
+  "pagination": { "style": "cursor" }
+}

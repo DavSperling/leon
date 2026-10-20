@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "gid": "4001",
+      "resource_type": "task",
+      "name": "Choisir la date de lancement",
+      "notes": "Lancement visé le 12 novembre.\n\nÀ confirmer avec Paul.",
+      "modified_at": "2026-10-12T09:30:00.000Z",
+      "created_by": { "gid": "1001", "resource_type": "user", "name": "Marie Durand" },
+      "permalink_url": "https://app.asana.com/0/3001/4001"
+    },
+    {
+      "gid": "4002",
+      "resource_type": "task",
+      "name": "Préparer le communiqué",
+      "notes": "",
+      "modified_at": "2026-10-11T08:00:00.000Z",
+      "created_by": { "gid": "1002", "resource_type": "user", "name": "Paul Martin" },
+      "permalink_url": "https://app.asana.com/0/3001/4002"
+    },
+    {
+      "gid": "4003",
+      "resource_type": "task",
+      "name": "Réserver la salle",
+      "modified_at": "2026-10-10T07:00:00.000Z",
+      "created_by": { "gid": "1002", "resource_type": "user", "name": "Paul Martin" },
+      "permalink_url": "https://app.asana.com/0/3001/4003"
+    }
+  ],
+  "next_page": {
+    "offset": "dGFza3MtMzAwMS1wYWdlLTI",
+    "path": "/tasks?project=3001&modified_since=2026-09-15T00%3A00%3A00.000Z&limit=100&offset=dGFza3MtMzAwMS1wYWdlLTI",
+    "uri": "https://app.asana.com/api/1.0/tasks?project=3001&modified_since=2026-09-15T00%3A00%3A00.000Z&limit=100&offset=dGFza3MtMzAwMS1wYWdlLTI"
+  }
+}

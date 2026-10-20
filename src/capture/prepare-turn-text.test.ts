@@ -10,7 +10,7 @@ describe('prepareTurnText', () => {
   });
 
   it('masque les secrets', () => {
-    expect(prepareTurnText('password=correct-horse-battery')).toBe(`password=${SECRET_MASK}`);
+    expect(prepareTurnText('DB_PASSWORD=correct-horse-battery')).toBe(`DB_PASSWORD=${SECRET_MASK}`);
   });
 
   it('retire les espaces autour', () => {
@@ -45,19 +45,21 @@ describe('prepareTurnText : entrées énormes', () => {
   });
 
   it('masque tout le texte avant de le tronquer', () => {
-    const result = prepareTurnText(`Début password=${'a'.repeat(100_000)} fin`);
-    expect(result).toBe(`Début password=${SECRET_MASK} fin`);
+    const result = prepareTurnText(`Début\nDB_PASSWORD=${'a'.repeat(100_000)} fin`);
+    expect(result).toBe(`Début\nDB_PASSWORD=${SECRET_MASK} fin`);
   });
 
   it('ne laisse aucun fragment de secret coupé à une limite', () => {
     const alnum = 'aB3dE5gH7jK9mN1pQ2sT4vW6xY8zC0fL'.repeat(2);
-    const prefix = `password=${'x'.repeat(39_980)} `;
+    const prefix = `DB_PASSWORD=${'x'.repeat(39_977)} `;
     expect(prepareTurnText(`${prefix}ghp_${alnum.slice(0, 40)}`)).toBe(
-      `password=${SECRET_MASK} ${SECRET_MASK}`,
+      `DB_PASSWORD=${SECRET_MASK} ${SECRET_MASK}`,
     );
   });
 
   const TWO_MB = 2 * 1024 * 1024;
+  // La borne garde contre une expression en temps quadratique (des minutes sur 2 Mo), pas contre quelques
+  // millisecondes : 2 s, comme les pièges de mask-secrets, tient sur une machine chargée (la suite tourne en parallèle).
   it.each([
     '<system-reminder>',
     '-----BEGIN PRIVATE KEY-----',
@@ -65,10 +67,10 @@ describe('prepareTurnText : entrées énormes', () => {
     'postgres://a:',
     'https://a:b',
     'password=',
-  ])('traite 2 Mo de « %s » répété en moins de 300 ms', (unit) => {
+  ])('traite 2 Mo de « %s » répété en moins de 2 s', (unit) => {
     const text = unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
     const start = performance.now();
     prepareTurnText(text);
-    expect(performance.now() - start).toBeLessThan(300);
+    expect(performance.now() - start).toBeLessThan(2000);
   });
 });

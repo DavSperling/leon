@@ -1,0 +1,49 @@
+{
+  "requestId": "4al018gzaztcr8nbuky",
+  "records": { "totalRecords": 1, "currentPageSize": 1, "currentPageNumber": 0 },
+  "callTranscripts": [
+    {
+      "callId": "7782342274025937895",
+      "transcript": [
+        {
+          "speakerId": "6432345678555530067",
+          "topic": "Introduction",
+          "sentences": [
+            {
+              "start": 5000,
+              "end": 9000,
+              "text": "Bonjour à tous, on commence par le calendrier."
+            },
+            { "start": 9500, "end": 12000, "text": "La livraison est repoussée au 3 novembre." }
+          ]
+        },
+        {
+          "speakerId": "6432345678555530067",
+          "topic": "Calendrier",
+          "sentences": [
+            { "start": 12500, "end": 15000, "text": "Paul, tu peux prévenir le client ?" }
+          ]
+        },
+        {
+          "speakerId": "6432345678555530068",
+          "topic": "Calendrier",
+          "sentences": [
+            { "start": 62000, "end": 65000, "text": "D'accord, je préviens le client demain." }
+          ]
+        },
+        {
+          "speakerId": "6432345678555530099",
+          "topic": "Divers",
+          "sentences": [
+            { "start": 90000, "end": 93000, "text": "Je me joins à l'appel en retard." }
+          ]
+        },
+        {
+          "speakerId": "6432345678555530069",
+          "topic": "Divers",
+          "sentences": [{ "start": 120000, "end": 122000, "text": "Même chose de mon côté." }]
+        }
+      ]
+    }
+  ]
+}

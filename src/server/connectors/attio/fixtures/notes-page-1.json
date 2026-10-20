@@ -1,0 +1,78 @@
+{
+  "data": [
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "note_id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
+      },
+      "parent_object": "companies",
+      "parent_record_id": "c3d4e5f6-a7b8-4c9d-8e0f-1a2b3c4d5e6f",
+      "title": "Décision budget",
+      "meeting_id": null,
+      "content_plaintext": "Budget validé à 12 000 euros pour le projet.\nMarie Durand doit envoyer le devis avant le 20 octobre.",
+      "content_markdown": "Budget validé à **12 000 euros** pour le projet.\n\nMarie Durand doit envoyer le devis avant le 20 octobre.",
+      "tags": [
+        {
+          "type": "workspace-member",
+          "workspace_member_id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b"
+        }
+      ],
+      "created_by_actor": {
+        "type": "workspace-member",
+        "id": "6a1e8d52-0b7c-4e39-9a4f-2c8d5b1f7e03"
+      },
+      "created_at": "2026-10-10T14:30:12.123456000Z"
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "note_id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+      },
+      "parent_object": "people",
+      "parent_record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+      "title": "Appel de découverte",
+      "meeting_id": null,
+      "content_plaintext": "Jean cherche un outil de suivi des ventes.\nIl veut une démo la semaine du 12 octobre.",
+      "content_markdown": "Jean cherche un outil de suivi des ventes.\n\nIl veut une démo la semaine du 12 octobre.",
+      "tags": [],
+      "created_by_actor": {
+        "type": "workspace-member",
+        "id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b"
+      },
+      "created_at": "2026-10-01T09:15:00.000000000Z"
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "note_id": "e0e0e0e0-0000-4000-8000-000000000001"
+      },
+      "parent_object": "people",
+      "parent_record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+      "title": "Ancien contact",
+      "meeting_id": null,
+      "content_plaintext": "Premier échange en août, sans suite.",
+      "content_markdown": "Premier échange en août, sans suite.",
+      "tags": [],
+      "created_by_actor": {
+        "type": "workspace-member",
+        "id": "50cf242c-7fa3-4cad-87d0-75b1af71c57b"
+      },
+      "created_at": "2026-08-01T10:00:00.000000000Z"
+    },
+    {
+      "id": {
+        "workspace_id": "14beef7a-99f7-4534-a87e-70b564330a4c",
+        "note_id": "e1e1e1e1-0000-4000-8000-000000000002"
+      },
+      "parent_object": "people",
+      "parent_record_id": "891dcbfc-9141-415d-9b2a-2238a6cc012d",
+      "title": "Note vide",
+      "meeting_id": null,
+      "content_plaintext": "",
+      "content_markdown": "",
+      "tags": [],
+      "created_by_actor": { "type": "api-token", "id": "9b6f3c1e-2d54-4f0a-8a37-5c1d0e7b2a44" },
+      "created_at": "2026-10-05T11:00:00.000000000Z"
+    }
+  ]
+}

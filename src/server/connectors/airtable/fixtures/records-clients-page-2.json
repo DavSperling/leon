@@ -1,0 +1,19 @@
+{
+  "records": [
+    {
+      "id": "recQd9vHb2nXk5RtB",
+      "createdTime": "2026-10-01T10:00:00.000Z",
+      "commentCount": 1,
+      "fields": {
+        "Nom": "Cobalt Industries",
+        "Statut": "Prospect"
+      }
+    },
+    {
+      "id": "recTe6yUg1mJp8SoC",
+      "createdTime": "2026-10-05T16:45:00.000Z",
+      "commentCount": 0,
+      "fields": {}
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "notes": [
+    {
+      "id": "not_3m7Xv9BcHd4SeF",
+      "object": "note",
+      "title": "Point depuis le telephone",
+      "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+      "created_at": "2026-10-12T09:00:00Z",
+      "updated_at": "2026-10-12T09:30:00Z",
+      "deleted_at": null
+    },
+    {
+      "id": "not_4n6Yh2DfJg8UkG",
+      "object": "note",
+      "title": null,
+      "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+      "created_at": "2026-10-11T13:30:00Z",
+      "updated_at": "2026-10-11T14:00:00Z",
+      "deleted_at": null
+    },
+    {
+      "id": "not_5p5Zj3EgKh9VlH",
+      "object": "note",
+      "title": "Note supprimee",
+      "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+      "created_at": "2026-10-10T07:30:00Z",
+      "updated_at": "2026-10-10T08:00:00Z",
+      "deleted_at": "2026-10-10T08:00:00Z"
+    }
+  ],
+  "hasMore": false,
+  "cursor": null
+}

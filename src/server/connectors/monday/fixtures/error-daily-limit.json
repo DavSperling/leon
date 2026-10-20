@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil : Daily limit exceeded",
+      "extensions": { "code": "DAILY_LIMIT_EXCEEDED", "status_code": 429 }
+    }
+  ],
+  "account_id": 1234567
+}

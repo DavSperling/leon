@@ -1,0 +1,32 @@
+{
+  "expires_at": "2026-10-29T14:00:00+02:00",
+  "identity": {
+    "id": 9999999,
+    "first_name": "Marie",
+    "last_name": "Durand",
+    "email_address": "marie@acme.test"
+  },
+  "accounts": [
+    {
+      "product": "bcx",
+      "id": 11111111,
+      "name": "Acme (ancien Basecamp)",
+      "href": "https://basecamp.com/11111111/api/v1",
+      "app_href": "https://basecamp.com/11111111"
+    },
+    {
+      "product": "bc3",
+      "id": 99999999,
+      "name": "Acme SAS",
+      "href": "https://3.basecampapi.com/99999999",
+      "app_href": "https://3.basecamp.com/99999999"
+    },
+    {
+      "product": "bc3",
+      "id": 88888888,
+      "name": "Acme Labo",
+      "href": "https://3.basecampapi.com/88888888",
+      "app_href": "https://3.basecamp.com/88888888"
+    }
+  ]
+}

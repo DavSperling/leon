@@ -1,0 +1,47 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-4000-8000-000000000001')/mailFolders('inbox')/messages(id,conversationId,subject,receivedDateTime,from,body,webLink)",
+  "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?%24filter=receivedDateTime+ge+2026-09-15T12%3A00%3A00Z&%24orderby=receivedDateTime+asc&%24top=25&%24skip=25",
+  "value": [
+    {
+      "@odata.etag": "W/\"CQAAABYAAAB1\"",
+      "id": "AAMkAGEx-inbox-1",
+      "conversationId": "AAQkAGEx-conv-devis",
+      "subject": "Devis site web",
+      "receivedDateTime": "2026-10-12T08:15:00Z",
+      "from": { "emailAddress": { "name": "Paul Lambert", "address": "paul.lambert@client.test" } },
+      "body": {
+        "contentType": "text",
+        "content": "Bonjour Marie,\r\n\r\nPouvez-vous nous envoyer le devis pour le nouveau site avant vendredi ?\r\n\r\nPaul"
+      },
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-inbox-1&exvsurl=1&viewmodel=ReadMessageItem"
+    },
+    {
+      "@odata.etag": "W/\"CQAAABYAAAB2\"",
+      "id": "AAMkAGEx-inbox-2",
+      "conversationId": "AAQkAGEx-conv-devis",
+      "subject": "RE: Devis site web",
+      "receivedDateTime": "2026-10-12T14:40:00Z",
+      "from": { "emailAddress": { "name": "Paul Lambert", "address": "paul.lambert@client.test" } },
+      "body": {
+        "contentType": "text",
+        "content": "J'ai oublié de le préciser : notre budget est de 12 000 euros.\r\n\r\nPaul"
+      },
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-inbox-2&exvsurl=1&viewmodel=ReadMessageItem"
+    },
+    {
+      "@odata.etag": "W/\"CQAAABYAAAB3\"",
+      "id": "AAMkAGEx-inbox-3",
+      "conversationId": "AAQkAGEx-conv-lancement",
+      "subject": "Réunion de lancement",
+      "receivedDateTime": "2026-10-13T09:00:00Z",
+      "from": {
+        "emailAddress": { "name": "Sophie Bernard", "address": "sophie.bernard@acme.test" }
+      },
+      "body": {
+        "contentType": "html",
+        "content": "<html><body><p>Bonjour,</p><p>Le lancement du projet est prévu mardi à 10 h.</p></body></html>"
+      },
+      "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-inbox-3&exvsurl=1&viewmodel=ReadMessageItem"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "bases": [
+    { "id": "appLkNDICXNqxSDhG", "name": "Acme CRM", "permissionLevel": "read" },
+    { "id": "appSW9R5uCNmRmfl6", "name": "Produit", "permissionLevel": "read" }
+  ]
+}

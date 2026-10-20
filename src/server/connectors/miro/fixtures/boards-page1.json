@@ -1,0 +1,43 @@
+{
+  "type": "list",
+  "total": 3,
+  "size": 3,
+  "offset": 0,
+  "limit": 50,
+  "data": [
+    {
+      "type": "board",
+      "id": "uXjVAcme2026Atelier=",
+      "name": "Atelier feuille de route",
+      "description": "Priorités du quatrième trimestre.",
+      "createdAt": "2026-09-01T08:00:00Z",
+      "modifiedAt": "2026-10-02T09:30:00Z",
+      "viewLink": "https://miro.com/app/board/uXjVAcme2026Atelier=/",
+      "owner": { "type": "user", "id": "3074457362577955221", "name": "Marie Durand" },
+      "team": { "type": "team", "id": "3074457362577833142", "name": "Acme" },
+      "project": { "type": "project", "id": "3458764517517819001", "name": "Produit" }
+    },
+    {
+      "type": "board",
+      "id": "uXjVAcme2026Vide=",
+      "name": "Tableau sans texte",
+      "description": "",
+      "createdAt": "2026-09-05T08:00:00Z",
+      "modifiedAt": "2026-10-03T10:00:00Z",
+      "viewLink": "https://miro.com/app/board/uXjVAcme2026Vide=/",
+      "owner": { "type": "user", "id": "3074457362577955221", "name": "Marie Durand" },
+      "team": { "type": "team", "id": "3074457362577833142", "name": "Acme" }
+    },
+    {
+      "type": "board",
+      "id": "uXjVAcme2025Ancien=",
+      "name": "Rétro de l’an dernier",
+      "description": "Ancien tableau.",
+      "createdAt": "2025-01-10T08:00:00Z",
+      "modifiedAt": "2025-01-10T09:00:00Z",
+      "viewLink": "https://miro.com/app/board/uXjVAcme2025Ancien=/",
+      "owner": { "type": "user", "id": "3074457362577955221", "name": "Marie Durand" },
+      "team": { "type": "team", "id": "3074457362577833142", "name": "Acme" }
+    }
+  ]
+}

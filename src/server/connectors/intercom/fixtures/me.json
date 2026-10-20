@@ -1,0 +1,25 @@
+{
+  "type": "admin",
+  "id": "814865",
+  "name": "Marie Durand",
+  "email": "marie@acme.test",
+  "job_title": "Responsable support",
+  "away_mode_enabled": false,
+  "away_mode_reassign": false,
+  "has_inbox_seat": true,
+  "team_ids": [5017691],
+  "avatar": {
+    "type": "avatar",
+    "image_url": "https://static.acme.test/avatars/marie.png"
+  },
+  "email_verified": true,
+  "app": {
+    "type": "app",
+    "id_code": "abc123xy",
+    "name": "Acme",
+    "region": "EU",
+    "timezone": "Europe/Paris",
+    "created_at": 1671465577,
+    "identity_verification": false
+  }
+}

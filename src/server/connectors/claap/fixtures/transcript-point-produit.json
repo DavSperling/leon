@@ -1,0 +1,42 @@
+{
+  "result": {
+    "transcript": {
+      "segments": [
+        {
+          "startedAt": 5.2,
+          "endedAt": 9.8,
+          "speaker": "speaker_1",
+          "text": "Bonjour à tous, on commence par le point sur la bêta.",
+          "languageCode": "fr",
+          "words": [
+            { "word": "Bonjour", "startedAt": 5.2, "endedAt": 5.7 },
+            { "word": "à", "startedAt": 5.7, "endedAt": 5.8 },
+            { "word": "tous,", "startedAt": 5.8, "endedAt": 6.3 }
+          ]
+        },
+        {
+          "startedAt": 12.8,
+          "endedAt": 17.1,
+          "speaker": "speaker_1",
+          "text": "Le lancement est fixé au 4 novembre.",
+          "languageCode": "fr"
+        },
+        {
+          "startedAt": 20.4,
+          "endedAt": 26,
+          "speaker": "speaker_2",
+          "text": "D’accord, je m’occupe de la page de tarifs d’ici vendredi.",
+          "languageCode": "fr"
+        },
+        {
+          "startedAt": 31,
+          "endedAt": 33.5,
+          "speaker": "speaker_1",
+          "text": "Parfait, merci Karim.",
+          "languageCode": "fr"
+        }
+      ],
+      "languageCode": "fr"
+    }
+  }
+}

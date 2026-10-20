@@ -1,0 +1,23 @@
+[
+  {
+    "body_text": "Incident confirmé chez l'hébergeur, retour à la normale prévu à 10 h.",
+    "body": "<div>Incident confirmé chez l'hébergeur, retour à la normale prévu à 10 h.</div>",
+    "id": 9103,
+    "incoming": false,
+    "private": true,
+    "user_id": 1,
+    "support_email": null,
+    "source": 2,
+    "category": 2,
+    "ticket_id": 103,
+    "to_emails": [],
+    "from_email": null,
+    "cc_emails": [],
+    "bcc_emails": [],
+    "created_at": "2026-10-10T07:00:00Z",
+    "updated_at": "2026-10-10T07:00:00Z",
+    "attachments": [],
+    "last_edited_at": null,
+    "last_edited_user_id": null
+  }
+]

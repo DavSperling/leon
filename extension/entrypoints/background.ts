@@ -1,12 +1,19 @@
 import { browser, defineBackground } from '#imports';
+import { ViewerProfileSchema } from '../../src/capture/api-contract';
 import { getMe, postIngest } from '../lib/api';
 import { browserStore as store } from '../lib/browser-store';
 import { recordExchange } from '../lib/capture';
 import type { Site } from '../lib/exchange';
-import { countPending, flushOutbox } from '../lib/outbox';
+import {
+  countPending,
+  flushOutbox,
+  forgetOutboxOnTokenChange,
+  noteOrganization,
+} from '../lib/outbox';
 import {
   type CaptureStatus,
   canCapture,
+  hasConsent,
   loadSettings,
   SETTINGS_KEY,
   saveStatus,
@@ -14,11 +21,22 @@ import {
 
 const FLUSH_ALARM = 'leon-flush';
 
+// Organisation du jeton selon /me, notée quand la réponse est lisible ; null si inconnue.
+async function organizationOf(response: Response, token: string): Promise<string | null> {
+  const me = ViewerProfileSchema.safeParse(await response.json().catch(() => null));
+  if (!me.success) return null;
+  await noteOrganization(store, token, me.data.tenantId);
+  return me.data.tenantId;
+}
+
 // Tampon vide : rien à envoyer, on vérifie quand même que le jeton est accepté.
 async function probeConnection(token: string): Promise<CaptureStatus['connection']> {
   try {
     const response = await getMe(token);
-    if (response.ok) return 'connected';
+    if (response.ok) {
+      await organizationOf(response, token);
+      return 'connected';
+    }
     return response.status === 401 ? 'unauthorized' : 'unreachable';
   } catch {
     return 'unreachable';
@@ -28,7 +46,18 @@ async function probeConnection(token: string): Promise<CaptureStatus['connection
 async function flush(): Promise<void> {
   const settings = await loadSettings(store);
   const { token } = settings;
+  // Tout envoi passe ici, après le changement de jeton : rien de l'ancien tampon ne part avec le nouveau.
+  // Seul un refus du jeton tranche sans organisation ; une panne passagère laisse la décision à l'alarme suivante.
+  const settled = await forgetOutboxOnTokenChange(store, token, async (next) => {
+    const response = await getMe(next).catch(() => null);
+    if (response?.ok) return organizationOf(response, next);
+    return response?.status === 401 ? null : undefined;
+  });
   const pending = await countPending(store);
+  if (!settled) {
+    await saveStatus(store, { connection: 'unreachable', pending });
+    return;
+  }
   if (token === null) {
     await saveStatus(store, { connection: 'not_configured', pending });
     return;
@@ -54,7 +83,8 @@ function enqueueTask(task: () => Promise<void>): void {
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(() => {
     enqueueTask(async () => {
-      if ((await loadSettings(store)).consentAt === null) await browser.runtime.openOptionsPage();
+      // À l'installation comme à la mise à jour : sans accord sur le texte actuel, l'écran de consentement s'ouvre.
+      if (!hasConsent(await loadSettings(store))) await browser.runtime.openOptionsPage();
     });
   });
 
@@ -69,7 +99,7 @@ export default defineBackground(() => {
     });
   });
 
-  // Jeton collé ou reprise après une pause : on n'attend pas la prochaine alarme.
+  // Jeton collé ou changé, reprise après une pause : on n'attend pas la prochaine alarme.
   browser.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && SETTINGS_KEY in changes) enqueueTask(flush);
   });

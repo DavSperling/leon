@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "id": "c1b7e4a9-2f66-4a1d-9c3b-7d5e2f8a1b40",
+      "member_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "role": "owner",
+      "member": {
+        "id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+        "display_name": "Marie Durand",
+        "avatar_url": "https://assets.plane.test/avatars/marie.png",
+        "email": "marie@acme.test"
+      }
+    },
+    {
+      "id": "3e8a5d17-9c40-4b2f-81d6-4a7f2b9e0c53",
+      "member_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "role": "member",
+      "member": {
+        "id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+        "display_name": "David Martin",
+        "avatar_url": null,
+        "email": "david@acme.test"
+      }
+    }
+  ],
+  "next": null,
+  "previous": null,
+  "total_count": 2,
+  "pagination": { "style": "offset" }
+}

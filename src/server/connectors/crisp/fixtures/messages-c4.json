@@ -1,0 +1,54 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": [
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000004",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "user",
+      "origin": "email",
+      "content": "Votre export CSV est coupé après 1 000 lignes.",
+      "fingerprint": 163239614854350,
+      "timestamp": 1791970200000,
+      "stamped": true,
+      "user": {
+        "type": "participant",
+        "nickname": "client",
+        "user_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000004"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000004",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "note",
+      "from": "operator",
+      "origin": "chat",
+      "content": "Bug connu, voir le ticket #482. Ne pas promettre de date.",
+      "fingerprint": 163239614854351,
+      "timestamp": 1791970800000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000004",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "text",
+      "from": "operator",
+      "origin": "email",
+      "content": "Merci du signalement, nous corrigeons cela cette semaine.",
+      "fingerprint": 163239614854352,
+      "timestamp": 1791972000000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "data": {
+    "gid": "1001",
+    "resource_type": "user",
+    "name": "Marie Durand",
+    "workspaces": [
+      { "gid": "2001", "resource_type": "workspace", "name": "Acme" },
+      { "gid": "2002", "resource_type": "workspace", "name": "Perso" }
+    ]
+  }
+}

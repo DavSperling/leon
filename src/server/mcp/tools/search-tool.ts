@@ -1,59 +1,124 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
+import { ITEM_NATURES, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { DATA_GUARD_LINE } from '@/server/memory/render-card';
-import { type SearchResult, searchMemory } from '@/server/memory/search';
+import type { Embedder } from '@/server/embeddings/embedder';
+import { searchPassages } from '@/server/search/search';
+import {
+  QUERY_SYNTAX_DESCRIPTION,
+  queryWithPerson,
+  readToolFilters,
+} from '@/server/search/tool-filters';
+import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 import { guarded } from './guarded';
+import { SearchOutputSchema } from './output-schemas';
+import { renderSearch, searchStructured } from './render';
 
-const InputSchema = z.object({
-  query: z.string().min(1).max(200),
-  type: z.string().max(40).optional(),
-  since: z.iso.date().optional(),
-  limit: z.number().int().min(1).max(20).optional(),
+// L'outil `search` : la recherche de la barre de Leon (passages, filtres), sans la réponse de l'agent, puisque
+// l'IA du client est elle-même un agent. Les mêmes droits que dans l'interface : la recherche tourne sous ceux
+// du porteur du jeton, et rien d'autre ne lit la base ici.
+
+const FILTER_MAX_CHARS = 100;
+
+// Dernière page que la recherche rend (`PAGE_MAX`, une page au-delà y est ramenée) : l'outil refuse au même endroit.
+export const SEARCH_PAGE_MAX = PAGE_MAX;
+
+// Les outils cités en exemple dans la description de `outil` : tous des outils de Leon (`SourceKind`).
+const EXAMPLE_TOOLS = [
+  'github',
+  'linear',
+  'notion',
+  'outlook',
+  'claude_code',
+  'fathom',
+] as const satisfies readonly SourceKind[];
+
+// Les paramètres facultatifs acceptent aussi `null` : des clients l'envoient pour « non renseigné ».
+export const SearchInputSchema = z.object({
+  query: z
+    .string()
+    // Pas de longueur maximale : une requête de 2 000 caractères collés donne une page de résultats ou « Aucun
+    // résultat », jamais un refus. `parseQuery` ne lit que ses 10 000 premiers caractères et garde 300 de texte.
+    .nullish()
+    .describe(
+      `${QUERY_SYNTAX_DESCRIPTION} Facultatif quand un filtre est donné : on rend alors les sources les plus récentes.`,
+    ),
+  outil: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe(`Limite à un outil : ${EXAMPLE_TOOLS.join(', ')}…`),
+  type: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe(`Limite à une nature : ${ITEM_NATURES.join(', ')}.`),
+  depuis: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe('Limite aux passages récents : 7j (jours), 2s (semaines), 3m (mois) ou AAAA-MM-JJ.'),
+  de: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe(
+      "Limite à ce qu'une personne a écrit : son nom, son e-mail ou son identifiant d'outil.",
+    ),
+  page: z
+    .number()
+    .int()
+    .min(1)
+    .max(SEARCH_PAGE_MAX)
+    .nullish()
+    .describe(`Page de résultats, ${PAGE_SIZE} sources par page (1 par défaut).`),
 });
 
-function resultLine(result: SearchResult, index: number): string {
-  return `${index + 1}. ${result.title} (${result.typeLabel}) · id ${result.id} · ${result.snippet}`;
-}
+// Les paramètres qui filtrent, tels que MCP_INSTRUCTIONS les nomme : un nom qui n'est pas un paramètre de
+// l'outil ne compile pas.
+export const SEARCH_FILTERS = ['outil', 'type', 'depuis', 'de'] as const satisfies ReadonlyArray<
+  keyof z.input<typeof SearchInputSchema>
+>;
 
-function searchText(query: string, results: SearchResult[]): string {
-  if (results.length === 0) return `Aucune fiche ne correspond à « ${query} ».`;
-  return [
-    `${results.length} fiche(s) pour « ${query} » :`,
-    DATA_GUARD_LINE,
-    ...results.map(resultLine),
-  ].join('\n');
-}
+export const SEARCH_DESCRIPTION =
+  "Cherche dans toute la mémoire brute de l'entreprise (conversations avec des IA, tickets, pages, réunions, mails, fichiers) par mots-clés et par sens. Rend des sources avec leurs meilleurs passages, leur outil, leur titre, leur date et leur lien. Ne rend que ce que l'utilisateur a le droit de voir. Lire un passage ou une source : fetch.";
 
-export function registerSearchTool(server: McpServer, ctx: TenantContext): void {
+const refusal = (text: string) => ({
+  isError: true as const,
+  content: [{ type: 'text' as const, text }],
+});
+
+export function registerSearchTool(
+  server: McpServer,
+  ctx: TenantContext,
+  deps: { embedder: Embedder | null },
+): void {
   server.registerTool(
     'search',
     {
       title: 'Chercher dans la mémoire',
-      description:
-        "Cherche des fiches (clients, projets, personnes, décisions…) par mot-clé dans la mémoire de l'entreprise. Ne renvoie que les fiches visibles par l'utilisateur.",
-      inputSchema: InputSchema,
+      description: SEARCH_DESCRIPTION,
+      inputSchema: SearchInputSchema,
+      outputSchema: SearchOutputSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    guarded('search', async ({ query, type, since, limit }) => {
-      const results = await searchMemory(ctx, {
-        query,
-        type,
-        since: since ? new Date(since) : undefined,
-        limit,
+    guarded('search', async ({ query, outil, type, depuis, de, page }) => {
+      const now = new Date();
+      const read = readToolFilters({ outil, type, depuis }, now);
+      if ('error' in read) return refusal(read.error);
+      // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe.
+      const text = queryWithPerson(query, de);
+      const pageNumber = page ?? 1;
+      const result = await searchPassages(ctx, {
+        query: text,
+        filters: read.filters,
+        page: pageNumber,
+        embedder: deps.embedder,
+        now,
       });
       return {
-        content: [{ type: 'text', text: searchText(query, results) }],
-        structuredContent: {
-          results: results.map((result) => ({
-            id: result.id,
-            title: result.title,
-            url: result.url,
-            type: result.typeSlug,
-            snippet: result.snippet,
-            updatedAt: result.updatedAt.toISOString(),
-          })),
-        },
+        content: [{ type: 'text', text: renderSearch(result, pageNumber) }],
+        structuredContent: searchStructured(result, pageNumber),
       };
     }),
   );

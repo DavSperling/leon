@@ -1,0 +1,48 @@
+{
+  "object": "list",
+  "type": "block",
+  "block": {},
+  "results": [
+    {
+      "object": "block",
+      "id": "2b3c4d5e-0001-4000-8000-000000000001",
+      "type": "paragraph",
+      "has_children": false,
+      "in_trash": false,
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Acme veut une démonstration avant la fin du mois.",
+              "link": null
+            },
+            "plain_text": "Acme veut une démonstration avant la fin du mois.",
+            "href": null
+          }
+        ],
+        "color": "default"
+      }
+    },
+    {
+      "object": "block",
+      "id": "2b3c4d5e-0002-4000-8000-000000000002",
+      "type": "paragraph",
+      "has_children": false,
+      "in_trash": false,
+      "paragraph": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": { "content": "Budget confirmé : 12 000 euros.", "link": null },
+            "plain_text": "Budget confirmé : 12 000 euros.",
+            "href": null
+          }
+        ],
+        "color": "default"
+      }
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
+}

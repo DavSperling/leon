@@ -1,0 +1,11 @@
+{
+  "data": {
+    "boards": [
+      { "id": "1111111111", "type": "board" },
+      { "id": "2222222222", "type": "sub_items_board" },
+      { "id": "3333333333", "type": "board" },
+      { "id": "4444444444", "type": "document" }
+    ]
+  },
+  "account_id": 1234567
+}

@@ -1,0 +1,94 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-4000-8000-000000000001')/events(id,subject,lastModifiedDateTime)",
+  "value": [
+    {
+      "@odata.etag": "W/\"ZlnW4RIAV06KYYwlrfNZvQAAKGWwbw==\"",
+      "id": "AAMkAGEx-event-1",
+      "subject": "Point d'avancement projet Acme",
+      "lastModifiedDateTime": "2026-10-11T10:30:12.4567890Z",
+      "start": { "dateTime": "2026-10-14T09:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-10-14T10:00:00.0000000", "timeZone": "UTC" },
+      "location": { "displayName": "Salle Montmartre" },
+      "organizer": {
+        "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" }
+      },
+      "isOrganizer": true,
+      "isCancelled": false,
+      "sensitivity": "normal",
+      "attendees": [
+        {
+          "type": "required",
+          "status": { "response": "accepted", "time": "2026-10-11T11:00:00Z" },
+          "emailAddress": { "name": "Paul Lambert", "address": "paul.lambert@client.test" }
+        },
+        {
+          "type": "required",
+          "status": { "response": "none", "time": "0001-01-01T00:00:00Z" },
+          "emailAddress": { "name": "Sophie Bernard", "address": "sophie.bernard@acme.test" }
+        }
+      ],
+      "body": { "contentType": "text", "content": "Ordre du jour :\r\n- budget\r\n- calendrier" },
+      "webLink": "https://outlook.office365.com/owa/?itemid=AAMkAGEx-event-1&exvsurl=1&path=/calendar/item"
+    },
+    {
+      "@odata.etag": "W/\"ZlnW4RIAV06KYYwlrfNZvQAAKGWwbx==\"",
+      "id": "AAMkAGEx-event-prive",
+      "subject": "Rendez-vous médical",
+      "lastModifiedDateTime": "2026-10-11T12:00:00.0000000Z",
+      "start": { "dateTime": "2026-10-15T14:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-10-15T15:00:00.0000000", "timeZone": "UTC" },
+      "location": { "displayName": "" },
+      "organizer": {
+        "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" }
+      },
+      "isOrganizer": true,
+      "isCancelled": false,
+      "sensitivity": "private",
+      "attendees": [],
+      "body": { "contentType": "text", "content": "Apporter la carte vitale." },
+      "webLink": "https://outlook.office365.com/owa/?itemid=AAMkAGEx-event-prive&exvsurl=1&path=/calendar/item"
+    },
+    {
+      "@odata.etag": "W/\"ZlnW4RIAV06KYYwlrfNZvQAAKGWwby==\"",
+      "id": "AAMkAGEx-event-vide",
+      "subject": "Déjeuner",
+      "lastModifiedDateTime": "2026-10-11T12:30:00.0000000Z",
+      "start": { "dateTime": "2026-10-15T12:00:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-10-15T13:00:00.0000000", "timeZone": "UTC" },
+      "location": { "displayName": "" },
+      "organizer": {
+        "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" }
+      },
+      "isOrganizer": true,
+      "isCancelled": false,
+      "sensitivity": "normal",
+      "attendees": [],
+      "body": { "contentType": "text", "content": "" },
+      "webLink": "https://outlook.office365.com/owa/?itemid=AAMkAGEx-event-vide&exvsurl=1&path=/calendar/item"
+    },
+    {
+      "@odata.etag": "W/\"ZlnW4RIAV06KYYwlrfNZvQAAKGWwbz==\"",
+      "id": "AAMkAGEx-event-annule",
+      "subject": "Atelier cahier des charges",
+      "lastModifiedDateTime": "2026-10-12T09:10:00.0000000Z",
+      "start": { "dateTime": "2026-10-16T13:30:00.0000000", "timeZone": "UTC" },
+      "end": { "dateTime": "2026-10-16T15:00:00.0000000", "timeZone": "UTC" },
+      "location": { "displayName": "Visioconférence" },
+      "organizer": {
+        "emailAddress": { "name": "Paul Lambert", "address": "paul.lambert@client.test" }
+      },
+      "isOrganizer": false,
+      "isCancelled": true,
+      "sensitivity": "normal",
+      "attendees": [
+        {
+          "type": "required",
+          "status": { "response": "accepted", "time": "2026-10-10T08:00:00Z" },
+          "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" }
+        }
+      ],
+      "body": { "contentType": "html", "content": "<p>Atelier reporté à une date ultérieure.</p>" },
+      "webLink": "https://outlook.office365.com/owa/?itemid=AAMkAGEx-event-annule&exvsurl=1&path=/calendar/item"
+    }
+  ]
+}

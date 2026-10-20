@@ -1,0 +1,99 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": [
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000003",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "inbox_id": null,
+      "people_id": null,
+      "state": "unresolved",
+      "status": 1,
+      "is_verified": false,
+      "is_blocked": false,
+      "availability": "online",
+      "active": {
+        "now": false
+      },
+      "last_message": "",
+      "preview_message": null,
+      "topic": null,
+      "verifications": [],
+      "participants": [],
+      "mentions": [],
+      "created_at": 1791648000000,
+      "updated_at": 1791650700000,
+      "waiting_since": null,
+      "compose": {},
+      "unread": {},
+      "assigned": null,
+      "meta": {
+        "nickname": "Léa Bernard",
+        "email": "lea@acme.test"
+      },
+      "segments": []
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000002",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "inbox_id": null,
+      "people_id": null,
+      "state": "unresolved",
+      "status": 1,
+      "is_verified": false,
+      "is_blocked": false,
+      "availability": "online",
+      "active": {
+        "now": false
+      },
+      "last_message": "",
+      "preview_message": null,
+      "topic": null,
+      "verifications": [],
+      "participants": [],
+      "mentions": [],
+      "created_at": 1791467700000,
+      "updated_at": 1791468000000,
+      "waiting_since": null,
+      "compose": {},
+      "unread": {},
+      "assigned": null,
+      "meta": {
+        "nickname": "visitor607"
+      },
+      "segments": []
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000001",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "inbox_id": null,
+      "people_id": null,
+      "state": "resolved",
+      "status": 2,
+      "is_verified": false,
+      "is_blocked": false,
+      "availability": "online",
+      "active": {
+        "now": false
+      },
+      "last_message": "Merci, c’est bien reçu.",
+      "preview_message": null,
+      "topic": null,
+      "verifications": [],
+      "participants": [],
+      "mentions": [],
+      "created_at": 1791273600000,
+      "updated_at": 1791279000000,
+      "waiting_since": null,
+      "compose": {},
+      "unread": {},
+      "assigned": null,
+      "meta": {
+        "nickname": "Marie Durand",
+        "email": "marie@acme.test",
+        "subject": "Question sur la facturation"
+      },
+      "segments": []
+    }
+  ]
+}

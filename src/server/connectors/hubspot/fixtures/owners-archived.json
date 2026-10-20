@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "id": "1003",
+      "email": "paul@acme.test",
+      "firstName": "Paul",
+      "lastName": "Roche",
+      "userIdIncludingInactive": 2003,
+      "createdAt": "2024-05-20T09:00:00.000Z",
+      "updatedAt": "2026-06-30T10:00:00.000Z",
+      "archived": true,
+      "type": "PERSON"
+    }
+  ]
+}

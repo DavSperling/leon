@@ -1,0 +1,21 @@
+{
+  "data": {
+    "threads": {
+      "edges": [
+        {
+          "node": {
+            "id": "th_01J9Z8K3M4N5P6Q7R8S9T0V1W4",
+            "ref": "T-103",
+            "title": "Question sur l’export",
+            "updatedAt": { "iso8601": "2026-10-14T18:30:00.000Z" },
+            "customer": { "fullName": "Marie Durand" }
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": "eyJpZCI6InRoXzAxSjlaOEszTTRONVA2UTdSOFM5VDBWMVc0In0"
+      }
+    }
+  }
+}

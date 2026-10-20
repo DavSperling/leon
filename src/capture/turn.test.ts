@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CAPTURE_KINDS,
   type IngestPayload,
   IngestPayloadSchema,
+  ITEM_NATURES,
+  PROVIDER_IDS,
+  SOURCE_KINDS,
   TURN_TEXT_MAX,
   TURNS_PER_BATCH_MAX,
+  TurnSchema,
 } from './turn';
 
 const turn = {
@@ -26,6 +31,21 @@ function withTurn(override: Record<string, unknown>) {
 describe('IngestPayloadSchema', () => {
   it('accepte un envoi valide', () => {
     expect(IngestPayloadSchema.safeParse(payload).success).toBe(true);
+  });
+
+  it('accepte les quatre types de capture', () => {
+    expect(CAPTURE_KINDS).toEqual(['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember']);
+    for (const kind of CAPTURE_KINDS) {
+      const body = { ...payload, source: { ...payload.source, kind } };
+      expect(IngestPayloadSchema.safeParse(body).success, kind).toBe(true);
+    }
+  });
+
+  it("refuse le type d'un connecteur : la route publique ne fabrique pas de source « notion »", () => {
+    for (const kind of ['notion', 'github']) {
+      const body = { ...payload, source: { ...payload.source, kind } };
+      expect(IngestPayloadSchema.safeParse(body).success, kind).toBe(false);
+    }
   });
 
   it('refuse un tour de rôle tool', () => {
@@ -54,5 +74,45 @@ describe('IngestPayloadSchema', () => {
     expect(IngestPayloadSchema.safeParse(withTurn({ ts: '2026-10-13T09:00:00' })).success).toBe(
       false,
     );
+  });
+});
+
+describe('TurnSchema', () => {
+  it('refuse le rôle participant, réservé aux connecteurs', () => {
+    expect(TurnSchema.safeParse({ ...turn, role: 'participant' }).success).toBe(false);
+    expect(TurnSchema.safeParse({ ...turn, role: 'document' }).success).toBe(false);
+  });
+
+  it('refuse le mode de capture connector', () => {
+    expect(TurnSchema.safeParse({ ...turn, capture_mode: 'connector' }).success).toBe(false);
+  });
+});
+
+describe('listes de types', () => {
+  it('donne 39 connecteurs, sans doublon ni recouvrement avec la capture', () => {
+    expect(PROVIDER_IDS).toHaveLength(39);
+    expect(new Set(PROVIDER_IDS).size).toBe(39);
+    for (const kind of CAPTURE_KINDS) expect(PROVIDER_IDS).not.toContain(kind);
+  });
+
+  it('SOURCE_KINDS = les types de capture puis les 39 connecteurs, sans doublon', () => {
+    expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, ...PROVIDER_IDS]);
+    expect(new Set(SOURCE_KINDS).size).toBe(SOURCE_KINDS.length);
+  });
+
+  it('ITEM_NATURES : les dix natures de source (C4), dans cet ordre, sans doublon', () => {
+    expect(ITEM_NATURES).toEqual([
+      'conversation',
+      'reunion',
+      'page',
+      'ticket',
+      'fil',
+      'note',
+      'mail',
+      'fichier',
+      'evenement',
+      'commit',
+    ]);
+    expect(new Set(ITEM_NATURES).size).toBe(ITEM_NATURES.length);
   });
 });

@@ -1,0 +1,12 @@
+{
+  "transcript": [
+    {
+      "speaker": { "source": "microphone", "attribution": "me" },
+      "text": "Très bien, merci.",
+      "start_time": "2026-10-13T10:00:09Z",
+      "end_time": "2026-10-13T10:00:10Z"
+    }
+  ],
+  "hasMore": false,
+  "cursor": null
+}

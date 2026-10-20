@@ -1,9 +1,23 @@
-import { Globe, type LucideIcon, Monitor, PenLine, Plug, Terminal } from 'lucide-react';
-import type { SourceKind } from '@/capture/turn';
+import {
+  Code,
+  Globe,
+  KanbanSquare,
+  LifeBuoy,
+  type LucideIcon,
+  Mail,
+  Mic,
+  Monitor,
+  PenLine,
+  Plug,
+  Terminal,
+  Users,
+} from 'lucide-react';
+import type { CaptureKind, ProviderId } from '@/capture/turn';
 import { formatDateTime } from '@/lib/format';
+import { PROVIDER_FAMILIES, type ProviderFamily } from '@/lib/providers';
 
-// Les quatre origines d'un fait, plus les clients du journal de lecture : l'interface et les autres assistants.
-const ICONS: Record<SourceKind | 'interface' | 'other', LucideIcon> = {
+// Les quatre origines d'une conversation, plus les clients du journal de lecture : l'interface et les autres assistants.
+const ICONS: Record<CaptureKind | 'interface' | 'other', LucideIcon> = {
   claude_code: Terminal,
   claude_ai: Globe,
   chatgpt: Globe,
@@ -12,13 +26,35 @@ const ICONS: Record<SourceKind | 'interface' | 'other', LucideIcon> = {
   other: Plug,
 };
 
-export type SourceChipKind = keyof typeof ICONS;
+// Un outil branché prend l'icône de sa famille.
+const FAMILY_ICONS: Record<ProviderFamily, LucideIcon> = {
+  dev: Code,
+  reunions: Mic,
+  projet: KanbanSquare,
+  crm: Users,
+  support: LifeBuoy,
+  mails: Mail,
+};
+
+export type SourceChipKind = keyof typeof ICONS | ProviderId;
+
+function isProvider(kind: SourceChipKind): kind is ProviderId {
+  return Object.hasOwn(PROVIDER_FAMILIES, kind);
+}
+
+// Un outil que ce code ne connaît pas (`sources.kind` n'a plus de contrainte en base : une ligne d'une autre
+// version du code, d'un outil retiré) prend l'icône d'un outil quelconque. Sans elle, `<Icon />` d'une icône
+// absente fait tomber toute la page qui affiche la puce.
+function iconOf(kind: SourceChipKind): LucideIcon {
+  if (isProvider(kind)) return FAMILY_ICONS[PROVIDER_FAMILIES[kind]];
+  return Object.hasOwn(ICONS, kind) ? ICONS[kind] : ICONS.other;
+}
 
 type SourceChipProps = { kind: SourceChipKind; label: string; authorName?: string; at?: Date };
 
-// Origine d'un fait (outil, auteur, date) ou assistant d'une lecture (outil seul). Sans lien dans ce jet.
+// Origine d'une source (outil, auteur, date) ou assistant d'une lecture (outil seul). Sans lien dans ce jet.
 export function SourceChip({ kind, label, authorName, at }: SourceChipProps) {
-  const Icon = ICONS[kind];
+  const Icon = iconOf(kind);
   return (
     <span className="inline-flex items-center gap-1.5 text-[13px] leading-[18px] text-muted-foreground">
       <Icon size={14} strokeWidth={1.5} aria-hidden="true" />

@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "accountId": "5b10ac8d82e05b22cc7d4ef5",
+      "accountType": "atlassian",
+      "accountStatus": "active",
+      "displayName": "Marie Durand",
+      "publicName": "Marie",
+      "email": "marie@acme.test",
+      "timeZone": null,
+      "isExternalCollaborator": false
+    },
+    {
+      "accountId": "712020:2c1b7a5e-3f4d-4a6b-9c8d-0123456789ab",
+      "accountType": "atlassian",
+      "accountStatus": "active",
+      "displayName": "Paul Martin",
+      "publicName": "Paul",
+      "email": "paul@acme.test",
+      "timeZone": null,
+      "isExternalCollaborator": false
+    },
+    {
+      "accountId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654",
+      "accountType": "atlassian",
+      "accountStatus": "active",
+      "displayName": "David Roux",
+      "publicName": "David",
+      "email": "",
+      "timeZone": null,
+      "isExternalCollaborator": false
+    }
+  ],
+  "_links": {
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

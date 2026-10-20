@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "id": "20003",
+      "status": "current",
+      "title": "Re: Re: Compte rendu du comité produit",
+      "parentCommentId": "20001",
+      "version": {
+        "createdAt": "2026-10-12T18:45:00.000Z",
+        "message": "",
+        "number": 1,
+        "minorEdit": false,
+        "authorId": "712020:9d8c7b6a-5e4f-4d3c-8b2a-fedcba987654"
+      },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<p>Le support ne pourra pas suivre avant janvier.</p>"
+        }
+      },
+      "_links": {
+        "webui": "/spaces/PROD/pages/10002/Compte+rendu+du+comite+produit?focusedCommentId=20003"
+      }
+    }
+  ],
+  "_links": {
+    "base": "https://acme.atlassian.net/wiki"
+  }
+}

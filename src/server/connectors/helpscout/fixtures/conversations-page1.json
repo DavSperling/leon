@@ -1,0 +1,181 @@
+{
+  "_embedded": {
+    "conversations": [
+      {
+        "_links": {
+          "self": { "href": "https://api.helpscout.net/v2/conversations/4001" },
+          "mailbox": { "href": "https://api.helpscout.net/v2/mailboxes/13" },
+          "threads": { "href": "https://api.helpscout.net/v2/conversations/4001/threads" },
+          "web": { "href": "https://secure.helpscout.net/conversation/4001/12" }
+        },
+        "id": 4001,
+        "number": 12,
+        "threads": 3,
+        "type": "email",
+        "folderId": 11,
+        "status": "closed",
+        "state": "published",
+        "subject": "Facture de septembre",
+        "preview": "Merci, c'est réglé.",
+        "mailboxId": 13,
+        "assignee": {
+          "id": 99,
+          "type": "user",
+          "first": "Paul",
+          "last": "Martin",
+          "email": "paul@acme.test"
+        },
+        "createdBy": { "id": 12, "type": "customer", "email": "julie@client.test" },
+        "createdAt": "2026-10-13T09:00:00Z",
+        "closedBy": 99,
+        "closedAt": "2026-10-14T16:20:00Z",
+        "userUpdatedAt": "2026-10-14T16:20:00Z",
+        "customerWaitingSince": { "time": "2026-10-14T15:45:00Z", "friendly": "1 hour ago" },
+        "source": { "type": "email", "via": "customer" },
+        "tags": [
+          { "id": 9150, "color": "#929499", "tag": "facturation" },
+          { "id": 9151, "color": "#929499", "tag": "remboursement" }
+        ],
+        "cc": [],
+        "bcc": [],
+        "primaryCustomer": {
+          "id": 238604,
+          "type": "customer",
+          "first": "Julie",
+          "last": "Moreau",
+          "email": "julie@client.test"
+        },
+        "customFields": [],
+        "_embedded": {
+          "threads": [
+            {
+              "id": 90005,
+              "type": "lineitem",
+              "status": "closed",
+              "state": "published",
+              "action": { "type": "changeStatus", "text": "Paul Martin a fermé la conversation" },
+              "createdAt": "2026-10-14T16:20:00Z",
+              "createdBy": {
+                "id": 99,
+                "type": "user",
+                "first": "Paul",
+                "last": "Martin",
+                "email": "paul@acme.test"
+              }
+            },
+            {
+              "id": 90004,
+              "type": "message",
+              "status": "closed",
+              "state": "draft",
+              "body": "<p>Brouillon jamais envoyé.</p>",
+              "createdAt": "2026-10-14T16:10:00Z",
+              "createdBy": {
+                "id": 99,
+                "type": "user",
+                "first": "Paul",
+                "last": "Martin",
+                "email": "paul@acme.test"
+              }
+            },
+            {
+              "id": 90003,
+              "type": "note",
+              "status": "active",
+              "state": "published",
+              "body": "<p>Remboursement validé par la comptabilité.</p>",
+              "createdAt": "2026-10-14T15:45:00Z",
+              "createdBy": {
+                "id": 99,
+                "type": "user",
+                "first": "Paul",
+                "last": "Martin",
+                "email": "paul@acme.test"
+              }
+            },
+            {
+              "id": 90002,
+              "type": "message",
+              "status": "active",
+              "state": "published",
+              "body": "<p>Bonjour Julie,</p><p>Nous vous remboursons les 120&nbsp;€ cette semaine :</p><ul><li>virement lundi</li><li>avoir sur la prochaine facture</li></ul><p>Cordialement,<br>Paul</p>",
+              "createdAt": "2026-10-13T14:30:00Z",
+              "createdBy": {
+                "id": 99,
+                "type": "user",
+                "first": "Paul",
+                "last": "Martin",
+                "email": "paul@acme.test"
+              },
+              "customer": {
+                "id": 238604,
+                "first": "Julie",
+                "last": "Moreau",
+                "email": "julie@client.test"
+              },
+              "to": ["julie@client.test"]
+            },
+            {
+              "id": 90001,
+              "type": "customer",
+              "status": "active",
+              "state": "published",
+              "body": "<div>Bonjour,<br>ma facture de septembre est fausse : j'ai été facturée deux fois.</div>",
+              "source": { "type": "email", "via": "customer" },
+              "createdAt": "2026-10-13T09:00:00Z",
+              "createdBy": {
+                "id": 238604,
+                "type": "customer",
+                "first": "Julie",
+                "last": "Moreau",
+                "email": "julie@client.test"
+              },
+              "customer": {
+                "id": 238604,
+                "first": "Julie",
+                "last": "Moreau",
+                "email": "julie@client.test"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "_links": { "web": { "href": "https://secure.helpscout.net/conversation/4002/13" } },
+        "id": 4002,
+        "number": 13,
+        "threads": 1,
+        "type": "chat",
+        "status": "active",
+        "state": "published",
+        "subject": "",
+        "mailboxId": 13,
+        "createdAt": "2026-10-15T08:00:00Z",
+        "userUpdatedAt": "2026-10-15T08:00:00Z",
+        "tags": [],
+        "primaryCustomer": { "id": 238700, "type": "customer", "first": "Karim", "last": "Benali" },
+        "_embedded": {
+          "threads": [
+            {
+              "id": 90010,
+              "type": "chat",
+              "status": "active",
+              "state": "published",
+              "body": "Est-ce que le plan Pro inclut l'export des données ?",
+              "createdAt": "2026-10-15T08:01:30Z",
+              "createdBy": { "id": 238700, "type": "customer", "first": "Karim", "last": "Benali" }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": { "href": "https://api.helpscout.net/v2/conversations?page=1" },
+    "first": { "href": "https://api.helpscout.net/v2/conversations?page=1" },
+    "next": { "href": "https://api.helpscout.net/v2/conversations?page=2" },
+    "last": { "href": "https://api.helpscout.net/v2/conversations?page=2" },
+    "page": { "href": "https://api.helpscout.net/v2/conversations{?page}", "templated": true }
+  },
+  "page": { "size": 25, "totalElements": 5, "totalPages": 2, "number": 1 }
+}

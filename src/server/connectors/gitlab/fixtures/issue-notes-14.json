@@ -1,0 +1,23 @@
+[
+  {
+    "id": 3010,
+    "body": "Je propose 90 jours, avec un premier passage plus long.",
+    "author": {
+      "id": 1,
+      "username": "marie-durand",
+      "name": "Marie Durand",
+      "state": "active",
+      "created_at": "2024-01-04T09:00:00.000Z"
+    },
+    "created_at": "2026-10-11T10:00:00.500Z",
+    "updated_at": "2026-10-11T10:00:00.500Z",
+    "system": false,
+    "noteable_id": 78,
+    "noteable_type": "Issue",
+    "project_id": 278964,
+    "noteable_iid": 14,
+    "resolvable": false,
+    "confidential": false,
+    "internal": false
+  }
+]

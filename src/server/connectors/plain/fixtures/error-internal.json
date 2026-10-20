@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil-a-ne-pas-reprendre : erreur interne",
+      "extensions": { "code": "INTERNAL_SERVER_ERROR" }
+    }
+  ],
+  "data": null
+}

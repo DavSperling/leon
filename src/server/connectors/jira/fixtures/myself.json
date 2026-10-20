@@ -1,0 +1,10 @@
+{
+  "self": "https://acme.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g",
+  "accountId": "5b10a2844c20165700ede21g",
+  "accountType": "atlassian",
+  "emailAddress": "marie@acme.test",
+  "displayName": "Marie Durand",
+  "active": true,
+  "timeZone": "Europe/Paris",
+  "locale": "fr_FR"
+}

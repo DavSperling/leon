@@ -1,0 +1,15 @@
+{
+  "result": {
+    "transcript": {
+      "segments": [
+        {
+          "startedAt": 1.5,
+          "endedAt": 6,
+          "text": "Voici la marche à suivre pour exporter une facture.",
+          "languageCode": "fr"
+        }
+      ],
+      "languageCode": "fr"
+    }
+  }
+}

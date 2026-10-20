@@ -1,20 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserContext, signOutCurrentUser } from '@/server/auth/session';
-import { searchMemory } from '@/server/memory/search';
-import { searchAction, signOutAction } from './actions';
+import { logError } from '@/server/log';
+import { fetchPassageContext } from '@/server/search/context';
+import { previewPassageAction, signOutAction } from './actions';
 
 vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
   signOutCurrentUser: vi.fn(),
 }));
-vi.mock('@/server/memory/search', () => ({ searchMemory: vi.fn() }));
+vi.mock('@/server/search/context', () => ({ fetchPassageContext: vi.fn() }));
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
   }),
 }));
 
-beforeEach(() => vi.clearAllMocks());
+const CTX = { userId: 'u1', tenantId: 't1' };
+const PASSAGE = '0b6d2c5e-8f2a-4d56-9a43-3d1f2b6a7c10';
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(requireUserContext).mockResolvedValue(CTX as never);
+});
 
 describe('signOutAction', () => {
   it('ferme la session puis renvoie à la connexion', async () => {
@@ -32,31 +40,77 @@ describe('signOutAction', () => {
   });
 });
 
-describe('searchAction', () => {
-  const ctx = { tenantId: 'tenant', userId: 'user', principals: ['user', 'tenant'] };
+describe('previewPassageAction', () => {
+  const context = {
+    source: {
+      sourceId: 's1',
+      kind: 'fathom' as const,
+      nature: 'reunion' as const,
+      title: 'Call ACME',
+      url: 'https://fathom.video/calls/1',
+      origin: {},
+      lastTs: new Date('2026-10-12T10:00:00Z'),
+    },
+    turns: [
+      {
+        turnId: 't1',
+        role: 'participant' as const,
+        authorName: 'Bob',
+        ts: new Date('2026-10-12T10:00:00Z'),
+        text: 'Bonjour',
+        isHit: true,
+      },
+    ],
+  };
 
-  it('cherche pour le lecteur connecté, requête nettoyée', async () => {
-    vi.mocked(requireUserContext).mockResolvedValue(ctx);
-    vi.mocked(searchMemory).mockResolvedValue([]);
+  it('rend l’aperçu du passage sous les droits de l’utilisateur connecté', async () => {
+    vi.mocked(fetchPassageContext).mockResolvedValue(context);
 
-    await expect(searchAction('  acme  ')).resolves.toEqual([]);
+    const result = await previewPassageAction(PASSAGE);
 
-    expect(searchMemory).toHaveBeenCalledWith(ctx, { query: 'acme' });
+    expect(fetchPassageContext).toHaveBeenCalledWith(CTX, PASSAGE);
+    expect(result).toMatchObject({
+      ok: true,
+      preview: {
+        kindLabel: 'Fathom',
+        title: 'Call ACME',
+        turns: [{ speaker: 'Bob', isHit: true }],
+      },
+    });
   });
 
-  it.each(['', '   ', 'a'.repeat(201)])('refuse la requête %j sans chercher', async (query) => {
-    vi.mocked(requireUserContext).mockResolvedValue(ctx);
+  it('dit « introuvable » pour un passage invisible ou inconnu, sans rien d’autre', async () => {
+    vi.mocked(fetchPassageContext).mockResolvedValue(null);
 
-    await expect(searchAction(query)).rejects.toThrow();
-
-    expect(searchMemory).not.toHaveBeenCalled();
+    expect(await previewPassageAction(PASSAGE)).toEqual({ ok: false, reason: 'introuvable' });
   });
 
-  it('ne cherche rien sans session valide', async () => {
+  it('ne lit rien quand l’identifiant n’est pas un uuid', async () => {
+    for (const bad of [undefined, null, 42, {}, ['x'], 'pas-un-uuid', `${PASSAGE}x`]) {
+      expect(await previewPassageAction(bad as never)).toEqual({
+        ok: false,
+        reason: 'introuvable',
+      });
+    }
+
+    expect(fetchPassageContext).not.toHaveBeenCalled();
+  });
+
+  it('répond « erreur » à une panne, journalise sans le texte de l’erreur, et ne la laisse pas sortir', async () => {
+    vi.mocked(fetchPassageContext).mockRejectedValue(new Error('secret : texte de la requête'));
+
+    const result = await previewPassageAction(PASSAGE);
+
+    expect(result).toEqual({ ok: false, reason: 'erreur' });
+    expect(JSON.stringify(result)).not.toContain('secret');
+    expect(logError).toHaveBeenCalledWith('search.preview_failed', expect.any(Error));
+  });
+
+  it('ne lit rien sans session valide', async () => {
     vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
 
-    await expect(searchAction('acme')).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(previewPassageAction(PASSAGE)).rejects.toThrow('NEXT_REDIRECT /connexion');
 
-    expect(searchMemory).not.toHaveBeenCalled();
+    expect(fetchPassageContext).not.toHaveBeenCalled();
   });
 });

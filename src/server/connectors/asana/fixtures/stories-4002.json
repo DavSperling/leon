@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "gid": "5003",
+      "resource_type": "story",
+      "created_at": "2026-10-11T08:00:00.000Z",
+      "created_by": { "gid": "1002", "resource_type": "user", "name": "Paul Martin" },
+      "resource_subtype": "comment_added",
+      "text": "Brouillon prêt, à relire."
+    }
+  ],
+  "next_page": null
+}

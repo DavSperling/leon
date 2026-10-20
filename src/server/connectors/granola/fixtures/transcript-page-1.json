@@ -1,0 +1,12 @@
+{
+  "transcript": [
+    {
+      "speaker": { "source": "speaker", "attribution": "them" },
+      "text": "Bonjour Marie, la livraison partira lundi.",
+      "start_time": "2026-10-13T10:00:03Z",
+      "end_time": "2026-10-13T10:00:07Z"
+    }
+  ],
+  "hasMore": true,
+  "cursor": "eyJyb3dfb2Zmc2V0Ijo1MCwiaXRlbV9vZmZzZXQiOjB9"
+}

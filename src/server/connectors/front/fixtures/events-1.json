@@ -1,0 +1,163 @@
+{
+  "_pagination": {
+    "next": "https://acme.api.frontapp.com/events?q%5Bafter%5D=1791795598.000&q%5Btypes%5D=inbound&q%5Btypes%5D=outbound&q%5Btypes%5D=out_reply&q%5Btypes%5D=comment&limit=15&sort_by=created_at&sort_order=asc&page_token=tok_events_2"
+  },
+  "_links": {
+    "self": "https://acme.api.frontapp.com/events"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/events/evt_1a01"
+      },
+      "id": "evt_1a01",
+      "type": "inbound",
+      "emitted_at": 1791795600,
+      "source": {
+        "_meta": {
+          "type": "inboxes"
+        },
+        "data": [
+          {
+            "_links": {
+              "self": "https://acme.api.frontapp.com/inboxes/inb_8k2"
+            },
+            "id": "inb_8k2",
+            "name": "Support",
+            "is_private": false,
+            "is_public": true
+          }
+        ]
+      },
+      "target": {
+        "_meta": {
+          "type": "message"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/messages/msg_1a11"
+          },
+          "id": "msg_1a11",
+          "type": "email",
+          "is_inbound": true,
+          "created_at": 1791795600
+        }
+      },
+      "conversation": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/conversations/cnv_1a1"
+        },
+        "id": "cnv_1a1",
+        "type": "conversation",
+        "subject": "Livraison de la commande 4512",
+        "status": "assigned",
+        "tags": [],
+        "is_private": false,
+        "is_closed": false
+      }
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/events/evt_1a02"
+      },
+      "id": "evt_1a02",
+      "type": "comment",
+      "emitted_at": 1791795900.5,
+      "source": {
+        "_meta": {
+          "type": "teammate"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/teammates/tea_david"
+          },
+          "id": "tea_david",
+          "email": "david@acme.test",
+          "username": "david",
+          "first_name": "David",
+          "last_name": "Roux",
+          "is_admin": true,
+          "is_available": true,
+          "is_blocked": false
+        }
+      },
+      "target": {
+        "_meta": {
+          "type": "comment"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/comments/com_1a21"
+          },
+          "id": "com_1a21",
+          "body": "Remboursement des frais de port accordé à Julie (commande 4512), à saisir dans l'outil de facturation.",
+          "posted_at": 1791795900.5
+        }
+      },
+      "conversation": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/conversations/cnv_1a1"
+        },
+        "id": "cnv_1a1",
+        "type": "conversation",
+        "subject": "Livraison de la commande 4512",
+        "status": "assigned",
+        "tags": [],
+        "is_private": false,
+        "is_closed": false
+      }
+    },
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/events/evt_2b01"
+      },
+      "id": "evt_2b01",
+      "type": "outbound",
+      "emitted_at": 1791796200,
+      "source": {
+        "_meta": {
+          "type": "teammate"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/teammates/tea_marie"
+          },
+          "id": "tea_marie",
+          "email": "marie@acme.test",
+          "username": "marie",
+          "first_name": "Marie",
+          "last_name": "Durand",
+          "is_admin": false,
+          "is_available": true,
+          "is_blocked": false
+        }
+      },
+      "target": {
+        "_meta": {
+          "type": "message"
+        },
+        "data": {
+          "_links": {
+            "self": "https://acme.api.frontapp.com/messages/msg_2b11"
+          },
+          "id": "msg_2b11",
+          "type": "email",
+          "is_inbound": false,
+          "created_at": 1791796200
+        }
+      },
+      "conversation": {
+        "_links": {
+          "self": "https://acme.api.frontapp.com/conversations/cnv_2b2"
+        },
+        "id": "cnv_2b2",
+        "type": "conversation",
+        "subject": "Question sur la facture de septembre",
+        "status": "archived",
+        "tags": [],
+        "is_private": false,
+        "is_closed": true
+      }
+    }
+  ]
+}

@@ -4,9 +4,14 @@ import { z } from 'zod';
 export const SITES = ['claude_ai', 'chatgpt'] as const;
 export type Site = (typeof SITES)[number];
 
+// Un très long message est coupé à la borne plutôt que de faire rejeter tout l'échange
+// (le texte est de toute façon tronqué à TURN_TEXT_MAX avant l'envoi).
 const CapturedMessageSchema = z.object({
   messageId: z.string().min(1).max(200),
-  text: z.string().min(1).max(200_000),
+  text: z
+    .string()
+    .min(1)
+    .transform((text) => text.slice(0, 200_000)),
   ts: z.iso.datetime(),
 });
 

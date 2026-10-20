@@ -1,0 +1,53 @@
+{
+  "comments": [
+    {
+      "id": 1001,
+      "type": "Comment",
+      "author_id": 9001,
+      "body": "Bonjour,\n\nl'imprimante du bureau 3 a pris feu ce matin.",
+      "html_body": "<div class=\"zd-comment\"><p>Bonjour,</p><p>l'imprimante du bureau 3 a pris feu ce matin.</p></div>",
+      "plain_body": "Bonjour,\n\nl'imprimante du bureau 3 a pris feu ce matin.",
+      "public": true,
+      "attachments": [],
+      "via": { "channel": "email" },
+      "created_at": "2026-10-09T08:00:00Z"
+    },
+    {
+      "id": 1002,
+      "type": "Comment",
+      "author_id": 9002,
+      "body": "Je passe demain avec un extincteur de rechange.",
+      "html_body": "<div class=\"zd-comment\"><p>Je passe demain avec un extincteur de rechange.</p></div>",
+      "plain_body": "Je passe demain avec un extincteur de rechange.",
+      "public": false,
+      "attachments": [],
+      "via": { "channel": "web" },
+      "created_at": "2026-10-09T10:30:00Z"
+    },
+    {
+      "id": 1003,
+      "type": "Comment",
+      "author_id": 9002,
+      "body": "Nous passons demain matin, à 9 h.",
+      "html_body": "<div class=\"zd-comment\"><p>Nous passons demain matin, à 9 h.</p></div>",
+      "plain_body": "Nous passons demain matin, à 9 h.",
+      "public": true,
+      "attachments": [],
+      "via": { "channel": "web" },
+      "created_at": "2026-10-10T09:00:00Z"
+    }
+  ],
+  "users": [
+    { "id": 9001, "name": "Camille Bernard", "email": "camille@client.test", "role": "end-user" },
+    { "id": 9002, "name": "Paul Martin", "email": "paul@acme.test", "role": "agent" }
+  ],
+  "meta": {
+    "has_more": false,
+    "after_cursor": "eyJvIjoiY3JlYXRlZF9hdCIsInYiOiJhUUUifQ==",
+    "before_cursor": null
+  },
+  "links": {
+    "prev": null,
+    "next": "https://acme.zendesk.com/api/v2/tickets/101/comments?include=users&page%5Bafter%5D=eyJvIjoiY3JlYXRlZF9hdCIsInYiOiJhUUUifQ%3D%3D&page%5Bsize%5D=100&sort=created_at"
+  }
+}

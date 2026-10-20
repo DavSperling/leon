@@ -1,0 +1,45 @@
+{
+  "id": "not_3m7Xv9BcHd4SeF",
+  "object": "note",
+  "title": "Point depuis le telephone",
+  "owner": { "name": "Marie Durand", "email": "marie@acme.test" },
+  "created_at": "2026-10-12T09:00:00Z",
+  "updated_at": "2026-10-12T09:30:00Z",
+  "deleted_at": null,
+  "web_url": "https://notes.granola.ai/d/4d5e6f70-24cc-480b-9a6c-8b1f5e3d7a2c",
+  "calendar_event": {
+    "event_title": null,
+    "invitees": [],
+    "organiser": null,
+    "calendar_event_id": null,
+    "scheduled_start_time": null,
+    "scheduled_end_time": null
+  },
+  "attendees": [],
+  "folder_membership": [],
+  "space_membership": [],
+  "summary_text": "Deux intervenants.",
+  "summary_markdown": null,
+  "private_notes_text": null,
+  "private_notes_markdown": null,
+  "transcript": [
+    {
+      "speaker": { "source": "microphone", "diarization_label": "Speaker A" },
+      "text": "On valide l'offre à 90 euros par mois.",
+      "start_time": "2026-10-12T09:00:04Z",
+      "end_time": "2026-10-12T09:00:08Z"
+    },
+    {
+      "speaker": { "source": "microphone", "diarization_label": "Speaker B" },
+      "text": "D'accord pour cette offre.",
+      "start_time": "2026-10-12T09:00:10Z",
+      "end_time": "2026-10-12T09:00:12Z"
+    },
+    {
+      "speaker": { "source": "microphone" },
+      "text": "Une phrase sans locuteur reconnu.",
+      "start_time": "2026-10-12T09:00:15Z",
+      "end_time": "2026-10-12T09:00:17Z"
+    }
+  ]
+}

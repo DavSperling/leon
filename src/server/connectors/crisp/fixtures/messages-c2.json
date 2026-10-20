@@ -1,0 +1,44 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": [
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000002",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "file",
+      "from": "user",
+      "origin": "chat",
+      "content": {
+        "name": "capture.png",
+        "url": "https://storage.acme.test/capture.png",
+        "type": "image/png"
+      },
+      "fingerprint": 163239614854330,
+      "timestamp": 1791467760000,
+      "stamped": true,
+      "user": {
+        "type": "participant",
+        "nickname": "visitor607",
+        "user_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000002"
+      }
+    },
+    {
+      "session_id": "session_6c1d3a7e-5b0f-4c2e-9d11-0a0000000002",
+      "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+      "type": "event",
+      "from": "operator",
+      "origin": "chat",
+      "content": {
+        "name": "conversation:resolved"
+      },
+      "fingerprint": 163239614854331,
+      "timestamp": 1791468000000,
+      "stamped": true,
+      "user": {
+        "type": "website",
+        "nickname": "Paul Martin",
+        "user_id": "b7a1c9d2-3e4f-4a5b-8c6d-7e8f90a1b2c3"
+      }
+    }
+  ]
+}

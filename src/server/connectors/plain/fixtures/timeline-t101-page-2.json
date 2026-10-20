@@ -1,0 +1,26 @@
+{
+  "data": {
+    "thread": {
+      "timelineEntries": {
+        "edges": [
+          {
+            "node": {
+              "id": "te_01J9Z8M1A1B2C3D4E5F6G7H8J3",
+              "timestamp": { "iso8601": "2026-10-14T16:20:00.000Z" },
+              "actor": {
+                "user": { "fullName": "David Martin", "email": "david@acme.test" }
+              },
+              "entry": {
+                "email": "Bonjour Marie,\n\nVotre compte est débloqué. À partir du 1er novembre, l’authentification en deux étapes sera obligatoire pour tous les comptes Acme.\n\nDavid"
+              }
+            }
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": "eyJ0ZSI6IjAxSjlaOE0xQTFCMkMzRDRFNUY2RzdIOEozIn0"
+        }
+      }
+    }
+  }
+}

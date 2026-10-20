@@ -1,7 +1,7 @@
 import { API_TOKEN_PATTERN, ViewerProfileSchema } from '../../../src/capture/api-contract';
 import { getMe, SERVER_URL } from '../../lib/api';
 import { browserStore } from '../../lib/browser-store';
-import { loadSettings, saveSettings } from '../../lib/settings';
+import { CONSENT_VERSION, hasConsent, loadSettings, saveSettings } from '../../lib/settings';
 import { bindSiteSwitches, showSiteSwitches } from '../../lib/site-switches';
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -20,8 +20,10 @@ function say(text: string, tone: 'ok' | 'error' | 'muted'): void {
 
 async function render(): Promise<void> {
   const settings = await loadSettings(browserStore);
-  const consented = settings.consentAt !== null;
+  const consented = hasConsent(settings);
   byId('consent').hidden = consented;
+  // Un accord donné sur un texte plus ancien : on dit pourquoi l'écran revient.
+  byId('consent-changed').hidden = consented || settings.consentAt === null;
   byId('settings').hidden = !consented;
   byId('server-url').textContent = SERVER_URL;
   tokenInput.value = settings.token ?? '';
@@ -45,7 +47,10 @@ async function describeConnection(token: string): Promise<{ text: string; ok: bo
 }
 
 byId('accept').addEventListener('click', async () => {
-  await saveSettings(browserStore, { consentAt: new Date().toISOString() });
+  await saveSettings(browserStore, {
+    consentAt: new Date().toISOString(),
+    consentVersion: CONSENT_VERSION,
+  });
   await render();
 });
 

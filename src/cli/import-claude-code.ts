@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { basename, sep } from 'node:path';
+import { z } from 'zod';
 import { API_PATHS } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import {
@@ -12,6 +13,15 @@ import { logError } from '../server/log';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
+
+// `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
+export function parseSince(value: string | undefined): Date | undefined {
+  if (value === undefined || value === '') return undefined;
+  if (!z.iso.date().safeParse(value).success) {
+    throw new Error('--since attend une date au format AAAA-MM-JJ.');
+  }
+  return new Date(`${value}T00:00:00`);
+}
 
 export type ImportOptions = { baseDir: string; project?: string; since?: Date; dryRun: boolean };
 export type ImportDeps = {
@@ -104,12 +114,16 @@ export async function importClaudeCode(
     skipped: 0,
     failures: 0,
   };
+  // Une session reprise recopie l'historique (mêmes uuid, autre sessionId) : chaque tour n'est envoyé qu'une fois.
+  const seen = new Set<string>();
   for (const file of await findSessionFiles(options.baseDir)) {
     try {
-      const session = await loadSession(file, options);
-      if (!session) continue;
+      const loaded = await loadSession(file, options);
+      const turns = loaded?.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];
+      if (!loaded || turns.length === 0) continue;
+      for (const turn of turns) seen.add(turn.external_id);
       summary.sessions += 1;
-      await importSession(session, options, deps, summary);
+      await importSession({ ...loaded, turns }, options, deps, summary);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

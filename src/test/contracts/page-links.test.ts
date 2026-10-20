@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cardUrl } from '@/server/memory/card-url';
 import { listFiles, productionSources } from './files';
-
-const CARD_ID = '00000000-0000-4000-8000-000000000000';
 
 // Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
 const routeOf = (file: string): string =>
@@ -57,15 +54,13 @@ function writtenPaths(): Array<{ file: string; path: string }> {
 
 describe('liens entre pages', () => {
   it('connaît les routes de l’application', () => {
-    expect(ROUTES).toEqual(
-      expect.arrayContaining(['/', '/fiches/[id]', '/journal', '/a-verifier']),
-    );
+    expect(ROUTES).toEqual(expect.arrayContaining(['/', '/sources', '/connexions', '/reglages']));
   });
 
-  it('mène le lien des résultats MCP (cardUrl) à la page d’une fiche', () => {
-    const path = new URL(cardUrl(CARD_ID)).pathname.replace(CARD_ID, '[id]');
-    expect(path).toBe('/fiches/[id]');
-    expect(matchesRoute(path)).toBe(true);
+  it('ne garde aucune page du tri : fiches, à vérifier, journal', () => {
+    for (const removed of ['/fiches/[id]', '/a-verifier', '/journal']) {
+      expect(ROUTES).not.toContain(removed);
+    }
   });
 
   it('trouve les liens écrits dans le code', () => {

@@ -1,0 +1,10 @@
+{
+  "data": {
+    "thread": {
+      "timelineEntries": {
+        "edges": [],
+        "pageInfo": { "hasNextPage": false, "endCursor": null }
+      }
+    }
+  }
+}

@@ -20,6 +20,8 @@ const dateTimeFormat = new Intl.DateTimeFormat(LOCALE, {
   minute: '2-digit',
 });
 const numberFormat = new Intl.NumberFormat(LOCALE);
+// « 2026-10-13 » : le jour civil à Paris.
+const dayFormat = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE });
 
 // « 12 oct. 2026 »
 export const formatDate = (date: Date): string => dateFormat.format(date);
@@ -35,6 +37,8 @@ export function formatRelative(date: Date, now: Date = new Date()): string {
   if (elapsed < MINUTE) return "à l'instant";
   if (elapsed < HOUR) return `il y a ${Math.floor(elapsed / MINUTE)} min`;
   if (elapsed < DAY) return `il y a ${Math.floor(elapsed / HOUR)} h`;
-  if (elapsed < 2 * DAY) return 'hier';
+  // « hier » : la veille en jour civil à Paris (midi la veille sert de repère, sans souci d'heure d'été).
+  const yesterday = new Date(Date.parse(`${dayFormat.format(now)}T12:00:00Z`) - DAY);
+  if (dayFormat.format(date) === dayFormat.format(yesterday)) return 'hier';
   return formatDate(date);
 }

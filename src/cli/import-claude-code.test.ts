@@ -1,4 +1,13 @@
-import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,6 +17,7 @@ import {
   createIngestSender,
   type ImportDeps,
   importClaudeCode,
+  parseSince,
   TokenRefusedError,
 } from './import-claude-code';
 
@@ -102,6 +112,51 @@ describe('importClaudeCode', () => {
 
     expect(summary.sessions).toBe(1);
     expect(send.mock.calls.map(([p]) => p.source.external_id)).toEqual([ACME_SESSION]);
+  });
+
+  it("n'envoie pas deux fois un tour recopié par une session reprise", async () => {
+    const acme = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    const resumed = '55555555-5555-4555-8555-555555555555';
+    const newTurn = JSON.stringify({
+      type: 'user',
+      uuid: 'reprise-1',
+      sessionId: resumed,
+      timestamp: '2026-10-14T09:00:00.000Z',
+      message: { content: 'On reprend.' },
+    });
+    await writeFile(
+      join(projectDir, 'reprise.jsonl'),
+      `${acme.replaceAll(ACME_SESSION, resumed).trimEnd()}\n${newTurn}\n`,
+    );
+    const { deps, send } = makeDeps();
+
+    const summary = await importClaudeCode(importOptions(), deps);
+
+    const sent = send.mock.calls.flatMap(([p]) => p.turns.map((turn) => turn.external_id));
+    expect(new Set(sent).size).toBe(sent.length);
+    expect(sent).toContain('reprise-1');
+    expect(summary.turnsSent).toBe(13);
+  });
+
+  it('rattache les tours recopiés à la session d’origine, quel que soit le nom des fichiers', async () => {
+    const acme = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    const resumed = '00000000-0000-4000-8000-000000000000';
+    // Le fichier de la reprise vient avant l'original dans l'ordre alphabétique, mais il est plus récent.
+    const resumedFile = join(projectDir, `${resumed}.jsonl`);
+    await writeFile(resumedFile, acme.replaceAll(ACME_SESSION, resumed));
+    await utimes(
+      join(projectDir, 'session-simple.jsonl'),
+      new Date(2026, 9, 1),
+      new Date(2026, 9, 1),
+    );
+    await utimes(resumedFile, new Date(2026, 9, 14), new Date(2026, 9, 14));
+    const { deps, send } = makeDeps();
+
+    await importClaudeCode(importOptions(), deps);
+
+    const sources = send.mock.calls.map(([p]) => p.source.external_id);
+    expect(sources).toContain(ACME_SESSION);
+    expect(sources).not.toContain(resumed);
   });
 
   it('since écarte les tours plus anciens et les sessions sans tour récent', async () => {
@@ -245,5 +300,22 @@ describe('createIngestSender', () => {
     );
 
     await expect(sender(payload)).rejects.toThrow();
+  });
+});
+
+describe('parseSince', () => {
+  const tz = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = tz;
+  });
+
+  it('prend minuit à l’heure locale', () => {
+    process.env.TZ = 'Europe/Paris';
+    expect(parseSince('2026-10-13')?.toISOString()).toBe('2026-10-12T22:00:00.000Z');
+  });
+
+  it('refuse une date mal écrite et laisse passer l’absence de date', () => {
+    expect(() => parseSince('13/10/2026')).toThrow('AAAA-MM-JJ');
+    expect(parseSince(undefined)).toBeUndefined();
   });
 });

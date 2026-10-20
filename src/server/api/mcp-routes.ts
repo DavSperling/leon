@@ -1,6 +1,8 @@
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { getEmbedder } from '@/server/embeddings/registry';
+import { env } from '@/server/env';
 import { clientLabelFromUserAgent } from '@/server/mcp/client-label';
 import { createLeonMcpServer } from '@/server/mcp/server';
 import { type ApiEnv, requireApiToken } from './require-api-token';
@@ -16,7 +18,7 @@ const McpAuthExtraSchema = z.object({
 
 const mcpHandler = createMcpHandler(({ authInfo }) => {
   const { ctx, client } = McpAuthExtraSchema.parse(authInfo?.extra);
-  return createLeonMcpServer(ctx, client);
+  return createLeonMcpServer(ctx, client, { embedder: getEmbedder(env) });
 });
 
 export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>

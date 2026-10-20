@@ -1,0 +1,9 @@
+{
+  "user_id": "3074457362577955221",
+  "expires_in": 3599,
+  "team_id": "3074457362577833142",
+  "access_token": "acces-exemple-miro",
+  "scope": "boards:read",
+  "refresh_token": "rafraichir-exemple-miro-1",
+  "token_type": "bearer"
+}

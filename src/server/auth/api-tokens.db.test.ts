@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -108,6 +108,56 @@ describe('jetons personnels', () => {
       .delete(members)
       .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
     expect(await verifyApiToken(created.token)).toBeNull();
+  });
+
+  // Audit n° 12 : un membre retiré puis réinvité retrouvait les jetons de son ancienne adhésion.
+  it("refuse un jeton créé avant l'adhésion en cours", async () => {
+    const paul = await signUp('Paul');
+    const created = await createApiToken(paul, 'Extension');
+    const membership = and(
+      eq(members.userId, paul.userId),
+      eq(members.organizationId, paul.tenantId),
+    );
+
+    await adminDb
+      .update(members)
+      .set({ createdAt: new Date(Date.now() + 60_000) })
+      .where(membership);
+
+    expect(await verifyApiToken(created.token)).toBeNull();
+  });
+
+  // L'adhésion prend son heure côté Node, le jeton côté base : un jeton créé juste après l'adhésion peut porter
+  // une heure un peu plus ancienne. Il reste valide.
+  it("accepte un jeton créé dans la seconde de l'adhésion, malgré l'écart d'horloge", async () => {
+    const paul = await signUp('Paul');
+    const created = await createApiToken(paul, 'Extension');
+    await adminDb
+      .update(members)
+      .set({
+        createdAt: sql`(select created_at from api_tokens where id = ${created.id}) + interval '300 milliseconds'`,
+      })
+      .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
+
+    expect(await verifyApiToken(created.token)).not.toBeNull();
+  });
+
+  // Audit 2 n° 15 b : la page des réglages montrait encore comme actif le jeton de l'ancienne adhésion.
+  it("ne liste pas un jeton créé avant l'adhésion en cours", async () => {
+    const paul = await signUp('Paul');
+    await createApiToken(paul, 'Ancienne adhésion');
+    await adminDb
+      .update(members)
+      .set({ createdAt: new Date(Date.now() + 60_000) })
+      .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
+    // Le jeton créé après la réadhésion, lui, reste listé.
+    const current = await createApiToken(paul, 'Adhésion en cours');
+    await adminDb
+      .update(apiTokens)
+      .set({ createdAt: new Date(Date.now() + 120_000) })
+      .where(eq(apiTokens.id, current.id));
+
+    expect((await listApiTokens(paul)).map((t) => t.id)).toEqual([current.id]);
   });
 
   it('refuse un jeton mal formé sans interroger la base', async () => {

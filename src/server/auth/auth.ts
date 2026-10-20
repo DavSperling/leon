@@ -11,7 +11,18 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   database: pool,
   emailAndPassword: { enabled: true, autoSignIn: false, minPasswordLength: 8 },
-  advanced: { database: { generateId: 'uuid' } },
+  // La connexion et l'inscription passent par les server actions (auth.api.*), sous la limite de débit de
+  // rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un compte sans
+  // organisation). Seul le routeur les ferme : auth.api.* les appelle toujours.
+  disabledPaths: ['/sign-in/email', '/sign-up/email'],
+  advanced: {
+    database: { generateId: 'uuid' },
+    // L'adresse du client ne vient que de l'en-tête que pose le proxy de confiance (rate-limit.ts) ; sans lui,
+    // aucune n'est lue : un en-tête choisi par le client ne vaut rien.
+    ipAddress: env.LEON_IP_HEADER
+      ? { ipAddressHeaders: [env.LEON_IP_HEADER] }
+      : { disableIpTracking: true },
+  },
   telemetry: { enabled: false },
   databaseHooks: {
     session: {

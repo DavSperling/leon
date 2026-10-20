@@ -1,7 +1,9 @@
 import { browser } from '#imports';
 import { browserStore } from '../../lib/browser-store';
+import { type DroppedCounts, type DropReason, takeDropped } from '../../lib/outbox';
 import {
   type CaptureStatus,
+  hasConsent,
   loadSettings,
   loadStatus,
   type Settings,
@@ -44,7 +46,7 @@ function formatAgo(iso: string | undefined): string {
 
 function displayFor(settings: Settings, status: CaptureStatus): Display {
   if (settings.paused) return { label: '❚❚ En pause', tone: 'info' };
-  if (settings.consentAt === null || settings.token === null) {
+  if (!hasConsent(settings) || settings.token === null) {
     return CONNECTION_DISPLAYS.not_configured;
   }
   return CONNECTION_DISPLAYS[status.connection];
@@ -55,10 +57,29 @@ function pendingText(count: number): string {
   return `${count} ${count === 1 ? 'échange' : 'échanges'} en attente d'envoi`;
 }
 
+// Lu une fois à l'ouverture (puis noté comme vu) : la popup garde le message tant qu'elle est ouverte.
+const dropped = takeDropped(browserStore);
+
+const DROP_CAUSES: Record<DropReason, string> = {
+  full: "le tampon d'envoi était plein (serveur injoignable trop longtemps)",
+  refused: "le serveur n'en a pas voulu (échange trop gros ou illisible)",
+  token: 'en attente quand le jeton a changé (rien ne part vers une autre organisation)',
+};
+
+function droppedText(counts: DroppedCounts): string {
+  return Object.entries(counts)
+    .map(([reason, count = 0]) => {
+      const exchanges = count === 1 ? '1 échange perdu' : `${count} échanges perdus`;
+      return `${exchanges} : ${DROP_CAUSES[reason as DropReason]}.`;
+    })
+    .join(' ');
+}
+
 async function render(): Promise<void> {
-  const [settings, status] = await Promise.all([
+  const [settings, status, droppedCounts] = await Promise.all([
     loadSettings(browserStore),
     loadStatus(browserStore),
+    dropped,
   ]);
   const display = displayFor(settings, status);
   const state = byId('state');
@@ -74,6 +95,8 @@ async function render(): Promise<void> {
     element.title = iso ? new Date(iso).toLocaleString('fr-FR') : '';
   }
   byId('pending').textContent = pendingText(status.pending);
+  byId('dropped').textContent = droppedText(droppedCounts);
+  byId('dropped').hidden = byId('dropped').textContent === '';
   showSiteSwitches(document, settings);
 }
 
@@ -90,13 +113,5 @@ for (const button of document.querySelectorAll('[data-toggle-pause]')) {
 for (const button of document.querySelectorAll('[data-open-options]')) {
   button.addEventListener('click', () => browser.runtime.openOptionsPage());
 }
-
-// sidePanel.open exige un geste de l'utilisateur : on ne fait que lire la fenêtre courante avant.
-byId('open-briefing').addEventListener('click', async () => {
-  const { id } = await browser.windows.getCurrent();
-  if (id === undefined) return;
-  await browser.sidePanel.open({ windowId: id });
-  window.close();
-});
 
 void render();

@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "id": "b7e42a19-3c5d-4f80-9a26-8d1c0f4e7b53",
+      "name": "Site web",
+      "description": "Refonte du site vitrine.",
+      "identifier": "SITE",
+      "network": 2,
+      "project_lead_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "timezone": "Europe/Paris",
+      "archived_at": null,
+      "created_at": "2026-03-02T08:00:00.000000Z",
+      "updated_at": "2026-09-01T10:12:00.000000Z",
+      "created_by_id": "2f9c4a71-0b3d-4e58-9a16-7c1e5d8b3f20",
+      "updated_by_id": null
+    },
+    {
+      "id": "5d1f9c2e-7a3b-4e68-8f40-2c9b6a1d7e35",
+      "name": "Application mobile",
+      "description": "",
+      "identifier": "APP",
+      "network": 0,
+      "project_lead_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "timezone": "Europe/Paris",
+      "archived_at": null,
+      "created_at": "2026-04-11T08:00:00.000000Z",
+      "updated_at": "2026-09-20T15:30:00.000000Z",
+      "created_by_id": "8a3e6b15-4d92-4c07-b1f8-5e2a9c7d4b61",
+      "updated_by_id": null
+    }
+  ],
+  "next": null,
+  "previous": null,
+  "total_count": 2,
+  "pagination": { "style": "offset" }
+}

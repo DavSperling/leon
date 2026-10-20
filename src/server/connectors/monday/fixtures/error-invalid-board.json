@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil : board 1111111111 is not accessible",
+      "extensions": { "code": "InvalidBoardIdException", "status_code": 200 }
+    }
+  ],
+  "data": null,
+  "account_id": 1234567
+}

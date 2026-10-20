@@ -1,0 +1,24 @@
+[
+  {
+    "id": 456,
+    "node_id": "IC_kwDOAB1Pjs4AAAHI",
+    "url": "https://api.github.com/repos/acme/leon/issues/comments/456",
+    "html_url": "https://github.com/acme/leon/issues/12#issuecomment-456",
+    "body": "Plutôt 30 minutes, non ?",
+    "user": { "login": "paul-martin", "id": 4102, "type": "User" },
+    "created_at": "2026-10-09T10:00:00Z",
+    "updated_at": "2026-10-09T10:00:00Z",
+    "author_association": "MEMBER"
+  },
+  {
+    "id": 789,
+    "node_id": "IC_kwDOAB1Pjs4AAAMV",
+    "url": "https://api.github.com/repos/acme/leon/issues/comments/789",
+    "html_url": "https://github.com/acme/leon/issues/12#issuecomment-789",
+    "body": "Non, 15 minutes : c’est décidé.",
+    "user": { "login": "marie-durand", "id": 4101, "type": "User" },
+    "created_at": "2026-10-10T08:50:00Z",
+    "updated_at": "2026-10-10T08:55:00Z",
+    "author_association": "MEMBER"
+  }
+]

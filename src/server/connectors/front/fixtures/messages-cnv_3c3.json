@@ -1,0 +1,56 @@
+{
+  "_pagination": {
+    "next": null
+  },
+  "_links": {
+    "self": "https://acme.api.frontapp.com/conversations/cnv_3c3/messages"
+  },
+  "_results": [
+    {
+      "_links": {
+        "self": "https://acme.api.frontapp.com/messages/msg_3c11",
+        "related": {
+          "conversation": "https://acme.api.frontapp.com/conversations/cnv_3c3",
+          "message_replied_to": null,
+          "message_seen": "https://acme.api.frontapp.com/messages/msg_3c11/seen"
+        }
+      },
+      "id": "msg_3c11",
+      "message_uid": "1eab543f84a0785f7b6b8967cc0003c1",
+      "type": "sms",
+      "is_inbound": true,
+      "draft_mode": null,
+      "error_type": null,
+      "version": "551ba368f3e7803cce51503ee3e58ef0-26028-1791900000000-03c1",
+      "created_at": 1791900000,
+      "subject": "",
+      "blurb": "Bonjour, mon colis n'est toujours pas arrivé",
+      "author": null,
+      "recipients": [
+        {
+          "_links": {
+            "related": {
+              "contact": null
+            }
+          },
+          "name": null,
+          "handle": "+33600000000",
+          "role": "from"
+        },
+        {
+          "_links": {
+            "related": {
+              "contact": null
+            }
+          },
+          "name": null,
+          "handle": "+33900000000",
+          "role": "to"
+        }
+      ],
+      "body": "Bonjour, mon colis n'est toujours pas arrivé & personne ne me répond < 48 h",
+      "attachments": [],
+      "metadata": {}
+    }
+  ]
+}

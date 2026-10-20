@@ -1,0 +1,12 @@
+{
+  "error": false,
+  "reason": "resolved",
+  "data": {
+    "website_id": "5d3f2a10-7b44-4c1e-9a30-0b1e6c2d4f01",
+    "name": "Acme",
+    "domain": "acme.test",
+    "logo": "",
+    "verified": true,
+    "institutional": false
+  }
+}

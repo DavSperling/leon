@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "message": "texte-de-l-outil-a-ne-pas-reprendre : droit thread:read manquant",
+      "path": ["threads"],
+      "extensions": { "code": "FORBIDDEN" }
+    }
+  ],
+  "data": null
+}

@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -50,6 +50,15 @@ export async function createApiToken(
 const ownedBy = (ctx: TenantContext) =>
   and(eq(apiTokens.userId, ctx.userId), eq(apiTokens.tenantId, ctx.tenantId));
 
+// L'adhésion en cours, depuis avant la création du jeton : celui d'une ancienne adhésion ne vaut plus rien.
+const currentMembership = and(
+  eq(members.userId, apiTokens.userId),
+  eq(members.organizationId, apiTokens.tenantId),
+  // Une seconde de marge : l'adhésion prend son heure côté Node, le jeton côté base (écart d'horloge).
+  gte(apiTokens.createdAt, sql`${members.createdAt} - interval '1 second'`),
+);
+
+// Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.
 export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> {
   return db
     .select({
@@ -61,6 +70,7 @@ export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> 
       revokedAt: apiTokens.revokedAt,
     })
     .from(apiTokens)
+    .innerJoin(members, currentMembership)
     .where(ownedBy(ctx))
     .orderBy(desc(apiTokens.createdAt), desc(apiTokens.id));
 }
@@ -76,7 +86,8 @@ export async function revokeApiToken(ctx: TenantContext, tokenId: string): Promi
   return rows.length > 0;
 }
 
-// Jeton non révoqué dont l'utilisateur est toujours membre de l'organisation, revérifié à chaque appel.
+// Jeton non révoqué dont l'utilisateur est toujours membre de l'organisation, depuis avant la création du
+// jeton, revérifié à chaque appel.
 export async function verifyApiToken(
   token: string,
 ): Promise<{ tokenId: string; ctx: TenantContext } | null> {
@@ -89,10 +100,8 @@ export async function verifyApiToken(
       lastUsedAt: apiTokens.lastUsedAt,
     })
     .from(apiTokens)
-    .innerJoin(
-      members,
-      and(eq(members.userId, apiTokens.userId), eq(members.organizationId, apiTokens.tenantId)),
-    )
+    // Un membre retiré puis réinvité ne retrouve pas les jetons de son ancienne adhésion.
+    .innerJoin(members, currentMembership)
     .where(and(eq(apiTokens.tokenHash, hashApiToken(token)), isNull(apiTokens.revokedAt)))
     .limit(1);
   if (!row) return null;

@@ -1,15 +1,108 @@
-import type { Llm, LlmRequest } from './llm';
+import type { AgentEvent, AgentTool, ChatMessage, Llm, LlmStep } from './llm';
+import { executeAgentTool } from './run-tool';
 
-export type FakeLlm = Llm & { calls: Array<LlmRequest<unknown>> };
+type FakeCall = { step: LlmStep; system: string; messages: ChatMessage[] };
 
-// Valide la réponse du handler avec request.schema : une fixture qui dérive du schéma casse le test.
-export function createFakeLlm(handler: (request: LlmRequest<unknown>) => unknown): FakeLlm {
-  const calls: Array<LlmRequest<unknown>> = [];
+export type FakeLlmScript = {
+  // Les morceaux que streamText rend, dans l'ordre, à chaque appel.
+  texts?: string[];
+  // Un tour du modèle : ce que runAgent rend pour l'appel n° `call` (0, 1, …), sachant le résultat du dernier outil
+  // exécuté (null au premier tour). Un évènement « outil » est exécuté par le faux, sous la limite d'étapes, puis le
+  // script est rappelé ; un tour sans « outil » finit la réponse (« fini » s'il ne dit pas « fin » lui-même).
+  agent?: (call: number, lastToolResult: string | null) => AgentEvent[];
+};
+
+export type FakeLlm = Llm & { calls: FakeCall[] };
+
+// Le faux des tests : rejoue son script, garde chaque appel dans `calls`. Un appel que le script ne prévoit pas
+// lève, pour qu'un test mal réglé ne passe pas en silence.
+export function createFakeLlm(script: FakeLlmScript): FakeLlm {
+  const calls: FakeCall[] = [];
+  const record = (request: FakeCall) =>
+    calls.push({ step: request.step, system: request.system, messages: [...request.messages] });
+
   return {
     calls,
-    async generateObject<T>(request: LlmRequest<T>): Promise<T> {
-      calls.push(request);
-      return request.schema.parse(handler(request));
+    async *streamText(request) {
+      record(request);
+      if (!script.texts) throw new Error('Faux modèle : le script ne prévoit pas de texts');
+      yield* script.texts;
+    },
+    async *runAgent(request) {
+      record(request);
+      const { agent } = script;
+      if (!agent) throw new Error("Faux modèle : le script ne prévoit pas d'agent");
+      let lastToolResult: string | null = null;
+      let steps = 0;
+      for (let call = 0; ; call++) {
+        const events = agent(call, lastToolResult);
+        let calledTool = false;
+        for (const event of events) {
+          if (event.type === 'outil') {
+            if (steps >= request.maxSteps) {
+              yield { type: 'fin', reason: 'limite' };
+              return;
+            }
+            steps += 1;
+            calledTool = true;
+            yield event;
+            lastToolResult = (await executeAgentTool(request.tools, event.name, event.input)).text;
+            continue;
+          }
+          yield event;
+          if (event.type === 'fin') return;
+        }
+        if (!calledTool) {
+          yield { type: 'fin', reason: 'fini' };
+          return;
+        }
+      }
+    },
+  };
+}
+
+// Le faux modèle des démonstrations (LEON_LLM=factice, jamais en production) : déterministe, sans réseau. Il
+// répond toujours la même phrase courte qui cite [1] et, dans la discussion, appelle d'abord une fois l'outil
+// « chercher » avec la dernière question. Il ne lit pas les résultats : il sert à voir l'interface sans clé, et
+// son [1] ne renvoie à rien quand la recherche ne trouve rien (l'appelant, lui, écarte tout renvoi hors liste).
+// Il écrit en dur le nom de l'outil et sa clé « requete » : sans « chercher », il lève ; si l'outil refuse la
+// requête ou échoue, il le dit au lieu de citer [1].
+const DEMO_ANSWER = [
+  'Réponse du modèle factice (essai sans clé) : ',
+  'la mémoire contient des éléments sur votre question, ',
+  'voir le premier résultat [1].',
+];
+const DEMO_SEARCH_FAILED = [
+  'Réponse du modèle factice (essai sans clé) : ',
+  "il n'a pas pu chercher dans la mémoire (l'outil « chercher » a refusé sa requête ou échoué).",
+];
+
+const lastQuestion = (messages: ChatMessage[]): string =>
+  messages.findLast((message) => message.role === 'user')?.content ?? '';
+
+export function createDemoLlm(): Llm {
+  return {
+    async *streamText() {
+      yield* DEMO_ANSWER;
+    },
+    async *runAgent(request) {
+      let answer = DEMO_ANSWER;
+      if (request.maxSteps >= 1) {
+        const search: AgentTool | undefined = request.tools.find(
+          (tool) => tool.name === 'chercher',
+        );
+        if (!search) {
+          throw new Error(
+            "Faux modèle de démonstration : l'outil « chercher » n'est pas fourni (il l'appelle une fois avant de répondre)",
+          );
+        }
+        const input = { requete: lastQuestion(request.messages) };
+        yield { type: 'outil', name: search.name, input };
+        const result = await executeAgentTool(request.tools, search.name, input);
+        if (result.isError) answer = DEMO_SEARCH_FAILED;
+      }
+      for (const delta of answer) yield { type: 'texte', delta };
+      yield { type: 'fin', reason: 'fini' };
     },
   };
 }

@@ -1,0 +1,101 @@
+{
+  "result": {
+    "recordings": [
+      {
+        "id": "Qm4tX8vLw2Ks7NfY1cRzH",
+        "createdAt": "2026-10-12T09:00:12.344Z",
+        "durationSeconds": 2710,
+        "title": "Point produit hebdo",
+        "labels": ["produit"],
+        "state": "Ready",
+        "thumbnailUrl": "https://cdn.claap.test/thumbnails/Qm4tX8vLw2Ks7NfY1cRzH.jpg",
+        "transcriptOnly": false,
+        "url": "https://app.claap.io/acme/point-produit-hebdo-c-Qm4tX8vLw2Ks7NfY1cRzH",
+        "source": "GoogleMeet",
+        "channel": { "id": "Ch8sP2nWd5Rk1TqJ7vXeA", "name": "Équipe produit" },
+        "meeting": {
+          "startingAt": "2026-10-12T09:00:00.000Z",
+          "endingAt": "2026-10-12T09:45:00.000Z",
+          "type": "internal",
+          "participants": [
+            {
+              "id": "Us1aB4cD7eF0gH3iJ6kLm",
+              "name": "Marie Durand",
+              "email": "marie@acme.test",
+              "attended": true
+            },
+            {
+              "id": "Us5nO8pQ1rS4tU7vW0xYz",
+              "name": "Karim Benali",
+              "email": "karim@acme.test",
+              "attended": true
+            },
+            { "name": "Léa Martin", "attended": true },
+            { "email": "invite@acme.test", "attended": false }
+          ]
+        },
+        "recorder": {
+          "id": "Us1aB4cD7eF0gH3iJ6kLm",
+          "name": "Marie Durand",
+          "email": "marie@acme.test",
+          "attended": true
+        },
+        "video": { "url": "https://cdn.claap.test/videos/Qm4tX8vLw2Ks7NfY1cRzH.mp4" },
+        "transcripts": [
+          {
+            "isActive": true,
+            "isTranscript": true,
+            "langIso2": "fr",
+            "textUrl": "https://cdn.claap.test/transcripts/Qm4tX8vLw2Ks7NfY1cRzH.txt",
+            "url": "https://cdn.claap.test/transcripts/Qm4tX8vLw2Ks7NfY1cRzH.json"
+          }
+        ],
+        "workspace": { "id": "Ws3kT7vNq2Lx9HdB5mRcY", "name": "Acme" }
+      },
+      {
+        "id": "Ht9vK3pNa6Ys1WdE5uBjR",
+        "createdAt": "2026-10-13T14:30:05.100Z",
+        "durationSeconds": 1800,
+        "title": "Démo client Dupont",
+        "labels": [],
+        "state": "Ready",
+        "thumbnailUrl": "https://cdn.claap.test/thumbnails/Ht9vK3pNa6Ys1WdE5uBjR.jpg",
+        "transcriptOnly": false,
+        "url": "https://app.claap.io/acme/demo-client-dupont-c-Ht9vK3pNa6Ys1WdE5uBjR",
+        "source": "Zoom",
+        "meeting": {
+          "startingAt": "2026-10-13T14:30:00.000Z",
+          "endingAt": "2026-10-13T15:00:00.000Z",
+          "type": "external",
+          "participants": [
+            {
+              "id": "Us1aB4cD7eF0gH3iJ6kLm",
+              "name": "Marie Durand",
+              "email": "marie@acme.test",
+              "attended": true
+            },
+            { "name": "Paul Dupont", "email": "paul@dupont.test", "attended": false }
+          ]
+        },
+        "recorder": {
+          "id": "Us1aB4cD7eF0gH3iJ6kLm",
+          "name": "Marie Durand",
+          "email": "marie@acme.test",
+          "attended": true
+        },
+        "video": { "url": "https://cdn.claap.test/videos/Ht9vK3pNa6Ys1WdE5uBjR.mp4" },
+        "transcripts": [
+          {
+            "isActive": true,
+            "isTranscript": true,
+            "langIso2": "fr",
+            "textUrl": "https://cdn.claap.test/transcripts/Ht9vK3pNa6Ys1WdE5uBjR.txt",
+            "url": "https://cdn.claap.test/transcripts/Ht9vK3pNa6Ys1WdE5uBjR.json"
+          }
+        ],
+        "workspace": { "id": "Ws3kT7vNq2Lx9HdB5mRcY", "name": "Acme" }
+      }
+    ],
+    "pagination": { "nextCursor": "cursor-page-2", "totalCount": 4 }
+  }
+}

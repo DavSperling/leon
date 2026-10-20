@@ -57,13 +57,13 @@ function pendingText(count: number): string {
   return `${count} ${count === 1 ? 'échange' : 'échanges'} en attente d'envoi`;
 }
 
-// Lu une fois à l'ouverture (puis remis à zéro) : la popup garde le message tant qu'elle est ouverte.
+// Lu une fois à l'ouverture (puis noté comme vu) : la popup garde le message tant qu'elle est ouverte.
 const dropped = takeDropped(browserStore);
 
 const DROP_CAUSES: Record<DropReason, string> = {
   full: "le tampon d'envoi était plein (serveur injoignable trop longtemps)",
   refused: "le serveur n'en a pas voulu (échange trop gros ou illisible)",
-  token: "en attente quand le jeton a changé (rien ne part vers une autre organisation)",
+  token: 'en attente quand le jeton a changé (rien ne part vers une autre organisation)',
 };
 
 function droppedText(counts: DroppedCounts): string {

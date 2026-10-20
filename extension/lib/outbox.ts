@@ -7,8 +7,11 @@ export const OUTBOX_MAX = 500;
 // storage.local est plafonné (10 Mo dans Chrome, 5 Mo avant la version 114) : au-delà, l'écriture échoue et la
 // capture est perdue sans un mot. On reste en dessous ; les plus anciens sortent, comme au plafond en nombre.
 export const OUTBOX_MAX_BYTES = 4 * 1024 * 1024;
-// Échanges sortis du tampon sans avoir été envoyés, par raison, en attendant que la popup le dise.
+// Échanges sortis du tampon sans avoir été envoyés, par raison : un total qui ne fait que croître, écrit par le
+// seul service worker. La popup note ce qu'elle a déjà montré (DROPPED_SEEN_KEY) et dit la différence : aucune
+// des deux ne réécrit ce que l'autre écrit, une perte comptée pendant que la popup lit n'est pas effacée.
 export const DROPPED_KEY = 'leon.dropped';
+export const DROPPED_SEEN_KEY = 'leon.dropped-seen';
 // full : tampon plein ; refused : charge refusée pour toujours par le serveur (400, 413) ;
 // token : en attente quand le jeton a changé.
 export type DropReason = 'full' | 'refused' | 'token';
@@ -59,22 +62,28 @@ const DroppedSchema = z
   ])
   .catch({});
 
-async function readDropped(store: KeyValueStore): Promise<DroppedCounts> {
-  const counts = DroppedSchema.parse(await store.get(DROPPED_KEY));
+async function readCounts(store: KeyValueStore, key: string): Promise<DroppedCounts> {
+  const counts = DroppedSchema.parse(await store.get(key));
   return Object.fromEntries(Object.entries(counts).filter(([, n]) => n !== undefined && n > 0));
 }
 
 async function addDropped(store: KeyValueStore, reason: DropReason, n: number): Promise<void> {
   if (n <= 0) return;
-  const counts = await readDropped(store);
+  const counts = await readCounts(store, DROPPED_KEY);
   await store.set(DROPPED_KEY, { ...counts, [reason]: (counts[reason] ?? 0) + n });
 }
 
-// Les échanges perdus depuis la dernière lecture, par raison, remis à zéro (la popup les dit une fois).
+// Les échanges perdus depuis la dernière lecture, par raison (la popup les dit une fois).
 export async function takeDropped(store: KeyValueStore): Promise<DroppedCounts> {
-  const dropped = await readDropped(store);
-  if (Object.keys(dropped).length > 0) await store.set(DROPPED_KEY, {});
-  return dropped;
+  const total = await readCounts(store, DROPPED_KEY);
+  const seen = await readCounts(store, DROPPED_SEEN_KEY);
+  const fresh = Object.fromEntries(
+    Object.entries(total)
+      .map(([reason, n = 0]) => [reason, n - (seen[reason as DropReason] ?? 0)] as const)
+      .filter(([, n]) => n > 0),
+  );
+  if (Object.keys(fresh).length > 0) await store.set(DROPPED_SEEN_KEY, total);
+  return fresh;
 }
 
 // Jeton auquel appartient le tampon (celui du dernier envoi).

@@ -183,6 +183,29 @@ describe('enqueuePayload', () => {
   });
 });
 
+describe('takeDropped', () => {
+  // La popup lit les pertes pendant que le service worker en ajoute : aucune ne doit disparaître.
+  it('ne perd pas une perte comptée entre la lecture et l’écriture de la popup', async () => {
+    const inner = createMemoryStore();
+    await inner.set('leon.dropped', { full: 2 });
+    let injected = false;
+    const store = {
+      async get(key: string) {
+        const value = await inner.get(key);
+        if (key === 'leon.dropped' && !injected) {
+          injected = true;
+          await inner.set('leon.dropped', { full: 3 });
+        }
+        return value;
+      },
+      set: (key: string, value: unknown) => inner.set(key, value),
+    };
+    expect(await takeDropped(store)).toEqual({ full: 2 });
+    expect(await takeDropped(store)).toEqual({ full: 1 });
+    expect(await takeDropped(store)).toEqual({});
+  });
+});
+
 describe('forgetOutboxOnTokenChange', () => {
   const X = `leon_${'x'.repeat(43)}`;
   const Y = `leon_${'y'.repeat(43)}`;

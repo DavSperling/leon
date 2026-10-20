@@ -1,7 +1,9 @@
-import { TriangleAlert } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TriangleAlert } from 'lucide-react';
+import Link from 'next/link';
 import { SourceChip } from '@/components/source-chip';
 import { SourceLink } from '@/components/source-link';
 import { type BadgeStatus, StatusBadge } from '@/components/status-badge';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -11,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatDateTime, formatNumber, formatRelative } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { ChannelHealth, SourceRow } from '@/server/memory/sources';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -155,5 +158,34 @@ export function SourcesTable({ sources }: { sources: SourceRow[] }) {
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+const sourcesHref = (page: number) => (page > 1 ? `/sources?page=${page}` : '/sources');
+
+// Précédent et Suivant : le nombre total de sources n'est pas compté (il faudrait toutes les lire).
+export function SourcesPagination({ page, hasNext }: { page: number; hasNext: boolean }) {
+  if (page === 1 && !hasNext) return null;
+  const link = cn(buttonVariants({ variant: 'outline' }), 'h-9 gap-1 rounded-lg px-3 text-[15px]');
+  return (
+    <nav aria-label="Pages de sources" className="grid grid-cols-[1fr_auto_1fr] items-center">
+      {page > 1 ? (
+        <Link href={sourcesHref(page - 1)} rel="prev" className={cn(link, 'justify-self-start')}>
+          <ChevronLeft size={16} strokeWidth={1.5} aria-hidden="true" />
+          Précédent
+        </Link>
+      ) : null}
+      <p className="col-start-2 text-[15px] text-muted-foreground tabular-nums">Page {page}</p>
+      {hasNext ? (
+        <Link
+          href={sourcesHref(page + 1)}
+          rel="next"
+          className={cn(link, 'col-start-3 justify-self-end')}
+        >
+          Suivant
+          <ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" />
+        </Link>
+      ) : null}
+    </nav>
   );
 }

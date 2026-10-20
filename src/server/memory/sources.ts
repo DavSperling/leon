@@ -1,4 +1,4 @@
-import { count, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, max, or, sql } from 'drizzle-orm';
 import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -27,11 +27,17 @@ export type SourceRow = {
 };
 export type ChannelHealth = { kind: SourceKind; kindLabel: string; lastCaptureAt: Date | null };
 
+// Sources par page : la page reste rapide quelle que soit la taille de la mémoire.
+export const SOURCES_PAGE_SIZE = 50;
+
+// Une page de sources, les plus récentes d'abord (`page` à partir de 1), et `hasNext` s'il en reste après elle.
+// Tours et indexations ne se comptent que pour les sources de la page.
 export async function listSources(
   ctx: TenantContext,
-): Promise<{ channels: ChannelHealth[]; sources: SourceRow[] }> {
+  page = 1,
+): Promise<{ channels: ChannelHealth[]; sources: SourceRow[]; hasNext: boolean }> {
   return withTenant(ctx, async (tx) => {
-    const rows = await tx
+    const found = await tx
       .select({
         id: sources.id,
         kind: sources.kind,
@@ -44,20 +50,39 @@ export async function listSources(
       // sources d'outils sont celles que la RLS laisse voir. Pas `connection_id` : il devient nul
       // quand la connexion est supprimée.
       .where(or(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, PROVIDER_IDS)))
-      .orderBy(sql`${sources.lastTurnAt} desc nulls last`, desc(sources.id));
-    const turnCounts = await tx
-      .select({ sourceId: turns.sourceId, turnCount: count() })
-      .from(turns)
-      .groupBy(turns.sourceId);
-    const runs = await tx
-      .selectDistinctOn([ingestRuns.sourceId], {
-        sourceId: ingestRuns.sourceId,
-        status: ingestRuns.status,
-        step: ingestRuns.step,
-        updatedAt: ingestRuns.updatedAt,
-      })
-      .from(ingestRuns)
-      .orderBy(ingestRuns.sourceId, desc(ingestRuns.createdAt), desc(ingestRuns.id));
+      .orderBy(sql`${sources.lastTurnAt} desc nulls last`, desc(sources.id))
+      // Une de plus que la page : elle dit seulement s'il en reste.
+      .limit(SOURCES_PAGE_SIZE + 1)
+      .offset((page - 1) * SOURCES_PAGE_SIZE);
+    const rows = found.slice(0, SOURCES_PAGE_SIZE);
+    const ids = rows.map((row) => row.id);
+    const turnCounts =
+      ids.length === 0
+        ? []
+        : await tx
+            .select({ sourceId: turns.sourceId, turnCount: count() })
+            .from(turns)
+            .where(inArray(turns.sourceId, ids))
+            .groupBy(turns.sourceId);
+    const runs =
+      ids.length === 0
+        ? []
+        : await tx
+            .selectDistinctOn([ingestRuns.sourceId], {
+              sourceId: ingestRuns.sourceId,
+              status: ingestRuns.status,
+              step: ingestRuns.step,
+              updatedAt: ingestRuns.updatedAt,
+            })
+            .from(ingestRuns)
+            .where(inArray(ingestRuns.sourceId, ids))
+            .orderBy(ingestRuns.sourceId, desc(ingestRuns.createdAt), desc(ingestRuns.id));
+    // La dernière capture de l'utilisateur par canal, quelle que soit la page.
+    const captures = await tx
+      .select({ kind: sources.kind, lastCaptureAt: max(sources.lastTurnAt) })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, CAPTURE_KINDS)))
+      .groupBy(sources.kind);
 
     const countBySource = new Map(turnCounts.map((row) => [row.sourceId, row.turnCount]));
     const runBySource = new Map(runs.map(({ sourceId, ...run }) => [sourceId, run]));
@@ -68,15 +93,12 @@ export async function listSources(
       turnCount: countBySource.get(row.id) ?? 0,
       lastRun: runBySource.get(row.id) ?? null,
     }));
-    return { channels: channelsOf(rows), sources: sourceRows };
+    const lastByKind = new Map(captures.map((row) => [row.kind, row.lastCaptureAt]));
+    const channels = CAPTURE_KINDS.map((kind) => ({
+      kind,
+      kindLabel: SOURCE_KIND_LABELS[kind],
+      lastCaptureAt: lastByKind.get(kind) ?? null,
+    }));
+    return { channels, sources: sourceRows, hasNext: found.length > SOURCES_PAGE_SIZE };
   });
-}
-
-// Les sources sont triées par dernier tour décroissant : la première d'un canal est sa dernière capture.
-function channelsOf(rows: Array<{ kind: SourceKind; lastTurnAt: Date | null }>): ChannelHealth[] {
-  return CAPTURE_KINDS.map((kind) => ({
-    kind,
-    kindLabel: SOURCE_KIND_LABELS[kind],
-    lastCaptureAt: rows.find((row) => row.kind === kind)?.lastTurnAt ?? null,
-  }));
 }

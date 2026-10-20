@@ -113,15 +113,12 @@ describe('readReply', () => {
     expect(await read()).toEqual({ status: 'origine' });
   });
 
-  // La route a répondu avant de garder quoi que ce soit, ou le flux s'est coupé : rien n'est promis.
-  it('ne promet rien sur un autre refus, un flux coupé ou une panne du réseau', async () => {
+  // La route a répondu avant de garder quoi que ce soit, ou le réseau a lâché avant sa réponse : rien n'est promis.
+  it('ne promet rien sur un autre refus ou une panne du réseau avant la réponse', async () => {
     for (const status of [400, 404, 413, 500]) {
       respond(status);
       expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
     }
-
-    respond(200, sse({ type: 'texte', delta: 'Début' }));
-    expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
 
     vi.stubGlobal(
       'fetch',
@@ -130,6 +127,30 @@ describe('readReply', () => {
       }),
     );
     expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+  });
+
+  // Audit 3 n° 7 : après 200, le serveur a pris la question et finit sa réponse même sans lecteur (session-routes.ts).
+  // Un flux coupé (proxy, réseau) n'est donc pas une question perdue : la page relit la discussion.
+  it('dit « coupée » quand le flux s’arrête ou lâche après 200, sans évènement de fin', async () => {
+    respond(200, sse({ type: 'texte', delta: 'Début' }));
+    expect(await read()).toEqual({ status: 'coupee' });
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(sse({ type: 'texte', delta: 'Début' })[0]));
+            controller.error(new TypeError('réseau coupé'));
+          },
+        });
+        return new Response(body, {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' },
+        });
+      }),
+    );
+    expect(await read()).toEqual({ status: 'coupee' });
   });
 });
 
@@ -146,5 +167,6 @@ describe('questionNotWritten', () => {
     expect(questionNotWritten({ status: 'indisponible', questionGardee: true })).toBe(false);
     expect(questionNotWritten({ status: 'finie', content: 'R', citations: [] })).toBe(false);
     expect(questionNotWritten({ status: 'en-cours' })).toBe(false);
+    expect(questionNotWritten({ status: 'coupee' })).toBe(false);
   });
 });

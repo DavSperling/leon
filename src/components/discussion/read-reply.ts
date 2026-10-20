@@ -23,9 +23,12 @@ export type ReplyOutcome =
   | { status: 'sans-modele' }
   // Leon répond déjà dans cette discussion : rien n'est écrit, la page attend cette réponse-là.
   | { status: 'en-cours' }
+  // Le flux s'est coupé après 200 (proxy, réseau) : le serveur finit sa réponse sans lecteur et la garde, ou dit
+  // qu'elle a échoué. La page relit la discussion au lieu de retirer la question.
+  | { status: 'coupee' }
   // `questionGardee` : le serveur dit avoir gardé la question avant d'échouer. Faux quand il dit le contraire,
-  // quand la route a refusé avant (400, 404, 413, 500), quand le flux s'est coupé ou que le réseau a lâché : rien
-  // n'est alors promis.
+  // quand la route a refusé avant (400, 404, 413, 500) ou que le réseau a lâché avant sa réponse : rien n'est
+  // alors promis.
   | { status: 'indisponible'; questionGardee: boolean }
   // 429 : l'utilisateur a déjà deux réponses en cours ; rien n'est écrit.
   | { status: 'occupe' }
@@ -35,9 +38,10 @@ export type ReplyOutcome =
   | { status: 'origine' };
 
 const LOST: ReplyOutcome = { status: 'indisponible', questionGardee: false };
+const CUT: ReplyOutcome = { status: 'coupee' };
 
 // Le serveur n'a pas écrit la question (ou ne promet pas l'avoir écrite) : la page la retire de la discussion et
-// la remet dans la saisie. « en-cours » a son propre chemin (la page attend la réponse commencée plus tôt).
+// la remet dans la saisie. « en-cours » et « coupee » ont leur propre chemin (la page relit la discussion).
 export function questionNotWritten(outcome: ReplyOutcome): boolean {
   if (outcome.status === 'indisponible') return !outcome.questionGardee;
   return ['sans-modele', 'occupe', 'session', 'origine'].includes(outcome.status);
@@ -48,18 +52,23 @@ export async function readReply(
   message: string,
   onProgress: (progress: ReplyProgress) => void,
 ): Promise<ReplyOutcome> {
+  let response: Response;
   try {
-    const response = await fetch(discussionMessagesUrl(discussionId), {
+    response = await fetch(discussionMessagesUrl(discussionId), {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
       body: JSON.stringify({ message }),
       cache: 'no-store',
     });
-    if (response.status === 204) return { status: 'sans-modele' };
-    if (response.status === 401) return { status: 'session' };
-    if (response.status === 403) return { status: 'origine' };
-    if (response.status === 429) return { status: 'occupe' };
-    if (!response.ok || !response.body) return LOST;
+  } catch {
+    return LOST;
+  }
+  if (response.status === 204) return { status: 'sans-modele' };
+  if (response.status === 401) return { status: 'session' };
+  if (response.status === 403) return { status: 'origine' };
+  if (response.status === 429) return { status: 'occupe' };
+  if (!response.ok || !response.body) return LOST;
+  try {
     const chunks = response.body.pipeThrough(new TextDecoderStream()).getReader();
     const reader = createDiscussionEventReader();
     let text = '';
@@ -67,7 +76,7 @@ export async function readReply(
     let activity: string | null = null;
     for (;;) {
       const { done, value } = await chunks.read();
-      if (done) return LOST;
+      if (done) return CUT;
       for (const event of reader.push(value)) {
         if (event.type === 'texte') {
           text += event.delta;
@@ -87,6 +96,6 @@ export async function readReply(
       }
     }
   } catch {
-    return LOST;
+    return CUT;
   }
 }

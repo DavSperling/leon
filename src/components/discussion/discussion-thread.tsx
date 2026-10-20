@@ -38,8 +38,9 @@ export type ThreadMessage = DiscussionMessageView;
 type Reply =
   | { status: 'repos' }
   | ({ status: 'flux' } & ReplyProgress)
-  // Leon répond déjà dans cette discussion : la page relit la discussion jusqu'à ce que cette réponse y soit.
-  | { status: 'attente'; message: string }
+  // Leon répond déjà dans cette discussion (ou le flux s'est coupé, `coupee`) : la page relit la discussion
+  // jusqu'à ce que cette réponse y soit.
+  | { status: 'attente'; message: string; coupee: boolean }
   // Cette réponse est arrivée, mais la question envoyée pendant qu'elle courait n'a pas été écrite.
   | { status: 'non-envoyee' }
   | { status: 'indisponible'; questionGardee: boolean }
@@ -262,8 +263,8 @@ export function DiscussionThread({
     setReply(THINKING);
     readReply(discussionId, message, (progress) => setReply({ status: 'flux', ...progress }))
       .then((outcome) => {
-        if (outcome.status === 'en-cours') {
-          setReply({ status: 'attente', message });
+        if (outcome.status === 'en-cours' || outcome.status === 'coupee') {
+          setReply({ status: 'attente', message, coupee: outcome.status === 'coupee' });
           return;
         }
         if (outcome.status !== 'finie') {
@@ -289,10 +290,11 @@ export function DiscussionThread({
 
   // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, ou que le serveur
   // n'en ait plus en cours (elle a échoué), puis la montre telle qu'elle est. Une question envoyée entre-temps n'a
-  // pas été écrite : elle revient dans la saisie.
+  // pas été écrite : elle revient dans la saisie. Après un flux coupé, une question absente n'a pas été écrite non
+  // plus : elle revient dans la saisie.
   useEffect(() => {
     if (reply.status !== 'attente') return;
-    const { message } = reply;
+    const { message, coupee } = reply;
     const until = Date.now() + WAIT_MAX_MS;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -316,7 +318,9 @@ export function DiscussionThread({
             return;
           }
           setDraft((typed) => (typed.trim() === '' ? message : typed));
-          setReply({ status: 'non-envoyee' });
+          setReply(
+            coupee ? { status: 'indisponible', questionGardee: false } : { status: 'non-envoyee' },
+          );
         })
         .catch(() => {
           if (!stopped) setReply({ status: 'indisponible', questionGardee: false });

@@ -45,8 +45,10 @@ async function setup() {
   return { tenantId, alice, bob, ticket, conversation };
 }
 
-async function collect(stream: AsyncIterable<DiscussionEvent> | null): Promise<DiscussionEvent[]> {
-  if (stream === null) throw new Error('flux attendu');
+async function collect(
+  stream: AsyncIterable<DiscussionEvent> | null | 'trop',
+): Promise<DiscussionEvent[]> {
+  if (stream === null || stream === 'trop') throw new Error('flux attendu');
   const events: DiscussionEvent[] = [];
   for await (const event of stream) events.push(event);
   return events;
@@ -366,6 +368,35 @@ describe('une réponse déjà en cours', () => {
     expect(intruder).toEqual([{ type: 'indisponible' }]);
   });
 
+  // Le coût d'un utilisateur : au plus deux réponses en cours à la fois, toutes discussions confondues.
+  it('refuse une troisième réponse en cours du même utilisateur, sans rien écrire', async () => {
+    const { alice, bob } = await setup();
+    const ids = await Promise.all(
+      ['Un', 'Deux', 'Trois'].map((question) => createDiscussion(alice, { question })),
+    );
+    const bobId = await createDiscussion(bob, { question: 'Quatre' });
+    const model = heldModel();
+    const third = createFakeLlm({ agent: () => [text('Non.')] });
+
+    const running = [
+      collect(reply(alice, ids[0] ?? '', 'Un', model.llm)),
+      collect(reply(alice, ids[1] ?? '', 'Deux', model.llm)),
+    ];
+    await model.running;
+    const refused = reply(alice, ids[2] ?? '', 'Trois', third);
+    const other = await collect(
+      reply(bob, bobId, 'Quatre', createFakeLlm({ agent: () => [text('Oui.')] })),
+    );
+    model.release();
+    await Promise.all(running);
+    const after = await collect(reply(alice, ids[2] ?? '', 'Trois', third));
+
+    expect(refused).toBe('trop');
+    expect(other.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(after.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
+    expect(third.calls).toHaveLength(1);
+  });
+
   it('se libère à la fin d’une réponse, après une panne, et quand le lecteur s’en va', async () => {
     const { alice } = await setup();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -383,7 +414,7 @@ describe('une réponse déjà en cours', () => {
     expect(await collect(reply(alice, id, 'Question', broken))).toEqual([{ type: 'indisponible' }]);
     // Le lecteur s'en va après le premier évènement : rien n'est gardé, la place est libre.
     const left = reply(alice, id, 'Question', scripted([search('quetzal')], [text('x')]).llm);
-    for await (const event of left ?? []) {
+    for await (const event of left === 'trop' ? [] : (left ?? [])) {
       expect(event).toEqual({ type: 'outil', name: 'chercher' });
       break;
     }

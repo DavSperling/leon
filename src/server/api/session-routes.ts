@@ -3,7 +3,11 @@ import { bodyLimit } from 'hono/body-limit';
 import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import { ANSWER_PATH, ANSWER_RESULTS_PARAM, parseAnswerResults } from '@/lib/answer-events';
-import { DISCUSSION_MESSAGE_MAX_CHARS, DISCUSSIONS_PATH } from '@/lib/discussion-events';
+import {
+  DISCUSSION_MESSAGE_MAX_CHARS,
+  DISCUSSION_TOO_MANY,
+  DISCUSSIONS_PATH,
+} from '@/lib/discussion-events';
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { answerStream } from '@/server/answer/answer';
 import { auth } from '@/server/auth/auth';
@@ -131,6 +135,8 @@ export const sessionRoutes = new Hono<SessionEnv>()
       });
       // Sans modèle, la page dit qu'aucun modèle n'est branché ; la question n'est pas gardée.
       if (events === null) return c.body(null, 204);
+      // Déjà deux réponses en cours pour cet utilisateur : rien n'est écrit.
+      if (events === 'trop') return c.json({ error: DISCUSSION_TOO_MANY }, 429);
       return streamEvents(c, events, 'discussion.route', true);
     },
   );

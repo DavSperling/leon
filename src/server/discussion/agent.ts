@@ -30,15 +30,20 @@ export type { DiscussionEvent } from '@/lib/discussion-events';
 // Un flux qu'on cesse de lire interrompt l'appel au modèle, et rien n'est gardé.
 //
 // Une seule réponse à la fois par discussion : une demande qui arrive pendant une réponse (la page quittée puis
-// rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. La garde vit dans
-// ce processus (une seule instance de Leon) ; sur plusieurs, la base refuse toujours une seconde réponse à la même
-// question (saveReply), qui rend alors « en-cours » elle aussi.
+// rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. Et au plus deux
+// réponses en cours par utilisateur (son coût) : au-delà, replyStream rend 'trop' (la route répond 429), sans rien
+// écrire. Ces gardes vivent dans ce processus (une seule instance de Leon) ; sur plusieurs, la base refuse
+// toujours une seconde réponse à la même question (saveReply), qui rend alors « en-cours » elle aussi.
 
 // Borne le texte ET la réflexion du modèle (llm.ts) : une réponse de quelques phrases, la réflexion de l'effort
 // « medium » entre deux outils. De la marge, pour ne pas couper une réponse.
 export const DISCUSSION_MAX_TOKENS = 8000;
 
-// Les discussions où une réponse est en cours, par utilisateur : celle d'un autre ne bloque jamais la sienne.
+// Les réponses en cours d'un utilisateur, toutes discussions confondues.
+export const DISCUSSION_MAX_REPLIES_PER_USER = 2;
+
+// Les discussions où une réponse est en cours, par utilisateur (`userId:discussionId`) : celle d'un autre ne
+// bloque jamais la sienne.
 const replying = new Set<string>();
 
 export function replyStream(
@@ -46,10 +51,21 @@ export function replyStream(
   discussionId: string,
   message: string,
   deps: { llm: Llm | null; embedder: Embedder | null },
-): AsyncIterable<DiscussionEvent> | null {
+): AsyncIterable<DiscussionEvent> | null | 'trop' {
   const { llm } = deps;
   if (llm === null) return null;
-  return streamReply(ctx, discussionId, message, llm, deps.embedder);
+  const key = `${ctx.userId}:${discussionId}`;
+  if (replying.has(key)) return alreadyReplying();
+  const mine = [...replying].filter((k) => k.startsWith(`${ctx.userId}:`)).length;
+  if (mine >= DISCUSSION_MAX_REPLIES_PER_USER) return 'trop';
+  // Prise ici, d'un bloc avec le contrôle, avant toute écriture ; rendue quand le flux finit, pour toute raison
+  // (finally). La route lit toujours le flux jusqu'au bout, même après le départ du lecteur.
+  replying.add(key);
+  return streamReply(ctx, discussionId, message, llm, deps.embedder, key);
+}
+
+async function* alreadyReplying(): AsyncGenerator<DiscussionEvent> {
+  yield { type: 'en-cours' };
 }
 
 async function* streamReply(
@@ -58,14 +74,8 @@ async function* streamReply(
   message: string,
   llm: Llm,
   embedder: Embedder | null,
+  key: string,
 ): AsyncGenerator<DiscussionEvent> {
-  // Prise avant toute écriture, rendue quand le flux finit, pour toute raison (finally).
-  const key = `${ctx.userId}:${discussionId}`;
-  if (replying.has(key)) {
-    yield { type: 'en-cours' };
-    return;
-  }
-  replying.add(key);
   try {
     yield* runReply(ctx, discussionId, message, llm, embedder);
   } finally {

@@ -5,7 +5,7 @@ import { createEventStreamReader } from './event-stream';
 // fixes de fin de réponse vivent ici.
 
 // POST, cookie de session, corps JSON `{ message }` : 204 sans modèle, 404 pour une discussion invisible ou
-// inconnue, sinon un flux `text/event-stream` d'évènements JSON.
+// inconnue, 429 au-delà de deux réponses en cours, sinon un flux `text/event-stream` d'évènements JSON.
 export const DISCUSSIONS_PATH = '/api/v1/discussions';
 
 // Durée maximale d'une réponse : au-delà, le serveur l'interrompt. La page qui attend une réponse commencée plus
@@ -15,6 +15,11 @@ export const DISCUSSION_TIMEOUT_MS = 180_000;
 export function discussionMessagesUrl(discussionId: string): string {
   return `${DISCUSSIONS_PATH}/${encodeURIComponent(discussionId)}/messages`;
 }
+
+// 429 : l'utilisateur a déjà deux réponses en cours (le coût d'un utilisateur). Rien n'est écrit ; la route rend
+// ce message, que la page affiche.
+export const DISCUSSION_TOO_MANY =
+  'Leon répond déjà à deux de vos questions. Attendez qu’une réponse soit finie, puis réessayez.';
 
 // Longueur maximale d'un message de l'utilisateur.
 export const DISCUSSION_MESSAGE_MAX_CHARS = 4000;

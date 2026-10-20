@@ -26,6 +26,8 @@ export type ReplyOutcome =
   // `questionGardee` : le serveur a gardé la question avant d'échouer. Faux quand la route a refusé avant (400,
   // 404, 413, 500), quand le flux s'est coupé ou que le réseau a lâché : rien n'est alors promis.
   | { status: 'indisponible'; questionGardee: boolean }
+  // 429 : l'utilisateur a déjà deux réponses en cours ; rien n'est écrit.
+  | { status: 'occupe' }
   // 401 : la session a expiré ; rien n'est écrit.
   | { status: 'session' }
   // 403 : la page est ouverte à une autre adresse que celle réglée pour Leon (BETTER_AUTH_URL) ; rien n'est écrit.
@@ -48,6 +50,7 @@ export async function readReply(
     if (response.status === 204) return { status: 'sans-modele' };
     if (response.status === 401) return { status: 'session' };
     if (response.status === 403) return { status: 'origine' };
+    if (response.status === 429) return { status: 'occupe' };
     if (!response.ok || !response.body) return LOST;
     const chunks = response.body.pipeThrough(new TextDecoderStream()).getReader();
     const reader = createDiscussionEventReader();

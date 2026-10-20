@@ -94,6 +94,12 @@ describe('readReply', () => {
     expect(await read()).toEqual({ status: 'indisponible', questionGardee: true });
   });
 
+  it('dit que trop de réponses sont en cours (429)', async () => {
+    respond(429);
+
+    expect(await read()).toEqual({ status: 'occupe' });
+  });
+
   it('distingue la session expirée (401) et l’adresse refusée (403)', async () => {
     respond(401);
     expect(await read()).toEqual({ status: 'session' });

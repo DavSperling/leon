@@ -9,6 +9,7 @@ import {
 import {
   createDiscussionEventReader,
   DISCUSSION_MESSAGE_MAX_CHARS,
+  DISCUSSION_TOO_MANY,
   type DiscussionEvent,
   discussionMessagesUrl,
 } from '@/lib/discussion-events';
@@ -476,6 +477,42 @@ describe('POST /api/v1/discussions/:id/messages', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  // Le coût d'un utilisateur : au plus deux réponses en cours ; la troisième est refusée avant d'écrire quoi que ce soit.
+  it('répond 429 à une troisième réponse en cours du même utilisateur, sans rien écrire', async () => {
+    const { alice } = await setupTeam();
+    const ids = await Promise.all(
+      ['Un', 'Deux', 'Trois'].map((question) => createDiscussion(alice.ctx, { question })),
+    );
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let calls = 0;
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        calls += 1;
+        await gate;
+        yield { type: 'texte', delta: 'Réponse.' };
+      },
+    });
+
+    const first = await post(alice, ids[0] ?? '', { message: 'Un' });
+    const second = await post(alice, ids[1] ?? '', { message: 'Deux' });
+    const third = await post(alice, ids[2] ?? '', { message: 'Encore' });
+    release();
+    await Promise.all([first.text(), second.text()]);
+
+    expect(third.status).toBe(429);
+    expect(await third.json()).toEqual({ error: DISCUSSION_TOO_MANY });
+    expect(calls).toBe(2);
+    expect((await getDiscussion(alice.ctx, ids[2] ?? ''))?.messages.map((m) => m.content)).toEqual([
+      'Trois',
+    ]);
   });
 
   // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.

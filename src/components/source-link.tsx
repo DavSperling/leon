@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Lien vers l'original d'une source d'outil. L'adresse est déjà limitée à https par le serveur.
+// Lien vers l'original d'une source d'outil. L'adresse est déjà limitée à http et https par le serveur (safeUrl).
 export function SourceLink({
   url,
   label,

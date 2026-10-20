@@ -231,9 +231,22 @@ describe('listSources', () => {
     expect(rows.map((row) => row.id)).not.toContain(ids.paulSource);
   });
 
+  it('garde un lien http, comme la recherche', async () => {
+    const { paul } = await seedRightsScenario();
+    const source = await seedTeamSource(paul, {
+      kind: 'linear',
+      title: 'Ticket en http',
+      metadata: { url: 'http://exemple.test/a' },
+    });
+
+    const { sources: rows } = await listSources(paul);
+
+    expect(rows.find((row) => row.id === source)?.url).toBe('http://exemple.test/a');
+  });
+
   it.each([
-    ['une adresse http', 'http://exemple.test/a'],
     ['un lien javascript', 'javascript:alert(1)'],
+    ['un lien javascript en majuscules', 'JavaScript:alert(1)'],
     ['une valeur qui n’est pas du texte', 42],
     ['aucune adresse', undefined],
   ])('ne garde pas le lien quand il est %s', async (_label, url) => {

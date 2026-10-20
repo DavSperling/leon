@@ -1,5 +1,6 @@
 import { type SQL, sql } from 'drizzle-orm';
 import { ITEM_NATURES, type ItemNature, type SourceKind } from '@/capture/turn';
+import { safeUrl } from '@/lib/safe-url';
 import type { SearchFilters, SourceInfo } from './types';
 
 // Les morceaux de SQL et de lecture que partagent la recherche, le contexte et l'activité. Les requêtes les
@@ -75,17 +76,6 @@ export function epochToDate(epoch: string | number): Date {
 }
 
 const NATURES = new Set<string>(ITEM_NATURES);
-
-// Seuls les liens http et https sortent : la source vient d'un outil tiers, et le lien finit dans un `href`.
-function safeUrl(value: unknown): string | null {
-  if (typeof value !== 'string' || value.length > 2000) return null;
-  try {
-    const { protocol } = new URL(value);
-    return protocol === 'https:' || protocol === 'http:' ? value : null;
-  } catch {
-    return null;
-  }
-}
 
 const ORIGIN_KEYS_MAX = 20;
 const ORIGIN_VALUE_MAX = 300;

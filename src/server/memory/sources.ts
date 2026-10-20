@@ -1,5 +1,6 @@
 import { count, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
+import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
@@ -15,7 +16,7 @@ export type SourceRow = {
   kind: SourceKind;
   kindLabel: string;
   title: string | null;
-  url: string | null; // lien vers l'original d'une source d'outil, en https seulement
+  url: string | null; // lien vers l'original d'une source d'outil, en http ou https seulement (safeUrl)
   lastTurnAt: Date | null;
   turnCount: number;
   lastRun: {
@@ -62,7 +63,7 @@ export async function listSources(
     const runBySource = new Map(runs.map(({ sourceId, ...run }) => [sourceId, run]));
     const sourceRows = rows.map(({ url, ...row }) => ({
       ...row,
-      url: url?.startsWith('https://') ? url : null,
+      url: safeUrl(url),
       kindLabel: SOURCE_KIND_LABELS[row.kind],
       turnCount: countBySource.get(row.id) ?? 0,
       lastRun: runBySource.get(row.id) ?? null,

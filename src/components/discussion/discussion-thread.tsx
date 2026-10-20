@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import {
   DISCUSSION_MESSAGE_MAX_CHARS,
   DISCUSSION_TIMEOUT_MS,
+  DISCUSSION_TOO_MANY,
   type DiscussionCitation,
 } from '@/lib/discussion-events';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ type Reply =
   // Cette réponse est arrivée, mais la question envoyée pendant qu'elle courait n'a pas été écrite.
   | { status: 'non-envoyee' }
   | { status: 'indisponible'; questionGardee: boolean }
+  | { status: 'occupe' }
   | { status: 'session' }
   | { status: 'origine' }
   | { status: 'sans-modele' };
@@ -407,6 +409,23 @@ export function DiscussionThread({
                 {reply.questionGardee
                   ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
                   : 'Leon n’a pas pu répondre pour le moment.'}
+              </Notice>
+            )}
+            {reply.status === 'occupe' && last?.role === 'user' && (
+              <Notice
+                action={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => ask(last.content)}
+                    className={actionClass}
+                  >
+                    <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
+                    Réessayer
+                  </Button>
+                }
+              >
+                {DISCUSSION_TOO_MANY}
               </Notice>
             )}
             {reply.status === 'session' && (

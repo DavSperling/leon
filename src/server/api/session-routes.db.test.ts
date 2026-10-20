@@ -9,6 +9,7 @@ import {
 import {
   createDiscussionEventReader,
   DISCUSSION_MESSAGE_MAX_CHARS,
+  DISCUSSION_TOO_MANY,
   type DiscussionEvent,
   discussionMessagesUrl,
 } from '@/lib/discussion-events';
@@ -402,6 +403,118 @@ describe('POST /api/v1/discussions/:id/messages', () => {
     expect(rows.map((row) => row.role)).toEqual(['user', 'assistant']);
   });
 
+  // La page rechargée ou quittée pendant la réponse : la page promet que le serveur la finit et la garde.
+  it('finit et garde la réponse quand le lecteur s’en va en cours de route', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        yield { type: 'outil', name: 'chercher', input: { requete: 'quetzal' } };
+        await gate;
+        yield { type: 'texte', delta: 'La clause est acceptée.' };
+      },
+    });
+
+    const response = await post(alice, id, { message: 'La clause quetzal ?' });
+    const reader = response.body?.getReader();
+    await reader?.read();
+    await reader?.cancel();
+    release();
+
+    await vi.waitFor(async () => {
+      const messages = (await getDiscussion(alice.ctx, id))?.messages ?? [];
+      expect(messages.map((m) => [m.role, m.content])).toEqual([
+        ['user', 'La clause quetzal ?'],
+        ['assistant', 'La clause est acceptée.'],
+      ]);
+    });
+  });
+
+  // Un proxy coupe une connexion muette : pendant que l'agent réfléchit, un commentaire SSE tient la ligne, que
+  // la page ignore.
+  it('envoie un signe de vie toutes les 15 s pendant la réponse', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        started();
+        await gate;
+        yield { type: 'texte', delta: 'La clause est acceptée.' };
+      },
+    });
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+
+    try {
+      const response = await post(alice, id, { message: 'La clause quetzal ?' });
+      await running;
+      vi.advanceTimersByTime(15_000);
+      release();
+      const body = await response.text();
+
+      expect(body).toContain(': ping\n\n');
+      expect(createDiscussionEventReader().push(body).at(-1)).toEqual({
+        type: 'fin',
+        reason: 'fini',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Le coût d'un utilisateur : au plus deux réponses en cours ; la troisième est refusée avant d'écrire quoi que ce soit.
+  it('répond 429 à une troisième réponse en cours du même utilisateur, sans rien écrire', async () => {
+    const { alice } = await setupTeam();
+    const ids = await Promise.all(
+      ['Un', 'Deux', 'Trois'].map((question) => createDiscussion(alice.ctx, { question })),
+    );
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let calls = 0;
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        calls += 1;
+        await gate;
+        yield { type: 'texte', delta: 'Réponse.' };
+      },
+    });
+
+    const first = await post(alice, ids[0] ?? '', { message: 'Un' });
+    const second = await post(alice, ids[1] ?? '', { message: 'Deux' });
+    const third = await post(alice, ids[2] ?? '', { message: 'Encore' });
+    release();
+    await Promise.all([first.text(), second.text()]);
+
+    expect(third.status).toBe(429);
+    expect(await third.json()).toEqual({ error: DISCUSSION_TOO_MANY });
+    expect(calls).toBe(2);
+    expect((await getDiscussion(alice.ctx, ids[2] ?? ''))?.messages.map((m) => m.content)).toEqual([
+      'Trois',
+    ]);
+  });
+
   // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.
   it('répond 404 à Bob dans la discussion d’Alice, sans rien écrire ni appeler le modèle', async () => {
     const { alice, bob } = await setupTeam();
@@ -473,7 +586,9 @@ describe('POST /api/v1/discussions/:id/messages', () => {
 
     const response = await post(alice, id, { message: 'Question' });
 
-    expect(await discussionEvents(response)).toEqual([{ type: 'indisponible' }]);
+    expect(await discussionEvents(response)).toEqual([
+      { type: 'indisponible', questionGardee: true },
+    ]);
   });
 
   // Chaque appelant de searchPassages passe le fournisseur de getEmbedder(env) (C4).

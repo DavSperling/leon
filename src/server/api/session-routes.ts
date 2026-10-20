@@ -3,7 +3,11 @@ import { bodyLimit } from 'hono/body-limit';
 import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import { ANSWER_PATH, ANSWER_RESULTS_PARAM, parseAnswerResults } from '@/lib/answer-events';
-import { DISCUSSION_MESSAGE_MAX_CHARS, DISCUSSIONS_PATH } from '@/lib/discussion-events';
+import {
+  DISCUSSION_MESSAGE_MAX_CHARS,
+  DISCUSSION_TOO_MANY,
+  DISCUSSIONS_PATH,
+} from '@/lib/discussion-events';
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { answerStream } from '@/server/answer/answer';
 import { auth } from '@/server/auth/auth';
@@ -61,22 +65,34 @@ const DiscussionMessageSchema = z.object({
   message: z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS),
 });
 
-// Les évènements d'un flux, un par évènement serveur, jusqu'à ce que le lecteur s'en aille.
+// Le signe de vie d'un flux : un commentaire SSE, que la page ignore (event-stream.ts). Sans lui, un proxy coupe
+// la connexion restée muette pendant que l'agent cherche ou réfléchit.
+const PING_MS = 15_000;
+
+// Les évènements d'un flux, un par évènement serveur. Quand le lecteur s'en va, la réponse en tête s'arrête (ce
+// qui interrompt l'appel au modèle) ; la discussion (`keepReading`) continue de lire sans écrire, pour que la
+// réponse soit finie et gardée : la page rechargée la retrouve.
 function streamEvents(
   c: Parameters<typeof streamSSE>[0],
   events: AsyncIterable<unknown>,
   route: string,
+  keepReading = false,
 ) {
   return streamSSE(c, async (stream) => {
+    const ping = setInterval(() => void stream.write(': ping\n\n'), PING_MS);
     try {
       for await (const event of events) {
-        // Le lecteur est parti : on arrête de lire, ce qui interrompt l'appel au modèle.
-        if (stream.aborted) break;
+        if (stream.aborted) {
+          if (keepReading) continue;
+          break;
+        }
         await stream.writeSSE({ data: JSON.stringify(event) });
       }
     } catch (error) {
       // Les flux ne lèvent pas ; sans ce filet, Hono écrirait le message de l'erreur dans la console.
       logError(route, error);
+    } finally {
+      clearInterval(ping);
     }
   });
 }
@@ -119,6 +135,8 @@ export const sessionRoutes = new Hono<SessionEnv>()
       });
       // Sans modèle, la page dit qu'aucun modèle n'est branché ; la question n'est pas gardée.
       if (events === null) return c.body(null, 204);
-      return streamEvents(c, events, 'discussion.route');
+      // Déjà deux réponses en cours pour cet utilisateur : rien n'est écrit.
+      if (events === 'trop') return c.json({ error: DISCUSSION_TOO_MANY }, 429);
+      return streamEvents(c, events, 'discussion.route', true);
     },
   );

@@ -87,11 +87,22 @@ describe('readReply', () => {
     expect(await read()).toEqual({ status: 'en-cours' });
   });
 
-  // La route a gardé la question avant d'appeler le modèle : elle le dit par l'évènement.
-  it('dit la question gardée seulement quand le flux dit « indisponible »', async () => {
-    respond(200, sse({ type: 'texte', delta: 'Début' }, { type: 'indisponible' }));
-
+  // La route dit dans l'évènement si elle a gardé la question avant d'échouer.
+  it('dit la question gardée seulement quand l’évènement « indisponible » le dit', async () => {
+    respond(
+      200,
+      sse({ type: 'texte', delta: 'Début' }, { type: 'indisponible', questionGardee: true }),
+    );
     expect(await read()).toEqual({ status: 'indisponible', questionGardee: true });
+
+    respond(200, sse({ type: 'indisponible', questionGardee: false }));
+    expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+  });
+
+  it('dit que trop de réponses sont en cours (429)', async () => {
+    respond(429);
+
+    expect(await read()).toEqual({ status: 'occupe' });
   });
 
   it('distingue la session expirée (401) et l’adresse refusée (403)', async () => {

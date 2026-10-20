@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
+import type { DiscussionCitation } from '@/lib/discussion-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { discussionMessages, discussions } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
@@ -27,6 +28,17 @@ async function team() {
   const { tenantId, members } = await newTeam(['Alice Martin', 'Bob Durand'], tenantIds);
   const [alice, bob] = members as [TenantContext, TenantContext];
   return { tenantId, alice, bob };
+}
+
+// Une réponse à la dernière question de la discussion (celle que saveReply attend).
+async function answer(
+  ctx: TenantContext,
+  id: string,
+  reply: { content: string; citations: DiscussionCitation[] },
+) {
+  const messages = (await getDiscussion(ctx, id))?.messages ?? [];
+  const questionId = messages.findLast((m) => m.role === 'user')?.id ?? '';
+  return saveReply(ctx, id, { questionId, ...reply });
 }
 
 const RLS_VIOLATION = { cause: { code: '42501' } };
@@ -143,7 +155,7 @@ describe('les discussions d’un autre', () => {
     const id = await createDiscussion(alice, { question: 'Question privée' });
 
     expect(await startReply(bob, id, 'Je m’invite')).toBeNull();
-    expect(await saveReply(bob, id, { content: 'Réponse', citations: [] })).toBe('invisible');
+    expect(await answer(bob, id, { content: 'Réponse', citations: [] })).toBe('invisible');
     const { rows } = await adminPool.query(
       'select 1 from discussion_messages where discussion_id = $1',
       [id],
@@ -241,7 +253,7 @@ describe('startReply et saveReply', () => {
     const before = await findDiscussion(alice, id);
 
     const turn = await startReply(alice, id, 'Deuxième question');
-    const saved = await saveReply(alice, id, {
+    const saved = await answer(alice, id, {
       content: 'Réponse [1].',
       citations: [
         { n: 1, sourceId: ticket.sourceId, passageId: randomUUID(), title: 'T', url: null },
@@ -290,7 +302,7 @@ describe('startReply et saveReply', () => {
     });
 
     const first = await startReply(alice, id, 'ACME ?');
-    await saveReply(alice, id, { content: 'Réponse.', citations: [] });
+    await answer(alice, id, { content: 'Réponse.', citations: [] });
     const second = await startReply(alice, id, 'Et ensuite ?');
 
     expect(first?.seeds.map((seed) => seed.sourceId)).toEqual([ticket.sourceId]);
@@ -301,8 +313,7 @@ describe('startReply et saveReply', () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'message 1' });
     for (let index = 2; index <= 24; index++) {
-      if (index % 2 === 0)
-        await saveReply(alice, id, { content: `message ${index}`, citations: [] });
+      if (index % 2 === 0) await answer(alice, id, { content: `message ${index}`, citations: [] });
       else await startReply(alice, id, `message ${index}`);
     }
 
@@ -318,7 +329,7 @@ describe('startReply et saveReply', () => {
   it('garde l’ordre des messages quand l’horloge recule', async () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'Question' });
-    await saveReply(alice, id, { content: 'Réponse', citations: [] });
+    await answer(alice, id, { content: 'Réponse', citations: [] });
     // La réponse semble écrite dans une heure : l'horloge de la base a reculé depuis.
     await adminPool.query(
       `update discussion_messages set created_at = now() + interval '1 hour'
@@ -327,7 +338,7 @@ describe('startReply et saveReply', () => {
     );
 
     const turn = await startReply(alice, id, 'Suite');
-    await saveReply(alice, id, { content: 'Réponse à la suite', citations: [] });
+    await answer(alice, id, { content: 'Réponse à la suite', citations: [] });
 
     expect(turn?.history.map((m) => m.content)).toEqual(['Question', 'Réponse', 'Suite']);
     expect((await getDiscussion(alice, id))?.messages.map((m) => m.content)).toEqual([
@@ -344,8 +355,8 @@ describe('startReply et saveReply', () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'Question' });
 
-    const first = await saveReply(alice, id, { content: 'Réponse', citations: [] });
-    const second = await saveReply(alice, id, { content: 'Doublon', citations: [] });
+    const first = await answer(alice, id, { content: 'Réponse', citations: [] });
+    const second = await answer(alice, id, { content: 'Doublon', citations: [] });
 
     expect([first, second]).toEqual(['gardee', 'deja-repondue']);
     expect((await getDiscussion(alice, id))?.messages.map((m) => m.content)).toEqual([
@@ -354,12 +365,39 @@ describe('startReply et saveReply', () => {
     ]);
   });
 
+  // Sur deux serveurs : une question posée pendant la réponse à la précédente. Cette réponse-là n'est pas écrite
+  // après la nouvelle question, à laquelle elle ne répond pas.
+  it('n’écrit pas la réponse d’une question qui n’est plus la dernière', async () => {
+    const { alice } = await team();
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const first = await startReply(alice, id, 'Question');
+    const second = await startReply(alice, id, 'Autre question');
+
+    const late = await saveReply(alice, id, {
+      questionId: first?.questionId ?? '',
+      content: 'Réponse à la première',
+      citations: [],
+    });
+    const right = await saveReply(alice, id, {
+      questionId: second?.questionId ?? '',
+      content: 'Réponse à la seconde',
+      citations: [],
+    });
+
+    expect([late, right]).toEqual(['deja-repondue', 'gardee']);
+    expect((await getDiscussion(alice, id))?.messages.map((m) => m.content)).toEqual([
+      'Question',
+      'Autre question',
+      'Réponse à la seconde',
+    ]);
+  });
+
   it('écrites en même temps, une seule réponse et une seule question entrent', async () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'Question' });
 
     const saved = await Promise.all(
-      [1, 2, 3].map((n) => saveReply(alice, id, { content: `Réponse ${n}`, citations: [] })),
+      [1, 2, 3].map((n) => answer(alice, id, { content: `Réponse ${n}`, citations: [] })),
     );
     await Promise.all([1, 2, 3].map(() => startReply(alice, id, 'Suite')));
 
@@ -377,7 +415,7 @@ describe('startReply et saveReply', () => {
     expect(await startReply(alice, randomUUID(), 'Question')).toBeNull();
     expect(await startReply(alice, 'pas-un-id', 'Question')).toBeNull();
     expect(await findDiscussion(alice, 'pas-un-id')).toBeNull();
-    expect(await saveReply(alice, 'pas-un-id', { content: 'x', citations: [] })).toBe('invisible');
+    expect(await answer(alice, 'pas-un-id', { content: 'x', citations: [] })).toBe('invisible');
   });
 });
 
@@ -418,7 +456,7 @@ describe('une source devenue invisible', () => {
   it('n’est plus citée, ni dans la réponse ni dans les résultats d’origine', async () => {
     const { alice, bob, lost, id } = await discussionOnTwoTickets();
     const seeds = (await getDiscussion(bob, id))?.messages[0]?.citations ?? [];
-    await saveReply(bob, id, { content: 'Signé [1], relance [2].', citations: seeds });
+    await answer(bob, id, { content: 'Signé [1], relance [2].', citations: seeds });
 
     await restrict(lost.sourceId, [alice.userId]);
 

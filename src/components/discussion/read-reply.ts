@@ -8,7 +8,7 @@ import { toolActivityLabel } from './message-segments';
 
 // La page d'une discussion envoie une question à la route (C8) et lit sa réponse au fil du flux. Chaque issue a
 // son état, pour que la page dise ce qui s'est vraiment passé : la question n'est dite « gardée » que lorsque le
-// serveur l'a gardée (l'évènement « indisponible » vient après son écriture). Module sans React, testé seul.
+// serveur dit l'avoir gardée (l'évènement « indisponible » le porte). Module sans React, testé seul.
 
 export type ReplyProgress = {
   text: string;
@@ -23,9 +23,12 @@ export type ReplyOutcome =
   | { status: 'sans-modele' }
   // Leon répond déjà dans cette discussion : rien n'est écrit, la page attend cette réponse-là.
   | { status: 'en-cours' }
-  // `questionGardee` : le serveur a gardé la question avant d'échouer. Faux quand la route a refusé avant (400,
-  // 404, 413, 500), quand le flux s'est coupé ou que le réseau a lâché : rien n'est alors promis.
+  // `questionGardee` : le serveur dit avoir gardé la question avant d'échouer. Faux quand il dit le contraire,
+  // quand la route a refusé avant (400, 404, 413, 500), quand le flux s'est coupé ou que le réseau a lâché : rien
+  // n'est alors promis.
   | { status: 'indisponible'; questionGardee: boolean }
+  // 429 : l'utilisateur a déjà deux réponses en cours ; rien n'est écrit.
+  | { status: 'occupe' }
   // 401 : la session a expiré ; rien n'est écrit.
   | { status: 'session' }
   // 403 : la page est ouverte à une autre adresse que celle réglée pour Leon (BETTER_AUTH_URL) ; rien n'est écrit.
@@ -48,6 +51,7 @@ export async function readReply(
     if (response.status === 204) return { status: 'sans-modele' };
     if (response.status === 401) return { status: 'session' };
     if (response.status === 403) return { status: 'origine' };
+    if (response.status === 429) return { status: 'occupe' };
     if (!response.ok || !response.body) return LOST;
     const chunks = response.body.pipeThrough(new TextDecoderStream()).getReader();
     const reader = createDiscussionEventReader();
@@ -70,7 +74,7 @@ export async function readReply(
         } else if (event.type === 'en-cours') {
           return { status: 'en-cours' };
         } else {
-          return { status: 'indisponible', questionGardee: true };
+          return { status: 'indisponible', questionGardee: event.questionGardee };
         }
         onProgress({ text, citations, activity });
       }

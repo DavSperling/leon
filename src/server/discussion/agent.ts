@@ -25,19 +25,25 @@ export type { DiscussionEvent } from '@/lib/discussion-events';
 // voit l'utilisateur : ses outils passent par la recherche, sous ses droits (tools.ts).
 //
 // Une panne (base, modèle, délai) rend l'évènement « indisponible », qui termine le flux : rien de la réponse
-// n'est gardé, la question reste et peut être reposée. Elle ne se journalise que par logError, sans question,
-// passage ni réponse. Un lecteur qui s'en va interrompt l'appel au modèle, et rien n'est gardé non plus.
+// n'est gardé ; la question reste et peut être reposée, sauf si elle n'a pas pu être écrite (questionGardee). Elle ne se journalise que par logError, sans question,
+// passage ni réponse. La route continue de lire le flux quand la page s'en va : la réponse est finie et gardée.
+// Un flux qu'on cesse de lire interrompt l'appel au modèle, et rien n'est gardé.
 //
 // Une seule réponse à la fois par discussion : une demande qui arrive pendant une réponse (la page quittée puis
-// rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. La garde vit dans
-// ce processus (une seule instance de Leon) ; sur plusieurs, la base refuse toujours une seconde réponse à la même
-// question (saveReply), qui rend alors « en-cours » elle aussi.
+// rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. Et au plus deux
+// réponses en cours par utilisateur (son coût) : au-delà, replyStream rend 'trop' (la route répond 429), sans rien
+// écrire. Ces gardes vivent dans ce processus (une seule instance de Leon) ; sur plusieurs, la base refuse
+// toujours une seconde réponse à la même question (saveReply), qui rend alors « en-cours » elle aussi.
 
 // Borne le texte ET la réflexion du modèle (llm.ts) : une réponse de quelques phrases, la réflexion de l'effort
 // « medium » entre deux outils. De la marge, pour ne pas couper une réponse.
 export const DISCUSSION_MAX_TOKENS = 8000;
 
-// Les discussions où une réponse est en cours, par utilisateur : celle d'un autre ne bloque jamais la sienne.
+// Les réponses en cours d'un utilisateur, toutes discussions confondues.
+export const DISCUSSION_MAX_REPLIES_PER_USER = 2;
+
+// Les discussions où une réponse est en cours, par utilisateur (`userId:discussionId`) : celle d'un autre ne
+// bloque jamais la sienne.
 const replying = new Set<string>();
 
 export function replyStream(
@@ -45,10 +51,21 @@ export function replyStream(
   discussionId: string,
   message: string,
   deps: { llm: Llm | null; embedder: Embedder | null },
-): AsyncIterable<DiscussionEvent> | null {
+): AsyncIterable<DiscussionEvent> | null | 'trop' {
   const { llm } = deps;
   if (llm === null) return null;
-  return streamReply(ctx, discussionId, message, llm, deps.embedder);
+  const key = `${ctx.userId}:${discussionId}`;
+  if (replying.has(key)) return alreadyReplying();
+  const mine = [...replying].filter((k) => k.startsWith(`${ctx.userId}:`)).length;
+  if (mine >= DISCUSSION_MAX_REPLIES_PER_USER) return 'trop';
+  // Prise ici, d'un bloc avec le contrôle, avant toute écriture ; rendue quand le flux finit, pour toute raison
+  // (finally). La route lit toujours le flux jusqu'au bout, même après le départ du lecteur.
+  replying.add(key);
+  return streamReply(ctx, discussionId, message, llm, deps.embedder, key);
+}
+
+async function* alreadyReplying(): AsyncGenerator<DiscussionEvent> {
+  yield { type: 'en-cours' };
 }
 
 async function* streamReply(
@@ -57,14 +74,8 @@ async function* streamReply(
   message: string,
   llm: Llm,
   embedder: Embedder | null,
+  key: string,
 ): AsyncGenerator<DiscussionEvent> {
-  // Prise avant toute écriture, rendue quand le flux finit, pour toute raison (finally).
-  const key = `${ctx.userId}:${discussionId}`;
-  if (replying.has(key)) {
-    yield { type: 'en-cours' };
-    return;
-  }
-  replying.add(key);
   try {
     yield* runReply(ctx, discussionId, message, llm, embedder);
   } finally {
@@ -84,12 +95,12 @@ async function* runReply(
     turn = await startReply(ctx, discussionId, message);
   } catch (error) {
     logError('discussion.indisponible', error, { etape: 'question' });
-    yield { type: 'indisponible' };
+    yield { type: 'indisponible', questionGardee: false };
     return;
   }
   // Une discussion que l'utilisateur ne voit pas (la route a déjà répondu 404 ; elle a pu disparaître depuis).
   if (turn === null) {
-    yield { type: 'indisponible' };
+    yield { type: 'indisponible', questionGardee: false };
     return;
   }
 
@@ -105,7 +116,7 @@ async function* runReply(
 
   // Le délai (DISCUSSION_TIMEOUT_MS : huit outils et une réponse y tiennent largement) interrompt l'appel au modèle
   // (signal), et la lecture n'attend plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui
-  // s'en va l'interrompt aussi (finally).
+  // cesse de lire le flux l'interrompt aussi (finally).
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISCUSSION_TIMEOUT_MS);
   const deadline = new Promise<never>((_resolve, reject) => {
@@ -153,7 +164,7 @@ async function* runReply(
       }
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'modele' });
-      yield { type: 'indisponible' };
+      yield { type: 'indisponible', questionGardee: true };
       return;
     }
     const rest = filter.flush();
@@ -166,15 +177,22 @@ async function* runReply(
     const citations = reason === 'refus' ? [] : numbering.citations(referencedNumbers(content));
     let saved: Awaited<ReturnType<typeof saveReply>>;
     try {
-      saved = await saveReply(ctx, discussionId, { content, citations });
+      saved = await saveReply(ctx, discussionId, {
+        questionId: turn.questionId,
+        content,
+        citations,
+      });
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'enregistrement' });
-      yield { type: 'indisponible' };
+      yield { type: 'indisponible', questionGardee: true };
       return;
     }
     // Une autre réponse à cette question a été gardée entre-temps (depuis un autre serveur) : c'est elle qui compte.
     if (saved !== 'gardee') {
-      yield saved === 'deja-repondue' ? { type: 'en-cours' } : { type: 'indisponible' };
+      // Invisible : la discussion a disparu entre-temps, avec sa question.
+      yield saved === 'deja-repondue'
+        ? { type: 'en-cours' }
+        : { type: 'indisponible', questionGardee: false };
       return;
     }
     yield { type: 'citations', items: citations };
@@ -182,7 +200,7 @@ async function* runReply(
   } finally {
     clearTimeout(timer);
     controller.abort();
-    // Le modèle n'est plus lu (fin, panne, délai ou lecteur parti) : on ferme son flux, sans attendre.
+    // Le modèle n'est plus lu (fin, panne, délai ou flux plus lu) : on ferme son flux, sans attendre.
     reading?.return?.().catch(() => undefined);
   }
 }

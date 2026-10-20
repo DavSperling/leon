@@ -413,4 +413,21 @@ describe('ingestConnectorItems', () => {
     expect(rows[0].n).toBe(0);
     expect(await sourceIdOf(marie, externalId)).toBeTruthy();
   });
+
+  // Audit 2 : la connexion qui a relevé l'événement a été supprimée (sa source est détachée), puis recréée. La
+  // nouvelle connexion du même créateur et du même outil retire l'événement devenu privé.
+  it('retire aussi un élément relevé par une connexion supprimée depuis', async () => {
+    const old = { ...(await connectionOf(paul)), privateRaw: true };
+    const externalId = `event:${randomUUID()}`;
+    await ingestConnectorItems(paul, old, [
+      normalized(connectorItem(externalId, [body('Entretien RH.')])),
+    ]);
+    const sourceId = await sourceIdOf(paul, externalId);
+    await adminPool.query('delete from connections where id = $1', [old.id]);
+    const current = { ...(await connectionOf(paul)), privateRaw: true };
+
+    expect(await removeConnectorItems(paul, current, [externalId])).toBe(1);
+
+    expect(await readSources(paul, sourceId)).toEqual([]);
+  });
 });

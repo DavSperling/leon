@@ -95,8 +95,9 @@ export async function ingestConnectorItems(
   return { sources: items.length, ...created };
 }
 
-// Retire les sources que la connexion signale (un événement devenu privé), par la fonction de 0019 : seulement
-// celles de cette connexion, de son outil et de son créateur (`ctx`). Tours, passages, vecteurs, runs et journal des
+// Retire les sources que la connexion signale (un événement devenu privé), par la fonction de 0019 (0020) :
+// seulement celles de son outil et de son créateur (`ctx`), y compris celles relevées par une connexion supprimée
+// depuis. Tours, passages, vecteurs, runs et journal des
 // lectures partent avec elles (clés en cascade). L'app n'a pas d'autre droit de supprimer du brut.
 export async function removeConnectorItems(
   ctx: TenantContext,

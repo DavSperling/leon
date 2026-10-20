@@ -140,3 +140,20 @@ language sql volatile security definer set search_path = public as $$
 $$;
 revoke all on function sortir_de_la_file(text, uuid[]) from public;
 grant execute on function sortir_de_la_file(text, uuid[]) to leon_app;
+
+-- Audit 2 (lot connecteurs) : un événement relevé par une connexion supprimée depuis garde une source détachée
+-- (connection_id nul) ; devenu privé, la connexion recréée ne le retirait pas. La clé de la source (organisation,
+-- propriétaire, outil, external_id) suffit : la condition sur connection_id est retirée.
+create or replace function retirer_sources_connexion(p_connection uuid, p_external_ids text[])
+returns integer
+language sql volatile security definer set search_path = public as $$
+  with gone as (
+    delete from sources s
+    using connections c
+    where c.id = p_connection and c.tenant_id = app_tenant() and c.created_by = any(app_principals())
+      and s.tenant_id = c.tenant_id and s.owner_user_id = c.created_by
+      and s.kind = c.provider and s.external_id = any(p_external_ids)
+    returning s.id
+  )
+  select count(*)::integer from gone
+$$;

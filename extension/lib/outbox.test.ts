@@ -6,6 +6,7 @@ import {
   enqueuePayload,
   flushOutbox,
   forgetOutboxOnTokenChange,
+  noteOrganization,
   OUTBOX_MAX,
   OUTBOX_MAX_BYTES,
   takeDropped,
@@ -209,39 +210,77 @@ describe('takeDropped', () => {
 describe('forgetOutboxOnTokenChange', () => {
   const X = `leon_${'x'.repeat(43)}`;
   const Y = `leon_${'y'.repeat(43)}`;
+  const ORG_A = '00000000-0000-4000-8000-00000000000a';
+  const ORG_B = '00000000-0000-4000-8000-00000000000b';
+  const unknown = async () => null;
 
   it.each([
     ['un autre jeton', Y],
     ['le jeton retiré', null],
   ])('vide le tampon et compte la perte quand le jeton change (%s)', async (_name, next) => {
     const store = createMemoryStore();
-    await forgetOutboxOnTokenChange(store, X);
+    await forgetOutboxOnTokenChange(store, X, unknown);
     await enqueuePayload(store, payload('a'));
     await enqueuePayload(store, payload('b'));
-    await forgetOutboxOnTokenChange(store, next);
+    await forgetOutboxOnTokenChange(store, next, unknown);
     expect(await countPending(store)).toBe(0);
     expect(await takeDropped(store)).toEqual({ token: 2 });
   });
 
   it('garde le tampon avec le même jeton', async () => {
     const store = createMemoryStore();
-    await forgetOutboxOnTokenChange(store, X);
+    await forgetOutboxOnTokenChange(store, X, unknown);
     await enqueuePayload(store, payload('a'));
-    await forgetOutboxOnTokenChange(store, X);
+    await forgetOutboxOnTokenChange(store, X, unknown);
     expect(await countPending(store)).toBe(1);
   });
 
   it('garde le tampon au premier jeton (capté avant tout jeton, ou avant la mise à jour)', async () => {
     const store = createMemoryStore();
     await enqueuePayload(store, payload('a'));
-    await forgetOutboxOnTokenChange(store, X);
+    await forgetOutboxOnTokenChange(store, X, unknown);
     expect(await countPending(store)).toBe(1);
     const later = createMemoryStore();
-    await forgetOutboxOnTokenChange(later, null);
+    await forgetOutboxOnTokenChange(later, null, unknown);
     await enqueuePayload(later, payload('b'));
-    await forgetOutboxOnTokenChange(later, Y);
+    await forgetOutboxOnTokenChange(later, Y, unknown);
     expect(await countPending(later)).toBe(1);
     expect(await takeDropped(later)).toEqual({});
+  });
+
+  it('garde le tampon quand le nouveau jeton est de la même organisation', async () => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X, unknown);
+    await noteOrganization(store, X, ORG_A);
+    await enqueuePayload(store, payload('a'));
+    await forgetOutboxOnTokenChange(store, Y, async (token) => (token === Y ? ORG_A : null));
+    expect(await countPending(store)).toBe(1);
+    expect(await takeDropped(store)).toEqual({});
+    // L'organisation suit le nouveau jeton : un troisième jeton d'une autre organisation vide le tampon.
+    await forgetOutboxOnTokenChange(store, X, async () => ORG_B);
+    expect(await countPending(store)).toBe(0);
+  });
+
+  it.each([
+    ['d’une autre organisation', async () => ORG_B],
+    ['dont l’organisation est inconnue', unknown],
+  ])('vide le tampon quand le nouveau jeton est %s', async (_name, organizationOf) => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X, unknown);
+    await noteOrganization(store, X, ORG_A);
+    await enqueuePayload(store, payload('a'));
+    await forgetOutboxOnTokenChange(store, Y, organizationOf);
+    expect(await countPending(store)).toBe(0);
+    expect(await takeDropped(store)).toEqual({ token: 1 });
+  });
+
+  it('vide le tampon quand l’organisation de l’ancien jeton n’a jamais été notée', async () => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X, unknown);
+    await noteOrganization(store, Y, ORG_A);
+    await enqueuePayload(store, payload('a'));
+    await forgetOutboxOnTokenChange(store, Y, async () => ORG_A);
+    expect(await countPending(store)).toBe(0);
   });
 });
 

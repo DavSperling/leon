@@ -88,24 +88,48 @@ export async function takeDropped(store: KeyValueStore): Promise<DroppedCounts> 
 
 // Jeton auquel appartient le tampon (celui du dernier envoi).
 export const OUTBOX_TOKEN_KEY = 'leon.outbox-token';
+// Organisation d'un jeton, notée à chaque /me réussi.
+export const OUTBOX_ORG_KEY = 'leon.outbox-org';
+const OrganizationSchema = z
+  .object({ token: z.string(), tenantId: z.string() })
+  .nullable()
+  .catch(null);
+
+export async function noteOrganization(
+  store: KeyValueStore,
+  token: string,
+  tenantId: string,
+): Promise<void> {
+  await store.set(OUTBOX_ORG_KEY, { token, tenantId });
+}
 
 // Le tampon appartient à l'organisation du jeton avec lequel il a été capté : quand le jeton change (autre jeton,
-// ou jeton retiré), il est vidé et compté comme perte, pour ne pas partir vers une autre organisation. Un tampon
+// ou jeton retiré), il est vidé et compté comme perte, pour ne pas partir vers une autre organisation, sauf si le
+// nouveau jeton est de la même organisation (`organizationOf` la demande au serveur ; null si inconnue). Un tampon
 // capté avant tout jeton (ou avant que le jeton ne soit noté) part avec le premier.
 export async function forgetOutboxOnTokenChange(
   store: KeyValueStore,
   token: string | null,
+  organizationOf: (token: string) => Promise<string | null>,
 ): Promise<void> {
   const previous = z
     .string()
     .nullable()
     .catch(null)
     .parse(await store.get(OUTBOX_TOKEN_KEY));
-  if (previous !== null && previous !== token) {
-    await addDropped(store, 'token', await countPending(store));
-    await store.set(OUTBOX_KEY, []);
+  if (previous === token) return;
+  if (previous !== null) {
+    const noted = OrganizationSchema.parse(await store.get(OUTBOX_ORG_KEY));
+    const before = noted?.token === previous ? noted.tenantId : null;
+    const after = before !== null && token !== null ? await organizationOf(token) : null;
+    if (after !== null && after === before && token !== null) {
+      await noteOrganization(store, token, after);
+    } else {
+      await addDropped(store, 'token', await countPending(store));
+      await store.set(OUTBOX_KEY, []);
+    }
   }
-  if (previous !== token) await store.set(OUTBOX_TOKEN_KEY, token);
+  await store.set(OUTBOX_TOKEN_KEY, token);
 }
 
 // 'stop' : on garde l'élément et on arrête ; 'drop' : charge définitivement refusée (400, 413), on passe à la suivante.

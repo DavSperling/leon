@@ -398,14 +398,18 @@ describe('finishSync', () => {
 });
 
 describe('requestSyncNow', () => {
-  it("met l'échéance à maintenant et repasse une connexion en erreur à active", async () => {
-    const id = await seedConnection(paul, { status: 'error', nextSyncAt: null });
+  // Audit 2 n° 13 b : l'erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
+  it("met l'échéance à maintenant, sans toucher au statut ni à l'erreur", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
 
     expect(await requestSyncNow(paul, id)).toBe(true);
 
     const row = await readRow(id);
     await makeNotDue(id);
-    expect(row.status).toBe('active');
+    expect(row.status).toBe('error');
+    expect(row.last_error).toBe('Clé refusée par GitHub.');
     expect(row.next_sync_at).not.toBeNull();
     expect(row.seconds_to_next).toBeLessThanOrEqual(0);
   });

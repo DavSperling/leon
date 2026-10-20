@@ -275,12 +275,13 @@ export async function setConnectionPaused(
   return rows.length > 0;
 }
 
-// Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas.
+// Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas. Le
+// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
 export async function requestSyncNow(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
-      .set({ status: 'active', nextSyncAt: sql`now()`, updatedAt: sql`now()` })
+      .set({ nextSyncAt: sql`now()`, updatedAt: sql`now()` })
       .where(and(eq(connections.id, id), inArray(connections.status, ['active', 'error'])))
       .returning({ id: connections.id }),
   );

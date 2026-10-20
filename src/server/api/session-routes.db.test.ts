@@ -300,6 +300,56 @@ describe(`GET ${ANSWER_PATH}`, () => {
     expect((await ask(alice, 'clause cinq', { results: shown })).status).toBe(200);
   });
 
+  // Audit 3 n° 8 : le lecteur qui s'en va (page quittée, nouvelle recherche) arrête tout de suite l'attente de la
+  // recherche et du modèle, interrompt l'appel au modèle et rend sa place, sans attendre un évènement ni le délai.
+  it('interrompt le modèle et rend la place dès que le lecteur s’en va, sans attendre le délai', async () => {
+    const { alice, shown } = await setupTeam();
+    const signals: AbortSignal[] = [];
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      async *streamText(request) {
+        if (request.signal) signals.push(request.signal);
+        await new Promise(() => undefined);
+        yield 'jamais';
+      },
+      runAgent(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+    });
+
+    const running = await Promise.all(
+      ['un', 'deux', 'trois'].map((q) => ask(alice, `clause ${q}`, { results: shown })),
+    );
+    await vi.waitFor(() => expect(signals).toHaveLength(3));
+    await Promise.all(running.map((response) => response.body?.cancel()));
+
+    await vi.waitFor(() => expect(signals.every((signal) => signal.aborted)).toBe(true), {
+      timeout: 2000,
+    });
+    fakeModel();
+    expect((await ask(alice, 'clause quatre', { results: shown })).status).toBe(200);
+  });
+
+  it('rend la place dès que le lecteur s’en va pendant la recherche', async () => {
+    const { alice, shown } = await setupTeam();
+    const llm = fakeModel();
+    const search = vi
+      .spyOn(searchModule, 'searchPassages')
+      .mockReturnValue(new Promise(() => undefined));
+
+    const running = await Promise.all(
+      ['un', 'deux', 'trois'].map((q) => ask(alice, `clause ${q}`, { results: shown })),
+    );
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(3));
+    await Promise.all(running.map((response) => response.body?.cancel()));
+    search.mockRestore();
+
+    await vi.waitFor(
+      async () => expect((await ask(alice, 'clause quatre', { results: shown })).status).toBe(200),
+      { timeout: 2000 },
+    );
+    expect(llm.calls.length).toBeLessThanOrEqual(1);
+  });
+
   it('passe le fournisseur de vecteurs réglé à la recherche', async () => {
     const { alice, shown } = await setupTeam();
     fakeModel();

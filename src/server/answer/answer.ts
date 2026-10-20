@@ -74,7 +74,8 @@ const answering = new Map<string, number>();
 export function answerStream(
   ctx: TenantContext,
   input: AnswerInput,
-  deps: { llm: Llm | null; embedder: Embedder | null; now?: Date },
+  // `signal` : le lecteur s'en va (route) ; la recherche et le modèle cessent d'être attendus, la place est rendue.
+  deps: { llm: Llm | null; embedder: Embedder | null; now?: Date; signal?: AbortSignal },
 ): AsyncIterable<AnswerEvent> | null | 'trop' {
   const { llm } = deps;
   if (llm === null) return null;
@@ -121,14 +122,18 @@ async function* streamAnswer(
   ctx: TenantContext,
   input: AnswerInput,
   llm: Llm,
-  deps: { embedder: Embedder | null; now?: Date },
+  deps: { embedder: Embedder | null; now?: Date; signal?: AbortSignal },
 ): AsyncGenerator<AnswerEvent> {
   const { query } = input;
   const now = deps.now ?? new Date();
   // Le délai couvre la recherche et le modèle. Il interrompt l'appel au modèle (signal), et la lecture n'attend
-  // plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui s'en va l'interrompt aussi.
+  // plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui s'en va (`deps.signal`)
+  // l'interrompt aussi, tout de suite, même pendant la recherche ou avant le premier mot du modèle.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ANSWER_TIMEOUT_MS);
+  const leave = () => controller.abort();
+  deps.signal?.addEventListener('abort', leave, { once: true });
+  if (deps.signal?.aborted) leave();
   const deadline = new Promise<never>((_resolve, reject) => {
     controller.signal.addEventListener('abort', () => reject(new LlmError('délai dépassé')), {
       once: true,
@@ -142,7 +147,8 @@ async function* streamAnswer(
     try {
       found = await Promise.race([gather(ctx, input, { embedder: deps.embedder, now }), deadline]);
     } catch (error) {
-      logError('answer.indisponible', error, { etape: 'recherche' });
+      // Un lecteur parti n'est pas une panne : rien n'est journalisé.
+      if (!deps.signal?.aborted) logError('answer.indisponible', error, { etape: 'recherche' });
       yield { type: 'indisponible' };
       return;
     }
@@ -187,7 +193,7 @@ async function* streamAnswer(
         yield { type: 'texte', delta };
       }
     } catch (error) {
-      logError('answer.indisponible', error, { etape: 'modele' });
+      if (!deps.signal?.aborted) logError('answer.indisponible', error, { etape: 'modele' });
       yield { type: 'indisponible' };
       return;
     }
@@ -200,6 +206,7 @@ async function* streamAnswer(
     yield { type: 'fin' };
   } finally {
     clearTimeout(timer);
+    deps.signal?.removeEventListener('abort', leave);
     controller.abort();
     // Le modèle n'est plus lu (fin, panne, délai ou lecteur parti) : on ferme son flux, sans attendre.
     reading?.return?.().catch(() => undefined);

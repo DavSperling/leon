@@ -34,10 +34,27 @@ describe('createReferenceFilter', () => {
 
     expect(before + after + filter.flush()).toBe('Trop tôt. À temps [1].');
   });
+
+  // Audit 3 n° 9 : un indice de tableau dans du code n'est pas un renvoi ; il reste tel quel.
+  it('laisse tel quel un crochet collé à un mot, à « ] » ou à « ) »', () => {
+    const code = 'Lisez argv[0] puis items[1][2], f(x)[3] et été[4].';
+    expect(run(new Set([1]), [code])).toBe(code);
+    expect(run(new Set([1, 2]), ['Voir [1][2][9] et argv[1].'])).toBe('Voir [1][2] et argv[1].');
+  });
+
+  it('garde le contexte entre deux morceaux', () => {
+    expect(run(new Set([1]), ['Lisez argv', '[0] et items[', '1] puis [1]', '[9].'])).toBe(
+      'Lisez argv[0] et items[1] puis [1].',
+    );
+  });
 });
 
 describe('referencedNumbers', () => {
   it('rend les numéros cités, une fois chacun, dans l’ordre croissant', () => {
     expect(referencedNumbers('Oui [3] et [1][3], pas [x] ni [0].')).toEqual([1, 3]);
+  });
+
+  it('ne prend pas un indice de tableau pour un renvoi', () => {
+    expect(referencedNumbers('Voir [2] ; argv[1], items[3][4], f(x)[5].')).toEqual([2]);
   });
 });

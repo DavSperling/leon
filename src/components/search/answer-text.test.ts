@@ -23,6 +23,15 @@ describe('answerSegments', () => {
     ]);
   });
 
+  // Audit 3 n° 9.
+  it('laisse un indice de tableau dans le texte, sans le retirer ni le lire comme un renvoi', () => {
+    expect(answerSegments('Voir [1] : argv[0], items[1][2] et f(x)[9].', 3)).toEqual([
+      { text: 'Voir ' },
+      { ref: 1 },
+      { text: ' : argv[0], items[1][2] et f(x)[9].' },
+    ]);
+  });
+
   it('rend une liste vide pour un texte vide', () => {
     expect(answerSegments('', 3)).toEqual([]);
   });

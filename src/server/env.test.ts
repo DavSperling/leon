@@ -37,6 +37,13 @@ describe('parseEnv', () => {
     );
   });
 
+  // Audit 3 n° 11.
+  it('lit LEON_IP_HEADER comme un nom d’en-tête, en minuscules ; vide vaut absent', () => {
+    expect(parseEnv({ ...TEST_ENV, LEON_IP_HEADER: 'X-Real-IP' }).LEON_IP_HEADER).toBe('x-real-ip');
+    expect(parseEnv({ ...TEST_ENV, LEON_IP_HEADER: '' }).LEON_IP_HEADER).toBeUndefined();
+    expect(() => parseEnv({ ...TEST_ENV, LEON_IP_HEADER: 'x-real-ip: 1.2.3.4' })).toThrow();
+  });
+
   it('accepte une clé des connecteurs de 32 octets en base64', () => {
     const key = randomBytes(32).toString('base64');
     expect(parseEnv({ ...TEST_ENV, LEON_CONNECTORS_KEY: key }).LEON_CONNECTORS_KEY).toBe(key);

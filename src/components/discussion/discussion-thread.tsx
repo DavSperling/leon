@@ -26,7 +26,7 @@ import {
 } from '@/lib/discussion-events';
 import { cn } from '@/lib/utils';
 import { AssistantMessage, LeonHeading, type OpenCitation, UserMessage } from './message-view';
-import { questionNotWritten, type ReplyProgress, readReply } from './read-reply';
+import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
 // Une discussion : ses messages, la réponse de Leon en flux (ce qu'il cherche et lit, puis son texte), la saisie
 // d'une nouvelle question et l'aperçu des passages cités. La route garde la question et la réponse : la page
@@ -38,12 +38,14 @@ export type ThreadMessage = DiscussionMessageView;
 type Reply =
   | { status: 'repos' }
   | ({ status: 'flux' } & ReplyProgress)
-  // Leon répond déjà dans cette discussion : la page relit la discussion jusqu'à ce que cette réponse y soit.
-  | { status: 'attente'; message: string }
+  // Leon répond déjà dans cette discussion (ou le flux s'est coupé, `coupee`) : la page relit la discussion
+  // jusqu'à ce que cette réponse y soit.
+  | { status: 'attente'; message: string; coupee: boolean }
   // Cette réponse est arrivée, mais la question envoyée pendant qu'elle courait n'a pas été écrite.
   | { status: 'non-envoyee' }
-  | { status: 'indisponible'; questionGardee: boolean }
-  | { status: 'occupe' }
+  // `retry` : la question que « Réessayer » renvoie (retryQuestion), ou null.
+  | { status: 'indisponible'; questionGardee: boolean; retry: string | null }
+  | { status: 'occupe'; retry: string | null }
   | { status: 'session' }
   | { status: 'origine' }
   | { status: 'sans-modele' };
@@ -262,8 +264,8 @@ export function DiscussionThread({
     setReply(THINKING);
     readReply(discussionId, message, (progress) => setReply({ status: 'flux', ...progress }))
       .then((outcome) => {
-        if (outcome.status === 'en-cours') {
-          setReply({ status: 'attente', message });
+        if (outcome.status === 'en-cours' || outcome.status === 'coupee') {
+          setReply({ status: 'attente', message, coupee: outcome.status === 'coupee' });
           return;
         }
         if (outcome.status !== 'finie') {
@@ -272,7 +274,12 @@ export function DiscussionThread({
             setMessages((current) => current.filter((item) => item.id !== questionId));
             setDraft((typed) => (typed.trim() === '' ? message : typed));
           }
-          setReply(outcome);
+          const retry = retryQuestion(outcome, message, { repeated });
+          setReply(
+            outcome.status === 'indisponible' || outcome.status === 'occupe'
+              ? { ...outcome, retry }
+              : outcome,
+          );
           return;
         }
         const { content, citations } = outcome;
@@ -284,15 +291,16 @@ export function DiscussionThread({
         // La page gardée par le navigateur (retour arrière) montrera aussi cette réponse.
         router.refresh();
       })
-      .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
+      .catch(() => setReply({ status: 'indisponible', questionGardee: false, retry: message }));
   }
 
   // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, ou que le serveur
   // n'en ait plus en cours (elle a échoué), puis la montre telle qu'elle est. Une question envoyée entre-temps n'a
-  // pas été écrite : elle revient dans la saisie.
+  // pas été écrite : elle revient dans la saisie. Après un flux coupé, une question absente n'a pas été écrite non
+  // plus : elle revient dans la saisie.
   useEffect(() => {
     if (reply.status !== 'attente') return;
-    const { message } = reply;
+    const { message, coupee } = reply;
     const until = Date.now() + WAIT_MAX_MS;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -301,7 +309,7 @@ export function DiscussionThread({
         .then((read) => {
           if (stopped) return;
           if (read === null) {
-            setReply({ status: 'indisponible', questionGardee: false });
+            setReply({ status: 'indisponible', questionGardee: false, retry: message });
             return;
           }
           const current = read.messages;
@@ -316,10 +324,14 @@ export function DiscussionThread({
             return;
           }
           setDraft((typed) => (typed.trim() === '' ? message : typed));
-          setReply({ status: 'non-envoyee' });
+          setReply(
+            coupee
+              ? { status: 'indisponible', questionGardee: false, retry: null }
+              : { status: 'non-envoyee' },
+          );
         })
         .catch(() => {
-          if (!stopped) setReply({ status: 'indisponible', questionGardee: false });
+          if (!stopped) setReply({ status: 'indisponible', questionGardee: false, retry: message });
         });
     };
     check();
@@ -349,9 +361,15 @@ export function DiscussionThread({
         const [question] = current ?? [];
         if (current?.length === 1 && question?.role === 'user') return run(question.content);
         if (current) setMessages(current);
-        setReply(current ? { status: 'repos' } : { status: 'indisponible', questionGardee: false });
+        setReply(
+          current
+            ? { status: 'repos' }
+            : { status: 'indisponible', questionGardee: false, retry: first?.content ?? null },
+        );
       })
-      .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
+      .catch(() =>
+        setReply({ status: 'indisponible', questionGardee: false, retry: first?.content ?? null }),
+      );
   }, []);
 
   const firstUserId = messages.find((message) => message.role === 'user')?.id;
@@ -410,16 +428,16 @@ export function DiscussionThread({
             )}
             {/* La question qui n'a pas été écrite est revenue dans la saisie : pas de « Réessayer », on la renvoie. */}
             {reply.status === 'indisponible' && (
-              <Notice action={last?.role === 'user' && retry(last.content)}>
+              <Notice action={reply.retry !== null && retry(reply.retry)}>
                 {reply.questionGardee
                   ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
-                  : last?.role === 'user'
+                  : reply.retry !== null
                     ? 'Leon n’a pas pu répondre pour le moment.'
                     : 'Leon n’a pas pu répondre pour le moment. Votre question vous attend dans la saisie.'}
               </Notice>
             )}
             {reply.status === 'occupe' && (
-              <Notice action={last?.role === 'user' && retry(last.content)}>
+              <Notice action={reply.retry !== null && retry(reply.retry)}>
                 {DISCUSSION_TOO_MANY}
               </Notice>
             )}

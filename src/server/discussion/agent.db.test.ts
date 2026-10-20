@@ -12,6 +12,7 @@ import { adminPool } from '@/test/db';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { replyStream } from './agent';
 import { DISCUSSION_SYSTEM } from './discussion-prompt';
+import * as discussionsModule from './discussions';
 import { createDiscussion, getDiscussion, saveReply, startReply } from './discussions';
 import { DISCUSSION_MAX_STEPS } from './tools';
 
@@ -202,10 +203,24 @@ describe('replyStream', () => {
 
     expect(events).toEqual([
       { type: 'texte', delta: 'Début de réponse' },
-      { type: 'indisponible' },
+      { type: 'indisponible', questionGardee: true },
     ]);
     const messages = (await getDiscussion(alice, id))?.messages ?? [];
     expect(messages.map((m) => [m.role, m.content])).toEqual([['user', 'Question']]);
+  });
+
+  // La base tombe avant d'écrire la question : la page ne doit pas dire qu'elle est gardée.
+  it('rend « indisponible » sans question gardée quand la question ne peut pas être écrite', async () => {
+    const { alice } = await setup();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const id = await createDiscussion(alice, { question: 'Question' });
+    vi.spyOn(discussionsModule, 'startReply').mockRejectedValue(new Error('base indisponible'));
+    const llm = createFakeLlm({ agent: () => [text('Réponse')] });
+
+    const events = await collect(reply(alice, id, 'Nouvelle question', llm));
+
+    expect(events).toEqual([{ type: 'indisponible', questionGardee: false }]);
+    expect(llm.calls).toHaveLength(0);
   });
 
   it('renvoie au modèle les 20 derniers messages au plus, la nouvelle question en dernier', async () => {
@@ -263,7 +278,7 @@ describe('sous le contexte de Bob', () => {
 
     const events = await collect(reply(bob, id, 'Je m’invite', llm));
 
-    expect(events).toEqual([{ type: 'indisponible' }]);
+    expect(events).toEqual([{ type: 'indisponible', questionGardee: false }]);
     expect(llm.calls).toHaveLength(0);
     const { rows } = await adminPool.query(
       'select content from discussion_messages where discussion_id = $1',
@@ -365,7 +380,7 @@ describe('une réponse déjà en cours', () => {
     await first;
 
     expect(meanwhile.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
-    expect(intruder).toEqual([{ type: 'indisponible' }]);
+    expect(intruder).toEqual([{ type: 'indisponible', questionGardee: false }]);
   });
 
   // Le coût d'un utilisateur : au plus deux réponses en cours à la fois, toutes discussions confondues.
@@ -411,7 +426,9 @@ describe('une réponse déjà en cours', () => {
       },
     };
 
-    expect(await collect(reply(alice, id, 'Question', broken))).toEqual([{ type: 'indisponible' }]);
+    expect(await collect(reply(alice, id, 'Question', broken))).toEqual([
+      { type: 'indisponible', questionGardee: true },
+    ]);
     // Le lecteur s'en va après le premier évènement : rien n'est gardé, la place est libre.
     const left = reply(alice, id, 'Question', scripted([search('quetzal')], [text('x')]).llm);
     for await (const event of left === 'trop' ? [] : (left ?? [])) {

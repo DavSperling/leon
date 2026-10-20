@@ -46,7 +46,15 @@ describe('parseDiscussionEvent', () => {
       type: 'fin',
       reason: 'limite',
     });
-    expect(parseDiscussionEvent('{"type":"indisponible"}')).toEqual({ type: 'indisponible' });
+    expect(parseDiscussionEvent('{"type":"indisponible","questionGardee":true}')).toEqual({
+      type: 'indisponible',
+      questionGardee: true,
+    });
+    // Sans le champ (ou avec autre chose que true), rien n'est promis.
+    expect(parseDiscussionEvent('{"type":"indisponible"}')).toEqual({
+      type: 'indisponible',
+      questionGardee: false,
+    });
     expect(parseDiscussionEvent('{"type":"en-cours"}')).toEqual({ type: 'en-cours' });
   });
 

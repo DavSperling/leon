@@ -37,8 +37,9 @@ export type DiscussionCitation = {
 // 'fini' : le modèle a répondu ; 'limite' : le nombre d'étapes ou la longueur est atteint ; 'refus' : il a refusé.
 export type DiscussionEndReason = 'fini' | 'limite' | 'refus';
 
-// « indisponible » termine le flux : le modèle (ou la recherche) a échoué, rien n'est gardé de la réponse, la
-// question reste dans la discussion et peut être reposée. « citations » arrive juste avant « fin ». « en-cours »
+// « indisponible » termine le flux : le modèle (ou la recherche, ou la base) a échoué, rien n'est gardé de la
+// réponse ; `questionGardee` dit si la question est restée dans la discussion (elle peut alors être reposée).
+// Faux quand elle n'a pas pu être écrite. « citations » arrive juste avant « fin ». « en-cours »
 // est le seul évènement du flux quand Leon répond déjà dans cette discussion (une page quittée puis rouverte, un
 // second onglet) : rien n'est écrit, ni la question ni une réponse, et la page relit la discussion jusqu'à ce que
 // cette réponse y soit.
@@ -47,7 +48,7 @@ export type DiscussionEvent =
   | { type: 'outil'; name: string }
   | { type: 'citations'; items: DiscussionCitation[] }
   | { type: 'fin'; reason: DiscussionEndReason }
-  | { type: 'indisponible' }
+  | { type: 'indisponible'; questionGardee: boolean }
   | { type: 'en-cours' };
 
 // Phrases fixes que le serveur garde et que la page affiche à la fin d'une réponse (finalReplyText).
@@ -102,7 +103,7 @@ export function parseDiscussionEvent(data: string): DiscussionEvent | null {
     return null;
   }
   if (typeof value !== 'object' || value === null) return null;
-  const { type, delta, name, items, reason } = value as Record<string, unknown>;
+  const { type, delta, name, items, reason, questionGardee } = value as Record<string, unknown>;
   if (type === 'texte') return typeof delta === 'string' ? { type, delta } : null;
   if (type === 'outil') return typeof name === 'string' ? { type, name } : null;
   if (type === 'citations') {
@@ -113,7 +114,8 @@ export function parseDiscussionEvent(data: string): DiscussionEvent | null {
       ? { type, reason: reason as DiscussionEndReason }
       : null;
   }
-  if (type === 'indisponible' || type === 'en-cours') return { type };
+  if (type === 'indisponible') return { type, questionGardee: questionGardee === true };
+  if (type === 'en-cours') return { type };
   return null;
 }
 

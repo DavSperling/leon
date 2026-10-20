@@ -25,7 +25,7 @@ export type { DiscussionEvent } from '@/lib/discussion-events';
 // voit l'utilisateur : ses outils passent par la recherche, sous ses droits (tools.ts).
 //
 // Une panne (base, modèle, délai) rend l'évènement « indisponible », qui termine le flux : rien de la réponse
-// n'est gardé, la question reste et peut être reposée. Elle ne se journalise que par logError, sans question,
+// n'est gardé ; la question reste et peut être reposée, sauf si elle n'a pas pu être écrite (questionGardee). Elle ne se journalise que par logError, sans question,
 // passage ni réponse. La route continue de lire le flux quand la page s'en va : la réponse est finie et gardée.
 // Un flux qu'on cesse de lire interrompt l'appel au modèle, et rien n'est gardé.
 //
@@ -95,12 +95,12 @@ async function* runReply(
     turn = await startReply(ctx, discussionId, message);
   } catch (error) {
     logError('discussion.indisponible', error, { etape: 'question' });
-    yield { type: 'indisponible' };
+    yield { type: 'indisponible', questionGardee: false };
     return;
   }
   // Une discussion que l'utilisateur ne voit pas (la route a déjà répondu 404 ; elle a pu disparaître depuis).
   if (turn === null) {
-    yield { type: 'indisponible' };
+    yield { type: 'indisponible', questionGardee: false };
     return;
   }
 
@@ -164,7 +164,7 @@ async function* runReply(
       }
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'modele' });
-      yield { type: 'indisponible' };
+      yield { type: 'indisponible', questionGardee: true };
       return;
     }
     const rest = filter.flush();
@@ -184,12 +184,15 @@ async function* runReply(
       });
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'enregistrement' });
-      yield { type: 'indisponible' };
+      yield { type: 'indisponible', questionGardee: true };
       return;
     }
     // Une autre réponse à cette question a été gardée entre-temps (depuis un autre serveur) : c'est elle qui compte.
     if (saved !== 'gardee') {
-      yield saved === 'deja-repondue' ? { type: 'en-cours' } : { type: 'indisponible' };
+      // Invisible : la discussion a disparu entre-temps, avec sa question.
+      yield saved === 'deja-repondue'
+        ? { type: 'en-cours' }
+        : { type: 'indisponible', questionGardee: false };
       return;
     }
     yield { type: 'citations', items: citations };

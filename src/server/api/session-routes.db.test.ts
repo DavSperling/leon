@@ -586,7 +586,9 @@ describe('POST /api/v1/discussions/:id/messages', () => {
 
     const response = await post(alice, id, { message: 'Question' });
 
-    expect(await discussionEvents(response)).toEqual([{ type: 'indisponible' }]);
+    expect(await discussionEvents(response)).toEqual([
+      { type: 'indisponible', questionGardee: true },
+    ]);
   });
 
   // Chaque appelant de searchPassages passe le fournisseur de getEmbedder(env) (C4).

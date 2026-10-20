@@ -147,6 +147,13 @@ describe('maskSecrets : troisième audit', () => {
     expect(maskSecrets(expected)).toBe(expected);
   });
 
+  it.each([
+    ['password: {Hunter2Secret!}', `password: ${SECRET_MASK}`],
+    ['password=$ecret2026Pass', `password=${SECRET_MASK}`],
+  ])('masque une valeur qui ressemble à un modèle sans en être un : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+  });
+
   // Les mêmes mots dans une phrase ordinaire.
   it.each([
     "Mot de passe oublié : l'utilisateur reçoit un lien par e-mail.",
@@ -163,6 +170,12 @@ describe('maskSecrets : troisième audit', () => {
 
   // Du code évident reste intact.
   it.each([
+    'const accessToken = session?.access_token;',
+    'const secretKeyRef = useRef<HTMLInputElement>(null);',
+    'password_reset_url = f"{base_url}/reset?token={reset_token}"',
+    '  "password": "$' + '{DB_PASSWORD}",',
+    'password: {{ db_password }}',
+    'DB_PASSWORD=$POSTGRES_PASSWORD',
     "const token = req.headers.authorization?.split(' ')[1];",
     'accessKeyId: credentials.accessKeyId,',
     'const key = import.meta.env.VITE_API_KEY;',

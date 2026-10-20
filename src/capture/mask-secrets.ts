@@ -75,9 +75,12 @@ const KEYWORD_THEN_CAMEL =
 // « z.string().min(8) », « req.headers.authorization?.split(' ') ») ou une variable d'environnement.
 // Une valeur à point sans appel (« Summer.Time2026! », « SG.xxx.yyy ») reste un secret.
 const CODE_VALUE =
-  /^(?:[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\(|process\.env\.|import\.meta\.env\.|os\.environ\b)/;
+  /^(?:[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*(?:<[\w$.,|[\]]{1,100}>)?\(|process\.env\.|import\.meta\.env\.|os\.environ\b)/;
 // Chemin d'objet qui finit par le nom lui-même (« accessKeyId: credentials.accessKeyId, »).
-const SAME_NAME_PATH = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\.([A-Za-z_$][\w$]*)[;,]?$/;
+// « session?.access_token; » aussi.
+const SAME_NAME_PATH = /^[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\??\.([A-Za-z_$][\w$]*)[;,]?$/;
+// Modèle ou renvoi à une variable, pas une valeur : « {reset_token} », « ${DB_PASSWORD} », « $DB_PASSWORD ».
+const PLACEHOLDER_VALUE = /^(?:\$?\{\{?\s?[A-Za-z_][\w.]*\s?\}\}?|\$[A-Z_][A-Z0-9_]*)[;,]?$/;
 const normalizeName = (name: string) => name.replace(/[_-]/g, '').toLowerCase();
 // « pwd » est aussi le dossier courant (« PWD=/Users/… », « Le pwd: /home/… »).
 const PATH_VALUE = /^[/~]/;
@@ -116,6 +119,7 @@ function maskAssignment(
 ): string {
   if (!KEYWORD_THEN_BOUNDARY.test(name) && !KEYWORD_THEN_CAMEL.test(name) && !PASS_PART.test(name))
     return match;
+  if (PLACEHOLDER_VALUE.test(doubleQuoted ?? singleQuoted ?? bare ?? '')) return match;
   if (bare !== undefined) {
     if (CODE_VALUE.test(bare)) return match;
     const last = SAME_NAME_PATH.exec(bare)?.[1];

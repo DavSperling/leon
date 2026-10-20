@@ -34,6 +34,19 @@ done
 
 La checklist de vérification manuelle du premier jet est dans [`docs/guides/premier-jet-verification.md`](docs/guides/premier-jet-verification.md) (périmée depuis le deuxième jet, sauf le démarrage, le jeton et l'extension), celle des connecteurs dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
+## Une instance, un modèle
+
+**Une seule instance de Leon par base, un seul modèle de vecteurs à la fois.** Les tâches de fond (relève des outils,
+indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponses par personne) vivent dans le processus.
+
+- En production, une mise à jour arrête l'ancienne version avant de démarrer la nouvelle.
+- En local, chaque worktree qui lance un serveur a sa propre base (`DATABASE_URL`).
+- Changer de modèle de vecteurs (`LEON_EMBEDDINGS_MODEL`) : arrêter le serveur, changer le réglage, relancer. Le tic
+  revectorise alors tout et retire les vecteurs de l'ancien modèle.
+
+Deux instances sur la même base (ou deux modèles actifs) ne cassent pas les droits, mais doublent des appels payants et
+peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances sera un chantier à part.
+
 ## Tester
 
 ```bash

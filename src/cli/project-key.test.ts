@@ -1,12 +1,12 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
-import { gitInDirectory, projectKeyFor } from './project-key';
+import { gitEnvironment, gitInDirectory, projectKeyFor } from './project-key';
 
 const run = promisify(execFile);
 
@@ -29,6 +29,9 @@ describe('projectKeyFor : adresse du dépôt GitHub', () => {
     ['git://github.com/acme/leon.git', 'github.com/acme/leon'],
     ['https://github.com/acme/leon.git?ref=main', 'github.com/acme/leon'],
     ['https://github.com/acme/mon.depot_v2-bis.git', 'github.com/acme/mon.depot_v2-bis'],
+    // Le suffixe .git se retire quelle que soit sa casse : la mise en minuscules passe avant.
+    ['https://github.com/Acme/Leon.GIT', 'github.com/acme/leon'],
+    ['git@github.com:Acme/Leon.Git', 'github.com/acme/leon'],
   ];
 
   it.each(GITHUB_REMOTES)('%s -> %s', async (remote, expected) => {
@@ -195,5 +198,57 @@ describe('gitInDirectory : avec le vrai git, dans un dossier temporaire', () => 
     expect(await projectKeyFor(dir, gitInDirectory)).toBe(dossierKey(dir));
     const absent = join(dir, 'absent');
     expect(await projectKeyFor(absent, gitInDirectory)).toBe(dossierKey(absent));
+  });
+});
+
+// git n'a besoin ni du jeton de Leon ni des clés de l'environnement : il reçoit le strict nécessaire.
+describe('gitEnvironment : ce que reçoit git', () => {
+  const SECRETS_IN_ENV = {
+    LEON_TOKEN: `leon_${'x'.repeat(43)}`,
+    LEON_URL: 'https://leon.exemple.fr',
+    ANTHROPIC_API_KEY: 'sk-ant-api03-FAKE',
+    GITHUB_TOKEN: 'ghp_FAKE',
+    DATABASE_URL: 'postgres://u:p@h/db',
+    GIT_DIR: '/ailleurs/.git',
+    GIT_CONFIG_COUNT: '1',
+  };
+
+  it('ne garde que PATH et HOME, et coupe toute question posée au terminal', () => {
+    const env = gitEnvironment({ PATH: '/usr/bin', HOME: '/home/demo', ...SECRETS_IN_ENV });
+
+    expect(env).toEqual({ PATH: '/usr/bin', HOME: '/home/demo', GIT_TERMINAL_PROMPT: '0' });
+  });
+
+  it("ne recopie rien de plus, quel que soit le contenu de l'environnement", () => {
+    const env = gitEnvironment({ ...SECRETS_IN_ENV });
+
+    expect(Object.keys(env).sort()).toEqual(['GIT_TERMINAL_PROMPT']);
+    expect(JSON.stringify(env)).not.toMatch(/leon_|sk-ant|ghp_|postgres/);
+  });
+
+  it('git, lancé pour de vrai, ne voit ni LEON_TOKEN ni les autres clés', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'leon-faux-git-'));
+    try {
+      // Un faux « git » qui rend les NOMS des variables qu'il reçoit, jamais leurs valeurs : un test qui
+      // échoue ne doit pas recopier l'environnement de celui qui le lance.
+      const fakeGit = join(dir, 'git');
+      await writeFile(fakeGit, '#!/bin/sh\n/usr/bin/env | /usr/bin/cut -d= -f1\n');
+      await chmod(fakeGit, 0o755);
+      vi.stubEnv('PATH', dir);
+      vi.stubEnv('LEON_TOKEN', SECRETS_IN_ENV.LEON_TOKEN);
+      vi.stubEnv('ANTHROPIC_API_KEY', SECRETS_IN_ENV.ANTHROPIC_API_KEY);
+      vi.stubEnv('GITHUB_TOKEN', SECRETS_IN_ENV.GITHUB_TOKEN);
+
+      const seen = await gitInDirectory(['remote', 'get-url', 'origin'], dir);
+
+      const names = (seen ?? '').split('\n');
+      expect(names).toContain('GIT_TERMINAL_PROMPT');
+      expect(names).not.toContain('LEON_TOKEN');
+      expect(names).not.toContain('ANTHROPIC_API_KEY');
+      expect(names).not.toContain('GITHUB_TOKEN');
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

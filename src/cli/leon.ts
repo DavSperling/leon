@@ -2,7 +2,12 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fetchBriefingText } from './briefing';
-import { captureSessionFromHook, createHookSender, readHookStdin } from './capture-session';
+import {
+  captureSessionFromHook,
+  createHookSender,
+  parseDeadlineMs,
+  readHookStdin,
+} from './capture-session';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   createIngestSender,
@@ -23,6 +28,7 @@ Commandes :
   briefing             Affiche le briefing Leon (pour le hook SessionStart de Claude Code)
   capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
                        de Claude Code : le JSON du crochet est lu sur l'entrée standard)
+      --delai-ms <n>       raccourcit le délai réseau de l'envoi, 15 000 ms au plus (pour les essais)
 
 L'envoi réel, le briefing et la capture de session demandent LEON_URL et LEON_TOKEN.`;
 
@@ -81,7 +87,7 @@ async function runBriefing(): Promise<number> {
 // Le crochet SessionEnd ne doit jamais gêner Claude Code : le code de sortie vaut toujours 0 et les messages
 // ne citent ni la session ni l'adresse du serveur (voir capture-session.ts). Rien n'est écrit sur la sortie
 // standard.
-async function runCaptureSession(): Promise<number> {
+async function runCaptureSession(args: string[]): Promise<number> {
   try {
     let env: ServerEnv;
     try {
@@ -91,11 +97,20 @@ async function runCaptureSession(): Promise<number> {
       console.error(`Leon : ${error instanceof Error ? error.message : 'configuration invalide.'}`);
       return 0;
     }
+    // Une option inconnue ou invalide ne doit pas empêcher la capture : on l'ignore (strict: false).
+    const { values } = parseArgs({
+      args,
+      options: { 'delai-ms': { type: 'string' } },
+      strict: false,
+    });
+    const delay = typeof values['delai-ms'] === 'string' ? values['delai-ms'] : undefined;
+    const projectDir = process.env.CLAUDE_PROJECT_DIR;
     return await captureSessionFromHook(await readHookStdin(process.stdin), {
-      send: createHookSender(fetch, env),
+      send: createHookSender(fetch, env, parseDeadlineMs(delay)),
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
+      ...(projectDir ? { projectDir } : {}),
     });
   } catch {
     console.error('Leon : capture impossible (erreur inattendue).');
@@ -110,7 +125,7 @@ async function main(argv: string[]): Promise<number> {
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefing();
-    if (command === 'capter-session') return await runCaptureSession();
+    if (command === 'capter-session') return await runCaptureSession(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
     console.error(error instanceof Error ? error.message : 'Erreur inconnue.');

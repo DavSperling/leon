@@ -2,17 +2,27 @@
 //
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionEnd`. Claude Code écrit sur l'entrée standard du crochet un JSON :
-//   `session_id`, `transcript_path` (le fichier .jsonl de la session), `cwd`, `hook_event_name` (« SessionEnd »)
-//   et `reason` (`clear`, `resume`, `logout`, `prompt_input_exit` ou `other`). Seuls `transcript_path` et `cwd`
-//   servent ici : l'identifiant de la source est celui écrit dans le fichier, comme à l'import.
+//   les champs communs (`session_id`, `prompt_id`, `transcript_path`, `cwd`, `scratchpad_dir`, `permission_mode`,
+//   `effort`, `hook_event_name`) et `reason` (`clear`, `resume`, `logout`, `prompt_input_exit` ou `other`).
+//   Seuls `transcript_path` et `cwd` sont lus ici, les autres champs sont ignorés : l'identifiant de la source est
+//   celui écrit dans le fichier de session, comme à l'import.
 // - Ce crochet ne peut ni bloquer la fin de session ni répondre à Claude Code (pas de contrôle de décision).
 // - Délai : 1,5 s par défaut pour SessionEnd ; un `timeout` plus long dans les réglages (jusqu'à 60 s) relève
 //   ce budget. L'installeur de crochets (T14) en pose un de 30 s.
+// - Le `cwd` du JSON SUIT Claude : il devient la racine d'un worktree dès que Claude y entre, et le nouveau dossier
+//   après un `cd`. Le projet est donc celui du dossier où la session a démarré (voir `startingDirectory`), le même
+//   que voit `briefing` au démarrage ; sans cela, une session qui change de dossier serait rangée sous un autre
+//   projet que celui de son point du matin.
 // - `transcript_path` s'écrit en tâche de fond et peut être en retard sur la conversation : les derniers tours
-//   manquants arrivent à la capture suivante (les tours déjà connus sont ignorés par le serveur).
+//   manquants ne sont envoyés qu'à la prochaine capture de la même session (une session reprise, ou
+//   `leon import-claude-code` relancé). Le serveur ignore les tours déjà connus.
+// - SessionEnd ne se déclenche qu'à la sortie de Claude Code, à `/clear` et au `/resume` interactif : un terminal
+//   fermé, une session `claude -p` ou un plantage ne sont jamais captés par le crochet. `leon import-claude-code`
+//   reste le rattrapage de celles-là.
 //
 // Les textes passent par la même préparation que l'import (masquage des secrets, retrait des rappels système,
 // coupe des tours trop longs : `parseClaudeCodeSession`), puis le serveur la refait à la réception.
+import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
 import type { ServerEnv } from './env';
@@ -20,23 +30,55 @@ import {
   createIngestSender,
   type ImportDeps,
   type ImportSummary,
+  IngestResponseError,
   importSession,
   TokenRefusedError,
 } from './import-claude-code';
 import { type GitRunner, projectKeyFor } from './project-key';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
-// et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine.
+// et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
+// fois, dès la création de l'envoi (lecture de l'entrée, du fichier et de git comprises) : c'est lui qui borne la
+// durée de la commande, d'où l'envoi des lots les plus récents d'abord.
 export const HOOK_DEADLINE_MS = 15_000;
 const STDIN_MAX_CHARS = 64 * 1024;
 const STDIN_TIMEOUT_MS = 5000;
 
-const HookInputSchema = z.object({ transcript_path: z.string().min(1), cwd: z.string().min(1) });
+// Un dossier relatif serait résolu contre celui du processus, qui est le dépôt de Leon (`pnpm --dir <dépôt> leon …`)
+// et non le projet : Claude Code envoie un chemin absolu, tout le reste est une entrée illisible.
+const HookInputSchema = z.object({
+  transcript_path: z.string().min(1),
+  cwd: z.string().min(1).refine(isAbsolute),
+});
 
 export type CaptureDeps = ImportDeps & {
   git: GitRunner;
   readFile: (path: string) => Promise<string>;
+  // $CLAUDE_PROJECT_DIR, « the project root where the session started » (doc des crochets) : repli quand le
+  // fichier de session n'écrit aucun dossier.
+  projectDir?: string;
 };
+
+// Le délai demandé à la commande (`--delai-ms`, réservé aux essais) : il ne fait que raccourcir celui du crochet.
+// Une valeur absente, illisible ou nulle laisse le délai du crochet.
+export function parseDeadlineMs(value: string | undefined): number {
+  if (value === undefined || !/^[1-9][0-9]{0,8}$/.test(value)) return HOOK_DEADLINE_MS;
+  return Math.min(Number(value), HOOK_DEADLINE_MS);
+}
+
+// Le dossier où la session a démarré : le premier dossier écrit dans le fichier de session, à défaut
+// $CLAUDE_PROJECT_DIR, à défaut le dossier du crochet. Seuls les chemins absolus comptent. Le projet se calcule
+// sur lui, jamais sur le `cwd` du crochet qui suit Claude dans un worktree ou après un `cd`.
+function startingDirectory(
+  sessionCwd: string | null,
+  projectDir: string | undefined,
+  hookCwd: string,
+): string {
+  const candidates = [sessionCwd, projectDir];
+  return (
+    candidates.find((dir): dir is string => typeof dir === 'string' && isAbsolute(dir)) ?? hookCwd
+  );
+}
 
 // Les messages sont fixes : jamais le texte d'une session, d'une adresse de remote ni d'une erreur
 // (celle d'un serveur ou du réseau peut citer une adresse ou un jeton).
@@ -46,6 +88,11 @@ function warn(message: string): void {
 
 function failureMessage(error: unknown): string {
   if (error instanceof TokenRefusedError) return 'jeton refusé par le serveur, session non captée.';
+  // Le serveur valide strictement la source : un serveur sans la tâche T12 refuse `source.project` par un 400.
+  // Ordre de déploiement : le serveur d'abord, la CLI ensuite.
+  if (error instanceof IngestResponseError && error.status === 400) {
+    return 'le serveur ne reconnaît pas cet envoi (il est peut-être plus ancien que la CLI), session non captée.';
+  }
   if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
     return 'serveur trop lent (délai dépassé), session non captée.';
   }
@@ -79,8 +126,11 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   }
   if (session === null) return warn('aucun échange à envoyer pour cette session.');
 
-  // Le dossier du crochet, comme pour `briefing` : le même projet des deux côtés.
-  const projectKey = await projectKeyFor(input.cwd, deps.git);
+  // Le dossier de départ de la session, comme `briefing` : le même projet des deux côtés.
+  const projectKey = await projectKeyFor(
+    startingDirectory(session.cwd, deps.projectDir, input.cwd),
+    deps.git,
+  );
   const summary: ImportSummary = {
     sessions: 1,
     turnsSent: 0,
@@ -89,7 +139,7 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
     failures: 0,
   };
   try {
-    await importSession(session, { dryRun: false, projectKey }, deps, summary);
+    await importSession(session, { dryRun: false, projectKey, newestFirst: true }, deps, summary);
   } catch (error) {
     return warn(failureMessage(error));
   }

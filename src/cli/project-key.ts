@@ -11,6 +11,19 @@ const URL_PROTOCOLS = new Set(['https:', 'http:', 'ssh:', 'git:']);
 
 export type GitRunner = (args: string[], cwd: string) => Promise<string | null>;
 
+// L'environnement de git : de quoi se trouver et lire sa configuration, rien de plus. Ni LEON_TOKEN ni les clés
+// des autres outils (git n'en a pas besoin) ; pas non plus de GIT_DIR ou GIT_CONFIG_* hérités, qui lui feraient
+// regarder ailleurs. Il ne pose jamais de question au terminal.
+export function gitEnvironment(source: Record<string, string | undefined>): Record<string, string> {
+  const kept = ['PATH', 'HOME'] as const;
+  const env: Record<string, string> = { GIT_TERMINAL_PROMPT: '0' };
+  for (const name of kept) {
+    const value = source[name];
+    if (value !== undefined) env[name] = value;
+  }
+  return env;
+}
+
 // Lance git dans un dossier ; null si git manque, si le dossier n'existe pas ou si la commande échoue.
 // Ni la sortie d'erreur ni le message de l'échec ne sortent d'ici : une adresse de remote peut porter un jeton.
 export const gitInDirectory: GitRunner = (args, cwd) =>
@@ -22,7 +35,7 @@ export const gitInDirectory: GitRunner = (args, cwd) =>
         cwd,
         timeout: GIT_TIMEOUT_MS,
         maxBuffer: 64 * 1024,
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+        env: gitEnvironment(process.env) as NodeJS.ProcessEnv,
       },
       (error, stdout) => done(error ? null : stdout.trim() || null),
     );
@@ -47,11 +60,12 @@ function githubOwnerAndRepo(remote: string): string | null {
     path = short[2] ?? '';
   }
   if (!GITHUB_HOSTS.has(host.toLowerCase())) return null;
+  // En minuscules d'abord : « Leon.GIT » perd aussi son suffixe.
   const segments = path
+    .toLowerCase()
     .replace(/^\//, '')
     .replace(/\/+$/, '')
     .replace(/\.git$/, '')
-    .toLowerCase()
     .split('/');
   const [owner, repo] = segments;
   if (segments.length !== 2 || !owner || !repo) return null;

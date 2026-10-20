@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { fetchSource } from '@/server/search/context';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { ingestTurns } from './ingest-turns';
@@ -170,6 +171,23 @@ describe('ingestTurns', () => {
 
     const [source] = await readSource(paul, sourceId);
     expect(source?.lastTurnAt?.toISOString()).toBe('2026-10-14T08:00:00.000Z');
+  });
+
+  it("se lit dans l'ordre de la conversation même quand les lots arrivent du plus récent au plus ancien", async () => {
+    // Le crochet de fin de session envoie les lots du plus récent au plus ancien (capture-session.ts) : la lecture
+    // d'une source suit la date des tours, pas leur ordre d'arrivée.
+    const { paul, externalId } = await setup();
+
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(3), newTurn(4)]));
+    await ingestTurns(paul, payload(externalId, [newTurn(1), newTurn(2)]));
+
+    const read = await fetchSource(paul, sourceId);
+    expect(read?.turns.map((turn) => turn.text)).toEqual([
+      'Tour numéro 1',
+      'Tour numéro 2',
+      'Tour numéro 3',
+      'Tour numéro 4',
+    ]);
   });
 
   it('remplace le titre quand un nouveau est fourni, le garde sinon', async () => {

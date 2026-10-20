@@ -50,6 +50,14 @@ export class TokenRefusedError extends Error {
   }
 }
 
+// Une réponse en erreur du serveur : le code seul compte, ni le corps ni l'adresse n'entrent dans le message.
+export class IngestResponseError extends Error {
+  override name = 'IngestResponseError';
+  constructor(readonly status: number) {
+    super(`Réponse ${status} du serveur Leon.`);
+  }
+}
+
 // `signal` borne la durée d'un envoi (réponse comprise) : le crochet de fin de session en a besoin,
 // l'import par lots, non.
 export function createIngestSender(
@@ -65,7 +73,7 @@ export function createIngestSender(
       ...(options.signal ? { signal: options.signal } : {}),
     });
     if (response.status === 401) throw new TokenRefusedError();
-    if (!response.ok) throw new Error(`Réponse ${response.status} du serveur Leon.`);
+    if (!response.ok) throw new IngestResponseError(response.status);
     return IngestResultSchema.parse(await response.json());
   };
 }
@@ -88,9 +96,12 @@ async function loadSession(
 }
 
 // Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi.
+// `newestFirst` : les lots partent du plus récent au plus ancien (les tours restent dans l'ordre à l'intérieur
+// de chaque lot). Le crochet, borné par un délai, s'en sert pour qu'une session reprise, dont l'historique est
+// déjà connu, atteigne d'abord ses tours nouveaux ; le serveur lit les tours par date, pas par ordre d'arrivée.
 export async function importSession(
   session: ClaudeCodeSession,
-  options: Pick<ImportOptions, 'dryRun' | 'projectKey'>,
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { newestFirst?: boolean },
   deps: ImportDeps,
   summary: ImportSummary,
 ): Promise<void> {
@@ -98,6 +109,7 @@ export async function importSession(
     maxTurns: TURNS_PER_BATCH_MAX,
     maxBytes: BATCH_MAX_BYTES,
   });
+  if (options.newestFirst) batches.reverse();
   for (const turns of batches) {
     const payload: IngestPayload = {
       source: {

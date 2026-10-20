@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
@@ -34,12 +34,14 @@ type ActivityRow = {
 
 // Les sources qui passent les filtres (une source dont au moins un passage passe les filtres de date et
 // d'auteur), la plus récente d'abord, chacune avec son passage le plus récent qui les passe. `total` : combien
-// de sources passent les filtres, toutes pages confondues. À appeler sous `withTenant`.
+// de sources passent les filtres, toutes pages confondues. À appeler sous `withTenant`. `passageWhere` : une
+// condition de plus sur chaque passage `p` (les mots niés d'une recherche faite de filtres, « de:marie -budget »).
 export async function recentSources(
   tx: Tx,
   ctx: TenantContext,
   filters: SearchFilters,
   page: { limit: number; offset: number },
+  passageWhere: SQL = sql`true`,
 ): Promise<{ hits: SourceHit[]; total: number }> {
   const { rows } = await tx.execute<ActivityRow & { snippet: string | null }>(sql`
     with matching as (
@@ -49,7 +51,8 @@ export async function recentSources(
         and ${sourceConditions(filters)}
         and exists (
           select 1 from passages p
-          where p.tenant_id = s.tenant_id and p.source_id = s.id and ${passageConditions(filters, sql`s.kind`)})
+          where p.tenant_id = s.tenant_id and p.source_id = s.id and ${passageConditions(filters, sql`s.kind`)}
+            and ${passageWhere})
     )
     select tt.total, pg.source_id, pg.kind, pg.title, pg.metadata,
            extract(epoch from pg.last_ts) as last_epoch,
@@ -63,7 +66,7 @@ export async function recentSources(
       select p.id as passage_id, p.turn_id, p.ts, p.author_name, left(p.text, ${SNIPPET_CHARS}) as snippet
       from passages p
       where p.tenant_id = ${ctx.tenantId} and p.source_id = pg.source_id
-        and ${passageConditions(filters, sql`pg.kind`)}
+        and ${passageConditions(filters, sql`pg.kind`)} and ${passageWhere}
       order by p.ts desc, p.ord desc
       limit 1
     ) pp on true

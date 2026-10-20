@@ -16,6 +16,7 @@ import {
 } from './filters-sql';
 import { parseQuery } from './parse-query';
 import { myAddresses, resolvePeople } from './people';
+import { type QueryTerms, queryTerms } from './query-terms';
 import {
   PAGE_MAX,
   PAGE_SIZE,
@@ -37,6 +38,14 @@ import {
 // Le score d'une source est celui de son meilleur passage plus celui de son titre, multiplié par un facteur de
 // récence et par un bonus de 10 % pour ce dont le lecteur est l'auteur. Les sources se regroupent, trois
 // passages au plus sous chacune.
+//
+// Le plein texte se fait en deux passes (T06b), sur la requête sans ses mots outils (query-terms.ts) ; le titre et
+// les vecteurs gardent la requête entière. La première passe exige tous les mots. Quand elle trouve moins de
+// sources qu'une page, la passe élargie se contente d'un mot, mais garde les expressions exigées et les mots niés
+// exclus ; elle ne cherche que dans les sources qu'aucun classement n'a trouvées, se range après elles dans le
+// classement du plein texte (rangs à la suite), et ses sources passent après toutes les autres, d'abord celles
+// qui couvrent le plus de mots : entre deux rangs voisins, la fusion ne laisse qu'un écart de 2 % environ, que la
+// récence (jusqu'à 30 %) effacerait.
 
 // Candidats gardés par classement : de quoi remplir quelques pages, sans classer toute la base.
 const CANDIDATES = 300;
@@ -78,6 +87,30 @@ const HEADLINE_OPTIONS = [
 
 // Les constantes numériques ci-dessus sont écrites dans la requête : jamais une valeur venue d'ailleurs.
 const num = (value: number): SQL => sql.raw(String(value));
+
+// La requête plein texte d'un texte : français (racines) ou simple (mots tels quels, noms propres). Une expression
+// sans variable de ligne : Postgres la calcule une fois et peut s'en servir pour l'index.
+const fullText = (text: string): SQL =>
+  sql`(websearch_to_tsquery('french', ${text}) || websearch_to_tsquery('simple', ${text}))`;
+
+// La requête de la passe élargie, bâtie mot par mot avec les opérateurs de tsquery : un mot suffit (||), chaque
+// expression reste exigée (&&), chaque mot nié reste exclu (&& !!). Postgres donne à ces opérateurs la même
+// priorité : les parenthèses fixent l'ordre.
+function wideQuery(terms: QueryTerms): SQL {
+  const anyWord = sql.join(terms.words.map(fullText), sql` || `);
+  const required = terms.phrases.map((phrase) => sql` && ${fullText(phrase)}`);
+  const excluded = terms.negated.map((term) => sql` && (!!${fullText(term)})`);
+  return sql`((${anyWord})${sql.join(required, sql``)}${sql.join(excluded, sql``)})`;
+}
+
+// Le nombre de mots de la requête que contient un passage. `ts_rank_cd` compte les occurrences : « remise,
+// remise, remise » y vaut plus que « la remise du plan » ; la passe élargie classe d'abord par mots couverts.
+function coveredWords(terms: QueryTerms): SQL {
+  return sql`(${sql.join(
+    terms.words.map((word) => sql`(p.tsv @@ ${fullText(word)})::int`),
+    sql` + `,
+  )})`;
+}
 
 type Tools = NonNullable<SearchFilters['tools']>;
 type Natures = NonNullable<SearchFilters['natures']>;
@@ -227,13 +260,19 @@ async function rankedSources(
 ): Promise<{ hits: SourceHit[]; total: number; usedVectors: boolean }> {
   const { text, filters, me } = query;
   const tenant = ctx.tenantId;
-  // Une expression sans variable de ligne : Postgres la calcule une fois et peut s'en servir pour l'index.
-  const tsq = sql`(websearch_to_tsquery('french', ${text}) || websearch_to_tsquery('simple', ${text}))`;
+  const terms = queryTerms(text);
+  const tsq = fullText(terms.text);
+  // Avec un seul mot libre, la passe élargie serait la première : elle n'a pas lieu.
+  const wide = terms.words.length >= 2 ? wideQuery(terms) : null;
   const plain = text.replace(/"/g, ' ');
   const sourceWhere = sourceConditions(filters);
   const passageWhere = passageConditions(filters, sql`s.kind`);
-  const snippet = sql`(case when numnode(${tsq}) > 0
-    then ts_headline('french', p.text, ${tsq}, ${HEADLINE_OPTIONS})
+  const headline = (tsquery: SQL) =>
+    sql`ts_headline('french', p.text, ${tsquery}, ${HEADLINE_OPTIONS})`;
+  // Un passage de la passe élargie ne contient pas tous les mots : son extrait se centre sur ceux qu'il contient.
+  const snippet = (fromWide: SQL) => sql`(case
+    ${wide ? sql`when ${fromWide} then ${headline(wide)}` : sql``}
+    when numnode(${tsq}) > 0 then ${headline(tsq)}
     else left(p.text, ${num(SNIPPET_CHARS)}) end)`;
 
   // Réglages de cette transaction seulement (`set local`) ; les valeurs sont des constantes du code.
@@ -263,11 +302,36 @@ async function rankedSources(
         )`
       : sql`vec as (select null::uuid as passage_id, null::bigint as r where false)`;
 
+  // La passe élargie (T06b). La condition sur la première passe ne dépend d'aucune ligne : Postgres l'évalue une
+  // fois, avant tout parcours, et ne lit rien quand la page est déjà pleine. Les sources qu'un autre classement a
+  // trouvées en sont exclues : leurs passages, leurs extraits et leur score restent ceux d'avant.
+  const wideLeg = wide
+    ? sql`wide as (
+        select passage_id, covered,
+               (select count(*) from ft1) + rank() over (order by covered desc, score desc) as r
+        from (
+          select p.id as passage_id, ${coveredWords(terms)} as covered, ts_rank_cd(p.tsv, ${wide}) as score
+          from passages p
+          join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
+          where (select count(distinct source_id) from ft1) < ${num(PAGE_SIZE)}
+            and p.tenant_id = ${tenant} and p.tsv @@ ${wide} and ${passageWhere} and ${sourceWhere}
+            and not exists (select 1 from ft1 f where f.source_id = p.source_id)
+            and not exists (select 1 from title ti where ti.source_id = p.source_id)
+            and not exists (
+              select 1 from vec v
+              join passages pv on pv.tenant_id = p.tenant_id and pv.id = v.passage_id
+              where pv.source_id = p.source_id)
+          order by covered desc, score desc
+          limit ${num(CANDIDATES)}
+        ) matches
+      )`
+    : sql`wide as (select null::uuid as passage_id, null::int as covered, null::bigint as r where false)`;
+
   const { rows } = await tx.execute<SearchRow>(sql`
     with
-    ft as (
-      select passage_id, rank() over (order by score desc) as r from (
-        select p.id as passage_id, ts_rank_cd(p.tsv, ${tsq}) as score
+    ft1 as (
+      select passage_id, source_id, rank() over (order by score desc) as r from (
+        select p.id as passage_id, p.source_id, ts_rank_cd(p.tsv, ${tsq}) as score
         from passages p
         join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
         where p.tenant_id = ${tenant} and p.tsv @@ ${tsq} and ${passageWhere} and ${sourceWhere}
@@ -276,17 +340,6 @@ async function rankedSources(
       ) matches
     ),
     ${vectorLeg},
-    fused as (
-      select coalesce(f.passage_id, v.passage_id) as passage_id,
-             (coalesce(1.0 / (${num(RRF_K)} + f.r), 0) + coalesce(1.0 / (${num(RRF_K)} + v.r), 0))::float8 as rrf
-      from ft f full join vec v on v.passage_id = f.passage_id
-    ),
-    cand as (
-      select fu.passage_id, p.source_id, fu.rrf, ${mineCondition(me)} as mine
-      from fused fu
-      join passages p on p.tenant_id = ${tenant} and p.id = fu.passage_id
-      join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
-    ),
     title as (
       select source_id, rank() over (order by sim desc) as r from (
         select s.id as source_id, similarity(s.title, ${plain}) as sim
@@ -299,6 +352,24 @@ async function rankedSources(
         limit ${num(TITLE_CANDIDATES)}
       ) near_titles
     ),
+    ${wideLeg},
+    ft as (
+      select passage_id, r, false as wide, 0 as covered from ft1
+      union all
+      select passage_id, r, true, covered from wide
+    ),
+    fused as (
+      select coalesce(f.passage_id, v.passage_id) as passage_id,
+             (coalesce(1.0 / (${num(RRF_K)} + f.r), 0) + coalesce(1.0 / (${num(RRF_K)} + v.r), 0))::float8 as rrf,
+             coalesce(f.wide, false) as wide, coalesce(f.covered, 0) as covered
+      from ft f full join vec v on v.passage_id = f.passage_id
+    ),
+    cand as (
+      select fu.passage_id, p.source_id, fu.rrf, fu.wide, fu.covered, ${mineCondition(me)} as mine
+      from fused fu
+      join passages p on p.tenant_id = ${tenant} and p.id = fu.passage_id
+      join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
+    ),
     ranked as (
       select r.*,
              r.relevance
@@ -310,10 +381,15 @@ async function rankedSources(
         select s.id as source_id, s.kind, s.title, s.metadata, ${LAST_TS_SQL} as last_ts,
                (coalesce(c.best, 0) + coalesce(1.0 / (${num(RRF_K)} + ti.r), 0))::float8 as relevance,
                (coalesce(c.mine, false)
-                 or (s.owner_user_id = ${ctx.userId} and s.kind = any(${textArray(CAPTURE_KINDS)}))) as mine
+                 or (s.owner_user_id = ${ctx.userId} and s.kind = any(${textArray(CAPTURE_KINDS)}))) as mine,
+               -- Trouvée par la passe élargie seule : après toutes les autres, quels que soient sa date et son auteur ;
+               -- et, entre elles, d'abord celles qui couvrent le plus de mots (0 hors de cette passe).
+               coalesce(c.wide, false) as wide, coalesce(c.covered, 0) as covered
         from sources s
         left join (
-          select source_id, max(rrf) as best, bool_or(mine) as mine from cand group by source_id
+          select source_id, max(rrf) as best, bool_or(mine) as mine, bool_or(wide) as wide,
+                 max(covered) as covered
+          from cand group by source_id
         ) c on c.source_id = s.id
         left join title ti on ti.source_id = s.id
         where s.tenant_id = ${tenant} and (c.source_id is not null or ti.source_id is not null)
@@ -324,11 +400,11 @@ async function rankedSources(
            pp.passage_id, pp.turn_id, extract(epoch from pp.ts) as epoch, pp.author_name, pp.snippet
     from (select count(*)::int as total from ranked) tt
     left join lateral (
-      select * from ranked order by score desc, last_ts desc, source_id
+      select * from ranked order by wide, covered desc, score desc, last_ts desc, source_id
       offset ${query.offset} limit ${num(PAGE_SIZE)}
     ) pg on true
     left join lateral (
-      (select p.id as passage_id, p.turn_id, p.ts, p.ord, p.author_name, ${snippet} as snippet,
+      (select p.id as passage_id, p.turn_id, p.ts, p.ord, p.author_name, ${snippet(sql`c.wide`)} as snippet,
               c.rrf as prank
        from cand c join passages p on p.id = c.passage_id
        where c.source_id = pg.source_id
@@ -336,7 +412,7 @@ async function rankedSources(
        limit ${num(PASSAGES_PER_SOURCE)})
       union all
       -- Une source trouvée par son titre seul : le début de son premier passage.
-      (select p.id, p.turn_id, p.ts, p.ord, p.author_name, ${snippet}, 0::float8
+      (select p.id, p.turn_id, p.ts, p.ord, p.author_name, ${snippet(sql`false`)}, 0::float8
        from passages p
        join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
        where p.tenant_id = ${tenant} and p.source_id = pg.source_id
@@ -345,7 +421,8 @@ async function rankedSources(
        order by p.ts, p.ord
        limit 1)
     ) pp on true
-    order by pg.score desc nulls last, pg.last_ts desc, pg.source_id, pp.prank desc nulls last, pp.ts desc, pp.ord`);
+    order by pg.wide nulls last, pg.covered desc nulls last, pg.score desc nulls last, pg.last_ts desc, pg.source_id,
+             pp.prank desc nulls last, pp.ts desc, pp.ord`);
 
   const hits = new Map<string, SourceHit>();
   for (const row of rows) {

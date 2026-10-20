@@ -259,6 +259,9 @@ export async function searchPassages(
   input: { query: string; filters?: SearchFilters; page?: number; embedder?: Embedder | null; now?: Date },
 ): Promise<SearchPage>;
 // Requête vide + filtres → les sources les plus récentes qui passent les filtres (mode 'plein-texte').
+// T06b : le plein texte cherche la requête sans ses mots outils (query-terms.ts) ; si cette première passe trouve
+// moins de 10 sources, une passe élargie (un mot suffit, expressions exigées, mots niés exclus) ajoute ses sources
+// après toutes les autres, les plus couvertes d'abord. Le titre et les vecteurs gardent la requête entière.
 
 // src/server/search/context.ts
 export type ContextTurn = { turnId: string; role: TurnRole; authorName: string | null; ts: Date; text: string; isHit: boolean };
@@ -607,6 +610,14 @@ T25 ne démarre que si le verdict est `indexable` (décision 14 de la spec).
 - [ ] **Étape 4 :** écrire le code. La requête SQL fait, sous `withTenant` : correspondances plein texte (`websearch_to_tsquery('french') || websearch_to_tsquery('simple')`, `ts_rank_cd`), correspondances de titre (`similarity` sur `sources.title`), plus proches voisins vectoriels du modèle courant (`set local hnsw.iterative_scan = relaxed_order` et `hnsw.ef_search = 100`), fusion RRF (k = 60), facteur de récence et bonus « moi » (Contraintes globales), regroupement par source. `ts_headline` avec `StartSel=, StopSel=`.
 - [ ] **Étape 5 :** `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/search src/lib/highlight.test.ts` → passe.
 - [ ] **Étape 6 :** commit « T06 · Recherche hybride sous les droits du lecteur ».
+
+### T06b · Une question en phrase trouve ses sources — Opus
+
+Défaut vu au bilan du lot B : `websearch_to_tsquery` exige tous les mots, mots outils compris (« quel », « les ») ; sans fournisseur de vecteurs, la barre, la réponse en tête, le MCP et la discussion ne trouvaient rien pour une question en phrase.
+
+- `src/server/search/query-terms.ts` (pur) retire les mots outils de la partie libre : liste fixe, comparée sans accents ni casse ; guillemets, mots niés, noms propres en milieu de phrase et filtres de `parseQuery` intacts ; tout mot outil → texte d'origine.
+- `search.ts` : première passe inchangée sur ce texte. Moins de 10 sources → passe élargie bâtie mot par mot (`||`, `&&`, `!!`), limitée aux sources qu'aucun classement n'a trouvées, rangs à la suite dans la fusion ; ses sources passent après les autres et, entre elles, par nombre de mots couverts (`ts_rank_cd` compte les occurrences, pas les mots : un test le montre). Postgres évalue la condition une fois et ne lit rien quand la page est pleine. Ses extraits viennent de `ts_headline` sur la requête élargie.
+- Tests : `query-terms.test.ts`, `search.db.test.ts` (« questions en phrase ») ; trois tests de vecteurs adaptés, le plein texte trouvant désormais « budget » dans « reunion budget ».
 
 ### T07 · MCP sur les passages — Sonnet
 

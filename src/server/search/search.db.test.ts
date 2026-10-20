@@ -224,6 +224,244 @@ describe('plein texte', () => {
   });
 });
 
+// Une question posée en phrase (T06b) : sans fournisseur de vecteurs, le plein texte seul doit la comprendre. Les
+// mots outils sont retirés, puis, si la première passe (tous les mots) ne remplit pas la page, une passe élargie
+// (un mot suffit) complète les résultats, sous les mêmes droits, après ceux de la première passe.
+describe('questions en phrase', () => {
+  const highlighted = (page: SearchPage, title: string) =>
+    (page.hits.find((hit) => hit.title === title)?.passages ?? []).flatMap((passage) =>
+      splitHighlights(passage.snippet)
+        .filter((part) => part.hit)
+        .map((part) => part.text.toLowerCase()),
+    );
+
+  it('« Quelles sont les sauvegardes quotidiennes ? » trouve le ticket qui les met en place', async () => {
+    const { tenantId, alice } = await team();
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'LIN-42',
+      metadata: { nature: 'ticket' },
+      turns: [{ text: 'Mettre en place les sauvegardes quotidiennes de la base de production.' }],
+    });
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'LIN-43',
+      metadata: { nature: 'ticket' },
+      turns: [{ text: 'Revoir la page de connexion.' }],
+    });
+    const page = await search(alice, 'Quelles sont les sauvegardes quotidiennes ?');
+    expect(page.mode).toBe('plein-texte');
+    expect(titles(page)).toEqual(['LIN-42']);
+    // Trouvé par son texte, pas par son titre : les mots cherchés sont surlignés.
+    expect(highlighted(page, 'LIN-42')).toEqual(['sauvegardes', 'quotidiennes']);
+  });
+
+  describe.each([
+    ['plein texte', null],
+    ['hybride', factice],
+  ])('sous les droits du lecteur (%s)', (_, embedder) => {
+    it('« Quelle remise vise le plan Zéphyr ? » trouve la conversation d’Alice pour elle seule', async () => {
+      const { alice, bob } = await team();
+      const other = await newTeam(['Zoé'], tenantIds);
+      await seedIndexed(alice, {
+        kind: 'claude_code',
+        title: 'Conversation avec Claude',
+        turns: [
+          { text: 'On a parlé de la remise du plan Zéphyr : quinze pour cent la première année.' },
+        ],
+      });
+      const question = 'Quelle remise vise le plan Zéphyr ?';
+      expect(titles(await search(alice, question, { embedder }))).toEqual([
+        'Conversation avec Claude',
+      ]);
+      // La passe élargie ne change pas les droits : ni Bob, de la même organisation, ni une autre organisation.
+      expect((await search(bob, question, { embedder })).hits).toEqual([]);
+      const zoe = other.members[0] as TenantContext;
+      expect((await search(zoe, question, { embedder })).hits).toEqual([]);
+    });
+  });
+
+  it('surligne dans l’extrait les mots trouvés par la passe élargie, même loin du début', async () => {
+    const { alice } = await team();
+    // Les mots trouvés arrivent après une cinquantaine d'autres : l'extrait (30 mots au plus par morceau) doit
+    // se centrer sur eux, pas rendre le début du passage.
+    await seedIndexed(alice, {
+      title: 'Conversation avec Claude',
+      turns: [
+        {
+          text:
+            'On a d’abord passé en revue le calendrier, les recrutements, le budget de communication, ' +
+            'les locaux, le séminaire de printemps, les congés d’été, la nouvelle charte graphique, ' +
+            'le choix du prestataire informatique, la refonte du site, les tarifs des concurrents et ' +
+            'le salon de novembre. Puis, en toute fin de réunion, on a parlé de la remise du plan ' +
+            'Zéphyr : quinze pour cent la première année.',
+        },
+      ],
+    });
+    const page = await search(alice, 'Quelle remise vise le plan Zéphyr ?');
+    const snippet = page.hits[0]?.passages[0]?.snippet ?? '';
+    expect(highlighted(page, 'Conversation avec Claude')).toEqual(['remise', 'plan', 'zéphyr']);
+    expect(snippet).toContain(`${HIGHLIGHT_START}remise${HIGHLIGHT_END}`);
+    expect(snippet).not.toContain('calendrier');
+  });
+
+  it('classe d’abord la source qui contient tous les mots, même plus ancienne', async () => {
+    const { tenantId, alice } = await team();
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Tous les mots',
+      turns: [{ text: 'La remise du plan Zéphyr est validée.', ts: daysAgo(170) }],
+      lastTurnAt: daysAgo(170),
+    });
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Un seul mot',
+      turns: [{ text: 'Le plan de la semaine est prêt.', ts: NOW }],
+      lastTurnAt: NOW,
+    });
+    for (const embedder of [null, factice]) {
+      // « remise plan Zéphyr » une fois les mots outils partis : la première source les contient tous.
+      const page = await search(alice, 'Quelle est la remise du plan Zéphyr ?', { embedder });
+      expect(titles(page)).toEqual(['Tous les mots', 'Un seul mot']);
+    }
+  });
+
+  it('classe la passe élargie selon le nombre de mots couverts, pas leur répétition', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Un mot répété', 'Remise, remise et encore remise : rien n’est décidé.'],
+      ['Deux mots', 'La remise du plan tarifaire est validée.'],
+      ['Trois mots', 'La remise du plan Zéphyr est validée.'],
+    ] as const) {
+      await seedIndexed(alice, {
+        kind: 'linear',
+        acl: [tenantId],
+        title,
+        turns: [{ text, ts: NOW }],
+        lastTurnAt: NOW,
+      });
+    }
+    // `ts_rank_cd` compte les occurrences : seul, il mettrait « Un mot répété » devant « Deux mots ».
+    const page = await search(alice, 'Quelle remise pour le plan Zéphyr ?');
+    expect(titles(page)).toEqual(['Trois mots', 'Deux mots', 'Un mot répété']);
+  });
+
+  it('range une source de la passe élargie qui couvre plus de mots devant une plus récente qui en couvre moins', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text, age] of [
+      ['Trois mots sur quatre', 'La remise du plan Zéphyr est validée.', 120],
+      ['Un mot sur quatre', 'Le plan de la semaine est prêt.', 0],
+    ] as const) {
+      await seedIndexed(alice, {
+        kind: 'linear',
+        acl: [tenantId],
+        title,
+        turns: [{ text, ts: daysAgo(age) }],
+        lastTurnAt: daysAgo(age),
+      });
+    }
+    // « vise » n'est nulle part : les deux sources viennent de la passe élargie.
+    const page = await search(alice, 'Quelle remise vise le plan Zéphyr ?');
+    expect(titles(page)).toEqual(['Trois mots sur quatre', 'Un mot sur quatre']);
+  });
+
+  it('n’apporte jamais par la passe élargie une source qui contient un mot nié', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Note alpha', 'Le contrat d’hébergement chez Scaleway est signé.'],
+      ['Note bravo', 'Le contrat OVH est signé.'],
+      ['Note charlie', 'L’hébergement chez OVH coûte trop cher.'],
+      ['Note delta', 'Le contrat de maintenance est renouvelé.'],
+    ] as const) {
+      await seedIndexed(alice, {
+        kind: 'linear',
+        acl: [tenantId],
+        title,
+        turns: [{ text, ts: NOW }],
+        lastTurnAt: NOW,
+      });
+    }
+    // Plein texte seul : les vecteurs, que T06b ne change pas, ne lisent pas les négations.
+    const wide = await search(alice, 'contrat hébergement -OVH');
+    expect(titles(wide)).toEqual(['Note alpha', 'Note delta']);
+    const single = await search(alice, 'contrat -OVH');
+    expect(titles(single).toSorted()).toEqual(['Note alpha', 'Note delta']);
+    for (const hit of [...wide.hits, ...single.hits]) {
+      for (const passage of hit.passages) expect(passage.snippet).not.toMatch(/ovh/i);
+    }
+  });
+
+  it('exige une expression entre guillemets telle quelle, passe élargie comprise', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Expression exacte', 'La remise du plan Zéphyr est de quinze pour cent.'],
+      ['Mots dispersés', 'Le plan de remise pour Zéphyr : accord signé hier.'],
+    ] as const) {
+      await seedIndexed(alice, { kind: 'linear', acl: [tenantId], title, turns: [{ text }] });
+    }
+    expect(titles(await search(alice, '"plan Zéphyr" remise'))).toEqual(['Expression exacte']);
+    // « accord » n'est que dans les mots dispersés : la passe élargie a lieu, l'expression reste exigée.
+    expect(titles(await search(alice, '"plan Zéphyr" remise accord'))).toEqual([
+      'Expression exacte',
+    ]);
+  });
+
+  it('ne lève aucune erreur sur une question faite de mots outils', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, { turns: [{ text: 'Qui a validé le budget ?' }] });
+    for (const embedder of [null, factice]) {
+      for (const query of ['qui ?', 'Qui ?', 'Qu’est-ce que c’est ?', 'qui -budget', 'le la les']) {
+        const page = await search(alice, query, { embedder });
+        expect(Array.isArray(page.hits)).toBe(true);
+      }
+    }
+  });
+
+  it('ne lance pas la passe élargie quand la première passe remplit la page', async () => {
+    const { tenantId, alice } = await team();
+    const seedMany = async (from: number, count: number) => {
+      for (let index = from; index < from + count; index += 1) {
+        await seedIndexed(alice, {
+          kind: 'linear',
+          acl: [tenantId],
+          title: `Complet ${index}`,
+          turns: [{ text: 'Les sauvegardes quotidiennes tournent.', ts: daysAgo(index + 1) }],
+          lastTurnAt: daysAgo(index + 1),
+        });
+      }
+    };
+    // Un seul des deux mots, mais la plus récente : sans la règle, elle viendrait en tête.
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Partielle',
+      turns: [{ text: 'Les sauvegardes hebdomadaires tournent.', ts: NOW }],
+      lastTurnAt: NOW,
+    });
+    await seedMany(0, 9);
+    // Neuf sources complètes : la page n'est pas pleine, la passe élargie ajoute la partielle à la fin.
+    const short = await search(alice, 'sauvegardes quotidiennes');
+    expect(short.totalSources).toBe(10);
+    expect(titles(short).at(-1)).toBe('Partielle');
+
+    await seedMany(9, 1);
+    // Dix sources complètes : la page est pleine, la passe élargie n'a pas lieu.
+    const full = await search(alice, 'sauvegardes quotidiennes');
+    const next = await search(alice, 'sauvegardes quotidiennes', { page: 2 });
+    expect(full.totalSources).toBe(10);
+    expect(titles(full)).not.toContain('Partielle');
+    expect(next.hits).toEqual([]);
+    // Posée en phrase, la même requête remplit aussi la page dès la première passe, sans ses mots outils.
+    const question = await search(alice, 'Quelles sont les sauvegardes quotidiennes ?');
+    expect(question.totalSources).toBe(10);
+    expect(titles(question)).not.toContain('Partielle');
+  });
+});
+
 describe('filtres', () => {
   async function seedFilterable() {
     const { tenantId, alice, bob } = await team();
@@ -355,12 +593,23 @@ describe('vecteurs', () => {
       title: 'Compte rendu',
       turns: [{ text: 'La réunion du budget a eu lieu hier.' }],
     });
-    const textOnly = await search(alice, 'reunion budget');
+    // « reunion » sans accent : le plein texte ne le rapproche pas de « réunion », le factice si.
+    const textOnly = await search(alice, 'reunion');
     expect(textOnly.mode).toBe('plein-texte');
     expect(textOnly.hits).toEqual([]);
 
-    const hybrid = await search(alice, 'reunion budget', { embedder: factice });
+    const hybrid = await search(alice, 'reunion', { embedder: factice });
     expect(hybrid.mode).toBe('hybride');
+    expect(titles(hybrid)).toEqual(['Compte rendu']);
+  });
+
+  it('surlignent les mots de la requête que contient un passage trouvé par le sens', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, {
+      title: 'Compte rendu',
+      turns: [{ text: 'La réunion du budget a eu lieu hier.' }],
+    });
+    const hybrid = await search(alice, 'reunion budget', { embedder: factice });
     expect(titles(hybrid)).toEqual(['Compte rendu']);
     // Les mots de la requête que le passage contient sont surlignés, même quand c'est le sens qui l'a trouvé.
     const snippet = hybrid.hits[0]?.passages[0]?.snippet ?? '';
@@ -387,14 +636,15 @@ describe('vecteurs', () => {
     });
     const autre: Embedder = { ...factice, model: 'factice-b' };
     // Aucun vecteur de « factice-b » : seul le texte répond, et ici il ne répond pas.
-    expect((await search(alice, 'reunion budget', { embedder: autre })).hits).toEqual([]);
+    expect((await search(alice, 'reunion', { embedder: autre })).hits).toEqual([]);
     // Le plein texte, lui, répond toujours.
     expect(titles(await search(alice, 'budget', { embedder: autre }))).toEqual(['Indexée']);
   });
 
   it('gardent la fusion stable : un passage trouvé par les deux classements passe devant', async () => {
     const { alice } = await team();
-    await seedIndexed(alice, { title: 'Le sens seul', turns: [{ text: 'tapirbudge reunion' }] });
+    // « réunion » accentué : aucun mot en commun avec la requête pour le plein texte, le même sens pour le factice.
+    await seedIndexed(alice, { title: 'Le sens seul', turns: [{ text: 'tapirbudge réunion' }] });
     await seedIndexed(alice, { title: 'Les deux', turns: [{ text: 'tapirbudget reunion' }] });
     expect(titles(await search(alice, 'tapirbudget reunion', { embedder: factice }))).toEqual([
       'Les deux',
@@ -481,6 +731,14 @@ describe('fournisseur de vecteurs', () => {
     expect(page.mode).toBe('hybride');
     expect(embed).toHaveBeenCalledTimes(1);
     expect(embed.mock.calls[0]?.[0]).toEqual(['quetzalcoatl']);
+  });
+
+  it('reçoit la question entière, mots outils compris : les vecteurs ne changent pas (T06b)', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, { title: 'Ticket', turns: [{ text: 'quetzalcoatl renouvelé' }] });
+    const { embedder, embed } = countingEmbedder();
+    await search(alice, 'Quand le quetzalcoatl est-il renouvelé ? de:alice', { embedder });
+    expect(embed.mock.calls[0]?.[0]).toEqual(['Quand le quetzalcoatl est-il renouvelé ?']);
   });
 
   it.each([

@@ -716,3 +716,25 @@ describe('droits sur une connexion', () => {
     await makeNotDue(id);
   });
 });
+
+// Audit 3 n° 14 : la relève saute la connexion d'un créateur parti (connector_syncs_due).
+describe('créateur parti', () => {
+  it('la vue le dit et « Synchroniser maintenant » refuse', async () => {
+    const team = await createTestTenant(['Paul', 'Bob']);
+    tenantIds.push(team.tenantId);
+    const [stays, leaves] = team.members as [TenantContext, TenantContext];
+    const id = await seedConnection(leaves);
+    await adminPool.query(`delete from member where "userId" = $1 and "organizationId" = $2`, [
+      leaves.userId,
+      leaves.tenantId,
+    ]);
+
+    const [view] = await listConnections(stays);
+    expect(view).toMatchObject({ id, creatorLeft: true, createdBy: { name: 'Bob' } });
+    expect(await requestSyncNow(stays, id)).toBe(false);
+
+    const kept = await seedConnection(stays);
+    expect((await listConnections(stays)).find((v) => v.id === kept)?.creatorLeft).toBe(false);
+    expect(await requestSyncNow(stays, kept)).toBe(true);
+  });
+});

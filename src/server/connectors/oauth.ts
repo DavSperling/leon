@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import type { ProviderId } from '@/capture/turn';
+import { PROVIDER_LABELS } from '@/lib/providers';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { type LoadedConnection, saveOAuthTokens } from './connections';
@@ -191,8 +192,14 @@ export async function ensureFreshTokens(
   const expiresAt = isString(config.expiresAt) ? Date.parse(config.expiresAt) : null;
   if (!deps.force && (expiresAt === null || expiresAt - now > RENEW_BEFORE_MS)) return config;
 
+  // L'appli retirée du serveur (variables effacées) : une erreur ordinaire, réessayée plus tard ;
+  // l'autorisation chez l'éditeur, elle, tient toujours.
   const client = oauthClient(oauth.appKey);
-  if (!isString(config.refreshToken) || !client) throw new OAuthRefusedError();
+  if (!client) {
+    const label = PROVIDER_LABELS[connection.provider];
+    throw new ConnectorHttpError(null, `L'appli ${label} n'est plus configurée sur ce serveur.`);
+  }
+  if (!isString(config.refreshToken)) throw new OAuthRefusedError();
   const http = tokenHttp(oauth, connection.provider, deps.fetchImpl);
   const tokens = await refreshTokens(oauth, client, config.refreshToken, http);
   const renewed = {

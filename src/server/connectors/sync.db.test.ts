@@ -9,7 +9,7 @@ import { fakeConnector } from '@/test/fake-connector';
 import { collect, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
-import { createConnection, listConnections } from './connections';
+import { createConnection, listConnections, saveOAuthTokens } from './connections';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
@@ -532,6 +532,56 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect((await readRow(id)).last_error).toBe(
       "Reconnectez GitHub : l'autorisation a été retirée.",
     );
+  });
+
+  // Audit 3 n° 15 : la relève partie avec les anciens jetons échoue après un « Reconnecter » ; la connexion
+  // reste celle de la reconnexion (active, sans erreur, échéance maintenant) au lieu de « Reconnectez ».
+  it('garde le statut posé par un « Reconnecter » fait pendant la relève qui échoue', async () => {
+    const id = await oauthConnection({ refreshToken: null });
+    await adminPool.query(
+      "update connections set status = 'error', last_error = 'Reconnectez GitHub' where id = $1",
+      [id],
+    );
+    const reconnectedMidway: AnyConnector = {
+      ...fakeOAuthConnector(),
+      // biome-ignore lint/correctness/useYield: le passage échoue avant sa première page
+      async *sync(): AsyncGenerator<SyncPage> {
+        const config = {
+          authMode: 'oauth',
+          accessToken: 'acces-reconnecte-0009',
+          refreshToken: 'rafraichir-reconnecte',
+          expiresAt: inMinutes(60),
+          repos: ['acme/leon'],
+        };
+        const secretFields = [...OAUTH_SECRET_FIELDS, 'token'];
+        await saveOAuthTokens(paul, id, config, secretFields, { reconnect: true });
+        throw new ConnectorAuthError('GitHub', 403);
+      },
+    };
+
+    await run(id, reconnectedMidway, { fetchImpl: fakeFetch([]) });
+
+    const row = await readRow(id);
+    expect(row).toMatchObject({ status: 'active', last_error: null, sync_lock_at: null });
+    expect(row.seconds_to_next).toBeLessThanOrEqual(5);
+    expect(await hintOf(id)).toBe('0009');
+  });
+
+  // Audit 3 n° 16 : l'appli retirée du serveur (variables effacées) n'est pas un refus de l'éditeur.
+  it('erreur ordinaire, nouvel essai dans une heure, quand l’appli OAuth n’est plus configurée', async () => {
+    const id = await oauthConnection({ expiresAt: inMinutes(1) });
+    vi.unstubAllEnvs();
+    const fetchImpl = fakeFetch([]);
+
+    expect(await run(id, fakeOAuthConnector(), { fetchImpl })).toBe('error');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    const row = await readRow(id);
+    expect(row).toMatchObject({
+      status: 'error',
+      last_error: "L'appli GitHub n'est plus configurée sur ce serveur.",
+    });
+    expectDelayAbout(row, 60 * MINUTE);
   });
 
   it('dit que l’autorisation a été retirée, sans renouveler, quand il n’y a pas de jeton de rafraîchissement', async () => {

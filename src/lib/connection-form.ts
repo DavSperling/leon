@@ -67,9 +67,13 @@ function sinceText(date: Date, now: Date): string {
 }
 
 export function statusLine(
-  view: Pick<ConnectionView, 'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError'>,
+  view: Pick<
+    ConnectionView,
+    'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError' | 'createdBy' | 'creatorLeft'
+  >,
   now: Date,
 ): string {
+  if (view.creatorLeft) return `Arrêtée : ${view.createdBy.name} n'est plus membre`;
   if (view.status === 'paused') return 'En pause';
   if (view.status === 'error')
     return view.lastError ? `En erreur : ${view.lastError}` : 'En erreur';
@@ -123,6 +127,7 @@ export const OAUTH_RETURN_CODES = [
   'champs',
   'admin',
   'admin_accorde',
+  'autre_compte',
 ] as const;
 type OAuthReturnCode = (typeof OAUTH_RETURN_CODES)[number];
 
@@ -162,6 +167,8 @@ function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
       return ADMIN_CONSENT_MESSAGE;
     case 'admin_accorde':
       return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
+    case 'autre_compte':
+      return `Reconnectez ${object} avec le même compte et le même site, ou ajoutez une autre connexion.`;
   }
 }
 

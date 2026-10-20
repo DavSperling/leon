@@ -797,6 +797,60 @@ describe('vecteurs', () => {
   });
 });
 
+// Audit 3 n° 17 : « -mot » vaut aussi pour les vecteurs et les titres.
+describe('mot nié, côté vecteurs et titres', () => {
+  it('calcule le vecteur de la requête sans les mots niés', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, { turns: [{ text: 'La réunion du budget a eu lieu hier.' }] });
+    const seen: string[] = [];
+    const spy: Embedder = {
+      ...factice,
+      async embed(texts, kind) {
+        seen.push(...texts);
+        return factice.embed(texts, kind);
+      },
+    };
+    await search(alice, 'reunion -facture -"note de frais"', { embedder: spy });
+    expect(seen).toHaveLength(1);
+    expect(seen[0]).toContain('reunion');
+    expect(seen[0]).not.toMatch(/facture|frais/);
+  });
+
+  it('écarte du volet vecteurs un passage qui contient un mot nié', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, {
+      title: 'Avec factures',
+      turns: [{ text: 'La réunion des factures a eu lieu hier.' }],
+    });
+    await seedIndexed(alice, {
+      title: 'Sans',
+      turns: [{ text: 'La réunion du budget a eu lieu hier.' }],
+    });
+    // « reunion » sans accent : seul le volet vecteurs les trouve.
+    expect(titles(await search(alice, 'reunion', { embedder: factice })).toSorted()).toEqual([
+      'Avec factures',
+      'Sans',
+    ]);
+    expect(titles(await search(alice, 'reunion -facture', { embedder: factice }))).toEqual([
+      'Sans',
+    ]);
+  });
+
+  it('écarte du volet titre une source dont aucun passage n’échappe au mot nié', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, {
+      title: 'Fathom · call ACME',
+      turns: [{ text: 'Compte rendu : les factures sont en retard.' }],
+    });
+    for (const embedder of [null, factice]) {
+      expect(titles(await search(alice, 'Fathon ACME', { embedder }))).toEqual([
+        'Fathom · call ACME',
+      ]);
+      expect(titles(await search(alice, 'Fathon ACME -facture', { embedder }))).toEqual([]);
+    }
+  });
+});
+
 describe('modèle de vecteurs en panne', () => {
   it('une erreur du fournisseur laisse le plein texte répondre, sans rien journaliser du texte cherché', async () => {
     const { alice } = await team();

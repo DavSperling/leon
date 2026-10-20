@@ -79,6 +79,8 @@ describe('statusLine', () => {
     lastSyncAt: ago(4 * MINUTE),
     itemsSynced: 128,
     lastError: null,
+    createdBy: { id: 'u1', name: 'Bob' },
+    creatorLeft: false,
     ...override,
   });
 
@@ -118,6 +120,15 @@ describe('statusLine', () => {
       ),
     ).toBe('En erreur : Clé refusée par GitHub : vérifiez-la ou remplacez-la.');
     expect(statusLine(view({ status: 'error', lastError: null }), NOW)).toBe('En erreur');
+  });
+
+  // Audit 3 n° 14 : la relève saute la connexion d'un créateur parti, la vue le dit.
+  it('dit « Arrêtée » quand le créateur n’est plus membre, quel que soit le statut', () => {
+    for (const status of ['active', 'paused', 'error'] as const) {
+      expect(statusLine(view({ status, creatorLeft: true }), NOW)).toBe(
+        "Arrêtée : Bob n'est plus membre",
+      );
+    }
   });
 });
 
@@ -209,11 +220,23 @@ describe('oauthNotice', () => {
     expect(text('admin_accorde')).toBe(
       'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.',
     );
+    expect(text('autre_compte')).toBe(
+      'Reconnectez Linear avec le même compte et le même site, ou ajoutez une autre connexion.',
+    );
   });
 
   it('couvre chaque code que le retour peut rendre, et rien d’autre', () => {
     expect([...OAUTH_RETURN_CODES].sort()).toEqual(
-      ['admin', 'admin_accorde', 'annule', 'champs', 'expire', 'indisponible', 'refuse'].sort(),
+      [
+        'admin',
+        'admin_accorde',
+        'annule',
+        'autre_compte',
+        'champs',
+        'expire',
+        'indisponible',
+        'refuse',
+      ].sort(),
     );
     for (const erreur of OAUTH_RETURN_CODES) {
       expect(oauthNotice({ erreur, outil: 'outlook' })).not.toBeNull();

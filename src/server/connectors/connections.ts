@@ -40,6 +40,7 @@ export type ConnectionView = {
   createdAt: Date;
   canManage: boolean; // pause, suppression : créateur ou administrateur
   isCreator: boolean; // clé, reconnexion : créateur seul (le secret est celui de son compte)
+  creatorLeft: boolean; // le créateur n'est plus membre : la relève saute la connexion
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -107,6 +108,12 @@ const manageable = (ctx: TenantContext) =>
 // renouvellement des jetons passe aussi par ici : la relève travaille au nom du créateur (queue.ts).
 const createdByMe = (ctx: TenantContext) => eq(connections.createdBy, ctx.userId);
 
+// La relève travaille au nom du créateur : parti de l'organisation, elle saute sa connexion
+// (connector_syncs_due).
+const creatorIsMember = sql`exists (
+  select 1 from member
+  where "userId" = ${connections.createdBy} and "organizationId" = ${connections.tenantId})`;
+
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
   try {
@@ -166,6 +173,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         creatorName: users.name,
         canManage: sql<boolean>`${manageable(ctx)}`,
         isCreator: sql<boolean>`${createdByMe(ctx)}`,
+        creatorLeft: sql<boolean>`not ${creatorIsMember}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -176,6 +184,17 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
     createdBy: { id: creatorId, name: creatorName },
   }));
 }
+
+// Une clé remplacée ou une reconnexion relance la connexion tout de suite (sauf en pause), et reprend
+// la réservation d'une relève en cours : partie avec l'ancien secret, elle n'écrit plus rien, pas même
+// son échec (finishSync, stillOurs). La relève suivante part du dernier curseur enregistré.
+const RESTART = {
+  status: unlessPaused(sql`'active'::text`, connections.status),
+  lastError: unlessPaused(sql`null::text`, connections.lastError),
+  nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
+  syncLockAt: NO_DATE,
+  lastSyncStartedAt: NO_DATE,
+};
 
 // `config` porte tous les champs secrets de l'outil ; les champs ouverts ne sont pas réécrits.
 // C'est le remède à « Clé refusée » : la connexion repart tout de suite, sauf si elle est en pause.
@@ -189,13 +208,7 @@ export async function replaceConnectionSecret(
   const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
-      .set({
-        ...sealed,
-        status: unlessPaused(sql`'active'::text`, connections.status),
-        lastError: unlessPaused(sql`null::text`, connections.lastError),
-        nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
-        updatedAt: sql`now()`,
-      })
+      .set({ ...sealed, ...RESTART, updatedAt: sql`now()` })
       .where(and(eq(connections.id, id), createdByMe(ctx)))
       .returning({ id: connections.id }),
   );
@@ -218,13 +231,7 @@ export async function saveOAuthTokens(
   options: { reconnect: true } | { reconnect: false; renewedFrom: string },
 ): Promise<boolean> {
   const sealed = sealSecrets(config, secretFields, aadOf(ctx.tenantId, id));
-  const restart = options.reconnect
-    ? {
-        status: unlessPaused(sql`'active'::text`, connections.status),
-        lastError: unlessPaused(sql`null::text`, connections.lastError),
-        nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
-      }
-    : {};
+  const restart = options.reconnect ? RESTART : {};
   const mine = and(eq(connections.id, id), createdByMe(ctx));
   const rows = await withTenant(ctx, async (tx) => {
     if (!options.reconnect) {
@@ -282,7 +289,13 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
     tx
       .update(connections)
       .set({ nextSyncAt: sql`now()`, updatedAt: sql`now()` })
-      .where(and(eq(connections.id, id), inArray(connections.status, ['active', 'error'])))
+      .where(
+        and(
+          eq(connections.id, id),
+          inArray(connections.status, ['active', 'error']),
+          creatorIsMember,
+        ),
+      )
       .returning({ id: connections.id }),
   );
   return rows.length > 0;

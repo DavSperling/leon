@@ -16,7 +16,7 @@ import {
 } from './filters-sql';
 import { parseQuery } from './parse-query';
 import { myAddresses, resolvePeople } from './people';
-import { type QueryTerms, queryTerms } from './query-terms';
+import { type QueryTerms, queryTerms, withoutNegations } from './query-terms';
 import {
   PAGE_MAX,
   PAGE_SIZE,
@@ -286,7 +286,7 @@ async function rankedSources(
   const tsq = firstQuery(terms);
   // Avec un seul mot libre, la passe élargie serait la première : elle n'a pas lieu.
   const wide = terms.words.length >= 2 ? wideQuery(terms) : null;
-  const plain = text.replace(/"/g, ' ');
+  const plain = withoutNegations(text).replace(/"/g, ' ');
   const sourceWhere = sourceConditions(filters);
   const passageWhere = passageConditions(filters, sql`s.kind`);
   const headline = (tsquery: SQL) =>
@@ -322,7 +322,14 @@ async function rankedSources(
     vector && literal
       ? sql`vec as (
           select passage_id, rank() over (order by dist) as r from (
-            ${hasFilters(filters) ? neighbours(joined, sql`and ${passageWhere} and ${sourceWhere}`) : neighbours(sql``, sql``)}
+            ${
+              hasFilters(filters) || terms.negated.length > 0
+                ? neighbours(
+                    joined,
+                    sql`and ${passageWhere} and ${sourceWhere} and ${withoutNegated(terms)}`,
+                  )
+                : neighbours(sql``, sql``)
+            }
           ) neighbours
           where dist < ${num(MAX_VECTOR_DISTANCE)}
         )`
@@ -387,7 +394,8 @@ async function rankedSources(
         where s.tenant_id = ${tenant} and s.title % ${plain} and ${sourceWhere}
           and exists (
             select 1 from passages p
-            where p.tenant_id = s.tenant_id and p.source_id = s.id and ${passageWhere})
+            where p.tenant_id = s.tenant_id and p.source_id = s.id and ${passageWhere}
+              and ${withoutNegated(terms)})
         order by sim desc
         limit ${num(TITLE_CANDIDATES)}
       ) near_titles
@@ -457,7 +465,7 @@ async function rankedSources(
        join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
        where p.tenant_id = ${tenant} and p.source_id = pg.source_id
          and not exists (select 1 from cand c where c.source_id = pg.source_id)
-         and ${passageWhere}
+         and ${passageWhere} and ${withoutNegated(terms)}
        order by p.ts, p.ord
        limit 1)
     ) pp on true
@@ -545,7 +553,9 @@ export async function searchPassages(
   // Le fournisseur de vecteurs est payant : il n'est interrogé qu'ici, une fois sûr que la recherche a lieu
   // (ni outils sans rien en commun, ni personne inconnue), pendant que la base donne les adresses du lecteur.
   const [vector, me] = await Promise.all([
-    input.embedder ? embedQuery(input.embedder, parsed.text.replace(/"/g, ' ')) : null,
+    input.embedder
+      ? embedQuery(input.embedder, withoutNegations(parsed.text).replace(/"/g, ' '))
+      : null,
     myAddresses(ctx),
   ]);
   const found = await withTenant(ctx, (tx) =>

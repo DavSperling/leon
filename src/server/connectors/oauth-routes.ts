@@ -55,7 +55,8 @@ type ReturnCode =
   | 'indisponible'
   | 'champs'
   | 'admin'
-  | 'admin_accorde';
+  | 'admin_accorde'
+  | 'autre_compte';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ACCOUNT_MAX = 120;
@@ -227,6 +228,27 @@ async function verifyConfig(
   }
 }
 
+// « Reconnecter » a rendu un autre compte, ou un autre site que celui gardé (Jira retombe sur le
+// premier site quand le sien n'est plus accessible) : la connexion garde ses jetons.
+class OtherAccount extends Error {
+  override name = 'OtherAccount';
+}
+
+// Le libellé est le compte rendu par `verify` au branchement ; les champs avant le clic gardés
+// doivent revenir tels quels.
+function sameAccount(
+  stored: { label: string },
+  provider: ProviderId,
+  account: string,
+  config: Record<string, unknown>,
+  preFields: Record<string, unknown>,
+): boolean {
+  if (stored.label !== accountLabel(account, PROVIDER_LABELS[provider])) return false;
+  return Object.entries(preFields).every(
+    ([name, value]) => JSON.stringify(config[name]) === JSON.stringify(value),
+  );
+}
+
 // Du code reçu à la connexion créée (ou à la même connexion, reconnectée).
 async function connect(
   ctx: TenantContext,
@@ -248,6 +270,10 @@ async function connect(
   const { account } = await verifyConfig(connector, config, http);
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
+    const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
+    if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!sameAccount(stored, provider, account, config, pending.preFields))
+      throw new OtherAccount();
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, config, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
@@ -266,6 +292,7 @@ function failureCode(error: unknown, provider: ProviderId): ReturnCode {
   logError('connector.oauth_failed', error, { provider });
   if (error instanceof OAuthRefusedError) return error.adminConsent ? 'admin' : 'refuse';
   if (error instanceof PreFieldsRejected) return 'champs';
+  if (error instanceof OtherAccount) return 'autre_compte';
   return error instanceof ConnectorAuthError ? 'refuse' : 'indisponible';
 }
 

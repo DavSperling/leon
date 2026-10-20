@@ -585,6 +585,43 @@ describe('« Reconnecter »', () => {
     expect(rows[0].next_sync_at).not.toBeNull();
   });
 
+  // Audit 3 n° 13 : « Reconnecter » ne met pas un autre compte (ou un autre site) sous la même connexion.
+  it('« autre_compte » quand l’éditeur rend un autre compte : la connexion garde ses jetons', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul);
+    const connector = fakeOAuthConnector({ account: 'globex' });
+    const { app } = makeApp({ routes: [goodTokens()], connector });
+
+    const go = await start(app, paul, { reconnect: id, since: '30' });
+    const response = await back(app, paul, { code: 'c', state: stateOf(go) }, oauthCookieOf(go));
+
+    expect(location(response)).toBe('/connexions?erreur=autre_compte&outil=github');
+    const { rows } = await adminPool.query(
+      'select status, secret_hint, config from connections where id = $1',
+      [id],
+    );
+    expect(rows[0]).toMatchObject({ status: 'error', secret_hint: '0000' });
+    expect(rows[0].config.repos).toEqual(['acme/ancien']);
+  });
+
+  it('« autre_compte » quand la configuration retombe sur un autre site que celui gardé', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul);
+    const connector = fakeOAuthConnector({ repos: ['acme/autre'] });
+    const { app } = makeApp({ routes: [goodTokens()], connector });
+
+    const go = await start(app, paul, { reconnect: id, since: '30' });
+    const response = await back(app, paul, { code: 'c', state: stateOf(go) }, oauthCookieOf(go));
+
+    expect(location(response)).toBe('/connexions?erreur=autre_compte&outil=github');
+    const { rows } = await adminPool.query(
+      'select secret_hint, config from connections where id = $1',
+      [id],
+    );
+    expect(rows[0].secret_hint).toBe('0000');
+    expect(rows[0].config.repos).toEqual(['acme/ancien']);
+  });
+
   it("répond 404, sans cookie, pour la connexion d'un autre outil", async () => {
     const paul = await signUp();
     const id = await seedConnection(paul.ctx, { provider: 'linear' });

@@ -11,7 +11,7 @@ import {
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedRun } from '@/test/seed-search';
-import { embedMissing, requeueStaleRuns } from './embed-missing';
+import { embedMissingBatch, requeueStaleRuns } from './embed-missing';
 import { startSearchWorker } from './worker';
 
 // Le vrai pg-boss de la base de test, sans aucune option de sondage : c'est ce que fait la production. Les
@@ -24,7 +24,7 @@ import { startSearchWorker } from './worker';
 vi.mock('./embed-missing', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./embed-missing')>()),
   requeueStaleRuns: vi.fn(async () => 0),
-  embedMissing: vi.fn(async () => 0),
+  embedMissingBatch: vi.fn(async () => ({ read: 0, stored: 0 })),
 }));
 
 // La file peut déjà porter des jobs d'autres essais (reprises laissées par un ancien lancement) : ce fichier ne
@@ -168,7 +168,7 @@ describe('worker de recherche sur le vrai pg-boss', () => {
   it('lit les deux files des tics : un job envoyé lance la reprise des runs, puis des vecteurs', async () => {
     const boss = await getBoss();
     vi.mocked(requeueStaleRuns).mockClear();
-    vi.mocked(embedMissing).mockClear();
+    vi.mocked(embedMissingBatch).mockClear();
 
     await boss.send(PIPELINE_QUEUES.requeue, {});
     await boss.send(PIPELINE_QUEUES.reindex, {});
@@ -176,12 +176,12 @@ describe('worker de recherche sur le vrai pg-boss', () => {
     await waitFor(
       async () => [
         vi.mocked(requeueStaleRuns).mock.calls.length,
-        vi.mocked(embedMissing).mock.calls.length,
+        vi.mocked(embedMissingBatch).mock.calls.length,
       ],
       ([requeue, reindex]) => (requeue ?? 0) > 0 && (reindex ?? 0) > 0,
     );
     expect(requeueStaleRuns).toHaveBeenCalledWith(5);
-    expect(embedMissing).toHaveBeenCalledWith({ embedder: factice }, 500);
+    expect(embedMissingBatch).toHaveBeenCalledWith({ embedder: factice }, 500);
   });
 
   it('retire le tic des vecteurs de la base quand le worker redémarre sans fournisseur', async () => {

@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   schedule: vi.fn(),
   unschedule: vi.fn(),
   indexIngestRun: vi.fn(),
-  embedMissing: vi.fn(),
+  embedMissingBatch: vi.fn(),
   dropOldVectors: vi.fn(),
   requeueStaleRuns: vi.fn(),
   failRun: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('@/server/auth/tenant-context', () => ({
 }));
 vi.mock('./index-run', () => ({ indexIngestRun: mocks.indexIngestRun }));
 vi.mock('./embed-missing', () => ({
-  embedMissing: mocks.embedMissing,
+  embedMissingBatch: mocks.embedMissingBatch,
   dropOldVectors: mocks.dropOldVectors,
   requeueStaleRuns: mocks.requeueStaleRuns,
 }));
@@ -67,7 +67,7 @@ beforeEach(() => {
   mocks.schedule.mockResolvedValue(undefined);
   mocks.unschedule.mockResolvedValue(undefined);
   mocks.indexIngestRun.mockResolvedValue('indexe');
-  mocks.embedMissing.mockResolvedValue(0);
+  mocks.embedMissingBatch.mockResolvedValue({ read: 0, stored: 0 });
   mocks.dropOldVectors.mockResolvedValue(0);
   mocks.requeueStaleRuns.mockResolvedValue(0);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
@@ -127,17 +127,43 @@ describe('startSearchWorker', () => {
     expect(mocks.schedule).toHaveBeenCalledWith('pipeline-reindex', '* * * * *');
     expect(mocks.unschedule).not.toHaveBeenCalled();
     await handlerOf('pipeline-reindex')();
-    expect(mocks.embedMissing).toHaveBeenCalledExactlyOnceWith({ embedder }, 500);
+    expect(mocks.embedMissingBatch).toHaveBeenCalledExactlyOnceWith({ embedder }, 500);
   });
 
   // Audit n° 19 : 500 vecteurs par minute, c'était deux jours pour rattraper un million de passages.
   it('enchaîne les lots de 500 dans un tic tant qu’il en reste', async () => {
-    mocks.embedMissing.mockResolvedValueOnce(500).mockResolvedValueOnce(500).mockResolvedValue(120);
+    mocks.embedMissingBatch
+      .mockResolvedValueOnce({ read: 500, stored: 500 })
+      .mockResolvedValueOnce({ read: 500, stored: 500 })
+      .mockResolvedValue({ read: 120, stored: 120 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
 
-    expect(mocks.embedMissing).toHaveBeenCalledTimes(3);
+    expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(3);
+  });
+
+  // Audit 3 n° 3 : la boucle comptait les vecteurs écrits. Un lot plein dont quelques passages sont refusés ou déjà
+  // vectorisés arrêtait le tic alors qu'il en restait.
+  it('continue tant que le lot lu est plein et qu’au moins un vecteur est écrit', async () => {
+    mocks.embedMissingBatch
+      .mockResolvedValueOnce({ read: 500, stored: 300 })
+      .mockResolvedValueOnce({ read: 500, stored: 1 })
+      .mockResolvedValue({ read: 120, stored: 120 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(3);
+  });
+
+  it('arrête le tic quand tout un lot est refusé', async () => {
+    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.embedMissingBatch).toHaveBeenCalledOnce();
   });
 
   // Audit 2 n° 7 bis : les vecteurs d'un ancien modèle restaient pour toujours à côté de ceux du courant.
@@ -150,18 +176,40 @@ describe('startSearchWorker', () => {
     expect(mocks.dropOldVectors).toHaveBeenCalledExactlyOnceWith(embedder.model, 5000);
   });
 
+  // Audit 3 n° 4 : le retrait passait même quand le tic s'arrêtait avec des passages encore à vectoriser.
+  it('ne retire les vieux vecteurs que quand le tic n’a plus rien trouvé à vectoriser', async () => {
+    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.dropOldVectors).not.toHaveBeenCalled();
+  });
+
+  it('retire les vieux vecteurs après le dernier lot, incomplet', async () => {
+    mocks.embedMissingBatch
+      .mockResolvedValueOnce({ read: 500, stored: 500 })
+      .mockResolvedValue({ read: 120, stored: 120 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.dropOldVectors).toHaveBeenCalledOnce();
+  });
+
   it('rend la main au bout de 45 secondes, même s’il en reste', async () => {
     let now = 0;
     vi.spyOn(Date, 'now').mockImplementation(() => now);
-    mocks.embedMissing.mockImplementation(async () => {
+    mocks.embedMissingBatch.mockImplementation(async () => {
       now += 20_000;
-      return 500;
+      return { read: 500, stored: 500 };
     });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
 
-    expect(mocks.embedMissing).toHaveBeenCalledTimes(3);
+    expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(3);
+    expect(mocks.dropOldVectors).not.toHaveBeenCalled();
   });
 
   it('ne lit pas la file des vecteurs et retire son tic planifié quand aucun fournisseur n’est réglé', async () => {
@@ -171,7 +219,7 @@ describe('startSearchWorker', () => {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base sans lecteur.
     expect(mocks.unschedule).toHaveBeenCalledWith('pipeline-reindex');
     expect(mocks.schedule).not.toHaveBeenCalledWith('pipeline-reindex', expect.anything());
-    expect(mocks.embedMissing).not.toHaveBeenCalled();
+    expect(mocks.embedMissingBatch).not.toHaveBeenCalled();
   });
 
   it('indexe le run du job avec le fournisseur réglé', async () => {
@@ -253,7 +301,7 @@ describe('startSearchWorker', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.requeueStaleRuns.mockRejectedValue(new Error('pool épuisé'));
     await startSearchWorker({ embedder: createFakeEmbedder() });
-    mocks.embedMissing.mockRejectedValue(new Error('pool épuisé'));
+    mocks.embedMissingBatch.mockRejectedValue(new Error('pool épuisé'));
 
     await expect(handlerOf('pipeline-requeue')()).rejects.toThrow(/pool épuisé/);
     await expect(handlerOf('pipeline-reindex')()).rejects.toThrow(/pool épuisé/);

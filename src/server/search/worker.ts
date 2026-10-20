@@ -8,7 +8,7 @@ import {
   PipelineJobSchema,
 } from '@/server/pipeline/queue';
 import { failRun } from '@/server/pipeline/runs';
-import { dropOldVectors, embedMissing, requeueStaleRuns } from './embed-missing';
+import { dropOldVectors, embedMissingBatch, requeueStaleRuns } from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // Le worker de la recherche (C5) : il lit la file `index`, et deux tics par minute reprennent ce qui est
@@ -28,8 +28,7 @@ const STALE_RUN_MINUTES = 5;
 // finir le dernier lot avant le tic suivant (un appel au fournisseur attend au plus 30 s, EMBED_TIMEOUT_MS).
 const EMBED_PER_TICK = 500;
 const EMBED_TICK_MS = 45_000;
-// Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis) : un changement de modèle sur un million de
-// passages se nettoie au rythme où les nouveaux vecteurs s'écrivent.
+// Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis), une fois les nouveaux écrits (audit 3 n° 4).
 const OLD_VECTORS_PER_TICK = 5000;
 const EVERY_MINUTE = '* * * * *';
 
@@ -90,16 +89,26 @@ async function registerWorkers(
     await boss.schedule(PIPELINE_QUEUES.reindex, EVERY_MINUTE);
     await boss.work(PIPELINE_QUEUES.reindex, tick, async () => {
       const start = Date.now();
-      // Un lot incomplet : il n'en reste plus, ou le fournisseur a échoué (le tic suivant reprendra).
-      let stored = EMBED_PER_TICK;
-      while (stored === EMBED_PER_TICK && Date.now() - start < EMBED_TICK_MS) {
-        stored = await embedMissing({ embedder }, EMBED_PER_TICK).catch((error) =>
+      // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit, le fournisseur a échoué ou
+      // refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie seulement est écrite (textes
+      // refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
+      let batch = { read: EMBED_PER_TICK, stored: 1 };
+      while (
+        batch.read === EMBED_PER_TICK &&
+        batch.stored > 0 &&
+        Date.now() - start < EMBED_TICK_MS
+      ) {
+        batch = await embedMissingBatch({ embedder }, EMBED_PER_TICK).catch((error) =>
           rethrowSummary('search.embed_tick_failed', error),
         );
       }
-      await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
-        rethrowSummary('search.drop_old_vectors_failed', error),
-      );
+      // Audit 3 n° 4 : seulement quand le tic n'a plus rien trouvé à vectoriser (dernier lot lu incomplet) : ni
+      // pendant un rattrapage, ni quand le temps du tic est écoulé.
+      if (batch.read < EMBED_PER_TICK) {
+        await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
+          rethrowSummary('search.drop_old_vectors_failed', error),
+        );
+      }
     });
   } else {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base : il remplirait

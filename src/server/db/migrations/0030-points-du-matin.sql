@@ -1,4 +1,4 @@
--- 0013-points-du-matin.sql : le point du matin de chaque utilisateur sur chaque projet (T13, C9 du plan du deuxième
+-- 0030-points-du-matin.sql : le point du matin de chaque utilisateur sur chaque projet (T13, C9 du plan du deuxième
 -- jet). C'est un cache, pas une fiche : il est refait quand de nouvelles données arrivent sur le projet (et chaque
 -- matin pour les points lus dans la semaine), jamais traité comme une source, et revérifié à chaque lecture : une
 -- source qu'il a reçue et que l'utilisateur ne voit plus le rend illisible. Privé à son utilisateur

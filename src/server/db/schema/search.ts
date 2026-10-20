@@ -98,7 +98,7 @@ export const discussionMessages = pgTable('discussion_messages', {
     .default(sql`clock_timestamp()`),
 });
 
-// Le point du matin de chaque utilisateur sur chaque projet (0013-points-du-matin.sql, C9 du plan du deuxième jet) :
+// Le point du matin de chaque utilisateur sur chaque projet (0030-points-du-matin.sql, C9 du plan du deuxième jet) :
 // un cache, refait en place, privé à son utilisateur (acl = [user_id], contrôlé par la base). Aucune suppression ;
 // seules les colonnes du recalcul et de la lecture peuvent changer.
 export const briefings = pgTable('briefings', {

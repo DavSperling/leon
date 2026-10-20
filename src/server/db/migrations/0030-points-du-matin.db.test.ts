@@ -12,7 +12,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 
-// Migration 0013 : les points du matin, privés à leur utilisateur, et les deux fonctions qui les parcourent hors
+// Migration 0030 : les points du matin, privés à leur utilisateur, et les deux fonctions qui les parcourent hors
 // sécurité par ligne (des identifiants seulement). Fixtures par le propriétaire de la base ; lectures et écritures
 // de l'app sous withTenant, ou sans contexte d'organisation pour les fonctions (comme les tics).
 

@@ -23,7 +23,7 @@ const SOURCE_TITLE_MAX_CHARS = 120;
 const BODY_MAX_CHARS = 5000;
 // Un lien plus long n'est pas recopié dans la liste des sources : la liste doit tenir sous BRIEFING_RENDER_MAX_CHARS.
 const SOURCE_URL_MAX_CHARS = 200;
-// La limite que la base pose au point (0013-points-du-matin.sql) : au-delà, le recalcul échouerait à chaque essai.
+// La limite que la base pose au point (0030-points-du-matin.sql) : au-delà, le recalcul échouerait à chaque essai.
 export const BRIEFING_MARKDOWN_MAX_CHARS = 20_000;
 // Claude Code plafonne à 10 000 caractères la sortie standard d'un crochet SessionStart : au-delà, il la range dans
 // un fichier et ne donne à Claude que son chemin et ses 2 000 premiers caractères, sans lui demander de le lire

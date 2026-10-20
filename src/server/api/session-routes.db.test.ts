@@ -402,6 +402,40 @@ describe('POST /api/v1/discussions/:id/messages', () => {
     expect(rows.map((row) => row.role)).toEqual(['user', 'assistant']);
   });
 
+  // La page rechargée ou quittée pendant la réponse : la page promet que le serveur la finit et la garde.
+  it('finit et garde la réponse quand le lecteur s’en va en cours de route', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        yield { type: 'outil', name: 'chercher', input: { requete: 'quetzal' } };
+        await gate;
+        yield { type: 'texte', delta: 'La clause est acceptée.' };
+      },
+    });
+
+    const response = await post(alice, id, { message: 'La clause quetzal ?' });
+    const reader = response.body?.getReader();
+    await reader?.read();
+    await reader?.cancel();
+    release();
+
+    await vi.waitFor(async () => {
+      const messages = (await getDiscussion(alice.ctx, id))?.messages ?? [];
+      expect(messages.map((m) => [m.role, m.content])).toEqual([
+        ['user', 'La clause quetzal ?'],
+        ['assistant', 'La clause est acceptée.'],
+      ]);
+    });
+  });
+
   // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.
   it('répond 404 à Bob dans la discussion d’Alice, sans rien écrire ni appeler le modèle', async () => {
     const { alice, bob } = await setupTeam();

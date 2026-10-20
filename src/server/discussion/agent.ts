@@ -26,7 +26,8 @@ export type { DiscussionEvent } from '@/lib/discussion-events';
 //
 // Une panne (base, modèle, délai) rend l'évènement « indisponible », qui termine le flux : rien de la réponse
 // n'est gardé, la question reste et peut être reposée. Elle ne se journalise que par logError, sans question,
-// passage ni réponse. Un lecteur qui s'en va interrompt l'appel au modèle, et rien n'est gardé non plus.
+// passage ni réponse. La route continue de lire le flux quand la page s'en va : la réponse est finie et gardée.
+// Un flux qu'on cesse de lire interrompt l'appel au modèle, et rien n'est gardé.
 //
 // Une seule réponse à la fois par discussion : une demande qui arrive pendant une réponse (la page quittée puis
 // rouverte, un second onglet) rend « en-cours », sans écrire sa question ni appeler le modèle. La garde vit dans
@@ -105,7 +106,7 @@ async function* runReply(
 
   // Le délai (DISCUSSION_TIMEOUT_MS : huit outils et une réponse y tiennent largement) interrompt l'appel au modèle
   // (signal), et la lecture n'attend plus rien après lui, même d'un modèle qui ignorerait le signal. Le lecteur qui
-  // s'en va l'interrompt aussi (finally).
+  // cesse de lire le flux l'interrompt aussi (finally).
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISCUSSION_TIMEOUT_MS);
   const deadline = new Promise<never>((_resolve, reject) => {
@@ -182,7 +183,7 @@ async function* runReply(
   } finally {
     clearTimeout(timer);
     controller.abort();
-    // Le modèle n'est plus lu (fin, panne, délai ou lecteur parti) : on ferme son flux, sans attendre.
+    // Le modèle n'est plus lu (fin, panne, délai ou flux plus lu) : on ferme son flux, sans attendre.
     reading?.return?.().catch(() => undefined);
   }
 }

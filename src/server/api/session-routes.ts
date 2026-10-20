@@ -61,17 +61,22 @@ const DiscussionMessageSchema = z.object({
   message: z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS),
 });
 
-// Les évènements d'un flux, un par évènement serveur, jusqu'à ce que le lecteur s'en aille.
+// Les évènements d'un flux, un par évènement serveur. Quand le lecteur s'en va, la réponse en tête s'arrête (ce
+// qui interrompt l'appel au modèle) ; la discussion (`keepReading`) continue de lire sans écrire, pour que la
+// réponse soit finie et gardée : la page rechargée la retrouve.
 function streamEvents(
   c: Parameters<typeof streamSSE>[0],
   events: AsyncIterable<unknown>,
   route: string,
+  keepReading = false,
 ) {
   return streamSSE(c, async (stream) => {
     try {
       for await (const event of events) {
-        // Le lecteur est parti : on arrête de lire, ce qui interrompt l'appel au modèle.
-        if (stream.aborted) break;
+        if (stream.aborted) {
+          if (keepReading) continue;
+          break;
+        }
         await stream.writeSSE({ data: JSON.stringify(event) });
       }
     } catch (error) {
@@ -119,6 +124,6 @@ export const sessionRoutes = new Hono<SessionEnv>()
       });
       // Sans modèle, la page dit qu'aucun modèle n'est branché ; la question n'est pas gardée.
       if (events === null) return c.body(null, 204);
-      return streamEvents(c, events, 'discussion.route');
+      return streamEvents(c, events, 'discussion.route', true);
     },
   );

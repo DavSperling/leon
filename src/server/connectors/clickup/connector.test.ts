@@ -144,7 +144,7 @@ describe('clickup : verify', () => {
 
     const result = await clickupConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101:9001' });
     expect(calls.map((call) => call.url)).toEqual([`${API}/user`, `${API}/team`]);
     expect(calls[0]?.headers.authorization).toBe(TOKEN);
   });
@@ -158,8 +158,29 @@ describe('clickup : verify', () => {
 
     expect(await clickupConnector.verify(config, http)).toEqual({
       account: 'Marie Durand (Acme, Beta)',
-      accountKey: '101',
+      accountKey: '101:9001:9002',
     });
+  });
+
+  // Audit 5 n° 1 : l'identifiant de reconnexion porte les espaces, triés ; un autre espace du même utilisateur
+  // est un autre compte (« autre_compte » à la reconnexion).
+  it('même utilisateur, autre espace : un autre identifiant', async () => {
+    const other = { teams: [{ ...teams.teams[0], id: '9002', name: 'Acme' }] };
+    const { http } = testHttp(clickupConnector, config, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/team`, json: other },
+    ]);
+    const reversed = { teams: [...other.teams, ...teams.teams] };
+    const both = testHttp(clickupConnector, config, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/team`, json: reversed },
+    ]);
+
+    expect(await clickupConnector.verify(config, http)).toEqual({
+      account: 'Marie Durand (Acme)',
+      accountKey: '101:9002',
+    });
+    expect((await clickupConnector.verify(config, both.http)).accountKey).toBe('101:9001:9002');
   });
 
   it('refuse un jeton rejeté', async () => {
@@ -683,7 +704,7 @@ describe('clickup : jeton OAuth', () => {
 
     const result = await clickupConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101:9001' });
     expect(calls).toHaveLength(2);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });

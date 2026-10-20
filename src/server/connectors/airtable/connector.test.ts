@@ -167,7 +167,7 @@ describe('airtable : verify', () => {
 
     expect(result).toEqual({
       account: 'marie@acme.test (Acme CRM)',
-      accountKey: 'usrL2PNC5o3H4lBEi',
+      accountKey: 'usrL2PNC5o3H4lBEi:appLkNDICXNqxSDhG',
     });
     expect(calls.map((call) => call.url)).toEqual([
       `${API}/meta/whoami`,
@@ -188,8 +188,34 @@ describe('airtable : verify', () => {
 
     expect(await airtableConnector.verify(two, http)).toEqual({
       account: 'usrL2PNC5o3H4lBEi (Acme CRM, Produit)',
-      accountKey: 'usrL2PNC5o3H4lBEi',
+      accountKey: 'usrL2PNC5o3H4lBEi:appLkNDICXNqxSDhG:appSW9R5uCNmRmfl6',
     });
+  });
+
+  // Audit 5 n° 1 : l'identifiant de reconnexion porte les bases lues, triées ; d'autres bases du même utilisateur
+  // sont un autre compte (« autre_compte » à la reconnexion).
+  it('même utilisateur, autre base : un autre identifiant', async () => {
+    const other = { ...config, bases: [OTHER_BASE] };
+    const { http } = testHttp(airtableConnector, other, [
+      { url: `${API}/meta/whoami`, json: whoami },
+      basesRoute,
+      tablesRoute(tables, OTHER_BASE),
+    ]);
+    const reversed = { ...config, bases: [OTHER_BASE, BASE] };
+    const both = testHttp(airtableConnector, reversed, [
+      { url: `${API}/meta/whoami`, json: whoami },
+      basesRoute,
+      tablesRoute(tables, OTHER_BASE),
+      tablesRoute(),
+    ]);
+
+    expect(await airtableConnector.verify(other, http)).toEqual({
+      account: 'marie@acme.test (Produit)',
+      accountKey: 'usrL2PNC5o3H4lBEi:appSW9R5uCNmRmfl6',
+    });
+    expect((await airtableConnector.verify(reversed, both.http)).accountKey).toBe(
+      'usrL2PNC5o3H4lBEi:appLkNDICXNqxSDhG:appSW9R5uCNmRmfl6',
+    );
   });
 
   it('refuse un jeton rejeté', async () => {
@@ -855,7 +881,7 @@ describe('airtable : jeton OAuth', () => {
 
     expect(result).toEqual({
       account: 'marie@acme.test (Acme CRM, Produit)',
-      accountKey: 'usrL2PNC5o3H4lBEi',
+      accountKey: 'usrL2PNC5o3H4lBEi:appLkNDICXNqxSDhG:appSW9R5uCNmRmfl6',
     });
     // Les bases viennent de la liste que le jeton voit : inutile de relire leurs tables.
     expect(calls.map((call) => call.url)).toEqual([`${API}/meta/whoami`, `${API}/meta/bases`]);
@@ -874,7 +900,7 @@ describe('airtable : jeton OAuth', () => {
 
     expect(result).toEqual({
       account: 'usrL2PNC5o3H4lBEi (Acme CRM)',
-      accountKey: 'usrL2PNC5o3H4lBEi',
+      accountKey: 'usrL2PNC5o3H4lBEi:appLkNDICXNqxSDhG',
     });
     expect(calls.map((call) => call.url)).toContain(`${API}/meta/bases/${BASE}/tables`);
   });

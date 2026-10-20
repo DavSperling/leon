@@ -25,11 +25,19 @@ export function SidebarSections() {
           href={href}
           aria-current={current ? 'page' : undefined}
           className={cn(
-            'flex h-8 items-center gap-2.5 rounded-md px-2 text-[14px] leading-5 text-foreground-2 transition-colors hover:bg-sidebar-accent hover:text-foreground',
-            current && 'bg-sidebar-accent text-foreground',
+            'group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[14px] leading-5 text-foreground-2 transition-colors hover:bg-black/[0.04] hover:text-foreground',
+            current &&
+              'bg-card font-medium text-foreground shadow-xs ring-1 ring-border hover:bg-card',
           )}
         >
-          <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+          <Icon
+            size={16}
+            strokeWidth={1.75}
+            aria-hidden="true"
+            className={
+              current ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+            }
+          />
           {label}
         </Link>
       </li>

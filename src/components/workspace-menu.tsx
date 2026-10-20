@@ -21,11 +21,11 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Workspa
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Menu du compte, ${userName}`}
-        className="-mx-1 flex w-[calc(100%+0.5rem)] items-center gap-2.5 rounded-md px-1 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
+        className="-mx-1 flex w-[calc(100%+0.5rem)] items-center gap-2.5 rounded-md px-1 py-1.5 text-left transition-colors hover:bg-black/[0.04]"
       >
         <span
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-md bg-card text-[13px] font-medium ring-1 ring-border"
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[13px] font-semibold text-primary-foreground"
         >
           {organizationName.charAt(0).toUpperCase()}
         </span>

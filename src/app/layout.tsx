@@ -1,14 +1,22 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
-const geist = Geist({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-geist',
+  variable: '--font-jakarta',
+});
+// Les titres seulement : la voix éditoriale de Leon.
+const serif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-instrument',
 });
 // Réservée au code, aux identifiants et à la syntaxe de recherche.
 const geistMono = Geist_Mono({
@@ -22,7 +30,7 @@ export const metadata: Metadata = { title: { default: 'Leon', template: '%s · L
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="fr" className={`${jakarta.variable} ${serif.variable} ${geistMono.variable}`}>
       <body>
         {children}
         <Toaster />

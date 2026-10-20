@@ -6,8 +6,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --color-sidebar-ring: var(--sidebar-ring);
@@ -52,37 +52,37 @@
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
-  --radius-xl: 8px;
+  --radius-xl: 12px;
 
-  /* Rien ne porte d'ombre au repos : les surfaces posées se séparent par un filet. Seul ce qui flotte (menus, dialogues, toasts) en a une. */
-  --shadow-xs: 0 0 #0000;
-  --shadow-sm: 0 0 #0000;
+  /* Ombres douces et chaudes pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts). */
+  --shadow-xs: 0 1px 2px rgb(40 34 24 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(40 34 24 / 0.04), 0 2px 8px -2px rgb(40 34 24 / 0.06);
   --shadow-md: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
   --shadow-lg: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
 }
 
 :root {
-  /* Registre sans couleur : l'interface est à l'encre, l'action principale presque noire. Une seule teinte,
-     `cite`, marque la preuve : les renvois [n], les mots trouvés, le passage trouvé. */
-  --background: #f8f8f8;
-  --foreground: #0a0a0a;
-  --foreground-2: #3d3d3d;
+  /* Mémoire d'atelier : un fond papier chaud, l'encre presque noire, et le jade de Leon sur les actions,
+     la sélection et la preuve (renvois [n], mots et passage trouvés). */
+  --background: #f4f2ed;
+  --foreground: #1c1a16;
+  --foreground-2: #45413a;
   --card: #ffffff;
   --card-foreground: #171717;
   --popover: #ffffff;
   --popover-foreground: #171717;
-  --primary: #141414;
+  --primary: #0d6b58;
   --primary-foreground: #ffffff;
-  --primary-soft: #eeeeee;
-  --cite: #1d5fbf;
-  --cite-soft: #e8eef8;
-  --secondary: #ededed;
+  --primary-soft: #e2f0ea;
+  --cite: #0d6b58;
+  --cite-soft: #dcefe7;
+  --secondary: #efece5;
   --secondary-foreground: #171717;
-  --muted: #f4f4f4;
-  --muted-foreground: #6b6b6b;
-  --accent: #eeeeee;
+  --muted: #f6f4ef;
+  --muted-foreground: #6b665c;
+  --accent: #efece5;
   --accent-foreground: #171717;
-  --quote: #fafaf9;
+  --quote: #faf8f4;
   --success: #1f6b35;
   --success-soft: #e6f2e8;
   --warning: #8a4b00;
@@ -91,18 +91,18 @@
   --destructive-soft: #fbe9e6;
   --info: #24519c;
   --info-soft: #e7eef9;
-  --border: #e6e6e6;
+  --border: #e5e1d8;
   --input: #949494; /* 3:1 sur blanc : le contour d'un champ reste visible (WCAG 1.4.11). */
-  --ring: #141414;
+  --ring: #0d6b58;
   --radius: 8px;
-  --sidebar: #f8f8f8;
+  --sidebar: #f4f2ed;
   --sidebar-foreground: #171717;
-  --sidebar-primary: #141414;
+  --sidebar-primary: #0d6b58;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ebebeb;
+  --sidebar-accent: #ffffff;
   --sidebar-accent-foreground: #171717;
-  --sidebar-border: #e6e6e6;
-  --sidebar-ring: #141414;
+  --sidebar-border: #e5e1d8;
+  --sidebar-ring: #0d6b58;
 }
 
 @layer base {

@@ -13,7 +13,7 @@ function Mark() {
       <rect x="2" y="2" width="3" height="16" rx="1" className="fill-foreground" />
       <rect x="7" y="5" width="11" height="3" rx="1" className="fill-foreground" />
       <rect x="7" y="10" width="8" height="3" rx="1" className="fill-foreground" />
-      <rect x="7" y="15" width="5" height="3" rx="1" className="fill-cite" />
+      <rect x="7" y="15" width="5" height="3" rx="1" className="fill-primary" />
     </svg>
   );
 }
@@ -33,7 +33,7 @@ function RailToggle({ open, onToggle }: { open: boolean; onToggle: () => void })
   );
 }
 
-// Barre latérale sur le fond de la page, séparée de la page par un seul filet ; la page est blanche et pleine hauteur.
+// Barre latérale sur le fond papier ; la page est une feuille blanche posée à côté, avec une ombre douce.
 export function ShellFrame({ rail, panel }: ShellFrameProps) {
   const [railOpen, setRailOpen] = useState(true);
   const toggle = () => setRailOpen(!railOpen);
@@ -43,13 +43,13 @@ export function ShellFrame({ rail, panel }: ShellFrameProps) {
         id="barre-laterale"
         inert={!railOpen}
         className={cn(
-          'shrink-0 overflow-hidden border-r transition-[width,opacity] duration-200 ease-out',
-          railOpen ? 'w-[240px] opacity-100' : 'w-0 border-r-0 opacity-0',
+          'shrink-0 overflow-hidden transition-[width,opacity] duration-200 ease-out',
+          railOpen ? 'w-[240px] opacity-100' : 'w-0 opacity-0',
         )}
       >
         <div className="flex h-full w-[240px] flex-col px-3 pb-3">
           <div className="flex h-14 shrink-0 items-center justify-between pl-2">
-            <span className="flex items-center gap-2 text-[16px] font-medium tracking-[-0.01em]">
+            <span className="flex items-center gap-2 font-heading text-[22px] leading-none">
               <Mark />
               Leon
             </span>
@@ -58,7 +58,7 @@ export function ShellFrame({ rail, panel }: ShellFrameProps) {
           {rail}
         </div>
       </div>
-      <div className="relative flex min-w-0 flex-1 bg-card">
+      <div className="relative my-2 mr-2 flex min-w-0 flex-1 overflow-hidden rounded-xl border bg-card shadow-sm">
         {!railOpen && (
           <div className="absolute top-3 left-3 z-10">
             <RailToggle open={railOpen} onToggle={toggle} />

@@ -47,6 +47,14 @@ indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponse
 Deux instances sur la même base (ou deux modèles actifs) ne cassent pas les droits, mais doublent des appels payants et
 peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances sera un chantier à part.
 
+## Secrets dans les conversations captées
+
+Avant stockage, la capture et les connecteurs masquent ce qui se reconnaît à sa forme (`src/capture/mask-secrets.ts`) :
+clés à préfixe connu (`sk-ant-`, `ghp_`, `GOCSPX-`…), clés privées, `utilisateur:mot@hôte` dans une URL, en-têtes
+`Authorization`, lignes de `.env` (`DB_PASSWORD=…`). Le texte ordinaire n'est jamais touché : **un mot de passe écrit
+en langage courant (« le mdp c'est … ») ou passé dans du code peut passer.** Les conversations captées restent privées
+à leur auteur.
+
 ## Tester
 
 ```bash

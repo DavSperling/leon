@@ -1,5 +1,15 @@
 export const SECRET_MASK = '[secret masqué]';
 
+// Ce que ce masquage garantit, et sa limite (décision de David, audit 4) :
+// - il masque ce qui se reconnaît à sa FORME : préfixes de clés connus, clés privées, identifiants
+//   dans une URL, en-têtes d'authentification, lignes de fichier .env, define() PHP, chaînes de
+//   connexion ;
+// - il ne touche jamais au texte ordinaire : aucune règle ne se fonde sur un mot-clé (« password: »,
+//   « token = », « mot de passe : », options de commande) dans une phrase ou dans du code ;
+// - limite assumée : un mot de passe écrit en langage courant (« le mdp c'est Lune#Bleue42 ») ou
+//   passé dans du code (« password: 'X' ») peut passer. Les conversations captées restent privées
+//   à leur auteur.
+//
 // Motifs en temps linéaire, même sur une entrée piégée (des milliers de débuts de motif sans fin) :
 // les répétitions sont bornées, ou s'arrêtent sur un délimiteur qui ne peut pas réapparaître avant
 // le début de motif suivant ; les lookbehinds ne laissent commencer un jeton qu'au début d'une suite.
@@ -21,6 +31,8 @@ const WHOLE_SECRETS: RegExp[] = [
   // Exactement 20 caractères : « ASIAPACIFICHEADQUARTERS » n'en est pas une.
   /(?<![0-9A-Za-z])(?:AKIA|ASIA)[0-9A-Z]{16}(?![0-9A-Za-z])/g,
   /AIza[0-9A-Za-z_-]{35}/g,
+  // Secret client OAuth Google.
+  /\bGOCSPX-[A-Za-z0-9_-]{24,}/g,
   /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}/g,
   /leon_[A-Za-z0-9_-]{43}/g,
   /\blin_api_[A-Za-z0-9]{32,}/g,
@@ -34,8 +46,17 @@ const WHOLE_SECRETS: RegExp[] = [
   /\bsb_secret_[A-Za-z0-9_-]{20,}/g,
   /(?<![A-Za-z0-9_-])ya29\.[A-Za-z0-9_-]{20,}/g,
   /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g,
+  // Clé SendGrid : « SG. », 22 caractères, « . », 43 caractères.
+  /\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])/g,
+  // Clé Mailgun : « key- » et 32 caractères minuscules ou chiffres, d'un seul tenant.
+  /(?<![A-Za-z0-9_-])key-[0-9a-z]{32}(?![A-Za-z0-9_-])/g,
+  // Jeton de bot Discord : trois segments base64, le premier encode l'identifiant (« M » ou « N »).
+  /(?<![A-Za-z0-9_-])[MN][A-Za-z0-9_-]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,38}(?![A-Za-z0-9_-])/g,
   // Jeton de bot Telegram : identifiant, « : », 35 caractères commençant par « AA ».
   /(?<![0-9])[0-9]{6,12}:AA[A-Za-z0-9_-]{33}(?![A-Za-z0-9_-])/g,
+  // Empreintes de mot de passe crackables hors ligne : htpasswd (apr1), bcrypt.
+  /\$apr1\$[./0-9A-Za-z]{1,8}\$[./0-9A-Za-z]{22}/g,
+  /\$2[aby]\$\d{2}\$[./0-9A-Za-z]{53}/g,
 ];
 
 // Le nom reste lisible, seule la valeur est masquée.
@@ -50,86 +71,60 @@ const URL_PASSWORD =
 // « git+https://github.com:443/org/repo@main »).
 const WEB_SCHEMES = new Set(['http', 'https', 'ws', 'wss']);
 const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
-// « Token » seul est un mot courant : il ne compte qu'après « Authorization: » (ou « "Authorization": " »).
-const AUTH_SCHEME =
-  /\b(Bearer|Basic|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
+
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
 const looksRandom = (value: string) =>
   /[0-9+/=]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value));
-// Valeur entre guillemets (espaces permis) jusqu'au guillemet fermant ou à la fin de la ligne,
-// ou valeur nue jusqu'au premier blanc. Sans borne haute : ce qui est lu est consommé.
-const ASSIGNMENT =
-  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{0,40}?(?:password|passwd|pass|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)[A-Za-z0-9_]{0,40})(\\?["']?\s{0,10}[:=]\s{0,10}\\?)(?:"([^"\n]{8,})"?|'([^'\n]{8,})'?|([^\s"']{8,}))/gi;
+// « Token » seul est un mot courant : il ne compte qu'après « Authorization: » (ou « "Authorization": " »).
+const AUTH_SCHEME =
+  /\b(Bearer|Basic|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
+// En-têtes de clé d'API (« X-API-Key: … », « "x-api-key": "…" »), valeur aléatoire de 16 caractères ou plus.
+const API_KEY_HEADER =
+  /(?<![A-Za-z0-9_-])(x-api-key|api-key|x-auth-token|x-access-token)(["']?\s{0,10}:\s{0,10}["']?)([A-Za-z0-9._~+/=-]{16,})/gi;
+// Paramètre de requête d'URL (« ?apikey=… », « &access_token=… »), valeur aléatoire de 8 caractères ou plus.
+// Un modèle (« ?token={reset_token} », « ${…} », « <…> ») ne commence pas par un caractère accepté.
+const QUERY_SECRET =
+  /([?&](?:api_?key|access_token|refresh_token|client_secret|auth_token)=)([A-Za-z0-9._~+/=-]{8,})/gi;
+// Chaîne de connexion « Clé=Valeur; » : .NET, SQL Server, Azure Storage. Le « ; » qui précède en fait la forme.
+const CONNECTION_STRING_SECRET =
+  /(;\s?(?:Password|Pwd|AccountKey|SharedAccessKey)=)(?!\[secret masqué\])([^;\s"']+)/gi;
+// Fichier d'identifiants AWS (« aws_secret_access_key = … ») : le nom est propre à AWS.
+const AWS_CREDENTIALS_FILE =
+  /(\baws_secret_access_key["']?\s{0,10}[:=]\s{0,10}["']?)([A-Za-z0-9/+=]{30,})(?![A-Za-z0-9/+=])/gi;
+// .npmrc : « //registry.npmjs.org/:_authToken=… ».
+const NPMRC_TOKEN = /(:_authToken=)(?!\$)(?!\[secret masqué\])([^\s"']+)/g;
 
-// Le mot-clé doit finir le nom ou une de ses parties : « SECRET_KEY », « apiKey », « secretKey »,
-// mais pas « Secretary », « tokens » ni « tokenizer ».
-const KEYWORD_THEN_BOUNDARY =
-  /(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)(?:$|_)/i;
-// « pass » seul est un mot courant (« bypass », « compass ») : il ne compte que comme partie entière
-// d'un nom (« DB_PASS », « PASS », « pass_admin »).
-const PASS_PART = /(?:^|_)pass(?:$|_)/i;
-// camelCase : la casse compte, « secretKey » oui, « SECRETARY » non.
-const KEYWORD_THEN_CAMEL =
-  /(?:[Pp]assword|[Pp]asswd|[Pp]wd|[Ss]ecret|[Aa]pi[_-]?[Kk]ey|[Tt]oken|[Aa]ccess[_-]?[Kk]ey|[Pp]rivate[_-]?[Kk]ey)[A-Z]/;
-// Valeur nue qui est du code évident et non un secret : un appel (« getToken(request); »,
-// « z.string().min(8) », « req.headers.authorization?.split(' ') ») ou une variable d'environnement.
-// Une valeur à point sans appel (« Summer.Time2026! », « SG.xxx.yyy ») reste un secret.
-const CODE_VALUE =
-  /^(?:[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*(?:<[\w$.,|[\]]{1,100}>)?\(|process\.env\.|import\.meta\.env\.|os\.environ\b)/;
-// Chemin d'objet qui finit par le nom lui-même (« accessKeyId: credentials.accessKeyId, »).
-// « session?.access_token; » aussi.
-const SAME_NAME_PATH = /^[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\??\.([A-Za-z_$][\w$]*)[;,]?$/;
-// Modèle ou renvoi à une variable, pas une valeur : « {reset_token} », « ${DB_PASSWORD} », « $DB_PASSWORD ».
-const PLACEHOLDER_VALUE = /^(?:\$?\{\{?\s?[A-Za-z_][\w.]*\s?\}\}?|\$[A-Z_][A-Z0-9_]*)[;,]?$/;
-const normalizeName = (name: string) => name.replace(/[_-]/g, '').toLowerCase();
-// « pwd » est aussi le dossier courant (« PWD=/Users/… », « Le pwd: /home/… »).
-const PATH_VALUE = /^[/~]/;
+// Ligne de fichier .env, stricte : en début de ligne (éventuellement « export » ou « - » de liste YAML),
+// un nom EN_MAJUSCULES qui finit par un suffixe de secret, « = » collé, une valeur sans espace.
+// « SECRET_KEY = env(…) » (espaces), « PWD=/Users/… » (dossier courant) et « TOKEN_TTL=3600 » ne sont pas visés.
+// KEY, PASS et PWD doivent suivre un « _ » (« MONKEY », « OLDPWD ») ; KEY et PASS peuvent être le nom entier.
+const ENV_LINE =
+  /^([ \t]{0,40}(?:export[ \t]{1,10}|-[ \t]{1,10})?)([A-Z][A-Z0-9_]{0,80})(=)(?:"([^"\s]+)"|'([^'\s]+)'|([^\s"']+))/gm;
+const ENV_NAME =
+  /(?:PASSWORD|PASSWD|PASSPHRASE|SECRET|TOKEN|(?:^|_)(?:KEY|PASS)|_PWD|_CREDENTIALS?)$/;
+// PowerShell : « $env:AZURE_CLIENT_SECRET = "…" ».
+const POWERSHELL_ENV =
+  /(\$env:)([A-Z][A-Z0-9_]{0,80})(\s{0,10}=\s{0,10})(?:"([^"\s]+)"|'([^'\s]+)')()/g;
+// PHP : « define('DB_PASSWORD', '…'); ».
+const PHP_DEFINE =
+  /(\bdefine\(\s{0,10}(['"])([A-Z][A-Z0-9_]{0,80})\2\s{0,10},\s{0,10})(['"])([^'"\n]+)\4/g;
+// Une valeur qui n'en est pas une : renvoi à une variable, modèle, booléen, masque déjà posé.
+const NOT_A_VALUE =
+  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|true|false|null|none|yes|no|\[secret.*)$/i;
 
-// Mot de passe en option d'une commande, sur une ligne qui nomme la commande, sans longueur minimale :
-// « curl -u admin:pw », « mysql -phunter2 », « redis-cli -a pw ». Le masque déjà posé n'est pas relu.
-const CLI_PASSWORDS: Array<[line: RegExp, option: RegExp]> = [
-  [
-    /^.*\bcurl\b.*$/gm,
-    /(\s(?:-u|--user)(?:\s{1,10}|=)["']?[^\s:"']{1,128}:)(?!\[secret masqué\])[^\s"']+/g,
-  ],
-  [/^.*\b(?:mysql|mysqldump|mariadb)\b.*$/gm, /(\s-p)(?!\[secret masqué\])[^\s"']+/g],
-  [/^.*\bredis-cli\b.*$/gm, /(\s(?:-a|--pass)\s{1,10}["']?)(?!\[secret masqué\])[^\s"']+/g],
-  [
-    /^.*\bdocker\s{1,10}login\b.*$/gm,
-    /(\s(?:-p|--password)(?:\s{1,10}|=)["']?)(?!\[secret masqué\])[^\s"']+/g,
-  ],
-  [/^.*\bsshpass\b.*$/gm, /(\s-p\s{0,10}["']?)(?!\[secret masqué\])[^\s"']+/g],
-];
-
-// Mot de passe donné dans une phrase : « Mot de passe du compte admin : X », « Le mot de passe est « X » ».
-// Jusqu'à 60 caractères entre « mot de passe » et « : » ou « est », sans franchir de fin de phrase.
-// La valeur doit avoir l'air aléatoire, pour laisser « Mot de passe oublié : Réinitialisez-le ».
-const PHRASE_PASSWORD =
-  /\b(mot de passe[^\n:=.;!?«»"]{0,60}?(?:\s?:|\sest)\s{0,10})(«\s?)?(?!\[secret masqué\])([^\s"'«»]*[^\s"'«».,;:)])/gi;
-const looksLikePassword = (value: string) =>
-  /[0-9!#$%&*+/=?@^_~]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value.slice(1)));
-
-function maskAssignment(
+function maskNamedValue(
   match: string,
+  lead: string,
   name: string,
   separator: string,
   doubleQuoted: string | undefined,
   singleQuoted: string | undefined,
   bare: string | undefined,
 ): string {
-  if (!KEYWORD_THEN_BOUNDARY.test(name) && !KEYWORD_THEN_CAMEL.test(name) && !PASS_PART.test(name))
-    return match;
-  if (PLACEHOLDER_VALUE.test(doubleQuoted ?? singleQuoted ?? bare ?? '')) return match;
-  if (bare !== undefined) {
-    if (CODE_VALUE.test(bare)) return match;
-    const last = SAME_NAME_PATH.exec(bare)?.[1];
-    if (last !== undefined && normalizeName(last) === normalizeName(name)) return match;
-    if (/pwd$/i.test(name) && PATH_VALUE.test(bare)) return match;
-  }
+  const value = doubleQuoted ?? singleQuoted ?? bare ?? '';
+  if (!ENV_NAME.test(name) || NOT_A_VALUE.test(value)) return match;
   const quote = doubleQuoted !== undefined ? '"' : singleQuoted !== undefined ? "'" : '';
-  // JSON échappé (« \"password\":\"…\" ») : la valeur lue garde la barre du guillemet fermant.
-  const closing = doubleQuoted?.endsWith('\\') ? '\\"' : quote;
-  return `${name}${separator}${quote}${SECRET_MASK}${closing}`;
+  return `${lead}${name}${separator}${quote}${SECRET_MASK}${quote}`;
 }
 
 function maskUrlPassword(_match: string, scheme: string, user: string, password: string): string {
@@ -143,20 +138,31 @@ function maskUrlPassword(_match: string, scheme: string, user: string, password:
   return `${scheme}://${user}:${SECRET_MASK}@`;
 }
 
+const maskIfRandom = (match: string, lead: string, value: string) =>
+  looksRandom(value) ? `${lead}${SECRET_MASK}` : match;
+
 export function maskSecrets(text: string): string {
   let masked = text;
   for (const pattern of WHOLE_SECRETS) masked = masked.replace(pattern, SECRET_MASK);
-  masked = masked
+  return masked
     .replace(URL_PASSWORD, maskUrlPassword)
     .replace(AUTH_SCHEME, (match, scheme: string, value: string) =>
-      looksRandom(value) ? `${scheme} ${SECRET_MASK}` : match,
+      maskIfRandom(match, `${scheme} `, value),
     )
-    .replace(ASSIGNMENT, maskAssignment);
-  masked = masked.replace(PHRASE_PASSWORD, (match, lead: string, quote = '', value: string) =>
-    value.length >= 6 && looksLikePassword(value) ? `${lead}${quote}${SECRET_MASK}` : match,
-  );
-  for (const [line, option] of CLI_PASSWORDS) {
-    masked = masked.replace(line, (text) => text.replace(option, `$1${SECRET_MASK}`));
-  }
-  return masked;
+    .replace(API_KEY_HEADER, (match, name: string, separator: string, value: string) =>
+      maskIfRandom(match, `${name}${separator}`, value),
+    )
+    .replace(QUERY_SECRET, (match, lead: string, value: string) => maskIfRandom(match, lead, value))
+    .replace(CONNECTION_STRING_SECRET, `$1${SECRET_MASK}`)
+    .replace(AWS_CREDENTIALS_FILE, `$1${SECRET_MASK}`)
+    .replace(NPMRC_TOKEN, `$1${SECRET_MASK}`)
+    .replace(ENV_LINE, maskNamedValue)
+    .replace(POWERSHELL_ENV, maskNamedValue)
+    .replace(
+      PHP_DEFINE,
+      (match, lead: string, _q: string, name: string, quote: string, value: string) =>
+        ENV_NAME.test(name) && !NOT_A_VALUE.test(value)
+          ? `${lead}${quote}${SECRET_MASK}${quote}`
+          : match,
+    );
 }

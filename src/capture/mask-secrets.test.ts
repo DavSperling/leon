@@ -118,6 +118,49 @@ describe('maskSecrets : troisième audit', () => {
     expect(maskSecrets(expected)).toBe(expected);
   });
 
+  // Formats manqués.
+  it.each([
+    [
+      'Mot de passe du compte admin : Tr0ub4dor&3xyz (à changer)',
+      `Mot de passe du compte admin : ${SECRET_MASK} (à changer)`,
+    ],
+    [
+      'Le mot de passe est « Tr0ub4dor&3xyz », je te le donne.',
+      `Le mot de passe est « ${SECRET_MASK} », je te le donne.`,
+    ],
+    ['Le mot de passe est Tr0ub4dor&3xyz.', `Le mot de passe est ${SECRET_MASK}.`],
+    ['DB_PASS=Hunter2Secret!', `DB_PASS=${SECRET_MASK}`],
+    [
+      'docker login -u paul -p Hunter2Secret registry.acme.fr',
+      `docker login -u paul -p ${SECRET_MASK} registry.acme.fr`,
+    ],
+    [
+      "sshpass -p 'Hunter2Secret' ssh root@10.0.0.4",
+      `sshpass -p '${SECRET_MASK}' ssh root@10.0.0.4`,
+    ],
+    [
+      `https://api.telegram.org/bot123456789:AA${alnum(33)}/sendMessage`,
+      `https://api.telegram.org/bot${SECRET_MASK}/sendMessage`,
+    ],
+  ])('masque : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
+
+  // Les mêmes mots dans une phrase ordinaire.
+  it.each([
+    "Mot de passe oublié : l'utilisateur reçoit un lien par e-mail.",
+    'Mot de passe oublié : Réinitialisez-le depuis la console.',
+    "mot de passe : à demander à Paul (il est en congés jusqu'au 3).",
+    'Le mot de passe est généralement trop court.',
+    'Le mot de passe doit faire au moins 12 caractères.',
+    'bypass: temporairement',
+    'docker run -e POSTGRES_PASSWORD -p 5432:5432 postgres:17',
+    'docker login --password-stdin registry.acme.fr',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
   // Du code évident reste intact.
   it.each([
     "const token = req.headers.authorization?.split(' ')[1];",
@@ -303,6 +346,12 @@ const TRAPS = [
   'mysql -pa ',
   'redis-cli -a ',
   'mot de passe: ',
+  'Mot de passe du compte ',
+  'Le mot de passe est « ',
+  'DB_PASS=',
+  'docker login -p ',
+  'sshpass -p ',
+  '123456789:AA',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 

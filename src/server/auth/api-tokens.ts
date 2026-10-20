@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, gte, isNull } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -54,7 +54,8 @@ const ownedBy = (ctx: TenantContext) =>
 const currentMembership = and(
   eq(members.userId, apiTokens.userId),
   eq(members.organizationId, apiTokens.tenantId),
-  gte(apiTokens.createdAt, members.createdAt),
+  // Une seconde de marge : l'adhésion prend son heure côté Node, le jeton côté base (écart d'horloge).
+  gte(apiTokens.createdAt, sql`${members.createdAt} - interval '1 second'`),
 );
 
 // Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.

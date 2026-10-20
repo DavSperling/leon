@@ -42,7 +42,8 @@ indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponse
 - En production, une mise à jour arrête l'ancienne version avant de démarrer la nouvelle.
 - En local, chaque worktree qui lance un serveur a sa propre base (`DATABASE_URL`).
 - Changer de modèle de vecteurs (`LEON_EMBEDDINGS_MODEL`) : arrêter le serveur, changer le réglage, relancer. Le tic
-  revectorise alors tout et retire les vecteurs de l'ancien modèle.
+  revectorise alors tout, sauf les textes que le fournisseur refuse et ceux d'un membre parti (le plein texte les
+  trouve toujours), puis retire tous les vecteurs de l'ancien modèle.
 
 Deux instances sur la même base (ou deux modèles actifs) ne cassent pas les droits, mais doublent des appels payants et
 peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances sera un chantier à part.

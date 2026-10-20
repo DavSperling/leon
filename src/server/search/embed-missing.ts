@@ -294,8 +294,9 @@ export async function embedMissingBatch(
   return { read: rows.length, stored: total, removed };
 }
 
-// Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`
-// (retirer_vieux_vecteurs, 0020 : audit 2 n° 7 bis). Réservé au tic du serveur, qui connaît le modèle courant.
+// Retire au plus `limit` vecteurs des autres modèles (retirer_vieux_vecteurs) : pour les passages qui ont déjà celui
+// de `model` (0020, audit 2 n° 7 bis) et, une fois la file remplie pour `model`, pour ceux qui en sont sortis sans
+// l'avoir (refusés, propriétaire parti : 0023, audit 4 n° 2). Réservé au tic du serveur, qui connaît le modèle courant.
 // Rend le nombre de vecteurs retirés.
 export async function dropOldVectors(model: string, limit: number): Promise<number> {
   const { rows } = await db.execute<{ n: number }>(

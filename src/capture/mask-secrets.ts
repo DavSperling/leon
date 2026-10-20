@@ -40,6 +40,7 @@ const WHOLE_SECRETS: RegExp[] = [
   // Ancien jeton Notion : exactement 43 caractères, pour laisser « secret_santa » et consorts.
   /\bsecret_[A-Za-z0-9]{43}(?![A-Za-z0-9])/g,
   /\bglpat-[A-Za-z0-9_-]{20,}/g,
+  /\bglptt-[0-9a-f]{40}(?![0-9a-f])/g, // GitLab, déclenchement de pipeline
   /\bwhsec_[A-Za-z0-9+/=]{24,}/g,
   /\bhf_[A-Za-z0-9]{30,}/g,
   /\bnpm_[A-Za-z0-9]{36,}/g,
@@ -65,7 +66,7 @@ const WHOLE_SECRETS: RegExp[] = [
   /\bpk_[0-9]{1,12}_[A-Z0-9]{32}(?![A-Za-z0-9])/g, // ClickUp
   /\bsntryu_[0-9a-f]{64}(?![A-Za-z0-9])/g, // Sentry, utilisateur
   /\bsntrys_eyJ[A-Za-z0-9+/=_]{40,}/g, // Sentry, organisation
-  /\bshp(?:at|ss)_[0-9a-fA-F]{32}(?![A-Za-z0-9])/g, // Shopify
+  /\bshp(?:at|ss|ca|pa)_[0-9a-fA-F]{32}(?![A-Za-z0-9])/g, // Shopify
   /\bdop_v1_[0-9a-f]{64}(?![A-Za-z0-9])/g, // DigitalOcean
   /\bdckr_pat_[A-Za-z0-9_-]{27}(?![A-Za-z0-9_-])/g, // Docker
   /\bsbp_[0-9a-f]{40}(?![A-Za-z0-9])/g, // Supabase, jeton d'accès
@@ -74,7 +75,7 @@ const WHOLE_SECRETS: RegExp[] = [
   /https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/[0-9]{17,20}\/[A-Za-z0-9_-]{60,}/g,
   /(?<=[?&]sig=)[A-Za-z0-9%+/=]{40,}/g, // signature d'une URL SAS Azure
   /\bgsk_[A-Za-z0-9]{52}(?![A-Za-z0-9])/g, // Groq
-  /\bhvs\.[A-Za-z0-9_-]{90,}/g, // Vault
+  /\bhvs\.[A-Za-z0-9_-]{24,}/g, // Vault (24 caractères pour un jeton racine de `vault server -dev`)
   /\bglrt-[A-Za-z0-9_-]{20,}/g, // GitLab, runner
 ];
 
@@ -96,10 +97,10 @@ const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
 const looksRandom = (value: string) =>
   /[0-9+/=]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value));
-// « Basic » et « Token » seuls sont des mots courants : ils ne comptent qu'après « Authorization: »
-// (ou « "Authorization": " »).
+// « Basic » et « Token » seuls sont des mots courants : ils ne comptent qu'après « Authorization » suivi d'un
+// « : », d'une « , » ou d'une espace (en-tête, argument de fonction « ("Authorization", "Basic …") », nginx).
 const AUTH_SCHEME =
-  /\b(Bearer|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)(?:Basic|Token))\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
+  /\b(Bearer|(?<=authorization["']?\s{0,10}[:,]?\s{0,10}["']?)(?:Basic|Token))\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
 // En-têtes de clé d'API (« X-API-Key: … », « "x-api-key": "…" »), valeur aléatoire de 16 caractères ou plus.
 const API_KEY_HEADER =
   /(?<![A-Za-z0-9_-])(x-api-key|api-key|x-auth-token|x-access-token)(["']?\s{0,10}:\s{0,10}["']?)([A-Za-z0-9._~+/=-]{16,})/gi;
@@ -135,16 +136,22 @@ const PHP_DEFINE =
 // « /home/paul/sa.json », « exports/2026/rapport.pdf »). Un chemin sans « ~/ » ni « ./ » doit finir par une
 // extension : une clé base64 peut contenir « / », jamais « . ».
 const NOT_A_VALUE =
-  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|\{[A-Za-z0-9_.]*\}|true|false|null|none|yes|no|\[secret.*|.*(?:\.\.\.|…)|(?:~|\.{1,2})\/\S*)$/i;
+  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|true|false|null|none|yes|no|\[secret.*|.*(?:\.\.\.|…)|(?:~|\.{1,2})\/\S*)$/i;
+// Modèle « {password} », « {db_pass} » : commence par une minuscule. « {Str0ngPassw0rd} » (ODBC) est une valeur.
+const TEMPLATE = /^\{[a-z_][A-Za-z0-9_.]*\}$/;
+const notAValue = (value: string) => NOT_A_VALUE.test(value) || TEMPLATE.test(value);
 const FILE_PATH = /^[\w.@/-]*\.[A-Za-z0-9]{1,5}$/;
-// Un nom en KEY ou TOKEN désigne aussi des réglages (« SORT_KEY=created_at », « MAX_TOKEN=4096 ») :
-// sa valeur ne compte que si elle a la forme d'une clé, 16 caractères ou plus et aléatoire.
+// Un nom en KEY ou TOKEN désigne aussi des réglages (« SORT_KEY=created_at », « MAX_TOKEN=4096 ») : sa valeur
+// ne compte que si elle a la forme d'une clé, 8 caractères ou plus et aléatoire. Un nom qui dit SECRET, PASS ou
+// PRIVATE (« SECRET_KEY », « JWT_SECRET_KEY ») est toujours un secret, et sa valeur n'est jamais un chemin.
 const KEY_NAME = /(?:KEY|TOKEN)$/;
+const SURELY_SECRET = /SECRET|PASS|PRIVATE|PWD/;
 const isSecretValue = (name: string, value: string) =>
   ENV_NAME.test(name) &&
-  !NOT_A_VALUE.test(value) &&
-  !(value.includes('/') && FILE_PATH.test(value)) &&
-  (!KEY_NAME.test(name) || (value.length >= 16 && looksRandom(value)));
+  !notAValue(value) &&
+  (SURELY_SECRET.test(name) ||
+    (!(value.includes('/') && FILE_PATH.test(value)) &&
+      (!KEY_NAME.test(name) || (value.length >= 8 && looksRandom(value)))));
 
 function maskNamedValue(
   match: string,
@@ -191,7 +198,7 @@ export function maskSecrets(text: string): string {
     )
     .replace(QUERY_SECRET, (match, lead: string, value: string) => maskIfRandom(match, lead, value))
     .replace(CONNECTION_STRING_SECRET, (match, lead: string, value: string) =>
-      NOT_A_VALUE.test(value) ? match : `${lead}${SECRET_MASK}`,
+      notAValue(value) ? match : `${lead}${SECRET_MASK}`,
     )
     .replace(AWS_CREDENTIALS_FILE, `$1${SECRET_MASK}`)
     .replace(NPMRC_TOKEN, `$1${SECRET_MASK}`)

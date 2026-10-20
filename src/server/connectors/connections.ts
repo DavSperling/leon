@@ -207,12 +207,15 @@ export async function replaceConnectionSecret(
 // repart tout de suite comme après un remplacement de clé (sauf en pause) ; sans, le statut,
 // l'échéance et la réservation ne bougent pas. Jamais par `replaceConnectionSecret`, qui ne
 // réécrit pas les champs ouverts.
+// Un renouvellement (`renewedFrom` : le jeton de rafraîchissement dont il est parti) n'écrit que si
+// la base porte encore ce jeton : un « Reconnecter » pendant le renouvellement a mis des jetons plus
+// récents, qui restent. La ligne est verrouillée entre la lecture et l'écriture.
 export async function saveOAuthTokens(
   ctx: TenantContext,
   id: string,
   config: Record<string, unknown>,
   secretFields: readonly string[],
-  options: { reconnect: boolean },
+  options: { reconnect: true } | { reconnect: false; renewedFrom: string },
 ): Promise<boolean> {
   const sealed = sealSecrets(config, secretFields, aadOf(ctx.tenantId, id));
   const restart = options.reconnect
@@ -222,8 +225,18 @@ export async function saveOAuthTokens(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
       }
     : {};
-  const rows = await withTenant(ctx, (tx) =>
-    tx
+  const mine = and(eq(connections.id, id), createdByMe(ctx));
+  const rows = await withTenant(ctx, async (tx) => {
+    if (!options.reconnect) {
+      const [row] = await tx
+        .select({ secret: connections.secret })
+        .from(connections)
+        .where(mine)
+        .for('update');
+      const stored = row && parseSecrets(decryptSecret(row.secret, aadOf(ctx.tenantId, id)));
+      if (stored?.refreshToken !== options.renewedFrom) return [];
+    }
+    return tx
       .update(connections)
       .set({
         ...sealed,
@@ -231,9 +244,9 @@ export async function saveOAuthTokens(
         ...restart,
         updatedAt: sql`now()`,
       })
-      .where(and(eq(connections.id, id), createdByMe(ctx)))
-      .returning({ id: connections.id }),
-  );
+      .where(mine)
+      .returning({ id: connections.id });
+  });
   return rows.length > 0;
 }
 

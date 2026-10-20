@@ -521,12 +521,27 @@ describe('saveOAuthTokens', () => {
     ...extra,
   });
 
+  // Connexion branchée par le bouton, échue, avec le jeton de rafraîchissement `refreshToken`.
+  async function oauthConnection(refreshToken: string): Promise<string> {
+    const config = oauthConfig({ accessToken: 'acces-ancien-0000', refreshToken });
+    const id = await createConnection(paul, {
+      ...atlassian,
+      config,
+      secretFields: oauthFields,
+    });
+    await makeDue(id);
+    return id;
+  }
+
   it('sans reconnexion : réécrit jetons et champs ouverts, statut, échéance et réservation inchangés', async () => {
-    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const id = await oauthConnection('rafraichir-ancien');
     const lock = await claimed(paul, id);
     const before = await readRow(id);
 
-    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: false });
+    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, {
+      reconnect: false,
+      renewedFrom: 'rafraichir-ancien',
+    });
 
     expect(saved).toBe(true);
     const row = await readRow(id);
@@ -550,6 +565,30 @@ describe('saveOAuthTokens', () => {
       refreshToken: 'rafraichir-nouveau',
       cloudId: 'nuage-1',
     });
+  });
+
+  // Audit 2 n° 13 a : « Reconnecter » pendant un renouvellement. Le renouvellement, parti des anciens
+  // jetons, n'écrase pas ceux de la reconnexion.
+  it("sans reconnexion : n'écrit rien quand les jetons ont changé depuis leur lecture", async () => {
+    const id = await oauthConnection('rafraichir-ancien');
+    const reconnected = oauthConfig({ refreshToken: 'rafraichir-reconnecte' });
+    await saveOAuthTokens(paul, id, reconnected, oauthFields, { reconnect: true });
+    const before = await readRow(id);
+
+    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, {
+      reconnect: false,
+      renewedFrom: 'rafraichir-ancien',
+    });
+
+    expect(saved).toBe(false);
+    const row = await readRow(id);
+    expect([row.secret, row.secret_hint, row.config]).toEqual([
+      before.secret,
+      before.secret_hint,
+      before.config,
+    ]);
+    await makeDue(id);
+    expect((await claimConnection(paul, id))?.config.refreshToken).toBe('rafraichir-reconnecte');
   });
 
   it('avec reconnexion : relance une connexion en erreur, active, sans erreur, échéance maintenant', async () => {

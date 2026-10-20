@@ -482,8 +482,24 @@ describe('ensureFreshTokens', () => {
       'c1',
       config,
       [...OAUTH_SECRET_FIELDS, 'token'],
-      { reconnect: false },
+      { reconnect: false, renewedFrom: 'rafraichir-1' },
     );
+  });
+
+  // Audit 2 n° 13 a : une reconnexion a remplacé les jetons pendant le renouvellement. Les siens
+  // restent en base ; ce passage-ci finit avec les jetons renouvelés, qui restent valables.
+  it('rend les jetons renouvelés même quand l’enregistrement est refusé (jetons changés entre-temps)', async () => {
+    const fetchImpl = fakeFetch([tokenRoute({ access_token: 'acces-2', expires_in: 3600 })]);
+    saveOAuthTokens.mockResolvedValueOnce(false);
+
+    const config = await ensureFreshTokens(
+      ctx,
+      connection(oauthConfig()),
+      connector,
+      deps(fetchImpl),
+    );
+
+    expect(config).toMatchObject({ accessToken: 'acces-2' });
   });
 
   it('ne fait rien quand l’accès expire dans une heure', async () => {

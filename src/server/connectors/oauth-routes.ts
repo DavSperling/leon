@@ -248,7 +248,7 @@ async function connect(
   const { account } = await verifyConfig(connector, config, http);
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
-    const options = { reconnect: true };
+    const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, config, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
     return;

@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { IngestPayload } from '../../src/capture/turn';
 import { createMemoryStore } from './memory-store';
-import { countPending, enqueuePayload, flushOutbox, OUTBOX_MAX } from './outbox';
+import {
+  countPending,
+  enqueuePayload,
+  flushOutbox,
+  OUTBOX_MAX,
+  OUTBOX_MAX_BYTES,
+  takeDropped,
+} from './outbox';
 
 function payload(externalId: string): IngestPayload {
   return {
@@ -145,4 +152,45 @@ describe('enqueuePayload', () => {
     expect(sent[0]).toBe('p2');
     expect(sent.at(-1)).toBe(`p${OUTBOX_MAX + 1}`);
   });
+
+  it('compte les échanges sortis par le plafond', async () => {
+    const store = createMemoryStore();
+    for (let i = 0; i < OUTBOX_MAX + 2; i += 1) await enqueuePayload(store, payload(`p${i}`));
+    expect(await takeDropped(store)).toBe(2);
+    expect(await takeDropped(store)).toBe(0);
+  });
+
+  // Au-delà du quota du navigateur, l'écriture échouerait et la capture serait perdue sans un mot.
+  it('borne le tampon en octets : les plus anciens sortent et sont comptés', async () => {
+    const store = createMemoryStore();
+    const third = Math.ceil(OUTBOX_MAX_BYTES / 3);
+    for (const id of ['a', 'b', 'c']) await enqueuePayload(store, heavyPayload(id, third));
+    expect(await countPending(store)).toBe(2);
+    expect(await takeDropped(store)).toBe(1);
+    const stored = JSON.stringify(await store.get('leon.outbox'));
+    expect(new TextEncoder().encode(stored).length).toBeLessThanOrEqual(OUTBOX_MAX_BYTES);
+  });
+
+  it('refuse et compte un échange plus gros que tout le tampon', async () => {
+    const store = createMemoryStore();
+    await enqueuePayload(store, payload('petit'));
+    await enqueuePayload(store, heavyPayload('enorme', OUTBOX_MAX_BYTES + 1));
+    expect(await countPending(store)).toBe(1);
+    expect(await takeDropped(store)).toBe(1);
+  });
 });
+
+// Une charge d'au moins `bytes` octets en UTF-8 (« é » en vaut deux), en tours de 20 000 caractères au plus.
+function heavyPayload(externalId: string, bytes: number): IngestPayload {
+  const turns = Math.ceil(bytes / 2 / 20_000);
+  return {
+    source: { kind: 'chatgpt', external_id: externalId },
+    turns: Array.from({ length: turns }, (_, i) => ({
+      external_id: `${externalId}-${i}`,
+      role: 'user' as const,
+      text: 'é'.repeat(20_000),
+      ts: '2026-10-13T09:00:00.000Z',
+      capture_mode: 'network' as const,
+    })),
+  };
+}

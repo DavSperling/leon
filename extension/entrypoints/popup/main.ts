@@ -1,5 +1,6 @@
 import { browser } from '#imports';
 import { browserStore } from '../../lib/browser-store';
+import { takeDropped } from '../../lib/outbox';
 import {
   type CaptureStatus,
   hasConsent,
@@ -56,10 +57,19 @@ function pendingText(count: number): string {
   return `${count} ${count === 1 ? 'échange' : 'échanges'} en attente d'envoi`;
 }
 
+// Lu une fois à l'ouverture (puis remis à zéro) : la popup garde le message tant qu'elle est ouverte.
+const dropped = takeDropped(browserStore);
+
+function droppedText(count: number): string {
+  const exchanges = count === 1 ? '1 échange perdu' : `${count} échanges perdus`;
+  return `${exchanges} : le tampon d'envoi était plein (serveur injoignable trop longtemps).`;
+}
+
 async function render(): Promise<void> {
-  const [settings, status] = await Promise.all([
+  const [settings, status, droppedCount] = await Promise.all([
     loadSettings(browserStore),
     loadStatus(browserStore),
+    dropped,
   ]);
   const display = displayFor(settings, status);
   const state = byId('state');
@@ -75,6 +85,8 @@ async function render(): Promise<void> {
     element.title = iso ? new Date(iso).toLocaleString('fr-FR') : '';
   }
   byId('pending').textContent = pendingText(status.pending);
+  byId('dropped').hidden = droppedCount === 0;
+  byId('dropped').textContent = droppedText(droppedCount);
   showSiteSwitches(document, settings);
 }
 

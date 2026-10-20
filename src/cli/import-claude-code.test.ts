@@ -1,4 +1,13 @@
-import { copyFile, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -126,6 +135,27 @@ describe('importClaudeCode', () => {
     expect(new Set(sent).size).toBe(sent.length);
     expect(sent).toContain('reprise-1');
     expect(summary.turnsSent).toBe(13);
+  });
+
+  it('rattache les tours recopiés à la session d’origine, quel que soit le nom des fichiers', async () => {
+    const acme = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    const resumed = '00000000-0000-4000-8000-000000000000';
+    // Le fichier de la reprise vient avant l'original dans l'ordre alphabétique, mais il est plus récent.
+    const resumedFile = join(projectDir, `${resumed}.jsonl`);
+    await writeFile(resumedFile, acme.replaceAll(ACME_SESSION, resumed));
+    await utimes(
+      join(projectDir, 'session-simple.jsonl'),
+      new Date(2026, 9, 1),
+      new Date(2026, 9, 1),
+    );
+    await utimes(resumedFile, new Date(2026, 9, 14), new Date(2026, 9, 14));
+    const { deps, send } = makeDeps();
+
+    await importClaudeCode(importOptions(), deps);
+
+    const sources = send.mock.calls.map(([p]) => p.source.external_id);
+    expect(sources).toContain(ACME_SESSION);
+    expect(sources).not.toContain(resumed);
   });
 
   it('since écarte les tours plus anciens et les sessions sans tour récent', async () => {

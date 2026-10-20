@@ -87,6 +87,23 @@ describe('maskSecrets : le nom reste, la valeur est masquée', () => {
   it.each(cases)('masque : %s', (_name, input, expected) => {
     expect(maskSecrets(input)).toBe(expected);
   });
+
+  // Formats manqués relevés par le second audit.
+  it.each([
+    ['mot de passe : Hunter2Secret!', `mot de passe : ${SECRET_MASK}`],
+    ['mdp: Hunter2Secret!', `mdp: ${SECRET_MASK}`],
+    ['redis://:hunter2secret@cache:6379', `redis://:${SECRET_MASK}@cache:6379`],
+    [`"Authorization": "Token ${alnum(22)}"`, `"Authorization": "Token ${SECRET_MASK}"`],
+    [`authorization: bearer ${alnum(30)}`, `authorization: bearer ${SECRET_MASK}`],
+    [`clé sb_secret_${alnum(31)} ici`, `clé ${SECRET_MASK} ici`],
+    [`jeton ya29.${alnum(40)} ici`, `jeton ${SECRET_MASK} ici`],
+    ['curl -u admin:pw https://api.acme.fr', `curl -u admin:${SECRET_MASK} https://api.acme.fr`],
+    ['mysql -u root -phunter2 app', `mysql -u root -p${SECRET_MASK} app`],
+    ['redis-cli -a pw ping', `redis-cli -a ${SECRET_MASK} ping`],
+  ])('masque : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
 });
 
 describe('maskSecrets : texte ordinaire', () => {
@@ -104,6 +121,25 @@ describe('maskSecrets : texte ordinaire', () => {
     'npm_config_registry',
     'hf_hub_download',
     'Token de session expiré, reconnecte-toi',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  // Faux positifs relevés par le second audit.
+  it.each([
+    'Secretary: Marie-Claire Dupont',
+    'les tokens: lexèmes',
+    'tokenizer: sentencepiece',
+    'Le pwd: /home/paul/projets/leon',
+    'Basic internationalization',
+    'ASIAPACIFICHEADQUARTERS',
+    'const token = getToken(request);',
+    'apiKey: process.env.ANTHROPIC_API_KEY',
+    'password: z.string().min(8)',
+    'PWD=/Users/david/Downloads/leon',
+    'the-sk-learn-classification-model',
+    'jdbc:postgresql://db.acme.fr:5432/prod?user=paul@acme.fr',
+    'git+https://github.com:443/org/repo@main',
   ])('laisse intact : %s', (text) => {
     expect(maskSecrets(text)).toBe(text);
   });
@@ -162,7 +198,7 @@ describe('maskSecrets : contournements', () => {
     ],
     ['redis://default:abc?def123@redis:6379', `redis://default:${SECRET_MASK}@redis:6379`],
     ['mysql://root:abc?def12@localhost', `mysql://root:${SECRET_MASK}@localhost`],
-    // Un mot de passe qui commence comme un port : l'exception ne vaut que pour les URL web.
+    // Un mot de passe qui commence comme un port : l'exception ne vaut que pour les URL web ou un hôte.
     [
       'postgres://app:2024#Paris@db.acme.fr:5432/prod',
       `postgres://app:${SECRET_MASK}@db.acme.fr:5432/prod`,
@@ -234,6 +270,16 @@ const TRAPS = [
   'password: "a',
   'eyJabcdefgh-',
   'a-',
+  'Basic aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  'Secretary: ',
+  'token = a.',
+  'redis://:',
+  '"Authorization": "Token ',
+  'curl -u a:',
+  'curl -u a:b ',
+  'mysql -pa ',
+  'redis-cli -a ',
+  'mot de passe: ',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 

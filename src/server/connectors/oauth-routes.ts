@@ -232,9 +232,9 @@ class OtherAccount extends Error {
 }
 
 // Le compte se reconnaît à l'identifiant stable rendu par `verify` (`accountKey`, gardé dans la config
-// ouverte). Une connexion enregistrée sans identifiant (ou un outil qui n'en rend pas) se reconnaît au
-// libellé, sans le nombre des autres sites (Jira, Confluence). Les champs avant le clic gardés doivent
-// revenir tels quels.
+// ouverte). Une connexion enregistrée sans identifiant (jusqu'à sa prochaine relève réussie, qui le lui
+// donne : sync.ts), ou un outil qui n'en rend pas, se reconnaît au libellé, sans le nombre des autres
+// sites (Jira, Confluence). Les champs avant le clic gardés doivent revenir tels quels.
 function sameAccount(
   stored: { label: string; config: Record<string, unknown> },
   provider: ProviderId,

@@ -9,6 +9,7 @@ import {
   claimConnection,
   finishSync,
   type LoadedConnection,
+  saveAccountKey,
   saveSyncProgress,
   UnreadableSecretError,
 } from './connections';
@@ -132,6 +133,35 @@ async function readWithRenewal(
   return readPages(ctx, connection, deps, renewed);
 }
 
+// Audit 5 n° 2 : une connexion OAuth enregistrée sans `accountKey` se reconnaît au libellé, et ne se
+// reconnecte plus si le compte a été renommé. Après une relève réussie, `verify` (avec ses propres jetons)
+// lui donne son identifiant, une seule fois. Une vérification en panne ne change rien : elle sera refaite.
+async function rememberAccountKey(
+  ctx: TenantContext,
+  connection: LoadedConnection,
+  deps: SyncDeps,
+  ready: Ready,
+): Promise<void> {
+  if (!isOAuth(connection) || 'accountKey' in connection.config) return;
+  const { connector, config } = ready;
+  try {
+    const http = createConnectorHttp({
+      provider: connection.provider,
+      hosts: connector.hosts(config),
+      minIntervalMs: connector.minIntervalMs,
+      fetchImpl: deps.fetchImpl,
+      sleep: deps.sleep,
+    });
+    const { accountKey } = await connector.verify(config, http);
+    await saveAccountKey(ctx, connection.id, connection.lockedAt, accountKey ?? null);
+  } catch (error) {
+    logError('connector.account_key_failed', error, {
+      connectionId: connection.id,
+      provider: connection.provider,
+    });
+  }
+}
+
 function authMessage(connection: LoadedConnection, error: ConnectorAuthError | OAuthRefusedError) {
   const label = PROVIDER_LABELS[connection.provider];
   if (error instanceof OAuthRefusedError) return `Reconnectez ${label} : l'autorisation a expiré.`;
@@ -193,6 +223,7 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
     return recordFailure(ctx, fresh, error);
   }
   if (again === 'lost') return 'skipped';
+  await rememberAccountKey(ctx, fresh, deps, ready);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   return 'ok';
 }

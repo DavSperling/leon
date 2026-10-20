@@ -17,9 +17,10 @@ Commandes :
       --project <chemin>   ne garde que les sessions lancées sous ce dossier
       --since AAAA-MM-JJ   ne garde que les tours à partir de cette date
       --dry-run            affiche ce qui serait envoyé (une ligne JSON par envoi), sans rien envoyer
-  briefing             Affiche le briefing Leon (pour le hook SessionStart de Claude Code)
 
-L'envoi réel et le briefing demandent LEON_URL et LEON_TOKEN.`;
+L'envoi réel demande LEON_URL et LEON_TOKEN.`;
+// `briefing` n'est pas dans l'aide tant que le point du matin n'existe pas côté serveur (T13) : la commande
+// reste, pour le hook SessionStart déjà posé, et ne gêne jamais Claude Code (voir `runBriefing`).
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'à envoyer' : 'envoyés';

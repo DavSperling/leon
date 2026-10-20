@@ -93,9 +93,10 @@ const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
 const looksRandom = (value: string) =>
   /[0-9+/=]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value));
-// « Token » seul est un mot courant : il ne compte qu'après « Authorization: » (ou « "Authorization": " »).
+// « Basic » et « Token » seuls sont des mots courants : ils ne comptent qu'après « Authorization: »
+// (ou « "Authorization": " »).
 const AUTH_SCHEME =
-  /\b(Bearer|Basic|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
+  /\b(Bearer|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)(?:Basic|Token))\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
 // En-têtes de clé d'API (« X-API-Key: … », « "x-api-key": "…" »), valeur aléatoire de 16 caractères ou plus.
 const API_KEY_HEADER =
   /(?<![A-Za-z0-9_-])(x-api-key|api-key|x-auth-token|x-access-token)(["']?\s{0,10}:\s{0,10}["']?)([A-Za-z0-9._~+/=-]{16,})/gi;

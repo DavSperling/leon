@@ -540,3 +540,14 @@ describe('maskSecrets : préfixes des outils (audit 5)', () => {
     expect(maskSecrets(text)).toBe(text);
   });
 });
+
+describe('maskSecrets : faux positifs (audit 5)', () => {
+  // « Basic » est un mot courant : comme « Token », il ne compte qu'après « Authorization: ».
+  it.each([
+    'Abonnement Basic 9.99/mois/utilisateur, Pro à 19,99 €.',
+    'Regarde le basic examples/basic-auth/server.js du dépôt.',
+    'Setting up basic 2-factor-authentication for admins',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+});

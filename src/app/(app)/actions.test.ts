@@ -85,8 +85,8 @@ describe('previewPassageAction', () => {
     expect(await previewPassageAction(PASSAGE)).toEqual({ ok: false, reason: 'introuvable' });
   });
 
-  it('ne lit rien quand l’identifiant n’est pas une chaîne', async () => {
-    for (const bad of [undefined, null, 42, {}, ['x']]) {
+  it('ne lit rien quand l’identifiant n’est pas un uuid', async () => {
+    for (const bad of [undefined, null, 42, {}, ['x'], 'pas-un-uuid', `${PASSAGE}x`]) {
       expect(await previewPassageAction(bad as never)).toEqual({
         ok: false,
         reason: 'introuvable',

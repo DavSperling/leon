@@ -40,6 +40,7 @@ export type ConnectionView = {
   createdAt: Date;
   canManage: boolean; // pause, suppression : créateur ou administrateur
   isCreator: boolean; // clé, reconnexion : créateur seul (le secret est celui de son compte)
+  creatorLeft: boolean; // le créateur n'est plus membre : la relève saute la connexion
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -107,6 +108,12 @@ const manageable = (ctx: TenantContext) =>
 // renouvellement des jetons passe aussi par ici : la relève travaille au nom du créateur (queue.ts).
 const createdByMe = (ctx: TenantContext) => eq(connections.createdBy, ctx.userId);
 
+// La relève travaille au nom du créateur : parti de l'organisation, elle saute sa connexion
+// (connector_syncs_due).
+const creatorIsMember = sql`exists (
+  select 1 from member
+  where "userId" = ${connections.createdBy} and "organizationId" = ${connections.tenantId})`;
+
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
   try {
@@ -166,6 +173,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         creatorName: users.name,
         canManage: sql<boolean>`${manageable(ctx)}`,
         isCreator: sql<boolean>`${createdByMe(ctx)}`,
+        creatorLeft: sql<boolean>`not ${creatorIsMember}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -282,7 +290,13 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
     tx
       .update(connections)
       .set({ nextSyncAt: sql`now()`, updatedAt: sql`now()` })
-      .where(and(eq(connections.id, id), inArray(connections.status, ['active', 'error'])))
+      .where(
+        and(
+          eq(connections.id, id),
+          inArray(connections.status, ['active', 'error']),
+          creatorIsMember,
+        ),
+      )
       .returning({ id: connections.id }),
   );
   return rows.length > 0;

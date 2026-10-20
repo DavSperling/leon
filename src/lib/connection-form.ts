@@ -67,9 +67,13 @@ function sinceText(date: Date, now: Date): string {
 }
 
 export function statusLine(
-  view: Pick<ConnectionView, 'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError'>,
+  view: Pick<
+    ConnectionView,
+    'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError' | 'createdBy' | 'creatorLeft'
+  >,
   now: Date,
 ): string {
+  if (view.creatorLeft) return `Arrêtée : ${view.createdBy.name} n'est plus membre`;
   if (view.status === 'paused') return 'En pause';
   if (view.status === 'error')
     return view.lastError ? `En erreur : ${view.lastError}` : 'En erreur';

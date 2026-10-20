@@ -14,10 +14,13 @@ export function ConnectionStatus({
   view,
   now,
 }: {
-  view: Pick<ConnectionView, 'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError'>;
+  view: Pick<
+    ConnectionView,
+    'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError' | 'createdBy' | 'creatorLeft'
+  >;
   now: Date;
 }) {
-  const { icon: Icon, className } = TONES[view.status];
+  const { icon: Icon, className } = TONES[view.creatorLeft ? 'error' : view.status];
   return (
     <p className={cn('flex items-start gap-1.5 text-[13px] leading-[18px]', className)}>
       <Icon size={14} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />

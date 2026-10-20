@@ -4,7 +4,11 @@ import { ITEM_NATURES, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { searchPassages } from '@/server/search/search';
-import { queryWithPerson, readToolFilters } from '@/server/search/tool-filters';
+import {
+  QUERY_SYNTAX_DESCRIPTION,
+  queryWithPerson,
+  readToolFilters,
+} from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 import { guarded } from './guarded';
 import { SearchOutputSchema } from './output-schemas';
@@ -37,7 +41,7 @@ export const SearchInputSchema = z.object({
     // résultat », jamais un refus. `parseQuery` ne lit que ses 10 000 premiers caractères et garde 300 de texte.
     .nullish()
     .describe(
-      'Les mots à chercher, avec « guillemets » pour une expression exacte. Facultatif quand un filtre est donné : on rend alors les sources les plus récentes.',
+      `${QUERY_SYNTAX_DESCRIPTION} Facultatif quand un filtre est donné : on rend alors les sources les plus récentes.`,
     ),
   outil: z
     .string()

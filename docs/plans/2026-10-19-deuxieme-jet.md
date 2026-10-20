@@ -259,9 +259,10 @@ export async function searchPassages(
   input: { query: string; filters?: SearchFilters; page?: number; embedder?: Embedder | null; now?: Date },
 ): Promise<SearchPage>;
 // Requête vide + filtres → les sources les plus récentes qui passent les filtres (mode 'plein-texte').
-// T06b : le plein texte cherche la requête sans ses mots outils (query-terms.ts) ; si cette première passe trouve
-// moins de 10 sources, une passe élargie (un mot suffit, expressions exigées, mots niés exclus) ajoute ses sources
-// après toutes les autres, les plus couvertes d'abord. Le titre et les vecteurs gardent la requête entière.
+// T06b : le plein texte cherche la requête sans ses mots outils (query-terms.ts) ; si cette première passe, les
+// titres et les vecteurs trouvent ensemble moins de 10 sources, une passe élargie (un mot suffit, 8 mots au plus,
+// expressions exigées, mots niés exclus) ajoute ses sources après toutes les autres, les plus couvertes d'abord.
+// Le titre et les vecteurs gardent la requête entière. `score` ne fixe pas l'ordre : l'ordre rendu est le classement.
 
 // src/server/search/context.ts
 export type ContextTurn = { turnId: string; role: TurnRole; authorName: string | null; ts: Date; text: string; isHit: boolean };
@@ -616,8 +617,10 @@ T25 ne démarre que si le verdict est `indexable` (décision 14 de la spec).
 Défaut vu au bilan du lot B : `websearch_to_tsquery` exige tous les mots, mots outils compris (« quel », « les ») ; sans fournisseur de vecteurs, la barre, la réponse en tête, le MCP et la discussion ne trouvaient rien pour une question en phrase.
 
 - `src/server/search/query-terms.ts` (pur) retire les mots outils de la partie libre : liste fixe, comparée sans accents ni casse ; guillemets, mots niés, noms propres en milieu de phrase et filtres de `parseQuery` intacts ; tout mot outil → texte d'origine.
-- `search.ts` : première passe inchangée sur ce texte. Moins de 10 sources → passe élargie bâtie mot par mot (`||`, `&&`, `!!`), limitée aux sources qu'aucun classement n'a trouvées, rangs à la suite dans la fusion ; ses sources passent après les autres et, entre elles, par nombre de mots couverts (`ts_rank_cd` compte les occurrences, pas les mots : un test le montre). Postgres évalue la condition une fois et ne lit rien quand la page est pleine. Ses extraits viennent de `ts_headline` sur la requête élargie.
+- `search.ts` : première passe inchangée sur ce texte. Moins de 10 sources (première passe, titres et vecteurs ensemble) → passe élargie bâtie mot par mot (`||`, `&&`, `!!`), limitée aux sources qu'aucun classement n'a trouvées, rangs à la suite dans la fusion ; ses sources passent après les autres et, entre elles, par nombre de mots couverts (`ts_rank_cd` compte les occurrences, pas les mots : un test le montre). Postgres évalue la condition une fois et ne lit rien quand la page est pleine. Ses extraits viennent de `ts_headline` sur la requête élargie.
 - Tests : `query-terms.test.ts`, `search.db.test.ts` (« questions en phrase ») ; trois tests de vecteurs adaptés, le plein texte trouvant désormais « budget » dans « reunion budget ».
+- Relecture : passe élargie sur 8 mots au plus (noms propres et mots à chiffres d'abord, puis les plus longs), 3 passages par source parmi ses candidats, calculée une fois (`materialized`) ; `set local jit = off` (test de contrat `search-sql.test.ts`). Mots outils élargis (prépositions, adverbes, modaux, « font ») ; « dû » et « sûr » gardés ; casse ignorée pour une question en capitales ou à majuscule partout ; tiret seul = ponctuation, `--mot` = mot. Les descriptions des outils `search` et `chercher` disent comment resserrer (guillemets, `-mot`) ; celle de `score`, qu'il ne fixe pas l'ordre.
+- Reste ouvert, hors de ce jet (pas de migration) : sous la sécurité par ligne, Postgres ne se sert pas de l'index GIN du plein texte (`@@` n'est pas « leakproof ») ; chaque passe lit tous les passages visibles de l'organisation, en temps proportionnel au corpus. Piste : une fonction `security definer` qui applique elle-même `tenant_id` et `acl`, sous revue de sécurité.
 
 ### T07 · MCP sur les passages — Sonnet
 
@@ -925,7 +928,8 @@ Après T28 : David écrit une trentaine de questions dans `essai-recherche/quest
 - [ ] **Étape 1 :** relire la doc officielle de chaque fournisseur (URL et date en tête de fichier) : modèle multilingue en 1 024 dimensions, distinction document / requête si elle existe, taille maximale d'un lot, limites de débit, prix.
 - [ ] **Étape 2 : tests** (`fetch` simulé). Chaque adaptateur envoie au plus 64 textes par requête, demande 1 024 dimensions, passe le bon type (document / requête), rend les vecteurs dans l'ordre, transforme 429 et 5xx en `EmbedderError` après 3 reprises, ne journalise ni texte ni clé ; son `model` fait de 1 à 80 caractères (colonne `passage_vectors.model`) ; `getEmbedder` construit chaque fournisseur à partir de sa variable.
 - [ ] **Étape 3 :** relever, pour chaque fournisseur, la distance cosinus des passages pertinents et celle de passages sans rapport, et en tirer le seuil `MAX_VECTOR_DISTANCE` de `search.ts` (0,8 aujourd'hui, valable pour le factice : avec un vrai modèle, des textes sans rapport peuvent rester en deçà, et « Aucun résultat » n'arrive plus) ; le seuil se règle par fournisseur ou se justifie dans le rapport. `pnpm essai:comparer` lance, pour chaque fournisseur dont la clé ou l'adresse est réglée, une réindexation du corpus puis `essai:noter`, et ajoute la ligne « plein texte seul » ; il écrit un tableau comparatif (deux notes, durée et coût d'indexation, coût par 1 000 recherches) dans `essai-recherche/rapports/`. Il ne règle aucun défaut.
-- [ ] **Étape 4 :** commit « T30 · Trois candidats de vecteurs et leur comparaison ».
+- [ ] **Étape 4 :** vérifier sur le jeu d'essai, avec chaque fournisseur, le rang des sources de la passe élargie de T06b : elles passent après toutes celles des vecteurs et du titre (observé à la relecture de T06b avec le fournisseur factice : « Migration » quatrième pour « Que reste-t-il à faire sur la migration ? », derrière du bruit vectoriel). Si un vrai fournisseur fait de même, le noter dans le rapport et voir avec David si le plein texte partiel doit se mêler aux vecteurs.
+- [ ] **Étape 5 :** commit « T30 · Trois candidats de vecteurs et leur comparaison ».
 
 ### Fin
 

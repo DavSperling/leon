@@ -16,7 +16,12 @@ import { listActivity } from '@/server/search/activity';
 import { fetchPassageContext, fetchSource, SOURCE_MAX_CHARS } from '@/server/search/context';
 import { resolvePeople } from '@/server/search/people';
 import { searchPassages } from '@/server/search/search';
-import { cleanFilterValue, queryWithPerson, readToolFilters } from '@/server/search/tool-filters';
+import {
+  cleanFilterValue,
+  QUERY_SYNTAX_DESCRIPTION,
+  queryWithPerson,
+  readToolFilters,
+} from '@/server/search/tool-filters';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 
 // Les outils de l'agent de discussion (T11) : chercher, lire, activite. Ils ne passent que par les fonctions de la
@@ -116,7 +121,7 @@ const ChercherInput = z.object({
     .string()
     .max(DISCUSSION_MESSAGE_MAX_CHARS)
     .describe(
-      'Les mots à chercher, avec « guillemets » pour une expression exacte. Reformule et relance si les résultats ne conviennent pas.',
+      `${QUERY_SYNTAX_DESCRIPTION} Reformule et relance si les résultats ne conviennent pas.`,
     ),
   outil: optionalFilter(TOOL_DESCRIPTION.outil),
   type: optionalFilter(TOOL_DESCRIPTION.type),

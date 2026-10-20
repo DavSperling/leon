@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toolDefinitions } from '@/server/llm/anthropic-llm';
+import { QUERY_SYNTAX_DESCRIPTION } from '@/server/search/tool-filters';
 import { createSourceNumbering, discussionTools } from './tools';
 
 const CTX = {
@@ -70,5 +71,14 @@ describe('les outils de la discussion', () => {
   it('se décrivent en français et disent qu’elles ne rendent que ce que l’utilisateur voit', () => {
     for (const tool of tools) expect(tool.description.length).toBeGreaterThan(40);
     expect(tools[0]?.description).toContain('ce que l’utilisateur a le droit de voir');
+  });
+
+  // T06b : on demande à l'agent de resserrer ; un mot ajouté n'y suffit plus quand la recherche trouve peu de
+  // sources (passe élargie). La description de la requête dit comment resserrer.
+  it('disent comment resserrer une recherche', () => {
+    const properties = toolDefinitions(tools)[0]?.input_schema.properties as
+      | Record<string, { description?: string }>
+      | undefined;
+    expect(properties?.requete?.description).toContain(QUERY_SYNTAX_DESCRIPTION);
   });
 });

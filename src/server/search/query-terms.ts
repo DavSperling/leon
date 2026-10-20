@@ -10,8 +10,9 @@
 
 // Mots outils du français, en minuscules ; comparés sans accents ni casse, avec l'apostrophe droite ou
 // typographique. Laissés de côté exprès, parce qu'ils sont aussi des noms qu'on cherche : « avoir » (la note de
-// crédit), « être », « sommes » (des montants), « son », « ton », « ça » (qui, sans accent, est « ca », le chiffre
-// d'affaires) et « font ».
+// crédit), « être », « sommes » (des montants), « son », « ton », « bien » (les biens) et « ça » (qui, sans accent,
+// est « ca », le chiffre d'affaires). Les mots très courants y sont aussi (« plus », « tout », « peut »,
+// « avant ») : la passe élargie se contente d'un mot, et un mot présent partout lui ferait lire tout le corpus.
 export const FUNCTION_WORDS: ReadonlySet<string> = new Set([
   // Interrogatifs
   'quel',
@@ -78,11 +79,46 @@ export const FUNCTION_WORDS: ReadonlySet<string> = new Set([
   'jusqu’',
   'lorsqu’',
   'puisqu’',
+  'avant',
+  'après',
+  'depuis',
+  'pendant',
+  'durant',
+  'dès',
+  'contre',
+  'selon',
+  'malgré',
+  'parmi',
+  'hors',
   'et',
   'ou',
   'mais',
   'donc',
   'ni',
+  'si',
+  'car',
+  'comme',
+  'lorsque',
+  'puisque',
+  'parce',
+  'quoique',
+  // Adverbes et déterminants courants
+  'très',
+  'trop',
+  'plus',
+  'moins',
+  'aussi',
+  'alors',
+  'encore',
+  'déjà',
+  'toujours',
+  'ici',
+  'tout',
+  'tous',
+  'toute',
+  'toutes',
+  'beaucoup',
+  'peu',
   // Pronoms
   'je',
   'j’',
@@ -117,6 +153,7 @@ export const FUNCTION_WORDS: ReadonlySet<string> = new Set([
   'ne',
   'n’',
   'pas',
+  'jamais',
   // Être et avoir au présent
   'suis',
   'es',
@@ -134,22 +171,46 @@ export const FUNCTION_WORDS: ReadonlySet<string> = new Set([
   'fait',
   'faisons',
   'faites',
+  'font',
   'dis',
   'dit',
   'disons',
   'dites',
   'disent',
+  // Pouvoir, devoir, falloir et vouloir au présent
+  'peux',
+  'peut',
+  'pouvons',
+  'pouvez',
+  'peuvent',
+  'dois',
+  'doit',
+  'devons',
+  'devez',
+  'doivent',
+  'faut',
+  'veux',
+  'veut',
+  'voulons',
+  'voulez',
+  'veulent',
 ]);
 
-// Mots gardés pour la passe élargie : chacun y ajoute deux recherches dans le dictionnaire et un test par passage
-// candidat. Un paragraphe collé (300 caractères, une quarantaine de mots) ne fabrique pas une requête démesurée.
-export const WIDE_WORDS_MAX = 16;
+// Mots que la comparaison sans accents confondrait avec un mot outil, et qui portent du sens : « le montant dû »,
+// « sûr ». Comparés avec leurs accents, sans casse.
+const KEPT_WITH_ACCENTS: ReadonlySet<string> = new Set(['dû', 'sûr']);
+
+// Mots gardés pour la passe élargie : chacun élargit l'union qu'elle lit et ajoute un test par passage trouvé. Une
+// question compte rarement plus de huit mots porteurs de sens ; au-delà (un paragraphe collé), la passe élargie
+// garde les noms propres et les mots à chiffres (« OVH », « v2 »), puis les mots les plus longs, en général les
+// plus rares (la base ne dit pas lesquels le sont sans lire les mots des autres organisations).
+export const WIDE_WORDS_MAX = 8;
 
 export type QueryTerms = {
   // Le texte de la première passe : la requête sans ses mots outils, ou telle quelle si tout en est.
   text: string;
-  // Les mots libres gardés, sans la ponctuation qui les entoure : en passe élargie, chacun suffit. Sans doublon,
-  // WIDE_WORDS_MAX au plus ; vide quand la requête n'a que des mots outils.
+  // Les mots libres gardés, sans la ponctuation qui les entoure, dans l'ordre de la requête : en passe élargie,
+  // chacun suffit. Sans doublon, WIDE_WORDS_MAX au plus ; vide quand la requête n'a que des mots outils.
   words: string[];
   // Les expressions entre guillemets, guillemets compris : toujours exigées telles quelles.
   phrases: string[];
@@ -182,6 +243,7 @@ const SENTENCE_END = /[.!?…]$/u;
 const OR_OPERATOR = 'or';
 
 function isFunctionWord(word: string): boolean {
+  if (KEPT_WITH_ACCENTS.has(word.normalize('NFC').toLowerCase())) return false;
   const key = normalize(word);
   if (NORMALIZED.has(key)) return true;
   // « a-t-il », « est-il », « sont-elles » : une inversion faite de mots outils et du « t » euphonique.
@@ -191,20 +253,31 @@ function isFunctionWord(word: string): boolean {
   );
 }
 
-// Le mot gardé, ou null pour un mot outil. Un mot à majuscule hors début de phrase est un nom propre (« La
-// Poste », « ON Semiconductor ») : il reste tel quel.
-function keptWord(raw: string, sentenceStart: boolean): string | null {
-  const word = raw.replace(AROUND, '');
+const startsWithCapital = (word: string) => {
   const first = word.charAt(0);
-  if (!sentenceStart && first !== first.toLowerCase()) return word;
+  return first !== first.toLowerCase();
+};
+
+// Le mot gardé, ou null pour un mot outil. Un mot à majuscule hors début de phrase est un nom propre (« La
+// Poste », « ON Semiconductor ») : il reste tel quel, sauf dans une requête dont la casse ne dit rien.
+function keptWord(
+  raw: string,
+  sentenceStart: boolean,
+  caseless: boolean,
+): { word: string; proper: boolean } | null {
+  const word = raw.replace(AROUND, '');
+  if (!caseless && !sentenceStart && startsWithCapital(word)) return { word, proper: true };
   const elided = ELISION.exec(word);
   const rest = elided && NORMALIZED.has(normalize(`${elided[1]}’`)) ? (elided[2] ?? '') : word;
   if (!hasWords(rest) || isFunctionWord(rest)) return null;
-  return rest;
+  return { word: rest, proper: false };
 }
 
 // Découpe à la manière de websearch_to_tsquery : "une expression", -mot ou -"expression" pour nier, le reste en
-// mots séparés par les espaces. Un guillemet qui ne se ferme pas ouvre une expression jusqu'à la fin.
+// mots séparés par les espaces. Un guillemet qui ne se ferme pas ouvre une expression jusqu'à la fin. Deux écarts
+// voulus : un tiret seul (« Compte rendu - budget ») est une ponctuation, pas une négation, comme chez Google ; et
+// deux tirets ou plus (« --force », une option de ligne de commande) gardent le mot, que Postgres lisait déjà
+// comme une double négation.
 function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   let at = 0;
@@ -234,11 +307,28 @@ function tokenize(text: string): Token[] {
     const raw = text.slice(at, end);
     at = end;
     if (!hasWords(raw)) tokens.push({ kind: 'ponctuation', raw });
-    else if (raw.startsWith('-'))
-      tokens.push({ kind: 'negation', raw, term: raw.replace(/^-+/, '') });
+    else if (raw.startsWith('-') && !raw.startsWith('--'))
+      tokens.push({ kind: 'negation', raw, term: raw.slice(1) });
     else tokens.push({ kind: 'mot', raw });
   }
   return tokens;
+}
+
+// L'opérateur « or », même suivi d'une ponctuation (« or, ») : Postgres le lit ainsi.
+const isOrOperator = (raw: string) => normalize(raw.replace(AROUND, '')) === OR_OPERATOR;
+
+// Une requête toute en capitales (« QUELLES SONT LES SAUVEGARDES ») ou dont plus de la moitié des mots portent une
+// majuscule (« Quelle Remise Vise Le Plan Zéphyr ») ne dit rien des noms propres : sa casse n'est pas lue, et
+// ses mots outils partent comme les autres. Un sigle seul (« contrat OVH ») ou deux noms propres dans une phrase
+// (« contrat avec ON Semiconductor ») ne suffisent pas.
+function isCaseless(tokens: Token[]): boolean {
+  const words = tokens
+    .filter((token) => token.kind === 'mot' && !isOrOperator(token.raw))
+    .map((token) => token.raw.replace(AROUND, ''))
+    .filter((word) => /\p{L}/u.test(word));
+  const cased = words.filter((word) => word.toLowerCase() !== word.toUpperCase());
+  if (cased.length >= 2 && cased.every((word) => word === word.toUpperCase())) return true;
+  return words.length >= 3 && words.filter(startsWithCapital).length * 2 > words.length;
 }
 
 // « or » ne relie que deux termes : en tête, en fin ou doublé (une fois les mots outils partis), il disparaît.
@@ -253,16 +343,33 @@ function tidyOperators(parts: Array<{ text: string; operator: boolean }>): strin
   return kept.map((part) => part.text);
 }
 
+type Candidate = { word: string; first: boolean; length: number; index: number };
+
+// Les mots de la passe élargie, dans l'ordre de la requête : tous s'ils sont WIDE_WORDS_MAX au plus ; sinon les
+// noms propres et les mots à chiffres d'abord, puis les plus longs, puis les premiers venus.
+function wideWords(candidates: Candidate[]): string[] {
+  if (candidates.length <= WIDE_WORDS_MAX) return candidates.map((candidate) => candidate.word);
+  return candidates
+    .toSorted(
+      (a, b) => Number(b.first) - Number(a.first) || b.length - a.length || a.index - b.index,
+    )
+    .slice(0, WIDE_WORDS_MAX)
+    .toSorted((a, b) => a.index - b.index)
+    .map((candidate) => candidate.word);
+}
+
 export function queryTerms(text: string): QueryTerms {
+  const tokens = tokenize(text);
+  const caseless = isCaseless(tokens);
   const parts: Array<{ text: string; operator: boolean }> = [];
-  const words: string[] = [];
+  const candidates: Candidate[] = [];
   const seen = new Set<string>();
   const phrases: string[] = [];
   const negated: string[] = [];
   let positive = false;
   let sentenceStart = true;
 
-  for (const token of tokenize(text)) {
+  for (const token of tokens) {
     switch (token.kind) {
       case 'expression':
         phrases.push(token.raw);
@@ -274,18 +381,23 @@ export function queryTerms(text: string): QueryTerms {
         parts.push({ text: token.raw, operator: false });
         break;
       case 'mot': {
-        if (normalize(token.raw) === OR_OPERATOR) {
-          parts.push({ text: token.raw, operator: true });
+        if (isOrOperator(token.raw)) {
+          parts.push({ text: token.raw.replace(AROUND, ''), operator: true });
           break;
         }
-        const word = keptWord(token.raw, sentenceStart);
-        if (word === null) break;
-        parts.push({ text: word, operator: false });
+        const kept = keptWord(token.raw, sentenceStart, caseless);
+        if (kept === null) break;
+        parts.push({ text: kept.word, operator: false });
         positive = true;
-        const key = normalize(word);
-        if (!seen.has(key) && words.length < WIDE_WORDS_MAX) {
+        const key = normalize(kept.word);
+        if (!seen.has(key)) {
           seen.add(key);
-          words.push(word);
+          candidates.push({
+            word: kept.word,
+            first: kept.proper || /\p{N}/u.test(kept.word),
+            length: [...kept.word.normalize('NFC')].length,
+            index: candidates.length,
+          });
         }
         break;
       }
@@ -297,5 +409,5 @@ export function queryTerms(text: string): QueryTerms {
 
   // Rien que des mots outils (« qui ? ») : la requête reste telle quelle, sans passe élargie.
   if (!positive) return { text, words: [], phrases, negated };
-  return { text: tidyOperators(parts).join(' '), words, phrases, negated };
+  return { text: tidyOperators(parts).join(' '), words: wideWords(candidates), phrases, negated };
 }

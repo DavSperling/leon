@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
+import { seedPassages } from '@/test/seed-search';
 import { listActivity } from './activity';
 import { EMBED_QUERY_TIMEOUT_MS, searchPassages } from './search';
 import type { SearchFilters, SearchPage } from './types';
@@ -459,6 +460,93 @@ describe('questions en phrase', () => {
     const question = await search(alice, 'Quelles sont les sauvegardes quotidiennes ?');
     expect(question.totalSources).toBe(10);
     expect(titles(question)).not.toContain('Partielle');
+  });
+
+  it('ne lance pas la passe élargie quand les titres remplissent déjà la page', async () => {
+    const { tenantId, alice } = await team();
+    const seedTitled = async (from: number, count: number) => {
+      for (let index = from; index < from + count; index += 1) {
+        // Trouvée par son titre seul : son texte ne contient aucun des mots.
+        await seedIndexed(alice, {
+          kind: 'linear',
+          acl: [tenantId],
+          title: `Sauvegardes quotidiennes ${index}`,
+          turns: [{ text: 'Rien à signaler.' }],
+        });
+      }
+    };
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Note',
+      turns: [{ text: 'Les sauvegardes hebdomadaires tournent.' }],
+    });
+    await seedTitled(0, 9);
+    const short = await search(alice, 'sauvegardes quotidiennes');
+    expect(short.totalSources).toBe(10);
+    expect(titles(short).at(-1)).toBe('Note');
+
+    await seedTitled(9, 1);
+    // Dix sources par leur titre : la passe élargie ne mettrait la note qu'en page 2, elle n'a pas lieu.
+    const full = await search(alice, 'sauvegardes quotidiennes');
+    expect(full.totalSources).toBe(10);
+    expect(titles(full)).not.toContain('Note');
+  });
+
+  it('ne lance pas la passe élargie quand les vecteurs remplissent déjà la page', async () => {
+    const { tenantId, alice } = await team();
+    const seedNear = async (from: number, count: number) => {
+      for (let index = from; index < from + count; index += 1) {
+        // Un mot sur deux en commun avec la requête : proche pour le factice, absent de la première passe.
+        await seedIndexed(alice, {
+          kind: 'linear',
+          acl: [tenantId],
+          title: `Ticket ${index}`,
+          turns: [{ text: 'Les sauvegardes.' }],
+        });
+      }
+    };
+    // Un mot en commun parmi une trentaine : loin pour le factice, trouvée par la passe élargie seule.
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Longue note',
+      turns: [
+        {
+          text:
+            'Le comité mensuel a passé en revue le calendrier, les recrutements, la communication, ' +
+            'les locaux, le séminaire, les congés, la charte graphique, le prestataire, la refonte, ' +
+            'les tarifs, le salon de novembre et enfin les sauvegardes.',
+        },
+      ],
+    });
+    await seedNear(0, 9);
+    const short = await search(alice, 'sauvegardes quotidiennes', { embedder: factice });
+    expect(short.mode).toBe('hybride');
+    expect(short.totalSources).toBe(10);
+    expect(titles(short).at(-1)).toBe('Longue note');
+
+    await seedNear(9, 1);
+    const full = await search(alice, 'sauvegardes quotidiennes', { embedder: factice });
+    expect(full.totalSources).toBe(10);
+    expect(titles(full)).not.toContain('Longue note');
+  });
+
+  it('ne laisse pas une longue source prendre toutes les places de la passe élargie', async () => {
+    const { tenantId, alice } = await team();
+    // Plus de passages que de candidats gardés (300), chacun plus pertinent pour « plan » que les deux tickets ne
+    // le sont pour « remise » : sans limite par source, la transcription remplirait seule la liste.
+    await seedPassages(alice, { count: 320, token: 'plan plan plan', acl: [tenantId] });
+    for (const title of ['Ticket A', 'Ticket B']) {
+      await seedIndexed(
+        alice,
+        { kind: 'linear', acl: [tenantId], title, turns: [{ text: 'La remise est validée.' }] },
+        null,
+      );
+    }
+    const page = await search(alice, 'remise plan');
+    expect(titles(page).toSorted()).toEqual(['Source de test', 'Ticket A', 'Ticket B']);
+    expect(page.hits.find((hit) => hit.title === 'Source de test')?.passages).toHaveLength(3);
   });
 });
 

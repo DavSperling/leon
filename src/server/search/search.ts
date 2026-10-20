@@ -40,12 +40,17 @@ import {
 // passages au plus sous chacune.
 //
 // Le plein texte se fait en deux passes (T06b), sur la requête sans ses mots outils (query-terms.ts) ; le titre et
-// les vecteurs gardent la requête entière. La première passe exige tous les mots. Quand elle trouve moins de
-// sources qu'une page, la passe élargie se contente d'un mot, mais garde les expressions exigées et les mots niés
-// exclus ; elle ne cherche que dans les sources qu'aucun classement n'a trouvées, se range après elles dans le
-// classement du plein texte (rangs à la suite), et ses sources passent après toutes les autres, d'abord celles
-// qui couvrent le plus de mots : entre deux rangs voisins, la fusion ne laisse qu'un écart de 2 % environ, que la
-// récence (jusqu'à 30 %) effacerait.
+// les vecteurs gardent la requête entière. La première passe exige tous les mots. Quand elle, les titres et les
+// vecteurs trouvent ensemble moins de sources qu'une page, la passe élargie se contente d'un mot, mais garde les
+// expressions exigées et les mots niés exclus ; elle ne cherche que dans les sources qu'aucun classement n'a
+// trouvées, se range après elles dans le classement du plein texte (rangs à la suite), et ses sources passent
+// après toutes les autres, d'abord celles qui couvrent le plus de mots : entre deux rangs voisins, la fusion ne
+// laisse qu'un écart de 2 % environ, que la récence (jusqu'à 30 %) effacerait. Le score d'une source de la passe
+// élargie peut donc dépasser celui d'une source rendue avant elle : l'ordre rendu est le classement.
+//
+// Coût : la sécurité par ligne empêche Postgres de se servir de l'index GIN du plein texte (l'opérateur `@@` n'est
+// pas « leakproof ») ; chaque passe lit donc tous les passages visibles de l'organisation, en temps proportionnel
+// au corpus. La passe élargie n'a lieu que si la page n'est pas pleine, sur WIDE_WORDS_MAX mots au plus.
 
 // Candidats gardés par classement : de quoi remplir quelques pages, sans classer toute la base.
 const CANDIDATES = 300;
@@ -277,6 +282,10 @@ async function rankedSources(
 
   // Réglages de cette transaction seulement (`set local`) ; les valeurs sont des constantes du code.
   await tx.execute(sql`set local pg_trgm.similarity_threshold = ${num(TITLE_SIMILARITY)}`);
+  // Pas de compilation à la volée (JIT) : Postgres la déclenche sur le coût estimé de la requête, que la passe
+  // élargie, même quand elle n'a pas lieu, porte au-delà du seuil ; elle coûte alors plus que la recherche elle-même
+  // (mesuré à la relecture de T06b : 930 ms au lieu de 318 ms sur 160 000 passages).
+  await tx.execute(sql`set local jit = off`);
   // Sans réglage accepté, plus de vecteurs : le plein texte seul répond (voir `tuneVectorIndex`).
   const vector = query.vector !== null && (await tuneVectorIndex(tx)) ? query.vector : null;
   const literal = vector ? `[${vector.join(',')}]` : null;
@@ -302,28 +311,42 @@ async function rankedSources(
         )`
       : sql`vec as (select null::uuid as passage_id, null::bigint as r where false)`;
 
-  // La passe élargie (T06b). La condition sur la première passe ne dépend d'aucune ligne : Postgres l'évalue une
-  // fois, avant tout parcours, et ne lit rien quand la page est déjà pleine. Les sources qu'un autre classement a
-  // trouvées en sont exclues : leurs passages, leurs extraits et leur score restent ceux d'avant.
+  // La passe élargie (T06b). `found` : les sources que les autres classements ont trouvées. La passe élargie n'a
+  // lieu que s'il y en a moins qu'une page : ses sources passent après les leurs, et ne viendraient sinon qu'en
+  // page 2. Cette condition ne dépend d'aucune ligne : Postgres l'évalue une fois, avant tout parcours, et ne lit
+  // rien quand la page est déjà pleine. Ces sources sont exclues de la passe élargie : leurs passages, leurs extraits
+  // et leur score restent ceux d'avant. Trois passages au plus par source parmi ses candidats, qui se comptent en
+  // passages : avec un seul mot exigé, une longue transcription prendrait sinon toutes les places. `materialized` :
+  // calculée une seule fois, quel que soit le plan (sur de petites tables, Postgres la réévaluait par ligne).
   const wideLeg = wide
-    ? sql`wide as (
+    ? sql`found as (
+        select source_id from ft1
+        union
+        select pv.source_id from vec v join passages pv on pv.tenant_id = ${tenant} and pv.id = v.passage_id
+        union
+        select source_id from title
+      ),
+      wide as materialized (
         select passage_id, covered,
                (select count(*) from ft1) + rank() over (order by covered desc, score desc) as r
         from (
-          select p.id as passage_id, ${coveredWords(terms)} as covered, ts_rank_cd(p.tsv, ${wide}) as score
-          from passages p
-          join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
-          where (select count(distinct source_id) from ft1) < ${num(PAGE_SIZE)}
-            and p.tenant_id = ${tenant} and p.tsv @@ ${wide} and ${passageWhere} and ${sourceWhere}
-            and not exists (select 1 from ft1 f where f.source_id = p.source_id)
-            and not exists (select 1 from title ti where ti.source_id = p.source_id)
-            and not exists (
-              select 1 from vec v
-              join passages pv on pv.tenant_id = p.tenant_id and pv.id = v.passage_id
-              where pv.source_id = p.source_id)
+          select passage_id, covered, score from (
+            select passage_id, covered, score,
+                   row_number() over (partition by source_id order by covered desc, score desc) as n
+            from (
+              select p.id as passage_id, p.source_id, ${coveredWords(terms)} as covered,
+                     ts_rank_cd(p.tsv, ${wide}) as score
+              from passages p
+              join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
+              where (select count(*) from found) < ${num(PAGE_SIZE)}
+                and p.tenant_id = ${tenant} and p.tsv @@ ${wide} and ${passageWhere} and ${sourceWhere}
+                and not exists (select 1 from found f where f.source_id = p.source_id)
+            ) matches
+          ) by_source
+          where n <= ${num(PASSAGES_PER_SOURCE)}
           order by covered desc, score desc
           limit ${num(CANDIDATES)}
-        ) matches
+        ) best
       )`
     : sql`wide as (select null::uuid as passage_id, null::int as covered, null::bigint as r where false)`;
 

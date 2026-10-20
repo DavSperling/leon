@@ -34,7 +34,18 @@ export const SearchOutputSchema = z.object({
   page: z.number().int(),
   totalSources: z.number().int(),
   unknownPeople: z.array(z.string()),
-  hits: z.array(SourceSchema.extend({ score: z.number(), passages: z.array(PassageSchema) })),
+  hits: z.array(
+    SourceSchema.extend({
+      // T06b : les sources qui ne contiennent qu'une partie des mots viennent après les autres, quel que soit leur
+      // score (récence, auteur) : le score ne se compare qu'entre sources voisines, l'ordre rendu est le classement.
+      score: z
+        .number()
+        .describe(
+          "Pertinence de la source, pour information : les sources sont rendues dans l'ordre du classement, et celles qui ne contiennent qu'une partie des mots cherchés viennent après les autres, quel que soit leur score.",
+        ),
+      passages: z.array(PassageSchema),
+    }),
+  ),
 });
 
 export const FetchOutputSchema = z.object({

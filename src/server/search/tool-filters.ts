@@ -6,6 +6,12 @@ import type { SearchFilters } from './types';
 // barre les lit (identifiant ou libellé d'outil, nature au singulier ou au pluriel, durées). Partagé par l'outil
 // `search` du MCP (T07) et les outils de l'agent de discussion (T11). Pur : ni base, ni réseau.
 
+// La requête, décrite à l'assistant (outil `search` du MCP, outil `chercher` de la discussion). Quand la recherche
+// trouve peu de sources qui contiennent tous les mots, elle ajoute celles qui n'en contiennent qu'une partie (passe
+// élargie, T06b) : un mot de plus n'écarte alors rien. Les guillemets et le signe moins, eux, resserrent toujours.
+export const QUERY_SYNTAX_DESCRIPTION =
+  'Les mots à chercher, ou une question en phrase. Les sources qui contiennent tous les mots passent devant celles qui n’en contiennent qu’une partie. Pour resserrer : "guillemets droits" pour une expression exacte, -mot pour écarter un mot.';
+
 // Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
 // guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.
 export function cleanFilterValue(value: string | null | undefined): string {

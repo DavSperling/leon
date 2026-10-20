@@ -6,12 +6,15 @@ import {
   FetchInputSchema,
   NEIGHBOUR_TURNS,
 } from '@/server/mcp/tools/fetch-tool';
+import { SearchOutputSchema } from '@/server/mcp/tools/output-schemas';
 import {
   SEARCH_DESCRIPTION,
   SEARCH_PAGE_MAX,
   SearchInputSchema,
 } from '@/server/mcp/tools/search-tool';
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
+import { queryTerms } from '@/server/search/query-terms';
+import { QUERY_SYNTAX_DESCRIPTION } from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
@@ -66,6 +69,22 @@ describe('description de search', () => {
 
   it("dit à l'assistant de lire avec fetch", () => {
     expect(SEARCH_DESCRIPTION).toContain('fetch');
+  });
+
+  // T06b : quand la première passe trouve peu de sources, un mot ajouté élargit au lieu de resserrer. La description
+  // de `query` donne les deux façons de resserrer, et la recherche les lit bien ainsi.
+  it('dit comment resserrer, avec la syntaxe que la recherche lit', () => {
+    expect(description(SearchInputSchema.shape.query)).toContain(QUERY_SYNTAX_DESCRIPTION);
+    expect(QUERY_SYNTAX_DESCRIPTION).toContain('"guillemets droits"');
+    expect(QUERY_SYNTAX_DESCRIPTION).toContain('-mot');
+    const terms = queryTerms('remise "plan b" -ovh');
+    expect(terms.phrases).toEqual(['"plan b"']);
+    expect(terms.negated).toEqual(['ovh']);
+  });
+
+  it('dit que le score n’est pas l’ordre des sources', () => {
+    const score = SearchOutputSchema.shape.hits.element.shape.score;
+    expect(score.description).toContain('ordre');
   });
 });
 

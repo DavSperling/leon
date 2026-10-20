@@ -72,6 +72,40 @@ describe('queryTerms : les mots outils', () => {
     expect(queryTerms('Quand ? Comment ? Le budget').text).toBe('budget');
   });
 
+  it('ne lit pas la casse d’une question toute en capitales ou à majuscule partout', () => {
+    expect(queryTerms('QUELLES SONT LES SAUVEGARDES QUOTIDIENNES ?')).toEqual({
+      text: 'SAUVEGARDES QUOTIDIENNES',
+      words: ['SAUVEGARDES', 'QUOTIDIENNES'],
+      phrases: [],
+      negated: [],
+    });
+    expect(queryTerms('QUELLE REMISE VISE LE PLAN ZÉPHYR ?').text).toBe('REMISE VISE PLAN ZÉPHYR');
+    expect(queryTerms('Quelle Remise Vise Le Plan Zéphyr ?').text).toBe('Remise Vise Plan Zéphyr');
+    // Un sigle seul, ou deux noms propres sur quatre mots, ne rendent pas la requête sans casse.
+    expect(queryTerms('contrat OVH').text).toBe('contrat OVH');
+    expect(queryTerms('Où en est le contrat de La Poste ?').text).toBe('contrat La Poste');
+  });
+
+  it('garde « dû » et « sûr », que la comparaison sans accents confondrait avec « du » et « sur »', () => {
+    expect(queryTerms('Quel est le montant dû ?').text).toBe('montant dû');
+    expect(queryTerms('Quel est le montant du devis ?').text).toBe('montant devis');
+    expect(queryTerms('Es-tu sûr du chiffre ?').text).toBe('sûr chiffre');
+    expect(queryTerms('MONTANT DÛ PAR ACME').text).toBe('MONTANT DÛ ACME');
+    expect(queryTerms('le serveur sur le site').text).toBe('serveur site');
+  });
+
+  it('retire les prépositions, conjonctions, adverbes et verbes vides courants', () => {
+    expect(
+      queryTerms('Peut-on avoir plus de détails sur la migration avant la fin du mois ?').text,
+    ).toBe('avoir détails migration fin mois');
+    expect(queryTerms('Faut-il tout refaire depuis le début ?').text).toBe('refaire début');
+    expect(queryTerms('Que font les commerciaux si le client doit payer ?').text).toBe(
+      'commerciaux client payer',
+    );
+    // « sommes » (des montants) reste : « être » au présent n'y perd qu'un mot que la passe élargie rattrape.
+    expect(queryTerms('Quelles sommes restent dues ?').text).toBe('sommes restent dues');
+  });
+
   it('ne touche jamais aux filtres de parseQuery', () => {
     const parsed = parseQuery('Quelles sont les sauvegardes de:alice outil:github depuis:7j', NOW);
     expect(parsed.people).toEqual(['alice']);
@@ -92,6 +126,44 @@ describe('queryTerms : les mots outils', () => {
     });
   });
 
+  it('lit un tiret seul comme une ponctuation, et nie seulement un mot collé à un seul tiret', () => {
+    // websearch_to_tsquery lirait « budget - plan » comme « budget sauf plan » : ici, comme chez Google, un tiret
+    // entouré d'espaces sépare (« Compte rendu - budget »), il ne nie rien.
+    expect(queryTerms('Compte rendu - budget')).toEqual({
+      text: 'Compte rendu budget',
+      words: ['Compte', 'rendu', 'budget'],
+      phrases: [],
+      negated: [],
+    });
+    expect(queryTerms('budget - "plan b"')).toEqual({
+      text: 'budget "plan b"',
+      words: ['budget'],
+      phrases: ['"plan b"'],
+      negated: [],
+    });
+    // Deux tirets ou plus : une option de ligne de commande, pas une négation (Postgres y lisait « !!force »,
+    // c'est-à-dire « force »). Les deux passes cherchent le mot.
+    expect(queryTerms('git push --force')).toEqual({
+      text: 'git push force',
+      words: ['git', 'push', 'force'],
+      phrases: [],
+      negated: [],
+    });
+    expect(queryTerms('budget -plan').negated).toEqual(['plan']);
+  });
+
+  it('lit « or » suivi d’une ponctuation comme l’opérateur, et retire un « or » final', () => {
+    // Postgres lit « or, » comme l'opérateur : la passe élargie ne doit pas en faire un mot.
+    expect(queryTerms('budget or, plan')).toEqual({
+      text: 'budget or plan',
+      words: ['budget', 'plan'],
+      phrases: [],
+      negated: [],
+    });
+    // Postgres garderait « or » final comme un mot exigé : ici, un opérateur sans second terme disparaît.
+    expect(queryTerms('budget or').text).toBe('budget');
+  });
+
   it('garde « or » entre deux mots, et le retire des mots de la passe élargie', () => {
     expect(queryTerms('quel contrat or quelle facture')).toEqual({
       text: 'contrat or facture',
@@ -104,10 +176,32 @@ describe('queryTerms : les mots outils', () => {
   });
 
   it('dédoublonne les mots de la passe élargie et en borne le nombre', () => {
+    expect(WIDE_WORDS_MAX).toBe(8);
     expect(queryTerms('budget Budget BUDGET acme').words).toEqual(['budget', 'acme']);
     const many = Array.from({ length: 40 }, (_, i) => `mot${i}`).join(' ');
     expect(queryTerms(many).words).toHaveLength(WIDE_WORDS_MAX);
     expect(queryTerms(many).text).toBe(many);
+  });
+
+  it('garde pour la passe élargie les noms propres, les mots à chiffres, puis les plus longs', () => {
+    // Treize mots : « v2 », « OVH » et « Zéphyr » d'abord, puis les cinq plus longs, dans l'ordre de la requête.
+    const terms = queryTerms(
+      'devis facture contrat remise plan budget v2 OVH Zéphyr migration hébergement serveur site',
+    );
+    expect(terms.words).toEqual([
+      'facture',
+      'contrat',
+      'v2',
+      'OVH',
+      'Zéphyr',
+      'migration',
+      'hébergement',
+      'serveur',
+    ]);
+    // La première passe garde tous les mots.
+    expect(terms.text).toBe(
+      'devis facture contrat remise plan budget v2 OVH Zéphyr migration hébergement serveur site',
+    );
   });
 
   it('ne lève rien sur les entrées bizarres', () => {
@@ -126,6 +220,13 @@ describe('queryTerms : les mots outils', () => {
       'l’',
       '-qui',
       '"a" "b"',
+      '- -',
+      '---x',
+      'or',
+      'or,',
+      'OR OR',
+      'DÛ',
+      'É',
     ]) {
       const terms = queryTerms(raw);
       expect(typeof terms.text).toBe('string');
@@ -158,8 +259,27 @@ describe('FUNCTION_WORDS', () => {
   });
 
   it('ne contient ni l’opérateur « or », ni les infinitifs, ni des mots porteurs de sens', () => {
-    for (const word of ['or', 'être', 'avoir', 'faire', 'dire', 'budget', 'contrat', 'plan']) {
+    for (const word of [
+      'or',
+      'être',
+      'avoir',
+      'faire',
+      'dire',
+      'budget',
+      'contrat',
+      'plan',
+      'sommes',
+      'bien',
+      'dû',
+      'sûr',
+    ]) {
       expect(FUNCTION_WORDS.has(word), word).toBe(false);
+    }
+  });
+
+  it('contient être, avoir, faire et dire au présent', () => {
+    for (const word of ['suis', 'est', 'sont', 'ai', 'a', 'ont', 'fais', 'fait', 'font', 'dit']) {
+      expect(FUNCTION_WORDS.has(word), word).toBe(true);
     }
   });
 });

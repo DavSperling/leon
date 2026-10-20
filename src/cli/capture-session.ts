@@ -16,9 +16,12 @@
 // - `transcript_path` s'écrit en tâche de fond et peut être en retard sur la conversation : les derniers tours
 //   manquants ne sont envoyés qu'à la prochaine capture de la même session (une session reprise, ou
 //   `leon import-claude-code` relancé). Le serveur ignore les tours déjà connus.
-// - SessionEnd ne se déclenche qu'à la sortie de Claude Code, à `/clear` et au `/resume` interactif : un terminal
-//   fermé, une session `claude -p` ou un plantage ne sont jamais captés par le crochet. `leon import-claude-code`
-//   reste le rattrapage de celles-là.
+// - SessionEnd se déclenche à la sortie de Claude Code, à `/clear` et au `/resume` interactif. Les sessions lancées
+//   par `claude -p` (scripts, automatisations, agents) le déclenchent aussi : sans `--bare`, `claude -p` charge les
+//   crochets de `~/.claude` comme une session interactive (https://code.claude.com/docs/en/headless), et sur SIGTERM
+//   il exécute les crochets SessionEnd avant de sortir ; seul `--bare` ne charge aucun crochet. La doc ne dit rien
+//   d'un terminal fermé de force ni d'un plantage : ces sessions peuvent ne pas être captées. `leon
+//   import-claude-code` reste le rattrapage de celles-là.
 //
 // Les textes passent par la même préparation que l'import (masquage des secrets, retrait des rappels système,
 // coupe des tours trop longs : `parseClaudeCodeSession`), puis le serveur la refait à la réception.

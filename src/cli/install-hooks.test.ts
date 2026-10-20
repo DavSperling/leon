@@ -43,21 +43,37 @@ const leonEnd = (command = END, timeout = 30) => ({
   hooks: [{ type: 'command', command, timeout }],
 });
 
+// Un jeton de la forme attendue (API_TOKEN_PATTERN), fictif.
+const FAKE_TOKEN = `leon_${'x'.repeat(43)}`;
+const asRoot = process.getuid?.() === 0; // root passe outre les droits : les essais en lecture seule n'ont pas de sens
+
 let dir: string;
 let configDir: string;
 let settingsPath: string;
 let backupPath: string;
+let locked: string[];
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'leon-install-hooks-'));
   configDir = join(dir, 'claude');
   settingsPath = join(configDir, SETTINGS_FILE);
   backupPath = join(configDir, BACKUP_FILE);
+  locked = [];
 });
 
 afterEach(async () => {
+  // Un dossier en lecture seule ne se supprime pas : on lui rend ses droits d'abord.
+  for (const path of locked) await chmod(path, 0o700);
   await rm(dir, { recursive: true, force: true });
 });
+
+// Un dépôt de Leon factice, avec ou sans `.env.local`.
+async function fakeRepo(envLocal: string | null): Promise<string> {
+  const repo = join(dir, 'depot');
+  await mkdir(repo, { recursive: true });
+  if (envLocal !== null) await writeFile(join(repo, '.env.local'), envLocal);
+  return repo;
+}
 
 async function writeSettings(content: unknown): Promise<string> {
   const text = typeof content === 'string' ? content : `${JSON.stringify(content, null, 2)}\n`;
@@ -254,6 +270,34 @@ describe('installHooks : un second passage', () => {
     expect(hooks.SessionEnd).toHaveLength(1);
   });
 
+  it('garde la sauvegarde d’avant Leon quand le dépôt change de place (la mise à jour ne l’écrase pas)', async () => {
+    const original = await writeSettings({ theme: 'dark' });
+    await install({ repoDir: '/ancien/leon', assumeYes: true });
+    expect(await readFile(settingsPath, 'utf8')).toContain('/ancien/leon');
+
+    const run = await install({ repoDir: '/nouveau/leon', assumeYes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('mise à jour');
+    expect(await readFile(settingsPath, 'utf8')).toContain('/nouveau/leon');
+    // Remettre la sauvegarde retire bien Leon : elle ne contient aucun de ses crochets.
+    expect(await readFile(backupPath, 'utf8')).toBe(original);
+    expect(await readFile(backupPath, 'utf8')).not.toContain('leon');
+  });
+
+  it('ne remplace jamais une sauvegarde qui existe déjà, et le dit avant d’écrire', async () => {
+    await writeSettings({ theme: 'dark' });
+    await writeFile(backupPath, '{"theme":"ancienne-copie"}\n');
+
+    const run = await install({ answers: ['oui'] });
+
+    expect(run.code).toBe(0);
+    expect(await readFile(backupPath, 'utf8')).toBe('{"theme":"ancienne-copie"}\n');
+    expect(run.output).toContain('existe déjà');
+    expect(run.output).not.toContain("l'ancien fichier est copié");
+    expect((await readSettings()).hooks.SessionStart).toEqual([leonStart()]);
+  });
+
   it('ne demande rien quand tout est déjà en place', async () => {
     await install({ assumeYes: true });
 
@@ -435,6 +479,198 @@ describe('installHooks : la confirmation', () => {
   });
 });
 
+describe('installHooks : le texte du consentement', () => {
+  it('dit que toutes les sessions, de tous les dossiers, partent chez Leon, y compris celles de `claude -p`', async () => {
+    const run = await install({ answers: ['non'] });
+    const lines = run.output.split('\n').join(' ');
+
+    expect(lines).toContain('TOUTES vos sessions Claude Code');
+    expect(lines).toContain('TOUS vos dossiers');
+    expect(lines).toContain('personnels');
+    // Une session lancée par un script est captée aussi (doc : « claude -p discovers and loads » les crochets) ;
+    // seul --bare ne charge aucun crochet.
+    expect(lines).toContain('claude -p');
+    expect(lines).toContain('--bare');
+  });
+
+  it('dit ce que les commandes demandent à l’environnement de Claude Code : pnpm, node et la mise en page', async () => {
+    const run = await install({ answers: ['non'] });
+    const lines = run.output.split('\n').join(' ');
+
+    expect(lines).toContain('PATH');
+    expect(lines).toContain('pnpm');
+    expect(lines).toContain('node');
+    expect(lines).toContain('packageManager');
+    expect(lines).toContain('mise en page');
+  });
+
+  it('dit le dossier voulu avant d’écrire, même avec --oui', async () => {
+    const run = await install({ assumeYes: true });
+
+    expect(run.output).toContain('TOUS vos dossiers');
+  });
+});
+
+describe('installHooks : les réglages du serveur dans le .env.local du dépôt', () => {
+  it('prévient quand le dépôt n’a pas de .env.local : les commandes ne feraient rien', async () => {
+    const repoDir = await fakeRepo(null);
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('LEON_URL manquante');
+    expect(run.output).toContain('LEON_TOKEN manquant');
+    expect(run.output).toContain(join(repoDir, '.env.local'));
+    expect(run.output).toContain("sortie d'erreur");
+    // Un simple avertissement : les crochets sont écrits quand même.
+    expect(await exists(settingsPath)).toBe(true);
+  });
+
+  it('ne prévient pas quand LEON_URL et LEON_TOKEN sont réglés (même avec « export » et des guillemets)', async () => {
+    const repoDir = await fakeRepo(
+      `# réglages\nexport LEON_URL="http://localhost:3000"\nLEON_TOKEN='${FAKE_TOKEN}'\n`,
+    );
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).not.toContain('manquant');
+    expect(run.output).not.toContain('Attention');
+  });
+
+  it.each([
+    ['des clés vides', 'LEON_URL=\nLEON_TOKEN=\n', ['LEON_URL manquante', 'LEON_TOKEN manquant']],
+    ['seul le jeton absent', 'LEON_URL=http://localhost:3000\n', ['LEON_TOKEN manquant']],
+    [
+      'un jeton qui n’a pas la forme voulue',
+      'LEON_URL=http://localhost:3000\nLEON_TOKEN=pas-un-jeton\n',
+      ['LEON_TOKEN manquant ou invalide'],
+    ],
+    [
+      'une adresse en http hors de la machine',
+      `LEON_URL=http://leon.exemple.test\nLEON_TOKEN=${FAKE_TOKEN}\n`,
+      ['LEON_URL manquante ou invalide'],
+    ],
+  ])('prévient avec %s', async (_name, envLocal, expected) => {
+    const repoDir = await fakeRepo(envLocal);
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    for (const text of expected) expect(run.output).toContain(text);
+    if (!expected.some((text) => text.startsWith('LEON_URL'))) {
+      expect(run.output).not.toContain('LEON_URL manquante');
+    }
+  });
+
+  it('n’affiche jamais une valeur du fichier, ni dans l’aperçu ni dans l’avertissement', async () => {
+    const repoDir = await fakeRepo(
+      'LEON_URL=http://adresse-secrete.exemple.test\nLEON_TOKEN=jeton-secret-0123456789\nAUTRE=valeur-secrete\n',
+    );
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.output).toContain('manquant');
+    for (const secret of ['adresse-secrete', 'jeton-secret', 'valeur-secrete']) {
+      expect(run.output).not.toContain(secret);
+    }
+  });
+
+  it('prévient aussi quand les crochets sont déjà en place', async () => {
+    const repoDir = await fakeRepo(null);
+    await install({ repoDir, assumeYes: true });
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.output).toContain('déjà en place');
+    expect(run.output).toContain('LEON_TOKEN manquant');
+  });
+});
+
+describe('installHooks : une écriture qui échoue', () => {
+  it.skipIf(asRoot)(
+    'dossier en lecture seule : message en français, rien de modifié, ni réglages ni copie',
+    async () => {
+      const original = await writeSettings({ theme: 'dark' });
+      await chmod(configDir, 0o500);
+      locked.push(configDir);
+
+      const run = await install({ assumeYes: true });
+
+      expect(run.code).toBe(1);
+      expect(run.output).toContain(`impossible d'écrire ${settingsPath}`);
+      expect(run.output).toContain('droits ou espace disque');
+      expect(run.output).toContain("Rien n'a été modifié");
+      expect(run.output).toContain('à la main');
+      // Pas le message brut du système.
+      expect(run.output).not.toContain('copyfile');
+      expect(await readFile(settingsPath, 'utf8')).toBe(original);
+      expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+    },
+  );
+
+  it.skipIf(asRoot)(
+    'dossier de réglages impossible à créer : même message, rien de créé',
+    async () => {
+      const parent = join(dir, 'parent-ferme');
+      await mkdir(parent);
+      await chmod(parent, 0o500);
+      locked.push(parent);
+
+      const lines: string[] = [];
+      const code = await installHooks(
+        { repoDir: REPO, configDir: join(parent, 'claude'), assumeYes: true },
+        {
+          out: (text) => lines.push(text),
+          err: (text) => lines.push(text),
+          ask: async () => '',
+        },
+      );
+
+      expect(code).toBe(1);
+      expect(lines.join('\n')).toContain("impossible d'écrire");
+      expect(await readdir(parent)).toEqual([]);
+    },
+  );
+
+  it.skipIf(asRoot)(
+    'la copie réussit mais l’écriture échoue : la copie faite pour rien est retirée',
+    async () => {
+      // Le fichier est un lien vers un dossier de réglages en lecture seule : la sauvegarde (à côté du lien) s'écrit,
+      // le fichier de travail (à côté du vrai fichier) non.
+      const dotfiles = join(dir, 'dotfiles');
+      const real = join(dotfiles, 'claude-settings.json');
+      await mkdir(dotfiles, { recursive: true });
+      await writeFile(real, '{"theme":"dark"}\n');
+      await mkdir(configDir, { recursive: true });
+      await symlink(real, settingsPath);
+      await chmod(dotfiles, 0o500);
+      locked.push(dotfiles);
+
+      const run = await install({ assumeYes: true });
+
+      expect(run.code).toBe(1);
+      expect(run.output).toContain("impossible d'écrire");
+      expect(await readFile(real, 'utf8')).toBe('{"theme":"dark"}\n');
+      expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+    },
+  );
+
+  it('un lien symbolique qui ne mène nulle part n’est pas « absent » : aucune écriture', async () => {
+    await mkdir(configDir, { recursive: true });
+    const missing = join(dir, 'dotfiles-non-montes', 'settings.json');
+    await symlink(missing, settingsPath);
+
+    const run = await install({ assumeYes: true });
+
+    expect(run.code).toBe(1);
+    expect(run.output).toContain('illisible');
+    expect(run.output).toContain("Rien n'a été écrit");
+    expect((await lstat(settingsPath)).isSymbolicLink()).toBe(true);
+    expect(await exists(join(dir, 'dotfiles-non-montes'))).toBe(false);
+    expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+  });
+});
+
 describe('installHooks : des réglages qu’on ne sait pas lire', () => {
   const unreadable = [
     ['du JSON coupé', '{ "theme": '],
@@ -537,15 +773,17 @@ describe('installHooks : les avertissements', () => {
     expect(run.output).not.toContain('disableAllHooks');
   });
 
-  it('prévient quand le dépôt est un dossier de travail temporaire (worktree)', async () => {
+  it('prévient quand le dépôt est un dossier de travail Git temporaire, sans jargon anglais', async () => {
     const run = await install({
       repoDir: '/Users/amos/leon/.claude/worktrees/une-tache',
       assumeYes: true,
     });
 
     expect(run.code).toBe(0);
-    expect(run.output).toContain('dossier de travail temporaire');
+    expect(run.output).toContain('dossier de travail Git temporaire');
     expect(run.output).toContain('--depot');
+    // Le mot anglais n'est que dans le chemin (« worktrees »), jamais dans la phrase.
+    expect(run.output.replaceAll('/.claude/worktrees/', '/')).not.toMatch(/worktree/i);
   });
 
   it('ne prévient pas pour le clone principal', async () => {
@@ -596,5 +834,47 @@ describe('le README', () => {
     expect(text).toContain("## L'IA à jour chaque matin");
     expect(text).not.toContain('Briefing au démarrage');
     expect(text).toContain('pnpm leon installer-crochets');
+  });
+
+  // La doc officielle (https://code.claude.com/docs/en/headless) : sans --bare, `claude -p` charge les crochets
+  // de ~/.claude, et sur SIGTERM il exécute les crochets SessionEnd. Le texte de consentement ne doit pas
+  // annoncer moins d'envois qu'il n'y en a.
+  it('ne dit pas qu’une session `claude -p` échappe au crochet, et cite --bare', async () => {
+    const text = await readme();
+    const quand = text.split('\n').find((line) => line.startsWith('- **Quand**'));
+
+    expect(quand).toBeDefined();
+    expect(quand).toContain('claude -p');
+    expect(quand).toContain('--bare');
+    expect(quand).toContain('import-claude-code');
+    expect(quand).not.toMatch(/ne sont pas capt/);
+    expect(text).not.toMatch(/claude -p`[^.\n]*(?:pas|jamais) capt/);
+    // Un plantage ou un terminal fermé de force : la doc n'en dit rien, le texte ne l'affirme pas.
+    expect(quand).toMatch(/peu(?:t|vent) ne pas l.être/);
+  });
+
+  it('dit que toutes les sessions de tous les dossiers sont envoyées, et que Claude Code attend l’approbation du dossier', async () => {
+    const text = await readme();
+
+    expect(text).toContain('toutes vos sessions Claude Code');
+    expect(text).toContain('tous vos dossiers');
+    expect(text).toMatch(/approuv/);
+    expect(text).toContain('PATH');
+  });
+
+  it('dit que la sauvegarde est la première copie, que la mise en page peut changer et que le projet n’est pas touché', async () => {
+    const text = await readme();
+
+    expect(text).not.toContain("est la copie d'avant l'installation");
+    expect(text).toContain('première copie');
+    expect(text).toContain('mise en page');
+    expect(text).toContain('réglages du projet');
+  });
+
+  it('le commentaire de capture-session.ts ne dit pas non plus que `claude -p` échappe au crochet', async () => {
+    const source = await readFile(`${REPO_ROOT}src/cli/capture-session.ts`, 'utf8');
+
+    expect(source).not.toContain('ne sont jamais captés');
+    expect(source).toContain('--bare');
   });
 });

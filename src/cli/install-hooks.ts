@@ -28,14 +28,30 @@
 //   `pnpm … leon capter-session`) et garde tout le reste, dans son ordre ;
 // - met à jour ces entrées quand le dépôt a changé de place, au lieu d'en ajouter une seconde, et n'écrit rien
 //   quand tout est déjà en place ;
-// - copie l'ancien fichier dans `settings.json.leon-sauvegarde` avant d'écrire, avec les mêmes droits ;
+// - copie le fichier dans `settings.json.leon-sauvegarde` avant d'écrire, avec les mêmes droits, mais seulement si
+//   cette sauvegarde n'existe pas : la première copie, celle d'avant Leon, n'est jamais remplacée (une mise à jour de
+//   ses crochets y mettrait des crochets de Leon) ;
 // - écrit dans un fichier voisin puis le renomme, à travers un lien symbolique éventuel, et refuse d'écrire si le
 //   fichier a changé pendant que l'utilisateur confirmait ;
-// - ne recopie jamais le contenu des réglages dans ses messages.
+// - répond en français, sans rien modifier, à une écriture impossible (droits, disque plein) ou à un fichier qui est
+//   un lien symbolique vers un fichier absent ;
+// - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
+//   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
+// - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
+//
+// Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
+// le crochet est dans les réglages de l'utilisateur, donc vaut pour tous ses dossiers. Sans `--bare`, `claude -p`
+// charge les crochets de `~/.claude` comme une session interactive (et sur SIGTERM exécute les crochets SessionEnd) :
+// ses sessions sont envoyées elles aussi. En session interactive, Claude Code retient les crochets, même ceux de
+// `~/.claude/settings.json`, tant que le dossier n'est pas approuvé (« Workspace trust ») ; `-p` ne montre jamais cette
+// fenêtre et tient le dossier pour approuvé. Les crochets de tous les fichiers de réglages s'additionnent : seuls
+// deux gestionnaires strictement identiques ne s'exécutent qu'une fois.
 import { randomBytes } from 'node:crypto';
+import { constants } from 'node:fs';
 import {
   chmod,
   copyFile,
+  lstat,
   mkdir,
   readFile,
   realpath,
@@ -45,7 +61,8 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { join } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
+import { isDeepStrictEqual, parseEnv } from 'node:util';
+import { parseServerEnv } from './env';
 import { type HookSubcommand, hookCommand } from './hook-commands';
 
 // 7,5 s au pire pour le démarrage (briefing.ts) : 10 s. Pour la fin de session, 30 s sont de la marge sur les 15 s
@@ -74,7 +91,7 @@ const HOOKS: readonly HookSpec[] = [
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: "à la fin d'une session, envoie le texte des échanges à Leon (secrets masqués) ; la conversation reste privée à son auteur.",
+    role: 'à la fin de chaque session, envoie le texte des échanges à Leon (secrets masqués) ; la conversation reste privée à son auteur.',
   },
 ];
 
@@ -180,15 +197,27 @@ type Loaded =
   | { kind: 'unreadable' }
   | { kind: 'present'; text: string; realPath: string; mode: number };
 
-// Les réglages tels qu'ils sont sur le disque : absents, illisibles (accès refusé, dossier…) ou présents.
+// Les réglages tels qu'ils sont sur le disque : absents, illisibles (accès refusé, dossier, lien symbolique vers un
+// fichier absent…) ou présents.
 async function load(path: string): Promise<Loaded> {
+  let realPath: string;
   try {
-    const realPath = await realpath(path); // à travers un lien symbolique : on écrit le fichier lui-même
+    realPath = await realpath(path); // à travers un lien symbolique : on écrit le fichier lui-même
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException | null)?.code !== 'ENOENT') return { kind: 'unreadable' };
+    // `realpath` répond « absent » aussi pour un lien qui ne mène nulle part (réglages versionnés dans un dossier non
+    // monté) : il serait remplacé par un fichier ordinaire. Si le lien lui-même existe, on n'y touche pas.
+    const linkExists = await lstat(path).then(
+      () => true,
+      () => false,
+    );
+    return linkExists ? { kind: 'unreadable' } : { kind: 'absent' };
+  }
+  try {
     const [text, info] = await Promise.all([readFile(realPath, 'utf8'), stat(realPath)]);
     return { kind: 'present', text, realPath, mode: info.mode & 0o777 };
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException | null)?.code;
-    return code === 'ENOENT' ? { kind: 'absent' } : { kind: 'unreadable' };
+  } catch {
+    return { kind: 'unreadable' };
   }
 }
 
@@ -226,7 +255,30 @@ const ACTION_LABELS: Record<HookChange['action'], string> = {
 
 const README_HINT = "voir le README, section « L'IA à jour chaque matin »";
 
-function warnings(settings: Json, repoDir: string): string[] {
+// Les réglages du serveur que les deux commandes liront à chaque lancement : le `.env.local` du dépôt (le script
+// `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de `pnpm --dir`).
+// On lit le fichier avec le même lecteur que node (`parseEnv`) et on le juge comme la CLI (`parseServerEnv`). Les
+// messages de `parseServerEnv` sont fixes : aucune valeur du fichier n'est jamais recopiée.
+async function serverEnvWarnings(repoDir: string): Promise<string[]> {
+  const envPath = join(repoDir, '.env.local');
+  let values: NodeJS.Dict<string> = {};
+  try {
+    values = parseEnv(await readFile(envPath, 'utf8'));
+  } catch {
+    // Absent ou illisible : traité comme vide.
+  }
+  try {
+    parseServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN });
+    return [];
+  } catch (error) {
+    const problem = error instanceof Error ? error.message : 'réglages du serveur invalides.';
+    return [
+      `Attention : ${envPath} ne donne pas au serveur de quoi se connecter : ${problem} Sans cela, les deux commandes ne font rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas (ignorez ce message si vous posez ces deux variables dans l'environnement qui lance Claude Code).`,
+    ];
+  }
+}
+
+async function warnings(settings: Json, repoDir: string): Promise<string[]> {
   const found: string[] = [];
   if (settings.disableAllHooks === true) {
     found.push(
@@ -235,13 +287,31 @@ function warnings(settings: Json, repoDir: string): string[] {
   }
   if (repoDir.includes('/.claude/worktrees/')) {
     found.push(
-      `Attention : ${repoDir} est un dossier de travail temporaire (un worktree) : s'il est supprimé, les crochets cesseront de marcher. Lancez la commande depuis le clone principal de Leon, ou donnez-le avec --depot <chemin>.`,
+      `Attention : ${repoDir} est un dossier de travail Git temporaire : s'il est supprimé, les crochets cesseront de marcher. Lancez la commande depuis le clone principal de Leon, ou donnez-le avec --depot <chemin>.`,
     );
   }
+  found.push(...(await serverEnvWarnings(repoDir)));
   return found;
 }
 
-function preview(path: string, changes: HookChange[], backup: string | null): string[] {
+type BackupPlan =
+  | { kind: 'none' } // pas de fichier : rien à sauvegarder
+  | { kind: 'copy'; path: string } // la sauvegarde sera créée
+  | { kind: 'keep'; path: string }; // une sauvegarde existe déjà : elle est gardée telle quelle
+
+function backupLine(backup: BackupPlan): string {
+  const untouched =
+    'Vos autres réglages et crochets ne sont pas touchés (leurs valeurs et leur ordre restent ; la mise en page du fichier peut changer)';
+  if (backup.kind === 'none') {
+    return `Le fichier n'existe pas encore : il sera créé. ${untouched}.`;
+  }
+  if (backup.kind === 'keep') {
+    return `${untouched}. ${backup.path} existe déjà : cette première copie est gardée telle quelle, l'ancien fichier n'y est pas recopié.`;
+  }
+  return `${untouched} ; l'ancien fichier est copié dans ${backup.path}.`;
+}
+
+function preview(path: string, changes: HookChange[], backup: BackupPlan): string[] {
   const lines = [`Crochets de Leon pour ${path} :`, ''];
   for (const change of changes) {
     const spec = HOOKS.find((hook) => hook.event === change.event);
@@ -253,13 +323,30 @@ function preview(path: string, changes: HookChange[], backup: string | null): st
     );
   }
   lines.push(
+    'Ce qui sera envoyé : ces crochets sont dans vos réglages personnels, donc à la fin de TOUTES vos sessions Claude Code, dans TOUS vos dossiers (personnels compris), le texte des échanges part vers le serveur de Leon (secrets masqués). Les sessions lancées par un script (`claude -p`) sont envoyées aussi, sauf avec `--bare`, qui ne charge aucun crochet.',
     'Les deux commandes parlent au serveur de LEON_URL, avec LEON_TOKEN, lus dans le fichier .env.local du dépôt.',
-    backup === null
-      ? "Le fichier n'existe pas encore : il sera créé. Vos autres réglages et crochets ne sont pas touchés."
-      : `Vos autres réglages et crochets ne sont pas touchés ; l'ancien fichier est copié dans ${backup}.`,
+    'Elles demandent `pnpm` (de la version du champ « packageManager » de package.json : une autre version irait chercher la bonne sur le réseau et dépasserait le délai) et `node` 24 ou plus dans le PATH de Claude Code, que ne voit pas toujours un Claude Code lancé depuis un éditeur ou une application.',
+    backupLine(backup),
   );
   return lines;
 }
+
+// La copie d'avant Leon : faite une seule fois. Rend true si ce passage l'a créée.
+async function saveBackup(from: string, to: string): Promise<boolean> {
+  try {
+    await copyFile(from, to, constants.COPYFILE_EXCL);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException | null)?.code === 'EEXIST') return false;
+    throw error;
+  }
+}
+
+const exists = (path: string) =>
+  lstat(path).then(
+    () => true,
+    () => false,
+  );
 
 // Rend le code de sortie : 0 si les crochets sont en place ou si l'utilisateur a refusé, 1 si les réglages n'ont pas
 // pu être lus ou ont changé en route.
@@ -276,7 +363,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   const loaded = await load(path);
   const unreadable = () =>
     refuse(
-      "est illisible : ce n'est pas un objet JSON valide (Claude Code lit du JSON strict, sans commentaire ni virgule finale) ou le fichier est inaccessible.",
+      "est illisible : ce n'est pas un objet JSON valide (Claude Code lit du JSON strict, sans commentaire ni virgule finale) ou le fichier est inaccessible (droits, lien symbolique vers un fichier absent).",
     );
   if (loaded.kind === 'unreadable') return unreadable();
   let settings: Json = {};
@@ -299,14 +386,18 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     return refuse(`n'a pas la forme attendue (${error.message}).`);
   }
 
-  const alerts = warnings(settings, options.repoDir);
+  const alerts = await warnings(settings, options.repoDir);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     deps.out(`Les deux crochets de Leon sont déjà en place dans ${path} : rien à faire.`);
     return 0;
   }
 
-  for (const line of preview(path, plan.changes, loaded.kind === 'present' ? backup : null)) {
+  const backupPlan: BackupPlan =
+    loaded.kind !== 'present'
+      ? { kind: 'none' }
+      : { kind: (await exists(backup)) ? 'keep' : 'copy', path: backup };
+  for (const line of preview(path, plan.changes, backupPlan)) {
     deps.out(line);
   }
   for (const line of alerts) deps.out(`\n${line}`);
@@ -327,12 +418,24 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     return 1;
   }
 
-  await mkdir(options.configDir, { recursive: true, mode: 0o700 });
-  if (loaded.kind === 'present') await copyFile(loaded.realPath, backup);
-  await writeAtomically(path, loaded, `${JSON.stringify(plan.settings, null, 2)}\n`);
+  // Une écriture impossible (droits, disque plein) ne laisse rien derrière elle : pas de réglages coupés (l'écriture
+  // est atomique), et la sauvegarde que ce passage vient de créer est retirée.
+  let backupCreated = false;
+  try {
+    await mkdir(options.configDir, { recursive: true, mode: 0o700 });
+    if (loaded.kind === 'present') backupCreated = await saveBackup(loaded.realPath, backup);
+    await writeAtomically(path, loaded, `${JSON.stringify(plan.settings, null, 2)}\n`);
+  } catch (error) {
+    if (backupCreated) await unlink(backup).catch(() => {});
+    const code = (error as NodeJS.ErrnoException | null)?.code;
+    deps.err(
+      `Leon : impossible d'écrire ${path} (droits ou espace disque${typeof code === 'string' ? ` : ${code}` : ''}). Rien n'a été modifié : ajoutez les crochets à la main (${README_HINT}).`,
+    );
+    return 1;
+  }
 
   deps.out(`\nCrochets installés dans ${path}.`);
-  if (loaded.kind === 'present') deps.out(`L'ancien fichier est copié dans ${backup}.`);
+  if (backupCreated) deps.out(`L'ancien fichier est copié dans ${backup}.`);
   deps.out(
     `Claude Code relit ce fichier tout seul ; sinon, ils servent dès le prochain démarrage. Pour les retirer, supprimez ces deux entrées (${README_HINT}).`,
   );

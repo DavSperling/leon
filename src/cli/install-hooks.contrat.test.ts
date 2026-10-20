@@ -83,8 +83,16 @@ async function seedSettings(text: string): Promise<void> {
   await writeFile(settingsPath, text);
 }
 
-function runShell(command: string, input: string): Promise<Outcome> {
-  return spawnAndWait('/bin/sh', ['-c', command], { cwd: project, env: cleanEnv(), input });
+function runShell(
+  command: string,
+  input: string,
+  extraEnv: Record<string, string> = {},
+): Promise<Outcome> {
+  return spawnAndWait('/bin/sh', ['-c', command], {
+    cwd: project,
+    env: cleanEnv(extraEnv),
+    input,
+  });
 }
 
 beforeAll(async () => {
@@ -223,6 +231,76 @@ describe('leon installer-crochets', () => {
 
       expect(outcome.code).toBe(1);
       await expect(readdir(configDir)).rejects.toThrow();
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'l’aide de la CLI cite la commande et ses deux options',
+    async () => {
+      const { stdout } = await spawnAndWait(
+        process.execPath,
+        ['--import', 'tsx', 'src/cli/leon.ts', 'help'],
+        { cwd: REPO_ROOT, env: cleanEnv(), input: '' },
+      );
+
+      expect(stdout).toMatch(/^ {2}installer-crochets /m);
+      expect(stdout).toContain('--oui');
+      expect(stdout).toContain('--depot');
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // La chaîne réelle, sans faux dépôt : le crochet écrit par la commande, le shell, `pnpm --dir`, le script `leon` de
+  // package.json (`node --env-file-if-exists=.env.local --import tsx src/cli/leon.ts`) et la CLI. LEON_URL et
+  // LEON_TOKEN sont posés dans l'environnement du crochet : ils l'emportent sur le .env.local du développeur (jamais
+  // lu ici), et le port 1 refuse toute connexion : aucun appel réel, aucune vraie clé. Le crochet ne doit rien
+  // écrire sur la sortie standard (SessionStart l'ajouterait au contexte), sortir avec 0 et le dire sur la sortie
+  // d'erreur, sans jeton ni texte de session.
+  it(
+    'les commandes écrites, lancées avec le vrai dépôt et le vrai pnpm, sortent avec 0, sans rien sur la sortie standard',
+    async () => {
+      const fakeToken = `leon_${'y'.repeat(43)}`;
+      const sessionText = 'Texte fictif de session, ne doit jamais ressortir.';
+      const sessionFile = join(dir, 'session-fictive.jsonl');
+      await writeFile(
+        sessionFile,
+        [
+          JSON.stringify({
+            type: 'user',
+            uuid: 'u-1',
+            sessionId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+            timestamp: '2026-10-20T08:01:00.000Z',
+            cwd: project,
+            isSidechain: false,
+            message: { role: 'user', content: sessionText },
+          }),
+        ].join('\n'),
+      );
+      await leon(['installer-crochets', '--oui']); // le dépôt qui lance la commande : le vrai
+      const { hooks } = JSON.parse(await readFile(settingsPath, 'utf8'));
+      const start: string = hooks.SessionStart[0].hooks[0].command;
+      const end: string = hooks.SessionEnd[0].hooks[0].command;
+      expect(start).toContain(shellQuote(resolve(REPO_ROOT)));
+      const hookEnv = { LEON_URL: 'http://127.0.0.1:1', LEON_TOKEN: fakeToken };
+      const endJson = JSON.stringify({
+        session_id: 's1',
+        transcript_path: sessionFile,
+        cwd: project,
+        hook_event_name: 'SessionEnd',
+        reason: 'other',
+      });
+
+      const started = await runShell(start, START_JSON, hookEnv);
+      const ended = await runShell(end, endJson, hookEnv);
+
+      for (const outcome of [started, ended]) {
+        expect(outcome.code).toBe(0);
+        expect(outcome.stdout).toBe('');
+        expect(outcome.stderr).toContain('Leon');
+        expect(outcome.stderr).not.toContain(fakeToken);
+        expect(outcome.stderr).not.toContain(sessionText);
+      }
     },
     TEST_TIMEOUT_MS,
   );

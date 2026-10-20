@@ -378,6 +378,12 @@ function outcomeColumns(outcome: SyncOutcome) {
   return { status: 'error', nextSync, lastError: cut(outcome.message, LAST_ERROR_MAX) };
 }
 
+// « Synchroniser maintenant » (ou une clé remplacée, une reprise) pendant le passage pose une
+// échéance après `last_sync_started_at` : elle est gardée au lieu d'être écrasée.
+const requestedDuringSync = (nextSync: SQL) =>
+  sql`case when ${connections.nextSyncAt} > ${connections.lastSyncStartedAt}
+    then ${connections.nextSyncAt} else ${nextSync} end`;
+
 // Sans effet si une autre relève a repris la réservation : c'est elle qui finira.
 export async function finishSync(
   ctx: TenantContext,
@@ -391,7 +397,7 @@ export async function finishSync(
       .update(connections)
       .set({
         status: unlessPaused(sql`${status}::text`, connections.status),
-        nextSyncAt: unlessPaused(nextSync, NO_DATE),
+        nextSyncAt: unlessPaused(requestedDuringSync(nextSync), NO_DATE),
         lastError,
         lastSyncAt: outcome.kind === 'ok' ? sql`now()` : undefined,
         syncLockAt: null,

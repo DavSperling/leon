@@ -354,6 +354,20 @@ describe('finishSync', () => {
     expect(row.seconds_to_next).toBeLessThanOrEqual(3_600);
   });
 
+  // « Synchroniser maintenant » cliqué pendant le passage : la demande n'est pas écrasée.
+  it('garde une échéance demandée après le début du passage', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+
+    expect(await requestSyncNow(paul, id)).toBe(true);
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'later' });
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+    expect(row.sync_lock_at).toBeNull();
+  });
+
   it("une pause demandée pendant le passage l'emporte", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);

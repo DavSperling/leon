@@ -202,6 +202,9 @@ export async function ensureFreshTokens(
     expiresAt: tokens.expiresAt,
   };
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
-  await saveOAuthTokens(ctx, connection.id, renewed, secretFields, { reconnect: false });
+  // Refusé si « Reconnecter » a changé les jetons entre-temps : les siens restent en base, et ce
+  // passage-ci finit avec ceux-ci, qui restent valables.
+  const options = { reconnect: false, renewedFrom: config.refreshToken } as const;
+  await saveOAuthTokens(ctx, connection.id, renewed, secretFields, options);
   return renewed;
 }

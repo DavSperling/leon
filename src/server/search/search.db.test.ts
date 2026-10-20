@@ -450,6 +450,22 @@ describe('questions en phrase', () => {
     }
   });
 
+  // Audit 2 n° 14 : « de:marie -budget » rendait les sources de Marie, budget compris.
+  it('applique l’exclusion d’une requête faite de filtres et d’exclusions, sous toutes ses formes', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Budget', 'Les budgets du trimestre sont validés.'],
+      ['Autre', 'La réunion est déplacée à jeudi.'],
+    ] as const) {
+      await seedIndexed(alice, { kind: 'linear', acl: [tenantId], title, turns: [{ text }] });
+    }
+    for (const embedder of [null, factice]) {
+      const page = await search(alice, 'outil:linear -budget', { embedder });
+      expect(titles(page)).toEqual(['Autre']);
+      expect(page.totalSources).toBe(1);
+    }
+  });
+
   it('ne lève aucune erreur sur une question faite de mots outils', async () => {
     const { alice } = await team();
     await seedIndexed(alice, { turns: [{ text: 'Qui a validé le budget ?' }] });

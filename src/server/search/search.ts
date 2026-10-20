@@ -106,6 +106,13 @@ const excluded = (terms: QueryTerms): SQL =>
     sql``,
   );
 
+// Sans mot à chercher (« de:marie -budget ») : le passage ne contient aucune forme d'un mot nié.
+const withoutNegated = (terms: QueryTerms): SQL =>
+  sql.join(
+    [sql`true`, ...terms.negated.map((term) => sql`not (p.tsv @@ ${fullText(term)})`)],
+    sql` and `,
+  );
+
 // La requête de la première passe : tous les mots, et aucune forme d'un mot nié.
 const firstQuery = (terms: QueryTerms): SQL => sql`(${fullText(terms.text)}${excluded(terms)})`;
 
@@ -508,7 +515,8 @@ export async function searchPassages(
 ): Promise<SearchPage> {
   const now = input.now ?? new Date();
   const parsed = parseQuery(input.query, now);
-  const searchable = hasWords(parsed.text) && !onlyExclusions(queryTerms(parsed.text));
+  const terms = queryTerms(parsed.text);
+  const searchable = hasWords(parsed.text) && !onlyExclusions(terms);
   const requested = input.page ?? 1;
   const page = Number.isInteger(requested) && requested >= 1 ? Math.min(requested, PAGE_MAX) : 1;
   const offset = (page - 1) * PAGE_SIZE;
@@ -529,7 +537,7 @@ export async function searchPassages(
     // Sans mot à chercher : les sources les plus récentes qui passent les filtres, s'il y en a.
     if (!hasFilters(filters)) return empty;
     const recent = await withTenant(ctx, (tx) =>
-      recentSources(tx, ctx, filters, { limit: PAGE_SIZE, offset }),
+      recentSources(tx, ctx, filters, { limit: PAGE_SIZE, offset }, withoutNegated(terms)),
     );
     return { hits: recent.hits, totalSources: recent.total, mode: 'plein-texte', unknownPeople };
   }

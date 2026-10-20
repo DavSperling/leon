@@ -106,8 +106,8 @@ function preFieldsFromForm(
 
 type Start = { preFields: Record<string, unknown>; reconnectId: string | null };
 
-// « Reconnecter » : la connexion doit exister, être de cet outil, gérable par l'utilisateur (créateur
-// ou administrateur), et ses champs ouverts servent de champs avant le clic. Sinon les champs viennent du formulaire. null : champs refusés.
+// « Reconnecter » : la connexion doit exister, être de cet outil, avoir été branchée par l'utilisateur
+// (un administrateur y mettrait son propre compte), et ses champs ouverts servent de champs avant le clic. Sinon les champs viennent du formulaire. null : champs refusés.
 async function startFields(
   ctx: TenantContext,
   provider: ProviderId,
@@ -123,7 +123,7 @@ async function startFields(
   const stored = id.success
     ? (await listConnections(ctx)).find((view) => view.id === id.data && view.provider === provider)
     : undefined;
-  if (!stored?.canManage) return 'absent';
+  if (!stored?.isCreator) return 'absent';
   const kept = spec.preFields.filter((name) => name in stored.config);
   return {
     preFields: Object.fromEntries(kept.map((name) => [name, stored.config[name]])),
@@ -248,7 +248,7 @@ async function connect(
   const { account } = await verifyConfig(connector, config, http);
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
-    const options = { reconnect: true };
+    const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, config, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
     return;

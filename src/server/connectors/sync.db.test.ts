@@ -168,6 +168,23 @@ describe('runConnectorSync : un passage qui réussit', () => {
     expect((await sourceCount(id)).total).toBe(1);
     expect(await readRow(id)).toMatchObject({ cursor: 'page-1', items_synced: 1 });
   });
+
+  // Audit 2 n° 16 : une page qui retire des éléments (Outlook : un événement devenu privé) retire
+  // leurs sources ; les autres restent.
+  it('retire la source d’un élément retiré par une page (removed)', async () => {
+    const id = await dueConnection();
+    await run(id, fakeConnector({ items: 3, pageSize: 3 }));
+    await makeDue(id);
+    const removal = inlineConnector(async () => [{ items: [], removed: ['fake:2'], cursor: '3' }]);
+
+    expect(await run(id, removal)).toBe('ok');
+
+    const { rows } = await adminPool.query<{ external_id: string }>(
+      'select external_id from sources where connection_id = $1 order by external_id',
+      [id],
+    );
+    expect(rows.map((row) => row.external_id)).toEqual(['fake:1', 'fake:3']);
+  });
 });
 
 // Audit n° 4 : une autre relève a repris la connexion en plein passage (réservation jugée

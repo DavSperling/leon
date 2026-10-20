@@ -398,14 +398,18 @@ describe('finishSync', () => {
 });
 
 describe('requestSyncNow', () => {
-  it("met l'échéance à maintenant et repasse une connexion en erreur à active", async () => {
-    const id = await seedConnection(paul, { status: 'error', nextSyncAt: null });
+  // Audit 2 n° 13 b : l'erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
+  it("met l'échéance à maintenant, sans toucher au statut ni à l'erreur", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
 
     expect(await requestSyncNow(paul, id)).toBe(true);
 
     const row = await readRow(id);
     await makeNotDue(id);
-    expect(row.status).toBe('active');
+    expect(row.status).toBe('error');
+    expect(row.last_error).toBe('Clé refusée par GitHub.');
     expect(row.next_sync_at).not.toBeNull();
     expect(row.seconds_to_next).toBeLessThanOrEqual(0);
   });
@@ -460,7 +464,7 @@ describe('replaceConnectionSecret', () => {
     const before = (await readRow(id)).secret;
 
     const replaced = await replaceConnectionSecret(
-      marie,
+      paul,
       id,
       { ...atlassian.config, apiToken: 'nouveau-jeton-ZZ99' },
       atlassian.secretFields,
@@ -521,12 +525,27 @@ describe('saveOAuthTokens', () => {
     ...extra,
   });
 
+  // Connexion branchée par le bouton, échue, avec le jeton de rafraîchissement `refreshToken`.
+  async function oauthConnection(refreshToken: string): Promise<string> {
+    const config = oauthConfig({ accessToken: 'acces-ancien-0000', refreshToken });
+    const id = await createConnection(paul, {
+      ...atlassian,
+      config,
+      secretFields: oauthFields,
+    });
+    await makeDue(id);
+    return id;
+  }
+
   it('sans reconnexion : réécrit jetons et champs ouverts, statut, échéance et réservation inchangés', async () => {
-    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const id = await oauthConnection('rafraichir-ancien');
     const lock = await claimed(paul, id);
     const before = await readRow(id);
 
-    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: false });
+    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, {
+      reconnect: false,
+      renewedFrom: 'rafraichir-ancien',
+    });
 
     expect(saved).toBe(true);
     const row = await readRow(id);
@@ -552,12 +571,36 @@ describe('saveOAuthTokens', () => {
     });
   });
 
+  // Audit 2 n° 13 a : « Reconnecter » pendant un renouvellement. Le renouvellement, parti des anciens
+  // jetons, n'écrase pas ceux de la reconnexion.
+  it("sans reconnexion : n'écrit rien quand les jetons ont changé depuis leur lecture", async () => {
+    const id = await oauthConnection('rafraichir-ancien');
+    const reconnected = oauthConfig({ refreshToken: 'rafraichir-reconnecte' });
+    await saveOAuthTokens(paul, id, reconnected, oauthFields, { reconnect: true });
+    const before = await readRow(id);
+
+    const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, {
+      reconnect: false,
+      renewedFrom: 'rafraichir-ancien',
+    });
+
+    expect(saved).toBe(false);
+    const row = await readRow(id);
+    expect([row.secret, row.secret_hint, row.config]).toEqual([
+      before.secret,
+      before.secret_hint,
+      before.config,
+    ]);
+    await makeDue(id);
+    expect((await claimConnection(paul, id))?.config.refreshToken).toBe('rafraichir-reconnecte');
+  });
+
   it('avec reconnexion : relance une connexion en erreur, active, sans erreur, échéance maintenant', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
     await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Reconnectez Linear.' });
 
-    await saveOAuthTokens(marie, id, oauthConfig(), oauthFields, { reconnect: true });
+    await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: true });
 
     const row = await readRow(id);
     await makeNotDue(id);
@@ -641,6 +684,29 @@ describe('droits sur une connexion', () => {
     expect(await deleteConnection(bob, id)).toBe(false);
 
     expect(await readRow(id)).toEqual(before);
+  });
+
+  // Audit 2 n° 2 : la clé et les jetons sont ceux du compte du créateur. Une administratrice qui
+  // « Reconnecte » mettrait son propre compte à sa place ; elle garde la pause et la suppression.
+  it('une administratrice ne remplace ni la clé ni les jetons : réservés au créateur (isCreator)', async () => {
+    const id = await seedConnection(paul);
+    const before = await readRow(id);
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-de-marie-0000' };
+    const isCreator = async (ctx: TenantContext) =>
+      (await listConnections(ctx)).find((view) => view.id === id)?.isCreator;
+
+    expect(await isCreator(paul)).toBe(true);
+    expect(await isCreator(marie)).toBe(false);
+    expect(
+      await replaceConnectionSecret(marie, id, { token: 'cle-de-marie-0000' }, ['token']),
+    ).toBe(false);
+    expect(await saveOAuthTokens(marie, id, oauth, ['accessToken'], { reconnect: true })).toBe(
+      false,
+    );
+    expect(await readRow(id)).toEqual(before);
+
+    expect(await setConnectionPaused(marie, id, true)).toBe(true);
+    expect(await deleteConnection(marie, id)).toBe(true);
   });
 
   it('un simple membre peut encore demander « Synchroniser maintenant »', async () => {

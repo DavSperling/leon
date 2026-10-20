@@ -607,6 +607,18 @@ describe('« Reconnecter »', () => {
     }
   });
 
+  // Audit 2 n° 2 : une administratrice non plus, elle mettrait son propre compte à la place du sien.
+  it("répond 404, sans cookie, pour la connexion d'un autre membre même quand on est administrateur", async () => {
+    const paul = await signUp();
+    const bob = await createTestUser(paul.ctx.tenantId, 'Bob');
+    const id = await seedConnection(bob, { provider: 'github' });
+
+    const response = await start(makeApp().app, paul, { reconnect: id, since: '30' });
+
+    expect(response.status).toBe(404);
+    expect(oauthCookieOf(response)).toBeUndefined();
+  });
+
   // Audit n° 3 : un simple membre ne reconnecte pas l'outil d'un autre avec son propre compte.
   it("répond 404, sans cookie, pour la connexion d'un autre membre quand on n'est pas administrateur", async () => {
     const paul = await signUp();

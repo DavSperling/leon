@@ -38,7 +38,8 @@ export type ConnectionView = {
   itemsSynced: number;
   createdBy: { id: string; name: string };
   createdAt: Date;
-  canManage: boolean; // pause, clé, reconnexion, suppression : créateur ou administrateur
+  canManage: boolean; // pause, suppression : créateur ou administrateur
+  isCreator: boolean; // clé, reconnexion : créateur seul (le secret est celui de son compte)
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -92,14 +93,19 @@ const unlessPaused = (value: SQL | AnyColumn, whenPaused: SQL | AnyColumn) =>
 
 const NO_DATE = sql`null::timestamptz`;
 
-// Seuls le créateur et les administrateurs (owner, admin) de l'organisation gèrent une connexion :
-// sinon un membre pourrait supprimer l'Outlook d'un autre, ou reconnecter son GitHub avec son propre
-// compte. Better Auth peut ranger plusieurs rôles séparés par des virgules.
+// Seuls le créateur et les administrateurs (owner, admin) de l'organisation mettent en pause ou
+// suppriment une connexion : sinon un membre pourrait supprimer l'Outlook d'un autre. Better Auth
+// peut ranger plusieurs rôles séparés par des virgules.
 const manageable = (ctx: TenantContext) =>
   sql`(${connections.createdBy} = ${ctx.userId} or exists (
     select 1 from member
     where "userId" = ${ctx.userId} and "organizationId" = ${ctx.tenantId}
       and string_to_array(role, ',') && array['owner', 'admin']))`;
+
+// La clé et les jetons sont ceux du compte du créateur : un administrateur qui les remplace (ou
+// « Reconnecte ») y mettrait son propre compte, et la connexion lirait avec ses droits à lui. Le
+// renouvellement des jetons passe aussi par ici : la relève travaille au nom du créateur (queue.ts).
+const createdByMe = (ctx: TenantContext) => eq(connections.createdBy, ctx.userId);
 
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
@@ -159,6 +165,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         creatorId: users.id,
         creatorName: users.name,
         canManage: sql<boolean>`${manageable(ctx)}`,
+        isCreator: sql<boolean>`${createdByMe(ctx)}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -189,7 +196,7 @@ export async function replaceConnectionSecret(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
         updatedAt: sql`now()`,
       })
-      .where(and(eq(connections.id, id), manageable(ctx)))
+      .where(and(eq(connections.id, id), createdByMe(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -200,12 +207,15 @@ export async function replaceConnectionSecret(
 // repart tout de suite comme après un remplacement de clé (sauf en pause) ; sans, le statut,
 // l'échéance et la réservation ne bougent pas. Jamais par `replaceConnectionSecret`, qui ne
 // réécrit pas les champs ouverts.
+// Un renouvellement (`renewedFrom` : le jeton de rafraîchissement dont il est parti) n'écrit que si
+// la base porte encore ce jeton : un « Reconnecter » pendant le renouvellement a mis des jetons plus
+// récents, qui restent. La ligne est verrouillée entre la lecture et l'écriture.
 export async function saveOAuthTokens(
   ctx: TenantContext,
   id: string,
   config: Record<string, unknown>,
   secretFields: readonly string[],
-  options: { reconnect: boolean },
+  options: { reconnect: true } | { reconnect: false; renewedFrom: string },
 ): Promise<boolean> {
   const sealed = sealSecrets(config, secretFields, aadOf(ctx.tenantId, id));
   const restart = options.reconnect
@@ -215,8 +225,18 @@ export async function saveOAuthTokens(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
       }
     : {};
-  const rows = await withTenant(ctx, (tx) =>
-    tx
+  const mine = and(eq(connections.id, id), createdByMe(ctx));
+  const rows = await withTenant(ctx, async (tx) => {
+    if (!options.reconnect) {
+      const [row] = await tx
+        .select({ secret: connections.secret })
+        .from(connections)
+        .where(mine)
+        .for('update');
+      const stored = row && parseSecrets(decryptSecret(row.secret, aadOf(ctx.tenantId, id)));
+      if (stored?.refreshToken !== options.renewedFrom) return [];
+    }
+    return tx
       .update(connections)
       .set({
         ...sealed,
@@ -224,9 +244,9 @@ export async function saveOAuthTokens(
         ...restart,
         updatedAt: sql`now()`,
       })
-      .where(and(eq(connections.id, id), manageable(ctx)))
-      .returning({ id: connections.id }),
-  );
+      .where(mine)
+      .returning({ id: connections.id });
+  });
   return rows.length > 0;
 }
 
@@ -255,12 +275,13 @@ export async function setConnectionPaused(
   return rows.length > 0;
 }
 
-// Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas.
+// Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas. Le
+// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
 export async function requestSyncNow(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
-      .set({ status: 'active', nextSyncAt: sql`now()`, updatedAt: sql`now()` })
+      .set({ nextSyncAt: sql`now()`, updatedAt: sql`now()` })
       .where(and(eq(connections.id, id), inArray(connections.status, ['active', 'error'])))
       .returning({ id: connections.id }),
   );

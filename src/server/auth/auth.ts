@@ -11,6 +11,10 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   database: pool,
   emailAndPassword: { enabled: true, autoSignIn: false, minPasswordLength: 8 },
+  // La connexion et l'inscription passent par les server actions (auth.api.*), sous la limite de débit de
+  // rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un compte sans
+  // organisation). Seul le routeur les ferme : auth.api.* les appelle toujours.
+  disabledPaths: ['/sign-in/email', '/sign-up/email'],
   advanced: { database: { generateId: 'uuid' } },
   telemetry: { enabled: false },
   databaseHooks: {

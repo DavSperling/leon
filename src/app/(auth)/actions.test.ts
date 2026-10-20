@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
 import { signInAction, signUpAction } from './actions';
@@ -8,6 +9,8 @@ vi.mock('@/server/auth/sign-up', async (importOriginal) => ({
   createUserWithOrganization: vi.fn(),
 }));
 vi.mock('@/server/auth/session', () => ({ signInWithPassword: vi.fn() }));
+vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
+vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -27,7 +30,45 @@ const validSignUp = {
   organizationName: 'Dupont Rénovation',
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+});
+
+// Audit 2 n° 3 : la connexion et l'inscription passent par une limite de débit (rate-limit.ts).
+const TOO_MANY_ATTEMPTS = 'Trop de tentatives. Réessayez dans quelques minutes.';
+
+describe('limite de débit', () => {
+  it('refuse la connexion au-delà de la limite, sans essayer le mot de passe', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+
+    const state = await signInAction({}, form({ email: 'paul@example.com', password: 'x' }));
+
+    expect(authAttemptAllowed).toHaveBeenCalledWith(
+      'connexion',
+      'paul@example.com',
+      expect.any(Headers),
+    );
+    expect(state.errors).toEqual({ form: TOO_MANY_ATTEMPTS });
+    expect(state.values).toEqual({ email: 'paul@example.com' });
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('refuse l’inscription au-delà de la limite, sans créer de compte', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+
+    const state = await signUpAction({}, form(validSignUp));
+
+    expect(authAttemptAllowed).toHaveBeenCalledWith(
+      'inscription',
+      'paul@example.com',
+      expect.any(Headers),
+    );
+    expect(state.errors).toEqual({ form: TOO_MANY_ATTEMPTS });
+    expect(createUserWithOrganization).not.toHaveBeenCalled();
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+});
 
 describe('signUpAction', () => {
   it('renvoie une erreur par champ invalide, sans créer de compte', async () => {

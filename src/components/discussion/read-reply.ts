@@ -47,6 +47,17 @@ export function questionNotWritten(outcome: ReplyOutcome): boolean {
   return ['sans-modele', 'occupe', 'session', 'origine'].includes(outcome.status);
 }
 
+// La question que « Réessayer » renvoie après un échec : celle qui vient d'échouer, tant qu'elle est encore dans
+// la discussion (gardée par le serveur, ou reposée). Une question nouvelle qu'il n'a pas écrite est revenue dans
+// la saisie : rien à réessayer, et surtout pas une question plus ancienne restée au-dessus d'elle.
+export function retryQuestion(
+  outcome: ReplyOutcome,
+  message: string,
+  { repeated }: { repeated: boolean },
+): string | null {
+  return !repeated && questionNotWritten(outcome) ? null : message;
+}
+
 export async function readReply(
   discussionId: string,
   message: string,

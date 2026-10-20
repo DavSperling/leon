@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DISCUSSION_REFUSAL, discussionMessagesUrl } from '@/lib/discussion-events';
-import { questionNotWritten, type ReplyProgress, readReply } from './read-reply';
+import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
 // Ce que la page d'une discussion comprend de la réponse de la route : chaque issue a son état, et la page ne dit
 // « votre question est gardée » que lorsque le serveur l'a gardée.
@@ -168,5 +168,25 @@ describe('questionNotWritten', () => {
     expect(questionNotWritten({ status: 'finie', content: 'R', citations: [] })).toBe(false);
     expect(questionNotWritten({ status: 'en-cours' })).toBe(false);
     expect(questionNotWritten({ status: 'coupee' })).toBe(false);
+  });
+});
+
+// Audit 3 n° 10 : « Réessayer » renvoie la question qui vient d'échouer, jamais une question plus ancienne restée
+// sans réponse au-dessus d'elle.
+describe('retryQuestion', () => {
+  it('ne propose rien pour une question nouvelle que le serveur n’a pas écrite (elle est dans la saisie)', () => {
+    for (const outcome of [
+      { status: 'occupe' },
+      { status: 'indisponible', questionGardee: false },
+    ] as const) {
+      expect(retryQuestion(outcome, 'Question nouvelle', { repeated: false })).toBeNull();
+    }
+  });
+
+  it('renvoie la question qui a échoué quand elle reste dans la discussion', () => {
+    expect(
+      retryQuestion({ status: 'indisponible', questionGardee: true }, 'Q', { repeated: false }),
+    ).toBe('Q');
+    expect(retryQuestion({ status: 'occupe' }, 'Q', { repeated: true })).toBe('Q');
   });
 });

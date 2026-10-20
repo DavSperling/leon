@@ -50,6 +50,14 @@ export async function createApiToken(
 const ownedBy = (ctx: TenantContext) =>
   and(eq(apiTokens.userId, ctx.userId), eq(apiTokens.tenantId, ctx.tenantId));
 
+// L'adhésion en cours, depuis avant la création du jeton : celui d'une ancienne adhésion ne vaut plus rien.
+const currentMembership = and(
+  eq(members.userId, apiTokens.userId),
+  eq(members.organizationId, apiTokens.tenantId),
+  gte(apiTokens.createdAt, members.createdAt),
+);
+
+// Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.
 export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> {
   return db
     .select({
@@ -61,6 +69,7 @@ export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> 
       revokedAt: apiTokens.revokedAt,
     })
     .from(apiTokens)
+    .innerJoin(members, currentMembership)
     .where(ownedBy(ctx))
     .orderBy(desc(apiTokens.createdAt), desc(apiTokens.id));
 }
@@ -90,15 +99,8 @@ export async function verifyApiToken(
       lastUsedAt: apiTokens.lastUsedAt,
     })
     .from(apiTokens)
-    .innerJoin(
-      members,
-      and(
-        eq(members.userId, apiTokens.userId),
-        eq(members.organizationId, apiTokens.tenantId),
-        // Un membre retiré puis réinvité ne retrouve pas les jetons de son ancienne adhésion.
-        gte(apiTokens.createdAt, members.createdAt),
-      ),
-    )
+    // Un membre retiré puis réinvité ne retrouve pas les jetons de son ancienne adhésion.
+    .innerJoin(members, currentMembership)
     .where(and(eq(apiTokens.tokenHash, hashApiToken(token)), isNull(apiTokens.revokedAt)))
     .limit(1);
   if (!row) return null;

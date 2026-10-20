@@ -127,6 +127,24 @@ describe('jetons personnels', () => {
     expect(await verifyApiToken(created.token)).toBeNull();
   });
 
+  // Audit 2 n° 15 b : la page des réglages montrait encore comme actif le jeton de l'ancienne adhésion.
+  it("ne liste pas un jeton créé avant l'adhésion en cours", async () => {
+    const paul = await signUp('Paul');
+    await createApiToken(paul, 'Ancienne adhésion');
+    await adminDb
+      .update(members)
+      .set({ createdAt: new Date(Date.now() + 60_000) })
+      .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
+    // Le jeton créé après la réadhésion, lui, reste listé.
+    const current = await createApiToken(paul, 'Adhésion en cours');
+    await adminDb
+      .update(apiTokens)
+      .set({ createdAt: new Date(Date.now() + 120_000) })
+      .where(eq(apiTokens.id, current.id));
+
+    expect((await listApiTokens(paul)).map((t) => t.id)).toEqual([current.id]);
+  });
+
   it('refuse un jeton mal formé sans interroger la base', async () => {
     const select = vi.spyOn(db, 'select');
     expect(await verifyApiToken('leon_court')).toBeNull();

@@ -10,7 +10,7 @@ import { auth } from '@/server/auth/auth';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
-import { oneLine } from '@/server/memory/labels';
+import { accountLabel } from './account-label';
 import { listCatalog } from './catalog';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
 import { connectorsKey } from './crypto';
@@ -60,7 +60,6 @@ type ReturnCode =
   | 'autre_compte';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const ACCOUNT_MAX = 120;
 const NOT_FOUND = { error: 'Introuvable' };
 
 const connexions = (params: Record<string, string>) =>
@@ -170,9 +169,6 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
   });
   return c.redirect(authorizeUrl(spec, client, pending), 303);
 }
-
-const accountLabel = (account: string, fallback: string) =>
-  Array.from(oneLine(account)).slice(0, ACCOUNT_MAX).join('') || fallback;
 
 // L'échange du code, puis la configuration de l'outil (jetons compris), validée par son schéma.
 async function oauthConfig(

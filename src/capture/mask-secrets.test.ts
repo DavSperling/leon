@@ -551,3 +551,17 @@ describe('maskSecrets : faux positifs (audit 5)', () => {
     expect(maskSecrets(text)).toBe(text);
   });
 });
+
+describe('maskSecrets : hôte sans point (audit 5)', () => {
+  const sha = '9f3a7c1e5b2d8f40a6c3e9b1d7f2a5c8'.repeat(2);
+  it.each([
+    'psql "postgresql://localhost:5432/leon?user=paul@acme.fr"',
+    `skopeo copy docker://localhost:5000/leon@sha256:${sha} oci:./img`,
+  ])('ne prend pas un port pour un mot de passe : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it('masque toujours un mot de passe qui commence comme un port', () => {
+    expect(maskSecrets('postgres://app:1234/abcd@hôte')).toBe(`postgres://app:${SECRET_MASK}@hôte`);
+  });
+});

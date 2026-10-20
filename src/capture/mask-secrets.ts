@@ -86,8 +86,10 @@ const URL_PASSWORD =
 // Dans une URL web, un port suivi d'un chemin, d'une requête ou d'une ancre
 // (« localhost:3000/…?email=paul@… ») n'est pas un mot de passe ; un « @ » y est courant.
 // De même quand l'« utilisateur » est un nom d'hôte (« jdbc:postgresql://db.acme.fr:5432/…?user=paul@… »,
-// « git+https://github.com:443/org/repo@main »).
+// « git+https://github.com:443/org/repo@main »), ou « localhost », hôte sans point
+// (« docker://localhost:5000/leon@sha256:… »). Un autre nom sans point (« app ») reste un utilisateur.
 const WEB_SCHEMES = new Set(['http', 'https', 'ws', 'wss']);
+const looksLikeHost = (user: string) => user.includes('.') || user.toLowerCase() === 'localhost';
 const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
 
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
@@ -148,7 +150,7 @@ function maskNamedValue(
 
 function maskUrlPassword(_match: string, scheme: string, user: string, password: string): string {
   if (
-    (WEB_SCHEMES.has(scheme.toLowerCase()) || user.includes('.')) &&
+    (WEB_SCHEMES.has(scheme.toLowerCase()) || looksLikeHost(user)) &&
     PORT_THEN_PATH.test(password)
   ) {
     // Le texte jusqu'au « @ » reste tel quel, mais une URL à identifiants peut s'y nicher : on la réexamine.

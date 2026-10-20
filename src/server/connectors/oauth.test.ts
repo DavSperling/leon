@@ -427,6 +427,7 @@ describe('ensureFreshTokens', () => {
       createdBy: 'u',
       cursor: null,
       since: new Date(NOW),
+      lockedAt: '2026-10-15 12:00:00+00',
       config,
     };
   }

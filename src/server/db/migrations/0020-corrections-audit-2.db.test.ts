@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { PoolClient } from 'pg';
 import { beforeAll, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
@@ -13,69 +14,96 @@ beforeAll(async () => {
   [alice] = team.members as [TenantContext];
 });
 
-type Scans = Record<string, { seq: number; idx: number }>;
-
-// Parcours des tables faits par la transaction en cours (pg_stat_xact_user_tables) : ils comptent ceux des
-// fonctions appelées, quel que soit leur plan.
-async function scans(client: { query: typeof adminPool.query }): Promise<Scans> {
-  const { rows } = await client.query<{ relname: string; seq: string; idx: string }>(
-    `select relname, seq_scan as seq, coalesce(idx_scan, 0) as idx from pg_stat_xact_user_tables
-      where relname in ('passages', 'passage_vectors')`,
+// Lignes de ces tables lues par la transaction en cours, par un parcours complet ou par un index (lignes vivantes
+// lues dans la table) : elles comptent celles des fonctions appelées, quel que soit leur plan. Les entrées d'index
+// ne sont pas comptées : celles des lignes supprimées ou annulées par les autres tests y restent jusqu'au prochain
+// nettoyage.
+async function rowsRead(client: PoolClient): Promise<Record<string, number>> {
+  const { rows } = await client.query<{ relname: string; lus: string }>(
+    `select relname, pg_stat_get_xact_tuples_returned(oid) + pg_stat_get_xact_tuples_fetched(oid) as lus
+       from pg_class
+      where relnamespace = 'public'::regnamespace and relname in ('passages', 'passage_vectors')`,
   );
-  return Object.fromEntries(
-    rows.map((row) => [row.relname, { seq: Number(row.seq), idx: Number(row.idx) }]),
-  );
+  return Object.fromEntries(rows.map((row) => [row.relname, Number(row.lus)]));
 }
 
-// Audit 2 n° 1 : passages_sans_vecteur (security definer) est planifiée sans la valeur du modèle : l'index de la
-// première correction n'était jamais choisi et la table des passages était relue à chaque tic. Le test du premier
-// tour vérifiait une requête recopiée à la main ; celui-ci compte les parcours de l'appel réel de la fonction, sur
-// une table de passages tous vectorisés (le cas de chaque minute) et analysée.
-it('le tic des vecteurs ne relit ni les passages ni les vecteurs quand tout est vectorisé', async () => {
-  const model = `modele-${randomUUID()}`;
+// Dans la transaction de `client` : 3 000 passages d'Alice, puis le vecteur de `model` pour tous les passages de la
+// base (ceux des autres fichiers compris), comme après le rattrapage d'un modèle, et les tables analysées. Le premier
+// tic d'un modèle peut tout relire (il remplit la file) : il passe avant.
+async function vectorizeEverything(client: PoolClient, model: string): Promise<void> {
+  const {
+    rows: [source],
+  } = await client.query<{ id: string }>(
+    `insert into sources (tenant_id, kind, external_id, owner_user_id, title, acl, metadata)
+     values ($1, 'claude_code', $2, $3, 'Source', array[$3::uuid], '{}') returning id`,
+    [alice.tenantId, randomUUID(), alice.userId],
+  );
+  const {
+    rows: [turn],
+  } = await client.query<{ id: string }>(
+    `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl)
+     values ($1, $2, 'tour-0', 'user', 'Tour.', now(), 'connector', array[$3::uuid]) returning id`,
+    [alice.tenantId, source?.id, alice.userId],
+  );
+  await client.query(
+    `insert into passages (tenant_id, source_id, turn_id, ord, text, char_start, char_end, ts, acl)
+     select $1, $2, $3, g, 'Passage ' || g, 0, 7, now(), array[$4::uuid] from generate_series(0, 2999) g`,
+    [alice.tenantId, source?.id, turn?.id, alice.userId],
+  );
+  await client.query('select * from passages_sans_vecteur($1, 500)', [model]);
+  await client.query(
+    `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+     select id, tenant_id, $1, array_fill(0.1, array[1024])::halfvec, acl from passages`,
+    [model],
+  );
+  for (const table of ['passages', 'passage_vectors', 'passages_a_vectoriser']) {
+    await client.query(`analyze ${table}`);
+  }
+}
+
+// Les lignes de ces tables lues par `call` (l'appel réel d'une fonction), au deuxième appel : le premier fait le
+// travail laissé par les autres fichiers de test (vieux vecteurs de leurs passages). Dans une transaction annulée.
+async function rowsReadBy(call: string): Promise<Record<string, number>> {
   const client = await adminPool.connect();
   try {
     await client.query('begin');
-    const {
-      rows: [source],
-    } = await client.query<{ id: string }>(
-      `insert into sources (tenant_id, kind, external_id, owner_user_id, title, acl, metadata)
-       values ($1, 'claude_code', $2, $3, 'Source', array[$3::uuid], '{}') returning id`,
-      [alice.tenantId, randomUUID(), alice.userId],
+    await vectorizeEverything(client, model);
+    await client.query(call, [model]);
+    const before = await rowsRead(client);
+    await client.query(call, [model]);
+    const after = await rowsRead(client);
+    return Object.fromEntries(
+      Object.keys(after).map((table) => [table, (after[table] ?? 0) - (before[table] ?? 0)]),
     );
-    const {
-      rows: [turn],
-    } = await client.query<{ id: string }>(
-      `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl)
-       values ($1, $2, 'tour-0', 'user', 'Tour.', now(), 'connector', array[$3::uuid]) returning id`,
-      [alice.tenantId, source?.id, alice.userId],
-    );
-    await client.query(
-      `insert into passages (tenant_id, source_id, turn_id, ord, text, char_start, char_end, ts, acl)
-       select $1, $2, $3, g, 'Passage ' || g, 0, 7, now(), array[$4::uuid] from generate_series(0, 2999) g`,
-      [alice.tenantId, source?.id, turn?.id, alice.userId],
-    );
-    // Le premier tic d'un modèle peut tout relire (changement de modèle). Puis tous les passages de la base, ceux
-    // des autres fichiers compris, reçoivent le vecteur de ce modèle, comme après le rattrapage.
-    await client.query('select * from passages_sans_vecteur($1, 500)', [model]);
-    await client.query(
-      `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
-       select id, tenant_id, $1, array_fill(0.1, array[1024])::halfvec, acl from passages`,
-      [model],
-    );
-    for (const table of ['passages', 'passage_vectors', 'passages_a_vectoriser']) {
-      await client.query(`analyze ${table}`);
-    }
-    const before = await scans(client);
-
-    await client.query('select * from passages_sans_vecteur($1, 500)', [model]);
-
-    const after = await scans(client);
-    for (const table of ['passages', 'passage_vectors']) {
-      expect(after[table]?.seq, table).toBe(before[table]?.seq);
-    }
   } finally {
     await client.query('rollback');
     client.release();
   }
+}
+
+// Le modèle des tests de plan, qu'aucun autre fichier n'écrit.
+const model = `modele-${randomUUID()}`;
+
+// Chaque table compte au moins les 3 000 lignes d'Alice : un parcours entier en lirait au moins autant. Les
+// quelques lignes lues viennent des autres fichiers de test, qui en écrivent en même temps.
+const FEW = 300;
+
+// Audit 2 n° 1 : passages_sans_vecteur (security definer) est planifiée sans la valeur du modèle : l'index de la
+// première correction n'était jamais choisi et la table des passages était relue à chaque tic. Le test du premier
+// tour vérifiait une requête recopiée à la main ; celui-ci compte les parcours de l'appel réel de la fonction, sur
+// une base toute vectorisée (le cas de chaque minute) et analysée.
+it('le tic des vecteurs ne lit ni les passages ni les vecteurs en entier quand tout est vectorisé', async () => {
+  const read = await rowsReadBy('select * from passages_sans_vecteur($1, 500)');
+
+  expect(read.passages).toBeLessThan(FEW);
+  expect(read.passage_vectors).toBeLessThan(FEW);
+});
+
+// Audit 2 n° 7 bis : le retrait des vieux vecteurs passe chaque minute ; sans vieux vecteur, il ne relit pas la
+// table des vecteurs.
+it('le retrait des vieux vecteurs ne lit pas la table des vecteurs en entier', async () => {
+  const read = await rowsReadBy('select retirer_vieux_vecteurs($1, 5000)');
+
+  expect(read.passages).toBeLessThan(FEW);
+  expect(read.passage_vectors).toBeLessThan(FEW);
 });

@@ -226,6 +226,16 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
   return total;
 }
 
+// Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`
+// (retirer_vieux_vecteurs, 0020 : audit 2 n° 7 bis). Réservé au tic du serveur, qui connaît le modèle courant.
+// Rend le nombre de vecteurs retirés.
+export async function dropOldVectors(model: string, limit: number): Promise<number> {
+  const { rows } = await db.execute<{ n: number }>(
+    sql`select retirer_vieux_vecteurs(${model}, ${limit}) as n`,
+  );
+  return rows[0]?.n ?? 0;
+}
+
 type StaleRunRow = { run_id: string; tenant_id: string; user_id: string };
 
 // Remet en file les runs « en attente » depuis plus de `olderThanMinutes`, et ceux restés « en cours » ou

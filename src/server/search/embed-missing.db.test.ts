@@ -19,7 +19,13 @@ import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedPassages, seedRun } from '@/test/seed-search';
-import { EMBED_TIMEOUT_MS, embedMissing, REQUEUE_BATCH, requeueStaleRuns } from './embed-missing';
+import {
+  dropOldVectors,
+  EMBED_TIMEOUT_MS,
+  embedMissing,
+  REQUEUE_BATCH,
+  requeueStaleRuns,
+} from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // requeueStaleRuns met en file des jobs d'indexation : ici la file est simulée.
@@ -369,6 +375,43 @@ describe('embedMissing', () => {
       [orphan.passageIds],
     );
     expect(rows[0]?.n).toBe(0);
+  });
+});
+
+// Audit 2 n° 7 bis : les vecteurs d'un ancien modèle des passages qui ont celui du courant ne servent plus.
+describe('dropOldVectors', () => {
+  // Un vecteur de ce modèle pour ces passages, écrit hors de embedPassages (comme par un autre serveur).
+  const seedVectors = (ids: string[], model: string) =>
+    adminPool.query(
+      `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+       select id, tenant_id, $2, array_fill(0.1, array[1024])::halfvec, acl from passages where id = any($1)`,
+      [ids, model],
+    );
+  const modelsOf = async (ids: string[]) => {
+    const { rows } = await adminPool.query<{ passage_id: string; model: string }>(
+      'select passage_id, model from passage_vectors where passage_id = any($1) order by model',
+      [ids],
+    );
+    return ids.map((id) => rows.filter((row) => row.passage_id === id).map((row) => row.model));
+  };
+
+  it('retire, par lots, les vecteurs des autres modèles des passages qui ont celui du modèle courant', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const current = `courant-${randomUUID()}`;
+    const done = await seedPassages(alice, { count: 3, token });
+    const [waiting] = (await seedPassages(zoe, { count: 1, token })).passageIds as [string];
+    await seedVectors(done.passageIds, 'ancien-a');
+    await seedVectors(done.passageIds, 'ancien-z');
+    await seedVectors(done.passageIds, current);
+    await seedVectors([waiting], 'ancien-a');
+
+    const first = await dropOldVectors(current, 4);
+    const second = await dropOldVectors(current, 4);
+
+    expect([first, second]).toEqual([4, 2]);
+    expect(await modelsOf(done.passageIds)).toEqual(Array(3).fill([current]));
+    // Pas encore de vecteur du modèle courant : l'ancien reste.
+    expect(await modelsOf([waiting])).toEqual([['ancien-a']]);
   });
 });
 

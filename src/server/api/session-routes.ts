@@ -112,6 +112,8 @@ export const sessionRoutes = new Hono<SessionEnv>()
     );
     // Sans modèle, l'encadré ne s'affiche pas : la recherche marche sans lui.
     if (events === null) return c.body(null, 204);
+    // Déjà trois réponses en cours pour cet utilisateur : l'encadré se masque.
+    if (events === 'trop') return c.json({ error: 'Trop de réponses en cours' }, 429);
     return streamEvents(c, events, 'answer.route');
   })
   // Une question dans une discussion de l'utilisateur, et la réponse de l'agent en flux (C8). Une discussion qu'il

@@ -265,6 +265,41 @@ describe(`GET ${ANSWER_PATH}`, () => {
   });
 
   // Chaque appelant de searchPassages passe le fournisseur de getEmbedder(env) (C4).
+  // Audit 2 n° 4 : le coût d'un utilisateur, comme la discussion ; au-delà de trois réponses en cours, 429 et
+  // l'encadré se masque.
+  it('répond 429 à une quatrième réponse en cours du même utilisateur, sans appeler le modèle', async () => {
+    const { alice, shown } = await setupTeam();
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let calls = 0;
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      async *streamText() {
+        calls += 1;
+        await gate;
+        yield 'Réponse.';
+      },
+      runAgent(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+    });
+
+    const running = await Promise.all(
+      ['un', 'deux', 'trois'].map((q) => ask(alice, `clause ${q}`, { results: shown })),
+    );
+    const fourth = await ask(alice, 'clause quatre', { results: shown });
+    release();
+    await Promise.all(running.map((response) => response.text()));
+
+    expect(running.map((response) => response.status)).toEqual([200, 200, 200]);
+    expect(fourth.status).toBe(429);
+    expect(calls).toBe(3);
+    // Les réponses finies rendent leur place.
+    fakeModel();
+    expect((await ask(alice, 'clause cinq', { results: shown })).status).toBe(200);
+  });
+
   it('passe le fournisseur de vecteurs réglé à la recherche', async () => {
     const { alice, shown } = await setupTeam();
     fakeModel();

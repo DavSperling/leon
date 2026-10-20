@@ -86,9 +86,12 @@ begin
   from passages_a_vectoriser q
   join passages p on p.id = q.passage_id
   join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
-  where exists (
-    select 1 from member m where m."userId" = s.owner_user_id and m."organizationId" = q.tenant_id
-  )
+  -- Audit 2 n° 9 b : l'indexation vectorise elle-même les passages qu'elle écrit ; le tic les doublait. Il ne
+  -- prend que ceux écrits il y a plus de 2 minutes (par le même index que l'ordre).
+  where q.created_at < now() - interval '2 minutes'
+    and exists (
+      select 1 from member m where m."userId" = s.owner_user_id and m."organizationId" = q.tenant_id
+    )
   order by q.created_at desc, q.passage_id
   limit p_limit;
 end

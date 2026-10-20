@@ -154,6 +154,23 @@ describe('embedMissing', () => {
     expect(await modelsOf(zoe, theirs.passageIds)).toEqual(Array(3).fill('factice-b'));
   });
 
+  // Audit 2 n° 9 b : l'indexation vectorise elle-même les passages qu'elle vient d'écrire ; le tic les doublait.
+  it('laisse à l’indexation les passages écrits il y a moins de 2 minutes', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const fresh = await seedPassages(alice, { count: 2, token, createdAt: new Date() });
+    const old = await seedPassages(alice, {
+      count: 1,
+      token,
+      createdAt: new Date(Date.now() - 3 * MINUTE),
+    });
+
+    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+
+    expect(done).toBe(1);
+    expect(await vectorsOf(alice, old.passageIds)).toHaveLength(1);
+    expect(await vectorsOf(alice, fresh.passageIds)).toHaveLength(0);
+  });
+
   it('ne dépasse pas la limite demandée', async () => {
     const token = `jeton-${randomUUID()}`;
     const seeded = await seedPassages(alice, { count: 5, token });
@@ -303,6 +320,11 @@ describe('embedMissing', () => {
     const ids = left.map((row) => row.id);
     expect(ids).toHaveLength(2);
     expect(await vectorsOf(alice, ids)).toHaveLength(0);
+    // Le tic laisse à l'indexation les passages de moins de 2 minutes : ceux-ci sont vieillis de 5 minutes.
+    await adminPool.query(
+      `update passages_a_vectoriser set created_at = now() - interval '5 minutes' where passage_id = any($1)`,
+      [ids],
+    );
 
     const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
 

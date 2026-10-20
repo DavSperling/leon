@@ -98,11 +98,13 @@ export async function seedRun(
 }
 
 // `count` passages sans vecteur, tous d'une même source et d'un même tour, dont le texte contient `token`
-// (un fournisseur de test qui ne répond qu'à ce jeton ne touche que ces passages).
+// (un fournisseur de test qui ne répond qu'à ce jeton ne touche que ces passages). Écrits par défaut il y a
+// 5 minutes : le tic des vecteurs laisse à l'indexation ceux de moins de 2 minutes.
 export async function seedPassages(
   owner: TenantContext,
-  input: { count: number; token: string; acl?: string[] },
+  input: { count: number; token: string; acl?: string[]; createdAt?: Date },
 ): Promise<{ sourceId: string; passageIds: string[] }> {
+  const createdAt = input.createdAt ?? new Date(Date.now() - 5 * 60_000);
   const acl = input.acl ?? [owner.userId];
   const { sourceId, turnIds } = await seedRun(owner, {
     acl,
@@ -125,6 +127,7 @@ export async function seedPassages(
           charEnd: text.length,
           ts: new Date(),
           acl,
+          createdAt,
         };
       }),
     )

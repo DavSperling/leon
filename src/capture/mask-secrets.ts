@@ -31,6 +31,8 @@ const WHOLE_SECRETS: RegExp[] = [
   /\bwhsec_[A-Za-z0-9+/=]{24,}/g,
   /\bhf_[A-Za-z0-9]{30,}/g,
   /\bnpm_[A-Za-z0-9]{36,}/g,
+  /\bsb_secret_[A-Za-z0-9_-]{20,}/g,
+  /(?<![A-Za-z0-9_-])ya29\.[A-Za-z0-9_-]{20,}/g,
   /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g,
 ];
 
@@ -39,28 +41,28 @@ const WHOLE_SECRETS: RegExp[] = [
 // Il peut aussi contenir « @ » : il s'arrête au dernier « @ » avant l'hôte (un « @ » suivi d'un autre
 // sans « / ? # » entre eux fait partie du mot de passe). Ses bornes à 128 caractères gardent le temps linéaire.
 const URL_PASSWORD =
-  /(?<![A-Za-z0-9+.-])([A-Za-z][A-Za-z0-9+.-]{0,30}):\/\/([^:\s/?#@]{1,256}):((?:[^@\s]|@(?=[^@\s/?#]{0,128}@)){1,128})@/g;
+  /(?<![A-Za-z0-9+.-])([A-Za-z][A-Za-z0-9+.-]{0,30}):\/\/([^:\s/?#@]{0,256}):((?:[^@\s]|@(?=[^@\s/?#]{0,128}@)){1,128})@/g;
 // Dans une URL web, un port suivi d'un chemin, d'une requête ou d'une ancre
 // (« localhost:3000/…?email=paul@… ») n'est pas un mot de passe ; un « @ » y est courant.
 // De même quand l'« utilisateur » est un nom d'hôte (« jdbc:postgresql://db.acme.fr:5432/…?user=paul@… »,
 // « git+https://github.com:443/org/repo@main »).
 const WEB_SCHEMES = new Set(['http', 'https', 'ws', 'wss']);
 const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
-// « Token » seul est un mot courant : il ne compte qu'après « Authorization: ».
+// « Token » seul est un mot courant : il ne compte qu'après « Authorization: » (ou « "Authorization": " »).
 const AUTH_SCHEME =
-  /\b(Bearer|Basic|(?<=[Aa]uthorization:\s{0,10})Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/g;
+  /\b(Bearer|Basic|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
 const looksRandom = (value: string) =>
   /[0-9+/=]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value));
 // Valeur entre guillemets (espaces permis) jusqu'au guillemet fermant ou à la fin de la ligne,
 // ou valeur nue jusqu'au premier blanc. Sans borne haute : ce qui est lu est consommé.
 const ASSIGNMENT =
-  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{0,40}?(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key)[A-Za-z0-9_]{0,40})(\\?["']?\s{0,10}[:=]\s{0,10}\\?)(?:"([^"\n]{8,})"?|'([^'\n]{8,})'?|([^\s"']{8,}))/gi;
+  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{0,40}?(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)[A-Za-z0-9_]{0,40})(\\?["']?\s{0,10}[:=]\s{0,10}\\?)(?:"([^"\n]{8,})"?|'([^'\n]{8,})'?|([^\s"']{8,}))/gi;
 
 // Le mot-clé doit finir le nom ou une de ses parties : « SECRET_KEY », « apiKey », « secretKey »,
 // mais pas « Secretary », « tokens » ni « tokenizer ».
 const KEYWORD_THEN_BOUNDARY =
-  /(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key)(?:$|_)/i;
+  /(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)(?:$|_)/i;
 // camelCase : la casse compte, « secretKey » oui, « SECRETARY » non.
 const KEYWORD_THEN_CAMEL =
   /(?:[Pp]assword|[Pp]asswd|[Pp]wd|[Ss]ecret|[Aa]pi[_-]?[Kk]ey|[Tt]oken|[Aa]ccess[_-]?[Kk]ey|[Pp]rivate[_-]?[Kk]ey)[A-Z]/;
@@ -69,6 +71,17 @@ const KEYWORD_THEN_CAMEL =
 const CODE_VALUE = /^[A-Za-z_$][\w$]*(?:\(|\.[A-Za-z_$])/;
 // « pwd » est aussi le dossier courant (« PWD=/Users/… », « Le pwd: /home/… »).
 const PATH_VALUE = /^[/~]/;
+
+// Mot de passe en option d'une commande, sur une ligne qui nomme la commande, sans longueur minimale :
+// « curl -u admin:pw », « mysql -phunter2 », « redis-cli -a pw ». Le masque déjà posé n'est pas relu.
+const CLI_PASSWORDS: Array<[line: RegExp, option: RegExp]> = [
+  [
+    /^.*\bcurl\b.*$/gm,
+    /(\s(?:-u|--user)(?:\s{1,10}|=)["']?[^\s:"']{1,128}:)(?!\[secret masqué\])[^\s"']+/g,
+  ],
+  [/^.*\b(?:mysql|mysqldump|mariadb)\b.*$/gm, /(\s-p)(?!\[secret masqué\])[^\s"']+/g],
+  [/^.*\bredis-cli\b.*$/gm, /(\s(?:-a|--pass)\s{1,10}["']?)(?!\[secret masqué\])[^\s"']+/g],
+];
 
 function maskAssignment(
   match: string,
@@ -103,10 +116,14 @@ function maskUrlPassword(_match: string, scheme: string, user: string, password:
 export function maskSecrets(text: string): string {
   let masked = text;
   for (const pattern of WHOLE_SECRETS) masked = masked.replace(pattern, SECRET_MASK);
-  return masked
+  masked = masked
     .replace(URL_PASSWORD, maskUrlPassword)
     .replace(AUTH_SCHEME, (match, scheme: string, value: string) =>
       looksRandom(value) ? `${scheme} ${SECRET_MASK}` : match,
     )
     .replace(ASSIGNMENT, maskAssignment);
+  for (const [line, option] of CLI_PASSWORDS) {
+    masked = masked.replace(line, (text) => text.replace(option, `$1${SECRET_MASK}`));
+  }
+  return masked;
 }

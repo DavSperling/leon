@@ -87,6 +87,23 @@ describe('maskSecrets : le nom reste, la valeur est masquée', () => {
   it.each(cases)('masque : %s', (_name, input, expected) => {
     expect(maskSecrets(input)).toBe(expected);
   });
+
+  // Formats manqués relevés par le second audit.
+  it.each([
+    ['mot de passe : Hunter2Secret!', `mot de passe : ${SECRET_MASK}`],
+    ['mdp: Hunter2Secret!', `mdp: ${SECRET_MASK}`],
+    ['redis://:hunter2secret@cache:6379', `redis://:${SECRET_MASK}@cache:6379`],
+    [`"Authorization": "Token ${alnum(22)}"`, `"Authorization": "Token ${SECRET_MASK}"`],
+    [`authorization: bearer ${alnum(30)}`, `authorization: bearer ${SECRET_MASK}`],
+    [`clé sb_secret_${alnum(31)} ici`, `clé ${SECRET_MASK} ici`],
+    [`jeton ya29.${alnum(40)} ici`, `jeton ${SECRET_MASK} ici`],
+    ['curl -u admin:pw https://api.acme.fr', `curl -u admin:${SECRET_MASK} https://api.acme.fr`],
+    ['mysql -u root -phunter2 app', `mysql -u root -p${SECRET_MASK} app`],
+    ['redis-cli -a pw ping', `redis-cli -a ${SECRET_MASK} ping`],
+  ])('masque : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
 });
 
 describe('maskSecrets : texte ordinaire', () => {
@@ -256,6 +273,13 @@ const TRAPS = [
   'Basic aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   'Secretary: ',
   'token = a.',
+  'redis://:',
+  '"Authorization": "Token ',
+  'curl -u a:',
+  'curl -u a:b ',
+  'mysql -pa ',
+  'redis-cli -a ',
+  'mot de passe: ',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 

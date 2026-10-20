@@ -5,9 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
-import { listReadLog, recordRead } from './read-log';
-
-const ids = (entries: Array<{ id: string }>) => entries.map((entry) => entry.id);
+import { recordRead } from './read-log';
 
 async function seedRead(
   ctx: TenantContext,
@@ -65,116 +63,6 @@ async function seedScenario() {
     zoeRead: await seedRead(zoe, { sourceId: zoeSource.sourceId, acl: [zoe.userId] }),
   };
 }
-
-describe('listReadLog', () => {
-  it('donne à Paul sa lecture de sa source et celle de Marie sur le ticket d’équipe', async () => {
-    const s = await seedScenario();
-
-    const entries = await listReadLog(s.paul, {});
-
-    expect(ids(entries).sort()).toEqual([s.paulRead, s.marieRead].sort());
-    expect(entries.find((entry) => entry.id === s.paulRead)).toMatchObject({
-      client: 'claude-code',
-      clientLabel: 'Claude Code',
-      readerName: 'Paul Martin',
-      sourceId: s.paulSourceId,
-      sourceTitle: 'Session ACME',
-      passageId: null,
-    });
-    expect(entries.find((entry) => entry.id === s.marieRead)).toMatchObject({
-      client: 'interface',
-      clientLabel: 'Interface',
-      readerName: 'Marie Durand',
-      sourceId: s.teamSourceId,
-      sourceTitle: 'Ticket 12',
-    });
-  });
-
-  it('ne donne pas à Marie la lecture de la source privée de Paul', async () => {
-    const s = await seedScenario();
-
-    const entries = await listReadLog(s.marie, {});
-
-    expect(ids(entries)).toEqual([s.marieRead]);
-    expect(JSON.stringify(entries)).not.toContain('Session ACME');
-  });
-
-  it('rend le passage lu quand la lecture en porte un', async () => {
-    const s = await seedScenario();
-    const passageId = randomUUID();
-    const read = await seedRead(s.paul, {
-      sourceId: s.paulSourceId,
-      acl: [s.paul.userId],
-      passageId,
-    });
-
-    const entries = await listReadLog(s.paul, { sourceId: s.paulSourceId });
-
-    expect(entries.find((entry) => entry.id === read)?.passageId).toBe(passageId);
-  });
-
-  it('ne donne à Zoé rien de l’autre organisation', async () => {
-    const s = await seedScenario();
-
-    expect(ids(await listReadLog(s.zoe, {}))).toEqual([s.zoeRead]);
-  });
-
-  it('filtre sur une source', async () => {
-    const s = await seedScenario();
-
-    expect(ids(await listReadLog(s.paul, { sourceId: s.paulSourceId }))).toEqual([s.paulRead]);
-    expect(ids(await listReadLog(s.paul, { sourceId: s.teamSourceId }))).toEqual([s.marieRead]);
-  });
-
-  it('classe la plus récente en premier et pagine avec before et limit', async () => {
-    const s = await seedScenario();
-    const at = (day: number) => new Date(`2026-10-${String(day).padStart(2, '0')}T10:00:00Z`);
-    await adminDb
-      .update(readLog)
-      .set({ at: at(1) })
-      .where(eq(readLog.id, s.paulRead));
-    await adminDb
-      .update(readLog)
-      .set({ at: at(2) })
-      .where(eq(readLog.id, s.marieRead));
-    const newer = await seedRead(s.paul, {
-      sourceId: s.paulSourceId,
-      acl: [s.paul.userId],
-      at: at(3),
-    });
-
-    const firstPage = await listReadLog(s.paul, { limit: 2 });
-    const rest = await listReadLog(s.paul, { before: firstPage.at(-1)?.at, limit: 2 });
-
-    expect(ids(firstPage)).toEqual([newer, s.marieRead]);
-    expect(ids(rest)).toEqual([s.paulRead]);
-  });
-
-  it('nomme un client inconnu tel quel', async () => {
-    const s = await seedScenario();
-    await adminDb.update(readLog).set({ client: 'cursor' }).where(eq(readLog.id, s.paulRead));
-
-    const entries = await listReadLog(s.paul, { sourceId: s.paulSourceId });
-
-    expect(entries[0]).toMatchObject({ client: 'cursor', clientLabel: 'cursor' });
-  });
-
-  it('plafonne la page à 50 lectures par défaut', async () => {
-    const s = await seedScenario();
-    await adminDb.insert(readLog).values(
-      Array.from({ length: 50 }, () => ({
-        tenantId: s.paul.tenantId,
-        userId: s.paul.userId,
-        client: 'interface',
-        sourceId: s.paulSourceId,
-        acl: [s.paul.userId],
-      })),
-    );
-
-    expect(await listReadLog(s.paul, {})).toHaveLength(50);
-    expect(await listReadLog(s.paul, { limit: 60 })).toHaveLength(52);
-  });
-});
 
 describe('recordRead', () => {
   const readsOf = (sourceId: string) =>

@@ -191,6 +191,37 @@ describe('listSources', () => {
     expect(rows.at(-1)?.title).toBe('Vieille session');
   });
 
+  it('rend 50 sources par page, les plus récentes d’abord, et dit s’il en reste', async () => {
+    const { paul, ids } = await seedRightsScenario();
+    const start = new Date('2026-01-01T00:00:00Z').getTime();
+    await adminDb.insert(sources).values(
+      Array.from({ length: 51 }, (_, index) => ({
+        tenantId: paul.tenantId,
+        kind: 'claude_code' as const,
+        externalId: randomUUID(),
+        ownerUserId: paul.userId,
+        title: `Source ${index}`,
+        acl: [paul.userId],
+        lastTurnAt: new Date(start - index * 86_400_000),
+      })),
+    );
+
+    const first = await listSources(paul);
+    const second = await listSources(paul, 2);
+
+    expect(first.sources).toHaveLength(50);
+    expect(first.hasNext).toBe(true);
+    expect(first.sources[0]).toMatchObject({ id: ids.paulSource, turnCount: 1 });
+    expect(first.sources.at(-1)?.title).toBe('Source 48');
+    expect(second.sources.map((row) => row.title)).toEqual(['Source 49', 'Source 50']);
+    expect(second.hasNext).toBe(false);
+    // La santé des canaux ne dépend pas de la page.
+    expect(lastCapture(second.channels, 'claude_code')).toEqual(
+      lastCapture(first.channels, 'claude_code'),
+    );
+    expect(lastCapture(second.channels, 'claude_code')).toEqual(first.sources[0]?.lastTurnAt);
+  });
+
   it("donne à Marie la source d'outil de Paul, avec le lien vers l'original", async () => {
     const { marie, paul, ids } = await seedRightsScenario();
     const github = await seedTeamSource(paul, {
@@ -231,9 +262,22 @@ describe('listSources', () => {
     expect(rows.map((row) => row.id)).not.toContain(ids.paulSource);
   });
 
+  it('garde un lien http, comme la recherche', async () => {
+    const { paul } = await seedRightsScenario();
+    const source = await seedTeamSource(paul, {
+      kind: 'linear',
+      title: 'Ticket en http',
+      metadata: { url: 'http://exemple.test/a' },
+    });
+
+    const { sources: rows } = await listSources(paul);
+
+    expect(rows.find((row) => row.id === source)?.url).toBe('http://exemple.test/a');
+  });
+
   it.each([
-    ['une adresse http', 'http://exemple.test/a'],
     ['un lien javascript', 'javascript:alert(1)'],
+    ['un lien javascript en majuscules', 'JavaScript:alert(1)'],
     ['une valeur qui n’est pas du texte', 42],
     ['aucune adresse', undefined],
   ])('ne garde pas le lien quand il est %s', async (_label, url) => {

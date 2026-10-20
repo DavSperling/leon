@@ -98,14 +98,24 @@ const num = (value: number): SQL => sql.raw(String(value));
 const fullText = (text: string): SQL =>
   sql`(websearch_to_tsquery('french', ${text}) || websearch_to_tsquery('simple', ${text}))`;
 
+// Chaque mot nié exclu sous toutes ses formes (&& !!) : dans `fullText`, chaque branche porte sa propre
+// négation, et la branche simple de « budget -facture » laissait passer « budget des factures ».
+const excluded = (terms: QueryTerms): SQL =>
+  sql.join(
+    terms.negated.map((term) => sql` && (!!${fullText(term)})`),
+    sql``,
+  );
+
+// La requête de la première passe : tous les mots, et aucune forme d'un mot nié.
+const firstQuery = (terms: QueryTerms): SQL => sql`(${fullText(terms.text)}${excluded(terms)})`;
+
 // La requête de la passe élargie, bâtie mot par mot avec les opérateurs de tsquery : un mot suffit (||), chaque
 // expression reste exigée (&&), chaque mot nié reste exclu (&& !!). Postgres donne à ces opérateurs la même
 // priorité : les parenthèses fixent l'ordre.
 function wideQuery(terms: QueryTerms): SQL {
   const anyWord = sql.join(terms.words.map(fullText), sql` || `);
   const required = terms.phrases.map((phrase) => sql` && ${fullText(phrase)}`);
-  const excluded = terms.negated.map((term) => sql` && (!!${fullText(term)})`);
-  return sql`((${anyWord})${sql.join(required, sql``)}${sql.join(excluded, sql``)})`;
+  return sql`((${anyWord})${sql.join(required, sql``)}${excluded(terms)})`;
 }
 
 // Le nombre de mots de la requête que contient un passage. `ts_rank_cd` compte les occurrences : « remise,
@@ -266,7 +276,7 @@ async function rankedSources(
   const { text, filters, me } = query;
   const tenant = ctx.tenantId;
   const terms = queryTerms(text);
-  const tsq = fullText(terms.text);
+  const tsq = firstQuery(terms);
   // Avec un seul mot libre, la passe élargie serait la première : elle n'a pas lieu.
   const wide = terms.words.length >= 2 ? wideQuery(terms) : null;
   const plain = text.replace(/"/g, ' ');
@@ -481,6 +491,11 @@ async function rankedSources(
 
 const hasWords = (text: string) => /[\p{L}\p{N}]/u.test(text);
 
+// Des exclusions seules (« -test ») : rien à chercher. Le plein texte rendrait sinon, au hasard, tout ce qui ne
+// contient pas le mot, après avoir lu tout le corpus.
+const onlyExclusions = (terms: QueryTerms) =>
+  terms.negated.length > 0 && terms.words.length === 0 && terms.phrases.length === 0;
+
 export async function searchPassages(
   ctx: TenantContext,
   input: {
@@ -493,7 +508,7 @@ export async function searchPassages(
 ): Promise<SearchPage> {
   const now = input.now ?? new Date();
   const parsed = parseQuery(input.query, now);
-  const searchable = hasWords(parsed.text);
+  const searchable = hasWords(parsed.text) && !onlyExclusions(queryTerms(parsed.text));
   const requested = input.page ?? 1;
   const page = Number.isInteger(requested) && requested >= 1 ? Math.min(requested, PAGE_MAX) : 1;
   const offset = (page - 1) * PAGE_SIZE;

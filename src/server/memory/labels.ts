@@ -11,16 +11,6 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   ...PROVIDER_LABELS,
 };
 
-const CLIENT_LABELS = new Map([
-  ['interface', 'Interface'],
-  ['claude-code', 'Claude Code'],
-]);
-
-// Client du journal de lecture (D9) ; un client inconnu garde son nom.
-export function clientLabel(client: string): string {
-  return CLIENT_LABELS.get(client) ?? client;
-}
-
 export function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }

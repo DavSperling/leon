@@ -12,6 +12,7 @@ import {
   briefingKey,
   enqueueBriefingRefresh,
   projectOfSource,
+  requestBriefingRefreshNow,
   signalProjectActivity,
   signalSourceActivity,
 } from './queue';
@@ -170,6 +171,39 @@ describe('enqueueBriefingRefresh', () => {
     const jobs = await jobsFor(bob, project);
     expect(jobs).toHaveLength(1);
     expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+  });
+});
+
+describe('requestBriefingRefreshNow', () => {
+  it('met en file tout de suite quand rien n’attend', async () => {
+    const project = uniqueProject();
+
+    await requestBriefingRefreshNow({ tenantId, userId: carol.userId, project });
+
+    const jobs = await jobsFor(carol, project);
+    expect(jobs).toHaveLength(1);
+    expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+  });
+
+  it('avance à maintenant le recalcul qu’un signal a mis dans 30 minutes, sans en ajouter un', async () => {
+    const project = uniqueProject();
+    const job = { tenantId, userId: carol.userId, project };
+    expect(await enqueueBriefingRefresh(job, { delaySeconds: BRIEFING_DELAY_SECONDS })).toBe(true);
+    // Le même envoi tout de suite est ignoré par la file : c'est ce que requestBriefingRefreshNow corrige.
+    expect(await enqueueBriefingRefresh(job)).toBe(false);
+
+    await requestBriefingRefreshNow(job);
+    await requestBriefingRefreshNow(job);
+
+    const jobs = await jobsFor(carol, project);
+    expect(jobs).toHaveLength(1);
+    expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+  });
+
+  it('refuse une clé de projet invalide', async () => {
+    await expect(
+      requestBriefingRefreshNow({ tenantId, userId: carol.userId, project: 'evil' }),
+    ).rejects.toThrow();
   });
 });
 

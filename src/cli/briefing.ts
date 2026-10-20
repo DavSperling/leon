@@ -6,12 +6,18 @@
 //   the hook is invoked »). Seul `cwd` est lu ici.
 // - Pour SessionStart, Claude Code ajoute la sortie standard au contexte de la session : seul le point y passe ; les
 //   messages vont sur la sortie d'erreur, que Claude ne voit pas quand le code de sortie vaut 0.
-// - Le crochet lance `pnpm -s --dir <dépôt de Leon> leon briefing` (T14) : le dossier du processus est alors le dépôt
+// - Le crochet lance `hookCommand(<dépôt de Leon>, 'briefing')` (hook-commands.ts : `pnpm -s
+//   --config.verify-deps-before-run=false --dir <dépôt> leon briefing`) : le dossier du processus est alors le dépôt
 //   de Leon, pas le projet. Le projet se calcule donc sur le `cwd` du JSON, sinon sur INIT_CWD (que pnpm pose au
 //   dossier d'où il a été lancé, `--dir` ou non), sinon sur le dossier du processus (voir briefingDirectory).
+// - La sortie standard d'un crochet est plafonnée à 10 000 caractères par Claude Code : le serveur rend un point qui
+//   tient en dessous (BRIEFING_RENDER_MAX_CHARS).
 //
 // La commande ne bloque jamais une session : entrée standard lue avec un délai court (jamais un terminal), git borné
-// (project-key.ts), serveur 3 secondes au plus, et le code de sortie vaut toujours 0.
+// (project-key.ts), serveur 3 secondes au plus, et le code de sortie vaut toujours 0. Au pire, ces trois délais se
+// suivent : 1 s + 3 s + 3 s, plus le démarrage (une demi-seconde), soit 7,5 s environ, sous le délai de 10 s que
+// l'installateur des crochets (T14) doit poser. En pratique, Claude Code ferme l'entrée tout de suite et git répond
+// en quelques millisecondes : la commande dure le temps de la requête.
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { API_PATHS, BRIEFING_PROJECT_PARAM, BriefingResponseSchema } from '../capture/api-contract';

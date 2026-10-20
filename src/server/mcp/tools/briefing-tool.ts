@@ -1,18 +1,17 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { type BriefingResponse, BriefingResponseSchema } from '@/capture/api-contract';
+import { BriefingResponseSchema } from '@/capture/api-contract';
 import { PROJECT_KEY_PATTERN } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import {
-  BRIEFING_PENDING_MARKDOWN,
-  latestBriefingProject,
-  readBriefing,
-} from '@/server/briefing/briefings';
+import { briefingResponse, latestBriefingProject } from '@/server/briefing/briefings';
+import { env } from '@/server/env';
+import { getLlm } from '@/server/llm/get-llm';
 import { guarded } from './guarded';
 
 // L'outil `briefing` : le point du matin sur un projet, pour les clients qui n'ont pas le crochet de démarrage de
 // Claude Code (ChatGPT, Cursor). Il rend la même chose que la route du crochet (`GET /api/v1/briefing`), sous les
-// droits du porteur du jeton : le dernier point prêt, ou le message d'attente (le recalcul est alors mis en file).
+// droits du porteur du jeton : le dernier point prêt, ou le message d'attente (le recalcul est alors mis en file), ou,
+// sans modèle sur ce serveur, le message qui dit qu'aucun point n'est préparé.
 
 const PROJECT_INPUT_MAX_CHARS = 300;
 const KEY_MAX_CHARS = 200;
@@ -71,15 +70,7 @@ export function registerBriefingTool(server: McpServer, ctx: TenantContext): voi
           return { isError: true, content: [{ type: 'text', text: INVALID_PROJECT }] };
         }
       }
-      const briefing = project === null ? null : await readBriefing(ctx, project);
-      const body: BriefingResponse =
-        briefing && project !== null
-          ? {
-              markdown: briefing.markdown,
-              projet: project,
-              preparedAt: briefing.preparedAt.toISOString(),
-            }
-          : { markdown: BRIEFING_PENDING_MARKDOWN, projet: null, preparedAt: null };
+      const body = await briefingResponse(ctx, project, { modelReady: getLlm(env) !== null });
       return { content: [{ type: 'text', text: body.markdown }], structuredContent: body };
     }),
   );

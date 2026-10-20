@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { PgBoss } from 'pg-boss';
 import { z } from 'zod';
-import { PROJECT_KEY_PATTERN } from '@/capture/turn';
+import { PROJECT_KEY_PATTERN, type SourceKind } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
@@ -40,6 +40,11 @@ export type BriefingJob = z.infer<typeof BriefingJobSchema>;
 export const briefingKey = (job: BriefingJob): string =>
   `${job.tenantId}:${job.userId}:${job.project}`;
 
+// Les outils rattachés à un projet (projectOfSource) : typés, pour qu'un nom qui n'est plus dans SOURCE_KINDS ne
+// compile pas.
+const CLAUDE_CODE = 'claude_code' satisfies SourceKind;
+const GITHUB = 'github' satisfies SourceKind;
+
 // Les files sont créées une fois par processus (createQueue ne fait rien quand elles existent). Sur globalThis :
 // le rechargement à chaud de Next réimporte ce module.
 const globalForBriefing = globalThis as typeof globalThis & { leonBriefingBoss?: Promise<PgBoss> };
@@ -70,6 +75,18 @@ export async function enqueueBriefingRefresh(
     ...(options.delaySeconds ? { startAfter: options.delaySeconds } : {}),
   });
   return id !== null;
+}
+
+// Le point doit être refait maintenant (la lecture n'en a trouvé aucun de montrable) : un recalcul déjà en attente
+// pour la même clé, qu'un signal a mis dans 30 minutes, est avancé à maintenant ; sinon un recalcul est mis en file
+// tout de suite. Un `send` serait ignoré par la file (`stately`) tant que le recalcul retardé attend.
+export async function requestBriefingRefreshNow(job: BriefingJob): Promise<void> {
+  const data = BriefingJobSchema.parse(job);
+  const boss = await getBriefingBoss();
+  await boss.upsert(BRIEFING_QUEUES.refresh, data, {
+    singletonKey: briefingKey(data),
+    startAfter: new Date(),
+  });
 }
 
 // De nouvelles données sur un projet : le point de chaque destinataire est marqué périmé et refait dans 30 minutes.
@@ -120,13 +137,13 @@ export function projectOfSource(source: {
       ? (source.metadata as Record<string, unknown>)
       : {};
   const valid = (key: string) => key.length <= 200 && PROJECT_KEY_PATTERN.test(key);
-  if (source.kind === 'claude_code') {
+  if (source.kind === CLAUDE_CODE) {
     const { project } = metadata;
     return typeof project === 'string' && valid(project)
       ? { project, extraUserIds: [source.ownerUserId] }
       : null;
   }
-  if (source.kind === 'github') {
+  if (source.kind === GITHUB) {
     const origin = metadata.origin;
     const repo =
       typeof origin === 'object' && origin !== null

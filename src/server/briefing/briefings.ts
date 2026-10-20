@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import type { BriefingResponse } from '@/capture/api-contract';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
@@ -13,7 +14,7 @@ import {
   isEmptyMaterial,
   materialSourceIds,
 } from './gather';
-import { enqueueBriefingRefresh } from './queue';
+import { requestBriefingRefreshNow } from './queue';
 
 // Le point du matin (T13) : préparé à l'avance par un seul appel au modèle (D8 du plan du deuxième jet), gardé dans
 // `briefings`, et lu par le crochet de démarrage de Claude Code, la route `GET /api/v1/briefing` et l'outil MCP
@@ -25,6 +26,10 @@ import { enqueueBriefingRefresh } from './queue';
 // Ce que la route et l'outil rendent tant qu'aucun point n'est prêt (le recalcul est alors en file).
 export const BRIEFING_PENDING_MARKDOWN =
   'Pas encore de point pour ce projet : il sera prêt à la prochaine session.';
+// Ce qu'ils rendent quand aucun point n'est prêt et que le serveur n'a pas de modèle (getLlm rend null) : le worker
+// ne prépare alors aucun point, et promettre « à la prochaine session » serait faux. Rien n'est mis en file.
+export const BRIEFING_NO_MODEL_MARKDOWN =
+  "Le point du matin n'est pas préparé : aucun modèle n'est réglé sur ce serveur.";
 // Borne le texte ET la réflexion du modèle (llm.ts) : 250 mots en prennent environ 600, la réflexion de l'effort
 // « medium » quelques milliers. De la marge, pour ne jamais couper le point avant son premier mot.
 const BRIEFING_MAX_TOKENS = 8000;
@@ -94,22 +99,24 @@ export async function refreshBriefing(
   );
 }
 
-// Met le recalcul en file sans jamais faire échouer la lecture : le crochet attend sa réponse.
+// Met le recalcul en file, tout de suite, sans jamais faire échouer la lecture : le crochet attend sa réponse.
 async function requestRefresh(ctx: TenantContext, project: string): Promise<void> {
   try {
-    await enqueueBriefingRefresh({ tenantId: ctx.tenantId, userId: ctx.userId, project });
+    await requestBriefingRefreshNow({ tenantId: ctx.tenantId, userId: ctx.userId, project });
   } catch (error) {
     logError('briefing.enqueue_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId });
   }
 }
 
 // Le dernier point de l'utilisateur sur ce projet, même périmé (un recalcul est déjà en file), et l'heure de la
-// lecture notée (le tic du matin refait les points lus dans la semaine). Rend null, et met le recalcul en file tout
-// de suite, quand il n'y a pas de point ou qu'une des sources fournies au modèle n'est plus visible de
-// l'utilisateur (droits retirés, source supprimée) : ce point-là n'est plus montré.
+// lecture notée (le tic du matin refait les points lus dans la semaine). Rend null quand il n'y a pas de point ou
+// qu'une des sources fournies au modèle n'est plus visible de l'utilisateur (droits retirés, source supprimée) : ce
+// point-là n'est plus montré, et son recalcul est mis en file tout de suite, sauf `refresh: false` (aucun modèle
+// pour le faire).
 export async function readBriefing(
   ctx: TenantContext,
   project: string,
+  options: { refresh?: boolean } = {},
 ): Promise<{ markdown: string; preparedAt: Date } | null> {
   const read = await withTenant(ctx, async (tx) => {
     const [row] = await tx
@@ -137,8 +144,32 @@ export async function readBriefing(
     }
     return { markdown: row.markdown, preparedAt: row.preparedAt };
   });
-  if (read === null) await requestRefresh(ctx, project);
+  if (read === null && options.refresh !== false) await requestRefresh(ctx, project);
   return read;
+}
+
+// La réponse de la route du crochet et de l'outil MCP (C8) : le dernier point, sinon le message qui dit pourquoi il
+// n'y en a pas. `modelReady` : le serveur a un modèle (getLlm), donc un point manquant sera préparé ; sans modèle,
+// rien n'est mis en file et le message le dit. `project` null : aucun projet connu (l'outil MCP appelé sans projet).
+export async function briefingResponse(
+  ctx: TenantContext,
+  project: string | null,
+  deps: { modelReady: boolean },
+): Promise<BriefingResponse> {
+  const briefing =
+    project === null ? null : await readBriefing(ctx, project, { refresh: deps.modelReady });
+  if (briefing !== null && project !== null) {
+    return {
+      markdown: briefing.markdown,
+      projet: project,
+      preparedAt: briefing.preparedAt.toISOString(),
+    };
+  }
+  return {
+    markdown: deps.modelReady ? BRIEFING_PENDING_MARKDOWN : BRIEFING_NO_MODEL_MARKDOWN,
+    projet: null,
+    preparedAt: null,
+  };
 }
 
 // Le projet du point que l'utilisateur a lu en dernier, sinon de celui préparé en dernier (l'outil MCP appelé sans

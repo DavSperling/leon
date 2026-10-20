@@ -146,7 +146,9 @@ La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'édite
 
 ## Briefing au démarrage de Claude Code
 
-Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans appeler d'outil, ajouter ce hook dans `~/.claude/settings.json`. Le serveur ne prépare pas encore ce point (tâche T13 du deuxième jet) : en attendant, la commande ne renvoie rien (elle écrit seulement « ce serveur ne prépare pas encore de point du matin » sur la sortie d'erreur) et ne bloque jamais la session.
+Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans appeler d'outil, ajouter ce crochet (« hook ») dans `~/.claude/settings.json`, en remplaçant `/chemin/vers/leon` par le chemin absolu du dépôt. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « Pas encore de point pour ce projet : il sera prêt à la prochaine session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session et sort toujours avec le code 0.
+
+`--config.verify-deps-before-run=false` empêche pnpm d'installer les dépendances avant la commande quand elles ne correspondent plus au verrou (après un `git pull`) : cette installation écrirait dans le contexte de la session et serait coupée au bout du délai du crochet.
 
 ```json
 {
@@ -156,7 +158,7 @@ Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans a
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm -s --dir <chemin du dépôt leon> leon briefing",
+            "command": "pnpm -s --config.verify-deps-before-run=false --dir /chemin/vers/leon leon briefing",
             "timeout": 10
           }
         ]

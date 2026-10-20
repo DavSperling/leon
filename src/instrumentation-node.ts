@@ -19,8 +19,9 @@ export async function startNodeInstrumentation() {
   const { startSearchWorker } = await import('@/server/search/worker');
   await startSearchWorker({ embedder });
   // Le point du matin (T13) : un appel au modèle par recalcul. Sans modèle, son worker démarre quand même et termine
-  // chaque job sans rien faire (aucune reprise en boucle) : la route et l'outil MCP disent alors « pas encore de
-  // point ». Avant la relève, comme l'indexation : l'indexation y signale les projets touchés.
+  // chaque job sans rien faire (aucune reprise en boucle) : la route et l'outil MCP disent alors qu'aucun modèle
+  // n'est réglé, et ne mettent rien en file. Avant la relève, comme l'indexation : l'indexation y signale les projets
+  // touchés.
   const { getLlm } = await import('@/server/llm/get-llm');
   const llm = getLlm(env);
   if (!llm) {

@@ -1,11 +1,13 @@
 import { and, eq } from 'drizzle-orm';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, BRIEFING_PROJECT_PARAM, BriefingResponseSchema } from '@/capture/api-contract';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
+import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
 import { BRIEFING_QUEUES, briefingKey } from '@/server/briefing/queue';
 import { briefings } from '@/server/db/schema/search';
+import { createFakeLlm } from '@/server/llm/fake-llm';
+import * as getLlmModule from '@/server/llm/get-llm';
 import { getBoss } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { adminDb, adminPool } from '@/test/db';
@@ -74,6 +76,13 @@ afterAll(async () => {
 });
 
 describe('GET /api/v1/briefing', () => {
+  // Un modèle est réglé sur le serveur (le faux) : un point manquant sera préparé. L'environnement de test n'en a
+  // pas (getLlm rend null) : c'est le cas du bloc suivant.
+  beforeEach(() => {
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue(createFakeLlm({ texts: [] }));
+  });
+  afterEach(() => vi.restoreAllMocks());
+
   it('répond 401 sans jeton', async () => {
     const response = await apiRequest(briefingUrl(uniqueProject()));
 
@@ -149,5 +158,45 @@ describe('GET /api/v1/briefing', () => {
 
     expect((await response.json()).markdown).toBe(BRIEFING_PENDING_MARKDOWN);
     expect(await jobsFor(alice, project)).toHaveLength(1);
+  });
+});
+
+// Sans clé Anthropic, le worker ne prépare aucun point : la route ne promet pas « à la prochaine session ».
+describe('GET /api/v1/briefing, sans modèle sur le serveur', () => {
+  it('sans point : le message qui dit qu’aucun modèle n’est réglé, et rien en file', async () => {
+    const project = uniqueProject();
+
+    const response = await apiRequest(briefingUrl(project), { token: aliceToken });
+
+    expect(response.status).toBe(200);
+    expect(BriefingResponseSchema.parse(await response.json())).toEqual({
+      markdown: BRIEFING_NO_MODEL_MARKDOWN,
+      projet: null,
+      preparedAt: null,
+    });
+    expect(BRIEFING_NO_MODEL_MARKDOWN).toBe(
+      "Le point du matin n'est pas préparé : aucun modèle n'est réglé sur ce serveur.",
+    );
+    expect(await jobsFor(alice, project)).toEqual([]);
+  });
+
+  it('avec un point préparé avant : le rend quand même', async () => {
+    const project = uniqueProject();
+    await seedBriefing(alice, project);
+
+    const response = await apiRequest(briefingUrl(project), { token: aliceToken });
+
+    expect((await response.json()).projet).toBe(project);
+  });
+
+  it('un point qui a reçu une source devenue invisible : ni montré, ni remis en file', async () => {
+    const project = uniqueProject();
+    const { sourceId } = await seedRun(bob, { kind: 'claude_code', status: 'done' });
+    await seedBriefing(alice, project, { sourceIds: [sourceId] });
+
+    const response = await apiRequest(briefingUrl(project), { token: aliceToken });
+
+    expect((await response.json()).markdown).toBe(BRIEFING_NO_MODEL_MARKDOWN);
+    expect(await jobsFor(alice, project)).toEqual([]);
   });
 });

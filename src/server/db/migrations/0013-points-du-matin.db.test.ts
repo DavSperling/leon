@@ -1,6 +1,11 @@
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { PROJECT_KEY_PATTERN } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import {
+  BRIEFING_MARKDOWN_MAX_CHARS,
+  BRIEFING_RENDER_MAX_CHARS,
+} from '@/server/briefing/briefing-prompt';
 import { db } from '@/server/db/client';
 import { briefings } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
@@ -130,6 +135,64 @@ describe('briefings sous la sécurité par ligne', () => {
     for (const column of ['tenant_id', 'user_id', 'project', 'acl']) {
       expect(await privilege(column, 'UPDATE'), column).toBe(false);
     }
+  });
+});
+
+// Les valeurs recopiées entre le code et la base : si elles divergent, un recalcul échoue à chaque essai (la route et
+// signalProjectActivity acceptent une clé que la base refuse, ou le rendu dépasse la limite de la colonne).
+describe('la base et le code disent la même chose', () => {
+  const insertBriefing = (project: string, markdown = 'Point') =>
+    adminPool.query(
+      `insert into briefings (tenant_id, user_id, project, markdown, prepared_at, acl)
+       values ($1, $2, $3, $4, now(), array[$2::uuid])`,
+      [alice.tenantId, alice.userId, project, markdown],
+    );
+
+  it('la clé de projet : la contrainte de la base accepte exactement ce que PROJECT_KEY_PATTERN accepte', async () => {
+    const suffix = crypto.randomUUID().slice(0, 8);
+    const keys = [
+      `github.com/acme/leon-${suffix}`,
+      `github.com/a.b_c-d/e.f-${suffix}`,
+      `github.com/../x-${suffix}`,
+      `dossier:${crypto.randomUUID().replaceAll('-', '').slice(0, 16)}`,
+      'dossier:0123456789ABCDEF',
+      'dossier:0123456789abcde',
+      'dossier:0123456789abcdef0',
+      `github.com/Acme/leon-${suffix}`,
+      `github.com/acme/leon-${suffix}/x`,
+      `github.com/acme-${suffix}`,
+      `gitlab.com/acme/leon-${suffix}`,
+      `https://github.com/acme/leon-${suffix}`,
+      ` github.com/acme/leon-${suffix}`,
+      `github.com/acme/leon-${suffix}\n`,
+      'evil',
+      '',
+      `github.com/a/${'b'.repeat(200 - 'github.com/a/'.length)}`,
+      `github.com/c/${'b'.repeat(201 - 'github.com/c/'.length)}`,
+    ];
+    expect(keys.at(-2)).toHaveLength(200);
+    expect(keys.at(-1)).toHaveLength(201);
+
+    for (const key of keys) {
+      const code = key.length <= 200 && PROJECT_KEY_PATTERN.test(key);
+      const base = await insertBriefing(key).then(
+        () => true,
+        () => false,
+      );
+      expect(base, JSON.stringify(key)).toBe(code);
+    }
+  });
+
+  it('la longueur du point : la base accepte BRIEFING_MARKDOWN_MAX_CHARS caractères, pas un de plus', async () => {
+    await expect(
+      insertBriefing(uniqueProject(), 'é'.repeat(BRIEFING_MARKDOWN_MAX_CHARS)),
+    ).resolves.toBeDefined();
+    await expect(
+      insertBriefing(uniqueProject(), 'é'.repeat(BRIEFING_MARKDOWN_MAX_CHARS + 1)),
+    ).rejects.toThrow();
+    await expect(insertBriefing(uniqueProject(), '')).rejects.toThrow();
+    // Le point rendu (briefing-prompt.ts) tient toujours sous la limite de la base.
+    expect(BRIEFING_RENDER_MAX_CHARS).toBeLessThanOrEqual(BRIEFING_MARKDOWN_MAX_CHARS);
   });
 });
 

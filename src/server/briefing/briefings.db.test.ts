@@ -16,7 +16,7 @@ import {
   readBriefing,
   refreshBriefing,
 } from './briefings';
-import { BRIEFING_QUEUES, briefingKey } from './queue';
+import { BRIEFING_QUEUES, briefingKey, signalProjectActivity } from './queue';
 
 // Le point du matin, de bout en bout sous les droits de l'utilisateur : la matière (gather.ts), un seul appel au
 // faux modèle, la ligne écrite ; puis la lecture, qui revérifie que chaque source fournie est encore visible.
@@ -135,7 +135,7 @@ describe('refreshBriefing', () => {
     expect(row?.markdown).toContain(`# Point du matin · ${seeded.project}`);
     expect(row?.markdown).toContain(DATA_GUARD_LINE);
     expect(row?.markdown).toContain('- Le jeton est corrigé [1].');
-    expect(row?.markdown).toContain('[1] Claude Code · Session du jeton');
+    expect(row?.markdown).toContain('[1] Claude Code · « Session du jeton »');
     expect(row?.preparedAt.getTime()).toBe(now.getTime());
     expect(row?.stale).toBe(false);
     expect(row?.acl).toEqual([alice.userId]);
@@ -248,6 +248,31 @@ describe('readBriefing', () => {
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toEqual({ tenantId, userId: alice.userId, project });
     expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+  });
+
+  // Un signal a mis le recalcul dans 30 minutes (file `stately` : un seul job en attente par clé). Une lecture qui
+  // ne trouve rien à montrer l'avance à maintenant, au lieu d'être ignorée par la file.
+  it('sans point, avance à maintenant un recalcul déjà en attente, sans en ajouter un second', async () => {
+    const project = `github.com/${uniqueRepo()}`;
+    await signalProjectActivity(alice, project, [alice.userId]);
+    const [delayed] = await jobsFor(alice, project);
+    expect((delayed?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
+
+    expect(await readBriefing(alice, project)).toBeNull();
+
+    const jobs = await jobsFor(alice, project);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.id).toBe(delayed?.id);
+    expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+    expect(jobs[0]?.data).toEqual({ tenantId, userId: alice.userId, project });
+  });
+
+  it('avec `refresh: false` (aucun modèle) : null, sans rien mettre en file', async () => {
+    const project = `github.com/${uniqueRepo()}`;
+
+    expect(await readBriefing(alice, project, { refresh: false })).toBeNull();
+
+    expect(await jobsFor(alice, project)).toEqual([]);
   });
 
   // Vigilance 3 : une source qui perd ses droits disparaît aussi du point déjà préparé.

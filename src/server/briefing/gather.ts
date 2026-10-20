@@ -1,5 +1,5 @@
 import { type SQL, sql } from 'drizzle-orm';
-import { CAPTURE_KINDS, type TurnRole } from '@/capture/turn';
+import { CAPTURE_KINDS, type SourceKind, type TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, sourceInfoFrom, textArray } from '@/server/search/filters-sql';
@@ -12,6 +12,13 @@ import type { SourceInfo } from '@/server/search/types';
 // par ligne retire ce qu'il ne voit pas (la conversation privée d'un collègue sur le même dépôt), et rien ici
 // n'ouvre d'autre accès à la base. Les filtres du point (clé du projet, dépôt, mention) ne s'écrivent pas avec ceux
 // de la recherche (C4) : ces lectures sont donc les siennes, toujours sous les droits du lecteur.
+//
+// Écart assumé à la décision D4 du plan (« le point du matin n'a pas d'accès à la base hors de searchPassages,
+// fetchPassageContext, fetchSource et listActivity ») : SearchFilters n'a de filtre ni sur `metadata.project` ni sur
+// `origin.repo`, ni de recherche de mention par adresse. Ces trois lectures ne passent que par les tables sous
+// sécurité par ligne (sources, turns, passages) et dans withTenant du lecteur. Quand les droits ou les exclusions
+// changeront (T16 à T18), elles devront rester ainsi : rien de ce que la sécurité par ligne masque n'y entre, et
+// toute nouvelle règle de visibilité qui ne serait pas portée par la sécurité par ligne devra y être ajoutée.
 //
 // Le texte capté est coupé ici, avant d'aller au modèle : les sessions sont longues (sorties d'outils), et le point
 // se refait plusieurs fois par jour.
@@ -29,6 +36,9 @@ const CHANGE_TURNS = 2;
 // Les passages qui mentionnent l'utilisateur (plan, T13).
 export const MENTIONS_MAX = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Les outils lus par nom dans les requêtes : typés, pour qu'un nom qui n'est plus dans SOURCE_KINDS ne compile pas.
+const CLAUDE_CODE = 'claude_code' satisfies SourceKind;
+const GITHUB = 'github' satisfies SourceKind;
 
 // Un extrait de la matière : un tour ou un passage, son texte déjà coupé.
 export type BriefingExcerpt = {
@@ -168,7 +178,7 @@ async function readSessions(tx: Tx, ctx: TenantContext, project: string, cutoff:
                                where t.tenant_id = s.tenant_id and t.source_id = s.id)) as first_epoch
     from sources s
     cross join lateral (select ${LAST_TS_SQL} as last_ts) l
-    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = 'claude_code'
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${CLAUDE_CODE}
       and s.metadata->>'project' = ${project}
       and l.last_ts >= ${cutoff.toISOString()}::timestamptz
     order by l.last_ts desc, s.id
@@ -192,7 +202,7 @@ async function readChanges(tx: Tx, ctx: TenantContext, project: string, since: D
     select s.id, s.kind, s.title, s.metadata, extract(epoch from l.last_ts) as last_epoch
     from sources s
     cross join lateral (select ${LAST_TS_SQL} as last_ts) l
-    where s.tenant_id = ${ctx.tenantId} and s.kind = 'github'
+    where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
       and lower(s.metadata->'origin'->>'repo') = ${repo}
       and l.last_ts >= ${since.toISOString()}::timestamptz
     order by l.last_ts desc, s.id

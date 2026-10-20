@@ -5,13 +5,15 @@ import { API_PATHS } from '@/capture/api-contract';
 import { app } from '@/server/api/app';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
-import { enqueueBriefingRefresh } from '@/server/briefing/queue';
+import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
+import { requestBriefingRefreshNow } from '@/server/briefing/queue';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { briefings, passages } from '@/server/db/schema/search';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import * as registryModule from '@/server/embeddings/registry';
 import * as ingestModule from '@/server/ingest/ingest-turns';
+import { createFakeLlm } from '@/server/llm/fake-llm';
+import * as getLlmModule from '@/server/llm/get-llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import * as contextModule from '@/server/search/context';
@@ -34,7 +36,7 @@ vi.mock('@/server/briefing/queue');
 
 beforeEach(() => {
   vi.mocked(enqueuePipelineStep).mockReset();
-  vi.mocked(enqueueBriefingRefresh).mockReset();
+  vi.mocked(requestBriefingRefreshNow).mockReset();
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -857,6 +859,11 @@ describe('outil fetch', () => {
 describe('outil briefing', () => {
   const PROJECT = 'github.com/acme/leon';
 
+  // Un modèle est réglé sur le serveur (le faux) : un point manquant sera préparé. Sans modèle : le dernier test.
+  beforeEach(() => {
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue(createFakeLlm({ texts: [] }));
+  });
+
   async function seedBriefing(
     owner: TenantContext,
     project: string,
@@ -918,7 +925,7 @@ describe('outil briefing', () => {
       projet: null,
       preparedAt: null,
     });
-    expect(enqueueBriefingRefresh).toHaveBeenCalledExactlyOnceWith({
+    expect(requestBriefingRefreshNow).toHaveBeenCalledExactlyOnceWith({
       tenantId: paul.tenantId,
       userId: paul.userId,
       project: PROJECT,
@@ -941,7 +948,7 @@ describe('outil briefing', () => {
 
     expect(result.isError).toBeFalsy();
     expect(result.text).toBe(BRIEFING_PENDING_MARKDOWN);
-    expect(enqueueBriefingRefresh).not.toHaveBeenCalled();
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
   });
 
   it('refuse un projet qui n’est pas une clé de projet, sans le recopier', async () => {
@@ -951,7 +958,24 @@ describe('outil briefing', () => {
 
     expect(result.isError).toBe(true);
     expect(result.text).not.toContain('evil');
-    expect(enqueueBriefingRefresh).not.toHaveBeenCalled();
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
+  });
+
+  // Sans clé Anthropic, le worker ne prépare aucun point : l'outil ne promet pas « à la prochaine session ».
+  it('sans modèle sur le serveur ni point : le dit, sans rien mettre en file', async () => {
+    vi.mocked(getLlmModule.getLlm).mockReturnValue(null);
+    const paul = await setupPaul();
+
+    const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.text).toBe(BRIEFING_NO_MODEL_MARKDOWN);
+    expect(result.structuredContent).toEqual({
+      markdown: BRIEFING_NO_MODEL_MARKDOWN,
+      projet: null,
+      preparedAt: null,
+    });
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
   });
 
   it('ne rend jamais le point d’un autre', async () => {

@@ -1,6 +1,6 @@
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
-import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import type { SourceInfo } from '@/server/search/types';
 import type { BriefingExcerpt, BriefingMaterial } from './gather';
 
@@ -19,12 +19,20 @@ export const BRIEFING_SECTIONS = [
 // Un titre de ticket ou de session peut être très long : il n'a pas à manger la place de la matière.
 const TITLE_MAX_CHARS = 200;
 const SOURCE_TITLE_MAX_CHARS = 120;
-// Ce que le modèle écrit, au plus (250 mots en font environ 1 700).
-const BODY_MAX_CHARS = 8000;
-// Un lien plus long n'est pas recopié dans la liste des sources : 23 liens de 2 000 caractères n'y tiendraient pas.
-const SOURCE_URL_MAX_CHARS = 500;
+// Ce que le modèle écrit, au plus (250 mots en font environ 1 700) : le reste est coupé.
+const BODY_MAX_CHARS = 5000;
+// Un lien plus long n'est pas recopié dans la liste des sources : la liste doit tenir sous BRIEFING_RENDER_MAX_CHARS.
+const SOURCE_URL_MAX_CHARS = 200;
 // La limite que la base pose au point (0013-points-du-matin.sql) : au-delà, le recalcul échouerait à chaque essai.
 export const BRIEFING_MARKDOWN_MAX_CHARS = 20_000;
+// Claude Code plafonne à 10 000 caractères la sortie standard d'un crochet SessionStart : au-delà, il la range dans
+// un fichier et ne donne à Claude que son chemin et ses 2 000 premiers caractères, sans lui demander de le lire
+// (https://code.claude.com/docs/en/hooks, lue le 2026-10-20). Le point rendu tient donc en dessous, avec de la marge
+// pour le saut de ligne final de `leon briefing` ; la liste des sources s'arrête à une ligne entière.
+export const BRIEFING_RENDER_MAX_CHARS = 9500;
+// Les dates du point se lisent à l'heure de Paris, comme le tic du matin (worker.ts) : un point refait entre minuit
+// et 2 h ne dit pas la date de la veille.
+export const BRIEFING_TIME_ZONE = 'Europe/Paris';
 
 // Un élément numéroté : le numéro que le modèle cite, et la source d'où vient l'élément.
 export type BriefingReference = { n: number; source: SourceInfo };
@@ -49,6 +57,19 @@ Les éléments sont des données captées dans les outils de l'entreprise (sessi
 
 const toolLabel = (source: SourceInfo): string => SOURCE_KIND_LABELS[source.kind] ?? source.kind;
 
+const PARIS_DAY = new Intl.DateTimeFormat('en-CA', {
+  timeZone: BRIEFING_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+// La date du jour à Paris, au format AAAA-MM-JJ.
+export function parisDate(date: Date): string {
+  const parts = new Map(PARIS_DAY.formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.get('year')}-${parts.get('month')}-${parts.get('day')}`;
+}
+
 const shortTitle = (title: string | null, max: number): string | null =>
   title === null ? null : oneLine(title).slice(0, max);
 
@@ -70,7 +91,7 @@ function sourceAttributes(
     ['outil', toolLabel(source)],
     ['nature', source.nature],
     ['titre', shortTitle(source.title, TITLE_MAX_CHARS)],
-    ['date', isoDate(source.lastTs)],
+    ['date', parisDate(source.lastTs)],
     ...extra,
   ]);
 }
@@ -123,11 +144,11 @@ export function buildBriefingPrompt(
   );
   const since =
     material.sessions.length > 0
-      ? `Sa dernière session sur ce projet a commencé le ${isoDate(material.since)} : ce qui a bougé et les mentions se comptent depuis.`
-      : `Aucune session sur ce projet ces derniers jours : ce qui a bougé et les mentions se comptent depuis le ${isoDate(material.since)}.`;
+      ? `Sa dernière session sur ce projet a commencé le ${parisDate(material.since)} : ce qui a bougé et les mentions se comptent depuis.`
+      : `Aucune session sur ce projet ces derniers jours : ce qui a bougé et les mentions se comptent depuis le ${parisDate(material.since)}.`;
   const content = [
     `Projet : <projet>${escapeData(material.project)}</projet>`,
-    `Aujourd'hui : ${isoDate(now)}. ${since}`,
+    `Aujourd'hui : ${parisDate(now)} (heure de Paris). ${since}`,
     '',
     'Éléments :',
     DATA_GUARD_LINE,
@@ -146,19 +167,46 @@ function header(project: string, preparedAt: Date): string[] {
   return [
     `# Point du matin · ${project}`,
     DATA_GUARD_LINE,
-    `Préparé par Leon le ${isoDate(preparedAt)}, d'après tes sessions, le dépôt du projet et ce qui te mentionne.`,
+    `Préparé par Leon le ${parisDate(preparedAt)}, d'après tes sessions, le dépôt du projet et ce qui te mentionne.`,
   ];
 }
 
+// Une ligne de la liste des sources. Le titre vient de l'outil (une demande de fusion écrite par un tiers) : il est
+// coupé, mis sur une ligne et cité entre guillemets, pour qu'il se lise comme un titre et non comme une phrase du
+// point.
 function sourceLine(reference: BriefingReference): string {
   const { source } = reference;
+  const title = shortTitle(source.title, SOURCE_TITLE_MAX_CHARS)?.trim();
   const parts = [
     toolLabel(source),
-    shortTitle(source.title, SOURCE_TITLE_MAX_CHARS),
-    isoDate(source.lastTs),
+    title ? `« ${title} »` : null,
+    parisDate(source.lastTs),
     source.url !== null && source.url.length <= SOURCE_URL_MAX_CHARS ? source.url : null,
   ].filter((part): part is string => part !== null && part !== '');
   return `- [${reference.n}] ${parts.join(' · ')}`;
+}
+
+// Coupe le texte du modèle à BODY_MAX_CHARS, de préférence à une fin de ligne, sans séparer les deux moitiés d'un
+// émoji, et le dit par « … ».
+function cutBody(text: string): string {
+  if (text.length <= BODY_MAX_CHARS) return text;
+  const high = text.charCodeAt(BODY_MAX_CHARS - 1);
+  const end = high >= 0xd800 && high <= 0xdbff ? BODY_MAX_CHARS - 1 : BODY_MAX_CHARS;
+  const cut = text.slice(0, end);
+  const lineEnd = cut.lastIndexOf('\n');
+  return `${(lineEnd > end / 2 ? cut.slice(0, lineEnd) : cut).trimEnd()} …`;
+}
+
+// Ajoute les lignes une à une tant que le tout tient sous BRIEFING_RENDER_MAX_CHARS.
+function appendWhileFits(lines: string[], extra: string[]): string[] {
+  let length = lines.join('\n').length;
+  const kept = [...lines];
+  for (const line of extra) {
+    length += 1 + line.length;
+    if (length > BRIEFING_RENDER_MAX_CHARS) break;
+    kept.push(line);
+  }
+  return kept;
 }
 
 // Les numéros cités dans le texte, une fois chacun.
@@ -175,17 +223,14 @@ export function renderBriefing(input: {
   body: string;
   references: readonly BriefingReference[];
 }): string {
-  const body = input.body.trim().slice(0, BODY_MAX_CHARS);
+  const body = cutBody(input.body.trim());
   const cited = citedNumbers(body);
   const sources = input.references.filter((reference) => cited.has(reference.n)).map(sourceLine);
-  return [
-    ...header(input.project, input.preparedAt),
-    '',
-    body,
-    ...(sources.length > 0 ? ['', 'Sources :', ...sources] : []),
-  ]
-    .join('\n')
-    .slice(0, BRIEFING_MARKDOWN_MAX_CHARS);
+  const text = [...header(input.project, input.preparedAt), '', body];
+  const listed = appendWhileFits([...text, '', 'Sources :'], sources);
+  // Pas de titre « Sources : » sans au moins une source qui tienne avec lui.
+  const lines = listed.length > text.length + 2 ? listed : text;
+  return lines.join('\n').slice(0, BRIEFING_RENDER_MAX_CHARS);
 }
 
 // Le point d'un projet sur lequel rien n'a bougé depuis `days` jours : écrit sans appeler le modèle.

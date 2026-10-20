@@ -3,6 +3,7 @@ import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import type { Llm } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
+import { BRIEFING_TIME_ZONE } from './briefing-prompt';
 import { refreshBriefing } from './briefings';
 import {
   BRIEFING_QUEUES,
@@ -20,7 +21,8 @@ import {
 // une fois la clé réglée.
 
 export const MORNING_CRON = '0 6 * * *';
-export const MORNING_TIME_ZONE = 'Europe/Paris';
+// Le fuseau des dates écrites dans le point (briefing-prompt.ts).
+export const MORNING_TIME_ZONE = BRIEFING_TIME_ZONE;
 // Les points lus depuis moins de 7 jours sont refaits chaque matin (plan, T13).
 export const MORNING_READ_DAYS = 7;
 // Points refaits en parallèle dans un processus : chacun est un appel au modèle d'une demi-minute environ.

@@ -1,5 +1,7 @@
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { access, readFile } from 'node:fs/promises';
+import { isAbsolute, join, resolve } from 'node:path';
+import { createInterface } from 'node:readline';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { runBriefing } from './briefing';
 import {
@@ -16,7 +18,11 @@ import {
   importClaudeCode,
   parseSince,
 } from './import-claude-code';
+import { installHooks } from './install-hooks';
 import { gitInDirectory } from './project-key';
+
+// Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
+const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
 const HELP = `Usage : pnpm leon <commande>
 
@@ -30,6 +36,10 @@ Commandes :
   capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
                        de Claude Code : le JSON du crochet est lu sur l'entrée standard)
       --delai-ms <n>       raccourcit le délai réseau de l'envoi, 15 000 ms au plus (pour les essais)
+  installer-crochets   Écrit les crochets SessionStart (briefing) et SessionEnd (capter-session) dans les
+                       réglages de Claude Code (~/.claude/settings.json, ou CLAUDE_CONFIG_DIR), après confirmation
+      --oui                n'attend aucune confirmation
+      --depot <chemin>     dépôt de Leon cité dans les commandes (par défaut : celui qui lance celle-ci)
 
 L'envoi réel, le briefing et la capture de session demandent LEON_URL et LEON_TOKEN.`;
 
@@ -128,12 +138,55 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
+// Pose une question sur le terminal et rend la ligne tapée, ou une chaîne vide si l'entrée se ferme sans réponse
+// (commande lancée sans terminal : on n'écrit alors rien). L'itérateur est créé tout de suite : une réponse déjà
+// arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent est gardée, pas perdue.
+function createAsker(): { ask: (question: string) => Promise<string>; close: () => void } {
+  const lines = createInterface({ input: process.stdin });
+  const answers = lines[Symbol.asyncIterator]();
+  return {
+    ask: async (question) => {
+      process.stdout.write(question);
+      const next = await answers.next();
+      return next.done ? '' : next.value;
+    },
+    close: () => lines.close(),
+  };
+}
+
+// Les crochets s'écrivent dans les réglages de Claude Code : CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude.
+async function runInstallHooks(args: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args,
+    options: { oui: { type: 'boolean' }, depot: { type: 'string' } },
+  });
+  const repoDir = values.depot ? resolve(values.depot) : CLI_REPO_DIR;
+  const isLeonRepo = await access(join(repoDir, 'src', 'cli', 'leon.ts')).then(
+    () => true,
+    () => false,
+  );
+  if (!isLeonRepo) throw new Error("--depot : ce dossier n'est pas un dépôt de Leon.");
+  // La commande tourne dans le dépôt de Leon (`pnpm --dir`), pas dans le dossier où l'utilisateur a posé la variable.
+  const configDir = claudeConfigDir(process.env);
+  if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR doit être un chemin absolu.');
+  const asker = createAsker();
+  try {
+    return await installHooks(
+      { repoDir, configDir, assumeYes: values.oui ?? false },
+      { out: console.log, err: console.error, ask: asker.ask },
+    );
+  } finally {
+    asker.close();
+  }
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
+    if (command === 'installer-crochets') return await runInstallHooks(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
     console.error(error instanceof Error ? error.message : 'Erreur inconnue.');

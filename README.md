@@ -144,11 +144,23 @@ Pour les outils dont l'éditeur le permet sans vérification de sa part, le pann
 
 La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'éditeur, « Reconnecter ») est dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
-## Briefing au démarrage de Claude Code
+## L'IA à jour chaque matin
 
-Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans appeler d'outil, ajouter ce crochet (« hook ») dans `~/.claude/settings.json`, en remplaçant `/chemin/vers/leon` par le chemin absolu du dépôt. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « Pas encore de point pour ce projet : il sera prêt à la prochaine session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session et sort toujours avec le code 0.
+Deux crochets de Claude Code font le travail, sans rien demander en séance :
 
-`--config.verify-deps-before-run=false` empêche pnpm d'installer les dépendances avant la commande quand elles ne correspondent plus au verrou (après un `git pull`) : cette installation écrirait dans le contexte de la session et serait coupée au bout du délai du crochet.
+- **au démarrage d'une session** (`SessionStart`), `pnpm leon briefing` affiche le point du matin du projet du dossier courant : ce qu'on a fait dans ses dernières sessions, ce qui a bougé depuis (le dépôt, les tickets, les messages qui nous mentionnent) et ce qui reste ouvert, avec ses sources, en 250 mots au plus. Claude Code l'ajoute au contexte de la session. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « Pas encore de point pour ce projet : il sera prêt à la prochaine session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session (3 secondes au serveur au plus) et sort toujours avec le code 0.
+- **à la fin d'une session** (`SessionEnd`), `pnpm leon capter-session` envoie la conversation à Leon avec son projet, pour qu'elle serve au point du matin et à la recherche. Elle sort aussi toujours avec le code 0.
+
+### Installer
+
+```bash
+pnpm leon installer-crochets          # montre ce qui sera écrit, puis demande confirmation [o/N]
+pnpm leon installer-crochets --oui    # écrit sans demander
+```
+
+Avant : `LEON_URL` et `LEON_TOKEN` dans le `.env.local` du dépôt (voir `.env.example` ; le jeton se crée dans Réglages). Les crochets les lisent là à chaque lancement. Lancer la commande depuis le **clone principal** de Leon : un dossier de travail temporaire (`.claude/worktrees/…`) est supprimé après la fusion, et les crochets cesseraient de marcher (la commande prévient). `--depot <chemin>` désigne un autre dépôt.
+
+La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du dossier `CLAUDE_CONFIG_DIR` quand cette variable est posée), avec le chemin absolu du dépôt à la place de `/chemin/vers/leon` :
 
 ```json
 {
@@ -163,12 +175,37 @@ Pour qu'une nouvelle session Claude Code reçoive le point sur son projet sans a
           }
         ]
       }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm -s --config.verify-deps-before-run=false --dir /chemin/vers/leon leon capter-session",
+            "timeout": 30
+          }
+        ]
+      }
     ]
   }
 }
 ```
 
-`LEON_URL` et `LEON_TOKEN` sont lus dans le `.env.local` du dépôt (voir `.env.example`). Le jeton se crée dans Réglages.
+- Vos autres réglages et crochets restent tels quels, dans leur ordre. L'ancien fichier est copié avant l'écriture dans `settings.json.leon-sauvegarde`, à côté.
+- Relancer la commande ne change rien (« déjà en place ») ; si le dépôt a changé de place, elle met à jour ses deux entrées au lieu d'en ajouter d'autres.
+- Un `settings.json` illisible (Claude Code lit du JSON strict : ni commentaire ni virgule finale) n'est pas touché : la commande dit pourquoi et s'arrête. On peut alors coller le JSON ci-dessus à la main.
+- `--config.verify-deps-before-run=false` empêche pnpm d'installer les dépendances avant la commande quand elles ne correspondent plus au verrou (après un `git pull`) : cette installation écrirait dans le contexte de la session et serait coupée au bout du délai du crochet.
+- Les délais sont en secondes : 10 au démarrage, 30 à la fin (Claude Code n'en laisse que 1,5 par défaut à un crochet de fin de session ; l'envoi s'interrompt de lui-même au bout de 15 secondes).
+
+### Ce qui est envoyé
+
+- **Au démarrage** : la clé du projet et le jeton, rien de la conversation. La clé est `github.com/<propriétaire>/<dépôt>`, tirée du `remote origin` du dossier de la session, sinon `dossier:` suivi de 16 caractères calculés à partir de son chemin.
+- **À la fin** : le texte des échanges (vos messages et les réponses de Claude), sans les pensées, les appels et les sorties d'outils, ni les images, avec la clé du projet. Avant l'envoi, les secrets reconnaissables (clés d'API, jetons, clés privées…) sont masqués, les rappels du système retirés et chaque message est coupé à 20 000 caractères ; le serveur refait le masquage. Tout part vers le serveur de `LEON_URL`. La conversation est **privée à son auteur** : personne d'autre ne la voit.
+- **Quand** : à la sortie de Claude Code, après `/clear` et au `/resume` interactif. Un terminal fermé de force, une session `claude -p` ou un plantage ne sont pas captés ; `pnpm leon import-claude-code` les rattrape (`--dry-run` montre ce qui serait envoyé, sans rien envoyer).
+
+### Retirer les crochets
+
+Ouvrir `settings.json` et supprimer les deux entrées dont la commande finit par `leon briefing` et `leon capter-session` (avec leur groupe `{ "hooks": [...] }` s'il ne contient plus rien) ; Claude Code reprend le changement tout seul. La commande `/hooks`, dans Claude Code, liste les crochets actifs et dit dans quel fichier chacun est défini. Pour tout éteindre un moment sans rien supprimer : `"disableAllHooks": true` dans `settings.json` (cela éteint aussi vos autres crochets). `settings.json.leon-sauvegarde` est la copie d'avant l'installation : la remettre annule aussi tous les changements faits dans les réglages depuis. Les sessions déjà envoyées restent chez Leon : il n'y a pas encore de bouton pour les effacer.
 
 ## Travailler à deux
 

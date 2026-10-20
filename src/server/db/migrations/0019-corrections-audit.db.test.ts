@@ -7,7 +7,7 @@ import { adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { seedPassages, seedRun } from '@/test/seed-search';
 
-// Migration 0013 : les corrections de l'audit du 20/10 sur les lectures des tics (fonctions hors RLS).
+// Migration 0019 : les corrections de l'audit du 20/10 sur les lectures des tics (fonctions hors RLS).
 
 const MINUTE = 60_000;
 const tenantIds: string[] = [];

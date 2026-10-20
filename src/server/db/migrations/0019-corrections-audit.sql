@@ -1,4 +1,4 @@
--- 0013-corrections-audit.sql : les corrections de l'audit du 20/10 qui touchent la base (tics de fond, index
+-- 0019-corrections-audit.sql : les corrections de l'audit du 20/10 qui touchent la base (tics de fond, index
 -- de recherche).
 
 -- Audit n° 8 : passages_sans_vecteur relisait chaque minute tous les passages (anti-jointure sur toute la table)

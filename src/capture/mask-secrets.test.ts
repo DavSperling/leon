@@ -106,6 +106,29 @@ describe('maskSecrets : le nom reste, la valeur est masquée', () => {
   });
 });
 
+describe('maskSecrets : troisième audit', () => {
+  // Régression du second tour : une valeur à point était prise pour du code.
+  it.each([
+    ['PASSWORD=Summer.Time2026!', `PASSWORD=${SECRET_MASK}`],
+    ['DB_PASSWORD=correct.horse.battery.staple', `DB_PASSWORD=${SECRET_MASK}`],
+    ['password: Hunter2.Secret', `password: ${SECRET_MASK}`],
+    [`SENDGRID_API_KEY=SG.${alnum(22)}.${alnum(43)}`, `SENDGRID_API_KEY=${SECRET_MASK}`],
+  ])('masque une valeur à point : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
+
+  // Du code évident reste intact.
+  it.each([
+    "const token = req.headers.authorization?.split(' ')[1];",
+    'accessKeyId: credentials.accessKeyId,',
+    'const key = import.meta.env.VITE_API_KEY;',
+    'api_key = os.environ.get("OPENAI_API_KEY")',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+});
+
 describe('maskSecrets : texte ordinaire', () => {
   it.each([
     'le sk-8 de la cuisine',
@@ -290,4 +313,13 @@ describe('maskSecrets : temps linéaire', () => {
     maskSecrets(text);
     expect(performance.now() - start).toBeLessThan(2000);
   });
+
+  it.each([`password=${trapText('a.')}!`, `password=${trapText('a?.')}`])(
+    'traite une valeur nue de 2 Mo en chemin d’objet en moins de 2 s',
+    (text) => {
+      const start = performance.now();
+      maskSecrets(text);
+      expect(performance.now() - start).toBeLessThan(2000);
+    },
+  );
 });

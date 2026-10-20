@@ -66,9 +66,14 @@ const KEYWORD_THEN_BOUNDARY =
 // camelCase : la casse compte, « secretKey » oui, « SECRETARY » non.
 const KEYWORD_THEN_CAMEL =
   /(?:[Pp]assword|[Pp]asswd|[Pp]wd|[Ss]ecret|[Aa]pi[_-]?[Kk]ey|[Tt]oken|[Aa]ccess[_-]?[Kk]ey|[Pp]rivate[_-]?[Kk]ey)[A-Z]/;
-// Valeur nue qui est du code et non un secret : appel ou chemin d'objet (« getToken(request); »,
-// « process.env.ANTHROPIC_API_KEY », « z.string().min(8) »).
-const CODE_VALUE = /^[A-Za-z_$][\w$]*(?:\(|\.[A-Za-z_$])/;
+// Valeur nue qui est du code évident et non un secret : un appel (« getToken(request); »,
+// « z.string().min(8) », « req.headers.authorization?.split(' ') ») ou une variable d'environnement.
+// Une valeur à point sans appel (« Summer.Time2026! », « SG.xxx.yyy ») reste un secret.
+const CODE_VALUE =
+  /^(?:[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\(|process\.env\.|import\.meta\.env\.|os\.environ\b)/;
+// Chemin d'objet qui finit par le nom lui-même (« accessKeyId: credentials.accessKeyId, »).
+const SAME_NAME_PATH = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\.([A-Za-z_$][\w$]*)[;,]?$/;
+const normalizeName = (name: string) => name.replace(/[_-]/g, '').toLowerCase();
 // « pwd » est aussi le dossier courant (« PWD=/Users/… », « Le pwd: /home/… »).
 const PATH_VALUE = /^[/~]/;
 
@@ -94,6 +99,8 @@ function maskAssignment(
   if (!KEYWORD_THEN_BOUNDARY.test(name) && !KEYWORD_THEN_CAMEL.test(name)) return match;
   if (bare !== undefined) {
     if (CODE_VALUE.test(bare)) return match;
+    const last = SAME_NAME_PATH.exec(bare)?.[1];
+    if (last !== undefined && normalizeName(last) === normalizeName(name)) return match;
     if (/pwd$/i.test(name) && PATH_VALUE.test(bare)) return match;
   }
   const quote = doubleQuoted !== undefined ? '"' : singleQuoted !== undefined ? "'" : '';

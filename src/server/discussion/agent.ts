@@ -46,6 +46,12 @@ export const DISCUSSION_MAX_REPLIES_PER_USER = 2;
 // bloque jamais la sienne.
 const replying = new Set<string>();
 
+// Une réponse de Leon est en cours, dans ce processus, pour cet utilisateur dans cette discussion : la page qui
+// attend une réponse commencée plus tôt (« en-cours ») cesse d'attendre dès qu'il n'y en a plus.
+export function isReplying(ctx: TenantContext, discussionId: string): boolean {
+  return replying.has(`${ctx.userId}:${discussionId}`);
+}
+
 export function replyStream(
   ctx: TenantContext,
   discussionId: string,

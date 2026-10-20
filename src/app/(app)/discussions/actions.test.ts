@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserContext } from '@/server/auth/session';
+import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 import {
@@ -13,6 +14,7 @@ vi.mock('@/server/discussion/discussions', () => ({
   createDiscussion: vi.fn(),
   getDiscussion: vi.fn(),
 }));
+vi.mock('@/server/discussion/agent', () => ({ isReplying: vi.fn(() => false) }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
@@ -124,13 +126,34 @@ describe('readDiscussionMessagesAction', () => {
       ],
     });
 
-    const messages = await readDiscussionMessagesAction(ID);
+    const read = await readDiscussionMessagesAction(ID);
 
     expect(getDiscussion).toHaveBeenCalledWith(CTX, ID);
-    expect(messages).toEqual([
-      { id: 'm1', role: 'user', content: 'Q', citations: [citation] },
-      { id: 'm2', role: 'assistant', content: 'R [1]', citations: [citation] },
-    ]);
+    expect(read).toEqual({
+      messages: [
+        { id: 'm1', role: 'user', content: 'Q', citations: [citation] },
+        { id: 'm2', role: 'assistant', content: 'R [1]', citations: [citation] },
+      ],
+      replying: false,
+    });
+  });
+
+  // Audit 2 n° 12 a : la page qui attend une réponse commencée plus tôt s'arrête dès que le serveur n'en a plus.
+  // Lu avant les messages : une réponse finie entre les deux lectures y est déjà gardée.
+  it('dit si Leon répond encore dans cette discussion, lu avant les messages', async () => {
+    vi.mocked(isReplying).mockReturnValueOnce(true);
+    vi.mocked(getDiscussion).mockResolvedValue({
+      discussion: { id: ID, title: 'Q', createdAt: new Date(), updatedAt: new Date() },
+      messages: [{ id: 'm1', role: 'user', content: 'Q', citations: [], createdAt: new Date() }],
+    });
+
+    const read = await readDiscussionMessagesAction(ID);
+
+    expect(read?.replying).toBe(true);
+    expect(isReplying).toHaveBeenCalledWith(CTX, ID);
+    expect(vi.mocked(isReplying).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(getDiscussion).mock.invocationCallOrder[0] ?? 0,
+    );
   });
 
   it('rend null pour une discussion invisible, un identifiant qui n’est pas une chaîne, ou une panne', async () => {

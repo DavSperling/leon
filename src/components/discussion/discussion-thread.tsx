@@ -274,8 +274,9 @@ export function DiscussionThread({
       .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
   }
 
-  // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, puis la montre
-  // telle qu'elle est. Une question envoyée entre-temps n'a pas été écrite : elle revient dans la saisie.
+  // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, ou que le serveur
+  // n'en ait plus en cours (elle a échoué), puis la montre telle qu'elle est. Une question envoyée entre-temps n'a
+  // pas été écrite : elle revient dans la saisie.
   useEffect(() => {
     if (reply.status !== 'attente') return;
     const { message } = reply;
@@ -284,13 +285,14 @@ export function DiscussionThread({
     let timer: ReturnType<typeof setTimeout> | undefined;
     const check = () => {
       readDiscussionMessagesAction(discussionId)
-        .then((current) => {
+        .then((read) => {
           if (stopped) return;
-          if (current === null) {
+          if (read === null) {
             setReply({ status: 'indisponible', questionGardee: false });
             return;
           }
-          if (current.at(-1)?.role !== 'assistant' && Date.now() < until) {
+          const current = read.messages;
+          if (current.at(-1)?.role !== 'assistant' && read.replying && Date.now() < until) {
             timer = setTimeout(check, WAIT_POLL_MS);
             return;
           }
@@ -329,7 +331,8 @@ export function DiscussionThread({
     if (started.current || !autoStart) return;
     started.current = true;
     readDiscussionMessagesAction(discussionId)
-      .then((current) => {
+      .then((read) => {
+        const current = read?.messages;
         const [question] = current ?? [];
         if (current?.length === 1 && question?.role === 'user') return run(question.content);
         if (current) setMessages(current);

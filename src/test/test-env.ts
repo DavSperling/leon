@@ -65,4 +65,6 @@ export const TEST_ENV = {
   LEON_MODEL_REPONSE: '',
   LEON_MODEL_DISCUSSION: '',
   LEON_MODEL_POINT: '',
+  // L'en-tête où le proxy de confiance pose l'adresse du client (rate-limit.ts), comme Caddy en production.
+  LEON_IP_HEADER: 'x-real-ip',
 } as const;

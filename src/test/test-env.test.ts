@@ -58,7 +58,7 @@ describe('TEST_ENV', () => {
   // son ajout. Obligatoire : une valeur fixe. Facultative : vide (absente), sauf celles qui ont une valeur fixe
   // de test. NODE_ENV est posé par Vitest lui-même (« test »).
   it('couvre chaque variable du schéma d’environnement', () => {
-    const FACULTATIVES_A_VALEUR_FIXE = ['LEON_CONNECTORS_KEY'];
+    const FACULTATIVES_A_VALEUR_FIXE = ['LEON_CONNECTORS_KEY', 'LEON_IP_HEADER'];
     const fields = EnvSchema.shape as Record<string, z.ZodType>;
     const values = TEST_ENV as Record<string, string | undefined>;
     const problems: string[] = [];

@@ -40,6 +40,17 @@ export const EnvSchema = z
       supportedModel('LEON_MODEL_DISCUSSION').optional(),
     ),
     LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_POINT').optional()),
+    // L'en-tête où le proxy de confiance (Caddy) pose l'adresse du client, qu'il écrase à chaque requête : la
+    // limite de débit de la connexion la lit (rate-limit.ts). Absent : aucun en-tête n'est cru, toutes les
+    // tentatives comptent par adresse sur une clé commune.
+    LEON_IP_HEADER: z.preprocess(
+      emptyIsAbsent,
+      z
+        .string()
+        .regex(/^[a-z0-9-]+$/i, 'LEON_IP_HEADER : un nom d’en-tête (x-real-ip)')
+        .transform((name) => name.toLowerCase())
+        .optional(),
+    ),
     // Clé de chiffrement des clés d'API des connecteurs : 32 octets en base64.
     LEON_CONNECTORS_KEY: z.preprocess(
       emptyIsAbsent,

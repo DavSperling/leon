@@ -38,7 +38,8 @@ export type ConnectorItem = {
 };
 
 export type SyncState = { cursor: string | null; since: Date };
-export type SyncPage = { items: ConnectorItem[]; cursor: string };
+// `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
+export type SyncPage = { items: ConnectorItem[]; cursor: string; removed?: string[] };
 
 // Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
 export type OAuthTokens = {

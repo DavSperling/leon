@@ -84,8 +84,11 @@ const PERSONAL_SENSITIVITIES = new Set(['personal', 'private', 'confidential']);
 
 // Rien pour un événement marqué personnel, privé ou confidentiel, ni pour un événement sans
 // participant ni description (« Déjeuner » : l'objet seul ne dit rien).
+export const isPersonal = (event: GraphEvent): boolean =>
+  PERSONAL_SENSITIVITIES.has(event.sensitivity?.toLowerCase() ?? '');
+
 export function eventToItem(event: GraphEvent): ConnectorItem | null {
-  if (PERSONAL_SENSITIVITIES.has(event.sensitivity?.toLowerCase() ?? '')) return null;
+  if (isPersonal(event)) return null;
   const people = (event.attendees ?? []).map((a) => nameOf(a.emailAddress)).filter(Boolean);
   const description = textOf(event.body);
   if (people.length === 0 && description === '') return null;

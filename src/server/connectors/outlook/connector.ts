@@ -3,7 +3,7 @@ import { ConnectorAuthError } from '../http';
 import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { type GraphClient, graphClient } from './client';
 import { advance, isDone, type Mark, readCursor, type StreamKey } from './cursor';
-import { eventToItem, threadsOf } from './map';
+import { eventToItem, isPersonal, threadsOf } from './map';
 import { outlookOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
@@ -49,7 +49,7 @@ const ConfigSchema = z.object({
 });
 type Config = z.infer<typeof ConfigSchema>;
 
-type Step = { items: ConnectorItem[]; mark: Mark | null; moved: boolean };
+type Step = { items: ConnectorItem[]; removed: string[]; mark: Mark | null; moved: boolean };
 
 // Une page de lignes de Graph : celles que la position a déjà vues sont écartées, la position avance
 // jusqu'à la dernière ligne (même sans élément à rendre : un message vide a été vu).
@@ -58,13 +58,14 @@ async function* readStream<T extends { id: string }>(
   timeOf: (row: T) => string,
   toItems: (rows: T[]) => ConnectorItem[],
   start: Mark | null,
+  removedOf: (rows: T[]) => string[] = () => [],
 ): AsyncGenerator<Step> {
   let mark = start;
   for await (const page of rows) {
     const before = mark;
     const fresh = page.filter((row) => !isDone(before, { id: row.id, at: timeOf(row) }));
     for (const row of fresh) mark = advance(mark, { id: row.id, at: timeOf(row) });
-    yield { items: toItems(fresh), mark, moved: mark !== before };
+    yield { items: toItems(fresh), removed: removedOf(fresh), mark, moved: mark !== before };
   }
 }
 
@@ -102,6 +103,8 @@ const streams = (
         (e) => e.lastModifiedDateTime,
         (rows) => rows.flatMap((e) => eventToItem(e) ?? []),
         start('events'),
+        // Un événement devenu privé a pu être relevé avant : on le retire (audit n° 13).
+        (rows) => rows.filter(isPersonal).map((e) => `event:${e.id}`),
       ),
   },
 ];
@@ -130,8 +133,9 @@ export const outlookConnector: Connector<Config> = {
       try {
         for await (const step of run()) {
           state = { ...state, [key]: step.mark };
-          if (step.items.length > 0 || step.moved) {
-            yield { items: step.items, cursor: JSON.stringify(state) };
+          if (step.items.length > 0 || step.removed.length > 0 || step.moved) {
+            const removed = step.removed.length > 0 ? { removed: step.removed } : {};
+            yield { items: step.items, cursor: JSON.stringify(state), ...removed };
           }
         }
       } catch (error) {

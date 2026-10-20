@@ -7,7 +7,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { type ConnectionRef, ingestConnectorItems } from './ingest-items';
+import { type ConnectionRef, ingestConnectorItems, removeConnectorItems } from './ingest-items';
 import { type NormalizedItem, normalizeItem } from './normalize';
 import type { ConnectorItem, ConnectorTurn } from './types';
 
@@ -390,5 +390,27 @@ describe('ingestConnectorItems', () => {
     expect(await readSources(marie, sourceId)).toEqual([]);
     expect(await readTurns(marie, sourceId)).toEqual([]);
     expect(await readRuns(marie, sourceId)).toEqual([]);
+  });
+
+  // Un événement d'agenda devenu privé (audit n° 13) : sa source, ses tours et son run partent ; la même clé d'un
+  // autre propriétaire reste.
+  it('retire les éléments que la connexion signale, et seulement les siens', async () => {
+    const mine = { ...(await connectionOf(paul)), privateRaw: true };
+    const theirs = { ...(await connectionOf(marie)), privateRaw: true };
+    const externalId = `event:${randomUUID()}`;
+    const item = normalized(connectorItem(externalId, [body('Entretien RH.')]));
+    await ingestConnectorItems(paul, mine, [item]);
+    await ingestConnectorItems(marie, theirs, [item]);
+    const sourceId = await sourceIdOf(paul, externalId);
+
+    expect(await removeConnectorItems(paul, mine, [externalId, 'event:inconnu'])).toBe(1);
+
+    expect(await readSources(paul, sourceId)).toEqual([]);
+    const { rows } = await adminPool.query(
+      'select count(*)::int as n from turns where source_id = $1',
+      [sourceId],
+    );
+    expect(rows[0].n).toBe(0);
+    expect(await sourceIdOf(marie, externalId)).toBeTruthy();
   });
 });

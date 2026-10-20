@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import type { ProviderId } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
@@ -8,6 +9,7 @@ import {
   insertNewTurns,
   updateSource,
 } from '@/server/ingest/ingest-turns';
+import { textArray } from '@/server/search/filters-sql';
 import type { NormalizedItem } from './normalize';
 
 export type ConnectionRef = {
@@ -91,4 +93,20 @@ export async function ingestConnectorItems(
   });
   for (const runId of created.runs) await enqueueIndexing(ctx, runId);
   return { sources: items.length, ...created };
+}
+
+// Retire les sources que la connexion signale (un événement devenu privé), par la fonction de 0019 : seulement
+// celles de cette connexion, de son outil et de son créateur (`ctx`). Tours, passages, vecteurs, runs et journal des
+// lectures partent avec elles (clés en cascade). L'app n'a pas d'autre droit de supprimer du brut.
+export async function removeConnectorItems(
+  ctx: TenantContext,
+  connection: ConnectionRef,
+  externalIds: string[],
+): Promise<number> {
+  const result = await withTenant(ctx, (tx) =>
+    tx.execute<{ n: number }>(
+      sql`select retirer_sources_connexion(${connection.id}, ${textArray(externalIds)}) as n`,
+    ),
+  );
+  return result.rows[0]?.n ?? 0;
 }

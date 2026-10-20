@@ -13,7 +13,7 @@ import {
   UnreadableSecretError,
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
-import { ingestConnectorItems } from './ingest-items';
+import { ingestConnectorItems, removeConnectorItems } from './ingest-items';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
@@ -82,6 +82,7 @@ async function readPages(
     const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
     if (items.length > 0)
       await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
+    if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
     const { id, lockedAt } = connection;
     if (!(await saveSyncProgress(ctx, id, lockedAt, page.cursor, items.length))) return 'lost';
     read += page.items.length;

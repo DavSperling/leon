@@ -76,3 +76,23 @@ create index ingest_runs_pending_idx on ingest_runs (updated_at) where status in
 -- Audit n° 7 : la recherche par le sens lit les vecteurs d'une organisation et d'un modèle (search.ts). Les
 -- vecteurs d'un ancien modèle sont retirés à mesure que ceux du nouveau s'écrivent (embedPassages).
 create index passage_vectors_tenant_model_idx on passage_vectors (tenant_id, model);
+
+-- Audit n° 13 : un événement d'agenda devenu privé retire sa source (removeConnectorItems) ; ses tours, passages,
+-- vecteurs, runs et lectures suivent par les clés en cascade. L'app ne reçoit pas le droit de supprimer du brut :
+-- seule cette fonction le fait, pour les sources d'une connexion de l'organisation courante, appelée par son
+-- créateur (withTenant), de son outil et à son nom.
+create function retirer_sources_connexion(p_connection uuid, p_external_ids text[])
+returns integer
+language sql volatile security definer set search_path = public as $$
+  with gone as (
+    delete from sources s
+    using connections c
+    where c.id = p_connection and c.tenant_id = app_tenant() and c.created_by = any(app_principals())
+      and s.tenant_id = c.tenant_id and s.connection_id = c.id and s.owner_user_id = c.created_by
+      and s.kind = c.provider and s.external_id = any(p_external_ids)
+    returning s.id
+  )
+  select count(*)::integer from gone
+$$;
+revoke all on function retirer_sources_connexion(uuid, text[]) from public;
+grant execute on function retirer_sources_connexion(uuid, text[]) to leon_app;

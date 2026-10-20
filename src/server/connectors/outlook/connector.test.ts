@@ -359,6 +359,8 @@ describe('outlookConnector.sync : agenda', () => {
     const ids = pages[3]?.items.map((item) => item.externalId);
     expect(ids).not.toContain('event:AAMkAGEx-event-prive');
     expect(ids).not.toContain('event:AAMkAGEx-event-vide');
+    // L'événement privé a pu être relevé avant de le devenir : la page demande de le retirer.
+    expect(pages[3]?.removed).toEqual(['event:AAMkAGEx-event-prive']);
     // Les deux ont été vus : le curseur passe derrière eux et jusqu'au dernier.
     expect(cursorOf(pages[3]).events).toEqual({
       at: '2026-10-12T09:10:00.000Z',

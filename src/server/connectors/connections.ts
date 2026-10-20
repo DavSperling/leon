@@ -397,6 +397,28 @@ export async function saveSyncProgress(
   return rows.length > 0;
 }
 
+// Audit 5 n° 2 : l'identifiant stable du compte (`accountKey`, voir oauth-routes.ts), donné une fois à une
+// connexion qui n'en a pas encore (`null` : l'outil n'en rend pas, on ne redemande plus). Sans effet si une
+// autre relève a repris la réservation, ou si un « Reconnecter » l'a posé entre-temps.
+export async function saveAccountKey(
+  ctx: TenantContext,
+  id: string,
+  lockedAt: string,
+  accountKey: string | null,
+): Promise<void> {
+  await withTenant(ctx, (tx) =>
+    tx
+      .update(connections)
+      .set({
+        config: sql`${connections.config} || jsonb_build_object('accountKey', ${accountKey}::text)`,
+        updatedAt: sql`now()`,
+      })
+      .where(
+        and(stillOurs(id, lockedAt), sql`not jsonb_exists(${connections.config}, 'accountKey')`),
+      ),
+  );
+}
+
 const NEXT_SYNC = {
   soon: sql`now() + interval '1 minute'`,
   later: sql`now() + interval '15 minutes'`,

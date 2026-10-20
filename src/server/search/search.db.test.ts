@@ -466,6 +466,23 @@ describe('questions en phrase', () => {
     }
   });
 
+  // Audit 5 n° 3 : une requête faite de filtres gardait la source dont seul le titre porte le mot nié.
+  it('écarte, sans mot à chercher, une source dont seul le titre contient le mot nié', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Stratégie produit 2027', 'On priorise la recherche et les connecteurs.'],
+      ['Autre', 'La réunion est déplacée à jeudi.'],
+    ] as const) {
+      await seedIndexed(alice, { kind: 'claude_ai', acl: [tenantId], title, turns: [{ text }] });
+    }
+    for (const embedder of [null, factice]) {
+      expect(titles(await search(alice, 'outil:claudeai', { embedder }))).toHaveLength(2);
+      const page = await search(alice, 'outil:claudeai -stratégie', { embedder });
+      expect(titles(page)).toEqual(['Autre']);
+      expect(page.totalSources).toBe(1);
+    }
+  });
+
   it('ne lève aucune erreur sur une question faite de mots outils', async () => {
     const { alice } = await team();
     await seedIndexed(alice, { turns: [{ text: 'Qui a validé le budget ?' }] });

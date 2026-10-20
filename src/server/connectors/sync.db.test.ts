@@ -472,6 +472,43 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect(idle.calls).toHaveLength(0);
   });
 
+  // Audit 5 n° 2 : une connexion enregistrée sans `accountKey` se reconnaissait au seul libellé, et un compte
+  // renommé ne se reconnectait plus. Elle reçoit l'identifiant à sa première relève réussie, une seule fois.
+  it('donne son identifiant à une ancienne connexion, à la première relève réussie seulement', async () => {
+    const counted = (accountKey?: string) => {
+      const base = fakeOAuthConnector({ account: 'acme-renomme', accountKey });
+      const verify = vi.fn(base.verify);
+      return { connector: { ...base, verify }, verify };
+    };
+    const id = await oauthConnection();
+    const keyed = counted('4101');
+
+    expect(await run(id, keyed.connector)).toBe('ok');
+    expect((await storedConfig(id))?.accountKey).toBe('4101');
+    await makeDue(id);
+    expect(await run(id, keyed.connector)).toBe('ok');
+    expect(keyed.verify).toHaveBeenCalledTimes(1);
+
+    // Un outil qui ne rend pas d'identifiant n'est pas réinterrogé à chaque relève.
+    const other = await oauthConnection();
+    const keyless = counted();
+    expect(await run(other, keyless.connector)).toBe('ok');
+    await makeDue(other);
+    expect(await run(other, keyless.connector)).toBe('ok');
+    expect(keyless.verify).toHaveBeenCalledTimes(1);
+    expect((await storedConfig(other))?.accountKey).toBeNull();
+  });
+
+  it('une vérification en panne ne fait pas échouer la relève, et sera refaite', async () => {
+    const id = await oauthConnection();
+
+    expect(await run(id, fakeOAuthConnector({ verifyFails: true }))).toBe('ok');
+    expect(await storedConfig(id)).not.toHaveProperty('accountKey');
+    await makeDue(id);
+    expect(await run(id, fakeOAuthConnector({ accountKey: '4101' }))).toBe('ok');
+    expect((await storedConfig(id))?.accountKey).toBe('4101');
+  });
+
   it('met la connexion en erreur sans échéance quand le renouvellement est refusé', async () => {
     const id = await oauthConnection({ expiresAt: inMinutes(1) });
     const fetchImpl = fakeFetch([tokenRoute({ error: 'invalid_grant' }, 400)]);

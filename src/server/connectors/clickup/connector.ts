@@ -153,7 +153,9 @@ export const clickupConnector: Connector<Config> = {
       throw new ConnectorHttpError(null, 'Aucun espace ClickUp accessible avec cette clé');
     }
     const names = teams.map((team) => team.name).join(', ');
-    return { account: `${user.username} (${names})`, accountKey: String(user.id) };
+    // L'identifiant porte les espaces, triés : un autre espace du même utilisateur est un autre compte.
+    const ids = teams.map((team) => team.id).sort();
+    return { account: `${user.username} (${names})`, accountKey: [user.id, ...ids].join(':') };
   },
 
   sync(config: Config, state, http: ConnectorHttp) {

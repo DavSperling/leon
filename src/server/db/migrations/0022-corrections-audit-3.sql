@@ -16,6 +16,10 @@
 -- la tête de la file est lue, ses passages qui ont déjà le vecteur du modèle sont retirés (en sautant les lignes
 -- qu'une suppression tient), les autres rendus.
 --
+-- Audit 3 n° 2 : un passage dont le propriétaire a quitté l'organisation n'entre plus dans la file au remplissage,
+-- et la lecture l'en sort (il occupait la tête de la file, relue à chaque tic). S'il revient, ses passages
+-- attendent le prochain changement de modèle pour leurs vecteurs (le plein texte les trouve toujours).
+--
 -- Une file déjà remplie par 0020 est notée remplie.
 alter table passages_a_vectoriser_modele
   add column if not exists rempli boolean not null default true,
@@ -42,7 +46,12 @@ begin
   if not v_rempli then
     with lot as (
       select p.tenant_id, p.id, p.created_at from passages p
+      join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
       where p.id > coalesce(v_curseur, '00000000-0000-0000-0000-000000000000'::uuid)
+        -- Audit 3 n° 2 : seulement les passages d'un membre (personne ne peut lire les autres sous ses droits).
+        and exists (
+          select 1 from member m where m."userId" = s.owner_user_id and m."organizationId" = p.tenant_id
+        )
         and not exists (select 1 from passage_vectors v where v.passage_id = p.id and v.model = p_model)
         -- Déjà dans la file (gardé de l'ancien modèle, ou écrit pendant le remplissage : déclencheur).
         and not exists (select 1 from passages_a_vectoriser q where q.passage_id = p.id)
@@ -60,16 +69,12 @@ begin
        set rempli = v_lus < 10000, curseur = coalesce(v_dernier, m.curseur)
      where m.model = p_model;
   end if;
-  -- La tête de la file, puis le propriétaire et le vecteur de chacun de ses passages par une sous-requête par ligne :
-  -- le plan ne lit jamais les passages ni les vecteurs en entier, quelle que soit l'estimation du planificateur.
+  -- La tête de la file d'abord (par son index), puis le propriétaire et le vecteur de chacun de ses passages par une
+  -- sous-requête par ligne : le plan ne lit jamais les passages ni les vecteurs en entier, quelle que soit
+  -- l'estimation du planificateur.
   return query
   with tete as materialized (
-    select q.passage_id, q.tenant_id,
-      (select s.owner_user_id from passages p join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
-        where p.id = q.passage_id) as owner_user_id,
-      exists (
-        select 1 from passage_vectors v where v.passage_id = q.passage_id and v.model = p_model
-      ) as fait
+    select q.passage_id, q.tenant_id
     from passages_a_vectoriser q
     -- Audit 2 n° 9 b : l'indexation vectorise elle-même les passages qu'elle écrit ; le tic les doublait. Il ne
     -- prend que ceux écrits il y a plus de 2 minutes (par le même index que l'ordre).
@@ -77,19 +82,30 @@ begin
     order by q.created_at desc, q.passage_id
     limit p_limit
   ),
+  lus as materialized (
+    select t.passage_id, t.tenant_id,
+      (select s.owner_user_id from passages p join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
+        where p.id = t.passage_id) as owner_user_id,
+      exists (
+        select 1 from passage_vectors v where v.passage_id = t.passage_id and v.model = p_model
+      ) as fait
+    from tete t
+  ),
+  juges as materialized (
+    select l.*, exists (
+      select 1 from member m where m."userId" = l.owner_user_id and m."organizationId" = l.tenant_id
+    ) as membre
+    from lus l
+  ),
   sortis as (
     delete from passages_a_vectoriser q
     where q.passage_id in (
-      select r.passage_id from passages_a_vectoriser r join tete t on t.passage_id = r.passage_id
-      where t.fait
+      select r.passage_id from passages_a_vectoriser r join juges j on j.passage_id = r.passage_id
+      where j.fait or not j.membre
       for update of r skip locked
     )
   )
-  select t.passage_id, t.tenant_id, t.owner_user_id from tete t
-  where not t.fait
-    and exists (
-      select 1 from member m where m."userId" = t.owner_user_id and m."organizationId" = t.tenant_id
-    );
+  select j.passage_id, j.tenant_id, j.owner_user_id from juges j where j.membre and not j.fait;
 end
 $$;
 

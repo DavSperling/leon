@@ -162,7 +162,8 @@ describe('embedMissing', () => {
     await embedMissing({ embedder: embedderFor(token) }, BIG);
     await adminPool.query(
       `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
-       select tenant_id, id, created_at from passages where id = any($1)`,
+       select tenant_id, id, created_at from passages where id = any($1)
+       on conflict do nothing`,
       [seeded.passageIds],
     );
 

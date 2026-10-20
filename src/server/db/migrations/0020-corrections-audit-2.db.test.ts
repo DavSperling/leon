@@ -75,6 +75,10 @@ async function rowsReadInTransaction(call: string): Promise<Record<string, numbe
   const client = await adminPool.connect();
   try {
     await client.query('begin');
+    // Les autres fichiers n'écrivent ni passages ni vecteurs pendant la mesure (leurs déclencheurs écrivent dans la
+    // file) : ceux qu'ils ajouteraient seraient à lire. Le truncate de 0020 le faisait ; la file n'est plus vidée
+    // (audit 3 n° 1).
+    await client.query('lock table passages_a_vectoriser in exclusive mode');
     await vectorizeEverything(client, model);
     await client.query(call, [model]);
     const before = await rowsRead(client);

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { beforeAll, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool, oneQueueTestAtATime } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
@@ -8,11 +8,27 @@ import { seedPassages } from '@/test/seed-search';
 // Migration 0022 : les corrections du troisième audit du 20/10 qui touchent la base.
 
 let alice: TenantContext;
+let leaver: TenantContext;
 
 beforeAll(async () => {
-  const team = await createTestTenant(['Alice']);
-  [alice] = team.members as [TenantContext];
+  const team = await createTestTenant(['Alice', 'Départ']);
+  [alice, leaver] = team.members as [TenantContext, TenantContext];
 });
+
+// Le membre parti : sa ligne `member` est retirée, ses sources restent.
+const leave = (ctx: TenantContext) =>
+  adminPool.query('delete from member where "userId" = $1 and "organizationId" = $2', [
+    ctx.userId,
+    ctx.tenantId,
+  ]);
+
+async function queued(passageIds: string[]): Promise<number> {
+  const { rows } = await adminPool.query<{ n: number }>(
+    'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
+    [passageIds],
+  );
+  return rows[0]?.n ?? 0;
+}
 
 // Une attente de verrou plus longue échoue : le test dit « attend » au lieu de pendre. Large : les autres fichiers
 // de test changent aussi le modèle de la file, et la ligne du modèle reste verrouillée le temps de leur appel.
@@ -91,3 +107,49 @@ it('une suppression de source pendant le remplissage n’en attend pas la fin', 
       await adminPool.query('delete from sources where id = $1', [sourceId]);
     }
   }));
+
+// Audit 3 n° 2 : le remplissage mettait en file les passages d'un propriétaire parti, que la lecture sautait sans
+// les retirer : la tête de la file les reparcourait à chaque tic.
+describe('membres partis', () => {
+  let departed: { sourceId: string; passageIds: string[] };
+  let kept: { sourceId: string; passageIds: string[] };
+
+  beforeAll(async () => {
+    const token = randomUUID();
+    kept = await seedPassages(alice, { count: 2, token });
+    departed = await seedPassages(leaver, { count: 2, token });
+    await leave(leaver);
+  });
+
+  it('le remplissage ne met en file que les passages d’un membre', () =>
+    oneQueueTestAtATime(async () => {
+      // Hors de la file, comme des passages vectorisés dans l'ancien modèle.
+      await adminPool.query('delete from passages_a_vectoriser where passage_id = any($1)', [
+        [...kept.passageIds, ...departed.passageIds],
+      ]);
+      const model = `modele-${randomUUID()}`;
+
+      for (let call = 0; call < 20; call++) {
+        await adminPool.query('select count(*) from passages_sans_vecteur($1, 1)', [model]);
+        if (await filled(model)) break;
+      }
+
+      expect(await queued(kept.passageIds)).toBe(2);
+      expect(await queued(departed.passageIds)).toBe(0);
+    }));
+
+  it('la lecture sort de la file les passages d’un propriétaire parti', async () => {
+    await adminPool.query(
+      `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
+       select tenant_id, id, created_at from passages where id = any($1)
+       on conflict do nothing`,
+      [departed.passageIds],
+    );
+
+    await adminPool.query('select count(*) from passages_sans_vecteur($1, 1000000)', [
+      `modele-${randomUUID()}`,
+    ]);
+
+    expect(await queued(departed.passageIds)).toBe(0);
+  });
+});

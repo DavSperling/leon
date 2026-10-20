@@ -27,7 +27,10 @@ language sql stable security definer set search_path = public as $$
   select r.id, r.tenant_id, s.owner_user_id
   from ingest_runs r
   join sources s on s.tenant_id = r.tenant_id and s.id = r.source_id
-  where r.status = 'queued' and r.updated_at < now() - make_interval(mins => p_minutes)
+  where (
+      (r.status = 'queued' and r.updated_at < now() - make_interval(mins => p_minutes))
+      or (r.status in ('running', 'failed') and r.updated_at < now() - interval '30 minutes')
+    )
     and exists (
       select 1 from member m where m."userId" = s.owner_user_id and m."organizationId" = r.tenant_id
     )
@@ -45,3 +48,9 @@ language sql stable security definer set search_path = public as $$
   order by c.next_sync_at
   limit 100
 $$;
+
+-- Audit n° 5 : runs_en_attente (ci-dessus) rend aussi les runs « en cours » ou « échoués » inchangés depuis plus
+-- de 30 minutes : un processus mort au milieu d'un run, ou un run échoué après les 3 reprises de pg-boss, n'était
+-- jamais repris. L'index des runs en attente couvre désormais ces trois états.
+drop index ingest_runs_queued_idx;
+create index ingest_runs_pending_idx on ingest_runs (updated_at) where status in ('queued', 'running', 'failed');

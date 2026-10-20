@@ -394,7 +394,7 @@ describe('requeueStaleRuns', () => {
     expect(requeued()).toEqual(expect.arrayContaining([idOf(mine), idOf(theirs)]));
   });
 
-  it('ne reprend ni les runs en cours, ni les terminés, ni les échoués', async () => {
+  it('ne reprend ni les runs terminés, ni ceux en cours ou échoués depuis 20 minutes', async () => {
     const old = new Date(Date.now() - 20 * MINUTE);
     const running = await seedRun(alice, { status: 'running', updatedAt: old });
     const done = await seedRun(alice, { status: 'done', updatedAt: old });
@@ -403,6 +403,20 @@ describe('requeueStaleRuns', () => {
     await requeueStaleRuns(5);
 
     for (const run of [running, done, failed]) expect(requeued()).not.toContain(idOf(run));
+  });
+
+  // Audit n° 5 : un run « en cours » dont le processus est mort, ou « échoué » après les 3 reprises de pg-boss,
+  // n'était jamais repris.
+  it('reprend un run en cours ou échoué inchangé depuis plus de 30 minutes, pas un run terminé', async () => {
+    const old = new Date(Date.now() - 31 * MINUTE);
+    const running = await seedRun(alice, { status: 'running', updatedAt: old });
+    const failed = await seedRun(alice, { status: 'failed', updatedAt: old });
+    const done = await seedRun(alice, { status: 'done', updatedAt: old });
+
+    await requeueStaleRuns(5);
+
+    expect(requeued()).toEqual(expect.arrayContaining([idOf(running), idOf(failed)]));
+    expect(requeued()).not.toContain(idOf(done));
   });
 
   it('ne remet pas deux fois de suite le même run en file', async () => {

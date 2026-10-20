@@ -42,4 +42,10 @@ avec la fin d'attribution habituelle ; fichiers ajoutés un par un ; jamais de p
 ## Après
 
 - [x] Fusionner, recréer `leon_test_glean`, toute la suite, build et ext:build, démo.
-- [ ] Audit ciblé sur les seuls fichiers touchés par ce tour.
+- [x] Audit ciblé sur les seuls fichiers touchés par ce tour.
+
+## Audit ciblé du sixième tour (fait)
+
+Régressions du masquage (SECRET_KEY court, Basic en argument, ODBC `Pwd={…}`) et formats voisins (Vault racine,
+`shpca_`/`shppa_`, `glptt-`) corrigés ; reconnexion ClickUp/Airtable acceptée pour le même utilisateur avec un espace en
+commun ; limite de l extension (changement d organisation pendant une panne) documentée.

@@ -4,6 +4,11 @@ import type { CaptureStatus, KeyValueStore } from './settings';
 
 export const OUTBOX_KEY = 'leon.outbox';
 export const OUTBOX_MAX = 500;
+// storage.local est plafonné (10 Mo dans Chrome, 5 Mo avant la version 114) : au-delà, l'écriture échoue et la
+// capture est perdue sans un mot. On reste en dessous ; les plus anciens sortent, comme au plafond en nombre.
+export const OUTBOX_MAX_BYTES = 4 * 1024 * 1024;
+// Échanges sortis du tampon sans avoir été envoyés, en attendant que la popup le dise.
+export const DROPPED_KEY = 'leon.dropped';
 
 const OutboxItemSchema = z.object({
   id: z.string(),
@@ -20,14 +25,41 @@ export async function countPending(store: KeyValueStore): Promise<number> {
   return (await loadOutbox(store)).length;
 }
 
+const byteSize = (item: OutboxItem) => new TextEncoder().encode(JSON.stringify(item)).length;
+
 export async function enqueuePayload(store: KeyValueStore, payload: IngestPayload): Promise<void> {
   const item: OutboxItem = {
     id: crypto.randomUUID(),
     payload,
     createdAt: new Date().toISOString(),
   };
-  const items = [...(await loadOutbox(store)), item];
-  await store.set(OUTBOX_KEY, items.slice(-OUTBOX_MAX));
+  const all = [...(await loadOutbox(store)), item];
+  // Un échange plus gros que tout le tampon n'y entre pas, sans pousser les autres dehors.
+  const kept =
+    byteSize(item) > OUTBOX_MAX_BYTES ? all.slice(-OUTBOX_MAX - 1, -1) : all.slice(-OUTBOX_MAX);
+  const sizes = kept.map(byteSize);
+  let bytes = sizes.reduce((sum, size) => sum + size, 0);
+  let first = 0;
+  while (bytes > OUTBOX_MAX_BYTES) bytes -= sizes[first++] ?? 0;
+  await store.set(OUTBOX_KEY, kept.slice(first));
+  const dropped = all.length - (kept.length - first);
+  if (dropped > 0) await store.set(DROPPED_KEY, (await readDropped(store)) + dropped);
+}
+
+async function readDropped(store: KeyValueStore): Promise<number> {
+  return z
+    .number()
+    .int()
+    .nonnegative()
+    .catch(0)
+    .parse(await store.get(DROPPED_KEY));
+}
+
+// Le nombre d'échanges perdus depuis la dernière lecture, remis à zéro (la popup le dit une fois).
+export async function takeDropped(store: KeyValueStore): Promise<number> {
+  const dropped = await readDropped(store);
+  if (dropped > 0) await store.set(DROPPED_KEY, 0);
+  return dropped;
 }
 
 // 'stop' : on garde l'élément et on arrête ; 'drop' : charge définitivement refusée (400, 413), on passe à la suivante.

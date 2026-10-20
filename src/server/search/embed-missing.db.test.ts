@@ -27,7 +27,7 @@ import { seedPassages, seedRun } from '@/test/seed-search';
 import {
   dropOldVectors,
   EMBED_TIMEOUT_MS,
-  embedMissing,
+  embedMissingBatch,
   REQUEUE_BATCH,
   requeueStaleRuns,
 } from './embed-missing';
@@ -94,7 +94,7 @@ const vectorsOf = (ctx: TenantContext, passageIds: string[]) =>
     tx.select().from(passageVectors).where(inArray(passageVectors.passageId, passageIds)),
   );
 
-describe('embedMissing', () => {
+describe('embedMissingBatch', () => {
   it('complète les vecteurs manquants de deux organisations, à l’accès de chaque passage, et rien de plus au deuxième appel', async () => {
     const token = `jeton-${randomUUID()}`;
     const mine = await seedPassages(alice, { count: 3, token });
@@ -110,8 +110,8 @@ describe('embedMissing', () => {
         .then(({ rows }) => rows.map((row) => row.xmin));
     const written = await versions();
 
-    const first = await embedMissing({ embedder }, BIG);
-    const second = await embedMissing({ embedder }, BIG);
+    const first = (await embedMissingBatch({ embedder }, BIG)).stored;
+    const second = (await embedMissingBatch({ embedder }, BIG)).stored;
 
     expect(first).toBe(5);
     expect(second).toBe(0);
@@ -136,9 +136,10 @@ describe('embedMissing', () => {
     const token = `jeton-${randomUUID()}`;
     const mine = await seedPassages(alice, { count: 2, token });
     const theirs = await seedPassages(zoe, { count: 3, token });
-    await embedMissing({ embedder: embedderFor(token, 'factice-a') }, BIG);
+    await embedMissingBatch({ embedder: embedderFor(token, 'factice-a') }, BIG);
 
-    const again = await embedMissing({ embedder: embedderFor(token, 'factice-b') }, BIG);
+    const again = (await embedMissingBatch({ embedder: embedderFor(token, 'factice-b') }, BIG))
+      .stored;
 
     expect(again).toBe(5);
     const modelsOf = async (ctx: TenantContext, ids: string[]) =>
@@ -159,7 +160,7 @@ describe('embedMissing', () => {
   it('sort de la file un passage qui a déjà le vecteur du modèle', async () => {
     const token = `jeton-${randomUUID()}`;
     const seeded = await seedPassages(alice, { count: 2, token });
-    await embedMissing({ embedder: embedderFor(token) }, BIG);
+    await embedMissingBatch({ embedder: embedderFor(token) }, BIG);
     await adminPool.query(
       `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
        select tenant_id, id, created_at from passages where id = any($1)
@@ -167,11 +168,45 @@ describe('embedMissing', () => {
       [seeded.passageIds],
     );
 
-    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(0);
+    expect((await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored).toBe(0);
 
     const { rows } = await adminPool.query<{ n: number }>(
       'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
       [seeded.passageIds],
+    );
+    expect(rows[0]?.n).toBe(0);
+  });
+
+  // Audit 4 n° 1 : la fonction retirait en silence les lignes de tête qui avaient déjà le vecteur, et ne rendait que
+  // les autres : le tic croyait la file presque vide, s'arrêtait et retirait les vieux vecteurs en plein rattrapage.
+  it('compte comme lues les lignes de tête déjà vectorisées (retour à un ancien modèle)', async () => {
+    const token = `jeton-${randomUUID()}`;
+    // La tête de la file (les plus récentes de plus de 2 minutes) : des passages qui ont déjà le vecteur du modèle,
+    // restés dans la file d'un autre modèle quand on revient à celui-ci.
+    const head = await seedPassages(alice, {
+      count: 3,
+      token,
+      createdAt: new Date(Date.now() - 2 * MINUTE - 10_000),
+    });
+    await adminPool.query(
+      `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+       select id, tenant_id, 'factice-1024', array_fill(0.1, array[1024])::halfvec, acl from passages
+       where id = any($1)`,
+      [head.passageIds],
+    );
+    await adminPool.query(
+      `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
+       select tenant_id, id, created_at from passages where id = any($1)
+       on conflict do nothing`,
+      [head.passageIds],
+    );
+
+    const batch = await embedMissingBatch({ embedder: embedderFor(token) }, 3);
+
+    expect(batch).toMatchObject({ read: 3, stored: 0, removed: 3 });
+    const { rows } = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
+      [head.passageIds],
     );
     expect(rows[0]?.n).toBe(0);
   });
@@ -186,7 +221,7 @@ describe('embedMissing', () => {
       createdAt: new Date(Date.now() - 3 * MINUTE),
     });
 
-    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+    const done = (await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored;
 
     expect(done).toBe(1);
     expect(await vectorsOf(alice, old.passageIds)).toHaveLength(1);
@@ -197,7 +232,7 @@ describe('embedMissing', () => {
     const token = `jeton-${randomUUID()}`;
     const seeded = await seedPassages(alice, { count: 5, token });
 
-    const done = await embedMissing({ embedder: embedderFor(token) }, 2);
+    const done = (await embedMissingBatch({ embedder: embedderFor(token) }, 2)).stored;
 
     expect(done).toBeLessThanOrEqual(2);
     expect((await vectorsOf(alice, seeded.passageIds)).length).toBeLessThanOrEqual(2);
@@ -209,7 +244,7 @@ describe('embedMissing', () => {
     const refused = await seedPassages(alice, { count: 3, token: tokenA });
     const accepted = await seedPassages(zoe, { count: 2, token: tokenB });
 
-    const done = await embedMissing({ embedder: embedderFor(tokenB) }, BIG);
+    const done = (await embedMissingBatch({ embedder: embedderFor(tokenB) }, BIG)).stored;
     const logged = log.mock.calls.flat().map(String).join('\n');
 
     expect(done).toBe(2);
@@ -234,8 +269,8 @@ describe('embedMissing', () => {
           : strict.embed(texts, kind),
     };
 
-    const done = await embedMissing({ embedder: picky }, BIG);
-    const again = await embedMissing({ embedder: strict }, BIG);
+    const done = (await embedMissingBatch({ embedder: picky }, BIG)).stored;
+    const again = (await embedMissingBatch({ embedder: strict }, BIG)).stored;
 
     expect(done).toBe(3);
     expect(await vectorsOf(alice, good.passageIds)).toHaveLength(3);
@@ -258,9 +293,9 @@ describe('embedMissing', () => {
       embed: vi.fn(() => Promise.reject(new EmbedderError('fournisseur indisponible (503)'))),
     };
 
-    expect(await embedMissing({ embedder: refusing }, BIG)).toBe(0);
-    expect(await embedMissing({ embedder: down }, BIG)).toBe(0);
-    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(2);
+    expect((await embedMissingBatch({ embedder: refusing }, BIG)).stored).toBe(0);
+    expect((await embedMissingBatch({ embedder: down }, BIG)).stored).toBe(0);
+    expect((await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored).toBe(2);
     expect(await vectorsOf(alice, seeded.passageIds)).toHaveLength(2);
     // Les autres fichiers laissent des passages d'autres organisations dans la file : un appel par lot.
     const calls = vi.mocked(down.embed).mock.calls;
@@ -286,7 +321,7 @@ describe('embedMissing', () => {
       },
     };
 
-    const done = await embedMissing({ embedder }, BIG);
+    const done = (await embedMissingBatch({ embedder }, BIG)).stored;
 
     expect(done).toBe(2);
     expect(await vectorsOf(alice, failing.passageIds)).toHaveLength(0);
@@ -315,7 +350,7 @@ describe('embedMissing', () => {
       },
     };
 
-    const done = await embedMissing({ embedder }, BIG);
+    const done = (await embedMissingBatch({ embedder }, BIG)).stored;
 
     expect(done).toBe(2);
     expect(await vectorsOf(zoe, kept.passageIds)).toHaveLength(2);
@@ -348,7 +383,7 @@ describe('embedMissing', () => {
       [ids],
     );
 
-    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+    const done = (await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored;
 
     expect(done).toBe(2);
     const vectors = await vectorsOf(alice, ids);
@@ -383,7 +418,7 @@ describe('embedMissing', () => {
       },
     };
 
-    const done = await embedMissing({ embedder }, BIG);
+    const done = (await embedMissingBatch({ embedder }, BIG)).stored;
 
     expect(done).toBe(2);
     const vectors = await vectorsOf(alice, seeded.passageIds);
@@ -405,10 +440,12 @@ describe('embedMissing', () => {
         [alice.userId],
       ]);
       let finished = false;
-      const running = embedMissing({ embedder: embedderFor(token) }, BIG).then((count) => {
-        finished = true;
-        return count;
-      });
+      const running = embedMissingBatch({ embedder: embedderFor(token) }, BIG).then(
+        ({ stored }) => {
+          finished = true;
+          return stored;
+        },
+      );
       await new Promise((resolve) => setTimeout(resolve, 600));
       expect(finished).toBe(false);
 
@@ -445,11 +482,11 @@ describe('embedMissing', () => {
       const hung = { model: 'factice-1024', embed: vi.fn(() => new Promise<number[][]>(() => {})) };
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 
-      const running = embedMissing({ embedder: hung }, BIG);
+      const running = embedMissingBatch({ embedder: hung }, BIG);
       await vi.waitFor(() => expect(hung.embed).toHaveBeenCalled(), { timeout: 5000 });
       await vi.advanceTimersByTimeAsync(EMBED_TIMEOUT_MS);
 
-      await expect(running).resolves.toBe(0);
+      await expect(running).resolves.toMatchObject({ stored: 0 });
       // Un seul appel : le fournisseur ne répond pour personne, les autres organisations attendront le tic suivant.
       expect(hung.embed).toHaveBeenCalledTimes(1);
       vi.useRealTimers();
@@ -470,7 +507,7 @@ describe('embedMissing', () => {
     await adminPool.query('delete from member where "userId" = $1', [leaver.userId]);
     const kept = await seedPassages(alice, { count: 1, token });
 
-    const done = await embedMissing({ embedder: embedderFor(token) }, BIG);
+    const done = (await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored;
 
     expect(done).toBe(1);
     expect(await vectorsOf(alice, kept.passageIds)).toHaveLength(1);

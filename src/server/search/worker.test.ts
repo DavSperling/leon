@@ -67,7 +67,7 @@ beforeEach(() => {
   mocks.schedule.mockResolvedValue(undefined);
   mocks.unschedule.mockResolvedValue(undefined);
   mocks.indexIngestRun.mockResolvedValue('indexe');
-  mocks.embedMissingBatch.mockResolvedValue({ read: 0, stored: 0 });
+  mocks.embedMissingBatch.mockResolvedValue({ read: 0, stored: 0, removed: 0 });
   mocks.dropOldVectors.mockResolvedValue(0);
   mocks.requeueStaleRuns.mockResolvedValue(0);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
@@ -133,9 +133,9 @@ describe('startSearchWorker', () => {
   // Audit n° 19 : 500 vecteurs par minute, c'était deux jours pour rattraper un million de passages.
   it('enchaîne les lots de 500 dans un tic tant qu’il en reste', async () => {
     mocks.embedMissingBatch
-      .mockResolvedValueOnce({ read: 500, stored: 500 })
-      .mockResolvedValueOnce({ read: 500, stored: 500 })
-      .mockResolvedValue({ read: 120, stored: 120 });
+      .mockResolvedValueOnce({ read: 500, stored: 500, removed: 0 })
+      .mockResolvedValueOnce({ read: 500, stored: 500, removed: 0 })
+      .mockResolvedValue({ read: 120, stored: 120, removed: 0 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
@@ -147,9 +147,9 @@ describe('startSearchWorker', () => {
   // vectorisés arrêtait le tic alors qu'il en restait.
   it('continue tant que le lot lu est plein et qu’au moins un vecteur est écrit', async () => {
     mocks.embedMissingBatch
-      .mockResolvedValueOnce({ read: 500, stored: 300 })
-      .mockResolvedValueOnce({ read: 500, stored: 1 })
-      .mockResolvedValue({ read: 120, stored: 120 });
+      .mockResolvedValueOnce({ read: 500, stored: 300, removed: 0 })
+      .mockResolvedValueOnce({ read: 500, stored: 1, removed: 0 })
+      .mockResolvedValue({ read: 120, stored: 120, removed: 0 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
@@ -157,8 +157,21 @@ describe('startSearchWorker', () => {
     expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(3);
   });
 
+  // Audit 4 n° 1 : un lot plein dont tous les passages avaient déjà le vecteur (retour à un ancien modèle) arrêtait
+  // le tic, qui retirait ensuite les vieux vecteurs en plein rattrapage.
+  it('continue quand un lot plein n’a fait que sortir de la file des passages déjà vectorisés', async () => {
+    mocks.embedMissingBatch
+      .mockResolvedValueOnce({ read: 500, stored: 0, removed: 500 })
+      .mockResolvedValue({ read: 120, stored: 120, removed: 0 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(2);
+  });
+
   it('arrête le tic quand tout un lot est refusé', async () => {
-    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0 });
+    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0, removed: 0 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
@@ -178,7 +191,7 @@ describe('startSearchWorker', () => {
 
   // Audit 3 n° 4 : le retrait passait même quand le tic s'arrêtait avec des passages encore à vectoriser.
   it('ne retire les vieux vecteurs que quand le tic n’a plus rien trouvé à vectoriser', async () => {
-    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0 });
+    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0, removed: 0 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
@@ -188,8 +201,8 @@ describe('startSearchWorker', () => {
 
   it('retire les vieux vecteurs après le dernier lot, incomplet', async () => {
     mocks.embedMissingBatch
-      .mockResolvedValueOnce({ read: 500, stored: 500 })
-      .mockResolvedValue({ read: 120, stored: 120 });
+      .mockResolvedValueOnce({ read: 500, stored: 500, removed: 0 })
+      .mockResolvedValue({ read: 120, stored: 120, removed: 0 });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 
     await handlerOf('pipeline-reindex')();
@@ -202,7 +215,7 @@ describe('startSearchWorker', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => now);
     mocks.embedMissingBatch.mockImplementation(async () => {
       now += 20_000;
-      return { read: 500, stored: 500 };
+      return { read: 500, stored: 500, removed: 0 };
     });
     await startSearchWorker({ embedder: createFakeEmbedder() });
 

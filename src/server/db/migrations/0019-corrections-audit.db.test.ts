@@ -52,7 +52,7 @@ describe('les tics ignorent les lignes d’un membre parti', () => {
 
   it('passages_sans_vecteur', async () => {
     const { rows } = await db.execute<{ passage_id: string }>(
-      sql`select passage_id from passages_sans_vecteur(${`modele-${randomUUID()}`}, 100000)`,
+      sql`select passage_id from passages_sans_vecteur(${`modele-${randomUUID()}`}, 100000) where a_vectoriser`,
     );
     const ids = new Set(rows.map((row) => row.passage_id));
     for (const id of kept.passageIds) expect(ids.has(id)).toBe(true);

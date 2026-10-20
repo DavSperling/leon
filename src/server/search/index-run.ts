@@ -87,7 +87,7 @@ async function embedSlice(ctx: TenantContext, embedder: Embedder, turnIds: strin
 // Rend « indexe » une fois le run traité, « absent » quand il n'y a rien à faire (inconnu, invisible, déjà
 // terminé). Une panne de base remonte : le worker marque le run « failed » et pg-boss relance le job.
 // Une panne du fournisseur de vecteurs, elle, ne fait pas échouer le run : les passages sont écrits, les
-// vecteurs manquants sont complétés plus tard (embedMissing). Un fournisseur qui ne répond pas compte pour une
+// vecteurs manquants sont complétés plus tard (embedMissingBatch). Un fournisseur qui ne répond pas compte pour une
 // panne au bout de EMBED_TIMEOUT_MS : il ne retient pas l'emplacement de la file et ne retarde pas le plein texte.
 export async function indexIngestRun(
   job: PipelineJob,

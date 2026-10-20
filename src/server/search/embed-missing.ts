@@ -15,7 +15,7 @@ import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { textArray } from './filters-sql';
 
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
-// - embedMissing complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
+// - embedMissingBatch complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
 //   ou modèle changé après coup) ;
 // - requeueStaleRuns remet en file les runs restés « en attente » sans job (mise en file ratée), ou restés
 //   « en cours » ou « échoués » (processus mort, reprises épuisées).
@@ -228,29 +228,31 @@ export async function embedPassages(
   return { stored, failed: false, timedOut: false };
 }
 
-type MissingRow = { passage_id: string; tenant_id: string; user_id: string };
+type MissingRow = { passage_id: string; tenant_id: string; user_id: string; a_vectoriser: boolean };
 
 // Complète, pour le modèle du fournisseur, les vecteurs des `limit` passages les plus récents qui n'en ont pas.
 // La liste vient d'une fonction qui ne rend que des identifiants (passages_sans_vecteur) ; le texte est lu
 // ensuite sous les droits du propriétaire de la source, organisation par organisation. Une organisation dont
 // le fournisseur échoue n'empêche pas les suivantes, sauf s'il ne répond plus : le tic s'arrête alors (il
-// attendrait EMBED_TIMEOUT_MS pour chaque organisation) et reprend au suivant. Rend le nombre de vecteurs écrits.
-export async function embedMissing(deps: { embedder: Embedder }, limit: number): Promise<number> {
-  return (await embedMissingBatch(deps, limit)).stored;
-}
-
-// Le même, qui rend aussi le nombre de passages lus dans la file : le tic continue tant que le lot lu est plein
-// (audit 3 n° 3).
+// attendrait EMBED_TIMEOUT_MS pour chaque organisation) et reprend au suivant. Rend le nombre de vecteurs écrits
+// (`stored`), celui des passages lus dans la file (`read`, audit 3 n° 3) et, parmi eux, ceux que la lecture en a
+// sortis sans les rendre à vectoriser (`removed` : déjà vectorisés, propriétaire parti, audit 4 n° 1). Le tic
+// continue tant que le lot lu est plein et qu'il a avancé.
 export async function embedMissingBatch(
   deps: { embedder: Embedder },
   limit: number,
-): Promise<{ read: number; stored: number }> {
+): Promise<{ read: number; stored: number; removed: number }> {
   const { embedder } = deps;
   const { rows } = await db.execute<MissingRow>(
-    sql`select passage_id, tenant_id, user_id from passages_sans_vecteur(${embedder.model}, ${limit})`,
+    sql`select passage_id, tenant_id, user_id, a_vectoriser from passages_sans_vecteur(${embedder.model}, ${limit})`,
   );
   const groups = new Map<string, { tenantId: string; userId: string; ids: string[] }>();
+  let removed = 0;
   for (const row of rows) {
+    if (!row.a_vectoriser) {
+      removed += 1;
+      continue;
+    }
     const key = `${row.tenant_id}:${row.user_id}`;
     const group = groups.get(key) ?? { tenantId: row.tenant_id, userId: row.user_id, ids: [] };
     group.ids.push(row.passage_id);
@@ -285,11 +287,12 @@ export async function embedMissingBatch(
       logError('search.embed_missing_failed', error, { tenantId: group.tenantId });
     }
   }
-  return { read: rows.length, stored: total };
+  return { read: rows.length, stored: total, removed };
 }
 
-// Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`
-// (retirer_vieux_vecteurs, 0020 : audit 2 n° 7 bis). Réservé au tic du serveur, qui connaît le modèle courant.
+// Retire au plus `limit` vecteurs des autres modèles (retirer_vieux_vecteurs) : pour les passages qui ont déjà celui
+// de `model` (0020, audit 2 n° 7 bis) et, une fois la file remplie pour `model`, pour ceux qui en sont sortis sans
+// l'avoir (refusés, propriétaire parti : 0023, audit 4 n° 2). Réservé au tic du serveur, qui connaît le modèle courant.
 // Rend le nombre de vecteurs retirés.
 export async function dropOldVectors(model: string, limit: number): Promise<number> {
   const { rows } = await db.execute<{ n: number }>(

@@ -851,6 +851,27 @@ describe('mot nié, côté vecteurs et titres', () => {
   });
 });
 
+// Audit 4 n° 3 : une source dont le titre contient un mot nié restait, trouvée par son titre ou par ses passages.
+describe('mot nié dans le titre', () => {
+  it('écarte une source dont le titre contient un mot nié, quel que soit le volet qui la trouve', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, {
+      title: 'Fathom · factures ACME',
+      turns: [{ text: 'Compte rendu : le zibelinard est livré.' }],
+    });
+    for (const embedder of [null, factice]) {
+      expect(titles(await search(alice, 'Fathom ACME', { embedder }))).toEqual([
+        'Fathom · factures ACME',
+      ]);
+      expect(titles(await search(alice, 'zibelinard', { embedder }))).toEqual([
+        'Fathom · factures ACME',
+      ]);
+      expect(titles(await search(alice, 'Fathom ACME -facture', { embedder }))).toEqual([]);
+      expect(titles(await search(alice, 'zibelinard -facture', { embedder }))).toEqual([]);
+    }
+  });
+});
+
 describe('modèle de vecteurs en panne', () => {
   it('une erreur du fournisseur laisse le plein texte répondre, sans rien journaliser du texte cherché', async () => {
     const { alice } = await team();

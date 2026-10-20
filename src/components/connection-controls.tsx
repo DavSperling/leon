@@ -113,7 +113,8 @@ function DeleteButton({ view, tool, pending, onConfirm }: DeleteProps) {
 
 // Une connexion existante : son état, ses boutons, et le remplacement de la clé (ou « Reconnecter »
 // pour une connexion branchée par le bouton). La clé n'est jamais réaffichée, seulement ses quatre
-// derniers caractères.
+// derniers caractères. Pause, clé, reconnexion et suppression ne sont proposées qu'au créateur et aux
+// administrateurs (`canManage`) ; « Synchroniser maintenant » reste ouvert à tous.
 export function ConnectionControls({
   view,
   tool,
@@ -156,52 +157,58 @@ export function ConnectionControls({
         >
           Synchroniser maintenant
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pending}
-          onClick={() =>
-            run(
-              () => setPausedAction(view.id, !paused),
-              paused ? 'Connexion reprise.' : 'Connexion mise en pause.',
-              "Cette connexion n'existe plus.",
-            )
-          }
-        >
-          {paused ? 'Reprendre' : 'Mettre en pause'}
-        </Button>
-        {oauth ? (
-          <ReconnectButton view={view} disabled={!canConnect || !oauthReady} />
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canConnect}
-            aria-expanded={replacing}
-            onClick={() => setReplacing((open) => !open)}
-          >
-            Remplacer la clé
-          </Button>
+        {view.canManage && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={pending}
+              onClick={() =>
+                run(
+                  () => setPausedAction(view.id, !paused),
+                  paused ? 'Connexion reprise.' : 'Connexion mise en pause.',
+                  "Cette connexion n'existe plus.",
+                )
+              }
+            >
+              {paused ? 'Reprendre' : 'Mettre en pause'}
+            </Button>
+            {oauth ? (
+              <ReconnectButton view={view} disabled={!canConnect || !oauthReady} />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canConnect}
+                aria-expanded={replacing}
+                onClick={() => setReplacing((open) => !open)}
+              >
+                Remplacer la clé
+              </Button>
+            )}
+            <DeleteButton
+              view={view}
+              tool={tool}
+              pending={pending}
+              onConfirm={() =>
+                run(
+                  () => deleteConnectionAction(view.id),
+                  'Connexion supprimée.',
+                  "Cette connexion n'existe plus.",
+                )
+              }
+            />
+          </>
         )}
-        <DeleteButton
-          view={view}
-          tool={tool}
-          pending={pending}
-          onConfirm={() =>
-            run(
-              () => deleteConnectionAction(view.id),
-              'Connexion supprimée.',
-              "Cette connexion n'existe plus.",
-            )
-          }
-        />
       </div>
-      {oauth && canConnect && !oauthReady && (
+      {view.canManage && oauth && canConnect && !oauthReady && (
         <p className="text-[13px] leading-[18px] text-muted-foreground">
           L'appli {tool} n'est plus configurée sur ce serveur : impossible de reconnecter.
         </p>
       )}
-      {replacing && canConnect && <ReplaceKeyForm id={view.id} secrets={secrets} />}
+      {replacing && canConnect && view.canManage && (
+        <ReplaceKeyForm id={view.id} secrets={secrets} />
+      )}
     </div>
   );
 }

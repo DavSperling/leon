@@ -15,8 +15,9 @@ import {
   setConnectionPaused,
 } from './connections';
 
-// Organisation Paul + Marie, une autre organisation (Zoé). La base de test est partagée :
-// on ne retire que nos connexions (voir « Connexions dans les tests » dans le plan).
+// Organisation Paul + Marie (administratrice) + Bob (simple membre), une autre organisation (Zoé).
+// La base de test est partagée : on ne retire que nos connexions (voir « Connexions dans les tests »
+// dans le plan).
 
 const DUE = new Date('2000-01-01T00:00:00Z');
 const DAY_MS = 24 * 3_600_000;
@@ -24,13 +25,18 @@ const DAY_MS = 24 * 3_600_000;
 const tenantIds: string[] = [];
 let paul: TenantContext;
 let marie: TenantContext;
+let bob: TenantContext;
 let zoe: TenantContext;
 
 beforeAll(async () => {
-  const team = await createTestTenant(['Paul', 'Marie']);
+  const team = await createTestTenant(['Paul', 'Marie', 'Bob']);
   const other = await createTestTenant(['Zoé']);
-  [paul, marie] = team.members as [TenantContext, TenantContext];
+  [paul, marie, bob] = team.members as [TenantContext, TenantContext, TenantContext];
   [zoe] = other.members as [TenantContext];
+  await adminPool.query(
+    `update member set role = 'admin' where "userId" = $1 and "organizationId" = $2`,
+    [marie.userId, marie.tenantId],
+  );
   tenantIds.push(team.tenantId, other.tenantId);
 });
 
@@ -360,7 +366,7 @@ describe('requestSyncNow', () => {
 });
 
 describe('setConnectionPaused', () => {
-  it("met en pause (sans échéance) puis reprend (échéance maintenant), au nom de n'importe quel membre", async () => {
+  it("met en pause (sans échéance) puis reprend (échéance maintenant), au nom d'une administratrice", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
 
     expect(await setConnectionPaused(marie, id, true)).toBe(true);
@@ -543,5 +549,41 @@ describe('deleteConnection', () => {
 
     expect(await deleteConnection(zoe, id)).toBe(false);
     expect((await readRow(id)).status).toBe('active');
+  });
+});
+
+// Audit n° 3 : Bob, simple membre, ne touche pas aux connexions de Paul ; Marie, administratrice, oui.
+describe('droits sur une connexion', () => {
+  it('seuls le créateur et les administrateurs peuvent la gérer (canManage)', async () => {
+    const id = await seedConnection(paul);
+
+    const canManage = async (ctx: TenantContext) =>
+      (await listConnections(ctx)).find((view) => view.id === id)?.canManage;
+
+    expect(await canManage(paul)).toBe(true);
+    expect(await canManage(marie)).toBe(true);
+    expect(await canManage(bob)).toBe(false);
+  });
+
+  it('un simple membre ne peut ni mettre en pause, ni remplacer la clé, ni reconnecter, ni supprimer', async () => {
+    const id = await seedConnection(paul);
+    const before = await readRow(id);
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-de-bob-0000' };
+
+    expect(await setConnectionPaused(bob, id, true)).toBe(false);
+    expect(await replaceConnectionSecret(bob, id, { token: 'cle-de-bob-0000' }, ['token'])).toBe(
+      false,
+    );
+    expect(await saveOAuthTokens(bob, id, oauth, ['accessToken'], { reconnect: true })).toBe(false);
+    expect(await deleteConnection(bob, id)).toBe(false);
+
+    expect(await readRow(id)).toEqual(before);
+  });
+
+  it('un simple membre peut encore demander « Synchroniser maintenant »', async () => {
+    const id = await seedConnection(paul);
+
+    expect(await requestSyncNow(bob, id)).toBe(true);
+    await makeNotDue(id);
   });
 });

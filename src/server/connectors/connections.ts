@@ -38,6 +38,7 @@ export type ConnectionView = {
   itemsSynced: number;
   createdBy: { id: string; name: string };
   createdAt: Date;
+  canManage: boolean; // pause, clé, reconnexion, suppression : créateur ou administrateur
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -89,6 +90,15 @@ const unlessPaused = (value: SQL | AnyColumn, whenPaused: SQL | AnyColumn) =>
   sql`case when ${connections.status} = 'paused' then ${whenPaused} else ${value} end`;
 
 const NO_DATE = sql`null::timestamptz`;
+
+// Seuls le créateur et les administrateurs (owner, admin) de l'organisation gèrent une connexion :
+// sinon un membre pourrait supprimer l'Outlook d'un autre, ou reconnecter son GitHub avec son propre
+// compte. Better Auth peut ranger plusieurs rôles séparés par des virgules.
+const manageable = (ctx: TenantContext) =>
+  sql`(${connections.createdBy} = ${ctx.userId} or exists (
+    select 1 from member
+    where "userId" = ${ctx.userId} and "organizationId" = ${ctx.tenantId}
+      and string_to_array(role, ',') && array['owner', 'admin']))`;
 
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
@@ -147,6 +157,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         createdAt: connections.createdAt,
         creatorId: users.id,
         creatorName: users.name,
+        canManage: sql<boolean>`${manageable(ctx)}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -177,7 +188,7 @@ export async function replaceConnectionSecret(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id))
+      .where(and(eq(connections.id, id), manageable(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -212,7 +223,7 @@ export async function saveOAuthTokens(
         ...restart,
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id))
+      .where(and(eq(connections.id, id), manageable(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -231,7 +242,13 @@ export async function setConnectionPaused(
           ? { status: 'paused', nextSyncAt: null, updatedAt: sql`now()` }
           : { status: 'active', nextSyncAt: sql`now()`, updatedAt: sql`now()` },
       )
-      .where(and(eq(connections.id, id), paused ? undefined : eq(connections.status, 'paused')))
+      .where(
+        and(
+          eq(connections.id, id),
+          manageable(ctx),
+          paused ? undefined : eq(connections.status, 'paused'),
+        ),
+      )
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -252,7 +269,10 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
 // Les sources déjà captées restent : leur `connection_id` passe à nul (clé étrangère).
 export async function deleteConnection(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
-    tx.delete(connections).where(eq(connections.id, id)).returning({ id: connections.id }),
+    tx
+      .delete(connections)
+      .where(and(eq(connections.id, id), manageable(ctx)))
+      .returning({ id: connections.id }),
   );
   return rows.length > 0;
 }

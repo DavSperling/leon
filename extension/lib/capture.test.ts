@@ -64,6 +64,14 @@ describe('recordExchange', () => {
     expect((await loadStatus(store)).lastCaptureAt.claude_ai).toBeDefined();
   });
 
+  it('met en tampon un échange au message trop long', async () => {
+    const store = createMemoryStore();
+    await saveSettings(store, CONSENT);
+    const long = { ...exchange, user: { ...exchange.user, text: 'a'.repeat(250_000) } };
+    expect(await recordExchange(store, { type: 'leon/exchange', exchange: long })).toBe(true);
+    expect(await countPending(store)).toBe(1);
+  });
+
   it('ignore un message qui n’est pas un échange', async () => {
     const store = createMemoryStore();
     await saveSettings(store, CONSENT);

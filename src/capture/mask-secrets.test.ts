@@ -462,6 +462,14 @@ const TRAPS = [
   'A_KEY=a\n',
   'MNaaaaaaaaaaaaaaaaaaaaaaaa.',
   '$apr1$',
+  'pataaaaaaaaaaaaaa.',
+  'pat-eu1-',
+  '?sig=a',
+  'sntrys_eyJ',
+  'https://discord.com/api/webhooks/12345678901234567/',
+  'A_KEY=a/.',
+  'A_PASSWORD=~/.',
+  ';Password={a}.',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 
@@ -481,4 +489,121 @@ describe('maskSecrets : temps linéaire', () => {
       expect(performance.now() - start).toBeLessThan(2000);
     },
   );
+});
+
+describe('maskSecrets : préfixes des outils (audit 5)', () => {
+  const hex = (n: number) => '9f3a7c1e5b2d8f40a6c3e9b1d7f2a5c8'.repeat(4).slice(0, n);
+  const upper = (n: number) => 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'.repeat(2).slice(0, n);
+  const uuid = 'b7e2c9a1-4f3d-4e8a-9c2b-1d6f8e3a5c7b';
+  it.each([
+    ['Airtable', `pat${alnum(14)}.${hex(64)}`],
+    ['Atlassian', `ATATT3xFfGF0${alnum(90)}${alnum(90)}=${hex(8).toUpperCase()}`],
+    ['HubSpot', `pat-eu1-${uuid}`],
+    ['ClickUp', `pk_81234567_${upper(32)}`],
+    ['Sentry utilisateur', `sntryu_${hex(64)}`],
+    ['Sentry organisation', `sntrys_eyJpYXQiOjE3MjU${alnum(60)}_${alnum(43)}`],
+    ['Shopify', `shpat_${hex(32)}`],
+    ['Shopify secret partagé', `shpss_${hex(32)}`],
+    ['DigitalOcean', `dop_v1_${hex(64)}`],
+    ['Docker', `dckr_pat_${alnum(27)}`],
+    ['Supabase', `sbp_${hex(40)}`],
+    ['Figma', `figd_${alnum(40)}`],
+    ['PyPI', `pypi-AgEIcHlwaS5vcmc${alnum(90)}${alnum(30)}`],
+    ['webhook Discord', `https://discord.com/api/webhooks/1234567890123456789/${alnum(68)}`],
+    ['Groq', `gsk_${alnum(52)}`],
+    ['Vault', `hvs.${alnum(90)}`],
+    ['GitLab runner', `glrt-${alnum(20)}`],
+  ])('masque : %s', (_name, secret) => {
+    expect(maskSecrets(`avant ${secret} après`)).toBe(`avant ${SECRET_MASK} après`);
+  });
+
+  it('masque la signature d’une URL SAS Azure', () => {
+    const url = `https://acme.blob.core.windows.net/a.pdf?sv=2022-11-02&sp=r&sig=${alnum(40)}%2B${alnum(2)}%3D`;
+    expect(maskSecrets(url)).toBe(
+      `https://acme.blob.core.windows.net/a.pdf?sv=2022-11-02&sp=r&sig=${SECRET_MASK}`,
+    );
+  });
+
+  it.each([
+    'patch.diff et pattern.json',
+    'pat-eu1-ticket',
+    'pk_42_court',
+    'sntryu_court',
+    'shpat_court',
+    'dckr_pat_court',
+    'sbp_test',
+    'figd_court',
+    'pypi-AgEIcHlwaS5vcmc',
+    'gsk_court',
+    'hvs.court',
+    'glrt-court',
+    'https://discord.com/api/webhooks',
+    'https://acme.fr/?sig=court',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+});
+
+describe('maskSecrets : faux positifs (audit 5)', () => {
+  // « Basic » est un mot courant : comme « Token », il ne compte qu'après « Authorization: ».
+  it.each([
+    'Abonnement Basic 9.99/mois/utilisateur, Pro à 19,99 €.',
+    'Regarde le basic examples/basic-auth/server.js du dépôt.',
+    'Setting up basic 2-factor-authentication for admins',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+});
+
+describe('maskSecrets : hôte sans point (audit 5)', () => {
+  const sha = '9f3a7c1e5b2d8f40a6c3e9b1d7f2a5c8'.repeat(2);
+  it.each([
+    'psql "postgresql://localhost:5432/leon?user=paul@acme.fr"',
+    `skopeo copy docker://localhost:5000/leon@sha256:${sha} oci:./img`,
+  ])('ne prend pas un port pour un mot de passe : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it('masque toujours un mot de passe qui commence comme un port', () => {
+    expect(maskSecrets('postgres://app:1234/abcd@hôte')).toBe(`postgres://app:${SECRET_MASK}@hôte`);
+  });
+});
+
+describe('maskSecrets : valeurs .env qui ne sont pas des secrets (audit 5)', () => {
+  it.each([
+    'export GOOGLE_APPLICATION_CREDENTIALS=/home/paul/keys/leon-sa.json',
+    'DEPLOY_SSH_KEY=~/.ssh/id_ed25519',
+    'TLS_KEY=./certs/server.key',
+    'S3_KEY=exports/2026/10/rapport.pdf',
+    'SORT_KEY=created_at',
+    'MAX_TOKEN=4096',
+    'DB_PASSWORD={password}',
+    'OPENAI_API_KEY=sk-...',
+    'DB_PASSWORD=…',
+    'var cs = $"Server={host};Database=leon;User Id={user};Password={password};";',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it.each([
+    [`AWS_SECRET_ACCESS_KEY=/${alnum(39)}`, `AWS_SECRET_ACCESS_KEY=${SECRET_MASK}`],
+    ['DB_PASSWORD=1234', `DB_PASSWORD=${SECRET_MASK}`],
+    ['ADMIN_PASSWORD=correcthorse', `ADMIN_PASSWORD=${SECRET_MASK}`],
+  ])('masque toujours : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+  });
+});
+
+describe('maskSecrets : faux positifs du corpus (audit 5)', () => {
+  it.each([
+    'api-key: docs/configuration/api.md',
+    'Monorepo_packages_frontend.vitest.config_workspace_shared_utils_ok',
+    'Le fichier key-0123456789abcdef0123456789abcdef.json est généré.',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it('masque toujours une clé Mailgun en fin de phrase', () => {
+    expect(maskSecrets(`clé ${`key-${alnum(32).toLowerCase()}`}.`)).toBe(`clé ${SECRET_MASK}.`);
+  });
 });

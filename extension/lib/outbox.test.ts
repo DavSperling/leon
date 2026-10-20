@@ -274,6 +274,20 @@ describe('forgetOutboxOnTokenChange', () => {
     expect(await takeDropped(store)).toEqual({ token: 1 });
   });
 
+  it('ne tranche pas sur une panne passagère : tampon gardé, nouvel essai plus tard', async () => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X, unknown);
+    await noteOrganization(store, X, ORG_A);
+    await enqueuePayload(store, payload('a'));
+    expect(await forgetOutboxOnTokenChange(store, Y, async () => undefined)).toBe(false);
+    expect(await countPending(store)).toBe(1);
+    expect(await takeDropped(store)).toEqual({});
+    // À l'essai suivant, /me répond : même organisation, le tampon part avec le nouveau jeton.
+    expect(await forgetOutboxOnTokenChange(store, Y, async () => ORG_A)).toBe(true);
+    expect(await countPending(store)).toBe(1);
+    expect(await forgetOutboxOnTokenChange(store, Y, async () => undefined)).toBe(true);
+  });
+
   it('vide le tampon quand l’organisation de l’ancien jeton n’a jamais été notée', async () => {
     const store = createMemoryStore();
     await forgetOutboxOnTokenChange(store, X, unknown);

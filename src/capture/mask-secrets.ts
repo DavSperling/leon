@@ -48,15 +48,34 @@ const WHOLE_SECRETS: RegExp[] = [
   /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g,
   // Clé SendGrid : « SG. », 22 caractères, « . », 43 caractères.
   /\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])/g,
-  // Clé Mailgun : « key- » et 32 caractères minuscules ou chiffres, d'un seul tenant.
-  /(?<![A-Za-z0-9_-])key-[0-9a-z]{32}(?![A-Za-z0-9_-])/g,
-  // Jeton de bot Discord : trois segments base64, le premier encode l'identifiant (« M » ou « N »).
-  /(?<![A-Za-z0-9_-])[MN][A-Za-z0-9_-]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,38}(?![A-Za-z0-9_-])/g,
+  // Clé Mailgun : « key- » et 32 caractères minuscules ou chiffres, d'un seul tenant (pas un nom de fichier).
+  /(?<![A-Za-z0-9_-])key-[0-9a-z]{32}(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
+  // Jeton de bot Discord : trois segments base64, le premier encode l'identifiant (« M » ou « N ») :
+  // des chiffres en base64, donc ni « _ » ni « - ».
+  /(?<![A-Za-z0-9_-])[MN][A-Za-z0-9]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,38}(?![A-Za-z0-9_-])/g,
   // Jeton de bot Telegram : identifiant, « : », 35 caractères commençant par « AA ».
   /(?<![0-9])[0-9]{6,12}:AA[A-Za-z0-9_-]{33}(?![A-Za-z0-9_-])/g,
   // Empreintes de mot de passe crackables hors ligne : htpasswd (apr1), bcrypt.
   /\$apr1\$[./0-9A-Za-z]{1,8}\$[./0-9A-Za-z]{22}/g,
   /\$2[aby]\$\d{2}\$[./0-9A-Za-z]{53}/g,
+  // Jetons des outils que Leon fait coller, et autres préfixes publiés par leur éditeur.
+  /\bpat[A-Za-z0-9]{14}\.[0-9a-f]{64}(?![A-Za-z0-9])/g, // Airtable
+  /\bATATT3[A-Za-z0-9_=-]{100,}/g, // Atlassian
+  /\bpat-[a-z]{2,3}[0-9]-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![0-9a-f])/g, // HubSpot
+  /\bpk_[0-9]{1,12}_[A-Z0-9]{32}(?![A-Za-z0-9])/g, // ClickUp
+  /\bsntryu_[0-9a-f]{64}(?![A-Za-z0-9])/g, // Sentry, utilisateur
+  /\bsntrys_eyJ[A-Za-z0-9+/=_]{40,}/g, // Sentry, organisation
+  /\bshp(?:at|ss)_[0-9a-fA-F]{32}(?![A-Za-z0-9])/g, // Shopify
+  /\bdop_v1_[0-9a-f]{64}(?![A-Za-z0-9])/g, // DigitalOcean
+  /\bdckr_pat_[A-Za-z0-9_-]{27}(?![A-Za-z0-9_-])/g, // Docker
+  /\bsbp_[0-9a-f]{40}(?![A-Za-z0-9])/g, // Supabase, jeton d'accès
+  /\bfigd_[A-Za-z0-9_-]{36,}/g, // Figma
+  /\bpypi-AgEIcHlwaS5vcmc[A-Za-z0-9_-]{50,}/g, // PyPI
+  /https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/[0-9]{17,20}\/[A-Za-z0-9_-]{60,}/g,
+  /(?<=[?&]sig=)[A-Za-z0-9%+/=]{40,}/g, // signature d'une URL SAS Azure
+  /\bgsk_[A-Za-z0-9]{52}(?![A-Za-z0-9])/g, // Groq
+  /\bhvs\.[A-Za-z0-9_-]{90,}/g, // Vault
+  /\bglrt-[A-Za-z0-9_-]{20,}/g, // GitLab, runner
 ];
 
 // Le nom reste lisible, seule la valeur est masquée.
@@ -68,16 +87,19 @@ const URL_PASSWORD =
 // Dans une URL web, un port suivi d'un chemin, d'une requête ou d'une ancre
 // (« localhost:3000/…?email=paul@… ») n'est pas un mot de passe ; un « @ » y est courant.
 // De même quand l'« utilisateur » est un nom d'hôte (« jdbc:postgresql://db.acme.fr:5432/…?user=paul@… »,
-// « git+https://github.com:443/org/repo@main »).
+// « git+https://github.com:443/org/repo@main »), ou « localhost », hôte sans point
+// (« docker://localhost:5000/leon@sha256:… »). Un autre nom sans point (« app ») reste un utilisateur.
 const WEB_SCHEMES = new Set(['http', 'https', 'ws', 'wss']);
+const looksLikeHost = (user: string) => user.includes('.') || user.toLowerCase() === 'localhost';
 const PORT_THEN_PATH = /^\d{1,5}[/?#]/;
 
 // Un jeton est aléatoire : chiffre, symbole ou casse mêlée. « Basic internationalization » n'en est pas un.
 const looksRandom = (value: string) =>
   /[0-9+/=]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value));
-// « Token » seul est un mot courant : il ne compte qu'après « Authorization: » (ou « "Authorization": " »).
+// « Basic » et « Token » seuls sont des mots courants : ils ne comptent qu'après « Authorization: »
+// (ou « "Authorization": " »).
 const AUTH_SCHEME =
-  /\b(Bearer|Basic|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)Token)\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
+  /\b(Bearer|(?<=authorization["']?\s{0,10}:\s{0,10}["']?)(?:Basic|Token))\s{1,10}([A-Za-z0-9._~+/=-]{16,})/gi;
 // En-têtes de clé d'API (« X-API-Key: … », « "x-api-key": "…" »), valeur aléatoire de 16 caractères ou plus.
 const API_KEY_HEADER =
   /(?<![A-Za-z0-9_-])(x-api-key|api-key|x-auth-token|x-access-token)(["']?\s{0,10}:\s{0,10}["']?)([A-Za-z0-9._~+/=-]{16,})/gi;
@@ -108,9 +130,21 @@ const POWERSHELL_ENV =
 // PHP : « define('DB_PASSWORD', '…'); ».
 const PHP_DEFINE =
   /(\bdefine\(\s{0,10}(['"])([A-Z][A-Z0-9_]{0,80})\2\s{0,10},\s{0,10})(['"])([^'"\n]+)\4/g;
-// Une valeur qui n'en est pas une : renvoi à une variable, modèle, booléen, masque déjà posé.
+// Une valeur qui n'en est pas une : renvoi à une variable, modèle (« {password} »), booléen, masque déjà
+// posé, valeur élidée (« sk-... », « … »), chemin de fichier (« ~/.ssh/id_ed25519 », « ./certs/a.key »,
+// « /home/paul/sa.json », « exports/2026/rapport.pdf »). Un chemin sans « ~/ » ni « ./ » doit finir par une
+// extension : une clé base64 peut contenir « / », jamais « . ».
 const NOT_A_VALUE =
-  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|true|false|null|none|yes|no|\[secret.*)$/i;
+  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|\{[A-Za-z0-9_.]*\}|true|false|null|none|yes|no|\[secret.*|.*(?:\.\.\.|…)|(?:~|\.{1,2})\/\S*)$/i;
+const FILE_PATH = /^[\w.@/-]*\.[A-Za-z0-9]{1,5}$/;
+// Un nom en KEY ou TOKEN désigne aussi des réglages (« SORT_KEY=created_at », « MAX_TOKEN=4096 ») :
+// sa valeur ne compte que si elle a la forme d'une clé, 16 caractères ou plus et aléatoire.
+const KEY_NAME = /(?:KEY|TOKEN)$/;
+const isSecretValue = (name: string, value: string) =>
+  ENV_NAME.test(name) &&
+  !NOT_A_VALUE.test(value) &&
+  !(value.includes('/') && FILE_PATH.test(value)) &&
+  (!KEY_NAME.test(name) || (value.length >= 16 && looksRandom(value)));
 
 function maskNamedValue(
   match: string,
@@ -122,14 +156,14 @@ function maskNamedValue(
   bare: string | undefined,
 ): string {
   const value = doubleQuoted ?? singleQuoted ?? bare ?? '';
-  if (!ENV_NAME.test(name) || NOT_A_VALUE.test(value)) return match;
+  if (!isSecretValue(name, value)) return match;
   const quote = doubleQuoted !== undefined ? '"' : singleQuoted !== undefined ? "'" : '';
   return `${lead}${name}${separator}${quote}${SECRET_MASK}${quote}`;
 }
 
 function maskUrlPassword(_match: string, scheme: string, user: string, password: string): string {
   if (
-    (WEB_SCHEMES.has(scheme.toLowerCase()) || user.includes('.')) &&
+    (WEB_SCHEMES.has(scheme.toLowerCase()) || looksLikeHost(user)) &&
     PORT_THEN_PATH.test(password)
   ) {
     // Le texte jusqu'au « @ » reste tel quel, mais une URL à identifiants peut s'y nicher : on la réexamine.
@@ -138,8 +172,11 @@ function maskUrlPassword(_match: string, scheme: string, user: string, password:
   return `${scheme}://${user}:${SECRET_MASK}@`;
 }
 
+// Un chemin de fichier (« api-key: docs/configuration/api.md ») n'est pas une clé.
 const maskIfRandom = (match: string, lead: string, value: string) =>
-  looksRandom(value) ? `${lead}${SECRET_MASK}` : match;
+  looksRandom(value) && !(value.includes('/') && FILE_PATH.test(value))
+    ? `${lead}${SECRET_MASK}`
+    : match;
 
 export function maskSecrets(text: string): string {
   let masked = text;
@@ -153,7 +190,9 @@ export function maskSecrets(text: string): string {
       maskIfRandom(match, `${name}${separator}`, value),
     )
     .replace(QUERY_SECRET, (match, lead: string, value: string) => maskIfRandom(match, lead, value))
-    .replace(CONNECTION_STRING_SECRET, `$1${SECRET_MASK}`)
+    .replace(CONNECTION_STRING_SECRET, (match, lead: string, value: string) =>
+      NOT_A_VALUE.test(value) ? match : `${lead}${SECRET_MASK}`,
+    )
     .replace(AWS_CREDENTIALS_FILE, `$1${SECRET_MASK}`)
     .replace(NPMRC_TOKEN, `$1${SECRET_MASK}`)
     .replace(ENV_LINE, maskNamedValue)
@@ -161,8 +200,6 @@ export function maskSecrets(text: string): string {
     .replace(
       PHP_DEFINE,
       (match, lead: string, _q: string, name: string, quote: string, value: string) =>
-        ENV_NAME.test(name) && !NOT_A_VALUE.test(value)
-          ? `${lead}${quote}${SECRET_MASK}${quote}`
-          : match,
+        isSecretValue(name, value) ? `${lead}${quote}${SECRET_MASK}${quote}` : match,
     );
 }

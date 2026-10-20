@@ -47,11 +47,17 @@ async function flush(): Promise<void> {
   const settings = await loadSettings(store);
   const { token } = settings;
   // Tout envoi passe ici, après le changement de jeton : rien de l'ancien tampon ne part avec le nouveau.
-  await forgetOutboxOnTokenChange(store, token, async (next) => {
+  // Seul un refus du jeton tranche sans organisation ; une panne passagère laisse la décision à l'alarme suivante.
+  const settled = await forgetOutboxOnTokenChange(store, token, async (next) => {
     const response = await getMe(next).catch(() => null);
-    return response?.ok ? organizationOf(response, next) : null;
+    if (response?.ok) return organizationOf(response, next);
+    return response?.status === 401 ? null : undefined;
   });
   const pending = await countPending(store);
+  if (!settled) {
+    await saveStatus(store, { connection: 'unreachable', pending });
+    return;
+  }
   if (token === null) {
     await saveStatus(store, { connection: 'not_configured', pending });
     return;

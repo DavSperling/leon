@@ -2,7 +2,6 @@ import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { briefings } from '@/server/db/schema/search';
-import { getBoss } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, createTestUser } from '@/test/fixtures';
 import { seedRun } from '@/test/seed-search';
@@ -11,6 +10,7 @@ import {
   BRIEFING_QUEUES,
   briefingKey,
   enqueueBriefingRefresh,
+  getBriefingBoss,
   projectOfSource,
   requestBriefingRefreshNow,
   signalProjectActivity,
@@ -45,7 +45,7 @@ async function seedBriefing(owner: TenantContext, project: string): Promise<void
 async function jobsFor(owner: TenantContext, project: string) {
   const key = briefingKey({ tenantId: owner.tenantId, userId: owner.userId, project });
   keys.add(key);
-  const boss = await getBoss();
+  const boss = await getBriefingBoss();
   return boss.findJobs(BRIEFING_QUEUES.refresh, { key, queued: true });
 }
 
@@ -67,7 +67,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const boss = await getBoss();
+  const boss = await getBriefingBoss();
   for (const key of keys) {
     const left = await boss.findJobs(BRIEFING_QUEUES.refresh, { key });
     if (left.length > 0) {

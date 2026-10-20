@@ -4,11 +4,10 @@ import { API_PATHS, BRIEFING_PROJECT_PARAM, BriefingResponseSchema } from '@/cap
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
-import { BRIEFING_QUEUES, briefingKey } from '@/server/briefing/queue';
+import { BRIEFING_QUEUES, briefingKey, getBriefingBoss } from '@/server/briefing/queue';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import * as getLlmModule from '@/server/llm/get-llm';
-import { getBoss } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
@@ -49,7 +48,7 @@ async function seedBriefing(
 async function jobsFor(owner: TenantContext, project: string) {
   const key = briefingKey({ tenantId: owner.tenantId, userId: owner.userId, project });
   keys.add(key);
-  return (await getBoss()).findJobs(BRIEFING_QUEUES.refresh, { key, queued: true });
+  return (await getBriefingBoss()).findJobs(BRIEFING_QUEUES.refresh, { key, queued: true });
 }
 
 beforeAll(async () => {
@@ -60,7 +59,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const boss = await getBoss();
+  const boss = await getBriefingBoss();
   for (const key of keys) {
     const left = await boss.findJobs(BRIEFING_QUEUES.refresh, { key });
     if (left.length > 0) {

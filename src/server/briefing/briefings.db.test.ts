@@ -6,7 +6,6 @@ import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { Llm } from '@/server/llm/llm';
 import { LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
-import { getBoss } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
@@ -16,7 +15,7 @@ import {
   readBriefing,
   refreshBriefing,
 } from './briefings';
-import { BRIEFING_QUEUES, briefingKey, signalProjectActivity } from './queue';
+import { BRIEFING_QUEUES, briefingKey, getBriefingBoss, signalProjectActivity } from './queue';
 
 // Le point du matin, de bout en bout sous les droits de l'utilisateur : la matière (gather.ts), un seul appel au
 // faux modèle, la ligne écrite ; puis la lecture, qui revérifie que chaque source fournie est encore visible.
@@ -89,7 +88,7 @@ async function rowOf(owner: TenantContext, project: string) {
 async function jobsFor(owner: TenantContext, project: string) {
   const key = briefingKey({ tenantId: owner.tenantId, userId: owner.userId, project });
   keys.add(key);
-  const boss = await getBoss();
+  const boss = await getBriefingBoss();
   return boss.findJobs(BRIEFING_QUEUES.refresh, { key, queued: true });
 }
 
@@ -102,7 +101,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const boss = await getBoss();
+  const boss = await getBriefingBoss();
   for (const key of keys) {
     const left = await boss.findJobs(BRIEFING_QUEUES.refresh, { key });
     if (left.length > 0) {

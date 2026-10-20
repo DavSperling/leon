@@ -63,6 +63,7 @@ const dropped = takeDropped(browserStore);
 const DROP_CAUSES: Record<DropReason, string> = {
   full: "le tampon d'envoi était plein (serveur injoignable trop longtemps)",
   refused: "le serveur n'en a pas voulu (échange trop gros ou illisible)",
+  token: "en attente quand le jeton a changé (rien ne part vers une autre organisation)",
 };
 
 function droppedText(counts: DroppedCounts): string {

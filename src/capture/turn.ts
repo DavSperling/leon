@@ -92,6 +92,11 @@ export const TurnSchema = z
   .strict();
 export type Turn = z.infer<typeof TurnSchema>;
 
+// La clé du projet d'une session (C8) : un dépôt GitHub (`github.com/<propriétaire>/<dépôt>`, en minuscules)
+// ou, faute de dépôt, le dossier (`dossier:` et 16 hexadécimaux). Jamais une adresse de remote : elle peut porter un jeton.
+export const PROJECT_KEY_PATTERN =
+  /^(github\.com\/[a-z0-9._-]+\/[a-z0-9._-]+|dossier:[0-9a-f]{16})$/;
+
 export const IngestPayloadSchema = z
   .object({
     source: z
@@ -99,6 +104,7 @@ export const IngestPayloadSchema = z
         kind: z.enum(CAPTURE_KINDS),
         external_id: z.string().min(1).max(200),
         title: z.string().min(1).max(300).optional(),
+        project: z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN).optional(),
       })
       .strict(),
     turns: z.array(TurnSchema).min(1).max(TURNS_PER_BATCH_MAX),

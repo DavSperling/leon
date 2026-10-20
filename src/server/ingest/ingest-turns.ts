@@ -114,6 +114,16 @@ export async function updateSource(
     await tx.update(sources).set(set).where(eq(sources.id, sourceId));
 }
 
+// La clé de projet d'une session captée (C8) va dans `sources.metadata.project`, à côté des autres clés
+// (nature…) : le dernier projet reçu l'emporte, un envoi sans projet ne touche à rien.
+async function recordProject(tx: Tx, sourceId: string, project: string | undefined): Promise<void> {
+  if (project === undefined) return;
+  await tx
+    .update(sources)
+    .set({ metadata: sql`${sources.metadata} || ${JSON.stringify({ project })}::jsonb` })
+    .where(eq(sources.id, sourceId));
+}
+
 export async function createIngestRun(
   tx: Tx,
   ctx: TenantContext,
@@ -152,6 +162,7 @@ export async function ingestTurns(
     const sourceId = await upsertSource(tx, ctx, payload.source, title);
     const { ids, lastTs } = await insertNewTurns(tx, captureRows(ctx, sourceId, payload.turns));
     await updateSource(tx, sourceId, title, lastTs);
+    await recordProject(tx, sourceId, payload.source.project);
     if (ids.length === 0) return { sourceId, newTurnIds: ids, ingestRunId: null };
     const ingestRunId = await createIngestRun(tx, ctx, sourceId, ids, [ctx.userId]);
     return { sourceId, newTurnIds: ids, ingestRunId };

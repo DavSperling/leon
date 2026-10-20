@@ -1,7 +1,10 @@
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
 import { INGEST_BODY_MAX_BYTES, IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
+import { sources } from '@/server/db/schema/memory';
+import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { createTestTenant } from '@/test/fixtures';
@@ -79,6 +82,54 @@ describe('POST /api/v1/ingest', () => {
       error: 'Requête invalide',
       issues: [{ path: 'source.kind', code: 'invalid_value' }],
     });
+  });
+
+  it('range la clé de projet dans metadata.project de la source', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+    const withProject = {
+      ...body,
+      source: { ...body.source, kind: 'claude_code', project: 'github.com/acme/leon' },
+    };
+
+    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: withProject });
+
+    expect(response.status).toBe(202);
+    const { sourceId } = IngestResultSchema.parse(await response.json());
+    const [stored] = await withTenant(paul, (tx) =>
+      tx.select({ metadata: sources.metadata }).from(sources).where(eq(sources.id, sourceId)),
+    );
+    expect(stored?.metadata).toMatchObject({ project: 'github.com/acme/leon' });
+  });
+
+  it("répond 400 à un projet qui n'est pas une clé, sans renvoyer la valeur reçue", async () => {
+    const { paulToken } = await setup();
+    const body = validBody();
+    const bad = { ...body, source: { ...body.source, project: 'evil' } };
+
+    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+
+    expect(response.status).toBe(400);
+    const text = await response.text();
+    expect(text).not.toContain('evil');
+    expect(JSON.parse(text)).toEqual({
+      error: 'Requête invalide',
+      issues: [{ path: 'source.project', code: 'invalid_format' }],
+    });
+  });
+
+  it('répond 400 à une adresse de dépôt en guise de clé : la clé ne porte jamais de jeton', async () => {
+    const { paulToken } = await setup();
+    const body = validBody();
+    const bad = {
+      ...body,
+      source: { ...body.source, project: 'https://utilisateur:jeton@github.com/acme/leon.git' },
+    };
+
+    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+
+    expect(response.status).toBe(400);
+    expect(await response.text()).not.toContain('jeton');
   });
 
   it('répond 400 à un corps vide', async () => {

@@ -83,6 +83,36 @@ describe('importClaudeCode', () => {
     expect(summary).toEqual({ sessions: 3, turnsSent: 12, inserted: 6, skipped: 3, failures: 0 });
   });
 
+  it('met la clé de projet dans la source de chaque envoi, et dans la sortie en dryRun', async () => {
+    const { deps, send, out } = makeDeps();
+
+    await importClaudeCode({ ...importOptions(), projectKey: 'github.com/acme/leon' }, deps);
+    await importClaudeCode({ baseDir, dryRun: true, projectKey: 'dossier:0123456789abcdef' }, deps);
+
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(send.mock.calls.map(([p]) => p.source.project)).toEqual([
+      'github.com/acme/leon',
+      'github.com/acme/leon',
+      'github.com/acme/leon',
+    ]);
+    const dry = out.mock.calls.map(([line]) => JSON.parse(line) as IngestPayload);
+    expect(dry.map((p) => p.source.project)).toEqual([
+      'dossier:0123456789abcdef',
+      'dossier:0123456789abcdef',
+      'dossier:0123456789abcdef',
+    ]);
+  });
+
+  it("sans clé de projet, la source n'a pas de champ project (comme avant)", async () => {
+    const { deps, send } = makeDeps();
+
+    await importClaudeCode(importOptions(), deps);
+
+    for (const [payload] of send.mock.calls) {
+      expect(Object.keys(payload.source)).not.toContain('project');
+    }
+  });
+
   it('ne garde que les sessions dont le cwd commence par project', async () => {
     const { deps, send } = makeDeps();
 
@@ -283,6 +313,27 @@ describe('createIngestSender', () => {
       headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+  });
+
+  it("passe le signal d'interruption à l'envoi, quand on en donne un", async () => {
+    const fetchImpl = vi.fn(async () => Response.json(RESULT, { status: 202 }));
+    const controller = new AbortController();
+
+    await createIngestSender(fetchImpl as typeof fetch, env, { signal: controller.signal })(
+      payload,
+    );
+
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it("n'ajoute aucun signal sans demande : l'import par lots n'a pas de délai global", async () => {
+    const fetchImpl = vi.fn(async () => Response.json(RESULT, { status: 202 }));
+
+    await createIngestSender(fetchImpl as typeof fetch, env)(payload);
+
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(init.signal).toBeUndefined();
   });
 
   it('lève TokenRefusedError sur 401, une erreur sur les autres refus', async () => {

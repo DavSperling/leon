@@ -182,6 +182,76 @@ describe('ingestTurns', () => {
     expect((await readSource(paul, first.sourceId))[0]?.title).toBe('Nouveau');
   });
 
+  it('range la clé de projet dans metadata.project, dès la première réception', async () => {
+    const { paul, externalId } = await setup();
+
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('complète une source déjà connue sans projet, garde les autres clés, et le dernier projet l’emporte', async () => {
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(1)]));
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({});
+    await withTenant(paul, (tx) =>
+      tx
+        .update(sources)
+        .set({ metadata: { autre: 'x' } })
+        .where(eq(sources.id, sourceId)),
+    );
+
+    await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(2)], { project: 'dossier:0123456789abcdef' }),
+    );
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      autre: 'x',
+      project: 'dossier:0123456789abcdef',
+    });
+
+    await ingestTurns(paul, payload(externalId, [newTurn(3)], { project: 'github.com/acme/leon' }));
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      autre: 'x',
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('un envoi sans projet (l’extension) n’efface pas le projet déjà connu', async () => {
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    await ingestTurns(paul, payload(externalId, [newTurn(2)]));
+
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('un projet envoyé sans nouveau tour est quand même enregistré', async () => {
+    // Les tours déjà connus sont ignorés, mais la session captée avant le correctif doit recevoir son projet.
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(1)]));
+
+    const second = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    expect(second.inserted).toBe(0);
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
+  });
+
   it('date l’écriture des tours reçus dans leur ordre, même quand ils ont tous la même date', async () => {
     // Un long texte découpé en morceaux (`doc:1`, `doc:2`…) arrive avec une seule date : l'ordre de lecture
     // d'une source (date du tour, puis date d'écriture) ne se retrouve que si l'écriture suit l'ordre reçu.

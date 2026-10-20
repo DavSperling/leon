@@ -1,7 +1,9 @@
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fetchBriefingText } from './briefing';
-import { claudeConfigDir, parseServerEnv } from './env';
+import { captureSessionFromHook, createHookSender, readHookStdin } from './capture-session';
+import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   createIngestSender,
   type ImportDeps,
@@ -9,6 +11,7 @@ import {
   importClaudeCode,
   parseSince,
 } from './import-claude-code';
+import { gitInDirectory } from './project-key';
 
 const HELP = `Usage : pnpm leon <commande>
 
@@ -17,10 +20,11 @@ Commandes :
       --project <chemin>   ne garde que les sessions lancées sous ce dossier
       --since AAAA-MM-JJ   ne garde que les tours à partir de cette date
       --dry-run            affiche ce qui serait envoyé (une ligne JSON par envoi), sans rien envoyer
+  briefing             Affiche le briefing Leon (pour le hook SessionStart de Claude Code)
+  capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
+                       de Claude Code : le JSON du crochet est lu sur l'entrée standard)
 
-L'envoi réel demande LEON_URL et LEON_TOKEN.`;
-// `briefing` n'est pas dans l'aide tant que le point du matin n'existe pas côté serveur (T13) : la commande
-// reste, pour le hook SessionStart déjà posé, et ne gêne jamais Claude Code (voir `runBriefing`).
+L'envoi réel, le briefing et la capture de session demandent LEON_URL et LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'à envoyer' : 'envoyés';
@@ -74,11 +78,39 @@ async function runBriefing(): Promise<number> {
   return 0;
 }
 
+// Le crochet SessionEnd ne doit jamais gêner Claude Code : le code de sortie vaut toujours 0 et les messages
+// ne citent ni la session ni l'adresse du serveur (voir capture-session.ts). Rien n'est écrit sur la sortie
+// standard.
+async function runCaptureSession(): Promise<number> {
+  try {
+    let env: ServerEnv;
+    try {
+      env = parseServerEnv(process.env);
+    } catch (error) {
+      // Les messages de parseServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
+      console.error(`Leon : ${error instanceof Error ? error.message : 'configuration invalide.'}`);
+      return 0;
+    }
+    return await captureSessionFromHook(await readHookStdin(process.stdin), {
+      send: createHookSender(fetch, env),
+      out: () => {},
+      git: gitInDirectory,
+      readFile: (path) => readFile(path, 'utf8'),
+    });
+  } catch {
+    console.error('Leon : capture impossible (erreur inattendue).');
+    return 0;
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefing();
+    if (command === 'capter-session') return await runCaptureSession();
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
     console.error(error instanceof Error ? error.message : 'Erreur inconnue.');

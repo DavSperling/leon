@@ -23,7 +23,14 @@ export function parseSince(value: string | undefined): Date | undefined {
   return new Date(`${value}T00:00:00`);
 }
 
-export type ImportOptions = { baseDir: string; project?: string; since?: Date; dryRun: boolean };
+// `project` filtre les sessions par dossier ; `projectKey` est la clé envoyée dans `source.project` (voir project-key.ts).
+export type ImportOptions = {
+  baseDir: string;
+  project?: string;
+  projectKey?: string;
+  since?: Date;
+  dryRun: boolean;
+};
 export type ImportDeps = {
   send: (payload: IngestPayload) => Promise<IngestResult>;
   out: (line: string) => void;
@@ -43,12 +50,19 @@ export class TokenRefusedError extends Error {
   }
 }
 
-export function createIngestSender(fetchImpl: typeof fetch, env: ServerEnv): ImportDeps['send'] {
+// `signal` borne la durée d'un envoi (réponse comprise) : le crochet de fin de session en a besoin,
+// l'import par lots, non.
+export function createIngestSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: { signal?: AbortSignal } = {},
+): ImportDeps['send'] {
   return async (payload) => {
     const response = await fetchImpl(new URL(API_PATHS.ingest, env.url), {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      ...(options.signal ? { signal: options.signal } : {}),
     });
     if (response.status === 401) throw new TokenRefusedError();
     if (!response.ok) throw new Error(`Réponse ${response.status} du serveur Leon.`);
@@ -73,9 +87,10 @@ async function loadSession(
   return turns.length > 0 ? { ...session, turns } : null;
 }
 
-async function importSession(
+// Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi.
+export async function importSession(
   session: ClaudeCodeSession,
-  options: ImportOptions,
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'>,
   deps: ImportDeps,
   summary: ImportSummary,
 ): Promise<void> {
@@ -89,6 +104,7 @@ async function importSession(
         kind: 'claude_code',
         external_id: session.sessionId,
         title: session.title ?? undefined,
+        ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
       },
       turns,
     };

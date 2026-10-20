@@ -61,6 +61,10 @@ const DiscussionMessageSchema = z.object({
   message: z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS),
 });
 
+// Le signe de vie d'un flux : un commentaire SSE, que la page ignore (event-stream.ts). Sans lui, un proxy coupe
+// la connexion restée muette pendant que l'agent cherche ou réfléchit.
+const PING_MS = 15_000;
+
 // Les évènements d'un flux, un par évènement serveur. Quand le lecteur s'en va, la réponse en tête s'arrête (ce
 // qui interrompt l'appel au modèle) ; la discussion (`keepReading`) continue de lire sans écrire, pour que la
 // réponse soit finie et gardée : la page rechargée la retrouve.
@@ -71,6 +75,7 @@ function streamEvents(
   keepReading = false,
 ) {
   return streamSSE(c, async (stream) => {
+    const ping = setInterval(() => void stream.write(': ping\n\n'), PING_MS);
     try {
       for await (const event of events) {
         if (stream.aborted) {
@@ -82,6 +87,8 @@ function streamEvents(
     } catch (error) {
       // Les flux ne lèvent pas ; sans ce filet, Hono écrirait le message de l'erreur dans la console.
       logError(route, error);
+    } finally {
+      clearInterval(ping);
     }
   });
 }

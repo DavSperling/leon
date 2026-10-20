@@ -436,6 +436,48 @@ describe('POST /api/v1/discussions/:id/messages', () => {
     });
   });
 
+  // Un proxy coupe une connexion muette : pendant que l'agent réfléchit, un commentaire SSE tient la ligne, que
+  // la page ignore.
+  it('envoie un signe de vie toutes les 15 s pendant la réponse', async () => {
+    const { alice } = await setupTeam();
+    const id = await createDiscussion(alice.ctx, { question: 'La clause quetzal ?' });
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: () => void = () => undefined;
+    const running = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue({
+      streamText(): AsyncIterable<never> {
+        throw new Error('non utilisé');
+      },
+      async *runAgent() {
+        started();
+        await gate;
+        yield { type: 'texte', delta: 'La clause est acceptée.' };
+      },
+    });
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+
+    try {
+      const response = await post(alice, id, { message: 'La clause quetzal ?' });
+      await running;
+      vi.advanceTimersByTime(15_000);
+      release();
+      const body = await response.text();
+
+      expect(body).toContain(': ping\n\n');
+      expect(createDiscussionEventReader().push(body).at(-1)).toEqual({
+        type: 'fin',
+        reason: 'fini',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   // Vigilance 4 : la discussion d'Alice n'existe pas pour Bob.
   it('répond 404 à Bob dans la discussion d’Alice, sans rien écrire ni appeler le modèle', async () => {
     const { alice, bob } = await setupTeam();

@@ -1,9 +1,15 @@
 import { browser, defineBackground } from '#imports';
+import { ViewerProfileSchema } from '../../src/capture/api-contract';
 import { getMe, postIngest } from '../lib/api';
 import { browserStore as store } from '../lib/browser-store';
 import { recordExchange } from '../lib/capture';
 import type { Site } from '../lib/exchange';
-import { countPending, flushOutbox, forgetOutboxOnTokenChange } from '../lib/outbox';
+import {
+  countPending,
+  flushOutbox,
+  forgetOutboxOnTokenChange,
+  noteOrganization,
+} from '../lib/outbox';
 import {
   type CaptureStatus,
   canCapture,
@@ -15,11 +21,22 @@ import {
 
 const FLUSH_ALARM = 'leon-flush';
 
+// Organisation du jeton selon /me, notée quand la réponse est lisible ; null si inconnue.
+async function organizationOf(response: Response, token: string): Promise<string | null> {
+  const me = ViewerProfileSchema.safeParse(await response.json().catch(() => null));
+  if (!me.success) return null;
+  await noteOrganization(store, token, me.data.tenantId);
+  return me.data.tenantId;
+}
+
 // Tampon vide : rien à envoyer, on vérifie quand même que le jeton est accepté.
 async function probeConnection(token: string): Promise<CaptureStatus['connection']> {
   try {
     const response = await getMe(token);
-    if (response.ok) return 'connected';
+    if (response.ok) {
+      await organizationOf(response, token);
+      return 'connected';
+    }
     return response.status === 401 ? 'unauthorized' : 'unreachable';
   } catch {
     return 'unreachable';
@@ -30,7 +47,10 @@ async function flush(): Promise<void> {
   const settings = await loadSettings(store);
   const { token } = settings;
   // Tout envoi passe ici, après le changement de jeton : rien de l'ancien tampon ne part avec le nouveau.
-  await forgetOutboxOnTokenChange(store, token);
+  await forgetOutboxOnTokenChange(store, token, async (next) => {
+    const response = await getMe(next).catch(() => null);
+    return response?.ok ? organizationOf(response, next) : null;
+  });
   const pending = await countPending(store);
   if (token === null) {
     await saveStatus(store, { connection: 'not_configured', pending });

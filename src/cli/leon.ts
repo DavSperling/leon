@@ -1,6 +1,5 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { z } from 'zod';
 import { fetchBriefingText } from './briefing';
 import { claudeConfigDir, parseServerEnv } from './env';
 import {
@@ -8,6 +7,7 @@ import {
   type ImportDeps,
   type ImportSummary,
   importClaudeCode,
+  parseSince,
 } from './import-claude-code';
 
 const HELP = `Usage : pnpm leon <commande>
@@ -36,10 +36,7 @@ async function runImport(args: string[]): Promise<number> {
       'dry-run': { type: 'boolean' },
     },
   });
-  if (values.since && !z.iso.date().safeParse(values.since).success) {
-    throw new Error('--since attend une date au format AAAA-MM-JJ.');
-  }
-  const since = values.since ? new Date(`${values.since}T00:00:00Z`) : undefined;
+  const since = parseSince(values.since);
   const dryRun = values['dry-run'] ?? false;
   const deps: ImportDeps = {
     out: console.log,

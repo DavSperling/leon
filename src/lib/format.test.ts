@@ -39,6 +39,15 @@ describe('formatRelative', () => {
     expect(formatRelative(ago(30 * HOUR), now)).toBe('hier');
   });
 
+  it('dit « hier » pour la veille en jour civil à Paris, pas pour l’avant-veille', () => {
+    // 8 h à Paris ; 23 h 30 l'avant-veille, 32 h 30 plus tôt.
+    const morning = new Date('2026-10-13T06:00:00Z');
+    expect(formatRelative(new Date('2026-10-11T21:30:00Z'), morning)).toBe('11 oct. 2026');
+    // 23 h à Paris ; 0 h 30 la veille, 46 h 30 plus tôt.
+    const evening = new Date('2026-10-13T21:00:00Z');
+    expect(formatRelative(new Date('2026-10-11T22:30:00Z'), evening)).toBe('hier');
+  });
+
   it('donne la date au-delà', () => {
     expect(formatRelative(ago(72 * HOUR), now)).toBe('10 oct. 2026');
   });

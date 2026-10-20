@@ -107,6 +107,12 @@ describe('embedMissing', () => {
     expect(await vectorsOf(zoe, theirs.passageIds)).toHaveLength(1);
     // L'équipe d'Alice voit le passage partagé, jamais ceux de Zoé ni les passages privés d'Alice pour Bob.
     expect(await vectorsOf(bob, mine.passageIds)).toHaveLength(0);
+    // Audit n° 8 : le passage note le modèle de son vecteur ; le tic ne relit que les autres.
+    const { rows } = await adminPool.query<{ embedded_model: string | null }>(
+      'select embedded_model from passages where id = any($1)',
+      [[...mine.passageIds, ...shared.passageIds, ...theirs.passageIds]],
+    );
+    expect(rows.map((row) => row.embedded_model)).toEqual(Array(5).fill('factice-1024'));
   });
 
   // Audit n° 7 : la recherche ne lit que les vecteurs du modèle courant ; ceux d'un ancien modèle restaient pour

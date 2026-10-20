@@ -93,3 +93,24 @@ it('indexe les vecteurs par organisation et par modèle', async () => {
     expect.stringContaining('(tenant_id, model)'),
   );
 });
+
+// Audit n° 8 : le tic des vecteurs relisait chaque minute tous les passages (anti-jointure sur toute la table).
+// Les passages à vectoriser se trouvent désormais par un index : le plan n'a pas d'autre choix que lui quand
+// le parcours complet est écarté.
+it('trouve les passages à vectoriser par un index', async () => {
+  const client = await adminPool.connect();
+  try {
+    await client.query('begin');
+    await client.query('set local enable_seqscan = off');
+    const { rows } = await client.query<{ 'QUERY PLAN': string }>(
+      `explain select id from passages
+        where embedded_model is null or embedded_model < 'modele' or embedded_model > 'modele'`,
+    );
+    const plan = rows.map((row) => row['QUERY PLAN']).join('\n');
+    expect(plan).toContain('passages_embedded_model_idx');
+    expect(plan).not.toContain('Seq Scan');
+  } finally {
+    await client.query('rollback');
+    client.release();
+  }
+});

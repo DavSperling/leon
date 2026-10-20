@@ -1,6 +1,21 @@
 -- 0013-corrections-audit.sql : les corrections de l'audit du 20/10 qui touchent la base (tics de fond, index
 -- de recherche).
 
+-- Audit n° 8 : passages_sans_vecteur relisait chaque minute tous les passages (anti-jointure sur toute la table)
+-- pour n'en trouver, la plupart du temps, aucun. Le passage note le modèle de son dernier vecteur
+-- (embedPassages l'écrit avec le vecteur) ; un index sur cette colonne rend vide, sans rien parcourir, la liste
+-- des passages dont le modèle n'est pas le courant. Un index partiel ne suffirait pas : il ne peut pas dépendre
+-- du modèle courant, et un changement de modèle doit remettre tous les passages dans la liste. La condition
+-- s'écrit `is null or < or >` : `is distinct from` et `<>` ne se servent pas d'un index. En tête du fichier :
+-- passages_sans_vecteur (ci-dessous) lit la colonne.
+alter table passages add column embedded_model text;
+update passages p set embedded_model = v.model
+from (
+  select distinct on (passage_id) passage_id, model from passage_vectors order by passage_id, created_at desc
+) v
+where v.passage_id = p.id;
+create index passages_embedded_model_idx on passages (embedded_model);
+
 -- Audit n° 1 : les lectures des tics ne rendent plus les lignes d'un propriétaire qui a quitté l'organisation.
 -- Personne ne peut plus travailler sous ses droits : rendues à chaque tic et sautées, elles occupaient la tête
 -- de la liste et bloquaient tout ce qui venait derrière.
@@ -11,9 +26,12 @@ language sql stable security definer set search_path = public as $$
   select p.id, p.tenant_id, s.owner_user_id
   from passages p
   join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
-  where not exists (
-    select 1 from passage_vectors v where v.passage_id = p.id and v.model = p_model
-  )
+  -- Audit n° 8 : le modèle noté sur le passage (en tête du fichier) écarte, par un index, ceux qui ont déjà
+  -- leur vecteur.
+  where (p.embedded_model is null or p.embedded_model < p_model or p.embedded_model > p_model)
+    and not exists (
+      select 1 from passage_vectors v where v.passage_id = p.id and v.model = p_model
+    )
     and exists (
       select 1 from member m where m."userId" = s.owner_user_id and m."organizationId" = p.tenant_id
     )

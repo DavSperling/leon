@@ -559,7 +559,14 @@ export async function searchPassages(
     // Sans mot à chercher : les sources les plus récentes qui passent les filtres, s'il y en a.
     if (!hasFilters(filters)) return empty;
     const recent = await withTenant(ctx, (tx) =>
-      recentSources(tx, ctx, filters, { limit: PAGE_SIZE, offset }, withoutNegated(terms)),
+      recentSources(
+        tx,
+        ctx,
+        filters,
+        { limit: PAGE_SIZE, offset },
+        withoutNegated(terms),
+        titleWithoutNegated(terms),
+      ),
     );
     return { hits: recent.hits, totalSources: recent.total, mode: 'plein-texte', unknownPeople };
   }

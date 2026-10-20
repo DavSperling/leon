@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TEST_ENV } from '@/test/test-env';
 import {
   enqueuePipelineStep,
+  ensureQueue,
   getBoss,
   INDEX_PRIORITY,
   PIPELINE_QUEUES,
@@ -43,6 +44,30 @@ describe('démarrage de pg-boss', () => {
     const boss = await getBoss();
 
     for (const name of LEGACY_QUEUES) expect(await boss.getQueue(name), name).toBeNull();
+  });
+
+  // Audit 3 n° 5 : un tic des vecteurs plus long que la minute laissait les suivants s'empiler dans la file.
+  it('ne garde dans la file du tic des vecteurs qu’un job actif et un en attente', async () => {
+    const boss = await getBoss();
+
+    expect((await boss.getQueue(PIPELINE_QUEUES.reindex))?.policy).toBe('stately');
+  });
+
+  // pg-boss ne change pas la politique d'une file qui existe déjà (celle des bases déjà utilisées).
+  it('recrée avec sa politique une file créée avant avec une autre', async () => {
+    const boss = await getBoss();
+    const name = `test-politique-${randomUUID()}`;
+    await boss.createQueue(name);
+    try {
+      await ensureQueue(boss, name, { policy: 'stately' });
+
+      expect((await boss.getQueue(name))?.policy).toBe('stately');
+      expect(await boss.send(name, {})).not.toBeNull();
+      expect(await boss.send(name, {})).toBeNull();
+    } finally {
+      await boss.deleteAllJobs(name);
+      await boss.deleteQueue(name);
+    }
   });
 });
 

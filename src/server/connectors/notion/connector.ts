@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Connector, ConnectorItem } from '../types';
+import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { type Api, fetchMe, type NotionPage, searchPages } from './client';
 import { createAuthors, pageToItem } from './map';
 import { notionOAuth } from './oauth';
@@ -25,8 +25,9 @@ import { notionOAuth } from './oauth';
 // décroissant, un tel décalage ne fait au pire que repasser deux fois sur une page. Le
 // curseur est JSON : { at, ids } = date de la dernière page rendue, et les pages déjà rendues à
 // cette date (plusieurs pages partagent la même minute ; sans leurs identifiants, un passage coupé à
-// 200 éléments ne progresserait plus). Un curseur illisible repart de since : l'ingestion est
-// idempotente. Une page sans texte ni commentaire n'est pas rendue. Une page retirée entre la
+// 200 éléments ne progresserait plus). Le premier remplissage fait exception : il rend les pages dans
+// l'ordre de la recherche et garde sa position (voir `fill`). Un curseur illisible repart de since,
+// en remplissage : l'ingestion est idempotente. Une page sans texte ni commentaire n'est pas rendue. Une page retirée entre la
 // recherche et sa lecture (404) est sautée. Sans la capacité « Lire les commentaires » ou « Lire les
 // informations des utilisateurs » (403) : pas de commentaires, auteur inconnu (le commentaire garde
 // le nom affiché que Notion donne).
@@ -69,16 +70,38 @@ const PAGES_PER_BATCH = 10;
 
 // Où reprendre : la date et les pages déjà rendues à cette date.
 type Mark = { at: number; ids: Set<string> };
-const CursorSchema = z.object({ at: z.iso.datetime(), ids: z.array(z.string()) });
+const MarkSchema = z.object({ at: z.iso.datetime(), ids: z.array(z.string()) });
+// Premier remplissage en cours (voir `fill`) : `after` est le début de la page de recherche en cours.
+const FillSchema = z.object({
+  fill: z.object({
+    after: z.string().nullable(),
+    upto: MarkSchema.nullable(),
+    top: MarkSchema.nullable(),
+  }),
+});
+type Fill = { after: string | null; upto: Mark | null; top: Mark | null };
 
-function readMark(cursor: string | null, since: Date): Mark {
+const toMark = (mark: z.infer<typeof MarkSchema>): Mark => ({
+  at: Date.parse(mark.at),
+  ids: new Set(mark.ids),
+});
+const fromMark = (mark: Mark) => ({ at: new Date(mark.at).toISOString(), ids: [...mark.ids] });
+
+// Un repère (passages suivants), un remplissage en cours, ou null : curseur absent ou illisible, le
+// remplissage part de since.
+function readCursor(cursor: string | null): Mark | Fill | null {
+  let value: unknown = null;
   try {
-    const parsed = CursorSchema.safeParse(JSON.parse(cursor ?? 'null'));
-    if (parsed.success) return { at: Date.parse(parsed.data.at), ids: new Set(parsed.data.ids) };
+    value = JSON.parse(cursor ?? 'null');
   } catch {
     // Curseur illisible : on repart de since.
   }
-  return { at: since.getTime(), ids: new Set() };
+  const mark = MarkSchema.safeParse(value);
+  if (mark.success) return toMark(mark.data);
+  const fill = FillSchema.safeParse(value);
+  if (!fill.success) return null;
+  const { after, upto, top } = fill.data.fill;
+  return { after, upto: upto && toMark(upto), top: top && toMark(top) };
 }
 
 const editedAt = (page: NotionPage) => Date.parse(page.last_edited_time);
@@ -112,6 +135,66 @@ function markAfter(done: NotionPage[], previous: Mark): string {
   return JSON.stringify({ at: new Date(at).toISOString(), ids: [...ids] });
 }
 
+// Le repère qui ajoute `page` : une date plus récente (`newer`) ou plus ancienne le remplace.
+function extend(mark: Mark | null, page: NotionPage, newer: boolean): Mark {
+  const at = editedAt(page);
+  if (mark === null || (newer ? at > mark.at : at < mark.at))
+    return { at, ids: new Set([page.id]) };
+  return at === mark.at ? { at, ids: new Set([...mark.ids, page.id]) } : mark;
+}
+
+// Déjà rendue par ce remplissage : plus récente que la dernière page rendue, ou à sa date et nommée.
+const alreadyDone = (page: NotionPage, upto: Mark | null) =>
+  upto !== null &&
+  (editedAt(page) > upto.at || (editedAt(page) === upto.at && upto.ids.has(page.id)));
+
+// Le premier remplissage lit la recherche du plus récent au plus ancien et rend les pages dans cet
+// ordre, comme Linear : le curseur garde sa position (`after`), la dernière page rendue (`upto`,
+// pour reprendre une page de recherche entamée) et la plus récente (`top`). Sans cela, chaque
+// passage de 200 éléments relisait toute la recherche. Une page modifiée pendant le remplissage
+// remonte en tête : plus récente que `top`, le passage suivant la prend. À la fin, le curseur
+// devient le repère de `top`. Non vérifié : la validité d'un `start_cursor` d'une relève à l'autre.
+async function* fill(
+  api: Api,
+  authors: ReturnType<typeof createAuthors>,
+  from: Fill,
+  since: Date,
+): AsyncGenerator<SyncPage> {
+  let { after, upto, top } = from;
+  const position = () =>
+    JSON.stringify({
+      fill: { after, upto: upto && fromMark(upto), top: top && fromMark(top) },
+    });
+  const finished = () => JSON.stringify(fromMark(top ?? { at: since.getTime(), ids: new Set() }));
+  for (;;) {
+    const answer = await searchPages(api, after ?? undefined);
+    const fresh: NotionPage[] = [];
+    let older = false;
+    for (const page of answer.results) {
+      if (editedAt(page) < since.getTime()) {
+        older = true;
+        break;
+      }
+      if (!alreadyDone(page, upto)) fresh.push(page);
+    }
+    const last = older || !answer.has_more || answer.next_cursor === null;
+    if (fresh.length === 0 && last) yield { items: [], cursor: finished() };
+    for (let start = 0; start < fresh.length; start += PAGES_PER_BATCH) {
+      const end = Math.min(start + PAGES_PER_BATCH, fresh.length);
+      const items: ConnectorItem[] = [];
+      for (const page of fresh.slice(start, end)) {
+        const item = await pageToItem(api, authors, page);
+        if (item !== null) items.push(item);
+        upto = extend(upto, page, false);
+        top = extend(top, page, true);
+      }
+      yield { items, cursor: last && end === fresh.length ? finished() : position() };
+    }
+    if (last) return;
+    after = answer.next_cursor;
+  }
+}
+
 export const notionConnector: Connector<Config> = {
   id: 'notion',
   configSchema: ConfigSchema,
@@ -129,9 +212,13 @@ export const notionConnector: Connector<Config> = {
 
   async *sync(config, state, http) {
     const api = { http, token: bearer(config) };
-    const previous = readMark(state.cursor, state.since);
-    const pages = await pagesSince(api, previous);
     const authors = createAuthors(api);
+    const previous = readCursor(state.cursor);
+    if (previous === null || 'after' in previous) {
+      yield* fill(api, authors, previous ?? { after: null, upto: null, top: null }, state.since);
+      return;
+    }
+    const pages = await pagesSince(api, previous);
     for (let start = 0; start < pages.length; start += PAGES_PER_BATCH) {
       const end = Math.min(start + PAGES_PER_BATCH, pages.length);
       const items: ConnectorItem[] = [];

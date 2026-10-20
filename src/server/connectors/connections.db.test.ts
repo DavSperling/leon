@@ -15,8 +15,9 @@ import {
   setConnectionPaused,
 } from './connections';
 
-// Organisation Paul + Marie, une autre organisation (Zoé). La base de test est partagée :
-// on ne retire que nos connexions (voir « Connexions dans les tests » dans le plan).
+// Organisation Paul + Marie (administratrice) + Bob (simple membre), une autre organisation (Zoé).
+// La base de test est partagée : on ne retire que nos connexions (voir « Connexions dans les tests »
+// dans le plan).
 
 const DUE = new Date('2000-01-01T00:00:00Z');
 const DAY_MS = 24 * 3_600_000;
@@ -24,13 +25,18 @@ const DAY_MS = 24 * 3_600_000;
 const tenantIds: string[] = [];
 let paul: TenantContext;
 let marie: TenantContext;
+let bob: TenantContext;
 let zoe: TenantContext;
 
 beforeAll(async () => {
-  const team = await createTestTenant(['Paul', 'Marie']);
+  const team = await createTestTenant(['Paul', 'Marie', 'Bob']);
   const other = await createTestTenant(['Zoé']);
-  [paul, marie] = team.members as [TenantContext, TenantContext];
+  [paul, marie, bob] = team.members as [TenantContext, TenantContext, TenantContext];
   [zoe] = other.members as [TenantContext];
+  await adminPool.query(
+    `update member set role = 'admin' where "userId" = $1 and "organizationId" = $2`,
+    [marie.userId, marie.tenantId],
+  );
   tenantIds.push(team.tenantId, other.tenantId);
 });
 
@@ -70,6 +76,13 @@ const makeDue = (id: string) =>
   adminPool.query('update connections set next_sync_at = $2 where id = $1', [id, DUE]);
 const makeNotDue = (id: string) =>
   adminPool.query('update connections set next_sync_at = null where id = $1', [id]);
+
+// Réserve la connexion (échue) et rend l'heure de réservation, que la relève passe à chaque écriture.
+async function claimed(ctx: TenantContext, id: string): Promise<string> {
+  const loaded = await claimConnection(ctx, id);
+  if (!loaded) throw new Error('connexion non réservée');
+  return loaded.lockedAt;
+}
 
 const atlassian = {
   provider: 'jira' as const,
@@ -233,14 +246,54 @@ describe('claimConnection', () => {
 
 describe('saveSyncProgress', () => {
   it('enregistre le curseur et additionne les éléments', async () => {
-    const id = await seedConnection(paul);
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
 
-    await saveSyncProgress(paul, id, 'curseur-1', 100);
-    await saveSyncProgress(paul, id, 'curseur-2', 30);
+    expect(await saveSyncProgress(paul, id, lock, 'curseur-1', 100)).toBe(true);
+    expect(await saveSyncProgress(paul, id, lock, 'curseur-2', 30)).toBe(true);
 
     const row = await readRow(id);
     expect(row.cursor).toBe('curseur-2');
     expect(row.items_synced).toBe(130);
+  });
+
+  // Audit n° 4 : un passage de plus de 30 minutes garde sa réservation tant qu'il avance.
+  it('rafraîchit la réservation : une autre relève ne la reprend pas', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+    await adminPool.query(
+      "update connections set sync_lock_at = now() - interval '29 minutes' where id = $1",
+      [id],
+    );
+
+    await saveSyncProgress(paul, id, lock, 'curseur-1', 10);
+    await adminPool.query(
+      "update connections set sync_lock_at = sync_lock_at - interval '2 minutes' where id = $1",
+      [id],
+    );
+
+    expect(await claimConnection(paul, id)).toBeNull();
+  });
+
+  // Audit n° 4 : une réservation reprise par une autre relève, l'ancienne n'écrit plus rien.
+  it("n'écrit rien quand la réservation a été reprise par une autre relève", async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const old = await claimed(paul, id);
+    await adminPool.query(
+      "update connections set sync_lock_at = now() - interval '31 minutes' where id = $1",
+      [id],
+    );
+    const current = await claimed(paul, id);
+
+    expect(await saveSyncProgress(paul, id, old, 'curseur-ancien', 50)).toBe(false);
+    await finishSync(paul, id, old, { kind: 'error', message: 'ancienne relève' });
+
+    const row = await readRow(id);
+    expect(row.cursor).toBeNull();
+    expect(row.items_synced).toBe(0);
+    expect(row.last_error).toBeNull();
+    expect(row.sync_lock_at).not.toBeNull();
+    expect(await saveSyncProgress(paul, id, current, 'curseur-1', 5)).toBe(true);
   });
 });
 
@@ -250,9 +303,9 @@ describe('finishSync', () => {
     await adminPool.query("update connections set last_error = 'ancienne erreur' where id = $1", [
       id,
     ]);
-    await claimConnection(paul, id);
+    const lock = await claimed(paul, id);
 
-    await finishSync(paul, id, { kind: 'ok', again: 'soon' });
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'soon' });
 
     const row = await readRow(id);
     expect(row.status).toBe('active');
@@ -264,9 +317,10 @@ describe('finishSync', () => {
   });
 
   it('ok « later » : prochaine échéance dans environ 15 minutes', async () => {
-    const id = await seedConnection(paul);
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
 
-    await finishSync(paul, id, { kind: 'ok', again: 'later' });
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'later' });
 
     const row = await readRow(id);
     expect(row.seconds_to_next).toBeGreaterThan(14 * 60);
@@ -275,9 +329,9 @@ describe('finishSync', () => {
 
   it('auth_error : en erreur, sans échéance, le message est gardé et la réservation libérée', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
+    const lock = await claimed(paul, id);
 
-    await finishSync(paul, id, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
 
     const row = await readRow(id);
     expect(row.status).toBe('error');
@@ -289,8 +343,9 @@ describe('finishSync', () => {
 
   it('error : en erreur, nouvel essai dans environ 1 heure, message coupé à 300 caractères', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
 
-    await finishSync(paul, id, { kind: 'error', message: 'x'.repeat(500) });
+    await finishSync(paul, id, lock, { kind: 'error', message: 'x'.repeat(500) });
 
     const row = await readRow(id);
     expect(row.status).toBe('error');
@@ -299,12 +354,26 @@ describe('finishSync', () => {
     expect(row.seconds_to_next).toBeLessThanOrEqual(3_600);
   });
 
+  // « Synchroniser maintenant » cliqué pendant le passage : la demande n'est pas écrasée.
+  it('garde une échéance demandée après le début du passage', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+
+    expect(await requestSyncNow(paul, id)).toBe(true);
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'later' });
+
+    const row = await readRow(id);
+    await makeNotDue(id);
+    expect(row.seconds_to_next).toBeLessThanOrEqual(0);
+    expect(row.sync_lock_at).toBeNull();
+  });
+
   it("une pause demandée pendant le passage l'emporte", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
+    const lock = await claimed(paul, id);
 
     await setConnectionPaused(paul, id, true);
-    await finishSync(paul, id, { kind: 'ok', again: 'soon' });
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'soon' });
 
     const row = await readRow(id);
     expect(row.status).toBe('paused');
@@ -315,10 +384,10 @@ describe('finishSync', () => {
 
   it("une pause l'emporte aussi sur une erreur, dont le message est gardé", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
+    const lock = await claimed(paul, id);
 
     await setConnectionPaused(paul, id, true);
-    await finishSync(paul, id, { kind: 'error', message: 'GitHub a répondu 500' });
+    await finishSync(paul, id, lock, { kind: 'error', message: 'GitHub a répondu 500' });
 
     const row = await readRow(id);
     expect(row.status).toBe('paused');
@@ -360,7 +429,7 @@ describe('requestSyncNow', () => {
 });
 
 describe('setConnectionPaused', () => {
-  it("met en pause (sans échéance) puis reprend (échéance maintenant), au nom de n'importe quel membre", async () => {
+  it("met en pause (sans échéance) puis reprend (échéance maintenant), au nom d'une administratrice", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
 
     expect(await setConnectionPaused(marie, id, true)).toBe(true);
@@ -408,8 +477,8 @@ describe('replaceConnectionSecret', () => {
 
   it('relance une connexion refusée (« Clé refusée ») : active, sans erreur, échéance maintenant', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
-    await finishSync(paul, id, { kind: 'auth_error', message: 'Clé refusée par Jira.' });
+    const lock = await claimed(paul, id);
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par Jira.' });
 
     await replaceConnectionSecret(paul, id, { token: 'autre-jeton-1234' }, ['token']);
 
@@ -454,7 +523,7 @@ describe('saveOAuthTokens', () => {
 
   it('sans reconnexion : réécrit jetons et champs ouverts, statut, échéance et réservation inchangés', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
+    const lock = await claimed(paul, id);
     const before = await readRow(id);
 
     const saved = await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: false });
@@ -473,7 +542,7 @@ describe('saveOAuthTokens', () => {
     expect(row.next_sync_at).toEqual(before.next_sync_at);
     expect(row.sync_lock_at).toEqual(before.sync_lock_at);
     expect(row.sync_lock_at).not.toBeNull();
-    await finishSync(paul, id, { kind: 'ok', again: 'later' });
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'later' });
     await makeDue(id);
     const loaded = await claimConnection(paul, id);
     expect(loaded?.config).toMatchObject({
@@ -485,8 +554,8 @@ describe('saveOAuthTokens', () => {
 
   it('avec reconnexion : relance une connexion en erreur, active, sans erreur, échéance maintenant', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
-    await claimConnection(paul, id);
-    await finishSync(paul, id, { kind: 'auth_error', message: 'Reconnectez Linear.' });
+    const lock = await claimed(paul, id);
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Reconnectez Linear.' });
 
     await saveOAuthTokens(marie, id, oauthConfig(), oauthFields, { reconnect: true });
 
@@ -543,5 +612,41 @@ describe('deleteConnection', () => {
 
     expect(await deleteConnection(zoe, id)).toBe(false);
     expect((await readRow(id)).status).toBe('active');
+  });
+});
+
+// Audit n° 3 : Bob, simple membre, ne touche pas aux connexions de Paul ; Marie, administratrice, oui.
+describe('droits sur une connexion', () => {
+  it('seuls le créateur et les administrateurs peuvent la gérer (canManage)', async () => {
+    const id = await seedConnection(paul);
+
+    const canManage = async (ctx: TenantContext) =>
+      (await listConnections(ctx)).find((view) => view.id === id)?.canManage;
+
+    expect(await canManage(paul)).toBe(true);
+    expect(await canManage(marie)).toBe(true);
+    expect(await canManage(bob)).toBe(false);
+  });
+
+  it('un simple membre ne peut ni mettre en pause, ni remplacer la clé, ni reconnecter, ni supprimer', async () => {
+    const id = await seedConnection(paul);
+    const before = await readRow(id);
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-de-bob-0000' };
+
+    expect(await setConnectionPaused(bob, id, true)).toBe(false);
+    expect(await replaceConnectionSecret(bob, id, { token: 'cle-de-bob-0000' }, ['token'])).toBe(
+      false,
+    );
+    expect(await saveOAuthTokens(bob, id, oauth, ['accessToken'], { reconnect: true })).toBe(false);
+    expect(await deleteConnection(bob, id)).toBe(false);
+
+    expect(await readRow(id)).toEqual(before);
+  });
+
+  it('un simple membre peut encore demander « Synchroniser maintenant »', async () => {
+    const id = await seedConnection(paul);
+
+    expect(await requestSyncNow(bob, id)).toBe(true);
+    await makeNotDue(id);
   });
 });

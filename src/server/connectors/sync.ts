@@ -10,6 +10,7 @@ import {
   finishSync,
   type LoadedConnection,
   saveSyncProgress,
+  UnreadableSecretError,
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
 import { ingestConnectorItems } from './ingest-items';
@@ -32,19 +33,16 @@ const UNREADABLE_KEY = 'Clé illisible : remplacez-la.';
 
 // `claimConnection` pose la réservation avant de déchiffrer : seule cette erreur-là laisse une
 // réservation à libérer. Toute autre (la base indisponible) n'a rien réservé et remonte.
-const isUnreadableSecret = (error: unknown) =>
-  error instanceof Error && error.message === 'Secret illisible';
-
 async function claim(
   ctx: TenantContext,
   id: string,
-): Promise<LoadedConnection | 'unreadable' | null> {
+): Promise<LoadedConnection | { unreadable: string } | null> {
   try {
     return await claimConnection(ctx, id);
   } catch (error) {
-    if (!isUnreadableSecret(error)) throw error;
+    if (!(error instanceof UnreadableSecretError)) throw error;
     logError('connector.sync_failed', error, { connectionId: id });
-    return 'unreadable';
+    return { unreadable: error.lockedAt };
   }
 }
 
@@ -60,13 +58,16 @@ function prepare(connection: LoadedConnection, deps: SyncDeps): Ready | { messag
 }
 
 // Une page après l'autre : ingestion, puis curseur. Une reprise après plantage refait au pire la
-// dernière page, l'ingestion ne crée aucun doublon. Renvoie « soon » quand la limite est atteinte.
+// dernière page, l'ingestion ne crée aucun doublon. Renvoie « soon » quand la limite est atteinte,
+// « lost » quand une autre relève a repris la réservation (le passage s'arrête là).
+type Again = 'soon' | 'later' | 'lost';
+
 async function readPages(
   ctx: TenantContext,
   connection: LoadedConnection,
   deps: SyncDeps,
   ready: Ready,
-): Promise<'soon' | 'later'> {
+): Promise<Again> {
   const { connector, config } = ready;
   const http = createConnectorHttp({
     provider: connection.provider,
@@ -81,7 +82,8 @@ async function readPages(
     const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
     if (items.length > 0)
       await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
-    await saveSyncProgress(ctx, connection.id, page.cursor, items.length);
+    const { id, lockedAt } = connection;
+    if (!(await saveSyncProgress(ctx, id, lockedAt, page.cursor, items.length))) return 'lost';
     read += page.items.length;
     if (read >= SYNC_ITEMS_MAX) return 'soon';
   }
@@ -109,7 +111,7 @@ async function readWithRenewal(
   connection: LoadedConnection,
   deps: SyncDeps,
   ready: Ready,
-): Promise<'soon' | 'later'> {
+): Promise<Again> {
   try {
     return await readPages(ctx, connection, deps, ready);
   } catch (error) {
@@ -149,22 +151,24 @@ async function recordFailure(
   });
   if (error instanceof ConnectorAuthError || error instanceof OAuthRefusedError) {
     const message = authMessage(connection, error);
-    await finishSync(ctx, connection.id, { kind: 'auth_error', message });
+    await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'auth_error', message });
     return 'auth_error';
   }
   const message = error instanceof ConnectorHttpError ? error.message : safeErrorSummary(error);
-  await finishSync(ctx, connection.id, { kind: 'error', message });
+  await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'error', message });
   return 'error';
 }
 
-// Toute issue d'une connexion réservée passe par `finishSync`, qui libère la réservation.
+// Toute issue d'une connexion réservée passe par `finishSync`, qui libère la réservation, sauf une
+// réservation perdue en route : elle appartient déjà à une autre relève.
 export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): Promise<SyncResult> {
   const ctx = await resolveTenantContext(job.userId, job.tenantId);
   if (!ctx) return 'skipped';
   const connection = await claim(ctx, job.connectionId);
   if (connection === null) return 'skipped';
-  if (connection === 'unreadable') {
-    await finishSync(ctx, job.connectionId, { kind: 'error', message: UNREADABLE_KEY });
+  if ('unreadable' in connection) {
+    const outcome = { kind: 'error', message: UNREADABLE_KEY } as const;
+    await finishSync(ctx, job.connectionId, connection.unreadable, outcome);
     return 'error';
   }
   let fresh: LoadedConnection;
@@ -175,16 +179,20 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   }
   const ready = prepare(fresh, deps);
   if ('message' in ready) {
-    await finishSync(ctx, connection.id, { kind: 'error', message: ready.message });
+    await finishSync(ctx, connection.id, connection.lockedAt, {
+      kind: 'error',
+      message: ready.message,
+    });
     return 'error';
   }
-  let again: 'soon' | 'later';
+  let again: Again;
   try {
     again = await readWithRenewal(ctx, fresh, deps, ready);
   } catch (error) {
     return recordFailure(ctx, fresh, error);
   }
-  await finishSync(ctx, connection.id, { kind: 'ok', again });
+  if (again === 'lost') return 'skipped';
+  await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   return 'ok';
 }
 

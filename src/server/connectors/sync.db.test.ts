@@ -170,6 +170,32 @@ describe('runConnectorSync : un passage qui réussit', () => {
   });
 });
 
+// Audit n° 4 : une autre relève a repris la connexion en plein passage (réservation jugée
+// abandonnée) ; l'ancienne s'arrête sans rien écrire : ni curseur, ni fin de passage.
+describe('runConnectorSync : une réservation reprise', () => {
+  it("s'arrête sans écrire quand une autre relève a repris la connexion", async () => {
+    const id = await dueConnection();
+    const [first, second] = [await oneItem(), { ...(await oneItem()), externalId: 'fake:2' }];
+    const connector: AnyConnector = {
+      ...fakeConnector({ items: 0, pageSize: 1 }),
+      async *sync() {
+        yield { items: [first], cursor: 'page-1' };
+        await adminPool.query(
+          'update connections set last_sync_started_at = now(), sync_lock_at = now() where id = $1',
+          [id],
+        );
+        yield { items: [second], cursor: 'page-2' };
+      },
+    };
+
+    expect(await run(id, connector)).toBe('skipped');
+
+    const row = await readRow(id);
+    expect(row).toMatchObject({ cursor: 'page-1', items_synced: 1, last_sync_at: null });
+    expect(row.sync_lock_at).not.toBeNull();
+  });
+});
+
 describe('runConnectorSync : une clé refusée ou une panne', () => {
   it('passe en erreur sans échéance quand la clé est refusée à la page 2, et garde le curseur de la page 1', async () => {
     const id = await dueConnection();

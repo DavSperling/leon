@@ -8,7 +8,7 @@ import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
-import { seedConnection } from '@/test/fixtures';
+import { createTestUser, seedConnection } from '@/test/fixtures';
 import { TEST_ENV } from '@/test/test-env';
 import { claimConnection, createConnection, listConnections } from './connections';
 import { ConnectorHttpError } from './http';
@@ -605,5 +605,21 @@ describe('« Reconnecter »', () => {
       expect(response.status).toBe(404);
       expect(oauthCookieOf(response)).toBeUndefined();
     }
+  });
+
+  // Audit n° 3 : un simple membre ne reconnecte pas l'outil d'un autre avec son propre compte.
+  it("répond 404, sans cookie, pour la connexion d'un autre membre quand on n'est pas administrateur", async () => {
+    const paul = await signUp();
+    const bob = await createTestUser(paul.ctx.tenantId, 'Bob');
+    const id = await seedConnection(bob, { provider: 'github' });
+    await adminPool.query(
+      `update member set role = 'member' where "userId" = $1 and "organizationId" = $2`,
+      [paul.ctx.userId, paul.ctx.tenantId],
+    );
+
+    const response = await start(makeApp().app, paul, { reconnect: id, since: '30' });
+
+    expect(response.status).toBe(404);
+    expect(oauthCookieOf(response)).toBeUndefined();
   });
 });

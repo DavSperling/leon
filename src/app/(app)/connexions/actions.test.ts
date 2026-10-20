@@ -322,6 +322,7 @@ describe('replaceKeyAction', () => {
     provider: 'linear',
     config: { teams: ['ENG'] },
     createdBy: { id: 'user', name: 'Amos' },
+    canManage: true,
   };
   const replace = (fields: Record<string, string> = { apiKey: KEY }) =>
     replaceKeyAction({ id: ID, fields });
@@ -430,6 +431,19 @@ describe('replaceKeyAction', () => {
     vi.mocked(listConnections).mockResolvedValue([stored] as never);
     vi.mocked(replaceConnectionSecret).mockResolvedValue(false);
     await expect(replace()).resolves.toEqual({ error: "Cette connexion n'existe plus." });
+  });
+
+  // Audit n° 3 : la clé d'un autre ne se remplace pas, et l'outil n'est même pas appelé.
+  it("refuse la connexion d'un autre membre quand on n'est pas administrateur", async () => {
+    vi.mocked(listConnections).mockResolvedValue([{ ...stored, canManage: false }] as never);
+
+    await expect(replace()).resolves.toEqual({
+      error:
+        'Seuls la personne qui a branché cet outil et les administrateurs peuvent le modifier.',
+    });
+
+    expect(verify).not.toHaveBeenCalled();
+    expect(replaceConnectionSecret).not.toHaveBeenCalled();
   });
 
   it("refuse un identifiant qui n'est pas un UUID et un serveur sans clé", async () => {

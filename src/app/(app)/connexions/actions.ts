@@ -41,6 +41,8 @@ const NOT_CONFIGURED =
   'Les connecteurs ne sont pas configurés sur ce serveur (LEON_CONNECTORS_KEY).';
 const BAD_REQUEST = 'Demande illisible : rechargez la page.';
 const GONE = "Cette connexion n'existe plus.";
+const NOT_ALLOWED =
+  'Seuls la personne qui a branché cet outil et les administrateurs peuvent le modifier.';
 const FIELD_MAX = 5_000;
 const ACCOUNT_MAX = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -148,6 +150,7 @@ export async function replaceKeyAction(input: {
   if (!connectorsKey()) return { error: NOT_CONFIGURED };
   const stored = (await listConnections(ctx)).find((view) => view.id === request.data.id);
   if (!stored) return { error: GONE };
+  if (!stored.canManage) return { error: NOT_ALLOWED };
 
   const secrets = catalogFields(stored.provider).filter((field) => field.kind === 'secret');
   const checked = await checkConnection(

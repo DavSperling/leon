@@ -38,6 +38,7 @@ export type ConnectionView = {
   itemsSynced: number;
   createdBy: { id: string; name: string };
   createdAt: Date;
+  canManage: boolean; // pause, clé, reconnexion, suppression : créateur ou administrateur
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -45,6 +46,7 @@ export type LoadedConnection = ConnectionRef & {
   config: Record<string, unknown>;
   cursor: string | null;
   since: Date;
+  lockedAt: string; // heure de la réservation, en texte : la microseconde se compare telle quelle
 };
 
 export type SyncOutcome =
@@ -89,6 +91,15 @@ const unlessPaused = (value: SQL | AnyColumn, whenPaused: SQL | AnyColumn) =>
   sql`case when ${connections.status} = 'paused' then ${whenPaused} else ${value} end`;
 
 const NO_DATE = sql`null::timestamptz`;
+
+// Seuls le créateur et les administrateurs (owner, admin) de l'organisation gèrent une connexion :
+// sinon un membre pourrait supprimer l'Outlook d'un autre, ou reconnecter son GitHub avec son propre
+// compte. Better Auth peut ranger plusieurs rôles séparés par des virgules.
+const manageable = (ctx: TenantContext) =>
+  sql`(${connections.createdBy} = ${ctx.userId} or exists (
+    select 1 from member
+    where "userId" = ${ctx.userId} and "organizationId" = ${ctx.tenantId}
+      and string_to_array(role, ',') && array['owner', 'admin']))`;
 
 // Le message de `JSON.parse` peut citer le texte lu : on n'en garde rien.
 function parseSecrets(plain: string): Record<string, unknown> {
@@ -147,6 +158,7 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         createdAt: connections.createdAt,
         creatorId: users.id,
         creatorName: users.name,
+        canManage: sql<boolean>`${manageable(ctx)}`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -177,7 +189,7 @@ export async function replaceConnectionSecret(
         nextSyncAt: unlessPaused(sql`now()`, NO_DATE),
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id))
+      .where(and(eq(connections.id, id), manageable(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -212,7 +224,7 @@ export async function saveOAuthTokens(
         ...restart,
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id))
+      .where(and(eq(connections.id, id), manageable(ctx)))
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -231,7 +243,13 @@ export async function setConnectionPaused(
           ? { status: 'paused', nextSyncAt: null, updatedAt: sql`now()` }
           : { status: 'active', nextSyncAt: sql`now()`, updatedAt: sql`now()` },
       )
-      .where(and(eq(connections.id, id), paused ? undefined : eq(connections.status, 'paused')))
+      .where(
+        and(
+          eq(connections.id, id),
+          manageable(ctx),
+          paused ? undefined : eq(connections.status, 'paused'),
+        ),
+      )
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
@@ -252,16 +270,29 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
 // Les sources déjà captées restent : leur `connection_id` passe à nul (clé étrangère).
 export async function deleteConnection(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
-    tx.delete(connections).where(eq(connections.id, id)).returning({ id: connections.id }),
+    tx
+      .delete(connections)
+      .where(and(eq(connections.id, id), manageable(ctx)))
+      .returning({ id: connections.id }),
   );
   return rows.length > 0;
 }
 
 // Réservées à la relève ------------------------------------------------------------------------
 
-// Une réservation de plus de 30 minutes est réputée abandonnée. Le secret est déchiffré après
-// la validation de la réservation : une clé illisible laisse la réservation posée, `finishSync`
-// la libère. L'erreur de déchiffrement remonte, sans le secret.
+// La réservation est posée : la relève la libère par `finishSync`, avec `lockedAt`.
+export class UnreadableSecretError extends Error {
+  override name = 'UnreadableSecretError';
+  constructor(readonly lockedAt: string) {
+    super('Secret illisible');
+  }
+}
+
+// Une réservation de plus de 30 minutes sans nouvelle page est réputée abandonnée. Le secret est
+// déchiffré après la validation de la réservation : une clé illisible laisse la réservation posée,
+// `finishSync` la libère. L'erreur de déchiffrement remonte, sans le secret (UnreadableSecretError).
+// `lockedAt` (= `last_sync_started_at`, posée ici seulement) dit à qui est la réservation : une
+// relève qui l'a perdue n'écrit plus rien.
 export async function claimConnection(
   ctx: TenantContext,
   id: string,
@@ -289,30 +320,47 @@ export async function claimConnection(
         secret: connections.secret,
         cursor: connections.cursor,
         since: connections.since,
+        lockedAt: sql<string>`${connections.lastSyncStartedAt}::text`,
       }),
   );
   if (!row) return null;
   const { secret, config, ...loaded } = row;
-  const secrets = parseSecrets(decryptSecret(secret, aadOf(ctx.tenantId, id)));
+  let secrets: Record<string, unknown>;
+  try {
+    secrets = parseSecrets(decryptSecret(secret, aadOf(ctx.tenantId, id)));
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Secret illisible')
+      throw new UnreadableSecretError(row.lockedAt);
+    throw error;
+  }
   return { ...loaded, config: { ...config, ...secrets } };
 }
 
+const stillOurs = (id: string, lockedAt: string) =>
+  and(eq(connections.id, id), sql`${connections.lastSyncStartedAt} = ${lockedAt}::timestamptz`);
+
+// Chaque page enregistrée rafraîchit la réservation. false : une autre relève l'a reprise, celle-ci
+// s'arrête.
 export async function saveSyncProgress(
   ctx: TenantContext,
   id: string,
+  lockedAt: string,
   cursor: string,
   itemsAdded: number,
-): Promise<void> {
-  await withTenant(ctx, (tx) =>
+): Promise<boolean> {
+  const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
       .set({
         cursor,
         itemsSynced: sql`${connections.itemsSynced} + ${itemsAdded}`,
+        syncLockAt: sql`now()`,
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id)),
+      .where(stillOurs(id, lockedAt))
+      .returning({ id: connections.id }),
   );
+  return rows.length > 0;
 }
 
 const NEXT_SYNC = {
@@ -330,9 +378,17 @@ function outcomeColumns(outcome: SyncOutcome) {
   return { status: 'error', nextSync, lastError: cut(outcome.message, LAST_ERROR_MAX) };
 }
 
+// « Synchroniser maintenant » (ou une clé remplacée, une reprise) pendant le passage pose une
+// échéance après `last_sync_started_at` : elle est gardée au lieu d'être écrasée.
+const requestedDuringSync = (nextSync: SQL) =>
+  sql`case when ${connections.nextSyncAt} > ${connections.lastSyncStartedAt}
+    then ${connections.nextSyncAt} else ${nextSync} end`;
+
+// Sans effet si une autre relève a repris la réservation : c'est elle qui finira.
 export async function finishSync(
   ctx: TenantContext,
   id: string,
+  lockedAt: string,
   outcome: SyncOutcome,
 ): Promise<void> {
   const { status, nextSync, lastError } = outcomeColumns(outcome);
@@ -341,12 +397,12 @@ export async function finishSync(
       .update(connections)
       .set({
         status: unlessPaused(sql`${status}::text`, connections.status),
-        nextSyncAt: unlessPaused(nextSync, NO_DATE),
+        nextSyncAt: unlessPaused(requestedDuringSync(nextSync), NO_DATE),
         lastError,
         lastSyncAt: outcome.kind === 'ok' ? sql`now()` : undefined,
         syncLockAt: null,
         updatedAt: sql`now()`,
       })
-      .where(eq(connections.id, id)),
+      .where(stillOurs(id, lockedAt)),
   );
 }

@@ -183,7 +183,7 @@ describe('sync : premier passage', () => {
   it('cherche les pages par date de modification décroissante, avec la clé et la version', async () => {
     const { calls } = await run(wholeWorkspace());
 
-    const [first, second] = calls;
+    const [first, second] = calls.filter((call) => call.url === `${API}/search`);
     expect(first?.method).toBe('POST');
     expect(first?.url).toBe(`${API}/search`);
     expect(first?.headers.authorization).toBe(`Bearer ${TOKEN}`);
@@ -196,12 +196,11 @@ describe('sync : premier passage', () => {
     expect(second?.body).toMatchObject({ start_cursor: search1.next_cursor });
   });
 
-  it('rend les pages modifiées depuis since, de la plus ancienne à la plus récente', async () => {
-    const { pages, items, calls } = await run(wholeWorkspace());
+  it('rend les pages modifiées depuis since, de la plus récente à la plus ancienne', async () => {
+    const { items, calls } = await run(wholeWorkspace());
 
-    expect(pages).toHaveLength(1);
     // La page sans texte ni commentaire n'est pas rendue ; la page antérieure à since non plus.
-    expect(items.map((item) => item.externalId)).toEqual([`page:${ID.road}`, `page:${ID.db}`]);
+    expect(items.map((item) => item.externalId)).toEqual([`page:${ID.db}`, `page:${ID.road}`]);
     expect(pathsOf(calls).filter((path) => path.endsWith('/search'))).toHaveLength(2);
     expect(pathsOf(calls).some((path) => path.includes(ID.old))).toBe(false);
   });
@@ -320,7 +319,7 @@ describe('sync : curseur', () => {
   it('reprend depuis since quand le curseur est illisible', async () => {
     const { items } = await run(wholeWorkspace(), { cursor: 'ceci n’est pas du JSON' });
 
-    expect(items.map((item) => item.externalId)).toEqual([`page:${ID.road}`, `page:${ID.db}`]);
+    expect(items.map((item) => item.externalId)).toEqual([`page:${ID.db}`, `page:${ID.road}`]);
   });
 
   it('rend des lots d’au plus cent éléments et reprend au bon endroit avec le curseur du premier', async () => {
@@ -330,14 +329,14 @@ describe('sync : curseur', () => {
     expect(pages.length).toBeGreaterThan(1);
     for (const page of pages) expect(page.items.length).toBeLessThanOrEqual(100);
     expect(items.map((item) => item.title)).toEqual(
-      Array.from({ length: 23 }, (_, i) => `Page ${i + 1}`),
+      Array.from({ length: 23 }, (_, i) => `Page ${23 - i}`),
     );
 
     const firstCursor = pages[0]?.cursor ?? null;
     const rest = await run(bulk(23, minuteOf).routes, { cursor: firstCursor });
     const done = pages[0]?.items.length ?? 0;
     expect(rest.items.map((item) => item.title)).toEqual(
-      Array.from({ length: 23 - done }, (_, i) => `Page ${done + i + 1}`),
+      Array.from({ length: 23 - done }, (_, i) => `Page ${23 - done - i}`),
     );
   });
 
@@ -355,6 +354,73 @@ describe('sync : curseur', () => {
 
     const last = pages.at(-1);
     expect(JSON.parse(last?.cursor ?? 'null').ids).toHaveLength(12);
+  });
+});
+
+// Audit (petit) : sans position gardée, chaque passage du premier remplissage relisait toute la
+// recherche (N² requêtes pour un gros espace).
+describe('sync : premier remplissage', () => {
+  const minuteOf = (i: number) => `2026-10-10T08:${String(i).padStart(2, '0')}:00.000Z`;
+  // 25 pages, du plus récent au plus ancien, rendues par la recherche dix par dix.
+  const newestFirst = Array.from({ length: 25 }, (_, i) =>
+    stubPage(i + 1, minuteOf(i + 1)),
+  ).reverse();
+  const searchPage = (k: number) =>
+    search({
+      results: newestFirst.slice(10 * k, 10 * k + 10),
+      next_cursor: k < 2 ? `suite-${k + 1}` : null,
+      has_more: k < 2,
+    });
+  const reads = (list: typeof newestFirst) => [
+    user(ID.marie, userMarie),
+    ...list.flatMap((page) => [
+      children(page.id, paragraph(`Texte ${page.id}`)),
+      comments(page.id, commentsEmpty),
+    ]),
+  ];
+  const searches = (calls: FakeCall[]) =>
+    calls
+      .filter((call) => call.url === `${API}/search`)
+      .map((call) => (call.body as { start_cursor?: string }).start_cursor ?? null);
+
+  it('reprend à sa position dans la recherche, sans la relire depuis le début', async () => {
+    const first = await run([searchPage(0), searchPage(1), searchPage(2), ...reads(newestFirst)]);
+    // La relève s'est arrêtée après le deuxième lot.
+    const cursor = first.pages[1]?.cursor ?? null;
+
+    const rest = await run([searchPage(1), searchPage(2), ...reads(newestFirst.slice(20))], {
+      cursor,
+    });
+
+    expect(searches(rest.calls)).toEqual(['suite-1', 'suite-2']);
+    expect(rest.items.map((item) => item.title)).toEqual([
+      'Page 5',
+      'Page 4',
+      'Page 3',
+      'Page 2',
+      'Page 1',
+    ]);
+  });
+
+  it('reprend au milieu d’une page de recherche sans refaire les pages déjà rendues', async () => {
+    const all = search({ results: newestFirst, next_cursor: null, has_more: false });
+    const first = await run([all, ...reads(newestFirst)]);
+    const cursor = first.pages[0]?.cursor ?? null;
+    const done = first.pages[0]?.items.length ?? 0;
+
+    const rest = await run([all, ...reads(newestFirst.slice(done))], { cursor });
+
+    expect(rest.items).toHaveLength(25 - done);
+    expect(rest.items[0]?.title).toBe(`Page ${25 - done}`);
+  });
+
+  it('finit sur le repère de la page la plus récente, d’où repartent les passages suivants', async () => {
+    const first = await run([searchPage(0), searchPage(1), searchPage(2), ...reads(newestFirst)]);
+
+    expect(JSON.parse(first.pages.at(-1)?.cursor ?? 'null')).toEqual({
+      at: minuteOf(25),
+      ids: [newestFirst[0]?.id],
+    });
   });
 });
 

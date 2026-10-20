@@ -19,6 +19,9 @@ export const ViewerProfileSchema = z.object({
 });
 export type ViewerProfile = z.infer<typeof ViewerProfileSchema>;
 
+// Le paramètre de `briefing` qui porte la clé du projet (C8) : `github.com/<propriétaire>/<dépôt>` ou `dossier:…`.
+export const BRIEFING_PROJECT_PARAM = 'projet';
+
 // Le point du matin d'un projet, préparé à l'avance ; `projet` et `preparedAt` sont nuls quand rien n'est prêt.
 export const BriefingResponseSchema = z.object({
   markdown: z.string(),

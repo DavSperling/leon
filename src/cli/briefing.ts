@@ -1,7 +1,28 @@
-import { API_PATHS, BriefingResponseSchema } from '../capture/api-contract';
-import type { ServerEnv } from './env';
+// Crochet de démarrage de Claude Code : affiche le point du matin du projet de la session.
+//
+// Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
+// - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
+//   l'entrée standard du crochet un JSON qui porte les champs communs, dont `cwd` (« Current working directory when
+//   the hook is invoked »). Seul `cwd` est lu ici.
+// - Pour SessionStart, Claude Code ajoute la sortie standard au contexte de la session : seul le point y passe ; les
+//   messages vont sur la sortie d'erreur, que Claude ne voit pas quand le code de sortie vaut 0.
+// - Le crochet lance `pnpm -s --dir <dépôt de Leon> leon briefing` (T14) : le dossier du processus est alors le dépôt
+//   de Leon, pas le projet. Le projet se calcule donc sur le `cwd` du JSON, sinon sur INIT_CWD (que pnpm pose au
+//   dossier d'où il a été lancé, `--dir` ou non), sinon sur le dossier du processus (voir briefingDirectory).
+//
+// La commande ne bloque jamais une session : entrée standard lue avec un délai court (jamais un terminal), git borné
+// (project-key.ts), serveur 3 secondes au plus, et le code de sortie vaut toujours 0.
+import { isAbsolute } from 'node:path';
+import { z } from 'zod';
+import { API_PATHS, BRIEFING_PROJECT_PARAM, BriefingResponseSchema } from '../capture/api-contract';
+import { readHookStdin } from './capture-session';
+import { parseServerEnv, type ServerEnv } from './env';
+import { type GitRunner, projectKeyFor } from './project-key';
 
 const TIMEOUT_MS = 3000;
+// Claude Code écrit son JSON puis ferme l'entrée : une seconde suffit largement. Au-delà (une entrée laissée
+// ouverte par un autre programme), on fait sans.
+export const BRIEFING_STDIN_TIMEOUT_MS = 1000;
 
 // Un 404 n'est ni un jeton refusé ni un serveur injoignable : ce serveur n'a pas la route du point du matin.
 export class BriefingRouteMissingError extends Error {
@@ -15,9 +36,12 @@ export class BriefingRouteMissingError extends Error {
 export async function fetchBriefingText(
   fetchImpl: typeof fetch,
   env: ServerEnv,
+  project: string,
 ): Promise<string | null> {
   try {
-    const response = await fetchImpl(new URL(API_PATHS.briefing, env.url), {
+    const url = new URL(API_PATHS.briefing, env.url);
+    url.searchParams.set(BRIEFING_PROJECT_PARAM, project);
+    const response = await fetchImpl(url, {
       headers: { Authorization: `Bearer ${env.token}` },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -29,4 +53,54 @@ export async function fetchBriefingText(
     if (error instanceof BriefingRouteMissingError) throw error;
     return null;
   }
+}
+
+const HookCwdSchema = z.object({ cwd: z.string().min(1).refine(isAbsolute) });
+
+// Le dossier du projet de la session : le `cwd` du JSON du crochet, sinon INIT_CWD, sinon le dossier du processus.
+// Seuls les chemins absolus comptent : un chemin relatif se lirait contre le dépôt de Leon.
+export function briefingDirectory(
+  stdin: string,
+  env: Record<string, string | undefined>,
+  cwd: string,
+): string {
+  try {
+    const parsed = HookCwdSchema.safeParse(JSON.parse(stdin));
+    if (parsed.success) return parsed.data.cwd;
+  } catch {
+    // Entrée vide (lancée à la main) ou illisible : on passe à la suite.
+  }
+  const initCwd = env.INIT_CWD;
+  if (initCwd !== undefined && initCwd !== '' && isAbsolute(initCwd)) return initCwd;
+  return cwd;
+}
+
+export type BriefingCommandDeps = {
+  stdin: Parameters<typeof readHookStdin>[0];
+  env: Record<string, string | undefined>;
+  cwd: string;
+  git: GitRunner;
+  fetch: typeof fetch;
+  out: (text: string) => void;
+  err: (text: string) => void;
+};
+
+// La commande `leon briefing`. Seul le point passe sur la sortie standard ; les messages ne citent ni le projet ni
+// l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code.
+export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
+  try {
+    const server = parseServerEnv(deps.env);
+    const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
+    const project = await projectKeyFor(briefingDirectory(stdin, deps.env, deps.cwd), deps.git);
+    const text = await fetchBriefingText(deps.fetch, server, project);
+    if (text === null) {
+      deps.err('Leon : briefing indisponible (serveur injoignable ou jeton refusé).');
+    } else {
+      deps.out(text);
+    }
+  } catch (error) {
+    // Messages fixes (parseServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
+    deps.err(`Leon : ${error instanceof Error ? error.message : 'briefing indisponible.'}`);
+  }
+  return 0;
 }

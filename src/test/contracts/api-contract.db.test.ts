@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
+import {
+  API_PATHS,
+  BRIEFING_PROJECT_PARAM,
+  BriefingResponseSchema,
+  ViewerProfileSchema,
+} from '@/capture/api-contract';
 import { IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -8,6 +13,8 @@ import { createTestTenant } from '@/test/fixtures';
 import { productionSources } from './files';
 
 vi.mock('@/server/pipeline/queue');
+// Le point du matin met en file un recalcul quand rien n'est prêt : pas de pg-boss ici.
+vi.mock('@/server/briefing/queue');
 
 beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 
@@ -19,10 +26,10 @@ const SERVED = {
   ingest: ['POST', { body: {} }],
   me: ['GET', {}],
   mcp: ['POST', { body: initialize }],
+  briefing: ['GET', {}],
 } as const;
-// T13 sert la route du point du matin : elle passe alors dans SERVED (la forme de réponse, BriefingResponseSchema,
-// est déjà celle de C8) et ajoute son cas « 200 conforme au schéma » plus bas.
-const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['briefing'];
+// Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
+const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
 
 describe('routes de l’API', () => {
   it('chaque chemin de API_PATHS est servi ou déclaré pas encore servi', () => {
@@ -37,8 +44,8 @@ describe('routes de l’API', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
 
-  it.each(NOT_YET_SERVED)(
-    '%s répond 404 : sa route n’existe pas encore (si T13 la sert, la retirer de NOT_YET_SERVED)',
+  it.skipIf(NOT_YET_SERVED.length === 0).each(NOT_YET_SERVED)(
+    '%s répond 404 : sa route n’existe pas encore (une fois servie, la retirer de NOT_YET_SERVED)',
     async (name) => {
       expect((await apiRequest(API_PATHS[name])).status).toBe(404);
     },
@@ -85,10 +92,15 @@ describe('routes de l’API', () => {
 
     const me = await apiRequest(API_PATHS.me, { token });
     const ingest = await apiRequest(API_PATHS.ingest, { token, body });
+    const briefing = await apiRequest(
+      `${API_PATHS.briefing}?${new URLSearchParams({ [BRIEFING_PROJECT_PARAM]: 'github.com/acme/leon' })}`,
+      { token },
+    );
 
-    expect([me.status, ingest.status]).toEqual([200, 202]);
+    expect([me.status, ingest.status, briefing.status]).toEqual([200, 202, 200]);
     expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
+    expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
   });
 });
 

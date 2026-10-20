@@ -32,8 +32,10 @@ describe('instructions du serveur MCP', () => {
     for (const filter of named) expect(searchProperties).toContain(filter);
   });
 
-  it('nomment les trois outils et le rôle de chacun', () => {
-    for (const tool of ['search', 'fetch', 'remember']) expect(MCP_INSTRUCTIONS).toContain(tool);
+  it('nomment les quatre outils et le rôle de chacun', () => {
+    for (const tool of ['search', 'fetch', 'briefing', 'remember']) {
+      expect(MCP_INSTRUCTIONS).toContain(tool);
+    }
   });
 });
 

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { fetchBriefingText } from './briefing';
+import { runBriefing } from './briefing';
 import {
   captureSessionFromHook,
   createHookSender,
@@ -25,7 +25,8 @@ Commandes :
       --project <chemin>   ne garde que les sessions lancées sous ce dossier
       --since AAAA-MM-JJ   ne garde que les tours à partir de cette date
       --dry-run            affiche ce qui serait envoyé (une ligne JSON par envoi), sans rien envoyer
-  briefing             Affiche le briefing Leon (pour le hook SessionStart de Claude Code)
+  briefing             Affiche le point du matin du projet du dossier courant (pour le crochet
+                       SessionStart de Claude Code : le JSON du crochet est lu sur l'entrée standard)
   capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
                        de Claude Code : le JSON du crochet est lu sur l'entrée standard)
       --delai-ms <n>       raccourcit le délai réseau de l'envoi, 15 000 ms au plus (pour les essais)
@@ -70,18 +71,25 @@ async function runImport(args: string[]): Promise<number> {
   return summary.failures > 0 ? 1 : 0;
 }
 
-// Le hook SessionStart ajoute stdout au contexte de la session : seul le briefing y passe,
-// et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code.
-async function runBriefing(): Promise<number> {
+// Le crochet SessionStart ajoute stdout au contexte de la session : seul le point du matin y passe,
+// et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
+async function runBriefingCommand(): Promise<number> {
   try {
-    const text = await fetchBriefingText(fetch, parseServerEnv(process.env));
-    if (text === null)
-      console.error('Leon : briefing indisponible (serveur injoignable ou jeton refusé).');
-    else console.log(text);
-  } catch (error) {
-    console.error(`Leon : ${error instanceof Error ? error.message : 'briefing indisponible.'}`);
+    return await runBriefing({
+      stdin: process.stdin,
+      env: process.env,
+      cwd: process.cwd(),
+      git: gitInDirectory,
+      fetch,
+      out: console.log,
+      err: console.error,
+    });
+  } catch {
+    console.error('Leon : briefing indisponible (erreur inattendue).');
+    return 0;
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
   }
-  return 0;
 }
 
 // Le crochet SessionEnd ne doit jamais gêner Claude Code : le code de sortie vaut toujours 0 et les messages
@@ -124,7 +132,7 @@ async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   try {
     if (command === 'import-claude-code') return await runImport(args);
-    if (command === 'briefing') return await runBriefing();
+    if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.

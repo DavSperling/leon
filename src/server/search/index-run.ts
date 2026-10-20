@@ -1,9 +1,11 @@
 import { and, eq, inArray, ne } from 'drizzle-orm';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { signalSourceActivity } from '@/server/briefing/queue';
 import { ingestRuns, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { Embedder } from '@/server/embeddings/embedder';
+import { logError } from '@/server/log';
 import type { PipelineJob } from '@/server/pipeline/queue';
 import { chunkText } from './chunk';
 import { embedPassages, lockSources, passagesWithoutVector } from './embed-missing';
@@ -84,6 +86,17 @@ async function embedSlice(ctx: TenantContext, embedder: Embedder, turnIds: strin
   return embedPassages(ctx, embedder, missing);
 }
 
+// De nouvelles données sur un projet font refaire les points du matin de ce projet (T13) : une session Claude Code
+// (son projet), un élément GitHub (son dépôt). Le signal ne fait jamais échouer l'indexation, déjà terminée : un
+// point qui n'est pas refait reste lisible, et se refera au prochain signal ou au tic du matin.
+async function signalBriefings(ctx: TenantContext, sourceId: string): Promise<void> {
+  try {
+    await signalSourceActivity(ctx, sourceId);
+  } catch (error) {
+    logError('search.signal_failed', error, { sourceId });
+  }
+}
+
 // Rend « indexe » une fois le run traité, « absent » quand il n'y a rien à faire (inconnu, invisible, déjà
 // terminé). Une panne de base remonte : le worker marque le run « failed » et pg-boss relance le job.
 // Une panne du fournisseur de vecteurs, elle, ne fait pas échouer le run : les passages sont écrits, les
@@ -112,5 +125,6 @@ export async function indexIngestRun(
       .set({ status: 'done', step: 'done', error: null, updatedAt: new Date() })
       .where(eq(ingestRuns.id, job.ingestRunId)),
   );
+  await signalBriefings(ctx, scope.sourceId);
   return 'indexe';
 }

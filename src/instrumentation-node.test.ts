@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     ANTHROPIC_API_KEY?: string;
     LEON_EMBEDDINGS?: string;
     VOYAGE_API_KEY?: string;
+    LEON_LLM?: string;
   },
   order: [] as string[],
 }));
@@ -14,6 +15,11 @@ vi.mock('@/server/env', () => ({ env: mocks.env }));
 vi.mock('@/server/search/worker', () => ({
   startSearchWorker: vi.fn(async () => {
     mocks.order.push('recherche');
+  }),
+}));
+vi.mock('@/server/briefing/worker', () => ({
+  startBriefingWorker: vi.fn(async () => {
+    mocks.order.push('point');
   }),
 }));
 vi.mock('@/server/connectors/worker', () => ({
@@ -26,6 +32,7 @@ vi.mock('@/server/connectors/oauth-env', () => ({ warnIncompleteOAuthPairs: vi.f
 const { startNodeInstrumentation } = await import('./instrumentation-node');
 const { startConnectorWorker } = await import('@/server/connectors/worker');
 const { startSearchWorker } = await import('@/server/search/worker');
+const { startBriefingWorker } = await import('@/server/briefing/worker');
 const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
 
 const NO_KEY = 'LEON_CONNECTORS_KEY absente';
@@ -36,9 +43,11 @@ beforeEach(() => {
   delete mocks.env.ANTHROPIC_API_KEY;
   delete mocks.env.LEON_EMBEDDINGS;
   delete mocks.env.VOYAGE_API_KEY;
+  delete mocks.env.LEON_LLM;
   // Le message « LEON_EMBEDDINGS absente » n'a rien à faire dans la sortie des tests qui ne le lisent pas.
   vi.spyOn(console, 'info').mockImplementation(() => {});
   vi.mocked(startSearchWorker).mockClear();
+  vi.mocked(startBriefingWorker).mockClear();
   vi.mocked(startConnectorWorker).mockClear();
   vi.mocked(warnIncompleteOAuthPairs).mockClear();
 });
@@ -49,16 +58,16 @@ afterEach(() => {
 });
 
 describe('démarrage des tâches de fond', () => {
-  it('lance l’indexation puis la relève des connecteurs, même sans clé Anthropic', async () => {
+  it('lance l’indexation, le point du matin puis la relève des connecteurs, même sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
 
     await startNodeInstrumentation();
 
     // L'indexation d'abord : la relève met des jobs dans sa file dès son premier passage.
-    expect(mocks.order).toEqual(['recherche', 'connecteurs']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'connecteurs']);
   });
 
-  // Le tri par modèle n'existe plus : la clé Anthropic ne démarre rien et son absence ne dit rien.
+  // Le tri par modèle n'existe plus : la clé Anthropic ne change que le modèle donné au point du matin.
   it('démarre la même chose, avec ou sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
     const without = await (async () => {
@@ -71,15 +80,15 @@ describe('démarrage des tâches de fond', () => {
     await startNodeInstrumentation();
 
     expect(mocks.order).toEqual(without);
-    expect(mocks.order).toEqual(['recherche', 'connecteurs']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'connecteurs']);
   });
 
-  it('lance l’indexation sans clé des connecteurs ni clé Anthropic', async () => {
+  it('lance l’indexation et le point du matin sans clé des connecteurs ni clé Anthropic', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await startNodeInstrumentation();
 
-    expect(mocks.order).toEqual(['recherche']);
+    expect(mocks.order).toEqual(['recherche', 'point']);
   });
 
   it("ne prévient pas de l'absence de clé Anthropic", async () => {
@@ -99,7 +108,7 @@ describe('démarrage des tâches de fond', () => {
 
     expect(startConnectorWorker).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(NO_KEY));
-    expect(mocks.order).toEqual(['recherche']);
+    expect(mocks.order).toEqual(['recherche', 'point']);
   });
 
   it('signale les paires OAuth incomplètes au démarrage', async () => {
@@ -186,5 +195,38 @@ describe('fournisseur de vecteurs', () => {
     await startNodeInstrumentation();
 
     expect(startSearchWorker).not.toHaveBeenCalled();
+  });
+});
+
+// Le point du matin (T13) : un appel au modèle par recalcul. Sans modèle, son worker démarre quand même et termine
+// chaque job sans rien faire (briefing/worker.ts) : le démarrage le dit, sans avertissement.
+describe('point du matin', () => {
+  it('démarre son worker sans modèle quand la clé Anthropic manque, et le dit', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    await startNodeInstrumentation();
+
+    expect(startBriefingWorker).toHaveBeenCalledExactlyOnceWith({ llm: null });
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('ANTHROPIC_API_KEY'));
+  });
+
+  it('démarre son worker avec le modèle réglé', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    mocks.env.LEON_LLM = 'factice';
+
+    await startNodeInstrumentation();
+
+    expect(startBriefingWorker).toHaveBeenCalledOnce();
+    const [deps] = vi.mocked(startBriefingWorker).mock.calls[0] ?? [];
+    expect(typeof deps?.llm?.streamText).toBe('function');
+    expect(info).not.toHaveBeenCalledWith(expect.stringContaining('ANTHROPIC_API_KEY'));
+  });
+
+  it('ne démarre pas son worker pendant `next build`', async () => {
+    vi.stubEnv('NEXT_PHASE', 'phase-production-build');
+
+    await startNodeInstrumentation();
+
+    expect(startBriefingWorker).not.toHaveBeenCalled();
   });
 });

@@ -423,6 +423,33 @@ describe('questions en phrase', () => {
     expect(titles(await search(alice, 'zibelinaire -facture'))).toEqual(['Budget seul']);
   });
 
+  it('rend une page vide pour une requête faite d’exclusions seules, ou les plus récentes avec un filtre', async () => {
+    const { tenantId, alice } = await team();
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Ancienne',
+      turns: [{ text: 'Rien à voir.', ts: daysAgo(3) }],
+      lastTurnAt: daysAgo(3),
+    });
+    await seedIndexed(alice, {
+      kind: 'linear',
+      acl: [tenantId],
+      title: 'Récente',
+      turns: [{ text: 'Rien non plus.', ts: daysAgo(1) }],
+      lastTurnAt: daysAgo(1),
+    });
+    for (const embedder of [null, factice]) {
+      const page = await search(alice, '-test', { embedder });
+      expect(page.hits).toEqual([]);
+      expect(page.totalSources).toBe(0);
+      expect(titles(await search(alice, 'outil:linear -test', { embedder }))).toEqual([
+        'Récente',
+        'Ancienne',
+      ]);
+    }
+  });
+
   it('ne lève aucune erreur sur une question faite de mots outils', async () => {
     const { alice } = await team();
     await seedIndexed(alice, { turns: [{ text: 'Qui a validé le budget ?' }] });
@@ -872,7 +899,7 @@ describe('dates extrêmes', () => {
         lastTurnAt: at,
       });
     }
-    // Trouvée par son titre seul, par une requête faite de négations.
+    // Un titre fait des mots qu'une requête de négations seules nie : elle ne le rend pas pour autant.
     const zero = new Date('0001-01-01T00:00:00Z');
     await seedIndexed(alice, {
       kind: 'github',
@@ -904,7 +931,8 @@ describe('dates extrêmes', () => {
       const page = await search(alice, query, { embedder });
       expect(Array.isArray(page.hits)).toBe(true);
     }
-    expect(titles(await search(alice, '-a -b -c', { embedder }))).toContain('a b c');
+    // Rien à chercher : une page vide, sans lire le corpus.
+    expect(titles(await search(alice, '-a -b -c', { embedder }))).toEqual([]);
   });
 
   it('rend l’activité, la plus récente d’abord, sans exception', async () => {

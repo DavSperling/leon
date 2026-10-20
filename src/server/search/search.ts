@@ -491,6 +491,11 @@ async function rankedSources(
 
 const hasWords = (text: string) => /[\p{L}\p{N}]/u.test(text);
 
+// Des exclusions seules (« -test ») : rien à chercher. Le plein texte rendrait sinon, au hasard, tout ce qui ne
+// contient pas le mot, après avoir lu tout le corpus.
+const onlyExclusions = (terms: QueryTerms) =>
+  terms.negated.length > 0 && terms.words.length === 0 && terms.phrases.length === 0;
+
 export async function searchPassages(
   ctx: TenantContext,
   input: {
@@ -503,7 +508,7 @@ export async function searchPassages(
 ): Promise<SearchPage> {
   const now = input.now ?? new Date();
   const parsed = parseQuery(input.query, now);
-  const searchable = hasWords(parsed.text);
+  const searchable = hasWords(parsed.text) && !onlyExclusions(queryTerms(parsed.text));
   const requested = input.page ?? 1;
   const page = Number.isInteger(requested) && requested >= 1 ? Math.min(requested, PAGE_MAX) : 1;
   const offset = (page - 1) * PAGE_SIZE;

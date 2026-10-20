@@ -12,6 +12,7 @@ import {
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { accountLabel } from '@/server/connectors/account-label';
 import { type CatalogField, listCatalog } from '@/server/connectors/catalog';
 import {
   createConnection,
@@ -30,7 +31,6 @@ import {
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import { logError } from '@/server/log';
-import { oneLine } from '@/server/memory/labels';
 
 // Toutes les actions passent par requireUserContext et valident leurs entrées avec zod. Aucune ne
 // laisse remonter d'exception à l'interface (sauf la redirection vers la connexion), et aucune ne
@@ -44,7 +44,6 @@ const GONE = "Cette connexion n'existe plus.";
 // La clé est celle du compte du créateur : un administrateur y mettrait la sienne.
 const NOT_CREATOR = 'Seule la personne qui a branché cet outil peut remplacer sa clé.';
 const FIELD_MAX = 5_000;
-const ACCOUNT_MAX = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const FieldsSchema = z.record(z.string(), z.string().max(FIELD_MAX));
@@ -59,10 +58,6 @@ type Checked = { connector: AnyConnector; config: Record<string, unknown>; accou
 
 const catalogFields = (provider: ProviderId): CatalogField[] =>
   listCatalog().find((entry) => entry.id === provider)?.fields ?? [];
-
-// Le compte vient de l'outil : une seule ligne, coupée, avant de devenir l'intitulé de la connexion.
-const accountLabel = (account: string, fallback: string): string =>
-  Array.from(oneLine(account)).slice(0, ACCOUNT_MAX).join('') || fallback;
 
 // Valide la configuration avec le schéma du connecteur puis appelle `verify` avec un vrai client
 // HTTP (hôtes du connecteur). `base` porte la configuration déjà enregistrée, `fields` les champs

@@ -18,6 +18,7 @@ export type Access = {
 
 const TokenSchema = z.object({ access_token: z.string().min(1) });
 const UserSchema = z.object({
+  id: z.number().nullish(),
   firstName: z.string().nullish(),
   lastName: z.string().nullish(),
   email: z.string().nullish(),

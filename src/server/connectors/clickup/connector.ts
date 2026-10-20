@@ -147,12 +147,13 @@ export const clickupConnector: Connector<Config> = {
 
   async verify(config: Config, http: ConnectorHttp) {
     const clickup = clickupClient(authorizationOf(config), http);
-    const name = await clickup.user();
+    const user = await clickup.user();
     const teams = await clickup.teams();
     if (teams.length === 0) {
       throw new ConnectorHttpError(null, 'Aucun espace ClickUp accessible avec cette clé');
     }
-    return { account: `${name} (${teams.map((team) => team.name).join(', ')})` };
+    const names = teams.map((team) => team.name).join(', ');
+    return { account: `${user.username} (${names})`, accountKey: String(user.id) };
   },
 
   sync(config: Config, state, http: ConnectorHttp) {

@@ -170,9 +170,9 @@ export const githubConnector: Connector<Config> = {
 
   async verify(config: Config, http: ConnectorHttp) {
     const github = githubClient(bearerOf(config), http);
-    const { login } = await github.account();
+    const { id, login } = await github.account();
     for (const repo of config.repos) await github.checkRepo(repo);
-    return { account: login };
+    return { account: login, accountKey: String(id) };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

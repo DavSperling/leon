@@ -47,7 +47,12 @@ export type Member = z.infer<typeof MemberSchema>;
 // Le nom d'une fiche : un `full_name` (personne) ou une `value` (entreprise, affaire…).
 export type RecordInfo = { web_url?: string | null; name?: Array<Record<string, unknown>> | null };
 
-const SelfReply = z.object({ active: z.boolean(), workspace_name: z.string().nullish() });
+const SelfReply = z.object({
+  active: z.boolean(),
+  workspace_id: z.string().nullish(),
+  workspace_name: z.string().nullish(),
+  authorized_by_workspace_member_id: z.string().nullish(),
+});
 const NotesReply = z.object({ data: z.array(NoteSchema) });
 const ThreadsReply = z.object({ data: z.array(ThreadSchema) });
 const MembersReply = z.object({ data: z.array(MemberSchema) });

@@ -153,7 +153,10 @@ describe('verify', () => {
       { url: `${API}/users/me`, json: me },
     ]);
 
-    await expect(notionConnector.verify(CONFIG, http)).resolves.toEqual({ account: 'Leon (Acme)' });
+    await expect(notionConnector.verify(CONFIG, http)).resolves.toEqual({
+      account: 'Leon (Acme)',
+      accountKey: '1f2e3d4c-5b6a-4980-9234-56789abcdef0:espace',
+    });
 
     expect(calls[0]?.method).toBe('GET');
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
@@ -167,6 +170,7 @@ describe('verify', () => {
 
     await expect(notionConnector.verify(CONFIG, http)).resolves.toEqual({
       account: 'Marie Durand',
+      accountKey: '3f8e2c71-5a04-4b9d-8c16-72d0a9e45b11',
     });
   });
 

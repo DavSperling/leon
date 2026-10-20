@@ -68,6 +68,7 @@ describe('verify', () => {
 
     await expect(miroConnector.verify(config, http)).resolves.toEqual({
       account: 'Marie Durand (Acme)',
+      accountKey: '3074457362577955221:3074457362577833142',
     });
 
     expect(calls[0]?.method).toBe('GET');

@@ -134,7 +134,10 @@ describe('jira : verify', () => {
 
     const result = await jiraConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (acme)' });
+    expect(result).toEqual({
+      account: 'Marie Durand (acme)',
+      accountKey: '5b10a2844c20165700ede21g:acme',
+    });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe(MYSELF);
     expect(calls[0]?.headers).toMatchObject({ authorization: BASIC, accept: 'application/json' });
@@ -802,6 +805,7 @@ describe('jira : le bouton, verify', () => {
 
     expect(result).toEqual({
       account: 'Connecté : acme.atlassian.net, 2 autres sites disponibles',
+      accountKey: `5b10a2844c20165700ede21g:${CLOUD_ID}`,
     });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe(`${GATEWAY}/rest/api/3/myself`);

@@ -149,8 +149,12 @@ export const jiraConnector: Connector<Config> = {
   async verify(config: Config, http: ConnectorHttp) {
     try {
       const me = await jiraClient(config, http).myself();
-      if (config.authMode === 'oauth') return { account: oauthAccount(config) };
-      return { account: `${me.displayName || me.emailAddress || config.email} (${config.site})` };
+      const key = me.accountId
+        ? { accountKey: `${me.accountId}:${config.cloudId ?? config.site}` }
+        : {};
+      if (config.authMode === 'oauth') return { account: oauthAccount(config), ...key };
+      const name = me.displayName || me.emailAddress || config.email;
+      return { account: `${name} (${config.site})`, ...key };
     } catch (error) {
       // Un 404 de la passerelle ne dit rien du nom d'un site : seule une adresse saisie peut être fausse.
       if (config.authMode === 'oauth' || !isUnknownSite(error)) throw error;

@@ -88,7 +88,9 @@ export type Connector<Config> = {
   // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle).
   // Absent : visible de l'équipe.
   privateRaw?: boolean;
-  verify(config: Config, http: ConnectorHttp): Promise<{ account: string }>;
+  // `account` : le libellé affiché. `accountKey` : l'identifiant stable du compte (et de l'espace ou du
+  // site), lu dans une réponse déjà demandée ; « Reconnecter » le compare. Absent quand l'outil n'en dit rien.
+  verify(config: Config, http: ConnectorHttp): Promise<{ account: string; accountKey?: string }>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;
   oauth?: OAuthSpec; // le bouton ; absent : l'outil ne se branche que par clé
 };

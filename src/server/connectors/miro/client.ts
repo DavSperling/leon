@@ -49,7 +49,8 @@ export const ItemSchema = z.object({
 });
 export type BoardItem = z.infer<typeof ItemSchema>;
 
-const TokenContext = z.object({ user: Named, team: Named });
+const Identified = z.object({ id: z.string().nullish(), name: z.string().nullish() }).nullish();
+const TokenContext = z.object({ user: Identified, team: Identified });
 const BoardsReply = z.object({ data: z.array(BoardSchema) });
 const ItemsReply = z.object({
   data: z.array(ItemSchema).default([]),
@@ -61,10 +62,12 @@ export function miroClient(accessToken: string, http: ConnectorHttp) {
 
   return {
     // GET /v1/oauth-token : l'utilisateur et l'équipe du jeton.
-    async account(): Promise<string> {
+    async account(): Promise<{ account: string; accountKey?: string }> {
       const context = await http.json({ url: `${API}/v1/oauth-token`, headers }, TokenContext);
       const names = [context.user?.name, context.team?.name].filter(Boolean);
-      return names.length === 2 ? `${names[0]} (${names[1]})` : (names[0] ?? 'Miro');
+      const account = names.length === 2 ? `${names[0]} (${names[1]})` : (names[0] ?? 'Miro');
+      const ids = [context.user?.id, context.team?.id].filter(Boolean);
+      return context.user?.id ? { account, accountKey: ids.join(':') } : { account };
     },
 
     // Tous les tableaux de l'équipe, dans l'ordre de création : il ne bouge pas quand un tableau est

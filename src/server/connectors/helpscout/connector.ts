@@ -131,7 +131,9 @@ export const helpscoutConnector: Connector<Config> = {
 
   async verify(config: Config, http: ConnectorHttp) {
     const client = await helpscoutClient(config, http);
-    return { account: accountOf(await client.user()) };
+    const user = await client.user();
+    const account = accountOf(user);
+    return typeof user.id === 'number' ? { account, accountKey: String(user.id) } : { account };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const UPDATES_MAX = 25;
 
-export const ACCOUNT_QUERY = 'query Account { me { name account { name } } }';
+export const ACCOUNT_QUERY = 'query Account { me { id name account { id name } } }';
 
 export const BOARDS_QUERY = `query Boards($limit: Int!, $page: Int!) {
   boards(limit: $limit, page: $page, order_by: used_at) { id type }

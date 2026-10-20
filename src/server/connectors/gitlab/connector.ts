@@ -136,9 +136,9 @@ export const gitlabConnector: Connector<Config> = {
 
   async verify(config: Config, http: ConnectorHttp) {
     const gitlab = gitlabClient(authHeaders(config), http);
-    const { username } = await gitlab.account();
+    const { id, username } = await gitlab.account();
     for (const project of config.projects) await gitlab.checkProject(project);
-    return { account: username };
+    return { account: username, accountKey: String(id) };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

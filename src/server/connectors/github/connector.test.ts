@@ -140,7 +140,7 @@ describe('github : verify', () => {
 
     const result = await githubConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'marie-durand' });
+    expect(result).toEqual({ account: 'marie-durand', accountKey: '4101' });
     expect(calls.map((call) => call.url)).toEqual([`${API}/user`, `${API}/repos/acme/leon`]);
     expect(calls[0]?.headers).toMatchObject({
       authorization: `Bearer ${TOKEN}`,
@@ -183,7 +183,7 @@ describe('github : verify, dépôt sans tickets', () => {
 
     const result = await githubConnector.verify(cfg, http);
 
-    expect(result).toEqual({ account: 'marie-durand' });
+    expect(result).toEqual({ account: 'marie-durand', accountKey: '4101' });
     expect(calls.map((call) => call.url)).toEqual([`${API}/user`, `${API}/repos/acme/site`]);
   });
 });
@@ -720,7 +720,7 @@ describe('github : connexion par le bouton', () => {
 
     const result = await githubConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'marie-durand' });
+    expect(result).toEqual({ account: 'marie-durand', accountKey: '4101' });
     expect(calls).toHaveLength(2);
     for (const call of calls) {
       expect(call.headers).toMatchObject({

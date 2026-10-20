@@ -57,7 +57,11 @@ export function gitlabClient(headers: Record<string, string>, http: ConnectorHtt
   }
 
   return {
-    account: () => http.json({ url: `${API}/user`, headers }, z.object({ username: z.string() })),
+    account: () =>
+      http.json(
+        { url: `${API}/user`, headers },
+        z.object({ id: z.number(), username: z.string() }),
+      ),
 
     // GitLab répond 404 à un projet privé hors de portée du jeton, et 403 à un jeton sans accès.
     async checkProject(project: string): Promise<void> {

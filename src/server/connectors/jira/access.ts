@@ -86,6 +86,10 @@ export function atlassianAccess(
 }
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
+const OTHER_SITES = /, \d+ autres? sites? disponibles?$/;
+
+// Le libellé sans le nombre des autres sites, qui change sans que le compte change.
+export const withoutOtherSites = (label: string): string => label.replace(OTHER_SITES, '');
 
 // Le compte affiché d'une connexion par bouton : le site, et les autres que le compte pouvait choisir.
 export function oauthAccount(config: AtlassianConfig): string {

@@ -17,7 +17,7 @@ const COMMENTS_MAX = 50;
 // récente vue depuis son début.
 export type Stream = { from: string; top: string | null; after: string | null };
 
-const ACCOUNT_QUERY = 'query Account { viewer { name } organization { name } }';
+const ACCOUNT_QUERY = 'query Account { viewer { id name } organization { id name } }';
 
 const ISSUES_QUERY = `query Issues($first: Int!, $after: String, $filter: IssueFilter) {
   issues(first: $first, after: $after, filter: $filter, orderBy: updatedAt) {
@@ -134,10 +134,17 @@ const pageVariables = (stream: Stream) => ({
   filter: { updatedAt: { gt: stream.from } },
 });
 
-export async function fetchAccount(http: ConnectorHttp, authorization: string): Promise<string> {
-  const schema = z.object({ viewer: named, organization: named });
-  const data = await graphql(http, authorization, ACCOUNT_QUERY, {}, schema);
-  return `${data.viewer.name} (${data.organization.name})`;
+export async function fetchAccount(
+  http: ConnectorHttp,
+  authorization: string,
+): Promise<{ account: string; accountKey: string }> {
+  const identified = named.extend({ id: z.string() });
+  const schema = z.object({ viewer: identified, organization: identified });
+  const { viewer, organization } = await graphql(http, authorization, ACCOUNT_QUERY, {}, schema);
+  return {
+    account: `${viewer.name} (${organization.name})`,
+    accountKey: `${viewer.id}:${organization.id}`,
+  };
 }
 
 export async function fetchIssues(http: ConnectorHttp, authorization: string, stream: Stream) {

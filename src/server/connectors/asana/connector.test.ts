@@ -116,7 +116,7 @@ describe('asana : verify', () => {
 
     const result = await asanaConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '1001:2001' });
     expect(calls).toHaveLength(1);
     expect(pathOf(calls[0])).toBe('/users/me');
     expect(paramsOf(calls[0])).toEqual({ opt_fields: 'name,workspaces.name' });
@@ -699,7 +699,7 @@ describe('asana : connexion par le bouton', () => {
 
     const result = await asanaConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '1001:2001' });
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });
 

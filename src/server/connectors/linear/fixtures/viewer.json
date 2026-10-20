@@ -1,6 +1,6 @@
 {
   "data": {
-    "viewer": { "name": "Marie Durand" },
-    "organization": { "name": "Acme" }
+    "viewer": { "id": "2d8b3c1e-5f4a-4e6b-9c7d-1a2b3c4d5e6f", "name": "Marie Durand" },
+    "organization": { "id": "8e7d6c5b-4a39-4281-9f0e-a1b2c3d4e5f6", "name": "Acme" }
   }
 }

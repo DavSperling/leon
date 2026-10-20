@@ -10,7 +10,7 @@ import { auth } from '@/server/auth/auth';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
-import { oneLine } from '@/server/memory/labels';
+import { accountLabel } from './account-label';
 import { listCatalog } from './catalog';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
 import { connectorsKey } from './crypto';
@@ -20,6 +20,7 @@ import {
   ConnectorHttpError,
   createConnectorHttp,
 } from './http';
+import { withoutOtherSites } from './jira/access';
 import {
   authorizeUrl,
   exchangeCode,
@@ -59,7 +60,6 @@ type ReturnCode =
   | 'autre_compte';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const ACCOUNT_MAX = 120;
 const NOT_FOUND = { error: 'Introuvable' };
 
 const connexions = (params: Record<string, string>) =>
@@ -170,9 +170,6 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
   return c.redirect(authorizeUrl(spec, client, pending), 303);
 }
 
-const accountLabel = (account: string, fallback: string) =>
-  Array.from(oneLine(account)).slice(0, ACCOUNT_MAX).join('') || fallback;
-
 // L'échange du code, puis la configuration de l'outil (jetons compris), validée par son schéma.
 async function oauthConfig(
   deps: OAuthRoutesDeps,
@@ -219,7 +216,7 @@ async function verifyConfig(
   connector: AnyConnector,
   config: Record<string, unknown>,
   http: ConnectorHttp,
-): Promise<{ account: string }> {
+): Promise<{ account: string; accountKey?: string }> {
   try {
     return await connector.verify(config, http);
   } catch (error) {
@@ -234,16 +231,24 @@ class OtherAccount extends Error {
   override name = 'OtherAccount';
 }
 
-// Le libellé est le compte rendu par `verify` au branchement ; les champs avant le clic gardés
-// doivent revenir tels quels.
+// Le compte se reconnaît à l'identifiant stable rendu par `verify` (`accountKey`, gardé dans la config
+// ouverte). Une connexion enregistrée sans identifiant (ou un outil qui n'en rend pas) se reconnaît au
+// libellé, sans le nombre des autres sites (Jira, Confluence). Les champs avant le clic gardés doivent
+// revenir tels quels.
 function sameAccount(
-  stored: { label: string },
+  stored: { label: string; config: Record<string, unknown> },
   provider: ProviderId,
-  account: string,
+  verified: { account: string; accountKey?: string },
   config: Record<string, unknown>,
   preFields: Record<string, unknown>,
 ): boolean {
-  if (stored.label !== accountLabel(account, PROVIDER_LABELS[provider])) return false;
+  const { accountKey } = stored.config;
+  const same =
+    typeof accountKey === 'string' && verified.accountKey !== undefined
+      ? accountKey === verified.accountKey
+      : withoutOtherSites(stored.label) ===
+        withoutOtherSites(accountLabel(verified.account, PROVIDER_LABELS[provider]));
+  if (!same) return false;
   return Object.entries(preFields).every(
     ([name, value]) => JSON.stringify(config[name]) === JSON.stringify(value),
   );
@@ -267,22 +272,24 @@ async function connect(
     minIntervalMs: connector.minIntervalMs,
     fetchImpl: deps.fetchImpl,
   });
-  const { account } = await verifyConfig(connector, config, http);
+  const verified = await verifyConfig(connector, config, http);
+  const { accountKey } = verified;
+  const kept = accountKey === undefined ? config : { ...config, accountKey };
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
     const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
     if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
-    if (!sameAccount(stored, provider, account, config, pending.preFields))
+    if (!sameAccount(stored, provider, verified, config, pending.preFields))
       throw new OtherAccount();
     const options = { reconnect: true } as const;
-    const saved = await saveOAuthTokens(ctx, pending.reconnectId, config, secretFields, options);
+    const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
     return;
   }
   await createConnection(ctx, {
     provider,
-    label: accountLabel(account, PROVIDER_LABELS[provider]),
-    config,
+    label: accountLabel(verified.account, PROVIDER_LABELS[provider]),
+    config: kept,
     secretFields,
     since: new Date((deps.now ?? Date.now)() - Number(pending.since) * DAY_MS),
   });

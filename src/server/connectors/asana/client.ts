@@ -32,7 +32,11 @@ export type Task = z.infer<typeof TaskSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 
 const MeSchema = z.object({
-  data: z.object({ name: z.string().nullish(), workspaces: z.array(WorkspaceSchema) }),
+  data: z.object({
+    gid: z.string(),
+    name: z.string().nullish(),
+    workspaces: z.array(WorkspaceSchema),
+  }),
 });
 
 const listOf = <T>(row: z.ZodType<T>) =>
@@ -77,14 +81,14 @@ export function asanaClient(token: string, http: ConnectorHttp) {
   }
 
   return {
-    async me(): Promise<{ name: string | null; workspaces: Workspace[] }> {
+    async me(): Promise<{ gid: string; name: string | null; workspaces: Workspace[] }> {
       const request = {
         url: `${API}/users/me`,
         headers,
         query: { opt_fields: 'name,workspaces.name' },
       };
       const { data } = await http.json(request, MeSchema);
-      return { name: data.name ?? null, workspaces: data.workspaces };
+      return { gid: data.gid, name: data.name ?? null, workspaces: data.workspaces };
     },
 
     // Les projets non archivés que le jeton voit dans l'espace (aucun ordre n'est documenté).

@@ -126,8 +126,8 @@ export const basecampConnector: Connector<Config> = {
   oauth: basecampOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
-    const { name } = await basecampClient(config, http).profile();
-    return { account: `${config.accountName} (${name})` };
+    const { id, name } = await basecampClient(config, http).profile();
+    return { account: `${config.accountName} (${name})`, accountKey: `${config.accountId}:${id}` };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

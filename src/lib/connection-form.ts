@@ -118,6 +118,10 @@ export function panelMode(item: Pick<CatalogItem, 'oauthReady' | 'keyAccepted'>)
 export const canReconnect = (view: Pick<ConnectionView, 'config'>): boolean =>
   view.config.authMode === 'oauth';
 
+// « Synchroniser maintenant » : ni en pause, ni arrêtée (le créateur n'est plus membre, l'action refuse).
+export const canSyncNow = (view: Pick<ConnectionView, 'status' | 'creatorLeft'>): boolean =>
+  view.status !== 'paused' && !view.creatorLeft;
+
 // Les codes que le retour de l'éditeur met dans `?erreur=` (voir oauth-routes.ts).
 export const OAUTH_RETURN_CODES = [
   'annule',

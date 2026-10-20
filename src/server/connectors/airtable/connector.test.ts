@@ -165,7 +165,10 @@ describe('airtable : verify', () => {
 
     const result = await airtableConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'marie@acme.test (Acme CRM)' });
+    expect(result).toEqual({
+      account: 'marie@acme.test (Acme CRM)',
+      accountKey: 'usrL2PNC5o3H4lBEi',
+    });
     expect(calls.map((call) => call.url)).toEqual([
       `${API}/meta/whoami`,
       `${API}/meta/bases`,
@@ -185,6 +188,7 @@ describe('airtable : verify', () => {
 
     expect(await airtableConnector.verify(two, http)).toEqual({
       account: 'usrL2PNC5o3H4lBEi (Acme CRM, Produit)',
+      accountKey: 'usrL2PNC5o3H4lBEi',
     });
   });
 
@@ -849,7 +853,10 @@ describe('airtable : jeton OAuth', () => {
 
     const result = await airtableConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'marie@acme.test (Acme CRM, Produit)' });
+    expect(result).toEqual({
+      account: 'marie@acme.test (Acme CRM, Produit)',
+      accountKey: 'usrL2PNC5o3H4lBEi',
+    });
     // Les bases viennent de la liste que le jeton voit : inutile de relire leurs tables.
     expect(calls.map((call) => call.url)).toEqual([`${API}/meta/whoami`, `${API}/meta/bases`]);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
@@ -865,7 +872,10 @@ describe('airtable : jeton OAuth', () => {
 
     const result = await airtableConnector.verify(chosen, http);
 
-    expect(result).toEqual({ account: 'usrL2PNC5o3H4lBEi (Acme CRM)' });
+    expect(result).toEqual({
+      account: 'usrL2PNC5o3H4lBEi (Acme CRM)',
+      accountKey: 'usrL2PNC5o3H4lBEi',
+    });
     expect(calls.map((call) => call.url)).toContain(`${API}/meta/bases/${BASE}/tables`);
   });
 

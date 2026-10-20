@@ -44,6 +44,7 @@ const SearchSchema = z.object({
   isLast: z.boolean().optional(),
 });
 const MyselfSchema = z.object({
+  accountId: z.string().nullish(),
   displayName: z.string().nullish(),
   emailAddress: z.string().nullish(),
   timeZone: z.string().nullish(),

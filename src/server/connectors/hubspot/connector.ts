@@ -133,7 +133,8 @@ export const hubspotConnector: Connector<Config> = {
     }
     // Le jeton a déjà fait ses preuves : un refus ici ne le met pas en cause.
     const portal = await optional(() => hubspot.portalId(), null, [401, 403]);
-    return { account: portal === null ? 'HubSpot' : `Compte HubSpot ${portal}` };
+    if (portal === null) return { account: 'HubSpot' };
+    return { account: `Compte HubSpot ${portal}`, accountKey: String(portal) };
   },
 
   sync(config: Config, state, http: ConnectorHttp) {

@@ -12,6 +12,7 @@ const body = z.object({ contentType: z.string(), content: z.string().nullish() }
 const when = z.object({ dateTime: z.string(), timeZone: z.string() });
 
 export const MeSchema = z.object({
+  id: z.string().nullish(),
   displayName: z.string().nullish(),
   mail: z.string().nullish(),
   userPrincipalName: z.string().nullish(),

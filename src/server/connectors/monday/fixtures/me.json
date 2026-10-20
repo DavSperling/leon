@@ -1,4 +1,10 @@
 {
-  "data": { "me": { "name": "Marie Durand", "account": { "name": "Acme" } } },
+  "data": {
+    "me": {
+      "id": "12345678",
+      "name": "Marie Durand",
+      "account": { "id": "1234567", "name": "Acme" }
+    }
+  },
   "account_id": 1234567
 }

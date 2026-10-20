@@ -42,8 +42,6 @@ export const passages = pgTable('passages', {
   authorName: text('author_name'),
   authorEmail: text('author_email'),
   acl: acl(),
-  // Modèle du dernier vecteur écrit (nul : aucun) : le tic des vecteurs ne relit que les autres (0013).
-  embeddedModel: text('embedded_model'),
   createdAt: createdAt(),
 });
 

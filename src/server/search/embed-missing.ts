@@ -111,8 +111,8 @@ function logEmbedFailure(error: unknown, ids: Record<string, string>): void {
 // alors laissés à une prochaine reprise) et `timedOut` s'il n'a pas répondu à temps. Les erreurs de base
 // remontent à l'appelant.
 //
-// Les vecteurs d'un autre modèle de ces passages sont retirés dans la même transaction (audit n° 7), et chaque
-// passage note le modèle de son vecteur (audit n° 8).
+// Les vecteurs d'un autre modèle de ces passages sont retirés dans la même transaction (audit n° 7). Le passage
+// lui-même n'est pas réécrit : il sort de la file des passages à vectoriser par un déclencheur (0020).
 //
 // Le vecteur prend l'accès que son passage a au moment de l'écriture (sous le verrou de sa source, voir
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
@@ -181,16 +181,6 @@ export async function embedPassages(
         .values(values)
         .onConflictDoNothing()
         .returning({ passageId: passageVectors.passageId });
-      // Le passage note son modèle : passages_sans_vecteur ne le relira plus (audit n° 8).
-      await tx
-        .update(passages)
-        .set({ embeddedModel: embedder.model })
-        .where(
-          inArray(
-            passages.id,
-            values.map((value) => value.passageId),
-          ),
-        );
       return inserted;
     });
     stored += written.length;

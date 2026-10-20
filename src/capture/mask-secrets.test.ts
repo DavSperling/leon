@@ -593,3 +593,17 @@ describe('maskSecrets : valeurs .env qui ne sont pas des secrets (audit 5)', () 
     expect(maskSecrets(input)).toBe(expected);
   });
 });
+
+describe('maskSecrets : faux positifs du corpus (audit 5)', () => {
+  it.each([
+    'api-key: docs/configuration/api.md',
+    'Monorepo_packages_frontend.vitest.config_workspace_shared_utils_ok',
+    'Le fichier key-0123456789abcdef0123456789abcdef.json est généré.',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it('masque toujours une clé Mailgun en fin de phrase', () => {
+    expect(maskSecrets(`clé ${`key-${alnum(32).toLowerCase()}`}.`)).toBe(`clé ${SECRET_MASK}.`);
+  });
+});

@@ -48,10 +48,11 @@ const WHOLE_SECRETS: RegExp[] = [
   /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g,
   // Clé SendGrid : « SG. », 22 caractères, « . », 43 caractères.
   /\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])/g,
-  // Clé Mailgun : « key- » et 32 caractères minuscules ou chiffres, d'un seul tenant.
-  /(?<![A-Za-z0-9_-])key-[0-9a-z]{32}(?![A-Za-z0-9_-])/g,
-  // Jeton de bot Discord : trois segments base64, le premier encode l'identifiant (« M » ou « N »).
-  /(?<![A-Za-z0-9_-])[MN][A-Za-z0-9_-]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,38}(?![A-Za-z0-9_-])/g,
+  // Clé Mailgun : « key- » et 32 caractères minuscules ou chiffres, d'un seul tenant (pas un nom de fichier).
+  /(?<![A-Za-z0-9_-])key-[0-9a-z]{32}(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
+  // Jeton de bot Discord : trois segments base64, le premier encode l'identifiant (« M » ou « N ») :
+  // des chiffres en base64, donc ni « _ » ni « - ».
+  /(?<![A-Za-z0-9_-])[MN][A-Za-z0-9]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,38}(?![A-Za-z0-9_-])/g,
   // Jeton de bot Telegram : identifiant, « : », 35 caractères commençant par « AA ».
   /(?<![0-9])[0-9]{6,12}:AA[A-Za-z0-9_-]{33}(?![A-Za-z0-9_-])/g,
   // Empreintes de mot de passe crackables hors ligne : htpasswd (apr1), bcrypt.
@@ -171,8 +172,11 @@ function maskUrlPassword(_match: string, scheme: string, user: string, password:
   return `${scheme}://${user}:${SECRET_MASK}@`;
 }
 
+// Un chemin de fichier (« api-key: docs/configuration/api.md ») n'est pas une clé.
 const maskIfRandom = (match: string, lead: string, value: string) =>
-  looksRandom(value) ? `${lead}${SECRET_MASK}` : match;
+  looksRandom(value) && !(value.includes('/') && FILE_PATH.test(value))
+    ? `${lead}${SECRET_MASK}`
+    : match;
 
 export function maskSecrets(text: string): string {
   let masked = text;

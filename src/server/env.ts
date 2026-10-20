@@ -27,6 +27,8 @@ export const EnvSchema = z
     BETTER_AUTH_URL: z.url(),
     // Lu pour refuser le faux modèle en production ; posé par Next, jamais dans .env.example.
     NODE_ENV: z.string().optional(),
+    // Posé par Next pendant `next build`, qui tourne en production et valide ce fichier sans servir de requête.
+    NEXT_PHASE: z.string().optional(),
     ANTHROPIC_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     // Faux modèle déterministe, sans réseau, pour les essais et les démos sans clé. Absent : le vrai modèle.
     LEON_LLM: z.preprocess(emptyIsAbsent, z.enum(['factice']).optional()),
@@ -42,7 +44,7 @@ export const EnvSchema = z
     LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_POINT').optional()),
     // L'en-tête où le proxy de confiance (Caddy) pose l'adresse du client, qu'il écrase à chaque requête : la
     // limite de débit de la connexion la lit (rate-limit.ts). Absent : aucun en-tête n'est cru, toutes les
-    // tentatives comptent par adresse sur une clé commune.
+    // tentatives comptent par adresse sur une clé commune. Obligatoire en production.
     LEON_IP_HEADER: z.preprocess(
       emptyIsAbsent,
       z
@@ -82,6 +84,20 @@ export const EnvSchema = z
         path: ['LEON_LLM'],
         message:
           'LEON_LLM=factice : interdit en production (le faux modèle sert aux essais sans clé)',
+      });
+    }
+    // Sans l'en-tête, toutes les tentatives de connexion partagent une seule clé de débit : un inconnu bloque tout
+    // le monde. `next build` tourne en production sans servir : il n'en a pas besoin.
+    if (
+      env.LEON_IP_HEADER === undefined &&
+      env.NODE_ENV === 'production' &&
+      env.NEXT_PHASE !== 'phase-production-build'
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['LEON_IP_HEADER'],
+        message:
+          'LEON_IP_HEADER : obligatoire en production (l’en-tête où le proxy pose l’adresse du client, x-real-ip derrière Caddy)',
       });
     }
     const id = env.LEON_EMBEDDINGS;

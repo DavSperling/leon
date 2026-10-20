@@ -105,23 +105,26 @@ export async function noteOrganization(
 
 // Le tampon appartient à l'organisation du jeton avec lequel il a été capté : quand le jeton change (autre jeton,
 // ou jeton retiré), il est vidé et compté comme perte, pour ne pas partir vers une autre organisation, sauf si le
-// nouveau jeton est de la même organisation (`organizationOf` la demande au serveur ; null si inconnue). Un tampon
-// capté avant tout jeton (ou avant que le jeton ne soit noté) part avec le premier.
+// nouveau jeton est de la même organisation (`organizationOf` la demande au serveur ; null si inconnue ou jeton
+// refusé). Un tampon capté avant tout jeton (ou avant que le jeton ne soit noté) part avec le premier.
+// Sur une panne passagère (`organizationOf` rend undefined), rien n'est tranché : le tampon reste, l'ancien jeton
+// reste noté et la fonction rend false ; l'appelant n'envoie rien et réessaie plus tard.
 export async function forgetOutboxOnTokenChange(
   store: KeyValueStore,
   token: string | null,
-  organizationOf: (token: string) => Promise<string | null>,
-): Promise<void> {
+  organizationOf: (token: string) => Promise<string | null | undefined>,
+): Promise<boolean> {
   const previous = z
     .string()
     .nullable()
     .catch(null)
     .parse(await store.get(OUTBOX_TOKEN_KEY));
-  if (previous === token) return;
+  if (previous === token) return true;
   if (previous !== null) {
     const noted = OrganizationSchema.parse(await store.get(OUTBOX_ORG_KEY));
     const before = noted?.token === previous ? noted.tenantId : null;
     const after = before !== null && token !== null ? await organizationOf(token) : null;
+    if (after === undefined) return false;
     if (after !== null && after === before && token !== null) {
       await noteOrganization(store, token, after);
     } else {
@@ -130,6 +133,7 @@ export async function forgetOutboxOnTokenChange(
     }
   }
   await store.set(OUTBOX_TOKEN_KEY, token);
+  return true;
 }
 
 // 'stop' : on garde l'élément et on arrête ; 'drop' : charge définitivement refusée (400, 413), on passe à la suivante.

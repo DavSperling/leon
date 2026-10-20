@@ -10,7 +10,7 @@ describe('prepareTurnText', () => {
   });
 
   it('masque les secrets', () => {
-    expect(prepareTurnText('password=correct-horse-battery')).toBe(`password=${SECRET_MASK}`);
+    expect(prepareTurnText('DB_PASSWORD=correct-horse-battery')).toBe(`DB_PASSWORD=${SECRET_MASK}`);
   });
 
   it('retire les espaces autour', () => {
@@ -45,15 +45,15 @@ describe('prepareTurnText : entrées énormes', () => {
   });
 
   it('masque tout le texte avant de le tronquer', () => {
-    const result = prepareTurnText(`Début password=${'a'.repeat(100_000)} fin`);
-    expect(result).toBe(`Début password=${SECRET_MASK} fin`);
+    const result = prepareTurnText(`Début\nDB_PASSWORD=${'a'.repeat(100_000)} fin`);
+    expect(result).toBe(`Début\nDB_PASSWORD=${SECRET_MASK} fin`);
   });
 
   it('ne laisse aucun fragment de secret coupé à une limite', () => {
     const alnum = 'aB3dE5gH7jK9mN1pQ2sT4vW6xY8zC0fL'.repeat(2);
-    const prefix = `password=${'x'.repeat(39_980)} `;
+    const prefix = `DB_PASSWORD=${'x'.repeat(39_977)} `;
     expect(prepareTurnText(`${prefix}ghp_${alnum.slice(0, 40)}`)).toBe(
-      `password=${SECRET_MASK} ${SECRET_MASK}`,
+      `DB_PASSWORD=${SECRET_MASK} ${SECRET_MASK}`,
     );
   });
 

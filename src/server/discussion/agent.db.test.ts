@@ -10,7 +10,7 @@ import { type AgentEvent, type Llm, LlmError } from '@/server/llm/llm';
 import * as searchModule from '@/server/search/search';
 import { adminPool } from '@/test/db';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
-import { replyStream } from './agent';
+import { isReplying, replyStream } from './agent';
 import { DISCUSSION_SYSTEM } from './discussion-prompt';
 import * as discussionsModule from './discussions';
 import { createDiscussion, getDiscussion, saveReply, startReply } from './discussions';
@@ -381,6 +381,22 @@ describe('une réponse déjà en cours', () => {
 
     expect(meanwhile.at(-1)).toEqual({ type: 'fin', reason: 'fini' });
     expect(intruder).toEqual([{ type: 'indisponible', questionGardee: false }]);
+  });
+
+  // Audit 2 n° 12 a : la page qui attend une réponse commencée plus tôt s'arrête dès qu'il n'y en a plus.
+  it('dit si une réponse est en cours dans la discussion, pour son auteur seulement', async () => {
+    const { alice, bob } = await setup();
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const model = heldModel();
+
+    const running = collect(reply(alice, id, 'Question', model.llm));
+    await model.running;
+    const during = [isReplying(alice, id), isReplying(bob, id)];
+    model.release();
+    await running;
+
+    expect(during).toEqual([true, false]);
+    expect(isReplying(alice, id)).toBe(false);
   });
 
   // Le coût d'un utilisateur : au plus deux réponses en cours à la fois, toutes discussions confondues.

@@ -469,13 +469,16 @@ describe('une source devenue invisible', () => {
     expect(JSON.stringify(found)).not.toContain(lost.sourceId);
   });
 
-  // Les résultats joints gardent des numéros qui se suivent : l'agent numérote les sources dans cet ordre.
+  // Audit 2 n° 15 c : les résultats joints gardent le numéro qu'affiche la question (getDiscussion), même avec
+  // un trou : l'agent les numérote ainsi.
   it('n’est plus jointe à la première question envoyée au modèle', async () => {
     const { bob, kept, lost, id } = await discussionOnTwoTickets();
 
     await adminPool.query('delete from sources where id = $1', [kept.sourceId]);
     const turn = await startReply(bob, id, 'ACME ?');
+    const shown = (await getDiscussion(bob, id))?.messages[0]?.citations ?? [];
 
-    expect(turn?.seeds.map((seed) => [seed.n, seed.sourceId])).toEqual([[1, lost.sourceId]]);
+    expect(turn?.seeds.map((seed) => [seed.n, seed.sourceId])).toEqual([[2, lost.sourceId]]);
+    expect(shown.map((seed) => [seed.n, seed.sourceId])).toEqual([[2, lost.sourceId]]);
   });
 });

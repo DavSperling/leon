@@ -54,6 +54,16 @@ describe('routes de l’API', () => {
     expect((await apiRequest('/api/auth/ok')).status).toBe(200);
   });
 
+  // Audit 2 n° 3 : la connexion et l'inscription ne passent que par les server actions, sous la limite de débit
+  // de rate-limit.ts ; les routes HTTP de Better Auth la contourneraient.
+  it.each(['/api/auth/sign-in/email', '/api/auth/sign-up/email'])(
+    'POST %s répond 404 : seules les pages de Leon connectent et inscrivent',
+    async (path) => {
+      const body = { email: 'paul@example.com', password: 'motdepasse-solide', name: 'Paul' };
+      expect((await apiRequest(path, { body })).status).toBe(404);
+    },
+  );
+
   it('renvoie des réponses conformes aux schémas que la CLI et l’extension valident', async () => {
     const {
       members: [paul],

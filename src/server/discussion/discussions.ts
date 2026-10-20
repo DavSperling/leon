@@ -242,7 +242,7 @@ const touch = (tx: Tx, id: string) =>
 // Avant une réponse : la question entre dans la discussion (sauf si elle y attend déjà sa réponse : une
 // discussion ouverte depuis la barre, une réponse tombée en panne), puis les 20 derniers messages pour le
 // modèle et, tant que la discussion n'a aucune réponse, les résultats d'où elle part que l'auteur voit encore,
-// numérotés de 1 à n dans leur ordre (l'agent les numérote ainsi). `questionId` : la question à laquelle la
+// avec le numéro qu'affiche la question (l'agent les numérote ainsi). `questionId` : la question à laquelle la
 // réponse répondra (saveReply).
 export async function startReply(
   ctx: TenantContext,
@@ -303,9 +303,7 @@ export async function startReply(
         .limit(1);
       const stored = parseDiscussionCitations(first?.citations);
       const visible = await visibleSourceIds(tx, ctx, stored);
-      seeds = stored
-        .filter((seed) => visible.has(seed.sourceId))
-        .map((seed, index) => ({ ...seed, n: index + 1 }));
+      seeds = stored.filter((seed) => visible.has(seed.sourceId));
     }
     return { questionId, history: recent.reverse(), seeds };
   });

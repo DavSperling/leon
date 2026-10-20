@@ -1,7 +1,9 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import { createUserWithOrganization, SignUpInputSchema } from '@/server/auth/sign-up';
 
@@ -15,6 +17,8 @@ export type AuthFormState = {
 const SignInSchema = z.object({ email: z.email(), password: z.string().min(1) });
 
 const INVALID_EMAIL = 'Saisissez une adresse e-mail valide.';
+// Au-delà de la limite de débit (rate-limit.ts), par adresse IP ou par e-mail : rien n'est essayé.
+const TOO_MANY_ATTEMPTS = 'Trop de tentatives. Réessayez dans quelques minutes.';
 
 const SIGN_IN_MESSAGES = {
   email: INVALID_EMAIL,
@@ -58,6 +62,9 @@ export async function signInAction(
   const values = withoutPassword(fields);
   const parsed = SignInSchema.safeParse(fields);
   if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_IN_MESSAGES), values };
+  if (!(await authAttemptAllowed('connexion', parsed.data.email, await headers()))) {
+    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+  }
 
   const { ok } = await signInWithPassword(parsed.data.email, parsed.data.password);
   // Même message pour un e-mail inconnu et un mot de passe faux.
@@ -73,6 +80,9 @@ export async function signUpAction(
   const values = withoutPassword(fields);
   const parsed = SignUpInputSchema.safeParse(fields);
   if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
+  if (!(await authAttemptAllowed('inscription', parsed.data.email, await headers()))) {
+    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+  }
 
   const created = await createUserWithOrganization(parsed.data);
   if (!created.ok) {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DISCUSSION_REFUSAL, discussionMessagesUrl } from '@/lib/discussion-events';
-import { type ReplyProgress, readReply } from './read-reply';
+import { questionNotWritten, type ReplyProgress, readReply } from './read-reply';
 
 // Ce que la page d'une discussion comprend de la réponse de la route : chaque issue a son état, et la page ne dit
 // « votre question est gardée » que lorsque le serveur l'a gardée.
@@ -130,5 +130,21 @@ describe('readReply', () => {
       }),
     );
     expect(await read()).toEqual({ status: 'indisponible', questionGardee: false });
+  });
+});
+
+// Audit 2 n° 12 b : une question que le serveur n'a pas écrite ne reste pas affichée ; elle revient dans la saisie.
+describe('questionNotWritten', () => {
+  it('vaut pour 429, 401, 403, 204 et « indisponible » sans question gardée', () => {
+    for (const status of ['occupe', 'session', 'origine', 'sans-modele'] as const) {
+      expect(questionNotWritten({ status })).toBe(true);
+    }
+    expect(questionNotWritten({ status: 'indisponible', questionGardee: false })).toBe(true);
+  });
+
+  it('ne vaut pas pour une question gardée, une réponse finie ou une réponse déjà en cours', () => {
+    expect(questionNotWritten({ status: 'indisponible', questionGardee: true })).toBe(false);
+    expect(questionNotWritten({ status: 'finie', content: 'R', citations: [] })).toBe(false);
+    expect(questionNotWritten({ status: 'en-cours' })).toBe(false);
   });
 });

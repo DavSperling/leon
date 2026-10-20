@@ -10,7 +10,7 @@ import { answerSegments, resultAnchorId } from './answer-text';
 
 // La réponse de l'agent en tête des résultats (T10). Les résultats sont déjà affichés : l'encadré lit ensuite le
 // flux de la route de la réponse, rend les renvois [n] en liens vers les résultats, se masque si aucun modèle
-// n'est branché (204) et dit « Réponse indisponible » si le modèle ou la recherche échoue. Une fois la réponse
+// n'est branché (204) ou si l'utilisateur a déjà trois réponses en cours (429), et dit « Réponse indisponible » si le modèle ou la recherche échoue. Une fois la réponse
 // finie, « Continuer en discussion » (T11) ouvre une discussion qui part de la requête et de ces résultats.
 
 export type AnswerResult = { sourceId: string; title: string | null };
@@ -36,7 +36,8 @@ function useAnswer(url: string): AnswerState {
         headers: { accept: 'text/event-stream' },
         cache: 'no-store',
       });
-      if (response.status === 204) return setState({ status: 'masque' });
+      // 429 : déjà trois réponses en cours pour l'utilisateur (une autre page de recherche) ; rien à dire ici.
+      if (response.status === 204 || response.status === 429) return setState({ status: 'masque' });
       if (!response.ok || !response.body) return setState({ status: 'indisponible' });
       const chunks = response.body.pipeThrough(new TextDecoderStream()).getReader();
       const events = createAnswerEventReader();

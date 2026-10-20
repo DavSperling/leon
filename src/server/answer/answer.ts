@@ -66,14 +66,36 @@ function writeCache(key: string, entry: Cached): void {
 
 export type AnswerInput = { query: string; resultIds: readonly string[] };
 
+// Au plus trois réponses en cours par utilisateur (son coût) : au-delà, answerStream rend 'trop' (la route répond
+// 429, l'encadré se masque). Comme la discussion (agent.ts), la garde vit dans ce processus.
+export const ANSWER_MAX_PER_USER = 3;
+const answering = new Map<string, number>();
+
 export function answerStream(
   ctx: TenantContext,
   input: AnswerInput,
   deps: { llm: Llm | null; embedder: Embedder | null; now?: Date },
-): AsyncIterable<AnswerEvent> | null {
+): AsyncIterable<AnswerEvent> | null | 'trop' {
   const { llm } = deps;
   if (llm === null) return null;
-  return streamAnswer(ctx, input, llm, deps);
+  const mine = answering.get(ctx.userId) ?? 0;
+  if (mine >= ANSWER_MAX_PER_USER) return 'trop';
+  // Prise ici, d'un bloc avec le contrôle ; rendue quand le flux finit, pour toute raison (finally).
+  answering.set(ctx.userId, mine + 1);
+  return releasing(ctx.userId, streamAnswer(ctx, input, llm, deps));
+}
+
+async function* releasing(
+  userId: string,
+  events: AsyncGenerator<AnswerEvent>,
+): AsyncGenerator<AnswerEvent> {
+  try {
+    yield* events;
+  } finally {
+    const left = (answering.get(userId) ?? 1) - 1;
+    if (left > 0) answering.set(userId, left);
+    else answering.delete(userId);
+  }
 }
 
 // La première page de la recherche, et le texte entier des passages de ses résultats affichés sur la page.

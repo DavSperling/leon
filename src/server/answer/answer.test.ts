@@ -342,8 +342,8 @@ function pageOf(hits: SourceHit[]): SearchPage {
 // La question de l'encadré : la requête et les résultats de la page affichée.
 const asked = (query: string) => ({ query, resultIds: shown });
 
-async function collect(stream: AsyncIterable<AnswerEvent> | null): Promise<AnswerEvent[]> {
-  if (stream === null) throw new Error('flux attendu');
+async function collect(stream: AsyncIterable<AnswerEvent> | null | 'trop'): Promise<AnswerEvent[]> {
+  if (stream === null || stream === 'trop') throw new Error('flux attendu');
   const events: AnswerEvent[] = [];
   for await (const event of stream) events.push(event);
   return events;

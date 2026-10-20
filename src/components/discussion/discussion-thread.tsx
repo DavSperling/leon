@@ -26,7 +26,7 @@ import {
 } from '@/lib/discussion-events';
 import { cn } from '@/lib/utils';
 import { AssistantMessage, LeonHeading, type OpenCitation, UserMessage } from './message-view';
-import { type ReplyProgress, readReply } from './read-reply';
+import { questionNotWritten, type ReplyProgress, readReply } from './read-reply';
 
 // Une discussion : ses messages, la réponse de Leon en flux (ce qu'il cherche et lit, puis son texte), la saisie
 // d'une nouvelle question et l'aperçu des passages cités. La route garde la question et la réponse : la page
@@ -241,16 +241,24 @@ export function DiscussionThread({
     if (!busy) run(message);
   }
 
+  const retry = (message: string) => (
+    <Button type="button" variant="outline" onClick={() => ask(message)} className={actionClass}>
+      <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
+      Réessayer
+    </Button>
+  );
+
   function run(message: string) {
-    setMessages((current) => {
-      const previous = current.at(-1);
-      // La question restée sans réponse est reposée telle quelle : le serveur ne la répète pas non plus.
-      if (previous?.role === 'user' && previous.content === message) return current;
-      return [
+    const previous = messages.at(-1);
+    // La question restée sans réponse est reposée telle quelle : le serveur ne la répète pas non plus.
+    const repeated = previous?.role === 'user' && previous.content === message;
+    const questionId = crypto.randomUUID();
+    if (!repeated) {
+      setMessages((current) => [
         ...current,
-        { id: crypto.randomUUID(), role: 'user', content: message, citations: [] },
-      ];
-    });
+        { id: questionId, role: 'user', content: message, citations: [] },
+      ]);
+    }
     setReply(THINKING);
     readReply(discussionId, message, (progress) => setReply({ status: 'flux', ...progress }))
       .then((outcome) => {
@@ -259,6 +267,11 @@ export function DiscussionThread({
           return;
         }
         if (outcome.status !== 'finie') {
+          // Une question nouvelle que le serveur n'a pas écrite quitte la discussion et revient dans la saisie.
+          if (!repeated && questionNotWritten(outcome)) {
+            setMessages((current) => current.filter((item) => item.id !== questionId));
+            setDraft((typed) => (typed.trim() === '' ? message : typed));
+          }
           setReply(outcome);
           return;
         }
@@ -274,8 +287,9 @@ export function DiscussionThread({
       .catch(() => setReply({ status: 'indisponible', questionGardee: false }));
   }
 
-  // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, puis la montre
-  // telle qu'elle est. Une question envoyée entre-temps n'a pas été écrite : elle revient dans la saisie.
+  // Leon répond déjà dans cette discussion : la page la relit jusqu'à ce que cette réponse y soit, ou que le serveur
+  // n'en ait plus en cours (elle a échoué), puis la montre telle qu'elle est. Une question envoyée entre-temps n'a
+  // pas été écrite : elle revient dans la saisie.
   useEffect(() => {
     if (reply.status !== 'attente') return;
     const { message } = reply;
@@ -284,13 +298,14 @@ export function DiscussionThread({
     let timer: ReturnType<typeof setTimeout> | undefined;
     const check = () => {
       readDiscussionMessagesAction(discussionId)
-        .then((current) => {
+        .then((read) => {
           if (stopped) return;
-          if (current === null) {
+          if (read === null) {
             setReply({ status: 'indisponible', questionGardee: false });
             return;
           }
-          if (current.at(-1)?.role !== 'assistant' && Date.now() < until) {
+          const current = read.messages;
+          if (current.at(-1)?.role !== 'assistant' && read.replying && Date.now() < until) {
             timer = setTimeout(check, WAIT_POLL_MS);
             return;
           }
@@ -329,7 +344,8 @@ export function DiscussionThread({
     if (started.current || !autoStart) return;
     started.current = true;
     readDiscussionMessagesAction(discussionId)
-      .then((current) => {
+      .then((read) => {
+        const current = read?.messages;
         const [question] = current ?? [];
         if (current?.length === 1 && question?.role === 'user') return run(question.content);
         if (current) setMessages(current);
@@ -392,39 +408,18 @@ export function DiscussionThread({
                 )}
               </div>
             )}
-            {reply.status === 'indisponible' && last?.role === 'user' && (
-              <Notice
-                action={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => ask(last.content)}
-                    className={actionClass}
-                  >
-                    <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
-                    Réessayer
-                  </Button>
-                }
-              >
+            {/* La question qui n'a pas été écrite est revenue dans la saisie : pas de « Réessayer », on la renvoie. */}
+            {reply.status === 'indisponible' && (
+              <Notice action={last?.role === 'user' && retry(last.content)}>
                 {reply.questionGardee
                   ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
-                  : 'Leon n’a pas pu répondre pour le moment.'}
+                  : last?.role === 'user'
+                    ? 'Leon n’a pas pu répondre pour le moment.'
+                    : 'Leon n’a pas pu répondre pour le moment. Votre question vous attend dans la saisie.'}
               </Notice>
             )}
-            {reply.status === 'occupe' && last?.role === 'user' && (
-              <Notice
-                action={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => ask(last.content)}
-                    className={actionClass}
-                  >
-                    <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
-                    Réessayer
-                  </Button>
-                }
-              >
+            {reply.status === 'occupe' && (
+              <Notice action={last?.role === 'user' && retry(last.content)}>
                 {DISCUSSION_TOO_MANY}
               </Notice>
             )}

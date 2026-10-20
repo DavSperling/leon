@@ -5,7 +5,7 @@ import { PAGE_SIZE } from './search-limits';
 // de recherche. Le navigateur n'importe rien de `@/server` : la route, la phrase du « pas assez » et la lecture
 // du flux vivent ici (avec les plafonds de search-limits.ts, qui n'importe rien).
 
-// GET, cookie de session : 204 sans modèle, sinon un flux `text/event-stream` d'évènements JSON.
+// GET, cookie de session : 204 sans modèle, 429 au-delà de trois réponses en cours, sinon un flux `text/event-stream` d'évènements JSON.
 // `?q=` la requête, `&r=` les identifiants des sources affichées sur la page, dans leur ordre, séparés par des
 // virgules : un renvoi [n] de la réponse désigne le n-ième. La route refait la recherche sous les droits du
 // lecteur et n'en garde que ces sources ; la liste ne donne accès à rien d'autre.

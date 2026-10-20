@@ -6,6 +6,7 @@ import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/dis
 import { PAGE_SIZE } from '@/lib/search-limits';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 
@@ -68,18 +69,25 @@ export async function continueInDiscussionAction(
 }
 
 // Les messages d'une discussion de l'utilisateur, relus au moment où la page veut y répondre d'elle-même : la page
-// affichée peut être ancienne (retour arrière du navigateur) et la question avoir déjà sa réponse. Null pour une
+// affichée peut être ancienne (retour arrière du navigateur) et la question avoir déjà sa réponse. `replying` : Leon
+// y répond encore, lu avant les messages (une réponse finie entre les deux y est déjà gardée). Null pour une
 // discussion qu'il ne voit pas, ou une panne.
 export async function readDiscussionMessagesAction(
   discussionId: string,
-): Promise<DiscussionMessageView[] | null> {
+): Promise<{ messages: DiscussionMessageView[]; replying: boolean } | null> {
   const ctx = await requireUserContext();
   if (typeof discussionId !== 'string') return null;
   try {
+    const replying = isReplying(ctx, discussionId);
     const found = await getDiscussion(ctx, discussionId);
-    return found
-      ? found.messages.map(({ id, role, content, citations }) => ({ id, role, content, citations }))
-      : null;
+    if (!found) return null;
+    const messages = found.messages.map(({ id, role, content, citations }) => ({
+      id,
+      role,
+      content,
+      citations,
+    }));
+    return { messages, replying };
   } catch (error) {
     logError('discussion.lecture', error);
     return null;

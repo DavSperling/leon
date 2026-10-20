@@ -36,6 +36,13 @@ export type ReplyOutcome =
 
 const LOST: ReplyOutcome = { status: 'indisponible', questionGardee: false };
 
+// Le serveur n'a pas écrit la question (ou ne promet pas l'avoir écrite) : la page la retire de la discussion et
+// la remet dans la saisie. « en-cours » a son propre chemin (la page attend la réponse commencée plus tôt).
+export function questionNotWritten(outcome: ReplyOutcome): boolean {
+  if (outcome.status === 'indisponible') return !outcome.questionGardee;
+  return ['sans-modele', 'occupe', 'session', 'origine'].includes(outcome.status);
+}
+
 export async function readReply(
   discussionId: string,
   message: string,

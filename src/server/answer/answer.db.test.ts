@@ -15,8 +15,8 @@ import { readPassageTexts } from './passage-texts';
 const tenantIds: string[] = [];
 afterAll(() => dropTeams(tenantIds));
 
-async function collect(stream: AsyncIterable<AnswerEvent> | null): Promise<AnswerEvent[]> {
-  if (stream === null) throw new Error('flux attendu');
+async function collect(stream: AsyncIterable<AnswerEvent> | null | 'trop'): Promise<AnswerEvent[]> {
+  if (stream === null || stream === 'trop') throw new Error('flux attendu');
   const events: AnswerEvent[] = [];
   for await (const event of stream) events.push(event);
   return events;

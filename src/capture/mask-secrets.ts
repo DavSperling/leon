@@ -57,6 +57,24 @@ const WHOLE_SECRETS: RegExp[] = [
   // Empreintes de mot de passe crackables hors ligne : htpasswd (apr1), bcrypt.
   /\$apr1\$[./0-9A-Za-z]{1,8}\$[./0-9A-Za-z]{22}/g,
   /\$2[aby]\$\d{2}\$[./0-9A-Za-z]{53}/g,
+  // Jetons des outils que Leon fait coller, et autres préfixes publiés par leur éditeur.
+  /\bpat[A-Za-z0-9]{14}\.[0-9a-f]{64}(?![A-Za-z0-9])/g, // Airtable
+  /\bATATT3[A-Za-z0-9_=-]{100,}/g, // Atlassian
+  /\bpat-[a-z]{2,3}[0-9]-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![0-9a-f])/g, // HubSpot
+  /\bpk_[0-9]{1,12}_[A-Z0-9]{32}(?![A-Za-z0-9])/g, // ClickUp
+  /\bsntryu_[0-9a-f]{64}(?![A-Za-z0-9])/g, // Sentry, utilisateur
+  /\bsntrys_eyJ[A-Za-z0-9+/=_]{40,}/g, // Sentry, organisation
+  /\bshp(?:at|ss)_[0-9a-fA-F]{32}(?![A-Za-z0-9])/g, // Shopify
+  /\bdop_v1_[0-9a-f]{64}(?![A-Za-z0-9])/g, // DigitalOcean
+  /\bdckr_pat_[A-Za-z0-9_-]{27}(?![A-Za-z0-9_-])/g, // Docker
+  /\bsbp_[0-9a-f]{40}(?![A-Za-z0-9])/g, // Supabase, jeton d'accès
+  /\bfigd_[A-Za-z0-9_-]{36,}/g, // Figma
+  /\bpypi-AgEIcHlwaS5vcmc[A-Za-z0-9_-]{50,}/g, // PyPI
+  /https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/[0-9]{17,20}\/[A-Za-z0-9_-]{60,}/g,
+  /(?<=[?&]sig=)[A-Za-z0-9%+/=]{40,}/g, // signature d'une URL SAS Azure
+  /\bgsk_[A-Za-z0-9]{52}(?![A-Za-z0-9])/g, // Groq
+  /\bhvs\.[A-Za-z0-9_-]{90,}/g, // Vault
+  /\bglrt-[A-Za-z0-9_-]{20,}/g, // GitLab, runner
 ];
 
 // Le nom reste lisible, seule la valeur est masquée.

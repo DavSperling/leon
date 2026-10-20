@@ -462,6 +462,11 @@ const TRAPS = [
   'A_KEY=a\n',
   'MNaaaaaaaaaaaaaaaaaaaaaaaa.',
   '$apr1$',
+  'pataaaaaaaaaaaaaa.',
+  'pat-eu1-',
+  '?sig=a',
+  'sntrys_eyJ',
+  'https://discord.com/api/webhooks/12345678901234567/',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 
@@ -481,4 +486,57 @@ describe('maskSecrets : temps linéaire', () => {
       expect(performance.now() - start).toBeLessThan(2000);
     },
   );
+});
+
+describe('maskSecrets : préfixes des outils (audit 5)', () => {
+  const hex = (n: number) => '9f3a7c1e5b2d8f40a6c3e9b1d7f2a5c8'.repeat(4).slice(0, n);
+  const upper = (n: number) => 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'.repeat(2).slice(0, n);
+  const uuid = 'b7e2c9a1-4f3d-4e8a-9c2b-1d6f8e3a5c7b';
+  it.each([
+    ['Airtable', `pat${alnum(14)}.${hex(64)}`],
+    ['Atlassian', `ATATT3xFfGF0${alnum(90)}${alnum(90)}=${hex(8).toUpperCase()}`],
+    ['HubSpot', `pat-eu1-${uuid}`],
+    ['ClickUp', `pk_81234567_${upper(32)}`],
+    ['Sentry utilisateur', `sntryu_${hex(64)}`],
+    ['Sentry organisation', `sntrys_eyJpYXQiOjE3MjU${alnum(60)}_${alnum(43)}`],
+    ['Shopify', `shpat_${hex(32)}`],
+    ['Shopify secret partagé', `shpss_${hex(32)}`],
+    ['DigitalOcean', `dop_v1_${hex(64)}`],
+    ['Docker', `dckr_pat_${alnum(27)}`],
+    ['Supabase', `sbp_${hex(40)}`],
+    ['Figma', `figd_${alnum(40)}`],
+    ['PyPI', `pypi-AgEIcHlwaS5vcmc${alnum(90)}${alnum(30)}`],
+    ['webhook Discord', `https://discord.com/api/webhooks/1234567890123456789/${alnum(68)}`],
+    ['Groq', `gsk_${alnum(52)}`],
+    ['Vault', `hvs.${alnum(90)}`],
+    ['GitLab runner', `glrt-${alnum(20)}`],
+  ])('masque : %s', (_name, secret) => {
+    expect(maskSecrets(`avant ${secret} après`)).toBe(`avant ${SECRET_MASK} après`);
+  });
+
+  it('masque la signature d’une URL SAS Azure', () => {
+    const url = `https://acme.blob.core.windows.net/a.pdf?sv=2022-11-02&sp=r&sig=${alnum(40)}%2B${alnum(2)}%3D`;
+    expect(maskSecrets(url)).toBe(
+      `https://acme.blob.core.windows.net/a.pdf?sv=2022-11-02&sp=r&sig=${SECRET_MASK}`,
+    );
+  });
+
+  it.each([
+    'patch.diff et pattern.json',
+    'pat-eu1-ticket',
+    'pk_42_court',
+    'sntryu_court',
+    'shpat_court',
+    'dckr_pat_court',
+    'sbp_test',
+    'figd_court',
+    'pypi-AgEIcHlwaS5vcmc',
+    'gsk_court',
+    'hvs.court',
+    'glrt-court',
+    'https://discord.com/api/webhooks',
+    'https://acme.fr/?sig=court',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
 });

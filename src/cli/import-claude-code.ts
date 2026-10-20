@@ -104,12 +104,16 @@ export async function importClaudeCode(
     skipped: 0,
     failures: 0,
   };
+  // Une session reprise recopie l'historique (mêmes uuid, autre sessionId) : chaque tour n'est envoyé qu'une fois.
+  const seen = new Set<string>();
   for (const file of await findSessionFiles(options.baseDir)) {
     try {
-      const session = await loadSession(file, options);
-      if (!session) continue;
+      const loaded = await loadSession(file, options);
+      const turns = loaded?.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];
+      if (!loaded || turns.length === 0) continue;
+      for (const turn of turns) seen.add(turn.external_id);
       summary.sessions += 1;
-      await importSession(session, options, deps, summary);
+      await importSession({ ...loaded, turns }, options, deps, summary);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

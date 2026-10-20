@@ -104,6 +104,30 @@ describe('importClaudeCode', () => {
     expect(send.mock.calls.map(([p]) => p.source.external_id)).toEqual([ACME_SESSION]);
   });
 
+  it("n'envoie pas deux fois un tour recopié par une session reprise", async () => {
+    const acme = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    const resumed = '55555555-5555-4555-8555-555555555555';
+    const newTurn = JSON.stringify({
+      type: 'user',
+      uuid: 'reprise-1',
+      sessionId: resumed,
+      timestamp: '2026-10-14T09:00:00.000Z',
+      message: { content: 'On reprend.' },
+    });
+    await writeFile(
+      join(projectDir, 'reprise.jsonl'),
+      `${acme.replaceAll(ACME_SESSION, resumed).trimEnd()}\n${newTurn}\n`,
+    );
+    const { deps, send } = makeDeps();
+
+    const summary = await importClaudeCode(importOptions(), deps);
+
+    const sent = send.mock.calls.flatMap(([p]) => p.turns.map((turn) => turn.external_id));
+    expect(new Set(sent).size).toBe(sent.length);
+    expect(sent).toContain('reprise-1');
+    expect(summary.turnsSent).toBe(13);
+  });
+
   it('since écarte les tours plus anciens et les sessions sans tour récent', async () => {
     const { deps, send } = makeDeps();
 

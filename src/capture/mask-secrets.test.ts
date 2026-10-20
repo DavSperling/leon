@@ -467,6 +467,9 @@ const TRAPS = [
   '?sig=a',
   'sntrys_eyJ',
   'https://discord.com/api/webhooks/12345678901234567/',
+  'A_KEY=a/.',
+  'A_PASSWORD=~/.',
+  ';Password={a}.',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 
@@ -563,5 +566,30 @@ describe('maskSecrets : hôte sans point (audit 5)', () => {
 
   it('masque toujours un mot de passe qui commence comme un port', () => {
     expect(maskSecrets('postgres://app:1234/abcd@hôte')).toBe(`postgres://app:${SECRET_MASK}@hôte`);
+  });
+});
+
+describe('maskSecrets : valeurs .env qui ne sont pas des secrets (audit 5)', () => {
+  it.each([
+    'export GOOGLE_APPLICATION_CREDENTIALS=/home/paul/keys/leon-sa.json',
+    'DEPLOY_SSH_KEY=~/.ssh/id_ed25519',
+    'TLS_KEY=./certs/server.key',
+    'S3_KEY=exports/2026/10/rapport.pdf',
+    'SORT_KEY=created_at',
+    'MAX_TOKEN=4096',
+    'DB_PASSWORD={password}',
+    'OPENAI_API_KEY=sk-...',
+    'DB_PASSWORD=…',
+    'var cs = $"Server={host};Database=leon;User Id={user};Password={password};";',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  it.each([
+    [`AWS_SECRET_ACCESS_KEY=/${alnum(39)}`, `AWS_SECRET_ACCESS_KEY=${SECRET_MASK}`],
+    ['DB_PASSWORD=1234', `DB_PASSWORD=${SECRET_MASK}`],
+    ['ADMIN_PASSWORD=correcthorse', `ADMIN_PASSWORD=${SECRET_MASK}`],
+  ])('masque toujours : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
   });
 });

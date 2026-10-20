@@ -129,9 +129,21 @@ const POWERSHELL_ENV =
 // PHP : « define('DB_PASSWORD', '…'); ».
 const PHP_DEFINE =
   /(\bdefine\(\s{0,10}(['"])([A-Z][A-Z0-9_]{0,80})\2\s{0,10},\s{0,10})(['"])([^'"\n]+)\4/g;
-// Une valeur qui n'en est pas une : renvoi à une variable, modèle, booléen, masque déjà posé.
+// Une valeur qui n'en est pas une : renvoi à une variable, modèle (« {password} »), booléen, masque déjà
+// posé, valeur élidée (« sk-... », « … »), chemin de fichier (« ~/.ssh/id_ed25519 », « ./certs/a.key »,
+// « /home/paul/sa.json », « exports/2026/rapport.pdf »). Un chemin sans « ~/ » ni « ./ » doit finir par une
+// extension : une clé base64 peut contenir « / », jamais « . ».
 const NOT_A_VALUE =
-  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|true|false|null|none|yes|no|\[secret.*)$/i;
+  /^(?:\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_]*|<.*>|\{[A-Za-z0-9_.]*\}|true|false|null|none|yes|no|\[secret.*|.*(?:\.\.\.|…)|(?:~|\.{1,2})\/\S*)$/i;
+const FILE_PATH = /^[\w.@/-]*\.[A-Za-z0-9]{1,5}$/;
+// Un nom en KEY ou TOKEN désigne aussi des réglages (« SORT_KEY=created_at », « MAX_TOKEN=4096 ») :
+// sa valeur ne compte que si elle a la forme d'une clé, 16 caractères ou plus et aléatoire.
+const KEY_NAME = /(?:KEY|TOKEN)$/;
+const isSecretValue = (name: string, value: string) =>
+  ENV_NAME.test(name) &&
+  !NOT_A_VALUE.test(value) &&
+  !(value.includes('/') && FILE_PATH.test(value)) &&
+  (!KEY_NAME.test(name) || (value.length >= 16 && looksRandom(value)));
 
 function maskNamedValue(
   match: string,
@@ -143,7 +155,7 @@ function maskNamedValue(
   bare: string | undefined,
 ): string {
   const value = doubleQuoted ?? singleQuoted ?? bare ?? '';
-  if (!ENV_NAME.test(name) || NOT_A_VALUE.test(value)) return match;
+  if (!isSecretValue(name, value)) return match;
   const quote = doubleQuoted !== undefined ? '"' : singleQuoted !== undefined ? "'" : '';
   return `${lead}${name}${separator}${quote}${SECRET_MASK}${quote}`;
 }
@@ -174,7 +186,9 @@ export function maskSecrets(text: string): string {
       maskIfRandom(match, `${name}${separator}`, value),
     )
     .replace(QUERY_SECRET, (match, lead: string, value: string) => maskIfRandom(match, lead, value))
-    .replace(CONNECTION_STRING_SECRET, `$1${SECRET_MASK}`)
+    .replace(CONNECTION_STRING_SECRET, (match, lead: string, value: string) =>
+      NOT_A_VALUE.test(value) ? match : `${lead}${SECRET_MASK}`,
+    )
     .replace(AWS_CREDENTIALS_FILE, `$1${SECRET_MASK}`)
     .replace(NPMRC_TOKEN, `$1${SECRET_MASK}`)
     .replace(ENV_LINE, maskNamedValue)
@@ -182,8 +196,6 @@ export function maskSecrets(text: string): string {
     .replace(
       PHP_DEFINE,
       (match, lead: string, _q: string, name: string, quote: string, value: string) =>
-        ENV_NAME.test(name) && !NOT_A_VALUE.test(value)
-          ? `${lead}${quote}${SECRET_MASK}${quote}`
-          : match,
+        isSecretValue(name, value) ? `${lead}${quote}${SECRET_MASK}${quote}` : match,
     );
 }

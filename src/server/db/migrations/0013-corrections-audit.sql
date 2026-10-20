@@ -54,3 +54,7 @@ $$;
 -- jamais repris. L'index des runs en attente couvre désormais ces trois états.
 drop index ingest_runs_queued_idx;
 create index ingest_runs_pending_idx on ingest_runs (updated_at) where status in ('queued', 'running', 'failed');
+
+-- Audit n° 7 : la recherche par le sens lit les vecteurs d'une organisation et d'un modèle (search.ts). Les
+-- vecteurs d'un ancien modèle sont retirés à mesure que ceux du nouveau s'écrivent (embedPassages).
+create index passage_vectors_tenant_model_idx on passage_vectors (tenant_id, model);

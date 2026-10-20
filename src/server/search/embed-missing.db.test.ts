@@ -109,7 +109,9 @@ describe('embedMissing', () => {
     expect(await vectorsOf(bob, mine.passageIds)).toHaveLength(0);
   });
 
-  it('refait des vecteurs pour un autre modèle et garde ceux de l’ancien', async () => {
+  // Audit n° 7 : la recherche ne lit que les vecteurs du modèle courant ; ceux d'un ancien modèle restaient pour
+  // toujours, et l'index HNSW (global) les parcourait.
+  it('refait des vecteurs pour un autre modèle et retire ceux de l’ancien', async () => {
     const token = `jeton-${randomUUID()}`;
     const mine = await seedPassages(alice, { count: 2, token });
     const theirs = await seedPassages(zoe, { count: 3, token });
@@ -118,11 +120,10 @@ describe('embedMissing', () => {
     const again = await embedMissing({ embedder: embedderFor(token, 'factice-b') }, BIG);
 
     expect(again).toBe(5);
-    const models = (await vectorsOf(alice, mine.passageIds)).map((vector) => vector.model).sort();
-    expect(models).toEqual(['factice-a', 'factice-a', 'factice-b', 'factice-b'].sort());
+    const models = (await vectorsOf(alice, mine.passageIds)).map((vector) => vector.model);
+    expect(models).toEqual(['factice-b', 'factice-b']);
     const zoeModels = (await vectorsOf(zoe, theirs.passageIds)).map((vector) => vector.model);
-    expect(zoeModels.filter((model) => model === 'factice-a')).toHaveLength(3);
-    expect(zoeModels.filter((model) => model === 'factice-b')).toHaveLength(3);
+    expect(zoeModels).toEqual(['factice-b', 'factice-b', 'factice-b']);
   });
 
   it('ne dépasse pas la limite demandée', async () => {

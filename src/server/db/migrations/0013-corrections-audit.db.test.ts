@@ -83,3 +83,13 @@ describe('les tics ignorent les lignes d’un membre parti', () => {
     expect(ids).not.toContain(departed.connectionId);
   });
 });
+
+// Audit n° 7 : la recherche par le sens filtre sur l'organisation et le modèle.
+it('indexe les vecteurs par organisation et par modèle', async () => {
+  const { rows } = await adminPool.query<{ indexdef: string }>(
+    `select indexdef from pg_indexes where tablename = 'passage_vectors'`,
+  );
+  expect(rows.map((row) => row.indexdef)).toContainEqual(
+    expect.stringContaining('(tenant_id, model)'),
+  );
+});

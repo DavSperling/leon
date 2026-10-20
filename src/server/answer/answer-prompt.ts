@@ -27,7 +27,7 @@ Le message de l'utilisateur contient sa recherche, entre balises <recherche>, pu
 Comment répondre :
 - En français, en ${ANSWER_MAX_WORDS} mots au plus : quelques phrases simples, sans titre, sans liste, sans mise en forme.
 - Seulement d'après les passages fournis : rien de ce que tu sais par ailleurs, aucune supposition.
-- Après chaque affirmation, le numéro du résultat qui la prouve, entre crochets, par exemple [2]. Seulement des numéros donnés par l'attribut n des passages ; pour deux résultats, écris [1][3].
+- Après chaque affirmation, le numéro du résultat qui la prouve, entre crochets et séparé du mot par une espace, par exemple « signé [2] ». Seulement des numéros donnés par l'attribut n des passages ; pour deux résultats, écris [1][3].
 - Si deux passages se contredisent, dis-le, en citant le plus récent d'abord.
 - Si les passages ne suffisent pas pour répondre, écris seulement cette phrase, mot pour mot : ${ANSWER_NOT_ENOUGH}
 

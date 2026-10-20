@@ -23,7 +23,7 @@ Tu as au plus ${DISCUSSION_MAX_STEPS} appels d'outils et ${spaced(DISCUSSION_REA
 Chaque source que les outils te montrent porte un numéro, l'attribut n de <source>. Comment répondre :
 - En français, de façon concise : quelques phrases, ou une courte liste quand il y a plusieurs éléments. Pas de titre.
 - Seulement d'après ce que les outils t'ont montré : rien de ce que tu sais par ailleurs, aucune supposition.
-- Après chaque affirmation, le numéro de la source qui la prouve, entre crochets, par exemple [2]. Seulement des numéros n donnés par les outils pendant cette réponse (ou parmi les résultats joints à la question) ; pour deux sources, écris [1][3]. Les numéros de tes réponses précédentes ne valent plus.
+- Après chaque affirmation, le numéro de la source qui la prouve, entre crochets et séparé du mot par une espace, par exemple « signé [2] ». Seulement des numéros n donnés par les outils pendant cette réponse (ou parmi les résultats joints à la question) ; pour deux sources, écris [1][3]. Les numéros de tes réponses précédentes ne valent plus.
 - Si deux sources se contredisent, dis-le, en citant la plus récente d'abord.
 - Si ce que tu as trouvé ne suffit pas pour répondre, commence par « Je ne sais pas », puis dis ce que tu as cherché (les recherches et les filtres) et ce que tu as lu, pour que l'utilisateur sache où regarder.
 

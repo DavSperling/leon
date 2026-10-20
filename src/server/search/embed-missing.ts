@@ -228,7 +228,7 @@ export async function embedPassages(
   return { stored, failed: false, timedOut: false };
 }
 
-type MissingRow = { passage_id: string; tenant_id: string; user_id: string };
+type MissingRow = { passage_id: string; tenant_id: string; user_id: string; a_vectoriser: boolean };
 
 // Complète, pour le modèle du fournisseur, les vecteurs des `limit` passages les plus récents qui n'en ont pas.
 // La liste vient d'une fonction qui ne rend que des identifiants (passages_sans_vecteur) ; le texte est lu
@@ -239,18 +239,24 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
   return (await embedMissingBatch(deps, limit)).stored;
 }
 
-// Le même, qui rend aussi le nombre de passages lus dans la file : le tic continue tant que le lot lu est plein
-// (audit 3 n° 3).
+// Le même, qui rend aussi le nombre de passages lus dans la file (audit 3 n° 3) et, parmi eux, ceux que la lecture
+// en a sortis sans les rendre à vectoriser (déjà vectorisés, propriétaire parti : audit 4 n° 1). Le tic continue tant
+// que le lot lu est plein et qu'il a avancé.
 export async function embedMissingBatch(
   deps: { embedder: Embedder },
   limit: number,
-): Promise<{ read: number; stored: number }> {
+): Promise<{ read: number; stored: number; removed: number }> {
   const { embedder } = deps;
   const { rows } = await db.execute<MissingRow>(
-    sql`select passage_id, tenant_id, user_id from passages_sans_vecteur(${embedder.model}, ${limit})`,
+    sql`select passage_id, tenant_id, user_id, a_vectoriser from passages_sans_vecteur(${embedder.model}, ${limit})`,
   );
   const groups = new Map<string, { tenantId: string; userId: string; ids: string[] }>();
+  let removed = 0;
   for (const row of rows) {
+    if (!row.a_vectoriser) {
+      removed += 1;
+      continue;
+    }
     const key = `${row.tenant_id}:${row.user_id}`;
     const group = groups.get(key) ?? { tenantId: row.tenant_id, userId: row.user_id, ids: [] };
     group.ids.push(row.passage_id);
@@ -285,7 +291,7 @@ export async function embedMissingBatch(
       logError('search.embed_missing_failed', error, { tenantId: group.tenantId });
     }
   }
-  return { read: rows.length, stored: total };
+  return { read: rows.length, stored: total, removed };
 }
 
 // Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`

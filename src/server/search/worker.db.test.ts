@@ -24,7 +24,7 @@ import { startSearchWorker } from './worker';
 vi.mock('./embed-missing', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./embed-missing')>()),
   requeueStaleRuns: vi.fn(async () => 0),
-  embedMissingBatch: vi.fn(async () => ({ read: 0, stored: 0 })),
+  embedMissingBatch: vi.fn(async () => ({ read: 0, stored: 0, removed: 0 })),
 }));
 
 // La file peut déjà porter des jobs d'autres essais (reprises laissées par un ancien lancement) : ce fichier ne

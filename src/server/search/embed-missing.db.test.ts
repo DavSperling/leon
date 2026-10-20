@@ -28,6 +28,7 @@ import {
   dropOldVectors,
   EMBED_TIMEOUT_MS,
   embedMissing,
+  embedMissingBatch,
   REQUEUE_BATCH,
   requeueStaleRuns,
 } from './embed-missing';
@@ -172,6 +173,40 @@ describe('embedMissing', () => {
     const { rows } = await adminPool.query<{ n: number }>(
       'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
       [seeded.passageIds],
+    );
+    expect(rows[0]?.n).toBe(0);
+  });
+
+  // Audit 4 n° 1 : la fonction retirait en silence les lignes de tête qui avaient déjà le vecteur, et ne rendait que
+  // les autres : le tic croyait la file presque vide, s'arrêtait et retirait les vieux vecteurs en plein rattrapage.
+  it('compte comme lues les lignes de tête déjà vectorisées (retour à un ancien modèle)', async () => {
+    const token = `jeton-${randomUUID()}`;
+    // La tête de la file (les plus récentes de plus de 2 minutes) : des passages qui ont déjà le vecteur du modèle,
+    // restés dans la file d'un autre modèle quand on revient à celui-ci.
+    const head = await seedPassages(alice, {
+      count: 3,
+      token,
+      createdAt: new Date(Date.now() - 2 * MINUTE - 10_000),
+    });
+    await adminPool.query(
+      `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+       select id, tenant_id, 'factice-1024', array_fill(0.1, array[1024])::halfvec, acl from passages
+       where id = any($1)`,
+      [head.passageIds],
+    );
+    await adminPool.query(
+      `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
+       select tenant_id, id, created_at from passages where id = any($1)
+       on conflict do nothing`,
+      [head.passageIds],
+    );
+
+    const batch = await embedMissingBatch({ embedder: embedderFor(token) }, 3);
+
+    expect(batch).toMatchObject({ read: 3, stored: 0, removed: 3 });
+    const { rows } = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
+      [head.passageIds],
     );
     expect(rows[0]?.n).toBe(0);
   });

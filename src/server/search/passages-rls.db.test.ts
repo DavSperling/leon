@@ -212,7 +212,7 @@ describe('passages_sans_vecteur', () => {
   // Limite assez haute pour trouver ses passages dans une base partagée.
   async function missing(model: string): Promise<Array<FunctionRow & { passage_id: string }>> {
     const { rows } = await pool.query<FunctionRow & { passage_id: string }>(
-      'select passage_id, tenant_id, user_id from passages_sans_vecteur($1, 1000000)',
+      'select passage_id, tenant_id, user_id from passages_sans_vecteur($1, 1000000) where a_vectoriser',
       [model],
     );
     return rows;
@@ -310,9 +310,10 @@ describe('runs_en_attente', () => {
 
 describe('droits sur les fonctions des tics', () => {
   const FUNCTIONS = [
+    // Audit 4 n° 1 : plus un booléen, faux pour les passages que la lecture sort de la file.
     [
       'passages_sans_vecteur(text, integer)',
-      'TABLE(passage_id uuid, tenant_id uuid, user_id uuid)',
+      'TABLE(passage_id uuid, tenant_id uuid, user_id uuid, a_vectoriser boolean)',
     ],
     ['runs_en_attente(integer)', 'TABLE(run_id uuid, tenant_id uuid, user_id uuid)'],
   ] as const;

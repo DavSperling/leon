@@ -89,13 +89,14 @@ async function registerWorkers(
     await boss.schedule(PIPELINE_QUEUES.reindex, EVERY_MINUTE);
     await boss.work(PIPELINE_QUEUES.reindex, tick, async () => {
       const start = Date.now();
-      // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit, le fournisseur a échoué ou
-      // refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie seulement est écrite (textes
-      // refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
-      let batch = { read: EMBED_PER_TICK, stored: 1 };
+      // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit et aucun passage sorti de la
+      // file, le fournisseur a échoué ou refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie
+      // seulement est écrite (textes refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
+      // Audit 4 n° 1 : le lot lu compte aussi les passages que la lecture sort de la file sans les rendre.
+      let batch = { read: EMBED_PER_TICK, stored: 1, removed: 0 };
       while (
         batch.read === EMBED_PER_TICK &&
-        batch.stored > 0 &&
+        batch.stored + batch.removed > 0 &&
         Date.now() - start < EMBED_TICK_MS
       ) {
         batch = await embedMissingBatch({ embedder }, EMBED_PER_TICK).catch((error) =>

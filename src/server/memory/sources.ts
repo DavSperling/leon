@@ -102,3 +102,28 @@ export async function listSources(
     return { channels, sources: sourceRows, hasNext: found.length > SOURCES_PAGE_SIZE };
   });
 }
+
+export type KindTally = {
+  kind: SourceKind;
+  kindLabel: string;
+  sourceCount: number;
+  lastTurnAt: Date | null;
+};
+
+// Ce que la mémoire garde, outil par outil : le nombre de sources que l'utilisateur peut lire (même règle que
+// `listSources`) et la date de la plus récente. Les plus fournis d'abord.
+export async function tallyByKind(ctx: TenantContext): Promise<KindTally[]> {
+  return withTenant(ctx, async (tx) => {
+    const rows = await tx
+      .select({ kind: sources.kind, sourceCount: count(), lastTurnAt: max(sources.lastTurnAt) })
+      .from(sources)
+      .where(or(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, PROVIDER_IDS)))
+      .groupBy(sources.kind)
+      .orderBy(desc(count()), sources.kind);
+    return rows.map((row) => ({
+      ...row,
+      // Une ligne d'un outil que ce code ne connaît plus garde son identifiant comme nom.
+      kindLabel: SOURCE_KIND_LABELS[row.kind] ?? row.kind,
+    }));
+  });
+}

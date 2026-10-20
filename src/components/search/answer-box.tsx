@@ -1,6 +1,5 @@
 'use client';
 
-import { Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ContinueInDiscussion } from '@/components/discussion/continue-in-discussion';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -82,7 +81,7 @@ function AnswerText({ text, results }: { text: string; results: AnswerResult[] }
         href={`#${resultAnchorId(result.sourceId)}`}
         title={title}
         aria-label={`Résultat ${segment.ref} : ${title}`}
-        className="mx-px inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[5px] bg-primary-soft px-1 align-[1px] text-[12px] leading-none font-medium text-primary tabular-nums no-underline transition-colors hover:bg-primary hover:text-primary-foreground"
+        className="mx-px inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[5px] bg-cite-soft px-1 align-[1px] text-[12px] leading-none font-medium text-cite tabular-nums no-underline transition-colors hover:bg-cite hover:text-white"
       >
         {segment.ref}
       </a>
@@ -101,13 +100,9 @@ export function AnswerBox({ query, results }: { query: string; results: AnswerRe
     // Aligné sur la colonne des résultats quand l'aperçu a sa place à droite (voir result-list.tsx).
     <section
       aria-labelledby="reponse-en-tete"
-      className="rounded-xl border bg-card px-5 py-4 shadow-xs @[920px]:mr-[440px]"
+      className="rounded-lg border bg-card px-5 py-4 @[920px]:mr-[440px]"
     >
-      <h2
-        id="reponse-en-tete"
-        className="flex items-center gap-1.5 text-[13px] leading-[18px] font-medium text-primary"
-      >
-        <Sparkles size={15} strokeWidth={1.5} aria-hidden="true" />
+      <h2 id="reponse-en-tete" className="text-[13px] leading-[18px] font-medium">
         Réponse de Leon
       </h2>
       {/* aria-busy : un lecteur d'écran attend la fin du flux pour lire la réponse en entier. */}
@@ -131,7 +126,7 @@ export function AnswerBox({ query, results }: { query: string; results: AnswerRe
             {state.status === 'flux' && (
               <span
                 aria-hidden="true"
-                className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-primary/60 align-[-2px]"
+                className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-foreground/50 align-[-2px]"
               />
             )}
           </p>

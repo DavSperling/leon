@@ -21,23 +21,27 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Workspa
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Menu du compte, ${userName}`}
-        className="flex w-full items-center gap-3 rounded-xl border bg-card px-3 py-2.5 text-left shadow-xs transition-colors hover:bg-accent"
+        className="-mx-1 flex w-[calc(100%+0.5rem)] items-center gap-2.5 rounded-md px-1 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
       >
         <span
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted text-base font-semibold"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md bg-card text-[13px] font-medium ring-1 ring-border"
         >
           {organizationName.charAt(0).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-base leading-5 font-medium">{organizationName}</span>
-          <span className="block truncate text-sm leading-5 text-muted-foreground">{userName}</span>
+          <span className="line-clamp-2 text-[14px] leading-5 font-medium" title={organizationName}>
+            {organizationName}
+          </span>
+          <span className="block truncate text-[12px] leading-4 text-muted-foreground">
+            {userName}
+          </span>
         </span>
         <ChevronsUpDown
-          size={16}
+          size={14}
           strokeWidth={1.5}
           aria-hidden="true"
-          className="text-muted-foreground"
+          className="shrink-0 text-muted-foreground"
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">

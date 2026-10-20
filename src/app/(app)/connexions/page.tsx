@@ -1,6 +1,7 @@
 import { CircleCheck, CircleX, ExternalLink, TriangleAlert } from 'lucide-react';
 import type { Metadata } from 'next';
 import { ConnectionsCatalog } from '@/components/connections-catalog';
+import { PAGE, PageHeader } from '@/components/page-header';
 import { type OAuthNotice, oauthNotice } from '@/lib/connection-form';
 import { cn } from '@/lib/utils';
 import { requireUserContext } from '@/server/auth/session';
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: 'Connexions' };
 
 function NotConfigured() {
   return (
-    <p className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning-soft p-4 text-[15px] leading-6 text-warning">
+    <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning-soft p-4 text-[14px] leading-6 text-warning">
       <TriangleAlert size={18} strokeWidth={1.5} aria-hidden="true" className="mt-1 shrink-0" />
       <span>
         Les connecteurs ne sont pas configurés sur ce serveur : il manque la variable
@@ -33,7 +34,7 @@ function ReturnNotice({ notice, consentUrl }: { notice: OAuthNotice; consentUrl:
     <div
       role={success ? 'status' : 'alert'}
       className={cn(
-        'flex items-start gap-2 rounded-xl border p-4 text-[15px] leading-6',
+        'flex items-start gap-2 rounded-lg border p-4 text-[14px] leading-6',
         success
           ? 'border-success/30 bg-success-soft text-success'
           : 'border-destructive/30 bg-destructive-soft text-destructive',
@@ -74,14 +75,11 @@ export default async function ConnectionsPage({
   const notice = oauthNotice(await searchParams);
   const consentUrl = catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null;
   return (
-    <div className="mx-auto w-full max-w-[1000px] space-y-10 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
-      <header className="border-b pb-7">
-        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Connexions</h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          Ce que Leon lit dans vos outils est visible de toute l'équipe, sauf le texte des boîtes
-          mail, qui reste privé comme une conversation.
-        </p>
-      </header>
+    <div className={cn(PAGE, 'space-y-8')}>
+      <PageHeader
+        title="Connexions"
+        description="Ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, qui reste privé comme une conversation."
+      />
       {notice && <ReturnNotice notice={notice} consentUrl={consentUrl} />}
       {!canConnect && <NotConfigured />}
       <ConnectionsCatalog

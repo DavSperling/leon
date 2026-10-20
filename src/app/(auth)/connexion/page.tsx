@@ -13,7 +13,7 @@ const FIELDS: AuthField[] = [
 export default function SignInPage() {
   return (
     <>
-      <h1 className="mb-4 text-base font-semibold">Se connecter</h1>
+      <h1 className="mb-4 text-base font-medium">Se connecter</h1>
       <AuthForm action={signInAction} fields={FIELDS} submitLabel="Se connecter" />
       <p className="mt-4 text-[13px] leading-[18px] text-foreground-2">
         Pas encore de compte ?{' '}

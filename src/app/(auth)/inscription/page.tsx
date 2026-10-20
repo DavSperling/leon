@@ -27,7 +27,7 @@ const FIELDS: AuthField[] = [
 export default function SignUpPage() {
   return (
     <>
-      <h1 className="mb-4 text-base font-semibold">Créer un espace</h1>
+      <h1 className="mb-4 text-base font-medium">Créer un espace</h1>
       <AuthForm action={signUpAction} fields={FIELDS} submitLabel="Créer l'espace" />
       <p className="mt-4 text-[13px] leading-[18px] text-foreground-2">
         Déjà un compte ?{' '}

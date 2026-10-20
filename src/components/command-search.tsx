@@ -37,11 +37,11 @@ export function CommandSearch() {
       variant="outline"
       aria-keyshortcuts="Meta+K Control+K"
       onClick={openSearch}
-      className="h-10 w-full justify-start rounded-xl bg-card text-[15px] font-normal text-muted-foreground shadow-xs transition-colors"
+      className="h-8 w-full justify-start gap-2 rounded-md bg-card px-2 text-[14px] font-normal text-muted-foreground transition-colors"
     >
-      <Search size={16} strokeWidth={1.5} aria-hidden="true" />
+      <Search size={14} strokeWidth={1.5} aria-hidden="true" />
       <span className="flex-1 text-left">Rechercher…</span>
-      <kbd className="font-mono text-xs leading-4">⌘K</kbd>
+      <kbd className="text-[12px] leading-4">⌘K</kbd>
     </Button>
   );
 }

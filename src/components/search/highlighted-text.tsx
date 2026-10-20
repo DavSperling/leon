@@ -6,7 +6,7 @@ import { splitHighlights } from '@/lib/highlight';
 
 type Part = { text: string; hit: boolean };
 
-const MARK_CLASS = 'rounded-[3px] bg-primary-soft px-0.5 font-medium text-primary';
+const MARK_CLASS = 'rounded-[3px] bg-cite-soft px-0.5 font-medium text-foreground';
 
 function Parts({ parts }: { parts: Part[] }) {
   return parts.map((part, index) =>

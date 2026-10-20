@@ -49,13 +49,13 @@ export function ResultItem({
           </>
         )}
       </div>
-      <h2 className="mt-1 text-[18px] leading-7 font-medium">
+      <h2 className="mt-1 text-[16px] leading-6 font-medium">
         {first ? (
           <button
             type="button"
             onClick={(event) => onOpen(result, first, event.currentTarget)}
             className={cn(
-              'cursor-pointer text-left text-primary underline-offset-2 transition-colors hover:underline',
+              'cursor-pointer text-left underline-offset-2 transition-colors hover:underline',
               !result.title && 'text-muted-foreground',
             )}
           >
@@ -77,7 +77,7 @@ export function ResultItem({
                   onClick={(event) => onOpen(result, passage, event.currentTarget)}
                   className={cn(
                     '-mx-2.5 block w-[calc(100%+1.25rem)] cursor-pointer rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-muted',
-                    selected && 'bg-primary-soft hover:bg-primary-soft',
+                    selected && 'bg-accent hover:bg-accent',
                   )}
                 >
                   <span className="block text-[13px] leading-[18px] text-muted-foreground">

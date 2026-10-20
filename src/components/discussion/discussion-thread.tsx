@@ -408,7 +408,7 @@ export function DiscussionThread({
                       size={16}
                       strokeWidth={1.5}
                       aria-hidden="true"
-                      className="animate-spin text-primary"
+                      className="animate-spin text-muted-foreground"
                     />
                     {reply.status === 'attente'
                       ? 'Leon termine une réponse commencée plus tôt…'
@@ -420,7 +420,7 @@ export function DiscussionThread({
                     {reply.text}
                     <span
                       aria-hidden="true"
-                      className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-primary/60 align-[-2px]"
+                      className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-foreground/50 align-[-2px]"
                     />
                   </p>
                 )}

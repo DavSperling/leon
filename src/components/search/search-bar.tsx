@@ -41,17 +41,17 @@ export function SearchBar({
         </label>
         {pending ? (
           <LoaderCircle
-            size={20}
+            size={18}
             strokeWidth={1.5}
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 animate-spin text-primary"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
           />
         ) : (
           <Search
-            size={20}
+            size={18}
             strokeWidth={1.5}
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground"
           />
         )}
         <input
@@ -67,7 +67,7 @@ export function SearchBar({
           spellCheck={false}
           enterKeyHint="search"
           aria-busy={pending}
-          className="h-14 w-full rounded-xl border border-input bg-card pr-44 pl-12 text-[17px] shadow-xs transition-[border-color] outline-none placeholder:text-muted-foreground focus-visible:border-ring"
+          className="h-12 w-full rounded-lg border border-input bg-card pr-40 pl-11 text-[16px] transition-[border-color] outline-none placeholder:text-muted-foreground focus-visible:border-foreground focus-visible:ring-3 focus-visible:ring-foreground/10"
         />
         <div className="absolute inset-y-0 right-2 flex items-center gap-1.5">
           {value !== '' && (
@@ -83,7 +83,7 @@ export function SearchBar({
               <X size={18} strokeWidth={1.5} aria-hidden="true" />
             </button>
           )}
-          <Button type="submit" size="lg" className="h-10 shrink-0 rounded-lg px-4 text-[15px]">
+          <Button type="submit" className="h-9 shrink-0 rounded-md px-4 text-[14px]">
             Rechercher
           </Button>
         </div>

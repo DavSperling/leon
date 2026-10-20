@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, MousePointerClick, X } from 'lucide-react';
+import { CircleAlert, X } from 'lucide-react';
 import { type Ref, useEffect, useRef } from 'react';
 import { SourceChip } from '@/components/source-chip';
 import { SourceLink } from '@/components/source-link';
@@ -54,7 +54,7 @@ function Turns({ preview, terms }: { preview: PreviewView; terms: string[] }) {
             data-hit={turn.isHit ? '' : undefined}
             className={cn(
               'rounded-lg px-3 py-2.5',
-              turn.isHit ? 'border-l-2 border-primary bg-primary-soft' : 'bg-quote',
+              turn.isHit ? 'border-l-2 border-cite bg-cite-soft' : 'bg-quote',
             )}
           >
             <p className="flex flex-wrap items-baseline gap-x-2 text-[13px] leading-[18px] text-muted-foreground">
@@ -62,7 +62,7 @@ function Turns({ preview, terms }: { preview: PreviewView; terms: string[] }) {
               <time dateTime={turn.ts.toISOString()} className="tabular-nums">
                 {formatDateTime(turn.ts)}
               </time>
-              {turn.isHit && <span className="font-medium text-primary">Passage trouvé</span>}
+              {turn.isHit && <span className="font-medium text-cite">Passage trouvé</span>}
             </p>
             <p
               className={cn(
@@ -119,12 +119,14 @@ export function ResultPreview({
       tabIndex={-1}
       aria-label={label}
       className={cn(
-        'flex-col overflow-hidden rounded-xl border bg-card outline-none',
+        'flex-col overflow-hidden rounded-lg border bg-card outline-none',
+        !result && 'border-dashed bg-transparent',
         // Place pour deux colonnes : l'aperçu reste en vue à droite, vide tant qu'on n'a rien ouvert.
-        '@[920px]:sticky @[920px]:top-4 @[920px]:flex @[920px]:max-h-[calc(100dvh-21rem)] @[920px]:min-h-[22rem] @[920px]:self-start @[920px]:shadow-xs',
+        '@[920px]:sticky @[920px]:top-4 @[920px]:flex @[920px]:max-h-[calc(100dvh-21rem)] @[920px]:self-start',
+        result && '@[920px]:min-h-[22rem]',
         // Sinon, une feuille posée sur la page.
         open
-          ? 'fixed inset-x-4 bottom-4 z-40 flex max-h-[calc(100dvh-7rem)] shadow-md duration-200 ease-out animate-in fade-in-0 slide-in-from-bottom-4 @[920px]:inset-auto @[920px]:shadow-xs @[920px]:slide-in-from-right-2'
+          ? 'fixed inset-x-4 bottom-4 z-40 flex max-h-[calc(100dvh-7rem)] shadow-md duration-200 ease-out animate-in fade-in-0 slide-in-from-bottom-4 @[920px]:inset-auto @[920px]:shadow-none @[920px]:slide-in-from-right-2'
           : 'hidden',
       )}
     >
@@ -138,7 +140,7 @@ export function ResultPreview({
                   label={`${result.kindLabel} · ${result.natureLabel}`}
                 />
               )}
-              <h2 className="mt-1 text-[17px] leading-6 font-medium break-words">
+              <h2 className="mt-1 text-[16px] leading-6 font-medium break-words">
                 {result.title ?? 'Sans titre'}
               </h2>
               {result.url && (
@@ -177,15 +179,9 @@ export function ResultPreview({
           )}
         </>
       ) : (
-        <div className="hidden flex-col items-center gap-2 px-8 py-16 text-center @[920px]:flex">
-          <MousePointerClick
-            size={22}
-            strokeWidth={1.5}
-            aria-hidden="true"
-            className="text-muted-foreground"
-          />
-          <p className="text-[15px] leading-6 text-muted-foreground">{emptyHint}</p>
-        </div>
+        <p className="hidden px-5 py-4 text-[14px] leading-5 text-muted-foreground @[920px]:block">
+          {emptyHint}
+        </p>
       )}
     </aside>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { LoaderCircle, MessageSquarePlus } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import { useActionState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,8 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
     { error: null },
   );
   return (
-    <form action={action} className="rounded-xl border bg-card p-4 shadow-xs">
-      <label htmlFor="nouvelle-question" className="text-[15px] font-medium">
+    <form action={action} className="rounded-lg border bg-card p-5">
+      <label htmlFor="nouvelle-question" className="text-[16px] leading-6 font-medium">
         Nouvelle discussion
       </label>
       <textarea
@@ -27,7 +27,7 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
         aria-invalid={state.error ? true : undefined}
         aria-describedby={state.error ? 'nouvelle-question-erreur' : 'nouvelle-question-aide'}
         placeholder="Par exemple : qu’a-t-on décidé avec ACME sur le renouvellement du contrat ?"
-        className="mt-2 field-sizing-content max-h-60 min-h-24 w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive"
+        className="mt-3 field-sizing-content max-h-60 min-h-32 w-full resize-none rounded-md border border-input bg-transparent px-3 py-2.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground focus-visible:border-foreground focus-visible:ring-3 focus-visible:ring-foreground/10 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive"
       />
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         {state.error ? (
@@ -35,19 +35,17 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
             {state.error}
           </p>
         ) : (
-          <p id="nouvelle-question-aide" className="text-[14px] text-muted-foreground">
+          <p id="nouvelle-question-aide" className="text-[13px] text-muted-foreground">
             Leon cherche, lit et répond en citant ses sources.
           </p>
         )}
         <Button
           type="submit"
           disabled={disabled || pending}
-          className="h-10 gap-2 rounded-lg px-4 text-[15px]"
+          className="h-9 gap-2 rounded-md px-4 text-[14px]"
         >
-          {pending ? (
+          {pending && (
             <LoaderCircle size={16} strokeWidth={1.5} aria-hidden="true" className="animate-spin" />
-          ) : (
-            <MessageSquarePlus size={16} strokeWidth={1.5} aria-hidden="true" />
           )}
           Demander à Leon
         </Button>

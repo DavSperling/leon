@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { EmptyState } from '@/components/empty-state';
+import { PAGE, PageHeader } from '@/components/page-header';
 import { ChannelLines, SourcesPagination, SourcesTable } from '@/components/sources-table';
+import { cn } from '@/lib/utils';
 import { requireUserContext } from '@/server/auth/session';
 import { listSources } from '@/server/memory/sources';
 
@@ -18,14 +20,11 @@ export default async function SourcesPage({ searchParams }: { searchParams: Sear
   const ctx = await requireUserContext();
   const { channels, sources, hasNext } = await listSources(ctx, page);
   return (
-    <div className="mx-auto w-full max-w-[1000px] space-y-8 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
-      <header className="border-b pb-7">
-        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Sources</h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          Les conversations brutes restent privées ; ce que lisent les connexions est visible de
-          l'équipe.
-        </p>
-      </header>
+    <div className={cn(PAGE, 'space-y-6')}>
+      <PageHeader
+        title="Sources"
+        description="Les conversations brutes restent privées ; ce que lisent les connexions est visible de l’équipe."
+      />
       <ChannelLines channels={channels} />
       {sources.length === 0 && page === 1 ? (
         <EmptyState

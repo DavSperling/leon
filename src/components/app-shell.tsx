@@ -11,8 +11,8 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-// Ossature de l'espace connecté : une barre latérale sur fond gris, puis un panneau blanc qui
-// porte la page lue. Sous 1024 px la page défile, sans tiroir.
+// Ossature de l'espace connecté : une barre latérale sur le fond gris, puis la page, blanche, qui
+// porte ce qu'on lit. Sous 1024 px la page défile, sans tiroir.
 export function AppShell({
   organizationName,
   userName,
@@ -30,7 +30,7 @@ export function AppShell({
       </a>
       <ShellFrame
         rail={
-          <nav aria-label="Navigation principale" className="flex flex-col gap-5">
+          <nav aria-label="Navigation principale" className="flex min-h-0 flex-1 flex-col gap-4">
             <WorkspaceMenu
               organizationName={organizationName}
               userName={userName}
@@ -41,15 +41,13 @@ export function AppShell({
           </nav>
         }
         panel={
-          <div className="flex min-w-0 flex-1 overflow-hidden rounded-2xl border bg-card shadow-sm">
-            <main
-              id="contenu"
-              tabIndex={-1}
-              className="relative min-w-0 flex-1 overflow-y-auto scroll-smooth"
-            >
-              {children}
-            </main>
-          </div>
+          <main
+            id="contenu"
+            tabIndex={-1}
+            className="relative min-w-0 flex-1 overflow-y-auto scroll-smooth"
+          >
+            {children}
+          </main>
         }
       />
     </>

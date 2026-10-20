@@ -203,7 +203,7 @@ export function ConnectionPanel({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button size="sm" variant={connections.length > 0 ? 'outline' : 'default'}>
+        <Button size="sm" variant="outline">
           {connections.length > 0 ? 'Gérer' : 'Brancher'}
           <span className="sr-only"> {entry.label}</span>
         </Button>

@@ -1,4 +1,4 @@
-import { ExternalLink, Sparkles } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import type { DiscussionCitation } from '@/lib/discussion-events';
 import { cn } from '@/lib/utils';
 import { messageSegments } from './message-segments';
@@ -26,7 +26,7 @@ function CitationChip({
       title={titleOf(citation)}
       aria-label={`Source ${citation.n} : ${titleOf(citation)}`}
       className={cn(
-        'inline-flex h-[18px] min-w-[18px] cursor-pointer items-center justify-center rounded-[5px] bg-primary-soft px-1 align-[1px] text-[12px] leading-none font-medium text-primary tabular-nums transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring',
+        'inline-flex h-[18px] min-w-[18px] cursor-pointer items-center justify-center rounded-[5px] bg-cite-soft px-1 align-[1px] text-[12px] leading-none font-medium text-cite tabular-nums transition-colors hover:bg-cite hover:text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring',
         className,
       )}
     >
@@ -79,7 +79,7 @@ export function CitationList({
           <li key={citation.n} className="flex min-h-9 items-center gap-2.5 text-[14px] leading-5">
             <span
               aria-hidden="true"
-              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-[5px] bg-primary-soft px-1 text-[12px] font-medium text-primary tabular-nums"
+              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-[5px] bg-cite-soft px-1 text-[12px] font-medium text-cite tabular-nums"
             >
               {citation.n}
             </span>
@@ -87,7 +87,7 @@ export function CitationList({
               type="button"
               onClick={(event) => onOpen(citation, event.currentTarget)}
               className={cn(
-                'min-w-0 cursor-pointer truncate py-1.5 text-left text-primary underline-offset-2 hover:underline',
+                'min-w-0 cursor-pointer truncate py-1.5 text-left underline-offset-2 hover:underline',
                 !citation.title && 'text-muted-foreground',
               )}
             >
@@ -123,7 +123,7 @@ export function UserMessage({
   onOpen: OpenCitation;
 }) {
   return (
-    <div className="ml-auto w-fit max-w-[88%] rounded-xl bg-primary-soft px-4 py-3">
+    <div className="ml-auto w-fit max-w-[88%] rounded-lg bg-accent px-4 py-3">
       <p className="sr-only">Vous :</p>
       <p className="text-[15px] leading-6 break-words whitespace-pre-wrap text-foreground">
         {content}
@@ -138,12 +138,7 @@ export function UserMessage({
 }
 
 export function LeonHeading() {
-  return (
-    <p className="flex items-center gap-1.5 text-[13px] leading-[18px] font-medium text-primary">
-      <Sparkles size={15} strokeWidth={1.5} aria-hidden="true" />
-      Leon
-    </p>
-  );
+  return <p className="text-[13px] leading-[18px] font-medium">Leon</p>;
 }
 
 export function AssistantMessage({
@@ -156,7 +151,7 @@ export function AssistantMessage({
   onOpen: OpenCitation;
 }) {
   return (
-    <div className="rounded-xl border bg-card px-5 py-4 shadow-xs">
+    <div className="rounded-lg border bg-card px-5 py-4">
       <LeonHeading />
       <p className="mt-2 text-[15px] leading-6 break-words whitespace-pre-wrap text-foreground-2">
         <MessageText text={content} citations={citations} onOpen={onOpen} />

@@ -48,28 +48,47 @@ export function failureMessage(): string {
   return 'Échec de l’indexation.';
 }
 
+// Les canaux de capture en une bande divisée : le nom, puis l'état ; un canal en retard le dit en couleur.
 export function ChannelLines({ channels }: { channels: ChannelHealth[] }) {
   const now = new Date();
   return (
-    <ul className="flex flex-wrap gap-2 text-sm leading-5">
-      {channels.map((channel) => {
-        const { text, late } = channelLine(channel, now);
-        return (
-          <li
-            key={channel.kind}
-            className={
-              late
-                ? 'flex items-center gap-1.5 rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-warning'
-                : 'rounded-full border bg-card px-3 py-1 text-foreground-2'
-            }
-          >
-            {late && <TriangleAlert size={16} strokeWidth={1.5} aria-hidden="true" />}
-            {text}
-          </li>
-        );
-      })}
-    </ul>
+    <section aria-label="Canaux de capture" className="rounded-lg border bg-card">
+      <ul
+        className="grid divide-x"
+        style={{ gridTemplateColumns: `repeat(${channels.length}, minmax(0, 1fr))` }}
+      >
+        {channels.map((channel) => {
+          const { late } = channelLine(channel, now);
+          return (
+            <li key={channel.kind} className="px-5 py-4">
+              <SourceChip kind={channel.kind} label={channel.kindLabel} />
+              <p
+                className={cn(
+                  'mt-1.5 flex items-center gap-1.5 text-[16px] leading-6',
+                  late
+                    ? 'text-warning'
+                    : channel.lastCaptureAt
+                      ? 'text-foreground'
+                      : 'text-muted-foreground',
+                )}
+              >
+                {late && <TriangleAlert size={14} strokeWidth={1.5} aria-hidden="true" />}
+                {channelState(channel, now)}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
+}
+
+// L'état d'un canal sans son nom, pour la bande : « il y a 2 h », « aucune depuis 12 j », « jamais ».
+function channelState({ lastCaptureAt }: ChannelHealth, now: Date): string {
+  if (!lastCaptureAt) return 'Aucune capture';
+  const elapsed = now.getTime() - lastCaptureAt.getTime();
+  if (elapsed <= DAY) return `Captée ${formatRelative(lastCaptureAt, now)}`;
+  return `Aucune depuis ${Math.floor(elapsed / DAY)} j`;
 }
 
 function IndexingCell({ run }: { run: SourceRow['lastRun'] }) {
@@ -98,30 +117,45 @@ function IndexingCell({ run }: { run: SourceRow['lastRun'] }) {
 export function SourcesTable({ sources }: { sources: SourceRow[] }) {
   const now = new Date();
   return (
-    <div className="overflow-hidden rounded-xl border">
-      <Table className="text-[15px]">
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <Table className="text-[14px]">
         <TableHeader>
-          <TableRow className="bg-muted/60 hover:bg-muted/60">
-            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+          <TableRow className="hover:bg-transparent">
+            <TableHead
+              scope="col"
+              className="h-10 px-5 text-[12px] font-normal text-muted-foreground"
+            >
               Origine
             </TableHead>
-            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+            <TableHead
+              scope="col"
+              className="h-10 px-5 text-[12px] font-normal text-muted-foreground"
+            >
               Titre
             </TableHead>
-            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+            <TableHead
+              scope="col"
+              className="h-10 px-5 text-[12px] font-normal text-muted-foreground"
+            >
               Dernier tour
             </TableHead>
-            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium text-right">
+            <TableHead
+              scope="col"
+              className="h-10 px-5 text-[12px] font-normal text-muted-foreground text-right"
+            >
               Tours
             </TableHead>
-            <TableHead scope="col" className="h-11 px-5 text-[15px] font-medium">
+            <TableHead
+              scope="col"
+              className="h-10 px-5 text-[12px] font-normal text-muted-foreground"
+            >
               Indexation
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sources.map((source) => (
-            <TableRow key={source.id} className="align-top transition-colors">
+            <TableRow key={source.id} className="border-border/70 align-top transition-colors">
               <TableCell className="px-5 py-3">
                 <SourceChip kind={source.kind} label={source.kindLabel} />
               </TableCell>
@@ -166,7 +200,7 @@ const sourcesHref = (page: number) => (page > 1 ? `/sources?page=${page}` : '/so
 // Précédent et Suivant : le nombre total de sources n'est pas compté (il faudrait toutes les lire).
 export function SourcesPagination({ page, hasNext }: { page: number; hasNext: boolean }) {
   if (page === 1 && !hasNext) return null;
-  const link = cn(buttonVariants({ variant: 'outline' }), 'h-9 gap-1 rounded-lg px-3 text-[15px]');
+  const link = cn(buttonVariants({ variant: 'outline' }), 'h-8 gap-1 rounded-md px-3 text-[14px]');
   return (
     <nav aria-label="Pages de sources" className="grid grid-cols-[1fr_auto_1fr] items-center">
       {page > 1 ? (
@@ -175,7 +209,7 @@ export function SourcesPagination({ page, hasNext }: { page: number; hasNext: bo
           Précédent
         </Link>
       ) : null}
-      <p className="col-start-2 text-[15px] text-muted-foreground tabular-nums">Page {page}</p>
+      <p className="col-start-2 text-[14px] text-muted-foreground tabular-nums">Page {page}</p>
       {hasNext ? (
         <Link
           href={sourcesHref(page + 1)}

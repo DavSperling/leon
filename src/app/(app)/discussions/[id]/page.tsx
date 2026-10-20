@@ -20,21 +20,21 @@ export default async function DiscussionPage({ params }: { params: Params }) {
   if (!found) notFound();
 
   return (
-    <div className="@container mx-auto w-full max-w-[1180px] px-10 pt-10 pb-10 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
+    <div className="@container mx-auto w-full max-w-[1240px] px-10 pt-6 pb-10">
       <nav aria-label="Fil d’Ariane">
         <Link
           href="/discussions"
-          className="-ml-2 inline-flex h-9 items-center gap-1 rounded-lg px-2 text-[14px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="-ml-2 inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <ChevronLeft size={16} strokeWidth={1.5} aria-hidden="true" />
           Discussions
         </Link>
       </nav>
-      <header className="mt-3 mb-7 border-b pb-6 @[920px]:mr-[440px]">
-        <h1 className="text-[26px] leading-[34px] font-semibold tracking-tight break-words">
+      <header className="mt-2 mb-6 @[920px]:mr-[440px]">
+        <h1 className="text-[24px] leading-8 font-medium tracking-[-0.01em] break-words">
           {found.discussion.title}
         </h1>
-        <p className="mt-2 flex items-center gap-1.5 text-[14px] text-muted-foreground">
+        <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
           <Lock size={14} strokeWidth={1.5} aria-hidden="true" />
           Visible de vous seul · Leon ne lit que ce que vous avez le droit de voir.
         </p>

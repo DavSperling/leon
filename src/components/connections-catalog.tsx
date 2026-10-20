@@ -25,12 +25,14 @@ type RowProps = {
 function ToolRow({ entry, connections, viewerId, canConnect, now }: RowProps) {
   const others = otherOwnersNote(connections, viewerId);
   return (
-    <li className="flex flex-wrap items-start gap-x-4 gap-y-2 border-b px-5 py-3.5 last:border-b-0">
+    <li className="flex flex-wrap items-start gap-x-4 gap-y-2 border-b border-border/70 px-5 py-3.5 last:border-b-0">
       <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <span className="text-[15px] font-medium">{entry.label}</span>
+          <span className="text-[14px] leading-5 font-medium">{entry.label}</span>
           {!entry.available && <Tag>Bientôt</Tag>}
-          {entry.available && !entry.triedForReal && <Tag>Non essayé en réel</Tag>}
+          {entry.available && !entry.triedForReal && (
+            <span className="text-[12px] leading-4 text-muted-foreground">non essayé en réel</span>
+          )}
         </div>
         {connections.length === 0 && (
           <p className="text-[13px] leading-[18px] text-muted-foreground">Non branché</p>
@@ -76,15 +78,28 @@ export function ConnectionsCatalog({
 }) {
   const now = new Date();
   const byProvider = groupByProvider(connections);
-  return PROVIDER_FAMILIES_ORDER.map((family) => (
-    <section key={family} aria-labelledby={`famille-${family}`} className="space-y-3">
-      <h2 id={`famille-${family}`} className="text-2xl leading-8 font-semibold tracking-tight">
-        {FAMILY_LABELS[family]}
-      </h2>
-      <ul className="overflow-hidden rounded-xl border">
-        {catalog
-          .filter((entry) => entry.family === family)
-          .map((entry) => (
+  // Une famille par rangée : son nom et son compte à gauche, ses outils à droite.
+  return PROVIDER_FAMILIES_ORDER.map((family) => {
+    const entries = catalog.filter((entry) => entry.family === family);
+    const plugged = entries.filter((entry) => byProvider.has(entry.id)).length;
+    return (
+      <section
+        key={family}
+        aria-labelledby={`famille-${family}`}
+        className="grid grid-cols-[240px_minmax(0,1fr)] gap-10 border-t pt-8 first-of-type:border-t-0 first-of-type:pt-0"
+      >
+        <div className="pt-3">
+          <h2 id={`famille-${family}`} className="text-[16px] leading-6 font-medium">
+            {FAMILY_LABELS[family]}
+          </h2>
+          <p className="mt-1 text-[14px] leading-5 text-muted-foreground tabular-nums">
+            {plugged === 0
+              ? 'Aucun outil branché'
+              : `${plugged} sur ${entries.length} ${plugged > 1 ? 'branchés' : 'branché'}`}
+          </p>
+        </div>
+        <ul className="overflow-hidden rounded-lg border bg-card">
+          {entries.map((entry) => (
             <ToolRow
               key={entry.id}
               entry={entry}
@@ -94,7 +109,8 @@ export function ConnectionsCatalog({
               now={now}
             />
           ))}
-      </ul>
-    </section>
-  ));
+        </ul>
+      </section>
+    );
+  });
 }

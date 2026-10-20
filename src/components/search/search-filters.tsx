@@ -147,7 +147,7 @@ export function SearchFilters({ q, now }: { q: string; now: Date }) {
           className={cn(
             'inline-flex h-8 items-center gap-1.5 rounded-full border pr-1 pl-3 text-[14px] leading-5',
             chip.recognized
-              ? 'border-primary/20 bg-primary-soft text-primary'
+              ? 'border-foreground bg-foreground text-background'
               : 'border-warning/30 bg-warning-soft text-warning',
           )}
         >

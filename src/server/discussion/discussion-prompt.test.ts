@@ -18,6 +18,12 @@ const SEED: DiscussionCitation = {
 };
 
 describe('le système de la discussion', () => {
+  // Audit 4 n° 7 : un renvoi collé au mot (« signé[2] ») se lit mal.
+  it('demande un renvoi séparé du mot par une espace', () => {
+    expect(DISCUSSION_SYSTEM).toContain('séparé du mot par une espace');
+    expect(DISCUSSION_SYSTEM).toContain('« signé [2] »');
+  });
+
   it('exige une citation [n] après chaque affirmation, seulement avec les numéros des outils', () => {
     expect(DISCUSSION_SYSTEM).toContain('Après chaque affirmation');
     expect(DISCUSSION_SYSTEM).toContain('[2]');

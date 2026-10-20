@@ -84,6 +84,13 @@ const userText = (prompt: ReturnType<typeof buildAnswerPrompt>) => {
 const passageBlocks = (text: string) => text.match(/<passage[^>]*>[\s\S]*?<\/passage>/g) ?? [];
 
 describe('buildAnswerPrompt', () => {
+  // Audit 4 n° 7 : un renvoi collé au mot (« signé[2] ») se lit mal.
+  it('demande un renvoi séparé du mot par une espace', () => {
+    const { system } = promptFor('contrat OVH', [hit()]);
+    expect(system).toContain('séparé du mot par une espace');
+    expect(system).toContain('« signé [2] »');
+  });
+
   it('balise chaque passage avec le numéro de son résultat, l’outil, le titre et la date', () => {
     const first = hit();
     const second = hit({

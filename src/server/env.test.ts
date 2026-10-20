@@ -44,6 +44,30 @@ describe('parseEnv', () => {
     expect(() => parseEnv({ ...TEST_ENV, LEON_IP_HEADER: 'x-real-ip: 1.2.3.4' })).toThrow();
   });
 
+  // Audit 4 n° 6 : sans l'en-tête, toutes les tentatives de connexion partagent une clé de débit.
+  it('refuse de démarrer en production sans LEON_IP_HEADER, avec un message qui la nomme', () => {
+    for (const LEON_IP_HEADER of [undefined, '']) {
+      expect(() => parseEnv({ ...TEST_ENV, NODE_ENV: 'production', LEON_IP_HEADER })).toThrow(
+        /LEON_IP_HEADER.*production/s,
+      );
+    }
+  });
+
+  it('accepte LEON_IP_HEADER absente hors production et pendant `next build`', () => {
+    expect(() => parseEnv({ ...TEST_ENV, LEON_IP_HEADER: '' })).not.toThrow();
+    expect(() =>
+      parseEnv({ ...TEST_ENV, NODE_ENV: 'development', LEON_IP_HEADER: '' }),
+    ).not.toThrow();
+    expect(() =>
+      parseEnv({
+        ...TEST_ENV,
+        NODE_ENV: 'production',
+        NEXT_PHASE: 'phase-production-build',
+        LEON_IP_HEADER: '',
+      }),
+    ).not.toThrow();
+  });
+
   it('accepte une clé des connecteurs de 32 octets en base64', () => {
     const key = randomBytes(32).toString('base64');
     expect(parseEnv({ ...TEST_ENV, LEON_CONNECTORS_KEY: key }).LEON_CONNECTORS_KEY).toBe(key);

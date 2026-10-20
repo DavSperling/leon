@@ -57,6 +57,19 @@ describe('newDiscussionAction', () => {
     expect(createDiscussion).not.toHaveBeenCalled();
   });
 
+  // Audit 4 n° 8 : le formulaire envoie chaque retour à la ligne en \r\n ; le champ, qui les compte pour un,
+  // laisse passer 4 000 caractères.
+  it('accepte une question de 4 000 caractères avec des retours à la ligne envoyés en \\r\\n', async () => {
+    const lines = Array.from({ length: 100 }, (_, i) => 'x'.repeat(i === 0 ? 40 : 39));
+    const question = lines.join('\r\n');
+    expect(lines.join('\n')).toHaveLength(4000);
+
+    await expect(newDiscussionAction({ error: null }, form(question))).rejects.toThrow(
+      `NEXT_REDIRECT /discussions/${ID}`,
+    );
+    expect(createDiscussion).toHaveBeenCalledWith(CTX, { question: lines.join('\n') });
+  });
+
   it('dit un message fixe quand la création échoue, et journalise sans le texte de l’erreur', async () => {
     vi.mocked(createDiscussion).mockRejectedValue(new Error('secret : la question'));
 

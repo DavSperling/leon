@@ -24,7 +24,12 @@ export type DiscussionMessageView = {
 
 export type NewDiscussionState = { error: string | null };
 
-const QuestionSchema = z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS);
+// Un formulaire envoie chaque retour à la ligne en \r\n, que le champ compte pour un caractère : ramené à \n
+// avant de compter, sans quoi une question que le champ accepte serait refusée.
+const QuestionSchema = z.preprocess(
+  (value) => (typeof value === 'string' ? value.replaceAll('\r\n', '\n') : value),
+  z.string().trim().min(1).max(DISCUSSION_MESSAGE_MAX_CHARS),
+);
 const SourceIdsSchema = z.array(z.string().max(64)).max(PAGE_SIZE);
 
 const FAILED = 'La discussion n’a pas pu être créée. Réessayez dans un instant.';

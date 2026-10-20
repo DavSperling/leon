@@ -56,14 +56,14 @@ describe('TEST_ENV', () => {
 
   // Une variable que la tâche suivante ajoute à env.ts ne doit pas pouvoir fuir du shell : elle figure ici dès
   // son ajout. Obligatoire : une valeur fixe. Facultative : vide (absente), sauf celles qui ont une valeur fixe
-  // de test. NODE_ENV est posé par Vitest lui-même (« test »).
+  // de test. NODE_ENV est posé par Vitest lui-même (« test ») ; NEXT_PHASE, par Next seul.
   it('couvre chaque variable du schéma d’environnement', () => {
     const FACULTATIVES_A_VALEUR_FIXE = ['LEON_CONNECTORS_KEY', 'LEON_IP_HEADER'];
     const fields = EnvSchema.shape as Record<string, z.ZodType>;
     const values = TEST_ENV as Record<string, string | undefined>;
     const problems: string[] = [];
     for (const [name, field] of Object.entries(fields)) {
-      if (name === 'NODE_ENV') continue;
+      if (name === 'NODE_ENV' || name === 'NEXT_PHASE') continue;
       const value = values[name];
       const facultative = field.safeParse(undefined).success;
       if (value === undefined) problems.push(`${name} : absente de TEST_ENV`);

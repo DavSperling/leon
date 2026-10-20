@@ -28,8 +28,7 @@ const STALE_RUN_MINUTES = 5;
 // finir le dernier lot avant le tic suivant (un appel au fournisseur attend au plus 30 s, EMBED_TIMEOUT_MS).
 const EMBED_PER_TICK = 500;
 const EMBED_TICK_MS = 45_000;
-// Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis) : un changement de modèle sur un million de
-// passages se nettoie au rythme où les nouveaux vecteurs s'écrivent.
+// Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis), une fois les nouveaux écrits (audit 3 n° 4).
 const OLD_VECTORS_PER_TICK = 5000;
 const EVERY_MINUTE = '* * * * *';
 
@@ -103,9 +102,13 @@ async function registerWorkers(
           rethrowSummary('search.embed_tick_failed', error),
         );
       }
-      await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
-        rethrowSummary('search.drop_old_vectors_failed', error),
-      );
+      // Audit 3 n° 4 : seulement quand le tic n'a plus rien trouvé à vectoriser (dernier lot lu incomplet) : ni
+      // pendant un rattrapage, ni quand le temps du tic est écoulé.
+      if (batch.read < EMBED_PER_TICK) {
+        await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
+          rethrowSummary('search.drop_old_vectors_failed', error),
+        );
+      }
     });
   } else {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base : il remplirait

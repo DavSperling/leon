@@ -176,6 +176,27 @@ describe('startSearchWorker', () => {
     expect(mocks.dropOldVectors).toHaveBeenCalledExactlyOnceWith(embedder.model, 5000);
   });
 
+  // Audit 3 n° 4 : le retrait passait même quand le tic s'arrêtait avec des passages encore à vectoriser.
+  it('ne retire les vieux vecteurs que quand le tic n’a plus rien trouvé à vectoriser', async () => {
+    mocks.embedMissingBatch.mockResolvedValue({ read: 500, stored: 0 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.dropOldVectors).not.toHaveBeenCalled();
+  });
+
+  it('retire les vieux vecteurs après le dernier lot, incomplet', async () => {
+    mocks.embedMissingBatch
+      .mockResolvedValueOnce({ read: 500, stored: 500 })
+      .mockResolvedValue({ read: 120, stored: 120 });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.dropOldVectors).toHaveBeenCalledOnce();
+  });
+
   it('rend la main au bout de 45 secondes, même s’il en reste', async () => {
     let now = 0;
     vi.spyOn(Date, 'now').mockImplementation(() => now);
@@ -188,6 +209,7 @@ describe('startSearchWorker', () => {
     await handlerOf('pipeline-reindex')();
 
     expect(mocks.embedMissingBatch).toHaveBeenCalledTimes(3);
+    expect(mocks.dropOldVectors).not.toHaveBeenCalled();
   });
 
   it('ne lit pas la file des vecteurs et retire son tic planifié quand aucun fournisseur n’est réglé', async () => {

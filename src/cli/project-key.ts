@@ -24,22 +24,28 @@ export function gitEnvironment(source: Record<string, string | undefined>): Reco
   return env;
 }
 
-// Lance git dans un dossier ; null si git manque, si le dossier n'existe pas ou si la commande échoue.
-// Ni la sortie d'erreur ni le message de l'échec ne sortent d'ici : une adresse de remote peut porter un jeton.
-export const gitInDirectory: GitRunner = (args, cwd) =>
-  new Promise((done) => {
-    execFile(
-      'git',
-      args,
-      {
-        cwd,
-        timeout: GIT_TIMEOUT_MS,
-        maxBuffer: 64 * 1024,
-        env: gitEnvironment(process.env) as NodeJS.ProcessEnv,
-      },
-      (error, stdout) => done(error ? null : stdout.trim() || null),
-    );
-  });
+// Lance git dans un dossier ; null si git manque, si le dossier n'existe pas, si la commande échoue ou dépasse
+// `timeoutMs`. Ni la sortie d'erreur ni le message de l'échec ne sortent d'ici : une adresse de remote peut porter un
+// jeton.
+export function gitRunner(timeoutMs: number): GitRunner {
+  return (args, cwd) =>
+    new Promise((done) => {
+      execFile(
+        'git',
+        args,
+        {
+          cwd,
+          timeout: timeoutMs,
+          maxBuffer: 64 * 1024,
+          env: gitEnvironment(process.env) as NodeJS.ProcessEnv,
+        },
+        (error, stdout) => done(error ? null : stdout.trim() || null),
+      );
+    });
+}
+
+// Le git des commandes : il ne retient jamais un crochet de Claude Code plus de GIT_TIMEOUT_MS.
+export const gitInDirectory: GitRunner = gitRunner(GIT_TIMEOUT_MS);
 
 // « propriétaire/dépôt » d'une adresse GitHub (https, ssh, git, ou la forme courte git@github.com:p/d), sinon null.
 // Les identifiants éventuels de l'adresse ne sont jamais lus : seuls l'hôte et le chemin comptent.

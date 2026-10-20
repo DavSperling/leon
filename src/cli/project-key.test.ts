@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
-import { gitEnvironment, gitInDirectory, projectKeyFor } from './project-key';
+import { gitEnvironment, gitRunner, projectKeyFor } from './project-key';
 
 const run = promisify(execFile);
 
@@ -161,7 +161,12 @@ describe('projectKeyFor : repli sur le dossier', () => {
   });
 });
 
-describe('gitInDirectory : avec le vrai git, dans un dossier temporaire', () => {
+// Le vrai git, avec un délai large : quand toute la suite tourne, lancer un processus peut prendre plus que les 3 s
+// des commandes, et le test échouerait sans rapport avec ce qu'il vérifie.
+const REAL_GIT_TIMEOUT_MS = 20_000;
+const realGit = gitRunner(REAL_GIT_TIMEOUT_MS);
+
+describe('gitRunner : avec le vrai git, dans un dossier temporaire', { timeout: 30_000 }, () => {
   let dir: string;
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'leon-projet-'));
@@ -180,7 +185,7 @@ describe('gitInDirectory : avec le vrai git, dans un dossier temporaire', () => 
       },
     );
 
-    const key = await projectKeyFor(dir, gitInDirectory);
+    const key = await projectKeyFor(dir, realGit);
 
     expect(key).toBe('github.com/acme/leon');
   });
@@ -191,13 +196,13 @@ describe('gitInDirectory : avec le vrai git, dans un dossier temporaire', () => 
     const sub = join(dir, 'src');
     await run('mkdir', [sub]);
 
-    expect(await projectKeyFor(sub, gitInDirectory)).toBe('github.com/acme/leon');
+    expect(await projectKeyFor(sub, realGit)).toBe('github.com/acme/leon');
   });
 
   it("un dossier sans dépôt, ou qui n'existe pas, donne la clé du dossier", async () => {
-    expect(await projectKeyFor(dir, gitInDirectory)).toBe(dossierKey(dir));
+    expect(await projectKeyFor(dir, realGit)).toBe(dossierKey(dir));
     const absent = join(dir, 'absent');
-    expect(await projectKeyFor(absent, gitInDirectory)).toBe(dossierKey(absent));
+    expect(await projectKeyFor(absent, realGit)).toBe(dossierKey(absent));
   });
 });
 
@@ -239,7 +244,7 @@ describe('gitEnvironment : ce que reçoit git', () => {
       vi.stubEnv('ANTHROPIC_API_KEY', SECRETS_IN_ENV.ANTHROPIC_API_KEY);
       vi.stubEnv('GITHUB_TOKEN', SECRETS_IN_ENV.GITHUB_TOKEN);
 
-      const seen = await gitInDirectory(['remote', 'get-url', 'origin'], dir);
+      const seen = await realGit(['remote', 'get-url', 'origin'], dir);
 
       const names = (seen ?? '').split('\n');
       expect(names).toContain('GIT_TERMINAL_PROMPT');

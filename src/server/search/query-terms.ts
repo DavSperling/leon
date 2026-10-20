@@ -358,6 +358,15 @@ function wideWords(candidates: Candidate[]): string[] {
     .map((candidate) => candidate.word);
 }
 
+// Le texte sans ses mots ni expressions niés (« -facture », -"note de frais ») : ce que le sens de la requête
+// doit porter (vecteur, proximité du titre).
+export function withoutNegations(text: string): string {
+  return tokenize(text)
+    .filter((token) => token.kind !== 'negation')
+    .map((token) => token.raw)
+    .join(' ');
+}
+
 export function queryTerms(text: string): QueryTerms {
   const tokens = tokenize(text);
   const caseless = isCaseless(tokens);

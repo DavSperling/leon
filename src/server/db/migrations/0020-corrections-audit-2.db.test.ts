@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
-import { beforeAll, expect, it, vi } from 'vitest';
+import { beforeAll, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { adminPool } from '@/test/db';
+import { adminPool, oneQueueTestAtATime } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedPassages } from '@/test/seed-search';
 
@@ -53,9 +53,11 @@ async function vectorizeEverything(client: PoolClient, model: string): Promise<v
      select $1, $2, $3, g, 'Passage ' || g, 0, 7, now(), array[$4::uuid] from generate_series(0, 2999) g`,
     [alice.tenantId, source?.id, turn?.id, alice.userId],
   );
+  // Sauf ceux qu'une suppression des autres fichiers tient (ils disparaissent) : les attendre pourrait interbloquer.
   await client.query(
     `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
-     select id, tenant_id, $1, array_fill(0.1, array[1024])::halfvec, acl from passages`,
+     select id, tenant_id, $1, array_fill(0.1, array[1024])::halfvec, acl from passages
+     for key share skip locked`,
     [model],
   );
   for (const table of ['passages', 'passage_vectors', 'passages_a_vectoriser']) {
@@ -65,7 +67,11 @@ async function vectorizeEverything(client: PoolClient, model: string): Promise<v
 
 // Les lignes de ces tables lues par `call` (l'appel réel d'une fonction), au deuxième appel : le premier fait le
 // travail laissé par les autres fichiers de test (vieux vecteurs de leurs passages). Dans une transaction annulée.
-async function rowsReadBy(call: string): Promise<Record<string, number>> {
+function rowsReadBy(call: string): Promise<Record<string, number>> {
+  return oneQueueTestAtATime(() => rowsReadInTransaction(call));
+}
+
+async function rowsReadInTransaction(call: string): Promise<Record<string, number>> {
   const client = await adminPool.connect();
   try {
     await client.query('begin');
@@ -113,41 +119,32 @@ it('le retrait des vieux vecteurs ne lit pas la table des vecteurs en entier', a
 // Audit 2 n° 1 (suite) : le remplissage de la file au changement de modèle prenait un verrou partagé sur les vecteurs
 // avant de vider la file. La suppression d'une source retire en cascade les lignes de la file, puis les vecteurs :
 // elle attendait le remplissage, qui l'attendait (interblocage).
-it('remplit la file d’un nouveau modèle sans interblocage avec une suppression en cours', async () => {
-  const [passageId] = (await seedPassages(alice, { count: 1, token: randomUUID() })).passageIds as [
-    string,
-  ];
-  const deleting = await adminPool.connect();
-  const filling = await adminPool.connect();
-  try {
-    await deleting.query('begin');
-    // La cascade d'une suppression : la file d'abord…
-    await deleting.query('delete from passages_a_vectoriser where passage_id = $1', [passageId]);
-    const {
-      rows: [backend],
-    } = await filling.query<{ pid: number }>('select pg_backend_pid() as pid');
-    const fill = filling
-      .query('select count(*) from passages_sans_vecteur($1, 1)', [`modele-${randomUUID()}`])
-      .then(
-        () => 'rempli',
-        (error: Error) => error.message,
-      );
-    await vi.waitFor(async () => {
-      const { rows } = await adminPool.query<{ wait: string | null }>(
-        'select wait_event_type as wait from pg_stat_activity where pid = $1',
-        [backend?.pid],
-      );
-      expect(rows[0]?.wait).toBe('Lock');
-    });
-    // … puis les vecteurs.
-    await deleting.query('delete from passage_vectors where passage_id = $1', [passageId]);
-    await deleting.query('commit');
+it('remplit la file d’un nouveau modèle sans interblocage avec une suppression en cours', () =>
+  oneQueueTestAtATime(async () => {
+    const [passageId] = (await seedPassages(alice, { count: 1, token: randomUUID() }))
+      .passageIds as [string];
+    const deleting = await adminPool.connect();
+    const filling = await adminPool.connect();
+    try {
+      await deleting.query('begin');
+      // La cascade d'une suppression : la file d'abord…
+      await deleting.query('delete from passages_a_vectoriser where passage_id = $1', [passageId]);
+      // Audit 3 n° 1 : le remplissage n'attend plus la suppression (il saute ce qu'elle tient) : il finit avant elle.
+      const fill = await filling
+        .query('select count(*) from passages_sans_vecteur($1, 1)', [`modele-${randomUUID()}`])
+        .then(
+          () => 'rempli',
+          (error: Error) => error.message,
+        );
+      // … puis les vecteurs.
+      await deleting.query('delete from passage_vectors where passage_id = $1', [passageId]);
+      await deleting.query('commit');
 
-    expect(await fill).toBe('rempli');
-  } finally {
-    await deleting.query('rollback');
-    deleting.release();
-    filling.release();
-    await adminPool.query('delete from passages where id = $1', [passageId]);
-  }
-});
+      expect(fill).toBe('rempli');
+    } finally {
+      await deleting.query('rollback');
+      deleting.release();
+      filling.release();
+      await adminPool.query('delete from passages where id = $1', [passageId]);
+    }
+  }));

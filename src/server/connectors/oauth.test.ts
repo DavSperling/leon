@@ -6,7 +6,7 @@ import { fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import type { LoadedConnection } from './connections';
 import { githubOAuth } from './github/oauth';
-import { createConnectorHttp } from './http';
+import { ConnectorHttpError, createConnectorHttp } from './http';
 import { hubspotOAuth } from './hubspot/oauth';
 import { atlassianOAuth } from './jira/oauth';
 import { miroOAuth } from './miro/oauth';
@@ -546,12 +546,19 @@ describe('ensureFreshTokens', () => {
     expect(fetchImpl.calls).toHaveLength(0);
   });
 
-  it('lève OAuthRefusedError quand l’appli n’est plus configurée', async () => {
+  // Audit 3 n° 16 : une erreur ordinaire, réessayée plus tard, et non un refus de l'éditeur.
+  it('lève une erreur ordinaire quand l’appli n’est plus configurée sur ce serveur', async () => {
     vi.stubEnv('LEON_OAUTH_GITHUB_SECRET', '');
 
-    await expect(
-      ensureFreshTokens(ctx, connection(oauthConfig()), connector, deps(fakeFetch([]))),
-    ).rejects.toBeInstanceOf(OAuthRefusedError);
+    const error = await ensureFreshTokens(
+      ctx,
+      connection(oauthConfig()),
+      connector,
+      deps(fakeFetch([])),
+    ).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ConnectorHttpError);
+    expect(error).not.toBeInstanceOf(OAuthRefusedError);
+    expect((error as Error).message).toBe("L'appli GitHub n'est plus configurée sur ce serveur.");
   });
 
   it('lève OAuthRefusedError quand l’éditeur refuse le renouvellement, sans rien enregistrer', async () => {

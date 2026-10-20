@@ -567,6 +567,23 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect(await hintOf(id)).toBe('0009');
   });
 
+  // Audit 3 n° 16 : l'appli retirée du serveur (variables effacées) n'est pas un refus de l'éditeur.
+  it('erreur ordinaire, nouvel essai dans une heure, quand l’appli OAuth n’est plus configurée', async () => {
+    const id = await oauthConnection({ expiresAt: inMinutes(1) });
+    vi.unstubAllEnvs();
+    const fetchImpl = fakeFetch([]);
+
+    expect(await run(id, fakeOAuthConnector(), { fetchImpl })).toBe('error');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    const row = await readRow(id);
+    expect(row).toMatchObject({
+      status: 'error',
+      last_error: "L'appli GitHub n'est plus configurée sur ce serveur.",
+    });
+    expectDelayAbout(row, 60 * MINUTE);
+  });
+
   it('dit que l’autorisation a été retirée, sans renouveler, quand il n’y a pas de jeton de rafraîchissement', async () => {
     const id = await oauthConnection({ refreshToken: null });
     const fetchImpl = fakeFetch([]);

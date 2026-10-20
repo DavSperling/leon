@@ -236,6 +236,15 @@ type MissingRow = { passage_id: string; tenant_id: string; user_id: string };
 // le fournisseur échoue n'empêche pas les suivantes, sauf s'il ne répond plus : le tic s'arrête alors (il
 // attendrait EMBED_TIMEOUT_MS pour chaque organisation) et reprend au suivant. Rend le nombre de vecteurs écrits.
 export async function embedMissing(deps: { embedder: Embedder }, limit: number): Promise<number> {
+  return (await embedMissingBatch(deps, limit)).stored;
+}
+
+// Le même, qui rend aussi le nombre de passages lus dans la file : le tic continue tant que le lot lu est plein
+// (audit 3 n° 3).
+export async function embedMissingBatch(
+  deps: { embedder: Embedder },
+  limit: number,
+): Promise<{ read: number; stored: number }> {
   const { embedder } = deps;
   const { rows } = await db.execute<MissingRow>(
     sql`select passage_id, tenant_id, user_id from passages_sans_vecteur(${embedder.model}, ${limit})`,
@@ -276,7 +285,7 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
       logError('search.embed_missing_failed', error, { tenantId: group.tenantId });
     }
   }
-  return total;
+  return { read: rows.length, stored: total };
 }
 
 // Retire au plus `limit` vecteurs des autres modèles, seulement pour les passages qui ont déjà celui de `model`

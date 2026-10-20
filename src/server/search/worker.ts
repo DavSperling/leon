@@ -8,7 +8,7 @@ import {
   PipelineJobSchema,
 } from '@/server/pipeline/queue';
 import { failRun } from '@/server/pipeline/runs';
-import { dropOldVectors, embedMissing, requeueStaleRuns } from './embed-missing';
+import { dropOldVectors, embedMissingBatch, requeueStaleRuns } from './embed-missing';
 import { indexIngestRun } from './index-run';
 
 // Le worker de la recherche (C5) : il lit la file `index`, et deux tics par minute reprennent ce qui est
@@ -90,10 +90,16 @@ async function registerWorkers(
     await boss.schedule(PIPELINE_QUEUES.reindex, EVERY_MINUTE);
     await boss.work(PIPELINE_QUEUES.reindex, tick, async () => {
       const start = Date.now();
-      // Un lot incomplet : il n'en reste plus, ou le fournisseur a échoué (le tic suivant reprendra).
-      let stored = EMBED_PER_TICK;
-      while (stored === EMBED_PER_TICK && Date.now() - start < EMBED_TICK_MS) {
-        stored = await embedMissing({ embedder }, EMBED_PER_TICK).catch((error) =>
+      // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit, le fournisseur a échoué ou
+      // refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie seulement est écrite (textes
+      // refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
+      let batch = { read: EMBED_PER_TICK, stored: 1 };
+      while (
+        batch.read === EMBED_PER_TICK &&
+        batch.stored > 0 &&
+        Date.now() - start < EMBED_TICK_MS
+      ) {
+        batch = await embedMissingBatch({ embedder }, EMBED_PER_TICK).catch((error) =>
           rethrowSummary('search.embed_tick_failed', error),
         );
       }

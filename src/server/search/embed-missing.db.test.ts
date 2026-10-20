@@ -13,7 +13,12 @@ import {
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
-import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
+import {
+  EMBEDDING_DIMS,
+  type Embedder,
+  EmbedderError,
+  EmbedderRefusal,
+} from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
@@ -173,6 +178,54 @@ describe('embedMissing', () => {
     expect(await vectorsOf(zoe, accepted.passageIds)).toHaveLength(2);
     expect(logged).not.toContain(tokenA);
     expect(logged).not.toContain('Passage');
+  });
+
+  // Audit 2 n° 9 a : un texte que le fournisseur refuse faisait échouer tout son lot, à chaque tic, pour toujours.
+  it('réessaie texte par texte un lot refusé, puis sort de la file les textes encore refusés', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const good = await seedPassages(alice, { count: 3, token });
+    const [refused] = (await seedPassages(alice, { count: 1, token: `${token} illisible` }))
+      .passageIds as [string];
+    const strict = embedderFor(token);
+    const picky: Embedder = {
+      model: strict.model,
+      embed: (texts, kind) =>
+        texts.some((text) => text.includes('illisible'))
+          ? Promise.reject(new EmbedderRefusal('texte refusé'))
+          : strict.embed(texts, kind),
+    };
+
+    const done = await embedMissing({ embedder: picky }, BIG);
+    const again = await embedMissing({ embedder: strict }, BIG);
+
+    expect(done).toBe(3);
+    expect(await vectorsOf(alice, good.passageIds)).toHaveLength(3);
+    // Sorti de la file : même un fournisseur qui l'accepterait ne le revoit plus (le plein texte le trouve).
+    expect(again).toBe(0);
+    expect(await vectorsOf(alice, [refused])).toHaveLength(0);
+  });
+
+  // Un fournisseur qui refuse tous les textes, même un par un, se trompe (réglage, panne) : rien ne sort de la file.
+  // Un fournisseur en panne n'est pas réinterrogé texte par texte.
+  it('laisse dans la file un lot dont aucun texte ne passe, et ne réessaie pas une panne', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 2, token });
+    const refusing: Embedder = {
+      model: 'factice-1024',
+      embed: vi.fn(() => Promise.reject(new EmbedderRefusal('fournisseur mal réglé (400)'))),
+    };
+    const down: Embedder = {
+      model: 'factice-1024',
+      embed: vi.fn(() => Promise.reject(new EmbedderError('fournisseur indisponible (503)'))),
+    };
+
+    expect(await embedMissing({ embedder: refusing }, BIG)).toBe(0);
+    expect(await embedMissing({ embedder: down }, BIG)).toBe(0);
+    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(2);
+    expect(await vectorsOf(alice, seeded.passageIds)).toHaveLength(2);
+    // Les autres fichiers laissent des passages d'autres organisations dans la file : un appel par lot.
+    const calls = vi.mocked(down.embed).mock.calls;
+    expect(calls.filter(([texts]) => texts.some((text) => text.includes(token)))).toHaveLength(1);
   });
 
   it('poursuit avec les autres organisations quand l’écriture échoue pour l’une d’elles, sans rien journaliser du texte', async () => {

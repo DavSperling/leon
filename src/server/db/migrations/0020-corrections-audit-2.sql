@@ -124,3 +124,16 @@ end
 $$;
 revoke all on function retirer_vieux_vecteurs(text, integer) from public;
 grant execute on function retirer_vieux_vecteurs(text, integer) to leon_app;
+
+-- Audit 2 n° 9 a : un texte que le fournisseur refuse, même seul, sort de la file (embedPassages) ; le plein texte
+-- le trouve toujours. Seulement pour les passages de l'organisation courante, et si la file sert ce modèle (un
+-- script d'essai sur un autre modèle n'y touche pas). Il y revient au changement de modèle.
+create function sortir_de_la_file(p_model text, p_passages uuid[])
+returns void
+language sql volatile security definer set search_path = public as $$
+  delete from passages_a_vectoriser q
+  using passages_a_vectoriser_modele m
+  where m.model = p_model and q.tenant_id = app_tenant() and q.passage_id = any(p_passages)
+$$;
+revoke all on function sortir_de_la_file(text, uuid[]) from public;
+grant execute on function sortir_de_la_file(text, uuid[]) to leon_app;

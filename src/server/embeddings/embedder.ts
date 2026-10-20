@@ -30,3 +30,7 @@ export interface Embedder {
 export class EmbedderError extends Error {
   override name = 'EmbedderError';
 }
+
+// Le fournisseur refuse les textes envoyés (réponse 400, 413 ou 422) : pas une panne, l'appelant peut les redemander
+// un par un pour écarter celui qui ne passe pas (audit 2 n° 9 a).
+export class EmbedderRefusal extends EmbedderError {}

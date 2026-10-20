@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TEST_ENV } from '@/test/test-env';
 import { parseEnv } from '../env';
-import { EMBEDDING_DIMS, EmbedderError } from './embedder';
+import { EMBEDDING_DIMS, EmbedderError, EmbedderRefusal } from './embedder';
 import { createOpenRouterEmbedder } from './openrouter-embedder';
 import { getEmbedder } from './registry';
 
@@ -42,6 +42,21 @@ describe('createOpenRouterEmbedder', () => {
     await expect(
       createOpenRouterEmbedder({ apiKey: 'k', model: 'm' }, down.impl).embed(['a'], 'requete'),
     ).rejects.toThrow('OpenRouter : réponse 500');
+  });
+
+  // Audit 2 n° 9 a : un refus des textes se redemande texte par texte ; une panne, non.
+  it('distingue un refus des textes (400, 413, 422) d’une panne du service', async () => {
+    const embedWith = (status: number) =>
+      createOpenRouterEmbedder(
+        { apiKey: 'k', model: 'm' },
+        fakeFetch(() => new Response('', { status })).impl,
+      ).embed(['a'], 'document');
+    for (const status of [400, 413, 422]) {
+      await expect(embedWith(status)).rejects.toBeInstanceOf(EmbedderRefusal);
+    }
+    for (const status of [401, 429, 500, 503]) {
+      await expect(embedWith(status)).rejects.not.toBeInstanceOf(EmbedderRefusal);
+    }
   });
 });
 

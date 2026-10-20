@@ -5,20 +5,15 @@ import { useState } from 'react';
 import { ConnectionPanel } from '@/components/connection-panel';
 import { ToolLogo } from '@/components/tool-logo';
 import { formatNumber, formatRelative } from '@/lib/format';
-import { FAMILY_LABELS, PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
+import {
+  FAMILY_LABELS,
+  PROVIDER_FAMILIES_ORDER,
+  type ProviderFamily,
+  readsOf,
+} from '@/lib/providers';
 import { cn } from '@/lib/utils';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
-
-// Ce que Leon lit dans chaque famille d'outils : la ligne sous le nom de l'outil.
-const FAMILY_READS: Record<ProviderFamily, string> = {
-  dev: 'Tickets, pull requests et pages',
-  reunions: 'Comptes rendus et transcriptions',
-  projet: 'Tâches, projets et documents',
-  crm: 'Contacts, entreprises et notes',
-  support: 'Conversations clients',
-  mails: 'Mails et agenda, privés à leur boîte',
-};
 
 type Health = 'active' | 'paused' | 'error';
 
@@ -115,9 +110,9 @@ function PluggedCard({
           </div>
           <p
             className="truncate text-[12.5px] leading-[18px] text-muted-foreground"
-            title={FAMILY_READS[entry.family]}
+            title={readsOf(entry.id, entry.family)}
           >
-            {FAMILY_READS[entry.family]}
+            {readsOf(entry.id, entry.family)}
           </p>
         </div>
         <HealthPill health={toolHealth(connections)} />
@@ -175,7 +170,7 @@ function CatalogCard({ entry, connections, viewerId, canConnect }: ToolProps) {
           <Beta entry={entry} />
         </div>
         <p className="truncate text-[12.5px] leading-[18px] text-muted-foreground">
-          {entry.available ? FAMILY_READS[entry.family] : 'Bientôt'}
+          {entry.available ? readsOf(entry.id, entry.family) : 'Bientôt'}
         </p>
       </div>
       {entry.available && (

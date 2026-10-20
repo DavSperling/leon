@@ -21,6 +21,27 @@ export const FAMILY_LABELS: Record<ProviderFamily, string> = {
   mails: 'Mails et agenda',
 };
 
+// Ce que Leon lit dans chaque famille d'outils, en une ligne.
+export const FAMILY_READS: Record<ProviderFamily, string> = {
+  dev: 'Tickets, pull requests et pages',
+  reunions: 'Comptes rendus et transcriptions',
+  projet: 'Tâches, projets et documents',
+  crm: 'Contacts, entreprises et notes',
+  support: 'Conversations clients',
+  mails: 'Mails et agenda, privés à leur boîte',
+};
+
+// Quand la ligne de la famille ne dit pas juste pour un outil.
+const TOOL_READS: Partial<Record<ProviderId, string>> = {
+  github: 'Tickets et pull requests, avec leurs commentaires',
+  notion: 'Pages partagées et leurs commentaires',
+  linear: 'Tickets, projets et leurs commentaires',
+  sentry: 'Erreurs et leurs occurrences',
+};
+
+export const readsOf = (id: ProviderId, family: ProviderFamily): string =>
+  TOOL_READS[id] ?? FAMILY_READS[family];
+
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   github: 'GitHub',
   notion: 'Notion',

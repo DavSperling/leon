@@ -106,7 +106,7 @@ describe('guide de vérification : brancher par bouton', () => {
   // Les boutons et messages que le guide demande de cliquer ou de lire existent dans l'interface.
   it.each([
     'Se connecter avec',
-    'ou coller une clé',
+    'Options avancées : coller une clé d’API',
     'Reconnecter',
     'Le lien a expiré, recommencez.',
     'annulée.',

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, ExternalLink, TriangleAlert } from 'lucide-react';
+import { Check, ChevronDown, ExternalLink, Lock, TriangleAlert } from 'lucide-react';
 import { useId, useState } from 'react';
 import { connectAction } from '@/app/(app)/connexions/actions';
 import { ConnectionControls } from '@/components/connection-controls';
@@ -11,6 +11,7 @@ import {
   useKeyForm,
   valuesOf,
 } from '@/components/connection-fields';
+import { ToolLogo } from '@/components/tool-logo';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -32,6 +33,7 @@ import {
   SINCE_VALUES,
   type SinceDays,
 } from '@/lib/connection-form';
+import { readsOf } from '@/lib/providers';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 
@@ -92,7 +94,11 @@ function ConnectForm({ entry }: { entry: CatalogItem }) {
         <FieldInput key={field.name} field={field} idPrefix={idPrefix} disabled={pending} />
       ))}
       <SinceSelect idPrefix={idPrefix} disabled={pending} />
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button
+        type="submit"
+        disabled={pending}
+        className="h-11 w-full rounded-xl text-[15px] font-semibold"
+      >
         {pending ? 'Test en cours…' : 'Tester et brancher'}
       </Button>
       <FormMessage result={result} />
@@ -107,14 +113,35 @@ function OAuthForm({ entry }: { entry: CatalogItem }) {
   const fields = entry.fields.filter((field) => entry.oauthPreFields.includes(field.name));
   return (
     <form method="post" action={oauthStartPath(entry.id)} className="space-y-4">
-      {entry.oauthHelp && <p className="text-sm leading-6 text-foreground-2">{entry.oauthHelp}</p>}
       {fields.map((field) => (
         <FieldInput key={field.name} field={field} idPrefix={idPrefix} />
       ))}
       <SinceSelect idPrefix={idPrefix} />
-      <Button type="submit" size="sm">
+      <Button type="submit" className="h-11 w-full gap-2.5 rounded-xl text-[15px] font-semibold">
+        <span className="flex size-6 items-center justify-center rounded-md bg-white">
+          {/* biome-ignore lint/performance/noImgElement: un SVG local de 1 Ko */}
+          <img src={`/logos/${entry.id}.svg`} alt="" width={14} height={14} />
+        </span>
         Se connecter avec {entry.label}
       </Button>
+      <p className="flex items-center justify-center gap-1.5 text-[12.5px] text-muted-foreground">
+        <Lock size={12} strokeWidth={1.75} aria-hidden="true" />
+        Leon ne voit jamais votre mot de passe {entry.label}.
+      </p>
+      {entry.oauthHelp && (
+        <details className="group rounded-xl bg-muted px-4 py-3 text-[13px] leading-5 text-foreground-2">
+          <summary className="cursor-pointer list-none font-medium text-foreground">
+            Ce que {entry.label} va vous demander
+            <ChevronDown
+              size={14}
+              strokeWidth={1.75}
+              aria-hidden="true"
+              className="ml-1 inline transition-transform group-open:rotate-180"
+            />
+          </summary>
+          <p className="mt-2">{entry.oauthHelp}</p>
+        </details>
+      )}
       {entry.adminConsentUrl && (
         <p className="text-[13px] leading-[18px] text-foreground-2">
           {ADMIN_CONSENT_MESSAGE}{' '}
@@ -140,7 +167,7 @@ function KeyFallback({ entry }: { entry: CatalogItem }) {
     <Collapsible className="space-y-4">
       <CollapsibleTrigger asChild>
         <Button type="button" variant="link" size="sm" className="h-auto p-0">
-          ou coller une clé
+          Options avancées : coller une clé d’API
           <ChevronDown
             size={14}
             strokeWidth={1.5}
@@ -177,7 +204,7 @@ function AddConnection({ entry }: { entry: CatalogItem }) {
 
 function Notice({ text }: { text: string }) {
   return (
-    <p className="flex items-start gap-1.5 text-[13px] leading-[18px] text-warning">
+    <p className="flex items-start gap-2 rounded-xl border border-warning/25 bg-warning-soft px-4 py-3 text-[13px] leading-[18px] text-warning">
       <TriangleAlert size={14} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0" />
       {text}
     </p>
@@ -208,34 +235,65 @@ export function ConnectionPanel({
           <span className="sr-only"> {entry.label}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{entry.label}</DialogTitle>
-          <DialogDescription>
-            Ce que Leon lit dans {entry.label} est visible de toute l'équipe.
+      <DialogContent className="max-h-[90dvh] gap-5 overflow-y-auto p-7 sm:max-w-[520px]">
+        <DialogHeader className="items-start gap-0 text-left">
+          <ToolLogo id={entry.id} size={56} />
+          <DialogTitle className="mt-4 font-heading text-[28px] leading-8 font-normal">
+            {connections.length > 0 ? entry.label : `Connecter ${entry.label} à Leon`}
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-[14px]">
+            {entry.family === 'mails'
+              ? 'Le texte des mails reste privé à sa boîte, comme une conversation.'
+              : `Ce que Leon lit dans ${entry.label} est visible de toute l'équipe.`}
           </DialogDescription>
         </DialogHeader>
+        <ul className="space-y-2 text-[14px] leading-5">
+          {[
+            `Leon lit : ${readsOf(entry.id, entry.family).toLowerCase()}.`,
+            'Vous choisissez jusqu’où remonter dans le temps.',
+            'Pause ou suppression à tout moment, depuis cette fenêtre.',
+          ].map((line) => (
+            <li key={line} className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <Check size={11} strokeWidth={2.5} aria-hidden="true" />
+              </span>
+              {line}
+            </li>
+          ))}
+        </ul>
         {entry.warning && <Notice text={entry.warning} />}
         {others && <Notice text={`${others} Évitez de brancher deux fois le même espace.`} />}
-        {connections.map((view) => (
-          <ConnectionControls
-            key={view.id}
-            view={view}
-            tool={entry.label}
-            secrets={secrets}
-            canConnect={canConnect}
-            oauthReady={entry.oauthReady}
-          />
-        ))}
+        {connections.length > 0 && (
+          <section aria-label="Connexions existantes" className="space-y-3">
+            {connections.map((view) => (
+              <ConnectionControls
+                key={view.id}
+                view={view}
+                tool={entry.label}
+                secrets={secrets}
+                canConnect={canConnect}
+                oauthReady={entry.oauthReady}
+              />
+            ))}
+          </section>
+        )}
         {!canConnect && (
-          <p className="text-sm leading-6 text-foreground-2">
+          <p className="rounded-xl bg-muted px-4 py-3 text-[13px] leading-5 text-foreground-2">
             Les connecteurs ne sont pas configurés sur ce serveur : ajoutez LEON_CONNECTORS_KEY
             (voir .env.example), puis redémarrez Leon.
           </p>
         )}
-        {canConnect && (connections.length === 0 || adding) && <AddConnection entry={entry} />}
+        {canConnect && (connections.length === 0 || adding) && (
+          <div className="border-t pt-5">
+            <AddConnection entry={entry} />
+          </div>
+        )}
         {canConnect && connections.length > 0 && !adding && (
-          <Button variant="ghost" size="sm" className="w-fit" onClick={() => setAdding(true)}>
+          <Button
+            variant="outline"
+            className="h-10 w-full rounded-xl"
+            onClick={() => setAdding(true)}
+          >
             Brancher une autre connexion
           </Button>
         )}

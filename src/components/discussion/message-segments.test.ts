@@ -17,6 +17,13 @@ describe('messageSegments', () => {
     ]);
   });
 
+  // Audit 3 n° 9.
+  it('laisse un indice de tableau dans le texte, sans le retirer ni le lire comme un renvoi', () => {
+    expect(messageSegments('Voir [1] : argv[0], items[1][2] et f(x)[1].', new Set([1, 2]))).toEqual(
+      [{ text: 'Voir ' }, { ref: 1 }, { text: ' : argv[0], items[1][2] et f(x)[1].' }],
+    );
+  });
+
   it('ne lit pas de HTML : une balise reste du texte', () => {
     expect(messageSegments('<b>[1]</b>', new Set([1]))).toEqual([
       { text: '<b>' },

@@ -253,9 +253,22 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
       const ctx = await resolveTenantContext(group.userId, group.tenantId);
       // Le propriétaire a quitté l'organisation : personne ne peut lire ces passages sous ses droits.
       if (!ctx) continue;
-      const missing = await withTenant(ctx, (tx) =>
-        passagesWithoutVector(tx, embedder.model, inArray(passages.id, group.ids)),
-      );
+      const missing = await withTenant(ctx, async (tx) => {
+        const rows = await passagesWithoutVector(
+          tx,
+          embedder.model,
+          inArray(passages.id, group.ids),
+        );
+        // Déjà vectorisés (un vecteur écrit pendant un remplissage de la file, 0020) : ils sortent de la file.
+        const listed = new Set(rows.map((row) => row.id));
+        const done = group.ids.filter((id) => !listed.has(id));
+        if (done.length > 0) {
+          await tx.execute(
+            sql`select sortir_de_la_file(${embedder.model}, ${textArray(done)}::uuid[])`,
+          );
+        }
+        return rows;
+      });
       const result = await embedPassages(ctx, embedder, missing);
       total += result.stored;
       if (result.timedOut) break;

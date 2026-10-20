@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
-import { beforeAll, expect, it } from 'vitest';
+import { beforeAll, expect, it, vi } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
+import { seedPassages } from '@/test/seed-search';
 
 // Migration 0020 : les corrections du second audit du 20/10 qui touchent la base.
 
@@ -29,8 +30,10 @@ async function rowsRead(client: PoolClient): Promise<Record<string, number>> {
 
 // Dans la transaction de `client` : 3 000 passages d'Alice, puis le vecteur de `model` pour tous les passages de la
 // base (ceux des autres fichiers compris), comme après le rattrapage d'un modèle, et les tables analysées. Le premier
-// tic d'un modèle peut tout relire (il remplit la file) : il passe avant.
+// tic d'un modèle peut tout relire (il remplit la file) : il passe avant, et avant toute écriture (comme le tic, qui
+// l'appelle seul) : le remplissage attend les transactions qui écrivent dans la file.
 async function vectorizeEverything(client: PoolClient, model: string): Promise<void> {
+  await client.query('select * from passages_sans_vecteur($1, 500)', [model]);
   const {
     rows: [source],
   } = await client.query<{ id: string }>(
@@ -50,7 +53,6 @@ async function vectorizeEverything(client: PoolClient, model: string): Promise<v
      select $1, $2, $3, g, 'Passage ' || g, 0, 7, now(), array[$4::uuid] from generate_series(0, 2999) g`,
     [alice.tenantId, source?.id, turn?.id, alice.userId],
   );
-  await client.query('select * from passages_sans_vecteur($1, 500)', [model]);
   await client.query(
     `insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
      select id, tenant_id, $1, array_fill(0.1, array[1024])::halfvec, acl from passages`,
@@ -106,4 +108,46 @@ it('le retrait des vieux vecteurs ne lit pas la table des vecteurs en entier', a
 
   expect(read.passages).toBeLessThan(FEW);
   expect(read.passage_vectors).toBeLessThan(FEW);
+});
+
+// Audit 2 n° 1 (suite) : le remplissage de la file au changement de modèle prenait un verrou partagé sur les vecteurs
+// avant de vider la file. La suppression d'une source retire en cascade les lignes de la file, puis les vecteurs :
+// elle attendait le remplissage, qui l'attendait (interblocage).
+it('remplit la file d’un nouveau modèle sans interblocage avec une suppression en cours', async () => {
+  const [passageId] = (await seedPassages(alice, { count: 1, token: randomUUID() })).passageIds as [
+    string,
+  ];
+  const deleting = await adminPool.connect();
+  const filling = await adminPool.connect();
+  try {
+    await deleting.query('begin');
+    // La cascade d'une suppression : la file d'abord…
+    await deleting.query('delete from passages_a_vectoriser where passage_id = $1', [passageId]);
+    const {
+      rows: [backend],
+    } = await filling.query<{ pid: number }>('select pg_backend_pid() as pid');
+    const fill = filling
+      .query('select count(*) from passages_sans_vecteur($1, 1)', [`modele-${randomUUID()}`])
+      .then(
+        () => 'rempli',
+        (error: Error) => error.message,
+      );
+    await vi.waitFor(async () => {
+      const { rows } = await adminPool.query<{ wait: string | null }>(
+        'select wait_event_type as wait from pg_stat_activity where pid = $1',
+        [backend?.pid],
+      );
+      expect(rows[0]?.wait).toBe('Lock');
+    });
+    // … puis les vecteurs.
+    await deleting.query('delete from passage_vectors where passage_id = $1', [passageId]);
+    await deleting.query('commit');
+
+    expect(await fill).toBe('rempli');
+  } finally {
+    await deleting.query('rollback');
+    deleting.release();
+    filling.release();
+    await adminPool.query('delete from passages where id = $1', [passageId]);
+  }
 });

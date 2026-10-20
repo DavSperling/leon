@@ -154,6 +154,27 @@ describe('embedMissing', () => {
     expect(await modelsOf(zoe, theirs.passageIds)).toEqual(Array(3).fill('factice-b'));
   });
 
+  // Audit 2 n° 1 (suite) : un vecteur écrit pendant un remplissage de la file (changement de modèle) peut y laisser
+  // son passage ; le tic l'en sort au lieu de le relire à chaque minute.
+  it('sort de la file un passage qui a déjà le vecteur du modèle', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const seeded = await seedPassages(alice, { count: 2, token });
+    await embedMissing({ embedder: embedderFor(token) }, BIG);
+    await adminPool.query(
+      `insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
+       select tenant_id, id, created_at from passages where id = any($1)`,
+      [seeded.passageIds],
+    );
+
+    expect(await embedMissing({ embedder: embedderFor(token) }, BIG)).toBe(0);
+
+    const { rows } = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from passages_a_vectoriser where passage_id = any($1)',
+      [seeded.passageIds],
+    );
+    expect(rows[0]?.n).toBe(0);
+  });
+
   // Audit 2 n° 9 b : l'indexation vectorise elle-même les passages qu'elle vient d'écrire ; le tic les doublait.
   it('laisse à l’indexation les passages écrits il y a moins de 2 minutes', async () => {
     const token = `jeton-${randomUUID()}`;

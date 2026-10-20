@@ -56,10 +56,12 @@ $$;
 create trigger vecteurs_hors_file after insert on passage_vectors
   referencing new table as nouveaux for each statement execute function passages_sortent_de_file();
 
--- Le changement de modèle se fait sous un verrou consultatif (deux tics ne remplissent pas la file ensemble) et un
--- verrou partagé sur les vecteurs, pris avant de toucher à la file : un vecteur écrit pendant le remplissage
--- l'attend, et il n'y a pas d'interblocage avec le déclencheur ci-dessus. La lecture, elle, ne parcourt que la tête
--- de la file : son plan est le même quel que soit le modèle.
+-- Le changement de modèle se fait sous un verrou consultatif (deux tics ne remplissent pas la file ensemble). La file
+-- est vidée par `truncate`, qui attend d'abord, sans rien tenir, les transactions qui l'écrivent : un verrou pris
+-- avant (sur les vecteurs, par exemple) ferait attendre une suppression de source, qui retire en cascade les lignes
+-- de la file puis les vecteurs, pendant qu'on l'attend (interblocage). Un vecteur écrit pendant le remplissage peut
+-- y laisser son passage : le tic l'en sort (embedMissing). La lecture, elle, ne parcourt que la tête de la file :
+-- son plan est le même quel que soit le modèle.
 create or replace function passages_sans_vecteur(p_model text, p_limit integer)
 returns table (passage_id uuid, tenant_id uuid, user_id uuid)
 language plpgsql volatile security definer set search_path = public as $$
@@ -68,10 +70,9 @@ begin
   if not exists (select 1 from passages_a_vectoriser_modele m where m.model = p_model) then
     perform pg_advisory_xact_lock(hashtext('passages_a_vectoriser'));
     if not exists (select 1 from passages_a_vectoriser_modele m where m.model = p_model) then
-      lock table passage_vectors in share mode;
+      truncate passages_a_vectoriser;
       insert into passages_a_vectoriser_modele (seule, model) values (true, p_model)
         on conflict (seule) do update set model = excluded.model;
-      delete from passages_a_vectoriser;
       insert into passages_a_vectoriser (tenant_id, passage_id, created_at)
       select p.tenant_id, p.id, p.created_at from passages p
       where not exists (

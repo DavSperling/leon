@@ -109,6 +109,9 @@ export async function noteOrganization(
 // refusé). Un tampon capté avant tout jeton (ou avant que le jeton ne soit noté) part avec le premier.
 // Sur une panne passagère (`organizationOf` rend undefined), rien n'est tranché : le tampon reste, l'ancien jeton
 // reste noté et la fonction rend false ; l'appelant n'envoie rien et réessaie plus tard.
+// Limite connue : pendant cette panne, les captures faites avec le nouveau jeton rejoignent le tampon ; si le serveur
+// revient sur une autre organisation, elles sont vidées avec lui (comptées comme pertes). Cas rare : changer
+// d'organisation pendant une panne.
 export async function forgetOutboxOnTokenChange(
   store: KeyValueStore,
   token: string | null,

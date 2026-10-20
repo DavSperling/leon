@@ -10,7 +10,7 @@ import { auth } from '@/server/auth/auth';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
-import { accountLabel } from './account-label';
+import { accountLabel, sameAccountKey } from './account-label';
 import { listCatalog } from './catalog';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
 import { connectorsKey } from './crypto';
@@ -245,7 +245,7 @@ function sameAccount(
   const { accountKey } = stored.config;
   const same =
     typeof accountKey === 'string' && verified.accountKey !== undefined
-      ? accountKey === verified.accountKey
+      ? sameAccountKey(provider, accountKey, verified.accountKey)
       : withoutOtherSites(stored.label) ===
         withoutOtherSites(accountLabel(verified.account, PROVIDER_LABELS[provider]));
   if (!same) return false;

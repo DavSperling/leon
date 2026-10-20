@@ -6,7 +6,7 @@ import { EMBEDDER_IDS, getEmbedder } from './registry';
 
 describe('getEmbedder', () => {
   it('liste les quatre fournisseurs prévus', () => {
-    expect([...EMBEDDER_IDS]).toEqual(['factice', 'voyage', 'mistral', 'bge-m3']);
+    expect([...EMBEDDER_IDS]).toEqual(['factice', 'voyage', 'mistral', 'bge-m3', 'openrouter']);
   });
 
   it('ré-exporte la liste de embedder.ts, que env.ts importe sans passer par le registre', () => {

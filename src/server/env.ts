@@ -10,6 +10,7 @@ const EMBEDDER_SETTING = {
   voyage: 'VOYAGE_API_KEY',
   mistral: 'MISTRAL_API_KEY',
   'bge-m3': 'LEON_BGE_URL',
+  openrouter: 'OPENROUTER_API_KEY',
 } as const;
 
 // Un modèle de la table de models.ts. Un autre ferait échouer chaque appel (repli ou effort que son API refuse) :
@@ -57,6 +58,10 @@ export const EnvSchema = z
     // Adresse du service bge-m3 : http ou https seulement. Sans http:// (« bge-service:8080 »), zod seul
     // l'accepterait et l'indexation échouerait en silence au premier appel.
     LEON_BGE_URL: z.preprocess(emptyIsAbsent, z.url({ protocol: /^https?$/ }).optional()),
+    // OpenRouter : une clé et un modèle de vecteurs de 1 024 valeurs (voyageai/voyage-4, mistralai/mistral-embed-2312,
+    // baai/bge-m3…), pour comparer les candidats avec un seul compte.
+    OPENROUTER_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    LEON_EMBEDDINGS_MODEL: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
   })
   .superRefine((env, ctx) => {
     // Un faux modèle en ligne répondrait à des questions réelles avec du texte factice : on refuse de démarrer.
@@ -70,6 +75,13 @@ export const EnvSchema = z
     }
     const id = env.LEON_EMBEDDINGS;
     if (id === undefined || id === 'factice') return;
+    if (id === 'openrouter' && env.LEON_EMBEDDINGS_MODEL === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['LEON_EMBEDDINGS_MODEL'],
+        message: 'LEON_EMBEDDINGS_MODEL : obligatoire avec LEON_EMBEDDINGS=openrouter',
+      });
+    }
     const setting = EMBEDDER_SETTING[id];
     if (env[setting] === undefined) {
       ctx.addIssue({

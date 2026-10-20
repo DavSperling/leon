@@ -10,7 +10,7 @@ export const EMBEDDING_DIMS = 1024;
 // l'importe sans tirer le registre ni les fournisseurs (un fournisseur qui importerait env fermerait un cycle).
 // Le choix du fournisseur réel est à faire par Amos et David après la comparaison sur le jeu d'essai : rien
 // n'en fixe un par défaut.
-export const EMBEDDER_IDS = ['factice', 'voyage', 'mistral', 'bge-m3'] as const;
+export const EMBEDDER_IDS = ['factice', 'voyage', 'mistral', 'bge-m3', 'openrouter'] as const;
 export type EmbedderId = (typeof EMBEDDER_IDS)[number];
 
 // `document` : le texte d'un passage à indexer ; `requete` : ce que cherche l'utilisateur. Certains

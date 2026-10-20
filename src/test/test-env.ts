@@ -55,6 +55,8 @@ export const TEST_ENV = {
   VOYAGE_API_KEY: '',
   MISTRAL_API_KEY: '',
   LEON_BGE_URL: '',
+  OPENROUTER_API_KEY: '',
+  LEON_EMBEDDINGS_MODEL: '',
   // Même raison pour le modèle d'IA : une clé Anthropic exportée dans le shell ferait rendre un vrai client à
   // getLlm (appel réseau, ou un test « aucun modèle » qui dépend du poste), un faux modèle exporté pour une
   // démo changerait les tests, et un modèle réglé par étape changerait le modèle attendu.

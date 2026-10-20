@@ -3,8 +3,8 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { ConnectionPanel } from '@/components/connection-panel';
-import { ConnectionStatus } from '@/components/connection-status';
-import { otherOwnersNote } from '@/lib/connection-form';
+import { ToolLogo } from '@/components/tool-logo';
+import { formatNumber, formatRelative } from '@/lib/format';
 import { FAMILY_LABELS, PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
 import { cn } from '@/lib/utils';
 import type { CatalogItem } from '@/server/connectors/catalog';
@@ -20,87 +20,222 @@ const FAMILY_READS: Record<ProviderFamily, string> = {
   mails: 'Mails et agenda, privés à leur boîte',
 };
 
-// Une tuile à l'initiale de l'outil, d'une teinte pâle propre à lui : on le reconnaît d'une carte à l'autre.
-function ToolMark({ entry }: { entry: CatalogItem }) {
-  const hue = [...entry.id].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 360, 7);
+type Health = 'active' | 'paused' | 'error';
+
+const HEALTH: Record<Health, { label: string; dot: string; pill: string }> = {
+  active: { label: 'Actif', dot: 'bg-success', pill: 'bg-success-soft text-success' },
+  paused: { label: 'En pause', dot: 'bg-muted-foreground', pill: 'bg-muted text-foreground-2' },
+  error: {
+    label: 'En erreur',
+    dot: 'bg-destructive',
+    pill: 'bg-destructive-soft text-destructive',
+  },
+};
+
+const healthOf = (view: ConnectionView): Health => (view.creatorLeft ? 'error' : view.status);
+
+// L'état d'un outil branché plusieurs fois : la pire de ses connexions, sinon l'une active.
+function toolHealth(connections: ConnectionView[]): Health {
+  const states = connections.map(healthOf);
+  if (states.includes('error')) return 'error';
+  return states.includes('active') ? 'active' : 'paused';
+}
+
+function HealthPill({ health }: { health: Health }) {
+  const { label, dot, pill } = HEALTH[health];
   return (
     <span
-      aria-hidden="true"
-      className="flex size-10 shrink-0 items-center justify-center rounded-lg text-[15px] font-semibold"
-      style={{ backgroundColor: `oklch(0.94 0.04 ${hue})`, color: `oklch(0.38 0.09 ${hue})` }}
+      className={cn(
+        'inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium whitespace-nowrap',
+        pill,
+      )}
     >
-      {entry.label.charAt(0)}
+      <span aria-hidden="true" className={cn('size-1.5 rounded-full', dot)} />
+      {label}
     </span>
   );
 }
 
-// Plusieurs connexions (une par boîte mail, par espace) : leur nombre, et celles en erreur, sur une ligne. Le
-// détail de chacune est dans « Gérer ».
-function Summary({ connections }: { connections: ConnectionView[] }) {
-  const failing = connections.filter((view) => view.status === 'error' || view.creatorLeft).length;
+function Beta({ entry }: { entry: CatalogItem }) {
+  if (!entry.available || entry.triedForReal) return null;
   return (
-    <p className="text-[12.5px] leading-[18px] text-foreground-2 tabular-nums">
-      {connections.length} connexions
-      {failing > 0 && (
-        <span className="text-destructive">
-          {' · '}
-          {failing} en erreur
-        </span>
-      )}
-    </p>
+    <span
+      title="Connecteur pas encore essayé sur un vrai compte"
+      className="rounded-md border px-1.5 text-[11px] leading-[18px] font-medium text-muted-foreground"
+    >
+      Bêta
+    </span>
   );
 }
 
-type CardProps = {
+// L'initiale d'une personne, d'une teinte pâle stable : on reconnaît qui a branché quoi.
+function Person({ name }: { name: string }) {
+  const hue = [...name].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 360, 11);
+  return (
+    <span
+      title={name}
+      className="flex size-6 items-center justify-center rounded-full text-[11px] font-semibold ring-2 ring-card"
+      style={{ backgroundColor: `oklch(0.93 0.05 ${hue})`, color: `oklch(0.4 0.1 ${hue})` }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </span>
+  );
+}
+
+// Ce que la mémoire garde d'un outil : ses sources et la plus récente (tallyByKind).
+export type Kept = { sourceCount: number; lastTurnAt: Date | null };
+
+type ToolProps = {
   entry: CatalogItem;
   connections: ConnectionView[];
   viewerId: string;
   canConnect: boolean;
-  now: Date;
 };
 
-function ToolCard({ entry, connections, viewerId, canConnect, now }: CardProps) {
-  const others = otherOwnersNote(connections, viewerId);
+function PluggedCard({
+  entry,
+  connections,
+  viewerId,
+  canConnect,
+  now,
+  kept,
+}: ToolProps & { now: Date; kept: Kept | undefined }) {
+  const people = [
+    ...new Map(connections.map((view) => [view.createdBy.id, view.createdBy])).values(),
+  ];
+  const first = people[0];
   return (
-    <li
-      className={cn(
-        'flex flex-col rounded-xl border bg-card p-4 shadow-xs transition-[border-color,box-shadow] hover:border-input hover:shadow-sm',
-        !entry.available && 'bg-muted/60 shadow-none hover:border-border hover:shadow-none',
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <ToolMark entry={entry} />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[14px] leading-5 font-semibold">{entry.label}</h3>
-          <p className="mt-0.5 text-[12.5px] leading-[18px] text-muted-foreground">
+    <li className="flex flex-col rounded-2xl border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm">
+      <div className="flex items-start gap-3.5">
+        <ToolLogo id={entry.id} size={48} />
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-[15px] leading-6 font-semibold">{entry.label}</h3>
+            <Beta entry={entry} />
+          </div>
+          <p
+            className="truncate text-[12.5px] leading-[18px] text-muted-foreground"
+            title={FAMILY_READS[entry.family]}
+          >
             {FAMILY_READS[entry.family]}
           </p>
         </div>
+        <HealthPill health={toolHealth(connections)} />
       </div>
-      <div className="mt-3 min-h-[18px] flex-1 space-y-1">
-        {connections.length === 0 && entry.available && (
-          <p className="text-[12.5px] leading-[18px] text-muted-foreground">Non branché</p>
-        )}
-        {connections.length === 1 && connections[0] && (
-          <ConnectionStatus view={connections[0]} now={now} />
-        )}
-        {connections.length > 1 && <Summary connections={connections} />}
-        {others && <p className="text-[12.5px] leading-[18px] text-muted-foreground">{others}</p>}
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-2">
-        <span className="text-[12px] leading-4 text-muted-foreground">
-          {!entry.available ? 'Bientôt' : !entry.triedForReal ? 'Non essayé en réel' : ''}
-        </span>
-        {entry.available && (
-          <ConnectionPanel
-            entry={entry}
-            connections={connections}
-            viewerId={viewerId}
-            canConnect={canConnect}
-          />
-        )}
+      <dl className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-muted px-4 py-3">
+        <div>
+          <dt className="text-[12px] text-muted-foreground">Sources gardées</dt>
+          <dd className="mt-0.5 text-[18px] leading-6 font-semibold tabular-nums">
+            {formatNumber(kept?.sourceCount ?? 0)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[12px] text-muted-foreground">Plus récente</dt>
+          <dd className="mt-0.5 text-[14px] leading-6 tabular-nums">
+            {kept?.lastTurnAt ? formatRelative(kept.lastTurnAt, now) : '—'}
+          </dd>
+        </div>
+      </dl>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex -space-x-1.5">
+            {people.slice(0, 3).map((person) => (
+              <Person key={person.id} name={person.name} />
+            ))}
+          </span>
+          <span className="truncate text-[12.5px] text-muted-foreground">
+            {connections.length > 1
+              ? `${connections.length} connexions`
+              : first && `Par ${first.id === viewerId ? 'vous' : first.name}`}
+          </span>
+        </div>
+        <ConnectionPanel
+          entry={entry}
+          connections={connections}
+          viewerId={viewerId}
+          canConnect={canConnect}
+        />
       </div>
     </li>
+  );
+}
+
+function CatalogCard({ entry, connections, viewerId, canConnect }: ToolProps) {
+  return (
+    <li
+      className={cn(
+        'flex items-center gap-3.5 rounded-2xl border bg-card p-4 transition-[border-color,box-shadow] hover:border-input hover:shadow-sm',
+        !entry.available && 'bg-transparent hover:border-border hover:shadow-none',
+      )}
+    >
+      <ToolLogo id={entry.id} size={44} className={cn(!entry.available && 'opacity-60')} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="truncate text-[14px] leading-5 font-semibold">{entry.label}</h3>
+          <Beta entry={entry} />
+        </div>
+        <p className="truncate text-[12.5px] leading-[18px] text-muted-foreground">
+          {entry.available ? FAMILY_READS[entry.family] : 'Bientôt'}
+        </p>
+      </div>
+      {entry.available && (
+        <ConnectionPanel
+          entry={entry}
+          connections={connections}
+          viewerId={viewerId}
+          canConnect={canConnect}
+        />
+      )}
+    </li>
+  );
+}
+
+// En tête : tout ce qui est branché d'un coup d'œil, logos empilés, éléments lus et états.
+function Summary({
+  plugged,
+  byProvider,
+  kept,
+}: {
+  plugged: CatalogItem[];
+  byProvider: Map<string, ConnectionView[]>;
+  kept: Record<string, Kept>;
+}) {
+  const sources = plugged.reduce((sum, entry) => sum + (kept[entry.id]?.sourceCount ?? 0), 0);
+  const count = (health: Health) =>
+    plugged.filter((entry) => toolHealth(byProvider.get(entry.id) ?? []) === health).length;
+  return (
+    <section
+      aria-label="Résumé des connexions"
+      className="flex items-center gap-8 rounded-2xl border bg-card px-7 py-6 shadow-xs"
+    >
+      <span className="flex -space-x-2">
+        {plugged.slice(0, 6).map((entry) => (
+          <ToolLogo key={entry.id} id={entry.id} size={42} className="ring-3 ring-card" />
+        ))}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-heading text-[30px] leading-9">
+          {plugged.length} {plugged.length > 1 ? 'outils branchés' : 'outil branché'}
+        </p>
+        <p className="mt-0.5 text-[14px] text-muted-foreground tabular-nums">
+          {formatNumber(sources)} sources gardées par Leon
+        </p>
+      </div>
+      <ul className="flex gap-6">
+        {(['active', 'paused', 'error'] as const).map((health) => (
+          <li key={health} className="text-right">
+            <p className="text-[22px] leading-7 font-semibold tabular-nums">{count(health)}</p>
+            <p className="flex items-center justify-end gap-1.5 text-[12.5px] text-muted-foreground">
+              <span
+                aria-hidden="true"
+                className={cn('size-1.5 rounded-full', HEALTH[health].dot)}
+              />
+              {HEALTH[health].label}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -111,33 +246,31 @@ function groupByProvider(connections: ConnectionView[]): Map<string, ConnectionV
   return groups;
 }
 
-// Le portefeuille d'outils : ceux qui sont branchés en tête, puis tout le catalogue, à chercher ou à filtrer
-// par famille.
+// Le portefeuille d'outils : le résumé, ceux qui sont branchés, puis tout le catalogue, à chercher ou à
+// filtrer par famille.
 export function ConnectionsCatalog({
   catalog,
   connections,
   viewerId,
   canConnect,
+  kept,
 }: {
   catalog: CatalogItem[];
   connections: ConnectionView[];
   viewerId: string;
   canConnect: boolean;
+  kept: Record<string, Kept>;
 }) {
   const [query, setQuery] = useState('');
   const [family, setFamily] = useState<ProviderFamily | 'tous'>('tous');
   const now = new Date();
   const byProvider = groupByProvider(connections);
-  const card = (entry: CatalogItem) => (
-    <ToolCard
-      key={entry.id}
-      entry={entry}
-      connections={byProvider.get(entry.id) ?? []}
-      viewerId={viewerId}
-      canConnect={canConnect}
-      now={now}
-    />
-  );
+  const props = (entry: CatalogItem) => ({
+    entry,
+    connections: byProvider.get(entry.id) ?? [],
+    viewerId,
+    canConnect,
+  });
   const plugged = catalog.filter((entry) => byProvider.has(entry.id));
   const needle = query.trim().toLocaleLowerCase('fr');
   const shown = catalog
@@ -149,30 +282,36 @@ export function ConnectionsCatalog({
   const tabs: Array<ProviderFamily | 'tous'> = ['tous', ...PROVIDER_FAMILIES_ORDER];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
+      {plugged.length > 0 && <Summary plugged={plugged} byProvider={byProvider} kept={kept} />}
+
       <section aria-labelledby="vos-outils">
-        <div className="flex items-baseline justify-between">
-          <h2 id="vos-outils" className="text-[16px] leading-6 font-semibold">
-            Vos outils
-          </h2>
-          <span className="text-[13px] text-muted-foreground tabular-nums">
-            {plugged.length} {plugged.length > 1 ? 'branchés' : 'branché'}
-          </span>
-        </div>
+        <h2 id="vos-outils" className="font-heading text-[26px] leading-8">
+          Vos outils
+        </h2>
         {plugged.length === 0 ? (
-          <p className="mt-3 rounded-xl border border-dashed px-5 py-4 text-[14px] leading-5 text-muted-foreground">
+          <p className="mt-4 rounded-2xl border border-dashed px-6 py-5 text-[14px] leading-5 text-muted-foreground">
             Aucun outil branché. Choisissez-en un ci-dessous : Leon lira ce qu’il contient.
           </p>
         ) : (
-          <ul className="mt-3 grid grid-cols-3 gap-4">{plugged.map(card)}</ul>
+          <ul className="mt-4 grid grid-cols-3 gap-4">
+            {plugged.map((entry) => (
+              <PluggedCard key={entry.id} {...props(entry)} now={now} kept={kept[entry.id]} />
+            ))}
+          </ul>
         )}
       </section>
 
       <section aria-labelledby="ajouter">
-        <div className="flex items-center justify-between gap-6">
-          <h2 id="ajouter" className="text-[16px] leading-6 font-semibold">
-            Ajouter un outil
-          </h2>
+        <div className="flex items-end justify-between gap-6">
+          <div>
+            <h2 id="ajouter" className="font-heading text-[26px] leading-8">
+              Ajouter un outil
+            </h2>
+            <p className="mt-1 text-[14px] text-muted-foreground tabular-nums">
+              {catalog.filter((entry) => entry.available).length} outils prêts à brancher
+            </p>
+          </div>
           <label className="relative w-72">
             <span className="sr-only">Chercher un outil</span>
             <Search
@@ -186,11 +325,12 @@ export function ConnectionsCatalog({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Chercher un outil…"
-              className="h-9 w-full rounded-lg border border-input bg-card pr-3 pl-9 text-[14px] outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15"
+              className="h-10 w-full rounded-xl border border-input bg-card pr-3 pl-9 text-[14px] outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15"
             />
           </label>
         </div>
-        <div role="group" aria-label="Familles d’outils" className="mt-4 flex flex-wrap gap-1.5">
+        <fieldset className="m-0 mt-5 flex flex-wrap gap-1.5 border-0 p-0">
+          <legend className="sr-only">Familles d’outils</legend>
           {tabs.map((tab) => (
             <button
               key={tab}
@@ -198,22 +338,26 @@ export function ConnectionsCatalog({
               aria-pressed={family === tab}
               onClick={() => setFamily(tab)}
               className={cn(
-                'h-8 cursor-pointer rounded-full border px-3 text-[13px] font-medium transition-colors',
+                'h-8 cursor-pointer rounded-full border px-3.5 text-[13px] font-medium transition-colors',
                 family === tab
-                  ? 'border-primary bg-primary text-primary-foreground'
+                  ? 'border-foreground bg-foreground text-background'
                   : 'bg-card text-foreground-2 hover:border-input hover:text-foreground',
               )}
             >
               {tab === 'tous' ? 'Tous' : FAMILY_LABELS[tab]}
             </button>
           ))}
-        </div>
+        </fieldset>
         {shown.length === 0 ? (
-          <p className="mt-4 rounded-xl border border-dashed px-5 py-4 text-[14px] leading-5 text-muted-foreground">
+          <p className="mt-5 rounded-2xl border border-dashed px-6 py-5 text-[14px] leading-5 text-muted-foreground">
             Aucun outil ne correspond. Essayez un autre nom, ou la famille « Tous ».
           </p>
         ) : (
-          <ul className="mt-4 grid grid-cols-4 gap-4">{shown.map(card)}</ul>
+          <ul className="mt-5 grid grid-cols-3 gap-3">
+            {shown.map((entry) => (
+              <CatalogCard key={entry.id} {...props(entry)} />
+            ))}
+          </ul>
         )}
       </section>
     </div>

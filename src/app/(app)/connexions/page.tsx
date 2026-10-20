@@ -8,6 +8,7 @@ import { requireUserContext } from '@/server/auth/session';
 import { listCatalog } from '@/server/connectors/catalog';
 import { listConnections } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
+import { tallyByKind } from '@/server/memory/sources';
 
 export const metadata: Metadata = { title: 'Connexions' };
 
@@ -69,7 +70,7 @@ export default async function ConnectionsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const ctx = await requireUserContext();
-  const connections = await listConnections(ctx);
+  const [connections, tallies] = await Promise.all([listConnections(ctx), tallyByKind(ctx)]);
   const canConnect = connectorsKey() !== null;
   const catalog = listCatalog();
   const notice = oauthNotice(await searchParams);
@@ -87,6 +88,7 @@ export default async function ConnectionsPage({
         connections={connections}
         viewerId={ctx.userId}
         canConnect={canConnect}
+        kept={Object.fromEntries(tallies.map((tally) => [tally.kind, tally]))}
       />
     </div>
   );

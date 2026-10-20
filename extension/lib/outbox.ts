@@ -7,8 +7,11 @@ export const OUTBOX_MAX = 500;
 // storage.local est plafonné (10 Mo dans Chrome, 5 Mo avant la version 114) : au-delà, l'écriture échoue et la
 // capture est perdue sans un mot. On reste en dessous ; les plus anciens sortent, comme au plafond en nombre.
 export const OUTBOX_MAX_BYTES = 4 * 1024 * 1024;
-// Échanges sortis du tampon sans avoir été envoyés, en attendant que la popup le dise.
+// Échanges sortis du tampon sans avoir été envoyés, par raison, en attendant que la popup le dise.
 export const DROPPED_KEY = 'leon.dropped';
+// full : tampon plein ; refused : charge refusée pour toujours par le serveur (400, 413).
+export type DropReason = 'full' | 'refused';
+export type DroppedCounts = Partial<Record<DropReason, number>>;
 
 const OutboxItemSchema = z.object({
   id: z.string(),
@@ -43,22 +46,33 @@ export async function enqueuePayload(store: KeyValueStore, payload: IngestPayloa
   while (bytes > OUTBOX_MAX_BYTES) bytes -= sizes[first++] ?? 0;
   await store.set(OUTBOX_KEY, kept.slice(first));
   const dropped = all.length - (kept.length - first);
-  if (dropped > 0) await store.set(DROPPED_KEY, (await readDropped(store)) + dropped);
+  await addDropped(store, 'full', dropped);
 }
 
-async function readDropped(store: KeyValueStore): Promise<number> {
-  return z
-    .number()
-    .int()
-    .nonnegative()
-    .catch(0)
-    .parse(await store.get(DROPPED_KEY));
+const count = z.number().int().nonnegative().optional().catch(undefined);
+const DroppedSchema = z
+  .union([
+    // Avant les raisons, un seul nombre : celui du tampon plein.
+    z.number().transform((full) => ({ full })),
+    z.object({ full: count, refused: count }),
+  ])
+  .catch({});
+
+async function readDropped(store: KeyValueStore): Promise<DroppedCounts> {
+  const counts = DroppedSchema.parse(await store.get(DROPPED_KEY));
+  return Object.fromEntries(Object.entries(counts).filter(([, n]) => n !== undefined && n > 0));
 }
 
-// Le nombre d'échanges perdus depuis la dernière lecture, remis à zéro (la popup le dit une fois).
-export async function takeDropped(store: KeyValueStore): Promise<number> {
+async function addDropped(store: KeyValueStore, reason: DropReason, n: number): Promise<void> {
+  if (n <= 0) return;
+  const counts = await readDropped(store);
+  await store.set(DROPPED_KEY, { ...counts, [reason]: (counts[reason] ?? 0) + n });
+}
+
+// Les échanges perdus depuis la dernière lecture, par raison, remis à zéro (la popup les dit une fois).
+export async function takeDropped(store: KeyValueStore): Promise<DroppedCounts> {
   const dropped = await readDropped(store);
-  if (dropped > 0) await store.set(DROPPED_KEY, 0);
+  if (Object.keys(dropped).length > 0) await store.set(DROPPED_KEY, {});
   return dropped;
 }
 
@@ -81,6 +95,7 @@ export async function flushOutbox(
   let connection: CaptureStatus['connection'] = 'unknown';
   const kept: OutboxItem[] = [];
   let stopped = false;
+  let refused = 0;
   for (const item of items) {
     if (stopped || !shouldSend(item.payload)) {
       kept.push(item);
@@ -95,9 +110,11 @@ export async function flushOutbox(
       stopped = true;
       kept.push(item);
     } else {
+      if (outcomeOf(status) === 'drop') refused += 1;
       connection = 'connected';
     }
   }
   await store.set(OUTBOX_KEY, kept);
+  await addDropped(store, 'refused', refused);
   return connection;
 }

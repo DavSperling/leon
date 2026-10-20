@@ -113,6 +113,20 @@ const withoutNegated = (terms: QueryTerms): SQL =>
     sql` and `,
   );
 
+// Audit 4 n° 3 : le titre de la source ne contient aucune forme d'un mot nié (sans quoi la source restait, trouvée
+// par son titre ou par ses passages).
+const titleWithoutNegated = (terms: QueryTerms): SQL =>
+  sql.join(
+    [
+      sql`true`,
+      ...terms.negated.map(
+        (term) =>
+          sql`not ((to_tsvector('french', coalesce(s.title, '')) || to_tsvector('simple', coalesce(s.title, ''))) @@ ${fullText(term)})`,
+      ),
+    ],
+    sql` and `,
+  );
+
 // La requête de la première passe : tous les mots, et aucune forme d'un mot nié.
 const firstQuery = (terms: QueryTerms): SQL => sql`(${fullText(terms.text)}${excluded(terms)})`;
 
@@ -287,7 +301,7 @@ async function rankedSources(
   // Avec un seul mot libre, la passe élargie serait la première : elle n'a pas lieu.
   const wide = terms.words.length >= 2 ? wideQuery(terms) : null;
   const plain = withoutNegations(text).replace(/"/g, ' ');
-  const sourceWhere = sourceConditions(filters);
+  const sourceWhere = sql`(${sourceConditions(filters)} and ${titleWithoutNegated(terms)})`;
   const passageWhere = passageConditions(filters, sql`s.kind`);
   const headline = (tsquery: SQL) =>
     sql`ts_headline('french', p.text, ${tsquery}, ${HEADLINE_OPTIONS})`;

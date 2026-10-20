@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, gte, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -76,7 +76,8 @@ export async function revokeApiToken(ctx: TenantContext, tokenId: string): Promi
   return rows.length > 0;
 }
 
-// Jeton non révoqué dont l'utilisateur est toujours membre de l'organisation, revérifié à chaque appel.
+// Jeton non révoqué dont l'utilisateur est toujours membre de l'organisation, depuis avant la création du
+// jeton, revérifié à chaque appel.
 export async function verifyApiToken(
   token: string,
 ): Promise<{ tokenId: string; ctx: TenantContext } | null> {
@@ -91,7 +92,12 @@ export async function verifyApiToken(
     .from(apiTokens)
     .innerJoin(
       members,
-      and(eq(members.userId, apiTokens.userId), eq(members.organizationId, apiTokens.tenantId)),
+      and(
+        eq(members.userId, apiTokens.userId),
+        eq(members.organizationId, apiTokens.tenantId),
+        // Un membre retiré puis réinvité ne retrouve pas les jetons de son ancienne adhésion.
+        gte(apiTokens.createdAt, members.createdAt),
+      ),
     )
     .where(and(eq(apiTokens.tokenHash, hashApiToken(token)), isNull(apiTokens.revokedAt)))
     .limit(1);

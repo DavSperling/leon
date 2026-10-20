@@ -23,8 +23,11 @@ const INDEX_CONCURRENCY = 4;
 const INDEX_POLLING_SECONDS = 0.5;
 // Un run « en attente » depuis plus longtemps est remis en file (mise en file ratée ou job perdu).
 const STALE_RUN_MINUTES = 5;
-// Vecteurs complétés à chaque tic.
+// Vecteurs complétés par lot. Un tic enchaîne les lots tant qu'il en reste, pendant au plus EMBED_TICK_MS : à un
+// seul lot par minute, un million de passages demandait deux jours de rattrapage. La marge sous la minute laisse
+// finir le dernier lot avant le tic suivant (un appel au fournisseur attend au plus 30 s, EMBED_TIMEOUT_MS).
 const EMBED_PER_TICK = 500;
+const EMBED_TICK_MS = 45_000;
 const EVERY_MINUTE = '* * * * *';
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte
@@ -83,9 +86,14 @@ async function registerWorkers(
   if (embedder) {
     await boss.schedule(PIPELINE_QUEUES.reindex, EVERY_MINUTE);
     await boss.work(PIPELINE_QUEUES.reindex, tick, async () => {
-      await embedMissing({ embedder }, EMBED_PER_TICK).catch((error) =>
-        rethrowSummary('search.embed_tick_failed', error),
-      );
+      const start = Date.now();
+      // Un lot incomplet : il n'en reste plus, ou le fournisseur a échoué (le tic suivant reprendra).
+      let stored = EMBED_PER_TICK;
+      while (stored === EMBED_PER_TICK && Date.now() - start < EMBED_TICK_MS) {
+        stored = await embedMissing({ embedder }, EMBED_PER_TICK).catch((error) =>
+          rethrowSummary('search.embed_tick_failed', error),
+        );
+      }
     });
   } else {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base : il remplirait

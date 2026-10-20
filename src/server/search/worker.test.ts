@@ -127,6 +127,30 @@ describe('startSearchWorker', () => {
     expect(mocks.embedMissing).toHaveBeenCalledExactlyOnceWith({ embedder }, 500);
   });
 
+  // Audit n° 19 : 500 vecteurs par minute, c'était deux jours pour rattraper un million de passages.
+  it('enchaîne les lots de 500 dans un tic tant qu’il en reste', async () => {
+    mocks.embedMissing.mockResolvedValueOnce(500).mockResolvedValueOnce(500).mockResolvedValue(120);
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.embedMissing).toHaveBeenCalledTimes(3);
+  });
+
+  it('rend la main au bout de 45 secondes, même s’il en reste', async () => {
+    let now = 0;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    mocks.embedMissing.mockImplementation(async () => {
+      now += 20_000;
+      return 500;
+    });
+    await startSearchWorker({ embedder: createFakeEmbedder() });
+
+    await handlerOf('pipeline-reindex')();
+
+    expect(mocks.embedMissing).toHaveBeenCalledTimes(3);
+  });
+
   it('ne lit pas la file des vecteurs et retire son tic planifié quand aucun fournisseur n’est réglé', async () => {
     await startSearchWorker({ embedder: null });
 

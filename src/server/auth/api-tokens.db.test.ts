@@ -110,6 +110,23 @@ describe('jetons personnels', () => {
     expect(await verifyApiToken(created.token)).toBeNull();
   });
 
+  // Audit n° 12 : un membre retiré puis réinvité retrouvait les jetons de son ancienne adhésion.
+  it("refuse un jeton créé avant l'adhésion en cours", async () => {
+    const paul = await signUp('Paul');
+    const created = await createApiToken(paul, 'Extension');
+    const membership = and(
+      eq(members.userId, paul.userId),
+      eq(members.organizationId, paul.tenantId),
+    );
+
+    await adminDb
+      .update(members)
+      .set({ createdAt: new Date(Date.now() + 60_000) })
+      .where(membership);
+
+    expect(await verifyApiToken(created.token)).toBeNull();
+  });
+
   it('refuse un jeton mal formé sans interroger la base', async () => {
     const select = vi.spyOn(db, 'select');
     expect(await verifyApiToken('leon_court')).toBeNull();

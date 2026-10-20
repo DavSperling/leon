@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, notExists, type SQL, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, lt, ne, notExists, type SQL, sql } from 'drizzle-orm';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
@@ -11,7 +11,8 @@ import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
 // - embedMissing complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
 //   ou modèle changé après coup) ;
-// - requeueStaleRuns remet en file les runs restés « en attente » sans job (mise en file ratée).
+// - requeueStaleRuns remet en file les runs restés « en attente » sans job (mise en file ratée), ou restés
+//   « en cours » ou « échoués » (processus mort, reprises épuisées).
 
 // Textes envoyés au fournisseur en un appel (« Vecteurs », contraintes globales du plan).
 export const EMBED_BATCH = 64;
@@ -110,6 +111,9 @@ function logEmbedFailure(error: unknown, ids: Record<string, string>): void {
 // alors laissés à une prochaine reprise) et `timedOut` s'il n'a pas répondu à temps. Les erreurs de base
 // remontent à l'appelant.
 //
+// Les vecteurs d'un autre modèle de ces passages sont retirés dans la même transaction (audit n° 7), et chaque
+// passage note le modèle de son vecteur (audit n° 8).
+//
 // Le vecteur prend l'accès que son passage a au moment de l'écriture (sous le verrou de sa source, voir
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
 // Un passage supprimé pendant l'appel est laissé de côté.
@@ -166,11 +170,28 @@ export async function embedPassages(
         ];
       });
       if (values.length === 0) return [];
-      return tx
+      // La recherche ne lit que les vecteurs du modèle courant : ceux d'un ancien modèle ne servent plus.
+      await tx
+        .delete(passageVectors)
+        .where(
+          and(inArray(passageVectors.passageId, ids), ne(passageVectors.model, embedder.model)),
+        );
+      const inserted = await tx
         .insert(passageVectors)
         .values(values)
         .onConflictDoNothing()
         .returning({ passageId: passageVectors.passageId });
+      // Le passage note son modèle : passages_sans_vecteur ne le relira plus (audit n° 8).
+      await tx
+        .update(passages)
+        .set({ embeddedModel: embedder.model })
+        .where(
+          inArray(
+            passages.id,
+            values.map((value) => value.passageId),
+          ),
+        );
+      return inserted;
     });
     stored += written.length;
   }
@@ -217,10 +238,12 @@ export async function embedMissing(deps: { embedder: Embedder }, limit: number):
 
 type StaleRunRow = { run_id: string; tenant_id: string; user_id: string };
 
-// Remet en file les runs « en attente » depuis plus de `olderThanMinutes` (au plus REQUEUE_BATCH, les plus
-// anciens d'abord). La liste vient de runs_en_attente, qui lit le dernier changement d'état (`updated_at`) :
-// chaque run repris est d'abord rajeuni, sans quoi le tic suivant le remettrait en file à nouveau, puis mis
-// en file sous les droits du propriétaire de sa source. Un run dont la mise en file échoue n'est pas compté ;
+// Remet en file les runs « en attente » depuis plus de `olderThanMinutes`, et ceux restés « en cours » ou
+// « échoués » depuis plus de 30 minutes (processus mort, reprises de pg-boss épuisées), au plus REQUEUE_BATCH,
+// les plus anciens d'abord. La liste vient de runs_en_attente, qui lit le dernier changement d'état
+// (`updated_at`) : chaque run repris est d'abord rajeuni, sans quoi le tic suivant le remettrait en file à
+// nouveau, puis mis en file sous les droits du propriétaire de sa source (l'indexation refait un run « en
+// cours » ou « échoué » sans rien doubler). Un run dont la mise en file échoue n'est pas compté ;
 // il sera repris quand il aura de nouveau `olderThanMinutes` minutes. Rend le nombre de runs mis en file.
 export async function requeueStaleRuns(olderThanMinutes: number): Promise<number> {
   const { rows } = await db.execute<StaleRunRow>(
@@ -240,10 +263,16 @@ export async function requeueStaleRuns(olderThanMinutes: number): Promise<number
         tx
           .update(ingestRuns)
           .set({ updatedAt: new Date() })
-          .where(and(eq(ingestRuns.id, row.run_id), eq(ingestRuns.status, 'queued')))
+          .where(
+            and(
+              eq(ingestRuns.id, row.run_id),
+              ne(ingestRuns.status, 'done'),
+              lt(ingestRuns.updatedAt, sql`now() - make_interval(mins => ${olderThanMinutes})`),
+            ),
+          )
           .returning({ id: ingestRuns.id }),
       );
-      if (claimed.length === 0) continue; // un autre tic ou le worker l'a déjà pris
+      if (claimed.length === 0) continue; // un autre tic ou le worker l'a déjà pris (ou terminé)
       await enqueuePipelineStep(
         'index',
         { ingestRunId: row.run_id, tenantId: row.tenant_id, userId: row.user_id },

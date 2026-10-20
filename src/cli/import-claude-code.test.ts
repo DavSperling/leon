@@ -17,6 +17,7 @@ import {
   createIngestSender,
   type ImportDeps,
   importClaudeCode,
+  parseSince,
   TokenRefusedError,
 } from './import-claude-code';
 
@@ -299,5 +300,22 @@ describe('createIngestSender', () => {
     );
 
     await expect(sender(payload)).rejects.toThrow();
+  });
+});
+
+describe('parseSince', () => {
+  const tz = process.env.TZ;
+  afterEach(() => {
+    process.env.TZ = tz;
+  });
+
+  it('prend minuit à l’heure locale', () => {
+    process.env.TZ = 'Europe/Paris';
+    expect(parseSince('2026-10-13')?.toISOString()).toBe('2026-10-12T22:00:00.000Z');
+  });
+
+  it('refuse une date mal écrite et laisse passer l’absence de date', () => {
+    expect(() => parseSince('13/10/2026')).toThrow('AAAA-MM-JJ');
+    expect(parseSince(undefined)).toBeUndefined();
   });
 });

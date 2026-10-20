@@ -3,7 +3,7 @@ import { getMe, postIngest } from '../lib/api';
 import { browserStore as store } from '../lib/browser-store';
 import { recordExchange } from '../lib/capture';
 import type { Site } from '../lib/exchange';
-import { countPending, flushOutbox } from '../lib/outbox';
+import { countPending, flushOutbox, forgetOutboxOnTokenChange } from '../lib/outbox';
 import {
   type CaptureStatus,
   canCapture,
@@ -29,6 +29,8 @@ async function probeConnection(token: string): Promise<CaptureStatus['connection
 async function flush(): Promise<void> {
   const settings = await loadSettings(store);
   const { token } = settings;
+  // Tout envoi passe ici, après le changement de jeton : rien de l'ancien tampon ne part avec le nouveau.
+  await forgetOutboxOnTokenChange(store, token);
   const pending = await countPending(store);
   if (token === null) {
     await saveStatus(store, { connection: 'not_configured', pending });
@@ -71,7 +73,7 @@ export default defineBackground(() => {
     });
   });
 
-  // Jeton collé ou reprise après une pause : on n'attend pas la prochaine alarme.
+  // Jeton collé ou changé, reprise après une pause : on n'attend pas la prochaine alarme.
   browser.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && SETTINGS_KEY in changes) enqueueTask(flush);
   });

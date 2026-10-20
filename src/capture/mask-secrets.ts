@@ -34,6 +34,8 @@ const WHOLE_SECRETS: RegExp[] = [
   /\bsb_secret_[A-Za-z0-9_-]{20,}/g,
   /(?<![A-Za-z0-9_-])ya29\.[A-Za-z0-9_-]{20,}/g,
   /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g,
+  // Jeton de bot Telegram : identifiant, « : », 35 caractères commençant par « AA ».
+  /(?<![0-9])[0-9]{6,12}:AA[A-Za-z0-9_-]{33}(?![A-Za-z0-9_-])/g,
 ];
 
 // Le nom reste lisible, seule la valeur est masquée.
@@ -57,18 +59,29 @@ const looksRandom = (value: string) =>
 // Valeur entre guillemets (espaces permis) jusqu'au guillemet fermant ou à la fin de la ligne,
 // ou valeur nue jusqu'au premier blanc. Sans borne haute : ce qui est lu est consommé.
 const ASSIGNMENT =
-  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{0,40}?(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)[A-Za-z0-9_]{0,40})(\\?["']?\s{0,10}[:=]\s{0,10}\\?)(?:"([^"\n]{8,})"?|'([^'\n]{8,})'?|([^\s"']{8,}))/gi;
+  /(?<![A-Za-z0-9_])([A-Za-z0-9_]{0,40}?(?:password|passwd|pass|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)[A-Za-z0-9_]{0,40})(\\?["']?\s{0,10}[:=]\s{0,10}\\?)(?:"([^"\n]{8,})"?|'([^'\n]{8,})'?|([^\s"']{8,}))/gi;
 
 // Le mot-clé doit finir le nom ou une de ses parties : « SECRET_KEY », « apiKey », « secretKey »,
 // mais pas « Secretary », « tokens » ni « tokenizer ».
 const KEYWORD_THEN_BOUNDARY =
   /(?:password|passwd|pwd|secret|api[_-]?key|token|access[_-]?key|private[_-]?key|mdp|mot[ _-]de[ _-]passe)(?:$|_)/i;
+// « pass » seul est un mot courant (« bypass », « compass ») : il ne compte que comme partie entière
+// d'un nom (« DB_PASS », « PASS », « pass_admin »).
+const PASS_PART = /(?:^|_)pass(?:$|_)/i;
 // camelCase : la casse compte, « secretKey » oui, « SECRETARY » non.
 const KEYWORD_THEN_CAMEL =
   /(?:[Pp]assword|[Pp]asswd|[Pp]wd|[Ss]ecret|[Aa]pi[_-]?[Kk]ey|[Tt]oken|[Aa]ccess[_-]?[Kk]ey|[Pp]rivate[_-]?[Kk]ey)[A-Z]/;
-// Valeur nue qui est du code et non un secret : appel ou chemin d'objet (« getToken(request); »,
-// « process.env.ANTHROPIC_API_KEY », « z.string().min(8) »).
-const CODE_VALUE = /^[A-Za-z_$][\w$]*(?:\(|\.[A-Za-z_$])/;
+// Valeur nue qui est du code évident et non un secret : un appel (« getToken(request); »,
+// « z.string().min(8) », « req.headers.authorization?.split(' ') ») ou une variable d'environnement.
+// Une valeur à point sans appel (« Summer.Time2026! », « SG.xxx.yyy ») reste un secret.
+const CODE_VALUE =
+  /^(?:[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*(?:<[\w$.,|[\]]{1,100}>)?\(|process\.env\.|import\.meta\.env\.|os\.environ\b)/;
+// Chemin d'objet qui finit par le nom lui-même (« accessKeyId: credentials.accessKeyId, »).
+// « session?.access_token; » aussi.
+const SAME_NAME_PATH = /^[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*\??\.([A-Za-z_$][\w$]*)[;,]?$/;
+// Modèle ou renvoi à une variable, pas une valeur : « {reset_token} », « ${DB_PASSWORD} », « $DB_PASSWORD ».
+const PLACEHOLDER_VALUE = /^(?:\$?\{\{?\s?[A-Za-z_][\w.]*\s?\}\}?|\$[A-Z_][A-Z0-9_]*)[;,]?$/;
+const normalizeName = (name: string) => name.replace(/[_-]/g, '').toLowerCase();
 // « pwd » est aussi le dossier courant (« PWD=/Users/… », « Le pwd: /home/… »).
 const PATH_VALUE = /^[/~]/;
 
@@ -81,7 +94,20 @@ const CLI_PASSWORDS: Array<[line: RegExp, option: RegExp]> = [
   ],
   [/^.*\b(?:mysql|mysqldump|mariadb)\b.*$/gm, /(\s-p)(?!\[secret masqué\])[^\s"']+/g],
   [/^.*\bredis-cli\b.*$/gm, /(\s(?:-a|--pass)\s{1,10}["']?)(?!\[secret masqué\])[^\s"']+/g],
+  [
+    /^.*\bdocker\s{1,10}login\b.*$/gm,
+    /(\s(?:-p|--password)(?:\s{1,10}|=)["']?)(?!\[secret masqué\])[^\s"']+/g,
+  ],
+  [/^.*\bsshpass\b.*$/gm, /(\s-p\s{0,10}["']?)(?!\[secret masqué\])[^\s"']+/g],
 ];
+
+// Mot de passe donné dans une phrase : « Mot de passe du compte admin : X », « Le mot de passe est « X » ».
+// Jusqu'à 60 caractères entre « mot de passe » et « : » ou « est », sans franchir de fin de phrase.
+// La valeur doit avoir l'air aléatoire, pour laisser « Mot de passe oublié : Réinitialisez-le ».
+const PHRASE_PASSWORD =
+  /\b(mot de passe[^\n:=.;!?«»"]{0,60}?(?:\s?:|\sest)\s{0,10})(«\s?)?(?!\[secret masqué\])([^\s"'«»]*[^\s"'«».,;:)])/gi;
+const looksLikePassword = (value: string) =>
+  /[0-9!#$%&*+/=?@^_~]/.test(value) || (/[a-z]/.test(value) && /[A-Z]/.test(value.slice(1)));
 
 function maskAssignment(
   match: string,
@@ -91,9 +117,13 @@ function maskAssignment(
   singleQuoted: string | undefined,
   bare: string | undefined,
 ): string {
-  if (!KEYWORD_THEN_BOUNDARY.test(name) && !KEYWORD_THEN_CAMEL.test(name)) return match;
+  if (!KEYWORD_THEN_BOUNDARY.test(name) && !KEYWORD_THEN_CAMEL.test(name) && !PASS_PART.test(name))
+    return match;
+  if (PLACEHOLDER_VALUE.test(doubleQuoted ?? singleQuoted ?? bare ?? '')) return match;
   if (bare !== undefined) {
     if (CODE_VALUE.test(bare)) return match;
+    const last = SAME_NAME_PATH.exec(bare)?.[1];
+    if (last !== undefined && normalizeName(last) === normalizeName(name)) return match;
     if (/pwd$/i.test(name) && PATH_VALUE.test(bare)) return match;
   }
   const quote = doubleQuoted !== undefined ? '"' : singleQuoted !== undefined ? "'" : '';
@@ -122,6 +152,9 @@ export function maskSecrets(text: string): string {
       looksRandom(value) ? `${scheme} ${SECRET_MASK}` : match,
     )
     .replace(ASSIGNMENT, maskAssignment);
+  masked = masked.replace(PHRASE_PASSWORD, (match, lead: string, quote = '', value: string) =>
+    value.length >= 6 && looksLikePassword(value) ? `${lead}${quote}${SECRET_MASK}` : match,
+  );
   for (const [line, option] of CLI_PASSWORDS) {
     masked = masked.replace(line, (text) => text.replace(option, `$1${SECRET_MASK}`));
   }

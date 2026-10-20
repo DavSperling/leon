@@ -106,6 +106,85 @@ describe('maskSecrets : le nom reste, la valeur est masquée', () => {
   });
 });
 
+describe('maskSecrets : troisième audit', () => {
+  // Régression du second tour : une valeur à point était prise pour du code.
+  it.each([
+    ['PASSWORD=Summer.Time2026!', `PASSWORD=${SECRET_MASK}`],
+    ['DB_PASSWORD=correct.horse.battery.staple', `DB_PASSWORD=${SECRET_MASK}`],
+    ['password: Hunter2.Secret', `password: ${SECRET_MASK}`],
+    [`SENDGRID_API_KEY=SG.${alnum(22)}.${alnum(43)}`, `SENDGRID_API_KEY=${SECRET_MASK}`],
+  ])('masque une valeur à point : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
+
+  // Formats manqués.
+  it.each([
+    [
+      'Mot de passe du compte admin : Tr0ub4dor&3xyz (à changer)',
+      `Mot de passe du compte admin : ${SECRET_MASK} (à changer)`,
+    ],
+    [
+      'Le mot de passe est « Tr0ub4dor&3xyz », je te le donne.',
+      `Le mot de passe est « ${SECRET_MASK} », je te le donne.`,
+    ],
+    ['Le mot de passe est Tr0ub4dor&3xyz.', `Le mot de passe est ${SECRET_MASK}.`],
+    ['DB_PASS=Hunter2Secret!', `DB_PASS=${SECRET_MASK}`],
+    [
+      'docker login -u paul -p Hunter2Secret registry.acme.fr',
+      `docker login -u paul -p ${SECRET_MASK} registry.acme.fr`,
+    ],
+    [
+      "sshpass -p 'Hunter2Secret' ssh root@10.0.0.4",
+      `sshpass -p '${SECRET_MASK}' ssh root@10.0.0.4`,
+    ],
+    [
+      `https://api.telegram.org/bot123456789:AA${alnum(33)}/sendMessage`,
+      `https://api.telegram.org/bot${SECRET_MASK}/sendMessage`,
+    ],
+  ])('masque : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+    expect(maskSecrets(expected)).toBe(expected);
+  });
+
+  it.each([
+    ['password: {Hunter2Secret!}', `password: ${SECRET_MASK}`],
+    ['password=$ecret2026Pass', `password=${SECRET_MASK}`],
+  ])('masque une valeur qui ressemble à un modèle sans en être un : %s', (input, expected) => {
+    expect(maskSecrets(input)).toBe(expected);
+  });
+
+  // Les mêmes mots dans une phrase ordinaire.
+  it.each([
+    "Mot de passe oublié : l'utilisateur reçoit un lien par e-mail.",
+    'Mot de passe oublié : Réinitialisez-le depuis la console.',
+    "mot de passe : à demander à Paul (il est en congés jusqu'au 3).",
+    'Le mot de passe est généralement trop court.',
+    'Le mot de passe doit faire au moins 12 caractères.',
+    'bypass: temporairement',
+    'docker run -e POSTGRES_PASSWORD -p 5432:5432 postgres:17',
+    'docker login --password-stdin registry.acme.fr',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+
+  // Du code évident reste intact.
+  it.each([
+    'const accessToken = session?.access_token;',
+    'const secretKeyRef = useRef<HTMLInputElement>(null);',
+    'password_reset_url = f"{base_url}/reset?token={reset_token}"',
+    '  "password": "$' + '{DB_PASSWORD}",',
+    'password: {{ db_password }}',
+    'DB_PASSWORD=$POSTGRES_PASSWORD',
+    "const token = req.headers.authorization?.split(' ')[1];",
+    'accessKeyId: credentials.accessKeyId,',
+    'const key = import.meta.env.VITE_API_KEY;',
+    'api_key = os.environ.get("OPENAI_API_KEY")',
+  ])('laisse intact : %s', (text) => {
+    expect(maskSecrets(text)).toBe(text);
+  });
+});
+
 describe('maskSecrets : texte ordinaire', () => {
   it.each([
     'le sk-8 de la cuisine',
@@ -280,6 +359,12 @@ const TRAPS = [
   'mysql -pa ',
   'redis-cli -a ',
   'mot de passe: ',
+  'Mot de passe du compte ',
+  'Le mot de passe est « ',
+  'DB_PASS=',
+  'docker login -p ',
+  'sshpass -p ',
+  '123456789:AA',
 ];
 const trapText = (unit: string) => unit.repeat(Math.ceil(TWO_MB / unit.length)).slice(0, TWO_MB);
 
@@ -290,4 +375,13 @@ describe('maskSecrets : temps linéaire', () => {
     maskSecrets(text);
     expect(performance.now() - start).toBeLessThan(2000);
   });
+
+  it.each([`password=${trapText('a.')}!`, `password=${trapText('a?.')}`])(
+    'traite une valeur nue de 2 Mo en chemin d’objet en moins de 2 s',
+    (text) => {
+      const start = performance.now();
+      maskSecrets(text);
+      expect(performance.now() - start).toBeLessThan(2000);
+    },
+  );
 });

@@ -5,6 +5,7 @@ import {
   countPending,
   enqueuePayload,
   flushOutbox,
+  forgetOutboxOnTokenChange,
   OUTBOX_MAX,
   OUTBOX_MAX_BYTES,
   takeDropped,
@@ -81,6 +82,8 @@ describe('flushOutbox', () => {
       expect(await flushOutbox(store, post, always)).toBe('connected');
       expect(sent).toEqual(['refusee', 'bonne']);
       expect(await countPending(store)).toBe(0);
+      // Une perte comme une autre : la popup la dit.
+      expect(await takeDropped(store)).toEqual({ refused: 1 });
     },
   );
 
@@ -156,8 +159,8 @@ describe('enqueuePayload', () => {
   it('compte les échanges sortis par le plafond', async () => {
     const store = createMemoryStore();
     for (let i = 0; i < OUTBOX_MAX + 2; i += 1) await enqueuePayload(store, payload(`p${i}`));
-    expect(await takeDropped(store)).toBe(2);
-    expect(await takeDropped(store)).toBe(0);
+    expect(await takeDropped(store)).toEqual({ full: 2 });
+    expect(await takeDropped(store)).toEqual({});
   });
 
   // Au-delà du quota du navigateur, l'écriture échouerait et la capture serait perdue sans un mot.
@@ -166,7 +169,7 @@ describe('enqueuePayload', () => {
     const third = Math.ceil(OUTBOX_MAX_BYTES / 3);
     for (const id of ['a', 'b', 'c']) await enqueuePayload(store, heavyPayload(id, third));
     expect(await countPending(store)).toBe(2);
-    expect(await takeDropped(store)).toBe(1);
+    expect(await takeDropped(store)).toEqual({ full: 1 });
     const stored = JSON.stringify(await store.get('leon.outbox'));
     expect(new TextEncoder().encode(stored).length).toBeLessThanOrEqual(OUTBOX_MAX_BYTES);
   });
@@ -176,7 +179,69 @@ describe('enqueuePayload', () => {
     await enqueuePayload(store, payload('petit'));
     await enqueuePayload(store, heavyPayload('enorme', OUTBOX_MAX_BYTES + 1));
     expect(await countPending(store)).toBe(1);
-    expect(await takeDropped(store)).toBe(1);
+    expect(await takeDropped(store)).toEqual({ full: 1 });
+  });
+});
+
+describe('takeDropped', () => {
+  // La popup lit les pertes pendant que le service worker en ajoute : aucune ne doit disparaître.
+  it('ne perd pas une perte comptée entre la lecture et l’écriture de la popup', async () => {
+    const inner = createMemoryStore();
+    await inner.set('leon.dropped', { full: 2 });
+    let injected = false;
+    const store = {
+      async get(key: string) {
+        const value = await inner.get(key);
+        if (key === 'leon.dropped' && !injected) {
+          injected = true;
+          await inner.set('leon.dropped', { full: 3 });
+        }
+        return value;
+      },
+      set: (key: string, value: unknown) => inner.set(key, value),
+    };
+    expect(await takeDropped(store)).toEqual({ full: 2 });
+    expect(await takeDropped(store)).toEqual({ full: 1 });
+    expect(await takeDropped(store)).toEqual({});
+  });
+});
+
+describe('forgetOutboxOnTokenChange', () => {
+  const X = `leon_${'x'.repeat(43)}`;
+  const Y = `leon_${'y'.repeat(43)}`;
+
+  it.each([
+    ['un autre jeton', Y],
+    ['le jeton retiré', null],
+  ])('vide le tampon et compte la perte quand le jeton change (%s)', async (_name, next) => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X);
+    await enqueuePayload(store, payload('a'));
+    await enqueuePayload(store, payload('b'));
+    await forgetOutboxOnTokenChange(store, next);
+    expect(await countPending(store)).toBe(0);
+    expect(await takeDropped(store)).toEqual({ token: 2 });
+  });
+
+  it('garde le tampon avec le même jeton', async () => {
+    const store = createMemoryStore();
+    await forgetOutboxOnTokenChange(store, X);
+    await enqueuePayload(store, payload('a'));
+    await forgetOutboxOnTokenChange(store, X);
+    expect(await countPending(store)).toBe(1);
+  });
+
+  it('garde le tampon au premier jeton (capté avant tout jeton, ou avant la mise à jour)', async () => {
+    const store = createMemoryStore();
+    await enqueuePayload(store, payload('a'));
+    await forgetOutboxOnTokenChange(store, X);
+    expect(await countPending(store)).toBe(1);
+    const later = createMemoryStore();
+    await forgetOutboxOnTokenChange(later, null);
+    await enqueuePayload(later, payload('b'));
+    await forgetOutboxOnTokenChange(later, Y);
+    expect(await countPending(later)).toBe(1);
+    expect(await takeDropped(later)).toEqual({});
   });
 });
 

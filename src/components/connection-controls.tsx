@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { canReconnect, oauthStartPath } from '@/lib/connection-form';
+import { canReconnect, canSyncNow, oauthStartPath } from '@/lib/connection-form';
 import { formatDate } from '@/lib/format';
 import type { CatalogField } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
@@ -147,7 +147,7 @@ export function ConnectionControls({
         <Button
           variant="outline"
           size="sm"
-          disabled={pending || paused}
+          disabled={pending || !canSyncNow(view)}
           onClick={() =>
             run(
               () => syncNowAction(view.id),

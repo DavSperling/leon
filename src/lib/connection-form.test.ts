@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   canReconnect,
+  canSyncNow,
   fieldsFromForm,
   inputTypeFor,
   invalidFieldsMessage,
@@ -188,6 +189,19 @@ describe('canReconnect', () => {
   it('laisse « Remplacer la clé » à une connexion à clé, avec ou sans authMode', () => {
     expect(canReconnect({ config: { authMode: 'key' } })).toBe(false);
     expect(canReconnect({ config: { repos: ['acme/leon'] } })).toBe(false);
+  });
+});
+
+// Audit 4 n° 11 : une connexion arrêtée (créateur parti) ne propose pas « Synchroniser maintenant ».
+describe('canSyncNow', () => {
+  it('propose la synchronisation à une connexion active ou en erreur', () => {
+    expect(canSyncNow({ status: 'active', creatorLeft: false })).toBe(true);
+    expect(canSyncNow({ status: 'error', creatorLeft: false })).toBe(true);
+  });
+
+  it('la refuse en pause, ou quand le créateur n’est plus membre', () => {
+    expect(canSyncNow({ status: 'paused', creatorLeft: false })).toBe(false);
+    expect(canSyncNow({ status: 'active', creatorLeft: true })).toBe(false);
   });
 });
 

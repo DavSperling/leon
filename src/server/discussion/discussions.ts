@@ -242,12 +242,13 @@ const touch = (tx: Tx, id: string) =>
 // Avant une réponse : la question entre dans la discussion (sauf si elle y attend déjà sa réponse : une
 // discussion ouverte depuis la barre, une réponse tombée en panne), puis les 20 derniers messages pour le
 // modèle et, tant que la discussion n'a aucune réponse, les résultats d'où elle part que l'auteur voit encore,
-// numérotés de 1 à n dans leur ordre (l'agent les numérote ainsi).
+// numérotés de 1 à n dans leur ordre (l'agent les numérote ainsi). `questionId` : la question à laquelle la
+// réponse répondra (saveReply).
 export async function startReply(
   ctx: TenantContext,
   id: string,
   question: string,
-): Promise<{ history: ChatMessage[]; seeds: DiscussionCitation[] } | null> {
+): Promise<{ questionId: string; history: ChatMessage[]; seeds: DiscussionCitation[] } | null> {
   if (!isUuid(id)) return null;
   const text = cleanQuestion(question);
   return withTenant(ctx, async (tx) => {
@@ -256,20 +257,29 @@ export async function startReply(
     const byId = eq(discussionMessages.discussionId, id);
     const newestFirst = [desc(discussionMessages.createdAt), desc(discussionMessages.id)];
     const [last] = await tx
-      .select({ role: discussionMessages.role, content: discussionMessages.content })
+      .select({
+        id: discussionMessages.id,
+        role: discussionMessages.role,
+        content: discussionMessages.content,
+      })
       .from(discussionMessages)
       .where(byId)
       .orderBy(...newestFirst)
       .limit(1);
+    let questionId = last?.id ?? '';
     if (!(last?.role === 'user' && last.content === text)) {
-      await tx.insert(discussionMessages).values({
-        tenantId: ctx.tenantId,
-        discussionId: id,
-        role: 'user',
-        content: text,
-        acl,
-        createdAt: nextMessageTime(ctx, id),
-      });
+      const [inserted] = await tx
+        .insert(discussionMessages)
+        .values({
+          tenantId: ctx.tenantId,
+          discussionId: id,
+          role: 'user',
+          content: text,
+          acl,
+          createdAt: nextMessageTime(ctx, id),
+        })
+        .returning({ id: discussionMessages.id });
+      questionId = inserted?.id ?? '';
     }
     await touch(tx, id);
     const recent = await tx
@@ -297,32 +307,34 @@ export async function startReply(
         .filter((seed) => visible.has(seed.sourceId))
         .map((seed, index) => ({ ...seed, n: index + 1 }));
     }
-    return { history: recent.reverse(), seeds };
+    return { questionId, history: recent.reverse(), seeds };
   });
 }
 
 // 'gardee' : la réponse est écrite ; 'invisible' : la discussion n'est pas à l'auteur ; 'deja-repondue' : le
-// dernier message est déjà une réponse (une autre réponse à la même question a été gardée entre-temps).
+// dernier message n'est plus sa question (une autre réponse à la même question a été gardée entre-temps, ou une
+// autre question est arrivée depuis).
 export type SaveReplyResult = 'gardee' | 'invisible' | 'deja-repondue';
 
-// La réponse de l'agent et ses citations, juste après la question à laquelle elle répond : jamais deux réponses
-// de suite. Rien n'est écrit pour une discussion invisible ou déjà répondue.
+// La réponse de l'agent et ses citations, juste après la question à laquelle elle répond (`questionId`) : jamais
+// deux réponses de suite, ni une réponse après une autre question. Rien n'est écrit pour une discussion invisible
+// ou déjà répondue.
 export async function saveReply(
   ctx: TenantContext,
   id: string,
-  reply: { content: string; citations: DiscussionCitation[] },
+  reply: { questionId: string; content: string; citations: DiscussionCitation[] },
 ): Promise<SaveReplyResult> {
   if (!isUuid(id)) return 'invisible';
   return withTenant(ctx, async (tx) => {
     const acl = await lockDiscussion(tx, id);
     if (!acl) return 'invisible';
     const [last] = await tx
-      .select({ role: discussionMessages.role })
+      .select({ id: discussionMessages.id })
       .from(discussionMessages)
       .where(eq(discussionMessages.discussionId, id))
       .orderBy(desc(discussionMessages.createdAt), desc(discussionMessages.id))
       .limit(1);
-    if (last?.role !== 'user') return 'deja-repondue';
+    if (last?.id !== reply.questionId) return 'deja-repondue';
     await tx.insert(discussionMessages).values({
       tenantId: ctx.tenantId,
       discussionId: id,

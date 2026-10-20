@@ -209,10 +209,11 @@ describe('replyStream', () => {
   it('renvoie au modèle les 20 derniers messages au plus, la nouvelle question en dernier', async () => {
     const { alice } = await setup();
     const id = await createDiscussion(alice, { question: 'message 1' });
+    let questionId = (await startReply(alice, id, 'message 1'))?.questionId ?? '';
     for (let index = 2; index <= 28; index++) {
       if (index % 2 === 0)
-        await saveReply(alice, id, { content: `message ${index}`, citations: [] });
-      else await startReply(alice, id, `message ${index}`);
+        await saveReply(alice, id, { questionId, content: `message ${index}`, citations: [] });
+      else questionId = (await startReply(alice, id, `message ${index}`))?.questionId ?? '';
     }
     const llm = createFakeLlm({ agent: () => [text('Réponse')] });
 

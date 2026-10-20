@@ -167,7 +167,11 @@ async function* runReply(
     const citations = reason === 'refus' ? [] : numbering.citations(referencedNumbers(content));
     let saved: Awaited<ReturnType<typeof saveReply>>;
     try {
-      saved = await saveReply(ctx, discussionId, { content, citations });
+      saved = await saveReply(ctx, discussionId, {
+        questionId: turn.questionId,
+        content,
+        citations,
+      });
     } catch (error) {
       logError('discussion.indisponible', error, { etape: 'enregistrement' });
       yield { type: 'indisponible' };

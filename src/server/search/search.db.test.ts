@@ -411,6 +411,18 @@ describe('questions en phrase', () => {
     ]);
   });
 
+  it('écarte toutes les formes d’un mot nié dès la première passe', async () => {
+    const { tenantId, alice } = await team();
+    for (const [title, text] of [
+      ['Budget des factures', 'Le budget zibelinaire des factures est validé.'],
+      ['Budget seul', 'Le budget zibelinaire est validé.'],
+    ] as const) {
+      await seedIndexed(alice, { kind: 'linear', acl: [tenantId], title, turns: [{ text }] });
+    }
+    // « factures » n'a pas la forme simple « facture » : la branche simple ne l'écartait pas.
+    expect(titles(await search(alice, 'zibelinaire -facture'))).toEqual(['Budget seul']);
+  });
+
   it('ne lève aucune erreur sur une question faite de mots outils', async () => {
     const { alice } = await team();
     await seedIndexed(alice, { turns: [{ text: 'Qui a validé le budget ?' }] });

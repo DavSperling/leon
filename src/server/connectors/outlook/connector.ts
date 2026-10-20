@@ -120,9 +120,10 @@ export const outlookConnector: Connector<Config> = {
   async verify(config, http) {
     const me = await graphClient(config, http).me();
     const address = me.mail || me.userPrincipalName;
+    const key = me.id ? { accountKey: me.id } : {};
     if (me.displayName)
-      return { account: address ? `${me.displayName} (${address})` : me.displayName };
-    return { account: address || 'compte Outlook' };
+      return { account: address ? `${me.displayName} (${address})` : me.displayName, ...key };
+    return { account: address || 'compte Outlook', ...key };
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {

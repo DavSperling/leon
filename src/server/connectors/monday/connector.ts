@@ -146,7 +146,7 @@ export const mondayConnector: Connector<Config> = {
   oauth: mondayOAuth,
 
   async verify(config, http) {
-    return { account: await fetchAccount(http, tokenOf(config)) };
+    return fetchAccount(http, tokenOf(config));
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {

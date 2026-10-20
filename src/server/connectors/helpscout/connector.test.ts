@@ -149,7 +149,7 @@ describe('helpscout : verify', () => {
 
     const result = await helpscoutConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (marie@acme.test)' });
+    expect(result).toEqual({ account: 'Marie Durand (marie@acme.test)', accountKey: '4' });
     expect(calls[0]).toMatchObject({
       method: 'POST',
       url: TOKEN_URL,
@@ -168,6 +168,7 @@ describe('helpscout : verify', () => {
 
     await expect(helpscoutConnector.verify(config, http)).resolves.toEqual({
       account: 'marie@acme.test',
+      accountKey: '4',
     });
   });
 
@@ -218,6 +219,7 @@ describe('helpscout : connexion par le bouton', () => {
 
     await expect(helpscoutConnector.verify(oauthConfig(), http)).resolves.toEqual({
       account: 'Marie Durand (marie@acme.test)',
+      accountKey: '4',
     });
 
     expect(calls).toHaveLength(1);

@@ -88,9 +88,12 @@ export const confluenceConnector: Connector<Config> = {
     const me = await fetchMe(createApi(http, config));
     // Sans identifiants valides, certains sites répondent 200 avec un visiteur anonyme.
     if (me.type === 'anonymous') throw new ConnectorAuthError('Confluence', 401);
-    if (config.authMode === 'oauth') return { account: oauthAccount(config) };
+    const key = me.accountId
+      ? { accountKey: `${me.accountId}:${config.cloudId ?? config.site}` }
+      : {};
+    if (config.authMode === 'oauth') return { account: oauthAccount(config), ...key };
     const name = me.displayName?.trim() || me.publicName?.trim() || 'Compte Atlassian';
-    return { account: `${name} (${config.site})` };
+    return { account: `${name} (${config.site})`, ...key };
   },
 
   async *sync(config, state, http) {

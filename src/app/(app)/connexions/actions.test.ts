@@ -274,7 +274,7 @@ describe('connectAction avec le vrai connecteur GitHub', () => {
     vi.mocked(listCatalog).mockReturnValue([github as CatalogItem]);
     fetchStub.mockImplementation(async (url: string) =>
       new URL(url).pathname === '/user'
-        ? Response.json({ login: 'david' })
+        ? Response.json({ login: 'david', id: 4102 })
         : Response.json({ message: 'Not Found' }, { status: 404 }),
     );
     vi.stubGlobal('fetch', fetchStub);

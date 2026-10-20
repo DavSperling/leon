@@ -39,7 +39,7 @@ export function graphClient({ accessToken }: { accessToken: string }, http: Conn
 
   return {
     me() {
-      const query = { $select: 'displayName,mail,userPrincipalName' };
+      const query = { $select: 'id,displayName,mail,userPrincipalName' };
       return http.json({ url: `${GRAPH}/me`, headers: { authorization }, query }, MeSchema);
     },
 

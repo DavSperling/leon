@@ -38,7 +38,7 @@ export type Task = z.infer<typeof TaskSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 export type Team = { id: string; name: string };
 
-const UserReply = z.object({ user: z.object({ username: z.string() }) });
+const UserReply = z.object({ user: z.object({ id: z.number(), username: z.string() }) });
 const TeamsReply = z.object({ teams: z.array(z.object({ id: z.string(), name: z.string() })) });
 // last_page est documenté pour les tâches d'une liste, pas pour celles d'un espace : facultatif.
 const TasksReply = z.object({ tasks: z.array(TaskSchema), last_page: z.boolean().optional() });
@@ -51,8 +51,8 @@ export function clickupClient(authorization: string, http: ConnectorHttp) {
   const path = (id: string) => encodeURIComponent(id);
 
   return {
-    async user(): Promise<string> {
-      return (await http.json({ url: `${API}/user`, headers }, UserReply)).user.username;
+    async user(): Promise<{ id: number; username: string }> {
+      return (await http.json({ url: `${API}/user`, headers }, UserReply)).user;
     },
 
     // ClickUp appelle « team » ce que l'interface appelle un espace de travail.

@@ -174,7 +174,7 @@ describe('hubspot : verify', () => {
 
     const result = await hubspotConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Compte HubSpot 12345678' });
+    expect(result).toEqual({ account: 'Compte HubSpot 12345678', accountKey: '12345678' });
     expect(calls.map((call) => call.url)).toEqual([
       `${OBJECTS}/notes/search`,
       `${OBJECTS}/calls/search`,
@@ -926,7 +926,7 @@ describe('hubspot : jeton OAuth', () => {
 
     const result = await hubspotConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Compte HubSpot 12345678' });
+    expect(result).toEqual({ account: 'Compte HubSpot 12345678', accountKey: '12345678' });
     expect(calls).toHaveLength(5);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });

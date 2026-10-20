@@ -80,7 +80,8 @@ export function githubClient(token: string, http: ConnectorHttp) {
   }
 
   return {
-    account: () => http.json({ url: `${API}/user`, headers }, z.object({ login: z.string() })),
+    account: () =>
+      http.json({ url: `${API}/user`, headers }, z.object({ id: z.number(), login: z.string() })),
 
     // GitHub répond 404 à un dépôt privé hors de portée du jeton, et 403 à un jeton sans accès.
     async checkRepo(repo: string): Promise<void> {

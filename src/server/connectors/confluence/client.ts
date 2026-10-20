@@ -30,6 +30,7 @@ const Body = z.object({ storage: z.object({ value: z.string() }).nullish() }).nu
 
 const Me = z.object({
   type: z.string().nullish(),
+  accountId: z.string().nullish(),
   displayName: z.string().nullish(),
   publicName: z.string().nullish(),
 });

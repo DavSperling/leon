@@ -6,9 +6,15 @@ import type { AnyConnector } from '@/server/connectors/types';
 // Il accepte aussi la clé (`token`). `toConfigUrl` : adresse que `toConfig` appelle ; hors de
 // `setupHosts` (vide), le client HTTP la refuse. `verifyFails` : `verify` lève un refus de clé.
 // `account` : le compte que rend `verify` ; `repos` : ce que `toConfig` rend au lieu du champ saisi
-// (un outil qui retombe sur un autre site, comme Jira).
+// (un outil qui retombe sur un autre site, comme Jira) ; `accountKey` : l'identifiant stable du compte.
 export function fakeOAuthConnector(
-  options: { toConfigUrl?: string; verifyFails?: boolean; account?: string; repos?: string[] } = {},
+  options: {
+    toConfigUrl?: string;
+    verifyFails?: boolean;
+    account?: string;
+    accountKey?: string;
+    repos?: string[];
+  } = {},
 ): AnyConnector {
   const schema = z
     .object({
@@ -31,7 +37,8 @@ export function fakeOAuthConnector(
     hosts: () => ['api.github.test'],
     verify: async () => {
       if (options.verifyFails) throw new ConnectorAuthError('GitHub', 401);
-      return { account: options.account ?? 'acme' };
+      const account = options.account ?? 'acme';
+      return options.accountKey ? { account, accountKey: options.accountKey } : { account };
     },
     async *sync() {},
     oauth: {

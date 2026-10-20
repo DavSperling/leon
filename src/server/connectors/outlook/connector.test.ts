@@ -110,21 +110,34 @@ describe('outlookConnector.verify', () => {
   it('lit le profil avec le jeton en Bearer et rend le nom et l’adresse', async () => {
     const { result, calls } = run(me);
 
-    await expect(result).resolves.toEqual({ account: 'Marie Durand (marie.durand@acme.test)' });
+    await expect(result).resolves.toEqual({
+      account: 'Marie Durand (marie.durand@acme.test)',
+      accountKey: '48d31887-5fad-4d73-a9f5-3c356e68a038',
+    });
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${ACCESS}`);
-    expect(param(calls[0]?.url, '$select')).toBe('displayName,mail,userPrincipalName');
+    expect(param(calls[0]?.url, '$select')).toBe('id,displayName,mail,userPrincipalName');
   });
 
   it('se rabat sur le nom d’utilisateur quand le profil n’a pas d’adresse', async () => {
     const { result } = run({ ...me, mail: null });
 
-    await expect(result).resolves.toEqual({ account: 'Marie Durand (marie.durand@acme.test)' });
+    await expect(result).resolves.toEqual({
+      account: 'Marie Durand (marie.durand@acme.test)',
+      accountKey: '48d31887-5fad-4d73-a9f5-3c356e68a038',
+    });
   });
 
   it('rend l’adresse seule quand le profil n’a pas de nom', async () => {
-    const { result } = run({ mail: 'marie.durand@acme.test', userPrincipalName: 'm@acme.test' });
+    const { result } = run({
+      id: me.id,
+      mail: 'marie.durand@acme.test',
+      userPrincipalName: 'm@acme.test',
+    });
 
-    await expect(result).resolves.toEqual({ account: 'marie.durand@acme.test' });
+    await expect(result).resolves.toEqual({
+      account: 'marie.durand@acme.test',
+      accountKey: '48d31887-5fad-4d73-a9f5-3c356e68a038',
+    });
   });
 
   it('lève ConnectorAuthError sur un 401', async () => {

@@ -94,9 +94,12 @@ export const asanaConnector: Connector<Config> = {
   oauth: asanaOAuth,
 
   async verify(config, http) {
-    const { name, workspaces } = await asanaClient(bearerToken(config), http).me();
+    const { gid, name, workspaces } = await asanaClient(bearerToken(config), http).me();
     const workspace = pickWorkspace(workspaces, config.workspace);
-    return { account: `${name ?? 'Compte Asana'} (${workspace.name})` };
+    return {
+      account: `${name ?? 'Compte Asana'} (${workspace.name})`,
+      accountKey: `${gid}:${workspace.gid}`,
+    };
   },
 
   async *sync(config, state, http): AsyncGenerator<SyncPage> {

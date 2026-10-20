@@ -142,9 +142,12 @@ export const attioConnector: Connector<Config> = {
     // Un jeton inconnu ou révoqué reçoit une réponse 200 « active: false ».
     if (!self.active) throw new ConnectorAuthError('Attio', 401);
     await attio.probeNotes();
-    return {
-      account: self.workspace_name ? `Attio (espace ${self.workspace_name})` : 'Attio (clé valide)',
-    };
+    const account = self.workspace_name
+      ? `Attio (espace ${self.workspace_name})`
+      : 'Attio (clé valide)';
+    if (!self.workspace_id) return { account };
+    const member = self.authorized_by_workspace_member_id;
+    return { account, accountKey: member ? `${self.workspace_id}:${member}` : self.workspace_id };
   },
 
   sync(config: Config, state, http: ConnectorHttp) {

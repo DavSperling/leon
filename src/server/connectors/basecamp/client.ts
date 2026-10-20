@@ -60,7 +60,10 @@ export function basecampClient(
     base,
 
     profile: () =>
-      http.json({ url: `${base}/my/profile.json`, headers }, z.object({ name: z.string() })),
+      http.json(
+        { url: `${base}/my/profile.json`, headers },
+        z.object({ id: z.number(), name: z.string() }),
+      ),
 
     // Les enregistrements d'un type, tous projets actifs confondus, du plus récemment modifié au plus
     // ancien. `next` : l'adresse de la page suivante que Basecamp a donnée dans l'en-tête Link.

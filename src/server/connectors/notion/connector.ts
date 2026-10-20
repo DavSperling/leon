@@ -207,7 +207,12 @@ export const notionConnector: Connector<Config> = {
     const me = await fetchMe({ http, token: bearer(config) });
     const name = me.name ?? 'Intégration';
     const workspace = me.bot?.workspace_name;
-    return { account: workspace ? `${name} (${workspace})` : name };
+    const account = workspace ? `${name} (${workspace})` : name;
+    // Le propriétaire et l'espace d'un robot ; une personne se reconnaît à son propre identifiant.
+    if (me.type !== 'bot') return { account, accountKey: me.id };
+    const workspaceId = me.bot?.workspace_id;
+    if (!workspaceId) return { account };
+    return { account, accountKey: `${workspaceId}:${me.bot?.owner?.user?.id ?? 'espace'}` };
   },
 
   async *sync(config, state, http) {

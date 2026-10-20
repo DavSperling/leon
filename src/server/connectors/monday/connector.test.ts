@@ -154,6 +154,7 @@ describe('mondayConnector : verify', () => {
 
     await expect(mondayConnector.verify(CONFIG, http)).resolves.toEqual({
       account: 'Marie Durand (Acme)',
+      accountKey: '12345678:1234567',
     });
 
     expect(calls).toHaveLength(1);
@@ -169,6 +170,7 @@ describe('mondayConnector : verify', () => {
 
     await expect(mondayConnector.verify(OAUTH_CONFIG, http)).resolves.toEqual({
       account: 'Marie Durand (Acme)',
+      accountKey: '12345678:1234567',
     });
 
     expect(calls).toHaveLength(1);

@@ -68,7 +68,7 @@ export const miroConnector: Connector<Config> = {
   oauth: miroOAuth,
 
   async verify(config, http) {
-    return { account: await miroClient(config.accessToken, http).account() };
+    return miroClient(config.accessToken, http).account();
   },
 
   async *sync(config, state, http) {

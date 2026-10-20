@@ -167,6 +167,7 @@ describe('basecamp : verify', () => {
 
     await expect(basecampConnector.verify(config, http)).resolves.toEqual({
       account: 'Acme SAS (Marie Durand)',
+      accountKey: '99999999:1049715913',
     });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);

@@ -184,7 +184,10 @@ describe('confluence : verify', () => {
 
     const result = await confluenceConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (acme)' });
+    expect(result).toEqual({
+      account: 'Marie Durand (acme)',
+      accountKey: '5b10ac8d82e05b22cc7d4ef5:acme',
+    });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe(`${SITE}/wiki/rest/api/user/current`);
     expect(calls[0]?.headers).toMatchObject({ authorization: BASIC, accept: 'application/json' });
@@ -195,7 +198,10 @@ describe('confluence : verify', () => {
       { url: `${SITE}/wiki/rest/api/user/current`, json: { ...userCurrent, displayName: null } },
     ]);
 
-    expect(await confluenceConnector.verify(config, http)).toEqual({ account: 'Marie (acme)' });
+    expect(await confluenceConnector.verify(config, http)).toEqual({
+      account: 'Marie (acme)',
+      accountKey: '5b10ac8d82e05b22cc7d4ef5:acme',
+    });
   });
 
   it('refuse une clé rejetée, par un 401 comme par une réponse anonyme', async () => {
@@ -703,7 +709,10 @@ describe('confluence : le bouton, verify', () => {
 
     const result = await confluenceConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Connecté : acme.atlassian.net, 1 autre site disponible' });
+    expect(result).toEqual({
+      account: 'Connecté : acme.atlassian.net, 1 autre site disponible',
+      accountKey: `5b10ac8d82e05b22cc7d4ef5:${CLOUD_ID}`,
+    });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe(CURRENT);
     expect(calls[0]?.headers).toMatchObject({ authorization: `Bearer ${ACCESS}` });
@@ -715,6 +724,7 @@ describe('confluence : le bouton, verify', () => {
 
     expect(await confluenceConnector.verify(cfg, http)).toEqual({
       account: 'Connecté : acme.atlassian.net',
+      accountKey: `5b10ac8d82e05b22cc7d4ef5:${CLOUD_ID}`,
     });
   });
 

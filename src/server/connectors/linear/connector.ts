@@ -122,7 +122,7 @@ export const linearConnector: Connector<Config> = {
   oauth: linearOAuth,
 
   async verify(config, http) {
-    return { account: await fetchAccount(http, authorizationOf(config)) };
+    return fetchAccount(http, authorizationOf(config));
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {

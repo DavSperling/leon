@@ -181,7 +181,7 @@ describe('gitlab : verify', () => {
 
     const result = await gitlabConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'marie-durand' });
+    expect(result).toEqual({ account: 'marie-durand', accountKey: '1' });
     expect(calls.map((call) => call.url)).toEqual([`${API}/user`, PROJECT]);
     expect(calls[0]?.headers).toMatchObject({ 'private-token': TOKEN });
     expect(calls[0]?.headers).not.toHaveProperty('authorization');
@@ -837,7 +837,7 @@ describe('gitlab : bouton, appels avec le jeton OAuth', () => {
 
     const result = await gitlabConnector.verify(parsedConfig(), http);
 
-    expect(result).toEqual({ account: 'marie-durand' });
+    expect(result).toEqual({ account: 'marie-durand', accountKey: '1' });
     expect(calls).toHaveLength(2);
     for (const call of calls) {
       expect(call.headers).toMatchObject(bearer);

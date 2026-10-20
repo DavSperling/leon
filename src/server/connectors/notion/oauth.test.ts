@@ -323,13 +323,21 @@ describe('configSchema', () => {
 });
 
 describe('avec le jeton du bouton', () => {
-  it("verify l'envoie en Bearer, avec la version de l'API", async () => {
+  // Le robot d'une intégration publique appartient à la personne qui l'a ajoutée (bot.owner.user).
+  it("verify l'envoie en Bearer, avec la version de l'API, et rend le propriétaire et l'espace", async () => {
+    const owned = {
+      ...me,
+      bot: { ...me.bot, owner: { type: 'user', user: tokenFirst.owner.user } },
+    };
     const { http, calls } = testHttp(notionConnector, OAUTH_CONFIG, [
-      { url: `${API}/users/me`, json: me },
+      { url: `${API}/users/me`, json: owned },
     ]);
     const config = notionConnector.configSchema.parse(OAUTH_CONFIG);
 
-    await expect(notionConnector.verify(config, http)).resolves.toEqual({ account: 'Leon (Acme)' });
+    await expect(notionConnector.verify(config, http)).resolves.toEqual({
+      account: 'Leon (Acme)',
+      accountKey: `${me.bot.workspace_id}:${tokenFirst.owner.user.id}`,
+    });
 
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${ACCESS}`);
     expect(calls[0]?.headers['notion-version']).toBe('2026-03-11');

@@ -147,7 +147,10 @@ describe('attio : verify', () => {
 
     const result = await attioConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Attio (espace Acme)' });
+    expect(result).toEqual({
+      account: 'Attio (espace Acme)',
+      accountKey: '14beef7a-99f7-4534-a87e-70b564330a4c:50cf242c-7fa3-4cad-87d0-75b1af71c57b',
+    });
     expect(calls[0]?.url).toBe(`${API}/self`);
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
     expect(pathOf(calls[1]?.url)).toBe('/v2/notes');
@@ -566,7 +569,10 @@ describe('attio : connexion par le bouton', () => {
 
     const result = await attioConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Attio (espace Acme)' });
+    expect(result).toEqual({
+      account: 'Attio (espace Acme)',
+      accountKey: '14beef7a-99f7-4534-a87e-70b564330a4c:50cf242c-7fa3-4cad-87d0-75b1af71c57b',
+    });
     expect(calls).toHaveLength(2);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });

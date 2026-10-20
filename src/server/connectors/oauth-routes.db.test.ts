@@ -250,10 +250,22 @@ describe('GET /:appli/retour : le branchement', () => {
     });
     expect(row.secret.startsWith('v1:')).toBe(true);
     expect(row.config).toMatchObject({ authMode: 'oauth', repos: ['acme/leon'] });
+    expect(row.config).not.toHaveProperty('accountKey');
     const visible = JSON.stringify([row.config, await listConnections(paul.ctx)]);
     expect(visible).not.toContain(ACCESS);
     expect(visible).not.toContain(REFRESH);
     expect(row.secret).not.toContain(ACCESS);
+  });
+
+  it('garde l’identifiant stable du compte dans la config ouverte', async () => {
+    const paul = await signUp();
+
+    await fullRound(paul, { connector: fakeOAuthConnector({ accountKey: '4101' }) });
+
+    const { rows } = await adminPool.query('select config from connections where tenant_id = $1', [
+      paul.ctx.tenantId,
+    ]);
+    expect(rows[0].config.accountKey).toBe('4101');
   });
 
   it('range les jetons dans le bloc secret, relu par la relève', async () => {
@@ -544,11 +556,16 @@ describe('accord de l’administrateur', () => {
 });
 
 describe('« Reconnecter »', () => {
-  async function oauthConnection(paul: Person, status = 'error'): Promise<string> {
+  async function oauthConnection(
+    paul: Person,
+    status = 'error',
+    stored: { label?: string; accountKey?: string } = {},
+  ): Promise<string> {
     const id = await createConnection(paul.ctx, {
       provider: 'github',
-      label: 'acme',
+      label: stored.label ?? 'acme',
       config: {
+        ...(stored.accountKey ? { accountKey: stored.accountKey } : {}),
         authMode: 'oauth',
         accessToken: 'ancien-acces-0000',
         refreshToken: 'ancien-rafraichir',
@@ -620,6 +637,91 @@ describe('« Reconnecter »', () => {
     );
     expect(rows[0].secret_hint).toBe('0000');
     expect(rows[0].config.repos).toEqual(['acme/ancien']);
+  });
+
+  async function reconnect(paul: Person, id: string, connector: AnyConnector) {
+    const { app } = makeApp({ routes: [goodTokens()], connector });
+    const go = await start(app, paul, { reconnect: id, since: '30' });
+    const response = await back(app, paul, { code: 'c', state: stateOf(go) }, oauthCookieOf(go));
+    const { rows } = await adminPool.query(
+      'select secret_hint, config from connections where id = $1',
+      [id],
+    );
+    return { location: location(response), row: rows[0] };
+  }
+
+  // Audit 4 n° 9 : le compte se reconnaît à son identifiant stable, pas à son libellé.
+  it('« autre_compte » quand l’identifiant diffère, même sous le même libellé', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul, 'error', { accountKey: '4101' });
+
+    const { location: to, row } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({ account: 'acme', accountKey: '9999' }),
+    );
+
+    expect(to).toBe('/connexions?erreur=autre_compte&outil=github');
+    expect(row.secret_hint).toBe('0000');
+    expect(row.config.accountKey).toBe('4101');
+  });
+
+  it('reconnecte le même identifiant même quand le libellé a changé (compte renommé)', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul, 'error', { accountKey: '4101' });
+
+    const { location: to, row } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({ account: 'acme-renomme', accountKey: '4101' }),
+    );
+
+    expect(to).toBe('/connexions?branche=github');
+    expect(row.secret_hint).toBe('0001');
+  });
+
+  it('une connexion sans identifiant passe par le libellé, puis garde l’identifiant', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul);
+
+    const { location: to, row } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({ account: 'acme', accountKey: '4101' }),
+    );
+
+    expect(to).toBe('/connexions?branche=github');
+    expect(row.config.accountKey).toBe('4101');
+  });
+
+  it('le repli sur le libellé ignore les autres sites disponibles (Jira)', async () => {
+    const paul = await signUp();
+    const label = 'Connecté : acme.atlassian.net, 1 autre site disponible';
+    const id = await oauthConnection(paul, 'error', { label });
+
+    const { location: to } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({
+        account: 'Connecté : acme.atlassian.net, 2 autres sites disponibles',
+        accountKey: 'compte:site',
+      }),
+    );
+
+    expect(to).toBe('/connexions?branche=github');
+  });
+
+  it('le repli sur le libellé refuse toujours un autre site', async () => {
+    const paul = await signUp();
+    const id = await oauthConnection(paul, 'error', { label: 'Connecté : acme.atlassian.net' });
+
+    const { location: to } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({ account: 'Connecté : globex.atlassian.net', accountKey: 'k' }),
+    );
+
+    expect(to).toBe('/connexions?erreur=autre_compte&outil=github');
   });
 
   it("répond 404, sans cookie, pour la connexion d'un autre outil", async () => {

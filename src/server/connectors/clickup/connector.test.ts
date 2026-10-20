@@ -144,7 +144,7 @@ describe('clickup : verify', () => {
 
     const result = await clickupConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101' });
     expect(calls.map((call) => call.url)).toEqual([`${API}/user`, `${API}/team`]);
     expect(calls[0]?.headers.authorization).toBe(TOKEN);
   });
@@ -158,6 +158,7 @@ describe('clickup : verify', () => {
 
     expect(await clickupConnector.verify(config, http)).toEqual({
       account: 'Marie Durand (Acme, Beta)',
+      accountKey: '101',
     });
   });
 
@@ -682,7 +683,7 @@ describe('clickup : jeton OAuth', () => {
 
     const result = await clickupConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (Acme)' });
+    expect(result).toEqual({ account: 'Marie Durand (Acme)', accountKey: '101' });
     expect(calls).toHaveLength(2);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });

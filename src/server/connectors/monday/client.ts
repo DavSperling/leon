@@ -82,12 +82,17 @@ async function graphql<T>(
   return parsed.data;
 }
 
-export async function fetchAccount(http: ConnectorHttp, token: string): Promise<string> {
+const Id = z.union([z.string(), z.number()]).transform(String);
+
+export async function fetchAccount(
+  http: ConnectorHttp,
+  token: string,
+): Promise<{ account: string; accountKey: string }> {
   const schema = z.object({
-    me: z.object({ name: z.string(), account: z.object({ name: z.string() }) }),
+    me: z.object({ id: Id, name: z.string(), account: z.object({ id: Id, name: z.string() }) }),
   });
   const { me } = await graphql(http, token, ACCOUNT_QUERY, {}, schema);
-  return `${me.name} (${me.account.name})`;
+  return { account: `${me.name} (${me.account.name})`, accountKey: `${me.id}:${me.account.id}` };
 }
 
 // Les tableaux actifs, les plus utilisés d'abord. Les tableaux de sous-éléments et les documents

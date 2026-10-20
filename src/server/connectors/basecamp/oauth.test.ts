@@ -260,7 +260,10 @@ describe('basecampOAuth : le déroulé du retour', () => {
       clientFor(basecampConnector.hosts(config)),
     );
 
-    expect(checked).toEqual({ account: 'Acme SAS (Marie Durand)' });
+    expect(checked).toEqual({
+      account: 'Acme SAS (Marie Durand)',
+      accountKey: '99999999:1049715913',
+    });
     expect(fetchImpl.calls.map((call) => new URL(call.url).host)).toEqual([
       'launchpad.37signals.com',
       'launchpad.37signals.com',

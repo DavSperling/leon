@@ -14,10 +14,18 @@ export const RichText = z.array(z.object({ plain_text: z.string() }));
 
 const Reference = z.object({ id: z.string() });
 
+// Un robot : son espace, et la personne qui l'a ajouté (bouton) ou l'espace lui-même (clé interne).
 const Me = z.object({
+  id: z.string(),
   type: z.string(),
   name: z.string().nullish(),
-  bot: z.object({ workspace_name: z.string().nullish() }).nullish(),
+  bot: z
+    .object({
+      owner: z.object({ user: z.object({ id: z.string() }).nullish() }).nullish(),
+      workspace_id: z.string().nullish(),
+      workspace_name: z.string().nullish(),
+    })
+    .nullish(),
 });
 
 // Un résultat de recherche est une page entière, ou seulement { object, id } quand la connexion n'a

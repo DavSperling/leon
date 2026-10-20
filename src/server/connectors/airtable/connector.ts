@@ -109,7 +109,7 @@ export const airtableConnector: Connector<Config> = {
     const wanted = basesToRead(config.bases, names);
     if (wanted.length === 0) throw new ConnectorHttpError(null, 'Aucune base Airtable autorisée');
     const bases = wanted.map((baseId) => names.get(baseId) ?? baseId).join(', ');
-    return { account: `${me.email ?? me.id} (${bases})` };
+    return { account: `${me.email ?? me.id} (${bases})`, accountKey: me.id };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

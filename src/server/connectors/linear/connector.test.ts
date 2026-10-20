@@ -122,6 +122,7 @@ describe('linearConnector : verify', () => {
 
     await expect(linearConnector.verify(CONFIG, http)).resolves.toEqual({
       account: 'Marie Durand (Acme)',
+      accountKey: '2d8b3c1e-5f4a-4e6b-9c7d-1a2b3c4d5e6f:8e7d6c5b-4a39-4281-9f0e-a1b2c3d4e5f6',
     });
 
     expect(calls).toHaveLength(1);
@@ -152,7 +153,10 @@ describe('linearConnector : connexion par le bouton', () => {
 
     await expect(
       linearConnector.verify(linearConnector.configSchema.parse(OAUTH_CONFIG), http),
-    ).resolves.toEqual({ account: 'Marie Durand (Acme)' });
+    ).resolves.toEqual({
+      account: 'Marie Durand (Acme)',
+      accountKey: '2d8b3c1e-5f4a-4e6b-9c7d-1a2b3c4d5e6f:8e7d6c5b-4a39-4281-9f0e-a1b2c3d4e5f6',
+    });
 
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${ACCESS}`);
   });

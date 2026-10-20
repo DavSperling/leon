@@ -1,3 +1,4 @@
+import type { SourceKind } from '@/capture/turn';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
@@ -40,6 +41,10 @@ const BLOCK_GUARD_LINE =
 // Les dates du point se lisent à l'heure de Paris, comme le tic du matin (worker.ts) : un point refait entre minuit
 // et 2 h ne dit pas la date de la veille.
 export const BRIEFING_TIME_ZONE = 'Europe/Paris';
+
+// Le seul outil dont le titre est recopié dans la liste des sources (sourceLine). Typé, pour qu'un nom qui n'est
+// plus dans SOURCE_KINDS ne compile pas.
+const CLAUDE_CODE_KIND = 'claude_code' satisfies SourceKind;
 
 // Un élément numéroté : le numéro que le modèle cite, et la source d'où vient l'élément.
 export type BriefingReference = { n: number; source: SourceInfo };
@@ -189,12 +194,16 @@ function cutEscaped(text: string, max: number): string {
     .trimEnd()} …`;
 }
 
-// Une ligne de la liste des sources. Le titre vient de l'outil (une demande de fusion écrite par un tiers) : il est
-// coupé, mis sur une ligne et cité entre guillemets, pour qu'il se lise comme un titre et non comme une phrase du
-// point.
+// Une ligne de la liste des sources. Le point entre tout seul dans le contexte de Claude Code : le titre d'une source
+// écrite par un tiers (une demande de fusion, un mail) n'y est jamais recopié ; l'outil, la date et le lien suffisent à
+// la retrouver. Seul reste le titre d'une session Claude Code : elles sont privées à leur auteur, donc à la personne
+// qui lit le point. Il est coupé, mis sur une ligne et cité entre guillemets, pour se lire comme un titre.
 function sourceLine(reference: BriefingReference): string {
   const { source } = reference;
-  const title = shortTitle(source.title, SOURCE_TITLE_MAX_CHARS)?.trim();
+  const title =
+    source.kind === CLAUDE_CODE_KIND
+      ? shortTitle(source.title, SOURCE_TITLE_MAX_CHARS)?.trim()
+      : undefined;
   const parts = [
     toolLabel(source),
     title ? `« ${title} »` : null,

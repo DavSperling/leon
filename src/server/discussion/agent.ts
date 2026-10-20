@@ -43,8 +43,12 @@ export const DISCUSSION_MAX_TOKENS = 8000;
 export const DISCUSSION_MAX_REPLIES_PER_USER = 2;
 
 // Les discussions où une réponse est en cours, par utilisateur (`userId:discussionId`) : celle d'un autre ne
-// bloque jamais la sienne.
-const replying = new Set<string>();
+// bloque jamais la sienne. Rangé sur globalThis : dans l'appli compilée, la route et l'action de la page
+// (isReplying) sont dans deux paquets de Next, chacun avec sa copie de ce module (audit 3 n° 12).
+const REPLYING = Symbol.for('leon.discussion.replying');
+const shared = globalThis as typeof globalThis & { [REPLYING]?: Set<string> };
+shared[REPLYING] ??= new Set<string>();
+const replying = shared[REPLYING];
 
 // Une réponse de Leon est en cours, dans ce processus, pour cet utilisateur dans cette discussion : la page qui
 // attend une réponse commencée plus tôt (« en-cours ») cesse d'attendre dès qu'il n'y en a plus.

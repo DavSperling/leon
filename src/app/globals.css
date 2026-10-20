@@ -54,35 +54,35 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
 
-  /* Ombres douces et chaudes pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts). */
-  --shadow-xs: 0 1px 2px rgb(40 34 24 / 0.05);
-  --shadow-sm: 0 1px 2px rgb(40 34 24 / 0.04), 0 2px 8px -2px rgb(40 34 24 / 0.06);
+  /* Ombres douces pour les surfaces posées ; une plus nette pour ce qui flotte (menus, dialogues, toasts). */
+  --shadow-xs: 0 1px 2px rgb(23 23 23 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(23 23 23 / 0.04), 0 2px 8px -2px rgb(23 23 23 / 0.06);
   --shadow-md: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
   --shadow-lg: 0 8px 24px rgb(23 23 23 / 0.08), 0 0 0 1px rgb(23 23 23 / 0.06);
 }
 
 :root {
-  /* Mémoire d'atelier : un fond papier chaud, l'encre presque noire, et le jade de Leon sur les actions,
-     la sélection et la preuve (renvois [n], mots et passage trouvés). */
-  --background: #f4f2ed;
-  --foreground: #1c1a16;
-  --foreground-2: #45413a;
+  /* Les couleurs de la première interface (gris neutres, indigo de Leon) sur le design du deuxième jet.
+     L'indigo marque les actions, la sélection et la preuve (renvois [n], mots et passage trouvés). */
+  --background: #f5f5f4;
+  --foreground: #171717;
+  --foreground-2: #3f3f46;
   --card: #ffffff;
   --card-foreground: #171717;
   --popover: #ffffff;
   --popover-foreground: #171717;
-  --primary: #0d6b58;
+  --primary: #4f46c8;
   --primary-foreground: #ffffff;
-  --primary-soft: #e2f0ea;
-  --cite: #0d6b58;
-  --cite-soft: #dcefe7;
-  --secondary: #efece5;
+  --primary-soft: #eeedfc;
+  --cite: #4f46c8;
+  --cite-soft: #eeedfc;
+  --secondary: #ffffff;
   --secondary-foreground: #171717;
-  --muted: #f6f4ef;
-  --muted-foreground: #6b665c;
-  --accent: #efece5;
+  --muted: #f5f5f4;
+  --muted-foreground: #66666e; /* l’ancien #71717a, foncé pour tenir 4,5:1 sur le fond gris */
+  --accent: #f0f0ef;
   --accent-foreground: #171717;
-  --quote: #faf8f4;
+  --quote: #fafaf9;
   --success: #1f6b35;
   --success-soft: #e6f2e8;
   --warning: #8a4b00;
@@ -91,18 +91,18 @@
   --destructive-soft: #fbe9e6;
   --info: #24519c;
   --info-soft: #e7eef9;
-  --border: #e5e1d8;
+  --border: #e7e7e5;
   --input: #949494; /* 3:1 sur blanc : le contour d'un champ reste visible (WCAG 1.4.11). */
-  --ring: #0d6b58;
+  --ring: #4f46c8;
   --radius: 8px;
-  --sidebar: #f4f2ed;
+  --sidebar: #f5f5f4;
   --sidebar-foreground: #171717;
-  --sidebar-primary: #0d6b58;
+  --sidebar-primary: #4f46c8;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #ffffff;
   --sidebar-accent-foreground: #171717;
-  --sidebar-border: #e5e1d8;
-  --sidebar-ring: #0d6b58;
+  --sidebar-border: #e7e7e5;
+  --sidebar-ring: #4f46c8;
 }
 
 @layer base {

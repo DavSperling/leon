@@ -228,10 +228,10 @@ function Home({
   const bar = rise(1);
   return (
     <>
-      {/* Un lavis de jade derrière la question : la seule atmosphère de l'application, ici seulement. */}
+      {/* Un lavis d'indigo derrière la question : la seule atmosphère de l'application, ici seulement. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgb(13_107_88/0.08),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,rgb(79_70_200/0.07),transparent_70%)]"
       />
       <div className="relative mx-auto max-w-[860px] pt-10 text-center">
         <div className={greeting.className} style={greeting.style}>

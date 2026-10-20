@@ -650,6 +650,24 @@ describe('answerStream', () => {
       expect(llm.calls).toHaveLength(0);
     });
 
+    // Audit 3 n° 8 : un départ n'est pas une panne ; rien n'est journalisé.
+    it('s’arrête sans rien journaliser quand le lecteur s’en va pendant la recherche', async () => {
+      search.mockReturnValue(new Promise(() => undefined));
+      const leaving = new AbortController();
+
+      const events = collect(
+        answerStream(newCtx(), asked('contrat'), {
+          llm: createFakeLlm({ texts: ['jamais'] }),
+          embedder: null,
+          signal: leaving.signal,
+        }),
+      );
+      leaving.abort();
+
+      expect(await events).toEqual([{ type: 'indisponible' }]);
+      expect(logged).not.toHaveBeenCalled();
+    });
+
     it('interrompt l’appel au modèle quand le lecteur s’en va avant la fin', async () => {
       search.mockResolvedValue(pageOf([hit()]));
       let signal: AbortSignal | undefined;

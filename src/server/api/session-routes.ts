@@ -69,16 +69,18 @@ const DiscussionMessageSchema = z.object({
 // la connexion restée muette pendant que l'agent cherche ou réfléchit.
 const PING_MS = 15_000;
 
-// Les évènements d'un flux, un par évènement serveur. Quand le lecteur s'en va, la réponse en tête s'arrête (ce
-// qui interrompt l'appel au modèle) ; la discussion (`keepReading`) continue de lire sans écrire, pour que la
-// réponse soit finie et gardée : la page rechargée la retrouve.
+// Les évènements d'un flux, un par évènement serveur. Quand le lecteur s'en va, la réponse en tête s'arrête tout
+// de suite (`leaving` interrompt la recherche et l'appel au modèle) ; la discussion (`keepReading`) continue de lire
+// sans écrire, pour que la réponse soit finie et gardée : la page rechargée la retrouve.
 function streamEvents(
   c: Parameters<typeof streamSSE>[0],
   events: AsyncIterable<unknown>,
   route: string,
-  keepReading = false,
+  options: { keepReading?: boolean; leaving?: AbortController } = {},
 ) {
+  const { keepReading = false, leaving } = options;
   return streamSSE(c, async (stream) => {
+    if (leaving) stream.onAbort(() => leaving.abort());
     const ping = setInterval(() => void stream.write(': ping\n\n'), PING_MS);
     try {
       for await (const event of events) {
@@ -105,16 +107,17 @@ export const sessionRoutes = new Hono<SessionEnv>()
     // Les résultats affichés sur la page, dans leur ordre : [n] de la réponse désigne le n-ième.
     const resultIds = parseAnswerResults(c.req.query(ANSWER_RESULTS_PARAM));
     if (resultIds === null) return c.json({ error: 'Liste des résultats invalide' }, 400);
+    const leaving = new AbortController();
     const events = answerStream(
       c.var.ctx,
       { query, resultIds },
-      { llm: getLlm(env), embedder: getEmbedder(env) },
+      { llm: getLlm(env), embedder: getEmbedder(env), signal: leaving.signal },
     );
     // Sans modèle, l'encadré ne s'affiche pas : la recherche marche sans lui.
     if (events === null) return c.body(null, 204);
     // Déjà trois réponses en cours pour cet utilisateur : l'encadré se masque.
     if (events === 'trop') return c.json({ error: 'Trop de réponses en cours' }, 429);
-    return streamEvents(c, events, 'answer.route');
+    return streamEvents(c, events, 'answer.route', { leaving });
   })
   // Une question dans une discussion de l'utilisateur, et la réponse de l'agent en flux (C8). Une discussion qu'il
   // ne voit pas (celle d'un autre, inconnue) n'existe pas pour lui : 404, avant tout appel au modèle.
@@ -139,6 +142,6 @@ export const sessionRoutes = new Hono<SessionEnv>()
       if (events === null) return c.body(null, 204);
       // Déjà deux réponses en cours pour cet utilisateur : rien n'est écrit.
       if (events === 'trop') return c.json({ error: DISCUSSION_TOO_MANY }, 429);
-      return streamEvents(c, events, 'discussion.route', true);
+      return streamEvents(c, events, 'discussion.route', { keepReading: true });
     },
   );

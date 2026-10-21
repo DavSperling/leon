@@ -97,8 +97,10 @@ docker run --rm -e URL="$URL" -v ~/.postgresql:"$HOME/.postgresql":ro pgvector/p
 
 Le tableau de bord met en pause un projet gratuit resté une semaine sans activité : il se relance d'un clic.
 
-**MCP.** `.mcp.json` déclare le serveur MCP de Supabase, limité à ce projet : Claude Code demande une fois de l'accepter,
-puis `/mcp` ouvre la connexion au compte Supabase.
+**MCP.** `.mcp.json` déclare le serveur MCP de Supabase, limité à ce projet et en lecture seule (doc, tables, journaux,
+conseils de sécurité) : la base garde des conversations captées, un texte qui ne doit jamais pousser un agent à écrire
+dans la base partagée. Claude Code demande une fois de l'accepter, puis `/mcp` ouvre la connexion au compte Supabase.
+Les écritures passent par le migrateur ou, pour une extension, par l'éditeur SQL du tableau de bord.
 
 ## Secrets dans les conversations captées
 

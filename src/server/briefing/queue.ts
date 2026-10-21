@@ -89,11 +89,18 @@ export async function requestBriefingRefreshNow(job: BriefingJob): Promise<void>
   });
 }
 
-// De nouvelles données sur un projet : le point de chaque destinataire est marqué périmé et refait dans 30 minutes.
-// Destinataires : les membres de l'organisation de `ctx` qui ont un point sur ce projet (briefings_du_projet, qui ne
-// rend que des identifiants) et `extraUserIds` (le propriétaire d'une session, qui n'a peut-être pas encore de
-// point). Chacun est traité sous ses propres droits ; un membre parti de l'organisation, ou d'une autre organisation,
-// est sauté sans erreur. L'échec d'un destinataire n'empêche pas les suivants.
+// Un point lu depuis moins de ce nombre de jours est refait quand son projet bouge (et chaque matin, worker.ts) ; un
+// point plus ancien est seulement marqué périmé, et se refait à sa prochaine lecture. Sans cette borne, chaque
+// activité d'un dépôt payait un appel au modèle pour chaque personne qui en a un jour eu le point.
+export const BRIEFING_READ_DAYS = 7;
+
+// De nouvelles données sur un projet : le point de chaque destinataire est marqué périmé, et refait dans 30 minutes
+// s'il a été lu depuis moins de BRIEFING_READ_DAYS jours. Destinataires : les membres de l'organisation de `ctx` qui
+// ont un point sur ce projet (briefings_du_projet, qui ne rend que des identifiants) et `extraUserIds` (le
+// propriétaire d'une session, qui n'a peut-être pas encore de point : le sien n'est préparé d'avance que pour un
+// dépôt GitHub, pas pour un simple dossier, où l'on ouvre Claude Code sans forcément y revenir). Chacun est traité
+// sous ses propres droits ; un membre parti de l'organisation, ou d'une autre organisation, est sauté sans erreur.
+// L'échec d'un destinataire n'empêche pas les suivants.
 export async function signalProjectActivity(
   ctx: TenantContext,
   project: string,
@@ -104,16 +111,22 @@ export async function signalProjectActivity(
     tx.execute<{ user_id: string }>(sql`select user_id from briefings_du_projet(${project})`),
   );
   const recipients = [...new Set([...rows.map((row) => row.user_id), ...extraUserIds])];
+  const readSince = new Date(Date.now() - BRIEFING_READ_DAYS * 24 * 60 * 60 * 1000);
   for (const userId of recipients) {
     try {
       const recipient = await resolveTenantContext(userId, ctx.tenantId);
       if (!recipient) continue;
-      await withTenant(recipient, (tx) =>
+      const [point] = await withTenant(recipient, (tx) =>
         tx
           .update(briefings)
           .set({ stale: true })
-          .where(and(eq(briefings.userId, recipient.userId), eq(briefings.project, project))),
+          .where(and(eq(briefings.userId, recipient.userId), eq(briefings.project, project)))
+          .returning({ lastReadAt: briefings.lastReadAt }),
       );
+      const wanted = point
+        ? point.lastReadAt !== null && point.lastReadAt > readSince
+        : project.startsWith('github.com/');
+      if (!wanted) continue;
       await enqueueBriefingRefresh(
         { tenantId: recipient.tenantId, userId: recipient.userId, project },
         { delaySeconds: BRIEFING_DELAY_SECONDS },

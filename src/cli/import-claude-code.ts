@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { basename, sep } from 'node:path';
+import { basename, isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import { API_PATHS } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
@@ -13,6 +13,7 @@ import { logError } from '../server/log';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
+import { type GitRunner, projectKeyFor } from './project-key';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
 export function parseSince(value: string | undefined): Date | undefined {
@@ -34,6 +35,9 @@ export type ImportOptions = {
 export type ImportDeps = {
   send: (payload: IngestPayload) => Promise<IngestResult>;
   out: (line: string) => void;
+  // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
+  // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
+  git?: GitRunner;
 };
 export type ImportSummary = {
   sessions: number;
@@ -151,7 +155,11 @@ export async function importClaudeCode(
       if (!loaded || turns.length === 0) continue;
       for (const turn of turns) seen.add(turn.external_id);
       summary.sessions += 1;
-      await importSession({ ...loaded, turns }, options, deps, summary);
+      const projectKey =
+        deps.git && loaded.cwd !== null && isAbsolute(loaded.cwd)
+          ? await projectKeyFor(loaded.cwd, deps.git)
+          : options.projectKey;
+      await importSession({ ...loaded, turns }, { ...options, projectKey }, deps, summary);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
   enqueueBriefingRefresh: vi.fn(),
   refreshBriefing: vi.fn(),
+  briefingIsFresh: vi.fn(),
   resolveTenantContext: vi.fn(),
 }));
 
@@ -25,7 +26,10 @@ vi.mock('./queue', async (importOriginal) => ({
   getBriefingBoss: async () => ({ work: mocks.work, schedule: mocks.schedule }),
   enqueueBriefingRefresh: mocks.enqueueBriefingRefresh,
 }));
-vi.mock('./briefings', () => ({ refreshBriefing: mocks.refreshBriefing }));
+vi.mock('./briefings', () => ({
+  refreshBriefing: mocks.refreshBriefing,
+  briefingIsFresh: mocks.briefingIsFresh,
+}));
 vi.mock('@/server/db/client', () => ({ db: { execute: mocks.execute } }));
 vi.mock('@/server/auth/tenant-context', () => ({
   resolveTenantContext: mocks.resolveTenantContext,
@@ -57,6 +61,7 @@ beforeEach(() => {
   mocks.execute.mockResolvedValue({ rows: [] });
   mocks.enqueueBriefingRefresh.mockResolvedValue(true);
   mocks.refreshBriefing.mockResolvedValue(undefined);
+  mocks.briefingIsFresh.mockResolvedValue(false);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
 });
 
@@ -95,6 +100,17 @@ describe('startBriefingWorker', () => {
 
     expect(mocks.resolveTenantContext).toHaveBeenCalledExactlyOnceWith(job.userId, job.tenantId);
     expect(mocks.refreshBriefing).toHaveBeenCalledExactlyOnceWith(ctx, job.project, { llm });
+  });
+
+  // Audit de la #28 : le tic du matin ne paie pas un appel au modèle pour réécrire un point sur lequel rien n'a bougé.
+  it('ne refait pas un point à jour (aucun signal depuis sa préparation)', async () => {
+    mocks.briefingIsFresh.mockResolvedValue(true);
+    await startBriefingWorker({ llm: createFakeLlm({ texts: ['Point.'] }) });
+
+    await handlerOf('point-refresh')([{ data: job }]);
+
+    expect(mocks.briefingIsFresh).toHaveBeenCalledExactlyOnceWith(ctx, job.project);
+    expect(mocks.refreshBriefing).not.toHaveBeenCalled();
   });
 
   // Choix le plus simple : sans modèle, le job se termine sans rien faire (aucune reprise, aucune boucle). Le point

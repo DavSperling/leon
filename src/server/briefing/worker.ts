@@ -4,9 +4,10 @@ import { db } from '@/server/db/client';
 import type { Llm } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
 import { BRIEFING_TIME_ZONE } from './briefing-prompt';
-import { refreshBriefing } from './briefings';
+import { briefingIsFresh, refreshBriefing } from './briefings';
 import {
   BRIEFING_QUEUES,
+  BRIEFING_READ_DAYS,
   BriefingJobSchema,
   enqueueBriefingRefresh,
   getBriefingBoss,
@@ -24,7 +25,7 @@ export const MORNING_CRON = '0 6 * * *';
 // Le fuseau des dates écrites dans le point (briefing-prompt.ts).
 export const MORNING_TIME_ZONE = BRIEFING_TIME_ZONE;
 // Les points lus depuis moins de 7 jours sont refaits chaque matin (plan, T13).
-export const MORNING_READ_DAYS = 7;
+export const MORNING_READ_DAYS = BRIEFING_READ_DAYS;
 // Points refaits en parallèle dans un processus : chacun est un appel au modèle d'une demi-minute environ.
 const REFRESH_CONCURRENCY = 2;
 
@@ -73,6 +74,9 @@ async function processRefreshJob(data: unknown, deps: { llm: Llm | null }): Prom
     const ctx = await resolveTenantContext(job.userId, job.tenantId);
     // Parti de l'organisation : personne ne peut plus lire ce point sous ses droits.
     if (!ctx) return;
+    // Rien n'a bougé depuis sa préparation (aucun signal, aucune source devenue invisible) : le tic du matin ne paie
+    // pas un appel au modèle pour réécrire le même point.
+    if (await briefingIsFresh(ctx, job.project)) return;
     await refreshBriefing(ctx, job.project, { llm });
   } catch (error) {
     rethrowSummary('briefing.refresh_failed', error, ids);

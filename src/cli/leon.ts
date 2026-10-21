@@ -61,6 +61,7 @@ async function runImport(args: string[]): Promise<number> {
   const dryRun = values['dry-run'] ?? false;
   const deps: ImportDeps = {
     out: console.log,
+    git: gitInDirectory,
     send: dryRun
       ? async () => {
           throw new Error('Aucun envoi en --dry-run.');

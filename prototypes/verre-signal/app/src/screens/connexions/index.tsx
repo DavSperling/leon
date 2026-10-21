@@ -42,6 +42,7 @@ import { useSearchParams } from 'react-router';
 import { Notice, PageHeader } from '@/components';
 import { CONNECTIONS, type Connection, type ProviderId } from '@/data';
 import { isInstant, nb, rise, scrollToTop, useTitle } from '@/lib';
+import { CarteConnexions } from './carte';
 import { Catalogue } from './catalogue';
 import { ADMIN_CONSENT_URL, isProviderId, newConnection, returnNotice } from './model';
 import { type DialogDemo, type Essai, type Ops, ToolDialog } from './tool-dialog';
@@ -200,6 +201,7 @@ export default function Connexions() {
           {', ajoutez-la à l’environnement (voir .env.example), puis redémarrez Leon.'}
         </Notice>
       )}
+      <CarteConnexions conns={conns} onOpen={open} />
       <Catalogue conns={conns} onOpen={open} filter={filter} onFilter={setFilter} fresh={fresh} />
       <ToolDialog provider={shownId} open={openId !== null} onOpenChange={onOpenChange} onCloseAutoFocus={onCloseAutoFocus} conns={conns} canConnect={canConnect} oauthReady={oauthReady} ops={ops} demo={demo} session={session} />
       </div>

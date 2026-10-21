@@ -1,0 +1,13 @@
+{
+  "id": "P076",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est là, je cherche ça depuis des mois et l'onboarding des trois nouveaux me fait peur. Mais je ne branche pas tout l'historique de la boîte sur une jeune startup sans savoir ce qu'elle va remonter à qui.",
+  "objection": "« Chacun voit ce qu'il voit déjà », c'est justement le problème : nos droits Drive sont un bazar, des fichiers partagés à tout le domaine par erreur. Aujourd'hui personne ne les trouve ; avec Leon, un stagiaire qui demande « quelles sont nos marges ? » tombe dessus en dix secondes.",
+  "would_change_my_mind": "Un audit avant activation qui me montre, par personne, les documents sensibles auxquels elle a accès (paie, marges, contrats), pour que je fasse le ménage, puis un pilote gratuit d'un mois sur une équipe.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

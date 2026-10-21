@@ -1,0 +1,79 @@
+{
+  "business": "Leon : mémoire d'entreprise pour sociétés de 10 à 200 personnes (montants en euros HT ; l'outil affiche le signe $). Année 1 au prix de lancement de 19 € (20 premières sociétés, garanti 12 mois).",
+  "unit": "siège-mois",
+  "price": 19,
+  "variable": [
+    {
+      "label": "Coût de service IA et hébergement par siège (estimation : 2,5 $ si lecture par le LLM du client, 4 à 11 $ avec le chat Leon ; milieu retenu)",
+      "cost": 5.0
+    },
+    {
+      "label": "Frais de paiement Stripe (vérifié par ops le 19/10 sur stripe.com/fr/pricing : carte UE standard 1,5 % + 0,25 € par facture, plus Stripe Billing 0,7 % pour l'abonnement ; à 19 € et 10 sièges par facture ≈ 0,44 €, montant inchangé)",
+      "cost": 0.45
+    }
+  ],
+  "fixed_monthly": [
+    {
+      "label": "Outils et hébergement de base actuels (environ 500 $)",
+      "cost": 460
+    },
+    {
+      "label": "Expert-comptable en ligne (mis à jour par ops le 19/10 : 150 → 99 €, prix public Dougs « Sérénité » pour une SAS, bilan, liasse, TVA et dépôt des comptes inclus)",
+      "cost": 99
+    },
+    {
+      "label": "Assurance RC pro et cyber (estimation, à faire chiffrer : les prix publics « à partir de » ne couvrent pas le cyber pour un SaaS qui stocke des données clients)",
+      "cost": 80
+    },
+    {
+      "label": "Signature électronique des DPA et contrats (ajout ops le 19/10 : Yousign Plus, 23 € HT par mois en engagement annuel, prix relevé sur une source secondaire, à confirmer)",
+      "cost": 23
+    },
+    {
+      "label": "Rémunération des fondateurs (aucune tant que l'activité n'est pas bien rentable, décision des fondateurs)",
+      "cost": 0
+    },
+    {
+      "label": "Pilotes gratuits : environ 3 par mois × 10 sièges × 5 € de service IA (estimation)",
+      "cost": 150
+    }
+  ],
+  "startup": [
+    {
+      "label": "Immatriculation de la SAS (mis à jour par ops le 19/10 : 500 → 252 €, minimum légal 2026 = guichet unique 33,83 € + annonce légale 199 € HT + bénéficiaires effectifs 19,33 € ; statuts et pacte d'associés par un avocat non inclus, sur devis)",
+      "cost": 252
+    },
+    {
+      "label": "Contrats : CGV, DPA, politique de confidentialité, relus par un avocat (estimation)",
+      "cost": 2500
+    },
+    {
+      "label": "Audit de sécurité léger par un tiers (estimation)",
+      "cost": 4000
+    },
+    {
+      "label": "Site, nom de domaine, premières démos (estimation)",
+      "cost": 500
+    },
+    {
+      "label": "Dossier confiance : note CSE, AIPD type, relecture (estimation, en plus des contrats)",
+      "cost": 800
+    }
+  ],
+  "days_per_month": 1,
+  "plan_per_day": 250,
+  "ramp_per_day": [
+    0,
+    10,
+    25,
+    40,
+    60,
+    80,
+    105,
+    130,
+    160,
+    190,
+    220,
+    250
+  ]
+}

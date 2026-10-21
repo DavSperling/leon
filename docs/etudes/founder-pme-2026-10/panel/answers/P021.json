@@ -1,0 +1,13 @@
+{
+  "id": "P021",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin des commerciaux est réel, mais je ne vais pas porter au DG un outil qui garde tous les mails et toutes les réunions alors qu'on n'a même pas encore de politique IA ni activé Gemini qu'on paie déjà. À 25 € par personne sur 120 salariés, ça fait 36 000 € par an pour une startup que personne ne connaît.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : un outil qui enregistre tout ce qui se dit en réunion et dans les mails, il faudra passer par le CSE, le DPO, l'AIPD RGPD, et je serai celui qui l'a proposé si ça se passe mal.",
+  "would_change_my_mind": "Un pilote gratuit limité à l'équipe commerciale, sur HubSpot et Gmail seulement, avec un dossier RGPD prêt à donner au CSE et une référence d'une PME française de notre taille qui l'utilise déjà.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

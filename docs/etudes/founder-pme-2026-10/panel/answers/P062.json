@@ -1,0 +1,13 @@
+{
+  "id": "P062",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Ouvrir tous nos mails, nos plans clients et nos réunions à une société de deux personnes, je ne le fais pas sur une publicité. Et à 25 € par tête sur 150 personnes, ça fait plus de 40 000 € par an sans aucun chiffre sur ce que ça nous rapporte.",
+  "objection": "Si cette start-up disparaît ou se fait pirater dans un an, c'est toute la mémoire de ma boîte qui part avec elle, et mon responsable informatique devra me l'expliquer.",
+  "would_change_my_mind": "Un pilote gratuit de deux mois sur une seule équipe, installé sur notre propre cloud, avec un gain de temps mesuré et un client industriel de notre taille que je peux appeler.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

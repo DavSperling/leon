@@ -1,0 +1,13 @@
+{
+  "id": "P042",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, mon chef de projet est parti et ses clients me posent des questions sans réponse, mais je ne vais pas brancher toutes nos boîtes mail et nos Drive sur un outil d'IA inconnu sur la foi d'une pub. Et 25 € par tête sur 100 à 150 personnes, ça fait 30 à 45 000 € par an pour un truc que personne chez nous n'utilise encore.",
+  "objection": "J'ai déjà vu ces outils répondre à côté avec aplomb ; le « je ne sais pas » et les citations, tout le monde le promet. Et la moitié de ce que savait mon chef de projet n'a jamais été écrit nulle part, c'était dans sa tête ou au téléphone.",
+  "would_change_my_mind": "Un essai gratuit de deux semaines sur la boîte et le Drive du chef de projet parti, avec mon responsable informatique, où Leon retrouve vraiment ce qu'on a promis à ses clients, source à l'appui, sans inventer.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

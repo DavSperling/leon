@@ -1,0 +1,13 @@
+{
+  "id": "P064",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Le problème de mes commerciaux qui fouillent Gmail, HubSpot et Slack avant chaque rendez-vous est réel, mais on n'a encore aucun outil IA qui ait pris chez nous et je ne vais pas brancher toute la boîte mail de l'entreprise sur une start-up que je découvre. Je transmets à mon responsable informatique, et je n'achète pas cette semaine.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira : mes commerciaux retourneront à HubSpot et à leurs mails par réflexe. Et donner accès à tout Gmail et Drive à un tiers, mon responsable informatique va tiquer.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur cinq commerciaux, validé par mon responsable informatique, avec des chiffres d'usage réels à la fin qui montrent qu'ils s'en servent encore la quatrième semaine.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P060",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "L'onboarding de mes trois nouveaux me parle, mais 25 € fois 120 ou 150 personnes, ça fait 3 000 à 4 000 € par mois pour un outil que mes équipes atelier et terrain n'ouvriront pas. Je paie déjà Gemini sans que personne s'en serve, je ne vais pas refaire la même erreur en plus cher.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira. Et brancher toutes nos boîtes mail et nos réunions chez une startup, mon responsable informatique va me demander qui ils sont et ce qui se passe si elle ferme.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur une seule équipe (le bureau d'études ou les commerciaux) avec un livret d'accueil interrogeable prêt pour les nouveaux arrivants, et une facturation uniquement sur les utilisateurs réellement actifs.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

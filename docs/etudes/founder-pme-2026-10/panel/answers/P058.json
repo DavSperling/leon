@@ -1,0 +1,13 @@
+{
+  "id": "P058",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche un endroit unique où retrouver ce qui s'est dit et décidé, et là c'est sans engagement : je le teste sur cinq ou six personnes, la direction et le support, pas sur toute la boîte.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira : un outil de plus parmi les vingt, que seuls moi et un ou deux curieux ouvriront, pendant que les autres continueront à demander sur Slack.",
+  "would_change_my_mind": "Si au bout de trois semaines de pilote les réponses sont fausses ou à côté, ou si l'équipe ne l'ouvre pas spontanément, j'arrête et je ne déploie pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

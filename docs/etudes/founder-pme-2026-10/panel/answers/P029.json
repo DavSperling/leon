@@ -1,0 +1,13 @@
+{
+  "id": "P029",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche exactement ça, Glean voulait 60 000 $ par an et ici c'est sans engagement et branché en 15 minutes. Je le lance sur une équipe de 10 personnes pendant un mois ; si ça ne tient pas la promesse, je coupe.",
+  "objection": "« Un clic, 15 minutes », je n'y crois qu'à moitié : si les réponses sont à côté ou si les droits d'accès fuient, mes équipes lâchent en une semaine, et c'est une jeune boîte inconnue à qui je confie tous nos mails et nos réunions.",
+  "would_change_my_mind": "Si au bout de la première semaine les réponses citent des sources fausses ou si quelqu'un voit un document qu'il ne devrait pas voir, j'arrête net.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 40,
+  "price_too_expensive": 60
+}

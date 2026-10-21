@@ -1,0 +1,13 @@
+{
+  "id": "P084",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, mes commerciaux perdent du temps avant chaque rendez-vous, mais j'ai déjà payé pour des outils qui promettaient la même chose et ne trouvaient rien. Je ne sors pas la carte sans avoir vu ce que ça donne sur nos propres données.",
+  "objection": "Je n'ai aucune preuve que les réponses tiennent sur notre historique réel, ni aucun chiffre sur le temps gagné. « Cite la source » et « dit je ne sais pas », tout le monde l'écrit sur sa page d'accueil.",
+  "would_change_my_mind": "Un essai gratuit de deux semaines sur trois commerciaux, branché sur notre Gmail et notre HubSpot, avec à la fin le temps de préparation des rendez-vous mesuré avant/après.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

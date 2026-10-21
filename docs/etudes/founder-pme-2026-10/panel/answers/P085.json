@@ -1,0 +1,13 @@
+{
+  "id": "P085",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel : mes commerciaux perdent du temps à fouiller Gmail, HubSpot et Slack avant chaque rendez-vous. Mais un outil qui aspire toutes les boîtes mail et enregistre ce qui se dit en réunion, signé chez une jeune société inconnue, je ne le branche pas ce mois-ci sans que mon DPO ait tout relu.",
+  "objection": "Garder tout ce qui se dit et se décide, réunions comprises, ça ressemble à de la surveillance pour mes équipes. Je veux savoir précisément qui chez Leon accède aux données, quels sous-traitants et quel LLM les voient, et je n'ai aucune garantie sur la solidité d'une startup à qui je confierais l'historique complet de l'entreprise.",
+  "would_change_my_mind": "Un DPA et un registre des sous-traitants que mon DPO valide, avec une référence d'une PME française comparable, et un pilote gratuit limité à l'équipe commerciale sur HubSpot et le Drive, sans les boîtes mail personnelles ni les réunions.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

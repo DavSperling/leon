@@ -1,0 +1,229 @@
+{
+ "business": "Leon : mémoire d'entreprise qui garde tout ce qui se dit et se décide dans les outils de l'équipe et répond en citant la source, pour sociétés de 10 à 200 personnes aux outils mélangés",
+ "seed": 468984,
+ "dealt": 100,
+ "answered": 100,
+ "skipped": [],
+ "buys": 18,
+ "passes": 82,
+ "buy_rate": 0.18,
+ "by_segment": [
+  [
+   "Dirigeant fondateur d'une société de services (agence, cabinet de conseil, ESN) de 10 à 40 personnes",
+   30,
+   0.2
+  ],
+  [
+   "Responsable des opérations ou de l'informatique d'une société de 50 à 200 personnes, qui instruit le dossier pour le DG",
+   20,
+   0.2
+  ],
+  [
+   "CEO ou COO d'un éditeur SaaS ou d'un e-commerce de 20 à 80 personnes",
+   25,
+   0.2
+  ],
+  [
+   "DG d'une PME de 80 à 200 personnes (industrie, distribution, bureau d'études) avec un responsable informatique",
+   25,
+   0.12
+  ]
+ ],
+ "by_behaviour": [
+  [
+   "Noyé dans les outils",
+   20,
+   0.65
+  ],
+  [
+   "Compte les euros",
+   16,
+   0.1875
+  ],
+  [
+   "Pas encore équipé en IA",
+   34,
+   0.058823529411764705
+  ],
+  [
+   "A déjà ChatGPT Business, Claude Team ou Copilot",
+   5,
+   0.0
+  ],
+  [
+   "Prudent sécurité et RGPD",
+   16,
+   0.0
+  ],
+  [
+   "Sceptique des démos IA",
+   9,
+   0.0
+  ]
+ ],
+ "by_income": [
+  [
+   "under $79,000",
+   31,
+   0.1935483870967742
+  ],
+  [
+   "$79,000 to $109,000",
+   34,
+   0.17647058823529413
+  ],
+  [
+   "$109,000 and up",
+   35,
+   0.17142857142857143
+  ]
+ ],
+ "why_not": [
+  [
+   "trust",
+   67,
+   [
+    "Le besoin, je l'ai, c'est exactement ce que mes commerciaux font à la main avant chaque rendez-vous. Mais ouvrir d'un coup tous les mails, les Drive et les réunions de la boîte, y compris ce qu'on dit sur nos clients, à une société de deux personnes que personne autour de moi ne connaît, je ne le fais pas ce mois-ci.",
+    "Le prix est raisonnable comparé aux 60 000 $ de Glean, mais je ne vais pas ouvrir les mails, le Drive et les enregistrements de réunion de 150 personnes à une société dont je ne sais rien, en un clic et sans que mon DPO ait lu le DPA. Et « garder tout ce qui se dit en réunion », mes salariés et le CSE vont le prendre comme de la surveillance."
+   ],
+   [
+    "P003",
+    "P004"
+   ]
+  ],
+  [
+   "price",
+   8,
+   [
+    "Je paie déjà Claude Team pour toute la boîte, branché sur Drive et Slack. Ajouter 25 € par tête, c'est 500 à 1 000 € de plus par mois pour une mémoire que mon outil actuel finira sans doute par avoir. Je ne paie pas deux fois pour le même usage.",
+    "On paie déjà un abonnement IA d'équipe branché sur Drive et Slack ; à 25 € par tête sur 120 personnes, ça fait 36 000 € par an en plus pour un deuxième outil qui promet de faire mieux le même travail. Je ne signe pas ça sur une promesse, et pas pour toute la boîte."
+   ],
+   [
+    "P001",
+    "P002"
+   ]
+  ],
+  [
+   "habit",
+   7,
+   [
+    "La fiche client avant rendez-vous, c'est exactement le temps que perdent mes commerciaux, donc je comprends l'intérêt. Mais on paie déjà Gemini sans que personne s'en serve, et je ne vais pas mettre 25 € par tête sur 30 personnes pour un outil de plus qu'on oubliera dans deux mois.",
+    "On paie déjà ChatGPT Business avec Drive et Slack branchés ; rajouter 25 € par tête pour une deuxième couche IA, c'est payer deux fois pour un outil que l'équipe aura oublié dans deux mois."
+   ],
+   [
+    "P023",
+    "P025"
+   ]
+  ]
+ ],
+ "why_yes": [
+  [
+   "need",
+   17,
+   [
+    "Je viens de perdre mon chef de projet senior et ses clients me posent des questions auxquelles personne ne sait répondre : si Leon retrouve ce qu'il a promis dans ses mails et ses réunions, ça vaut l'essai. Sans engagement, je lance un pilote sur une dizaine de personnes de son équipe, pas sur les 150.",
+    "Ça fait des mois que je cherche exactement ça : retrouver qui a promis quoi au client en réunion il y a deux mois. Sans engagement, je le teste sur moi et deux chefs de projet, pas sur les 30 personnes d'un coup."
+   ],
+   [
+    "P011",
+    "P012"
+   ]
+  ],
+  [
+   "price",
+   1,
+   [
+    "Après le devis Glean à 60 000 $, 25 € par siège sans engagement me permet de tester sur une dizaine de sièges (support et commerciaux) pour 250 € par mois, sans demander l'avis du DG. Mais je n'équipe pas toute la boîte : je pilote deux mois et je mesure qui s'en sert vraiment."
+   ],
+   [
+    "P098"
+   ]
+  ]
+ ],
+ "flip": [
+  "Un essai gratuit d'un mois sur une seule équipe, facturé seulement sur les utilisateurs actifs, qui montre noir sur blanc qu'il répond juste là où Claude Team se plante.",
+  "Un pilote gratuit d'un mois sur une seule équipe (le support ou les commerciaux), avec un rapport préalable des documents sensibles mal partagés, et un tarif qui ne se paie que pour les utilisateurs actifs plutôt que pour tout l'effectif.",
+  "Deux ou trois dirigeants d'agences ou d'ESN françaises comme la mienne qui l'utilisent depuis des mois et que je peux appeler, plus un pilote gratuit d'un mois limité à mon équipe commerciale, avec suppression des données garantie par écrit à la fin.",
+  "Une installation sur notre propre cloud avec un DPA et une liste de sous-traitants validés par notre avocat, plus une référence d'une PME industrielle comparable qui l'utilise depuis six mois ; dans ce cas je ferais un pilote payant sur un service, pas toute la boîte.",
+  "Un pilote gratuit sur une seule équipe et sans les boîtes mail, avec un DPA signé, un audit de sécurité ou une certification, et deux ou trois agences comparables qui l'utilisent déjà et que je peux appeler.",
+  "Un pilote gratuit limité à une équipe (les commerciaux et le suivi client), sans mails personnels, avec un modèle de note d'information CSE et un DPA prêts, et une référence d'une PME comparable qui l'utilise depuis six mois.",
+  "Un essai gratuit à 3 ou 4 personnes sur un périmètre limité, avec un audit avant branchement qui me montre noir sur blanc quels documents sensibles (paie, marges) seraient accessibles à qui, et des références de boîtes comme la mienne.",
+  "Un dossier sécurité et RGPD complet (DPA, sous-traitants, hébergement nommé, audit tiers) validé par mon DPO, plus un pilote sur une seule équipe sans les réunions, avec des références de sociétés de services comme la mienne.",
+  "Un pilote gratuit limité à une équipe et à quelques dossiers que je choisis, avec un audit qui me montre avant l'activation qui pourrait voir quoi, et une référence d'un dirigeant d'une boîte comme la mienne.",
+  "Un essai gratuit limité à deux ou trois commerciaux, branché devant moi en moins d'une heure, qui me sort une vraie fiche client juste avant un rendez-vous, avec les sources, et une référence d'une agence comparable qui l'utilise.",
+  "Un essai gratuit sur un ou deux projets où l'équipe voit concrètement qu'elle ne perd rien en confidentialité, et la preuve qu'il récupère l'historique d'un compte qui part avant qu'on le ferme.",
+  "Un pilote gratuit de deux ou trois semaines sur un service, sur nos vraies données, validé par mon responsable informatique sur les droits d'accès, où Leon retrouve correctement des décisions anciennes et dit « je ne sais pas » au lieu d'inventer.",
+  "Un essai gratuit d'un mois sur toute l'équipe, avec un compte rendu chiffré à la fin du nombre de questions auxquelles Leon a répondu à ma place, ou un prix forfaitaire par entreprise plutôt qu'au siège.",
+  "Un DPA et une AIPD prêts à l'emploi validés par mon DPO, l'instance dédiée en Europe avec la liste des sous-traitants, et un pilote limité à un projet volontaire sans les boîtes mail personnelles ni les réunions internes RH.",
+  "Un DPA signé avec la liste des sous-traitants, un audit de sécurité indépendant (ou ISO 27001/SOC 2 en cours), et l'instance dédiée au même prix, testée d'abord sur un seul projet interne sans données clients.",
+  "Un pilote gratuit limité à l'équipe commerciale, sur HubSpot et Gmail seulement, avec un dossier RGPD prêt à donner au CSE et une référence d'une PME française de notre taille qui l'utilise déjà.",
+  "Un essai gratuit d'un mois limité aux 4-5 commerciaux, avec la preuve chiffrée qu'ils s'en servent vraiment avant chaque rendez-vous, et un tarif qui ne m'oblige pas à équiper toute la boîte.",
+  "Un pilote gratuit de deux semaines sur un vrai dossier à nous, par exemple ce litige de périmètre, où Leon retrouve la bonne minute de réunion et le bon mail avec la source, et dit « je ne sais pas » quand l'info n'existe pas.",
+  "Un essai gratuit d'un mois sur une équipe où je vois concrètement Leon retrouver ce qu'on a promis à un client et que ChatGPT ne trouve pas, ou un prix qui me permette de couper une partie de l'abonnement actuel.",
+  "Un pilote gratuit d'un mois sur 5 sièges (direction et support), avec un audit montrant ce que chaque profil peut voir et une mesure du temps gagné.",
+  "Un pilote gratuit de deux ou trois semaines sur nos vraies données, avec mon responsable informatique, où on lui pose dix questions dont on connaît déjà la réponse (dont l'affaire du périmètre) et où il répond juste ou dit qu'il ne sait pas.",
+  "Un pilote gratuit de 30 jours limité à l'équipe commerciale, avec un audit préalable de ce qui serait exposé et une mesure du temps gagné par rendez-vous.",
+  "Un pilote gratuit de deux ou trois semaines sur nos vraies données, avec une seule équipe (les commerciaux), où je peux tester moi-même des questions pièges sur les droits et vérifier chaque source citée, plus un audit des accès avant l'indexation.",
+  "Un essai gratuit d'un mois sur une dizaine de sièges, piloté par mon responsable informatique, avec un relevé d'usage réel à la fin et un prix qui ne compte que les utilisateurs actifs.",
+  "Un essai gratuit limité à mes commerciaux, branché en une demi-journée sur Gmail et HubSpot, où je vois des fiches client avant rendez-vous nettement meilleures que ce que sort ChatGPT aujourd'hui, avec un prix qui ne facture que ceux qui l'utilisent.",
+  "Un pilote limité à l'équipe commerciale (Gmail, HubSpot, comptes rendus) sur une instance dédiée en Europe, avec DPA, sous-traitants listés, audit des droits avant indexation et journal de qui a demandé quoi, validé par mon DPO.",
+  "Un essai gratuit de deux semaines sur nos propres données, limité à Drive et Notion au départ, pendant lequel je vérifie moi-même que les réponses sont justes et sourcées, avec une page claire à montrer à l'équipe sur ce qui est stocké et qui voit quoi.",
+  "Un DPA complet avec la liste des sous-traitants et une AIPD type que notre DPO valide, plus un essai gratuit limité au Drive et à Notion (sans mails ni réunions) où je vérifie moi-même qu'il cite juste et dit « je ne sais pas » quand il faut.",
+  "Un audit fait avec moi avant de brancher quoi que ce soit, qui me montre ce que chaque salarié pourrait retrouver, avec la paie et la finance exclues par défaut, plus la recommandation d'un dirigeant d'une société comme la mienne qui l'utilise depuis six mois.",
+  "Un audit des droits avant la mise en route qui me montre ce qui serait exposé, plus un DPA, une certification type ISO 27001 ou SOC 2 et l'instance dédiée en Europe validés par mon DPO, avec un pilote gratuit sur une seule équipe.",
+  "Un essai gratuit de deux semaines sur nos vraies données, avec deux ou trois commerciaux, et des réponses justes et sourcées sur des clients que je connais par coeur.",
+  "Un essai gratuit de deux semaines sur la boîte et le Drive du chef de projet parti, avec mon responsable informatique, où Leon retrouve vraiment ce qu'on a promis à ses clients, source à l'appui, sans inventer.",
+  "Un essai gratuit sur une seule équipe (par exemple le support ou les commerciaux), facturé seulement aux utilisateurs actifs, avec un pair dirigeant qui me confirme que l'installation a vraiment pris moins d'une heure.",
+  "Un essai gratuit d'un mois sur une équipe de 10 personnes, branché sur nos vrais mails et réunions, où il retrouve correctement qui a validé quoi sur un dossier client contesté, avec la source.",
+  "Un essai gratuit sur notre propre historique, où je pose la question du périmètre contesté et où il me ressort la bonne minute de réunion avec la source, ou bien un « je ne sais pas » honnête.",
+  "Un pilote limité à une équipe projet sur l'instance dédiée, avec un DPA signé, la liste des sous-traitants (dont le fournisseur du modèle d'IA), et un audit préalable qui me montre les documents sensibles mal partagés avant que Leon les indexe.",
+  "Un DPA prêt à signer avec la liste des sous-traitants et un hébergement certifié en France ou en Europe, validé par mon DPO, plus un essai limité au seul Drive de l'onboarding, sans mails ni réunions.",
+  "Un essai gratuit sur un seul projet ou une seule équipe, avec l'accord des gens concernés, qui montre noir sur blanc ce que Leon garde et ce qu'il ne garde pas, et que l'équipe elle-même me dise que ça lui fait gagner du temps.",
+  "Un pilote gratuit d'un mois sur une équipe de 10 (les commerciaux), avec un relevé d'usage réel et du temps gagné mesuré, puis un tarif au seul nombre d'utilisateurs actifs.",
+  "Un essai gratuit d'un mois sur une seule équipe, par exemple le support ou les commerciaux, avec un chiffre concret à la fin sur le temps gagné, et la possibilité de ne payer que les sièges qui l'utilisent vraiment.",
+  "Un pilote gratuit d'un mois sur l'équipe commerciale seulement, validé par mon responsable informatique, où les fiches client avant rendez-vous sont justes et font réellement gagner du temps, plus un dirigeant d'une PME comparable qui me confirme que ça marche chez lui.",
+  "Un audit de sécurité sérieux ou une certification (type ISO 27001), avec un pilote gratuit sur un seul service validé par mon responsable informatique, et un ou deux clients PME comparables que je peux appeler.",
+  "Un DPA solide relu par notre DPO, l'instance sur notre propre cloud, et un pilote limité au livret d'accueil et à quelques dossiers Drive, sans mails ni réunions, avec le CSE informé.",
+  "Une instance dédiée hébergée en France avec un DPA signé, la liste des sous-traitants (dont le fournisseur du modèle d'IA), un audit des droits d'accès avant indexation, et un pilote de 2 mois limité à une équipe projet, validé par mon DPO.",
+  "Un pilote gratuit d'un mois sur un petit groupe, par exemple l'équipe qui accueille les nouveaux, avec nos vraies données, où je vérifie moi-même que les réponses tombent juste et que les droits d'accès sont respectés, et une facturation qui ne compte pas les gens qui ne s'en servent pas.",
+  "Une recommandation d'un dirigeant que je connais qui l'utilise depuis plusieurs mois, plus un pilote limité à une équipe et à quelques boîtes, avec un engagement écrit sur la suppression des données.",
+  "Un dirigeant d'une boîte comme la mienne qui l'utilise depuis six mois et me le recommande, plus un essai gratuit limité à un projet, sans brancher les boîtes mail.",
+  "Un essai gratuit d'un mois branché sur nos vrais outils, où je retrouve moi-même en deux minutes qui a promis quoi à un client, avec un prix par entreprise ou limité aux quelques personnes qui s'en servent vraiment.",
+  "Un pilote gratuit d'un mois sur une seule équipe (le bureau d'études ou les commerciaux) avec un livret d'accueil interrogeable prêt pour les nouveaux arrivants, et une facturation uniquement sur les utilisateurs réellement actifs.",
+  "Un pilote limité au support et à Jira/Linear, sans mails ni réunions, avec un DPA signé, la liste des sous-traitants, un hébergement nommé en Europe et l'avis favorable de mon DPO.",
+  "Un pilote gratuit de deux mois sur une seule équipe, installé sur notre propre cloud, avec un gain de temps mesuré et un client industriel de notre taille que je peux appeler.",
+  "Un pilote gratuit d'un mois limité à une équipe et à quelques boîtes, avec un DPA, une certification type ISO 27001 ou SOC 2 au moins en cours, et deux ou trois PME françaises de notre taille que je peux appeler.",
+  "Un pilote gratuit d'un mois sur cinq commerciaux, validé par mon responsable informatique, avec des chiffres d'usage réels à la fin qui montrent qu'ils s'en servent encore la quatrième semaine.",
+  "Un essai gratuit de 30 jours sur 5 commerciaux, branché sur nos vrais Gmail et HubSpot, avec un temps de préparation des rendez-vous mesurablement réduit et zéro réponse inventée sur un échantillon que je vérifie moi-même.",
+  "Un essai gratuit d'un mois limité au support et à deux devs, avec un compteur du nombre de questions répondues sans déranger un dev, pour que je voie le retour en heures avant de payer le moindre siège.",
+  "Un audit avant activation qui me liste les documents sensibles trop partagés, plus un essai gratuit sur une seule équipe avec un client de ma taille qui en témoigne.",
+  "Un DPA prêt à signer avec la liste des sous-traitants et l'hébergement précis, validé par mon DPO, plus un pilote gratuit limité au support et aux tickets Jira/Linear (sans mails ni réunions) pour vérifier que ça marche vraiment chez nous.",
+  "Un pilote gratuit d'un mois sur 10 sièges et une seule équipe, avec un audit préalable qui me liste les documents sensibles trop partagés avant d'indexer quoi que ce soit, et la preuve qu'il retrouve l'historique d'un compte déjà parti.",
+  "Un essai gratuit de deux semaines sur nos vraies données, avec au départ un audit qui me montre quels documents sensibles seraient visibles par qui, et que mes questions sur les clients de mon chef de projet parti obtiennent des réponses justes avec la source.",
+  "Un pilote gratuit d'un mois sur l'équipe commerciale seule, avec des références de PME comparables et un minimum de garanties sécurité écrites (DPA RGPD, audit ou certification en cours).",
+  "Un pilote gratuit limité à une équipe et à un client (les dossiers du chef de projet parti), avec un document clair RGPD/CSE prêt à présenter aux salariés, et la preuve qu'il retrouve des réponses que personne chez nous ne savait plus donner.",
+  "Un essai gratuit sur une partie de l'équipe où je vois en une semaine qu'il répond juste avec la source sur nos vrais dossiers clients, et un prix qui ne compte que les vrais utilisateurs actifs, pas toute la boîte.",
+  "Un audit avant activation qui me montre, par personne, les documents sensibles auxquels elle a accès (paie, marges, contrats), pour que je fasse le ménage, puis un pilote gratuit d'un mois sur une équipe.",
+  "Un pilote gratuit d'un mois sur une seule équipe en instance dédiée sur notre cloud, validé par mon responsable informatique, avec deux références de PME industrielles comparables que je peux appeler.",
+  "Un dossier RGPD complet (AIPD, DPA, sous-traitants listés, durées de conservation) validé par mon DPO, plus un pilote limité à l'équipe commerciale, sur la base du volontariat, sans enregistrement des réunions internes.",
+  "Un pilote gratuit de quelques semaines sur un périmètre restreint de nos vraies données, piloté par mon responsable informatique, avec un audit préalable de ce qui serait exposé et la preuve que les réponses citent la bonne source sans halluciner.",
+  "Une installation sur notre propre cloud avec un DPA complet, la liste des sous-traitants, un audit de sécurité tiers (ou une certification type ISO 27001), et un pilote limité à l'équipe commerciale.",
+  "Un essai gratuit d'un mois sur nos vraies données avec une dizaine de sièges, où je mesure combien de questions Slack il absorbe et si les sources citées sont justes.",
+  "Un pilote gratuit d'un mois sur une seule équipe, en instance dédiée, validé par mon responsable informatique, avec un contrat clair sur la réversibilité et la suppression des données, et une PME industrielle comparable qui l'utilise déjà.",
+  "Un pilote gratuit d'un mois sur un périmètre limité (une équipe, quelques boîtes), avec un contrat de sous-traitance RGPD, une attestation de sécurité type ISO 27001 ou audit indépendant, et des références de PME françaises comparables que je peux appeler.",
+  "Un essai gratuit de deux semaines sur trois commerciaux, branché sur notre Gmail et notre HubSpot, avec à la fin le temps de préparation des rendez-vous mesuré avant/après.",
+  "Un DPA et un registre des sous-traitants que mon DPO valide, avec une référence d'une PME française comparable, et un pilote gratuit limité à l'équipe commerciale sur HubSpot et le Drive, sans les boîtes mail personnelles ni les réunions.",
+  "Un essai gratuit sur une petite équipe (5 à 10 personnes, juste Gmail et Meet) où je pose la question sur ce client contesté et où Leon me sort la bonne minute de réunion, avec la source.",
+  "Un pilote gratuit d'un mois sur 10 sièges, limité à l'équipe commerciale, avec un audit préalable des documents sensibles exposés et des références de sociétés françaises de notre taille.",
+  "Un tarif au forfait ou limité aux utilisateurs actifs, avec un essai gratuit d'un mois sur un seul service (l'onboarding des nouveaux) qui montre des réponses justes sur nos propres documents.",
+  "Un pilote gratuit d'un mois sur une seule équipe, avec un audit préalable qui me montre ce qui est sur-partagé dans notre Drive avant indexation, et un tarif dégressif ou au forfait pour ne payer que les utilisateurs actifs.",
+  "Un dirigeant d'agence comme la mienne qui l'utilise depuis six mois et me le recommande, plus un essai gratuit limité à deux ou trois boîtes et un Drive interne, sans données clients.",
+  "Un essai gratuit de deux semaines sur une équipe pilote avec nos vrais outils, où je pose mes propres questions et je vérifie les sources, plus un document sécurité/RGPD que je peux mettre sous les yeux du DG.",
+  "Un essai gratuit limité à un service et à quelques dossiers que je choisis, avec un audit préalable qui me montre ce qui serait exposé et à qui, plus un engagement écrit sur l'hébergement et la sécurité (contrat de sous-traitance RGPD, références de clients PME comparables).",
+  "Un essai gratuit sur un petit périmètre (par exemple le livret d'accueil et un seul service) validé par mon responsable informatique, avec des références de PME industrielles françaises et une instance dédiée chez nous.",
+  "Un pilote gratuit de deux ou trois semaines sur l'instance dédiée, limité à la boîte et au Drive du chef de projet parti, avec des références de dirigeants comme moi et un engagement écrit (DPA RGPD, audit de sécurité, réversibilité des données).",
+  "Un pilote gratuit de deux ou trois semaines sur notre propre Jira/Linear et notre Drive, limité à l'équipe support, où je vérifie moi-même les réponses et les accès avant de payer."
+ ],
+ "purchases_first_month_per_buyer": 1.0,
+ "price_answers": 100
+}

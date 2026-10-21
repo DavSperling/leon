@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason": "Je paie déjà Claude Team branché sur Drive et Slack ; même si la mémoire et les sources citées sont mieux, je ne vais pas rajouter 25 € par tête pour un deuxième outil d'IA. Le pilote gratuit, je le lancerai peut-être un jour sur une équipe, mais cette semaine je n'ai ni le temps de faire l'audit ni envie d'ouvrir le sujet avec mes salariés.",
+  "reason_code": "price",
+  "objection": "Payer deux fois pour de l'IA, et que mes équipes vivent un outil qui garde tout ce qu'elles disent en réunion et par mail comme de la surveillance, même avec une note pour le CSE.",
+  "would_change_my_mind": "Que Leon se branche dans mon Claude Team actuel au lieu d'être un abonnement de plus, et que le test des 10 questions montre qu'il me fait vraiment gagner mon heure de Slack par jour.",
+  "price_too_cheap": 4,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

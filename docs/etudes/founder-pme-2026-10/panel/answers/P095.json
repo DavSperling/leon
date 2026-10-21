@@ -1,0 +1,13 @@
+{
+  "id": "P095",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche exactement ça : mes commerciaux perdent une demi-heure à fouiller Gmail, HubSpot et Slack avant chaque rendez-vous. Sans engagement, je le teste sur les cinq commerciaux, et si la fiche client tient la route, j'étends.",
+  "objection": "« Installation en 15 minutes, sans équipe informatique », je l'ai lu sur dix outils et à chaque fois ça a pris des semaines. Et je ne veux pas que des infos clients sensibles remontent chez quelqu'un qui ne devrait pas les voir.",
+  "would_change_my_mind": "Si au premier essai les réponses sont fausses ou sans source, ou si le branchement de HubSpot et Gmail me demande plus d'une heure, j'arrête tout de suite.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 55
+}

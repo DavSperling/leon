@@ -1,0 +1,13 @@
+{
+  "id": "P086",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème, je l'ai cette semaine même : personne ne retrouve ce qu'on a validé avec ce client il y a deux mois. Mais donner à une startup que je ne connais pas l'accès à tous nos mails, nos réunions et notre CRM, puis payer 25 € par tête pour 40 personnes, soit 1 000 € par mois, sur une promesse de « 15 minutes », je ne le fais pas sur une simple annonce.",
+  "objection": "Je n'y crois pas, aux 15 minutes sans équipe informatique : brancher Gmail, Drive, Meet, Notion, Jira et HubSpot avec les bons droits, chez nous ça prend des semaines, et si les réponses sont à moitié fausses je me retrouve avec un outil de plus que personne n'utilise.",
+  "would_change_my_mind": "Un essai gratuit sur une petite équipe (5 à 10 personnes, juste Gmail et Meet) où je pose la question sur ce client contesté et où Leon me sort la bonne minute de réunion, avec la source.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 35
+}

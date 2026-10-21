@@ -1,0 +1,13 @@
+{
+  "id": "P089",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je perds une heure par jour dans Slack, mais « chacun ne voit que ce qu'il voit déjà » ne me rassure pas : nos partages Drive sont un fouillis, et un outil qui fouille tout l'historique va justement faire remonter ce qui est mal partagé. Et à 25 € par tête sur 120 personnes, ça fait plus de 35 000 € par an pour une boîte qui n'a encore aucun abonnement IA : je ne présente pas ça au DG sans preuve.",
+  "objection": "Qu'un stagiaire pose une question anodine et tombe sur la paie ou les marges d'un client parce qu'un dossier Drive a été partagé « à toute l'entreprise » il y a trois ans. Je n'ai pas le temps d'auditer tous les partages avant de brancher quoi que ce soit, et une jeune société française inconnue, je ne sais pas qui elle est ni si elle sera là dans deux ans.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur une seule équipe, avec un audit préalable qui me montre ce qui est sur-partagé dans notre Drive avant indexation, et un tarif dégressif ou au forfait pour ne payer que les utilisateurs actifs.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

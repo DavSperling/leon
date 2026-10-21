@@ -1,0 +1,13 @@
+{
+  "id": "P079",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est bien plus raisonnable que Glean, mais je ne signe rien sur une promesse. « Chacun ne voit que ce qu'il voit déjà », c'est justement ça le problème : chez nous, les droits sur le Drive sont un bazar, et brancher toute l'entreprise d'un clic, c'est faire remonter ce bazar dans un moteur de recherche.",
+  "objection": "Qu'un stagiaire ou un commercial tombe sur la paie ou les marges d'un client parce qu'un dossier a été mal partagé il y a trois ans, et que l'outil invente une réponse sur nos propres données comme dans les démos que j'ai vues.",
+  "would_change_my_mind": "Un pilote gratuit de quelques semaines sur un périmètre restreint de nos vraies données, piloté par mon responsable informatique, avec un audit préalable de ce qui serait exposé et la preuve que les réponses citent la bonne source sans halluciner.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

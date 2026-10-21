@@ -1,0 +1,13 @@
+{
+  "id": "P027",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est bien plus raisonnable que Glean, mais je ne branche pas notre Drive, Gmail et HubSpot entiers chez une jeune startup sur une promesse de page d'accueil. Et à 25 € par tête pour toute l'équipe, je ne vois pas encore le retour chiffré.",
+  "objection": "Que \"chacun ne voit que ce qu'il voit déjà\" soit vrai en pratique : un partage Drive mal réglé et un stagiaire tombe sur la paie ou les marges clients via une simple question. Et qui me garantit que cette société sera encore là dans deux ans ?",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur 5 sièges (direction et support), avec un audit montrant ce que chaque profil peut voir et une mesure du temps gagné.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

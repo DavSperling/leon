@@ -1,0 +1,13 @@
+{
+  "id": "P066",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Le problème du support qui dérange les devs, je l'ai, c'est vrai. Mais à 25 € par tête sur 30 personnes, ça fait 750 € par mois pour un outil dont je parie que dans deux mois plus personne ne l'ouvrira, parce que tout le monde retournera demander sur Slack.",
+  "objection": "L'adoption : on paie, deux semaines d'enthousiasme, puis les gens reprennent leurs habitudes. Et je n'ai aucun chiffre qui me dit combien d'heures de dev ça me fait gagner.",
+  "would_change_my_mind": "Un essai gratuit d'un mois limité au support et à deux devs, avec un compteur du nombre de questions répondues sans déranger un dev, pour que je voie le retour en heures avant de payer le moindre siège.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

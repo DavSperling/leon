@@ -1,0 +1,13 @@
+{
+  "id": "P073",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème de mes commerciaux qui fouillent partout avant un rendez-vous, il est réel. Mais brancher Gmail, Drive, HubSpot et nos réunions sur une boîte de deux personnes qu'on ne connaît pas, je ne le fais pas sur une simple page de présentation. Et comme on n'a encore rien en IA côté entreprise, je regarderais d'abord ce que Gemini fait déjà dans notre Workspace.",
+  "objection": "Une société de deux personnes avec accès à tous nos mails clients et nos comptes rendus : qui est derrière, que se passe-t-il si elle coule ou se fait pirater, et est-ce que les droits d'accès sont vraiment respectés ?",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur l'équipe commerciale seule, avec des références de PME comparables et un minimum de garanties sécurité écrites (DPA RGPD, audit ou certification en cours).",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

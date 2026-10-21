@@ -1,0 +1,13 @@
+{
+  "id": "P031",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin existe, mes commerciaux perdent vraiment du temps avant chaque rendez-vous, mais je ne vais pas recommander au DG de brancher toute notre messagerie, le Drive et HubSpot sur un outil d'une jeune boîte sur la foi d'une page. « Cite la source ou dit je ne sais pas », toutes les démos IA que j'ai vues le promettaient, et elles inventaient quand même sur nos données.",
+  "objection": "Les droits. Si un seul partage Drive mal réglé laisse un stagiaire demander « quelles sont les marges sur tel client » ou tomber sur la paie, c'est moi qui saute. « Chacun ne voit que ce qu'il voit déjà », c'est justement le problème : chez nous, la moitié des dossiers Drive sont ouverts à tous par négligence.",
+  "would_change_my_mind": "Un pilote gratuit de deux ou trois semaines sur nos vraies données, avec une seule équipe (les commerciaux), où je peux tester moi-même des questions pièges sur les droits et vérifier chaque source citée, plus un audit des accès avant l'indexation.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

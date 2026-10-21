@@ -1,0 +1,13 @@
+{
+  "id": "P009",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème, je l'ai en ce moment même avec le départ de mon chef de projet, donc ça me parle. Mais brancher toute la boîte, Gmail et Drive compris, sur une startup que je ne connais pas alors que nos partages Drive sont un vrai bazar, je ne le fais pas sur une simple page de présentation.",
+  "objection": "« Chacun ne voit que ce qu'il voit déjà », d'accord, mais chez nous les droits Drive sont mal réglés depuis des années. Si Leon rend tout facile à trouver, le stagiaire tombe sur la paie ou sur les marges d'un client en une question, et c'est moi qui en réponds.",
+  "would_change_my_mind": "Un pilote gratuit limité à une équipe et à quelques dossiers que je choisis, avec un audit qui me montre avant l'activation qui pourrait voir quoi, et une référence d'un dirigeant d'une boîte comme la mienne.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

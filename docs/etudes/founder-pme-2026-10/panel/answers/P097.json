@@ -1,0 +1,13 @@
+{
+  "id": "P097",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche un endroit unique où retrouver ce qu'on a dit à un client, et mes commerciaux perdent un temps fou à fouiller Gmail, HubSpot et Slack avant chaque rendez-vous. Sans engagement, je teste sur les 5 ou 6 commerciaux d'abord, pas sur toute la boîte.",
+  "objection": "Enregistrer tout ce qui se dit, réunions comprises : mes salariés vont le vivre comme de la surveillance, et si ça casse la confiance dans l'équipe, aucun gain de temps ne le compense. Et je ne veux pas d'un trente-et-unième outil que personne n'ouvre.",
+  "would_change_my_mind": "Si les commerciaux ne l'utilisent plus au bout de trois semaines, ou si l'équipe le prend mal quand je l'annonce, j'arrête.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

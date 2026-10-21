@@ -1,0 +1,13 @@
+{
+  "id": "P046",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je le vis en ce moment avec un client qui conteste un périmètre, mais un outil qui aspire toutes nos boîtes mail, nos Drive et nos réunions ne se signe pas en un mois. Ça passe d'abord par mon responsable informatique et par le DPO, et « installation en 15 minutes sans équipe informatique », pour moi, c'est plutôt un signal d'alarme.",
+  "objection": "Le « chacun ne voit que ce qu'il voit déjà » repose sur des droits de partage Drive qui sont en vrac chez nous. Si un dossier paie ou marges est mal partagé, Leon le rend trouvable en une question. Et l'enregistrement des réunions avec rapport hebdo pour le dirigeant, mes équipes vont le lire comme de la surveillance.",
+  "would_change_my_mind": "Un pilote limité à une équipe projet sur l'instance dédiée, avec un DPA signé, la liste des sous-traitants (dont le fournisseur du modèle d'IA), et un audit préalable qui me montre les documents sensibles mal partagés avant que Leon les indexe.",
+  "price_too_cheap": 5,
+  "price_cheap": 15,
+  "price_expensive": 35,
+  "price_too_expensive": 55
+}

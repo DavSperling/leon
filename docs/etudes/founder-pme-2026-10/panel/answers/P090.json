@@ -1,0 +1,13 @@
+{
+  "id": "P090",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est sans commune mesure avec Glean, mais je ne vais pas ouvrir les mails, les Drive et les réunions de mes clients à une boîte que je ne connais pas, juste sur une page de présentation. Et on n'a même pas encore d'abonnement IA d'entreprise : ce ne serait pas la première marche.",
+  "objection": "Si cette société disparaît ou se fait pirater, ce sont les données confidentielles de mes clients qui partent, et c'est moi qui en réponds devant eux.",
+  "would_change_my_mind": "Un dirigeant d'agence comme la mienne qui l'utilise depuis six mois et me le recommande, plus un essai gratuit limité à deux ou trois boîtes et un Drive interne, sans données clients.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

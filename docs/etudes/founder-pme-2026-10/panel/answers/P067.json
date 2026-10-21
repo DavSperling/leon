@@ -1,0 +1,13 @@
+{
+  "id": "P067",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Ça fait des mois que je cherche un endroit unique où retrouver ce qui a été dit et décidé, et chacun fait son ChatGPT dans son coin. Sans engagement, je lance un pilote payant sur une équipe de 10 à 15 personnes (commerciaux et support) avec mon responsable informatique, pas sur les 120 d'un coup.",
+  "objection": "Encore un outil de plus dans la pile : dans deux mois plus personne ne l'ouvre, et à 25 € par tête sur toute la boîte ça fait 3 000 € par mois pour un gadget. Et je veux voir de mes yeux que les droits d'accès sont vraiment respectés avant de brancher Gmail et le Drive de la direction.",
+  "would_change_my_mind": "Si au bout du pilote les commerciaux ne l'utilisent pas chaque semaine sans qu'on les relance, j'arrête et je n'étends pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

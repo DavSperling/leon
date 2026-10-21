@@ -1,0 +1,13 @@
+{
+  "id": "P015",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "Je viens de perdre mon chef de projet senior et ses clients me posent des questions auxquelles personne ne sait répondre : si Leon retrouve ce qu'on leur a promis en réunion, ça me sert cette semaine. Sans engagement, je le teste sur une dizaine de personnes (projet et support), pas sur toute la boîte.",
+  "objection": "Un outil de plus dans une pile de trente. On va payer, et dans deux mois plus personne ne l'ouvrira ; et s'il répond « je ne sais pas » une fois sur deux, c'est mort.",
+  "would_change_my_mind": "Si au premier essai il ne retrouve pas correctement ce qui a été promis aux clients de mon chef de projet parti, sources à l'appui, je coupe tout de suite.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

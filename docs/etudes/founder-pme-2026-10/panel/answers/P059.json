@@ -1,0 +1,13 @@
+{
+  "id": "P059",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "Le problème de cette semaine, je l'ai vraiment, mais 25 € fois une vingtaine de personnes, ça fait 500 € par mois pour un outil que mes équipes n'ouvriront pas : ils n'utilisent même pas Gemini qu'on paie déjà dans Workspace.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira. Et la réunion d'il y a deux mois n'était de toute façon pas enregistrée, donc ça ne règle pas mon litige d'aujourd'hui.",
+  "would_change_my_mind": "Un essai gratuit d'un mois branché sur nos vrais outils, où je retrouve moi-même en deux minutes qui a promis quoi à un client, avec un prix par entreprise ou limité aux quelques personnes qui s'en servent vraiment.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

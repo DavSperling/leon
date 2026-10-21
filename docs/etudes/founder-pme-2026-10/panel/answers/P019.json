@@ -1,0 +1,13 @@
+{
+  "id": "P019",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le prix est raisonnable à côté du devis Glean, mais un outil qui garde tout ce qui se dit en réunion et dans les mails, mes consultants vont le vivre comme un mouchard. Je ne signe rien ce mois-ci sans que mon DPO et mon avocat aient lu le DPA, et sans en avoir parlé au CSE.",
+  "objection": "Enregistrer et indexer toutes les réunions et tous les mails, c'est de la surveillance aux yeux des salariés, et je ne sais pas qui chez Leon peut accéder à nos données ni ce que valent les engagements d'une jeune société.",
+  "would_change_my_mind": "Un DPA et une AIPD prêts à l'emploi validés par mon DPO, l'instance dédiée en Europe avec la liste des sous-traitants, et un pilote limité à un projet volontaire sans les boîtes mail personnelles ni les réunions internes RH.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

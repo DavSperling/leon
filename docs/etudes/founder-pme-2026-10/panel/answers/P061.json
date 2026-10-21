@@ -1,0 +1,13 @@
+{
+  "id": "P061",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le « ce bug est-il connu ? » me parle vraiment, mes devs perdent du temps chaque semaine avec ça. Mais brancher Gmail, Drive et l'enregistrement de nos réunions clients chez une société de deux personnes, je ne le fais pas sans validation de mon DPO, et pas tout de suite.",
+  "objection": "Une jeune société de deux personnes qui garde tout ce qui se dit chez nous, y compris des données de nos clients : qui y a accès, où exactement, que se passe-t-il si elle coule ou se fait racheter, et mes équipes vont vivre ça comme de la surveillance.",
+  "would_change_my_mind": "Un pilote limité au support et à Jira/Linear, sans mails ni réunions, avec un DPA signé, la liste des sous-traitants, un hébergement nommé en Europe et l'avis favorable de mon DPO.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P028",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je l'ai encore eu cette semaine avec ce client qui conteste le périmètre. Mais je ne signe pas pour 150 personnes sur une promesse de « je cite la source ou je dis je ne sais pas » : j'ai déjà vu des démos inventer des réponses avec aplomb sur nos propres documents.",
+  "objection": "Qu'il me sorte une citation fausse ou hors contexte sur un sujet contractuel, et qu'on s'appuie dessus face au client. Et brancher tous nos mails et réunions sur un outil d'une jeune société, mon responsable informatique va tiquer.",
+  "would_change_my_mind": "Un pilote gratuit de deux ou trois semaines sur nos vraies données, avec mon responsable informatique, où on lui pose dix questions dont on connaît déjà la réponse (dont l'affaire du périmètre) et où il répond juste ou dit qu'il ne sait pas.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 25,
+  "price_too_expensive": 40
+}

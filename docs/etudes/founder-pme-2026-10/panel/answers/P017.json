@@ -1,0 +1,13 @@
+{
+  "id": "P017",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Pour que ça m'enlève mon heure de Slack, il faut que toute l'équipe l'utilise, donc 25 sièges à 25 €, soit plus de 7 000 € par an, pour un outil dont je n'ai aucun chiffre de retour. J'ai déjà payé Notion et Google pour ranger l'information, je ne vais pas en plus payer quelqu'un pour la retrouver sans preuve que ça marche chez nous.",
+  "objection": "Le « 15 minutes sans équipe informatique », j'y crois à moitié : entre exclure les bons dossiers, vérifier les droits et convaincre l'équipe de poser ses questions à Leon plutôt qu'à moi, je vois surtout des semaines de mon temps, et un abonnement au siège qui grimpe à chaque embauche.",
+  "would_change_my_mind": "Un essai gratuit d'un mois sur toute l'équipe, avec un compte rendu chiffré à la fin du nombre de questions auxquelles Leon a répondu à ma place, ou un prix forfaitaire par entreprise plutôt qu'au siège.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

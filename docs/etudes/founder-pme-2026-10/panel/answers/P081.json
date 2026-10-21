@@ -1,0 +1,13 @@
+{
+  "id": "P081",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "J'ai déjà vu ces outils répondre à côté avec aplomb, et à 25 € par tête sur 120 personnes ça fait 36 000 € par an : je ne monte pas ce dossier au DG sur une page de promesses sans aucun chiffre de résultat.",
+  "objection": "Je ne crois pas qu'il trouve vraiment la bonne réponse dans notre fouillis Notion et Drive, ni qu'il dise « je ne sais pas » au lieu d'inventer ; et le tarif par utilisateur m'oblige à payer pour des gens qui ne s'en serviront jamais.",
+  "would_change_my_mind": "Un essai gratuit d'un mois sur nos vraies données avec une dizaine de sièges, où je mesure combien de questions Slack il absorbe et si les sources citées sont justes.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

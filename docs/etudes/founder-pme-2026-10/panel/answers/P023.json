@@ -1,0 +1,13 @@
+{
+  "id": "P023",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "habit",
+  "reason": "La fiche client avant rendez-vous, c'est exactement le temps que perdent mes commerciaux, donc je comprends l'intérêt. Mais on paie déjà Gemini sans que personne s'en serve, et je ne vais pas mettre 25 € par tête sur 30 personnes pour un outil de plus qu'on oubliera dans deux mois.",
+  "objection": "L'adoption : mes équipes ne changeront pas leurs habitudes, et brancher Gmail, HubSpot et nos comptes rendus clients chez une jeune boîte que je ne connais pas me gêne aussi.",
+  "would_change_my_mind": "Un essai gratuit d'un mois limité aux 4-5 commerciaux, avec la preuve chiffrée qu'ils s'en servent vraiment avant chaque rendez-vous, et un tarif qui ne m'oblige pas à équiper toute la boîte.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 18,
+  "price_too_expensive": 30
+}

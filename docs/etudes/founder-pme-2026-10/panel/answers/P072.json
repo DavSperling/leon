@@ -1,0 +1,13 @@
+{
+  "id": "P072",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je viens de perdre mon chef de projet et personne ne sait ce qu'il a promis aux clients. Mais je ne paie pas sur une page de présentation : j'ai déjà vu des outils IA inventer des réponses sur mes propres données.",
+  "objection": "« Chacun ne voit que ce qu'il voit déjà », d'accord, mais nos droits sur Drive sont un bazar : si un fichier de paie ou de marges est partagé trop largement, Leon le servira proprement au premier stagiaire qui pose la question. Et rien ne me prouve qu'il dira vraiment « je ne sais pas » au lieu d'inventer.",
+  "would_change_my_mind": "Un essai gratuit de deux semaines sur nos vraies données, avec au départ un audit qui me montre quels documents sensibles seraient visibles par qui, et que mes questions sur les clients de mon chef de projet parti obtiennent des réponses justes avec la source.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 55
+}

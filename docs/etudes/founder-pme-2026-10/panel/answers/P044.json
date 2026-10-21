@@ -1,0 +1,13 @@
+{
+  "id": "P044",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Mon problème de périmètre contesté est bien réel, mais 25 € par tête sur 80 à 200 personnes, ça fait 30 à 60 k€ par an pour une jeune boîte que personne ne connaît et un type d'outil qui, d'après ce que j'ai vu, invente avec aplomb. Je ne signe pas ça cette semaine, je demande à mon responsable informatique de regarder et on verra.",
+  "objection": "Je ne crois pas qu'il retrouve vraiment ce qui s'est dit en réunion il y a deux mois sans se tromper, et laisser une start-up lire tous les mails et les Drive de la boîte, mon responsable informatique va freiner des quatre fers.",
+  "would_change_my_mind": "Un essai gratuit d'un mois sur une équipe de 10 personnes, branché sur nos vrais mails et réunions, où il retrouve correctement qui a validé quoi sur un dossier client contesté, avec la source.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

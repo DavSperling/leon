@@ -1,0 +1,13 @@
+{
+  "id": "P051",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Je n'ai même pas encore activé Gemini qu'on paie déjà, et on me propose de brancher tous nos mails, réunions et le CRM sur une start-up que je ne connais pas. À 25 € par tête sur une centaine de personnes, ça fait près de 30 000 € par an pour un outil dont je n'ai jamais vu la preuve qu'il ne raconte pas n'importe quoi.",
+  "objection": "J'ai déjà vu ces outils répondre avec aplomb des choses fausses ; « il cite la source » et « il dit je ne sais pas », tout le monde le promet. Et mon responsable informatique ne laissera pas une jeune boîte aspirer tout l'historique de l'entreprise sur une simple installation en 15 minutes.",
+  "would_change_my_mind": "Un pilote gratuit d'un mois sur l'équipe commerciale seulement, validé par mon responsable informatique, où les fiches client avant rendez-vous sont justes et font réellement gagner du temps, plus un dirigeant d'une PME comparable qui me confirme que ça marche chez lui.",
+  "price_too_cheap": 5,
+  "price_cheap": 10,
+  "price_expensive": 20,
+  "price_too_expensive": 30
+}

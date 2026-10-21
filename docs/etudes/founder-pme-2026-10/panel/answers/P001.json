@@ -1,0 +1,13 @@
+{
+  "id": "P001",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "Je paie déjà Claude Team pour toute la boîte, branché sur Drive et Slack. Ajouter 25 € par tête, c'est 500 à 1 000 € de plus par mois pour une mémoire que mon outil actuel finira sans doute par avoir. Je ne paie pas deux fois pour le même usage.",
+  "objection": "Un outil qui garde tout ce qui se dit en réunion et dans les mails, mes consultants vont le vivre comme du flicage, même si chacun ne voit que ses propres droits. Je n'ai pas envie d'ouvrir ce débat-là en interne pour gagner une heure de Slack.",
+  "would_change_my_mind": "Un essai gratuit d'un mois sur une seule équipe, facturé seulement sur les utilisateurs actifs, qui montre noir sur blanc qu'il répond juste là où Claude Team se plante.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

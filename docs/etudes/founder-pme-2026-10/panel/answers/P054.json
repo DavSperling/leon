@@ -1,0 +1,13 @@
+{
+  "id": "P054",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le besoin est réel, je viens de perdre mon chef de projet et je découvre ce qu'il avait dans la tête. Mais un outil qui « garde tout ce qui s'y dit, réunions comprises », branché en un clic sans mon responsable informatique, je ne le signe pas cette semaine : ça passe d'abord par le DPO et l'avocat, et le CSE va me parler de surveillance.",
+  "objection": "Une société inconnue qui aspire tous les mails et enregistrements de réunion, y compris la paie et les marges clients. « Chacun ne voit que ce qu'il voit déjà », d'accord, mais nos droits Drive sont un bazar : un dossier partagé trop largement et un stagiaire tombe sur les salaires. Et je ne sais pas qui chez eux a accès aux données, ni ce qui part chez ChatGPT ou Claude.",
+  "would_change_my_mind": "Une instance dédiée hébergée en France avec un DPA signé, la liste des sous-traitants (dont le fournisseur du modèle d'IA), un audit des droits d'accès avant indexation, et un pilote de 2 mois limité à une équipe projet, validé par mon DPO.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

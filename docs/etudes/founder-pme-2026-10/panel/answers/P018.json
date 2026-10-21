@@ -1,0 +1,13 @@
+{
+  "id": "P018",
+  "buys": true,
+  "purchases_first_month": 1,
+  "reason_code": "need",
+  "reason": "La fiche client avant un rendez-vous, c'est exactement ce que mes commerciaux reconstituent à la main en fouillant Gmail, HubSpot et Slack. Sans engagement, je le teste un mois sur l'équipe commerciale seulement, cinq ou six licences, pas toute la boîte.",
+  "objection": "On va payer, et dans deux mois plus personne ne s'en servira : c'est un outil de plus dans une pile de trente, et si les réponses ne sont pas fiables dès la première semaine, mes commerciaux retournent à leurs onglets.",
+  "would_change_my_mind": "Si pendant l'essai mes commerciaux ne l'ouvrent pas spontanément avant leurs rendez-vous, ou si une seule fiche client contient une promesse fausse, j'arrête.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 35,
+  "price_too_expensive": 50
+}

@@ -1,0 +1,13 @@
+{
+  "id": "P088",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "price",
+  "reason": "25 € par personne sur 120 salariés, ça fait plus de 3 000 € par mois pour un outil dont la moitié des gens ne se serviront jamais ; on n'a même pas activé Gemini qu'on paie déjà. Mon problème de la rentrée, c'est l'onboarding de trois personnes, pas de stocker toute la mémoire de la boîte.",
+  "objection": "Je ne crois pas aux 15 minutes : mon responsable informatique va devoir tout vérifier, les droits, les dossiers à exclure, le RGPD sur les réunions enregistrées, et je ne sais pas qui chez nous va réellement poser des questions à cet outil.",
+  "would_change_my_mind": "Un tarif au forfait ou limité aux utilisateurs actifs, avec un essai gratuit d'un mois sur un seul service (l'onboarding des nouveaux) qui montre des réponses justes sur nos propres documents.",
+  "price_too_cheap": 3,
+  "price_cheap": 8,
+  "price_expensive": 15,
+  "price_too_expensive": 25
+}

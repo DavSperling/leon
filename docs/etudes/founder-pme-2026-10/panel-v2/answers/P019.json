@@ -1,0 +1,13 @@
+{
+  "id": "P019",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le dossier confiance est sérieux, bien plus que ce que j'attendais d'une jeune boîte, mais un outil qui garde les mails, les réunions et les tickets de mes consultants, mes équipes le vivront comme de la surveillance, CSE ou pas. Je peux à la rigueur laisser une équipe tester gratuitement, mais je ne signe rien tant que mon avocat n'a pas lu le DPA et que je ne sais pas qui est derrière Leon.",
+  "objection": "Mes salariés vont le vivre comme de la surveillance : « qu'a dit untel en réunion » devient vite « qui a dit quoi ». Et confier les échanges avec mes clients à une startup inconnue, avec un modèle d'IA sous-traitant, c'est un risque pour mes contrats de confidentialité.",
+  "would_change_my_mind": "Que le pilote se passe sans remous dans l'équipe, avec l'accord explicite du CSE, une instance dédiée en Europe validée par mon avocat, et des références d'autres cabinets de services comparables.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

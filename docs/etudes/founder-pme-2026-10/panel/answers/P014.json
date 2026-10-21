@@ -1,0 +1,13 @@
+{
+  "id": "P014",
+  "buys": false,
+  "purchases_first_month": 0,
+  "reason_code": "trust",
+  "reason": "Le problème est réel, je l'ai eu cette semaine avec ce client qui conteste un périmètre, mais j'ai déjà vu des IA inventer des réponses sur nos propres données. Je ne paie pas avant d'avoir vu Leon retrouver une vraie décision de réunion chez nous, avec la bonne source, sans rien inventer.",
+  "objection": "Brancher tout notre Gmail, Drive et nos réunions d'un clic, c'est la paie, les marges clients et les RH à portée d'une question. Le « chacun ne voit que ce qu'il voit déjà » repose sur des droits de partage Drive que personne n'a jamais nettoyés chez nous ; mon responsable informatique devra vérifier ça avant tout, et 15 minutes sans équipe informatique me fait plutôt peur.",
+  "would_change_my_mind": "Un pilote gratuit de deux ou trois semaines sur un service, sur nos vraies données, validé par mon responsable informatique sur les droits d'accès, où Leon retrouve correctement des décisions anciennes et dit « je ne sais pas » au lieu d'inventer.",
+  "price_too_cheap": 5,
+  "price_cheap": 12,
+  "price_expensive": 30,
+  "price_too_expensive": 45
+}

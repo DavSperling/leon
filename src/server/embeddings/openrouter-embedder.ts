@@ -1,4 +1,10 @@
-import { EMBEDDING_DIMS, type Embedder, EmbedderError, EmbedderRefusal } from './embedder';
+import {
+  EMBEDDING_DIMS,
+  type Embedder,
+  EmbedderError,
+  EmbedderRefusal,
+  type EmbedKind,
+} from './embedder';
 
 // Fournisseur de vecteurs passant par OpenRouter (API compatible OpenAI) : un seul compte pour comparer les
 // candidats du plan (voyageai/voyage-4, mistralai/mistral-embed-2312, baai/bge-m3) et d'autres. Le modèle se
@@ -16,13 +22,19 @@ export function createOpenRouterEmbedder(
   config: { apiKey: string; model: string },
   fetchImpl: typeof fetch = fetch,
 ): Embedder {
-  async function embedBatch(texts: string[]): Promise<number[][]> {
+  async function embedBatch(texts: string[], kind: EmbedKind): Promise<number[][]> {
     let res: globalThis.Response;
     try {
       res = await fetchImpl(URL, {
         method: 'POST',
         headers: { authorization: `Bearer ${config.apiKey}`, 'content-type': 'application/json' },
-        body: JSON.stringify({ model: config.model, input: texts }),
+        // Voyage préfixe alors la question ou le passage d'une consigne (vecteurs compatibles avec ceux faits sans) ;
+        // OpenRouter le transmet, et mistral-embed comme bge-m3 l'acceptent (vérifié le 20/10/2026).
+        body: JSON.stringify({
+          model: config.model,
+          input: texts,
+          input_type: kind === 'requete' ? 'query' : 'document',
+        }),
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
     } catch {
@@ -50,10 +62,10 @@ export function createOpenRouterEmbedder(
 
   return {
     model: `openrouter:${config.model}`,
-    async embed(texts) {
+    async embed(texts, kind) {
       const out: number[][] = [];
       for (let i = 0; i < texts.length; i += BATCH)
-        out.push(...(await embedBatch(texts.slice(i, i + BATCH))));
+        out.push(...(await embedBatch(texts.slice(i, i + BATCH), kind)));
       return out;
     },
   };

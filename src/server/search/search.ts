@@ -72,8 +72,11 @@ const TITLE_CANDIDATES = 100;
 const HNSW_EF_SEARCH = 100;
 // Distance cosinus au-delà de laquelle un passage ne répond plus (0 : même sens, 1 : sans rapport). Sans seuil,
 // les vecteurs rendraient les passages les plus proches même pour une requête sans aucun rapport, et « Aucun
-// résultat » n'arriverait jamais. Provisoire : à régler avec les fournisseurs candidats sur le jeu d'essai (T30).
-export const MAX_VECTOR_DISTANCE = 0.8;
+// résultat » n'arriverait jamais. Mesuré le 20/10/2026 avec voyage-4 sur les 17 questions du jeu d'essai : à 0,8,
+// 91 % des paires de passages tirées au hasard passaient et une question hors sujet rendait ~90 sources ; à 0,55, 2 à 9,
+// pour le même rappel à 10 (94 %) ; en deçà, de bonnes sources se perdent (rappel 92 % à 0,5).
+// shortcut: seuil réglé pour voyage-4 seul, à mesurer de nouveau avant de changer de modèle de vecteurs.
+export const MAX_VECTOR_DISTANCE = 0.55;
 // La recherche n'attend pas le fournisseur de vecteurs plus longtemps : passé ce délai, elle répond au plein
 // texte seul (une recherche lente est un échec, et la barre ne doit jamais dépendre d'un fournisseur).
 export const EMBED_QUERY_TIMEOUT_MS = 3000;

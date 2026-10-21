@@ -751,7 +751,8 @@ describe('vecteurs', () => {
     const { alice } = await team();
     await seedIndexed(alice, {
       title: 'Compte rendu',
-      turns: [{ text: 'La réunion du budget a eu lieu hier.' }],
+      // Trois mots : le factice (sac de mots) place « reunion » sous le seuil de distance réglé pour voyage-4.
+      turns: [{ text: 'Réunion budget hier.' }],
     });
     // « reunion » sans accent : le plein texte ne le rapproche pas de « réunion », le factice si.
     const textOnly = await search(alice, 'reunion');
@@ -837,11 +838,11 @@ describe('mot nié, côté vecteurs et titres', () => {
     const { alice } = await team();
     await seedIndexed(alice, {
       title: 'Avec factures',
-      turns: [{ text: 'La réunion des factures a eu lieu hier.' }],
+      turns: [{ text: 'Réunion factures hier.' }],
     });
     await seedIndexed(alice, {
       title: 'Sans',
-      turns: [{ text: 'La réunion du budget a eu lieu hier.' }],
+      turns: [{ text: 'Réunion budget hier.' }],
     });
     // « reunion » sans accent : seul le volet vecteurs les trouve.
     expect(titles(await search(alice, 'reunion', { embedder: factice })).toSorted()).toEqual([

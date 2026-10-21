@@ -33,6 +33,17 @@ describe('createOpenRouterEmbedder', () => {
     expect(embedder.model).toBe('openrouter:baai/bge-m3');
   });
 
+  it('dit au fournisseur si le texte est une question ou un passage', async () => {
+    const { impl, calls } = fakeFetch((b) => ok(b.input));
+    const embedder = createOpenRouterEmbedder({ apiKey: 'k', model: 'voyageai/voyage-4' }, impl);
+    await embedder.embed(['a'], 'requete');
+    await embedder.embed(['b'], 'document');
+    expect(calls.map((c) => (c as { input_type?: string }).input_type)).toEqual([
+      'query',
+      'document',
+    ]);
+  });
+
   it('refuse une mauvaise dimension et une erreur du service, sans citer sa réponse', async () => {
     const short = fakeFetch(() => Response.json({ data: [{ index: 0, embedding: [1, 2] }] }));
     await expect(

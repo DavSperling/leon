@@ -1,0 +1,177 @@
+/* Jetons « Verre + signal, violet atténué », repris de planche/verre-signal.html (la planche fait foi). */
+@import "tailwindcss";
+@import "./effects.css";
+
+/* La palette par défaut de Tailwind est retirée : on n'écrit qu'avec les jetons ci-dessous. */
+@theme {
+  --color-*: initial;
+}
+
+:root {
+  --font: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(.34, 1.4, .64, 1);
+  --dur-enter: 220ms;
+  --dur-exit: 140ms;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0c11;
+  --glass: rgba(226, 232, 242, .035); --glass-2: rgba(226, 232, 242, .05); --glass-3: rgba(226, 232, 242, .04);
+  --float: rgba(20, 23, 30, .68); --menu: #181b23; --scrim: rgba(5, 7, 11, .5);
+  --hover: rgba(226, 232, 242, .05); --ink: rgba(226, 232, 242, .065);
+  --line: rgba(255, 255, 255, .085); --line-strong: rgba(255, 255, 255, .14); --hi: rgba(255, 255, 255, .06);
+  --text: #eef1f6; --text-2: #c9cfda; --muted: #a9b1c0;
+  --accent: #aabff2; --accent-ink: #0b1020; --accent-soft: rgba(170, 191, 242, .11); --accent-line: rgba(170, 191, 242, .3);
+  --ring: rgba(170, 191, 242, .8); --spot: rgba(170, 191, 242, .1);
+  --mark-bg: rgba(170, 191, 242, .16); --mark-ink: #dfe7ff;
+  --ok: #4cc79a; --logo-2: #6db4a9; --thumb: #eef1f6; --sk-hi: rgba(255, 255, 255, .06);
+  --success: #5fd0a6; --success-soft: rgba(95, 208, 166, .07); --success-line: rgba(95, 208, 166, .28);
+  --warning: #e9c27a; --warning-soft: rgba(233, 194, 122, .07); --warning-line: rgba(233, 194, 122, .3);
+  --destructive: #f5a8a8; --destructive-ink: #1c0c0d; --destructive-soft: rgba(245, 168, 168, .07); --destructive-line: rgba(245, 168, 168, .3);
+  --info: #8fcbe8; --info-soft: rgba(143, 203, 232, .07); --info-line: rgba(143, 203, 232, .28);
+  --shadow: 0 40px 80px -40px rgba(0, 0, 0, .75);
+  --float-shadow: 0 32px 80px -24px rgba(0, 0, 0, .7), 0 2px 8px rgba(0, 0, 0, .25);
+  --blob-1: #24376e; --blob-2: #0d5f5c; --blob-3: #2d3a52; --blob-4: #3a4f8f; --blob-o: .45; --box-line: rgba(255, 255, 255, .4);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef0f4;
+  --glass: rgba(255, 255, 255, .46); --glass-2: rgba(255, 255, 255, .62); --glass-3: rgba(22, 30, 48, .035);
+  --float: rgba(252, 253, 254, .86); --menu: #fcfcfd; --scrim: rgba(18, 24, 38, .16);
+  --hover: rgba(22, 30, 48, .04); --ink: rgba(255, 255, 255, .78);
+  --line: rgba(16, 22, 36, .08); --line-strong: rgba(16, 22, 36, .14); --hi: rgba(255, 255, 255, .85);
+  --text: #111622; --text-2: #353d4e; --muted: #515a6c;
+  --accent: #3b5aae; --accent-ink: #ffffff; --accent-soft: #e9eef9; --accent-line: rgba(59, 90, 174, .26);
+  --ring: rgba(59, 90, 174, .7); --spot: rgba(59, 90, 174, .07);
+  --mark-bg: #dbe3f4; --mark-ink: #2c4596;
+  --ok: #17946a; --logo-2: #2b8f84; --thumb: #ffffff; --sk-hi: rgba(255, 255, 255, .7);
+  --success: #0f7653; --success-soft: #e2f3ec; --success-line: rgba(15, 118, 83, .24);
+  --warning: #8a5a06; --warning-soft: #f8eedb; --warning-line: rgba(138, 90, 6, .26);
+  --destructive: #b0373a; --destructive-ink: #ffffff; --destructive-soft: #f9e6e6; --destructive-line: rgba(176, 55, 58, .24);
+  --info: #20628f; --info-soft: #e2eef7; --info-line: rgba(32, 98, 143, .24);
+  --shadow: 0 30px 60px -36px rgba(25, 35, 65, .26);
+  --float-shadow: 0 30px 70px -24px rgba(25, 35, 65, .32), 0 2px 8px rgba(25, 35, 65, .06);
+  --blob-1: #c9d4f2; --blob-2: #bfe6df; --blob-3: #dfe3ea; --blob-4: #b9c8f0; --blob-o: .66; --box-line: rgba(16, 22, 36, .5);
+}
+
+/* Les classes Tailwind lisent les jetons : bg-panel, text-muted, border-line, text-accent, rounded-card, font-mono… */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-glass: var(--glass);
+  --color-glass-2: var(--glass-2);
+  --color-glass-3: var(--glass-3);
+  --color-panel: var(--glass); /* = GlassCard variant="panel" */
+  --color-float: var(--float);
+  --color-menu: var(--menu);
+  --color-scrim: var(--scrim);
+  --color-hover: var(--hover);
+  --color-ink: var(--ink);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-hi: var(--hi);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-ring: var(--ring);
+  --color-mark-bg: var(--mark-bg);
+  --color-mark-ink: var(--mark-ink);
+  --color-spot: var(--spot);
+  --color-logo-2: var(--logo-2);
+  --color-ok: var(--ok);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-line: var(--destructive-line);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+
+  --radius-panel: 26px;
+  --radius-box: 18px;
+  --radius-card: 16px;
+  --radius-field: 12px;
+  --radius-item: 10px;
+  --radius-chip: 7px;
+
+  --shadow-hi: inset 0 1px 0 var(--hi);
+  --shadow-panel: inset 0 1px 0 var(--hi), var(--shadow);
+  --shadow-float: var(--float-shadow), inset 0 1px 0 var(--hi);
+
+  --ease-out: var(--ease-out);
+  --ease-spring: var(--ease-spring);
+}
+
+/* Sous 861 px, la barre latérale laisse place à la barre mobile : « shell: » et « max-shell: ». */
+@theme {
+  --breakpoint-shell: 861px;
+}
+
+/* Échelle typographique de la planche : métadonnées mono, libellés, interface, corps, titres. */
+@theme {
+  --text-meta: 11.5px;
+  --text-meta--line-height: 1.4;
+  --text-label: 12.5px;
+  --text-label--line-height: 1.45;
+  --text-ui: 13.5px;
+  --text-ui--line-height: 1.45;
+  --text-body: 14px;
+  --text-body--line-height: 1.55;
+  --text-lead: 15.5px;
+  --text-lead--line-height: 1.65;
+  --text-title: 16.5px;
+  --text-title--line-height: 1.35;
+  --text-h2: 21px;
+  --text-h2--line-height: 1.25;
+  --text-h1: 30px;
+  --text-h1--line-height: 1.15;
+}
+
+@layer base {
+  *, ::before, ::after, ::backdrop { border-color: var(--line); }
+  html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+  body {
+    min-height: 100dvh;
+    background: var(--bg); color: var(--text);
+    font: 14px/1.5 var(--font); letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
+    transition: background-color .4s var(--ease-out), color .4s var(--ease-out);
+  }
+  button, [role="button"], summary, label[for] { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  ::selection { background: var(--mark-bg); color: var(--mark-ink); }
+  mark { background: var(--mark-bg); color: var(--mark-ink); border-radius: 4px; padding: 0 2px; font-weight: 600; box-shadow: inset 0 -1px 0 var(--accent-line); }
+  code, kbd, samp { font-family: var(--mono); letter-spacing: 0; }
+  * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+}
+
+/* Mouvement réduit ou ?instant=1 : état final, aucune animation infinie. */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+[data-instant] *, [data-instant] ::before, [data-instant] ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+

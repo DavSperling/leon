@@ -5,6 +5,7 @@
     "includes": [
       "**",
       "!docs/etudes",
+      "!prototypes",
       "!extension/.output",
       "!extension/.wxt",
       "!.next",

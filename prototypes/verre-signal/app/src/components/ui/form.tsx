@@ -1,0 +1,189 @@
+import { Check, ChevronDown } from 'lucide-react';
+import { Checkbox as RCheckbox, Select as RSelect, Switch as RSwitch } from 'radix-ui';
+import { type ComponentProps, createContext, type ReactNode, useContext, useId, useLayoutEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/cn';
+import { mergeRefs } from '@/lib/refs';
+import { nb } from '@/lib/nb';
+
+type FieldCtx = { id: string; describedBy?: string; invalid: boolean };
+const FieldContext = createContext<FieldCtx | null>(null);
+
+/** Les attributs que Field donne au contrôle qu'il contient (id, aria-describedby, aria-invalid). */
+function useFieldProps(id?: string) {
+  const f = useContext(FieldContext);
+  return { id: id ?? f?.id, 'aria-describedby': f?.describedBy, 'aria-invalid': f?.invalid || undefined };
+}
+
+export type FieldProps = {
+  label: ReactNode;
+  /** Aide sous le champ (atténuée) */
+  help?: ReactNode;
+  /** Erreur sous le champ (rouge) ; remplace l'aide et passe le contrôle en aria-invalid. */
+  error?: ReactNode;
+  /** Élément à droite du libellé (lien « Où trouver la clé ↗ », compteur…) */
+  aside?: ReactNode;
+  /** id du contrôle (sinon généré) : pour le viser d'ailleurs (aria-controls d'un bouton « Voir »). */
+  id?: string;
+  className?: string;
+  children: ReactNode;
+};
+
+/** Libellé + contrôle + aide ou erreur, reliés (htmlFor, aria-describedby) ; l'erreur est annoncée (role=alert). Le contrôle (Input, Textarea, Select) lit le contexte. */
+export function Field({ label, help, error, aside, id: ownId, className, children }: FieldProps) {
+  const auto = useId();
+  const id = ownId ?? auto;
+  const noteId = `${id}-note`;
+  const note = error ?? help;
+  return (
+    <FieldContext.Provider value={{ id, describedBy: note ? noteId : undefined, invalid: Boolean(error) }}>
+      <div className={cn('grid gap-1.5', className)}>
+        <div className="flex items-baseline justify-between gap-3">
+          <label htmlFor={id} className="text-label font-semibold text-fg-2">{label}</label>
+          {aside && <span className="text-label">{aside}</span>}
+        </div>
+        {children}
+        {note && (
+          // une erreur est un nouvel élément (role=alert inséré : annoncé), pas l'aide qui change de rôle
+          <p key={error ? 'erreur' : 'aide'} id={noteId} role={error ? 'alert' : undefined} className={cn('text-label', error ? 'text-destructive' : 'text-muted')}>
+            {typeof note === 'string' ? nb(note) : note}
+          </p>
+        )}
+      </div>
+    </FieldContext.Provider>
+  );
+}
+
+// 16 px au doigt : sous 16 px, Safari iOS zoome sur le champ au focus. Un champ en erreur garde son trait rouge et
+// reprend l'anneau de focus global (outline) : le halo rouge pâle seul ne se voyait pas (~1,1:1).
+const CONTROL =
+  'w-full rounded-field border border-line-strong bg-glass-2 text-body text-fg shadow-hi outline-none transition-[border-color,box-shadow] duration-200 pointer-coarse:text-[16px] ' +
+  'placeholder:text-muted hover:border-[color-mix(in_srgb,var(--line-strong),var(--text)_10%)] focus-visible:border-accent focus-visible:shadow-[0_0_0_3px_var(--accent-soft)] ' +
+  'aria-invalid:border-destructive aria-invalid:focus-visible:shadow-none aria-invalid:focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-60';
+
+export function Input({ className, id, ...props }: ComponentProps<'input'>) {
+  return <input className={cn(CONTROL, 'h-10 px-3.5', className)} {...useFieldProps(id)} {...props} />;
+}
+
+export type TextareaProps = ComponentProps<'textarea'> & { /** grandit avec le texte, jusqu'à maxRows */ autoGrow?: boolean; maxRows?: number };
+
+export function Textarea({ className, id, autoGrow, maxRows = 12, rows = 3, onInput, ref: outerRef, ...props }: TextareaProps) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const fit = () => {
+    const el = ref.current;
+    if (!el || !autoGrow) return;
+    const line = parseFloat(getComputedStyle(el).lineHeight) || 22;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight + 2, line * maxRows + 22)}px`;
+  };
+  useLayoutEffect(fit, [props.value, autoGrow]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <textarea
+      ref={mergeRefs(ref, outerRef)}
+      rows={rows}
+      className={cn(CONTROL, 'block resize-none px-3.5 py-2.5 leading-[1.55]', !autoGrow && 'resize-y', className)}
+      onInput={(e) => (fit(), onInput?.(e))}
+      {...useFieldProps(id)}
+      {...props}
+    />
+  );
+}
+
+export type SelectOption = { value: string; label: string; disabled?: boolean };
+export type SelectProps = {
+  options: SelectOption[];
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  placeholder?: string;
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  className?: string;
+  'aria-label'?: string;
+};
+
+/** Liste déroulante Radix, au style des champs ; le menu est une carte de verre. */
+export function Select({ options, placeholder, className, id, ...props }: SelectProps) {
+  const field = useFieldProps(id);
+  return (
+    <RSelect.Root {...props}>
+      <RSelect.Trigger {...field} aria-label={props['aria-label']} className={cn(CONTROL, 'group flex h-10 items-center justify-between gap-2 px-3.5 text-left data-[placeholder]:text-muted', className)}>
+        <RSelect.Value placeholder={placeholder} />
+        <RSelect.Icon><ChevronDown aria-hidden="true" className="size-4 text-muted transition-transform duration-200 group-data-[state=open]:rotate-180" /></RSelect.Icon>
+      </RSelect.Trigger>
+      <RSelect.Portal>
+        <RSelect.Content position="popper" sideOffset={6} className="layer-pop z-[70] max-h-[min(320px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-card border border-line-strong bg-menu p-1.5 shadow-float">
+          <RSelect.Viewport>
+            {options.map((o) => (
+              <RSelect.Item key={o.value} value={o.value} disabled={o.disabled} className="flex h-[34px] cursor-pointer items-center gap-2.5 rounded-item px-2.5 text-ui text-fg-2 outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[highlighted]:text-fg data-[state=checked]:text-fg focus-visible:shadow-[inset_0_0_0_2px_var(--ring)]">
+                <RSelect.ItemText>{o.label}</RSelect.ItemText>
+                <RSelect.ItemIndicator className="ml-auto text-accent"><Check aria-hidden="true" className="size-4" strokeWidth={2} /></RSelect.ItemIndicator>
+              </RSelect.Item>
+            ))}
+          </RSelect.Viewport>
+        </RSelect.Content>
+      </RSelect.Portal>
+    </RSelect.Root>
+  );
+}
+
+/** Case carrée de 16 px de la planche : se remplit d'accent, la coche éclot avec un ressort. */
+export function CheckboxBox({ checked }: { checked: boolean }) {
+  return (
+    <span aria-hidden="true" className={cn('grid size-4 shrink-0 place-items-center rounded-[5px] border transition-[background-color,border-color] duration-150', checked ? 'border-accent bg-accent' : 'border-[var(--box-line)]')}>
+      <Check strokeWidth={2.6} className={cn('size-[11px] text-accent-ink transition-[opacity,transform] duration-[250ms] ease-[var(--ease-spring)]', checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0')} />
+    </span>
+  );
+}
+
+export type CheckboxProps = Omit<ComponentProps<typeof RCheckbox.Root>, 'children' | 'checked' | 'defaultChecked' | 'onCheckedChange'> & {
+  /** Contrôlé ; sans `checked`, la case garde son propre état (départ : defaultChecked). */
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  /** Libellé cliquable à droite */
+  label?: ReactNode;
+};
+
+export function Checkbox({ checked, defaultChecked = false, onCheckedChange, label, className, id, ...props }: CheckboxProps) {
+  const auto = useId();
+  const [own, setOwn] = useState(defaultChecked);
+  const on = checked ?? own;
+  const box = (
+    <RCheckbox.Root
+      id={id ?? auto}
+      checked={on}
+      onCheckedChange={(v) => (setOwn(v === true), onCheckedChange?.(v === true))}
+      // anneau : la règle globale :focus-visible (un `outline-none` ici l'effacerait aussi au focus, Tailwind 4)
+      className={cn('rounded-[5px]', !label && className)}
+      {...props}
+    >
+      <CheckboxBox checked={on} />
+    </RCheckbox.Root>
+  );
+  if (!label) return box;
+  return (
+    <label htmlFor={id ?? auto} className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg-2', className)}>
+      {box}
+      {label}
+    </label>
+  );
+}
+
+export type SwitchProps = Omit<ComponentProps<typeof RSwitch.Root>, 'children'> & { label?: ReactNode };
+
+export function Switch({ label, className, id, ...props }: SwitchProps) {
+  const auto = useId();
+  const sw = (
+    <RSwitch.Root id={id ?? auto} className={cn('group relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-line-strong shadow-[inset_0_0_0_1px_var(--line)] transition-colors duration-200 data-[state=checked]:bg-accent', !label && className)} {...props}>
+      <RSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-[var(--thumb)] shadow-[0_1px_3px_rgba(0,0,0,.3)] transition-transform duration-[250ms] ease-[var(--ease-spring)] group-data-[state=checked]:translate-x-[18px]" />
+    </RSwitch.Root>
+  );
+  if (!label) return sw;
+  return (
+    <label htmlFor={id ?? auto} className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg-2', className)}>
+      {sw}
+      {label}
+    </label>
+  );
+}

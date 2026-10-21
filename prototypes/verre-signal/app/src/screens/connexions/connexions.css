@@ -1,0 +1,8 @@
+/* Outil tout juste branché : un trait d'accent autour de sa ligne de « Vos outils branchés » quand la fenêtre se ferme
+   (retour visuel, pas d'animation continue), sans changer de taille. ?instant=1 et le mouvement réduit coupent les animations CSS. */
+.cx-fresh-row::after {
+  content: ""; position: absolute; inset: 4px; border-radius: 12px; pointer-events: none;
+  box-shadow: inset 0 0 0 1.5px var(--accent); opacity: 0; animation: cx-fresh-row 1.5s ease-in 1;
+}
+/* tenu le temps que la page glisse jusqu'à la ligne, puis effacé */
+@keyframes cx-fresh-row { 0%, 45% { opacity: 1; } 100% { opacity: 0; } }

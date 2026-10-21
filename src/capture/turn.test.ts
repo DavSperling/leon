@@ -4,6 +4,7 @@ import {
   type IngestPayload,
   IngestPayloadSchema,
   ITEM_NATURES,
+  PROJECT_KEY_PATTERN,
   PROVIDER_IDS,
   SOURCE_KINDS,
   TURN_TEXT_MAX,
@@ -73,6 +74,63 @@ describe('IngestPayloadSchema', () => {
   it('refuse une date sans fuseau', () => {
     expect(IngestPayloadSchema.safeParse(withTurn({ ts: '2026-10-13T09:00:00' })).success).toBe(
       false,
+    );
+  });
+});
+
+describe('IngestPayloadSchema : source.project (C8)', () => {
+  const withProject = (project: unknown) => ({
+    ...payload,
+    source: { ...payload.source, project },
+  });
+
+  it('accepte une clé de dépôt GitHub ou de dossier', () => {
+    for (const project of [
+      'github.com/acme/leon',
+      'github.com/a/b',
+      'github.com/mon-org_2/mon.depot-v2',
+      'dossier:0123456789abcdef',
+    ]) {
+      expect(IngestPayloadSchema.safeParse(withProject(project)).success, project).toBe(true);
+    }
+  });
+
+  it("reste facultatif : un envoi sans projet est valide, et c'est le cas de l'extension", () => {
+    expect(IngestPayloadSchema.safeParse(payload).success).toBe(true);
+  });
+
+  it('refuse tout ce qui n’est pas une clé exacte', () => {
+    for (const project of [
+      'evil',
+      '',
+      'github.com/acme',
+      'github.com/acme/leon/extra',
+      'github.com//leon',
+      'github.com/Acme/Leon',
+      'GitHub.com/acme/leon',
+      'https://github.com/acme/leon',
+      'gitlab.com/acme/leon',
+      'github.com/acme/leon\n',
+      'github.com/acme/le on',
+      'dossier:0123456789ABCDEF',
+      'dossier:0123456789abcde',
+      'dossier:0123456789abcdef0',
+      'dossier:0123456789abcdeg',
+      'dossier:0123456789abcdef\n',
+      `github.com/acme/${'a'.repeat(200)}`,
+      42,
+      null,
+      { owner: 'acme' },
+    ]) {
+      expect(IngestPayloadSchema.safeParse(withProject(project)).success, String(project)).toBe(
+        false,
+      );
+    }
+  });
+
+  it('PROJECT_KEY_PATTERN est exactement la regex du contrat C8', () => {
+    expect(PROJECT_KEY_PATTERN.source).toBe(
+      String.raw`^(github\.com\/[a-z0-9._-]+\/[a-z0-9._-]+|dossier:[0-9a-f]{16})$`,
     );
   });
 });

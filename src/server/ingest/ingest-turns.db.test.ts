@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { fetchSource } from '@/server/search/context';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { ingestTurns } from './ingest-turns';
@@ -172,6 +173,23 @@ describe('ingestTurns', () => {
     expect(source?.lastTurnAt?.toISOString()).toBe('2026-10-14T08:00:00.000Z');
   });
 
+  it("se lit dans l'ordre de la conversation même quand les lots arrivent du plus récent au plus ancien", async () => {
+    // Le crochet de fin de session envoie les lots du plus récent au plus ancien (capture-session.ts) : la lecture
+    // d'une source suit la date des tours, pas leur ordre d'arrivée.
+    const { paul, externalId } = await setup();
+
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(3), newTurn(4)]));
+    await ingestTurns(paul, payload(externalId, [newTurn(1), newTurn(2)]));
+
+    const read = await fetchSource(paul, sourceId);
+    expect(read?.turns.map((turn) => turn.text)).toEqual([
+      'Tour numéro 1',
+      'Tour numéro 2',
+      'Tour numéro 3',
+      'Tour numéro 4',
+    ]);
+  });
+
   it('remplace le titre quand un nouveau est fourni, le garde sinon', async () => {
     const { paul, externalId } = await setup();
     const first = await ingestTurns(paul, payload(externalId, [newTurn(1)], { title: 'Ancien' }));
@@ -180,6 +198,76 @@ describe('ingestTurns', () => {
 
     await ingestTurns(paul, payload(externalId, [newTurn(3)]));
     expect((await readSource(paul, first.sourceId))[0]?.title).toBe('Nouveau');
+  });
+
+  it('range la clé de projet dans metadata.project, dès la première réception', async () => {
+    const { paul, externalId } = await setup();
+
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('complète une source déjà connue sans projet, garde les autres clés, et le dernier projet l’emporte', async () => {
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(1)]));
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({});
+    await withTenant(paul, (tx) =>
+      tx
+        .update(sources)
+        .set({ metadata: { autre: 'x' } })
+        .where(eq(sources.id, sourceId)),
+    );
+
+    await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(2)], { project: 'dossier:0123456789abcdef' }),
+    );
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      autre: 'x',
+      project: 'dossier:0123456789abcdef',
+    });
+
+    await ingestTurns(paul, payload(externalId, [newTurn(3)], { project: 'github.com/acme/leon' }));
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      autre: 'x',
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('un envoi sans projet (l’extension) n’efface pas le projet déjà connu', async () => {
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    await ingestTurns(paul, payload(externalId, [newTurn(2)]));
+
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
+  });
+
+  it('un projet envoyé sans nouveau tour est quand même enregistré', async () => {
+    // Les tours déjà connus sont ignorés, mais la session captée avant le correctif doit recevoir son projet.
+    const { paul, externalId } = await setup();
+    const { sourceId } = await ingestTurns(paul, payload(externalId, [newTurn(1)]));
+
+    const second = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1)], { project: 'github.com/acme/leon' }),
+    );
+
+    expect(second.inserted).toBe(0);
+    expect((await readSource(paul, sourceId))[0]?.metadata).toEqual({
+      project: 'github.com/acme/leon',
+    });
   });
 
   it('date l’écriture des tours reçus dans leur ordre, même quand ils ont tous la même date', async () => {

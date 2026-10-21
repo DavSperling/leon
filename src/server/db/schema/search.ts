@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   halfvec,
   integer,
   jsonb,
@@ -95,4 +96,25 @@ export const discussionMessages = pgTable('discussion_messages', {
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .default(sql`clock_timestamp()`),
+});
+
+// Le point du matin de chaque utilisateur sur chaque projet (0030-points-du-matin.sql, C9 du plan du deuxième jet) :
+// un cache, refait en place, privé à son utilisateur (acl = [user_id], contrôlé par la base). Aucune suppression ;
+// seules les colonnes du recalcul et de la lecture peuvent changer.
+export const briefings = pgTable('briefings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  project: text('project').notNull(),
+  markdown: text('markdown').notNull(),
+  // Toutes les sources fournies au modèle, citées ou non : la lecture vérifie qu'elles sont encore visibles.
+  sourceIds: uuid('source_ids').array().notNull().default(sql`'{}'::uuid[]`),
+  preparedAt: timestamp('prepared_at', { withTimezone: true }).notNull(),
+  lastReadAt: timestamp('last_read_at', { withTimezone: true }),
+  stale: boolean('stale').notNull().default(false),
+  acl: acl(),
 });

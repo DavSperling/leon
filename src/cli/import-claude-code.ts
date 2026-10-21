@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { basename, sep } from 'node:path';
+import { basename, isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import { API_PATHS } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
@@ -13,6 +13,7 @@ import { logError } from '../server/log';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
+import { type GitRunner, projectKeyFor } from './project-key';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
 export function parseSince(value: string | undefined): Date | undefined {
@@ -23,10 +24,20 @@ export function parseSince(value: string | undefined): Date | undefined {
   return new Date(`${value}T00:00:00`);
 }
 
-export type ImportOptions = { baseDir: string; project?: string; since?: Date; dryRun: boolean };
+// `project` filtre les sessions par dossier ; `projectKey` est la clé envoyée dans `source.project` (voir project-key.ts).
+export type ImportOptions = {
+  baseDir: string;
+  project?: string;
+  projectKey?: string;
+  since?: Date;
+  dryRun: boolean;
+};
 export type ImportDeps = {
   send: (payload: IngestPayload) => Promise<IngestResult>;
   out: (line: string) => void;
+  // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
+  // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
+  git?: GitRunner;
 };
 export type ImportSummary = {
   sessions: number;
@@ -43,15 +54,30 @@ export class TokenRefusedError extends Error {
   }
 }
 
-export function createIngestSender(fetchImpl: typeof fetch, env: ServerEnv): ImportDeps['send'] {
+// Une réponse en erreur du serveur : le code seul compte, ni le corps ni l'adresse n'entrent dans le message.
+export class IngestResponseError extends Error {
+  override name = 'IngestResponseError';
+  constructor(readonly status: number) {
+    super(`Réponse ${status} du serveur Leon.`);
+  }
+}
+
+// `signal` borne la durée d'un envoi (réponse comprise) : le crochet de fin de session en a besoin,
+// l'import par lots, non.
+export function createIngestSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: { signal?: AbortSignal } = {},
+): ImportDeps['send'] {
   return async (payload) => {
     const response = await fetchImpl(new URL(API_PATHS.ingest, env.url), {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+      ...(options.signal ? { signal: options.signal } : {}),
     });
     if (response.status === 401) throw new TokenRefusedError();
-    if (!response.ok) throw new Error(`Réponse ${response.status} du serveur Leon.`);
+    if (!response.ok) throw new IngestResponseError(response.status);
     return IngestResultSchema.parse(await response.json());
   };
 }
@@ -73,9 +99,13 @@ async function loadSession(
   return turns.length > 0 ? { ...session, turns } : null;
 }
 
-async function importSession(
+// Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi.
+// `newestFirst` : les lots partent du plus récent au plus ancien (les tours restent dans l'ordre à l'intérieur
+// de chaque lot). Le crochet, borné par un délai, s'en sert pour qu'une session reprise, dont l'historique est
+// déjà connu, atteigne d'abord ses tours nouveaux ; le serveur lit les tours par date, pas par ordre d'arrivée.
+export async function importSession(
   session: ClaudeCodeSession,
-  options: ImportOptions,
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { newestFirst?: boolean },
   deps: ImportDeps,
   summary: ImportSummary,
 ): Promise<void> {
@@ -83,12 +113,14 @@ async function importSession(
     maxTurns: TURNS_PER_BATCH_MAX,
     maxBytes: BATCH_MAX_BYTES,
   });
+  if (options.newestFirst) batches.reverse();
   for (const turns of batches) {
     const payload: IngestPayload = {
       source: {
         kind: 'claude_code',
         external_id: session.sessionId,
         title: session.title ?? undefined,
+        ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
       },
       turns,
     };
@@ -123,7 +155,11 @@ export async function importClaudeCode(
       if (!loaded || turns.length === 0) continue;
       for (const turn of turns) seen.add(turn.external_id);
       summary.sessions += 1;
-      await importSession({ ...loaded, turns }, options, deps, summary);
+      const projectKey =
+        deps.git && loaded.cwd !== null && isAbsolute(loaded.cwd)
+          ? await projectKeyFor(loaded.cwd, deps.git)
+          : options.projectKey;
+      await importSession({ ...loaded, turns }, { ...options, projectKey }, deps, summary);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

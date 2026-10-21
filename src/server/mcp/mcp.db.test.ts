@@ -5,19 +5,24 @@ import { API_PATHS } from '@/capture/api-contract';
 import { app } from '@/server/api/app';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
+import { requestBriefingRefreshNow } from '@/server/briefing/queue';
 import { readLog, sources } from '@/server/db/schema/memory';
-import { passages } from '@/server/db/schema/search';
+import { briefings, passages } from '@/server/db/schema/search';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import * as registryModule from '@/server/embeddings/registry';
 import * as ingestModule from '@/server/ingest/ingest-turns';
+import { createFakeLlm } from '@/server/llm/fake-llm';
+import * as getLlmModule from '@/server/llm/get-llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import * as contextModule from '@/server/search/context';
 import { indexIngestRun } from '@/server/search/index-run';
 import * as searchModule from '@/server/search/search';
 import { apiRequest } from '@/test/api-request';
-import { adminDb } from '@/test/db';
+import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
+import { seedRun } from '@/test/seed-search';
 import { NEIGHBOUR_TURNS } from './tools/fetch-tool';
 import {
   type FetchOutput,
@@ -27,8 +32,13 @@ import {
 } from './tools/output-schemas';
 
 vi.mock('@/server/pipeline/queue');
+// Le point du matin met en file ses recalculs (et l'indexation signale les projets) : pas de pg-boss ici.
+vi.mock('@/server/briefing/queue');
 
-beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
+beforeEach(() => {
+  vi.mocked(enqueuePipelineStep).mockReset();
+  vi.mocked(requestBriefingRefreshNow).mockReset();
+});
 afterEach(() => vi.restoreAllMocks());
 
 const clients: Client[] = [];
@@ -105,13 +115,17 @@ describe('serveur MCP', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
 
-  // `briefing` arrive en T13.
-  it('annonce exactement search, fetch et remember, avec leurs annotations', async () => {
+  it('annonce exactement search, fetch, briefing et remember, avec leurs annotations', async () => {
     const client = await connect(await setupPaul());
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name).sort()).toEqual(['fetch', 'remember', 'search']);
+    expect(tools.map((tool) => tool.name).sort()).toEqual([
+      'briefing',
+      'fetch',
+      'remember',
+      'search',
+    ]);
     const byName = new Map(tools.map((tool) => [tool.name, tool]));
     expect(byName.get('search')?.annotations).toMatchObject({
       readOnlyHint: true,
@@ -126,8 +140,14 @@ describe('serveur MCP', () => {
       destructiveHint: false,
       openWorldHint: false,
     });
+    expect(byName.get('briefing')?.annotations).toMatchObject({
+      readOnlyHint: true,
+      openWorldHint: false,
+    });
+    expect(Object.keys(byName.get('briefing')?.inputSchema.properties ?? {})).toEqual(['projet']);
+    expect(byName.get('briefing')?.inputSchema.required ?? []).toEqual([]);
     const instructions = client.getInstructions() ?? '';
-    for (const word of ['search', 'fetch', 'remember', 'titre', 'outil', 'date']) {
+    for (const word of ['search', 'fetch', 'briefing', 'remember', 'titre', 'outil', 'date']) {
       expect(instructions).toContain(word);
     }
   });
@@ -834,5 +854,139 @@ describe('outil fetch', () => {
     const result = await call(client, 'fetch', { sourceId });
 
     expect(result).toMatchObject({ isError: true, text: 'Erreur interne de Leon.' });
+  });
+});
+
+describe('outil briefing', () => {
+  const PROJECT = 'github.com/acme/leon';
+
+  // Un modèle est réglé sur le serveur (le faux) : un point manquant sera préparé. Sans modèle : le dernier test.
+  beforeEach(() => {
+    vi.spyOn(getLlmModule, 'getLlm').mockReturnValue(createFakeLlm({ texts: [] }));
+  });
+
+  async function seedBriefing(
+    owner: TenantContext,
+    project: string,
+    input: { markdown?: string; lastReadAt?: Date | null; preparedAt?: Date } = {},
+  ) {
+    await adminDb.insert(briefings).values({
+      tenantId: owner.tenantId,
+      userId: owner.userId,
+      project,
+      markdown: input.markdown ?? `# Point du matin · ${project}\n- Le jeton est corrigé [1].`,
+      preparedAt: input.preparedAt ?? new Date('2026-10-20T04:00:00.000Z'),
+      lastReadAt: input.lastReadAt ?? null,
+      acl: [owner.userId],
+    });
+  }
+
+  afterAll(async () => {
+    await adminPool.query('delete from briefings where tenant_id = any($1)', [tenantIds]);
+  });
+
+  it('rend le point du projet, comme la route du crochet', async () => {
+    const paul = await setupPaul();
+    await seedBriefing(paul, PROJECT);
+
+    const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.text).toBe(`# Point du matin · ${PROJECT}\n- Le jeton est corrigé [1].`);
+    expect(result.structuredContent).toEqual({
+      markdown: result.text,
+      projet: PROJECT,
+      preparedAt: '2026-10-20T04:00:00.000Z',
+    });
+  });
+
+  it('accepte « propriétaire/dépôt » et une adresse GitHub, quelle que soit la casse', async () => {
+    const paul = await setupPaul();
+    await seedBriefing(paul, PROJECT);
+    const client = await connect(paul);
+
+    for (const projet of [
+      'Acme/Leon',
+      'https://github.com/acme/leon.git',
+      'GITHUB.COM/acme/leon',
+    ]) {
+      const result = await call(client, 'briefing', { projet });
+      expect(result.structuredContent?.projet, projet).toBe(PROJECT);
+    }
+  });
+
+  it('sans point : le message d’attente, et le recalcul mis en file', async () => {
+    const paul = await setupPaul();
+    await seedRun(paul, { kind: 'claude_code', metadata: { project: PROJECT } });
+
+    const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
+
+    expect(result.text).toBe(BRIEFING_PENDING_MARKDOWN);
+    expect(result.structuredContent).toEqual({
+      markdown: BRIEFING_PENDING_MARKDOWN,
+      projet: null,
+      preparedAt: null,
+    });
+    expect(requestBriefingRefreshNow).toHaveBeenCalledExactlyOnceWith({
+      tenantId: paul.tenantId,
+      userId: paul.userId,
+      project: PROJECT,
+    });
+  });
+
+  it('sans projet : le point lu le plus récemment', async () => {
+    const paul = await setupPaul();
+    await seedBriefing(paul, 'github.com/acme/ancien', { lastReadAt: new Date('2026-10-10') });
+    await seedBriefing(paul, PROJECT, { lastReadAt: new Date('2026-10-19') });
+
+    for (const args of [{}, { projet: null }]) {
+      const result = await call(await connect(paul), 'briefing', args);
+      expect(result.structuredContent?.projet).toBe(PROJECT);
+    }
+  });
+
+  it('sans projet ni point : le message d’attente, sans rien mettre en file', async () => {
+    const result = await call(await connect(await setupPaul()), 'briefing');
+
+    expect(result.isError).toBeFalsy();
+    expect(result.text).toBe(BRIEFING_PENDING_MARKDOWN);
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
+  });
+
+  it('refuse un projet qui n’est pas une clé de projet, sans le recopier', async () => {
+    const result = await call(await connect(await setupPaul()), 'briefing', {
+      projet: 'https://gitlab.com/evil/secret',
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.text).not.toContain('evil');
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
+  });
+
+  // Sans clé Anthropic, le worker ne prépare aucun point : l'outil ne promet pas « à la prochaine session ».
+  it('sans modèle sur le serveur ni point : le dit, sans rien mettre en file', async () => {
+    vi.mocked(getLlmModule.getLlm).mockReturnValue(null);
+    const paul = await setupPaul();
+
+    const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
+
+    expect(result.isError).toBeFalsy();
+    expect(result.text).toBe(BRIEFING_NO_MODEL_MARKDOWN);
+    expect(result.structuredContent).toEqual({
+      markdown: BRIEFING_NO_MODEL_MARKDOWN,
+      projet: null,
+      preparedAt: null,
+    });
+    expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
+  });
+
+  it('ne rend jamais le point d’un autre', async () => {
+    const { paul, marie } = await setupTeam();
+    await seedBriefing(paul, PROJECT, { markdown: 'Le point privé de Paul.' });
+
+    const result = await call(await connect(marie), 'briefing', { projet: PROJECT });
+
+    expect(result.text).toBe(BRIEFING_PENDING_MARKDOWN);
+    expect(JSON.stringify(result)).not.toContain('point privé de Paul');
   });
 });

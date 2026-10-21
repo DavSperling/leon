@@ -18,6 +18,17 @@ export async function startNodeInstrumentation() {
   }
   const { startSearchWorker } = await import('@/server/search/worker');
   await startSearchWorker({ embedder });
+  // Le point du matin (T13) : un appel au modèle par recalcul. Sans modèle, son worker démarre quand même et termine
+  // chaque job sans rien faire (aucune reprise en boucle) : la route et l'outil MCP disent alors qu'aucun modèle
+  // n'est réglé, et ne mettent rien en file. Avant la relève, comme l'indexation : l'indexation y signale les projets
+  // touchés.
+  const { getLlm } = await import('@/server/llm/get-llm');
+  const llm = getLlm(env);
+  if (!llm) {
+    console.info('[leon] ANTHROPIC_API_KEY absente : les points du matin ne sont pas préparés.');
+  }
+  const { startBriefingWorker } = await import('@/server/briefing/worker');
+  await startBriefingWorker({ llm });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

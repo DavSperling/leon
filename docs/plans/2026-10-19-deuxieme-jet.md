@@ -110,7 +110,7 @@ T02 rend le nom de la base de test réglable (`LEON_TEST_DATABASE`, défaut `leo
 src/capture/turn.ts                      ITEM_NATURES (déplacé ici, T02), PROVIDER_IDS (+7 ids, T15), source.project (T12)
 src/lib/providers.ts                     ACCESS_FAMILY, libellés et familles des 7 nouveaux outils (T15)
 src/lib/highlight.ts                     HIGHLIGHT_START, HIGHLIGHT_END, splitHighlights (T06)
-src/server/db/migrations/0010 … 0018     voir C2
+src/server/db/migrations/0010 … 0012, 0030 … 0035     voir C2
 src/server/db/schema/search.ts           passages, passageVectors (T03) ; discussions, discussionMessages (T11) ; briefings (T13)
 src/server/db/schema/access.ts           sourceGrants (T16), connectionExclusions (T17), identities (T19), inviteLinks (T26)
 src/server/embeddings/                   embedder.ts, fake-embedder.ts, registry.ts (T04) ; voyage.ts, mistral.ts, bge-m3.ts (T30)
@@ -147,12 +147,14 @@ Dockerfile, docs/guides/deploiement.md   (T27)
 | `0010-suppression-tri.sql` | T02 | supprime `review_items`, `facts`, `fact_candidates`, `card_aliases`, `cards`, `predicates`, `card_types` (et leurs fonctions, index, politiques) ; `read_log` : supprime ses lignes (elles pointent vers des fiches), remplace `card_id` par `source_id uuid not null` (clé composée vers `sources`, `on delete cascade`) et `passage_id uuid` facultatif (sans clé étrangère, les passages n'existent qu'en 0011) ; supprime les contraintes `sources_kind_check` et `connections_provider_check` ; `ingest_runs` : supprime la colonne `triage` et la contrainte d'étape, `step` vaut `'index'` par défaut avec `check (step in ('index', 'done'))`, toutes les lignes passent à `step = 'index', status = 'queued'` |
 | `0011-passages.sql` | T03 | `create extension if not exists vector` ; tables `passages` et `passage_vectors` (ci-dessous), sécurité par ligne `tenant_acl`, droits `select, insert, update, delete` à `leon_app` ; index `gin (tsv)`, `(tenant_id, source_id)`, `(tenant_id, ts desc)`, `hnsw (embedding halfvec_cosine_ops)` ; fonctions `passages_sans_vecteur` et `runs_en_attente`. Écarts acceptés à la relecture de T03 : `check (ord >= 0)`, `check (char_start >= 0 and char_end > char_start)` et l'index partiel `ingest_runs_queued_idx on ingest_runs (updated_at) where status = 'queued'` (pour le tic de `runs_en_attente`). Demande pgvector 0.8 au moins (`halfvec` : 0.7 ; `hnsw.iterative_scan` de T06 : 0.8), vérifié par `schema-contract.db.test.ts`, et l'extension créée par un superutilisateur : `init.sql` en local, le compte d'administration chez un hébergeur, avant la première migration |
 | `0012-discussions.sql` | T11 | `discussions`, `discussion_messages` (privées : `acl = [user_id]`) |
-| `0013-points-du-matin.sql` | T13 | `briefings` ; fonctions `briefings_du_projet`, `briefings_a_rafraichir` |
-| `0014-parts-d-acces.sql` | T16 | `source_grants` ; `sources.shared` et index uniques partiels ; `connections.acl` des connexions personnelles ; fonctions `grant_source_access`, `revoke_connection_grants` ; fonction qui passe en `failed` les runs dont le propriétaire n'est plus membre (relevé en T05) ; index trigramme sur `sources.title` ; reprise de l'existant |
-| `0015-exclusions.sql` | T17 | `connection_exclusions` ; `connections.skipped jsonb not null default '{}'` |
-| `0016-reconciliation.sql` | T18 | `connections.last_reconciled_at timestamptz` ; fonction `connexions_a_reconcilier` |
-| `0017-identites.sql` | T19 | `identities` |
-| `0018-invitations.sql` | T26 | `invite_links` ; fonctions `invite_link_lookup`, `invite_link_consume` |
+| `0030-points-du-matin.sql` | T13 | `briefings` ; fonctions `briefings_du_projet`, `briefings_a_rafraichir` |
+| `0031-parts-d-acces.sql` | T16 | `source_grants` ; `sources.shared` et index uniques partiels ; `connections.acl` des connexions personnelles ; fonctions `grant_source_access`, `revoke_connection_grants` ; fonction qui passe en `failed` les runs dont le propriétaire n'est plus membre (relevé en T05) ; index trigramme sur `sources.title` ; reprise de l'existant |
+| `0032-exclusions.sql` | T17 | `connection_exclusions` ; `connections.skipped jsonb not null default '{}'` |
+| `0033-reconciliation.sql` | T18 | `connections.last_reconciled_at timestamptz` ; fonction `connexions_a_reconcilier` |
+| `0034-identites.sql` | T19 | `identities` |
+| `0035-invitations.sql` | T26 | `invite_links` ; fonctions `invite_link_lookup`, `invite_link_consume` |
+
+Numérotation (20/10, après #27) : 0019 à 0023 sont prises par les corrections d'audit de David, déjà sur `main`. Les migrations de ce plan qui restaient à écrire partent donc de 0030 : 0013 → 0030, 0014 → 0031, 0015 → 0032, 0016 → 0033, 0017 → 0034, 0018 → 0035 (les numéros de C9 à C14 suivent).
 
 Les fonctions `security definer` de ce jet suivent le modèle de `connector_syncs_due` (0008) : `set search_path = public`, `revoke all … from public`, `grant execute … to leon_app`, et elles ne rendent **que des identifiants** quand elles lisent hors sécurité par ligne. Fonctions de parcours (tics) :
 - `runs_en_attente(p_minutes integer)` → `(run_id, tenant_id, user_id)` : runs `queued` depuis plus de `p_minutes`, `user_id` = propriétaire de la source (T05). « Depuis » se lit sur `ingest_runs.updated_at`, qu'aucun déclencheur ne tient à jour, et la fonction n'a pas de limite : 0010 a remis tout l'historique en `queued` sans toucher `updated_at` (des milliers de runs dès le premier tic). Qui remet un run en file écrit donc `updated_at = now()` et borne le nombre de runs repris par tic ;
@@ -362,7 +364,7 @@ create table discussions (id uuid pk, tenant_id, user_id uuid not null, title te
 create table discussion_messages (id uuid pk, tenant_id, discussion_id uuid not null, role text check (role in ('user', 'assistant')),
   content text not null, citations jsonb not null default '[]', acl uuid[] not null, created_at,
   foreign key (tenant_id, discussion_id) references discussions (tenant_id, id) on delete cascade);
--- 0013
+-- 0030
 create table briefings (id uuid pk, tenant_id, user_id uuid not null, project text not null, markdown text not null,
   source_ids uuid[] not null default '{}', -- TOUTES les sources fournies au modèle, citées ou non
   prepared_at timestamptz not null, last_read_at timestamptz, stale boolean not null default false,
@@ -397,7 +399,7 @@ Clés d'`origin` normalisées (`ORIGIN_KEYS`, dans `connectors/types.ts`) : `rep
 ### C11. Parts d'accès
 
 ```sql
--- 0014
+-- 0031
 create table source_grants (tenant_id uuid not null, source_id uuid not null, connection_id uuid not null, acl uuid[] not null,
   primary key (source_id, connection_id), foreign keys composées avec tenant_id, on delete cascade);
 -- aucun droit direct de leon_app sur source_grants
@@ -433,7 +435,7 @@ export async function revokeConnectionGrants(ctx: TenantContext, connectionId: s
 ### C12. Exclusions
 
 ```sql
--- 0015
+-- 0032
 create table connection_exclusions (id uuid pk, tenant_id, connection_id uuid not null, kind text not null
   check (kind in ('repo', 'project', 'space', 'channel', 'folder', 'mailbox', 'organizer', 'site', 'titre')),
   value text not null check (char_length(value) between 1 and 300), created_by uuid not null, acl uuid[] not null, created_at,
@@ -454,7 +456,7 @@ Qui exclut : sur une connexion d'équipe, son créateur ou un administrateur ou 
 ### C13. Identités
 
 ```sql
--- 0017
+-- 0034
 create table identities (id uuid pk, tenant_id, user_id uuid not null, kind text not null, account text not null
   check (char_length(account) between 1 and 320), origin text not null check (origin in ('connexion', 'declaree')),
   acl uuid[] not null, created_at, unique (tenant_id, kind, account));
@@ -466,7 +468,7 @@ create table identities (id uuid pk, tenant_id, user_id uuid not null, kind text
 ### C14. Invitations
 
 ```sql
--- 0018
+-- 0035
 create table invite_links (id uuid pk, tenant_id, token_hash text not null unique, created_by uuid not null,
   expires_at timestamptz not null, used_at timestamptz, used_by uuid, acl uuid[] not null, created_at);
 -- security definer, sans session : rend seulement (organization_name, valid boolean) pour un hash donné.
@@ -712,7 +714,7 @@ export async function captureSessionFromHook(stdin: string, deps: ImportDeps & {
 
 ### T13 · Le point du matin — Opus (charge `claude-api`)
 
-**Fichiers :** créer `src/server/db/migrations/0013-points-du-matin.sql`, compléter `src/server/db/schema/search.ts`, créer `src/server/briefing/{gather,briefing-prompt,briefings,queue}.ts` et leurs tests, `src/server/api/briefing-routes.ts` (nouvelle), `src/server/mcp/tools/briefing-tool.ts` (nouveau) ; modifier `src/capture/api-contract.ts` (C8), `src/cli/briefing.ts` et `src/cli/leon.ts` (`briefing` calcule la clé du dossier courant), `src/server/search/index-run.ts` (après indexation, signale le projet touché), `src/server/mcp/server.ts`, `src/instrumentation-node.ts`.
+**Fichiers :** créer `src/server/db/migrations/0030-points-du-matin.sql`, compléter `src/server/db/schema/search.ts`, créer `src/server/briefing/{gather,briefing-prompt,briefings,queue}.ts` et leurs tests, `src/server/api/briefing-routes.ts` (nouvelle), `src/server/mcp/tools/briefing-tool.ts` (nouveau) ; modifier `src/capture/api-contract.ts` (C8), `src/cli/briefing.ts` et `src/cli/leon.ts` (`briefing` calcule la clé du dossier courant), `src/server/search/index-run.ts` (après indexation, signale le projet touché), `src/server/mcp/server.ts`, `src/instrumentation-node.ts`.
 
 ```ts
 export async function gatherBriefingMaterial(ctx: TenantContext, project: string, now: Date): Promise<BriefingMaterial>;
@@ -725,7 +727,7 @@ export async function signalProjectActivity(ctx: TenantContext, project: string,
 // met en file `point-refresh` avec singletonKey `${tenant}:${user}:${project}` et 30 min de délai
 ```
 
-- [ ] **Étape 1 :** `0013-points-du-matin.sql` (C9).
+- [ ] **Étape 1 :** `0030-points-du-matin.sql` (C9).
 - [ ] **Étape 2 : tests.** La matière ne contient que ce qu'Alice voit (une conversation privée de Bob sur le même dépôt n'y est pas) ; le prompt balise chaque élément, demande 250 mots au plus en trois parties (« Ce que tu as fait », « Ce qui a bougé », « Ce qui reste ouvert ») avec renvois aux sources ; `refreshBriefing` (faux modèle) écrit une ligne dont `source_ids` contient **toutes** les sources fournies au modèle. **(vigilance 3)** une source fournie (citée ou non) qui devient invisible pour Alice → `readBriefing` rend `null` et remet le point en file. `readBriefing` met à jour `last_read_at`. Deux signaux en 30 min → un seul job ; un signal sur un dépôt touche Alice et Bob s'ils ont tous deux un point sur ce projet, et jamais un membre d'une autre organisation. `briefings_a_rafraichir(7)` ne rend que les points lus depuis moins de 7 jours. La route : sans point → `markdown` « Pas encore de point pour ce projet : il sera prêt à la prochaine session. » et mise en file ; avec point (même `stale`) → le dernier, en moins de 3 s ; sans jeton → 401. L'outil MCP `briefing({ projet? })` rend la même chose. `src/cli/briefing.ts` passe `projet` et garde sa sortie toujours à 0.
 - [ ] **Étape 3 :** écrire le code ; un tic chaque jour à 6 h (Europe/Paris) recalcule les points lus dans les 7 derniers jours.
 - [ ] **Étape 4 :** `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/briefing src/server/api src/server/mcp` et `pnpm vitest run src/cli` → passe.
@@ -733,9 +735,9 @@ export async function signalProjectActivity(ctx: TenantContext, project: string,
 
 ### T14 · Installer les crochets — Sonnet
 
-**Fichiers :** créer `src/cli/install-hooks.ts` et son test ; modifier `src/cli/leon.ts` (commande `installer-crochets [--oui]`), `README.md` (section « Briefing au démarrage » remplacée par « L'IA à jour chaque matin »).
+**Fichiers :** créer `src/cli/install-hooks.ts`, son test et son test de contrat (`install-hooks.contrat.test.ts`) ; modifier `src/cli/leon.ts` (commande `installer-crochets [--oui] [--depot <chemin>]` ; `--depot` désigne le dépôt cité dans les commandes, par défaut celui qui lance la commande), `README.md` (section « Briefing au démarrage » remplacée par « L'IA à jour chaque matin »). Les commandes écrites viennent de `src/cli/hook-commands.ts` (T13), qui les écrit une seule fois pour le README et l'installateur.
 
-- [ ] **Étape 1 : tests** (dossier temporaire comme `CLAUDE_CONFIG_DIR`). Écrit dans `settings.json` un crochet `SessionStart` (`pnpm -s --dir <dépôt> leon briefing`, délai 10) et un crochet `SessionEnd` (`pnpm -s --dir <dépôt> leon capter-session`, délai 30) avec le chemin absolu du dépôt ; garde les autres réglages et crochets ; crée une copie `settings.json.leon-sauvegarde` avant d'écrire ; un second passage ne duplique rien ; sans `--oui`, affiche ce qui sera écrit et demande confirmation (entrée simulée « non » → rien d'écrit) ; un `settings.json` illisible → aucune écriture, message clair.
+- [ ] **Étape 1 : tests** (dossier temporaire comme `CLAUDE_CONFIG_DIR`). Écrit dans `settings.json` un crochet `SessionStart` (`pnpm -s --config.verify-deps-before-run=false --dir <dépôt> leon briefing`, délai 10) et un crochet `SessionEnd` (`pnpm -s --config.verify-deps-before-run=false --dir <dépôt> leon capter-session`, délai 30) avec le chemin absolu du dépôt, cité proprement (espace, apostrophe) ; garde les autres réglages et crochets ; crée une copie `settings.json.leon-sauvegarde` avant d'écrire, une seule fois (la première copie, celle d'avant Leon, n'est jamais remplacée) ; un second passage ne duplique rien ; sans `--oui`, affiche ce qui sera écrit et demande confirmation (entrée simulée « non » → rien d'écrit) ; un `settings.json` illisible (ou lien symbolique vers un fichier absent) → aucune écriture, message clair ; une écriture impossible (droits, disque) → message en français, rien de modifié ; avertissements (dépôt dans un dossier de travail temporaire, `disableAllHooks`, `.env.local` du dépôt sans `LEON_URL` ou `LEON_TOKEN`) ; le texte de l'aperçu et du README dit que toutes les sessions de tous les dossiers sont envoyées, `claude -p` compris (sauf `--bare`).
 - [ ] **Étape 2 :** écrire le code ; `pnpm vitest run src/cli/install-hooks.test.ts` → passe. Vérifier dans la doc officielle de Claude Code les noms `SessionStart` et `SessionEnd` et le JSON reçu sur l'entrée standard (`session_id`, `transcript_path`, `cwd`) ; noter l'URL et la date en tête du fichier.
 - [ ] **Étape 3 :** commit « T14 · Installer les crochets Claude Code ».
 
@@ -763,9 +765,9 @@ Les garde-fous des réunions (spec, « Les droits ») et les exclusions (T17) s'
 
 ### T16 · Parts d'accès — Opus
 
-**Fichiers :** créer `src/server/db/migrations/0014-parts-d-acces.sql` (C11), `src/server/db/schema/access.ts` (sourceGrants), `src/server/connectors/grants.ts` et `grants.db.test.ts` ; modifier `src/server/db/schema/memory.ts` (`sources.shared`, index partiels), `src/server/ingest/ingest-turns.ts` (le `on conflict` de la capture vise `sources_own_key` avec sa condition), `src/server/connectors/ingest-items.ts` (passe par `grantItemAccess` avec `shared = isSharedFamily(...)` ; un élément devenu `confidential` retire la part de la connexion), `src/server/connectors/connections.ts` (`createConnection` pose `acl = [created_by]` pour les familles personnel et fichiers ; `deleteConnection`, `setConnectionPaused` et `requestSyncNow` réservés au créateur ou à un owner/admin ; `deleteConnection` appelle `revokeConnectionGrants`), la confirmation de suppression dans l'interface (« Les données que seule cette connexion apporte seront retirées de Leon. »).
+**Fichiers :** créer `src/server/db/migrations/0031-parts-d-acces.sql` (C11), `src/server/db/schema/access.ts` (sourceGrants), `src/server/connectors/grants.ts` et `grants.db.test.ts` ; modifier `src/server/db/schema/memory.ts` (`sources.shared`, index partiels), `src/server/ingest/ingest-turns.ts` (le `on conflict` de la capture vise `sources_own_key` avec sa condition), `src/server/connectors/ingest-items.ts` (passe par `grantItemAccess` avec `shared = isSharedFamily(...)` ; un élément devenu `confidential` retire la part de la connexion), `src/server/connectors/connections.ts` (`createConnection` pose `acl = [created_by]` pour les familles personnel et fichiers ; `deleteConnection`, `setConnectionPaused` et `requestSyncNow` réservés au créateur ou à un owner/admin ; `deleteConnection` appelle `revokeConnectionGrants`), la confirmation de suppression dans l'interface (« Les données que seule cette connexion apporte seront retirées de Leon. »).
 
-- [ ] **Étape 1 :** `0014-parts-d-acces.sql`, relue contre C11 (vérifications de l'appelant comprises) avant tout test db. Elle crée aussi `sources_title_trgm_idx on sources using gin (title gin_trgm_ops)` : la recherche par titre (T06, `s.title % texte`) lit sinon toutes les sources de l'organisation, et leur nombre va croître avec Gmail, Slack et Drive. Un test de contrat vérifie, par `pg_indexes`, que l'index existe, et que `explain` de la requête de titre ne fait pas de parcours séquentiel sur quelques milliers de sources.
+- [ ] **Étape 1 :** `0031-parts-d-acces.sql`, relue contre C11 (vérifications de l'appelant comprises) avant tout test db. Elle crée aussi `sources_title_trgm_idx on sources using gin (title gin_trgm_ops)` : la recherche par titre (T06, `s.title % texte`) lit sinon toutes les sources de l'organisation, et leur nombre va croître avec Gmail, Slack et Drive. Un test de contrat vérifie, par `pg_indexes`, que l'index existe, et que `explain` de la requête de titre ne fait pas de parcours séquentiel sur quelques milliers de sources.
 - [ ] **Étape 2 : tests.**
   - Alice et Bob branchent chacun leur Drive ; le même fichier `restreint` vu par les deux → **une** source d'ACL `{alice, bob}`, ses tours et passages aussi ; Carole ne le voit pas.
   - **le même fil Outlook (même `thread:<conversationId>`) chez Alice et chez Bob → deux sources**, chacune privée à son propriétaire ; Bob ne voit aucun tour du fil d'Alice.
@@ -785,7 +787,7 @@ Les garde-fous des réunions (spec, « Les droits ») et les exclusions (T17) s'
 
 ### T17 · Exclusions — Sonnet
 
-**Fichiers :** créer `src/server/db/migrations/0015-exclusions.sql` (C12), compléter `schema/access.ts`, créer `src/server/connectors/exclusions.ts` et ses tests ; modifier `src/server/connectors/sync.ts` (charge les exclusions, ignore et compte), `src/server/connectors/connections.ts` (`skipped` dans `ConnectionView`), le panneau d'une connexion (liste des exclusions, ajout, retrait ; compteur « non lus » par raison).
+**Fichiers :** créer `src/server/db/migrations/0032-exclusions.sql` (C12), compléter `schema/access.ts`, créer `src/server/connectors/exclusions.ts` et ses tests ; modifier `src/server/connectors/sync.ts` (charge les exclusions, ignore et compte), `src/server/connectors/connections.ts` (`skipped` dans `ConnectionView`), le panneau d'une connexion (liste des exclusions, ajout, retrait ; compteur « non lus » par raison).
 
 - [ ] **Étape 1 : tests.** `isExcluded({ title: 'Entretien annuel Marie', origin: {} }, [{ kind: 'titre', value: 'entretien' }])` → vrai ; `{ origin: { channel: 'RH' } }` contre `{ kind: 'channel', value: 'rh' }` → vrai ; `{ origin: { organizer: 'drh@acme.fr' } }` contre `{ kind: 'organizer', value: 'DRH@acme.fr' }` → vrai ; clé absente → faux. Un membre simple ne peut pas exclure sur une connexion d'équipe qu'il n'a pas créée (`'interdit'`) ; son créateur et un administrateur le peuvent ; sur une connexion personnelle, seul son créateur le peut, et Bob ne voit pas les exclusions de la boîte d'Alice. **(vigilance 3)** ajouter une exclusion retire, par `revokeConnectionGrants`, les sources déjà captées qui y correspondent, et la recherche ne les rend plus ; le passage suivant ne les recrée pas et compte `skipped.exclu`.
 - [ ] **Étape 2 :** écrire le code ; `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/connectors` → passe ; vérification visuelle du panneau.
@@ -793,7 +795,7 @@ Les garde-fous des réunions (spec, « Les droits ») et les exclusions (T17) s'
 
 ### T18 · Réconciliation des suppressions — Sonnet
 
-**Fichiers :** créer `src/server/db/migrations/0016-reconciliation.sql` (C2) ; modifier `src/server/connectors/types.ts` (méthode optionnelle `listExternalIds?(config, http): AsyncIterable<string>`), `src/server/connectors/worker.ts` (tic horaire qui prend `connexions_a_reconcilier()` et pose `last_reconciled_at` après chaque réconciliation, réussie ou non) ; créer `src/server/connectors/reconcile.ts` et `reconcile.db.test.ts` ; implémenter `listExternalIds` pour GitHub, Notion et Linear dans leurs dossiers, puis pour chaque autre connecteur dont l'API liste les ids en moins de 50 requêtes pour 5 000 éléments.
+**Fichiers :** créer `src/server/db/migrations/0033-reconciliation.sql` (C2) ; modifier `src/server/connectors/types.ts` (méthode optionnelle `listExternalIds?(config, http): AsyncIterable<string>`), `src/server/connectors/worker.ts` (tic horaire qui prend `connexions_a_reconcilier()` et pose `last_reconciled_at` après chaque réconciliation, réussie ou non) ; créer `src/server/connectors/reconcile.ts` et `reconcile.db.test.ts` ; implémenter `listExternalIds` pour GitHub, Notion et Linear dans leurs dossiers, puis pour chaque autre connecteur dont l'API liste les ids en moins de 50 requêtes pour 5 000 éléments.
 
 ```ts
 export async function reconcileConnection(ctx: TenantContext, connectionId: string, deps: SyncDeps): Promise<{ removed: number } | 'non-gere' | 'erreur'>;
@@ -805,7 +807,7 @@ export async function reconcileConnection(ctx: TenantContext, connectionId: stri
 
 ### T19 · « Moi » dans chaque outil — Sonnet
 
-**Fichiers :** créer `src/server/db/migrations/0017-identites.sql` (C13), compléter `schema/access.ts`, créer `src/server/identities.ts` et ses tests, la section Réglages › « Mes comptes » ; modifier `src/server/search/people.ts` (`resolvePeople`, `myAddresses` lisent `identities`), `src/server/connectors/connections.ts` (une connexion personnelle enregistre son compte vérifié comme identité `connexion`).
+**Fichiers :** créer `src/server/db/migrations/0034-identites.sql` (C13), compléter `schema/access.ts`, créer `src/server/identities.ts` et ses tests, la section Réglages › « Mes comptes » ; modifier `src/server/search/people.ts` (`resolvePeople`, `myAddresses` lisent `identities`), `src/server/connectors/connections.ts` (une connexion personnelle enregistre son compte vérifié comme identité `connexion`).
 
 - [ ] **Étape 1 : tests.** Une connexion Gmail d'Alice vérifiée sur `alice@acme.fr` → identité `gmail / alice@acme.fr` ; Alice déclare `github / alice-dev` → `de:alice-dev` trouve ses PR (`author_name = 'alice-dev'` sur les sources GitHub) ; `myAddresses` rend son e-mail Leon, `alice@acme.fr` et `{github, alice-dev}` ; le bonus « moi » de `searchPassages` s'applique à une PR d'`alice-dev` ; Bob ne peut pas déclarer un compte déjà pris (`unique`) ; une écriture directe en base de Bob sur une ligne d'Alice (insert avec `user_id = alice`, update, delete) est refusée par la sécurité par ligne.
 - [ ] **Étape 2 :** écrire le code ; `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/identities.db.test.ts src/server/search` → passe.
@@ -875,7 +877,7 @@ Chaque connecteur suit la recette R1 du plan des connecteurs (doc officielle rel
 
 ### T26 · Rejoindre par lien — Opus
 
-**Fichiers :** créer `src/server/db/migrations/0018-invitations.sql` (C14), compléter `schema/access.ts`, créer `src/server/auth/invite-links.ts` et `invite-links.db.test.ts`, `src/app/(auth)/rejoindre/[jeton]/page.tsx` et son action, la section Réglages › « Inviter » (créer un lien, le copier).
+**Fichiers :** créer `src/server/db/migrations/0035-invitations.sql` (C14), compléter `schema/access.ts`, créer `src/server/auth/invite-links.ts` et `invite-links.db.test.ts`, `src/app/(auth)/rejoindre/[jeton]/page.tsx` et son action, la section Réglages › « Inviter » (créer un lien, le copier).
 
 - [ ] **Étape 1 : tests.** Un administrateur crée un lien → seul le hash est en base ; un membre simple → `'interdit'` ; `lookupInviteLink` d'un lien valide rend le nom de l'organisation, d'un lien expiré, utilisé ou inconnu rend `null` ; `joinWithInviteLink` crée l'utilisateur, l'ajoute comme `member` à **cette** organisation (pas de nouvelle organisation), marque le lien utilisé ; une seconde utilisation → `lien_invalide` ; un e-mail déjà pris → `email_pris`, le lien reste valide ; deux personnes qui utilisent le même lien en même temps → une seule entre, le compte de l'autre est supprimé et elle reçoit `lien_invalide` ; `invite_link_lookup` et `invite_link_consume` ne rendent rien d'autre que ce que dit C14.
 - [ ] **Étape 2 :** écrire le code ; `LEON_TEST_DATABASE=leon_test_glean pnpm vitest run src/server/auth` → passe ; vérification visuelle (créer un lien, rejoindre dans une fenêtre privée).

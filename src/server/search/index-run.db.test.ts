@@ -3,6 +3,7 @@ import { asc, eq, inArray } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngestPayload, Turn } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { signalSourceActivity } from '@/server/briefing/queue';
 import { ingestRuns, turns } from '@/server/db/schema/memory';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
@@ -19,6 +20,8 @@ import { indexIngestRun } from './index-run';
 
 // L'ingestion met en file un job d'indexation ; ici on appelle indexIngestRun à la main.
 vi.mock('@/server/pipeline/queue');
+// Après l'indexation, le projet touché est signalé au point du matin (T13) : simulé ici.
+vi.mock('@/server/briefing/queue');
 
 const tenantIds: string[] = [];
 let alice: TenantContext;
@@ -32,7 +35,10 @@ beforeAll(async () => {
   tenantIds.push(team.tenantId);
 });
 
-beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
+beforeEach(() => {
+  vi.mocked(enqueuePipelineStep).mockReset();
+  vi.mocked(signalSourceActivity).mockReset();
+});
 
 // Les passages de ces tests ne doivent pas rester dans la file des vecteurs manquants des autres fichiers.
 afterAll(async () => {
@@ -113,6 +119,50 @@ describe('indexIngestRun', () => {
     expect(await readRun(alice, job.ingestRunId)).toMatchObject({ status: 'done', step: 'done' });
     // Bob ne voit rien : la conversation est à Alice.
     expect(await readPassages(bob, sourceId)).toHaveLength(0);
+  });
+
+  // Le point du matin (T13) : de nouvelles données sur un projet (une session Claude Code, un élément GitHub) font
+  // refaire les points de ce projet. Le signal lit la source sous les droits du propriétaire du run.
+  it('signale la source indexée au point du matin, sous les droits du propriétaire du run', async () => {
+    const project = 'github.com/acme/leon';
+    const { job, sourceId } = await seedRun(alice, { metadata: { project } });
+
+    await indexIngestRun(job, { embedder: null });
+
+    expect(signalSourceActivity).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ tenantId: alice.tenantId, userId: alice.userId }),
+      sourceId,
+    );
+  });
+
+  it('termine le run même si le signal au point du matin échoue, et le journalise sans message de base', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(signalSourceActivity).mockRejectedValueOnce(
+      Object.assign(new Error("select … where text = 'secret de Julie'"), {
+        code: '57014',
+        severity: 'ERROR',
+      }),
+    );
+    const { job } = await seedRun(alice, {});
+
+    expect(await indexIngestRun(job, { embedder: null })).toBe('indexe');
+
+    expect(await readRun(alice, job.ingestRunId)).toMatchObject({ status: 'done' });
+    const logged = log.mock.calls.flat().map(String).join('\n');
+    expect(logged).toContain('search.signal_failed');
+    expect(logged).not.toContain('secret de Julie');
+    log.mockRestore();
+  });
+
+  it('ne signale rien pour un run absent ou déjà terminé', async () => {
+    const { job } = await seedRun(alice, { status: 'done' });
+
+    expect(await indexIngestRun(job, { embedder: null })).toBe('absent');
+    expect(await indexIngestRun({ ...job, ingestRunId: randomUUID() }, { embedder: null })).toBe(
+      'absent',
+    );
+
+    expect(signalSourceActivity).not.toHaveBeenCalled();
   });
 
   it('reporte l’auteur, la date et les positions du tour sur chaque passage', async () => {

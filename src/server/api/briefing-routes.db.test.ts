@@ -104,6 +104,8 @@ describe('GET /api/v1/briefing', () => {
 
   it('sans point : le message d’attente, et le point mis en file', async () => {
     const project = uniqueProject();
+    // Une session d'Alice sur ce projet : une clé inventée, elle, ne met rien en file (briefings.db.test.ts).
+    await seedRun(alice, { kind: 'claude_code', metadata: { project } });
 
     const response = await apiRequest(briefingUrl(project), { token: aliceToken });
 

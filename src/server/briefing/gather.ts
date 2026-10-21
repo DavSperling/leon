@@ -216,6 +216,13 @@ async function readChanges(tx: Tx, ctx: TenantContext, project: string, since: D
   return rows.map((row) => ({ source: sourceOf(row), turns: turns.get(row.id) ?? [] }));
 }
 
+// L'expression régulière (Postgres) qui trouve `text` tel quel, sans caractère d'adresse ou d'identifiant collé avant
+// ni après.
+export function wholeWord(text: string): string {
+  const literal = text.replace(/[\\^$.|?*+()[\]{}]/g, '\\$&');
+  return `(?<![[:alnum:]._%+-])${literal}(?![[:alnum:]_-])`;
+}
+
 // Les passages qui mentionnent le lecteur depuis `since` : son adresse e-mail dans le texte, ou son identifiant
 // d'outil précédé de « @ » dans un élément de cet outil (T19). Ni ce qu'il a écrit lui-même, ni ses propres
 // conversations, ni une source déjà comptée parmi les changements. Sans adresse connue : rien (on ne devine pas).
@@ -228,11 +235,13 @@ async function readMentions(
 ): Promise<BriefingMention[]> {
   const emails = me.emails.map((email) => email.toLowerCase()).filter((email) => email !== '');
   const names = me.names.filter((name) => name.name.trim() !== '');
+  // Un mot entier, pas un morceau : « bob@acme.fr » n'est pas mentionné par « jacob@acme.fr », ni « @al » par « @alice »
+  // (le texte d'un tiers qui ne le concerne pas entrerait sinon dans son point).
   const mentions: SQL[] = [
-    ...emails.map((email) => sql`strpos(lower(p.text), ${email}) > 0`),
+    ...emails.map((email) => sql`lower(p.text) ~ ${wholeWord(email)}`),
     ...names.map(
       (name) =>
-        sql`(s.kind = ${name.kind} and strpos(lower(p.text), ${`@${name.name.toLowerCase()}`}) > 0)`,
+        sql`(s.kind = ${name.kind} and lower(p.text) ~ ${wholeWord(`@${name.name.toLowerCase()}`)})`,
     ),
   ];
   if (mentions.length === 0) return [];

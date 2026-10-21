@@ -223,10 +223,11 @@ describe('readBriefing', () => {
     const seeded = await seedProject(alice);
     const now = new Date();
     await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']), now });
-    await adminPool.query('update briefings set stale = true where user_id = $1 and project = $2', [
-      alice.userId,
-      seeded.project,
-    ]);
+    // Lu hier : le signal qui l'a marqué périmé a déjà mis son recalcul en file (queue.ts), la lecture n'en ajoute pas.
+    await adminPool.query(
+      "update briefings set stale = true, last_read_at = now() - interval '1 day' where user_id = $1 and project = $2",
+      [alice.userId, seeded.project],
+    );
     const before = Date.now();
 
     const read = await readBriefing(alice, seeded.project);
@@ -238,8 +239,22 @@ describe('readBriefing', () => {
     expect(await jobsFor(alice, seeded.project)).toEqual([]);
   });
 
+  it('un point périmé qu’on ne lisait plus : rendu, et son recalcul mis en file tout de suite', async () => {
+    const seeded = await seedProject(alice);
+    await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']), now: new Date() });
+    await adminPool.query(
+      "update briefings set stale = true, last_read_at = now() - interval '8 days' where user_id = $1 and project = $2",
+      [alice.userId, seeded.project],
+    );
+
+    expect((await readBriefing(alice, seeded.project))?.markdown).toContain('Point');
+
+    expect(await jobsFor(alice, seeded.project)).toHaveLength(1);
+  });
+
   it('sans point : null, et le point est mis en file tout de suite', async () => {
     const project = `github.com/${uniqueRepo()}`;
+    await seedRun(alice, { kind: 'claude_code', metadata: { project } });
 
     expect(await readBriefing(alice, project)).toBeNull();
 
@@ -253,6 +268,7 @@ describe('readBriefing', () => {
   // ne trouve rien à montrer l'avance à maintenant, au lieu d'être ignorée par la file.
   it('sans point, avance à maintenant un recalcul déjà en attente, sans en ajouter un second', async () => {
     const project = `github.com/${uniqueRepo()}`;
+    await seedRun(alice, { kind: 'claude_code', metadata: { project } });
     await signalProjectActivity(alice, project, [alice.userId]);
     const [delayed] = await jobsFor(alice, project);
     expect((delayed?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
@@ -264,6 +280,19 @@ describe('readBriefing', () => {
     expect(jobs[0]?.id).toBe(delayed?.id);
     expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
     expect(jobs[0]?.data).toEqual({ tenantId, userId: alice.userId, project });
+  });
+
+  // Audit de la #28 : la route et l'outil MCP acceptent toute clé bien formée ; une clé inventée ne coûte rien.
+  it('sans point, sur un projet dont le lecteur n’a ni session ni élément GitHub : null, rien en file', async () => {
+    const project = `github.com/${uniqueRepo()}`;
+    await seedRun(bob, { kind: 'claude_code', metadata: { project } });
+
+    expect(await readBriefing(alice, project)).toBeNull();
+
+    expect(await jobsFor(alice, project)).toEqual([]);
+    expect(await jobsFor(alice, 'dossier:0123456789abcdef')).toEqual([]);
+    expect(await readBriefing(alice, 'dossier:0123456789abcdef')).toBeNull();
+    expect(await jobsFor(alice, 'dossier:0123456789abcdef')).toEqual([]);
   });
 
   it('avec `refresh: false` (aucun modèle) : null, sans rien mettre en file', async () => {

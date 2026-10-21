@@ -314,4 +314,30 @@ describe('gatherBriefingMaterial : bornes', () => {
     expect(material.mentions[0]?.excerpt.text).toBe(`Note 0 pour ${email}.`);
     expect(material.mentions.at(-1)?.excerpt.text).toBe(`Note ${MENTIONS_MAX - 1} pour ${email}.`);
   });
+
+  it('ne prend pour une mention que l’adresse entière, pas une adresse qui la contient', async () => {
+    const team = await newTeam(['Fanny', 'Gil'], local);
+    const [fanny, gil] = team.members as [TenantContext, TenantContext];
+    const email = await emailOf(fanny);
+    await seedIndexed(
+      gil,
+      {
+        kind: 'notion',
+        acl: [team.tenantId],
+        title: 'Adresses voisines',
+        metadata: { nature: 'page' },
+        turns: [
+          { text: `Écrire à jacques.${email} demain.`, ts: ago(2 * HOUR) },
+          { text: `Voir avec ${email}, merci.`, ts: ago(HOUR) },
+        ],
+      },
+      null,
+    );
+
+    const material = await gatherBriefingMaterial(fanny, PROJECT, new Date());
+
+    expect(material.mentions.map((entry) => entry.excerpt.text)).toEqual([
+      `Voir avec ${email}, merci.`,
+    ]);
+  });
 });

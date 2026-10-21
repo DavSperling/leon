@@ -103,6 +103,21 @@ describe('importClaudeCode', () => {
     ]);
   });
 
+  it('avec git, calcule la clé de projet de chaque session sur son dossier de départ', async () => {
+    const { deps, send } = makeDeps();
+    const remotes: Record<string, string> = {
+      '/Users/demo/projets/acme': 'git@github.com:Acme/Offres.git',
+    };
+    const git = vi.fn(async (_args: string[], cwd: string) => remotes[cwd] ?? null);
+
+    await importClaudeCode(importOptions(), { ...deps, git });
+
+    const keys = new Map(send.mock.calls.map(([p]) => [p.source.external_id, p.source.project]));
+    expect(keys.get(ACME_SESSION)).toBe('github.com/acme/offres');
+    // Pas de remote GitHub : la clé du dossier, la même que celle du crochet de fin de session.
+    expect(keys.get('22222222-2222-4222-8222-222222222222')).toMatch(/^dossier:[0-9a-f]{16}$/);
+  });
+
   it("sans clé de projet, la source n'a pas de champ project (comme avant)", async () => {
     const { deps, send } = makeDeps();
 

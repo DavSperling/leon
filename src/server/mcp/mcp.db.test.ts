@@ -22,6 +22,7 @@ import * as searchModule from '@/server/search/search';
 import { apiRequest } from '@/test/api-request';
 import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
+import { seedRun } from '@/test/seed-search';
 import { NEIGHBOUR_TURNS } from './tools/fetch-tool';
 import {
   type FetchOutput,
@@ -916,6 +917,7 @@ describe('outil briefing', () => {
 
   it('sans point : le message d’attente, et le recalcul mis en file', async () => {
     const paul = await setupPaul();
+    await seedRun(paul, { kind: 'claude_code', metadata: { project: PROJECT } });
 
     const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
 

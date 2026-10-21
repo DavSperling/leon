@@ -8,6 +8,7 @@ import { seedRun } from '@/test/seed-search';
 import {
   BRIEFING_DELAY_SECONDS,
   BRIEFING_QUEUES,
+  BRIEFING_READ_DAYS,
   briefingKey,
   enqueueBriefingRefresh,
   getBriefingBoss,
@@ -31,13 +32,19 @@ let zoe: TenantContext;
 
 const uniqueProject = () => `github.com/acme/projet-${crypto.randomUUID().slice(0, 8)}`;
 
-async function seedBriefing(owner: TenantContext, project: string): Promise<void> {
+// Un point lu à l'instant, sauf `lastReadAt` donné (null : jamais lu).
+async function seedBriefing(
+  owner: TenantContext,
+  project: string,
+  lastReadAt: Date | null = new Date(),
+): Promise<void> {
   await adminDb.insert(briefings).values({
     tenantId: owner.tenantId,
     userId: owner.userId,
     project,
     markdown: '# Point du matin',
     preparedAt: new Date(),
+    lastReadAt,
     acl: [owner.userId],
   });
 }
@@ -127,6 +134,33 @@ describe('signalProjectActivity', () => {
     expect(await jobsFor(zoe, project)).toEqual([]);
     expect(await staleOf(zoe, project)).toBe(false);
     expect(await jobsFor(alice, project)).toHaveLength(1);
+  });
+
+  // Audit de la #28 : un point qu'on ne lit plus ne se refait pas à chaque activité du dépôt (un appel au modèle
+  // chaque fois) ; il est marqué périmé et se refera à sa prochaine lecture.
+  it(`ne refait pas un point lu il y a plus de ${BRIEFING_READ_DAYS} jours, ni jamais lu : il le marque périmé`, async () => {
+    const project = uniqueProject();
+    await seedBriefing(
+      alice,
+      project,
+      new Date(Date.now() - (BRIEFING_READ_DAYS + 1) * 86_400_000),
+    );
+    await seedBriefing(bob, project, null);
+
+    await signalProjectActivity(alice, project, []);
+
+    for (const member of [alice, bob]) {
+      expect(await jobsFor(member, project)).toEqual([]);
+      expect(await staleOf(member, project)).toBe(true);
+    }
+  });
+
+  it('ne prépare pas d’avance le premier point d’un simple dossier', async () => {
+    const project = 'dossier:00112233445566ff';
+
+    await signalProjectActivity(alice, project, [carol.userId]);
+
+    expect(await jobsFor(carol, project)).toEqual([]);
   });
 
   it('met aussi en file les utilisateurs nommés en plus, même sans point sur ce projet', async () => {

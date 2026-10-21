@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { Code, FileText, GitBranch, Globe, LifeBuoy, Mail, Mic, Monitor, PenLine, Plug, SquareKanban, Terminal, Users } from 'lucide-react';
+import { Code, Globe, LifeBuoy, Mail, Mic, Monitor, PenLine, Plug, SquareKanban, Terminal, Users } from 'lucide-react';
 import { CATALOG } from './catalog';
 
 // Les 39 outils branchables, leurs familles, et les quatre canaux de capture (libellés du vrai Leon).
@@ -92,18 +92,14 @@ export type CaptureChannel = (typeof CAPTURE_CHANNELS)[number]['id'];
 /** Toute origine d'une source : un outil branché ou un canal de capture. */
 export type SourceKind = ProviderId | CaptureChannel;
 
-const isProvider = (k: string): k is ProviderId => Object.hasOwn(TOOLS, k);
+export const isProvider = (k: string): k is ProviderId => Object.hasOwn(TOOLS, k);
 
 export function kindLabel(kind: SourceKind): string {
   return isProvider(kind) ? TOOLS[kind][0] : CAPTURE_CHANNELS.find((c) => c.id === kind)!.label;
 }
 
-// Les outils que la planche dessine ont leur propre icône (un commit, un ticket et une page se distinguent d'un coup d'œil).
-const TOOL_ICONS: Partial<Record<ProviderId, LucideIcon>> = { github: GitBranch, linear: SquareKanban, notion: FileText, fathom: Mic, hubspot: Users, outlook: Mail };
-
-/** Icône d'une origine : celle de l'outil (planche) ou de sa famille, le canal pour une capture ; Monitor pour l'interface, Plug sinon. */
-export function kindIcon(kind: SourceKind | 'interface' | 'other'): LucideIcon {
-  if (isProvider(kind)) return TOOL_ICONS[kind] ?? FAMILIES.find((f) => f.id === TOOLS[kind][1])!.icon;
+/** Icône d'un canal de capture ; Monitor pour l'interface, Plug sinon. Un outil branché montre son logo (ToolIcon). */
+export function kindIcon(kind: CaptureChannel | 'interface' | 'other'): LucideIcon {
   if (kind === 'interface') return Monitor;
   return CAPTURE_CHANNELS.find((c) => c.id === kind)?.icon ?? Plug;
 }

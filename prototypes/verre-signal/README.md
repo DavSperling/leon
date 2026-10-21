@@ -14,7 +14,7 @@ Puis ouvrir http://127.0.0.1:5180. Le prototype a son propre `package.json` (npm
 
 ## Ce qu'on y voit
 
-- Tous les écrans : Recherche (réponse citée, filtres, aperçu), Discussions (liste et fil), Connexions (outils branchés et à brancher, schéma), Sources, Réglages (jetons), connexion et inscription, 404 et page d'erreur.
+- Tous les écrans : Recherche (réponse citée, filtres, aperçu), Discussions (liste et fil), Connexions (outils branchés et à brancher, avec leurs logos, schéma), Réglages (jetons), connexion et inscription, 404 et page d'erreur.
 - Thème sombre et clair (menu du compte), barre latérale repliable en icônes (bouton en haut, touche `[` ou ⌘K), palette ⌘K, version mobile.
 - `/_ds` : tous les composants et leurs états.
 - Chaque écran liste en tête de son `index.tsx` les paramètres d'adresse qui montrent ses états (erreurs, vides, chargements…).

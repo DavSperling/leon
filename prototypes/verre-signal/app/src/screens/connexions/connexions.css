@@ -6,3 +6,19 @@
 }
 /* tenu le temps que la page glisse jusqu'à la ligne, puis effacé */
 @keyframes cx-fresh-row { 0%, 45% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Schéma des connexions : deux halos battent autour du rond de Leon, le point vert du résumé respire, les traits et les
+   croix s'allument ou s'effacent en douceur au survol. ?instant=1 et le mouvement réduit coupent ces animations. */
+.cx-halo {
+  position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 9999px; pointer-events: none;
+  border: 1px solid var(--accent-line); background: radial-gradient(closest-side, var(--accent-soft), transparent);
+  animation: cx-halo 3.2s var(--ease-out) infinite;
+}
+.cx-halo-2 { animation-delay: 1.6s; }
+@keyframes cx-halo { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.7); opacity: 0; } }
+.cx-live { animation: cx-live 2.4s ease-in-out infinite; }
+@keyframes cx-live {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 50%, transparent); }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+.cx-trait { transition: opacity .25s ease, stroke-opacity .25s ease, stroke-width .25s ease; }

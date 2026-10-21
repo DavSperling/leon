@@ -32,7 +32,7 @@ app/
   src/screens/<écran>/       un dossier par écran, propriété exclusive de son agent
 ```
 
-Routes : `/` Recherche, `/discussions`, `/discussions/:id`, `/sources`, `/connexions`, `/reglages`, `/connexion`, `/inscription`, `/_ds` (vitrine du système de design), `*` 404. Les pages d'authentification sont hors de l'ossature.
+Routes : `/` Recherche, `/discussions`, `/discussions/:id`, `/connexions`, `/reglages`, `/connexion`, `/inscription`, `/_ds` (vitrine du système de design), `*` 404. Les pages d'authentification sont hors de l'ossature.
 
 Paramètres de démonstration (pour les captures déterministes et pour montrer les états) : `?theme=`, `?instant=1` (état final immédiat, sans chorégraphie), et des paramètres d'état propres à chaque écran, documentés en tête de leur fichier.
 
@@ -41,7 +41,7 @@ Paramètres de démonstration (pour les captures déterministes et pour montrer 
 1. **Recherche** : accueil (exemples, syntaxe), barre, filtres (Outil, Type, Période, Personne), réponse de Leon (tous ses états), résultats avec passages surlignés, aperçu, pagination.
 2. **Discussions** : liste et nouvelle question, fil avec réponse en flux, sources citées, aperçu, notices, zone de saisie.
 3. **Connexions** : schéma vivant des outils branchés, catalogue par famille, fenêtre de branchement (bouton OAuth, clé collée, gestion, suppression).
-4. **Sources et Réglages** : canaux de capture, tableau d'indexation ; jetons personnels, branchement de Claude Code, extension.
+4. **Réglages** : jetons personnels, branchement de Claude Code, extension. (La page Sources a été retirée le 21 octobre 2026 : on retrouve une source par la recherche.)
 5. **Connexion, inscription et pages système** : 404, erreur, chargement.
 
 ## Règles de qualité

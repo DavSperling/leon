@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { type CaptureChannel, kindIcon, kindLabel, type SourceKind } from '@/data/providers';
+import { type CaptureChannel, isProvider, kindIcon, kindLabel, type SourceKind } from '@/data/providers';
 import { cn } from '@/lib/cn';
 import { formatDate, formatDateTime } from '@/lib/format';
 
@@ -22,8 +22,16 @@ export function CitationChip({ n, label, active, animate, className, ...props }:
   return <button type="button" {...shared} {...(props as ComponentProps<'button'>)}>{n}</button>;
 }
 
-/** Icône d'une origine (famille de l'outil, ou canal de capture) ; `boxed` : pastille carrée de 22 px de la planche. */
+/** Icône d'une origine : le logo de l'outil (public/logos), ou l'icône du canal de capture ; `boxed` : pastille carrée de 22 px de la planche. */
 export function ToolIcon({ kind, boxed, className }: { kind: SourceKind | 'interface' | 'other'; boxed?: boolean; className?: string }) {
+  // Le logo est posé sur du blanc : les logos sombres (GitHub, Notion, Attio) restent lisibles en thème sombre.
+  // #fff écrit en dur : tokens.css retire les couleurs de Tailwind (--color-*: initial), bg-white n'existe pas.
+  if (isProvider(kind))
+    return (
+      <span aria-hidden="true" className={cn('grid shrink-0 place-items-center bg-[#fff]', boxed ? 'size-[22px] rounded-chip border border-line' : 'size-4 rounded-[4px]', className)}>
+        <img src={`/logos/${kind}.svg`} alt="" className={boxed ? 'size-[14px]' : 'size-[11px]'} />
+      </span>
+    );
   const Icon = kindIcon(kind);
   if (!boxed) return <Icon aria-hidden="true" strokeWidth={1.6} className={cn('size-3.5 shrink-0 text-muted', className)} />;
   return (

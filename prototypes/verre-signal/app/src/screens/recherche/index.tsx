@@ -269,8 +269,7 @@ function Screen() {
               {resultsVisible && unknown && <Notice tone="warning" live="status">{unknown}</Notice>}
               {resultsVisible && failed && (
                 <Notice tone="error" live="alert">
-                  {nb('La recherche n’a pas abouti. Réessayez dans un instant ; si cela persiste, regardez ')}
-                  <Link to="/sources" className="font-semibold underline decoration-destructive-line underline-offset-[3px] hover:decoration-destructive">la page Sources</Link>.
+                  {nb('La recherche n’a pas abouti. Réessayez dans un instant.')}
                 </Notice>
               )}
               {resultsVisible && res && results.length === 0 && (

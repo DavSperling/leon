@@ -212,7 +212,7 @@ export default function DesignSystem() {
             <SourceChip kind="github" author="Julie Martin" date={getItem('github-118')!.date} time />
             <SourceChip kind="claude_code" label="Claude Code" author="Vous" />
           </Demo>
-          <Demo label="ToolIcon : outils de la planche, puis par famille (boxed), et canaux">
+          <Demo label="ToolIcon : logos des outils (boxed), et canaux de capture">
             {(['github', 'linear', 'notion', 'fathom', 'hubspot', 'outlook', 'jira', 'intercom'] as const).map((k) => (
               <span key={k} className="inline-flex items-center gap-2 text-label text-fg-2"><ToolIcon kind={k} boxed />{kindLabel(k)}</span>
             ))}

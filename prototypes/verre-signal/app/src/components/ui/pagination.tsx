@@ -5,7 +5,7 @@ import { scrollToTop } from '@/lib/scroll';
 
 export type PaginationProps = {
   page: number;
-  /** Nombre de pages ; absent : « Page N » sans total (page Sources). */
+  /** Nombre de pages ; absent : « Page N » sans total. */
   pages?: number;
   /** Sans total : y a-t-il une page suivante ? */
   hasNext?: boolean;

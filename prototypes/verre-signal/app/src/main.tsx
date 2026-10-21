@@ -31,7 +31,7 @@ function screen<P extends object>(load: () => Promise<{ default: ComponentType<P
 const Recherche = screen(() => import('@/screens/recherche'));
 const Discussions = screen(() => import('@/screens/discussions'));
 const Connexions = screen(() => import('@/screens/connexions'));
-const SourcesReglages = screen(() => import('@/screens/sources-reglages'));
+const Reglages = screen(() => import('@/screens/reglages'));
 const AuthSysteme = screen(() => import('@/screens/auth-systeme'));
 const DesignSystem = screen(() => import('@/ds'));
 
@@ -47,8 +47,7 @@ const router = createBrowserRouter([
           { index: true, element: <Recherche /> },
           { path: 'discussions', element: <Discussions /> },
           { path: 'discussions/:id', element: <Discussions /> },
-          { path: 'sources', element: <SourcesReglages page="sources" /> },
-          { path: 'reglages', element: <SourcesReglages page="reglages" /> },
+          { path: 'reglages', element: <Reglages /> },
           { path: 'connexions', element: <Connexions /> },
           { path: '_ds', element: <DesignSystem /> },
         ],
@@ -66,7 +65,7 @@ const router = createBrowserRouter([
 ]);
 
 // Les autres écrans se préchargent pendant un temps mort (un échec se montre à la visite : page d'erreur, « Réessayer » recharge).
-const warm = () => [Recherche, Discussions, Connexions, SourcesReglages, AuthSysteme, DesignSystem].forEach((s) => s.preload().catch(() => {}));
+const warm = () => [Recherche, Discussions, Connexions, Reglages, AuthSysteme, DesignSystem].forEach((s) => s.preload().catch(() => {}));
 if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 2500 });
 else setTimeout(warm, 1200);
 

@@ -10,7 +10,7 @@ import { ThemeToggle } from './theme-toggle';
 // Même motif que les autres pages système : un titre court, la phrase, un seul bouton secondaire.
 
 const TITLE = 'Impossible de charger la page.';
-const HINT = 'Réessayez ; si ça persiste, regardez la page Sources.';
+const HINT = 'Réessayez dans un instant.';
 
 export function ErrorPage({ standalone: forced }: { standalone?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);

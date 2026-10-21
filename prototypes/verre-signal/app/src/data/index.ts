@@ -4,6 +4,5 @@ export * from './providers';
 export * from './corpus';
 export * from './search';
 export * from './discussions';
-export * from './sources';
 export * from './connections';
 export * from './tokens';

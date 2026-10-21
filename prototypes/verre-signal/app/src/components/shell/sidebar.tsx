@@ -58,14 +58,14 @@ const MEMORY_LATE = NOW.getTime() - MEMORY_AT.getTime() > 60 * 60_000;
 
 /**
  * Pied de la barre : silencieux tant que la mémoire est à jour. En retard (plus d'une heure sans capture), une ligne
- * d'alerte (icône + mots, jamais la couleur seule) mène aux Sources ; repliée, l'icône reste, avec son infobulle.
+ * d'alerte (icône + mots, jamais la couleur seule) mène aux Réglages, où se branchent les captures ; repliée, l'icône reste, avec son infobulle.
  */
 export function MemoryStatus({ className, onNavigate }: { className?: string; onNavigate?: () => void }) {
   if (!MEMORY_LATE) return null;
   const label = `Mémoire en retard · ${formatRelative(MEMORY_AT)}`;
   return (
     <Tooltip content={label} side="right">
-      <Link to="/sources" onClick={onNavigate} onPointerMove={railOnly} onFocus={railOnly} className={cn(ROW, 'text-[12px]', className)}>
+      <Link to="/reglages" onClick={onNavigate} onPointerMove={railOnly} onFocus={railOnly} className={cn(ROW, 'text-[12px]', className)}>
         <TriangleAlert aria-hidden="true" strokeWidth={1.6} className={cn(ROW_ICON, 'text-warning')} />
         <span className={cn(LABEL, 'min-w-0 overflow-hidden whitespace-nowrap tabular-nums')}>{label}</span>
       </Link>

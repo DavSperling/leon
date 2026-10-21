@@ -1,6 +1,5 @@
 import { CircleCheck, CircleDashed, CircleX, type LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import type { IndexingStatus } from '@/data/sources';
 import { cn } from '@/lib/cn';
 
 export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'destructive' | 'info';
@@ -28,6 +27,7 @@ export function Badge({ tone = 'neutral', icon: Icon, mono, className, children,
   );
 }
 
+export type IndexingStatus = 'running' | 'done' | 'failed';
 const STATUSES = {
   running: { label: 'En cours', icon: CircleDashed, tone: 'info' },
   done: { label: 'Indexée', icon: CircleCheck, tone: 'success' },

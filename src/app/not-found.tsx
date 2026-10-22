@@ -1,13 +1,24 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { StandaloneMessage } from '@/components/verre/auth/standalone-card';
+import { ThemeToggle } from '@/components/verre/auth/theme-toggle';
+import { StandaloneShell } from '@/components/verre/shell';
+import { Button } from '@/components/verre/ui/button';
+
+export const metadata: Metadata = { title: 'Page introuvable' };
 
 export default function NotFound() {
   return (
-    <main className="mx-auto max-w-[360px] px-4 py-16">
-      <h1 className="mb-4 text-base font-semibold">Cette page n'existe pas.</h1>
-      <Button asChild variant="outline" size="sm">
-        <Link href="/">Retour à l'accueil</Link>
-      </Button>
-    </main>
+    <StandaloneShell>
+      <StandaloneMessage
+        title="Cette page n’existe pas."
+        action={
+          <Button asChild variant="secondary">
+            <Link href="/">Retour à l’accueil</Link>
+          </Button>
+        }
+      />
+      <ThemeToggle />
+    </StandaloneShell>
   );
 }

@@ -47,6 +47,7 @@ Chaque écran garde ses chargeurs et ses actions. Seul le rendu change.
 - « Leon lit N sources » sur la recherche : on affiche « Leon lit les résultats… », sans nombre.
 - La pastille de version à côté de la marque (l'appli n'expose pas de numéro de version).
 - Les « il y a 3 h » de l'alerte « Mémoire en retard » : elle nomme les canaux en retard (« Mémoire en retard · Claude Code »).
+- L'adresse pré-remplie quand « Compte créé, mais la connexion a échoué » mène à « Se connecter » (la maquette la passait dans l'état du routeur ; on ne la met pas dans l'URL). Le lien mène à `/connexion`, vide.
 
 ### La page Sources
 

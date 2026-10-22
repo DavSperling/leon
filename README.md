@@ -39,7 +39,7 @@ La checklist de vérification manuelle du premier jet est dans [`docs/guides/pre
 **Une seule instance de Leon par base, un seul modèle de vecteurs à la fois.** Les tâches de fond (relève des outils,
 indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponses par personne) vivent dans le processus.
 
-- En production, une mise à jour arrête l'ancienne version avant de démarrer la nouvelle.
+- En production, une mise à jour arrête l'ancienne version dès que la nouvelle est prête (voir « En ligne »).
 - En local, chaque worktree qui lance un serveur a sa propre base (`DATABASE_URL`).
 - Changer de modèle de vecteurs (`LEON_EMBEDDINGS_MODEL`) : arrêter le serveur, changer le réglage, relancer. Le tic
   revectorise alors tout, sauf les textes que le fournisseur refuse et ceux d'un membre parti (le plein texte les
@@ -47,6 +47,25 @@ indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponse
 
 Deux instances sur la même base (ou deux modèles actifs) ne cassent pas les droits, mais doublent des appels payants et
 peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances sera un chantier à part.
+
+## En ligne (Railway)
+
+Pour mettre Leon en ligne sur [Railway](https://railway.com) : un seul service, allumé en continu, branché sur la base
+Supabase partagée (hébergeur pas encore choisi : Railway, ou une machine Oracle gratuite derrière Caddy). Pas de Vercel : ses fonctions s'endorment entre deux requêtes, et les tâches de fond (relève, indexation, point du
+matin) ne tourneraient plus.
+
+- `railway.json` décrit le service : `pnpm build`, les migrations avant chaque mise en ligne (`pnpm db:migrate`, avec
+  `DATABASE_URL_ADMIN`), puis `pnpm start`, et `/api/health` pour savoir qu'il est prêt.
+- Railway démarre la nouvelle version avant d'arrêter l'ancienne. `overlapSeconds: "0"` réduit ce recouvrement au
+  temps du démarrage (quelques dizaines de secondes, pendant lesquelles deux instances tournent). Éviter de mettre en
+  ligne pendant une relève ou un changement de modèle de vecteurs.
+- **Tant que le site tourne, personne ne branche son serveur local sur la base Supabase** : ce serait une seconde
+  instance (voir plus haut).
+- Variables : les mêmes que `.env.example`, collées dans l'éditeur brut des variables du service. En plus :
+  `BETTER_AUTH_URL` = l'adresse publique du site, `LEON_IP_HEADER=x-real-ip` (le proxy de Railway le remplace par
+  l'adresse du client), `NODE_ENV=production`. `sslrootcert` pointe vers le certificat public de Supabase
+  (`prod-ca-2021.crt`), à poser dans `certs/supabase-ca-2021.crt`.
+- L'inscription est ouverte à qui a l'adresse : chaque réponse de l'IA se paie sur notre clé Anthropic.
 
 ## Secrets dans les conversations captées
 

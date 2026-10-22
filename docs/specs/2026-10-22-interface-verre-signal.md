@@ -49,6 +49,7 @@ Chaque écran garde ses chargeurs et ses actions. Seul le rendu change.
 - Les « il y a 3 h » de l'alerte « Mémoire en retard » : elle nomme les canaux en retard (« Mémoire en retard · Claude Code »).
 - L'adresse pré-remplie quand « Compte créé, mais la connexion a échoué » mène à « Se connecter » (la maquette la passait dans l'état du routeur ; on ne la met pas dans l'URL). Le lien mène à `/connexion`, vide.
 - Discussions : le texte de la réponse ne sort pas mot à mot d'un flou (le flux donne le texte entier à chaque étape, pas des mots), les renvois et le curseur restent. Pas de curseur posé d'office dans la saisie à l'arrivée (« Continuer en discussion », nouvelle question), ni de ⌘K « Nouvelle discussion » qui met le curseur dans la question (`?nouvelle=1`). L'aperçu d'une source citée montre l'outil et la nature une fois le passage chargé (la citation n'en dit rien) ; avant, le titre seul.
+- Recherche : la carte de réponse ne réserve pas sa hauteur finale (le texte arrive en flux, sa longueur n'est pas connue d'avance) et ne sort pas mot à mot d'un flou ; les renvois éclosent et le curseur reste. « Continuer en discussion » crée une discussion à chaque clic (la maquette ramenait à celle déjà ouverte depuis la même recherche). Pas de glissement de la barre entre l'accueil et les résultats : la page est rendue par le serveur à chaque recherche.
 
 ### La page Sources
 

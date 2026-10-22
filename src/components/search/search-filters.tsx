@@ -1,8 +1,9 @@
-import { TriangleAlert, X } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { ITEM_NATURES } from '@/capture/turn';
+import { Tooltip } from '@/components/verre/ui/menu';
+import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
 import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
@@ -138,31 +139,34 @@ export function buildMenus(q: string): FilterMenuModel[] {
 export function SearchFilters({ q, now }: { q: string; now: Date }) {
   const chips = buildActiveChips(q, now);
   return (
-    <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-2 border-0 p-0">
+    <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-2 border-0 p-0 max-sm:gap-1.5">
       <legend className="sr-only">Filtres</legend>
-      {chips.map((chip) => (
-        <span
-          key={chip.id}
-          title={chip.recognized ? undefined : 'Filtre non reconnu : la recherche l’ignore.'}
-          className={cn(
-            'inline-flex h-8 items-center gap-1.5 rounded-full border pr-1 pl-3 text-[14px] leading-5',
-            chip.recognized
-              ? 'border-primary/20 bg-primary-soft text-primary'
-              : 'border-warning/30 bg-warning-soft text-warning',
-          )}
-        >
-          {!chip.recognized && <TriangleAlert size={14} strokeWidth={1.5} aria-hidden="true" />}
-          {chip.label}
-          {!chip.recognized && <span className="sr-only"> (non reconnu, ignoré)</span>}
-          <Link
-            href={chip.removeHref}
-            aria-label={chip.removeLabel}
-            className="flex size-6 items-center justify-center rounded-full transition-colors hover:bg-foreground/10"
+      {chips.map((chip) => {
+        // Toute la pastille retire le filtre : un lien vers la recherche sans lui.
+        const pill = (
+          <Pill
+            key={chip.id}
+            asChild
+            variant={chip.recognized ? 'active' : 'warning'}
+            icon={chip.recognized ? undefined : TriangleAlert}
+            removable
           >
-            <X size={14} strokeWidth={1.5} aria-hidden="true" />
-          </Link>
-        </span>
-      ))}
+            <Link
+              href={chip.removeHref}
+              aria-label={`${chip.removeLabel}${chip.recognized ? '' : ' (non reconnu, ignoré)'}`}
+            >
+              {chip.label}
+            </Link>
+          </Pill>
+        );
+        return chip.recognized ? (
+          pill
+        ) : (
+          <Tooltip key={chip.id} content="Filtre non reconnu : la recherche l’ignore.">
+            {pill}
+          </Tooltip>
+        );
+      })}
       {buildMenus(q).map((menu) => (
         <FilterMenu key={menu.name} name={menu.name} label={menu.label} options={menu.options} />
       ))}

@@ -51,8 +51,8 @@ peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances ser
 ## En ligne (Railway)
 
 Pour mettre Leon en ligne sur [Railway](https://railway.com) : un seul service, allumé en continu, branché sur la base
-Supabase partagée (hébergeur pas encore choisi : Railway, ou une machine Oracle gratuite derrière Caddy). Pas de Vercel : ses fonctions s'endorment entre deux requêtes, et les tâches de fond (relève, indexation, point du
-matin) ne tourneraient plus.
+Supabase partagée. Pas de Vercel : ses fonctions s'endorment entre deux requêtes, et les tâches de fond (relève,
+indexation, point du matin) ne tourneraient plus.
 
 - `railway.json` décrit le service : `pnpm build`, les migrations avant chaque mise en ligne (`pnpm db:migrate`, avec
   `DATABASE_URL_ADMIN`), puis `pnpm start`, et `/api/health` pour savoir qu'il est prêt.
@@ -63,8 +63,8 @@ matin) ne tourneraient plus.
   instance (voir plus haut).
 - Variables : les mêmes que `.env.example`, collées dans l'éditeur brut des variables du service. En plus :
   `BETTER_AUTH_URL` = l'adresse publique du site, `LEON_IP_HEADER=x-real-ip` (le proxy de Railway le remplace par
-  l'adresse du client), `NODE_ENV=production`. `sslrootcert` pointe vers le certificat public de Supabase
-  (`prod-ca-2021.crt`), à poser dans `certs/supabase-ca-2021.crt`.
+  l'adresse du client), `NODE_ENV=production`. Dans les deux adresses de la base, `sslrootcert` pointe vers le
+  certificat public de Supabase, versionné dans le repo : `sslrootcert=/app/certs/supabase-ca-2021.crt`.
 - L'inscription est ouverte à qui a l'adresse : chaque réponse de l'IA se paie sur notre clé Anthropic.
 
 ## Secrets dans les conversations captées

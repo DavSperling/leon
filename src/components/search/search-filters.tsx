@@ -4,7 +4,7 @@ import { ITEM_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
 import {

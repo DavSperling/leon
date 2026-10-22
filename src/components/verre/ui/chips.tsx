@@ -9,10 +9,10 @@ import {
 } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import type { CaptureKind, ProviderId, SourceKind } from '@/capture/turn';
+import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { cn } from '@/lib/verre/cn';
 import { formatDate, formatDateTime } from '@/lib/verre/format';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
 
 // Icône d'un canal de capture, ou des clients du journal de lecture (l'interface, un autre assistant).
 const CHANNEL_ICONS: Record<CaptureKind | 'interface' | 'other', LucideIcon> = {

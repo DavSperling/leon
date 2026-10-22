@@ -5,6 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { SOURCE_KIND_LABELS } from './labels';
+import type { ChannelHealth } from './stale';
 
 // Page « Sources » : santé de la capture de l'utilisateur, plus ce que lisent les connexions aux
 // outils (visible de toute l'équipe, sauf une source au texte brut privé, que la RLS réserve à son
@@ -25,7 +26,8 @@ export type SourceRow = {
     updatedAt: Date;
   } | null;
 };
-export type ChannelHealth = { kind: SourceKind; kindLabel: string; lastCaptureAt: Date | null };
+export type { ChannelHealth } from './stale';
+export { STALE_AFTER_MS, staleChannels } from './stale';
 
 // Sources par page : la page reste rapide quelle que soit la taille de la mémoire.
 export const SOURCES_PAGE_SIZE = 50;
@@ -36,7 +38,7 @@ export async function listSources(
   ctx: TenantContext,
   page = 1,
 ): Promise<{ channels: ChannelHealth[]; sources: SourceRow[]; hasNext: boolean }> {
-  return withTenant(ctx, async (tx) => {
+  const listed = await withTenant(ctx, async (tx) => {
     const found = await tx
       .select({
         id: sources.id,
@@ -77,12 +79,6 @@ export async function listSources(
             .from(ingestRuns)
             .where(inArray(ingestRuns.sourceId, ids))
             .orderBy(ingestRuns.sourceId, desc(ingestRuns.createdAt), desc(ingestRuns.id));
-    // La dernière capture de l'utilisateur par canal, quelle que soit la page.
-    const captures = await tx
-      .select({ kind: sources.kind, lastCaptureAt: max(sources.lastTurnAt) })
-      .from(sources)
-      .where(and(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, CAPTURE_KINDS)))
-      .groupBy(sources.kind);
 
     const countBySource = new Map(turnCounts.map((row) => [row.sourceId, row.turnCount]));
     const runBySource = new Map(runs.map(({ sourceId, ...run }) => [sourceId, run]));
@@ -93,12 +89,24 @@ export async function listSources(
       turnCount: countBySource.get(row.id) ?? 0,
       lastRun: runBySource.get(row.id) ?? null,
     }));
-    const lastByKind = new Map(captures.map((row) => [row.kind, row.lastCaptureAt]));
-    const channels = CAPTURE_KINDS.map((kind) => ({
-      kind,
-      kindLabel: SOURCE_KIND_LABELS[kind],
-      lastCaptureAt: lastByKind.get(kind) ?? null,
-    }));
-    return { channels, sources: sourceRows, hasNext: found.length > SOURCES_PAGE_SIZE };
+    return { sources: sourceRows, hasNext: found.length > SOURCES_PAGE_SIZE };
   });
+  return { channels: await channelHealth(ctx), ...listed };
+}
+
+// La dernière capture de l'utilisateur par canal, quelle que soit la page, dans l'ordre de CAPTURE_KINDS.
+export async function channelHealth(ctx: TenantContext): Promise<ChannelHealth[]> {
+  const captures = await withTenant(ctx, (tx) =>
+    tx
+      .select({ kind: sources.kind, lastCaptureAt: max(sources.lastTurnAt) })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, CAPTURE_KINDS)))
+      .groupBy(sources.kind),
+  );
+  const lastByKind = new Map(captures.map((row) => [row.kind, row.lastCaptureAt]));
+  return CAPTURE_KINDS.map((kind) => ({
+    kind,
+    kindLabel: SOURCE_KIND_LABELS[kind],
+    lastCaptureAt: lastByKind.get(kind) ?? null,
+  }));
 }

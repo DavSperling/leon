@@ -1,15 +1,18 @@
 'use client';
 
-import { CalendarDays, ChevronDown, Layers, UserRound, Wrench } from 'lucide-react';
+import { CalendarDays, Layers, UserRound, Wrench } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import {
+  Button,
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Input,
+  Pill,
+} from '@/components/verre';
 import { searchHref, withFilter } from './url-state';
 
 // Les menus de filtre. Choisir une entrée réécrit la requête (`outil:github` en tête) et relance la recherche :
@@ -19,6 +22,13 @@ export type FilterOption = { label: string; active: boolean; href: string };
 export type FilterMenuName = 'outil' | 'type' | 'periode';
 
 const ICONS = { outil: Wrench, type: Layers, periode: CalendarDays } as const;
+const HEADINGS = {
+  outil: 'Filtrer par outil',
+  type: 'Filtrer par type',
+  periode: 'Période',
+} as const;
+// Sous 640 px, les menus perdent leur icône (le mot suffit) : les quatre tiennent sur une ligne à 390 px.
+const NARROW = 'max-sm:[&>svg:first-child]:hidden';
 
 export function FilterMenu({
   name,
@@ -30,17 +40,15 @@ export function FilterMenu({
   options: FilterOption[];
 }) {
   const router = useRouter();
-  const Icon = ICONS[name];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full px-3 text-[14px]">
-          <Icon size={14} strokeWidth={1.5} aria-hidden="true" />
+        <Pill icon={ICONS[name]} chevron className={NARROW}>
           {label}
-          <ChevronDown size={14} strokeWidth={1.5} aria-hidden="true" />
-        </Button>
+        </Pill>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="max-h-80 w-56">
+      <DropdownMenuContent className="max-h-[min(380px,var(--radix-dropdown-menu-content-available-height))] w-[240px] overflow-y-auto">
+        <DropdownMenuLabel>{HEADINGS[name]}</DropdownMenuLabel>
         {options.map((option) => (
           <DropdownMenuCheckboxItem
             key={option.label}
@@ -60,32 +68,34 @@ export function FilterMenu({
 export function FilterPerson({ query }: { query: string }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
+  const wasOpen = useRef(open);
 
   useEffect(() => {
-    if (open) input.current?.focus();
+    if (open) input.current?.focus({ preventScroll: true });
+    else if (wasOpen.current) trigger.current?.focus({ preventScroll: true }); // fermé : le curseur revient au bouton
+    wasOpen.current = open;
   }, [open]);
+
+  const close = () => {
+    setOpen(false);
+    setValue('');
+  };
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const q = withFilter(query, 'de', value);
-    setOpen(false);
-    setValue('');
+    close();
     if (q !== query) router.push(searchHref({ q }));
   }
 
   if (!open) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="h-8 gap-1.5 rounded-full px-3 text-[14px]"
-      >
-        <UserRound size={14} strokeWidth={1.5} aria-hidden="true" />
+      <Pill ref={trigger} icon={UserRound} className={NARROW} onClick={() => setOpen(true)}>
         Personne
-      </Button>
+      </Pill>
     );
   }
   return (
@@ -93,29 +103,34 @@ export function FilterPerson({ query }: { query: string }) {
       <label htmlFor="filtre-personne" className="sr-only">
         Nom ou adresse e-mail de la personne
       </label>
-      <input
-        ref={input}
-        id="filtre-personne"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') setOpen(false);
-        }}
-        maxLength={100}
-        placeholder="Nom ou e-mail"
-        autoComplete="off"
-        className="h-8 w-44 rounded-full border border-input bg-card px-3 text-[14px] outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-      />
-      <Button type="submit" size="sm" className="h-8 rounded-full px-3 text-[14px]">
+      <span className="relative">
+        <UserRound
+          aria-hidden="true"
+          strokeWidth={1.7}
+          className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted"
+        />
+        <Input
+          ref={input}
+          id="filtre-personne"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              close();
+            }
+          }}
+          maxLength={100}
+          placeholder="Nom ou e-mail"
+          autoComplete="off"
+          className="h-8 w-44 rounded-full pr-3 pl-8 text-label max-sm:w-36"
+        />
+      </span>
+      {/* la barre garde le seul bouton principal de la vue */}
+      <Button type="submit" size="sm">
         Ajouter
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => setOpen(false)}
-        className="h-8 rounded-full px-2 text-[14px] text-muted-foreground"
-      >
+      <Button variant="ghost" size="sm" onClick={close}>
         Annuler
       </Button>
     </form>

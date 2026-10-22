@@ -54,11 +54,13 @@ function writtenPaths(): Array<{ file: string; path: string }> {
 
 describe('liens entre pages', () => {
   it('connaît les routes de l’application', () => {
-    expect(ROUTES).toEqual(expect.arrayContaining(['/', '/sources', '/connexions', '/reglages']));
+    expect(ROUTES).toEqual(
+      expect.arrayContaining(['/', '/discussions', '/connexions', '/reglages']),
+    );
   });
 
-  it('ne garde aucune page du tri : fiches, à vérifier, journal', () => {
-    for (const removed of ['/fiches/[id]', '/a-verifier', '/journal']) {
+  it('ne garde aucune page retirée : fiches, à vérifier, journal, sources', () => {
+    for (const removed of ['/fiches/[id]', '/a-verifier', '/journal', '/sources']) {
       expect(ROUTES).not.toContain(removed);
     }
   });

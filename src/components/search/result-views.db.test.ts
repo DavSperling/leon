@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { SourceKind } from '@/capture/turn';
-import { SourceChip } from '@/components/source-chip';
+import { SourceChip } from '@/components/verre/ui/chips';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { fetchPassageContext } from '@/server/search/context';
 import { searchPassages } from '@/server/search/search';

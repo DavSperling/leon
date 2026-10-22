@@ -1,31 +1,7 @@
-import { Fragment } from 'react';
-import { splitHighlights } from '@/lib/highlight';
-
 // Surlignage des mots trouvés. Le texte n'est jamais interprété comme du HTML : on le découpe en morceaux et
 // seuls les morceaux trouvés vont dans un `<mark>` (décision D5 du plan du deuxième jet).
 
 type Part = { text: string; hit: boolean };
-
-const MARK_CLASS = 'rounded-[3px] bg-primary-soft px-0.5 font-medium text-primary';
-
-function Parts({ parts }: { parts: Part[] }) {
-  return parts.map((part, index) =>
-    part.hit ? (
-      // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte découpé une fois, jamais réordonnés
-      <mark key={index} className={MARK_CLASS}>
-        {part.text}
-      </mark>
-    ) : (
-      // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte découpé une fois, jamais réordonnés
-      <Fragment key={index}>{part.text}</Fragment>
-    ),
-  );
-}
-
-// L'extrait d'un résultat : la base a entouré les mots trouvés des marqueurs de `src/lib/highlight.ts`.
-export function HighlightedText({ snippet }: { snippet: string }) {
-  return <Parts parts={splitHighlights(snippet)} />;
-}
 
 // Le début d'un mot (lettres et chiffres) qui ne continue pas un autre : « contrat » ne se trouve pas dans
 // « microcontrat ».
@@ -65,9 +41,4 @@ export function highlightTerms(text: string, terms: string[]): Part[] {
   }
   if (from < text.length) parts.push({ text: text.slice(from), hit: false });
   return parts;
-}
-
-// Le texte d'un tour, avec les mots cherchés repérés.
-export function TermHighlightedText({ text, terms }: { text: string; terms: string[] }) {
-  return <Parts parts={highlightTerms(text, terms)} />;
 }

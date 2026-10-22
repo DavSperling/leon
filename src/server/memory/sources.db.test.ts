@@ -7,7 +7,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
-import { listSources } from './sources';
+import { channelHealth, listSources } from './sources';
 
 const lastCapture = (channels: Array<{ kind: string; lastCaptureAt: Date | null }>, kind: string) =>
   channels.find((channel) => channel.kind === kind)?.lastCaptureAt;
@@ -131,6 +131,15 @@ describe('listSources', () => {
     expect(lastCapture(channels, 'claude_code')).toBeInstanceOf(Date);
     expect(lastCapture(channels, 'chatgpt')).toBeNull();
     expect(lastCapture(forMarie.channels, 'claude_ai')).toBeNull();
+  });
+
+  it('channelHealth donne la même santé par canal que listSources, sans lire les sources', async () => {
+    const { paul } = await seedRightsScenario();
+    await seedSource(paul, { kind: 'claude_ai', title: 'Récente' });
+
+    const { channels } = await listSources(paul);
+
+    expect(await channelHealth(paul)).toEqual(channels);
   });
 
   it("donne l'exécution la plus récente de la source, étape comprise", async () => {

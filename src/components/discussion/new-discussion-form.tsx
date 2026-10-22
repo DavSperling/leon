@@ -1,10 +1,11 @@
 'use client';
 
-import { LoaderCircle, MessageSquarePlus } from 'lucide-react';
-import { useActionState } from 'react';
+import { MessageSquarePlus } from 'lucide-react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
-import { Button } from '@/components/ui/button';
+import { Button, Field, GlassCard, Textarea, useThinking } from '@/components/verre';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
+import { cn, formatNumber, nb } from '@/lib/verre';
 
 // Une nouvelle discussion : une question, puis la page de la discussion, où Leon y répond tout de suite.
 export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
@@ -12,46 +13,78 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
     newDiscussionAction,
     { error: null },
   );
+  const [question, setQuestion] = useState('');
+  const form = useRef<HTMLFormElement>(null);
+  const { setThinking } = useThinking();
+  useEffect(() => setThinking(pending), [pending, setThinking]);
+  const count = question.length;
+
   return (
-    <form action={action} className="rounded-xl border bg-card p-4 shadow-xs">
-      <label htmlFor="nouvelle-question" className="text-[15px] font-medium">
-        Nouvelle discussion
-      </label>
-      <textarea
-        id="nouvelle-question"
-        name="question"
-        required
-        maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
-        rows={3}
-        disabled={disabled || pending}
-        aria-invalid={state.error ? true : undefined}
-        aria-describedby={state.error ? 'nouvelle-question-erreur' : 'nouvelle-question-aide'}
-        placeholder="Par exemple : qu’a-t-on décidé avec ACME sur le renouvellement du contrat ?"
-        className="mt-2 field-sizing-content max-h-60 min-h-24 w-full resize-none rounded-lg border border-input bg-transparent px-3 py-2.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive"
-      />
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        {state.error ? (
-          <p id="nouvelle-question-erreur" role="alert" className="text-[14px] text-destructive">
-            {state.error}
-          </p>
-        ) : (
-          <p id="nouvelle-question-aide" className="text-[14px] text-muted-foreground">
-            Leon cherche, lit et répond en citant ses sources.
-          </p>
-        )}
-        <Button
-          type="submit"
-          disabled={disabled || pending}
-          className="h-10 gap-2 rounded-lg px-4 text-[15px]"
+    <GlassCard variant="raised" signal className="p-4 sm:p-5">
+      <form ref={form} action={action}>
+        <Field
+          label={<span className="text-body text-fg">Nouvelle discussion</span>}
+          aside={
+            count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
+              <span
+                className={cn(
+                  'font-mono text-meta tracking-normal',
+                  count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
+                )}
+              >
+                {formatNumber(count)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS)}
+              </span>
+            )
+          }
         >
-          {pending ? (
-            <LoaderCircle size={16} strokeWidth={1.5} aria-hidden="true" className="animate-spin" />
+          <Textarea
+            name="question"
+            rows={3}
+            autoGrow
+            maxRows={10}
+            maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
+            required
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter')
+                form.current?.requestSubmit();
+            }}
+            disabled={disabled}
+            // et non disabled : le focus reste dans le champ pendant l'envoi
+            readOnly={pending}
+            aria-invalid={state.error ? true : undefined}
+            aria-describedby="nouvelle-question-note"
+            placeholder={nb(
+              'Par exemple : qu’a-t-on décidé avec ACME sur le renouvellement du contrat ?',
+            )}
+            className="min-h-[92px] text-lead"
+          />
+        </Field>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          {state.error ? (
+            <p id="nouvelle-question-note" role="alert" className="text-ui text-destructive">
+              {nb(state.error)}
+            </p>
           ) : (
-            <MessageSquarePlus size={16} strokeWidth={1.5} aria-hidden="true" />
+            // le sous-titre de la page le dit déjà : lu, pas affiché
+            <p id="nouvelle-question-note" className="sr-only">
+              Leon cherche, lit et répond en citant ses sources.
+            </p>
           )}
-          Demander à Leon
-        </Button>
-      </div>
-    </form>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            icon={MessageSquarePlus}
+            loading={pending}
+            disabled={disabled}
+            className="ml-auto max-sm:w-full"
+          >
+            Demander à Leon
+          </Button>
+        </div>
+      </form>
+    </GlassCard>
   );
 }

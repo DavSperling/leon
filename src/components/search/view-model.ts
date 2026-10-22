@@ -1,7 +1,7 @@
 import { type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { formatNumber } from '@/lib/format';
+import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PAGE_MAX, PAGE_SIZE } from '@/lib/search-limits';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 
 // Ce que la barre montre d'un résultat : les libellés français déjà choisis, les dates, rien d'autre. La page

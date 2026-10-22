@@ -1,31 +1,24 @@
 'use client';
 
-import { ArrowUp, CircleAlert, LoaderCircle, LogIn, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ExternalLink, Lock, LogIn, RotateCcw } from 'lucide-react';
+import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import {
-  type FormEvent,
-  type KeyboardEvent,
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import { previewPassageAction } from '@/app/(app)/actions';
+import { useEffect, useRef, useState } from 'react';
 import {
   type DiscussionMessageView,
   readDiscussionMessagesAction,
 } from '@/app/(app)/discussions/actions';
-import { type PreviewState, ResultPreview } from '@/components/search/result-preview';
-import { Button } from '@/components/ui/button';
+import { Button, Notice, type NoticeProps, PageHeader, useThinking } from '@/components/verre';
+import { Composer } from '@/components/verre/discussions/composer';
+import { LeonCard, UserBubble } from '@/components/verre/discussions/messages';
 import {
-  DISCUSSION_MESSAGE_MAX_CHARS,
-  DISCUSSION_TIMEOUT_MS,
-  DISCUSSION_TOO_MANY,
-  type DiscussionCitation,
-} from '@/lib/discussion-events';
-import { cn } from '@/lib/utils';
-import { AssistantMessage, LeonHeading, type OpenCitation, UserMessage } from './message-view';
+  PreviewPane,
+  PreviewSheet,
+  useCitationPreview,
+} from '@/components/verre/discussions/preview';
+import { DISCUSSION_TIMEOUT_MS, DISCUSSION_TOO_MANY } from '@/lib/discussion-events';
+import { rise, useAppear, useMinWidth } from '@/lib/verre';
 import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
 // Une discussion : ses messages, la réponse de Leon en flux (ce qu'il cherche et lit, puis son texte), la saisie
@@ -55,168 +48,25 @@ type Reply =
 const WAIT_POLL_MS = 2000;
 const WAIT_MAX_MS = DISCUSSION_TIMEOUT_MS + 10_000;
 
-const CITATION_HEADER = (citation: DiscussionCitation) => ({
-  kind: 'other' as const,
-  kindLabel: '',
-  natureLabel: '',
-  title: citation.title,
-  url: citation.url,
-});
-
-function useCitationPreview() {
-  const [state, setState] = useState<PreviewState>({ status: 'vide' });
-  const panel = useRef<HTMLElement>(null);
-  const latest = useRef(0);
-  const opener = useRef<HTMLElement | null>(null);
-
-  const close = () => {
-    latest.current += 1;
-    setState({ status: 'vide' });
-    opener.current?.focus();
-    opener.current = null;
-  };
-
-  const open: OpenCitation = (citation, trigger) => {
-    const request = ++latest.current;
-    opener.current ??= trigger;
-    const result = CITATION_HEADER(citation);
-    setState({ status: 'charge', result });
-    previewPassageAction(citation.passageId)
-      .then((answer) => {
-        if (request !== latest.current) return;
-        setState(
-          answer.ok
-            ? { status: 'pret', result, preview: answer.preview }
-            : { status: answer.reason, result },
-        );
-      })
-      .catch(() => {
-        if (request === latest.current) setState({ status: 'erreur', result });
-      });
-  };
-
-  const opened = state.status !== 'vide';
-  useEffect(() => {
-    if (opened) panel.current?.focus({ preventScroll: true });
-  }, [opened]);
-  useEffect(() => {
-    if (!opened) return;
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  });
-
-  return { state, panel, open, close, opened };
-}
-
-function Composer({
-  value,
-  setValue,
-  disabled,
-  busy,
-  onSend,
-}: {
-  value: string;
-  setValue: (value: string) => void;
-  disabled: boolean;
-  busy: boolean;
-  onSend: (message: string) => void;
-}) {
-  const empty = value.trim() === '';
-
-  function submit(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault();
-    if (disabled || busy || empty) return;
-    onSend(value.trim());
-    setValue('');
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    // Entrée envoie, Maj + Entrée passe à la ligne ; jamais pendant la composition d'un caractère accentué.
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      submit();
-    }
-  }
-
-  return (
-    <form
-      onSubmit={submit}
-      className="sticky bottom-4 z-20 mt-6 rounded-xl border bg-card p-2 shadow-md"
-    >
-      <label htmlFor="question-discussion" className="sr-only">
-        Votre question à Leon
-      </label>
-      <div className="flex items-end gap-2">
-        <textarea
-          id="question-discussion"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onKeyDown={onKeyDown}
-          maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
-          rows={1}
-          disabled={disabled}
-          placeholder={
-            disabled ? 'Leon ne peut pas répondre sur ce serveur' : 'Posez une autre question…'
-          }
-          className="field-sizing-content max-h-48 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={disabled || busy || empty}
-          aria-label={busy ? 'Leon répond…' : 'Envoyer la question'}
-          className="size-11 shrink-0 rounded-lg"
-        >
-          {busy ? (
-            <LoaderCircle size={18} strokeWidth={1.5} aria-hidden="true" className="animate-spin" />
-          ) : (
-            <ArrowUp size={18} strokeWidth={1.75} aria-hidden="true" />
-          )}
-        </Button>
-      </div>
-      <p className="px-3 pt-1 pb-0.5 text-[12px] leading-4 text-muted-foreground">
-        Entrée pour envoyer, Maj + Entrée pour passer à la ligne. Leon ne lit que ce que vous avez
-        le droit de voir.
-      </p>
-    </form>
-  );
-}
-
-function Notice({ children, action }: { children: string; action?: ReactNode }) {
-  return (
-    <div
-      role="alert"
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-quote px-4 py-3"
-    >
-      <CircleAlert
-        size={16}
-        strokeWidth={1.5}
-        aria-hidden="true"
-        className="shrink-0 text-muted-foreground"
-      />
-      <p className="min-w-0 flex-1 text-[15px] leading-6 text-foreground-2">{children}</p>
-      {action}
-    </div>
-  );
-}
-
-const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: 'Leon réfléchit…' };
+// Avant le premier évènement : pas de libellé inventé, seulement l'indicateur d'attente.
+const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: null };
+const RESUMING = 'Leon termine une réponse commencée plus tôt…';
 
 const NO_MODEL =
   'Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La recherche, elle, marche.';
 
-const actionClass = 'h-9 gap-1.5 rounded-lg px-3 text-[15px]';
+/** Le texte lu aux lecteurs d'écran une fois la réponse finie : sans les renvois. */
+const spoken = (text: string) => text.replace(/\s?\[\d+\]/g, '');
 
 export function DiscussionThread({
   discussionId,
+  title,
   initialMessages,
   modelAvailable,
   appOrigin,
 }: {
   discussionId: string;
+  title: string;
   initialMessages: ThreadMessage[];
   modelAvailable: boolean;
   // L'adresse réglée pour Leon (BETTER_AUTH_URL) : la seule d'où la route accepte une question.
@@ -231,10 +81,19 @@ export function DiscussionThread({
     !modelAvailable ? { status: 'sans-modele' } : autoStart ? THINKING : { status: 'repos' },
   );
   const [draft, setDraft] = useState('');
+  const [fresh, setFresh] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const preview = useCitationPreview();
   const router = useRouter();
+  const { setThinking } = useThinking();
+  const appear = useAppear();
+  const root = useRef<HTMLDivElement>(null);
+  const pane = useRef<HTMLElement>(null);
+  const wide = useMinWidth(root, 920);
   const bottom = useRef<HTMLDivElement>(null);
   const started = useRef(false);
+  // La réponse en cours a l'identifiant du message qui la remplacera : la carte reste le même nœud.
+  const replyId = useRef('');
   const busy = reply.status === 'flux' || reply.status === 'attente';
   const last = messages.at(-1);
   const waiting = last?.role === 'user' && reply.status === 'repos';
@@ -243,18 +102,19 @@ export function DiscussionThread({
     if (!busy) run(message);
   }
 
-  const retry = (message: string) => (
-    <Button type="button" variant="outline" onClick={() => ask(message)} className={actionClass}>
-      <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
-      Réessayer
-    </Button>
-  );
+  const retry = (message: string): NoticeProps['action'] => ({
+    label: 'Réessayer',
+    icon: RotateCcw,
+    onClick: () => ask(message),
+  });
 
   function run(message: string) {
     const previous = messages.at(-1);
     // La question restée sans réponse est reposée telle quelle : le serveur ne la répète pas non plus.
     const repeated = previous?.role === 'user' && previous.content === message;
     const questionId = crypto.randomUUID();
+    const answerId = crypto.randomUUID();
+    replyId.current = answerId;
     if (!repeated) {
       setMessages((current) => [
         ...current,
@@ -285,8 +145,9 @@ export function DiscussionThread({
         const { content, citations } = outcome;
         setMessages((current) => [
           ...current,
-          { id: crypto.randomUUID(), role: 'assistant', content, citations },
+          { id: answerId, role: 'assistant', content, citations },
         ]);
+        setFresh(answerId);
         setReply({ status: 'repos' });
         // La page gardée par le navigateur (retour arrière) montrera aussi cette réponse.
         router.refresh();
@@ -341,6 +202,9 @@ export function DiscussionThread({
     };
   }, [reply, discussionId, router]);
 
+  // Leon travaille : l'aurore s'intensifie tant qu'une réponse court.
+  useEffect(() => setThinking(busy), [busy, setThinking]);
+
   // Une question envoyée, une réponse finie : la fin de la discussion vient en vue.
   // biome-ignore lint/correctness/useExhaustiveDependencies: suit le nombre de messages et l'état de la réponse
   useEffect(() => {
@@ -372,128 +236,182 @@ export function DiscussionThread({
       );
   }, []);
 
+  // Aperçu ouvert en panneau : il prend le focus, Échap le ferme (la feuille gère les siens).
+  const opened = preview.state.status !== 'vide';
+  useEffect(() => {
+    if (opened && wide) pane.current?.focus({ preventScroll: true });
+  }, [opened, wide]);
+  useEffect(() => {
+    if (!opened || !wide) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) preview.close();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  });
+
   const firstUserId = messages.find((message) => message.role === 'user')?.id;
+  const openKey = preview.state.status === 'vide' ? null : preview.state.key;
+  const active = hovered ?? openKey;
+  const streaming = reply.status === 'flux' || reply.status === 'attente';
+  const liveKey = replyId.current || 'reponse-en-cours';
+  const latest = streaming ? liveKey : messages.findLast((m) => m.role === 'assistant')?.id;
+  const freshMessage = fresh ? messages.find((m) => m.id === fresh) : undefined;
+  const announce =
+    reply.status === 'attente'
+      ? RESUMING
+      : reply.status === 'flux'
+        ? (reply.activity ?? '')
+        : freshMessage
+          ? spoken(freshMessage.content)
+          : '';
+
+  // La question qui n'a pas été écrite est revenue dans la saisie : pas de « Réessayer », on la renvoie.
+  let notice: { text: string; action?: NoticeProps['action']; warning?: boolean } | null = null;
+  if (reply.status === 'indisponible')
+    notice = {
+      text: reply.questionGardee
+        ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
+        : reply.retry !== null
+          ? 'Leon n’a pas pu répondre pour le moment.'
+          : 'Leon n’a pas pu répondre pour le moment. Votre question vous attend dans la saisie.',
+      action: reply.retry !== null ? retry(reply.retry) : undefined,
+    };
+  else if (reply.status === 'occupe')
+    notice = {
+      text: DISCUSSION_TOO_MANY,
+      action: reply.retry !== null ? retry(reply.retry) : undefined,
+    };
+  else if (reply.status === 'session')
+    notice = {
+      text: 'Votre session a expiré : la question n’a pas été envoyée. Reconnectez-vous, puis posez-la de nouveau.',
+      action: (
+        <Button asChild size="sm" icon={LogIn}>
+          <Link href="/connexion">Se reconnecter</Link>
+        </Button>
+      ),
+    };
+  else if (reply.status === 'origine')
+    notice = {
+      text: `Leon est ouvert ici à une autre adresse que la sienne (${appOrigin}) : la question n’a pas été envoyée.`,
+      action: (
+        <Button asChild size="sm" icon={ExternalLink}>
+          <a href={`${appOrigin}/discussions/${encodeURIComponent(discussionId)}`}>
+            Ouvrir à cette adresse
+          </a>
+        </Button>
+      ),
+    };
+  else if (reply.status === 'non-envoyee')
+    notice = {
+      text: 'Leon répondait déjà dans cette discussion : votre question n’a pas été envoyée. Elle vous attend dans la saisie.',
+    };
+  else if (reply.status === 'sans-modele') notice = { text: NO_MODEL, warning: true };
+  else if (waiting && last)
+    notice = {
+      text: 'Cette question attend encore sa réponse.',
+      action: { label: 'Demander la réponse', icon: RotateCcw, onClick: () => ask(last.content) },
+    };
 
   return (
-    <div className="@container">
-      <div className="grid gap-x-10 @[920px]:grid-cols-[minmax(0,1fr)_400px]">
+    <div ref={root}>
+      {/* le volet ne prend sa colonne qu'une fois une source ouverte : sinon le fil a toute sa largeur */}
+      <div
+        className={
+          wide && opened
+            ? 'grid grid-cols-[minmax(0,880px)_400px] items-start gap-x-8'
+            : 'max-w-[880px]'
+        }
+      >
         <div className="min-w-0">
-          <ol aria-label="Messages de la discussion" className="space-y-5">
+          <nav aria-label="Fil d’Ariane" className="mb-3">
+            <Link
+              href="/discussions"
+              className="-ml-2 inline-flex h-8 items-center gap-1 rounded-full pr-3 pl-1.5 text-ui text-muted transition-colors hover:bg-hover hover:text-fg"
+            >
+              <ChevronLeft aria-hidden="true" className="size-4" strokeWidth={1.8} />
+              Discussions
+            </Link>
+          </nav>
+          <PageHeader
+            title={title}
+            // la question est aussi la première bulle : titre plus petit, la conversation reste le point focal
+            className="mb-7 [&_h1]:text-h2 [&_h1]:leading-[1.3] [&_h1]:break-words"
+            meta={
+              <span className="inline-flex items-center gap-1.5">
+                <Lock aria-hidden="true" />
+                Visible de vous seul · Leon ne lit que ce que vous avez le droit de voir.
+              </span>
+            }
+          />
+
+          <ol
+            aria-label="Messages de la discussion"
+            aria-busy={busy}
+            className="grid grid-cols-[minmax(0,1fr)] gap-5"
+          >
             {messages.map((message) => (
-              <li key={message.id}>
+              // à l'arrivée, sans entrée ; une question ou une réponse ajoutée ensuite monte
+              <motion.li key={message.id} variants={rise} initial={appear} animate="animate">
                 {message.role === 'user' ? (
-                  <UserMessage
+                  <UserBubble
+                    id={message.id}
                     content={message.content}
                     seeds={message.id === firstUserId ? message.citations : []}
+                    active={active}
                     onOpen={preview.open}
                   />
                 ) : (
-                  <AssistantMessage
+                  <LeonCard
+                    id={message.id}
                     content={message.content}
                     citations={message.citations}
+                    fresh={message.id === fresh}
+                    latest={message.id === latest}
+                    active={active}
                     onOpen={preview.open}
+                    onHover={setHovered}
                   />
                 )}
-              </li>
+              </motion.li>
             ))}
+            {streaming && (
+              <motion.li key={liveKey} variants={rise} initial={appear} animate="animate">
+                <LeonCard
+                  id={liveKey}
+                  content=""
+                  citations={[]}
+                  live={
+                    reply.status === 'attente'
+                      ? { activity: RESUMING, text: '' }
+                      : { activity: reply.activity, text: reply.text }
+                  }
+                  latest
+                  active={active}
+                  onOpen={preview.open}
+                  onHover={setHovered}
+                />
+              </motion.li>
+            )}
           </ol>
 
-          <div aria-live="polite" aria-busy={busy} className="mt-5 space-y-5">
-            {(reply.status === 'flux' || reply.status === 'attente') && (
-              <div className="rounded-xl border bg-card px-5 py-4 shadow-xs">
-                <LeonHeading />
-                {reply.status === 'attente' || reply.text === '' ? (
-                  <p className="mt-2 flex items-center gap-2 text-[15px] leading-6 text-muted-foreground">
-                    <LoaderCircle
-                      size={16}
-                      strokeWidth={1.5}
-                      aria-hidden="true"
-                      className="animate-spin text-primary"
-                    />
-                    {reply.status === 'attente'
-                      ? 'Leon termine une réponse commencée plus tôt…'
-                      : (reply.activity ?? 'Leon réfléchit…')}
-                  </p>
-                ) : (
-                  <p className="mt-2 text-[15px] leading-6 break-words whitespace-pre-wrap text-foreground-2">
-                    {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
-                    {reply.text}
-                    <span
-                      aria-hidden="true"
-                      className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse rounded-[2px] bg-primary/60 align-[-2px]"
-                    />
-                  </p>
-                )}
-              </div>
-            )}
-            {/* La question qui n'a pas été écrite est revenue dans la saisie : pas de « Réessayer », on la renvoie. */}
-            {reply.status === 'indisponible' && (
-              <Notice action={reply.retry !== null && retry(reply.retry)}>
-                {reply.questionGardee
-                  ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
-                  : reply.retry !== null
-                    ? 'Leon n’a pas pu répondre pour le moment.'
-                    : 'Leon n’a pas pu répondre pour le moment. Votre question vous attend dans la saisie.'}
-              </Notice>
-            )}
-            {reply.status === 'occupe' && (
-              <Notice action={reply.retry !== null && retry(reply.retry)}>
-                {DISCUSSION_TOO_MANY}
-              </Notice>
-            )}
-            {reply.status === 'session' && (
+          <p className="sr-only" role="status" aria-live="polite">
+            {announce}
+          </p>
+
+          {notice && (
+            <motion.div variants={rise} initial={appear} animate="animate" className="mt-5">
               <Notice
-                action={
-                  <Button asChild variant="outline" className={actionClass}>
-                    <Link href="/connexion">
-                      <LogIn size={15} strokeWidth={1.5} aria-hidden="true" />
-                      Se reconnecter
-                    </Link>
-                  </Button>
-                }
+                tone={notice.warning ? 'warning' : 'neutral'}
+                // présente dès l'arrivée : pas annoncée ; une issue de réponse l'est
+                live={notice.warning ? undefined : waiting ? 'status' : 'alert'}
+                action={notice.action}
               >
-                Votre session a expiré : la question n’a pas été envoyée. Reconnectez-vous, puis
-                posez-la de nouveau.
+                {notice.text}
               </Notice>
-            )}
-            {reply.status === 'origine' && (
-              <Notice
-                action={
-                  <Button asChild variant="outline" className={actionClass}>
-                    <a href={`${appOrigin}/discussions/${encodeURIComponent(discussionId)}`}>
-                      Ouvrir à cette adresse
-                    </a>
-                  </Button>
-                }
-              >
-                {`Leon est ouvert ici à une autre adresse que la sienne (${appOrigin}) : la question n’a pas été envoyée.`}
-              </Notice>
-            )}
-            {reply.status === 'non-envoyee' && (
-              <Notice>
-                Leon répondait déjà dans cette discussion : votre question n’a pas été envoyée. Elle
-                vous attend dans la saisie.
-              </Notice>
-            )}
-            {reply.status === 'sans-modele' && <Notice>{NO_MODEL}</Notice>}
-            {waiting && last && (
-              <Notice
-                action={
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => ask(last.content)}
-                    className={actionClass}
-                  >
-                    <RotateCcw size={15} strokeWidth={1.5} aria-hidden="true" />
-                    Demander la réponse
-                  </Button>
-                }
-              >
-                Cette question attend encore sa réponse.
-              </Notice>
-            )}
-          </div>
+            </motion.div>
+          )}
+
           <Composer
             value={draft}
             setValue={setDraft}
@@ -504,26 +422,11 @@ export function DiscussionThread({
           {/* Sous la saisie : faire défiler jusqu'ici montre le dernier message au-dessus d'elle. */}
           <div ref={bottom} />
         </div>
-        {preview.opened && (
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-hidden="true"
-            onClick={preview.close}
-            className={cn(
-              'fixed inset-0 z-30 cursor-default bg-foreground/30 duration-200 animate-in fade-in-0 @[920px]:hidden',
-            )}
-          />
+        {wide && preview.state.status !== 'vide' && (
+          <PreviewPane ref={pane} state={preview.state} onClose={preview.close} />
         )}
-        <ResultPreview
-          ref={preview.panel}
-          state={preview.state}
-          terms={[]}
-          onClose={preview.close}
-          label="Aperçu de la source citée"
-          emptyHint="Cliquez sur une source citée pour lire le passage dans son contexte."
-        />
       </div>
+      {!wide && <PreviewSheet state={preview.state} onClose={preview.close} />}
     </div>
   );
 }

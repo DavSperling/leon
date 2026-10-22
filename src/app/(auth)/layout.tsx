@@ -1,12 +1,17 @@
 import type { ReactNode } from 'react';
+import { StandaloneCard } from '@/components/verre/auth/standalone-card';
+import { ThemeToggle } from '@/components/verre/auth/theme-toggle';
+import { StandaloneShell } from '@/components/verre/shell';
 
+// Commune à la connexion et à l'inscription : la carte reste en place quand on passe de l'une à l'autre.
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <main className="flex min-h-dvh justify-center px-4 py-16">
-      <div className="w-full max-w-[360px]">
-        <p className="mb-8 text-xl font-semibold">Leon</p>
-        {children}
+    <StandaloneShell>
+      {/* Ancré en haut, pas centré : une erreur ou le passage à l'inscription allonge la carte vers le bas, rien au-dessus ne bouge. */}
+      <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] px-4 pt-[max(56px,calc(50dvh-310px))] pb-12">
+        <StandaloneCard>{children}</StandaloneCard>
       </div>
-    </main>
+      <ThemeToggle />
+    </StandaloneShell>
   );
 }

@@ -1,8 +1,9 @@
-import { ChevronRight, Lock } from 'lucide-react';
+import { Lock, MessagesSquare } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { NewDiscussionForm } from '@/components/discussion/new-discussion-form';
-import { EmptyState } from '@/components/empty-state';
+import { EmptyState, Notice, PageHeader, Section } from '@/components/verre';
+import { DiscussionRows } from '@/components/verre/discussions/list';
 import { formatRelative } from '@/lib/format';
 import { requireUserContext } from '@/server/auth/session';
 import { listDiscussions } from '@/server/discussion/discussions';
@@ -20,69 +21,57 @@ export default async function DiscussionsPage() {
   const now = new Date();
 
   return (
-    <div className="mx-auto w-full max-w-[860px] space-y-8 px-10 pt-14 pb-28 duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-2">
-      <header className="border-b pb-7">
-        <h1 className="text-[34px] leading-[42px] font-semibold tracking-tight">Discussions</h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          Posez une question : Leon cherche, lit et répond en citant ses sources, ou dit qu’il ne
-          sait pas.
-        </p>
-        <p className="mt-3 flex items-center gap-1.5 text-[14px] text-muted-foreground">
-          <Lock size={14} strokeWidth={1.5} aria-hidden="true" />
-          Vos discussions ne sont visibles que de vous.
-        </p>
-      </header>
+    <div className="max-w-[880px]">
+      <PageHeader
+        title="Discussions"
+        subtitle="Posez une question : Leon cherche, lit et répond en citant ses sources, ou dit qu’il ne sait pas."
+        meta={
+          <span className="inline-flex items-center gap-1.5">
+            <Lock aria-hidden="true" />
+            Vos discussions ne sont visibles que de vous.
+          </span>
+        }
+      />
+      <div className="grid gap-5">
+        {!modelAvailable && (
+          <Notice tone="warning" live="status">
+            Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La
+            recherche, elle, marche.
+          </Notice>
+        )}
+        <NewDiscussionForm disabled={!modelAvailable} />
+      </div>
 
-      {!modelAvailable && (
-        <p
-          role="status"
-          className="rounded-lg bg-warning-soft px-4 py-2.5 text-[15px] text-warning"
-        >
-          Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La recherche,
-          elle, marche.
-        </p>
-      )}
-
-      <NewDiscussionForm disabled={!modelAvailable} />
-
-      <section aria-labelledby="mes-discussions" className="space-y-3">
-        <h2 id="mes-discussions" className="text-[15px] font-medium">
-          Vos discussions
-        </h2>
+      <Section id="vos-discussions" title="Vos discussions" className="mt-12">
         {discussions.length === 0 ? (
           <EmptyState
-            reason="Aucune discussion pour l’instant."
-            nextStep="Posez une question ci-dessus, ou continuez une recherche en discussion depuis la page Recherche."
+            icon={MessagesSquare}
+            title="Aucune discussion pour l’instant."
+            description={
+              <>
+                Posez une question ci-dessus, ou continuez une recherche en discussion depuis la
+                page{' '}
+                <Link
+                  href="/"
+                  className="font-medium text-accent underline-offset-[3px] decoration-accent-line hover:underline"
+                >
+                  Recherche
+                </Link>
+                .
+              </>
+            }
           />
         ) : (
-          <ul className="divide-y rounded-xl border bg-card">
-            {discussions.map((discussion) => (
-              <li key={discussion.id}>
-                <Link
-                  href={`/discussions/${discussion.id}`}
-                  className="flex min-h-14 items-center gap-4 px-4 py-3 transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-muted"
-                >
-                  <span className="min-w-0 flex-1 truncate text-[15px] leading-6 font-medium">
-                    {discussion.title}
-                  </span>
-                  <time
-                    dateTime={discussion.updatedAt.toISOString()}
-                    className="shrink-0 text-[14px] text-muted-foreground tabular-nums"
-                  >
-                    {formatRelative(discussion.updatedAt, now)}
-                  </time>
-                  <ChevronRight
-                    size={16}
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                    className="shrink-0 text-muted-foreground"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <DiscussionRows
+            rows={discussions.map((d) => ({
+              id: d.id,
+              title: d.title,
+              updatedAt: d.updatedAt.toISOString(),
+              when: formatRelative(d.updatedAt, now),
+            }))}
+          />
         )}
-      </section>
+      </Section>
     </div>
   );
 }

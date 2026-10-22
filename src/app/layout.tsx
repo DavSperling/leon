@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Geist_Mono, Manrope } from 'next/font/google';
 import type { ReactNode } from 'react';
-import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/verre/ui/menu';
+import { Toaster } from '@/components/verre/ui/toast';
 import './globals.css';
 
 // Police variable : couvre les graisses 400 à 800 de la maquette en un seul fichier.
@@ -37,8 +38,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        {children}
-        <Toaster />
+        <TooltipProvider>
+          {children}
+          <Toaster />
+        </TooltipProvider>
       </body>
     </html>
   );

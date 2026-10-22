@@ -1,23 +1,15 @@
 'use client';
 
-import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { Brand } from '@/components/verre/shell/brand';
 import { GlassCard } from '@/components/verre/ui/surfaces';
-import { useInstant } from '@/lib/verre/instant';
-import { rise } from '@/lib/verre/motion';
 import { nb } from '@/lib/verre/nb';
 
 /** La marque et la carte de verre des pages hors ossature (connexion, inscription, 404, erreur racine). */
 export function StandaloneCard({ children }: { children: ReactNode }) {
-  const instant = useInstant();
+  // entrée en CSS (.rise-in) : rendue par le serveur, la carte reste visible sans JavaScript
   return (
-    <motion.div
-      className="mx-auto w-full max-w-[392px]"
-      variants={rise}
-      initial={instant ? false : 'initial'}
-      animate="animate"
-    >
+    <div className="rise-in mx-auto w-full max-w-[392px]">
       {/* Brand a 6 px de marge interne : le logo s'aligne ainsi sur le bord de la carte */}
       <div className="-mx-1.5">
         <Brand />
@@ -25,7 +17,7 @@ export function StandaloneCard({ children }: { children: ReactNode }) {
       <GlassCard variant="raised" className="mt-5 p-6 shadow-panel backdrop-blur-[30px] sm:p-7">
         {children}
       </GlassCard>
-    </motion.div>
+    </div>
   );
 }
 

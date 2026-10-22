@@ -614,6 +614,21 @@
   .pop-in {
     animation: popin 0.45s var(--ease-spring) both;
   }
+  /* Entrées jouées en CSS, pas par motion : le rendu serveur reste visible sans JavaScript (connexion, inscription).
+     Sans remplissage après la fin : aucun `filter` ne reste posé (même raison que `unfilter`, src/lib/verre/motion.ts). */
+  .rise-in {
+    animation: rise-in 0.6s var(--ease-out) backwards;
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(8px);
+    }
+  }
+  .fade-in {
+    animation: fade-enter var(--dur-enter) var(--ease-out) backwards;
+  }
   @keyframes popin {
     from {
       transform: scale(0.3);

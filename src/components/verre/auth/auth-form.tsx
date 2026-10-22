@@ -7,7 +7,7 @@ import { type AuthFormState, signInAction, signUpAction } from '@/app/(auth)/act
 import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
 import { Field, Input } from '@/components/verre/ui/form';
-import { enter, exit, fade } from '@/lib/verre/motion';
+import { enter, exit } from '@/lib/verre/motion';
 import { nb } from '@/lib/verre/nb';
 
 // Formulaires de connexion et d'inscription : les champs, les règles et les messages sont ceux de app/(auth)/actions.ts.
@@ -105,8 +105,9 @@ export function AuthForm({ page }: { page: AuthPage }) {
   }, [state, animate, pwScope]);
 
   return (
-    // Passage connexion ↔ inscription : la carte reste (mise en page commune), le contenu entre en fondu.
-    <motion.div variants={fade} initial="initial" animate="animate">
+    // Passage connexion ↔ inscription : la carte reste (mise en page commune), le contenu entre en fondu (CSS : visible
+    // sans JavaScript, le rendu serveur n'attend pas l'hydratation).
+    <div className="fade-in">
       <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{copy.title}</h1>
 
       <form ref={formRef} noValidate action={formAction} className="mt-6 grid gap-4">
@@ -197,6 +198,6 @@ export function AuthForm({ page }: { page: AuthPage }) {
           {copy.other}
         </Link>
       </motion.p>
-    </motion.div>
+    </div>
   );
 }

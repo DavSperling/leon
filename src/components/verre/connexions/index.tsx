@@ -45,7 +45,8 @@ function ReturnNotice({
   consentUrl: string | null;
 }) {
   return (
-    <AnimatePresence mode="wait">
+    // initial={false} : l'avis rendu par le serveur (retour de l'éditeur) est visible avant l'hydratation
+    <AnimatePresence mode="wait" initial={false}>
       {notice && (
         <motion.div
           key={notice.text}

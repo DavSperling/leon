@@ -1,9 +1,9 @@
 'use client';
 
-import { LoaderCircle, MessagesSquare } from 'lucide-react';
+import { MessagesSquare } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { continueInDiscussionAction } from '@/app/(app)/discussions/actions';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/verre';
 
 // « Continuer en discussion » (décision 2 de la spec) : une discussion qui part de la requête et des résultats
 // affichés, où Leon répond tout de suite.
@@ -22,22 +22,11 @@ export function ContinueInDiscussion({ query, sourceIds }: { query: string; sour
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={start}
-        disabled={pending}
-        className="h-9 gap-1.5 rounded-lg px-3 text-[14px]"
-      >
-        {pending ? (
-          <LoaderCircle size={15} strokeWidth={1.5} aria-hidden="true" className="animate-spin" />
-        ) : (
-          <MessagesSquare size={15} strokeWidth={1.5} aria-hidden="true" />
-        )}
+      <Button type="button" size="sm" icon={MessagesSquare} onClick={start} loading={pending}>
         Continuer en discussion
       </Button>
       {error && (
-        <p role="alert" className="text-[13px] text-destructive">
+        <p role="alert" className="text-label text-destructive">
           {error}
         </p>
       )}

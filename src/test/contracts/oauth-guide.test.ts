@@ -112,7 +112,7 @@ describe('guide de vérification : brancher par bouton', () => {
     'annulée.',
     'est branché. La première synchronisation démarre dans la minute.',
     'a été retirée.',
-    "n'est pas encore configurée sur ce serveur.",
+    'n’est pas encore configurée sur ce serveur.',
   ])('cite « %s », qui existe dans le code', (label) => {
     expect(readText(VERIFICATION)).toContain(label);
     const sources = productionSources('src/**/*.{ts,tsx}');

@@ -74,7 +74,7 @@ describe('guide de vérification des connecteurs', () => {
     'Supprimer',
     'Ouvrir dans',
     'Clé refusée par',
-    'Non branché',
+    'À brancher',
     'Bientôt',
   ])('cite « %s », qui existe dans le code', (label) => {
     expect(readText(GUIDE)).toContain(label);

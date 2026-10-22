@@ -1,11 +1,5 @@
 /* Jetons « Verre + signal », repris de prototypes/verre-signal/app/src/styles (la maquette fait foi). */
 @import "tailwindcss";
-@import "tw-animate-css";
-/* Variantes data-open:, data-closed:… des anciens composants shadcn (src/components/ui), à retirer avec eux (tâche 11). */
-@import "shadcn/tailwind.css";
-
-/* Le thème vit sur <html data-theme> ; dark: suit ce thème et non le réglage du système. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* La palette par défaut de Tailwind est retirée : on n'écrit qu'avec les jetons ci-dessous. */
 @theme {
@@ -304,40 +298,6 @@
     /* biome-ignore lint/complexity/noImportantStyles: doit l'emporter sur tout défilement doux */
     scroll-behavior: auto !important;
   }
-}
-
-/* Anciens jetons, encore lus par les écrans pas encore portés : adossés à la nouvelle palette, retirés à la tâche 11.
-   muted, accent, ring, destructive, success, warning, info et leurs -soft prennent le sens de la maquette. */
-@theme inline {
-  --color-background: var(--bg);
-  --color-foreground: var(--text);
-  --color-foreground-2: var(--text-2);
-  --color-card: var(--glass-2);
-  --color-card-foreground: var(--text);
-  --color-popover: var(--menu);
-  --color-popover-foreground: var(--text);
-  --color-primary: var(--accent);
-  --color-primary-foreground: var(--accent-ink);
-  --color-primary-soft: var(--accent-soft);
-  --color-secondary: var(--glass-2);
-  --color-secondary-foreground: var(--text);
-  --color-muted-foreground: var(--muted);
-  --color-accent-foreground: var(--text);
-  --color-border: var(--line);
-  --color-input: var(--line-strong);
-  --color-quote: var(--glass-3);
-  --color-sidebar-accent: var(--hover);
-  --color-black: #000;
-  --font-heading: var(--font);
-}
-/* Lues en direct par src/components/ui/button.tsx et sonner.tsx. */
-:root {
-  --foreground: var(--text);
-  --secondary: var(--glass-2);
-  --popover: var(--menu);
-  --popover-foreground: var(--text);
-  --border: var(--line);
-  --radius: 12px;
 }
 
 /* Effets de la planche qui ne tiennent pas dans une classe Tailwind : aurore, faisceau, lueur, squelettes, calques. */
@@ -639,17 +599,6 @@
     50% {
       opacity: 0.25;
     }
-  }
-
-  /* barres de l'activité : un graphique reste calme, il s'affiche tel quel ; la dernière (aujourd'hui) plus franche */
-  .spark > i {
-    flex: 1;
-    background: var(--accent);
-    opacity: 0.32;
-    border-radius: 2px 2px 1px 1px;
-  }
-  .spark > i:last-child {
-    opacity: 0.9;
   }
 
   /* mots qui arrivent en flux : chaque mot sort d'un léger flou */

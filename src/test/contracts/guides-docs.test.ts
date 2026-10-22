@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SECTIONS } from '@/components/sidebar-sections';
+import { NAV } from '@/components/verre/shell/nav';
 import { listFiles, productionSources, readText } from './files';
 
 // Les guides de vérification manuelle décrivent l'interface et les outils MCP que le code porte. Quand le
@@ -50,7 +50,7 @@ describe('guides de vérification', () => {
 
   it('le guide des connecteurs cite les sections de la barre latérale telles que le code les nomme', () => {
     expect(readText('docs/guides/connecteurs-verification.md')).toContain(
-      SECTIONS.map(({ label }) => label).join(', '),
+      NAV.map(({ label }) => label).join(', '),
     );
   });
 

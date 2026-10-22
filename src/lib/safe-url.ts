@@ -1,5 +1,5 @@
 // Le lien vers l'original d'une source, ou null. Il vient d'un outil tiers et finit dans un `href` : seuls http et
-// https passent (jamais `javascript:`). Une seule règle pour la recherche, la page Sources et les citations.
+// https passent (jamais `javascript:`). Une seule règle pour la recherche et les citations.
 export function safeUrl(value: unknown): string | null {
   if (typeof value !== 'string' || value.length > 2000) return null;
   try {

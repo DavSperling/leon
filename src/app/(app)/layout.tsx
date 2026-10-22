@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import { AppShell } from '@/components/app-shell';
-import { CommandSearch } from '@/components/command-search';
+import { AppShell } from '@/components/verre/shell';
 import { requireUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 
@@ -12,7 +11,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       organizationName={profile.organizationName}
       userName={profile.userName}
       userEmail={profile.email}
-      search={<CommandSearch />}
+      // branché sur staleChannels(await channelHealth(ctx), new Date()) juste après (tâche 5)
+      stale={[]}
     >
       {children}
     </AppShell>

@@ -45,6 +45,8 @@ Chaque écran garde ses chargeurs et ses actions. Seul le rendu change.
 - Nombre de passages au centre du schéma des connexions, et la courbe d'activité.
 - « Leon réfléchit… » et les noms des sources pendant la lecture (le flux n'envoie que le nom de l'outil). On garde les libellés tirés de `toolActivityLabel` et de l'événement `en-cours`.
 - « Leon lit N sources » sur la recherche : on affiche « Leon lit les résultats… », sans nombre.
+- La pastille de version à côté de la marque (l'appli n'expose pas de numéro de version).
+- Les « il y a 3 h » de l'alerte « Mémoire en retard » : elle nomme les canaux en retard (« Mémoire en retard · Claude Code »).
 
 ### La page Sources
 

@@ -48,6 +48,60 @@ indexation, vecteurs) et quelques gardes (réponses en cours, nombre de réponse
 Deux instances sur la même base (ou deux modèles actifs) ne cassent pas les droits, mais doublent des appels payants et
 peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances sera un chantier à part.
 
+## Base partagée Supabase
+
+Amos et David partagent une base Postgres 17 chez Supabase : projet `leon` (`ogbqkwnyyqxfijaenscd`), Francfort, offre
+gratuite. Leon s'en sert comme d'un Postgres ordinaire, avec ses rôles `leon_owner` et `leon_app` : il n'utilise ni
+l'API web de Supabase (aucune table n'est ouverte aux rôles `anon` et `authenticated`), ni son authentification, ni son
+stockage. Les tests restent sur le Postgres local : ils effacent des tables.
+
+**Se brancher.** Le certificat de Supabase, une fois par poste :
+
+```bash
+mkdir -p ~/.postgresql
+curl -o ~/.postgresql/supabase-ca-2021.crt https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt
+openssl x509 -in ~/.postgresql/supabase-ca-2021.crt -noout -fingerprint -sha256   # doit finir par …:72:E6:CA:FA
+```
+
+Puis, dans le `.env.local` du worktree qui tourne sur Supabase, les deux adresses commentées de `.env.example`, avec
+les mots de passe de `leon_app` et `leon_owner` (transmis de la main à la main, jamais dans le repo). Le point d'accès
+partagé (`aws-1-eu-central-1.pooler.supabase.com`) doit être pris sur le port 5432, en mode « session » : le migrateur
+pose un verrou qui dure toute la connexion, ce que le port 6543 (mode « transaction ») ne garantit pas. L'adresse
+directe `db.ogbqkwnyyqxfijaenscd.supabase.co` n'existe qu'en IPv6 sur l'offre gratuite.
+
+**Chacun son tour.** La règle « une instance par base » vaut aussi ici : un seul serveur Leon branché sur Supabase à la
+fois. Avant `pnpm dev`, vérifier que personne ne tourne (le tic de l'indexation crée une tâche par minute tant qu'un
+serveur vit), prévenir l'autre, et arrêter son serveur en fin de séance :
+
+```sql
+select coalesce(max(created_on) > now() - interval '3 minutes', false) as un_serveur_tourne
+  from pgboss.job where name = 'pipeline-requeue';
+```
+
+Les deux postes gardent les mêmes valeurs de `LEON_CONNECTORS_KEY` (sinon les clés d'API collées par l'un sont
+illisibles pour l'autre), de `LEON_EMBEDDINGS` et de `LEON_EMBEDDINGS_MODEL` (sinon chaque serveur efface les vecteurs
+de l'autre).
+
+**Migrer.** Toute migration fusionnée dans `main` s'applique aussi ici, après accord de l'autre : `pnpm db:migrate`
+depuis un worktree de `main` dont `DATABASE_URL_ADMIN` pointe vers Supabase. `vector`, `btree_gist` et `pg_trgm` sont
+déjà créées dans `public`, comme en local ; une nouvelle extension réservée au superutilisateur se crée avant sa
+migration, depuis l'éditeur SQL du tableau de bord (rôle `postgres`). L'offre gratuite ne sauvegarde rien : avant une
+migration qui efface des données, sauvegarder avec le `pg_dump` de l'image Docker locale (`pgboss`, la file des tâches
+de fond, appartient à `leon_app` : même commande avec `DATABASE_URL` et `--schema=pgboss`) :
+
+```bash
+URL=$(grep '^DATABASE_URL_ADMIN=' .env.local | cut -d= -f2- | tr -d '"')
+docker run --rm -e URL="$URL" -v ~/.postgresql:"$HOME/.postgresql":ro pgvector/pgvector:pg17 \
+  sh -c 'pg_dump --format=custom --schema=public "$URL"' > supabase-public.dump
+```
+
+Le tableau de bord met en pause un projet gratuit resté une semaine sans activité : il se relance d'un clic.
+
+**MCP.** `.mcp.json` déclare le serveur MCP de Supabase, limité à ce projet et en lecture seule (doc, tables, journaux,
+conseils de sécurité) : la base garde des conversations captées, un texte qui ne doit jamais pousser un agent à écrire
+dans la base partagée. Claude Code demande une fois de l'accepter, puis `/mcp` ouvre la connexion au compte Supabase.
+Les écritures passent par le migrateur ou, pour une extension, par l'éditeur SQL du tableau de bord.
+
 ## Secrets dans les conversations captées
 
 Avant stockage, la capture et les connecteurs masquent ce qui se reconnaît à sa forme (`src/capture/mask-secrets.ts`) :

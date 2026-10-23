@@ -6,6 +6,7 @@ import { Logo } from '@/components/verre/shell/brand';
 import { nb } from '@/lib/verre/nb';
 import { BRIEFING, DEMOS, type Demo, TAGLINES, TOOL_COUNT } from './content';
 import { DemoAnswerCard, DemoSourceRow } from './demo-card';
+import { ParticleField, SplitWords, Tilt } from './fx';
 import { Kicker, ToolLogo } from './parts';
 
 // Panneau à côté du formulaire de connexion ou d'inscription (même mise en page, d'où usePathname) : à la connexion,
@@ -87,17 +88,25 @@ export function AuthAside() {
         <Points />
       </div>
 
-      <div className="relative max-lg:hidden">
+      <div className="relative isolate max-lg:hidden">
+        <div className="pointer-events-none absolute -inset-x-24 top-24 bottom-36 -z-10 opacity-70">
+          <ParticleField density={0.75} height={1.4} />
+        </div>
         <Kicker>{signUp ? 'En trois temps' : 'Bon retour'}</Kicker>
         <h2 className="mt-4 max-w-[560px] text-[clamp(32px,3.6vw,48px)] leading-[1.04] font-extrabold tracking-[-0.045em] text-balance text-fg">
-          {signUp ? (
-            nb('Créez l’espace, branchez un outil, posez une question.')
-          ) : (
-            <>
-              {nb('Ce qui a été dit ')}
-              <span className="site-gradient">{nb('reste dit.')}</span>
-            </>
-          )}
+          {/* une clé par page : les mots rejouent leur entrée quand on passe de l'une à l'autre */}
+          <SplitWords
+            key={signUp ? 'inscription' : 'connexion'}
+            delay={150}
+            parts={
+              signUp
+                ? [{ text: 'Créez l’espace, branchez un outil, posez une question.' }]
+                : [
+                    { text: 'Ce qui a été dit ' },
+                    { text: 'reste dit.', className: 'site-gradient' },
+                  ]
+            }
+          />
         </h2>
         <p className="mt-4 max-w-[520px] text-[16.5px] leading-[1.6] text-fg-2">
           {nb(TAGLINES.pitch)}
@@ -107,19 +116,21 @@ export function AuthAside() {
           <>
             <ol className="mt-8 grid max-w-[560px] gap-2.5">
               {STEPS.map((s) => (
-                <li
-                  key={s.n}
-                  className="site-lift flex items-start gap-4 rounded-box border border-line bg-panel p-4 shadow-hi"
-                >
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft font-mono text-label text-accent">
-                    {s.n}
-                  </span>
-                  <span>
-                    <span className="block text-ui font-semibold text-fg">{nb(s.title)}</span>
-                    <span className="mt-0.5 block text-label leading-[1.5] text-muted">
-                      {nb(s.text)}
+                <li key={s.n}>
+                  <Tilt
+                    max={5}
+                    className="flex items-start gap-4 rounded-box border border-line bg-panel p-4 shadow-hi"
+                  >
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft font-mono text-label text-accent">
+                      {s.n}
                     </span>
-                  </span>
+                    <span>
+                      <span className="block text-ui font-semibold text-fg">{nb(s.title)}</span>
+                      <span className="mt-0.5 block text-label leading-[1.5] text-muted">
+                        {nb(s.text)}
+                      </span>
+                    </span>
+                  </Tilt>
                 </li>
               ))}
             </ol>
@@ -151,14 +162,16 @@ export function AuthAside() {
             aria-hidden="true"
             className="relative mt-8 grid max-w-[600px] gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]"
           >
-            <div className="grid content-start gap-2.5">
+            <Tilt className="grid content-start gap-2.5 rounded-box">
               <DemoAnswerCard demo={demo} />
-              <ol className="grid gap-2">
+              <ol className="fx-pop grid gap-2">
                 <DemoSourceRow source={demo.sources[0] as Demo['sources'][number]} n={1} />
               </ol>
-            </div>
+            </Tilt>
             <div className="site-float">
-              <Briefing />
+              <Tilt className="rounded-box">
+                <Briefing />
+              </Tilt>
             </div>
           </div>
         )}

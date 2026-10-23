@@ -22,7 +22,9 @@ import {
   SECURITY_FACTS,
   TAGLINES,
   TOOL_COUNT,
+  TOOL_GROUPS,
 } from '../content';
+import { Layers3D, LogoSphere, ParticleField, SplitWords, Tilt } from '../fx';
 import {
   ArrowLink,
   Cite,
@@ -31,7 +33,6 @@ import {
   CtaLink,
   Excerpt,
   Kicker,
-  LogoMarquee,
   QueryCode,
   SectionHeading,
   ToolLogo,
@@ -53,10 +54,9 @@ function Hero() {
         aria-hidden="true"
         className="site-halo pointer-events-none absolute inset-x-0 top-0 h-[760px]"
       />
-      <div
-        aria-hidden="true"
-        className="site-grid pointer-events-none absolute inset-x-0 top-0 h-[820px] opacity-80"
-      />
+      <div className="pointer-events-none absolute inset-x-0 top-[120px] h-[880px] opacity-90 sm:top-[60px]">
+        <ParticleField />
+      </div>
       <Container className="relative">
         <div className="mx-auto max-w-[960px] text-center">
           <Link
@@ -76,13 +76,15 @@ function Hero() {
           </Link>
           <h1
             id="titre"
-            style={rise(1)}
-            className="site-rise mt-7 text-[clamp(40px,7.2vw,86px)] leading-[0.98] font-extrabold tracking-[-0.052em] text-balance text-fg"
+            className="mt-7 text-[clamp(40px,7.2vw,86px)] leading-[0.98] font-extrabold tracking-[-0.052em] text-balance text-fg"
           >
-            {nb('Ce qui a été promis à vos clients, ')}
-            <span className="site-gradient site-gradient-anim">
-              {nb('retrouvé avec sa source.')}
-            </span>
+            <SplitWords
+              delay={120}
+              parts={[
+                { text: 'Ce qui a été promis à vos clients, ' },
+                { text: 'retrouvé avec sa source.', className: 'site-gradient' },
+              ]}
+            />
           </h1>
           <p
             style={rise(2)}
@@ -109,7 +111,11 @@ function Hero() {
           </p>
         </div>
         <div style={rise(5)} className="site-rise mx-auto mt-14 max-w-[1100px] sm:mt-16">
-          <HeroDemo />
+          <div className="fx-untilt">
+            <Tilt max={2.5} scale={1} perspective={1800} glare={false}>
+              <HeroDemo />
+            </Tilt>
+          </div>
         </div>
       </Container>
     </section>
@@ -117,19 +123,42 @@ function Hero() {
 }
 
 function ToolsStrip() {
-  const half = Math.ceil(ALL_TOOLS.length / 2);
   return (
-    <section aria-labelledby="outils-titre" className="py-14 sm:py-20">
-      <Container>
-        <h2
-          id="outils-titre"
-          className="text-center font-mono text-meta tracking-normal text-muted"
-        >
-          {nb(`Se branche sur ${TOOL_COUNT} outils de l’équipe, et sur vos assistants d’IA`)}
-        </h2>
+    <section aria-labelledby="outils-titre" className="relative py-16 sm:py-24">
+      <Container className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="site-reveal max-lg:text-center">
+          <Kicker>Connecteurs</Kicker>
+          <h2
+            id="outils-titre"
+            className="mt-3 text-[clamp(30px,4.4vw,52px)] leading-[1.04] font-extrabold tracking-[-0.045em] text-balance text-fg"
+          >
+            {nb(`${TOOL_COUNT} outils, `)}
+            <span className="site-gradient">{nb('et vos assistants d’IA.')}</span>
+          </h2>
+          <p className="mt-5 max-w-[480px] text-[17px] leading-[1.6] text-fg-2 max-lg:mx-auto">
+            {nb(
+              'Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change toutes les 15 minutes, par une clé d’API ou un bouton de connexion. Faites tourner la sphère.',
+            )}
+          </p>
+          <ul className="mt-7 flex flex-wrap gap-2 max-lg:justify-center">
+            {TOOL_GROUPS.map((g) => (
+              <li
+                key={g.family}
+                className="inline-flex items-center gap-2 rounded-full border border-line bg-glass-3 px-3 py-1.5 text-label font-medium text-fg-2"
+              >
+                {g.label}
+                <span className="font-mono text-[11px] text-accent">{g.tools.length}</span>
+              </li>
+            ))}
+          </ul>
+          <ArrowLink href="/connecteurs" className="mt-8">
+            Voir les {TOOL_COUNT} connecteurs
+          </ArrowLink>
+        </div>
+        <div className="site-reveal mx-auto w-full max-w-[560px]">
+          <LogoSphere tools={ALL_TOOLS} size={44} />
+        </div>
       </Container>
-      <LogoMarquee tools={ALL_TOOLS.slice(0, half)} className="mt-7" duration={56} />
-      <LogoMarquee tools={ALL_TOOLS.slice(half)} reverse className="mt-3" duration={62} />
     </section>
   );
 }
@@ -223,15 +252,16 @@ function Problem() {
         />
         <ul className="mt-14 grid gap-4 md:grid-cols-3">
           {PROBLEMS.map((p, i) => (
-            <li
-              key={p.title}
-              className="site-reveal site-lift relative overflow-hidden rounded-box border border-line bg-panel p-6 shadow-hi"
-            >
-              <ProblemVisual i={i} />
-              <h3 className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
-                {nb(p.title)}
-              </h3>
-              <p className="mt-2 text-body leading-[1.6] text-muted">{nb(p.text)}</p>
+            <li key={p.title} className="site-reveal">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                <div className="fx-pop">
+                  <ProblemVisual i={i} />
+                </div>
+                <h3 className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
+                  {nb(p.title)}
+                </h3>
+                <p className="mt-2 text-body leading-[1.6] text-muted">{nb(p.text)}</p>
+              </Tilt>
             </li>
           ))}
         </ul>
@@ -270,80 +300,88 @@ function Steps() {
             />
           </svg>
 
-          <li className="site-reveal relative rounded-box border border-line bg-panel p-6 shadow-hi">
-            <StepNumber n="01" />
-            <h3 className="mt-5 text-title font-semibold text-fg">Vous branchez vos outils</h3>
-            <p className="mt-2 text-body leading-[1.6] text-muted">
-              {nb(
-                `Une clé d’API ou un bouton de connexion, parmi ${TOOL_COUNT} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.`,
-              )}
-            </p>
-            <div aria-hidden="true" className="mt-5 grid gap-2">
-              <div className="grid grid-cols-6 gap-2">
-                {(['github', 'notion', 'hubspot', 'linear', 'granola', 'intercom'] as const).map(
-                  (id) => (
-                    <ToolLogo key={id} id={id} size={34} />
-                  ),
+          <li className="site-reveal">
+            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+              <StepNumber n="01" />
+              <h3 className="mt-5 text-title font-semibold text-fg">Vous branchez vos outils</h3>
+              <p className="mt-2 text-body leading-[1.6] text-muted">
+                {nb(
+                  `Une clé d’API ou un bouton de connexion, parmi ${TOOL_COUNT} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.`,
                 )}
-              </div>
-              <div className="flex items-center gap-3 rounded-field border border-line bg-glass-3 px-3 py-2.5 text-label text-fg-2">
-                <span className="size-2 rounded-full bg-ok" />
-                Extension · assistant web
-                <span className="ml-auto inline-flex h-5 w-9 items-center rounded-full bg-accent p-0.5">
-                  <span className="ml-auto size-4 rounded-full bg-accent-ink" />
-                </span>
-              </div>
-            </div>
-          </li>
-
-          <li className="site-reveal relative rounded-box border border-line bg-panel p-6 shadow-hi">
-            <StepNumber n="02" />
-            <h3 className="mt-5 text-title font-semibold text-fg">Leon garde le brut</h3>
-            <p className="mt-2 text-body leading-[1.6] text-muted">
-              {nb(
-                'Tel quel, avec un lien vers l’original et les droits de chacun. Les secrets reconnaissables sont masqués avant d’être gardés.',
-              )}
-            </p>
-            <div aria-hidden="true" className="mt-5 grid gap-2">
-              <div className="rounded-field border border-line bg-glass-3 px-3 py-2.5">
-                <div className="flex items-center gap-2 text-label font-semibold text-fg">
-                  <ToolLogo id="granola" size={20} />
-                  Point mensuel ACME
-                  <span className="ml-auto font-mono text-[10.5px] font-normal text-muted">
-                    3 oct.
+              </p>
+              <div aria-hidden="true" className="mt-5 grid gap-2">
+                <div className="grid grid-cols-6 gap-2">
+                  {(['github', 'notion', 'hubspot', 'linear', 'granola', 'intercom'] as const).map(
+                    (id) => (
+                      <ToolLogo key={id} id={id} size={34} />
+                    ),
+                  )}
+                </div>
+                <div className="flex items-center gap-3 rounded-field border border-line bg-glass-3 px-3 py-2.5 text-label text-fg-2">
+                  <span className="size-2 rounded-full bg-ok" />
+                  Extension · assistant web
+                  <span className="ml-auto inline-flex h-5 w-9 items-center rounded-full bg-accent p-0.5">
+                    <span className="ml-auto size-4 rounded-full bg-accent-ink" />
                   </span>
                 </div>
-                <p className="mt-1.5 line-clamp-1 text-label text-muted">
-                  {nb('« On peut s’engager sur le 15 novembre pour la V2… »')}
-                </p>
-                <p className="mt-1.5 text-label font-semibold text-accent">Ouvrir dans Granola ↗</p>
               </div>
-              <code className="block rounded-field border border-line bg-glass-3 px-3 py-2.5 font-mono text-[12px] text-fg-2">
-                <span className="text-muted">DB_PASSWORD=</span>
-                <span className="rounded-[4px] bg-mark-bg px-1 text-mark-ink">[masqué]</span>
-              </code>
-            </div>
+            </Tilt>
           </li>
 
-          <li className="site-reveal relative rounded-box border border-line bg-panel p-6 shadow-hi">
-            <StepNumber n="03" />
-            <h3 className="mt-5 text-title font-semibold text-fg">Vous demandez</h3>
-            <p className="mt-2 text-body leading-[1.6] text-muted">
-              {nb(
-                'Une recherche, une discussion, ou votre assistant d’IA par MCP. La réponse cite chaque source, ou dit « je ne sais pas ».',
-              )}
-            </p>
-            <div aria-hidden="true" className="mt-5 grid gap-2">
-              <div className="flex h-10 items-center gap-2 rounded-field border border-line-strong bg-glass-2 px-3">
-                <QueryCode q="de:julie type:réunion depuis:1m" />
+          <li className="site-reveal">
+            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+              <StepNumber n="02" />
+              <h3 className="mt-5 text-title font-semibold text-fg">Leon garde le brut</h3>
+              <p className="mt-2 text-body leading-[1.6] text-muted">
+                {nb(
+                  'Tel quel, avec un lien vers l’original et les droits de chacun. Les secrets reconnaissables sont masqués avant d’être gardés.',
+                )}
+              </p>
+              <div aria-hidden="true" className="mt-5 grid gap-2">
+                <div className="rounded-field border border-line bg-glass-3 px-3 py-2.5">
+                  <div className="flex items-center gap-2 text-label font-semibold text-fg">
+                    <ToolLogo id="granola" size={20} />
+                    Point mensuel ACME
+                    <span className="ml-auto font-mono text-[10.5px] font-normal text-muted">
+                      3 oct.
+                    </span>
+                  </div>
+                  <p className="mt-1.5 line-clamp-1 text-label text-muted">
+                    {nb('« On peut s’engager sur le 15 novembre pour la V2… »')}
+                  </p>
+                  <p className="mt-1.5 text-label font-semibold text-accent">
+                    Ouvrir dans Granola ↗
+                  </p>
+                </div>
+                <code className="block rounded-field border border-line bg-glass-3 px-3 py-2.5 font-mono text-[12px] text-fg-2">
+                  <span className="text-muted">DB_PASSWORD=</span>
+                  <span className="rounded-[4px] bg-mark-bg px-1 text-mark-ink">[masqué]</span>
+                </code>
               </div>
-              <div className="signal-line relative overflow-hidden rounded-field border border-line bg-glass-2 px-3 py-2.5 text-label leading-[1.6] text-fg">
-                {nb('Julie s’est engagée sur le 15 nov.')}
-                <Cite n={1} />
-                {nb(', hors reprise des données')}
-                <Cite n={2} />.
+            </Tilt>
+          </li>
+
+          <li className="site-reveal">
+            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+              <StepNumber n="03" />
+              <h3 className="mt-5 text-title font-semibold text-fg">Vous demandez</h3>
+              <p className="mt-2 text-body leading-[1.6] text-muted">
+                {nb(
+                  'Une recherche, une discussion, ou votre assistant d’IA par MCP. La réponse cite chaque source, ou dit « je ne sais pas ».',
+                )}
+              </p>
+              <div aria-hidden="true" className="mt-5 grid gap-2">
+                <div className="flex h-10 items-center gap-2 rounded-field border border-line-strong bg-glass-2 px-3">
+                  <QueryCode q="de:julie type:réunion depuis:1m" />
+                </div>
+                <div className="signal-line relative overflow-hidden rounded-field border border-line bg-glass-2 px-3 py-2.5 text-label leading-[1.6] text-fg">
+                  {nb('Julie s’est engagée sur le 15 nov.')}
+                  <Cite n={1} />
+                  {nb(', hors reprise des données')}
+                  <Cite n={2} />.
+                </div>
               </div>
-            </div>
+            </Tilt>
           </li>
         </ol>
       </Container>
@@ -356,6 +394,60 @@ function StepNumber({ n }: { n: string }) {
     <span className="relative z-[1] inline-grid size-[44px] place-items-center rounded-full border border-accent-line bg-[color-mix(in_srgb,var(--bg)_70%,var(--accent-soft))] font-mono text-ui font-medium text-accent shadow-[0_0_0_6px_color-mix(in_srgb,var(--bg)_80%,transparent)]">
       {n}
     </span>
+  );
+}
+
+const LAYERS = [
+  {
+    title: 'Le brut, tel quel',
+    text: 'Chaque réunion, ticket, note ou mail est gardé comme il a été écrit, avec son lien vers l’original.',
+  },
+  {
+    title: 'L’index',
+    text: 'Découpé en passages, cherché par les mots et par le sens, fautes de frappe tolérées dans les titres.',
+  },
+  {
+    title: 'Les droits, d’abord',
+    text: 'Le filtre des droits passe avant le classement : ce qui est privé ne remonte jamais chez un autre.',
+  },
+] as const;
+
+function UnderTheHood() {
+  return (
+    <section aria-labelledby="couches" className="relative overflow-hidden py-20 sm:py-28">
+      <Container className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div>
+          <SectionHeading
+            id="couches"
+            kicker="Sous le capot"
+            title="Trois couches, dans cet ordre."
+            lead="Leon ne réécrit rien. Il garde le brut, l’indexe pour le retrouver, et applique les droits avant de vous montrer quoi que ce soit."
+          />
+          <ol className="mt-8 grid gap-3">
+            {LAYERS.map((l, i) => (
+              <li
+                key={l.title}
+                className="site-reveal flex gap-4 rounded-box border border-line bg-panel p-4 shadow-hi"
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft font-mono text-label text-accent">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="block text-ui font-semibold text-fg">{nb(l.title)}</span>
+                  <span className="mt-0.5 block text-label leading-[1.55] text-muted">
+                    {nb(l.text)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="relative min-h-[460px] sm:min-h-[540px]">
+          <div aria-hidden="true" className="site-halo absolute inset-0 opacity-70" />
+          <Layers3D className="absolute inset-0" />
+        </div>
+      </Container>
+    </section>
   );
 }
 
@@ -433,17 +525,16 @@ function Proof() {
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
             {PROOFS.map((p) => (
-              <li
-                key={p.title}
-                className="site-reveal site-lift rounded-box border border-line bg-panel p-6 shadow-hi"
-              >
-                <span className="grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent">
-                  <p.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
-                </span>
-                <h3 className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
-                  {nb(p.title)}
-                </h3>
-                <p className="mt-2 text-body leading-[1.6] text-muted">{nb(p.text)}</p>
+              <li key={p.title} className="site-reveal">
+                <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                  <span className="grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent">
+                    <p.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
+                  </span>
+                  <h3 className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
+                    {nb(p.title)}
+                  </h3>
+                  <p className="mt-2 text-body leading-[1.6] text-muted">{nb(p.text)}</p>
+                </Tilt>
               </li>
             ))}
           </ul>
@@ -459,60 +550,70 @@ function Assistant() {
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="grid gap-4 max-lg:order-2">
-            <div className="site-reveal overflow-hidden rounded-box border border-line-strong bg-glass-2 shadow-panel">
-              <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 font-mono text-meta tracking-normal text-muted">
-                <Terminal aria-hidden="true" strokeWidth={1.7} className="size-3.5" />
-                assistant de code · serveur MCP de Leon
-              </div>
-              <div
-                aria-hidden="true"
-                className="grid gap-3 px-4 py-4 font-mono text-[12.5px] leading-[1.6] tracking-normal"
+            <div className="site-reveal">
+              <Tilt
+                max={4}
+                className="overflow-hidden rounded-box border border-line-strong bg-glass-2 shadow-panel"
               >
-                <p>
-                  <span className="text-accent">›</span> <span className="text-fg">search</span>{' '}
-                  <span className="text-muted">« reprise des données ACME »</span>
-                </p>
-                <p className="flex flex-wrap items-center gap-2 pl-4 text-fg-2">
-                  3 sources
-                  <ToolLogo id="linear" size={18} />
-                  <ToolLogo id="hubspot" size={18} />
-                  <ToolLogo id="granola" size={18} />
-                </p>
-                <p>
-                  <span className="text-accent">›</span> <span className="text-fg">fetch</span>{' '}
-                  <span className="text-muted">ticket ACME-214</span>
-                </p>
-                <p>
-                  <span className="text-accent">›</span> <span className="text-fg">remember</span>{' '}
-                  <span className="text-muted">« reprise reportée au 2 déc. »</span>
-                </p>
-                <p className="pl-4 text-success">note gardée, visible de vous seul</p>
-              </div>
+                <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 font-mono text-meta tracking-normal text-muted">
+                  <Terminal aria-hidden="true" strokeWidth={1.7} className="size-3.5" />
+                  assistant de code · serveur MCP de Leon
+                </div>
+                <div
+                  aria-hidden="true"
+                  className="grid gap-3 px-4 py-4 font-mono text-[12.5px] leading-[1.6] tracking-normal"
+                >
+                  <p>
+                    <span className="text-accent">›</span> <span className="text-fg">search</span>{' '}
+                    <span className="text-muted">« reprise des données ACME »</span>
+                  </p>
+                  <p className="flex flex-wrap items-center gap-2 pl-4 text-fg-2">
+                    3 sources
+                    <ToolLogo id="linear" size={18} />
+                    <ToolLogo id="hubspot" size={18} />
+                    <ToolLogo id="granola" size={18} />
+                  </p>
+                  <p>
+                    <span className="text-accent">›</span> <span className="text-fg">fetch</span>{' '}
+                    <span className="text-muted">ticket ACME-214</span>
+                  </p>
+                  <p>
+                    <span className="text-accent">›</span> <span className="text-fg">remember</span>{' '}
+                    <span className="text-muted">« reprise reportée au 2 déc. »</span>
+                  </p>
+                  <p className="pl-4 text-success">note gardée, visible de vous seul</p>
+                </div>
+              </Tilt>
             </div>
-            <div className="site-reveal signal-line relative overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi">
-              <div className="flex items-center gap-2">
-                <Logo className="size-[18px] text-[9.5px]" />
-                <span className="text-[13px] font-semibold text-accent">Point du matin</span>
-                <span className="ml-auto font-mono text-meta tracking-normal text-muted">
-                  08:45 · 250 mots au plus
-                </span>
-              </div>
-              <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                {BRIEFING.map((part) => (
-                  <div key={part.title}>
-                    <h3 className="font-mono text-meta tracking-normal text-fg-2">
-                      {nb(part.title)}
-                    </h3>
-                    <ul className="mt-2 grid gap-1.5">
-                      {part.items.map((it) => (
-                        <li key={it} className="text-label leading-[1.5] text-muted">
-                          {nb(it)}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+            <div className="site-reveal">
+              <Tilt
+                max={4}
+                className="signal-line overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi"
+              >
+                <div className="flex items-center gap-2">
+                  <Logo className="size-[18px] text-[9.5px]" />
+                  <span className="text-[13px] font-semibold text-accent">Point du matin</span>
+                  <span className="ml-auto font-mono text-meta tracking-normal text-muted">
+                    08:45 · 250 mots au plus
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {BRIEFING.map((part) => (
+                    <div key={part.title}>
+                      <h3 className="font-mono text-meta tracking-normal text-fg-2">
+                        {nb(part.title)}
+                      </h3>
+                      <ul className="mt-2 grid gap-1.5">
+                        {part.items.map((it) => (
+                          <li key={it} className="text-label leading-[1.5] text-muted">
+                            {nb(it)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </Tilt>
             </div>
           </div>
           <div>
@@ -640,6 +741,7 @@ export function HomeSignal() {
       <ToolsStrip />
       <Problem />
       <Steps />
+      <UnderTheHood />
       <UseCases />
       <Proof />
       <Assistant />

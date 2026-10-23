@@ -3,6 +3,7 @@ import { Aurora, ThinkingProvider } from '@/components/verre/shell/thinking';
 import { SiteFooter } from './site-footer';
 import { SiteHeader } from './site-header';
 import './site.css';
+import './fx/fx.css';
 
 /** Cadre du site public (accueil, cas d'usage, connecteurs…) et des pages de connexion : l'aurore, l'en-tête, le pied. */
 export function SiteShell({ children, footer = true }: { children: ReactNode; footer?: boolean }) {

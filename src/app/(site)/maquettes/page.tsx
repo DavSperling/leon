@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
+import { Tilt } from '@/components/site/fx';
 import { MAQUETTES } from '@/components/site/maquettes';
 import { Container, Kicker } from '@/components/site/parts';
 import { nb } from '@/lib/verre/nb';
@@ -95,53 +96,55 @@ export default function MaquettesPage() {
       <ol className="mt-14 grid gap-5 lg:grid-cols-3">
         {MAQUETTES.map((m, i) => (
           <li key={m.n} className="site-rise" style={{ '--i': i + 1 } as CSSProperties}>
-            <Link
-              href={`/maquettes/${m.n}`}
-              className="group site-lift flex h-full flex-col overflow-hidden rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] shadow-panel backdrop-blur-[30px]"
-            >
-              <div
-                aria-hidden="true"
-                className="relative h-[220px] overflow-hidden border-b border-line bg-glass-3"
+            <Tilt max={6} className="h-full rounded-panel">
+              <Link
+                href={`/maquettes/${m.n}`}
+                className="group flex h-full flex-col overflow-hidden rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] shadow-panel backdrop-blur-[30px]"
               >
-                <div className="site-dots absolute inset-0" />
-                <div className="relative h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]">
-                  <Preview n={m.n} />
+                <div
+                  aria-hidden="true"
+                  className="relative h-[220px] overflow-hidden border-b border-line bg-glass-3"
+                >
+                  <div className="site-dots absolute inset-0" />
+                  <div className="fx-pop relative h-full transition-transform duration-500 ease-out group-hover:scale-[1.03]">
+                    <Preview n={m.n} />
+                  </div>
                 </div>
-              </div>
-              <div className="flex flex-1 flex-col p-6">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-meta tracking-normal text-accent">
-                    Maquette {m.n}
-                  </span>
-                  {m.n === '1' && (
-                    <span className="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-[11px] text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                      sur l’accueil
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-meta tracking-normal text-accent">
+                      Maquette {m.n}
                     </span>
-                  )}
+                    {m.n === '1' && (
+                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-[11px] text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
+                        sur l’accueil
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="mt-2 text-h2 font-bold tracking-[-0.025em] text-fg">{m.name}</h2>
+                  <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(m.pitch)}</p>
+                  <ul className="mt-4 grid gap-2">
+                    {m.points.map((p) => (
+                      <li key={p} className="flex gap-2.5 text-label leading-[1.5] text-muted">
+                        <span
+                          aria-hidden="true"
+                          className="mt-[7px] size-1.5 shrink-0 rounded-full bg-accent"
+                        />
+                        {nb(p)}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-ui font-semibold text-accent">
+                    Voir la maquette
+                    <ArrowRight
+                      aria-hidden="true"
+                      strokeWidth={2}
+                      className="size-4 transition-transform duration-300 group-hover:translate-x-1"
+                    />
+                  </span>
                 </div>
-                <h2 className="mt-2 text-h2 font-bold tracking-[-0.025em] text-fg">{m.name}</h2>
-                <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(m.pitch)}</p>
-                <ul className="mt-4 grid gap-2">
-                  {m.points.map((p) => (
-                    <li key={p} className="flex gap-2.5 text-label leading-[1.5] text-muted">
-                      <span
-                        aria-hidden="true"
-                        className="mt-[7px] size-1.5 shrink-0 rounded-full bg-accent"
-                      />
-                      {nb(p)}
-                    </li>
-                  ))}
-                </ul>
-                <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-ui font-semibold text-accent">
-                  Voir la maquette
-                  <ArrowRight
-                    aria-hidden="true"
-                    strokeWidth={2}
-                    className="size-4 transition-transform duration-300 group-hover:translate-x-1"
-                  />
-                </span>
-              </div>
-            </Link>
+              </Link>
+            </Tilt>
           </li>
         ))}
       </ol>

@@ -175,6 +175,8 @@ export function SiteHeader() {
       data-scrolled={scrolled || undefined}
       className="site-header fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-5"
     >
+      {/* progression de la lecture, en CSS (animation-timeline: scroll()) */}
+      <span aria-hidden="true" className="site-progress" />
       <div className="site-header-bar mx-auto flex h-[58px] max-w-[1200px] items-center gap-2 rounded-full border border-transparent pr-2 pl-3 sm:pl-4">
         <Link
           href="/"

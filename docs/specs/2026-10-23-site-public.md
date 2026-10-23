@@ -30,6 +30,21 @@ Même design « Verre + signal » (jetons, aurore, verre, filet Signal, Manrope 
 3. **Récit** : éditorial, « Une journée avec Leon » de 08:45 à 18:10 sur une ligne de temps. Titres en Fraunces
    (la police d'affichage de `brand.md`), et ce que Leon ne fait pas.
 
+## Effets 3D et animations
+
+Dans `src/components/site/fx/`, sans nouvelle dépendance :
+
+- `Tilt` : la carte s'incline vers le pointeur, avec un reflet ; un enfant `.fx-pop` sort du plan.
+- `ParticleField` : une nappe de points vue en perspective, soulevée par des ondes (Canvas 2D, couleurs du thème).
+- `LogoSphere` : les 39 logos sur une sphère qui tourne seule et se lance à la souris ou au doigt.
+- `Layers3D` : le brut, l'index et les droits, trois couches de verre éclatées (CSS 3D).
+- `SplitWords` : un titre dont chaque mot bascule en 3D (CSS seul, visible sans JavaScript).
+- Classes de `fx.css` : `fx-untilt` (panneau qui se redresse au défilement), `fx-ring` (bordure lumineuse qui tourne),
+  `fx-breathe`.
+
+Mouvement réduit : état final, rien ne tourne. Les animations en JavaScript s'arrêtent hors de l'écran et onglet caché.
+Seuls `transform`, `opacity` et `filter` bougent ; les visuels 3D sont décoratifs (`aria-hidden`), le texte voisin dit la même chose.
+
 ## Règles suivies pour les textes
 
 Celles de `docs/etudes/founder-pme-2026-10/brand.md` et `marketing.md` :

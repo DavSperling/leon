@@ -26,7 +26,7 @@ export const confluenceCatalog: CatalogEntry = {
   keyHelp:
     'Sur id.atlassian.com › Sécurité › Jetons d’API : créer un jeton d’API (sans portées), puis le copier ; Leon lit ce que ce compte peut lire.',
   oauthHelp:
-    'Atlassian vous demande d’autoriser Leon à lire les pages, les commentaires, les espaces et les profils de votre site Confluence (lecture seule), et de choisir le site si votre compte en a plusieurs. Leon ne peut rien modifier.',
+    'Atlassian vous fait choisir votre site Confluence. Leon lit les pages et leurs commentaires ; l’accès permet aussi d’écrire, Leon ne s’en sert pas encore.',
   docsUrl:
     'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
   triedForReal: false,

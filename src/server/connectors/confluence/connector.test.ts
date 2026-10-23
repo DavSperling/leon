@@ -661,7 +661,7 @@ describe('confluence : le bouton, configuration', () => {
 });
 
 describe('confluence : le bouton, description', () => {
-  it('demande les droits fins de lecture des pages, commentaires, espaces et personnes', () => {
+  it('demande les droits fins de lecture des pages, commentaires, espaces et personnes, et l’écriture des pages et commentaires', () => {
     expect(confluenceConnector.oauth).toMatchObject({
       appKey: 'ATLASSIAN',
       scopes: [
@@ -670,6 +670,8 @@ describe('confluence : le bouton, description', () => {
         'read:space:confluence',
         'read:user:confluence',
         'read:confluence-user',
+        'write:page:confluence',
+        'write:comment:confluence',
         'offline_access',
       ],
       authorizeUrl: 'https://auth.atlassian.com/authorize',

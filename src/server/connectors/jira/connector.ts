@@ -144,7 +144,12 @@ export const jiraConnector: Connector<Config> = {
   configSchema: ConfigSchema,
   secretFields: ['apiToken'],
   hosts: atlassianHosts,
-  oauth: atlassianOAuth(['read:jira-work', 'read:jira-user', 'offline_access']),
+  oauth: atlassianOAuth([
+    'read:jira-work',
+    'read:jira-user',
+    'write:jira-work', // Leon n'écrit pas encore : l'accès est demandé d'avance
+    'offline_access',
+  ]),
 
   async verify(config: Config, http: ConnectorHttp) {
     try {

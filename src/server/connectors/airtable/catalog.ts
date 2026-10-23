@@ -21,7 +21,8 @@ export const airtableCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Sur airtable.com/create/tokens : Create new token, cochez les portées data.records:read, data.recordComments:read et schema.bases:read, ajoutez les bases à lire, puis copiez le jeton (il commence par pat).',
-  oauthHelp: 'Airtable vous fait choisir les bases que Leon peut lire, en lecture seule.',
+  oauthHelp:
+    'Airtable vous fait choisir les bases que Leon peut lire. L’accès permet aussi d’y écrire ; Leon ne s’en sert pas encore.',
   docsUrl: 'https://airtable.com/developers/web/api/authentication',
   triedForReal: false,
 };

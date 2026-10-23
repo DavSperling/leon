@@ -764,10 +764,10 @@ describe('jira : le bouton, configuration', () => {
 describe('jira : le bouton, description', () => {
   const spec = jiraConnector.oauth;
 
-  it('demande la lecture de Jira, des profils et le renouvellement, rien d’autre', () => {
+  it('demande la lecture et l’écriture de Jira, les profils et le renouvellement, rien d’autre', () => {
     expect(spec).toMatchObject({
       appKey: 'ATLASSIAN',
-      scopes: ['read:jira-work', 'read:jira-user', 'offline_access'],
+      scopes: ['read:jira-work', 'read:jira-user', 'write:jira-work', 'offline_access'],
       authorizeUrl: 'https://auth.atlassian.com/authorize',
       tokenUrl: 'https://auth.atlassian.com/oauth/token',
       pkce: false,

@@ -862,7 +862,7 @@ describe('airtable : configuration du bouton', () => {
     const entry = listCatalog().find((item) => item.id === 'airtable');
     expect(entry?.oauthHelp).toMatch(/Airtable/);
     expect(entry?.oauthHelp).toMatch(/bases/);
-    expect(entry?.oauthHelp).toMatch(/lecture/);
+    expect(entry?.oauthHelp).toMatch(/écrire/);
     expect(entry?.keyAccepted ?? true).toBe(true);
     expect(entry?.keyHelp).toMatch(/airtable\.com\/create\/tokens/);
     // Le champ sert aux deux formulaires : il dit qu'avec le bouton il peut rester vide.

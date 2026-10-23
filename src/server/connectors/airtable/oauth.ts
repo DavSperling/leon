@@ -36,7 +36,14 @@ export const airtableOAuth: OAuthSpec = {
   appKey: 'AIRTABLE',
   authorizeUrl: 'https://airtable.com/oauth2/v1/authorize',
   tokenUrl: 'https://airtable.com/oauth2/v1/token',
-  scopes: ['data.records:read', 'schema.bases:read', 'data.recordComments:read'],
+  scopes: [
+    'data.records:read',
+    'schema.bases:read',
+    'data.recordComments:read',
+    // Leon n'écrit pas encore : l'accès est demandé d'avance
+    'data.records:write',
+    'data.recordComments:write',
+  ],
   pkce: true,
   clientAuth: 'basic',
   tokenBody: 'form',

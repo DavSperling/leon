@@ -81,6 +81,9 @@ export const confluenceConnector: Connector<Config> = {
     'read:space:confluence',
     'read:user:confluence',
     'read:confluence-user',
+    // Leon n'écrit pas encore : l'accès est demandé d'avance
+    'write:page:confluence',
+    'write:comment:confluence',
     'offline_access',
   ]),
 

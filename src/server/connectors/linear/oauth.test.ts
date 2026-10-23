@@ -61,12 +61,12 @@ afterEach(() => {
 });
 
 describe('linearOAuth : description', () => {
-  it('déclare les adresses de Linear, le droit de lecture, PKCE et le secret avec les paramètres', () => {
+  it('déclare les adresses de Linear, la lecture et l’écriture, PKCE et le secret avec les paramètres', () => {
     expect(linearOAuth).toMatchObject({
       appKey: 'LINEAR',
       authorizeUrl: 'https://linear.app/oauth/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['read'],
+      scopes: ['read', 'write'],
       scopeSeparator: ',',
       pkce: true,
       clientAuth: 'body',
@@ -79,7 +79,7 @@ describe('linearOAuth : description', () => {
     expect(linearOAuth.extraTokenParams).toBeUndefined();
   });
 
-  it('ne demande que le droit « read », au nom de l’utilisateur, avec PKCE S256', () => {
+  it('demande « read,write », au nom de l’utilisateur, avec PKCE S256', () => {
     const url = new URL(authorizeUrl(linearOAuth, CLIENT, pending));
 
     expect(`${url.origin}${url.pathname}`).toBe('https://linear.app/oauth/authorize');
@@ -88,7 +88,7 @@ describe('linearOAuth : description', () => {
       redirect_uri: redirectUri(linearOAuth),
       response_type: 'code',
       state: 'etat-1',
-      scope: 'read',
+      scope: 'read,write',
       actor: 'user',
       code_challenge: createHash('sha256').update('verificateur-1').digest('base64url'),
       code_challenge_method: 'S256',

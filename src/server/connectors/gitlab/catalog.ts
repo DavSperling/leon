@@ -22,7 +22,7 @@ export const gitlabCatalog: CatalogEntry = {
   keyHelp:
     'Sur gitlab.com : votre avatar › Modifier le profil › Accès › Jetons d’accès personnels › Générer un jeton (jeton classique), avec la portée read_api. Le jeton expire au plus tard dans un an : il faudra alors le remplacer.',
   oauthHelp:
-    'Leon lit les tickets et les demandes de fusion des 20 projets les plus actifs dont vous êtes membre, en lecture seule.',
+    'Leon lit les tickets et les demandes de fusion des 20 projets les plus actifs dont vous êtes membre. L’accès permet aussi d’écrire ; Leon ne s’en sert pas encore.',
   docsUrl: 'https://docs.gitlab.com/user/profile/personal_access_tokens/',
   triedForReal: false,
   warning: 'Seul gitlab.com est pris en charge, pas une installation de GitLab hébergée par vous.',

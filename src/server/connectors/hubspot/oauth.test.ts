@@ -33,6 +33,9 @@ const SCOPES = [
   'crm.objects.deals.read',
   'crm.objects.owners.read',
   'sales-email-read',
+  'crm.objects.contacts.write',
+  'crm.objects.companies.write',
+  'crm.objects.deals.write',
 ];
 
 // Forme de la réponse de https://developers.hubspot.com/docs/api-reference/legacy/authentication/
@@ -92,10 +95,13 @@ describe('hubspotOAuth : description', () => {
     expect(hubspotOAuth.adminConsent).toBeUndefined();
   });
 
-  it('ne demande que des droits de lecture', () => {
-    for (const scope of hubspotOAuth.scopes) {
-      expect(scope === 'oauth' || /(\.read|-read)$/.test(scope), scope).toBe(true);
-    }
+  it('ne demande en écriture que les contacts, les entreprises et les affaires', () => {
+    const writes = hubspotOAuth.scopes.filter((s) => s !== 'oauth' && !/(\.read|-read)$/.test(s));
+    expect(writes).toEqual([
+      'crm.objects.contacts.write',
+      'crm.objects.companies.write',
+      'crm.objects.deals.write',
+    ]);
   });
 
   it('envoie vers HubSpot avec les droits séparés par des espaces et sans PKCE', () => {

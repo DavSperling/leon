@@ -14,7 +14,7 @@ export const mondayCatalog: CatalogEntry = {
   keyHelp:
     'Dans monday.com : photo de profil › Développeurs › Jeton d’API › Afficher (un administrateur le trouve aussi dans Administration › Connexions › Jeton d’API personnel).',
   oauthHelp:
-    'monday.com vous demande « Autoriser Leon à lire vos tableaux ? ». Leon ne demande que la lecture (tableaux, éléments, mises à jour et votre profil), avec vos propres droits : il ne voit que les tableaux que vous voyez.',
+    'monday.com vous demande d’autoriser Leon sur vos tableaux. Leon lit les tableaux, les éléments, les mises à jour et votre profil, avec vos propres droits : il ne voit que les tableaux que vous voyez. L’accès permet aussi d’écrire ; Leon ne s’en sert pas encore.',
   docsUrl: 'https://developer.monday.com/api-reference/docs/authentication',
   triedForReal: false,
   warning:

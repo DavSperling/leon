@@ -16,6 +16,10 @@ import type { OAuthSpec } from '../types';
 //   complet » (qui interdit de demander des droits un à un). Voir le guide des applis (T62).
 // - Droits, un par point d'accès lu : tasks:read (GET /tasks), projects:read (GET /projects),
 //   stories:read (GET /tasks/{gid}/stories, les commentaires), users:read (GET /users/me).
+// - Écriture demandée d'avance (relu le 23/10/2026 sur https://developers.asana.com/docs/oauth-scopes) :
+//   tasks:write (POST /tasks, PUT /tasks/{gid}) et stories:write (POST /tasks/{gid}/stories, commenter).
+//   La suppression a ses propres droits (tasks:delete, projects:delete), jamais demandés. Pas de
+//   projects:write : Leon ne change pas la structure des projets.
 //
 // Écarts au plan, d'après la doc : `stories:read` s'ajoute aux trois droits du plan, car les
 // commentaires d'une tâche en ont besoin. PKCE est facultatif chez Asana (« conditionnel » dans la
@@ -33,7 +37,15 @@ export const asanaOAuth: OAuthSpec = {
   appKey: 'ASANA',
   authorizeUrl: 'https://app.asana.com/-/oauth_authorize',
   tokenUrl: 'https://app.asana.com/-/oauth_token',
-  scopes: ['tasks:read', 'projects:read', 'stories:read', 'users:read'],
+  scopes: [
+    'tasks:read',
+    'projects:read',
+    'stories:read',
+    'users:read',
+    // Leon n'écrit pas encore : l'accès est demandé d'avance
+    'tasks:write',
+    'stories:write',
+  ],
   pkce: true,
   clientAuth: 'body',
   preFields: ['workspace'], // facultatif : l'espace à lire, sinon le premier du compte

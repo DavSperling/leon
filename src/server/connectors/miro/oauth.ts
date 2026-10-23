@@ -17,10 +17,12 @@ import type { OAuthSpec } from '../types';
 //     une fois utilisé, à la désinstallation de l'appli ou si l'accès est retiré, sans corps décrit)
 //   https://developers.miro.com/reference/create-authorization-request-link (state facultatif,
 //     rendu tel quel ; team_id facultatif, qui ne fait que présélectionner l'équipe affichée)
-//   https://developers.miro.com/reference/scopes (boards:read lit tableaux et éléments)
+//   https://developers.miro.com/reference/scopes (boards:read lit tableaux et éléments ; relu le
+//     23/10/2026 : boards:write, « Create, update, or delete boards, board members, or items », coché
+//     d'avance dans la console bien que Leon n'écrive pas encore ; il permet aussi de supprimer)
 //
 // Écarts au plan, d'après la doc. Aucun paramètre `scope` : l'adresse d'autorisation n'en a pas,
-// les droits (boards:read, seul à cocher) se règlent dans la console de l'appli, section des
+// les droits (boards:read et boards:write) se règlent dans la console de l'appli, section des
 // permissions. Pas de PKCE : la doc n'en parle pas. L'équipe où l'appli est installée n'est pas
 // choisie par Leon mais par l'utilisateur chez Miro, et rendue dans la réponse (`team_id`).
 //

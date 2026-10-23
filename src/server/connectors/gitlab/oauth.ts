@@ -9,8 +9,12 @@ import type { OAuthSpec } from '../types';
 //   - autorisation `https://gitlab.com/oauth/authorize`, jetons `https://gitlab.com/oauth/token`, en
 //     formulaire (`application/x-www-form-urlencoded`) ; PKCE S256 avec un vérificateur de 43 à 128
 //     caractères ; `client_id` et `client_secret` en paramètres ou en Basic, jamais les deux (400) ;
-//   - portée `read_api` : « lecture de l'API, y compris tous les groupes et projets » ; GitLab ne
-//     permet pas de la limiter à certains projets, c'est Leon qui ne lit que ceux de la liste ;
+//   - portée `api` (lecture et écriture de toute l'API, registres de conteneurs et de paquets compris) :
+//     relu le 23/10/2026 sur https://docs.gitlab.com/security/tokens/access_token_scopes/ et
+//     https://docs.gitlab.com/integration/oauth_provider/, il n'existe rien de plus étroit entre
+//     `read_api` et `api` pour écrire sur les tickets et les notes (`write_repository` ne couvre que Git).
+//     Elle permet aussi de supprimer : c'est à Leon de s'en garder. GitLab ne permet pas de la limiter
+//     à certains projets, c'est Leon qui ne lit que ceux de la liste ;
 //   - jeton d'accès de 2 h (`expires_in` 7200) ; chaque renouvellement invalide l'ancien jeton
 //     d'accès ET l'ancien jeton de rafraîchissement et en rend de nouveaux (usage unique, c'est
 //     pourquoi le socle enregistre les nouveaux avant le passage) ;
@@ -27,7 +31,7 @@ export const gitlabOAuth: OAuthSpec = {
   appKey: 'GITLAB',
   authorizeUrl: 'https://gitlab.com/oauth/authorize',
   tokenUrl: 'https://gitlab.com/oauth/token',
-  scopes: ['read_api'],
+  scopes: ['api'], // Leon n'écrit pas encore : l'accès est demandé d'avance
   pkce: true,
   clientAuth: 'body',
   tokenBody: 'form',

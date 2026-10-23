@@ -8,7 +8,7 @@ export const miroCatalog: CatalogEntry = {
   keyHelp: '',
   keyAccepted: false,
   oauthHelp:
-    'Miro vous demande de choisir l’équipe où installer Leon, puis d’autoriser la lecture de ses tableaux. Leon lit le texte des notes, des textes, des formes, des cartes, des cadres et des documents de ces tableaux, jamais les images. Pour changer d’équipe, utilisez Reconnecter.',
+    'Miro vous demande de choisir l’équipe où installer Leon, puis d’autoriser l’accès à ses tableaux (il permet aussi d’écrire ; Leon ne s’en sert pas encore). Leon lit le texte des notes, des textes, des formes, des cartes, des cadres et des documents de ces tableaux, jamais les images. Pour changer d’équipe, utilisez Reconnecter.',
   docsUrl: 'https://developers.miro.com/docs/getting-started-with-oauth',
   triedForReal: false,
   warning:

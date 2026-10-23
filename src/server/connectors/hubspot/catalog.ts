@@ -15,7 +15,7 @@ export const hubspotCatalog: CatalogEntry = {
   keyHelp:
     'Dans HubSpot : Développement › Applis héritées (Legacy apps) › Créer une appli héritée › Privée ; onglet Portées (Scopes), cochez en lecture crm.objects.contacts.read, crm.objects.companies.read, crm.objects.deals.read, crm.objects.owners.read et sales-email-read ; onglet Authentification (Auth) › Afficher le jeton.',
   oauthHelp:
-    'HubSpot vous demande d’autoriser Leon à lire les notes, appels, réunions et e-mails de votre compte, avec le nom des contacts, entreprises et affaires auxquels ils sont liés. Seul un super administrateur du compte peut installer l’appli. Leon ne fait que lire.',
+    'HubSpot vous demande d’autoriser Leon à lire les notes, appels, réunions et e-mails de votre compte, avec le nom des contacts, entreprises et affaires auxquels ils sont liés. Seul un super administrateur du compte peut installer l’appli. L’accès permet aussi d’écrire ; Leon ne s’en sert pas encore.',
   docsUrl: 'https://developers.hubspot.com/docs/apps/legacy-apps/private-apps/overview',
   triedForReal: false,
 };

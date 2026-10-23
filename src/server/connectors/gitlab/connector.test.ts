@@ -626,14 +626,14 @@ describe('gitlab : bouton, description OAuth', () => {
     vi.useRealTimers();
   });
 
-  it('décrit l’autorisation de gitlab.com : lecture de l’API, PKCE, secret avec les paramètres', () => {
+  it('décrit l’autorisation de gitlab.com : lecture et écriture de l’API, PKCE, secret avec les paramètres', () => {
     const spec = oauthSpec();
 
     expect(spec).toMatchObject({
       appKey: 'GITLAB',
       authorizeUrl: 'https://gitlab.com/oauth/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['read_api'],
+      scopes: ['api'],
       pkce: true,
       clientAuth: 'body',
       tokenBody: 'form',
@@ -646,7 +646,7 @@ describe('gitlab : bouton, description OAuth', () => {
     expect(spec.adminConsent).toBeUndefined();
   });
 
-  it('demande la portée read_api avec un défi PKCE S256 et l’adresse de retour gitlab', () => {
+  it('demande la portée api avec un défi PKCE S256 et l’adresse de retour gitlab', () => {
     const pending: OAuthPending = {
       provider: 'gitlab',
       userId: 'u',
@@ -667,7 +667,7 @@ describe('gitlab : bouton, description OAuth', () => {
       redirect_uri: expect.stringMatching(/\/api\/v1\/connexions\/oauth\/gitlab\/retour$/),
       response_type: 'code',
       state: 'etat-1',
-      scope: 'read_api',
+      scope: 'api',
       code_challenge: createHash('sha256')
         .update(pending.verifier ?? '')
         .digest('base64url'),
@@ -820,7 +820,7 @@ describe('gitlab : bouton, configuration', () => {
   });
 
   it('explique au catalogue ce que GitLab demande, et garde la clé collée', () => {
-    expect(gitlabCatalog.oauthHelp).toMatch(/lecture seule/);
+    expect(gitlabCatalog.oauthHelp).toMatch(/ne s’en sert pas encore/);
     expect(gitlabCatalog.oauthHelp).toMatch(/membre/);
     expect(gitlabCatalog.oauthHelp?.trim()).not.toBe('');
     expect(gitlabCatalog.keyAccepted).not.toBe(false);

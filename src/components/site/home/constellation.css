@@ -1,0 +1,164 @@
+/* Maquette 2 « Constellation » : le schéma vivant du haut de page et les visuels des tuiles. Mêmes jetons que l'appli ;
+   le mouvement réduit coupe tout (règle globale de globals.css) et laisse l'état final, lisible. */
+
+/* ---------- Schéma : tailles en unités de conteneur, il se réduit avec sa colonne sans déborder ---------- */
+.cs-diagram {
+  container-type: inline-size;
+}
+.cs-node {
+  position: absolute;
+  width: var(--n, 8.4cqw);
+  height: var(--n, 8.4cqw);
+  margin: calc(var(--n, 8.4cqw) / -2) 0 0 calc(var(--n, 8.4cqw) / -2);
+  display: grid;
+  place-items: center;
+  border-radius: 28%;
+}
+.cs-node-logo {
+  background: #fff;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 10px 24px -12px rgba(0, 0, 0, 0.55);
+}
+.cs-node-logo > img {
+  width: 56%;
+  height: 56%;
+}
+.cs-node-ai {
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--menu));
+  color: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-line),
+    0 10px 24px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+  backdrop-filter: blur(8px);
+}
+.cs-node-ai > svg {
+  width: 46%;
+  height: 46%;
+}
+.cs-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 15cqw;
+  height: 15cqw;
+  margin: -7.5cqw 0 0 -7.5cqw;
+}
+.cs-core-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--accent-line);
+  background: radial-gradient(closest-side, var(--accent-soft), transparent);
+}
+.cs-core-glow {
+  position: absolute;
+  inset: -60%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--accent) 28%, transparent),
+    color-mix(in srgb, var(--logo-2) 10%, transparent) 55%,
+    transparent
+  );
+  animation: cs-breathe 5s ease-in-out infinite alternate;
+}
+@keyframes cs-breathe {
+  from {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/* étincelles de donnée (animateMotion, SVG) : coupées en mouvement réduit, la règle CSS globale ne les touche pas */
+@media (prefers-reduced-motion: reduce) {
+  .cs-spark {
+    display: none;
+  }
+}
+
+/* ---------- Tuile « secrets » : la valeur passe de lisible à masquée, puis revient ---------- */
+.cs-secret-plain {
+  animation: cs-secret-plain 5s ease-in-out infinite;
+}
+.cs-secret-mask {
+  animation: cs-secret-mask 5s ease-in-out infinite;
+}
+@keyframes cs-secret-plain {
+  0%,
+  30% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  42%,
+  92% {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+@keyframes cs-secret-mask {
+  0%,
+  30% {
+    opacity: 0;
+  }
+  42%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* mouvement réduit : l'état final, masqué */
+@media (prefers-reduced-motion: reduce) {
+  .cs-secret-plain {
+    opacity: 0;
+  }
+  .cs-secret-mask {
+    opacity: 1;
+  }
+}
+.cs-scanline {
+  animation: cs-scan 5s ease-in-out infinite;
+}
+@keyframes cs-scan {
+  0%,
+  22% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  28% {
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(260%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(260%);
+    opacity: 0;
+  }
+}
+
+/* ---------- Grand énoncé : chaque mot s'allume au défilement ---------- */
+@supports (animation-timeline: view()) {
+  .cs-statement-word {
+    animation: cs-word linear both;
+    animation-timeline: view();
+    animation-range: entry 30% cover 45%;
+  }
+}
+@keyframes cs-word {
+  from {
+    opacity: 0.18;
+  }
+}

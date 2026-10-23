@@ -1,0 +1,132 @@
+/* Maquette 3 « Récit » : une journée avec Leon, racontée comme un article. Fraunces pour les titres (la police
+   d'affichage de brand.md), Manrope pour le texte, Geist Mono pour les heures. Mêmes jetons que l'appli ; le mouvement
+   réduit coupe tout (règle globale de globals.css) et laisse l'état final. */
+
+.recit {
+  --display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --hl: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 52%, transparent),
+    color-mix(in srgb, var(--logo-2) 44%, transparent)
+  );
+}
+[data-theme="light"] .recit {
+  --hl: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent) 30%, transparent),
+    color-mix(in srgb, var(--logo-2) 28%, transparent)
+  );
+}
+
+.recit-display {
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-variation-settings:
+    "SOFT" 40,
+    "WONK" 0;
+  font-weight: 460;
+  letter-spacing: -0.028em;
+}
+.recit-display em,
+.recit-italic {
+  font-style: italic;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
+  font-weight: 420;
+}
+
+/* ---------- Surligneur : un trait d'accent qui se trace sous le mot (transform seul) ---------- */
+.recit-hl {
+  position: relative;
+  isolation: isolate;
+  white-space: nowrap;
+}
+.recit-hl::after {
+  content: "";
+  position: absolute;
+  left: -0.04em;
+  right: -0.06em;
+  bottom: 0.07em;
+  height: 0.2em;
+  z-index: -1;
+  border-radius: 0.2em 0.55em 0.25em 0.5em;
+  background: var(--hl);
+  transform-origin: left center;
+  animation: recit-sweep 1.2s var(--ease-out) 0.75s backwards;
+}
+@keyframes recit-sweep {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* le même trait, tracé quand le titre entre à l'écran */
+@supports (animation-timeline: view()) {
+  .recit-hl-scroll::after {
+    animation: recit-sweep linear both;
+    animation-timeline: view();
+    animation-range: entry 40% cover 40%;
+  }
+}
+
+/* ---------- Lettrine du chapeau ---------- */
+.recit-dropcap::first-letter {
+  float: left;
+  margin: 0.06em 0.12em 0 0;
+  font-family: var(--display);
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
+  font-style: italic;
+  font-size: 3.6em;
+  line-height: 0.82;
+  color: var(--accent);
+}
+
+/* ---------- Filets de l'en-tête de page (comme un journal) ---------- */
+.recit-rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), var(--line) 60%, transparent);
+}
+
+/* ---------- Ligne de temps : le point de chaque chapitre s'allume quand il arrive ---------- */
+.recit-dot-on {
+  box-shadow:
+    0 0 0 4px var(--accent-soft),
+    0 0 18px 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+@supports (animation-timeline: view()) {
+  .recit-dot-on {
+    animation: recit-dot linear both;
+    animation-timeline: view();
+    animation-range: entry 100% cover 45%;
+  }
+}
+@keyframes recit-dot {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+/* Grande heure du chapitre : chiffres à chasse fixe, un trait d'accent dessous */
+.recit-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Bulle de la question (vignette « discussion ») ---------- */
+.recit-bubble {
+  border-radius: 18px 18px 6px 18px;
+}
+
+/* ---------- Numéros de la liste « ce que Leon ne fait pas » ---------- */
+.recit-numeral {
+  font-family: var(--display);
+  font-style: italic;
+  font-variation-settings:
+    "SOFT" 100,
+    "WONK" 1;
+  font-weight: 380;
+  font-variant-numeric: lining-nums;
+  line-height: 0.9;
+}

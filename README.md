@@ -32,6 +32,8 @@ for base in template1 leon leon_test; do
 done
 ```
 
+Sans session, `/` sert la page d'accueil publique (`src/proxy.ts`) ; le site public (accueil, cas d'usage, connecteurs, sécurité, tarifs, et les trois maquettes de l'accueil sur `/maquettes`) est décrit dans [`docs/specs/2026-10-23-site-public.md`](docs/specs/2026-10-23-site-public.md).
+
 La checklist de vérification manuelle du premier jet est dans [`docs/guides/premier-jet-verification.md`](docs/guides/premier-jet-verification.md) (périmée depuis le deuxième jet, sauf le démarrage, le jeton et l'extension), celle des connecteurs dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 
 ## Une instance, un modèle

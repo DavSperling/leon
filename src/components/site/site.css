@@ -1,0 +1,252 @@
+/* Site public (accueil, cas d'usage, connecteurs…) : les effets de vitrine qui ne tiennent pas dans une classe Tailwind.
+   Mêmes jetons que l'appli (globals.css) ; le mouvement réduit coupe tout (règle globale de globals.css). */
+
+/* ---------- Apparition au défilement : CSS seul (animation-timeline), le contenu reste visible sans prise en charge ---------- */
+@supports (animation-timeline: view()) {
+  .site-reveal {
+    animation: site-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+  .site-reveal-late {
+    animation: site-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 20% cover 35%;
+  }
+}
+@keyframes site-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+  }
+}
+
+/* Entrée échelonnée du haut de page (CSS : visible sans JavaScript), délai par --i */
+.site-rise {
+  animation: site-rise 0.9s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms + 60ms);
+}
+@keyframes site-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(10px);
+  }
+}
+
+/* ---------- Titre : dégradé accent → sarcelle, comme la pastille du logo ---------- */
+.site-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--accent) 0%,
+    color-mix(in srgb, var(--accent) 55%, var(--logo-2)) 50%,
+    var(--logo-2) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.site-gradient-anim {
+  background-size: 200% 100%;
+  animation: site-gradient-pan 8s ease-in-out infinite alternate;
+}
+@keyframes site-gradient-pan {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+/* ---------- En-tête : verre qui se densifie au défilement ---------- */
+.site-header-bar {
+  transition:
+    background-color 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    backdrop-filter 0.35s var(--ease-out);
+}
+.site-header[data-scrolled] .site-header-bar {
+  background: var(--float);
+  border-color: var(--line-strong);
+  backdrop-filter: blur(28px) saturate(115%);
+  box-shadow:
+    var(--float-shadow),
+    inset 0 1px 0 var(--hi);
+}
+
+/* Méga-menu (Radix NavigationMenu) : entrée en fondu et montée légère */
+.site-menu-content[data-state="open"] {
+  animation: pop-enter var(--dur-enter) var(--ease-out);
+}
+.site-menu-content[data-state="closed"] {
+  animation: pop-exit var(--dur-exit) var(--ease-in) forwards;
+}
+
+/* ---------- Bandeau de logos qui défile (deux copies, translation de -50 %) ---------- */
+.site-marquee {
+  -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.site-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: site-marquee var(--marquee-dur, 48s) linear infinite;
+}
+.site-marquee-track[data-reverse] {
+  animation-direction: reverse;
+}
+.site-marquee:hover .site-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes site-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- Trame de fond : quadrillage fin, effacé vers les bords ---------- */
+.site-grid {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+  mask: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+}
+.site-dots {
+  background-image: radial-gradient(var(--line-strong) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  -webkit-mask: radial-gradient(ellipse 60% 70% at 50% 50%, #000 10%, transparent 72%);
+  mask: radial-gradient(ellipse 60% 70% at 50% 50%, #000 10%, transparent 72%);
+}
+
+/* ---------- Faisceau de lumière sous le titre principal ---------- */
+.site-halo {
+  background:
+    radial-gradient(
+      60% 50% at 50% 0%,
+      color-mix(in srgb, var(--accent) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 40% at 70% 10%,
+      color-mix(in srgb, var(--logo-2) 16%, transparent),
+      transparent 70%
+    );
+}
+
+/* ---------- Bouton principal qui luit au survol ---------- */
+.site-cta {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 10px 30px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+  transition:
+    box-shadow 0.3s var(--ease-out),
+    filter 0.2s,
+    scale 0.2s;
+}
+.site-cta:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 14px 40px -8px color-mix(in srgb, var(--accent) 85%, transparent),
+    0 0 0 4px var(--accent-soft);
+}
+
+/* ---------- Traits qui circulent (schémas) : tirets qui avancent vers Leon ---------- */
+.site-flow {
+  stroke-dasharray: 3 9;
+  animation: site-flow 1.6s linear infinite;
+}
+.site-flow-slow {
+  stroke-dasharray: 2 10;
+  animation: site-flow 3.2s linear infinite;
+}
+@keyframes site-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Halo qui bat autour d'un point (Leon au centre d'un schéma) */
+.site-ping {
+  animation: site-ping 3.2s var(--ease-out) infinite;
+}
+.site-ping-2 {
+  animation-delay: 1.6s;
+}
+@keyframes site-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Lévitation douce (cartes flottantes du haut de page) */
+.site-float {
+  animation: site-float 7s ease-in-out infinite alternate;
+}
+.site-float-2 {
+  animation: site-float 9s ease-in-out -3s infinite alternate;
+}
+@keyframes site-float {
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+/* Orbites (maquette Constellation) : l'anneau tourne, chaque logo tourne à l'envers pour rester droit */
+.site-orbit {
+  animation: site-spin var(--orbit-dur, 60s) linear infinite;
+}
+.site-orbit[data-reverse] {
+  animation-direction: reverse;
+}
+.site-orbit > .site-orbit-item {
+  animation: site-spin var(--orbit-dur, 60s) linear infinite reverse;
+}
+.site-orbit[data-reverse] > .site-orbit-item {
+  animation-direction: normal;
+}
+@keyframes site-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* Ligne de temps (maquette Récit) : le trait se remplit au défilement */
+@supports (animation-timeline: view()) {
+  .site-timeline-fill {
+    transform-origin: top;
+    animation: site-fill linear both;
+    animation-timeline: view();
+    animation-range: entry 40% exit 60%;
+  }
+}
+@keyframes site-fill {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Texte qui défile mot à mot (démo de réponse) */
+.site-word {
+  animation: wordblur 0.5s var(--ease-out) both;
+}
+
+/* Carte qui se soulève au survol */
+.site-lift {
+  transition:
+    translate 0.35s var(--ease-out),
+    border-color 0.3s,
+    box-shadow 0.35s var(--ease-out);
+}
+.site-lift:hover {
+  translate: 0 -4px;
+  border-color: var(--line-strong);
+  box-shadow:
+    inset 0 1px 0 var(--hi),
+    var(--shadow);
+}

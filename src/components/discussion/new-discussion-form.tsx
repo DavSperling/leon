@@ -1,9 +1,9 @@
 'use client';
 
-import { MessageSquarePlus } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
-import { Button, Field, GlassCard, Textarea, useThinking } from '@/components/verre';
+import { GlassCard, IconButton, Textarea, useThinking } from '@/components/verre';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
 import { cn, formatNumber, nb } from '@/lib/verre';
 
@@ -20,50 +20,47 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
   const count = question.length;
 
   return (
-    <GlassCard variant="raised" signal className="p-4 sm:p-5">
+    <GlassCard
+      variant="raised"
+      signal
+      className="p-2 transition-[border-color,box-shadow] duration-200 focus-within:border-accent-line"
+    >
       <form ref={form} action={action}>
-        <Field
-          label={<span className="text-body text-fg">Nouvelle discussion</span>}
-          aside={
-            count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
-              <span
-                className={cn(
-                  'font-mono text-meta tracking-normal',
-                  count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
-                )}
-              >
-                {formatNumber(count)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS)}
-              </span>
-            )
-          }
-        >
-          <Textarea
-            name="question"
-            rows={3}
-            autoGrow
-            maxRows={10}
-            maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
-            required
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={(event) => {
-              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter')
-                form.current?.requestSubmit();
-            }}
-            disabled={disabled}
-            // et non disabled : le focus reste dans le champ pendant l'envoi
-            readOnly={pending}
-            aria-invalid={state.error ? true : undefined}
-            aria-describedby="nouvelle-question-note"
-            placeholder={nb(
-              'Par exemple : qu’a-t-on décidé avec ACME sur le renouvellement du contrat ?',
-            )}
-            className="min-h-[92px] text-lead"
-          />
-        </Field>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <label htmlFor="nouvelle-question" className="sr-only">
+          Nouvelle discussion : votre question à Leon
+        </label>
+        <Textarea
+          id="nouvelle-question"
+          name="question"
+          rows={2}
+          autoGrow
+          maxRows={10}
+          maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
+          required
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          onKeyDown={(event) => {
+            // Entrée envoie, Maj + Entrée passe à la ligne, comme dans le fil d'une discussion.
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              form.current?.requestSubmit();
+            }
+          }}
+          disabled={disabled}
+          // et non disabled : le focus reste dans le champ pendant l'envoi
+          readOnly={pending}
+          aria-invalid={state.error ? true : undefined}
+          aria-describedby="nouvelle-question-note"
+          placeholder={nb('Comment Leon peut-il vous aider ?')}
+          className="border-0 bg-transparent px-2.5 py-2 text-lead shadow-none hover:border-0 focus-visible:shadow-none disabled:opacity-70"
+        />
+        <div className="flex items-center justify-end gap-3 px-1">
           {state.error ? (
-            <p id="nouvelle-question-note" role="alert" className="text-ui text-destructive">
+            <p
+              id="nouvelle-question-note"
+              role="alert"
+              className="mr-auto px-1.5 text-ui text-destructive"
+            >
               {nb(state.error)}
             </p>
           ) : (
@@ -72,17 +69,27 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
               Leon cherche, lit et répond en citant ses sources.
             </p>
           )}
-          <Button
+          {count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
+            <span
+              className={cn(
+                'font-mono text-meta tracking-normal',
+                count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
+              )}
+            >
+              {formatNumber(count)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS)}
+            </span>
+          )}
+          <IconButton
             type="submit"
+            icon={ArrowUp}
+            label={pending ? 'Leon répond…' : 'Demander à Leon'}
             variant="primary"
             size="lg"
-            icon={MessageSquarePlus}
-            loading={pending}
-            disabled={disabled}
-            className="ml-auto max-sm:w-full"
-          >
-            Demander à Leon
-          </Button>
+            aria-disabled={pending || undefined}
+            disabled={disabled || (!pending && question.trim() === '')}
+            tooltip={false}
+            className="size-10 rounded-field aria-disabled:opacity-50 [&_svg]:size-[18px]"
+          />
         </div>
       </form>
     </GlassCard>

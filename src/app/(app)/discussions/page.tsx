@@ -21,25 +21,29 @@ export default async function DiscussionsPage() {
   const now = new Date();
 
   return (
-    <div className="max-w-[880px]">
-      <PageHeader
-        title="Discussions"
-        subtitle="Posez une question : Leon cherche, lit et répond en citant ses sources, ou dit qu’il ne sait pas."
-        meta={
-          <span className="inline-flex items-center gap-1.5">
-            <Lock aria-hidden="true" />
-            Vos discussions ne sont visibles que de vous.
-          </span>
-        }
-      />
-      <div className="grid gap-5">
-        {!modelAvailable && (
-          <Notice tone="warning" live="status">
-            Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La
-            recherche, elle, marche.
-          </Notice>
-        )}
-        <NewDiscussionForm disabled={!modelAvailable} />
+    <div className="mx-auto max-w-[760px]">
+      {/* La question au centre de l'écran, comme l'accueil d'un assistant ; les discussions passées en dessous. */}
+      <div className="flex min-h-[calc(100dvh-160px)] flex-col justify-center">
+        <PageHeader
+          title="Discussions"
+          subtitle="Posez une question : Leon cherche, lit et répond en citant ses sources, ou dit qu’il ne sait pas."
+          meta={
+            <span className="inline-flex items-center gap-1.5">
+              <Lock aria-hidden="true" />
+              Vos discussions ne sont visibles que de vous.
+            </span>
+          }
+          className="justify-center text-center [&>div]:mx-auto [&>div>div]:justify-center"
+        />
+        <div className="grid gap-5">
+          {!modelAvailable && (
+            <Notice tone="warning" live="status">
+              Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La
+              recherche, elle, marche.
+            </Notice>
+          )}
+          <NewDiscussionForm disabled={!modelAvailable} />
+        </div>
       </div>
 
       <Section id="vos-discussions" title="Vos discussions" className="mt-12">

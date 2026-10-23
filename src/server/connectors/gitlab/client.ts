@@ -63,6 +63,21 @@ export function gitlabClient(headers: Record<string, string>, http: ConnectorHtt
         z.object({ id: z.number(), username: z.string() }),
       ),
 
+    // Bouton seulement : GitLab ne laisse pas choisir les projets à l'autorisation. Les `max` projets
+    // dont l'utilisateur est membre, les plus récemment actifs d'abord (une seule page).
+    // https://docs.gitlab.com/api/projects/#list-a-users-projects
+    memberProjects: (max: number) =>
+      http.json(
+        {
+          url: `${API}/projects`,
+          headers,
+          query: { membership: 'true', order_by: 'last_activity_at', sort: 'desc', per_page: max },
+        },
+        z
+          .array(z.object({ path_with_namespace: z.string() }))
+          .transform((rows) => rows.map((row) => row.path_with_namespace)),
+      ),
+
     // GitLab répond 404 à un projet privé hors de portée du jeton, et 403 à un jeton sans accès.
     async checkProject(project: string): Promise<void> {
       try {

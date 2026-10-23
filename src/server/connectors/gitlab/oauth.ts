@@ -31,11 +31,12 @@ export const gitlabOAuth: OAuthSpec = {
   pkce: true,
   clientAuth: 'body',
   tokenBody: 'form',
-  preFields: ['projects'],
+  preFields: [],
   setupHosts: [],
 
-  // Rien à demander à GitLab : les projets viennent du formulaire d'avant le clic.
-  async toConfig(_tokens, preFields) {
-    return { projects: preFields.projects };
+  // Rien à demander avant le clic : les projets sont ceux dont l'utilisateur est membre, relus à
+  // chaque passage (voir `projectsToRead`).
+  async toConfig() {
+    return {};
   },
 };

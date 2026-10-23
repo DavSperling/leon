@@ -83,6 +83,32 @@ export function githubClient(token: string, http: ConnectorHttp) {
     account: () =>
       http.json({ url: `${API}/user`, headers }, z.object({ id: z.number(), login: z.string() })),
 
+    // Bouton seulement : les dépôts où l'utilisateur a installé l'appli (choisis sur l'écran
+    // d'installation de GitHub), dans l'ordre de GitHub. `max` borne la lecture.
+    // https://docs.github.com/en/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token
+    async installedRepos(max: number): Promise<string[]> {
+      const repos: string[] = [];
+      const installations = all(
+        '/user/installations',
+        z
+          .object({ installations: z.array(z.object({ id: z.number() })) })
+          .transform((r) => r.installations),
+      );
+      for (const { id } of await installations) {
+        const listed = all(
+          `/user/installations/${id}/repositories`,
+          z
+            .object({ repositories: z.array(z.object({ full_name: z.string() })) })
+            .transform((r) => r.repositories),
+        );
+        for (const { full_name } of await listed) {
+          if (repos.length === max) return repos;
+          repos.push(full_name);
+        }
+      }
+      return repos;
+    },
+
     // GitHub répond 404 à un dépôt privé hors de portée du jeton, et 403 à un jeton sans accès.
     async checkRepo(repo: string): Promise<void> {
       try {

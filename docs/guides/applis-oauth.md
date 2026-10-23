@@ -26,11 +26,12 @@ Une **GitHub App**, pas une « OAuth App » : le droit `repo` d'une OAuth App do
 - **Où créer** : https://github.com/settings/apps/new (compte personnel), ou pour une organisation : Your organizations › Settings › Developer settings › GitHub Apps › New GitHub App.
 - **Nom** : « Leon » (34 caractères au plus, unique sur tout GitHub : s'il est pris, « Leon » suivi du nom de l'entreprise). « Homepage URL » : l'adresse publique de Leon (en local, celle du dépôt).
 - **Adresse de retour**, dans « Callback URL » : `http://localhost:3000/api/v1/connexions/oauth/github/retour`
+- **Après l'installation**, dans « Post installation » : « Setup URL » = `http://localhost:3000/connexions?branche=github` (l'adresse de Leon suivie de `/connexions?branche=github`), et « Redirect on update » **cochée**. GitHub y renvoie l'utilisateur une fois ses dépôts choisis.
 - **Cases** : « Expire user authorization tokens » **cochée** (laisser ainsi : le jeton dure 8 h et Leon le renouvelle) ; « Request user authorization (OAuth) during installation » **décochée** (sinon GitHub renvoie vers Leon sans `state`) ; « Webhook › Active » décochée.
 - **Droits** (Repository permissions) : « Issues » et « Pull requests » en « Read-only » ; « Metadata » en « Read-only » (déjà imposé). Aucune autre permission. Leon ne demande aucun paramètre `scope` : les droits sont ceux de l'appli.
 - **Pages demandées** : aucune. Un logo est facultatif.
-- **Variables** : `LEON_OAUTH_GITHUB_ID` = le « Client ID » de l'appli (pas son « App ID »), `LEON_OAUTH_GITHUB_SECRET` = un secret créé sur la même page (« Client secrets › Generate a new client secret »).
-- **Pour que d'autres comptes l'utilisent** : « Where can this GitHub App be installed? » sur « Any account » (appli publique). Chaque compte ou organisation installe ensuite l'appli sur les dépôts voulus (page publique de l'appli › Install, en limitant l'accès aux dépôts à brancher) ; dans une organisation, un propriétaire doit approuver l'installation. Sans installation, l'appli ne voit aucun dépôt. Les dépôts à lire se saisissent dans Leon avant le clic.
+- **Variables** : `LEON_OAUTH_GITHUB_ID` = le « Client ID » de l'appli (pas son « App ID »), `LEON_OAUTH_GITHUB_SECRET` = un secret créé sur la même page (« Client secrets › Generate a new client secret »), `LEON_OAUTH_GITHUB_APP` = le nom court de l'appli (celui de son adresse publique, github.com/apps/<nom>).
+- **Pour que d'autres comptes l'utilisent** : « Where can this GitHub App be installed? » sur « Any account » (appli publique). Chaque compte ou organisation installe ensuite l'appli sur les dépôts voulus (page publique de l'appli › Install, en limitant l'accès aux dépôts à brancher) ; dans une organisation, un propriétaire doit approuver l'installation. Sans installation, l'appli ne voit aucun dépôt. Leon ne demande rien avant le clic : après l'autorisation, si l'appli n'est installée sur aucun dépôt, il enchaîne sur son écran d'installation, où l'on choisit les dépôts, puis GitHub revient à Leon (« Setup URL »). Leon lit les dépôts où l'appli est installée (20 au plus), relus à chaque passage.
 
 ### Notion
 
@@ -62,7 +63,7 @@ gitlab.com seulement ; une installation de GitLab hébergée par le client n'est
 - **Où créer** : https://gitlab.com/-/user_settings/applications (avatar › Edit profile › Access › Applications › Add new application). Pour qu'elle ne dépende pas d'une personne, la créer dans un groupe (Settings › Applications du groupe).
 - **Nom** : « Leon ».
 - **Adresse de retour**, dans « Redirect URI » : `http://localhost:3000/api/v1/connexions/oauth/gitlab/retour`
-- **Droits** (« Scopes ») : `read_api` seulement. GitLab ne permet pas de le limiter à certains projets : c'est Leon qui ne lit que ceux de la liste.
+- **Droits** (« Scopes ») : `read_api` seulement. GitLab ne permet pas de le limiter à certains projets : avec le bouton, Leon lit les 20 projets les plus actifs dont l'utilisateur est membre (avec une clé collée, ceux de la liste).
 - **Cases** : « Confidential » **cochée** (Leon envoie le secret) ; « Trusted » non cochée (elle n'existe que pour une appli de toute l'instance).
 - **Pages demandées** : aucune.
 - **Variables** : `LEON_OAUTH_GITLAB_ID` = « Application ID », `LEON_OAUTH_GITLAB_SECRET` = « Secret » (affiché après « Save application »).

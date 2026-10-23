@@ -220,6 +220,29 @@ describe('POST /:outil/debut', () => {
 });
 
 describe('GET /:appli/retour : le branchement', () => {
+  it('branche puis enchaîne sur la page que l’outil demande (installation de l’appli GitHub)', async () => {
+    const paul = await signUp();
+    const next = 'https://github.com/apps/leon-memory/installations/new';
+
+    const { response } = await fullRound(paul, {
+      connector: fakeOAuthConnector({ nextStep: next }),
+    });
+
+    expect(response.status).toBe(302);
+    expect(location(response)).toBe(next);
+    expect(await connectionsOf(paul.ctx.tenantId)).toHaveLength(1);
+  });
+
+  it('reste branché et revient sur la page quand l’étape suivante échoue', async () => {
+    const paul = await signUp();
+    const connector = fakeOAuthConnector({ nextStep: new Error('GitHub ne répond pas') });
+
+    const { response } = await fullRound(paul, { connector });
+
+    expect(location(response)).toBe('/connexions?branche=github');
+    expect(await connectionsOf(paul.ctx.tenantId)).toHaveLength(1);
+  });
+
   it('crée la connexion avec ses jetons chiffrés, efface le cookie et revient sur la page', async () => {
     const paul = await signUp();
 

@@ -132,6 +132,7 @@ export const OAUTH_RETURN_CODES = [
   'admin',
   'admin_accorde',
   'autre_compte',
+  'vide',
 ] as const;
 type OAuthReturnCode = (typeof OAUTH_RETURN_CODES)[number];
 
@@ -173,6 +174,13 @@ function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
       return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
     case 'autre_compte':
       return `Reconnectez ${object} avec le même compte et le même site, ou ajoutez une autre connexion.`;
+    case 'vide':
+      if (tool === 'airtable') {
+        return 'Leon est connecté à Airtable, mais aucune base n’a été choisie. Reconnectez-vous et cochez au moins une base.';
+      }
+      if (tool === 'gitlab')
+        return 'Leon est connecté à GitLab, mais vous n’êtes membre d’aucun projet.';
+      return `Leon est connecté à ${object}, mais n'y a accès à rien pour l'instant.`;
   }
 }
 

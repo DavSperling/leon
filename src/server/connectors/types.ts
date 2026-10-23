@@ -70,6 +70,9 @@ export type OAuthSpec = {
     isConsentError(input: { error: string; description: string | null }): boolean;
     url(clientId: string, redirectUri: string): string;
   };
+  // Après le branchement : une page de l'outil où envoyer l'utilisateur au lieu de revenir à Leon
+  // (l'installation de l'appli GitHub quand elle n'ouvre encore aucun dépôt), ou null.
+  nextStep?(config: Record<string, unknown>, http: ConnectorHttp): Promise<string | null>;
   // Champs propres à l'outil (cloudId, site, compte…), à partir des jetons et des champs saisis avant le clic.
   toConfig(
     tokens: OAuthTokens,

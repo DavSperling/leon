@@ -3,11 +3,13 @@ import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
+import { ParticleField, SplitWords, type WordsPart } from '../fx';
 import { Container, Kicker } from '../parts';
 
 // Haut des pages secondaires du site (produit, cas d'usage, connecteurs, sécurité, tarifs) : un seul style partagé.
 // Fil d'Ariane, libellé, h1 (le seul de la page), chapeau, boutons ; à droite, un visuel facultatif.
-// Entrée échelonnée en CSS (.site-rise) : visible sans JavaScript.
+// Entrée échelonnée en CSS (.site-rise, mots du titre qui basculent en 3D) : visible sans JavaScript. Derrière, une
+// nappe de particules en 3D, plus légère que celle de l'accueil.
 
 const rise = (i: number) => ({ '--i': i }) as CSSProperties;
 
@@ -16,6 +18,7 @@ export type Crumb = { href: string; label: string };
 export function PageHero({
   kicker,
   title,
+  accent,
   lead,
   actions,
   aside,
@@ -26,7 +29,9 @@ export function PageHero({
   className,
 }: {
   kicker?: ReactNode;
-  title: ReactNode;
+  title: string;
+  /** Morceau du titre en dégradé accent → sarcelle (« avec sa source. »). */
+  accent?: string;
   lead?: string;
   actions?: ReactNode;
   /** Visuel à droite (sous le texte sur mobile). */
@@ -41,16 +46,29 @@ export function PageHero({
   className?: string;
 }) {
   const centered = align === 'center' && !aside;
+  const at = accent ? title.indexOf(accent) : -1;
+  const parts: WordsPart[] =
+    accent && at >= 0
+      ? [
+          { text: title.slice(0, at) },
+          { text: accent, className: 'site-gradient' },
+          { text: title.slice(at + accent.length) },
+        ].filter((p) => p.text !== '')
+      : [{ text: title }];
   return (
     <section className={cn('relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-20', className)}>
       <div
         aria-hidden="true"
-        className="site-grid pointer-events-none absolute inset-0 opacity-70"
+        className="site-halo pointer-events-none absolute inset-x-0 top-0 h-[560px]"
       />
       <div
-        aria-hidden="true"
-        className="site-halo pointer-events-none absolute inset-x-0 top-0 h-[520px]"
-      />
+        className={cn(
+          'pointer-events-none absolute inset-x-0 bottom-0 opacity-75 [mask:linear-gradient(180deg,transparent,#000_42%)] [[data-theme=light]_&]:opacity-45',
+          aside ? 'top-[40%]' : 'top-[56%]',
+        )}
+      >
+        <ParticleField density={0.62} height={0.9} />
+      </div>
       <Container
         className={cn(
           'relative grid items-center gap-12',
@@ -77,11 +95,9 @@ export function PageHero({
                     <ChevronRight aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
                   </li>
                 ))}
-                {(current ?? (typeof title === 'string' ? title : null)) && (
-                  <li aria-current="page" className="font-medium text-fg-2">
-                    {nb(current ?? (typeof title === 'string' ? title : ''))}
-                  </li>
-                )}
+                <li aria-current="page" className="font-medium text-fg-2">
+                  {nb(current ?? title)}
+                </li>
               </ol>
             </nav>
           )}
@@ -92,14 +108,13 @@ export function PageHero({
           )}
           <h1
             className={cn(
-              'site-rise mt-4 font-bold tracking-[-0.045em] text-balance text-fg',
-              aside ? 'text-[clamp(36px,4.4vw,56px)]' : 'text-[clamp(38px,5.6vw,68px)]',
+              'mt-4 font-extrabold tracking-[-0.048em] text-balance text-fg',
+              aside ? 'text-[clamp(36px,4.6vw,60px)]' : 'text-[clamp(38px,5.8vw,72px)]',
               // après la taille : tailwind-merge retirerait sinon l'interligne (text-* le règle aussi)
-              'leading-[1.04]',
+              'leading-[1.02]',
             )}
-            style={rise(2)}
           >
-            {typeof title === 'string' ? nb(title) : title}
+            <SplitWords parts={parts} delay={140} />
           </h1>
           {lead && (
             <p
@@ -130,7 +145,7 @@ export function PageHero({
           )}
         </div>
         {aside && (
-          <div className="site-rise min-w-0" style={rise(3)}>
+          <div className="site-rise min-w-0" style={rise(4)}>
             {aside}
           </div>
         )}

@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { FAQ, PLANS, TOOL_COUNT } from '../content';
+import { Tilt } from '../fx';
 import { CtaBand, SectionHeading } from '../parts';
 import { PageHero, PageSection } from './page-hero';
+import './pages.css';
 
 // Page « Tarifs » : la proposition de docs/etudes/founder-pme-2026-10/pricing.md (pas encore arrêtée, aucune
 // facturation codée) : chaque bouton mène à la création d'un espace. Pas de « le plus choisi » : rien ne le mesure.
@@ -22,57 +24,67 @@ const EVERYWHERE = [
 
 function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
   return (
-    <li
-      className={cn(
-        'site-reveal relative flex flex-col overflow-hidden rounded-panel border p-6 shadow-hi sm:p-7',
-        plan.featured
-          ? 'signal-line signal-glow border-accent-line bg-glass-2 shadow-panel lg:-my-3 lg:py-10'
-          : 'border-line bg-panel',
-      )}
-    >
-      <div className="relative flex items-center justify-between gap-3">
-        <h3 className="text-title font-bold tracking-[-0.02em] text-fg">{plan.name}</h3>
-        {plan.featured && (
-          <span className="inline-flex h-[22px] items-center rounded-full bg-accent-soft px-2.5 font-mono text-[11px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-            Recommandé
-          </span>
-        )}
-      </div>
-      <p className="relative mt-2 text-body text-fg-2">{nb(plan.text)}</p>
-      <p className="relative mt-7 flex items-baseline gap-2">
-        <span className="text-[44px] leading-none font-bold tracking-[-0.04em] text-fg">
-          {nb(plan.price)}
-        </span>
-      </p>
-      <p className="relative mt-2 font-mono text-meta tracking-normal text-muted">
-        {nb(plan.unit)}
-      </p>
-      <Link
-        href="/inscription"
-        className={cn(
-          'relative mt-7 inline-flex h-11 items-center justify-center rounded-full text-ui font-semibold transition-[background-color,border-color,filter,scale] duration-200 active:scale-[.97]',
-          plan.featured
-            ? 'site-cta bg-accent text-accent-ink hover:brightness-[1.06]'
-            : 'border border-line-strong bg-glass-3 text-fg hover:border-accent-line hover:bg-hover',
-        )}
-      >
-        {plan.cta}
-      </Link>
-      <ul className="relative mt-7 grid gap-3 border-t border-line pt-6">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5 text-ui text-fg-2">
-            <Check
-              aria-hidden="true"
-              strokeWidth={2.2}
+    <li className={cn('site-reveal relative', plan.featured && 'z-[1]')}>
+      <div className={cn('h-full', plan.featured && 'pg-featured')}>
+        <Tilt
+          max={plan.featured ? 6 : 8}
+          className={cn(
+            'flex h-full flex-col overflow-clip rounded-panel border p-6 shadow-hi sm:p-7',
+            plan.featured
+              ? 'signal-line signal-glow fx-ring border-accent-line bg-glass-2 shadow-panel lg:py-10'
+              : 'border-line bg-panel',
+          )}
+        >
+          <div className="relative flex items-center justify-between gap-3">
+            <h3 className="text-title font-bold tracking-[-0.02em] text-fg">{plan.name}</h3>
+            {plan.featured && (
+              <span className="inline-flex h-[22px] items-center rounded-full bg-accent-soft px-2.5 font-mono text-[11px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
+                Recommandé
+              </span>
+            )}
+          </div>
+          <p className="relative mt-2 text-body text-fg-2">{nb(plan.text)}</p>
+          <p className="fx-pop relative mt-7 flex items-baseline gap-2 [--pop:46px]">
+            <span
               className={cn(
-                'mt-0.5 size-4 shrink-0',
-                plan.featured ? 'text-accent' : 'text-success',
+                'text-[44px] leading-none font-extrabold tracking-[-0.045em]',
+                plan.featured ? 'site-gradient' : 'text-fg',
               )}
-            />
-            {nb(f)}
-          </li>
-        ))}
-      </ul>
+            >
+              {nb(plan.price)}
+            </span>
+          </p>
+          <p className="relative mt-2 font-mono text-meta tracking-normal text-muted">
+            {nb(plan.unit)}
+          </p>
+          <Link
+            href="/inscription"
+            className={cn(
+              'relative mt-7 inline-flex h-11 items-center justify-center rounded-full text-ui font-semibold transition-[background-color,border-color,filter,scale] duration-200 active:scale-[.97]',
+              plan.featured
+                ? 'site-cta bg-accent text-accent-ink hover:brightness-[1.06]'
+                : 'border border-line-strong bg-glass-3 text-fg hover:border-accent-line hover:bg-hover',
+            )}
+          >
+            {plan.cta}
+          </Link>
+          <ul className="relative mt-7 grid gap-3 border-t border-line pt-6">
+            {plan.features.map((f) => (
+              <li key={f} className="flex items-start gap-2.5 text-ui text-fg-2">
+                <Check
+                  aria-hidden="true"
+                  strokeWidth={2.2}
+                  className={cn(
+                    'mt-0.5 size-4 shrink-0',
+                    plan.featured ? 'text-accent' : 'text-success',
+                  )}
+                />
+                {nb(f)}
+              </li>
+            ))}
+          </ul>
+        </Tilt>
+      </div>
     </li>
   );
 }
@@ -83,6 +95,7 @@ export function TarifsPage() {
       <PageHero
         kicker="Tarifs"
         title="Un prix simple, par personne qui s’en sert."
+        accent="par personne qui s’en sert."
         lead="Essayez gratuitement sur une équipe, avec vos vrais outils. Ensuite, seuls les comptes actifs du mois sont comptés."
         align="center"
         className="pb-10 sm:pb-12"
@@ -141,15 +154,17 @@ export function TarifsPage() {
             {FAQ.map((f) => (
               <details
                 key={f.q}
-                className="site-reveal group rounded-box border border-line bg-panel shadow-hi transition-[border-color,background-color] duration-300 open:border-line-strong open:bg-glass-2"
+                className="pg-faq site-reveal group rounded-box border border-line bg-panel shadow-hi transition-[border-color,background-color,box-shadow] duration-300 open:border-accent-line open:bg-glass-2 open:shadow-panel"
               >
                 <summary className="flex min-h-14 cursor-pointer list-none items-center gap-4 rounded-box px-5 py-3 text-ui font-semibold text-fg marker:content-none [&::-webkit-details-marker]:hidden">
                   <span className="flex-1">{nb(f.q)}</span>
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line bg-glass-3 text-accent transition-transform duration-300 group-open:rotate-45">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line bg-glass-3 text-accent transition-[rotate,background-color,color] duration-300 ease-[var(--ease-spring)] group-open:rotate-45 group-open:bg-accent group-open:text-accent-ink">
                     <Plus aria-hidden="true" strokeWidth={2} className="size-3.5" />
                   </span>
                 </summary>
-                <p className="px-5 pb-5 text-body leading-[1.65] text-fg-2">{nb(f.a)}</p>
+                <p className="pg-faq-answer px-5 pb-5 text-body leading-[1.65] text-fg-2">
+                  {nb(f.a)}
+                </p>
               </details>
             ))}
           </div>

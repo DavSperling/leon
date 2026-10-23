@@ -1,39 +1,31 @@
 import { Blocks, Globe, KeyRound, ListChecks, Plug, Terminal, Timer } from 'lucide-react';
-import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { TOOL_COUNT, TOOL_GROUPS } from '../content';
-import { CtaBand, CtaLink, Kicker, LogoMarquee, SectionHeading } from '../parts';
+import { ALL_TOOLS, TOOL_COUNT } from '../content';
+import { LogoSphere, Tilt } from '../fx';
+import { CtaBand, CtaLink, Kicker, SectionHeading } from '../parts';
 import { ConnecteursCatalogue } from './connecteurs-catalogue';
 import { PageHero, PageSection, PlannedBadge } from './page-hero';
 
 // Page « Connecteurs » : le catalogue filtrable des outils, comment on branche, les conversations d'IA, ce qui est
 // prévu. Les deux sites d'assistants que capte l'extension ne sont pas nommés (marketing.md, publicité comparative).
 
-const group = (family: string): ProviderId[] =>
-  TOOL_GROUPS.find((g) => g.family === family)?.tools ?? [];
-
-const ROWS: ProviderId[][] = [
-  [...group('dev'), ...group('crm'), 'outlook'],
-  [...group('reunions'), ...group('support').slice(0, 4)],
-  [...group('projet'), ...group('support').slice(4)],
-];
-
-function LogoWall() {
+/** La sphère des outils, à faire tourner, posée sur un socle de verre. */
+function SphereStage() {
   return (
-    <figure className="relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] py-6 shadow-panel backdrop-blur-[30px]">
-      <figcaption className="sr-only">
-        {nb(`Les logos des ${TOOL_COUNT} outils branchables.`)}
-      </figcaption>
+    <figure className="relative mx-auto w-full max-w-[540px]">
       <div
         aria-hidden="true"
-        className="site-dots pointer-events-none absolute inset-0 opacity-60"
+        className="absolute inset-[6%] rounded-full border border-line bg-[radial-gradient(closest-side,var(--glass-2),transparent)] shadow-[inset_0_1px_0_var(--hi)]"
       />
-      <div aria-hidden="true" className="relative grid gap-3">
-        <LogoMarquee tools={ROWS[0] ?? []} duration={42} />
-        <LogoMarquee tools={ROWS[1] ?? []} duration={50} reverse />
-        <LogoMarquee tools={ROWS[2] ?? []} duration={58} />
-      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-[18%] rounded-full border border-dashed border-accent-line opacity-60"
+      />
+      <LogoSphere tools={ALL_TOOLS} size={46} />
+      <figcaption className="mt-2 text-center font-mono text-meta tracking-normal text-muted">
+        {nb(`${TOOL_COUNT} outils · faites tourner la sphère`)}
+      </figcaption>
     </figure>
   );
 }
@@ -115,7 +107,8 @@ export function ConnecteursPage() {
             </CtaLink>
           </>
         }
-        aside={<LogoWall />}
+        accent="et vos conversations d’IA."
+        aside={<SphereStage />}
       />
 
       <PageSection id="catalogue" labelledBy="catalogue-titre" className="pt-6 sm:pt-10">
@@ -142,20 +135,19 @@ export function ConnecteursPage() {
         />
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
-            <li
-              key={s.title}
-              className="site-reveal relative overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent">
-                  <s.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
-                </span>
-                <span className="font-mono text-meta tracking-normal text-muted">0{i + 1}</span>
-              </div>
-              <h3 className="mt-5 text-title font-bold tracking-[-0.02em] text-fg">
-                {nb(s.title)}
-              </h3>
-              <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(s.text)}</p>
+            <li key={s.title} className="site-reveal">
+              <Tilt className="h-full overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi">
+                <div className="flex items-center justify-between">
+                  <span className="fx-pop grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent">
+                    <s.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
+                  </span>
+                  <span className="font-mono text-meta tracking-normal text-muted">0{i + 1}</span>
+                </div>
+                <h3 className="mt-5 text-title font-bold tracking-[-0.02em] text-fg">
+                  {nb(s.title)}
+                </h3>
+                <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(s.text)}</p>
+              </Tilt>
             </li>
           ))}
         </ol>
@@ -170,28 +162,32 @@ export function ConnecteursPage() {
         />
         <ul className="mt-10 grid gap-4 lg:grid-cols-3">
           {CHANNELS.map((c, i) => (
-            <li
-              key={c.title}
-              className={cn(
-                'site-reveal relative overflow-hidden rounded-box border bg-panel p-6 shadow-hi',
-                i === 0 ? 'signal-line signal-glow border-accent-line' : 'border-line',
-              )}
-            >
-              <span className="relative grid size-11 place-items-center rounded-item border border-line bg-glass-3 text-accent">
-                <c.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
-              </span>
-              <h3 className="relative mt-5 text-title font-bold tracking-[-0.02em] text-fg">
-                {c.title}
-              </h3>
-              <p className="relative mt-2 text-body leading-[1.6] text-fg-2">{nb(c.text)}</p>
-              <ul className="relative mt-5 grid gap-2 border-t border-line pt-4">
-                {c.points.map((p) => (
-                  <li key={p} className="flex items-center gap-2 text-label text-fg-2">
-                    <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" />
-                    {nb(p)}
-                  </li>
-                ))}
-              </ul>
+            <li key={c.title} className="site-reveal">
+              <Tilt
+                className={cn(
+                  'h-full overflow-hidden rounded-box border bg-panel p-6 shadow-hi',
+                  i === 0 ? 'signal-line signal-glow fx-ring border-accent-line' : 'border-line',
+                )}
+              >
+                <span className="fx-pop relative grid size-11 place-items-center rounded-item border border-line bg-glass-3 text-accent">
+                  <c.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
+                </span>
+                <h3 className="relative mt-5 text-title font-bold tracking-[-0.02em] text-fg">
+                  {c.title}
+                </h3>
+                <p className="relative mt-2 text-body leading-[1.6] text-fg-2">{nb(c.text)}</p>
+                <ul className="relative mt-5 grid gap-2 border-t border-line pt-4">
+                  {c.points.map((p) => (
+                    <li key={p} className="flex items-center gap-2 text-label text-fg-2">
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 shrink-0 rounded-full bg-accent"
+                      />
+                      {nb(p)}
+                    </li>
+                  ))}
+                </ul>
+              </Tilt>
             </li>
           ))}
         </ul>

@@ -67,10 +67,10 @@
     animation-range: entry 0% cover 42%;
   }
 }
+/* transform seul, pour la même raison : la 3D d'une carte inclinable à l'intérieur reste vivante */
 @keyframes fx-untilt {
   from {
     transform: perspective(1400px) rotateX(26deg) scale(0.9) translateY(30px);
-    opacity: 0.55;
   }
 }
 
@@ -121,10 +121,10 @@
     animation-range: entry 10% cover 50%;
   }
 }
+/* transform seul : une opacité sous 1 aplatirait les couches en un seul plan pendant l'entrée */
 @keyframes fx-layers-open {
   from {
     transform: rotateX(56deg) rotateZ(-36deg) scale(0.86);
-    opacity: 0.4;
   }
 }
 

@@ -1,19 +1,11 @@
-import {
-  ArrowUpRight,
-  Check,
-  FileText,
-  MessagesSquare,
-  Plug,
-  Sunrise,
-  Terminal,
-  UserRound,
-} from 'lucide-react';
+import { Check, MessagesSquare, Plug, Sunrise, Terminal } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { BRIEFING, DEMOS, PILLARS, type Pillar, SYNTAX, TOOL_COUNT } from '../content';
 import { DemoAnswerCard, DemoSearchField } from '../demo-card';
+import { Layers3D, Tilt } from '../fx';
 import {
   CitedAnswer,
   CtaBand,
@@ -25,6 +17,7 @@ import {
   ToolLogo,
 } from '../parts';
 import { PageHero, PageSection, PlannedBadge } from './page-hero';
+import './pages.css';
 
 // Page « Produit » : les quatre étapes (capter, garder, retrouver, discuter), chacune avec un visuel fait en HTML et
 // CSS d'après les vrais écrans, puis ce qui est prévu. Exemples fictifs, fonctions réelles (état de main).
@@ -44,12 +37,45 @@ const CAPTURED: ProviderId[] = [
   'outlook',
 ];
 
-/** Un visuel illustratif : lu comme une image (légende pour les lecteurs d'écran), décor pour le reste. */
-function Visual({ caption, children }: { caption: string; children: ReactNode }) {
+/**
+ * Un visuel illustratif : lu comme une image (légende pour les lecteurs d'écran), décor pour le reste. Il s'incline
+ * vers le pointeur ; `chip`, une pastille qui flotte devant lui, sort du plan en 3D.
+ */
+function Visual({
+  caption,
+  chip,
+  tilt = true,
+  children,
+}: {
+  caption: string;
+  chip?: ReactNode;
+  tilt?: boolean;
+  children: ReactNode;
+}) {
+  const body = (
+    <>
+      {children}
+      {chip && (
+        <div className="fx-pop pointer-events-none absolute -top-4 right-4 z-[4] [--pop:60px] sm:-right-3">
+          <div className="site-float rounded-full border border-accent-line bg-[color-mix(in_srgb,var(--menu)_86%,transparent)] px-3.5 py-2 font-mono text-meta tracking-normal text-accent shadow-float backdrop-blur-[16px]">
+            {chip}
+          </div>
+        </div>
+      )}
+    </>
+  );
   return (
     <figure className="site-reveal relative min-w-0">
       <figcaption className="sr-only">{nb(caption)}</figcaption>
-      <div aria-hidden="true">{children}</div>
+      <div aria-hidden="true">
+        {tilt ? (
+          <Tilt max={5} scale={1.01} perspective={1400} className="rounded-panel">
+            {body}
+          </Tilt>
+        ) : (
+          body
+        )}
+      </div>
     </figure>
   );
 }
@@ -75,7 +101,10 @@ function FakeSwitch({ on }: { on: boolean }) {
 
 function CaptureVisual() {
   return (
-    <Visual caption="Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin.">
+    <Visual
+      caption="Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin."
+      chip="+ 3 éléments gardés · 14:12"
+    >
       <div className={PANEL}>
         <div className="site-dots pointer-events-none absolute inset-0 opacity-70" />
         <div className="relative grid gap-3">
@@ -150,76 +179,17 @@ function CaptureVisual() {
 
 function KeepVisual() {
   return (
-    <Visual caption="Illustration : une page gardée telle quelle avec un lien vers l’original, une ligne de fichier .env dont la valeur est masquée avant stockage, et une conversation privée à son auteur.">
-      <div className={PANEL}>
-        <div className="site-grid pointer-events-none absolute inset-0 opacity-50" />
-        <div className="relative grid gap-3">
-          <div className={cn(CARD, 'signal-line relative p-4 sm:p-5')}>
-            <div className="flex items-start gap-3">
-              <ToolLogo id="notion" size={36} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-ui font-semibold text-fg">
-                  {nb('Passation : comptes de Thomas')}
-                </p>
-                <p className="mt-0.5 truncate font-mono text-meta tracking-normal text-muted">
-                  Page · Thomas Girard · 17 oct. 2026
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2 border-t border-line pt-4 text-label leading-[1.6] text-fg-2">
-              <p>
-                {nb(
-                  'Nordia : refonte du tableau de bord, échéance le 28 nov. Maquettes validées le 9 oct.',
-                )}
-              </p>
-              <p>{nb('Verlant : devis ajusté à renvoyer. Contact : direction financière.')}</p>
-              <p className="text-muted">{nb('Accès : voir le coffre de l’équipe.')}</p>
-            </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="inline-flex items-center gap-1.5 font-mono text-meta tracking-normal text-muted">
-                <FileText strokeWidth={1.7} className="size-3.5" />
-                gardé tel quel, sans résumé
-              </p>
-              <span className="inline-flex items-center gap-1 rounded-full border border-line-strong bg-glass-3 px-3 py-1.5 text-label font-semibold text-fg-2">
-                Ouvrir dans Notion
-                <ArrowUpRight strokeWidth={1.8} className="size-3.5 text-accent" />
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-            <div className={cn(CARD, 'p-4')}>
-              <p className="text-ui font-semibold text-fg">Secrets masqués</p>
-              <div className="mt-3 overflow-hidden rounded-field border border-line bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] p-3 font-mono text-[11px] leading-[1.75] tracking-normal">
-                <p className="truncate text-muted">
-                  <span className="text-fg-2">DB_PASSWORD</span>=
-                  <span className="rounded-[4px] bg-accent-soft px-1 text-accent">
-                    [secret masqué]
-                  </span>
-                </p>
-                <p className="truncate text-muted">
-                  <span className="text-fg-2">API_KEY</span>=
-                  <span className="rounded-[4px] bg-accent-soft px-1 text-accent">
-                    [secret masqué]
-                  </span>
-                </p>
-              </div>
-              <p className="mt-2.5 text-label text-muted">avant tout stockage</p>
-            </div>
-            <div className={cn(CARD, 'p-4')}>
-              <p className="text-ui font-semibold text-fg">Qui la voit</p>
-              <ul className="mt-3 grid gap-2 text-label">
-                <li className="flex items-center gap-2 rounded-field border border-line bg-glass-3 px-3 py-2 text-fg-2">
-                  <span className="size-1.5 rounded-full bg-success" />
-                  Page d’équipe : toute l’équipe
-                </li>
-                <li className="flex items-center gap-2 rounded-field border border-accent-line bg-accent-soft px-3 py-2 text-accent">
-                  <UserRound strokeWidth={1.8} className="size-3.5" />
-                  Conversation d’IA : vous uniquement
-                </li>
-              </ul>
-            </div>
-          </div>
+    <Visual
+      tilt={false}
+      caption="Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous seul."
+    >
+      <div className="relative min-h-[440px] sm:min-h-[520px]">
+        <div className="site-halo pointer-events-none absolute inset-0 opacity-80" />
+        <Layers3D className="absolute inset-0" />
+        <div className="site-float absolute bottom-2 left-1/2 z-[2] w-max -translate-x-1/2 rounded-field border border-line-strong bg-[color-mix(in_srgb,var(--menu)_88%,transparent)] px-3.5 py-2.5 font-mono text-[11.5px] tracking-normal shadow-float backdrop-blur-[16px]">
+          <span className="text-fg-2">DB_PASSWORD</span>
+          <span className="text-muted">=</span>
+          <span className="rounded-[4px] bg-accent-soft px-1 text-accent">[secret masqué]</span>
         </div>
       </div>
     </Visual>
@@ -230,33 +200,43 @@ function FindVisual() {
   const demo = DEMOS[1];
   return (
     <div className="site-reveal min-w-0">
-      <div className={PANEL}>
-        <div className="site-dots pointer-events-none absolute inset-0 opacity-60" />
-        <div className="relative grid gap-3">
-          <div aria-hidden="true" className="grid gap-3">
-            <DemoSearchField query={<QueryCode q="outil:linear type:ticket depuis:7j" />} />
-            {demo && <DemoAnswerCard demo={demo} />}
-          </div>
-          <div className={cn(CARD, 'px-2 py-1.5')}>
-            <p className="px-2.5 pt-2.5 pb-1 font-mono text-meta font-medium tracking-[0.08em] text-muted uppercase">
-              Écrit dans la barre
-            </p>
-            <dl className="grid sm:grid-cols-2">
-              {SYNTAX.map((s) => (
-                <div
-                  key={s.code}
-                  className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2"
-                >
-                  <dt>
-                    <QueryCode q={s.code} />
-                  </dt>
-                  <dd className="text-label text-fg-2">{nb(s.text)}</dd>
-                </div>
-              ))}
-            </dl>
+      <Tilt max={5} scale={1.01} perspective={1400} className="rounded-panel">
+        <div className={PANEL}>
+          <div className="site-dots pointer-events-none absolute inset-0 opacity-60" />
+          <div className="relative grid gap-3">
+            <div aria-hidden="true" className="grid gap-3">
+              <DemoSearchField query={<QueryCode q="outil:linear type:ticket depuis:7j" />} />
+              {demo && <DemoAnswerCard demo={demo} />}
+            </div>
+            <div className={cn(CARD, 'px-2 py-1.5')}>
+              <p className="px-2.5 pt-2.5 pb-1 font-mono text-meta font-medium tracking-[0.08em] text-muted uppercase">
+                Écrit dans la barre
+              </p>
+              <dl className="grid sm:grid-cols-2">
+                {SYNTAX.map((s) => (
+                  <div
+                    key={s.code}
+                    className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2"
+                  >
+                    <dt>
+                      <QueryCode q={s.code} />
+                    </dt>
+                    <dd className="text-label text-fg-2">{nb(s.text)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </div>
-      </div>
+        <div
+          aria-hidden="true"
+          className="fx-pop pointer-events-none absolute -top-4 right-4 z-[4] [--pop:60px] sm:-right-3"
+        >
+          <div className="site-float rounded-full border border-accent-line bg-[color-mix(in_srgb,var(--menu)_86%,transparent)] px-3.5 py-2 font-mono text-meta tracking-normal text-accent shadow-float backdrop-blur-[16px]">
+            une source par phrase · [1] [2] [3]
+          </div>
+        </div>
+      </Tilt>
     </div>
   );
 }
@@ -271,7 +251,10 @@ const MCP_TOOLS = [
 function DiscussVisual() {
   const demo = DEMOS[2];
   return (
-    <Visual caption="Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant.">
+    <Visual
+      caption="Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant."
+      chip="point du matin · 08:45"
+    >
       <div className={PANEL}>
         <div className="site-grid pointer-events-none absolute inset-0 opacity-50" />
         <div className="relative grid gap-3">
@@ -376,54 +359,48 @@ function PillarSection({ pillar, index }: { pillar: Pillar; index: number }) {
   );
 }
 
-/** Le chemin d'une information, en quatre étapes reliées (visuel du haut de page). */
+/**
+ * Le chemin d'une information, en quatre étapes reliées (visuel du haut de page) : une pile de cartes de verre en 3D,
+ * chacune un cran devant l'autre ; la carte survolée sort de la pile. À plat sous 1024 px (pages.css, .pg-stack).
+ */
 function FlowAside() {
   return (
-    <figure className="relative">
+    <figure className="pg-stack relative py-4 lg:py-10">
       <figcaption className="sr-only">
         {nb('Les quatre étapes : capter, garder, retrouver, discuter.')}
       </figcaption>
-      <div className={cn(PANEL, 'p-3 sm:p-4')}>
-        <div
-          aria-hidden="true"
-          className="site-dots pointer-events-none absolute inset-0 opacity-60"
-        />
-        <ol className="relative grid">
-          {PILLARS.map((p, i) => (
-            <li key={p.id} className="relative min-w-0">
-              <a
-                href={`#${p.id}`}
-                className="site-lift relative flex min-w-0 items-center gap-4 rounded-box border border-line bg-glass-2 px-4 py-3.5 shadow-hi"
-              >
-                <span className="grid size-10 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft font-mono text-[13px] font-medium text-accent">
-                  0{i + 1}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-ui font-semibold text-fg">{p.kicker}</span>
-                  <span className="mt-0.5 block truncate text-label text-muted">{nb(p.title)}</span>
-                </span>
-              </a>
-              {i < PILLARS.length - 1 && (
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 2 22"
-                  className="ml-[35px] block h-[22px] w-[2px] overflow-visible"
-                >
-                  <line
-                    x1="1"
-                    y1="0"
-                    x2="1"
-                    y2="22"
-                    stroke="var(--accent)"
-                    strokeWidth="1.5"
-                    className="site-flow"
-                  />
-                </svg>
+      <div
+        aria-hidden="true"
+        className="site-halo pointer-events-none absolute -inset-10 opacity-80 [mask:radial-gradient(closest-side,#000,transparent)]"
+      />
+      <ol className="pg-stack-deck relative grid gap-3 lg:gap-4">
+        {PILLARS.map((p, i) => (
+          <li key={p.id} className="relative min-w-0" style={{ '--i': i } as CSSProperties}>
+            <a
+              href={`#${p.id}`}
+              className={cn(
+                'pg-stack-card relative flex min-w-0 items-center gap-4 rounded-box border border-line-strong bg-[linear-gradient(160deg,color-mix(in_srgb,var(--menu)_88%,transparent),color-mix(in_srgb,var(--menu)_72%,transparent))] px-4 py-4 shadow-panel',
+                i === PILLARS.length - 1 && 'signal-line',
               )}
-            </li>
-          ))}
-        </ol>
-      </div>
+              style={{ '--i': i } as CSSProperties}
+            >
+              <span className="grid size-11 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft font-mono text-[13px] font-medium text-accent shadow-[0_0_0_6px_var(--accent-soft)]">
+                0{i + 1}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-ui font-semibold text-fg">{p.kicker}</span>
+                <span className="mt-0.5 block truncate text-label text-muted">{nb(p.title)}</span>
+              </span>
+              <span
+                aria-hidden="true"
+                className="font-mono text-meta tracking-normal text-muted max-sm:hidden"
+              >
+                →
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
     </figure>
   );
 }
@@ -445,6 +422,7 @@ export function ProduitPage() {
       <PageHero
         kicker="Comment ça marche"
         title="Tout ce qui se dit, gardé tel quel, retrouvé avec sa source."
+        accent="retrouvé avec sa source."
         lead="Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément avec ses droits, puis répond en citant ses sources. Personne ne remplit de fiche pour lui."
         actions={
           <>
@@ -470,13 +448,12 @@ export function ProduitPage() {
         />
         <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {NEXT.map((n) => (
-            <li
-              key={n.title}
-              className="site-reveal rounded-card border border-line bg-panel p-4 shadow-hi"
-            >
-              <PlannedBadge />
-              <p className="mt-3 text-ui font-semibold text-fg">{nb(n.title)}</p>
-              <p className="mt-1 text-label leading-[1.5] text-muted">{nb(n.text)}</p>
+            <li key={n.title} className="site-reveal">
+              <Tilt className="h-full rounded-card border border-dashed border-line-strong bg-panel p-4 shadow-hi">
+                <PlannedBadge className="fx-pop" />
+                <p className="mt-3 text-ui font-semibold text-fg">{nb(n.title)}</p>
+                <p className="mt-1 text-label leading-[1.5] text-muted">{nb(n.text)}</p>
+              </Tilt>
             </li>
           ))}
         </ul>

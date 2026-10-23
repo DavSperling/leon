@@ -8,6 +8,7 @@ import { FAMILY_LABELS, type ProviderFamily } from '@/lib/providers';
 import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
 import { ALL_TOOLS, TOOL_GROUPS, toolLabel } from '../content';
+import { Tilt } from '../fx';
 import { ToolLogo } from '../parts';
 
 // Catalogue des outils branchables : filtre par famille (pastilles) et par nom (champ), sans recharger la page.
@@ -124,35 +125,38 @@ export function ConnecteursCatalogue() {
             const fam = FAMILY_OF.get(id);
             const oauth = OAUTH.has(id);
             return (
-              <li
-                key={id}
-                className="fade-in group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-box border border-line bg-panel p-3 shadow-hi sm:flex-col sm:items-start sm:gap-4 sm:p-4 transition-[border-color,translate] duration-300 ease-out hover:-translate-y-0.5 hover:border-line-strong"
-              >
-                <ToolLogo id={id} size={44} className="max-sm:size-9!" />
-                <div className="min-w-0 flex-1 sm:flex-none">
-                  <p className="truncate text-ui font-semibold text-fg">{toolLabel(id)}</p>
-                  <p className="mt-0.5 font-mono text-meta tracking-normal text-muted">
-                    {fam ? FAMILY_LABELS[fam] : ''}
+              <li key={id} className="fade-in min-w-0">
+                <Tilt
+                  max={10}
+                  scale={1.04}
+                  className="group flex h-full min-w-0 items-center gap-3 overflow-hidden rounded-box border border-line bg-panel p-3 shadow-hi transition-[border-color,box-shadow] duration-300 hover:border-accent-line hover:shadow-panel sm:flex-col sm:items-start sm:gap-4 sm:p-4"
+                >
+                  <ToolLogo id={id} size={44} className="fx-pop max-sm:size-9!" />
+                  <div className="min-w-0 flex-1 sm:flex-none">
+                    <p className="truncate text-ui font-semibold text-fg">{toolLabel(id)}</p>
+                    <p className="mt-0.5 font-mono text-meta tracking-normal text-muted">
+                      {fam ? FAMILY_LABELS[fam] : ''}
+                    </p>
+                  </div>
+                  <p className="inline-flex items-center gap-1.5 text-label text-fg-2 max-sm:absolute max-sm:top-2 max-sm:right-2 sm:mt-auto">
+                    {oauth ? (
+                      <MousePointerClick
+                        aria-hidden="true"
+                        strokeWidth={1.7}
+                        className="size-3.5 text-accent"
+                      />
+                    ) : (
+                      <KeyRound
+                        aria-hidden="true"
+                        strokeWidth={1.7}
+                        className="size-3.5 text-accent"
+                      />
+                    )}
+                    <span className="max-sm:sr-only">
+                      {oauth ? 'Bouton de connexion' : 'Clé d’API'}
+                    </span>
                   </p>
-                </div>
-                <p className="inline-flex items-center gap-1.5 text-label text-fg-2 max-sm:absolute max-sm:top-2 max-sm:right-2 sm:mt-auto">
-                  {oauth ? (
-                    <MousePointerClick
-                      aria-hidden="true"
-                      strokeWidth={1.7}
-                      className="size-3.5 text-accent"
-                    />
-                  ) : (
-                    <KeyRound
-                      aria-hidden="true"
-                      strokeWidth={1.7}
-                      className="size-3.5 text-accent"
-                    />
-                  )}
-                  <span className="max-sm:sr-only">
-                    {oauth ? 'Bouton de connexion' : 'Clé d’API'}
-                  </span>
-                </p>
+                </Tilt>
               </li>
             );
           })}

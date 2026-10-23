@@ -4,6 +4,7 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { TEAMS, type Team, TOOL_COUNT, toolLabel } from '../content';
 import { DemoCard } from '../demo-card';
+import { Tilt } from '../fx';
 import {
   ArrowLink,
   CtaBand,
@@ -16,6 +17,8 @@ import {
 } from '../parts';
 import { TeamTabs } from '../team-tabs';
 import { PageHero, PageSection } from './page-hero';
+import { TypedText, TypingList } from './typing-list';
+import './pages.css';
 
 // Cas d'usage : le hub (les six équipes, leurs questions, les onglets) et la page de chaque équipe.
 
@@ -31,8 +34,8 @@ function Question({ q, className }: { q: string; className?: string }) {
   );
 }
 
-/** Ligne qui ressemble à la barre de recherche, avec la touche « / » (décorative) devant. */
-function QuestionRow({ q, aside }: { q: string; aside?: string }) {
+/** Ligne qui ressemble à la barre de recherche, avec la touche « / » (décorative) devant ; `row` : elle se tape. */
+function QuestionRow({ q, aside, row }: { q: string; aside?: string; row?: number }) {
   return (
     <span className="flex min-h-[52px] items-center gap-3 rounded-box border border-line bg-glass-2 px-4 py-2.5 shadow-hi">
       <span
@@ -42,7 +45,13 @@ function QuestionRow({ q, aside }: { q: string; aside?: string }) {
         /
       </span>
       <span className="min-w-0 flex-1">
-        <Question q={q} />
+        {row === undefined ? (
+          <Question q={q} />
+        ) : (
+          <TypedText text={q} row={row}>
+            <Question q={q} />
+          </TypedText>
+        )}
       </span>
       {aside && (
         <span className="shrink-0 font-mono text-meta tracking-normal text-muted max-sm:hidden">
@@ -56,44 +65,46 @@ function QuestionRow({ q, aside }: { q: string; aside?: string }) {
 function TeamCard({ team }: { team: Team }) {
   return (
     <li className="site-reveal">
-      <Link
-        href={`/cas-usage/${team.slug}`}
-        className="site-lift group relative flex h-full flex-col overflow-hidden rounded-box border border-line bg-panel p-6 shadow-hi"
-      >
-        <span
-          aria-hidden="true"
-          className="site-halo pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        />
-        <span className="relative flex items-start justify-between gap-4">
+      <Tilt max={8} scale={1.02} className="h-full rounded-box">
+        <Link
+          href={`/cas-usage/${team.slug}`}
+          className="group relative flex h-full flex-col overflow-clip rounded-box border border-line bg-panel p-6 shadow-hi transition-[border-color,box-shadow] duration-300 [transform-style:preserve-3d] hover:border-accent-line hover:shadow-panel"
+        >
           <span
-            className={cn(
-              ICON_BOX,
-              'size-11 group-hover:border-accent-line group-hover:bg-accent-soft',
-            )}
-          >
-            <team.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
-          </span>
-          <ArrowUpRight
             aria-hidden="true"
-            strokeWidth={1.8}
-            className="size-5 text-muted transition-[translate,color] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent"
+            className="site-halo pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           />
-        </span>
-        <span className="relative mt-6 text-title font-bold tracking-[-0.02em] text-fg">
-          {team.label}
-        </span>
-        <span className="relative mt-2 text-body leading-[1.55] text-fg-2">{nb(team.pitch)}</span>
-        <span className="relative mt-auto flex items-center gap-2 pt-7">
-          <span className="flex -space-x-2">
-            {team.tools.slice(0, 4).map((id) => (
-              <ToolLogo key={id} id={id} size={30} className="ring-2 ring-[var(--bg)]" />
-            ))}
+          <span className="relative flex items-start justify-between gap-4 [transform-style:preserve-3d]">
+            <span
+              className={cn(
+                ICON_BOX,
+                'fx-pop size-11 [--pop:44px] group-hover:border-accent-line group-hover:bg-accent-soft group-hover:shadow-[0_18px_40px_-16px_color-mix(in_srgb,var(--accent)_70%,transparent)]',
+              )}
+            >
+              <team.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
+            </span>
+            <ArrowUpRight
+              aria-hidden="true"
+              strokeWidth={1.8}
+              className="size-5 text-muted transition-[translate,color] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent"
+            />
           </span>
-          <span className="font-mono text-meta tracking-normal text-muted">
-            {team.tools.length} outils
+          <span className="relative mt-6 text-title font-bold tracking-[-0.02em] text-fg">
+            {team.label}
           </span>
-        </span>
-      </Link>
+          <span className="relative mt-2 text-body leading-[1.55] text-fg-2">{nb(team.pitch)}</span>
+          <span className="relative mt-auto flex items-center gap-2 pt-7">
+            <span className="flex -space-x-2">
+              {team.tools.slice(0, 4).map((id) => (
+                <ToolLogo key={id} id={id} size={30} className="ring-2 ring-[var(--bg)]" />
+              ))}
+            </span>
+            <span className="font-mono text-meta tracking-normal text-muted">
+              {team.tools.length} outils
+            </span>
+          </span>
+        </Link>
+      </Tilt>
     </li>
   );
 }
@@ -111,6 +122,7 @@ export function CasUsagePage() {
       <PageHero
         kicker="Cas d’usage"
         title="Chaque équipe a ses questions. Leon répond avec les mêmes sources."
+        accent="Leon répond avec les mêmes sources."
         lead="Direction, ventes, support, produit, projets, nouvelles arrivées : chacun cherche autre chose, dans les mêmes outils. Voici ce qu’on tape dans la barre, et ce que Leon répond."
         align="center"
         actions={
@@ -215,7 +227,13 @@ export function EquipePage({ team }: { team: Team }) {
             </CtaLink>
           </>
         }
-        aside={<DemoCard demo={team.demo} />}
+        aside={
+          <div className="fx-untilt">
+            <Tilt max={4} scale={1} perspective={1600} glare={false} className="rounded-panel">
+              <DemoCard demo={team.demo} />
+            </Tilt>
+          </div>
+        }
       />
 
       <PageSection labelledBy="questions-titre">
@@ -226,18 +244,18 @@ export function EquipePage({ team }: { team: Team }) {
             title="Les questions de l’équipe."
             lead="Écrites telles qu’on les tape. Leon cherche dans tous les outils branchés, puis répond en citant."
           />
-          <ol className="grid content-start gap-2.5">
+          <TypingList className="grid content-start gap-2.5">
             {team.questions.map((q, i) => (
               <li key={q} className="site-reveal flex items-center gap-3">
                 <span className="w-6 shrink-0 font-mono text-meta tracking-normal text-muted">
                   0{i + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <QuestionRow q={q} />
+                  <QuestionRow q={q} row={i} />
                 </span>
               </li>
             ))}
-          </ol>
+          </TypingList>
         </div>
       </PageSection>
 
@@ -249,17 +267,16 @@ export function EquipePage({ team }: { team: Team }) {
         />
         <ul className="mt-10 grid gap-4 md:grid-cols-3">
           {team.gains.map((g, i) => (
-            <li
-              key={g.title}
-              className="site-reveal signal-line relative overflow-hidden rounded-box border border-line bg-panel p-6 shadow-hi"
-            >
-              <span className="font-mono text-[28px] leading-none font-medium tracking-[-0.02em] text-accent">
-                0{i + 1}
-              </span>
-              <h3 className="mt-6 text-title font-bold tracking-[-0.02em] text-fg">
-                {nb(g.title)}
-              </h3>
-              <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(g.text)}</p>
+            <li key={g.title} className="site-reveal">
+              <Tilt className="signal-line h-full overflow-clip rounded-box border border-line bg-panel p-6 shadow-hi">
+                <span className="fx-pop inline-block font-mono text-[34px] leading-none font-medium tracking-[-0.02em] text-accent [--pop:50px]">
+                  0{i + 1}
+                </span>
+                <h3 className="mt-6 text-title font-bold tracking-[-0.02em] text-fg">
+                  {nb(g.title)}
+                </h3>
+                <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(g.text)}</p>
+              </Tilt>
             </li>
           ))}
         </ul>
@@ -293,7 +310,7 @@ export function EquipePage({ team }: { team: Team }) {
               {team.tools.map((id) => (
                 <li
                   key={id}
-                  className="flex items-center gap-3 rounded-field border border-line bg-glass-2 px-3 py-2.5 shadow-hi"
+                  className="flex items-center gap-3 rounded-field border border-line bg-glass-2 px-3 py-2.5 shadow-hi transition-[translate,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-accent-line"
                 >
                   <ToolLogo id={id} size={30} />
                   <span className="min-w-0 truncate text-ui font-semibold text-fg-2">

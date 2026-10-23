@@ -2,7 +2,7 @@
 
 import { Search, SearchX, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import {
   Badge,
@@ -10,10 +10,11 @@ import {
   EmptyState,
   GlassCard,
   IconButton,
+  Pill,
   Section,
   ToolIcon,
 } from '@/components/verre';
-import { FAMILY_LABELS, PROVIDER_FAMILIES_ORDER } from '@/lib/providers';
+import { FAMILY_LABELS, PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
 import { cn, duration, fold, nb } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
@@ -121,9 +122,13 @@ export function Catalogue({
   /** Outil tout juste branché : un anneau bat une fois autour de sa ligne. */
   fresh: string | null;
 }) {
+  // Une famille à la fois (« Dev », « CRM »…) ; null : toutes. Se combine avec le texte du champ.
+  const [family, setFamily] = useState<ProviderFamily | null>(null);
+  const families = PROVIDER_FAMILIES_ORDER.filter((id) => catalog.some((p) => p.family === id));
   const q = fold(filter.trim());
   const match = (p: CatalogItem) =>
-    !q || fold(p.label).includes(q) || fold(FAMILY_LABELS[p.family]).includes(q);
+    (family === null || p.family === family) &&
+    (!q || fold(p.label).includes(q) || fold(FAMILY_LABELS[p.family]).includes(q));
   const connected = connectedTools(catalog, conns).filter(match);
   const free = catalog.filter((p) => !conns.some((c) => c.provider === p.id) && match(p));
   const groups = PROVIDER_FAMILIES_ORDER.map((id) => ({
@@ -176,8 +181,30 @@ export function Catalogue({
           )}
         </search>
         <p className="sr-only" aria-live="polite">
-          {q ? `${count} ${count > 1 ? 'outils' : 'outil'}` : ''}
+          {q || family ? `${count} ${count > 1 ? 'outils' : 'outil'}` : ''}
         </p>
+      </div>
+
+      {/* biome-ignore lint/a11y/useSemanticElements: un groupe de boutons bascule, pas un formulaire (fieldset) */}
+      <div role="group" aria-label="Familles d’outils" className="mt-3 flex flex-wrap gap-2">
+        <Pill
+          variant={family === null ? 'active' : 'default'}
+          aria-pressed={family === null}
+          onClick={() => setFamily(null)}
+        >
+          Tous
+        </Pill>
+        {families.map((id) => (
+          <Pill
+            key={id}
+            variant={family === id ? 'active' : 'default'}
+            aria-pressed={family === id}
+            // un second clic sur la famille choisie revient à tous les outils
+            onClick={() => setFamily(family === id ? null : id)}
+          >
+            {FAMILY_LABELS[id]}
+          </Pill>
+        ))}
       </div>
 
       {connected.length > 0 && (
@@ -235,15 +262,20 @@ export function Catalogue({
           icon={SearchX}
           className="mt-8"
           title="Aucun outil ne correspond."
-          description={`Rien ne s’appelle « ${filter.trim()} » dans le catalogue des ${catalog.length} outils.`}
+          description={
+            q
+              ? `Rien ne s’appelle « ${filter.trim()} »${family ? ` dans la famille ${FAMILY_LABELS[family]}` : ` dans le catalogue des ${catalog.length} outils`}.`
+              : `Aucun outil dans la famille ${family ? FAMILY_LABELS[family] : ''}.`
+          }
           action={
             <Button
               onClick={() => {
                 onFilter('');
+                setFamily(null);
                 input.current?.focus();
               }}
             >
-              Effacer le filtre
+              Effacer les filtres
             </Button>
           }
         />

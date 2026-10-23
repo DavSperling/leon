@@ -553,7 +553,8 @@ export function CarteConnexions({
             ref={box}
             role="group"
             aria-label="Schéma des connexions"
-            className="relative mt-2"
+            // plafonné : sur un grand écran, le schéma prenait toute la hauteur de la page
+            className="relative mx-auto mt-2 w-full max-w-[760px]"
             style={{ aspectRatio: `${W} / ${H}` }}
           >
             <svg

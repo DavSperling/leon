@@ -67,6 +67,8 @@ function RightsVisual() {
             <div
               className={cn(
                 plane,
+                // plans du bas : le contenu sur la bande que le plan du dessus laisse voir
+                'flex flex-col justify-end',
                 'border-line-strong bg-[color-mix(in_srgb,var(--menu)_62%,transparent)]',
               )}
             >
@@ -92,6 +94,8 @@ function RightsVisual() {
             <div
               className={cn(
                 plane,
+                // plans du bas : le contenu sur la bande que le plan du dessus laisse voir
+                'flex flex-col justify-end',
                 'signal-line border-accent-line bg-[color-mix(in_srgb,var(--menu)_58%,var(--accent-soft))]',
               )}
             >

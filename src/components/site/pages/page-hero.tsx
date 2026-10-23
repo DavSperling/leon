@@ -63,8 +63,12 @@ export function PageHero({
       />
       <div
         className={cn(
-          'pointer-events-none absolute inset-x-0 bottom-0 opacity-75 [mask:linear-gradient(180deg,transparent,#000_42%)] [[data-theme=light]_&]:opacity-45',
-          aside ? 'top-[40%]' : 'top-[56%]',
+          // entrée fondue par le haut, et un creux derrière la colonne de texte (centrée, ou à gauche avec un visuel) :
+          // les points ne passent jamais sur le chapeau ni sur les boutons
+          'pointer-events-none absolute inset-x-0 bottom-0 opacity-75 [-webkit-mask-composite:source-in] [mask-composite:intersect] [[data-theme=light]_&]:opacity-45',
+          aside
+            ? 'top-[40%] [mask-image:linear-gradient(180deg,transparent,#000_42%),radial-gradient(ellipse_44%_70%_at_24%_18%,transparent_62%,#000_100%)]'
+            : 'top-[52%] [mask-image:linear-gradient(180deg,transparent,#000_42%),radial-gradient(ellipse_560px_190px_at_50%_22%,transparent_62%,#000_100%)]',
         )}
       >
         <ParticleField density={0.62} height={0.9} />

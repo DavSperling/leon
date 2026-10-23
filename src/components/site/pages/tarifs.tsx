@@ -1,5 +1,6 @@
 import { Check, Plus } from 'lucide-react';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { FAQ, PLANS, TOOL_COUNT } from '../content';
@@ -22,9 +23,14 @@ const EVERYWHERE = [
   'Clés des outils chiffrées',
 ] as const;
 
-function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
+// Les formules sont dans le premier écran : elles entrent avec le haut de page (site-rise, à la suite de PageHero),
+// pas au défilement, qui les laisserait à moitié transparentes tant qu'on ne défile pas.
+function PlanCard({ plan, i }: { plan: (typeof PLANS)[number]; i: number }) {
   return (
-    <li className={cn('site-reveal relative', plan.featured && 'z-[1]')}>
+    <li
+      className={cn('site-rise relative', plan.featured && 'z-[1]')}
+      style={{ '--i': 5 + i } as CSSProperties}
+    >
       <div className={cn('h-full', plan.featured && 'pg-featured')}>
         <Tilt
           max={plan.featured ? 6 : 8}
@@ -50,7 +56,7 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
               </span>
             )}
           </div>
-          <p className="relative mt-2 text-body text-fg-2">{nb(plan.text)}</p>
+          <p className="relative mt-2 text-body text-fg-2 lg:min-h-[3lh]">{nb(plan.text)}</p>
           <p className="fx-pop relative mt-7 flex items-baseline gap-2 [--pop:46px]">
             <span
               className={cn(
@@ -112,9 +118,9 @@ export function TarifsPage() {
         <h2 id="plans-titre" className="sr-only">
           Les plans
         </h2>
-        <ul className="mx-auto grid max-w-[1080px] items-stretch gap-4 lg:grid-cols-3 lg:items-center">
-          {PLANS.map((p) => (
-            <PlanCard key={p.id} plan={p} />
+        <ul className="mx-auto grid max-w-[1080px] items-stretch gap-4 lg:grid-cols-3">
+          {PLANS.map((p, i) => (
+            <PlanCard key={p.id} plan={p} i={i} />
           ))}
         </ul>
         <p className="mt-8 text-center font-mono text-meta tracking-normal text-muted">

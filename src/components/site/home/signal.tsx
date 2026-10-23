@@ -54,7 +54,8 @@ function Hero() {
         aria-hidden="true"
         className="site-halo pointer-events-none absolute inset-x-0 top-0 h-[760px]"
       />
-      <div className="pointer-events-none absolute inset-x-0 top-[120px] h-[880px] opacity-90 sm:top-[60px]">
+      {/* un creux dans la nappe derrière le chapeau et les boutons : les points ne passent jamais sur le texte */}
+      <div className="pointer-events-none absolute inset-x-0 top-[120px] h-[880px] opacity-90 [mask-image:radial-gradient(ellipse_230px_150px_at_50%_315px,transparent_60%,#000_100%)] sm:top-[60px] sm:[mask-image:radial-gradient(ellipse_470px_150px_at_50%_500px,transparent_62%,#000_100%)]">
         <ParticleField />
       </div>
       <Container className="relative">
@@ -448,7 +449,10 @@ function UnderTheHood() {
           </ol>
         </div>
         <div className="relative min-h-[460px] sm:min-h-[540px]">
-          <div aria-hidden="true" className="site-halo absolute inset-0 opacity-70" />
+          <div
+            aria-hidden="true"
+            className="site-halo absolute inset-0 opacity-70 [mask:linear-gradient(180deg,transparent,#000_30%,#000_70%,transparent)]"
+          />
           <Layers3D className="absolute inset-0" />
           <p className="absolute right-0 bottom-0 font-mono text-meta tracking-normal text-muted">
             Exemple fictif

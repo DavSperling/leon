@@ -27,7 +27,16 @@ describe('proxy de « / »', () => {
     ).toBeNull();
   });
 
-  it('laisse les server actions (POST) à l’appli', () => {
+  it('sert aussi l’accueil aux requêtes HEAD (sondes, aperçus de liens)', () => {
+    expect(rewrittenTo(proxy(request({ method: 'HEAD' })))).toBe('http://localhost:3000/accueil');
+  });
+
+  it('laisse les server actions (POST) et les autres méthodes à l’appli', () => {
     expect(rewrittenTo(proxy(request({ method: 'POST' })))).toBeNull();
+    expect(rewrittenTo(proxy(request({ method: 'PUT' })))).toBeNull();
+  });
+
+  it('interdit aux caches partagés de garder l’accueil servi sur « / »', () => {
+    expect(proxy(request()).headers.get('cache-control')).toBe('private, no-store, max-age=0');
   });
 });

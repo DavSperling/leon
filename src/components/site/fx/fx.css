@@ -2,6 +2,13 @@
    coupe animations et transitions ; les composants JS lisent aussi useInstant et figent leur image. */
 
 /* ---------- Carte qui s'incline vers le pointeur, avec un reflet (Tilt) ---------- */
+/* --fx-lift : 0 au repos, 1 pendant l'inclinaison ; le relief des .fx-pop n'apparaît qu'en inclinant (au repos, la
+   perspective les décalerait de quelques pixels par rapport au texte de la carte) */
+@property --fx-lift {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
 .fx-tilt {
   position: relative;
   transform: perspective(var(--tilt-p, 1000px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
@@ -10,13 +17,16 @@
   /* les bordures, fonds et ombres des cartes gardent leur transition (ce bloc l'emporte sur les utilitaires) */
   transition:
     transform 0.6s var(--ease-out),
+    --fx-lift 0.6s var(--ease-out),
     border-color 0.3s,
     background-color 0.3s,
     box-shadow 0.3s;
 }
 .fx-tilt[data-tilting] {
+  --fx-lift: 1;
   transition:
     transform 0.15s linear,
+    --fx-lift 0.3s var(--ease-out),
     border-color 0.3s,
     background-color 0.3s,
     box-shadow 0.3s;
@@ -46,7 +56,7 @@
 }
 /* un enfant qui sort du plan quand la carte s'incline */
 .fx-pop {
-  transform: translateZ(var(--pop, 36px));
+  transform: translateZ(calc(var(--pop, 36px) * var(--fx-lift, 0)));
 }
 
 /* ---------- Révélation des mots en 3D (SplitWords) : chaque mot bascule depuis l'arrière ---------- */
@@ -116,12 +126,12 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--z) * var(--gap, 86px)));
+  transform: translateZ(calc(var(--z) * var(--gap, 104px)));
   transition: transform 0.9s var(--ease-spring);
 }
 .fx-layers:hover .fx-layer,
 .fx-layers:focus-within .fx-layer {
-  --gap: 118px;
+  --gap: 136px;
 }
 @supports (animation-timeline: view()) {
   .fx-layers-stage {

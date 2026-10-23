@@ -496,7 +496,7 @@ function Journee() {
     <section aria-labelledby="recit-journee" className="relative py-20 sm:py-28">
       <Container>
         <div className="site-reveal grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[160px_minmax(0,1fr)] lg:gap-14">
-          <Kicker className="lg:justify-end lg:pt-3">La journée</Kicker>
+          <Kicker className="lg:justify-end lg:self-start lg:pt-3">La journée</Kicker>
           <div className="max-w-[760px]">
             <h2
               id="recit-journee"
@@ -544,7 +544,7 @@ function Inconnu() {
     >
       <div
         aria-hidden="true"
-        className="site-halo pointer-events-none absolute inset-0 opacity-70"
+        className="site-halo pointer-events-none absolute inset-0 opacity-70 [mask:linear-gradient(180deg,transparent,#000_22%)]"
       />
       <Container className="relative text-center">
         <Kicker className="justify-center">Et quand on ne sait pas</Kicker>

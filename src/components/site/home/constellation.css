@@ -183,7 +183,15 @@
   }
 }
 .cs-scanline {
+  /* au repos, hors champ : rien ne reste posé sur le texte */
+  opacity: 0;
+  transform: translateX(-120%);
   animation: cs-scan 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-scanline {
+    display: none;
+  }
 }
 @keyframes cs-scan {
   0%,

@@ -126,11 +126,11 @@
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--z) * var(--gap, 96px)));
+  transform: translateZ(calc(var(--z) * var(--gap, 128px)));
   transition: transform 0.9s var(--ease-spring);
 }
 .pg-iso:hover .pg-iso-plane {
-  --gap: 128px;
+  --gap: 156px;
 }
 @supports (animation-timeline: view()) {
   .pg-iso-stage {

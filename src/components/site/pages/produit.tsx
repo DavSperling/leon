@@ -196,7 +196,7 @@ function KeepVisual() {
     >
       {/* overflow-x-clip : la scène des couches garde sa largeur sous 340 px (pas de défilement horizontal) */}
       <div className="relative min-h-[440px] overflow-x-clip sm:min-h-[520px]">
-        <div className="site-halo pointer-events-none absolute inset-0 opacity-80" />
+        <div className="site-halo pointer-events-none absolute inset-0 opacity-80 [mask:linear-gradient(180deg,transparent,#000_35%,#000_65%,transparent)]" />
         <Layers3D className="absolute inset-0" />
         <div className="site-float absolute bottom-2 left-1/2 z-[2] w-max -translate-x-1/2 rounded-field border border-line-strong bg-[color-mix(in_srgb,var(--menu)_88%,transparent)] px-3.5 py-2.5 font-mono text-[11.5px] tracking-normal shadow-float backdrop-blur-[16px]">
           <span className="text-fg-2">DB_PASSWORD</span>
@@ -224,7 +224,7 @@ function FindVisual() {
               <p className="px-2.5 pt-2.5 pb-1 font-mono text-meta font-medium tracking-[0.08em] text-muted uppercase">
                 Écrit dans la barre
               </p>
-              <dl className="grid sm:grid-cols-2">
+              <dl className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {SYNTAX.map((s) => (
                   <div
                     key={s.code}
@@ -307,7 +307,7 @@ function DiscussVisual() {
             </div>
             <div className={cn(CARD, 'p-4')}>
               <p className="text-ui font-semibold text-fg">Serveur MCP</p>
-              <ul className="mt-3 grid gap-1.5">
+              <ul className="mt-3 grid grid-cols-1 gap-1.5">
                 {MCP_TOOLS.map((t) => (
                   <li key={t.name} className="flex items-baseline gap-2">
                     <code className="rounded-[5px] border border-line bg-glass-3 px-1.5 font-mono text-[11.5px] text-fg">

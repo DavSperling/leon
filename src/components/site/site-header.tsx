@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, ChevronDown, Menu, Moon, Sun } from 'lucide-react';
+import { ArrowRight, ChevronDown, Menu, Moon, Sun, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavigationMenu } from 'radix-ui';
@@ -14,7 +14,7 @@ import { NAV_LINKS, TEAMS } from './content';
 
 // En-tête du site public : la marque, la navigation (Cas d'usage ouvre un méga-menu des équipes), le thème, puis
 // « Se connecter » et « Créer un espace ». Verre transparent en haut de page, qui se densifie dès qu'on défile.
-// Sous 900 px : la marque, « Créer un espace » et un bouton Menu qui ouvre la feuille du bas.
+// Sous 960 px : la marque, « Créer un espace » et un bouton Menu qui ouvre la feuille du bas.
 
 /** « page » sur la page même, « true » sur la section qui la contient (« Cas d’usage » sur /cas-usage/ventes). */
 const currentOf = (pathname: string, href: string): 'page' | 'true' | undefined =>
@@ -24,7 +24,7 @@ const isActive = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 const LINK =
-  'relative inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-ui font-medium text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg aria-[current=true]:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg';
+  'relative inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-ui font-medium whitespace-nowrap text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg aria-[current=true]:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg';
 
 function ActiveDot({ on }: { on: boolean }) {
   return (
@@ -59,7 +59,7 @@ function ThemeButton({ className }: { className?: string }) {
 
 function TeamsMenu({ pathname }: { pathname: string }) {
   return (
-    <NavigationMenu.Content className="site-menu-content absolute top-[calc(100%+10px)] left-1/2 w-[640px] -translate-x-1/2 rounded-box border border-line-strong bg-menu p-2.5 shadow-float">
+    <NavigationMenu.Content className="site-menu-content absolute top-[calc(100%+10px)] left-1/2 w-[min(640px,calc(100vw-32px))] -translate-x-1/2 rounded-box border border-line-strong bg-menu p-2.5 shadow-float">
       <div className="grid grid-cols-2 gap-1">
         {TEAMS.map((t) => (
           <NavigationMenu.Link key={t.slug} asChild>
@@ -114,12 +114,19 @@ function MobileMenu({ pathname }: { pathname: string }) {
       <SheetContent
         title="Menu"
         titleHidden
+        hideClose
         onOpenAutoFocus={(e) => {
           e.preventDefault();
           first.current?.focus();
         }}
       >
-        <nav aria-label="Site" className="grid gap-1">
+        <SheetClose
+          aria-label="Fermer"
+          className="absolute top-2 right-2 grid size-11 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg"
+        >
+          <X aria-hidden="true" strokeWidth={1.8} className="size-[18px]" />
+        </SheetClose>
+        <nav aria-label="Site" className="mt-5 grid gap-1">
           {NAV_LINKS.map((l, i) => (
             <SheetClose key={l.href} asChild>
               <Link
@@ -205,12 +212,12 @@ export function SiteHeader() {
         <NavigationMenu.Root
           aria-label="Site"
           delayDuration={80}
-          className="relative mx-auto max-[900px]:hidden"
+          className="relative mx-auto max-[960px]:hidden"
         >
           <NavigationMenu.List className="flex items-center gap-0.5">
             {NAV_LINKS.map((l) =>
               l.href === '/cas-usage' ? (
-                <NavigationMenu.Item key={l.href} className="relative">
+                <NavigationMenu.Item key={l.href}>
                   <NavigationMenu.Trigger
                     className={LINK}
                     aria-current={currentOf(pathname, l.href)}
@@ -239,23 +246,23 @@ export function SiteHeader() {
           </NavigationMenu.List>
         </NavigationMenu.Root>
 
-        <div className="flex items-center gap-1.5 max-[900px]:ml-auto">
-          <ThemeButton className="max-[900px]:hidden" />
+        <div className="flex items-center gap-1.5 max-[960px]:ml-auto">
+          <ThemeButton className="max-[960px]:hidden" />
           <Link
             href="/connexion"
             aria-current={pathname === '/connexion' ? 'page' : undefined}
-            className="inline-flex h-10 items-center rounded-full px-4 text-ui font-semibold text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg max-[900px]:hidden"
+            className="inline-flex h-10 items-center rounded-full px-4 text-ui font-semibold whitespace-nowrap text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg max-[960px]:hidden"
           >
             Se connecter
           </Link>
           <Link
             href="/inscription"
             aria-current={pathname === '/inscription' ? 'page' : undefined}
-            className="site-cta inline-flex h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-ui font-semibold text-accent-ink transition-[filter,scale] duration-200 hover:brightness-[1.06] active:scale-[.97] max-[420px]:px-3.5"
+            className="site-cta inline-flex h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-ui font-semibold whitespace-nowrap text-accent-ink transition-[filter,scale] duration-200 hover:brightness-[1.06] active:scale-[.97] max-[420px]:px-3.5"
           >
             Créer un espace
           </Link>
-          <div className="min-[901px]:hidden">
+          <div className="min-[960px]:hidden">
             <MobileMenu pathname={pathname} />
           </div>
         </div>

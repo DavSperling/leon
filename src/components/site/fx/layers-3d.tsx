@@ -45,10 +45,7 @@ export function Layers3D({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn(
-        'fx-layers grid place-items-center max-sm:scale-[0.78] max-sm:overflow-x-clip',
-        className,
-      )}
+      className={cn('fx-layers grid place-items-center max-sm:scale-[0.78]', className)}
     >
       <div className="fx-layers-stage relative h-[260px] w-[min(340px,86vw)] sm:h-[300px] sm:w-[400px]">
         <Plane z={0} label="Le brut, tel quel">

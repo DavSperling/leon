@@ -378,7 +378,7 @@ function SecretsVisual() {
       <div className="relative px-3 py-2.5">
         <span
           aria-hidden="true"
-          className="cs-scanline pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-[linear-gradient(90deg,transparent,var(--accent-soft),transparent)]"
+          className="cs-scanline pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--accent)_14%,transparent),transparent)]"
         />
         <p className="truncate text-muted">
           <span className="text-fg-2">APP_URL</span>=https://app.exemple.fr

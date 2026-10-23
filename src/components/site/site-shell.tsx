@@ -17,8 +17,13 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
         Aller au contenu
       </a>
       <SiteHeader />
-      {/* z-[2] : au-dessus du pied (z-[1]) ; un élément fixe de la page (barre des maquettes) ne passe pas dessous */}
-      <main id="contenu" tabIndex={-1} className="relative z-[2] min-h-dvh outline-none">
+      {/* z-[2] : au-dessus du pied (z-[1]) ; un élément fixe de la page (barre des maquettes) ne passe pas dessous.
+          overflow-x-clip : un décor qui déborde (particules, 3D) ne fait jamais défiler la page de côté. */}
+      <main
+        id="contenu"
+        tabIndex={-1}
+        className="relative z-[2] min-h-dvh overflow-x-clip outline-none"
+      >
         {children}
       </main>
       {footer && (

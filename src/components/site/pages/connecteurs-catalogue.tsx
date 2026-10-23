@@ -56,6 +56,12 @@ export function ConnecteursCatalogue() {
         (q === '' || fold(toolLabel(id)).includes(q)),
     );
   }, [family, query]);
+  // Les outils au bon nom, toutes familles : l'état vide dit si c'est la famille choisie qui les cache.
+  const byName = useMemo(() => {
+    const q = fold(query.trim());
+    return q === '' ? [] : ALL_TOOLS.filter((id) => fold(toolLabel(id)).includes(q));
+  }, [query]);
+  const hiddenByFamily = family !== 'tous' && byName.length > 0;
 
   return (
     <div className="mt-10">
@@ -169,21 +175,42 @@ export function ConnecteursCatalogue() {
         </ul>
       ) : (
         <div className="mt-4 rounded-box border border-line bg-panel px-6 py-12 text-center shadow-hi">
-          <p className="text-ui font-semibold text-fg">
-            {nb(`Aucun outil ne s’appelle « ${query.trim()} ».`)}
-          </p>
-          <p className="mt-1.5 text-body text-muted">
-            {nb('Vérifiez l’orthographe, ou regardez ce qui est prévu plus bas.')}
-          </p>
+          {hiddenByFamily ? (
+            <>
+              <p className="text-ui font-semibold text-fg">
+                {nb(`Aucun outil « ${query.trim()} » dans ${FAMILY_LABELS[family]}.`)}
+              </p>
+              <p className="mt-1.5 text-body text-muted">
+                {nb(
+                  `Ailleurs : ${byName
+                    .map((id) => {
+                      const f = FAMILY_OF.get(id);
+                      return f ? `${toolLabel(id)} (${FAMILY_LABELS[f]})` : toolLabel(id);
+                    })
+                    .join(', ')}.`,
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-ui font-semibold text-fg">
+                {nb(`Aucun outil ne s’appelle « ${query.trim()} ».`)}
+              </p>
+              <p className="mt-1.5 text-body text-muted">
+                {nb('Vérifiez l’orthographe, ou regardez ce qui est prévu plus bas.')}
+              </p>
+            </>
+          )}
           <button
             type="button"
             onClick={() => {
-              setQuery('');
+              // la famille cache les bons outils : on la lève, la recherche reste
+              if (!hiddenByFamily) setQuery('');
               setFamily('tous');
             }}
             className="mt-5 inline-flex h-10 items-center rounded-full border border-line-strong bg-glass-3 px-4 text-ui font-semibold text-fg transition-colors hover:bg-hover"
           >
-            Voir tous les outils
+            {hiddenByFamily ? 'Chercher dans toutes les familles' : 'Voir tous les outils'}
           </button>
         </div>
       )}

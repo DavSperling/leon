@@ -214,7 +214,7 @@ describe('les discussions d’un autre', () => {
 });
 
 describe('ce que l’app peut changer', () => {
-  it('ajoute des messages, change la date d’une discussion, et rien d’autre', async () => {
+  it('ajoute des messages, change la date d’une discussion, la supprime (0031), et rien d’autre', async () => {
     const { alice } = await team();
     const id = await createDiscussion(alice, { question: 'Question' });
 
@@ -231,8 +231,11 @@ describe('ce que l’app peut changer', () => {
           .set({ content: 'Autre' })
           .where(eq(discussionMessages.discussionId, id)),
       );
+    // Un message ne s'efface pas seul : il ne part qu'avec sa discussion (0031).
     const remove = () =>
-      withTenant(alice, (tx) => tx.delete(discussions).where(eq(discussions.id, id)));
+      withTenant(alice, (tx) =>
+        tx.delete(discussionMessages).where(eq(discussionMessages.discussionId, id)),
+      );
 
     await expect(retitle()).rejects.toMatchObject(RLS_VIOLATION);
     await expect(rewrite()).rejects.toMatchObject(RLS_VIOLATION);

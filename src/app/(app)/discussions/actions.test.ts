@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserContext } from '@/server/auth/session';
 import { isReplying } from '@/server/discussion/agent';
-import { createDiscussion, getDiscussion } from '@/server/discussion/discussions';
+import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 import {
   continueInDiscussionAction,
+  deleteDiscussionAction,
   newDiscussionAction,
   readDiscussionMessagesAction,
 } from './actions';
@@ -12,10 +13,12 @@ import {
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
 vi.mock('@/server/discussion/discussions', () => ({
   createDiscussion: vi.fn(),
+  deleteDiscussion: vi.fn(),
   getDiscussion: vi.fn(),
 }));
 vi.mock('@/server/discussion/agent', () => ({ isReplying: vi.fn(() => false) }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -178,5 +181,24 @@ describe('readDiscussionMessagesAction', () => {
     vi.mocked(getDiscussion).mockRejectedValueOnce(new Error('secret'));
     expect(await readDiscussionMessagesAction(ID)).toBeNull();
     expect(logError).toHaveBeenCalledWith('discussion.lecture', expect.any(Error));
+  });
+});
+
+describe('deleteDiscussionAction', () => {
+  it('supprime la discussion de l’utilisateur', async () => {
+    vi.mocked(deleteDiscussion).mockResolvedValue(true);
+    expect(await deleteDiscussionAction(ID)).toEqual({ ok: true });
+    expect(deleteDiscussion).toHaveBeenCalledWith(CTX, ID);
+  });
+
+  it('refuse un identifiant qui n’est pas une chaîne, sans toucher la base', async () => {
+    expect(await deleteDiscussionAction(42 as never)).toEqual({ ok: false });
+    expect(deleteDiscussion).not.toHaveBeenCalled();
+  });
+
+  it('une panne ne sort qu’en échec, journalisé', async () => {
+    vi.mocked(deleteDiscussion).mockRejectedValue(new Error('base'));
+    expect(await deleteDiscussionAction(ID)).toEqual({ ok: false });
+    expect(logError).toHaveBeenCalledWith('discussion.suppression', expect.any(Error));
   });
 });

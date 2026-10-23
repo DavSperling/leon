@@ -149,6 +149,19 @@ export async function listDiscussions(ctx: TenantContext): Promise<DiscussionSum
   );
 }
 
+// Supprime une discussion de l'utilisateur et ses messages (clé étrangère en cascade). Faux si elle n'existe pas ou
+// n'est pas la sienne : la sécurité par ligne la cache, et le filtre sur l'auteur le redit.
+export async function deleteDiscussion(ctx: TenantContext, id: string): Promise<boolean> {
+  if (!isUuid(id)) return false;
+  return withTenant(ctx, async (tx) => {
+    const deleted = await tx
+      .delete(discussions)
+      .where(and(eq(discussions.id, id), eq(discussions.userId, ctx.userId)))
+      .returning({ id: discussions.id });
+    return deleted.length > 0;
+  });
+}
+
 async function loadSummary(tx: Tx, id: string): Promise<DiscussionSummary | null> {
   const [row] = await tx.select(summaryColumns).from(discussions).where(eq(discussions.id, id));
   return row ?? null;

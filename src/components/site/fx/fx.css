@@ -128,7 +128,8 @@
   }
 }
 
-/* ---------- Bordure lumineuse qui tourne (cartes mises en avant) : ::after, ::before étant le filet Signal ---------- */
+/* ---------- Bordure lumineuse qui tourne (cartes mises en avant) : ::after, ::before étant le filet Signal.
+   Sans `isolation` : elle aplatirait la 3D d'une carte inclinable (Tilt) qui la porte. ---------- */
 @property --fx-angle {
   syntax: "<angle>";
   inherits: false;
@@ -136,7 +137,6 @@
 }
 .fx-ring {
   position: relative;
-  isolation: isolate;
 }
 .fx-ring::after {
   content: "";

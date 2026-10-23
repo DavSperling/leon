@@ -9,11 +9,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
-import { GlassCard } from '@/components/verre/ui/surfaces';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { ALL_TOOLS, BRIEFING, DEMOS, type Demo, SYNTAX, TEAMS, TOOL_COUNT } from '../content';
 import { DemoAnswerCard, DemoSourceRow } from '../demo-card';
+import { SplitWords, Tilt } from '../fx';
 import {
   ArrowLink,
   CitedAnswer,
@@ -26,6 +26,7 @@ import {
   SectionHeading,
   ToolLogo,
 } from '../parts';
+import { CountUp } from './constellation/count-up';
 import { ConstellationDiagram } from './constellation/diagram';
 import './constellation.css';
 
@@ -51,14 +52,14 @@ function Hero() {
           <div className="site-rise" style={{ '--i': 0 } as CSSProperties}>
             <Kicker>Mémoire d’entreprise, pour les PME</Kicker>
           </div>
-          <h1
-            className="site-rise mt-5 text-[clamp(40px,5.4vw,70px)] leading-[0.99] font-bold tracking-[-0.05em] text-balance text-fg"
-            style={{ '--i': 1 } as CSSProperties}
-          >
-            {nb('La mémoire de votre entreprise ')}
-            <span className="site-gradient site-gradient-anim">
-              {nb('se remplit toute seule.')}
-            </span>
+          <h1 className="mt-5 text-[clamp(40px,5.4vw,70px)] leading-[0.99] font-bold tracking-[-0.05em] text-balance text-fg">
+            <SplitWords
+              delay={140}
+              parts={[
+                { text: 'La mémoire de votre entreprise ' },
+                { text: 'se remplit toute seule.', className: 'site-gradient' },
+              ]}
+            />
           </h1>
           <p
             className="site-rise mt-6 max-w-[540px] text-[18px] leading-[1.6] text-pretty text-fg-2 max-sm:text-[16px]"
@@ -86,20 +87,26 @@ function Hero() {
   );
 }
 
-const FACTS = [
-  { value: String(TOOL_COUNT), text: 'outils branchables, par une clé ou un bouton de connexion' },
-  { value: '15 min', text: 'entre deux relèves, sans rien ressaisir' },
-  { value: '[n]', text: 'un renvoi par affirmation, ou « je ne sais pas »' },
-  { value: '250 mots', text: 'au plus pour le point du matin' },
-] as const;
+// `count` : le nombre compte jusqu'à sa valeur à l'entrée dans l'écran ; sinon la valeur est montrée telle quelle.
+const FACTS: Array<{ key: string; count?: number; suffix?: string; value?: string; text: string }> =
+  [
+    {
+      key: 'outils',
+      count: TOOL_COUNT,
+      text: 'outils branchables, par une clé ou un bouton de connexion',
+    },
+    { key: 'releve', count: 15, suffix: 'min', text: 'entre deux relèves, sans rien ressaisir' },
+    { key: 'renvoi', value: '[n]', text: 'un renvoi par affirmation, ou « je ne sais pas »' },
+    { key: 'point', count: 250, suffix: 'mots', text: 'au plus pour le point du matin' },
+  ];
 
 function Facts() {
   return (
     <Container className="pb-10">
-      <dl className="site-reveal grid overflow-hidden rounded-box border border-line bg-panel shadow-hi backdrop-blur-[20px] sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="site-reveal cs-facts relative grid overflow-hidden rounded-box border border-line bg-panel shadow-hi backdrop-blur-[20px] sm:grid-cols-2 lg:grid-cols-4">
         {FACTS.map((f, i) => (
           <div
-            key={f.value}
+            key={f.key}
             className={cn(
               'flex flex-col gap-2 px-6 py-6',
               i > 0 &&
@@ -109,8 +116,12 @@ function Facts() {
             )}
           >
             <dt className="text-label leading-[1.45] text-muted">{nb(f.text)}</dt>
-            <dd className="order-first font-mono text-[30px] leading-none font-medium tracking-[-0.03em] text-fg">
-              {f.value}
+            <dd className="order-first font-mono text-[34px] leading-none font-medium tracking-[-0.03em] text-fg">
+              {f.count !== undefined ? (
+                <CountUp to={f.count} suffix={f.suffix} />
+              ) : (
+                <span className="cs-cite-pop inline-block text-accent">{f.value}</span>
+              )}
             </dd>
           </div>
         ))}
@@ -127,31 +138,40 @@ function Tile({
   className,
   children,
   visualClassName,
+  featured,
 }: {
   title: string;
   text: string;
   className?: string;
   children: ReactNode;
   visualClassName?: string;
+  /** Tuile mise en avant : une bordure de lumière en fait le tour. */
+  featured?: boolean;
 }) {
   return (
-    <GlassCard
-      spotlight
-      className={cn('site-reveal flex flex-col rounded-box p-5 sm:p-6', className)}
-    >
-      <div
-        aria-hidden="true"
+    <div className={cn('site-reveal', className)}>
+      <Tilt
+        max={6}
         className={cn(
-          'relative mb-6 grid flex-1 place-items-center overflow-hidden rounded-[14px] border border-line bg-glass-3 p-2.5 sm:p-3',
-          visualClassName,
+          'flex h-full flex-col rounded-box border border-line bg-panel p-5 shadow-hi sm:p-6',
+          featured && 'fx-ring',
         )}
       >
-        <span className="site-dots pointer-events-none absolute inset-0 opacity-70" />
-        <div className="relative w-full">{children}</div>
-      </div>
-      <h3 className="text-title font-semibold tracking-[-0.015em] text-fg">{nb(title)}</h3>
-      <p className="mt-1.5 text-body leading-[1.6] text-muted">{nb(text)}</p>
-    </GlassCard>
+        {/* le visuel sort du plan quand la tuile s'incline */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            'fx-pop relative mb-6 grid flex-1 place-items-center overflow-hidden rounded-[14px] border border-line bg-glass-3 p-2.5 shadow-[0_24px_40px_-28px_rgba(0,0,0,.6)] sm:p-3',
+            visualClassName,
+          )}
+        >
+          <span className="site-dots pointer-events-none absolute inset-0 opacity-70" />
+          <div className="relative w-full">{children}</div>
+        </div>
+        <h3 className="text-title font-semibold tracking-[-0.015em] text-fg">{nb(title)}</h3>
+        <p className="mt-1.5 text-body leading-[1.6] text-muted">{nb(text)}</p>
+      </Tilt>
+    </div>
   );
 }
 
@@ -372,6 +392,7 @@ function Bento() {
         />
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 lg:grid-cols-6">
           <Tile
+            featured
             className="md:col-span-2 lg:col-span-4"
             title="Une réponse en tête, chaque phrase citée"
             text="La réponse arrive au-dessus des résultats. Chaque renvoi ouvre la source qu’il cite : la réunion, la note, le ticket."
@@ -445,42 +466,44 @@ function Teams() {
         <ul className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TEAMS.map((t) => (
             <li key={t.slug} className="site-reveal">
-              <Link
-                href={`/cas-usage/${t.slug}`}
-                className="site-lift group flex h-full flex-col rounded-box border border-line bg-panel p-5 shadow-hi backdrop-blur-[16px]"
-              >
-                <span className="flex items-center justify-between">
-                  <span className="grid size-10 place-items-center rounded-item border border-line bg-glass-3 text-accent transition-colors duration-300 group-hover:border-accent-line group-hover:bg-accent-soft">
-                    <t.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
-                  </span>
-                  <ArrowRight
-                    aria-hidden="true"
-                    strokeWidth={2}
-                    className="size-4 -translate-x-1 text-accent opacity-0 transition-[translate,opacity] duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                  />
-                </span>
-                <span className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
-                  {t.label}
-                </span>
-                <span className="mt-1.5 flex-1 text-body leading-[1.55] text-muted">
-                  {nb(t.pitch)}
-                </span>
-                <span aria-hidden="true" className="mt-5 flex items-center">
-                  {t.tools.slice(0, 4).map((id, i) => (
-                    <ToolLogo
-                      key={id}
-                      id={id}
-                      size={28}
-                      className={cn(i > 0 && '-ml-1.5', 'ring-2 ring-[var(--bg)]')}
-                    />
-                  ))}
-                  {t.tools.length > 4 && (
-                    <span className="ml-2 font-mono text-meta tracking-normal text-muted">
-                      +{t.tools.length - 4}
+              <Tilt className="h-full rounded-box border border-line bg-panel shadow-hi transition-[border-color] duration-300 hover:border-accent-line">
+                <Link
+                  href={`/cas-usage/${t.slug}`}
+                  className="group flex h-full flex-col rounded-box p-5 [transform-style:preserve-3d]"
+                >
+                  <span className="fx-pop flex items-center justify-between [--pop:28px]">
+                    <span className="grid size-10 place-items-center rounded-item border border-line bg-glass-3 text-accent transition-colors duration-300 group-hover:border-accent-line group-hover:bg-accent-soft">
+                      <t.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
                     </span>
-                  )}
-                </span>
-              </Link>
+                    <ArrowRight
+                      aria-hidden="true"
+                      strokeWidth={2}
+                      className="size-4 -translate-x-1 text-accent opacity-0 transition-[translate,opacity] duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                    />
+                  </span>
+                  <span className="mt-5 text-title font-semibold tracking-[-0.015em] text-fg">
+                    {t.label}
+                  </span>
+                  <span className="mt-1.5 flex-1 text-body leading-[1.55] text-muted">
+                    {nb(t.pitch)}
+                  </span>
+                  <span aria-hidden="true" className="mt-5 flex items-center">
+                    {t.tools.slice(0, 4).map((id, i) => (
+                      <ToolLogo
+                        key={id}
+                        id={id}
+                        size={28}
+                        className={cn(i > 0 && '-ml-1.5', 'ring-2 ring-[var(--bg)]')}
+                      />
+                    ))}
+                    {t.tools.length > 4 && (
+                      <span className="ml-2 font-mono text-meta tracking-normal text-muted">
+                        +{t.tools.length - 4}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              </Tilt>
             </li>
           ))}
         </ul>
@@ -524,16 +547,21 @@ function Statement() {
           </p>
         </div>
         <figure className="site-reveal grid gap-3">
-          <div className="rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-3 shadow-panel backdrop-blur-[30px] sm:p-4">
-            <div className="flex h-[52px] items-center gap-3 rounded-box border border-line-strong bg-glass-2 px-4 text-[15px] font-medium text-fg shadow-hi">
-              <span className="truncate">{nb(UNKNOWN.query)}</span>
-            </div>
-            <DemoAnswerCard demo={UNKNOWN} className="mt-3" />
-            {first && (
-              <ol className="mt-3">
-                <DemoSourceRow source={first} n={1} />
-              </ol>
-            )}
+          <div className="fx-untilt">
+            <Tilt
+              max={5}
+              className="rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-3 shadow-panel sm:p-4"
+            >
+              <div className="flex h-[52px] items-center gap-3 rounded-box border border-line-strong bg-glass-2 px-4 text-[15px] font-medium text-fg shadow-hi">
+                <span className="truncate">{nb(UNKNOWN.query)}</span>
+              </div>
+              <DemoAnswerCard demo={UNKNOWN} className="mt-3" />
+              {first && (
+                <ol className="fx-pop mt-3 [--pop:26px]">
+                  <DemoSourceRow source={first} n={1} />
+                </ol>
+              )}
+            </Tilt>
           </div>
           <figcaption className="px-1 font-mono text-meta tracking-normal text-muted">
             Exemple fictif · quand rien ne répond, Leon le dit

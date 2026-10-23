@@ -4,7 +4,7 @@ import { ArrowRight, ChevronDown, Menu, Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavigationMenu } from 'radix-ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/verre/shell/brand';
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/verre/ui/dialog';
 import { cn } from '@/lib/verre/cn';
@@ -16,11 +16,15 @@ import { NAV_LINKS, TEAMS } from './content';
 // « Se connecter » et « Créer un espace ». Verre transparent en haut de page, qui se densifie dès qu'on défile.
 // Sous 900 px : la marque, « Créer un espace » et un bouton Menu qui ouvre la feuille du bas.
 
+/** « page » sur la page même, « true » sur la section qui la contient (« Cas d’usage » sur /cas-usage/ventes). */
+const currentOf = (pathname: string, href: string): 'page' | 'true' | undefined =>
+  pathname === href ? 'page' : pathname.startsWith(`${href}/`) ? 'true' : undefined;
+
 const isActive = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 const LINK =
-  'relative inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-ui font-medium text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg';
+  'relative inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-ui font-medium text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg aria-[current=true]:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg';
 
 function ActiveDot({ on }: { on: boolean }) {
   return (
@@ -53,7 +57,7 @@ function ThemeButton({ className }: { className?: string }) {
   );
 }
 
-function TeamsMenu() {
+function TeamsMenu({ pathname }: { pathname: string }) {
   return (
     <NavigationMenu.Content className="site-menu-content absolute top-[calc(100%+10px)] left-1/2 w-[640px] -translate-x-1/2 rounded-box border border-line-strong bg-menu p-2.5 shadow-float">
       <div className="grid grid-cols-2 gap-1">
@@ -61,6 +65,7 @@ function TeamsMenu() {
           <NavigationMenu.Link key={t.slug} asChild>
             <Link
               href={`/cas-usage/${t.slug}`}
+              aria-current={pathname === `/cas-usage/${t.slug}` ? 'page' : undefined}
               className="group flex gap-3 rounded-field p-3 transition-colors duration-200 hover:bg-hover focus-visible:bg-hover"
             >
               <span className="grid size-9 shrink-0 place-items-center rounded-item border border-line bg-glass-3 text-accent transition-colors duration-200 group-hover:border-accent-line group-hover:bg-accent-soft">
@@ -94,6 +99,7 @@ function TeamsMenu() {
 }
 
 function MobileMenu({ pathname }: { pathname: string }) {
+  const first = useRef<HTMLAnchorElement>(null);
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -105,14 +111,22 @@ function MobileMenu({ pathname }: { pathname: string }) {
           <Menu aria-hidden="true" strokeWidth={1.8} className="size-[18px]" />
         </button>
       </SheetTrigger>
-      <SheetContent title="Menu" titleHidden>
+      <SheetContent
+        title="Menu"
+        titleHidden
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          first.current?.focus();
+        }}
+      >
         <nav aria-label="Site" className="grid gap-1">
-          {NAV_LINKS.map((l) => (
+          {NAV_LINKS.map((l, i) => (
             <SheetClose key={l.href} asChild>
               <Link
+                ref={i === 0 ? first : undefined}
                 href={l.href}
-                aria-current={isActive(pathname, l.href) ? 'page' : undefined}
-                className="flex h-12 items-center justify-between rounded-field px-3 text-[16px] font-semibold text-fg-2 hover:bg-hover aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent"
+                aria-current={currentOf(pathname, l.href)}
+                className="flex h-12 items-center justify-between rounded-field px-3 text-[16px] font-semibold text-fg-2 hover:bg-hover aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent aria-[current=true]:bg-accent-soft aria-[current=true]:text-accent"
               >
                 {l.label}
                 <ArrowRight aria-hidden="true" strokeWidth={1.8} className="size-4 text-muted" />
@@ -125,6 +139,7 @@ function MobileMenu({ pathname }: { pathname: string }) {
             <SheetClose key={t.slug} asChild>
               <Link
                 href={`/cas-usage/${t.slug}`}
+                aria-current={pathname === `/cas-usage/${t.slug}` ? 'page' : undefined}
                 className="flex min-h-11 items-center gap-2.5 rounded-field border border-line bg-glass-3 px-3 text-label font-semibold text-fg-2"
               >
                 <t.icon aria-hidden="true" strokeWidth={1.7} className="size-4 text-accent" />
@@ -198,7 +213,7 @@ export function SiteHeader() {
                 <NavigationMenu.Item key={l.href} className="relative">
                   <NavigationMenu.Trigger
                     className={LINK}
-                    aria-current={isActive(pathname, l.href) ? 'page' : undefined}
+                    aria-current={currentOf(pathname, l.href)}
                   >
                     {l.label}
                     <ChevronDown
@@ -208,16 +223,12 @@ export function SiteHeader() {
                     />
                     <ActiveDot on={isActive(pathname, l.href)} />
                   </NavigationMenu.Trigger>
-                  <TeamsMenu />
+                  <TeamsMenu pathname={pathname} />
                 </NavigationMenu.Item>
               ) : (
                 <NavigationMenu.Item key={l.href}>
                   <NavigationMenu.Link asChild active={isActive(pathname, l.href)}>
-                    <Link
-                      href={l.href}
-                      className={LINK}
-                      aria-current={isActive(pathname, l.href) ? 'page' : undefined}
-                    >
+                    <Link href={l.href} className={LINK} aria-current={currentOf(pathname, l.href)}>
                       {l.label}
                       <ActiveDot on={isActive(pathname, l.href)} />
                     </Link>

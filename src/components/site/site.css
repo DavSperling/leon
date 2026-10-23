@@ -56,6 +56,14 @@
   }
 }
 
+/* ---------- Le focus et les ancres ne passent pas sous l'en-tête fixe, ni sous la barre des maquettes ---------- */
+html:has(.site-header) {
+  scroll-padding-top: 96px;
+}
+html:has(.site-maquette-switcher) {
+  scroll-padding-bottom: 96px;
+}
+
 /* ---------- En-tête : verre qui se densifie au défilement ---------- */
 .site-header-bar {
   transition:

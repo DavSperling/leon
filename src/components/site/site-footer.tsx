@@ -24,7 +24,6 @@ const COLUMNS = [
     links: [
       { href: '/securite', label: 'Sécurité' },
       { href: '/securite#pas-encore', label: 'Ce qui n’est pas encore là' },
-      { href: '/maquettes', label: 'Maquettes de l’accueil' },
     ],
   },
   {
@@ -45,7 +44,7 @@ export function SiteFooter() {
           <div className="max-w-[340px]">
             <Link
               href="/"
-              className="inline-flex items-center gap-2.5 rounded-full text-[17px] font-bold tracking-[-0.02em] text-fg"
+              className="inline-flex min-h-10 items-center gap-2.5 rounded-full text-[17px] font-bold tracking-[-0.02em] text-fg"
             >
               <Logo className="size-7 text-[14px]" />
               Leon
@@ -63,7 +62,7 @@ export function SiteFooter() {
                     <li key={l.href}>
                       <Link
                         href={l.href}
-                        className="rounded-sm text-ui text-fg-2 transition-colors duration-200 hover:text-fg"
+                        className="inline-flex items-center rounded-sm text-ui text-fg-2 transition-colors duration-200 hover:text-fg pointer-coarse:min-h-10"
                       >
                         {nb(l.label)}
                       </Link>

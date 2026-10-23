@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
+import { nb } from '@/lib/verre/nb';
 import { ToolLogo } from '../parts';
 
 // Ce que Leon garde, en trois couches de verre éclatées en 3D (CSS seul) : le brut au fond, l'index au milieu, les
@@ -44,9 +45,12 @@ export function Layers3D({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn('fx-layers grid place-items-center max-sm:scale-[0.78]', className)}
+      className={cn(
+        'fx-layers grid place-items-center max-sm:scale-[0.78] max-sm:overflow-x-clip',
+        className,
+      )}
     >
-      <div className="fx-layers-stage relative h-[260px] w-[340px] sm:h-[300px] sm:w-[400px]">
+      <div className="fx-layers-stage relative h-[260px] w-[min(340px,86vw)] sm:h-[300px] sm:w-[400px]">
         <Plane z={0} label="Le brut, tel quel">
           <ul className="mt-3 grid gap-2">
             {RAW.map(([tool, title, kind]) => (
@@ -55,8 +59,8 @@ export function Layers3D({ className }: { className?: string }) {
                 className="flex items-center gap-2.5 rounded-[10px] border border-line bg-glass-3 px-2.5 py-2"
               >
                 <ToolLogo id={tool} size={22} lazy={false} />
-                <span className="truncate text-label font-semibold text-fg">{title}</span>
-                <span className="ml-auto font-mono text-[10px] text-muted">{kind}</span>
+                <span className="truncate text-label font-semibold text-fg">{nb(title)}</span>
+                <span className="ml-auto font-mono text-[11px] text-fg-2">{kind}</span>
               </li>
             ))}
           </ul>

@@ -106,7 +106,7 @@ export function DemoAnswerCard({
         <LeonMark />
         <span className="ml-auto font-mono text-meta tracking-normal whitespace-nowrap text-muted">
           {demo.unknown
-            ? 'aucune source'
+            ? 'sans réponse'
             : `${demo.sources.length} source${demo.sources.length > 1 ? 's' : ''}`}
         </span>
       </div>

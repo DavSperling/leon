@@ -199,6 +199,7 @@ export function Cite({ n, active }: { n: number; active?: boolean }) {
       data-active={active || undefined}
       className="relative mx-[1px] ml-1 inline-grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-[5px] align-[2px] font-mono text-[11px] leading-none font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)] data-[active]:bg-accent data-[active]:text-accent-ink"
     >
+      <span className="sr-only"> source </span>
       {n}
     </span>
   );
@@ -244,7 +245,7 @@ export function ArrowLink({
     <Link
       href={href}
       className={cn(
-        'group inline-flex items-center gap-1.5 rounded-sm text-ui font-semibold text-accent',
+        'group inline-flex min-h-10 items-center gap-1.5 rounded-sm text-ui font-semibold text-accent',
         className,
       )}
     >

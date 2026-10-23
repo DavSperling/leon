@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { Tabs } from 'radix-ui';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { TEAMS, type Team } from './content';
+import { TEAMS, type Team, toolLabel } from './content';
 import { DemoAnswerCard, DemoSourceRow } from './demo-card';
 import { ArrowLink, isFilterQuery, QueryCode, ToolLogo } from './parts';
 
@@ -84,7 +84,7 @@ export function TeamTabs({
       </Tabs.List>
 
       {TEAMS.map((t) => (
-        <Tabs.Content key={t.slug} value={t.slug} className="mt-6 outline-none">
+        <Tabs.Content key={t.slug} value={t.slug} className="mt-6 rounded-panel">
           <div className="fade-in grid gap-6 rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-5 shadow-panel backdrop-blur-[30px] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
             <div className="flex flex-col">
               <h3 className="text-[clamp(24px,2.8vw,32px)] leading-[1.15] font-bold tracking-[-0.03em] text-balance text-fg">
@@ -94,6 +94,9 @@ export function TeamTabs({
               {detail === 'questions' ? <Questions team={t} /> : <Gains team={t} />}
               <div className="mt-6 flex flex-wrap items-center justify-between gap-4 lg:mt-auto lg:pt-6">
                 <div className="flex flex-wrap gap-1.5">
+                  <p className="sr-only">
+                    {nb(`Outils de l’équipe : ${t.tools.slice(0, 6).map(toolLabel).join(', ')}`)}
+                  </p>
                   {t.tools.slice(0, 6).map((id) => (
                     <ToolLogo key={id} id={id} size={30} title />
                   ))}

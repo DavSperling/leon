@@ -30,10 +30,10 @@ export function SplitWords({
       <span aria-hidden="true">
         {parts.map((part) =>
           nb(part.text)
-            .split(/(\s+)/)
+            .split(/([ \t\n]+)/)
             .map((word, k) => {
               if (word === '') return null;
-              if (/^\s+$/.test(word)) return ' ';
+              if (/^[ \t\n]+$/.test(word)) return word;
               const i = w++;
               return (
                 <span

@@ -8,9 +8,9 @@ export function MaquetteSwitcher({ current }: { current: MaquetteNumber }) {
   return (
     <nav
       aria-label="Maquettes de l’accueil"
-      className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]"
+      className="site-maquette-switcher pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="flex items-center gap-1 rounded-full border border-line-strong bg-float p-1.5 shadow-float backdrop-blur-[28px]">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-line-strong bg-float p-1.5 shadow-float backdrop-blur-[28px]">
         <Link
           href="/maquettes"
           aria-label="Comparer les maquettes"
@@ -25,7 +25,7 @@ export function MaquetteSwitcher({ current }: { current: MaquetteNumber }) {
             href={`/maquettes/${m.n}`}
             aria-current={m.n === current ? 'page' : undefined}
             className={cn(
-              'inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-label font-semibold text-fg-2 transition-colors hover:bg-hover hover:text-fg sm:px-4',
+              'inline-flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 text-label font-semibold text-fg-2 transition-colors hover:bg-hover hover:text-fg sm:px-4',
               'aria-[current=page]:bg-accent aria-[current=page]:text-accent-ink',
             )}
           >

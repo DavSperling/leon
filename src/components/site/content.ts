@@ -381,8 +381,8 @@ export const TEAMS: Team[] = [
         text: 'Ce qui a été promis en réunion se retrouve à côté de la tâche qui le suit.',
       },
       {
-        title: 'Un fil par projet',
-        text: 'Une discussion avec Leon reprend les sources d’un projet et répond en les citant.',
+        title: 'Une discussion par sujet',
+        text: 'Ouvrez une discussion sur un projet : Leon cherche dans toutes les sources et répond en les citant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -424,8 +424,8 @@ export const TEAMS: Team[] = [
         text: 'Qui suit quel client, ce qui a été dit, ce qui est en cours : avant le premier rendez-vous.',
       },
       {
-        title: 'Seulement ce qu’on a le droit de voir',
-        text: 'La recherche passe par les droits de chacun. Les conversations privées restent privées.',
+        title: 'Ce qui est privé le reste',
+        text: 'Ce que lisent les outils branchés est partagé avec l’équipe ; les conversations d’IA, discussions et notes de chacun restent à lui.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -454,7 +454,7 @@ export const PILLARS: Pillar[] = [
   {
     id: 'garde',
     kicker: 'Garder',
-    title: 'Le brut, tel quel, avec ses droits.',
+    title: 'Le brut, tel quel, et qui peut le voir.',
     text: 'Leon ne résume pas et ne tient pas de fiches. Il garde chaque élément tel qu’il a été écrit, avec un lien vers l’original, et masque les secrets reconnaissables avant de les stocker.',
     points: [
       'Chaque résultat s’ouvre dans son outil d’origine',
@@ -499,7 +499,7 @@ export const SYNTAX = [
 /** Le point du matin, tel que le rédige Leon (briefing-prompt.ts) : trois parties, 250 mots au plus. Exemple fictif. */
 export const BRIEFING = [
   {
-    title: 'Ce que tu as fait',
+    title: 'Ce que vous avez fait',
     items: [
       'Relu et fusionné la PR de pagination de l’export PDF.',
       'Répondu à ACME sur le calendrier de la V2.',
@@ -557,7 +557,7 @@ export const SECURITY_FACTS = [
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe.',
+  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail Outlook, privée à qui la branche.',
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
@@ -577,6 +577,7 @@ export const PLANS = [
       `Les ${TOOL_COUNT} connecteurs`,
       'Recherche, réponse citée et discussions',
       'Point du matin et serveur MCP',
+      'Extension du navigateur et assistant de code',
     ],
     cta: 'Commencer le pilote',
     featured: false,
@@ -591,7 +592,6 @@ export const PLANS = [
       'Tout le pilote, sans limite d’équipe',
       'Seuls les comptes actifs du mois sont comptés',
       'Sans engagement, résiliable chaque mois',
-      'Extension du navigateur et assistant de code',
     ],
     cta: 'Créer un espace',
     featured: true,
@@ -615,11 +615,11 @@ export const PLANS = [
 export const FAQ = [
   {
     q: 'Faut-il changer d’outils ?',
-    a: 'Non. Leon se branche sur ceux que vous avez déjà, par une clé d’API ou un bouton de connexion, et relève ce qui change toutes les 15 minutes.',
+    a: `Non, s’ils sont parmi les ${TOOL_COUNT} connecteurs : Leon s’y branche par une clé d’API ou un bouton de connexion, et relève ce qui change toutes les 15 minutes.`,
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
+    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail Outlook, privée à qui la branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',

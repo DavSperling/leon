@@ -17,7 +17,8 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
         Aller au contenu
       </a>
       <SiteHeader />
-      <main id="contenu" tabIndex={-1} className="relative z-[1] min-h-dvh outline-none">
+      {/* z-[2] : au-dessus du pied (z-[1]) ; un élément fixe de la page (barre des maquettes) ne passe pas dessous */}
+      <main id="contenu" tabIndex={-1} className="relative z-[2] min-h-dvh outline-none">
         {children}
       </main>
       {footer && (

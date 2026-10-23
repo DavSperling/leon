@@ -7,10 +7,19 @@
   transform: perspective(var(--tilt-p, 1000px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
     scale(var(--ts, 1));
   transform-style: preserve-3d;
-  transition: transform 0.6s var(--ease-out);
+  /* les bordures, fonds et ombres des cartes gardent leur transition (ce bloc l'emporte sur les utilitaires) */
+  transition:
+    transform 0.6s var(--ease-out),
+    border-color 0.3s,
+    background-color 0.3s,
+    box-shadow 0.3s;
 }
 .fx-tilt[data-tilting] {
-  transition: transform 0.15s linear;
+  transition:
+    transform 0.15s linear,
+    border-color 0.3s,
+    background-color 0.3s,
+    box-shadow 0.3s;
 }
 .fx-tilt-glare {
   position: absolute;
@@ -158,9 +167,19 @@
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  animation: fx-ring 5s linear infinite;
+  /* angle fixe par défaut ; avec le défilement, il tourne quand la carte traverse l'écran (aucun travail au repos) */
+  --fx-angle: 40deg;
+}
+@supports (animation-timeline: view()) {
+  .fx-ring::after {
+    animation: fx-ring linear both;
+    animation-timeline: view();
+  }
 }
 @keyframes fx-ring {
+  from {
+    --fx-angle: 0deg;
+  }
   to {
     --fx-angle: 1turn;
   }

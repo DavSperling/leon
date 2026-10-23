@@ -91,7 +91,7 @@ function Hero() {
             className="site-rise mx-auto mt-6 max-w-[660px] text-[18px] leading-[1.6] text-pretty text-fg-2 max-sm:text-[16px]"
           >
             {nb(
-              'Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, avec les droits de chacun, et répond en citant la source. Quand rien ne répond, il le dit.',
+              'Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous seul, et répond en citant la source. Quand rien ne répond, il le dit.',
             )}
           </p>
           <div
@@ -107,7 +107,7 @@ function Hero() {
             style={rise(4)}
             className="site-rise mt-5 font-mono text-meta tracking-normal text-muted"
           >
-            Pilote gratuit de 30 jours · sans carte bancaire
+            Bêta ouverte · un e-mail suffit pour créer l’espace
           </p>
         </div>
         <div style={rise(5)} className="site-rise mx-auto mt-14 max-w-[1100px] sm:mt-16">
@@ -137,8 +137,9 @@ function ToolsStrip() {
           </h2>
           <p className="mt-5 max-w-[480px] text-[17px] leading-[1.6] text-fg-2 max-lg:mx-auto">
             {nb(
-              'Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change toutes les 15 minutes, par une clé d’API ou un bouton de connexion. Faites tourner la sphère.',
-            )}
+              'Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change toutes les 15 minutes, par une clé d’API ou un bouton de connexion.',
+            )}{' '}
+            <span aria-hidden="true">Faites tourner la sphère.</span>
           </p>
           <ul className="mt-7 flex flex-wrap gap-2 max-lg:justify-center">
             {TOOL_GROUPS.map((g) => (
@@ -166,7 +167,7 @@ function ToolsStrip() {
 const PROBLEMS = [
   {
     title: 'Tout est quelque part',
-    text: 'Mails, CRM, tickets, réunions, pages : ce qui a été dit vit dans des dizaines d’outils. Le retrouver prend une matinée, quand on le retrouve.',
+    text: 'Mails, CRM, tickets, réunions, pages : ce qui a été dit vit dans des dizaines d’outils. Le retrouver demande d’ouvrir chaque outil, quand on le retrouve.',
   },
   {
     title: 'Les départs emportent la mémoire',
@@ -174,7 +175,7 @@ const PROBLEMS = [
   },
   {
     title: 'Chacun parle à son IA dans son coin',
-    text: 'Les conversations avec les assistants d’IA contiennent des décisions. Elles ne servent qu’à une personne, puis se perdent.',
+    text: 'Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde, pour vous seul, avec le reste.',
   },
 ] as const;
 
@@ -215,7 +216,7 @@ function ProblemVisual({ i }: { i: number }) {
           <div
             key={task}
             className="flex items-center gap-2.5 rounded-field border border-line bg-glass-3 px-3 py-2 text-label text-fg-2"
-            style={{ opacity: 1 - k * 0.28 }}
+            style={{ opacity: 1 - k * 0.15 }}
           >
             <span className="size-3.5 rounded-full border border-line-strong" />
             <span className="truncate">{nb(task)}</span>
@@ -250,7 +251,7 @@ function Problem() {
           title="L’information de l’équipe est partout, sauf là où on la cherche."
           align="center"
         />
-        <ul className="mt-14 grid gap-4 md:grid-cols-3">
+        <ul className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-3">
           {PROBLEMS.map((p, i) => (
             <li key={p.title} className="site-reveal">
               <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
@@ -280,7 +281,7 @@ function Steps() {
           title="Vous branchez. Leon garde. Vous demandez."
           lead="Aucune fiche à remplir, aucun résumé à relire : Leon relève vos outils toutes les 15 minutes et garde chaque élément tel qu’il a été écrit."
         />
-        <ol className="relative mt-14 grid gap-4 lg:grid-cols-3">
+        <div className="relative mt-14">
           {/* fil qui relie les trois temps */}
           <svg
             aria-hidden="true"
@@ -299,91 +300,95 @@ function Steps() {
               className="site-flow"
             />
           </svg>
-
-          <li className="site-reveal">
-            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
-              <StepNumber n="01" />
-              <h3 className="mt-5 text-title font-semibold text-fg">Vous branchez vos outils</h3>
-              <p className="mt-2 text-body leading-[1.6] text-muted">
-                {nb(
-                  `Une clé d’API ou un bouton de connexion, parmi ${TOOL_COUNT} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.`,
-                )}
-              </p>
-              <div aria-hidden="true" className="mt-5 grid gap-2">
-                <div className="grid grid-cols-6 gap-2">
-                  {(['github', 'notion', 'hubspot', 'linear', 'granola', 'intercom'] as const).map(
-                    (id) => (
-                      <ToolLogo key={id} id={id} size={34} />
-                    ),
+          <ol className="relative grid gap-4 lg:grid-cols-3">
+            <li className="site-reveal">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                <StepNumber n="01" />
+                <h3 className="mt-5 text-title font-semibold text-fg">Vous branchez vos outils</h3>
+                <p className="mt-2 text-body leading-[1.6] text-muted">
+                  {nb(
+                    `Une clé d’API ou un bouton de connexion, parmi ${TOOL_COUNT} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.`,
                   )}
-                </div>
-                <div className="flex items-center gap-3 rounded-field border border-line bg-glass-3 px-3 py-2.5 text-label text-fg-2">
-                  <span className="size-2 rounded-full bg-ok" />
-                  Extension · assistant web
-                  <span className="ml-auto inline-flex h-5 w-9 items-center rounded-full bg-accent p-0.5">
-                    <span className="ml-auto size-4 rounded-full bg-accent-ink" />
-                  </span>
-                </div>
-              </div>
-            </Tilt>
-          </li>
-
-          <li className="site-reveal">
-            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
-              <StepNumber n="02" />
-              <h3 className="mt-5 text-title font-semibold text-fg">Leon garde le brut</h3>
-              <p className="mt-2 text-body leading-[1.6] text-muted">
-                {nb(
-                  'Tel quel, avec un lien vers l’original et les droits de chacun. Les secrets reconnaissables sont masqués avant d’être gardés.',
-                )}
-              </p>
-              <div aria-hidden="true" className="mt-5 grid gap-2">
-                <div className="rounded-field border border-line bg-glass-3 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-label font-semibold text-fg">
-                    <ToolLogo id="granola" size={20} />
-                    Point mensuel ACME
-                    <span className="ml-auto font-mono text-[10.5px] font-normal text-muted">
-                      3 oct.
+                </p>
+                <div aria-hidden="true" className="mt-5 grid gap-2">
+                  <div className="grid grid-cols-6 gap-2">
+                    {(
+                      ['github', 'notion', 'hubspot', 'linear', 'granola', 'intercom'] as const
+                    ).map((id) => (
+                      <ToolLogo key={id} id={id} size={34} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 rounded-field border border-line bg-glass-3 px-3 py-2.5 text-label text-fg-2">
+                    <span className="size-2 rounded-full bg-ok" />
+                    Extension · assistant web
+                    <span className="ml-auto inline-flex h-5 w-9 items-center rounded-full bg-accent p-0.5">
+                      <span className="ml-auto size-4 rounded-full bg-accent-ink" />
                     </span>
                   </div>
-                  <p className="mt-1.5 line-clamp-1 text-label text-muted">
-                    {nb('« On peut s’engager sur le 15 novembre pour la V2… »')}
-                  </p>
-                  <p className="mt-1.5 text-label font-semibold text-accent">
-                    Ouvrir dans Granola ↗
-                  </p>
                 </div>
-                <code className="block rounded-field border border-line bg-glass-3 px-3 py-2.5 font-mono text-[12px] text-fg-2">
-                  <span className="text-muted">DB_PASSWORD=</span>
-                  <span className="rounded-[4px] bg-mark-bg px-1 text-mark-ink">[masqué]</span>
-                </code>
-              </div>
-            </Tilt>
-          </li>
+              </Tilt>
+            </li>
 
-          <li className="site-reveal">
-            <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
-              <StepNumber n="03" />
-              <h3 className="mt-5 text-title font-semibold text-fg">Vous demandez</h3>
-              <p className="mt-2 text-body leading-[1.6] text-muted">
-                {nb(
-                  'Une recherche, une discussion, ou votre assistant d’IA par MCP. La réponse cite chaque source, ou dit « je ne sais pas ».',
-                )}
-              </p>
-              <div aria-hidden="true" className="mt-5 grid gap-2">
-                <div className="flex h-10 items-center gap-2 rounded-field border border-line-strong bg-glass-2 px-3">
-                  <QueryCode q="de:julie type:réunion depuis:1m" />
+            <li className="site-reveal">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                <StepNumber n="02" />
+                <h3 className="mt-5 text-title font-semibold text-fg">Leon garde le brut</h3>
+                <p className="mt-2 text-body leading-[1.6] text-muted">
+                  {nb(
+                    'Tel quel, avec un lien vers l’original. Vos conversations d’IA restent à vous. Les secrets reconnaissables sont masqués avant d’être gardés.',
+                  )}
+                </p>
+                <div aria-hidden="true" className="mt-5 grid gap-2">
+                  <div className="rounded-field border border-line bg-glass-3 px-3 py-2.5">
+                    <div className="flex items-center gap-2 text-label font-semibold text-fg">
+                      <ToolLogo id="granola" size={20} />
+                      Point mensuel ACME
+                      <span className="ml-auto font-mono text-[10.5px] font-normal text-muted">
+                        3 oct.
+                      </span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-1 text-label text-muted">
+                      {nb('« On peut s’engager sur le 15 novembre pour la V2… »')}
+                    </p>
+                    <p className="mt-1.5 text-label font-semibold text-accent">
+                      Ouvrir dans Granola ↗
+                    </p>
+                  </div>
+                  <code className="block rounded-field border border-line bg-glass-3 px-3 py-2.5 font-mono text-[12px] text-fg-2">
+                    <span className="text-muted">DB_PASSWORD=</span>
+                    <span className="rounded-[4px] bg-mark-bg px-1 text-mark-ink">
+                      [secret masqué]
+                    </span>
+                  </code>
                 </div>
-                <div className="signal-line relative overflow-hidden rounded-field border border-line bg-glass-2 px-3 py-2.5 text-label leading-[1.6] text-fg">
-                  {nb('Julie s’est engagée sur le 15 nov.')}
-                  <Cite n={1} />
-                  {nb(', hors reprise des données')}
-                  <Cite n={2} />.
+              </Tilt>
+            </li>
+
+            <li className="site-reveal">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                <StepNumber n="03" />
+                <h3 className="mt-5 text-title font-semibold text-fg">Vous demandez</h3>
+                <p className="mt-2 text-body leading-[1.6] text-muted">
+                  {nb(
+                    'Une recherche, une discussion, ou votre assistant d’IA par MCP. La réponse cite chaque source, ou dit « je ne sais pas ».',
+                  )}
+                </p>
+                <div aria-hidden="true" className="mt-5 grid gap-2">
+                  <div className="flex h-10 items-center gap-2 rounded-field border border-line-strong bg-glass-2 px-3">
+                    <QueryCode q="de:julie type:réunion depuis:1m" />
+                  </div>
+                  <div className="signal-line relative overflow-hidden rounded-field border border-line bg-glass-2 px-3 py-2.5 text-label leading-[1.6] text-fg">
+                    {nb('Julie s’est engagée sur le 15 nov.')}
+                    <Cite n={1} />
+                    {nb(', hors reprise des données')}
+                    <Cite n={2} />.
+                  </div>
                 </div>
-              </div>
-            </Tilt>
-          </li>
-        </ol>
+              </Tilt>
+            </li>
+          </ol>
+        </div>
+        <p className="mt-4 font-mono text-meta tracking-normal text-muted">Exemples fictifs</p>
       </Container>
     </section>
   );
@@ -408,7 +413,7 @@ const LAYERS = [
   },
   {
     title: 'Les droits, d’abord',
-    text: 'Le filtre des droits passe avant le classement : ce qui est privé ne remonte jamais chez un autre.',
+    text: 'Le filtre des droits passe avant le classement : ce qui est privé à son auteur ne remonte jamais chez un autre.',
   },
 ] as const;
 
@@ -445,6 +450,9 @@ function UnderTheHood() {
         <div className="relative min-h-[460px] sm:min-h-[540px]">
           <div aria-hidden="true" className="site-halo absolute inset-0 opacity-70" />
           <Layers3D className="absolute inset-0" />
+          <p className="absolute right-0 bottom-0 font-mono text-meta tracking-normal text-muted">
+            Exemple fictif
+          </p>
         </div>
       </Container>
     </section>
@@ -483,8 +491,8 @@ const PROOFS = [
   },
   {
     icon: Users,
-    title: 'Ce que vous avez le droit de voir',
-    text: 'La recherche, la discussion et l’assistant passent par vos droits. Les conversations privées le restent.',
+    title: 'Ce qui est à vous reste à vous',
+    text: 'La recherche, la discussion et l’assistant appliquent les mêmes droits : ce qui est privé à son auteur ne remonte chez personne d’autre.',
   },
   {
     icon: FileText,
@@ -549,7 +557,33 @@ function Assistant() {
     <section aria-labelledby="assistant" className="py-20 sm:py-28">
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-          <div className="grid gap-4 max-lg:order-2">
+          <div className="lg:order-2">
+            <SectionHeading
+              id="assistant"
+              kicker="Dans votre assistant"
+              title="Votre assistant d’IA connaît enfin le contexte de l’équipe."
+              lead="Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Avec un jeton personnel, révocable à tout moment : il voit ce que vous voyez, rien de plus."
+            />
+            <ul className="mt-8 grid gap-3 text-body text-fg-2">
+              {[
+                'Le point du matin vous attend au démarrage de votre assistant de code.',
+                'Chaque session de code est gardée à sa fin, texte seul.',
+                'Ce que lit chaque assistant est noté dans un journal.',
+              ].map((t) => (
+                <li key={t} className="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-[9px] size-1.5 shrink-0 rounded-full bg-accent"
+                  />
+                  {nb(t)}
+                </li>
+              ))}
+            </ul>
+            <ArrowLink href="/produit#discute" className="mt-8">
+              Discussions, point du matin et MCP
+            </ArrowLink>
+          </div>
+          <div className="grid gap-4 lg:order-1">
             <div className="site-reveal">
               <Tilt
                 max={4}
@@ -600,9 +634,9 @@ function Assistant() {
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   {BRIEFING.map((part) => (
                     <div key={part.title}>
-                      <h3 className="font-mono text-meta tracking-normal text-fg-2">
+                      <p className="font-mono text-meta tracking-normal text-fg-2">
                         {nb(part.title)}
-                      </h3>
+                      </p>
                       <ul className="mt-2 grid gap-1.5">
                         {part.items.map((it) => (
                           <li key={it} className="text-label leading-[1.5] text-muted">
@@ -615,32 +649,7 @@ function Assistant() {
                 </div>
               </Tilt>
             </div>
-          </div>
-          <div>
-            <SectionHeading
-              id="assistant"
-              kicker="Dans votre assistant"
-              title="Votre assistant d’IA connaît enfin le contexte de l’équipe."
-              lead="Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Avec un jeton personnel, révocable à tout moment, et vos droits, rien de plus."
-            />
-            <ul className="mt-8 grid gap-3 text-body text-fg-2">
-              {[
-                'Le point du matin vous attend au démarrage de votre assistant de code.',
-                'Chaque session de code est gardée à sa fin, texte seul.',
-                'Ce que lit chaque assistant est noté dans un journal.',
-              ].map((t) => (
-                <li key={t} className="flex gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="mt-[9px] size-1.5 shrink-0 rounded-full bg-accent"
-                  />
-                  {nb(t)}
-                </li>
-              ))}
-            </ul>
-            <ArrowLink href="/produit#discute" className="mt-8">
-              Discussions, point du matin et MCP
-            </ArrowLink>
+            <p className="font-mono text-meta tracking-normal text-muted">Exemple fictif</p>
           </div>
         </div>
       </Container>
@@ -664,7 +673,7 @@ function Security() {
                 id="securite"
                 className="mt-3 text-[clamp(26px,3.4vw,38px)] leading-[1.1] font-bold tracking-[-0.035em] text-fg"
               >
-                {nb('Chaque entreprise dans son espace. Chacun dans ses droits.')}
+                {nb('Chaque entreprise dans son espace. Vos conversations à vous.')}
               </h2>
             </div>
             <ArrowLink href="/securite">Tout sur la sécurité</ArrowLink>

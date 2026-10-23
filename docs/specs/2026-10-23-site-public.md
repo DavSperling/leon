@@ -8,7 +8,7 @@ Ajouté le 23 octobre 2026. Tout ce qu'on voit **avant** de se connecter ; rien 
 | --- | --- |
 | `/` sans session | La page d'accueil (maquette 1), servie par `src/proxy.ts` à la même adresse. Avec un cookie de session, `/` reste la recherche. |
 | `/accueil` | La même page d'accueil, à son adresse propre. |
-| `/maquettes`, `/maquettes/1`, `/2`, `/3` | Les trois maquettes de l'accueil, à comparer (non indexées). Une barre flottante passe de l'une à l'autre. |
+| `/maquettes`, `/maquettes/1`, `/2`, `/3` | Les trois maquettes de l'accueil, à comparer (non indexées, sans lien depuis le site : l'adresse se partage dans l'équipe). Une barre flottante passe de l'une à l'autre. |
 | `/produit` | Comment ça marche : capter, garder, retrouver, discuter ; ce qui arrive ensuite. |
 | `/cas-usage`, `/cas-usage/<équipe>` | Les six équipes : direction, ventes, support, produit et tech, chefs de projet, arrivées. |
 | `/connecteurs` | Les 39 outils, filtrables par famille et par nom ; les conversations d'IA ; ce qui est prévu. |
@@ -39,8 +39,8 @@ Dans `src/components/site/fx/`, sans nouvelle dépendance :
 - `LogoSphere` : les 39 logos sur une sphère qui tourne seule et se lance à la souris ou au doigt.
 - `Layers3D` : le brut, l'index et les droits, trois couches de verre éclatées (CSS 3D).
 - `SplitWords` : un titre dont chaque mot bascule en 3D (CSS seul, visible sans JavaScript).
-- Classes de `fx.css` : `fx-untilt` (panneau qui se redresse au défilement), `fx-ring` (bordure lumineuse qui tourne),
-  `fx-breathe`.
+- Classes de `fx.css` : `fx-untilt` (panneau qui se redresse au défilement), `fx-ring` (bordure lumineuse qui tourne
+  au défilement, sans travail au repos), `fx-breathe`.
 
 Mouvement réduit : état final, rien ne tourne. Les animations en JavaScript s'arrêtent hors de l'écran et onglet caché.
 Seuls `transform`, `opacity` et `filter` bougent ; les visuels 3D sont décoratifs (`aria-hidden`), le texte voisin dit la même chose.

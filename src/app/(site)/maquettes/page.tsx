@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import { Tilt } from '@/components/site/fx';
 import { MAQUETTES } from '@/components/site/maquettes';
 import { Container, Kicker } from '@/components/site/parts';
+import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 
 export const metadata: Metadata = {
@@ -20,10 +21,10 @@ function Preview({ n }: { n: string }) {
   if (n === '1')
     return (
       <div className="grid h-full content-center justify-items-center gap-2 px-8">
-        <span className={`${bar} h-1.5 w-16 bg-accent-line`} />
-        <span className={`${bar} h-3 w-[70%] bg-fg-2/70`} />
-        <span className={`${bar} h-3 w-[52%] bg-accent`} />
-        <span className={`${bar} mt-1 h-1.5 w-[58%]`} />
+        <span className={cn(bar, 'h-1.5 w-16 bg-accent-line')} />
+        <span className={cn(bar, 'h-3 w-[70%] bg-fg-2/70')} />
+        <span className={cn(bar, 'h-3 w-[52%] bg-accent')} />
+        <span className={cn(bar, 'mt-1 h-1.5 w-[58%]')} />
         <span className="mt-3 h-6 w-[82%] rounded-[8px] border border-accent-line bg-glass-2" />
         <span className="grid w-[82%] grid-cols-[1.2fr_1fr] gap-1.5">
           <span className="signal-line relative h-14 overflow-hidden rounded-[8px] border border-line bg-glass-2" />
@@ -39,10 +40,10 @@ function Preview({ n }: { n: string }) {
     return (
       <div className="grid h-full grid-cols-2 items-center gap-4 px-7">
         <span className="grid gap-2">
-          <span className={`${bar} h-1.5 w-12 bg-accent-line`} />
-          <span className={`${bar} h-3 w-full bg-fg-2/70`} />
-          <span className={`${bar} h-3 w-4/5 bg-fg-2/70`} />
-          <span className={`${bar} h-1.5 w-3/4`} />
+          <span className={cn(bar, 'h-1.5 w-12 bg-accent-line')} />
+          <span className={cn(bar, 'h-3 w-full bg-fg-2/70')} />
+          <span className={cn(bar, 'h-3 w-4/5 bg-fg-2/70')} />
+          <span className={cn(bar, 'h-1.5 w-3/4')} />
           <span className="mt-2 h-5 w-20 rounded-full bg-accent" />
         </span>
         <span className="relative mx-auto aspect-square w-full max-w-[150px]">
@@ -63,7 +64,7 @@ function Preview({ n }: { n: string }) {
     );
   return (
     <div className="grid h-full content-center gap-3 px-8">
-      <span className={`${bar} h-1.5 w-24`} />
+      <span className={cn(bar, 'h-1.5 w-24')} />
       <span className="h-4 w-[86%] rounded-[4px] bg-fg-2/70" />
       <span className="h-4 w-[60%] rounded-[4px] bg-[linear-gradient(90deg,var(--mark-bg),var(--accent-soft))]" />
       <span className="relative mt-2 grid gap-2 border-l border-accent-line pl-4">
@@ -71,7 +72,7 @@ function Preview({ n }: { n: string }) {
           <span key={w} className="relative flex items-center gap-2">
             <span className="absolute -left-[21px] size-2 rounded-full bg-accent" />
             <span className="h-1.5 w-8 rounded-full bg-accent-line" />
-            <span className={`${bar} h-1.5 ${w}`} />
+            <span className={cn(bar, 'h-1.5', w)} />
           </span>
         ))}
       </span>

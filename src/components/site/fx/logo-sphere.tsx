@@ -24,9 +24,12 @@ const fibonacci = (n: number) =>
 export function LogoSphere({
   tools,
   size = 34,
+  srList = true,
   className,
 }: {
   tools: ProviderId[];
+  /** Liste des outils pour les lecteurs d'écran ; false quand la page les liste déjà en texte. */
+  srList?: boolean;
   /** Taille d'un logo au premier plan, en px. */
   size?: number;
   className?: string;
@@ -79,6 +82,10 @@ export function LogoSphere({
     };
 
     const loop = () => {
+      if (isInstant()) {
+        pause();
+        return;
+      }
       if (!drag) {
         ay += vy;
         ax += vx;
@@ -158,11 +165,13 @@ export function LogoSphere({
 
   return (
     <div className={cn('relative aspect-square w-full', className)}>
-      <ul className="sr-only">
-        {tools.map((id) => (
-          <li key={id}>{toolLabel(id)}</li>
-        ))}
-      </ul>
+      {srList && (
+        <ul className="sr-only">
+          {tools.map((id) => (
+            <li key={id}>{toolLabel(id)}</li>
+          ))}
+        </ul>
+      )}
       <div ref={host} aria-hidden="true" className="fx-sphere absolute inset-0 select-none">
         {/* halo et Leon au centre */}
         <div className="absolute inset-[30%] rounded-full bg-[radial-gradient(closest-side,var(--accent-soft),transparent)] fx-breathe" />

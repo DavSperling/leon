@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <votre jeton>"`;
 
   return (
-    <div className="max-w-[760px]">
+    <div className="mx-auto max-w-[760px]">
       <PageHeader
         title="Réglages"
         subtitle="Jetons d’accès et branchement des assistants"

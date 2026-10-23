@@ -43,6 +43,9 @@ const fraunces = Fraunces({
   style: ['normal', 'italic'],
   axes: ['SOFT', 'WONK', 'opsz'],
   display: 'swap',
+  // la police ne sert qu'à cette maquette, mais la route /maquettes/[n] importe les trois accueils : sans ceci, chaque
+  // maquette précharge les deux fichiers Fraunces (~270 Ko) en priorité haute
+  preload: false,
   variable: '--font-fraunces',
 });
 
@@ -160,7 +163,7 @@ function PerimetreVignette() {
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
           <ToolLogo id={devis.tool} size={26} />
           <span className="text-label text-fg-2">
-            {nb(`${devis.author}, signé par le client le ${devis.date}`)}
+            {nb(`Devis signé par le client · note de ${devis.author}`)}
           </span>
           <span className="ml-auto inline-flex items-center gap-1 text-label font-semibold text-accent">
             Ouvrir dans {toolLabel(devis.tool)}
@@ -236,21 +239,28 @@ type Chapter = {
   id: string;
   time: string;
   label: string;
-  title: ReactNode;
+  /** Titre du chapitre ; le passage entre *astérisques* passe en italique. */
+  title: string;
   text: string[];
   vignette: ReactNode;
 };
+
+/** « *mot* » en italique ; nb() passe sur la phrase entière, avant la découpe, pour que « prévu ? » garde son espace fine. */
+function Emphasis({ text }: { text: string }) {
+  return nb(text)
+    .split('*')
+    .map((part, i) =>
+      // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un titre figé
+      i % 2 === 1 ? <em key={i}>{part}</em> : part,
+    );
+}
 
 const CHAPTERS: Chapter[] = [
   {
     id: 'matin',
     time: '08:45',
     label: 'Le point du matin',
-    title: (
-      <>
-        La journée reprend là où elle s’était <em>arrêtée</em>.
-      </>
-    ),
+    title: 'La journée reprend là où elle s’était *arrêtée*.',
     text: [
       'Avant la première question, Leon a préparé le point : ce que vous avez fait, ce qui a bougé autour de vous, ce qui reste ouvert.',
       'Il tient en 250 mots au plus et attend au démarrage de votre assistant de code. Ailleurs, il s’appelle par MCP.',
@@ -261,11 +271,7 @@ const CHAPTERS: Chapter[] = [
     id: 'rendez-vous',
     time: '10:30',
     label: 'Avant le rendez-vous',
-    title: (
-      <>
-        Le client arrive dans une <em>demi-heure</em>.
-      </>
-    ),
+    title: 'Le client arrive dans une *demi-heure*.',
     text: [
       'Karim veut savoir ce qui a été promis à ACME. Une seule recherche couvre la réunion enregistrée, la note du CRM et le ticket de suivi.',
       'La réponse arrive au-dessus des résultats. Chaque phrase renvoie à sa source.',
@@ -276,11 +282,7 @@ const CHAPTERS: Chapter[] = [
     id: 'perimetre',
     time: '14:00',
     label: 'Le périmètre',
-    title: (
-      <>
-        « Ce n’était pas <em>prévu</em> ? »
-      </>
-    ),
+    title: '« Ce n’était pas *prévu* ? »',
     text: [
       'Le client affirme que la reprise des données faisait partie du contrat. Personne ne se souvient du détail.',
       'Le devis signé, lui, est gardé tel quel. Entre guillemets, la phrase exacte retrouve l’endroit où elle a été écrite, et l’original s’ouvre d’un clic.',
@@ -291,11 +293,7 @@ const CHAPTERS: Chapter[] = [
     id: 'support',
     time: '16:20',
     label: 'Le support',
-    title: (
-      <>
-        Ce bug est-il <em>connu</em> ?
-      </>
-    ),
+    title: 'Ce bug est-il *connu* ?',
     text: [
       'Trois conversations de support parlent d’un PDF vide. Leon relie ce que les clients écrivent au ticket qui le reproduit et à la PR qui le corrige.',
       'La discussion reste visible de vous seul, et chaque affirmation porte sa source.',
@@ -306,13 +304,9 @@ const CHAPTERS: Chapter[] = [
     id: 'passation',
     time: '18:10',
     label: 'La passation',
-    title: (
-      <>
-        Thomas part en fin de <em>semaine</em>.
-      </>
-    ),
+    title: 'Thomas part en fin de *semaine*.',
     text: [
-      'Ce qu’il suivait vit dans ses tâches, ses réunions et ses notes. Leon le garde après son départ.',
+      'Ce qu’il suivait vit dans ses tâches, ses réunions et ses pages. Leon le garde après son départ.',
       'La passation ne dépend plus de sa mémoire, ni de celle de ses collègues.',
     ],
     vignette: <PassationVignette />,
@@ -321,7 +315,8 @@ const CHAPTERS: Chapter[] = [
 
 function Timeline() {
   return (
-    <ol className="relative mt-16 grid gap-24 sm:mt-20 lg:gap-32">
+    // les filets sont des frères de la liste, pas ses enfants : un <ol> ne contient que des <li>
+    <div className="relative mt-16 sm:mt-20">
       {/* la ligne et son remplissage au défilement ; sur mobile, au bord gauche */}
       <span
         aria-hidden="true"
@@ -340,40 +335,42 @@ function Timeline() {
           <span className="recit-head-dot absolute bottom-0 left-1/2" />
         </span>
       </span>
-      {CHAPTERS.map((c) => (
-        <li
-          key={c.id}
-          id={`recit-${c.id}`}
-          className="recit-chapter relative grid scroll-mt-28 grid-cols-[minmax(0,1fr)] gap-6 pl-8 lg:grid-cols-[160px_minmax(0,1fr)] lg:gap-14 lg:pl-0"
-        >
-          <span
-            aria-hidden="true"
-            className="absolute top-[9px] left-0 size-[11px] rounded-full border border-line-strong bg-bg lg:left-[183px]"
+      <ol className="relative grid gap-24 lg:gap-32">
+        {CHAPTERS.map((c) => (
+          <li
+            key={c.id}
+            id={`recit-${c.id}`}
+            className="recit-chapter relative grid scroll-mt-28 grid-cols-[minmax(0,1fr)] gap-6 pl-8 lg:grid-cols-[160px_minmax(0,1fr)] lg:gap-14 lg:pl-0"
           >
-            <span className="recit-dot-on absolute -inset-px rounded-full bg-accent" />
-          </span>
-          <div className="lg:sticky lg:top-28 lg:self-start lg:text-right">
-            <FlipTime time={c.time} className="text-[30px] lg:justify-end lg:text-[34px]" />
-            <p className="mt-2 font-mono text-meta tracking-[0.08em] text-accent uppercase">
-              {nb(c.label)}
-            </p>
-          </div>
-          <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-12">
-            <div className="max-w-[520px]">
-              <h3 className="recit-display text-[clamp(30px,2.9vw,40px)] leading-[1.08] text-balance text-fg">
-                {c.title}
-              </h3>
-              {c.text.map((t) => (
-                <p key={t} className="mt-4 text-[16.5px] leading-[1.7] text-pretty text-fg-2">
-                  {nb(t)}
-                </p>
-              ))}
+            <span
+              aria-hidden="true"
+              className="absolute top-[9px] left-0 size-[11px] rounded-full border border-line-strong bg-bg lg:left-[183px]"
+            >
+              <span className="recit-dot-on absolute -inset-px rounded-full bg-accent" />
+            </span>
+            <div className="lg:sticky lg:top-28 lg:self-start lg:text-right">
+              <FlipTime time={c.time} className="text-[30px] lg:justify-end lg:text-[34px]" />
+              <p className="mt-2 font-mono text-meta tracking-[0.08em] text-accent uppercase">
+                {nb(c.label)}
+              </p>
             </div>
-            {c.vignette}
-          </div>
-        </li>
-      ))}
-    </ol>
+            <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-12">
+              <div className="max-w-[520px]">
+                <h3 className="recit-display text-[clamp(30px,2.9vw,40px)] leading-[1.08] text-balance text-fg">
+                  <Emphasis text={c.title} />
+                </h3>
+                {c.text.map((t) => (
+                  <p key={t} className="mt-4 text-[16.5px] leading-[1.7] text-pretty text-fg-2">
+                    {nb(t)}
+                  </p>
+                ))}
+              </div>
+              {c.vignette}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -428,7 +425,7 @@ function Hero() {
           <div className="site-rise" style={{ '--i': 2 } as CSSProperties}>
             <p className="recit-dropcap max-w-[560px] text-[18px] leading-[1.65] text-pretty text-fg-2 max-sm:text-[16.5px]">
               {nb(
-                `${TAGLINES.pitch} Leon garde ce qui se dit dans vos outils et vos conversations d’IA, tel quel et avec ses droits.`,
+                `${TAGLINES.pitch} Leon garde, tel quel, ce qui se dit dans vos outils et dans vos conversations d’IA ; ces conversations ne sont visibles que de vous.`,
               )}
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -719,8 +716,11 @@ function Index() {
             ))}
           </dl>
           <div className="site-reveal mx-auto w-full max-w-[340px] lg:sticky lg:top-28 lg:max-w-[460px]">
-            <LogoSphere tools={ALL_TOOLS} size={40} />
-            <p className="mt-2 text-center font-mono text-meta tracking-normal text-muted">
+            <LogoSphere tools={ALL_TOOLS} size={40} srList={false} />
+            <p
+              aria-hidden="true"
+              className="mt-2 text-center font-mono text-meta tracking-normal text-muted"
+            >
               {nb('Faites tourner : les outils, et Leon au milieu')}
             </p>
           </div>
@@ -735,7 +735,9 @@ function Closing() {
     <section aria-labelledby="recit-fin" className="py-20 sm:py-28">
       <Container>
         <Tilt max={3} glare className="site-reveal rounded-panel">
-          <div className="fx-ring signal-line relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] px-6 py-16 shadow-panel backdrop-blur-[30px] sm:px-14 sm:py-24">
+          {/* overflow-clip, pas hidden : hidden en ferait un conteneur de défilement, et l'anneau (fx-ring) comme le trait
+              sous « reste dit » (animation-timeline: view()) suivraient ce conteneur immobile, figés */}
+          <div className="fx-ring signal-line relative overflow-clip rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] px-6 py-16 shadow-panel backdrop-blur-[30px] sm:px-14 sm:py-24">
             <div aria-hidden="true" className="site-halo pointer-events-none absolute inset-0" />
             <div
               aria-hidden="true"

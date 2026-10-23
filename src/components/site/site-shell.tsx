@@ -12,7 +12,7 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
       <Aurora />
       <a
         href="#contenu"
-        className="fixed top-3 left-3 z-50 -translate-y-20 rounded-full bg-accent px-4 py-2 text-ui font-semibold text-accent-ink transition-transform focus-visible:translate-y-0"
+        className="fixed top-3 left-3 z-50 inline-flex min-h-10 -translate-y-20 items-center rounded-full bg-accent px-4 text-ui font-semibold text-accent-ink transition-transform focus-visible:translate-y-0"
       >
         Aller au contenu
       </a>

@@ -37,7 +37,7 @@ const FACT_ICONS: LucideIcon[] = [
 
 const TEAM_SEES = [
   'Tickets, pages, réunions, notes de CRM lus par une connexion',
-  'Conversations de support et mails d’une boîte branchée',
+  'Conversations de support et boîtes partagées (Front, Missive…)',
   'Avec un lien vers l’original, dans son outil',
 ] as const;
 
@@ -45,6 +45,7 @@ const ONLY_YOU = [
   'Vos conversations captées avec vos assistants d’IA',
   'Vos discussions avec Leon',
   'Vos notes gardées par MCP (remember)',
+  'Vos mails et votre agenda Outlook, si vous les branchez',
 ] as const;
 
 /**
@@ -56,11 +57,6 @@ function RightsVisual() {
     'absolute inset-0 rounded-[22px] border p-5 shadow-[0_40px_80px_-40px_rgba(0,0,0,.55),inset_0_1px_0_var(--hi)]';
   return (
     <figure className="relative overflow-x-clip">
-      <figcaption className="sr-only">
-        {nb(
-          'Illustration : une recherche passe d’abord par le filtre des droits, puis par le classement.',
-        )}
-      </figcaption>
       <div
         aria-hidden="true"
         className="pg-iso relative grid min-h-[400px] place-items-center sm:min-h-[500px]"
@@ -138,6 +134,14 @@ function RightsVisual() {
           </div>
         </div>
       </div>
+      <figcaption className="-mt-14 text-center font-mono text-meta tracking-normal text-muted sm:-mt-20">
+        <span className="sr-only">
+          {nb(
+            'Illustration : une recherche passe d’abord par le filtre des droits, puis par le classement. ',
+          )}
+        </span>
+        Exemple fictif
+      </figcaption>
     </figure>
   );
 }
@@ -175,7 +179,7 @@ export function SecuritePage() {
               <li key={f.title} className="site-reveal">
                 <Tilt
                   max={9}
-                  className="h-full overflow-clip rounded-box border border-line bg-panel p-5 shadow-hi transition-[border-color] duration-300 hover:border-accent-line"
+                  className="h-full rounded-box border border-line bg-panel p-5 shadow-hi transition-[border-color] duration-300 hover:border-accent-line"
                 >
                   <span className="fx-pop grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent [--pop:40px]">
                     <Icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
@@ -210,7 +214,9 @@ export function SecuritePage() {
               Visible de toute l’équipe
             </h3>
             <p className="mt-2 text-body text-fg-2">
-              {nb('Ce que lit une connexion, comme dans un outil partagé.')}
+              {nb(
+                'Ce que lit une connexion, comme dans un outil partagé. Sauf Outlook : une boîte mail et un agenda restent privés à qui les branche.',
+              )}
             </p>
             <ul className="mt-5 grid gap-2.5">
               {TEAM_SEES.map((t) => (
@@ -235,7 +241,7 @@ export function SecuritePage() {
               id="vous-voyez"
               className="relative mt-5 text-h2 font-bold tracking-[-0.02em] text-fg"
             >
-              Privé, à son auteur
+              Privé, à vous seul
             </h3>
             <p className="relative mt-2 text-body text-fg-2">
               {nb('Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.')}
@@ -291,7 +297,7 @@ export function SecuritePage() {
 
       <CtaBand
         title="Ce qui a été dit reste dit, pour ceux qui ont le droit de le lire."
-        text="Créez un espace, branchez un outil, et regardez ce que chaque personne voit."
+        text="Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui reste à vous."
       />
     </>
   );

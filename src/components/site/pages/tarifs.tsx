@@ -29,12 +29,19 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[number] }) {
         <Tilt
           max={plan.featured ? 6 : 8}
           className={cn(
-            'flex h-full flex-col overflow-clip rounded-panel border p-6 shadow-hi sm:p-7',
+            'flex h-full flex-col rounded-panel border p-6 shadow-hi sm:p-7',
             plan.featured
-              ? 'signal-line signal-glow fx-ring border-accent-line bg-glass-2 shadow-panel lg:py-10'
+              ? 'signal-glow fx-ring border-accent-line bg-glass-2 shadow-panel lg:py-10'
               : 'border-line bg-panel',
           )}
         >
+          {/* le filet Signal sur un calque rogné à part : un overflow sur la carte aplatirait sa 3D (le prix) */}
+          {plan.featured && (
+            <span
+              aria-hidden="true"
+              className="signal-line pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+            />
+          )}
           <div className="relative flex items-center justify-between gap-3">
             <h3 className="text-title font-bold tracking-[-0.02em] text-fg">{plan.name}</h3>
             {plan.featured && (
@@ -173,7 +180,7 @@ export function TarifsPage() {
 
       <CtaBand
         title="Commencez par le pilote."
-        text="Trente jours, une équipe de dix personnes au plus, tous vos outils."
+        text={`Trente jours, une équipe de 10 personnes au plus, les ${TOOL_COUNT} connecteurs.`}
         primary={{ href: '/inscription', label: 'Commencer le pilote' }}
       />
     </>

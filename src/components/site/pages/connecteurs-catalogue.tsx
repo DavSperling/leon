@@ -40,6 +40,9 @@ const FAMILY_OF = new Map<ProviderId, ProviderFamily>(
 
 type Filter = 'tous' | ProviderFamily;
 
+/** Cible tactile d'au moins 40 px (la pastille fait 32 px à la souris). */
+const PILL = 'max-sm:h-10 pointer-coarse:h-10';
+
 export function ConnecteursCatalogue() {
   const [family, setFamily] = useState<Filter>('tous');
   const [query, setQuery] = useState('');
@@ -64,9 +67,10 @@ export function ConnecteursCatalogue() {
               variant={family === 'tous' ? 'active' : 'default'}
               aria-pressed={family === 'tous'}
               onClick={() => setFamily('tous')}
+              className={PILL}
             >
               Tous
-              <span className="font-mono text-[11px] opacity-80">{ALL_TOOLS.length}</span>
+              <span className="font-mono text-[11px]">{ALL_TOOLS.length}</span>
             </Pill>
             {TOOL_GROUPS.map((g) => (
               <Pill
@@ -74,9 +78,10 @@ export function ConnecteursCatalogue() {
                 variant={family === g.family ? 'active' : 'default'}
                 aria-pressed={family === g.family}
                 onClick={() => setFamily(g.family)}
+                className={PILL}
               >
                 {g.label}
-                <span className="font-mono text-[11px] opacity-80">{g.tools.length}</span>
+                <span className="font-mono text-[11px]">{g.tools.length}</span>
               </Pill>
             ))}
           </div>
@@ -98,14 +103,14 @@ export function ConnecteursCatalogue() {
             placeholder="Filtrer par nom…"
             autoComplete="off"
             spellCheck={false}
-            className="h-11 w-full rounded-full border border-line-strong bg-glass-2 pr-10 pl-10 text-ui text-fg shadow-hi outline-none transition-[border-color,box-shadow] duration-200 pointer-coarse:text-title focus-visible:border-accent-line focus-visible:shadow-[inset_0_1px_0_var(--hi),0_0_0_3px_var(--accent-soft)]"
+            className="h-11 w-full rounded-full border border-line-strong bg-glass-2 pr-11 pl-10 text-ui text-fg shadow-hi transition-[border-color] duration-200 pointer-coarse:text-title focus-visible:border-accent"
           />
           {query !== '' && (
             <button
               type="button"
               aria-label="Effacer le filtre"
               onClick={() => setQuery('')}
-              className="absolute top-1/2 right-1.5 inline-grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg"
+              className="absolute top-1/2 right-1.5 inline-grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg max-sm:right-0.5 max-sm:size-10 pointer-coarse:right-0.5 pointer-coarse:size-10"
             >
               <X aria-hidden="true" strokeWidth={1.8} className="size-4" />
             </button>
@@ -129,10 +134,11 @@ export function ConnecteursCatalogue() {
                 <Tilt
                   max={10}
                   scale={1.04}
-                  className="group flex h-full min-w-0 items-center gap-3 overflow-hidden rounded-box border border-line bg-panel p-3 shadow-hi transition-[border-color,box-shadow] duration-300 hover:border-accent-line hover:shadow-panel sm:flex-col sm:items-start sm:gap-4 sm:p-4"
+                  className="group flex h-full min-w-0 items-center gap-3 rounded-box border border-line bg-panel p-3 shadow-hi transition-[border-color,box-shadow] duration-300 hover:border-accent-line hover:shadow-panel sm:flex-col sm:items-start sm:gap-4 sm:p-4"
                 >
                   <ToolLogo id={id} size={44} className="fx-pop max-sm:size-9!" />
-                  <div className="min-w-0 flex-1 sm:flex-none">
+                  {/* sur mobile, l'icône du branchement est en haut à droite : le nom s'arrête avant */}
+                  <div className="min-w-0 flex-1 max-sm:pr-5 sm:flex-none">
                     <p className="truncate text-ui font-semibold text-fg">{toolLabel(id)}</p>
                     <p className="mt-0.5 font-mono text-meta tracking-normal text-muted">
                       {fam ? FAMILY_LABELS[fam] : ''}
@@ -175,7 +181,7 @@ export function ConnecteursCatalogue() {
               setQuery('');
               setFamily('tous');
             }}
-            className="mt-5 inline-flex h-9 items-center rounded-full border border-line-strong bg-glass-3 px-4 text-ui font-semibold text-fg transition-colors hover:bg-hover"
+            className="mt-5 inline-flex h-10 items-center rounded-full border border-line-strong bg-glass-3 px-4 text-ui font-semibold text-fg transition-colors hover:bg-hover"
           >
             Voir tous les outils
           </button>

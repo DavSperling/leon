@@ -37,17 +37,23 @@ const CAPTURED: ProviderId[] = [
   'outlook',
 ];
 
+/** Mention visible sous chaque visuel aux données inventées. */
+const FICTIF = 'mt-3 px-1 font-mono text-meta tracking-normal text-muted';
+
 /**
  * Un visuel illustratif : lu comme une image (légende pour les lecteurs d'écran), décor pour le reste. Il s'incline
- * vers le pointeur ; `chip`, une pastille qui flotte devant lui, sort du plan en 3D.
+ * vers le pointeur ; `chip`, une pastille qui flotte devant lui, sort du plan en 3D. Sous lui, la mention
+ * « Exemple fictif · `label` », visible de tous.
  */
 function Visual({
   caption,
+  label,
   chip,
   tilt = true,
   children,
 }: {
   caption: string;
+  label: string;
   chip?: ReactNode;
   tilt?: boolean;
   children: ReactNode;
@@ -66,7 +72,6 @@ function Visual({
   );
   return (
     <figure className="site-reveal relative min-w-0">
-      <figcaption className="sr-only">{nb(caption)}</figcaption>
       <div aria-hidden="true">
         {tilt ? (
           <Tilt max={5} scale={1.01} perspective={1400} className="rounded-panel">
@@ -76,6 +81,10 @@ function Visual({
           body
         )}
       </div>
+      <figcaption className={FICTIF}>
+        <span className="sr-only">{nb(`${caption} `)}</span>
+        {nb(`Exemple fictif · ${label}`)}
+      </figcaption>
     </figure>
   );
 }
@@ -103,6 +112,7 @@ function CaptureVisual() {
   return (
     <Visual
       caption="Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin."
+      label="ce que Leon capte"
       chip="+ 3 éléments gardés · 14:12"
     >
       <div className={PANEL}>
@@ -182,8 +192,10 @@ function KeepVisual() {
     <Visual
       tilt={false}
       caption="Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous seul."
+      label="ce que Leon garde"
     >
-      <div className="relative min-h-[440px] sm:min-h-[520px]">
+      {/* overflow-x-clip : la scène des couches garde sa largeur sous 340 px (pas de défilement horizontal) */}
+      <div className="relative min-h-[440px] overflow-x-clip sm:min-h-[520px]">
         <div className="site-halo pointer-events-none absolute inset-0 opacity-80" />
         <Layers3D className="absolute inset-0" />
         <div className="site-float absolute bottom-2 left-1/2 z-[2] w-max -translate-x-1/2 rounded-field border border-line-strong bg-[color-mix(in_srgb,var(--menu)_88%,transparent)] px-3.5 py-2.5 font-mono text-[11.5px] tracking-normal shadow-float backdrop-blur-[16px]">
@@ -205,7 +217,7 @@ function FindVisual() {
           <div className="site-dots pointer-events-none absolute inset-0 opacity-60" />
           <div className="relative grid gap-3">
             <div aria-hidden="true" className="grid gap-3">
-              <DemoSearchField query={<QueryCode q="outil:linear type:ticket depuis:7j" />} />
+              <DemoSearchField query={nb(demo?.query ?? '')} />
               {demo && <DemoAnswerCard demo={demo} />}
             </div>
             <div className={cn(CARD, 'px-2 py-1.5')}>
@@ -237,6 +249,7 @@ function FindVisual() {
           </div>
         </div>
       </Tilt>
+      <p className={FICTIF}>{nb('Exemple fictif · l’écran Recherche de Leon')}</p>
     </div>
   );
 }
@@ -253,6 +266,7 @@ function DiscussVisual() {
   return (
     <Visual
       caption="Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant."
+      label="discussion et point du matin"
       chip="point du matin · 08:45"
     >
       <div className={PANEL}>
@@ -375,7 +389,12 @@ function FlowAside() {
       />
       <ol className="pg-stack-deck relative grid gap-3 lg:gap-4">
         {PILLARS.map((p, i) => (
-          <li key={p.id} className="relative min-w-0" style={{ '--i': i } as CSSProperties}>
+          // preserve-3d : sans lui, le <li> aplatirait la profondeur de sa carte (translateZ) dans son plan
+          <li
+            key={p.id}
+            className="relative min-w-0 [transform-style:preserve-3d]"
+            style={{ '--i': i } as CSSProperties}
+          >
             <a
               href={`#${p.id}`}
               className={cn(
@@ -423,7 +442,7 @@ export function ProduitPage() {
         kicker="Comment ça marche"
         title="Tout ce qui se dit, gardé tel quel, retrouvé avec sa source."
         accent="retrouvé avec sa source."
-        lead="Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément avec ses droits, puis répond en citant ses sources. Personne ne remplit de fiche pour lui."
+        lead="Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous seul, puis répond en citant ses sources. Personne ne remplit de fiche pour lui."
         actions={
           <>
             <CtaLink href="/inscription">Créer un espace</CtaLink>
@@ -450,7 +469,8 @@ export function ProduitPage() {
           {NEXT.map((n) => (
             <li key={n.title} className="site-reveal">
               <Tilt className="h-full rounded-card border border-dashed border-line-strong bg-panel p-4 shadow-hi">
-                <PlannedBadge className="fx-pop" />
+                {/* en bloc : une pastille en ligne serait enveloppée d'une boîte anonyme, à plat */}
+                <PlannedBadge className="fx-pop flex w-fit" />
                 <p className="mt-3 text-ui font-semibold text-fg">{nb(n.title)}</p>
                 <p className="mt-1 text-label leading-[1.5] text-muted">{nb(n.text)}</p>
               </Tilt>

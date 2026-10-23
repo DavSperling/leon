@@ -107,7 +107,7 @@ function Hero() {
             style={rise(4)}
             className="site-rise mt-5 font-mono text-meta tracking-normal text-muted"
           >
-            Bêta ouverte · un e-mail suffit pour créer l’espace
+            Bêta ouverte · aucune facturation à ce jour
           </p>
         </div>
         <div style={rise(5)} className="site-rise mx-auto mt-14 max-w-[1100px] sm:mt-16">

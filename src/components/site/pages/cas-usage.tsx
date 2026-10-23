@@ -68,12 +68,15 @@ function TeamCard({ team }: { team: Team }) {
       <Tilt max={8} scale={1.02} className="h-full rounded-box">
         <Link
           href={`/cas-usage/${team.slug}`}
-          className="group relative flex h-full flex-col overflow-clip rounded-box border border-line bg-panel p-6 shadow-hi transition-[border-color,box-shadow] duration-300 [transform-style:preserve-3d] hover:border-accent-line hover:shadow-panel"
+          className="group relative flex h-full flex-col rounded-box border border-line bg-panel p-6 shadow-hi transition-[border-color,box-shadow] duration-300 [transform-style:preserve-3d] hover:border-accent-line hover:shadow-panel"
         >
+          {/* le halo est rogné par son propre calque : un overflow sur le lien aplatirait la 3D de la carte */}
           <span
             aria-hidden="true"
-            className="site-halo pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          />
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+          >
+            <span className="site-halo absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          </span>
           <span className="relative flex items-start justify-between gap-4 [transform-style:preserve-3d]">
             <span
               className={cn(
@@ -139,7 +142,7 @@ export function CasUsagePage() {
             <li key={t.slug}>
               <Link
                 href={`/cas-usage/${t.slug}`}
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-line bg-glass-3 px-3.5 text-label font-semibold text-fg-2 transition-colors duration-200 hover:border-accent-line hover:text-fg"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-glass-3 px-3.5 text-label font-semibold text-fg-2 transition-colors duration-200 hover:border-accent-line hover:text-fg pointer-coarse:h-11"
               >
                 <t.icon aria-hidden="true" strokeWidth={1.8} className="size-3.5 text-accent" />
                 {t.label}
@@ -268,8 +271,13 @@ export function EquipePage({ team }: { team: Team }) {
         <ul className="mt-10 grid gap-4 md:grid-cols-3">
           {team.gains.map((g, i) => (
             <li key={g.title} className="site-reveal">
-              <Tilt className="signal-line h-full overflow-clip rounded-box border border-line bg-panel p-6 shadow-hi">
-                <span className="fx-pop inline-block font-mono text-[34px] leading-none font-medium tracking-[-0.02em] text-accent [--pop:50px]">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-6 shadow-hi">
+                {/* le filet Signal sur un calque rogné à part : un overflow sur la carte aplatirait sa 3D */}
+                <span
+                  aria-hidden="true"
+                  className="signal-line pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+                />
+                <span className="fx-pop block w-fit font-mono text-[34px] leading-none font-medium tracking-[-0.02em] text-accent [--pop:50px]">
                   0{i + 1}
                 </span>
                 <h3 className="mt-6 text-title font-bold tracking-[-0.02em] text-fg">

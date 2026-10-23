@@ -86,9 +86,10 @@ export function PageHero({
               >
                 {crumbs.map((c) => (
                   <li key={c.href} className="flex items-center gap-1.5">
+                    {/* cible de 40 px de haut, sans changer la hauteur du fil (marges négatives) */}
                     <Link
                       href={c.href}
-                      className="rounded-sm font-medium transition-colors duration-200 hover:text-fg"
+                      className="-my-2.5 inline-flex min-h-10 items-center rounded-sm font-medium transition-colors duration-200 hover:text-fg"
                     >
                       {nb(c.label)}
                     </Link>

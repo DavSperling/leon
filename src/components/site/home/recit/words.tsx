@@ -29,15 +29,21 @@ export function RecitWords({ parts, delay = 0 }: { parts: RecitPart[]; delay?: n
       <span className="sr-only">{nb(parts.map((p) => p.text).join(''))}</span>
       <span aria-hidden="true">
         {parts.map((part, p) => {
+          // on ne coupe que sur les espaces sécables : l'espace fine insécable de nb() (« connu ? ») reste dans le mot,
+          // sinon le « ? » deviendrait un mot à part, seul en début de ligne
           const text = nb(part.text);
           if (part.group) {
-            const lead = /^\s/.test(text) ? ' ' : '';
-            const tail = /\s$/.test(text) ? ' ' : '';
-            return [lead, unit(text.trim(), part.className, `g${p}`), tail];
+            const lead = /^[ \t\n]/.test(text) ? ' ' : '';
+            const tail = /[ \t\n]$/.test(text) ? ' ' : '';
+            return [
+              lead,
+              unit(text.replace(/^[ \t\n]+|[ \t\n]+$/g, ''), part.className, `g${p}`),
+              tail,
+            ];
           }
-          return text.split(/(\s+)/).map((word, k) => {
+          return text.split(/([ \t\n]+)/).map((word, k) => {
             if (word === '') return null;
-            if (/^\s+$/.test(word)) return ' ';
+            if (/^[ \t\n]+$/.test(word)) return word;
             return unit(word, part.className, `${p}-${k}`);
           });
         })}
@@ -75,8 +81,9 @@ export function FlipTime({ time, className }: { time: string; className?: string
 }
 
 /** Une phrase dont chaque lettre pivote en place au défilement ; les mots restent insécables. */
-export function TiltLetters({ text }: { text: string }) {
+export function TiltLetters({ text: raw }: { text: string }) {
   let l = 0;
+  const text = nb(raw);
   const words = text.split(' ');
   return (
     <>

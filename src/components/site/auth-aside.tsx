@@ -153,8 +153,9 @@ export function AuthAside() {
                 {nb(`et ${TOOL_COUNT - 8} autres`)}
               </span>
             </div>
+            {/* les tarifs sont une proposition (pages/tarifs.tsx) : aucune promesse ferme ici */}
             <p className="mt-6 font-mono text-meta tracking-normal text-muted">
-              Pilote gratuit de 30 jours · sans carte bancaire
+              {nb('Aucune facturation à ce jour · tarifs en cours de définition')}
             </p>
           </>
         ) : (
@@ -173,6 +174,9 @@ export function AuthAside() {
                 <Briefing />
               </Tilt>
             </div>
+            <p className="px-1 font-mono text-meta tracking-normal text-muted xl:col-span-2">
+              {nb('Exemple fictif · une réponse citée et le point du matin')}
+            </p>
           </div>
         )}
 

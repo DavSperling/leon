@@ -237,7 +237,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Les départs ne coûtent plus la mémoire',
-        text: 'Ce qu’une personne a écrit dans les outils branchés reste interrogeable après son départ.',
+        text: 'Ce qu’une personne a écrit dans les outils partagés de l’équipe reste interrogeable après son départ.',
       },
       {
         title: 'Le brut, pas un résumé',
@@ -425,7 +425,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Ce qui est privé le reste',
-        text: 'Ce que lisent les outils branchés est partagé avec l’équipe ; les conversations d’IA, discussions et notes de chacun restent à lui.',
+        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte Outlook ; les conversations d’IA, discussions et notes de chacun ne sont visibles que de lui.',
       },
     ],
     demo: DEMOS[2] as Demo,

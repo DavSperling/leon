@@ -22,9 +22,10 @@ function SphereStage() {
         aria-hidden="true"
         className="absolute inset-[18%] rounded-full border border-dashed border-accent-line opacity-60"
       />
-      <LogoSphere tools={ALL_TOOLS} size={46} />
+      <LogoSphere tools={ALL_TOOLS} size={46} srList={false} />
       <figcaption className="mt-2 text-center font-mono text-meta tracking-normal text-muted">
-        {nb(`${TOOL_COUNT} outils · faites tourner la sphère`)}
+        {nb(`${TOOL_COUNT} outils`)}
+        <span aria-hidden="true">{nb(' · faites tourner la sphère')}</span>
       </figcaption>
     </figure>
   );
@@ -136,8 +137,9 @@ export function ConnecteursPage() {
         <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s, i) => (
             <li key={s.title} className="site-reveal">
-              <Tilt className="h-full overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi">
-                <div className="flex items-center justify-between">
+              <Tilt className="h-full rounded-box border border-line bg-panel p-5 shadow-hi">
+                {/* preserve-3d jusqu'à la pastille, et pas d'overflow sur la carte : sinon sa 3D est aplatie */}
+                <div className="flex items-center justify-between [transform-style:preserve-3d]">
                   <span className="fx-pop grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent">
                     <s.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
                   </span>
@@ -165,10 +167,17 @@ export function ConnecteursPage() {
             <li key={c.title} className="site-reveal">
               <Tilt
                 className={cn(
-                  'h-full overflow-hidden rounded-box border bg-panel p-6 shadow-hi',
-                  i === 0 ? 'signal-line signal-glow fx-ring border-accent-line' : 'border-line',
+                  'h-full rounded-box border bg-panel p-6 shadow-hi',
+                  i === 0 ? 'signal-glow fx-ring border-accent-line' : 'border-line',
                 )}
               >
+                {/* le filet Signal sur un calque rogné à part : un overflow sur la carte aplatirait sa 3D */}
+                {i === 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="signal-line pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+                  />
+                )}
                 <span className="fx-pop relative grid size-11 place-items-center rounded-item border border-line bg-glass-3 text-accent">
                   <c.icon aria-hidden="true" strokeWidth={1.7} className="size-5" />
                 </span>

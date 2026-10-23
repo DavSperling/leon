@@ -8,7 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import type { CSSProperties, ReactNode } from 'react';
+import { type CSSProperties, Fragment, type ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { ALL_TOOLS, BRIEFING, DEMOS, type Demo, SYNTAX, TEAMS, TOOL_COUNT } from '../content';
@@ -66,7 +66,7 @@ function Hero() {
             style={{ '--i': 2 } as CSSProperties}
           >
             {nb(
-              'Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, avec les droits de chacun, et le retrouve avec sa source.',
+              'Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel et le retrouve avec sa source ; vos conversations d’IA ne sont visibles que de vous.',
             )}
           </p>
           <div
@@ -139,6 +139,7 @@ function Tile({
   children,
   visualClassName,
   featured,
+  example,
 }: {
   title: string;
   text: string;
@@ -147,6 +148,8 @@ function Tile({
   visualClassName?: string;
   /** Tuile mise en avant : une bordure de lumière en fait le tour. */
   featured?: boolean;
+  /** Le visuel montre des données inventées (ACME, Thomas…) : la mention « Exemple fictif » sous le visuel. */
+  example?: boolean;
 }) {
   return (
     <div className={cn('site-reveal', className)}>
@@ -166,7 +169,14 @@ function Tile({
           )}
         >
           <span className="site-dots pointer-events-none absolute inset-0 opacity-70" />
-          <div className="relative w-full">{children}</div>
+          <div className="relative w-full">
+            {children}
+            {example && (
+              <p className="mt-2.5 px-1 font-mono text-meta tracking-normal text-muted">
+                {nb('Exemple fictif')}
+              </p>
+            )}
+          </div>
         </div>
         <h3 className="text-title font-semibold tracking-[-0.015em] text-fg">{nb(title)}</h3>
         <p className="mt-1.5 text-body leading-[1.6] text-muted">{nb(text)}</p>
@@ -266,6 +276,7 @@ function PrivateVisual() {
     { tool: 'linear', label: 'Tickets' },
     { tool: 'notion', label: 'Pages' },
     { tool: 'granola', label: 'Réunions' },
+    { tool: 'intercom', label: 'Support' },
   ] as const;
   const mine = [
     { icon: Globe, label: 'Conversations d’IA' },
@@ -273,17 +284,19 @@ function PrivateVisual() {
     { icon: PenLine, label: 'Notes' },
   ] as const;
   return (
-    <div className="grid grid-cols-2 gap-2">
+    // les deux groupes l'un sous l'autre, en éléments qui passent à la ligne : côte à côte, une colonne fait 115 à 145 px
+    // et « Conversations d'IA » en débordait
+    <div className="grid gap-2">
       <div className="rounded-field border border-line bg-glass-3 p-2.5">
         <p className="flex items-center gap-1.5 font-mono text-[10.5px] tracking-normal text-muted">
           <Users strokeWidth={1.8} className="size-3" />
           toute l’équipe
         </p>
-        <ul className="mt-2.5 grid gap-1.5">
+        <ul className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5">
           {team.map((t) => (
             <li key={t.tool} className="flex items-center gap-2 text-label text-fg-2">
               <ToolLogo id={t.tool} size={20} />
-              {t.label}
+              {nb(t.label)}
             </li>
           ))}
         </ul>
@@ -293,15 +306,20 @@ function PrivateVisual() {
           <KeyRound strokeWidth={1.8} className="size-3" />
           vous seul
         </p>
-        <ul className="mt-2.5 grid gap-1.5">
+        <ul className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5">
           {mine.map((m) => (
             <li key={m.label} className="flex items-center gap-2 text-label text-fg">
               <span className="grid size-5 shrink-0 place-items-center rounded-[6px] bg-glass-2 text-accent">
                 <m.icon strokeWidth={1.8} className="size-3" />
               </span>
-              <span className="truncate">{nb(m.label)}</span>
+              {nb(m.label)}
             </li>
           ))}
+          {/* la seule connexion privée : une boîte mail et un agenda sont personnels (outlook/connector.ts) */}
+          <li className="flex items-center gap-2 text-label text-fg">
+            <ToolLogo id="outlook" size={20} />
+            {nb('Mails et agenda Outlook')}
+          </li>
         </ul>
       </div>
     </div>
@@ -388,11 +406,12 @@ function Bento() {
           id="cs-fonctions"
           kicker="Ce que fait Leon"
           title="Un seul endroit où chercher. Une réponse qui cite."
-          lead="Leon ne résume pas et ne tient pas de fiches. Il garde, il retrouve, il cite. Chaque tuile montre l’écran tel qu’il est, avec des données d’exemple."
+          lead="Leon ne résume pas et ne tient pas de fiches. Il garde, il retrouve, il cite. Chaque tuile en montre un aperçu, avec des données d’exemple."
         />
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-4 md:grid-cols-2 lg:grid-cols-6">
           <Tile
             featured
+            example
             className="md:col-span-2 lg:col-span-4"
             title="Une réponse en tête, chaque phrase citée"
             text="La réponse arrive au-dessus des résultats. Chaque renvoi ouvre la source qu’il cite : la réunion, la note, le ticket."
@@ -408,6 +427,7 @@ function Bento() {
           </Tile>
           <Tile
             className="lg:col-span-2"
+            example
             title="Le point du matin"
             text="Ce que vous avez fait, ce qui a bougé, ce qui reste ouvert. 250 mots au plus, prêts au démarrage."
           >
@@ -415,6 +435,7 @@ function Bento() {
           </Tile>
           <Tile
             className="lg:col-span-2"
+            example
             title="Le brut, tel quel"
             text="Aucun résumé, aucune fiche à tenir. Chaque élément est gardé tel qu’il a été écrit, avec un lien vers l’original."
           >
@@ -423,14 +444,14 @@ function Bento() {
           <Tile
             className="lg:col-span-2"
             title="Vos conversations restent les vôtres"
-            text="Ce que lit une connexion est visible de l’équipe. Vos conversations d’IA, vos discussions et vos notes ne sont visibles que de vous."
+            text="Ce que lit une connexion est visible de l’équipe, sauf une boîte Outlook (mails et agenda), privée à qui la branche. Vos conversations d’IA, vos discussions et vos notes ne sont visibles que de vous."
           >
             <PrivateVisual />
           </Tile>
           <Tile
             className="lg:col-span-2"
             title="Dans votre assistant, par MCP"
-            text="Votre assistant d’IA interroge Leon avec vos droits, rien de plus. Un jeton personnel, révocable à tout moment."
+            text="Votre assistant d’IA interroge Leon en votre nom : il voit ce que vous y voyez, rien de plus. Un jeton personnel, révocable à tout moment."
           >
             <McpVisual />
           </Tile>
@@ -518,7 +539,12 @@ function Statement() {
   const words = ['La', 'source,', 'ou', 'rien.'];
   const first = UNKNOWN.sources[0];
   return (
-    <section aria-labelledby="cs-source" className="relative overflow-hidden py-24 sm:py-32">
+    <section
+      aria-labelledby="cs-source"
+      // overflow-clip, pas hidden : un overflow hidden ferait de la section un conteneur de défilement, et les mots
+      // (animation-timeline: view()) suivraient ce conteneur immobile au lieu de la page, figés à l'état final
+      className="relative overflow-clip py-24 sm:py-32"
+    >
       <div
         aria-hidden="true"
         className="site-halo pointer-events-none absolute inset-x-0 top-[8%] h-[70%] [mask:linear-gradient(180deg,transparent,#000_35%,#000_60%,transparent)]"
@@ -530,15 +556,20 @@ function Statement() {
             id="cs-source"
             className="mt-4 text-[clamp(52px,9vw,128px)] leading-[0.92] font-extrabold tracking-[-0.06em] text-fg"
           >
-            {words.map((w, i) => (
-              <span
-                key={w}
-                className={cn('cs-statement-word inline-block', i === 1 && 'site-gradient')}
-              >
-                {nb(w)}
-                {i < words.length - 1 && ' '}
-              </span>
-            ))}
+            {/* le parent donne la perspective, --k décale chaque mot : ils remontent l'un après l'autre (constellation.css) */}
+            <span className="cs-statement">
+              {words.map((w, i) => (
+                <Fragment key={w}>
+                  <span
+                    className={cn('cs-statement-word inline-block', i === 1 && 'site-gradient')}
+                    style={{ '--k': i } as CSSProperties}
+                  >
+                    {nb(w)}
+                  </span>
+                  {i < words.length - 1 && ' '}
+                </Fragment>
+              ))}
+            </span>
           </h2>
           <p className="site-reveal mt-8 max-w-[520px] text-[17px] leading-[1.65] text-fg-2">
             {nb(
@@ -564,7 +595,7 @@ function Statement() {
             </Tilt>
           </div>
           <figcaption className="px-1 font-mono text-meta tracking-normal text-muted">
-            Exemple fictif · quand rien ne répond, Leon le dit
+            {nb('Exemple fictif · quand rien ne répond, Leon le dit')}
           </figcaption>
         </figure>
       </Container>

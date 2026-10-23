@@ -91,7 +91,7 @@ export function Layers3D({ className }: { className?: string }) {
             <div className="flex items-center gap-3 rounded-[12px] border border-line bg-glass-3 px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-ok" />
               <span className="text-label font-semibold text-fg">Visible de l’équipe</span>
-              <span className="ml-auto font-mono text-[10.5px] text-muted">outils branchés</span>
+              <span className="ml-auto font-mono text-[11px] text-fg-2">outils de l’équipe</span>
             </div>
             <div className="flex items-center gap-3 rounded-[12px] border border-accent-line bg-accent-soft px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-accent" />

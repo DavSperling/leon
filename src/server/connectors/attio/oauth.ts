@@ -24,9 +24,11 @@ import type { OAuthSpec } from '../types';
 // « Reconnectez Attio ».
 //
 // Écarts au plan, d'après la doc : Attio n'a pas de paramètre `scope` dans l'adresse d'autorisation,
-// d'où `scopes: []`. Les droits de lecture se cochent dans la console de l'appli (note:read,
-// comment:read, user_management:read, object_configuration:read, record_permission:read, ceux du
-// jeton collé) ; le guide des applis (T62) les reprend d'ici. `token_level=workspace` est la valeur
+// d'où `scopes: []`. Les droits se cochent dans la console de l'appli (ceux du jeton collé :
+// user_management:read, object_configuration:read, record_permission:read ; et, demandés d'avance
+// bien que Leon n'écrive pas encore, note:read-write et comment:read-write, relus le 23/10/2026 sur
+// https://docs.attio.com/rest-api/endpoint-reference/notes/create-a-note et .../comments/create-a-comment ;
+// note:read-write permet aussi de supprimer une note) ; le guide des applis (T62) les reprend d'ici. `token_level=workspace` est la valeur
 // par défaut, écrite pour que le jeton lise tout l'espace et non un seul membre. PKCE est facultatif
 // pour un jeton d'espace : on l'envoie, puisque le socle le fait partout où l'éditeur le permet.
 //

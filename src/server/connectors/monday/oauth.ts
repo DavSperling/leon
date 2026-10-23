@@ -16,6 +16,10 @@ import type { OAuthSpec } from '../types';
 //   https://auth.monday.com/oauth_ms/.well-known/oauth-authorization-server (mêmes adresses, PKCE S256
 //     seul, client_secret_post et client_secret_basic, droits `boards:read`, `updates:read` et
 //     `me:read` au catalogue).
+//   https://developer.monday.com/apps/docs/oauth, relu le 23/10/2026 : écriture demandée d'avance,
+//     `boards:write` (« Modify a user's board data ») et `updates:write` (« Post or edit updates »).
+//     Pas de droit plus étroit : d'après https://developer.monday.com/api-reference/reference/items et
+//     .../updates, ces mêmes droits permettent aussi d'archiver et de supprimer (à Leon de s'en garder).
 // Écart au plan : le plan dit « jeton sans expiration » (flux legacy). La doc conseille le nouveau flux
 // pour une nouvelle intégration, et c'est le seul dont le corps de l'échange est documenté : adresse de
 // jeton différente, PKCE, corps JSON, jetons qui expirent et se renouvellent (sur 401, faute
@@ -31,7 +35,7 @@ export const mondayOAuth: OAuthSpec = {
   appKey: 'MONDAY',
   authorizeUrl: 'https://auth.monday.com/oauth2/authorize',
   tokenUrl: 'https://auth.monday.com/oauth_ms/oauth/token',
-  scopes: ['boards:read', 'updates:read', 'me:read'],
+  scopes: ['boards:read', 'updates:read', 'me:read', 'boards:write', 'updates:write'], // Leon n'écrit pas encore : l'accès est demandé d'avance
   pkce: true,
   clientAuth: 'body',
   tokenBody: 'json',

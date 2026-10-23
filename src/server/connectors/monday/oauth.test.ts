@@ -68,12 +68,12 @@ afterEach(() => {
 });
 
 describe('mondayOAuth : description', () => {
-  it('déclare les adresses de monday.com, trois droits de lecture, PKCE, le secret dans un corps JSON', () => {
+  it('déclare les adresses de monday.com, la lecture et l’écriture, PKCE, le secret dans un corps JSON', () => {
     expect(mondayOAuth).toMatchObject({
       appKey: 'MONDAY',
       authorizeUrl: 'https://auth.monday.com/oauth2/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['boards:read', 'updates:read', 'me:read'],
+      scopes: ['boards:read', 'updates:read', 'me:read', 'boards:write', 'updates:write'],
       pkce: true,
       clientAuth: 'body',
       tokenBody: 'json',
@@ -86,8 +86,11 @@ describe('mondayOAuth : description', () => {
     expect(mondayOAuth.extraTokenParams).toBeUndefined();
   });
 
-  it('ne demande que des droits de lecture', () => {
-    expect(mondayOAuth.scopes.every((scope) => scope.endsWith(':read'))).toBe(true);
+  it('ne demande en écriture que les tableaux et les mises à jour', () => {
+    expect(mondayOAuth.scopes.filter((scope) => !scope.endsWith(':read'))).toEqual([
+      'boards:write',
+      'updates:write',
+    ]);
   });
 
   it('est branchée sur le connecteur, qui garde la clé collée', () => {
@@ -104,7 +107,7 @@ describe('mondayOAuth : description', () => {
       redirect_uri: redirectUri(mondayOAuth),
       response_type: 'code',
       state: 'etat-1',
-      scope: 'boards:read updates:read me:read',
+      scope: 'boards:read updates:read me:read boards:write updates:write',
       code_challenge: createHash('sha256').update('verificateur-1').digest('base64url'),
       code_challenge_method: 'S256',
     });

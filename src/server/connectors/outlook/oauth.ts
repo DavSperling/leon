@@ -19,6 +19,12 @@ import type { OAuthSpec } from '../types';
 //     de demande d'accord ; AADSTS65001 : ni l'utilisateur ni l'administrateur n'ont donné leur
 //     accord ; AADSTS65004 : l'utilisateur a refusé, ce n'est pas un défaut d'accord).
 //
+//   https://learn.microsoft.com/en-us/graph/permissions-reference, relu le 23/10/2026 : écriture
+//     demandée d'avance, Mail.ReadWrite (« Does not include permission to send mail », jamais
+//     Mail.Send) et Calendars.ReadWrite, qui remplacent Mail.Read et Calendars.Read (ils les
+//     contiennent) ; ni l'un ni l'autre n'exige en lui-même l'accord de l'administrateur. Les deux
+//     permettent aussi de supprimer : à Leon de s'en garder.
+//
 // Écarts au plan, d'après la doc :
 //   - `scope` est envoyé aussi à l'échange du code (le plan ne le prévoyait qu'au renouvellement) : la
 //     doc de Graph le dit obligatoire, celle d'Entra facultatif ; le même texte aux deux endroits ne
@@ -35,7 +41,8 @@ import type { OAuthSpec } from '../types';
 // bouton) ; que l'adresse d'accord accepte « /.default » avec les seuls droits déclarés dans
 // l'inscription de l'appli (ceux de SCOPES, en « Autorisations déléguées »).
 
-const SCOPES = ['offline_access', 'User.Read', 'Mail.Read', 'Calendars.Read'];
+// Leon n'écrit pas encore : l'accès est demandé d'avance.
+const SCOPES = ['offline_access', 'User.Read', 'Mail.ReadWrite', 'Calendars.ReadWrite'];
 
 // AADSTS suivi d'un code qui ne continue pas : AADSTS650011 n'est pas AADSTS65001.
 const ADMIN_CONSENT_CODES = /AADSTS(?:90094|90095|65001)(?!\d)/;

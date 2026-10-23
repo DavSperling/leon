@@ -17,6 +17,9 @@ import type { OAuthSpec } from '../types';
 //     scopes, expires_in, created_at)
 //   https://developer.productboard.com/reference/oauth-public-client (même serveur : le paramètre
 //     `scope` y est documenté, séparé par des espaces, avec `notes:read` parmi les droits)
+//   https://developer.productboard.com/reference/oauth-authorization-code, relu le 23/10/2026 :
+//     écriture demandée d'avance, `notes:write` (« create and edit all notes ») ; la suppression est
+//     un droit à part (`notes:delete`), jamais demandé.
 // Écart au plan : aucun sur les adresses, PKCE, durées ni le format. Le plan donne le droit `notes:read` ;
 // la doc du flux ordinaire ne cite pas de paramètre `scope` (les droits se cochent à la création de
 // l'appli, voir le guide) et le documente pour l'autre flux du même serveur : on l'envoie, il resserre
@@ -34,7 +37,7 @@ export const productboardOAuth: OAuthSpec = {
   appKey: 'PRODUCTBOARD',
   authorizeUrl: 'https://app.productboard.com/oauth2/authorize',
   tokenUrl: 'https://app.productboard.com/oauth2/token',
-  scopes: ['notes:read'],
+  scopes: ['notes:read', 'notes:write'], // Leon n'écrit pas encore : l'accès est demandé d'avance
   pkce: true,
   clientAuth: 'body',
   tokenBody: 'query',

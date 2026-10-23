@@ -19,6 +19,11 @@ import type { OAuthSpec } from '../types';
 //     ou sales-email-read pour les e-mails, crm.objects.owners.read, crm.objects.companies.read ; les
 //     liens passent par le droit de chaque genre de fiche ; account-info demande « oauth »)
 //   /changelog/legacy-public-app-creation-sunset (23/04/2026)
+//   Relu le 23/10/2026 pour l'écriture demandée d'avance : /docs/api-reference/latest/crm/activities/
+//     {notes,calls,meetings,emails}/guide (créer une note, un appel, une réunion ou un e-mail exige
+//     crm.objects.contacts.write) et /docs/apps/legacy-apps/authentication/scopes
+//     (crm.objects.companies.write, crm.objects.deals.write : « create, delete, or make changes »).
+//     HubSpot n'a pas de droit séparé pour la suppression : ces droits la permettent, à Leon de s'en garder.
 //
 // Écarts au plan, d'après la doc :
 // - « Appli publique non listée » : depuis le 26/05/2026 (23/06/2026 pour les comptes plus anciens),
@@ -27,7 +32,7 @@ import type { OAuthSpec } from '../types';
 //   « marketplace » ou « private », droits requis). Le guide des applis (T62) doit le dire. Les adresses
 //   et les droits ci-dessous sont les mêmes.
 // - Le plan ne donne pas les droits : ce sont ceux de l'accès par clé (catalog.ts), plus « oauth »,
-//   que la doc place dans son exemple d'adresse d'autorisation. Tous sont des droits de lecture. Les
+//   que la doc place dans son exemple d'adresse d'autorisation, et l'écriture demandée d'avance (voir plus haut). Les
 //   droits cochés dans l'appli sont obligatoires et doivent tous figurer dans l'adresse : l'appli doit
 //   déclarer exactement cette liste.
 // - `sales-email-read` n'est pas indispensable d'après la doc (la recherche des e-mails accepte aussi
@@ -59,6 +64,10 @@ export const hubspotOAuth: OAuthSpec = {
     'crm.objects.deals.read',
     'crm.objects.owners.read',
     'sales-email-read',
+    // Leon n'écrit pas encore : l'accès est demandé d'avance
+    'crm.objects.contacts.write',
+    'crm.objects.companies.write',
+    'crm.objects.deals.write',
   ],
   pkce: false,
   clientAuth: 'body',

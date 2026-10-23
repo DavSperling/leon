@@ -82,7 +82,7 @@ describe('productboardOAuth : description', () => {
       appKey: 'PRODUCTBOARD',
       authorizeUrl: 'https://app.productboard.com/oauth2/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['notes:read'],
+      scopes: ['notes:read', 'notes:write'],
       pkce: true,
       clientAuth: 'body',
       tokenBody: 'query',
@@ -93,7 +93,7 @@ describe('productboardOAuth : description', () => {
     expect(productboardOAuth.adminConsent).toBeUndefined();
   });
 
-  it('ne demande que « notes:read », avec PKCE S256 et l’adresse de retour fixe', () => {
+  it('demande « notes:read notes:write », avec PKCE S256 et l’adresse de retour fixe', () => {
     const url = new URL(authorizeUrl(productboardOAuth, CLIENT, pending));
 
     expect(`${url.origin}${url.pathname}`).toBe('https://app.productboard.com/oauth2/authorize');
@@ -102,7 +102,7 @@ describe('productboardOAuth : description', () => {
       redirect_uri: redirectUri(productboardOAuth),
       response_type: 'code',
       state: 'etat-1',
-      scope: 'notes:read',
+      scope: 'notes:read notes:write',
       code_challenge: createHash('sha256').update('verificateur-1').digest('base64url'),
       code_challenge_method: 'S256',
     });

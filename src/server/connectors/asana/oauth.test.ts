@@ -79,14 +79,16 @@ describe('asanaOAuth : description', () => {
     expect(asanaOAuth.extraTokenParams).toBeUndefined();
   });
 
-  it('ne demande que des droits de lecture, ceux des seuls points d’accès que le connecteur appelle', () => {
+  it('demande la lecture des points d’accès lus, l’écriture des tâches et des commentaires, jamais la suppression', () => {
     expect([...asanaOAuth.scopes].sort()).toEqual([
       'projects:read',
       'stories:read',
+      'stories:write',
       'tasks:read',
+      'tasks:write',
       'users:read',
     ]);
-    for (const scope of asanaOAuth.scopes) expect(scope).toMatch(/:read$/);
+    for (const scope of asanaOAuth.scopes) expect(scope).toMatch(/:(read|write)$/);
   });
 
   it('demande les droits séparés par une espace, avec PKCE S256 et le state', () => {
@@ -98,7 +100,7 @@ describe('asanaOAuth : description', () => {
       redirect_uri: redirectUri(asanaOAuth),
       response_type: 'code',
       state: 'etat-1',
-      scope: 'tasks:read projects:read stories:read users:read',
+      scope: 'tasks:read projects:read stories:read users:read tasks:write stories:write',
       code_challenge: createHash('sha256').update('verificateur-1').digest('base64url'),
       code_challenge_method: 'S256',
     });

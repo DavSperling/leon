@@ -24,7 +24,7 @@ const CLIENT = {
   secret: `s-${randomBytes(8).toString('hex')}`,
 };
 const TOKEN_URL = 'https://login.microsoftonline.com/organizations/oauth2/v2.0/token';
-const SCOPE = 'offline_access User.Read Mail.Read Calendars.Read';
+const SCOPE = 'offline_access User.Read Mail.ReadWrite Calendars.ReadWrite';
 
 // Des jetons générés à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const ACCESS = `eyJ.${randomBytes(12).toString('hex')}`;
@@ -81,7 +81,7 @@ describe('outlookOAuth : description', () => {
       appKey: 'OUTLOOK',
       authorizeUrl: 'https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['offline_access', 'User.Read', 'Mail.Read', 'Calendars.Read'],
+      scopes: ['offline_access', 'User.Read', 'Mail.ReadWrite', 'Calendars.ReadWrite'],
       pkce: true,
       clientAuth: 'body',
       preFields: [],

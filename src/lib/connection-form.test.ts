@@ -234,6 +234,9 @@ describe('oauthNotice', () => {
     expect(text('admin_accorde')).toBe(
       'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.',
     );
+    expect(text('vide')).toBe(
+      "Leon est connecté à Linear, mais n'y a accès à rien pour l'instant.",
+    );
     expect(text('autre_compte')).toBe(
       'Reconnectez Linear avec le même compte et le même site, ou ajoutez une autre connexion.',
     );
@@ -250,6 +253,7 @@ describe('oauthNotice', () => {
         'expire',
         'indisponible',
         'refuse',
+        'vide',
       ].sort(),
     );
     for (const erreur of OAUTH_RETURN_CODES) {

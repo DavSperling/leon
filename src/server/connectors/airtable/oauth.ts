@@ -40,11 +40,11 @@ export const airtableOAuth: OAuthSpec = {
   pkce: true,
   clientAuth: 'basic',
   tokenBody: 'form',
-  preFields: ['bases'],
+  preFields: [],
   setupHosts: [],
 
-  // Rien à demander à Airtable : les bases viennent du formulaire d'avant le clic.
-  async toConfig(_tokens, preFields) {
-    return { bases: preFields.bases ?? [] };
+  // Rien à demander avant le clic : les bases se choisissent sur l'écran d'autorisation d'Airtable.
+  async toConfig() {
+    return { bases: [] };
   },
 };

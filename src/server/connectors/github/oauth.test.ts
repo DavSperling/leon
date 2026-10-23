@@ -38,7 +38,7 @@ const pending: OAuthPending = {
   state: 'etat-1',
   verifier: 'verificateur-0123456789-0123456789-0123456789',
   since: '30',
-  preFields: { repos: ['acme/leon'] },
+  preFields: {},
   reconnectId: null,
   createdAt: NOW,
 };
@@ -79,7 +79,7 @@ describe('github : description du bouton (GitHub App)', () => {
       scopes: [],
       pkce: true,
       clientAuth: 'body',
-      preFields: ['repos'],
+      preFields: [],
       setupHosts: [],
     });
     expect(githubOAuth.tokenBody ?? 'form').toBe('form');
@@ -196,19 +196,19 @@ describe('github : toConfig', () => {
     raw: { token_type: 'bearer' },
   };
 
-  it('garde les dépôts saisis avant le clic, sans appeler personne', async () => {
+  it('ne demande rien avant le clic et n’appelle personne : les dépôts sont ceux de l’installation', async () => {
     const { http, calls } = httpWith([], githubOAuth.setupHosts);
 
-    const config = await githubOAuth.toConfig(tokens, { repos: ['acme/leon', 'acme/site'] }, http);
+    const config = await githubOAuth.toConfig(tokens, {}, http);
 
-    expect(config).toEqual({ repos: ['acme/leon', 'acme/site'] });
+    expect(config).toEqual({});
     expect(calls).toEqual([]);
   });
 
   it('ne met aucun jeton dans ce qu’elle rend, et la configuration finale est valide', async () => {
     const { http } = httpWith([], githubOAuth.setupHosts);
 
-    const fromTool = await githubOAuth.toConfig(tokens, { repos: ['acme/leon'] }, http);
+    const fromTool = await githubOAuth.toConfig(tokens, {}, http);
     const parsed = githubConnector.configSchema.safeParse({
       ...fromTool,
       authMode: 'oauth',
@@ -225,7 +225,50 @@ describe('github : toConfig', () => {
       accessToken: 'ghu_exemple-acces-1',
       refreshToken: 'ghr_exemple-rafraichir-1',
       expiresAt: '2026-10-15T18:00:00.000Z',
-      repos: ['acme/leon'],
+      repos: [],
     });
+  });
+});
+
+describe('github : après le branchement', () => {
+  const API = 'https://api.github.com';
+  const config = { authMode: 'oauth', accessToken: 'ghu_exemple-acces-1', repos: [] };
+  const apiHttp = (routes: Parameters<typeof fakeFetch>[0]) => httpWith(routes, ['api.github.com']);
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('sans dépôt ouvert, enchaîne sur l’écran d’installation de l’appli', async () => {
+    vi.stubEnv('LEON_OAUTH_GITHUB_APP', 'leon-memory');
+    const { http, calls } = apiHttp([
+      { url: `${API}/user/installations`, json: { installations: [] } },
+    ]);
+
+    const next = await githubOAuth.nextStep?.(config, http);
+
+    expect(next).toBe('https://github.com/apps/leon-memory/installations/new');
+    expect(calls[0]?.headers.authorization).toBe('Bearer ghu_exemple-acces-1');
+  });
+
+  it('revient à Leon quand l’appli ouvre déjà un dépôt', async () => {
+    vi.stubEnv('LEON_OAUTH_GITHUB_APP', 'leon-memory');
+    const { http } = apiHttp([
+      { url: `${API}/user/installations`, json: { installations: [{ id: 7 }] } },
+      {
+        url: `${API}/user/installations/7/repositories`,
+        json: { repositories: [{ full_name: 'acme/leon' }] },
+      },
+    ]);
+
+    expect(await githubOAuth.nextStep?.(config, http)).toBeNull();
+  });
+
+  it('revient à Leon sans rien appeler quand le nom de l’appli n’est pas réglé, ou des dépôts sont choisis', async () => {
+    vi.stubEnv('LEON_OAUTH_GITHUB_APP', '');
+    const { http, calls } = apiHttp([]);
+
+    expect(await githubOAuth.nextStep?.(config, http)).toBeNull();
+    vi.stubEnv('LEON_OAUTH_GITHUB_APP', 'leon-memory');
+    expect(await githubOAuth.nextStep?.({ ...config, repos: ['acme/leon'] }, http)).toBeNull();
+    expect(calls).toEqual([]);
   });
 });

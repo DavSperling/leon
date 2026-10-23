@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
-import { ConnectorAuthError, ConnectorHttpError } from '../http';
+import { ConnectorAuthError, ConnectorHttpError, NothingToReadError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
@@ -858,7 +858,7 @@ describe('airtable : configuration du bouton', () => {
     expect(airtableConnector.hosts(oauthConfig)).toEqual(['api.airtable.com']);
   });
 
-  it('annonce le bouton dans le catalogue : ce qu’on verra chez Airtable, bases facultatives, clé gardée', () => {
+  it('annonce le bouton dans le catalogue : ce qu’on verra chez Airtable, rien à saisir avant, clé gardée', () => {
     const entry = listCatalog().find((item) => item.id === 'airtable');
     expect(entry?.oauthHelp).toMatch(/Airtable/);
     expect(entry?.oauthHelp).toMatch(/bases/);
@@ -866,7 +866,7 @@ describe('airtable : configuration du bouton', () => {
     expect(entry?.keyAccepted ?? true).toBe(true);
     expect(entry?.keyHelp).toMatch(/airtable\.com\/create\/tokens/);
     // Le champ sert aux deux formulaires : il dit qu'avec le bouton il peut rester vide.
-    expect(entry?.fields.find((field) => field.name === 'bases')?.help).toMatch(/vide/);
+    expect(entry?.oauthPreFields).toEqual([]);
   });
 });
 
@@ -930,7 +930,7 @@ describe('airtable : jeton OAuth', () => {
       .verify(oauthConfig, http)
       .catch((error: unknown) => error);
 
-    expect(failure).toBeInstanceOf(ConnectorHttpError);
+    expect(failure).toBeInstanceOf(NothingToReadError);
     expect((failure as Error).message).toBe('Aucune base Airtable autorisée');
   });
 

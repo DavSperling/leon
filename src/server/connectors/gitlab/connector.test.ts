@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { collect, type FakeRoute, fakeFetch, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
-import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from '../http';
+import {
+  ConnectorAuthError,
+  ConnectorHttpError,
+  createConnectorHttp,
+  NothingToReadError,
+} from '../http';
 import { normalizeItem } from '../normalize';
 import { authorizeUrl, exchangeCode, OAuthRefusedError, refreshTokens, tokenHttp } from '../oauth';
 import type { OAuthPending } from '../oauth-cookie';
@@ -632,7 +637,7 @@ describe('gitlab : bouton, description OAuth', () => {
       pkce: true,
       clientAuth: 'body',
       tokenBody: 'form',
-      preFields: ['projects'],
+      preFields: [],
       setupHosts: [],
     });
     expect(spec.scopeSeparator).toBeUndefined();
@@ -748,7 +753,7 @@ describe('gitlab : bouton, description OAuth', () => {
     await expect(run).rejects.toBeInstanceOf(OAuthRefusedError);
   });
 
-  it('ne garde que les projets choisis avant le clic, sans rien appeler chez GitLab', async () => {
+  it('ne demande rien avant le clic, sans rien appeler chez GitLab', async () => {
     const fetchImpl = fakeFetch([]);
     const http = createConnectorHttp({ provider: 'gitlab', hosts: [], fetchImpl });
     const tokens = {
@@ -759,13 +764,9 @@ describe('gitlab : bouton, description OAuth', () => {
       raw: {},
     };
 
-    const fields = await oauthSpec().toConfig(
-      tokens,
-      { projects: ['acme/leon', 'acme/site'] },
-      http,
-    );
+    const fields = await oauthSpec().toConfig(tokens, {}, http);
 
-    expect(fields).toEqual({ projects: ['acme/leon', 'acme/site'] });
+    expect(fields).toEqual({});
     expect(fetchImpl.calls).toEqual([]);
   });
 });
@@ -785,14 +786,15 @@ describe('gitlab : bouton, configuration', () => {
     expect(parsed).toMatchObject({ refreshToken: null, expiresAt: null });
   });
 
-  it('refuse la forme du bouton sans jeton d’accès, ou sans projet', () => {
+  it('refuse la forme du bouton sans jeton d’accès ; sans projet, elle lit ceux du membre', () => {
     const { accessToken: _omitted, ...withoutAccess } = oauthConfig;
 
     const noAccess = schema.safeParse(withoutAccess);
     expect(noAccess.success).toBe(false);
     expect(noAccess.error?.issues.map((issue) => issue.path.join('.'))).toEqual(['accessToken']);
     expect(schema.safeParse({ ...oauthConfig, accessToken: '' }).success).toBe(false);
-    expect(schema.safeParse({ ...oauthConfig, projects: [] }).success).toBe(false);
+    expect(schema.safeParse({ ...oauthConfig, projects: [] }).success).toBe(true);
+    expect(schema.safeParse({ ...config, projects: [] }).success).toBe(false);
   });
 
   it('refuse la forme à clé sans clé, même si un jeton OAuth est présent', () => {
@@ -818,7 +820,8 @@ describe('gitlab : bouton, configuration', () => {
   });
 
   it('explique au catalogue ce que GitLab demande, et garde la clé collée', () => {
-    expect(gitlabCatalog.oauthHelp).toMatch(/read_api/);
+    expect(gitlabCatalog.oauthHelp).toMatch(/lecture seule/);
+    expect(gitlabCatalog.oauthHelp).toMatch(/membre/);
     expect(gitlabCatalog.oauthHelp?.trim()).not.toBe('');
     expect(gitlabCatalog.keyAccepted).not.toBe(false);
     expect(gitlabCatalog.fields.find((field) => field.name === 'projects')?.kind).toBe('list');
@@ -828,6 +831,54 @@ describe('gitlab : bouton, configuration', () => {
 describe('gitlab : bouton, appels avec le jeton OAuth', () => {
   const bearer = { authorization: `Bearer ${ACCESS}` };
   const parsedConfig = () => gitlabConnector.configSchema.parse(oauthConfig);
+
+  it('sans projet choisi, verify lit les projets dont l’utilisateur est membre', async () => {
+    const member = { ...oauthConfig, projects: [] };
+    const { http, calls } = testHttp(gitlabConnector, member, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/projects`, json: [{ path_with_namespace: 'acme/leon' }] },
+    ]);
+
+    await gitlabConnector.verify(gitlabConnector.configSchema.parse(member), http);
+
+    const listed = new URL(calls[1]?.url ?? '');
+    expect(Object.fromEntries(listed.searchParams)).toEqual({
+      membership: 'true',
+      order_by: 'last_activity_at',
+      sort: 'desc',
+      per_page: '20',
+    });
+  });
+
+  it('sans projet choisi ni projet dont il est membre, verify dit qu’il n’y a rien à lire', async () => {
+    const member = { ...oauthConfig, projects: [] };
+    const { http } = testHttp(gitlabConnector, member, [
+      { url: `${API}/user`, json: user },
+      { url: `${API}/projects`, json: [] },
+    ]);
+
+    await expect(
+      gitlabConnector.verify(gitlabConnector.configSchema.parse(member), http),
+    ).rejects.toBeInstanceOf(NothingToReadError);
+  });
+
+  it('sans projet choisi, sync relit les projets du membre puis les lit', async () => {
+    const member = { ...oauthConfig, projects: [] };
+    const { http } = testHttp(gitlabConnector, member, [
+      { url: `${API}/projects`, json: [{ path_with_namespace: 'acme/leon' }] },
+      ...firstPassRoutes(),
+    ]);
+
+    const pages = await collect(
+      gitlabConnector.sync(
+        gitlabConnector.configSchema.parse(member),
+        { cursor: null, since: SINCE },
+        http,
+      ),
+    );
+
+    expect(idsOf(pages).length).toBeGreaterThan(0);
+  });
 
   it('verify envoie Authorization: Bearer, jamais PRIVATE-TOKEN', async () => {
     const { http, calls } = testHttp(gitlabConnector, oauthConfig, [

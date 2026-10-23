@@ -31,8 +31,6 @@ const CLIENT = {
   secret: randomBytes(16).toString('hex'),
 };
 const TOKEN_URL = 'https://airtable.com/oauth2/v1/token';
-const BASE = 'appLkNDICXNqxSDhG';
-const OTHER_BASE = 'appSW9R5uCNmRmfl6';
 const VERIFIER = 'verificateur-de-test_0123456789.abcdefghijklmnopqrstuvwxyz';
 
 const pending: OAuthPending = {
@@ -67,7 +65,7 @@ describe('airtable : description du bouton', () => {
     expect(airtableConnector.oauth).toBe(airtableOAuth);
   });
 
-  it('suit la doc : PKCE, secret en Basic, formulaire, trois droits en lecture, bases facultatives', () => {
+  it('suit la doc : PKCE, secret en Basic, formulaire, trois droits en lecture, rien à saisir avant le clic', () => {
     expect(airtableOAuth).toMatchObject({
       appKey: 'AIRTABLE',
       authorizeUrl: 'https://airtable.com/oauth2/v1/authorize',
@@ -76,7 +74,7 @@ describe('airtable : description du bouton', () => {
       pkce: true,
       clientAuth: 'basic',
       tokenBody: 'form',
-      preFields: ['bases'],
+      preFields: [],
       setupHosts: [],
     });
     expect(airtableOAuth.scopeSeparator ?? ' ').toBe(' ');
@@ -217,15 +215,6 @@ describe('airtable : conversion des jetons en configuration', () => {
     const http = createConnectorHttp({ provider: 'airtable', hosts: [], fetchImpl });
     return { http, fetchImpl };
   };
-
-  it('garde les bases choisies avant le clic, sans appeler Airtable', async () => {
-    const { http, fetchImpl } = silent();
-
-    const fields = await airtableOAuth.toConfig(tokens, { bases: [BASE, OTHER_BASE] }, http);
-
-    expect(fields).toEqual({ bases: [BASE, OTHER_BASE] });
-    expect(fetchImpl.calls).toEqual([]);
-  });
 
   it('prend aucune base pour « toutes les bases autorisées »', async () => {
     const { http } = silent();

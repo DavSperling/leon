@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
+import {
+  ConnectorAuthError,
+  type ConnectorHttp,
+  ConnectorHttpError,
+  NothingToReadError,
+} from '../http';
 import type { Connector, SyncState } from '../types';
 import { type AirtableClient, airtableClient } from './client';
 import { airtableOAuth } from './oauth';
@@ -107,7 +112,7 @@ export const airtableConnector: Connector<Config> = {
     // Les bases choisies sont contrôlées une à une ; celles que le jeton liste lui sont accessibles.
     for (const baseId of config.bases) await checkBase(air, baseId);
     const wanted = basesToRead(config.bases, names);
-    if (wanted.length === 0) throw new ConnectorHttpError(null, 'Aucune base Airtable autorisée');
+    if (wanted.length === 0) throw new NothingToReadError('Aucune base Airtable autorisée');
     const bases = wanted.map((baseId) => names.get(baseId) ?? baseId).join(', ');
     // L'identifiant porte les bases lues, triées : d'autres bases du même utilisateur sont un autre compte.
     const accountKey = [me.id, ...[...wanted].sort()].join(':');

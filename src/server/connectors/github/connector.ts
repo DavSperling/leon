@@ -41,6 +41,7 @@ import { githubOAuth } from './oauth';
 // Limite connue : un élément modifié pendant que les pages d'un même dépôt sont lues peut décaler
 // les pages et en faire manquer un autre, qui ne reviendra qu'à sa prochaine modification.
 
+const REPOS_MAX = 20;
 const REPO_PATTERN = /^(?!\.{1,2}\/)(?!.*\/\.{1,2}$)[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
 
 // Deux façons de se brancher : une clé collée (`token`) ou le bouton (`accessToken`, `refreshToken`,
@@ -53,18 +54,26 @@ const ConfigSchema = z
     accessToken: z.string().trim().min(1).max(500).optional(),
     refreshToken: z.string().nullable().optional(),
     expiresAt: z.string().nullable().optional(),
-    // Propriétaire/nom ; ni « . » ni « .. » seuls, qui changeraient l'adresse appelée.
-    repos: z.array(z.string().trim().regex(REPO_PATTERN)).min(1).max(20),
+    // Propriétaire/nom ; ni « . » ni « .. » seuls, qui changeraient l'adresse appelée. Obligatoires
+    // avec une clé ; avec le bouton, vide veut dire « les dépôts où l'appli est installée ».
+    repos: z.array(z.string().trim().regex(REPO_PATTERN)).max(REPOS_MAX).default([]),
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
     if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (config.authMode === 'key' && config.repos.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['repos'], message: 'Requis' });
+    }
   });
 type Config = z.infer<typeof ConfigSchema>;
 
 // Le jeton de GitHub s'envoie de la même façon, clé collée ou jeton d'accès du bouton.
 const bearerOf = (config: Config): string =>
   (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
+
+// Relu à chaque passage : un dépôt ajouté ou retiré sur GitHub est pris en compte sans reconnexion.
+const reposToRead = (github: GithubClient, config: Config): Promise<string[]> =>
+  config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos(REPOS_MAX);
 
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
 const CursorSchema = z.record(
@@ -175,7 +184,8 @@ export const githubConnector: Connector<Config> = {
     return { account: login, accountKey: String(id) };
   },
 
-  sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncRepos(githubClient(bearerOf(config), http), config.repos, state);
+  async *sync(config: Config, state: SyncState, http: ConnectorHttp) {
+    const github = githubClient(bearerOf(config), http);
+    yield* syncRepos(github, await reposToRead(github, config), state);
   },
 };

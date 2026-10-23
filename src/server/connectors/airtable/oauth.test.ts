@@ -65,12 +65,18 @@ describe('airtable : description du bouton', () => {
     expect(airtableConnector.oauth).toBe(airtableOAuth);
   });
 
-  it('suit la doc : PKCE, secret en Basic, formulaire, trois droits en lecture, rien à saisir avant le clic', () => {
+  it('suit la doc : PKCE, secret en Basic, formulaire, lecture et écriture des enregistrements, rien à saisir avant le clic', () => {
     expect(airtableOAuth).toMatchObject({
       appKey: 'AIRTABLE',
       authorizeUrl: 'https://airtable.com/oauth2/v1/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['data.records:read', 'schema.bases:read', 'data.recordComments:read'],
+      scopes: [
+        'data.records:read',
+        'schema.bases:read',
+        'data.recordComments:read',
+        'data.records:write',
+        'data.recordComments:write',
+      ],
       pkce: true,
       clientAuth: 'basic',
       tokenBody: 'form',
@@ -83,8 +89,9 @@ describe('airtable : description du bouton', () => {
     expect(airtableOAuth.adminConsent).toBeUndefined();
   });
 
-  it('ne demande que de la lecture', () => {
-    for (const scope of airtableOAuth.scopes) expect(scope).toMatch(/:read$/);
+  it('écrit seulement les enregistrements et leurs commentaires, jamais la structure des bases', () => {
+    const writes = airtableOAuth.scopes.filter((scope) => !scope.endsWith(':read'));
+    expect(writes).toEqual(['data.records:write', 'data.recordComments:write']);
   });
 
   it('nomme chaque champ avant le clic dans le schéma du connecteur', () => {
@@ -100,7 +107,8 @@ describe('airtable : description du bouton', () => {
       client_id: CLIENT.id,
       redirect_uri: redirectUri(airtableOAuth),
       response_type: 'code',
-      scope: 'data.records:read schema.bases:read data.recordComments:read',
+      scope:
+        'data.records:read schema.bases:read data.recordComments:read data.records:write data.recordComments:write',
       state: 'etat-1',
       code_challenge: createHash('sha256').update(VERIFIER).digest('base64url'),
       code_challenge_method: 'S256',

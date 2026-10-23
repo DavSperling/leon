@@ -833,7 +833,7 @@ describe('github : catalogue du bouton', () => {
 
   it('explique ce que l’utilisateur verra chez GitHub, et où installer l’appli', () => {
     expect(entry?.oauthHelp).toMatch(/installe/i);
-    expect(entry?.oauthHelp).toMatch(/lecture seule/i);
+    expect(entry?.oauthHelp).toMatch(/écrire/i);
     expect(entry?.oauthHelp).toMatch(/pull requests/i);
     expect(entry?.oauthPreFields).toEqual([]);
   });

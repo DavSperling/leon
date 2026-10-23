@@ -26,7 +26,7 @@ export const jiraCatalog: CatalogEntry = {
   ],
   keyHelp: 'Sur id.atlassian.com : Sécurité › Jetons d’API › Créer un jeton d’API.',
   oauthHelp:
-    'Atlassian vous demande d’autoriser Leon à lire vos tickets, leurs commentaires et les profils de votre site Jira (lecture seule), et de choisir le site si votre compte en a plusieurs. Leon ne peut rien modifier.',
+    'Atlassian vous fait choisir votre site Jira. Leon lit les tickets et leurs commentaires ; l’accès permet aussi d’écrire, Leon ne s’en sert pas encore.',
   docsUrl:
     'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
   triedForReal: false,

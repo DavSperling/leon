@@ -19,6 +19,7 @@ import {
   type ConnectorHttp,
   ConnectorHttpError,
   createConnectorHttp,
+  NothingToReadError,
 } from './http';
 import { withoutOtherSites } from './jira/access';
 import {
@@ -57,7 +58,8 @@ type ReturnCode =
   | 'champs'
   | 'admin'
   | 'admin_accorde'
-  | 'autre_compte';
+  | 'autre_compte'
+  | 'vide';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOT_FOUND = { error: 'Introuvable' };
@@ -263,7 +265,7 @@ async function connect(
   pending: OAuthPending,
   code: string,
   client: { id: string; secret: string },
-): Promise<void> {
+): Promise<string | null> {
   const { provider } = pending;
   const config = await oauthConfig(deps, connector, spec, pending, code, client);
   const http = createConnectorHttp({
@@ -284,15 +286,17 @@ async function connect(
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
-    return;
+  } else {
+    await createConnection(ctx, {
+      provider,
+      label: accountLabel(verified.account, PROVIDER_LABELS[provider]),
+      config: kept,
+      secretFields,
+      since: new Date((deps.now ?? Date.now)() - Number(pending.since) * DAY_MS),
+    });
   }
-  await createConnection(ctx, {
-    provider,
-    label: accountLabel(verified.account, PROVIDER_LABELS[provider]),
-    config: kept,
-    secretFields,
-    since: new Date((deps.now ?? Date.now)() - Number(pending.since) * DAY_MS),
-  });
+  // Branchée : une étape chez l'outil qui échoue ne la défait pas, on revient simplement à Leon.
+  return (await spec.nextStep?.(config, http).catch(() => null)) ?? null;
 }
 
 function failureCode(error: unknown, provider: ProviderId): ReturnCode {
@@ -300,18 +304,20 @@ function failureCode(error: unknown, provider: ProviderId): ReturnCode {
   if (error instanceof OAuthRefusedError) return error.adminConsent ? 'admin' : 'refuse';
   if (error instanceof PreFieldsRejected) return 'champs';
   if (error instanceof OtherAccount) return 'autre_compte';
+  if (error instanceof NothingToReadError) return 'vide';
   return error instanceof ConnectorAuthError ? 'refuse' : 'indisponible';
 }
 
-// null : branché. Sinon le code de l'erreur, dans l'ordre de la spec : accord administrateur, refus
-// de l'éditeur, puis cookie, session et `state`, puis l'échange.
+// Branché : `{ next }`, la page de l'outil où continuer (ou null). Sinon le code de l'erreur, dans
+// l'ordre de la spec : accord administrateur, refus de l'éditeur, puis cookie, session et `state`,
+// puis l'échange.
 async function finishReturn(
   c: Context,
   deps: OAuthRoutesDeps,
   app: string,
   pending: OAuthPending | null,
   provider: ProviderId | null,
-): Promise<ReturnCode | null> {
+): Promise<ReturnCode | { next: string | null }> {
   const query = c.req.query();
   const connector = provider ? deps.getConnector(provider) : null;
   const spec = connector?.oauth;
@@ -331,8 +337,7 @@ async function finishReturn(
   if (!code) return 'refuse';
   if (!client || !connectorsKey()) return 'indisponible';
   try {
-    await connect(ctx, deps, connector, spec, pending, code, client);
-    return null;
+    return { next: await connect(ctx, deps, connector, spec, pending, code, client) };
   } catch (failure) {
     return failureCode(failure, pending.provider);
   }
@@ -345,9 +350,10 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
   const pending = cookie ? openPending(cookie, (deps.now ?? Date.now)()) : null;
   const provider = pending?.provider ?? asProviderId(app);
   const outcome = await finishReturn(c, deps, app, pending, provider);
+  if (typeof outcome === 'object' && outcome.next) return c.redirect(outcome.next, 302);
   const tool: Record<string, string> = provider ? { outil: provider } : {};
   const params: Record<string, string> =
-    outcome === null ? { branche: provider ?? '' } : { erreur: outcome, ...tool };
+    typeof outcome === 'object' ? { branche: provider ?? '' } : { erreur: outcome, ...tool };
   return c.redirect(connexions(params), 302);
 }
 

@@ -14,6 +14,7 @@ export function fakeOAuthConnector(
     account?: string;
     accountKey?: string;
     repos?: string[];
+    nextStep?: string | Error; // la page où enchaîner après le branchement, ou l'erreur qu'elle lève
   } = {},
 ): AnyConnector {
   const schema = z
@@ -50,6 +51,14 @@ export function fakeOAuthConnector(
       clientAuth: 'body',
       preFields: ['repos'],
       setupHosts: [],
+      ...(options.nextStep === undefined
+        ? {}
+        : {
+            async nextStep() {
+              if (options.nextStep instanceof Error) throw options.nextStep;
+              return options.nextStep ?? null;
+            },
+          }),
       async toConfig(_tokens, preFields, http) {
         if (options.toConfigUrl) {
           await http.json({ url: options.toConfigUrl }, z.unknown()).catch((error: unknown) => {

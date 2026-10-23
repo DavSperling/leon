@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ConnectorAuthError, type ConnectorHttp } from '../http';
+import { ConnectorAuthError, type ConnectorHttp, NothingToReadError } from '../http';
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
 import { type GitlabClient, gitlabClient, type Listed, type Stream } from './client';
 import { advance, apiTime, cursorKey, isDone, readCursor } from './cursor';
@@ -50,6 +50,7 @@ const SEGMENT = '[A-Za-z0-9_][A-Za-z0-9_.-]*';
 const PROJECT_PATTERN = new RegExp(`^${SEGMENT}(?:/${SEGMENT}){1,20}$`);
 // L'identifiant d'un élément (« issue:<chemin>#12 ») ne dépasse pas 200 caractères.
 const PROJECT_MAX = 150;
+const PROJECTS_MAX = 20;
 
 // Deux façons de se brancher : la clé collée (`authMode` 'key', celui d'une connexion enregistrée
 // avant le bouton) ou le bouton ('oauth', avec les jetons). Un z.object raffiné, pas une union : le
@@ -61,11 +62,18 @@ const ConfigSchema = z
     accessToken: z.string().min(1).optional(),
     refreshToken: z.string().nullable().optional(),
     expiresAt: z.string().nullable().optional(),
-    projects: z.array(z.string().trim().max(PROJECT_MAX).regex(PROJECT_PATTERN)).min(1).max(20),
+    // Obligatoires avec une clé ; avec le bouton, vide veut dire « les projets dont je suis membre ».
+    projects: z
+      .array(z.string().trim().max(PROJECT_MAX).regex(PROJECT_PATTERN))
+      .max(PROJECTS_MAX)
+      .default([]),
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
     if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (config.authMode === 'key' && config.projects.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['projects'], message: 'Requis' });
+    }
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -75,6 +83,12 @@ function authHeaders(config: Config): Record<string, string> {
   if (config.authMode === 'oauth') return { authorization: `Bearer ${config.accessToken ?? ''}` };
   return { 'PRIVATE-TOKEN': config.token ?? '' };
 }
+
+// Relu à chaque passage : un projet rejoint ou quitté est pris en compte sans reconnexion.
+const projectsToRead = (gitlab: GitlabClient, config: Config): Promise<string[]> =>
+  config.projects.length > 0
+    ? Promise.resolve(config.projects)
+    : gitlab.memberProjects(PROJECTS_MAX);
 
 const STREAMS: Stream[] = ['issues', 'merge_requests'];
 
@@ -138,10 +152,14 @@ export const gitlabConnector: Connector<Config> = {
     const gitlab = gitlabClient(authHeaders(config), http);
     const { id, username } = await gitlab.account();
     for (const project of config.projects) await gitlab.checkProject(project);
+    if ((await projectsToRead(gitlab, config)).length === 0) {
+      throw new NothingToReadError('Membre d’aucun projet GitLab');
+    }
     return { account: username, accountKey: String(id) };
   },
 
-  sync(config: Config, state: SyncState, http: ConnectorHttp) {
-    return syncProjects(gitlabClient(authHeaders(config), http), config.projects, state);
+  async *sync(config: Config, state: SyncState, http: ConnectorHttp) {
+    const gitlab = gitlabClient(authHeaders(config), http);
+    yield* syncProjects(gitlab, await projectsToRead(gitlab, config), state);
   },
 };

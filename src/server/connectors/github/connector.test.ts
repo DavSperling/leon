@@ -697,9 +697,39 @@ describe('github : connexion par le bouton', () => {
     expect(issuePaths({ accessToken: ACCESS, repos: ['acme/leon'] })).toEqual(['token']);
   });
 
-  it('refuse un mode inconnu et des dépôts absents', () => {
+  it('refuse un mode inconnu, et des dépôts absents avec une clé seulement', () => {
     expect(schema.safeParse({ ...oauthConfig, authMode: 'autre' }).success).toBe(false);
-    expect(schema.safeParse({ ...oauthConfig, repos: [] }).success).toBe(false);
+    expect(issuePaths({ ...config, repos: [] })).toEqual(['repos']);
+    expect(schema.safeParse({ ...oauthConfig, repos: [] }).success).toBe(true);
+    expect(schema.parse({ ...oauthConfig, repos: undefined }).repos).toEqual([]);
+  });
+
+  it('sans dépôt choisi ni installation, verify branche quand même : rien à lire pour l’instant', async () => {
+    const installed = { ...oauthConfig, repos: [] };
+    const { http } = testHttp(githubConnector, installed, [{ url: `${API}/user`, json: user }]);
+
+    await expect(githubConnector.verify(schema.parse(installed), http)).resolves.toEqual({
+      account: 'marie-durand',
+      accountKey: '4101',
+    });
+  });
+
+  it('sans dépôt choisi, sync relit l’installation puis lit ses dépôts', async () => {
+    const installed = { ...oauthConfig, repos: [] };
+    const { http } = testHttp(githubConnector, installed, [
+      { url: `${API}/user/installations`, json: { installations: [{ id: 7 }] } },
+      {
+        url: `${API}/user/installations/7/repositories`,
+        json: { repositories: [{ full_name: 'acme/leon' }] },
+      },
+      ...firstPassRoutes(),
+    ]);
+
+    const pages = await collect(
+      githubConnector.sync(schema.parse(installed), { cursor: null, since: SINCE }, http),
+    );
+
+    expect(idsOf(pages)).toContain('issue:acme/leon#12');
   });
 
   it('reste un objet à champs nommés, et ne chiffre que la clé collée', () => {
@@ -804,7 +834,8 @@ describe('github : catalogue du bouton', () => {
   it('explique ce que l’utilisateur verra chez GitHub, et où installer l’appli', () => {
     expect(entry?.oauthHelp).toMatch(/installe/i);
     expect(entry?.oauthHelp).toMatch(/lecture seule/i);
-    expect(entry?.oauthHelp).toContain('Pull requests');
+    expect(entry?.oauthHelp).toMatch(/pull requests/i);
+    expect(entry?.oauthPreFields).toEqual([]);
   });
 
   it('garde la clé collée en secours, avec son aide', () => {

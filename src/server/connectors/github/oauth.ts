@@ -1,4 +1,5 @@
 import type { OAuthSpec } from '../types';
+import { githubClient } from './client';
 
 // Le bouton « Se connecter avec GitHub » : une GitHub App (pas une appli OAuth, dont le droit `repo`
 // donnerait l'écriture sur tous les dépôts privés). Ses permissions sont celles de l'appli, réglées
@@ -43,11 +44,26 @@ export const githubOAuth: OAuthSpec = {
   scopes: [],
   pkce: true,
   clientAuth: 'body',
-  preFields: ['repos'],
+  preFields: [],
   setupHosts: [],
 
-  // Les dépôts se choisissent avant le clic : GitHub ne dit pas lesquels l'utilisateur veut brancher.
-  async toConfig(_tokens, preFields) {
-    return { repos: preFields.repos };
+  // Branché sans aucun dépôt ouvert : on enchaîne sur l'écran d'installation de l'appli, où
+  // l'utilisateur choisit ses dépôts ; GitHub le renvoie ensuite à la « Setup URL » de l'appli (la page
+  // Connexions de Leon). Le nom court de l'appli (github.com/apps/<nom>) n'est pas dans la réponse de
+  // GitHub : on le règle. Sans lui, on revient à Leon et l'utilisateur installe l'appli lui-même.
+  async nextStep(config, http) {
+    const slug = process.env.LEON_OAUTH_GITHUB_APP?.trim();
+    const { accessToken, repos } = config;
+    if (!slug || (Array.isArray(repos) && repos.length > 0)) return null;
+    const installed = await githubClient(String(accessToken ?? ''), http).installedRepos(1);
+    return installed.length > 0
+      ? null
+      : `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
+  },
+
+  // Rien à demander avant le clic : les dépôts sont ceux où l'utilisateur installe l'appli sur
+  // GitHub, relus à chaque passage (voir `reposToRead`).
+  async toConfig() {
+    return {};
   },
 };

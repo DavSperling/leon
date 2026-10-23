@@ -45,6 +45,12 @@ export class ConnectorHttpError extends Error {
   }
 }
 
+// Connecté, mais l'outil n'ouvre rien à Leon (appli installée sur aucun dépôt, aucune base, aucun
+// projet) : l'utilisateur doit choisir chez l'outil ce que Leon peut lire.
+export class NothingToReadError extends Error {
+  override name = 'NothingToReadError';
+}
+
 const TIMEOUT_MS = 30_000;
 const BODY_MAX_BYTES = 10 * 1024 * 1024;
 const RETRIES_MAX = 3;

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { API_PATHS } from '@/capture/api-contract';
-import { CodeLine, PageHeader, Section } from '@/components/verre';
+import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
@@ -17,6 +17,12 @@ export default async function SettingsPage() {
     .map(({ revokedAt: _, ...token }) => token);
   const serverUrl = env.BETTER_AUTH_URL;
   const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
+  // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
+  // l'utilisateur, qui le colle lui-même.
+  const extensionPrompt = `Installe l'extension navigateur de Leon depuis ce dépôt :
+1. Construis-la avec WXT_PUBLIC_LEON_URL=${serverUrl} pnpm ext:build.
+2. Dans Chrome, ouvre chrome://extensions, active le mode développeur, clique sur « Charger l'extension non empaquetée » et choisis le dossier extension/.output/chrome-mv3.
+3. Ouvre ensuite les options de l'extension et laisse-moi y coller mon jeton Leon moi-même.`;
   const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <votre jeton>"`;
 
   return (
@@ -38,7 +44,13 @@ export default async function SettingsPage() {
         <CommandBlock command={command} />
       </Section>
 
-      <Section id="extension" title="Extension navigateur" className={SECTION}>
+      <Section
+        id="extension"
+        title="Extension navigateur"
+        description="Copiez la demande et collez-la dans Claude Code, ouvert dans le dépôt Leon : il construit et charge l’extension pour vous. Ou suivez les étapes à la main."
+        actions={<CopyButton value={extensionPrompt} label="Demander à Claude de le faire" />}
+        className={SECTION}
+      >
         <ol className="grid gap-3.5">
           <Step n={1}>
             Construisez l’extension avec <code className={INLINE}>pnpm ext:build</code>.

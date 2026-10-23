@@ -19,6 +19,7 @@ const DELETE_ALLOWED = [
   'passage_vectors', // changement de modèle de vecteurs (0011)
   'connection_exclusions', // retirer une exclusion (0015)
   'identities', // retirer un compte déclaré (0017)
+  'discussions', // l'auteur supprime ses discussions, les messages partent en cascade (0031)
 ];
 
 const TENANT_TABLES = `

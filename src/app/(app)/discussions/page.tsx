@@ -22,8 +22,9 @@ export default async function DiscussionsPage() {
 
   return (
     <div className="mx-auto max-w-[760px]">
-      {/* La question au centre de l'écran, comme l'accueil d'un assistant ; les discussions passées en dessous. */}
-      <div className="flex min-h-[calc(100dvh-160px)] flex-col justify-center">
+      {/* La question au centre, comme l'accueil d'un assistant, assez haut pour que les discussions passées
+          commencent dans le premier écran. */}
+      <div className="pt-[clamp(24px,14dvh,160px)]">
         <PageHeader
           title="Discussions"
           subtitle="Posez une question : Leon cherche, lit et répond en citant ses sources, ou dit qu’il ne sait pas."
@@ -46,7 +47,7 @@ export default async function DiscussionsPage() {
         </div>
       </div>
 
-      <Section id="vos-discussions" title="Vos discussions" className="mt-12">
+      <Section id="vos-discussions" title="Vos discussions" className="mt-14">
         {discussions.length === 0 ? (
           <EmptyState
             icon={MessagesSquare}

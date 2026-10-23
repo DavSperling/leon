@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/discussion-events';
@@ -7,7 +8,7 @@ import { PAGE_SIZE } from '@/lib/search-limits';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { isReplying } from '@/server/discussion/agent';
-import { createDiscussion, getDiscussion } from '@/server/discussion/discussions';
+import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 
 // Ouvrir une discussion : depuis la page Discussions (une question), ou depuis la réponse en tête de la barre
@@ -96,5 +97,19 @@ export async function readDiscussionMessagesAction(
   } catch (error) {
     logError('discussion.lecture', error);
     return null;
+  }
+}
+
+// Supprimer une de ses discussions, depuis la liste. Faux pour une discussion inconnue ou d'un autre, ou une panne.
+export async function deleteDiscussionAction(discussionId: string): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  if (typeof discussionId !== 'string') return { ok: false };
+  try {
+    const ok = await deleteDiscussion(ctx, discussionId);
+    revalidatePath('/discussions');
+    return { ok };
+  } catch (error) {
+    logError('discussion.suppression', error);
+    return { ok: false };
   }
 }

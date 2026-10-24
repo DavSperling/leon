@@ -56,12 +56,9 @@
   }
 }
 
-/* ---------- Le focus et les ancres ne passent pas sous l'en-tête fixe, ni sous la barre des maquettes ---------- */
+/* ---------- Le focus et les ancres ne passent pas sous l'en-tête fixe ---------- */
 html:has(.site-header) {
   scroll-padding-top: 96px;
-}
-html:has(.site-maquette-switcher) {
-  scroll-padding-bottom: 96px;
 }
 
 /* ---------- En-tête : verre qui se densifie au défilement ---------- */
@@ -226,40 +223,6 @@ html:has(.site-maquette-switcher) {
 @keyframes site-float {
   to {
     transform: translateY(-10px);
-  }
-}
-
-/* Orbites (maquette Constellation) : l'anneau tourne, chaque logo tourne à l'envers pour rester droit */
-.site-orbit {
-  animation: site-spin var(--orbit-dur, 60s) linear infinite;
-}
-.site-orbit[data-reverse] {
-  animation-direction: reverse;
-}
-.site-orbit > .site-orbit-item {
-  animation: site-spin var(--orbit-dur, 60s) linear infinite reverse;
-}
-.site-orbit[data-reverse] > .site-orbit-item {
-  animation-direction: normal;
-}
-@keyframes site-spin {
-  to {
-    rotate: 1turn;
-  }
-}
-
-/* Ligne de temps (maquette Récit) : le trait se remplit au défilement */
-@supports (animation-timeline: view()) {
-  .site-timeline-fill {
-    transform-origin: top;
-    animation: site-fill linear both;
-    animation-timeline: view();
-    animation-range: entry 40% exit 60%;
-  }
-}
-@keyframes site-fill {
-  from {
-    transform: scaleY(0);
   }
 }
 

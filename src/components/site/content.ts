@@ -435,7 +435,7 @@ export const TEAMS: Team[] = [
 
 export const teamBySlug = (slug: string): Team | undefined => TEAMS.find((t) => t.slug === slug);
 
-// ---------- Ce que fait Leon (page Produit, maquettes) ----------
+// ---------- Ce que fait Leon (page Produit) ----------
 
 export type Pillar = { id: string; kicker: string; title: string; text: string; points: string[] };
 

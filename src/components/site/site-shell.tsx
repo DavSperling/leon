@@ -17,7 +17,7 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
         Aller au contenu
       </a>
       <SiteHeader />
-      {/* z-[2] : au-dessus du pied (z-[1]) ; un élément fixe de la page (barre des maquettes) ne passe pas dessous.
+      {/* z-[2] : au-dessus du pied (z-[1]).
           overflow-x-clip : un décor qui déborde (particules, 3D) ne fait jamais défiler la page de côté. */}
       <main
         id="contenu"

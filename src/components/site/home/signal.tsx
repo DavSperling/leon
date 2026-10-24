@@ -41,7 +41,7 @@ import { TeamTabs } from '../team-tabs';
 import { HeroDemo } from './hero-demo';
 import './signal.css';
 
-// Maquette 1 « Signal » : la plus proche de l'appli. Un titre centré, puis la démo de la recherche (requête, faisceau,
+// Accueil « Signal » : la plus proche de l'appli. Un titre centré, puis la démo de la recherche (requête, faisceau,
 // sources, réponse citée) comme point focal ; ensuite le problème, les trois temps, les équipes en onglets, la preuve
 // (« La source, ou rien. »), l'assistant d'IA, la sécurité et les questions fréquentes.
 

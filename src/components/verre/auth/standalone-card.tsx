@@ -5,7 +5,7 @@ import { Brand } from '@/components/verre/shell/brand';
 import { GlassCard } from '@/components/verre/ui/surfaces';
 import { nb } from '@/lib/verre/nb';
 
-/** La marque et la carte de verre des pages hors ossature (connexion, inscription, 404, erreur racine). */
+/** La marque et la carte de verre des pages hors ossature (404, erreur racine) ; la connexion et l'inscription ont leur mise en page dans src/app/(auth)/layout.tsx. */
 export function StandaloneCard({ children }: { children: ReactNode }) {
   // entrée en CSS (.rise-in) : rendue par le serveur, la carte reste visible sans JavaScript
   return (

@@ -1,0 +1,207 @@
+/* Effets 3D et animations du site public (src/components/site/fx). Mouvement réduit : la règle globale de globals.css
+   coupe animations et transitions ; les composants JS lisent aussi useInstant et figent leur image. */
+
+/* ---------- Carte qui s'incline vers le pointeur, avec un reflet (Tilt) ---------- */
+/* --fx-lift : 0 au repos, 1 pendant l'inclinaison ; le relief des .fx-pop n'apparaît qu'en inclinant (au repos, la
+   perspective les décalerait de quelques pixels par rapport au texte de la carte) */
+@property --fx-lift {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+.fx-tilt {
+  position: relative;
+  transform: perspective(var(--tilt-p, 1000px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+    scale(var(--ts, 1));
+  transform-style: preserve-3d;
+  /* les bordures, fonds et ombres des cartes gardent leur transition (ce bloc l'emporte sur les utilitaires) */
+  transition:
+    transform 0.6s var(--ease-out),
+    --fx-lift 0.6s var(--ease-out),
+    border-color 0.3s,
+    background-color 0.3s,
+    box-shadow 0.3s;
+}
+.fx-tilt[data-tilting] {
+  --fx-lift: 1;
+  transition:
+    transform 0.15s linear,
+    --fx-lift 0.3s var(--ease-out),
+    border-color 0.3s,
+    background-color 0.3s,
+    box-shadow 0.3s;
+}
+.fx-tilt-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+  background: radial-gradient(
+    520px circle at var(--gx, 50%) var(--gy, 50%),
+    var(--fx-glare),
+    transparent 42%
+  );
+}
+[data-theme="dark"] {
+  --fx-glare: rgba(255, 255, 255, 0.085);
+}
+[data-theme="light"] {
+  --fx-glare: rgba(255, 255, 255, 0.7);
+}
+.fx-tilt[data-tilting] > .fx-tilt-glare {
+  opacity: 1;
+}
+/* un enfant qui sort du plan quand la carte s'incline */
+.fx-pop {
+  transform: translateZ(calc(var(--pop, 36px) * var(--fx-lift, 0)));
+}
+
+/* ---------- Révélation des mots en 3D (SplitWords) : chaque mot bascule depuis l'arrière ---------- */
+.fx-words {
+  perspective: 900px;
+}
+.fx-word {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  animation: fx-word 1s var(--ease-out) backwards;
+  animation-delay: calc(var(--fx-base, 0ms) + var(--w, 0) * 70ms);
+}
+@keyframes fx-word {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em) rotateX(-80deg);
+    filter: blur(8px);
+  }
+}
+
+/* ---------- Panneau qui se redresse au défilement (CSS seul) ---------- */
+@supports (animation-timeline: view()) {
+  .fx-untilt {
+    transform-origin: 50% 0%;
+    animation: fx-untilt linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 42%;
+  }
+}
+/* transform seul, pour la même raison : la 3D d'une carte inclinable à l'intérieur reste vivante */
+@keyframes fx-untilt {
+  from {
+    transform: perspective(1400px) rotateX(26deg) scale(0.9) translateY(30px);
+  }
+}
+
+/* ---------- Champ de particules (ParticleField) : fondu vers les bords ---------- */
+.fx-field {
+  -webkit-mask: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 78%);
+  mask: radial-gradient(ellipse 75% 70% at 50% 45%, #000 35%, transparent 78%);
+}
+
+/* ---------- Sphère des logos (LogoSphere) ---------- */
+.fx-sphere {
+  touch-action: pan-y;
+  cursor: grab;
+}
+.fx-sphere[data-dragging] {
+  cursor: grabbing;
+}
+.fx-sphere-item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  will-change: transform, opacity;
+}
+
+/* ---------- Couches éclatées (Layers3D) : le brut, l'index, les droits ---------- */
+.fx-layers {
+  perspective: 1600px;
+}
+.fx-layers-stage {
+  transform-style: preserve-3d;
+  transform: rotateX(56deg) rotateZ(-36deg);
+}
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--z) * var(--gap, 104px)));
+  transition: transform 0.9s var(--ease-spring);
+}
+.fx-layers:hover .fx-layer,
+.fx-layers:focus-within .fx-layer {
+  --gap: 136px;
+}
+@supports (animation-timeline: view()) {
+  .fx-layers-stage {
+    animation: fx-layers-open linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 50%;
+  }
+}
+/* transform seul : une opacité sous 1 aplatirait les couches en un seul plan pendant l'entrée */
+@keyframes fx-layers-open {
+  from {
+    transform: rotateX(56deg) rotateZ(-36deg) scale(0.86);
+  }
+}
+
+/* ---------- Bordure lumineuse qui tourne (cartes mises en avant) : ::after, ::before étant le filet Signal.
+   Sans `isolation` : elle aplatirait la 3D d'une carte inclinable (Tilt) qui la porte. ---------- */
+@property --fx-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.fx-ring {
+  position: relative;
+}
+.fx-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--fx-angle),
+    transparent 0 62%,
+    color-mix(in srgb, var(--accent) 80%, transparent) 78%,
+    var(--logo-2) 86%,
+    transparent 96%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  /* angle fixe par défaut ; avec le défilement, il tourne quand la carte traverse l'écran (aucun travail au repos) */
+  --fx-angle: 40deg;
+}
+@supports (animation-timeline: view()) {
+  .fx-ring::after {
+    animation: fx-ring linear both;
+    animation-timeline: view();
+  }
+}
+@keyframes fx-ring {
+  from {
+    --fx-angle: 0deg;
+  }
+  to {
+    --fx-angle: 1turn;
+  }
+}
+
+/* ---------- Lueur qui respire derrière un élément (logo central, bouton) ---------- */
+.fx-breathe {
+  animation: fx-breathe 4.5s ease-in-out infinite;
+}
+@keyframes fx-breathe {
+  50% {
+    opacity: 0.55;
+    transform: scale(1.08);
+  }
+}

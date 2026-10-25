@@ -617,7 +617,11 @@ export function ToolDialog({
         onOpenAutoFocus={autoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
         title={entry.label}
-        description={`Ce que Leon lit dans ${entry.label} est visible de toute l’équipe.`}
+        description={
+          entry.privateRaw
+            ? `Le texte que Leon lit dans ${entry.label} reste privé : vous seul le voyez.`
+            : `Ce que Leon lit dans ${entry.label} est visible de toute l’équipe.`
+        }
       >
         <Panel
           key={`${entry.id}-${session}`}

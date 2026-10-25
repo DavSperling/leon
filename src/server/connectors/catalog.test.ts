@@ -23,8 +23,9 @@ function catalogProblems(entry: CatalogEntry, connector: AnyConnector): string[]
   const keyAccepted = entry.keyAccepted ?? true;
   if (keyAccepted && entry.keyHelp.trim() === '') problems.push('aide vide');
   if (!keyAccepted && secrets.length > 0) problems.push('outil sans clé : champ secret');
-  if (!keyAccepted && !connector.oauth) problems.push('ni clé ni bouton');
-  if (connector.oauth && !entry.oauthHelp?.trim()) problems.push('aide du bouton vide');
+  const button = connector.oauth ?? connector.pipedream;
+  if (!keyAccepted && !button) problems.push('ni clé ni bouton');
+  if (button && !entry.oauthHelp?.trim()) problems.push('aide du bouton vide');
   // Les champs demandés avant le clic : dans le schéma, et visibles (jamais un secret).
   for (const name of connector.oauth?.preFields ?? []) {
     const field = entry.fields.find((candidate) => candidate.name === name);
@@ -39,8 +40,8 @@ function catalogProblems(entry: CatalogEntry, connector: AnyConnector): string[]
 describe('listCatalog', () => {
   const items = listCatalog();
 
-  it('rend les 39 outils, une fois chacun', () => {
-    expect(items).toHaveLength(39);
+  it('rend les 42 outils, une fois chacun', () => {
+    expect(items).toHaveLength(42);
     expect(items.map((item) => item.id).sort()).toEqual([...PROVIDER_IDS].sort());
   });
 
@@ -76,6 +77,7 @@ describe('listCatalog', () => {
       'ClickUp',
       'Confluence',
       'GitLab',
+      'Google Drive',
       'Jira',
       'Miro',
       'monday.com',
@@ -96,7 +98,7 @@ describe('listCatalog', () => {
       'Plain',
       'Zendesk',
     ]);
-    expect(labelsOf('mails')).toEqual(['Outlook']);
+    expect(labelsOf('mails')).toEqual(['Gmail', 'Outlook', 'Slack']);
   });
 
   it('marque disponible un outil dont le connecteur existe', () => {

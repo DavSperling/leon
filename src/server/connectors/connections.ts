@@ -52,9 +52,9 @@ export type LoadedConnection = ConnectionRef & {
 };
 
 export type SyncOutcome =
-  | { kind: 'ok'; again: 'soon' | 'later' }
+  | { kind: 'ok'; again: 'soon' | 'later' | 'office' }
   | { kind: 'auth_error'; message: string }
-  | { kind: 'error'; message: string };
+  | { kind: 'error'; message: string; again?: 'office' };
 
 const LAST_ERROR_MAX = 300;
 const SecretsSchema = z.record(z.string(), z.unknown());
@@ -419,9 +419,18 @@ export async function saveAccountKey(
   );
 }
 
+// Le prochain créneau de bureau, heure de Paris : 8 h, 11 h, 14 h ou 17 h, le jour même ou le lendemain.
+// Rien la nuit : une relève par Pipedream est payée à la requête (docs/etudes/pipedream-2026-10).
+const OFFICE_HOURS = sql`(select min(slot) from (
+    select (date_trunc('day', now() at time zone 'Europe/Paris') + day * interval '1 day'
+      + hour * interval '1 hour') at time zone 'Europe/Paris' as slot
+    from generate_series(0, 1) as day, unnest(array[8, 11, 14, 17]) as hour) as slots
+  where slot > now())`;
+
 const NEXT_SYNC = {
   soon: sql`now() + interval '1 minute'`,
   later: sql`now() + interval '15 minutes'`,
+  office: OFFICE_HOURS,
   retry: sql`now() + interval '1 hour'`,
   never: NO_DATE,
 };
@@ -430,7 +439,9 @@ function outcomeColumns(outcome: SyncOutcome) {
   if (outcome.kind === 'ok') {
     return { status: 'active', nextSync: NEXT_SYNC[outcome.again], lastError: null };
   }
-  const nextSync = outcome.kind === 'auth_error' ? NEXT_SYNC.never : NEXT_SYNC.retry;
+  let nextSync = NEXT_SYNC.retry;
+  if (outcome.kind === 'auth_error') nextSync = NEXT_SYNC.never;
+  else if (outcome.again === 'office') nextSync = NEXT_SYNC.office;
   return { status: 'error', nextSync, lastError: cut(outcome.message, LAST_ERROR_MAX) };
 }
 

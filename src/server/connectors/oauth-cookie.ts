@@ -21,6 +21,8 @@ export type OAuthPending = {
   preFields: Record<string, unknown>;
   reconnectId: string | null;
   createdAt: number; // millisecondes depuis 1970
+  // Branchement par Pipedream : l'utilisateur Pipedream créé pour cette connexion.
+  pipedreamUser?: string;
 };
 
 const PendingSchema = z.object({
@@ -33,6 +35,7 @@ const PendingSchema = z.object({
   preFields: z.record(z.string(), z.unknown()),
   reconnectId: z.string().nullable(),
   createdAt: z.number(),
+  pipedreamUser: z.string().optional(),
 });
 
 const sign = (body: string) =>

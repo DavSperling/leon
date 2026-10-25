@@ -28,6 +28,7 @@ import {
   ConnectorHttpError,
   createConnectorHttp,
 } from '@/server/connectors/http';
+import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import { logError } from '@/server/log';
@@ -195,6 +196,13 @@ export async function setPausedAction(id: string, paused: boolean): Promise<{ ok
   return manage(id, (ctx, uuid) => setConnectionPaused(ctx, uuid, paused === true));
 }
 
+// Une connexion Pipedream supprimée : Pipedream oublie aussi le compte et ses jetons.
 export async function deleteConnectionAction(id: string): Promise<{ ok: boolean }> {
-  return manage(id, deleteConnection);
+  return manage(id, async (ctx, uuid) => {
+    const stored = (await listConnections(ctx)).find((view) => view.id === uuid);
+    const deleted = await deleteConnection(ctx, uuid);
+    if (deleted && stored?.config.authMode === 'pipedream')
+      await forgetPipedreamUser(stored.config.externalUserId);
+    return deleted;
+  });
 }

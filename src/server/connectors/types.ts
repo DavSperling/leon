@@ -96,6 +96,9 @@ export type Connector<Config> = {
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string; accountKey?: string }>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;
   oauth?: OAuthSpec; // le bouton ; absent : l'outil ne se branche que par clé
+  // Le bouton passe par Pipedream Connect (pipedream.ts) : `app` est le nom de l'appli chez Pipedream.
+  // La configuration est alors PipedreamConfigSchema, et chaque requête passe par son proxy.
+  pipedream?: { app: string };
 };
 export type AnyConnector = Connector<Record<string, unknown>>;
 

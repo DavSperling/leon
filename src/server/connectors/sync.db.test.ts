@@ -10,8 +10,10 @@ import { collect, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
+import { gmailConnector } from './gmail/connector';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
+import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from './pipedream';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
 import type { AnyConnector, ConnectorItem, SyncPage } from './types';
 
@@ -631,5 +633,105 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect((await readRow(id)).last_error).toBe(
       "Reconnectez GitHub : l'autorisation a été retirée.",
     );
+  });
+});
+
+describe('runConnectorSync : connexion Pipedream', () => {
+  const CONNECT = 'https://api.pipedream.com/v1/connect/proj_essai';
+  const LIST = 'https://gmail.googleapis.com/gmail/v1/users/me/messages';
+  const BATCH = 'https://gmail.googleapis.com/batch/gmail/v1';
+  // Le proxy reçoit l'adresse entière en base64url : seuls les groupes de 3 caractères du début
+  // donnent le même début d'encodage, avec ou sans chaîne de requête.
+  const proxied = (url: string) => {
+    const head = Buffer.from(url.slice(0, url.length - (url.length % 3))).toString('base64url');
+    return new RegExp(`^${CONNECT}/proxy/${head}`);
+  };
+
+  beforeEach(() => {
+    forgetPipedreamToken();
+    vi.stubEnv('PIPEDREAM_PROJECT_ID', 'proj_essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_ID', 'client-essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_SECRET', 'secret-essai-pipedream');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  async function pipedreamConnection(accountKey?: string): Promise<string> {
+    const id = await createConnection(paul, {
+      provider: 'gmail',
+      label: 'david@acme.test',
+      config: {
+        authMode: 'pipedream',
+        externalUserId: 'leon-essai',
+        accountId: 'apn_gm1',
+        ...(accountKey ? { accountKey } : {}),
+      },
+      secretFields: PIPEDREAM_SECRET_FIELDS,
+      since: new Date(Date.now() - 86_400_000),
+    });
+    await makeDue(id);
+    return id;
+  }
+
+  it('lit par le proxy avec le compte chiffré, puis repasse au prochain créneau de bureau', async () => {
+    const id = await pipedreamConnection('david@acme.test');
+    const mail = {
+      id: 'm1',
+      threadId: 't1',
+      labelIds: ['INBOX'],
+      internalDate: String(Date.now() - 3_600_000),
+      payload: {
+        mimeType: 'text/plain',
+        headers: [{ name: 'Subject', value: 'Devis' }],
+        body: { data: Buffer.from('Voici le devis').toString('base64url') },
+      },
+    };
+    const batch =
+      '--b\r\nContent-Type: application/http\r\nContent-ID: <response-item0>\r\n\r\n' +
+      `HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(mail)}\r\n--b--\r\n`;
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: 'https://api.pipedream.com/v1/oauth/token',
+        json: { access_token: 'pd' },
+      },
+      { url: proxied(LIST), json: { messages: [{ id: 'm1', threadId: 't1' }] } },
+      {
+        method: 'POST',
+        url: proxied(BATCH),
+        text: batch,
+        headers: { 'content-type': 'multipart/mixed; boundary=b' },
+      },
+    ]);
+
+    expect(await run(id, gmailConnector, { fetchImpl, sleep: async () => {} })).toBe('ok');
+
+    const listCall = fetchImpl.calls[1];
+    expect(new URL(listCall?.url ?? '').searchParams.get('account_id')).toBe('apn_gm1');
+    expect(listCall?.headers.authorization).toBe('Bearer pd');
+    expect(await sourceCount(id)).toEqual({ total: 1, distinct: 1 });
+    const { rows } = await adminPool.query<{ hour: number }>(
+      `select extract(hour from next_sync_at at time zone 'Europe/Paris')::int as hour
+       from connections where id = $1`,
+      [id],
+    );
+    expect([8, 11, 14, 17]).toContain(rows[0]?.hour);
+  });
+
+  it('un accès retiré chez Google arrête la connexion : « Reconnectez Gmail »', async () => {
+    const id = await pipedreamConnection('david@acme.test');
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: 'https://api.pipedream.com/v1/oauth/token',
+        json: { access_token: 'pd' },
+      },
+      { url: proxied(LIST), status: 403 },
+    ]);
+
+    expect(await run(id, gmailConnector, { fetchImpl, sleep: async () => {} })).toBe('auth_error');
+
+    const row = await readRow(id);
+    expect(row.last_error).toBe("Reconnectez Gmail : l'autorisation a été retirée.");
+    expect(row.next_sync_at).toBeNull();
   });
 });

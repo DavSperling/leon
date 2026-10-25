@@ -44,7 +44,7 @@ export const TOOL_COUNT = Object.keys(PROVIDER_LABELS).length;
 
 export type ToolGroup = { family: ProviderFamily; label: string; tools: ProviderId[] };
 
-/** Les 39 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
+/** Les 42 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
 export const TOOL_GROUPS: ToolGroup[] = PROVIDER_FAMILIES_ORDER.map((family) => ({
   family,
   label: FAMILY_LABELS[family],
@@ -557,7 +557,7 @@ export const SECURITY_FACTS = [
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail Outlook, privée à qui la branche.',
+  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
@@ -619,7 +619,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail Outlook, privée à qui la branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
+    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',

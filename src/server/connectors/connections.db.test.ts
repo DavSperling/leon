@@ -327,6 +327,44 @@ describe('finishSync', () => {
     expect(row.seconds_to_next).toBeLessThanOrEqual(15 * 60);
   });
 
+  it('ok « office » : au prochain créneau de bureau, heure de Paris (8 h, 11 h, 14 h ou 17 h)', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+
+    await finishSync(paul, id, lock, { kind: 'ok', again: 'office' });
+
+    const { rows } = await adminPool.query<{ hour: number; minute: number; ahead: number }>(
+      `select extract(hour from next_sync_at at time zone 'Europe/Paris')::int as hour,
+              extract(minute from next_sync_at at time zone 'Europe/Paris')::int as minute,
+              extract(epoch from next_sync_at - now())::float as ahead
+       from connections where id = $1`,
+      [id],
+    );
+    expect([8, 11, 14, 17]).toContain(rows[0]?.hour);
+    expect(rows[0]?.minute).toBe(0);
+    // Au plus loin : de 17 h au lendemain 8 h (16 h au changement d'heure).
+    expect(rows[0]?.ahead).toBeGreaterThan(0);
+    expect(rows[0]?.ahead).toBeLessThanOrEqual(16 * 3600);
+  });
+
+  it('error « office » : en erreur, réessayée au prochain créneau de bureau', async () => {
+    const id = await seedConnection(paul, { nextSyncAt: DUE });
+    const lock = await claimed(paul, id);
+
+    const outcome = { kind: 'error', message: 'Gmail a répondu 500', again: 'office' } as const;
+    await finishSync(paul, id, lock, outcome);
+
+    const { rows } = await adminPool.query<{ status: string; hour: number; minute: number }>(
+      `select status, extract(hour from next_sync_at at time zone 'Europe/Paris')::int as hour,
+              extract(minute from next_sync_at at time zone 'Europe/Paris')::int as minute
+       from connections where id = $1`,
+      [id],
+    );
+    expect(rows[0]?.status).toBe('error');
+    expect([8, 11, 14, 17]).toContain(rows[0]?.hour);
+    expect(rows[0]?.minute).toBe(0);
+  });
+
   it('auth_error : en erreur, sans échéance, le message est gardé et la réservation libérée', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);

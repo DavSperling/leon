@@ -815,7 +815,7 @@ describe('Pipedream : Gmail par le bouton', () => {
     json: { connect_link_url: 'https://pipedream.com/_static/connect.html?token=ctok' },
   });
   const accounts = (ids: string[]): FakeRoute => ({
-    url: /\/v1\/connect\/proj_essai\/users\/leon-[^/]+\/accounts/,
+    url: /\/v1\/connect\/proj_essai\/accounts\?external_user_id=leon-/,
     json: {
       data: ids.map((id) => ({ id, healthy: true, dead: false, app: { name_slug: 'gmail' } })),
     },

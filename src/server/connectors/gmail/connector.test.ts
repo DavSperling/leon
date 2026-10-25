@@ -155,6 +155,14 @@ describe('gmail : lecture des messages', () => {
       body: { data: latin1 },
     };
     expect(textOf(part)).toBe('Réunion à 14 h');
+
+    // Gmail convertit en UTF-8 sans changer l'en-tête : le texte n'est pas relu en Windows-1252.
+    const converted = {
+      ...part,
+      headers: [{ name: 'Content-Type', value: 'text/plain; charset="Windows-1252"' }],
+      body: { data: Buffer.from('Cécile, compte clôturé').toString('base64url') },
+    };
+    expect(textOf(converted)).toBe('Cécile, compte clôturé');
   });
 
   it('sépare le nom et l’adresse de l’expéditeur', () => {

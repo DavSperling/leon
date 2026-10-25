@@ -161,17 +161,16 @@ const AccountsSchema = z.object({
 
 export type PipedreamAccount = { id: string; scopes: string[] | null };
 
-// Le dernier compte de l'appli branché par cet utilisateur Pipedream, s'il est sain.
+// Le dernier compte de l'appli branché par cet utilisateur Pipedream, s'il est sain. La liste des comptes
+// filtrée par utilisateur : `/users/{id}/accounts` rend un tableau nu et un 404 pour un inconnu (essai du 25/10).
 export async function findAccount(
   env: PipedreamEnv,
   externalUserId: string,
   app: string,
   fetchImpl: Fetch = fetch,
 ): Promise<PipedreamAccount | null> {
-  const query = new URLSearchParams({ app });
-  const path = `/users/${encodeURIComponent(externalUserId)}/accounts?${query}`;
-  const response = await api(env, fetchImpl, path);
-  if (response.status === 404) return null;
+  const query = new URLSearchParams({ external_user_id: externalUserId, app });
+  const response = await api(env, fetchImpl, `/accounts?${query}`);
   if (!response.ok) throw unavailable(response.status);
   const parsed = AccountsSchema.safeParse(await response.json().catch(() => null));
   if (!parsed.success) throw unavailable(response.status);

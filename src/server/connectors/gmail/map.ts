@@ -9,9 +9,14 @@ import type { GmailMessage, GmailPart } from './schemas';
 const headerOf = (part: GmailPart | null | undefined, name: string): string | null =>
   part?.headers?.find((header) => header.name.toLowerCase() === name)?.value ?? null;
 
-// Le corps d'une partie : base64url, dans le jeu de caractères annoncé (UTF-8 par défaut).
+// Le corps d'une partie, en base64url. Gmail le rend déjà en UTF-8 même quand l'en-tête annonce un autre
+// jeu (essai du 25/10 : « Windows-1252 » et des octets UTF-8) ; le jeu annoncé ne sert qu'aux octets qui
+// ne sont pas de l'UTF-8.
 function decode(part: GmailPart): string {
   const bytes = Buffer.from(part.body?.data ?? '', 'base64url');
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {}
   const charset = /charset="?([^";\s]+)"?/i.exec(headerOf(part, 'content-type') ?? '')?.[1];
   try {
     return new TextDecoder(charset ?? 'utf-8').decode(bytes);

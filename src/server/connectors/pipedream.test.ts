@@ -145,7 +145,7 @@ describe('createConnectLink', () => {
 
 describe('findAccount', () => {
   const accounts = (data: unknown[]): FakeRoute => ({
-    url: `${CONNECT}/users/leon-u1/accounts`,
+    url: `${CONNECT}/accounts`,
     json: { data },
   });
 
@@ -188,14 +188,14 @@ describe('findAccount', () => {
       id: 'apn_new',
       scopes: ['s'],
     });
-    expect(new URL(fetchImpl.calls[1]?.url ?? '').searchParams.get('app')).toBe('gmail');
+    const query = new URL(fetchImpl.calls[1]?.url ?? '').searchParams;
+    expect(query.get('external_user_id')).toBe('leon-u1');
+    expect(query.get('app')).toBe('gmail');
   });
 
-  it('rend null sans compte, ou pour un utilisateur inconnu', async () => {
+  it('rend null sans compte', async () => {
     const empty = fakeFetch([token('pd-1'), accounts([])]);
     expect(await findAccount(ENV, 'leon-u1', 'gmail', empty)).toBeNull();
-    const unknown = fakeFetch([{ url: `${CONNECT}/users/leon-u1/accounts`, status: 404 }]);
-    expect(await findAccount(ENV, 'leon-u1', 'gmail', unknown)).toBeNull();
   });
 });
 

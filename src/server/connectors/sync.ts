@@ -13,10 +13,11 @@ import {
   saveSyncProgress,
   UnreadableSecretError,
 } from './connections';
-import { ConnectorAuthError, ConnectorHttpError, createConnectorHttp } from './http';
+import { ConnectorAuthError, ConnectorHttpError } from './http';
 import { ingestConnectorItems, removeConnectorItems } from './ingest-items';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
+import { connectorHttp } from './pipedream';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
 import type { AnyConnector } from './types';
 
@@ -60,8 +61,9 @@ function prepare(connection: LoadedConnection, deps: SyncDeps): Ready | { messag
 
 // Une page après l'autre : ingestion, puis curseur. Une reprise après plantage refait au pire la
 // dernière page, l'ingestion ne crée aucun doublon. Renvoie « soon » quand la limite est atteinte,
-// « lost » quand une autre relève a repris la réservation (le passage s'arrête là).
-type Again = 'soon' | 'later' | 'lost';
+// « lost » quand une autre relève a repris la réservation (le passage s'arrête là). Une connexion
+// Pipedream, payée à la requête, repasse aux heures de bureau (« office ») plutôt que tous les quarts d'heure.
+type Again = 'soon' | 'later' | 'office' | 'lost';
 
 async function readPages(
   ctx: TenantContext,
@@ -70,13 +72,7 @@ async function readPages(
   ready: Ready,
 ): Promise<Again> {
   const { connector, config } = ready;
-  const http = createConnectorHttp({
-    provider: connection.provider,
-    hosts: connector.hosts(config),
-    minIntervalMs: connector.minIntervalMs,
-    fetchImpl: deps.fetchImpl,
-    sleep: deps.sleep,
-  });
+  const http = connectorHttp(connection.provider, connector, config, deps);
   const state = { cursor: connection.cursor, since: connection.since };
   let read = 0;
   for await (const page of connector.sync(config, state, http)) {
@@ -89,10 +85,13 @@ async function readPages(
     read += page.items.length;
     if (read >= SYNC_ITEMS_MAX) return 'soon';
   }
-  return 'later';
+  return connector.pipedream ? 'office' : 'later';
 }
 
 const isOAuth = (connection: LoadedConnection) => connection.config.authMode === 'oauth';
+// Branchée par le bouton, chez l'éditeur ou par Pipedream : il faut reconnecter, pas changer de clé.
+const isButton = (connection: LoadedConnection) =>
+  isOAuth(connection) || connection.config.authMode === 'pipedream';
 
 // Avant le passage : sur une connexion OAuth, renouvelle l'accès s'il expire bientôt.
 async function withFreshTokens(
@@ -142,16 +141,10 @@ async function rememberAccountKey(
   deps: SyncDeps,
   ready: Ready,
 ): Promise<void> {
-  if (!isOAuth(connection) || 'accountKey' in connection.config) return;
+  if (!isButton(connection) || 'accountKey' in connection.config) return;
   const { connector, config } = ready;
   try {
-    const http = createConnectorHttp({
-      provider: connection.provider,
-      hosts: connector.hosts(config),
-      minIntervalMs: connector.minIntervalMs,
-      fetchImpl: deps.fetchImpl,
-      sleep: deps.sleep,
-    });
+    const http = connectorHttp(connection.provider, connector, config, deps);
     const { accountKey } = await connector.verify(config, http);
     await saveAccountKey(ctx, connection.id, connection.lockedAt, accountKey ?? null);
   } catch (error) {
@@ -165,7 +158,7 @@ async function rememberAccountKey(
 function authMessage(connection: LoadedConnection, error: ConnectorAuthError | OAuthRefusedError) {
   const label = PROVIDER_LABELS[connection.provider];
   if (error instanceof OAuthRefusedError) return `Reconnectez ${label} : l'autorisation a expiré.`;
-  if (isOAuth(connection)) return `Reconnectez ${label} : l'autorisation a été retirée.`;
+  if (isButton(connection)) return `Reconnectez ${label} : l'autorisation a été retirée.`;
   return `Clé refusée par ${label} : vérifiez-la ou remplacez-la.`;
 }
 
@@ -186,7 +179,9 @@ async function recordFailure(
     return 'auth_error';
   }
   const message = error instanceof ConnectorHttpError ? error.message : safeErrorSummary(error);
-  await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'error', message });
+  // Par Pipedream, chaque essai est payé : l'erreur qui dure n'est pas réessayée toutes les heures.
+  const again = connection.config.authMode === 'pipedream' ? { again: 'office' as const } : {};
+  await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'error', message, ...again });
   return 'error';
 }
 

@@ -4,7 +4,7 @@ import type { AnyConnector, SyncPage } from '@/server/connectors/types';
 import { callProblems, loadVendorSpec, type VendorSpec } from './contracts/vendor-spec';
 
 export type FakeRoute = {
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'DELETE';
   // Une chaîne vaut l'adresse complète ou l'adresse sans sa chaîne de requête.
   url: string | RegExp;
   status?: number;
@@ -13,7 +13,8 @@ export type FakeRoute = {
   headers?: Record<string, string>;
 };
 
-// Les noms d'en-tête sont en minuscules ; body est le JSON (ou le formulaire) envoyé, déjà relu.
+// Les noms d'en-tête sont en minuscules ; body est le JSON (ou le formulaire) envoyé, déjà relu, ou le
+// texte d'un corps multipart.
 export type FakeCall = {
   method: string;
   url: string;
@@ -30,6 +31,7 @@ function parseBody(raw: string, contentType: string | undefined): unknown {
   if (contentType?.startsWith('application/x-www-form-urlencoded')) {
     return Object.fromEntries(new URLSearchParams(raw));
   }
+  if (contentType?.startsWith('multipart/')) return raw; // le lot de Gmail, gardé tel quel
   return JSON.parse(raw);
 }
 
@@ -42,8 +44,10 @@ function matches(route: FakeRoute, call: FakeCall): boolean {
 function respond(route: FakeRoute): Response {
   const headers = new Headers(route.headers);
   if (route.json !== undefined) headers.set('content-type', 'application/json');
+  const status = route.status ?? 200;
   const body = route.json !== undefined ? JSON.stringify(route.json) : (route.text ?? '');
-  return new Response(body, { status: route.status ?? 200, headers });
+  // 204 et 304 n'ont jamais de corps : Response lève si on lui en donne un, même vide.
+  return new Response(status === 204 || status === 304 ? null : body, { status, headers });
 }
 
 // Une route sert une fois, puis laisse la place à la suivante qui correspond.

@@ -154,7 +154,7 @@ export function Connexions({
       <div key="connexions">
         <PageHeader
           title="Connexions"
-          subtitle="Ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, qui reste privé comme une conversation."
+          subtitle="Ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, de Google Drive et de Slack, qui reste privé comme une conversation."
         />
         <ReturnNotice notice={notice} consentUrl={consentUrl} />
         {!canConnect && (

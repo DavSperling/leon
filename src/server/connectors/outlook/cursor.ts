@@ -4,7 +4,7 @@ import { z } from 'zod';
 // Une position est l'instant du dernier élément lu et les identifiants déjà lus à cet instant :
 // Graph date le courrier à la seconde, et « ge » (plus récent ou égal) rend l'élément du curseur.
 
-const MarkSchema = z.object({ at: z.iso.datetime(), seen: z.array(z.string()) });
+export const MarkSchema = z.object({ at: z.iso.datetime(), seen: z.array(z.string()) });
 const CursorSchema = z.object({
   inbox: MarkSchema.nullable(),
   sent: MarkSchema.nullable(),

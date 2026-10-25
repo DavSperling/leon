@@ -21,8 +21,10 @@ const OAUTH = new Set<ProviderId>([
   'basecamp',
   'clickup',
   'confluence',
+  'drive',
   'github',
   'gitlab',
+  'gmail',
   'helpscout',
   'hubspot',
   'jira',
@@ -32,6 +34,7 @@ const OAUTH = new Set<ProviderId>([
   'notion',
   'outlook',
   'productboard',
+  'slack',
 ]);
 
 const FAMILY_OF = new Map<ProviderId, ProviderFamily>(

@@ -115,8 +115,9 @@ export function panelMode(item: Pick<CatalogItem, 'oauthReady' | 'keyAccepted'>)
   return item.keyAccepted ? 'key' : 'none';
 }
 
+// Branchée par le bouton, chez l'éditeur ou par Pipedream.
 export const canReconnect = (view: Pick<ConnectionView, 'config'>): boolean =>
-  view.config.authMode === 'oauth';
+  view.config.authMode === 'oauth' || view.config.authMode === 'pipedream';
 
 // « Synchroniser maintenant » : ni en pause, ni arrêtée (le créateur n'est plus membre, l'action refuse).
 export const canSyncNow = (view: Pick<ConnectionView, 'status' | 'creatorLeft'>): boolean =>

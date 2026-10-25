@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { type Context, Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
@@ -38,10 +38,20 @@ import {
   sealPending,
 } from './oauth-cookie';
 import { oauthClient } from './oauth-env';
+import {
+  connectorHttp,
+  createConnectLink,
+  findAccount,
+  forgetPipedreamUser,
+  PIPEDREAM_SECRET_FIELDS,
+  PipedreamConfigSchema,
+  type PipedreamEnv,
+  pipedreamEnv,
+} from './pipedream';
 import type { AnyConnector, OAuthSpec } from './types';
 
-// Les deux routes du bouton « Se connecter avec… » : `POST /:outil/debut` envoie chez l'éditeur,
-// `GET /:appli/retour` termine le branchement. Rien de ce que dit l'éditeur ne finit dans une
+// Les routes du bouton « Se connecter avec… » : `POST /:outil/debut` envoie chez l'éditeur (ou chez
+// Pipedream), `GET /:appli/retour` termine le branchement (`GET /pipedream/retour` pour Pipedream). Rien de ce que dit l'éditeur ne finit dans une
 // adresse, un message ou un journal : seulement un code de la table ci-dessous.
 
 export type OAuthRoutesDeps = {
@@ -109,8 +119,18 @@ function preFieldsFromForm(
 
 type Start = { preFields: Record<string, unknown>; reconnectId: string | null };
 
-// « Reconnecter » : la connexion doit exister, être de cet outil, avoir été branchée par l'utilisateur
-// (un administrateur y mettrait son propre compte), et ses champs ouverts servent de champs avant le clic. Sinon les champs viennent du formulaire. null : champs refusés.
+// La connexion à reconnecter : elle doit exister, être de cet outil et avoir été branchée par
+// l'utilisateur (un administrateur y mettrait son propre compte).
+async function ownConnection(ctx: TenantContext, provider: ProviderId, value: string) {
+  const id = z.uuid().safeParse(value);
+  const stored = id.success
+    ? (await listConnections(ctx)).find((view) => view.id === id.data && view.provider === provider)
+    : undefined;
+  return stored?.isCreator ? stored : null;
+}
+
+// « Reconnecter » : les champs ouverts de la connexion servent de champs avant le clic. Sinon les
+// champs viennent du formulaire. null : champs refusés.
 async function startFields(
   ctx: TenantContext,
   provider: ProviderId,
@@ -122,11 +142,8 @@ async function startFields(
     const preFields = preFieldsFromForm(provider, connector, spec, values);
     return preFields && { preFields, reconnectId: null };
   }
-  const id = z.uuid().safeParse(values.reconnect);
-  const stored = id.success
-    ? (await listConnections(ctx)).find((view) => view.id === id.data && view.provider === provider)
-    : undefined;
-  if (!stored?.isCreator) return 'absent';
+  const stored = await ownConnection(ctx, provider, values.reconnect);
+  if (!stored) return 'absent';
   const kept = spec.preFields.filter((name) => name in stored.config);
   return {
     preFields: Object.fromEntries(kept.map((name) => [name, stored.config[name]])),
@@ -134,9 +151,20 @@ async function startFields(
   };
 }
 
+function setPending(c: Context, pending: OAuthPending): void {
+  setCookie(c, OAUTH_COOKIE, sealPending(pending), {
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: new URL(env.BETTER_AUTH_URL).protocol === 'https:',
+    path: OAUTH_COOKIE_PATH,
+    maxAge: OAUTH_COOKIE_MAX_AGE,
+  });
+}
+
 async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response> {
   const provider = asProviderId(c.req.param('provider'));
   const connector = provider && deps.getConnector(provider);
+  if (provider && connector?.pipedream) return pipedreamStart(c, deps, provider, connector);
   const spec = connector ? connector.oauth : undefined;
   const client = spec && oauthClient(spec.appKey);
   if (!provider || !connector || !spec || !client) return c.json(NOT_FOUND, 404);
@@ -162,14 +190,66 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
     ...start,
     createdAt: (deps.now ?? Date.now)(),
   };
-  setCookie(c, OAUTH_COOKIE, sealPending(pending), {
-    httpOnly: true,
-    sameSite: 'Lax',
-    secure: new URL(env.BETTER_AUTH_URL).protocol === 'https:',
-    path: OAUTH_COOKIE_PATH,
-    maxAge: OAUTH_COOKIE_MAX_AGE,
-  });
+  setPending(c, pending);
   return c.redirect(authorizeUrl(spec, client, pending), 303);
+}
+
+// Pipedream : un utilisateur Pipedream neuf par branchement (et par reconnexion), un lien de connexion
+// limité à l'appli de l'outil, puis le retour sur `/pipedream/retour` avec le `state` du cookie.
+async function pipedreamStart(
+  c: Context,
+  deps: OAuthRoutesDeps,
+  provider: ProviderId,
+  connector: AnyConnector,
+): Promise<Response> {
+  const pd = pipedreamEnv();
+  const app = connector.pipedream?.app;
+  if (!pd || !app) return c.json(NOT_FOUND, 404);
+  const ctx = await sessionContext(c);
+  if (!ctx) return c.redirect('/connexion', 303);
+  if (!connectorsKey())
+    return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
+
+  const values = stringValues(await c.req.parseBody());
+  const since = z.enum(SINCE_VALUES).safeParse(values.since || DEFAULT_SINCE);
+  const stored = values.reconnect ? await ownConnection(ctx, provider, values.reconnect) : null;
+  if (values.reconnect && !stored) return c.json(NOT_FOUND, 404);
+  if (!since.success) return c.redirect(connexions({ erreur: 'champs', outil: provider }), 303);
+
+  const pending: OAuthPending = {
+    provider,
+    userId: ctx.userId,
+    tenantId: ctx.tenantId,
+    state: randomBytes(24).toString('base64url'),
+    verifier: null,
+    since: since.data,
+    preFields: {},
+    reconnectId: stored?.id ?? null,
+    createdAt: (deps.now ?? Date.now)(),
+    pipedreamUser: `leon-${randomUUID()}`,
+  };
+  const success = new URL(`${OAUTH_COOKIE_PATH}/pipedream/retour`, env.BETTER_AUTH_URL);
+  success.searchParams.set('state', pending.state);
+  const failure = new URL(success);
+  failure.searchParams.set('error', 'access_denied');
+  let link: string;
+  try {
+    link = await createConnectLink(
+      pd,
+      {
+        externalUserId: pending.pipedreamUser ?? '',
+        app,
+        successUri: success.toString(),
+        errorUri: failure.toString(),
+      },
+      deps.fetchImpl,
+    );
+  } catch (error) {
+    logError('connector.oauth_failed', error, { provider });
+    return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
+  }
+  setPending(c, pending);
+  return c.redirect(link, 303);
 }
 
 // L'échange du code, puis la configuration de l'outil (jetons compris), validée par son schéma.
@@ -299,6 +379,57 @@ async function connect(
   return (await spec.nextStep?.(config, http).catch(() => null)) ?? null;
 }
 
+// Le compte branché chez Pipedream, vérifié auprès de l'outil, puis la connexion créée (ou reconnectée,
+// avec le même compte : l'ancien utilisateur Pipedream est alors oublié).
+async function connectPipedream(
+  ctx: TenantContext,
+  deps: OAuthRoutesDeps,
+  pd: PipedreamEnv,
+  connector: AnyConnector,
+  pending: OAuthPending,
+  externalUserId: string,
+): Promise<void> {
+  const { provider } = pending;
+  const account = await findAccount(
+    pd,
+    externalUserId,
+    connector.pipedream?.app ?? '',
+    deps.fetchImpl,
+  );
+  if (!account) throw new ConnectorAuthError(PROVIDER_LABELS[provider]);
+  const parsed = PipedreamConfigSchema.safeParse({
+    authMode: 'pipedream',
+    externalUserId,
+    accountId: account.id,
+  });
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration refusée');
+  const config = parsed.data;
+  const http = connectorHttp(provider, connector, config, { fetchImpl: deps.fetchImpl });
+  const verified = await verifyConfig(connector, config, http);
+  const { accountKey } = verified;
+  const kept = accountKey === undefined ? config : { ...config, accountKey };
+  const secretFields = [...PIPEDREAM_SECRET_FIELDS, ...connector.secretFields];
+  if (pending.reconnectId) {
+    const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
+    if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!sameAccount(stored, provider, verified, config, {})) throw new OtherAccount();
+    // Les champs ouverts sont réécrits en entier, comme après un « Reconnecter » OAuth.
+    const options = { reconnect: true } as const;
+    const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
+    if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (stored.config.externalUserId !== externalUserId)
+      await forgetPipedreamUser(stored.config.externalUserId, deps.fetchImpl);
+    return;
+  }
+  await createConnection(ctx, {
+    provider,
+    label: accountLabel(verified.account, PROVIDER_LABELS[provider]),
+    config: kept,
+    secretFields,
+    since: new Date((deps.now ?? Date.now)() - Number(pending.since) * DAY_MS),
+  });
+}
+
 function failureCode(error: unknown, provider: ProviderId): ReturnCode {
   logError('connector.oauth_failed', error, { provider });
   if (error instanceof OAuthRefusedError) return error.adminConsent ? 'admin' : 'refuse';
@@ -357,12 +488,50 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
   return c.redirect(connexions(params), 302);
 }
 
+// Le retour de Pipedream : le cookie, la même session et le même `state`, puis le compte branché.
+async function finishPipedream(
+  c: Context,
+  deps: OAuthRoutesDeps,
+  pending: OAuthPending | null,
+): Promise<ReturnCode | { next: null }> {
+  const connector = pending ? deps.getConnector(pending.provider) : null;
+  const externalUserId = pending?.pipedreamUser;
+  if (!pending || !connector?.pipedream || !externalUserId) return 'expire';
+  const ctx = await sessionContext(c);
+  const sameSession = ctx?.userId === pending.userId && ctx.tenantId === pending.tenantId;
+  const state = c.req.query('state');
+  if (!ctx || !sameSession || !state || !sameText(state, pending.state)) return 'expire';
+  if (c.req.query('error')) return 'annule';
+  const pd = pipedreamEnv();
+  if (!pd || !connectorsKey()) return 'indisponible';
+  try {
+    await connectPipedream(ctx, deps, pd, connector, pending, externalUserId);
+    return { next: null };
+  } catch (failure) {
+    return failureCode(failure, pending.provider);
+  }
+}
+
+async function pipedreamReturnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response> {
+  const cookie = getCookie(c, OAUTH_COOKIE);
+  deleteCookie(c, OAUTH_COOKIE, { path: OAUTH_COOKIE_PATH });
+  const pending = cookie ? openPending(cookie, (deps.now ?? Date.now)()) : null;
+  const outcome = await finishPipedream(c, deps, pending);
+  const provider = pending?.provider ?? null;
+  if (typeof outcome === 'object') return c.redirect(connexions({ branche: provider ?? '' }), 302);
+  // Pas branché : l'utilisateur Pipedream de cet essai ne sert plus.
+  await forgetPipedreamUser(pending?.pipedreamUser, deps.fetchImpl);
+  return c.redirect(connexions({ erreur: outcome, ...(provider ? { outil: provider } : {}) }), 302);
+}
+
 export function createOAuthRoutes(deps: OAuthRoutesDeps): Hono {
   const routes = new Hono();
   // Un lien piégé ne doit pas brancher un outil à l'insu de l'utilisateur : seul un formulaire
   // posté depuis Leon démarre le déroulé.
   const sameOrigin = csrf({ origin: new URL(env.BETTER_AUTH_URL).origin });
   routes.post('/:provider/debut', sameOrigin, (c) => startHandler(c, deps));
+  // Avant `/:app/retour`, qui la prendrait pour une appli OAuth.
+  routes.get('/pipedream/retour', (c) => pipedreamReturnHandler(c, deps));
   routes.get('/:app/retour', (c) => returnHandler(c, deps));
   return routes;
 }

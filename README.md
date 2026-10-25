@@ -105,7 +105,7 @@ pnpm dev                              # puis la page « Connexions » de la barr
 - **Aucun modèle à l'entrée** : chaque élément est gardé tel quel, sans clé Anthropic, et son indexation est mise en file. Le worker de l'indexation (démarré avec l'application, sans condition sur la clé Anthropic) découpe les tours en passages pour la recherche ; si `LEON_EMBEDDINGS` règle un fournisseur de vecteurs, il en fabrique aussi, et une panne du fournisseur ne retarde jamais le plein texte. Un tic par minute reprend les éléments restés en attente plus de 5 minutes et les vecteurs manquants. `LEON_EMBEDDINGS=voyage`, `mistral` ou `bge-m3` empêche le démarrage tant que leur adaptateur n'est pas livré.
 - **Modèle d'IA** : la réponse en tête, la discussion et le point du matin passent par `ANTHROPIC_API_KEY` ; sans clé, la recherche par le texte marche et ces trois fonctions disent qu'aucun modèle n'est branché. Le modèle de chaque étape se règle par `LEON_MODEL_REPONSE` (Haiku 5.5 par défaut), `LEON_MODEL_DISCUSSION` et `LEON_MODEL_POINT` (Sonnet 5.5 par défaut), parmi `claude-haiku-5-5`, `claude-sonnet-5-5` et `claude-opus-5-5` : un autre nom empêche le démarrage, parce que chaque appel enverrait au modèle un réglage (repli des refus, effort) que son API peut refuser. `LEON_LLM=factice` branche un faux modèle, sans réseau ni clé, pour voir l'interface en démonstration ; l'application refuse de démarrer en production avec ce réglage.
 
-Les 39 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a branché avec une vraie clé ; sinon le connecteur est testé sur des réponses d'exemple tirées de la doc officielle, rien de plus.
+Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a branché avec une vraie clé ; sinon le connecteur est testé sur des réponses d'exemple tirées de la doc officielle, rien de plus.
 
 | Outil | Famille | Essayé en réel |
 | --- | --- | --- |
@@ -126,6 +126,7 @@ Les 39 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | ClickUp | Projet | non |
 | Confluence | Projet | non |
 | GitLab | Projet | non |
+| Google Drive | Projet | non |
 | Jira | Projet | non |
 | Miro | Projet | non |
 | monday.com | Projet | non |
@@ -147,7 +148,9 @@ Les 39 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | Missive | Support | non |
 | Plain | Support | non |
 | Zendesk | Support | non |
-| Outlook | Mails et agenda | non |
+| Gmail | Mails, chat et agenda | non |
+| Outlook | Mails, chat et agenda | non |
+| Slack | Mails, chat et agenda | non |
 
 Pour chaque connecteur, l'en-tête de `src/server/connectors/<outil>/connector.ts` note les pages de doc lues et ce qui n'a pas pu être vérifié. Les conditions d'utilisation de Fathom, tl;dv, ClickUp, Front, monday.com et Sentry sont à faire confirmer par écrit avant tout client. Les instances hébergées chez le client (GitLab, Jira Data Center, Mattermost) ne sont pas prises en charge : l'adresse de chaque outil est fixée dans le connecteur.
 
@@ -155,13 +158,14 @@ La vérification pas à pas (GitHub, Notion, Linear, outil de réunion) est dans
 
 ## Brancher par bouton
 
-Pour les outils dont l'éditeur le permet sans vérification de sa part, le panneau de la page Connexions propose « Se connecter avec <outil> » en premier : Leon envoie chez l'éditeur, qui demande d'autoriser la lecture, puis la connexion est créée au retour. Coller une clé reste possible en secours (« ou coller une clé ») pour les outils qui en acceptent une ; Basecamp, Miro, Productboard et Outlook ne se branchent que par bouton. Les réglages qui ne sont pas des secrets (les dépôts GitHub, la période à reprendre) se choisissent avant le clic.
+Pour les outils dont l'éditeur le permet sans vérification de sa part, le panneau de la page Connexions propose « Se connecter avec <outil> » en premier : Leon envoie chez l'éditeur, qui demande d'autoriser la lecture, puis la connexion est créée au retour. Coller une clé reste possible en secours (« ou coller une clé ») pour les outils qui en acceptent une ; Basecamp, Miro, Productboard, Outlook, Gmail, Google Drive et Slack ne se branchent que par bouton. Les réglages qui ne sont pas des secrets (les dépôts GitHub, la période à reprendre) se choisissent avant le clic.
 
 - **Une appli par éditeur, créée une fois** par Amos ou David dans la console développeur de l'éditeur. Le guide [`docs/guides/applis-oauth.md`](docs/guides/applis-oauth.md) dit, éditeur par éditeur, où la créer, l'adresse de retour exacte, les droits à cocher et ce qu'il faut activer pour que d'autres comptes s'en servent. L'adresse de retour est `<BETTER_AUTH_URL>/api/v1/connexions/oauth/<appli>/retour`, soit `http://localhost:3000/…` en local ; `<appli>` est `atlassian` pour Jira et Confluence, l'identifiant de l'outil pour les autres.
 - **Deux variables par appli**, dans `.env.local` : `LEON_OAUTH_<APPLI>_ID` et `LEON_OAUTH_<APPLI>_SECRET` (`ATLASSIAN` pour Jira et Confluence), listées vides dans `.env.example`. Une paire vide ou incomplète désactive le bouton de l'outil (la console l'écrit au démarrage) : son panneau garde le formulaire de clé, ou dit que l'appli n'est pas encore configurée sur ce serveur. Le secret d'appli ne quitte jamais le serveur.
 - **Le déroulé** : un cookie signé de 10 minutes garde l'utilisateur, l'outil, le `state` et le vérificateur PKCE. Un refus chez l'éditeur, un lien trop vieux ou un cookie absent ramènent sur Connexions avec un message simple, sans rien créer.
 - **Les jetons** sont chiffrés comme une clé et renouvelés avant chaque passage quand ils expirent bientôt. Un renouvellement refusé met la connexion en erreur (« Reconnectez <outil> ») sans nouvelle échéance, et le panneau propose « Reconnecter », qui refait le déroulé sur la même connexion.
 - **Les droits** demandés sont la lecture seule, les plus étroits que l'éditeur propose. Outlook demande en plus l'accord, une fois, de l'administrateur Microsoft de l'entreprise (le panneau donne le lien).
+- **Gmail, Google Drive et Slack passent par Pipedream Connect** : l'appli OAuth est celle de Pipedream, déjà validée par Google et Slack, et chaque requête passe par son proxy, qui y ajoute l'accès du compte (les jetons restent chez Pipedream). Il faut `PIPEDREAM_PROJECT_ID`, `PIPEDREAM_CLIENT_ID`, `PIPEDREAM_CLIENT_SECRET` et `PIPEDREAM_ENVIRONMENT` dans `.env.local`. Chaque requête coûte un crédit Pipedream : ces connexions se relèvent à 8 h, 11 h, 14 h et 17 h (heure de Paris), jamais la nuit, et Gmail lit ses courriers par lots de 20. Les droits accordés sont ceux de Pipedream, plus larges que ce que Leon lit (Gmail : lire, écrire et envoyer ; Drive : tout le Drive). Supprimer la connexion supprime aussi le compte chez Pipedream. Étude et coûts : [`docs/etudes/pipedream-2026-10`](docs/etudes/pipedream-2026-10).
 
 La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'éditeur, « Reconnecter ») est dans [`docs/guides/connecteurs-verification.md`](docs/guides/connecteurs-verification.md).
 

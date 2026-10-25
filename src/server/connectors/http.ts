@@ -14,6 +14,7 @@ export type HttpRequest = {
   query?: Record<string, string | number | boolean | string[] | undefined>;
   body?: unknown; // envoyé en JSON
   form?: Record<string, string>; // envoyé en application/x-www-form-urlencoded ; jamais avec body
+  raw?: { type: string; text: string }; // envoyé tel quel (le lot multipart de Gmail) ; seul corps
   // Ex. [400] : le corps est validé par le schéma et rendu au connecteur au lieu de lever.
   acceptStatus?: number[];
 };
@@ -22,6 +23,8 @@ export type ConnectorHttp = {
   json<T>(request: HttpRequest, schema: z.ZodType<T>): Promise<T>;
   // Pagination par l'en-tête Link.
   page<T>(request: HttpRequest, schema: z.ZodType<T>): Promise<{ data: T; nextUrl: string | null }>;
+  // Une réponse qui n'est pas du JSON (export de Drive, lot de Gmail), avec son type et son code.
+  text(request: HttpRequest): Promise<{ text: string; type: string | null; status: number }>;
 };
 
 // Message fixe : jamais celui de l'outil.
@@ -44,6 +47,15 @@ export class ConnectorHttpError extends Error {
     super(message);
   }
 }
+
+// Une réponse au-delà de BODY_MAX_BYTES : l'appelant peut laisser de côté ce qu'il demandait.
+export class ResponseTooBigError extends ConnectorHttpError {
+  override name = 'ResponseTooBigError';
+}
+
+// Google signale ses limites (userRateLimitExceeded, rateLimitExceeded, dailyLimitExceeded) par un 403
+// sans Retry-After : seule la raison, dans le corps, les distingue d'un accès retiré.
+export const GOOGLE_RATE_LIMIT = /ratelimitexceeded|dailylimitexceeded/i;
 
 // Connecté, mais l'outil n'ouvre rien à Leon (appli installée sur aucun dépôt, aucune base, aucun
 // projet) : l'utilisateur doit choisir chez l'outil ce que Leon peut lire.
@@ -80,16 +92,17 @@ function waitBeforeRetry(headers: Headers, number: number): number {
   return Math.min(waitMs, WAIT_MAX_MS);
 }
 
-// GitHub signale une limite dépassée par un 403 qui porte Retry-After ou x-ratelimit-remaining: 0.
-function isRateLimit(status: number, headers: Headers): boolean {
+// GitHub signale une limite dépassée par un 403 qui porte Retry-After ou x-ratelimit-remaining: 0,
+// Google par la raison écrite dans le corps.
+function isRateLimit(status: number, headers: Headers, body: string): boolean {
   if (status === 429) return true;
   const signal = headers.has('retry-after') || headers.get('x-ratelimit-remaining') === '0';
-  return status === 403 && signal;
+  return status === 403 && (signal || GOOGLE_RATE_LIMIT.test(body));
 }
 
 // Lit le flux et s'arrête dès que la limite est dépassée.
 async function readBody(response: Response): Promise<string> {
-  const tooBig = new ConnectorHttpError(response.status, 'Réponse trop volumineuse');
+  const tooBig = new ResponseTooBigError(response.status, 'Réponse trop volumineuse');
   if (Number(response.headers.get('content-length')) > BODY_MAX_BYTES) throw tooBig;
   const reader = response.body?.getReader();
   if (!reader) return '';
@@ -174,6 +187,7 @@ export function createConnectorHttp(input: {
       if (request.form !== undefined) {
         headers.set('content-type', 'application/x-www-form-urlencoded');
       }
+      if (request.raw !== undefined) headers.set('content-type', request.raw.type);
       for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value);
       return headers;
     } catch {
@@ -182,10 +196,10 @@ export function createConnectorHttp(input: {
   }
 
   function buildBody(request: HttpRequest): string | undefined {
-    if (request.form !== undefined) {
-      if (request.body !== undefined) throw new ConnectorHttpError(null, 'Requête invalide');
-      return new URLSearchParams(request.form).toString();
-    }
+    const given = [request.body, request.form, request.raw].filter((part) => part !== undefined);
+    if (given.length > 1) throw new ConnectorHttpError(null, 'Requête invalide');
+    if (request.raw !== undefined) return request.raw.text;
+    if (request.form !== undefined) return new URLSearchParams(request.form).toString();
     if (request.body === undefined) return undefined;
     try {
       return JSON.stringify(request.body);
@@ -195,13 +209,13 @@ export function createConnectorHttp(input: {
   }
 
   // Les codes d'erreur : reprise (limite de débit, 5xx), clé refusée, ou erreur définitive.
-  function failure(status: number, headers: Headers, number: number): Attempt {
+  function failure(status: number, headers: Headers, number: number, body: string): Attempt {
     const retry = (message: string): Attempt => ({
       kind: 'retry',
       waitMs: waitBeforeRetry(headers, number),
       failure: new ConnectorHttpError(status, message),
     });
-    if (isRateLimit(status, headers)) return retry(`Limite de requêtes de ${label} atteinte`);
+    if (isRateLimit(status, headers, body)) return retry(`Limite de requêtes de ${label} atteinte`);
     if (status >= 500) return retry(`${label} a répondu ${status}`);
     if (status === 401 || status === 403) throw new ConnectorAuthError(label, status);
     throw new ConnectorHttpError(status, `${label} a répondu ${status}`);
@@ -229,8 +243,10 @@ export function createConnectorHttp(input: {
       });
       const { status } = response;
       if (!request.acceptStatus?.includes(status) && !(status >= 200 && status < 300)) {
-        await response.body?.cancel().catch(() => {});
-        return failure(status, response.headers, number);
+        // Le corps d'un 403 dit s'il s'agit d'une limite (Google) ; les autres ne sont pas lus.
+        const body = status === 403 ? await readBody(response).catch(() => '') : '';
+        if (status !== 403) await response.body?.cancel().catch(() => {});
+        return failure(status, response.headers, number, body);
       }
       return {
         kind: 'done',
@@ -242,28 +258,29 @@ export function createConnectorHttp(input: {
     }
   }
 
-  async function send<T>(request: HttpRequest, schema: z.ZodType<T>) {
+  async function receive(request: HttpRequest): Promise<Answer & { url: string }> {
     // Une requête inutilisable échoue ici, avant toute reprise.
     const url = buildUrl(request);
     const prepared = { url, headers: buildHeaders(request), body: buildBody(request) };
     for (let number = 0; ; number++) {
       const result = await attempt(request, prepared, number);
-      if (result.kind === 'retry') {
-        if (number >= RETRIES_MAX) throw result.failure;
-        await sleep(result.waitMs);
-        continue;
-      }
-      const { status, headers, text } = result.answer;
-      let value: unknown;
-      try {
-        value = JSON.parse(text);
-      } catch {
-        throw new ConnectorHttpError(status, 'Réponse illisible');
-      }
-      const parsed = schema.safeParse(value);
-      if (!parsed.success) throw new ConnectorHttpError(status, 'Réponse inattendue');
-      return { data: parsed.data, headers, url, status };
+      if (result.kind === 'done') return { ...result.answer, url };
+      if (number >= RETRIES_MAX) throw result.failure;
+      await sleep(result.waitMs);
     }
+  }
+
+  async function send<T>(request: HttpRequest, schema: z.ZodType<T>) {
+    const { status, headers, text, url } = await receive(request);
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch {
+      throw new ConnectorHttpError(status, 'Réponse illisible');
+    }
+    const parsed = schema.safeParse(value);
+    if (!parsed.success) throw new ConnectorHttpError(status, 'Réponse inattendue');
+    return { data: parsed.data, headers, url, status };
   }
 
   return {
@@ -273,6 +290,10 @@ export function createConnectorHttp(input: {
     async page(request, schema) {
       const { data, headers, url, status } = await send(request, schema);
       return { data, nextUrl: nextLink(headers.get('link'), url, status) };
+    },
+    async text(request) {
+      const { text, headers, status } = await receive(request);
+      return { text, type: headers.get('content-type'), status };
     },
   };
 }

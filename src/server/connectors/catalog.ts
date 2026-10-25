@@ -15,6 +15,7 @@ import { clickupCatalog } from './clickup/catalog';
 import { closeCatalog } from './close/catalog';
 import { confluenceCatalog } from './confluence/catalog';
 import { crispCatalog } from './crisp/catalog';
+import { driveCatalog } from './drive/catalog';
 import { fathomCatalog } from './fathom/catalog';
 import { firefliesCatalog } from './fireflies/catalog';
 import { folkCatalog } from './folk/catalog';
@@ -22,6 +23,7 @@ import { freshdeskCatalog } from './freshdesk/catalog';
 import { frontCatalog } from './front/catalog';
 import { githubCatalog } from './github/catalog';
 import { gitlabCatalog } from './gitlab/catalog';
+import { gmailCatalog } from './gmail/catalog';
 import { gongCatalog } from './gong/catalog';
 import { granolaCatalog } from './granola/catalog';
 import { helpscoutCatalog } from './helpscout/catalog';
@@ -37,6 +39,7 @@ import { notionCatalog } from './notion/catalog';
 import { redirectUri } from './oauth';
 import { oauthClient } from './oauth-env';
 import { outlookCatalog } from './outlook/catalog';
+import { pipedreamEnv } from './pipedream';
 import { pipedriveCatalog } from './pipedrive/catalog';
 import { plainCatalog } from './plain/catalog';
 import { planeCatalog } from './plane/catalog';
@@ -44,6 +47,7 @@ import { productboardCatalog } from './productboard/catalog';
 import { getConnector } from './registry';
 import { sentryCatalog } from './sentry/catalog';
 import { shortcutCatalog } from './shortcut/catalog';
+import { slackCatalog } from './slack/catalog';
 import { tldvCatalog } from './tldv/catalog';
 import { trelloCatalog } from './trello/catalog';
 import type { AnyConnector, CatalogEntry } from './types';
@@ -55,7 +59,9 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted'> & {
   label: string;
   family: ProviderFamily;
   available: boolean; // le connecteur existe (sinon « bientôt »)
-  oauthReady: boolean; // le connecteur a un bouton et son appli est configurée sur ce serveur
+  privateRaw: boolean; // le texte lu reste privé à qui branche (boîte mail, Drive, Slack)
+  // Le connecteur a un bouton et son appli (ou Pipedream) est configurée sur ce serveur.
+  oauthReady: boolean;
   keyAccepted: boolean; // la clé collée reste possible
   oauthPreFields: string[]; // champs non secrets à remplir avant le clic
   // Lien d'accord de l'administrateur (Outlook). L'identifiant d'une appli n'est pas un secret ;
@@ -103,6 +109,9 @@ const ENTRIES: Record<ProviderId, CatalogEntry> = {
   miro: miroCatalog,
   productboard: productboardCatalog,
   outlook: outlookCatalog,
+  gmail: gmailCatalog,
+  drive: driveCatalog,
+  slack: slackCatalog,
 };
 
 export function catalogItem(entry: CatalogEntry, connector: AnyConnector | null): CatalogItem {
@@ -113,7 +122,8 @@ export function catalogItem(entry: CatalogEntry, connector: AnyConnector | null)
     label: PROVIDER_LABELS[entry.id],
     family: PROVIDER_FAMILIES[entry.id],
     available: connector !== null,
-    oauthReady: client !== null,
+    privateRaw: connector?.privateRaw === true,
+    oauthReady: client !== null || (connector?.pipedream !== undefined && pipedreamEnv() !== null),
     keyAccepted: entry.keyAccepted ?? true,
     oauthPreFields: spec?.preFields ?? [],
     adminConsentUrl:

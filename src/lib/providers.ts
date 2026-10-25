@@ -1,6 +1,6 @@
 import type { ProviderId } from '@/capture/turn';
 
-// Libellés et familles des 39 outils branchables. Données pures : lues par l'interface et les libellés.
+// Libellés et familles des 42 outils branchables. Données pures : lues par l'interface et les libellés.
 
 export const PROVIDER_FAMILIES_ORDER = [
   'dev',
@@ -18,7 +18,7 @@ export const FAMILY_LABELS: Record<ProviderFamily, string> = {
   projet: 'Projet',
   crm: 'CRM',
   support: 'Support',
-  mails: 'Mails et agenda',
+  mails: 'Mails, chat et agenda',
 };
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
@@ -61,6 +61,9 @@ export const PROVIDER_LABELS: Record<ProviderId, string> = {
   miro: 'Miro',
   productboard: 'Productboard',
   outlook: 'Outlook',
+  gmail: 'Gmail',
+  drive: 'Google Drive',
+  slack: 'Slack',
 };
 
 export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
@@ -103,4 +106,7 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   miro: 'projet',
   productboard: 'projet',
   outlook: 'mails',
+  gmail: 'mails',
+  drive: 'projet',
+  slack: 'mails',
 };

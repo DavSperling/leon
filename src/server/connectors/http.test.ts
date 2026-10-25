@@ -98,6 +98,32 @@ describe('createConnectorHttp : requête', () => {
     expect(calls[0]?.body).toEqual({ code: 'a b&c', grant_type: 'authorization_code' });
   });
 
+  it('envoie un corps brut avec son type, et rend une réponse texte avec le sien', async () => {
+    const type = 'multipart/mixed; boundary=lot';
+    const { http, calls } = setup([
+      { method: 'POST', url: URL_A, text: '--lot--', headers: { 'content-type': type } },
+    ]);
+
+    const answer = await http.text({
+      url: URL_A,
+      method: 'POST',
+      raw: { type, text: '--lot\r\n--lot--' },
+    });
+
+    expect(answer).toEqual({ text: '--lot--', type, status: 200 });
+    expect(calls[0]?.headers['content-type']).toBe(type);
+    expect(calls[0]?.body).toBe('--lot\r\n--lot--');
+  });
+
+  it('refuse un corps brut accompagné d’un autre corps, sans appel', async () => {
+    const { http, calls } = setup([ok()]);
+
+    await expect(
+      http.text({ url: URL_A, method: 'POST', body: {}, raw: { type: 'text/plain', text: 'x' } }),
+    ).rejects.toThrow('Requête invalide');
+    expect(calls).toHaveLength(0);
+  });
+
   it('refuse un formulaire et un corps JSON ensemble, sans appel ni valeur dans le message', async () => {
     const { http, calls } = setup([ok({ method: 'POST' })]);
 
@@ -305,6 +331,13 @@ describe('createConnectorHttp : reprises', () => {
     await expect(http.json({ url: URL_A }, OBJECT)).resolves.toEqual({ ok: true });
   });
 
+  it('traite un 403 de Google dont la raison est une limite comme une limite', async () => {
+    const limited = { error: { errors: [{ reason: 'userRateLimitExceeded' }] } };
+    const { http } = setup([failing(403, { json: limited }), ok()]);
+
+    await expect(http.json({ url: URL_A }, OBJECT)).resolves.toEqual({ ok: true });
+  });
+
   it('reprend après une erreur réseau puis réussit', async () => {
     let attempts = 0;
     const http = createConnectorHttp({
@@ -381,7 +414,7 @@ describe('createConnectorHttp : corps', () => {
     const { http, calls } = setup([{ url: URL_A, text: jsonString(TEN_MB + 1) }]);
 
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
-      name: 'ConnectorHttpError',
+      name: 'ResponseTooBigError',
       message: 'Réponse trop volumineuse',
     });
     expect(calls).toHaveLength(1);

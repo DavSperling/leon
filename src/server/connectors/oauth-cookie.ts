@@ -21,7 +21,7 @@ export type OAuthPending = {
   preFields: Record<string, unknown>;
   reconnectId: string | null;
   createdAt: number; // millisecondes depuis 1970
-  // Branchement par Pipedream : l'utilisateur Pipedream créé pour cette connexion.
+  // Branchement par Pipedream : l'utilisateur Pipedream de la personne.
   pipedreamUser?: string;
 };
 

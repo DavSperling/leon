@@ -8,6 +8,7 @@ import {
   createConnection,
   deleteConnection,
   listConnections,
+  readConnectionSecrets,
   replaceConnectionSecret,
   requestSyncNow,
   setConnectionPaused,
@@ -20,6 +21,7 @@ import { gongConnector } from '@/server/connectors/gong/connector';
 import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http';
 import { leexiCatalog } from '@/server/connectors/leexi/catalog';
 import { leexiConnector } from '@/server/connectors/leexi/connector';
+import { forgetPipedreamAccount } from '@/server/connectors/pipedream';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import {
@@ -36,6 +38,7 @@ vi.mock('@/server/connectors/connections', () => ({
   createConnection: vi.fn(),
   deleteConnection: vi.fn(),
   listConnections: vi.fn(),
+  readConnectionSecrets: vi.fn(),
   replaceConnectionSecret: vi.fn(),
   requestSyncNow: vi.fn(),
   setConnectionPaused: vi.fn(),
@@ -43,6 +46,7 @@ vi.mock('@/server/connectors/connections', () => ({
 vi.mock('@/server/connectors/registry', () => ({ getConnector: vi.fn() }));
 vi.mock('@/server/connectors/catalog', () => ({ listCatalog: vi.fn() }));
 vi.mock('@/server/connectors/crypto', () => ({ connectorsKey: vi.fn() }));
+vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamAccount: vi.fn() }));
 
 const ctx = { tenantId: 'tenant', userId: 'user', principals: ['user', 'tenant'] };
 const ID = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c5d';
@@ -538,5 +542,32 @@ describe.each([
     await expect(run(ID)).rejects.toThrow('NEXT_REDIRECT /connexion');
 
     expect(write).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteConnectionAction, connexion Pipedream', () => {
+  beforeEach(() => {
+    const config = { authMode: 'pipedream', externalUserId: 'leon-user' };
+    vi.mocked(listConnections).mockResolvedValue([{ id: ID, provider: 'gmail', config }] as never);
+    vi.mocked(readConnectionSecrets).mockResolvedValue({ accountId: 'apn_gm1' });
+  });
+
+  it('retire chez Pipedream le seul compte de la connexion, relu avant la suppression', async () => {
+    vi.mocked(deleteConnection).mockResolvedValue(true);
+
+    await expect(deleteConnectionAction(ID)).resolves.toEqual({ ok: true });
+
+    expect(forgetPipedreamAccount).toHaveBeenCalledWith('apn_gm1');
+    expect(vi.mocked(readConnectionSecrets).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(deleteConnection).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it('ne retire rien quand la connexion n’a pas été supprimée', async () => {
+    vi.mocked(deleteConnection).mockResolvedValue(false);
+
+    await expect(deleteConnectionAction(ID)).resolves.toEqual({ ok: false });
+
+    expect(forgetPipedreamAccount).not.toHaveBeenCalled();
   });
 });

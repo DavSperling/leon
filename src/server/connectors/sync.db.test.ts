@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { members } from '@/server/db/schema/auth';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { fakeConnector } from '@/test/fake-connector';
-import { collect, fakeFetch } from '@/test/fake-fetch';
+import { collect, type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
@@ -14,7 +15,7 @@ import { gmailConnector } from './gmail/connector';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from './pipedream';
-import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
+import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps, sweepPipedreamUsers } from './sync';
 import type { AnyConnector, ConnectorItem, SyncPage } from './types';
 
 vi.mock('@/server/pipeline/queue');
@@ -733,5 +734,95 @@ describe('runConnectorSync : connexion Pipedream', () => {
     const row = await readRow(id);
     expect(row.last_error).toBe("Reconnectez Gmail : l'autorisation a été retirée.");
     expect(row.next_sync_at).toBeNull();
+  });
+});
+
+describe('sweepPipedreamUsers', () => {
+  const CONNECT = 'https://api.pipedream.com/v1/connect/proj_essai';
+  const token: FakeRoute = {
+    method: 'POST',
+    url: 'https://api.pipedream.com/v1/oauth/token',
+    json: { access_token: 'pd' },
+  };
+  const users = (data: unknown[]): FakeRoute => ({
+    url: `${CONNECT}/users`,
+    json: { data, page_info: { total_count: data.length, count: data.length } },
+  });
+  const user = (externalId: string, createdAt = '2026-10-01T10:00:00Z') => ({
+    id: `exu_${externalId}`,
+    external_id: externalId,
+    created_at: createdAt,
+  });
+  // La base de test est partagée : des identifiants à ce test seulement.
+  let tag: string;
+
+  beforeEach(() => {
+    tag = randomUUID().slice(0, 8);
+    forgetPipedreamToken();
+    vi.stubEnv('PIPEDREAM_PROJECT_ID', 'proj_essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_ID', 'client-essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_SECRET', 'secret-essai-pipedream');
+    vi.stubEnv('PIPEDREAM_SWEEP', 'on');
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  async function pipedreamConnection(ctx: TenantContext, externalUserId: string, paused = false) {
+    const id = await seedConnection(ctx, {
+      provider: 'gmail',
+      status: paused ? 'paused' : 'active',
+    });
+    const config = { authMode: 'pipedream', externalUserId, accountId: 'apn_gm1' };
+    await adminPool.query('update connections set config = $2 where id = $1', [
+      id,
+      JSON.stringify(config),
+    ]);
+  }
+
+  it('retire les utilisateurs `leon-` sans connexion, de toutes les organisations, sauf les plus jeunes', async () => {
+    const team = await createTestTenant(['Rose']);
+    tenantIds.push(team.tenantId);
+    await pipedreamConnection(paul, `leon-${tag}-paul`);
+    await pipedreamConnection(team.members[0] as TenantContext, `leon-${tag}-rose`, true);
+    const tenMinutesAgo = new Date(Date.now() - 600_000).toISOString();
+    const fetchImpl = fakeFetch([
+      token,
+      users([
+        user(`leon-${tag}-paul`),
+        user(`leon-${tag}-rose`),
+        user(`leon-${tag}-orphelin`),
+        user(`leon-${tag}-en-cours`, tenMinutesAgo),
+        user('david-essai'),
+      ]),
+      { method: 'DELETE', url: `${CONNECT}/users/leon-${tag}-orphelin`, status: 204 },
+    ]);
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    expect(await sweepPipedreamUsers(fetchImpl)).toEqual([`leon-${tag}-orphelin`]);
+
+    const deletes = fetchImpl.calls.filter((call) => call.method === 'DELETE');
+    expect(deletes.map((call) => call.url)).toEqual([`${CONNECT}/users/leon-${tag}-orphelin`]);
+  });
+
+  it('ne demande rien à Pipedream sans PIPEDREAM_SWEEP=on', async () => {
+    vi.stubEnv('PIPEDREAM_SWEEP', '');
+    const fetchImpl = fakeFetch([]);
+
+    expect(await sweepPipedreamUsers(fetchImpl)).toEqual([]);
+    expect(fetchImpl.calls).toEqual([]);
+  });
+
+  it('Pipedream injoignable : journalisé, ne retire rien et ne lève pas', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const fetchImpl = fakeFetch([token, { url: `${CONNECT}/users`, status: 503 }]);
+
+    expect(await sweepPipedreamUsers(fetchImpl)).toEqual([]);
+    expect(logged).toHaveBeenCalledWith(
+      '[leon]',
+      'connector.pipedream_sweep_failed',
+      expect.stringContaining('Pipedream injoignable'),
+    );
   });
 });

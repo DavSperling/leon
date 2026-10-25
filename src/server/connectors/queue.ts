@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
-// Deux files pg-boss : le tic (chaque minute) cherche les connexions dues, un job par connexion
+// Les files pg-boss : le tic (chaque minute) cherche les connexions dues, un job par connexion
 // fait le passage. Le job ne porte que des identifiants, jamais la clé ni le moindre contenu.
-export const CONNECTOR_QUEUES = { tick: 'connector-tick', sync: 'connector-sync' } as const;
+// Une fois par jour, le balayage des utilisateurs Pipedream orphelins.
+export const CONNECTOR_QUEUES = {
+  tick: 'connector-tick',
+  sync: 'connector-sync',
+  pipedreamSweep: 'connector-pipedream-sweep',
+} as const;
 
 // `userId` est le créateur de la connexion : la relève travaille sous ses droits.
 export const ConnectorSyncJobSchema = z.object({

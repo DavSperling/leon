@@ -2,7 +2,7 @@ import { logError, safeErrorSummary } from '@/server/log';
 import { getBoss } from '@/server/pipeline/queue';
 import { CONNECTOR_QUEUES, ConnectorSyncJobSchema } from './queue';
 import { getConnector } from './registry';
-import { enqueueDueSyncs, runConnectorSync, type SyncDeps } from './sync';
+import { enqueueDueSyncs, runConnectorSync, type SyncDeps, sweepPipedreamUsers } from './sync';
 
 const RETRY = { retryLimit: 2 };
 // Un seul job en attente par connexion (singletonKey). `expireInSeconds` est la durée de la
@@ -21,7 +21,9 @@ async function registerWorkers(deps: SyncDeps, pollingIntervalSeconds: number | 
   const boss = await getBoss();
   await boss.createQueue(CONNECTOR_QUEUES.tick, RETRY);
   await boss.createQueue(CONNECTOR_QUEUES.sync, SYNC_QUEUE);
+  await boss.createQueue(CONNECTOR_QUEUES.pipedreamSweep);
   await boss.schedule(CONNECTOR_QUEUES.tick, '* * * * *');
+  await boss.schedule(CONNECTOR_QUEUES.pipedreamSweep, '0 4 * * *'); // 4 h UTC, personne ne branche
   const polling = pollingIntervalSeconds === undefined ? {} : { pollingIntervalSeconds };
   const options = { batchSize: 1, localConcurrency: 1, ...polling };
   // Quatre relèves à la fois : le long premier passage d'un outil ne bloque pas les autres. La
@@ -35,6 +37,10 @@ async function registerWorkers(deps: SyncDeps, pollingIntervalSeconds: number | 
     await runConnectorSync(parsed, deps).catch((error) =>
       rethrowSummary('connector.job_failed', error, { connectionId: parsed.connectionId }),
     );
+  });
+  // Sans Pipedream sur ce serveur, ou sans PIPEDREAM_SWEEP=on, le balayage ne fait rien. Il n'échoue jamais.
+  await boss.work(CONNECTOR_QUEUES.pipedreamSweep, options, async () => {
+    await sweepPipedreamUsers(deps.fetchImpl);
   });
 }
 

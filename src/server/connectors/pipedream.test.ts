@@ -10,6 +10,7 @@ import {
   deleteExternalUser,
   findAccount,
   forgetPipedreamToken,
+  listLeonUsers,
   type PipedreamEnv,
   pipedreamEnv,
   proxyFetch,
@@ -196,6 +197,65 @@ describe('findAccount', () => {
   it('rend null sans compte', async () => {
     const empty = fakeFetch([token('pd-1'), accounts([])]);
     expect(await findAccount(ENV, 'leon-u1', 'gmail', empty)).toBeNull();
+  });
+});
+
+describe('listLeonUsers', () => {
+  // Comme en vrai (essai du 25/10) : la dernière page n'a pas d'`end_cursor`.
+  const users = (data: unknown[], endCursor: string | null): FakeRoute => ({
+    url: `${CONNECT}/users`,
+    json: {
+      data,
+      page_info: {
+        count: data.length,
+        start_cursor: 'c0',
+        ...(endCursor && { end_cursor: endCursor }),
+      },
+    },
+  });
+  const user = (externalId: string, createdAt = '2026-10-20T10:00:00Z') => ({
+    id: `exu_${externalId}`,
+    external_id: externalId,
+    created_at: createdAt,
+  });
+
+  it('lit toutes les pages et ne rend que les utilisateurs `leon-`', async () => {
+    const fetchImpl = fakeFetch([
+      token('pd-1'),
+      users([user('leon-a'), user('david-essai'), user('ex-leon-b')], 'c1'),
+      users([{ id: 'exu_c', external_id: 'leon-c' }], 'c2'),
+      users([], 'c2'),
+    ]);
+
+    expect(await listLeonUsers(ENV, fetchImpl)).toEqual([
+      { externalId: 'leon-a', createdAt: Date.parse('2026-10-20T10:00:00Z') },
+      { externalId: 'leon-c', createdAt: Number.NaN },
+    ]);
+    const queries = fetchImpl.calls.slice(1).map((call) => new URL(call.url).searchParams);
+    expect(queries.map((query) => query.get('limit'))).toEqual(['100', '100', '100']);
+    expect(queries.map((query) => query.get('after'))).toEqual([null, 'c1', 'c2']);
+  });
+
+  it('s’arrête sur une page sans suite, ou qui rend le même curseur', async () => {
+    const last = fakeFetch([token('pd-1'), users([user('leon-a')], null)]);
+    expect(await listLeonUsers(ENV, last)).toHaveLength(1);
+
+    forgetPipedreamToken();
+    const stuck = fakeFetch([
+      token('pd-1'),
+      users([user('leon-a')], 'c1'),
+      users([user('leon-a')], 'c1'),
+    ]);
+    expect(await listLeonUsers(ENV, stuck)).toHaveLength(2);
+    expect(stuck.calls).toHaveLength(3);
+  });
+
+  it('remonte « Pipedream injoignable » sur une erreur ou une réponse illisible', async () => {
+    const down = fakeFetch([token('pd-1'), { url: `${CONNECT}/users`, status: 500 }]);
+    await expect(listLeonUsers(ENV, down)).rejects.toThrow('Pipedream injoignable');
+
+    const odd = fakeFetch([{ url: `${CONNECT}/users`, json: { users: [] } }]);
+    await expect(listLeonUsers(ENV, odd)).rejects.toThrow('Pipedream injoignable');
   });
 });
 

@@ -57,6 +57,7 @@ async function startBoss(): Promise<PgBoss> {
     connectionString: env.DATABASE_URL,
     schema: 'pgboss',
     createSchema: false,
+    max: 2, // 10 par défaut : le budget de connexions est expliqué dans db/client.ts
   });
   boss.on('error', (error) => logError('pgboss.error', error));
   await boss.start();

@@ -61,6 +61,9 @@ indexation, point du matin) ne tourneraient plus.
 - Railway démarre la nouvelle version avant d'arrêter l'ancienne. `overlapSeconds: "0"` réduit ce recouvrement au
   temps du démarrage (quelques dizaines de secondes, pendant lesquelles deux instances tournent). Éviter de mettre en
   ligne pendant une relève ou un changement de modèle de vecteurs.
+- Le pooler de Supabase en mode session (port 5432) accepte 15 clients par rôle (la « Pool Size » de ses réglages).
+  Une instance en ouvre 7 au plus (`src/server/db/client.ts`), deux en ouvrent donc 14 pendant le recouvrement. Au-delà,
+  la nouvelle instance s'arrête au démarrage sur `EMAXCONNSESSION` et Railway la déclare en échec au healthcheck.
 - **Tant que le site tourne, personne ne branche son serveur local sur la base Supabase** : ce serait une seconde
   instance (voir plus haut).
 - Variables : les mêmes que `.env.example`, collées dans l'éditeur brut des variables du service. En plus :

@@ -9,7 +9,7 @@ Le site n'est pas modifié. Cette étude propose des cas d'usage, et David chois
 - **Les cas du site se ressemblent parce qu'ils racontent deux histoires avec une seule mécanique.** Les deux histoires sont la promesse faite au client et le départ d'un collègue. La mécanique est toujours la même : on tape une question, Leon répond en citant. Six équipes se partagent trois démos.
 - **Glean et Macro ne montrent pas des équipes, ils montrent des moments** : le standup, le vendredi à 16 h, l'incident, le premier jour sur un projet, la réponse à un client après un correctif.
 - **Onze cas, chacun avec une personne, un moment et une question.** Six marchent déjà avec le code de `main`, cinq marchent en partie. Neuf concernent des équipes produit ou dev.
-- **Recommandation pour le site** : remplacer les six équipes par quatre situations qui marchent aujourd'hui (§ 5), chacune avec sa propre démo.
+- **Décision de David (25/10)** : on garde les six équipes du site et on ajoute à côté les situations qui marchent déjà (§ 5).
 
 ## 1. Pourquoi les cas du site se ressemblent
 
@@ -192,17 +192,17 @@ Lu dans `src/components/site/content.ts` (équipes, démos) et `src/components/s
 | Point quotidien sur la boîte de réception (Macro) | Une seule source, et Gmail et Outlook le proposent. Rien n'est croisé. |
 | Promesse au client, départ d'un collègue (site actuel) | Déjà partout sur le site. Le cas 11 en garde la partie utile. |
 
-## 5. Recommandation pour le site
+## 5. Ce qui va sur le site
 
-1. **Remplacer les six équipes par quatre situations qui marchent aujourd'hui**, chacune avec sa propre démo :
-   - « Dans votre assistant de code » (cas 2, avec le cas 1 en second temps) ;
-   - « Le support répond sans déranger un développeur » (cas 5) ;
-   - « Ce que vous avez trouvé avec ChatGPT » (cas 3) ;
-   - « Avant un renouvellement » (cas 11).
+La première recommandation était de remplacer les six équipes par quatre situations. **David a choisi le 25/10 de ne rien enlever et d'ajouter ce qui manque.** C'est fait dans la même PR :
 
-   Les rôles sont variés (dev, support, tout le monde, succès client), et chaque cas montre une mécanique différente : point préparé à l'avance, assistant qui vérifie, boucle avec le client, mémoire personnelle, historique d'un compte.
-2. **Ne pas mettre les cas « en partie » sur le site** avant qu'ils marchent. C'est la règle de marque en tête de `content.ts` : aucune promesse que le code ne tient pas.
-3. **Garder la promesse au client pour l'accueil seulement.** Elle n'a pas besoin d'être répétée dans quatre pages.
+1. **Les cas 1, 2, 3, 4 et 11 sont ajoutés** sous le titre « En situation » (`SITUATIONS` dans `src/components/site/content.ts`).
+   - Sur `/cas-usage`, ils apparaissent tous, sous la grille des équipes.
+   - Sur chaque page équipe, on ne montre que ceux de l'équipe : quatre pour Produit et tech, un pour Ventes.
+   - Chaque situation dit qui, quand, la question posée, ce que Leon fait, ce que ça change et les outils lus.
+2. **Le cas 5 n'est pas ajouté** : la page Support raconte déjà cette histoire.
+3. **Les cas « en partie » (6 à 10) ne vont pas sur le site** tant qu'ils ne marchent pas. C'est la règle de marque en tête de `content.ts` : aucune promesse que le code ne tient pas.
+4. **Aucun nom d'assistant concurrent sur le site** (même règle) : le cas 3 y parle de « son assistant d'IA », pas de ChatGPT.
 
 Ce qu'il faudrait construire en premier, si un pilote le confirme :
 

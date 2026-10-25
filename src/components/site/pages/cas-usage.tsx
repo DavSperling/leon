@@ -2,7 +2,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { TEAMS, type Team, TOOL_COUNT, toolLabel } from '../content';
+import { SITUATIONS, type Situation, TEAMS, type Team, TOOL_COUNT, toolLabel } from '../content';
 import { DemoCard } from '../demo-card';
 import { Tilt } from '../fx';
 import {
@@ -112,6 +112,55 @@ function TeamCard({ team }: { team: Team }) {
   );
 }
 
+/** Une situation : qui, quand, ce qu'on demande, ce que Leon fait et lit. */
+function SituationCard({ s }: { s: Situation }) {
+  return (
+    <li className="site-reveal">
+      <article className="flex h-full flex-col gap-4 rounded-box border border-line bg-panel p-6 shadow-hi">
+        <div>
+          <p className="font-mono text-meta tracking-normal text-accent">{nb(s.moment)}</p>
+          <h3 className="mt-2 text-title font-bold tracking-[-0.02em] text-fg">{nb(s.title)}</h3>
+          <p className="mt-1 text-label text-muted">{nb(s.who)}</p>
+        </div>
+        <QuestionRow q={s.question} />
+        <p className="text-body leading-[1.6] text-fg-2">{nb(s.does)}</p>
+        <p className="text-body leading-[1.6] text-fg-2">
+          <span className="font-semibold text-fg">Ce que ça change : </span>
+          {nb(s.gain)}
+        </p>
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          {s.tools.map((id) => (
+            <ToolLogo key={id} id={id} size={28} title />
+          ))}
+          {s.alsoReads && (
+            <span className="rounded-full border border-line bg-glass-3 px-3 py-1 text-label text-fg-2">
+              {nb(s.alsoReads)}
+            </span>
+          )}
+        </div>
+      </article>
+    </li>
+  );
+}
+
+function SituationsSection({ situations, lead }: { situations: Situation[]; lead: string }) {
+  return (
+    <PageSection labelledBy="situations-titre">
+      <SectionHeading
+        id="situations-titre"
+        kicker="En situation"
+        title="Une personne, un moment, une question."
+        lead={lead}
+      />
+      <ul className="mt-10 grid gap-4 md:grid-cols-2">
+        {situations.map((s) => (
+          <SituationCard key={s.id} s={s} />
+        ))}
+      </ul>
+    </PageSection>
+  );
+}
+
 /** Les questions de toutes les équipes, mêlées, une par une. */
 const ALL_QUESTIONS = TEAMS.flatMap((t, ti) =>
   t.questions.map((q, qi) => ({ q, team: t, order: qi * TEAMS.length + ti })),
@@ -163,6 +212,11 @@ export function CasUsagePage() {
         </ul>
       </PageSection>
 
+      <SituationsSection
+        situations={SITUATIONS}
+        lead="Ce que Leon fait déjà, au moment où on en a besoin. Les personnes, les sociétés et les détails de ces exemples sont fictifs."
+      />
+
       <PageSection labelledBy="onglets-titre">
         <SectionHeading
           id="onglets-titre"
@@ -207,6 +261,7 @@ export function CasUsagePage() {
 
 export function EquipePage({ team }: { team: Team }) {
   const others = TEAMS.filter((t) => t.slug !== team.slug);
+  const situations = SITUATIONS.filter((s) => s.team === team.slug);
   return (
     <>
       <PageHero
@@ -261,6 +316,13 @@ export function EquipePage({ team }: { team: Team }) {
           </TypingList>
         </div>
       </PageSection>
+
+      {situations.length > 0 && (
+        <SituationsSection
+          situations={situations}
+          lead="Ce que Leon fait déjà pour l’équipe, au moment où elle en a besoin. Exemples fictifs."
+        />
+      )}
 
       <PageSection labelledBy="gains-titre">
         <SectionHeading

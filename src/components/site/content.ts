@@ -435,6 +435,85 @@ export const TEAMS: Team[] = [
 
 export const teamBySlug = (slug: string): Team | undefined => TEAMS.find((t) => t.slug === slug);
 
+// ---------- Situations (cas d'usage concrets, docs/etudes/cas-usage-2026-10) ----------
+// Seulement ce que le code fait déjà : les cas « en partie » de l'étude n'entrent pas ici.
+
+export type Situation = {
+  id: string;
+  /** L'équipe dont la page montre aussi la situation. */
+  team: Team['slug'];
+  who: string;
+  moment: string;
+  title: string;
+  /** Ce qu'on tape ou ce qu'on demande. */
+  question: string;
+  does: string;
+  gain: string;
+  tools: ProviderId[];
+  /** Ce que Leon lit en plus des outils, sans logo (conversations d'IA, sessions de code). */
+  alsoReads?: string;
+};
+
+export const SITUATIONS: Situation[] = [
+  {
+    id: 'reprendre',
+    team: 'produit-tech',
+    who: 'Développeuse, éditeur SaaS de 25 personnes',
+    moment: 'Lundi, 9 h',
+    title: 'Reprendre là où on s’était arrêté',
+    question: 'où en étais-je sur le dépôt facturation ?',
+    does: 'Vendredi, elle a laissé une migration à moitié faite. À l’ouverture de la session, le point du matin du dépôt l’attend dans son assistant de code : ce qu’elle a fait, la revue arrivée depuis, l’issue rouverte, ce qui reste ouvert.',
+    gain: 'Elle et son assistant repartent du bon endroit, sans rouvrir trois onglets.',
+    tools: ['github'],
+    alsoReads: 'Ses sessions de code',
+  },
+  {
+    id: 'deja-essaye',
+    team: 'produit-tech',
+    who: 'Développeur, startup de 12 personnes',
+    moment: 'Avant de réécrire un module',
+    title: 'Vérifier ce que l’équipe a déjà tranché',
+    question: 'a-t-on déjà essayé de générer les PDF côté navigateur ?',
+    does: 'Il demande à son assistant de code de vérifier dans Leon, par MCP. Leon retrouve la PR fermée en mars, la revue qui explique l’abandon (des accents mal rendus) et la décision notée dans Notion.',
+    gain: 'L’assistant ne refait pas un chemin déjà payé, ou dit ce qui a changé depuis.',
+    tools: ['github', 'linear', 'notion'],
+  },
+  {
+    id: 'conversation-ia',
+    team: 'produit-tech',
+    who: 'Chef de produit, PME de 40 personnes',
+    moment: 'Refaire une analyse d’il y a un mois',
+    title: 'Retrouver ce qu’on a trouvé avec son assistant d’IA',
+    question: 'la requête de rétention par cohorte sans les comptes de test',
+    does: 'En septembre, il a mis au point la requête avec son assistant d’IA, pièges compris. La conversation, captée par l’extension, se retrouve en une recherche, à côté du ticket qui demandait la courbe. Elle n’est visible que de lui.',
+    gain: 'La version finale, pas le premier essai qui était faux, avec le raisonnement autour.',
+    tools: ['linear'],
+    alsoReads: 'Ses conversations d’IA',
+  },
+  {
+    id: 'astreinte',
+    team: 'produit-tech',
+    who: 'Développeuse d’astreinte, SaaS de 30 personnes',
+    moment: '22 h, une erreur sur un module inconnu',
+    title: 'Savoir si l’incident est déjà arrivé',
+    question: 'cette erreur d’import est-elle déjà arrivée ?',
+    does: 'Leon retrouve l’issue Sentry de mars, la PR qui l’avait corrigée, le ticket d’incident et le post-mortem. Le lendemain, une discussion en tire le brouillon du nouveau post-mortem.',
+    gain: 'Elle applique le contournement connu au lieu de réveiller l’auteur du module.',
+    tools: ['sentry', 'github', 'linear', 'notion'],
+  },
+  {
+    id: 'renouvellement',
+    team: 'ventes',
+    who: 'Responsable succès client, SaaS de 70 personnes',
+    moment: '30 jours avant un renouvellement',
+    title: 'Tout ce qui a coincé chez ce client',
+    question: 'qu’est-ce qui s’est mal passé chez Nordia depuis un an ?',
+    does: 'Il a repris le compte en juin. Leon croise les conversations de support, les bugs liés au client, les appels enregistrés et les notes du CRM, puis dit ce qui est corrigé, avec la date, et ce qui ne l’est pas.',
+    gain: 'Il découvre les problèmes du client avant le rendez-vous, pas pendant.',
+    tools: ['intercom', 'linear', 'fathom', 'hubspot'],
+  },
+];
+
 // ---------- Ce que fait Leon (page Produit) ----------
 
 export type Pillar = { id: string; kicker: string; title: string; text: string; points: string[] };

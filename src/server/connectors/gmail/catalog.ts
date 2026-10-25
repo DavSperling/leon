@@ -9,7 +9,7 @@ export const gmailCatalog: CatalogEntry = {
   oauthHelp:
     'La connexion passe par Pipedream, le service qui garde l’accès pour Leon : Google vous demande d’autoriser « Pipedream » à lire, écrire et envoyer vos courriers. Leon ne fait que lire (hors promotions, réseaux sociaux, brouillons et indésirables) ; il n’écrit et n’envoie rien.',
   docsUrl: 'https://support.google.com/accounts/answer/3466521',
-  triedForReal: false,
+  triedForReal: true,
   warning:
     'Le texte des courriers reste privé, comme une conversation : vous seul le voyez. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
 };

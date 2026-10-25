@@ -126,7 +126,7 @@ Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | ClickUp | Projet | non |
 | Confluence | Projet | non |
 | GitLab | Projet | non |
-| Google Drive | Projet | non |
+| Google Drive | Projet | oui |
 | Jira | Projet | non |
 | Miro | Projet | non |
 | monday.com | Projet | non |
@@ -148,7 +148,7 @@ Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | Missive | Support | non |
 | Plain | Support | non |
 | Zendesk | Support | non |
-| Gmail | Mails, chat et agenda | non |
+| Gmail | Mails, chat et agenda | oui |
 | Outlook | Mails, chat et agenda | non |
 | Slack | Mails, chat et agenda | non |
 

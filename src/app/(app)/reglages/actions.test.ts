@@ -1,11 +1,13 @@
 import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
+import { createInvitationLink } from '@/server/auth/members';
 import { requireUserContext } from '@/server/auth/session';
-import { createTokenAction, revokeTokenAction } from './actions';
+import { createInvitationAction, createTokenAction, revokeTokenAction } from './actions';
 
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
+vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 const ctx = { tenantId: 'tenant', userId: 'user', principals: ['user', 'tenant'] };
@@ -97,5 +99,26 @@ describe('revokeTokenAction', () => {
     await expect(revokeTokenAction(TOKEN_ID)).rejects.toThrow('NEXT_REDIRECT /connexion');
 
     expect(revokeApiToken).not.toHaveBeenCalled();
+  });
+});
+
+describe('createInvitationAction', () => {
+  it("rend l'adresse du lien sur l'instance, une seule fois", async () => {
+    const expiresAt = new Date('2026-11-01T10:00:00Z');
+    vi.mocked(createInvitationLink).mockResolvedValue({ token: 'abc_-123', expiresAt });
+
+    await expect(createInvitationAction()).resolves.toEqual({
+      url: 'http://localhost:3000/invitation/abc_-123',
+      expiresAt,
+    });
+    expect(createInvitationLink).toHaveBeenCalledWith(ctx);
+  });
+
+  it("refuse qui n'est ni propriétaire ni administrateur", async () => {
+    vi.mocked(createInvitationLink).mockResolvedValue(null);
+
+    await expect(createInvitationAction()).resolves.toEqual({
+      error: expect.stringContaining('administrateurs'),
+    });
   });
 });

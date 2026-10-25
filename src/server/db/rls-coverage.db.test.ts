@@ -9,6 +9,8 @@ import { adminPool } from '@/test/db';
 const RLS_EXCEPTIONS = [
   // Le jeton se retrouve par son empreinte avant qu'on connaisse l'organisation (authentification par jeton).
   'api_tokens',
+  // Même raison : le lien d'invitation se retrouve par son empreinte, avant l'inscription (0033).
+  'invitation_links',
 ];
 
 // Tables à `tenant_id` dont l'app peut supprimer des lignes : une décision par table, jamais un défaut.

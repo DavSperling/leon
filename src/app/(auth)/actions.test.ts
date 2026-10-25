@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
-import { createUserWithOrganization } from '@/server/auth/sign-up';
-import { signInAction, signUpAction } from './actions';
+import { createUserWithInvitation, createUserWithOrganization } from '@/server/auth/sign-up';
+import { joinAction, signInAction, signUpAction } from './actions';
 
 vi.mock('@/server/auth/sign-up', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/auth/sign-up')>()),
   createUserWithOrganization: vi.fn(),
+  createUserWithInvitation: vi.fn(),
 }));
 vi.mock('@/server/auth/session', () => ({ signInWithPassword: vi.fn() }));
 vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
@@ -165,5 +166,47 @@ describe('signInAction', () => {
     await expect(
       signInAction({}, form({ email: 'paul@example.com', password: 'motdepasse-solide' })),
     ).rejects.toThrow('NEXT_REDIRECT /');
+  });
+});
+
+describe('joinAction', () => {
+  const validJoin = {
+    name: 'Julie Petit',
+    email: 'julie@example.com',
+    password: 'motdepasse-solide',
+    token: 'secret-du-lien',
+  };
+
+  it('ne renvoie ni le mot de passe ni le secret du lien', async () => {
+    vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: false, error: 'email_pris' });
+
+    const state = await joinAction({}, form(validJoin));
+
+    expect(state.values).toEqual({ name: 'Julie Petit', email: 'julie@example.com' });
+    expect(state.errors).toEqual({ email: 'Cette adresse e-mail est déjà utilisée.' });
+  });
+
+  it('dit que le lien ne vaut plus quand il a servi ou expiré', async () => {
+    vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: false, error: 'lien_invalide' });
+
+    const state = await joinAction({}, form(validJoin));
+
+    expect(state.errors?.form).toContain('n’est plus valable');
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('compte la tentative comme une inscription, puis connecte et va à l’accueil', async () => {
+    vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: true, userId: 'u', tenantId: 't' });
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(joinAction({}, form(validJoin))).rejects.toThrow('NEXT_REDIRECT /');
+
+    expect(authAttemptAllowed).toHaveBeenCalledWith(
+      'inscription',
+      'julie@example.com',
+      expect.any(Headers),
+    );
+    expect(createUserWithInvitation).toHaveBeenCalledWith(validJoin);
+    expect(signInWithPassword).toHaveBeenCalledWith('julie@example.com', 'motdepasse-solide');
   });
 });

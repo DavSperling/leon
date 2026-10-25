@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
+import { MembersSection } from '@/components/verre/reglages/members';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
 import { listApiTokens } from '@/server/auth/api-tokens';
+import { canInvite, listMembers } from '@/server/auth/members';
 import { requireUserContext } from '@/server/auth/session';
 import { env } from '@/server/env';
 
@@ -12,7 +14,12 @@ export const metadata: Metadata = { title: 'Réglages' };
 
 export default async function SettingsPage() {
   const ctx = await requireUserContext();
-  const tokens = (await listApiTokens(ctx))
+  const [allTokens, members, mayInvite] = await Promise.all([
+    listApiTokens(ctx),
+    listMembers(ctx),
+    canInvite(ctx),
+  ]);
+  const tokens = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
   const serverUrl = env.BETTER_AUTH_URL;
@@ -29,9 +36,11 @@ export default async function SettingsPage() {
     <div className="mx-auto max-w-[760px]">
       <PageHeader
         title="Réglages"
-        subtitle="Jetons d’accès et branchement des assistants"
+        subtitle="Membres, jetons d’accès et branchement des assistants"
         className="mb-10"
       />
+
+      <MembersSection members={members} canInvite={mayInvite} />
 
       <TokensSection tokens={tokens} />
 

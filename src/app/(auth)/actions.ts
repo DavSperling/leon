@@ -5,7 +5,12 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
-import { createUserWithOrganization, SignUpInputSchema } from '@/server/auth/sign-up';
+import {
+  createUserWithInvitation,
+  createUserWithOrganization,
+  JoinInputSchema,
+  SignUpInputSchema,
+} from '@/server/auth/sign-up';
 
 // `errors` : un message par champ ; `form` pour une erreur qui ne vise aucun champ.
 // `values` : ce qui a été saisi (jamais le mot de passe), pour ne pas vider le formulaire.
@@ -30,6 +35,9 @@ const SIGN_UP_MESSAGES = {
   password: 'Le mot de passe doit contenir entre 8 et 128 caractères.',
   organizationName: 'Indiquez le nom de votre entreprise (2 à 100 caractères).',
 };
+const EMAIL_TAKEN = 'Cette adresse e-mail est déjà utilisée.';
+const SIGN_UP_FAILED = 'Impossible de créer le compte. Réessayez.';
+const SIGNED_UP_NOT_IN = 'Compte créé, mais la connexion a échoué. Connectez-vous.';
 
 function readFields(formData: FormData, names: string[]): Record<string, string> {
   return Object.fromEntries(
@@ -87,14 +95,44 @@ export async function signUpAction(
   const created = await createUserWithOrganization(parsed.data);
   if (!created.ok) {
     const errors: Record<string, string> =
-      created.error === 'email_pris'
-        ? { email: 'Cette adresse e-mail est déjà utilisée.' }
-        : { form: 'Impossible de créer le compte. Réessayez.' };
+      created.error === 'email_pris' ? { email: EMAIL_TAKEN } : { form: SIGN_UP_FAILED };
     return { errors, values };
   }
+  return signInNewAccount(parsed.data.email, parsed.data.password, values);
+}
 
-  const { ok } = await signInWithPassword(parsed.data.email, parsed.data.password);
-  if (!ok)
-    return { errors: { form: 'Compte créé, mais la connexion a échoué. Connectez-vous.' }, values };
+// L'inscription par un lien d'invitation : le formulaire porte le secret du lien dans un champ caché.
+export async function joinAction(
+  _previous: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const fields = readFields(formData, ['name', 'email', 'password', 'token']);
+  const { token: _token, ...values } = withoutPassword(fields);
+  const parsed = JoinInputSchema.safeParse(fields);
+  if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
+  if (!(await authAttemptAllowed('inscription', parsed.data.email, await headers()))) {
+    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+  }
+
+  const created = await createUserWithInvitation(parsed.data);
+  if (!created.ok) {
+    const errors: Record<string, string> =
+      created.error === 'email_pris'
+        ? { email: EMAIL_TAKEN }
+        : created.error === 'lien_invalide'
+          ? { form: 'Ce lien d’invitation n’est plus valable. Demandez-en un nouveau.' }
+          : { form: SIGN_UP_FAILED };
+    return { errors, values };
+  }
+  return signInNewAccount(parsed.data.email, parsed.data.password, values);
+}
+
+async function signInNewAccount(
+  email: string,
+  password: string,
+  values: Record<string, string>,
+): Promise<AuthFormState> {
+  const { ok } = await signInWithPassword(email, password);
+  if (!ok) return { errors: { form: SIGNED_UP_NOT_IN }, values };
   redirect('/');
 }

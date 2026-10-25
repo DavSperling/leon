@@ -7,6 +7,7 @@ import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
 import { logError } from '@/server/log';
 import { auth } from './auth';
+import { findInvitation, joinWithInvitation } from './members';
 
 export const SignUpInputSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -19,6 +20,15 @@ export type SignUpInput = z.infer<typeof SignUpInputSchema>;
 export type SignUpResult =
   | { ok: true; userId: string; tenantId: string }
   | { ok: false; error: 'email_pris' | 'invalide' };
+
+// L'inscription par un lien d'invitation : pas d'organisation à créer, on rejoint celle du lien.
+export const JoinInputSchema = SignUpInputSchema.omit({ organizationName: true }).extend({
+  token: z.string(),
+});
+export type JoinInput = z.infer<typeof JoinInputSchema>;
+export type JoinResult =
+  | { ok: true; userId: string; tenantId: string }
+  | { ok: false; error: 'email_pris' | 'lien_invalide' | 'invalide' };
 
 // Suffixe aléatoire : deux organisations de même nom n'ont jamais le même slug.
 function organizationSlug(name: string): string {
@@ -63,4 +73,35 @@ export async function createUserWithOrganization(input: SignUpInput): Promise<Si
     await db.delete(users).where(eq(users.id, userId));
     return { ok: false, error: 'invalide' };
   }
+}
+
+// L'inscription par un lien d'invitation crée l'utilisateur, membre de l'organisation du lien, ou rien.
+export async function createUserWithInvitation(input: JoinInput): Promise<JoinResult> {
+  const parsed = JoinInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalide' };
+  const { token, ...body } = parsed.data;
+  // Vérifié avant de créer le compte (le lien est servi plus bas, une seule fois) : un lien mort ne crée rien.
+  if (!(await findInvitation(token))) return { ok: false, error: 'lien_invalide' };
+  if (await emailTaken(body.email)) return { ok: false, error: 'email_pris' };
+
+  let userId: string;
+  try {
+    userId = (await auth.api.signUpEmail({ body })).user.id;
+  } catch (error) {
+    if (error instanceof APIError) return { ok: false, error: 'invalide' };
+    throw error;
+  }
+
+  let error: Extract<JoinResult, { ok: false }>;
+  try {
+    const tenantId = await joinWithInvitation(token, userId);
+    if (tenantId) return { ok: true, userId, tenantId };
+    error = { ok: false, error: 'lien_invalide' }; // servi ou expiré entre-temps
+  } catch (cause) {
+    logError('auth.sign_up.invitation', cause);
+    error = { ok: false, error: 'invalide' };
+  }
+  // Pas de compte sans organisation : on le supprime (sessions et comptes suivent en cascade).
+  await db.delete(users).where(eq(users.id, userId));
+  return error;
 }

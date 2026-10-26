@@ -115,7 +115,8 @@ describe('guide de vérification : brancher par bouton', () => {
     'n’est pas encore configurée sur ce serveur.',
   ])('cite « %s », qui existe dans le code', (label) => {
     expect(readText(VERIFICATION)).toContain(label);
-    const sources = productionSources('src/**/*.{ts,tsx}');
+    // les textes de l'interface vivent aussi dans les messages français (next-intl)
+    const sources = productionSources('src/**/*.{ts,tsx}', 'messages/fr.json');
     expect(sources.some(({ text }) => text.includes(label))).toBe(true);
   });
 

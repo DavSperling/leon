@@ -157,7 +157,10 @@ export async function ingestTurns(
   ctx: TenantContext,
   payload: IngestPayload,
 ): Promise<IngestResult> {
-  const title = payload.source.title === undefined ? undefined : maskSecrets(payload.source.title);
+  const title =
+    payload.source.title === undefined
+      ? undefined
+      : maskSecrets(payload.source.title.replaceAll('\u0000', ''));
   const { sourceId, newTurnIds, ingestRunId } = await withTenant(ctx, async (tx) => {
     const sourceId = await upsertSource(tx, ctx, payload.source, title);
     const { ids, lastTs } = await insertNewTurns(tx, captureRows(ctx, sourceId, payload.turns));

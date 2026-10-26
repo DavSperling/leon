@@ -36,6 +36,11 @@ describe('prepareTurnText', () => {
   it('renvoie null pour un bloc system-reminder seul', () => {
     expect(prepareTurnText('<system-reminder>Rappel</system-reminder>')).toBeNull();
   });
+
+  it('retire le caractère nul, que Postgres refuse', () => {
+    expect(prepareTurnText('sortie\u0000 binaire\u0000')).toBe('sortie binaire');
+    expect(prepareTurnText('\u0000')).toBeNull();
+  });
 });
 
 describe('prepareTurnText : entrées énormes', () => {

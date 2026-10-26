@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { FAQ, PLANS, TOOL_COUNT } from '../content';
+import { FAQ, PLANS, SYNC_DELAY, TOOL_COUNT } from '../content';
 import { Tilt } from '../fx';
 import { CtaBand, SectionHeading } from '../parts';
 import { PageHero, PageSection } from './page-hero';
@@ -13,7 +13,7 @@ import './pages.css';
 // facturation codée) : chaque bouton mène à la création d'un espace. Pas de « le plus choisi » : rien ne le mesure.
 
 const EVERYWHERE = [
-  `Les ${TOOL_COUNT} connecteurs, relevés toutes les 15 minutes`,
+  `Les ${TOOL_COUNT} connecteurs, relevés ${SYNC_DELAY}`,
   'Recherche plein texte et par le sens, avec filtres',
   'Réponse citée en tête des résultats',
   'Discussions privées qui citent leurs sources',

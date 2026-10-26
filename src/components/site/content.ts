@@ -42,6 +42,10 @@ export const TAGLINES = {
 
 export const TOOL_COUNT = Object.keys(PROVIDER_LABELS).length;
 
+// Ce que tient la relève (connectors/connections.ts) : toutes les 15 minutes, sauf les outils passés par
+// Pipedream, relevés à 8 h, 11 h, 14 h et 17 h (heure de Paris) parce que chaque requête y est payée.
+export const SYNC_DELAY = 'toutes les 15 minutes (Gmail, Drive et Slack : quatre fois par jour)';
+
 export type ToolGroup = { family: ProviderFamily; label: string; tools: ProviderId[] };
 
 /** Les 42 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
@@ -271,7 +275,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Rien à ressaisir',
-        text: 'Leon relève les outils toutes les 15 minutes. Personne ne remplit de fiche pour lui.',
+        text: `Leon relève les outils ${SYNC_DELAY}. Personne ne remplit de fiche pour lui.`,
       },
     ],
     demo: DEMOS[0] as Demo,
@@ -523,9 +527,9 @@ export const PILLARS: Pillar[] = [
     id: 'capte',
     kicker: 'Capter',
     title: 'Il se branche sur vos outils et sur vos assistants d’IA.',
-    text: `${TOOL_COUNT} outils branchables, par une clé ou un bouton de connexion, relevés toutes les 15 minutes. Les conversations avec vos assistants d’IA arrivent par l’extension du navigateur et par votre assistant de code.`,
+    text: `${TOOL_COUNT} outils branchables, par une clé ou un bouton de connexion, relevés ${SYNC_DELAY}. Les conversations avec vos assistants d’IA arrivent par l’extension du navigateur et par votre assistant de code.`,
     points: [
-      'Relève toutes les 15 minutes, sans webhook',
+      `Relève ${SYNC_DELAY}, sans webhook`,
       'Extension : consentement, un interrupteur par site, jamais en navigation privée',
       'Assistant de code : chaque session envoyée à sa fin',
     ],
@@ -640,6 +644,7 @@ export const NOT_YET = [
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
+  'Gmail, Google Drive et Slack passent par Pipedream Connect : leurs jetons sont gardés chez Pipedream, avec des droits plus larges que ce que Leon lit (Gmail : lire, écrire et envoyer ; Drive : tout le Drive).',
 ] as const;
 
 // ---------- Tarifs (proposition de docs/etudes/founder-pme-2026-10/pricing.md, pas encore arrêtée) ----------
@@ -694,7 +699,7 @@ export const PLANS = [
 export const FAQ = [
   {
     q: 'Faut-il changer d’outils ?',
-    a: `Non, s’ils sont parmi les ${TOOL_COUNT} connecteurs : Leon s’y branche par une clé d’API ou un bouton de connexion, et relève ce qui change toutes les 15 minutes.`,
+    a: `Non, s’ils sont parmi les ${TOOL_COUNT} connecteurs : Leon s’y branche par une clé d’API ou un bouton de connexion, et relève ce qui change ${SYNC_DELAY}.`,
   },
   {
     q: 'Qui voit quoi ?',

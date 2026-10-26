@@ -250,6 +250,7 @@ describe('oauthNotice', () => {
         'annule',
         'autre_compte',
         'champs',
+        'collegue',
         'expire',
         'indisponible',
         'refuse',

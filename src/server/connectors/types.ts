@@ -41,6 +41,8 @@ export type SyncState = { cursor: string | null; since: Date };
 // `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
 export type SyncPage = { items: ConnectorItem[]; cursor: string; removed?: string[] };
 
+export type VerifiedAccount = { account: string; accountKey?: string; email?: string };
+
 // Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
 export type OAuthTokens = {
   accessToken: string;
@@ -93,7 +95,9 @@ export type Connector<Config> = {
   privateRaw?: boolean;
   // `account` : le libellé affiché. `accountKey` : l'identifiant stable du compte (et de l'espace ou du
   // site), lu dans une réponse déjà demandée ; « Reconnecter » le compare. Absent quand l'outil n'en dit rien.
-  verify(config: Config, http: ConnectorHttp): Promise<{ account: string; accountKey?: string }>;
+  // `email` : l'adresse du compte, quand l'outil la donne ; un branchement par Pipedream refuse celle d'un
+  // autre membre (oauth-routes.ts).
+  verify(config: Config, http: ConnectorHttp): Promise<VerifiedAccount>;
   sync(config: Config, state: SyncState, http: ConnectorHttp): AsyncIterable<SyncPage>;
   oauth?: OAuthSpec; // le bouton ; absent : l'outil ne se branche que par clé
   // Le bouton passe par Pipedream Connect (pipedream.ts) : `app` est le nom de l'appli chez Pipedream.

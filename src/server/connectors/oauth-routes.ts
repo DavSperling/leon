@@ -7,6 +7,7 @@ import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import { DEFAULT_SINCE, fieldsFromForm, SINCE_VALUES } from '@/lib/connection-form';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { auth } from '@/server/auth/auth';
+import { isOtherMemberEmail } from '@/server/auth/members';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
@@ -48,7 +49,7 @@ import {
   type PipedreamEnv,
   pipedreamEnv,
 } from './pipedream';
-import type { AnyConnector, OAuthSpec } from './types';
+import type { AnyConnector, OAuthSpec, VerifiedAccount } from './types';
 
 // Les routes du bouton « Se connecter avec… » : `POST /:outil/debut` envoie chez l'éditeur (ou chez
 // Pipedream), `GET /:appli/retour` termine le branchement (`GET /pipedream/retour` pour Pipedream). Rien de ce que dit l'éditeur ne finit dans une
@@ -69,6 +70,7 @@ type ReturnCode =
   | 'admin'
   | 'admin_accorde'
   | 'autre_compte'
+  | 'collegue'
   | 'vide';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -298,7 +300,7 @@ async function verifyConfig(
   connector: AnyConnector,
   config: Record<string, unknown>,
   http: ConnectorHttp,
-): Promise<{ account: string; accountKey?: string }> {
+): Promise<VerifiedAccount> {
   try {
     return await connector.verify(config, http);
   } catch (error) {
@@ -311,6 +313,15 @@ async function verifyConfig(
 // premier site quand le sien n'est plus accessible) : la connexion garde ses jetons.
 class OtherAccount extends Error {
   override name = 'OtherAccount';
+}
+
+// Un lien Pipedream peut être ouvert par quelqu'un d'autre que celui qui l'a demandé (il est fait pour être
+// envoyé), et rien au retour ne dit qui a donné l'accord : le compte branché est celui du lien. Sans ce refus,
+// un membre ferait brancher la boîte d'un collègue sur sa propre connexion, privée à lui.
+// shortcut: Slack ne rend pas d'adresse sans un droit de plus (users:read.email), le refus ne le couvre pas ; à
+// ajouter si Slack sert en vrai.
+class ColleagueAccount extends Error {
+  override name = 'ColleagueAccount';
 }
 
 // Le compte se reconnaît à l'identifiant stable rendu par `verify` (`accountKey`, gardé dans la config
@@ -406,6 +417,8 @@ async function connectPipedream(
   const config = parsed.data;
   const http = connectorHttp(provider, connector, config, { fetchImpl: deps.fetchImpl });
   const verified = await verifyConfig(connector, config, http);
+  if (verified.email && (await isOtherMemberEmail(ctx, verified.email)))
+    throw new ColleagueAccount();
   const { accountKey } = verified;
   const kept = accountKey === undefined ? config : { ...config, accountKey };
   const secretFields = [...PIPEDREAM_SECRET_FIELDS, ...connector.secretFields];
@@ -435,6 +448,7 @@ function failureCode(error: unknown, provider: ProviderId): ReturnCode {
   if (error instanceof OAuthRefusedError) return error.adminConsent ? 'admin' : 'refuse';
   if (error instanceof PreFieldsRejected) return 'champs';
   if (error instanceof OtherAccount) return 'autre_compte';
+  if (error instanceof ColleagueAccount) return 'collegue';
   if (error instanceof NothingToReadError) return 'vide';
   return error instanceof ConnectorAuthError ? 'refuse' : 'indisponible';
 }

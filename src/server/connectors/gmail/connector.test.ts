@@ -121,6 +121,7 @@ describe('gmailConnector : configuration', () => {
     expect(await gmailConnector.verify(config, http)).toEqual({
       account: 'David@Acme.test',
       accountKey: 'david@acme.test',
+      email: 'David@Acme.test',
     });
   });
 });

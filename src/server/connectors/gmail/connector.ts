@@ -63,7 +63,7 @@ export const gmailConnector: Connector<PipedreamConfig> = {
 
   async verify(_config, http) {
     const { emailAddress } = await gmailClient(http).profile();
-    return { account: emailAddress, accountKey: emailAddress.toLowerCase() };
+    return { account: emailAddress, accountKey: emailAddress.toLowerCase(), email: emailAddress };
   },
 
   async *sync(_config, { cursor, since }, http): AsyncGenerator<SyncPage> {

@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { type AnyColumn, and, asc, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import { type AnyColumn, and, asc, eq, isNull, ne, type SQL, sql } from 'drizzle-orm';
 import { db } from '@/server/db/client';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
@@ -42,6 +42,23 @@ export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
     .innerJoin(users, eq(users.id, members.userId))
     .where(eq(members.organizationId, ctx.tenantId))
     .orderBy(asc(members.createdAt), asc(members.id));
+}
+
+// L'adresse est-elle celle d'un autre membre de l'organisation (casse ignorée) ?
+export async function isOtherMemberEmail(ctx: TenantContext, email: string): Promise<boolean> {
+  const [found] = await db
+    .select({ id: members.id })
+    .from(members)
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(
+      and(
+        eq(members.organizationId, ctx.tenantId),
+        ne(members.userId, ctx.userId),
+        sql`lower(${users.email}) = lower(${email})`,
+      ),
+    )
+    .limit(1);
+  return found !== undefined;
 }
 
 // Le lien en clair n'est renvoyé qu'ici, une seule fois ; null si le lecteur n'est ni propriétaire ni administrateur.

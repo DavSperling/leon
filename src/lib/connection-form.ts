@@ -141,6 +141,7 @@ export const OAUTH_RETURN_CODES = [
   'admin',
   'admin_accorde',
   'autre_compte',
+  'collegue',
   'vide',
 ] as const;
 type OAuthReturnCode = (typeof OAUTH_RETURN_CODES)[number];
@@ -185,6 +186,8 @@ function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
       return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
     case 'autre_compte':
       return `Reconnectez ${object} avec le même compte et le même site, ou ajoutez une autre connexion.`;
+    case 'collegue':
+      return "Ce compte est celui d'un autre membre de l'équipe : chacun branche le sien.";
     case 'vide':
       if (tool === 'airtable') {
         return 'Leon est connecté à Airtable, mais aucune base n’a été choisie. Reconnectez-vous et cochez au moins une base.';
@@ -215,6 +218,8 @@ function errorTextEn(code: OAuthReturnCode, tool: ProviderId | null): string {
       return 'Consent granted: click Continue with Outlook again.';
     case 'autre_compte':
       return `Reconnect ${object} with the same account and site, or add another connection.`;
+    case 'collegue':
+      return 'This account belongs to another team member: everyone connects their own.';
     case 'vide':
       if (tool === 'airtable') {
         return 'Leon is connected to Airtable, but no base was selected. Reconnect and select at least one base.';

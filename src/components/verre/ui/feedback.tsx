@@ -34,11 +34,11 @@ export function SkeletonText({
   );
 }
 
-/** Page en chargement : barre de titre, sous-titre, cinq lignes de deux traits ; « Chargement… » pour les lecteurs d'écran. */
-export function PageSkeleton() {
+/** Page en chargement : barre de titre, sous-titre, cinq lignes de deux traits ; `label` pour les lecteurs d'écran. */
+export function PageSkeleton({ label }: { label: string }) {
   return (
     <div role="status" className="grid gap-3 pt-2">
-      <span className="sr-only">Chargement…</span>
+      <span className="sr-only">{label}</span>
       <Skeleton className="h-7 w-56 rounded-lg" />
       <Skeleton className="mb-5 h-3 w-96 max-w-full" />
       {[0, 1, 2, 3, 4].map((i) => (

@@ -75,7 +75,8 @@
     "page": "Page {page}",
     "pageOf": "Page {page} sur {pages}",
     "openIn": "Ouvrir dans {tool}",
-    "newTab": " (s'ouvre dans un nouvel onglet)"
+    "newTab": " (s'ouvre dans un nouvel onglet)",
+    "loading": "Chargement…"
   },
   "discussions": {
     "title": "Discussions",

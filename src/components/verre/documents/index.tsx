@@ -1,9 +1,10 @@
 'use client';
 
 import { FileText, Trash2, Upload } from 'lucide-react';
-import { useActionState } from 'react';
+import { type FormEvent, useActionState, useState } from 'react';
 import { deleteDocumentAction, uploadDocumentAction } from '@/app/(app)/documents/actions';
 import { Button, EmptyState, GlassCard, Notice, PageHeader, Section } from '@/components/verre';
+import { DOCUMENT_MAX_BYTES, type DocumentErrorCode } from '@/lib/documents';
 import { formatRelative } from '@/lib/format';
 import { nb } from '@/lib/verre';
 
@@ -15,11 +16,33 @@ type DocumentRow = {
   ownerName: string;
 };
 
+const ERRORS: Record<DocumentErrorCode, string> = {
+  missing: 'Choisissez un fichier à ajouter.',
+  unreadable:
+    'Fichier illisible. Choisissez un PDF, Excel, Word, PowerPoint, CSV, TXT ou Markdown de 10 Mo maximum.',
+  empty: 'Aucun texte lisible dans ce fichier.',
+  too_long: 'Ce document contient trop de texte (maximum 1 million de caractères).',
+  failed: 'Impossible d’enregistrer ce document. Réessayez.',
+};
+
 function UploadForm() {
-  const [state, action, pending] = useActionState(uploadDocumentAction, { error: null });
+  const [state, action, pending] = useActionState(uploadDocumentAction, {
+    error: null,
+    partial: false,
+  });
+  // Au-delà de la limite de Next, la requête est refusée avant l'action et la page d'erreur s'affiche :
+  // la taille se vérifie avant l'envoi (le serveur la vérifie aussi).
+  const [tooBig, setTooBig] = useState(false);
+  const checkSize = (event: FormEvent<HTMLFormElement>) => {
+    const file = new FormData(event.currentTarget).get('file');
+    const refused = file instanceof File && file.size > DOCUMENT_MAX_BYTES;
+    setTooBig(refused);
+    if (refused) event.preventDefault();
+  };
+  const error = tooBig ? 'unreadable' : state.error;
   return (
     <GlassCard variant="raised" className="p-5">
-      <form action={action} className="flex flex-wrap items-end gap-4">
+      <form action={action} onSubmit={checkSize} className="flex flex-wrap items-end gap-4">
         <label className="grid min-w-0 flex-1 gap-2 text-label font-medium text-fg-2">
           Choisir un document
           <input
@@ -38,9 +61,14 @@ function UploadForm() {
       <p id="formats-documents" className="mt-3 text-label text-muted">
         PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte ou Markdown · 10 Mo maximum.
       </p>
-      {state.error && (
+      {error && (
         <Notice tone="error" className="mt-4" live="alert">
-          {nb(state.error)}
+          {nb(ERRORS[error])}
+        </Notice>
+      )}
+      {!error && state.partial && (
+        <Notice tone="warning" className="mt-4" live="status">
+          {nb('Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.')}
         </Notice>
       )}
     </GlassCard>

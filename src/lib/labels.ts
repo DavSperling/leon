@@ -1,4 +1,4 @@
-import type { SourceKind } from '@/capture/turn';
+import type { ItemNature, SourceKind } from '@/capture/turn';
 import { PROVIDER_LABELS } from '@/lib/providers';
 
 // Libellés d'affichage. Module pur : n'importe ni env ni la base.
@@ -10,6 +10,29 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   mcp_remember: 'Note MCP',
   ...PROVIDER_LABELS,
 };
+
+// L'interface en anglais : les types de source, que la recherche lit aussi dans la barre (`type:meeting`).
+export const NATURE_LABELS_EN: Record<ItemNature, string> = {
+  conversation: 'AI conversation',
+  reunion: 'Meeting',
+  page: 'Page',
+  ticket: 'Ticket',
+  fil: 'Thread',
+  note: 'Note',
+  mail: 'Email',
+  fichier: 'File',
+  evenement: 'Event',
+  commit: 'Code change',
+};
+
+// Les filtres anglais de la barre, lus comme leur équivalent français : `from:` vaut `de:`. Ici pour que la
+// recherche (parse-query.ts) et la barre (url-state.ts), qui n'importe rien du serveur, partagent la même liste.
+export const FILTER_ALIASES = {
+  from: 'de',
+  tool: 'outil',
+  since: 'depuis',
+  before: 'avant',
+} as const;
 
 export function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10);

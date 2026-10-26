@@ -3,6 +3,7 @@
 // composants (côté navigateur) s'en servent de la même façon.
 
 import { stripHighlightMarks } from '@/lib/highlight';
+import { FILTER_ALIASES } from '@/lib/labels';
 import { PAGE_MAX, QUERY_MAX_CHARS } from '@/lib/search-limits';
 
 // Identifiant de la zone de saisie : ⌘K la retrouve par lui pour y mettre le curseur (command-search.tsx).
@@ -63,16 +64,13 @@ export function searchHref(state: { q?: string; page?: number }): string {
 // guillemet non fermé ignoré. Un test compare les deux lectures.
 
 export const FILTER_KEYS = ['de', 'outil', 'type', 'depuis', 'avant'] as const;
-export type FilterKey = (typeof FILTER_KEYS)[number] | 'from' | 'tool' | 'since' | 'before';
+// Les clés anglaises (`from:`…) valent leur équivalent français.
+export type FilterKey = (typeof FILTER_KEYS)[number] | keyof typeof FILTER_ALIASES;
 
 const FILTER_KEY = /^(de|from|outil|tool|type|depuis|since|avant|before):/i;
-const FILTER_ALIASES: Record<string, string> = {
-  from: 'de',
-  tool: 'outil',
-  since: 'depuis',
-  before: 'avant',
-};
-const canonicalKey = (key: FilterKey): string => FILTER_ALIASES[key] ?? key;
+export type CanonicalKey = (typeof FILTER_KEYS)[number];
+export const canonicalKey = (key: FilterKey): CanonicalKey =>
+  (FILTER_ALIASES as Partial<Record<FilterKey, CanonicalKey>>)[key] ?? (key as CanonicalKey);
 // `depuis` et `avant` n'ont qu'une valeur ; les autres s'additionnent.
 const SINGLE_VALUED: ReadonlySet<FilterKey> = new Set(['depuis', 'avant']);
 
@@ -139,8 +137,7 @@ export function filterTokens(q: string): FilterToken[] {
 }
 
 const sameFilter = (token: FilterToken, key: FilterKey, value: string) =>
-  (FILTER_ALIASES[token.key] ?? token.key) === (FILTER_ALIASES[key] ?? key) &&
-  squash(token.value) === squash(value);
+  canonicalKey(token.key) === canonicalKey(key) && squash(token.value) === squash(value);
 
 export function hasFilter(q: string, key: FilterKey, value: string): boolean {
   return filterTokens(q).some((token) => sameFilter(token, key, value));
@@ -176,7 +173,7 @@ export function withFilter(q: string, key: FilterKey, value: string): string {
   const clean = tidy(value);
   if (clean === '') return q.trim();
   if (hasFilter(q, key, clean)) return q;
-  const base = SINGLE_VALUED.has(canonicalKey(key) as FilterKey)
+  const base = SINGLE_VALUED.has(canonicalKey(key))
     ? removeTokens(
         q,
         filterTokens(q).filter((token) => canonicalKey(token.key) === canonicalKey(key)),

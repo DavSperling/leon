@@ -37,7 +37,7 @@ export async function runChat(directory: string): Promise<number> {
   console.log('Leon · chat privé au terminal');
   console.log(`Lecture locale : ${directory}`);
   console.log(
-    'Les fichiers ne sont pas enregistrés dans Leon. Les extraits utiles sont transmis au modèle hébergé.',
+    'Les fichiers restent sur cette machine. Leon demandera votre accord avant d’envoyer des extraits au modèle hébergé.',
   );
   console.log('Chargement des documents…\n');
   const documents = await loadLocalDocuments(directory);
@@ -49,17 +49,44 @@ export async function runChat(directory: string): Promise<number> {
     prompt: '\u001b[38;2;116;190;195mVous › \u001b[0m',
   });
   const history: ChatMessage[] = [];
+  let historyMayContainLocal = false;
+  const input = lines[Symbol.asyncIterator]();
   lines.prompt();
-  for await (const line of lines) {
+  for (;;) {
+    const next = await input.next();
+    if (next.done) break;
+    const line = next.value;
     const query = line.trim();
     if (!query) {
       lines.prompt();
       continue;
     }
     if (['quitter', 'exit', 'quit'].includes(query.toLocaleLowerCase('fr'))) break;
-    const localContext = findLocalPassages(documents, query);
+    let localContext = findLocalPassages(documents, query);
+    let approvedHistory = history;
+    if (localContext.length > 0 || historyMayContainLocal) {
+      const files = [...new Set(localContext.map(({ path }) => path))];
+      const foundFiles = files.length
+        ? `Leon a trouvé ${localContext.length} extrait(s) dans ${files.length} fichier(s) :\n${files.map((file) => `  • ${file}`).join('\n')}\n`
+        : 'L’historique du chat peut contenir des informations tirées de fichiers locaux.\n';
+      process.stdout.write(
+        `${foundFiles}Autorisez-vous l’envoi de ces extraits et de l’historique au modèle Leon hébergé pour cette réponse ? [o/N] `,
+      );
+      const consent = await input.next();
+      if (consent.done) break;
+      const accepted = /^(o|oui|y|yes)$/i.test(consent.value.trim());
+      if (!accepted) {
+        localContext = [];
+        approvedHistory = [];
+        historyMayContainLocal = false;
+        history.splice(0);
+        console.log('Je continue sans les fichiers locaux ni l’historique du chat.');
+      } else if (localContext.length > 0) {
+        historyMayContainLocal = true;
+      }
+    }
     try {
-      const answer = await askLeon(config, query, history, localContext);
+      const answer = await askLeon(config, query, approvedHistory, localContext);
       console.log(`\n\u001b[38;2;116;190;195mLeon ›\u001b[0m ${answer}\n`);
       history.push({ role: 'user', content: query }, { role: 'assistant', content: answer });
     } catch (error) {

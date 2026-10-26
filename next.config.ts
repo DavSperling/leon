@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  experimental: { serverActions: { bodySizeLimit: '12mb' } },
   // Aucune page ne s'affiche dans un cadre : protège les boutons « Partager » et « Révoquer ».
   async headers() {
     return [

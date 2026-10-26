@@ -8,6 +8,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note MCP',
+  document: 'Document manuel',
   ...PROVIDER_LABELS,
 };
 

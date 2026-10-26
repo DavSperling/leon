@@ -2,8 +2,33 @@
   "navigation": {
     "search": "Search",
     "discussions": "Discussions",
+    "documents": "Documents",
     "connections": "Connections",
     "settings": "Settings"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Add files so your team can find them in search and discussions.",
+    "addSection": "Add a document",
+    "chooseFile": "Choose a document",
+    "add": "Add document",
+    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, text or Markdown · 10 MB max.",
+    "partial": "Document added, but only partly indexed: it is too large to be read in full.",
+    "teamSection": "Team documents",
+    "teamDescription": "The extracted text is indexed in Leon’s memory.",
+    "emptyTitle": "No documents yet.",
+    "emptyDescription": "Add a file above to make it searchable by your team.",
+    "untitled": "Untitled document",
+    "addedBy": "Added by {name} · {when}",
+    "delete": "Delete",
+    "deleteLabel": "Delete {title}",
+    "errors": {
+      "missing": "Choose a file to add.",
+      "unreadable": "Unreadable file. Choose a PDF, Excel, Word, PowerPoint, CSV, TXT or Markdown file of 10 MB max.",
+      "empty": "No readable text in this file.",
+      "too_long": "This document has too much text (1 million characters max).",
+      "failed": "Couldn’t save this document. Try again."
+    }
   },
   "shell": {
     "skipToContent": "Skip to content",

@@ -2,8 +2,33 @@
   "navigation": {
     "search": "Recherche",
     "discussions": "Discussions",
+    "documents": "Documents",
     "connections": "Connexions",
     "settings": "Réglages"
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Ajoutez des fichiers pour que l’équipe puisse les retrouver dans la recherche et les discussions.",
+    "addSection": "Ajouter un document",
+    "chooseFile": "Choisir un document",
+    "add": "Ajouter le document",
+    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte ou Markdown · 10 Mo maximum.",
+    "partial": "Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.",
+    "teamSection": "Documents de l’équipe",
+    "teamDescription": "Le texte extrait est indexé dans la mémoire de Leon.",
+    "emptyTitle": "Aucun document pour l’instant.",
+    "emptyDescription": "Ajoutez un fichier ci-dessus pour le rendre consultable par l’équipe.",
+    "untitled": "Document sans titre",
+    "addedBy": "Ajouté par {name} · {when}",
+    "delete": "Supprimer",
+    "deleteLabel": "Supprimer {title}",
+    "errors": {
+      "missing": "Choisissez un fichier à ajouter.",
+      "unreadable": "Fichier illisible. Choisissez un PDF, Excel, Word, PowerPoint, CSV, TXT ou Markdown de 10 Mo maximum.",
+      "empty": "Aucun texte lisible dans ce fichier.",
+      "too_long": "Ce document contient trop de texte (maximum 1 million de caractères).",
+      "failed": "Impossible d’enregistrer ce document. Réessayez."
+    }
   },
   "shell": {
     "skipToContent": "Aller au contenu",

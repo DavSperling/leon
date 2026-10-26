@@ -20,5 +20,7 @@ export const connectedTools = <T extends Pick<CatalogItem, 'id'>>(
     .map((x) => x.p);
 
 /** « Clé ••••abcd · branché par Julie le 12 oct. 2026 » (« Jeton » pour OAuth), toujours avec la date, même aujourd'hui. */
-export const secretText = (c: ConnectionView): string =>
-  `${canReconnect(c) ? 'Jeton' : 'Clé'} ••••${c.secretHint} · branché par ${c.createdBy.name} le ${formatDate(c.createdAt)}`;
+export const secretText = (c: ConnectionView, locale = 'fr'): string =>
+  locale === 'en'
+    ? `${canReconnect(c) ? 'Token' : 'Key'} ••••${c.secretHint} · connected by ${c.createdBy.name} on ${formatDate(c.createdAt, locale)}`
+    : `${canReconnect(c) ? 'Jeton' : 'Clé'} ••••${c.secretHint} · branché par ${c.createdBy.name} le ${formatDate(c.createdAt)}`;

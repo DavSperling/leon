@@ -94,8 +94,9 @@ export function MemoryStatus({
   className?: string;
   onNavigate?: () => void;
 }) {
+  const t = useTranslations('shell');
   if (stale.length === 0) return null;
-  const label = `Mémoire en retard · ${stale.map((c) => c.kindLabel).join(', ')}`;
+  const label = `${t('memoryLate')} · ${stale.map((c) => c.kindLabel).join(', ')}`;
   return (
     <Tooltip content={label} side="right">
       <Link

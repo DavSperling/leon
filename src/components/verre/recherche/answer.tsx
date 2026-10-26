@@ -131,7 +131,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
         <div aria-live="polite" aria-busy={busy} className="relative z-[1] mt-2.5 max-w-[72ch]">
           {state.status === 'charge' && <SkeletonText className="pt-2 pb-1" />}
           {state.status === 'indisponible' && (
-            <p className={cn(TEXT, 'text-muted')}>{t('unavailable')}</p>
+            <p className={cn(TEXT, 'text-muted')}>{nb(t('unavailable'))}</p>
           )}
           {(state.status === 'flux' || state.status === 'fini') && (
             <p className={cn(TEXT, notEnough ? 'text-muted' : 'text-fg')}>
@@ -145,7 +145,9 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
                       n={n}
                       animate={state.status === 'flux'}
                       href={`#${resultAnchorId(r.sourceId)}`}
-                      label={t('result', { number: n, title: r.title?.trim() || 'Untitled' })}
+                      label={nb(
+                        t('result', { number: n, title: r.title?.trim() || t('untitled') }),
+                      )}
                       active={lit.includes(n)}
                       onMouseEnter={() => onLit(n)}
                       onMouseLeave={() => onLit(null)}
@@ -168,7 +170,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
           <div className="relative z-[1] mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line pt-3">
             {!notEnough && (
               <p className="min-w-0 flex-1 basis-[280px] text-label text-muted">
-                {t('sourceNote')}
+                {nb(t('sourceNote'))}
               </p>
             )}
             <ContinueInDiscussion q={q} sourceIds={resultIds} />

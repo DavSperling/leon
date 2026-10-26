@@ -1,6 +1,6 @@
 import { type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { formatNumber } from '@/lib/format';
-import { SOURCE_KIND_LABELS } from '@/lib/labels';
+import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PAGE_MAX, PAGE_SIZE } from '@/lib/search-limits';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 
@@ -19,18 +19,6 @@ export const NATURE_LABELS: Record<ItemNature, string> = {
   fichier: 'Fichier',
   evenement: 'Évènement',
   commit: 'Modification de code',
-};
-const NATURE_LABELS_EN: Record<ItemNature, string> = {
-  conversation: 'AI conversation',
-  reunion: 'Meeting',
-  page: 'Page',
-  ticket: 'Ticket',
-  fil: 'Thread',
-  note: 'Note',
-  mail: 'Email',
-  fichier: 'File',
-  evenement: 'Event',
-  commit: 'Code change',
 };
 
 export type ResultPassageView = {
@@ -108,15 +96,15 @@ function knownKind(kind: string): SourceKind | 'other' {
   return KNOWN_KINDS.has(kind) ? (kind as SourceKind) : 'other';
 }
 
-function kindLabelOf(kind: string): string {
+function kindLabelOf(kind: string, locale: string): string {
   return KNOWN_KINDS.has(kind)
     ? SOURCE_KIND_LABELS[kind as SourceKind]
-    : kind.trim() || 'Autre outil';
+    : kind.trim() || (locale === 'en' ? 'Other tool' : 'Autre outil');
 }
 
 function labelsOf(source: Pick<SourceInfo, 'kind' | 'nature' | 'origin'>, locale: string) {
   return {
-    kindLabel: kindLabelOf(source.kind),
+    kindLabel: kindLabelOf(source.kind, locale),
     natureLabel: locale === 'en' ? NATURE_LABELS_EN[source.nature] : NATURE_LABELS[source.nature],
     originLabel: originLabel(source.origin),
   };
@@ -145,6 +133,7 @@ const ROLE_SPEAKERS: Record<ContextTurn['role'], string> = {
   document: 'Document',
   participant: 'Participant',
 };
+const ROLE_SPEAKERS_EN: Record<ContextTurn['role'], string> = { ...ROLE_SPEAKERS, user: 'You' };
 
 export function toPreviewView(
   context: { source: SourceInfo; turns: ContextTurn[] },
@@ -159,15 +148,7 @@ export function toPreviewView(
     turns: context.turns.map((turn) => ({
       turnId: turn.turnId,
       speaker:
-        turn.authorName?.trim() ||
-        (locale === 'en'
-          ? {
-              user: 'You',
-              assistant: 'Assistant',
-              document: 'Document',
-              participant: 'Participant',
-            }[turn.role]
-          : ROLE_SPEAKERS[turn.role]),
+        turn.authorName?.trim() || (locale === 'en' ? ROLE_SPEAKERS_EN : ROLE_SPEAKERS)[turn.role],
       ts: turn.ts,
       text: turn.text,
       isHit: turn.isHit,
@@ -196,12 +177,14 @@ export function queryTerms(text: string): string[] {
 
 // Au-delà d'une page, le total est celui des candidats que la recherche a gardés : pas un compte exact de la base.
 export function countLabel(total: number, locale = 'fr'): string {
-  const plural =
-    locale === 'en' ? (total === 1 ? 'source' : 'sources') : total > 1 ? 'sources' : 'source';
-  const number = formatNumber(total, locale);
-  if (locale === 'en')
-    return total <= PAGE_SIZE ? `${number} ${plural}` : `About ${number} ${plural}`;
-  return total <= PAGE_SIZE ? `${number} ${plural}` : `Environ ${number} ${plural}`;
+  if (locale === 'en') {
+    const plural = total === 1 ? 'source' : 'sources';
+    return total <= PAGE_SIZE
+      ? `${total} ${plural}`
+      : `About ${formatNumber(total, locale)} ${plural}`;
+  }
+  const plural = total > 1 ? 'sources' : 'source';
+  return total <= PAGE_SIZE ? `${total} ${plural}` : `Environ ${formatNumber(total)} ${plural}`;
 }
 
 export function pageCount(total: number): number {
@@ -210,10 +193,11 @@ export function pageCount(total: number): number {
 
 export function unknownPeopleMessage(names: string[], locale = 'fr'): string | null {
   if (names.length === 0) return null;
-  const quoted = names.map((name) => (locale === 'en' ? `“${name}”` : `« ${name} »`));
+  const en = locale === 'en';
+  const quoted = names.map((name) => (en ? `“${name}”` : `« ${name} »`));
   const last = quoted.pop() as string;
-  const list = quoted.length === 0 ? last : `${quoted.join(', ')} ni ${last}`;
-  return locale === 'en'
+  const list = quoted.length === 0 ? last : `${quoted.join(', ')} ${en ? 'or' : 'ni'} ${last}`;
+  return en
     ? `No one on the team is called ${list}.`
     : `Personne ne s’appelle ${list} dans l’équipe.`;
 }

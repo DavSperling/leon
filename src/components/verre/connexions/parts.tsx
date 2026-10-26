@@ -60,29 +60,23 @@ export function StatusText({
   );
 }
 
-/** L'état d'une connexion en un mot, avec son icône : Actif, En pause, En erreur, Arrêtée (créateur parti). */
+/** L'état d'une connexion en un mot (sa clé dans les messages), avec son icône : Actif, En pause, En erreur, Arrêtée
+ *  (créateur parti). */
 export function connState(c: Pick<ConnectionView, 'status' | 'creatorLeft'>): {
-  word: string;
+  word: 'statusStopped' | 'statusError' | 'statusPaused' | 'statusActive';
   tone: StatusTone;
   icon: LucideIcon;
 } {
-  if (c.creatorLeft) return { word: 'Arrêtée', tone: 'destructive', icon: CircleStop };
-  if (c.status === 'error') return { word: 'En erreur', tone: 'destructive', icon: CircleX };
-  if (c.status === 'paused') return { word: 'En pause', tone: 'muted', icon: Pause };
-  return { word: 'Actif', tone: 'success', icon: CircleCheck };
+  if (c.creatorLeft) return { word: 'statusStopped', tone: 'destructive', icon: CircleStop };
+  if (c.status === 'error') return { word: 'statusError', tone: 'destructive', icon: CircleX };
+  if (c.status === 'paused') return { word: 'statusPaused', tone: 'muted', icon: Pause };
+  return { word: 'statusActive', tone: 'success', icon: CircleCheck };
 }
 
 /** Le mot d'état seul, icône en ligne : il s'aligne sur la ligne de base du texte voisin. */
 export function StateWord({ c, className }: { c: ConnectionView; className?: string }) {
   const t = useTranslations('connections');
-  const { tone, icon: Icon } = connState(c);
-  const localizedWord = c.creatorLeft
-    ? t('statusStopped')
-    : c.status === 'error'
-      ? t('statusError')
-      : c.status === 'paused'
-        ? t('statusPaused')
-        : t('statusActive');
+  const { word, tone, icon: Icon } = connState(c);
   return (
     <p className={cn('text-[12.5px] font-medium whitespace-nowrap', TONES[tone].cls, className)}>
       <Icon
@@ -90,7 +84,7 @@ export function StateWord({ c, className }: { c: ConnectionView; className?: str
         strokeWidth={1.8}
         className={cn('mr-1.5 inline size-3.5 align-[-2.5px]', TONES[tone].iconCls)}
       />
-      {localizedWord}
+      {t(word)}
     </p>
   );
 }

@@ -8,7 +8,7 @@ import { previewPassageAction } from '@/app/(app)/actions';
 import { searchHref } from '@/components/search/url-state';
 import type { ResultView } from '@/components/search/view-model';
 import { Button, EmptyState, Notice, Pagination } from '@/components/verre';
-import { cn, useMinWidth } from '@/lib/verre';
+import { cn, nb, useMinWidth } from '@/lib/verre';
 import { AnswerCard } from './answer';
 import { type Opened, PreviewPane, PreviewSheet } from './preview';
 import { type OpenPreview, ResultCard } from './results';
@@ -146,7 +146,7 @@ export function SearchResults({
           )}
           {failed && (
             <Notice tone="error" live="alert">
-              {t('failed')}
+              {nb(t('failed'))}
             </Notice>
           )}
           {!failed &&

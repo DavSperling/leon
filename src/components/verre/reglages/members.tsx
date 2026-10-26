@@ -65,7 +65,7 @@ export function MembersSection({
       }
     >
       <GlassCard className="p-1.5">
-        <ul aria-label={t('membersTitle')} className="grid grid-cols-[minmax(0,1fr)]">
+        <ul aria-label={t('membersList')} className="grid grid-cols-[minmax(0,1fr)]">
           {members.map((m) => (
             <li
               key={m.id}

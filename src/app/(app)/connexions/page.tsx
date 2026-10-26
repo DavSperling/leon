@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Connexions } from '@/components/verre/connexions';
 import { oauthNotice } from '@/lib/connection-form';
 import { requireUserContext } from '@/server/auth/session';
@@ -22,7 +22,7 @@ export default async function ConnectionsPage({
   const catalog = listCatalog();
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
-  const notice = oauthNotice(await searchParams);
+  const notice = oauthNotice(await searchParams, await getLocale());
   const consentUrl = catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null;
   const now = new Date();
   return (

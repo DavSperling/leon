@@ -5,10 +5,12 @@ import { ITEM_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
-import { SOURCE_KIND_LABELS } from '@/lib/labels';
+import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
 import { parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
 import {
+  type CanonicalKey,
+  canonicalKey,
   type FilterKey,
   filterTokens,
   hasFilter,
@@ -31,61 +33,56 @@ export type ActiveChip = {
   removeLabel: string;
 };
 
-const KEY_LABELS: Record<string, string> = {
+const KEY_LABELS: Record<CanonicalKey, string> = {
   de: 'Personne',
   outil: 'Outil',
   type: 'Type',
   depuis: 'Depuis',
   avant: 'Avant',
 };
-const KEY_LABELS_EN: Record<string, string> = {
+const KEY_LABELS_EN: Record<CanonicalKey, string> = {
   de: 'Person',
   outil: 'Tool',
   type: 'Type',
   depuis: 'Since',
   avant: 'Before',
 };
-const FILTER_ALIASES: Record<string, string> = {
-  from: 'de',
-  tool: 'outil',
-  since: 'depuis',
-  before: 'avant',
-};
-const canonicalKey = (key: FilterKey): FilterKey => (FILTER_ALIASES[key] ?? key) as FilterKey;
 
+// Les unités de `depuis:` : françaises (7j, 2s, 3m) ou anglaises (7d, 2w, 3mo), que la recherche lit toutes.
+const UNIT_OF: Record<string, string> = { d: 'j', w: 's', mo: 'm' };
 const UNITS: Record<string, [string, string]> = {
   j: ['jour', 'jours'],
   s: ['semaine', 'semaines'],
   m: ['mois', 'mois'],
 };
+const UNITS_EN: Record<string, [string, string]> = {
+  j: ['day', 'days'],
+  s: ['week', 'weeks'],
+  m: ['month', 'months'],
+};
 
 // `7j` → « 7 jours » ; une date → « 1 sept. 2026 ».
-function sinceLabel(value: string, parsed: Date | undefined, locale = 'fr'): string {
+function sinceLabel(value: string, parsed: Date | undefined, locale: string): string {
   const duration = /^(\d{1,4})(mo|[jsmdw])$/i.exec(value);
   if (duration) {
     const unit = (duration[2] as string).toLowerCase();
+    const [one, many] = (locale === 'en' ? UNITS_EN : UNITS)[UNIT_OF[unit] ?? unit] as [
+      string,
+      string,
+    ];
     const amount = Number(duration[1]);
-    if (locale === 'en') {
-      const name =
-        unit === 'd' || unit === 'j' ? 'day' : unit === 'w' || unit === 's' ? 'week' : 'month';
-      return `${amount} ${name}${amount === 1 ? '' : 's'}`;
-    }
-    const [one, many] = UNITS[
-      unit === 'd' ? 'j' : unit === 'w' ? 's' : unit === 'mo' ? 'm' : unit
-    ] as [string, string];
     return `${amount} ${amount === 1 ? one : many}`;
   }
   return parsed ? formatDate(parsed, locale) : value;
 }
 
-// Ce que `parseQuery` comprend d'un seul filtre, pour l'écrire en français et savoir s'il compte.
+// Ce que `parseQuery` comprend d'un seul filtre, pour l'écrire dans la langue de l'interface et savoir s'il compte.
 function describeFilter(
-  key: FilterKey,
+  key: CanonicalKey,
   value: string,
   now: Date,
-  locale = 'fr',
+  locale: string,
 ): { text: string; recognized: boolean } {
-  key = canonicalKey(key);
   const filters = parseQuery(`${key}:"${value}"`, now).filters;
   switch (key) {
     case 'de':
@@ -96,7 +93,8 @@ function describeFilter(
     }
     case 'type': {
       const nature = filters.natures?.[0];
-      return { text: nature ? NATURE_LABELS[nature] : value, recognized: nature !== undefined };
+      const labels = locale === 'en' ? NATURE_LABELS_EN : NATURE_LABELS;
+      return { text: nature ? labels[nature] : value, recognized: nature !== undefined };
     }
     case 'depuis':
       return {
@@ -108,16 +106,15 @@ function describeFilter(
         text: filters.until ? formatDate(filters.until, locale) : value,
         recognized: filters.until !== undefined,
       };
-    default:
-      return { text: value, recognized: false };
   }
 }
 
 export function buildActiveChips(q: string, now: Date, locale = 'fr'): ActiveChip[] {
   return filterTokens(q).map((token, index) => {
-    const { text, recognized } = describeFilter(token.key, token.value, now, locale);
     const key = canonicalKey(token.key);
-    const label = `${(locale === 'en' ? KEY_LABELS_EN : KEY_LABELS)[key]}: ${text}`;
+    const { text, recognized } = describeFilter(key, token.value, now, locale);
+    const label =
+      locale === 'en' ? `${KEY_LABELS_EN[key]}: ${text}` : `${KEY_LABELS[key]} : ${text}`;
     return {
       id: `${index}-${token.key}-${token.value}`,
       label,
@@ -136,6 +133,12 @@ const PERIODS: Array<{ value: string; label: string }> = [
   { value: '3m', label: '3 derniers mois' },
   { value: '12m', label: '12 derniers mois' },
 ];
+const PERIODS_EN: Array<{ value: string; label: string }> = [
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '3mo', label: 'Last 3 months' },
+  { value: '12mo', label: 'Last 12 months' },
+];
 
 // Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic.
 function option(q: string, key: FilterKey, value: string, label: string): FilterOption {
@@ -147,62 +150,31 @@ function option(q: string, key: FilterKey, value: string, label: string): Filter
   };
 }
 
+// En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
 export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
-  const english = locale === 'en';
-  const englishNatures: Record<string, string> = {
-    reunion: 'meeting',
-    fil: 'thread',
-    mail: 'email',
-    fichier: 'file',
-    evenement: 'event',
-    conversation: 'AI conversation',
-    commit: 'code change',
-  };
-  const natureLabels: Record<string, string> = {
-    conversation: 'AI conversation',
-    reunion: 'Meeting',
-    page: 'Page',
-    ticket: 'Ticket',
-    fil: 'Thread',
-    note: 'Note',
-    mail: 'Email',
-    fichier: 'File',
-    evenement: 'Event',
-    commit: 'Code change',
-  };
-  const periods = english
-    ? [
-        { value: '7d', label: 'Last 7 days' },
-        { value: '30d', label: 'Last 30 days' },
-        { value: '3mo', label: 'Last 3 months' },
-        { value: '12mo', label: 'Last 12 months' },
-      ]
-    : PERIODS;
+  const en = locale === 'en';
   return [
     {
       name: 'outil',
-      label: english ? 'Tool' : 'Outil',
+      label: en ? 'Tool' : 'Outil',
       options: toolOptions().map((tool) =>
-        option(q, english ? 'tool' : 'outil', tool.value, tool.label),
+        option(q, en ? 'tool' : 'outil', tool.value, tool.label),
       ),
     },
     {
       name: 'type',
-      label: english ? 'Type' : 'Type',
+      label: 'Type',
       options: ITEM_NATURES.map((nature) =>
-        option(
-          q,
-          'type',
-          english ? (englishNatures[nature] ?? nature) : nature,
-          english ? (natureLabels[nature] ?? nature) : NATURE_LABELS[nature],
-        ),
+        en
+          ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
+          : option(q, 'type', nature, NATURE_LABELS[nature]),
       ),
     },
     {
       name: 'periode',
-      label: english ? 'Date' : 'Période',
-      options: periods.map((period) =>
-        option(q, english ? 'since' : 'depuis', period.value, period.label),
+      label: en ? 'Date' : 'Période',
+      options: (en ? PERIODS_EN : PERIODS).map((period) =>
+        option(q, en ? 'since' : 'depuis', period.value, period.label),
       ),
     },
   ];

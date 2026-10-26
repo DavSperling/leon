@@ -32,7 +32,7 @@ export default async function SettingsPage() {
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
   // l'utilisateur, qui le colle lui-même.
   const extensionPrompt = t('extensionPrompt', { serverUrl });
-  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <votre jeton>"`;
+  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <${t('tokenPlaceholder')}>"`;
 
   return (
     <div className="mx-auto max-w-[760px]">
@@ -66,7 +66,7 @@ export default async function SettingsPage() {
           </Step>
           <Step n={2}>
             {t('step2')} <code className={INLINE}>chrome://extensions</code>, {t('developerMode')}{' '}
-            {nb(`“${t('loadUnpacked')}”`)} {t('chooseFolder')}{' '}
+            {nb(t('loadUnpacked'))} {t('chooseFolder')}{' '}
             <code className={INLINE}>extension/.output/chrome-mv3</code>.
           </Step>
           <Step n={3}>
@@ -83,7 +83,7 @@ export default async function SettingsPage() {
         <p className="mt-6 mb-2.5 text-body text-fg-2">
           {t('serverAddress')}
           <code className={INLINE}>WXT_PUBLIC_LEON_URL</code>
-          {t('serverAddressEnd')}
+          {nb(t('serverAddressEnd'))}
         </p>
         <CodeLine code={serverUrl} />
       </Section>

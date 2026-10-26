@@ -30,7 +30,7 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
     >
       <form ref={form} action={action}>
         <label htmlFor="nouvelle-question" className="sr-only">
-          {t('newQuestion')}
+          {t('newQuestionLabel')}
         </label>
         <Textarea
           id="nouvelle-question"

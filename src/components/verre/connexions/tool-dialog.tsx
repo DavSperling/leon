@@ -10,7 +10,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, type RefObject, useEffect, useRef, useState, useTransition } from 'react';
 import {
   connectAction,
@@ -38,6 +38,7 @@ import {
 import {
   type ActionResult,
   ADMIN_CONSENT_MESSAGE,
+  ADMIN_CONSENT_MESSAGE_EN,
   canReconnect,
   canSyncNow,
   DEFAULT_SINCE,
@@ -46,7 +47,6 @@ import {
   otherOwnersNote,
   panelMode,
   resultMessage,
-  SINCE_LABELS,
   SINCE_VALUES,
   type SinceDays,
 } from '@/lib/connection-form';
@@ -61,7 +61,6 @@ import { ConnStatus, StatusText } from './parts';
 
 const LINK =
   'inline-flex items-center gap-0.5 rounded-sm font-medium text-accent underline-offset-4 decoration-accent-line hover:underline';
-const SINCE_OPTIONS = SINCE_VALUES.map((value) => ({ value, label: SINCE_LABELS[value] }));
 /** Premier arrêt d'un formulaire d'ajout : « Se connecter avec … » s'il existe, sinon le premier champ de la clé. */
 const firstStop = (root: HTMLElement | null | undefined) =>
   root?.querySelector<HTMLElement>('[data-autofocus]') ??
@@ -88,7 +87,7 @@ function PeriodField({ disabled }: { disabled?: boolean }) {
     <Field label={t('periodLabel')} help={t('periodHelp')}>
       <Select
         name="since"
-        options={SINCE_OPTIONS}
+        options={SINCE_VALUES.map((value) => ({ value, label: t(`since.${value}`) }))}
         defaultValue={DEFAULT_SINCE}
         disabled={disabled}
       />
@@ -135,6 +134,7 @@ function KeyForm({
   onSuccess?: () => void;
 }) {
   const t = useTranslations('connections');
+  const locale = useLocale();
   const fields = replaceId
     ? entry.fields.filter((x) => x.kind === 'secret')
     : entry.fields.filter((x) => !shared || !entry.oauthPreFields.includes(x.name));
@@ -219,13 +219,13 @@ function KeyForm({
             <AnimatePresence mode="wait">
               {result && (
                 <motion.div
-                  key={resultMessage(result)}
+                  key={resultMessage(result, locale)}
                   initial={{ opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                 >
                   <StatusText tone={'error' in result ? 'destructive' : 'success'}>
-                    {resultMessage(result)}
+                    {resultMessage(result, locale)}
                   </StatusText>
                 </motion.div>
               )}
@@ -252,6 +252,7 @@ function AdminConsent({ url }: { url: string }) {
 // Les champs non secrets et la période partent avec ; les jetons, eux, ne passent jamais ici.
 function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLFormElement | null> }) {
   const t = useTranslations('connections');
+  const en = useLocale() === 'en';
   return (
     <form ref={ref} method="post" action={oauthStartPath(entry.id)} className="grid gap-4">
       {entry.oauthHelp && <p className="text-ui text-fg-2">{nb(entry.oauthHelp)}</p>}
@@ -268,7 +269,8 @@ function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLForm
       </div>
       {entry.adminConsentUrl && (
         <p className="text-label text-fg-2">
-          {nb(ADMIN_CONSENT_MESSAGE)} <AdminConsent url={entry.adminConsentUrl} />
+          {nb(en ? ADMIN_CONSENT_MESSAGE_EN : ADMIN_CONSENT_MESSAGE)}{' '}
+          <AdminConsent url={entry.adminConsentUrl} />
         </p>
       )}
     </form>
@@ -292,7 +294,9 @@ function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => 
     });
   };
   if (mode === 'none')
-    return <p className="text-ui text-fg-2">{t('unconfiguredApp', { provider: entry.label })}</p>;
+    return (
+      <p className="text-ui text-fg-2">{nb(t('unconfiguredApp', { provider: entry.label }))}</p>
+    );
   if (mode === 'key') return <KeyForm entry={entry} onSuccess={onAdded} />;
   return (
     <div className="grid gap-5">
@@ -355,6 +359,7 @@ function ConnectionCard({
   onRemoved: () => void;
 }) {
   const t = useTranslations('connections');
+  const locale = useLocale();
   const [replacing, setReplacing] = useState(false);
   const { pending, run } = useManage();
   const paused = c.status === 'paused';
@@ -370,7 +375,7 @@ function ConnectionCard({
       <div className="grid gap-1">
         <p className="text-ui font-semibold break-words text-fg">{c.label}</p>
         <ConnStatus c={c} now={now} />
-        <p className="font-mono text-meta tracking-normal text-muted">{secretText(c)}</p>
+        <p className="font-mono text-meta tracking-normal text-muted">{secretText(c, locale)}</p>
       </div>
       <div className="flex flex-wrap gap-1">
         <Button
@@ -379,7 +384,7 @@ function ConnectionCard({
           disabled={pending || !canSyncNow(c)}
           onClick={() => run(() => syncNowAction(c.id), t('syncRequested'), t('syncFailed'))}
         >
-          Synchroniser maintenant
+          {t('syncNow')}
         </Button>
         {c.canManage && (
           <>
@@ -395,7 +400,7 @@ function ConnectionCard({
                 )
               }
             >
-              {paused ? 'Reprendre' : 'Mettre en pause'}
+              {paused ? t('resume') : t('pause')}
             </Button>
             {c.isCreator &&
               (oauth ? (
@@ -448,11 +453,7 @@ function ConnectionCard({
         )}
       </div>
       {c.isCreator && oauth && canConnect && !entry.oauthReady && (
-        <p className="text-label text-muted">
-          {nb(
-            `L’appli ${entry.label} n’est plus configurée sur ce serveur : impossible de reconnecter.`,
-          )}
-        </p>
+        <p className="text-label text-muted">{nb(t('appGone', { provider: entry.label }))}</p>
       )}
       {replacing && canConnect && c.isCreator && !oauth && (
         <KeyForm entry={entry} replaceId={c.id} />
@@ -477,10 +478,11 @@ function Panel({
   focusDialog: () => void;
 }) {
   const t = useTranslations('connections');
+  const locale = useLocale();
   const [adding, setAdding] = useState(conns.length === 0);
   const addRef = useRef<HTMLDivElement>(null);
   const userAdd = useRef(false);
-  const others = otherOwnersNote(conns, viewerId);
+  const others = otherOwnersNote(conns, viewerId, locale);
   const showAdd = canConnect && (conns.length === 0 || adding);
   useEffect(() => {
     // « Brancher une autre connexion » disparaît au clic : le focus passe à l'action principale du formulaire
@@ -556,7 +558,7 @@ function Panel({
             strokeWidth={1.7}
             className="mt-[2px] size-3.5 shrink-0"
           />
-          {t('notTested')}
+          {nb(t('notTested'))}
         </p>
       )}
     </>

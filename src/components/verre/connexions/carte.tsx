@@ -18,6 +18,7 @@ import { cn, formatSince, nb, useInstant, useMinWidth } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
+import { JeuConnexions } from './jeu';
 import { connState } from './parts';
 
 /*
@@ -286,14 +287,7 @@ function Bulle({ n }: { n: Noeud }) {
     <span className="block">
       <span className="block font-semibold text-fg">{n.label}</span>
       {n.conns.map((c) => {
-        const { icon: Icon, tone } = connState(c);
-        const state = c.creatorLeft
-          ? t('statusStopped')
-          : c.status === 'error'
-            ? t('statusError')
-            : c.status === 'paused'
-              ? t('statusPaused')
-              : t('statusActive');
+        const { word, icon: Icon, tone } = connState(c);
         return (
           <span key={c.id} className="mt-1 block">
             <span className="block text-fg-2">{c.label}</span>
@@ -308,7 +302,7 @@ function Bulle({ n }: { n: Noeud }) {
               )}
             >
               <Icon aria-hidden="true" strokeWidth={2} className="size-3" />
-              {state}
+              {t(word)}
             </span>
           </span>
         );
@@ -346,19 +340,7 @@ function Pastille({
   const top = useTransform(centre.y, (y) => pct(n.y + (y - CY) * 0.05, H));
   const count = n.type === 'outil' && n.conns.length > 1 ? n.conns.length : null;
   const states =
-    n.type === 'outil'
-      ? n.conns
-          .map((c) =>
-            c.creatorLeft
-              ? t('statusStopped')
-              : c.status === 'error'
-                ? t('statusError')
-                : c.status === 'paused'
-                  ? t('statusPaused')
-                  : t('statusActive'),
-          )
-          .join(', ')
-      : n.detail;
+    n.type === 'outil' ? n.conns.map((c) => t(connState(c).word)).join(', ') : n.detail;
   const props = {
     'data-hot': hot || undefined,
     'aria-label': nb(`${n.label} : ${states}`),
@@ -557,7 +539,7 @@ export function CarteConnexions({
     null,
   );
   const summary = [
-    tools === 1 ? t('summaryOne', { count: tools }) : t('summaryMany', { count: tools }),
+    t('summary', { count: tools }),
     lastSync ? t('summaryLastSync', { time: formatSince(lastSync, now, locale) }) : null,
   ]
     .filter(Boolean)
@@ -575,7 +557,10 @@ export function CarteConnexions({
               />
               {nb(summary)}
             </p>
-            <Legende />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Legende />
+              <JeuConnexions />
+            </div>
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset) */}
           <div
@@ -623,6 +608,11 @@ export function CarteConnexions({
             <Coeur centre={centre} box={box} instant={instant} />
           </div>
         </GlassCard>
+      )}
+      {!wide && (
+        <div className="mb-6">
+          <JeuConnexions compact />
+        </div>
       )}
     </div>
   );

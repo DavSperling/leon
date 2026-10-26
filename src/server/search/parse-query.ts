@@ -1,6 +1,6 @@
 import { ITEM_NATURES, type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { stripHighlightMarks } from '@/lib/highlight';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import { FILTER_ALIASES, NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
 
 // Lecture de ce que l'utilisateur tape dans la barre (C4). Pur : ni base, ni réseau, jamais d'exception.
@@ -11,6 +11,8 @@ import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
 //   depuis:<N>j|<N>s|<N>m|AAAA-MM-JJ   jours, semaines, mois, ou une date (UTC, incluse)
 //   avant:AAAA-MM-JJ              une date (UTC, exclue)
 //   "phrase exacte"               passe telle quelle au texte
+//
+// L'anglais de l'interface s'y lit aussi : from:, tool:, since:<N>d|<N>w|<N>mo, before:, type:meeting.
 //
 // Un filtre vide, inconnu ou mal formé est ignoré, et retiré du texte. Le texte garde ses guillemets
 // appariés et se limite à QUERY_MAX_CHARS caractères.
@@ -23,12 +25,6 @@ const PERSON_MAX_CHARS = 100;
 const DURATION_MAX = 9999;
 
 const FILTER_KEY = /^(de|from|outil|tool|type|depuis|since|avant|before):/i;
-const FILTER_ALIASES: Record<string, string> = {
-  from: 'de',
-  tool: 'outil',
-  since: 'depuis',
-  before: 'avant',
-};
 // Les caractères de contrôle (dont NUL, que Postgres refuse dans un texte) valent une espace.
 const CONTROL_CHARS = /\p{Cc}/gu;
 
@@ -47,18 +43,10 @@ for (const kind of SOURCE_KINDS) {
   KIND_BY_NAME.set(squash(SOURCE_KIND_LABELS[kind]), kind);
 }
 
-const NATURE_BY_NAME = new Map<string, ItemNature>(ITEM_NATURES.map((n) => [squash(n), n]));
-for (const [english, french] of Object.entries({
-  meeting: 'reunion',
-  thread: 'fil',
-  email: 'mail',
-  file: 'fichier',
-  event: 'evenement',
-  'code change': 'commit',
-  'ai conversation': 'conversation',
-})) {
-  const nature = ITEM_NATURES.find((item) => item === french);
-  if (nature) NATURE_BY_NAME.set(squash(english), nature);
+const NATURE_BY_NAME = new Map<string, ItemNature>();
+for (const nature of ITEM_NATURES) {
+  NATURE_BY_NAME.set(squash(nature), nature);
+  NATURE_BY_NAME.set(squash(NATURE_LABELS_EN[nature]), nature);
 }
 
 function toKind(value: string): SourceKind | null {
@@ -190,7 +178,8 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
     scan.at += key[0].length;
     const value = tidy(readValue(scan));
     if (value === '') continue;
-    switch (FILTER_ALIASES[(key[1] as string).toLowerCase()] ?? (key[1] as string).toLowerCase()) {
+    const name = (key[1] as string).toLowerCase();
+    switch ((FILTER_ALIASES as Record<string, string>)[name] ?? name) {
       case 'de':
         pushUnique(people, value.slice(0, PERSON_MAX_CHARS));
         break;

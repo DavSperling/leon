@@ -1,7 +1,7 @@
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { SYNTAX } from '@/components/search/examples';
+import { EXAMPLES, EXAMPLES_EN, SYNTAX, SYNTAX_EN } from '@/components/search/examples';
 import { searchHref } from '@/components/search/url-state';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, GlassCard } from '@/components/verre';
 import { cn } from '@/lib/verre/cn';
@@ -34,14 +34,8 @@ function QueryCode({ q, className }: { q: string; className?: string }) {
 
 /** Accueil sans requête : quatre recherches d'exemple, puis la syntaxe des filtres, repliée. */
 export function Welcome() {
-  const locale = useLocale();
+  const en = useLocale() === 'en';
   const t = useTranslations('welcome');
-  const examples = [
-    { q: t('example1Query'), hint: t('example1Hint') },
-    { q: t('example2Query'), hint: t('example2Hint') },
-    { q: t('example3Query'), hint: t('example3Hint') },
-    { q: t('example4Query'), hint: t('example4Hint') },
-  ];
   return (
     <div className="mt-11 grid gap-7 max-sm:mt-8">
       <section aria-labelledby="exemples">
@@ -49,7 +43,7 @@ export function Welcome() {
           {t('examplesTitle')}
         </h2>
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
-          {examples.map((ex) => (
+          {(en ? EXAMPLES_EN : EXAMPLES).map((ex) => (
             <li key={ex.q}>
               <GlassCard
                 spotlight
@@ -94,17 +88,7 @@ export function Welcome() {
           <CollapsibleContent>
             <GlassCard className="mt-2.5 px-2 py-1.5">
               <dl className="grid grid-cols-[minmax(0,1fr)] sm:grid-cols-2 sm:gap-x-2">
-                {(locale === 'en'
-                  ? [
-                      { code: 'from:alex', text: t('syntaxFrom') },
-                      { code: 'tool:github', text: t('syntaxTool') },
-                      { code: 'type:meeting', text: t('syntaxType') },
-                      { code: 'since:7d', text: t('syntaxSince') },
-                      { code: 'before:2026-10-01', text: t('syntaxBefore') },
-                      { code: '"exact phrase"', text: t('syntaxPhrase') },
-                    ]
-                  : SYNTAX
-                ).map((s) => (
+                {(en ? SYNTAX_EN : SYNTAX).map((s) => (
                   <div
                     key={s.code}
                     className="grid grid-cols-[148px_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2.5 max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-1.5"

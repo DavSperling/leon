@@ -1,9 +1,16 @@
+import { cimd } from '@better-auth/cimd';
+import { fetchClientMetadataResource } from '@better-auth/cimd/node';
+import { mcp } from '@better-auth/mcp';
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
+import { jwt } from 'better-auth/plugins';
 import { organization } from 'better-auth/plugins/organization';
+import { API_PATHS } from '@/capture/api-contract';
 import { pool } from '@/server/db/client';
 import { env } from '@/server/env';
 import { firstOrganizationId } from './tenant-context';
+
+export const MCP_RESOURCE = new URL(API_PATHS.mcp, env.BETTER_AUTH_URL).toString();
 
 export const auth = betterAuth({
   appName: 'Leon',
@@ -39,6 +46,29 @@ export const auth = betterAuth({
     // Une invitation ne s'accepte qu'avec un e-mail vérifié : sinon, quiconque s'inscrit avec
     // l'adresse invitée rejoint l'organisation (aucun e-mail n'est vérifié dans ce jet).
     organization({ disableOrganizationDeletion: true, requireEmailVerificationOnInvitation: true }),
+    jwt(),
+    mcp({
+      resource: MCP_RESOURCE,
+      loginPage: '/connexion',
+      consentPage: '/mcp/autorisation',
+      allowDynamicClientRegistration: true,
+      allowUnauthenticatedClientRegistration: true,
+      clientRegistrationDefaultApplicationType: 'infer',
+      postLogin: {
+        page: '/mcp/autorisation',
+        shouldRedirect: async () => false,
+        consentReferenceId: ({ session }) =>
+          typeof session.activeOrganizationId === 'string'
+            ? session.activeOrganizationId
+            : undefined,
+      },
+      customAccessTokenClaims: ({ referenceId }) => (referenceId ? { tenantId: referenceId } : {}),
+      scopes: ['openid', 'profile', 'email', 'offline_access', 'mcp:access'],
+    }),
+    cimd({
+      fetchClientMetadataResource,
+      metadataProfile: 'mcp-2026-07-28',
+    }),
     nextCookies(), // en dernier : cookies posés par les server actions
   ],
 });

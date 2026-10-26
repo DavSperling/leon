@@ -112,9 +112,11 @@ const CONTROL_FIX = 'pointer-coarse:text-title aria-invalid:focus-visible:outlin
 export function AuthForm({
   page,
   invitation,
+  oauthQuery = '',
 }: {
   page: AuthPage;
   invitation?: { token: string; organizationName: string };
+  oauthQuery?: string;
 }) {
   const copy = COPY[page];
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(copy.action, {});
@@ -152,6 +154,7 @@ export function AuthForm({
 
       <form ref={formRef} noValidate action={formAction} className="mt-6 grid gap-4">
         {invitation && <input type="hidden" name="token" value={invitation.token} />}
+        {oauthQuery && <input type="hidden" name="oauth_query" value={oauthQuery} />}
         {FIELDS[page].map((f, i) => {
           const isPw = f.type === 'password';
           return (
@@ -234,7 +237,11 @@ export function AuthForm({
         <motion.p {...slide} className="mt-6 border-t border-line pt-5 text-ui text-muted">
           {nb(copy.footer)}{' '}
           <Link
-            href={copy.href}
+            href={
+              oauthQuery
+                ? `${copy.href}?${new URLSearchParams({ oauth_query: oauthQuery })}`
+                : copy.href
+            }
             className="rounded-sm font-semibold text-accent underline decoration-accent-line underline-offset-4 transition-colors hover:decoration-accent"
           >
             {copy.other}

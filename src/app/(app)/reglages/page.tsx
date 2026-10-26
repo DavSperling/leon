@@ -24,13 +24,12 @@ export default async function SettingsPage() {
     .map(({ revokedAt: _, ...token }) => token);
   const serverUrl = env.BETTER_AUTH_URL;
   const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
-  // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
-  // l'utilisateur, qui le colle lui-même.
+  // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome.
   const extensionPrompt = `Installe l'extension navigateur de Leon depuis ce dépôt :
 1. Construis-la avec WXT_PUBLIC_LEON_URL=${serverUrl} pnpm ext:build.
 2. Dans Chrome, ouvre chrome://extensions, active le mode développeur, clique sur « Charger l'extension non empaquetée » et choisis le dossier extension/.output/chrome-mv3.
 3. Ouvre ensuite les options de l'extension et laisse-moi y coller mon jeton Leon moi-même.`;
-  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <votre jeton>"`;
+  const command = `claude mcp add --transport http leon ${mcpUrl}`;
 
   return (
     <div className="mx-auto max-w-[760px]">
@@ -45,11 +44,14 @@ export default async function SettingsPage() {
       <TokensSection tokens={tokens} />
 
       <Section
-        id="claude-code"
-        title="Brancher Claude Code"
-        description="Lancez cette commande dans un terminal, en remplaçant le jeton par l’un des vôtres."
+        id="mcp-distant"
+        title="Serveur MCP distant"
+        description="Ajoutez cette adresse dans un client compatible MCP. À la première connexion, Leon s’ouvre dans votre navigateur pour vous connecter et autoriser l’accès à votre espace."
         className={SECTION}
       >
+        <p className="mb-2.5 text-body text-fg-2">Adresse du serveur MCP</p>
+        <CodeLine code={mcpUrl} />
+        <p className="mt-6 mb-2.5 text-body text-fg-2">Configuration rapide de Claude Code</p>
         <CommandBlock command={command} />
       </Section>
 

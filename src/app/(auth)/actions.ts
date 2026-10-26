@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { auth } from '@/server/auth/auth';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import {
@@ -39,6 +40,22 @@ const EMAIL_TAKEN = 'Cette adresse e-mail est déjà utilisée.';
 const SIGN_UP_FAILED = 'Impossible de créer le compte. Réessayez.';
 const SIGNED_UP_NOT_IN = 'Compte créé, mais la connexion a échoué. Connectez-vous.';
 
+function oauthQueryFromForm(formData: FormData): string {
+  const value = formData.get('oauth_query');
+  return typeof value === 'string' && value.length <= 8000 ? value : '';
+}
+
+async function continueOAuthLogin(oauthQuery: string): Promise<never> {
+  if (!oauthQuery) {
+    redirect('/');
+  }
+  const result = await auth.api.oauth2Continue({
+    headers: await headers(),
+    body: { oauth_query: oauthQuery },
+  });
+  redirect(result.url);
+}
+
 function readFields(formData: FormData, names: string[]): Record<string, string> {
   return Object.fromEntries(
     names.map((name) => {
@@ -67,6 +84,7 @@ export async function signInAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   const fields = readFields(formData, ['email', 'password']);
+  const oauthQuery = oauthQueryFromForm(formData);
   const values = withoutPassword(fields);
   const parsed = SignInSchema.safeParse(fields);
   if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_IN_MESSAGES), values };
@@ -77,7 +95,7 @@ export async function signInAction(
   const { ok } = await signInWithPassword(parsed.data.email, parsed.data.password);
   // Même message pour un e-mail inconnu et un mot de passe faux.
   if (!ok) return { errors: { form: 'E-mail ou mot de passe incorrect.' }, values };
-  redirect('/');
+  return continueOAuthLogin(oauthQuery);
 }
 
 export async function signUpAction(
@@ -85,6 +103,7 @@ export async function signUpAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   const fields = readFields(formData, ['name', 'email', 'password', 'organizationName']);
+  const oauthQuery = oauthQueryFromForm(formData);
   const values = withoutPassword(fields);
   const parsed = SignUpInputSchema.safeParse(fields);
   if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
@@ -98,7 +117,7 @@ export async function signUpAction(
       created.error === 'email_pris' ? { email: EMAIL_TAKEN } : { form: SIGN_UP_FAILED };
     return { errors, values };
   }
-  return signInNewAccount(parsed.data.email, parsed.data.password, values);
+  return signInNewAccount(parsed.data.email, parsed.data.password, values, oauthQuery);
 }
 
 // L'inscription par un lien d'invitation : le formulaire porte le secret du lien dans un champ caché.
@@ -131,8 +150,9 @@ async function signInNewAccount(
   email: string,
   password: string,
   values: Record<string, string>,
+  oauthQuery = '',
 ): Promise<AuthFormState> {
   const { ok } = await signInWithPassword(email, password);
   if (!ok) return { errors: { form: SIGNED_UP_NOT_IN }, values };
-  redirect('/');
+  return continueOAuthLogin(oauthQuery);
 }

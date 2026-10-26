@@ -10,6 +10,7 @@ import {
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
+import { runChat } from './chat';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   createIngestSender,
@@ -36,12 +37,13 @@ Commandes :
   capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
                        de Claude Code : le JSON du crochet est lu sur l'entrée standard)
       --delai-ms <n>       raccourcit le délai réseau de l'envoi, 15 000 ms au plus (pour les essais)
+  chat [dossier]       Ouvre le chat Leon et recherche aussi dans les fichiers locaux du dossier
   installer-crochets   Écrit les crochets SessionStart (briefing) et SessionEnd (capter-session) dans les
                        réglages de Claude Code (~/.claude/settings.json, ou CLAUDE_CONFIG_DIR), après confirmation
       --oui                n'attend aucune confirmation
       --depot <chemin>     dépôt de Leon cité dans les commandes (par défaut : celui qui lance celle-ci)
 
-L'envoi réel, le briefing et la capture de session demandent LEON_URL et LEON_TOKEN.`;
+Les commandes réseau demandent LEON_URL et LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'à envoyer' : 'envoyés';
@@ -188,6 +190,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
     if (command === 'installer-crochets') return await runInstallHooks(args);
+    if (command === 'chat') return await runChat(resolve(args[0] ?? '.'));
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
     console.error(error instanceof Error ? error.message : 'Erreur inconnue.');

@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowUp } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import { GlassCard, IconButton, Textarea, useThinking } from '@/components/verre';
@@ -9,6 +10,8 @@ import { cn, formatNumber, nb } from '@/lib/verre';
 
 // Une nouvelle discussion : une question, puis la page de la discussion, où Leon y répond tout de suite.
 export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
+  const locale = useLocale();
+  const t = useTranslations('discussions');
   const [state, action, pending] = useActionState<NewDiscussionState, FormData>(
     newDiscussionAction,
     { error: null },
@@ -27,7 +30,7 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
     >
       <form ref={form} action={action}>
         <label htmlFor="nouvelle-question" className="sr-only">
-          Nouvelle discussion : votre question à Leon
+          {t('newQuestion')}
         </label>
         <Textarea
           id="nouvelle-question"
@@ -51,7 +54,7 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
           readOnly={pending}
           aria-invalid={state.error ? true : undefined}
           aria-describedby="nouvelle-question-note"
-          placeholder={nb('Comment Leon peut-il vous aider ?')}
+          placeholder={nb(t('newQuestion'))}
           className="border-0 bg-transparent px-2.5 py-2 text-lead shadow-none hover:border-0 focus-visible:shadow-none disabled:opacity-70"
         />
         <div className="flex items-center justify-end gap-3 px-1">
@@ -66,7 +69,7 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
           ) : (
             // le sous-titre de la page le dit déjà : lu, pas affiché
             <p id="nouvelle-question-note" className="sr-only">
-              Leon cherche, lit et répond en citant ses sources.
+              {t('srDescription')}
             </p>
           )}
           {count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
@@ -76,13 +79,13 @@ export function NewDiscussionForm({ disabled }: { disabled: boolean }) {
                 count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
               )}
             >
-              {formatNumber(count)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS)}
+              {formatNumber(count, locale)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS, locale)}
             </span>
           )}
           <IconButton
             type="submit"
             icon={ArrowUp}
-            label={pending ? 'Leon répond…' : 'Demander à Leon'}
+            label={pending ? t('busy') : t('sendQuestion')}
             variant="primary"
             size="lg"
             aria-disabled={pending || undefined}

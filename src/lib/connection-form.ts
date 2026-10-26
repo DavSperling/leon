@@ -72,14 +72,29 @@ export function statusLine(
     'status' | 'lastSyncAt' | 'itemsSynced' | 'lastError' | 'createdBy' | 'creatorLeft'
   >,
   now: Date,
+  locale = 'fr',
 ): string {
-  if (view.creatorLeft) return `Arrêtée : ${view.createdBy.name} n'est plus membre`;
-  if (view.status === 'paused') return 'En pause';
+  if (view.creatorLeft)
+    return locale === 'en'
+      ? `Stopped: ${view.createdBy.name} is no longer a member`
+      : `Arrêtée : ${view.createdBy.name} n'est plus membre`;
+  if (view.status === 'paused') return locale === 'en' ? 'Paused' : 'En pause';
   if (view.status === 'error')
-    return view.lastError ? `En erreur : ${view.lastError}` : 'En erreur';
-  if (!view.lastSyncAt) return 'Actif · premier passage en attente';
-  const count = `${formatNumber(view.itemsSynced)} ${view.itemsSynced > 1 ? 'éléments' : 'élément'}`;
-  return `Actif · dernier passage ${sinceText(view.lastSyncAt, now)} · ${count}`;
+    return view.lastError
+      ? `${locale === 'en' ? 'Error' : 'En erreur'}: ${view.lastError}`
+      : locale === 'en'
+        ? 'Error'
+        : 'En erreur';
+  if (!view.lastSyncAt)
+    return locale === 'en' ? 'Active · first sync pending' : 'Actif · premier passage en attente';
+  const count = `${formatNumber(view.itemsSynced, locale)} ${locale === 'en' ? (view.itemsSynced === 1 ? 'item' : 'items') : view.itemsSynced > 1 ? 'éléments' : 'élément'}`;
+  const when =
+    locale === 'en'
+      ? `on ${formatRelative(view.lastSyncAt, now, locale)}`
+      : sinceText(view.lastSyncAt, now);
+  return locale === 'en'
+    ? `Active · last sync ${when} · ${count}`
+    : `Actif · dernier passage ${when} · ${count}`;
 }
 
 export function resultMessage(result: ActionResult): string {

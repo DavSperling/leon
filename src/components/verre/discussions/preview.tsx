@@ -2,6 +2,7 @@
 
 import { CircleAlert, ExternalLink, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { type Ref, useEffect, useRef, useState } from 'react';
 import { type PreviewResult, previewPassageAction } from '@/app/(app)/actions';
 import type { PreviewView } from '@/components/search/view-model';
@@ -21,8 +22,6 @@ export type PreviewState =
   | { status: 'pret'; key: string; header: Header; preview: PreviewView };
 
 type Shown = Exclude<PreviewState, { status: 'vide' }>;
-
-export const PANE_LABEL = 'Aperçu de la source citée';
 
 /** État de l'aperçu : le passage lu sous les droits de l'utilisateur ; la fermeture rend le focus au déclencheur. */
 export function useCitationPreview() {
@@ -67,6 +66,8 @@ function Turns({
   turns: PreviewView['turns'];
   scroller: () => HTMLElement | null;
 }) {
+  const tr = useTranslations('discussionView');
+  const locale = useLocale();
   const list = useRef<HTMLOListElement>(null);
   // biome-ignore lint/correctness/useExhaustiveDependencies: une fois par source (Turns est remonté à chaque source)
   useEffect(() => {
@@ -92,14 +93,14 @@ function Turns({
             {t.speaker}
             {t.isHit && (
               <span className="inline-flex h-[18px] items-center rounded-full px-[7px] font-mono text-[10.5px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                Passage trouvé
+                {tr('matchingPassage')}
               </span>
             )}
             <time
               dateTime={new Date(t.ts).toISOString()}
               className="ml-auto font-mono text-[11px] font-normal tracking-normal text-muted"
             >
-              {formatDateTime(new Date(t.ts))}
+              {formatDateTime(new Date(t.ts), locale)}
             </time>
           </p>
           <p className={cn('break-words whitespace-pre-wrap', !t.isHit && 'line-clamp-6')}>
@@ -121,6 +122,7 @@ function Body({
   onClose: () => void;
   scroller: () => HTMLElement | null;
 }) {
+  const t = useTranslations('discussionView');
   const preview = state.status === 'pret' ? state.preview : null;
   const title = preview?.title ?? state.header.title;
   const url = preview?.url ?? state.header.url;
@@ -142,7 +144,7 @@ function Body({
               title?.trim() ? 'text-fg' : 'text-muted',
             )}
           >
-            {title?.trim() || 'Sans titre'}
+            {title?.trim() || t('untitled')}
           </h2>
           {url && (
             <a
@@ -152,13 +154,15 @@ function Body({
               className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-sm text-label font-medium text-accent underline-offset-[3px] decoration-accent-line hover:underline"
             >
               <ExternalLink aria-hidden="true" className="size-[13px]" strokeWidth={1.8} />
-              {preview?.kindLabel ? `Ouvrir dans ${preview.kindLabel}` : 'Ouvrir l’original'}
+              {preview?.kindLabel
+                ? t('openIn', { tool: preview.kindLabel })
+                : t('openOriginalLabel')}
             </a>
           )}
         </div>
         <IconButton
           icon={X}
-          label="Fermer l’aperçu"
+          label={t('closePreview')}
           size="sm"
           onClick={onClose}
           className="-mt-1 -mr-1"
@@ -168,7 +172,7 @@ function Body({
       <div className="px-3 py-3">
         {state.status === 'charge' && (
           <div role="status" className="grid gap-2">
-            <span className="sr-only">Chargement de l’aperçu…</span>
+            <span className="sr-only">{t('loadingPreview')}</span>
             <Skeleton className="h-16 rounded-field" />
             <Skeleton className="h-28 rounded-field" />
             <Skeleton className="h-16 rounded-field" />
@@ -177,12 +181,12 @@ function Body({
         {preview && <Turns turns={preview.turns} scroller={scroller} />}
         {state.status === 'introuvable' && (
           <Notice tone="warning" icon={CircleAlert} live="alert">
-            Ce passage n’est plus disponible. Relancez la recherche.
+            {t('passageUnavailable')}
           </Notice>
         )}
         {state.status === 'erreur' && (
           <Notice tone="error" icon={CircleAlert} live="alert">
-            L’aperçu n’a pas pu se charger. Cliquez de nouveau sur le résultat.
+            {t('previewFailed')}
           </Notice>
         )}
       </div>
@@ -200,12 +204,13 @@ export function PreviewPane({
   onClose: () => void;
   ref: Ref<HTMLElement>;
 }) {
+  const t = useTranslations('discussionView');
   const scrollRef = useRef<HTMLDivElement>(null);
   return (
     <aside
       ref={ref}
       tabIndex={-1}
-      aria-label={PANE_LABEL}
+      aria-label={t('paneLabel')}
       className="sticky top-4 flex max-h-[calc(100dvh-56px)] min-h-[22rem] flex-col overflow-hidden rounded-box border border-line bg-glass-2 shadow-hi outline-none"
     >
       <AnimatePresence mode="wait">
@@ -233,6 +238,7 @@ export function PreviewPane({
 
 /** Feuille du bas (fil étroit) : même contenu et même croix ; le focus va sur la feuille. */
 export function PreviewSheet({ state, onClose }: { state: PreviewState; onClose: () => void }) {
+  const t = useTranslations('discussionView');
   const ref = useRef<HTMLDivElement>(null);
   const shown = state.status !== 'vide' ? state : null;
   const last = useRef(shown);
@@ -243,8 +249,8 @@ export function PreviewSheet({ state, onClose }: { state: PreviewState; onClose:
       {body && (
         <SheetContent
           ref={ref}
-          title={body.header.title?.trim() || 'Sans titre'}
-          description={PANE_LABEL}
+          title={body.header.title?.trim() || t('untitled')}
+          description={t('paneLabel')}
           titleHidden
           hideClose
           onOpenAutoFocus={(e) => {

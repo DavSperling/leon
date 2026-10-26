@@ -63,9 +63,16 @@ export function searchHref(state: { q?: string; page?: number }): string {
 // guillemet non fermé ignoré. Un test compare les deux lectures.
 
 export const FILTER_KEYS = ['de', 'outil', 'type', 'depuis', 'avant'] as const;
-export type FilterKey = (typeof FILTER_KEYS)[number];
+export type FilterKey = (typeof FILTER_KEYS)[number] | 'from' | 'tool' | 'since' | 'before';
 
-const FILTER_KEY = /^(de|outil|type|depuis|avant):/i;
+const FILTER_KEY = /^(de|from|outil|tool|type|depuis|since|avant|before):/i;
+const FILTER_ALIASES: Record<string, string> = {
+  from: 'de',
+  tool: 'outil',
+  since: 'depuis',
+  before: 'avant',
+};
+const canonicalKey = (key: FilterKey): string => FILTER_ALIASES[key] ?? key;
 // `depuis` et `avant` n'ont qu'une valeur ; les autres s'additionnent.
 const SINGLE_VALUED: ReadonlySet<FilterKey> = new Set(['depuis', 'avant']);
 
@@ -132,7 +139,8 @@ export function filterTokens(q: string): FilterToken[] {
 }
 
 const sameFilter = (token: FilterToken, key: FilterKey, value: string) =>
-  token.key === key && squash(token.value) === squash(value);
+  (FILTER_ALIASES[token.key] ?? token.key) === (FILTER_ALIASES[key] ?? key) &&
+  squash(token.value) === squash(value);
 
 export function hasFilter(q: string, key: FilterKey, value: string): boolean {
   return filterTokens(q).some((token) => sameFilter(token, key, value));
@@ -168,10 +176,10 @@ export function withFilter(q: string, key: FilterKey, value: string): string {
   const clean = tidy(value);
   if (clean === '') return q.trim();
   if (hasFilter(q, key, clean)) return q;
-  const base = SINGLE_VALUED.has(key)
+  const base = SINGLE_VALUED.has(canonicalKey(key) as FilterKey)
     ? removeTokens(
         q,
-        filterTokens(q).filter((token) => token.key === key),
+        filterTokens(q).filter((token) => canonicalKey(token.key) === canonicalKey(key)),
       )
     : q;
   const rest = base.trim();

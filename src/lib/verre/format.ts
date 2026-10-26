@@ -13,7 +13,7 @@ const timeFormat = new Intl.DateTimeFormat('fr-FR', {
 export const formatTime = (date: Date): string => timeFormat.format(date);
 
 // Comme formatRelative, mais « le 12 oct. 2026 » pour une date nue : « dernier passage le 12 oct. 2026 ».
-export function formatSince(date: Date, now: Date = new Date()): string {
-  const r = formatRelative(date, now);
-  return /^\d/.test(r) ? `le ${r}` : r;
+export function formatSince(date: Date, now: Date = new Date(), locale = 'fr'): string {
+  const r = formatRelative(date, now, locale);
+  return /^\d/.test(r) ? `${locale === 'en' ? 'on ' : 'le '}${r}` : r;
 }

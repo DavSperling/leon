@@ -2,12 +2,13 @@
 
 import { ArrowLeft, SearchX } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { previewPassageAction } from '@/app/(app)/actions';
 import { searchHref } from '@/components/search/url-state';
 import type { ResultView } from '@/components/search/view-model';
 import { Button, EmptyState, Notice, Pagination } from '@/components/verre';
-import { cn, nb, useMinWidth } from '@/lib/verre';
+import { cn, useMinWidth } from '@/lib/verre';
 import { AnswerCard } from './answer';
 import { type Opened, PreviewPane, PreviewSheet } from './preview';
 import { type OpenPreview, ResultCard } from './results';
@@ -49,6 +50,7 @@ export function SearchResults({
   answer: boolean;
 }) {
   const [appear] = useState<false | 'initial'>(() => (booted ? 'initial' : false));
+  const t = useTranslations('searchResults');
   useEffect(() => {
     booted = true;
   }, []);
@@ -144,25 +146,21 @@ export function SearchResults({
           )}
           {failed && (
             <Notice tone="error" live="alert">
-              {nb('La recherche n’a pas abouti. Réessayez dans un instant.')}
+              {t('failed')}
             </Notice>
           )}
           {!failed &&
             results.length === 0 &&
             (page === 1 ? (
-              <EmptyState
-                icon={SearchX}
-                title="Aucun résultat."
-                description="Essayez d’autres mots, retirez un filtre, ou cherchez le titre d’un document."
-              />
+              <EmptyState icon={SearchX} title={t('none')} description={t('noneDescription')} />
             ) : (
               <EmptyState
                 icon={SearchX}
-                title="Il n’y a pas autant de résultats."
-                description="Cette page est vide : les résultats s’arrêtent avant."
+                title={t('shortPage')}
+                description={t('shortPageDescription')}
                 action={
                   <Button asChild icon={ArrowLeft}>
-                    <Link href={searchHref({ q })}>Revenir à la première page</Link>
+                    <Link href={searchHref({ q })}>{t('firstPage')}</Link>
                   </Button>
                 }
               />
@@ -171,7 +169,7 @@ export function SearchResults({
           {results.length > 0 && (
             <section aria-labelledby="resultats-titre" className="min-w-0">
               <h2 id="resultats-titre" tabIndex={-1} className="sr-only">
-                Résultats
+                {t('results')}
               </h2>
               <p role="status" className="mb-3 text-meta text-muted tabular-nums">
                 {count}

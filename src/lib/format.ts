@@ -1,44 +1,36 @@
-// Formats français de l'interface. Les dates s'écrivent à l'heure de Paris, quel que soit le fuseau du serveur.
-const LOCALE = 'fr-FR';
 const TIME_ZONE = 'Europe/Paris';
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
+const localeTag = (locale: string) => (locale === 'en' ? 'en-US' : 'fr-FR');
 
-const dateFormat = new Intl.DateTimeFormat(LOCALE, {
-  timeZone: TIME_ZONE,
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
-const dateTimeFormat = new Intl.DateTimeFormat(LOCALE, {
-  timeZone: TIME_ZONE,
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-const numberFormat = new Intl.NumberFormat(LOCALE);
-// « 2026-10-13 » : le jour civil à Paris.
-const dayFormat = new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE });
+export const formatDate = (date: Date, locale = 'fr'): string =>
+  new Intl.DateTimeFormat(localeTag(locale), {
+    timeZone: TIME_ZONE,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
 
-// « 12 oct. 2026 »
-export const formatDate = (date: Date): string => dateFormat.format(date);
+export const formatDateTime = (date: Date, locale = 'fr'): string =>
+  new Intl.DateTimeFormat(localeTag(locale), {
+    timeZone: TIME_ZONE,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 
-// « 12 oct. 2026, 14:12 »
-export const formatDateTime = (date: Date): string => dateTimeFormat.format(date);
+export const formatNumber = (value: number, locale = 'fr'): string =>
+  new Intl.NumberFormat(localeTag(locale)).format(value);
 
-export const formatNumber = (value: number): string => numberFormat.format(value);
-
-// « à l'instant », « il y a 4 min », « il y a 2 h », « hier », puis la date.
-export function formatRelative(date: Date, now: Date = new Date()): string {
+export function formatRelative(date: Date, now: Date = new Date(), locale = 'fr'): string {
   const elapsed = now.getTime() - date.getTime();
-  if (elapsed < MINUTE) return "à l'instant";
-  if (elapsed < HOUR) return `il y a ${Math.floor(elapsed / MINUTE)} min`;
-  if (elapsed < DAY) return `il y a ${Math.floor(elapsed / HOUR)} h`;
-  // « hier » : la veille en jour civil à Paris (midi la veille sert de repère, sans souci d'heure d'été).
-  const yesterday = new Date(Date.parse(`${dayFormat.format(now)}T12:00:00Z`) - DAY);
-  if (dayFormat.format(date) === dayFormat.format(yesterday)) return 'hier';
-  return formatDate(date);
+  if (elapsed < MINUTE) return locale === 'en' ? 'just now' : "à l'instant";
+  const relative = new Intl.RelativeTimeFormat(localeTag(locale), { numeric: 'auto' });
+  if (elapsed < HOUR) return relative.format(-Math.floor(elapsed / MINUTE), 'minute');
+  if (elapsed < DAY) return relative.format(-Math.floor(elapsed / HOUR), 'hour');
+  if (elapsed < 2 * DAY) return relative.format(-1, 'day');
+  return formatDate(date, locale);
 }

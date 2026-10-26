@@ -12,11 +12,11 @@ import {
   Sun,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Dialog as RDialog } from 'radix-ui';
 import { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Kbd } from '@/components/verre/ui/kbd';
 import { cn } from '@/lib/verre/cn';
-import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
 import { useTheme } from '@/lib/verre/theme';
 import { NAV } from './nav';
@@ -44,6 +44,8 @@ export function CommandPalette({
   onOpenChange: (open: boolean) => void;
 }) {
   const router = useRouter();
+  const navT = useTranslations('navigation');
+  const t = useTranslations('shell');
   const { theme, toggle } = useTheme();
   const collapsed = useRailCollapsed();
   // La palette se centre sur le panneau ; elle garde la place prise à l'ouverture (repliée ou non) jusqu'à sa sortie.
@@ -79,32 +81,38 @@ export function CommandPalette({
     const all: Option[] = [
       ...NAV.map((n, i) => ({
         id: `n${i}`,
-        group: 'Aller à',
-        label: n.label,
+        group: t('goTo'),
+        label: navT(n.labelKey),
         icon: n.icon,
         run: go(n.href),
       })),
       {
         id: 'a0',
-        group: 'Actions',
-        label: 'Nouvelle discussion',
+        group: t('actions'),
+        label: t('newDiscussion'),
         icon: MessageSquarePlus,
         run: go('/discussions'),
       },
       {
         id: 'a1',
-        group: 'Actions',
-        label: 'Brancher un outil',
+        group: t('actions'),
+        label: t('connectTool'),
         icon: Plug,
         run: go('/connexions'),
       },
-      { id: 'a2', group: 'Actions', label: 'Créer un jeton', icon: KeyRound, run: go('/reglages') },
+      {
+        id: 'a2',
+        group: t('actions'),
+        label: t('createToken'),
+        icon: KeyRound,
+        run: go('/reglages'),
+      },
       {
         id: 'a3',
-        group: 'Actions',
-        label: 'Basculer le thème',
+        group: t('actions'),
+        label: t('toggleTheme'),
         icon: theme === 'dark' ? Sun : Moon,
-        meta: theme === 'dark' ? 'sombre' : 'clair',
+        meta: theme === 'dark' ? t('darkTheme') : t('lightTheme'),
         run: () => {
           toggle();
           onOpenChange(false);
@@ -115,8 +123,8 @@ export function CommandPalette({
     if (isDesktop())
       all.push({
         id: 'a4',
-        group: 'Actions',
-        label: collapsed ? 'Déplier la barre latérale' : 'Replier la barre latérale',
+        group: t('actions'),
+        label: collapsed ? t('expandSidebar') : t('collapseSidebar'),
         icon: collapsed ? PanelLeftOpen : PanelLeftClose,
         meta: '[',
         run: () => {
@@ -130,7 +138,7 @@ export function CommandPalette({
     const free: Option = {
       id: 'q',
       group: null,
-      label: nb(`Rechercher « ${query} »`),
+      label: t('searchQuery', { query }),
       icon: Search,
       run: go(`/?q=${encodeURIComponent(query)}`),
     };
@@ -138,7 +146,7 @@ export function CommandPalette({
     // liste. Sinon, Entrée lance la recherche telle quelle.
     const named = matches.some((o) => ` ${fold(o.label)}`.includes(` ${f}`));
     return named ? [...matches, free] : [free, ...matches];
-  }, [query, theme, toggle, collapsed, router, onOpenChange]);
+  }, [query, theme, toggle, collapsed, router, onOpenChange, t, navT]);
 
   const current = visible[Math.min(active, visible.length - 1)];
 
@@ -259,7 +267,7 @@ export function CommandPalette({
               : 'shell:left-[calc(50%+119px)] shell:w-[min(620px,calc(100vw-290px))]',
           )}
         >
-          <RDialog.Title className="sr-only">Palette de commandes</RDialog.Title>
+          <RDialog.Title className="sr-only">{t('paletteTitle')}</RDialog.Title>
           <div className="flex h-14 items-center gap-3 border-b border-line pr-3.5 pl-[18px] transition-colors duration-200 focus-within:border-accent-line">
             <Search
               aria-hidden="true"
@@ -280,8 +288,8 @@ export function CommandPalette({
               aria-controls="pal-list"
               aria-autocomplete="list"
               aria-activedescendant={current ? `pal-${current.id}` : undefined}
-              aria-label="Rechercher ou aller à"
-              placeholder="Rechercher ou aller à…"
+              aria-label={t('searchAndGo')}
+              placeholder={t('searchPlaceholder')}
               autoComplete="off"
               spellCheck={false}
               className="h-full min-w-0 flex-1 bg-transparent text-[16px] font-medium tracking-[-0.015em] text-fg outline-none placeholder:font-normal placeholder:text-muted"
@@ -295,7 +303,7 @@ export function CommandPalette({
             }}
             id="pal-list"
             role="listbox"
-            aria-label="Suggestions"
+            aria-label={t('suggestions')}
             onScroll={() => {
               const l = listRef.current;
               if (l) setMore(l.scrollTop + l.clientHeight < l.scrollHeight - 2);

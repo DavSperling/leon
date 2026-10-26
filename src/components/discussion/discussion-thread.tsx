@@ -4,6 +4,7 @@ import { ChevronLeft, ExternalLink, Lock, LogIn, RotateCcw } from 'lucide-react'
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import {
   type DiscussionMessageView,
@@ -17,7 +18,7 @@ import {
   PreviewSheet,
   useCitationPreview,
 } from '@/components/verre/discussions/preview';
-import { DISCUSSION_TIMEOUT_MS, DISCUSSION_TOO_MANY } from '@/lib/discussion-events';
+import { DISCUSSION_TIMEOUT_MS } from '@/lib/discussion-events';
 import { rise, useAppear, useMinWidth } from '@/lib/verre';
 import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
@@ -50,10 +51,6 @@ const WAIT_MAX_MS = DISCUSSION_TIMEOUT_MS + 10_000;
 
 // Avant le premier évènement : pas de libellé inventé, seulement l'indicateur d'attente.
 const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: null };
-const RESUMING = 'Leon termine une réponse commencée plus tôt…';
-
-const NO_MODEL =
-  'Aucun modèle d’IA n’est branché sur ce serveur : Leon ne peut pas répondre. La recherche, elle, marche.';
 
 /** Le texte lu aux lecteurs d'écran une fois la réponse finie : sans les renvois. */
 const spoken = (text: string) => text.replace(/\s?\[\d+\]/g, '');
@@ -72,6 +69,9 @@ export function DiscussionThread({
   // L'adresse réglée pour Leon (BETTER_AUTH_URL) : la seule d'où la route accepte une question.
   appOrigin: string;
 }) {
+  const t = useTranslations('thread');
+  const discussionsT = useTranslations('discussions');
+  const RESUMING = t('resuming');
   // Une discussion ouverte depuis la barre ou la page Discussions arrive avec sa question seule : Leon y répond
   // tout de suite.
   const [first] = initialMessages;
@@ -103,7 +103,7 @@ export function DiscussionThread({
   }
 
   const retry = (message: string): NoticeProps['action'] => ({
-    label: 'Réessayer',
+    label: t('retry'),
     icon: RotateCcw,
     onClick: () => ask(message),
   });
@@ -271,46 +271,47 @@ export function DiscussionThread({
   if (reply.status === 'indisponible')
     notice = {
       text: reply.questionGardee
-        ? 'Leon n’a pas pu répondre pour le moment. Votre question est gardée.'
+        ? t('answerFailedKept')
         : reply.retry !== null
-          ? 'Leon n’a pas pu répondre pour le moment.'
-          : 'Leon n’a pas pu répondre pour le moment. Votre question vous attend dans la saisie.',
+          ? t('answerFailed')
+          : t('answerFailedDraft'),
       action: reply.retry !== null ? retry(reply.retry) : undefined,
     };
   else if (reply.status === 'occupe')
     notice = {
-      text: DISCUSSION_TOO_MANY,
+      text: t('tooMany'),
       action: reply.retry !== null ? retry(reply.retry) : undefined,
     };
   else if (reply.status === 'session')
     notice = {
-      text: 'Votre session a expiré : la question n’a pas été envoyée. Reconnectez-vous, puis posez-la de nouveau.',
+      text: t('sessionExpired'),
       action: (
         <Button asChild size="sm" icon={LogIn}>
-          <Link href="/connexion">Se reconnecter</Link>
+          <Link href="/connexion">{t('signInAgain')}</Link>
         </Button>
       ),
     };
   else if (reply.status === 'origine')
     notice = {
-      text: `Leon est ouvert ici à une autre adresse que la sienne (${appOrigin}) : la question n’a pas été envoyée.`,
+      text: t('wrongOrigin', { origin: appOrigin }),
       action: (
         <Button asChild size="sm" icon={ExternalLink}>
           <a href={`${appOrigin}/discussions/${encodeURIComponent(discussionId)}`}>
-            Ouvrir à cette adresse
+            {t('openAtAddress')}
           </a>
         </Button>
       ),
     };
   else if (reply.status === 'non-envoyee')
     notice = {
-      text: 'Leon répondait déjà dans cette discussion : votre question n’a pas été envoyée. Elle vous attend dans la saisie.',
+      text: t('alreadyReplying'),
     };
-  else if (reply.status === 'sans-modele') notice = { text: NO_MODEL, warning: true };
+  else if (reply.status === 'sans-modele')
+    notice = { text: discussionsT('modelUnavailable'), warning: true };
   else if (waiting && last)
     notice = {
-      text: 'Cette question attend encore sa réponse.',
-      action: { label: 'Demander la réponse', icon: RotateCcw, onClick: () => ask(last.content) },
+      text: t('waitingForReply'),
+      action: { label: t('requestReply'), icon: RotateCcw, onClick: () => ask(last.content) },
     };
 
   return (
@@ -324,13 +325,13 @@ export function DiscussionThread({
         }
       >
         <div className="min-w-0">
-          <nav aria-label="Fil d’Ariane" className="mb-3">
+          <nav aria-label={t('breadcrumb')} className="mb-3">
             <Link
               href="/discussions"
               className="-ml-2 inline-flex h-8 items-center gap-1 rounded-full pr-3 pl-1.5 text-ui text-muted transition-colors hover:bg-hover hover:text-fg"
             >
               <ChevronLeft aria-hidden="true" className="size-4" strokeWidth={1.8} />
-              Discussions
+              {discussionsT('title')}
             </Link>
           </nav>
           <PageHeader
@@ -340,13 +341,13 @@ export function DiscussionThread({
             meta={
               <span className="inline-flex items-center gap-1.5">
                 <Lock aria-hidden="true" />
-                Visible de vous seul · Leon ne lit que ce que vous avez le droit de voir.
+                {t('visibleOnlyToYou')} · {t('privacyHint')}
               </span>
             }
           />
 
           <ol
-            aria-label="Messages de la discussion"
+            aria-label={t('messages')}
             aria-busy={busy}
             className="grid grid-cols-[minmax(0,1fr)] gap-5"
           >

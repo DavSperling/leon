@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { Connexions } from '@/components/verre/connexions';
 import { oauthNotice } from '@/lib/connection-form';
 import { requireUserContext } from '@/server/auth/session';
@@ -7,7 +8,9 @@ import { listConnections } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
 import { channelHealth, staleChannels } from '@/server/memory/sources';
 
-export const metadata: Metadata = { title: 'Connexions' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await (await getTranslations('connections'))('title') };
+}
 
 export default async function ConnectionsPage({
   searchParams,

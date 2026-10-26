@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { createTokenAction } from '@/app/(app)/reglages/actions';
 import {
@@ -14,8 +15,6 @@ import {
   Notice,
 } from '@/components/verre';
 import { duration, ease, nb } from '@/lib/verre';
-
-const DESCRIPTION = 'Un jeton donne accès à ce que vous voyez. Il n’est montré qu’une fois.';
 
 /** L'étape 2 entre en fondu : le changement d'état se voit, sans rien retenir. */
 const step = {
@@ -32,6 +31,7 @@ type State = { name: string; error?: string; token?: string };
  * le jeton en clair disparaît avec elle.
  */
 export function CreateTokenContent({ onCreated }: { onCreated: (hint: string) => void }) {
+  const t = useTranslations('settings');
   const [state, formAction, pending] = useActionState(
     async (_: State, data: FormData): Promise<State> => {
       const name = String(data.get('name') ?? '');
@@ -50,8 +50,8 @@ export function CreateTokenContent({ onCreated }: { onCreated: (hint: string) =>
       hideClose
       dismissible={false}
       onEscapeKeyDown={(e) => secret && e.preventDefault()}
-      title={secret ? 'Jeton créé' : 'Créer un jeton'}
-      description={nb(secret ? 'Collez-le dans l’outil à brancher.' : DESCRIPTION)}
+      title={secret ? t('tokenCreated') : t('createToken')}
+      description={nb(secret ? t('pasteToken') : t('tokenDescription'))}
     >
       {secret ? (
         <motion.div key="cree" className="grid gap-4" {...step}>
@@ -60,27 +60,27 @@ export function CreateTokenContent({ onCreated }: { onCreated: (hint: string) =>
               {secret}
             </code>
             <Notice tone="warning" live="status" className="py-2.5">
-              Copiez-le maintenant : il ne sera plus affiché.
+              {t('copyToken')}
             </Notice>
           </div>
           <DialogFooter>
             <CopyButton value={secret} size="md" autoFocus />
             <DialogClose asChild>
-              <Button variant="primary">Terminé</Button>
+              <Button variant="primary">{t('done')}</Button>
             </DialogClose>
           </DialogFooter>
         </motion.div>
       ) : (
         <form noValidate action={formAction} className="grid gap-5">
-          <Field label="Nom de l’appareil" error={state.error}>
+          <Field label={t('deviceName')} error={state.error}>
             <Input name="name" autoComplete="off" defaultValue={state.name} />
           </Field>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost">Annuler</Button>
+              <Button variant="ghost">{t('cancel')}</Button>
             </DialogClose>
             <Button type="submit" variant="primary" loading={pending}>
-              {pending ? 'Envoi…' : 'Créer le jeton'}
+              {pending ? t('sending') : t('createToken')}
             </Button>
           </DialogFooter>
         </form>

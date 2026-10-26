@@ -2,6 +2,7 @@
 
 import { UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { createInvitationAction } from '@/app/(app)/reglages/actions';
 import {
@@ -27,10 +28,10 @@ const ROLE_LABELS: Record<string, string> = {
   member: 'Membre',
 };
 // Better Auth peut ranger plusieurs rôles séparés par des virgules.
-const roleLabel = (role: string) =>
+const roleLabel = (role: string, labels: Record<string, string>) =>
   role
     .split(',')
-    .map((r) => ROLE_LABELS[r] ?? r)
+    .map((r) => labels[r] ?? ROLE_LABELS[r] ?? r)
     .join(', ');
 
 /** Section « Membres » : qui est dans l'espace et, pour un propriétaire ou un administrateur, l'invitation. */
@@ -42,19 +43,20 @@ export function MembersSection({
   canInvite: boolean;
 }) {
   const [session, setSession] = useState(0);
+  const t = useTranslations('settings');
 
   return (
     <Section
       id="membres"
-      title="Membres"
-      description="Chacun voit ce que Leon lit dans les outils de l’équipe. Les conversations avec les assistants, les boîtes mail, Google Drive et Slack restent à leur propriétaire."
+      title={t('membersTitle')}
+      description={t('membersDescription')}
       className={SECTION}
       actions={
         canInvite ? (
           <Dialog onOpenChange={(open) => open && setSession((s) => s + 1)}>
             <DialogTrigger asChild>
               <Button variant="primary" icon={UserPlus}>
-                Inviter
+                {t('invite')}
               </Button>
             </DialogTrigger>
             <CreateInvitationContent key={session} />
@@ -63,7 +65,7 @@ export function MembersSection({
       }
     >
       <GlassCard className="p-1.5">
-        <ul aria-label="Membres de l’espace" className="grid grid-cols-[minmax(0,1fr)]">
+        <ul aria-label={t('membersTitle')} className="grid grid-cols-[minmax(0,1fr)]">
           {members.map((m) => (
             <li
               key={m.id}
@@ -73,7 +75,9 @@ export function MembersSection({
                 <p className="text-body font-medium [overflow-wrap:anywhere] text-fg">{m.name}</p>
                 <p className="mt-0.5 text-label [overflow-wrap:anywhere] text-muted">{m.email}</p>
               </div>
-              <Badge>{roleLabel(m.role)}</Badge>
+              <Badge>
+                {roleLabel(m.role, { owner: t('owner'), admin: t('admin'), member: t('member') })}
+              </Badge>
             </li>
           ))}
         </ul>
@@ -95,6 +99,8 @@ type State = { error?: string; url?: string; expiresAt?: Date };
  * doit pas se perdre, seul « Terminé » ferme. Montée avec une `key` neuve à chaque ouverture : le lien disparaît avec elle.
  */
 function CreateInvitationContent() {
+  const t = useTranslations('settings');
+  const locale = useLocale();
   const [state, formAction, pending] = useActionState(async (): Promise<State> => {
     const result = await createInvitationAction();
     return 'error' in result ? { error: result.error } : result;
@@ -107,12 +113,8 @@ function CreateInvitationContent() {
       hideClose
       dismissible={false}
       onEscapeKeyDown={(e) => url && e.preventDefault()}
-      title={url ? 'Lien créé' : 'Inviter un membre'}
-      description={nb(
-        url
-          ? 'Envoyez-le vous-même à la personne à inviter : Leon n’envoie aucun e-mail.'
-          : 'Le lien sert une seule fois, à créer un compte dans cet espace. Il expire au bout de 7 jours.',
-      )}
+      title={url ? t('inviteCreated') : t('inviteMember')}
+      description={nb(url ? t('inviteCreatedDescription') : t('inviteDescription'))}
     >
       {url && expiresAt ? (
         <motion.div key="cree" className="grid gap-4" {...step}>
@@ -121,14 +123,13 @@ function CreateInvitationContent() {
               {url}
             </code>
             <Notice tone="warning" live="status" className="py-2.5">
-              Copiez-le maintenant : il ne sera plus affiché. Valable jusqu’au{' '}
-              {formatDate(expiresAt)}.
+              {t('copyInvite')} {t('validUntil')} {formatDate(expiresAt, locale)}.
             </Notice>
           </div>
           <DialogFooter>
             <CopyButton value={url} size="md" autoFocus />
             <DialogClose asChild>
-              <Button variant="primary">Terminé</Button>
+              <Button variant="primary">{t('done')}</Button>
             </DialogClose>
           </DialogFooter>
         </motion.div>
@@ -141,10 +142,10 @@ function CreateInvitationContent() {
           )}
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="ghost">Annuler</Button>
+              <Button variant="ghost">{t('cancel')}</Button>
             </DialogClose>
             <Button type="submit" variant="primary" loading={pending}>
-              {pending ? 'Envoi…' : 'Créer le lien'}
+              {pending ? t('sending') : t('createInvite')}
             </Button>
           </DialogFooter>
         </form>

@@ -1,6 +1,7 @@
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { EXAMPLES, SYNTAX } from '@/components/search/examples';
+import { useLocale, useTranslations } from 'next-intl';
+import { SYNTAX } from '@/components/search/examples';
 import { searchHref } from '@/components/search/url-state';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, GlassCard } from '@/components/verre';
 import { cn } from '@/lib/verre/cn';
@@ -33,14 +34,22 @@ function QueryCode({ q, className }: { q: string; className?: string }) {
 
 /** Accueil sans requête : quatre recherches d'exemple, puis la syntaxe des filtres, repliée. */
 export function Welcome() {
+  const locale = useLocale();
+  const t = useTranslations('welcome');
+  const examples = [
+    { q: t('example1Query'), hint: t('example1Hint') },
+    { q: t('example2Query'), hint: t('example2Hint') },
+    { q: t('example3Query'), hint: t('example3Hint') },
+    { q: t('example4Query'), hint: t('example4Hint') },
+  ];
   return (
     <div className="mt-11 grid gap-7 max-sm:mt-8">
       <section aria-labelledby="exemples">
         <h2 id="exemples" className="mb-4 text-h2 font-semibold tracking-[-0.02em] text-fg">
-          Quelques recherches pour commencer
+          {t('examplesTitle')}
         </h2>
         <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
-          {EXAMPLES.map((ex) => (
+          {examples.map((ex) => (
             <li key={ex.q}>
               <GlassCard
                 spotlight
@@ -74,7 +83,7 @@ export function Welcome() {
         <Collapsible>
           <h2 id="filtres">
             <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1.5 rounded-field px-1.5 text-ui font-medium text-fg-2 transition-colors duration-200 hover:text-fg">
-              Pour affiner, écrivez-le dans la barre
+              {t('filtersTitle')}
               <ChevronDown
                 aria-hidden="true"
                 strokeWidth={1.8}
@@ -85,7 +94,17 @@ export function Welcome() {
           <CollapsibleContent>
             <GlassCard className="mt-2.5 px-2 py-1.5">
               <dl className="grid grid-cols-[minmax(0,1fr)] sm:grid-cols-2 sm:gap-x-2">
-                {SYNTAX.map((s) => (
+                {(locale === 'en'
+                  ? [
+                      { code: 'from:alex', text: t('syntaxFrom') },
+                      { code: 'tool:github', text: t('syntaxTool') },
+                      { code: 'type:meeting', text: t('syntaxType') },
+                      { code: 'since:7d', text: t('syntaxSince') },
+                      { code: 'before:2026-10-01', text: t('syntaxBefore') },
+                      { code: '"exact phrase"', text: t('syntaxPhrase') },
+                    ]
+                  : SYNTAX
+                ).map((s) => (
                   <div
                     key={s.code}
                     className="grid grid-cols-[148px_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2.5 max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-1.5"

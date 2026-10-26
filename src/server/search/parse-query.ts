@@ -22,7 +22,13 @@ const VALUES_MAX = 10;
 const PERSON_MAX_CHARS = 100;
 const DURATION_MAX = 9999;
 
-const FILTER_KEY = /^(de|outil|type|depuis|avant):/i;
+const FILTER_KEY = /^(de|from|outil|tool|type|depuis|since|avant|before):/i;
+const FILTER_ALIASES: Record<string, string> = {
+  from: 'de',
+  tool: 'outil',
+  since: 'depuis',
+  before: 'avant',
+};
 // Les caractères de contrôle (dont NUL, que Postgres refuse dans un texte) valent une espace.
 const CONTROL_CHARS = /\p{Cc}/gu;
 
@@ -42,6 +48,18 @@ for (const kind of SOURCE_KINDS) {
 }
 
 const NATURE_BY_NAME = new Map<string, ItemNature>(ITEM_NATURES.map((n) => [squash(n), n]));
+for (const [english, french] of Object.entries({
+  meeting: 'reunion',
+  thread: 'fil',
+  email: 'mail',
+  file: 'fichier',
+  event: 'evenement',
+  'code change': 'commit',
+  'ai conversation': 'conversation',
+})) {
+  const nature = ITEM_NATURES.find((item) => item === french);
+  if (nature) NATURE_BY_NAME.set(squash(english), nature);
+}
 
 function toKind(value: string): SourceKind | null {
   return KIND_BY_NAME.get(squash(value)) ?? null;
@@ -77,13 +95,13 @@ function monthsBefore(now: Date, months: number): Date {
 }
 
 function parseSince(value: string, now: Date): Date | null {
-  const duration = /^(\d{1,4})([jsm])$/i.exec(value);
+  const duration = /^(\d{1,4})(mo|[jsmdw])$/i.exec(value);
   if (!duration) return parseDate(value);
   const amount = Number(duration[1]);
   if (amount < 1 || amount > DURATION_MAX) return null;
   const unit = (duration[2] as string).toLowerCase();
-  if (unit === 'm') return monthsBefore(now, amount);
-  const days = unit === 's' ? amount * 7 : amount;
+  if (unit === 'm' || unit === 'mo') return monthsBefore(now, amount);
+  const days = unit === 's' || unit === 'w' ? amount * 7 : amount;
   return new Date(now.getTime() - days * 86_400_000);
 }
 
@@ -172,7 +190,7 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
     scan.at += key[0].length;
     const value = tidy(readValue(scan));
     if (value === '') continue;
-    switch ((key[1] as string).toLowerCase()) {
+    switch (FILTER_ALIASES[(key[1] as string).toLowerCase()] ?? (key[1] as string).toLowerCase()) {
       case 'de':
         pushUnique(people, value.slice(0, PERSON_MAX_CHARS));
         break;

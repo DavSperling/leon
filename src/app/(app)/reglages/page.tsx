@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
+import { LanguageSettings } from '@/components/verre/reglages/language';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import { TokensSection } from '@/components/verre/reglages/tokens';
@@ -10,9 +12,12 @@ import { canInvite, listMembers } from '@/server/auth/members';
 import { requireUserContext } from '@/server/auth/session';
 import { env } from '@/server/env';
 
-export const metadata: Metadata = { title: 'Réglages' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await (await getTranslations('settings'))('title') };
+}
 
 export default async function SettingsPage() {
+  const t = await getTranslations('settings');
   const ctx = await requireUserContext();
   const [allTokens, members, mayInvite] = await Promise.all([
     listApiTokens(ctx),
@@ -26,28 +31,23 @@ export default async function SettingsPage() {
   const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
   // l'utilisateur, qui le colle lui-même.
-  const extensionPrompt = `Installe l'extension navigateur de Leon depuis ce dépôt :
-1. Construis-la avec WXT_PUBLIC_LEON_URL=${serverUrl} pnpm ext:build.
-2. Dans Chrome, ouvre chrome://extensions, active le mode développeur, clique sur « Charger l'extension non empaquetée » et choisis le dossier extension/.output/chrome-mv3.
-3. Ouvre ensuite les options de l'extension et laisse-moi y coller mon jeton Leon moi-même.`;
+  const extensionPrompt = t('extensionPrompt', { serverUrl });
   const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <votre jeton>"`;
 
   return (
     <div className="mx-auto max-w-[760px]">
-      <PageHeader
-        title="Réglages"
-        subtitle="Membres, jetons d’accès et branchement des assistants"
-        className="mb-10"
-      />
+      <PageHeader title={t('title')} subtitle={t('subtitle')} className="mb-10" />
 
       <MembersSection members={members} canInvite={mayInvite} />
 
       <TokensSection tokens={tokens} />
 
+      <LanguageSettings />
+
       <Section
         id="claude-code"
-        title="Brancher Claude Code"
-        description="Lancez cette commande dans un terminal, en remplaçant le jeton par l’un des vôtres."
+        title={t('claudeTitle')}
+        description={t('claudeDescription')}
         className={SECTION}
       >
         <CommandBlock command={command} />
@@ -55,34 +55,35 @@ export default async function SettingsPage() {
 
       <Section
         id="extension"
-        title="Extension navigateur"
-        description="Copiez la demande et collez-la dans Claude Code, ouvert dans le dépôt Leon : il construit et charge l’extension pour vous. Ou suivez les étapes à la main."
-        actions={<CopyButton value={extensionPrompt} label="Demander à Claude de le faire" />}
+        title={t('extensionTitle')}
+        description={t('extensionDescription')}
+        actions={<CopyButton value={extensionPrompt} label={t('askClaude')} />}
         className={SECTION}
       >
         <ol className="grid gap-3.5">
           <Step n={1}>
-            Construisez l’extension avec <code className={INLINE}>pnpm ext:build</code>.
+            {t('step1')} <code className={INLINE}>pnpm ext:build</code>.
           </Step>
           <Step n={2}>
-            Dans Chrome, ouvrez <code className={INLINE}>chrome://extensions</code>, activez le mode
-            développeur, puis {nb('« Charger l’extension non empaquetée »')} et choisissez le
-            dossier <code className={INLINE}>extension/.output/chrome-mv3</code>.
+            {t('step2')} <code className={INLINE}>chrome://extensions</code>, {t('developerMode')}{' '}
+            {nb(`“${t('loadUnpacked')}”`)} {t('chooseFolder')}{' '}
+            <code className={INLINE}>extension/.output/chrome-mv3</code>.
           </Step>
           <Step n={3}>
-            Dans les options de l’extension, collez{' '}
+            {t('step3')}{' '}
             <a
               href="#jetons"
               className="text-accent underline decoration-accent-line underline-offset-4 hover:decoration-accent"
             >
-              un jeton créé ci-dessus
+              {t('tokenCreatedAbove')}
             </a>
             .
           </Step>
         </ol>
         <p className="mt-6 mb-2.5 text-body text-fg-2">
-          Adresse du serveur, fixée à la construction de l’extension (variable{' '}
-          <code className={INLINE}>WXT_PUBLIC_LEON_URL</code>){nb(' :')}
+          {t('serverAddress')}
+          <code className={INLINE}>WXT_PUBLIC_LEON_URL</code>
+          {t('serverAddressEnd')}
         </p>
         <CodeLine code={serverUrl} />
       </Section>

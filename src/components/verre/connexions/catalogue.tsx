@@ -2,6 +2,7 @@
 
 import { Search, SearchX, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import {
@@ -14,7 +15,7 @@ import {
   Section,
   ToolIcon,
 } from '@/components/verre';
-import { FAMILY_LABELS, PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
+import { PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
 import { cn, duration, fold, nb } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
@@ -46,6 +47,8 @@ function ConnectedRow({
   onOpen: () => void;
   fresh: boolean;
 }) {
+  const t = useTranslations('connections');
+  const locale = useLocale();
   return (
     <motion.li
       layout="position"
@@ -57,7 +60,7 @@ function ConnectedRow({
         <p className="text-body font-semibold tracking-[-0.01em] text-fg">{p.label}</p>
         <ul className="grid gap-1">
           {conns.map((c) => {
-            const reason = connState(c).tone === 'destructive' ? stateDetail(c, now) : null;
+            const reason = connState(c).tone === 'destructive' ? stateDetail(c, now, locale) : null;
             return (
               <li key={c.id} className="grid gap-0.5 @lg:flex @lg:items-baseline @lg:gap-3">
                 <StateWord c={c} className="@lg:w-[6.5rem] @lg:shrink-0" />
@@ -77,7 +80,8 @@ function ConnectedRow({
         </ul>
       </div>
       <Button size="sm" variant="quiet" data-outil={p.id} onClick={onOpen} className="-my-0.5">
-        Gérer<span className="sr-only"> {p.label}</span>
+        {t('manage')}
+        <span className="sr-only"> {p.label}</span>
       </Button>
     </motion.li>
   );
@@ -85,6 +89,7 @@ function ConnectedRow({
 
 /** Un outil libre : icône, nom, « Brancher » (ou « Bientôt » sans connecteur). Plus léger qu'une ligne branchée. */
 function FreeTile({ p, onOpen }: { p: CatalogItem; onOpen: () => void }) {
+  const t = useTranslations('connections');
   return (
     <motion.li
       layout="position"
@@ -95,10 +100,11 @@ function FreeTile({ p, onOpen }: { p: CatalogItem; onOpen: () => void }) {
       <span className="min-w-0 flex-1 truncate text-ui text-fg">{p.label}</span>
       {p.available ? (
         <Button size="sm" variant="quiet" data-outil={p.id} onClick={onOpen}>
-          Brancher<span className="sr-only"> {p.label}</span>
+          {t('connect')}
+          <span className="sr-only"> {p.label}</span>
         </Button>
       ) : (
-        <Badge className="mr-1.5">Bientôt</Badge>
+        <Badge className="mr-1.5">{t('soon')}</Badge>
       )}
     </motion.li>
   );
@@ -122,18 +128,19 @@ export function Catalogue({
   /** Outil tout juste branché : un anneau bat une fois autour de sa ligne. */
   fresh: string | null;
 }) {
+  const t = useTranslations('connections');
   // Une famille à la fois (« Dev », « CRM »…) ; null : toutes. Se combine avec le texte du champ.
   const [family, setFamily] = useState<ProviderFamily | null>(null);
   const families = PROVIDER_FAMILIES_ORDER.filter((id) => catalog.some((p) => p.family === id));
   const q = fold(filter.trim());
   const match = (p: CatalogItem) =>
     (family === null || p.family === family) &&
-    (!q || fold(p.label).includes(q) || fold(FAMILY_LABELS[p.family]).includes(q));
+    (!q || fold(p.label).includes(q) || fold(t(`family.${p.family}`)).includes(q));
   const connected = connectedTools(catalog, conns).filter(match);
   const free = catalog.filter((p) => !conns.some((c) => c.provider === p.id) && match(p));
   const groups = PROVIDER_FAMILIES_ORDER.map((id) => ({
     id,
-    label: FAMILY_LABELS[id],
+    label: t(`family.${id}`),
     tools: free.filter((p) => p.family === id),
   })).filter((g) => g.tools.length);
   const count = connected.length + free.length;
@@ -160,8 +167,8 @@ export function Catalogue({
                 onFilter('');
               }
             }}
-            placeholder="Filtrer les outils"
-            aria-label="Filtrer les outils"
+            placeholder={t('filter')}
+            aria-label={t('filter')}
             autoComplete="off"
             spellCheck={false}
             className="h-10 w-full rounded-field border border-line-strong bg-glass-2 pr-9 pl-9 text-ui text-fg shadow-hi outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-muted hover:border-line-strong focus-visible:border-accent focus-visible:shadow-[0_0_0_3px_var(--accent-soft)] shell:glass-float [&::-webkit-search-cancel-button]:appearance-none"
@@ -169,7 +176,7 @@ export function Catalogue({
           {filter && (
             <IconButton
               icon={X}
-              label="Effacer le filtre"
+              label={t('clearFilter')}
               size="sm"
               className="absolute top-1/2 right-1 -translate-y-1/2"
               tooltip={false}
@@ -181,18 +188,18 @@ export function Catalogue({
           )}
         </search>
         <p className="sr-only" aria-live="polite">
-          {q || family ? `${count} ${count > 1 ? 'outils' : 'outil'}` : ''}
+          {q || family ? (count === 1 ? t('countOne', { count }) : t('countMany', { count })) : ''}
         </p>
       </div>
 
       {/* biome-ignore lint/a11y/useSemanticElements: un groupe de boutons bascule, pas un formulaire (fieldset) */}
-      <div role="group" aria-label="Familles d’outils" className="mt-3 flex flex-wrap gap-2">
+      <div role="group" aria-label={t('families')} className="mt-3 flex flex-wrap gap-2">
         <Pill
           variant={family === null ? 'active' : 'default'}
           aria-pressed={family === null}
           onClick={() => setFamily(null)}
         >
-          Tous
+          {t('all')}
         </Pill>
         {families.map((id) => (
           <Pill
@@ -202,7 +209,7 @@ export function Catalogue({
             // un second clic sur la famille choisie revient à tous les outils
             onClick={() => setFamily(family === id ? null : id)}
           >
-            {FAMILY_LABELS[id]}
+            {t(`family.${id}`)}
           </Pill>
         ))}
       </div>
@@ -210,7 +217,7 @@ export function Catalogue({
       {connected.length > 0 && (
         <Section
           id="branches"
-          title="Vos outils branchés"
+          title={t('connected')}
           className="mt-8 scroll-mt-[124px] shell:scroll-mt-[84px]"
         >
           <GlassCard className="@container">
@@ -235,7 +242,7 @@ export function Catalogue({
       {free.length > 0 && (
         <Section
           id="a-brancher"
-          title="À brancher"
+          title={t('toConnect')}
           className="mt-10 scroll-mt-[124px] shell:scroll-mt-[84px]"
         >
           <div className="grid gap-6">
@@ -261,11 +268,16 @@ export function Catalogue({
         <EmptyState
           icon={SearchX}
           className="mt-8"
-          title="Aucun outil ne correspond."
+          title={t('noMatch')}
           description={
             q
-              ? `Rien ne s’appelle « ${filter.trim()} »${family ? ` dans la famille ${FAMILY_LABELS[family]}` : ` dans le catalogue des ${catalog.length} outils`}.`
-              : `Aucun outil dans la famille ${family ? FAMILY_LABELS[family] : ''}.`
+              ? t('noMatchQuery', {
+                  query: filter.trim(),
+                  scope: family
+                    ? t('inFamily', { family: t(`family.${family}`) })
+                    : t('catalogueCount', { count: catalog.length }),
+                })
+              : t('noFamily', { family: family ? t(`family.${family}`) : '' })
           }
           action={
             <Button
@@ -275,7 +287,7 @@ export function Catalogue({
                 input.current?.focus();
               }}
             >
-              Effacer les filtres
+              {t('clearFilters')}
             </Button>
           }
         />

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/discussion-events';
 import { PAGE_SIZE } from '@/lib/search-limits';
@@ -33,8 +34,6 @@ const QuestionSchema = z.preprocess(
 );
 const SourceIdsSchema = z.array(z.string().max(64)).max(PAGE_SIZE);
 
-const FAILED = 'La discussion n’a pas pu être créée. Réessayez dans un instant.';
-
 async function create(
   ctx: TenantContext,
   input: Parameters<typeof createDiscussion>[1],
@@ -52,10 +51,11 @@ export async function newDiscussionAction(
   formData: FormData,
 ): Promise<NewDiscussionState> {
   const ctx = await requireUserContext();
+  const t = await getTranslations('discussions');
   const question = QuestionSchema.safeParse(formData.get('question'));
-  if (!question.success) return { error: 'Écrivez une question de 4 000 caractères au plus.' };
+  if (!question.success) return { error: t('questionTooLong') };
   const id = await create(ctx, { question: question.data });
-  if (id === null) return { error: FAILED };
+  if (id === null) return { error: t('createFailed') };
   redirect(`/discussions/${id}`);
 }
 
@@ -64,13 +64,14 @@ export async function continueInDiscussionAction(
   sourceIds: string[],
 ): Promise<{ error: string }> {
   const ctx = await requireUserContext();
+  const t = await getTranslations('discussions');
   const question = QuestionSchema.safeParse(query);
   const seeds = SourceIdsSchema.safeParse(sourceIds);
   if (!question.success || !seeds.success) {
-    return { error: 'Cette recherche ne peut pas devenir une discussion.' };
+    return { error: t('continueUnavailable') };
   }
   const id = await create(ctx, { question: question.data, seedSourceIds: seeds.data });
-  if (id === null) return { error: FAILED };
+  if (id === null) return { error: t('createFailed') };
   redirect(`/discussions/${id}`);
 }
 

@@ -3,6 +3,7 @@
 import './connexions.css';
 import { ArrowUpRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { Notice, PageHeader } from '@/components/verre';
@@ -44,6 +45,7 @@ function ReturnNotice({
   notice: OAuthNotice | null;
   consentUrl: string | null;
 }) {
+  const t = useTranslations('connections');
   return (
     // initial={false} : l'avis rendu par le serveur (retour de l'éditeur) est visible avant l'hydratation
     <AnimatePresence mode="wait" initial={false}>
@@ -67,13 +69,13 @@ function ReturnNotice({
                   rel="noreferrer"
                   className="font-medium text-fg underline decoration-destructive-line underline-offset-4 hover:decoration-destructive"
                 >
-                  Lien d’accord pour l’administrateur
+                  {t('adminConsent')}
                   <ArrowUpRight
                     aria-hidden="true"
                     strokeWidth={1.8}
                     className="ml-0.5 inline size-3.5 align-[-2px]"
                   />
-                  <span className="sr-only"> (s’ouvre dans un nouvel onglet)</span>
+                  <span className="sr-only">{t('newTab')}</span>
                 </a>
               </>
             )}
@@ -95,6 +97,7 @@ export function Connexions({
   stale,
   now,
 }: ConnexionsProps) {
+  const t = useTranslations('connections');
   const [openId, setOpenId] = useState<ProviderId | null>(null);
   const [shownId, setShownId] = useState<ProviderId | null>(null);
   const [session, setSession] = useState(0);
@@ -134,7 +137,7 @@ export function Connexions({
     requestAnimationFrame(() => {
       const el =
         document.querySelector<HTMLElement>(`[data-outil="${id}"]`) ??
-        document.querySelector<HTMLElement>('input[aria-label="Filtrer les outils"]');
+        document.querySelector<HTMLElement>('input[type="search"]');
       el?.focus({ preventScroll: true });
       el?.scrollIntoView({ block: 'center', behavior: isInstant() ? 'auto' : 'smooth' });
     });
@@ -152,20 +155,11 @@ export function Connexions({
   return (
     <AnimatePresence>
       <div key="connexions">
-        <PageHeader
-          title="Connexions"
-          subtitle="Ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, de Google Drive et de Slack, qui reste privé comme une conversation."
-        />
+        <PageHeader title={t('title')} subtitle={t('subtitle')} />
         <ReturnNotice notice={notice} consentUrl={consentUrl} />
         {!canConnect && (
           <Notice tone="warning" className="mb-6">
-            {nb(
-              'Les connecteurs ne sont pas configurés sur ce serveur : il manque la variable LEON_CONNECTORS_KEY, qui chiffre les clés des outils. Générez-la avec',
-            )}{' '}
-            <code className="rounded-[5px] whitespace-nowrap bg-warning-soft px-1 py-px font-mono text-[12.5px] text-fg shadow-[inset_0_0_0_1px_var(--warning-line)]">
-              openssl rand -base64 32
-            </code>
-            {', ajoutez-la à l’environnement (voir .env.example), puis redémarrez Leon.'}
+            {nb(t('serverSetup'))}
           </Notice>
         )}
         <CarteConnexions

@@ -6,6 +6,7 @@ import {
   Pause,
   TriangleAlert,
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import { statusLine } from '@/lib/connection-form';
 import { cn, nb } from '@/lib/verre';
@@ -73,7 +74,15 @@ export function connState(c: Pick<ConnectionView, 'status' | 'creatorLeft'>): {
 
 /** Le mot d'état seul, icône en ligne : il s'aligne sur la ligne de base du texte voisin. */
 export function StateWord({ c, className }: { c: ConnectionView; className?: string }) {
-  const { word, tone, icon: Icon } = connState(c);
+  const t = useTranslations('connections');
+  const { tone, icon: Icon } = connState(c);
+  const localizedWord = c.creatorLeft
+    ? t('statusStopped')
+    : c.status === 'error'
+      ? t('statusError')
+      : c.status === 'paused'
+        ? t('statusPaused')
+        : t('statusActive');
   return (
     <p className={cn('text-[12.5px] font-medium whitespace-nowrap', TONES[tone].cls, className)}>
       <Icon
@@ -81,16 +90,16 @@ export function StateWord({ c, className }: { c: ConnectionView; className?: str
         strokeWidth={1.8}
         className={cn('mr-1.5 inline size-3.5 align-[-2.5px]', TONES[tone].iconCls)}
       />
-      {word}
+      {localizedWord}
     </p>
   );
 }
 
 /** La ligne d'état sans son premier mot : « Clé refusée par Intercom. », « X n'est plus membre » ; null pour « En pause ». */
-export const stateDetail = (c: StatusView, now: Date): string | null =>
-  statusLine(c, now).match(/^[^·:]*[·:]\s*(.+)$/s)?.[1] ?? null;
+export const stateDetail = (c: StatusView, now: Date, locale = 'fr'): string | null =>
+  statusLine(c, now, locale).match(/^[^·:]*[·:]\s*(.+)$/s)?.[1] ?? null;
 
-export const ConnStatus = ({
+export function ConnStatus({
   c,
   now,
   className,
@@ -98,8 +107,11 @@ export const ConnStatus = ({
   c: StatusView;
   now: Date;
   className?: string;
-}) => (
-  <StatusText tone={connState(c).tone} className={className}>
-    {statusLine(c, now)}
-  </StatusText>
-);
+}) {
+  const locale = useLocale();
+  return (
+    <StatusText tone={connState(c).tone} className={className}>
+      {statusLine(c, now, locale)}
+    </StatusText>
+  );
+}

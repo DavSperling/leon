@@ -2,6 +2,7 @@
 
 import { KeyRound, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { revokeTokenAction } from '@/app/(app)/reglages/actions';
 import {
@@ -32,6 +33,7 @@ type Token = Omit<ApiTokenRow, 'revokedAt'>;
 
 /** Section « Jetons personnels » : la liste (jetons non révoqués, lus par la page), la création et la révocation. */
 export function TokensSection({ tokens }: { tokens: Token[] }) {
+  const t = useTranslations('settings');
   const createRef = useRef<HTMLButtonElement>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -77,14 +79,14 @@ export function TokensSection({ tokens }: { tokens: Token[] }) {
   return (
     <Section
       id="jetons"
-      title="Jetons personnels"
-      description="Un jeton donne accès à ce que vous voyez. Il n’est montré qu’une fois."
+      title={t('tokensTitle')}
+      description={t('tokenDescription')}
       className={SECTION}
       actions={
         <Dialog open={createOpen} onOpenChange={onCreateChange}>
           <DialogTrigger asChild>
             <Button ref={createRef} variant="primary" icon={Plus}>
-              Créer un jeton
+              {t('createToken')}
             </Button>
           </DialogTrigger>
           <CreateTokenContent key={session} onCreated={setCreated} />
@@ -93,7 +95,7 @@ export function TokensSection({ tokens }: { tokens: Token[] }) {
     >
       {shown.length > 0 ? (
         <GlassCard className="p-1.5">
-          <ul aria-label="Vos jetons" className="grid grid-cols-[minmax(0,1fr)]">
+          <ul aria-label={t('yourTokens')} className="grid grid-cols-[minmax(0,1fr)]">
             <AnimatePresence initial={false}>
               {shown.map((t) => (
                 <TokenRow
@@ -107,7 +109,7 @@ export function TokensSection({ tokens }: { tokens: Token[] }) {
           </ul>
         </GlassCard>
       ) : (
-        <EmptyState icon={KeyRound} title="Aucun jeton pour l’instant." className="py-8" />
+        <EmptyState icon={KeyRound} title={t('noTokens')} className="py-8" />
       )}
     </Section>
   );
@@ -123,17 +125,19 @@ function TokenRow({
   onGone: () => void;
 }) {
   const instant = useInstant();
+  const tr = useTranslations('settings');
+  const locale = useLocale();
   const [revoking, startTransition] = useTransition();
 
   const revoke = () =>
     startTransition(async () => {
       try {
         const { ok } = await revokeTokenAction(t.id);
-        if (ok) toast.success('Jeton révoqué.');
-        else toast.error('Ce jeton n’existe plus ou est déjà révoqué.');
+        if (ok) toast.success(tr('tokenRevoked'));
+        else toast.error(tr('tokenAlreadyRevoked'));
         onGone();
       } catch {
-        toast.error('Impossible de révoquer. Réessayez.');
+        toast.error(tr('revokeFailed'));
       }
     });
 
@@ -173,24 +177,25 @@ function TokenRow({
           {/* les morceaux ne se coupent pas en leur milieu (« 12 oct. / 2026 ») : la ligne passe à la ligne entre eux */}
           <p className="mt-0.5 flex flex-wrap gap-x-1.5 text-label text-muted [&>span]:whitespace-nowrap">
             <span>
-              créé le <time dateTime={t.createdAt.toISOString()}>{formatDate(t.createdAt)}</time>
+              {tr('createdOn')}{' '}
+              <time dateTime={t.createdAt.toISOString()}>{formatDate(t.createdAt, locale)}</time>
             </span>
             <span aria-hidden="true">·</span>
             <span>
               {t.lastUsedAt ? (
                 <>
-                  utilisé{' '}
+                  {tr('used')}{' '}
                   {/* relatif à l'heure du rendu : serveur et navigateur peuvent différer d'une minute */}
                   <time
                     dateTime={t.lastUsedAt.toISOString()}
-                    title={formatDateTime(t.lastUsedAt)}
+                    title={formatDateTime(t.lastUsedAt, locale)}
                     suppressHydrationWarning
                   >
-                    {formatRelative(t.lastUsedAt)}
+                    {formatRelative(t.lastUsedAt, new Date(), locale)}
                   </time>
                 </>
               ) : (
-                'jamais utilisé'
+                tr('neverUsed')
               )}
             </span>
           </p>
@@ -204,12 +209,12 @@ function TokenRow({
               loading={revoking}
               className="relative"
             >
-              {revoking ? 'Envoi…' : 'Révoquer'}
+              {revoking ? tr('sending') : tr('revoke')}
             </Button>
           }
-          title={`Révoquer « ${t.name} » ?`}
-          description="Les outils qui l’utilisent perdront l’accès."
-          confirmLabel="Révoquer"
+          title={tr('revokeNamed', { name: t.name })}
+          description={tr('revokeDescription')}
+          confirmLabel={tr('revoke')}
           onConfirm={revoke}
         />
       </div>

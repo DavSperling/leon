@@ -1,9 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { auth } from '@/server/auth/auth';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import { createUserWithInvitation, createUserWithOrganization } from '@/server/auth/sign-up';
-import { joinAction, signInAction, signUpAction } from './actions';
+import {
+  joinAction,
+  requestPasswordResetAction,
+  signInAction,
+  signUpAction,
+  verifyTwoFactorAction,
+} from './actions';
 
+const resend = vi.hoisted(() => ({ configured: true }));
+vi.mock('@/server/auth/auth', () => ({
+  auth: {
+    api: { verifyTOTP: vi.fn(), verifyBackupCode: vi.fn(), requestPasswordReset: vi.fn() },
+  },
+  get passwordResetEnabled() {
+    return resend.configured;
+  },
+}));
 vi.mock('@/server/auth/sign-up', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/auth/sign-up')>()),
   createUserWithOrganization: vi.fn(),
@@ -28,12 +44,14 @@ const validSignUp = {
   name: 'Paul Martin',
   email: 'paul@example.com',
   password: 'motdepasse-solide',
+  confirmation: 'motdepasse-solide',
   organizationName: 'Dupont Rénovation',
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+  resend.configured = true;
 });
 
 // Audit 2 n° 3 : la connexion et l'inscription passent par une limite de débit (rate-limit.ts).
@@ -79,6 +97,7 @@ describe('signUpAction', () => {
     );
 
     expect(Object.keys(state.errors ?? {}).sort()).toEqual([
+      'confirmation',
       'email',
       'name',
       'organizationName',
@@ -127,6 +146,13 @@ describe('signUpAction', () => {
 
     expect(signInWithPassword).toHaveBeenCalledWith('paul@example.com', 'motdepasse-solide');
   });
+
+  it('refuse deux mots de passe différents, sans créer de compte', async () => {
+    const state = await signUpAction({}, form({ ...validSignUp, confirmation: 'autre-chose' }));
+
+    expect(state.errors).toEqual({ confirmation: 'Les mots de passe ne correspondent pas.' });
+    expect(createUserWithOrganization).not.toHaveBeenCalled();
+  });
 });
 
 describe('signUpAction, connexion qui échoue après la création', () => {
@@ -174,6 +200,7 @@ describe('joinAction', () => {
     name: 'Julie Petit',
     email: 'julie@example.com',
     password: 'motdepasse-solide',
+    confirmation: 'motdepasse-solide',
     token: 'secret-du-lien',
   };
 
@@ -206,7 +233,82 @@ describe('joinAction', () => {
       'julie@example.com',
       expect.any(Headers),
     );
-    expect(createUserWithInvitation).toHaveBeenCalledWith(validJoin);
+    const { confirmation: _, ...input } = validJoin;
+    expect(createUserWithInvitation).toHaveBeenCalledWith(input);
     expect(signInWithPassword).toHaveBeenCalledWith('julie@example.com', 'motdepasse-solide');
+  });
+});
+
+describe('verifyTwoFactorAction', () => {
+  it('vérifie un code à 6 chiffres auprès de l’application', async () => {
+    await expect(verifyTwoFactorAction({}, form({ code: '123 456' }))).rejects.toThrow(
+      'NEXT_REDIRECT /',
+    );
+
+    expect(auth.api.verifyTOTP).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { code: '123456' } }),
+    );
+    expect(auth.api.verifyBackupCode).not.toHaveBeenCalled();
+  });
+
+  it('accepte un code de secours, avec ou sans tiret (téléphone perdu)', async () => {
+    for (const code of ['V5qHD-kSFGw', 'V5qHDkSFGw']) {
+      await expect(verifyTwoFactorAction({}, form({ code }))).rejects.toThrow('NEXT_REDIRECT /');
+    }
+
+    expect(vi.mocked(auth.api.verifyBackupCode).mock.calls.map(([call]) => call?.body)).toEqual([
+      { code: 'V5qHD-kSFGw' },
+      { code: 'V5qHD-kSFGw' },
+    ]);
+    expect(auth.api.verifyTOTP).not.toHaveBeenCalled();
+  });
+
+  it('reste à l’étape du code quand il est refusé ou mal formé', async () => {
+    vi.mocked(auth.api.verifyTOTP).mockRejectedValue(new Error('INVALID_CODE'));
+
+    expect(await verifyTwoFactorAction({}, form({ code: '000000' }))).toEqual({
+      twoFactor: true,
+      errors: { form: 'Code incorrect ou expiré. Réessayez.' },
+    });
+    expect((await verifyTwoFactorAction({}, form({ code: '12' }))).errors?.code).toBeDefined();
+  });
+});
+
+describe('requestPasswordResetAction', () => {
+  const SENT =
+    'Si cette adresse correspond à un compte, un lien de réinitialisation vient d’être envoyé.';
+
+  it('répond pareil, que le compte existe ou non', async () => {
+    vi.mocked(auth.api.requestPasswordReset).mockRejectedValueOnce(new Error('inconnu'));
+
+    const unknown = await requestPasswordResetAction({}, form({ email: 'inconnu@example.com' }));
+    const known = await requestPasswordResetAction({}, form({ email: 'paul@example.com' }));
+
+    expect(unknown).toEqual({ message: SENT });
+    expect(known).toEqual({ message: SENT });
+    expect(authAttemptAllowed).toHaveBeenCalledWith(
+      'recuperation',
+      'paul@example.com',
+      expect.any(Headers),
+    );
+  });
+
+  it('n’envoie rien au-delà de la limite de débit', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+
+    const state = await requestPasswordResetAction({}, form({ email: 'paul@example.com' }));
+
+    expect(state.errors).toEqual({ form: TOO_MANY_ATTEMPTS });
+    expect(auth.api.requestPasswordReset).not.toHaveBeenCalled();
+  });
+
+  it('dit que l’envoi n’est pas configuré au lieu de prétendre avoir envoyé un lien', async () => {
+    resend.configured = false;
+
+    const state = await requestPasswordResetAction({}, form({ email: 'paul@example.com' }));
+
+    expect(state.message).toBeUndefined();
+    expect(state.errors?.form).toContain('pas configuré');
+    expect(auth.api.requestPasswordReset).not.toHaveBeenCalled();
   });
 });

@@ -38,6 +38,7 @@
     "officeparser": "8.2.0",
     "pg": "8.23.1",
     "pg-boss": "12.37.1",
+    "qrcode.react": "4.2.0",
     "radix-ui": "1.8.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",

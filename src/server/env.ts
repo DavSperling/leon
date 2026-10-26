@@ -25,6 +25,8 @@ export const EnvSchema = z
     DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//),
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.url(),
+    RESEND_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    LEON_EMAIL_FROM: z.preprocess(emptyIsAbsent, z.string().min(3).max(254).optional()),
     // Lu pour refuser le faux modèle en production ; posé par Next, jamais dans .env.example.
     NODE_ENV: z.string().optional(),
     // Posé par Next pendant `next build`, qui tourne en production et valide ce fichier sans servir de requête.

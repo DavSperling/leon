@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 // Contrat des tours captés, partagé avec la CLI et l'extension (décision D1 : imports relatifs seulement).
 // Trois listes de types : ceux de la capture (seuls admis par la route publique d'envoi), ceux des
-// connecteurs (écrits par la tâche de fond), et leur réunion, qui est tout ce que la base accepte.
+// connecteurs (écrits par la tâche de fond), et leur réunion avec les documents ajoutés à la main (écran
+// Documents), qui est tout ce que la base accepte.
 export const CAPTURE_KINDS = ['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember'] as const;
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
 export const PROVIDER_IDS = [
@@ -50,7 +51,7 @@ export const PROVIDER_IDS = [
   'slack',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
-export const SOURCE_KINDS = [...CAPTURE_KINDS, ...PROVIDER_IDS] as const;
+export const SOURCE_KINDS = [...CAPTURE_KINDS, 'document', ...PROVIDER_IDS] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 // Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan du deuxième jet).
 // Elle s'écrit dans `sources.metadata.nature`. Une nature absente (les conversations captées n'en écrivent pas)

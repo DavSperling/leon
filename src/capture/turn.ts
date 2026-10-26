@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 // Contrat des tours captés, partagé avec la CLI et l'extension (décision D1 : imports relatifs seulement).
 // Trois listes de types : ceux de la capture (seuls admis par la route publique d'envoi), ceux des
-// connecteurs (écrits par la tâche de fond), et leur réunion, qui est tout ce que la base accepte.
+// connecteurs (écrits par la tâche de fond), et leur réunion avec les documents ajoutés à la main (écran
+// Documents), qui est tout ce que la base accepte.
 export const CAPTURE_KINDS = ['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember'] as const;
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
 export const PROVIDER_IDS = [

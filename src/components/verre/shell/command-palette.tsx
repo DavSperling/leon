@@ -17,6 +17,7 @@ import { Dialog as RDialog } from 'radix-ui';
 import { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Kbd } from '@/components/verre/ui/kbd';
 import { cn } from '@/lib/verre/cn';
+import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
 import { useTheme } from '@/lib/verre/theme';
 import { NAV } from './nav';
@@ -138,7 +139,7 @@ export function CommandPalette({
     const free: Option = {
       id: 'q',
       group: null,
-      label: t('searchQuery', { query }),
+      label: nb(t('searchQuery', { query })),
       icon: Search,
       run: go(`/?q=${encodeURIComponent(query)}`),
     };

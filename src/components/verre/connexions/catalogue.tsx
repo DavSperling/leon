@@ -188,7 +188,7 @@ export function Catalogue({
           )}
         </search>
         <p className="sr-only" aria-live="polite">
-          {q || family ? (count === 1 ? t('countOne', { count }) : t('countMany', { count })) : ''}
+          {q || family ? t('count', { count }) : ''}
         </p>
       </div>
 

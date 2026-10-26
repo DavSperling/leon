@@ -159,7 +159,11 @@ export function Connexions({
         <ReturnNotice notice={notice} consentUrl={consentUrl} />
         {!canConnect && (
           <Notice tone="warning" className="mb-6">
-            {nb(t('serverSetup'))}
+            {nb(t('serverSetup'))}{' '}
+            <code className="rounded-[5px] whitespace-nowrap bg-warning-soft px-1 py-px font-mono text-[12.5px] text-fg shadow-[inset_0_0_0_1px_var(--warning-line)]">
+              openssl rand -base64 32
+            </code>
+            {t('serverSetupEnd')}
           </Notice>
         )}
         <CarteConnexions

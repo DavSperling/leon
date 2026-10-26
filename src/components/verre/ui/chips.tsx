@@ -7,6 +7,7 @@ import {
   Plug,
   Terminal,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import type { CaptureKind, ProviderId, SourceKind } from '@/capture/turn';
 import { SOURCE_KIND_LABELS } from '@/lib/labels';
@@ -193,6 +194,7 @@ export function SourceLink({
   label?: string;
   className?: string;
 }) {
+  const t = useTranslations('common');
   if (!href) return null;
   return (
     <a
@@ -205,8 +207,8 @@ export function SourceLink({
       )}
     >
       <ExternalLink aria-hidden="true" strokeWidth={1.7} className="size-[13px] shrink-0" />
-      Ouvrir dans {label ?? kindLabel(kind)}
-      <span className="sr-only"> (s'ouvre dans un nouvel onglet)</span>
+      {t('openIn', { tool: label ?? kindLabel(kind) })}
+      <span className="sr-only">{t('newTab')}</span>
     </a>
   );
 }

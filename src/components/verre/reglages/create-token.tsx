@@ -80,7 +80,7 @@ export function CreateTokenContent({ onCreated }: { onCreated: (hint: string) =>
               <Button variant="ghost">{t('cancel')}</Button>
             </DialogClose>
             <Button type="submit" variant="primary" loading={pending}>
-              {pending ? t('sending') : t('createToken')}
+              {pending ? t('sending') : t('createTokenSubmit')}
             </Button>
           </DialogFooter>
         </form>

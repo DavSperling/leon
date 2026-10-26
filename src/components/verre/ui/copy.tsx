@@ -51,7 +51,6 @@ export function CodeLine({
   wrap?: boolean;
   className?: string;
 }) {
-  const t = useTranslations('common');
   return (
     <div
       className={cn(
@@ -81,7 +80,7 @@ export function CodeLine({
             )
           : code}
       </code>
-      <CopyButton value={code} label={t('copy')} />
+      <CopyButton value={code} />
     </div>
   );
 }

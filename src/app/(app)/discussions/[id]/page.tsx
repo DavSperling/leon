@@ -8,7 +8,7 @@ import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await (await getTranslations('discussions'))('title') };
+  return { title: await (await getTranslations('thread'))('title') };
 }
 
 type Params = Promise<{ id: string }>;

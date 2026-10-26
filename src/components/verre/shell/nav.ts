@@ -2,10 +2,11 @@ import { type LucideIcon, MessagesSquare, Plug, Settings2, TextSearch } from 'lu
 
 // Les quatre sections, partagées par la barre latérale, la feuille mobile et la palette. Recherche a sa loupe sur des
 // lignes ; le bouton « Rechercher ⌘K » juste au-dessus a le glyphe ⌘ (dans le rail, deux loupes empilées se confondaient).
+// `label` : le libellé français, que les guides citent ; `labelKey` : sa clé dans les messages (navigation).
 export type NavItem = {
   href: string;
   label: string;
-  labelKey: string;
+  labelKey: 'search' | 'discussions' | 'connections' | 'settings';
   icon: LucideIcon;
   end?: boolean;
 };

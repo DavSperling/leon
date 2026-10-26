@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { OfficeParser, type SupportedFileType } from 'officeparser';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { users } from '@/server/db/schema/auth';
@@ -123,19 +123,11 @@ export async function listDocuments(ctx: TenantContext) {
   );
 }
 
+// L'app n'a pas le droit de supprimer du brut : la fonction de 0034 ne retire qu'un document de l'organisation
+// courante, et seulement pour son auteur. Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
 export async function deleteDocument(ctx: TenantContext, id: string): Promise<boolean> {
-  const [deleted] = await withTenant(ctx, (tx) =>
-    tx
-      .delete(sources)
-      .where(
-        and(
-          eq(sources.id, id),
-          eq(sources.tenantId, ctx.tenantId),
-          eq(sources.ownerUserId, ctx.userId),
-          eq(sources.kind, 'document'),
-        ),
-      )
-      .returning({ id: sources.id }),
+  const result = await withTenant(ctx, (tx) =>
+    tx.execute<{ deleted: boolean }>(sql`select supprimer_document(${id}) as deleted`),
   );
-  return deleted !== undefined;
+  return result.rows[0]?.deleted === true;
 }

@@ -60,6 +60,17 @@ describe('authAttemptAllowed', () => {
     expect(await authAttemptAllowed('connexion', mail, from(address))).toBe(true);
   });
 
+  it('laisse une équipe de 30 rejoindre par lien depuis le même bureau', async () => {
+    const address = ip();
+
+    for (let i = 0; i < 30; i += 1) {
+      expect(await authAttemptAllowed('invitation', email(), from(address))).toBe(true);
+    }
+
+    // L'inscription libre garde son plafond bas par adresse IP.
+    expect(AUTH_LIMITS.inscription.ip).toBeLessThan(30);
+  });
+
   it('ne garde ni l’e-mail ni l’adresse IP en clair', async () => {
     const mail = email();
     const address = ip();

@@ -222,14 +222,14 @@ describe('joinAction', () => {
     expect(signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it('compte la tentative comme une inscription, puis connecte et va à l’accueil', async () => {
+  it('compte la tentative sous la limite des invitations, puis connecte et va à l’accueil', async () => {
     vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: true, userId: 'u', tenantId: 't' });
     vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
 
     await expect(joinAction({}, form(validJoin))).rejects.toThrow('NEXT_REDIRECT /');
 
     expect(authAttemptAllowed).toHaveBeenCalledWith(
-      'inscription',
+      'invitation',
       'julie@example.com',
       expect.any(Headers),
     );

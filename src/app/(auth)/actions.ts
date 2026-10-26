@@ -229,7 +229,7 @@ export async function joinAction(
   const { token: _token, ...values } = withoutPassword(fields);
   const parsed = JoinFormSchema.safeParse(fields);
   if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
-  if (!(await authAttemptAllowed('inscription', parsed.data.email, await headers()))) {
+  if (!(await authAttemptAllowed('invitation', parsed.data.email, await headers()))) {
     return { errors: { form: TOO_MANY_ATTEMPTS }, values };
   }
 

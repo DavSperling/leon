@@ -1,6 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { type PreviewView, toPreviewView } from '@/components/search/view-model';
 import { requireUserContext, signOutCurrentUser } from '@/server/auth/session';
@@ -27,7 +28,7 @@ export async function previewPassageAction(passageId: string): Promise<PreviewRe
   try {
     const context = await fetchPassageContext(ctx, passageId);
     return context
-      ? { ok: true, preview: toPreviewView(context) }
+      ? { ok: true, preview: toPreviewView(context, await getLocale()) }
       : { ok: false, reason: 'introuvable' };
   } catch (error) {
     logError('search.preview_failed', error);

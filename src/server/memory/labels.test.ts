@@ -11,6 +11,7 @@ describe('labels', () => {
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
       mcp_remember: 'Note MCP',
+      document: 'Document manuel',
       ...PROVIDER_LABELS,
     });
   });

@@ -1,11 +1,39 @@
 import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
+import { auth } from '@/server/auth/auth';
 import { createInvitationLink } from '@/server/auth/members';
-import { requireUserContext } from '@/server/auth/session';
-import { createInvitationAction, createTokenAction, revokeTokenAction } from './actions';
+import { authAttemptAllowed } from '@/server/auth/rate-limit';
+import { getSession, requireUserContext } from '@/server/auth/session';
+import {
+  createInvitationAction,
+  createTokenAction,
+  disableTotpAction,
+  enableTotpAction,
+  regenerateBackupCodesAction,
+  revokeTokenAction,
+  updateProfileAction,
+  verifyTotpSetupAction,
+} from './actions';
 
-vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
+vi.mock('@/server/auth/session', () => ({
+  requireUserContext: vi.fn(),
+  getSession: vi.fn(),
+  requestHeaders: vi.fn(async () => new Headers()),
+}));
+vi.mock('@/server/auth/auth', () => ({
+  auth: {
+    api: {
+      updateUser: vi.fn(),
+      enableTwoFactor: vi.fn(),
+      verifyTOTP: vi.fn(),
+      revokeOtherSessions: vi.fn(),
+      disableTwoFactor: vi.fn(),
+      generateBackupCodes: vi.fn(),
+    },
+  },
+}));
+vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -17,6 +45,75 @@ const SECRET = 'leon_jeton-de-test-qui-ne-doit-jamais-etre-journalise';
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(requireUserContext).mockResolvedValue(ctx);
+  vi.mocked(getSession).mockResolvedValue({ user: { email: 'amos@example.com' } } as never);
+  vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+});
+
+describe('double authentification', () => {
+  it('ferme les autres sessions une fois le code de l’application confirmé', async () => {
+    await expect(verifyTotpSetupAction('123456')).resolves.toEqual({ ok: true });
+
+    expect(auth.api.verifyTOTP).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { code: '123456' } }),
+    );
+    expect(auth.api.revokeOtherSessions).toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it('ne ferme rien quand le code est refusé ou mal formé', async () => {
+    vi.mocked(auth.api.verifyTOTP).mockRejectedValue(new Error('INVALID_CODE'));
+
+    expect(await verifyTotpSetupAction('000000')).toEqual({ error: expect.any(String) });
+    expect(await verifyTotpSetupAction('12a')).toEqual({ error: expect.any(String) });
+
+    expect(auth.api.verifyTOTP).toHaveBeenCalledTimes(1);
+    expect(auth.api.revokeOtherSessions).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['activer', () => enableTotpAction('x'), () => auth.api.enableTwoFactor],
+    ['désactiver', () => disableTotpAction('x'), () => auth.api.disableTwoFactor],
+    [
+      'régénérer les codes',
+      () => regenerateBackupCodesAction('x'),
+      () => auth.api.generateBackupCodes,
+    ],
+  ])(
+    'compte l’essai de mot de passe pour %s, et s’arrête à la limite',
+    async (_label, run, api) => {
+      vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+
+      expect(await run()).toEqual({ error: expect.any(String) });
+
+      expect(authAttemptAllowed).toHaveBeenCalledWith(
+        'connexion',
+        'amos@example.com',
+        expect.any(Headers),
+      );
+      expect(api()).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rend les nouveaux codes de secours', async () => {
+    vi.mocked(auth.api.generateBackupCodes).mockResolvedValue({
+      status: true,
+      backupCodes: ['aaaaa-bbbbb'],
+    });
+
+    expect(await regenerateBackupCodesAction('motdepasse')).toEqual({
+      backupCodes: ['aaaaa-bbbbb'],
+    });
+  });
+});
+
+describe('updateProfileAction', () => {
+  it('rend une erreur au lieu de planter quand Better Auth refuse', async () => {
+    vi.mocked(auth.api.updateUser).mockRejectedValue(new Error('refus'));
+
+    expect(await updateProfileAction('Amos')).toEqual({ error: expect.any(String) });
+    expect(await updateProfileAction('   ')).toEqual({ error: expect.any(String) });
+    expect(auth.api.updateUser).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('createTokenAction', () => {

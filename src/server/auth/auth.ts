@@ -4,7 +4,11 @@ import { organization } from 'better-auth/plugins/organization';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { pool } from '@/server/db/client';
 import { env } from '@/server/env';
+import { logError } from '@/server/log';
 import { firstOrganizationId } from './tenant-context';
+
+// Sans Resend, aucun lien ne part : l'écran de connexion ne propose pas « Mot de passe oublié ? ».
+export const passwordResetEnabled = Boolean(env.RESEND_API_KEY && env.LEON_EMAIL_FROM);
 
 async function sendPasswordReset(email: string, url: string): Promise<void> {
   if (!env.RESEND_API_KEY || !env.LEON_EMAIL_FROM) {
@@ -36,12 +40,23 @@ export const auth = betterAuth({
     autoSignIn: false,
     minPasswordLength: 8,
     revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url }) => sendPasswordReset(user.email, url),
+    // Envoi sans attente : la réponse met le même temps que le compte existe ou non (Leon tourne en continu,
+    // l'envoi finit après la réponse).
+    sendResetPassword: async ({ user, url }) => {
+      void sendPasswordReset(user.email, url).catch((error) =>
+        logError('auth.password_reset_email', error),
+      );
+    },
   },
-  // La connexion et l'inscription passent par les server actions (auth.api.*), sous la limite de débit de
-  // rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un compte sans
-  // organisation). Seul le routeur les ferme : auth.api.* les appelle toujours.
-  disabledPaths: ['/sign-in/email', '/sign-up/email'],
+  // La connexion, l'inscription et la demande de lien passent par les server actions (auth.api.*), sous la limite
+  // de débit de rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un
+  // compte sans organisation). Seul le routeur les ferme : auth.api.* les appelle toujours. /reset-password/:token
+  // reste ouverte : c'est le lien de l'e-mail.
+  disabledPaths: ['/sign-in/email', '/sign-up/email', '/request-password-reset'],
+  // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
+  verification: {
+    storeIdentifier: { default: 'plain', overrides: { 'reset-password:': 'hashed' } },
+  },
   advanced: {
     database: { generateId: 'uuid' },
     // L'adresse du client ne vient que de l'en-tête que pose le proxy de confiance (rate-limit.ts) ; sans lui,

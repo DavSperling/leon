@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { auth } from '@/server/auth/auth';
+import { auth, passwordResetEnabled } from '@/server/auth/auth';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import {
@@ -95,15 +95,29 @@ export async function signInAction(
   redirect('/');
 }
 
+const TOTP_CODE = /^\d{6}$/;
+// Un code de secours de Better Auth : 10 lettres ou chiffres, affichés en deux groupes de 5 (« V5qHD-kSFGw »).
+const BACKUP_CODE = /^[A-Za-z0-9]{5}-?[A-Za-z0-9]{5}$/;
+
 export async function verifyTwoFactorAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
   const code = String(formData.get('code') ?? '').replace(/\s/g, '');
-  if (!/^\d{6}$/.test(code))
-    return { twoFactor: true, errors: { code: 'Saisissez le code à 6 chiffres.' } };
+  const isTotp = TOTP_CODE.test(code);
+  if (!isTotp && !BACKUP_CODE.test(code))
+    return {
+      twoFactor: true,
+      errors: { code: 'Saisissez le code à 6 chiffres ou l’un de vos codes de secours.' },
+    };
   try {
-    await auth.api.verifyTOTP({ body: { code }, headers: await headers() });
+    if (isTotp) await auth.api.verifyTOTP({ body: { code }, headers: await headers() });
+    // Téléphone perdu : un code de secours ouvre la session, une seule fois.
+    else
+      await auth.api.verifyBackupCode({
+        body: { code: `${code.slice(0, 5)}-${code.slice(-5)}` },
+        headers: await headers(),
+      });
   } catch {
     return { twoFactor: true, errors: { form: 'Code incorrect ou expiré. Réessayez.' } };
   }
@@ -114,6 +128,12 @@ export async function requestPasswordResetAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  if (!passwordResetEnabled)
+    return {
+      errors: {
+        form: 'L’envoi d’e-mails n’est pas configuré. Demandez à l’administrateur de votre espace.',
+      },
+    };
   const email = String(formData.get('email') ?? '').trim();
   if (!z.email().safeParse(email).success) return { errors: { email: INVALID_EMAIL } };
   if (!(await authAttemptAllowed('recuperation', email, await headers()))) {
@@ -125,7 +145,8 @@ export async function requestPasswordResetAction(
       headers: await headers(),
     });
   } catch (error) {
-    // Même réponse si le compte n'existe pas ou si l'envoi échoue : ne pas révéler les comptes enregistrés.
+    // Même réponse si le compte n'existe pas : ne pas révéler les comptes enregistrés. L'échec de l'envoi
+    // lui-même est journalisé par auth.ts.
     logError('auth.password_reset', error);
   }
   return {

@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronsUpDown, LogOut, Moon, Sun } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { startTransition } from 'react';
 import { signOutAction } from '@/app/(app)/actions';
 import {
@@ -27,6 +28,7 @@ const FOLDED =
 
 /** Haut de la barre latérale : l'espace et la personne ; derrière, le compte, le thème et la déconnexion. */
 export function WorkspaceMenu({ organizationName, userName, userEmail }: Viewer) {
+  const t = useTranslations('shell');
   const { theme, toggle } = useTheme();
   const collapsed = useRailCollapsed();
   return (
@@ -35,7 +37,7 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Viewer)
         <DropdownMenuTrigger
           onPointerMove={railOnly}
           onFocus={railOnly}
-          aria-label={nb(`Menu du compte : ${organizationName}, ${userName}`)}
+          aria-label={nb(t('accountMenu', { organization: organizationName, user: userName }))}
           className={cn(
             'flex h-10 w-full shrink-0 items-center gap-2.5 rounded-field border border-line bg-glass-2 pr-2.5 pl-[5px] text-left shadow-hi transition-[background-color,border-color,box-shadow] duration-200 hover:border-line-strong data-[state=open]:border-line-strong',
             FOLDED,
@@ -72,10 +74,10 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Viewer)
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem icon={theme === 'dark' ? Sun : Moon} onSelect={toggle}>
-          {theme === 'dark' ? 'Thème clair' : 'Thème sombre'}
+          {theme === 'dark' ? t('lightTheme') : t('darkTheme')}
         </DropdownMenuItem>
         <DropdownMenuItem icon={LogOut} onSelect={() => startTransition(signOutAction)}>
-          Se déconnecter
+          {t('signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -2,6 +2,7 @@
 
 import { ChevronDown, CircleAlert, ExternalLink, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import {
   Beam,
@@ -31,8 +32,8 @@ export type OpenCitation = (
   trigger: HTMLElement,
 ) => void;
 
-const plural = (n: number) => (n > 1 ? 's' : '');
-const titleOf = (citation: DiscussionCitation): string => citation.title?.trim() || 'Sans titre';
+const titleOf = (citation: DiscussionCitation, fallback: string): string =>
+  citation.title?.trim() || fallback;
 
 /** Une limite atteinte s'ajoute à la fin du texte (finalReplyText) : affichée à part, en note. */
 function splitLimit(text: string): [string, string | null] {
@@ -55,6 +56,7 @@ function SourceRows({
   onOpen: OpenCitation;
   fresh?: boolean;
 }) {
+  const t = useTranslations('discussionView');
   return (
     <ol className="mt-1.5 grid grid-cols-[minmax(0,1fr)] gap-px">
       {citations.map((c, i) => {
@@ -82,15 +84,15 @@ function SourceRows({
                 !c.title?.trim() && 'text-muted',
               )}
             >
-              <span className="sr-only">Lire la source {c.n} : </span>
-              {titleOf(c)}
+              <span className="sr-only">{t('readSource', { number: c.n })}</span>
+              {titleOf(c, t('untitled'))}
             </button>
             {c.url && (
               <a
                 href={c.url}
                 target="_blank"
                 rel="noreferrer"
-                aria-label={nb(`Ouvrir l’original de « ${titleOf(c)} » (nouvel onglet)`)}
+                aria-label={nb(t('openOriginal', { title: titleOf(c, t('untitled')) }))}
                 className="ml-auto grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg"
               >
                 <ExternalLink aria-hidden="true" className="size-[15px]" strokeWidth={1.7} />
@@ -120,6 +122,7 @@ function CitedSources({
   fresh?: boolean;
 }) {
   // suit la dernière réponse (se replie quand une autre arrive) tant qu'on n'y a pas touché
+  const t = useTranslations('discussionView');
   const [chosen, setChosen] = useState<boolean | null>(null);
   const n = citations.length;
   return (
@@ -129,7 +132,7 @@ function CitedSources({
       className="mt-4 border-t border-line pt-2"
     >
       <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1 rounded-field px-1.5 text-label font-semibold text-muted transition-colors hover:text-fg">
-        {n} source{plural(n)} citée{plural(n)}
+        {t('citedSources', { count: n })}
         <ChevronDown
           aria-hidden="true"
           className="size-3.5 transition-[rotate] duration-200 group-data-[state=open]:rotate-180"
@@ -163,15 +166,16 @@ export function UserBubble({
   active: string | null;
   onOpen: OpenCitation;
 }) {
+  const t = useTranslations('discussionView');
   return (
     <div className="ml-auto w-fit max-w-[88%] rounded-box rounded-br-[6px] border border-accent-line bg-accent-soft px-4 py-3 shadow-hi">
-      <p className="sr-only">Vous :</p>
+      <p className="sr-only">{t('you')}</p>
       <p className="text-lead leading-[1.6] break-words whitespace-pre-wrap text-fg">{content}</p>
       {seeds.length > 0 && (
         // les résultats d'origine sont secondaires : repliés, ouverts à la demande
         <Collapsible className="mt-2.5 border-t border-accent-line pt-1.5">
           <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1 rounded-field px-1.5 text-label font-semibold text-fg-2 transition-colors hover:text-fg">
-            À partir de {seeds.length} résultat{plural(seeds.length)} de la recherche
+            {t('searchSeeds', { count: seeds.length })}
             <ChevronDown
               aria-hidden="true"
               className="size-3.5 transition-[rotate] duration-200 group-data-[state=open]:rotate-180"
@@ -216,6 +220,7 @@ export function LeonCard({
   onOpen,
   onHover,
 }: LeonCardProps) {
+  const t = useTranslations('discussionView');
   const byN = new Map(citations.map((c) => [c.n, c]));
   const [main, limit] = splitLimit(content);
   const fixed = content === DISCUSSION_REFUSAL || content === DISCUSSION_EMPTY;
@@ -261,7 +266,7 @@ export function LeonCard({
                   return (
                     <CitationChip
                       n={n}
-                      label={nb(`Source ${n} : ${titleOf(c)}`)}
+                      label={nb(t('sourceLabel', { number: n, title: titleOf(c, t('untitled')) }))}
                       active={active === key}
                       animate={fresh}
                       onClick={(e) => onOpen(key, c, e.currentTarget)}

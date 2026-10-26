@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   test: {
     env: TEST_ENV,
+    setupFiles: ['src/test/next-intl.ts'],
     projects: [
       {
         extends: true,

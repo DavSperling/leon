@@ -1,133 +1,168 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useTransition } from 'react';
 import {
   disableTotpAction,
   enableTotpAction,
+  regenerateBackupCodesAction,
   updateProfileAction,
   verifyTotpSetupAction,
 } from '@/app/(app)/reglages/actions';
 import { Button } from '@/components/verre/ui/button';
+import { CopyButton } from '@/components/verre/ui/copy';
 import { Notice } from '@/components/verre/ui/feedback';
 import { Field, Input } from '@/components/verre/ui/form';
+import { nb } from '@/lib/verre/nb';
+
+const read = (data: FormData, name: string) => String(data.get(name) ?? '');
+
+// Les codes de secours ne sont montrés qu'ici, une fois : à l'activation ou quand l'utilisateur en demande d'autres.
+function BackupCodes({ codes }: { codes: string[] }) {
+  const t = useTranslations('security');
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h4 className="text-label font-semibold text-fg">{t('backupTitle')}</h4>
+        <CopyButton value={codes.join('\n')} label={t('copyCodes')} />
+      </div>
+      <p className="mt-1 text-label text-muted">{nb(t('backupHelp'))}</p>
+      <ul className="mt-2 grid grid-cols-2 gap-2 rounded-panel bg-surface p-3 font-mono text-label">
+        {codes.map((code) => (
+          <li key={code}>{code}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function SecuritySettings({ enabled }: { enabled: boolean }) {
+  const t = useTranslations('security');
   const [setup, setSetup] = useState<{ uri: string; backupCodes: string[] } | null>(null);
+  const [codes, setCodes] = useState<string[] | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [running, setRunning] = useState('');
   const [pending, startTransition] = useTransition();
 
-  function enable(formData: FormData) {
+  function start(name: string, work: () => Promise<void>) {
     setError('');
-    startTransition(async () => {
-      const result = await enableTotpAction(String(formData.get('password') ?? ''));
+    setMessage('');
+    setRunning(name);
+    startTransition(work);
+  }
+  const enable = (data: FormData) =>
+    start('enable', async () => {
+      const result = await enableTotpAction(read(data, 'password'));
       if ('error' in result) setError(result.error);
       else setSetup(result);
     });
-  }
-  function verify(formData: FormData) {
-    setError('');
-    startTransition(async () => {
-      const result = await verifyTotpSetupAction(
-        String(formData.get('code') ?? '').replace(/\s/g, ''),
-      );
-      if (result.ok) {
-        setSetup(null);
-        setMessage('L’authentification à deux facteurs est activée.');
-      } else setError(result.error ?? 'Code incorrect.');
+  const verify = (data: FormData) =>
+    start('verify', async () => {
+      const result = await verifyTotpSetupAction(read(data, 'code').replace(/\s/g, ''));
+      if ('error' in result) return setError(result.error);
+      setSetup(null);
+      setMessage(t('enabled'));
     });
-  }
-  function disable(formData: FormData) {
-    setError('');
-    startTransition(async () => {
-      const result = await disableTotpAction(String(formData.get('password') ?? ''));
-      if (result.ok) setMessage('L’authentification à deux facteurs est désactivée.');
-      else setError(result.error ?? 'Impossible de désactiver.');
+  const disable = (data: FormData) =>
+    start('disable', async () => {
+      const result = await disableTotpAction(read(data, 'password'));
+      if ('error' in result) setError(result.error);
+      else setMessage(t('disabled'));
     });
-  }
+  const regenerate = (data: FormData) =>
+    start('codes', async () => {
+      const result = await regenerateBackupCodesAction(read(data, 'password'));
+      if ('error' in result) setError(result.error);
+      else setCodes(result.backupCodes);
+    });
 
   return (
-    <section className="grid gap-5">
+    <div className="grid gap-5">
       <div>
-        <h2 className="text-h2 font-semibold text-fg">Authentification à deux facteurs</h2>
-        <p className="mt-1 text-ui text-muted">
-          Protégez votre compte avec une application d’authentification.
-        </p>
+        <h3 className="text-title font-semibold text-fg">{t('twoFactorTitle')}</h3>
+        <p className="mt-1 text-ui text-muted">{t('twoFactorDescription')}</p>
       </div>
       {message && (
         <Notice tone="success" live="status">
-          {message}
+          {nb(message)}
         </Notice>
       )}
       {error && (
         <Notice tone="error" live="alert">
-          {error}
+          {nb(error)}
         </Notice>
       )}
       {setup ? (
         <div className="grid gap-4 rounded-panel border border-line p-5">
-          <p className="text-ui text-fg-2">
-            Scannez ce code QR avec une application d’authentification, puis confirmez avec le code
-            affiché.
-          </p>
+          <p className="text-ui text-fg-2">{t('scan')}</p>
           <div className="w-fit rounded-panel bg-white p-3">
             <QRCodeSVG value={setup.uri} size={192} />
           </div>
           <details>
-            <summary className="cursor-pointer text-label text-accent">
-              Afficher la clé de configuration
-            </summary>
+            <summary className="cursor-pointer text-label text-accent">{t('showKey')}</summary>
             <code className="mt-2 block break-all text-label">
               {new URL(setup.uri).searchParams.get('secret')}
             </code>
           </details>
-          <div>
-            <h3 className="text-label font-semibold text-fg">Codes de secours</h3>
-            <p className="mt-1 text-label text-muted">
-              Enregistrez-les maintenant. Chaque code ne peut servir qu’une fois.
-            </p>
-            <pre className="mt-2 grid grid-cols-2 gap-2 rounded-panel bg-surface p-3 text-label">
-              {setup.backupCodes.join('\n')}
-            </pre>
-          </div>
+          <BackupCodes codes={setup.backupCodes} />
           <form action={verify} className="flex flex-wrap items-end gap-3">
-            <Field label="Code à 6 chiffres">
+            <Field label={t('code')}>
               <Input name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} />
             </Field>
-            <Button type="submit" variant="primary" loading={pending}>
-              Activer
+            <Button type="submit" variant="primary" loading={pending && running === 'verify'}>
+              {t('activate')}
             </Button>
           </form>
         </div>
+      ) : codes ? (
+        <div className="grid gap-4 rounded-panel border border-line p-5">
+          <BackupCodes codes={codes} />
+          <Button variant="secondary" className="w-fit" onClick={() => setCodes(null)}>
+            {t('codesSaved')}
+          </Button>
+        </div>
       ) : enabled ? (
-        <form action={disable} className="flex flex-wrap items-end gap-3">
-          <p className="w-full text-ui text-fg-2">La protection par application est activée.</p>
-          <Field label="Mot de passe">
-            <Input name="password" type="password" autoComplete="current-password" />
+        <form className="flex flex-wrap items-end gap-3">
+          <p className="w-full text-ui text-fg-2">{t('enabledNotice')}</p>
+          <Field label={t('password')} help={t('regenerateHelp')}>
+            <Input name="password" type="password" autoComplete="current-password" required />
           </Field>
-          <Button type="submit" variant="secondary" loading={pending}>
-            Désactiver
+          <Button
+            type="submit"
+            variant="secondary"
+            formAction={regenerate}
+            loading={pending && running === 'codes'}
+          >
+            {t('regenerate')}
+          </Button>
+          <Button
+            type="submit"
+            variant="secondary"
+            formAction={disable}
+            loading={pending && running === 'disable'}
+          >
+            {t('disable')}
           </Button>
         </form>
       ) : (
         <form action={enable} className="flex flex-wrap items-end gap-3">
-          <p className="w-full text-ui text-fg-2">
-            Aucune application d’authentification n’est encore configurée.
-          </p>
-          <Field label="Mot de passe">
-            <Input name="password" type="password" autoComplete="current-password" />
+          <p className="w-full text-ui text-fg-2">{t('notConfigured')}</p>
+          <Field label={t('password')}>
+            <Input name="password" type="password" autoComplete="current-password" required />
           </Field>
-          <Button type="submit" variant="primary" loading={pending}>
-            Configurer la double authentification
+          <Button type="submit" variant="primary" loading={pending && running === 'enable'}>
+            {t('configure')}
           </Button>
         </form>
       )}
-    </section>
+    </div>
   );
 }
 
 export function ProfileSettings({ name, email }: { name: string; email: string }) {
+  const t = useTranslations('security');
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
@@ -137,17 +172,17 @@ export function ProfileSettings({ name, email }: { name: string; email: string }
         setError('');
         setStatus('');
         startTransition(async () => {
-          const result = await updateProfileAction(String(data.get('name') ?? ''));
-          if (result.ok) setStatus('Votre profil a été mis à jour.');
-          else setError(result.error ?? 'Impossible de mettre à jour le profil.');
+          const result = await updateProfileAction(read(data, 'name'));
+          if ('error' in result) setError(result.error);
+          else setStatus(t('profileSaved'));
         });
       }}
       className="grid max-w-md gap-4"
     >
-      <Field label="Nom">
-        <Input name="name" defaultValue={name} autoComplete="name" />
+      <Field label={t('name')}>
+        <Input name="name" defaultValue={name} autoComplete="name" required maxLength={100} />
       </Field>
-      <Field label="Adresse e-mail" help="Pour modifier votre adresse, contactez l’administrateur.">
+      <Field label={t('email')} help={t('emailHelp')}>
         <Input value={email} readOnly type="email" />
       </Field>
       {status && (
@@ -161,7 +196,7 @@ export function ProfileSettings({ name, email }: { name: string; email: string }
         </Notice>
       )}
       <Button type="submit" variant="primary" loading={pending} className="w-fit">
-        Enregistrer
+        {t('save')}
       </Button>
     </form>
   );

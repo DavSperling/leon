@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/verre/cn';
 import type { ChannelHealth } from '@/server/memory/sources';
@@ -36,6 +37,7 @@ export type AppShellProps = Viewer & {
  * des pages est dans src/app/(app)/template.tsx ; les notifications sont montées une fois, dans src/app/layout.tsx.
  */
 export function AppShell({ stale, children, ...viewer }: AppShellProps) {
+  const t = useTranslations('shell');
   const pathname = usePathname();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
@@ -124,7 +126,7 @@ export function AppShell({ stale, children, ...viewer }: AppShellProps) {
             href="#contenu"
             className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-full bg-accent px-4 py-2 text-ui font-semibold text-accent-ink transition-transform focus:translate-y-0"
           >
-            Aller au contenu
+            {t('skipToContent')}
           </a>
           <MobileBar {...viewer} stale={stale} />
           <div className="relative z-[1] shell:grid shell:h-dvh shell:grid-cols-[auto_minmax(0,1fr)] shell:grid-rows-[minmax(0,1fr)] shell:py-2.5 shell:pr-2.5">

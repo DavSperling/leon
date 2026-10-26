@@ -2,6 +2,7 @@
 
 import { CalendarDays, Layers, UserRound, Wrench } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -22,11 +23,6 @@ export type FilterOption = { label: string; active: boolean; href: string };
 export type FilterMenuName = 'outil' | 'type' | 'periode';
 
 const ICONS = { outil: Wrench, type: Layers, periode: CalendarDays } as const;
-const HEADINGS = {
-  outil: 'Filtrer par outil',
-  type: 'Filtrer par type',
-  periode: 'Période',
-} as const;
 // Sous 640 px, les menus perdent leur icône (le mot suffit) : les quatre tiennent sur une ligne à 390 px.
 const NARROW = 'max-sm:[&>svg:first-child]:hidden';
 
@@ -39,6 +35,7 @@ export function FilterMenu({
   label: string;
   options: FilterOption[];
 }) {
+  const t = useTranslations('filters');
   const router = useRouter();
   return (
     <DropdownMenu>
@@ -48,7 +45,9 @@ export function FilterMenu({
         </Pill>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="max-h-[min(380px,var(--radix-dropdown-menu-content-available-height))] w-[240px] overflow-y-auto">
-        <DropdownMenuLabel>{HEADINGS[name]}</DropdownMenuLabel>
+        <DropdownMenuLabel>
+          {t(name === 'outil' ? 'byTool' : name === 'type' ? 'byType' : 'byDate')}
+        </DropdownMenuLabel>
         {options.map((option) => (
           <DropdownMenuCheckboxItem
             key={option.label}
@@ -65,7 +64,8 @@ export function FilterMenu({
 
 // « Personne » : un nom ou une adresse, que la recherche rapproche des membres de l'équipe. Une saisie, et non
 // un menu : on ne liste pas l'équipe ici.
-export function FilterPerson({ query }: { query: string }) {
+export function FilterPerson({ query, locale }: { query: string; locale: string }) {
+  const t = useTranslations('filters');
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -86,7 +86,7 @@ export function FilterPerson({ query }: { query: string }) {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const q = withFilter(query, 'de', value);
+    const q = withFilter(query, locale === 'en' ? 'from' : 'de', value);
     close();
     if (q !== query) router.push(searchHref({ q }));
   }
@@ -94,14 +94,14 @@ export function FilterPerson({ query }: { query: string }) {
   if (!open) {
     return (
       <Pill ref={trigger} icon={UserRound} className={NARROW} onClick={() => setOpen(true)}>
-        Personne
+        {t('person')}
       </Pill>
     );
   }
   return (
     <form onSubmit={submit} className="flex items-center gap-1.5">
       <label htmlFor="filtre-personne" className="sr-only">
-        Nom ou adresse e-mail de la personne
+        {t('personNameEmail')}
       </label>
       <span className="relative">
         <UserRound
@@ -121,17 +121,17 @@ export function FilterPerson({ query }: { query: string }) {
             }
           }}
           maxLength={100}
-          placeholder="Nom ou e-mail"
+          placeholder={t('nameOrEmail')}
           autoComplete="off"
           className="h-8 w-44 rounded-full pr-3 pl-8 text-label max-sm:w-36"
         />
       </span>
       {/* la barre garde le seul bouton principal de la vue */}
       <Button type="submit" size="sm">
-        Ajouter
+        {t('add')}
       </Button>
       <Button variant="ghost" size="sm" onClick={close}>
-        Annuler
+        {t('cancel')}
       </Button>
     </form>
   );

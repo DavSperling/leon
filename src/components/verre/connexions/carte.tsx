@@ -10,6 +10,7 @@ import {
   useTransform,
 } from 'motion/react';
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { type PointerEvent, type RefObject, useMemo, useRef, useState } from 'react';
 import type { CaptureKind, ProviderId } from '@/capture/turn';
 import { GlassCard, Logo, ToolIcon, Tooltip } from '@/components/verre';
@@ -17,6 +18,7 @@ import { cn, formatSince, nb, useInstant, useMinWidth } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
+import { JeuConnexions } from './jeu';
 import { connState } from './parts';
 
 /*
@@ -96,6 +98,8 @@ function noeuds(
   channels: ChannelHealth[],
   stale: string[],
   now: Date,
+  locale: string,
+  t: ReturnType<typeof useTranslations<'connections'>>,
 ): Noeud[] {
   const outils = catalog.filter((p) => conns.some((c) => c.provider === p.id));
   const posOutils = arc(outils.length, -78, -282, 400, 182, 0.84);
@@ -122,10 +126,10 @@ function noeuds(
       const last = c.lastCaptureAt;
       const late = stale.includes(c.kind);
       const detail = !last
-        ? 'Aucune capture pour l’instant'
+        ? t('captureNone')
         : late
-          ? `Aucune capture depuis ${Math.floor((now.getTime() - last.getTime()) / DAY)} j`
-          : `Dernière capture ${formatSince(last, now)}`;
+          ? t('captureSince', { days: Math.floor((now.getTime() - last.getTime()) / DAY) })
+          : t('lastCapture', { time: formatSince(last, now, locale) });
       const pos = posCanaux[i] ?? { x: CX, y: CY };
       return {
         type: 'canal',
@@ -271,6 +275,7 @@ function EtatIcone({ n }: { n: Noeud }) {
 }
 
 function Bulle({ n }: { n: Noeud }) {
+  const t = useTranslations('connections');
   if (n.type === 'canal')
     return (
       <span className="block">
@@ -297,7 +302,7 @@ function Bulle({ n }: { n: Noeud }) {
               )}
             >
               <Icon aria-hidden="true" strokeWidth={2} className="size-3" />
-              {word}
+              {t(word)}
             </span>
           </span>
         );
@@ -329,11 +334,13 @@ function Pastille({
   onOpen: (id: ProviderId) => void;
   instant: boolean;
 }) {
+  const t = useTranslations('connections');
   // Les pastilles se penchent un peu vers le centre quand on le tire.
   const left = useTransform(centre.x, (x) => pct(n.x + (x - CX) * 0.05, W));
   const top = useTransform(centre.y, (y) => pct(n.y + (y - CY) * 0.05, H));
   const count = n.type === 'outil' && n.conns.length > 1 ? n.conns.length : null;
-  const states = n.type === 'outil' ? n.conns.map((c) => connState(c).word).join(', ') : n.detail;
+  const states =
+    n.type === 'outil' ? n.conns.map((c) => t(connState(c).word)).join(', ') : n.detail;
   const props = {
     'data-hot': hot || undefined,
     'aria-label': nb(`${n.label} : ${states}`),
@@ -388,6 +395,7 @@ function Coeur({
   box: RefObject<HTMLDivElement | null>;
   instant: boolean;
 }) {
+  const t = useTranslations('connections');
   const left = useTransform(centre.x, (x) => pct(x, W));
   const top = useTransform(centre.y, (y) => pct(y, H));
   const grab = useRef<{ px: number; py: number; x: number; y: number; k: number } | null>(null);
@@ -437,7 +445,7 @@ function Coeur({
       <span className="cx-halo" />
       <span className="cx-halo cx-halo-2" />
       <motion.span
-        title="Attrapez-moi"
+        title={t('dragLeon')}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -458,10 +466,11 @@ function Coeur({
 }
 
 function Legende() {
+  const t = useTranslations('connections');
   const items: Array<[Etat, string]> = [
-    ['actif', 'Actif'],
-    ['pause', 'En pause'],
-    ['erreur', 'En erreur'],
+    ['actif', t('statusActive')],
+    ['pause', t('statusPaused')],
+    ['erreur', t('statusError')],
   ];
   return (
     <ul className="flex items-center gap-4 font-mono text-[11.5px] text-muted" aria-hidden="true">
@@ -507,6 +516,8 @@ export function CarteConnexions({
   now: Date;
   onOpen: (id: ProviderId) => void;
 }) {
+  const locale = useLocale();
+  const t = useTranslations('connections');
   const ref = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const wide = useMinWidth(ref, 760);
@@ -519,8 +530,8 @@ export function CarteConnexions({
   const centre = useMemo<Centre>(() => ({ x, y, lx, ly }), [x, y, lx, ly]);
   const [hot, setHot] = useState<string | null>(null);
   const list = useMemo(
-    () => noeuds(catalog, conns, channels, stale, now),
-    [catalog, conns, channels, stale, now],
+    () => noeuds(catalog, conns, channels, stale, now, locale, t),
+    [catalog, conns, channels, stale, now, locale, t],
   );
   const tools = list.filter((n) => n.type === 'outil').length;
   const lastSync = conns.reduce<Date | null>(
@@ -528,8 +539,8 @@ export function CarteConnexions({
     null,
   );
   const summary = [
-    `${tools} ${tools > 1 ? 'outils branchés' : 'outil branché'}`,
-    lastSync ? `dernier passage ${formatSince(lastSync, now)}` : null,
+    t('summary', { count: tools }),
+    lastSync ? t('summaryLastSync', { time: formatSince(lastSync, now, locale) }) : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -546,13 +557,16 @@ export function CarteConnexions({
               />
               {nb(summary)}
             </p>
-            <Legende />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Legende />
+              <JeuConnexions />
+            </div>
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset) */}
           <div
             ref={box}
             role="group"
-            aria-label="Schéma des connexions"
+            aria-label={t('graphLabel')}
             // plafonné : sur un grand écran, le schéma prenait toute la hauteur de la page
             className="relative mx-auto mt-2 w-full max-w-[760px]"
             style={{ aspectRatio: `${W} / ${H}` }}
@@ -594,6 +608,11 @@ export function CarteConnexions({
             <Coeur centre={centre} box={box} instant={instant} />
           </div>
         </GlassCard>
+      )}
+      {!wide && (
+        <div className="mb-6">
+          <JeuConnexions compact />
+        </div>
       )}
     </div>
   );

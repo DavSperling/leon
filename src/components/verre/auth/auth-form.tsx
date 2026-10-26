@@ -127,16 +127,21 @@ const noticeIn = {
 const CONTROL_FIX = 'pointer-coarse:text-title aria-invalid:focus-visible:outline-solid';
 
 // `invitation` : le secret du lien, renvoyé dans un champ caché, et le nom de l'espace à rejoindre.
+// `canResetPassword` : « Mot de passe oublié ? » n'apparaît que si Leon peut envoyer l'e-mail.
 export function AuthForm({
   page,
   invitation,
+  canResetPassword = false,
 }: {
   page: AuthPage;
   invitation?: { token: string; organizationName: string };
+  canResetPassword?: boolean;
 }) {
   const copy = COPY[page];
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(copy.action, {});
   const [visible, setVisible] = useState(false);
+  // Étape du code : le code de l'application, ou un code de secours si le téléphone est perdu.
+  const [backupCode, setBackupCode] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const pwId = useId();
@@ -184,17 +189,35 @@ export function AuthForm({
         {state.twoFactor ? (
           <>
             <p className="text-ui text-muted">
-              Saisissez le code de votre application d’authentification.
+              {backupCode
+                ? 'Saisissez l’un des codes de secours enregistrés à l’activation. Chacun ne sert qu’une fois.'
+                : 'Saisissez le code de votre application d’authentification.'}
             </p>
-            <Field label="Code d’authentification" error={twoFactorState.errors?.code}>
+            <Field
+              key={backupCode ? 'secours' : 'application'}
+              label={backupCode ? 'Code de secours' : 'Code d’authentification'}
+              error={twoFactorState.errors?.code}
+            >
               <Input
                 name="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
+                inputMode={backupCode ? 'text' : 'numeric'}
+                autoComplete={backupCode ? 'off' : 'one-time-code'}
+                autoCapitalize="none"
+                spellCheck={false}
                 autoFocus
-                maxLength={6}
+                maxLength={backupCode ? 11 : 6}
+                className={CONTROL_FIX}
               />
             </Field>
+            <button
+              type="button"
+              onClick={() => setBackupCode((value) => !value)}
+              className="w-fit text-ui text-accent underline underline-offset-4"
+            >
+              {backupCode
+                ? 'Utiliser l’application'
+                : 'Téléphone perdu ? Utiliser un code de secours'}
+            </button>
             {twoFactorState.errors?.form && (
               <Notice tone="error" live="alert">
                 {twoFactorState.errors.form}
@@ -321,7 +344,7 @@ export function AuthForm({
         )}
       </form>
 
-      {page === 'connexion' && !state.twoFactor && (
+      {page === 'connexion' && canResetPassword && !state.twoFactor && (
         <Link
           href="/mot-de-passe-oublie"
           className="mt-4 inline-block text-ui text-accent underline underline-offset-4"

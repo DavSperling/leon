@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { FormEvent, KeyboardEvent } from 'react';
 import { IconButton, Textarea } from '@/components/verre';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
@@ -19,6 +20,7 @@ export function Composer({
   busy: boolean;
   onSend: (message: string) => void;
 }) {
+  const t = useTranslations('discussions');
   const empty = value.trim() === '';
 
   function submit(event?: FormEvent<HTMLFormElement>) {
@@ -43,7 +45,7 @@ export function Composer({
         className="glass-float sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-20 mt-6 rounded-box border border-line-strong p-2 shadow-float transition-[border-color,box-shadow] duration-200 focus-within:border-accent-line focus-within:shadow-[var(--float-shadow),0_0_0_3px_var(--accent-soft)]"
       >
         <label htmlFor="question-discussion" className="sr-only">
-          Votre question à Leon
+          {t('composerLabel')}
         </label>
         <div className="flex items-end gap-2">
           <Textarea
@@ -56,15 +58,13 @@ export function Composer({
             onChange={(event) => setValue(event.target.value)}
             onKeyDown={onKeyDown}
             disabled={disabled}
-            placeholder={
-              disabled ? 'Leon ne peut pas répondre sur ce serveur' : 'Posez une autre question…'
-            }
+            placeholder={disabled ? t('disabledPlaceholder') : t('newQuestionPlaceholder')}
             className="min-h-11 border-0 bg-transparent px-2.5 py-[9px] text-lead shadow-none hover:border-0 focus-visible:shadow-none disabled:opacity-70"
           />
           <IconButton
             type="submit"
             icon={ArrowUp}
-            label={busy ? 'Leon répond…' : 'Envoyer la question'}
+            label={busy ? t('busy') : t('send')}
             variant="primary"
             size="lg"
             // pendant la réponse : flèche immobile (la carte de Leon a déjà son indicateur) ; aria-disabled garde le focus
@@ -75,10 +75,8 @@ export function Composer({
           />
         </div>
         <p className="px-2.5 pt-1 pb-0.5 text-label text-muted">
-          <span className="pointer-coarse:hidden">
-            Entrée pour envoyer, Maj + Entrée pour passer à la ligne.{' '}
-          </span>
-          Leon ne lit que ce que vous avez le droit de voir.
+          <span className="pointer-coarse:hidden">{t('keyboardHint')} </span>
+          {t('privacyHint')}
         </p>
       </form>
       {/* l'interstice sous la saisie collée : ce qui défile dessous y est flouté */}

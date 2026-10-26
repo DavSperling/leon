@@ -21,3 +21,20 @@ export const SYNTAX = [
   { code: 'avant:2026-10-01', text: 'avant une date' },
   { code: '"phrase exacte"', text: 'les mots tels quels, dans cet ordre' },
 ] as const;
+
+// Les mêmes en anglais, avec les filtres anglais que la recherche lit aussi.
+export const EXAMPLES_EN = [
+  { q: 'tool:github type:ticket', hint: 'Recent GitHub tickets' },
+  { q: 'type:meeting since:7d', hint: 'Meetings from the past week' },
+  { q: '"contract renewal"', hint: 'Exact words in a phrase' },
+  { q: 'budget since:3mo', hint: 'A topic from the past three months' },
+] as const;
+
+export const SYNTAX_EN = [
+  { code: 'from:julie', text: 'what someone wrote (their name or email)' },
+  { code: 'tool:github', text: 'a single tool' },
+  { code: 'type:meeting', text: 'a kind of source: ticket, page, email, file, conversation…' },
+  { code: 'since:7d', text: 'the past 7 days (d), weeks (w), or months (mo)' },
+  { code: 'before:2026-10-01', text: 'before a date' },
+  { code: '"exact phrase"', text: 'these exact words, in this order' },
+] as const;

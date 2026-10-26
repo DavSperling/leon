@@ -2,6 +2,7 @@
 
 import { ArrowRight, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type FormEvent, useEffect, useRef, useState, useTransition } from 'react';
 import { SEARCH_INPUT_ID, searchHref } from '@/components/search/url-state';
 import { Beam, IconButton, useThinking } from '@/components/verre';
@@ -22,6 +23,7 @@ const typing = (el: EventTarget | null) =>
  */
 export function SearchBar({ query, home }: { query: string; home: boolean }) {
   const router = useRouter();
+  const t = useTranslations('search');
   const input = useRef<HTMLInputElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const [value, setValue] = useState(query);
@@ -58,7 +60,7 @@ export function SearchBar({ query, home }: { query: string; home: boolean }) {
   };
 
   return (
-    <search aria-label="Recherche dans la mémoire de l’équipe">
+    <search aria-label={t('memoryLabel')}>
       <Beam active={pending || thinking} className="rounded-box">
         <form
           ref={form}
@@ -70,7 +72,7 @@ export function SearchBar({ query, home }: { query: string; home: boolean }) {
           )}
         >
           <label htmlFor={SEARCH_INPUT_ID} className="sr-only">
-            Rechercher dans tout ce que Leon a gardé
+            {t('searchEverything')}
           </label>
           <Search
             aria-hidden="true"
@@ -85,7 +87,7 @@ export function SearchBar({ query, home }: { query: string; home: boolean }) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             maxLength={QUERY_MAX_CHARS}
-            placeholder={roomy ? 'Rechercher dans tout ce que Leon a gardé…' : 'Rechercher…'}
+            placeholder={roomy ? `${t('searchEverything')}…` : t('placeholder')}
             autoComplete="off"
             spellCheck={false}
             enterKeyHint="search"
@@ -96,7 +98,7 @@ export function SearchBar({ query, home }: { query: string; home: boolean }) {
           {value !== '' && (
             <IconButton
               icon={X}
-              label="Effacer la recherche"
+              label={t('clear')}
               size="sm"
               tooltip={false}
               onClick={() => {
@@ -110,7 +112,7 @@ export function SearchBar({ query, home }: { query: string; home: boolean }) {
             type="submit"
             className="inline-flex h-10 shrink-0 items-center gap-2.5 rounded-full bg-accent px-4 text-ui font-semibold text-accent-ink shadow-[inset_0_1px_0_rgba(255,255,255,.3)] transition-[filter,scale] duration-200 ease-out hover:brightness-[1.06] active:scale-[.96] max-sm:w-10 max-sm:justify-center max-sm:p-0"
           >
-            <span className="max-sm:sr-only">Rechercher</span>
+            <span className="max-sm:sr-only">{t('submit')}</span>
             <ArrowRight aria-hidden="true" strokeWidth={2} className="size-4 sm:hidden" />
           </button>
         </form>

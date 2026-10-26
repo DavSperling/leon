@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { DiscussionThread } from '@/components/discussion/discussion-thread';
 import { requireUserContext } from '@/server/auth/session';
 import { getDiscussion } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 
-export const metadata: Metadata = { title: 'Discussion' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await (await getTranslations('thread'))('title') };
+}
 
 type Params = Promise<{ id: string }>;
 

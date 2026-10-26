@@ -17,6 +17,7 @@ import { cn, formatSince, nb, useInstant, useMinWidth } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
+import { JeuConnexions } from './jeu';
 import { connState } from './parts';
 
 /*
@@ -546,7 +547,10 @@ export function CarteConnexions({
               />
               {nb(summary)}
             </p>
-            <Legende />
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              <Legende />
+              <JeuConnexions />
+            </div>
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset) */}
           <div
@@ -594,6 +598,11 @@ export function CarteConnexions({
             <Coeur centre={centre} box={box} instant={instant} />
           </div>
         </GlassCard>
+      )}
+      {!wide && (
+        <div className="mb-6">
+          <JeuConnexions compact />
+        </div>
       )}
     </div>
   );

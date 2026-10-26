@@ -26,6 +26,7 @@ const WINDOW = '15 minutes';
 export const AUTH_LIMITS = {
   connexion: { email: 10, ip: 50, inconnue: 500 },
   inscription: { email: 5, ip: 10, inconnue: 100 },
+  recuperation: { email: 5, ip: 10, inconnue: 100 },
 } as const;
 
 export type AuthAttempt = keyof typeof AUTH_LIMITS;

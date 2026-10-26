@@ -21,9 +21,14 @@ export async function requireUserContext(): Promise<TenantContext> {
 export async function signInWithPassword(
   email: string,
   password: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; twoFactor?: boolean }> {
   try {
-    await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
+    const result = await auth.api.signInEmail({
+      body: { email, password },
+      headers: await headers(),
+    });
+    if ('twoFactorRedirect' in result && result.twoFactorRedirect)
+      return { ok: false, twoFactor: true };
     return { ok: true };
   } catch (error) {
     if (error instanceof APIError) return { ok: false };

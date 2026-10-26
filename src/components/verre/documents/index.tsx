@@ -1,10 +1,11 @@
 'use client';
 
 import { FileText, Trash2, Upload } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useActionState, useState } from 'react';
 import { deleteDocumentAction, uploadDocumentAction } from '@/app/(app)/documents/actions';
 import { Button, EmptyState, GlassCard, Notice, PageHeader, Section } from '@/components/verre';
-import { DOCUMENT_MAX_BYTES, type DocumentErrorCode } from '@/lib/documents';
+import { DOCUMENT_MAX_BYTES } from '@/lib/documents';
 import { formatRelative } from '@/lib/format';
 import { nb } from '@/lib/verre';
 
@@ -16,16 +17,8 @@ type DocumentRow = {
   ownerName: string;
 };
 
-const ERRORS: Record<DocumentErrorCode, string> = {
-  missing: 'Choisissez un fichier à ajouter.',
-  unreadable:
-    'Fichier illisible. Choisissez un PDF, Excel, Word, PowerPoint, CSV, TXT ou Markdown de 10 Mo maximum.',
-  empty: 'Aucun texte lisible dans ce fichier.',
-  too_long: 'Ce document contient trop de texte (maximum 1 million de caractères).',
-  failed: 'Impossible d’enregistrer ce document. Réessayez.',
-};
-
 function UploadForm() {
+  const t = useTranslations('documents');
   const [state, action, pending] = useActionState(uploadDocumentAction, {
     error: null,
     partial: false,
@@ -44,7 +37,7 @@ function UploadForm() {
     <GlassCard variant="raised" className="p-5">
       <form action={action} onSubmit={checkSize} className="flex flex-wrap items-end gap-4">
         <label className="grid min-w-0 flex-1 gap-2 text-label font-medium text-fg-2">
-          Choisir un document
+          {t('chooseFile')}
           <input
             type="file"
             name="file"
@@ -55,20 +48,20 @@ function UploadForm() {
           />
         </label>
         <Button type="submit" icon={Upload} variant="primary" loading={pending}>
-          Ajouter le document
+          {t('add')}
         </Button>
       </form>
       <p id="formats-documents" className="mt-3 text-label text-muted">
-        PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte ou Markdown · 10 Mo maximum.
+        {t('formats')}
       </p>
       {error && (
         <Notice tone="error" className="mt-4" live="alert">
-          {nb(ERRORS[error])}
+          {nb(t(`errors.${error}`))}
         </Notice>
       )}
       {!error && state.partial && (
         <Notice tone="warning" className="mt-4" live="status">
-          {nb('Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.')}
+          {nb(t('partial'))}
         </Notice>
       )}
     </GlassCard>
@@ -76,7 +69,9 @@ function UploadForm() {
 }
 
 function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId: string }) {
-  const title = document.title || 'Document sans titre';
+  const t = useTranslations('documents');
+  const locale = useLocale();
+  const title = document.title || t('untitled');
   return (
     <li className="flex items-center gap-3 border-b border-line py-3 last:border-0">
       <FileText aria-hidden="true" className="size-4 shrink-0 text-accent" strokeWidth={1.7} />
@@ -85,7 +80,12 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
           {nb(title)}
         </p>
         <p className="mt-0.5 text-label text-muted">
-          Ajouté par {nb(document.ownerName)} · {nb(formatRelative(document.createdAt, new Date()))}
+          {nb(
+            t('addedBy', {
+              name: document.ownerName,
+              when: formatRelative(document.createdAt, new Date(), locale),
+            }),
+          )}
         </p>
       </div>
       {document.ownerUserId === viewerId && (
@@ -96,9 +96,9 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
             variant="ghost"
             size="sm"
             icon={Trash2}
-            aria-label={`Supprimer ${title}`}
+            aria-label={t('deleteLabel', { title })}
           >
-            Supprimer
+            {t('delete')}
           </Button>
         </form>
       )}
@@ -107,25 +107,16 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
 }
 
 export function Documents({ documents, viewerId }: { documents: DocumentRow[]; viewerId: string }) {
+  const t = useTranslations('documents');
   return (
     <div className="mx-auto max-w-[760px]">
-      <PageHeader
-        title="Documents"
-        subtitle="Ajoutez des fichiers pour que l’équipe puisse les retrouver dans la recherche et les discussions."
-      />
-      <Section title="Ajouter un document" className="mt-0">
+      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <Section title={t('addSection')} className="mt-0">
         <UploadForm />
       </Section>
-      <Section
-        title="Documents de l’équipe"
-        description="Le texte extrait est indexé dans la mémoire de Leon."
-      >
+      <Section title={t('teamSection')} description={t('teamDescription')}>
         {documents.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="Aucun document pour l’instant."
-            description="Ajoutez un fichier ci-dessus pour le rendre consultable par l’équipe."
-          />
+          <EmptyState icon={FileText} title={t('emptyTitle')} description={t('emptyDescription')} />
         ) : (
           <GlassCard className="px-4">
             <ul>

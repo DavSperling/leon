@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { Button, type ButtonProps } from './button';
@@ -9,11 +10,12 @@ import { toast } from './toast';
 /** « Copier » : copie `value`, puis « Copié. » ; si le presse-papiers refuse, invite à copier à la main. */
 export function CopyButton({
   value,
-  label = 'Copier',
+  label,
   size = 'sm',
   variant = 'secondary',
   ...props
 }: Omit<ButtonProps, 'onClick' | 'icon'> & { value: string; label?: string }) {
+  const t = useTranslations('common');
   const [done, setDone] = useState(false);
   useEffect(() => {
     if (!done) return;
@@ -24,14 +26,14 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(value);
       setDone(true);
-      toast.success('Copié.');
+      toast.success(t('copied'));
     } catch {
-      toast.error('Impossible de copier. Sélectionnez le texte à la main.');
+      toast.error(t('copyFailed'));
     }
   };
   return (
     <Button size={size} variant={variant} icon={done ? Check : Copy} onClick={copy} {...props}>
-      {label}
+      {label ?? t('copy')}
     </Button>
   );
 }

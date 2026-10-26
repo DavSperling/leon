@@ -2,6 +2,7 @@
 
 import { ChevronRight, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { deleteDiscussionAction } from '@/app/(app)/discussions/actions';
 import { AlertDialog, GlassCard, IconButton, toast, trackSpot } from '@/components/verre';
@@ -11,6 +12,7 @@ import { AlertDialog, GlassCard, IconButton, toast, trackSpot } from '@/componen
 export type DiscussionRow = { id: string; title: string; updatedAt: string; when: string };
 
 export function DiscussionRows({ rows }: { rows: DiscussionRow[] }) {
+  const t = useTranslations('discussions');
   const [asked, setAsked] = useState<DiscussionRow | null>(null);
   const [gone, setGone] = useState<ReadonlySet<string>>(new Set());
   const [, startTransition] = useTransition();
@@ -23,7 +25,7 @@ export function DiscussionRows({ rows }: { rows: DiscussionRow[] }) {
       try {
         const { ok } = await deleteDiscussionAction(row.id);
         if (ok) {
-          toast.success('Discussion supprimée.');
+          toast.success(t('deleteSuccess'));
           return;
         }
       } catch {
@@ -34,7 +36,7 @@ export function DiscussionRows({ rows }: { rows: DiscussionRow[] }) {
         next.delete(row.id);
         return next;
       });
-      toast.error('Impossible de supprimer cette discussion. Réessayez.');
+      toast.error(t('deleteFailed'));
     });
 
   if (shown.length === 0) return null;
@@ -74,7 +76,7 @@ export function DiscussionRows({ rows }: { rows: DiscussionRow[] }) {
               {/* Au survol ou au clavier sur un écran à souris ; toujours visible au doigt, qui ne survole pas. */}
               <IconButton
                 icon={Trash2}
-                label={`Supprimer « ${d.title} »`}
+                label={t('deleteNamed', { title: d.title })}
                 tooltip={false}
                 onClick={() => setAsked(d)}
                 className="ml-1 shrink-0 text-muted transition-opacity duration-200 hover:text-destructive focus-visible:opacity-100 pointer-coarse:size-11 pointer-fine:opacity-0 pointer-fine:group-hover/row:opacity-100 pointer-fine:group-focus-within/row:opacity-100"
@@ -88,9 +90,9 @@ export function DiscussionRows({ rows }: { rows: DiscussionRow[] }) {
         onOpenChange={(open) => {
           if (!open) setAsked(null);
         }}
-        title={`Supprimer « ${asked?.title ?? ''} » ?`}
-        description="La discussion et tous ses messages seront effacés. Cette action est définitive."
-        confirmLabel="Supprimer"
+        title={t('deleteConfirm', { title: asked?.title ?? '' })}
+        description={t('deleteDescription')}
+        confirmLabel={t('delete')}
         onConfirm={() => {
           if (asked) remove(asked);
         }}

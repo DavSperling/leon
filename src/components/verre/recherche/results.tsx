@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { resultAnchorId } from '@/components/search/answer-text';
 import type { ResultPassageView, ResultView } from '@/components/search/view-model';
 import { GlassCard, Highlighted, SourceChip, SourceLink } from '@/components/verre';
@@ -39,9 +40,11 @@ export function ResultCard({
   onOpen: OpenPreview;
   onHover: (n: number | null) => void;
 }) {
+  const t = useTranslations('searchResults');
   const selected = selectedPassageId !== null;
+  const locale = useLocale();
   const first = r.passages[0];
-  const title = r.title?.trim() || 'Sans titre';
+  const title = r.title?.trim() || t('untitled');
   return (
     <motion.li
       id={resultAnchorId(r.sourceId)}
@@ -118,7 +121,7 @@ export function ResultCard({
                         </>
                       )}
                       <time dateTime={p.ts.toISOString()} className="tabular-nums">
-                        {formatDate(p.ts)}
+                        {formatDate(p.ts, locale)}
                       </time>
                     </span>
                     <span className="mt-0.5 block text-body leading-[1.58] break-words text-fg-2">

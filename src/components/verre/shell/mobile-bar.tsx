@@ -2,6 +2,7 @@
 
 import { LogOut, Menu, Moon, Search, Sun } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { signOutAction } from '@/app/(app)/actions';
 import { IconButton } from '@/components/verre/ui/button';
@@ -23,6 +24,7 @@ export function MobileBar({
   userEmail,
   stale,
 }: Viewer & { stale: ChannelHealth[] }) {
+  const t = useTranslations('shell');
   const { openPalette } = usePalette();
   const { theme, toggle } = useTheme();
   const pathname = usePathname();
@@ -41,7 +43,7 @@ export function MobileBar({
       <span className="ml-auto" />
       <IconButton
         icon={Search}
-        label="Rechercher"
+        label={t('search')}
         variant="secondary"
         size="lg"
         onClick={openPalette}
@@ -52,14 +54,14 @@ export function MobileBar({
         <SheetTrigger asChild>
           <IconButton
             icon={Menu}
-            label="Ouvrir le menu"
+            label={t('openMenu')}
             variant="secondary"
             size="lg"
             tooltip={false}
           />
         </SheetTrigger>
         <SheetContent
-          title="Menu"
+          title={t('menu')}
           titleHidden
           // le focus s'ouvre sur la section courante (Radix viserait le premier bouton, après les liens)
           onOpenAutoFocus={(e) => {
@@ -95,7 +97,7 @@ export function MobileBar({
               </span>
             </span>
           </div>
-          <nav aria-label="Navigation principale">
+          <nav aria-label={t('primaryNavigation')}>
             <NavList inkId="nav-ink-sheet" onNavigate={go} />
           </nav>
           <div className="grid gap-0.5 border-t border-line pt-3">
@@ -105,12 +107,12 @@ export function MobileBar({
               ) : (
                 <Moon aria-hidden="true" className="size-4 text-muted" />
               )}
-              {theme === 'dark' ? 'Thème clair' : 'Thème sombre'}
+              {theme === 'dark' ? t('lightTheme') : t('darkTheme')}
             </button>
             <form action={signOutAction}>
               <button type="submit" className={ROW}>
                 <LogOut aria-hidden="true" className="size-4 text-muted" />
-                Se déconnecter
+                {t('signOut')}
               </button>
             </form>
           </div>

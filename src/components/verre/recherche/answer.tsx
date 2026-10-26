@@ -1,6 +1,7 @@
 'use client';
 
 import { MessagesSquare, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState, useTransition } from 'react';
 import { continueInDiscussionAction } from '@/app/(app)/discussions/actions';
 import { resultAnchorId } from '@/components/search/answer-text';
@@ -28,8 +29,6 @@ type AnswerState =
   | { status: 'indisponible' }
   | { status: 'masque' };
 
-const UNAVAILABLE =
-  'Réponse indisponible pour le moment. Les résultats ci-dessous restent complets.';
 const TEXT = 'text-lead leading-[1.72] break-words';
 
 // `url` porte la requête et les résultats affichés : [n] de la réponse renvoie au n-ième de ces résultats.
@@ -94,6 +93,7 @@ export type CiteHandlers = {
  * vivants, enfin la note et « Continuer en discussion ».
  */
 export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { q: string }) {
+  const t = useTranslations('answer');
   const resultIds = results.map((r) => r.sourceId);
   const state = useAnswer(answerUrl(q, resultIds));
   const busy = state.status === 'charge' || state.status === 'flux';
@@ -112,7 +112,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
         <div className="relative z-[1] flex min-h-5 items-center gap-2">
           <Sparkles aria-hidden="true" strokeWidth={1.7} className="size-4 shrink-0 text-accent" />
           <h2 id="reponse-titre" className="text-[13px] font-semibold text-accent">
-            Réponse de Leon
+            {t('title')}
           </h2>
           <p
             role="status"
@@ -121,7 +121,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
             {state.status === 'charge' && (
               <>
                 <span className="spin" aria-hidden="true" />
-                <span className="truncate">Leon lit les résultats…</span>
+                <span className="truncate">{t('reading')}</span>
               </>
             )}
           </p>
@@ -131,7 +131,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
         <div aria-live="polite" aria-busy={busy} className="relative z-[1] mt-2.5 max-w-[72ch]">
           {state.status === 'charge' && <SkeletonText className="pt-2 pb-1" />}
           {state.status === 'indisponible' && (
-            <p className={cn(TEXT, 'text-muted')}>{nb(UNAVAILABLE)}</p>
+            <p className={cn(TEXT, 'text-muted')}>{nb(t('unavailable'))}</p>
           )}
           {(state.status === 'flux' || state.status === 'fini') && (
             <p className={cn(TEXT, notEnough ? 'text-muted' : 'text-fg')}>
@@ -145,7 +145,9 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
                       n={n}
                       animate={state.status === 'flux'}
                       href={`#${resultAnchorId(r.sourceId)}`}
-                      label={nb(`Résultat ${n} : ${r.title?.trim() || 'Sans titre'}`)}
+                      label={nb(
+                        t('result', { number: n, title: r.title?.trim() || t('untitled') }),
+                      )}
                       active={lit.includes(n)}
                       onMouseEnter={() => onLit(n)}
                       onMouseLeave={() => onLit(null)}
@@ -168,9 +170,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
           <div className="relative z-[1] mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-2.5 border-t border-line pt-3">
             {!notEnough && (
               <p className="min-w-0 flex-1 basis-[280px] text-label text-muted">
-                {nb(
-                  'Rédigée par l’IA à partir des résultats ci-dessous : vérifiez les sources citées.',
-                )}
+                {nb(t('sourceNote'))}
               </p>
             )}
             <ContinueInDiscussion q={q} sourceIds={resultIds} />
@@ -183,6 +183,7 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
 
 /** Une discussion qui part de la requête et des résultats affichés, où Leon répond tout de suite. */
 function ContinueInDiscussion({ q, sourceIds }: { q: string; sourceIds: string[] }) {
+  const t = useTranslations('answer');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const start = () => {
@@ -201,7 +202,7 @@ function ContinueInDiscussion({ q, sourceIds }: { q: string; sourceIds: string[]
         </p>
       )}
       <Button size="sm" icon={MessagesSquare} loading={pending} onClick={start}>
-        Continuer en discussion
+        {t('continue')}
       </Button>
     </div>
   );

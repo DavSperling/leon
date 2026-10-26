@@ -10,7 +10,7 @@
 - Avec un jeton personnel, il faut saisir les dépôts à la main, avec la même limite de 20.
 - La synchronisation lit les tickets et pull requests, leurs commentaires, avis et commentaires de revue. Elle ne lit ni fichiers, ni branches, ni commits, ni résultats de CI.
 - La discussion n'a pas d'outil d'inventaire GitHub ni d'outil d'action. Le client HTTP des connecteurs ne sait actuellement envoyer que des requêtes `GET` et `POST`.
-- Le catalogue dit actuellement que l'accès OAuth permet aussi d'écrire, alors que Léon ne le fait pas. Le texte est corrigé dans cette PR.
+- Le catalogue dit que l'accès OAuth permet aussi d'écrire, ce qui est vrai : l'appli GitHub demande ce droit, même si Leon ne s'en sert pas encore. Cette PR garde cet avertissement et précise que Leon ne lit pas encore le code.
 
 ## Périmètre proposé
 

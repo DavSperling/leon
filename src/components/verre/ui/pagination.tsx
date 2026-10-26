@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { scrollToTop } from '@/lib/verre/scroll';
@@ -23,6 +24,7 @@ const LINK =
 
 /** « ← Précédent | Page 2 sur 7 | Suivant → », en liens ; le côté qui manque reste vide ; un clic remonte en haut du panneau. */
 export function Pagination({ page, pages, hasNext, href, focusId, className }: PaginationProps) {
+  const t = useTranslations('common');
   const next = pages ? page < pages : hasNext;
   const moved = useRef(false);
   // après le rendu de la nouvelle page (le lien cliqué a pu disparaître)
@@ -38,23 +40,25 @@ export function Pagination({ page, pages, hasNext, href, focusId, className }: P
   };
   return (
     <nav
-      aria-label="Pagination"
+      aria-label={t('pagination')}
       className={cn('grid grid-cols-[1fr_auto_1fr] items-center gap-2', className)}
     >
       <span>
         {page > 1 && (
           <Link className={LINK} href={href(page - 1)} rel="prev" onClick={go}>
-            <span aria-hidden="true">←</span>Précédent
+            <span aria-hidden="true">←</span>
+            {t('previous')}
           </Link>
         )}
       </span>
       <span className="text-label text-muted tabular-nums" aria-current="page">
-        {pages ? `Page ${page} sur ${pages}` : `Page ${page}`}
+        {pages ? t('pageOf', { page, pages }) : t('page', { page })}
       </span>
       <span className="justify-self-end">
         {next && (
           <Link className={LINK} href={href(page + 1)} rel="next" onClick={go}>
-            Suivant<span aria-hidden="true">→</span>
+            {t('next')}
+            <span aria-hidden="true">→</span>
           </Link>
         )}
       </span>

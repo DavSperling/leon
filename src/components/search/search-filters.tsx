@@ -1,13 +1,16 @@
 import { TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
 import { ITEM_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
-import { SOURCE_KIND_LABELS } from '@/lib/labels';
+import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
 import { parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
 import {
+  type CanonicalKey,
+  canonicalKey,
   type FilterKey,
   filterTokens,
   hasFilter,
@@ -30,36 +33,55 @@ export type ActiveChip = {
   removeLabel: string;
 };
 
-const KEY_LABELS: Record<FilterKey, string> = {
+const KEY_LABELS: Record<CanonicalKey, string> = {
   de: 'Personne',
   outil: 'Outil',
   type: 'Type',
   depuis: 'Depuis',
   avant: 'Avant',
 };
+const KEY_LABELS_EN: Record<CanonicalKey, string> = {
+  de: 'Person',
+  outil: 'Tool',
+  type: 'Type',
+  depuis: 'Since',
+  avant: 'Before',
+};
 
+// Les unités de `depuis:` : françaises (7j, 2s, 3m) ou anglaises (7d, 2w, 3mo), que la recherche lit toutes.
+const UNIT_OF: Record<string, string> = { d: 'j', w: 's', mo: 'm' };
 const UNITS: Record<string, [string, string]> = {
   j: ['jour', 'jours'],
   s: ['semaine', 'semaines'],
   m: ['mois', 'mois'],
 };
+const UNITS_EN: Record<string, [string, string]> = {
+  j: ['day', 'days'],
+  s: ['week', 'weeks'],
+  m: ['month', 'months'],
+};
 
 // `7j` → « 7 jours » ; une date → « 1 sept. 2026 ».
-function sinceLabel(value: string, parsed: Date | undefined): string {
-  const duration = /^(\d{1,4})([jsm])$/i.exec(value);
+function sinceLabel(value: string, parsed: Date | undefined, locale: string): string {
+  const duration = /^(\d{1,4})(mo|[jsmdw])$/i.exec(value);
   if (duration) {
-    const [one, many] = UNITS[(duration[2] as string).toLowerCase()] as [string, string];
+    const unit = (duration[2] as string).toLowerCase();
+    const [one, many] = (locale === 'en' ? UNITS_EN : UNITS)[UNIT_OF[unit] ?? unit] as [
+      string,
+      string,
+    ];
     const amount = Number(duration[1]);
     return `${amount} ${amount === 1 ? one : many}`;
   }
-  return parsed ? formatDate(parsed) : value;
+  return parsed ? formatDate(parsed, locale) : value;
 }
 
-// Ce que `parseQuery` comprend d'un seul filtre, pour l'écrire en français et savoir s'il compte.
+// Ce que `parseQuery` comprend d'un seul filtre, pour l'écrire dans la langue de l'interface et savoir s'il compte.
 function describeFilter(
-  key: FilterKey,
+  key: CanonicalKey,
   value: string,
   now: Date,
+  locale: string,
 ): { text: string; recognized: boolean } {
   const filters = parseQuery(`${key}:"${value}"`, now).filters;
   switch (key) {
@@ -71,28 +93,34 @@ function describeFilter(
     }
     case 'type': {
       const nature = filters.natures?.[0];
-      return { text: nature ? NATURE_LABELS[nature] : value, recognized: nature !== undefined };
+      const labels = locale === 'en' ? NATURE_LABELS_EN : NATURE_LABELS;
+      return { text: nature ? labels[nature] : value, recognized: nature !== undefined };
     }
     case 'depuis':
-      return { text: sinceLabel(value, filters.since), recognized: filters.since !== undefined };
+      return {
+        text: sinceLabel(value, filters.since, locale),
+        recognized: filters.since !== undefined,
+      };
     case 'avant':
       return {
-        text: filters.until ? formatDate(filters.until) : value,
+        text: filters.until ? formatDate(filters.until, locale) : value,
         recognized: filters.until !== undefined,
       };
   }
 }
 
-export function buildActiveChips(q: string, now: Date): ActiveChip[] {
+export function buildActiveChips(q: string, now: Date, locale = 'fr'): ActiveChip[] {
   return filterTokens(q).map((token, index) => {
-    const { text, recognized } = describeFilter(token.key, token.value, now);
-    const label = `${KEY_LABELS[token.key]} : ${text}`;
+    const key = canonicalKey(token.key);
+    const { text, recognized } = describeFilter(key, token.value, now, locale);
+    const label =
+      locale === 'en' ? `${KEY_LABELS_EN[key]}: ${text}` : `${KEY_LABELS[key]} : ${text}`;
     return {
       id: `${index}-${token.key}-${token.value}`,
       label,
       recognized,
       removeHref: searchHref({ q: withoutFilter(q, token.key, token.value) }),
-      removeLabel: `Retirer le filtre « ${label} »`,
+      removeLabel: locale === 'en' ? `Remove filter “${label}”` : `Retirer le filtre « ${label} »`,
     };
   });
 }
@@ -105,6 +133,12 @@ const PERIODS: Array<{ value: string; label: string }> = [
   { value: '3m', label: '3 derniers mois' },
   { value: '12m', label: '12 derniers mois' },
 ];
+const PERIODS_EN: Array<{ value: string; label: string }> = [
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '3mo', label: 'Last 3 months' },
+  { value: '12mo', label: 'Last 12 months' },
+];
 
 // Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic.
 function option(q: string, key: FilterKey, value: string, label: string): FilterOption {
@@ -116,31 +150,43 @@ function option(q: string, key: FilterKey, value: string, label: string): Filter
   };
 }
 
-export function buildMenus(q: string): FilterMenuModel[] {
+// En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
+export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
+  const en = locale === 'en';
   return [
     {
       name: 'outil',
-      label: 'Outil',
-      options: toolOptions().map((tool) => option(q, 'outil', tool.value, tool.label)),
+      label: en ? 'Tool' : 'Outil',
+      options: toolOptions().map((tool) =>
+        option(q, en ? 'tool' : 'outil', tool.value, tool.label),
+      ),
     },
     {
       name: 'type',
       label: 'Type',
-      options: ITEM_NATURES.map((nature) => option(q, 'type', nature, NATURE_LABELS[nature])),
+      options: ITEM_NATURES.map((nature) =>
+        en
+          ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
+          : option(q, 'type', nature, NATURE_LABELS[nature]),
+      ),
     },
     {
       name: 'periode',
-      label: 'Période',
-      options: PERIODS.map((period) => option(q, 'depuis', period.value, period.label)),
+      label: en ? 'Date' : 'Période',
+      options: (en ? PERIODS_EN : PERIODS).map((period) =>
+        option(q, en ? 'since' : 'depuis', period.value, period.label),
+      ),
     },
   ];
 }
 
 export function SearchFilters({ q, now }: { q: string; now: Date }) {
-  const chips = buildActiveChips(q, now);
+  const locale = useLocale();
+  const t = useTranslations('filters');
+  const chips = buildActiveChips(q, now, locale);
   return (
     <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-2 border-0 p-0 max-sm:gap-1.5">
-      <legend className="sr-only">Filtres</legend>
+      <legend className="sr-only">{t('filters')}</legend>
       {chips.map((chip) => {
         // Toute la pastille retire le filtre : un lien vers la recherche sans lui.
         const pill = (
@@ -153,7 +199,7 @@ export function SearchFilters({ q, now }: { q: string; now: Date }) {
           >
             <Link
               href={chip.removeHref}
-              aria-label={`${chip.removeLabel}${chip.recognized ? '' : ' (non reconnu, ignoré)'}`}
+              aria-label={`${chip.removeLabel}${chip.recognized ? '' : t('unrecognizedSuffix')}`}
             >
               {chip.label}
             </Link>
@@ -162,15 +208,15 @@ export function SearchFilters({ q, now }: { q: string; now: Date }) {
         return chip.recognized ? (
           pill
         ) : (
-          <Tooltip key={chip.id} content="Filtre non reconnu : la recherche l’ignore.">
+          <Tooltip key={chip.id} content={t('unrecognized')}>
             {pill}
           </Tooltip>
         );
       })}
-      {buildMenus(q).map((menu) => (
+      {buildMenus(q, locale).map((menu) => (
         <FilterMenu key={menu.name} name={menu.name} label={menu.label} options={menu.options} />
       ))}
-      <FilterPerson query={q} />
+      <FilterPerson query={q} locale={locale} />
     </fieldset>
   );
 }

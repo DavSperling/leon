@@ -26,6 +26,7 @@ const CAPTURE_MODE_BY_KIND: Record<SourceKind, TurnCaptureMode> = {
   claude_ai: 'network',
   chatgpt: 'network',
   mcp_remember: 'manual',
+  document: 'manual',
   ...CONNECTOR_MODES,
 };
 

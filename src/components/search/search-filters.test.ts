@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
 import { parseQuery } from '@/server/search/parse-query';
-import { EXAMPLES, SYNTAX } from './examples';
+import { EXAMPLES, EXAMPLES_EN, SYNTAX, SYNTAX_EN } from './examples';
 import { buildActiveChips, buildMenus } from './search-filters';
 import { FILTER_KEYS, fromSearchParams } from './url-state';
 
@@ -206,6 +206,84 @@ describe('les exemples et l’aide de la page d’accueil', () => {
     }
     // Les cinq filtres de la barre sont tous expliqués (la phrase exacte n'en est pas un).
     const filters = SYNTAX.filter((item) => buildActiveChips(item.code, NOW).length === 1);
+    expect(filters).toHaveLength(FILTER_KEYS.length);
+  });
+});
+
+describe('les filtres en anglais', () => {
+  const labels = (q: string) =>
+    buildActiveChips(q, NOW, 'en').map((chip) => [chip.label, chip.recognized]);
+
+  it('nomment les puces en anglais, filtres français compris', () => {
+    expect(labels('from:julie tool:github type:meeting since:7d before:2026-10-01')).toEqual([
+      ['Person: julie', true],
+      ['Tool: GitHub', true],
+      ['Type: Meeting', true],
+      ['Since: 7 days', true],
+      ['Before: Oct 1, 2026', true],
+    ]);
+    expect(labels('type:réunion depuis:2s since:3mo')).toEqual([
+      ['Type: Meeting', true],
+      ['Since: 2 weeks', true],
+      ['Since: 3 months', true],
+    ]);
+  });
+
+  it('écrivent des menus anglais, dont chaque entrée est un seul filtre reconnu', () => {
+    const menus = buildMenus('', 'en');
+    expect(menus.map((m) => [m.name, m.label])).toEqual([
+      ['outil', 'Tool'],
+      ['type', 'Type'],
+      ['periode', 'Date'],
+    ]);
+    const [tools, types, periods] = menus;
+    expect(tools?.options.find((o) => o.label === 'GitHub')?.href).toBe('/?q=tool%3Agithub');
+    expect(types?.options.find((o) => o.label === 'Meeting')?.href).toBe('/?q=type%3Ameeting');
+    expect(periods?.options.map((o) => o.label)).toEqual([
+      'Last 7 days',
+      'Last 30 days',
+      'Last 3 months',
+      'Last 12 months',
+    ]);
+    for (const menu of menus) {
+      for (const o of menu.options) {
+        const q = queryOf(o.href);
+        expect(
+          buildActiveChips(q, NOW, 'en').map((c) => c.recognized),
+          `${menu.name} · ${o.label}`,
+        ).toEqual([true]);
+      }
+    }
+  });
+
+  it('cochent un filtre écrit en français, et remplacent sa période', () => {
+    const [tools, , periods] = buildMenus('outil:github depuis:7j x', 'en');
+
+    expect(tools?.options.find((o) => o.label === 'GitHub')).toMatchObject({
+      active: true,
+      href: '/?q=depuis%3A7j+x',
+    });
+    expect(periods?.options.find((o) => o.label === 'Last 30 days')).toMatchObject({
+      active: false,
+      href: '/?q=since%3A30d+outil%3Agithub+x',
+    });
+  });
+
+  it('proposent des exemples et une aide que la recherche comprend', () => {
+    expect(EXAMPLES_EN).toHaveLength(EXAMPLES.length);
+    for (const example of EXAMPLES_EN) {
+      expect(
+        buildActiveChips(example.q, NOW, 'en').every((chip) => chip.recognized),
+        example.q,
+      ).toBe(true);
+    }
+    for (const item of SYNTAX_EN) {
+      expect(
+        buildActiveChips(item.code, NOW, 'en').every((chip) => chip.recognized),
+        item.code,
+      ).toBe(true);
+    }
+    const filters = SYNTAX_EN.filter((item) => buildActiveChips(item.code, NOW).length === 1);
     expect(filters).toHaveLength(FILTER_KEYS.length);
   });
 });

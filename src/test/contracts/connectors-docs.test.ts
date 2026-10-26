@@ -78,7 +78,8 @@ describe('guide de vérification des connecteurs', () => {
     'Bientôt',
   ])('cite « %s », qui existe dans le code', (label) => {
     expect(readText(GUIDE)).toContain(label);
-    const sources = productionSources('src/**/*.{ts,tsx}');
+    // les textes de l'interface vivent aussi dans les messages français (next-intl)
+    const sources = productionSources('src/**/*.{ts,tsx}', 'messages/fr.json');
     expect(sources.some(({ text }) => text.includes(label))).toBe(true);
   });
 

@@ -1,6 +1,6 @@
 import { ITEM_NATURES, type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { stripHighlightMarks } from '@/lib/highlight';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import { FILTER_ALIASES, NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
 
 // Lecture de ce que l'utilisateur tape dans la barre (C4). Pur : ni base, ni réseau, jamais d'exception.
@@ -12,6 +12,8 @@ import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
 //   avant:AAAA-MM-JJ              une date (UTC, exclue)
 //   "phrase exacte"               passe telle quelle au texte
 //
+// L'anglais de l'interface s'y lit aussi : from:, tool:, since:<N>d|<N>w|<N>mo, before:, type:meeting.
+//
 // Un filtre vide, inconnu ou mal formé est ignoré, et retiré du texte. Le texte garde ses guillemets
 // appariés et se limite à QUERY_MAX_CHARS caractères.
 
@@ -22,7 +24,7 @@ const VALUES_MAX = 10;
 const PERSON_MAX_CHARS = 100;
 const DURATION_MAX = 9999;
 
-const FILTER_KEY = /^(de|outil|type|depuis|avant):/i;
+const FILTER_KEY = /^(de|from|outil|tool|type|depuis|since|avant|before):/i;
 // Les caractères de contrôle (dont NUL, que Postgres refuse dans un texte) valent une espace.
 const CONTROL_CHARS = /\p{Cc}/gu;
 
@@ -41,7 +43,11 @@ for (const kind of SOURCE_KINDS) {
   KIND_BY_NAME.set(squash(SOURCE_KIND_LABELS[kind]), kind);
 }
 
-const NATURE_BY_NAME = new Map<string, ItemNature>(ITEM_NATURES.map((n) => [squash(n), n]));
+const NATURE_BY_NAME = new Map<string, ItemNature>();
+for (const nature of ITEM_NATURES) {
+  NATURE_BY_NAME.set(squash(nature), nature);
+  NATURE_BY_NAME.set(squash(NATURE_LABELS_EN[nature]), nature);
+}
 
 function toKind(value: string): SourceKind | null {
   return KIND_BY_NAME.get(squash(value)) ?? null;
@@ -77,13 +83,13 @@ function monthsBefore(now: Date, months: number): Date {
 }
 
 function parseSince(value: string, now: Date): Date | null {
-  const duration = /^(\d{1,4})([jsm])$/i.exec(value);
+  const duration = /^(\d{1,4})(mo|[jsmdw])$/i.exec(value);
   if (!duration) return parseDate(value);
   const amount = Number(duration[1]);
   if (amount < 1 || amount > DURATION_MAX) return null;
   const unit = (duration[2] as string).toLowerCase();
-  if (unit === 'm') return monthsBefore(now, amount);
-  const days = unit === 's' ? amount * 7 : amount;
+  if (unit === 'm' || unit === 'mo') return monthsBefore(now, amount);
+  const days = unit === 's' || unit === 'w' ? amount * 7 : amount;
   return new Date(now.getTime() - days * 86_400_000);
 }
 
@@ -172,7 +178,8 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
     scan.at += key[0].length;
     const value = tidy(readValue(scan));
     if (value === '') continue;
-    switch ((key[1] as string).toLowerCase()) {
+    const name = (key[1] as string).toLowerCase();
+    switch ((FILTER_ALIASES as Record<string, string>)[name] ?? name) {
       case 'de':
         pushUnique(people, value.slice(0, PERSON_MAX_CHARS));
         break;

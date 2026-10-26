@@ -65,6 +65,9 @@ export const TEST_ENV = {
   LEON_MODEL_REPONSE: '',
   LEON_MODEL_DISCUSSION: '',
   LEON_MODEL_POINT: '',
+  // Une clé Resend exportée dans le shell ferait partir de vrais e-mails pendant les tests.
+  RESEND_API_KEY: '',
+  LEON_EMAIL_FROM: '',
   // L'en-tête où le proxy de confiance pose l'adresse du client (rate-limit.ts), comme Caddy en production.
   LEON_IP_HEADER: 'x-real-ip',
 } as const;

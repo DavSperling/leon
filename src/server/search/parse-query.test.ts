@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
-import { SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { parseQuery } from './parse-query';
 
 const NOW = new Date('2026-10-19T10:00:00Z');
@@ -180,6 +180,34 @@ describe('parseQuery : le catalogue des outils et des types', () => {
     (nature) => {
       expect(parse(`type:${nature}`).filters.natures, `nature ${nature}`).toEqual([nature]);
       expect(parse(`type:${nature}s`).filters.natures, `pluriel ${nature}s`).toEqual([nature]);
+    },
+  );
+});
+
+// L'interface anglaise écrit ses propres filtres (menus, exemples, aide) : la barre les lit comme les français.
+describe('parseQuery : les filtres anglais', () => {
+  it('lit from:, tool:, type:, since: et before: comme de:, outil:, type:, depuis: et avant:', () => {
+    expect(parse('call from:julie tool:github type:meeting since:7d before:2026-10-01')).toEqual(
+      parse('call de:julie outil:github type:reunion depuis:7j avant:2026-10-01'),
+    );
+    expect(parse('FROM:Julie Tool:GitHub').filters.tools).toEqual(['github']);
+  });
+
+  it('compte since: en jours, en semaines et en mois, sans changer depuis:', () => {
+    expect(parse('since:1d').filters.since).toEqual(new Date('2026-10-18T10:00:00Z'));
+    expect(parse('since:2w').filters.since).toEqual(new Date('2026-10-05T10:00:00Z'));
+    expect(parse('since:3mo').filters.since).toEqual(new Date('2026-07-19T10:00:00Z'));
+    // « m » reste le mois des requêtes françaises, quelle que soit la clé.
+    expect(parse('depuis:3m').filters.since).toEqual(new Date('2026-07-19T10:00:00Z'));
+    expect(parse('since:3m').filters.since).toEqual(new Date('2026-07-19T10:00:00Z'));
+  });
+
+  it.each(ITEM_NATURES.map((nature) => [nature]))(
+    'type:%s se retrouve aussi par son libellé anglais, au singulier comme au pluriel',
+    (nature) => {
+      const label = NATURE_LABELS_EN[nature];
+      expect(parse(`type:"${label}"`).filters.natures, label).toEqual([nature]);
+      expect(parse(`type:"${label}s"`).filters.natures, `${label}s`).toEqual([nature]);
     },
   );
 });

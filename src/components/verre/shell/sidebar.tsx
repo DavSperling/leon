@@ -4,6 +4,7 @@ import { Command, PanelLeftClose, PanelLeftOpen, TriangleAlert } from 'lucide-re
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Kbd, useModKey } from '@/components/verre/ui/kbd';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { cn } from '@/lib/verre/cn';
@@ -33,10 +34,12 @@ export function NavList({
 }) {
   // section active calculée ici : sous l'infobulle (Slot de Radix), une className en fonction serait changée en texte
   const current = sectionOf(usePathname());
+  const t = useTranslations('navigation');
   return (
     <ul className="grid grid-cols-[minmax(0,1fr)] gap-0.5">
       {NAV.map((item) => {
-        const { href, label, icon: Icon } = item;
+        const { href, labelKey, icon: Icon } = item;
+        const label = t(labelKey);
         const isActive = item === current;
         return (
           <li key={href}>
@@ -91,8 +94,9 @@ export function MemoryStatus({
   className?: string;
   onNavigate?: () => void;
 }) {
+  const t = useTranslations('shell');
   if (stale.length === 0) return null;
-  const label = `Mémoire en retard · ${stale.map((c) => c.kindLabel).join(', ')}`;
+  const label = `${t('memoryLate')} · ${stale.map((c) => c.kindLabel).join(', ')}`;
   return (
     <Tooltip content={label} side="right">
       <Link
@@ -116,17 +120,18 @@ export function MemoryStatus({
 export type SidebarProps = Viewer & { stale: ChannelHealth[]; className?: string };
 
 export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
+  const shellT = useTranslations('shell');
   const { openPalette } = usePalette();
   const onSearchPage = usePathname() === '/';
   const modKey = useModKey();
   const collapsed = useRailCollapsed();
   const Toggle = collapsed ? PanelLeftOpen : PanelLeftClose;
-  const toggleLabel = collapsed ? 'Déplier la barre latérale' : 'Replier la barre latérale';
+  const toggleLabel = collapsed ? shellT('expandSidebar') : shellT('collapseSidebar');
 
   return (
     <aside
       id="barre-laterale"
-      aria-label="Barre latérale"
+      aria-label={shellT('sidebar')}
       data-rail={collapsed ? 'replie' : 'deplie'}
       className={cn(
         'group/rail flex min-w-0 flex-col gap-4 px-3 pt-1 pb-2 transition-[width]',
@@ -200,7 +205,7 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
           <Kbd className={cn(LABEL, 'ml-auto')}>{modKey}K</Kbd>
         </button>
       </Tooltip>
-      <nav aria-label="Navigation principale">
+      <nav aria-label={shellT('primaryNavigation')}>
         <NavList />
       </nav>
       <MemoryStatus stale={stale} className="mt-auto" />

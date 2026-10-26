@@ -2,6 +2,7 @@
 
 import { CircleAlert, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Fragment, type Ref, useLayoutEffect, useRef } from 'react';
 import { highlightTerms } from '@/components/search/highlighted-text';
 import type { PreviewView, ResultView } from '@/components/search/view-model';
@@ -32,6 +33,8 @@ function PreviewBody({
   terms: string[];
   onClose: () => void;
 }) {
+  const tr = useTranslations('searchResults');
+  const locale = useLocale();
   // Une fois chargé, l'aperçu dit lui-même d'où vient le passage.
   const head = sel.status === 'pret' ? sel.preview : sel.result;
   const scroller = useRef<HTMLDivElement>(null);
@@ -69,7 +72,7 @@ function PreviewBody({
               !head.title && 'text-muted',
             )}
           >
-            {head.title?.trim() || 'Sans titre'}
+            {head.title?.trim() || tr('untitled')}
           </h2>
           <SourceLink
             href={head.url}
@@ -80,7 +83,7 @@ function PreviewBody({
         </div>
         <IconButton
           icon={X}
-          label="Fermer l’aperçu"
+          label={tr('closePreview')}
           size="sm"
           tooltip={false}
           onClick={onClose}
@@ -90,7 +93,7 @@ function PreviewBody({
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
         {sel.status === 'charge' && (
           <div role="status" className="grid gap-2.5">
-            <span className="sr-only">Chargement de l’aperçu…</span>
+            <span className="sr-only">{tr('loadingPreview')}</span>
             <Skeleton className="h-16 rounded-field" />
             <Skeleton className="h-28 rounded-field" />
             <Skeleton className="h-16 rounded-field" />
@@ -98,12 +101,12 @@ function PreviewBody({
         )}
         {sel.status === 'introuvable' && (
           <Notice tone="warning" icon={CircleAlert} live="alert">
-            {nb('Ce passage n’est plus disponible. Relancez la recherche.')}
+            {nb(tr('passageUnavailable'))}
           </Notice>
         )}
         {sel.status === 'erreur' && (
           <Notice tone="error" icon={CircleAlert} live="alert">
-            {nb('L’aperçu n’a pas pu se charger. Cliquez de nouveau sur le résultat.')}
+            {nb(tr('previewFailed'))}
           </Notice>
         )}
         {sel.status === 'pret' && (
@@ -123,14 +126,14 @@ function PreviewBody({
                   <span className="font-semibold text-fg-2">{t.speaker}</span>
                   {t.isHit && (
                     <span className="inline-flex h-[18px] items-center rounded-full px-[7px] font-mono text-[10.5px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                      Passage trouvé
+                      {tr('matchingPassage')}
                     </span>
                   )}
                   <time
                     dateTime={t.ts.toISOString()}
                     className="ml-auto font-mono text-[11px] tracking-normal text-muted"
                   >
-                    {formatDateTime(t.ts)}
+                    {formatDateTime(t.ts, locale)}
                   </time>
                 </p>
                 <p
@@ -162,11 +165,12 @@ export function PreviewPane({
   onClose,
   ref,
 }: PreviewProps & { ref: Ref<HTMLElement> }) {
+  const t = useTranslations('searchResults');
   return (
     <aside
       ref={ref}
       tabIndex={-1}
-      aria-label="Aperçu du résultat"
+      aria-label={t('preview')}
       className={cn(
         'sticky top-4 hidden flex-col outline-none @[900px]:flex focus-visible:outline-2 focus-visible:outline-ring',
         sel
@@ -185,9 +189,7 @@ export function PreviewPane({
           {sel ? (
             <PreviewBody sel={sel} terms={terms} onClose={onClose} />
           ) : (
-            <p className="max-w-[34ch] text-label text-muted">
-              Cliquez sur un résultat pour lire le passage dans son contexte.
-            </p>
+            <p className="max-w-[34ch] text-label text-muted">{t('clickResultToPreview')}</p>
           )}
         </motion.div>
       </AnimatePresence>
@@ -197,6 +199,7 @@ export function PreviewPane({
 
 /** Écran étroit : feuille de verre qui monte du bas (focus piégé, Échap, retour du focus au passage cliqué). */
 export function PreviewSheet({ sel, terms, onClose }: PreviewProps) {
+  const t = useTranslations('searchResults');
   // la feuille garde son contenu pendant son animation de sortie
   const last = useRef(sel);
   if (sel) last.current = sel;
@@ -205,7 +208,7 @@ export function PreviewSheet({ sel, terms, onClose }: PreviewProps) {
     <Sheet open={Boolean(sel)} onOpenChange={(o) => !o && onClose()}>
       {shown && (
         <SheetContent
-          title={shown.result.title?.trim() || 'Sans titre'}
+          title={shown.result.title?.trim() || t('untitled')}
           titleHidden
           hideClose
           onOpenAutoFocus={(e) => {

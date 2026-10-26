@@ -10,6 +10,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, type RefObject, useEffect, useRef, useState, useTransition } from 'react';
 import {
   connectAction,
@@ -37,6 +38,7 @@ import {
 import {
   type ActionResult,
   ADMIN_CONSENT_MESSAGE,
+  ADMIN_CONSENT_MESSAGE_EN,
   canReconnect,
   canSyncNow,
   DEFAULT_SINCE,
@@ -45,7 +47,6 @@ import {
   otherOwnersNote,
   panelMode,
   resultMessage,
-  SINCE_LABELS,
   SINCE_VALUES,
   type SinceDays,
 } from '@/lib/connection-form';
@@ -58,11 +59,8 @@ import { ConnStatus, StatusText } from './parts';
 // Fenêtre d'un outil : ses connexions, leurs boutons, puis de quoi en brancher une. Pause et suppression : créateur ou
 // administrateur (`canManage`) ; clé et reconnexion : créateur seul (`isCreator`) ; « Synchroniser maintenant » : tous.
 
-const UNREACHABLE = 'Impossible de joindre le serveur. Réessayez.';
-const NEW_TAB = <span className="sr-only"> (s’ouvre dans un nouvel onglet)</span>;
 const LINK =
   'inline-flex items-center gap-0.5 rounded-sm font-medium text-accent underline-offset-4 decoration-accent-line hover:underline';
-const SINCE_OPTIONS = SINCE_VALUES.map((value) => ({ value, label: SINCE_LABELS[value] }));
 /** Premier arrêt d'un formulaire d'ajout : « Se connecter avec … » s'il existe, sinon le premier champ de la clé. */
 const firstStop = (root: HTMLElement | null | undefined) =>
   root?.querySelector<HTMLElement>('[data-autofocus]') ??
@@ -84,11 +82,12 @@ const sinceOf = (value: FormDataEntryValue | null): SinceDays =>
   SINCE_VALUES.find((candidate) => candidate === value) ?? DEFAULT_SINCE;
 
 function PeriodField({ disabled }: { disabled?: boolean }) {
+  const t = useTranslations('connections');
   return (
-    <Field label="Lire ce qui date de" help="Borne le premier passage, donc son coût.">
+    <Field label={t('periodLabel')} help={t('periodHelp')}>
       <Select
         name="since"
-        options={SINCE_OPTIONS}
+        options={SINCE_VALUES.map((value) => ({ value, label: t(`since.${value}`) }))}
         defaultValue={DEFAULT_SINCE}
         disabled={disabled}
       />
@@ -134,6 +133,8 @@ function KeyForm({
   secondary?: boolean;
   onSuccess?: () => void;
 }) {
+  const t = useTranslations('connections');
+  const locale = useLocale();
   const fields = replaceId
     ? entry.fields.filter((x) => x.kind === 'secret')
     : entry.fields.filter((x) => !shared || !entry.oauthPreFields.includes(x.name));
@@ -166,7 +167,7 @@ function KeyForm({
               since: sinceOf(common?.get('since') ?? data.get('since')),
             });
       } catch {
-        outcome = { error: UNREACHABLE };
+        outcome = { error: t('syncUnavailable') };
       }
       if ('error' in outcome) {
         setResult(outcome);
@@ -194,9 +195,9 @@ function KeyForm({
           <p className="text-ui text-fg-2">
             {nb(entry.keyHelp)}{' '}
             <a href={entry.docsUrl} target="_blank" rel="noreferrer" className={LINK}>
-              Où trouver la clé
+              {t('whereKey')}
               <ArrowUpRight aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
-              {NEW_TAB}
+              <span className="sr-only">{t('newTab')}</span>
             </a>
           </p>
         )}
@@ -212,19 +213,19 @@ function KeyForm({
             loading={pending}
             className="scroll-mb-8"
           >
-            {pending ? 'Test en cours…' : replaceId ? 'Tester et remplacer' : 'Tester et brancher'}
+            {pending ? t('testPending') : replaceId ? t('testReplace') : t('testConnect')}
           </Button>
           <div aria-live="polite" className="min-w-0">
             <AnimatePresence mode="wait">
               {result && (
                 <motion.div
-                  key={resultMessage(result)}
+                  key={resultMessage(result, locale)}
                   initial={{ opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                 >
                   <StatusText tone={'error' in result ? 'destructive' : 'success'}>
-                    {resultMessage(result)}
+                    {resultMessage(result, locale)}
                   </StatusText>
                 </motion.div>
               )}
@@ -237,11 +238,12 @@ function KeyForm({
 }
 
 function AdminConsent({ url }: { url: string }) {
+  const t = useTranslations('connections');
   return (
     <a href={url} target="_blank" rel="noreferrer" className={LINK}>
-      Lien d’accord pour l’administrateur
+      {t('adminConsent')}
       <ArrowUpRight aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
-      {NEW_TAB}
+      <span className="sr-only">{t('newTab')}</span>
     </a>
   );
 }
@@ -249,6 +251,8 @@ function AdminConsent({ url }: { url: string }) {
 // « Se connecter avec … » : une navigation vers l'éditeur (formulaire POST), pas une action serveur.
 // Les champs non secrets et la période partent avec ; les jetons, eux, ne passent jamais ici.
 function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLFormElement | null> }) {
+  const t = useTranslations('connections');
+  const en = useLocale() === 'en';
   return (
     <form ref={ref} method="post" action={oauthStartPath(entry.id)} className="grid gap-4">
       {entry.oauthHelp && <p className="text-ui text-fg-2">{nb(entry.oauthHelp)}</p>}
@@ -260,12 +264,13 @@ function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLForm
       <PeriodField />
       <div>
         <Button type="submit" variant="primary" icon={LogIn} data-autofocus>
-          Se connecter avec {entry.label}
+          {t('connectWith', { provider: entry.label })}
         </Button>
       </div>
       {entry.adminConsentUrl && (
         <p className="text-label text-fg-2">
-          {nb(ADMIN_CONSENT_MESSAGE)} <AdminConsent url={entry.adminConsentUrl} />
+          {nb(en ? ADMIN_CONSENT_MESSAGE_EN : ADMIN_CONSENT_MESSAGE)}{' '}
+          <AdminConsent url={entry.adminConsentUrl} />
         </p>
       )}
     </form>
@@ -274,6 +279,7 @@ function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLForm
 
 /** Le bouton d'abord, la clé en secours (« ou coller une clé ») ; la clé seule quand l'appli n'est pas configurée. */
 function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => void }) {
+  const t = useTranslations('connections');
   const mode = panelMode(entry);
   const keyBox = useRef<HTMLDivElement>(null);
   const oauthForm = useRef<HTMLFormElement>(null);
@@ -289,9 +295,7 @@ function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => 
   };
   if (mode === 'none')
     return (
-      <p className="text-ui text-fg-2">
-        {nb(`L’appli ${entry.label} n’est pas encore configurée sur ce serveur.`)}
-      </p>
+      <p className="text-ui text-fg-2">{nb(t('unconfiguredApp', { provider: entry.label }))}</p>
     );
   if (mode === 'key') return <KeyForm entry={entry} onSuccess={onAdded} />;
   return (
@@ -300,7 +304,7 @@ function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => 
       {mode === 'oauth+key' && (
         <Collapsible onOpenChange={onKeyOpen} className="grid gap-3">
           <CollapsibleTrigger className={cn(LINK, 'group w-fit py-1 text-ui')}>
-            ou coller une clé
+            {t('pasteKey')}
             <ChevronDown
               aria-hidden="true"
               strokeWidth={1.8}
@@ -319,6 +323,7 @@ function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => 
 
 // Une action de gestion : un message de réussite ou d'échec, jamais d'exception à l'écran.
 function useManage() {
+  const t = useTranslations('connections');
   const [pending, startTransition] = useTransition();
   const run = (
     action: () => Promise<{ ok: boolean }>,
@@ -334,7 +339,7 @@ function useManage() {
           after?.();
         } else toast.error(failed);
       } catch {
-        toast.error(UNREACHABLE);
+        toast.error(t('syncUnavailable'));
       }
     });
   return { pending, run };
@@ -353,6 +358,8 @@ function ConnectionCard({
   canConnect: boolean;
   onRemoved: () => void;
 }) {
+  const t = useTranslations('connections');
+  const locale = useLocale();
   const [replacing, setReplacing] = useState(false);
   const { pending, run } = useManage();
   const paused = c.status === 'paused';
@@ -368,22 +375,16 @@ function ConnectionCard({
       <div className="grid gap-1">
         <p className="text-ui font-semibold break-words text-fg">{c.label}</p>
         <ConnStatus c={c} now={now} />
-        <p className="font-mono text-meta tracking-normal text-muted">{secretText(c)}</p>
+        <p className="font-mono text-meta tracking-normal text-muted">{secretText(c, locale)}</p>
       </div>
       <div className="flex flex-wrap gap-1">
         <Button
           size="sm"
           className="mr-1"
           disabled={pending || !canSyncNow(c)}
-          onClick={() =>
-            run(
-              () => syncNowAction(c.id),
-              'Synchronisation demandée : elle démarre dans la minute.',
-              "Impossible : la connexion n'existe plus ou est en pause.",
-            )
-          }
+          onClick={() => run(() => syncNowAction(c.id), t('syncRequested'), t('syncFailed'))}
         >
-          Synchroniser maintenant
+          {t('syncNow')}
         </Button>
         {c.canManage && (
           <>
@@ -394,12 +395,12 @@ function ConnectionCard({
               onClick={() =>
                 run(
                   () => setPausedAction(c.id, !paused),
-                  paused ? 'Connexion reprise.' : 'Connexion mise en pause.',
-                  "Cette connexion n'existe plus.",
+                  paused ? t('connectionResumed') : t('connectionPaused'),
+                  t('connectionMissing'),
                 )
               }
             >
-              {paused ? 'Reprendre' : 'Mettre en pause'}
+              {paused ? t('resume') : t('pause')}
             </Button>
             {c.isCreator &&
               (oauth ? (
@@ -412,7 +413,7 @@ function ConnectionCard({
                     variant="ghost"
                     disabled={!canConnect || !entry.oauthReady}
                   >
-                    Reconnecter
+                    {t('reconnect')}
                   </Button>
                 </form>
               ) : (
@@ -423,24 +424,27 @@ function ConnectionCard({
                   aria-expanded={replacing}
                   onClick={() => setReplacing((o) => !o)}
                 >
-                  Remplacer la clé
+                  {t('replaceKey')}
                 </Button>
               ))}
             <AlertDialog
               trigger={
                 <Button size="sm" variant="ghost" icon={Trash2} disabled={pending}>
-                  Supprimer
+                  {t('delete')}
                 </Button>
               }
-              title={`Supprimer « ${c.label} » ?`}
-              description={`Leon ne lira plus ${entry.label} avec ${oauth ? 'ces jetons, qui sont effacés' : 'cette clé, qui est effacée'}. Les sources déjà captées restent dans la mémoire.`}
-              confirmLabel="Supprimer"
+              title={t('deleteTitle', { name: c.label })}
+              description={t('deleteConfirm', {
+                provider: entry.label,
+                credential: oauth ? t('tokens') : t('key'),
+              })}
+              confirmLabel={t('delete')}
               tone="destructive"
               onConfirm={() =>
                 run(
                   () => deleteConnectionAction(c.id),
-                  'Connexion supprimée.',
-                  "Cette connexion n'existe plus.",
+                  t('connectionDeleted'),
+                  t('connectionMissing'),
                   onRemoved,
                 )
               }
@@ -449,11 +453,7 @@ function ConnectionCard({
         )}
       </div>
       {c.isCreator && oauth && canConnect && !entry.oauthReady && (
-        <p className="text-label text-muted">
-          {nb(
-            `L’appli ${entry.label} n’est plus configurée sur ce serveur : impossible de reconnecter.`,
-          )}
-        </p>
+        <p className="text-label text-muted">{nb(t('appGone', { provider: entry.label }))}</p>
       )}
       {replacing && canConnect && c.isCreator && !oauth && (
         <KeyForm entry={entry} replaceId={c.id} />
@@ -477,10 +477,12 @@ function Panel({
   canConnect: boolean;
   focusDialog: () => void;
 }) {
+  const t = useTranslations('connections');
+  const locale = useLocale();
   const [adding, setAdding] = useState(conns.length === 0);
   const addRef = useRef<HTMLDivElement>(null);
   const userAdd = useRef(false);
-  const others = otherOwnersNote(conns, viewerId);
+  const others = otherOwnersNote(conns, viewerId, locale);
   const showAdd = canConnect && (conns.length === 0 || adding);
   useEffect(() => {
     // « Brancher une autre connexion » disparaît au clic : le focus passe à l'action principale du formulaire
@@ -488,7 +490,7 @@ function Panel({
   }, [adding]);
   const onAdded = () => {
     setAdding(false);
-    toast.success(`${entry.label} est branché.`);
+    toast.success(t('connectedToast', { provider: entry.label }));
     focusDialog();
   };
   return (
@@ -520,13 +522,7 @@ function Panel({
           </AnimatePresence>
         </ul>
       )}
-      {!canConnect && (
-        <p className="text-ui text-fg-2">
-          {nb(
-            'Les connecteurs ne sont pas configurés sur ce serveur : ajoutez LEON_CONNECTORS_KEY (voir .env.example), puis redémarrez Leon.',
-          )}
-        </p>
-      )}
+      {!canConnect && <p className="text-ui text-fg-2">{nb(t('connectorsUnavailable'))}</p>}
       {showAdd && (
         <motion.div
           ref={addRef}
@@ -535,9 +531,7 @@ function Panel({
         >
           {/* simple remarque au moment d'en ajouter une : qui l'a déjà branché se lit aussi sur chaque connexion */}
           {others && (
-            <p className="text-label text-muted">
-              {nb(`${others} Évitez de brancher deux fois le même espace.`)}
-            </p>
+            <p className="text-label text-muted">{nb(`${others} ${t('duplicateWarning')}`)}</p>
           )}
           <AddConnection entry={entry} onAdded={onAdded} />
         </motion.div>
@@ -553,7 +547,7 @@ function Panel({
             setAdding(true);
           }}
         >
-          Brancher une autre connexion
+          {t('another')}
         </Button>
       )}
       {/* une note discrète en pied de fenêtre plutôt qu'un badge sur chaque outil */}
@@ -564,7 +558,7 @@ function Panel({
             strokeWidth={1.7}
             className="mt-[2px] size-3.5 shrink-0"
           />
-          {nb('Non essayé en réel : ce connecteur n’a pas encore été testé sur un vrai compte.')}
+          {nb(t('notTested'))}
         </p>
       )}
     </>
@@ -594,6 +588,7 @@ export function ToolDialog({
   /** Change à chaque ouverture : l'état de la fenêtre repart de zéro. */
   session: number;
 }) {
+  const t = useTranslations('connections');
   const content = useRef<HTMLDivElement>(null);
   // après une suppression ou un ajout, le bouton qui avait le focus a disparu : on le rend à la fenêtre
   const focusDialog = () =>
@@ -619,8 +614,8 @@ export function ToolDialog({
         title={entry.label}
         description={
           entry.privateRaw
-            ? `Le texte que Leon lit dans ${entry.label} reste privé : vous seul le voyez.`
-            : `Ce que Leon lit dans ${entry.label} est visible de toute l’équipe.`
+            ? t('privateTool', { provider: entry.label })
+            : t('sharedTool', { provider: entry.label })
         }
       >
         <Panel

@@ -1,6 +1,6 @@
 import { type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
 import { formatNumber } from '@/lib/format';
-import { SOURCE_KIND_LABELS } from '@/lib/labels';
+import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PAGE_MAX, PAGE_SIZE } from '@/lib/search-limits';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 
@@ -96,25 +96,25 @@ function knownKind(kind: string): SourceKind | 'other' {
   return KNOWN_KINDS.has(kind) ? (kind as SourceKind) : 'other';
 }
 
-function kindLabelOf(kind: string): string {
+function kindLabelOf(kind: string, locale: string): string {
   return KNOWN_KINDS.has(kind)
     ? SOURCE_KIND_LABELS[kind as SourceKind]
-    : kind.trim() || 'Autre outil';
+    : kind.trim() || (locale === 'en' ? 'Other tool' : 'Autre outil');
 }
 
-function labelsOf(source: Pick<SourceInfo, 'kind' | 'nature' | 'origin'>) {
+function labelsOf(source: Pick<SourceInfo, 'kind' | 'nature' | 'origin'>, locale: string) {
   return {
-    kindLabel: kindLabelOf(source.kind),
-    natureLabel: NATURE_LABELS[source.nature],
+    kindLabel: kindLabelOf(source.kind, locale),
+    natureLabel: locale === 'en' ? NATURE_LABELS_EN[source.nature] : NATURE_LABELS[source.nature],
     originLabel: originLabel(source.origin),
   };
 }
 
-export function toResultViews(hits: SourceHit[]): ResultView[] {
+export function toResultViews(hits: SourceHit[], locale = 'fr'): ResultView[] {
   return hits.map((hit) => ({
     sourceId: hit.sourceId,
     kind: knownKind(hit.kind),
-    ...labelsOf(hit),
+    ...labelsOf(hit, locale),
     title: hit.title,
     url: hit.url,
     lastTs: hit.lastTs,
@@ -133,17 +133,22 @@ const ROLE_SPEAKERS: Record<ContextTurn['role'], string> = {
   document: 'Document',
   participant: 'Participant',
 };
+const ROLE_SPEAKERS_EN: Record<ContextTurn['role'], string> = { ...ROLE_SPEAKERS, user: 'You' };
 
-export function toPreviewView(context: { source: SourceInfo; turns: ContextTurn[] }): PreviewView {
+export function toPreviewView(
+  context: { source: SourceInfo; turns: ContextTurn[] },
+  locale = 'fr',
+): PreviewView {
   const { source } = context;
   return {
     kind: knownKind(source.kind),
-    ...labelsOf(source),
+    ...labelsOf(source, locale),
     title: source.title,
     url: source.url,
     turns: context.turns.map((turn) => ({
       turnId: turn.turnId,
-      speaker: turn.authorName?.trim() || ROLE_SPEAKERS[turn.role],
+      speaker:
+        turn.authorName?.trim() || (locale === 'en' ? ROLE_SPEAKERS_EN : ROLE_SPEAKERS)[turn.role],
       ts: turn.ts,
       text: turn.text,
       isHit: turn.isHit,
@@ -171,7 +176,13 @@ export function queryTerms(text: string): string[] {
 }
 
 // Au-delà d'une page, le total est celui des candidats que la recherche a gardés : pas un compte exact de la base.
-export function countLabel(total: number): string {
+export function countLabel(total: number, locale = 'fr'): string {
+  if (locale === 'en') {
+    const plural = total === 1 ? 'source' : 'sources';
+    return total <= PAGE_SIZE
+      ? `${total} ${plural}`
+      : `About ${formatNumber(total, locale)} ${plural}`;
+  }
   const plural = total > 1 ? 'sources' : 'source';
   return total <= PAGE_SIZE ? `${total} ${plural}` : `Environ ${formatNumber(total)} ${plural}`;
 }
@@ -180,12 +191,15 @@ export function pageCount(total: number): number {
   return Math.min(Math.max(Math.ceil(total / PAGE_SIZE), 1), PAGE_MAX);
 }
 
-export function unknownPeopleMessage(names: string[]): string | null {
+export function unknownPeopleMessage(names: string[], locale = 'fr'): string | null {
   if (names.length === 0) return null;
-  const quoted = names.map((name) => `« ${name} »`);
+  const en = locale === 'en';
+  const quoted = names.map((name) => (en ? `“${name}”` : `« ${name} »`));
   const last = quoted.pop() as string;
-  const list = quoted.length === 0 ? last : `${quoted.join(', ')} ni ${last}`;
-  return `Personne ne s’appelle ${list} dans l’équipe.`;
+  const list = quoted.length === 0 ? last : `${quoted.join(', ')} ${en ? 'or' : 'ni'} ${last}`;
+  return en
+    ? `No one on the team is called ${list}.`
+    : `Personne ne s’appelle ${list} dans l’équipe.`;
 }
 
 // Les outils du menu de filtre : l'identifiant s'écrit dans la requête (`outil:claude_code`), le libellé s'affiche.

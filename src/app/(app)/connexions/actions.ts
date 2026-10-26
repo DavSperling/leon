@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import {
@@ -78,6 +79,7 @@ async function checkConnection(
       error: invalidFieldsMessage(
         fields,
         parsed.error.issues.map((i) => String(i.path[0])),
+        await getLocale(),
       ),
     };
   }

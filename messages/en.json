@@ -283,7 +283,20 @@
       "crm": "CRM",
       "support": "Support",
       "mails": "Mail, chat, and calendar"
-    }
+    },
+    "play": "Play",
+    "playHint": "Quick Recall: a little arcade game on the diagram.",
+    "gameName": "Quick Recall",
+    "gameHowTo": "Leon follows your pointer: catch the fragments, dodge the bugs. Keyboard: arrow keys.",
+    "gameScore": "Score",
+    "gameLevel": "Level {level}",
+    "gameLives": "{count, plural, =0 {No lives left} one {# life left} other {# lives left}}",
+    "gameBest": "Best",
+    "gameMagnet": "Magnet!",
+    "gameOver": "Game over: {score, number} points",
+    "gameNewBest": "New best!",
+    "gameReplay": "Play again",
+    "gameQuit": "Quit"
   },
   "settings": {
     "title": "Settings",

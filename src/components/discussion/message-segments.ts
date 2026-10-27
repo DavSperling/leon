@@ -16,6 +16,7 @@ const ACTIVITY: Record<string, string> = {
   chercher: 'Leon cherche dans la mémoire…',
   lire: 'Leon lit une source…',
   activite: 'Leon regarde l’activité récente…',
+  depots_github: 'Leon consulte GitHub…',
 };
 
 export function toolActivityLabel(name: string): string {

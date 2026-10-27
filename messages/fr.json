@@ -283,7 +283,20 @@
       "crm": "CRM",
       "support": "Support",
       "mails": "Mails, chat et agenda"
-    }
+    },
+    "play": "Jouer",
+    "playHint": "Mémoire vive : un petit jeu d’arcade sur le schéma.",
+    "gameName": "Mémoire vive",
+    "gameHowTo": "Leon suit votre souris : attrapez les fragments, évitez les bugs. Au clavier : les flèches.",
+    "gameScore": "Score",
+    "gameLevel": "Niveau {level}",
+    "gameLives": "{count, plural, =0 {Plus de vie} one {# vie restante} other {# vies restantes}}",
+    "gameBest": "Record",
+    "gameMagnet": "Aimant !",
+    "gameOver": "Partie terminée : {score, number} points",
+    "gameNewBest": "Nouveau record !",
+    "gameReplay": "Rejouer",
+    "gameQuit": "Quitter"
   },
   "settings": {
     "title": "Réglages",

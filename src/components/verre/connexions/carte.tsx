@@ -11,14 +11,14 @@ import {
 } from 'motion/react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { type PointerEvent, type RefObject, useMemo, useRef, useState } from 'react';
+import { type PointerEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import type { CaptureKind, ProviderId } from '@/capture/turn';
 import { GlassCard, Logo, ToolIcon, Tooltip } from '@/components/verre';
 import { cn, formatSince, nb, useInstant, useMinWidth } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
-import { JeuConnexions } from './jeu';
+import { BoutonJeu, HudJeu, ToileJeu, useJeu } from './jeu';
 import { connState } from './parts';
 
 /*
@@ -28,6 +28,8 @@ import { connState } from './parts';
  * pâles). Survol ou focus d'une pastille : son trait ressort, une bulle dit ses connexions ; un clic ouvre la fenêtre de
  * l'outil (ou les Réglages du canal). Le rond central se tire à la souris : les traits suivent en s'étirant, puis il
  * revient en place avec un rebond. Mouvement réduit : rien ne bouge tout seul.
+ * « Jouer » transforme le schéma en jeu d'arcade, sur place (jeu.tsx) : Leon suit la souris, les pastilles lâchent des
+ * fragments, la ligne du haut compte les points ; pastilles et rond ne s'attrapent plus le temps de la partie.
  * Sous 760 px de large, le schéma s'efface : la liste « Vos outils branchés » suffit.
  */
 
@@ -36,6 +38,7 @@ const H = 460;
 const CX = W / 2;
 const CY = H / 2 + 4;
 const DAY = 86_400_000;
+const REPOS = { x: CX, y: CY };
 
 type Etat = 'actif' | 'pause' | 'erreur' | 'retard' | 'vide';
 type Base = { id: string; label: string; etat: Etat; x: number; y: number; bow: number };
@@ -325,6 +328,7 @@ function Pastille({
   onHot,
   onOpen,
   instant,
+  jeu,
 }: {
   n: Noeud;
   i: number;
@@ -333,6 +337,7 @@ function Pastille({
   onHot: (id: string | null) => void;
   onOpen: (id: ProviderId) => void;
   instant: boolean;
+  jeu: boolean;
 }) {
   const t = useTranslations('connections');
   // Les pastilles se penchent un peu vers le centre quand on le tire.
@@ -361,6 +366,7 @@ function Pastille({
     <motion.span
       className="absolute z-[2]"
       style={{ left, top }}
+      inert={jeu}
       initial={instant ? false : { opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{
@@ -390,10 +396,13 @@ function Coeur({
   centre,
   box,
   instant,
+  jeu,
 }: {
   centre: Centre;
   box: RefObject<HTMLDivElement | null>;
   instant: boolean;
+  /** Pendant la partie, Leon suit la souris : on ne l'attrape plus. */
+  jeu: boolean;
 }) {
   const t = useTranslations('connections');
   const left = useTransform(centre.x, (x) => pct(x, W));
@@ -445,7 +454,7 @@ function Coeur({
       <span className="cx-halo" />
       <span className="cx-halo cx-halo-2" />
       <motion.span
-        title={t('dragLeon')}
+        title={jeu ? undefined : t('dragLeon')}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -456,7 +465,7 @@ function Coeur({
         transition={{ type: 'spring', stiffness: 380, damping: 18 }}
         className={cn(
           'relative grid size-[76px] touch-none place-items-center rounded-full border border-line-strong bg-menu shadow-float select-none',
-          dragging ? 'cursor-grabbing' : 'cursor-grab',
+          jeu ? 'pointer-events-none' : dragging ? 'cursor-grabbing' : 'cursor-grab',
         )}
       >
         <Logo className="size-12 text-[20px]" />
@@ -533,6 +542,13 @@ export function CarteConnexions({
     () => noeuds(catalog, conns, channels, stale, now, locale, t),
     [catalog, conns, channels, stale, now, locale, t],
   );
+  const sources = useMemo(() => list.map((n) => ({ x: n.x, y: n.y })), [list]);
+  const jeu = useJeu(centre, REPOS, instant);
+  const { actif, quitter } = jeu;
+  // Le schéma s'efface sous 760 px : la partie s'arrête avec lui.
+  useEffect(() => {
+    if (actif && !wide) quitter();
+  }, [actif, wide, quitter]);
   const tools = list.filter((n) => n.type === 'outil').length;
   const lastSync = conns.reduce<Date | null>(
     (a, c) => (c.lastSyncAt && (!a || c.lastSyncAt > a) ? c.lastSyncAt : a),
@@ -549,26 +565,38 @@ export function CarteConnexions({
     <div ref={ref} className={cn(wide && 'mb-10')}>
       {wide && (
         <GlassCard className="px-6 pt-5 pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-            <p className="flex items-center gap-2 font-mono text-[12px] text-muted tabular-nums">
-              <span
-                aria-hidden="true"
-                className="cx-live size-1.5 shrink-0 rounded-full bg-success"
-              />
-              {nb(summary)}
-            </p>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              <Legende />
-              <JeuConnexions />
-            </div>
+          <div className="flex min-h-8 flex-wrap items-center justify-between gap-x-6 gap-y-2">
+            {actif ? (
+              <HudJeu hud={jeu.hud} onReplay={jeu.lancer} onQuit={quitter} />
+            ) : (
+              <>
+                <p className="flex items-center gap-2 font-mono text-[12px] text-muted tabular-nums">
+                  <span
+                    aria-hidden="true"
+                    className="cx-live size-1.5 shrink-0 rounded-full bg-success"
+                  />
+                  {nb(summary)}
+                </p>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <Legende />
+                  <BoutonJeu onClick={jeu.lancer} />
+                </div>
+              </>
+            )}
           </div>
           {/* biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset) */}
           <div
             ref={box}
             role="group"
-            aria-label={t('graphLabel')}
+            aria-label={actif ? t('gameName') : t('graphLabel')}
+            // la partie y met le focus : les flèches ne font plus défiler la page
+            tabIndex={actif ? -1 : undefined}
             // plafonné : sur un grand écran, le schéma prenait toute la hauteur de la page
-            className="relative mx-auto mt-2 w-full max-w-[760px]"
+            className={cn(
+              'relative mx-auto mt-2 w-full max-w-[760px] outline-none',
+              actif && 'touch-none',
+              actif && jeu.hud.phase !== 'fin' && 'cursor-none',
+            )}
             style={{ aspectRatio: `${W} / ${H}` }}
           >
             <svg
@@ -588,11 +616,24 @@ export function CarteConnexions({
                 />
               ))}
             </svg>
-            {list
-              .filter((n) => n.etat === 'erreur')
-              .map((n) => (
-                <Croix key={n.id} n={n} centre={centre} dim={hot !== null && hot !== n.id} />
-              ))}
+            {actif && (
+              <ToileJeu
+                key={jeu.manche}
+                centre={centre}
+                box={box}
+                sources={sources}
+                instant={instant}
+                onHud={jeu.setHud}
+                onQuit={quitter}
+              />
+            )}
+            {/* Les croix des traits en erreur ressemblent aux bugs du jeu : elles s'effacent le temps de la partie. */}
+            {!actif &&
+              list
+                .filter((n) => n.etat === 'erreur')
+                .map((n) => (
+                  <Croix key={n.id} n={n} centre={centre} dim={hot !== null && hot !== n.id} />
+                ))}
             {list.map((n, i) => (
               <Pastille
                 key={n.id}
@@ -603,16 +644,12 @@ export function CarteConnexions({
                 onHot={setHot}
                 onOpen={onOpen}
                 instant={instant}
+                jeu={actif}
               />
             ))}
-            <Coeur centre={centre} box={box} instant={instant} />
+            <Coeur centre={centre} box={box} instant={instant} jeu={actif} />
           </div>
         </GlassCard>
-      )}
-      {!wide && (
-        <div className="mb-6">
-          <JeuConnexions compact />
-        </div>
       )}
     </div>
   );

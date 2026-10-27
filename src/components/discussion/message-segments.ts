@@ -19,10 +19,12 @@ const ACTIVITIES = [
   'activite',
   'depots_github',
   'lire_github',
-  'creer_branche_github',
+  'ecrire_github',
 ] as const;
 export type ToolActivity = (typeof ACTIVITIES)[number] | 'autre';
 
+// Les outils qui écrivent finissent tous par _github et proposent une action : un seul libellé.
 export function toolActivity(name: string): ToolActivity {
-  return ACTIVITIES.find((activity) => activity === name) ?? 'autre';
+  const known = ACTIVITIES.find((activity) => activity === name);
+  return known ?? (name.endsWith('_github') ? 'ecrire_github' : 'autre');
 }

@@ -296,6 +296,32 @@ describe('createConnectorHttp : reprises', () => {
     expect(waits).toEqual([2000, 4000, 8000]);
   });
 
+  it('n’envoie qu’une fois une écriture `once` : ni limite, ni 5xx, ni réseau ne la reprend', async () => {
+    const write = { url: URL_A, method: 'PATCH', body: { a: 1 }, once: true } as const;
+    const limited = setup([
+      failing(429, { method: 'PATCH', headers: { 'retry-after': '1' } }),
+      ok({ method: 'PATCH' }),
+    ]);
+    const broken = setup([failing(503, { method: 'PATCH' }), ok({ method: 'PATCH' })]);
+    let attempts = 0;
+    const lost = createConnectorHttp({
+      provider: 'github',
+      hosts: [HOST],
+      sleep: async () => {},
+      fetchImpl: async () => {
+        attempts += 1;
+        throw new TypeError('connect ECONNREFUSED secret-123');
+      },
+    });
+
+    await expect(limited.http.json(write, ANY)).rejects.toMatchObject({ status: 429 });
+    await expect(broken.http.json(write, ANY)).rejects.toMatchObject({ status: 503 });
+    await expect(lost.json(write, ANY)).rejects.toMatchObject({ status: null });
+    expect([limited.calls.length, broken.calls.length, attempts]).toEqual([1, 1, 1]);
+    expect(limited.calls[0]?.method).toBe('PATCH');
+    expect(limited.waits).toEqual([]);
+  });
+
   it('abandonne un 429 en parlant de limite de requêtes', async () => {
     const { http } = setup([failing(429), failing(429), failing(429), failing(429)]);
 

@@ -371,17 +371,29 @@ describe('latestBriefingProject', () => {
 });
 
 describe('saveAbout', () => {
-  it('donne au point ce que l’utilisateur dit de lui, et ne marque périmés que ses points', async () => {
+  it('donne au point ce que l’utilisateur dit de lui, et ne refait que ses points', async () => {
     const mine = await seedProject(alice);
     await refreshBriefing(alice, mine.project, { llm: writes(['Premier point [1].']) });
+    const forgotten = await seedProject(alice);
+    await refreshBriefing(alice, forgotten.project, { llm: writes(['Vieux point [1].']) });
     const theirs = await seedProject(bob);
     await refreshBriefing(bob, theirs.project, { llm: writes(['Point de Bob [1].']) });
+    await adminPool.query(
+      "update briefings set last_read_at = case when project = $2 then now() - interval '8 days' else now() end where user_id = any($1)",
+      [[alice.userId, bob.userId], forgotten.project],
+    );
 
     await saveAbout(alice, 'Lead back-end, la migration Stripe ce mois-ci.');
 
     expect(await readAbout(alice.userId)).toBe('Lead back-end, la migration Stripe ce mois-ci.');
     expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+    expect((await rowOf(alice, forgotten.project))?.stale).toBe(true);
     expect((await rowOf(bob, theirs.project))?.stale).toBe(false);
+    // Lu dans la semaine : refait dans 30 minutes, comme après un signal. Plus lu : refait à sa prochaine lecture.
+    const [queued] = await jobsFor(alice, mine.project);
+    expect((queued?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
+    expect(await jobsFor(alice, forgotten.project)).toEqual([]);
+    expect(await jobsFor(bob, theirs.project)).toEqual([]);
 
     const llm = writes(['Second point [1].']);
     await refreshBriefing(alice, mine.project, { llm });

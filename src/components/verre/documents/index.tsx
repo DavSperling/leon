@@ -17,6 +17,37 @@ type DocumentRow = {
   ownerName: string;
 };
 
+// Le logo du format, d'après l'extension du titre (le nom du fichier envoyé) ; les autres formats gardent l'icône.
+const LOGOS: Record<string, string> = {
+  pdf: 'pdf',
+  docx: 'word',
+  rtf: 'word',
+  xlsx: 'excel',
+  csv: 'excel',
+  pptx: 'powerpoint',
+  odt: 'writer',
+  ods: 'calc',
+};
+
+function FormatIcon({ title }: { title: string | null }) {
+  const logo = LOGOS[title?.split('.').pop()?.toLowerCase() ?? ''];
+  if (!logo)
+    return (
+      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center">
+        <FileText className="size-4 text-accent" strokeWidth={1.7} />
+      </span>
+    );
+  return (
+    <span
+      aria-hidden="true"
+      className="grid size-8 shrink-0 place-items-center rounded-chip border border-line bg-[#fff]"
+    >
+      {/* biome-ignore lint/performance/noImgElement: petit SVG statique, rien à optimiser */}
+      <img src={`/logos/${logo}.svg`} alt="" className="size-5" />
+    </span>
+  );
+}
+
 function UploadForm() {
   const t = useTranslations('documents');
   const [state, action, pending] = useActionState(uploadDocumentAction, {
@@ -74,7 +105,7 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
   const title = document.title || t('untitled');
   return (
     <li className="flex items-center gap-3 border-b border-line py-3 last:border-0">
-      <FileText aria-hidden="true" className="size-4 shrink-0 text-accent" strokeWidth={1.7} />
+      <FormatIcon title={document.title} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-ui font-medium text-fg" title={title}>
           {nb(title)}

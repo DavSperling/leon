@@ -83,7 +83,7 @@ describe('github : description du bouton (GitHub App)', () => {
       setupHosts: [],
     });
     expect(githubOAuth.tokenBody ?? 'form').toBe('form');
-    expect(githubOAuth.extraAuthorizeParams).toBeUndefined();
+    expect(githubOAuth.extraAuthorizeParams).toEqual({ prompt: 'select_account' });
     expect(githubOAuth.extraTokenParams).toBeUndefined();
     expect(githubOAuth.adminConsent).toBeUndefined();
   });
@@ -92,7 +92,7 @@ describe('github : description du bouton (GitHub App)', () => {
     expect(githubConnector.oauth).toBe(githubOAuth);
   });
 
-  it('demande le code à GitHub sans paramètre scope, avec le défi PKCE', () => {
+  it('demande le code à GitHub sans paramètre scope, avec le défi PKCE et le choix du compte', () => {
     const url = new URL(authorizeUrl(githubOAuth, CLIENT, pending));
 
     expect(`${url.origin}${url.pathname}`).toBe('https://github.com/login/oauth/authorize');
@@ -105,6 +105,7 @@ describe('github : description du bouton (GitHub App)', () => {
         .update(pending.verifier ?? '')
         .digest('base64url'),
       code_challenge_method: 'S256',
+      prompt: 'select_account',
     });
     expect(redirectUri(githubOAuth)).toMatch(/\/api\/v1\/connexions\/oauth\/github\/retour$/);
   });

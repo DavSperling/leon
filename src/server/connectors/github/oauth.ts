@@ -47,6 +47,10 @@ export const githubOAuth: OAuthSpec = {
   clientAuth: 'body',
   preFields: [],
   setupHosts: [],
+  // Sans lui, GitHub branche en silence le compte déjà ouvert dans le navigateur, s'il a déjà accepté
+  // l'appli : chaque compte Leon créé sur ce navigateur recevait le même GitHub. Doc lue le 27/10/2026 :
+  // « Forces the account picker to appear if set to select_account » (page du jeton utilisateur, plus haut).
+  extraAuthorizeParams: { prompt: 'select_account' },
 
   // Branché sans aucun dépôt ouvert : on enchaîne sur l'écran d'installation de l'appli, où
   // l'utilisateur choisit ses dépôts ; GitHub le renvoie ensuite à la « Setup URL » de l'appli (la page

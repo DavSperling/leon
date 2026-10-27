@@ -155,6 +155,19 @@ describe('replyStream', () => {
       'depots_github',
       'lire_github',
       'creer_branche_github',
+      'supprimer_branche_github',
+      'ecrire_fichier_github',
+      'supprimer_fichier_github',
+      'ouvrir_pr_github',
+      'modifier_pr_github',
+      'fusionner_pr_github',
+      'commenter_github',
+      'demander_revue_github',
+      'soumettre_revue_github',
+      'creer_ticket_github',
+      'modifier_ticket_github',
+      'relancer_execution_github',
+      'annuler_execution_github',
     ]);
   });
 

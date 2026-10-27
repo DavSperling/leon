@@ -1,7 +1,6 @@
-import type { BranchParams } from '@/lib/actions';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { loadMyConnections } from '@/server/connectors/connections';
-import { githubConnector, liveGithub, REPO_PATTERN } from '@/server/connectors/github/connector';
+import { githubConnector, liveGithub } from '@/server/connectors/github/connector';
 import { ensureFreshTokens } from '@/server/connectors/oauth';
 import { connectorHttp } from '@/server/connectors/pipedream';
 
@@ -31,10 +30,10 @@ export const isBranchName = (name: string) => BRANCH_NAME.test(name);
 // Un commit tel que GitHub l'écrit : 40 caractères hexadécimaux (64 pour un dépôt en SHA-256).
 export const COMMIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 
-// Les paramètres d'une branche, revérifiés à la proposition et à l'exécution : ils viennent en partie de GitHub et
-// finissent dans une adresse de l'API, sur la carte et devant le modèle.
-export const validBranchParams = (params: BranchParams) =>
-  REPO_PATTERN.test(params.repo) &&
-  isBranchName(params.branch) &&
-  isBranchName(params.from) &&
-  COMMIT_SHA.test(params.sha);
+// Un chemin de fichier depuis la racine du dépôt : un morceau vide, « . » ou « .. » changerait la route appelée
+// (arbre, dossier parent). Partagé par la lecture et l'écriture.
+export const isRepoPath = (path: string | null | undefined) =>
+  path != null &&
+  path.length <= 500 &&
+  !/\p{Cc}/u.test(path) &&
+  !path.split('/').some((part) => part === '' || part === '.' || part === '..');

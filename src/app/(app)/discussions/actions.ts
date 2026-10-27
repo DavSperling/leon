@@ -11,7 +11,7 @@ import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
-import { decideAction } from '@/server/discussion/proposed-actions';
+import { decideAction } from '@/server/discussion/github-actions';
 import { logError } from '@/server/log';
 
 // Ouvrir une discussion : depuis la page Discussions (une question), ou depuis la réponse en tête de la barre

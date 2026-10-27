@@ -23,8 +23,9 @@ import {
   readToolFilters,
 } from '@/server/search/tool-filters';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
+import { actionTools } from './github-actions';
 import { githubReadTool } from './github-read';
-import { type GithubToolDeps, githubBranchTool, githubReposTool } from './github-tool';
+import { type GithubToolDeps, githubReposTool } from './github-tool';
 
 // Les outils de l'agent de discussion (T11) : chercher, lire, activite. Ils ne passent que par les fonctions de la
 // recherche (D4 du plan du deuxième jet), toujours sous les droits de l'utilisateur : l'agent ne voit que ce
@@ -338,6 +339,6 @@ export function discussionTools(ctx: TenantContext, deps: DiscussionToolDeps): A
     activite,
     githubReposTool(ctx, github),
     githubReadTool(ctx, github),
-    githubBranchTool(ctx, github),
+    ...actionTools(ctx, github),
   ] as AgentTool[];
 }

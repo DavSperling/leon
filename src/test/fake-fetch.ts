@@ -4,7 +4,7 @@ import type { AnyConnector, SyncPage } from '@/server/connectors/types';
 import { callProblems, loadVendorSpec, type VendorSpec } from './contracts/vendor-spec';
 
 export type FakeRoute = {
-  method?: 'GET' | 'POST' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   // Une chaîne vaut l'adresse complète ou l'adresse sans sa chaîne de requête.
   url: string | RegExp;
   status?: number;

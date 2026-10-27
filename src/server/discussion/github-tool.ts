@@ -6,7 +6,14 @@ import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http
 import { OAuthRefusedError } from '@/server/connectors/oauth';
 import type { AgentTool } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
-import { type LiveDeps, type MyConnection, myGithubConnections, openGithub } from './github-live';
+import {
+  isBranchName,
+  type LiveDeps,
+  type MyConnection,
+  myGithubConnections,
+  openGithub,
+  validBranchParams,
+} from './github-live';
 import { proposeBranch } from './proposed-actions';
 
 // Les outils GitHub de la discussion (docs/specs/2026-10-26-github-acces-complet.md), en direct avec la connexion
@@ -35,12 +42,6 @@ const refused = (connection: MyConnection) =>
 const isRefused = (error: unknown) =>
   error instanceof OAuthRefusedError ||
   (error instanceof ConnectorAuthError && error.status === 401);
-
-// Un nom de branche que git accepte, en plus étroit : lettres, chiffres, « . », « _ », « - » et « / », sans « .. »
-// ni « // », sans « / », « . » ou « - » au début, ni « / », « . » ou « .lock » à la fin.
-const BRANCH_NAME =
-  /^(?![/.-])(?!.*\.\.)(?!.*\/\/)(?!.*\/\.)(?!.*(?:\/|\.|\.lock)$)[A-Za-z0-9._/-]{1,200}$/;
-export const isBranchName = (name: string) => BRANCH_NAME.test(name);
 
 // Une ligne par dépôt tant que le budget le permet ; la suite est comptée, jamais tue.
 function renderRepos(label: string, repos: string[], budget: { chars: number }): string[] {
@@ -105,6 +106,21 @@ const CreerBrancheInput = z.object({
     .describe('La branche de départ ; sans elle, la branche par défaut du dépôt.'),
 });
 
+// La branche existe déjà : la proposer donnerait un échec au clic, ou un faux « faite » sur le même commit.
+async function branchExists(
+  github: Awaited<ReturnType<typeof openGithub>>['github'],
+  repo: string,
+  branch: string,
+): Promise<boolean> {
+  try {
+    await github.branchSha(repo, branch);
+    return true;
+  } catch (error) {
+    if (error instanceof ConnectorHttpError && error.status === 404) return false;
+    throw error;
+  }
+}
+
 export function githubBranchTool(
   ctx: TenantContext,
   deps: GithubToolDeps,
@@ -139,12 +155,21 @@ export function githubBranchTool(
         try {
           from = depuis ?? (await live.github.defaultBranch(repo));
           const sha = await live.github.branchSha(repo, from);
+          const params = { repo, branch: nom, from, sha };
+          if (!validBranchParams(params)) {
+            return 'GitHub a rendu une branche de départ ou un commit inattendu : rien n’est proposé.';
+          }
+          if (await branchExists(live.github, repo, nom)) {
+            return `La branche « ${nom} » existe déjà dans ${repo} : rien n’est proposé.`;
+          }
           const action = await proposeBranch(ctx, {
             discussionId,
             connectionId: connection.id,
-            params: { repo, branch: nom, from, sha },
+            params,
           });
-          deps.onAction?.(action);
+          // Sans l'heure de la ligne : l'agent la montre telle quelle à la page.
+          const { createdAt: _at, ...view } = action;
+          deps.onAction?.(view);
           return `Action proposée, en attente : créer la branche « ${nom} » dans ${repo}, depuis « ${from} » (commit ${sha.slice(0, 7)}). Rien n’est encore fait : l’utilisateur la crée avec le bouton sous ta réponse. Ne dis pas que la branche existe.`;
         } catch (error) {
           if (isRefused(error)) return refused(connection);

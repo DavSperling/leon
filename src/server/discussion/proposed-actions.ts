@@ -14,7 +14,7 @@ import { OAuthRefusedError } from '@/server/connectors/oauth';
 import { actions } from '@/server/db/schema/actions';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
-import { type LiveDeps, myGithubConnections, openGithub } from './github-live';
+import { type LiveDeps, myGithubConnections, openGithub, validBranchParams } from './github-live';
 
 // Les actions que Leon propose dans une discussion (0037-actions.sql) : un outil les enregistre sans rien faire,
 // l'utilisateur les confirme ou les annule d'un clic, et seule la confirmation les exécute, une fois, avec sa
@@ -25,12 +25,12 @@ export type TimedAction = ActionView & { createdAt: Date };
 
 const UuidSchema = z.uuid();
 
-function toView(row: Row): TimedAction {
+// Une ligne illisible donne null : elle n'empêche pas d'afficher la discussion.
+function toView(row: Row): TimedAction | null {
   const expired =
     row.status === 'proposee' && Date.now() - row.createdAt.getTime() >= ACTION_VALID_MS;
   const view = parseActionView({ ...row, status: expired ? 'expiree' : row.status });
-  if (!view) throw new Error('Action illisible');
-  return { ...view, createdAt: row.createdAt };
+  return view && { ...view, createdAt: row.createdAt };
 }
 
 export async function proposeBranch(
@@ -51,7 +51,9 @@ export async function proposeBranch(
       })
       .returning(),
   );
-  return toView(row as Row);
+  const view = toView(row as Row);
+  if (!view) throw new Error('Action illisible');
+  return view;
 }
 
 // Les actions d'une discussion de l'utilisateur, de la plus ancienne à la plus récente.
@@ -66,7 +68,7 @@ export async function listDiscussionActions(
       .where(eq(actions.discussionId, discussionId))
       .orderBy(asc(actions.createdAt), asc(actions.id)),
   );
-  return rows.map(toView);
+  return rows.flatMap((row) => toView(row) ?? []);
 }
 
 async function readAction(ctx: TenantContext, id: string): Promise<TimedAction | null> {
@@ -94,6 +96,7 @@ export async function decideAction(
     );
     return row ? toView(row) : readAction(ctx, id);
   }
+  if (decision !== 'confirmer') return null;
   // La réservation : une seule confirmation passe, même sur deux onglets ou deux serveurs.
   const [claimed] = await withTenant(ctx, (tx) =>
     tx
@@ -113,7 +116,7 @@ export async function decideAction(
     tx
       .update(actions)
       .set({ status: result.error ? 'echouee' : 'faite', result })
-      .where(eq(actions.id, id))
+      .where(and(eq(actions.id, id), eq(actions.status, 'en-cours')))
       .returning(),
   );
   return toView(done as Row);
@@ -125,9 +128,10 @@ const failed = (error: ActionError): Outcome => ({ url: null, error });
 // Créer la branche avec la connexion de l'auteur, celle de la proposition. Rien du texte de GitHub n'est gardé.
 async function execute(ctx: TenantContext, row: Row, deps: LiveDeps): Promise<Outcome> {
   const params = row.params as BranchParams;
-  const connection = (await myGithubConnections(ctx)).find((c) => c.id === row.connectionId);
-  if (!connection) return failed('connexion');
+  if (!validBranchParams(params)) return failed('echec');
   try {
+    const connection = (await myGithubConnections(ctx)).find((c) => c.id === row.connectionId);
+    if (!connection) return failed('connexion');
     const { github } = await openGithub(ctx, connection, deps);
     try {
       await github.createBranch(params.repo, params.branch, params.sha);

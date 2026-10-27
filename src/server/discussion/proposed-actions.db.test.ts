@@ -42,9 +42,11 @@ async function setup() {
   return { alice, bob, aliceConnection, discussionId, connection };
 }
 
+const NEW_BRANCH = `${API}/repos/acme/leon/git/ref/heads/feature/x`;
 const proposeRoutes = (): FakeRoute[] => [
   { url: `${API}/repos/acme/leon`, json: { default_branch: 'main' } },
   { url: `${API}/repos/acme/leon/git/ref/heads/main`, json: { object: { sha: SHA } } },
+  { url: NEW_BRANCH, status: 404, json: { message: 'Not Found' } },
 ];
 const createRoute = (extra: Partial<FakeRoute> = {}): FakeRoute => ({
   method: 'POST',
@@ -54,8 +56,8 @@ const createRoute = (extra: Partial<FakeRoute> = {}): FakeRoute => ({
   ...extra,
 });
 
-async function propose(alice: TenantContext, discussionId: string) {
-  const fetchImpl = fakeFetch(proposeRoutes());
+async function propose(alice: TenantContext, discussionId: string, routes = proposeRoutes()) {
+  const fetchImpl = fakeFetch(routes);
   const proposed: ActionView[] = [];
   const text = await githubBranchTool(alice, {
     budget: { chars: 40_000 },
@@ -79,7 +81,25 @@ describe('creer_branche_github', () => {
       status: 'proposee',
       params: { repo: 'acme/leon', branch: 'feature/x', from: 'main', sha: SHA },
     });
-    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET', 'GET']);
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET', 'GET', 'GET']);
+  });
+
+  it('ne propose pas une branche qui existe déjà, ni un commit inattendu', async () => {
+    const { alice, discussionId } = await setup();
+    const [repo, main] = proposeRoutes();
+    const exists = await propose(alice, discussionId, [
+      repo as FakeRoute,
+      main as FakeRoute,
+      { url: NEW_BRANCH, json: { object: { sha: SHA } } },
+    ]);
+    const odd = await propose(alice, discussionId, [
+      repo as FakeRoute,
+      { ...(main as FakeRoute), json: { object: { sha: 'pas-un-commit' } } },
+    ]);
+
+    expect(exists.text).toContain('existe déjà');
+    expect(odd.text).toContain('inattendu');
+    expect([exists.action, odd.action]).toEqual([undefined, undefined]);
   });
 
   it('refuse un dépôt que la connexion n’ouvre pas, et un nom de branche invalide', async () => {

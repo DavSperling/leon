@@ -260,6 +260,7 @@
       "lire": "Leon is reading a source…",
       "activite": "Leon is checking recent activity…",
       "depots_github": "Leon is checking GitHub…",
+      "creer_branche_github": "Leon is preparing a branch…",
       "autre": "Leon is working…"
     },
     "action": {

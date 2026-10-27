@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isBranchName } from './github-tool';
+import { isBranchName } from './github-live';
 
 describe('isBranchName', () => {
   it('accepte les noms de branche courants', () => {

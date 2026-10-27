@@ -450,7 +450,8 @@ describe('github : sync, reprise', () => {
 
     expect(sinceOf(calls[0]?.url)).toBe('2026-10-12T13:59:59Z');
     expect(calls).toHaveLength(1);
-    expect(pages).toEqual([]);
+    // Rien de neuf : une page vide garde le curseur (et l'ordre de lecture des dépôts).
+    expect(pages).toEqual([{ items: [], cursor: first.pages.at(-1)?.cursor }]);
   });
 
   it('ignore l’élément déjà rendu au même instant, et rend l’autre', async () => {
@@ -480,13 +481,44 @@ describe('github : sync, reprise', () => {
       { cursor, repos: ['acme/leon', 'acme/site'] },
     );
 
-    expect(sinceOf(calls[0]?.url)).toBe('2026-10-12T13:59:59Z');
-    expect(sinceOf(calls[1]?.url)).toBe('2026-09-15T00:00:00Z');
+    // Le dépôt jamais lu passe avant celui qui a déjà un curseur.
+    expect(calls.map((call) => call.url.replace(/\?.*$/, ''))).toEqual([
+      `${API}/repos/acme/site/issues`,
+      `${API}/repos/acme/leon/issues`,
+    ]);
+    expect(sinceOf(calls[0]?.url)).toBe('2026-09-15T00:00:00Z');
+    expect(sinceOf(calls[1]?.url)).toBe('2026-10-12T13:59:59Z');
     expect(idsOf(pages)).toEqual(['issue:acme/site#115', 'issue:acme/site#116']);
     expect(cursorOf(pages[0])).toEqual({
       'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
       'acme/site': { at: '2026-10-12T14:00:00Z', seen: [115, 116] },
     });
+  });
+
+  it('après un passage coupé, commence par les dépôts qu’il n’a pas finis', async () => {
+    const repos = ['acme/a', 'acme/b', 'acme/c'];
+    const empty = (name: string): FakeRoute => ({ url: `${API}/repos/${name}/issues`, json: [] });
+    const cfg = { ...config, repos };
+    const cut = testHttp(githubConnector, cfg, [
+      empty('acme/a'),
+      { url: `${API}/repos/acme/b/issues`, status: 404 },
+    ]);
+    const first: SyncPage[] = [];
+    const run = (async () => {
+      const state = { cursor: null, since: SINCE };
+      for await (const page of githubConnector.sync(cfg, state, cut.http)) first.push(page);
+    })();
+    await expect(run).rejects.toMatchObject({ status: 404 });
+
+    const { calls } = await runSync(repos.map(empty), { cursor: first.at(-1)?.cursor, repos });
+
+    // a, vide, a quand même gardé sa place : il passe en dernier, b et c d'abord.
+    expect(calls.map((call) => call.url.replace(/\?.*$/, ''))).toEqual([
+      `${API}/repos/acme/b/issues`,
+      `${API}/repos/acme/c/issues`,
+      `${API}/repos/acme/a/issues`,
+    ]);
+    expect(sinceOf(calls[2]?.url)).toBe('2026-09-14T23:59:59Z');
   });
 });
 
@@ -647,7 +679,7 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
       siteOnly,
     );
 
-    expect(pages).toEqual([]);
+    expect(itemsOf(pages)).toEqual([]);
     expect(calls).toHaveLength(2);
   });
 

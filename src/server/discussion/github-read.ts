@@ -4,7 +4,7 @@ import type { ChangedFile, GithubClient } from '@/server/connectors/github/clien
 import { REPO_PATTERN } from '@/server/connectors/github/connector';
 import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http';
 import type { AgentTool } from '@/server/llm/llm';
-import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
+import { DATA_GUARD_LINE, escapeData } from '@/server/llm/prompt-guard';
 import { COMMIT_SHA, isBranchName, myGithubConnections, openGithub } from './github-live';
 import {
   type GithubToolDeps,
@@ -99,16 +99,16 @@ function inputProblem({ depot, quoi, ref, chemin, numero }: Input): string | nul
   return null;
 }
 
-// Le texte qui tient dans le budget de lecture ; le reste est compté, jamais tu.
-function withinBudget(text: string, budget: { chars: number }): string {
+// Le texte qui tient dans le budget de lecture, et ce qui en reste ; le reste est compté, jamais tu.
+function withinBudget(text: string, budget: { chars: number }): { shown: string; cut: number } {
   if (text.length <= budget.chars) {
     budget.chars -= text.length;
-    return text;
+    return { shown: text, cut: 0 };
   }
   // Sans la moitié d'un émoji coupé en deux.
   const shown = text.slice(0, Math.max(0, budget.chars)).replace(/[\ud800-\udbff]$/, '');
   budget.chars -= shown.length;
-  return `${shown}\nTexte coupé : ${text.length - shown.length} caractères non affichés (budget de lecture atteint).`;
+  return { shown, cut: text.length - shown.length };
 }
 
 const firstLine = (text: string) => text.split('\n')[0] ?? '';
@@ -127,9 +127,21 @@ async function read(
 ): Promise<string> {
   const { quoi, chemin } = input;
   const ref = input.ref ?? undefined;
-  // Ce que GitHub rend (withinBudget) puis nos notes : une liste partielle le dit toujours.
-  const answer = (lines: string[], notes: string[] = []) =>
-    [DATA_GUARD_LINE, withinBudget(lines.join('\n'), budget), ...notes].join('\n');
+  // Ce que GitHub rend, entre balises <github> et échappé comme les sources des autres outils (render.ts) : un
+  // fichier ou un ticket ne peut ni fermer la balise ni se faire passer pour une note. Nos notes viennent après.
+  const answer = (lines: string[], notes: string[] = []) => {
+    const { shown, cut } = withinBudget(lines.join('\n'), budget);
+    return [
+      DATA_GUARD_LINE,
+      '<github>',
+      escapeData(shown),
+      '</github>',
+      ...(cut > 0
+        ? [`Texte coupé : ${cut} caractères non affichés (budget de lecture atteint).`]
+        : []),
+      ...notes,
+    ].join('\n');
+  };
 
   switch (quoi) {
     case 'branches': {

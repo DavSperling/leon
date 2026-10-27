@@ -181,7 +181,7 @@ export async function refreshTokens(
 // `expiresAt` nul (Notion, ClickUp…) : jamais renouvelé, sauf `force` (accès refusé en cours de passage).
 export async function ensureFreshTokens(
   ctx: TenantContext,
-  connection: LoadedConnection,
+  connection: Pick<LoadedConnection, 'id' | 'provider' | 'config'>,
   connector: AnyConnector,
   deps: { fetchImpl?: typeof fetch; now?: () => Date; force?: boolean },
 ): Promise<Record<string, unknown>> {

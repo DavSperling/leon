@@ -77,6 +77,12 @@ const bearerOf = (config: Config): string =>
 const reposToRead = (github: GithubClient, config: Config): Promise<string[]> =>
   config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos();
 
+// Les mêmes dépôts, lus en direct pour l'outil de la discussion (la configuration enregistrée, telle quelle).
+export const readableRepos = (config: Record<string, unknown>, http: ConnectorHttp) => {
+  const parsed = ConfigSchema.parse(config);
+  return reposToRead(githubClient(bearerOf(parsed), http), parsed);
+};
+
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
 const CursorSchema = z.record(
   z.string(),

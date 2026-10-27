@@ -247,6 +247,7 @@
       "chercher": "Leon is searching memory…",
       "lire": "Leon is reading a source…",
       "activite": "Leon is checking recent activity…",
+      "depots_github": "Leon is checking GitHub…",
       "autre": "Leon is working…"
     }
   },

@@ -148,7 +148,12 @@ describe('replyStream', () => {
     expect(llm.calls[0]).toMatchObject({ step: 'discussion', system: DISCUSSION_SYSTEM });
     const request = runAgent.mock.calls[0]?.[0];
     expect(request?.maxSteps).toBe(DISCUSSION_MAX_STEPS);
-    expect(request?.tools.map((tool) => tool.name)).toEqual(['chercher', 'lire', 'activite']);
+    expect(request?.tools.map((tool) => tool.name)).toEqual([
+      'chercher',
+      'lire',
+      'activite',
+      'depots_github',
+    ]);
   });
 
   it('s’arrête après 8 appels d’outils sur 20 demandés : fin « limite », note gardée', async () => {

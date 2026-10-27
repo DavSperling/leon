@@ -1,5 +1,4 @@
 import type { OAuthSpec } from '../types';
-import { githubClient } from './client';
 
 // Le bouton « Se connecter avec GitHub » : une GitHub App (pas une appli OAuth, dont le droit `repo`
 // donnerait l'écriture sur tous les dépôts privés). Ses permissions sont celles de l'appli, réglées
@@ -52,18 +51,17 @@ export const githubOAuth: OAuthSpec = {
   // « Forces the account picker to appear if set to select_account » (page du jeton utilisateur, plus haut).
   extraAuthorizeParams: { prompt: 'select_account' },
 
-  // Branché sans aucun dépôt ouvert : on enchaîne sur l'écran d'installation de l'appli, où
-  // l'utilisateur choisit ses dépôts ; GitHub le renvoie ensuite à la « Setup URL » de l'appli (la page
-  // Connexions de Leon). Le nom court de l'appli (github.com/apps/<nom>) n'est pas dans la réponse de
-  // GitHub : on le règle. Sans lui, on revient à Leon et l'utilisateur installe l'appli lui-même.
-  async nextStep(config, http) {
+  // Après chaque branchement, on enchaîne sur l'écran d'installation de l'appli, où l'utilisateur
+  // choisit ses dépôts (ou règle une installation existante) ; GitHub le renvoie ensuite à la « Setup
+  // URL » de l'appli (la page Connexions de Leon). Toujours, et pas seulement sans dépôt visible : un
+  // collaborateur voit déjà les dépôts de l'installation d'un autre, et ne se voyait jamais proposer
+  // les siens. Le nom court de l'appli (github.com/apps/<nom>) n'est pas dans la réponse de GitHub : on
+  // le règle. Sans lui, on revient à Leon et l'utilisateur installe l'appli lui-même.
+  async nextStep(config) {
     const slug = process.env.LEON_OAUTH_GITHUB_APP?.trim();
-    const { accessToken, repos } = config;
+    const { repos } = config;
     if (!slug || (Array.isArray(repos) && repos.length > 0)) return null;
-    const installed = await githubClient(String(accessToken ?? ''), http).installedRepos(1);
-    return installed.length > 0
-      ? null
-      : `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
+    return `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
   },
 
   // Rien à demander avant le clic : les dépôts sont ceux où l'utilisateur installe l'appli sur

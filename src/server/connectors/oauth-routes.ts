@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { type Context, Hono } from 'hono';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
@@ -12,7 +12,12 @@ import { env } from '@/server/env';
 import { logError } from '@/server/log';
 import { accountLabel, sameAccountKey } from './account-label';
 import { listCatalog } from './catalog';
-import { createConnection, listConnections, saveOAuthTokens } from './connections';
+import {
+  createConnection,
+  listConnections,
+  readConnectionSecrets,
+  saveOAuthTokens,
+} from './connections';
 import { connectorsKey } from './crypto';
 import {
   ConnectorAuthError,
@@ -42,7 +47,7 @@ import {
   connectorHttp,
   createConnectLink,
   findAccount,
-  forgetPipedreamUser,
+  forgetPipedreamAccount,
   PIPEDREAM_SECRET_FIELDS,
   PipedreamConfigSchema,
   type PipedreamEnv,
@@ -194,8 +199,9 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
   return c.redirect(authorizeUrl(spec, client, pending), 303);
 }
 
-// Pipedream : un utilisateur Pipedream neuf par branchement (et par reconnexion), un lien de connexion
-// limité à l'appli de l'outil, puis le retour sur `/pipedream/retour` avec le `state` du cookie.
+// Pipedream : l'utilisateur Pipedream de la personne (Pipedream facture chaque utilisateur, pas chaque
+// compte), un lien de connexion limité à l'appli de l'outil, puis le retour sur `/pipedream/retour`
+// avec le `state` du cookie.
 async function pipedreamStart(
   c: Context,
   deps: OAuthRoutesDeps,
@@ -226,7 +232,7 @@ async function pipedreamStart(
     preFields: {},
     reconnectId: stored?.id ?? null,
     createdAt: (deps.now ?? Date.now)(),
-    pipedreamUser: `leon-${randomUUID()}`,
+    pipedreamUser: `leon-${ctx.userId}`,
   };
   const success = new URL(`${OAUTH_COOKIE_PATH}/pipedream/retour`, env.BETTER_AUTH_URL);
   success.searchParams.set('state', pending.state);
@@ -379,8 +385,8 @@ async function connect(
   return (await spec.nextStep?.(config, http).catch(() => null)) ?? null;
 }
 
-// Le compte branché chez Pipedream, vérifié auprès de l'outil, puis la connexion créée (ou reconnectée,
-// avec le même compte : l'ancien utilisateur Pipedream est alors oublié).
+// Le compte branché chez Pipedream. Créé par ce branchement mais pas gardé (refus, autre adresse…) :
+// retiré, Pipedream n'a pas à garder l'accès à une boîte dont Leon ne se sert pas.
 async function connectPipedream(
   ctx: TenantContext,
   deps: OAuthRoutesDeps,
@@ -389,18 +395,32 @@ async function connectPipedream(
   pending: OAuthPending,
   externalUserId: string,
 ): Promise<void> {
+  const app = connector.pipedream?.app ?? '';
+  const account = await findAccount(pd, externalUserId, app, pending.createdAt, deps.fetchImpl);
+  if (!account) throw new ConnectorAuthError(PROVIDER_LABELS[pending.provider]);
+  try {
+    await keepPipedreamAccount(ctx, deps, connector, pending, externalUserId, account.id);
+  } catch (error) {
+    if (account.fresh) await forgetPipedreamAccount(account.id, deps.fetchImpl);
+    throw error;
+  }
+}
+
+// Le compte vérifié auprès de l'outil, puis la connexion créée, ou reconnectée avec le même compte de
+// l'outil : l'ancien compte Pipedream, s'il a changé, est alors retiré.
+async function keepPipedreamAccount(
+  ctx: TenantContext,
+  deps: OAuthRoutesDeps,
+  connector: AnyConnector,
+  pending: OAuthPending,
+  externalUserId: string,
+  accountId: string,
+): Promise<void> {
   const { provider } = pending;
-  const account = await findAccount(
-    pd,
-    externalUserId,
-    connector.pipedream?.app ?? '',
-    deps.fetchImpl,
-  );
-  if (!account) throw new ConnectorAuthError(PROVIDER_LABELS[provider]);
   const parsed = PipedreamConfigSchema.safeParse({
     authMode: 'pipedream',
     externalUserId,
-    accountId: account.id,
+    accountId,
   });
   if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration refusée');
   const config = parsed.data;
@@ -413,12 +433,13 @@ async function connectPipedream(
     const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
     if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
     if (!sameAccount(stored, provider, verified, config, {})) throw new OtherAccount();
+    const previous = await readConnectionSecrets(ctx, pending.reconnectId);
     // Les champs ouverts sont réécrits en entier, comme après un « Reconnecter » OAuth.
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
-    if (stored.config.externalUserId !== externalUserId)
-      await forgetPipedreamUser(stored.config.externalUserId, deps.fetchImpl);
+    if (previous?.accountId !== accountId)
+      await forgetPipedreamAccount(previous?.accountId, deps.fetchImpl);
     return;
   }
   await createConnection(ctx, {
@@ -519,8 +540,6 @@ async function pipedreamReturnHandler(c: Context, deps: OAuthRoutesDeps): Promis
   const outcome = await finishPipedream(c, deps, pending);
   const provider = pending?.provider ?? null;
   if (typeof outcome === 'object') return c.redirect(connexions({ branche: provider ?? '' }), 302);
-  // Pas branché : l'utilisateur Pipedream de cet essai ne sert plus.
-  await forgetPipedreamUser(pending?.pipedreamUser, deps.fetchImpl);
   return c.redirect(connexions({ erreur: outcome, ...(provider ? { outil: provider } : {}) }), 302);
 }
 

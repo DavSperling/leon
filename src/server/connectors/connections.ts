@@ -302,6 +302,26 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
 }
 
 // Les sources déjà captées restent : leur `connection_id` passe à nul (clé étrangère).
+// Les champs secrets d'une connexion que l'on peut gérer, déchiffrés : seulement pour retirer chez
+// Pipedream le compte d'une connexion supprimée ou reconnectée. Absente ou illisible : null.
+export async function readConnectionSecrets(
+  ctx: TenantContext,
+  id: string,
+): Promise<Record<string, unknown> | null> {
+  const [row] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ secret: connections.secret })
+      .from(connections)
+      .where(and(eq(connections.id, id), manageable(ctx))),
+  );
+  if (!row) return null;
+  try {
+    return parseSecrets(decryptSecret(row.secret, aadOf(ctx.tenantId, id)));
+  } catch {
+    return null;
+  }
+}
+
 export async function deleteConnection(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
     tx

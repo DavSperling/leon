@@ -814,10 +814,18 @@ describe('Pipedream : Gmail par le bouton', () => {
     url: `${CONNECT}/tokens`,
     json: { connect_link_url: 'https://pipedream.com/_static/connect.html?token=ctok' },
   });
-  const accounts = (ids: string[]): FakeRoute => ({
+  // Par défaut, des comptes que Pipedream vient de créer.
+  const accounts = (ids: string[], created = new Date().toISOString()): FakeRoute => ({
     url: /\/v1\/connect\/proj_essai\/accounts\?external_user_id=leon-/,
     json: {
-      data: ids.map((id) => ({ id, healthy: true, dead: false, app: { name_slug: 'gmail' } })),
+      data: ids.map((id) => ({
+        id,
+        healthy: true,
+        dead: false,
+        created_at: created,
+        updated_at: created,
+        app: { name_slug: 'gmail' },
+      })),
     },
   });
   const profile = (email = 'David@Acme.test'): FakeRoute => ({
@@ -826,7 +834,7 @@ describe('Pipedream : Gmail par le bouton', () => {
   });
   const removal = (): FakeRoute => ({
     method: 'DELETE',
-    url: /\/users\/leon-[^/?]+$/,
+    url: /\/accounts\/apn_[^/?]+$/,
     status: 204,
   });
 
@@ -860,7 +868,7 @@ describe('Pipedream : Gmail par le bouton', () => {
     return { ...made, go, response };
   }
 
-  it('renvoie chez Pipedream, limité à Gmail, avec un utilisateur Pipedream neuf', async () => {
+  it('renvoie chez Pipedream, limité à Gmail, avec l’utilisateur Pipedream de la personne', async () => {
     const paul = await signUp();
     const { app, fetchImpl } = makeApp({ routes: [pdToken(), link()], connector: gmailConnector });
 
@@ -872,7 +880,7 @@ describe('Pipedream : Gmail par le bouton', () => {
     expect(target.searchParams.get('app')).toBe('gmail');
     expect(oauthCookieOf(go)).toBeDefined();
     const body = linkBody(fetchImpl);
-    expect(body?.external_user_id).toMatch(/^leon-[0-9a-f-]{36}$/);
+    expect(body?.external_user_id).toBe(`leon-${paul.ctx.userId}`);
     expect(body?.success_redirect_uri).toBe(
       `${ORIGIN}${BASE}/pipedream/retour?state=${encodeURIComponent(pdState(fetchImpl))}`,
     );
@@ -905,12 +913,9 @@ describe('Pipedream : Gmail par le bouton', () => {
     expect(loaded?.config.accountId).toBe('apn_gm1');
   });
 
-  it('« annule » au retour d’un refus, sans connexion, et Pipedream oublie l’utilisateur', async () => {
+  it('« annule » au retour d’un refus, sans connexion ni rien retirer chez Pipedream', async () => {
     const paul = await signUp();
-    const { app, fetchImpl } = makeApp({
-      routes: [pdToken(), link(), removal()],
-      connector: gmailConnector,
-    });
+    const { app, fetchImpl } = makeApp({ routes: [pdToken(), link()], connector: gmailConnector });
     const go = await start(app, paul, { since: '30' }, {}, 'gmail');
 
     const response = await back(
@@ -923,16 +928,12 @@ describe('Pipedream : Gmail par le bouton', () => {
 
     expect(location(response)).toBe('/connexions?erreur=annule&outil=gmail');
     expect(await connectionsOf(paul.ctx.tenantId)).toEqual([]);
-    const user = linkBody(fetchImpl)?.external_user_id;
-    expect(fetchImpl.calls.at(-1)).toMatchObject({
-      method: 'DELETE',
-      url: `${CONNECT}/users/${user}`,
-    });
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'POST']);
   });
 
   it('« refuse » quand aucun compte n’a été branché chez Pipedream', async () => {
     const paul = await signUp();
-    const { response } = await connectGmail(paul, [accounts([]), removal()]);
+    const { response } = await connectGmail(paul, [accounts([])]);
 
     expect(location(response)).toBe('/connexions?erreur=refuse&outil=gmail');
     expect(await connectionsOf(paul.ctx.tenantId)).toEqual([]);
@@ -940,16 +941,13 @@ describe('Pipedream : Gmail par le bouton', () => {
 
   it('« expire » quand le state ne correspond pas, sans rien demander à Pipedream de plus', async () => {
     const paul = await signUp();
-    const { app, fetchImpl } = makeApp({
-      routes: [pdToken(), link(), removal()],
-      connector: gmailConnector,
-    });
+    const { app, fetchImpl } = makeApp({ routes: [pdToken(), link()], connector: gmailConnector });
     const go = await start(app, paul, { since: '30' }, {}, 'gmail');
 
     const response = await back(app, paul, { state: 'autre' }, oauthCookieOf(go), 'pipedream');
 
     expect(location(response)).toBe('/connexions?erreur=expire&outil=gmail');
-    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'POST', 'DELETE']);
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'POST']);
   });
 
   it('répond 404 quand Pipedream n’est pas configuré sur le serveur', async () => {
@@ -960,11 +958,10 @@ describe('Pipedream : Gmail par le bouton', () => {
     expect((await start(app, paul, { since: '30' }, {}, 'gmail')).status).toBe(404);
   });
 
-  it('« Reconnecter » garde la connexion, prend le nouveau compte et oublie l’ancien utilisateur', async () => {
+  it('« Reconnecter » garde la connexion et l’utilisateur, prend le nouveau compte et retire l’ancien', async () => {
     const paul = await signUp();
     const first = await connectGmail(paul, [accounts(['apn_old1']), profile()]);
     const id = (await connectionsOf(paul.ctx.tenantId))[0]?.id ?? '';
-    const oldUser = linkBody(first.fetchImpl)?.external_user_id;
 
     const again = await connectGmail(
       paul,
@@ -977,12 +974,29 @@ describe('Pipedream : Gmail par le bouton', () => {
     const loaded = await claimConnection(paul.ctx, id);
     expect(loaded?.config).toMatchObject({
       accountId: 'apn_new2',
-      externalUserId: linkBody(again.fetchImpl)?.external_user_id,
+      externalUserId: linkBody(first.fetchImpl)?.external_user_id,
     });
+    expect(linkBody(again.fetchImpl)?.external_user_id).toBe(`leon-${paul.ctx.userId}`);
     expect(again.fetchImpl.calls.at(-1)).toMatchObject({
       method: 'DELETE',
-      url: `${CONNECT}/users/${oldUser}`,
+      url: `${CONNECT}/accounts/apn_old1`,
     });
+  });
+
+  it('« Reconnecter » sur le même compte Pipedream, autorisé à nouveau, ne retire rien', async () => {
+    const paul = await signUp();
+    await connectGmail(paul, [accounts(['apn_old1']), profile()]);
+    const id = (await connectionsOf(paul.ctx.tenantId))[0]?.id ?? '';
+
+    const again = await connectGmail(
+      paul,
+      [accounts(['apn_old1'], '2026-10-20T10:00:00Z'), profile('david@acme.test')],
+      { reconnect: id, since: '30' } as { since: string },
+    );
+
+    expect(location(again.response)).toBe('/connexions?branche=gmail');
+    expect((await claimConnection(paul.ctx, id))?.config.accountId).toBe('apn_old1');
+    expect(again.fetchImpl.calls.some((call) => call.method === 'DELETE')).toBe(false);
   });
 
   it('« autre_compte » quand la reconnexion rend une autre adresse', async () => {
@@ -999,5 +1013,10 @@ describe('Pipedream : Gmail par le bouton', () => {
     expect(location(again.response)).toBe('/connexions?erreur=autre_compte&outil=gmail');
     const loaded = await claimConnection(paul.ctx, id);
     expect(loaded?.config.accountId).toBe('apn_old1');
+    // Le compte créé pour rien est retiré ; l'ancien reste, la connexion s'en sert encore.
+    expect(again.fetchImpl.calls.at(-1)).toMatchObject({
+      method: 'DELETE',
+      url: `${CONNECT}/accounts/apn_new2`,
+    });
   });
 });

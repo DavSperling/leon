@@ -7,7 +7,7 @@ import { ConnectorHttpError } from './http';
 import {
   connectorHttp,
   createConnectLink,
-  deleteExternalUser,
+  deleteAccount,
   findAccount,
   forgetPipedreamToken,
   type PipedreamEnv,
@@ -144,71 +144,73 @@ describe('createConnectLink', () => {
 });
 
 describe('findAccount', () => {
+  const STARTED = Date.parse('2026-10-25T10:00:00Z');
   const accounts = (data: unknown[]): FakeRoute => ({
     url: `${CONNECT}/accounts`,
     json: { data },
   });
+  const gmail = (id: string, created: string, updated = created, healthy = true) => ({
+    id,
+    healthy,
+    dead: !healthy,
+    created_at: created,
+    updated_at: updated,
+    app: { name_slug: 'gmail' },
+  });
 
-  it('rend le compte sain le plus récent de l’appli', async () => {
+  it('prend le compte sain créé pendant le branchement, à une minute d’horloge près', async () => {
     const fetchImpl = fakeFetch([
       token('pd-1'),
       accounts([
-        {
-          id: 'apn_old',
-          healthy: true,
-          dead: false,
-          created_at: '2026-10-20T10:00:00Z',
-          app: { name_slug: 'gmail' },
-        },
-        {
-          id: 'apn_dead',
-          healthy: false,
-          dead: true,
-          created_at: '2026-10-25T10:00:00Z',
-          app: { name_slug: 'gmail' },
-        },
-        {
-          id: 'apn_new',
-          healthy: true,
-          dead: false,
-          created_at: '2026-10-24T10:00:00Z',
-          app: { name_slug: 'gmail' },
-          authorized_scopes: ['s'],
-        },
-        {
-          id: 'apn_slack',
-          healthy: true,
-          created_at: '2026-10-25T11:00:00Z',
-          app: { name_slug: 'slack_v2' },
-        },
+        // Un autre compte Gmail de la personne, dont Pipedream vient de renouveler le jeton.
+        gmail('apn_old', '2026-10-20T10:00:00Z', '2026-10-25T10:05:00Z'),
+        gmail('apn_dead', '2026-10-25T10:02:00Z', '2026-10-25T10:02:00Z', false),
+        { ...gmail('apn_new', '2026-10-25T09:59:30Z'), authorized_scopes: ['s'] },
+        { ...gmail('apn_slack', '2026-10-25T10:03:00Z'), app: { name_slug: 'slack_v2' } },
       ]),
     ]);
 
-    expect(await findAccount(ENV, 'leon-u1', 'gmail', fetchImpl)).toEqual({
+    expect(await findAccount(ENV, 'leon-u1', 'gmail', STARTED, fetchImpl)).toEqual({
       id: 'apn_new',
       scopes: ['s'],
+      fresh: true,
     });
     const query = new URL(fetchImpl.calls[1]?.url ?? '').searchParams;
     expect(query.get('external_user_id')).toBe('leon-u1');
     expect(query.get('app')).toBe('gmail');
   });
 
+  it('sans compte neuf, prend le dernier mis à jour (un compte autorisé à nouveau)', async () => {
+    const fetchImpl = fakeFetch([
+      token('pd-1'),
+      accounts([
+        gmail('apn_a', '2026-10-20T10:00:00Z', '2026-10-24T10:00:00Z'),
+        gmail('apn_b', '2026-10-21T10:00:00Z', '2026-10-25T10:01:00Z'),
+      ]),
+    ]);
+
+    expect(await findAccount(ENV, 'leon-u1', 'gmail', STARTED, fetchImpl)).toMatchObject({
+      id: 'apn_b',
+      fresh: false,
+    });
+  });
+
   it('rend null sans compte', async () => {
     const empty = fakeFetch([token('pd-1'), accounts([])]);
-    expect(await findAccount(ENV, 'leon-u1', 'gmail', empty)).toBeNull();
+    expect(await findAccount(ENV, 'leon-u1', 'gmail', STARTED, empty)).toBeNull();
   });
 });
 
-describe('deleteExternalUser', () => {
-  it('supprime l’utilisateur, et accepte qu’il soit déjà absent', async () => {
+describe('deleteAccount', () => {
+  it('retire le compte seul, et accepte qu’il soit déjà absent', async () => {
     const fetchImpl = fakeFetch([
       token('pd-1'),
-      { method: 'DELETE', url: `${CONNECT}/users/leon-u1`, status: 204 },
-      { method: 'DELETE', url: `${CONNECT}/users/leon-u1`, status: 404 },
+      { method: 'DELETE', url: `${CONNECT}/accounts/apn_abc123`, status: 204 },
+      { method: 'DELETE', url: `${CONNECT}/accounts/apn_abc123`, status: 404 },
     ]);
 
-    await deleteExternalUser(ENV, 'leon-u1', fetchImpl);
-    await deleteExternalUser(ENV, 'leon-u1', fetchImpl);
+    await deleteAccount(ENV, 'apn_abc123', fetchImpl);
+    await deleteAccount(ENV, 'apn_abc123', fetchImpl);
 
     expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'DELETE', 'DELETE']);
   });
@@ -216,9 +218,9 @@ describe('deleteExternalUser', () => {
   it('remonte une autre erreur', async () => {
     const fetchImpl = fakeFetch([
       token('pd-1'),
-      { method: 'DELETE', url: `${CONNECT}/users/leon-u1`, status: 500 },
+      { method: 'DELETE', url: `${CONNECT}/accounts/apn_abc123`, status: 500 },
     ]);
-    await expect(deleteExternalUser(ENV, 'leon-u1', fetchImpl)).rejects.toThrow(
+    await expect(deleteAccount(ENV, 'apn_abc123', fetchImpl)).rejects.toThrow(
       'Pipedream injoignable',
     );
   });

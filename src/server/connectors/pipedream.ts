@@ -4,20 +4,21 @@ import { logError } from '@/server/log';
 import { type ConnectorHttp, ConnectorHttpError, createConnectorHttp } from './http';
 import type { AnyConnector } from './types';
 
-// Pipedream Connect : son appli OAuth, déjà validée chez Google et Slack, et son proxy. Leon garde, par
-// connexion, un utilisateur Pipedream à lui (`externalUserId`, un par connexion) et le compte qu'il a
-// branché (`accountId`) ; les jetons de l'outil restent chez Pipedream, qui les ajoute aux requêtes.
+// Pipedream Connect : son appli OAuth, déjà validée chez Google et Slack, et son proxy. Leon garde un
+// utilisateur Pipedream par personne (`externalUserId`) et, par connexion, le compte branché
+// (`accountId`) ; les jetons de l'outil restent chez Pipedream, qui les ajoute aux requêtes.
 // Étude et essai réel : docs/etudes/pipedream-2026-10. Doc lue le 25/10/2026 :
 //   https://pipedream.com/docs/connect/api-proxy (adresse en base64url, 30 s au plus, en-têtes restreints)
 //   https://pipedream.com/docs/connect/api-reference/create-connect-token (success_redirect_uri…)
 //   https://pipedream.com/docs/connect/api-reference/list-accounts-for-external-user
-//   https://pipedream.com/docs/connect/api-reference/delete-external-user
+//   https://pipedream.com/pricing (chaque utilisateur distinct est facturé, quel que soit son nombre de comptes)
 //   https://pipedream.com/docs/rest-api/auth (jeton serveur par client_credentials, valable 1 h)
 // Chaque requête au proxy coûte 1 crédit (vérifié : un lot Gmail de 100 mails = 1 crédit).
 
 const API = 'https://api.pipedream.com';
 const TIMEOUT_MS = 30_000;
 const TOKEN_MARGIN_MS = 60_000;
+const CLOCK_MARGIN_MS = 60_000; // l'horloge de Pipedream contre la nôtre
 
 // Les champs chiffrés d'une connexion Pipedream : le compte branché ne sert qu'avec nos identifiants
 // Pipedream, mais il ouvre la boîte mail : il ne reste pas lisible en base.
@@ -153,20 +154,27 @@ const AccountsSchema = z.object({
       healthy: z.boolean().nullish(),
       dead: z.boolean().nullish(),
       created_at: z.string().nullish(),
+      updated_at: z.string().nullish(),
       authorized_scopes: z.array(z.string()).nullish(),
       app: z.object({ name_slug: z.string() }).nullish(),
     }),
   ),
 });
 
-export type PipedreamAccount = { id: string; scopes: string[] | null };
+// `fresh` : créé pendant ce branchement, donc encore utilisé par aucune connexion.
+export type PipedreamAccount = { id: string; scopes: string[] | null; fresh: boolean };
 
-// Le dernier compte de l'appli branché par cet utilisateur Pipedream, s'il est sain. La liste des comptes
-// filtrée par utilisateur : `/users/{id}/accounts` rend un tableau nu et un 404 pour un inconnu (essai du 25/10).
+const time = (value: string | null | undefined) => Date.parse(value ?? '') || 0;
+
+// Le compte de l'appli que la personne vient de brancher, s'il est sain : le dernier créé depuis
+// `startedAt`, sinon le dernier mis à jour (un compte déjà branché, autorisé à nouveau ; la date bouge
+// aussi quand Pipedream renouvelle un jeton, d'où la préférence pour un compte neuf). La liste filtrée
+// par utilisateur : `/users/{id}/accounts` rend un tableau nu et un 404 pour un inconnu (essai du 25/10).
 export async function findAccount(
   env: PipedreamEnv,
   externalUserId: string,
   app: string,
+  startedAt: number,
   fetchImpl: Fetch = fetch,
 ): Promise<PipedreamAccount | null> {
   const query = new URLSearchParams({ external_user_id: externalUserId, app });
@@ -176,36 +184,45 @@ export async function findAccount(
   if (!parsed.success) throw unavailable(response.status);
   const usable = parsed.data.data
     .filter((account) => !account.dead && account.healthy !== false)
-    .filter((account) => !account.app || account.app.name_slug === app)
-    .sort((a, b) => Date.parse(b.created_at ?? '') - Date.parse(a.created_at ?? ''));
-  const [newest] = usable;
-  return newest ? { id: newest.id, scopes: newest.authorized_scopes ?? null } : null;
+    .filter((account) => !account.app || account.app.name_slug === app);
+  const created = usable
+    .filter((account) => time(account.created_at) >= startedAt - CLOCK_MARGIN_MS)
+    .sort((a, b) => time(b.created_at) - time(a.created_at));
+  const updated = usable.sort((a, b) => time(b.updated_at) - time(a.updated_at));
+  const account = created[0] ?? updated[0];
+  if (!account) return null;
+  return {
+    id: account.id,
+    scopes: account.authorized_scopes ?? null,
+    fresh: account === created[0],
+  };
 }
 
-// Retire l'utilisateur Pipedream et ses comptes : Pipedream oublie les jetons. Déjà absent : rien à faire.
-export async function deleteExternalUser(
+// Retire un compte : Pipedream oublie ses jetons. L'utilisateur, celui de la personne, peut en porter
+// d'autres. Déjà absent : rien à faire (DELETE /accounts/{id} rend 204, essai du 25/10).
+export async function deleteAccount(
   env: PipedreamEnv,
-  externalUserId: string,
+  accountId: string,
   fetchImpl: Fetch = fetch,
 ): Promise<void> {
-  const path = `/users/${encodeURIComponent(externalUserId)}`;
+  const path = `/accounts/${encodeURIComponent(accountId)}`;
   const response = await api(env, fetchImpl, path, { method: 'DELETE' });
   if (!response.ok && response.status !== 404) throw unavailable(response.status);
 }
 
-// Après une suppression, un échec ou une reconnexion : l'utilisateur Pipedream n'a plus d'usage. Pipedream
+// Après une suppression, une reconnexion ou un échec : le compte n'a plus d'usage. Pipedream
 // injoignable n'empêche rien (journalisé) : le compte reste chez lui, sans connexion qui s'en serve.
 // shortcut: restent aussi chez Pipedream les comptes d'un retour jamais revenu (cookie expiré, deux
-// onglets) et ceux d'un membre ou d'un espace supprimé (cascade SQL) ; un balayage périodique des
-// utilisateurs `leon-` sans connexion, avant la production.
-export async function forgetPipedreamUser(
-  externalUserId: unknown,
+// onglets), ceux d'un membre ou d'un espace supprimé (cascade SQL), et les utilisateurs restés sans
+// compte ; un balayage périodique des comptes et utilisateurs sans connexion, avant la production.
+export async function forgetPipedreamAccount(
+  accountId: unknown,
   fetchImpl: Fetch = fetch,
 ): Promise<void> {
   const env = pipedreamEnv();
-  if (!env || typeof externalUserId !== 'string' || externalUserId === '') return;
+  if (!env || typeof accountId !== 'string' || accountId === '') return;
   try {
-    await deleteExternalUser(env, externalUserId, fetchImpl);
+    await deleteAccount(env, accountId, fetchImpl);
   } catch (error) {
     logError('connector.pipedream_cleanup_failed', error);
   }

@@ -19,6 +19,7 @@ import {
   createConnection,
   deleteConnection,
   listConnections,
+  readConnectionSecrets,
   replaceConnectionSecret,
   requestSyncNow,
   setConnectionPaused,
@@ -29,7 +30,7 @@ import {
   ConnectorHttpError,
   createConnectorHttp,
 } from '@/server/connectors/http';
-import { forgetPipedreamUser } from '@/server/connectors/pipedream';
+import { forgetPipedreamAccount } from '@/server/connectors/pipedream';
 import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import { logError } from '@/server/log';
@@ -198,13 +199,15 @@ export async function setPausedAction(id: string, paused: boolean): Promise<{ ok
   return manage(id, (ctx, uuid) => setConnectionPaused(ctx, uuid, paused === true));
 }
 
-// Une connexion Pipedream supprimée : Pipedream oublie aussi le compte et ses jetons.
+// Une connexion Pipedream supprimée : Pipedream oublie aussi son compte et ses jetons (le compte est
+// dans le bloc chiffré, relu avant la suppression).
 export async function deleteConnectionAction(id: string): Promise<{ ok: boolean }> {
   return manage(id, async (ctx, uuid) => {
     const stored = (await listConnections(ctx)).find((view) => view.id === uuid);
+    const secrets =
+      stored?.config.authMode === 'pipedream' ? await readConnectionSecrets(ctx, uuid) : null;
     const deleted = await deleteConnection(ctx, uuid);
-    if (deleted && stored?.config.authMode === 'pipedream')
-      await forgetPipedreamUser(stored.config.externalUserId);
+    if (deleted) await forgetPipedreamAccount(secrets?.accountId);
     return deleted;
   });
 }

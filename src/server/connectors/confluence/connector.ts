@@ -95,7 +95,7 @@ export const confluenceConnector: Connector<Config> = {
       ? { accountKey: `${me.accountId}:${config.cloudId ?? config.site}` }
       : {};
     if (config.authMode === 'oauth') return { account: oauthAccount(config), ...key };
-    const name = me.displayName?.trim() || me.publicName?.trim() || 'Compte Atlassian';
+    const name = me.displayName?.trim() || me.publicName?.trim() || 'Atlassian account';
     return { account: `${name} (${config.site})`, ...key };
   },
 

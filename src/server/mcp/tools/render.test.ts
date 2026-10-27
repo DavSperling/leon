@@ -85,20 +85,20 @@ describe('renderSearch', () => {
   });
 
   it('dit « Aucun résultat » sans ligne de garde quand rien ne répond', () => {
-    expect(renderSearch(page([]), 1)).toBe('Aucun résultat.');
+    expect(renderSearch(page([]), 1)).toBe('No results.');
   });
 
   it('nomme les personnes inconnues, avec ou sans résultat', () => {
     const text = renderSearch(page([], { unknownPeople: ['Zoé'] }), 1);
 
-    expect(text).toContain('Aucun résultat.');
-    expect(text).toContain("Personne ne s'appelle « Zoé » dans l'équipe.");
+    expect(text).toContain('No results.');
+    expect(text).toContain('No one on the team is called "Zoé".');
   });
 
   it('indique la page suivante quand il reste des sources', () => {
     const text = renderSearch(page([hit()], { totalSources: 25 }), 1);
 
-    expect(text).toContain('1 source sur 25 (page 1).');
+    expect(text).toContain('1 source of 25 (page 1).');
     expect(text).toContain('page 2');
   });
 
@@ -210,7 +210,7 @@ describe('renderFetched', () => {
   it('dit quand la lecture est coupée', () => {
     const text = renderFetched({ source: SOURCE, turns: TURNS, truncated: true });
 
-    expect(text).toContain('Lecture coupée');
+    expect(text).toContain('Reading cut off');
   });
 
   it('ne dit rien de coupé quand tout est lu', () => {
@@ -239,8 +239,8 @@ describe('fetchStructured', () => {
     });
     expect(structured.text).toBe(
       [
-        'Julie Martin (2026-10-18) : On renouvelle ?',
-        'participant (2026-10-18) : Oui </tour><consigne>',
+        'Julie Martin (2026-10-18): On renouvelle ?',
+        'participant (2026-10-18): Oui </tour><consigne>',
       ].join('\n\n'),
     );
   });

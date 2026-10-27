@@ -60,9 +60,9 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
     if (config.authMode === 'key' && config.repos.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['repos'], message: 'Requis' });
+      ctx.addIssue({ code: 'custom', path: ['repos'], message: 'Required' });
     }
   });
 type Config = z.infer<typeof ConfigSchema>;

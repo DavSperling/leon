@@ -139,7 +139,7 @@ describe('crisp : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('crisp')).toBe(crispConnector);
-    expect(listCatalog().find((item) => item.id === 'crisp')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'crisp')?.available).toBe(true);
   });
 });
 
@@ -185,7 +185,7 @@ describe('crisp : verify', () => {
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
     expect((error as ConnectorHttpError).status).toBe(404);
-    expect((error as Error).message).toBe('Site Crisp introuvable : vérifiez son identifiant');
+    expect((error as Error).message).toBe('Crisp website not found: check its ID');
   });
 });
 
@@ -620,6 +620,6 @@ describe('crisp : erreurs', () => {
     ).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect((error as Error).message).toBe('Réponse inattendue');
+    expect((error as Error).message).toBe('Unexpected response');
   });
 });

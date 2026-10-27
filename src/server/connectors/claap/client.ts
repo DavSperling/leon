@@ -5,7 +5,7 @@ import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../h
 const BASE_URL = 'https://api.claap.io/v1';
 
 // La doc ne donne pas le format des dates : de l'ISO 8601 avec fuseau est supposé. Une autre forme
-// fait lever « Réponse inattendue » plutôt que de décaler les faits dans le temps.
+// fait lever « Unexpected response » plutôt que de décaler les faits dans le temps.
 const date = z.iso.datetime({ offset: true });
 const person = z.object({ name: z.string().nullish(), email: z.string().nullish() });
 

@@ -124,7 +124,7 @@ describe('jira : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('jira')).toBe(jiraConnector);
-    expect(listCatalog().find((item) => item.id === 'jira')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'jira')?.available).toBe(true);
   });
 });
 
@@ -156,7 +156,7 @@ describe('jira : verify', () => {
       const failure = await jiraConnector.verify(config, http).catch((error: unknown) => error);
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
-      expect((failure as Error).message).toBe('Site Jira introuvable : vérifiez le nom du site');
+      expect((failure as Error).message).toBe('Jira site not found: check the site name');
     }
   });
 });
@@ -707,7 +707,7 @@ describe('jira : sync, erreurs', () => {
 
     const failure = await run.catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 
@@ -787,7 +787,7 @@ describe('jira : le bouton, description', () => {
   });
 
   it('fait expliquer le bouton dans le catalogue, en plus de la clé', () => {
-    const entry = listCatalog().find((item) => item.id === 'jira');
+    const entry = listCatalog('fr').find((item) => item.id === 'jira');
 
     expect(entry?.oauthHelp?.trim()).toBeTruthy();
     expect(entry?.keyAccepted ?? true).toBe(true);
@@ -804,7 +804,7 @@ describe('jira : le bouton, verify', () => {
     const result = await jiraConnector.verify(oauthConfig, http);
 
     expect(result).toEqual({
-      account: 'Connecté : acme.atlassian.net, 2 autres sites disponibles',
+      account: 'Connected: acme.atlassian.net, 2 other sites available',
       accountKey: `5b10a2844c20165700ede21g:${CLOUD_ID}`,
     });
     expect(calls).toHaveLength(1);
@@ -823,8 +823,8 @@ describe('jira : le bouton, verify', () => {
     }
 
     expect(accounts).toEqual([
-      'Connecté : acme.atlassian.net, 1 autre site disponible',
-      'Connecté : acme.atlassian.net',
+      'Connected: acme.atlassian.net, 1 other site available',
+      'Connected: acme.atlassian.net',
     ]);
   });
 
@@ -838,7 +838,7 @@ describe('jira : le bouton, verify', () => {
     );
   });
 
-  it('ne reprend pas « site introuvable » pour un 404 de la passerelle', async () => {
+  it('ne reprend pas « Jira site not found » pour un 404 de la passerelle', async () => {
     const { http } = testHttp(jiraConnector, oauthConfig, [
       { url: `${GATEWAY}/rest/api/3/myself`, status: 404 },
     ]);

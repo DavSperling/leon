@@ -128,7 +128,7 @@ describe('helpscout : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('helpscout')).toBe(helpscoutConnector);
-    const entry = listCatalog().find((item) => item.id === 'helpscout');
+    const entry = listCatalog('fr').find((item) => item.id === 'helpscout');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => [field.name, field.kind])).toEqual([
       ['appId', 'text'],
@@ -181,7 +181,7 @@ describe('helpscout : verify', () => {
 
       await expect(helpscoutConnector.verify(config, http)).rejects.toMatchObject({
         name: 'ConnectorAuthError',
-        message: 'Clé refusée par Help Scout',
+        message: 'Help Scout rejected the key',
       });
     },
   );
@@ -205,7 +205,7 @@ describe('helpscout : verify', () => {
     const failure = await helpscoutConnector.verify(config, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 
@@ -588,7 +588,7 @@ describe('helpscout : erreurs', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse illisible');
+    expect((failure as Error).message).toBe('Unreadable response');
   });
 
   it('une conversation sans date de création est une erreur propre, sans le corps', async () => {
@@ -601,6 +601,6 @@ describe('helpscout : erreurs', () => {
     const failure = await runSync([tokenRoute, listRoute(broken)]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });

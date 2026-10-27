@@ -483,7 +483,7 @@ describe('plainConnector : erreurs', () => {
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
     expect((error as ConnectorHttpError).status).toBe(429);
-    expect((error as Error).message).toBe('Limite de requêtes de Plain atteinte');
+    expect((error as Error).message).toBe('Plain rate limit reached');
   });
 
   it('reprend après un 429 puis réussit', async () => {
@@ -498,8 +498,8 @@ describe('plainConnector : erreurs', () => {
 
   it('convertit toute autre erreur en message fixe, sans le texte de l’outil ni la clé', async () => {
     for (const [json, message] of [
-      [errorInternal, 'Plain a répondu 500'],
-      [errorValidation, 'Plain a refusé la requête'],
+      [errorInternal, 'Plain responded with 500'],
+      [errorValidation, 'Plain rejected the request'],
     ] as const) {
       const { pages } = sync([api({ json })]);
 
@@ -515,12 +515,12 @@ describe('plainConnector : erreurs', () => {
   it('refuse une réponse sans données ni erreurs', async () => {
     const { pages } = sync([api({ json: {} })]);
 
-    await expect(pages).rejects.toMatchObject({ message: 'Réponse inattendue' });
+    await expect(pages).rejects.toMatchObject({ message: 'Unexpected response' });
   });
 
   it('refuse une réponse dont les données n’ont pas la forme attendue', async () => {
     const { pages } = sync([api({ json: { data: { threads: { edges: 'rien' } } } })]);
 
-    await expect(pages).rejects.toMatchObject({ message: 'Réponse inattendue' });
+    await expect(pages).rejects.toMatchObject({ message: 'Unexpected response' });
   });
 });

@@ -25,7 +25,7 @@ const NOT_JETON_FIELDS = ['access_token', 'refresh_token', 'id_token'];
 export class OAuthRefusedError extends Error {
   override name = 'OAuthRefusedError';
   constructor(readonly adminConsent = false) {
-    super("Autorisation refusée par l'éditeur");
+    super('Authorization refused by the provider');
   }
 }
 
@@ -122,7 +122,7 @@ async function requestTokens(
     });
     throw new OAuthRefusedError(consent ?? false);
   }
-  if (!data.access_token) throw new ConnectorHttpError(null, 'Réponse inattendue');
+  if (!data.access_token) throw new ConnectorHttpError(null, 'Unexpected response');
   return { ...data, access_token: data.access_token };
 }
 
@@ -197,7 +197,7 @@ export async function ensureFreshTokens(
   const client = oauthClient(oauth.appKey);
   if (!client) {
     const label = PROVIDER_LABELS[connection.provider];
-    throw new ConnectorHttpError(null, `L'appli ${label} n'est plus configurée sur ce serveur.`);
+    throw new ConnectorHttpError(null, `The ${label} app is no longer configured on this server.`);
   }
   if (!isString(config.refreshToken)) throw new OAuthRefusedError();
   const http = tokenHttp(oauth, connection.provider, deps.fetchImpl);

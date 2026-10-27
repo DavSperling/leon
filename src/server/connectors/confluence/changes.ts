@@ -43,7 +43,7 @@ export async function pagesSince(api: Api, mark: Mark): Promise<PageStub[]> {
 // Le repère après avoir lu `done`, qui commence à la plus ancienne page trouvée.
 export function markAfter(done: PageStub[], previous: Mark): string {
   const last = done.at(-1);
-  if (last === undefined) throw new Error('Aucune page lue');
+  if (last === undefined) throw new Error('No page read');
   const at = modifiedAt(last);
   const ids = new Set(previous.at === at ? previous.ids : []);
   for (const stub of done) if (modifiedAt(stub) === at) ids.add(stub.id);

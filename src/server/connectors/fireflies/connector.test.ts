@@ -360,14 +360,14 @@ describe('sync : la liste des réunions', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect(failure.status).toBe(429);
-    expect(failure.message).toBe('Limite de requêtes de Fireflies atteinte');
+    expect(failure.message).toBe('Fireflies rate limit reached');
   });
 
   it('convertit toute autre erreur en refus de Fireflies, sans reprendre son texte', async () => {
     const failure = await runSync([gql(errors.invalid_arguments)]).catch((error) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect(failure.message).toBe('Fireflies a refusé la requête');
+    expect(failure.message).toBe('Fireflies rejected the request');
     expect(failure.message).not.toContain('secret-xyz');
   });
 });
@@ -423,6 +423,6 @@ describe('configuration et catalogue', () => {
 
   it('est enregistré et disponible dans le catalogue', () => {
     expect(getConnector('fireflies')).toBe(firefliesConnector);
-    expect(listCatalog().find((item) => item.id === 'fireflies')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'fireflies')?.available).toBe(true);
   });
 });

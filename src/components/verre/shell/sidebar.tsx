@@ -180,7 +180,8 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
       <Tooltip
         content={
           <span className="flex items-center gap-2">
-            Rechercher<Kbd>{modKey}K</Kbd>
+            {shellT('quickSearch')}
+            <Kbd>{modKey}K</Kbd>
           </span>
         }
         side="right"
@@ -200,7 +201,7 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
             className={cn(ROW_ICON, 'text-muted group-hover:text-fg-2')}
           />
           <span className={cn(LABEL, 'min-w-0 overflow-hidden whitespace-nowrap')}>
-            Rechercher…
+            {shellT('quickSearch')}…
           </span>
           <Kbd className={cn(LABEL, 'ml-auto')}>{modKey}K</Kbd>
         </button>

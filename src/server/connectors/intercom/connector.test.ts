@@ -121,7 +121,7 @@ describe('Intercom : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('intercom')).toBe(intercomConnector);
-    const entry = listCatalog().find((item) => item.id === 'intercom');
+    const entry = listCatalog('fr').find((item) => item.id === 'intercom');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => field.name)).toEqual(['token', 'region']);
     expect(
@@ -610,7 +610,7 @@ describe('Intercom : erreurs', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse illisible');
+    expect((failure as Error).message).toBe('Unreadable response');
   });
 
   it('refuse une réponse qui n’a pas la forme attendue, sans en reprendre le texte', async () => {
@@ -619,7 +619,7 @@ describe('Intercom : erreurs', () => {
     );
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
     expect((failure as Error).message).not.toContain(TOKEN);
   });
 });

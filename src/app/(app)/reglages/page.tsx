@@ -36,7 +36,8 @@ export default async function SettingsPage() {
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
   // l'utilisateur, qui le colle lui-même.
   const extensionPrompt = t('extensionPrompt', { serverUrl });
-  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <${t('tokenPlaceholder')}>"`;
+  const placeholder = `<${t('tokenPlaceholder')}>`;
+  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer ${placeholder}"`;
 
   return (
     // 1008 px : la colonne des onglets (200), son écart (48) et le contenu (760, comme les autres pages)
@@ -76,7 +77,7 @@ export default async function SettingsPage() {
                 description={t('claudeDescription')}
                 className={SECTION}
               >
-                <CommandBlock command={command} />
+                <CommandBlock command={command} placeholder={placeholder} />
               </Section>
 
               <Section

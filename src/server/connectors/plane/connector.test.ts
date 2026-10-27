@@ -160,7 +160,7 @@ describe('plane : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, avec l’avertissement sur les installations hébergées', () => {
     expect(getConnector('plane')).toBe(planeConnector);
-    const entry = listCatalog().find((item) => item.id === 'plane');
+    const entry = listCatalog('fr').find((item) => item.id === 'plane');
     expect(entry?.available).toBe(true);
     expect(entry?.warning).toMatch(/hébergée/);
     expect(entry?.fields.map((field) => [field.name, field.kind])).toEqual([
@@ -210,7 +210,7 @@ describe('plane : verify', () => {
     const failure = await planeConnector.verify(config, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Espace inaccessible : acme');
+    expect((failure as Error).message).toBe('Workspace not accessible: acme');
   });
 });
 
@@ -402,7 +402,7 @@ describe('plane : dates', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 
@@ -636,6 +636,6 @@ describe('plane : ressources secondaires et erreurs', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Plane a répondu 500');
+    expect((failure as Error).message).toBe('Plane responded with 500');
   });
 });

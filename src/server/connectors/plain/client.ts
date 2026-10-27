@@ -34,12 +34,12 @@ function failure(errors: z.infer<typeof apiError>[]): Error {
   if (codes.includes('UNAUTHENTICATED')) return new ConnectorAuthError(LABEL, 401);
   if (codes.includes('FORBIDDEN')) return new ConnectorAuthError(LABEL, 403);
   if (codes.includes('RATELIMITED')) {
-    return new ConnectorHttpError(429, `Limite de requêtes de ${LABEL} atteinte`);
+    return new ConnectorHttpError(429, `${LABEL} rate limit reached`);
   }
   if (codes.includes('INTERNALSERVERERROR')) {
-    return new ConnectorHttpError(500, `${LABEL} a répondu 500`);
+    return new ConnectorHttpError(500, `${LABEL} responded with 500`);
   }
-  return new ConnectorHttpError(400, `${LABEL} a refusé la requête`);
+  return new ConnectorHttpError(400, `${LABEL} rejected the request`);
 }
 
 async function graphql<T>(
@@ -60,7 +60,7 @@ async function graphql<T>(
   );
   if (response.errors?.length) throw failure(response.errors);
   const parsed = data.safeParse(response.data);
-  if (!parsed.success) throw new ConnectorHttpError(null, 'Réponse inattendue');
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Unexpected response');
   return parsed.data;
 }
 

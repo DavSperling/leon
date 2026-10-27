@@ -42,7 +42,7 @@ const REQUIRED = {
 // Chaque forme exige ses champs (le schéma reste un z.object : le catalogue lit sa forme).
 export function requireFields(config: AtlassianConfig, ctx: z.RefinementCtx): void {
   for (const name of REQUIRED[config.authMode]) {
-    if (!config[name]) ctx.addIssue({ code: 'custom', path: [name], message: 'Requis' });
+    if (!config[name]) ctx.addIssue({ code: 'custom', path: [name], message: 'Required' });
   }
 }
 
@@ -56,7 +56,7 @@ export type AtlassianAccess = {
   authorization: string;
 };
 
-const incomplete = () => new ConnectorHttpError(null, 'Configuration incomplète');
+const incomplete = () => new ConnectorHttpError(null, 'Incomplete configuration');
 
 // Où et comment appeler le produit : l'adresse du site avec une clé, la passerelle avec le bouton.
 export function atlassianAccess(
@@ -86,7 +86,8 @@ export function atlassianAccess(
 }
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
-const OTHER_SITES = /, \d+ autres? sites? disponibles?$/;
+// Les libellés déjà enregistrés sont en français (« 2 autres sites disponibles ») : les deux se lisent.
+const OTHER_SITES = /, \d+ (?:other sites? available|autres? sites? disponibles?)$/;
 
 // Le libellé sans le nombre des autres sites, qui change sans que le compte change.
 export const withoutOtherSites = (label: string): string => label.replace(OTHER_SITES, '');
@@ -96,7 +97,7 @@ export function oauthAccount(config: AtlassianConfig): string {
   const others = config.otherSites ?? 0;
   const more =
     others > 0
-      ? `, ${others} ${plural(others, 'autre site disponible', 'autres sites disponibles')}`
+      ? `, ${others} ${plural(others, 'other site available', 'other sites available')}`
       : '';
-  return `Connecté : ${config.site}.atlassian.net${more}`;
+  return `Connected: ${config.site}.atlassian.net${more}`;
 }

@@ -1,8 +1,9 @@
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { SITUATIONS, type Situation, TEAMS, type Team, TOOL_COUNT, toolLabel } from '../content';
+import { type Situation, type Team, TOOL_COUNT, toolLabel, useSiteContent } from '../content';
 import { DemoCard } from '../demo-card';
 import { Tilt } from '../fx';
 import {
@@ -63,6 +64,7 @@ function QuestionRow({ q, aside, row }: { q: string; aside?: string; row?: numbe
 }
 
 function TeamCard({ team }: { team: Team }) {
+  const common = useTranslations('site.common');
   return (
     <li className="site-reveal">
       <Tilt max={8} scale={1.02} className="h-full rounded-box">
@@ -103,7 +105,7 @@ function TeamCard({ team }: { team: Team }) {
               ))}
             </span>
             <span className="font-mono text-meta tracking-normal text-muted">
-              {team.tools.length} outils
+              {common('toolCount', { count: team.tools.length })}
             </span>
           </span>
         </Link>
@@ -114,6 +116,7 @@ function TeamCard({ team }: { team: Team }) {
 
 /** Une situation : qui, quand, ce qu'on demande, ce que Leon fait et lit. */
 function SituationCard({ s }: { s: Situation }) {
+  const t = useTranslations('site.useCases');
   return (
     <li className="site-reveal">
       <article className="flex h-full flex-col gap-4 rounded-box border border-line bg-panel p-6 shadow-hi">
@@ -125,7 +128,7 @@ function SituationCard({ s }: { s: Situation }) {
         <QuestionRow q={s.question} />
         <p className="text-body leading-[1.6] text-fg-2">{nb(s.does)}</p>
         <p className="text-body leading-[1.6] text-fg-2">
-          <span className="font-semibold text-fg">Ce que ça change : </span>
+          <span className="font-semibold text-fg">{t('changes')}</span>
           {nb(s.gain)}
         </p>
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
@@ -144,12 +147,13 @@ function SituationCard({ s }: { s: Situation }) {
 }
 
 function SituationsSection({ situations, lead }: { situations: Situation[]; lead: string }) {
+  const t = useTranslations('site.useCases');
   return (
     <PageSection labelledBy="situations-titre">
       <SectionHeading
         id="situations-titre"
-        kicker="En situation"
-        title="Une personne, un moment, une question."
+        kicker={t('situationsKicker')}
+        title={t('situationsTitle')}
         lead={lead}
       />
       <ul className="mt-10 grid gap-4 md:grid-cols-2">
@@ -162,39 +166,43 @@ function SituationsSection({ situations, lead }: { situations: Situation[]; lead
 }
 
 /** Les questions de toutes les équipes, mêlées, une par une. */
-const ALL_QUESTIONS = TEAMS.flatMap((t, ti) =>
-  t.questions.map((q, qi) => ({ q, team: t, order: qi * TEAMS.length + ti })),
-)
-  .sort((a, b) => a.order - b.order)
-  .filter((x, i, arr) => arr.findIndex((y) => y.q === x.q) === i);
+const allQuestions = (teams: Team[]) =>
+  teams
+    .flatMap((t, ti) => t.questions.map((q, qi) => ({ q, team: t, order: qi * teams.length + ti })))
+    .sort((a, b) => a.order - b.order)
+    .filter((x, i, arr) => arr.findIndex((y) => y.q === x.q) === i);
 
 export function CasUsagePage() {
+  const t = useTranslations('site.useCases');
+  const cta = useTranslations('site.cta');
+  const common = useTranslations('site.common');
+  const { teams, situations } = useSiteContent();
   return (
     <>
       <PageHero
-        kicker="Cas d’usage"
-        title="Chaque équipe a ses questions. Leon répond avec les mêmes sources."
-        accent="Leon répond avec les mêmes sources."
-        lead="Direction, ventes, support, produit, projets, nouvelles arrivées : chacun cherche autre chose, dans les mêmes outils. Voici ce qu’on tape dans la barre, et ce que Leon répond."
+        kicker={common('useCases')}
+        title={t('heroTitle')}
+        accent={t('heroAccent')}
+        lead={t('heroLead')}
         align="center"
         actions={
           <>
-            <CtaLink href="/inscription">Créer un espace</CtaLink>
+            <CtaLink href="/inscription">{cta('create')}</CtaLink>
             <CtaLink href="/produit" variant="secondary">
-              Comment ça marche
+              {cta('howItWorks')}
             </CtaLink>
           </>
         }
       >
         <ul className="flex flex-wrap justify-center gap-2">
-          {TEAMS.map((t) => (
-            <li key={t.slug}>
+          {teams.map((team) => (
+            <li key={team.slug}>
               <Link
-                href={`/cas-usage/${t.slug}`}
+                href={`/cas-usage/${team.slug}`}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-glass-3 px-3.5 text-label font-semibold text-fg-2 transition-colors duration-200 hover:border-accent-line hover:text-fg pointer-coarse:h-11"
               >
-                <t.icon aria-hidden="true" strokeWidth={1.8} className="size-3.5 text-accent" />
-                {t.label}
+                <team.icon aria-hidden="true" strokeWidth={1.8} className="size-3.5 text-accent" />
+                {team.label}
               </Link>
             </li>
           ))}
@@ -203,26 +211,23 @@ export function CasUsagePage() {
 
       <PageSection labelledBy="equipes-titre" className="pt-4 sm:pt-8">
         <h2 id="equipes-titre" className="sr-only">
-          Les six équipes
+          {t('sixTeams')}
         </h2>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TEAMS.map((t) => (
-            <TeamCard key={t.slug} team={t} />
+          {teams.map((team) => (
+            <TeamCard key={team.slug} team={team} />
           ))}
         </ul>
       </PageSection>
 
-      <SituationsSection
-        situations={SITUATIONS}
-        lead="Ce que Leon fait déjà, au moment où on en a besoin. Les personnes, les sociétés et les détails de ces exemples sont fictifs."
-      />
+      <SituationsSection situations={situations} lead={t('situationsLead')} />
 
       <PageSection labelledBy="onglets-titre">
         <SectionHeading
           id="onglets-titre"
-          kicker="Une même barre"
-          title="Une seule recherche, des réponses différentes."
-          lead="Choisissez une équipe : voici ce qu’elle demande, et l’écran que Leon lui rend. Les données de ces exemples sont fictives."
+          kicker={t('tabsKicker')}
+          title={t('tabsTitle')}
+          lead={t('tabsLead')}
         />
         <TeamTabs detail="gains" className="mt-10" />
       </PageSection>
@@ -230,13 +235,13 @@ export function CasUsagePage() {
       <PageSection labelledBy="questions-titre">
         <SectionHeading
           id="questions-titre"
-          kicker="Dans la barre"
-          title="Les questions qu’on tape vraiment."
-          lead="En langage courant ou avec des filtres : de:, outil:, type:, depuis:, avant:, et les mots exacts entre guillemets."
+          kicker={common('inTheBar')}
+          title={t('questionsTitle')}
+          lead={t('questionsLead')}
           align="center"
         />
         <ul className="mx-auto mt-12 grid max-w-[1000px] gap-2.5 md:grid-cols-2">
-          {ALL_QUESTIONS.map(({ q, team }) => (
+          {allQuestions(teams).map(({ q, team }) => (
             <li key={q} className="site-reveal">
               <Link
                 href={`/cas-usage/${team.slug}`}
@@ -249,10 +254,7 @@ export function CasUsagePage() {
         </ul>
       </PageSection>
 
-      <CtaBand
-        title="Commencez par une équipe."
-        text={`Branchez ses outils parmi les ${TOOL_COUNT} connecteurs et posez la première question.`}
-      />
+      <CtaBand title={t('ctaTitle')} text={t('ctaText', { count: TOOL_COUNT })} />
     </>
   );
 }
@@ -260,12 +262,16 @@ export function CasUsagePage() {
 // ---------- Page d'une équipe ----------
 
 export function EquipePage({ team }: { team: Team }) {
-  const others = TEAMS.filter((t) => t.slug !== team.slug);
-  const situations = SITUATIONS.filter((s) => s.team === team.slug);
+  const t = useTranslations('site.useCases');
+  const cta = useTranslations('site.cta');
+  const common = useTranslations('site.common');
+  const content = useSiteContent();
+  const others = content.teams.filter((o) => o.slug !== team.slug);
+  const situations = content.situations.filter((s) => s.team === team.slug);
   return (
     <>
       <PageHero
-        crumbs={[{ href: '/cas-usage', label: 'Cas d’usage' }]}
+        crumbs={[{ href: '/cas-usage', label: common('useCases') }]}
         current={team.label}
         kicker={
           <span className="inline-flex items-center gap-2.5">
@@ -279,9 +285,9 @@ export function EquipePage({ team }: { team: Team }) {
         lead={team.lead}
         actions={
           <>
-            <CtaLink href="/inscription">Créer un espace</CtaLink>
+            <CtaLink href="/inscription">{cta('create')}</CtaLink>
             <CtaLink href="/connexion" variant="secondary">
-              Se connecter
+              {cta('signIn')}
             </CtaLink>
           </>
         }
@@ -298,9 +304,9 @@ export function EquipePage({ team }: { team: Team }) {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <SectionHeading
             id="questions-titre"
-            kicker="Dans la barre"
-            title="Les questions de l’équipe."
-            lead="Écrites telles qu’on les tape. Leon cherche dans tous les outils branchés, puis répond en citant."
+            kicker={common('inTheBar')}
+            title={t('teamQuestionsTitle')}
+            lead={t('teamQuestionsLead')}
           />
           <TypingList className="grid content-start gap-2.5">
             {team.questions.map((q, i) => (
@@ -318,18 +324,11 @@ export function EquipePage({ team }: { team: Team }) {
       </PageSection>
 
       {situations.length > 0 && (
-        <SituationsSection
-          situations={situations}
-          lead="Ce que Leon fait déjà pour l’équipe, au moment où elle en a besoin. Exemples fictifs."
-        />
+        <SituationsSection situations={situations} lead={t('teamSituationsLead')} />
       )}
 
       <PageSection labelledBy="gains-titre">
-        <SectionHeading
-          id="gains-titre"
-          kicker="Ce qui change"
-          title="Trois choses, concrètement."
-        />
+        <SectionHeading id="gains-titre" kicker={t('gainsKicker')} title={t('gainsTitle')} />
         <ul className="mt-10 grid gap-4 md:grid-cols-3">
           {team.gains.map((g, i) => (
             <li key={g.title} className="site-reveal">
@@ -360,20 +359,16 @@ export function EquipePage({ team }: { team: Team }) {
           />
           <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
             <div>
-              <Kicker>Les outils</Kicker>
+              <Kicker>{t('toolsKicker')}</Kicker>
               <h2
                 id="outils-titre"
                 className="mt-3 text-[clamp(26px,3vw,36px)] leading-[1.1] font-bold tracking-[-0.03em] text-balance text-fg"
               >
-                {nb('Les outils de l’équipe, déjà branchables.')}
+                {nb(t('toolsTitle'))}
               </h2>
-              <p className="mt-3 text-body leading-[1.6] text-fg-2">
-                {nb(
-                  'Une clé d’API ou un bouton de connexion suffit. Leon relève ce qui change toutes les 15 minutes.',
-                )}
-              </p>
+              <p className="mt-3 text-body leading-[1.6] text-fg-2">{nb(t('toolsLead'))}</p>
               <ArrowLink href="/connecteurs" className="mt-6">
-                {nb(`Les ${TOOL_COUNT} connecteurs`)}
+                {nb(t('allConnectors', { count: TOOL_COUNT }))}
               </ArrowLink>
             </div>
             <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -395,22 +390,22 @@ export function EquipePage({ team }: { team: Team }) {
 
       <PageSection labelledBy="autres-titre" className="pt-4 sm:pt-8">
         <h2 id="autres-titre" className="text-title font-bold tracking-[-0.02em] text-fg">
-          Les autres équipes
+          {t('otherTeams')}
         </h2>
         <ul className="mt-5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-          {others.map((t) => (
-            <li key={t.slug}>
+          {others.map((o) => (
+            <li key={o.slug}>
               <Link
-                href={`/cas-usage/${t.slug}`}
+                href={`/cas-usage/${o.slug}`}
                 className="group flex h-full items-center gap-3 rounded-box border border-line bg-panel px-4 py-3.5 shadow-hi transition-[border-color,background-color] duration-200 hover:border-accent-line hover:bg-hover"
               >
-                <t.icon
+                <o.icon
                   aria-hidden="true"
                   strokeWidth={1.7}
                   className="size-[18px] shrink-0 text-accent"
                 />
                 <span className="min-w-0 flex-1 truncate text-ui font-semibold text-fg">
-                  {t.label}
+                  {o.label}
                 </span>
                 <ArrowRight
                   aria-hidden="true"
@@ -423,10 +418,7 @@ export function EquipePage({ team }: { team: Team }) {
         </ul>
       </PageSection>
 
-      <CtaBand
-        title="Branchez les outils de l’équipe. Posez la première question."
-        text="Leon répond avec la source, ou dit qu’il ne sait pas."
-      />
+      <CtaBand title={t('teamCtaTitle')} text={t('teamCtaText')} />
     </>
   );
 }

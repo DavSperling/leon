@@ -1,11 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { ITEM_NATURES, type SourceKind } from '@/capture/turn';
+import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { searchPassages } from '@/server/search/search';
 import {
-  QUERY_SYNTAX_DESCRIPTION,
+  NATURE_NAMES_EN,
+  QUERY_SYNTAX_DESCRIPTION_EN,
   queryWithPerson,
   readToolFilters,
 } from '@/server/search/tool-filters';
@@ -41,37 +42,35 @@ export const SearchInputSchema = z.object({
     // résultat », jamais un refus. `parseQuery` ne lit que ses 10 000 premiers caractères et garde 300 de texte.
     .nullish()
     .describe(
-      `${QUERY_SYNTAX_DESCRIPTION} Facultatif quand un filtre est donné : on rend alors les sources les plus récentes.`,
+      `${QUERY_SYNTAX_DESCRIPTION_EN} Optional when a filter is given: the most recent sources are then returned.`,
     ),
   outil: z
     .string()
     .max(FILTER_MAX_CHARS)
     .nullish()
-    .describe(`Limite à un outil : ${EXAMPLE_TOOLS.join(', ')}…`),
+    .describe(`Limit to one tool: ${EXAMPLE_TOOLS.join(', ')}…`),
   type: z
     .string()
     .max(FILTER_MAX_CHARS)
     .nullish()
-    .describe(`Limite à une nature : ${ITEM_NATURES.join(', ')}.`),
+    .describe(`Limit to one kind of source: ${NATURE_NAMES_EN.join(', ')}.`),
   depuis: z
     .string()
     .max(FILTER_MAX_CHARS)
     .nullish()
-    .describe('Limite aux passages récents : 7j (jours), 2s (semaines), 3m (mois) ou AAAA-MM-JJ.'),
+    .describe('Limit to recent passages: 7d (days), 2w (weeks), 3mo (months) or YYYY-MM-DD.'),
   de: z
     .string()
     .max(FILTER_MAX_CHARS)
     .nullish()
-    .describe(
-      "Limite à ce qu'une personne a écrit : son nom, son e-mail ou son identifiant d'outil.",
-    ),
+    .describe('Limit to what one person wrote: their name, email or username in the tool.'),
   page: z
     .number()
     .int()
     .min(1)
     .max(SEARCH_PAGE_MAX)
     .nullish()
-    .describe(`Page de résultats, ${PAGE_SIZE} sources par page (1 par défaut).`),
+    .describe(`Results page, ${PAGE_SIZE} sources per page (1 by default).`),
 });
 
 // Les paramètres qui filtrent, tels que MCP_INSTRUCTIONS les nomme : un nom qui n'est pas un paramètre de
@@ -81,7 +80,7 @@ export const SEARCH_FILTERS = ['outil', 'type', 'depuis', 'de'] as const satisfi
 >;
 
 export const SEARCH_DESCRIPTION =
-  "Cherche dans toute la mémoire brute de l'entreprise (conversations avec des IA, tickets, pages, réunions, mails, fichiers) par mots-clés et par sens. Rend des sources avec leurs meilleurs passages, leur outil, leur titre, leur date et leur lien. Ne rend que ce que l'utilisateur a le droit de voir. Lire un passage ou une source : fetch.";
+  "Searches the company's whole raw memory (AI conversations, tickets, pages, meetings, emails, files) by keywords and by meaning. Returns sources with their best passages, tool, title, date and link. Only returns what the user is allowed to see. To read a passage or a source: fetch.";
 
 const refusal = (text: string) => ({
   isError: true as const,
@@ -96,7 +95,7 @@ export function registerSearchTool(
   server.registerTool(
     'search',
     {
-      title: 'Chercher dans la mémoire',
+      title: 'Search memory',
       description: SEARCH_DESCRIPTION,
       inputSchema: SearchInputSchema,
       outputSchema: SearchOutputSchema,

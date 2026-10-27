@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import type { CSSProperties, ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
@@ -45,6 +46,7 @@ export function PageHero({
   children?: ReactNode;
   className?: string;
 }) {
+  const t = useTranslations('site.common');
   const centered = align === 'center' && !aside;
   const at = accent ? title.indexOf(accent) : -1;
   const parts: WordsPart[] =
@@ -81,7 +83,7 @@ export function PageHero({
       >
         <div className={cn('min-w-0', centered && 'mx-auto max-w-[820px] text-center')}>
           {crumbs && crumbs.length > 0 && (
-            <nav aria-label="Fil d’Ariane" className="site-rise mb-6" style={rise(0)}>
+            <nav aria-label={t('breadcrumb')} className="site-rise mb-6" style={rise(0)}>
               <ol
                 className={cn(
                   'flex flex-wrap items-center gap-1.5 text-label text-muted',
@@ -184,6 +186,7 @@ export function PageSection({
 
 /** Étiquette « Prévu » : ce qui n'est pas encore construit. */
 export function PlannedBadge({ className }: { className?: string }) {
+  const t = useTranslations('site.common');
   return (
     <span
       className={cn(
@@ -191,7 +194,7 @@ export function PlannedBadge({ className }: { className?: string }) {
         className,
       )}
     >
-      Prévu
+      {t('planned')}
     </span>
   );
 }

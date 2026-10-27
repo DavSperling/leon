@@ -113,7 +113,7 @@ describe('trello : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('trello')).toBe(trelloConnector);
-    expect(listCatalog().find((item) => item.id === 'trello')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'trello')?.available).toBe(true);
   });
 });
 
@@ -126,7 +126,7 @@ describe('trello : verify', () => {
 
     const result = await trelloConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (@mariedurand), 2 tableaux' });
+    expect(result).toEqual({ account: 'Marie Durand (@mariedurand), 2 boards' });
     expect(calls.map((call) => pathOf(call.url))).toEqual([
       '/1/members/me',
       '/1/members/me/boards',
@@ -149,7 +149,7 @@ describe('trello : verify', () => {
 
     const result = await trelloConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'mariedurand (@mariedurand), 1 tableau' });
+    expect(result).toEqual({ account: 'mariedurand (@mariedurand), 1 board' });
   });
 
   it('refuse un jeton rejeté, sans reprendre la clé ni le jeton dans le message', async () => {
@@ -160,7 +160,7 @@ describe('trello : verify', () => {
     const failure = await trelloConnector.verify(config, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorAuthError);
-    expect((failure as Error).message).toBe('Clé refusée par Trello');
+    expect((failure as Error).message).toBe('Trello rejected the key');
   });
 });
 
@@ -311,7 +311,7 @@ describe('trello : sync, premier passage', () => {
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
     expect((failure as ConnectorHttpError).status).toBe(503);
-    expect((failure as Error).message).toBe('Trello a répondu 503');
+    expect((failure as Error).message).toBe('Trello responded with 503');
   });
 
   it('ne demande ni les listes ni les cartes d’un tableau sans action', async () => {

@@ -101,7 +101,7 @@ describe('productboard : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, sans clé à coller', () => {
     expect(getConnector('productboard')).toBe(productboardConnector);
-    const entry = listCatalog().find((item) => item.id === 'productboard');
+    const entry = listCatalog('fr').find((item) => item.id === 'productboard');
     expect(entry?.available).toBe(true);
     expect(entry?.fields).toEqual([]);
     expect(entry?.keyAccepted).toBe(false);

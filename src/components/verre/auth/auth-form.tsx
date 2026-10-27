@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useAnimate } from 'motion/react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useActionState, useEffect, useId, useRef, useState } from 'react';
 import {
   type AuthFormState,
@@ -20,63 +21,65 @@ import { nb } from '@/lib/verre/nb';
 // messages sont ceux de app/(auth)/actions.ts.
 
 export type AuthPage = 'connexion' | 'inscription' | 'invitation';
+// Les libellés sont des clés de messages/*.json (espace `auth`), traduites au rendu.
+type Key = Parameters<ReturnType<typeof useTranslations<'auth'>>>[0];
 type FieldDef = {
   name: string;
-  label: string;
+  label: Key;
   type: 'text' | 'email' | 'password';
   autoComplete: string;
-  hint?: string;
+  hint?: Key;
 };
 
 const FIELDS: Record<AuthPage, FieldDef[]> = {
   connexion: [
-    { name: 'email', label: 'E-mail', type: 'email', autoComplete: 'email' },
-    { name: 'password', label: 'Mot de passe', type: 'password', autoComplete: 'current-password' },
+    { name: 'email', label: 'email', type: 'email', autoComplete: 'email' },
+    { name: 'password', label: 'password', type: 'password', autoComplete: 'current-password' },
   ],
   inscription: [
-    { name: 'name', label: 'Nom', type: 'text', autoComplete: 'name' },
-    { name: 'email', label: 'E-mail', type: 'email', autoComplete: 'email' },
+    { name: 'name', label: 'name', type: 'text', autoComplete: 'name' },
+    { name: 'email', label: 'email', type: 'email', autoComplete: 'email' },
     {
       name: 'password',
-      label: 'Mot de passe',
+      label: 'password',
       type: 'password',
       autoComplete: 'new-password',
-      hint: '8 caractères minimum.',
+      hint: 'passwordHint',
     },
     {
       name: 'confirmation',
-      label: 'Confirmer le mot de passe',
+      label: 'confirmPassword',
       type: 'password',
       autoComplete: 'new-password',
     },
     {
       name: 'organizationName',
-      label: 'Nom de l’entreprise',
+      label: 'companyName',
       type: 'text',
       autoComplete: 'organization',
-      hint: 'Crée l’espace de votre équipe.',
+      hint: 'companyHint',
     },
   ],
   // Un compte existant ne rejoint pas l'espace : il appartient déjà à une autre organisation.
   invitation: [
-    { name: 'name', label: 'Nom', type: 'text', autoComplete: 'name' },
+    { name: 'name', label: 'name', type: 'text', autoComplete: 'name' },
     {
       name: 'email',
-      label: 'E-mail',
+      label: 'email',
       type: 'email',
       autoComplete: 'email',
-      hint: 'Une adresse qui n’a pas encore de compte Leon.',
+      hint: 'inviteEmailHint',
     },
     {
       name: 'password',
-      label: 'Mot de passe',
+      label: 'password',
       type: 'password',
       autoComplete: 'new-password',
-      hint: '8 caractères minimum.',
+      hint: 'passwordHint',
     },
     {
       name: 'confirmation',
-      label: 'Confirmer le mot de passe',
+      label: 'confirmPassword',
       type: 'password',
       autoComplete: 'new-password',
     },
@@ -85,35 +88,31 @@ const FIELDS: Record<AuthPage, FieldDef[]> = {
 
 const COPY = {
   connexion: {
-    title: 'Se connecter',
-    submit: 'Se connecter',
-    footer: 'Pas encore de compte ?',
-    other: 'Créer un espace',
+    title: 'signIn',
+    submit: 'signIn',
+    footer: 'noAccount',
+    other: 'createWorkspace',
     href: '/inscription',
     action: signInAction,
   },
   inscription: {
-    title: 'Créer un espace',
-    submit: 'Créer l’espace',
-    footer: 'Déjà un compte ?',
-    other: 'Se connecter',
+    title: 'createWorkspace',
+    submit: 'createWorkspaceSubmit',
+    footer: 'haveAccount',
+    other: 'signIn',
     href: '/connexion',
     action: signUpAction,
   },
   // Pas de lien « Se connecter » : se connecter à un compte existant ne fait pas rejoindre l'espace.
   invitation: {
-    title: 'Rejoindre l’espace',
-    submit: 'Rejoindre l’espace',
+    title: 'joinWorkspace',
+    submit: 'joinWorkspace',
     footer: null,
     other: null,
     href: null,
     action: joinAction,
   },
 } as const;
-
-// Messages de app/(auth)/actions.ts qui changent le rendu : secousse du mot de passe, lien « Se connecter ».
-const WRONG = 'E-mail ou mot de passe incorrect.';
-const SIGNED_UP_NOT_IN = 'Compte créé, mais la connexion a échoué. Connectez-vous.';
 
 // Un avis qui s'ouvre pousse le bouton et le pied vers le bas : ils glissent (transform) au lieu de sauter.
 const slide = { layout: 'position', transition: { layout: enter } } as const;
@@ -137,6 +136,7 @@ export function AuthForm({
   invitation?: { token: string; organizationName: string };
   canResetPassword?: boolean;
 }) {
+  const t = useTranslations('auth');
   const copy = COPY[page];
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(copy.action, {});
   const [visible, setVisible] = useState(false);
@@ -153,11 +153,15 @@ export function AuthForm({
     FormData
   >(verifyTwoFactorAction, { twoFactor: true });
 
+  // Messages de app/(auth)/actions.ts qui changent le rendu : secousse du mot de passe, lien « Se connecter ».
+  const wrong = t('wrongCredentials');
+  const signedUpNotIn = t('signedUpNotIn');
+
   // Après un refus : le focus va au premier champ en erreur ; sur identifiants refusés, au mot de passe (vidé), qui tremble.
   useEffect(() => {
     if (!state.errors) return;
     const form = formRef.current;
-    if (state.errors.form === WRONG) {
+    if (state.errors.form === wrong) {
       form?.querySelector<HTMLElement>('[name="password"]')?.focus();
       if (pwScope.current)
         animate(
@@ -166,16 +170,16 @@ export function AuthForm({
           { duration: 0.42, ease: 'easeOut' },
         );
     } else form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-  }, [state, animate, pwScope]);
+  }, [state, wrong, animate, pwScope]);
 
   return (
     // Passage connexion ↔ inscription : la carte reste (mise en page commune), le contenu entre en fondu (CSS : visible
     // sans JavaScript, le rendu serveur n'attend pas l'hydratation).
     <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{copy.title}</h1>
+      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t(copy.title)}</h1>
       {invitation && (
         <p className="mt-2 text-ui [overflow-wrap:anywhere] text-muted">
-          On vous invite dans l’espace {nb(`« ${invitation.organizationName} »`)}.
+          {nb(t('invitedTo', { name: invitation.organizationName }))}
         </p>
       )}
 
@@ -189,13 +193,11 @@ export function AuthForm({
         {state.twoFactor ? (
           <>
             <p className="text-ui text-muted">
-              {backupCode
-                ? 'Saisissez l’un des codes de secours enregistrés à l’activation. Chacun ne sert qu’une fois.'
-                : 'Saisissez le code de votre application d’authentification.'}
+              {backupCode ? t('twoFactorBackupPrompt') : t('twoFactorAppPrompt')}
             </p>
             <Field
               key={backupCode ? 'secours' : 'application'}
-              label={backupCode ? 'Code de secours' : 'Code d’authentification'}
+              label={backupCode ? t('backupCodeLabel') : t('authCodeLabel')}
               error={twoFactorState.errors?.code}
             >
               <Input
@@ -214,9 +216,7 @@ export function AuthForm({
               onClick={() => setBackupCode((value) => !value)}
               className="w-fit text-ui text-accent underline underline-offset-4"
             >
-              {backupCode
-                ? 'Utiliser l’application'
-                : 'Téléphone perdu ? Utiliser un code de secours'}
+              {backupCode ? t('useApp') : t('lostPhone')}
             </button>
             {twoFactorState.errors?.form && (
               <Notice tone="error" live="alert">
@@ -230,7 +230,7 @@ export function AuthForm({
               loading={twoFactorPending}
               className="w-full"
             >
-              Vérifier
+              {t('verify')}
             </Button>
           </>
         ) : (
@@ -241,8 +241,8 @@ export function AuthForm({
             return (
               <div key={f.name} ref={isPw && !isConfirmation ? pwScope : undefined}>
                 <Field
-                  label={f.label}
-                  help={f.hint}
+                  label={t(f.label)}
+                  help={f.hint && t(f.hint)}
                   error={errors[f.name]}
                   id={isPw && !isConfirmation ? pwId : undefined}
                 >
@@ -269,11 +269,11 @@ export function AuthForm({
                       <button
                         type="button"
                         aria-controls={pwId}
-                        aria-label={visible ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                        aria-label={visible ? t('hidePassword') : t('showPassword')}
                         onClick={() => setVisible((v) => !v)}
                         className="absolute inset-y-1 right-1 min-w-[68px] rounded-chip px-3 text-label font-semibold text-accent transition-colors duration-150 hover:bg-hover"
                       >
-                        {visible ? 'Masquer' : 'Voir'}
+                        {visible ? t('hide') : t('show')}
                       </button>
                     </div>
                   ) : (
@@ -295,14 +295,14 @@ export function AuthForm({
                   <p
                     className={`mt-1.5 text-label ${password.length >= 8 ? 'text-success' : 'text-muted'}`}
                   >
-                    {password.length >= 8 ? '✓' : '○'} 8 caractères minimum
+                    {password.length >= 8 ? '✓' : '○'} {t('passwordMinLength')}
                   </p>
                 )}
                 {isConfirmation && confirmation.length > 0 && (
                   <p
                     className={`mt-1.5 text-label ${confirmation === password ? 'text-success' : 'text-muted'}`}
                   >
-                    {confirmation === password ? '✓' : '○'} Les mots de passe correspondent
+                    {confirmation === password ? '✓' : '○'} {t('passwordsMatch')}
                   </p>
                 )}
               </div>
@@ -318,9 +318,9 @@ export function AuthForm({
                   tone="error"
                   live="alert"
                   action={
-                    errors.form === SIGNED_UP_NOT_IN ? (
+                    errors.form === signedUpNotIn ? (
                       <Button asChild size="sm">
-                        <Link href="/connexion">Se connecter</Link>
+                        <Link href="/connexion">{t('signIn')}</Link>
                       </Button>
                     ) : undefined
                   }
@@ -333,12 +333,12 @@ export function AuthForm({
         )}
 
         <span role="status" className="sr-only">
-          {pending ? 'Envoi…' : ''}
+          {pending ? t('sending') : ''}
         </span>
         {!state.twoFactor && (
           <motion.div {...slide} className="pt-1">
             <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-              {pending ? 'Envoi…' : copy.submit}
+              {pending ? t('sending') : t(copy.submit)}
             </Button>
           </motion.div>
         )}
@@ -349,18 +349,18 @@ export function AuthForm({
           href="/mot-de-passe-oublie"
           className="mt-4 inline-block text-ui text-accent underline underline-offset-4"
         >
-          Mot de passe oublié ?
+          {t('forgotLink')}
         </Link>
       )}
 
       {copy.href && (
         <motion.p {...slide} className="mt-6 border-t border-line pt-5 text-ui text-muted">
-          {nb(copy.footer)}{' '}
+          {nb(t(copy.footer))}{' '}
           <Link
             href={copy.href}
             className="rounded-sm font-semibold text-accent underline decoration-accent-line underline-offset-4 transition-colors hover:decoration-accent"
           >
-            {copy.other}
+            {t(copy.other)}
           </Link>
         </motion.p>
       )}

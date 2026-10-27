@@ -1,6 +1,6 @@
 // Le système de design Leon « Verre + signal » : importez tout depuis '@/components/verre'.
 
-export { Badge, type BadgeProps, StatusBadge, type Tone } from './badge';
+export { Badge, type BadgeProps, type Tone } from './badge';
 export {
   Button,
   type ButtonProps,

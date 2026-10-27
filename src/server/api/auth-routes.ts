@@ -12,7 +12,7 @@ export const authRoutes = new Hono().on(
   '/*',
   bodyLimit({
     maxSize: AUTH_BODY_MAX_BYTES,
-    onError: (c) => c.json({ error: 'Requête trop volumineuse' }, 413),
+    onError: (c) => c.json({ error: 'Request too large' }, 413),
   }),
   (c) => auth.handler(c.req.raw),
 );

@@ -86,7 +86,7 @@ export const tldvConnector: Connector<Config> = {
   async verify(config, http) {
     const total = await createTldvClient(config.apiKey, http).countMeetings();
     const plural = total > 1 ? 's' : '';
-    return { account: `${total} réunion${plural} accessible${plural}` };
+    return { account: `${total} accessible meeting${plural}` };
   },
 
   async *sync(config, state, http): AsyncGenerator<SyncPage> {

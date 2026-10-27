@@ -38,4 +38,8 @@ describe('connexions', () => {
   test('keepTogether : ni « 18 / min » ni « · » en début de ligne', () => {
     expect(keepTogether('il y a 18 min · 418 éléments')).toBe('il y a 18 min · 418 éléments');
   });
+
+  test('keepTogether : de même en anglais', () => {
+    expect(keepTogether('2 hr. ago · 418 items')).toBe('2 hr. ago · 418 items');
+  });
 });

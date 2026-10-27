@@ -1,4 +1,5 @@
 import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { NATURE_LABELS_EN } from '@/lib/labels';
 import { parseQuery } from './parse-query';
 import type { SearchFilters } from './types';
 
@@ -11,6 +12,13 @@ import type { SearchFilters } from './types';
 // élargie, T06b) : un mot de plus n'écarte alors rien. Les guillemets et le signe moins, eux, resserrent toujours.
 export const QUERY_SYNTAX_DESCRIPTION =
   'Les mots à chercher, ou une question en phrase. Les sources qui contiennent tous les mots passent devant celles qui n’en contiennent qu’une partie. Pour resserrer : "guillemets droits" pour une expression exacte, -mot pour écarter un mot.';
+// La même en anglais, pour l'outil `search` du MCP (la langue de base des assistants des clients).
+export const QUERY_SYNTAX_DESCRIPTION_EN =
+  'The words to search for, or a question as a sentence. Sources that contain all the words rank above those that contain only some. To narrow down: "straight quotes" for an exact phrase, -word to exclude a word.';
+
+// Les natures que l'outil accepte, nommées en anglais (`meeting`, `email`…) : la recherche les lit comme leur
+// identifiant (parse-query.ts).
+export const NATURE_NAMES_EN = ITEM_NATURES.map((nature) => NATURE_LABELS_EN[nature].toLowerCase());
 
 // Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
 // guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.
@@ -29,7 +37,7 @@ export function readToolFilters(
   if (outil !== '') {
     const tools = parseQuery(`outil:"${outil}"`, now).filters.tools;
     if (!tools) {
-      return { error: `Outil inconnu : « ${outil} ». Outils connus : ${SOURCE_KINDS.join(', ')}.` };
+      return { error: `Unknown tool: "${outil}". Known tools: ${SOURCE_KINDS.join(', ')}.` };
     }
     filters.tools = tools;
   }
@@ -37,7 +45,7 @@ export function readToolFilters(
   if (type !== '') {
     const natures = parseQuery(`type:"${type}"`, now).filters.natures;
     if (!natures) {
-      return { error: `Type inconnu : « ${type} ». Types connus : ${ITEM_NATURES.join(', ')}.` };
+      return { error: `Unknown type: "${type}". Known types: ${NATURE_NAMES_EN.join(', ')}.` };
     }
     filters.natures = natures;
   }
@@ -46,7 +54,7 @@ export function readToolFilters(
     const since = parseQuery(`depuis:"${depuis}"`, now).filters.since;
     if (!since) {
       return {
-        error: `Durée inconnue pour depuis : « ${depuis} ». Écrire 7j, 2s, 3m (jours, semaines, mois) ou AAAA-MM-JJ.`,
+        error: `Unknown duration for depuis: "${depuis}". Write 7d, 2w, 3mo (days, weeks, months) or YYYY-MM-DD.`,
       };
     }
     filters.since = since;

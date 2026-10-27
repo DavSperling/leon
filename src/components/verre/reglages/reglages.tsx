@@ -6,14 +6,12 @@ export const INLINE =
 // Les sections défilent jusqu'à leur titre sous la barre mobile (56 px) ou en haut du panneau (/reglages#extension).
 export const SECTION = 'mt-12 first:mt-0 scroll-mt-20 shell:scroll-mt-6';
 
-const PLACEHOLDER = '<votre jeton>';
-
 /**
  * La commande MCP, comme une CodeLine mais qui passe à la ligne : rien n'est caché, même à 390 px.
- * « <votre jeton> » ressort : c'est la seule chose à remplacer.
+ * `placeholder` (« <votre jeton> », dans la langue de l'interface) ressort : c'est la seule chose à remplacer.
  */
-export function CommandBlock({ command }: { command: string }) {
-  const [before = '', after = ''] = command.split(PLACEHOLDER);
+export function CommandBlock({ command, placeholder }: { command: string; placeholder: string }) {
+  const [before = '', after = ''] = command.split(placeholder);
   const header = before.lastIndexOf('--header');
   // une option (« --header ») ne se coupe jamais après son premier tiret ; l'adresse, elle, peut se couper n'importe où
   const words = (s: string) =>
@@ -34,7 +32,7 @@ export function CommandBlock({ command }: { command: string }) {
         {/* l'en-tête entre guillemets ne se coupe pas au milieu, sauf sur un écran étroit */}
         <span className="sm:whitespace-nowrap">
           {words(before.slice(header))}
-          <span className="rounded-[4px] bg-mark-bg px-0.5 text-mark-ink">{PLACEHOLDER}</span>
+          <span className="rounded-[4px] bg-mark-bg px-0.5 text-mark-ink">{placeholder}</span>
           {after}
         </span>
       </code>

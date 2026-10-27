@@ -117,10 +117,10 @@ describe('chercher', () => {
     expect(meetings).not.toContain(ticket.sourceId);
     expect(mine).toContain(ticket.sourceId);
     expect(mine).not.toContain(meeting.sourceId);
-    expect(await tools.chercher({ requete: 'x', outil: 'inconnu' })).toContain('Outil inconnu');
-    expect(await tools.chercher({ requete: 'x', depuis: 'hier' })).toContain('Durée inconnue');
+    expect(await tools.chercher({ requete: 'x', outil: 'inconnu' })).toContain('Unknown tool');
+    expect(await tools.chercher({ requete: 'x', depuis: 'hier' })).toContain('Unknown duration');
     expect(await tools.chercher({ requete: 'contrat', de: 'Zorro' })).toContain(
-      'Personne ne s’appelle « Zorro » dans l’équipe.'.replace(/’/g, "'"),
+      'No one on the team is called "Zorro".',
     );
   });
 

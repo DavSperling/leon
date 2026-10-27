@@ -90,9 +90,9 @@ function failure(errors: z.infer<typeof apiError>[]): Error {
     return new ConnectorAuthError(LABEL, 401);
   if (has('FORBIDDEN', 'forbidden')) return new ConnectorAuthError(LABEL, 403);
   if (has('RATELIMITED', 'ratelimited')) {
-    return new ConnectorHttpError(429, `Limite de requêtes de ${LABEL} atteinte`);
+    return new ConnectorHttpError(429, `${LABEL} rate limit reached`);
   }
-  return new ConnectorHttpError(400, `${LABEL} a refusé la requête`);
+  return new ConnectorHttpError(400, `${LABEL} rejected the request`);
 }
 
 // Ce que les requêtes lisent de la configuration : la clé personnelle, ou le jeton du bouton.
@@ -124,7 +124,7 @@ async function graphql<T>(
   );
   if (response.errors?.length) throw failure(response.errors);
   const parsed = data.safeParse(response.data);
-  if (!parsed.success) throw new ConnectorHttpError(null, 'Réponse inattendue');
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Unexpected response');
   return parsed.data;
 }
 

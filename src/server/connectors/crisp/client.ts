@@ -50,7 +50,7 @@ export function crispClient(credentials: Credentials, http: ConnectorHttp) {
         return data.domain ? `${data.name} (${data.domain})` : data.name;
       } catch (error) {
         if (error instanceof ConnectorHttpError && error.status === 404) {
-          throw new ConnectorHttpError(404, 'Site Crisp introuvable : vérifiez son identifiant');
+          throw new ConnectorHttpError(404, 'Crisp website not found: check its ID');
         }
         throw error;
       }

@@ -9,7 +9,7 @@ export function guarded<Args>(tool: string, run: (args: Args) => Promise<CallToo
       return await run(args);
     } catch (error) {
       logError('mcp.tool_failed', error, { tool });
-      return { isError: true, content: [{ type: 'text', text: 'Erreur interne de Leon.' }] };
+      return { isError: true, content: [{ type: 'text', text: 'Leon internal error.' }] };
     }
   };
 }

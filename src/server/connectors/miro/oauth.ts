@@ -32,7 +32,7 @@ import type { OAuthSpec } from '../types';
 //
 // Le refus de Miro n'a pas la forme de la RFC 6749 : aucun champ `error`, mais { status, code, message,
 // type: 'error' }. Le socle (`requestTokens`) le compte comme un refus : au retour, le code est `refuse`,
-// et un renouvellement refusé met la connexion en 'auth_error' (« Reconnectez Miro »).
+// et un renouvellement refusé met la connexion en 'auth_error' (« Reconnect Miro »).
 //
 // Non vérifié : le renouvellement, que la page de référence montre en formulaire alors que le guide
 // et la spec de l'échange l'envoient dans l'adresse (le socle n'a qu'un mode par outil : adresse) ;

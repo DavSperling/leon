@@ -86,7 +86,7 @@ export function driveClient(http: ConnectorHttp) {
       if (answer.status === 404) return null;
       if (answer.status === 403) {
         if (GOOGLE_RATE_LIMIT.test(answer.text))
-          throw new ConnectorHttpError(429, 'Limite de requêtes de Google Drive atteinte');
+          throw new ConnectorHttpError(429, 'Google Drive rate limit reached');
         return null;
       }
       return answer.text;

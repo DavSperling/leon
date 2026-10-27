@@ -17,4 +17,16 @@ export const frontCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Une clause des conditions de Front sur l’entraînement de modèles est ambiguë : à faire confirmer par écrit avant tout client.',
+  en: {
+    fields: {
+      token: {
+        label: 'API token',
+        help: 'Leon only reads. Personal inboxes are read only if the token covers private resources and their owner has enabled API access.',
+      },
+    },
+    keyHelp:
+      'In Front, an admin opens Settings › Developers › API tokens › Create API token, enables “Access resources”, chooses the shared resources (all the inboxes to read) and the “Read” permission, then copies the token: it is shown only once.',
+    warning:
+      'A clause in Front’s terms about training models is ambiguous: get it confirmed in writing before any client.',
+  },
 };

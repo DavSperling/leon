@@ -17,7 +17,7 @@ export const app = new Hono<ApiEnv>().basePath('/api');
 export const handleApiError: ErrorHandler = (error, c) => {
   if (error instanceof HTTPException) return error.getResponse();
   logError('api.unhandled', error);
-  return c.json({ error: 'Erreur interne' }, 500);
+  return c.json({ error: 'Internal error' }, 500);
 };
 
 app.get('/health', (c) => c.json({ ok: true }));

@@ -13,4 +13,12 @@ export const miroCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Les commentaires des tableaux ne sont pas lus : l’API de Miro ne les donne pas. Seuls les tableaux de l’équipe choisie, auxquels votre compte a accès, sont lus.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'Miro asks you to choose the team where Leon is installed, then to authorize access to its boards (it also allows writing; Leon doesn’t use it yet). Leon reads the text of sticky notes, text items, shapes, cards, frames, and documents on these boards, never images. To change team, use Reconnect.',
+    warning:
+      'Board comments are not read: Miro’s API doesn’t provide them. Only the boards of the chosen team that your account has access to are read.',
+  },
 };

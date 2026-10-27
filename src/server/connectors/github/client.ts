@@ -117,7 +117,7 @@ export function githubClient(token: string, http: ConnectorHttp) {
         const denied = error instanceof ConnectorAuthError && error.status === 403;
         const missing = error instanceof ConnectorHttpError && error.status === 404;
         if (denied || missing) {
-          throw new ConnectorHttpError(denied ? 403 : 404, `Dépôt inaccessible : ${repo}`);
+          throw new ConnectorHttpError(denied ? 403 : 404, `Repository not accessible: ${repo}`);
         }
         throw error;
       }

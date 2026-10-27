@@ -12,7 +12,7 @@ export const requireApiToken: MiddlewareHandler<ApiEnv> = async (c, next) => {
   const verified = token ? await verifyApiToken(token) : null;
   if (!verified) {
     c.header('WWW-Authenticate', 'Bearer');
-    return c.json({ error: 'Jeton manquant ou invalide' }, 401);
+    return c.json({ error: 'Missing or invalid token' }, 401);
   }
   c.set('ctx', verified.ctx);
   c.set('tokenId', verified.tokenId);

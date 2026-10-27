@@ -111,7 +111,7 @@ describe('guide de vérification : brancher par bouton', () => {
     'Le lien a expiré, recommencez.',
     'annulée.',
     'est branché. La première synchronisation démarre dans la minute.',
-    'a été retirée.',
+    'was revoked.',
     'n’est pas encore configurée sur ce serveur.',
   ])('cite « %s », qui existe dans le code', (label) => {
     expect(readText(VERIFICATION)).toContain(label);

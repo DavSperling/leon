@@ -1,6 +1,7 @@
 'use client';
 
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { AlertDialog as RAlert, Collapsible as RCollapsible, Dialog as RDialog } from 'radix-ui';
 import { type ComponentProps, type CSSProperties, type ReactNode, useRef } from 'react';
 import { cn } from '@/lib/verre/cn';
@@ -83,6 +84,7 @@ export function DialogContent({
   onCloseAutoFocus,
   ...props
 }: DialogContentProps) {
+  const t = useTranslations('common');
   const block = (e: Event) => !dismissible && e.preventDefault();
   const focus = useReturnFocus({ onOpenAutoFocus, onCloseAutoFocus });
   return (
@@ -111,7 +113,7 @@ export function DialogContent({
         </div>
         {children}
         {!hideClose && (
-          <RDialog.Close aria-label="Fermer" className={CLOSE}>
+          <RDialog.Close aria-label={t('close')} className={CLOSE}>
             <X aria-hidden="true" className="size-4" strokeWidth={1.8} />
           </RDialog.Close>
         )}
@@ -212,6 +214,7 @@ export function SheetContent({
   onCloseAutoFocus,
   ...props
 }: SheetContentProps) {
+  const t = useTranslations('common');
   const focus = useReturnFocus({ onOpenAutoFocus, onCloseAutoFocus });
   return (
     <RDialog.Portal>
@@ -239,7 +242,7 @@ export function SheetContent({
         </div>
         {children}
         {!hideClose && (
-          <RDialog.Close aria-label="Fermer" className={cn(CLOSE, 'top-3 right-3')}>
+          <RDialog.Close aria-label={t('close')} className={cn(CLOSE, 'top-3 right-3')}>
             <X aria-hidden="true" className="size-4" strokeWidth={1.8} />
           </RDialog.Close>
         )}

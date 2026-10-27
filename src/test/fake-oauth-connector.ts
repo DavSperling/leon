@@ -28,7 +28,7 @@ export function fakeOAuthConnector(
     })
     .superRefine((config, ctx) => {
       const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
     });
 
   return {

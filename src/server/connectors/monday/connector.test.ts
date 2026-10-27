@@ -649,7 +649,7 @@ describe('mondayConnector : erreurs', () => {
 
       expect(error).toBeInstanceOf(ConnectorHttpError);
       expect((error as ConnectorHttpError).status).toBe(429);
-      expect((error as Error).message).toBe('Limite de requêtes de monday.com atteinte');
+      expect((error as Error).message).toBe('monday.com rate limit reached');
     },
   );
 
@@ -668,7 +668,7 @@ describe('mondayConnector : erreurs', () => {
     const error = await pages.catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect((error as Error).message).toBe('monday.com a refusé la requête');
+    expect((error as Error).message).toBe('monday.com rejected the request');
     expect((error as Error).message).not.toContain('texte-de-l-outil');
     expect((error as Error).message).not.toContain(TOKEN);
   });
@@ -676,12 +676,12 @@ describe('mondayConnector : erreurs', () => {
   it('refuse une réponse sans données ni erreurs', async () => {
     const { pages } = sync([api({ json: {} })]);
 
-    await expect(pages).rejects.toMatchObject({ message: 'Réponse inattendue' });
+    await expect(pages).rejects.toMatchObject({ message: 'Unexpected response' });
   });
 
   it('refuse une réponse dont les données n’ont pas la forme attendue', async () => {
     const { pages } = sync([api({ json: { data: { boards: 'non' } } })]);
 
-    await expect(pages).rejects.toMatchObject({ message: 'Réponse inattendue' });
+    await expect(pages).rejects.toMatchObject({ message: 'Unexpected response' });
   });
 });

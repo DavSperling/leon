@@ -20,7 +20,7 @@ function diagnostics(error: Error): string[] {
 }
 
 export function safeErrorSummary(error: unknown): string {
-  if (!(error instanceof Error)) return 'erreur inconnue';
+  if (!(error instanceof Error)) return 'unknown error';
   const head = [error.name, ...diagnostics(error)].join(' ');
   if (hidesMessage(error)) return head;
   return `${head}: ${error.message.slice(0, MESSAGE_MAX_CHARS)}`;

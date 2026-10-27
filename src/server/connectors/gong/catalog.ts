@@ -27,4 +27,22 @@ export const gongCatalog: CatalogEntry = {
     'Dans Gong : Centre d’administration › Paramètres › API (sous Écosystème), puis « Obtenir une clé d’API » ; seul un administrateur technique peut la créer, et le secret ne s’affiche qu’une fois.',
   docsUrl: 'https://help.gong.io/docs/receive-access-to-the-api',
   triedForReal: false,
+  en: {
+    fields: {
+      baseUrlHost: {
+        label: 'API subdomain',
+        help: 'The part before “.api.gong.io” in the base URL shown on Gong’s API page.',
+      },
+      accessKey: {
+        label: 'Access key',
+        help: 'A replaced key comes with a new access key: enter that one too.',
+      },
+      accessKeySecret: {
+        label: 'Access key secret',
+        help: 'The key must allow reading calls and their transcripts.',
+      },
+    },
+    keyHelp:
+      'In Gong: Admin center › Settings › Ecosystem › API, then “Get API Key”; only a technical administrator can create it, and the secret is shown only once.',
+  },
 };

@@ -48,15 +48,15 @@ function failure(errors: z.infer<typeof apiError>[]): Error {
   if (has('userunauthorizedexception', 'useraccessdenied'))
     return new ConnectorAuthError(LABEL, 403);
   if (codes.some((code) => LIMIT_CODES.has(code))) {
-    return new ConnectorHttpError(429, `Limite de requêtes de ${LABEL} atteinte`);
+    return new ConnectorHttpError(429, `${LABEL} rate limit reached`);
   }
   if (has('invalidboardidexception', 'resourcenotfoundexception')) {
-    return new ConnectorHttpError(404, `${LABEL} ne trouve pas la ressource`);
+    return new ConnectorHttpError(404, `${LABEL} can’t find the resource`);
   }
   if (has('cursorexception', 'invalidcursorexception')) {
-    return new ConnectorHttpError(410, `Curseur de ${LABEL} expiré`);
+    return new ConnectorHttpError(410, `${LABEL} cursor expired`);
   }
-  return new ConnectorHttpError(400, `${LABEL} a refusé la requête`);
+  return new ConnectorHttpError(400, `${LABEL} rejected the request`);
 }
 
 async function graphql<T>(
@@ -78,7 +78,7 @@ async function graphql<T>(
   );
   if (response.errors?.length) throw failure(response.errors);
   const parsed = data.safeParse(response.data);
-  if (!parsed.success) throw new ConnectorHttpError(null, 'Réponse inattendue');
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Unexpected response');
   return parsed.data;
 }
 

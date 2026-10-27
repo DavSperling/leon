@@ -89,7 +89,7 @@ describe('freshdesk : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('freshdesk')).toBe(freshdeskConnector);
-    const entry = listCatalog().find((item) => item.id === 'freshdesk');
+    const entry = listCatalog('fr').find((item) => item.id === 'freshdesk');
     expect(entry?.available).toBe(true);
     expect(entry?.triedForReal).toBe(false);
   });
@@ -141,9 +141,7 @@ describe('freshdesk : verify', () => {
         .catch((error: unknown) => error);
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
-      expect((failure as Error).message).toBe(
-        'Domaine Freshdesk introuvable : vérifiez le nom du domaine',
-      );
+      expect((failure as Error).message).toBe('Freshdesk domain not found: check the domain name');
     }
   });
 });
@@ -443,7 +441,7 @@ describe('freshdesk : sync, ressources secondaires et erreurs', () => {
     const failure = await runSync([{ url: TICKETS, json: odd }]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 
   it('refuse un lien de page suivante qui pointe vers un autre hôte', async () => {
@@ -460,7 +458,7 @@ describe('freshdesk : sync, ressources secondaires et erreurs', () => {
     const failure = await run.catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Adresse non autorisée');
+    expect((failure as Error).message).toBe('Address not allowed');
   });
 });
 

@@ -125,7 +125,7 @@ describe('listSources', () => {
       'Claude Code',
       'claude.ai',
       'ChatGPT',
-      'Note MCP',
+      'Note (MCP)',
     ]);
     expect(lastCapture(channels, 'claude_ai')).toEqual(new Date('2026-10-12T09:30:00Z'));
     expect(lastCapture(channels, 'claude_code')).toBeInstanceOf(Date);

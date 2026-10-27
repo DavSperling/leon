@@ -6,8 +6,8 @@ export default defineConfig({
   // si bien que host_permissions suit la même URL que SERVER_URL.
   manifest: () => ({
     name: 'Leon',
-    description:
-      'Capte vos conversations sur claude.ai et chatgpt.com pour la mémoire de votre équipe.',
+    // En anglais, la langue de base : le manifeste n'a pas de traduction.
+    description: 'Captures your claude.ai and chatgpt.com conversations into your team’s memory.',
     permissions: ['storage', 'alarms'],
     host_permissions: hostPermissionsFor(serverUrlFromEnv(process.env.WXT_PUBLIC_LEON_URL)),
     incognito: 'not_allowed',

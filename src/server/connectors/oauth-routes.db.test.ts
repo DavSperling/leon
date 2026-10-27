@@ -476,7 +476,7 @@ describe('GET /:appli/retour : ce qui ne crée rien', () => {
     const missing: AnyConnector = {
       ...fakeOAuthConnector(),
       verify: async () => {
-        throw new ConnectorHttpError(404, 'Dépôt inaccessible : x');
+        throw new ConnectorHttpError(404, 'Repository not accessible: x');
       },
     };
 
@@ -601,7 +601,7 @@ describe('« Reconnecter »', () => {
       since: new Date(),
     });
     await adminPool.query(
-      "update connections set status = $2, last_error = 'Reconnectez GitHub', next_sync_at = null where id = $1",
+      "update connections set status = $2, last_error = 'Reconnect GitHub', next_sync_at = null where id = $1",
       [id, status],
     );
     return id;
@@ -721,6 +721,24 @@ describe('« Reconnecter »', () => {
 
   it('le repli sur le libellé ignore les autres sites disponibles (Jira)', async () => {
     const paul = await signUp();
+    const label = 'Connected: acme.atlassian.net, 1 other site available';
+    const id = await oauthConnection(paul, 'error', { label });
+
+    const { location: to } = await reconnect(
+      paul,
+      id,
+      fakeOAuthConnector({
+        account: 'Connected: acme.atlassian.net, 2 other sites available',
+        accountKey: 'compte:site',
+      }),
+    );
+
+    expect(to).toBe('/connexions?branche=github');
+  });
+
+  // Les connexions enregistrées avant le passage à l'anglais portent un libellé français.
+  it('le repli sur le libellé lit aussi un libellé enregistré en français', async () => {
+    const paul = await signUp();
     const label = 'Connecté : acme.atlassian.net, 1 autre site disponible';
     const id = await oauthConnection(paul, 'error', { label });
 
@@ -738,12 +756,12 @@ describe('« Reconnecter »', () => {
 
   it('le repli sur le libellé refuse toujours un autre site', async () => {
     const paul = await signUp();
-    const id = await oauthConnection(paul, 'error', { label: 'Connecté : acme.atlassian.net' });
+    const id = await oauthConnection(paul, 'error', { label: 'Connected: acme.atlassian.net' });
 
     const { location: to } = await reconnect(
       paul,
       id,
-      fakeOAuthConnector({ account: 'Connecté : globex.atlassian.net', accountKey: 'k' }),
+      fakeOAuthConnector({ account: 'Connected: globex.atlassian.net', accountKey: 'k' }),
     );
 
     expect(to).toBe('/connexions?erreur=autre_compte&outil=github');

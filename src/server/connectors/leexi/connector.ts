@@ -34,8 +34,8 @@ const ConfigSchema = z.object({
   keyId: z
     .string()
     .trim()
-    .regex(/^[^\s:]+$/, 'L’identifiant de la clé ne contient ni espace ni « : »'),
-  keySecret: z.string().trim().regex(/^\S+$/, 'Le secret de la clé ne contient pas d’espace'),
+    .regex(/^[^\s:]+$/, 'The key ID can’t contain spaces or “:”'),
+  keySecret: z.string().trim().regex(/^\S+$/, 'The key secret can’t contain spaces'),
 });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -54,7 +54,7 @@ export const leexiConnector: Connector<Config> = {
   minIntervalMs: 1200, // 50 requêtes par minute et par clé
   async verify(config, http) {
     const count = await countCalls(http, config);
-    return { account: `compte Leexi (appels et réunions visibles par la clé : ${count})` };
+    return { account: `Leexi account (calls and meetings visible to the key: ${count})` };
   },
   async *sync(config, state, http): AsyncGenerator<SyncPage> {
     const after = modifiedAfter(state);

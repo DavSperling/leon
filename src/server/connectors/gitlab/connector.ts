@@ -70,9 +70,9 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
     if (config.authMode === 'key' && config.projects.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['projects'], message: 'Requis' });
+      ctx.addIssue({ code: 'custom', path: ['projects'], message: 'Required' });
     }
   });
 type Config = z.infer<typeof ConfigSchema>;
@@ -153,7 +153,7 @@ export const gitlabConnector: Connector<Config> = {
     const { id, username } = await gitlab.account();
     for (const project of config.projects) await gitlab.checkProject(project);
     if ((await projectsToRead(gitlab, config)).length === 0) {
-      throw new NothingToReadError('Membre d’aucun projet GitLab');
+      throw new NothingToReadError('Not a member of any GitLab project');
     }
     return { account: username, accountKey: String(id) };
   },

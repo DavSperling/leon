@@ -19,7 +19,7 @@ import { type GitRunner, projectKeyFor } from './project-key';
 export function parseSince(value: string | undefined): Date | undefined {
   if (value === undefined || value === '') return undefined;
   if (!z.iso.date().safeParse(value).success) {
-    throw new Error('--since attend une date au format AAAA-MM-JJ.');
+    throw new Error('--since expects a date in the format YYYY-MM-DD.');
   }
   return new Date(`${value}T00:00:00`);
 }
@@ -47,10 +47,14 @@ export type ImportSummary = {
   failures: number;
 };
 
+// « 1 turn », « 3 turns » : les messages de la CLI écrivent leurs pluriels.
+export const countOf = (count: number, noun: string): string =>
+  `${count} ${noun}${count === 1 ? '' : 's'}`;
+
 export class TokenRefusedError extends Error {
   override name = 'TokenRefusedError';
   constructor() {
-    super('Jeton refusé par le serveur Leon.');
+    super('Token refused by the Leon server.');
   }
 }
 
@@ -58,7 +62,7 @@ export class TokenRefusedError extends Error {
 export class IngestResponseError extends Error {
   override name = 'IngestResponseError';
   constructor(readonly status: number) {
-    super(`Réponse ${status} du serveur Leon.`);
+    super(`Response ${status} from the Leon server.`);
   }
 }
 

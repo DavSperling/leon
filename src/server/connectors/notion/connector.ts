@@ -40,7 +40,7 @@ import { notionOAuth } from './oauth';
 // curseur le prévoit) ; une page modifiée deux fois dans la même minute, de part et d'autre de
 // notre lecture, garde sa première version jusqu'à la modification suivante ; un résultat
 // de recherche partiel (seulement id) sans la capacité « Lire le contenu » : il est refusé par le
-// schéma, « Réponse inattendue » ; un essai en réel.
+// schéma, « Unexpected response » ; un essai en réel.
 
 // Deux façons de se brancher : la clé collée (`token`), ou le bouton (`accessToken` et ce que
 // `notionOAuth.toConfig` rend). Une connexion sans `authMode` est à clé. Les jetons du bouton
@@ -57,7 +57,7 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -128,7 +128,7 @@ function sortedByDate(found: Map<string, NotionPage>): NotionPage[] {
 // Le repère après avoir lu `done`, qui commence à la plus ancienne page trouvée.
 function markAfter(done: NotionPage[], previous: Mark): string {
   const last = done.at(-1);
-  if (last === undefined) throw new Error('Aucune page lue');
+  if (last === undefined) throw new Error('No page read');
   const at = editedAt(last);
   const ids = new Set(previous.at === at ? previous.ids : []);
   for (const page of done) if (editedAt(page) === at) ids.add(page.id);
@@ -205,7 +205,7 @@ export const notionConnector: Connector<Config> = {
 
   async verify(config, http) {
     const me = await fetchMe({ http, token: bearer(config) });
-    const name = me.name ?? 'Intégration';
+    const name = me.name ?? 'Integration';
     const workspace = me.bot?.workspace_name;
     const account = workspace ? `${name} (${workspace})` : name;
     // Le propriétaire et l'espace d'un robot ; une personne se reconnaît à son propre identifiant.

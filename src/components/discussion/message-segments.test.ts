@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { messageSegments, toolActivityLabel } from './message-segments';
+import { messageSegments, toolActivity } from './message-segments';
 
 describe('messageSegments', () => {
   it('découpe le texte et les renvois aux citations connues, même éparses', () => {
@@ -33,11 +33,12 @@ describe('messageSegments', () => {
   });
 });
 
-describe('toolActivityLabel', () => {
+describe('toolActivity', () => {
   it('dit ce que fait l’agent, pour chaque outil et pour un outil inconnu', () => {
-    expect(toolActivityLabel('chercher')).toBe('Leon cherche dans la mémoire…');
-    expect(toolActivityLabel('lire')).toBe('Leon lit une source…');
-    expect(toolActivityLabel('activite')).toBe('Leon regarde l’activité récente…');
-    expect(toolActivityLabel('autre')).toBe('Leon travaille…');
+    expect(toolActivity('chercher')).toBe('chercher');
+    expect(toolActivity('lire')).toBe('lire');
+    expect(toolActivity('activite')).toBe('activite');
+    expect(toolActivity('autre')).toBe('autre');
+    expect(toolActivity('inconnu')).toBe('autre');
   });
 });

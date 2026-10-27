@@ -13,24 +13,36 @@
       </header>
       <p id="hint" class="muted" hidden>
         <span id="hint-text"></span>
-        <button type="button" class="link" data-open-options>Ouvrir les options</button>
+        <button type="button" class="link" data-open-options data-en="Open options">
+          Ouvrir les options
+        </button>
       </p>
       <div id="paused-banner" class="banner row" hidden>
-        <span>Capture en pause</span>
-        <button type="button" class="button" data-toggle-pause>Reprendre</button>
+        <span data-en="Capture paused">Capture en pause</span>
+        <button type="button" class="button" data-toggle-pause data-en="Resume">Reprendre</button>
       </div>
       <hr />
       <ul class="sites">
         <li>
           <label>
             <span>claude.ai <span class="muted" data-last="claude_ai"></span></span>
-            <input type="checkbox" data-site="claude_ai" aria-label="Capturer claude.ai" />
+            <input
+              type="checkbox"
+              data-site="claude_ai"
+              aria-label="Capturer claude.ai"
+              data-en-label="Capture claude.ai"
+            />
           </label>
         </li>
         <li>
           <label>
             <span>ChatGPT <span class="muted" data-last="chatgpt"></span></span>
-            <input type="checkbox" data-site="chatgpt" aria-label="Capturer ChatGPT" />
+            <input
+              type="checkbox"
+              data-site="chatgpt"
+              aria-label="Capturer ChatGPT"
+              data-en-label="Capture ChatGPT"
+            />
           </label>
         </li>
       </ul>
@@ -38,7 +50,15 @@
       <p id="pending" class="muted"></p>
       <p id="dropped" class="error" hidden></p>
       <div class="row">
-        <button type="button" id="pause-button" class="button" data-toggle-pause>Mettre en pause</button>
+        <button
+          type="button"
+          id="pause-button"
+          class="button"
+          data-toggle-pause
+          data-en="Pause capture"
+        >
+          Mettre en pause
+        </button>
       </div>
       <button type="button" class="link" data-open-options>Options</button>
     </main>

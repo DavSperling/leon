@@ -115,7 +115,7 @@ export const pipedriveConnector: Connector<Config> = {
       if (!isUnknownCompany(error)) throw error;
       throw new ConnectorHttpError(
         error.status,
-        'Compte Pipedrive introuvable : vérifiez le nom de l’entreprise',
+        'Pipedrive account not found: check the company name',
       );
     }
   },

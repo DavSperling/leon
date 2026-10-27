@@ -65,7 +65,7 @@ describe('POST /api/v1/ingest', () => {
     const text = await response.text();
     expect(text).not.toContain('secret-xyz');
     expect(JSON.parse(text)).toEqual({
-      error: 'Requête invalide',
+      error: 'Invalid request',
       issues: [{ path: 'turns.0.role', code: 'invalid_value' }],
     });
   });
@@ -79,7 +79,7 @@ describe('POST /api/v1/ingest', () => {
 
     expect(response.status).toBe(400);
     expect(JSON.parse(await response.text())).toEqual({
-      error: 'Requête invalide',
+      error: 'Invalid request',
       issues: [{ path: 'source.kind', code: 'invalid_value' }],
     });
   });
@@ -113,7 +113,7 @@ describe('POST /api/v1/ingest', () => {
     const text = await response.text();
     expect(text).not.toContain('evil');
     expect(JSON.parse(text)).toEqual({
-      error: 'Requête invalide',
+      error: 'Invalid request',
       issues: [{ path: 'source.project', code: 'invalid_format' }],
     });
   });
@@ -146,7 +146,7 @@ describe('POST /api/v1/ingest', () => {
     const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: filler });
 
     expect(response.status).toBe(413);
-    expect(await response.json()).toEqual({ error: 'Requête trop volumineuse' });
+    expect(await response.json()).toEqual({ error: 'Request too large' });
   });
 
   it('isole la même conversation envoyée par deux collègues, sans rien révéler', async () => {

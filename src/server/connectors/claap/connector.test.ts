@@ -414,12 +414,12 @@ describe('sync : erreurs', () => {
       transcript(ID_PRODUIT, { result: { texte: 'secret-de-la-reponse' } }),
     ]);
     await expect(outcome).rejects.toBeInstanceOf(ConnectorHttpError);
-    await expect(outcome).rejects.toThrow('Réponse inattendue');
+    await expect(outcome).rejects.toThrow('Unexpected response');
     await expect(outcome).rejects.not.toThrow('secret-de-la-reponse');
   });
 
   it('une liste dont les dates n’ont pas de fuseau lève une erreur au lieu de décaler les faits', async () => {
     const naive = { ...produit, createdAt: '2026-10-12T09:00:12' };
-    await expect(runSync([list([naive])])).rejects.toThrow('Réponse inattendue');
+    await expect(runSync([list([naive])])).rejects.toThrow('Unexpected response');
   });
 });

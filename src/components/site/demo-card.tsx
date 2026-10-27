@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
@@ -19,6 +20,7 @@ export function DemoSearchField({
   className?: string;
   children?: ReactNode;
 }) {
+  const t = useTranslations('site.demo');
   return (
     <div
       className={cn(
@@ -41,7 +43,7 @@ export function DemoSearchField({
         aria-hidden="true"
         className="inline-flex h-10 shrink-0 items-center rounded-full bg-accent px-4 text-ui font-semibold text-accent-ink shadow-[inset_0_1px_0_rgba(255,255,255,.3)] max-sm:hidden"
       >
-        Rechercher
+        {t('search')}
       </span>
     </div>
   );
@@ -95,6 +97,7 @@ export function DemoAnswerCard({
   className?: string;
   children?: ReactNode;
 }) {
+  const t = useTranslations('site.demo');
   return (
     <div
       className={cn(
@@ -105,9 +108,7 @@ export function DemoAnswerCard({
       <div className="relative z-[1] flex items-center gap-2">
         <LeonMark />
         <span className="ml-auto font-mono text-meta tracking-normal whitespace-nowrap text-muted">
-          {demo.unknown
-            ? 'sans réponse'
-            : `${demo.sources.length} source${demo.sources.length > 1 ? 's' : ''}`}
+          {demo.unknown ? t('noAnswer') : t('sources', { count: demo.sources.length })}
         </span>
       </div>
       {children ?? (
@@ -132,6 +133,7 @@ export function DemoCard({
   sources?: boolean;
   label?: boolean;
 }) {
+  const t = useTranslations('site.common');
   return (
     <figure
       className={cn(
@@ -152,7 +154,7 @@ export function DemoCard({
       )}
       {label && (
         <figcaption className="mt-3 px-1 font-mono text-meta tracking-normal text-muted">
-          Exemple fictif · l’écran Recherche de Leon
+          {t('searchScreen')}
         </figcaption>
       )}
     </figure>

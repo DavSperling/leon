@@ -18,8 +18,9 @@ import {
   PreviewSheet,
   useCitationPreview,
 } from '@/components/verre/discussions/preview';
-import { DISCUSSION_TIMEOUT_MS } from '@/lib/discussion-events';
+import { DISCUSSION_TIMEOUT_MS, replyParts } from '@/lib/discussion-events';
 import { rise, useAppear, useMinWidth } from '@/lib/verre';
+import type { ToolActivity } from './message-segments';
 import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
 // Une discussion : ses messages, la réponse de Leon en flux (ce qu'il cherche et lit, puis son texte), la saisie
@@ -71,6 +72,16 @@ export function DiscussionThread({
 }) {
   const t = useTranslations('thread');
   const discussionsT = useTranslations('discussions');
+  const viewT = useTranslations('discussionView');
+  const activityLabel = (activity: ToolActivity | null) =>
+    activity && viewT(`activity.${activity}`);
+  // Ce que le lecteur d'écran annonce d'une réponse arrivée : sans les renvois, ses phrases fixes traduites.
+  const spokenReply = (content: string) => {
+    const { main, fixed, limit } = replyParts(content);
+    return [fixed ? viewT(fixed) : spoken(main), limit ? viewT('limitNote') : '']
+      .filter(Boolean)
+      .join(' ');
+  };
   const RESUMING = t('resuming');
   // Une discussion ouverte depuis la barre ou la page Discussions arrive avec sa question seule : Leon y répond
   // tout de suite.
@@ -261,9 +272,9 @@ export function DiscussionThread({
     reply.status === 'attente'
       ? RESUMING
       : reply.status === 'flux'
-        ? (reply.activity ?? '')
+        ? (activityLabel(reply.activity) ?? '')
         : freshMessage
-          ? spoken(freshMessage.content)
+          ? spokenReply(freshMessage.content)
           : '';
 
   // La question qui n'a pas été écrite est revenue dans la saisie : pas de « Réessayer », on la renvoie.
@@ -385,7 +396,7 @@ export function DiscussionThread({
                   live={
                     reply.status === 'attente'
                       ? { activity: RESUMING, text: '' }
-                      : { activity: reply.activity, text: reply.text }
+                      : { activity: activityLabel(reply.activity), text: reply.text }
                   }
                   latest
                   active={active}

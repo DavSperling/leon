@@ -55,7 +55,7 @@ import { zendeskCatalog } from './zendesk/catalog';
 
 export type { CatalogEntry, CatalogField } from './types';
 
-export type CatalogItem = Omit<CatalogEntry, 'keyAccepted'> & {
+export type CatalogItem = Omit<CatalogEntry, 'keyAccepted' | 'en'> & {
   label: string;
   family: ProviderFamily;
   available: boolean; // le connecteur existe (sinon « bientôt »)
@@ -69,7 +69,7 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted'> & {
   adminConsentUrl: string | null;
 };
 
-const ENTRIES: Record<ProviderId, CatalogEntry> = {
+export const CATALOG_ENTRIES: Record<ProviderId, CatalogEntry> = {
   github: githubCatalog,
   notion: notionCatalog,
   linear: linearCatalog,
@@ -114,11 +114,41 @@ const ENTRIES: Record<ProviderId, CatalogEntry> = {
   slack: slackCatalog,
 };
 
-export function catalogItem(entry: CatalogEntry, connector: AnyConnector | null): CatalogItem {
+// Les textes de l'entrée dans la langue demandée : l'anglais vient du bloc `en`, tout autre code garde
+// le français. Le bloc `en` lui-même ne sort jamais d'ici.
+function localized(entry: CatalogEntry, locale: string): Omit<CatalogEntry, 'en'> {
+  const { en, ...french } = entry;
+  if (locale !== 'en') return french;
+  return {
+    ...french,
+    keyHelp: en.keyHelp,
+    oauthHelp: en.oauthHelp,
+    warning: en.warning,
+    fields: french.fields.map((field) => {
+      const text = en.fields[field.name];
+      return {
+        ...field,
+        label: text?.label ?? field.label,
+        placeholder: text?.placeholder ?? field.placeholder,
+        help: text?.help,
+        options: field.options?.map((option) => ({
+          ...option,
+          label: text?.options?.[option.value] ?? option.label,
+        })),
+      };
+    }),
+  };
+}
+
+export function catalogItem(
+  entry: CatalogEntry,
+  connector: AnyConnector | null,
+  locale = 'en',
+): CatalogItem {
   const spec = connector?.oauth;
   const client = spec ? oauthClient(spec.appKey) : null;
   return {
-    ...entry,
+    ...localized(entry, locale),
     label: PROVIDER_LABELS[entry.id],
     family: PROVIDER_FAMILIES[entry.id],
     available: connector !== null,
@@ -131,11 +161,11 @@ export function catalogItem(entry: CatalogEntry, connector: AnyConnector | null)
   };
 }
 
-// Par famille, puis par libellé.
-export function listCatalog(): CatalogItem[] {
-  return PROVIDER_IDS.map((id) => catalogItem(ENTRIES[id], getConnector(id))).sort(
+// Par famille, puis par libellé. `locale` : la langue de l'interface (l'anglais par défaut).
+export function listCatalog(locale = 'en'): CatalogItem[] {
+  return PROVIDER_IDS.map((id) => catalogItem(CATALOG_ENTRIES[id], getConnector(id), locale)).sort(
     (a, b) =>
       PROVIDER_FAMILIES_ORDER.indexOf(a.family) - PROVIDER_FAMILIES_ORDER.indexOf(b.family) ||
-      a.label.localeCompare(b.label, 'fr'),
+      a.label.localeCompare(b.label, locale),
   );
 }

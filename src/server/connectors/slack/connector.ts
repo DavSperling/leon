@@ -106,7 +106,7 @@ export const slackConnector: Connector<PipedreamConfig> = {
   async verify(_config, http) {
     const me = await slackClient(http).me();
     const account = me.user && me.team ? `${me.user} (${me.team})` : me.user || me.team;
-    return { account: account || 'compte Slack', accountKey: `${me.team_id}:${me.user_id}` };
+    return { account: account || 'Slack account', accountKey: `${me.team_id}:${me.user_id}` };
   },
 
   async *sync(_config, { cursor, since }, http): AsyncGenerator<SyncPage> {

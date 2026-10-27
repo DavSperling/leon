@@ -11,4 +11,11 @@ export const productboardCatalog: CatalogEntry = {
   docsUrl: 'https://developer.productboard.com/reference/oauth-authorization-code',
   triedForReal: false,
   warning: 'Seul un Maker administrateur peut autoriser Leon.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'Productboard asks you to authorize Leon to read your workspace’s notes. The access also allows writing; Leon doesn’t use it yet. Only an admin Maker can accept, and API access requires a Pro plan or higher.',
+    warning: 'Only an admin Maker can authorize Leon.',
+  },
 };

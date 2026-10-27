@@ -59,7 +59,7 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -150,7 +150,7 @@ export const clickupConnector: Connector<Config> = {
     const user = await clickup.user();
     const teams = await clickup.teams();
     if (teams.length === 0) {
-      throw new ConnectorHttpError(null, 'Aucun espace ClickUp accessible avec cette clé');
+      throw new ConnectorHttpError(null, 'No ClickUp workspace accessible with this key');
     }
     const names = teams.map((team) => team.name).join(', ');
     // L'identifiant porte les espaces, triés : un autre espace du même utilisateur est un autre compte.

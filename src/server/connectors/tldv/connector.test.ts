@@ -87,13 +87,13 @@ describe('tldvConnector : configuration', () => {
   });
 
   it('est disponible dans le catalogue, avec son avertissement', () => {
-    const entry = listCatalog().find((item) => item.id === 'tldv');
+    const entry = listCatalog('fr').find((item) => item.id === 'tldv');
     expect(entry).toMatchObject({ available: true, triedForReal: false });
     expect(entry?.warning).toContain('Pro');
   });
 
   it('déclare au catalogue les champs de la configuration, la clé en secret', () => {
-    const entry = listCatalog().find((item) => item.id === 'tldv');
+    const entry = listCatalog('fr').find((item) => item.id === 'tldv');
     const connector: AnyConnector = tldvConnector;
     const keys = Object.keys((connector.configSchema as z.ZodObject).shape);
     expect(entry?.fields.map((field) => field.name)).toEqual(keys);
@@ -110,7 +110,7 @@ describe('tldvConnector : verify', () => {
 
     const { account } = await tldvConnector.verify(CONFIG, http);
 
-    expect(account).toBe('3 réunions accessibles');
+    expect(account).toBe('3 accessible meetings');
     const url = new URL(calls[0]?.url ?? '');
     expect(`${url.origin}${url.pathname}`).toBe(LIST);
     expect(url.searchParams.get('limit')).toBe('1');
@@ -370,7 +370,7 @@ describe('tldvConnector : ressources secondaires', () => {
 
     await expect(pages).rejects.toMatchObject({
       name: 'ConnectorHttpError',
-      message: 'Réponse inattendue',
+      message: 'Unexpected response',
     });
   });
 });

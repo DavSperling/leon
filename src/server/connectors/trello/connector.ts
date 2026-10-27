@@ -117,7 +117,7 @@ export const trelloConnector: Connector<Config> = {
     const me = await trello.account();
     const count = (await trello.boards()).length;
     const name = me.fullName?.trim() || me.username;
-    return { account: `${name} (@${me.username}), ${count} tableau${count > 1 ? 'x' : ''}` };
+    return { account: `${name} (@${me.username}), ${count} board${count > 1 ? 's' : ''}` };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

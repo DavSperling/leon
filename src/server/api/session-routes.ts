@@ -49,7 +49,7 @@ export const requireSameOrigin: MiddlewareHandler = async (c, next) => {
     (origin !== undefined && origin !== expected) ||
     (site !== undefined && !ALLOWED_FETCH_SITES.includes(site))
   ) {
-    return c.json({ error: 'Origine refusée' }, 403);
+    return c.json({ error: 'Origin not allowed' }, 403);
   }
   await next();
 };
@@ -103,10 +103,10 @@ export const sessionRoutes = new Hono<SessionEnv>()
   .get(ANSWER_ROUTE, requireSameOrigin, requireSession, (c) => {
     // La barre tronque déjà la requête à 300 caractères (url-state.ts) : la même requête, la même clé de cache.
     const query = (c.req.query('q') ?? '').slice(0, QUERY_MAX_CHARS);
-    if (query.trim() === '') return c.json({ error: 'Requête vide' }, 400);
+    if (query.trim() === '') return c.json({ error: 'Empty query' }, 400);
     // Les résultats affichés sur la page, dans leur ordre : [n] de la réponse désigne le n-ième.
     const resultIds = parseAnswerResults(c.req.query(ANSWER_RESULTS_PARAM));
-    if (resultIds === null) return c.json({ error: 'Liste des résultats invalide' }, 400);
+    if (resultIds === null) return c.json({ error: 'Invalid result list' }, 400);
     const leaving = new AbortController();
     const events = answerStream(
       c.var.ctx,
@@ -116,7 +116,7 @@ export const sessionRoutes = new Hono<SessionEnv>()
     // Sans modèle, l'encadré ne s'affiche pas : la recherche marche sans lui.
     if (events === null) return c.body(null, 204);
     // Déjà trois réponses en cours pour cet utilisateur : l'encadré se masque.
-    if (events === 'trop') return c.json({ error: 'Trop de réponses en cours' }, 429);
+    if (events === 'trop') return c.json({ error: 'Too many answers in progress' }, 429);
     return streamEvents(c, events, 'answer.route', { leaving });
   })
   // Une question dans une discussion de l'utilisateur, et la réponse de l'agent en flux (C8). Une discussion qu'il
@@ -127,13 +127,13 @@ export const sessionRoutes = new Hono<SessionEnv>()
     requireSession,
     bodyLimit({
       maxSize: DISCUSSION_BODY_MAX_BYTES,
-      onError: (c) => c.json({ error: 'Requête trop volumineuse' }, 413),
+      onError: (c) => c.json({ error: 'Request too large' }, 413),
     }),
     async (c) => {
       const discussion = await findDiscussion(c.var.ctx, c.req.param('id') ?? '');
       if (!discussion) return c.json({ error: 'Introuvable' }, 404);
       const parsed = DiscussionMessageSchema.safeParse(await c.req.json().catch(() => undefined));
-      if (!parsed.success) return c.json({ error: 'Message vide ou trop long' }, 400);
+      if (!parsed.success) return c.json({ error: 'Empty or too long message' }, 400);
       const events = replyStream(c.var.ctx, discussion.id, parsed.data.message, {
         llm: getLlm(env),
         embedder: getEmbedder(env),

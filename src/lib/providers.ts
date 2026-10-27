@@ -21,6 +21,16 @@ export const FAMILY_LABELS: Record<ProviderFamily, string> = {
   mails: 'Mails, chat et agenda',
 };
 
+// Les mêmes en anglais, pour le site public.
+export const FAMILY_LABELS_EN: Record<ProviderFamily, string> = {
+  dev: 'Dev',
+  reunions: 'Meetings',
+  projet: 'Project management',
+  crm: 'CRM',
+  support: 'Support',
+  mails: 'Email, chat and calendar',
+};
+
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
   github: 'GitHub',
   notion: 'Notion',

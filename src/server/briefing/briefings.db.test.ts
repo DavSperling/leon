@@ -131,10 +131,10 @@ describe('refreshBriefing', () => {
     expect(row?.sourceIds.toSorted()).toEqual(
       [seeded.sessionId, seeded.changeId, seeded.mentionId].toSorted(),
     );
-    expect(row?.markdown).toContain(`# Point du matin · ${seeded.project}`);
+    expect(row?.markdown).toContain(`# Morning briefing · ${seeded.project}`);
     expect(row?.markdown).toContain(DATA_GUARD_LINE);
     expect(row?.markdown).toContain('- Le jeton est corrigé [1].');
-    expect(row?.markdown).toContain('[1] Claude Code · « Session du jeton »');
+    expect(row?.markdown).toContain('[1] Claude Code · "Session du jeton"');
     expect(row?.preparedAt.getTime()).toBe(now.getTime());
     expect(row?.stale).toBe(false);
     expect(row?.acl).toEqual([alice.userId]);
@@ -190,7 +190,7 @@ describe('refreshBriefing', () => {
 
     const row = await rowOf(solo, project);
     expect(llm.calls).toEqual([]);
-    expect(row?.markdown).toMatch(/Rien de neuf sur ce projet/);
+    expect(row?.markdown).toMatch(/Nothing new on this project/);
     expect(row?.sourceIds).toEqual([]);
   });
 
@@ -364,7 +364,7 @@ describe('latestBriefingProject', () => {
 
   it('le message d’attente dit que le point sera prêt à la prochaine session', () => {
     expect(BRIEFING_PENDING_MARKDOWN).toBe(
-      'Pas encore de point pour ce projet : il sera prêt à la prochaine session.',
+      'No briefing for this project yet: it will be ready at your next session.',
     );
   });
 });

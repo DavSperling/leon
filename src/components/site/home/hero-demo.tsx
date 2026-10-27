@@ -1,13 +1,14 @@
 'use client';
 
 import { Pause, Play } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Tabs } from 'radix-ui';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Beam } from '@/components/verre/ui/surfaces';
 import { cn } from '@/lib/verre/cn';
 import { useInstant } from '@/lib/verre/instant';
 import { nb } from '@/lib/verre/nb';
-import { DEMOS, type Demo } from '../content';
+import { type Demo, useSiteContent } from '../content';
 import { DemoAnswerCard, DemoSearchField, DemoSourceRow } from '../demo-card';
 import { Cite } from '../parts';
 
@@ -16,13 +17,6 @@ import { Cite } from '../parts';
 // (Radix Tabs : flèches du clavier). Le scénario suivant démarre seul après un temps de lecture, sauf si l'on a choisi
 // un onglet, mis en pause, ou si le pointeur ou le focus est dans la démo. Rien ne tourne hors de l'écran ni onglet
 // caché. Mouvement réduit : l'état final, sans enchaînement. Les lecteurs d'écran lisent la version finale (sr-only).
-
-const LABELS: Record<string, string> = {
-  promesse: 'Une promesse client',
-  bug: 'Un bug connu',
-  depart: 'Un départ',
-  inconnu: 'Sans source',
-};
 
 const CHAR_MS = 34;
 const SEARCH_MS = 750;
@@ -44,6 +38,9 @@ function timeline(demo: Demo) {
 }
 
 export function HeroDemo() {
+  const t = useTranslations('site.heroDemo');
+  const common = useTranslations('site.common');
+  const { demos: DEMOS } = useSiteContent();
   const instant = useInstant();
   const [index, setIndex] = useState(0);
   // l'horloge porte l'id de son scénario : un changement d'onglet repart de zéro dès le rendu, sans une image de l'ancien état
@@ -58,8 +55,8 @@ export function HeroDemo() {
   const scenario = useRef('');
   const demo = DEMOS[index] as Demo;
   const tl = useMemo(() => timeline(demo), [demo]);
-  const t = clock.id === tl.id ? clock.t : 0;
-  const reading = t >= tl.end;
+  const time = clock.id === tl.id ? clock.t : 0;
+  const reading = time >= tl.end;
 
   // Visible à l'écran et onglet affiché : sinon l'horloge s'arrête.
   useEffect(() => {
@@ -101,15 +98,15 @@ export function HeroDemo() {
       reading ? 120 : 32,
     );
     return () => window.clearInterval(id);
-  }, [instant, visible, auto, hold, tl, reading]);
+  }, [instant, visible, auto, hold, tl, reading, DEMOS.length]);
 
-  const now = instant ? Number.POSITIVE_INFINITY : t;
+  const now = instant ? Number.POSITIVE_INFINITY : time;
   const typedChars = Math.min(demo.query.length, Math.floor(now / CHAR_MS));
   const searching = now >= tl.typed && now < tl.sources;
   const streaming = now >= tl.answer && now < tl.end;
   const showSources = now >= tl.sources;
   const shownTokens = now >= tl.answer ? Math.floor((now - tl.answer) / WORD_MS) + 1 : 0;
-  const progress = auto ? Math.min(1, t / tl.total) : Math.min(1, t / tl.end);
+  const progress = auto ? Math.min(1, time / tl.total) : Math.min(1, time / tl.end);
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: retient le défilement automatique, rien d'autre
@@ -133,17 +130,14 @@ export function HeroDemo() {
         }}
       >
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
-          <Tabs.List
-            aria-label="Exemples de questions"
-            className="flex flex-wrap justify-center gap-2"
-          >
+          <Tabs.List aria-label={t('tabs')} className="flex flex-wrap justify-center gap-2">
             {DEMOS.map((d) => (
               <Tabs.Trigger
                 key={d.id}
                 value={d.id}
                 className="relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full border border-line bg-glass-3 px-4 text-label font-semibold text-fg-2 backdrop-blur-[12px] transition-[border-color,background-color,color] duration-200 hover:border-line-strong hover:text-fg data-[state=active]:border-accent-line data-[state=active]:bg-accent-soft data-[state=active]:text-accent"
               >
-                {LABELS[d.id]}
+                {d.tab}
                 {/* fil de progression du scénario en cours */}
                 {d.id === demo.id && !instant && (
                   <span
@@ -163,10 +157,8 @@ export function HeroDemo() {
               type="button"
               onClick={() => setAuto((a) => !a)}
               aria-pressed={!auto}
-              aria-label={
-                auto ? 'Arrêter le défilement des exemples' : 'Reprendre le défilement des exemples'
-              }
-              title={auto ? 'Arrêter le défilement' : 'Reprendre le défilement'}
+              aria-label={auto ? t('pause') : t('play')}
+              title={auto ? t('pauseShort') : t('playShort')}
               className="inline-grid size-10 place-items-center rounded-full border border-line bg-glass-3 text-fg-2 backdrop-blur-[12px] transition-colors duration-200 hover:border-line-strong hover:text-fg"
             >
               {auto ? (
@@ -186,9 +178,9 @@ export function HeroDemo() {
           >
             {/* Version lue : la question, la réponse finale et ses sources */}
             <div className="sr-only">
-              <p>{nb('Exemple fictif.')}</p>
-              <p>{nb(`Question : ${d.query}`)}</p>
-              <p>{nb(`Réponse de Leon : ${d.answer}`)}</p>
+              <p>{nb(t('srExample'))}</p>
+              <p>{nb(t('srQuestion', { query: d.query }))}</p>
+              <p>{nb(t('srAnswer', { answer: d.answer }))}</p>
               <ol>
                 {d.sources.map((s) => (
                   <li key={s.title}>{nb(`${s.kind}, ${s.title}, ${s.author}, ${s.date}`)}</li>
@@ -199,8 +191,8 @@ export function HeroDemo() {
             <div aria-hidden="true">
               <div className="mb-3 flex items-center gap-2 px-1 font-mono text-meta tracking-normal text-muted">
                 <span className="size-1.5 rounded-full bg-ok" />
-                leon · recherche
-                <span className="ml-auto">Exemple fictif</span>
+                {t('bar')}
+                <span className="ml-auto">{common('fictional')}</span>
               </div>
 
               <Beam active={searching || streaming} className="rounded-box">
@@ -250,7 +242,7 @@ export function HeroDemo() {
                   )}
                   {now >= tl.end && demo.unknown && (
                     <p className="fade-in relative z-[1] mt-3 inline-flex rounded-full border border-warning-line bg-warning-soft px-3 py-1 text-label font-semibold text-warning">
-                      Leon le dit plutôt que de deviner
+                      {t('unknown')}
                     </p>
                   )}
                 </DemoAnswerCard>

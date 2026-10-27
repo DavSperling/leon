@@ -19,10 +19,11 @@ export default async function ConnectionsPage({
 }) {
   const ctx = await requireUserContext();
   const [connections, channels] = await Promise.all([listConnections(ctx), channelHealth(ctx)]);
-  const catalog = listCatalog();
+  const locale = await getLocale();
+  const catalog = listCatalog(locale);
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
-  const notice = oauthNotice(await searchParams, await getLocale());
+  const notice = oauthNotice(await searchParams, locale);
   const consentUrl = catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null;
   const now = new Date();
   return (

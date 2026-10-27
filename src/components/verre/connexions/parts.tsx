@@ -20,7 +20,7 @@ type StatusView = Pick<
 /** Lignes étroites : jamais « 18 / min » ni un « · » en début de ligne (le point reste avec ce qui le précède). */
 export const keepTogether = (s: string): string =>
   s
-    .replace(/(\d) (?=(?:min|h|j|éléments?|passages?)(?!\p{L}))/gu, '$1 ')
+    .replace(/(\d) (?=(?:min|hr?|j|items?|éléments?|passages?)(?!\p{L}))/gu, '$1 ')
     .replace(/ · /g, ' · ')
     .replace(/il y a /g, 'il y a ');
 
@@ -89,7 +89,7 @@ export function StateWord({ c, className }: { c: ConnectionView; className?: str
   );
 }
 
-/** La ligne d'état sans son premier mot : « Clé refusée par Intercom. », « X n'est plus membre » ; null pour « En pause ». */
+/** La ligne d'état sans son premier mot : « Intercom rejected the key », « X n'est plus membre » ; null pour « En pause ». */
 export const stateDetail = (c: StatusView, now: Date, locale = 'fr'): string | null =>
   statusLine(c, now, locale).match(/^[^·:]*[·:]\s*(.+)$/s)?.[1] ?? null;
 

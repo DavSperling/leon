@@ -34,7 +34,7 @@ import { outlookOAuth } from './oauth';
 // Non vérifié (aucun compte réel) : que Graph accepte $filter et $orderby sur lastModifiedDateTime
 // pour les événements ; que le corps en texte vienne bien avec l'en-tête Prefer ; que Prefer et
 // $select ensemble ne changent rien ; l'erreur d'une boîte sans licence Exchange (404 attendu :
-// elle sort en « Outlook a répondu 404 », nouvel essai dans une heure) ; la limite de débit de Graph
+// elle sort en « Outlook responded with 404 », nouvel essai dans une heure) ; la limite de débit de Graph
 // pour Outlook (10 000 requêtes par 10 minutes et par boîte : un passage de 200 éléments reste loin) ;
 // qu'une réponse cite tout le fil précédent (le corps est gardé tel quel, citations comprises) ;
 // que les identifiants de message (≈ 150 caractères) tiennent dans les 180 caractères d'un tour.
@@ -123,7 +123,7 @@ export const outlookConnector: Connector<Config> = {
     const key = me.id ? { accountKey: me.id } : {};
     if (me.displayName)
       return { account: address ? `${me.displayName} (${address})` : me.displayName, ...key };
-    return { account: address || 'compte Outlook', ...key };
+    return { account: address || 'Outlook account', ...key };
   },
 
   async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {

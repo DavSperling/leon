@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS } from '../capture/api-contract';
 import { type IngestPayload, type IngestResult, TURN_TEXT_MAX } from '../capture/turn';
 import {
+  countOf,
   createIngestSender,
   type ImportDeps,
   importClaudeCode,
@@ -236,7 +237,7 @@ describe('importClaudeCode', () => {
     });
 
     await expect(importClaudeCode(importOptions(), deps)).rejects.toThrow(
-      'Jeton refusé par le serveur Leon.',
+      'Token refused by the Leon server.',
     );
     expect(send).toHaveBeenCalledTimes(1);
   });
@@ -381,7 +382,17 @@ describe('parseSince', () => {
   });
 
   it('refuse une date mal écrite et laisse passer l’absence de date', () => {
-    expect(() => parseSince('13/10/2026')).toThrow('AAAA-MM-JJ');
+    expect(() => parseSince('13/10/2026')).toThrow('YYYY-MM-DD');
     expect(parseSince(undefined)).toBeUndefined();
+  });
+});
+
+describe('countOf', () => {
+  it('met le pluriel sauf pour un seul : 0 turns, 1 turn, 2 turns', () => {
+    expect([0, 1, 2].map((count) => countOf(count, 'turn'))).toEqual([
+      '0 turns',
+      '1 turn',
+      '2 turns',
+    ]);
   });
 });

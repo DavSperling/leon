@@ -85,7 +85,7 @@ describe('outlookConnector : configuration', () => {
 });
 
 describe('outlookConnector : catalogue', () => {
-  const item = listCatalog().find((entry) => entry.id === 'outlook');
+  const item = listCatalog('fr').find((entry) => entry.id === 'outlook');
 
   it('est disponible, sans clé collée, et dit que le texte reste privé à son auteur', () => {
     expect(item).toMatchObject({ available: true, keyAccepted: false, fields: [] });
@@ -545,7 +545,7 @@ describe('outlookConnector.sync : erreurs', () => {
     );
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Adresse non autorisée');
+    expect((failure as Error).message).toBe('Address not allowed');
   });
 
   it('ne reprend pas le texte de l’erreur de Microsoft', async () => {

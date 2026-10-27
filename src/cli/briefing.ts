@@ -33,7 +33,7 @@ export const BRIEFING_STDIN_TIMEOUT_MS = 1000;
 // Un 404 n'est ni un jeton refusé ni un serveur injoignable : ce serveur n'a pas la route du point du matin.
 export class BriefingRouteMissingError extends Error {
   constructor() {
-    super('ce serveur ne prépare pas encore de point du matin (route absente).');
+    super('this server does not prepare a morning briefing yet (route missing).');
   }
 }
 
@@ -100,13 +100,13 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     const project = await projectKeyFor(briefingDirectory(stdin, deps.env, deps.cwd), deps.git);
     const text = await fetchBriefingText(deps.fetch, server, project);
     if (text === null) {
-      deps.err('Leon : briefing indisponible (serveur injoignable ou jeton refusé).');
+      deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {
       deps.out(text);
     }
   } catch (error) {
     // Messages fixes (parseServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
-    deps.err(`Leon : ${error instanceof Error ? error.message : 'briefing indisponible.'}`);
+    deps.err(`Leon: ${error instanceof Error ? error.message : 'briefing unavailable.'}`);
   }
   return 0;
 }

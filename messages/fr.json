@@ -1,4 +1,72 @@
 {
+  "auth": {
+    "signIn": "Se connecter",
+    "createWorkspace": "Créer un espace",
+    "createWorkspaceSubmit": "Créer l’espace",
+    "joinWorkspace": "Rejoindre l’espace",
+    "joinWorkspaceMeta": "Rejoindre un espace",
+    "noAccount": "Pas encore de compte ?",
+    "haveAccount": "Déjà un compte ?",
+    "invitedTo": "On vous invite dans l’espace « {name} ».",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "name": "Nom",
+    "confirmPassword": "Confirmer le mot de passe",
+    "companyName": "Nom de l’entreprise",
+    "passwordHint": "8 caractères minimum.",
+    "companyHint": "Crée l’espace de votre équipe.",
+    "inviteEmailHint": "Une adresse qui n’a pas encore de compte Leon.",
+    "showPassword": "Voir le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "show": "Voir",
+    "hide": "Masquer",
+    "passwordMinLength": "8 caractères minimum",
+    "passwordsMatch": "Les mots de passe correspondent",
+    "sending": "Envoi…",
+    "twoFactorAppPrompt": "Saisissez le code de votre application d’authentification.",
+    "twoFactorBackupPrompt": "Saisissez l’un des codes de secours enregistrés à l’activation. Chacun ne sert qu’une fois.",
+    "authCodeLabel": "Code d’authentification",
+    "backupCodeLabel": "Code de secours",
+    "useApp": "Utiliser l’application",
+    "lostPhone": "Téléphone perdu ? Utiliser un code de secours",
+    "verify": "Vérifier",
+    "forgotTitle": "Mot de passe oublié",
+    "forgotLink": "Mot de passe oublié ?",
+    "forgotIntro": "Recevez un lien pour choisir un nouveau mot de passe.",
+    "emailNotSetUp": "Leon n’envoie pas encore d’e-mails : demandez à l’administrateur de votre espace.",
+    "backToSignIn": "Retour à la connexion",
+    "sendLink": "Envoyer le lien",
+    "resetMeta": "Réinitialiser le mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "changePassword": "Changer le mot de passe",
+    "resetLinkExpired": "Ce lien est invalide ou a expiré.",
+    "requestNewLink": "Demander un nouveau lien",
+    "expiredTitle": "Lien expiré",
+    "expiredText": "Ce lien d’invitation a déjà servi ou n’est plus valable. Demandez-en un nouveau à la personne qui vous l’a envoyé.",
+    "passwordsMismatch": "Les mots de passe ne correspondent pas.",
+    "invalidEmail": "Saisissez une adresse e-mail valide.",
+    "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "passwordRequired": "Saisissez votre mot de passe.",
+    "nameRequired": "Indiquez votre nom.",
+    "passwordLength": "Le mot de passe doit contenir entre 8 et 128 caractères.",
+    "companyInvalid": "Indiquez le nom de votre entreprise (2 à 100 caractères).",
+    "emailTaken": "Cette adresse e-mail est déjà utilisée.",
+    "signUpFailed": "Impossible de créer le compte. Réessayez.",
+    "signedUpNotIn": "Compte créé, mais la connexion a échoué. Connectez-vous.",
+    "invalidValue": "Valeur invalide.",
+    "wrongCredentials": "E-mail ou mot de passe incorrect.",
+    "codeFormat": "Saisissez le code à 6 chiffres ou l’un de vos codes de secours.",
+    "codeWrong": "Code incorrect ou expiré. Réessayez.",
+    "emailSendingOff": "L’envoi d’e-mails n’est pas configuré. Demandez à l’administrateur de votre espace.",
+    "resetSent": "Si cette adresse correspond à un compte, un lien de réinitialisation vient d’être envoyé.",
+    "resetLinkInvalid": "Ce lien est invalide ou a expiré. Demandez-en un nouveau.",
+    "resetDone": "Votre mot de passe a été changé. Vous pouvez vous connecter.",
+    "inviteInvalid": "Ce lien d’invitation n’est plus valable. Demandez-en un nouveau.",
+    "resetEmailSubject": "Réinitialiser votre mot de passe Leon",
+    "resetEmailIntro": "Une demande de réinitialisation de votre mot de passe Leon a été faite.",
+    "resetEmailAction": "Choisir un nouveau mot de passe",
+    "resetEmailIgnore": "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail."
+  },
   "navigation": {
     "search": "Recherche",
     "discussions": "Discussions",
@@ -54,7 +122,8 @@
     "searchQuery": "Rechercher « {query} »",
     "paletteTitle": "Palette de commandes",
     "suggestions": "Suggestions",
-    "memoryLate": "Mémoire en retard"
+    "memoryLate": "Mémoire en retard",
+    "quickSearch": "Rechercher"
   },
   "language": {
     "title": "Langue",
@@ -101,6 +170,7 @@
     "pageOf": "Page {page} sur {pages}",
     "openIn": "Ouvrir dans {tool}",
     "newTab": " (s'ouvre dans un nouvel onglet)",
+    "close": "Fermer",
     "loading": "Chargement…"
   },
   "discussions": {
@@ -169,12 +239,24 @@
     "loadingPreview": "Chargement de l’aperçu…",
     "passageUnavailable": "Ce passage n’est plus disponible. Relancez la recherche.",
     "previewFailed": "L’aperçu n’a pas pu se charger. Cliquez de nouveau sur le résultat.",
-    "paneLabel": "Aperçu de la source citée"
+    "paneLabel": "Aperçu de la source citée",
+    "refusal": "Je ne peux pas répondre à cette demande.",
+    "empty": "Je ne sais pas : je n’ai rien trouvé à répondre.",
+    "limitNote": "Je me suis arrêté avant la fin : la limite de recherches et de lectures pour une réponse est atteinte. Posez une question plus précise pour que je continue.",
+    "activity": {
+      "chercher": "Leon cherche dans la mémoire…",
+      "lire": "Leon lit une source…",
+      "activite": "Leon regarde l’activité récente…",
+      "autre": "Leon travaille…"
+    }
   },
   "errors": {
     "loadTitle": "Impossible de charger la page.",
     "retrySoon": "Réessayez dans un instant.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "notFoundTitle": "Page introuvable",
+    "notFound": "Cette page n’existe pas.",
+    "backHome": "Retour à l’accueil"
   },
   "searchResults": {
     "failed": "La recherche n’a pas abouti. Réessayez dans un instant.",
@@ -200,6 +282,7 @@
     "result": "Résultat {number} : {title}",
     "untitled": "Sans titre",
     "sourceNote": "Rédigée par l’IA à partir des résultats ci-dessous : vérifiez les sources citées.",
+    "notEnough": "Les résultats ne suffisent pas pour répondre.",
     "continue": "Continuer en discussion"
   },
   "connections": {
@@ -255,6 +338,15 @@
     "connectionResumed": "Connexion reprise.",
     "connectionPaused": "Connexion mise en pause.",
     "connectionMissing": "Cette connexion n'existe plus.",
+    "notConfigured": "Les connecteurs ne sont pas configurés sur ce serveur (LEON_CONNECTORS_KEY).",
+    "badRequest": "Demande illisible : rechargez la page.",
+    "notCreator": "Seule la personne qui a branché cet outil peut remplacer sa clé.",
+    "unknownTool": "Outil inconnu.",
+    "toolUnavailable": "{provider} n'est pas encore disponible.",
+    "keyRejected": "Clé refusée par {provider}.",
+    "toolNotResponding": "{provider} ne répond pas, réessayez dans un moment.",
+    "saveFailed": "Impossible d'enregistrer la connexion. Réessayez.",
+    "replaceFailed": "Impossible de remplacer la clé. Réessayez.",
     "reconnect": "Reconnecter",
     "appGone": "L’appli {provider} n’est plus configurée sur ce serveur : impossible de reconnecter.",
     "replaceKey": "Remplacer la clé",
@@ -397,5 +489,505 @@
     "codeInvalid": "Saisissez le code à 6 chiffres.",
     "codeWrong": "Code incorrect. Vérifiez l’application et réessayez.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes."
+  },
+  "site": {
+    "meta": {
+      "homeTitle": "Leon · La mémoire de votre entreprise, avec ses sources",
+      "homeDescription": "Leon garde ce qui se dit dans vos outils et vos conversations d’IA, tel quel, et le retrouve avec sa source. Quand rien ne répond, il le dit.",
+      "useCasesTitle": "Cas d’usage",
+      "useCasesDescription": "Direction, ventes, support, produit, chefs de projet, nouvelles arrivées : les questions que chaque équipe pose à Leon, et ce qu’il répond, avec ses sources.",
+      "connectorsTitle": "Connecteurs",
+      "connectorsDescription": "Les {count} outils que Leon relève toutes les 15 minutes (dev, réunions, projet, CRM, support, mails), et les conversations avec vos assistants d’IA.",
+      "productTitle": "Comment ça marche",
+      "productDescription": "Leon se branche sur vos outils et vos assistants d’IA, garde chaque élément tel quel, et répond en citant ses sources.",
+      "securityTitle": "Sécurité",
+      "securityDescription": "Leon voit ce que vous voyez : isolation par entreprise, droits appliqués avant le classement, conversations privées, clés chiffrées. Et ce qui n’est pas encore là.",
+      "pricingTitle": "Tarifs",
+      "pricingDescription": "Un pilote gratuit de 30 jours, puis un prix par utilisateur actif et par mois, sans engagement.",
+      "teamTitle": "{team} · Cas d’usage"
+    },
+    "cta": {
+      "create": "Créer un espace",
+      "signIn": "Se connecter",
+      "howItWorks": "Comment ça marche",
+      "seeHowItWorks": "Voir comment ça marche",
+      "seeConnectors": "Voir les connecteurs",
+      "startPilot": "Commencer le pilote"
+    },
+    "common": {
+      "fictional": "Exemple fictif",
+      "fictionalPlural": "Exemples fictifs",
+      "fictionalLabel": "Exemple fictif · {label}",
+      "searchScreen": "Exemple fictif · l’écran Recherche de Leon",
+      "leonAnswer": "Réponse de Leon",
+      "briefing": "Point du matin",
+      "maskedSecret": "[secret masqué]",
+      "planned": "Prévu",
+      "breadcrumb": "Fil d’Ariane",
+      "next": "Ensuite",
+      "useCases": "Cas d’usage",
+      "connectors": "Connecteurs",
+      "security": "Sécurité",
+      "inTheBar": "Dans la barre",
+      "toolCount": "{count} outils"
+    },
+    "shell": {
+      "skip": "Aller au contenu"
+    },
+    "header": {
+      "home": "Leon, accueil",
+      "nav": "Site",
+      "lightTheme": "Thème clair",
+      "darkTheme": "Thème sombre",
+      "allUseCases": "Tous les cas d’usage",
+      "menu": "Menu",
+      "close": "Fermer"
+    },
+    "footer": {
+      "nav": "Pied de page",
+      "product": "Produit",
+      "search": "Recherche et réponse citée",
+      "discussions": "Discussions et point du matin",
+      "pricing": "Tarifs",
+      "trust": "Confiance",
+      "account": "Compte",
+      "language": "Langue"
+    },
+    "auth": {
+      "aside": "Leon en bref",
+      "points": {
+        "sources": "Chaque réponse cite sa source, ou dit « je ne sais pas ».",
+        "private": "Vos conversations d’IA et vos discussions restent privées.",
+        "tools": "{count} outils branchables, relevés toutes les 15 minutes."
+      },
+      "steps": {
+        "create": {
+          "title": "Créez l’espace",
+          "text": "Votre nom, votre e-mail, le nom de l’entreprise."
+        },
+        "connect": {
+          "title": "Branchez un premier outil",
+          "text": "Une clé d’API ou un bouton de connexion, dans Connexions."
+        },
+        "ask": {
+          "title": "Posez une première question",
+          "text": "Leon cherche dans ce qu’il a gardé et cite ses sources."
+        }
+      },
+      "signUpKicker": "En trois temps",
+      "signInKicker": "Bon retour",
+      "signUpTitle": "Créez l’espace, branchez un outil, posez une question.",
+      "signInTitle": "Ce qui a été dit ",
+      "signInTitleAccent": "reste dit.",
+      "moreTools": "et {count} autres",
+      "noBilling": "Aucune facturation à ce jour · tarifs en cours de définition",
+      "example": "Exemple fictif · une réponse citée et le point du matin"
+    },
+    "demo": {
+      "search": "Rechercher",
+      "noAnswer": "sans réponse",
+      "sources": "{count, plural, one {# source} other {# sources}}"
+    },
+    "heroDemo": {
+      "tabs": "Exemples de questions",
+      "pause": "Arrêter le défilement des exemples",
+      "play": "Reprendre le défilement des exemples",
+      "pauseShort": "Arrêter le défilement",
+      "playShort": "Reprendre le défilement",
+      "srExample": "Exemple fictif.",
+      "srQuestion": "Question : {query}",
+      "srAnswer": "Réponse de Leon : {answer}",
+      "bar": "leon · recherche",
+      "unknown": "Leon le dit plutôt que de deviner"
+    },
+    "teamTabs": {
+      "list": "Cas d’usage par équipe",
+      "typed": "Ce que l’équipe tape dans la barre",
+      "tools": "Outils de l’équipe : {tools}",
+      "more": "Tout le cas d’usage"
+    },
+    "layers": {
+      "raw": {
+        "title": "Le brut, tel quel",
+        "text": "Chaque réunion, ticket, note ou mail est gardé comme il a été écrit, avec son lien vers l’original."
+      },
+      "index": {
+        "title": "L’index",
+        "text": "Découpé en passages, cherché par les mots et par le sens, fautes de frappe tolérées dans les titres."
+      },
+      "rights": {
+        "title": "Les droits, d’abord",
+        "text": "Le filtre des droits passe avant le classement : ce qui est privé à son auteur ne remonte jamais chez un autre."
+      },
+      "line1": "on peut **s’engager** sur le **15 novembre**",
+      "line2": "hors **reprise** de l’historique",
+      "line3": "la **reprise des données** fait l’objet",
+      "fullText": "plein texte",
+      "semantic": "par le sens",
+      "team": "Visible de l’équipe",
+      "teamTools": "outils de l’équipe",
+      "you": "Vous seul",
+      "aiConversations": "conversations d’IA"
+    },
+    "sample": {
+      "meeting": "Point mensuel ACME",
+      "meetingKind": "Réunion",
+      "migration": "ACME : reprise des données",
+      "quote": "Devis V2 signé",
+      "email": "Re : calendrier de la V2",
+      "emailKind": "Mail"
+    },
+    "home": {
+      "beta": "Bêta",
+      "pill": "La mémoire d’entreprise des PME",
+      "title": "Ce qui a été promis à vos clients, ",
+      "titleAccent": "retrouvé avec sa source.",
+      "lead": "Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous seul, et répond en citant la source. Quand rien ne répond, il le dit.",
+      "betaNote": "Bêta ouverte · aucune facturation à ce jour",
+      "toolsTitle": "{count} outils, ",
+      "toolsTitleAccent": "et vos assistants d’IA.",
+      "toolsLead": "Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change toutes les 15 minutes, par une clé d’API ou un bouton de connexion.",
+      "spin": "Faites tourner la sphère.",
+      "seeConnectors": "Voir les {count} connecteurs",
+      "problemKicker": "Le problème",
+      "problemTitle": "L’information de l’équipe est partout, sauf là où on la cherche.",
+      "problems": {
+        "scattered": {
+          "title": "Tout est quelque part",
+          "text": "Mails, CRM, tickets, réunions, pages : ce qui a été dit vit dans des dizaines d’outils. Le retrouver demande d’ouvrir chaque outil, quand on le retrouve."
+        },
+        "departures": {
+          "title": "Les départs emportent la mémoire",
+          "text": "Quand un chef de projet part, ses engagements partent avec lui. Le client, lui, s’en souvient."
+        },
+        "privateAi": {
+          "title": "Chacun parle à son IA dans son coin",
+          "text": "Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde, pour vous seul, avec le reste."
+        }
+      },
+      "tasks": {
+        "quote": "Relancer le devis Verlant",
+        "ship": "Livrer la V2 à ACME le 15 nov.",
+        "migrate": "Reprendre les données"
+      },
+      "chatQuestion": "On garde Postgres pour la file, pas Redis ?",
+      "chatAnswer": "Oui : une seule base, moins de pièces à surveiller…",
+      "chatNote": "conversation d’une seule personne",
+      "stepsTitle": "Vous branchez. Leon garde. Vous demandez.",
+      "stepsLead": "Aucune fiche à remplir, aucun résumé à relire : Leon relève vos outils toutes les 15 minutes et garde chaque élément tel qu’il a été écrit.",
+      "step1Title": "Vous branchez vos outils",
+      "step1Text": "Une clé d’API ou un bouton de connexion, parmi {count} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.",
+      "step1Extension": "Extension · assistant web",
+      "step2Title": "Leon garde le brut",
+      "step2Text": "Tel quel, avec un lien vers l’original. Vos conversations d’IA restent à vous. Les secrets reconnaissables sont masqués avant d’être gardés.",
+      "step2Date": "3 oct.",
+      "step2Quote": "« On peut s’engager sur le 15 novembre pour la V2… »",
+      "step2Open": "Ouvrir dans Granola ↗",
+      "step3Title": "Vous demandez",
+      "step3Text": "Une recherche, une discussion, ou votre assistant d’IA par MCP. La réponse cite chaque source, ou dit « je ne sais pas ».",
+      "step3Query": "de:julie type:réunion depuis:1m",
+      "step3Answer1": "Julie s’est engagée sur le 15 nov.",
+      "step3Answer2": ", hors reprise des données",
+      "layersKicker": "Sous le capot",
+      "layersTitle": "Trois couches, dans cet ordre.",
+      "layersLead": "Leon ne réécrit rien. Il garde le brut, l’indexe pour le retrouver, et applique les droits avant de vous montrer quoi que ce soit.",
+      "useCasesTitle": "Une mémoire commune, des questions propres à chaque équipe.",
+      "useCasesLead": "Direction, ventes, support, produit, projets, arrivées : chacun cherche autre chose, dans les mêmes outils.",
+      "proofKicker": "Notre règle",
+      "proofTitle": "La source,",
+      "proofTitleAccent": "ou rien.",
+      "proofLead": "Une réponse sans source ne vaut rien devant un client qui conteste. Leon montre d’où vient chaque phrase, et s’arrête quand il ne sait pas.",
+      "proofUnknown": "**Je ne sais pas.** Aucune source gardée ne parle d’un tarif accordé à Verlant en 2024.",
+      "proofs": {
+        "cited": {
+          "title": "Chaque phrase citée",
+          "text": "Un renvoi par affirmation, vers la réunion, le ticket ou le mail d’origine."
+        },
+        "unknown": {
+          "title": "« Je ne sais pas », plutôt qu’une supposition",
+          "text": "Quand aucune source ne répond, la réponse le dit. Rien n’est inventé pour combler."
+        },
+        "private": {
+          "title": "Ce qui est à vous reste à vous",
+          "text": "La recherche, la discussion et l’assistant appliquent les mêmes droits : ce qui est privé à son auteur ne remonte chez personne d’autre."
+        },
+        "raw": {
+          "title": "Le brut, jamais réécrit",
+          "text": "Leon ne résume pas pour stocker. Il garde l’original et l’ouvre dans son outil."
+        }
+      },
+      "assistantKicker": "Dans votre assistant",
+      "assistantTitle": "Votre assistant d’IA connaît enfin le contexte de l’équipe.",
+      "assistantLead": "Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Avec un jeton personnel, révocable à tout moment : il voit ce que vous voyez, rien de plus.",
+      "assistantPoints": {
+        "briefing": "Le point du matin vous attend au démarrage de votre assistant de code.",
+        "sessions": "Chaque session de code est gardée à sa fin, texte seul.",
+        "log": "Ce que lit chaque assistant est noté dans un journal."
+      },
+      "assistantLink": "Discussions, point du matin et MCP",
+      "terminal": "assistant de code · serveur MCP de Leon",
+      "terminalSearch": "« reprise des données ACME »",
+      "terminalRemember": "« reprise reportée au 2 déc. »",
+      "terminalSaved": "note gardée, visible de vous seul",
+      "briefingMeta": "08:45 · 250 mots au plus",
+      "securityTitle": "Chaque entreprise dans son espace. Vos conversations à vous.",
+      "securityLink": "Tout sur la sécurité",
+      "securityNotYet": "Ce qui n’est pas encore là est écrit aussi : ",
+      "securityList": "la liste",
+      "faqKicker": "Questions fréquentes",
+      "faqTitle": "Ce qu’on nous demande d’abord.",
+      "faqLink": "Tarifs et autres questions",
+      "ctaText": "Créez l’espace de votre équipe, branchez un premier outil, posez une première question."
+    },
+    "product": {
+      "heroTitle": "Tout ce qui se dit, gardé tel quel, retrouvé avec sa source.",
+      "heroAccent": "retrouvé avec sa source.",
+      "heroLead": "Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous seul, puis répond en citant ses sources. Personne ne remplit de fiche pour lui.",
+      "flowCaption": "Les quatre étapes : capter, garder, retrouver, discuter.",
+      "captureCaption": "Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin.",
+      "captureLabel": "ce que Leon capte",
+      "captureChip": "+ 3 éléments gardés · 14:12",
+      "connected": "Outils branchés",
+      "syncs": "relève toutes les 15 min",
+      "connectable": "{count} outils branchables · clé d’API ou bouton de connexion",
+      "extension": "Extension du navigateur",
+      "extensionChoice": "Vous choisissez, site par site.",
+      "site1": "Assistant d’IA, site 1",
+      "site2": "Assistant d’IA, site 2",
+      "extensionNever": "Jamais en navigation privée. Jamais de pièce jointe.",
+      "codingAssistant": "Assistant de code",
+      "sessionEnd": "$ fin de session",
+      "sent": "conversation envoyée",
+      "textOnly": "texte seul, sans sorties d’outils",
+      "keepCaption": "Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous seul.",
+      "keepLabel": "ce que Leon garde",
+      "typedInBar": "Écrit dans la barre",
+      "findChip": "une source par phrase · [1] [2] [3]",
+      "mcp": {
+        "search": "chercher dans la mémoire",
+        "fetch": "lire une source en entier",
+        "briefing": "le point du matin",
+        "remember": "garder une note, privée"
+      },
+      "discussCaption": "Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant.",
+      "discussLabel": "discussion et point du matin",
+      "discussChip": "point du matin · 08:45",
+      "discussionPrivate": "Discussion · privée",
+      "theBriefing": "Le point du matin",
+      "mcpServer": "Serveur MCP",
+      "token": "jeton personnel, révocable",
+      "nextTitle": "Ce qui arrive ensuite.",
+      "nextLead": "Ce qui suit n’est pas encore construit. Nous l’écrivons ici pour que vous sachiez à quoi vous attendre.",
+      "next": {
+        "google": {
+          "title": "Google Workspace",
+          "text": "Gmail, Drive et Agenda."
+        },
+        "microsoft": {
+          "title": "Microsoft 365",
+          "text": "Teams, OneDrive et SharePoint."
+        },
+        "files": {
+          "title": "Fichiers",
+          "text": "PDF et documents Office."
+        },
+        "invites": {
+          "title": "Invitations d’équipe",
+          "text": "Rejoindre l’espace de son entreprise."
+        },
+        "permissions": {
+          "title": "Droits de l’outil d’origine",
+          "text": "Une page privée chez l’éditeur reste privée dans Leon."
+        }
+      },
+      "ctaText": "Branchez un premier outil et posez votre première question."
+    },
+    "useCases": {
+      "changes": "Ce que ça change : ",
+      "situationsKicker": "En situation",
+      "situationsTitle": "Une personne, un moment, une question.",
+      "heroTitle": "Chaque équipe a ses questions. Leon répond avec les mêmes sources.",
+      "heroAccent": "Leon répond avec les mêmes sources.",
+      "heroLead": "Direction, ventes, support, produit, projets, nouvelles arrivées : chacun cherche autre chose, dans les mêmes outils. Voici ce qu’on tape dans la barre, et ce que Leon répond.",
+      "sixTeams": "Les six équipes",
+      "situationsLead": "Ce que Leon fait déjà, au moment où on en a besoin. Les personnes, les sociétés et les détails de ces exemples sont fictifs.",
+      "tabsKicker": "Une même barre",
+      "tabsTitle": "Une seule recherche, des réponses différentes.",
+      "tabsLead": "Choisissez une équipe : voici ce qu’elle demande, et l’écran que Leon lui rend. Les données de ces exemples sont fictives.",
+      "questionsTitle": "Les questions qu’on tape vraiment.",
+      "questionsLead": "En langage courant ou avec des filtres : de:, outil:, type:, depuis:, avant:, et les mots exacts entre guillemets.",
+      "ctaTitle": "Commencez par une équipe.",
+      "ctaText": "Branchez ses outils parmi les {count} connecteurs et posez la première question.",
+      "teamQuestionsTitle": "Les questions de l’équipe.",
+      "teamQuestionsLead": "Écrites telles qu’on les tape. Leon cherche dans tous les outils branchés, puis répond en citant.",
+      "teamSituationsLead": "Ce que Leon fait déjà pour l’équipe, au moment où elle en a besoin. Exemples fictifs.",
+      "gainsKicker": "Ce qui change",
+      "gainsTitle": "Trois choses, concrètement.",
+      "toolsKicker": "Les outils",
+      "toolsTitle": "Les outils de l’équipe, déjà branchables.",
+      "toolsLead": "Une clé d’API ou un bouton de connexion suffit. Leon relève ce qui change toutes les 15 minutes.",
+      "allConnectors": "Les {count} connecteurs",
+      "otherTeams": "Les autres équipes",
+      "teamCtaTitle": "Branchez les outils de l’équipe. Posez la première question.",
+      "teamCtaText": "Leon répond avec la source, ou dit qu’il ne sait pas."
+    },
+    "connectors": {
+      "spin": " · faites tourner la sphère",
+      "steps": {
+        "pick": {
+          "title": "Choisir l’outil",
+          "text": "Dans la page Connexions de votre espace, parmi les familles."
+        },
+        "auth": {
+          "title": "Se connecter ou coller une clé",
+          "text": "Un bouton « Se connecter avec… » quand l’éditeur le permet, sinon une clé d’API. L’aide dit où la trouver."
+        },
+        "period": {
+          "title": "Choisir la période",
+          "text": "Leon lit 7, 30, 90 ou 365 jours en arrière. 30 par défaut."
+        },
+        "test": {
+          "title": "Tester et brancher",
+          "text": "La connexion n’est enregistrée que si le test réussit. Ensuite, une relève toutes les 15 minutes."
+        }
+      },
+      "channels": {
+        "extension": {
+          "title": "Extension du navigateur",
+          "text": "Pour deux assistants d’IA sur le web. Un écran de consentement, un interrupteur par site, une pause.",
+          "p1": "Jamais en navigation privée",
+          "p2": "Jamais de pièce jointe",
+          "p3": "Conversations privées à leur auteur"
+        },
+        "coding": {
+          "title": "Assistant de code",
+          "text": "À la fin de chaque session, la conversation est envoyée à Leon. Une commande rattrape les sessions manquées.",
+          "p1": "Texte seul, sans sorties d’outils",
+          "p2": "Secrets masqués avant stockage",
+          "p3": "Point du matin au démarrage"
+        },
+        "mcp": {
+          "title": "Serveur MCP",
+          "text": "Dans l’autre sens : votre assistant interroge Leon, avec un jeton personnel que vous révoquez quand vous voulez.",
+          "p1": "search, fetch, briefing, remember",
+          "p2": "Les mêmes droits que vous",
+          "p3": "Un journal de ce qui a été lu"
+        }
+      },
+      "planned": {
+        "google": {
+          "title": "Google Workspace",
+          "text": "Gmail, Drive, Agenda."
+        },
+        "microsoft": {
+          "title": "Microsoft 365",
+          "text": "Teams, OneDrive, SharePoint."
+        },
+        "files": {
+          "title": "Fichiers",
+          "text": "PDF et documents Office."
+        }
+      },
+      "heroTitle": "{count} outils branchables, et vos conversations d’IA.",
+      "heroAccent": "et vos conversations d’IA.",
+      "heroLead": "Tickets, pages, réunions, notes de CRM, conversations de support : Leon relève ce qui change toutes les 15 minutes et le garde tel quel, avec un lien vers l’original.",
+      "browse": "Voir le catalogue",
+      "catalogKicker": "Le catalogue",
+      "catalogTitle": "Tous les outils, par famille.",
+      "catalogLead": "Dev, réunions, projet, CRM, support, mails et agenda. Choisissez une famille ou tapez un nom.",
+      "betaNote": "Les connecteurs sont en bêta : chacun est testé sur les réponses d’exemple de la documentation de son éditeur. Les instances hébergées chez vous (GitLab, Jira Data Center) ne sont pas prises en charge.",
+      "connectKicker": "Brancher",
+      "connectTitle": "Quatre gestes, une fois par outil.",
+      "connectLead": "Personne ne remplit de fiche ensuite : Leon relit l’outil de lui-même.",
+      "aiKicker": "Conversations d’IA",
+      "aiTitle": "Les conversations avec vos assistants d’IA.",
+      "aiLead": "Ce qui se dit avec un assistant est souvent ce qu’on ne retrouve nulle part ailleurs. Leon le garde, pour la personne qui l’a écrit.",
+      "plannedTitle": "Ce qui n’est pas encore branchable.",
+      "plannedLead": "Nous le disons pour que vous ne le découvriez pas après coup.",
+      "ctaTitle": "Branchez un premier outil.",
+      "ctaText": "Une clé ou un bouton, une période à lire, et la première relève commence."
+    },
+    "catalogue": {
+      "family": "Famille d’outils",
+      "all": "Tous",
+      "filterLabel": "Filtrer les outils par nom",
+      "filterPlaceholder": "Filtrer par nom…",
+      "clear": "Effacer le filtre",
+      "none": "Aucun outil ne correspond",
+      "count": "{count, plural, one {# outil} other {# outils}}",
+      "oauth": "Bouton de connexion",
+      "apiKey": "Clé d’API",
+      "hiddenTitle": "Aucun outil « {query} » dans {family}.",
+      "hiddenElsewhere": "Ailleurs : {tools}.",
+      "noneTitle": "Aucun outil ne s’appelle « {query} ».",
+      "noneHint": "Vérifiez l’orthographe, ou regardez ce qui est prévu plus bas.",
+      "searchAll": "Chercher dans toutes les familles",
+      "showAll": "Voir tous les outils"
+    },
+    "security": {
+      "teamSees": {
+        "read": "Tickets, pages, réunions, notes de CRM lus par une connexion",
+        "support": "Conversations de support et boîtes partagées (Front, Missive…)",
+        "link": "Avec un lien vers l’original, dans son outil"
+      },
+      "onlyYou": {
+        "ai": "Vos conversations captées avec vos assistants d’IA",
+        "discussions": "Vos discussions avec Leon",
+        "notes": "Vos notes gardées par MCP (remember)",
+        "outlook": "Vos mails et votre agenda Outlook, si vous les branchez"
+      },
+      "ranking": "3 · le classement, puis la réponse",
+      "filter": "2 · le filtre des droits, d’abord",
+      "teamPages": "Pages et tickets de l’équipe",
+      "ownConversations": "Vos propres conversations",
+      "colleague": "Les conversations d’un collègue",
+      "question": "1 · la question",
+      "query": "qu’a-t-on promis à ACME ?",
+      "visualCaption": "Illustration : une recherche passe d’abord par le filtre des droits, puis par le classement. ",
+      "heroTitle": "Leon voit ce que vous voyez. Rien de plus.",
+      "heroAccent": "Rien de plus.",
+      "heroLead": "La recherche, la discussion et votre assistant passent par les mêmes droits que vous. Voici ce qui est en place aujourd’hui, et ce qui ne l’est pas encore.",
+      "notYet": "Ce qui n’est pas encore là",
+      "factsKicker": "En place",
+      "factsTitle": "Ce qui est vrai dans le code, aujourd’hui.",
+      "factsLead": "Chaque point ci-dessous existe dans le produit aujourd’hui. Rien n’est annoncé avant d’exister.",
+      "whoKicker": "Qui voit quoi",
+      "whoTitle": "Deux règles, faciles à retenir.",
+      "teamTitle": "Visible de toute l’équipe",
+      "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf Outlook : une boîte mail et un agenda restent privés à qui les branche.",
+      "youTitle": "Privé, à vous seul",
+      "youText": "Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.",
+      "frankly": "Franchement",
+      "notYetTitle": "Ce qui n’est pas encore là.",
+      "notYetLead": "Nous préférons l’écrire ici plutôt que de vous le laisser découvrir. Nous tenons cette liste à jour.",
+      "ctaTitle": "Ce qui a été dit reste dit, pour ceux qui ont le droit de le lire.",
+      "ctaText": "Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui reste à vous."
+    },
+    "pricing": {
+      "everywhere": {
+        "connectors": "Les {count} connecteurs, relevés toutes les 15 minutes",
+        "search": "Recherche plein texte et par le sens, avec filtres",
+        "answer": "Réponse citée en tête des résultats",
+        "discussions": "Discussions privées qui citent leurs sources",
+        "briefing": "Point du matin et serveur MCP",
+        "capture": "Extension du navigateur et assistant de code",
+        "secrets": "Secrets masqués avant stockage",
+        "keys": "Clés des outils chiffrées"
+      },
+      "recommended": "Recommandé",
+      "heroTitle": "Un prix simple, par personne qui s’en sert.",
+      "heroAccent": "par personne qui s’en sert.",
+      "heroLead": "Essayez gratuitement sur une équipe, avec vos vrais outils. Ensuite, seuls les comptes actifs du mois sont comptés.",
+      "plans": "Les plans",
+      "taxNote": "Prix hors taxes. Aucun engagement.",
+      "everywhereKicker": "Dans chaque plan",
+      "everywhereTitle": "Toutes les fonctions, dans chaque plan.",
+      "everywhereLead": "Les plans diffèrent par la taille de l’équipe et par l’hébergement, pas par ce que Leon sait faire.",
+      "faqKicker": "Questions",
+      "faqTitle": "Les questions qu’on nous pose.",
+      "faqLead": "Une autre question ? Créez un espace : le pilote est gratuit, et on y voit vite ce que Leon garde.",
+      "ctaTitle": "Commencez par le pilote.",
+      "ctaText": "Trente jours, une équipe de 10 personnes au plus, les {count} connecteurs."
+    }
   }
 }

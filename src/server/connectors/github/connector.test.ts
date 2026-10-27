@@ -127,7 +127,7 @@ describe('github : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('github')).toBe(githubConnector);
-    expect(listCatalog().find((item) => item.id === 'github')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'github')?.available).toBe(true);
   });
 });
 
@@ -168,7 +168,7 @@ describe('github : verify', () => {
       const failure = await githubConnector.verify(cfg, http).catch((error: unknown) => error);
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
-      expect((failure as Error).message).toBe('Dépôt inaccessible : acme/site');
+      expect((failure as Error).message).toBe('Repository not accessible: acme/site');
     }
   });
 });
@@ -780,7 +780,7 @@ describe('github : connexion par le bouton', () => {
       .catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Dépôt inaccessible : acme/leon');
+    expect((failure as Error).message).toBe('Repository not accessible: acme/leon');
   });
 
   it('sync envoie le jeton d’accès à chaque requête, pages suivantes comprises', async () => {
@@ -829,7 +829,7 @@ describe('github : connexion par le bouton', () => {
 });
 
 describe('github : catalogue du bouton', () => {
-  const entry = listCatalog().find((item) => item.id === 'github');
+  const entry = listCatalog('fr').find((item) => item.id === 'github');
 
   it('explique ce que l’utilisateur verra chez GitHub, et où installer l’appli', () => {
     expect(entry?.oauthHelp).toMatch(/installe/i);

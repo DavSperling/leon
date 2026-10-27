@@ -20,4 +20,18 @@ export const clickupCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'À faire confirmer par écrit avant tout client : les conditions de ClickUp interdisent d’entraîner des modèles sur les données des utilisateurs sans leur accord exprès.',
+  en: {
+    fields: {
+      token: {
+        label: 'Personal token',
+        help: 'The token acts on behalf of your account; Leon only reads. It gives access to all your ClickUp workspaces: tasks (closed ones included) and their comments are read.',
+      },
+    },
+    keyHelp:
+      'In ClickUp: click your avatar › Settings › Apps › API Token › Generate, then copy the token (it starts with pk_ and doesn’t expire).',
+    oauthHelp:
+      'ClickUp asks you to choose the workspaces Leon can open, then to authorize the access. ClickUp has no read-only permission: the authorization gives the same rights as your account on those workspaces, but Leon only reads tasks and their comments.',
+    warning:
+      'Get this confirmed in writing before any client use: ClickUp’s terms forbid training models on users’ data without their express consent.',
+  },
 };

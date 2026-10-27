@@ -81,7 +81,7 @@ describe('pipedrive : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('pipedrive')).toBe(pipedriveConnector);
-    const entry = listCatalog().find((item) => item.id === 'pipedrive');
+    const entry = listCatalog('fr').find((item) => item.id === 'pipedrive');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => field.name)).toEqual(['company', 'token']);
   });
@@ -117,7 +117,7 @@ describe('pipedrive : verify', () => {
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
       expect((failure as Error).message).toBe(
-        'Compte Pipedrive introuvable : vérifiez le nom de l’entreprise',
+        'Pipedrive account not found: check the company name',
       );
     }
   });
@@ -398,7 +398,7 @@ describe('pipedrive : sync, reprise et cas limites', () => {
     );
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 
   it('rend la note sans auteur quand Pipedrive n’en donne pas', async () => {
@@ -470,6 +470,6 @@ describe('pipedrive : sync, reprise et cas limites', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Limite de requêtes de Pipedrive atteinte');
+    expect((failure as Error).message).toBe('Pipedrive rate limit reached');
   });
 });

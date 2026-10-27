@@ -34,7 +34,7 @@ export class ConnectorAuthError extends Error {
     providerLabel: string,
     readonly status: number | null = null,
   ) {
-    super(`Clé refusée par ${providerLabel}`);
+    super(`${providerLabel} rejected the key`);
   }
 }
 
@@ -102,7 +102,7 @@ function isRateLimit(status: number, headers: Headers, body: string): boolean {
 
 // Lit le flux et s'arrête dès que la limite est dépassée.
 async function readBody(response: Response): Promise<string> {
-  const tooBig = new ResponseTooBigError(response.status, 'Réponse trop volumineuse');
+  const tooBig = new ResponseTooBigError(response.status, 'Response too large');
   if (Number(response.headers.get('content-length')) > BODY_MAX_BYTES) throw tooBig;
   const reader = response.body?.getReader();
   if (!reader) return '';
@@ -131,7 +131,7 @@ function nextLink(header: string | null, base: string, status: number): string |
     try {
       return new URL(target, base).toString();
     } catch {
-      throw new ConnectorHttpError(status, 'Réponse inattendue');
+      throw new ConnectorHttpError(status, 'Unexpected response');
     }
   }
   return null;
@@ -158,7 +158,7 @@ export function createConnectorHttp(input: {
   }
 
   function buildUrl(request: HttpRequest): string {
-    const refused = new ConnectorHttpError(null, 'Adresse non autorisée');
+    const refused = new ConnectorHttpError(null, 'Address not allowed');
     let url: URL;
     try {
       url = new URL(request.url);
@@ -191,20 +191,20 @@ export function createConnectorHttp(input: {
       for (const [name, value] of Object.entries(request.headers ?? {})) headers.set(name, value);
       return headers;
     } catch {
-      throw new ConnectorHttpError(null, `En-tête invalide : vérifiez la clé de ${label}`);
+      throw new ConnectorHttpError(null, `Invalid header: check your ${label} key`);
     }
   }
 
   function buildBody(request: HttpRequest): string | undefined {
     const given = [request.body, request.form, request.raw].filter((part) => part !== undefined);
-    if (given.length > 1) throw new ConnectorHttpError(null, 'Requête invalide');
+    if (given.length > 1) throw new ConnectorHttpError(null, 'Invalid request');
     if (request.raw !== undefined) return request.raw.text;
     if (request.form !== undefined) return new URLSearchParams(request.form).toString();
     if (request.body === undefined) return undefined;
     try {
       return JSON.stringify(request.body);
     } catch {
-      throw new ConnectorHttpError(null, `Corps de requête invalide pour ${label}`);
+      throw new ConnectorHttpError(null, `Invalid request body for ${label}`);
     }
   }
 
@@ -215,10 +215,10 @@ export function createConnectorHttp(input: {
       waitMs: waitBeforeRetry(headers, number),
       failure: new ConnectorHttpError(status, message),
     });
-    if (isRateLimit(status, headers, body)) return retry(`Limite de requêtes de ${label} atteinte`);
-    if (status >= 500) return retry(`${label} a répondu ${status}`);
+    if (isRateLimit(status, headers, body)) return retry(`${label} rate limit reached`);
+    if (status >= 500) return retry(`${label} responded with ${status}`);
     if (status === 401 || status === 403) throw new ConnectorAuthError(label, status);
-    throw new ConnectorHttpError(status, `${label} a répondu ${status}`);
+    throw new ConnectorHttpError(status, `${label} responded with ${status}`);
   }
 
   async function attempt(
@@ -230,7 +230,7 @@ export function createConnectorHttp(input: {
     const unreachable = (): Attempt => ({
       kind: 'retry',
       waitMs: BACKOFF_MS * 2 ** number,
-      failure: new ConnectorHttpError(null, `${label} injoignable`),
+      failure: new ConnectorHttpError(null, `${label} is unreachable`),
     });
     await pace();
     try {
@@ -276,10 +276,10 @@ export function createConnectorHttp(input: {
     try {
       value = JSON.parse(text);
     } catch {
-      throw new ConnectorHttpError(status, 'Réponse illisible');
+      throw new ConnectorHttpError(status, 'Unreadable response');
     }
     const parsed = schema.safeParse(value);
-    if (!parsed.success) throw new ConnectorHttpError(status, 'Réponse inattendue');
+    if (!parsed.success) throw new ConnectorHttpError(status, 'Unexpected response');
     return { data: parsed.data, headers, url, status };
   }
 

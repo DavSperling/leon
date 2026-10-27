@@ -4,7 +4,7 @@ import {
   discussionMessagesUrl,
   finalReplyText,
 } from '@/lib/discussion-events';
-import { toolActivityLabel } from './message-segments';
+import { type ToolActivity, toolActivity } from './message-segments';
 
 // La page d'une discussion envoie une question à la route (C8) et lit sa réponse au fil du flux. Chaque issue a
 // son état, pour que la page dise ce qui s'est vraiment passé : la question n'est dite « gardée » que lorsque le
@@ -14,7 +14,7 @@ export type ReplyProgress = {
   text: string;
   citations: DiscussionCitation[];
   // Ce que Leon fait en attendant son texte (chercher, lire…), ou null quand il écrit.
-  activity: string | null;
+  activity: ToolActivity | null;
 };
 
 export type ReplyOutcome =
@@ -84,7 +84,7 @@ export async function readReply(
     const reader = createDiscussionEventReader();
     let text = '';
     let citations: DiscussionCitation[] = [];
-    let activity: string | null = null;
+    let activity: ToolActivity | null = null;
     for (;;) {
       const { done, value } = await chunks.read();
       if (done) return CUT;
@@ -93,7 +93,7 @@ export async function readReply(
           text += event.delta;
           activity = null;
         } else if (event.type === 'outil') {
-          activity = toolActivityLabel(event.name);
+          activity = toolActivity(event.name);
         } else if (event.type === 'citations') {
           citations = event.items;
         } else if (event.type === 'fin') {

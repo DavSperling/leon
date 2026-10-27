@@ -80,9 +80,9 @@ const catalogItem = {
 // Les messages que les connecteurs écrivent exprès pour la personne qui saisit (jamais ceux de
 // l'outil, jamais une clé ni une adresse) : l'écran doit les montrer tels quels.
 const CONNECTOR_MESSAGES: Array<[number | null, string]> = [
-  [404, 'Dépôt inaccessible : acme/leon'],
-  [404, 'Site Jira introuvable : vérifiez le nom du site'],
-  [null, 'En-tête invalide : vérifiez la clé de GitHub'],
+  [404, 'Repository not accessible: acme/leon'],
+  [404, 'Jira site not found: check the site name'],
+  [null, 'Invalid header: check your GitHub key'],
 ];
 
 // Un outil dont la clé est une paire, et ce que le remplacement doit chiffrer (le secret en premier).
@@ -290,7 +290,7 @@ describe('connectAction avec le vrai connecteur GitHub', () => {
 
     const result = await connectGithub(TOKEN);
 
-    expect(result).toEqual({ error: 'Dépôt inaccessible : acme/leon' });
+    expect(result).toEqual({ error: 'Repository not accessible: acme/leon' });
     expect(fetchStub.mock.calls.map(([url]) => url)).toEqual([
       'https://api.github.com/user',
       'https://api.github.com/repos/acme/leon',
@@ -307,7 +307,7 @@ describe('connectAction avec le vrai connecteur GitHub', () => {
 
     const result = await connectGithub(pasted);
 
-    expect(result).toEqual({ error: 'En-tête invalide : vérifiez la clé de GitHub' });
+    expect(result).toEqual({ error: 'Invalid header: check your GitHub key' });
     expect(fetchStub).not.toHaveBeenCalled();
     expect(JSON.stringify(result)).not.toContain(TOKEN.slice(0, 20));
     expect(JSON.stringify(spy.mock.calls)).not.toContain(TOKEN.slice(0, 20));

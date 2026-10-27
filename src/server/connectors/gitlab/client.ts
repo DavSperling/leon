@@ -86,7 +86,7 @@ export function gitlabClient(headers: Record<string, string>, http: ConnectorHtt
         const denied = error instanceof ConnectorAuthError && error.status === 403;
         const missing = error instanceof ConnectorHttpError && error.status === 404;
         if (denied || missing) {
-          throw new ConnectorHttpError(denied ? 403 : 404, `Projet inaccessible : ${project}`);
+          throw new ConnectorHttpError(denied ? 403 : 404, `Project not accessible: ${project}`);
         }
         throw error;
       }

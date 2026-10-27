@@ -18,9 +18,9 @@ export function discussionMessagesUrl(discussionId: string): string {
 }
 
 // 429 : l'utilisateur a déjà deux réponses en cours (le coût d'un utilisateur). Rien n'est écrit ; la route rend
-// ce message, que la page affiche.
+// ce message en anglais, la langue de l'API (la page affiche le sien, thread.tooMany).
 export const DISCUSSION_TOO_MANY =
-  'Leon répond déjà à deux de vos questions. Attendez qu’une réponse soit finie, puis réessayez.';
+  'Leon is already answering two of your questions. Wait for one answer to finish, then try again.';
 
 // Longueur maximale d'un message de l'utilisateur.
 export const DISCUSSION_MESSAGE_MAX_CHARS = 4000;
@@ -52,7 +52,8 @@ export type DiscussionEvent =
   | { type: 'indisponible'; questionGardee: boolean }
   | { type: 'en-cours' };
 
-// Phrases fixes que le serveur garde et que la page affiche à la fin d'une réponse (finalReplyText).
+// Phrases fixes que le serveur garde à la fin d'une réponse (finalReplyText). Elles restent en français dans la base,
+// comme des marqueurs : la page les reconnaît (replyParts) et affiche leur traduction (discussionView).
 export const DISCUSSION_REFUSAL = 'Je ne peux pas répondre à cette demande.';
 export const DISCUSSION_LIMIT_NOTE =
   'Je me suis arrêté avant la fin : la limite de recherches et de lectures pour une réponse est atteinte. Posez une question plus précise pour que je continue.';
@@ -66,6 +67,24 @@ export function finalReplyText(streamed: string, reason: DiscussionEndReason): s
   if (reason === 'limite')
     return text === '' ? DISCUSSION_LIMIT_NOTE : `${text}\n\n${DISCUSSION_LIMIT_NOTE}`;
   return text === '' ? DISCUSSION_EMPTY : text;
+}
+
+// Le texte d'une réponse gardée, séparé de ses phrases fixes : `fixed` remplace tout le texte (refus, rien trouvé),
+// `limit` dit qu'une note de limite suit `main`.
+export function replyParts(content: string): {
+  main: string;
+  fixed: 'refusal' | 'empty' | null;
+  limit: boolean;
+} {
+  if (content === DISCUSSION_REFUSAL) return { main: '', fixed: 'refusal', limit: false };
+  if (content === DISCUSSION_EMPTY) return { main: '', fixed: 'empty', limit: false };
+  if (content.endsWith(DISCUSSION_LIMIT_NOTE))
+    return {
+      main: content.slice(0, -DISCUSSION_LIMIT_NOTE.length).trimEnd(),
+      fixed: null,
+      limit: true,
+    };
+  return { main: content, fixed: null, limit: false };
 }
 
 const END_REASONS: readonly string[] = ['fini', 'limite', 'refus'] satisfies DiscussionEndReason[];

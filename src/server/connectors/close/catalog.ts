@@ -14,4 +14,13 @@ export const closeCatalog: CatalogEntry = {
   keyHelp: 'Dans Close : Réglages › Développeur › Clés d’API › créez une clé, puis copiez-la.',
   docsUrl: 'https://developer.close.com/api/overview/api-key-authentication',
   triedForReal: false,
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'The key acts on behalf of your Close account; Leon only reads. It reads the notes, calls (with their transcripts), emails, SMS, and WhatsApp messages of the leads this account can see. A note edited after it was created is not read again.',
+      },
+    },
+    keyHelp: 'In Close: Settings › Developer › API Keys › create a key, then copy it.',
+  },
 };

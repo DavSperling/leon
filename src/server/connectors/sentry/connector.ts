@@ -130,7 +130,7 @@ export const sentryConnector: Connector<Config> = {
 
   async verify(config: Config, http: ConnectorHttp) {
     await sentryClient(config, http).checkIssues();
-    return { account: `organisation ${config.organization}` };
+    return { account: `organization ${config.organization}` };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

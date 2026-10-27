@@ -25,4 +25,20 @@ export const airtableCatalog: CatalogEntry = {
     'Airtable vous fait choisir les bases que Leon peut lire. L’accès permet aussi d’y écrire ; Leon ne s’en sert pas encore.',
   docsUrl: 'https://airtable.com/developers/web/api/authentication',
   triedForReal: false,
+  en: {
+    fields: {
+      token: {
+        label: 'Personal access token',
+        help: 'Give it only the read scopes data.records:read, data.recordComments:read, and schema.bases:read, and add the bases to read. Without the second scope, comments are not read.',
+      },
+      bases: {
+        label: 'Bases',
+        help: 'One base per line (20 max), by its ID: it starts with app and appears in the base’s URL, airtable.com/appXXXXXXXXXXXXXX/… All its tables are read, record by record; attachments are ignored.',
+      },
+    },
+    keyHelp:
+      'At airtable.com/create/tokens: Create new token, check the scopes data.records:read, data.recordComments:read, and schema.bases:read, add the bases to read, then copy the token (it starts with pat).',
+    oauthHelp:
+      'Airtable has you choose the bases Leon can read. The access also allows writing to them; Leon doesn’t use it yet.',
+  },
 };

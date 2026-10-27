@@ -277,7 +277,7 @@ async function oauthConfig(
     refreshToken: tokens.refreshToken,
     expiresAt: tokens.expiresAt,
   });
-  if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration refusée');
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration rejected');
   return parsed.data;
 }
 
@@ -360,12 +360,12 @@ async function connect(
   const secretFields = [...OAUTH_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
     const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
-    if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!stored) throw new ConnectorHttpError(null, 'Connection not found');
     if (!sameAccount(stored, provider, verified, config, pending.preFields))
       throw new OtherAccount();
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
-    if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!saved) throw new ConnectorHttpError(null, 'Connection not found');
   } else {
     await createConnection(ctx, {
       provider,
@@ -402,7 +402,7 @@ async function connectPipedream(
     externalUserId,
     accountId: account.id,
   });
-  if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration refusée');
+  if (!parsed.success) throw new ConnectorHttpError(null, 'Configuration rejected');
   const config = parsed.data;
   const http = connectorHttp(provider, connector, config, { fetchImpl: deps.fetchImpl });
   const verified = await verifyConfig(connector, config, http);
@@ -411,12 +411,12 @@ async function connectPipedream(
   const secretFields = [...PIPEDREAM_SECRET_FIELDS, ...connector.secretFields];
   if (pending.reconnectId) {
     const stored = (await listConnections(ctx)).find((view) => view.id === pending.reconnectId);
-    if (!stored) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!stored) throw new ConnectorHttpError(null, 'Connection not found');
     if (!sameAccount(stored, provider, verified, config, {})) throw new OtherAccount();
     // Les champs ouverts sont réécrits en entier, comme après un « Reconnecter » OAuth.
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
-    if (!saved) throw new ConnectorHttpError(null, 'Connexion introuvable');
+    if (!saved) throw new ConnectorHttpError(null, 'Connection not found');
     if (stored.config.externalUserId !== externalUserId)
       await forgetPipedreamUser(stored.config.externalUserId, deps.fetchImpl);
     return;

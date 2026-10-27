@@ -12,4 +12,12 @@ export const outlookCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Le texte des courriers et de l’agenda reste privé, comme une conversation : vous seul le voyez. Les événements personnels, privés ou confidentiels ne sont pas lus.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'Microsoft asks you to authorize Leon on your mail and calendar. Leon only reads the inbox, sent items, and calendar; the access also allows writing (never sending), but Leon doesn’t use it yet. Your company’s Microsoft admin must first have approved Leon, once for the whole company: without that, Microsoft refuses the connection.',
+    warning:
+      'The text of emails and of the calendar stays private, like a conversation: only you can see it. Personal, private, or confidential events are not read.',
+  },
 };

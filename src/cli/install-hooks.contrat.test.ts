@@ -144,8 +144,8 @@ describe('leon installer-crochets', () => {
       for (const outcome of [refused, closed]) {
         expect(outcome.code).toBe(0);
         expect(outcome.stdout).toContain(hookCommand(fakeRepo, 'briefing'));
-        expect(outcome.stdout).toContain('[o/N]');
-        expect(outcome.stdout).toContain("Rien n'a été écrit");
+        expect(outcome.stdout).toContain('[y/N]');
+        expect(outcome.stdout).toContain('Nothing was written');
       }
       if (existing) {
         expect(await readFile(settingsPath, 'utf8')).toBe(before);
@@ -158,12 +158,12 @@ describe('leon installer-crochets', () => {
   );
 
   it(
-    'sur « oui » écrit les crochets et garde les réglages, et un second passage ne change rien',
+    'sur « y » écrit les crochets et garde les réglages, et un second passage ne change rien',
     async () => {
       const before = '{"theme":"dark"}\n';
       await seedSettings(before);
 
-      const first = await leon(['installer-crochets', '--depot', fakeRepo], 'oui\n');
+      const first = await leon(['installer-crochets', '--depot', fakeRepo], 'y\n');
       const written = await readFile(settingsPath, 'utf8');
       const second = await leon(['installer-crochets', '--depot', fakeRepo, '--oui']);
 
@@ -173,7 +173,7 @@ describe('leon installer-crochets', () => {
         hooks: { SessionStart: [{}], SessionEnd: [{}] },
       });
       expect(second.code).toBe(0);
-      expect(second.stdout).toContain('déjà');
+      expect(second.stdout).toContain('already');
       expect(await readFile(settingsPath, 'utf8')).toBe(written);
       expect(await readFile(join(configDir, BACKUP_FILE), 'utf8')).toBe(before);
     },
@@ -203,7 +203,7 @@ describe('leon installer-crochets', () => {
 
       for (const outcome of [missing, wrong]) {
         expect(outcome.code).toBe(1);
-        expect(outcome.stderr).toContain('dépôt de Leon');
+        expect(outcome.stderr).toContain('Leon repository');
         expect(outcome.stdout).toBe('');
       }
       await expect(readdir(configDir)).rejects.toThrow();

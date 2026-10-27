@@ -147,7 +147,7 @@ describe('serveur MCP', () => {
     expect(Object.keys(byName.get('briefing')?.inputSchema.properties ?? {})).toEqual(['projet']);
     expect(byName.get('briefing')?.inputSchema.required ?? []).toEqual([]);
     const instructions = client.getInstructions() ?? '';
-    for (const word of ['search', 'fetch', 'briefing', 'remember', 'titre', 'outil', 'date']) {
+    for (const word of ['search', 'fetch', 'briefing', 'remember', 'title', 'tool', 'date']) {
       expect(instructions).toContain(word);
     }
   });
@@ -196,7 +196,7 @@ describe('serveur MCP', () => {
       sourceId: string;
       ingestRunId: string;
     };
-    expect(result.text).toBe(`Noté : Leon va indexer cette information (source ${sourceId}).`);
+    expect(result.text).toBe(`Saved: Leon will index this information (source ${sourceId}).`);
     const [source] = await adminDb.select().from(sources).where(eq(sources.id, sourceId));
     expect(source).toMatchObject({
       kind: 'mcp_remember',
@@ -223,7 +223,7 @@ describe('serveur MCP', () => {
     };
 
     const before = await call(client, 'search', { query: 'livraison trois semaines' });
-    expect(before.text).toBe('Aucun résultat.');
+    expect(before.text).toBe('No results.');
 
     await indexIngestRun(
       { ingestRunId, tenantId: paul.tenantId, userId: paul.userId },
@@ -232,11 +232,11 @@ describe('serveur MCP', () => {
     const after = await call(client, 'search', { query: 'livraison trois semaines' });
 
     expect(found(after).hits.map((hit) => hit.sourceId)).toEqual([sourceId]);
-    expect(found(after).hits[0]).toMatchObject({ kind: 'mcp_remember', kindLabel: 'Note MCP' });
+    expect(found(after).hits[0]).toMatchObject({ kind: 'mcp_remember', kindLabel: 'Note (MCP)' });
     expect(after.text).toContain('délai de livraison');
   });
 
-  it("une erreur inattendue d'un outil devient « Erreur interne de Leon. » sans son message", async () => {
+  it("une erreur inattendue d'un outil devient « Leon internal error. » sans son message", async () => {
     const client = await connect(await setupPaul());
     vi.spyOn(ingestModule, 'ingestTurns').mockRejectedValue(new Error('zanzibar'));
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -244,7 +244,7 @@ describe('serveur MCP', () => {
     const result = await call(client, 'remember', { text: 'Une note.' });
 
     expect(result.isError).toBe(true);
-    expect(result.text).toBe('Erreur interne de Leon.');
+    expect(result.text).toBe('Leon internal error.');
     expect(JSON.stringify(result)).not.toContain('zanzibar');
   });
 });
@@ -464,7 +464,7 @@ describe('outil search', () => {
         true,
       );
     }
-    expect(pasted.text).toBe('Aucun résultat.');
+    expect(pasted.text).toBe('No results.');
   });
 
   // Le contrat de ChatGPT : `results` d'objets { id, title, url }, un par source, dans l'ordre des résultats.
@@ -514,11 +514,11 @@ describe('outil search', () => {
     const since = await call(client, 'search', { query: 'flibustier', depuis: 'hier' });
 
     expect(tool).toMatchObject({ isError: true });
-    expect(tool.text).toContain('Outil inconnu');
+    expect(tool.text).toContain('Unknown tool');
     expect(tool.text).toContain('github');
     expect(nature).toMatchObject({ isError: true });
-    expect(nature.text).toContain('Type inconnu');
-    expect(nature.text).toContain('reunion');
+    expect(nature.text).toContain('Unknown type');
+    expect(nature.text).toContain('meeting');
     expect(since).toMatchObject({ isError: true });
     expect(since.text).toContain('depuis');
   });
@@ -539,7 +539,7 @@ describe('outil search', () => {
 
     expect(found(result).hits).toEqual([]);
     expect(found(result).unknownPeople).toEqual(['Personne Inconnue']);
-    expect(result.text).toContain("Personne ne s'appelle « Personne Inconnue » dans l'équipe.");
+    expect(result.text).toContain('No one on the team is called "Personne Inconnue".');
   });
 
   it('pagine : 10 sources par page, la suite se demande par page', async () => {
@@ -563,7 +563,7 @@ describe('outil search', () => {
     expect(first.text).toContain('page 2');
     expect(found(second)).toMatchObject({ page: 2 });
     expect(found(second).hits).toHaveLength(2);
-    expect(second.text).not.toContain('Pour la suite');
+    expect(second.text).not.toContain('For more');
   });
 
   it('rend un passage piégé comme de la donnée : balises intactes, aucune consigne ouverte', async () => {
@@ -624,7 +624,7 @@ describe('outil search', () => {
     const result = await call(client, 'search', { query: 'requetesecretezanzibar' });
 
     expect(result.isError).toBe(true);
-    expect(result.text).toBe('Erreur interne de Leon.');
+    expect(result.text).toBe('Leon internal error.');
     expect(JSON.stringify(logged.mock.calls)).not.toContain('requetesecretezanzibar');
     expect(logged).toHaveBeenCalled();
   });
@@ -712,7 +712,7 @@ describe('outil fetch', () => {
 
       for (const result of [bySource, byPassage]) {
         expect(result.isError).toBe(true);
-        expect(result.text).toContain('introuvable');
+        expect(result.text).toContain('not found');
         expect(result.text).not.toContain('contrats');
       }
     }
@@ -730,7 +730,7 @@ describe('outil fetch', () => {
     ]) {
       const result = await call(client, 'fetch', args);
       expect(result.isError).toBe(true);
-      expect(result.text).toContain('introuvable');
+      expect(result.text).toContain('not found');
     }
   });
 
@@ -789,7 +789,7 @@ describe('outil fetch', () => {
     const result = await call(await connect(marie), 'fetch', { id: sourceId });
 
     expect(result).toMatchObject({ isError: true });
-    expect(result.text).toContain('introuvable');
+    expect(result.text).toContain('not found');
     expect(await readsOf(sourceId)).toHaveLength(0);
   });
 
@@ -823,7 +823,7 @@ describe('outil fetch', () => {
 
     for (const result of refused) {
       expect(result.isError).toBe(true);
-      expect(result.text).toBe('Donne id, passageId ou sourceId, un seul des trois.');
+      expect(result.text).toBe('Give id, passageId or sourceId: exactly one of the three.');
     }
     expect(await readsOf(sourceId)).toHaveLength(0);
   });
@@ -842,7 +842,7 @@ describe('outil fetch', () => {
     const result = await call(await connect(team.paul), 'fetch', { sourceId });
 
     expect((result.structuredContent as unknown as FetchStructured).truncated).toBe(true);
-    expect(result.text).toContain('Lecture coupée');
+    expect(result.text).toContain('Reading cut off');
   });
 
   it('une panne de la lecture rend un message fixe', async () => {
@@ -853,7 +853,7 @@ describe('outil fetch', () => {
 
     const result = await call(client, 'fetch', { sourceId });
 
-    expect(result).toMatchObject({ isError: true, text: 'Erreur interne de Leon.' });
+    expect(result).toMatchObject({ isError: true, text: 'Leon internal error.' });
   });
 });
 

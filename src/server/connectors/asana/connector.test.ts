@@ -106,7 +106,7 @@ describe('asana : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('asana')).toBe(asanaConnector);
-    expect(listCatalog().find((item) => item.id === 'asana')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'asana')?.available).toBe(true);
   });
 });
 
@@ -141,7 +141,7 @@ describe('asana : verify', () => {
     const failure = await asanaConnector.verify(cfg, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Espace introuvable : Autre');
+    expect((failure as Error).message).toBe('Workspace not found: Autre');
     expect((failure as ConnectorHttpError).status).toBe(404); // une erreur de saisie, pas une panne
   });
 
@@ -152,7 +152,7 @@ describe('asana : verify', () => {
     const failure = await asanaConnector.verify(config, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Aucun espace Asana accessible');
+    expect((failure as Error).message).toBe('No Asana workspace accessible');
   });
 
   it('refuse un jeton rejeté', async () => {

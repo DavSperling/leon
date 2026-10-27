@@ -240,7 +240,7 @@ describe('exchangeCode', () => {
 
     expect(error).toBeInstanceOf(OAuthRefusedError);
     expect(error.adminConsent).toBe(false);
-    expect(error.message).toBe("Autorisation refusée par l'éditeur");
+    expect(error.message).toBe('Authorization refused by the provider');
   });
 
   it('lève OAuthRefusedError sur un 400 qui porte error, sans reprendre le corps', async () => {
@@ -277,7 +277,7 @@ describe('exchangeCode', () => {
 
     const error = await exchangeCode(spec(), CLIENT, 'code-1', null, http).catch((e) => e);
 
-    expect(error).toMatchObject({ name: 'ConnectorHttpError', message: 'Réponse inattendue' });
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', message: 'Unexpected response' });
     expect(error.message).not.toContain('corps-secret-xyz');
   });
 });
@@ -390,14 +390,14 @@ describe('refus documenté par chaque éditeur', () => {
     const error = await run(provider, spec, status, body, 'exchange').catch((e) => e);
 
     expect(error).toBeInstanceOf(OAuthRefusedError);
-    expect(error.message).toBe("Autorisation refusée par l'éditeur");
+    expect(error.message).toBe('Authorization refused by the provider');
   });
 
   it.each(cases)('%s : au renouvellement', async (provider, spec, status, body) => {
     const error = await run(provider, spec, status, body, 'refresh').catch((e) => e);
 
     expect(error).toBeInstanceOf(OAuthRefusedError);
-    expect(error.message).toBe("Autorisation refusée par l'éditeur");
+    expect(error.message).toBe('Authorization refused by the provider');
   });
 
   it('ne prend pas pour un refus une réponse sans jeton qui ne porte aucune erreur', async () => {
@@ -405,7 +405,7 @@ describe('refus documenté par chaque éditeur', () => {
 
     const error = await exchangeCode(spec(), CLIENT, 'code-1', null, http).catch((e) => e);
 
-    expect(error).toMatchObject({ name: 'ConnectorHttpError', message: 'Réponse inattendue' });
+    expect(error).toMatchObject({ name: 'ConnectorHttpError', message: 'Unexpected response' });
   });
 
   it('garde une réponse qui porte un jeton, même avec un champ code', async () => {
@@ -558,7 +558,7 @@ describe('ensureFreshTokens', () => {
     ).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ConnectorHttpError);
     expect(error).not.toBeInstanceOf(OAuthRefusedError);
-    expect((error as Error).message).toBe("L'appli GitHub n'est plus configurée sur ce serveur.");
+    expect((error as Error).message).toBe('The GitHub app is no longer configured on this server.');
   });
 
   it('lève OAuthRefusedError quand l’éditeur refuse le renouvellement, sans rien enregistrer', async () => {

@@ -76,7 +76,9 @@ describe('slackConnector', () => {
     const odd = testHttp(slackConnector, config, [
       { url: 'https://slack.com/api/auth.test', json: { ok: false, error: '<script>' } },
     ]);
-    await expect(slackConnector.verify(config, odd.http)).rejects.toThrow('Slack a répondu erreur');
+    await expect(slackConnector.verify(config, odd.http)).rejects.toThrow(
+      'Slack responded with erreur',
+    );
   });
 
   it('cherche depuis deux jours avant `since`, du plus ancien au plus récent', async () => {

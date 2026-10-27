@@ -30,4 +30,24 @@ export const crispCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Jeton de site seulement (un jeton de plugin n’est pas pris en charge). Crisp limite ce jeton à 10 000 requêtes par jour : un premier passage sur une longue période peut en consommer une bonne part.',
+  en: {
+    fields: {
+      websiteId: {
+        label: 'Website ID',
+        help: 'In Crisp: Settings › Workspace Settings › Setup Instructions (the “Website ID”).',
+      },
+      identifier: {
+        label: 'Token identifier',
+        help: 'Crisp shows it only once, when the token is created: copy the key too.',
+      },
+      key: {
+        label: 'Token key',
+        help: 'Leon only reads: the website’s conversations, with their messages and internal notes.',
+      },
+    },
+    keyHelp:
+      'In Crisp: Settings › Workspace Settings › Advanced configuration › API Token › Generate Token (workspace owner only).',
+    warning:
+      'Website token only (a plugin token is not supported). Crisp limits this token to 10,000 requests per day: a first sync over a long period can use a good share of them.',
+  },
 };

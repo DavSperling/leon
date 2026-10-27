@@ -2,6 +2,8 @@
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { auth, passwordResetEnabled } from '@/server/auth/auth';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
@@ -24,34 +26,30 @@ export type AuthFormState = {
   twoFactor?: boolean;
 };
 
+type Translator = ReturnType<typeof useTranslations<'auth'>>;
+
+// Les schémas ne portent aucun message : fieldErrors() pose celui de chaque champ, dans la langue de la requête.
 const SignInSchema = z.object({ email: z.email(), password: z.string().min(1) });
 const SignUpFormSchema = SignUpInputSchema.extend({ confirmation: z.string() }).refine(
   ({ password, confirmation }) => password === confirmation,
-  { path: ['confirmation'], message: 'Les mots de passe ne correspondent pas.' },
+  { path: ['confirmation'] },
 );
 const JoinFormSchema = JoinInputSchema.extend({ confirmation: z.string() }).refine(
   ({ password, confirmation }) => password === confirmation,
-  { path: ['confirmation'], message: 'Les mots de passe ne correspondent pas.' },
+  { path: ['confirmation'] },
 );
 
-const INVALID_EMAIL = 'Saisissez une adresse e-mail valide.';
-// Au-delà de la limite de débit (rate-limit.ts), par adresse IP ou par e-mail : rien n'est essayé.
-const TOO_MANY_ATTEMPTS = 'Trop de tentatives. Réessayez dans quelques minutes.';
-
-const SIGN_IN_MESSAGES = {
-  email: INVALID_EMAIL,
-  password: 'Saisissez votre mot de passe.',
-};
-const SIGN_UP_MESSAGES = {
-  name: 'Indiquez votre nom.',
-  email: INVALID_EMAIL,
-  password: 'Le mot de passe doit contenir entre 8 et 128 caractères.',
-  confirmation: 'Les mots de passe ne correspondent pas.',
-  organizationName: 'Indiquez le nom de votre entreprise (2 à 100 caractères).',
-};
-const EMAIL_TAKEN = 'Cette adresse e-mail est déjà utilisée.';
-const SIGN_UP_FAILED = 'Impossible de créer le compte. Réessayez.';
-const SIGNED_UP_NOT_IN = 'Compte créé, mais la connexion a échoué. Connectez-vous.';
+const signInMessages = (t: Translator) => ({
+  email: t('invalidEmail'),
+  password: t('passwordRequired'),
+});
+const signUpMessages = (t: Translator) => ({
+  name: t('nameRequired'),
+  email: t('invalidEmail'),
+  password: t('passwordLength'),
+  confirmation: t('passwordsMismatch'),
+  organizationName: t('companyInvalid'),
+});
 
 function readFields(formData: FormData, names: string[]): Record<string, string> {
   return Object.fromEntries(
@@ -67,11 +65,15 @@ function withoutPassword(fields: Record<string, string>): Record<string, string>
   return values;
 }
 
-function fieldErrors(error: z.ZodError, messages: Record<string, string>): Record<string, string> {
+function fieldErrors(
+  error: z.ZodError,
+  messages: Record<string, string>,
+  t: Translator,
+): Record<string, string> {
   const errors: Record<string, string> = {};
   for (const issue of error.issues) {
     const field = String(issue.path[0]);
-    errors[field] ??= messages[field] ?? 'Valeur invalide.';
+    errors[field] ??= messages[field] ?? t('invalidValue');
   }
   return errors;
 }
@@ -80,18 +82,22 @@ export async function signInAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
   const fields = readFields(formData, ['email', 'password']);
   const values = withoutPassword(fields);
   const parsed = SignInSchema.safeParse(fields);
-  if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_IN_MESSAGES), values };
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error, signInMessages(t), t), values };
+  }
+  // Au-delà de la limite de débit (rate-limit.ts), par adresse IP ou par e-mail : rien n'est essayé.
   if (!(await authAttemptAllowed('connexion', parsed.data.email, await headers()))) {
-    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+    return { errors: { form: t('tooManyAttempts') }, values };
   }
 
   const { ok, twoFactor } = await signInWithPassword(parsed.data.email, parsed.data.password);
   if (twoFactor) return { twoFactor: true, values };
   // Même message pour un e-mail inconnu et un mot de passe faux.
-  if (!ok) return { errors: { form: 'E-mail ou mot de passe incorrect.' }, values };
+  if (!ok) return { errors: { form: t('wrongCredentials') }, values };
   redirect('/');
 }
 
@@ -103,13 +109,11 @@ export async function verifyTwoFactorAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
   const code = String(formData.get('code') ?? '').replace(/\s/g, '');
   const isTotp = TOTP_CODE.test(code);
   if (!isTotp && !BACKUP_CODE.test(code))
-    return {
-      twoFactor: true,
-      errors: { code: 'Saisissez le code à 6 chiffres ou l’un de vos codes de secours.' },
-    };
+    return { twoFactor: true, errors: { code: t('codeFormat') } };
   try {
     if (isTotp) await auth.api.verifyTOTP({ body: { code }, headers: await headers() });
     // Téléphone perdu : un code de secours ouvre la session, une seule fois.
@@ -119,7 +123,7 @@ export async function verifyTwoFactorAction(
         headers: await headers(),
       });
   } catch {
-    return { twoFactor: true, errors: { form: 'Code incorrect ou expiré. Réessayez.' } };
+    return { twoFactor: true, errors: { form: t('codeWrong') } };
   }
   redirect('/');
 }
@@ -128,16 +132,12 @@ export async function requestPasswordResetAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
-  if (!passwordResetEnabled)
-    return {
-      errors: {
-        form: 'L’envoi d’e-mails n’est pas configuré. Demandez à l’administrateur de votre espace.',
-      },
-    };
+  const t = await getTranslations('auth');
+  if (!passwordResetEnabled) return { errors: { form: t('emailSendingOff') } };
   const email = String(formData.get('email') ?? '').trim();
-  if (!z.email().safeParse(email).success) return { errors: { email: INVALID_EMAIL } };
+  if (!z.email().safeParse(email).success) return { errors: { email: t('invalidEmail') } };
   if (!(await authAttemptAllowed('recuperation', email, await headers()))) {
-    return { errors: { form: TOO_MANY_ATTEMPTS } };
+    return { errors: { form: t('tooManyAttempts') } };
   }
   try {
     await auth.api.requestPasswordReset({
@@ -149,10 +149,7 @@ export async function requestPasswordResetAction(
     // lui-même est journalisé par auth.ts.
     logError('auth.password_reset', error);
   }
-  return {
-    message:
-      'Si cette adresse correspond à un compte, un lien de réinitialisation vient d’être envoyé.',
-  };
+  return { message: t('resetSent') };
 }
 
 const ResetPasswordSchema = z
@@ -163,13 +160,13 @@ const ResetPasswordSchema = z
   })
   .refine(({ password, confirmation }) => password === confirmation, {
     path: ['confirmation'],
-    message: 'Les mots de passe ne correspondent pas.',
   });
 
 export async function resetPasswordAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
   const parsed = ResetPasswordSchema.safeParse({
     token: String(formData.get('token') ?? ''),
     password: String(formData.get('password') ?? ''),
@@ -177,25 +174,27 @@ export async function resetPasswordAction(
   });
   if (!parsed.success)
     return {
-      errors: fieldErrors(parsed.error, {
-        password: SIGN_UP_MESSAGES.password,
-        confirmation: 'Les mots de passe ne correspondent pas.',
-      }),
+      errors: fieldErrors(
+        parsed.error,
+        { password: t('passwordLength'), confirmation: t('passwordsMismatch') },
+        t,
+      ),
     };
   try {
     await auth.api.resetPassword({
       body: { token: parsed.data.token, newPassword: parsed.data.password },
     });
   } catch {
-    return { errors: { form: 'Ce lien est invalide ou a expiré. Demandez-en un nouveau.' } };
+    return { errors: { form: t('resetLinkInvalid') } };
   }
-  return { message: 'Votre mot de passe a été changé. Vous pouvez vous connecter.' };
+  return { message: t('resetDone') };
 }
 
 export async function signUpAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
   const fields = readFields(formData, [
     'name',
     'email',
@@ -205,19 +204,21 @@ export async function signUpAction(
   ]);
   const values = withoutPassword(fields);
   const parsed = SignUpFormSchema.safeParse(fields);
-  if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error, signUpMessages(t), t), values };
+  }
   if (!(await authAttemptAllowed('inscription', parsed.data.email, await headers()))) {
-    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+    return { errors: { form: t('tooManyAttempts') }, values };
   }
 
   const { confirmation: _confirmation, ...input } = parsed.data;
   const created = await createUserWithOrganization(input);
   if (!created.ok) {
     const errors: Record<string, string> =
-      created.error === 'email_pris' ? { email: EMAIL_TAKEN } : { form: SIGN_UP_FAILED };
+      created.error === 'email_pris' ? { email: t('emailTaken') } : { form: t('signUpFailed') };
     return { errors, values };
   }
-  return signInNewAccount(parsed.data.email, parsed.data.password, values);
+  return signInNewAccount(parsed.data.email, parsed.data.password, values, t);
 }
 
 // L'inscription par un lien d'invitation : le formulaire porte le secret du lien dans un champ caché.
@@ -225,12 +226,15 @@ export async function joinAction(
   _previous: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
   const fields = readFields(formData, ['name', 'email', 'password', 'confirmation', 'token']);
   const { token: _token, ...values } = withoutPassword(fields);
   const parsed = JoinFormSchema.safeParse(fields);
-  if (!parsed.success) return { errors: fieldErrors(parsed.error, SIGN_UP_MESSAGES), values };
+  if (!parsed.success) {
+    return { errors: fieldErrors(parsed.error, signUpMessages(t), t), values };
+  }
   if (!(await authAttemptAllowed('inscription', parsed.data.email, await headers()))) {
-    return { errors: { form: TOO_MANY_ATTEMPTS }, values };
+    return { errors: { form: t('tooManyAttempts') }, values };
   }
 
   const { confirmation: _confirmation, ...input } = parsed.data;
@@ -238,21 +242,22 @@ export async function joinAction(
   if (!created.ok) {
     const errors: Record<string, string> =
       created.error === 'email_pris'
-        ? { email: EMAIL_TAKEN }
+        ? { email: t('emailTaken') }
         : created.error === 'lien_invalide'
-          ? { form: 'Ce lien d’invitation n’est plus valable. Demandez-en un nouveau.' }
-          : { form: SIGN_UP_FAILED };
+          ? { form: t('inviteInvalid') }
+          : { form: t('signUpFailed') };
     return { errors, values };
   }
-  return signInNewAccount(parsed.data.email, parsed.data.password, values);
+  return signInNewAccount(parsed.data.email, parsed.data.password, values, t);
 }
 
 async function signInNewAccount(
   email: string,
   password: string,
   values: Record<string, string>,
+  t: Translator,
 ): Promise<AuthFormState> {
   const { ok } = await signInWithPassword(email, password);
-  if (!ok) return { errors: { form: SIGNED_UP_NOT_IN }, values };
+  if (!ok) return { errors: { form: t('signedUpNotIn') }, values };
   redirect('/');
 }

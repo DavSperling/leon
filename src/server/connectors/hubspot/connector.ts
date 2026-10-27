@@ -76,7 +76,7 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -134,7 +134,7 @@ export const hubspotConnector: Connector<Config> = {
     // Le jeton a déjà fait ses preuves : un refus ici ne le met pas en cause.
     const portal = await optional(() => hubspot.portalId(), null, [401, 403]);
     if (portal === null) return { account: 'HubSpot' };
-    return { account: `Compte HubSpot ${portal}`, accountKey: String(portal) };
+    return { account: `HubSpot account ${portal}`, accountKey: String(portal) };
   },
 
   sync(config: Config, state, http: ConnectorHttp) {

@@ -7,7 +7,7 @@ import {
   Plug,
   Terminal,
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import type { CaptureKind, ProviderId, SourceKind } from '@/capture/turn';
 import { SOURCE_KIND_LABELS } from '@/lib/labels';
@@ -142,6 +142,16 @@ export type SourceChipProps = {
   className?: string;
 };
 
+// La date dans la langue de l'interface : seule partie de la puce qui la lit.
+function ChipDate({ date, time }: { date: Date; time?: boolean }) {
+  const locale = useLocale();
+  return (
+    <time dateTime={date.toISOString()} className="tabular-nums">
+      {time ? formatDateTime(date, locale) : formatDate(date, locale)}
+    </time>
+  );
+}
+
 /** Origine d'une source : icône + « Libellé · Réunion · Équipe Sales · Julie Martin · 14 oct. 2026 ». */
 export function SourceChip({
   kind,
@@ -172,9 +182,7 @@ export function SourceChip({
             <span aria-hidden="true" className="mx-1.5 opacity-70">
               ·
             </span>
-            <time dateTime={date.toISOString()} className="tabular-nums">
-              {time ? formatDateTime(date) : formatDate(date)}
-            </time>
+            <ChipDate date={date} time={time} />
           </>
         )}
       </span>

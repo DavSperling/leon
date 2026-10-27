@@ -134,7 +134,7 @@ describe('sentry : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, avec les deux régions et l’avertissement', () => {
     expect(getConnector('sentry')).toBe(sentryConnector);
-    const entry = listCatalog().find((item) => item.id === 'sentry');
+    const entry = listCatalog('fr').find((item) => item.id === 'sentry');
     const region = entry?.fields.find((field) => field.name === 'region');
     expect(entry?.available).toBe(true);
     expect(region?.kind).toBe('select');
@@ -155,7 +155,7 @@ describe('sentry : verify', () => {
 
     const result = await sentryConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'organisation acme' });
+    expect(result).toEqual({ account: 'organization acme' });
     expect(calls.map((call) => pathOf(call.url))).toEqual(['/api/0/organizations/acme/issues/']);
     expect(calls[0]?.headers.authorization).toBe(`Bearer ${TOKEN}`);
     expect(paramsOf(calls[0]?.url).limit).toBe('1');
@@ -443,7 +443,7 @@ describe('sentry : ressource secondaire et erreurs', () => {
     const failure = await runSync([listRoute(broken)]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 

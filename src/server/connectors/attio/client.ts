@@ -7,7 +7,7 @@ const API = 'https://api.attio.com/v2';
 export const PAGE_SIZE = 50; // le maximum d'Attio pour les notes et les fils
 
 // Attio écrit ses dates avec neuf décimales (« …49.061281000Z ») ; `Date` en garde trois.
-const Timestamp = z.string().refine((text) => Number.isFinite(Date.parse(text)), 'Date illisible');
+const Timestamp = z.string().refine((text) => Number.isFinite(Date.parse(text)), 'Unreadable date');
 // L'auteur d'une note ou d'un commentaire. `id` est un membre de l'espace quand `type` le dit.
 const Actor = z.object({ id: z.string().nullish(), type: z.string().nullish() }).nullish();
 export type Actor = z.infer<typeof Actor>;

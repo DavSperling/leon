@@ -197,7 +197,7 @@ const RESTART = {
 };
 
 // `config` porte tous les champs secrets de l'outil ; les champs ouverts ne sont pas réécrits.
-// C'est le remède à « Clé refusée » : la connexion repart tout de suite, sauf si elle est en pause.
+// C'est le remède à « rejected the key » : la connexion repart tout de suite, sauf si elle est en pause.
 export async function replaceConnectionSecret(
   ctx: TenantContext,
   id: string,

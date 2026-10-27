@@ -12,6 +12,7 @@ import {
 } from './capture-session';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
+  countOf,
   createIngestSender,
   type ImportDeps,
   type ImportSummary,
@@ -24,28 +25,28 @@ import { gitInDirectory } from './project-key';
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
 const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
-const HELP = `Usage : pnpm leon <commande>
+const HELP = `Usage: pnpm leon <command>
 
-Commandes :
-  import-claude-code   Importe les sessions Claude Code (~/.claude/projects, ou CLAUDE_CONFIG_DIR)
-      --project <chemin>   ne garde que les sessions lancées sous ce dossier
-      --since AAAA-MM-JJ   ne garde que les tours à partir de cette date
-      --dry-run            affiche ce qui serait envoyé (une ligne JSON par envoi), sans rien envoyer
-  briefing             Affiche le point du matin du projet du dossier courant (pour le crochet
-                       SessionStart de Claude Code : le JSON du crochet est lu sur l'entrée standard)
-  capter-session       Envoie la session qui se termine, avec son projet (pour le crochet SessionEnd
-                       de Claude Code : le JSON du crochet est lu sur l'entrée standard)
-      --delai-ms <n>       raccourcit le délai réseau de l'envoi, 15 000 ms au plus (pour les essais)
-  installer-crochets   Écrit les crochets SessionStart (briefing) et SessionEnd (capter-session) dans les
-                       réglages de Claude Code (~/.claude/settings.json, ou CLAUDE_CONFIG_DIR), après confirmation
-      --oui                n'attend aucune confirmation
-      --depot <chemin>     dépôt de Leon cité dans les commandes (par défaut : celui qui lance celle-ci)
+Commands:
+  import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
+      --project <path>     keep only the sessions started under this folder
+      --since YYYY-MM-DD   keep only the turns from this date on
+      --dry-run            print what would be sent (one JSON line per request), send nothing
+  briefing             Print the morning briefing for the project of the current folder (for Claude Code's
+                       SessionStart hook: the hook JSON is read from standard input)
+  capter-session       Send the session that is ending, with its project (for Claude Code's SessionEnd
+                       hook: the hook JSON is read from standard input)
+      --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
+  installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
+                       settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR), after confirmation
+      --oui                do not ask for confirmation
+      --depot <path>       Leon repository named in the hook commands (default: the one running this command)
 
-L'envoi réel, le briefing et la capture de session demandent LEON_URL et LEON_TOKEN.`;
+Real uploads (import-claude-code without --dry-run), briefing and capter-session need LEON_URL and LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
-  const sent = dryRun ? 'à envoyer' : 'envoyés';
-  return `${summary.sessions} session(s), ${summary.turnsSent} tour(s) ${sent} : ${summary.inserted} nouveau(x), ${summary.skipped} déjà connu(s), ${summary.failures} échec(s).`;
+  const sent = dryRun ? 'to send' : 'sent';
+  return `${countOf(summary.sessions, 'session')}, ${countOf(summary.turnsSent, 'turn')} ${sent}: ${summary.inserted} new, ${summary.skipped} already known, ${countOf(summary.failures, 'failure')}.`;
 }
 
 async function runImport(args: string[]): Promise<number> {
@@ -64,7 +65,7 @@ async function runImport(args: string[]): Promise<number> {
     git: gitInDirectory,
     send: dryRun
       ? async () => {
-          throw new Error('Aucun envoi en --dry-run.');
+          throw new Error('Nothing is sent with --dry-run.');
         }
       : createIngestSender(fetch, parseServerEnv(process.env)),
   };
@@ -96,7 +97,7 @@ async function runBriefingCommand(): Promise<number> {
       err: console.error,
     });
   } catch {
-    console.error('Leon : briefing indisponible (erreur inattendue).');
+    console.error('Leon: briefing unavailable (unexpected error).');
     return 0;
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
@@ -113,7 +114,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
       env = parseServerEnv(process.env);
     } catch (error) {
       // Les messages de parseServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
-      console.error(`Leon : ${error instanceof Error ? error.message : 'configuration invalide.'}`);
+      console.error(`Leon: ${error instanceof Error ? error.message : 'invalid configuration.'}`);
       return 0;
     }
     // Une option inconnue ou invalide ne doit pas empêcher la capture : on l'ignore (strict: false).
@@ -132,7 +133,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
       ...(projectDir ? { projectDir } : {}),
     });
   } catch {
-    console.error('Leon : capture impossible (erreur inattendue).');
+    console.error('Leon: capture failed (unexpected error).');
     return 0;
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
@@ -166,10 +167,10 @@ async function runInstallHooks(args: string[]): Promise<number> {
     () => true,
     () => false,
   );
-  if (!isLeonRepo) throw new Error("--depot : ce dossier n'est pas un dépôt de Leon.");
+  if (!isLeonRepo) throw new Error('--depot: this folder is not a Leon repository.');
   // La commande tourne dans le dépôt de Leon (`pnpm --dir`), pas dans le dossier où l'utilisateur a posé la variable.
   const configDir = claudeConfigDir(process.env);
-  if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR doit être un chemin absolu.');
+  if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
   const asker = createAsker();
   try {
     return await installHooks(
@@ -190,7 +191,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'installer-crochets') return await runInstallHooks(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
-    console.error(error instanceof Error ? error.message : 'Erreur inconnue.');
+    console.error(error instanceof Error ? error.message : 'Unknown error.');
     return 1;
   }
   const asked = command === undefined || command === 'help' || command === '--help';

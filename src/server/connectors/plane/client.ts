@@ -66,7 +66,10 @@ export function planeClient(apiKey: string, workspace: string, http: ConnectorHt
         const denied = error instanceof ConnectorAuthError && error.status === 403;
         const missing = error instanceof ConnectorHttpError && error.status === 404;
         if (denied || missing) {
-          throw new ConnectorHttpError(denied ? 403 : 404, `Espace inaccessible : ${workspace}`);
+          throw new ConnectorHttpError(
+            denied ? 403 : 404,
+            `Workspace not accessible: ${workspace}`,
+          );
         }
         throw error;
       }

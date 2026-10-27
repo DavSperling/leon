@@ -47,20 +47,18 @@ export function renderHit(hit: SourceHit, n: number): string {
 const plural = (count: number, word: string): string => `${count} ${word}${count > 1 ? 's' : ''}`;
 
 export function unknownPeopleLines(names: string[]): string[] {
-  return names.map(
-    (name) => `Personne ne s'appelle « ${escapeData(oneLine(name))} » dans l'équipe.`,
-  );
+  return names.map((name) => `No one on the team is called "${escapeData(oneLine(name))}".`);
 }
 
 export function renderSearch(page: SearchPage, pageNumber: number): string {
   const unknown = unknownPeopleLines(page.unknownPeople);
-  if (page.hits.length === 0) return ['Aucun résultat.', ...unknown].join('\n');
+  if (page.hits.length === 0) return ['No results.', ...unknown].join('\n');
   const first = (pageNumber - 1) * PAGE_SIZE;
   const more = first + page.hits.length < page.totalSources;
   return [
     DATA_GUARD_LINE,
-    `${plural(page.hits.length, 'source')} sur ${page.totalSources} (page ${pageNumber}).${
-      more ? ` Pour la suite, demande la page ${pageNumber + 1}.` : ''
+    `${plural(page.hits.length, 'source')} of ${page.totalSources} (page ${pageNumber}).${
+      more ? ` For more, ask for page ${pageNumber + 1}.` : ''
     }`,
     ...unknown,
     ...page.hits.map((hit, index) => renderHit(hit, first + index + 1)),
@@ -134,7 +132,7 @@ export function renderFetched(fetched: Fetched): string {
     '</source>',
     ...(fetched.truncated
       ? [
-          "Lecture coupée : la suite de cette source n'est pas rendue, cherche un passage précis avec search.",
+          'Reading cut off: the rest of this source is not returned. Search for a specific passage with search.',
         ]
       : []),
   ].join('\n');
@@ -144,7 +142,7 @@ export function renderFetched(fetched: Fetched): string {
 // de la donnée brute : la ligne de garde et les balises de `content` ne l'accompagnent pas (comme pour `turns`).
 function joinedText(turns: ContextTurn[]): string {
   return turns
-    .map((turn) => `${turn.authorName ?? turn.role} (${isoDate(turn.ts)}) : ${turn.text}`)
+    .map((turn) => `${turn.authorName ?? turn.role} (${isoDate(turn.ts)}): ${turn.text}`)
     .join('\n\n');
 }
 

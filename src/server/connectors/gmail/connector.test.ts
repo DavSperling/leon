@@ -216,7 +216,7 @@ describe('gmail : lecture des messages', () => {
       { index: 0, status: 200, body: '{"id":"a"}' },
       { index: 1, status: 429, body: '{"error":{}}' },
     ]);
-    expect(() => parseBatch('', 'application/json')).toThrow('Réponse inattendue');
+    expect(() => parseBatch('', 'application/json')).toThrow('Unexpected response');
   });
 });
 
@@ -346,7 +346,7 @@ describe('gmailConnector : relevé', () => {
     ]);
     await expect(refused).rejects.toMatchObject({
       status: 429,
-      message: 'Limite de requêtes de Gmail atteinte',
+      message: 'Gmail rate limit reached',
     });
   });
 

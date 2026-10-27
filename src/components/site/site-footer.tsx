@@ -1,42 +1,77 @@
 import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
+import { setLocaleAction } from '@/app/(app)/reglages/actions';
 import { Logo } from '@/components/verre/shell/brand';
 import { nb } from '@/lib/verre/nb';
-import { TAGLINES, TEAMS } from './content';
+import { useSiteContent } from './content';
 import { Container } from './parts';
 
-const COLUMNS = [
-  {
-    title: 'Produit',
-    links: [
-      { href: '/produit', label: 'Comment ça marche' },
-      { href: '/produit#retrouve', label: 'Recherche et réponse citée' },
-      { href: '/produit#discute', label: 'Discussions et point du matin' },
-      { href: '/connecteurs', label: 'Connecteurs' },
-      { href: '/tarifs', label: 'Tarifs' },
-    ],
-  },
-  {
-    title: 'Cas d’usage',
-    links: TEAMS.map((t) => ({ href: `/cas-usage/${t.slug}`, label: t.label })),
-  },
-  {
-    title: 'Confiance',
-    links: [
-      { href: '/securite', label: 'Sécurité' },
-      { href: '/securite#pas-encore', label: 'Ce qui n’est pas encore là' },
-    ],
-  },
-  {
-    title: 'Compte',
-    links: [
-      { href: '/connexion', label: 'Se connecter' },
-      { href: '/inscription', label: 'Créer un espace' },
-    ],
-  },
+// Chaque langue écrite dans sa langue (et marquée lang=) : « Français » se lit en français, même sur le site anglais.
+const LANGUAGES = [
+  { locale: 'en', label: 'English' },
+  { locale: 'fr', label: 'Français' },
 ] as const;
+
+/** Le choix de la langue : un formulaire qui pose le cookie leon-locale, sans session et sans JavaScript. */
+function LanguageSwitch() {
+  const t = useTranslations('site.footer');
+  const current = useLocale();
+  return (
+    <form action={setLocaleAction} aria-label={t('language')} className="flex items-center gap-1">
+      {LANGUAGES.map((l) => (
+        <button
+          key={l.locale}
+          type="submit"
+          name="locale"
+          value={l.locale}
+          lang={l.locale}
+          aria-current={l.locale === current ? 'true' : undefined}
+          className="inline-flex items-center rounded-sm px-1.5 text-muted underline-offset-4 transition-colors duration-200 hover:text-fg aria-[current=true]:text-fg aria-[current=true]:underline pointer-coarse:min-h-10"
+        >
+          {l.label}
+        </button>
+      ))}
+    </form>
+  );
+}
 
 /** Pied du site : la promesse, quatre colonnes de liens, le grand mot « Leon » en filigrane. */
 export function SiteFooter() {
+  const t = useTranslations('site.footer');
+  const common = useTranslations('site.common');
+  const cta = useTranslations('site.cta');
+  const security = useTranslations('site.security');
+  const { taglines, teams } = useSiteContent();
+  const columns = [
+    {
+      title: t('product'),
+      links: [
+        { href: '/produit', label: cta('howItWorks') },
+        { href: '/produit#retrouve', label: t('search') },
+        { href: '/produit#discute', label: t('discussions') },
+        { href: '/connecteurs', label: common('connectors') },
+        { href: '/tarifs', label: t('pricing') },
+      ],
+    },
+    {
+      title: common('useCases'),
+      links: teams.map((team) => ({ href: `/cas-usage/${team.slug}`, label: team.label })),
+    },
+    {
+      title: t('trust'),
+      links: [
+        { href: '/securite', label: common('security') },
+        { href: '/securite#pas-encore', label: security('notYet') },
+      ],
+    },
+    {
+      title: t('account'),
+      links: [
+        { href: '/connexion', label: cta('signIn') },
+        { href: '/inscription', label: cta('create') },
+      ],
+    },
+  ];
   return (
     <footer className="relative mt-10 overflow-hidden border-t border-line">
       <Container className="relative pt-16 pb-10">
@@ -49,10 +84,10 @@ export function SiteFooter() {
               <Logo className="size-7 text-[14px]" />
               Leon
             </Link>
-            <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(TAGLINES.pitch)}</p>
+            <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(taglines.pitch)}</p>
           </div>
-          <nav aria-label="Pied de page" className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-            {COLUMNS.map((col) => (
+          <nav aria-label={t('nav')} className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+            {columns.map((col) => (
               <div key={col.title}>
                 <h2 className="font-mono text-meta font-medium tracking-[0.08em] text-muted uppercase">
                   {col.title}
@@ -75,7 +110,8 @@ export function SiteFooter() {
         </div>
         <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 font-mono text-meta tracking-normal text-muted">
           <span>© 2026 Leon</span>
-          <span>{nb(TAGLINES.source)}</span>
+          <LanguageSwitch />
+          <span>{nb(taglines.source)}</span>
         </div>
       </Container>
       <p

@@ -85,7 +85,7 @@ describe('close : configuration', () => {
 
   it('est disponible dans le registre et dans le catalogue', () => {
     expect(getConnector('close')).toBe(closeConnector);
-    const entry = listCatalog().find((item) => item.id === 'close');
+    const entry = listCatalog('fr').find((item) => item.id === 'close');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => field.name)).toEqual(['apiKey']);
   });
@@ -605,7 +605,7 @@ describe('close : erreurs', () => {
     );
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
     expect((failure as Error).message).not.toContain(KEY);
   });
 
@@ -615,6 +615,6 @@ describe('close : erreurs', () => {
     ]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Close a répondu 400');
+    expect((failure as Error).message).toBe('Close responded with 400');
   });
 });

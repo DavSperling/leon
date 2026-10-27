@@ -12,4 +12,12 @@ export const basecampCatalog: CatalogEntry = {
   keyAccepted: false,
   warning:
     'Basecamp n’a pas de droit en lecture seule : l’autorisation couvre tout votre compte, mais Leon ne fait que lire les messages, les documents et les commentaires.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'Basecamp asks you to authorize Leon to access your account. If you have several Basecamp accounts, Leon uses the first one.',
+    warning:
+      'Basecamp has no read-only permission: the authorization covers your whole account, but Leon only reads messages, documents, and comments.',
+  },
 };

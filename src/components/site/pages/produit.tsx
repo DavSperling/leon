@@ -1,9 +1,10 @@
 import { Check, MessagesSquare, Plug, Sunrise, Terminal } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { BRIEFING, DEMOS, PILLARS, type Pillar, SYNTAX, TOOL_COUNT } from '../content';
+import { type Pillar, TOOL_COUNT, useSiteContent } from '../content';
 import { DemoAnswerCard, DemoSearchField } from '../demo-card';
 import { Layers3D, Tilt } from '../fx';
 import {
@@ -58,6 +59,7 @@ function Visual({
   tilt?: boolean;
   children: ReactNode;
 }) {
+  const common = useTranslations('site.common');
   const body = (
     <>
       {children}
@@ -83,7 +85,7 @@ function Visual({
       </div>
       <figcaption className={FICTIF}>
         <span className="sr-only">{nb(`${caption} `)}</span>
-        {nb(`Exemple fictif · ${label}`)}
+        {nb(common('fictionalLabel', { label }))}
       </figcaption>
     </figure>
   );
@@ -109,22 +111,19 @@ function FakeSwitch({ on }: { on: boolean }) {
 }
 
 function CaptureVisual() {
+  const t = useTranslations('site.product');
   return (
-    <Visual
-      caption="Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin."
-      label="ce que Leon capte"
-      chip="+ 3 éléments gardés · 14:12"
-    >
+    <Visual caption={t('captureCaption')} label={t('captureLabel')} chip={t('captureChip')}>
       <div className={PANEL}>
         <div className="site-dots pointer-events-none absolute inset-0 opacity-70" />
         <div className="relative grid gap-3">
           <div className={cn(CARD, 'p-4')}>
             <div className="flex items-center gap-2">
               <Plug strokeWidth={1.7} className="size-4 text-accent" />
-              <span className="text-ui font-semibold text-fg">Outils branchés</span>
+              <span className="text-ui font-semibold text-fg">{t('connected')}</span>
               <span className="ml-auto flex items-center gap-1.5 font-mono text-meta tracking-normal text-muted">
                 <span className="pulse" />
-                relève toutes les 15 min
+                {t('syncs')}
               </span>
             </div>
             <div className="mt-4 grid grid-cols-4 gap-2.5 sm:grid-cols-8">
@@ -139,18 +138,18 @@ function CaptureVisual() {
               ))}
             </div>
             <p className="mt-3.5 font-mono text-meta tracking-normal text-muted">
-              {TOOL_COUNT} outils branchables · clé d’API ou bouton de connexion
+              {t('connectable', { count: TOOL_COUNT })}
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
             <div className={cn(CARD, 'p-4')}>
-              <p className="text-ui font-semibold text-fg">Extension du navigateur</p>
-              <p className="mt-1 text-label text-muted">Vous choisissez, site par site.</p>
+              <p className="text-ui font-semibold text-fg">{t('extension')}</p>
+              <p className="mt-1 text-label text-muted">{t('extensionChoice')}</p>
               <ul className="mt-3.5 grid gap-2">
                 {[
-                  { label: 'Assistant d’IA, site 1', on: true },
-                  { label: 'Assistant d’IA, site 2', on: false },
+                  { label: t('site1'), on: true },
+                  { label: t('site2'), on: false },
                 ].map((s) => (
                   <li
                     key={s.label}
@@ -163,21 +162,19 @@ function CaptureVisual() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-label leading-[1.5] text-muted">
-                {nb('Jamais en navigation privée. Jamais de pièce jointe.')}
-              </p>
+              <p className="mt-3 text-label leading-[1.5] text-muted">{nb(t('extensionNever'))}</p>
             </div>
             <div className={cn(CARD, 'flex flex-col p-4')}>
               <p className="flex items-center gap-2 text-ui font-semibold text-fg">
                 <Terminal strokeWidth={1.7} className="size-4 text-accent" />
-                Assistant de code
+                {t('codingAssistant')}
               </p>
               <div className="mt-3.5 flex-1 rounded-field border border-line bg-[color-mix(in_srgb,var(--bg)_70%,transparent)] p-3 font-mono text-[11.5px] leading-[1.7] tracking-normal">
-                <p className="text-muted">$ fin de session</p>
+                <p className="text-muted">{t('sessionEnd')}</p>
                 <p className="text-fg-2">
-                  <span className="text-success">✓</span> conversation envoyée
+                  <span className="text-success">✓</span> {t('sent')}
                 </p>
-                <p className="text-muted">texte seul, sans sorties d’outils</p>
+                <p className="text-muted">{t('textOnly')}</p>
               </div>
             </div>
           </div>
@@ -188,12 +185,10 @@ function CaptureVisual() {
 }
 
 function KeepVisual() {
+  const t = useTranslations('site.product');
+  const common = useTranslations('site.common');
   return (
-    <Visual
-      tilt={false}
-      caption="Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous seul."
-      label="ce que Leon garde"
-    >
+    <Visual tilt={false} caption={t('keepCaption')} label={t('keepLabel')}>
       {/* overflow-x-clip : la scène des couches garde sa largeur sous 340 px (pas de défilement horizontal) */}
       <div className="relative min-h-[440px] overflow-x-clip sm:min-h-[520px]">
         <div className="site-halo pointer-events-none absolute inset-0 opacity-80 [mask:linear-gradient(180deg,transparent,#000_35%,#000_65%,transparent)]" />
@@ -201,7 +196,9 @@ function KeepVisual() {
         <div className="site-float absolute bottom-2 left-1/2 z-[2] w-max -translate-x-1/2 rounded-field border border-line-strong bg-[color-mix(in_srgb,var(--menu)_88%,transparent)] px-3.5 py-2.5 font-mono text-[11.5px] tracking-normal shadow-float backdrop-blur-[16px]">
           <span className="text-fg-2">DB_PASSWORD</span>
           <span className="text-muted">=</span>
-          <span className="rounded-[4px] bg-accent-soft px-1 text-accent">[secret masqué]</span>
+          <span className="rounded-[4px] bg-accent-soft px-1 text-accent">
+            {common('maskedSecret')}
+          </span>
         </div>
       </div>
     </Visual>
@@ -209,7 +206,10 @@ function KeepVisual() {
 }
 
 function FindVisual() {
-  const demo = DEMOS[1];
+  const t = useTranslations('site.product');
+  const common = useTranslations('site.common');
+  const { demos, syntax } = useSiteContent();
+  const demo = demos[1];
   return (
     <div className="site-reveal min-w-0">
       <Tilt max={5} scale={1.01} perspective={1400} className="rounded-panel">
@@ -222,10 +222,10 @@ function FindVisual() {
             </div>
             <div className={cn(CARD, 'px-2 py-1.5')}>
               <p className="px-2.5 pt-2.5 pb-1 font-mono text-meta font-medium tracking-[0.08em] text-muted uppercase">
-                Écrit dans la barre
+                {t('typedInBar')}
               </p>
               <dl className="grid sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                {SYNTAX.map((s) => (
+                {syntax.map((s) => (
                   <div
                     key={s.code}
                     className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2"
@@ -245,37 +245,31 @@ function FindVisual() {
           className="fx-pop pointer-events-none absolute -top-4 right-4 z-[4] [--pop:60px] sm:-right-3"
         >
           <div className="site-float rounded-full border border-accent-line bg-[color-mix(in_srgb,var(--menu)_86%,transparent)] px-3.5 py-2 font-mono text-meta tracking-normal text-accent shadow-float backdrop-blur-[16px]">
-            une source par phrase · [1] [2] [3]
+            {t('findChip')}
           </div>
         </div>
       </Tilt>
-      <p className={FICTIF}>{nb('Exemple fictif · l’écran Recherche de Leon')}</p>
+      <p className={FICTIF}>{nb(common('searchScreen'))}</p>
     </div>
   );
 }
 
-const MCP_TOOLS = [
-  { name: 'search', text: 'chercher dans la mémoire' },
-  { name: 'fetch', text: 'lire une source en entier' },
-  { name: 'briefing', text: 'le point du matin' },
-  { name: 'remember', text: 'garder une note, privée' },
-] as const;
+// Les quatre outils du serveur MCP, sous leur vrai nom ; ce qu'ils font est dans site.product.mcp.
+const MCP_TOOLS = ['search', 'fetch', 'briefing', 'remember'] as const;
 
 function DiscussVisual() {
-  const demo = DEMOS[2];
+  const t = useTranslations('site.product');
+  const { demos, briefing } = useSiteContent();
+  const demo = demos[2];
   return (
-    <Visual
-      caption="Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant."
-      label="discussion et point du matin"
-      chip="point du matin · 08:45"
-    >
+    <Visual caption={t('discussCaption')} label={t('discussLabel')} chip={t('discussChip')}>
       <div className={PANEL}>
         <div className="site-grid pointer-events-none absolute inset-0 opacity-50" />
         <div className="relative grid gap-3">
           <div className={cn(CARD, 'p-4')}>
             <div className="flex items-center gap-2 text-label text-muted">
               <MessagesSquare strokeWidth={1.7} className="size-4 text-accent" />
-              Discussion · privée
+              {t('discussionPrivate')}
             </div>
             <p className="mt-3 ml-auto w-fit max-w-[85%] rounded-[16px] rounded-br-[6px] bg-accent-soft px-3.5 py-2.5 text-ui text-fg shadow-[inset_0_0_0_1px_var(--accent-line)]">
               {nb(demo?.query ?? '')}
@@ -292,10 +286,10 @@ function DiscussVisual() {
             <div className={cn(CARD, 'p-4')}>
               <p className="flex items-center gap-2 text-ui font-semibold text-fg">
                 <Sunrise strokeWidth={1.7} className="size-4 text-accent" />
-                Le point du matin
+                {t('theBriefing')}
               </p>
               <div className="mt-3 grid gap-2.5">
-                {BRIEFING.map((part) => (
+                {briefing.map((part) => (
                   <div key={part.title}>
                     <p className="font-mono text-meta tracking-normal text-accent">{part.title}</p>
                     <p className="mt-0.5 line-clamp-2 text-label leading-[1.5] text-fg-2">
@@ -306,20 +300,20 @@ function DiscussVisual() {
               </div>
             </div>
             <div className={cn(CARD, 'p-4')}>
-              <p className="text-ui font-semibold text-fg">Serveur MCP</p>
+              <p className="text-ui font-semibold text-fg">{t('mcpServer')}</p>
               <ul className="mt-3 grid grid-cols-1 gap-1.5">
-                {MCP_TOOLS.map((t) => (
-                  <li key={t.name} className="flex items-baseline gap-2">
+                {MCP_TOOLS.map((name) => (
+                  <li key={name} className="flex items-baseline gap-2">
                     <code className="rounded-[5px] border border-line bg-glass-3 px-1.5 font-mono text-[11.5px] text-fg">
-                      {t.name}
+                      {name}
                     </code>
-                    <span className="min-w-0 truncate text-label text-muted">{nb(t.text)}</span>
+                    <span className="min-w-0 truncate text-label text-muted">
+                      {nb(t(`mcp.${name}`))}
+                    </span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 font-mono text-meta tracking-normal text-muted">
-                jeton personnel, révocable
-              </p>
+              <p className="mt-3 font-mono text-meta tracking-normal text-muted">{t('token')}</p>
             </div>
           </div>
         </div>
@@ -378,17 +372,17 @@ function PillarSection({ pillar, index }: { pillar: Pillar; index: number }) {
  * chacune un cran devant l'autre ; la carte survolée sort de la pile. À plat sous 1024 px (pages.css, .pg-stack).
  */
 function FlowAside() {
+  const t = useTranslations('site.product');
+  const { pillars } = useSiteContent();
   return (
     <figure className="pg-stack relative py-4 lg:py-10">
-      <figcaption className="sr-only">
-        {nb('Les quatre étapes : capter, garder, retrouver, discuter.')}
-      </figcaption>
+      <figcaption className="sr-only">{nb(t('flowCaption'))}</figcaption>
       <div
         aria-hidden="true"
         className="site-halo pointer-events-none absolute -inset-10 opacity-80 [mask:radial-gradient(closest-side,#000,transparent)]"
       />
       <ol className="pg-stack-deck relative grid gap-3 lg:gap-4">
-        {PILLARS.map((p, i) => (
+        {pillars.map((p, i) => (
           // preserve-3d : sans lui, le <li> aplatirait la profondeur de sa carte (translateZ) dans son plan
           <li
             key={p.id}
@@ -399,7 +393,7 @@ function FlowAside() {
               href={`#${p.id}`}
               className={cn(
                 'pg-stack-card relative flex min-w-0 items-center gap-4 rounded-box border border-line-strong bg-[linear-gradient(160deg,color-mix(in_srgb,var(--menu)_88%,transparent),color-mix(in_srgb,var(--menu)_72%,transparent))] px-4 py-4 shadow-panel',
-                i === PILLARS.length - 1 && 'signal-line',
+                i === pillars.length - 1 && 'signal-line',
               )}
               style={{ '--i': i } as CSSProperties}
             >
@@ -424,65 +418,60 @@ function FlowAside() {
   );
 }
 
-const NEXT = [
-  { title: 'Google Workspace', text: 'Gmail, Drive et Agenda.' },
-  { title: 'Microsoft 365', text: 'Teams, OneDrive et SharePoint.' },
-  { title: 'Fichiers', text: 'PDF et documents Office.' },
-  { title: 'Invitations d’équipe', text: 'Rejoindre l’espace de son entreprise.' },
-  {
-    title: 'Droits de l’outil d’origine',
-    text: 'Une page privée chez l’éditeur reste privée dans Leon.',
-  },
-] as const;
+// Ce qui n'est pas encore construit (site.product.next).
+const NEXT = ['google', 'microsoft', 'files', 'invites', 'permissions'] as const;
 
 export function ProduitPage() {
+  const t = useTranslations('site.product');
+  const cta = useTranslations('site.cta');
+  const common = useTranslations('site.common');
+  const { pillars, taglines } = useSiteContent();
   return (
     <>
       <PageHero
-        kicker="Comment ça marche"
-        title="Tout ce qui se dit, gardé tel quel, retrouvé avec sa source."
-        accent="retrouvé avec sa source."
-        lead="Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous seul, puis répond en citant ses sources. Personne ne remplit de fiche pour lui."
+        kicker={cta('howItWorks')}
+        title={t('heroTitle')}
+        accent={t('heroAccent')}
+        lead={t('heroLead')}
         actions={
           <>
-            <CtaLink href="/inscription">Créer un espace</CtaLink>
+            <CtaLink href="/inscription">{cta('create')}</CtaLink>
             <CtaLink href="/connecteurs" variant="secondary">
-              Voir les connecteurs
+              {cta('seeConnectors')}
             </CtaLink>
           </>
         }
         aside={<FlowAside />}
       />
 
-      {PILLARS.map((p, i) => (
+      {pillars.map((p, i) => (
         <PillarSection key={p.id} pillar={p} index={i} />
       ))}
 
       <PageSection labelledBy="ensuite-titre">
         <SectionHeading
           id="ensuite-titre"
-          kicker="Ensuite"
-          title="Ce qui arrive ensuite."
-          lead="Ce qui suit n’est pas encore construit. Nous l’écrivons ici pour que vous sachiez à quoi vous attendre."
+          kicker={common('next')}
+          title={t('nextTitle')}
+          lead={t('nextLead')}
         />
         <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {NEXT.map((n) => (
-            <li key={n.title} className="site-reveal">
+            <li key={n} className="site-reveal">
               <Tilt className="h-full rounded-card border border-dashed border-line-strong bg-panel p-4 shadow-hi">
                 {/* en bloc : une pastille en ligne serait enveloppée d'une boîte anonyme, à plat */}
                 <PlannedBadge className="fx-pop flex w-fit" />
-                <p className="mt-3 text-ui font-semibold text-fg">{nb(n.title)}</p>
-                <p className="mt-1 text-label leading-[1.5] text-muted">{nb(n.text)}</p>
+                <p className="mt-3 text-ui font-semibold text-fg">{nb(t(`next.${n}.title`))}</p>
+                <p className="mt-1 text-label leading-[1.5] text-muted">
+                  {nb(t(`next.${n}.text`))}
+                </p>
               </Tilt>
             </li>
           ))}
         </ul>
       </PageSection>
 
-      <CtaBand
-        title="La source, ou rien."
-        text="Branchez un premier outil et posez votre première question."
-      />
+      <CtaBand title={taglines.source} text={t('ctaText')} />
     </>
   );
 }

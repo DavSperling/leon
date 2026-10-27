@@ -732,6 +732,31 @@ describe('github : connexion par le bouton', () => {
     expect(idsOf(pages)).toContain('issue:acme/leon#12');
   });
 
+  it('sans dépôt choisi, sync lit tous les dépôts installés, au-delà de 20 et de la première page', async () => {
+    const installed = { ...oauthConfig, repos: [] };
+    const repos = Array.from({ length: 22 }, (_, i) => `acme/r${i + 1}`);
+    const listed = (names: string[]) => ({
+      repositories: names.map((full_name) => ({ full_name })),
+    });
+    const REPOS_7 = `${API}/user/installations/7/repositories`;
+    const { http, calls } = testHttp(githubConnector, installed, [
+      { url: `${API}/user/installations`, json: { installations: [{ id: 7 }, { id: 8 }] } },
+      { url: REPOS_7, json: listed(repos.slice(0, 20)), headers: next(REPOS_7) },
+      { url: REPOS_7, json: listed(repos.slice(20, 21)) },
+      { url: `${API}/user/installations/8/repositories`, json: listed(repos.slice(21)) },
+      ...repos.map((name) => ({ url: `${API}/repos/${name}/issues`, json: [] })),
+    ]);
+
+    await collect(
+      githubConnector.sync(schema.parse(installed), { cursor: null, since: SINCE }, http),
+    );
+
+    const read = calls
+      .map(({ url }) => url.replace(/\?.*$/, ''))
+      .filter((url) => url.endsWith('/issues'));
+    expect(read).toEqual(repos.map((name) => `${API}/repos/${name}/issues`));
+  });
+
   it('reste un objet à champs nommés, et ne chiffre que la clé collée', () => {
     const shape = Object.keys((schema as unknown as z.ZodObject).shape);
 

@@ -84,9 +84,10 @@ export function githubClient(token: string, http: ConnectorHttp) {
       http.json({ url: `${API}/user`, headers }, z.object({ id: z.number(), login: z.string() })),
 
     // Bouton seulement : les dépôts où l'utilisateur a installé l'appli (choisis sur l'écran
-    // d'installation de GitHub), dans l'ordre de GitHub. `max` borne la lecture.
+    // d'installation de GitHub), dans l'ordre de GitHub, toutes les pages lues. `max` arrête la lecture
+    // plus tôt (« au moins un dépôt ? ») ; sans lui, la liste est complète.
     // https://docs.github.com/en/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token
-    async installedRepos(max: number): Promise<string[]> {
+    async installedRepos(max = Number.POSITIVE_INFINITY): Promise<string[]> {
       const repos: string[] = [];
       const installations = all(
         '/user/installations',

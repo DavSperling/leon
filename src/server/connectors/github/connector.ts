@@ -72,8 +72,10 @@ const bearerOf = (config: Config): string =>
   (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Relu à chaque passage : un dépôt ajouté ou retiré sur GitHub est pris en compte sans reconnexion.
+// Avec le bouton, tous les dépôts installés sont lus : le choix fait sur GitHub fait foi, sans la
+// limite des dépôts saisis à la main.
 const reposToRead = (github: GithubClient, config: Config): Promise<string[]> =>
-  config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos(REPOS_MAX);
+  config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos();
 
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
 const CursorSchema = z.record(

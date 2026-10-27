@@ -8,10 +8,11 @@ import type { DriveFile } from './schemas';
 // Google Drive, par Pipedream Connect (pipedream.ts) : l'appli Google est celle de Pipedream (droit
 // `drive` complet) ; chaque requête passe par son proxy et coûte 1 crédit. Doc : voir client.ts.
 //
-// Un fichier est une page, avec un seul tour `document` : son texte à sa dernière modification. Leon ne
-// lit que les documents, présentations et feuilles de calcul Google, et les fichiers texte ou Markdown ;
-// les PDF, Word et images sont laissés de côté. Le curseur est une position (instant de modification du
-// dernier fichier lu et identifiants déjà lus à cet instant), comme celle d'Outlook.
+// Un fichier est une page, avec un seul tour `document` : son texte à sa dernière modification. Leon lit
+// les documents, présentations et feuilles de calcul Google, les fichiers texte ou Markdown, et les PDF,
+// Word, Excel et PowerPoint (extraits comme à l'import manuel) ; les images et PDF scannés, sans texte, sont
+// laissés de côté. Le curseur est une position (instant de modification du dernier fichier lu et
+// identifiants déjà lus à cet instant), comme celle d'Outlook.
 //
 // Non vérifié : que corpora=allDrives rende bien les fichiers partagés avec l'utilisateur et ceux des
 // drives partagés ; le texte exporté d'une présentation.

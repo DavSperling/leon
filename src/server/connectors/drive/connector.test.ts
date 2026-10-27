@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { extractText } from '@/server/documents/documents';
+import { logError } from '@/server/log';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { normalizeItem } from '../normalize';
 import { driveConnector } from './connector';
+
+// L'extraction (officeparser) est celle de l'import manuel, testée là-bas : simulée ici.
+vi.mock('@/server/documents/documents', () => ({ extractText: vi.fn() }));
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 
 const config = {
   authMode: 'pipedream',
@@ -70,7 +76,7 @@ describe('driveConnector', () => {
     const { calls } = await runSync([files([])]);
     const url = new URL(calls[0]?.url ?? '');
     expect(url.searchParams.get('q')).toBe(
-      "modifiedTime >= '2026-10-01T00:00:00' and trashed = false and (mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/vnd.google-apps.presentation' or mimeType = 'application/vnd.google-apps.spreadsheet' or mimeType = 'text/plain' or mimeType = 'text/markdown')",
+      "modifiedTime >= '2026-10-01T00:00:00' and trashed = false and (mimeType = 'application/vnd.google-apps.document' or mimeType = 'application/vnd.google-apps.presentation' or mimeType = 'application/vnd.google-apps.spreadsheet' or mimeType = 'text/plain' or mimeType = 'text/markdown' or mimeType = 'application/pdf' or mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' or mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' or mimeType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation')",
     );
     expect(url.searchParams.get('orderBy')).toBe('modifiedTime');
     expect(url.searchParams.get('corpora')).toBe('allDrives');
@@ -112,6 +118,38 @@ describe('driveConnector', () => {
       for (const item of page.items) expect(normalizeItem(item, 'drive')).not.toBeNull();
     expect(JSON.parse(pages[2]?.cursor ?? '')).toEqual({
       mark: { at: '2026-10-22T08:00:00.000Z', seen: ['sheet1'] },
+    });
+  });
+
+  it('télécharge un PDF ou un fichier Office et en extrait le texte ; un fichier illisible est laissé', async () => {
+    const PDF = { ...NOTE, id: 'pdf1', name: 'devis.pdf', mimeType: 'application/pdf' };
+    const WORD = {
+      ...NOTE,
+      id: 'docx1',
+      name: 'contrat.docx',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    };
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0xff, 0x00]);
+    vi.mocked(extractText)
+      .mockResolvedValueOnce({ text: 'Devis : 1 200 € HT.', partial: false })
+      .mockRejectedValueOnce(Object.assign(new Error('protégé'), { officeIssue: { code: 'X' } }));
+
+    const { pages, calls } = await runSync([
+      files([PDF, WORD]),
+      { url: `${DRIVE}/files/pdf1`, bytes: pdfBytes },
+      { url: `${DRIVE}/files/docx1`, bytes: new Uint8Array([0x50, 0x4b]) },
+    ]);
+
+    expect(new URL(calls[1]?.url ?? '').searchParams.get('alt')).toBe('media');
+    expect(vi.mocked(extractText).mock.calls.map(([type, bytes]) => [type, [...bytes]])).toEqual([
+      ['pdf', [...pdfBytes]],
+      ['docx', [0x50, 0x4b]],
+    ]);
+    expect(pages.map((page) => page.items.length)).toEqual([1, 0]);
+    expect(pages[0]?.items[0]?.turns[0]?.text).toBe('Devis : 1 200 € HT.');
+    expect(JSON.parse(pages[1]?.cursor ?? '').mark.seen).toEqual(['pdf1', 'docx1']);
+    expect(logError).toHaveBeenCalledWith('connector.drive_unreadable', expect.any(Error), {
+      reason: 'X',
     });
   });
 

@@ -20,6 +20,7 @@ import {
 } from '@/components/verre/discussions/preview';
 import { DISCUSSION_TIMEOUT_MS, replyParts } from '@/lib/discussion-events';
 import { rise, useAppear, useMinWidth } from '@/lib/verre';
+import { ActionCard } from './action-card';
 import type { ToolActivity } from './message-segments';
 import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
 
@@ -129,7 +130,7 @@ export function DiscussionThread({
     if (!repeated) {
       setMessages((current) => [
         ...current,
-        { id: questionId, role: 'user', content: message, citations: [] },
+        { id: questionId, role: 'user', content: message, citations: [], actions: [] },
       ]);
     }
     setReply(THINKING);
@@ -153,10 +154,10 @@ export function DiscussionThread({
           );
           return;
         }
-        const { content, citations } = outcome;
+        const { content, citations, actions } = outcome;
         setMessages((current) => [
           ...current,
-          { id: answerId, role: 'assistant', content, citations },
+          { id: answerId, role: 'assistant', content, citations, actions },
         ]);
         setFresh(answerId);
         setReply({ status: 'repos' });
@@ -385,6 +386,9 @@ export function DiscussionThread({
                     onHover={setHovered}
                   />
                 )}
+                {message.actions.map((action) => (
+                  <ActionCard key={action.id} action={action} />
+                ))}
               </motion.li>
             ))}
             {streaming && (

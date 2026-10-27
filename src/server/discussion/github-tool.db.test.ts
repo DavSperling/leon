@@ -3,6 +3,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { createConnection, setConnectionPaused } from '@/server/connectors/connections';
 import { OAUTH_SECRET_FIELDS } from '@/server/connectors/oauth';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
+import { adminPool } from '@/test/db';
 import { fakeFetch } from '@/test/fake-fetch';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { githubReposTool } from './github-tool';
@@ -13,6 +14,12 @@ import { githubReposTool } from './github-tool';
 const API = 'https://api.github.com';
 const tenantIds: string[] = [];
 afterAll(() => dropTeams(tenantIds));
+
+// Sans échéance : la relève des autres tests (worker.db.test.ts) ne prend pas ces connexions.
+async function notDue(id: string) {
+  await adminPool.query('update connections set next_sync_at = null where id = $1', [id]);
+  return id;
+}
 
 async function team() {
   const { members } = await newTeam(['Alice Martin', 'Bob Durand'], tenantIds);
@@ -26,7 +33,7 @@ const byKey = (ctx: TenantContext, repos: string[]) =>
     config: { authMode: 'key', token: 'github_pat_test', repos },
     secretFields: ['token'],
     since: new Date('2026-09-01T00:00:00Z'),
-  });
+  }).then(notDue);
 
 const byButton = (ctx: TenantContext) =>
   createConnection(ctx, {
@@ -41,7 +48,7 @@ const byButton = (ctx: TenantContext) =>
     },
     secretFields: [...OAUTH_SECRET_FIELDS, 'token'],
     since: new Date('2026-09-01T00:00:00Z'),
-  });
+  }).then(notDue);
 
 const run = (ctx: TenantContext, deps: { chars?: number; fetchImpl?: typeof fetch } = {}) =>
   githubReposTool(ctx, {

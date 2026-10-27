@@ -1,3 +1,4 @@
+import { type ActionView, parseActionViews } from './actions';
 import { createEventStreamReader } from './event-stream';
 import { safeUrl } from './safe-url';
 
@@ -48,6 +49,8 @@ export type DiscussionEvent =
   | { type: 'texte'; delta: string }
   | { type: 'outil'; name: string }
   | { type: 'citations'; items: DiscussionCitation[] }
+  // Les actions que Leon a proposées pendant la réponse (actions.ts), juste avant « citations » ; aucune n'est faite.
+  | { type: 'actions'; items: ActionView[] }
   | { type: 'fin'; reason: DiscussionEndReason }
   | { type: 'indisponible'; questionGardee: boolean }
   | { type: 'en-cours' };
@@ -118,6 +121,8 @@ export function parseDiscussionEvent(data: string): DiscussionEvent | null {
   if (type === 'citations') {
     return Array.isArray(items) ? { type, items: parseDiscussionCitations(items) } : null;
   }
+  if (type === 'actions')
+    return Array.isArray(items) ? { type, items: parseActionViews(items) } : null;
   if (type === 'fin') {
     return typeof reason === 'string' && END_REASONS.includes(reason)
       ? { type, reason: reason as DiscussionEndReason }

@@ -172,7 +172,37 @@ export function githubClient(token: string, http: ConnectorHttp) {
       all(`/repos/${repo}/pulls/${number}/reviews`, z.array(ReviewSchema)),
     reviewComments: (repo: string, number: number) =>
       all(`/repos/${repo}/pulls/${number}/comments`, z.array(ReviewCommentSchema)),
+
+    // Lectures et écriture des branches (lot 7 de la spec GitHub) : `Contents` en lecture, puis en écriture.
+    // https://docs.github.com/en/rest/git/refs
+    defaultBranch: async (repo: string) =>
+      (
+        await http.json(
+          { url: `${API}/repos/${repo}`, headers },
+          z.object({ default_branch: z.string() }),
+        )
+      ).default_branch,
+    branchSha: async (repo: string, branch: string) =>
+      (
+        await http.json(
+          { url: `${API}/repos/${repo}/git/ref/heads/${refPath(branch)}`, headers },
+          z.object({ object: z.object({ sha: z.string() }) }),
+        )
+      ).object.sha,
+    createBranch: (repo: string, branch: string, sha: string) =>
+      http.json(
+        {
+          url: `${API}/repos/${repo}/git/refs`,
+          method: 'POST',
+          headers,
+          body: { ref: `refs/heads/${branch}`, sha },
+        },
+        z.looseObject({}),
+      ),
   };
 }
+
+// Une branche dans une adresse : chaque morceau encodé, les « / » gardés (feature/x).
+export const refPath = (branch: string) => branch.split('/').map(encodeURIComponent).join('/');
 
 export type GithubClient = ReturnType<typeof githubClient>;

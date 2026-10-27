@@ -42,7 +42,8 @@ import { githubOAuth } from './oauth';
 // les pages et en faire manquer un autre, qui ne reviendra qu'à sa prochaine modification.
 
 const REPOS_MAX = 20;
-const REPO_PATTERN = /^(?!\.{1,2}\/)(?!.*\/\.{1,2}$)[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
+export const REPO_PATTERN =
+  /^(?!\.{1,2}\/)(?!.*\/\.{1,2}$)[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
 
 // Deux façons de se brancher : une clé collée (`token`) ou le bouton (`accessToken`, `refreshToken`,
 // `expiresAt`, voir `oauth.ts`). Une connexion enregistrée avant le bouton n'a pas d'`authMode` : elle
@@ -77,10 +78,12 @@ const bearerOf = (config: Config): string =>
 const reposToRead = (github: GithubClient, config: Config): Promise<string[]> =>
   config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos();
 
-// Les mêmes dépôts, lus en direct pour l'outil de la discussion (la configuration enregistrée, telle quelle).
-export const readableRepos = (config: Record<string, unknown>, http: ConnectorHttp) => {
+// GitHub en direct, pour les outils de la discussion (la configuration enregistrée, telle quelle) : le client avec
+// le jeton de la connexion, et les mêmes dépôts que la synchronisation.
+export const liveGithub = (config: Record<string, unknown>, http: ConnectorHttp) => {
   const parsed = ConfigSchema.parse(config);
-  return reposToRead(githubClient(bearerOf(parsed), http), parsed);
+  const github = githubClient(bearerOf(parsed), http);
+  return { github, repos: () => reposToRead(github, parsed) };
 };
 
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.

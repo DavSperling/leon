@@ -260,7 +260,28 @@
       "lire": "Leon lit une source…",
       "activite": "Leon regarde l’activité récente…",
       "depots_github": "Leon consulte GitHub…",
+      "creer_branche_github": "Leon prépare une branche…",
       "autre": "Leon travaille…"
+    },
+    "action": {
+      "label": "Action proposée par Leon",
+      "branch": "Créer la branche {branch} dans {repo}, depuis {from} (commit {sha}).",
+      "confirm": "Créer la branche",
+      "cancel": "Annuler",
+      "waiting": "Rien n’est fait tant que vous ne confirmez pas.",
+      "running": "Création en cours…",
+      "done": "Branche créée.",
+      "open": "Voir sur GitHub",
+      "cancelled": "Annulée : rien n’a été fait.",
+      "expired": "Expirée : redemandez à Leon pour repartir du dernier commit.",
+      "lost": "Votre choix n’a pas pu être enregistré. Réessayez.",
+      "errors": {
+        "droits": "GitHub refuse : l’appli Leon n’a pas le droit d’écrire le code de ce dépôt.",
+        "existe": "Une branche porte déjà ce nom.",
+        "introuvable": "Dépôt ou commit introuvable sur GitHub.",
+        "connexion": "Votre connexion GitHub est à reconnecter dans Connexions.",
+        "echec": "GitHub n’a pas pu créer la branche. Réessayez plus tard."
+      }
     }
   },
   "errors": {

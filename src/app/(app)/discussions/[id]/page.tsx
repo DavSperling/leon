@@ -30,6 +30,7 @@ export default async function DiscussionPage({ params }: { params: Params }) {
         role: message.role,
         content: message.content,
         citations: message.citations,
+        actions: message.actions,
       }))}
       modelAvailable={getLlm(env) !== null}
       appOrigin={new URL(env.BETTER_AUTH_URL).origin}

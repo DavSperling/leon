@@ -64,12 +64,13 @@ describe('les outils de la discussion', () => {
     numbering: createSourceNumbering(),
   });
 
-  it('sont chercher, lire, activite et depots_github', () => {
+  it('sont chercher, lire, activite et les outils GitHub', () => {
     expect(tools.map((tool) => tool.name)).toEqual([
       'chercher',
       'lire',
       'activite',
       'depots_github',
+      'creer_branche_github',
     ]);
   });
 
@@ -77,6 +78,7 @@ describe('les outils de la discussion', () => {
     const definitions = toolDefinitions(tools);
 
     expect(definitions.map((tool) => tool.input_schema.type)).toEqual([
+      'object',
       'object',
       'object',
       'object',

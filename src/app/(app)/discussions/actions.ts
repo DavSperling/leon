@@ -4,12 +4,14 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
+import type { ActionView } from '@/lib/actions';
 import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/discussion-events';
 import { PAGE_SIZE } from '@/lib/search-limits';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
+import { decideAction } from '@/server/discussion/proposed-actions';
 import { logError } from '@/server/log';
 
 // Ouvrir une discussion : depuis la page Discussions (une question), ou depuis la réponse en tête de la barre
@@ -22,6 +24,8 @@ export type DiscussionMessageView = {
   role: 'user' | 'assistant';
   content: string;
   citations: DiscussionCitation[];
+  // Les actions proposées pendant cette réponse, chacune avec son bouton.
+  actions: ActionView[];
 };
 
 export type NewDiscussionState = { error: string | null };
@@ -88,11 +92,12 @@ export async function readDiscussionMessagesAction(
     const replying = isReplying(ctx, discussionId);
     const found = await getDiscussion(ctx, discussionId);
     if (!found) return null;
-    const messages = found.messages.map(({ id, role, content, citations }) => ({
+    const messages = found.messages.map(({ id, role, content, citations, actions }) => ({
       id,
       role,
       content,
       citations,
+      actions,
     }));
     return { messages, replying };
   } catch (error) {
@@ -112,5 +117,26 @@ export async function deleteDiscussionAction(discussionId: string): Promise<{ ok
   } catch (error) {
     logError('discussion.suppression', error);
     return { ok: false };
+  }
+}
+
+// Confirmer ou annuler une action que Leon a proposée (lot 7 de la spec GitHub). Seule une action de l'utilisateur,
+// encore proposée et pas expirée, change ; la confirmation l'exécute avec sa propre connexion. Null pour une action
+// inconnue ou d'un autre, ou une panne.
+export async function decideActionAction(
+  actionId: string,
+  decision: 'confirmer' | 'annuler',
+): Promise<ActionView | null> {
+  const ctx = await requireUserContext();
+  if (typeof actionId !== 'string' || (decision !== 'confirmer' && decision !== 'annuler'))
+    return null;
+  try {
+    const action = await decideAction(ctx, actionId, decision);
+    if (!action) return null;
+    const { createdAt: _at, ...view } = action;
+    return view;
+  } catch (error) {
+    logError('action.decision', error);
+    return null;
   }
 }

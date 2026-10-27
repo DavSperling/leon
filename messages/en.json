@@ -260,7 +260,28 @@
       "lire": "Leon is reading a source…",
       "activite": "Leon is checking recent activity…",
       "depots_github": "Leon is checking GitHub…",
+      "creer_branche_github": "Leon is preparing a branch…",
       "autre": "Leon is working…"
+    },
+    "action": {
+      "label": "Action proposed by Leon",
+      "branch": "Create the branch {branch} in {repo}, from {from} (commit {sha}).",
+      "confirm": "Create branch",
+      "cancel": "Cancel",
+      "waiting": "Nothing happens until you confirm.",
+      "running": "Creating…",
+      "done": "Branch created.",
+      "open": "View on GitHub",
+      "cancelled": "Cancelled: nothing was done.",
+      "expired": "Expired: ask Leon again to start from the latest commit.",
+      "lost": "Your choice couldn’t be saved. Try again.",
+      "errors": {
+        "droits": "GitHub refused: Leon’s GitHub app isn’t allowed to write code in this repository.",
+        "existe": "A branch with this name already exists.",
+        "introuvable": "Repository or commit not found on GitHub.",
+        "connexion": "Reconnect your GitHub connection in Connections.",
+        "echec": "GitHub couldn’t create the branch. Try again later."
+      }
     }
   },
   "errors": {

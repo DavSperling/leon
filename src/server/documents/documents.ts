@@ -219,6 +219,11 @@ export async function addDocument(
       })
       .returning({ id: sources.id });
     if (!source) throw new Error('Document non enregistré');
+    // L'auteur du document est celui qui l'ajoute : « de: » et l'écran « Mon équipe » le retrouvent (0053).
+    const [author] = await tx
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, ctx.userId));
 
     const now = new Date();
     const rows = parts.map((text, index) => ({
@@ -229,6 +234,8 @@ export async function addDocument(
       text,
       ts: now,
       captureMode: 'manual' as const,
+      authorName: author?.name ?? null,
+      authorEmail: author?.email ?? null,
       acl: [ctx.tenantId],
     }));
     const inserted = await insertNewTurns(tx, rows);

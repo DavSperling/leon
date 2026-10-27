@@ -5,15 +5,16 @@ import {
   Plug,
   Settings2,
   TextSearch,
+  Users,
 } from 'lucide-react';
 
-// Les cinq sections, partagées par la barre latérale, la feuille mobile et la palette. Recherche a sa loupe sur des
+// Les six sections, partagées par la barre latérale, la feuille mobile et la palette. Recherche a sa loupe sur des
 // lignes ; le bouton « Rechercher ⌘K » juste au-dessus a le glyphe ⌘ (dans le rail, deux loupes empilées se confondaient).
 // `label` : le libellé français, que les guides citent ; `labelKey` : sa clé dans les messages (navigation).
 export type NavItem = {
   href: string;
   label: string;
-  labelKey: 'search' | 'discussions' | 'documents' | 'connections' | 'settings';
+  labelKey: 'search' | 'discussions' | 'documents' | 'team' | 'connections' | 'settings';
   icon: LucideIcon;
   end?: boolean;
 };
@@ -22,6 +23,7 @@ export const NAV: NavItem[] = [
   { href: '/', label: 'Recherche', labelKey: 'search', icon: TextSearch, end: true },
   { href: '/discussions', label: 'Discussions', labelKey: 'discussions', icon: MessagesSquare },
   { href: '/documents', label: 'Documents', labelKey: 'documents', icon: FileText },
+  { href: '/equipe', label: 'Équipe', labelKey: 'team', icon: Users },
   { href: '/connexions', label: 'Connexions', labelKey: 'connections', icon: Plug },
   { href: '/reglages', label: 'Réglages', labelKey: 'settings', icon: Settings2 },
 ];

@@ -1,9 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { type AnyColumn, and, asc, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { markBriefingsStale } from '@/server/briefing/about';
 import { db } from '@/server/db/client';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { reportingLines } from '@/server/db/schema/organisation';
+import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import type { ValidPlacement } from './onboarding';
 import { resolveTenantContext, type TenantContext } from './tenant-context';
@@ -17,6 +20,7 @@ const INVITATION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/; // 32 octets en base64ur
 
 export type MemberRow = {
   id: string;
+  userId: string;
   name: string;
   email: string;
   role: string;
@@ -26,13 +30,17 @@ export type MemberRow = {
   seniority: number | null;
   /** La ligne du lecteur lui-même. */
   self: boolean;
+  managerId: string | null; // membre auquel il est rattaché (0053)
 };
 
 const hashInvitationToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
 // Better Auth peut ranger plusieurs rôles séparés par des virgules (comme connections.ts).
+// Un propriétaire ou un administrateur invite, rattache à un manager, change un rôle et retire un membre.
 const isAdminRole = (role: SQL | AnyColumn) =>
   sql`string_to_array(${role}, ',') && array['owner', 'admin']`;
+// Un propriétaire ne se rétrograde ni ne se retire depuis l'écran : l'espace en garde toujours un.
+const notOwner = sql`not (string_to_array(${members.role}, ',') && array['owner'])`;
 
 // Le lecteur `userId` est propriétaire ou administrateur de l'organisation `tenantId` : la condition SQL de ce qu'un
 // administrateur peut écrire (le poste d'un membre) et lire (le poste de tous), et de la validité d'un lien.
@@ -61,23 +69,64 @@ export async function canInvite(ctx: TenantContext): Promise<boolean> {
 // vaut null sur chaque ligne, la sienne comprise. La condition est dans le SQL, comme celle de l'écriture.
 export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
   const mayReadPlacement = isAdminOf(ctx.userId, ctx.tenantId);
-  return db
-    .select({
-      id: members.id,
-      name: users.name,
-      // Un ancien membre (supprimé, 0040) reste dans la liste sous son nom, sans l'adresse qu'on lui a substituée.
-      email: sql<string>`case when ${users.deletedAt} is null then ${users.email} else '' end`,
-      role: members.role,
-      former: sql<boolean>`${users.deletedAt} is not null`,
-      department: sql<string | null>`case when ${mayReadPlacement} then ${members.department} end`,
-      job: sql<string | null>`case when ${mayReadPlacement} then ${members.job} end`,
-      seniority: sql<number | null>`case when ${mayReadPlacement} then ${members.seniority} end`,
-      self: sql<boolean>`${members.userId} = ${ctx.userId}`,
-    })
-    .from(members)
-    .innerJoin(users, eq(users.id, members.userId))
-    .where(eq(members.organizationId, ctx.tenantId))
-    .orderBy(asc(members.createdAt), asc(members.id));
+  // Sous RLS : reporting_lines n'est lisible que dans l'organisation du lecteur.
+  return withTenant(ctx, (tx) =>
+    tx
+      .select({
+        id: members.id,
+        userId: members.userId,
+        name: users.name,
+        // Un ancien membre (supprimé, 0040) reste dans la liste sous son nom, sans l'adresse qu'on lui a substituée.
+        email: sql<string>`case when ${users.deletedAt} is null then ${users.email} else '' end`,
+        role: members.role,
+        former: sql<boolean>`${users.deletedAt} is not null`,
+        department: sql<
+          string | null
+        >`case when ${mayReadPlacement} then ${members.department} end`,
+        job: sql<string | null>`case when ${mayReadPlacement} then ${members.job} end`,
+        seniority: sql<number | null>`case when ${mayReadPlacement} then ${members.seniority} end`,
+        self: sql<boolean>`${members.userId} = ${ctx.userId}`,
+        managerId: reportingLines.managerId,
+      })
+      .from(members)
+      .innerJoin(users, eq(users.id, members.userId))
+      .leftJoin(reportingLines, eq(reportingLines.memberId, members.id))
+      .where(eq(members.organizationId, ctx.tenantId))
+      .orderBy(asc(members.createdAt), asc(members.id)),
+  );
+}
+
+// Membre ou administrateur, jamais propriétaire ; false si le lecteur n'a pas le droit ou si la cible est propriétaire.
+export async function setMemberRole(
+  ctx: TenantContext,
+  memberId: string,
+  role: 'admin' | 'member',
+): Promise<boolean> {
+  if (!z.uuid().safeParse(memberId).success || !(await canInvite(ctx))) return false;
+  const rows = await db
+    .update(members)
+    .set({ role })
+    .where(and(eq(members.id, memberId), eq(members.organizationId, ctx.tenantId), notOwner))
+    .returning({ id: members.id });
+  return rows.length > 0;
+}
+// Retire un membre de l'organisation : sa session, ses jetons et ses connexions s'arrêtent à la requête suivante
+// (tous revérifient l'adhésion), ses rattachements partent en cascade. Ce qu'il a déjà fait entrer dans Leon reste.
+// Ni soi-même, ni un propriétaire.
+export async function removeMember(ctx: TenantContext, memberId: string): Promise<boolean> {
+  if (!z.uuid().safeParse(memberId).success || !(await canInvite(ctx))) return false;
+  const rows = await db
+    .delete(members)
+    .where(
+      and(
+        eq(members.id, memberId),
+        eq(members.organizationId, ctx.tenantId),
+        sql`${members.userId} <> ${ctx.userId}`,
+        notOwner,
+      ),
+    )
+    .returning({ id: members.id });
+  return rows.length > 0;
 }
 
 // La place du lecteur dans son organisation, pour l'en-tête du profil ; null s'il n'en est plus membre.
@@ -85,7 +134,11 @@ export async function getMembership(
   ctx: TenantContext,
 ): Promise<{ role: string; organizationName: string; since: Date } | null> {
   const [row] = await db
-    .select({ role: members.role, organizationName: organizations.name, since: members.createdAt })
+    .select({
+      role: members.role,
+      organizationName: organizations.name,
+      since: members.createdAt,
+    })
     .from(members)
     .innerJoin(organizations, eq(organizations.id, members.organizationId))
     .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))

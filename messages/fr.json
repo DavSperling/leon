@@ -88,6 +88,7 @@
     "search": "Recherche",
     "discussions": "Discussions",
     "documents": "Documents",
+    "team": "Équipe",
     "connections": "Connexions",
     "settings": "Réglages"
   },
@@ -130,6 +131,26 @@
       "ignored": "Fichier écarté : il contient souvent des mots de passe ou des clés (configuration, clé privée), ou n’est que généré.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
+  },
+  "team": {
+    "title": "Mon équipe",
+    "subtitle": "Les personnes rattachées à vous. Choisissez ce que vous suivez de chacune, parmi ce que toute l’équipe voit déjà : leurs mails, leurs conversations avec les IA et leurs discussions avec Leon restent privés.",
+    "emptyTitle": "Personne ne vous est rattaché",
+    "emptyDescription": "Un administrateur indique le manager de chacun dans Réglages, onglet Équipe.",
+    "emptyAction": "Ouvrir les membres",
+    "people": "Personnes rattachées",
+    "reportsTo": "Manager : {name}",
+    "following": "Ce que vous suivez",
+    "followingHelp": "Seulement ce que toute l’équipe voit déjà. Ce que vous cochez ne change rien pour les autres.",
+    "documents": "Documents",
+    "followFailed": "Le choix n’a pas été enregistré. Réessayez.",
+    "activity": "Activité récente",
+    "searchAll": "Tout ce qu’a écrit {name}",
+    "nothingFollowed": "Vous ne suivez rien de cette personne",
+    "nothingFollowedHelp": "Cochez une famille d’outils ci-dessus pour voir son activité.",
+    "nothingRecent": "Rien de récent dans ce que vous suivez",
+    "nothingRecentHelp": "Leon relie un élément à une personne par son adresse e-mail : ce qu’elle écrit sous une autre adresse n’apparaît pas ici.",
+    "untitled": "Sans titre"
   },
   "shell": {
     "skipToContent": "Aller au contenu",
@@ -681,7 +702,21 @@
     "ssoRemove": "Retirer le SSO",
     "ssoRemoveConfirm": "Retirer le SSO ? Les comptes restent ; ils se connecteront autrement.",
     "ssoRemoved": "SSO retiré.",
-    "ssoRemoveFailed": "Le SSO n’a pas pu être retiré."
+    "ssoRemoveFailed": "Le SSO n’a pas pu être retiré.",
+    "manager": "Manager",
+    "noManager": "Personne",
+    "role": "Rôle",
+    "managerOf": "Manager de {name}",
+    "roleOf": "Rôle de {name}",
+    "reportsTo": "Manager : {name}",
+    "managerSaved": "Manager enregistré",
+    "managerLoop": "Impossible : cette personne est déjà au-dessus du manager choisi.",
+    "roleSaved": "Rôle enregistré",
+    "remove": "Retirer",
+    "removeNamed": "Retirer {name} de l’espace ?",
+    "removeDescription": "Cette personne perd l’accès tout de suite : recherche, discussions, jetons et connexions. Ce qu’elle a déjà fait entrer dans Leon reste.",
+    "memberRemoved": "{name} ne fait plus partie de l’espace",
+    "memberFailed": "La modification n’a pas été enregistrée. Réessayez."
   },
   "security": {
     "profileTitle": "Profil",

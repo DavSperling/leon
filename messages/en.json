@@ -88,6 +88,7 @@
     "search": "Search",
     "discussions": "Chat",
     "documents": "Documents",
+    "team": "Team",
     "connections": "Connections",
     "settings": "Settings"
   },
@@ -130,6 +131,26 @@
       "ignored": "File skipped: it often holds passwords or keys (configuration, private key), or is only generated.",
       "failed": "Couldn’t save this document. Try again."
     }
+  },
+  "team": {
+    "title": "My team",
+    "subtitle": "The people who report to you. Choose what you follow for each of them, among what the whole team already sees: their emails, their AI conversations and their Leon discussions stay private.",
+    "emptyTitle": "Nobody reports to you",
+    "emptyDescription": "An administrator sets each person’s manager in Settings, Team tab.",
+    "emptyAction": "Open members",
+    "people": "People who report to you",
+    "reportsTo": "Reports to {name}",
+    "following": "What you follow",
+    "followingHelp": "Only what the whole team already sees. What you tick changes nothing for anyone else.",
+    "documents": "Documents",
+    "followFailed": "Your choice was not saved. Try again.",
+    "activity": "Recent activity",
+    "searchAll": "Everything {name} wrote",
+    "nothingFollowed": "You follow nothing from this person",
+    "nothingFollowedHelp": "Tick a tool family above to see their activity.",
+    "nothingRecent": "Nothing recent in what you follow",
+    "nothingRecentHelp": "Leon links an item to a person by email address: what they write under another address does not show here.",
+    "untitled": "Untitled"
   },
   "shell": {
     "skipToContent": "Skip to content",
@@ -681,7 +702,21 @@
     "ssoRemove": "Remove SSO",
     "ssoRemoveConfirm": "Remove SSO? Accounts stay; they’ll sign in another way.",
     "ssoRemoved": "SSO removed.",
-    "ssoRemoveFailed": "SSO couldn’t be removed."
+    "ssoRemoveFailed": "SSO couldn’t be removed.",
+    "manager": "Manager",
+    "noManager": "Nobody",
+    "role": "Role",
+    "managerOf": "Manager of {name}",
+    "roleOf": "Role of {name}",
+    "reportsTo": "Reports to {name}",
+    "managerSaved": "Manager saved",
+    "managerLoop": "Not possible: this person is already above the chosen manager.",
+    "roleSaved": "Role saved",
+    "remove": "Remove",
+    "removeNamed": "Remove {name} from the workspace?",
+    "removeDescription": "This person loses access right away: search, discussions, tokens and connections. What they already brought into Leon stays.",
+    "memberRemoved": "{name} was removed from the workspace",
+    "memberFailed": "The change was not saved. Try again."
   },
   "security": {
     "profileTitle": "Profile",

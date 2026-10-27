@@ -72,8 +72,10 @@ const bearerOf = (config: Config): string =>
   (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Relu à chaque passage : un dépôt ajouté ou retiré sur GitHub est pris en compte sans reconnexion.
+// Avec le bouton, tous les dépôts installés sont lus : le choix fait sur GitHub fait foi, sans la
+// limite des dépôts saisis à la main.
 const reposToRead = (github: GithubClient, config: Config): Promise<string[]> =>
-  config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos(REPOS_MAX);
+  config.repos.length > 0 ? Promise.resolve(config.repos) : github.installedRepos();
 
 // Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
 const CursorSchema = z.record(
@@ -150,23 +152,39 @@ async function* changed(github: GithubClient, repo: string, from: Date): AsyncGe
   }
 }
 
+// Les dépôts jamais lus d'abord (dans l'ordre de GitHub), puis du moins récemment lu au plus récent :
+// l'ordre des clés du curseur. Un passage coupé (limite de requêtes, d'éléments) reprend ainsi là où
+// il s'est arrêté, au lieu de relire toujours les mêmes premiers dépôts d'une grosse installation.
+function leastRecentFirst(repos: string[], cursor: Cursor): string[] {
+  const rank = new Map(Object.keys(cursor).map((repo, index) => [repo, index]));
+  return [...repos].sort((a, b) => (rank.get(a) ?? -1) - (rank.get(b) ?? -1));
+}
+
 async function* syncRepos(
   github: GithubClient,
   repos: string[],
   state: SyncState,
 ): AsyncGenerator<SyncPage> {
   const cursor = readCursor(state.cursor);
-  for (const repo of repos) {
+  for (const repo of leastRecentFirst(repos, cursor)) {
     const mark = cursor[repo];
     const from = mark ? new Date(Date.parse(mark.at) - 1000) : state.since;
+    // Passé en fin d'ordre, avec une marque même si rien ne change (elle garde alors `since`).
+    delete cursor[repo];
+    cursor[repo] = mark ?? { at: apiTime(state.since), seen: [] };
+    let saved = false;
     for await (const issues of changed(github, repo, from)) {
       const items: ConnectorItem[] = [];
       for (const issue of issues) {
         if (!isDone(cursor[repo], issue)) items.push(await readItem(github, repo, issue));
         cursor[repo] = advance(cursor[repo], issue);
       }
-      if (items.length > 0) yield { items, cursor: JSON.stringify(cursor) };
+      if (items.length > 0) {
+        yield { items, cursor: JSON.stringify(cursor) };
+        saved = true;
+      }
     }
+    if (!saved) yield { items: [], cursor: JSON.stringify(cursor) };
   }
 }
 

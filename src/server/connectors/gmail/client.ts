@@ -25,7 +25,7 @@ type Answer = { index: number; status: number; body: string };
 // en-têtes, une ligne vide, puis le JSON.
 export function parseBatch(text: string, type: string | null): Answer[] {
   const boundary = /boundary="?([^";\s]+)"?/i.exec(type ?? '')?.[1];
-  if (!boundary) throw new ConnectorHttpError(null, 'Réponse inattendue');
+  if (!boundary) throw new ConnectorHttpError(null, 'Unexpected response');
   const answers: Answer[] = [];
   for (const part of text.split(`--${boundary}`)) {
     const index = /content-id:\s*<response-item(\d+)>/i.exec(part)?.[1];
@@ -84,13 +84,13 @@ export function gmailClient(http: ConnectorHttp) {
         try {
           value = JSON.parse(answer.body);
         } catch {
-          throw new ConnectorHttpError(answer.status, 'Réponse illisible');
+          throw new ConnectorHttpError(answer.status, 'Unreadable response');
         }
         const parsed = MessageSchema.safeParse(value);
-        if (!parsed.success) throw new ConnectorHttpError(answer.status, 'Réponse inattendue');
+        if (!parsed.success) throw new ConnectorHttpError(answer.status, 'Unexpected response');
         read.push(parsed.data);
       } else if (answer.status !== 404 && answer.status !== 400)
-        throw new ConnectorHttpError(answer.status, `Gmail a répondu ${answer.status}`);
+        throw new ConnectorHttpError(answer.status, `Gmail responded with ${answer.status}`);
     }
     return { read, again };
   }
@@ -131,8 +131,7 @@ export function gmailClient(http: ConnectorHttp) {
         read.push(...answer.read);
         missing = answer.again;
       }
-      if (missing.length > 0)
-        throw new ConnectorHttpError(429, 'Limite de requêtes de Gmail atteinte');
+      if (missing.length > 0) throw new ConnectorHttpError(429, 'Gmail rate limit reached');
       return read;
     },
   };

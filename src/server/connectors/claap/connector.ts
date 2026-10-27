@@ -77,7 +77,7 @@ export const claapConnector: Connector<Config> = {
   minIntervalMs: 400,
 
   async verify(config, http) {
-    return { account: `Claap (espace ${await fetchWorkspaceName(http, config.apiKey)})` };
+    return { account: `Claap (workspace ${await fetchWorkspaceName(http, config.apiKey)})` };
   },
 
   async *sync(config, state, http) {

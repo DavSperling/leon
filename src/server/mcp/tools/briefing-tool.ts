@@ -23,15 +23,15 @@ const InputSchema = z.object({
     .max(PROJECT_INPUT_MAX_CHARS)
     .nullish()
     .describe(
-      "Le projet : son dépôt GitHub (github.com/propriétaire/dépôt, ou propriétaire/dépôt). Facultatif : sans lui, le dernier point que l'utilisateur a lu.",
+      'The project: its GitHub repository (github.com/owner/repo, or owner/repo). Optional: without it, the last briefing the user read.',
     ),
 });
 
 export const BRIEFING_DESCRIPTION =
-  "Le point du matin sur un projet, préparé à l'avance par Leon : ce que l'utilisateur y a fait dans ses dernières sessions Claude Code, ce qui a bougé depuis (demandes de fusion, tickets, messages qui le mentionnent) et ce qui reste ouvert, avec ses sources. À lire au début d'un travail sur ce projet.";
+  'The morning briefing on a project, prepared ahead of time by Leon: what the user did there in their latest Claude Code sessions, what changed since (pull requests, issues, messages that mention them) and what is still open, with sources. Read it when starting work on that project.';
 
 const INVALID_PROJECT =
-  'Projet invalide : donne son dépôt GitHub (github.com/propriétaire/dépôt ou propriétaire/dépôt).';
+  'Invalid project: give its GitHub repository (github.com/owner/repo or owner/repo).';
 
 // La clé du projet (D9) d'après ce qu'écrit l'utilisateur : la clé elle-même, « propriétaire/dépôt », ou l'adresse
 // https du dépôt. Null pour tout le reste (un autre hébergeur, une adresse avec identifiants).
@@ -54,7 +54,7 @@ export function registerBriefingTool(server: McpServer, ctx: TenantContext): voi
   server.registerTool(
     'briefing',
     {
-      title: 'Le point du matin',
+      title: 'Morning briefing',
       description: BRIEFING_DESCRIPTION,
       inputSchema: InputSchema,
       outputSchema: BriefingResponseSchema,

@@ -22,4 +22,19 @@ export const trelloCatalog: CatalogEntry = {
     'Sur trello.com/apps/admin : créez un Power-Up, générez sa clé d’API (onglet d’authentification), puis obtenez un jeton en lecture seule avec le lien indiqué sous le champ « Jeton ».',
   docsUrl: 'https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/',
   triedForReal: false,
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        placeholder: 'Your Power-Up’s key',
+        help: 'The key alone gives access to nothing: the token is what opens the boards.',
+      },
+      token: {
+        label: 'Token',
+        help: 'Open https://trello.com/1/authorize?expiration=never&scope=read&response_type=token&key= followed by your API key, then authorize: the page shows the token (read-only, no expiration). It gives access to all your open boards.',
+      },
+    },
+    keyHelp:
+      'At trello.com/apps/admin: create a Power-Up, generate its API key (authentication tab), then get a read-only token with the link shown under the “Token” field.',
+  },
 };

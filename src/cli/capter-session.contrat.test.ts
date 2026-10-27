@@ -175,7 +175,7 @@ describe('leon capter-session : la vraie commande', () => {
         project: 'github.com/acme/leon',
       });
       expect(request?.body.turns.map((turn) => turn.external_id)).toEqual(['u-1', 'u-2', 'u-3']);
-      expect(outcome.stderr).toMatch(/session captée/);
+      expect(outcome.stderr).toMatch(/session captured/);
     },
     TEST_TIMEOUT_MS,
   );
@@ -210,7 +210,7 @@ describe('leon capter-session : la vraie commande', () => {
 
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
-      expect(outcome.stderr).toMatch(/trop lent|délai/);
+      expect(outcome.stderr).toMatch(/too slow|timeout/);
       expect(outcome.stderr).not.toContain(TOKEN);
       expect(outcome.stderr).not.toContain(REMOTE_TOKEN);
       expect(outcome.seconds).toBeLessThan(MAX_SECONDS);
@@ -229,7 +229,7 @@ describe('leon capter-session : la vraie commande', () => {
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
       expect(received).toHaveLength(1);
-      expect(outcome.stderr).toMatch(/session captée/);
+      expect(outcome.stderr).toMatch(/session captured/);
     },
     TEST_TIMEOUT_MS,
   );
@@ -254,7 +254,7 @@ describe('leon capter-session : la vraie commande', () => {
         const outcome = await runCommand(input);
         expect(outcome.code).toBe(0);
         expect(outcome.stdout).toBe('');
-        expect(outcome.stderr).toMatch(/^Leon : /m);
+        expect(outcome.stderr).toMatch(/^Leon: /m);
       }
       expect(received).toHaveLength(0);
     },

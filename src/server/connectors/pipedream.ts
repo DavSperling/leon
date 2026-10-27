@@ -52,7 +52,7 @@ export function pipedreamEnv(): PipedreamEnv | null {
 
 // Message fixe : jamais le corps d'une réponse de Pipedream.
 const unavailable = (status: number | null = null) =>
-  new ConnectorHttpError(status, 'Pipedream injoignable');
+  new ConnectorHttpError(status, 'Pipedream is unreachable');
 
 type Fetch = typeof fetch;
 
@@ -252,7 +252,7 @@ export function connectorHttp(
       env && parsed.success
         ? proxyFetch(env, parsed.data, deps.fetchImpl ?? fetch)
         : async () => {
-            throw new ConnectorHttpError(null, 'Pipedream n’est pas configuré sur ce serveur');
+            throw new ConnectorHttpError(null, 'Pipedream isn’t configured on this server');
           };
   }
   return createConnectorHttp({

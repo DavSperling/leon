@@ -176,13 +176,13 @@ La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'édite
 
 Deux crochets de Claude Code font le travail, sans rien demander en séance :
 
-- **au démarrage d'une session** (`SessionStart`), `pnpm leon briefing` affiche le point du matin du projet du dossier courant : ce qu'on a fait dans ses dernières sessions, ce qui a bougé depuis (le dépôt, les tickets, les messages qui nous mentionnent) et ce qui reste ouvert, avec ses sources, en 250 mots au plus. Claude Code l'ajoute au contexte de la session. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « Pas encore de point pour ce projet : il sera prêt à la prochaine session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session (3 secondes au serveur au plus) et sort toujours avec le code 0.
+- **au démarrage d'une session** (`SessionStart`), `pnpm leon briefing` affiche le point du matin du projet du dossier courant : ce qu'on a fait dans ses dernières sessions, ce qui a bougé depuis (le dépôt, les tickets, les messages qui nous mentionnent) et ce qui reste ouvert, avec ses sources, en 250 mots au plus. Claude Code l'ajoute au contexte de la session. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « No briefing for this project yet: it will be ready at your next session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session (3 secondes au serveur au plus) et sort toujours avec le code 0.
 - **à la fin d'une session** (`SessionEnd`), `pnpm leon capter-session` envoie la conversation à Leon avec son projet, pour qu'elle serve au point du matin et à la recherche. Elle sort aussi toujours avec le code 0.
 
 ### Installer
 
 ```bash
-pnpm leon installer-crochets          # montre ce qui sera écrit, puis demande confirmation [o/N]
+pnpm leon installer-crochets          # montre ce qui sera écrit, puis demande confirmation [y/N]
 pnpm leon installer-crochets --oui    # écrit sans demander
 ```
 

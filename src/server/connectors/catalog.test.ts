@@ -3,13 +3,13 @@ import { z } from 'zod';
 import { PROVIDER_IDS } from '@/capture/turn';
 import { PROVIDER_FAMILIES, PROVIDER_FAMILIES_ORDER, PROVIDER_LABELS } from '@/lib/providers';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
-import { catalogItem, listCatalog } from './catalog';
+import { CATALOG_ENTRIES, catalogItem, listCatalog } from './catalog';
 import { redirectUri } from './oauth';
 import { CONNECTORS, getConnector } from './registry';
 import type { AnyConnector, CatalogEntry, Connector } from './types';
 
 // Les écarts entre la partie publique d'un connecteur et le connecteur lui-même.
-function catalogProblems(entry: CatalogEntry, connector: AnyConnector): string[] {
+function catalogProblems(entry: Omit<CatalogEntry, 'en'>, connector: AnyConnector): string[] {
   const problems: string[] = [];
   const keys = Object.keys((connector.configSchema as z.ZodObject).shape);
   const secrets = entry.fields.filter((f) => f.kind === 'secret').map((f) => f.name);
@@ -101,6 +101,25 @@ describe('listCatalog', () => {
     expect(labelsOf('mails')).toEqual(['Gmail', 'Outlook', 'Slack']);
   });
 
+  it('sert les textes dans la langue de l’interface, sans jamais envoyer le bloc en', () => {
+    const french = listCatalog('fr').find((item) => item.id === 'intercom');
+    const english = listCatalog('en').find((item) => item.id === 'intercom');
+    expect(french?.keyHelp).toMatch(/^Dans Intercom/);
+    expect(english?.keyHelp).toMatch(/^In Intercom/);
+    expect(french?.fields[1]?.options?.[0]).toEqual({
+      value: 'api.intercom.io',
+      label: 'États-Unis (api.intercom.io)',
+    });
+    expect(english?.fields[1]?.options?.[0]).toEqual({
+      value: 'api.intercom.io',
+      label: 'United States (api.intercom.io)',
+    });
+    expect(listCatalog()).toEqual(listCatalog('en'));
+    for (const item of [...listCatalog('fr'), ...listCatalog('en')]) {
+      expect(item).not.toHaveProperty('en');
+    }
+  });
+
   it('marque disponible un outil dont le connecteur existe', () => {
     for (const item of items) {
       expect(item.available).toBe(getConnector(item.id) !== null);
@@ -129,6 +148,11 @@ describe('catalogItem : le bouton', () => {
     docsUrl: 'https://docs.github.com/',
     triedForReal: false,
     oauthHelp: 'GitHub demandera les dépôts à partager.',
+    en: {
+      fields: { token: { label: 'Token' }, repos: { label: 'Repositories' } },
+      keyHelp: 'On github.com: Settings › Developer settings.',
+      oauthHelp: 'GitHub will ask which repositories to share.',
+    },
   };
   const withApp = () => {
     vi.stubEnv('LEON_OAUTH_GITHUB_ID', 'id-exemple');
@@ -162,8 +186,10 @@ describe('catalogItem : le bouton', () => {
     expect(catalogItem(entry, null).oauthPreFields).toEqual([]);
   });
 
-  it('garde l’aide du bouton du catalogue', () => {
-    expect(catalogItem(entry, fakeOAuthConnector()).oauthHelp).toBe(entry.oauthHelp);
+  it('garde l’aide du bouton du catalogue, dans la langue demandée', () => {
+    expect(catalogItem(entry, fakeOAuthConnector(), 'fr').oauthHelp).toBe(entry.oauthHelp);
+    expect(catalogItem(entry, fakeOAuthConnector(), 'en').oauthHelp).toBe(entry.en.oauthHelp);
+    expect(catalogItem(entry, fakeOAuthConnector()).oauthHelp).toBe(entry.en.oauthHelp);
   });
 
   describe('lien d’accord de l’administrateur', () => {
@@ -214,6 +240,81 @@ describe('catalogItem : le bouton', () => {
   });
 });
 
+// Les écarts entre les textes français d'une entrée et son jumeau anglais.
+function englishProblems(entry: CatalogEntry): string[] {
+  const problems: string[] = [];
+  const { en } = entry;
+  const names = entry.fields.map((field) => field.name).sort();
+  if (Object.keys(en.fields).sort().join() !== names.join()) problems.push('champs');
+  for (const field of entry.fields) {
+    const twin = en.fields[field.name];
+    if (!twin) continue;
+    if (twin.label.trim() === '') problems.push(`libellé vide : ${field.name}`);
+    if ((twin.help !== undefined) !== (field.help !== undefined)) {
+      problems.push(`aide : ${field.name}`);
+    }
+    const values = (field.options ?? []).map((option) => option.value).sort();
+    if (
+      Object.keys(twin.options ?? {})
+        .sort()
+        .join() !== values.join()
+    ) {
+      problems.push(`options : ${field.name}`);
+    }
+    if (twin.placeholder !== undefined && field.placeholder === undefined) {
+      problems.push(`exemple : ${field.name}`);
+    }
+  }
+  if ((en.keyHelp === '') !== (entry.keyHelp === '')) problems.push('aide de la clé');
+  if ((en.oauthHelp !== undefined) !== (entry.oauthHelp !== undefined))
+    problems.push('aide du bouton');
+  if ((en.warning !== undefined) !== (entry.warning !== undefined)) problems.push('avertissement');
+  // Un texte anglais n'a ni lettre accentuée ni guillemet français : c'est du français resté là.
+  const texts = [
+    en.keyHelp,
+    en.oauthHelp,
+    en.warning,
+    ...Object.values(en.fields).flatMap((twin) => [
+      twin.label,
+      twin.placeholder,
+      twin.help,
+      ...Object.values(twin.options ?? {}),
+    ]),
+  ];
+  if (texts.some((text) => text !== undefined && /[àâçéèêëîïôùûüœ«»]/i.test(text))) {
+    problems.push('texte français');
+  }
+  return problems;
+}
+
+describe('catalogue : le jumeau anglais', () => {
+  it('couvre exactement les textes français de chaque outil', () => {
+    for (const id of PROVIDER_IDS) {
+      expect({ id, problems: englishProblems(CATALOG_ENTRIES[id]) }).toEqual({ id, problems: [] });
+    }
+  });
+
+  it('repère un jumeau qui diverge du français', () => {
+    const entry = CATALOG_ENTRIES.intercom;
+    const { region: _region, ...fields } = entry.en.fields;
+    expect(englishProblems({ ...entry, en: { ...entry.en, fields } })).toContain('champs');
+    const noHelp = { ...entry.en.fields, token: { label: 'Token' } };
+    expect(englishProblems({ ...entry, en: { ...entry.en, fields: noHelp } })).toContain(
+      'aide : token',
+    );
+    const noOptions = { ...entry.en.fields, region: { label: 'Region', help: 'x' } };
+    expect(englishProblems({ ...entry, en: { ...entry.en, fields: noOptions } })).toContain(
+      'options : region',
+    );
+    expect(englishProblems({ ...entry, en: { ...entry.en, oauthHelp: 'x' } })).toContain(
+      'aide du bouton',
+    );
+    expect(englishProblems({ ...entry, en: { ...entry.en, warning: 'Résumé' } })).toContain(
+      'texte français',
+    );
+  });
+});
+
 describe('registre', () => {
   it('range chaque connecteur sous son identifiant', () => {
     expect(Object.keys(CONNECTORS).sort()).toEqual([...PROVIDER_IDS].sort());
@@ -226,12 +327,18 @@ describe('registre', () => {
 
 describe('catalogue et connecteur', () => {
   it('est cohérent pour chaque connecteur disponible', () => {
-    const entries = new Map(listCatalog().map((item) => [item.id, item]));
-    for (const id of PROVIDER_IDS) {
-      const connector = getConnector(id);
-      const entry = entries.get(id);
-      if (!connector || !entry) continue;
-      expect({ id, problems: catalogProblems(entry, connector) }).toEqual({ id, problems: [] });
+    for (const locale of ['fr', 'en']) {
+      const entries = new Map(listCatalog(locale).map((item) => [item.id, item]));
+      for (const id of PROVIDER_IDS) {
+        const connector = getConnector(id);
+        const entry = entries.get(id);
+        if (!connector || !entry) continue;
+        expect({ id, locale, problems: catalogProblems(entry, connector) }).toEqual({
+          id,
+          locale,
+          problems: [],
+        });
+      }
     }
   });
 
@@ -254,6 +361,10 @@ describe('catalogue et connecteur', () => {
     keyHelp: 'Dans Atlassian : Sécurité › Jetons d’API.',
     docsUrl: 'https://support.atlassian.com/',
     triedForReal: false,
+    en: {
+      fields: { site: { label: 'Atlassian site' }, token: { label: 'API token' } },
+      keyHelp: 'In Atlassian: Security › API tokens.',
+    },
   };
 
   it('ne trouve rien à redire à un catalogue juste', () => {
@@ -271,6 +382,11 @@ describe('catalogue et connecteur', () => {
     docsUrl: 'https://docs.github.com/',
     triedForReal: false,
     oauthHelp: 'GitHub demandera les dépôts à partager.',
+    en: {
+      fields: { token: { label: 'Token' }, repos: { label: 'Repositories' } },
+      keyHelp: 'On github.com: Settings › Developer settings.',
+      oauthHelp: 'GitHub will ask which repositories to share.',
+    },
   };
 
   it('ne trouve rien à redire à un outil à bouton bien décrit', () => {

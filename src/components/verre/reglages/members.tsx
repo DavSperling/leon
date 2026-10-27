@@ -22,16 +22,11 @@ import { duration, ease, formatDate, nb } from '@/lib/verre';
 import type { MemberRow } from '@/server/auth/members';
 import { SECTION } from './reglages';
 
-const ROLE_LABELS: Record<string, string> = {
-  owner: 'Propriétaire',
-  admin: 'Administrateur',
-  member: 'Membre',
-};
 // Better Auth peut ranger plusieurs rôles séparés par des virgules.
 const roleLabel = (role: string, labels: Record<string, string>) =>
   role
     .split(',')
-    .map((r) => labels[r] ?? ROLE_LABELS[r] ?? r)
+    .map((r) => labels[r] ?? r)
     .join(', ');
 
 /** Section « Membres » : qui est dans l'espace et, pour un propriétaire ou un administrateur, l'invitation. */

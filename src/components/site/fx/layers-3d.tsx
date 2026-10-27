@@ -1,19 +1,21 @@
+import { useTranslations } from 'next-intl';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { ToolLogo } from '../parts';
+import { Excerpt, ToolLogo } from '../parts';
 
 // Ce que Leon garde, en trois couches de verre éclatées en 3D (CSS seul) : le brut au fond, l'index au milieu, les
 // droits au-dessus. Elles s'écartent au survol, et s'ouvrent en entrant dans l'écran (animation-timeline). Décoratif :
 // le texte qui l'accompagne dit la même chose.
 
-const RAW: Array<[ProviderId, string, string]> = [
-  ['granola', 'Point mensuel ACME', 'Réunion'],
-  ['linear', 'ACME : reprise des données', 'Ticket'],
-  ['hubspot', 'Devis V2 signé', 'Note'],
-  ['outlook', 'Re : calendrier de la V2', 'Mail'],
-];
+// [outil, titre, sorte] : les clés de site.sample, sauf « Ticket » et « Note », les mêmes dans les deux langues.
+const RAW = [
+  ['granola', 'meeting', 'meetingKind'],
+  ['linear', 'migration', 'Ticket'],
+  ['hubspot', 'quote', 'Note'],
+  ['outlook', 'email', 'emailKind'],
+] as const satisfies ReadonlyArray<readonly [ProviderId, string, string]>;
 
 function Plane({
   z,
@@ -42,13 +44,15 @@ function Plane({
 }
 
 export function Layers3D({ className }: { className?: string }) {
+  const t = useTranslations('site.layers');
+  const sample = useTranslations('site.sample');
   return (
     <div
       aria-hidden="true"
       className={cn('fx-layers grid place-items-center max-sm:scale-[0.78]', className)}
     >
       <div className="fx-layers-stage relative h-[260px] w-[min(340px,86vw)] sm:h-[300px] sm:w-[400px]">
-        <Plane z={0} label="Le brut, tel quel">
+        <Plane z={0} label={t('raw.title')}>
           <ul className="mt-3 grid gap-2">
             {RAW.map(([tool, title, kind]) => (
               <li
@@ -56,44 +60,46 @@ export function Layers3D({ className }: { className?: string }) {
                 className="flex items-center gap-2.5 rounded-[10px] border border-line bg-glass-3 px-2.5 py-2"
               >
                 <ToolLogo id={tool} size={22} lazy={false} />
-                <span className="truncate text-label font-semibold text-fg">{nb(title)}</span>
-                <span className="ml-auto font-mono text-[11px] text-fg-2">{kind}</span>
+                <span className="truncate text-label font-semibold text-fg">
+                  {nb(sample(title))}
+                </span>
+                <span className="ml-auto font-mono text-[11px] text-fg-2">
+                  {kind === 'Ticket' || kind === 'Note' ? kind : sample(kind)}
+                </span>
               </li>
             ))}
           </ul>
         </Plane>
-        <Plane z={1} label="L’index">
+        <Plane z={1} label={t('index.title')}>
           <div className="mt-4 grid gap-2.5 font-mono text-[11.5px] leading-[1.5] text-fg-2">
-            <p>
-              on peut <mark>s’engager</mark> sur le <mark>15 novembre</mark>
-            </p>
-            <p>
-              hors <mark>reprise</mark> de l’historique
-            </p>
-            <p>
-              la <mark>reprise des données</mark> fait l’objet
-            </p>
+            {(['line1', 'line2', 'line3'] as const).map((line) => (
+              <p key={line}>
+                <Excerpt text={t(line)} />
+              </p>
+            ))}
             <div className="mt-2 flex gap-2">
               <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10.5px] text-accent">
-                plein texte
+                {t('fullText')}
               </span>
               <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10.5px] text-accent">
-                par le sens
+                {t('semantic')}
               </span>
             </div>
           </div>
         </Plane>
-        <Plane z={2} label="Les droits, d’abord" className="signal-line">
+        <Plane z={2} label={t('rights.title')} className="signal-line">
           <div className="mt-5 grid gap-2.5">
             <div className="flex items-center gap-3 rounded-[12px] border border-line bg-glass-3 px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-ok" />
-              <span className="text-label font-semibold text-fg">Visible de l’équipe</span>
-              <span className="ml-auto font-mono text-[11px] text-fg-2">outils de l’équipe</span>
+              <span className="text-label font-semibold text-fg">{t('team')}</span>
+              <span className="ml-auto font-mono text-[11px] text-fg-2">{t('teamTools')}</span>
             </div>
             <div className="flex items-center gap-3 rounded-[12px] border border-accent-line bg-accent-soft px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-accent" />
-              <span className="text-label font-semibold text-accent">Vous seul</span>
-              <span className="ml-auto font-mono text-[10.5px] text-muted">conversations d’IA</span>
+              <span className="text-label font-semibold text-accent">{t('you')}</span>
+              <span className="ml-auto font-mono text-[10.5px] text-muted">
+                {t('aiConversations')}
+              </span>
             </div>
           </div>
         </Plane>

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { Aurora, ThinkingProvider } from '@/components/verre/shell/thinking';
 import { SiteFooter } from './site-footer';
@@ -7,6 +8,7 @@ import './fx/fx.css';
 
 /** Cadre du site public (accueil, cas d'usage, connecteurs…) et des pages de connexion : l'aurore, l'en-tête, le pied. */
 export function SiteShell({ children, footer = true }: { children: ReactNode; footer?: boolean }) {
+  const t = useTranslations('site.shell');
   return (
     <ThinkingProvider>
       <Aurora />
@@ -14,7 +16,7 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
         href="#contenu"
         className="fixed top-3 left-3 z-50 inline-flex min-h-10 -translate-y-20 items-center rounded-full bg-accent px-4 text-ui font-semibold text-accent-ink transition-transform focus-visible:translate-y-0"
       >
-        Aller au contenu
+        {t('skip')}
       </a>
       <SiteHeader />
       {/* z-[2] : au-dessus du pied (z-[1]).

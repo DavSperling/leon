@@ -15,4 +15,14 @@ export const fathomCatalog: CatalogEntry = {
   docsUrl: 'https://developers.fathom.ai/quickstart',
   triedForReal: false,
   warning: 'Conditions de Fathom à faire confirmer avant usage client',
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'The key only sees the meetings recorded by its owner or shared with them.',
+      },
+    },
+    keyHelp: 'In Fathom: User Settings › API Access, then generate a key.',
+    warning: 'Fathom’s terms to be confirmed before client use',
+  },
 };

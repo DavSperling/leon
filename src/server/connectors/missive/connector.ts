@@ -99,12 +99,12 @@ export const missiveConnector: Connector<Config> = {
     if ((await client.teams()).length === 0) {
       throw new ConnectorHttpError(
         null,
-        'Aucune équipe Missive visible avec ce jeton : Leon lit les conversations des équipes, pas le courrier personnel',
+        'No Missive team visible with this token: Leon reads team conversations, not personal email',
       );
     }
     const who = me?.name || me?.email;
     if (who) return { account: organizations ? `${who} (${organizations})` : who };
-    return { account: organizations ? `organisation ${organizations}` : 'compte Missive' };
+    return { account: organizations ? `organization ${organizations}` : 'Missive account' };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

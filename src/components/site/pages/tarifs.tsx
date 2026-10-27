@@ -1,9 +1,10 @@
 import { Check, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { FAQ, PLANS, TOOL_COUNT } from '../content';
+import { type SiteContent, TOOL_COUNT, useSiteContent } from '../content';
 import { Tilt } from '../fx';
 import { CtaBand, SectionHeading } from '../parts';
 import { PageHero, PageSection } from './page-hero';
@@ -12,20 +13,22 @@ import './pages.css';
 // Page « Tarifs » : la proposition de docs/etudes/founder-pme-2026-10/pricing.md (pas encore arrêtée, aucune
 // facturation codée) : chaque bouton mène à la création d'un espace. Pas de « le plus choisi » : rien ne le mesure.
 
+// Ce que chaque plan contient (site.pricing.everywhere).
 const EVERYWHERE = [
-  `Les ${TOOL_COUNT} connecteurs, relevés toutes les 15 minutes`,
-  'Recherche plein texte et par le sens, avec filtres',
-  'Réponse citée en tête des résultats',
-  'Discussions privées qui citent leurs sources',
-  'Point du matin et serveur MCP',
-  'Extension du navigateur et assistant de code',
-  'Secrets masqués avant stockage',
-  'Clés des outils chiffrées',
+  'connectors',
+  'search',
+  'answer',
+  'discussions',
+  'briefing',
+  'capture',
+  'secrets',
+  'keys',
 ] as const;
 
 // Les formules sont dans le premier écran : elles entrent avec le haut de page (site-rise, à la suite de PageHero),
 // pas au défilement, qui les laisserait à moitié transparentes tant qu'on ne défile pas.
-function PlanCard({ plan, i }: { plan: (typeof PLANS)[number]; i: number }) {
+function PlanCard({ plan, i }: { plan: SiteContent['plans'][number]; i: number }) {
+  const t = useTranslations('site.pricing');
   return (
     <li
       className={cn('site-rise relative', plan.featured && 'z-[1]')}
@@ -52,7 +55,7 @@ function PlanCard({ plan, i }: { plan: (typeof PLANS)[number]; i: number }) {
             <h3 className="text-title font-bold tracking-[-0.02em] text-fg">{plan.name}</h3>
             {plan.featured && (
               <span className="inline-flex h-[22px] items-center rounded-full bg-accent-soft px-2.5 font-mono text-[11px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                Recommandé
+                {t('recommended')}
               </span>
             )}
           </div>
@@ -103,28 +106,32 @@ function PlanCard({ plan, i }: { plan: (typeof PLANS)[number]; i: number }) {
 }
 
 export function TarifsPage() {
+  const t = useTranslations('site.pricing');
+  const cta = useTranslations('site.cta');
+  const meta = useTranslations('site.meta');
+  const { plans, faq } = useSiteContent();
   return (
     <>
       <PageHero
-        kicker="Tarifs"
-        title="Un prix simple, par personne qui s’en sert."
-        accent="par personne qui s’en sert."
-        lead="Essayez gratuitement sur une équipe, avec vos vrais outils. Ensuite, seuls les comptes actifs du mois sont comptés."
+        kicker={meta('pricingTitle')}
+        title={t('heroTitle')}
+        accent={t('heroAccent')}
+        lead={t('heroLead')}
         align="center"
         className="pb-10 sm:pb-12"
       />
 
       <PageSection labelledBy="plans-titre" className="pt-2 sm:pt-4">
         <h2 id="plans-titre" className="sr-only">
-          Les plans
+          {t('plans')}
         </h2>
         <ul className="mx-auto grid max-w-[1080px] items-stretch gap-4 lg:grid-cols-3">
-          {PLANS.map((p, i) => (
+          {plans.map((p, i) => (
             <PlanCard key={p.id} plan={p} i={i} />
           ))}
         </ul>
         <p className="mt-8 text-center font-mono text-meta tracking-normal text-muted">
-          {nb('Prix hors taxes. Aucun engagement.')}
+          {nb(t('taxNote'))}
         </p>
       </PageSection>
 
@@ -137,9 +144,9 @@ export function TarifsPage() {
           <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
             <SectionHeading
               id="partout-titre"
-              kicker="Dans chaque plan"
-              title="Toutes les fonctions, dans chaque plan."
-              lead="Les plans diffèrent par la taille de l’équipe et par l’hébergement, pas par ce que Leon sait faire."
+              kicker={t('everywhereKicker')}
+              title={t('everywhereTitle')}
+              lead={t('everywhereLead')}
             />
             <ul className="grid content-center gap-x-6 gap-y-3 sm:grid-cols-2">
               {EVERYWHERE.map((e) => (
@@ -147,7 +154,7 @@ export function TarifsPage() {
                   <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
                     <Check aria-hidden="true" strokeWidth={2.4} className="size-3" />
                   </span>
-                  {nb(e)}
+                  {nb(t(`everywhere.${e}`, { count: TOOL_COUNT }))}
                 </li>
               ))}
             </ul>
@@ -159,12 +166,12 @@ export function TarifsPage() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
           <SectionHeading
             id="faq-titre"
-            kicker="Questions"
-            title="Les questions qu’on nous pose."
-            lead="Une autre question ? Créez un espace : le pilote est gratuit, et on y voit vite ce que Leon garde."
+            kicker={t('faqKicker')}
+            title={t('faqTitle')}
+            lead={t('faqLead')}
           />
           <div className="grid content-start gap-2.5">
-            {FAQ.map((f) => (
+            {faq.map((f) => (
               <details
                 key={f.q}
                 className="pg-faq site-reveal group rounded-box border border-line bg-panel shadow-hi transition-[border-color,background-color,box-shadow] duration-300 open:border-accent-line open:bg-glass-2 open:shadow-panel"
@@ -185,9 +192,9 @@ export function TarifsPage() {
       </PageSection>
 
       <CtaBand
-        title="Commencez par le pilote."
-        text={`Trente jours, une équipe de 10 personnes au plus, les ${TOOL_COUNT} connecteurs.`}
-        primary={{ href: '/inscription', label: 'Commencer le pilote' }}
+        title={t('ctaTitle')}
+        text={t('ctaText', { count: TOOL_COUNT })}
+        primary={{ href: '/inscription', label: cta('startPilot') }}
       />
     </>
   );

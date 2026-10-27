@@ -173,7 +173,7 @@ describe('gitlab : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('gitlab')).toBe(gitlabConnector);
-    expect(listCatalog().find((item) => item.id === 'gitlab')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'gitlab')?.available).toBe(true);
   });
 });
 
@@ -210,7 +210,7 @@ describe('gitlab : verify', () => {
       const failure = await gitlabConnector.verify(cfg, http).catch((error: unknown) => error);
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
-      expect((failure as Error).message).toBe('Projet inaccessible : acme/equipe/site');
+      expect((failure as Error).message).toBe('Project not accessible: acme/equipe/site');
       expect(calls).toHaveLength(3);
     }
   });
@@ -582,7 +582,7 @@ describe('gitlab : sync, erreurs', () => {
     const failure = await run.catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Adresse non autorisée');
+    expect((failure as Error).message).toBe('Address not allowed');
   });
 });
 

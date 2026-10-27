@@ -66,12 +66,12 @@ describe('parseClaudeCodeSession et le point du matin injecté au démarrage', (
 
     const session = parseClaudeCodeSession(file);
 
-    expect(POINT).toMatch(/^# Point du matin · github\.com\/acme\/leon\n/);
+    expect(POINT).toMatch(/^# Morning briefing · github\.com\/acme\/leon\n/);
     expect(session?.turns.map((turn) => [turn.role, turn.text])).toEqual([
       ['user', 'Reprends le test du jeton.'],
       ['assistant', 'Le test passe.'],
     ]);
-    expect(JSON.stringify(session)).not.toContain('Point du matin');
+    expect(JSON.stringify(session)).not.toContain('Morning briefing');
     expect(session?.title).toBe('Reprends le test du jeton.');
   });
 });

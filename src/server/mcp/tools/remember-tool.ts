@@ -16,9 +16,9 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext): voi
   server.registerTool(
     'remember',
     {
-      title: 'Noter une information',
+      title: 'Save a note',
       description:
-        "Dépose une information dans la mémoire. Elle est privée à l'utilisateur, et Leon l'indexe pour qu'on la retrouve. `about` nomme le sujet (client, projet, personne…).",
+        'Saves a piece of information to memory. It stays private to the user, and Leon indexes it so it can be found later. `about` names the subject (client, project, person…).',
       inputSchema: InputSchema,
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
     },
@@ -33,7 +33,7 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext): voi
           {
             external_id: randomUUID(),
             role: 'user',
-            text: about ? `À propos de ${about} : ${text}` : text,
+            text: about ? `About ${about}: ${text}` : text,
             ts: new Date().toISOString(),
             capture_mode: 'manual',
           },
@@ -42,14 +42,14 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext): voi
       if (result.ingestRunId === null) {
         return {
           isError: true,
-          content: [{ type: 'text', text: 'Rien à noter : le texte est vide.' }],
+          content: [{ type: 'text', text: 'Nothing to save: the text is empty.' }],
         };
       }
       return {
         content: [
           {
             type: 'text',
-            text: `Noté : Leon va indexer cette information (source ${result.sourceId}).`,
+            text: `Saved: Leon will index this information (source ${result.sourceId}).`,
           },
         ],
         structuredContent: { sourceId: result.sourceId, ingestRunId: result.ingestRunId },

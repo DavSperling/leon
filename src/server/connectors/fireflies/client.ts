@@ -73,8 +73,8 @@ function refusal(error: z.infer<typeof gqlError>): Error {
   const code = error.extensions?.code ?? error.code ?? '';
   const status = CODE_STATUS[code] ?? error.extensions?.status ?? null;
   if (status === 401 || status === 403) return new ConnectorAuthError(LABEL, status);
-  if (status === 429) return new ConnectorHttpError(429, `Limite de requêtes de ${LABEL} atteinte`);
-  return new ConnectorHttpError(status, `${LABEL} a refusé la requête`);
+  if (status === 429) return new ConnectorHttpError(429, `${LABEL} rate limit reached`);
+  return new ConnectorHttpError(status, `${LABEL} rejected the request`);
 }
 
 // Fireflies peut rendre une erreur avec un code 200 : elle est convertie ici.
@@ -97,13 +97,13 @@ async function graphql<T>(
   );
   const error = answer.errors?.[0];
   if (error) throw refusal(error);
-  if (answer.data == null) throw new ConnectorHttpError(200, 'Réponse inattendue');
+  if (answer.data == null) throw new ConnectorHttpError(200, 'Unexpected response');
   return answer.data;
 }
 
 export async function fetchAccount(http: ConnectorHttp, apiKey: string): Promise<string> {
   const { user } = await graphql(http, apiKey, USER_QUERY, {}, userData);
-  if (!user) throw new ConnectorHttpError(200, 'Réponse inattendue');
+  if (!user) throw new ConnectorHttpError(200, 'Unexpected response');
   const name = user.name?.trim();
   const email = user.email?.trim();
   return name && email ? `${name} (${email})` : name || email || LABEL;

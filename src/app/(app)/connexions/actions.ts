@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import {
@@ -39,12 +39,7 @@ import { logError } from '@/server/log';
 // répète une clé saisie dans un message ou dans un journal. Seuls les messages écrits par les
 // connecteurs peuvent nommer un champ non secret déjà validé par leur schéma (un dépôt, un site).
 
-const NOT_CONFIGURED =
-  'Les connecteurs ne sont pas configurés sur ce serveur (LEON_CONNECTORS_KEY).';
-const BAD_REQUEST = 'Demande illisible : rechargez la page.';
-const GONE = "Cette connexion n'existe plus.";
-// La clé est celle du compte du créateur : un administrateur y mettrait la sienne.
-const NOT_CREATOR = 'Seule la personne qui a branché cet outil peut remplacer sa clé.';
+// Les messages sont écrits dans la langue de la personne qui agit (messages, espace « connections »).
 const FIELD_MAX = 5_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -58,8 +53,8 @@ const ReplaceSchema = z.object({ id: z.uuid(), fields: FieldsSchema });
 
 type Checked = { connector: AnyConnector; config: Record<string, unknown>; account: string };
 
-const catalogFields = (provider: ProviderId): CatalogField[] =>
-  listCatalog().find((entry) => entry.id === provider)?.fields ?? [];
+const catalogFields = (provider: ProviderId, locale: string): CatalogField[] =>
+  listCatalog(locale).find((entry) => entry.id === provider)?.fields ?? [];
 
 // Valide la configuration avec le schéma du connecteur puis appelle `verify` avec un vrai client
 // HTTP (hôtes du connecteur). `base` porte la configuration déjà enregistrée, `fields` les champs
@@ -70,9 +65,10 @@ async function checkConnection(
   values: Record<string, string>,
   base: Record<string, unknown>,
 ): Promise<Checked | { error: string }> {
+  const t = await getTranslations('connections');
   const label = PROVIDER_LABELS[provider];
   const connector = getConnector(provider);
-  if (!connector) return { error: `${label} n'est pas encore disponible.` };
+  if (!connector) return { error: t('toolUnavailable', { provider: label }) };
   const parsed = connector.configSchema.safeParse({ ...base, ...fieldsFromForm(fields, values) });
   if (!parsed.success) {
     return {
@@ -92,13 +88,15 @@ async function checkConnection(
     const { account } = await connector.verify(parsed.data, http);
     return { connector, config: parsed.data, account: accountLabel(account, label) };
   } catch (error) {
-    if (error instanceof ConnectorAuthError) return { error: `Clé refusée par ${label}.` };
+    if (error instanceof ConnectorAuthError)
+      return { error: t('keyRejected', { provider: label }) };
     logError('connector.verify_failed', error, { provider });
     // Le message d'une ConnectorHttpError est écrit par nous (http.ts et les connecteurs), jamais
-    // celui de l'outil, et il ne porte ni clé ni adresse : « Dépôt inaccessible : acme/leon » dit
-    // quoi corriger. Toute autre erreur est inconnue : on n'en montre rien.
+    // celui de l'outil, et il ne porte ni clé ni adresse : « Repository not accessible: acme/leon » dit
+    // quoi corriger. Il est en anglais, la langue de base du produit, quelle que soit celle de
+    // l'interface. Toute autre erreur est inconnue : on n'en montre rien.
     if (error instanceof ConnectorHttpError) return { error: error.message };
-    return { error: `${label} ne répond pas, réessayez dans un moment.` };
+    return { error: t('toolNotResponding', { provider: label }) };
   }
 }
 
@@ -108,15 +106,16 @@ export async function connectAction(input: {
   since: '7' | '30' | '90' | '365';
 }): Promise<ActionResult> {
   const ctx = await requireUserContext();
+  const t = await getTranslations('connections');
   const request = ConnectSchema.safeParse(input);
-  if (!request.success) return { error: BAD_REQUEST };
+  if (!request.success) return { error: t('badRequest') };
   const provider = z.enum(PROVIDER_IDS).safeParse(request.data.provider);
-  if (!provider.success) return { error: 'Outil inconnu.' };
-  if (!connectorsKey()) return { error: NOT_CONFIGURED };
+  if (!provider.success) return { error: t('unknownTool') };
+  if (!connectorsKey()) return { error: t('notConfigured') };
 
   const checked = await checkConnection(
     provider.data,
-    catalogFields(provider.data),
+    catalogFields(provider.data, await getLocale()),
     request.data.fields,
     {},
   );
@@ -131,7 +130,7 @@ export async function connectAction(input: {
     });
   } catch (error) {
     logError('connector.create_failed', error, { provider: provider.data });
-    return { error: "Impossible d'enregistrer la connexion. Réessayez." };
+    return { error: t('saveFailed') };
   }
   revalidatePath('/connexions');
   return { ok: true, account: checked.account };
@@ -143,14 +142,18 @@ export async function replaceKeyAction(input: {
   fields: Record<string, string>;
 }): Promise<ActionResult> {
   const ctx = await requireUserContext();
+  const t = await getTranslations('connections');
   const request = ReplaceSchema.safeParse(input);
-  if (!request.success) return { error: BAD_REQUEST };
-  if (!connectorsKey()) return { error: NOT_CONFIGURED };
+  if (!request.success) return { error: t('badRequest') };
+  if (!connectorsKey()) return { error: t('notConfigured') };
   const stored = (await listConnections(ctx)).find((view) => view.id === request.data.id);
-  if (!stored) return { error: GONE };
-  if (!stored.isCreator) return { error: NOT_CREATOR };
+  if (!stored) return { error: t('connectionMissing') };
+  // La clé est celle du compte du créateur : un administrateur y mettrait la sienne.
+  if (!stored.isCreator) return { error: t('notCreator') };
 
-  const secrets = catalogFields(stored.provider).filter((field) => field.kind === 'secret');
+  const secrets = catalogFields(stored.provider, await getLocale()).filter(
+    (field) => field.kind === 'secret',
+  );
   const checked = await checkConnection(
     stored.provider,
     secrets,
@@ -165,10 +168,10 @@ export async function replaceKeyAction(input: {
       checked.config,
       checked.connector.secretFields,
     );
-    if (!saved) return { error: GONE };
+    if (!saved) return { error: t('connectionMissing') };
   } catch (error) {
     logError('connector.replace_failed', error, { connectionId: stored.id });
-    return { error: 'Impossible de remplacer la clé. Réessayez.' };
+    return { error: t('replaceFailed') };
   }
   revalidatePath('/connexions');
   return { ok: true, account: checked.account };

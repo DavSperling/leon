@@ -17,4 +17,16 @@ export const claapCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'L’API de Claap est limitée à 3 000 requêtes par jour pour tout l’espace, toutes clés confondues : Leon lit au plus 100 transcriptions par passage.',
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'Don’t enable “Full access” on the key: private recordings would become readable by the whole team in Leon.',
+      },
+    },
+    keyHelp:
+      'In Claap, with an admin account: workspace name › Settings › API & Webhooks › API, then Create API key (the key is shown only once).',
+    warning:
+      'Claap’s API is limited to 3,000 requests per day for the whole workspace, across all keys: Leon reads at most 100 transcripts per sync.',
+  },
 };

@@ -41,7 +41,7 @@ export const SearchOutputSchema = z.object({
       score: z
         .number()
         .describe(
-          "Pertinence de la source, pour information : les sources sont rendues dans l'ordre du classement, et celles qui ne contiennent qu'une partie des mots cherchés viennent après les autres, quel que soit leur score.",
+          'Source relevance, for information only: sources are returned in ranking order, and those that contain only some of the searched words come after the others, whatever their score.',
         ),
       passages: z.array(PassageSchema),
     }),

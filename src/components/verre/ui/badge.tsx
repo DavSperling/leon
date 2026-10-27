@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed, CircleX, type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/verre/cn';
 
@@ -41,37 +41,5 @@ export function Badge({
       {Icon && <Icon aria-hidden="true" className="size-3" strokeWidth={1.8} />}
       {children}
     </span>
-  );
-}
-
-export type IndexingStatus = 'running' | 'done' | 'failed';
-const STATUSES = {
-  running: { label: 'En cours', icon: CircleDashed, tone: 'info' },
-  done: { label: 'Indexée', icon: CircleCheck, tone: 'success' },
-  failed: { label: 'Erreur', icon: CircleX, tone: 'destructive' },
-} as const;
-
-/**
- * État d'indexation d'une source : le sens passe par l'icône et le mot, jamais par la couleur seule. L'état courant
- * (« Indexée ») reste discret, icône verte et mot atténué ; seules les exceptions (« En cours », « Erreur ») sont des pastilles.
- */
-export function StatusBadge({ status, className }: { status: IndexingStatus; className?: string }) {
-  const { label, icon: Icon, tone } = STATUSES[status];
-  if (status === 'done')
-    return (
-      <span
-        className={cn(
-          'inline-flex h-5 shrink-0 items-center gap-1 text-[11px] leading-none font-medium whitespace-nowrap text-muted',
-          className,
-        )}
-      >
-        <Icon aria-hidden="true" className="size-3 text-success" strokeWidth={1.8} />
-        {label}
-      </span>
-    );
-  return (
-    <Badge tone={tone} icon={Icon} className={className}>
-      {label}
-    </Badge>
   );
 }

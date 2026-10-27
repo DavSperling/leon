@@ -24,4 +24,19 @@ export const freshdeskCatalog: CatalogEntry = {
     'https://support.freshdesk.com/support/solutions/articles/215517-how-to-find-your-api-key',
   triedForReal: false,
   warning: 'L’API de Freshdesk est fermée au plan gratuit : il faut un plan payant ou un essai.',
+  en: {
+    fields: {
+      domain: {
+        label: 'Freshdesk domain',
+        help: 'The start of your Freshdesk URL: acme for acme.freshdesk.com.',
+      },
+      apiKey: {
+        label: 'API key',
+        help: 'Leon only reads what the key’s account sees: use the key of an agent who sees the team’s tickets. A reset key also cuts off the other tools that use it.',
+      },
+    },
+    keyHelp:
+      'In Freshdesk: your profile picture at the top right › Profile settings, then “View API Key” (you have to solve a captcha).',
+    warning: 'Freshdesk’s API is closed to the free plan: a paid plan or a trial is required.',
+  },
 };

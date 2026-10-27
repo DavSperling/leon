@@ -31,7 +31,7 @@ export type SyncDeps = {
 };
 export type SyncResult = 'skipped' | 'ok' | 'auth_error' | 'error';
 
-const UNREADABLE_KEY = 'Clé illisible : remplacez-la.';
+const UNREADABLE_KEY = 'Unreadable key: replace it.';
 
 // `claimConnection` pose la réservation avant de déchiffrer : seule cette erreur-là laisse une
 // réservation à libérer. Toute autre (la base indisponible) n'a rien réservé et remonte.
@@ -53,9 +53,9 @@ type Ready = { connector: AnyConnector; config: Record<string, unknown> };
 // Le connecteur et sa configuration validée, ou la raison pour laquelle on ne peut pas synchroniser.
 function prepare(connection: LoadedConnection, deps: SyncDeps): Ready | { message: string } {
   const connector = deps.getConnector(connection.provider);
-  if (!connector) return { message: 'Connecteur indisponible' };
+  if (!connector) return { message: 'Connector unavailable' };
   const parsed = connector.configSchema.safeParse(connection.config);
-  if (!parsed.success) return { message: "Configuration illisible : rebranchez l'outil" };
+  if (!parsed.success) return { message: 'Unreadable configuration: reconnect the tool' };
   return { connector, config: parsed.data };
 }
 
@@ -157,9 +157,10 @@ async function rememberAccountKey(
 
 function authMessage(connection: LoadedConnection, error: ConnectorAuthError | OAuthRefusedError) {
   const label = PROVIDER_LABELS[connection.provider];
-  if (error instanceof OAuthRefusedError) return `Reconnectez ${label} : l'autorisation a expiré.`;
-  if (isButton(connection)) return `Reconnectez ${label} : l'autorisation a été retirée.`;
-  return `Clé refusée par ${label} : vérifiez-la ou remplacez-la.`;
+  if (error instanceof OAuthRefusedError)
+    return `Reconnect ${label}: the authorization has expired.`;
+  if (isButton(connection)) return `Reconnect ${label}: the authorization was revoked.`;
+  return `${label} rejected the key: check it or replace it.`;
 }
 
 // Le message de `last_error` est écrit par nous : celui d'une ConnectorHttpError, ou le résumé

@@ -15,4 +15,14 @@ export const shortcutCatalog: CatalogEntry = {
     'Dans Shortcut : Settings › Your Account › API Tokens, donnez un nom au jeton puis cliquez sur Generate Token. Le jeton est propre à votre compte et à cet espace de travail.',
   docsUrl: 'https://developer.shortcut.com/api/rest/v3',
   triedForReal: false,
+  en: {
+    fields: {
+      token: {
+        label: 'API token',
+        help: 'Leon only reads. If Shortcut refuses a read-only token for searching stories, create one with write access.',
+      },
+    },
+    keyHelp:
+      'In Shortcut: Settings › Your Account › API Tokens, give the token a name, then click Generate Token. The token belongs to your account and to this workspace.',
+  },
 };

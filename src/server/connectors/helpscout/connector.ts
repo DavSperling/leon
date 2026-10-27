@@ -80,7 +80,7 @@ const ConfigSchema = z
     const fields =
       config.authMode === 'oauth' ? (['accessToken'] as const) : (['appId', 'appSecret'] as const);
     for (const field of fields) {
-      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
     }
   });
 type Config = z.infer<typeof ConfigSchema>;
@@ -119,7 +119,7 @@ function accountOf(user: {
 }) {
   const name = [user.firstName, user.lastName].filter(Boolean).join(' ');
   if (name && user.email) return `${name} (${user.email})`;
-  return name || user.email || 'compte Help Scout';
+  return name || user.email || 'Help Scout account';
 }
 
 export const helpscoutConnector: Connector<Config> = {

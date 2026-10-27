@@ -23,8 +23,8 @@ const ServerEnvSchema = z.object({
 
 // Messages fixes : la valeur reçue (le jeton surtout) n'est jamais recopiée.
 const HINTS = {
-  LEON_URL: 'LEON_URL manquante ou invalide (https, ou http sur localhost et 127.0.0.1).',
-  LEON_TOKEN: 'LEON_TOKEN manquant ou invalide (jeton créé dans Leon, de la forme leon_…).',
+  LEON_URL: 'LEON_URL is missing or invalid (https, or http on localhost and 127.0.0.1).',
+  LEON_TOKEN: 'LEON_TOKEN is missing or invalid (a token created in Leon, shaped like leon_…).',
 };
 
 export type ServerEnv = { url: string; token: string };

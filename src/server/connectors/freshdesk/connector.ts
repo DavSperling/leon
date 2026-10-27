@@ -130,7 +130,7 @@ export const freshdeskConnector: Connector<Config> = {
       if (!isUnknownDomain(error)) throw error;
       throw new ConnectorHttpError(
         (error as ConnectorHttpError).status,
-        'Domaine Freshdesk introuvable : vérifiez le nom du domaine',
+        'Freshdesk domain not found: check the domain name',
       );
     }
   },

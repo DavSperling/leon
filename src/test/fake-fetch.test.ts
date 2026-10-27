@@ -83,7 +83,7 @@ describe('testHttp et collect', () => {
     const connector = connectorFor(() => ['autre.test']);
     const { http, calls } = testHttp(connector, {}, [{ url: URL_A, json: { n: 1 } }]);
 
-    await expect(http.json({ url: URL_A }, z.unknown())).rejects.toThrow('Adresse non autorisée');
+    await expect(http.json({ url: URL_A }, z.unknown())).rejects.toThrow('Address not allowed');
     expect(calls).toHaveLength(0);
   });
 

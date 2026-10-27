@@ -73,9 +73,9 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
     if (config.authMode === 'key' && config.bases.length === 0) {
-      ctx.addIssue({ code: 'custom', path: ['bases'], message: 'Requis' });
+      ctx.addIssue({ code: 'custom', path: ['bases'], message: 'Required' });
     }
   });
 type Config = z.infer<typeof ConfigSchema>;
@@ -92,7 +92,7 @@ async function checkBase(air: AirtableClient, baseId: string): Promise<void> {
     const denied = error instanceof ConnectorAuthError && error.status === 403;
     const missing = error instanceof ConnectorHttpError && error.status === 404;
     if (denied || missing) {
-      throw new ConnectorHttpError(denied ? 403 : 404, `Base Airtable inaccessible : ${baseId}`);
+      throw new ConnectorHttpError(denied ? 403 : 404, `Airtable base not accessible: ${baseId}`);
     }
     throw error;
   }
@@ -112,7 +112,7 @@ export const airtableConnector: Connector<Config> = {
     // Les bases choisies sont contrôlées une à une ; celles que le jeton liste lui sont accessibles.
     for (const baseId of config.bases) await checkBase(air, baseId);
     const wanted = basesToRead(config.bases, names);
-    if (wanted.length === 0) throw new NothingToReadError('Aucune base Airtable autorisée');
+    if (wanted.length === 0) throw new NothingToReadError('No Airtable base authorized');
     const bases = wanted.map((baseId) => names.get(baseId) ?? baseId).join(', ');
     // L'identifiant porte les bases lues, triées : d'autres bases du même utilisateur sont un autre compte.
     const accountKey = [me.id, ...[...wanted].sort()].join(':');

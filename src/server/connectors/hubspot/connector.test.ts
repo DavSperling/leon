@@ -153,7 +153,7 @@ describe('hubspot : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('hubspot')).toBe(hubspotConnector);
-    const entry = listCatalog().find((item) => item.id === 'hubspot');
+    const entry = listCatalog('fr').find((item) => item.id === 'hubspot');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => field.name)).toEqual(['token']);
   });
@@ -174,7 +174,7 @@ describe('hubspot : verify', () => {
 
     const result = await hubspotConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Compte HubSpot 12345678', accountKey: '12345678' });
+    expect(result).toEqual({ account: 'HubSpot account 12345678', accountKey: '12345678' });
     expect(calls.map((call) => call.url)).toEqual([
       `${OBJECTS}/notes/search`,
       `${OBJECTS}/calls/search`,
@@ -816,7 +816,7 @@ describe('hubspot : ressources secondaires', () => {
     ).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 
@@ -902,7 +902,7 @@ describe('hubspot : description du bouton', () => {
   });
 
   it('est annoncée dans le catalogue, avec ce que l’utilisateur verra chez HubSpot', () => {
-    const entry = listCatalog().find((item) => item.id === 'hubspot');
+    const entry = listCatalog('fr').find((item) => item.id === 'hubspot');
     expect(entry?.oauthHelp).toMatch(/administrateur/);
     expect(entry?.oauthHelp).toMatch(/lecture|lire/);
     // La clé collée reste acceptée, avec son mode d'emploi.
@@ -926,7 +926,7 @@ describe('hubspot : jeton OAuth', () => {
 
     const result = await hubspotConnector.verify(oauthConfig, http);
 
-    expect(result).toEqual({ account: 'Compte HubSpot 12345678', accountKey: '12345678' });
+    expect(result).toEqual({ account: 'HubSpot account 12345678', accountKey: '12345678' });
     expect(calls).toHaveLength(5);
     for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${OAUTH_TOKEN}`);
   });

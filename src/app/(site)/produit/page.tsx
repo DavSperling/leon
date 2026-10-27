@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { ProduitPage } from '@/components/site/pages/produit';
 
-export const metadata: Metadata = {
-  title: 'Comment ça marche',
-  description:
-    'Leon se branche sur vos outils et vos assistants d’IA, garde chaque élément tel quel, et répond en citant ses sources.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('site.meta');
+  return { title: t('productTitle'), description: t('productDescription') };
+}
 
 export default function Page() {
   return <ProduitPage />;

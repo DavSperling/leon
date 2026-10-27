@@ -48,7 +48,7 @@ describe('safeErrorSummary', () => {
   });
 
   it("décrit une valeur qui n'est pas une erreur sans la recopier", () => {
-    expect(safeErrorSummary('zanzibar')).toBe('erreur inconnue');
+    expect(safeErrorSummary('zanzibar')).toBe('unknown error');
   });
 });
 

@@ -38,8 +38,8 @@ export const fathomConnector: Connector<Config> = {
 
   async verify(config, http) {
     const page = await listMeetings(http, config.apiKey, {});
-    const seen = page.items.length > 0 ? '' : ', mais aucune réunion visible pour le moment';
-    return { account: `Fathom (clé valide${seen})` };
+    const seen = page.items.length > 0 ? '' : ', but no meeting visible yet';
+    return { account: `Fathom (valid key${seen})` };
   },
 
   async *sync(config, state, http) {

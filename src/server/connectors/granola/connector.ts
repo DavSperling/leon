@@ -59,7 +59,7 @@ export const granolaConnector: Connector<GranolaConfig> = {
   async verify(config, http) {
     const found = await granolaClient(config.apiKey, http).hasNotes();
     return {
-      account: found ? 'Granola (notes lisibles)' : 'Granola (aucune note lisible pour l’instant)',
+      account: found ? 'Granola (readable notes)' : 'Granola (no readable notes yet)',
     };
   },
 

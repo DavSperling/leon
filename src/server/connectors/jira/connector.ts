@@ -165,7 +165,7 @@ export const jiraConnector: Connector<Config> = {
       if (config.authMode === 'oauth' || !isUnknownSite(error)) throw error;
       throw new ConnectorHttpError(
         (error as ConnectorHttpError).status,
-        'Site Jira introuvable : vérifiez le nom du site',
+        'Jira site not found: check the site name',
       );
     }
   },

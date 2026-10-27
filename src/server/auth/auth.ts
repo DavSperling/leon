@@ -2,6 +2,9 @@ import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 import { organization } from 'better-auth/plugins/organization';
 import { twoFactor } from 'better-auth/plugins/two-factor';
+import { createTranslator } from 'next-intl';
+import { getLocale } from 'next-intl/server';
+import { DEFAULT_LOCALE, type Locale, localeOf } from '@/i18n/request';
 import { pool } from '@/server/db/client';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
@@ -10,10 +13,21 @@ import { firstOrganizationId } from './tenant-context';
 // Sans Resend, aucun lien ne part : l'écran de connexion ne propose pas « Mot de passe oublié ? ».
 export const passwordResetEnabled = Boolean(env.RESEND_API_KEY && env.LEON_EMAIL_FROM);
 
-async function sendPasswordReset(email: string, url: string): Promise<void> {
+// La langue de la personne qui demande le lien, lue dans sa requête (cookie `leon-locale`) ; l'anglais hors requête.
+async function requesterLocale(): Promise<Locale> {
+  try {
+    return localeOf(await getLocale());
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+async function sendPasswordReset(email: string, url: string, locale: Locale): Promise<void> {
   if (!env.RESEND_API_KEY || !env.LEON_EMAIL_FROM) {
     throw new Error('RESEND_API_KEY and LEON_EMAIL_FROM are required to send password reset email');
   }
+  const messages = (await import(`../../../messages/${locale}.json`)).default;
+  const t = createTranslator({ locale, messages, namespace: 'auth' });
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -23,8 +37,8 @@ async function sendPasswordReset(email: string, url: string): Promise<void> {
     body: JSON.stringify({
       from: env.LEON_EMAIL_FROM,
       to: [email],
-      subject: 'Réinitialiser votre mot de passe Leon',
-      html: `<p>Une demande de réinitialisation de votre mot de passe Leon a été faite.</p><p><a href="${url}">Choisir un nouveau mot de passe</a></p><p>Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.</p>`,
+      subject: t('resetEmailSubject'),
+      html: `<p>${t('resetEmailIntro')}</p><p><a href="${url}">${t('resetEmailAction')}</a></p><p>${t('resetEmailIgnore')}</p>`,
     }),
   });
   if (!response.ok) throw new Error(`Password reset email failed (${response.status})`);
@@ -43,9 +57,10 @@ export const auth = betterAuth({
     // Envoi sans attente : la réponse met le même temps que le compte existe ou non (Leon tourne en continu,
     // l'envoi finit après la réponse).
     sendResetPassword: async ({ user, url }) => {
-      void sendPasswordReset(user.email, url).catch((error) =>
-        logError('auth.password_reset_email', error),
-      );
+      // La langue se lit dans l'envoi détaché aussi : l'attendre ici ne retarderait que les comptes qui existent.
+      void requesterLocale()
+        .then((locale) => sendPasswordReset(user.email, url, locale))
+        .catch((error) => logError('auth.password_reset_email', error));
     },
   },
   // La connexion, l'inscription et la demande de lien passent par les server actions (auth.api.*), sous la limite

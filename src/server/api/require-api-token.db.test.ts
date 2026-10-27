@@ -45,7 +45,7 @@ describe('requireApiToken', () => {
     const response = await testApp.request('/');
     expect(response.status).toBe(401);
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
-    expect(await response.json()).toEqual({ error: 'Jeton manquant ou invalide' });
+    expect(await response.json()).toEqual({ error: 'Missing or invalid token' });
   });
 
   it('répond 401 à un jeton mal formé', async () => {

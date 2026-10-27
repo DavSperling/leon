@@ -183,7 +183,7 @@ describe('échange du code et renouvellement', () => {
   // La forme que la doc Miro décrit (docs/troubleshooting-oauth20) pour un code invalide et pour
   // une adresse de retour qui ne correspond pas : un 401 { status, code: 'oauthError', message,
   // type: 'error' }, sans champ `error`. Le socle la compte comme un refus : /retour répond 'refuse'
-  // et un renouvellement forcé met la connexion en 'auth_error' (« Reconnectez Miro »).
+  // et un renouvellement forcé met la connexion en 'auth_error' (« Reconnect Miro »).
   describe.each([
     { cas: 'code invalide', message: `Invalid authorization code: ${REFRESH}` },
     { cas: 'adresse de retour différente', message: 'Redirect URI mismatch.' },

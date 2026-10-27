@@ -16,8 +16,8 @@ import { fetchStructured, renderFetched } from './render';
 export const NEIGHBOUR_TURNS = 2;
 const NEIGHBOUR_WINDOW = { before: NEIGHBOUR_TURNS, after: NEIGHBOUR_TURNS };
 
-// 20000 devient « 20 000 » (espace ordinaire : le texte se lit tel quel dans un assistant).
-const spaced = (count: number): string => String(count).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+// 20000 devient « 20,000 ».
+const grouped = (count: number): string => count.toLocaleString('en-US');
 
 // Les paramètres facultatifs acceptent aussi `null` : des clients l'envoient pour « non renseigné ».
 export const FetchInputSchema = z.object({
@@ -25,40 +25,38 @@ export const FetchInputSchema = z.object({
     .string()
     .max(64)
     .nullish()
-    .describe(
-      'Une source rendue par search (le nom que ChatGPT donne à sourceId) : lue en entier.',
-    ),
+    .describe('A source returned by search (ChatGPT’s name for sourceId): read in full.'),
   passageId: z
     .string()
     .max(64)
     .nullish()
     .describe(
-      `Un passage rendu par search : on lit son tour et les ${NEIGHBOUR_TURNS} tours avant et après.`,
+      `A passage returned by search: reads its turn and the ${NEIGHBOUR_TURNS} turns before and after it.`,
     ),
   sourceId: z
     .string()
     .max(64)
     .nullish()
     .describe(
-      `Une source rendue par search : on la lit en entier, dans l’ordre, jusqu’à ${spaced(SOURCE_MAX_CHARS)} caractères.`,
+      `A source returned by search: read in full, in order, up to ${grouped(SOURCE_MAX_CHARS)} characters.`,
     ),
 });
 
 export const FETCH_DESCRIPTION =
-  "Lit le texte d'une source (id ou sourceId) ou d'un passage (passageId), un seul des trois, tel que Leon l'a gardé : les tours dans l'ordre, avec leur auteur et leur date. Avec passageId, rend le passage trouvé et les tours voisins. Ne lit que ce que l'utilisateur a le droit de voir.";
+  'Reads the text of a source (id or sourceId) or of a passage (passageId), exactly one of the three, as Leon kept it: the turns in order, with their author and date. With passageId, returns the matching passage and its neighboring turns. Only reads what the user is allowed to see.';
 
 const refusal = (text: string) => ({
   isError: true as const,
   content: [{ type: 'text' as const, text }],
 });
 
-const NOT_FOUND = 'Source ou passage introuvable, ou non visible.';
+const NOT_FOUND = 'Source or passage not found, or not visible to the user.';
 
 export function registerFetchTool(server: McpServer, ctx: TenantContext, client: string): void {
   server.registerTool(
     'fetch',
     {
-      title: 'Lire une source ou un passage',
+      title: 'Read a source or passage',
       description: FETCH_DESCRIPTION,
       inputSchema: FetchInputSchema,
       outputSchema: FetchOutputSchema,
@@ -69,7 +67,7 @@ export function registerFetchTool(server: McpServer, ctx: TenantContext, client:
     guarded('fetch', async ({ id, passageId, sourceId }) => {
       const wanted = [id, passageId, sourceId].filter((value) => value != null);
       if (wanted.length !== 1) {
-        return refusal('Donne id, passageId ou sourceId, un seul des trois.');
+        return refusal('Give id, passageId or sourceId: exactly one of the three.');
       }
       // Un seul des trois est donné. `id` est un autre nom de `sourceId` : le contrat que ChatGPT impose à `fetch`.
       const read =

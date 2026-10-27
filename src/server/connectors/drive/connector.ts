@@ -68,7 +68,7 @@ export const driveConnector: Connector<PipedreamConfig> = {
     const key = user.permissionId ? { accountKey: user.permissionId } : {};
     if (user.displayName)
       return { account: address ? `${user.displayName} (${address})` : user.displayName, ...key };
-    return { account: address || 'compte Google Drive', ...key };
+    return { account: address || 'Google Drive account', ...key };
   },
 
   // Un fichier à la fois : chaque export est une requête, la position avance après chacun.

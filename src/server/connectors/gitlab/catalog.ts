@@ -26,4 +26,21 @@ export const gitlabCatalog: CatalogEntry = {
   docsUrl: 'https://docs.gitlab.com/user/profile/personal_access_tokens/',
   triedForReal: false,
   warning: 'Seul gitlab.com est pris en charge, pas une installation de GitLab hébergée par vous.',
+  en: {
+    fields: {
+      token: {
+        label: 'Personal access token',
+        help: 'Check only the read_api scope: the token then gives read-only access.',
+      },
+      projects: {
+        label: 'Projects',
+        help: 'One project per line, as group/project or group/subgroup/project (20 max). Its issues and merge requests are read, with their comments.',
+      },
+    },
+    keyHelp:
+      'On gitlab.com: your avatar › Edit profile › Access › Personal access tokens › Generate token (classic token), with the read_api scope. The token expires after one year at most: you will then have to replace it.',
+    oauthHelp:
+      'Leon reads the issues and merge requests of the 20 most active projects you are a member of. The access also allows writing; Leon doesn’t use it yet.',
+    warning: 'Only gitlab.com is supported, not a GitLab installation you host yourself.',
+  },
 };

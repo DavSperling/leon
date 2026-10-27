@@ -35,4 +35,28 @@ export const sentryCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'À faire lire avant tout client : le §2.3 b des conditions de Sentry interdit d’utiliser le service pour le compte de tiers.',
+  en: {
+    fields: {
+      token: {
+        label: 'Internal integration token',
+        help: 'Read-only is enough: the event:read scope (issues). Leon reads neither stack traces nor event data.',
+      },
+      organization: {
+        label: 'Organization',
+        help: 'The organization’s ID (slug), visible in Sentry URLs: …/organizations/<slug>/.',
+      },
+      region: {
+        label: 'Data region',
+        options: {
+          'sentry.io': 'United States (sentry.io)',
+          'de.sentry.io': 'Europe (de.sentry.io)',
+        },
+        help: 'The one where Sentry stores the organization’s data, shown in its settings.',
+      },
+    },
+    keyHelp:
+      'In Sentry: Settings › Developer Settings › New Internal Integration, with Read access on Issue & Event; the token is shown when the integration is created and doesn’t expire.',
+    warning:
+      'Have this reviewed before any client: section 2.3(b) of Sentry’s terms forbids using the service on behalf of third parties.',
+  },
 };

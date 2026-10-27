@@ -32,7 +32,7 @@ import { miroOAuth } from './oauth';
 // tableau (sinon une retouche n'est lue qu'à la modification suivante du tableau) ; que la liste sans
 // équipe et sans ordre stable ne saute aucun tableau ; le texte exact des notes (HTML, d'après la doc
 // du SDK) ; un 400 « jeton invalide » de GET /v1/oauth-token, que la doc décrit à la place d'un 401
-// (la vérification échouerait alors en « Miro a répondu 400 », pas en jeton refusé) ; un essai en réel.
+// (la vérification échouerait alors en « Miro responded with 400 », pas en jeton refusé) ; un essai en réel.
 
 // Miro ne se branche que par le bouton : la forme à clé n'existe pas. Les jetons ne sont pas dans
 // `secretFields` : le socle les chiffre à part.

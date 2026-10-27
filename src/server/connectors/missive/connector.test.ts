@@ -130,7 +130,7 @@ describe('missive : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, avec l’avertissement sur le forfait', () => {
     expect(getConnector('missive')).toBe(missiveConnector);
-    const entry = listCatalog().find((item) => item.id === 'missive');
+    const entry = listCatalog('fr').find((item) => item.id === 'missive');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => [field.name, field.kind])).toEqual([['token', 'secret']]);
     expect(entry?.warning).toMatch(/Productive/);
@@ -169,7 +169,7 @@ describe('missive : verify', () => {
       teamsRoute(),
     ]);
 
-    expect(await missiveConnector.verify(config, http)).toEqual({ account: 'organisation Acme' });
+    expect(await missiveConnector.verify(config, http)).toEqual({ account: 'organization Acme' });
   });
 
   // Sans équipe, rien ne serait lu (le courrier personnel ne l'est pas) : mieux vaut le dire tout de suite.
@@ -182,7 +182,7 @@ describe('missive : verify', () => {
 
     await expect(missiveConnector.verify(config, http)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
-      message: expect.stringContaining('Aucune équipe Missive'),
+      message: expect.stringContaining('No Missive team'),
     });
   });
 
@@ -626,7 +626,7 @@ describe('missive : ressource secondaire et erreurs', () => {
     const failure = await runSync([listRoute(broken)]).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 

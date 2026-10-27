@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import type { ComponentProps, CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { Logo } from '@/components/verre/shell/brand';
@@ -7,7 +8,8 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { toolLabel } from './content';
 
-// Briques du site public, rendues par le serveur (aucune ne demande JavaScript).
+// Briques du site public, rendues par le serveur (aucune ne demande JavaScript). Les libellés suivent la langue de la
+// requête (useTranslations marche des deux côtés : certaines briques servent aussi aux composants client).
 
 /** Colonne centrale du site : 1200 px au plus, marges de 20 px sur mobile. */
 export function Container({ className, ...props }: ComponentProps<'div'>) {
@@ -222,11 +224,12 @@ export function CitedAnswer({ text, className }: { text: string; className?: str
 }
 
 /** Pastille « Réponse de Leon » : le logo, pas d'étincelles (brand.md proscrit l'icône). */
-export function LeonMark({ label = 'Réponse de Leon' }: { label?: string }) {
+export function LeonMark({ label }: { label?: string }) {
+  const t = useTranslations('site.common');
   return (
     <span className="flex items-center gap-2 text-[13px] font-semibold text-accent">
       <Logo className="size-[18px] text-[9.5px]" />
-      {label}
+      {label ?? t('leonAnswer')}
     </span>
   );
 }
@@ -301,14 +304,17 @@ export function CtaLink({
 export function CtaBand({
   title,
   text,
-  primary = { href: '/inscription', label: 'Créer un espace' },
-  secondary = { href: '/connexion', label: 'Se connecter' },
+  primary,
+  secondary,
 }: {
   title: string;
   text?: string;
   primary?: { href: string; label: string };
   secondary?: { href: string; label: string };
 }) {
+  const t = useTranslations('site.cta');
+  const first = primary ?? { href: '/inscription', label: t('create') };
+  const second = secondary ?? { href: '/connexion', label: t('signIn') };
   return (
     <section className="py-20 sm:py-28">
       <Container>
@@ -329,9 +335,9 @@ export function CtaBand({
               </p>
             )}
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <CtaLink href={primary.href}>{primary.label}</CtaLink>
-              <CtaLink href={secondary.href} variant="secondary">
-                {secondary.label}
+              <CtaLink href={first.href}>{first.label}</CtaLink>
+              <CtaLink href={second.href} variant="secondary">
+                {second.label}
               </CtaLink>
             </div>
           </div>

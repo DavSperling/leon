@@ -1,13 +1,14 @@
 'use client';
 
 import { KeyRound, ListFilter, MousePointerClick, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useId, useMemo, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { Pill } from '@/components/verre/ui/pill';
-import { FAMILY_LABELS, type ProviderFamily } from '@/lib/providers';
+import type { ProviderFamily } from '@/lib/providers';
 import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
-import { ALL_TOOLS, TOOL_GROUPS, toolLabel } from '../content';
+import { ALL_TOOLS, TOOL_GROUPS, toolLabel, useSiteContent } from '../content';
 import { Tilt } from '../fx';
 import { ToolLogo } from '../parts';
 
@@ -47,6 +48,8 @@ type Filter = 'tous' | ProviderFamily;
 const PILL = 'max-sm:h-10 pointer-coarse:h-10';
 
 export function ConnecteursCatalogue() {
+  const t = useTranslations('site.catalogue');
+  const { toolGroups, familyLabels } = useSiteContent();
   const [family, setFamily] = useState<Filter>('tous');
   const [query, setQuery] = useState('');
   const inputId = useId();
@@ -70,7 +73,7 @@ export function ConnecteursCatalogue() {
     <div className="mt-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <fieldset className="min-w-0">
-          <legend className="sr-only">Famille d’outils</legend>
+          <legend className="sr-only">{t('family')}</legend>
           <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             <Pill
               variant={family === 'tous' ? 'active' : 'default'}
@@ -78,10 +81,10 @@ export function ConnecteursCatalogue() {
               onClick={() => setFamily('tous')}
               className={PILL}
             >
-              Tous
+              {t('all')}
               <span className="font-mono text-[11px]">{ALL_TOOLS.length}</span>
             </Pill>
-            {TOOL_GROUPS.map((g) => (
+            {toolGroups.map((g) => (
               <Pill
                 key={g.family}
                 variant={family === g.family ? 'active' : 'default'}
@@ -97,7 +100,7 @@ export function ConnecteursCatalogue() {
         </fieldset>
         <div className="relative w-full lg:w-[280px]">
           <label htmlFor={inputId} className="sr-only">
-            Filtrer les outils par nom
+            {t('filterLabel')}
           </label>
           <ListFilter
             aria-hidden="true"
@@ -109,7 +112,7 @@ export function ConnecteursCatalogue() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filtrer par nom…"
+            placeholder={t('filterPlaceholder')}
             autoComplete="off"
             spellCheck={false}
             className="h-11 w-full rounded-full border border-line-strong bg-glass-2 pr-11 pl-10 text-ui text-fg shadow-hi transition-[border-color] duration-200 pointer-coarse:text-title focus-visible:border-accent"
@@ -117,7 +120,7 @@ export function ConnecteursCatalogue() {
           {query !== '' && (
             <button
               type="button"
-              aria-label="Effacer le filtre"
+              aria-label={t('clear')}
               onClick={() => setQuery('')}
               className="absolute top-1/2 right-1.5 inline-grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg max-sm:right-0.5 max-sm:size-10 pointer-coarse:right-0.5 pointer-coarse:size-10"
             >
@@ -129,8 +132,8 @@ export function ConnecteursCatalogue() {
 
       <p role="status" className="mt-5 font-mono text-meta tracking-normal text-muted">
         {shown.length === 0
-          ? 'Aucun outil ne correspond'
-          : `${shown.length} outil${shown.length > 1 ? 's' : ''}${family === 'tous' ? '' : ` · ${FAMILY_LABELS[family]}`}`}
+          ? t('none')
+          : `${t('count', { count: shown.length })}${family === 'tous' ? '' : ` · ${familyLabels[family]}`}`}
       </p>
 
       {shown.length > 0 ? (
@@ -150,7 +153,7 @@ export function ConnecteursCatalogue() {
                   <div className="min-w-0 flex-1 max-sm:pr-5 sm:flex-none">
                     <p className="truncate text-ui font-semibold text-fg">{toolLabel(id)}</p>
                     <p className="mt-0.5 font-mono text-meta tracking-normal text-muted">
-                      {fam ? FAMILY_LABELS[fam] : ''}
+                      {fam ? familyLabels[fam] : ''}
                     </p>
                   </div>
                   <p className="inline-flex items-center gap-1.5 text-label text-fg-2 max-sm:absolute max-sm:top-2 max-sm:right-2 sm:mt-auto">
@@ -167,9 +170,7 @@ export function ConnecteursCatalogue() {
                         className="size-3.5 text-accent"
                       />
                     )}
-                    <span className="max-sm:sr-only">
-                      {oauth ? 'Bouton de connexion' : 'Clé d’API'}
-                    </span>
+                    <span className="max-sm:sr-only">{oauth ? t('oauth') : t('apiKey')}</span>
                   </p>
                 </Tilt>
               </li>
@@ -181,27 +182,27 @@ export function ConnecteursCatalogue() {
           {hiddenByFamily ? (
             <>
               <p className="text-ui font-semibold text-fg">
-                {nb(`Aucun outil « ${query.trim()} » dans ${FAMILY_LABELS[family]}.`)}
+                {nb(t('hiddenTitle', { query: query.trim(), family: familyLabels[family] }))}
               </p>
               <p className="mt-1.5 text-body text-muted">
                 {nb(
-                  `Ailleurs : ${byName
-                    .map((id) => {
-                      const f = FAMILY_OF.get(id);
-                      return f ? `${toolLabel(id)} (${FAMILY_LABELS[f]})` : toolLabel(id);
-                    })
-                    .join(', ')}.`,
+                  t('hiddenElsewhere', {
+                    tools: byName
+                      .map((id) => {
+                        const f = FAMILY_OF.get(id);
+                        return f ? `${toolLabel(id)} (${familyLabels[f]})` : toolLabel(id);
+                      })
+                      .join(', '),
+                  }),
                 )}
               </p>
             </>
           ) : (
             <>
               <p className="text-ui font-semibold text-fg">
-                {nb(`Aucun outil ne s’appelle « ${query.trim()} ».`)}
+                {nb(t('noneTitle', { query: query.trim() }))}
               </p>
-              <p className="mt-1.5 text-body text-muted">
-                {nb('Vérifiez l’orthographe, ou regardez ce qui est prévu plus bas.')}
-              </p>
+              <p className="mt-1.5 text-body text-muted">{nb(t('noneHint'))}</p>
             </>
           )}
           <button
@@ -213,7 +214,7 @@ export function ConnecteursCatalogue() {
             }}
             className="mt-5 inline-flex h-10 items-center rounded-full border border-line-strong bg-glass-3 px-4 text-ui font-semibold text-fg transition-colors hover:bg-hover"
           >
-            {hiddenByFamily ? 'Chercher dans toutes les familles' : 'Voir tous les outils'}
+            {hiddenByFamily ? t('searchAll') : t('showAll')}
           </button>
         </div>
       )}

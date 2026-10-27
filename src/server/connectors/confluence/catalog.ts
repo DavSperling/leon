@@ -32,4 +32,23 @@ export const confluenceCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Pages et commentaires de pied de page lus avec les droits du compte. Les commentaires en ligne ne sont pas lus. Atlassian fait expirer les jetons (un an par défaut) : en cas d’erreur, créez-en un nouveau.',
+  en: {
+    fields: {
+      site: {
+        label: 'Atlassian site',
+        help: 'The part before .atlassian.net in your Confluence URL (acme for acme.atlassian.net). With the button, optional: useful if your account has several Atlassian sites and you want to choose the one to read.',
+      },
+      email: { label: 'Atlassian account email address' },
+      apiToken: {
+        label: 'API token',
+        help: 'A token created without scopes: a token with scopes will be rejected.',
+      },
+    },
+    keyHelp:
+      'At id.atlassian.com › Security › API tokens: create an API token (without scopes), then copy it; Leon reads what this account can read.',
+    oauthHelp:
+      'Atlassian has you choose your Confluence site. Leon reads pages and their comments; the access also allows writing, but Leon doesn’t use it yet.',
+    warning:
+      'Pages and footer comments are read with the account’s permissions. Inline comments are not read. Atlassian expires tokens (after one year by default): if you get an error, create a new one.',
+  },
 };

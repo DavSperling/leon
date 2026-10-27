@@ -16,4 +16,14 @@ export const plainCatalog: CatalogEntry = {
     'Dans Plain : Settings › Machine users, créez un utilisateur machine puis ajoutez-lui une clé d’API avec les droits de lecture des fils (thread:read), de leurs messages (timeline:read) et des clients (customer:read).',
   docsUrl: 'https://www.plain.com/docs/graphql/authentication',
   triedForReal: false,
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'The key is shown only once, when it is created. Give it read-only permissions.',
+      },
+    },
+    keyHelp:
+      'In Plain: Settings › Machine users, create a machine user, then add an API key to it with permissions to read threads (thread:read), their messages (timeline:read), and customers (customer:read).',
+  },
 };

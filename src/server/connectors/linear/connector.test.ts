@@ -431,7 +431,7 @@ describe('linearConnector : erreurs', () => {
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
     expect((error as ConnectorHttpError).status).toBe(429);
-    expect((error as Error).message).toBe('Limite de requêtes de Linear atteinte');
+    expect((error as Error).message).toBe('Linear rate limit reached');
   });
 
   it('convertit toute autre erreur en message fixe, sans le texte de l’outil ni la clé', async () => {
@@ -440,7 +440,7 @@ describe('linearConnector : erreurs', () => {
     const error = await pages.catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect((error as Error).message).toBe('Linear a refusé la requête');
+    expect((error as Error).message).toBe('Linear rejected the request');
     expect((error as Error).message).not.toContain('texte-de-l-outil');
     expect((error as Error).message).not.toContain(KEY);
   });
@@ -454,6 +454,6 @@ describe('linearConnector : erreurs', () => {
   it('refuse une réponse sans données ni erreurs', async () => {
     const { pages } = sync([graphql({ json: {} })]);
 
-    await expect(pages).rejects.toMatchObject({ message: 'Réponse inattendue' });
+    await expect(pages).rejects.toMatchObject({ message: 'Unexpected response' });
   });
 });

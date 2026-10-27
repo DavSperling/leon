@@ -351,7 +351,11 @@ describe('finishSync', () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
 
-    const outcome = { kind: 'error', message: 'Gmail a répondu 500', again: 'office' } as const;
+    const outcome = {
+      kind: 'error',
+      message: 'Gmail responded with 500',
+      again: 'office',
+    } as const;
     await finishSync(paul, id, lock, outcome);
 
     const { rows } = await adminPool.query<{ status: string; hour: number; minute: number }>(
@@ -369,12 +373,12 @@ describe('finishSync', () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
 
-    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'GitHub rejected the key' });
 
     const row = await readRow(id);
     expect(row.status).toBe('error');
     expect(row.next_sync_at).toBeNull();
-    expect(row.last_error).toBe('Clé refusée par GitHub.');
+    expect(row.last_error).toBe('GitHub rejected the key');
     expect(row.sync_lock_at).toBeNull();
     expect(row.last_sync_at).toBeNull();
   });
@@ -425,12 +429,12 @@ describe('finishSync', () => {
     const lock = await claimed(paul, id);
 
     await setConnectionPaused(paul, id, true);
-    await finishSync(paul, id, lock, { kind: 'error', message: 'GitHub a répondu 500' });
+    await finishSync(paul, id, lock, { kind: 'error', message: 'GitHub responded with 500' });
 
     const row = await readRow(id);
     expect(row.status).toBe('paused');
     expect(row.next_sync_at).toBeNull();
-    expect(row.last_error).toBe('GitHub a répondu 500');
+    expect(row.last_error).toBe('GitHub responded with 500');
     expect(row.sync_lock_at).toBeNull();
   });
 });
@@ -440,14 +444,14 @@ describe('requestSyncNow', () => {
   it("met l'échéance à maintenant, sans toucher au statut ni à l'erreur", async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
-    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par GitHub.' });
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'GitHub rejected the key' });
 
     expect(await requestSyncNow(paul, id)).toBe(true);
 
     const row = await readRow(id);
     await makeNotDue(id);
     expect(row.status).toBe('error');
-    expect(row.last_error).toBe('Clé refusée par GitHub.');
+    expect(row.last_error).toBe('GitHub rejected the key');
     expect(row.next_sync_at).not.toBeNull();
     expect(row.seconds_to_next).toBeLessThanOrEqual(0);
   });
@@ -517,10 +521,10 @@ describe('replaceConnectionSecret', () => {
     expect((await claimConnection(paul, id))?.config.apiToken).toBe('nouveau-jeton-ZZ99');
   });
 
-  it('relance une connexion refusée (« Clé refusée ») : active, sans erreur, échéance maintenant', async () => {
+  it('relance une connexion refusée (« rejected the key ») : active, sans erreur, échéance maintenant', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
-    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Clé refusée par Jira.' });
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Jira rejected the key' });
 
     await replaceConnectionSecret(paul, id, { token: 'autre-jeton-1234' }, ['token']);
 
@@ -636,7 +640,7 @@ describe('saveOAuthTokens', () => {
   it('avec reconnexion : relance une connexion en erreur, active, sans erreur, échéance maintenant', async () => {
     const id = await seedConnection(paul, { nextSyncAt: DUE });
     const lock = await claimed(paul, id);
-    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Reconnectez Linear.' });
+    await finishSync(paul, id, lock, { kind: 'auth_error', message: 'Reconnect Linear.' });
 
     await saveOAuthTokens(paul, id, oauthConfig(), oauthFields, { reconnect: true });
 

@@ -59,7 +59,7 @@ describe('fetchBriefingText', () => {
       BriefingRouteMissingError,
     );
     await expect(fetchBriefingText(asFetch(fetchImpl), env, PROJECT)).rejects.toThrow(
-      /ne prépare pas encore de point/,
+      /does not prepare a morning briefing yet/,
     );
   });
 
@@ -234,7 +234,7 @@ describe('runBriefing', () => {
 
       expect(out).toEqual([]);
       expect(err).toHaveLength(1);
-      expect(err[0]).toMatch(/^Leon : /);
+      expect(err[0]).toMatch(/^Leon: /);
     },
   );
 

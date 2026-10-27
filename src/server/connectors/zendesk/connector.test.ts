@@ -97,7 +97,7 @@ describe('zendesk : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('zendesk')).toBe(zendeskConnector);
-    expect(listCatalog().find((item) => item.id === 'zendesk')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'zendesk')?.available).toBe(true);
   });
 });
 
@@ -127,7 +127,7 @@ describe('zendesk : verify', () => {
 
       expect(failure, String(status)).toBeInstanceOf(ConnectorHttpError);
       expect((failure as Error).message).toBe(
-        'Sous-domaine Zendesk introuvable : vérifiez le nom du sous-domaine',
+        'Zendesk subdomain not found: check the subdomain name',
       );
     }
   });
@@ -503,6 +503,6 @@ describe('zendesk : sync, erreurs', () => {
 
     const failure = await run.catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });

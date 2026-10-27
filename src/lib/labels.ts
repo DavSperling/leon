@@ -3,12 +3,13 @@ import { PROVIDER_LABELS } from '@/lib/providers';
 
 // Libellés d'affichage. Module pur : n'importe ni env ni la base.
 
+// Des noms qui se lisent pareil en français et en anglais : le serveur les calcule sans connaître la langue du lecteur.
 export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_code: 'Claude Code',
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
-  mcp_remember: 'Note MCP',
-  document: 'Document manuel',
+  mcp_remember: 'Note (MCP)',
+  document: 'Document',
   ...PROVIDER_LABELS,
 };
 

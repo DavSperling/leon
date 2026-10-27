@@ -28,7 +28,7 @@ const ConfigSchema = z.object({
   apiKey: z
     .string()
     .trim()
-    .regex(/^cb_\S+$/, 'La clé Circleback commence par cb_'),
+    .regex(/^cb_\S+$/, 'A Circleback key starts with cb_'),
 });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -67,7 +67,7 @@ export const circlebackConnector: Connector<Config> = {
   minIntervalMs: 350, // plan gratuit : 3 requêtes par seconde
   async verify(config, http) {
     await checkKey(http, config.apiKey);
-    return { account: 'compte Circleback' }; // l'API ne dit pas à qui est la clé
+    return { account: 'Circleback account' }; // l'API ne dit pas à qui est la clé
   },
   async *sync(config, state, http): AsyncGenerator<SyncPage> {
     const after = modifiedAfter(state);

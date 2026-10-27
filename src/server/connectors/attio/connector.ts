@@ -60,7 +60,7 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -143,8 +143,8 @@ export const attioConnector: Connector<Config> = {
     if (!self.active) throw new ConnectorAuthError('Attio', 401);
     await attio.probeNotes();
     const account = self.workspace_name
-      ? `Attio (espace ${self.workspace_name})`
-      : 'Attio (clé valide)';
+      ? `Attio (workspace ${self.workspace_name})`
+      : 'Attio (valid key)';
     if (!self.workspace_id) return { account };
     const member = self.authorized_by_workspace_member_id;
     return { account, accountKey: member ? `${self.workspace_id}:${member}` : self.workspace_id };

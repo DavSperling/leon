@@ -120,4 +120,18 @@ export type CatalogEntry = {
   oauthHelp?: string; // ce que l'utilisateur verra chez l'éditeur ; exigé quand le connecteur a `oauth`
   keyAccepted?: boolean; // faux pour un outil qui ne se branche que par bouton ; absent = vrai
   warning?: string; // « Plan Business requis », « Conditions à faire confirmer »
+  // Le jumeau anglais de chaque texte ci-dessus (listCatalog le sert quand l'interface est en anglais,
+  // et ne l'envoie jamais au navigateur). Les champs sont clés par `name`, les options par `value` ;
+  // `help`, `oauthHelp` et `warning` n'existent ici que s'ils existent en français. `placeholder` :
+  // seulement pour un exemple écrit en français (« prenom@entreprise.fr »), sinon le français sert.
+  en: CatalogEnglish;
+};
+export type CatalogEnglish = {
+  fields: Record<
+    string,
+    { label: string; placeholder?: string; help?: string; options?: Record<string, string> }
+  >;
+  keyHelp: string;
+  oauthHelp?: string;
+  warning?: string;
 };

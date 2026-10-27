@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist_Mono, Manrope } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { TooltipProvider } from '@/components/verre/ui/menu';
 import { Toaster } from '@/components/verre/ui/toast';
@@ -25,10 +27,11 @@ export const metadata: Metadata = {
   icons: { icon: ICON },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// La langue vient du cookie (src/i18n/request.ts) : le site, la connexion et l'app lisent les mêmes messages.
+export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="fr"
+      lang={await getLocale()}
       data-theme="dark"
       className={`${manrope.variable} ${geistMono.variable}`}
       suppressHydrationWarning
@@ -38,10 +41,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body>
-        <TooltipProvider>
-          {children}
-          <Toaster />
-        </TooltipProvider>
+        <NextIntlClientProvider>
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

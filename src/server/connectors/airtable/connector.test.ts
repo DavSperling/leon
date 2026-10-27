@@ -146,7 +146,7 @@ describe('airtable : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('airtable')).toBe(airtableConnector);
-    const entry = listCatalog().find((item) => item.id === 'airtable');
+    const entry = listCatalog('fr').find((item) => item.id === 'airtable');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((f) => [f.name, f.kind])).toEqual([
       ['token', 'secret'],
@@ -238,7 +238,7 @@ describe('airtable : verify', () => {
     const failure = await airtableConnector.verify(two, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe(`Base Airtable inaccessible : ${OTHER_BASE}`);
+    expect((failure as Error).message).toBe(`Airtable base not accessible: ${OTHER_BASE}`);
     expect((failure as ConnectorHttpError).status).toBe(status); // une erreur de saisie, pas une panne
   });
 });
@@ -859,7 +859,7 @@ describe('airtable : configuration du bouton', () => {
   });
 
   it('annonce le bouton dans le catalogue : ce qu’on verra chez Airtable, rien à saisir avant, clé gardée', () => {
-    const entry = listCatalog().find((item) => item.id === 'airtable');
+    const entry = listCatalog('fr').find((item) => item.id === 'airtable');
     expect(entry?.oauthHelp).toMatch(/Airtable/);
     expect(entry?.oauthHelp).toMatch(/bases/);
     expect(entry?.oauthHelp).toMatch(/écrire/);
@@ -916,7 +916,7 @@ describe('airtable : jeton OAuth', () => {
     const failure = await airtableConnector.verify(chosen, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe(`Base Airtable inaccessible : ${OTHER_BASE}`);
+    expect((failure as Error).message).toBe(`Airtable base not accessible: ${OTHER_BASE}`);
     expect((failure as ConnectorHttpError).status).toBe(403);
   });
 
@@ -931,7 +931,7 @@ describe('airtable : jeton OAuth', () => {
       .catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(NothingToReadError);
-    expect((failure as Error).message).toBe('Aucune base Airtable autorisée');
+    expect((failure as Error).message).toBe('No Airtable base authorized');
   });
 
   it('verify refuse un accès retiré (401)', async () => {

@@ -26,11 +26,11 @@ import { BRIEFING_READ_DAYS, requestBriefingRefreshNow } from './queue';
 
 // Ce que la route et l'outil rendent tant qu'aucun point n'est prêt (le recalcul est alors en file).
 export const BRIEFING_PENDING_MARKDOWN =
-  'Pas encore de point pour ce projet : il sera prêt à la prochaine session.';
+  'No briefing for this project yet: it will be ready at your next session.';
 // Ce qu'ils rendent quand aucun point n'est prêt et que le serveur n'a pas de modèle (getLlm rend null) : le worker
 // ne prépare alors aucun point, et promettre « à la prochaine session » serait faux. Rien n'est mis en file.
 export const BRIEFING_NO_MODEL_MARKDOWN =
-  "Le point du matin n'est pas préparé : aucun modèle n'est réglé sur ce serveur.";
+  'The morning briefing is not prepared: no model is configured on this server.';
 // Borne le texte ET la réflexion du modèle (llm.ts) : 250 mots en prennent environ 600, la réflexion de l'effort
 // « medium » quelques milliers. De la marge, pour ne jamais couper le point avant son premier mot.
 const BRIEFING_MAX_TOKENS = 8000;

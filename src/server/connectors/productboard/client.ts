@@ -48,7 +48,7 @@ function cursorOf(next: string): string {
     } catch {
       // adresse illisible : refusée ci-dessous
     }
-    throw new ConnectorHttpError(null, 'Réponse inattendue');
+    throw new ConnectorHttpError(null, 'Unexpected response');
   }
   return next;
 }
@@ -80,7 +80,7 @@ export function productboardClient(token: string, http: ConnectorHttp) {
         cursors.add(next);
         pageCursor = next;
       }
-      throw new ConnectorHttpError(null, 'Productboard : trop de pages de notes à lire');
+      throw new ConnectorHttpError(null, 'Productboard: too many pages of notes to read');
     },
   };
 }

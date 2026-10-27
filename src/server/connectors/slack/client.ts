@@ -67,12 +67,11 @@ export function slackClient(http: ConnectorHttp) {
     if (!answer.ok) {
       const code = /^[a-z_]{1,60}$/.test(answer.error ?? '') ? (answer.error ?? '') : 'erreur';
       if (AUTH_ERRORS.has(code)) throw new ConnectorAuthError(PROVIDER_LABELS.slack, 403);
-      if (code === 'ratelimited')
-        throw new ConnectorHttpError(429, 'Limite de requêtes de Slack atteinte');
-      throw new ConnectorHttpError(null, `Slack a répondu ${code}`);
+      if (code === 'ratelimited') throw new ConnectorHttpError(429, 'Slack rate limit reached');
+      throw new ConnectorHttpError(null, `Slack responded with ${code}`);
     }
     const parsed = schema.safeParse(answer);
-    if (!parsed.success) throw new ConnectorHttpError(200, 'Réponse inattendue');
+    if (!parsed.success) throw new ConnectorHttpError(200, 'Unexpected response');
     return parsed.data;
   }
 

@@ -33,7 +33,7 @@
 //   ses crochets y mettrait des crochets de Leon) ;
 // - écrit dans un fichier voisin puis le renomme, à travers un lien symbolique éventuel, et refuse d'écrire si le
 //   fichier a changé pendant que l'utilisateur confirmait ;
-// - répond en français, sans rien modifier, à une écriture impossible (droits, disque plein) ou à un fichier qui est
+// - répond clairement, sans rien modifier, à une écriture impossible (droits, disque plein) ou à un fichier qui est
 //   un lien symbolique vers un fichier absent ;
 // - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
 //   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
@@ -85,13 +85,13 @@ const HOOKS: readonly HookSpec[] = [
     event: 'SessionStart',
     subcommand: 'briefing',
     timeout: SESSION_START_TIMEOUT_S,
-    role: "au démarrage d'une session, affiche le point du matin du projet : Claude Code l'ajoute au contexte de la session.",
+    role: "at the start of a session, prints the project's morning briefing: Claude Code adds it to the session context.",
   },
   {
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'à la fin de chaque session, envoie le texte des échanges à Leon (secrets masqués) ; la conversation reste privée à son auteur.',
+    role: 'at the end of every session, sends the text of the exchanges to Leon (secrets masked); the conversation stays private to its author.',
   },
 ];
 
@@ -131,10 +131,10 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
   const pattern = leonCommandPattern(spec.subcommand);
 
   const hooksRoot = root.hooks ?? {};
-  if (!isRecord(hooksRoot)) throw new SettingsShapeError('la clé « hooks » doit être un objet');
+  if (!isRecord(hooksRoot)) throw new SettingsShapeError('the "hooks" key must be an object');
   const groups = hooksRoot[spec.event] ?? [];
   if (!Array.isArray(groups)) {
-    throw new SettingsShapeError(`« hooks.${spec.event} » doit être une liste`);
+    throw new SettingsShapeError(`"hooks.${spec.event}" must be an array`);
   }
 
   let found = false;
@@ -143,7 +143,7 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
   for (const group of groups) {
     if (!isRecord(group) || !Array.isArray(group.hooks)) {
       throw new SettingsShapeError(
-        `chaque groupe de « hooks.${spec.event} » doit être un objet avec une liste « hooks »`,
+        `each group in "hooks.${spec.event}" must be an object with a "hooks" array`,
       );
     }
     const handlers: unknown[] = [];
@@ -248,12 +248,13 @@ export type InstallDeps = {
 };
 
 const ACTION_LABELS: Record<HookChange['action'], string> = {
-  ajout: 'ajout',
-  'mise-a-jour': 'mise à jour',
-  inchange: 'déjà en place',
+  ajout: 'add',
+  'mise-a-jour': 'update',
+  inchange: 'already in place',
 };
 
-const README_HINT = "voir le README, section « L'IA à jour chaque matin »";
+// Le README est en français : la section citée garde son titre exact.
+const README_HINT = `see the README, section "L'IA à jour chaque matin"`;
 
 // Les réglages du serveur que les deux commandes liront à chaque lancement : le `.env.local` du dépôt (le script
 // `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de `pnpm --dir`).
@@ -271,9 +272,9 @@ async function serverEnvWarnings(repoDir: string): Promise<string[]> {
     parseServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN });
     return [];
   } catch (error) {
-    const problem = error instanceof Error ? error.message : 'réglages du serveur invalides.';
+    const problem = error instanceof Error ? error.message : 'invalid server settings.';
     return [
-      `Attention : ${envPath} ne donne pas au serveur de quoi se connecter : ${problem} Sans cela, les deux commandes ne font rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas (ignorez ce message si vous posez ces deux variables dans l'environnement qui lance Claude Code).`,
+      `Warning: ${envPath} does not give the commands what they need to reach the server: ${problem} Without these, both commands do nothing and say so only on stderr, which Claude Code does not show (ignore this if you set both variables in the environment that starts Claude Code).`,
     ];
   }
 }
@@ -282,12 +283,12 @@ async function warnings(settings: Json, repoDir: string): Promise<string[]> {
   const found: string[] = [];
   if (settings.disableAllHooks === true) {
     found.push(
-      "Attention : « disableAllHooks » vaut true dans ces réglages ; tant qu'il y reste, Claude Code n'exécute aucun crochet.",
+      'Warning: "disableAllHooks" is true in these settings; as long as it stays that way, Claude Code runs no hooks.',
     );
   }
   if (repoDir.includes('/.claude/worktrees/')) {
     found.push(
-      `Attention : ${repoDir} est un dossier de travail Git temporaire : s'il est supprimé, les crochets cesseront de marcher. Lancez la commande depuis le clone principal de Leon, ou donnez-le avec --depot <chemin>.`,
+      `Warning: ${repoDir} is a temporary Git worktree: if it is deleted, the hooks will stop working. Run the command from the main Leon clone, or pass that clone with --depot <path>.`,
     );
   }
   found.push(...(await serverEnvWarnings(repoDir)));
@@ -301,31 +302,31 @@ type BackupPlan =
 
 function backupLine(backup: BackupPlan): string {
   const untouched =
-    'Vos autres réglages et crochets ne sont pas touchés (leurs valeurs et leur ordre restent ; la mise en page du fichier peut changer)';
+    'Your other settings and hooks are not touched (their values and order stay; the formatting of the file may change)';
   if (backup.kind === 'none') {
-    return `Le fichier n'existe pas encore : il sera créé. ${untouched}.`;
+    return `The file does not exist yet: it will be created. ${untouched}.`;
   }
   if (backup.kind === 'keep') {
-    return `${untouched}. ${backup.path} existe déjà : cette première copie est gardée telle quelle, l'ancien fichier n'y est pas recopié.`;
+    return `${untouched}. ${backup.path} already exists: that first copy is kept as is, and the current file is not copied over it.`;
   }
-  return `${untouched} ; l'ancien fichier est copié dans ${backup.path}.`;
+  return `${untouched}; the old file is copied to ${backup.path}.`;
 }
 
 function preview(path: string, changes: HookChange[], backup: BackupPlan): string[] {
-  const lines = [`Crochets de Leon pour ${path} :`, ''];
+  const lines = [`Leon hooks for ${path}:`, ''];
   for (const change of changes) {
     const spec = HOOKS.find((hook) => hook.event === change.event);
     lines.push(
-      `  ${change.event} · délai ${change.timeout} s · ${ACTION_LABELS[change.action]}`,
+      `  ${change.event} · timeout ${change.timeout} s · ${ACTION_LABELS[change.action]}`,
       `    ${change.command}`,
       `    ${spec?.role ?? ''}`,
       '',
     );
   }
   lines.push(
-    'Ce qui sera envoyé : ces crochets sont dans vos réglages personnels, donc à la fin de TOUTES vos sessions Claude Code, dans TOUS vos dossiers (personnels compris), le texte des échanges part vers le serveur de Leon (secrets masqués). Les sessions lancées par un script (`claude -p`) sont envoyées aussi, sauf avec `--bare`, qui ne charge aucun crochet.',
-    'Les deux commandes parlent au serveur de LEON_URL, avec LEON_TOKEN, lus dans le fichier .env.local du dépôt.',
-    'Elles demandent `pnpm` (de la version du champ « packageManager » de package.json : une autre version irait chercher la bonne sur le réseau et dépasserait le délai) et `node` 24 ou plus dans le PATH de Claude Code, que ne voit pas toujours un Claude Code lancé depuis un éditeur ou une application.',
+    'What will be sent: these hooks are in your personal settings, so at the end of ALL your Claude Code sessions, in ALL your folders (personal ones included), the text of the exchanges is sent to the Leon server (secrets masked). Sessions started by a script (`claude -p`) are sent too, except with `--bare`, which loads no hooks.',
+    'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
+    'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
     backupLine(backup),
   );
   return lines;
@@ -355,7 +356,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   const backup = join(options.configDir, BACKUP_FILE);
   const refuse = (problem: string): number => {
     deps.err(
-      `Leon : ${path} ${problem} Rien n'a été écrit. Corrigez le fichier puis relancez la commande, ou ajoutez les crochets à la main (${README_HINT}).`,
+      `Leon: ${path} ${problem} Nothing was written. Fix the file and run the command again, or add the hooks by hand (${README_HINT}).`,
     );
     return 1;
   };
@@ -363,7 +364,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   const loaded = await load(path);
   const unreadable = () =>
     refuse(
-      "est illisible : ce n'est pas un objet JSON valide (Claude Code lit du JSON strict, sans commentaire ni virgule finale) ou le fichier est inaccessible (droits, lien symbolique vers un fichier absent).",
+      'is unreadable: it is not a valid JSON object (Claude Code reads strict JSON, with no comments or trailing commas) or the file is inaccessible (permissions, symbolic link to a missing file).',
     );
   if (loaded.kind === 'unreadable') return unreadable();
   let settings: Json = {};
@@ -383,13 +384,13 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     plan = addLeonHooks(settings, options.repoDir);
   } catch (error) {
     if (!(error instanceof SettingsShapeError)) throw error;
-    return refuse(`n'a pas la forme attendue (${error.message}).`);
+    return refuse(`does not have the expected shape (${error.message}).`);
   }
 
   const alerts = await warnings(settings, options.repoDir);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
-    deps.out(`Les deux crochets de Leon sont déjà en place dans ${path} : rien à faire.`);
+    deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
     return 0;
   }
 
@@ -402,9 +403,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   }
   for (const line of alerts) deps.out(`\n${line}`);
   if (!options.assumeYes) {
-    const answer = await deps.ask('\nÉcrire ces crochets ? [o/N] ');
+    const answer = await deps.ask('\nWrite these hooks? [y/N] ');
     if (!isYes(answer)) {
-      deps.out("Rien n'a été écrit.");
+      deps.out('Nothing was written.');
       return 0;
     }
   }
@@ -413,7 +414,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   // on ne l'écrase pas.
   if (!sameLoaded(loaded, await load(path))) {
     deps.err(
-      `Leon : ${path} a changé pendant l'installation. Rien n'a été écrit : relancez la commande.`,
+      `Leon: ${path} changed during the installation. Nothing was written: run the command again.`,
     );
     return 1;
   }
@@ -429,15 +430,15 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     if (backupCreated) await unlink(backup).catch(() => {});
     const code = (error as NodeJS.ErrnoException | null)?.code;
     deps.err(
-      `Leon : impossible d'écrire ${path} (droits ou espace disque${typeof code === 'string' ? ` : ${code}` : ''}). Rien n'a été modifié : ajoutez les crochets à la main (${README_HINT}).`,
+      `Leon: could not write ${path} (permissions or disk space${typeof code === 'string' ? `: ${code}` : ''}). Nothing was modified: add the hooks by hand (${README_HINT}).`,
     );
     return 1;
   }
 
-  deps.out(`\nCrochets installés dans ${path}.`);
-  if (backupCreated) deps.out(`L'ancien fichier est copié dans ${backup}.`);
+  deps.out(`\nHooks installed in ${path}.`);
+  if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
   deps.out(
-    `Claude Code relit ce fichier tout seul ; sinon, ils servent dès le prochain démarrage. Pour les retirer, supprimez ces deux entrées (${README_HINT}).`,
+    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, delete these two entries (${README_HINT}).`,
   );
   return 0;
 }

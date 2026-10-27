@@ -176,7 +176,7 @@ describe('GET /api/v1/briefing, sans modèle sur le serveur', () => {
       preparedAt: null,
     });
     expect(BRIEFING_NO_MODEL_MARKDOWN).toBe(
-      "Le point du matin n'est pas préparé : aucun modèle n'est réglé sur ce serveur.",
+      'The morning briefing is not prepared: no model is configured on this server.',
     );
     expect(await jobsFor(alice, project)).toEqual([]);
   });

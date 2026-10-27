@@ -12,4 +12,12 @@ export const driveCatalog: CatalogEntry = {
   triedForReal: true,
   warning:
     'Le texte des fichiers reste privé, comme une conversation : vous seul le voyez. Les PDF, fichiers Word et images ne sont pas lus. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'The connection goes through Pipedream, the service that holds the access for Leon: Google asks you to authorize “Pipedream” to view, edit, and delete your Drive files. Leon only reads Google documents, presentations, and spreadsheets, and text files; it changes nothing.',
+    warning:
+      'The text of files stays private, like a conversation: only you can see it. PDFs, Word files, and images are not read. The access is held by Pipedream, hosted in the United States.',
+  },
 };

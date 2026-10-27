@@ -24,4 +24,17 @@ export const githubCatalog: CatalogEntry = {
   docsUrl:
     'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
   triedForReal: false,
+  en: {
+    fields: {
+      token: { label: 'Fine-grained access token' },
+      repos: {
+        label: 'Repositories',
+        help: 'One repository per line, as owner/name (20 max). Repository not accessible? An organization may require the token to be approved by an admin.',
+      },
+    },
+    keyHelp:
+      'On github.com: Settings › Developer settings › Personal access tokens › Fine-grained tokens; choose the account or organization that owns the repositories as the resource owner, limit access to the repositories you want, and give it read access to Issues, Pull requests, and Metadata.',
+    oauthHelp:
+      'Leon reads the issues and pull requests of the repositories where you install its GitHub app. The access also allows writing to them; Leon doesn’t use it yet and doesn’t read code yet.',
+  },
 };

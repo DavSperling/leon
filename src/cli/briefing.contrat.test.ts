@@ -167,7 +167,7 @@ describe('leon briefing : la vraie commande', () => {
 
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
-      expect(outcome.stderr).toMatch(/^Leon : briefing indisponible/);
+      expect(outcome.stderr).toMatch(/^Leon: briefing unavailable/);
       expect(outcome.seconds).toBeLessThan(MAX_SECONDS + 1);
       const everything = [outcome.stdout, outcome.stderr, ...received.map((r) => r.url.href)];
       for (const text of everything) {

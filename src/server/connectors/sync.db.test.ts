@@ -231,7 +231,7 @@ describe('runConnectorSync : une clé refusée ou une panne', () => {
       next_sync_at: null,
       cursor: '100',
       sync_lock_at: null,
-      last_error: 'Clé refusée par GitHub : vérifiez-la ou remplacez-la.',
+      last_error: 'GitHub rejected the key: check it or replace it.',
     });
     expect((await sourceCount(id)).total).toBe(100);
   });
@@ -247,7 +247,7 @@ describe('runConnectorSync : une clé refusée ou une panne', () => {
     expect(result).toBe('error');
     const row = await readRow(id);
     expect(row).toMatchObject({ status: 'error', sync_lock_at: null, cursor: null });
-    expect(row.last_error).toBe('GitHub a répondu 500');
+    expect(row.last_error).toBe('GitHub responded with 500');
     expectDelayAbout(row, 60 * MINUTE);
   });
 
@@ -270,7 +270,7 @@ describe('runConnectorSync : une clé refusée ou une panne', () => {
     expect(result).toBe('error');
     expect(fetchImpl.calls).toHaveLength(4);
     const { last_error } = await readRow(id);
-    expect(last_error).toBe('GitHub a répondu 503');
+    expect(last_error).toBe('GitHub responded with 503');
     expect(last_error).not.toContain('corps-secret-xyz');
     expect(last_error).not.toContain('secret-de-test');
   });
@@ -339,7 +339,7 @@ describe('runConnectorSync : ce qui ne se synchronise pas', () => {
     const row = await readRow(id);
     expect(row).toMatchObject({
       status: 'error',
-      last_error: 'Connecteur indisponible',
+      last_error: 'Connector unavailable',
       sync_lock_at: null,
     });
     expectDelayAbout(row, 60 * MINUTE);
@@ -356,7 +356,7 @@ describe('runConnectorSync : ce qui ne se synchronise pas', () => {
 
     expect(await readRow(id)).toMatchObject({
       status: 'error',
-      last_error: "Configuration illisible : rebranchez l'outil",
+      last_error: 'Unreadable configuration: reconnect the tool',
       sync_lock_at: null,
     });
     expect((await sourceCount(id)).total).toBe(0);
@@ -375,7 +375,7 @@ describe('runConnectorSync : ce qui ne se synchronise pas', () => {
     const row = await readRow(target);
     expect(row).toMatchObject({
       status: 'error',
-      last_error: 'Clé illisible : remplacez-la.',
+      last_error: 'Unreadable key: replace it.',
       sync_lock_at: null,
     });
     expectDelayAbout(row, 60 * MINUTE);
@@ -521,7 +521,7 @@ describe('runConnectorSync : une connexion OAuth', () => {
       status: 'error',
       next_sync_at: null,
       sync_lock_at: null,
-      last_error: "Reconnectez GitHub : l'autorisation a expiré.",
+      last_error: 'Reconnect GitHub: the authorization has expired.',
     });
   });
 
@@ -557,7 +557,7 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect(await readRow(id)).toMatchObject({
       status: 'error',
       next_sync_at: null,
-      last_error: "Reconnectez GitHub : l'autorisation a été retirée.",
+      last_error: 'Reconnect GitHub: the authorization was revoked.',
     });
   });
 
@@ -568,17 +568,15 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect(await run(id, refusesOldAccess(true, 403), { fetchImpl })).toBe('auth_error');
 
     expect(fetchImpl.calls).toHaveLength(0);
-    expect((await readRow(id)).last_error).toBe(
-      "Reconnectez GitHub : l'autorisation a été retirée.",
-    );
+    expect((await readRow(id)).last_error).toBe('Reconnect GitHub: the authorization was revoked.');
   });
 
   // Audit 3 n° 15 : la relève partie avec les anciens jetons échoue après un « Reconnecter » ; la connexion
-  // reste celle de la reconnexion (active, sans erreur, échéance maintenant) au lieu de « Reconnectez ».
+  // reste celle de la reconnexion (active, sans erreur, échéance maintenant) au lieu de « Reconnect ».
   it('garde le statut posé par un « Reconnecter » fait pendant la relève qui échoue', async () => {
     const id = await oauthConnection({ refreshToken: null });
     await adminPool.query(
-      "update connections set status = 'error', last_error = 'Reconnectez GitHub' where id = $1",
+      "update connections set status = 'error', last_error = 'Reconnect GitHub' where id = $1",
       [id],
     );
     const reconnectedMidway: AnyConnector = {
@@ -618,7 +616,7 @@ describe('runConnectorSync : une connexion OAuth', () => {
     const row = await readRow(id);
     expect(row).toMatchObject({
       status: 'error',
-      last_error: "L'appli GitHub n'est plus configurée sur ce serveur.",
+      last_error: 'The GitHub app is no longer configured on this server.',
     });
     expectDelayAbout(row, 60 * MINUTE);
   });
@@ -630,9 +628,7 @@ describe('runConnectorSync : une connexion OAuth', () => {
     expect(await run(id, refusesOldAccess(true), { fetchImpl })).toBe('auth_error');
 
     expect(fetchImpl.calls).toHaveLength(0);
-    expect((await readRow(id)).last_error).toBe(
-      "Reconnectez GitHub : l'autorisation a été retirée.",
-    );
+    expect((await readRow(id)).last_error).toBe('Reconnect GitHub: the authorization was revoked.');
   });
 });
 
@@ -717,7 +713,7 @@ describe('runConnectorSync : connexion Pipedream', () => {
     expect([8, 11, 14, 17]).toContain(rows[0]?.hour);
   });
 
-  it('un accès retiré chez Google arrête la connexion : « Reconnectez Gmail »', async () => {
+  it('un accès retiré chez Google arrête la connexion : « Reconnect Gmail »', async () => {
     const id = await pipedreamConnection('david@acme.test');
     const fetchImpl = fakeFetch([
       {
@@ -731,7 +727,7 @@ describe('runConnectorSync : connexion Pipedream', () => {
     expect(await run(id, gmailConnector, { fetchImpl, sleep: async () => {} })).toBe('auth_error');
 
     const row = await readRow(id);
-    expect(row.last_error).toBe("Reconnectez Gmail : l'autorisation a été retirée.");
+    expect(row.last_error).toBe('Reconnect Gmail: the authorization was revoked.');
     expect(row.next_sync_at).toBeNull();
   });
 });

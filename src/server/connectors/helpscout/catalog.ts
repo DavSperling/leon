@@ -25,4 +25,22 @@ export const helpscoutCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Plan Standard ou supérieur requis (pas d’API en gratuit). L’appli doit être créée par un utilisateur actif du compte, qui doit avoir accès aux boîtes à lire.',
+  en: {
+    fields: {
+      appId: {
+        label: 'App ID',
+        help: 'The ID (App ID) shown on the page of the app you created.',
+      },
+      appSecret: {
+        label: 'App secret',
+        help: 'The secret (App Secret) of the same app. Leon only reads conversations.',
+      },
+    },
+    keyHelp:
+      'In Help Scout: Your Profile › My apps › Create My App (any redirect URL will do, for example https://example.com), then copy the app’s ID (App ID) and secret (App Secret).',
+    oauthHelp:
+      'Help Scout asks you to authorize Leon. Its access follows your permissions in Help Scout (the API has no separate permissions), but Leon only reads conversations. You must be an active user of the account.',
+    warning:
+      'Standard plan or higher required (no API on the free plan). The app must be created by an active user of the account, who must have access to the mailboxes to read.',
+  },
 };

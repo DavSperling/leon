@@ -12,7 +12,7 @@ export const ingestRoutes = new Hono<ApiEnv>()
     requireApiToken,
     bodyLimit({
       maxSize: INGEST_BODY_MAX_BYTES,
-      onError: (c) => c.json({ error: 'Requête trop volumineuse' }, 413),
+      onError: (c) => c.json({ error: 'Request too large' }, 413),
     }),
     async (c) => {
       const body = await c.req.json().catch(() => undefined);
@@ -23,7 +23,7 @@ export const ingestRoutes = new Hono<ApiEnv>()
           path: issue.path.join('.'),
           code: issue.code,
         }));
-        return c.json({ error: 'Requête invalide', issues }, 400);
+        return c.json({ error: 'Invalid request', issues }, 400);
       }
       const result: IngestResult = await ingestTurns(c.var.ctx, parsed.data);
       return c.json(result, 202);

@@ -64,7 +64,7 @@ async function getCalls<T>(
   } catch (error) {
     // 402 : le forfait de l'entreprise est inactif, la clé n'y est pour rien.
     if (error instanceof ConnectorHttpError && error.status === 402) {
-      throw new ConnectorHttpError(402, 'Abonnement Leexi inactif');
+      throw new ConnectorHttpError(402, 'Leexi subscription inactive');
     }
     throw error;
   }

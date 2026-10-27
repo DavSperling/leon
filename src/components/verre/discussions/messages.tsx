@@ -13,12 +13,7 @@ import {
   CollapsibleTrigger,
   GlassCard,
 } from '@/components/verre';
-import {
-  DISCUSSION_EMPTY,
-  DISCUSSION_LIMIT_NOTE,
-  DISCUSSION_REFUSAL,
-  type DiscussionCitation,
-} from '@/lib/discussion-events';
+import { type DiscussionCitation, replyParts } from '@/lib/discussion-events';
 import { cn, duration, ease, nb } from '@/lib/verre';
 
 // Un message du fil : la question (bulle à droite) ou la carte « ✦ Leon » : activité, texte en flux, renvois, sources
@@ -34,13 +29,6 @@ export type OpenCitation = (
 
 const titleOf = (citation: DiscussionCitation, fallback: string): string =>
   citation.title?.trim() || fallback;
-
-/** Une limite atteinte s'ajoute à la fin du texte (finalReplyText) : affichée à part, en note. */
-function splitLimit(text: string): [string, string | null] {
-  return text.endsWith(DISCUSSION_LIMIT_NOTE)
-    ? [text.slice(0, -DISCUSSION_LIMIT_NOTE.length).trimEnd(), DISCUSSION_LIMIT_NOTE]
-    : [text, null];
-}
 
 /** Lignes de sources (citées, ou résultats d'origine d'une question) : numéro, titre qui ouvre l'aperçu, original. */
 function SourceRows({
@@ -222,8 +210,11 @@ export function LeonCard({
 }: LeonCardProps) {
   const t = useTranslations('discussionView');
   const byN = new Map(citations.map((c) => [c.n, c]));
-  const [main, limit] = splitLimit(content);
-  const fixed = content === DISCUSSION_REFUSAL || content === DISCUSSION_EMPTY;
+  // Une phrase fixe (refus, rien trouvé) s'affiche traduite ; une limite atteinte, à part, en note.
+  const reply = replyParts(content);
+  const fixed = reply.fixed !== null;
+  const main = reply.fixed ? t(reply.fixed) : reply.main;
+  const limit = reply.limit ? t('limitNote') : null;
   return (
     <Beam active={Boolean(live)} className="rounded-box">
       <GlassCard

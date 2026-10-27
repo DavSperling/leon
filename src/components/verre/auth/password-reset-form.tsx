@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import {
   type AuthFormState,
@@ -12,13 +13,14 @@ import { Notice } from '@/components/verre/ui/feedback';
 import { Field, Input } from '@/components/verre/ui/form';
 
 export function RequestPasswordResetForm() {
+  const t = useTranslations('auth');
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     requestPasswordResetAction,
     {},
   );
   return (
     <form action={action} className="mt-6 grid gap-4">
-      <Field label="E-mail" error={state.errors?.email}>
+      <Field label={t('email')} error={state.errors?.email}>
         <Input name="email" type="email" autoComplete="email" autoFocus />
       </Field>
       {state.errors?.form && (
@@ -33,29 +35,26 @@ export function RequestPasswordResetForm() {
       )}
       {!state.message && (
         <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-          Envoyer le lien
+          {t('sendLink')}
         </Button>
       )}
       <Link href="/connexion" className="text-ui text-accent underline underline-offset-4">
-        Retour à la connexion
+        {t('backToSignIn')}
       </Link>
     </form>
   );
 }
 
 export function ResetPasswordForm({ token }: { token: string }) {
+  const t = useTranslations('auth');
   const [state, action, pending] = useActionState<AuthFormState, FormData>(resetPasswordAction, {});
   return (
     <form action={action} className="mt-6 grid gap-4">
       <input type="hidden" name="token" value={token} />
-      <Field
-        label="Nouveau mot de passe"
-        help="8 caractères minimum."
-        error={state.errors?.password}
-      >
+      <Field label={t('newPassword')} help={t('passwordHint')} error={state.errors?.password}>
         <Input name="password" type="password" autoComplete="new-password" autoFocus />
       </Field>
-      <Field label="Confirmer le mot de passe" error={state.errors?.confirmation}>
+      <Field label={t('confirmPassword')} error={state.errors?.confirmation}>
         <Input name="confirmation" type="password" autoComplete="new-password" />
       </Field>
       {state.errors?.form && (
@@ -69,12 +68,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
             {state.message}
           </Notice>
           <Link href="/connexion" className="text-ui text-accent underline underline-offset-4">
-            Se connecter
+            {t('signIn')}
           </Link>
         </>
       ) : (
         <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-          Changer le mot de passe
+          {t('changePassword')}
         </Button>
       )}
     </form>

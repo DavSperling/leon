@@ -36,7 +36,7 @@ describe('handleApiError', () => {
     const response = await failing(new Error('fuite')).request('/');
     expect(response.status).toBe(500);
     const text = await response.text();
-    expect(JSON.parse(text)).toEqual({ error: 'Erreur interne' });
+    expect(JSON.parse(text)).toEqual({ error: 'Internal error' });
     expect(text).not.toContain('fuite');
     expect(spy).toHaveBeenCalledOnce();
   });

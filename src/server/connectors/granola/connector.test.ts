@@ -98,7 +98,7 @@ describe('verify', () => {
 
     const { account } = await granolaConnector.verify(CONFIG, http);
 
-    expect(account).toMatch(/aucune note/);
+    expect(account).toMatch(/no readable notes/);
   });
 
   it('lève ConnectorAuthError quand la clé est refusée', async () => {

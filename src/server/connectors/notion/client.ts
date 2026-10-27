@@ -29,7 +29,7 @@ const Me = z.object({
 });
 
 // Un résultat de recherche est une page entière, ou seulement { object, id } quand la connexion n'a
-// pas le droit de lire le contenu : ce second cas est refusé par ce schéma (« Réponse inattendue »).
+// pas le droit de lire le contenu : ce second cas est refusé par ce schéma (« Unexpected response »).
 const Page = z.object({
   object: z.literal('page'),
   id: z.string(),

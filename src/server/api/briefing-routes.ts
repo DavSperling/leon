@@ -19,7 +19,7 @@ const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN);
 export const briefingRoutes = new Hono<ApiEnv>().get('/briefing', requireApiToken, async (c) => {
   const project = ProjectSchema.safeParse(c.req.query(BRIEFING_PROJECT_PARAM));
   // Sans la valeur reçue : une adresse de remote peut porter un jeton.
-  if (!project.success) return c.json({ error: 'Projet manquant ou invalide' }, 400);
+  if (!project.success) return c.json({ error: 'Missing or invalid project' }, 400);
   return c.json(
     await briefingResponse(c.var.ctx, project.data, { modelReady: getLlm(env) !== null }),
   );

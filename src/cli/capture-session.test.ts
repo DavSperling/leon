@@ -154,6 +154,17 @@ describe('captureSessionFromHook : une session qui se termine', () => {
     expect(payload?.turns.map((turn) => turn.external_id)).toEqual(['u-1', 'u-2', 'u-4']);
   });
 
+  it('dit combien de tours sont nouveaux, au pluriel comme au singulier', async () => {
+    const many = makeDeps();
+    await captureSessionFromHook(HOOK, many.deps);
+    expect(stderrText()).toContain('session captured (2 new turns, 0 already known).');
+
+    stderr.mockClear();
+    const one = makeDeps({ send: async () => ({ ...RESULT, inserted: 1, skipped: 3 }) });
+    await captureSessionFromHook(HOOK, one.deps);
+    expect(stderrText()).toContain('session captured (1 new turn, 3 already known).');
+  });
+
   it('sans remote, la clé est celle du dossier', async () => {
     const { deps, send } = makeDeps({ remote: null });
 
@@ -360,9 +371,9 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
 
-    expect(stderrText()).toMatch(/ne reconnaît pas cet envoi/);
-    expect(stderrText()).toMatch(/plus ancien/);
-    expect(stderrText()).not.toMatch(/injoignable/);
+    expect(stderrText()).toMatch(/does not recognize this upload/);
+    expect(stderrText()).toMatch(/older than the CLI/);
+    expect(stderrText()).not.toMatch(/unreachable/);
     expect(stderrText()).not.toContain('MOT-DU-SERVEUR');
     expect(refusing).toHaveBeenCalledTimes(1);
   });
@@ -373,15 +384,15 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
 
     await captureSessionFromHook(HOOK, deps);
 
-    expect(stderrText()).toMatch(/injoignable ou réponse inattendue/);
-    expect(stderrText()).not.toMatch(/ne reconnaît pas/);
+    expect(stderrText()).toMatch(/unreachable or unexpected response/);
+    expect(stderrText()).not.toMatch(/does not recognize/);
   });
 
   it("l'erreur d'envoi porte le code de la réponse, sans la citer dans son message", () => {
     const error = new IngestResponseError(400);
 
     expect(error.status).toBe(400);
-    expect(error.message).toBe('Réponse 400 du serveur Leon.');
+    expect(error.message).toBe('Response 400 from the Leon server.');
   });
 });
 
@@ -420,7 +431,7 @@ describe("captureSessionFromHook : les lots les plus récents d'abord", () => {
     expect(received[0]?.[0]).toBe(`u-${total - TURNS_PER_BATCH_MAX}`);
     expect(received[1]?.at(-1)).toBe(`u-${total - TURNS_PER_BATCH_MAX - 1}`);
     expect(received.flat()).not.toContain('u-0'); // le début, lui, attendra la capture suivante
-    expect(stderrText()).toMatch(/trop lent|délai/);
+    expect(stderrText()).toMatch(/too slow|timeout/);
   });
 
   it("dans chaque lot, les tours restent dans l'ordre de la conversation", async () => {
@@ -548,7 +559,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
 
       expect(code).toBe(0);
       expect(stderr).toHaveBeenCalled();
-      expect(stderrText()).toMatch(/^Leon : /);
+      expect(stderrText()).toMatch(/^Leon: /);
       expect(readSessionFile).not.toHaveBeenCalled();
       expect(send).not.toHaveBeenCalled();
     },
@@ -572,7 +583,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
     const code = await captureSessionFromHook(HOOK, deps);
 
     expect(code).toBe(0);
-    expect(stderrText()).toMatch(/introuvable|illisible/);
+    expect(stderrText()).toMatch(/not found|unreadable/);
     expect(stderrText()).not.toContain('MOT-DE-L-ERREUR');
     expect(send).not.toHaveBeenCalled();
   });
@@ -597,7 +608,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
     const code = await captureSessionFromHook(HOOK, deps);
 
     expect(code).toBe(0);
-    expect(stderrText()).toMatch(/injoignable/);
+    expect(stderrText()).toMatch(/unreachable/);
     expect(stderrText()).not.toContain('MOT-DE-L-ERREUR');
     expect(stderrText()).not.toContain('ECONNREFUSED');
   });
@@ -610,7 +621,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
-    expect(stderrText()).toMatch(/^Leon : /);
+    expect(stderrText()).toMatch(/^Leon: /);
   });
 
   it('un jeton refusé : code 0 et le message le dit', async () => {
@@ -621,7 +632,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
-    expect(stderrText()).toMatch(/jeton refusé/);
+    expect(stderrText()).toMatch(/token refused/);
     expect(send).toHaveBeenCalledTimes(1);
   });
 
@@ -633,7 +644,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
-    expect(stderrText()).toMatch(/trop lent|délai/);
+    expect(stderrText()).toMatch(/too slow|timeout/);
   });
 
   it("une exception inattendue (même synchrone) ne fait jamais sortir autrement qu'à 0", async () => {
@@ -691,7 +702,7 @@ describe('createHookSender : un délai réseau borné', () => {
     expect(code).toBe(0);
     expect(Date.now() - started).toBeLessThan(2000);
     expect(hangingFetch).toHaveBeenCalledTimes(1);
-    expect(stderrText()).toMatch(/trop lent|délai/);
+    expect(stderrText()).toMatch(/too slow|timeout/);
   });
 });
 

@@ -11,23 +11,23 @@ vi.mock('next/headers', () => ({
 }));
 
 describe('localeOf', () => {
-  it('garde une langue connue, et revient au français pour tout le reste', () => {
+  it('garde une langue connue, et revient à l’anglais pour tout le reste', () => {
     expect(localeOf('fr')).toBe('fr');
     expect(localeOf('en')).toBe('en');
-    expect(localeOf('de')).toBe('fr');
-    expect(localeOf('EN')).toBe('fr');
-    expect(localeOf('')).toBe('fr');
-    expect(localeOf(undefined)).toBe('fr');
+    expect(localeOf('de')).toBe('en');
+    expect(localeOf('FR')).toBe('en');
+    expect(localeOf('')).toBe('en');
+    expect(localeOf(undefined)).toBe('en');
   });
 });
 
 // Le setup des tests remplace getRequestConfig par l'identité : l'export par défaut est la fonction elle-même.
 describe('la configuration de chaque requête', () => {
   it.each([
-    ['sans cookie', undefined, 'fr'],
+    ['sans cookie', undefined, 'en'],
     ['cookie fr', 'fr', 'fr'],
     ['cookie en', 'en', 'en'],
-    ['cookie inconnu', 'de', 'fr'],
+    ['cookie inconnu', 'de', 'en'],
   ] as const)('%s : %s', async (_, value, locale) => {
     jar.clear();
     if (value) jar.set(LOCALE_COOKIE, value);

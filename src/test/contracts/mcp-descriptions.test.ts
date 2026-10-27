@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { SOURCE_KINDS } from '@/capture/turn';
 import { MCP_INSTRUCTIONS } from '@/server/mcp/server';
 import {
   FETCH_DESCRIPTION,
@@ -14,7 +14,11 @@ import {
 } from '@/server/mcp/tools/search-tool';
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
 import { queryTerms } from '@/server/search/query-terms';
-import { QUERY_SYNTAX_DESCRIPTION } from '@/server/search/tool-filters';
+import {
+  NATURE_NAMES_EN,
+  QUERY_SYNTAX_DESCRIPTION_EN,
+  readToolFilters,
+} from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
@@ -26,7 +30,7 @@ const description = (schema: { description?: string }): string => schema.descrip
 
 describe('instructions du serveur MCP', () => {
   it("ne nomment, comme filtres de search, que des paramètres de l'outil", () => {
-    const named = /\(filtres : ([^)]+)\)/.exec(MCP_INSTRUCTIONS)?.[1]?.split(', ') ?? [];
+    const named = /\(filters: ([^)]+)\)/.exec(MCP_INSTRUCTIONS)?.[1]?.split(', ') ?? [];
 
     expect(named.length).toBeGreaterThan(0);
     for (const filter of named) expect(searchProperties).toContain(filter);
@@ -41,7 +45,7 @@ describe('instructions du serveur MCP', () => {
 
 describe('description de search', () => {
   it('ne cite en exemple, pour outil, que des outils de Leon', () => {
-    const listed = /Limite à un outil : ([^…]+)…/.exec(
+    const listed = /Limit to one tool: ([^…]+)…/.exec(
       description(SearchInputSchema.shape.outil),
     )?.[1];
     const tools = listed?.split(', ') ?? [];
@@ -50,14 +54,17 @@ describe('description de search', () => {
     for (const tool of tools) expect(SOURCE_KINDS).toContain(tool);
   });
 
-  it('liste les natures du code', () => {
+  it('liste les natures du code, par des noms que la recherche lit', () => {
     const text = description(SearchInputSchema.shape.type);
 
-    for (const nature of ITEM_NATURES) expect(text).toContain(nature);
+    for (const name of NATURE_NAMES_EN) {
+      expect(text).toContain(name);
+      expect(readToolFilters({ type: name }, new Date()), name).not.toHaveProperty('error');
+    }
   });
 
   it('annonce le nombre de sources par page et la dernière page de la recherche', () => {
-    expect(description(SearchInputSchema.shape.page)).toContain(`${PAGE_SIZE} sources par page`);
+    expect(description(SearchInputSchema.shape.page)).toContain(`${PAGE_SIZE} sources per page`);
 
     // Une page au-delà de PAGE_MAX est ramenée à PAGE_MAX par la recherche : l'outil doit refuser au même endroit,
     // sinon il numérote les résultats d'une page qu'il n'a pas rendue. Les deux lisent la même constante
@@ -76,9 +83,9 @@ describe('description de search', () => {
   // T06b : quand la première passe trouve peu de sources, un mot ajouté élargit au lieu de resserrer. La description
   // de `query` donne les deux façons de resserrer, et la recherche les lit bien ainsi.
   it('dit comment resserrer, avec la syntaxe que la recherche lit', () => {
-    expect(description(SearchInputSchema.shape.query)).toContain(QUERY_SYNTAX_DESCRIPTION);
-    expect(QUERY_SYNTAX_DESCRIPTION).toContain('"guillemets droits"');
-    expect(QUERY_SYNTAX_DESCRIPTION).toContain('-mot');
+    expect(description(SearchInputSchema.shape.query)).toContain(QUERY_SYNTAX_DESCRIPTION_EN);
+    expect(QUERY_SYNTAX_DESCRIPTION_EN).toContain('"straight quotes"');
+    expect(QUERY_SYNTAX_DESCRIPTION_EN).toContain('-word');
     const terms = queryTerms('remise "plan b" -ovh');
     expect(terms.phrases).toEqual(['"plan b"']);
     expect(terms.negated).toEqual(['ovh']);
@@ -86,20 +93,20 @@ describe('description de search', () => {
 
   it('dit que le score n’est pas l’ordre des sources', () => {
     const score = SearchOutputSchema.shape.hits.element.shape.score;
-    expect(score.description).toContain('ordre');
+    expect(score.description).toContain('order');
   });
 });
 
 describe('description de fetch', () => {
   it('annonce la longueur maximale lue, celle de la lecture', () => {
-    const spaced = String(SOURCE_MAX_CHARS).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-
-    expect(description(FetchInputSchema.shape.sourceId)).toContain(`${spaced} caractères`);
+    expect(description(FetchInputSchema.shape.sourceId)).toContain(
+      `${SOURCE_MAX_CHARS.toLocaleString('en-US')} characters`,
+    );
   });
 
   it('annonce les tours voisins que la lecture rend', () => {
     expect(description(FetchInputSchema.shape.passageId)).toContain(
-      `les ${NEIGHBOUR_TURNS} tours avant et après`,
+      `the ${NEIGHBOUR_TURNS} turns before and after`,
     );
   });
 

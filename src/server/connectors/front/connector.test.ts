@@ -117,7 +117,7 @@ describe('front : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('front')).toBe(frontConnector);
-    expect(listCatalog().find((item) => item.id === 'front')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'front')?.available).toBe(true);
   });
 });
 

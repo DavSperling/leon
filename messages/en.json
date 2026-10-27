@@ -1,4 +1,72 @@
 {
+  "auth": {
+    "signIn": "Sign in",
+    "createWorkspace": "Create a workspace",
+    "createWorkspaceSubmit": "Create workspace",
+    "joinWorkspace": "Join the workspace",
+    "joinWorkspaceMeta": "Join a workspace",
+    "noAccount": "Don’t have an account?",
+    "haveAccount": "Already have an account?",
+    "invitedTo": "You’ve been invited to the “{name}” workspace.",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "confirmPassword": "Confirm password",
+    "companyName": "Company name",
+    "passwordHint": "At least 8 characters.",
+    "companyHint": "Creates your team’s workspace.",
+    "inviteEmailHint": "An address that doesn’t have a Leon account yet.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "show": "Show",
+    "hide": "Hide",
+    "passwordMinLength": "At least 8 characters",
+    "passwordsMatch": "Passwords match",
+    "sending": "Please wait…",
+    "twoFactorAppPrompt": "Enter the code from your authenticator app.",
+    "twoFactorBackupPrompt": "Enter one of the backup codes you saved when you turned on two-factor authentication. Each code works only once.",
+    "authCodeLabel": "Authentication code",
+    "backupCodeLabel": "Backup code",
+    "useApp": "Use your authenticator app",
+    "lostPhone": "Lost your phone? Use a backup code",
+    "verify": "Verify",
+    "forgotTitle": "Forgot your password?",
+    "forgotLink": "Forgot your password?",
+    "forgotIntro": "We’ll email you a link to choose a new password.",
+    "emailNotSetUp": "Leon can’t send emails yet. Ask your workspace administrator.",
+    "backToSignIn": "Back to sign in",
+    "sendLink": "Send reset link",
+    "resetMeta": "Reset your password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "resetLinkExpired": "This link is invalid or has expired.",
+    "requestNewLink": "Request a new link",
+    "expiredTitle": "Link expired",
+    "expiredText": "This invitation link has already been used or is no longer valid. Ask the person who sent it for a new one.",
+    "passwordsMismatch": "Passwords don’t match.",
+    "invalidEmail": "Enter a valid email address.",
+    "tooManyAttempts": "Too many attempts. Try again in a few minutes.",
+    "passwordRequired": "Enter your password.",
+    "nameRequired": "Enter your name.",
+    "passwordLength": "Your password must be 8 to 128 characters long.",
+    "companyInvalid": "Enter your company name (2 to 100 characters).",
+    "emailTaken": "This email address is already in use.",
+    "signUpFailed": "Couldn’t create your account. Try again.",
+    "signedUpNotIn": "Your account was created, but signing in failed. Please sign in.",
+    "invalidValue": "Invalid value.",
+    "wrongCredentials": "Incorrect email or password.",
+    "codeFormat": "Enter the 6-digit code or one of your backup codes.",
+    "codeWrong": "Incorrect or expired code. Try again.",
+    "emailSendingOff": "Email sending isn’t set up. Ask your workspace administrator.",
+    "resetSent": "If this address matches an account, we’ve just sent a reset link.",
+    "resetLinkInvalid": "This link is invalid or has expired. Request a new one.",
+    "resetDone": "Your password has been changed. You can now sign in.",
+    "inviteInvalid": "This invitation link is no longer valid. Ask for a new one.",
+    "resetEmailSubject": "Reset your Leon password",
+    "resetEmailIntro": "We received a request to reset your Leon password.",
+    "resetEmailAction": "Choose a new password",
+    "resetEmailIgnore": "If you didn’t request this, you can ignore this email."
+  },
   "navigation": {
     "search": "Search",
     "discussions": "Discussions",
@@ -54,7 +122,8 @@
     "searchQuery": "Search “{query}”",
     "paletteTitle": "Command palette",
     "suggestions": "Suggestions",
-    "memoryLate": "Memory out of date"
+    "memoryLate": "Memory out of date",
+    "quickSearch": "Quick search"
   },
   "language": {
     "title": "Language",
@@ -101,6 +170,7 @@
     "pageOf": "Page {page} of {pages}",
     "openIn": "Open in {tool}",
     "newTab": " (opens in a new tab)",
+    "close": "Close",
     "loading": "Loading…"
   },
   "discussions": {
@@ -169,12 +239,24 @@
     "loadingPreview": "Loading preview…",
     "passageUnavailable": "This passage is no longer available. Run the search again.",
     "previewFailed": "Couldn’t load the preview. Click the result again to retry.",
-    "paneLabel": "Cited source preview"
+    "paneLabel": "Cited source preview",
+    "refusal": "I can’t help with this request.",
+    "empty": "I don’t know: I found nothing to answer with.",
+    "limitNote": "I stopped before the end: this answer hit its limit of searches and reads. Ask a more specific question and I’ll keep going.",
+    "activity": {
+      "chercher": "Leon is searching memory…",
+      "lire": "Leon is reading a source…",
+      "activite": "Leon is checking recent activity…",
+      "autre": "Leon is working…"
+    }
   },
   "errors": {
     "loadTitle": "Couldn’t load the page.",
     "retrySoon": "Please try again shortly.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "notFoundTitle": "Page not found",
+    "notFound": "This page doesn’t exist.",
+    "backHome": "Back to home"
   },
   "searchResults": {
     "failed": "Search failed. Please try again shortly.",
@@ -200,6 +282,7 @@
     "result": "Result {number}: {title}",
     "untitled": "Untitled",
     "sourceNote": "Written by AI from the results below. Check the cited sources.",
+    "notEnough": "The results aren’t enough to answer.",
     "continue": "Continue in discussion"
   },
   "connections": {
@@ -255,6 +338,15 @@
     "connectionResumed": "Connection resumed.",
     "connectionPaused": "Connection paused.",
     "connectionMissing": "This connection no longer exists.",
+    "notConfigured": "Connectors aren’t configured on this server (LEON_CONNECTORS_KEY).",
+    "badRequest": "Couldn’t read the request: reload the page.",
+    "notCreator": "Only the person who connected this tool can replace its key.",
+    "unknownTool": "Unknown tool.",
+    "toolUnavailable": "{provider} isn’t available yet.",
+    "keyRejected": "{provider} rejected the key.",
+    "toolNotResponding": "{provider} isn’t responding. Try again in a moment.",
+    "saveFailed": "Couldn’t save the connection. Try again.",
+    "replaceFailed": "Couldn’t replace the key. Try again.",
     "reconnect": "Reconnect",
     "appGone": "The {provider} app is no longer configured on this server, so it can’t be reconnected.",
     "replaceKey": "Replace key",
@@ -397,5 +489,505 @@
     "codeInvalid": "Enter the 6-digit code.",
     "codeWrong": "Incorrect code. Check the app and try again.",
     "tooManyAttempts": "Too many attempts. Try again in a few minutes."
+  },
+  "site": {
+    "meta": {
+      "homeTitle": "Leon · Your company’s memory, with its sources",
+      "homeDescription": "Leon keeps what is said in your tools and AI conversations, exactly as written, and finds it again with its source. When nothing answers the question, it says so.",
+      "useCasesTitle": "Use cases",
+      "useCasesDescription": "Leadership, sales, support, product, project managers, new hires: the questions each team asks Leon, and the answers it gives, with sources.",
+      "connectorsTitle": "Connectors",
+      "connectorsDescription": "The {count} tools Leon syncs every 15 minutes (dev, meetings, project management, CRM, support, email), plus your conversations with AI assistants.",
+      "productTitle": "How it works",
+      "productDescription": "Leon connects to your tools and AI assistants, keeps every item as written, and answers by citing its sources.",
+      "securityTitle": "Security",
+      "securityDescription": "Leon sees what you see: isolation per company, permissions applied before ranking, private conversations, encrypted keys. And what isn’t there yet.",
+      "pricingTitle": "Pricing",
+      "pricingDescription": "A free 30-day pilot, then a price per active user per month, with no commitment.",
+      "teamTitle": "{team} · Use cases"
+    },
+    "cta": {
+      "create": "Create a workspace",
+      "signIn": "Sign in",
+      "howItWorks": "How it works",
+      "seeHowItWorks": "See how it works",
+      "seeConnectors": "See the connectors",
+      "startPilot": "Start the pilot"
+    },
+    "common": {
+      "fictional": "Fictional example",
+      "fictionalPlural": "Fictional examples",
+      "fictionalLabel": "Fictional example · {label}",
+      "searchScreen": "Fictional example · Leon’s Search screen",
+      "leonAnswer": "Leon’s answer",
+      "briefing": "Morning briefing",
+      "maskedSecret": "[secret masked]",
+      "planned": "Planned",
+      "breadcrumb": "Breadcrumb",
+      "next": "Next",
+      "useCases": "Use cases",
+      "connectors": "Connectors",
+      "security": "Security",
+      "inTheBar": "In the search bar",
+      "toolCount": "{count} tools"
+    },
+    "shell": {
+      "skip": "Skip to content"
+    },
+    "header": {
+      "home": "Leon, home",
+      "nav": "Site",
+      "lightTheme": "Light theme",
+      "darkTheme": "Dark theme",
+      "allUseCases": "All use cases",
+      "menu": "Menu",
+      "close": "Close"
+    },
+    "footer": {
+      "nav": "Footer",
+      "product": "Product",
+      "search": "Search and cited answers",
+      "discussions": "Discussions and morning briefing",
+      "pricing": "Pricing",
+      "trust": "Trust",
+      "account": "Account",
+      "language": "Language"
+    },
+    "auth": {
+      "aside": "Leon at a glance",
+      "points": {
+        "sources": "Every answer cites its source, or says “I don’t know.”",
+        "private": "Your AI conversations and discussions stay private.",
+        "tools": "{count} tools to connect, synced every 15 minutes."
+      },
+      "steps": {
+        "create": {
+          "title": "Create the workspace",
+          "text": "Your name, your email, your company’s name."
+        },
+        "connect": {
+          "title": "Connect a first tool",
+          "text": "An API key or OAuth, under Connections."
+        },
+        "ask": {
+          "title": "Ask a first question",
+          "text": "Leon searches what it has kept and cites its sources."
+        }
+      },
+      "signUpKicker": "Three steps",
+      "signInKicker": "Welcome back",
+      "signUpTitle": "Create the workspace, connect a tool, ask a question.",
+      "signInTitle": "What was said ",
+      "signInTitleAccent": "stays said.",
+      "moreTools": "and {count} more",
+      "noBilling": "No billing yet · pricing not final",
+      "example": "Fictional example · a cited answer and the morning briefing"
+    },
+    "demo": {
+      "search": "Search",
+      "noAnswer": "no answer",
+      "sources": "{count, plural, one {# source} other {# sources}}"
+    },
+    "heroDemo": {
+      "tabs": "Example questions",
+      "pause": "Stop cycling through the examples",
+      "play": "Resume cycling through the examples",
+      "pauseShort": "Stop cycling",
+      "playShort": "Resume cycling",
+      "srExample": "Fictional example.",
+      "srQuestion": "Question: {query}",
+      "srAnswer": "Leon’s answer: {answer}",
+      "bar": "leon · search",
+      "unknown": "Leon says so instead of guessing"
+    },
+    "teamTabs": {
+      "list": "Use cases by team",
+      "typed": "What the team types in the search bar",
+      "tools": "Team tools: {tools}",
+      "more": "See the full use case"
+    },
+    "layers": {
+      "raw": {
+        "title": "The raw record, as written",
+        "text": "Every meeting, ticket, note or email is kept as it was written, with its link to the original."
+      },
+      "index": {
+        "title": "The index",
+        "text": "Split into passages, searched by keyword and by meaning, with typos tolerated in titles."
+      },
+      "rights": {
+        "title": "Permissions first",
+        "text": "The permission filter runs before ranking: what is private to its author never shows up for anyone else."
+      },
+      "line1": "we can **commit** to **November 15**",
+      "line2": "history **migration** excluded",
+      "line3": "the **data migration** is quoted",
+      "fullText": "full text",
+      "semantic": "semantic",
+      "team": "Visible to the team",
+      "teamTools": "team tools",
+      "you": "Only you",
+      "aiConversations": "AI conversations"
+    },
+    "sample": {
+      "meeting": "ACME monthly check-in",
+      "meetingKind": "Meeting",
+      "migration": "ACME: data migration",
+      "quote": "Signed V2 quote",
+      "email": "Re: V2 timeline",
+      "emailKind": "Email"
+    },
+    "home": {
+      "beta": "Beta",
+      "pill": "Company memory for small and midsize teams",
+      "title": "What you promised your clients, ",
+      "titleAccent": "found and cited.",
+      "lead": "Leon connects to your tools and to your conversations with AI assistants. It stores everything as written, keeps your AI conversations visible only to you, and answers by citing the source. When nothing answers the question, it says so.",
+      "betaNote": "Open beta · no billing yet",
+      "toolsTitle": "{count} tools, ",
+      "toolsTitleAccent": "plus your AI assistants.",
+      "toolsLead": "Meetings, tickets, CRM, support, pages, email. Leon picks up what changed every 15 minutes, through an API key or OAuth.",
+      "spin": "Give the sphere a spin.",
+      "seeConnectors": "See all {count} connectors",
+      "problemKicker": "The problem",
+      "problemTitle": "Your team’s knowledge is everywhere except where you look for it.",
+      "problems": {
+        "scattered": {
+          "title": "It’s all somewhere",
+          "text": "Email, CRM, tickets, meetings, pages: what was said lives in dozens of tools. Finding it means opening each one, if you find it at all."
+        },
+        "departures": {
+          "title": "People leave with the context",
+          "text": "When a project manager leaves, their commitments leave with them. The client still remembers."
+        },
+        "privateAi": {
+          "title": "Everyone talks to their own AI",
+          "text": "Conversations with AI assistants contain decisions. They get buried in the assistant’s history. Leon keeps them, for you only, alongside everything else."
+        }
+      },
+      "tasks": {
+        "quote": "Follow up on the Verlant quote",
+        "ship": "Ship V2 to ACME on Nov 15",
+        "migrate": "Migrate the data"
+      },
+      "chatQuestion": "Do we keep Postgres for the queue, not Redis?",
+      "chatAnswer": "Yes: one database, fewer moving parts to watch…",
+      "chatNote": "one person’s conversation",
+      "stepsTitle": "You connect. Leon keeps the record. You ask.",
+      "stepsLead": "No forms to fill in, no summaries to proofread. Leon syncs your tools every 15 minutes and keeps each item exactly as it was written.",
+      "step1Title": "You connect your tools",
+      "step1Text": "An API key or OAuth, across {count} tools. The browser extension and your coding assistant add your AI conversations.",
+      "step1Extension": "Extension · web assistant",
+      "step2Title": "Leon keeps the raw record",
+      "step2Text": "As written, with a link to the original. Your AI conversations stay yours. Recognizable secrets are masked before anything is stored.",
+      "step2Date": "Oct 3",
+      "step2Quote": "“We can commit to November 15 for V2…”",
+      "step2Open": "Open in Granola ↗",
+      "step3Title": "You ask",
+      "step3Text": "A search, a discussion, or your AI assistant over MCP. The answer cites every source, or says “I don’t know.”",
+      "step3Query": "from:julie type:meeting since:1mo",
+      "step3Answer1": "Julie committed to Nov 15",
+      "step3Answer2": ", excluding the data migration",
+      "layersKicker": "Under the hood",
+      "layersTitle": "Three layers, in this order.",
+      "layersLead": "Leon rewrites nothing. It keeps the raw record, indexes it for search, and applies permissions before it shows you anything.",
+      "useCasesTitle": "One shared memory. Each team asks its own questions.",
+      "useCasesLead": "Leadership, sales, support, product, projects, new hires: each looks for something different, in the same tools.",
+      "proofKicker": "Our rule",
+      "proofTitle": "The source,",
+      "proofTitleAccent": "or nothing.",
+      "proofLead": "An answer without a source is worth nothing when a client disputes it. Leon shows where each sentence comes from, and stops when it doesn’t know.",
+      "proofUnknown": "**I don’t know.** No source on record mentions a price agreed with Verlant in 2024.",
+      "proofs": {
+        "cited": {
+          "title": "Every sentence cited",
+          "text": "One citation per claim, pointing to the original meeting, ticket or email."
+        },
+        "unknown": {
+          "title": "“I don’t know” rather than a guess",
+          "text": "When no source answers, the answer says so. Nothing is made up to fill the gap."
+        },
+        "private": {
+          "title": "What’s yours stays yours",
+          "text": "Search, discussions and the assistant apply the same permissions: what is private to its author never surfaces for anyone else."
+        },
+        "raw": {
+          "title": "The original, never rewritten",
+          "text": "Leon doesn’t store summaries. It keeps the original and opens it in its own tool."
+        }
+      },
+      "assistantKicker": "In your assistant",
+      "assistantTitle": "Your AI assistant finally has your team’s context.",
+      "assistantLead": "Leon’s MCP server gives your assistant four tools: search, read a source, prepare the morning briefing, save a note. It connects with a personal token you can revoke at any time, and sees what you see, nothing more.",
+      "assistantPoints": {
+        "briefing": "The morning briefing is waiting when your coding assistant starts.",
+        "sessions": "Each coding session is saved when it ends, text only.",
+        "log": "What each assistant reads is recorded in a log."
+      },
+      "assistantLink": "Discussions, morning briefing and MCP",
+      "terminal": "coding assistant · Leon MCP server",
+      "terminalSearch": "“ACME data migration”",
+      "terminalRemember": "“migration moved to Dec 2”",
+      "terminalSaved": "note saved, visible only to you",
+      "briefingMeta": "08:45 · 250 words max",
+      "securityTitle": "Each company in its own space. Your conversations stay yours.",
+      "securityLink": "More on security",
+      "securityNotYet": "What isn’t there yet is written down too: ",
+      "securityList": "see the list",
+      "faqKicker": "FAQ",
+      "faqTitle": "What people ask us first.",
+      "faqLink": "Pricing and more questions",
+      "ctaText": "Create your team’s workspace, connect a first tool, ask a first question."
+    },
+    "product": {
+      "heroTitle": "What your team says, kept as written, found with its source.",
+      "heroAccent": "found with its source.",
+      "heroLead": "Leon connects to your tools and AI assistants, stores each item as written, keeps your AI conversations visible only to you, then answers with citations. Nobody fills in forms for it.",
+      "flowCaption": "The four steps: capture, keep, find, discuss.",
+      "captureCaption": "Illustration: connected tools synced every 15 minutes, the browser extension with a switch per site, and a coding assistant session sent when it ends.",
+      "captureLabel": "what Leon captures",
+      "captureChip": "+ 3 items kept · 14:12",
+      "connected": "Connected tools",
+      "syncs": "syncs every 15 min",
+      "connectable": "{count} tools available · API key or OAuth",
+      "extension": "Browser extension",
+      "extensionChoice": "You choose, site by site.",
+      "site1": "AI assistant, site 1",
+      "site2": "AI assistant, site 2",
+      "extensionNever": "Never in private browsing. Never attachments.",
+      "codingAssistant": "Coding assistant",
+      "sessionEnd": "$ session end",
+      "sent": "conversation sent",
+      "textOnly": "text only, no tool output",
+      "keepCaption": "Illustration: three glass layers stacked in 3D. At the bottom, the raw record kept as written; in the middle, the passage index; on top, permissions: visible to the team, or only to you.",
+      "keepLabel": "what Leon keeps",
+      "typedInBar": "Typed in the bar",
+      "findChip": "one source per sentence · [1] [2] [3]",
+      "mcp": {
+        "search": "search the memory",
+        "fetch": "read a whole source",
+        "briefing": "the morning briefing",
+        "remember": "save a private note"
+      },
+      "discussCaption": "Illustration: a discussion where Leon answers with cited sources, the three-part morning briefing, and the four tools the MCP server gives an assistant.",
+      "discussLabel": "discussion and morning briefing",
+      "discussChip": "morning briefing · 08:45",
+      "discussionPrivate": "Discussion · private",
+      "theBriefing": "The morning briefing",
+      "mcpServer": "MCP server",
+      "token": "personal token, revocable",
+      "nextTitle": "What’s coming next.",
+      "nextLead": "None of this is built yet. We list it here so you know what to expect.",
+      "next": {
+        "google": {
+          "title": "Google Workspace",
+          "text": "Gmail, Drive and Calendar."
+        },
+        "microsoft": {
+          "title": "Microsoft 365",
+          "text": "Teams, OneDrive and SharePoint."
+        },
+        "files": {
+          "title": "Files",
+          "text": "PDFs and Office documents."
+        },
+        "invites": {
+          "title": "Team invitations",
+          "text": "Join your company’s workspace."
+        },
+        "permissions": {
+          "title": "Source tool permissions",
+          "text": "A page that is private in its original tool stays private in Leon."
+        }
+      },
+      "ctaText": "Connect a first tool and ask your first question."
+    },
+    "useCases": {
+      "changes": "What it changes: ",
+      "situationsKicker": "In practice",
+      "situationsTitle": "One person, one moment, one question.",
+      "heroTitle": "Every team has its own questions. Leon answers from the same sources.",
+      "heroAccent": "Leon answers from the same sources.",
+      "heroLead": "Leadership, sales, support, product, projects, new hires: each looks for something different in the same tools. Here is what people type in the search bar, and what Leon answers.",
+      "sixTeams": "The six teams",
+      "situationsLead": "What Leon already does, at the moment it’s needed. The people, companies and details in these examples are fictional.",
+      "tabsKicker": "One search bar",
+      "tabsTitle": "One search, different answers.",
+      "tabsLead": "Pick a team to see what it asks and the screen Leon returns. The data in these examples is fictional.",
+      "questionsTitle": "The questions people actually type.",
+      "questionsLead": "In plain language or with filters: from:, tool:, type:, since:, before:, and exact words in quotes.",
+      "ctaTitle": "Start with one team.",
+      "ctaText": "Connect its tools from the {count} connectors and ask the first question.",
+      "teamQuestionsTitle": "The team’s questions.",
+      "teamQuestionsLead": "Written the way people type them. Leon searches every connected tool, then answers with citations.",
+      "teamSituationsLead": "What Leon already does for this team, when it’s needed. Fictional examples.",
+      "gainsKicker": "What changes",
+      "gainsTitle": "Three concrete changes.",
+      "toolsKicker": "The tools",
+      "toolsTitle": "The team’s tools, ready to connect.",
+      "toolsLead": "An API key or OAuth is all it takes. Leon picks up what changed every 15 minutes.",
+      "allConnectors": "All {count} connectors",
+      "otherTeams": "Other teams",
+      "teamCtaTitle": "Connect the team’s tools. Ask the first question.",
+      "teamCtaText": "Leon answers with the source, or says it doesn’t know."
+    },
+    "connectors": {
+      "spin": " · give the sphere a spin",
+      "steps": {
+        "pick": {
+          "title": "Pick the tool",
+          "text": "On the Connections page of your workspace, grouped by family."
+        },
+        "auth": {
+          "title": "Sign in or paste a key",
+          "text": "A “Continue with…” button when the vendor supports it, otherwise an API key. The help text says where to find it."
+        },
+        "period": {
+          "title": "Pick the time range",
+          "text": "Leon reads back 7, 30, 90 or 365 days. 30 by default."
+        },
+        "test": {
+          "title": "Test and connect",
+          "text": "The connection is saved only if the test passes. After that, Leon syncs every 15 minutes."
+        }
+      },
+      "channels": {
+        "extension": {
+          "title": "Browser extension",
+          "text": "For two web-based AI assistants. A consent screen, a switch per site, a pause button.",
+          "p1": "Never in private browsing",
+          "p2": "Never attachments",
+          "p3": "Conversations private to their author"
+        },
+        "coding": {
+          "title": "Coding assistant",
+          "text": "When a session ends, the conversation is sent to Leon. One command catches up on missed sessions.",
+          "p1": "Text only, no tool output",
+          "p2": "Secrets masked before storage",
+          "p3": "Morning briefing at startup"
+        },
+        "mcp": {
+          "title": "MCP server",
+          "text": "The other direction: your assistant queries Leon with a personal token you can revoke whenever you want.",
+          "p1": "search, fetch, briefing, remember",
+          "p2": "The same permissions as you",
+          "p3": "A log of what was read"
+        }
+      },
+      "planned": {
+        "google": {
+          "title": "Google Workspace",
+          "text": "Gmail, Drive, Calendar."
+        },
+        "microsoft": {
+          "title": "Microsoft 365",
+          "text": "Teams, OneDrive, SharePoint."
+        },
+        "files": {
+          "title": "Files",
+          "text": "PDFs and Office documents."
+        }
+      },
+      "heroTitle": "{count} tools to connect, plus your AI conversations.",
+      "heroAccent": "plus your AI conversations.",
+      "heroLead": "Tickets, pages, meetings, CRM notes, support conversations. Leon picks up what changed every 15 minutes and keeps it as written, with a link to the original.",
+      "browse": "Browse the catalog",
+      "catalogKicker": "The catalog",
+      "catalogTitle": "Every tool, by family.",
+      "catalogLead": "Dev, meetings, project management, CRM, support, email and calendar. Pick a family or type a name.",
+      "betaNote": "Connectors are in beta: each one is tested against the sample responses in its vendor’s documentation. Self-hosted instances (GitLab, Jira Data Center) are not supported.",
+      "connectKicker": "Connect",
+      "connectTitle": "Four steps, once per tool.",
+      "connectLead": "Nothing to fill in afterward: Leon rereads the tool on its own.",
+      "aiKicker": "AI conversations",
+      "aiTitle": "Your conversations with AI assistants.",
+      "aiLead": "What gets said to an assistant often exists nowhere else. Leon keeps it, for the person who wrote it.",
+      "plannedTitle": "What you can’t connect yet.",
+      "plannedLead": "We say so now so you don’t find out later.",
+      "ctaTitle": "Connect a first tool.",
+      "ctaText": "An API key or OAuth, a time range to read back, and the first sync starts."
+    },
+    "catalogue": {
+      "family": "Tool family",
+      "all": "All",
+      "filterLabel": "Filter tools by name",
+      "filterPlaceholder": "Filter by name…",
+      "clear": "Clear the filter",
+      "none": "No matching tools",
+      "count": "{count, plural, one {# tool} other {# tools}}",
+      "oauth": "OAuth",
+      "apiKey": "API key",
+      "hiddenTitle": "No “{query}” tool in {family}.",
+      "hiddenElsewhere": "In other families: {tools}.",
+      "noneTitle": "No tool called “{query}”.",
+      "noneHint": "Check the spelling, or see what’s planned further down.",
+      "searchAll": "Search all families",
+      "showAll": "Show all tools"
+    },
+    "security": {
+      "teamSees": {
+        "read": "Tickets, pages, meetings and CRM notes read by a connection",
+        "support": "Support conversations and shared inboxes (Front, Missive…)",
+        "link": "With a link to the original, in its own tool"
+      },
+      "onlyYou": {
+        "ai": "Your conversations captured from AI assistants",
+        "discussions": "Your discussions with Leon",
+        "notes": "Your notes saved over MCP (remember)",
+        "outlook": "Your Outlook email and calendar, if you connect them"
+      },
+      "ranking": "3 · ranking, then the answer",
+      "filter": "2 · the permission filter, first",
+      "teamPages": "Team pages and tickets",
+      "ownConversations": "Your own conversations",
+      "colleague": "A colleague’s conversations",
+      "question": "1 · the question",
+      "query": "what did we promise ACME?",
+      "visualCaption": "Illustration: a search goes through the permission filter first, then ranking. ",
+      "heroTitle": "Leon sees what you see. Nothing more.",
+      "heroAccent": "Nothing more.",
+      "heroLead": "Search, discussions and your assistant go through the same permissions as you. Here is what is in place today, and what isn’t yet.",
+      "notYet": "What isn’t there yet",
+      "factsKicker": "In place",
+      "factsTitle": "What the code does today.",
+      "factsLead": "Every point below exists in the product today. Nothing is announced before it exists.",
+      "whoKicker": "Who sees what",
+      "whoTitle": "Two rules, easy to remember.",
+      "teamTitle": "Visible to the whole team",
+      "teamText": "What a connection reads, as in a shared tool. Except Outlook: a mailbox and a calendar stay private to whoever connects them.",
+      "youTitle": "Private to you",
+      "youText": "Nobody else sees it, in search or in an answer.",
+      "frankly": "Frankly",
+      "notYetTitle": "What isn’t there yet.",
+      "notYetLead": "We would rather write it here than let you find out on your own. We keep this list up to date.",
+      "ctaTitle": "What was said stays said, for the people allowed to read it.",
+      "ctaText": "Create a workspace, connect a tool, and see what the team can see and what stays yours."
+    },
+    "pricing": {
+      "everywhere": {
+        "connectors": "All {count} connectors, synced every 15 minutes",
+        "search": "Full-text and semantic search, with filters",
+        "answer": "A cited answer above the results",
+        "discussions": "Private discussions that cite their sources",
+        "briefing": "Morning briefing and MCP server",
+        "capture": "Browser extension and coding assistant",
+        "secrets": "Secrets masked before storage",
+        "keys": "Encrypted tool keys"
+      },
+      "recommended": "Recommended",
+      "heroTitle": "Simple pricing, per person who uses it.",
+      "heroAccent": "per person who uses it.",
+      "heroLead": "Try it free on one team, with your real tools. After that, only accounts active that month are counted.",
+      "plans": "Plans",
+      "taxNote": "Prices exclude tax. No commitment.",
+      "everywhereKicker": "In every plan",
+      "everywhereTitle": "Every feature, in every plan.",
+      "everywhereLead": "Plans differ by team size and hosting, not by what Leon can do.",
+      "faqKicker": "Questions",
+      "faqTitle": "Questions we get asked.",
+      "faqLead": "Another question? Create a workspace: the pilot is free, and you’ll quickly see what Leon keeps.",
+      "ctaTitle": "Start with the pilot.",
+      "ctaText": "Thirty days, one team of up to 10 people, all {count} connectors."
+    }
   }
 }

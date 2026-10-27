@@ -11,7 +11,7 @@ import type { OAuthSpec } from '../types';
 //     réponse `{ "access_token": "…" }`, aucune erreur documentée)
 //
 // Un jeton sans expiration ni rafraîchissement : `expiresAt` reste nul, le socle ne le renouvelle
-// jamais ; un 401 en plein passage met la connexion en « Reconnectez ClickUp ».
+// jamais ; un 401 en plein passage met la connexion en « Reconnect ClickUp ».
 export const clickupOAuth: OAuthSpec = {
   appKey: 'CLICKUP',
   authorizeUrl: 'https://app.clickup.com/api',

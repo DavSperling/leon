@@ -33,7 +33,7 @@ import { peopleById, toItem } from './map';
 //   - que `updated_at__gte` accepte une date à la milliseconde (« 2026-10-12T16:40:05.902Z »), alors que Plane écrit
 //     des microsecondes : un élément du même instant mais absent du curseur est relu, au pire une fois de trop ;
 //   - la réponse de Plane pour un projet visible mais que la clé n'a pas rejoint : un 403 sur la liste des éléments
-//     remonte comme « Clé refusée » pour toute la connexion ;
+//     remonte comme « Plane rejected the key » pour toute la connexion ;
 //   - que `description_html` met le texte d'une liste dans des paragraphes (« <li><p>…</p></li> ») : le plan de
 //     secours est dans `map.ts`, la doc ne montre que des « <p> » ;
 //   - l'adresse /<espace>/browse/<PROJET>-<n> : elle vient d'une demande de fusion du dépôt de Plane, pas de la doc ;

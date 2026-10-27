@@ -151,7 +151,7 @@ describe('basecamp : configuration', () => {
     expect(basecampCatalog.keyAccepted).toBe(false);
     expect(basecampCatalog.fields).toEqual([]);
     expect(basecampCatalog.oauthHelp?.trim()).toBeTruthy();
-    expect(listCatalog().find((item) => item.id === 'basecamp')).toMatchObject({
+    expect(listCatalog('fr').find((item) => item.id === 'basecamp')).toMatchObject({
       available: true,
       keyAccepted: false,
       oauthPreFields: [],

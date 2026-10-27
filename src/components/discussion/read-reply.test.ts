@@ -62,7 +62,7 @@ describe('readReply', () => {
 
     expect(outcome).toEqual({ status: 'finie', content: 'Acceptée [1].', citations: [CITATION] });
     expect(steps.map((step) => [step.text, step.activity])).toEqual([
-      ['', 'Leon cherche dans la mémoire…'],
+      ['', 'chercher'],
       ['Acceptée ', null],
       ['Acceptée [1].', null],
       ['Acceptée [1].', null],

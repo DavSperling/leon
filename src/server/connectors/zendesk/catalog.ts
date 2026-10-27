@@ -31,4 +31,24 @@ export const zendeskCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Il faut le jeton d’un administrateur : Zendesk réserve l’export des tickets aux administrateurs.',
+  en: {
+    fields: {
+      subdomain: {
+        label: 'Zendesk subdomain',
+        help: 'The start of your Zendesk URL: acme for acme.zendesk.com.',
+      },
+      email: {
+        label: 'Admin email',
+        placeholder: 'first.last@company.com',
+        help: 'The address of the admin account that created the token.',
+      },
+      apiToken: {
+        label: 'Zendesk API token',
+        help: 'The token acts on behalf of this admin; Leon only reads. It reads all tickets, internal notes included. Zendesk describes it as discouraged in favor of OAuth, but it still works.',
+      },
+    },
+    keyHelp:
+      'In Zendesk Admin Center: Apps and integrations › APIs › Zendesk API › Add API token (token access must be enabled).',
+    warning: 'An admin’s token is required: Zendesk reserves ticket export for admins.',
+  },
 };

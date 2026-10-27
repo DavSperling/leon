@@ -66,7 +66,7 @@ function onApi2(next: string | null | undefined): string | null {
     const url = new URL(next, API);
     return `${API}${url.pathname}${url.search}`;
   } catch {
-    throw new ConnectorHttpError(null, 'Réponse inattendue');
+    throw new ConnectorHttpError(null, 'Unexpected response');
   }
 }
 

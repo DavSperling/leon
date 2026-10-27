@@ -11,13 +11,11 @@ export function messageSegments(text: string, cited: ReadonlySet<number>): Messa
   return referenceSegments(text, (n) => cited.has(n));
 }
 
-// Ce que l'agent fait pendant qu'il prépare sa réponse, d'après l'outil qu'il appelle.
-const ACTIVITY: Record<string, string> = {
-  chercher: 'Leon cherche dans la mémoire…',
-  lire: 'Leon lit une source…',
-  activite: 'Leon regarde l’activité récente…',
-};
+// Ce que l'agent fait pendant qu'il prépare sa réponse, d'après l'outil qu'il appelle : la clé de son libellé
+// (discussionView.activity).
+const ACTIVITIES = ['chercher', 'lire', 'activite'] as const;
+export type ToolActivity = (typeof ACTIVITIES)[number] | 'autre';
 
-export function toolActivityLabel(name: string): string {
-  return Object.hasOwn(ACTIVITY, name) ? (ACTIVITY[name] as string) : 'Leon travaille…';
+export function toolActivity(name: string): ToolActivity {
+  return ACTIVITIES.find((activity) => activity === name) ?? 'autre';
 }

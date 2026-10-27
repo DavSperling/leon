@@ -56,7 +56,7 @@ describe('verify', () => {
 
     const { account } = await fathomConnector.verify(CONFIG, http);
 
-    expect(account).toBe('Fathom (clé valide)');
+    expect(account).toBe('Fathom (valid key)');
     expect(calls).toHaveLength(1);
     expect(calls[0]?.headers['x-api-key']).toBe('cle-de-test');
     const query = params(calls[0]?.url);
@@ -70,7 +70,7 @@ describe('verify', () => {
 
     const { account } = await fathomConnector.verify(CONFIG, http);
 
-    expect(account).toBe('Fathom (clé valide, mais aucune réunion visible pour le moment)');
+    expect(account).toBe('Fathom (valid key, but no meeting visible yet)');
   });
 
   it('lève ConnectorAuthError sur un 401', async () => {

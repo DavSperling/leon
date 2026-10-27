@@ -61,7 +61,7 @@ const ConfigSchema = z
   })
   .superRefine((config, ctx) => {
     const field = config.authMode === 'oauth' ? 'accessToken' : 'token';
-    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Requis' });
+    if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
   });
 type Config = z.infer<typeof ConfigSchema>;
 
@@ -81,7 +81,7 @@ function pickWorkspace(workspaces: Workspace[], wanted: string | undefined): Wor
   // 404 seulement si l'utilisateur a saisi l'espace : un compte sans espace n'est pas une saisie.
   throw new ConnectorHttpError(
     wanted ? 404 : null,
-    wanted ? `Espace introuvable : ${wanted}` : 'Aucun espace Asana accessible',
+    wanted ? `Workspace not found: ${wanted}` : 'No Asana workspace accessible',
   );
 }
 
@@ -97,7 +97,7 @@ export const asanaConnector: Connector<Config> = {
     const { gid, name, workspaces } = await asanaClient(bearerToken(config), http).me();
     const workspace = pickWorkspace(workspaces, config.workspace);
     return {
-      account: `${name ?? 'Compte Asana'} (${workspace.name})`,
+      account: `${name ?? 'Asana account'} (${workspace.name})`,
       accountKey: `${gid}:${workspace.gid}`,
     };
   },

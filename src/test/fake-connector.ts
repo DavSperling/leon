@@ -46,7 +46,7 @@ export function fakeConnector(input: {
       for (let page = 1; last < items; page += 1) {
         if (failAt?.page === page) {
           if (failAt.status === 401) throw new ConnectorAuthError('GitHub', 401);
-          throw new ConnectorHttpError(500, 'GitHub a répondu 500');
+          throw new ConnectorHttpError(500, 'GitHub responded with 500');
         }
         const end = Math.min(last + pageSize, items);
         const ranks = Array.from({ length: end - last }, (_, index) => last + 1 + index);

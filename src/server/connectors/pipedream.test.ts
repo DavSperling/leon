@@ -138,7 +138,7 @@ describe('createConnectLink', () => {
     const error = await createConnectLink(ENV, input, fetchImpl).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect(String((error as Error).message)).toBe('Pipedream injoignable');
+    expect(String((error as Error).message)).toBe('Pipedream is unreachable');
     expect(JSON.stringify(error)).not.toContain(SECRET);
   });
 });
@@ -219,7 +219,7 @@ describe('deleteExternalUser', () => {
       { method: 'DELETE', url: `${CONNECT}/users/leon-u1`, status: 500 },
     ]);
     await expect(deleteExternalUser(ENV, 'leon-u1', fetchImpl)).rejects.toThrow(
-      'Pipedream injoignable',
+      'Pipedream is unreachable',
     );
   });
 });
@@ -284,7 +284,7 @@ describe('connectorHttp', () => {
 
     expect(await http.json({ url: PROFILE }, Profile)).toEqual({ emailAddress: 'a@b.test' });
     await expect(http.json({ url: 'https://evil.test/x' }, Profile)).rejects.toThrow(
-      'Adresse non autorisée',
+      'Address not allowed',
     );
   });
 
@@ -297,7 +297,7 @@ describe('connectorHttp', () => {
     });
 
     await expect(http.json({ url: PROFILE }, Profile)).rejects.toThrow(
-      'Pipedream n’est pas configuré sur ce serveur',
+      'Pipedream isn’t configured on this server',
     );
     expect(fetchImpl.calls).toHaveLength(0);
   });

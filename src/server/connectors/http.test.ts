@@ -120,7 +120,7 @@ describe('createConnectorHttp : requête', () => {
 
     await expect(
       http.text({ url: URL_A, method: 'POST', body: {}, raw: { type: 'text/plain', text: 'x' } }),
-    ).rejects.toThrow('Requête invalide');
+    ).rejects.toThrow('Invalid request');
     expect(calls).toHaveLength(0);
   });
 
@@ -134,7 +134,7 @@ describe('createConnectorHttp : requête', () => {
     expect(error).toMatchObject({
       name: 'ConnectorHttpError',
       status: null,
-      message: 'Requête invalide',
+      message: 'Invalid request',
     });
     expect(calls).toHaveLength(0);
   });
@@ -164,7 +164,7 @@ describe('createConnectorHttp : adresses', () => {
     await expect(http.json({ url: 'https://evil.test/a' }, ANY)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: null,
-      message: 'Adresse non autorisée',
+      message: 'Address not allowed',
     });
     expect(calls).toHaveLength(0);
   });
@@ -179,7 +179,7 @@ describe('createConnectorHttp : adresses', () => {
   ])('refuse %s', async (url) => {
     const { http, calls } = setup([]);
 
-    await expect(http.json({ url }, ANY)).rejects.toThrow('Adresse non autorisée');
+    await expect(http.json({ url }, ANY)).rejects.toThrow('Address not allowed');
     expect(calls).toHaveLength(0);
   });
 
@@ -209,7 +209,7 @@ describe('createConnectorHttp : codes de réponse', () => {
     const error = await http.json({ url: URL_A }, ANY).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(ConnectorAuthError);
-    expect(error).toMatchObject({ status: 401, message: 'Clé refusée par GitHub' });
+    expect(error).toMatchObject({ status: 401, message: 'GitHub rejected the key' });
     expect(calls).toHaveLength(1);
   });
 
@@ -228,7 +228,7 @@ describe('createConnectorHttp : codes de réponse', () => {
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: 404,
-      message: 'GitHub a répondu 404',
+      message: 'GitHub responded with 404',
     });
     expect(calls).toHaveLength(1);
   });
@@ -290,7 +290,7 @@ describe('createConnectorHttp : reprises', () => {
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: 503,
-      message: 'GitHub a répondu 503',
+      message: 'GitHub responded with 503',
     });
     expect(calls).toHaveLength(4);
     expect(waits).toEqual([2000, 4000, 8000]);
@@ -301,7 +301,7 @@ describe('createConnectorHttp : reprises', () => {
 
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       status: 429,
-      message: 'Limite de requêtes de GitHub atteinte',
+      message: 'GitHub rate limit reached',
     });
   });
 
@@ -320,7 +320,7 @@ describe('createConnectorHttp : reprises', () => {
     expect(error).toMatchObject({
       name: 'ConnectorHttpError',
       status: 403,
-      message: 'Limite de requêtes de GitHub atteinte',
+      message: 'GitHub rate limit reached',
     });
     expect(calls).toHaveLength(4);
   });
@@ -373,7 +373,7 @@ describe('createConnectorHttp : reprises', () => {
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: null,
-      message: 'GitHub injoignable',
+      message: 'GitHub is unreachable',
     });
     expect(attempts).toBe(4);
     expect(waits).toEqual([2000, 4000, 8000]);
@@ -387,7 +387,7 @@ describe('createConnectorHttp : corps', () => {
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: 200,
-      message: 'Réponse illisible',
+      message: 'Unreadable response',
     });
   });
 
@@ -397,7 +397,7 @@ describe('createConnectorHttp : corps', () => {
     await expect(http.json({ url: URL_A }, OBJECT)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
       status: 200,
-      message: 'Réponse inattendue',
+      message: 'Unexpected response',
     });
   });
 
@@ -415,7 +415,7 @@ describe('createConnectorHttp : corps', () => {
 
     await expect(http.json({ url: URL_A }, ANY)).rejects.toMatchObject({
       name: 'ResponseTooBigError',
-      message: 'Réponse trop volumineuse',
+      message: 'Response too large',
     });
     expect(calls).toHaveLength(1);
   });
@@ -425,7 +425,7 @@ describe('createConnectorHttp : corps', () => {
       { url: URL_A, json: { ok: true }, headers: { 'content-length': String(TEN_MB + 1) } },
     ]);
 
-    await expect(http.json({ url: URL_A }, ANY)).rejects.toThrow('Réponse trop volumineuse');
+    await expect(http.json({ url: URL_A }, ANY)).rejects.toThrow('Response too large');
   });
 });
 
@@ -532,7 +532,7 @@ describe('createConnectorHttp : page', () => {
 
     await expect(http.page({ url: URL_A }, OBJECT)).rejects.toMatchObject({
       name: 'ConnectorHttpError',
-      message: 'Réponse inattendue',
+      message: 'Unexpected response',
     });
   });
 
@@ -543,9 +543,7 @@ describe('createConnectorHttp : page', () => {
     const { nextUrl } = await http.page({ url: URL_A }, OBJECT);
 
     expect(nextUrl).not.toBeNull();
-    await expect(http.page({ url: nextUrl ?? '' }, OBJECT)).rejects.toThrow(
-      'Adresse non autorisée',
-    );
+    await expect(http.page({ url: nextUrl ?? '' }, OBJECT)).rejects.toThrow('Address not allowed');
     expect(calls).toHaveLength(1);
   });
 });

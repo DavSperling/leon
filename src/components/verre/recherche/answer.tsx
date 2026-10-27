@@ -100,7 +100,11 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
   const { setThinking } = useThinking();
   useEffect(() => setThinking(busy), [busy, setThinking]);
   if (state.status === 'masque') return null;
-  const notEnough = state.status === 'fini' && state.text.trim() === ANSWER_NOT_ENOUGH;
+  // La phrase « les résultats ne suffisent pas » est un marqueur que le prompt exige mot pour mot : affichée traduite,
+  // et cachée tant que le flux peut encore être en train de l'écrire.
+  const streamed = state.status === 'flux' || state.status === 'fini' ? state.text.trim() : '';
+  const notEnough = state.status === 'fini' && streamed === ANSWER_NOT_ENOUGH;
+  const maybeNotEnough = state.status === 'flux' && ANSWER_NOT_ENOUGH.startsWith(streamed);
 
   return (
     <section aria-labelledby="reponse-titre">
@@ -129,12 +133,14 @@ export function AnswerCard({ q, results, lit, onLit, onCite }: CiteHandlers & { 
 
         {/* aria-busy : un lecteur d'écran attend la fin du flux pour lire la réponse en entier */}
         <div aria-live="polite" aria-busy={busy} className="relative z-[1] mt-2.5 max-w-[72ch]">
-          {state.status === 'charge' && <SkeletonText className="pt-2 pb-1" />}
+          {(state.status === 'charge' || maybeNotEnough) && <SkeletonText className="pt-2 pb-1" />}
           {state.status === 'indisponible' && (
             <p className={cn(TEXT, 'text-muted')}>{nb(t('unavailable'))}</p>
           )}
-          {(state.status === 'flux' || state.status === 'fini') && (
-            <p className={cn(TEXT, notEnough ? 'text-muted' : 'text-fg')}>
+          {notEnough && <p className={cn(TEXT, 'text-muted')}>{nb(t('notEnough'))}</p>}
+          {((state.status === 'flux' && !maybeNotEnough) ||
+            (state.status === 'fini' && !notEnough)) && (
+            <p className={cn(TEXT, 'text-fg')}>
               <CitedText
                 text={state.text}
                 keep={(n) => n >= 1 && n <= results.length}

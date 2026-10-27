@@ -10,8 +10,8 @@ describe('labels', () => {
       claude_code: 'Claude Code',
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
-      mcp_remember: 'Note MCP',
-      document: 'Document manuel',
+      mcp_remember: 'Note (MCP)',
+      document: 'Document',
       ...PROVIDER_LABELS,
     });
   });

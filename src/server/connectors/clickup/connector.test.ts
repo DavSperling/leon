@@ -129,7 +129,7 @@ describe('clickup : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, avec l’avertissement sur les conditions', () => {
     expect(getConnector('clickup')).toBe(clickupConnector);
-    const entry = listCatalog().find((item) => item.id === 'clickup');
+    const entry = listCatalog('fr').find((item) => item.id === 'clickup');
     expect(entry?.available).toBe(true);
     expect(entry?.warning).toMatch(/entraîn/);
   });
@@ -198,7 +198,7 @@ describe('clickup : verify', () => {
     const failure = await clickupConnector.verify(config, http).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Aucun espace ClickUp accessible avec cette clé');
+    expect((failure as Error).message).toBe('No ClickUp workspace accessible with this key');
   });
 });
 
@@ -353,7 +353,7 @@ describe('clickup : dates', () => {
     const failure = await runSync(routes).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
   });
 });
 
@@ -686,7 +686,7 @@ describe('clickup : description du bouton (doc lue le 15/10/2026)', () => {
   });
 
   it('est annoncée dans le catalogue, avec ce que l’utilisateur verra chez ClickUp', () => {
-    const entry = listCatalog().find((item) => item.id === 'clickup');
+    const entry = listCatalog('fr').find((item) => item.id === 'clickup');
     expect(entry?.oauthHelp).toMatch(/espaces/);
     // Pas de droit en lecture seule chez ClickUp : le dire.
     expect(entry?.oauthHelp).toMatch(/lecture/);

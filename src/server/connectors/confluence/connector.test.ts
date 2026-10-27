@@ -172,7 +172,7 @@ describe('confluence : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('confluence')).toBe(confluenceConnector);
-    expect(listCatalog().find((item) => item.id === 'confluence')?.available).toBe(true);
+    expect(listCatalog('fr').find((item) => item.id === 'confluence')?.available).toBe(true);
   });
 });
 
@@ -596,14 +596,14 @@ describe('confluence : ressources manquantes ou refusées', () => {
     const error = await runSync(routes).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect((error as Error).message).toBe('Adresse non autorisée');
+    expect((error as Error).message).toBe('Address not allowed');
   });
 
   it('refuse une liste sans date de version : réponse inattendue', async () => {
     const broken = { results: [{ id: '1', title: 'x' }], _links: {} };
 
     await expect(runSync([listRoute(broken)])).rejects.toMatchObject({
-      message: 'Réponse inattendue',
+      message: 'Unexpected response',
     });
   });
 });
@@ -693,7 +693,7 @@ describe('confluence : le bouton, description', () => {
   });
 
   it('fait expliquer le bouton dans le catalogue, en plus de la clé', () => {
-    const entry = listCatalog().find((item) => item.id === 'confluence');
+    const entry = listCatalog('fr').find((item) => item.id === 'confluence');
 
     expect(entry?.oauthHelp?.trim()).toBeTruthy();
     expect(entry?.keyAccepted ?? true).toBe(true);
@@ -712,7 +712,7 @@ describe('confluence : le bouton, verify', () => {
     const result = await confluenceConnector.verify(oauthConfig, http);
 
     expect(result).toEqual({
-      account: 'Connecté : acme.atlassian.net, 1 autre site disponible',
+      account: 'Connected: acme.atlassian.net, 1 other site available',
       accountKey: `5b10ac8d82e05b22cc7d4ef5:${CLOUD_ID}`,
     });
     expect(calls).toHaveLength(1);
@@ -725,7 +725,7 @@ describe('confluence : le bouton, verify', () => {
     const { http } = testHttp(confluenceConnector, cfg, [{ url: CURRENT, json: userCurrent }]);
 
     expect(await confluenceConnector.verify(cfg, http)).toEqual({
-      account: 'Connecté : acme.atlassian.net',
+      account: 'Connected: acme.atlassian.net',
       accountKey: `5b10ac8d82e05b22cc7d4ef5:${CLOUD_ID}`,
     });
   });
@@ -799,7 +799,7 @@ describe('confluence : le bouton, sync', () => {
     const error = await runSync(routes, { config: oauthConfig }).catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect((error as Error).message).toBe('Adresse non autorisée');
+    expect((error as Error).message).toBe('Address not allowed');
   });
 
   it('remonte un jeton refusé (401) sur la liste des pages', async () => {

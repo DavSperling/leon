@@ -21,7 +21,7 @@ import type { OAuthSpec } from '../types';
 //
 // Un jeton d'espace qui n'expire pas, sans jeton de rafraîchissement : `expiresAt` et `refreshToken`
 // restent nuls, le socle ne le renouvelle jamais ; un 401 en plein passage met la connexion en
-// « Reconnectez Attio ».
+// « Reconnect Attio ».
 //
 // Écarts au plan, d'après la doc : Attio n'a pas de paramètre `scope` dans l'adresse d'autorisation,
 // d'où `scopes: []`. Les droits se cochent dans la console de l'appli (ceux du jeton collé :

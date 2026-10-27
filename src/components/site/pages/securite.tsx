@@ -11,10 +11,11 @@ import {
   UserRound,
   Users,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CSSProperties } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { NOT_YET, SECURITY_FACTS } from '../content';
+import { useSiteContent } from '../content';
 import { Tilt } from '../fx';
 import { CtaBand, CtaLink, Kicker, SectionHeading } from '../parts';
 import { PageHero, PageSection } from './page-hero';
@@ -35,24 +36,18 @@ const FACT_ICONS: LucideIcon[] = [
   Database,
 ];
 
-const TEAM_SEES = [
-  'Tickets, pages, réunions, notes de CRM lus par une connexion',
-  'Conversations de support et boîtes partagées (Front, Missive…)',
-  'Avec un lien vers l’original, dans son outil',
-] as const;
-
-const ONLY_YOU = [
-  'Vos conversations captées avec vos assistants d’IA',
-  'Vos discussions avec Leon',
-  'Vos notes gardées par MCP (remember)',
-  'Vos mails et votre agenda Outlook, si vous les branchez',
-] as const;
+// Les deux listes de « Qui voit quoi » (site.security.teamSees et onlyYou).
+const TEAM_SEES = ['read', 'support', 'link'] as const;
+const ONLY_YOU = ['ai', 'discussions', 'notes', 'outlook'] as const;
 
 /**
  * Le chemin d'une question, en trois plans de verre empilés en perspective (pages.css, .pg-iso) : la question en haut,
  * le filtre des droits au milieu, le classement en bas. Les plans s'écartent au survol et en entrant dans l'écran.
  */
 function RightsVisual() {
+  const t = useTranslations('site.security');
+  const sample = useTranslations('site.sample');
+  const common = useTranslations('site.common');
   const plane =
     'absolute inset-0 rounded-[22px] border p-5 shadow-[0_40px_80px_-40px_rgba(0,0,0,.55),inset_0_1px_0_var(--hi)]';
   return (
@@ -72,21 +67,17 @@ function RightsVisual() {
                 'border-line-strong bg-[color-mix(in_srgb,var(--menu)_62%,transparent)]',
               )}
             >
-              <p className="font-mono text-[11px] tracking-normal text-muted">
-                3 · le classement, puis la réponse
-              </p>
+              <p className="font-mono text-[11px] tracking-normal text-muted">{t('ranking')}</p>
               <div className="mt-3 grid gap-2">
-                {['Point mensuel ACME', 'Devis V2 signé', 'ACME : reprise des données'].map(
-                  (t, k) => (
-                    <p
-                      key={t}
-                      className="flex items-center gap-2 rounded-[10px] border border-line bg-glass-3 px-2.5 py-1.5 text-label text-fg-2"
-                    >
-                      <span className="font-mono text-[10.5px] text-accent">[{k + 1}]</span>
-                      {nb(t)}
-                    </p>
-                  ),
-                )}
+                {(['meeting', 'quote', 'migration'] as const).map((key, k) => (
+                  <p
+                    key={key}
+                    className="flex items-center gap-2 rounded-[10px] border border-line bg-glass-3 px-2.5 py-1.5 text-label text-fg-2"
+                  >
+                    <span className="font-mono text-[10.5px] text-accent">[{k + 1}]</span>
+                    {nb(sample(key))}
+                  </p>
+                ))}
               </div>
             </div>
           </div>
@@ -100,21 +91,21 @@ function RightsVisual() {
               )}
             >
               <p className="flex items-center gap-2 font-mono text-[11px] tracking-normal text-accent">
-                <ShieldCheck strokeWidth={1.8} className="size-3.5" />2 · le filtre des droits,
-                d’abord
+                <ShieldCheck strokeWidth={1.8} className="size-3.5" />
+                {t('filter')}
               </p>
               <div className="mt-3 grid gap-1.5 text-label">
                 <p className="flex items-center gap-2 text-fg-2">
                   <span className="size-2 rounded-full bg-success" />
-                  Pages et tickets de l’équipe
+                  {t('teamPages')}
                 </p>
                 <p className="flex items-center gap-2 text-fg-2">
                   <span className="size-2 rounded-full bg-success" />
-                  Vos propres conversations
+                  {t('ownConversations')}
                 </p>
                 <p className="flex items-center gap-2 text-muted line-through decoration-line-strong">
                   <span className="size-2 rounded-full bg-line-strong" />
-                  Les conversations d’un collègue
+                  {t('colleague')}
                 </p>
               </div>
             </div>
@@ -126,12 +117,10 @@ function RightsVisual() {
                 'border-line-strong bg-[color-mix(in_srgb,var(--menu)_70%,transparent)]',
               )}
             >
-              <p className="font-mono text-[11px] tracking-normal text-muted">1 · la question</p>
+              <p className="font-mono text-[11px] tracking-normal text-muted">{t('question')}</p>
               <div className="mt-3 flex h-11 items-center gap-2.5 rounded-[12px] border border-line-strong bg-glass-2 px-3">
                 <span className="font-mono text-[11px] text-muted">/</span>
-                <span className="text-ui font-medium text-fg">
-                  {nb('qu’a-t-on promis à ACME ?')}
-                </span>
+                <span className="text-ui font-medium text-fg">{nb(t('query'))}</span>
                 <span className="caret" />
               </div>
             </div>
@@ -139,30 +128,30 @@ function RightsVisual() {
         </div>
       </div>
       <figcaption className="-mt-14 text-center font-mono text-meta tracking-normal text-muted sm:-mt-20">
-        <span className="sr-only">
-          {nb(
-            'Illustration : une recherche passe d’abord par le filtre des droits, puis par le classement. ',
-          )}
-        </span>
-        Exemple fictif
+        <span className="sr-only">{nb(t('visualCaption'))}</span>
+        {common('fictional')}
       </figcaption>
     </figure>
   );
 }
 
 export function SecuritePage() {
+  const t = useTranslations('site.security');
+  const cta = useTranslations('site.cta');
+  const common = useTranslations('site.common');
+  const { securityFacts, notYet } = useSiteContent();
   return (
     <>
       <PageHero
-        kicker="Sécurité"
-        title="Leon voit ce que vous voyez. Rien de plus."
-        accent="Rien de plus."
-        lead="La recherche, la discussion et votre assistant passent par les mêmes droits que vous. Voici ce qui est en place aujourd’hui, et ce qui ne l’est pas encore."
+        kicker={common('security')}
+        title={t('heroTitle')}
+        accent={t('heroAccent')}
+        lead={t('heroLead')}
         actions={
           <>
-            <CtaLink href="/inscription">Créer un espace</CtaLink>
+            <CtaLink href="/inscription">{cta('create')}</CtaLink>
             <CtaLink href="#pas-encore" variant="secondary">
-              Ce qui n’est pas encore là
+              {t('notYet')}
             </CtaLink>
           </>
         }
@@ -172,12 +161,12 @@ export function SecuritePage() {
       <PageSection labelledBy="faits-titre" className="pt-6 sm:pt-10">
         <SectionHeading
           id="faits-titre"
-          kicker="En place"
-          title="Ce qui est vrai dans le code, aujourd’hui."
-          lead="Chaque point ci-dessous existe dans le produit aujourd’hui. Rien n’est annoncé avant d’exister."
+          kicker={t('factsKicker')}
+          title={t('factsTitle')}
+          lead={t('factsLead')}
         />
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {SECURITY_FACTS.map((f, i) => {
+          {securityFacts.map((f, i) => {
             const Icon = FACT_ICONS[i] ?? ShieldCheck;
             return (
               <li key={f.title} className="site-reveal">
@@ -202,8 +191,8 @@ export function SecuritePage() {
       <PageSection labelledBy="qui-titre">
         <SectionHeading
           id="qui-titre"
-          kicker="Qui voit quoi"
-          title="Deux règles, faciles à retenir."
+          kicker={t('whoKicker')}
+          title={t('whoTitle')}
           align="center"
         />
         <div className="mx-auto mt-10 grid max-w-[980px] gap-4 md:grid-cols-2">
@@ -215,21 +204,17 @@ export function SecuritePage() {
               <Users aria-hidden="true" strokeWidth={1.7} className="size-5" />
             </span>
             <h3 id="equipe-voit" className="mt-5 text-h2 font-bold tracking-[-0.02em] text-fg">
-              Visible de toute l’équipe
+              {t('teamTitle')}
             </h3>
-            <p className="mt-2 text-body text-fg-2">
-              {nb(
-                'Ce que lit une connexion, comme dans un outil partagé. Sauf Outlook : une boîte mail et un agenda restent privés à qui les branche.',
-              )}
-            </p>
+            <p className="mt-2 text-body text-fg-2">{nb(t('teamText'))}</p>
             <ul className="mt-5 grid gap-2.5">
-              {TEAM_SEES.map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-ui text-fg-2">
+              {TEAM_SEES.map((k) => (
+                <li key={k} className="flex items-start gap-2.5 text-ui text-fg-2">
                   <span
                     aria-hidden="true"
                     className="mt-[7px] size-1.5 shrink-0 rounded-full bg-success"
                   />
-                  {nb(t)}
+                  {nb(t(`teamSees.${k}`))}
                 </li>
               ))}
             </ul>
@@ -245,19 +230,17 @@ export function SecuritePage() {
               id="vous-voyez"
               className="relative mt-5 text-h2 font-bold tracking-[-0.02em] text-fg"
             >
-              Privé, à vous seul
+              {t('youTitle')}
             </h3>
-            <p className="relative mt-2 text-body text-fg-2">
-              {nb('Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.')}
-            </p>
+            <p className="relative mt-2 text-body text-fg-2">{nb(t('youText'))}</p>
             <ul className="relative mt-5 grid gap-2.5">
-              {ONLY_YOU.map((t) => (
-                <li key={t} className="flex items-start gap-2.5 text-ui text-fg-2">
+              {ONLY_YOU.map((k) => (
+                <li key={k} className="flex items-start gap-2.5 text-ui text-fg-2">
                   <span
                     aria-hidden="true"
                     className="mt-[7px] size-1.5 shrink-0 rounded-full bg-accent"
                   />
-                  {nb(t)}
+                  {nb(t(`onlyYou.${k}`))}
                 </li>
               ))}
             </ul>
@@ -269,21 +252,17 @@ export function SecuritePage() {
         <div className="site-reveal relative overflow-hidden rounded-panel border border-warning-line bg-warning-soft p-6 sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
             <div>
-              <Kicker className="text-warning [&>span]:bg-warning">Franchement</Kicker>
+              <Kicker className="text-warning [&>span]:bg-warning">{t('frankly')}</Kicker>
               <h2
                 id="pas-encore-titre"
                 className="mt-3 text-[clamp(26px,3.2vw,40px)] leading-[1.08] font-bold tracking-[-0.035em] text-balance text-fg"
               >
-                {nb('Ce qui n’est pas encore là.')}
+                {nb(t('notYetTitle'))}
               </h2>
-              <p className="mt-4 text-body leading-[1.6] text-fg-2">
-                {nb(
-                  'Nous préférons l’écrire ici plutôt que de vous le laisser découvrir. Nous tenons cette liste à jour.',
-                )}
-              </p>
+              <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(t('notYetLead'))}</p>
             </div>
             <ol className="grid content-start gap-3">
-              {NOT_YET.map((n, i) => (
+              {notYet.map((n, i) => (
                 <li
                   key={n}
                   className="site-reveal flex items-start gap-4 rounded-box border border-line bg-panel px-4 py-3.5 shadow-hi transition-[translate,border-color] duration-300 ease-out hover:translate-x-1 hover:border-warning-line"
@@ -299,10 +278,7 @@ export function SecuritePage() {
         </div>
       </PageSection>
 
-      <CtaBand
-        title="Ce qui a été dit reste dit, pour ceux qui ont le droit de le lire."
-        text="Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui reste à vous."
-      />
+      <CtaBand title={t('ctaTitle')} text={t('ctaText')} />
     </>
   );
 }

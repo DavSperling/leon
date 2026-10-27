@@ -104,7 +104,7 @@ export function closeClient(apiKey: string, http: ConnectorHttp) {
       const reply = await http.json({ url: `${API}/me/`, headers }, MeReply);
       const name = [reply.first_name, reply.last_name].filter(Boolean).join(' ');
       return {
-        name: name || reply.email || 'Compte Close',
+        name: name || reply.email || 'Close account',
         organization: reply.organizations?.[0]?.name ?? null,
         email: reply.email ?? null,
       };

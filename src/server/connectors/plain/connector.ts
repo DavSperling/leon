@@ -25,7 +25,7 @@ import { threadToItem } from './map';
 // on filtre sur `updatedAt` (DatetimeFilter.after, borne comprise), on parcourt la liste par ordre de
 // création, et le passage suivant repart du début de celui-ci moins 5 minutes (voir cursor.ts).
 // (4) Les messages d'un fil sont la ressource principale, pas une ressource secondaire : un droit
-// manquant sur la chronologie (FORBIDDEN) remonte en « Clé refusée » au lieu de ne rien lire.
+// manquant sur la chronologie (FORBIDDEN) remonte en « Plain rejected the key » au lieu de ne rien lire.
 // (5) Aucune adresse vers le fil : la doc n'en donne pas (`url` nul).
 // Lus : courriels (dernier message seul, `textContent`), notes, chats, messages Slack, Teams et
 // Discord. Non lus : entrées personnalisées, messages du centre d'aide, messages de fils fusionnés,

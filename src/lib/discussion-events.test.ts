@@ -7,6 +7,7 @@ import {
   discussionMessagesUrl,
   finalReplyText,
   parseDiscussionEvent,
+  replyParts,
 } from './discussion-events';
 
 const ID = '0b6c1f0e-8a52-4c0e-9d8e-3f1b2a4c5d6e';
@@ -139,5 +140,23 @@ describe('finalReplyText', () => {
 
   it('remplace tout texte partiel par la phrase de refus', () => {
     expect(finalReplyText('Voici les mails', 'refus')).toBe(DISCUSSION_REFUSAL);
+  });
+});
+
+describe('replyParts', () => {
+  it('reconnaît les phrases fixes gardées, pour que la page les traduise', () => {
+    expect(replyParts(DISCUSSION_REFUSAL)).toEqual({ main: '', fixed: 'refusal', limit: false });
+    expect(replyParts(DISCUSSION_EMPTY)).toEqual({ main: '', fixed: 'empty', limit: false });
+    expect(replyParts(finalReplyText('Début [1]', 'limite'))).toEqual({
+      main: 'Début [1]',
+      fixed: null,
+      limit: true,
+    });
+    expect(replyParts(DISCUSSION_LIMIT_NOTE)).toEqual({ main: '', fixed: null, limit: true });
+    expect(replyParts('La clause est acceptée [1].')).toEqual({
+      main: 'La clause est acceptée [1].',
+      fixed: null,
+      limit: false,
+    });
   });
 });

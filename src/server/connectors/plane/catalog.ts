@@ -25,4 +25,21 @@ export const planeCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'Seul Plane en ligne (app.plane.so) est pris en charge, pas une installation de Plane hébergée par vous.',
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'The key is shown only once, when it is created. It has its owner’s permissions: create it with an account that only sees the projects you want.',
+      },
+      workspace: {
+        label: 'Workspace',
+        placeholder: 'my-team',
+        help: 'The identifier in your Plane URL: in app.plane.so/my-team/projects/, it’s my-team.',
+      },
+    },
+    keyHelp:
+      'In Plane: your profile › Profile settings › Personal access tokens › Add personal access token (give it a title and, if you like, an expiration date).',
+    warning:
+      'Only Plane Cloud (app.plane.so) is supported, not a Plane installation you host yourself.',
+  },
 };

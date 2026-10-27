@@ -18,4 +18,17 @@ export const attioCatalog: CatalogEntry = {
   docsUrl: 'https://docs.attio.com/rest-api/guides/authentication',
   triedForReal: false,
   warning: 'Revue d’Attio nécessaire au-delà de 25 espaces.',
+  en: {
+    fields: {
+      token: {
+        label: 'Access token',
+        help: 'Give the token read access to notes (note:read), comments (comment:read), members (user_management:read), and records (object_configuration:read, record_permission:read). Leon only reads. Notes edited after they were created are not read again.',
+      },
+    },
+    keyHelp:
+      'In Attio, as an admin: menu next to the workspace name › Workspace settings › Developers tab › + New access token, then set the read permissions and copy the token.',
+    oauthHelp:
+      'Attio asks you to authorize Leon to read your workspace’s notes, comments, members, and records. The access also allows writing notes and comments; Leon doesn’t use it yet. Only a workspace admin can give this authorization. Until the app is approved by Attio, a “not yet approved” warning is shown: you can continue.',
+    warning: 'Attio review required beyond 25 workspaces.',
+  },
 };

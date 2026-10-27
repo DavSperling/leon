@@ -22,4 +22,20 @@ export const leexiCatalog: CatalogEntry = {
   triedForReal: false,
   warning:
     'L’API demande le plan AI Meeting au minimum. Tous les appels que la clé voit (selon ses règles d’accès) deviennent visibles de toute l’équipe dans Leon.',
+  en: {
+    fields: {
+      keyId: {
+        label: 'Key ID',
+        help: 'Shown with the secret when the key is created. A replaced key has a new ID: enter it too.',
+      },
+      keySecret: {
+        label: 'Key secret',
+        help: 'Shown only once, when the key is created: copy it right away.',
+      },
+    },
+    keyHelp:
+      'In Leexi: Settings › Advanced › API keys, “Add” button (admin account required), with the “Read calls” permission.',
+    warning:
+      'The API requires the AI Meeting plan at minimum. All the calls the key sees (according to its access rules) become visible to the whole team in Leon.',
+  },
 };

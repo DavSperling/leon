@@ -12,4 +12,12 @@ export const gmailCatalog: CatalogEntry = {
   triedForReal: true,
   warning:
     'Le texte des courriers reste privé, comme une conversation : vous seul le voyez. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
+  en: {
+    fields: {},
+    keyHelp: '',
+    oauthHelp:
+      'The connection goes through Pipedream, the service that holds the access for Leon: Google asks you to authorize “Pipedream” to read, write, and send your email. Leon only reads (excluding Promotions, Social, drafts, and spam); it writes and sends nothing.',
+    warning:
+      'The text of emails stays private, like a conversation: only you can see it. The access is held by Pipedream, hosted in the United States.',
+  },
 };

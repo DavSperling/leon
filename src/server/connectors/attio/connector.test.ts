@@ -132,7 +132,7 @@ describe('attio : configuration', () => {
 
   it('est disponible dans le registre et le catalogue', () => {
     expect(getConnector('attio')).toBe(attioConnector);
-    const entry = listCatalog().find((item) => item.id === 'attio');
+    const entry = listCatalog('fr').find((item) => item.id === 'attio');
     expect(entry?.available).toBe(true);
     expect(entry?.fields.map((field) => field.name)).toEqual(['token']);
   });
@@ -148,7 +148,7 @@ describe('attio : verify', () => {
     const result = await attioConnector.verify(config, http);
 
     expect(result).toEqual({
-      account: 'Attio (espace Acme)',
+      account: 'Attio (workspace Acme)',
       accountKey: '14beef7a-99f7-4534-a87e-70b564330a4c:50cf242c-7fa3-4cad-87d0-75b1af71c57b',
     });
     expect(calls[0]?.url).toBe(`${API}/self`);
@@ -570,7 +570,7 @@ describe('attio : connexion par le bouton', () => {
     const result = await attioConnector.verify(oauthConfig, http);
 
     expect(result).toEqual({
-      account: 'Attio (espace Acme)',
+      account: 'Attio (workspace Acme)',
       accountKey: '14beef7a-99f7-4534-a87e-70b564330a4c:50cf242c-7fa3-4cad-87d0-75b1af71c57b',
     });
     expect(calls).toHaveLength(2);

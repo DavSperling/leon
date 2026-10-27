@@ -28,7 +28,7 @@ export const byTime = (a: Board, b: Board): number => a.time - b.time || a.id.lo
 // Le repère après avoir rendu `done`, des tableaux triés par `byTime`.
 export function markAfter(done: Board[], previous: Mark): string {
   const last = done.at(-1);
-  if (last === undefined) throw new Error('Aucun tableau lu');
+  if (last === undefined) throw new Error('No board read');
   const ids = new Set(previous.at === last.time ? previous.ids : []);
   for (const board of done) if (board.time === last.time) ids.add(board.id);
   return JSON.stringify({ at: new Date(last.time).toISOString(), ids: [...ids] });

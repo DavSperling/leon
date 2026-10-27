@@ -81,7 +81,7 @@ describe('folk : configuration', () => {
 
   it('est disponible dans le registre et le catalogue, avec l’avertissement sur la bêta', () => {
     expect(getConnector('folk')).toBe(folkConnector);
-    const entry = listCatalog().find((item) => item.id === 'folk');
+    const entry = listCatalog('fr').find((item) => item.id === 'folk');
     expect(entry?.available).toBe(true);
     expect(entry?.warning).toMatch(/bêta/);
   });
@@ -458,7 +458,7 @@ describe('folk : erreurs', () => {
     const failure = await runSync(routes).catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Adresse non autorisée');
+    expect((failure as Error).message).toBe('Address not allowed');
   });
 
   it('refuse une réponse qui n’a pas la forme attendue, sans en reprendre le texte', async () => {
@@ -467,7 +467,7 @@ describe('folk : erreurs', () => {
     );
 
     expect(failure).toBeInstanceOf(ConnectorHttpError);
-    expect((failure as Error).message).toBe('Réponse inattendue');
+    expect((failure as Error).message).toBe('Unexpected response');
     expect((failure as Error).message).not.toContain(KEY);
   });
 

@@ -111,7 +111,7 @@ export const zendeskConnector: Connector<Config> = {
       if (!isUnknownSubdomain(error)) throw error;
       throw new ConnectorHttpError(
         (error as ConnectorHttpError).status,
-        'Sous-domaine Zendesk introuvable : vérifiez le nom du sous-domaine',
+        'Zendesk subdomain not found: check the subdomain name',
       );
     }
   },

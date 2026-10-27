@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { CasUsagePage } from '@/components/site/pages/cas-usage';
 
-export const metadata: Metadata = {
-  title: 'Cas d’usage',
-  description:
-    'Direction, ventes, support, produit, chefs de projet, nouvelles arrivées : les questions que chaque équipe pose à Leon, et ce qu’il répond, avec ses sources.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('site.meta');
+  return { title: t('useCasesTitle'), description: t('useCasesDescription') };
+}
 
 export default function Page() {
   return <CasUsagePage />;

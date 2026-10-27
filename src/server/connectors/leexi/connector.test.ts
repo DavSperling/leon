@@ -125,7 +125,7 @@ describe('verify', () => {
     expect(error).toBeInstanceOf(ConnectorHttpError);
     expect(error).not.toBeInstanceOf(ConnectorAuthError);
     expect(error.status).toBe(402);
-    expect(error.message).toBe('Abonnement Leexi inactif');
+    expect(error.message).toBe('Leexi subscription inactive');
   });
 });
 
@@ -459,7 +459,7 @@ describe('sync : erreurs', () => {
       listRoute({ success: false, message: 'texte-secret-xyz' }, { status: 402 }),
     ]).catch((caught) => caught);
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect(error.message).toBe('Abonnement Leexi inactif');
+    expect(error.message).toBe('Leexi subscription inactive');
   });
 
   it('lève une erreur propre sur une réponse qui n’est pas du JSON', async () => {
@@ -467,13 +467,13 @@ describe('sync : erreurs', () => {
       { url: `${BASE}/calls`, text: '<html>texte-secret-xyz</html>' },
     ]).catch((caught) => caught);
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect(error.message).toBe('Réponse illisible');
+    expect(error.message).toBe('Unreadable response');
     expect(error.message).not.toContain('texte-secret-xyz');
   });
 
   it('lève une erreur propre sur une réponse d’une autre forme', async () => {
     const error = await runSync([listRoute({ data: 'rien', pagination: {} })]).catch((c) => c);
     expect(error).toBeInstanceOf(ConnectorHttpError);
-    expect(error.message).toBe('Réponse inattendue');
+    expect(error.message).toBe('Unexpected response');
   });
 });

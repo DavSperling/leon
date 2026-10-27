@@ -15,4 +15,14 @@ export const circlebackCatalog: CatalogEntry = {
     'Dans Circleback : Settings › API keys, puis créer une clé (elle commence par cb_ et ne s’affiche qu’une seule fois).',
   docsUrl: 'https://circleback.ai/docs/api',
   triedForReal: false,
+  en: {
+    fields: {
+      apiKey: {
+        label: 'API key',
+        help: 'Leon reads the meetings of the key’s owner, not those that were only shared with them.',
+      },
+    },
+    keyHelp:
+      'In Circleback: Settings › API keys, then create a key (it starts with cb_ and is shown only once).',
+  },
 };

@@ -30,6 +30,7 @@ import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
 import type { ServerEnv } from './env';
 import {
+  countOf,
   createIngestSender,
   type ImportDeps,
   type ImportSummary,
@@ -86,20 +87,21 @@ function startingDirectory(
 // Les messages sont fixes : jamais le texte d'une session, d'une adresse de remote ni d'une erreur
 // (celle d'un serveur ou du réseau peut citer une adresse ou un jeton).
 function warn(message: string): void {
-  console.error(`Leon : ${message}`);
+  console.error(`Leon: ${message}`);
 }
 
 function failureMessage(error: unknown): string {
-  if (error instanceof TokenRefusedError) return 'jeton refusé par le serveur, session non captée.';
+  if (error instanceof TokenRefusedError)
+    return 'token refused by the server, session not captured.';
   // Le serveur valide strictement la source : un serveur sans la tâche T12 refuse `source.project` par un 400.
   // Ordre de déploiement : le serveur d'abord, la CLI ensuite.
   if (error instanceof IngestResponseError && error.status === 400) {
-    return 'le serveur ne reconnaît pas cet envoi (il est peut-être plus ancien que la CLI), session non captée.';
+    return 'the server does not recognize this upload (it may be older than the CLI), session not captured.';
   }
   if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
-    return 'serveur trop lent (délai dépassé), session non captée.';
+    return 'server too slow (timeout exceeded), session not captured.';
   }
-  return 'serveur injoignable ou réponse inattendue, session non captée.';
+  return 'server unreachable or unexpected response, session not captured.';
 }
 
 function parseHookInput(stdin: string): z.infer<typeof HookInputSchema> | null {
@@ -121,13 +123,13 @@ async function readSession(path: string, deps: CaptureDeps) {
 
 async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   const input = parseHookInput(stdin);
-  if (!input) return warn('entrée du crochet illisible, session non captée.');
+  if (!input) return warn('could not read the hook input, session not captured.');
 
   const session = await readSession(input.transcript_path, deps);
   if (session === undefined) {
-    return warn('fichier de session introuvable ou illisible, session non captée.');
+    return warn('session file not found or unreadable, session not captured.');
   }
-  if (session === null) return warn('aucun échange à envoyer pour cette session.');
+  if (session === null) return warn('nothing to send for this session.');
 
   // Le dossier de départ de la session, comme `briefing` : le même projet des deux côtés.
   const projectKey = await projectKeyFor(
@@ -147,7 +149,7 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
     return warn(failureMessage(error));
   }
   warn(
-    `session captée (${summary.inserted} tour(s) nouveau(x), ${summary.skipped} déjà connu(s)).`,
+    `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
 }
 
@@ -156,7 +158,7 @@ export async function captureSessionFromHook(stdin: string, deps: CaptureDeps): 
   try {
     await capture(stdin, deps);
   } catch {
-    warn('capture impossible (erreur inattendue).');
+    warn('capture failed (unexpected error).');
   }
   return 0;
 }

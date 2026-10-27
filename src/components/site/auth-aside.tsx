@@ -4,7 +4,7 @@ import { Plug, Quote, Users } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/verre/shell/brand';
 import { nb } from '@/lib/verre/nb';
-import { BRIEFING, DEMOS, type Demo, TAGLINES, TOOL_COUNT } from './content';
+import { BRIEFING, DEMOS, type Demo, SYNC_DELAY, TAGLINES, TOOL_COUNT } from './content';
 import { DemoAnswerCard, DemoSourceRow } from './demo-card';
 import { ParticleField, SplitWords, Tilt } from './fx';
 import { Kicker, ToolLogo } from './parts';
@@ -16,7 +16,7 @@ import { Kicker, ToolLogo } from './parts';
 const POINTS = [
   { icon: Quote, text: 'Chaque réponse cite sa source, ou dit « je ne sais pas ».' },
   { icon: Users, text: 'Vos conversations d’IA et vos discussions restent privées.' },
-  { icon: Plug, text: `${TOOL_COUNT} outils branchables, relevés toutes les 15 minutes.` },
+  { icon: Plug, text: `${TOOL_COUNT} outils branchables, relevés ${SYNC_DELAY}.` },
 ] as const;
 
 const STEPS = [

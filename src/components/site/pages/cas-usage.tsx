@@ -2,7 +2,15 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { SITUATIONS, type Situation, TEAMS, type Team, TOOL_COUNT, toolLabel } from '../content';
+import {
+  SITUATIONS,
+  type Situation,
+  SYNC_DELAY,
+  TEAMS,
+  type Team,
+  TOOL_COUNT,
+  toolLabel,
+} from '../content';
 import { DemoCard } from '../demo-card';
 import { Tilt } from '../fx';
 import {
@@ -369,7 +377,7 @@ export function EquipePage({ team }: { team: Team }) {
               </h2>
               <p className="mt-3 text-body leading-[1.6] text-fg-2">
                 {nb(
-                  'Une clé d’API ou un bouton de connexion suffit. Leon relève ce qui change toutes les 15 minutes.',
+                  `Une clé d’API ou un bouton de connexion suffit. Leon relève ce qui change ${SYNC_DELAY}.`,
                 )}
               </p>
               <ArrowLink href="/connecteurs" className="mt-6">

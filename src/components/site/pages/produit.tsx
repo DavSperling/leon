@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { BRIEFING, DEMOS, PILLARS, type Pillar, SYNTAX, TOOL_COUNT } from '../content';
+import { BRIEFING, DEMOS, PILLARS, type Pillar, SYNC_DELAY, SYNTAX, TOOL_COUNT } from '../content';
 import { DemoAnswerCard, DemoSearchField } from '../demo-card';
 import { Layers3D, Tilt } from '../fx';
 import {
@@ -111,7 +111,7 @@ function FakeSwitch({ on }: { on: boolean }) {
 function CaptureVisual() {
   return (
     <Visual
-      caption="Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin."
+      caption={`Illustration : des outils branchés relevés ${SYNC_DELAY}, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin.`}
       label="ce que Leon capte"
       chip="+ 3 éléments gardés · 14:12"
     >
@@ -124,7 +124,7 @@ function CaptureVisual() {
               <span className="text-ui font-semibold text-fg">Outils branchés</span>
               <span className="ml-auto flex items-center gap-1.5 font-mono text-meta tracking-normal text-muted">
                 <span className="pulse" />
-                relève toutes les 15 min
+                relève automatique
               </span>
             </div>
             <div className="mt-4 grid grid-cols-4 gap-2.5 sm:grid-cols-8">

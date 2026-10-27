@@ -1,7 +1,7 @@
 import { Blocks, Globe, KeyRound, ListChecks, Plug, Terminal, Timer } from 'lucide-react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { ALL_TOOLS, TOOL_COUNT } from '../content';
+import { ALL_TOOLS, SYNC_DELAY, TOOL_COUNT } from '../content';
 import { LogoSphere, Tilt } from '../fx';
 import { CtaBand, CtaLink, Kicker, SectionHeading } from '../parts';
 import { ConnecteursCatalogue } from './connecteurs-catalogue';
@@ -50,7 +50,7 @@ const STEPS = [
   {
     icon: ListChecks,
     title: 'Tester et brancher',
-    text: 'La connexion n’est enregistrée que si le test réussit. Ensuite, une relève toutes les 15 minutes.',
+    text: `La connexion n’est enregistrée que si le test réussit. Ensuite, une relève ${SYNC_DELAY}.`,
   },
 ] as const;
 
@@ -99,7 +99,7 @@ export function ConnecteursPage() {
       <PageHero
         kicker="Connecteurs"
         title={`${TOOL_COUNT} outils branchables, et vos conversations d’IA.`}
-        lead="Tickets, pages, réunions, notes de CRM, conversations de support : Leon relève ce qui change toutes les 15 minutes et le garde tel quel, avec un lien vers l’original."
+        lead={`Tickets, pages, réunions, notes de CRM, conversations de support : Leon relève ce qui change ${SYNC_DELAY} et le garde tel quel, avec un lien vers l’original.`}
         actions={
           <>
             <CtaLink href="/inscription">Créer un espace</CtaLink>

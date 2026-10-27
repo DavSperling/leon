@@ -20,6 +20,7 @@ import {
   type Demo,
   FAQ,
   SECURITY_FACTS,
+  SYNC_DELAY,
   TAGLINES,
   TOOL_COUNT,
   TOOL_GROUPS,
@@ -138,7 +139,7 @@ function ToolsStrip() {
           </h2>
           <p className="mt-5 max-w-[480px] text-[17px] leading-[1.6] text-fg-2 max-lg:mx-auto">
             {nb(
-              'Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change toutes les 15 minutes, par une clé d’API ou un bouton de connexion.',
+              `Réunions, tickets, CRM, support, pages, mails : Leon relève ce qui change ${SYNC_DELAY}, par une clé d’API ou un bouton de connexion.`,
             )}{' '}
             <span aria-hidden="true">Faites tourner la sphère.</span>
           </p>
@@ -280,7 +281,7 @@ function Steps() {
           id="etapes"
           kicker="Comment ça marche"
           title="Vous branchez. Leon garde. Vous demandez."
-          lead="Aucune fiche à remplir, aucun résumé à relire : Leon relève vos outils toutes les 15 minutes et garde chaque élément tel qu’il a été écrit."
+          lead={`Aucune fiche à remplir, aucun résumé à relire : Leon relève vos outils ${SYNC_DELAY} et garde chaque élément tel qu’il a été écrit.`}
         />
         <div className="relative mt-14">
           {/* fil qui relie les trois temps */}

@@ -64,7 +64,7 @@ export default async function SettingsPage() {
               <SecuritySettings enabled={Boolean(session?.user.twoFactorEnabled)} />
             </Section>
           ),
-          equipe: <MembersSection members={members} canInvite={mayInvite} />,
+          equipe: <MembersSection members={members} canInvite={mayInvite} viewerId={ctx.userId} />,
           integrations: (
             <>
               <TokensSection tokens={tokens} />

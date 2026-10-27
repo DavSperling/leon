@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { LOCALE_COOKIE, locales } from '@/i18n/request';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
-import { createInvitationLink } from '@/server/auth/members';
+import { createInvitationLink, removeMember, setMemberRole } from '@/server/auth/members';
+import { setManager } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requestHeaders, requireUserContext } from '@/server/auth/session';
 import { env } from '@/server/env';
@@ -58,6 +59,42 @@ export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean 
   if (!z.uuid().safeParse(tokenId).success) return { ok: false };
   const ok = await revokeApiToken(ctx, tokenId);
   revalidatePath('/reglages');
+  return { ok };
+}
+
+// Organigramme et membres (0036) : réservés aux propriétaires et administrateurs, ce que members.ts et organisation.ts
+// vérifient, avec les identifiants reçus du navigateur.
+export async function setManagerAction(
+  memberId: string,
+  managerId: string | null,
+): Promise<{ result: 'ok' | 'refuse' | 'boucle' }> {
+  const ctx = await requireUserContext();
+  const result = await setManager(ctx, memberId, managerId);
+  if (result === 'ok') {
+    revalidatePath('/reglages');
+    revalidatePath('/equipe');
+  }
+  return { result };
+}
+
+export async function setMemberRoleAction(
+  memberId: string,
+  role: string,
+): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const parsed = z.enum(['admin', 'member']).safeParse(role);
+  const ok = parsed.success && (await setMemberRole(ctx, memberId, parsed.data));
+  if (ok) revalidatePath('/reglages');
+  return { ok };
+}
+
+export async function removeMemberAction(memberId: string): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await removeMember(ctx, memberId);
+  if (ok) {
+    revalidatePath('/reglages');
+    revalidatePath('/equipe');
+  }
   return { ok };
 }
 

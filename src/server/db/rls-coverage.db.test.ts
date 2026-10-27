@@ -22,6 +22,7 @@ const DELETE_ALLOWED = [
   'connection_exclusions', // retirer une exclusion (0015)
   'identities', // retirer un compte déclaré (0017)
   'discussions', // l'auteur supprime ses discussions, les messages partent en cascade (0031)
+  'reporting_lines', // un administrateur détache un membre de son manager (0036)
 ];
 
 const TENANT_TABLES = `

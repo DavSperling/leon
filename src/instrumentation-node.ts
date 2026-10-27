@@ -5,6 +5,9 @@ export async function startNodeInstrumentation() {
   const { env } = await import('@/server/env');
   // Next exécute register() pendant `next build` : le worker ne doit jamais y démarrer.
   if (process.env.NEXT_PHASE === 'phase-production-build') return;
+  // Avant tout worker et toute requête : un rôle qui passe outre la RLS arrête le démarrage (db/client.ts).
+  const { assertRlsRole } = await import('@/server/db/client');
+  await assertRlsRole();
   // L'indexation de la recherche ne dépend d'aucun modèle : ni de la clé Anthropic, ni d'aucun appel au modèle.
   // Le plein texte tourne seul ; les vecteurs s'ajoutent dès qu'un fournisseur est réglé (LEON_EMBEDDINGS).
   // Elle démarre avant la relève des connecteurs, qui met des jobs dans sa file dès son premier passage.

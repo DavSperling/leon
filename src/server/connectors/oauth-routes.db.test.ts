@@ -1000,4 +1000,25 @@ describe('Pipedream : Gmail par le bouton', () => {
     const loaded = await claimConnection(paul.ctx, id);
     expect(loaded?.config.accountId).toBe('apn_old1');
   });
+
+  // Audit ponytail n° 2 : Bob ouvre le lien de Paul et y branche sa propre boîte.
+  it('« collegue » quand la boîte branchée est celle d’un autre membre, et Pipedream l’oublie', async () => {
+    const paul = await signUp();
+    const bob = await createTestUser(paul.ctx.tenantId, 'Bob');
+    const address = `bob-${randomUUID()}@acme.test`;
+    await adminPool.query('update "user" set email = $1 where id = $2', [address, bob.userId]);
+
+    const { response, fetchImpl } = await connectGmail(paul, [
+      accounts(['apn_bob1']),
+      profile(address.toUpperCase()),
+      removal(),
+    ]);
+
+    expect(location(response)).toBe('/connexions?erreur=collegue&outil=gmail');
+    expect(await connectionsOf(paul.ctx.tenantId)).toEqual([]);
+    expect(fetchImpl.calls.at(-1)).toMatchObject({
+      method: 'DELETE',
+      url: `${CONNECT}/users/${linkBody(fetchImpl)?.external_user_id}`,
+    });
+  });
 });

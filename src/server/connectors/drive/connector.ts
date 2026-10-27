@@ -65,7 +65,10 @@ export const driveConnector: Connector<PipedreamConfig> = {
   async verify(_config, http) {
     const { user } = await driveClient(http).about();
     const address = user.emailAddress;
-    const key = user.permissionId ? { accountKey: user.permissionId } : {};
+    const key = {
+      ...(user.permissionId ? { accountKey: user.permissionId } : {}),
+      ...(address ? { email: address } : {}),
+    };
     if (user.displayName)
       return { account: address ? `${user.displayName} (${address})` : user.displayName, ...key };
     return { account: address || 'compte Google Drive', ...key };

@@ -63,6 +63,7 @@ describe('driveConnector', () => {
     expect(await driveConnector.verify(config, http)).toEqual({
       account: 'David (david@acme.test)',
       accountKey: '0123',
+      email: 'david@acme.test',
     });
   });
 

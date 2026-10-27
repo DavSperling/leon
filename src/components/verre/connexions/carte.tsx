@@ -579,7 +579,7 @@ export function CarteConnexions({
                 </p>
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                   <Legende />
-                  <BoutonJeu onClick={jeu.lancer} />
+                  <BoutonJeu ref={jeu.bouton} onClick={jeu.lancer} />
                 </div>
               </>
             )}

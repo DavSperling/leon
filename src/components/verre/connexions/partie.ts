@@ -240,6 +240,9 @@ export function avancer(
 
   if (p.vies <= 0) {
     p.phase = 'fin';
+    // La partie se fige : ni anneau d'invincibilité ni aimant sur l'écran de fin.
+    p.invincible = 0;
+    p.aimant = 0;
     ev.push({ type: 'fin' });
   }
   return ev;

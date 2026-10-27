@@ -88,7 +88,14 @@ export function useJeu(
   const [actif, setActif] = useState(false);
   const [manche, setManche] = useState(0);
   const [hud, setHud] = useState(HUD_DEPART);
+  const bouton = useRef<HTMLButtonElement>(null);
+  const aJoue = useRef(false);
+  // Le bouton « Jouer » revient avec le schéma : le focus y retourne, plutôt que sur la page entière.
+  useEffect(() => {
+    if (!actif && aJoue.current) bouton.current?.focus();
+  }, [actif]);
   const lancer = useCallback(() => {
+    aJoue.current = true;
     setHud({ ...HUD_DEPART, record: lireRecord() });
     setActif(true);
     setManche((m) => m + 1);
@@ -103,14 +110,20 @@ export function useJeu(
     animate(centre.x, repos.x, RESSORT);
     animate(centre.y, repos.y, RESSORT);
   }, [centre, repos, instant]);
-  return { actif, manche, hud, setHud, lancer, quitter };
+  return { actif, manche, hud, setHud, lancer, quitter, bouton };
 }
 
-export function BoutonJeu({ onClick }: { onClick: () => void }) {
+export function BoutonJeu({
+  onClick,
+  ref,
+}: {
+  onClick: () => void;
+  ref: RefObject<HTMLButtonElement | null>;
+}) {
   const t = useTranslations('connections');
   return (
     <Tooltip content={nb(t('playHint'))}>
-      <Button size="sm" variant="quiet" icon={Gamepad2} onClick={onClick}>
+      <Button ref={ref} size="sm" variant="quiet" icon={Gamepad2} onClick={onClick}>
         {t('play')}
       </Button>
     </Tooltip>
@@ -316,10 +329,13 @@ export function ToileJeu({
 }) {
   const t = useTranslations('connections');
   const toile = useRef<HTMLCanvasElement>(null);
+  // Lus à chaque image : un rafraîchissement de la page (nouvelles pastilles, nouveaux messages) ne relance pas la partie.
   const depart = useRef(sources);
+  const tr = useRef(t);
   useEffect(() => {
     depart.current = sources;
-  }, [sources]);
+    tr.current = t;
+  }, [sources, t]);
 
   useEffect(() => {
     const el = box.current;
@@ -371,9 +387,13 @@ export function ToileJeu({
       cible.y = ((e.clientY - r.top) * HAUTEUR) / r.height;
     };
     const presser = (e: KeyboardEvent) => {
-      // On tape dans un champ (la palette ⌘K…) : ni Échap ni lettres pour le jeu.
-      if (e.target instanceof Element && e.target.closest('input, textarea, [contenteditable]'))
-        return;
+      // Une fenêtre, un menu ou un champ (la palette ⌘K…) a la main : ni Échap ni lettres pour le jeu.
+      const ailleurs =
+        e.target instanceof Element &&
+        e.target.closest(
+          'input, textarea, select, [contenteditable], [role="dialog"], [role="alertdialog"], [role="menu"]',
+        );
+      if (e.defaultPrevented || ailleurs) return;
       if (e.key === 'Escape') {
         onQuit();
         return;
@@ -421,7 +441,8 @@ export function ToileJeu({
         else if (e.type === 'attrape') {
           gerbe(etincelles, e, e.or ? c.or : c.accent, e.or ? 22 : 10, e.or ? 300 : 210);
           texte({ x: e.x, y: e.y - 14 }, `+${e.points}`, e.or ? c.or : c.accent);
-          if (e.or) texte({ x: p.leon.x, y: p.leon.y - rayon - 30 }, t('gameMagnet'), c.or, 24);
+          if (e.or)
+            texte({ x: p.leon.x, y: p.leon.y - rayon - 30 }, tr.current('gameMagnet'), c.or, 24);
         } else if (e.type === 'eteint') gerbe(etincelles, e, c.accent, 5, 50);
         else if (e.type === 'touche') {
           gerbe(etincelles, e, c.bug, 24, 330);
@@ -430,7 +451,7 @@ export function ToileJeu({
         } else if (e.type === 'niveau')
           texte(
             { x: p.leon.x, y: p.leon.y - rayon - 34 },
-            t('gameLevel', { level: e.niveau }),
+            tr.current('gameLevel', { level: e.niveau }),
             c.texte,
             30,
           );
@@ -558,8 +579,10 @@ export function ToileJeu({
       window.removeEventListener('keyup', lacher);
       window.removeEventListener('blur', oublier);
       el.style.translate = '';
+      // On quitte en pleine partie : le record affiché en direct est gardé.
+      if (p.score > record) ecrireRecord(p.score);
     };
-  }, [box, centre, instant, onHud, onQuit, t]);
+  }, [box, centre, instant, onHud, onQuit]);
 
   return (
     // sans contenu de repli, la toile n'existe pas pour un lecteur d'écran ; le tableau des scores dit l'essentiel

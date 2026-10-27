@@ -74,7 +74,7 @@ describe('Mémoire vive', () => {
     p.vies = 1;
     p.bugs.push(bug(p.leon.x, p.leon.y));
     expect(avancer(p, 0.016, p.leon, [], RAYON, pile)).toContainEqual({ type: 'fin' });
-    expect(p.phase).toBe('fin');
+    expect([p.phase, p.invincible, p.aimant]).toEqual(['fin', 0, 0]);
     expect(avancer(p, 0.016, { x: 0, y: 0 }, [], RAYON, pile)).toEqual([]);
   });
 

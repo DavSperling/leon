@@ -14,7 +14,8 @@
             "email": "marie@acme.test"
           },
           "team": {
-            "name": "Produit"
+            "name": "Produit",
+            "visibility": "public"
           },
           "project": {
             "name": "Site vitrine"
@@ -51,7 +52,8 @@
           "updatedAt": "2026-10-14T08:00:00.000Z",
           "creator": null,
           "team": {
-            "name": "Produit"
+            "name": "Produit",
+            "visibility": "public"
           },
           "project": null,
           "comments": {

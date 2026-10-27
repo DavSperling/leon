@@ -400,6 +400,47 @@ describe('linearConnector : mises à jour de projet', () => {
   });
 });
 
+describe('linearConnector : équipes non publiques', () => {
+  it('demande la visibilité de l’équipe des tickets et des équipes des projets', async () => {
+    const { pages, calls } = sync(twoPagesThenUpdates());
+    await pages;
+
+    expect(bodyOf(calls[0]).query).toMatch(/team \{ name visibility \}/);
+    expect(bodyOf(calls[2]).query).toMatch(/teams\(first: 50\) \{ nodes \{ visibility \} \}/);
+  });
+
+  it('ne rend pas un ticket d’une équipe privée ou restreinte, et le retire s’il a été relevé', async () => {
+    const hidden = structuredClone(issuesPage1);
+    const [leo12, leo11] = hidden.data.issues.nodes;
+    if (!leo12 || !leo11) throw new Error('fixture vide');
+    leo12.team.visibility = 'private';
+    leo11.team.visibility = 'restricted';
+
+    const pages = await sync([
+      graphql({ json: hidden }),
+      graphql({ json: issuesPage2 }),
+      graphql({ json: projectUpdates }),
+    ]).pages;
+
+    expect(pages[0]?.items).toEqual([]);
+    expect(pages[0]?.removed).toEqual([`issue:${leo12.id}`, `issue:${leo11.id}`]);
+    // L'équipe publique de la page suivante reste rendue.
+    expect(pages[1]?.items).toHaveLength(1);
+    expect(pages[1]?.removed).toBeUndefined();
+  });
+
+  it('retire une mise à jour d’un projet dont une des équipes n’est pas publique', async () => {
+    const hidden = structuredClone(projectUpdates);
+    const [update] = hidden.data.projectUpdates.nodes;
+    if (!update) throw new Error('fixture vide');
+    update.project.teams.nodes = [{ visibility: 'public' }, { visibility: 'private' }];
+
+    const pages = await sync([graphql({ json: issuesEmpty }), graphql({ json: hidden })]).pages;
+
+    expect(pages.at(-1)).toMatchObject({ items: [], removed: [`project-update:${update.id}`] });
+  });
+});
+
 describe('linearConnector : erreurs', () => {
   it('remonte une clé refusée sur les tickets, après avoir livré la première page', async () => {
     const { http } = testHttp(linearConnector, CONFIG, [

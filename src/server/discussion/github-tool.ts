@@ -30,16 +30,17 @@ export type GithubToolDeps = LiveDeps & {
   onAction?: (action: ActionView) => void;
 };
 
-const NO_CONNECTION =
+export const NO_CONNECTION =
   'L’utilisateur n’a pas branché son propre GitHub dans Leon (Connexions › GitHub). Leon ne lit ni n’écrit jamais avec le GitHub d’un autre membre.';
 const SCOPE_LINE =
   'Leon ne voit que les dépôts ouverts à cette connexion : ceux où son appli GitHub est installée (à modifier sur GitHub), ou ceux saisis avec une clé.';
-const NO_CONTENTS_RIGHT =
-  'GitHub refuse : l’appli Leon n’a pas le droit « Contents » sur ce dépôt. Il faut l’ajouter dans la console de l’appli GitHub (docs/guides/applis-oauth.md), puis que l’utilisateur accepte la demande sur GitHub.';
+export const missingRight = (right: string) =>
+  `GitHub refuse : l’appli Leon n’a pas le droit ${right} sur ce dépôt. Il faut l’ajouter dans la console de l’appli GitHub (docs/guides/applis-oauth.md), puis que l’utilisateur accepte la demande sur GitHub.`;
+const NO_CONTENTS_RIGHT = missingRight('« Contents »');
 
-const refused = (connection: MyConnection) =>
+export const refused = (connection: MyConnection) =>
   `GitHub refuse l’accès de la connexion « ${connection.label} » : l’utilisateur doit la reconnecter dans Connexions.`;
-const isRefused = (error: unknown) =>
+export const isRefused = (error: unknown) =>
   error instanceof OAuthRefusedError ||
   (error instanceof ConnectorAuthError && error.status === 401);
 

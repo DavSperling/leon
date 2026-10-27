@@ -18,6 +18,7 @@ const ACTIVITIES = [
   'lire',
   'activite',
   'depots_github',
+  'lire_github',
   'creer_branche_github',
 ] as const;
 export type ToolActivity = (typeof ACTIVITIES)[number] | 'autre';

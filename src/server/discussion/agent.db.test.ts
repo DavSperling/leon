@@ -153,6 +153,7 @@ describe('replyStream', () => {
       'lire',
       'activite',
       'depots_github',
+      'lire_github',
       'creer_branche_github',
     ]);
   });

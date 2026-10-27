@@ -29,7 +29,7 @@ const BRANCH_NAME =
 export const isBranchName = (name: string) => BRANCH_NAME.test(name);
 
 // Un commit tel que GitHub l'écrit : 40 caractères hexadécimaux (64 pour un dépôt en SHA-256).
-const COMMIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+export const COMMIT_SHA = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 
 // Les paramètres d'une branche, revérifiés à la proposition et à l'exécution : ils viennent en partie de GitHub et
 // finissent dans une adresse de l'API, sur la carte et devant le modèle.

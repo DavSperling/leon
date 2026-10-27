@@ -11,6 +11,7 @@ import {
 const API = 'https://api.github.com';
 const ISSUES_PER_PAGE = 50;
 const COMMENTS_PER_PAGE = 100; // le maximum de GitHub
+const PULL_FILES_MAX = 300; // les fichiers d'une PR lus pour la discussion (3 pages de 100)
 
 const Author = z.object({ login: z.string() }).nullish(); // nul quand le compte a été supprimé
 // Le lien de l'auteur avec le dépôt (OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, NONE…) : GitHub le donne
@@ -45,6 +46,78 @@ export const ReviewSchema = z.object({
 });
 export const ReviewCommentSchema = CommentSchema.extend({ path: z.string() });
 
+// Les lectures en direct de la discussion (lots 5 et 6 de la spec GitHub) : seulement les champs que Leon montre.
+const ChangedFileSchema = z.object({
+  filename: z.string(),
+  status: z.string(),
+  additions: z.number(),
+  deletions: z.number(),
+  patch: z.string().nullish(), // absent pour un fichier binaire ou trop gros
+});
+const CommitSchema = z.object({
+  sha: z.string(),
+  commit: z.object({
+    message: z.string(),
+    author: z.object({ name: z.string().nullish(), date: z.string().nullish() }).nullish(),
+  }),
+  author: Author, // le compte GitHub ; nul quand l'adresse du commit n'en désigne aucun
+  files: z.array(ChangedFileSchema).optional(), // seulement pour un commit lu seul
+});
+const ContentSchema = z.union([
+  z.array(z.looseObject({})), // un dossier
+  z.object({
+    type: z.string(), // file, symlink, submodule
+    size: z.number(),
+    encoding: z.string().nullish(), // « none » pour un fichier de plus de 1 Mo
+    content: z.string().nullish(),
+  }),
+]);
+const PullSchema = z.object({
+  title: z.string(),
+  state: z.string(),
+  merged: z.boolean(),
+  draft: z.boolean().optional(),
+  user: Author,
+  head: z.object({ ref: z.string() }),
+  base: z.object({ ref: z.string() }),
+  mergeable_state: z.string().optional(),
+  body: z.string().nullish(),
+});
+const CheckRunsSchema = z.object({
+  total_count: z.number(),
+  check_runs: z.array(
+    z.object({
+      name: z.string(),
+      status: z.string(),
+      conclusion: z.string().nullish(), // absent tant que le contrôle n'est pas terminé
+      html_url: z.string().nullish(),
+    }),
+  ),
+});
+const WorkflowRunsSchema = z.object({
+  total_count: z.number(),
+  workflow_runs: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string().nullish(),
+      status: z.string().nullish(),
+      conclusion: z.string().nullish(),
+      event: z.string(),
+      html_url: z.string(),
+    }),
+  ),
+});
+const TicketSchema = z.object({
+  number: z.number(),
+  title: z.string(),
+  user: Author,
+  updated_at: z.string(),
+  labels: z.array(z.object({ name: z.string() })),
+  assignees: z.array(z.object({ login: z.string() })).nullish(),
+  pull_request: z.looseObject({}).nullish(), // les PR sont dans la liste des tickets
+});
+
+export type ChangedFile = z.infer<typeof ChangedFileSchema>;
 export type Issue = z.infer<typeof IssueSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 export type Review = z.infer<typeof ReviewSchema>;
@@ -77,6 +150,12 @@ export function githubClient(token: string, http: ConnectorHttp) {
     const rows: T[] = [];
     for await (const page of pages(request, schema)) rows.push(...page);
     return rows;
+  }
+
+  // La première page seulement, et s'il y en a d'autres derrière : pour dire qu'une liste est partielle.
+  async function firstPage<T>(path: string, query: HttpRequest['query'], schema: z.ZodType<T[]>) {
+    const { data, nextUrl } = await http.page({ url: `${API}${path}`, headers, query }, schema);
+    return { rows: data, more: nextUrl !== null };
   }
 
   return {
@@ -199,6 +278,73 @@ export function githubClient(token: string, http: ConnectorHttp) {
         },
         z.looseObject({}),
       ),
+
+    // Lectures en direct : code, commits, PR, CI et tickets (permissions Contents, Pull requests, Checks, Actions et Issues).
+    // https://docs.github.com/en/rest/branches/branches#list-branches
+    branches: (repo: string) =>
+      firstPage(
+        `/repos/${repo}/branches`,
+        { per_page: 100 },
+        z.array(z.object({ name: z.string(), protected: z.boolean().optional() })),
+      ),
+    commits: (repo: string, ref: string) =>
+      firstPage(
+        `/repos/${repo}/commits`,
+        { sha: ref, per_page: 20 },
+        z.array(CommitSchema.omit({ files: true })),
+      ),
+    commit: (repo: string, ref: string) =>
+      http.json({ url: `${API}/repos/${repo}/commits/${refPath(ref)}`, headers }, CommitSchema),
+    tree: (repo: string, ref: string) =>
+      http.json(
+        {
+          url: `${API}/repos/${repo}/git/trees/${refPath(ref)}`,
+          headers,
+          query: { recursive: 1 },
+        },
+        z.object({
+          truncated: z.boolean(), // GitHub coupe un arbre de plus de 100 000 entrées
+          tree: z.array(z.object({ path: z.string(), type: z.string() })),
+        }),
+      ),
+    file: (repo: string, path: string, ref?: string) =>
+      http.json(
+        { url: `${API}/repos/${repo}/contents/${refPath(path)}`, headers, query: { ref } },
+        ContentSchema,
+      ),
+    pull: (repo: string, number: number) =>
+      http.json({ url: `${API}/repos/${repo}/pulls/${number}`, headers }, PullSchema),
+    // Les PULL_FILES_MAX premiers fichiers ; une page de plus est lue pour savoir s'il y en a d'autres.
+    async pullFiles(repo: string, number: number) {
+      const request = {
+        url: `${API}/repos/${repo}/pulls/${number}/files`,
+        headers,
+        query: { per_page: 100 },
+      };
+      const rows: ChangedFile[] = [];
+      for await (const page of pages(request, z.array(ChangedFileSchema))) {
+        rows.push(...page);
+        if (rows.length > PULL_FILES_MAX) break;
+      }
+      return { rows: rows.slice(0, PULL_FILES_MAX), more: rows.length > PULL_FILES_MAX };
+    },
+    checkRuns: (repo: string, ref: string) =>
+      http.json(
+        {
+          url: `${API}/repos/${repo}/commits/${refPath(ref)}/check-runs`,
+          headers,
+          query: { per_page: 100 },
+        },
+        CheckRunsSchema,
+      ),
+    // Une branche, ou un commit entier (head_sha) : `branch` ne trouve rien avec un sha.
+    workflowRuns: (repo: string, by: { branch: string } | { head_sha: string }) =>
+      http.json(
+        { url: `${API}/repos/${repo}/actions/runs`, headers, query: { ...by, per_page: 10 } },
+        WorkflowRunsSchema,
+      ),
+    openIssues: (repo: string) =>
+      firstPage(`/repos/${repo}/issues`, { state: 'open', per_page: 30 }, z.array(TicketSchema)),
   };
 }
 

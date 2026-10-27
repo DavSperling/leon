@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useTransition } from 'react';
 import {
@@ -10,11 +10,15 @@ import {
   updateProfileAction,
   verifyTotpSetupAction,
 } from '@/app/(app)/reglages/actions';
+import { initialOf } from '@/components/verre/shell/brand';
 import { Button } from '@/components/verre/ui/button';
 import { CopyButton } from '@/components/verre/ui/copy';
 import { Notice } from '@/components/verre/ui/feedback';
 import { Field, Input } from '@/components/verre/ui/form';
+import { GlassCard } from '@/components/verre/ui/surfaces';
+import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
+import { roleLabel } from './members';
 
 const read = (data: FormData, name: string) => String(data.get(name) ?? '');
 
@@ -161,43 +165,82 @@ export function SecuritySettings({ enabled }: { enabled: boolean }) {
   );
 }
 
-export function ProfileSettings({ name, email }: { name: string; email: string }) {
+type Membership = { role: string; organizationName: string; since: Date } | null;
+
+export function ProfileSettings({
+  name,
+  email,
+  membership,
+}: {
+  name: string;
+  email: string;
+  membership: Membership;
+}) {
   const t = useTranslations('security');
+  const roles = useTranslations('settings');
+  const locale = useLocale();
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
   return (
-    <form
-      action={(data) => {
-        setError('');
-        setStatus('');
-        startTransition(async () => {
-          const result = await updateProfileAction(read(data, 'name'));
-          if ('error' in result) setError(result.error);
-          else setStatus(t('profileSaved'));
-        });
-      }}
-      className="grid max-w-md gap-4"
-    >
-      <Field label={t('name')}>
-        <Input name="name" defaultValue={name} autoComplete="name" required maxLength={100} />
-      </Field>
-      <Field label={t('email')} help={t('emailHelp')}>
-        <Input value={email} readOnly type="email" />
-      </Field>
-      {status && (
-        <Notice tone="success" live="status">
-          {status}
-        </Notice>
-      )}
-      {error && (
-        <Notice tone="error" live="alert">
-          {error}
-        </Notice>
-      )}
-      <Button type="submit" variant="primary" loading={pending} className="w-fit">
-        {t('save')}
-      </Button>
-    </form>
+    <div className="grid max-w-md gap-6">
+      <GlassCard className="flex items-center gap-4 p-4">
+        <span
+          aria-hidden="true"
+          className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-soft text-[18px] font-bold text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]"
+        >
+          {initialOf(name)}
+        </span>
+        <div className="min-w-0">
+          <p className="text-body font-semibold [overflow-wrap:anywhere] text-fg">{name}</p>
+          {membership && (
+            <p className="mt-0.5 text-label text-muted">
+              {t('membership', {
+                role: roleLabel(membership.role, {
+                  owner: roles('owner'),
+                  admin: roles('admin'),
+                  member: roles('member'),
+                }),
+                organization: membership.organizationName,
+                // la date ne se coupe pas en deux sur un écran étroit
+                date: formatDate(membership.since, locale).replaceAll(' ', '\u00a0'),
+              })}
+            </p>
+          )}
+        </div>
+      </GlassCard>
+      <form
+        action={(data) => {
+          setError('');
+          setStatus('');
+          startTransition(async () => {
+            const result = await updateProfileAction(read(data, 'name'));
+            if ('error' in result) setError(result.error);
+            else setStatus(t('profileSaved'));
+          });
+        }}
+        className="grid gap-4"
+      >
+        <Field label={t('name')}>
+          <Input name="name" defaultValue={name} autoComplete="name" required maxLength={100} />
+        </Field>
+        <Field label={t('email')}>
+          <Input value={email} readOnly type="email" />
+        </Field>
+        {status && (
+          <Notice tone="success" live="status">
+            {status}
+          </Notice>
+        )}
+        {error && (
+          <Notice tone="error" live="alert">
+            {error}
+          </Notice>
+        )}
+        <Button type="submit" variant="primary" loading={pending} className="w-fit">
+          {t('save')}
+        </Button>
+      </form>
+    </div>
   );
 }

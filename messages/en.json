@@ -125,13 +125,15 @@
     "memoryLate": "Memory out of date",
     "quickSearch": "Quick search"
   },
-  "language": {
-    "title": "Language",
-    "description": "Choose the language of the Leon interface.",
-    "label": "Interface language",
+  "preferences": {
+    "title": "Preferences",
+    "description": "Language and appearance. Changes apply right away.",
+    "language": "Interface language",
     "french": "Français",
     "english": "English",
-    "save": "Save language"
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light"
   },
   "search": {
     "memoryLabel": "Search the team’s memory",
@@ -457,9 +459,9 @@
   "security": {
     "profileTitle": "Profile",
     "profileDescription": "Edit your account details.",
+    "membership": "{role} · {organization} · since {date}",
     "name": "Name",
     "email": "Email address",
-    "emailHelp": "To change your address, contact your administrator.",
     "save": "Save",
     "profileSaved": "Your profile has been updated.",
     "profileFailed": "Couldn’t update your profile. Try again.",

@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
@@ -12,6 +13,7 @@ import {
   enableTotpAction,
   regenerateBackupCodesAction,
   revokeTokenAction,
+  setLocaleAction,
   updateProfileAction,
   verifyTotpSetupAction,
 } from './actions';
@@ -37,6 +39,8 @@ vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+const setCookie = vi.fn();
+vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ set: setCookie })) }));
 
 const ctx = { tenantId: 'tenant', userId: 'user', principals: ['user', 'tenant'] };
 const TOKEN_ID = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c5d';
@@ -103,6 +107,29 @@ describe('double authentification', () => {
     expect(await regenerateBackupCodesAction('motdepasse')).toEqual({
       backupCodes: ['aaaaa-bbbbb'],
     });
+  });
+});
+
+const localeForm = (locale: string) => {
+  const data = new FormData();
+  data.set('locale', locale);
+  return data;
+};
+
+describe('setLocaleAction', () => {
+  it('pose le cookie de langue, et ignore une langue inconnue', async () => {
+    await setLocaleAction(localeForm('fr'));
+    expect(setCookie).toHaveBeenCalledWith(
+      'leon-locale',
+      'fr',
+      expect.objectContaining({ httpOnly: true }),
+    );
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+
+    vi.clearAllMocks();
+    await setLocaleAction(localeForm('de'));
+    expect(cookies).not.toHaveBeenCalled();
+    expect(setCookie).not.toHaveBeenCalled();
   });
 });
 

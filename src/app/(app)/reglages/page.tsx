@@ -2,15 +2,15 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
-import { LanguageSettings } from '@/components/verre/reglages/language';
 import { MembersSection } from '@/components/verre/reglages/members';
+import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import { ProfileSettings, SecuritySettings } from '@/components/verre/reglages/security-settings';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
 import { listApiTokens } from '@/server/auth/api-tokens';
-import { canInvite, listMembers } from '@/server/auth/members';
+import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { env } from '@/server/env';
 
@@ -22,11 +22,12 @@ export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session] = await Promise.all([
+  const [allTokens, members, mayInvite, session, membership] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
     canInvite(ctx),
     getSession(),
+    getMembership(ctx),
   ]);
   const tokens = allTokens
     .filter((token) => !token.revokedAt)
@@ -56,9 +57,10 @@ export default async function SettingsPage() {
                 <ProfileSettings
                   name={session?.user.name ?? ''}
                   email={session?.user.email ?? ''}
+                  membership={membership}
                 />
               </Section>
-              <LanguageSettings />
+              <PreferencesSettings />
             </>
           ),
           securite: (

@@ -125,13 +125,15 @@
     "memoryLate": "Mémoire en retard",
     "quickSearch": "Rechercher"
   },
-  "language": {
-    "title": "Langue",
-    "description": "Choisissez la langue de l’interface Leon.",
-    "label": "Langue de l’interface",
+  "preferences": {
+    "title": "Préférences",
+    "description": "Langue et apparence. Les changements s’appliquent tout de suite.",
+    "language": "Langue de l’interface",
     "french": "Français",
     "english": "English",
-    "save": "Enregistrer la langue"
+    "theme": "Thème",
+    "dark": "Sombre",
+    "light": "Clair"
   },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
@@ -457,9 +459,9 @@
   "security": {
     "profileTitle": "Profil",
     "profileDescription": "Modifiez les informations de votre compte.",
+    "membership": "{role} · {organization} · depuis le {date}",
     "name": "Nom",
     "email": "Adresse e-mail",
-    "emailHelp": "Pour modifier votre adresse, contactez l’administrateur.",
     "save": "Enregistrer",
     "profileSaved": "Votre profil a été mis à jour.",
     "profileFailed": "Impossible de mettre à jour le profil. Réessayez.",

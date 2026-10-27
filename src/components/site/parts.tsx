@@ -228,7 +228,7 @@ export function LeonMark({ label }: { label?: string }) {
   const t = useTranslations('site.common');
   return (
     <span className="flex items-center gap-2 text-[13px] font-semibold text-accent">
-      <Logo className="size-[18px] text-[9.5px]" />
+      <Logo className="size-[18px]" />
       {label ?? t('leonAnswer')}
     </span>
   );
@@ -325,7 +325,7 @@ export function CtaBand({
             className="site-grid pointer-events-none absolute inset-0 opacity-60"
           />
           <div className="relative">
-            <Logo className="mx-auto size-11 text-[21px]" />
+            <Logo className="mx-auto size-11" />
             <h2 className="mx-auto mt-6 max-w-[760px] text-[clamp(30px,4.6vw,52px)] leading-[1.05] font-bold tracking-[-0.04em] text-balance text-fg">
               {nb(title)}
             </h2>

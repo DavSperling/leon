@@ -9,7 +9,7 @@ import { IconButton } from '@/components/verre/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/verre/ui/dialog';
 import { useTheme } from '@/lib/verre/theme';
 import type { ChannelHealth } from '@/server/memory/sources';
-import { initialOf, Logo } from './brand';
+import { Brand, initialOf } from './brand';
 import { usePalette } from './palette-context';
 import { MemoryStatus, NavList } from './sidebar';
 import type { Viewer } from './workspace-menu';
@@ -36,10 +36,7 @@ export function MobileBar({
   };
   return (
     <header className="glass-float sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-line-strong pr-3 pl-4 shell:hidden">
-      <span className="flex items-center gap-2.5 text-[15.5px] font-bold tracking-[-0.02em]">
-        <Logo />
-        Leon
-      </span>
+      <Brand />
       <span className="ml-auto" />
       <IconButton
         icon={Search}

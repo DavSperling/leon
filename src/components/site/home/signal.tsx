@@ -579,7 +579,7 @@ function Assistant() {
                 className="signal-line overflow-hidden rounded-box border border-line bg-panel p-5 shadow-hi"
               >
                 <div className="flex items-center gap-2">
-                  <Logo className="size-[18px] text-[9.5px]" />
+                  <Logo className="size-[18px]" />
                   <span className="text-[13px] font-semibold text-accent">
                     {common('briefing')}
                   </span>

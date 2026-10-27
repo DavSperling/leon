@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { NavigationMenu } from 'radix-ui';
 import { useEffect, useRef, useState } from 'react';
-import { Logo } from '@/components/verre/shell/brand';
+import { Brand } from '@/components/verre/shell/brand';
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/verre/ui/dialog';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
@@ -214,10 +214,9 @@ export function SiteHeader() {
         <Link
           href="/"
           aria-label={t('home')}
-          className="flex h-10 shrink-0 items-center gap-2.5 rounded-full pr-2 text-[17px] font-bold tracking-[-0.02em] text-fg"
+          className="flex h-10 shrink-0 items-center rounded-full pr-2"
         >
-          <Logo className="size-7 text-[14px]" />
-          Leon
+          <Brand className="h-6" />
         </Link>
 
         <NavigationMenu.Root

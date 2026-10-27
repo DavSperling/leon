@@ -68,8 +68,16 @@ export function WorkspaceMenu({ organizationName, userName, userEmail }: Viewer)
       <DropdownMenuContent side={collapsed ? 'right' : 'bottom'} className="w-56">
         <DropdownMenuLabel className="grid gap-0.5 pb-2">
           <span className="text-ui font-semibold text-fg">{organizationName}</span>
-          <span className="truncate text-label font-normal text-muted">
-            {userName} · {userEmail}
+          <span className="flex min-w-0 items-center gap-1.5 text-label font-normal text-muted">
+            <span
+              aria-hidden="true"
+              className="grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-[10px] font-bold text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]"
+            >
+              {initialOf(userName)}
+            </span>
+            <span className="truncate">
+              {userName} · {userEmail}
+            </span>
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

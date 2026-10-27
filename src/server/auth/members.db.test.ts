@@ -9,6 +9,7 @@ import {
   canInvite,
   createInvitationLink,
   findInvitation,
+  getMembership,
   joinWithInvitation,
   listMembers,
 } from './members';
@@ -151,5 +152,18 @@ describe('listMembers', () => {
       ['Julie', 'member'],
     ]);
     expect(rows.at(-1)?.email).toMatch(/@test\.leon$/);
+  });
+});
+
+describe('getMembership', () => {
+  it("rend le rôle, l'organisation et la date d'arrivée du lecteur, et rien hors de son organisation", async () => {
+    const { owner } = await tenantWithLink();
+    const mine = await getMembership(owner);
+    expect(mine).toMatchObject({ role: 'owner', organizationName: 'Organisation de test' });
+    expect(mine?.since).toBeInstanceOf(Date);
+
+    const { members: people } = await createTestTenant(['Ailleurs']);
+    const [stranger] = people as [TenantContext];
+    expect(await getMembership({ ...stranger, tenantId: owner.tenantId })).toBeNull();
   });
 });

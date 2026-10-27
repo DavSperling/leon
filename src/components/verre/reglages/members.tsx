@@ -23,7 +23,7 @@ import type { MemberRow } from '@/server/auth/members';
 import { SECTION } from './reglages';
 
 // Better Auth peut ranger plusieurs rôles séparés par des virgules.
-const roleLabel = (role: string, labels: Record<string, string>) =>
+export const roleLabel = (role: string, labels: Record<string, string>) =>
   role
     .split(',')
     .map((r) => labels[r] ?? r)

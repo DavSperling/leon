@@ -44,6 +44,19 @@ export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
     .orderBy(asc(members.createdAt), asc(members.id));
 }
 
+// La place du lecteur dans son organisation, pour l'en-tête du profil ; null s'il n'en est plus membre.
+export async function getMembership(
+  ctx: TenantContext,
+): Promise<{ role: string; organizationName: string; since: Date } | null> {
+  const [row] = await db
+    .select({ role: members.role, organizationName: organizations.name, since: members.createdAt })
+    .from(members)
+    .innerJoin(organizations, eq(organizations.id, members.organizationId))
+    .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+    .limit(1);
+  return row ?? null;
+}
+
 // Le lien en clair n'est renvoyé qu'ici, une seule fois ; null si le lecteur n'est ni propriétaire ni administrateur.
 export async function createInvitationLink(
   ctx: TenantContext,

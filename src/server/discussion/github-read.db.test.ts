@@ -54,6 +54,7 @@ async function ask(
 }
 
 const base64 = (text: string) => Buffer.from(text).toString('base64');
+const SHA_MAIN = 'f0e1d2c3b4a5968778695a4b3c2d1e0f12345678';
 const file = (text: string) => ({
   url: `${REPO}/contents/src/app.ts`,
   json: { type: 'file', size: text.length, encoding: 'base64', content: base64(text) },
@@ -213,8 +214,9 @@ describe('lire_github', () => {
   it('rend les contrôles et les exécutions tels que GitHub les dit, sans rien conclure', async () => {
     const { text, calls } = await ask({ quoi: 'ci' }, [
       { url: REPO, json: { default_branch: 'main' } },
+      { url: `${REPO}/commits`, json: [{ sha: SHA_MAIN, commit: { message: 'm' } }] },
       {
-        url: `${REPO}/commits/main/check-runs`,
+        url: `${REPO}/commits/${SHA_MAIN}/check-runs`,
         json: {
           total_count: 2,
           check_runs: [
@@ -258,7 +260,20 @@ describe('lire_github', () => {
     expect(text).toContain('#77 CI (push) : completed, conclusion : cancelled');
     expect(text).toContain('Ne dis pas qu’un test ou un contrôle passe si GitHub ne le dit pas');
     expect(text).not.toContain('success');
-    expect(calls.at(-1)?.url).toBe(`${REPO}/actions/runs?branch=main&per_page=10`);
+    expect(text).toContain(`Contrôles de main, commit ${SHA_MAIN.slice(0, 7)}`);
+    expect(calls.at(-1)?.url).toBe(`${REPO}/actions/runs?head_sha=${SHA_MAIN}&per_page=10`);
+  });
+
+  // Remarque de Codex sur #90 : le filtre `branch` ne trouve pas les exécutions d'une étiquette.
+  it('ramène une étiquette à son commit pour trouver ses exécutions', async () => {
+    const { calls } = await ask({ quoi: 'ci', ref: 'v1.2' }, [
+      { url: `${REPO}/commits`, json: [{ sha: SHA_MAIN, commit: { message: 'm' } }] },
+      { url: `${REPO}/commits/${SHA_MAIN}/check-runs`, json: { total_count: 0, check_runs: [] } },
+      { url: `${REPO}/actions/runs`, json: { total_count: 0, workflow_runs: [] } },
+    ]);
+
+    expect(calls[0]?.url).toBe(`${REPO}/commits?sha=v1.2&per_page=20`);
+    expect(calls.at(-1)?.url).toBe(`${REPO}/actions/runs?head_sha=${SHA_MAIN}&per_page=10`);
   });
 
   it('cherche les exécutions d’un commit entier par head_sha', async () => {

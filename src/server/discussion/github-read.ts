@@ -231,23 +231,24 @@ async function read(
     }
     case 'ci': {
       const at = ref ?? (await github.defaultBranch(repo));
-      const checks = await github.checkRuns(repo, at);
-      const runs = await github.workflowRuns(
-        repo,
-        COMMIT_SHA.test(at) ? { head_sha: at } : { branch: at },
-      );
+      // Une branche ou une étiquette ramenée à son commit : le filtre `branch` des exécutions ne trouve pas celles
+      // d'une étiquette, `head_sha` trouve celles du commit, quelle que soit la ref qui l'a lancé.
+      const sha = COMMIT_SHA.test(at) ? at : (await github.commits(repo, at)).rows[0]?.sha;
+      if (!sha) return `Aucun commit à ${at} : rien à vérifier.`;
+      const checks = await github.checkRuns(repo, sha);
+      const runs = await github.workflowRuns(repo, { head_sha: sha });
       const partial = [
         checks.total_count > checks.check_runs.length && 'des contrôles',
         runs.total_count > runs.workflow_runs.length && 'des exécutions',
       ].filter(Boolean);
       return answer(
         [
-          `Contrôles de ${at} (${checks.total_count} au total) :`,
+          `Contrôles de ${at}, commit ${sha.slice(0, 7)} (${checks.total_count} au total) :`,
           ...checks.check_runs.map(
             (run) =>
               `${run.name} : ${run.status}, conclusion : ${run.conclusion ?? 'aucune'} ${run.html_url ?? ''}`,
           ),
-          `Exécutions GitHub Actions de ${at}, les 10 dernières (${runs.total_count} au total) :`,
+          `Exécutions GitHub Actions de ce commit, les 10 dernières (${runs.total_count} au total) :`,
           ...runs.workflow_runs.map(
             (run) =>
               `#${run.id} ${run.name ?? ''} (${run.event}) : ${run.status ?? 'inconnu'}, conclusion : ${run.conclusion ?? 'aucune'} ${run.html_url}`,

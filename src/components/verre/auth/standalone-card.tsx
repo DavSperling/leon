@@ -10,8 +10,7 @@ export function StandaloneCard({ children }: { children: ReactNode }) {
   // entrée en CSS (.rise-in) : rendue par le serveur, la carte reste visible sans JavaScript
   return (
     <div className="rise-in mx-auto w-full max-w-[392px]">
-      {/* Brand a 6 px de marge interne : le logo s'aligne ainsi sur le bord de la carte */}
-      <div className="-mx-1.5">
+      <div className="flex h-9 items-center">
         <Brand />
       </div>
       <GlassCard variant="raised" className="mt-5 p-6 shadow-panel backdrop-blur-[30px] sm:p-7">

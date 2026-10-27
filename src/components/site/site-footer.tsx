@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { setLocaleAction } from '@/app/(app)/reglages/actions';
-import { Logo } from '@/components/verre/shell/brand';
+import { Brand } from '@/components/verre/shell/brand';
 import { nb } from '@/lib/verre/nb';
 import { useSiteContent } from './content';
 import { Container } from './parts';
@@ -77,12 +77,8 @@ export function SiteFooter() {
       <Container className="relative pt-16 pb-10">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div className="max-w-[340px]">
-            <Link
-              href="/"
-              className="inline-flex min-h-10 items-center gap-2.5 rounded-full text-[17px] font-bold tracking-[-0.02em] text-fg"
-            >
-              <Logo className="size-7 text-[14px]" />
-              Leon
+            <Link href="/" className="inline-flex min-h-10 items-center rounded-full">
+              <Brand className="h-6" />
             </Link>
             <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(taglines.pitch)}</p>
           </div>

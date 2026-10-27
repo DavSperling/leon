@@ -468,7 +468,7 @@ function Coeur({
           jeu ? 'pointer-events-none' : dragging ? 'cursor-grabbing' : 'cursor-grab',
         )}
       >
-        <Logo className="size-12 text-[20px]" />
+        <Logo className="size-12" />
       </motion.span>
     </motion.span>
   );

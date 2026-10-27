@@ -10,7 +10,7 @@ import { Tooltip } from '@/components/verre/ui/menu';
 import { cn } from '@/lib/verre/cn';
 import { spring } from '@/lib/verre/motion';
 import type { ChannelHealth } from '@/server/memory/sources';
-import { Logo } from './brand';
+import { Brand } from './brand';
 import { NAV, sectionOf } from './nav';
 import { usePalette } from './palette-context';
 import { EASE, EASE_FOLD, LABEL, railOnly, toggleRail, useRailCollapsed } from './rail';
@@ -140,7 +140,7 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
         className,
       )}
     >
-      {/* Le bouton suit le bord droit de la colonne : dépliée, au bout de la marque ; repliée, il prend la place du « L »
+      {/* Le bouton suit le bord droit de la colonne : dépliée, au bout de la marque ; repliée, il prend la place du logo
           (qui s'efface avec les libellés) et reste visible au repos : le chemin du retour se voit, à la souris comme au doigt. */}
       <div className="relative flex h-10 shrink-0 items-center gap-2 pl-2">
         <Tooltip
@@ -164,15 +164,7 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
             <Toggle aria-hidden="true" strokeWidth={1.6} className="size-[18px]" />
           </button>
         </Tooltip>
-        <Logo className={LABEL} />
-        <span
-          className={cn(
-            LABEL,
-            'min-w-0 overflow-hidden text-[15.5px] font-bold tracking-[-0.02em] whitespace-nowrap',
-          )}
-        >
-          Leon
-        </span>
+        <Brand className={cn(LABEL, 'min-w-0 shrink')} />
       </div>
       <WorkspaceMenu {...viewer} />
       {/* Une ligne comme les sections, sans cadre. Le glyphe ⌘ (et pas une loupe) : dans le rail, il ne se confond pas avec

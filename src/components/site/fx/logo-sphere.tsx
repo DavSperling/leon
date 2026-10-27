@@ -178,7 +178,9 @@ export function LogoSphere({
         <div className="absolute top-1/2 left-1/2 z-[50] -translate-x-1/2 -translate-y-1/2">
           <span className="site-ping absolute inset-0 rounded-full border border-accent-line" />
           <span className="site-ping site-ping-2 absolute inset-0 rounded-full border border-accent-line" />
-          <Logo className="relative size-16 text-[28px] shadow-[inset_0_1px_0_rgba(255,255,255,.4),0_0_0_1px_var(--line-strong),0_24px_60px_-14px_color-mix(in_srgb,var(--accent)_75%,transparent)]" />
+          <span className="relative grid size-16 place-items-center rounded-full bg-menu shadow-[inset_0_1px_0_rgba(255,255,255,.4),0_0_0_1px_var(--line-strong),0_24px_60px_-14px_color-mix(in_srgb,var(--accent)_75%,transparent)]">
+            <Logo className="size-11" />
+          </span>
         </div>
         {tools.map((id, i) => (
           <div

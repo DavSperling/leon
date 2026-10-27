@@ -49,7 +49,7 @@ function Briefing() {
   return (
     <div className="signal-line relative overflow-hidden rounded-box border border-line bg-glass-2 p-5 shadow-hi">
       <div className="flex items-center gap-2">
-        <Logo className="size-[18px] text-[9.5px]" />
+        <Logo className="size-[18px]" />
         <span className="text-[13px] font-semibold text-accent">{common('briefing')}</span>
         <span className="ml-auto font-mono text-meta tracking-normal text-muted">08:45</span>
       </div>

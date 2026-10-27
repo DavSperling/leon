@@ -3,8 +3,9 @@ import { githubClient } from './client';
 
 // Le bouton « Se connecter avec GitHub » : une GitHub App (pas une appli OAuth, dont le droit `repo`
 // donnerait l'écriture sur tous les dépôts privés). Ses permissions sont celles de l'appli, réglées
-// dans sa console : Issues, Pull requests et Metadata en lecture seule. Le jeton obtenu est un jeton
-// utilisateur (ghu_…) : il n'ouvre que les dépôts où l'appli est installée ET que l'utilisateur voit.
+// dans sa console : Issues et Pull requests en lecture et écriture (l'écriture demandée d'avance, #40),
+// Metadata en lecture. Le jeton obtenu est un jeton utilisateur (ghu_…) : il n'ouvre que les dépôts où
+// l'appli est installée ET que l'utilisateur voit.
 //
 // Doc lue le 15/10/2026 :
 //   https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app

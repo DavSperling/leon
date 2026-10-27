@@ -20,9 +20,9 @@ import { type Viewer, WorkspaceMenu } from './workspace-menu';
 // leur hauteur dans les deux états : en repliant, rien ne bouge, seuls les libellés s'effacent et la colonne rétrécit.
 
 // Une ligne de la barre (sections, recherche, état) : 40 px, 44 sous 861 px (doigt) ; fond au survol seulement en rail.
-const ROW =
+export const ROW =
   'group relative flex h-10 w-full items-center gap-3 rounded-field pr-2.5 pl-3 text-[13.5px] font-medium text-fg-2 transition-colors duration-200 hover:text-fg max-shell:h-11 group-data-[rail=replie]/rail:hover:bg-hover';
-const ROW_ICON = 'relative size-4 shrink-0 transition-colors duration-200';
+export const ROW_ICON = 'relative size-4 shrink-0 transition-colors duration-200';
 
 /** Liens des sections avec l'encre qui glisse sous la section active (layoutId partagé). 44 px de haut sous 861 px (doigt). */
 export function NavList({

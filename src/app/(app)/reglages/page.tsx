@@ -39,7 +39,8 @@ export default async function SettingsPage() {
   const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer <${t('tokenPlaceholder')}>"`;
 
   return (
-    <div className="mx-auto max-w-[760px]">
+    // 1008 px : la colonne des onglets (200), son écart (48) et le contenu (760, comme les autres pages)
+    <div className="mx-auto max-w-[1008px]">
       <PageHeader title={t('title')} subtitle={t('subtitle')} className="mb-10" />
 
       <SettingsTabs

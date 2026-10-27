@@ -25,6 +25,8 @@ export type ConnectorHttp = {
   page<T>(request: HttpRequest, schema: z.ZodType<T>): Promise<{ data: T; nextUrl: string | null }>;
   // Une réponse qui n'est pas du JSON (export de Drive, lot de Gmail), avec son type et son code.
   text(request: HttpRequest): Promise<{ text: string; type: string | null; status: number }>;
+  // Un fichier tel quel (PDF, Word… de Drive), pour l'extraction de documents.ts.
+  bytes(request: HttpRequest): Promise<{ bytes: Uint8Array; type: string | null; status: number }>;
 };
 
 // Message fixe : jamais celui de l'outil.
@@ -69,7 +71,7 @@ const RETRIES_MAX = 3;
 const WAIT_MAX_MS = 60_000;
 const BACKOFF_MS = 2000; // puis 4 et 8 secondes
 
-type Answer = { status: number; headers: Headers; text: string };
+type Answer = { status: number; headers: Headers; body: Buffer };
 type Prepared = { url: string; headers: Headers; body: string | undefined };
 type Attempt =
   | { kind: 'done'; answer: Answer }
@@ -101,11 +103,11 @@ function isRateLimit(status: number, headers: Headers, body: string): boolean {
 }
 
 // Lit le flux et s'arrête dès que la limite est dépassée.
-async function readBody(response: Response): Promise<string> {
+async function readBody(response: Response): Promise<Buffer> {
   const tooBig = new ResponseTooBigError(response.status, 'Response too large');
   if (Number(response.headers.get('content-length')) > BODY_MAX_BYTES) throw tooBig;
   const reader = response.body?.getReader();
-  if (!reader) return '';
+  if (!reader) return Buffer.alloc(0);
   const chunks: Uint8Array[] = [];
   let total = 0;
   for (;;) {
@@ -118,7 +120,7 @@ async function readBody(response: Response): Promise<string> {
     }
     chunks.push(value);
   }
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks);
 }
 
 // « Link: <url>; rel="next"; results="false" » : l'adresse suivante, ou null s'il n'y en a pas.
@@ -244,13 +246,13 @@ export function createConnectorHttp(input: {
       const { status } = response;
       if (!request.acceptStatus?.includes(status) && !(status >= 200 && status < 300)) {
         // Le corps d'un 403 dit s'il s'agit d'une limite (Google) ; les autres ne sont pas lus.
-        const body = status === 403 ? await readBody(response).catch(() => '') : '';
+        const body = status === 403 ? await readBody(response).then(String, () => '') : '';
         if (status !== 403) await response.body?.cancel().catch(() => {});
         return failure(status, response.headers, number, body);
       }
       return {
         kind: 'done',
-        answer: { status, headers: response.headers, text: await readBody(response) },
+        answer: { status, headers: response.headers, body: await readBody(response) },
       };
     } catch (error) {
       if (error instanceof ConnectorHttpError || error instanceof ConnectorAuthError) throw error;
@@ -271,10 +273,10 @@ export function createConnectorHttp(input: {
   }
 
   async function send<T>(request: HttpRequest, schema: z.ZodType<T>) {
-    const { status, headers, text, url } = await receive(request);
+    const { status, headers, body, url } = await receive(request);
     let value: unknown;
     try {
-      value = JSON.parse(text);
+      value = JSON.parse(body.toString('utf8'));
     } catch {
       throw new ConnectorHttpError(status, 'Unreadable response');
     }
@@ -292,8 +294,12 @@ export function createConnectorHttp(input: {
       return { data, nextUrl: nextLink(headers.get('link'), url, status) };
     },
     async text(request) {
-      const { text, headers, status } = await receive(request);
-      return { text, type: headers.get('content-type'), status };
+      const { body, headers, status } = await receive(request);
+      return { text: body.toString('utf8'), type: headers.get('content-type'), status };
+    },
+    async bytes(request) {
+      const { body, headers, status } = await receive(request);
+      return { bytes: body, type: headers.get('content-type'), status };
     },
   };
 }

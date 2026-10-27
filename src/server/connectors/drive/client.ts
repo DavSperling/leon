@@ -1,3 +1,6 @@
+import type { OfficeError } from 'officeparser';
+import { extractText } from '@/server/documents/documents';
+import { logError } from '@/server/log';
 import {
   type ConnectorHttp,
   ConnectorHttpError,
@@ -17,14 +20,19 @@ const DRIVE = 'https://www.googleapis.com/drive/v3';
 const FILE_FIELDS =
   'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink,lastModifyingUser(displayName,emailAddress,me))';
 
-// Ce que Leon lit, et comment : un export en texte pour les fichiers Google, le contenu pour le texte.
-// Une feuille de calcul s'exporte en CSV, première feuille seulement (limite de Google).
-export const READABLE: Record<string, { export: string } | { media: true }> = {
+// Ce que Leon lit, et comment : un export en texte pour les fichiers Google, le contenu pour le texte, le
+// fichier passé à l'extraction de l'import manuel (documents.ts) pour les PDF et fichiers Office.
+// Une feuille de calcul Google s'exporte en CSV, première feuille seulement (limite de Google).
+export const READABLE: Record<string, { export: string } | { media: true } | { parse: string }> = {
   'application/vnd.google-apps.document': { export: 'text/plain' },
   'application/vnd.google-apps.presentation': { export: 'text/plain' },
   'application/vnd.google-apps.spreadsheet': { export: 'text/csv' },
   'text/plain': { media: true },
   'text/markdown': { media: true },
+  'application/pdf': { parse: 'pdf' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { parse: 'docx' },
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { parse: 'xlsx' },
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': { parse: 'pptx' },
 };
 
 // Drive veut AAAA-MM-JJTHH:MM:SS, en UTC sans fuseau ; « >= » rend aussi le fichier du curseur.
@@ -62,8 +70,8 @@ export function driveClient(http: ConnectorHttp) {
 
     // Le texte d'un fichier, ou null s'il ne se lit pas : trop gros pour l'export (403
     // exportSizeLimitExceeded) ou pour Leon (plus de 10 Mo), téléchargement interdit par son
-    // propriétaire (403), supprimé (404). Un 403 de limite de débit n'en est pas un : il fait échouer
-    // le passage, qui reprendra au même fichier.
+    // propriétaire (403), supprimé (404), PDF ou fichier Office illisible (protégé, abîmé). Un 403 de
+    // limite de débit n'en est pas un : il fait échouer le passage, qui reprendra au même fichier.
     async content(file: DriveFile): Promise<string | null> {
       const how = READABLE[file.mimeType];
       if (!how) return null;
@@ -72,9 +80,9 @@ export function driveClient(http: ConnectorHttp) {
         'export' in how
           ? { url: `${DRIVE}/files/${id}/export`, query: { mimeType: how.export } }
           : { url: `${DRIVE}/files/${id}`, query: { alt: 'media', supportsAllDrives: true } };
-      let answer: Awaited<ReturnType<ConnectorHttp['text']>>;
+      let answer: Awaited<ReturnType<ConnectorHttp['bytes']>>;
       try {
-        answer = await http.text({
+        answer = await http.bytes({
           ...request,
           headers: { accept: '*/*' },
           acceptStatus: [403, 404],
@@ -85,11 +93,19 @@ export function driveClient(http: ConnectorHttp) {
       }
       if (answer.status === 404) return null;
       if (answer.status === 403) {
-        if (GOOGLE_RATE_LIMIT.test(answer.text))
+        if (GOOGLE_RATE_LIMIT.test(new TextDecoder().decode(answer.bytes)))
           throw new ConnectorHttpError(429, 'Google Drive rate limit reached');
         return null;
       }
-      return answer.text;
+      if (!('parse' in how)) return new TextDecoder().decode(answer.bytes);
+      try {
+        return (await extractText(how.parse, answer.bytes)).text;
+      } catch (error) {
+        // Ni le nom ni le contenu du fichier : le code de l'erreur d'officeparser.
+        const reason = (error as OfficeError).officeIssue?.code ?? (error as Error).name;
+        logError('connector.drive_unreadable', error, { reason });
+        return null;
+      }
     },
   };
 }

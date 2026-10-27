@@ -10,6 +10,7 @@ export type FakeRoute = {
   status?: number;
   json?: unknown;
   text?: string;
+  bytes?: Uint8Array<ArrayBuffer>; // un fichier (PDF de Drive)
   headers?: Record<string, string>;
 };
 
@@ -45,7 +46,8 @@ function respond(route: FakeRoute): Response {
   const headers = new Headers(route.headers);
   if (route.json !== undefined) headers.set('content-type', 'application/json');
   const status = route.status ?? 200;
-  const body = route.json !== undefined ? JSON.stringify(route.json) : (route.text ?? '');
+  const body =
+    route.json !== undefined ? JSON.stringify(route.json) : (route.bytes ?? route.text ?? '');
   // 204 et 304 n'ont jamais de corps : Response lève si on lui en donne un, même vide.
   return new Response(status === 204 || status === 304 ? null : body, { status, headers });
 }

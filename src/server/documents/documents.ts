@@ -84,7 +84,8 @@ export function decodeText(bytes: Uint8Array): string {
   }
 }
 
-async function extractText(
+// Partagée avec le connecteur Drive (PDF, Word… déposés dans le Drive).
+export async function extractText(
   extension: string,
   bytes: Uint8Array,
 ): Promise<{ text: string; partial: boolean }> {

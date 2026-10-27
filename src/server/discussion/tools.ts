@@ -113,7 +113,7 @@ export type DiscussionToolDeps = {
   // Partagée avec l'agent, qui en tire les citations de la réponse. Une numérotation neuve sans elle.
   numbering?: SourceNumbering;
   // Les outils GitHub : la discussion où ils proposent une action, l'agent qui la montre ; fetchImpl pour les tests.
-} & Pick<GithubToolDeps, 'discussionId' | 'onAction' | 'fetchImpl'>;
+} & Pick<GithubToolDeps, 'discussionId' | 'onAction' | 'asked' | 'fetchImpl'>;
 
 const optionalFilter = (description: string) =>
   z.string().max(FILTER_MAX_CHARS).nullish().describe(description);

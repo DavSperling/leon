@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACTION_KEYS, ACTION_KINDS } from '@/lib/actions';
-import { invalidParam, SPECS, validParams } from './github-actions';
+import { askedOf, invalidParam, SPECS, validParams } from './github-actions';
 
 // Les règles par clé des paramètres d'une action, revérifiées à la proposition et à l'exécution : une clé inconnue,
 // manquante ou hors règle fait refuser l'action. Table par clé, éprouvée sur chaque type d'action qui la porte.
@@ -32,6 +32,8 @@ const GOOD: Record<string, string> = {
   content: '',
   diff: '+ x',
   lines: '12',
+  asked: 'Peux-tu fusionner la PR 7 ?',
+  default: 'oui',
 };
 const BAD: Record<string, string[]> = {
   repo: ['acme', 'a/b/c', 'acme/leon?x', ''],
@@ -51,14 +53,26 @@ const BAD: Record<string, string[]> = {
   reviewers: ['bob, carol', 'bo b', '-bob', 'a,,b', Array(16).fill('bob').join(',')],
   assignees: ['bob;carol', Array(11).fill('bob').join(',')],
   labels: ['a,,b', 'x'.repeat(51), 'a\nb', Array(21).fill('l').join(',')],
-  title: ['', 'a\nb', 'x'.repeat(257)],
-  name: ['', 'a\r\nb'],
-  current: ['', 'x'.repeat(257)],
-  message: ['', 'x'.repeat(2001)],
-  body: ['x'.repeat(65_537)],
-  content: ['x'.repeat(200_001)],
+  title: ['', 'a\nb', 'x'.repeat(257), 'a\u202Eb'],
+  name: ['', 'a\r\nb', 'a\u2067b'],
+  current: ['', 'x'.repeat(257), 'a\u202Ab'],
+  message: ['', 'x'.repeat(2001), 'a\u202Eb'],
+  body: ['x'.repeat(65_537), 'a\u2066b'],
+  content: ['x'.repeat(200_001), 'a\u202Cb'],
   diff: ['x'.repeat(200_001)],
   lines: ['-1', '1.5', 'abc', ''],
+  asked: [
+    '',
+    'x'.repeat(301),
+    'a\nb',
+    'a\tb',
+    'a\0b',
+    'a\u2028b',
+    'a\u202Eb',
+    'a\u2069b',
+    'a\ud83db',
+  ],
+  default: ['yes', 'true', 'Oui', ''],
 };
 
 describe('validParams', () => {
@@ -104,6 +118,87 @@ describe('validParams', () => {
     const { sha: _sha, ...nouveau } = base('github.ecrire_fichier');
 
     expect(validParams('github.ecrire_fichier', nouveau)).toBe(true);
+  });
+
+  it('laisse « asked » facultative partout, et « default » aux seules écritures de fichier', () => {
+    for (const kind of ACTION_KINDS) {
+      const { asked: _asked, default: _default, ...params } = base(kind);
+
+      expect(validParams(kind, params), kind).toBe(true);
+      expect(ACTION_KEYS[kind].optional, kind).toContain('asked');
+    }
+    const fichier = base('github.supprimer_fichier');
+    expect(validParams('github.supprimer_fichier', fichier)).toBe(true);
+    expect(invalidParam('github.commenter', { ...base('github.commenter'), default: 'oui' })).toBe(
+      'default',
+    );
+  });
+
+  it('exige la branche visée d’une fusion', () => {
+    const { base: _base, ...sansBase } = base('github.fusionner_pr');
+
+    expect(ACTION_KEYS['github.fusionner_pr'].required).toContain('base');
+    expect(invalidParam('github.fusionner_pr', sansBase)).toBe('base');
+    expect(invalidParam('github.fusionner_pr', { ...sansBase, base: '-x' })).toBe('base');
+  });
+
+  it('refuse les caractères qui changent le sens de lecture dans les textes montrés', () => {
+    const bidi = [...'\u202A\u202B\u202C\u202D\u202E\u2066\u2067\u2068\u2069'];
+    const shown = [
+      ['github.ecrire_fichier', 'content'],
+      ['github.ecrire_fichier', 'message'],
+      ['github.ouvrir_pr', 'body'],
+      ['github.ouvrir_pr', 'title'],
+      ['github.commenter', 'body'],
+    ] as const;
+
+    for (const [kind, key] of shown) {
+      for (const char of bidi) {
+        expect(invalidParam(kind, { ...base(kind), [key]: `a${char}b` }), `${kind} ${key}`).toBe(
+          key,
+        );
+      }
+      // Un texte arabe, sans caractère de contrôle, passe.
+      expect(validParams(kind, { ...base(kind), [key]: 'مرحبا' }), `${kind} ${key}`).toBe(true);
+    }
+  });
+});
+
+const GOOD_COMMENT = { repo: 'acme/leon', number: '7', title: 'Un titre', body: 'Texte' };
+
+describe('askedOf', () => {
+  it('rend la demande sur une ligne de 300 caractères au plus, sans contrôle ni sens de lecture', () => {
+    expect(askedOf('  Fusionne\nla   PR\t7 \u202Eici\u2028 ')).toBe('Fusionne la PR 7 ici');
+    expect(askedOf(undefined)).toBe('');
+    expect(askedOf(' \n\t ')).toBe('');
+    const long = askedOf('mot '.repeat(200));
+    expect(long.length).toBeLessThanOrEqual(300);
+    expect(long.startsWith('mot mot')).toBe(true);
+  });
+
+  it('ne coupe pas une paire de substitution, et écarte une moitié seule', () => {
+    const cut = askedOf(`${'a'.repeat(299)}😀 suite`);
+
+    expect(cut).toBe('a'.repeat(299));
+    expect(askedOf('x\ud83dy')).toBe('x y');
+    expect(askedOf('😀'.repeat(200))).toBe('😀'.repeat(150));
+  });
+
+  it('rend toujours une valeur que la règle de la clé accepte', () => {
+    for (const text of [
+      'Salut',
+      'é'.repeat(900),
+      '😀'.repeat(900),
+      'a\0b\u202Ec',
+      'ligne\r\nsuite',
+    ]) {
+      const asked = askedOf(text);
+
+      expect(
+        validParams('github.commenter', { ...GOOD_COMMENT, asked }),
+        JSON.stringify(text),
+      ).toBe(true);
+    }
   });
 });
 

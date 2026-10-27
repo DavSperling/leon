@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { decideActionAction } from '@/app/(app)/discussions/actions';
 import { Button } from '@/components/verre';
-import { type ActionView, actionName } from '@/lib/actions';
+import { type ActionView, actionName, actionWarnings } from '@/lib/actions';
 
 // Une action que Leon a proposée pendant sa réponse (lot 7 de la spec GitHub) : ce qu'elle fera exactement (le dépôt,
 // les valeurs, le diff d'un fichier), et les deux boutons. Rien n'est fait avant le clic ; la confirmation l'exécute
@@ -16,8 +16,10 @@ type Decision = 'confirmer' | 'annuler';
 
 // Les paramètres que la carte montre en ligne, dans cet ordre ; `body` et `diff` ont leur bloc.
 const DETAILS = [
+  'asked',
   'title',
   'current',
+  'name',
   'state',
   'method',
   'event',
@@ -75,6 +77,8 @@ export function ActionCard({ action }: { action: ActionView }) {
     return [key, text] as const;
   });
 
+  const warnings = actionWarnings(kind, params);
+
   // Les lignes d'un diff n'ont pas d'identité : leur rang tient lieu de clé.
   const diffLines = (params.diff ?? '').split('\n').map((line, key) => ({ key, line }));
 
@@ -97,10 +101,13 @@ export function ActionCard({ action }: { action: ActionView }) {
           ))}
         </dl>
       )}
-      {params.body && (
+      {'body' in params && (
         <blockquote className="mt-2 max-h-48 overflow-auto border-l-2 border-line-strong pl-3 text-label whitespace-pre-wrap text-fg-2">
-          {params.body}
+          {params.body || <span className="text-muted">{t('emptyBody')}</span>}
         </blockquote>
+      )}
+      {kind === 'github.ecrire_fichier' && params.diff === '' && (
+        <p className="mt-2 text-label text-muted">{t('newlineOnly')}</p>
       )}
       {params.diff && (
         <>
@@ -117,12 +124,13 @@ export function ActionCard({ action }: { action: ActionView }) {
           </pre>
         </>
       )}
-      {kind === 'github.relancer_execution' && view.status === 'proposee' && (
-        <p className="mt-2 flex gap-2 text-label text-warning">
-          <TriangleAlert aria-hidden="true" className="mt-[1px] size-3.5 shrink-0" />
-          {t('rerunWarning')}
-        </p>
-      )}
+      {view.status === 'proposee' &&
+        warnings.map((warning) => (
+          <p key={warning} className="mt-2 flex gap-2 text-label text-warning">
+            <TriangleAlert aria-hidden="true" className="mt-[1px] size-3.5 shrink-0" />
+            {t(warning)}
+          </p>
+        ))}
       {view.status === 'proposee' && (
         <div className="mt-3 flex flex-wrap gap-2">
           <Button

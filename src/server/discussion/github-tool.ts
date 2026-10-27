@@ -18,6 +18,8 @@ export type GithubToolDeps = LiveDeps & {
   // La discussion où s'affichent les actions proposées, et l'agent qui les montre à la fin de la réponse.
   discussionId?: string;
   onAction?: (action: ActionView) => void;
+  // La question de l'utilisateur dans cette réponse : les actions proposées en gardent un extrait, montré sur la carte.
+  asked?: string;
 };
 
 export const NO_CONNECTION =

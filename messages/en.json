@@ -299,8 +299,10 @@
         "annuler_execution": "Cancel run"
       },
       "details": {
+        "asked": "Your request",
         "title": "Title",
         "current": "Current title",
+        "name": "Run",
         "state": "State",
         "method": "Method",
         "event": "Review",
@@ -330,6 +332,10 @@
         "none": "None"
       },
       "rerunWarning": "Re-running a workflow can run code and deploy.",
+      "defaultBranchWarning": "Writes straight to the default branch, with no PR.",
+      "workflowWarning": "This file is a GitHub Actions workflow: it can run code as soon as it is committed.",
+      "emptyBody": "(empty)",
+      "newlineOnly": "Only the final newline changes.",
       "cancel": "Cancel",
       "waiting": "Nothing happens until you confirm.",
       "running": "In progress…",
@@ -343,9 +349,10 @@
         "existe": "A branch with this name already exists.",
         "introuvable": "Repository, branch, file or number not found on GitHub.",
         "connexion": "Reconnect your GitHub connection in Connections.",
-        "echec": "GitHub couldn’t do this. Try again later.",
+        "echec": "GitHub couldn’t do this. Check on GitHub before asking again.",
         "conflit": "Conflict: the item changed since the proposal, or the action is no longer possible. Ask Leon again.",
-        "refus": "GitHub refused the action (a repository rule, or a value it doesn’t accept)."
+        "refus": "GitHub refused the action (a repository rule, or a value it doesn’t accept).",
+        "incertain": "GitHub didn’t answer in time: the action may have gone through. Check on GitHub before asking again."
       }
     }
   },

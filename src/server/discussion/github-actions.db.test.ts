@@ -8,7 +8,7 @@ import { adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { createDiscussion, getDiscussion, saveReply } from './discussions';
-import { actionTools, decideAction } from './github-actions';
+import { actionTools, askedOf, decideAction } from './github-actions';
 import { proposeAction } from './proposed-actions';
 
 // Toutes les écritures GitHub confirmées d'un clic (lots 7 à 10 de la spec GitHub), sur de vraies lignes : chaque
@@ -81,6 +81,8 @@ const get = (url: string, json: unknown): FakeRoute => ({ url, json });
 const branchRoute = (name: string, sha = SHA) =>
   get(`${REPO}/git/ref/heads/${name}`, { object: { sha } });
 const DEFAULT_BRANCH = get(REPO, { default_branch: 'main' });
+// La question de l'utilisateur dans la réponse, que chaque action proposée garde sur sa carte.
+const ASKED = 'Fais-le pour moi';
 
 type Written = Pick<FakeRoute, 'status' | 'json' | 'text'> & {
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -93,6 +95,7 @@ async function propose(
   tool: string,
   input: Record<string, unknown>,
   routes: FakeRoute[],
+  asked = ASKED,
 ) {
   const fetchImpl = fakeFetch(routes);
   const proposed: ActionView[] = [];
@@ -100,6 +103,7 @@ async function propose(
     budget: { chars: 40_000 },
     discussionId,
     fetchImpl,
+    asked,
     onAction: (action) => proposed.push(action),
   }).find((item) => item.name === tool) as AgentTool;
   // Comme l'agent : l'entrée passe d'abord par le schéma de l'outil.
@@ -124,7 +128,7 @@ const CASES: Array<{
     input: { depot: 'acme/leon', branche: 'feature/x' },
     read: [DEFAULT_BRANCH, branchRoute('feature/x')],
     params: { repo: 'acme/leon', branch: 'feature/x', sha: SHA },
-    recheck: [branchRoute('feature/x')],
+    recheck: [DEFAULT_BRANCH, branchRoute('feature/x')],
     write: { method: 'DELETE', url: `${REPO}/git/refs/heads/feature/x`, status: 204 },
     url: 'https://github.com/acme/leon/branches',
   },
@@ -139,6 +143,7 @@ const CASES: Array<{
     },
     read: [
       branchRoute('feature/x'),
+      DEFAULT_BRANCH,
       get(`${REPO}/contents/docs/a.md`, fileOf('un\nquatre\ntrois\n')),
     ],
     params: { path: 'docs/a.md', sha: BLOB, diff: '  un\n- quatre\n+ deux\n  trois' },
@@ -153,7 +158,11 @@ const CASES: Array<{
   {
     tool: 'supprimer_fichier_github',
     input: { depot: 'acme/leon', branche: 'feature/x', chemin: 'docs/a.md', message: 'Retrait' },
-    read: [branchRoute('feature/x'), get(`${REPO}/contents/docs/a.md`, fileOf('a\nb\n'))],
+    read: [
+      branchRoute('feature/x'),
+      DEFAULT_BRANCH,
+      get(`${REPO}/contents/docs/a.md`, fileOf('a\nb\n')),
+    ],
     params: { path: 'docs/a.md', sha: BLOB, lines: '2' },
     write: {
       method: 'DELETE',
@@ -200,7 +209,8 @@ const CASES: Array<{
     tool: 'fusionner_pr_github',
     input: { depot: 'acme/leon', numero: 7, methode: 'squash' },
     read: [get(`${REPO}/pulls/7`, PULL)],
-    params: { number: '7', title: 'Ancien titre', method: 'squash', sha: SHA },
+    params: { number: '7', title: 'Ancien titre', base: 'main', method: 'squash', sha: SHA },
+    recheck: [get(`${REPO}/pulls/7`, PULL)],
     write: { method: 'PUT', url: `${REPO}/pulls/7/merge`, json: { merged: true } },
     body: { merge_method: 'squash', sha: SHA },
     url: 'https://github.com/acme/leon/pull/7',
@@ -317,6 +327,7 @@ describe('les outils d’écriture', () => {
     } = await propose(alice, discussionId, item.tool, item.input, item.read);
 
     expect(action).toMatchObject({ status: 'proposee', params: item.params });
+    expect(action.params.asked).toBe(ASKED);
     expect(reading.calls.map((call) => call.method)).toEqual(item.read.map(() => 'GET'));
     expect(text.split('\n')[0]).toBe(DATA_GUARD_LINE);
     expect(text).toContain('Action proposée, en attente');
@@ -478,7 +489,11 @@ describe('ce que l’outil refuse de proposer', () => {
         contenu: 'a\nb',
         message: 'Neuf',
       },
-      [branchRoute('feature/x'), { url: `${REPO}/contents/neuf.md`, status: 404, json: {} }],
+      [
+        branchRoute('feature/x'),
+        DEFAULT_BRANCH,
+        { url: `${REPO}/contents/neuf.md`, status: 404, json: {} },
+      ],
     );
 
     expect(action.params.diff).toBe('+ a\n+ b');
@@ -494,7 +509,11 @@ describe('ce que l’outil refuse de proposer', () => {
       message: 'm',
       ...extra,
     });
-    const at = (json: unknown) => [branchRoute('feature/x'), get(`${REPO}/contents/a.md`, json)];
+    const at = (json: unknown) => [
+      branchRoute('feature/x'),
+      DEFAULT_BRANCH,
+      get(`${REPO}/contents/a.md`, json),
+    ];
     const big = Array.from({ length: 3001 }, (_, i) => `l${i}`).join('\n');
 
     const same = await run('ecrire_fichier_github', input(), at(fileOf('x\n')));
@@ -700,9 +719,11 @@ describe('decideAction', () => {
     expect(await status(409)).toBe('conflit');
     expect(await status(422)).toBe('refus');
     expect(await status(418)).toBe('echec');
+    expect(await status(500)).toBe('incertain');
+    expect(await status(502)).toBe('incertain');
   });
 
-  it('ne rejoue jamais une écriture : un 500 sur un commentaire échoue tout de suite', async () => {
+  it('ne rejoue jamais une écriture : un 500 sur un commentaire s’arrête tout de suite, en incertain', async () => {
     const { alice, discussionId } = await setup();
     const { action } = await propose(
       alice,
@@ -720,7 +741,7 @@ describe('decideAction', () => {
     const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
 
     expect(fetchImpl.calls).toHaveLength(1);
-    expect(done).toMatchObject({ status: 'echouee', result: { url: null, error: 'echec' } });
+    expect(done).toMatchObject({ status: 'echouee', result: { url: null, error: 'incertain' } });
   });
 
   it('dit « conflit » quand le fichier a changé depuis la proposition (409) ou que la fusion est impossible (405)', async () => {
@@ -730,7 +751,7 @@ describe('decideAction', () => {
       discussionId,
       'ecrire_fichier_github',
       { depot: 'acme/leon', branche: 'feature/x', chemin: 'a.md', contenu: 'b\n', message: 'm' },
-      [branchRoute('feature/x'), get(`${REPO}/contents/a.md`, fileOf('a\n'))],
+      [branchRoute('feature/x'), DEFAULT_BRANCH, get(`${REPO}/contents/a.md`, fileOf('a\n'))],
     );
     const merge = await propose(
       alice,
@@ -747,6 +768,7 @@ describe('decideAction', () => {
     });
     const blocked = await decideAction(alice, merge.action.id, 'confirmer', {
       fetchImpl: fakeFetch([
+        get(`${REPO}/pulls/7`, PULL),
         { method: 'PUT', url: `${REPO}/pulls/7/merge`, status: 405, json: { message: 'checks' } },
       ]),
     });
@@ -764,12 +786,12 @@ describe('decideAction', () => {
       { depot: 'acme/leon', branche: 'feature/x' },
       [DEFAULT_BRANCH, branchRoute('feature/x')],
     );
-    const fetchImpl = fakeFetch([branchRoute('feature/x', 'f'.repeat(40))]);
+    const fetchImpl = fakeFetch([DEFAULT_BRANCH, branchRoute('feature/x', 'f'.repeat(40))]);
 
     const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
 
     expect(done).toMatchObject({ status: 'echouee', result: { error: 'conflit' } });
-    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET']);
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET', 'GET']);
   });
 
   it('revérifie les paramètres au clic : une ligne altérée n’écrit rien', async () => {
@@ -809,6 +831,239 @@ describe('decideAction', () => {
 
     expect(done).toMatchObject({ status: 'echouee', result: { error: 'connexion' } });
     expect(fetchImpl.calls).toEqual([]);
+  });
+});
+
+describe('fusionner_pr_github', () => {
+  const merge = async () => {
+    const { alice, discussionId } = await setup();
+    const { action } = await propose(
+      alice,
+      discussionId,
+      'fusionner_pr_github',
+      { depot: 'acme/leon', numero: 7 },
+      [get(`${REPO}/pulls/7`, PULL)],
+    );
+    return { alice, action };
+  };
+
+  it('garde la branche visée avec la PR proposée', async () => {
+    const { action } = await merge();
+
+    expect(action.params).toMatchObject({ base: 'main', sha: SHA, method: 'merge' });
+  });
+
+  it.each([
+    ['visait une autre branche', { base: { ref: 'develop' } }],
+    ['a reçu un nouveau commit', { head: { ref: 'feature/x', sha: 'f'.repeat(40) } }],
+    ['est fermée', { state: 'closed' }],
+    ['est fusionnée', { state: 'closed', merged: true }],
+  ])('ne fusionne rien quand la PR %s depuis la proposition', async (_what, change) => {
+    const { alice, action } = await merge();
+    const fetchImpl = fakeFetch([get(`${REPO}/pulls/7`, { ...PULL, ...change })]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { url: null, error: 'conflit' } });
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET']);
+  });
+
+  it('refuse une branche visée que GitHub écrit hors des règles', async () => {
+    const { alice, discussionId } = await setup();
+
+    const { text, action } = await propose(
+      alice,
+      discussionId,
+      'fusionner_pr_github',
+      { depot: 'acme/leon', numero: 7 },
+      [get(`${REPO}/pulls/7`, { ...PULL, base: { ref: '../main' } })],
+    );
+
+    expect(text).toContain('inattendu');
+    expect(action).toBeUndefined();
+  });
+});
+
+describe('la demande de l’utilisateur sur la carte', () => {
+  const RLO = String.fromCharCode(0x202e);
+  const NUL = String.fromCharCode(0);
+  const comment = (asked?: string) =>
+    setup().then(({ alice, discussionId }) =>
+      propose(
+        alice,
+        discussionId,
+        'commenter_github',
+        { depot: 'acme/leon', numero: 7, texte: 'Merci' },
+        [get(`${REPO}/issues/7`, { title: 'Un bug' })],
+        asked,
+      ),
+    );
+
+  it('garde un extrait de la question sur une ligne de 300 caractères au plus, sans contrôle ni sens de lecture', async () => {
+    const question = ['Commente\nle ticket 7\t', 'très '.repeat(150), RLO, 'fin', NUL].join('');
+
+    const { action } = await comment(question);
+
+    expect(action.params.asked).toBe(askedOf(question));
+    expect(action.params.asked).toMatch(/^Commente le ticket 7 très très/);
+    expect(action.params.asked?.length).toBeLessThanOrEqual(300);
+    expect([...(action.params.asked ?? '')].some((char) => char < ' ' || char === RLO)).toBe(false);
+    const row = await adminPool.query('select params from actions where id = $1', [action.id]);
+    expect(row.rows[0]?.params.asked).toBe(action.params.asked);
+  });
+
+  it('n’en garde rien quand la question est vide', async () => {
+    const { action } = await comment(' \n ');
+
+    expect('asked' in action.params).toBe(false);
+    expect(action.status).toBe('proposee');
+  });
+});
+
+describe('la branche par défaut', () => {
+  const file = (branche: string, tool: 'ecrire_fichier_github' | 'supprimer_fichier_github') =>
+    setup().then(({ alice, discussionId }) =>
+      propose(
+        alice,
+        discussionId,
+        tool,
+        { depot: 'acme/leon', branche, chemin: 'a.md', contenu: 'b\n', message: 'm' },
+        [branchRoute(branche), DEFAULT_BRANCH, get(`${REPO}/contents/a.md`, fileOf('a\n'))],
+      ),
+    );
+
+  it.each(['ecrire_fichier_github', 'supprimer_fichier_github'] as const)(
+    '%s marque « default » quand la branche est la branche par défaut',
+    async (tool) => {
+      const onMain = await file('main', tool);
+      const elsewhere = await file('feature/x', tool);
+
+      expect(onMain.action.params.default).toBe('oui');
+      expect('default' in elsewhere.action.params).toBe(false);
+    },
+  );
+
+  it('ne supprime pas une branche devenue la branche par défaut depuis la proposition', async () => {
+    const { alice, discussionId } = await setup();
+    const { action } = await propose(
+      alice,
+      discussionId,
+      'supprimer_branche_github',
+      { depot: 'acme/leon', branche: 'feature/x' },
+      [DEFAULT_BRANCH, branchRoute('feature/x')],
+    );
+    const fetchImpl = fakeFetch([get(REPO, { default_branch: 'feature/x' })]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { error: 'conflit' } });
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET']);
+  });
+
+  it('ne supprime rien quand GitHub rend une branche par défaut hors des règles', async () => {
+    const { alice, discussionId } = await setup();
+    const { action } = await propose(
+      alice,
+      discussionId,
+      'supprimer_branche_github',
+      { depot: 'acme/leon', branche: 'feature/x' },
+      [DEFAULT_BRANCH, branchRoute('feature/x')],
+    );
+    const fetchImpl = fakeFetch([get(REPO, { default_branch: '../main' })]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { error: 'conflit' } });
+    expect(fetchImpl.calls).toHaveLength(1);
+  });
+});
+
+describe('une branche écrite par GitHub hors des règles', () => {
+  const ODD = get(REPO, { default_branch: '../main' });
+
+  it.each([
+    ['creer_branche_github', { nom: 'feature/x' }, [ODD]],
+    ['ouvrir_pr_github', { tete: 'feature/x', titre: 'Ma PR' }, [ODD]],
+    ['supprimer_branche_github', { branche: 'feature/x' }, [ODD]],
+    [
+      'ecrire_fichier_github',
+      { branche: 'feature/x', chemin: 'a.md', contenu: 'b\n', message: 'm' },
+      [branchRoute('feature/x'), ODD],
+    ],
+    [
+      'supprimer_fichier_github',
+      { branche: 'feature/x', chemin: 'a.md', message: 'm' },
+      [branchRoute('feature/x'), ODD],
+    ],
+  ] as Array<[string, Record<string, unknown>, FakeRoute[]]>)(
+    '%s ne la met dans aucune adresse et ne propose rien',
+    async (tool, input, routes) => {
+      const { alice, discussionId } = await setup();
+
+      const { text, action, fetchImpl } = await propose(
+        alice,
+        discussionId,
+        tool,
+        { depot: 'acme/leon', ...input },
+        routes,
+      );
+
+      expect(text).toContain('inattendu');
+      expect(action).toBeUndefined();
+      expect(fetchImpl.calls.map((call) => call.url).join(' ')).not.toContain('..');
+      expect(fetchImpl.calls).toHaveLength(routes.length);
+    },
+  );
+});
+
+describe('une écriture dont on ne sait pas si elle est faite', () => {
+  const comment = async () => {
+    const { alice, discussionId } = await setup();
+    const { action } = await propose(
+      alice,
+      discussionId,
+      'commenter_github',
+      { depot: 'acme/leon', numero: 7, texte: 'x' },
+      [get(`${REPO}/issues/7`, { title: 'Un bug' })],
+    );
+    return { alice, action };
+  };
+
+  it('sans réponse de GitHub (réseau, délai) : « incertain », une seule tentative', async () => {
+    const { alice, action } = await comment();
+    let attempts = 0;
+    const down = (async () => {
+      attempts += 1;
+      throw new TypeError('fetch failed');
+    }) as unknown as typeof fetch;
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl: down });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { url: null, error: 'incertain' } });
+    expect(attempts).toBe(1);
+  });
+
+  it('avec une réponse de succès illisible : « incertain » aussi, l’écriture est probablement faite', async () => {
+    const { alice, action } = await comment();
+    const fetchImpl = fakeFetch([
+      { method: 'POST', url: `${REPO}/issues/7/comments`, status: 201, text: 'pas du JSON' },
+    ]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { error: 'incertain' } });
+    expect(fetchImpl.calls).toHaveLength(1);
+  });
+
+  it('un refus net de GitHub reste un échec, pas un doute', async () => {
+    const { alice, action } = await comment();
+    const fetchImpl = fakeFetch([
+      { method: 'POST', url: `${REPO}/issues/7/comments`, status: 400, json: {} },
+    ]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { error: 'echec' } });
   });
 });
 

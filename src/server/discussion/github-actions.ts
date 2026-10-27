@@ -76,6 +76,20 @@ class ActionFailure extends Error {
 const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const DIGITS = /^\d{1,12}$/;
 const oneLine = (text: string) => !/[\r\n\u2028\u2029]/.test(text);
+// Les caractères qui changent le sens de lecture (U+202A à U+202E, U+2066 à U+2069) : ce que l'utilisateur confirme
+// d'un clic ne doit pas s'afficher autrement qu'il s'écrit.
+const BIDI = /[\u202A-\u202E\u2066-\u2069]/;
+const plain = (rule: (value: string) => boolean) => (value: string) =>
+  rule(value) && !BIDI.test(value);
+// Ce qui ne tient pas sur une ligne montrée telle quelle : contrôles, sauts, sens de lecture, moitiés de paire.
+const UNSAFE = /[\p{Cc}\p{Cs}\u2028\u2029\u202A-\u202E\u2066-\u2069]/u;
+// Au plus `max` unités sans couper une paire de substitution (la règle de la clé compte ces unités).
+const cut = (text: string, max: number) => {
+  const end = text.charCodeAt(max - 1);
+  return text.slice(0, end >= 0xd800 && end <= 0xdbff ? max - 1 : max);
+};
+const safeLine = (text: string, max: number) =>
+  cut(text.split(UNSAFE).join(' ').replace(/\s+/g, ' ').trim(), max).trim();
 const between = (min: number, max: number) => (value: string) =>
   value.length >= min && value.length <= max;
 const oneOf =
@@ -84,15 +98,21 @@ const oneOf =
     values.includes(value);
 const list = (max: number, item: (value: string) => boolean) => (value: string) =>
   value === '' || (value.split(',').length <= max && value.split(',').every(item));
-// Les éléments d'une liste d'entrée de l'outil : ni virgule, ni saut de ligne.
+// Les éléments d'une liste d'entrée de l'outil : ni virgule, ni saut de ligne. Un .refine et non un .regex : le
+// schéma envoyé au modèle ne porte aucun `pattern` (l'API n'en accepte que certains).
 const label = () =>
   z
     .string()
     .min(1)
     .max(50)
-    .regex(/^[^,\r\n\u2028\u2029]+$/);
-const login = () => z.string().regex(LOGIN);
-const title = (value: string) => between(1, 256)(value) && oneLine(value);
+    .refine((value) => !/[,\r\n\u2028\u2029]/.test(value), 'Ni virgule ni saut de ligne.');
+const login = () =>
+  z
+    .string()
+    .max(39)
+    .refine((value) => LOGIN.test(value), 'Un identifiant GitHub.');
+const ASKED_MAX = 300;
+const title = (value: string) => plain(between(1, 256))(value) && oneLine(value);
 const yesNo = oneOf('oui', 'non');
 
 const RULES = {
@@ -116,11 +136,15 @@ const RULES = {
   title,
   name: title,
   current: title,
-  message: between(1, 2000),
-  body: between(0, 65_536),
-  content: between(0, 200_000),
+  message: plain(between(1, 2000)),
+  body: plain(between(0, 65_536)),
+  content: plain(between(0, 200_000)),
   diff: between(0, 200_000),
   lines: (value) => /^\d{1,9}$/.test(value),
+  // Un extrait de la demande de l'utilisateur, montré sur la carte (askedOf).
+  asked: (value) => between(1, ASKED_MAX)(value) && !UNSAFE.test(value),
+  // « oui » : l'écriture va sur la branche par défaut, sans PR.
+  default: yesNo,
 } satisfies Record<string, (value: string) => boolean>;
 
 // Les paramètres d'une action vérifiée : toute clé se lit comme du texte. Une clé facultative absente est vide
@@ -188,8 +212,10 @@ const pick = (params: Prepared, keys: string[]): Prepared =>
     keys.filter((key) => key in params).map((key) => [key, params[key] as string]),
   );
 // Une seule ligne de 256 caractères au plus : le nom d'une exécution vient de GitHub.
-const clip = (text: string, fallback: string) =>
-  text.replace(/\s+/g, ' ').trim().slice(0, 256) || fallback;
+const clip = (text: string, fallback: string) => safeLine(text, 256) || fallback;
+// La demande de l'utilisateur dans cette réponse, en une ligne : la carte la montre pour qu'il voie ce qui a déclenché
+// l'action, même si un texte lu par Leon l'a poussé à la proposer.
+export const askedOf = (message: string | undefined) => safeLine(message ?? '', ASKED_MAX);
 const WHAT: Record<string, string> = {
   title: 'titre',
   body: 'description',
@@ -215,6 +241,12 @@ async function branchExists(github: Github, repo: string, branch: string): Promi
     if (error instanceof ConnectorHttpError && error.status === 404) return false;
     throw error;
   }
+}
+
+// La branche par défaut du dépôt, ou null si GitHub la rend sous une forme qu'on ne met pas dans une adresse.
+async function defaultBranchOf(github: Github, repo: string): Promise<string | null> {
+  const name = await github.defaultBranch(repo);
+  return isBranchName(name) ? name : null;
 }
 
 // Un fichier tel qu'il est sur la branche : son sha et son texte, null s'il n'existe pas, ou la phrase de refus
@@ -264,10 +296,11 @@ export const SPECS: Record<ActionKind, Spec> = {
     }),
     async prepare(github, repo, { nom, depuis }) {
       if (!isBranchName(nom) || (depuis != null && !isBranchName(depuis))) return BAD_BRANCH;
-      const from = depuis ?? (await github.defaultBranch(repo));
+      const from = depuis ?? (await defaultBranchOf(github, repo));
+      if (from === null) return UNEXPECTED;
       const sha = await github.branchSha(repo, from);
       // Avant la lecture suivante : un commit inattendu n'est pas proposé.
-      if (!COMMIT_SHA.test(sha) || !isBranchName(from)) return UNEXPECTED;
+      if (!COMMIT_SHA.test(sha)) return UNEXPECTED;
       // La branche existe déjà : la proposer donnerait un échec au clic, ou un faux « faite » sur le même commit.
       if (await branchExists(github, repo, nom)) {
         return `La branche « ${nom} » existe déjà dans ${repo} : rien n’est proposé.`;
@@ -299,7 +332,9 @@ export const SPECS: Record<ActionKind, Spec> = {
     input: z.object({ depot: depot(), branche: branche('La branche à supprimer.') }),
     async prepare(github, repo, { branche: name }) {
       if (!isBranchName(name)) return BAD_BRANCH;
-      if (name === (await github.defaultBranch(repo))) {
+      const main = await defaultBranchOf(github, repo);
+      if (main === null) return UNEXPECTED;
+      if (name === main) {
         return `« ${name} » est la branche par défaut de ${repo} : Leon ne la supprime pas.`;
       }
       return { repo, branch: name, sha: await github.branchSha(repo, name) };
@@ -308,6 +343,9 @@ export const SPECS: Record<ActionKind, Spec> = {
       `supprimer la branche « ${p.branch} » de ${p.repo} (dernier commit ${sha7(p.sha)})`,
     async execute(github, p) {
       const { repo, branch, sha } = p;
+      // La branche est devenue la branche par défaut depuis la proposition : elle ne se supprime pas.
+      const main = await defaultBranchOf(github, repo);
+      if (main === null || main === branch) throw new ActionFailure('conflit');
       // La branche a reçu un commit depuis la proposition : ce que l'utilisateur a vu n'est plus ce qui serait perdu.
       if ((await github.branchSha(repo, branch)) !== sha) throw new ActionFailure('conflit');
       await github.deleteBranch(repo, branch);
@@ -331,6 +369,8 @@ export const SPECS: Record<ActionKind, Spec> = {
       if (!isBranchName(name)) return BAD_BRANCH;
       if (!isRepoPath(path)) return BAD_PATH;
       await github.branchSha(repo, name);
+      const main = await defaultBranchOf(github, repo);
+      if (main === null) return UNEXPECTED;
       const file = await currentFile(github, repo, path, name);
       if (typeof file === 'string') return file;
       if (file?.text === contenu) return `« ${path} » a déjà ce contenu : rien n’est proposé.`;
@@ -343,7 +383,7 @@ export const SPECS: Record<ActionKind, Spec> = {
         message: note,
         content: contenu,
         diff,
-        ...given({ sha: file?.sha }),
+        ...given({ sha: file?.sha, default: name === main ? 'oui' : undefined }),
       };
     },
     summary: (p) =>
@@ -374,6 +414,8 @@ export const SPECS: Record<ActionKind, Spec> = {
       if (!isBranchName(name)) return BAD_BRANCH;
       if (!isRepoPath(path)) return BAD_PATH;
       await github.branchSha(repo, name);
+      const main = await defaultBranchOf(github, repo);
+      if (main === null) return UNEXPECTED;
       const file = await currentFile(github, repo, path, name);
       if (file === null) return `« ${path} » n’existe pas sur « ${name} » : rien n’est proposé.`;
       if (typeof file === 'string') return file;
@@ -384,6 +426,7 @@ export const SPECS: Record<ActionKind, Spec> = {
         message: note,
         sha: file.sha,
         lines: String(linesOf(file.text).length),
+        ...given({ default: name === main ? 'oui' : undefined }),
       };
     },
     summary: (p) =>
@@ -412,7 +455,8 @@ export const SPECS: Record<ActionKind, Spec> = {
     }),
     async prepare(github, repo, { tete, base, titre, texte, brouillon }) {
       if (!isBranchName(tete) || (base != null && !isBranchName(base))) return BAD_BRANCH;
-      const into = base ?? (await github.defaultBranch(repo));
+      const into = base ?? (await defaultBranchOf(github, repo));
+      if (into === null) return UNEXPECTED;
       if (tete === into) return 'La branche de départ et la base sont les mêmes : rien à proposer.';
       await github.branchSha(repo, tete);
       await github.branchSha(repo, into);
@@ -494,17 +538,25 @@ export const SPECS: Record<ActionKind, Spec> = {
       if (pull.mergeable_state === 'dirty')
         return `La PR #${n} a des conflits : elle ne se fusionne pas.`;
       if (!pull.head.sha || !COMMIT_SHA.test(pull.head.sha)) return UNEXPECTED;
+      if (!isBranchName(pull.base.ref)) return UNEXPECTED;
       return {
         repo,
         number: String(n),
         title: pull.title,
+        base: pull.base.ref,
         method: methode ?? 'merge',
         sha: pull.head.sha,
       };
     },
     summary: (p) =>
-      `fusionner la PR #${p.number} « ${p.title} » de ${p.repo} (méthode ${p.method}, commit ${sha7(p.sha)})`,
+      `fusionner la PR #${p.number} « ${p.title} » de ${p.repo} dans « ${p.base} » (méthode ${p.method}, commit ${sha7(p.sha)})`,
     async execute(github, p) {
+      // La PR a changé depuis la proposition (fermée, fusionnée, autre base, nouveau commit) : ce que l'utilisateur a
+      // vu n'est plus ce qui serait fusionné.
+      const now = await github.pull(p.repo, Number(p.number));
+      if (now.merged || now.state !== 'open' || now.base.ref !== p.base || now.head.sha !== p.sha) {
+        throw new ActionFailure('conflit');
+      }
       await github.mergePull(p.repo, Number(p.number), {
         merge_method: p.method,
         sha: p.sha,
@@ -745,6 +797,7 @@ const notFound = (repo: string) =>
 // Le facteur commun des outils : trouver le dépôt dans la connexion de l'utilisateur, laisser l'action préparer sa
 // proposition, l'enregistrer et la montrer. Rien n'est écrit chez GitHub.
 export function actionTools(ctx: TenantContext, deps: GithubToolDeps): AgentTool[] {
+  const asked = askedOf(deps.asked);
   return (Object.entries(SPECS) as Array<[ActionKind, Spec]>).map(([kind, item]) => ({
     name: item.tool,
     description: `${item.description} ${PROPOSES}`,
@@ -771,8 +824,10 @@ export function actionTools(ctx: TenantContext, deps: GithubToolDeps): AgentTool
         }
         if (!repo) continue;
         try {
-          const params = await item.prepare(live.github, repo, input);
-          if (typeof params === 'string') return params;
+          const prepared = await item.prepare(live.github, repo, input);
+          if (typeof prepared === 'string') return prepared;
+          // La demande de l'utilisateur dans cette réponse, pour la carte (askedOf).
+          const params = asked ? { ...prepared, asked } : prepared;
           const bad = invalidParam(kind, params);
           if (bad) return `Valeur invalide ou inattendue (« ${bad} ») : rien n’est proposé.`;
           const checked = params as Params;
@@ -823,6 +878,14 @@ function errorCode(error: unknown, id: string): ActionError {
   const code = error instanceof ConnectorHttpError ? HTTP_ERRORS[error.status ?? 0] : undefined;
   if (code) return code;
   logError('action.github', error, { action: id });
+  // Une écriture (jamais rejouée) partie sans réponse (délai, réseau), à laquelle GitHub a répondu par une panne, ou
+  // dont la réponse est illisible : elle a peut-être été faite. L'utilisateur la vérifie avant de redemander.
+  if (
+    error instanceof ConnectorHttpError &&
+    (error.status === null || error.status >= 500 || error.status < 300)
+  ) {
+    return 'incertain';
+  }
   return 'echec';
 }
 

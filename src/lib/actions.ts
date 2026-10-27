@@ -26,43 +26,37 @@ export type ActionName = ActionKind extends `github.${infer Name}` ? Name : neve
 export const actionName = (kind: ActionKind) => kind.slice('github.'.length) as ActionName;
 
 // Les paramètres de chaque action, toutes valeurs en texte : ceux qu'elle doit porter et ceux qu'elle peut porter.
-// Une autre clé est refusée (validParams côté serveur) et écartée (parseActionView).
+// Une autre clé est refusée (validParams côté serveur) et écartée (parseActionView). `asked`, facultatif partout, est
+// un extrait de la demande de l'utilisateur, montré sur la carte pour qu'il voie ce qui a déclenché l'action.
+const keys = (required: string[], optional: string[] = []) => ({
+  required,
+  optional: [...optional, 'asked'],
+});
 export const ACTION_KEYS: Record<ActionKind, { required: string[]; optional: string[] }> = {
-  'github.creer_branche': { required: ['repo', 'branch', 'from', 'sha'], optional: [] },
-  'github.supprimer_branche': { required: ['repo', 'branch', 'sha'], optional: [] },
-  'github.ecrire_fichier': {
-    required: ['repo', 'branch', 'path', 'message', 'content', 'diff'],
-    optional: ['sha'], // absent : le fichier est nouveau
-  },
-  'github.supprimer_fichier': {
-    required: ['repo', 'branch', 'path', 'message', 'sha', 'lines'],
-    optional: [],
-  },
-  'github.ouvrir_pr': {
-    required: ['repo', 'head', 'base', 'title', 'body', 'draft'],
-    optional: [],
-  },
-  'github.modifier_pr': {
-    required: ['repo', 'number', 'current'],
-    optional: ['title', 'body', 'state'],
-  },
-  'github.fusionner_pr': { required: ['repo', 'number', 'title', 'method', 'sha'], optional: [] },
-  'github.commenter': { required: ['repo', 'number', 'title', 'body'], optional: [] },
-  'github.demander_revue': { required: ['repo', 'number', 'title', 'reviewers'], optional: [] },
-  'github.soumettre_revue': {
-    required: ['repo', 'number', 'title', 'event', 'body', 'sha'],
-    optional: [],
-  },
-  'github.creer_ticket': { required: ['repo', 'title'], optional: ['body', 'labels', 'assignees'] },
-  'github.modifier_ticket': {
-    required: ['repo', 'number', 'current'],
-    optional: ['title', 'body', 'state', 'labels', 'assignees'],
-  },
-  'github.relancer_execution': {
-    required: ['repo', 'run', 'name', 'failed'],
-    optional: ['branch'],
-  },
-  'github.annuler_execution': { required: ['repo', 'run', 'name'], optional: ['branch'] },
+  'github.creer_branche': keys(['repo', 'branch', 'from', 'sha']),
+  'github.supprimer_branche': keys(['repo', 'branch', 'sha']),
+  'github.ecrire_fichier': keys(
+    ['repo', 'branch', 'path', 'message', 'content', 'diff'],
+    // sha absent : le fichier est nouveau ; default « oui » : la branche est la branche par défaut.
+    ['sha', 'default'],
+  ),
+  'github.supprimer_fichier': keys(
+    ['repo', 'branch', 'path', 'message', 'sha', 'lines'],
+    ['default'],
+  ),
+  'github.ouvrir_pr': keys(['repo', 'head', 'base', 'title', 'body', 'draft']),
+  'github.modifier_pr': keys(['repo', 'number', 'current'], ['title', 'body', 'state']),
+  'github.fusionner_pr': keys(['repo', 'number', 'title', 'base', 'method', 'sha']),
+  'github.commenter': keys(['repo', 'number', 'title', 'body']),
+  'github.demander_revue': keys(['repo', 'number', 'title', 'reviewers']),
+  'github.soumettre_revue': keys(['repo', 'number', 'title', 'event', 'body', 'sha']),
+  'github.creer_ticket': keys(['repo', 'title'], ['body', 'labels', 'assignees']),
+  'github.modifier_ticket': keys(
+    ['repo', 'number', 'current'],
+    ['title', 'body', 'state', 'labels', 'assignees'],
+  ),
+  'github.relancer_execution': keys(['repo', 'run', 'name', 'failed'], ['branch']),
+  'github.annuler_execution': keys(['repo', 'run', 'name'], ['branch']),
 };
 
 // proposee → en-cours (le clic, une seule fois) → faite ou echouee ; ou annulee.
@@ -82,6 +76,7 @@ export const ACTION_ERRORS = [
   'echec',
   'conflit',
   'refus',
+  'incertain', // l'écriture est partie sans réponse : elle a peut-être été faite
 ] as const;
 export type ActionError = (typeof ACTION_ERRORS)[number];
 
@@ -93,6 +88,20 @@ export type ActionView = {
   // faite : l'adresse sur l'outil ; echouee : la raison.
   result: { url: string | null; error: ActionError | null };
 };
+
+export type ActionWarning = 'rerunWarning' | 'defaultBranchWarning' | 'workflowWarning';
+const WORKFLOWS_DIR = '.github/workflows/';
+// Ce que l'action a de plus grave que ce qu'elle dit : la carte l'écrit avant le clic, qui l'exécute sans autre relecture.
+export function actionWarnings(
+  kind: ActionKind,
+  params: Record<string, string | undefined>,
+): ActionWarning[] {
+  const warnings: ActionWarning[] = [];
+  if (kind === 'github.relancer_execution') warnings.push('rerunWarning');
+  if (params.default === 'oui') warnings.push('defaultBranchWarning');
+  if (params.path?.startsWith(WORKFLOWS_DIR)) warnings.push('workflowWarning');
+  return warnings;
+}
 
 const STATUSES: readonly string[] = [...ACTION_STATUSES, 'expiree'];
 const ERRORS: readonly string[] = ACTION_ERRORS;

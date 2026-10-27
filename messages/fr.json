@@ -299,8 +299,10 @@
         "annuler_execution": "Annuler l’exécution"
       },
       "details": {
+        "asked": "Votre demande",
         "title": "Titre",
         "current": "Titre actuel",
+        "name": "Exécution",
         "state": "État",
         "method": "Méthode",
         "event": "Avis",
@@ -330,6 +332,10 @@
         "none": "Aucun"
       },
       "rerunWarning": "Relancer une exécution peut exécuter du code et déployer.",
+      "defaultBranchWarning": "Écrit directement sur la branche par défaut, sans PR.",
+      "workflowWarning": "Ce fichier est un workflow GitHub Actions : il peut exécuter du code dès le commit.",
+      "emptyBody": "(vide)",
+      "newlineOnly": "Seul le saut de ligne final change.",
       "cancel": "Annuler",
       "waiting": "Rien n’est fait tant que vous ne confirmez pas.",
       "running": "En cours…",
@@ -343,9 +349,10 @@
         "existe": "Une branche porte déjà ce nom.",
         "introuvable": "Dépôt, branche, fichier ou numéro introuvable sur GitHub.",
         "connexion": "Votre connexion GitHub est à reconnecter dans Connexions.",
-        "echec": "GitHub n’a pas pu faire cette action. Réessayez plus tard.",
+        "echec": "GitHub n’a pas pu faire cette action. Vérifiez sur GitHub avant de redemander.",
         "conflit": "Conflit : l’élément a changé depuis la proposition, ou l’action n’est plus possible. Redemandez à Leon.",
-        "refus": "GitHub a refusé l’action (une règle du dépôt, ou une valeur qu’il n’accepte pas)."
+        "refus": "GitHub a refusé l’action (une règle du dépôt, ou une valeur qu’il n’accepte pas).",
+        "incertain": "GitHub n’a pas répondu à temps : l’action a peut-être été faite. Vérifiez sur GitHub avant de redemander."
       }
     }
   },

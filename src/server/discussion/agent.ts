@@ -126,6 +126,7 @@ async function* runReply(
     numbering,
     discussionId,
     onAction: (action) => proposed.push(action),
+    asked: message,
   });
   const filter = createReferenceFilter(numbering);
 

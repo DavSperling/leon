@@ -96,6 +96,12 @@ describe('les outils de la discussion', () => {
     expect(definitions[2]?.input_schema.required).toEqual(['depuis']);
   });
 
+  // L'API des outils ne reçoit pas tous les motifs d'un schéma : une règle de forme s'écrit en .refine (le code la
+  // contrôle) et non en .regex, sinon le schéma envoyé au modèle porte un `pattern`.
+  it('n’envoient aucun « pattern » au modèle', () => {
+    expect(JSON.stringify(toolDefinitions(tools))).not.toContain('"pattern"');
+  });
+
   it('se décrivent en français et disent qu’elles ne rendent que ce que l’utilisateur voit', () => {
     for (const tool of tools) expect(tool.description.length).toBeGreaterThan(40);
     expect(tools[0]?.description).toContain('ce que l’utilisateur a le droit de voir');

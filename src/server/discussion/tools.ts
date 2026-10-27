@@ -23,11 +23,12 @@ import {
   readToolFilters,
 } from '@/server/search/tool-filters';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
+import { githubReadTool } from './github-read';
 import { type GithubToolDeps, githubBranchTool, githubReposTool } from './github-tool';
 
 // Les outils de l'agent de discussion (T11) : chercher, lire, activite. Ils ne passent que par les fonctions de la
 // recherche (D4 du plan du deuxième jet), toujours sous les droits de l'utilisateur : l'agent ne voit que ce
-// qu'il voit. depots_github, lui, interroge GitHub en direct avec la connexion de l'utilisateur (github-tool.ts). Leurs résultats sont de la donnée captée : derrière la ligne de garde, entre balises, échappés
+// qu'il voit. depots_github et lire_github interrogent GitHub en direct avec la connexion de l'utilisateur (github-tool.ts, github-read.ts). Leurs résultats sont de la donnée captée : derrière la ligne de garde, entre balises, échappés
 // (rendu partagé avec le MCP, mcp/tools/render.ts). Une panne de la base lève : runAgent la rend au modèle comme
 // un échec d'outil au message fixe, et ne la journalise que par logError (llm/run-tool.ts).
 
@@ -336,6 +337,7 @@ export function discussionTools(ctx: TenantContext, deps: DiscussionToolDeps): A
     lire,
     activite,
     githubReposTool(ctx, github),
+    githubReadTool(ctx, github),
     githubBranchTool(ctx, github),
   ] as AgentTool[];
 }

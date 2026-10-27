@@ -70,6 +70,7 @@ describe('les outils de la discussion', () => {
       'lire',
       'activite',
       'depots_github',
+      'lire_github',
       'creer_branche_github',
     ]);
   });
@@ -78,6 +79,7 @@ describe('les outils de la discussion', () => {
     const definitions = toolDefinitions(tools);
 
     expect(definitions.map((tool) => tool.input_schema.type)).toEqual([
+      'object',
       'object',
       'object',
       'object',

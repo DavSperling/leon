@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken } from '@/server/auth/api-tokens';
@@ -105,33 +105,44 @@ describe('montage de Better Auth', () => {
     expect(rows).toEqual([{ id: paul.tenantId }]);
   });
 
-  // Aucun e-mail n'est vérifié dans ce jet : quiconque s'inscrit avec l'adresse invitée ne doit pas
-  // pouvoir rejoindre l'organisation, même en connaissant l'identifiant de l'invitation.
-  it("refuse d'accepter une invitation avec un e-mail non vérifié", async () => {
+  // Audit du 26/10 n° 5 : avec une session (volée), ces routes contourneraient les limites de Leon.
+  it('ferme les routes que Leon n’appelle pas, même avec une session', async () => {
     const paulEmail = `paul-${randomUUID()}@example.com`;
     const paul = await signUp(paulEmail);
-    const invitedEmail = `marie-${randomUUID()}@example.com`;
-    const invite = await app.request('/api/auth/organization/invite-member', {
-      method: 'POST',
-      headers: { cookie: await sessionCookie(paulEmail), ...jsonFromApp },
-      body: JSON.stringify({ email: invitedEmail, role: 'member', organizationId: paul.tenantId }),
-    });
-    expect(invite.status).toBe(200);
-    const { id: invitationId } = (await invite.json()) as { id: string };
+    const cookie = await sessionCookie(paulEmail);
+    const post = (path: string, body: object) =>
+      app.request(`/api/auth${path}`, {
+        method: 'POST',
+        headers: { cookie, ...jsonFromApp },
+        body: JSON.stringify(body),
+      });
 
-    const attacker = await signUp(invitedEmail);
-    const response = await app.request('/api/auth/organization/accept-invitation', {
-      method: 'POST',
-      headers: { cookie: await sessionCookie(invitedEmail), ...jsonFromApp },
-      body: JSON.stringify({ invitationId }),
-    });
+    const responses = await Promise.all([
+      post('/change-password', { currentPassword: password, newPassword: 'autre-mot-de-passe' }),
+      post('/organization/invite-member', {
+        email: `marie-${randomUUID()}@example.com`,
+        role: 'member',
+        organizationId: paul.tenantId,
+      }),
+      post('/organization/create', { name: 'Autre', slug: `autre-${randomUUID()}` }),
+    ]);
 
-    expect(response.status).not.toBe(200);
-    const membership = await adminDb
+    expect(responses.map((response) => response.status)).toEqual([404, 404, 404]);
+    await expect(sessionCookie(paulEmail)).resolves.toMatch(/^better-auth\.session_token=/);
+    const memberships = await adminDb
       .select({ id: members.id })
       .from(members)
-      .where(and(eq(members.userId, attacker.userId), eq(members.organizationId, paul.tenantId)));
-    expect(membership).toEqual([]);
+      .where(eq(members.userId, paul.userId));
+    expect(memberships).toHaveLength(1);
+  });
+
+  it('laisse passer le lien de réinitialisation de l’e-mail', async () => {
+    const response = await app.request(
+      '/api/auth/reset-password/inconnu?callbackURL=/reinitialiser',
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toMatch(/\/reinitialiser\?error=INVALID_TOKEN/);
   });
 });
 

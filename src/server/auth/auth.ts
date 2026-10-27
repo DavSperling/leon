@@ -50,8 +50,8 @@ export const auth = betterAuth({
   },
   // La connexion, l'inscription et la demande de lien passent par les server actions (auth.api.*), sous la limite
   // de débit de rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un
-  // compte sans organisation). Seul le routeur les ferme : auth.api.* les appelle toujours. /reset-password/:token
-  // reste ouverte : c'est le lien de l'e-mail.
+  // compte sans organisation). Seul le routeur les ferme : auth.api.* les appelle toujours. Le routeur
+  // (api/auth-routes.ts) ne passe d'ailleurs que /reset-password/:token, le lien de l'e-mail, et /ok.
   disabledPaths: ['/sign-in/email', '/sign-up/email', '/request-password-reset'],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {

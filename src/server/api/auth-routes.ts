@@ -1,18 +1,9 @@
 import { Hono } from 'hono';
-import { bodyLimit } from 'hono/body-limit';
 import { auth } from '@/server/auth/auth';
 
-// Plafond du corps : un formulaire de connexion ou d'organisation tient en quelques Ko.
-const AUTH_BODY_MAX_BYTES = 64 * 1024;
-
-// Better Auth sert lui-même /api/auth/* (inscription, connexion, session, organisation). Il lit le corps sans
-// limite : on le plafonne avant.
-export const authRoutes = new Hono().on(
-  ['GET', 'POST'],
-  '/*',
-  bodyLimit({
-    maxSize: AUTH_BODY_MAX_BYTES,
-    onError: (c) => c.json({ error: 'Requête trop volumineuse' }, 413),
-  }),
-  (c) => auth.handler(c.req.raw),
-);
+// Leon appelle Better Auth par auth.api.* dans ses server actions, sous ses propres limites et validations. Le
+// routeur ne lui passe que ce qui doit venir d'un navigateur : le lien de réinitialisation de l'e-mail, et /ok.
+// Le reste (change-password, update-user, organization/*, two-factor/*…) contournerait ces limites : 404.
+export const authRoutes = new Hono()
+  .get('/reset-password/:token', (c) => auth.handler(c.req.raw))
+  .get('/ok', (c) => auth.handler(c.req.raw));

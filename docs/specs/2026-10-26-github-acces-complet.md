@@ -18,7 +18,7 @@
 - **Dépôts :** avec le bouton, Leon lit tous les dépôts où son appli est installée (#74 ; avant, il s'arrêtait aux 20 premiers sans le dire). Avec une clé collée, 20 dépôts au plus, saisis à la main.
 - **Discussion :** l'agent a déjà une boucle d'outils (`src/server/discussion/agent.ts` et `tools.ts` : `chercher`, `lire`, `activite`), avec au plus 8 étapes et 40 000 caractères lus par réponse. Aucun de ces outils n'interroge GitHub en direct.
 - **Client HTTP des connecteurs :** GET et POST seulement.
-- **Appli GitHub :** Issues et Pull requests en lecture et écriture (l'écriture est demandée d'avance depuis #40), Metadata en lecture. Pas encore de Contents, d'Actions ni de Checks.
+- **Appli GitHub :** Issues et Pull requests en lecture et écriture (l'écriture est demandée d'avance depuis #40), Metadata en lecture. Pas encore de Contents, d'Actions ni de Checks (demandés dès le 27/10, voir le tableau ci-dessous).
 
 ## Permissions de l'appli GitHub
 
@@ -29,12 +29,13 @@
 | Pull requests | lecture et écriture | PR, revues, demandes de revue, approbation | |
 | Contents | lecture et écriture | fichiers, branches, commits, fusion d'une PR | supprimer une branche ou une release ; pousser sur la branche par défaut quand elle n'est pas protégée |
 | Checks | lecture | résultats de CI | |
+| Commit statuses | lecture | résultats de CI publiés en statuts (anciens services de CI) | |
 | Actions | lecture et écriture | relancer, annuler une exécution | supprimer des exécutions, des journaux, des artefacts et des caches ; lancer un workflow à la main (ce qui peut déployer) ; activer ou désactiver un workflow ; approuver l'exécution d'un fork ; modifier le modèle des jetons OIDC |
-| Workflows | écriture | seulement si Leon doit modifier `.github/workflows` | |
+| Workflows | écriture | modifier les fichiers `.github/workflows` (GitHub refuse sinon tout commit qui les touche) | |
 
-GitHub ne découpe pas ces droits plus finement. Le reste, Leon se l'interdit dans son code : aucun outil ne supprime définitivement quoi que ce soit (branche, release, exécution, artefact, cache), et aucun n'active, ne désactive ni ne lance un workflow à la main. Les jetons de runner et la politique Actions relèvent d'`Administration`, que Leon ne demande pas.
+GitHub ne découpe pas ces droits plus finement. Supprimer une branche fait partie du travail courant (décision d'Amos du 27/10/2026) : c'est permis, toujours après confirmation. Le reste, Leon se l'interdit dans son code : aucun outil ne supprime une release, une exécution, un artefact ou un cache, et aucun n'active, ne désactive ni ne lance un workflow à la main. Les jetons de runner et la politique Actions relèvent d'`Administration`, que Leon ne demande pas.
 
-Chaque nouvelle permission doit être réacceptée par chaque installation (dans une organisation, par un propriétaire). Comme pour #40, on demande tout le tableau d'un coup, avec le lot qui lit le code (lot 5) : il n'y aura qu'une seule réapprobation.
+Chaque nouvelle permission doit être réacceptée par chaque installation (dans une organisation, par un propriétaire). À la demande d'Amos (27/10/2026), tout le tableau est demandé dès maintenant, avant les lots qui s'en servent : il n'y a qu'une seule réapprobation. L'écran d'autorisation de GitHub montre donc des droits que Leon n'utilise pas encore ; le texte du bouton GitHub dans Connexions le dit.
 
 **Jeton à grain fin (clé collée) :** il faut accorder les mêmes permissions. GitHub n'offre aucune route pour lire les droits d'un tel jeton : on les découvre au premier refus, par l'en-tête `X-Accepted-GitHub-Permissions`. L'erreur affichée nomme la permission manquante, jamais le jeton.
 
@@ -56,11 +57,11 @@ Chaque nouvelle permission doit être réacceptée par chaque installation (dans
 2. Cette spec, le guide `docs/guides/applis-oauth.md` et le commentaire de `oauth.ts`.
 3. Outil de discussion « dépôts GitHub » : la liste en direct des dépôts que Leon lit avec la connexion GitHub de la personne qui demande. Aucune nouvelle permission.
 4. Choix des dépôts partagés par l'administrateur, et leur affichage sur la carte GitHub, avec un lien « Modifier sur GitHub ».
-5. Lecture du code : branches, commits, arborescence, fichiers. Toutes les permissions du tableau sont demandées ici.
+5. Lecture du code : branches, commits, arborescence, fichiers.
 6. PR en détail (fichiers modifiés, diff) et résultats de CI.
 7. Socle des écritures : PATCH, PUT et DELETE dans le client HTTP ; une action proposée, son aperçu, le clic, l'exécution, le journal. Première écriture : commenter un ticket ou une PR.
 8. Tickets et PR : créer, modifier, étiqueter, assigner, fermer, rouvrir ; ouvrir une PR, demander ou soumettre une revue (approbation comprise), fusionner.
-9. Branches, fichiers et commits.
+9. Branches (créer, supprimer), fichiers et commits.
 10. Actions : relancer ou annuler une exécution.
 11. Essais réels : compte personnel et organisation, dépôts publics et privés, installation partielle, permission refusée.
 

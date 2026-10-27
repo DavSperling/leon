@@ -8,6 +8,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
+import { readAbout } from './about';
 import { buildBriefingPrompt, renderBriefing, renderEmptyBriefing } from './briefing-prompt';
 import {
   BRIEFING_DAYS,
@@ -74,7 +75,7 @@ export async function refreshBriefing(
     markdown = renderEmptyBriefing(project, now, BRIEFING_DAYS);
     sourceIds = [];
   } else {
-    const prompt = buildBriefingPrompt(material, now);
+    const prompt = buildBriefingPrompt(material, now, await readAbout(ctx.userId));
     const body = await writeBody(deps.llm, prompt);
     markdown = renderBriefing({ project, preparedAt: now, body, references: prompt.references });
     // Toutes les sources fournies au modèle, citées ou non : le texte peut en tenir sans les citer.

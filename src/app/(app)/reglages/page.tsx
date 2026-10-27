@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
+import { AboutSettings } from '@/components/verre/reglages/about';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
@@ -12,6 +13,7 @@ import { nb } from '@/lib/verre/nb';
 import { listApiTokens } from '@/server/auth/api-tokens';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
+import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { env } from '@/server/env';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,12 +24,13 @@ export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership] = await Promise.all([
+  const [allTokens, members, mayInvite, session, membership, about] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
     canInvite(ctx),
     getSession(),
     getMembership(ctx),
+    readAbout(ctx.userId),
   ]);
   const tokens = allTokens
     .filter((token) => !token.revokedAt)
@@ -60,6 +63,7 @@ export default async function SettingsPage() {
                   membership={membership}
                 />
               </Section>
+              <AboutSettings about={about ?? ''} max={ABOUT_MAX_CHARS} />
               <PreferencesSettings />
             </>
           ),

@@ -135,6 +135,16 @@
     "dark": "Sombre",
     "light": "Clair"
   },
+  "about": {
+    "title": "À propos de vous",
+    "description": "Leon le lit quand il prépare votre point du matin, pour choisir ce qui compte pour vous. Rien d’autre ne s’en sert.",
+    "label": "Votre rôle et vos sujets du moment",
+    "placeholder": "Ex. : responsable back-end de l’API de facturation. Ce mois-ci : la migration Stripe et les astreintes.",
+    "save": "Enregistrer",
+    "saved": "Enregistré. Vos prochains points du matin en tiendront compte.",
+    "failed": "Échec de l’enregistrement. Réessayez.",
+    "tooLong": "{max} caractères au plus."
+  },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
     "searchEverything": "Rechercher dans tout ce que Leon a gardé",

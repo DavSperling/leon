@@ -26,6 +26,9 @@ const WINDOW = '15 minutes';
 export const AUTH_LIMITS = {
   connexion: { email: 10, ip: 50, inconnue: 500 },
   inscription: { email: 5, ip: 10, inconnue: 100 },
+  // Par lien d'invitation : toute une équipe arrive du même bureau le jour du lancement, et un lien mort ne crée
+  // rien (vérifié avant le compte, sign-up.ts), d'où un plafond par adresse IP bien plus haut.
+  invitation: { email: 5, ip: 200, inconnue: 1000 },
   recuperation: { email: 5, ip: 10, inconnue: 100 },
 } as const;
 

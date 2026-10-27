@@ -64,14 +64,20 @@ describe('les outils de la discussion', () => {
     numbering: createSourceNumbering(),
   });
 
-  it('sont chercher, lire et activite', () => {
-    expect(tools.map((tool) => tool.name)).toEqual(['chercher', 'lire', 'activite']);
+  it('sont chercher, lire, activite et depots_github', () => {
+    expect(tools.map((tool) => tool.name)).toEqual([
+      'chercher',
+      'lire',
+      'activite',
+      'depots_github',
+    ]);
   });
 
   it('passent la vérification des outils de l’API', () => {
     const definitions = toolDefinitions(tools);
 
     expect(definitions.map((tool) => tool.input_schema.type)).toEqual([
+      'object',
       'object',
       'object',
       'object',

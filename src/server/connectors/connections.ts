@@ -312,6 +312,39 @@ export async function deleteConnection(ctx: TenantContext, id: string): Promise<
   return rows.length > 0;
 }
 
+// Les connexions d'un outil que l'utilisateur a branchées lui-même, secrets compris : un outil de la
+// discussion lit en direct avec SON compte, jamais avec celui d'un autre membre (spec GitHub, décision 3).
+// Une connexion en pause est écartée : la pause vaut aussi pour la lecture en direct. Un secret
+// illisible lève, sans le secret.
+export async function loadMyConnections(
+  ctx: TenantContext,
+  provider: ProviderId,
+): Promise<Array<Pick<LoadedConnection, 'id' | 'provider' | 'config'> & { label: string }>> {
+  const rows = await withTenant(ctx, (tx) =>
+    tx
+      .select({
+        id: connections.id,
+        provider: connections.provider,
+        label: connections.label,
+        config: connections.config,
+        secret: connections.secret,
+      })
+      .from(connections)
+      .where(
+        and(
+          eq(connections.provider, provider),
+          createdByMe(ctx),
+          inArray(connections.status, ['active', 'error']),
+        ),
+      )
+      .orderBy(asc(connections.createdAt)),
+  );
+  return rows.map(({ secret, config, ...row }) => ({
+    ...row,
+    config: { ...config, ...parseSecrets(decryptSecret(secret, aadOf(ctx.tenantId, row.id))) },
+  }));
+}
+
 // Réservées à la relève ------------------------------------------------------------------------
 
 // La réservation est posée : la relève la libère par `finishSync`, avec `lockedAt`.

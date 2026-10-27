@@ -135,6 +135,16 @@
     "dark": "Dark",
     "light": "Light"
   },
+  "about": {
+    "title": "About you",
+    "description": "Leon reads this when it prepares your morning briefing, to pick what matters to you. Nothing else uses it.",
+    "label": "Your role and current focus",
+    "placeholder": "e.g. Backend lead on the billing API. This month: the Stripe migration and on-call.",
+    "save": "Save",
+    "saved": "Saved. Your next briefings will take it into account.",
+    "failed": "Couldn’t save. Try again.",
+    "tooLong": "{max} characters at most."
+  },
   "search": {
     "memoryLabel": "Search the team’s memory",
     "searchEverything": "Search everything Leon has saved",

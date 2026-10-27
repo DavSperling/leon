@@ -6,6 +6,7 @@ import { auth } from '@/server/auth/auth';
 import { createInvitationLink } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requireUserContext } from '@/server/auth/session';
+import { saveAbout } from '@/server/briefing/about';
 import {
   createInvitationAction,
   createTokenAction,
@@ -14,6 +15,7 @@ import {
   regenerateBackupCodesAction,
   revokeTokenAction,
   setLocaleAction,
+  updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
 } from './actions';
@@ -38,6 +40,7 @@ vi.mock('@/server/auth/auth', () => ({
 vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
+vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const setCookie = vi.fn();
 vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ set: setCookie })) }));
@@ -130,6 +133,26 @@ describe('setLocaleAction', () => {
     await setLocaleAction(localeForm('de'));
     expect(cookies).not.toHaveBeenCalled();
     expect(setCookie).not.toHaveBeenCalled();
+  });
+});
+
+describe('updateAboutAction', () => {
+  it('enregistre le texte sans ses blancs, et efface quand il est vide', async () => {
+    await expect(updateAboutAction('  Lead back-end.  ')).resolves.toEqual({ ok: true });
+    expect(saveAbout).toHaveBeenCalledWith(ctx, 'Lead back-end.');
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+
+    await updateAboutAction('   ');
+    expect(saveAbout).toHaveBeenLastCalledWith(ctx, null);
+  });
+
+  it('refuse un texte de plus de 500 caractères, et rend une erreur quand la base refuse', async () => {
+    const tooLong = await updateAboutAction('x'.repeat(501));
+    expect(tooLong).toHaveProperty('error');
+    expect(saveAbout).not.toHaveBeenCalled();
+
+    vi.mocked(saveAbout).mockRejectedValue(new Error('refus'));
+    await expect(updateAboutAction('Lead back-end.')).resolves.toHaveProperty('error');
   });
 });
 

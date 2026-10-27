@@ -9,6 +9,7 @@ import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
+import { readAbout, saveAbout } from './about';
 import {
   BRIEFING_PENDING_MARKDOWN,
   latestBriefingProject,
@@ -366,5 +367,29 @@ describe('latestBriefingProject', () => {
     expect(BRIEFING_PENDING_MARKDOWN).toBe(
       'No briefing for this project yet: it will be ready at your next session.',
     );
+  });
+});
+
+describe('saveAbout', () => {
+  it('donne au point ce que l’utilisateur dit de lui, et ne marque périmés que ses points', async () => {
+    const mine = await seedProject(alice);
+    await refreshBriefing(alice, mine.project, { llm: writes(['Premier point [1].']) });
+    const theirs = await seedProject(bob);
+    await refreshBriefing(bob, theirs.project, { llm: writes(['Point de Bob [1].']) });
+
+    await saveAbout(alice, 'Lead back-end, la migration Stripe ce mois-ci.');
+
+    expect(await readAbout(alice.userId)).toBe('Lead back-end, la migration Stripe ce mois-ci.');
+    expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+    expect((await rowOf(bob, theirs.project))?.stale).toBe(false);
+
+    const llm = writes(['Second point [1].']);
+    await refreshBriefing(alice, mine.project, { llm });
+    const sent = llm.calls[0]?.messages.map((message) => message.content).join('\n') ?? '';
+    expect(sent).toContain('<a-propos>Lead back-end, la migration Stripe ce mois-ci.</a-propos>');
+
+    await expect(saveAbout(alice, 'x'.repeat(501))).rejects.toThrow();
+    await saveAbout(alice, null);
+    expect(await readAbout(alice.userId)).toBeNull();
   });
 });

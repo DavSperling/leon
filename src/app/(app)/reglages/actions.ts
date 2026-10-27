@@ -11,6 +11,7 @@ import { auth } from '@/server/auth/auth';
 import { createInvitationLink } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requestHeaders, requireUserContext } from '@/server/auth/session';
+import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
 import { env } from '@/server/env';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
@@ -70,6 +71,21 @@ export async function updateProfileAction(name: string): Promise<{ ok: true } | 
     await auth.api.updateUser({ body: { name: parsed.data }, headers: await requestHeaders() });
   } catch {
     return { error: t('profileFailed') };
+  }
+  revalidatePath('/reglages');
+  return { ok: true };
+}
+
+// Un texte vide efface ce que l'utilisateur disait de lui.
+export async function updateAboutAction(about: string): Promise<{ ok: true } | { error: string }> {
+  const ctx = await requireUserContext();
+  const t = await getTranslations('about');
+  const parsed = z.string().trim().max(ABOUT_MAX_CHARS).safeParse(about);
+  if (!parsed.success) return { error: t('tooLong', { max: ABOUT_MAX_CHARS }) };
+  try {
+    await saveAbout(ctx, parsed.data || null);
+  } catch {
+    return { error: t('failed') };
   }
   revalidatePath('/reglages');
   return { ok: true };

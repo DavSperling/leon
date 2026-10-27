@@ -131,12 +131,20 @@ describe('readDiscussionMessagesAction', () => {
     vi.mocked(getDiscussion).mockResolvedValue({
       discussion: { id: ID, title: 'Q', createdAt: new Date(), updatedAt: new Date() },
       messages: [
-        { id: 'm1', role: 'user', content: 'Q', citations: [citation], createdAt: new Date() },
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'Q',
+          citations: [citation],
+          actions: [],
+          createdAt: new Date(),
+        },
         {
           id: 'm2',
           role: 'assistant',
           content: 'R [1]',
           citations: [citation],
+          actions: [],
           createdAt: new Date(),
         },
       ],
@@ -147,8 +155,8 @@ describe('readDiscussionMessagesAction', () => {
     expect(getDiscussion).toHaveBeenCalledWith(CTX, ID);
     expect(read).toEqual({
       messages: [
-        { id: 'm1', role: 'user', content: 'Q', citations: [citation] },
-        { id: 'm2', role: 'assistant', content: 'R [1]', citations: [citation] },
+        { id: 'm1', role: 'user', content: 'Q', citations: [citation], actions: [] },
+        { id: 'm2', role: 'assistant', content: 'R [1]', citations: [citation], actions: [] },
       ],
       replying: false,
     });
@@ -160,7 +168,9 @@ describe('readDiscussionMessagesAction', () => {
     vi.mocked(isReplying).mockReturnValueOnce(true);
     vi.mocked(getDiscussion).mockResolvedValue({
       discussion: { id: ID, title: 'Q', createdAt: new Date(), updatedAt: new Date() },
-      messages: [{ id: 'm1', role: 'user', content: 'Q', citations: [], createdAt: new Date() }],
+      messages: [
+        { id: 'm1', role: 'user', content: 'Q', citations: [], actions: [], createdAt: new Date() },
+      ],
     });
 
     const read = await readDiscussionMessagesAction(ID);

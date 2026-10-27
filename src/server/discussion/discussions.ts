@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import type { ActionView } from '@/lib/actions';
 import {
   DISCUSSION_MESSAGE_MAX_CHARS,
   type DiscussionCitation,
@@ -13,6 +14,7 @@ import type { ChatMessage } from '@/server/llm/llm';
 import { oneLine } from '@/server/memory/labels';
 import { sourceInfoFrom, textArray } from '@/server/search/filters-sql';
 import { DISCUSSION_HISTORY_MAX } from './discussion-prompt';
+import { listDiscussionActions, type TimedAction } from './proposed-actions';
 
 // Les discussions et leurs messages (0012, C9 du plan du deuxième jet), toujours sous les droits de leur auteur :
 // une discussion est privée à lui (acl = [user_id], la base le garantit) et personne d'autre ne la liste, ne la lit
@@ -29,6 +31,8 @@ export type StoredMessage = {
   role: 'user' | 'assistant';
   content: string;
   citations: DiscussionCitation[];
+  // Les actions proposées pendant la réponse que ce message clôt (attachActions).
+  actions: ActionView[];
   createdAt: Date;
 };
 
@@ -190,6 +194,21 @@ async function visibleSourceIds(
   return new Set(rows.map((row) => row.id));
 }
 
+// Une action se place sous le premier message écrit après elle : la réponse pendant laquelle Leon l'a proposée
+// (écrite à la fin). Sans réponse gardée (une panne), sous le dernier message, la question.
+function attachActions(messages: StoredMessage[], proposed: TimedAction[]): StoredMessage[] {
+  const last = messages.length - 1;
+  return messages.map((message, index) => ({
+    ...message,
+    actions: proposed
+      .filter((action) => {
+        const anchor = messages.findIndex((m) => m.createdAt > action.createdAt);
+        return (anchor === -1 ? last : anchor) === index;
+      })
+      .map(({ createdAt: _at, ...action }) => action),
+  }));
+}
+
 // La discussion et tous ses messages, dans l'ordre. Les citations d'une source que l'auteur ne voit plus sont
 // écartées ; les autres gardent leur numéro, celui du texte de la réponse.
 export async function getDiscussion(
@@ -197,6 +216,15 @@ export async function getDiscussion(
   id: string,
 ): Promise<{ discussion: DiscussionSummary; messages: StoredMessage[] } | null> {
   if (!isUuid(id)) return null;
+  const found = await readDiscussion(ctx, id);
+  if (!found) return null;
+  return {
+    ...found,
+    messages: attachActions(found.messages, await listDiscussionActions(ctx, id)),
+  };
+}
+
+async function readDiscussion(ctx: TenantContext, id: string) {
   return withTenant(ctx, async (tx) => {
     const discussion = await loadSummary(tx, id);
     if (!discussion) return null;
@@ -225,6 +253,7 @@ export async function getDiscussion(
       messages: messages.map((message) => ({
         ...message,
         citations: message.citations.filter((citation) => visible.has(citation.sourceId)),
+        actions: [] as ActionView[],
       })),
     };
   });

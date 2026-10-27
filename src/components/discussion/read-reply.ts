@@ -1,3 +1,4 @@
+import type { ActionView } from '@/lib/actions';
 import {
   createDiscussionEventReader,
   type DiscussionCitation,
@@ -18,7 +19,7 @@ export type ReplyProgress = {
 };
 
 export type ReplyOutcome =
-  | { status: 'finie'; content: string; citations: DiscussionCitation[] }
+  | { status: 'finie'; content: string; citations: DiscussionCitation[]; actions: ActionView[] }
   // 204 : aucun modèle n'est branché ; rien n'est écrit.
   | { status: 'sans-modele' }
   // Leon répond déjà dans cette discussion : rien n'est écrit, la page attend cette réponse-là.
@@ -84,6 +85,7 @@ export async function readReply(
     const reader = createDiscussionEventReader();
     let text = '';
     let citations: DiscussionCitation[] = [];
+    let actions: ActionView[] = [];
     let activity: ToolActivity | null = null;
     for (;;) {
       const { done, value } = await chunks.read();
@@ -96,8 +98,11 @@ export async function readReply(
           activity = toolActivity(event.name);
         } else if (event.type === 'citations') {
           citations = event.items;
+        } else if (event.type === 'actions') {
+          actions = event.items;
         } else if (event.type === 'fin') {
-          return { status: 'finie', content: finalReplyText(text, event.reason), citations };
+          const content = finalReplyText(text, event.reason);
+          return { status: 'finie', content, citations, actions };
         } else if (event.type === 'en-cours') {
           return { status: 'en-cours' };
         } else {

@@ -1,3 +1,4 @@
+import type { ActionView } from '@/lib/actions';
 import {
   DISCUSSION_TIMEOUT_MS,
   type DiscussionEndReason,
@@ -117,10 +118,14 @@ async function* runReply(
   const numbering = createSourceNumbering();
   // Les résultats d'où part la discussion prennent les premiers numéros, ceux qu'affiche la question.
   for (const seed of turn.seeds) numbering.number(seed, seed.passageId, { n: seed.n });
+  // Les actions que les outils proposent pendant la réponse : montrées à la fin, chacune avec son bouton.
+  const proposed: ActionView[] = [];
   const tools = discussionTools(ctx, {
     embedder,
     budget: { chars: DISCUSSION_READ_BUDGET },
     numbering,
+    discussionId,
+    onAction: (action) => proposed.push(action),
   });
   const filter = createReferenceFilter(numbering);
 
@@ -205,6 +210,7 @@ async function* runReply(
         : { type: 'indisponible', questionGardee: false };
       return;
     }
+    if (proposed.length > 0) yield { type: 'actions', items: proposed };
     yield { type: 'citations', items: citations };
     yield { type: 'fin', reason };
   } finally {

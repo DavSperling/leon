@@ -60,7 +60,12 @@ describe('readReply', () => {
 
     const outcome = await read((progress) => steps.push(progress));
 
-    expect(outcome).toEqual({ status: 'finie', content: 'Acceptée [1].', citations: [CITATION] });
+    expect(outcome).toEqual({
+      status: 'finie',
+      content: 'Acceptée [1].',
+      citations: [CITATION],
+      actions: [],
+    });
     expect(steps.map((step) => [step.text, step.activity])).toEqual([
       ['', 'chercher'],
       ['Acceptée ', null],
@@ -165,7 +170,9 @@ describe('questionNotWritten', () => {
 
   it('ne vaut pas pour une question gardée, une réponse finie ou une réponse déjà en cours', () => {
     expect(questionNotWritten({ status: 'indisponible', questionGardee: true })).toBe(false);
-    expect(questionNotWritten({ status: 'finie', content: 'R', citations: [] })).toBe(false);
+    expect(questionNotWritten({ status: 'finie', content: 'R', citations: [], actions: [] })).toBe(
+      false,
+    );
     expect(questionNotWritten({ status: 'en-cours' })).toBe(false);
     expect(questionNotWritten({ status: 'coupee' })).toBe(false);
   });

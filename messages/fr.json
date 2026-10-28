@@ -80,7 +80,18 @@
     "addSection": "Ajouter un document",
     "chooseFile": "Choisir un document",
     "add": "Ajouter le document",
-    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte ou Markdown · 10 Mo maximum.",
+    "chooseFolder": "Choisir un dossier",
+    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte, Markdown et code (JSON, YAML, TypeScript, Python, SQL…) · 10 Mo maximum par fichier, 200 fichiers par dossier.",
+    "dropHint": "Vous pouvez aussi glisser des fichiers, ou un dossier entier, sur cette zone. Tout ce que vous ajoutez est visible de l’équipe.",
+    "sending": "Envoi : {done} / {total}",
+    "report": {
+      "added": "{count, plural, one {# fichier ajouté} other {# fichiers ajoutés}}",
+      "partial": "{count, plural, one {# ajouté en partie} other {# ajoutés en partie}}",
+      "skipped": "{count, plural, one {# ignoré} other {# ignorés}}",
+      "failed": "{count, plural, one {# illisible ou refusé} other {# illisibles ou refusés}}"
+    },
+    "tooManyFiles": "Un dossier contient {count} fichiers lisibles : le maximum est de {max}. Rien n’a été envoyé. Choisissez un dossier plus petit.",
+    "noReadableFiles": "Aucun fichier lisible dans cette sélection : les fichiers cachés, les dépendances (node_modules…), les dossiers générés, les fichiers de verrouillage, les fichiers vides et ceux de plus de 10 Mo sont laissés de côté.",
     "partial": "Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.",
     "teamSection": "Documents de l’équipe",
     "teamDescription": "Le texte extrait est indexé dans la mémoire de Leon.",
@@ -90,11 +101,15 @@
     "addedBy": "Ajouté par {name} · {when}",
     "delete": "Supprimer",
     "deleteLabel": "Supprimer {title}",
+    "folderFiles": "{count, plural, one {# fichier} other {# fichiers}}",
+    "deleteFolder": "Supprimer le dossier",
+    "deleteFolderLabel": "Supprimer le dossier {name}",
     "errors": {
       "missing": "Choisissez un fichier à ajouter.",
-      "unreadable": "Fichier illisible. Choisissez un PDF, Excel, Word, PowerPoint, CSV, TXT ou Markdown de 10 Mo maximum.",
+      "unreadable": "Fichier illisible. Choisissez un PDF, Word, Excel, PowerPoint, un fichier texte ou un fichier de code, de 10 Mo maximum.",
       "empty": "Aucun texte lisible dans ce fichier.",
       "too_long": "Ce document contient trop de texte (maximum 1 million de caractères).",
+      "folder_full": "Ce dossier a atteint le maximum de 200 fichiers.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
   },

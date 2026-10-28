@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, count, desc, eq, sql } from 'drizzle-orm';
 import {
   type OfficeError,
   OfficeParser,
@@ -7,7 +7,14 @@ import {
   type SupportedFileType,
 } from 'officeparser';
 import { maskSecrets } from '@/capture/mask-secrets';
-import { DOCUMENT_MAX_BYTES, type DocumentErrorCode } from '@/lib/documents';
+import {
+  DOCUMENT_MAX_BYTES,
+  type DocumentErrorCode,
+  documentExtension,
+  FOLDER_MAX_FILES,
+  OFFICE_EXTENSIONS,
+  TEXT_EXTENSIONS,
+} from '@/lib/documents';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { CONNECTOR_TURN_MAX, splitText } from '@/server/connectors/normalize';
 import { users } from '@/server/db/schema/auth';
@@ -23,20 +30,11 @@ import {
 const MAX_TEXT_CHARS = 1_000_000;
 const NULL_CHAR = String.fromCharCode(0);
 // Lus tels quels : officeparser ne les décode qu'en UTF-8.
-const PLAIN_TEXT = new Set(['txt', 'csv', 'md']);
+const PLAIN_TEXT: ReadonlySet<string> = new Set(TEXT_EXTENSIONS);
 // L'extension est aussi le type de fichier d'officeparser.
-const OFFICE_FORMATS: ReadonlySet<string> = new Set<SupportedFileType>([
-  'docx',
-  'epub',
-  'html',
-  'odt',
-  'ods',
-  'pdf',
-  'pptx',
-  'rtf',
-  'tex',
-  'xlsx',
-]);
+const OFFICE_FORMATS: ReadonlySet<string> = new Set(
+  OFFICE_EXTENSIONS satisfies readonly SupportedFileType[],
+);
 // Ce qu'officeparser laisse de côté passé un plafond : le document n'est alors indexé qu'en partie.
 const TRUNCATIONS = new Set<string>([
   OfficeWarningType.TABLE_CELL_LIMIT_EXCEEDED,
@@ -112,12 +110,16 @@ export async function extractText(
   });
 }
 
+// Nom ou chemin tel que la liste l'affiche : sans caractères de contrôle, secrets masqués.
+const cleanName = (name: string) => maskSecrets(name.replace(/[\p{Cc}]/gu, '').trim());
+
 // Ce que l'import garde d'un fichier : son nom et son texte, secrets masqués, le texte découpé en tours comme
-// celui des outils (aux titres, puis aux paragraphes).
+// celui des outils (aux titres, puis aux paragraphes). `name` : celui du fichier, ou son chemin dans un dossier.
 export async function readDocument(
   file: File,
+  name = file.name,
 ): Promise<{ title: string; parts: string[]; partial: boolean }> {
-  const extension = file.name.split('.').at(-1)?.toLowerCase() ?? '';
+  const extension = documentExtension(name);
   const known = PLAIN_TEXT.has(extension) || OFFICE_FORMATS.has(extension);
   if (!known || file.size === 0 || file.size > DOCUMENT_MAX_BYTES) {
     throw new DocumentError('unreadable');
@@ -134,8 +136,10 @@ export async function readDocument(
   if (!text) throw new DocumentError('empty');
   if (text.length > MAX_TEXT_CHARS) throw new DocumentError('too_long');
 
+  // Trop long, un chemin garde sa fin : c'est le nom du fichier qui compte.
+  const cleaned = cleanName(name);
   const title =
-    maskSecrets(file.name.replace(/[\p{Cc}]/gu, '').trim()).slice(0, 300) || 'Document sans titre';
+    (cleaned.length > 300 ? `…${cleaned.slice(-299)}` : cleaned) || 'Document sans titre';
   return {
     title,
     parts: splitText(maskSecrets(text), CONNECTOR_TURN_MAX),
@@ -143,9 +147,41 @@ export async function readDocument(
   };
 }
 
-export async function addDocument(ctx: TenantContext, file: File): Promise<{ partial: boolean }> {
-  const { title, parts, partial } = await readDocument(file);
+// `folder` : le dossier d'où vient le fichier (`path` : son chemin sous le dossier, racine exclue). Le titre est
+// alors le chemin complet `${folder.name}/${path}`, et la source garde l'identifiant du dossier pour que la liste
+// les regroupe.
+export async function addDocument(
+  ctx: TenantContext,
+  file: File,
+  folder?: { id: string; name: string; path: string },
+): Promise<{ partial: boolean }> {
+  const { title, parts, partial } = await readDocument(
+    file,
+    folder ? `${folder.name}/${folder.path}` : file.name,
+  );
+  const metadata = folder
+    ? { nature: 'fichier', folder: { id: folder.id, name: cleanName(folder.name).slice(0, 200) } }
+    : { nature: 'fichier' };
   const runId = await withTenant(ctx, async (tx) => {
+    // La page s'arrête déjà au plafond ; on le tient aussi ici, elle peut être contournée. Il vaut par auteur : le
+    // dossier d'un autre membre ne compte pas, même avec le même identifiant.
+    // shortcut: compter puis insérer sans verrou, des envois simultanés peuvent dépasser le plafond de quelques
+    // fichiers, et un autre `folderId` le contourne de toute façon ; à verrouiller (pg_advisory_xact_lock) si le
+    // volume par auteur doit un jour être borné pour de bon.
+    if (folder) {
+      const [row] = await tx
+        .select({ total: count() })
+        .from(sources)
+        .where(
+          and(
+            eq(sources.tenantId, ctx.tenantId),
+            eq(sources.kind, 'document'),
+            eq(sources.ownerUserId, ctx.userId),
+            sql`${sources.metadata}->'folder'->>'id' = ${folder.id}`,
+          ),
+        );
+      if (row && row.total >= FOLDER_MAX_FILES) throw new DocumentError('folder_full');
+    }
     const [source] = await tx
       .insert(sources)
       .values({
@@ -155,7 +191,7 @@ export async function addDocument(ctx: TenantContext, file: File): Promise<{ par
         ownerUserId: ctx.userId,
         title,
         acl: [ctx.tenantId],
-        metadata: { nature: 'fichier' },
+        metadata,
       })
       .returning({ id: sources.id });
     if (!source) throw new Error('Document non enregistré');
@@ -189,6 +225,9 @@ export async function listDocuments(ctx: TenantContext) {
         createdAt: sources.createdAt,
         ownerUserId: sources.ownerUserId,
         ownerName: users.name,
+        // Les fichiers d'un même dossier portent son identifiant et son nom (addDocument).
+        folderId: sql<string | null>`${sources.metadata}->'folder'->>'id'`,
+        folderName: sql<string | null>`${sources.metadata}->'folder'->>'name'`,
       })
       .from(sources)
       .innerJoin(users, eq(users.id, sources.ownerUserId))
@@ -204,4 +243,17 @@ export async function deleteDocument(ctx: TenantContext, id: string): Promise<bo
     tx.execute<{ deleted: boolean }>(sql`select supprimer_document(${id}) as deleted`),
   );
   return result.rows[0]?.deleted === true;
+}
+
+// Les documents d'un dossier, d'un coup, par la même fonction : chacun est supprimé s'il est de l'auteur. Rend le
+// nombre de documents partis.
+export async function deleteFolder(ctx: TenantContext, folderId: string): Promise<number> {
+  const result = await withTenant(ctx, (tx) =>
+    tx.execute<{ deleted: number }>(sql`
+      select count(*) filter (where supprimer_document(id))::int as deleted
+      from sources
+      where tenant_id = ${ctx.tenantId} and kind = 'document' and owner_user_id = ${ctx.userId}
+        and metadata->'folder'->>'id' = ${folderId}`),
+  );
+  return result.rows[0]?.deleted ?? 0;
 }

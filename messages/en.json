@@ -80,7 +80,18 @@
     "addSection": "Add a document",
     "chooseFile": "Choose a document",
     "add": "Add document",
-    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, text or Markdown · 10 MB max.",
+    "chooseFolder": "Choose a folder",
+    "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, text, Markdown and code (JSON, YAML, TypeScript, Python, SQL…) · 10 MB max per file, 200 files per folder.",
+    "dropHint": "You can also drag files, or a whole folder, onto this area. Everything you add is visible to your team.",
+    "sending": "Sending: {done} / {total}",
+    "report": {
+      "added": "{count, plural, one {# file added} other {# files added}}",
+      "partial": "{count} partly added",
+      "skipped": "{count} skipped",
+      "failed": "{count} unreadable or rejected"
+    },
+    "tooManyFiles": "A folder has {count} readable files, and the maximum is {max}. Nothing was sent. Choose a smaller folder.",
+    "noReadableFiles": "No readable files in this selection: hidden files, dependencies (node_modules…), generated folders, lock files, empty files and files over 10 MB are left out.",
     "partial": "Document added, but only partly indexed: it is too large to be read in full.",
     "teamSection": "Team documents",
     "teamDescription": "The extracted text is indexed in Leon’s memory.",
@@ -90,11 +101,15 @@
     "addedBy": "Added by {name} · {when}",
     "delete": "Delete",
     "deleteLabel": "Delete {title}",
+    "folderFiles": "{count, plural, one {# file} other {# files}}",
+    "deleteFolder": "Delete folder",
+    "deleteFolderLabel": "Delete folder {name}",
     "errors": {
       "missing": "Choose a file to add.",
-      "unreadable": "Unreadable file. Choose a PDF, Excel, Word, PowerPoint, CSV, TXT or Markdown file of 10 MB max.",
+      "unreadable": "Unreadable file. Choose a PDF, Word, Excel, PowerPoint, text or code file of 10 MB max.",
       "empty": "No readable text in this file.",
       "too_long": "This document has too much text (1 million characters max).",
+      "folder_full": "This folder has reached the maximum of 200 files.",
       "failed": "Couldn’t save this document. Try again."
     }
   },

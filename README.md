@@ -113,8 +113,10 @@ Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | Outil | Famille | Essayé en réel |
 | --- | --- | --- |
 | GitHub | Dev | non |
+| GitLab | Dev | non |
 | Linear | Dev | non |
 | Notion | Dev | non |
+| Sentry | Dev | non |
 | Circleback | Réunions | non |
 | Claap | Réunions | non |
 | Fathom | Réunions | non |
@@ -128,14 +130,12 @@ Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 | Basecamp | Projet | non |
 | ClickUp | Projet | non |
 | Confluence | Projet | non |
-| GitLab | Projet | non |
 | Google Drive | Projet | oui |
 | Jira | Projet | non |
 | Miro | Projet | non |
 | monday.com | Projet | non |
 | Plane | Projet | non |
 | Productboard | Projet | non |
-| Sentry | Projet | non |
 | Shortcut | Projet | non |
 | Trello | Projet | non |
 | Attio | CRM | non |

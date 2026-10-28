@@ -21,7 +21,7 @@ describe('providers', () => {
   });
 
   it('range les outils dans les familles des lots', () => {
-    expect(ofFamily('dev')).toEqual(['github', 'notion', 'linear']);
+    expect(ofFamily('dev')).toEqual(['github', 'notion', 'linear', 'gitlab', 'sentry']);
     expect(ofFamily('reunions')).toEqual([
       'granola',
       'fathom',
@@ -35,7 +35,6 @@ describe('providers', () => {
     expect(ofFamily('projet')).toEqual([
       'jira',
       'confluence',
-      'gitlab',
       'asana',
       'clickup',
       'trello',
@@ -43,7 +42,6 @@ describe('providers', () => {
       'shortcut',
       'plane',
       'airtable',
-      'sentry',
       'basecamp',
       'miro',
       'productboard',

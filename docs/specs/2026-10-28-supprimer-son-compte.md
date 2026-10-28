@@ -128,6 +128,8 @@ aussi `former: boolean`. Endroits : la liste de l'onglet Équipe (`members.ts`) 
 (`documents/documents.ts`) ; les connexions d'un ancien membre sont effacées, elles n'apparaissent plus. Dans
 Équipe, les anciens membres sont listés à part, sans actions. Limite connue : la recherche « de : <nom> » rapproche
 un nom d'une adresse (`search/people.ts`) ; pour un ancien membre, l'adresse ne mène plus à ses messages relevés.
+Autre limite : les messages relevés dans les outils (Slack, Gmail…) gardent l'adresse de leur auteur telle que
+l'outil l'a écrite (`turns.author_email`) ; c'est de la donnée de la société, elle reste.
 
 ### Les actions serveur
 
@@ -171,8 +173,8 @@ mêmes clés dans les deux (test `src/i18n/messages.test.ts`).
 
 - **En base** :
   - supprimer son compte : la ligne `user` reste avec `deleted_at`, sans e-mail d'origine ni mot de passe ; plus
-    de session, de 2FA, de jeton valable, de lien d'invitation valable, de connexion, de point du matin ; ses
-    sources, tours, passages et discussions sont toujours là, et un collègue voit toujours ce qui était partagé ;
+    de session, de 2FA, de jeton valable, de lien d'invitation valable, de connexion ; ses sources, tours,
+    passages, discussions et points du matin sont toujours là, et un collègue voit toujours ce qui était partagé ;
   - il ne peut plus se connecter (`signInEmail` échoue) ni demander un lien de réinitialisation ;
   - seul propriétaire avec d'autres membres actifs : refus sans successeur, refus avec un successeur d'une autre
     organisation ou un ancien membre, et avec un bon successeur, celui-ci devient propriétaire ; un ancien membre

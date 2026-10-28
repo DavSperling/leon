@@ -14,6 +14,7 @@ import { isReplying, replyStream } from './agent';
 import { DISCUSSION_SYSTEM } from './discussion-prompt';
 import * as discussionsModule from './discussions';
 import { createDiscussion, getDiscussion, saveReply, startReply } from './discussions';
+import * as toolsModule from './tools';
 import { DISCUSSION_MAX_STEPS } from './tools';
 
 // L'agent de discussion avec un faux modèle scripté, sur la vraie recherche : ce qu'il garde, ce qu'il cite, ses
@@ -155,7 +156,31 @@ describe('replyStream', () => {
       'depots_github',
       'lire_github',
       'creer_branche_github',
+      'supprimer_branche_github',
+      'ecrire_fichier_github',
+      'supprimer_fichier_github',
+      'ouvrir_pr_github',
+      'modifier_pr_github',
+      'fusionner_pr_github',
+      'commenter_github',
+      'demander_revue_github',
+      'soumettre_revue_github',
+      'creer_ticket_github',
+      'modifier_ticket_github',
+      'relancer_execution_github',
+      'annuler_execution_github',
     ]);
+  });
+
+  it('donne aux outils la question de l’utilisateur, dont les actions proposées gardent un extrait', async () => {
+    const { alice } = await setup();
+    const id = await createDiscussion(alice, { question: 'Question' });
+    const llm = createFakeLlm({ agent: () => [text('Ok.')] });
+    const tools = vi.spyOn(toolsModule, 'discussionTools');
+
+    await collect(reply(alice, id, 'Commente le ticket 7', llm));
+
+    expect(tools.mock.calls[0]?.[1]).toMatchObject({ asked: 'Commente le ticket 7' });
   });
 
   it('s’arrête après 8 appels d’outils sur 20 demandés : fin « limite », note gardée', async () => {

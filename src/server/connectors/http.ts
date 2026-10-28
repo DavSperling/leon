@@ -8,7 +8,7 @@ import { PROVIDER_LABELS } from '@/lib/providers';
 
 export type HttpRequest = {
   url: string; // https://<hôte autorisé>/… ; peut déjà porter une chaîne de requête
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: Record<string, string>;
   // Ajoutée à celle de url ; un tableau répète le paramètre.
   query?: Record<string, string | number | boolean | string[] | undefined>;
@@ -17,6 +17,9 @@ export type HttpRequest = {
   raw?: { type: string; text: string }; // envoyé tel quel (le lot multipart de Gmail) ; seul corps
   // Ex. [400] : le corps est validé par le schéma et rendu au connecteur au lieu de lever.
   acceptStatus?: number[];
+  // Une écriture qu'on ne rejoue pas : une limite de débit, un 5xx ou une réponse perdue échouent tout de suite,
+  // car la requête a pu aboutir.
+  once?: true;
 };
 
 export type ConnectorHttp = {
@@ -267,7 +270,7 @@ export function createConnectorHttp(input: {
     for (let number = 0; ; number++) {
       const result = await attempt(request, prepared, number);
       if (result.kind === 'done') return { ...result.answer, url };
-      if (number >= RETRIES_MAX) throw result.failure;
+      if (number >= RETRIES_MAX || request.once) throw result.failure;
       await sleep(result.waitMs);
     }
   }

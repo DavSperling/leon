@@ -9,6 +9,8 @@ export const users = pgTable('user', {
   image: text('image'),
   twoFactorEnabled: boolean('twoFactorEnabled').notNull().default(false),
   about: text('about'),
+  // Posé à la suppression du compte (0039) : la ligne reste, vidée de ce qui rend la personne joignable.
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updatedAt', { withTimezone: true }).notNull().defaultNow(),
 });

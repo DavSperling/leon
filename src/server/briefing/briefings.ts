@@ -2,6 +2,8 @@ import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { BriefingResponse } from '@/capture/api-contract';
 import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { db } from '@/server/db/client';
+import { users } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -61,6 +63,16 @@ async function writeBody(
   return body;
 }
 
+// Un compte supprimé (0039) garde ses points mais n'en reçoit plus : un recalcul déjà en file ne coûte pas d'appel
+// au modèle. Un utilisateur disparu avec son organisation n'a plus de ligne du tout.
+async function accountIsGone(userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row === undefined || row.deletedAt !== null;
+}
+
 // Refait le point de l'utilisateur sur ce projet. Sans rien de neuf (ni session, ni changement, ni mention), le
 // point le dit sans appeler le modèle. Une panne du modèle remonte (LlmError) et laisse le point précédent tel quel.
 export async function refreshBriefing(
@@ -68,6 +80,7 @@ export async function refreshBriefing(
   project: string,
   deps: { llm: Llm; now?: Date },
 ): Promise<void> {
+  if (await accountIsGone(ctx.userId)) return;
   const now = deps.now ?? new Date();
   const material = await gatherBriefingMaterial(ctx, project, now);
   let markdown: string;

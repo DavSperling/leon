@@ -1,0 +1,229 @@
+import { and, asc, eq, inArray, isNull, ne, type SQL, sql } from 'drizzle-orm';
+import { apiTokens } from '@/server/db/schema/api-tokens';
+import { members, organizations, users } from '@/server/db/schema/auth';
+import { connections } from '@/server/db/schema/connections';
+import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
+import type { TenantContext } from './tenant-context';
+
+// Supprimer son compte (0039) : la personne part, pas son travail. La ligne `user` reste, vidée et verrouillée, car
+// ses sources en dépendent (clé étrangère en cascade) ; le seul membre actif, lui, emporte l'organisation. Tout se
+// fait en base dans une seule transaction ; Pipedream et les e-mails, après, sont l'affaire de l'appelant.
+//
+// Un membre actif est une adhésion dont l'utilisateur n'a pas de `deleted_at` : partout où l'on compte ou liste
+// les membres pour décider, on ne compte que ceux-là.
+
+// Une adresse qui ne mène nulle part et ne peut pas servir à se connecter ni à recevoir un lien.
+export const formerEmail = (userId: string) => `ancien-${userId}@leon.invalid`;
+
+export type DeletionInfo = {
+  organizationName: string;
+  isOwner: boolean; // propriétaire actif de l'organisation courante
+  soleActiveMember: boolean; // supprimer le compte supprimera l'organisation
+  needsSuccessor: boolean; // seul propriétaire actif, avec d'autres membres actifs
+  successors: { userId: string; name: string }[]; // les autres membres actifs, par ancienneté
+  activeMembers: number;
+};
+
+export type DeletionRefusal = 'successeur' | 'autre_organisation' | 'pas_proprietaire';
+
+export class DeletionRefused extends Error {
+  override name = 'DeletionRefused';
+  constructor(readonly reason: DeletionRefusal) {
+    super(`Suppression refusée : ${reason}`);
+  }
+}
+
+export type DeletionResult = {
+  organizationDeleted: boolean;
+  organizationName: string;
+  notify: { email: string; kind: 'account' | 'organization' }[]; // adresses d'origine, relevées avant
+  pipedreamUsers: string[]; // `config.externalUserId` des connexions Pipedream effacées
+};
+
+// Better Auth peut ranger plusieurs rôles séparés par des virgules (comme members.ts).
+const isOwnerRole = (role: string) => role.split(',').includes('owner');
+
+// Verrouille les adhésions de l'organisation, anciennes comprises : deux suppressions simultanées passent l'une
+// après l'autre, et la seconde relit les rôles que la première a laissés. Sans cela, deux propriétaires qui partent
+// ensemble verraient chacun l'autre en place et laisseraient l'organisation sans propriétaire.
+async function lockMembers(tx: Tx, tenantId: string): Promise<void> {
+  await tx
+    .select({ id: members.id })
+    .from(members)
+    .where(eq(members.organizationId, tenantId))
+    .orderBy(asc(members.id))
+    .for('update');
+}
+
+async function readState(tx: Tx, ctx: TenantContext) {
+  const [organization] = await tx
+    .select({ name: organizations.name })
+    .from(organizations)
+    .where(eq(organizations.id, ctx.tenantId));
+  if (!organization) throw new Error('Organisation introuvable');
+  const active = await tx
+    .select({ userId: members.userId, name: users.name, email: users.email, role: members.role })
+    .from(members)
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(and(eq(members.organizationId, ctx.tenantId), isNull(users.deletedAt)))
+    .orderBy(asc(members.createdAt), asc(members.id));
+  const me = active.find((member) => member.userId === ctx.userId);
+  const isOwner = me !== undefined && isOwnerRole(me.role);
+  const soleOwner = isOwner && active.filter((member) => isOwnerRole(member.role)).length === 1;
+  return {
+    organizationName: organization.name,
+    active,
+    me,
+    isOwner,
+    soleActiveMember: me !== undefined && active.length === 1,
+    needsSuccessor: soleOwner && active.length > 1,
+    successors: active
+      .filter((member) => member.userId !== ctx.userId)
+      .map(({ userId, name }) => ({ userId, name })),
+  };
+}
+type State = Awaited<ReturnType<typeof readState>>;
+
+export async function deletionInfo(ctx: TenantContext): Promise<DeletionInfo> {
+  const state = await withTenant(ctx, (tx) => readState(tx, ctx));
+  return {
+    organizationName: state.organizationName,
+    isOwner: state.isOwner,
+    soleActiveMember: state.soleActiveMember,
+    needsSuccessor: state.needsSuccessor,
+    successors: state.successors,
+    activeMembers: state.active.length,
+  };
+}
+
+// Les utilisateurs Pipedream des connexions choisies : Pipedream garde les jetons chez lui, il faut le prévenir.
+async function pipedreamUsersOf(tx: Tx, where: SQL | undefined): Promise<string[]> {
+  const rows = await tx
+    .select({ id: sql<string | null>`${connections.config}->>'externalUserId'` })
+    .from(connections)
+    .where(and(where, sql`${connections.config}->>'authMode' = 'pipedream'`));
+  return rows.flatMap(({ id }) => (id ? [id] : []));
+}
+
+async function removeOrganization(
+  tx: Tx,
+  ctx: TenantContext,
+  state: State,
+): Promise<DeletionResult> {
+  if (!state.isOwner) throw new DeletionRefused('pas_proprietaire');
+  const pipedreamUsers = await pipedreamUsersOf(tx, eq(connections.tenantId, ctx.tenantId));
+  // Un compte qui appartient aussi à une autre organisation reste ; les autres, anciens membres compris, ne
+  // mèneraient plus à rien.
+  const { rows } = await tx.execute<{ userId: string }>(sql`
+    select m."userId" as "userId" from member m
+    where m."organizationId" = ${ctx.tenantId}
+      and not exists (
+        select 1 from member o where o."userId" = m."userId" and o."organizationId" <> ${ctx.tenantId})`);
+  // Toute sa mémoire part en cascade avec la ligne `organization`.
+  await tx.delete(organizations).where(eq(organizations.id, ctx.tenantId));
+  if (rows.length > 0) {
+    await tx.delete(users).where(
+      inArray(
+        users.id,
+        rows.map((row) => row.userId),
+      ),
+    );
+  }
+  return {
+    organizationDeleted: true,
+    organizationName: state.organizationName,
+    notify: state.active.map((member) => ({
+      email: member.email,
+      kind: member.userId === ctx.userId ? 'account' : 'organization',
+    })),
+    pipedreamUsers,
+  };
+}
+
+// `successorId` ne sert qu'au seul propriétaire actif d'une organisation qui garde d'autres membres actifs.
+export async function deleteAccount(
+  ctx: TenantContext,
+  successorId: string | null,
+): Promise<DeletionResult> {
+  return withTenant(ctx, async (tx) => {
+    await lockMembers(tx, ctx.tenantId);
+    const state = await readState(tx, ctx);
+    if (!state.me) throw new Error('Membre actif introuvable');
+
+    // Un compte n'a qu'une organisation en pratique ; ses connexions ailleurs resteraient sinon actives.
+    const [elsewhere] = await tx
+      .select({ id: members.id })
+      .from(members)
+      .where(and(eq(members.userId, ctx.userId), ne(members.organizationId, ctx.tenantId)))
+      .limit(1);
+    if (elsewhere) throw new DeletionRefused('autre_organisation');
+
+    if (state.soleActiveMember) return removeOrganization(tx, ctx, state);
+
+    if (state.needsSuccessor) {
+      const successor = state.successors.find((member) => member.userId === successorId);
+      if (!successor) throw new DeletionRefused('successeur');
+      await tx
+        .update(members)
+        .set({ role: 'owner' })
+        .where(and(eq(members.organizationId, ctx.tenantId), eq(members.userId, successor.userId)));
+    }
+
+    const pipedreamUsers = await pipedreamUsersOf(
+      tx,
+      and(eq(connections.tenantId, ctx.tenantId), eq(connections.createdBy, ctx.userId)),
+    );
+    const now = sql`now()`;
+    await tx
+      .update(users)
+      .set({
+        deletedAt: now,
+        email: formerEmail(ctx.userId),
+        emailVerified: false,
+        image: null,
+        about: null,
+        twoFactorEnabled: false,
+        updatedAt: now,
+      })
+      .where(eq(users.id, ctx.userId));
+    await tx.update(members).set({ role: 'member' }).where(eq(members.userId, ctx.userId));
+
+    // Plus de mot de passe, de session, de 2FA, ni de lien de réinitialisation déjà envoyé (sa valeur est l'id).
+    await tx.execute(sql`delete from account where "userId" = ${ctx.userId}`);
+    await tx.execute(sql`delete from session where "userId" = ${ctx.userId}`);
+    await tx.execute(sql`delete from "twoFactor" where "userId" = ${ctx.userId}`);
+    await tx.execute(sql`delete from verification where value = ${ctx.userId}`);
+    await tx
+      .update(apiTokens)
+      .set({ revokedAt: now })
+      .where(and(eq(apiTokens.userId, ctx.userId), isNull(apiTokens.revokedAt)));
+    await tx
+      .update(invitationLinks)
+      .set({ expiresAt: now })
+      .where(
+        and(
+          eq(invitationLinks.createdBy, ctx.userId),
+          isNull(invitationLinks.usedAt),
+          sql`${invitationLinks.expiresAt} > now()`,
+        ),
+      );
+    // Leon arrête de relever ses outils ; les sources déjà relevées restent (`connection_id` passe à nul).
+    await tx.delete(connections).where(eq(connections.createdBy, ctx.userId));
+
+    return {
+      organizationDeleted: false,
+      organizationName: state.organizationName,
+      notify: [{ email: state.me.email, kind: 'account' }],
+      pipedreamUsers,
+    };
+  });
+}
+
+// Réservé au propriétaire actif : tout part, pour tout le monde.
+export async function deleteOrganization(ctx: TenantContext): Promise<DeletionResult> {
+  return withTenant(ctx, async (tx) => {
+    await lockMembers(tx, ctx.tenantId);
+    return removeOrganization(tx, ctx, await readState(tx, ctx));
+  });
+}

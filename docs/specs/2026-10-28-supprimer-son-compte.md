@@ -115,7 +115,7 @@ et ce qui reste, et un bouton rouge. Il ouvre le `Dialog` du kit (`src/component
 - « Supprimer définitivement », actif seulement quand le mot est tapé.
 
 **Équipe**, pour le propriétaire seulement, en bas : un bloc « Supprimer l'organisation », même dialogue, qui dit
-que tout est effacé pour tout le monde, avec le nombre de membres et de sources.
+que tout est effacé pour tout le monde, avec le nombre de membres actifs.
 
 Le mot à taper : « SUPPRIMER » en français, « DELETE » en anglais, pour les deux (choix de Claude).
 

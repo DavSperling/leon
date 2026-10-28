@@ -3,7 +3,7 @@ import { APIError } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { slugify } from '@/lib/slug';
-import { db, pool } from '@/server/db/client';
+import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
 import { logError } from '@/server/log';
 import { auth } from './auth';
@@ -51,10 +51,31 @@ export type CreateOrganizationResult =
   | { ok: true; tenantId: string }
   | { ok: false; error: 'deja_membre' | 'invalide' };
 
-// L'espace d'une personne qui n'en a pas (elle en devient propriétaire). Un verrou par utilisateur couvre le test
-// « déjà membre » et la création : deux onglets ne créent pas deux espaces. Le verrou ne fait jamais attendre
-// (une attente garderait une connexion du pool, et cinq envois simultanés le videraient) : qui ne l'obtient pas
-// est le doublon d'un envoi en cours.
+// Rangé sur globalThis, comme le pool (db/client.ts) : Next compile ce module en plusieurs copies.
+const globalForLocks = globalThis as { leonUserLocks?: Map<string, Promise<unknown>> };
+globalForLocks.leonUserLocks ??= new Map();
+const userLocks = globalForLocks.leonUserLocks;
+
+// Les appels d'un même utilisateur passent l'un après l'autre ; ceux de deux utilisateurs ne s'attendent pas.
+// Aucune connexion du pool n'est tenue pendant l'attente. L'entrée disparaît quand le dernier a fini.
+// shortcut: deux instances (recouvrement d'une mise en ligne) ne partagent pas ce verrou, à passer en base si Leon tourne durablement sur plusieurs instances.
+async function withUserLock<T>(userId: string, run: () => Promise<T>): Promise<T> {
+  const result = (userLocks.get(userId) ?? Promise.resolve()).then(run);
+  const tail = result.then(
+    () => undefined,
+    () => undefined, // la file continue même si `run` échoue
+  );
+  userLocks.set(userId, tail);
+  try {
+    return await result;
+  } finally {
+    if (userLocks.get(userId) === tail) userLocks.delete(userId);
+  }
+}
+
+// L'espace d'une personne qui n'en a pas (elle en devient propriétaire). Le test « déjà membre » et la création se
+// font sous le verrou de l'utilisateur : le second de deux envois simultanés (deux onglets) attend le premier,
+// puis trouve l'espace créé et rend `deja_membre`.
 export async function createOrganizationForUser(
   userId: string,
   organizationName: string,
@@ -62,16 +83,7 @@ export async function createOrganizationForUser(
   const name = SignUpInputSchema.shape.organizationName.safeParse(organizationName);
   if (!name.success) return { ok: false, error: 'invalide' };
 
-  const client = await pool.connect();
-  let locked = false;
-  let unlockFailed = false;
-  try {
-    const { rows } = await client.query<{ locked: boolean }>(
-      'select pg_try_advisory_lock(hashtext($1)) as locked',
-      [userId],
-    );
-    locked = rows[0]?.locked === true;
-    if (!locked) return { ok: false, error: 'deja_membre' };
+  return withUserLock(userId, async (): Promise<CreateOrganizationResult> => {
     if (await firstOrganizationId(userId)) return { ok: false, error: 'deja_membre' };
     try {
       const org = await auth.api.createOrganization({
@@ -82,15 +94,7 @@ export async function createOrganizationForUser(
       logError('auth.sign_up.organization', error);
       return { ok: false, error: 'invalide' };
     }
-  } finally {
-    try {
-      if (locked) await client.query('select pg_advisory_unlock(hashtext($1))', [userId]);
-    } catch {
-      unlockFailed = true;
-    }
-    // Un déverrouillage raté jette la connexion : sa fermeture libère le verrou de session.
-    client.release(unlockFailed);
-  }
+  });
 }
 
 // L'inscription crée l'utilisateur et son organisation (il en est propriétaire), ou rien.

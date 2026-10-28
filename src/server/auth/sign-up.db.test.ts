@@ -153,6 +153,19 @@ describe('createOrganizationForUser', () => {
     expect(await membershipsOf(userId)).toHaveLength(1);
   });
 
+  it('deux envois simultanés de deux personnes créent chacun leur espace', async () => {
+    const [first, second] = [await userWithoutSpace(), await userWithoutSpace()];
+
+    const results = await Promise.all([
+      createOrganizationForUser(first, 'Acme'),
+      createOrganizationForUser(second, 'Beta'),
+    ]);
+
+    expect(results.map((r) => r.ok)).toEqual([true, true]);
+    expect(await membershipsOf(first)).toHaveLength(1);
+    expect(await membershipsOf(second)).toHaveLength(1);
+  });
+
   it('refuse un nom vide', async () => {
     const userId = await userWithoutSpace();
     expect(await createOrganizationForUser(userId, '')).toEqual({ ok: false, error: 'invalide' });

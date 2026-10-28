@@ -45,6 +45,8 @@ export async function resolvePeople(
       .from(members)
       .innerJoin(users, eq(users.id, members.userId))
       .where(eq(members.organizationId, ctx.tenantId));
+    // shortcut: l'adresse d'un ancien membre n'est plus celle de ses messages relevés (0039), le nom ne mène plus à
+    // eux ; à revoir si `de:` doit retrouver le travail d'un membre parti.
     const known = team.map((member) => ({ name: normalize(member.name), email: member.email }));
     for (const person of names) {
       const wanted = normalize(person);

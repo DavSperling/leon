@@ -37,6 +37,7 @@ type DocumentRow = {
   ownerName: string;
   folderId: string | null;
   folderName: string | null;
+  ownerFormer: boolean;
 };
 
 // Les fichiers d'un même dossier (et d'un même auteur), regroupés sur une ligne de la liste.
@@ -273,6 +274,7 @@ function DocumentItem({
   path?: string;
 }) {
   const t = useTranslations('documents');
+  const tSettings = useTranslations('settings');
   const locale = useLocale();
   const full = document.title || t('untitled');
   const title = path ?? full;
@@ -287,7 +289,9 @@ function DocumentItem({
           <p className="mt-0.5 text-label text-muted">
             {nb(
               t('addedBy', {
-                name: document.ownerName,
+                name: document.ownerFormer
+                  ? tSettings('formerMember', { name: document.ownerName })
+                  : document.ownerName,
                 when: formatRelative(document.createdAt, new Date(), locale),
               }),
             )}

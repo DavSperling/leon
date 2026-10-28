@@ -5,6 +5,7 @@ import { members } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { adminDb } from '@/test/db';
 import { createTestTenant, createTestUser } from '@/test/fixtures';
+import { deleteAccount } from './delete-account';
 import {
   canInvite,
   createInvitationLink,
@@ -152,6 +153,21 @@ describe('listMembers', () => {
       ['Julie', 'member'],
     ]);
     expect(rows.at(-1)?.email).toMatch(/@test\.leon$/);
+  });
+
+  it('rend les anciens membres marqués, sans leur adresse', async () => {
+    const { owner, member } = await tenantWithLink();
+    await createTestUser(owner.tenantId, 'Julie');
+    await deleteAccount(member, null);
+
+    const rows = await listMembers(owner);
+    expect(rows.map((r) => [r.name, r.former])).toEqual([
+      ['Amos', false],
+      ['David', true],
+      ['Julie', false],
+    ]);
+    expect(rows.filter((r) => r.former).map((r) => r.email)).toEqual(['']);
+    expect(rows.filter((r) => !r.former).every((r) => r.email.endsWith('@test.leon'))).toBe(true);
   });
 });
 

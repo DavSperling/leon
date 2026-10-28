@@ -533,6 +533,8 @@
     "membersTitle": "Members",
     "membersDescription": "Everyone can see what Leon reads in team tools. Assistant conversations, email, Google Drive, and Slack messages stay with their owner.",
     "membersList": "Workspace members",
+    "formerMembersTitle": "Former members",
+    "formerMember": "{name} (former member)",
     "invite": "Invite",
     "owner": "Owner",
     "admin": "Administrator",

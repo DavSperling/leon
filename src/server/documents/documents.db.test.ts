@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FOLDER_MAX_FILES } from '@/lib/documents';
+import { deleteAccount } from '@/server/auth/delete-account';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { enqueuePipelineStep, type PipelineJob } from '@/server/pipeline/queue';
 import { indexIngestRun } from '@/server/search/index-run';
 import { adminDb, adminPool } from '@/test/db';
-import { createTestTenant, seedSource } from '@/test/fixtures';
+import { createTestTenant, createTestUser, seedSource } from '@/test/fixtures';
 import { addDocument, deleteDocument, deleteFolder, listDocuments } from './documents';
 
 // L'ajout met en file l'indexation ; ici on l'appelle à la main. Le point du matin qu'elle prévient est simulé.
@@ -126,12 +127,23 @@ describe('liste des documents', () => {
         title: 'contrat-acme.txt',
         ownerUserId: alice.userId,
         ownerName: 'Alice',
+        ownerFormer: false,
       }),
     );
     const bobIds = seenByBob.map((doc) => doc.id);
     expect(bobIds).not.toContain(theirs.sourceId);
     expect(bobIds).not.toContain(capture.sourceId);
     expect(seenByZoe.map((doc) => doc.id)).toEqual([theirs.sourceId]);
+  });
+
+  it("garde le document d'un ancien membre, marqué comme tel", async () => {
+    const julie = await createTestUser(alice.tenantId, 'Julie');
+    const { sourceId } = await upload(julie, 'plan-julie.txt');
+    await deleteAccount(julie, null);
+
+    expect(await listDocuments(bob)).toContainEqual(
+      expect.objectContaining({ id: sourceId, ownerName: 'Julie', ownerFormer: true }),
+    );
   });
 });
 

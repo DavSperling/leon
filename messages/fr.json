@@ -533,6 +533,8 @@
     "membersTitle": "Membres",
     "membersDescription": "Chacun voit ce que Leon lit dans les outils de l’équipe. Les conversations avec les assistants, les boîtes mail, Google Drive et Slack restent à leur propriétaire.",
     "membersList": "Membres de l’espace",
+    "formerMembersTitle": "Anciens membres",
+    "formerMember": "{name} (ancien membre)",
     "invite": "Inviter",
     "owner": "Propriétaire",
     "admin": "Administrateur",

@@ -1159,5 +1159,154 @@
       "ctaTitle": "Commencez par le pilote.",
       "ctaText": "Gratuit, sur une équipe, avec les {count} connecteurs."
     }
+  },
+  "onboarding": {
+    "other": "Autre",
+    "departments": {
+      "engineering": "Dev",
+      "product": "Produit",
+      "design": "Design",
+      "data": "Data",
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "support": "Support et succès client",
+      "operations": "Ops et finance",
+      "people": "RH",
+      "legal": "Juridique",
+      "leadership": "Direction générale"
+    },
+    "jobs": {
+      "engineering": {
+        "backend": "Développeur backend",
+        "frontend": "Développeur frontend",
+        "fullstack": "Développeur full-stack",
+        "mobile": "Développeur mobile",
+        "devops": "DevOps / SRE",
+        "qa": "QA",
+        "engineeringManager": "Engineering manager",
+        "cto": "CTO"
+      },
+      "product": {
+        "productManager": "Product manager",
+        "productOwner": "Product owner",
+        "headOfProduct": "Head of product",
+        "cpo": "CPO"
+      },
+      "design": {
+        "productDesigner": "Product designer",
+        "uxResearcher": "UX researcher",
+        "artDirector": "Directeur artistique"
+      },
+      "data": {
+        "dataAnalyst": "Data analyst",
+        "dataEngineer": "Data engineer",
+        "dataScientist": "Data scientist"
+      },
+      "sales": {
+        "sdr": "SDR / BDR",
+        "accountExecutive": "Account executive",
+        "accountManager": "Account manager",
+        "salesOps": "Sales ops",
+        "vpSales": "Directeur commercial"
+      },
+      "marketing": {
+        "growth": "Growth",
+        "content": "Contenu",
+        "productMarketing": "Marketing produit",
+        "communications": "Communication",
+        "cmo": "CMO"
+      },
+      "support": {
+        "supportAgent": "Agent support",
+        "customerSuccess": "Customer success manager",
+        "implementation": "Onboarding / mise en place",
+        "headOfSupport": "Head of support"
+      },
+      "operations": {
+        "officeManager": "Office manager",
+        "accountant": "Comptable",
+        "financialController": "Contrôleur de gestion",
+        "cfo": "Directeur financier",
+        "coo": "COO"
+      },
+      "people": {
+        "recruiter": "Chargé de recrutement",
+        "hrGeneralist": "RH généraliste",
+        "headOfPeople": "DRH"
+      },
+      "legal": {
+        "legalCounsel": "Juriste",
+        "generalCounsel": "Directeur juridique"
+      },
+      "leadership": {
+        "ceo": "CEO / fondateur",
+        "managingDirector": "Directeur général",
+        "partner": "Associé"
+      }
+    },
+    "seniority": {
+      "intern": "Stagiaire",
+      "apprentice": "Alternant",
+      "junior": "Junior",
+      "mid": "Confirmé",
+      "senior": "Senior",
+      "lead": "Lead",
+      "head": "Head of / directeur",
+      "executive": "C-level / fondateur"
+    },
+    "goals": {
+      "find": "Retrouver une info vite",
+      "meetings": "Préparer mes réunions",
+      "briefing": "Recevoir un point chaque matin",
+      "team": "Suivre mon équipe",
+      "onboarding": "Intégrer les nouveaux",
+      "customers": "Répondre plus vite aux clients"
+    },
+    "asks": {
+      "engineering": {
+        "one": "Qu’est-ce qui a cassé en prod cette semaine ?",
+        "two": "Où en est la PR sur la facturation ?"
+      },
+      "product": {
+        "one": "Résume les retours clients sur l’export depuis un mois",
+        "two": "Qu’est-ce qui bloque la prochaine version ?"
+      },
+      "design": {
+        "one": "Qu’ont dit les utilisateurs du nouvel écran ?",
+        "two": "Quelles maquettes attendent un retour ?"
+      },
+      "data": {
+        "one": "Qui a demandé ce tableau de bord, et pourquoi ?",
+        "two": "Où est documentée la table des commandes ?"
+      },
+      "sales": {
+        "one": "Prépare mon rendez-vous avec Acme Logistique",
+        "two": "Quels deals n’ont pas bougé depuis 15 jours ?"
+      },
+      "marketing": {
+        "one": "Quels sujets reviennent dans les appels commerciaux ?",
+        "two": "Où en est la campagne de novembre ?"
+      },
+      "support": {
+        "one": "Ce client a-t-il déjà signalé ce bug ?",
+        "two": "Le correctif de l’export est-il en production ?"
+      },
+      "operations": {
+        "one": "Où est le dernier contrat signé avec ce fournisseur ?",
+        "two": "Quelles dépenses ont été validées ce mois-ci ?"
+      },
+      "people": {
+        "one": "Où en sont les recrutements ouverts ?",
+        "two": "Prépare l’arrivée de la nouvelle développeuse"
+      },
+      "legal": {
+        "one": "Quels contrats arrivent à échéance ce trimestre ?",
+        "two": "Où a-t-on parlé de la clause de confidentialité ?"
+      },
+      "leadership": {
+        "one": "Qu’est-ce qui a bougé cette semaine dans les équipes ?",
+        "two": "Prépare mon point avec les investisseurs"
+      }
+    }
   }
 }

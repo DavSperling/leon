@@ -1159,5 +1159,154 @@
       "ctaTitle": "Start with the pilot.",
       "ctaText": "Free, with one team, on all {count} connectors."
     }
+  },
+  "onboarding": {
+    "other": "Other",
+    "departments": {
+      "engineering": "Engineering",
+      "product": "Product",
+      "design": "Design",
+      "data": "Data",
+      "sales": "Sales",
+      "marketing": "Marketing",
+      "support": "Support & Customer Success",
+      "operations": "Operations & Finance",
+      "people": "People",
+      "legal": "Legal",
+      "leadership": "Leadership"
+    },
+    "jobs": {
+      "engineering": {
+        "backend": "Backend engineer",
+        "frontend": "Frontend engineer",
+        "fullstack": "Full-stack engineer",
+        "mobile": "Mobile engineer",
+        "devops": "DevOps / SRE",
+        "qa": "QA engineer",
+        "engineeringManager": "Engineering manager",
+        "cto": "CTO"
+      },
+      "product": {
+        "productManager": "Product manager",
+        "productOwner": "Product owner",
+        "headOfProduct": "Head of Product",
+        "cpo": "CPO"
+      },
+      "design": {
+        "productDesigner": "Product designer",
+        "uxResearcher": "UX researcher",
+        "artDirector": "Art director"
+      },
+      "data": {
+        "dataAnalyst": "Data analyst",
+        "dataEngineer": "Data engineer",
+        "dataScientist": "Data scientist"
+      },
+      "sales": {
+        "sdr": "SDR / BDR",
+        "accountExecutive": "Account executive",
+        "accountManager": "Account manager",
+        "salesOps": "Sales ops",
+        "vpSales": "VP Sales"
+      },
+      "marketing": {
+        "growth": "Growth marketer",
+        "content": "Content marketer",
+        "productMarketing": "Product marketing manager",
+        "communications": "Communications",
+        "cmo": "CMO"
+      },
+      "support": {
+        "supportAgent": "Support agent",
+        "customerSuccess": "Customer success manager",
+        "implementation": "Onboarding / Implementation",
+        "headOfSupport": "Head of Support"
+      },
+      "operations": {
+        "officeManager": "Office manager",
+        "accountant": "Accountant",
+        "financialController": "Financial controller",
+        "cfo": "CFO",
+        "coo": "COO"
+      },
+      "people": {
+        "recruiter": "Recruiter",
+        "hrGeneralist": "HR generalist",
+        "headOfPeople": "Head of People"
+      },
+      "legal": {
+        "legalCounsel": "Legal counsel",
+        "generalCounsel": "General counsel"
+      },
+      "leadership": {
+        "ceo": "CEO / Founder",
+        "managingDirector": "Managing director",
+        "partner": "Partner"
+      }
+    },
+    "seniority": {
+      "intern": "Intern",
+      "apprentice": "Apprentice",
+      "junior": "Junior",
+      "mid": "Mid-level",
+      "senior": "Senior",
+      "lead": "Lead",
+      "head": "Head of / Director",
+      "executive": "C-level / Founder"
+    },
+    "goals": {
+      "find": "Find information fast",
+      "meetings": "Prepare for meetings",
+      "briefing": "Get a morning briefing",
+      "team": "Keep track of my team",
+      "onboarding": "Onboard new hires",
+      "customers": "Answer customers faster"
+    },
+    "asks": {
+      "engineering": {
+        "one": "What broke in production this week?",
+        "two": "Where is the billing PR at?"
+      },
+      "product": {
+        "one": "Summarize customer feedback on export from the last month",
+        "two": "What’s blocking the next release?"
+      },
+      "design": {
+        "one": "What did users say about the new screen?",
+        "two": "Which mockups are waiting for feedback?"
+      },
+      "data": {
+        "one": "Who asked for this dashboard, and why?",
+        "two": "Where is the orders table documented?"
+      },
+      "sales": {
+        "one": "Prep my call with Acme Logistics",
+        "two": "Which deals haven’t moved in 15 days?"
+      },
+      "marketing": {
+        "one": "What topics keep coming up in sales calls?",
+        "two": "Where is the November campaign at?"
+      },
+      "support": {
+        "one": "Has this customer reported this bug before?",
+        "two": "Is the export fix live yet?"
+      },
+      "operations": {
+        "one": "Where is the latest signed contract with this supplier?",
+        "two": "Which expenses were approved this month?"
+      },
+      "people": {
+        "one": "Where are our open roles at?",
+        "two": "Prep the new engineer’s first week"
+      },
+      "legal": {
+        "one": "Which contracts expire this quarter?",
+        "two": "Where did we discuss the confidentiality clause?"
+      },
+      "leadership": {
+        "one": "What moved across the teams this week?",
+        "two": "Prep my investor update"
+      }
+    }
   }
 }

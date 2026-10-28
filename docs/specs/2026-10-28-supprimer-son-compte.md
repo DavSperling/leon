@@ -59,12 +59,16 @@ Le compte n'est pas effacé : la ligne `user` reste, vidée et verrouillée (cho
 est en `on delete cascade`, effacer la ligne effacerait ses données ; et `0019` ne montre les passages d'une
 source que si son propriétaire est encore membre, donc l'adhésion reste aussi).
 
-Dans une seule transaction :
+Dans une seule transaction (la même pour supprimer l'organisation), qui prend d'abord ses verrous, dans cet ordre :
+les liens d'invitation de l'organisation, la ligne `organization`, puis les adhésions ; c'est l'ordre de
+`joinWithInvitation` (le lien, puis le membre), donc une invitation acceptée au même instant attend sans
+interblocage, et deux suppressions simultanées passent l'une après l'autre.
 
 - **`user`** : `deleted_at` posé (nouvelle colonne), e-mail remplacé par une adresse qui ne mène nulle part et
   ne peut pas servir (`ancien-<id>@leon.invalid`), `emailVerified`, `image`, `about` remis à vide,
   `twoFactorEnabled` à faux. Le **nom reste**. L'adresse d'origine redevient libre : la personne pourra se
-  réinscrire plus tard, comme quelqu'un de nouveau.
+  réinscrire plus tard, comme quelqu'un de nouveau. L'inscription refuse tout domaine en `.invalid` (domaine
+  réservé), pour que l'adresse d'ancien membre ne puisse pas être prise.
 - **Effacés** : ses comptes Better Auth (le mot de passe), ses sessions (déconnecté partout), sa 2FA, ses jetons
   d'API (révoqués : la CLI et l'extension s'arrêtent), ses liens d'invitation encore valables, ses connexions
   (Leon arrête de relever ses outils ; leurs sources restent, `connection_id` passe à nul comme dans
@@ -145,6 +149,10 @@ l'outil l'a écrite (`turns.author_email`) ; c'est de la donnée de la société
 6. La transaction.
 7. Pipedream et e-mails, sans faire échouer.
 8. Les cookies de session sont effacés et la page part vers la connexion.
+
+Le dialogue envoie ce qu'il a annoncé (`organizationToo` : la suppression du compte emporte l'organisation). Si la
+situation a changé depuis son ouverture (un autre membre est parti ou arrivé), la transaction refuse sans rien
+effacer (`situation`) : « La situation de l'organisation a changé : rechargez la page. »
 
 ### La base (migration `0039-suppression-compte.sql`)
 

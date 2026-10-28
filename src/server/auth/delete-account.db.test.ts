@@ -492,6 +492,42 @@ describe('deleteAccount : ce que le dialogue a montré', () => {
 
     expect((await deletionInfo(member)).activeMembers).toBe(2);
   });
+
+  // `joinWithInvitation` sert le lien, puis ajoute le membre (la clé étrangère verrouille l'organisation) : la
+  // suppression prend ses verrous dans le même ordre, sans quoi elle tient l'organisation en attendant le lien
+  // que l'inscription tient en attendant l'organisation (interblocage, une des deux échoue).
+  it('ne se bloque pas avec une inscription par le lien du partant', async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, member] = people as [TenantContext, TenantContext];
+    const newcomer = ((await team(['member'])).people as [TenantContext])[0];
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into invitation_links (tenant_id, created_by, token_hash, expires_at)
+       values ($1, $2, $3, now() + interval '7 days') returning id`,
+      [tenantId, owner.userId, randomUUID()],
+    );
+    const joining = await adminPool.connect();
+    try {
+      await joining.query('begin');
+      await joining.query('update invitation_links set used_at = now() where id = $1', [
+        rows[0]?.id,
+      ]);
+      const leaving = deleteAccount(owner, member.userId, false);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Avec l'ancien ordre, cet ajout attend l'organisation que la suppression tient, qui attend ce lien.
+      await joining.query(
+        `insert into member ("organizationId", "userId", role, "createdAt") values ($1, $2, 'member', now())`,
+        [tenantId, newcomer.userId],
+      );
+      await joining.query('commit');
+
+      await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+    } finally {
+      await joining.query('rollback');
+      joining.release();
+    }
+
+    expect((await deletionInfo(member)).activeMembers).toBe(2);
+  });
 });
 
 describe('deletionInfo', () => {

@@ -48,11 +48,19 @@ export type DeletionResult = {
 // Better Auth peut ranger plusieurs rôles séparés par des virgules (comme members.ts).
 const isOwnerRole = (role: string) => role.split(',').includes('owner');
 
-// Verrouille l'organisation puis ses adhésions, anciennes comprises : deux suppressions simultanées passent l'une
-// après l'autre, et la seconde relit les rôles que la première a laissés. Sans cela, deux propriétaires qui partent
-// ensemble verraient chacun l'autre en place et laisseraient l'organisation sans propriétaire. La ligne de
-// l'organisation, elle, fait attendre l'adhésion qu'une invitation acceptée au même instant est en train d'ajouter.
+// Verrouille les liens d'invitation, l'organisation, puis ses adhésions, anciennes comprises : deux suppressions
+// simultanées passent l'une après l'autre, et la seconde relit les rôles que la première a laissés. Sans cela, deux
+// propriétaires qui partent ensemble verraient chacun l'autre en place et laisseraient l'organisation sans
+// propriétaire. La ligne de l'organisation fait attendre l'adhésion qu'une invitation acceptée au même instant est en
+// train d'ajouter ; les liens passent avant, dans l'ordre de `joinWithInvitation` (le lien, puis le membre), pour que
+// les deux ne s'attendent pas l'un l'autre.
 async function lockMembers(tx: Tx, tenantId: string): Promise<void> {
+  await tx
+    .select({ id: invitationLinks.id })
+    .from(invitationLinks)
+    .where(eq(invitationLinks.tenantId, tenantId))
+    .orderBy(asc(invitationLinks.id))
+    .for('update');
   await tx
     .select({ id: organizations.id })
     .from(organizations)

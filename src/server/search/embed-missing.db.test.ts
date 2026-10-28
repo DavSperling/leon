@@ -10,7 +10,7 @@ import {
   type MockInstance,
   vi,
 } from 'vitest';
-import type { TenantContext } from '@/server/auth/tenant-context';
+import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
 import {
@@ -516,6 +516,30 @@ describe('embedMissingBatch', () => {
       [orphan.passageIds],
     );
     expect(rows[0]?.n).toBe(0);
+  });
+
+  // Un compte supprimé garde sa ligne `member` et ses sources : ce que la personne avait capté, et partagé, doit
+  // pouvoir être cherché. Seules les entrées (session, jeton) lui sont fermées.
+  it('complète les vecteurs des passages d’un ancien membre, dont le contexte reste fermé ailleurs', async () => {
+    const token = `jeton-${randomUUID()}`;
+    const team = await createTestTenant(['Parti']);
+    tenantIds.push(team.tenantId);
+    const [leaver] = team.members as [TenantContext];
+    const pending = await seedPassages(leaver, { count: 2, token, acl: [team.tenantId] });
+    await adminPool.query('update "user" set deleted_at = now() where id = $1', [leaver.userId]);
+
+    const done = (await embedMissingBatch({ embedder: embedderFor(token) }, BIG)).stored;
+
+    expect(done).toBe(2);
+    const { rows } = await adminPool.query<{ n: number }>(
+      'select count(*)::int as n from passage_vectors where passage_id = any($1)',
+      [pending.passageIds],
+    );
+    expect(rows[0]?.n).toBe(2);
+    expect(await resolveTenantContext(leaver.userId, team.tenantId)).toBeNull();
+    expect(
+      await resolveTenantContext(leaver.userId, team.tenantId, { includeFormer: true }),
+    ).toEqual(leaver);
   });
 });
 

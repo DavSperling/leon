@@ -106,7 +106,7 @@ export async function indexIngestRun(
   job: PipelineJob,
   deps: { embedder: Embedder | null },
 ): Promise<'indexe' | 'absent'> {
-  const ctx = await resolveTenantContext(job.userId, job.tenantId);
+  const ctx = await resolveTenantContext(job.userId, job.tenantId, { includeFormer: true });
   if (!ctx) return 'absent';
   const scope = await claimRun(ctx, job.ingestRunId);
   if (!scope) return 'absent';

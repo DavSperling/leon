@@ -59,7 +59,7 @@ describe('listCatalog', () => {
     expect(items.map((item) => PROVIDER_FAMILIES_ORDER.indexOf(item.family))).toEqual(
       items.map((item) => PROVIDER_FAMILIES_ORDER.indexOf(item.family)).sort((a, b) => a - b),
     );
-    expect(labelsOf('dev')).toEqual(['GitHub', 'Linear', 'Notion']);
+    expect(labelsOf('dev')).toEqual(['GitHub', 'GitLab', 'Linear', 'Notion', 'Sentry']);
     expect(labelsOf('reunions')).toEqual([
       'Circleback',
       'Claap',
@@ -76,14 +76,12 @@ describe('listCatalog', () => {
       'Basecamp',
       'ClickUp',
       'Confluence',
-      'GitLab',
       'Google Drive',
       'Jira',
       'Miro',
       'monday.com',
       'Plane',
       'Productboard',
-      'Sentry',
       'Shortcut',
       'Trello',
     ]);

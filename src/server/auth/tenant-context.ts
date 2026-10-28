@@ -1,7 +1,7 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/server/db/client';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 
 export type TenantContext = {
   readonly tenantId: string;
@@ -16,11 +16,16 @@ export function principalsFor(userId: string, tenantId: string): string[] {
   return [userId, tenantId];
 }
 
+// Un ancien membre (compte supprimé, 0039) garde son adhésion mais n'entre plus : une session ouverte pendant la
+// suppression ne mène nulle part.
+const activeMember = (userId: string) => and(eq(members.userId, userId), isNull(users.deletedAt));
+
 export async function firstOrganizationId(userId: string): Promise<string | null> {
   const [row] = await db
     .select({ organizationId: members.organizationId })
     .from(members)
-    .where(eq(members.userId, userId))
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(activeMember(userId))
     .orderBy(asc(members.createdAt), asc(members.id))
     .limit(1);
   return row?.organizationId ?? null;
@@ -30,7 +35,8 @@ async function isMember(userId: string, tenantId: string): Promise<boolean> {
   const rows = await db
     .select({ id: members.id })
     .from(members)
-    .where(and(eq(members.userId, userId), eq(members.organizationId, tenantId)))
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(and(activeMember(userId), eq(members.organizationId, tenantId)))
     .limit(1);
   return rows.length > 0;
 }

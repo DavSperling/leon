@@ -1,10 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, isNull, notExists, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
 import { apiTokens } from '@/server/db/schema/api-tokens';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { principalsFor, type TenantContext } from './tenant-context';
 
 export type ApiTokenRow = {
@@ -50,12 +50,19 @@ export async function createApiToken(
 const ownedBy = (ctx: TenantContext) =>
   and(eq(apiTokens.userId, ctx.userId), eq(apiTokens.tenantId, ctx.tenantId));
 
-// L'adhésion en cours, depuis avant la création du jeton : celui d'une ancienne adhésion ne vaut plus rien.
+// L'adhésion en cours, depuis avant la création du jeton : celui d'une ancienne adhésion ne vaut plus rien. Un
+// ancien membre (compte supprimé) garde son adhésion, mais ses jetons, même non révoqués, ne valent plus rien.
 const currentMembership = and(
   eq(members.userId, apiTokens.userId),
   eq(members.organizationId, apiTokens.tenantId),
   // Une seconde de marge : l'adhésion prend son heure côté Node, le jeton côté base (écart d'horloge).
   gte(apiTokens.createdAt, sql`${members.createdAt} - interval '1 second'`),
+  notExists(
+    db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.id, members.userId), isNotNull(users.deletedAt))),
+  ),
 );
 
 // Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.

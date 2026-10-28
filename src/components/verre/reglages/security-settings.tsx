@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useTransition } from 'react';
 import {
+  changePasswordAction,
   disableTotpAction,
   enableTotpAction,
   regenerateBackupCodesAction,
@@ -37,6 +38,67 @@ function BackupCodes({ codes }: { codes: string[] }) {
           <li key={code}>{code}</li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+export function PasswordSettings() {
+  const t = useTranslations('security');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [pending, startTransition] = useTransition();
+  return (
+    <div className="grid gap-5">
+      <div>
+        <h3 className="text-title font-semibold text-fg">{t('passwordTitle')}</h3>
+        <p className="mt-1 text-ui text-muted">{t('passwordDescription')}</p>
+      </div>
+      {message && (
+        <Notice tone="success" live="status">
+          {nb(message)}
+        </Notice>
+      )}
+      {error && (
+        <Notice tone="error" live="alert">
+          {nb(error)}
+        </Notice>
+      )}
+      <form
+        action={(data) => {
+          setError('');
+          setMessage('');
+          startTransition(async () => {
+            const result = await changePasswordAction(
+              read(data, 'current'),
+              read(data, 'password'),
+              read(data, 'confirmation'),
+            );
+            if ('error' in result) setError(result.error);
+            else setMessage(t('passwordChanged'));
+          });
+        }}
+        className="grid max-w-md gap-4"
+      >
+        <Field label={t('currentPassword')}>
+          <Input name="current" type="password" autoComplete="current-password" required />
+        </Field>
+        <Field label={t('newPassword')} help={t('passwordHint')}>
+          <Input
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            maxLength={128}
+          />
+        </Field>
+        <Field label={t('confirmPassword')}>
+          <Input name="confirmation" type="password" autoComplete="new-password" required />
+        </Field>
+        <Button type="submit" variant="primary" loading={pending} className="w-fit">
+          {t('changePassword')}
+        </Button>
+      </form>
     </div>
   );
 }

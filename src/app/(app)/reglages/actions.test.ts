@@ -8,6 +8,7 @@ import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
 import {
+  changePasswordAction,
   createInvitationAction,
   createTokenAction,
   disableTotpAction,
@@ -29,6 +30,7 @@ vi.mock('@/server/auth/auth', () => ({
   auth: {
     api: {
       updateUser: vi.fn(),
+      changePassword: vi.fn(),
       enableTwoFactor: vi.fn(),
       verifyTOTP: vi.fn(),
       revokeOtherSessions: vi.fn(),
@@ -54,6 +56,49 @@ beforeEach(() => {
   vi.mocked(requireUserContext).mockResolvedValue(ctx);
   vi.mocked(getSession).mockResolvedValue({ user: { email: 'amos@example.com' } } as never);
   vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+});
+
+describe('changePasswordAction', () => {
+  it('change le mot de passe et ferme les autres sessions', async () => {
+    await expect(changePasswordAction('ancien-mdp', 'nouveau-mdp', 'nouveau-mdp')).resolves.toEqual(
+      {
+        ok: true,
+      },
+    );
+    expect(auth.api.changePassword).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: {
+          currentPassword: 'ancien-mdp',
+          newPassword: 'nouveau-mdp',
+          revokeOtherSessions: true,
+        },
+      }),
+    );
+  });
+
+  it('refuse un mot de passe trop court ou mal confirmé sans appeler Better Auth', async () => {
+    await expect(changePasswordAction('ancien-mdp', 'court', 'court')).resolves.toHaveProperty(
+      'error',
+    );
+    await expect(
+      changePasswordAction('ancien-mdp', 'nouveau-mdp', 'autre-mdp'),
+    ).resolves.toHaveProperty('error');
+    expect(auth.api.changePassword).not.toHaveBeenCalled();
+  });
+
+  it('compte dans la limite de la connexion, et rend une erreur sur un mauvais mot de passe actuel', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+    await expect(changePasswordAction('x', 'nouveau-mdp', 'nouveau-mdp')).resolves.toEqual({
+      error: expect.any(String),
+    });
+    expect(auth.api.changePassword).not.toHaveBeenCalled();
+
+    vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+    vi.mocked(auth.api.changePassword).mockRejectedValue(new Error('INVALID_PASSWORD'));
+    await expect(
+      changePasswordAction('faux', 'nouveau-mdp', 'nouveau-mdp'),
+    ).resolves.toHaveProperty('error');
+  });
 });
 
 describe('double authentification', () => {

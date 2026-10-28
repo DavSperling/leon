@@ -99,6 +99,28 @@ async function passwordCheckAllowed(): Promise<boolean> {
   return authAttemptAllowed('connexion', session.user.email, await requestHeaders());
 }
 
+// Les autres sessions, peut-être volées, sont fermées ; Better Auth en ouvre une nouvelle pour celle-ci.
+export async function changePasswordAction(
+  current: string,
+  password: string,
+  confirmation: string,
+): Promise<{ ok: true } | { error: string }> {
+  const t = await getTranslations('security');
+  const form = await getTranslations('auth');
+  if (password.length < 8 || password.length > 128) return { error: form('passwordLength') };
+  if (password !== confirmation) return { error: form('passwordsMismatch') };
+  if (!(await passwordCheckAllowed())) return { error: t('tooManyAttempts') };
+  try {
+    await auth.api.changePassword({
+      body: { currentPassword: current, newPassword: password, revokeOtherSessions: true },
+      headers: await requestHeaders(),
+    });
+  } catch {
+    return { error: t('wrongPassword') };
+  }
+  return { ok: true };
+}
+
 export async function enableTotpAction(
   password: string,
 ): Promise<{ uri: string; backupCodes: string[] } | { error: string }> {

@@ -6,7 +6,11 @@ import { AboutSettings } from '@/components/verre/reglages/about';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
-import { ProfileSettings, SecuritySettings } from '@/components/verre/reglages/security-settings';
+import {
+  PasswordSettings,
+  ProfileSettings,
+  SecuritySettings,
+} from '@/components/verre/reglages/security-settings';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
@@ -69,7 +73,10 @@ export default async function SettingsPage() {
           ),
           securite: (
             <Section title={s('title')} description={s('description')} className={SECTION}>
-              <SecuritySettings enabled={Boolean(session?.user.twoFactorEnabled)} />
+              <div className="grid gap-12">
+                <PasswordSettings />
+                <SecuritySettings enabled={Boolean(session?.user.twoFactorEnabled)} />
+              </div>
             </Section>
           ),
           equipe: <MembersSection members={members} canInvite={mayInvite} />,

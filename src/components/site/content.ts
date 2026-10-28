@@ -1254,7 +1254,7 @@ const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
   },
   {
     title: 'Audited MCP access',
-    text: 'Every read over MCP is logged. Personal tokens can be revoked at any time.',
+    text: 'Each source an assistant opens in full over MCP (fetch) is logged. Personal tokens can be revoked at any time.',
   },
   {
     title: 'A single datastore',
@@ -1331,7 +1331,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Does Leon summarize our documents?',
-    a: 'No. It stores the original text verbatim and indexes it for search. Answers quote that text and link to the original.',
+    a: 'No. It stores the original text verbatim and indexes it for search. Each claim in an answer cites that text, with a link to the original.',
   },
   {
     q: 'Can our AI assistant query Leon?',

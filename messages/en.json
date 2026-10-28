@@ -836,7 +836,7 @@
       "assistantPoints": {
         "briefing": "Your coding assistant opens each session with the morning briefing.",
         "sessions": "Coding sessions are captured when they end, text only.",
-        "log": "Every MCP read is written to an audit log."
+        "log": "Each source your assistant opens in full is written to an audit log."
       },
       "assistantLink": "Chat, morning briefing and MCP",
       "terminal": "coding assistant · Leon MCP server",
@@ -985,7 +985,7 @@
           "text": "The reverse direction: your AI assistant queries Leon over MCP with a personal token you can revoke at any time.",
           "p1": "search, fetch, briefing, remember",
           "p2": "Scoped to your permissions",
-          "p3": "Audit log of every read"
+          "p3": "Audit log of the sources it opens"
         }
       },
       "planned": {

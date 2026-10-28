@@ -6,7 +6,7 @@ import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
 
-// Supprimer son compte (0039) : la personne part, pas son travail. La ligne `user` reste, vidée et verrouillée, car
+// Supprimer son compte (0040) : la personne part, pas son travail. La ligne `user` reste, vidée et verrouillée, car
 // ses sources en dépendent (clé étrangère en cascade) ; le seul membre actif, lui, emporte l'organisation. Tout se
 // fait en base dans une seule transaction ; Pipedream et les e-mails, après, sont l'affaire de l'appelant.
 //

@@ -16,7 +16,7 @@ export function principalsFor(userId: string, tenantId: string): string[] {
   return [userId, tenantId];
 }
 
-// Un ancien membre (compte supprimé, 0039) garde son adhésion mais n'entre plus : une session ouverte pendant la
+// Un ancien membre (compte supprimé, 0040) garde son adhésion mais n'entre plus : une session ouverte pendant la
 // suppression ne mène nulle part. Seul le travail de fond sur ce qu'il a laissé à l'organisation (indexation,
 // vecteurs) passe `includeFormer`.
 type ResolveOptions = { includeFormer?: boolean };

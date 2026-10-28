@@ -154,7 +154,7 @@ Le dialogue envoie ce qu'il a annoncé (`organizationToo` : la suppression du co
 situation a changé depuis son ouverture (un autre membre est parti ou arrivé), la transaction refuse sans rien
 effacer (`situation`) : « La situation de l'organisation a changé : rechargez la page. »
 
-### La base (migration `0039-suppression-compte.sql`)
+### La base (migration `0040-suppression-compte.sql`)
 
 - `alter table "user" add column deleted_at timestamptz`, et rien d'autre : `leon_app` peut faire tout le reste
   lui-même (les tables de Better Auth, `api_tokens` et `invitation_links` n'ont pas de RLS ; les jetons se

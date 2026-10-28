@@ -40,7 +40,7 @@ export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
     .select({
       id: members.id,
       name: users.name,
-      // Un ancien membre (supprimé, 0039) reste dans la liste sous son nom, sans l'adresse qu'on lui a substituée.
+      // Un ancien membre (supprimé, 0040) reste dans la liste sous son nom, sans l'adresse qu'on lui a substituée.
       email: sql<string>`case when ${users.deletedAt} is null then ${users.email} else '' end`,
       role: members.role,
       former: sql<boolean>`${users.deletedAt} is not null`,

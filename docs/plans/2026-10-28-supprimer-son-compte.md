@@ -46,7 +46,7 @@ l'appellent, préviennent Pipedream et envoient l'e-mail. La seule migration ajo
 ### Tâche 1 : la base (migration, module de suppression)
 
 **Fichiers :**
-- Créer : `src/server/db/migrations/0039-suppression-compte.sql`
+- Créer : `src/server/db/migrations/0040-suppression-compte.sql`
 - Modifier : `src/server/db/schema/auth.ts` (colonne `deletedAt` sur `users`)
 - Créer : `src/server/auth/delete-account.ts`
 - Modifier : `src/server/briefing/briefings.ts` (`refreshBriefing` ne fait rien pour un compte supprimé)
@@ -130,7 +130,7 @@ voit) :
   - Dans le test de `briefings.ts` : `refreshBriefing` pour un compte supprimé n'écrit rien et n'appelle pas le
     faux modèle.
 - [ ] **Étape 2 : les lancer, vérifier qu'ils échouent** (module absent).
-- [ ] **Étape 3 : écrire la migration** `0039-suppression-compte.sql` : `alter table "user" add column deleted_at
+- [ ] **Étape 3 : écrire la migration** `0040-suppression-compte.sql` : `alter table "user" add column deleted_at
   timestamptz;` avec une ligne de commentaire d'en-tête comme les autres migrations ; et `deletedAt:
   timestamp('deleted_at', { withTimezone: true })` dans `users`.
 - [ ] **Étape 4 : écrire `delete-account.ts` et la garde de `refreshBriefing`.**
@@ -261,7 +261,7 @@ dialogue.
 
 ### Tâche 6 : vérification à l'écran (Claude, pas un agent)
 
-Sur `localhost:3008` (base locale `leon_reglages_ux`, migrée à 0039), en français et en anglais : un membre qui
+Sur `localhost:3008` (base locale `leon_reglages_ux`, migrée à 0040), en français et en anglais : un membre qui
 supprime son compte (puis son nom « ancien membre » dans Équipe pour un autre) ; le seul propriétaire avec un autre
 membre (successeur obligatoire) ; un compte avec 2FA ; la suppression de l'organisation par son propriétaire ; les
 mauvais mot de passe, code et mot. Puis montrer à Amos avant d'ouvrir la PR.

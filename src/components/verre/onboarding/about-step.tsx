@@ -3,7 +3,16 @@
 import { Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { type ReactNode, useActionState, useEffect, useRef, useState, useTransition } from 'react';
+import {
+  type FormEvent,
+  type ReactNode,
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { setLocaleAction } from '@/app/(app)/reglages/actions';
 import {
   type AboutStepErrors,
@@ -130,6 +139,14 @@ export function AboutStep({
         ?.focus();
   }, [state]);
 
+  // Pas de `action={formAction}` : React remet le formulaire à zéro après une action, et les listes (Radix Select)
+  // se vident avec lui. On envoie donc nous-mêmes, dans une transition, ce qui garde aussi `pending`.
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    startTransition(() => formAction(data));
+  };
+
   const chooseLanguage = (next: string) => {
     if (next === locale) return;
     const data = new FormData();
@@ -152,7 +169,7 @@ export function AboutStep({
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
-      <form ref={formRef} noValidate action={formAction} className="grid content-start gap-5">
+      <form ref={formRef} noValidate onSubmit={submit} className="grid content-start gap-5">
         <div>
           <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">
             {mode === 'member' ? t('memberTitle', { organization: orgName }) : t('title')}

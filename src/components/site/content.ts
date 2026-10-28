@@ -746,21 +746,20 @@ const NAV_LINKS_EN: Twin<typeof NAV_LINKS> = [
 ];
 
 const TAGLINES_EN: Twin<typeof TAGLINES> = {
-  hero: 'What you promised your clients, found and cited.',
-  source: 'The source, or nothing.',
-  depart: 'When someone leaves, their promises stay.',
-  dit: 'What was said stays said.',
-  pitch:
-    'What was said and promised to your clients, found with its source. When Leon doesn’t know, it says so.',
+  hero: 'Know exactly what you promised. Source included.',
+  source: 'Every answer, cited.',
+  depart: 'People leave. Their commitments stay on record.',
+  dit: 'Everything your team said, on record.',
+  pitch: 'Every client commitment, found with its source. When the record is silent, Leon says so.',
 };
 
 const DEMOS_EN: Demo[] = [
   {
     id: 'promesse',
-    tab: 'A client promise',
+    tab: 'A client commitment',
     query: 'what did we promise ACME for V2?',
     answer:
-      'At the Oct 3 monthly check-in, Julie committed to shipping V2 on Nov 15 [1]. The signed quote keeps that date but leaves out the data migration [2]. The migration ticket is still open [3].',
+      'At the Oct 3 monthly check-in, Julie committed to delivering V2 on Nov 15 [1]. The signed quote confirms the date but excludes the data migration [2], and the migration ticket is still open [3].',
     sources: [
       {
         tool: 'granola',
@@ -784,7 +783,7 @@ const DEMOS_EN: Demo[] = [
         title: 'ACME: data migration',
         author: 'Sophie Laurent',
         date: 'Oct 21, 2026',
-        excerpt: 'Waiting on the **export file** from the client. Status: Todo.',
+        excerpt: 'Blocked on the client’s **export file**. Status: Todo.',
       },
     ],
   },
@@ -793,7 +792,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'A known bug',
     query: 'is this PDF export bug already known?',
     answer:
-      'Yes. Three customers have reported it since Monday [1]. The team reproduced it on invoices longer than 50 lines [2], and the fix is in review [3].',
+      'Yes. Three customers have reported it since Monday [1]. Engineering reproduced it on invoices longer than 50 lines [2], and the fix is in review [3].',
     sources: [
       {
         tool: 'intercom',
@@ -817,16 +816,16 @@ const DEMOS_EN: Demo[] = [
         title: 'fix(export): paginate PDF rendering',
         author: 'Thomas Girard',
         date: 'Oct 22, 2026',
-        excerpt: 'Renders **page by page** instead of one block. Review requested.',
+        excerpt: 'Renders **page by page** instead of in one pass. Review requested.',
       },
     ],
   },
   {
     id: 'depart',
-    tab: 'Someone left',
+    tab: 'A departure',
     query: 'what was Thomas working on before he left?',
     answer:
-      'Thomas had two open items: the Nordia dashboard redesign, due at the end of November [1], and the revised quote for Verlant, promised for last week [2]. His handover notes are in Notion [3].',
+      'Thomas left two open items: the Nordia dashboard redesign, due at the end of November [1], and a revised quote for Verlant, promised for last week [2]. His handover notes are in Notion [3].',
     sources: [
       {
         tool: 'asana',
@@ -859,7 +858,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'No source',
     query: 'what price did we give Verlant in 2024?',
     answer:
-      'I don’t know. No source on record mentions a price agreed with Verlant in 2024. The first quote on record is from March 2025 [1].',
+      'I don’t know. No source on record mentions a price agreed with Verlant in 2024. The earliest quote on record dates from March 2025 [1].',
     unknown: true,
     sources: [
       {
@@ -868,7 +867,7 @@ const DEMOS_EN: Demo[] = [
         title: 'Verlant: first quote',
         author: 'Karim Benali',
         date: 'Mar 12, 2025',
-        excerpt: 'First quote sent at **standard pricing**, no discount.',
+        excerpt: 'First quote sent at **list price**, no discount.',
       },
     ],
   },
@@ -879,9 +878,9 @@ const TEAMS_EN: Team[] = [
     slug: 'direction',
     label: 'Leadership',
     icon: Compass,
-    pitch: 'Know what was said and promised, without digging for it.',
-    headline: 'What you promised your clients, found and cited.',
-    lead: 'A meeting three months ago, a quote, an email thread. When a client disputes something, Leon finds the record and cites it. When there is nothing on record, it says so.',
+    pitch: 'Every commitment made to a client, with the source to back it.',
+    headline: 'Know exactly what you promised. Source included.',
+    lead: 'A meeting three months ago, a signed quote, an email thread. When a client disputes scope, Leon retrieves the record and cites it. When there is no record, it says so.',
     questions: [
       'what did we promise this client in last month’s meeting?',
       'the client says it was out of scope: what did we write?',
@@ -890,16 +889,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'Answers with citations',
-        text: 'Every sentence links to its source: the meeting, the note, the email. One click opens the original.',
+        title: 'Cited answers',
+        text: 'Every sentence links to the meeting, note or email it comes from. One click opens the original.',
       },
       {
-        title: 'People leave, the record stays',
-        text: 'What someone wrote in the team’s shared tools can still be searched after they leave.',
+        title: 'Departures without data loss',
+        text: 'Anything a person wrote in the team’s shared tools stays searchable after they leave.',
       },
       {
-        title: 'The original, not a summary',
-        text: 'Leon keeps each item exactly as written. It finds the history instead of rewriting it.',
+        title: 'The original wording',
+        text: 'Leon stores every item verbatim, so you quote what was actually said.',
       },
     ],
     demo: DEMOS_EN[0] as Demo,
@@ -909,9 +908,9 @@ const TEAMS_EN: Team[] = [
     slug: 'ventes',
     label: 'Sales',
     icon: Handshake,
-    pitch: 'Walk into the meeting knowing what has already been said.',
-    headline: 'Walk into the meeting knowing what has already been said.',
-    lead: 'CRM notes, call recordings, emails. Before each meeting, the account’s history is one search away instead of spread across three tools.',
+    pitch: 'Walk into every meeting with the full account history.',
+    headline: 'Walk into every meeting with the full account history.',
+    lead: 'CRM notes, call recordings, email. Before each meeting, the account history is one search away instead of spread across three tools.',
     questions: [
       'where are we in the ACME negotiation?',
       'what did this prospect ask on the last call?',
@@ -920,16 +919,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'The whole account history',
-        text: 'CRM, recorded meetings and email in one list of results, most useful first.',
+        title: 'One view of the account',
+        text: 'CRM records, call transcripts and email in a single ranked result list.',
       },
       {
-        title: 'The exact words',
-        text: 'A phrase in quotes finds the exact place it was written or said.',
+        title: 'Exact wording',
+        text: 'Put a phrase in quotes to find exactly where it was written or said.',
       },
       {
-        title: 'Nothing to re-enter',
-        text: 'Leon syncs your tools every 15 minutes. Nobody fills in a record for it.',
+        title: 'Synced every 15 minutes',
+        text: 'Leon pulls from your tools on its own. Nobody updates a record for it.',
       },
     ],
     demo: DEMOS_EN[0] as Demo,
@@ -939,9 +938,9 @@ const TEAMS_EN: Team[] = [
     slug: 'support',
     label: 'Customer support',
     icon: Headset,
-    pitch: 'Know whether a bug is already known, with the ticket to show for it.',
-    headline: 'Is this a known bug? The answer comes with the ticket.',
-    lead: 'Support conversations, product tickets, fixes in review. Leon connects what the customer writes to what the team already knows.',
+    pitch: 'Know whether a bug is already known, with the ticket to prove it.',
+    headline: 'Known bug or new one? The answer comes with the ticket.',
+    lead: 'Support conversations, engineering tickets, fixes in review. Leon links what a customer reports to what the team already knows.',
     questions: [
       'is this export bug already known?',
       'what did we tell them last time?',
@@ -950,16 +949,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'Support and product in one search',
-        text: 'A customer conversation and the ticket that fixes it come up in the same search.',
+        title: 'Support and engineering in one search',
+        text: 'The customer conversation and the ticket that fixes it come back in the same results.',
       },
       {
         title: 'Consistent replies',
-        text: 'What the team already replied is in front of you before you reply again.',
+        text: 'See what the team already told the customer before you reply again.',
       },
       {
-        title: 'A link to the original',
-        text: 'Every result opens in the tool it came from, where you can act on it.',
+        title: 'Deep links to the source',
+        text: 'Every result opens in its original tool, where you can act on it.',
       },
     ],
     demo: DEMOS_EN[1] as Demo,
@@ -980,9 +979,9 @@ const TEAMS_EN: Team[] = [
     slug: 'produit-tech',
     label: 'Product and engineering',
     icon: GitPullRequest,
-    pitch: 'The PR, its reviews, the ticket and the discussion around it.',
-    headline: 'The PR, its reviews, the ticket, and the discussion around it.',
-    lead: 'Leon keeps the history around the code: why a choice was made, who reviewed it, what is still open. Your coding assistant queries it over MCP, and the morning briefing is waiting when a session starts.',
+    pitch: 'The PR, its reviews, the ticket and the discussion behind it.',
+    headline: 'The PR, its reviews, the ticket, and the discussion behind it.',
+    lead: 'Leon indexes the history around your code: why a decision was made, who reviewed it, what is still open. Your coding assistant queries it over MCP and opens each session with the morning briefing.',
     questions: [
       'the PR that changed the refresh token',
       'tool:github type:ticket',
@@ -991,16 +990,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'The why behind a change',
-        text: 'Reviews, tickets and design meetings come up with the PR they explain.',
+        title: 'The why behind every change',
+        text: 'Reviews, tickets and design meetings surface next to the PR they explain.',
       },
       {
-        title: 'Inside your assistant',
-        text: 'Leon’s MCP server gives your coding assistant the team’s memory, with the same permissions as you.',
+        title: 'Native to your assistant',
+        text: 'Leon’s MCP server gives your coding assistant the team’s history, scoped to your permissions.',
       },
       {
         title: 'The morning briefing',
-        text: 'What you did, what changed, what is still open: 250 words, ready when you start.',
+        text: 'What you did, what changed, what is still open: 250 words, ready when your session starts.',
       },
     ],
     demo: DEMOS_EN[1] as Demo,
@@ -1020,9 +1019,9 @@ const TEAMS_EN: Team[] = [
     slug: 'projets',
     label: 'Project managers',
     icon: KanbanSquare,
-    pitch: 'Handovers that no longer depend on one person’s memory.',
-    headline: 'When someone leaves, their promises stay.',
-    lead: 'Agencies, IT services firms, consultancies: commitments live in meetings and tasks. Leon keeps them, so a handover no longer depends on what one person remembers.',
+    pitch: 'Handovers that don’t depend on one person’s memory.',
+    headline: 'People leave. Their commitments stay on record.',
+    lead: 'Agencies, IT services firms, consultancies: commitments are made in meetings and tracked in tasks. Leon indexes both, so a handover no longer depends on what one person remembers.',
     questions: [
       'what was Thomas working on before he left?',
       'what was decided about phase 2?',
@@ -1031,16 +1030,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'Meetings you can search',
-        text: 'Transcripts from your meeting tools are kept and searched like everything else.',
+        title: 'Searchable meetings',
+        text: 'Transcripts from your meeting recorders are indexed and searched like everything else.',
       },
       {
-        title: 'Commitments kept',
-        text: 'What was promised in a meeting shows up next to the task that tracks it.',
+        title: 'Commitments tracked',
+        text: 'A promise made in a meeting surfaces next to the task that tracks it.',
       },
       {
-        title: 'One discussion per topic',
-        text: 'Open a discussion about a project: Leon searches every source and answers with citations.',
+        title: 'One chat per project',
+        text: 'Open a chat about a project: Leon searches every source and answers with citations.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1063,9 +1062,9 @@ const TEAMS_EN: Team[] = [
     slug: 'arrivees',
     label: 'New hires',
     icon: DoorOpen,
-    pitch: 'New people find what the team already knows, on their own.',
-    headline: 'New hires find what the team already knows, on their own.',
-    lead: 'In the first weeks, you ask the questions everyone else has forgotten. Leon answers them from the team’s sources, without pulling a colleague away each time.',
+    pitch: 'New hires get up to speed without interrupting the team.',
+    headline: 'New hires get up to speed without interrupting the team.',
+    lead: 'In the first weeks, new people ask the questions everyone else stopped asking. Leon answers them from the team’s own sources, without pulling a colleague off their work.',
     questions: [
       'how do we deploy to production?',
       'who handles the ACME account?',
@@ -1074,16 +1073,16 @@ const TEAMS_EN: Team[] = [
     ],
     gains: [
       {
-        title: 'A handbook you can question',
-        text: 'Pages, tickets and past meetings answer the first-week questions.',
+        title: 'A handbook that answers back',
+        text: 'Docs, tickets and past meetings answer the first-week questions.',
       },
       {
-        title: 'The context on an account',
-        text: 'Who handles which client, what was said, what is in progress: before the first meeting.',
+        title: 'Account context up front',
+        text: 'Who owns which client, what was said, what is in progress: before the first meeting.',
       },
       {
-        title: 'Private stays private',
-        text: 'What connected tools read is shared with the team, except an Outlook mailbox. Each person’s AI conversations, discussions and notes are visible only to them.',
+        title: 'Clear privacy rules',
+        text: 'Content from shared connections is visible to the team, except email, Google Drive and Slack. Each person’s AI conversations, chats and notes are visible only to them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1097,9 +1096,9 @@ const SITUATIONS_EN: Situation[] = [
     team: 'produit-tech',
     who: 'Developer, 25-person SaaS company',
     moment: 'Monday, 9 a.m.',
-    title: 'Pick up where you left off',
+    title: 'Resume where you left off',
     question: 'where was I on the billing repo?',
-    does: 'On Friday she left a migration half done. When her session opens, the repo’s morning briefing is waiting in her coding assistant: what she did, the review that came in since, the reopened issue, what is still open.',
+    does: 'She left a migration half done on Friday. When her session starts, the repo’s morning briefing is already in her coding assistant: what she did, the review that came in since, the reopened issue, what is still open.',
     gain: 'She and her assistant start from the right place, without reopening three tabs.',
     tools: ['github'],
     alsoReads: 'Her coding sessions',
@@ -1111,19 +1110,19 @@ const SITUATIONS_EN: Situation[] = [
     moment: 'Before rewriting a module',
     title: 'Check what the team already decided',
     question: 'have we already tried generating PDFs in the browser?',
-    does: 'He asks his coding assistant to check in Leon over MCP. Leon finds the PR closed in March, the review that explains why it was dropped (accented characters rendered badly) and the decision written down in Notion.',
-    gain: 'The assistant doesn’t retrace a path the team already paid for, or it says what has changed since.',
+    does: 'He has his coding assistant query Leon over MCP. Leon returns the PR closed in March, the review explaining why it was dropped (broken rendering of accented characters) and the decision record in Notion.',
+    gain: 'The assistant doesn’t repeat a dead end the team already paid for, or it flags what has changed since.',
     tools: ['github', 'linear', 'notion'],
   },
   {
     id: 'conversation-ia',
     team: 'produit-tech',
     who: 'Product manager, 40-person company',
-    moment: 'Redoing an analysis from a month ago',
-    title: 'Find what you worked out with your AI assistant',
+    moment: 'Rerunning an analysis from last month',
+    title: 'Retrieve what you worked out with your AI assistant',
     question: 'the cohort retention query without the test accounts',
-    does: 'In September he built the query with his AI assistant, pitfalls included. The conversation, captured by the extension, comes back in one search, next to the ticket that asked for the curve. Only he can see it.',
-    gain: 'The final version, not the first attempt that was wrong, with the reasoning around it.',
+    does: 'In September he built the query with his AI assistant, edge cases included. The conversation, captured by the extension, comes back in one search next to the ticket that requested the chart. Only he can see it.',
+    gain: 'The final, corrected query, with the reasoning that led to it.',
     tools: ['linear'],
     alsoReads: 'His AI conversations',
   },
@@ -1132,10 +1131,10 @@ const SITUATIONS_EN: Situation[] = [
     team: 'produit-tech',
     who: 'On-call developer, 30-person SaaS company',
     moment: '10 p.m., an error in an unfamiliar module',
-    title: 'Know whether the incident has happened before',
+    title: 'Find out whether the incident has happened before',
     question: 'has this import error happened before?',
-    does: 'Leon finds the Sentry issue from March, the PR that fixed it, the incident ticket and the postmortem. The next day, a discussion turns them into a draft of the new postmortem.',
-    gain: 'She applies the known workaround instead of waking up the module’s author.',
+    does: 'Leon returns the Sentry issue from March, the PR that fixed it, the incident ticket and the postmortem. The next day, a chat turns them into a first draft of the new postmortem.',
+    gain: 'She applies the known workaround instead of paging the module’s author.',
     tools: ['sentry', 'github', 'linear', 'notion'],
   },
   {
@@ -1143,10 +1142,10 @@ const SITUATIONS_EN: Situation[] = [
     team: 'ventes',
     who: 'Customer success manager, 70-person SaaS company',
     moment: '30 days before a renewal',
-    title: 'Everything that went wrong with this client',
+    title: 'Everything that went wrong with this account',
     question: 'what went wrong with Nordia over the past year?',
-    does: 'He took over the account in June. Leon cross-checks support conversations, bugs tied to the client, recorded calls and CRM notes, then says what is fixed, with the date, and what is not.',
-    gain: 'He learns about the client’s problems before the meeting, not during it.',
+    does: 'He inherited the account in June. Leon cross-references support conversations, bugs linked to the client, recorded calls and CRM notes, then reports what is fixed, with dates, and what is not.',
+    gain: 'He walks into the renewal meeting already knowing every complaint on record.',
     tools: ['intercom', 'linear', 'fathom', 'hubspot'],
   },
 ];
@@ -1155,56 +1154,56 @@ const PILLARS_EN: Pillar[] = [
   {
     id: 'capte',
     kicker: 'Capture',
-    title: 'It connects to your tools and to your AI assistants.',
-    text: `${TOOL_COUNT} tools you connect with an API key or OAuth, synced every 15 minutes. Conversations with your AI assistants come in through the browser extension and your coding assistant.`,
+    title: 'Connects to your tools and AI assistants.',
+    text: `${TOOL_COUNT} connectors over OAuth or an API key, synced incrementally every 15 minutes. AI conversations arrive through the browser extension and a coding-assistant hook.`,
     points: [
-      'Polls every 15 minutes, no webhooks',
-      'Extension: consent screen, a switch per site, never in private browsing',
-      'Coding assistant: each session sent when it ends',
+      'Polls each tool every 15 minutes; nothing to set up on the vendor side',
+      'Extension: explicit consent, per-site toggle, paused in private windows',
+      'Coding assistant: each session captured when it ends',
     ],
   },
   {
     id: 'garde',
-    kicker: 'Keep',
-    title: 'The raw record, as written, and who can see it.',
-    text: 'Leon doesn’t summarize and doesn’t keep fact sheets. It stores each item as it was written, with a link to the original, and masks recognizable secrets before storing them.',
+    kicker: 'Store',
+    title: 'Stores the originals, with access rules attached.',
+    text: 'Leon stores each item verbatim, with a link to the original. Recognizable secrets are redacted before anything is stored.',
     points: [
-      'Every result opens in its original tool',
-      'AI conversations, discussions and notes private to their author',
-      'API keys, tokens and .env passwords masked before storage',
+      'Every result opens in its source tool',
+      'AI conversations, chats and notes private to their author',
+      'API keys, tokens and .env secrets redacted before storage',
     ],
   },
   {
     id: 'retrouve',
-    kicker: 'Find',
-    title: 'One search, every source, the answer on top.',
-    text: 'Full-text and semantic search, merged, always after the permission filter. A written answer sits above the results, with every sentence linked to its source.',
+    kicker: 'Search',
+    title: 'Hybrid search across every source, with the answer on top.',
+    text: 'Postgres full-text and vector search run side by side and are merged with reciprocal rank fusion, always after the permission filter. A generated answer sits above the results, every sentence cited.',
     points: [
-      'Filters typed in the bar: from:, tool:, type:, since:, before:',
-      'Exact words in quotes',
-      'Typos tolerated in titles',
+      'Inline filters: from:, tool:, type:, since:, before:',
+      'Exact-phrase matching in quotes',
+      'Typo-tolerant title matching',
     ],
   },
   {
     id: 'discute',
-    kicker: 'Discuss',
-    title: 'A discussion that cites its sources, or says “I don’t know.”',
-    text: 'Leon searches, reads and cross-checks before it answers. Every claim carries its source. Without one, it says so instead of making something up.',
+    kicker: 'Chat',
+    title: 'Chat that cites its sources, or says it doesn’t know.',
+    text: 'Leon searches, reads and cross-checks sources before it answers. Every claim is cited. When the sources fall short, it says so instead of guessing.',
     points: [
-      'Private discussions you can delete',
-      'The morning briefing: done, changed, open',
-      'Available to your assistant over MCP',
+      'Private chats you can delete',
+      'Morning briefing: done, changed, still open',
+      'Available to any MCP client',
     ],
   },
 ];
 
 const SYNTAX_EN: Twin<typeof SYNTAX> = [
-  { code: 'from:julie', text: 'what one person wrote' },
-  { code: 'tool:github', text: 'a single tool' },
+  { code: 'from:julie', text: 'written by one person' },
+  { code: 'tool:github', text: 'one connector only' },
   { code: 'type:meeting', text: 'ticket, page, email, meeting, conversation…' },
-  { code: 'since:7d', text: 'the past 7 days, weeks or months' },
+  { code: 'since:7d', text: 'last 7 days; also weeks or months' },
   { code: 'before:2026-10-01', text: 'before a date' },
-  { code: '"exact phrase"', text: 'the words as written' },
+  { code: '"exact phrase"', text: 'exact match' },
 ];
 
 const BRIEFING_EN: Twin<typeof BRIEFING> = [
@@ -1219,55 +1218,55 @@ const BRIEFING_EN: Twin<typeof BRIEFING> = [
     title: 'What changed',
     items: [
       'Sophie opened the ACME data migration ticket.',
-      'Two new support conversations mention the export.',
+      'Two new support conversations mention the export bug.',
     ],
   },
   {
-    title: 'What is still open',
-    items: ['The revised quote for Verlant, promised last week.'],
+    title: 'Still open',
+    items: ['The revised Verlant quote, promised last week.'],
   },
 ];
 
 const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
   {
-    title: 'Each company in its own space',
-    text: 'An organization’s data is isolated from the others in the database by Postgres row-level security. Tests check it.',
+    title: 'Tenant isolation',
+    text: 'Each organization’s data is isolated at the database level with Postgres row-level security, and covered by automated tests.',
   },
   {
-    title: 'Leon sees what you see',
-    text: 'Search, discussions and the MCP server go through the same permissions as the person asking. The permission filter runs before ranking.',
+    title: 'Permission-aware retrieval',
+    text: 'Search, chat and the MCP server run with the permissions of the person asking. Access is filtered before ranking, so hidden content never shapes a result.',
   },
   {
-    title: 'Conversations stay private',
-    text: 'Conversations captured from your AI assistants, your discussions with Leon and your notes are visible only to you.',
+    title: 'Private conversations',
+    text: 'AI assistant conversations, chats with Leon and saved notes are visible only to their author.',
   },
   {
-    title: 'Encrypted keys',
-    text: 'Pasted API keys and the tools’ OAuth tokens are encrypted (AES-256-GCM) and bound to their row.',
+    title: 'Encrypted credentials',
+    text: 'API keys and OAuth tokens are encrypted with AES-256-GCM and bound to their database row.',
   },
   {
-    title: 'Secrets masked before storage',
-    text: 'Keys with a known prefix, private keys, authorization headers, .env lines: masked before they are stored.',
+    title: 'Secret redaction',
+    text: 'Known key prefixes, private keys, authorization headers and .env lines are redacted before storage.',
   },
   {
-    title: 'An extension that asks first',
-    text: 'A consent screen, a switch per site, a pause button. Nothing in private browsing, never an attachment.',
+    title: 'Consent-first extension',
+    text: 'Explicit consent, a per-site toggle and a pause button. Inactive in private windows, never captures attachments.',
   },
   {
-    title: 'What assistants read is logged',
-    text: 'A log records what each assistant read over MCP. Personal tokens can be revoked at any time.',
+    title: 'Audited MCP access',
+    text: 'Every read over MCP is logged. Personal tokens can be revoked at any time.',
   },
   {
-    title: 'One database',
-    text: 'Text, index and permissions live in Postgres, with no separate search service.',
+    title: 'A single datastore',
+    text: 'Text, search index, vectors and permissions all live in Postgres. No separate search cluster holds a copy of your data.',
   },
 ];
 
 const NOT_YET_EN: Twin<typeof NOT_YET> = [
-  'Permissions from the source tool are not carried over yet. What a connection reads is visible to the whole team, except a mailbox (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
-  'A password written in plain language (“the password is…”) can slip past masking.',
-  'No export yet, and no full deletion from the interface.',
-  'No certification (ISO 27001, SOC 2) to date.',
+  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
+  'A secret written in plain prose (“the password is…”) can slip past redaction.',
+  'No data export yet, and no full account deletion from the interface.',
+  'No ISO 27001 or SOC 2 certification yet.',
 ];
 
 const PLANS_EN: Twin<typeof PLANS> = [
@@ -1276,27 +1275,27 @@ const PLANS_EN: Twin<typeof PLANS> = [
     name: 'Pilot',
     price: 'Free',
     unit: '30 days',
-    text: 'To try Leon on one team, with your real tools.',
+    text: 'Try Leon with one team, on your real tools.',
     features: [
       'One team of up to 10 people',
       `All ${TOOL_COUNT} connectors`,
-      'Search, cited answers and discussions',
+      'Search, cited answers and chat',
       'Morning briefing and MCP server',
-      'Browser extension and coding assistant',
+      'Browser extension and coding-assistant capture',
     ],
-    cta: 'Start the pilot',
+    cta: 'Start the free pilot',
     featured: false,
   },
   {
     id: 'equipe',
     name: 'Team',
     price: '€25',
-    unit: 'per active user per month, excl. tax',
-    text: 'For the whole company, with no commitment.',
+    unit: 'per active user per month, excl. VAT',
+    text: 'For the whole company. No commitment.',
     features: [
-      'Everything in the pilot, no limit on team size',
-      'Only accounts active that month are counted',
-      'No commitment, cancel any month',
+      'Everything in Pilot, with no team size limit',
+      'Billed only for accounts active that month',
+      'Monthly billing, cancel anytime',
     ],
     cta: 'Create a workspace',
     featured: true,
@@ -1304,13 +1303,13 @@ const PLANS_EN: Twin<typeof PLANS> = [
   {
     id: 'dediee',
     name: 'Dedicated',
-    price: 'Custom quote',
-    unit: 'based on your needs',
-    text: 'For companies that want their own instance.',
+    price: 'Custom',
+    unit: 'quoted to your requirements',
+    text: 'For companies that need their own instance.',
     features: [
       'Everything in Team',
-      'An instance and a database for you alone',
-      'Your choice of AI model for each step',
+      'Single-tenant instance and database',
+      'Your choice of AI model at each step',
     ],
     cta: 'Start with the pilot',
     featured: false,
@@ -1319,28 +1318,28 @@ const PLANS_EN: Twin<typeof PLANS> = [
 
 const FAQ_EN: Twin<typeof FAQ> = [
   {
-    q: 'Do we have to change tools?',
-    a: `No, if they are among the ${TOOL_COUNT} connectors. Leon connects with an API key or OAuth and picks up what changed every 15 minutes.`,
+    q: 'Do we need to switch tools?',
+    a: `No, as long as they are among the ${TOOL_COUNT} supported connectors. Leon connects over OAuth or an API key and syncs changes every 15 minutes.`,
   },
   {
-    q: 'Who sees what?',
-    a: 'What a connection reads is visible to the whole team, as in a shared tool, except a mailbox (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them. Conversations captured from your AI assistants, your discussions and your notes are visible only to you.',
+    q: 'Who can see what?',
+    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them. AI assistant conversations, chats and notes are visible only to their author.',
   },
   {
     q: 'What happens when Leon doesn’t know?',
-    a: 'It says so. Every claim in an answer links to its source. Without a source, the answer is “I don’t know,” not a guess.',
+    a: 'It says so. Every claim in an answer is cited. Without a source, the answer is “I don’t know.”',
   },
   {
     q: 'Does Leon summarize our documents?',
-    a: 'No. It keeps the raw text as it was written and indexes it so it can be found. Answers cite that text, with a link to the original.',
+    a: 'No. It stores the original text verbatim and indexes it for search. Answers quote that text and link to the original.',
   },
   {
-    q: 'Can we query it from an AI assistant?',
-    a: 'Yes, over MCP, with a personal token you create and revoke in Settings. The assistant sees what you see, nothing more.',
+    q: 'Can our AI assistant query Leon?',
+    a: 'Yes, over MCP, with a personal token you create and revoke in Settings. The assistant is limited to what you can see.',
   },
   {
     q: 'What counts as an active user?',
-    a: 'Someone who used Leon during the month. An account that stayed inactive is not counted.',
+    a: 'Anyone who used Leon during the billing month. Inactive accounts are not counted.',
   },
 ];
 

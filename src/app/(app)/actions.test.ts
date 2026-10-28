@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { requireUserContext, signOutCurrentUser } from '@/server/auth/session';
+import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
 import { previewPassageAction, signOutAction } from './actions';
 
 vi.mock('@/server/auth/session', () => ({
+  getSession: vi.fn(),
   requireUserContext: vi.fn(),
   signOutCurrentUser: vi.fn(),
 }));
@@ -22,6 +23,7 @@ const PASSAGE = '0b6d2c5e-8f2a-4d56-9a43-3d1f2b6a7c10';
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(requireUserContext).mockResolvedValue(CTX as never);
+  vi.mocked(getSession).mockResolvedValue({ user: { id: 'u1' } } as never);
 });
 
 describe('signOutAction', () => {
@@ -31,8 +33,17 @@ describe('signOutAction', () => {
     expect(signOutCurrentUser).toHaveBeenCalledOnce();
   });
 
+  it('déconnecte une session sans organisation, sans passer par /bienvenue', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /bienvenue'));
+
+    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /connexion');
+
+    expect(requireUserContext).not.toHaveBeenCalled();
+    expect(signOutCurrentUser).toHaveBeenCalledOnce();
+  });
+
   it('ne ferme rien sans session valide', async () => {
-    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+    vi.mocked(getSession).mockResolvedValue(null);
 
     await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /connexion');
 

@@ -7,6 +7,10 @@ import { type AnthropicLike, createAnthropicLlm, logUsage, toolDefinitions } fro
 import { type AgentEvent, type AgentTool, type ChatMessage, LlmError, type LlmStep } from './llm';
 import { EFFORT_BY_STEP } from './models';
 
+// L'écriture dans llm_usage : sans base dans ces tests.
+const { query } = vi.hoisted(() => ({ query: vi.fn(() => Promise.resolve()) }));
+vi.mock('../db/client', () => ({ pool: { query } }));
+
 const messages: ChatMessage[] = [{ role: 'user', content: 'Question ordinaire' }];
 
 type Turn = {
@@ -661,6 +665,15 @@ describe('logUsage', () => {
       cacheWriteTokens: 0,
       costUsd: 6,
     });
+    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('insert into llm_usage'), [
+      'discussion',
+      'claude-opus-5-5',
+      1_000_000,
+      100_000,
+      0,
+      0,
+      6,
+    ]);
   });
 
   it('compte la lecture et l’écriture du cache, et ne chiffre pas un modèle sans tarif', () => {

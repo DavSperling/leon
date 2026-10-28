@@ -1,6 +1,7 @@
 import { APIError } from 'better-auth/api';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { noteActivity } from '@/server/admin/stats';
 import { auth } from './auth';
 import { resolveTenantContext, type TenantContext } from './tenant-context';
 
@@ -26,6 +27,7 @@ export async function getSession() {
 export async function getUserContext(): Promise<TenantContext | null> {
   const session = await getSession();
   if (!session) return null;
+  noteActivity(session.session.id, session.user.id);
   return resolveTenantContext(session.user.id, session.session.activeOrganizationId ?? null);
 }
 

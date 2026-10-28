@@ -20,6 +20,12 @@ const supportedModel = (name: string) =>
     error: () => `${name} : modèle pris en charge attendu (${SUPPORTED_MODEL_IDS.join(', ')})`,
   });
 
+const adminEmails = (list: string | undefined) =>
+  (list || 'davsperling@gmail.com')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
 export const EnvSchema = z
   .object({
     DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//),
@@ -77,6 +83,8 @@ export const EnvSchema = z
     // baai/bge-m3…), pour comparer les candidats avec un seul compte.
     OPENROUTER_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     LEON_EMBEDDINGS_MODEL: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
+    // Les e-mails qui ouvrent /admin, séparés par des virgules. Absent : David seul.
+    LEON_ADMINS: z.string().optional().transform(adminEmails),
   })
   .superRefine((env, ctx) => {
     // Un faux modèle en ligne répondrait à des questions réelles avec du texte factice : on refuse de démarrer.

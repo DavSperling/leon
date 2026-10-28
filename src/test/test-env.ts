@@ -70,4 +70,6 @@ export const TEST_ENV = {
   LEON_EMAIL_FROM: '',
   // L'en-tête où le proxy de confiance pose l'adresse du client (rate-limit.ts), comme Caddy en production.
   LEON_IP_HEADER: 'x-real-ip',
+  // Les admins de /admin : le défaut de env.ts, jamais la liste du poste.
+  LEON_ADMINS: '',
 } as const;

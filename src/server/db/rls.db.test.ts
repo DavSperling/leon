@@ -94,6 +94,7 @@ async function seedScenario(): Promise<Scenario> {
           tenantId: team.tenantId,
           userId: ctx.userId,
           client: 'claude-code',
+          tool: 'fetch',
           sourceId,
           acl,
         })

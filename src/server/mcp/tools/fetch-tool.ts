@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { recordRead } from '@/server/memory/read-log';
+import { recordReads } from '@/server/memory/read-log';
 import { fetchPassageContext, fetchSource, SOURCE_MAX_CHARS } from '@/server/search/context';
 import { guarded } from './guarded';
 import { FetchOutputSchema } from './output-schemas';
@@ -78,12 +78,12 @@ export function registerFetchTool(server: McpServer, ctx: TenantContext, client:
       const fetched = { truncated: false, ...read };
       // Le journal d'abord : une lecture que Leon ne peut pas noter (la source a perdu ses droits entre-temps)
       // n'est pas rendue.
-      const logged = await recordRead(ctx, {
-        sourceId: fetched.source.sourceId,
-        passageId: passageId ?? null,
+      const logged = await recordReads(ctx, {
+        tool: 'fetch',
         client,
+        reads: [{ sourceId: fetched.source.sourceId, passageId }],
       });
-      if (!logged) return refusal(NOT_FOUND);
+      if (logged.size === 0) return refusal(NOT_FOUND);
       return {
         content: [{ type: 'text', text: renderFetched(fetched) }],
         structuredContent: fetchStructured(fetched),

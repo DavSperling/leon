@@ -11,7 +11,8 @@ import { guarded } from './guarded';
 // L'outil `briefing` : le point du matin sur un projet, pour les clients qui n'ont pas le crochet de démarrage de
 // Claude Code (ChatGPT, Cursor). Il rend la même chose que la route du crochet (`GET /api/v1/briefing`), sous les
 // droits du porteur du jeton : le dernier point prêt, ou le message d'attente (le recalcul est alors mis en file), ou,
-// sans modèle sur ce serveur, le message qui dit qu'aucun point n'est préparé.
+// sans modèle sur ce serveur, le message qui dit qu'aucun point n'est préparé. Le point rendu est noté au journal des
+// lectures, une ligne par source fournie au modèle.
 
 const PROJECT_INPUT_MAX_CHARS = 300;
 const KEY_MAX_CHARS = 200;
@@ -50,7 +51,7 @@ export function projectKeyFromInput(raw: string): string | null {
   return key !== null && key.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(key) ? key : null;
 }
 
-export function registerBriefingTool(server: McpServer, ctx: TenantContext): void {
+export function registerBriefingTool(server: McpServer, ctx: TenantContext, client: string): void {
   server.registerTool(
     'briefing',
     {
@@ -70,7 +71,10 @@ export function registerBriefingTool(server: McpServer, ctx: TenantContext): voi
           return { isError: true, content: [{ type: 'text', text: INVALID_PROJECT }] };
         }
       }
-      const body = await briefingResponse(ctx, project, { modelReady: getLlm(env) !== null });
+      const body = await briefingResponse(ctx, project, {
+        modelReady: getLlm(env) !== null,
+        client,
+      });
       return { content: [{ type: 'text', text: body.markdown }], structuredContent: body };
     }),
   );

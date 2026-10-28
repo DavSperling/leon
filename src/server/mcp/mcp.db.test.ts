@@ -280,6 +280,44 @@ describe('outil search', () => {
     expect(JSON.stringify(asMarie.structuredContent)).not.toContain('secret');
   });
 
+  it('note au journal des lectures chaque passage rendu, avec le client, et rien de ce que le lecteur ne voit pas', async () => {
+    const { tenantId, paul, marie } = await setupTeam();
+    const own = await seedIndexed(paul, {
+      kind: 'claude_code',
+      title: 'Ma conversation',
+      turns: [{ text: 'le code secret zorbaflux reste entre nous' }],
+    });
+    const team = await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket 12',
+      metadata: { nature: 'ticket' },
+      turns: [{ text: 'le ticket parle de zorbaflux' }, { text: 'zorbaflux encore ici' }],
+    });
+    const readsBy = (userId: string) =>
+      adminDb.select().from(readLog).where(eq(readLog.userId, userId));
+
+    const result = await call(await connect(marie, 'cursor/1.7.0'), 'search', {
+      query: 'zorbaflux',
+    });
+
+    const passageIds = found(result).hits.flatMap((hit) =>
+      hit.passages.map((passage) => passage.passageId),
+    );
+    expect(passageIds.length).toBeGreaterThan(0);
+    const rows = await readsBy(marie.userId);
+    expect(rows.map((row) => row.passageId).sort()).toEqual(passageIds.sort());
+    for (const row of rows) {
+      expect(row).toMatchObject({
+        tool: 'search',
+        client: 'cursor',
+        sourceId: team.sourceId,
+        acl: [tenantId],
+      });
+    }
+    expect(rows.some((row) => row.sourceId === own.sourceId)).toBe(false);
+  });
+
   it('rend le texte derrière la ligne de garde, source par source, et les mêmes sources en structuredContent', async () => {
     const { tenantId, paul } = await setupTeam();
     await seedIndexed(paul, {
@@ -685,7 +723,7 @@ describe('outil fetch', () => {
     await call(client, 'fetch', { passageId });
     await call(client, 'fetch', { sourceId });
 
-    const rows = await readsOf(sourceId);
+    const rows = (await readsOf(sourceId)).filter((row) => row.tool === 'fetch');
     expect(rows).toHaveLength(2);
     expect(rows.map((row) => row.passageId).sort()).toEqual([passageId, null].sort());
     for (const row of rows) {
@@ -765,9 +803,10 @@ describe('outil fetch', () => {
     expect(structured.text).toContain('le contrat widgetron est renouvelé');
     expect(structured.text).toContain('merci pour la relance');
     expect(result.text.startsWith(DATA_GUARD_LINE)).toBe(true);
-    // Une lecture, une ligne : celle de fetch, pas celle de search.
-    expect(await readsOf(sourceId)).toHaveLength(1);
-    expect((await readsOf(sourceId))[0]?.passageId).toBeNull();
+    // Une lecture de fetch, une ligne de fetch, sans passage (search a noté les siennes à part).
+    const fetched = (await readsOf(sourceId)).filter((row) => row.tool === 'fetch');
+    expect(fetched).toHaveLength(1);
+    expect(fetched[0]?.passageId).toBeNull();
   });
 
   it('lit null comme « non renseigné » pour les identifiants absents', async () => {
@@ -868,7 +907,12 @@ describe('outil briefing', () => {
   async function seedBriefing(
     owner: TenantContext,
     project: string,
-    input: { markdown?: string; lastReadAt?: Date | null; preparedAt?: Date } = {},
+    input: {
+      markdown?: string;
+      lastReadAt?: Date | null;
+      preparedAt?: Date;
+      sourceIds?: string[];
+    } = {},
   ) {
     await adminDb.insert(briefings).values({
       tenantId: owner.tenantId,
@@ -877,6 +921,7 @@ describe('outil briefing', () => {
       markdown: input.markdown ?? `# Point du matin · ${project}\n- Le jeton est corrigé [1].`,
       preparedAt: input.preparedAt ?? new Date('2026-10-20T04:00:00.000Z'),
       lastReadAt: input.lastReadAt ?? null,
+      sourceIds: input.sourceIds ?? [],
       acl: [owner.userId],
     });
   }
@@ -978,6 +1023,43 @@ describe('outil briefing', () => {
       preparedAt: null,
     });
     expect(requestBriefingRefreshNow).not.toHaveBeenCalled();
+  });
+
+  it('note au journal une ligne par source du point rendu, et rien quand aucun point n’est rendu', async () => {
+    const { paul, marie } = await setupTeam();
+    const first = await seedRun(paul, { kind: 'claude_code', metadata: { project: PROJECT } });
+    const second = await seedRun(paul, { kind: 'github', acl: [paul.tenantId] });
+    await seedBriefing(paul, PROJECT, { sourceIds: [first.sourceId, second.sourceId] });
+    const readsBy = (userId: string) =>
+      adminDb.select().from(readLog).where(eq(readLog.userId, userId));
+
+    await call(await connect(paul, 'chatgpt/1.0'), 'briefing', { projet: PROJECT });
+    await call(await connect(marie), 'briefing', { projet: PROJECT });
+
+    const rows = await readsBy(paul.userId);
+    expect(rows.map((row) => row.sourceId).sort()).toEqual(
+      [first.sourceId, second.sourceId].sort(),
+    );
+    for (const row of rows) {
+      expect(row).toMatchObject({ tool: 'briefing', client: 'chatgpt', passageId: null });
+    }
+    expect(await readsBy(marie.userId)).toHaveLength(0);
+  });
+
+  it('un point dont une source n’est plus visible n’est ni rendu ni noté', async () => {
+    const { paul, marie } = await setupTeam();
+    const hidden = await seedRun(marie, { kind: 'claude_code' });
+    await seedBriefing(paul, PROJECT, {
+      markdown: 'Le point fuité.',
+      sourceIds: [hidden.sourceId],
+    });
+
+    const result = await call(await connect(paul), 'briefing', { projet: PROJECT });
+
+    expect(result.text).not.toContain('fuité');
+    expect(
+      await adminDb.select().from(readLog).where(eq(readLog.userId, paul.userId)),
+    ).toHaveLength(0);
   });
 
   it('ne rend jamais le point d’un autre', async () => {

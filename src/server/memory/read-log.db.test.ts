@@ -5,7 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
-import { recordRead } from './read-log';
+import { recordReads } from './read-log';
 
 async function seedRead(
   ctx: TenantContext,
@@ -17,6 +17,7 @@ async function seedRead(
       tenantId: ctx.tenantId,
       userId: ctx.userId,
       client: input.client ?? 'claude-code',
+      tool: 'fetch',
       sourceId: input.sourceId,
       passageId: input.passageId ?? null,
       acl: input.acl,
@@ -64,7 +65,7 @@ async function seedScenario() {
   };
 }
 
-describe('recordRead', () => {
+describe('recordReads', () => {
   const readsOf = (sourceId: string) =>
     adminDb.select().from(readLog).where(eq(readLog.sourceId, sourceId));
 
@@ -72,19 +73,20 @@ describe('recordRead', () => {
     const s = await seedScenario();
     const passageId = randomUUID();
 
-    const written = await recordRead(s.paul, {
-      sourceId: s.paulSourceId,
-      passageId,
+    const written = await recordReads(s.paul, {
+      tool: 'search',
       client: 'claude-code',
+      reads: [{ sourceId: s.paulSourceId, passageId }],
     });
 
-    expect(written).toBe(true);
+    expect(written).toEqual(new Set([s.paulSourceId]));
     const rows = await readsOf(s.paulSourceId);
     const row = rows.find((entry) => entry.passageId === passageId);
     expect(row).toMatchObject({
       tenantId: s.paul.tenantId,
       userId: s.paul.userId,
       client: 'claude-code',
+      tool: 'search',
       sourceId: s.paulSourceId,
       acl: [s.paul.userId],
     });
@@ -93,7 +95,11 @@ describe('recordRead', () => {
   it('journalise une lecture de source entière sans passage, avec l’accès d’équipe d’une source d’équipe', async () => {
     const s = await seedScenario();
 
-    await recordRead(s.marie, { sourceId: s.teamSourceId, client: 'cursor' });
+    await recordReads(s.marie, {
+      tool: 'fetch',
+      client: 'cursor',
+      reads: [{ sourceId: s.teamSourceId }],
+    });
 
     const rows = await readsOf(s.teamSourceId);
     const row = rows.find((entry) => entry.client === 'cursor');
@@ -104,17 +110,61 @@ describe('recordRead', () => {
     const s = await seedScenario();
     const before = (await readsOf(s.paulSourceId)).length;
 
-    const written = await recordRead(s.marie, { sourceId: s.paulSourceId, client: 'claude-code' });
+    const written = await recordReads(s.marie, {
+      tool: 'fetch',
+      client: 'claude-code',
+      reads: [{ sourceId: s.paulSourceId }],
+    });
 
-    expect(written).toBe(false);
+    expect(written.size).toBe(0);
     expect(await readsOf(s.paulSourceId)).toHaveLength(before);
   });
 
   it('n’écrit rien pour une source d’une autre organisation', async () => {
     const s = await seedScenario();
 
-    expect(await recordRead(s.zoe, { sourceId: s.paulSourceId, client: 'claude-code' })).toBe(
-      false,
-    );
+    const written = await recordReads(s.zoe, {
+      tool: 'fetch',
+      client: 'claude-code',
+      reads: [{ sourceId: s.paulSourceId }],
+    });
+
+    expect(written.size).toBe(0);
+  });
+
+  it('dans un lot, note les sources visibles et omet les autres', async () => {
+    const s = await seedScenario();
+    const before = (await readsOf(s.paulSourceId)).length;
+    const [first, second] = [randomUUID(), randomUUID()];
+
+    const written = await recordReads(s.marie, {
+      tool: 'search',
+      client: 'cursor',
+      reads: [
+        { sourceId: s.teamSourceId, passageId: first },
+        { sourceId: s.paulSourceId, passageId: randomUUID() },
+        { sourceId: s.teamSourceId, passageId: second },
+      ],
+    });
+
+    expect(written).toEqual(new Set([s.teamSourceId]));
+    const rows = (await readsOf(s.teamSourceId)).filter((row) => row.client === 'cursor');
+    expect(rows.map((row) => row.passageId).sort()).toEqual([first, second].sort());
+    expect(await readsOf(s.paulSourceId)).toHaveLength(before);
+  });
+
+  it('tout ou rien (whole) : une seule source invisible et rien n’est noté', async () => {
+    const s = await seedScenario();
+    const before = (await readsOf(s.teamSourceId)).length;
+
+    const written = await recordReads(s.marie, {
+      tool: 'briefing',
+      client: 'chatgpt',
+      reads: [{ sourceId: s.teamSourceId }, { sourceId: s.paulSourceId }],
+      whole: true,
+    });
+
+    expect(written.size).toBe(0);
+    expect(await readsOf(s.teamSourceId)).toHaveLength(before);
   });
 });

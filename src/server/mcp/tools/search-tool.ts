@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
+import { recordReads } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import {
   NATURE_NAMES_EN,
@@ -17,7 +18,8 @@ import { renderSearch, searchStructured } from './render';
 
 // L'outil `search` : la recherche de la barre de Leon (passages, filtres), sans la réponse de l'agent, puisque
 // l'IA du client est elle-même un agent. Les mêmes droits que dans l'interface : la recherche tourne sous ceux
-// du porteur du jeton, et rien d'autre ne lit la base ici.
+// du porteur du jeton, et rien d'autre ne lit la base ici. Chaque passage rendu est noté au journal des lectures,
+// comme une lecture de `fetch` (une source rendue sans passage : une ligne sans passage).
 
 const FILTER_MAX_CHARS = 100;
 
@@ -90,6 +92,7 @@ const refusal = (text: string) => ({
 export function registerSearchTool(
   server: McpServer,
   ctx: TenantContext,
+  client: string,
   deps: { embedder: Embedder | null },
 ): void {
   server.registerTool(
@@ -115,6 +118,20 @@ export function registerSearchTool(
         embedder: deps.embedder,
         now,
       });
+      const logged = await recordReads(ctx, {
+        tool: 'search',
+        client,
+        reads: result.hits.flatMap((hit) =>
+          hit.passages.length > 0
+            ? hit.passages.map((passage) => ({
+                sourceId: hit.sourceId,
+                passageId: passage.passageId,
+              }))
+            : [{ sourceId: hit.sourceId }],
+        ),
+      });
+      // Comme `fetch` : une source que Leon n'a pas pu noter (devenue invisible entre-temps) n'est pas rendue.
+      result.hits = result.hits.filter((hit) => logged.has(hit.sourceId));
       return {
         content: [{ type: 'text', text: renderSearch(result, pageNumber) }],
         structuredContent: searchStructured(result, pageNumber),

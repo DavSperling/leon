@@ -31,6 +31,7 @@ const insertRead = (sourceId: string) =>
       tenantId: bob.tenantId,
       userId: bob.userId,
       client: 'interface',
+      tool: 'fetch',
       sourceId,
       acl: [bob.tenantId],
     }),

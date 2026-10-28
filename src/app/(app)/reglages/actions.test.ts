@@ -524,8 +524,9 @@ describe.each([
       vi.useRealTimers();
     }
 
-    expect(starts[1]! - starts[0]!).toBeGreaterThanOrEqual(500);
-    expect(starts[2]! - starts[1]!).toBeGreaterThanOrEqual(500);
+    const gaps = starts.slice(1).map((start, index) => start - (starts[index] ?? start));
+    expect(gaps).toHaveLength(2);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(500);
     expect(events).toEqual([
       'début a@example.com',
       'fin a@example.com',

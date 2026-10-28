@@ -1,5 +1,6 @@
 import Anthropic, { AnthropicError, APIError, APIUserAbortError } from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { pool } from '../db/client';
 import type { Env } from '../env';
 import { logError } from '../log';
 import {
@@ -42,10 +43,8 @@ type Usage = {
 // Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu. Le coût vient des tarifs de
 // models.ts ; c'est un minimum : après un repli du serveur, les tentatives refusées (`usage.iterations`) ne sont
 // pas comptées, et un modèle de repli absent de la table n'est pas chiffré.
-// La table llm_usage (PR #13 de David) n'est pas sur cette branche : à la fusion avec main, cette ligne
-// deviendra une écriture dans la table, dont le check sur `step` devra accepter reponse, discussion et point (un
-// test de contrat le garde dès que la table existe). Cette écriture ne lèvera jamais : try/catch puis logError,
-// car la réponse de l'utilisateur ne doit pas échouer à cause de son journal.
+// La ligne va aussi dans llm_usage (0039), que lit le tableau des admins. Sans attendre et sans lever : la réponse
+// de l'utilisateur ne doit ni ralentir ni échouer à cause de son journal.
 export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): void {
   if (!usage) return;
   const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
@@ -68,6 +67,22 @@ export function logUsage(step: LlmStep, model: string, usage: Usage | undefined)
     costUsd: costUsd === null ? null : Number(costUsd.toFixed(5)),
   };
   console.info('[leon]', 'llm.usage', JSON.stringify(line));
+  void pool
+    .query(
+      `insert into llm_usage (step, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+                              cost_usd)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        step,
+        model.slice(0, 100),
+        line.inputTokens,
+        line.outputTokens,
+        cacheReadTokens,
+        cacheWriteTokens,
+        line.costUsd,
+      ],
+    )
+    .catch((error) => logError('llm.usage', error));
 }
 
 // Le SDK (réseau, 429, 5xx, annulation, flux illisible) devient une erreur à message fixe : son message peut citer

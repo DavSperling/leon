@@ -6,6 +6,9 @@ import { parseEnv } from '../env';
 import { createAnthropicLlm } from './anthropic-llm';
 import { type AgentEvent, type AgentTool, LlmError } from './llm';
 
+// L'écriture dans llm_usage : sans base dans ces tests.
+vi.mock('../db/client', () => ({ pool: { query: () => Promise.resolve() } }));
+
 // Ces tests passent par le vrai SDK, sur un faux réseau : ils gardent ce que les faux flux de
 // anthropic-llm.test.ts supposent du SDK (forme des évènements, message final, entrée d'outil recomposée, en-tête
 // de la bêta). Les réponses reprennent le format des évènements de la documentation officielle de l'API.

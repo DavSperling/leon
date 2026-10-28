@@ -1,8 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { type AnyColumn, and, asc, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { db } from '@/server/db/client';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { reportingLines } from '@/server/db/schema/organisation';
+import { withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
 
 // Les membres d'une organisation, et l'ajout d'un membre par un lien d'invitation (0033) : un propriétaire ou un
@@ -12,13 +15,23 @@ export const INVITATION_DAYS = 7;
 const DAY_MS = 86_400_000;
 const INVITATION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/; // 32 octets en base64url
 
-export type MemberRow = { id: string; name: string; email: string; role: string };
+export type MemberRow = {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  managerId: string | null; // membre auquel il est rattaché (0036)
+};
 
 const hashInvitationToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
 // Better Auth peut ranger plusieurs rôles séparés par des virgules (comme connections.ts).
+// Un propriétaire ou un administrateur invite, rattache à un manager, change un rôle et retire un membre.
 const isAdminRole = (role: SQL | AnyColumn) =>
   sql`string_to_array(${role}, ',') && array['owner', 'admin']`;
+// Un propriétaire ne se rétrograde ni ne se retire depuis l'écran : l'espace en garde toujours un.
+const notOwner = sql`not (string_to_array(${members.role}, ',') && array['owner'])`;
 
 export async function canInvite(ctx: TenantContext): Promise<boolean> {
   const rows = await db
@@ -36,12 +49,56 @@ export async function canInvite(ctx: TenantContext): Promise<boolean> {
 }
 
 export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
-  return db
-    .select({ id: members.id, name: users.name, email: users.email, role: members.role })
-    .from(members)
-    .innerJoin(users, eq(users.id, members.userId))
-    .where(eq(members.organizationId, ctx.tenantId))
-    .orderBy(asc(members.createdAt), asc(members.id));
+  return withTenant(ctx, (tx) =>
+    tx
+      .select({
+        id: members.id,
+        userId: members.userId,
+        name: users.name,
+        email: users.email,
+        role: members.role,
+        managerId: reportingLines.managerId,
+      })
+      .from(members)
+      .innerJoin(users, eq(users.id, members.userId))
+      .leftJoin(reportingLines, eq(reportingLines.memberId, members.id))
+      .where(eq(members.organizationId, ctx.tenantId))
+      .orderBy(asc(members.createdAt), asc(members.id)),
+  );
+}
+
+// Membre ou administrateur, jamais propriétaire ; false si le lecteur n'a pas le droit ou si la cible est propriétaire.
+export async function setMemberRole(
+  ctx: TenantContext,
+  memberId: string,
+  role: 'admin' | 'member',
+): Promise<boolean> {
+  if (!z.uuid().safeParse(memberId).success || !(await canInvite(ctx))) return false;
+  const rows = await db
+    .update(members)
+    .set({ role })
+    .where(and(eq(members.id, memberId), eq(members.organizationId, ctx.tenantId), notOwner))
+    .returning({ id: members.id });
+  return rows.length > 0;
+}
+
+// Retire un membre de l'organisation : sa session, ses jetons et ses connexions s'arrêtent à la requête suivante
+// (tous revérifient l'adhésion), ses rattachements partent en cascade. Ce qu'il a déjà fait entrer dans Leon reste.
+// Ni soi-même, ni un propriétaire.
+export async function removeMember(ctx: TenantContext, memberId: string): Promise<boolean> {
+  if (!z.uuid().safeParse(memberId).success || !(await canInvite(ctx))) return false;
+  const rows = await db
+    .delete(members)
+    .where(
+      and(
+        eq(members.id, memberId),
+        eq(members.organizationId, ctx.tenantId),
+        sql`${members.userId} <> ${ctx.userId}`,
+        notOwner,
+      ),
+    )
+    .returning({ id: members.id });
+  return rows.length > 0;
 }
 
 // La place du lecteur dans son organisation, pour l'en-tête du profil ; null s'il n'en est plus membre.

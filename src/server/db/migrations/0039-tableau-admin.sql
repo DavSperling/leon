@@ -18,7 +18,8 @@ create index journal_connexions_debut_idx on journal_connexions (debut);
 create index journal_connexions_user_idx on journal_connexions (user_id, derniere_activite);
 
 -- Un appel au modèle : ses compteurs de tokens et son coût estimé (models.ts). Null : modèle sans tarif connu.
-create table llm_usage (
+-- Pas llm_usage : la base de production garde celle de 0007 (l'ancien pipeline, retirée du dépôt depuis).
+create table appels_modele (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   step text not null check (step in ('reponse', 'discussion', 'point')),
@@ -29,8 +30,8 @@ create table llm_usage (
   cache_write_tokens integer not null,
   cost_usd numeric(12, 5)
 );
-create index llm_usage_created_at_idx on llm_usage (created_at);
-grant insert on llm_usage to leon_app;
+create index appels_modele_created_at_idx on appels_modele (created_at);
+grant insert on appels_modele to leon_app;
 
 -- Note une requête de la session. Une écriture par minute au plus ; un écart de 30 minutes ou plus est une pause,
 -- pas du temps passé (le délai de session des outils de mesure d'audience).
@@ -102,7 +103,7 @@ language sql stable security definer set search_path = public as $$
         'semaine', count(*) filter (where created_at > now() - interval '7 days'),
         'mois', count(*) filter (where created_at > now() - interval '30 days'),
         'discussions', (select count(*) from discussions),
-        'recherches30', (select count(*) from llm_usage
+        'recherches30', (select count(*) from appels_modele
                           where step = 'reponse' and created_at > now() - interval '30 days'))
       from questions),
     'couts', (select jsonb_build_object(
@@ -116,13 +117,13 @@ language sql stable security definer set search_path = public as $$
         'tokensSortie30', coalesce(sum(output_tokens) filter (where created_at > now() - interval '30 days'), 0),
         'parModele', (select coalesce(jsonb_agg(jsonb_build_object('nom', model, 'cout', cout, 'appels', appels)
                                                 order by cout desc), '[]')
-                        from (select model, coalesce(sum(cost_usd), 0) as cout, count(*) as appels from llm_usage
+                        from (select model, coalesce(sum(cost_usd), 0) as cout, count(*) as appels from appels_modele
                                where created_at > now() - interval '30 days' group by model) m),
         'parEtape', (select coalesce(jsonb_agg(jsonb_build_object('nom', step, 'cout', cout, 'appels', appels)
                                                order by cout desc), '[]')
-                       from (select step, coalesce(sum(cost_usd), 0) as cout, count(*) as appels from llm_usage
+                       from (select step, coalesce(sum(cost_usd), 0) as cout, count(*) as appels from appels_modele
                               where created_at > now() - interval '30 days' group by step) e))
-      from llm_usage),
+      from appels_modele),
     'parJour', (select jsonb_agg(jsonb_build_object(
         'jour', j.jour,
         'inscriptions', (select count(*) from "user" u
@@ -131,7 +132,7 @@ language sql stable security definer set search_path = public as $$
                         where (c.debut at time zone 'Europe/Paris')::date = j.jour),
         'questions', (select count(*) from questions q
                        where (q.created_at at time zone 'Europe/Paris')::date = j.jour),
-        'cout', (select coalesce(sum(l.cost_usd), 0) from llm_usage l
+        'cout', (select coalesce(sum(l.cost_usd), 0) from appels_modele l
                   where (l.created_at at time zone 'Europe/Paris')::date = j.jour)
       ) order by j.jour) from jours j),
     'connecteurs', (select coalesce(jsonb_agg(jsonb_build_object('nom', provider, 'total', total,

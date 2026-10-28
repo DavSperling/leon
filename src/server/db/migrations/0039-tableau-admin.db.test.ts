@@ -50,14 +50,14 @@ describe('noter_activite', () => {
     expect(await journal(session)).toEqual({ secondes: 600 });
   });
 
-  it("l'app n'écrit dans llm_usage que par insert, et ne lit pas le journal", async () => {
+  it("l'app n'écrit dans appels_modele que par insert, et ne lit pas le journal", async () => {
     await expect(
       app.query(
-        `insert into llm_usage (step, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+        `insert into appels_modele (step, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
                                 cost_usd) values ('reponse', 'claude-haiku-5-5', 1, 1, 0, 0, 0.001)`,
       ),
     ).resolves.toBeDefined();
-    await expect(app.query('select * from llm_usage')).rejects.toThrow(/permission/);
+    await expect(app.query('select * from appels_modele')).rejects.toThrow(/permission/);
     await expect(app.query('select * from journal_connexions')).rejects.toThrow(/permission/);
   });
 });
@@ -82,7 +82,7 @@ describe('statistiques_admin', () => {
 
     const before = await stats();
     await adminPool.query(
-      `insert into llm_usage (step, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+      `insert into appels_modele (step, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
                               cost_usd) values ('discussion', 'claude-opus-5-5', 10, 10, 0, 0, 1.5)`,
     );
     const after = await stats();

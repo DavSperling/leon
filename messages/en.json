@@ -621,6 +621,24 @@
     "codeWrong": "Incorrect code. Check the app and try again.",
     "tooManyAttempts": "Too many attempts. Try again in a few minutes."
   },
+  "deleteAccount": {
+    "word": "DELETE",
+    "wrongWord": "Type the word “{word}” exactly to confirm.",
+    "wrongCode": "Incorrect code. Check the app and try again.",
+    "failed": "Couldn’t delete. Reload the page and try again.",
+    "refused": {
+      "successeur": "Choose another member of the organization as the new owner.",
+      "autre_organisation": "This account also belongs to another organization, so it can’t be deleted from here.",
+      "pas_proprietaire": "Only the organization’s owner can delete it."
+    },
+    "emailSubjectAccount": "Your Leon account has been deleted",
+    "emailSubjectOrganization": "Your Leon organization has been deleted",
+    "emailAccount": "Your Leon account in the organization “{organization}” was deleted on {date}.",
+    "emailOrganization": "The organization “{organization}” was deleted by its owner on {date}, along with everything it contained.",
+    "emailIgnore": "If you didn’t request this deletion, tell your organization’s administrator.",
+    "doneAccount": "Your account has been deleted.",
+    "doneOrganization": "The organization has been deleted."
+  },
   "site": {
     "meta": {
       "homeTitle": "Leon · Cited answers from your company’s tools",

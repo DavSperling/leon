@@ -621,6 +621,24 @@
     "codeWrong": "Code incorrect. Vérifiez l’application et réessayez.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes."
   },
+  "deleteAccount": {
+    "word": "SUPPRIMER",
+    "wrongWord": "Saisissez exactement le mot « {word} » pour confirmer.",
+    "wrongCode": "Code incorrect. Vérifiez l’application et réessayez.",
+    "failed": "Impossible de supprimer. Rechargez la page et réessayez.",
+    "refused": {
+      "successeur": "Choisissez un autre membre de l’organisation comme nouveau propriétaire.",
+      "autre_organisation": "Ce compte appartient aussi à une autre organisation : il ne peut pas être supprimé d’ici.",
+      "pas_proprietaire": "Seul le propriétaire de l’organisation peut la supprimer."
+    },
+    "emailSubjectAccount": "Votre compte Leon a été supprimé",
+    "emailSubjectOrganization": "Votre organisation Leon a été supprimée",
+    "emailAccount": "Votre compte Leon, dans l’organisation « {organization} », a été supprimé le {date}.",
+    "emailOrganization": "L’organisation « {organization} » a été supprimée par son propriétaire le {date}, avec tout ce qu’elle contenait.",
+    "emailIgnore": "Si vous n’êtes pas à l’origine de cette suppression, prévenez l’administrateur de votre organisation.",
+    "doneAccount": "Votre compte a été supprimé.",
+    "doneOrganization": "L’organisation a été supprimée."
+  },
   "site": {
     "meta": {
       "homeTitle": "Leon · La mémoire de votre entreprise, avec ses sources",

@@ -77,7 +77,7 @@ export function SiteFooter() {
       <Container className="relative pt-16 pb-10">
         <div className="grid gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div className="max-w-[340px]">
-            <Link href="/" className="inline-flex min-h-10 items-center rounded-full">
+            <Link href="/accueil" className="inline-flex min-h-10 items-center rounded-full">
               <Brand className="h-6" />
             </Link>
             <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(taglines.pitch)}</p>

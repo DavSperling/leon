@@ -212,7 +212,7 @@ export function SiteHeader() {
       <span aria-hidden="true" className="site-progress" />
       <div className="site-header-bar mx-auto flex h-[58px] max-w-[1200px] items-center gap-2 rounded-full border border-transparent pr-2 pl-3 sm:pl-4">
         <Link
-          href="/"
+          href="/accueil"
           aria-label={t('home')}
           className="flex h-10 shrink-0 items-center rounded-full pr-2"
         >

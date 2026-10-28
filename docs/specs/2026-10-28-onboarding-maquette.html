@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leon onboarding : maquettes v2</title>
+<style>
+  :root {
+    --bg: #0a0c11; --glass: rgba(226,232,242,.035); --glass-2: rgba(226,232,242,.05);
+    --line: rgba(255,255,255,.085); --line-strong: rgba(255,255,255,.14);
+    --fg: #e8ecf4; --fg-2: rgba(232,236,244,.72); --fg-3: rgba(232,236,244,.5);
+    --accent: #aabff2; --accent-ink: #0b1020; --accent-soft: rgba(170,191,242,.11); --accent-line: rgba(170,191,242,.3);
+    --meta: #f2d3aa; --meta-line: rgba(242,211,170,.35);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(1200px 600px at 80% -10%, rgba(170,191,242,.08), transparent), var(--bg);
+    color: var(--fg); font: 14px/1.5 -apple-system, "Inter", system-ui, sans-serif; }
+  button { font: inherit; cursor: pointer; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 20px 16px 64px; }
+
+  /* barre de la maquette (pas l'interface) */
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border: 1px dashed var(--meta-line); border-radius: 12px; padding: 8px 12px; margin-bottom: 16px; color: var(--meta); font-size: 12.5px; }
+  .meta b { font-weight: 600; }
+  .meta .seg button { color: var(--meta); }
+  .meta .seg button.on { background: rgba(242,211,170,.14); color: var(--meta); }
+  .metanote { margin-top: 6px; font-size: 12px; color: var(--meta); border-left: 2px dashed var(--meta-line); padding-left: 8px; }
+
+  .screen { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 28px; border: 1px solid var(--line); border-radius: 18px; background: var(--glass); padding: 32px; }
+  @media (max-width: 900px) { .screen { grid-template-columns: 1fr; padding: 20px; } }
+
+  /* étapes */
+  .stepper { display: flex; list-style: none; padding: 0; margin: 0 0 28px; }
+  .stepper li { display: flex; align-items: center; gap: 8px; color: var(--fg-3); font-size: 13px; white-space: nowrap; }
+  .stepper li:not(:last-child) { flex: 1; }
+  .stepper li:not(:last-child)::after { content: ''; flex: 1; height: 1px; background: var(--line-strong); margin: 0 12px; min-width: 16px; }
+  .stepper li.done::after { background: var(--accent-line); }
+  .stepper .dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; font-size: 12px; flex: none; }
+  .stepper li.cur { color: var(--fg); font-weight: 600; }
+  .stepper li.cur .dot { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .stepper li.done { color: var(--fg-2); }
+  .stepper li.done .dot { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+
+  h2 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .lead { color: var(--fg-2); margin: 0 0 20px; }
+  .kicker { color: var(--fg-3); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 8px; }
+  label, .lbl { display: block; font-weight: 600; margin: 16px 0 6px; }
+  .hint { color: var(--fg-3); font-weight: 400; font-size: 12.5px; margin-left: 4px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  select, input, textarea { width: 100%; background: rgba(0,0,0,.25); border: 1px solid var(--line-strong); color: var(--fg); border-radius: 10px; padding: 9px 11px; font: inherit; }
+  select:disabled { opacity: .5; }
+  textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--fg-2); border-radius: 7px; padding: 5px 12px; }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 11px; color: var(--fg-2); background: transparent; }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent); }
+  .btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 11px 16px; font-weight: 600; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--fg-2); border: 1px solid var(--line-strong); font-weight: 500; }
+  .btn.small { padding: 6px 12px; font-size: 13px; }
+  .btn.block { width: 100%; }
+  .footer { display: flex; gap: 10px; margin-top: 24px; }
+  .footer .btn:last-child { flex: 1; }
+  .skip { display: block; width: 100%; text-align: center; color: var(--fg-3); margin-top: 12px; font-size: 13px; background: none; border: 0; }
+  .skip:hover { color: var(--fg-2); }
+  .divider { border-top: 1px solid var(--line); margin: 22px 0 4px; }
+
+  /* aperçu */
+  .preview { border-radius: 18px; border: 1px solid var(--line); padding: 28px; display: flex; flex-direction: column; justify-content: center; gap: 16px; min-height: 560px;
+    background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(180deg, rgba(170,191,242,.03), rgba(120,110,180,.2)); background-size: 16px 16px, auto; }
+  .card { border: 1px solid var(--line-strong); background: rgba(14,17,26,.85); border-radius: 14px; padding: 18px; }
+  .card h4 { margin: 0 0 10px; font-size: 12px; color: var(--fg-3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+  .who { display: flex; gap: 12px; align-items: center; }
+  .avatar { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); font-weight: 700; flex: none; }
+  .who b { display: block; font-size: 16px; } .who span { color: var(--fg-2); }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .badge { font-size: 12px; border-radius: 6px; padding: 2px 8px; border: 1px solid var(--line-strong); color: var(--fg-2); white-space: nowrap; }
+  .badge.acc { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .logos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .logo { width: 34px; height: 34px; border-radius: 9px; background: #fff; display: grid; place-items: center; flex: none; }
+  .logo img { width: 20px; height: 20px; }
+  .ask { border-left: 2px solid var(--accent-line); padding: 4px 0 4px 10px; color: var(--fg-2); margin: 6px 0; }
+  .big { text-align: center; font-size: 28px; color: rgba(232,236,244,.75); margin-top: 10px; }
+  .muted { color: var(--fg-3); }
+
+  /* outils */
+  .fam { margin-top: 14px; }
+  .fam .lbl { margin: 0 0 6px; font-size: 12px; color: var(--fg-3); text-transform: uppercase; letter-spacing: .05em; font-weight: 500; }
+  .tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .tool { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; color: var(--fg-2); background: transparent; text-align: left; }
+  .tool.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--fg); }
+  .tool .logo { width: 26px; height: 26px; border-radius: 7px; } .tool .logo img { width: 16px; height: 16px; }
+  .tool small { margin-left: auto; color: var(--accent); font-size: 11px; }
+  .tool.shared { border-style: dashed; cursor: default; } .tool.shared small { color: var(--fg-3); }
+  .plug { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .plug:last-child { border-bottom: 0; } .plug span { flex: 1; }
+  .ok { color: #9fd8b4; font-size: 13px; }
+
+  /* invitations */
+  .inv { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 10px; }
+  .inv label { margin: 0 0 4px; font-size: 12.5px; }
+  .inv .row3 { margin-top: 10px; }
+  .inv-head { display: flex; align-items: baseline; gap: 8px; }
+  .inv-head b { font-size: 15px; }
+  .link { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-family: ui-monospace, monospace; font-size: 12px; color: var(--fg-2); background: rgba(0,0,0,.3); border: 1px dashed var(--line-strong); border-radius: 8px; padding: 6px 6px 6px 10px; }
+  .link span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .small-note { font-size: 12px; color: var(--fg-3); margin: 8px 0 0; }
+  .add { margin-top: 10px; width: 100%; border: 1px dashed var(--line-strong); background: transparent; color: var(--fg-2); border-radius: 12px; padding: 10px; }
+  .add:hover { border-color: var(--accent-line); color: var(--accent); }
+  .locked { border: 1px solid var(--line-strong); border-radius: 12px; padding: 14px; background: rgba(0,0,0,.2); }
+  .locked p { margin: 10px 0 0; color: var(--fg-3); font-size: 12.5px; }
+  .tree { display: grid; gap: 10px; }
+  .node { display: flex; align-items: center; gap: 10px; } .node.sub { margin-left: 28px; }
+  .node .avatar { width: 30px; height: 30px; border-radius: 9px; font-size: 13px; }
+  .node .badge { margin-left: auto; }
+  .check { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-line); font-size: 26px; margin-bottom: 18px; }
+  .saved { color: #9fd8b4; font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const LEVELS = {
+  en: ['Intern', 'Apprentice', 'Junior', 'Mid-level', 'Senior', 'Lead', 'Head of / Director', 'C-level / Founder'],
+  fr: ['Stagiaire', 'Alternant', 'Junior', 'Confirmé', 'Senior', 'Lead', 'Head of / directeur', 'C-level / fondateur'],
+};
+const TEAMS = {
+  dev: { en: 'Engineering', fr: 'Dev',
+    roles: [['Backend engineer', 'Développeur backend'], ['Frontend engineer', 'Développeur frontend'], ['Full-stack engineer', 'Développeur full-stack'], ['Mobile engineer', 'Développeur mobile'], ['DevOps / SRE', 'DevOps / SRE'], ['QA engineer', 'QA'], ['Engineering manager', 'Engineering manager'], ['CTO', 'CTO']],
+    tools: ['github', 'gitlab', 'linear', 'sentry', 'jira', 'notion', 'slack'],
+    asks: { en: ['What broke in production this week?', 'Where is the billing PR at?'], fr: ["Qu'est-ce qui a cassé en prod cette semaine ?", 'Où en est la PR sur la facturation ?'] } },
+  produit: { en: 'Product', fr: 'Produit',
+    roles: [['Product manager', 'Product manager'], ['Product owner', 'Product owner'], ['Head of Product', 'Head of product'], ['CPO', 'CPO']],
+    tools: ['linear', 'notion', 'jira', 'productboard', 'miro', 'fathom', 'slack'],
+    asks: { en: ['Summarize customer feedback on export from the last month', "What's blocking the next release?"], fr: ["Résume les retours clients sur l'export depuis un mois", "Qu'est-ce qui bloque la prochaine version ?"] } },
+  design: { en: 'Design', fr: 'Design',
+    roles: [['Product designer', 'Product designer'], ['UX researcher', 'UX researcher'], ['Art director', 'Directeur artistique']],
+    tools: ['miro', 'notion', 'linear', 'drive', 'slack'],
+    asks: { en: ['What did users say about the new screen?', 'Which mockups are waiting for feedback?'], fr: ['Qu’ont dit les utilisateurs du nouvel écran ?', 'Quelles maquettes attendent un retour ?'] } },
+  data: { en: 'Data', fr: 'Data',
+    roles: [['Data analyst', 'Data analyst'], ['Data engineer', 'Data engineer'], ['Data scientist', 'Data scientist']],
+    tools: ['github', 'notion', 'drive', 'jira', 'slack'],
+    asks: { en: ['Who asked for this dashboard, and why?', 'Where is the orders table documented?'], fr: ['Qui a demandé ce tableau de bord, et pourquoi ?', 'Où est documentée la table des commandes ?'] } },
+  sales: { en: 'Sales', fr: 'Sales',
+    roles: [['SDR / BDR', 'SDR / BDR'], ['Account executive', 'Account executive'], ['Account manager', 'Account manager'], ['Sales ops', 'Sales ops'], ['VP Sales', 'Directeur commercial']],
+    tools: ['hubspot', 'pipedrive', 'gmail', 'gong', 'fathom', 'drive', 'slack'],
+    asks: { en: ['Prep my call with Acme Logistics', "Which deals haven't moved in 15 days?"], fr: ['Prépare mon rendez-vous avec Acme Logistique', 'Quels deals n’ont pas bougé depuis 15 jours ?'] } },
+  marketing: { en: 'Marketing', fr: 'Marketing',
+    roles: [['Growth marketer', 'Growth'], ['Content marketer', 'Contenu'], ['Product marketing manager', 'Marketing produit'], ['Communications', 'Communication'], ['CMO', 'CMO']],
+    tools: ['hubspot', 'notion', 'drive', 'asana', 'gmail', 'slack'],
+    asks: { en: ['What topics keep coming up in sales calls?', 'Where is the November campaign at?'], fr: ['Quels sujets reviennent dans les appels commerciaux ?', 'Où en est la campagne de novembre ?'] } },
+  support: { en: 'Support & Customer Success', fr: 'Support et succès client',
+    roles: [['Support agent', 'Agent support'], ['Customer success manager', 'Customer success manager'], ['Onboarding / Implementation', 'Onboarding / mise en place'], ['Head of Support', 'Head of support']],
+    tools: ['intercom', 'zendesk', 'front', 'linear', 'gmail', 'slack'],
+    asks: { en: ['Has this customer reported this bug before?', 'Is the export fix live yet?'], fr: ['Ce client a-t-il déjà signalé ce bug ?', 'Le correctif de l’export est-il en production ?'] } },
+  ops: { en: 'Operations & Finance', fr: 'Ops et finance',
+    roles: [['Office manager', 'Office manager'], ['Accountant', 'Comptable'], ['Financial controller', 'Contrôleur de gestion'], ['CFO', 'Directeur financier'], ['COO', 'COO']],
+    tools: ['drive', 'gmail', 'notion', 'airtable', 'slack'],
+    asks: { en: ['Where is the latest signed contract with this supplier?', 'Which expenses were approved this month?'], fr: ['Où est le dernier contrat signé avec ce fournisseur ?', 'Quelles dépenses ont été validées ce mois-ci ?'] } },
+  rh: { en: 'People', fr: 'RH',
+    roles: [['Recruiter', 'Chargé de recrutement'], ['HR generalist', 'RH généraliste'], ['Head of People', 'DRH']],
+    tools: ['drive', 'gmail', 'notion', 'slack'],
+    asks: { en: ['Where are our open roles at?', "Prep the new engineer's first week"], fr: ['Où en sont les recrutements ouverts ?', 'Prépare l’arrivée de la nouvelle développeuse'] } },
+  juridique: { en: 'Legal', fr: 'Juridique',
+    roles: [['Legal counsel', 'Juriste'], ['General counsel', 'Directeur juridique']],
+    tools: ['drive', 'outlook', 'gmail', 'notion'],
+    asks: { en: ['Which contracts expire this quarter?', 'Where did we discuss the confidentiality clause?'], fr: ['Quels contrats arrivent à échéance ce trimestre ?', 'Où a-t-on parlé de la clause de confidentialité ?'] } },
+  direction: { en: 'Leadership', fr: 'Direction générale',
+    roles: [['CEO / Founder', 'CEO / fondateur'], ['Managing director', 'Directeur général'], ['Partner', 'Associé']],
+    tools: ['gmail', 'slack', 'drive', 'hubspot', 'fathom', 'notion', 'linear'],
+    asks: { en: ['What moved across the teams this week?', 'Prep my investor update'], fr: ['Qu’est-ce qui a bougé cette semaine dans les équipes ?', 'Prépare mon point avec les investisseurs'] } },
+};
+const FAMILIES = [
+  [{ en: 'Dev', fr: 'Dev' }, ['github', 'gitlab', 'linear', 'sentry', 'notion']],
+  [{ en: 'Project management', fr: 'Projet' }, ['jira', 'confluence', 'asana', 'clickup', 'trello', 'monday', 'airtable', 'miro', 'productboard', 'drive']],
+  [{ en: 'Meetings', fr: 'Réunions' }, ['fathom', 'granola', 'fireflies', 'gong', 'tldv', 'claap']],
+  [{ en: 'CRM', fr: 'CRM' }, ['hubspot', 'pipedrive', 'attio', 'folk', 'close']],
+  [{ en: 'Support', fr: 'Support' }, ['intercom', 'zendesk', 'front', 'freshdesk', 'helpscout', 'crisp']],
+  [{ en: 'Email, chat and calendar', fr: 'Mails, chat et agenda' }, ['gmail', 'outlook', 'slack']],
+];
+const NAMES = { github: 'GitHub', gitlab: 'GitLab', linear: 'Linear', sentry: 'Sentry', notion: 'Notion', jira: 'Jira', confluence: 'Confluence', asana: 'Asana', clickup: 'ClickUp', trello: 'Trello', monday: 'monday', airtable: 'Airtable', miro: 'Miro', productboard: 'Productboard', drive: 'Google Drive', fathom: 'Fathom', granola: 'Granola', fireflies: 'Fireflies', gong: 'Gong', tldv: 'tl;dv', claap: 'Claap', hubspot: 'HubSpot', pipedrive: 'Pipedrive', attio: 'Attio', folk: 'folk', close: 'Close', intercom: 'Intercom', zendesk: 'Zendesk', front: 'Front', freshdesk: 'Freshdesk', helpscout: 'Help Scout', crisp: 'Crisp', gmail: 'Gmail', outlook: 'Outlook', slack: 'Slack' };
+const SIZES = ['1–10', '11–50', '51–200', '201+'];
+
+const T = {
+  en: {
+    ownerSteps: ['About you', 'Your tools', 'Teammates'], inviteeSteps: ['About you', 'Your tools'],
+    language: 'Language',
+    s1Title: 'Welcome to Leon',
+    s1Lead: 'A few questions so Leon fits the way you work: the right sources, the right questions, and a morning briefing about what matters to you.',
+    company: 'Company name', team: 'Department', role: 'Role', level: 'Seniority', levelHint: 'Same scale in every company',
+    size: 'Company size', goals: 'What should Leon help you with?', goalsHint: 'Pick all that apply',
+    goalsList: ['Find information fast', 'Prepare for meetings', 'Get a morning briefing', 'Keep track of my team', 'Onboard new hires', 'Answer customers faster'],
+    continue: 'Continue', back: 'Back',
+    pvProfile: (org) => `Your profile in ${org}`, owner: 'Owner', member: 'Member',
+    pvConnect: 'Leon will suggest connecting', pvAsk: 'Things you can ask in Chat', pvBig: 'Setting up your workspace',
+    s2Title: 'Connect your tools', s2Lead: 'Select the tools you use. The ones recommended for your role are already selected.',
+    recommended: 'Recommended', connectNow: 'To connect', connect: 'Connect', connected: 'Connected', none: 'Nothing selected yet.',
+    nextTitle: 'What happens next', nextText: 'Leon starts reading each source as soon as it’s connected. Your first morning briefing builds on them.',
+    skipTools: 'I’ll connect them later',
+    by: (n) => `Connected by ${n}`, alreadyTitle: 'Already connected for your workspace', connectOwn: 'Connect my account',
+    ownConnected: 'Your account is connected', ownHint: 'Optional. To act under your own name, for example on GitHub.',
+    s3Title: 'Invite your teammates', s3Lead: 'One invitation link per person. You set their department, role and seniority. They’ll see them, but can’t change them.',
+    name: 'Name', nameHint: 'To tell links apart', choose: 'Choose…',
+    createLink: 'Create link', copy: 'Copy', copied: 'Copied', linkNote: 'Send it yourself. It works once and expires in 7 days.',
+    addTeammate: 'Add a teammate', enter: 'Enter Leon', skipTeam: 'I’ll invite people later',
+    linkCreated: 'Link created', draft: 'Draft', you: 'You',
+    doneTitle: 'You’re in', doneLead: 'Leon is reading your first sources. Ask your first question in Chat.', openChat: 'Open Chat',
+    invTitle: (org) => `Welcome to ${org}`, invLead: (who, org) => `${who} added you to the ${org} workspace.`,
+    locked: (org) => `Set by an ${org} admin. Something wrong? Ask them to change it.`, invBig: 'Your workspace is ready',
+    laterKicker: 'A few days later, once your first sources are read', laterTitle: 'Here’s what Leon learned about you',
+    laterLead: 'Edit it or add details. Your morning briefing reads this.', aboutLabel: 'About you', aboutHint: '500 characters max',
+    notNow: 'Not now', save: 'Save', saved: 'Saved. Your next briefings will take it into account.',
+    whereTitle: 'Where this appears', whereText: 'Once, as a card at the top of Chat. After that, anytime in Settings › Profile.',
+    fromTitle: 'Based on', fromNote: 'Only from your own sources: nothing you couldn’t open yourself.',
+    about: 'Senior backend engineer on Acme’s Engineering team. Last two weeks: mostly the billing rewrite (PRs #212 and #219 on GitHub), Sentry alerts on the payments API, and the Postgres 17 migration tracked in Linear. Regular syncs with Inès (Product) on the export feature.',
+  },
+  fr: {
+    ownerSteps: ['Vous', 'Vos outils', 'Collaborateurs'], inviteeSteps: ['Vous', 'Vos outils'],
+    language: 'Langue',
+    s1Title: 'Bienvenue sur Leon',
+    s1Lead: 'Quelques questions pour que Leon s’adapte à votre travail : les bonnes sources, les bonnes questions, et un point du matin sur ce qui compte pour vous.',
+    company: 'Nom de l’entreprise', team: 'Service', role: 'Poste', level: 'Niveau', levelHint: 'La même échelle dans toutes les entreprises',
+    size: 'Taille de l’entreprise', goals: 'Sur quoi Leon doit-il vous aider ?', goalsHint: 'Plusieurs choix possibles',
+    goalsList: ['Retrouver une info vite', 'Préparer mes réunions', 'Recevoir un point chaque matin', 'Suivre mon équipe', 'Intégrer les nouveaux', 'Répondre plus vite aux clients'],
+    continue: 'Continuer', back: 'Retour',
+    pvProfile: (org) => `Votre fiche chez ${org}`, owner: 'Propriétaire', member: 'Membre',
+    pvConnect: 'Leon vous proposera de brancher', pvAsk: 'Ce que vous pourrez demander dans le Chat', pvBig: 'Votre espace se prépare',
+    s2Title: 'Branchez vos outils', s2Lead: 'Cochez ceux que vous utilisez. Ceux conseillés pour votre poste sont déjà cochés.',
+    recommended: 'Conseillé', connectNow: 'À brancher', connect: 'Brancher', connected: 'Branché', none: 'Rien de coché pour l’instant.',
+    nextTitle: 'Ensuite', nextText: 'Leon commence à lire chaque source dès qu’elle est branchée. Votre premier point du matin s’appuie dessus.',
+    skipTools: 'Je brancherai plus tard',
+    by: (n) => `Branché par ${n}`, alreadyTitle: 'Déjà branché pour l’espace', connectOwn: 'Brancher mon compte',
+    ownConnected: 'Votre compte est branché', ownHint: 'Facultatif. Pour agir en votre nom, par exemple sur GitHub.',
+    s3Title: 'Invitez vos collaborateurs', s3Lead: 'Un lien d’invitation par personne. Vous fixez son service, son poste et son niveau : elle les verra sans pouvoir les changer.',
+    name: 'Nom', nameHint: 'Pour vous y retrouver', choose: 'Choisir…',
+    createLink: 'Créer le lien', copy: 'Copier', copied: 'Copié', linkNote: 'Envoyez-le vous-même. Il sert une fois et expire dans 7 jours.',
+    addTeammate: 'Ajouter un collaborateur', enter: 'Entrer dans Leon', skipTeam: 'J’inviterai plus tard',
+    linkCreated: 'Lien créé', draft: 'Brouillon', you: 'Vous',
+    doneTitle: 'C’est prêt', doneLead: 'Leon lit vos premières sources. Posez votre première question dans le Chat.', openChat: 'Ouvrir le Chat',
+    invTitle: (org) => `Bienvenue chez ${org}`, invLead: (who, org) => `${who} vous a ajouté à l’espace ${org}.`,
+    locked: (org) => `Fixé par un administrateur de ${org}. Une erreur ? Demandez-lui de le corriger.`, invBig: 'Votre espace est prêt',
+    laterKicker: 'Quelques jours plus tard, une fois vos premières sources lues', laterTitle: 'Ce que Leon a compris de vous',
+    laterLead: 'Corrigez ou complétez : votre point du matin lit ce texte.', aboutLabel: 'À propos de vous', aboutHint: '500 caractères au plus',
+    notNow: 'Plus tard', save: 'Enregistrer', saved: 'Enregistré. Vos prochains points en tiendront compte.',
+    whereTitle: 'Où ça apparaît', whereText: 'Une fois, en carte en haut du Chat. Ensuite, à tout moment dans Réglages › Profil.',
+    fromTitle: 'Tiré de', fromNote: 'Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même.',
+    about: 'Développeur backend senior dans l’équipe Dev d’Acme. Ces deux dernières semaines : surtout la refonte de la facturation (PR #212 et #219 sur GitHub), les alertes Sentry de l’API de paiement, et la migration vers Postgres 17 suivie dans Linear. Points réguliers avec Inès (Produit) sur l’export.',
+  },
+};
+
+// État de la maquette
+const S = {
+  scenario: 'owner', step: 1, done: false, lang: 'en', org: 'Acme',
+  team: 'dev', role: 0, level: 4, size: 1, goals: new Set([0, 2]),
+  tools: new Set(TEAMS.dev.tools), connected: new Set(), own: new Set(),
+  invites: [
+    { name: 'Inès', team: 'produit', role: 0, level: 4, link: 'https://leon.app/invitation/3f9c…a71e' },
+    { name: '', team: '', role: 0, level: '', link: null },
+  ],
+  copied: -1, saved: false,
+};
+const INVITEE = { name: 'Inès Martin', team: 'produit', role: 0, level: 4, inviter: 'Amos' };
+
+const t = () => T[S.lang];
+const lab = (o) => o[S.lang];
+const li = S.lang === 'en' ? 0 : 1;
+const roleName = (team, i) => TEAMS[team].roles[i][S.lang === 'en' ? 0 : 1];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const logo = (id) => `<span class="logo" title="${NAMES[id]}"><img src="../../public/logos/${id}.svg" alt="${NAMES[id]}"></span>`;
+const opts = (items, sel, placeholder) =>
+  (placeholder ? `<option value=""${sel === '' ? ' selected' : ''}>${placeholder}</option>` : '') +
+  items.map(([v, l]) => `<option value="${v}"${String(v) === String(sel) ? ' selected' : ''}>${esc(l)}</option>`).join('');
+const teamOpts = (sel, ph) => opts(Object.entries(TEAMS).map(([k, v]) => [k, lab(v)]), sel, ph);
+const roleOpts = (team, sel) => opts(TEAMS[team].roles.map((r, i) => [i, r[S.lang === 'en' ? 0 : 1]]), sel);
+const levelOpts = (sel, ph) => opts(LEVELS[S.lang].map((l, i) => [i, l]), sel, ph);
+
+function stepper(names, cur) {
+  return `<ol class="stepper">${names.map((n, i) => {
+    const s = i + 1 < cur ? 'done' : i + 1 === cur ? 'cur' : '';
+    return `<li class="${s}"><span class="dot">${s === 'done' ? '✓' : i + 1}</span>${n}</li>`;
+  }).join('')}</ol>`;
+}
+const langSeg = () => `<label>${t().language}</label>
+  <div class="seg"><button data-a="lang" data-v="en" class="${S.lang === 'en' ? 'on' : ''}">English</button><button data-a="lang" data-v="fr" class="${S.lang === 'fr' ? 'on' : ''}">Français</button></div>`;
+const goalChips = () => `<span class="lbl">${t().goals}<span class="hint">${t().goalsHint}</span></span>
+  <div class="chips">${t().goalsList.map((g, i) => `<button class="chip${S.goals.has(i) ? ' on' : ''}" data-a="goal" data-v="${i}">${g}</button>`).join('')}</div>`;
+const asks = (team) => TEAMS[team].asks[S.lang].map((a) => `<div class="ask">${a}</div>`).join('');
+
+function ownerStep1() {
+  return `<div>
+    ${stepper(t().ownerSteps, 1)}
+    <h2>${t().s1Title}</h2><p class="lead">${t().s1Lead}</p>
+    ${langSeg()}
+    <label for="org">${t().company}</label><input id="org" data-f="org" value="${esc(S.org)}">
+    <div class="metanote">Maquette : ce champ n'apparaît que pour qui arrive par Google, Microsoft ou GitHub sans espace.</div>
+    <div class="row">
+      <div><label>${t().team}</label><select data-a="team">${teamOpts(S.team)}</select></div>
+      <div><label>${t().role}</label><select data-a="role">${roleOpts(S.team, S.role)}</select></div>
+    </div>
+    <label>${t().level}<span class="hint">${t().levelHint}</span></label><select data-a="level">${levelOpts(S.level)}</select>
+    <div class="divider"></div>
+    <span class="lbl">${t().size}</span>
+    <div class="chips">${SIZES.map((s, i) => `<button class="chip${S.size === i ? ' on' : ''}" data-a="size" data-v="${i}">${s}</button>`).join('')}</div>
+    ${goalChips()}
+    <div class="footer"><button class="btn" data-a="next">${t().continue}</button></div>
+  </div>
+  <div class="preview">
+    <div class="card">
+      <h4>${t().pvProfile(esc(S.org || 'Acme'))}</h4>
+      <div class="who"><div class="avatar">A</div><div><b>Amos Koskas</b><span>${roleName(S.team, S.role)}</span></div></div>
+      <div class="badges"><span class="badge acc">${LEVELS[S.lang][S.level]}</span><span class="badge">${lab(TEAMS[S.team])}</span><span class="badge">${t().owner}</span></div>
+    </div>
+    <div class="card"><h4>${t().pvConnect}</h4><div class="logos">${TEAMS[S.team].tools.map(logo).join('')}</div></div>
+    <div class="card"><h4>${t().pvAsk}</h4>${asks(S.team)}</div>
+    <div class="big">${t().pvBig}</div>
+  </div>`;
+}
+
+function toolsStep(steps, cur, team, isLast) {
+  const rec = TEAMS[team].tools;
+  return `<div>
+    ${stepper(steps, cur)}
+    <h2>${t().s2Title}</h2><p class="lead">${t().s2Lead}</p>
+    ${FAMILIES.map(([fam, ids]) => `<div class="fam"><div class="lbl">${lab(fam)}</div><div class="tools">${ids.map((id) => already(id)
+      ? `<button class="tool shared">${logo(id)}${NAMES[id]}<small>${t().by(ALREADY[id])}</small></button>`
+      : `<button class="tool${S.tools.has(id) ? ' on' : ''}" data-a="tool" data-v="${id}">${logo(id)}${NAMES[id]}${rec.includes(id) ? `<small>${t().recommended}</small>` : ''}</button>`).join('')}</div></div>`).join('')}
+    <div class="footer"><button class="btn ghost" data-a="back">${t().back}</button><button class="btn" data-a="${isLast ? 'finish' : 'next'}">${isLast ? t().enter : t().continue}</button></div>
+    <button class="skip" data-a="${isLast ? 'finish' : 'next'}">${t().skipTools}</button>
+  </div>
+  <div class="preview">
+    <div class="card"><h4>${t().connectNow}</h4>${[...S.tools].map((id) => `<div class="plug">${logo(id)}<span>${NAMES[id]}</span>${S.connected.has(id)
+      ? `<span class="ok">✓ ${t().connected}</span>` : `<button class="btn small" data-a="connect" data-v="${id}">${t().connect}</button>`}</div>`).join('') || `<p class="muted" style="margin:0">${t().none}</p>`}</div>
+    ${rec.some(already) ? `<div class="card"><h4>${t().alreadyTitle}</h4>${rec.filter(already).map((id) => `<div class="plug">${logo(id)}<span>${NAMES[id]} <span class="muted">· ${t().by(ALREADY[id])}</span></span>${S.own.has(id)
+      ? `<span class="ok">✓ ${t().ownConnected}</span>` : `<button class="btn ghost small" data-a="connect-own" data-v="${id}">${t().connectOwn}</button>`}</div>`).join('')}
+      <p class="small-note">${t().ownHint}</p></div>` : ''}
+    <div class="card"><h4>${t().nextTitle}</h4><p class="muted" style="margin:0">${t().nextText}</p></div>
+  </div>`;
+}
+
+function inviteCard(inv, i) {
+  if (inv.link) {
+    return `<div class="inv">
+      <div class="inv-head"><b>${esc(inv.name || '—')}</b><span class="muted">${roleName(inv.team, inv.role)} · ${LEVELS[S.lang][inv.level]} · ${lab(TEAMS[inv.team])}</span></div>
+      <div class="link"><span>${inv.link}</span><button class="btn small" data-a="copy" data-v="${i}">${S.copied === i ? '✓ ' + t().copied : t().copy}</button></div>
+      <p class="small-note">${t().linkNote}</p>
+    </div>`;
+  }
+  const ready = inv.team !== '' && inv.level !== '';
+  return `<div class="inv">
+    <label>${t().name}<span class="hint">${t().nameHint}</span></label>
+    <input data-f="inv-name" data-i="${i}" value="${esc(inv.name)}" placeholder="${S.lang === 'en' ? 'e.g. Inès' : 'ex. Inès'}">
+    <div class="row3">
+      <div><label>${t().team}</label><select data-a="inv-team" data-i="${i}">${teamOpts(inv.team, t().choose)}</select></div>
+      <div><label>${t().role}</label><select data-a="inv-role" data-i="${i}" ${inv.team === '' ? 'disabled' : ''}>${inv.team === '' ? `<option>${t().choose}</option>` : roleOpts(inv.team, inv.role)}</select></div>
+      <div><label>${t().level}</label><select data-a="inv-level" data-i="${i}">${levelOpts(inv.level, t().choose)}</select></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn small" data-a="create" data-v="${i}" ${ready ? '' : 'disabled'}>${t().createLink}</button></div>
+  </div>`;
+}
+
+function ownerStep3() {
+  return `<div>
+    ${stepper(t().ownerSteps, 3)}
+    <h2>${t().s3Title}</h2><p class="lead">${t().s3Lead}</p>
+    ${S.invites.map(inviteCard).join('')}
+    <button class="add" data-a="add">+ ${t().addTeammate}</button>
+    <div class="footer"><button class="btn ghost" data-a="back">${t().back}</button><button class="btn" data-a="finish">${t().enter}</button></div>
+    <button class="skip" data-a="finish">${t().skipTeam}</button>
+  </div>
+  <div class="preview">
+    <div class="card"><h4>${esc(S.org || 'Acme')}</h4><div class="tree">
+      <div class="node"><div class="avatar">A</div><div><b>Amos</b> <span class="muted">· ${roleName(S.team, S.role)} · ${LEVELS[S.lang][S.level]}</span></div><span class="badge">${t().you}</span></div>
+      ${S.invites.map((inv) => `<div class="node sub"><div class="avatar"${inv.link ? '' : ' style="opacity:.45"'}>${esc((inv.name || '?')[0].toUpperCase())}</div>
+        <div><b>${esc(inv.name || '—')}</b>${inv.team !== '' ? ` <span class="muted">· ${roleName(inv.team, inv.role)}${inv.level !== '' ? ' · ' + LEVELS[S.lang][inv.level] : ''}</span>` : ''}</div>
+        <span class="badge${inv.link ? ' acc' : ''}">${inv.link ? t().linkCreated : t().draft}</span></div>`).join('')}
+    </div></div>
+    <div class="metanote">Maquette : le manager de chacun se choisira ici quand la PR #69 de David (organigramme) sera fusionnée.</div>
+  </div>`;
+}
+
+function doneScreen() {
+  return `<div>
+    <div class="check">✓</div>
+    <h2>${t().doneTitle}</h2><p class="lead">${t().doneLead}</p>
+    <div class="footer"><button class="btn" data-a="later">${t().openChat}</button></div>
+    <div class="metanote">Maquette : « Ouvrir le Chat » montre la carte « À propos de vous » qui viendra quelques jours plus tard.</div>
+  </div>
+  <div class="preview"><div class="big">${S.scenario === 'owner' ? t().pvBig : t().invBig}</div></div>`;
+}
+
+function inviteeStep1() {
+  const tm = INVITEE.team;
+  return `<div>
+    ${stepper(t().inviteeSteps, 1)}
+    <h2>${t().invTitle('Acme')}</h2><p class="lead">${t().invLead(INVITEE.inviter, 'Acme')}</p>
+    ${langSeg()}
+    <div class="locked" style="margin-top:18px">
+      <div class="who"><div class="avatar">I</div><div><b>${INVITEE.name}</b><span>${roleName(tm, INVITEE.role)} · ${lab(TEAMS[tm])}</span></div></div>
+      <div class="badges"><span class="badge acc">${LEVELS[S.lang][INVITEE.level]}</span><span class="badge">${t().member}</span></div>
+      <p>🔒 ${t().locked('Acme')}</p>
+    </div>
+    ${goalChips()}
+    <div class="footer"><button class="btn" data-a="next">${t().continue}</button></div>
+  </div>
+  <div class="preview">
+    <div class="card"><h4>${t().pvConnect}</h4><div class="logos">${TEAMS[tm].tools.map(logo).join('')}</div></div>
+    <div class="card"><h4>${t().pvAsk}</h4>${asks(tm)}</div>
+    <div class="big">${t().invBig}</div>
+  </div>`;
+}
+
+function laterScreen() {
+  return `<div>
+    <div class="kicker">${t().laterKicker}</div>
+    <h2>${t().laterTitle}</h2><p class="lead">${t().laterLead}</p>
+    <label>${t().aboutLabel}<span class="hint">${t().aboutHint}</span></label>
+    <textarea maxlength="500">${t().about}</textarea>
+    <div class="footer"><button class="btn ghost" data-a="notnow">${t().notNow}</button><button class="btn" data-a="save">${t().save}</button></div>
+    ${S.saved ? `<div class="saved">✓ ${t().saved}</div>` : ''}
+  </div>
+  <div class="preview">
+    <div class="card"><h4>${t().whereTitle}</h4><p class="muted" style="margin:0">${t().whereText}</p></div>
+    <div class="card"><h4>${t().fromTitle}</h4><div class="logos">${['github', 'sentry', 'linear', 'fathom'].map(logo).join('')}</div></div>
+    <p class="muted" style="margin:0;text-align:center">${t().fromNote}</p>
+  </div>`;
+}
+
+function screen() {
+  if (S.scenario === 'later') return laterScreen();
+  if (S.done) return doneScreen();
+  if (S.scenario === 'invitee') return S.step === 1 ? inviteeStep1() : toolsStep(t().inviteeSteps, 2, INVITEE.team, true);
+  if (S.step === 1) return ownerStep1();
+  if (S.step === 2) return toolsStep(t().ownerSteps, 2, S.team, false);
+  return ownerStep3();
+}
+
+function render() {
+  document.documentElement.lang = S.lang;
+  const sc = [['owner', 'Créateur de l’espace'], ['invitee', 'Invité'], ['later', 'Plus tard : « À propos de vous »']];
+  document.getElementById('app').innerHTML = `
+    <div class="meta"><b>Maquette</b> · parcours :
+      <div class="seg">${sc.map(([v, l]) => `<button data-a="scenario" data-v="${v}" class="${S.scenario === v ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span>Listes de postes, outils conseillés et exemples : mes propositions.</span>
+    </div>
+    <section class="screen">${screen()}</section>`;
+}
+
+// Dans le parcours invité, Amos a déjà branché Linear et Notion pour l'espace ; les outils perso (Gmail, Outlook, Drive, Slack) ne le sont jamais pour les autres.
+const ALREADY = { linear: 'Amos', notion: 'Amos', github: 'Amos' };
+const already = (id) => S.scenario === 'invitee' && Boolean(ALREADY[id]);
+function resetTools(team) { S.tools = new Set(TEAMS[team].tools.filter((id) => !already(id))); S.connected = new Set(); S.own = new Set(); }
+const randomLink = () => `https://leon.app/invitation/${Math.random().toString(16).slice(2, 6)}…${Math.random().toString(16).slice(2, 6)}`;
+
+const app = document.getElementById('app');
+app.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-a]');
+  if (!b || b.disabled) return;
+  const v = b.dataset.v;
+  switch (b.dataset.a) {
+    case 'scenario': S.scenario = v; S.step = 1; S.done = false; S.saved = false; resetTools(v === 'invitee' ? INVITEE.team : S.team); break;
+    case 'lang': S.lang = v; break;
+    case 'size': S.size = Number(v); break;
+    case 'goal': { const n = Number(v); S.goals.has(n) ? S.goals.delete(n) : S.goals.add(n); break; }
+    case 'tool': S.tools.has(v) ? S.tools.delete(v) : S.tools.add(v); break;
+    case 'connect': S.connected.add(v); break;
+    case 'connect-own': S.own.add(v); break;
+    case 'next': S.step += 1; scrollTo(0, 0); break;
+    case 'back': S.step -= 1; scrollTo(0, 0); break;
+    case 'finish': S.done = true; scrollTo(0, 0); break;
+    case 'later': S.scenario = 'later'; S.done = false; break;
+    case 'create': S.invites[Number(v)].link = randomLink(); break;
+    case 'add': S.invites.push({ name: '', team: '', role: 0, level: '', link: null }); break;
+    case 'copy': {
+      const i = Number(v);
+      navigator.clipboard?.writeText(S.invites[i].link).catch(() => {});
+      S.copied = i; setTimeout(() => { S.copied = -1; render(); }, 1500); break;
+    }
+    case 'save': S.saved = true; break;
+    case 'notnow': S.scenario = 'owner'; S.step = 1; S.done = false; break;
+  }
+  render();
+});
+app.addEventListener('change', (e) => {
+  const el = e.target, a = el.dataset.a, i = Number(el.dataset.i);
+  if (a === 'team') { S.team = el.value; S.role = 0; resetTools(S.team); }
+  else if (a === 'role') S.role = Number(el.value);
+  else if (a === 'level') S.level = Number(el.value);
+  else if (a === 'inv-team') { S.invites[i].team = el.value; S.invites[i].role = 0; }
+  else if (a === 'inv-role') S.invites[i].role = Number(el.value);
+  else if (a === 'inv-level') S.invites[i].level = el.value === '' ? '' : Number(el.value);
+  else if (el.dataset.f === 'org') S.org = el.value;
+  else if (el.dataset.f === 'inv-name') S.invites[i].name = el.value;
+  else return;
+  render();
+});
+render();
+</script>
+</body>
+</html>

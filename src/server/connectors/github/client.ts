@@ -70,6 +70,7 @@ const ContentSchema = z.union([
     size: z.number(),
     encoding: z.string().nullish(), // « none » pour un fichier de plus de 1 Mo
     content: z.string().nullish(),
+    sha: z.string().optional(), // le fichier tel qu'il est : ce que l'écriture suivante doit citer
   }),
 ]);
 const PullSchema = z.object({
@@ -78,7 +79,7 @@ const PullSchema = z.object({
   merged: z.boolean(),
   draft: z.boolean().optional(),
   user: Author,
-  head: z.object({ ref: z.string() }),
+  head: z.object({ ref: z.string(), sha: z.string().optional() }),
   base: z.object({ ref: z.string() }),
   mergeable_state: z.string().optional(),
   body: z.string().nullish(),
@@ -107,6 +108,15 @@ const WorkflowRunsSchema = z.object({
     }),
   ),
 });
+// Ce que les écritures lisent avant de proposer (le titre d'un ticket, l'état d'une exécution) et rendent après.
+const TitleSchema = z.object({ title: z.string() });
+const RunSchema = z.object({
+  name: z.string().nullish(),
+  status: z.string().nullish(),
+  head_branch: z.string().nullish(),
+});
+const UrlSchema = z.object({ html_url: z.string() });
+const CommitUrlSchema = z.object({ commit: z.object({ html_url: z.string() }) });
 const TicketSchema = z.object({
   number: z.number(),
   title: z.string(),
@@ -116,6 +126,9 @@ const TicketSchema = z.object({
   assignees: z.array(z.object({ login: z.string() })).nullish(),
   pull_request: z.looseObject({}).nullish(), // les PR sont dans la liste des tickets
 });
+
+type FileWrite = { message: string; branch: string; content?: string; sha?: string };
+type IssueWrite = { title?: string; body?: string; labels?: string[]; assignees?: string[] };
 
 export type ChangedFile = z.infer<typeof ChangedFileSchema>;
 export type Issue = z.infer<typeof IssueSchema>;
@@ -131,6 +144,8 @@ export function githubClient(token: string, http: ConnectorHttp) {
     'X-GitHub-Api-Version': '2022-11-28',
     'User-Agent': 'Leon',
   };
+  const write = (method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', path: string, body?: unknown) =>
+    ({ url: `${API}${path}`, method, headers, body, once: true }) satisfies HttpRequest;
 
   // Une page à la fois ; la suivante par l'adresse que GitHub donne dans l'en-tête Link.
   async function* pages<T>(first: HttpRequest, schema: z.ZodType<T[]>): AsyncGenerator<T[]> {
@@ -345,6 +360,48 @@ export function githubClient(token: string, http: ConnectorHttp) {
       ),
     openIssues: (repo: string) =>
       firstPage(`/repos/${repo}/issues`, { state: 'open', per_page: 30 }, z.array(TicketSchema)),
+    issue: (repo: string, number: number) =>
+      http.json({ url: `${API}/repos/${repo}/issues/${number}`, headers }, TitleSchema),
+    run: (repo: string, id: number) =>
+      http.json({ url: `${API}/repos/${repo}/actions/runs/${id}`, headers }, RunSchema),
+
+    // Les écritures que l'utilisateur confirme d'un clic (lots 7 à 10), jamais reprises (`once`) : une réponse
+    // perdue ne doit pas doubler un commentaire, une fusion ou une revue. Seul le jeton de l'utilisateur les signe.
+    // https://docs.github.com/en/rest/repos/contents, /pulls, /issues, /actions/workflow-runs
+    deleteBranch: (repo: string, branch: string) =>
+      http.text(write('DELETE', `/repos/${repo}/git/refs/heads/${refPath(branch)}`)),
+    writeFile: (repo: string, path: string, body: FileWrite) =>
+      http.json(write('PUT', `/repos/${repo}/contents/${refPath(path)}`, body), CommitUrlSchema),
+    deleteFile: (repo: string, path: string, body: Required<Omit<FileWrite, 'content'>>) =>
+      http.json(write('DELETE', `/repos/${repo}/contents/${refPath(path)}`, body), CommitUrlSchema),
+    openPull: (repo: string, body: Record<string, string | boolean>) =>
+      http.json(write('POST', `/repos/${repo}/pulls`, body), UrlSchema),
+    editPull: (repo: string, number: number, body: Record<string, string>) =>
+      http.json(write('PATCH', `/repos/${repo}/pulls/${number}`, body), UrlSchema),
+    mergePull: (repo: string, number: number, body: { merge_method: string; sha: string }) =>
+      http.json(write('PUT', `/repos/${repo}/pulls/${number}/merge`, body), z.looseObject({})),
+    comment: (repo: string, number: number, body: string) =>
+      http.json(write('POST', `/repos/${repo}/issues/${number}/comments`, { body }), UrlSchema),
+    requestReviewers: (repo: string, number: number, reviewers: string[]) =>
+      http.json(
+        write('POST', `/repos/${repo}/pulls/${number}/requested_reviewers`, { reviewers }),
+        UrlSchema,
+      ),
+    submitReview: (repo: string, number: number, body: Record<string, string>) =>
+      http.json(write('POST', `/repos/${repo}/pulls/${number}/reviews`, body), UrlSchema),
+    openIssue: (repo: string, body: IssueWrite) =>
+      http.json(write('POST', `/repos/${repo}/issues`, body), UrlSchema),
+    editIssue: (repo: string, number: number, body: IssueWrite & { state?: string }) =>
+      http.json(write('PATCH', `/repos/${repo}/issues/${number}`, body), UrlSchema),
+    rerun: (repo: string, id: number, failedOnly: boolean) =>
+      http.text(
+        write(
+          'POST',
+          `/repos/${repo}/actions/runs/${id}/${failedOnly ? 'rerun-failed-jobs' : 'rerun'}`,
+        ),
+      ),
+    cancelRun: (repo: string, id: number) =>
+      http.text(write('POST', `/repos/${repo}/actions/runs/${id}/cancel`)),
   };
 }
 

@@ -39,6 +39,9 @@ describe('toolActivity', () => {
     expect(toolActivity('lire')).toBe('lire');
     expect(toolActivity('activite')).toBe('activite');
     expect(toolActivity('autre')).toBe('autre');
+    expect(toolActivity('depots_github')).toBe('depots_github');
+    expect(toolActivity('fusionner_pr_github')).toBe('ecrire_github');
+    expect(toolActivity('creer_branche_github')).toBe('ecrire_github');
     expect(toolActivity('inconnu')).toBe('autre');
   });
 });

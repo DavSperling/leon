@@ -72,22 +72,34 @@ describe('les outils de la discussion', () => {
       'depots_github',
       'lire_github',
       'creer_branche_github',
+      'supprimer_branche_github',
+      'ecrire_fichier_github',
+      'supprimer_fichier_github',
+      'ouvrir_pr_github',
+      'modifier_pr_github',
+      'fusionner_pr_github',
+      'commenter_github',
+      'demander_revue_github',
+      'soumettre_revue_github',
+      'creer_ticket_github',
+      'modifier_ticket_github',
+      'relancer_execution_github',
+      'annuler_execution_github',
     ]);
   });
 
   it('passent la vérification des outils de l’API', () => {
     const definitions = toolDefinitions(tools);
 
-    expect(definitions.map((tool) => tool.input_schema.type)).toEqual([
-      'object',
-      'object',
-      'object',
-      'object',
-      'object',
-      'object',
-    ]);
+    expect(definitions.map((tool) => tool.input_schema.type)).toEqual(tools.map(() => 'object'));
     expect(definitions[0]?.input_schema.required).toEqual(['requete']);
     expect(definitions[2]?.input_schema.required).toEqual(['depuis']);
+  });
+
+  // L'API des outils ne reçoit pas tous les motifs d'un schéma : une règle de forme s'écrit en .refine (le code la
+  // contrôle) et non en .regex, sinon le schéma envoyé au modèle porte un `pattern`.
+  it('n’envoient aucun « pattern » au modèle', () => {
+    expect(JSON.stringify(toolDefinitions(tools))).not.toContain('"pattern"');
   });
 
   it('se décrivent en français et disent qu’elles ne rendent que ce que l’utilisateur voit', () => {

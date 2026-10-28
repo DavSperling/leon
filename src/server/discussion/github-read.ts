@@ -5,7 +5,13 @@ import { REPO_PATTERN } from '@/server/connectors/github/connector';
 import { ConnectorAuthError, ConnectorHttpError } from '@/server/connectors/http';
 import type { AgentTool } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, escapeData } from '@/server/llm/prompt-guard';
-import { COMMIT_SHA, isBranchName, myGithubConnections, openGithub } from './github-live';
+import {
+  COMMIT_SHA,
+  isBranchName,
+  isRepoPath,
+  myGithubConnections,
+  openGithub,
+} from './github-live';
 import {
   type GithubToolDeps,
   isRefused,
@@ -81,19 +87,12 @@ const BAD_NUMBER = 'Donne numero : le numéro de la PR, un entier positif.';
 const NO_ROOM =
   'Lecture refusée : budget de lecture atteint pour cette réponse. Réponds avec ce que tu as déjà lu, ou dis ce qui te manque.';
 
-// Un morceau de chemin vide, « . » ou « .. » changerait la route appelée (arbre, dossier parent).
-const validPath = (path: string | null | undefined) =>
-  path != null &&
-  path.length <= 500 &&
-  !/\p{Cc}/u.test(path) &&
-  !path.split('/').some((part) => part === '' || part === '.' || part === '..');
-
 // Un sha de commit passe aussi isBranchName (lettres et chiffres).
 function inputProblem({ depot, quoi, ref, chemin, numero }: Input): string | null {
   if (!REPO_PATTERN.test(depot)) return 'Dépôt invalide : il s’écrit propriétaire/nom.';
   if (ref != null && !isBranchName(ref)) return BAD_REF;
   if (quoi === 'commit' && ref == null) return 'Donne ref : le sha du commit à lire.';
-  if (quoi === 'fichier' && !validPath(chemin)) return BAD_PATH;
+  if (quoi === 'fichier' && !isRepoPath(chemin)) return BAD_PATH;
   const isNumber = typeof numero === 'number' && Number.isInteger(numero) && numero > 0;
   if (quoi === 'pr' && !isNumber) return BAD_NUMBER;
   return null;

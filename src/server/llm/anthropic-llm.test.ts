@@ -7,7 +7,7 @@ import { type AnthropicLike, createAnthropicLlm, logUsage, toolDefinitions } fro
 import { type AgentEvent, type AgentTool, type ChatMessage, LlmError, type LlmStep } from './llm';
 import { EFFORT_BY_STEP } from './models';
 
-// L'écriture dans llm_usage : sans base dans ces tests.
+// L'écriture dans appels_modele : sans base dans ces tests.
 const { query } = vi.hoisted(() => ({ query: vi.fn(() => Promise.resolve()) }));
 vi.mock('../db/client', () => ({ pool: { query } }));
 
@@ -665,7 +665,7 @@ describe('logUsage', () => {
       cacheWriteTokens: 0,
       costUsd: 6,
     });
-    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('insert into llm_usage'), [
+    expect(query).toHaveBeenLastCalledWith(expect.stringContaining('insert into appels_modele'), [
       'discussion',
       'claude-opus-5-5',
       1_000_000,

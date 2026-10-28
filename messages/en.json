@@ -637,7 +637,26 @@
     "emailOrganization": "The organization “{organization}” was deleted by its owner on {date}, along with everything it contained.",
     "emailIgnore": "If you didn’t request this deletion, tell your organization’s administrator.",
     "doneAccount": "Your account has been deleted.",
-    "doneOrganization": "The organization has been deleted."
+    "doneOrganization": "The organization has been deleted.",
+    "title": "Delete my account",
+    "description": "You won’t be able to sign in anymore, and Leon stops collecting from the tools you connected. What you produced stays with your organization, under your name followed by “former member”.",
+    "descriptionSole": "You’re the only active member: deleting your account also deletes the organization, with everything it contains.",
+    "irreversible": "This can’t be undone.",
+    "effectLogin": "You won’t be able to sign in to Leon anymore.",
+    "effectTools": "Leon stops collecting from the tools you connected: an administrator will have to reconnect them for the team.",
+    "effectStays": "What you produced stays with the organization “{organization}”, under your name followed by “former member”.",
+    "effectSole": "You’re the only active member of “{organization}”: the whole organization will be deleted, with everything it contains.",
+    "successor": "New owner",
+    "successorHelp": "You’re the only owner: choose who takes over before you leave.",
+    "successorPlaceholder": "Choose a member",
+    "typeWord": "To confirm, type “{word}”",
+    "confirm": "Delete permanently"
+  },
+  "deleteOrganization": {
+    "title": "Delete the organization",
+    "description": "Only its owner can delete it. Everything it contains is erased, for everyone.",
+    "effectAll": "Everything in “{organization}” is erased, for everyone: collected sources, documents, discussions and morning briefings.",
+    "effectMembers": "Access removed for {count, plural, one {# active member} other {# active members}}; accounts that don’t belong to any other organization are deleted with it."
   },
   "site": {
     "meta": {

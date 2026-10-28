@@ -152,4 +152,19 @@ describe('recordReads', () => {
     expect(rows.map((row) => row.passageId).sort()).toEqual([first, second].sort());
     expect(await readsOf(s.paulSourceId)).toHaveLength(before);
   });
+
+  it('tout ou rien (whole) : une seule source invisible et rien n’est noté', async () => {
+    const s = await seedScenario();
+    const before = (await readsOf(s.teamSourceId)).length;
+
+    const written = await recordReads(s.marie, {
+      tool: 'briefing',
+      client: 'chatgpt',
+      reads: [{ sourceId: s.teamSourceId }, { sourceId: s.paulSourceId }],
+      whole: true,
+    });
+
+    expect(written.size).toBe(0);
+    expect(await readsOf(s.teamSourceId)).toHaveLength(before);
+  });
 });

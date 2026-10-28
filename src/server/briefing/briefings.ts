@@ -209,6 +209,7 @@ export async function briefingResponse(
         tool: 'briefing',
         client: deps.client,
         reads: briefing.sourceIds.map((sourceId) => ({ sourceId })),
+        whole: true,
       })
     ).size === briefing.sourceIds.length;
   if (briefing !== null && project !== null && logged) {

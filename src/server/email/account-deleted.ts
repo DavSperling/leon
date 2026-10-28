@@ -41,6 +41,8 @@ export async function sendDeletionEmail(input: {
       subject: t(kind === 'account' ? 'emailSubjectAccount' : 'emailSubjectOrganization'),
       html: paragraphs.map((text) => `<p>${text}</p>`).join(''),
     }),
+    // Les envois partent l'un après l'autre : un Resend qui ne répond pas ne doit pas retenir toute la suite.
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error(`Deletion email failed (${response.status})`);
 }

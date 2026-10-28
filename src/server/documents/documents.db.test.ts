@@ -139,7 +139,7 @@ describe('liste des documents', () => {
   it("garde le document d'un ancien membre, marqué comme tel", async () => {
     const julie = await createTestUser(alice.tenantId, 'Julie');
     const { sourceId } = await upload(julie, 'plan-julie.txt');
-    await deleteAccount(julie, null);
+    await deleteAccount(julie, null, false);
 
     expect(await listDocuments(bob)).toContainEqual(
       expect.objectContaining({ id: sourceId, ownerName: 'Julie', ownerFormer: true }),

@@ -629,7 +629,8 @@
     "refused": {
       "successeur": "Choisissez un autre membre de l’organisation comme nouveau propriétaire.",
       "autre_organisation": "Ce compte appartient aussi à une autre organisation : il ne peut pas être supprimé d’ici.",
-      "pas_proprietaire": "Seul le propriétaire de l’organisation peut la supprimer."
+      "pas_proprietaire": "Seul le propriétaire de l’organisation peut la supprimer.",
+      "situation": "La situation de l’organisation a changé : rechargez la page."
     },
     "emailSubjectAccount": "Votre compte Leon a été supprimé",
     "emailSubjectOrganization": "Votre organisation Leon a été supprimée",

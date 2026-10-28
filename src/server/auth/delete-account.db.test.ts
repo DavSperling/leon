@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import type { PipedreamConfig } from '@/server/connectors/pipedream';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { sources, turns } from '@/server/db/schema/memory';
@@ -154,7 +155,13 @@ describe('deleteAccount', () => {
     const connectionId = await seedLogin(alice);
     await adminDb
       .update(connections)
-      .set({ config: { authMode: 'pipedream', externalUserId: 'leon-alice', accountId: 'apn_1' } })
+      .set({
+        config: {
+          authMode: 'pipedream',
+          externalUserId: 'leon-alice',
+          accountId: 'apn_1',
+        } satisfies PipedreamConfig,
+      })
       .where(eq(connections.id, connectionId));
     const bobConnectionId = await seedConnection(bob);
     const privateSource = await seedSource(alice, { title: 'Privée' });
@@ -184,7 +191,7 @@ describe('deleteAccount', () => {
       links: 1,
     });
 
-    const result = await deleteAccount(alice, null);
+    const result = await deleteAccount(alice, null, false);
 
     expect(result).toEqual({
       organizationDeleted: false,
@@ -262,10 +269,14 @@ describe('deleteAccount', () => {
     await expect(auth.api.signInEmail({ body: { email, password } })).resolves.toBeDefined();
     const { token } = await createApiToken(paul, 'cli');
     expect(await verifyApiToken(token)).not.toBeNull();
+    // Un vrai lien de réinitialisation demandé avant : Better Auth le range dans `verification`, avec l'id pour valeur.
+    await auth.api.requestPasswordReset({ body: { email }, headers: new Headers() });
+    expect((await loginTraces(user.id))?.resets).toBe(1);
 
-    await deleteAccount(paul, null);
+    await deleteAccount(paul, null, false);
 
     expect(await verifyApiToken(token)).toBeNull();
+    expect((await loginTraces(user.id))?.resets).toBe(0);
 
     await expect(auth.api.signInEmail({ body: { email, password } })).rejects.toThrow();
     await expect(
@@ -291,7 +302,9 @@ describe('deleteAccount', () => {
     await markFormer(former);
     const outsider = (await team(['member'])).people[0] as TenantContext;
     const refused = (successorId: string | null) =>
-      expect(deleteAccount(owner, successorId)).rejects.toMatchObject({ reason: 'successeur' });
+      expect(deleteAccount(owner, successorId, false)).rejects.toMatchObject({
+        reason: 'successeur',
+      });
 
     await refused(null);
     await refused(outsider.userId);
@@ -301,7 +314,7 @@ describe('deleteAccount', () => {
     expect((await userRow(owner.userId))?.deletedAt).toBeNull();
     expect(await roleOf(owner)).toBe('owner');
 
-    await deleteAccount(owner, member.userId);
+    await deleteAccount(owner, member.userId, false);
 
     expect(await roleOf(member)).toBe('owner');
     expect(await roleOf(owner)).toBe('member');
@@ -313,7 +326,7 @@ describe('deleteAccount', () => {
     const { people } = await team(['owner', 'owner', 'member']);
     const [first, second] = people as [TenantContext, TenantContext, TenantContext];
 
-    await deleteAccount(first, null);
+    await deleteAccount(first, null, false);
 
     expect(await roleOf(first)).toBe('member');
     expect(await roleOf(second)).toBe('owner');
@@ -326,7 +339,13 @@ describe('deleteAccount', () => {
     const connectionId = await seedConnection(owner);
     await adminDb
       .update(connections)
-      .set({ config: { authMode: 'pipedream', externalUserId: 'leon-seul', accountId: 'apn_2' } })
+      .set({
+        config: {
+          authMode: 'pipedream',
+          externalUserId: 'leon-seul',
+          accountId: 'apn_2',
+        } satisfies PipedreamConfig,
+      })
       .where(eq(connections.id, connectionId));
     const mine = await seedSource(owner);
     const others = await team(['owner']);
@@ -334,7 +353,7 @@ describe('deleteAccount', () => {
     const theirs = await seedSource(otherOwner);
     const email = await emailOf(owner);
 
-    const result = await deleteAccount(owner, null);
+    const result = await deleteAccount(owner, null, true);
 
     expect(result).toEqual({
       organizationDeleted: true,
@@ -370,7 +389,7 @@ describe('deleteAccount', () => {
     });
     await seedLogin(member);
 
-    await expect(deleteAccount(member, null)).rejects.toMatchObject({
+    await expect(deleteAccount(member, null, false)).rejects.toMatchObject({
       reason: 'autre_organisation',
     });
 
@@ -388,6 +407,7 @@ describe('deleteAccount', () => {
       deleteAccount(
         { tenantId, userId: stranger.userId, principals: principalsFor(stranger.userId, tenantId) },
         null,
+        false,
       ),
     ).rejects.toThrow();
 
@@ -399,14 +419,78 @@ describe('deleteAccount', () => {
     const [a, b] = people as [TenantContext, TenantContext, TenantContext];
 
     const outcomes = await Promise.allSettled([
-      deleteAccount(a, b.userId),
-      deleteAccount(b, a.userId),
+      deleteAccount(a, b.userId, false),
+      deleteAccount(b, a.userId, false),
     ]);
 
     expect(await activeOwners(tenantId)).toHaveLength(1);
     expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
     const [refusal] = outcomes.filter((outcome) => outcome.status === 'rejected');
     expect(refusal?.reason).toBeInstanceOf(DeletionRefused);
+  });
+});
+
+describe('deleteAccount : ce que le dialogue a montré', () => {
+  // B ouvre le dialogue quand A est encore là (B n'est pas seul) ; A part en nommant B ; B confirme sur ce
+  // qu'il a vu : il ne doit pas effacer l'organisation sans l'avoir lue.
+  it("refuse de supprimer l'organisation sur un dialogue ouvert avant le départ des autres", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [a, b] = people as [TenantContext, TenantContext];
+    const source = await seedSource(a);
+    expect((await deletionInfo(b)).soleActiveMember).toBe(false);
+    await deleteAccount(a, b.userId, false);
+    expect((await deletionInfo(b)).soleActiveMember).toBe(true);
+
+    await expect(deleteAccount(b, null, false)).rejects.toMatchObject({ reason: 'situation' });
+
+    expect(
+      await adminDb.select().from(organizations).where(eq(organizations.id, tenantId)),
+    ).toHaveLength(1);
+    expect(
+      await adminDb.select().from(sources).where(eq(sources.id, source.sourceId)),
+    ).toHaveLength(1);
+    expect((await userRow(b.userId))?.deletedAt).toBeNull();
+  });
+
+  it("refuse aussi de partir seul quand le dialogue annonçait l'organisation supprimée", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner] = people as [TenantContext, TenantContext];
+
+    await expect(deleteAccount(owner, null, true)).rejects.toMatchObject({ reason: 'situation' });
+
+    expect(
+      await adminDb.select().from(organizations).where(eq(organizations.id, tenantId)),
+    ).toHaveLength(1);
+    expect((await userRow(owner.userId))?.deletedAt).toBeNull();
+  });
+
+  // Une invitation acceptée au même instant : la suppression attend qu'elle soit validée, puis relit l'équipe.
+  it("attend l'adhésion en cours d'une invitation avant de lire l'organisation", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, member] = people as [TenantContext, TenantContext];
+    const newcomer = ((await team(['member'])).people as [TenantContext])[0];
+    const joining = await adminPool.connect();
+    try {
+      await joining.query('begin');
+      await joining.query(
+        `insert into member ("organizationId", "userId", role, "createdAt") values ($1, $2, 'member', now())`,
+        [tenantId, newcomer.userId],
+      );
+      let settled = false;
+      const leaving = deleteAccount(owner, member.userId, false).finally(() => {
+        settled = true;
+      });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(settled).toBe(false);
+
+      await joining.query('commit');
+      await leaving;
+    } finally {
+      await joining.query('rollback'); // sans effet une fois validée ; libère les verrous si un test échoue
+      joining.release();
+    }
+
+    expect((await deletionInfo(member)).activeMembers).toBe(2);
   });
 });
 
@@ -473,7 +557,13 @@ describe('deleteOrganization', () => {
     const connectionId = await seedConnection(member);
     await adminDb
       .update(connections)
-      .set({ config: { authMode: 'pipedream', externalUserId: 'leon-membre', accountId: 'apn_3' } })
+      .set({
+        config: {
+          authMode: 'pipedream',
+          externalUserId: 'leon-membre',
+          accountId: 'apn_3',
+        } satisfies PipedreamConfig,
+      })
       .where(eq(connections.id, connectionId));
     const source = await seedSource(owner);
     const expected = [
@@ -500,6 +590,35 @@ describe('deleteOrganization', () => {
     expect(
       await adminDb.select().from(organizations).where(eq(organizations.id, otherOwner.tenantId)),
     ).toHaveLength(1);
+  });
+
+  it('garde le compte du propriétaire qui appartient aussi à une autre organisation', async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, member] = people as [TenantContext, TenantContext];
+    const other = await team(['owner']);
+    const [otherOwner] = other.people as [TenantContext];
+    await adminDb.insert(members).values({
+      organizationId: otherOwner.tenantId,
+      userId: owner.userId,
+      role: 'member',
+      createdAt: new Date(),
+    });
+
+    const expected = [
+      { email: await emailOf(owner), kind: 'organization' },
+      { email: await emailOf(member), kind: 'organization' },
+    ];
+
+    const result = await deleteOrganization(owner);
+
+    expect(result.notify.toSorted((a, b) => a.email.localeCompare(b.email))).toEqual(
+      expected.toSorted((a, b) => a.email.localeCompare(b.email)),
+    );
+    expect(
+      await adminDb.select().from(organizations).where(eq(organizations.id, tenantId)),
+    ).toEqual([]);
+    expect(await userRow(owner.userId)).toBeDefined();
+    expect(await userRow(member.userId)).toBeUndefined();
   });
 
   it("refuse de supprimer l'organisation à qui n'est pas propriétaire", async () => {

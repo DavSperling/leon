@@ -359,14 +359,15 @@ const done = {
   pipedreamUsers: ['pd-1', 'pd-2'],
 };
 const identity = { password: 'motdepasse', code: '123456', word: 'SUPPRIMER' };
+const SUCCESSOR_ID = '5c1d8e0a-7b3f-4a62-8d19-0e4f6a7b8c9d';
 
 describe.each([
   {
     name: 'deleteAccountAction',
     run: (input: Partial<typeof identity> = {}) =>
-      deleteAccountAction({ ...identity, ...input, successorId: null }),
+      deleteAccountAction({ ...identity, ...input, successorId: null, organizationToo: false }),
     deletion: () => vi.mocked(deleteAccount),
-    callArgs: [ctx, null],
+    callArgs: [ctx, null, false],
     redirectTo: '/connexion?supprime=compte',
   },
   {
@@ -495,6 +496,49 @@ describe.each([
     expect(logError).toHaveBeenCalledWith('account.deletion_email', expect.any(Error));
   });
 
+  // Resend limite à 2 requêtes par seconde : un message après l'autre, et un échec n'arrête pas les suivants.
+  it("envoie les e-mails l'un après l'autre, et un échec n'empêche pas les suivants", async () => {
+    deletion().mockResolvedValue({
+      ...done,
+      notify: ['a', 'b', 'c'].map((name) => ({
+        email: `${name}@example.com`,
+        kind: 'organization' as const,
+      })),
+    });
+    const events: string[] = [];
+    vi.mocked(sendDeletionEmail).mockImplementation(async ({ to }) => {
+      events.push(`début ${to}`);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      events.push(`fin ${to}`);
+      if (to === 'b@example.com') throw new Error('resend');
+    });
+
+    await expect(run()).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+
+    expect(events).toEqual([
+      'début a@example.com',
+      'fin a@example.com',
+      'début b@example.com',
+      'fin b@example.com',
+      'début c@example.com',
+      'fin c@example.com',
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith('account.deletion_email', expect.any(Error));
+  });
+
+  it.each([
+    ['un mot de passe qui n’est pas un texte', { password: 42 }],
+    ['un code absent', { code: undefined }],
+    ['un mot qui n’est pas un texte', { word: null }],
+  ])('rend un message général pour %s, sans rien vérifier ni supprimer', async (_label, bad) => {
+    await expect(run(bad as never)).resolves.toEqual({ error: fr.deleteAccount.failed });
+
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deletion()).not.toHaveBeenCalled();
+    expect(sendDeletionEmail).not.toHaveBeenCalled();
+  });
+
   it('rend le refus du module, sans prévenir personne', async () => {
     deletion().mockRejectedValue(new DeletionRefused('pas_proprietaire'));
 
@@ -519,10 +563,43 @@ describe('deleteAccountAction', () => {
   it('passe le successeur choisi au module, et rend le refus d’un successeur invalide', async () => {
     vi.mocked(deleteAccount).mockRejectedValue(new DeletionRefused('successeur'));
 
-    await expect(deleteAccountAction({ ...identity, successorId: 'collegue' })).resolves.toEqual({
-      error: fr.deleteAccount.refused.successeur,
+    await expect(
+      deleteAccountAction({ ...identity, successorId: SUCCESSOR_ID, organizationToo: false }),
+    ).resolves.toEqual({ error: fr.deleteAccount.refused.successeur });
+
+    expect(deleteAccount).toHaveBeenCalledWith(ctx, SUCCESSOR_ID, false);
+  });
+
+  // Le dialogue envoie ce qu'il a montré : le module refuse si l'équipe a changé depuis.
+  it('passe au module si le dialogue annonçait l’organisation supprimée, et rend son refus', async () => {
+    vi.mocked(deleteAccount).mockRejectedValue(new DeletionRefused('situation'));
+
+    await expect(
+      deleteAccountAction({ ...identity, successorId: null, organizationToo: true }),
+    ).resolves.toEqual({ error: fr.deleteAccount.refused.situation });
+
+    expect(deleteAccount).toHaveBeenCalledWith(ctx, null, true);
+    expect(sendDeletionEmail).not.toHaveBeenCalled();
+    expect(signOutCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'un successeur qui n’est pas un identifiant',
+      { successorId: 'collegue', organizationToo: false },
+    ],
+    ['un successeur absent', { successorId: undefined, organizationToo: false }],
+    [
+      'un choix d’organisation qui n’est pas un booléen',
+      { successorId: null, organizationToo: 'oui' },
+    ],
+    ['un choix d’organisation absent', { successorId: null }],
+  ])('rend un message général pour %s, sans rien vérifier ni supprimer', async (_label, bad) => {
+    await expect(deleteAccountAction({ ...identity, ...bad } as never)).resolves.toEqual({
+      error: fr.deleteAccount.failed,
     });
 
-    expect(deleteAccount).toHaveBeenCalledWith(ctx, 'collegue');
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deleteAccount).not.toHaveBeenCalled();
   });
 });

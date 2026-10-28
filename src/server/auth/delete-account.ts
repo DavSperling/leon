@@ -25,7 +25,11 @@ export type DeletionInfo = {
   activeMembers: number;
 };
 
-export type DeletionRefusal = 'successeur' | 'autre_organisation' | 'pas_proprietaire';
+export type DeletionRefusal =
+  | 'successeur'
+  | 'autre_organisation'
+  | 'pas_proprietaire'
+  | 'situation';
 
 export class DeletionRefused extends Error {
   override name = 'DeletionRefused';
@@ -44,10 +48,16 @@ export type DeletionResult = {
 // Better Auth peut ranger plusieurs rôles séparés par des virgules (comme members.ts).
 const isOwnerRole = (role: string) => role.split(',').includes('owner');
 
-// Verrouille les adhésions de l'organisation, anciennes comprises : deux suppressions simultanées passent l'une
+// Verrouille l'organisation puis ses adhésions, anciennes comprises : deux suppressions simultanées passent l'une
 // après l'autre, et la seconde relit les rôles que la première a laissés. Sans cela, deux propriétaires qui partent
-// ensemble verraient chacun l'autre en place et laisseraient l'organisation sans propriétaire.
+// ensemble verraient chacun l'autre en place et laisseraient l'organisation sans propriétaire. La ligne de
+// l'organisation, elle, fait attendre l'adhésion qu'une invitation acceptée au même instant est en train d'ajouter.
 async function lockMembers(tx: Tx, tenantId: string): Promise<void> {
+  await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, tenantId))
+    .for('update');
   await tx
     .select({ id: members.id })
     .from(members)
@@ -122,29 +132,26 @@ async function removeOrganization(
         select 1 from member o where o."userId" = m."userId" and o."organizationId" <> ${ctx.tenantId})`);
   // Toute sa mémoire part en cascade avec la ligne `organization`.
   await tx.delete(organizations).where(eq(organizations.id, ctx.tenantId));
-  if (rows.length > 0) {
-    await tx.delete(users).where(
-      inArray(
-        users.id,
-        rows.map((row) => row.userId),
-      ),
-    );
-  }
+  const gone = new Set(rows.map((row) => row.userId));
+  if (gone.size > 0) await tx.delete(users).where(inArray(users.id, [...gone]));
   return {
     organizationDeleted: true,
     organizationName: state.organizationName,
+    // Qui garde son compte (membre ailleurs, l'appelant compris) apprend la suppression de l'organisation, pas du compte.
     notify: state.active.map((member) => ({
       email: member.email,
-      kind: member.userId === ctx.userId ? 'account' : 'organization',
+      kind: member.userId === ctx.userId && gone.has(member.userId) ? 'account' : 'organization',
     })),
     pipedreamUsers,
   };
 }
 
 // `successorId` ne sert qu'au seul propriétaire actif d'une organisation qui garde d'autres membres actifs.
+// `organizationToo` est ce que le dialogue a annoncé (`soleActiveMember`) : si l'équipe a changé depuis, rien ne part.
 export async function deleteAccount(
   ctx: TenantContext,
   successorId: string | null,
+  organizationToo: boolean,
 ): Promise<DeletionResult> {
   return withTenant(ctx, async (tx) => {
     await lockMembers(tx, ctx.tenantId);
@@ -159,6 +166,7 @@ export async function deleteAccount(
       .limit(1);
     if (elsewhere) throw new DeletionRefused('autre_organisation');
 
+    if (state.soleActiveMember !== organizationToo) throw new DeletionRefused('situation');
     if (state.soleActiveMember) return removeOrganization(tx, ctx, state);
 
     if (state.needsSuccessor) {

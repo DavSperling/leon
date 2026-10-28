@@ -629,7 +629,8 @@
     "refused": {
       "successeur": "Choose another member of the organization as the new owner.",
       "autre_organisation": "This account also belongs to another organization, so it can’t be deleted from here.",
-      "pas_proprietaire": "Only the organization’s owner can delete it."
+      "pas_proprietaire": "Only the organization’s owner can delete it.",
+      "situation": "The organization has changed: reload the page."
     },
     "emailSubjectAccount": "Your Leon account has been deleted",
     "emailSubjectOrganization": "Your Leon organization has been deleted",

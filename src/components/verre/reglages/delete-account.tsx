@@ -162,7 +162,10 @@ export function DeleteAccountSection({
       }
       successors={info.needsSuccessor ? info.successors : undefined}
       twoFactor={twoFactor}
-      run={(input, successorId) => deleteAccountAction({ ...input, successorId })}
+      // Ce que le dialogue annonce part avec la demande : si l'équipe a changé entre-temps, le serveur refuse.
+      run={(input, successorId) =>
+        deleteAccountAction({ ...input, successorId, organizationToo: info.soleActiveMember })
+      }
     />
   );
 }

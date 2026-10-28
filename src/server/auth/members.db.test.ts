@@ -158,7 +158,7 @@ describe('listMembers', () => {
   it('rend les anciens membres marqués, sans leur adresse', async () => {
     const { owner, member } = await tenantWithLink();
     await createTestUser(owner.tenantId, 'Julie');
-    await deleteAccount(member, null);
+    await deleteAccount(member, null, false);
 
     const rows = await listMembers(owner);
     expect(rows.map((r) => [r.name, r.former])).toEqual([

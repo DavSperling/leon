@@ -74,6 +74,12 @@ describe('sendDeletionEmail', () => {
     expect(payload().html).not.toContain('href');
   });
 
+  it('abandonne un envoi que Resend laisse sans réponse', async () => {
+    await sendDeletionEmail({ ...input, locale: 'fr', kind: 'account' });
+
+    expect(sent.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
   it('protège le message du nom de l’organisation, que chacun choisit', async () => {
     await sendDeletionEmail({
       ...input,

@@ -202,7 +202,13 @@ export async function regenerateBackupCodesAction(
   }
 }
 
-type DeletionInput = { password: string; code: string; word: string };
+const DeletionInputSchema = z.object({ password: z.string(), code: z.string(), word: z.string() });
+type DeletionInput = z.infer<typeof DeletionInputSchema>;
+// `organizationToo` : ce que le dialogue a annoncé, que le module relit avant de rien effacer (`situation`).
+const AccountDeletionInputSchema = DeletionInputSchema.extend({
+  successorId: z.uuid().nullable(),
+  organizationToo: z.boolean(),
+});
 
 // Ce qui part ne revient pas : le mot tapé, le mot de passe et, avec la 2FA, le code de l'application. Rend le
 // message du premier qui ne passe pas, ou null.
@@ -230,19 +236,23 @@ async function confirmIdentity({ password, code, word }: DeletionInput): Promise
   return null;
 }
 
-async function runDeletion(
-  input: DeletionInput,
-  deletion: (ctx: TenantContext) => Promise<DeletionResult>,
+async function runDeletion<Input extends DeletionInput>(
+  schema: z.ZodType<Input>,
+  rawInput: unknown,
+  deletion: (ctx: TenantContext, input: Input) => Promise<DeletionResult>,
   redirectTo: '/connexion?supprime=compte' | '/connexion?supprime=organisation',
 ): Promise<{ error: string }> {
   const ctx = await requireUserContext();
   const t = await getTranslations('deleteAccount');
+  const parsed = schema.safeParse(rawInput);
+  if (!parsed.success) return { error: t('failed') };
+  const input = parsed.data;
   const refusal = await confirmIdentity(input);
   if (refusal) return { error: refusal };
 
   let result: DeletionResult;
   try {
-    result = await deletion(ctx);
+    result = await deletion(ctx, input);
   } catch (error) {
     if (error instanceof DeletionRefused) return { error: t(`refused.${error.reason}`) };
     // Y compris un second envoi du formulaire : la première suppression a déjà retiré la personne.
@@ -252,19 +262,20 @@ async function runDeletion(
 
   // Tout est fait en base : ni Pipedream ni Resend ne peuvent plus faire échouer la suppression.
   const locale = localeOf(await getLocale());
-  await Promise.all([
-    ...result.pipedreamUsers.map((id) =>
+  await Promise.all(
+    result.pipedreamUsers.map((id) =>
       forgetPipedreamUser(id).catch((error) => logError('account.deletion_pipedream', error)),
     ),
-    ...result.notify.map(({ email, kind }) =>
-      sendDeletionEmail({
-        to: email,
-        locale,
-        kind,
-        organizationName: result.organizationName,
-      }).catch((error) => logError('account.deletion_email', error)),
-    ),
-  ]);
+  );
+  // Resend limite à 2 requêtes par seconde : un message après l'autre, et un échec n'arrête pas les suivants.
+  for (const { email, kind } of result.notify) {
+    await sendDeletionEmail({
+      to: email,
+      locale,
+      kind,
+      organizationName: result.organizationName,
+    }).catch((error) => logError('account.deletion_email', error));
+  }
   // La session est déjà effacée en base : il ne reste que les cookies à retirer.
   await signOutCurrentUser().catch(() => undefined);
   redirect(redirectTo);
@@ -273,15 +284,23 @@ async function runDeletion(
 // `successorId` ne sert qu'au seul propriétaire qui laisse d'autres membres. En cas de succès, ne rend pas : la page
 // part vers la connexion.
 export async function deleteAccountAction(
-  input: DeletionInput & { successorId: string | null },
+  input: z.input<typeof AccountDeletionInputSchema>,
 ): Promise<{ error: string }> {
   return runDeletion(
+    AccountDeletionInputSchema,
     input,
-    (ctx) => deleteAccount(ctx, input.successorId),
+    (ctx, { successorId, organizationToo }) => deleteAccount(ctx, successorId, organizationToo),
     '/connexion?supprime=compte',
   );
 }
 
-export async function deleteOrganizationAction(input: DeletionInput): Promise<{ error: string }> {
-  return runDeletion(input, deleteOrganization, '/connexion?supprime=organisation');
+export async function deleteOrganizationAction(
+  input: z.input<typeof DeletionInputSchema>,
+): Promise<{ error: string }> {
+  return runDeletion(
+    DeletionInputSchema,
+    input,
+    (ctx) => deleteOrganization(ctx),
+    '/connexion?supprime=organisation',
+  );
 }

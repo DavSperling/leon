@@ -497,7 +497,7 @@ describe.each([
   });
 
   // Resend limite à 2 requêtes par seconde : un message après l'autre, et un échec n'arrête pas les suivants.
-  it("envoie les e-mails l'un après l'autre, et un échec n'empêche pas les suivants", async () => {
+  it("envoie les e-mails l'un après l'autre, espacés pour Resend, et un échec n'empêche pas les suivants", async () => {
     deletion().mockResolvedValue({
       ...done,
       notify: ['a', 'b', 'c'].map((name) => ({
@@ -506,15 +506,26 @@ describe.each([
       })),
     });
     const events: string[] = [];
+    const starts: number[] = [];
     vi.mocked(sendDeletionEmail).mockImplementation(async ({ to }) => {
       events.push(`début ${to}`);
+      starts.push(Date.now());
       await new Promise((resolve) => setTimeout(resolve, 5));
       events.push(`fin ${to}`);
       if (to === 'b@example.com') throw new Error('resend');
     });
 
-    await expect(run()).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+    vi.useFakeTimers();
+    try {
+      const done = expect(run()).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+      await vi.runAllTimersAsync();
+      await done;
+    } finally {
+      vi.useRealTimers();
+    }
 
+    expect(starts[1]! - starts[0]!).toBeGreaterThanOrEqual(500);
+    expect(starts[2]! - starts[1]!).toBeGreaterThanOrEqual(500);
     expect(events).toEqual([
       'début a@example.com',
       'fin a@example.com',

@@ -209,6 +209,8 @@ const AccountDeletionInputSchema = DeletionInputSchema.extend({
   successorId: z.uuid().nullable(),
   organizationToo: z.boolean(),
 });
+// 2 requêtes par seconde chez Resend, avec une marge.
+const RESEND_SPACING_MS = 600;
 
 // Ce qui part ne revient pas : le mot tapé, le mot de passe et, avec la 2FA, le code de l'application. Rend le
 // message du premier qui ne passe pas, ou null.
@@ -267,8 +269,9 @@ async function runDeletion<Input extends DeletionInput>(
       forgetPipedreamUser(id).catch((error) => logError('account.deletion_pipedream', error)),
     ),
   );
-  // Resend limite à 2 requêtes par seconde : un message après l'autre, et un échec n'arrête pas les suivants.
-  for (const { email, kind } of result.notify) {
+  // Resend limite à 2 requêtes par seconde : un message après l'autre, espacés, et un échec n'arrête pas les suivants.
+  for (const [index, { email, kind }] of result.notify.entries()) {
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, RESEND_SPACING_MS));
     await sendDeletionEmail({
       to: email,
       locale,

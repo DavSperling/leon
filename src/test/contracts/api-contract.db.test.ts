@@ -61,10 +61,18 @@ describe('routes de l’API', () => {
     expect((await apiRequest('/api/auth/ok')).status).toBe(200);
   });
 
-  // Audit 2 n° 3 : la connexion et l'inscription ne passent que par les server actions, sous la limite de débit
-  // de rate-limit.ts ; les routes HTTP de Better Auth la contourneraient.
-  it.each(['/api/auth/sign-in/email', '/api/auth/sign-up/email'])(
-    'POST %s répond 404 : seules les pages de Leon connectent et inscrivent',
+  // Audit 2 n° 3 : la connexion, l'inscription, le changement de mot de passe et la 2FA ne passent que par les
+  // server actions, sous la limite de débit de rate-limit.ts ; les routes HTTP de Better Auth la contourneraient.
+  it.each([
+    '/api/auth/sign-in/email',
+    '/api/auth/sign-up/email',
+    '/api/auth/change-password',
+    '/api/auth/two-factor/enable',
+    '/api/auth/two-factor/disable',
+    '/api/auth/two-factor/generate-backup-codes',
+    '/api/auth/two-factor/verify-totp',
+  ])(
+    'POST %s répond 404 : seules les pages de Leon vérifient un mot de passe ou un code',
     async (path) => {
       const body = { email: 'paul@example.com', password: 'motdepasse-solide', name: 'Paul' };
       expect((await apiRequest(path, { body })).status).toBe(404);

@@ -63,11 +63,25 @@ export const auth = betterAuth({
         .catch((error) => logError('auth.password_reset_email', error));
     },
   },
-  // La connexion, l'inscription et la demande de lien passent par les server actions (auth.api.*), sous la limite
-  // de débit de rate-limit.ts : les routes HTTP de Better Auth la contourneraient (et l'inscription y créerait un
-  // compte sans organisation). Seul le routeur les ferme : auth.api.* les appelle toujours. /reset-password/:token
-  // reste ouverte : c'est le lien de l'e-mail.
-  disabledPaths: ['/sign-in/email', '/sign-up/email', '/request-password-reset'],
+  // La connexion, l'inscription, la demande de lien, le changement de mot de passe et la 2FA passent par les server
+  // actions (auth.api.*), sous la limite de débit de rate-limit.ts : les routes HTTP de Better Auth la
+  // contourneraient (deviner un mot de passe ou un code depuis une session volée ; l'inscription y créerait un compte
+  // sans organisation). Seul le routeur les ferme : auth.api.* les appelle toujours. /reset-password/:token reste
+  // ouverte : c'est le lien de l'e-mail.
+  disabledPaths: [
+    '/sign-in/email',
+    '/sign-up/email',
+    '/request-password-reset',
+    '/change-password',
+    '/two-factor/enable',
+    '/two-factor/disable',
+    '/two-factor/get-totp-uri',
+    '/two-factor/generate-backup-codes',
+    '/two-factor/verify-totp',
+    '/two-factor/verify-backup-code',
+    '/two-factor/send-otp',
+    '/two-factor/verify-otp',
+  ],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {
     storeIdentifier: { default: 'plain', overrides: { 'reset-password:': 'hashed' } },

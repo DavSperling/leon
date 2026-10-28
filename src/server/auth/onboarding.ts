@@ -67,10 +67,11 @@ export async function completeOwnerStep(ctx: TenantContext, step: OwnerStep): Pr
       .where(and(pending(ctx), sql`string_to_array(${members.role}, ',') && array['owner']`))
       .returning({ id: members.id });
     if (done.length === 0) return false;
+    // La taille se pose une fois : un autre propriétaire qui passe l'étape ensuite ne réécrit pas celle de l'entreprise.
     await tx
       .update(organizations)
       .set({ size: step.size })
-      .where(eq(organizations.id, ctx.tenantId));
+      .where(and(eq(organizations.id, ctx.tenantId), isNull(organizations.size)));
     return true;
   });
 }

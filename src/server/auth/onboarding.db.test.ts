@@ -83,6 +83,21 @@ describe('completeOwnerStep', () => {
     expect(await sizeOf()).toBe('11-50');
   });
 
+  it("garde la taille déjà posée quand un autre propriétaire passe l'étape, mais écrit son poste", async () => {
+    await adminDb.update(organizations).set({ size: '201+' }).where(eq(organizations.id, tenantId));
+    await setRole(bob, 'owner');
+
+    expect(await completeOwnerStep(bob, step)).toBe(true);
+    expect(await sizeOf()).toBe('201+');
+    expect(await readOnboardingMember(bob)).toEqual(
+      expect.objectContaining({
+        department: 'engineering',
+        job: 'backend',
+        onboardedAt: expect.any(Date),
+      }),
+    );
+  });
+
   it("refuse l'étape du propriétaire à un membre", async () => {
     expect(await completeOwnerStep(bob, step)).toBe(false);
     expect(await readOnboardingMember(bob)).toEqual(

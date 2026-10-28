@@ -1177,7 +1177,7 @@
     "choose": "Choose…",
     "continue": "Continue",
     "signOut": "Sign out",
-    "locked": "Set by an {organization} admin. Something wrong? Ask them to change it.",
+    "locked": "Set by an admin of {organization}. Something wrong? Ask them to change it.",
     "notSet": "Not set yet. An admin will set it.",
     "preview": {
       "profile": "Your profile",

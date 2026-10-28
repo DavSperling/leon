@@ -1177,7 +1177,7 @@
     "choose": "Choisir…",
     "continue": "Continuer",
     "signOut": "Se déconnecter",
-    "locked": "Fixé par un administrateur de {organization}. Une erreur ? Demandez-lui de le corriger.",
+    "locked": "Fixé par un administrateur de l’espace {organization}. Une erreur ? Demandez-lui de le corriger.",
     "notSet": "Pas encore renseigné. Un administrateur le fixera.",
     "preview": {
       "profile": "Votre fiche",
@@ -1340,8 +1340,8 @@
       "department": "Choisissez votre service.",
       "job": "Choisissez votre poste.",
       "seniority": "Choisissez votre niveau.",
-      "size": "Choisissez la taille de l'entreprise.",
-      "company": "Saisissez le nom de l'entreprise (2 à 100 caractères).",
+      "size": "Choisissez la taille de l’entreprise.",
+      "company": "Saisissez le nom de l’entreprise (2 à 100 caractères).",
       "form": "Un problème est survenu. Réessayez."
     }
   }

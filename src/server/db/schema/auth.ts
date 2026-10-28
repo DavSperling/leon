@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { boolean, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { COMPANY_SIZES } from '@/lib/onboarding';
 
 // Tables de Better Auth (0002-auth.sql) : noms de colonnes en camelCase, tels que Better Auth les génère.
 export const users = pgTable('user', {
@@ -23,7 +24,7 @@ export const organizations = pgTable('organization', {
   logo: text('logo'),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull(),
   metadata: text('metadata'),
-  size: text('size'), // onboarding (0041) : '1-10' | '11-50' | '51-200' | '201+'
+  size: text('size', { enum: COMPANY_SIZES }), // onboarding (0041)
 });
 
 export const members = pgTable('member', {

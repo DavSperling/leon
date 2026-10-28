@@ -87,4 +87,13 @@ describe('liens entre pages', () => {
     expect([...written].toSorted()).toEqual(['compte', 'organisation']);
     for (const value of written) expect(page).toContain(`'${value}'`);
   });
+
+  // ONBOARDING_PATH passe par une constante : le balayage des redirect('…') ne le voit pas.
+  it('mène ONBOARDING_PATH à une page', () => {
+    const path = /ONBOARDING_PATH\s*=\s*'(\/[^']*)'/.exec(
+      readText('src/server/auth/session.ts'),
+    )?.[1];
+    expect(path).toBeDefined();
+    expect(matchesRoute(path as string)).toBe(true);
+  });
 });

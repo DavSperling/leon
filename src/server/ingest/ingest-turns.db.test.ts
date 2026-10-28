@@ -131,6 +131,23 @@ describe('ingestTurns', () => {
     expect(turn?.text).toBe('Ma clé est [secret masqué], merci.');
   });
 
+  it('retire le caractère nul du texte et du titre, que Postgres refuserait', async () => {
+    const { paul, externalId } = await setup();
+
+    const { sourceId, inserted } = await ingestTurns(
+      paul,
+      payload(externalId, [newTurn(1, { text: 'sortie\u0000 de commande' })], {
+        title: 'Session\u0000 collée',
+      }),
+    );
+
+    const [source] = await readSource(paul, sourceId);
+    const [turn] = await readTurns(paul, sourceId);
+    expect(inserted).toBe(1);
+    expect(source?.title).toBe('Session collée');
+    expect(turn?.text).toBe('sortie de commande');
+  });
+
   it('compte dans skipped un tour vide après nettoyage', async () => {
     const { paul, externalId } = await setup();
     const reminder = '<system-reminder>Rappel</system-reminder>';

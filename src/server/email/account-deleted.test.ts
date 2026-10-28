@@ -64,6 +64,7 @@ describe('sendDeletionEmail', () => {
     await sendDeletionEmail({ ...input, locale, kind: 'organization' });
     expect(payload().subject).toBe(messages.deleteAccount.emailSubjectOrganization);
     expect(payload().html).toContain('Dupont Rénovation');
+    expect(payload().html).not.toContain(messages.deleteAccount.emailIgnore);
   });
 
   it('s’identifie auprès de Resend, sans mettre de lien dans le message', async () => {

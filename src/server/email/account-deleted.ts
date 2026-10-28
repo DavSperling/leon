@@ -23,6 +23,12 @@ export async function sendDeletionEmail(input: {
     organization: escapeHtml(organizationName),
     date: new Date().toLocaleDateString(locale, { dateStyle: 'long' }),
   };
+  // Seul l'e-mail du compte renvoie vers l'administrateur : une organisation supprimée n'en a plus, et son
+  // propriétaire l'a voulu.
+  const paragraphs =
+    kind === 'account'
+      ? [t('emailAccount', values), t('emailIgnore')]
+      : [t('emailOrganization', values)];
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -33,7 +39,7 @@ export async function sendDeletionEmail(input: {
       from: env.LEON_EMAIL_FROM,
       to: [to],
       subject: t(kind === 'account' ? 'emailSubjectAccount' : 'emailSubjectOrganization'),
-      html: `<p>${t(kind === 'account' ? 'emailAccount' : 'emailOrganization', values)}</p><p>${t('emailIgnore')}</p>`,
+      html: paragraphs.map((text) => `<p>${text}</p>`).join(''),
     }),
   });
   if (!response.ok) throw new Error(`Deletion email failed (${response.status})`);

@@ -20,9 +20,9 @@ export function createLeonMcpServer(
     { name: 'leon', version: '0.1.0' },
     { instructions: MCP_INSTRUCTIONS },
   );
-  registerSearchTool(server, ctx, deps);
+  registerSearchTool(server, ctx, client, deps);
   registerFetchTool(server, ctx, client);
-  registerBriefingTool(server, ctx);
+  registerBriefingTool(server, ctx, client);
   registerRememberTool(server, ctx);
   return server;
 }

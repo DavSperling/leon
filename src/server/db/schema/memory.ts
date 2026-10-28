@@ -75,6 +75,8 @@ export const readLog = pgTable('read_log', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   client: text('client').notNull(),
+  // L'outil MCP qui a rendu la lecture : fetch, search ou briefing (0039).
+  tool: text('tool', { enum: ['fetch', 'search', 'briefing'] }).notNull(),
   // Source lue ; clé étrangère composée (tenant_id, source_id) en SQL, on delete cascade.
   sourceId: uuid('source_id')
     .notNull()

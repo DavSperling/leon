@@ -1,33 +1,50 @@
-import { eq } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 
-// Journal : qui a lu quelle source (et quel passage), avec quel assistant. Pas encore d'écran qui le lise ; sous
-// la RLS, une lecture dont l'ACL (celle de la source au moment de la lecture) n'est pas visible est omise.
+// Journal : qui a lu quelle source (et quel passage), avec quel assistant et quel outil MCP. Pas encore d'écran qui
+// le lise ; sous la RLS, une lecture dont l'ACL (celle de la source au moment de la lecture) n'est pas visible est
+// omise.
 
-// Note qu'un assistant a lu cette source (et ce passage), avec l'accès qu'a la source à cet instant : seuls
-// ceux qui la voient voient la lecture. Rend false, sans rien écrire, quand la source n'est pas visible du
-// lecteur (inconnue, privée à un autre, devenue invisible entre sa lecture et ce journal) : l'appelant ne
-// rend alors pas ce qu'il a lu.
-export async function recordRead(
+export type ReadTool = (typeof readLog.tool.enumValues)[number];
+
+// Note qu'un assistant a reçu ces sources (et ces passages), une ligne par lecture, chacune avec l'accès qu'a sa
+// source à cet instant : seuls ceux qui la voient voient la lecture. Rend les sources notées ; une source que le
+// lecteur ne voit pas (inconnue, privée à un autre, devenue invisible entre sa lecture et ce journal) n'est pas
+// notée, et l'appelant ne rend alors pas ce qu'il en a lu.
+export async function recordReads(
   ctx: TenantContext,
-  input: { sourceId: string; passageId?: string | null; client: string },
-): Promise<boolean> {
+  input: {
+    tool: ReadTool;
+    client: string;
+    reads: ReadonlyArray<{ sourceId: string; passageId?: string | null }>;
+  },
+): Promise<Set<string>> {
+  if (input.reads.length === 0) return new Set();
   return withTenant(ctx, async (tx) => {
-    const [source] = await tx
-      .select({ acl: sources.acl })
+    const visible = await tx
+      .select({ id: sources.id, acl: sources.acl })
       .from(sources)
-      .where(eq(sources.id, input.sourceId));
-    if (!source) return false;
-    await tx.insert(readLog).values({
-      tenantId: ctx.tenantId,
-      userId: ctx.userId,
-      client: input.client,
-      sourceId: input.sourceId,
-      passageId: input.passageId ?? null,
-      acl: source.acl,
+      .where(inArray(sources.id, [...new Set(input.reads.map((read) => read.sourceId))]));
+    const aclOf = new Map(visible.map((source) => [source.id, source.acl]));
+    const rows = input.reads.flatMap((read) => {
+      const acl = aclOf.get(read.sourceId);
+      return acl
+        ? [
+            {
+              tenantId: ctx.tenantId,
+              userId: ctx.userId,
+              client: input.client,
+              tool: input.tool,
+              sourceId: read.sourceId,
+              passageId: read.passageId ?? null,
+              acl,
+            },
+          ]
+        : [];
     });
-    return true;
+    if (rows.length > 0) await tx.insert(readLog).values(rows);
+    return new Set(aclOf.keys());
   });
 }

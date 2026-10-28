@@ -8,6 +8,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
+import { recordReads } from '@/server/memory/read-log';
 import { readAbout } from './about';
 import { buildBriefingPrompt, renderBriefing, renderEmptyBriefing } from './briefing-prompt';
 import {
@@ -149,7 +150,7 @@ export async function readBriefing(
   ctx: TenantContext,
   project: string,
   options: { refresh?: boolean } = {},
-): Promise<{ markdown: string; preparedAt: Date } | null> {
+): Promise<{ markdown: string; preparedAt: Date; sourceIds: string[] } | null> {
   const { read, refresh } = await withTenant(ctx, async (tx) => {
     const [row] = await tx
       .select({
@@ -179,7 +180,10 @@ export async function readBriefing(
     // Périmé alors qu'il n'était plus lu : le signal l'a seulement marqué (queue.ts), rien n'est en file pour lui.
     const unreadSince = new Date(Date.now() - BRIEFING_READ_DAYS * 24 * 60 * 60 * 1000);
     const forgotten = row.stale && (row.lastReadAt === null || row.lastReadAt <= unreadSince);
-    return { read: { markdown: row.markdown, preparedAt: row.preparedAt }, refresh: forgotten };
+    return {
+      read: { markdown: row.markdown, preparedAt: row.preparedAt, sourceIds: wanted },
+      refresh: forgotten,
+    };
   });
   if (refresh && options.refresh !== false) await requestRefresh(ctx, project);
   return read;
@@ -188,14 +192,26 @@ export async function readBriefing(
 // La réponse de la route du crochet et de l'outil MCP (C8) : le dernier point, sinon le message qui dit pourquoi il
 // n'y en a pas. `modelReady` : le serveur a un modèle (getLlm), donc un point manquant sera préparé ; sans modèle,
 // rien n'est mis en file et le message le dit. `project` null : aucun projet connu (l'outil MCP appelé sans projet).
+// `client` (l'outil MCP) : le point rendu est noté au journal des lectures, une ligne par source fournie au modèle ;
+// un point dont une source n'a pas pu être notée (devenue invisible entre-temps) n'est pas rendu.
 export async function briefingResponse(
   ctx: TenantContext,
   project: string | null,
-  deps: { modelReady: boolean },
+  deps: { modelReady: boolean; client?: string },
 ): Promise<BriefingResponse> {
   const briefing =
     project === null ? null : await readBriefing(ctx, project, { refresh: deps.modelReady });
-  if (briefing !== null && project !== null) {
+  const logged =
+    briefing === null ||
+    deps.client === undefined ||
+    (
+      await recordReads(ctx, {
+        tool: 'briefing',
+        client: deps.client,
+        reads: briefing.sourceIds.map((sourceId) => ({ sourceId })),
+      })
+    ).size === briefing.sourceIds.length;
+  if (briefing !== null && project !== null && logged) {
     return {
       markdown: briefing.markdown,
       projet: project,

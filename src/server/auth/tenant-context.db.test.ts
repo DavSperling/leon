@@ -1,10 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
-import { users } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
 import { createUserWithOrganization } from './sign-up';
-import { firstOrganizationId, principalsFor, resolveTenantContext } from './tenant-context';
+import {
+  firstOrganizationId,
+  principalsFor,
+  resolveSessionContext,
+  resolveTenantContext,
+} from './tenant-context';
 
 async function signUp(name: string): Promise<{ userId: string; tenantId: string }> {
   const result = await createUserWithOrganization({
@@ -60,5 +65,44 @@ describe('resolveTenantContext', () => {
     const paul = await signUp('Paul');
     expect(await resolveTenantContext(paul.userId, 'pas-un-uuid')).toBeNull();
     expect(await resolveTenantContext('pas-un-uuid', paul.tenantId)).toBeNull();
+  });
+});
+
+describe('resolveSessionContext', () => {
+  it("rend l'organisation active quand la personne en est membre, même si ce n'est pas la première", async () => {
+    const paul = await signUp('Paul');
+    const zoe = await signUp('Zoe');
+    await adminDb.insert(members).values({
+      organizationId: zoe.tenantId,
+      userId: paul.userId,
+      role: 'member',
+      createdAt: new Date(),
+    });
+
+    const ctx = await resolveSessionContext(paul.userId, zoe.tenantId);
+
+    expect(ctx?.tenantId).toBe(zoe.tenantId);
+  });
+
+  it("se rabat sur la première organisation quand l'organisation active n'est plus la sienne", async () => {
+    const paul = await signUp('Paul');
+    const zoe = await signUp('Zoe');
+
+    expect(await resolveSessionContext(paul.userId, zoe.tenantId)).toEqual(
+      await resolveTenantContext(paul.userId, paul.tenantId),
+    );
+  });
+
+  it('prend la première organisation sans organisation active', async () => {
+    const paul = await signUp('Paul');
+
+    expect((await resolveSessionContext(paul.userId, null))?.tenantId).toBe(paul.tenantId);
+  });
+
+  it("rend null sans aucune organisation, qu'il y en ait une d'active ou non", async () => {
+    const paul = await signUp('Paul');
+
+    expect(await resolveSessionContext(randomUUID(), paul.tenantId)).toBeNull();
+    expect(await resolveSessionContext(randomUUID(), null)).toBeNull();
   });
 });

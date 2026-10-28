@@ -11,7 +11,7 @@ import {
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { answerStream } from '@/server/answer/answer';
 import { auth } from '@/server/auth/auth';
-import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { resolveSessionContext, type TenantContext } from '@/server/auth/tenant-context';
 import { replyStream } from '@/server/discussion/agent';
 import { findDiscussion } from '@/server/discussion/discussions';
 import { getEmbedder } from '@/server/embeddings/registry';
@@ -24,12 +24,13 @@ import { logError } from '@/server/log';
 
 export type SessionEnv = { Variables: { ctx: TenantContext } };
 
-// Le contexte de l'utilisateur connecté, résolu comme dans les pages (membre de l'organisation de sa session).
+// Le contexte de l'utilisateur connecté, résolu comme dans les pages (organisation de sa session, ou à défaut
+// sa première).
 // Jamais getUserContext : il lit `next/headers`, qui lève hors d'une requête Next.
 export const requireSession: MiddlewareHandler<SessionEnv> = async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   const ctx = session
-    ? await resolveTenantContext(session.user.id, session.session.activeOrganizationId ?? null)
+    ? await resolveSessionContext(session.user.id, session.session.activeOrganizationId ?? null)
     : null;
   if (!ctx) return c.json({ error: 'Session requise' }, 401);
   c.set('ctx', ctx);

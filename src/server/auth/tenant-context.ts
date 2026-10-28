@@ -69,3 +69,15 @@ export async function resolveTenantContext(
   if (resolved === null) return null;
   return { tenantId: resolved, userId, principals: principalsFor(userId, resolved) };
 }
+
+// Le contexte d'une session. Un membre retiré garde son ancienne organisation active (Better Auth ne la remet pas à
+// zéro) : on se rabat alors sur sa première organisation, pour que pages et routes d'API suivent la même règle.
+export async function resolveSessionContext(
+  userId: string,
+  activeOrganizationId: string | null,
+): Promise<TenantContext | null> {
+  return (
+    (await resolveTenantContext(userId, activeOrganizationId)) ??
+    (activeOrganizationId ? resolveTenantContext(userId, null) : null)
+  );
+}

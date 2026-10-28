@@ -2,10 +2,10 @@ import { redirect } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from './auth';
 import { getUserContext, requireUserContext } from './session';
-import { resolveTenantContext } from './tenant-context';
+import { resolveSessionContext } from './tenant-context';
 
 vi.mock('./auth', () => ({ auth: { api: { getSession: vi.fn() } } }));
-vi.mock('./tenant-context', () => ({ resolveTenantContext: vi.fn() }));
+vi.mock('./tenant-context', () => ({ resolveSessionContext: vi.fn() }));
 vi.mock('@/server/admin/stats', () => ({ noteActivity: vi.fn() }));
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers()),
@@ -38,7 +38,7 @@ describe('requireUserContext', () => {
 
   it('une session sans organisation est renvoyée vers /bienvenue', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf(null));
-    vi.mocked(resolveTenantContext).mockResolvedValue(null);
+    vi.mocked(resolveSessionContext).mockResolvedValue(null);
 
     await expect(requireUserContext()).rejects.toThrow('NEXT_REDIRECT /bienvenue');
 
@@ -47,7 +47,7 @@ describe('requireUserContext', () => {
 
   it('avec une organisation, rend le contexte sans rediriger', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf('t1'));
-    vi.mocked(resolveTenantContext).mockResolvedValue(CTX as never);
+    vi.mocked(resolveSessionContext).mockResolvedValue(CTX as never);
 
     expect(await requireUserContext()).toEqual(CTX);
 
@@ -56,33 +56,29 @@ describe('requireUserContext', () => {
 });
 
 describe('getUserContext', () => {
-  it("se rabat sur la première organisation quand l'organisation active n'est plus la sienne", async () => {
+  it("passe l'organisation active de la session à resolveSessionContext, qui porte le repli", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf(OLD));
-    vi.mocked(resolveTenantContext)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(CTX as never);
+    vi.mocked(resolveSessionContext).mockResolvedValue(CTX as never);
 
     expect(await getUserContext()).toEqual(CTX);
 
-    expect(resolveTenantContext).toHaveBeenNthCalledWith(1, USER, OLD);
-    expect(resolveTenantContext).toHaveBeenLastCalledWith(USER, null);
+    expect(resolveSessionContext).toHaveBeenCalledExactlyOnceWith(USER, OLD);
   });
 
-  it("ne cherche pas de repli quand l'organisation active est la sienne", async () => {
-    vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf('t1'));
-    vi.mocked(resolveTenantContext).mockResolvedValue(CTX as never);
-
-    expect(await getUserContext()).toEqual(CTX);
-
-    expect(resolveTenantContext).toHaveBeenCalledOnce();
-  });
-
-  it("n'a rien à rabattre sans organisation active : null", async () => {
+  it('sans organisation active ni première organisation : null', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf(null));
-    vi.mocked(resolveTenantContext).mockResolvedValue(null);
+    vi.mocked(resolveSessionContext).mockResolvedValue(null);
 
     expect(await getUserContext()).toBeNull();
 
-    expect(resolveTenantContext).toHaveBeenCalledOnce();
+    expect(resolveSessionContext).toHaveBeenCalledExactlyOnceWith(USER, null);
+  });
+
+  it('sans session : null, sans chercher de contexte', async () => {
+    vi.mocked(auth.api.getSession).mockResolvedValue(null);
+
+    expect(await getUserContext()).toBeNull();
+
+    expect(resolveSessionContext).not.toHaveBeenCalled();
   });
 });

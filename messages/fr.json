@@ -1307,6 +1307,14 @@
         "one": "Qu’est-ce qui a bougé cette semaine dans les équipes ?",
         "two": "Prépare mon point avec les investisseurs"
       }
+    },
+    "errors": {
+      "department": "Choisissez votre service.",
+      "job": "Choisissez votre poste.",
+      "seniority": "Choisissez votre niveau.",
+      "size": "Choisissez la taille de l'entreprise.",
+      "company": "Saisissez le nom de l'entreprise (2 à 100 caractères).",
+      "form": "Un problème est survenu. Réessayez."
     }
   }
 }

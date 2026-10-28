@@ -1307,6 +1307,14 @@
         "one": "What moved across the teams this week?",
         "two": "Prep my investor update"
       }
+    },
+    "errors": {
+      "department": "Choose your department.",
+      "job": "Choose your role.",
+      "seniority": "Choose your seniority.",
+      "size": "Choose your company size.",
+      "company": "Enter a company name (2 to 100 characters).",
+      "form": "Something went wrong. Try again."
     }
   }
 }

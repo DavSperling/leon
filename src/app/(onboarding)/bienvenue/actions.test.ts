@@ -125,7 +125,7 @@ describe('completeAboutStepAction', () => {
     it("refuse un poste qui n'appartient pas au service", async () => {
       const state = await run({ ...validOwner, department: 'sales', job: 'backend' });
 
-      expect(state.errors).toEqual({ job: 'Choisissez votre poste.' });
+      expect(state.errors).toEqual({ job: 'job' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
@@ -134,7 +134,7 @@ describe('completeAboutStepAction', () => {
       async (seniority) => {
         const state = await run({ ...validOwner, seniority });
 
-        expect(state.errors).toEqual({ seniority: 'Choisissez votre niveau.' });
+        expect(state.errors).toEqual({ seniority: 'seniority' });
         expect(completeOwnerStep).not.toHaveBeenCalled();
       },
     );
@@ -144,7 +144,7 @@ describe('completeAboutStepAction', () => {
       async (department) => {
         const state = await run({ ...validOwner, department });
 
-        expect(state.errors?.department).toBe('Choisissez votre service.');
+        expect(state.errors?.department).toBe('department');
         expect(completeOwnerStep).not.toHaveBeenCalled();
       },
     );
@@ -152,29 +152,27 @@ describe('completeAboutStepAction', () => {
     it('refuse une taille inconnue', async () => {
       const state = await run({ ...validOwner, size: '12-49' });
 
-      expect(state.errors).toEqual({ size: "Choisissez la taille de l'entreprise." });
+      expect(state.errors).toEqual({ size: 'size' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
     it('refuse une attente inconnue, sans champ à signaler', async () => {
       const state = await run({ ...validOwner, goals: ['find', 'world-domination'] });
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
-    it('signale chaque champ faux à la fois, et rend ce qui a été saisi', async () => {
-      const input = {
+    it('signale chaque champ faux à la fois', async () => {
+      const state = await run({
         department: 'sales',
         job: 'backend',
         seniority: '9',
         size: '3',
         goals: ['find'],
-      };
-      const state = await run(input);
+      });
 
-      expect(Object.keys(state.errors ?? {}).sort()).toEqual(['job', 'seniority', 'size']);
-      expect(state.values).toMatchObject(input);
+      expect(state.errors).toEqual({ job: 'job', seniority: 'seniority', size: 'size' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
@@ -230,7 +228,7 @@ describe('completeAboutStepAction', () => {
 
       const state = await run({ goals: ['find', 'nope'] });
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeMemberStep).not.toHaveBeenCalled();
     });
   });
@@ -260,7 +258,7 @@ describe('completeAboutStepAction', () => {
 
       const state = await run(validOwner);
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
       expect(completeMemberStep).not.toHaveBeenCalled();
     });
@@ -310,7 +308,7 @@ describe('completeAboutStepAction', () => {
 
       const state = await run(newcomer);
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
@@ -319,7 +317,7 @@ describe('completeAboutStepAction', () => {
 
       const state = await run(newcomer);
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
@@ -329,17 +327,14 @@ describe('completeAboutStepAction', () => {
 
       const state = await run(newcomer);
 
-      expect(state.errors).toEqual({ form: 'Un problème est survenu. Réessayez.' });
+      expect(state.errors).toEqual({ form: 'form' });
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
     it("un nom d'entreprise trop court ne crée rien", async () => {
       const state = await run({ ...newcomer, organizationName: 'A' });
 
-      expect(state.errors).toEqual({
-        organizationName: "Saisissez le nom de l'entreprise (2 à 100 caractères).",
-      });
-      expect(state.values).toMatchObject({ organizationName: 'A' });
+      expect(state.errors).toEqual({ organizationName: 'company' });
       expect(createOrganizationForUser).not.toHaveBeenCalled();
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
@@ -347,22 +342,14 @@ describe('completeAboutStepAction', () => {
     it('un formulaire du propriétaire invalide ne crée rien non plus', async () => {
       const state = await run({ ...newcomer, department: 'sales' });
 
-      expect(state.errors).toEqual({ job: 'Choisissez votre poste.' });
+      expect(state.errors).toEqual({ job: 'job' });
       expect(createOrganizationForUser).not.toHaveBeenCalled();
     });
 
-    it('signale ensemble le nom et les champs faux, et rend ce qui a été saisi', async () => {
+    it('signale ensemble le nom et les champs faux', async () => {
       const state = await run({ ...newcomer, organizationName: ' ', size: 'x' });
 
-      expect(Object.keys(state.errors ?? {}).sort()).toEqual(['organizationName', 'size']);
-      expect(state.values).toEqual({
-        organizationName: '',
-        department: 'engineering',
-        job: 'backend',
-        seniority: '5',
-        size: 'x',
-        goals: ['find', 'briefing'],
-      });
+      expect(state.errors).toEqual({ organizationName: 'company', size: 'size' });
       expect(createOrganizationForUser).not.toHaveBeenCalled();
     });
   });

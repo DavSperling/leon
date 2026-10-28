@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { type ReactNode, useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import { setLocaleAction } from '@/app/(app)/reglages/actions';
-import { type AboutStepState, completeAboutStepAction } from '@/app/(onboarding)/bienvenue/actions';
+import {
+  type AboutStepErrors,
+  type AboutStepField,
+  type AboutStepState,
+  completeAboutStepAction,
+} from '@/app/(onboarding)/bienvenue/actions';
 import { Badge } from '@/components/verre/ui/badge';
 import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
@@ -40,8 +45,6 @@ export type AboutStepProps = {
 
 // Le trait d'union des tailles ('11-50') s'écrit en tiret demi-cadratin ; la valeur envoyée reste l'identifiant.
 const sizeLabel = (size: string) => size.replace('-', '–');
-// La valeur d'un champ, rendue par l'action après un refus.
-const textOf = (value: string | string[] | undefined) => (typeof value === 'string' ? value : '');
 // Le départ du select du niveau : la valeur gardée en base (indice + 1).
 const levelOptions = SENIORITY_LEVELS.map((id, i) => ({ id, value: String(i + 1) }));
 
@@ -89,17 +92,35 @@ export function AboutStep({
     {},
   );
   const formRef = useRef<HTMLFormElement>(null);
-  const errors = state.errors ?? {};
+
+  // Les erreurs sont des codes, traduits au rendu (un changement de langue les suit). La copie locale se remet à
+  // l'état de l'action à chaque réponse, et perd l'erreur d'un champ dès que sa valeur change. La remise à zéro se
+  // fait pendant le rendu, non dans l'effet : le focus ci-dessous lit `aria-invalid` dans le DOM déjà à jour.
+  const [seenState, setSeenState] = useState(state);
+  const [errors, setErrors] = useState<AboutStepErrors>(state.errors ?? {});
+  if (state !== seenState) {
+    setSeenState(state);
+    setErrors(state.errors ?? {});
+  }
+  const clearErrors = (...fields: AboutStepField[]) =>
+    setErrors((current) => {
+      const next = { ...current };
+      for (const field of fields) delete next[field];
+      return next;
+    });
+  const errorOf = (field: AboutStepField) => {
+    const code = errors[field];
+    return code ? t(`errors.${code}`) : undefined;
+  };
 
   // Les choix vivent ici : l'aperçu les suit sans envoi, et ils résistent à un refus et au changement de langue.
-  // Les champs cachés envoient les mêmes valeurs ; `state.values` ne sert qu'à un formulaire arrivé du serveur.
-  const values = state.values ?? {};
-  const [company, setCompany] = useState(textOf(values.organizationName));
-  const [department, setDepartment] = useState(textOf(values.department));
-  const [job, setJob] = useState(textOf(values.job));
-  const [seniority, setSeniority] = useState(textOf(values.seniority));
-  const [size, setSize] = useState(textOf(values.size));
-  const [goals, setGoals] = useState<string[]>(Array.isArray(values.goals) ? values.goals : []);
+  // Les champs cachés envoient les mêmes valeurs.
+  const [company, setCompany] = useState('');
+  const [department, setDepartment] = useState('');
+  const [job, setJob] = useState('');
+  const [seniority, setSeniority] = useState('');
+  const [size, setSize] = useState('');
+  const [goals, setGoals] = useState<string[]>([]);
 
   // Après un refus : le focus va au premier champ en erreur (le déclencheur d'une liste, la première pastille d'un groupe).
   useEffect(() => {
@@ -154,12 +175,15 @@ export function AboutStep({
         </Group>
 
         {mode === 'newcomer' && (
-          <Field label={t('company')} error={errors.organizationName}>
+          <Field label={t('company')} error={errorOf('organizationName')}>
             <Input
               name="organizationName"
               autoComplete="organization"
               value={company}
-              onChange={(event) => setCompany(event.target.value)}
+              onChange={(event) => {
+                setCompany(event.target.value);
+                clearErrors('organizationName');
+              }}
             />
           </Field>
         )}
@@ -167,7 +191,7 @@ export function AboutStep({
         {editable && (
           <>
             <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
-              <Field label={t('department')} error={errors.department}>
+              <Field label={t('department')} error={errorOf('department')}>
                 <Select
                   className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
                   placeholder={t('choose')}
@@ -175,6 +199,7 @@ export function AboutStep({
                   onValueChange={(next) => {
                     setDepartment(next);
                     setJob('');
+                    clearErrors('department', 'job');
                   }}
                   options={DEPARTMENT_IDS.map((id) => ({
                     value: id,
@@ -182,13 +207,16 @@ export function AboutStep({
                   }))}
                 />
               </Field>
-              <Field label={t('job')} error={errors.job}>
+              <Field label={t('job')} error={errorOf('job')}>
                 <Select
                   className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
                   placeholder={t('choose')}
                   disabled={jobs.length === 0}
                   value={job}
-                  onValueChange={setJob}
+                  onValueChange={(next) => {
+                    setJob(next);
+                    clearErrors('job');
+                  }}
                   options={jobs.map((id) => ({
                     value: id,
                     label: t(jobLabelKey(department, id)),
@@ -197,11 +225,18 @@ export function AboutStep({
               </Field>
             </div>
 
-            <Field label={t('seniorityLabel')} help={t('seniorityHint')} error={errors.seniority}>
+            <Field
+              label={t('seniorityLabel')}
+              help={t('seniorityHint')}
+              error={errorOf('seniority')}
+            >
               <Select
                 placeholder={t('choose')}
                 value={seniority}
-                onValueChange={setSeniority}
+                onValueChange={(next) => {
+                  setSeniority(next);
+                  clearErrors('seniority');
+                }}
                 options={levelOptions.map(({ id, value }) => ({
                   value,
                   label: t(`seniority.${id}`),
@@ -209,14 +244,17 @@ export function AboutStep({
               />
             </Field>
 
-            <Group legend={t('size')} error={errors.size}>
+            <Group legend={t('size')} error={errorOf('size')}>
               {COMPANY_SIZES.map((option, i) => (
                 <Pill
                   key={option}
                   variant={size === option ? 'active' : 'default'}
                   aria-pressed={size === option}
                   data-invalid={errors.size && i === 0 ? 'true' : undefined}
-                  onClick={() => setSize(option)}
+                  onClick={() => {
+                    setSize(option);
+                    clearErrors('size');
+                  }}
                 >
                   {sizeLabel(option)}
                 </Pill>
@@ -277,7 +315,7 @@ export function AboutStep({
 
         {errors.form && (
           <Notice tone="error" live="alert">
-            {errors.form}
+            {errorOf('form')}
           </Notice>
         )}
 

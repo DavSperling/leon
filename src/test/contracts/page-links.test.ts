@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listFiles, productionSources } from './files';
+import { listFiles, productionSources, readText } from './files';
 
 // Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
 const routeOf = (file: string): string =>
@@ -72,5 +72,19 @@ describe('liens entre pages', () => {
   it('mène chaque lien écrit dans le code à une page', () => {
     const broken = writtenPaths().filter(({ path }) => !matchesRoute(path));
     expect(broken).toEqual([]);
+  });
+
+  // La requête (`?supprime=…`) n'entre pas dans les liens ci-dessus : une valeur que la page de connexion ne lit pas
+  // renverrait la personne sans le message qui lui dit que sa suppression est faite.
+  it('lit sur la page de connexion chaque ?supprime= écrit par les actions de suppression', () => {
+    const written = new Set(
+      [...readText('src/app/(app)/reglages/actions.ts').matchAll(/\?supprime=([a-z]+)/g)].map(
+        (match) => match[1],
+      ),
+    );
+    const page = readText('src/app/(auth)/connexion/page.tsx');
+
+    expect([...written].toSorted()).toEqual(['compte', 'organisation']);
+    for (const value of written) expect(page).toContain(`'${value}'`);
   });
 });

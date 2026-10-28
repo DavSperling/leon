@@ -5,7 +5,7 @@ import { DOCUMENT_MAX_BYTES } from '@/lib/documents';
 import { CONNECTOR_TURN_MAX } from '@/server/connectors/normalize';
 import { DocumentError, decodeText, readDocument } from './documents';
 
-// Les formats Office passent par officeparser, simulé ici ; TXT, CSV et Markdown sont lus sans lui.
+// Les formats Office passent par officeparser, simulé ici ; le texte et le code sont lus sans lui.
 vi.mock('officeparser', async (importOriginal) => ({
   ...(await importOriginal<typeof import('officeparser')>()),
   OfficeParser: { parseOffice: vi.fn() },
@@ -37,6 +37,29 @@ describe('readDocument', () => {
 
     expect(doc).toEqual({ title: 'devis.txt', parts: ['Devis signé le 3 mars.'], partial: false });
     expect(OfficeParser.parseOffice).not.toHaveBeenCalled();
+  });
+
+  it('lit un fichier de code sans officeparser, avec son chemin de dossier pour titre', async () => {
+    const file = new File(['export const a = 1;'], 'a.ts');
+
+    const doc = await readDocument(file, 'projet/src/a.ts');
+
+    expect(doc).toEqual({
+      title: 'projet/src/a.ts',
+      parts: ['export const a = 1;'],
+      partial: false,
+    });
+    expect(OfficeParser.parseOffice).not.toHaveBeenCalled();
+  });
+
+  it('garde la fin d’un titre de chemin trop long', async () => {
+    const path = `${'dossier/'.repeat(60)}important.ts`;
+
+    const { title } = await readDocument(new File(['x'], 'important.ts'), path);
+
+    expect(title).toHaveLength(300);
+    expect(title.startsWith('…')).toBe(true);
+    expect(title.endsWith('/important.ts')).toBe(true);
   });
 
   it('refuse un fichier de plus de 10 Mo, ou vide', async () => {

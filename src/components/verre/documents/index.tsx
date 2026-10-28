@@ -1,13 +1,33 @@
 'use client';
 
-import { FileText, Trash2, Upload } from 'lucide-react';
+import { ChevronRight, FileText, Folder, FolderOpen, Trash2, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { type FormEvent, useActionState, useState } from 'react';
-import { deleteDocumentAction, uploadDocumentAction } from '@/app/(app)/documents/actions';
+import {
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+  useActionState,
+  useRef,
+  useState,
+} from 'react';
+import {
+  addFileAction,
+  deleteDocumentAction,
+  deleteFolderAction,
+  uploadDocumentAction,
+} from '@/app/(app)/documents/actions';
 import { Button, EmptyState, GlassCard, Notice, PageHeader, Section } from '@/components/verre';
-import { DOCUMENT_MAX_BYTES } from '@/lib/documents';
+import {
+  DOCUMENT_ACCEPT,
+  DOCUMENT_MAX_BYTES,
+  FOLDER_MAX_FILES,
+  selectFolderFiles,
+} from '@/lib/documents';
 import { formatRelative } from '@/lib/format';
 import { nb } from '@/lib/verre';
+import { cn } from '@/lib/verre/cn';
+import { type PickedFile, type PickedFolder, readDropped, readPicked } from './dropped-files';
 
 type DocumentRow = {
   id: string;
@@ -15,7 +35,12 @@ type DocumentRow = {
   createdAt: Date;
   ownerUserId: string;
   ownerName: string;
+  folderId: string | null;
+  folderName: string | null;
 };
+
+// Les fichiers d'un même dossier (et d'un même auteur), regroupés sur une ligne de la liste.
+type FolderGroup = { key: string; id: string; name: string; documents: DocumentRow[] };
 
 // Le logo du format, d'après l'extension du titre (le nom du fichier envoyé) ; les autres formats gardent l'icône.
 const LOGOS: Record<string, string> = {
@@ -48,8 +73,11 @@ function FormatIcon({ title }: { title: string | null }) {
   );
 }
 
+type Report = { tone: 'success' | 'warning' | 'error'; text: string };
+
 function UploadForm() {
   const t = useTranslations('documents');
+  const router = useRouter();
   const [state, action, pending] = useActionState(uploadDocumentAction, {
     error: null,
     partial: false,
@@ -57,15 +85,118 @@ function UploadForm() {
   // Au-delà de la limite de Next, la requête est refusée avant l'action et la page d'erreur s'affiche :
   // la taille se vérifie avant l'envoi (le serveur la vérifie aussi).
   const [tooBig, setTooBig] = useState(false);
+  // Un dossier ou des fichiers glissés partent un par un (une requête est limitée à 12 Mo) : `progress` en dit l'avancée.
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [report, setReport] = useState<Report | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const folderInput = useRef<HTMLInputElement>(null);
+  const sending = progress !== null;
   const checkSize = (event: FormEvent<HTMLFormElement>) => {
     const file = new FormData(event.currentTarget).get('file');
     const refused = file instanceof File && file.size > DOCUMENT_MAX_BYTES;
+    setReport(null);
     setTooBig(refused);
     if (refused) event.preventDefault();
   };
+
+  async function send(picking: Promise<{ folders: PickedFolder[]; singles: PickedFile[] }>) {
+    setReport(null);
+    setProgress({ done: 0, total: 0 });
+    try {
+      const { folders, singles } = await picking;
+      const chosen = folders.map(({ name, files }) => ({
+        id: crypto.randomUUID(),
+        name,
+        ...selectFolderFiles(files),
+      }));
+      const alone = selectFolderFiles(singles);
+      // Le chemin part sans sa racine : le serveur ajoute le nom du dossier au titre.
+      const uploads = [
+        ...chosen.flatMap(({ id, name, kept }) =>
+          kept.map(({ file, path }) => ({ file, folder: { id, name, path } })),
+        ),
+        ...alone.kept.map(({ file }) => ({ file, folder: null })),
+      ];
+      const biggest = Math.max(0, ...chosen.map(({ kept }) => kept.length));
+      const refusal =
+        biggest > FOLDER_MAX_FILES
+          ? t('tooManyFiles', { count: biggest, max: FOLDER_MAX_FILES })
+          : uploads.length === 0 && t('noReadableFiles');
+      if (refusal) {
+        setReport({ tone: 'error', text: refusal });
+        return;
+      }
+
+      const total = uploads.length;
+      const counts = {
+        added: 0,
+        partial: 0,
+        skipped: alone.skipped + chosen.reduce((sum, { skipped }) => sum + skipped, 0),
+        failed: 0,
+      };
+      setProgress({ done: 0, total });
+      for (const [index, { file, folder }] of uploads.entries()) {
+        const body = new FormData();
+        body.set('file', file);
+        if (folder) {
+          body.set('folderId', folder.id);
+          body.set('folderName', folder.name);
+          body.set('path', folder.path);
+        }
+        // Une erreur réseau n'arrête pas les fichiers suivants.
+        const result = await addFileAction(body).catch(() => null);
+        if (!result || result.error) counts.failed += 1;
+        else if (result.partial) counts.partial += 1;
+        else counts.added += 1;
+        setProgress({ done: index + 1, total });
+      }
+      const text = (['added', 'partial', 'skipped', 'failed'] as const)
+        .filter((key) => counts[key] > 0)
+        .map((key) => t(`report.${key}`, { count: counts[key] }))
+        .join(' · ');
+      setReport({ tone: counts.failed > 0 ? 'warning' : 'success', text });
+      router.refresh();
+    } catch {
+      setReport({ tone: 'error', text: t('errors.failed') });
+    } finally {
+      setProgress(null);
+    }
+  }
+
+  const pickFolder = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = ''; // pour pouvoir choisir deux fois le même dossier
+    void send(Promise.resolve(readPicked(files)));
+  };
+
+  const drop = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    if (sending) return;
+    // Les éléments déposés ne sont valides que pendant l'événement : leurs entrées se prennent tout de suite. Sans
+    // entrée, le fichier lui-même.
+    const entries = [...event.dataTransfer.items].flatMap((item) =>
+      item.kind === 'file' ? (item.webkitGetAsEntry() ?? item.getAsFile() ?? []) : [],
+    );
+    void send(readDropped(entries));
+  };
+
   const error = tooBig ? 'unreadable' : state.error;
+  const idle = !sending && !report && !pending;
   return (
-    <GlassCard variant="raised" className="p-5">
+    <GlassCard
+      variant="raised"
+      className={cn('p-5 transition-colors', dragging && 'border-accent bg-accent-soft')}
+      onDragOver={(event) => {
+        if (!event.dataTransfer.types.includes('Files')) return;
+        event.preventDefault(); // sinon le navigateur ouvre le fichier déposé
+        setDragging(!sending);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={drop}
+    >
       <form action={action} onSubmit={checkSize} className="flex flex-wrap items-end gap-4">
         <label className="grid min-w-0 flex-1 gap-2 text-label font-medium text-fg-2">
           {t('chooseFile')}
@@ -73,24 +204,56 @@ function UploadForm() {
             type="file"
             name="file"
             required
-            accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.epub,.rtf,.csv,.txt,.md,.html,.tex"
+            accept={DOCUMENT_ACCEPT}
             aria-describedby="formats-documents"
             className="block w-full rounded-field border border-line bg-glass-2 px-3 py-2 text-ui text-fg file:mr-3 file:rounded-full file:border-0 file:bg-glass-3 file:px-3 file:py-1.5 file:text-label file:font-medium file:text-fg"
           />
         </label>
-        <Button type="submit" icon={Upload} variant="primary" loading={pending}>
+        <Button type="submit" icon={Upload} variant="primary" loading={pending} disabled={sending}>
           {t('add')}
         </Button>
+        <Button
+          icon={FolderOpen}
+          disabled={sending || pending}
+          aria-describedby="formats-documents"
+          onClick={() => folderInput.current?.click()}
+        >
+          {t('chooseFolder')}
+        </Button>
+        {/* `webkitdirectory` n'existe pas dans les types de React : posé par un objet d'attributs. */}
+        <input
+          ref={folderInput}
+          type="file"
+          multiple
+          hidden
+          onChange={pickFolder}
+          {...{ webkitdirectory: '' }}
+        />
       </form>
       <p id="formats-documents" className="mt-3 text-label text-muted">
         {t('formats')}
       </p>
-      {error && (
+      <p className="mt-1 text-label text-muted">{t('dropHint')}</p>
+      {progress && progress.total > 0 && (
+        <Notice tone="info" className="mt-4" live="status">
+          {t('sending', progress)}
+        </Notice>
+      )}
+      {report && (
+        <Notice
+          tone={report.tone}
+          className="mt-4"
+          live={report.tone === 'error' ? 'alert' : 'status'}
+        >
+          {nb(report.text)}
+        </Notice>
+      )}
+      {idle && error && (
         <Notice tone="error" className="mt-4" live="alert">
           {nb(t(`errors.${error}`))}
         </Notice>
       )}
-      {!error && state.partial && (
+      {idle && !error && state.partial && (
         <Notice tone="warning" className="mt-4" live="status">
           {nb(t('partial'))}
         </Notice>
@@ -99,10 +262,20 @@ function UploadForm() {
   );
 }
 
-function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId: string }) {
+// `path` : le chemin du fichier dans son dossier ; l'auteur est alors celui du dossier.
+function DocumentItem({
+  document,
+  viewerId,
+  path,
+}: {
+  document: DocumentRow;
+  viewerId: string;
+  path?: string;
+}) {
   const t = useTranslations('documents');
   const locale = useLocale();
-  const title = document.title || t('untitled');
+  const full = document.title || t('untitled');
+  const title = path ?? full;
   return (
     <li className="flex items-center gap-3 border-b border-line py-3 last:border-0">
       <FormatIcon title={document.title} />
@@ -110,14 +283,16 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
         <p className="truncate text-ui font-medium text-fg" title={title}>
           {nb(title)}
         </p>
-        <p className="mt-0.5 text-label text-muted">
-          {nb(
-            t('addedBy', {
-              name: document.ownerName,
-              when: formatRelative(document.createdAt, new Date(), locale),
-            }),
-          )}
-        </p>
+        {!path && (
+          <p className="mt-0.5 text-label text-muted">
+            {nb(
+              t('addedBy', {
+                name: document.ownerName,
+                when: formatRelative(document.createdAt, new Date(), locale),
+              }),
+            )}
+          </p>
+        )}
       </div>
       {document.ownerUserId === viewerId && (
         <form action={deleteDocumentAction}>
@@ -127,7 +302,7 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
             variant="ghost"
             size="sm"
             icon={Trash2}
-            aria-label={t('deleteLabel', { title })}
+            aria-label={t('deleteLabel', { title: full })}
           >
             {t('delete')}
           </Button>
@@ -135,6 +310,98 @@ function DocumentItem({ document, viewerId }: { document: DocumentRow; viewerId:
       )}
     </li>
   );
+}
+
+function FolderItem({ folder, viewerId }: { folder: FolderGroup; viewerId: string }) {
+  const t = useTranslations('documents');
+  const locale = useLocale();
+  // La liste va du plus récent au plus ancien : le premier fichier dit l'auteur et la date du dossier.
+  const [latest] = folder.documents;
+  const prefix = `${folder.name}/`;
+  const files = folder.documents
+    .map((document) => {
+      const title = document.title || t('untitled');
+      return { document, path: title.startsWith(prefix) ? title.slice(prefix.length) : title };
+    })
+    .sort((a, b) => a.path.localeCompare(b.path, locale));
+  const owner = latest?.ownerUserId === viewerId;
+  // « Supprimer le dossier » est posé sur la ligne, hors du `<summary>` : la liste dépliée garde toute la largeur
+  // (sur un téléphone, à côté du bouton, les chemins n'auraient plus de place).
+  return (
+    <li className="relative border-b border-line py-3 last:border-0">
+      <details className="group min-w-0">
+        <summary
+          className={cn(
+            'flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden',
+            owner && 'pr-12 sm:pr-48',
+          )}
+        >
+          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center">
+            <Folder className="size-4 text-accent" strokeWidth={1.7} />
+          </span>
+          <span className="block min-w-0 flex-1">
+            <span className="block truncate text-ui font-medium text-fg" title={folder.name}>
+              {nb(folder.name)}
+            </span>
+            <span className="mt-0.5 block text-label text-muted">
+              {nb(
+                `${t('folderFiles', { count: files.length })} · ${t('addedBy', {
+                  name: latest?.ownerName ?? '',
+                  when: latest ? formatRelative(latest.createdAt, new Date(), locale) : '',
+                })}`,
+              )}
+            </span>
+          </span>
+          <ChevronRight
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted transition-transform group-open:rotate-90"
+          />
+        </summary>
+        <ul className="mt-1 ml-4 sm:ml-11">
+          {files.map(({ document, path }) => (
+            <DocumentItem key={document.id} document={document} viewerId={viewerId} path={path} />
+          ))}
+        </ul>
+      </details>
+      {owner && (
+        <form action={deleteFolderAction} className="absolute top-4 right-0">
+          <input type="hidden" name="id" value={folder.id} />
+          <Button
+            type="submit"
+            variant="ghost"
+            size="sm"
+            icon={Trash2}
+            aria-label={t('deleteFolderLabel', { name: folder.name })}
+          >
+            {/* Sur un téléphone, l'icône seule : le libellé reste dans aria-label. */}
+            <span className="max-sm:sr-only">{t('deleteFolder')}</span>
+          </Button>
+        </form>
+      )}
+    </li>
+  );
+}
+
+// Les lignes de la liste : un dossier à la place de son premier fichier, les documents seuls tels quels. Le dossier
+// se reconnaît à son identifiant ET à son auteur : un identifiant repris par un autre membre reste à part.
+function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[] {
+  const rows: (DocumentRow | FolderGroup)[] = [];
+  const folders = new Map<string, FolderGroup>();
+  for (const document of documents) {
+    if (!document.folderId) {
+      rows.push(document);
+      continue;
+    }
+    const key = `${document.ownerUserId}:${document.folderId}`;
+    let folder = folders.get(key);
+    if (!folder) {
+      folder = { key, id: document.folderId, name: document.folderName ?? '', documents: [] };
+      folders.set(key, folder);
+      rows.push(folder);
+    }
+    folder.documents.push(document);
+  }
+  return rows;
 }
 
 export function Documents({ documents, viewerId }: { documents: DocumentRow[]; viewerId: string }) {
@@ -151,9 +418,13 @@ export function Documents({ documents, viewerId }: { documents: DocumentRow[]; v
         ) : (
           <GlassCard className="px-4">
             <ul>
-              {documents.map((document) => (
-                <DocumentItem key={document.id} document={document} viewerId={viewerId} />
-              ))}
+              {groupDocuments(documents).map((row) =>
+                'documents' in row ? (
+                  <FolderItem key={row.key} folder={row} viewerId={viewerId} />
+                ) : (
+                  <DocumentItem key={row.id} document={row} viewerId={viewerId} />
+                ),
+              )}
             </ul>
           </GlassCard>
         )}

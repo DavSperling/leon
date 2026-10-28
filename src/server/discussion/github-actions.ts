@@ -105,7 +105,10 @@ const label = () =>
     .string()
     .min(1)
     .max(50)
-    .refine((value) => !/[,\r\n\u2028\u2029]/.test(value), 'Ni virgule ni saut de ligne.');
+    .refine(
+      (value) => !/[,\r\n\u2028\u2029]/.test(value) && !BIDI.test(value),
+      'Ni virgule, ni saut de ligne, ni changement du sens de lecture.',
+    );
 const login = () =>
   z
     .string()
@@ -121,7 +124,7 @@ const RULES = {
   from: isBranchName,
   head: isBranchName,
   base: isBranchName,
-  path: isRepoPath,
+  path: plain(isRepoPath),
   number: (value) => DIGITS.test(value),
   run: (value) => DIGITS.test(value),
   sha: (value) => COMMIT_SHA.test(value),
@@ -132,14 +135,15 @@ const RULES = {
   draft: yesNo,
   reviewers: list(15, (login) => LOGIN.test(login)),
   assignees: list(10, (login) => LOGIN.test(login)),
-  labels: list(20, (label) => between(1, 50)(label) && oneLine(label)),
+  labels: list(20, (label) => plain(between(1, 50))(label) && oneLine(label)),
   title,
   name: title,
   current: title,
   message: plain(between(1, 2000)),
   body: plain(between(0, 65_536)),
   content: plain(between(0, 200_000)),
-  diff: between(0, 200_000),
+  // Le contenu proposé est déjà sans ces caractères : seul le fichier actuel peut en porter, et le diff les montrerait.
+  diff: plain(between(0, 200_000)),
   lines: (value) => /^\d{1,9}$/.test(value),
   // Un extrait de la demande de l'utilisateur, montré sur la carte (askedOf).
   asked: (value) => between(1, ASKED_MAX)(value) && !UNSAFE.test(value),
@@ -643,6 +647,12 @@ export const SPECS: Record<ActionKind, Spec> = {
     summary: (p) =>
       `soumettre un avis « ${p.event} » sur la PR #${p.number} « ${p.title} » de ${p.repo} (commit ${sha7(p.sha)})`,
     async execute(github, p) {
+      // Comme pour la fusion : un nouveau commit depuis la proposition, et l'avis porterait sur du code que
+      // l'utilisateur n'a pas vu.
+      const now = await github.pull(p.repo, Number(p.number));
+      if (now.merged || now.state !== 'open' || now.head.sha !== p.sha) {
+        throw new ActionFailure('conflit');
+      }
       const review = await github.submitReview(p.repo, Number(p.number), {
         event: p.event,
         commit_id: p.sha,

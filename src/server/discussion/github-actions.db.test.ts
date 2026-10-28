@@ -248,6 +248,7 @@ const CASES: Array<{
     input: { depot: 'acme/leon', numero: 7, decision: 'approuver' },
     read: [get(`${REPO}/pulls/7`, PULL)],
     params: { number: '7', event: 'APPROVE', body: '', sha: SHA },
+    recheck: [get(`${REPO}/pulls/7`, PULL)],
     write: {
       method: 'POST',
       url: `${REPO}/pulls/7/reviews`,
@@ -881,6 +882,29 @@ describe('fusionner_pr_github', () => {
 
     expect(text).toContain('inattendu');
     expect(action).toBeUndefined();
+  });
+});
+
+describe('soumettre_revue_github', () => {
+  it.each([
+    ['a reçu un nouveau commit', { head: { ref: 'feature/x', sha: 'f'.repeat(40) } }],
+    ['est fermée', { state: 'closed' }],
+    ['est fusionnée', { state: 'closed', merged: true }],
+  ])('ne soumet aucun avis quand la PR %s depuis la proposition', async (_what, change) => {
+    const { alice, discussionId } = await setup();
+    const { action } = await propose(
+      alice,
+      discussionId,
+      'soumettre_revue_github',
+      { depot: 'acme/leon', numero: 7, decision: 'approuver' },
+      [get(`${REPO}/pulls/7`, PULL)],
+    );
+    const fetchImpl = fakeFetch([get(`${REPO}/pulls/7`, { ...PULL, ...change })]);
+
+    const done = await decideAction(alice, action.id, 'confirmer', { fetchImpl });
+
+    expect(done).toMatchObject({ status: 'echouee', result: { url: null, error: 'conflit' } });
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['GET']);
   });
 });
 

@@ -267,10 +267,12 @@ function UploadForm() {
 function DocumentItem({
   document,
   viewerId,
+  admin,
   path,
 }: {
   document: DocumentRow;
   viewerId: string;
+  admin: boolean;
   path?: string;
 }) {
   const t = useTranslations('documents');
@@ -298,7 +300,7 @@ function DocumentItem({
           </p>
         )}
       </div>
-      {document.ownerUserId === viewerId && (
+      {(document.ownerUserId === viewerId || (admin && document.ownerFormer)) && (
         <form action={deleteDocumentAction}>
           <input type="hidden" name="id" value={document.id} />
           <Button
@@ -316,7 +318,16 @@ function DocumentItem({
   );
 }
 
-function FolderItem({ folder, viewerId }: { folder: FolderGroup; viewerId: string }) {
+// Le dossier d'un ancien membre ne se supprime pas d'un coup : un administrateur retire ses fichiers un par un.
+function FolderItem({
+  folder,
+  viewerId,
+  admin,
+}: {
+  folder: FolderGroup;
+  viewerId: string;
+  admin: boolean;
+}) {
   const t = useTranslations('documents');
   const locale = useLocale();
   // La liste va du plus récent au plus ancien : le premier fichier dit l'auteur et la date du dossier.
@@ -363,7 +374,13 @@ function FolderItem({ folder, viewerId }: { folder: FolderGroup; viewerId: strin
         </summary>
         <ul className="mt-1 ml-4 sm:ml-11">
           {files.map(({ document, path }) => (
-            <DocumentItem key={document.id} document={document} viewerId={viewerId} path={path} />
+            <DocumentItem
+              key={document.id}
+              document={document}
+              viewerId={viewerId}
+              admin={admin}
+              path={path}
+            />
           ))}
         </ul>
       </details>
@@ -408,7 +425,15 @@ function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[]
   return rows;
 }
 
-export function Documents({ documents, viewerId }: { documents: DocumentRow[]; viewerId: string }) {
+export function Documents({
+  documents,
+  viewerId,
+  admin,
+}: {
+  documents: DocumentRow[];
+  viewerId: string;
+  admin: boolean;
+}) {
   const t = useTranslations('documents');
   return (
     <div className="mx-auto max-w-[760px]">
@@ -424,9 +449,9 @@ export function Documents({ documents, viewerId }: { documents: DocumentRow[]; v
             <ul>
               {groupDocuments(documents).map((row) =>
                 'documents' in row ? (
-                  <FolderItem key={row.key} folder={row} viewerId={viewerId} />
+                  <FolderItem key={row.key} folder={row} viewerId={viewerId} admin={admin} />
                 ) : (
-                  <DocumentItem key={row.id} document={row} viewerId={viewerId} />
+                  <DocumentItem key={row.id} document={row} viewerId={viewerId} admin={admin} />
                 ),
               )}
             </ul>

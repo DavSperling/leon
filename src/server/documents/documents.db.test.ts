@@ -112,6 +112,52 @@ describe('suppression d’un document (0034)', () => {
   });
 });
 
+// Un document laissé par un membre parti n'a plus d'auteur pour le retirer : un administrateur le peut (0042).
+describe('document d’un ancien membre (0042)', () => {
+  const makeAdmin = (ctx: TenantContext) =>
+    adminPool.query(
+      `update member set role = 'admin' where "userId" = $1 and "organizationId" = $2`,
+      [ctx.userId, ctx.tenantId],
+    );
+  let claire: TenantContext;
+  let zack: TenantContext;
+
+  beforeAll(async () => {
+    claire = await createTestUser(alice.tenantId, 'Claire');
+    zack = await createTestUser(zoe.tenantId, 'Zack');
+    await makeAdmin(claire);
+    await makeAdmin(zack);
+  });
+
+  async function departed(): Promise<string> {
+    const julie = await createTestUser(alice.tenantId, 'Julie');
+    const { sourceId } = await upload(julie, 'secret-julie.txt');
+    await deleteAccount(julie, null, false);
+    return sourceId;
+  }
+
+  it('un administrateur le supprime', async () => {
+    const sourceId = await departed();
+
+    expect(await deleteDocument(claire, sourceId)).toBe(true);
+  });
+
+  it('pas celui d’un membre encore là', async () => {
+    const { sourceId } = await upload(alice);
+
+    expect(await deleteDocument(claire, sourceId)).toBe(false);
+    expect(await count('turns', sourceId)).toBe(1);
+  });
+
+  it('un simple membre ne le supprime pas, ni l’administrateur d’une autre organisation', async () => {
+    const sourceId = await departed();
+
+    expect(await deleteDocument(bob, sourceId)).toBe(false);
+    expect(await deleteDocument(zack, sourceId)).toBe(false);
+    expect(await count('turns', sourceId)).toBe(1);
+  });
+});
+
 describe('liste des documents', () => {
   it('montre à toute l’organisation ses documents, et seulement eux', async () => {
     const mine = await upload(alice, 'contrat-acme.txt');

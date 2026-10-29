@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
 import { apiTokens } from '@/server/db/schema/api-tokens';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
 import {
   createApiToken,
@@ -108,6 +108,18 @@ describe('jetons personnels', () => {
       .delete(members)
       .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
     expect(await verifyApiToken(created.token)).toBeNull();
+  });
+
+  // Un jeton créé pendant la suppression du compte peut échapper à la révocation : l'ancien membre ne passe plus.
+  it("refuse un jeton non révoqué d'un ancien membre, et ne le liste plus", async () => {
+    const paul = await signUp('Paul');
+    const created = await createApiToken(paul, 'Extension');
+    expect(await verifyApiToken(created.token)).not.toBeNull();
+
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, paul.userId));
+
+    expect(await verifyApiToken(created.token)).toBeNull();
+    expect(await listApiTokens(paul)).toEqual([]);
   });
 
   // Audit n° 12 : un membre retiré puis réinvité retrouvait les jetons de son ancienne adhésion.

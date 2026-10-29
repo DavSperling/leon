@@ -1,12 +1,14 @@
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { Llm } from '@/server/llm/llm';
 import { LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
+import { createTestUser } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import { readAbout, saveAbout } from './about';
@@ -193,6 +195,18 @@ describe('refreshBriefing', () => {
     expect(llm.calls).toEqual([]);
     expect(row?.markdown).toMatch(/Nothing new on this project/);
     expect(row?.sourceIds).toEqual([]);
+  });
+
+  it('ne refait rien pour un compte supprimé : ni ligne écrite, ni appel au modèle', async () => {
+    const gone = await createTestUser(tenantId, 'Charlie Ancien');
+    const seeded = await seedProject(gone);
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, gone.userId));
+    const llm = writes(['ne doit pas servir']);
+
+    await refreshBriefing(gone, seeded.project, { llm });
+
+    expect(llm.calls).toEqual([]);
+    expect(await rowOf(gone, seeded.project)).toBeUndefined();
   });
 
   it('sur une panne ou une réponse vide du modèle, lève et garde le point précédent', async () => {

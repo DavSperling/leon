@@ -124,13 +124,14 @@ const IGNORED_FILES: ReadonlySet<string> = new Set([
   'poetry.lock',
   'Gemfile.lock',
   'Cargo.lock',
-  'credentials.json',
-  'secrets.json',
-  'secrets.yml',
-  'secrets.yaml',
   'local.settings.json',
   'service-account.json',
 ]);
+// Les configurations qui portent d'habitude un mot de passe ou une clé en clair (`POSTGRES_PASSWORD: …`,
+// `SECRET_KEY = '…'`), que `maskSecrets` ne reconnaît pas : Docker Compose, Rails, Spring, .NET, WordPress, Django,
+// puis les clés et jetons eux-mêmes.
+const SECRET_FILES =
+  /^((docker-)?compose.*\.ya?ml|database\.yml|application.*\.(ya?ml|properties)|appsettings.*\.json|wp-config\.php|settings\.py|secrets\..*|credentials.*|.*\.(pem|key)|\.npmrc|\.pypirc|id_rsa.*)$/i;
 
 // `accept` du choix de fichier.
 export const DOCUMENT_ACCEPT = [...READABLE].map((extension) => `.${extension}`).join(',');
@@ -152,6 +153,7 @@ export function isIgnoredPath(path: string): boolean {
   const file = segments.at(-1) ?? '';
   return (
     IGNORED_FILES.has(file) ||
+    SECRET_FILES.test(file) ||
     segments.some((segment) => segment.startsWith('.') || IGNORED_FOLDERS.has(segment))
   );
 }
@@ -177,4 +179,5 @@ export type DocumentErrorCode =
   | 'empty'
   | 'too_long'
   | 'folder_full'
+  | 'ignored'
   | 'failed';

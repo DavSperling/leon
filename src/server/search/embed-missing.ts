@@ -261,7 +261,9 @@ export async function embedMissingBatch(
   let total = 0;
   for (const group of groups.values()) {
     try {
-      const ctx = await resolveTenantContext(group.userId, group.tenantId);
+      const ctx = await resolveTenantContext(group.userId, group.tenantId, {
+        includeFormer: true,
+      });
       // Le propriétaire a quitté l'organisation : personne ne peut lire ces passages sous ses droits.
       if (!ctx) continue;
       const missing = await withTenant(ctx, async (tx) => {
@@ -320,7 +322,9 @@ export async function requeueStaleRuns(olderThanMinutes: number): Promise<number
     const ids = { ingestRunId: row.run_id };
     try {
       const key = `${row.tenant_id}:${row.user_id}`;
-      const pending = contexts.get(key) ?? resolveTenantContext(row.user_id, row.tenant_id);
+      const pending =
+        contexts.get(key) ??
+        resolveTenantContext(row.user_id, row.tenant_id, { includeFormer: true });
       contexts.set(key, pending);
       const ctx = await pending;
       if (!ctx) continue;

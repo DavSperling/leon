@@ -11,7 +11,8 @@ import { findInvitation, joinWithInvitation } from './members';
 
 export const SignUpInputSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  email: z.email(),
+  // `.invalid` est réservé aux adresses de l'ancien membre (delete-account.ts) : personne ne s'y inscrit.
+  email: z.email().refine((email) => !email.toLowerCase().endsWith('.invalid')),
   password: z.string().min(8).max(128),
   organizationName: z.string().trim().min(2).max(100),
 });

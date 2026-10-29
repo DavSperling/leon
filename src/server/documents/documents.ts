@@ -12,6 +12,7 @@ import {
   type DocumentErrorCode,
   documentExtension,
   FOLDER_MAX_FILES,
+  isIgnoredPath,
   OFFICE_EXTENSIONS,
   TEXT_EXTENSIONS,
 } from '@/lib/documents';
@@ -87,7 +88,11 @@ export async function extractText(
   extension: string,
   bytes: Uint8Array,
 ): Promise<{ text: string; partial: boolean }> {
-  if (PLAIN_TEXT.has(extension)) return { text: decodeText(bytes), partial: false };
+  if (PLAIN_TEXT.has(extension)) {
+    // Un octet nul dans les 8 premiers Ko : un binaire sous une extension de texte (`.ts` d'une vidéo MPEG-TS).
+    if (bytes.subarray(0, 8192).includes(0)) throw new DocumentError('unreadable', 'binary');
+    return { text: decodeText(bytes), partial: false };
+  }
   return withExtractionSlot(async () => {
     const ast = await OfficeParser.parseOffice(bytes, {
       fileType: extension as SupportedFileType,
@@ -119,6 +124,9 @@ export async function readDocument(
   file: File,
   name = file.name,
 ): Promise<{ title: string; parts: string[]; partial: boolean }> {
+  // Le serveur l'écarte aussi, la page peut être contournée ; seul le nom du fichier est jugé (la racine d'un
+  // dossier est un choix de l'utilisateur, cf. isIgnoredPath).
+  if (isIgnoredPath(name.split('/').at(-1) ?? '')) throw new DocumentError('ignored');
   const extension = documentExtension(name);
   const known = PLAIN_TEXT.has(extension) || OFFICE_FORMATS.has(extension);
   if (!known || file.size === 0 || file.size > DOCUMENT_MAX_BYTES) {
@@ -129,6 +137,7 @@ export async function readDocument(
   try {
     extracted = await extractText(extension, new Uint8Array(await file.arrayBuffer()));
   } catch (error) {
+    if (error instanceof DocumentError) throw error;
     const reason = (error as OfficeError).officeIssue?.code ?? (error as Error).name;
     throw new DocumentError('unreadable', reason);
   }
@@ -159,8 +168,9 @@ export async function addDocument(
     file,
     folder ? `${folder.name}/${folder.path}` : file.name,
   );
+  const folderName = folder && cleanName(folder.name).slice(0, 200);
   const metadata = folder
-    ? { nature: 'fichier', folder: { id: folder.id, name: cleanName(folder.name).slice(0, 200) } }
+    ? { nature: 'fichier', folder: { id: folder.id, name: folderName } }
     : { nature: 'fichier' };
   const runId = await withTenant(ctx, async (tx) => {
     // La page s'arrête déjà au plafond ; on le tient aussi ici, elle peut être contournée. Il vaut par auteur : le
@@ -181,6 +191,14 @@ export async function addDocument(
           ),
         );
       if (row && row.total >= FOLDER_MAX_FILES) throw new DocumentError('folder_full');
+      // Le premier fichier d'un dossier remplace le dossier du même nom que l'auteur a déjà envoyé : renvoyer un
+      // dossier le met à jour au lieu de le doubler. Dans la transaction : si ce fichier n'entre pas, l'ancien reste.
+      if (row?.total === 0) {
+        await tx.execute(sql`
+          select supprimer_document(id) from sources
+          where tenant_id = ${ctx.tenantId} and kind = 'document' and owner_user_id = ${ctx.userId}
+            and metadata->'folder'->>'name' = ${folderName} and metadata->'folder'->>'id' <> ${folder.id}`);
+      }
     }
     const [source] = await tx
       .insert(sources)
@@ -228,6 +246,7 @@ export async function listDocuments(ctx: TenantContext) {
         // Les fichiers d'un même dossier portent son identifiant et son nom (addDocument).
         folderId: sql<string | null>`${sources.metadata}->'folder'->>'id'`,
         folderName: sql<string | null>`${sources.metadata}->'folder'->>'name'`,
+        ownerFormer: sql<boolean>`${users.deletedAt} is not null`,
       })
       .from(sources)
       .innerJoin(users, eq(users.id, sources.ownerUserId))
@@ -237,7 +256,7 @@ export async function listDocuments(ctx: TenantContext) {
 }
 
 // L'app n'a pas le droit de supprimer du brut : la fonction de 0034 ne retire qu'un document de l'organisation
-// courante, et seulement pour son auteur. Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
+// courante, et seulement pour son auteur ou, celui d'un ancien membre, pour un administrateur (0042). Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
 export async function deleteDocument(ctx: TenantContext, id: string): Promise<boolean> {
   const result = await withTenant(ctx, (tx) =>
     tx.execute<{ deleted: boolean }>(sql`select supprimer_document(${id}) as deleted`),

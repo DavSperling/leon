@@ -69,6 +69,19 @@ describe('createUserWithOrganization', () => {
     expect(again).toEqual({ ok: false, error: 'email_pris' });
   });
 
+  // `.invalid` est réservé (RFC 2606) : l'adresse d'un ancien membre (ancien-<id>@leon.invalid) ne s'inscrit pas.
+  it.each(['leon.invalid', 'LEON.INVALID', 'invalid.invalid'])(
+    'refuse une adresse en @%s, sans créer de compte',
+    async (domain) => {
+      const email = `ancien-${randomUUID()}@${domain}`;
+      expect(await createUserWithOrganization(input({ email }))).toEqual({
+        ok: false,
+        error: 'invalide',
+      });
+      expect(await userByEmail(email.toLowerCase())).toEqual([]);
+    },
+  );
+
   it('refuse un mot de passe de 7 caractères', async () => {
     expect(await createUserWithOrganization(input({ password: '1234567' }))).toEqual({
       ok: false,
@@ -134,6 +147,19 @@ describe('createUserWithInvitation', () => {
     );
     expect(sessions).toEqual([{ activeOrganizationId: tenantId }]);
     expect(await findInvitation(token)).toBeNull();
+  });
+
+  it("refuse l'adresse réservée d'un ancien membre, et laisse le lien utilisable", async () => {
+    const { token } = await invitation();
+    const email = `ancien-${randomUUID()}@leon.invalid`;
+
+    expect(await createUserWithInvitation(joinInput(token, { email }))).toEqual({
+      ok: false,
+      error: 'invalide',
+    });
+
+    expect(await userByEmail(email)).toEqual([]);
+    expect(await findInvitation(token)).not.toBeNull();
   });
 
   it('ne crée aucun compte avec un lien déjà servi', async () => {

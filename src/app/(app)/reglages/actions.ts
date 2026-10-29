@@ -3,16 +3,31 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
-import { LOCALE_COOKIE, locales } from '@/i18n/request';
+import { LOCALE_COOKIE, localeOf, locales } from '@/i18n/request';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
+import {
+  DeletionRefused,
+  type DeletionResult,
+  deleteAccount,
+  deleteOrganization,
+} from '@/server/auth/delete-account';
 import { createInvitationLink } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
-import { getSession, requestHeaders, requireUserContext } from '@/server/auth/session';
+import {
+  getSession,
+  requestHeaders,
+  requireUserContext,
+  signOutCurrentUser,
+} from '@/server/auth/session';
+import type { TenantContext } from '@/server/auth/tenant-context';
 import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
+import { forgetPipedreamUser } from '@/server/connectors/pipedream';
+import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
 import { env } from '@/server/env';
+import { logError } from '@/server/log';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
@@ -185,4 +200,110 @@ export async function regenerateBackupCodesAction(
   } catch {
     return { error: t('wrongPassword') };
   }
+}
+
+const DeletionInputSchema = z.object({ password: z.string(), code: z.string(), word: z.string() });
+type DeletionInput = z.infer<typeof DeletionInputSchema>;
+// `organizationToo` : ce que le dialogue a annoncé, que le module relit avant de rien effacer (`situation`).
+const AccountDeletionInputSchema = DeletionInputSchema.extend({
+  successorId: z.uuid().nullable(),
+  organizationToo: z.boolean(),
+});
+// 2 requêtes par seconde chez Resend, avec une marge.
+const RESEND_SPACING_MS = 600;
+
+// Ce qui part ne revient pas : le mot tapé, le mot de passe et, avec la 2FA, le code de l'application. Rend le
+// message du premier qui ne passe pas, ou null.
+async function confirmIdentity({ password, code, word }: DeletionInput): Promise<string | null> {
+  const t = await getTranslations('deleteAccount');
+  const security = await getTranslations('security');
+  if (!(await passwordCheckAllowed())) return security('tooManyAttempts');
+  if (word.trim() !== t('word')) return t('wrongWord', { word: t('word') });
+  const headers = await requestHeaders();
+  try {
+    await auth.api.verifyPassword({ body: { password }, headers });
+  } catch {
+    return security('wrongPassword');
+  }
+  // Avec une session ouverte, Better Auth ne compte pas les échecs du code : seule la limite d'essais protège.
+  // Une session qui vient de disparaître ne dispense pas du code.
+  const session = await getSession();
+  if (!session || session.user.twoFactorEnabled) {
+    try {
+      await auth.api.verifyTOTP({ body: { code }, headers });
+    } catch {
+      return t('wrongCode');
+    }
+  }
+  return null;
+}
+
+async function runDeletion<Input extends DeletionInput>(
+  schema: z.ZodType<Input>,
+  rawInput: unknown,
+  deletion: (ctx: TenantContext, input: Input) => Promise<DeletionResult>,
+  redirectTo: '/connexion?supprime=compte' | '/connexion?supprime=organisation',
+): Promise<{ error: string }> {
+  const ctx = await requireUserContext();
+  const t = await getTranslations('deleteAccount');
+  const parsed = schema.safeParse(rawInput);
+  if (!parsed.success) return { error: t('failed') };
+  const input = parsed.data;
+  const refusal = await confirmIdentity(input);
+  if (refusal) return { error: refusal };
+
+  let result: DeletionResult;
+  try {
+    result = await deletion(ctx, input);
+  } catch (error) {
+    if (error instanceof DeletionRefused) return { error: t(`refused.${error.reason}`) };
+    // Y compris un second envoi du formulaire : la première suppression a déjà retiré la personne.
+    logError('account.deletion_failed', error);
+    return { error: t('failed') };
+  }
+
+  // Tout est fait en base : ni Pipedream ni Resend ne peuvent plus faire échouer la suppression.
+  const locale = localeOf(await getLocale());
+  await Promise.all(
+    result.pipedreamUsers.map((id) =>
+      forgetPipedreamUser(id).catch((error) => logError('account.deletion_pipedream', error)),
+    ),
+  );
+  // Par lots de 100, une requête par lot : 100 membres ne retiennent plus la page une minute. Resend limite à 2
+  // requêtes par seconde : un lot après l'autre, espacés, et un échec n'arrête pas les suivants.
+  for (let start = 0; start < result.notify.length; start += RESEND_BATCH_MAX) {
+    if (start > 0) await new Promise((resolve) => setTimeout(resolve, RESEND_SPACING_MS));
+    await sendDeletionEmails({
+      recipients: result.notify.slice(start, start + RESEND_BATCH_MAX),
+      locale,
+      organizationName: result.organizationName,
+    }).catch((error) => logError('account.deletion_email', error));
+  }
+  // La session est déjà effacée en base : il ne reste que les cookies à retirer.
+  await signOutCurrentUser().catch(() => undefined);
+  redirect(redirectTo);
+}
+
+// `successorId` ne sert qu'au seul propriétaire qui laisse d'autres membres. En cas de succès, ne rend pas : la page
+// part vers la connexion.
+export async function deleteAccountAction(
+  input: z.input<typeof AccountDeletionInputSchema>,
+): Promise<{ error: string }> {
+  return runDeletion(
+    AccountDeletionInputSchema,
+    input,
+    (ctx, { successorId, organizationToo }) => deleteAccount(ctx, successorId, organizationToo),
+    '/connexion?supprime=compte',
+  );
+}
+
+export async function deleteOrganizationAction(
+  input: z.input<typeof DeletionInputSchema>,
+): Promise<{ error: string }> {
+  return runDeletion(
+    DeletionInputSchema,
+    input,
+    (ctx) => deleteOrganization(ctx),
+    '/connexion?supprime=organisation',
+  );
 }

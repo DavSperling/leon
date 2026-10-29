@@ -125,7 +125,8 @@ export function createAnthropicLlm(
   const { env } = options;
 
   // Un appel au modèle en flux : rend les morceaux de texte au fil de l'eau (mis en forme par `emit`), puis le
-  // message final, dont l'usage est journalisé. L'appel est abandonné si le lecteur s'arrête avant la fin.
+  // message final, dont l'usage est journalisé. L'appel est abandonné si le lecteur s'arrête avant la fin ; l'usage
+  // partiel est alors journalisé aussi.
   async function* streamTurn<T>(
     request: TurnRequest,
     extra: Record<string, unknown>,
@@ -159,7 +160,12 @@ export function createAnthropicLlm(
     } catch (error) {
       throw toLlmError(request.step, error);
     } finally {
-      if (!finished) stream.abort();
+      if (!finished) {
+        // Interrompu ou en échec : Anthropic facture quand même l'entrée et la sortie déjà produite.
+        const partial = stream.currentMessage;
+        stream.abort();
+        logUsage(request.step, partial?.model ?? model, partial?.usage);
+      }
     }
   }
 

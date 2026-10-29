@@ -26,8 +26,9 @@ export type ActionName = ActionKind extends `github.${infer Name}` ? Name : neve
 export const actionName = (kind: ActionKind) => kind.slice('github.'.length) as ActionName;
 
 // Les paramètres de chaque action, toutes valeurs en texte : ceux qu'elle doit porter et ceux qu'elle peut porter.
-// Une autre clé est refusée (validParams côté serveur) et écartée (parseActionView). `asked`, facultatif partout, est
-// un extrait de la demande de l'utilisateur, montré sur la carte pour qu'il voie ce qui a déclenché l'action.
+// Une autre clé est refusée (validParams côté serveur) et écartée (parseActionView), comme `content` (SERVER_ONLY).
+// `asked`, facultatif partout, est un extrait de la demande de l'utilisateur, montré sur la carte pour qu'il voie ce
+// qui a déclenché l'action.
 const keys = (required: string[], optional: string[] = []) => ({
   required,
   optional: [...optional, 'asked'],
@@ -66,6 +67,9 @@ export type ActionStatus = (typeof ACTION_STATUSES)[number];
 // Une proposition se confirme dans l'heure : au-delà, ce qu'elle montre (le commit de départ) a pu changer.
 // Elle s'affiche alors « expiree » et ne s'exécute plus.
 export const ACTION_VALID_MS = 60 * 60 * 1000;
+// Une action confirmée qui reste « en-cours » au-delà (serveur redémarré pendant l'écriture) s'affiche « echouee »,
+// « incertain » : l'écriture est peut-être faite.
+export const ACTION_RUNNING_MS = 5 * 60 * 1000;
 
 // Pourquoi une action a échoué, traduit par la page : jamais le texte de l'outil.
 export const ACTION_ERRORS = [
@@ -107,6 +111,8 @@ const STATUSES: readonly string[] = [...ACTION_STATUSES, 'expiree'];
 const ERRORS: readonly string[] = ACTION_ERRORS;
 const isString = (value: unknown): value is string => typeof value === 'string' && value !== '';
 const isKind = (value: unknown): value is ActionKind => ACTION_KINDS.includes(value as ActionKind);
+// Les paramètres gardés en base pour l'exécution, jamais envoyés à la page : le fichier entier (la carte montre le diff).
+const SERVER_ONLY = ['content'];
 
 // Une action du contrat (une ligne relue, un évènement du flux), avec ses seuls champs et paramètres connus, ou null.
 export function parseActionView(value: unknown): ActionView | null {
@@ -122,9 +128,9 @@ export function parseActionView(value: unknown): ActionView | null {
   const kept: Record<string, string> = {};
   for (const key of [...required, ...optional]) {
     const item = given[key];
-    if (typeof item === 'string') kept[key] = item;
+    if (typeof item === 'string' && !SERVER_ONLY.includes(key)) kept[key] = item;
   }
-  if (!required.every((key) => key in kept)) return null;
+  if (!required.every((key) => key in kept || SERVER_ONLY.includes(key))) return null;
   const { url, error } = (result ?? {}) as Record<string, unknown>;
   return {
     id,

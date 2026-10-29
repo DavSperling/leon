@@ -6,7 +6,7 @@ import { createApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
-import { members, organizations } from '@/server/db/schema/auth';
+import { members, organizations, users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
 import { TEST_ENV } from '@/test/test-env';
 import { app } from './app';
@@ -103,6 +103,26 @@ describe('montage de Better Auth', () => {
       .from(organizations)
       .where(eq(organizations.id, paul.tenantId));
     expect(rows).toEqual([{ id: paul.tenantId }]);
+  });
+
+  // La suppression d'un compte passe par `deleteAccount` : la route de Better Auth, qui effacerait la ligne `user`
+  // et emporterait le travail de la personne avec elle, reste fermée.
+  it('refuse la suppression de son compte par Better Auth', async () => {
+    const email = `paul-${randomUUID()}@example.com`;
+    const paul = await signUp(email);
+
+    const response = await app.request('/api/auth/delete-user', {
+      method: 'POST',
+      headers: { cookie: await sessionCookie(email), ...jsonFromApp },
+      body: JSON.stringify({ password }),
+    });
+
+    expect(response.status).not.toBe(200);
+    const rows = await adminDb
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, paul.userId));
+    expect(rows).toEqual([{ id: paul.userId }]);
   });
 
   // Aucun e-mail n'est vérifié dans ce jet : quiconque s'inscrit avec l'adresse invitée ne doit pas

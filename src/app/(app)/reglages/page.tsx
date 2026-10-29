@@ -3,6 +3,10 @@ import { getTranslations } from 'next-intl/server';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
 import { AboutSettings } from '@/components/verre/reglages/about';
+import {
+  DeleteAccountSection,
+  DeleteOrganizationSection,
+} from '@/components/verre/reglages/delete-account';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
@@ -15,6 +19,7 @@ import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
 import { listApiTokens } from '@/server/auth/api-tokens';
+import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
@@ -28,14 +33,16 @@ export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership, about] = await Promise.all([
+  const [allTokens, members, mayInvite, session, membership, about, deletion] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
     canInvite(ctx),
     getSession(),
     getMembership(ctx),
     readAbout(ctx.userId),
+    deletionInfo(ctx),
   ]);
+  const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const tokens = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
@@ -69,17 +76,25 @@ export default async function SettingsPage() {
               </Section>
               <AboutSettings about={about ?? ''} max={ABOUT_MAX_CHARS} />
               <PreferencesSettings />
+              <DeleteAccountSection info={deletion} twoFactor={twoFactor} />
             </>
           ),
           securite: (
             <Section title={s('title')} description={s('description')} className={SECTION}>
               <div className="grid gap-12">
                 <PasswordSettings />
-                <SecuritySettings enabled={Boolean(session?.user.twoFactorEnabled)} />
+                <SecuritySettings enabled={twoFactor} />
               </div>
             </Section>
           ),
-          equipe: <MembersSection members={members} canInvite={mayInvite} />,
+          equipe: (
+            <>
+              <MembersSection members={members} canInvite={mayInvite} />
+              {deletion.isOwner && (
+                <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
+              )}
+            </>
+          ),
           integrations: (
             <>
               <TokensSection tokens={tokens} />

@@ -90,8 +90,8 @@
       "skipped": "{count} skipped",
       "failed": "{count} unreadable or rejected"
     },
-    "tooManyFiles": "A folder has {count} readable files, and the maximum is {max}. Nothing was sent. Choose a smaller folder.",
-    "noReadableFiles": "No readable files in this selection: hidden files, dependencies (node_modules…), generated folders, lock files, empty files and files over 10 MB are left out.",
+    "tooManyFiles": "This upload has {count} readable files, and the maximum is {max}. Nothing was sent. Send them in several goes.",
+    "noReadableFiles": "No readable files in this selection: hidden files, dependencies (node_modules…), generated folders, lock and secret files, empty files and files over 10 MB are left out.",
     "partial": "Document added, but only partly indexed: it is too large to be read in full.",
     "teamSection": "Team documents",
     "teamDescription": "The extracted text is indexed in Leon’s memory.",
@@ -110,6 +110,7 @@
       "empty": "No readable text in this file.",
       "too_long": "This document has too much text (1 million characters max).",
       "folder_full": "This folder has reached the maximum of 200 files.",
+      "ignored": "File skipped: it often holds passwords or keys (configuration, private key), or is only generated.",
       "failed": "Couldn’t save this document. Try again."
     }
   },
@@ -533,6 +534,8 @@
     "membersTitle": "Members",
     "membersDescription": "Everyone can see what Leon reads in team tools. Assistant conversations, email, Google Drive, and Slack messages stay with their owner.",
     "membersList": "Workspace members",
+    "formerMembersTitle": "Former members",
+    "formerMember": "{name} (former member)",
     "invite": "Invite",
     "owner": "Owner",
     "admin": "Administrator",
@@ -618,6 +621,44 @@
     "codeInvalid": "Enter the 6-digit code.",
     "codeWrong": "Incorrect code. Check the app and try again.",
     "tooManyAttempts": "Too many attempts. Try again in a few minutes."
+  },
+  "deleteAccount": {
+    "word": "DELETE",
+    "wrongWord": "Type the word “{word}” exactly to confirm.",
+    "wrongCode": "Incorrect code. Check the app and try again.",
+    "failed": "Couldn’t delete. Reload the page and try again.",
+    "refused": {
+      "successeur": "Choose another member of the organization as the new owner.",
+      "autre_organisation": "This account also belongs to another organization, so it can’t be deleted from here.",
+      "pas_proprietaire": "Only the organization’s owner can delete it.",
+      "situation": "The organization has changed: reload the page."
+    },
+    "emailSubjectAccount": "Your Leon account has been deleted",
+    "emailSubjectOrganization": "Your Leon organization has been deleted",
+    "emailAccount": "Your Leon account in the organization “{organization}” was deleted on {date}.",
+    "emailOrganization": "The organization “{organization}” was deleted by its owner on {date}, along with everything it contained.",
+    "emailIgnore": "If you didn’t request this deletion, tell your organization’s administrator.",
+    "doneAccount": "Your account has been deleted.",
+    "doneOrganization": "The organization has been deleted.",
+    "title": "Delete my account",
+    "description": "You won’t be able to sign in anymore, and Leon stops collecting from the tools you connected. What you produced stays with your organization, under your name followed by “former member”.",
+    "descriptionSole": "You’re the only active member: deleting your account also deletes the organization, with everything it contains.",
+    "irreversible": "This can’t be undone.",
+    "effectLogin": "You won’t be able to sign in to Leon anymore.",
+    "effectTools": "Leon stops collecting from the tools you connected: an administrator will have to reconnect them for the team.",
+    "effectStays": "What you produced stays with the organization “{organization}”, under your name followed by “former member”.",
+    "effectSole": "You’re the only active member of “{organization}”: the whole organization will be deleted, with everything it contains.",
+    "successor": "New owner",
+    "successorHelp": "You’re the only owner: choose who takes over before you leave.",
+    "successorPlaceholder": "Choose a member",
+    "typeWord": "To confirm, type “{word}”",
+    "confirm": "Delete permanently"
+  },
+  "deleteOrganization": {
+    "title": "Delete the organization",
+    "description": "Only its owner can delete it. Everything it contains is erased, for everyone.",
+    "effectAll": "Everything in “{organization}” is erased, for everyone: collected sources, documents, discussions and morning briefings.",
+    "effectMembers": "Access removed for {count, plural, one {# active member} other {# active members}}; accounts that don’t belong to any other organization are deleted with it."
   },
   "site": {
     "meta": {

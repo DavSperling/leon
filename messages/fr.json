@@ -90,8 +90,8 @@
       "skipped": "{count, plural, one {# ignoré} other {# ignorés}}",
       "failed": "{count, plural, one {# illisible ou refusé} other {# illisibles ou refusés}}"
     },
-    "tooManyFiles": "Un dossier contient {count} fichiers lisibles : le maximum est de {max}. Rien n’a été envoyé. Choisissez un dossier plus petit.",
-    "noReadableFiles": "Aucun fichier lisible dans cette sélection : les fichiers cachés, les dépendances (node_modules…), les dossiers générés, les fichiers de verrouillage, les fichiers vides et ceux de plus de 10 Mo sont laissés de côté.",
+    "tooManyFiles": "Cet envoi contient {count} fichiers lisibles : le maximum est de {max}. Rien n’a été envoyé. Envoyez-les en plusieurs fois.",
+    "noReadableFiles": "Aucun fichier lisible dans cette sélection : les fichiers cachés, les dépendances (node_modules…), les dossiers générés, les fichiers de verrouillage et de secrets, les fichiers vides et ceux de plus de 10 Mo sont laissés de côté.",
     "partial": "Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.",
     "teamSection": "Documents de l’équipe",
     "teamDescription": "Le texte extrait est indexé dans la mémoire de Leon.",
@@ -110,6 +110,7 @@
       "empty": "Aucun texte lisible dans ce fichier.",
       "too_long": "Ce document contient trop de texte (maximum 1 million de caractères).",
       "folder_full": "Ce dossier a atteint le maximum de 200 fichiers.",
+      "ignored": "Fichier écarté : il contient souvent des mots de passe ou des clés (configuration, clé privée), ou n’est que généré.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
   },
@@ -533,6 +534,8 @@
     "membersTitle": "Membres",
     "membersDescription": "Chacun voit ce que Leon lit dans les outils de l’équipe. Les conversations avec les assistants, les boîtes mail, Google Drive et Slack restent à leur propriétaire.",
     "membersList": "Membres de l’espace",
+    "formerMembersTitle": "Anciens membres",
+    "formerMember": "{name} (ancien membre)",
     "invite": "Inviter",
     "owner": "Propriétaire",
     "admin": "Administrateur",
@@ -618,6 +621,44 @@
     "codeInvalid": "Saisissez le code à 6 chiffres.",
     "codeWrong": "Code incorrect. Vérifiez l’application et réessayez.",
     "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes."
+  },
+  "deleteAccount": {
+    "word": "SUPPRIMER",
+    "wrongWord": "Saisissez exactement le mot « {word} » pour confirmer.",
+    "wrongCode": "Code incorrect. Vérifiez l’application et réessayez.",
+    "failed": "Impossible de supprimer. Rechargez la page et réessayez.",
+    "refused": {
+      "successeur": "Choisissez un autre membre de l’organisation comme nouveau propriétaire.",
+      "autre_organisation": "Ce compte appartient aussi à une autre organisation : il ne peut pas être supprimé d’ici.",
+      "pas_proprietaire": "Seul le propriétaire de l’organisation peut la supprimer.",
+      "situation": "La situation de l’organisation a changé : rechargez la page."
+    },
+    "emailSubjectAccount": "Votre compte Leon a été supprimé",
+    "emailSubjectOrganization": "Votre organisation Leon a été supprimée",
+    "emailAccount": "Votre compte Leon, dans l’organisation « {organization} », a été supprimé le {date}.",
+    "emailOrganization": "L’organisation « {organization} » a été supprimée par son propriétaire le {date}, avec tout ce qu’elle contenait.",
+    "emailIgnore": "Si vous n’êtes pas à l’origine de cette suppression, prévenez l’administrateur de votre organisation.",
+    "doneAccount": "Votre compte a été supprimé.",
+    "doneOrganization": "L’organisation a été supprimée.",
+    "title": "Supprimer mon compte",
+    "description": "Vous ne pourrez plus vous connecter, et Leon arrête de relever les outils que vous avez branchés. Ce que vous avez produit reste à votre organisation, sous votre nom suivi de « ancien membre ».",
+    "descriptionSole": "Vous êtes le seul membre actif : supprimer votre compte supprime aussi l’organisation, avec tout ce qu’elle contient.",
+    "irreversible": "Cette action est définitive.",
+    "effectLogin": "Vous ne pourrez plus vous connecter à Leon.",
+    "effectTools": "Leon arrête de relever les outils que vous avez branchés : un administrateur devra les rebrancher pour l’équipe.",
+    "effectStays": "Ce que vous avez produit reste à l’organisation « {organization} », sous votre nom suivi de « ancien membre ».",
+    "effectSole": "Vous êtes le seul membre actif de « {organization} » : l’organisation entière sera supprimée, avec tout ce qu’elle contient.",
+    "successor": "Nouveau propriétaire",
+    "successorHelp": "Vous êtes le seul propriétaire : choisissez qui le devient avant de partir.",
+    "successorPlaceholder": "Choisir un membre",
+    "typeWord": "Pour confirmer, tapez « {word} »",
+    "confirm": "Supprimer définitivement"
+  },
+  "deleteOrganization": {
+    "title": "Supprimer l’organisation",
+    "description": "Seul son propriétaire peut la supprimer. Tout ce qu’elle contient est effacé, pour tout le monde.",
+    "effectAll": "Tout ce que contient « {organization} » est effacé, pour tout le monde : les sources relevées, les documents, les discussions et les points du matin.",
+    "effectMembers": "Accès retiré à {count, plural, one {# membre actif} other {# membres actifs}} ; les comptes qui n’appartiennent à aucune autre organisation sont supprimés avec elle."
   },
   "site": {
     "meta": {

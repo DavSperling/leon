@@ -49,7 +49,7 @@ async function processIndexJob(data: unknown, deps: { embedder: Embedder | null 
     const ids = { ingestRunId: job.ingestRunId };
     logError('search.index_failed', error, ids);
     try {
-      const ctx = await resolveTenantContext(job.userId, job.tenantId);
+      const ctx = await resolveTenantContext(job.userId, job.tenantId, { includeFormer: true });
       if (ctx) await failRun(ctx, job.ingestRunId, error);
     } catch (markError) {
       logError('search.mark_failed', markError, ids);

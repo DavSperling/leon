@@ -1,13 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FOLDER_MAX_FILES } from '@/lib/documents';
+import { deleteAccount } from '@/server/auth/delete-account';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { enqueuePipelineStep, type PipelineJob } from '@/server/pipeline/queue';
 import { indexIngestRun } from '@/server/search/index-run';
 import { adminDb, adminPool } from '@/test/db';
-import { createTestTenant, seedSource } from '@/test/fixtures';
+import { createTestTenant, createTestUser, seedSource } from '@/test/fixtures';
 import { addDocument, deleteDocument, deleteFolder, listDocuments } from './documents';
 
 // L'ajout met en file l'indexation ; ici on l'appelle à la main. Le point du matin qu'elle prévient est simulé.
@@ -111,6 +112,52 @@ describe('suppression d’un document (0034)', () => {
   });
 });
 
+// Un document laissé par un membre parti n'a plus d'auteur pour le retirer : un administrateur le peut (0042).
+describe('document d’un ancien membre (0042)', () => {
+  const makeAdmin = (ctx: TenantContext) =>
+    adminPool.query(
+      `update member set role = 'admin' where "userId" = $1 and "organizationId" = $2`,
+      [ctx.userId, ctx.tenantId],
+    );
+  let claire: TenantContext;
+  let zack: TenantContext;
+
+  beforeAll(async () => {
+    claire = await createTestUser(alice.tenantId, 'Claire');
+    zack = await createTestUser(zoe.tenantId, 'Zack');
+    await makeAdmin(claire);
+    await makeAdmin(zack);
+  });
+
+  async function departed(): Promise<string> {
+    const julie = await createTestUser(alice.tenantId, 'Julie');
+    const { sourceId } = await upload(julie, 'secret-julie.txt');
+    await deleteAccount(julie, null, false);
+    return sourceId;
+  }
+
+  it('un administrateur le supprime', async () => {
+    const sourceId = await departed();
+
+    expect(await deleteDocument(claire, sourceId)).toBe(true);
+  });
+
+  it('pas celui d’un membre encore là', async () => {
+    const { sourceId } = await upload(alice);
+
+    expect(await deleteDocument(claire, sourceId)).toBe(false);
+    expect(await count('turns', sourceId)).toBe(1);
+  });
+
+  it('un simple membre ne le supprime pas, ni l’administrateur d’une autre organisation', async () => {
+    const sourceId = await departed();
+
+    expect(await deleteDocument(bob, sourceId)).toBe(false);
+    expect(await deleteDocument(zack, sourceId)).toBe(false);
+    expect(await count('turns', sourceId)).toBe(1);
+  });
+});
+
 describe('liste des documents', () => {
   it('montre à toute l’organisation ses documents, et seulement eux', async () => {
     const mine = await upload(alice, 'contrat-acme.txt');
@@ -126,12 +173,23 @@ describe('liste des documents', () => {
         title: 'contrat-acme.txt',
         ownerUserId: alice.userId,
         ownerName: 'Alice',
+        ownerFormer: false,
       }),
     );
     const bobIds = seenByBob.map((doc) => doc.id);
     expect(bobIds).not.toContain(theirs.sourceId);
     expect(bobIds).not.toContain(capture.sourceId);
     expect(seenByZoe.map((doc) => doc.id)).toEqual([theirs.sourceId]);
+  });
+
+  it("garde le document d'un ancien membre, marqué comme tel", async () => {
+    const julie = await createTestUser(alice.tenantId, 'Julie');
+    const { sourceId } = await upload(julie, 'plan-julie.txt');
+    await deleteAccount(julie, null, false);
+
+    expect(await listDocuments(bob)).toContainEqual(
+      expect.objectContaining({ id: sourceId, ownerName: 'Julie', ownerFormer: true }),
+    );
   });
 });
 
@@ -177,6 +235,25 @@ describe('dossiers', () => {
     for (const kept of [otherFolder, alone, bobs])
       expect(await count('turns', kept.sourceId)).toBe(1);
     expect(await deleteFolder(alice, folder.id)).toBe(0);
+  });
+
+  it('renvoyer un dossier du même nom remplace le précédent, chez son auteur seulement', async () => {
+    const first = folderOf('maj-dossier', 'a.md');
+    const old = await upload(alice, 'a.md', first);
+    await upload(alice, 'b.md', { ...first, path: 'b.md' });
+    const bobs = await upload(bob, 'a.md', folderOf('maj-dossier', 'a.md'));
+    const other = await upload(alice, 'c.md', folderOf('autre-dossier', 'c.md'));
+
+    const again = folderOf('maj-dossier', 'a.md');
+    const fresh = await upload(alice, 'a.md', again);
+    await upload(alice, 'b.md', { ...again, path: 'b.md' });
+
+    expect(await count('turns', old.sourceId)).toBe(0);
+    const names = (await listDocuments(alice)).filter((doc) => doc.folderName === 'maj-dossier');
+    expect(
+      names.filter((doc) => doc.ownerUserId === alice.userId).map((doc) => doc.folderId),
+    ).toEqual([again.id, again.id]);
+    for (const kept of [fresh, bobs, other]) expect(await count('turns', kept.sourceId)).toBe(1);
   });
 
   it('un membre d’une autre organisation ne supprime pas le dossier', async () => {

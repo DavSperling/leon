@@ -37,6 +37,7 @@ type DocumentRow = {
   ownerName: string;
   folderId: string | null;
   folderName: string | null;
+  ownerFormer: boolean;
 };
 
 // Les fichiers d'un même dossier (et d'un même auteur), regroupés sur une ligne de la liste.
@@ -117,10 +118,10 @@ function UploadForm() {
         ),
         ...alone.kept.map(({ file }) => ({ file, folder: null })),
       ];
-      const biggest = Math.max(0, ...chosen.map(({ kept }) => kept.length));
+      // Le plafond vaut pour tout l'envoi : dossiers et fichiers seuls ensemble.
       const refusal =
-        biggest > FOLDER_MAX_FILES
-          ? t('tooManyFiles', { count: biggest, max: FOLDER_MAX_FILES })
+        uploads.length > FOLDER_MAX_FILES
+          ? t('tooManyFiles', { count: uploads.length, max: FOLDER_MAX_FILES })
           : uploads.length === 0 && t('noReadableFiles');
       if (refusal) {
         setReport({ tone: 'error', text: refusal });
@@ -266,13 +267,16 @@ function UploadForm() {
 function DocumentItem({
   document,
   viewerId,
+  admin,
   path,
 }: {
   document: DocumentRow;
   viewerId: string;
+  admin: boolean;
   path?: string;
 }) {
   const t = useTranslations('documents');
+  const tSettings = useTranslations('settings');
   const locale = useLocale();
   const full = document.title || t('untitled');
   const title = path ?? full;
@@ -287,14 +291,16 @@ function DocumentItem({
           <p className="mt-0.5 text-label text-muted">
             {nb(
               t('addedBy', {
-                name: document.ownerName,
+                name: document.ownerFormer
+                  ? tSettings('formerMember', { name: document.ownerName })
+                  : document.ownerName,
                 when: formatRelative(document.createdAt, new Date(), locale),
               }),
             )}
           </p>
         )}
       </div>
-      {document.ownerUserId === viewerId && (
+      {(document.ownerUserId === viewerId || (admin && document.ownerFormer)) && (
         <form action={deleteDocumentAction}>
           <input type="hidden" name="id" value={document.id} />
           <Button
@@ -312,7 +318,16 @@ function DocumentItem({
   );
 }
 
-function FolderItem({ folder, viewerId }: { folder: FolderGroup; viewerId: string }) {
+// Le dossier d'un ancien membre ne se supprime pas d'un coup : un administrateur retire ses fichiers un par un.
+function FolderItem({
+  folder,
+  viewerId,
+  admin,
+}: {
+  folder: FolderGroup;
+  viewerId: string;
+  admin: boolean;
+}) {
   const t = useTranslations('documents');
   const locale = useLocale();
   // La liste va du plus récent au plus ancien : le premier fichier dit l'auteur et la date du dossier.
@@ -359,7 +374,13 @@ function FolderItem({ folder, viewerId }: { folder: FolderGroup; viewerId: strin
         </summary>
         <ul className="mt-1 ml-4 sm:ml-11">
           {files.map(({ document, path }) => (
-            <DocumentItem key={document.id} document={document} viewerId={viewerId} path={path} />
+            <DocumentItem
+              key={document.id}
+              document={document}
+              viewerId={viewerId}
+              admin={admin}
+              path={path}
+            />
           ))}
         </ul>
       </details>
@@ -404,7 +425,15 @@ function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[]
   return rows;
 }
 
-export function Documents({ documents, viewerId }: { documents: DocumentRow[]; viewerId: string }) {
+export function Documents({
+  documents,
+  viewerId,
+  admin,
+}: {
+  documents: DocumentRow[];
+  viewerId: string;
+  admin: boolean;
+}) {
   const t = useTranslations('documents');
   return (
     <div className="mx-auto max-w-[760px]">
@@ -420,9 +449,9 @@ export function Documents({ documents, viewerId }: { documents: DocumentRow[]; v
             <ul>
               {groupDocuments(documents).map((row) =>
                 'documents' in row ? (
-                  <FolderItem key={row.key} folder={row} viewerId={viewerId} />
+                  <FolderItem key={row.key} folder={row} viewerId={viewerId} admin={admin} />
                 ) : (
-                  <DocumentItem key={row.id} document={row} viewerId={viewerId} />
+                  <DocumentItem key={row.id} document={row} viewerId={viewerId} admin={admin} />
                 ),
               )}
             </ul>

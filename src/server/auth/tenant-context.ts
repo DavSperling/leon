@@ -1,7 +1,7 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/server/db/client';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 
 export type TenantContext = {
   readonly tenantId: string;
@@ -16,21 +16,37 @@ export function principalsFor(userId: string, tenantId: string): string[] {
   return [userId, tenantId];
 }
 
-export async function firstOrganizationId(userId: string): Promise<string | null> {
+// Un ancien membre (compte supprimé, 0040) garde son adhésion mais n'entre plus : une session ouverte pendant la
+// suppression ne mène nulle part. Seul le travail de fond sur ce qu'il a laissé à l'organisation (indexation,
+// vecteurs) passe `includeFormer`.
+type ResolveOptions = { includeFormer?: boolean };
+const activeMember = (userId: string, includeFormer: boolean) =>
+  and(eq(members.userId, userId), includeFormer ? undefined : isNull(users.deletedAt));
+
+export async function firstOrganizationId(
+  userId: string,
+  { includeFormer = false }: ResolveOptions = {},
+): Promise<string | null> {
   const [row] = await db
     .select({ organizationId: members.organizationId })
     .from(members)
-    .where(eq(members.userId, userId))
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(activeMember(userId, includeFormer))
     .orderBy(asc(members.createdAt), asc(members.id))
     .limit(1);
   return row?.organizationId ?? null;
 }
 
-async function isMember(userId: string, tenantId: string): Promise<boolean> {
+async function isMember(
+  userId: string,
+  tenantId: string,
+  includeFormer: boolean,
+): Promise<boolean> {
   const rows = await db
     .select({ id: members.id })
     .from(members)
-    .where(and(eq(members.userId, userId), eq(members.organizationId, tenantId)))
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(and(activeMember(userId, includeFormer), eq(members.organizationId, tenantId)))
     .limit(1);
   return rows.length > 0;
 }
@@ -39,14 +55,15 @@ async function isMember(userId: string, tenantId: string): Promise<boolean> {
 export async function resolveTenantContext(
   userId: string,
   tenantId: string | null,
+  { includeFormer = false }: ResolveOptions = {},
 ): Promise<TenantContext | null> {
   if (!UuidSchema.safeParse(userId).success) return null;
   if (tenantId !== null && !UuidSchema.safeParse(tenantId).success) return null;
 
   const resolved =
     tenantId === null
-      ? await firstOrganizationId(userId)
-      : (await isMember(userId, tenantId))
+      ? await firstOrganizationId(userId, { includeFormer })
+      : (await isMember(userId, tenantId, includeFormer))
         ? tenantId
         : null;
   if (resolved === null) return null;

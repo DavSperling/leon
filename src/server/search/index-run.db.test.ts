@@ -242,6 +242,20 @@ describe('indexIngestRun', () => {
     expect(await readRun(alice, job.ingestRunId)).toMatchObject({ status: 'queued' });
   });
 
+  // Le compte supprimé pendant l'attente du run : ce que la personne avait capté reste à l'organisation, indexé.
+  it('indexe le run en attente d’un ancien membre', async () => {
+    const team = await createTestTenant(['Parti']);
+    tenantIds.push(team.tenantId);
+    const [leaver] = team.members as [TenantContext];
+    const { sourceId, job } = await ingestConversation(leaver, 2);
+    await adminPool.query('update "user" set deleted_at = now() where id = $1', [leaver.userId]);
+
+    expect(await indexIngestRun(job, { embedder: null })).toBe('indexe');
+
+    expect(await readPassages(leaver, sourceId)).toHaveLength(2);
+    expect(await readRun(leaver, job.ingestRunId)).toMatchObject({ status: 'done', step: 'done' });
+  });
+
   it('ne crée aucun vecteur sans fournisseur', async () => {
     const { sourceId, job } = await ingestConversation(alice, 3);
 

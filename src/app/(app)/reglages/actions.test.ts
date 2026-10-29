@@ -3,14 +3,21 @@ import { cookies } from 'next/headers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
+import { DeletionRefused, deleteAccount, deleteOrganization } from '@/server/auth/delete-account';
 import { createInvitationLink } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
-import { getSession, requireUserContext } from '@/server/auth/session';
+import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
+import { forgetPipedreamUser } from '@/server/connectors/pipedream';
+import { sendDeletionEmails } from '@/server/email/account-deleted';
+import { logError } from '@/server/log';
+import fr from '../../../../messages/fr.json';
 import {
   changePasswordAction,
   createInvitationAction,
   createTokenAction,
+  deleteAccountAction,
+  deleteOrganizationAction,
   disableTotpAction,
   enableTotpAction,
   regenerateBackupCodesAction,
@@ -25,6 +32,7 @@ vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
   getSession: vi.fn(),
   requestHeaders: vi.fn(async () => new Headers()),
+  signOutCurrentUser: vi.fn(),
 }));
 vi.mock('@/server/auth/auth', () => ({
   auth: {
@@ -32,6 +40,7 @@ vi.mock('@/server/auth/auth', () => ({
       updateUser: vi.fn(),
       changePassword: vi.fn(),
       enableTwoFactor: vi.fn(),
+      verifyPassword: vi.fn(),
       verifyTOTP: vi.fn(),
       revokeOtherSessions: vi.fn(),
       disableTwoFactor: vi.fn(),
@@ -43,6 +52,28 @@ vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
 vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
+// La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
+// test lisent la même.
+vi.mock('@/server/auth/delete-account', () => ({
+  DeletionRefused: class extends Error {
+    constructor(readonly reason: string) {
+      super(reason);
+    }
+  },
+  deleteAccount: vi.fn(),
+  deleteOrganization: vi.fn(),
+}));
+vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
+vi.mock('@/server/email/account-deleted', () => ({
+  RESEND_BATCH_MAX: 100,
+  sendDeletionEmails: vi.fn(),
+}));
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn((path: string) => {
+    throw new Error(`NEXT_REDIRECT ${path}`);
+  }),
+}));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 const setCookie = vi.fn();
 vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({ set: setCookie })) }));
@@ -54,8 +85,16 @@ const SECRET = 'leon_jeton-de-test-qui-ne-doit-jamais-etre-journalise';
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(requireUserContext).mockResolvedValue(ctx);
-  vi.mocked(getSession).mockResolvedValue({ user: { email: 'amos@example.com' } } as never);
+  vi.mocked(getSession).mockResolvedValue({
+    user: { email: 'amos@example.com', twoFactorEnabled: false },
+  } as never);
   vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+  // clearAllMocks garde les refus programmés par un test précédent.
+  vi.mocked(auth.api.verifyPassword).mockResolvedValue({ status: true });
+  vi.mocked(auth.api.verifyTOTP).mockResolvedValue(undefined as never);
+  vi.mocked(forgetPipedreamUser).mockResolvedValue(undefined);
+  vi.mocked(sendDeletionEmails).mockResolvedValue(undefined);
+  vi.mocked(signOutCurrentUser).mockResolvedValue(undefined);
 });
 
 describe('changePasswordAction', () => {
@@ -312,5 +351,268 @@ describe('createInvitationAction', () => {
     await expect(createInvitationAction()).resolves.toEqual({
       error: expect.stringContaining('administrateurs'),
     });
+  });
+});
+
+// Les deux actions confirment l'identité de la même façon, puis appellent le module de suppression.
+const done = {
+  organizationDeleted: false,
+  organizationName: 'Dupont Rénovation',
+  notify: [{ email: 'amos@example.com', kind: 'account' as const }],
+  pipedreamUsers: ['pd-1', 'pd-2'],
+};
+const identity = { password: 'motdepasse', code: '123456', word: 'SUPPRIMER' };
+const SUCCESSOR_ID = '5c1d8e0a-7b3f-4a62-8d19-0e4f6a7b8c9d';
+
+describe.each([
+  {
+    name: 'deleteAccountAction',
+    run: (input: Partial<typeof identity> = {}) =>
+      deleteAccountAction({ ...identity, ...input, successorId: null, organizationToo: false }),
+    deletion: () => vi.mocked(deleteAccount),
+    callArgs: [ctx, null, false],
+    redirectTo: '/connexion?supprime=compte',
+  },
+  {
+    name: 'deleteOrganizationAction',
+    run: (input: Partial<typeof identity> = {}) =>
+      deleteOrganizationAction({ ...identity, ...input }),
+    deletion: () => vi.mocked(deleteOrganization),
+    callArgs: [ctx],
+    redirectTo: '/connexion?supprime=organisation',
+  },
+])('$name', ({ run, deletion, callArgs, redirectTo }) => {
+  beforeEach(() => {
+    deletion().mockResolvedValue(done);
+  });
+
+  const twoFactor = () =>
+    vi.mocked(getSession).mockResolvedValue({
+      user: { email: 'amos@example.com', twoFactorEnabled: true },
+    } as never);
+
+  it.each([
+    [
+      'un mot mal tapé',
+      () => run({ word: 'supprimer' }),
+      fr.deleteAccount.wrongWord.replace('{word}', fr.deleteAccount.word),
+    ],
+    [
+      'un mauvais mot de passe',
+      () => {
+        vi.mocked(auth.api.verifyPassword).mockRejectedValue(new Error('INVALID_PASSWORD'));
+        return run();
+      },
+      fr.security.wrongPassword,
+    ],
+    [
+      'un mauvais code 2FA',
+      () => {
+        twoFactor();
+        vi.mocked(auth.api.verifyTOTP).mockRejectedValue(new Error('INVALID_CODE'));
+        return run();
+      },
+      fr.deleteAccount.wrongCode,
+    ],
+    [
+      'au-delà de la limite d’essais',
+      () => {
+        vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+        return run();
+      },
+      fr.security.tooManyAttempts,
+    ],
+  ])('refuse %s, sans rien supprimer', async (_label, attempt, error) => {
+    await expect(attempt()).resolves.toEqual({ error });
+
+    expect(deletion()).not.toHaveBeenCalled();
+    expect(sendDeletionEmails).not.toHaveBeenCalled();
+    expect(forgetPipedreamUser).not.toHaveBeenCalled();
+    expect(signOutCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it('compte l’essai dans la limite de la connexion, avant de lire le mot de passe', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+
+    await run();
+
+    expect(authAttemptAllowed).toHaveBeenCalledWith(
+      'connexion',
+      'amos@example.com',
+      expect.any(Headers),
+    );
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+  });
+
+  it('supprime, prévient Pipedream, envoie l’e-mail, ferme la session et redirige', async () => {
+    deletion().mockResolvedValue({
+      ...done,
+      notify: [
+        { email: 'amos@example.com', kind: 'account' },
+        { email: 'paul@example.com', kind: 'organization' },
+      ],
+    });
+
+    // Le mot tapé se lit sans ses blancs ; sans 2FA, aucun code n'est demandé.
+    await expect(run({ word: ' SUPPRIMER ' })).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+
+    expect(auth.api.verifyPassword).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { password: 'motdepasse' } }),
+    );
+    expect(auth.api.verifyTOTP).not.toHaveBeenCalled();
+    expect(deletion()).toHaveBeenCalledWith(...callArgs);
+    expect(forgetPipedreamUser).toHaveBeenCalledTimes(2);
+    expect(forgetPipedreamUser).toHaveBeenCalledWith('pd-1');
+    expect(forgetPipedreamUser).toHaveBeenCalledWith('pd-2');
+    expect(sendDeletionEmails).toHaveBeenCalledExactlyOnceWith({
+      recipients: [
+        { email: 'amos@example.com', kind: 'account' },
+        { email: 'paul@example.com', kind: 'organization' },
+      ],
+      locale: 'fr',
+      organizationName: 'Dupont Rénovation',
+    });
+    expect(signOutCurrentUser).toHaveBeenCalled();
+  });
+
+  it('demande le code de l’application quand la 2FA est activée', async () => {
+    twoFactor();
+
+    await expect(run()).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(auth.api.verifyTOTP).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { code: '123456' } }),
+    );
+  });
+
+  it('une panne de Pipedream, de Resend ou de la fermeture de session n’empêche pas la redirection', async () => {
+    vi.mocked(forgetPipedreamUser).mockRejectedValue(new Error('pipedream'));
+    vi.mocked(sendDeletionEmails).mockRejectedValue(new Error('resend'));
+    vi.mocked(signOutCurrentUser).mockRejectedValue(new Error('session déjà partie'));
+
+    await expect(run()).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+
+    expect(logError).toHaveBeenCalledWith('account.deletion_email', expect.any(Error));
+  });
+
+  // Une requête par lot de 100 ; Resend limite à 2 requêtes par seconde : un lot après l'autre, et un échec
+  // n'arrête pas les suivants.
+  it("envoie les e-mails par lots de 100, espacés pour Resend, et un échec n'empêche pas les suivants", async () => {
+    deletion().mockResolvedValue({
+      ...done,
+      notify: Array.from({ length: 250 }, (_, index) => ({
+        email: `m${index}@example.com`,
+        kind: 'organization' as const,
+      })),
+    });
+    const events: string[] = [];
+    const starts: number[] = [];
+    vi.mocked(sendDeletionEmails).mockImplementation(async ({ recipients }) => {
+      const first = recipients[0]?.email;
+      events.push(`début ${first} (${recipients.length})`);
+      starts.push(Date.now());
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      events.push(`fin ${first}`);
+      if (first === 'm100@example.com') throw new Error('resend');
+    });
+
+    vi.useFakeTimers();
+    try {
+      const done = expect(run()).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+      await vi.runAllTimersAsync();
+      await done;
+    } finally {
+      vi.useRealTimers();
+    }
+
+    const gaps = starts.slice(1).map((start, index) => start - (starts[index] ?? start));
+    expect(gaps).toHaveLength(2);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(500);
+    expect(events).toEqual([
+      'début m0@example.com (100)',
+      'fin m0@example.com',
+      'début m100@example.com (100)',
+      'fin m100@example.com',
+      'début m200@example.com (50)',
+      'fin m200@example.com',
+    ]);
+    expect(logError).toHaveBeenCalledTimes(1);
+    expect(logError).toHaveBeenCalledWith('account.deletion_email', expect.any(Error));
+  });
+
+  it.each([
+    ['un mot de passe qui n’est pas un texte', { password: 42 }],
+    ['un code absent', { code: undefined }],
+    ['un mot qui n’est pas un texte', { word: null }],
+  ])('rend un message général pour %s, sans rien vérifier ni supprimer', async (_label, bad) => {
+    await expect(run(bad as never)).resolves.toEqual({ error: fr.deleteAccount.failed });
+
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deletion()).not.toHaveBeenCalled();
+    expect(sendDeletionEmails).not.toHaveBeenCalled();
+  });
+
+  it('rend le refus du module, sans prévenir personne', async () => {
+    deletion().mockRejectedValue(new DeletionRefused('pas_proprietaire'));
+
+    await expect(run()).resolves.toEqual({ error: fr.deleteAccount.refused.pas_proprietaire });
+
+    expect(sendDeletionEmails).not.toHaveBeenCalled();
+    expect(signOutCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it('rend un message général, et le journal, quand la suppression échoue autrement', async () => {
+    // Un second envoi du même formulaire : la première suppression a déjà retiré la personne.
+    deletion().mockRejectedValue(new Error('Membre actif introuvable'));
+
+    await expect(run()).resolves.toEqual({ error: fr.deleteAccount.failed });
+
+    expect(logError).toHaveBeenCalledWith('account.deletion_failed', expect.any(Error));
+    expect(sendDeletionEmails).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteAccountAction', () => {
+  it('passe le successeur choisi au module, et rend le refus d’un successeur invalide', async () => {
+    vi.mocked(deleteAccount).mockRejectedValue(new DeletionRefused('successeur'));
+
+    await expect(
+      deleteAccountAction({ ...identity, successorId: SUCCESSOR_ID, organizationToo: false }),
+    ).resolves.toEqual({ error: fr.deleteAccount.refused.successeur });
+
+    expect(deleteAccount).toHaveBeenCalledWith(ctx, SUCCESSOR_ID, false);
+  });
+
+  // Le dialogue envoie ce qu'il a montré : le module refuse si l'équipe a changé depuis.
+  it('passe au module si le dialogue annonçait l’organisation supprimée, et rend son refus', async () => {
+    vi.mocked(deleteAccount).mockRejectedValue(new DeletionRefused('situation'));
+
+    await expect(
+      deleteAccountAction({ ...identity, successorId: null, organizationToo: true }),
+    ).resolves.toEqual({ error: fr.deleteAccount.refused.situation });
+
+    expect(deleteAccount).toHaveBeenCalledWith(ctx, null, true);
+    expect(sendDeletionEmails).not.toHaveBeenCalled();
+    expect(signOutCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'un successeur qui n’est pas un identifiant',
+      { successorId: 'collegue', organizationToo: false },
+    ],
+    ['un successeur absent', { successorId: undefined, organizationToo: false }],
+    [
+      'un choix d’organisation qui n’est pas un booléen',
+      { successorId: null, organizationToo: 'oui' },
+    ],
+    ['un choix d’organisation absent', { successorId: null }],
+  ])('rend un message général pour %s, sans rien vérifier ni supprimer', async (_label, bad) => {
+    await expect(deleteAccountAction({ ...identity, ...bad } as never)).resolves.toEqual({
+      error: fr.deleteAccount.failed,
+    });
+
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deleteAccount).not.toHaveBeenCalled();
   });
 });

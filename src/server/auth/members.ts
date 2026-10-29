@@ -12,7 +12,7 @@ export const INVITATION_DAYS = 7;
 const DAY_MS = 86_400_000;
 const INVITATION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/; // 32 octets en base64url
 
-export type MemberRow = { id: string; name: string; email: string; role: string };
+export type MemberRow = { id: string; name: string; email: string; role: string; former: boolean };
 
 const hashInvitationToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -37,7 +37,14 @@ export async function canInvite(ctx: TenantContext): Promise<boolean> {
 
 export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
   return db
-    .select({ id: members.id, name: users.name, email: users.email, role: members.role })
+    .select({
+      id: members.id,
+      name: users.name,
+      // Un ancien membre (supprimé, 0040) reste dans la liste sous son nom, sans l'adresse qu'on lui a substituée.
+      email: sql<string>`case when ${users.deletedAt} is null then ${users.email} else '' end`,
+      role: members.role,
+      former: sql<boolean>`${users.deletedAt} is not null`,
+    })
     .from(members)
     .innerJoin(users, eq(users.id, members.userId))
     .where(eq(members.organizationId, ctx.tenantId))

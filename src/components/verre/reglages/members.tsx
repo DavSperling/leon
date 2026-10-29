@@ -29,6 +29,9 @@ export const roleLabel = (role: string, labels: Record<string, string>) =>
     .map((r) => labels[r] ?? r)
     .join(', ');
 
+const ROW =
+  'relative flex min-h-[60px] items-center gap-4 rounded-field px-3 py-2.5 [&:not(:first-child)]:before:absolute [&:not(:first-child)]:before:inset-x-3 [&:not(:first-child)]:before:top-0 [&:not(:first-child)]:before:h-px [&:not(:first-child)]:before:bg-line';
+
 /** Section « Membres » : qui est dans l'espace et, pour un propriétaire ou un administrateur, l'invitation. */
 export function MembersSection({
   members,
@@ -39,6 +42,8 @@ export function MembersSection({
 }) {
   const [session, setSession] = useState(0);
   const t = useTranslations('settings');
+  const active = members.filter((m) => !m.former);
+  const former = members.filter((m) => m.former);
 
   return (
     <Section
@@ -61,11 +66,8 @@ export function MembersSection({
     >
       <GlassCard className="p-1.5">
         <ul aria-label={t('membersList')} className="grid grid-cols-[minmax(0,1fr)]">
-          {members.map((m) => (
-            <li
-              key={m.id}
-              className="relative flex min-h-[60px] items-center gap-4 rounded-field px-3 py-2.5 [&:not(:first-child)]:before:absolute [&:not(:first-child)]:before:inset-x-3 [&:not(:first-child)]:before:top-0 [&:not(:first-child)]:before:h-px [&:not(:first-child)]:before:bg-line"
-            >
+          {active.map((m) => (
+            <li key={m.id} className={ROW}>
               <div className="min-w-0 flex-1">
                 <p className="text-body font-medium [overflow-wrap:anywhere] text-fg">{m.name}</p>
                 <p className="mt-0.5 text-label [overflow-wrap:anywhere] text-muted">{m.email}</p>
@@ -77,6 +79,24 @@ export function MembersSection({
           ))}
         </ul>
       </GlassCard>
+      {former.length > 0 && (
+        <>
+          <h3 id="anciens-membres" className="mt-6 mb-2 text-label font-semibold text-fg">
+            {t('formerMembersTitle')}
+          </h3>
+          <GlassCard className="p-1.5">
+            <ul aria-labelledby="anciens-membres" className="grid grid-cols-[minmax(0,1fr)]">
+              {former.map((m) => (
+                <li key={m.id} className={ROW}>
+                  <p className="min-w-0 flex-1 text-body [overflow-wrap:anywhere] text-muted">
+                    {t('formerMember', { name: m.name })}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
+        </>
+      )}
     </Section>
   );
 }

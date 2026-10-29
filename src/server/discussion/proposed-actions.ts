@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import {
+  ACTION_RUNNING_MS,
   ACTION_VALID_MS,
   type ActionError,
   type ActionKind,
@@ -19,11 +20,20 @@ export type ActionRow = typeof actions.$inferSelect;
 export type TimedAction = ActionView & { createdAt: Date };
 export type Outcome = { url: string | null; error: ActionError | null };
 
-// Une ligne illisible donne null : elle n'empêche pas d'afficher la discussion.
-function toView(row: ActionRow): TimedAction | null {
+// Une ligne illisible donne null : elle n'empêche pas d'afficher la discussion. Exportée pour ses tests.
+export function toView(row: ActionRow): TimedAction | null {
   const expired =
     row.status === 'proposee' && Date.now() - row.createdAt.getTime() >= ACTION_VALID_MS;
-  const view = parseActionView({ ...row, status: expired ? 'expiree' : row.status });
+  // Lecture seule : la ligne reste « en-cours » en base, aucun clic ne la relance.
+  const stuck =
+    row.status === 'en-cours' &&
+    row.decidedAt !== null &&
+    Date.now() - row.decidedAt.getTime() >= ACTION_RUNNING_MS;
+  const view = parseActionView({
+    ...row,
+    status: expired ? 'expiree' : stuck ? 'echouee' : row.status,
+    result: stuck ? { url: null, error: 'incertain' } : row.result,
+  });
   return view && { ...view, createdAt: row.createdAt };
 }
 

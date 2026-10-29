@@ -20,12 +20,15 @@ type Turn = {
   message?: Record<string, unknown>;
   // Une erreur levée par le flux avant le message final.
   fail?: Error;
+  // Le message en cours de construction (usage partiel), tel que le SDK le garde pendant le flux.
+  current?: Record<string, unknown>;
 };
 
 function scriptedStream(turn: Turn) {
   const abort = vi.fn();
   return {
     abort,
+    currentMessage: turn.current,
     async *[Symbol.asyncIterator]() {
       for (const text of turn.texts ?? []) {
         yield { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } };
@@ -278,6 +281,19 @@ describe('streamText', () => {
     for await (const _chunk of llm.streamText(textRequest())) break;
 
     expect(streams[0]?.abort).toHaveBeenCalledOnce();
+  });
+
+  it('journalise une seule fois l’usage partiel d’un appel interrompu : il est facturé', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const current = { model: 'claude-sonnet-5-5', usage: { input_tokens: 300, output_tokens: 7 } };
+    const { llm } = setup([{ texts: ['a', 'b', 'c'], current }]);
+
+    for await (const _chunk of llm.streamText(textRequest())) break;
+
+    expect(info).toHaveBeenCalledOnce();
+    const [, event, json] = info.mock.calls[0] as [string, string, string];
+    expect(event).toBe('llm.usage');
+    expect(JSON.parse(json)).toMatchObject({ inputTokens: 300, outputTokens: 7 });
   });
 
   it('n’abandonne rien quand la réponse est allée au bout', async () => {

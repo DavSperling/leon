@@ -4,7 +4,7 @@ import { logError } from '@/server/log';
 
 type Count = { nom: string; cout: number; appels: number };
 
-// Ce que rend statistiques_admin() (0039) : des comptes, et les dix derniers inscrits. Durées en secondes, coûts
+// Ce que rend statistiques_admin() (0039, 0041) : des comptes, et les dix derniers inscrits. Durées en secondes, coûts
 // en dollars, dates en ISO.
 export type AdminStats = {
   utilisateurs: { total: number; nouveaux7: number; nouveaux30: number; deuxFacteurs: number };

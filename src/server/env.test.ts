@@ -23,6 +23,16 @@ describe('parseEnv', () => {
     expect(() => parseEnv({ ...TEST_ENV, DATABASE_URL: 'mysql://u:p@h/db' })).toThrow();
   });
 
+  it('ne fait personne admin quand LEON_ADMINS est absent ou vide', () => {
+    const { LEON_ADMINS: _, ...sansAdmins } = TEST_ENV;
+    expect(parseEnv(sansAdmins).LEON_ADMINS).toEqual([]);
+    expect(parseEnv({ ...TEST_ENV, LEON_ADMINS: '' }).LEON_ADMINS).toEqual([]);
+    expect(parseEnv({ ...TEST_ENV, LEON_ADMINS: ' A@b.fr, c@d.fr ' }).LEON_ADMINS).toEqual([
+      'a@b.fr',
+      'c@d.fr',
+    ]);
+  });
+
   it("accepte l'absence de clé Anthropic", () => {
     expect(parseEnv(TEST_ENV).ANTHROPIC_API_KEY).toBeUndefined();
   });

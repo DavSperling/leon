@@ -72,6 +72,25 @@ describe('isIgnoredPath', () => {
     expect(isIgnoredPath('api/local.settings.json')).toBe(true);
   });
 
+  it('ignore les configurations qui portent d’habitude un mot de passe en clair', () => {
+    for (const name of [
+      'docker-compose.yml',
+      'docker-compose.prod.yaml',
+      'compose.yaml',
+      'config/database.yml',
+      'src/main/resources/application-dev.properties',
+      'Api/appsettings.Production.json',
+      'wp-config.php',
+      'site/settings.py',
+      'deploy/server.key',
+      'certs/server.pem',
+    ]) {
+      expect(isIgnoredPath(name), name).toBe(true);
+    }
+    expect(isIgnoredPath('src/compose.ts')).toBe(false);
+    expect(isIgnoredPath('src/user_settings.py')).toBe(false);
+  });
+
   it('garde un chemin normal, même quand un nom ressemble à un dossier ignoré', () => {
     expect(isIgnoredPath('projet/src/app.ts')).toBe(false);
     expect(isIgnoredPath('projet/docs/build-notes.md')).toBe(false);

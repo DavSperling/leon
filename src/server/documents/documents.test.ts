@@ -21,8 +21,8 @@ function parsed(text: string, warnings: string[] = []) {
   } as never;
 }
 
-async function refusal(file: File): Promise<string> {
-  const error = await readDocument(file).catch((caught: unknown) => caught);
+async function refusal(file: File, name?: string): Promise<string> {
+  const error = await readDocument(file, name).catch((caught: unknown) => caught);
   if (!(error instanceof DocumentError)) throw new Error('aucune DocumentError');
   return error.code;
 }
@@ -77,7 +77,20 @@ describe('readDocument', () => {
   });
 
   it('refuse un fichier sans texte lisible', async () => {
-    expect(await refusal(new File([' \n\u0000\t'], 'blanc.md'))).toBe('empty');
+    expect(await refusal(new File([' \n\t'], 'blanc.md'))).toBe('empty');
+  });
+
+  it('refuse un binaire sous une extension de texte (octet nul au début)', async () => {
+    const video = new Uint8Array([0x47, 0x40, 0x00, 0x10, 0x00, 0x00, 0xb0, 0x0d]);
+
+    expect(await refusal(new File([video], 'seg001.ts'))).toBe('unreadable');
+  });
+
+  it('refuse une configuration à mot de passe envoyée seule, même hors d’un dossier', async () => {
+    const compose = new File(['POSTGRES_PASSWORD: hunter2Xy'], 'docker-compose.yml');
+
+    expect(await refusal(compose)).toBe('ignored');
+    expect(await refusal(new File(['x'], 'settings.py'), 'site/settings.py')).toBe('ignored');
   });
 
   it('refuse plus d’un million de caractères', async () => {

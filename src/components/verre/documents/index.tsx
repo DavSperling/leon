@@ -118,10 +118,10 @@ function UploadForm() {
         ),
         ...alone.kept.map(({ file }) => ({ file, folder: null })),
       ];
-      const biggest = Math.max(0, ...chosen.map(({ kept }) => kept.length));
+      // Le plafond vaut pour tout l'envoi : dossiers et fichiers seuls ensemble.
       const refusal =
-        biggest > FOLDER_MAX_FILES
-          ? t('tooManyFiles', { count: biggest, max: FOLDER_MAX_FILES })
+        uploads.length > FOLDER_MAX_FILES
+          ? t('tooManyFiles', { count: uploads.length, max: FOLDER_MAX_FILES })
           : uploads.length === 0 && t('noReadableFiles');
       if (refusal) {
         setReport({ tone: 'error', text: refusal });

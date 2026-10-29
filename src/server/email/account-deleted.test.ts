@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import en from '../../../messages/en.json';
 import fr from '../../../messages/fr.json';
-import { sendDeletionEmail } from './account-deleted';
+import { sendDeletionEmails } from './account-deleted';
 
 const mocks = vi.hoisted(() => ({
   env: {
@@ -11,13 +11,15 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('@/server/env', () => ({ env: mocks.env }));
 
-const input = {
-  to: 'paul@example.com',
-  organizationName: 'Dupont Rénovation',
-} as const;
+const input = { organizationName: 'Dupont Rénovation' };
+const to = (kind: 'account' | 'organization') => ({
+  recipients: [{ email: 'paul@example.com', kind }],
+});
 
 let sent: MockInstance<typeof fetch>;
-const payload = () => JSON.parse(String(sent.mock.calls[0]?.[1]?.body)) as Record<string, string>;
+const batch = () =>
+  JSON.parse(String(sent.mock.calls[0]?.[1]?.body)) as Record<string, string | string[]>[];
+const payload = () => batch()[0] as Record<string, string>;
 
 beforeEach(() => {
   mocks.env.RESEND_API_KEY = 're_test';
@@ -32,7 +34,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('sendDeletionEmail', () => {
+describe('sendDeletionEmails', () => {
   it.each([
     ['la clé Resend', 'RESEND_API_KEY'],
     ['l’expéditeur', 'LEON_EMAIL_FROM'],
@@ -40,7 +42,7 @@ describe('sendDeletionEmail', () => {
     mocks.env[variable] = undefined;
 
     await expect(
-      sendDeletionEmail({ ...input, locale: 'fr', kind: 'account' }),
+      sendDeletionEmails({ ...input, ...to('account'), locale: 'fr' }),
     ).resolves.toBeUndefined();
 
     expect(sent).not.toHaveBeenCalled();
@@ -50,7 +52,7 @@ describe('sendDeletionEmail', () => {
     ['fr', fr, '28 octobre 2026'],
     ['en', en, 'October 28, 2026'],
   ] as const)('écrit le sujet et le texte en %s', async (locale, messages, date) => {
-    await sendDeletionEmail({ ...input, locale, kind: 'account' });
+    await sendDeletionEmails({ ...input, ...to('account'), locale });
     expect(payload()).toMatchObject({
       from: 'Leon <test@example.com>',
       to: ['paul@example.com'],
@@ -61,41 +63,58 @@ describe('sendDeletionEmail', () => {
     expect(payload().html).toContain(messages.deleteAccount.emailIgnore);
 
     sent.mockClear();
-    await sendDeletionEmail({ ...input, locale, kind: 'organization' });
+    await sendDeletionEmails({ ...input, ...to('organization'), locale });
     expect(payload().subject).toBe(messages.deleteAccount.emailSubjectOrganization);
     expect(payload().html).toContain('Dupont Rénovation');
     expect(payload().html).not.toContain(messages.deleteAccount.emailIgnore);
   });
 
   it('s’identifie auprès de Resend, sans mettre de lien dans le message', async () => {
-    await sendDeletionEmail({ ...input, locale: 'fr', kind: 'organization' });
+    await sendDeletionEmails({ ...input, ...to('organization'), locale: 'fr' });
 
     expect(sent.mock.calls[0]?.[1]?.headers).toMatchObject({ Authorization: 'Bearer re_test' });
     expect(payload().html).not.toContain('href');
   });
 
   it('abandonne un envoi que Resend laisse sans réponse', async () => {
-    await sendDeletionEmail({ ...input, locale: 'fr', kind: 'account' });
+    await sendDeletionEmails({ ...input, ...to('account'), locale: 'fr' });
 
     expect(sent.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it('protège le message du nom de l’organisation, que chacun choisit', async () => {
-    await sendDeletionEmail({
-      ...input,
+    await sendDeletionEmails({
+      ...to('account'),
       organizationName: 'Dupont <b>& fils</b>',
       locale: 'fr',
-      kind: 'account',
     });
 
     expect(payload().html).toContain('Dupont &lt;b&gt;&amp; fils&lt;/b&gt;');
     expect(payload().html).not.toContain('<b>');
   });
 
+  it('envoie tout le lot en une requête, chaque message selon son destinataire', async () => {
+    await sendDeletionEmails({
+      ...input,
+      locale: 'fr',
+      recipients: [
+        { email: 'amos@example.com', kind: 'account' },
+        { email: 'paul@example.com', kind: 'organization' },
+      ],
+    });
+
+    expect(sent).toHaveBeenCalledTimes(1);
+    expect(sent.mock.calls[0]?.[0]).toBe('https://api.resend.com/emails/batch');
+    expect(batch()).toMatchObject([
+      { to: ['amos@example.com'], subject: fr.deleteAccount.emailSubjectAccount },
+      { to: ['paul@example.com'], subject: fr.deleteAccount.emailSubjectOrganization },
+    ]);
+  });
+
   it('lève quand Resend refuse', async () => {
     sent.mockResolvedValue(new Response('{}', { status: 422 }));
 
-    await expect(sendDeletionEmail({ ...input, locale: 'fr', kind: 'account' })).rejects.toThrow(
+    await expect(sendDeletionEmails({ ...input, ...to('account'), locale: 'fr' })).rejects.toThrow(
       '422',
     );
   });

@@ -256,7 +256,7 @@ export async function listDocuments(ctx: TenantContext) {
 }
 
 // L'app n'a pas le droit de supprimer du brut : la fonction de 0034 ne retire qu'un document de l'organisation
-// courante, et seulement pour son auteur. Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
+// courante, et seulement pour son auteur ou, celui d'un ancien membre, pour un administrateur (0042). Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
 export async function deleteDocument(ctx: TenantContext, id: string): Promise<boolean> {
   const result = await withTenant(ctx, (tx) =>
     tx.execute<{ deleted: boolean }>(sql`select supprimer_document(${id}) as deleted`),

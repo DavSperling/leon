@@ -11,7 +11,7 @@ import { TEST_ENV } from '@/test/test-env';
 import { listFiles, productionSources, readText } from './files';
 
 // Ce que le code dit du modèle d'IA doit rester d'accord avec ce qui est écrit ailleurs : la table des modèles
-// (models.ts), l'annexe des prix, .env.example, le README, la table llm_usage de David, et qui a le droit
+// (models.ts), l'annexe des prix, .env.example, le README, la table appels_modele, et qui a le droit
 // d'importer le faux modèle.
 
 const STEPS = Object.keys(EFFORT_BY_STEP);
@@ -76,11 +76,9 @@ describe('les tarifs de models.ts et l’annexe des prix', () => {
   });
 });
 
-// La table llm_usage (migration 0007 de la PR #13 de David, pas sur cette branche) a un check sur `step`. Les
-// étapes ont changé (reponse, discussion, point) : le jour où une migration crée la table sur cette branche, ou
-// après la fusion avec main, chaque insertion d'une étape absente du check échouerait. Ce test dort tant que
-// la table n'existe pas ; à la fusion, la migration doit lister les trois étapes (à signaler à David sur #13).
-describe('la table llm_usage', () => {
+// La table appels_modele (0039), qui reçoit chaque appel au modèle, a un check sur `step`. Une étape du modèle
+// d'IA absente de ce check ferait échouer chaque insertion de son usage, en silence (logUsage n'attend pas).
+describe('la table appels_modele', () => {
   // Les valeurs du dernier `check (step in (...))` de ce SQL, ou null s'il n'y en a pas.
   function stepsAllowedBy(sql: string): string[] | null {
     const checks = [...sql.matchAll(/step\s+in\s*\(([^)]*)\)/gi)];
@@ -89,26 +87,26 @@ describe('la table llm_usage', () => {
     return [...last.matchAll(/'([^']*)'/g)].map((match) => match[1] as string);
   }
   const migrations = listFiles('src/server/db/migrations/*.sql').map(readText);
-  const usageSql = migrations.filter((sql) => /llm_usage/i.test(sql)).join('\n');
-  const created = /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?llm_usage\b/i.test(
-    usageSql,
-  );
+  const usageSql = migrations.filter((sql) => /appels_modele/i.test(sql)).join('\n');
 
-  it('lit le check sur `step` : la forme de la migration 0007 de David', () => {
-    const davidSql = `create table llm_usage (id uuid primary key, step text not null check (step in ('triage', 'extraction', 'placement')));`;
-    expect(stepsAllowedBy(davidSql)).toEqual(['triage', 'extraction', 'placement']);
+  it('lit le check sur `step` : la forme de la migration 0039', () => {
+    const sql = `create table appels_modele (id bigint primary key, step text not null check (step in ('triage', 'extraction')));`;
+    expect(stepsAllowedBy(sql)).toEqual(['triage', 'extraction']);
     expect(stepsAllowedBy('create table autre (id uuid)')).toBeNull();
     // Un check ajouté plus tard remplace le premier.
     expect(
       stepsAllowedBy(
-        `${davidSql} alter table llm_usage add constraint c check (step in ('reponse'));`,
+        `${sql} alter table appels_modele add constraint c check (step in ('reponse'));`,
       ),
     ).toEqual(['reponse']);
   });
 
-  it.skipIf(!created)('accepte, dès qu’elle existe, chaque étape du modèle d’IA', () => {
+  it('accepte chaque étape du modèle d’IA', () => {
+    expect(usageSql).toMatch(
+      /create\s+table\s+(?:if\s+not\s+exists\s+)?(?:public\.)?appels_modele\b/i,
+    );
     const allowed = stepsAllowedBy(usageSql);
-    expect(allowed, 'la migration de llm_usage doit contraindre `step`').not.toBeNull();
+    expect(allowed, 'la migration d’appels_modele doit contraindre `step`').not.toBeNull();
     expect(STEPS.filter((step) => !(allowed ?? []).includes(step))).toEqual([]);
   });
 });

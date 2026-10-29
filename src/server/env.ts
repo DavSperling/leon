@@ -20,8 +20,9 @@ const supportedModel = (name: string) =>
     error: () => `${name} : modèle pris en charge attendu (${SUPPORTED_MODEL_IDS.join(', ')})`,
   });
 
+// Pas d'admin par défaut : l'inscription ne vérifie pas l'e-mail, une adresse par défaut serait à qui la prend.
 const adminEmails = (list: string | undefined) =>
-  (list || 'davsperling@gmail.com')
+  (list ?? '')
     .split(',')
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);

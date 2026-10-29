@@ -25,7 +25,7 @@ import {
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
-import { sendDeletionEmail } from '@/server/email/account-deleted';
+import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
 
@@ -269,13 +269,13 @@ async function runDeletion<Input extends DeletionInput>(
       forgetPipedreamUser(id).catch((error) => logError('account.deletion_pipedream', error)),
     ),
   );
-  // Resend limite à 2 requêtes par seconde : un message après l'autre, espacés, et un échec n'arrête pas les suivants.
-  for (const [index, { email, kind }] of result.notify.entries()) {
-    if (index > 0) await new Promise((resolve) => setTimeout(resolve, RESEND_SPACING_MS));
-    await sendDeletionEmail({
-      to: email,
+  // Par lots de 100, une requête par lot : 100 membres ne retiennent plus la page une minute. Resend limite à 2
+  // requêtes par seconde : un lot après l'autre, espacés, et un échec n'arrête pas les suivants.
+  for (let start = 0; start < result.notify.length; start += RESEND_BATCH_MAX) {
+    if (start > 0) await new Promise((resolve) => setTimeout(resolve, RESEND_SPACING_MS));
+    await sendDeletionEmails({
+      recipients: result.notify.slice(start, start + RESEND_BATCH_MAX),
       locale,
-      kind,
       organizationName: result.organizationName,
     }).catch((error) => logError('account.deletion_email', error));
   }

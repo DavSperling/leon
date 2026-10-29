@@ -41,10 +41,13 @@ describe('parseActionView', () => {
       diff: '+ a',
     };
 
-    expect(parseActionView({ ...write, params })?.params).toEqual(params);
+    // Le contenu entier du fichier reste en base : la page ne le reçoit pas.
+    const { content: _content, ...shown } = params;
+
+    expect(parseActionView({ ...write, params })?.params).toEqual(shown);
     expect(
       parseActionView({ ...write, params: { ...params, sha: 'b'.repeat(40) } })?.params,
-    ).toEqual({ ...params, sha: 'b'.repeat(40) });
+    ).toEqual({ ...shown, sha: 'b'.repeat(40) });
     expect(parseActionView({ ...write, params: { ...params, diff: 12 } })).toBeNull();
   });
 

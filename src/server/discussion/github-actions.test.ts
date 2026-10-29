@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ACTION_KEYS, ACTION_KINDS } from '@/lib/actions';
+import type { GithubClient } from '@/server/connectors/github/client';
 import { askedOf, invalidParam, SPECS, validParams } from './github-actions';
 
 // Les règles par clé des paramètres d'une action, revérifiées à la proposition et à l'exécution : une clé inconnue,
@@ -165,6 +166,17 @@ describe('validParams', () => {
       expect(validParams(kind, { ...base(kind), [key]: 'مرحبا' }), `${kind} ${key}`).toBe(true);
     }
   });
+
+  it('refuse les caractères invisibles (largeur nulle, étiquettes), et garde les emojis composés', () => {
+    for (const text of ['a\u200Bb', 'a\uFEFFb', 'a\u061Cb', 'a\u{E0041}b']) {
+      expect(invalidParam('github.ouvrir_pr', { ...base('github.ouvrir_pr'), title: text })).toBe(
+        'title',
+      );
+      expect(invalidParam('github.commenter', { ...GOOD_COMMENT, body: text })).toBe('body');
+    }
+    expect(validParams('github.commenter', { ...GOOD_COMMENT, body: '👩\u200D💻' })).toBe(true);
+    expect(askedOf('a\u200Bb\u{E0041}c')).toBe('a b c');
+  });
 });
 
 const GOOD_COMMENT = { repo: 'acme/leon', number: '7', title: 'Un titre', body: 'Texte' };
@@ -221,5 +233,52 @@ describe('SPECS', () => {
 
   it('dit dans chaque description que l’outil ne fait rien sans le clic', () => {
     for (const spec of Object.values(SPECS)) expect(spec.description.length).toBeGreaterThan(30);
+  });
+});
+
+describe('fusionner_pr', () => {
+  const merge = SPECS['github.fusionner_pr'];
+  const PULL = {
+    title: 'Titre',
+    state: 'open',
+    merged: false,
+    draft: false,
+    head: { ref: 'feature/x', sha: SHA },
+    base: { ref: 'main' },
+  };
+  const github = (mergeable_state: string) =>
+    ({
+      pull: async () => ({ ...PULL, mergeable_state }),
+      mergePull: async () => {
+        throw new Error('fusionnée');
+      },
+    }) as unknown as GithubClient;
+  const params = {
+    repo: 'acme/leon',
+    number: '7',
+    title: 'Titre',
+    base: 'main',
+    method: 'merge',
+    sha: SHA,
+  };
+
+  it.each(['blocked', 'unstable', 'behind', 'dirty'])(
+    'ne propose ni ne fusionne une PR « %s »',
+    async (state) => {
+      expect(
+        await merge.prepare(github(state), 'acme/leon', { depot: 'acme/leon', numero: 7 }),
+      ).toContain('ne se fusionne pas');
+      await expect(merge.execute(github(state), params as never)).rejects.toMatchObject({
+        code: 'conflit',
+      });
+    },
+  );
+
+  it('propose une PR « clean », « has_hooks » ou « unknown »', async () => {
+    for (const state of ['clean', 'has_hooks', 'unknown']) {
+      expect(
+        await merge.prepare(github(state), 'acme/leon', { depot: 'acme/leon', numero: 7 }),
+      ).toMatchObject({ sha: SHA });
+    }
   });
 });

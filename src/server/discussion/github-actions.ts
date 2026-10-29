@@ -76,13 +76,13 @@ class ActionFailure extends Error {
 const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const DIGITS = /^\d{1,12}$/;
 const oneLine = (text: string) => !/[\r\n\u2028\u2029]/.test(text);
-// Les caractères qui changent le sens de lecture (U+202A à U+202E, U+2066 à U+2069) : ce que l'utilisateur confirme
-// d'un clic ne doit pas s'afficher autrement qu'il s'écrit.
-const BIDI = /[\u202A-\u202E\u2066-\u2069]/;
+// Les caractères de format invisibles (\p{Cf} : sens de lecture, largeur nulle, étiquettes U+E0000…) : ce que
+// l'utilisateur confirme d'un clic ne doit pas s'afficher autrement qu'il s'écrit. Sauf U+200D, qui lie les emojis.
+const BIDI = /(?!\u200D)\p{Cf}/u;
 const plain = (rule: (value: string) => boolean) => (value: string) =>
   rule(value) && !BIDI.test(value);
-// Ce qui ne tient pas sur une ligne montrée telle quelle : contrôles, sauts, sens de lecture, moitiés de paire.
-const UNSAFE = /[\p{Cc}\p{Cs}\u2028\u2029\u202A-\u202E\u2066-\u2069]/u;
+// Ce qui ne tient pas sur une ligne montrée telle quelle : contrôles, sauts, format invisible, moitiés de paire.
+const UNSAFE = /[\p{Cc}\p{Cs}\u2028\u2029]|(?!\u200D)\p{Cf}/u;
 // Au plus `max` unités sans couper une paire de substitution (la règle de la clé compte ces unités).
 const cut = (text: string, max: number) => {
   const end = text.charCodeAt(max - 1);
@@ -236,6 +236,14 @@ const stateOf = (state: 'ouvert' | 'ferme' | null | undefined) =>
   state == null ? undefined : state === 'ouvert' ? 'open' : 'closed';
 const prUrl = (p: Params) => `https://github.com/${p.repo}/pull/${p.number}`;
 const runUrl = (p: Params) => `https://github.com/${p.repo}/actions/runs/${p.run}`;
+// Les états de fusion (mergeable_state) qui ne se fusionnent pas d'un clic. « unknown » passe : GitHub le calcule
+// après coup, et la fusion refuse d'elle-même ce qu'elle ne peut pas faire.
+const BLOCKED_MERGE = new Map([
+  ['dirty', 'a des conflits'],
+  ['blocked', 'attend une revue ou une règle de sa branche visée'],
+  ['unstable', 'a des vérifications en échec'],
+  ['behind', 'est en retard sur sa branche visée'],
+]);
 
 async function branchExists(github: Github, repo: string, branch: string): Promise<boolean> {
   try {
@@ -539,8 +547,8 @@ export const SPECS: Record<ActionKind, Spec> = {
       if (pull.merged) return `La PR #${n} est déjà fusionnée.`;
       if (pull.state !== 'open') return `La PR #${n} est fermée : elle ne se fusionne pas.`;
       if (pull.draft) return `La PR #${n} est un brouillon : elle ne se fusionne pas.`;
-      if (pull.mergeable_state === 'dirty')
-        return `La PR #${n} a des conflits : elle ne se fusionne pas.`;
+      const blocked = BLOCKED_MERGE.get(pull.mergeable_state ?? '');
+      if (blocked) return `La PR #${n} ${blocked} : elle ne se fusionne pas.`;
       if (!pull.head.sha || !COMMIT_SHA.test(pull.head.sha)) return UNEXPECTED;
       if (!isBranchName(pull.base.ref)) return UNEXPECTED;
       return {
@@ -555,10 +563,16 @@ export const SPECS: Record<ActionKind, Spec> = {
     summary: (p) =>
       `fusionner la PR #${p.number} « ${p.title} » de ${p.repo} dans « ${p.base} » (méthode ${p.method}, commit ${sha7(p.sha)})`,
     async execute(github, p) {
-      // La PR a changé depuis la proposition (fermée, fusionnée, autre base, nouveau commit) : ce que l'utilisateur a
-      // vu n'est plus ce qui serait fusionné.
+      // La PR a changé depuis la proposition (fermée, fusionnée, autre base, nouveau commit, plus fusionnable) : ce
+      // que l'utilisateur a vu n'est plus ce qui serait fusionné.
       const now = await github.pull(p.repo, Number(p.number));
-      if (now.merged || now.state !== 'open' || now.base.ref !== p.base || now.head.sha !== p.sha) {
+      if (
+        now.merged ||
+        now.state !== 'open' ||
+        now.base.ref !== p.base ||
+        now.head.sha !== p.sha ||
+        BLOCKED_MERGE.has(now.mergeable_state ?? '')
+      ) {
         throw new ActionFailure('conflit');
       }
       await github.mergePull(p.repo, Number(p.number), {

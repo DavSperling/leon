@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { users } from '@/server/db/schema/auth';
+import { adminDb } from '@/test/db';
 import { createUserWithOrganization } from './sign-up';
 import { firstOrganizationId, principalsFor, resolveTenantContext } from './tenant-context';
 
@@ -35,6 +38,17 @@ describe('resolveTenantContext', () => {
     const paul = await signUp('Paul');
     const zoe = await signUp('Zoe');
     expect(await resolveTenantContext(zoe.userId, paul.tenantId)).toBeNull();
+  });
+
+  // Une réinitialisation de mot de passe ou un rappel OAuth arrivés pendant la suppression ouvrent une session :
+  // l'ancien membre n'entre pourtant nulle part.
+  it("renvoie null pour un ancien membre, qui reste pourtant dans l'organisation", async () => {
+    const paul = await signUp('Paul');
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, paul.userId));
+
+    expect(await firstOrganizationId(paul.userId)).toBeNull();
+    expect(await resolveTenantContext(paul.userId, null)).toBeNull();
+    expect(await resolveTenantContext(paul.userId, paul.tenantId)).toBeNull();
   });
 
   it('renvoie null pour un utilisateur sans organisation', async () => {

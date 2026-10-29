@@ -228,6 +228,7 @@ export async function listDocuments(ctx: TenantContext) {
         // Les fichiers d'un même dossier portent son identifiant et son nom (addDocument).
         folderId: sql<string | null>`${sources.metadata}->'folder'->>'id'`,
         folderName: sql<string | null>`${sources.metadata}->'folder'->>'name'`,
+        ownerFormer: sql<boolean>`${users.deletedAt} is not null`,
       })
       .from(sources)
       .innerJoin(users, eq(users.id, sources.ownerUserId))

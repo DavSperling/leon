@@ -191,6 +191,25 @@ describe('dossiers', () => {
     expect(await deleteFolder(alice, folder.id)).toBe(0);
   });
 
+  it('renvoyer un dossier du même nom remplace le précédent, chez son auteur seulement', async () => {
+    const first = folderOf('maj-dossier', 'a.md');
+    const old = await upload(alice, 'a.md', first);
+    await upload(alice, 'b.md', { ...first, path: 'b.md' });
+    const bobs = await upload(bob, 'a.md', folderOf('maj-dossier', 'a.md'));
+    const other = await upload(alice, 'c.md', folderOf('autre-dossier', 'c.md'));
+
+    const again = folderOf('maj-dossier', 'a.md');
+    const fresh = await upload(alice, 'a.md', again);
+    await upload(alice, 'b.md', { ...again, path: 'b.md' });
+
+    expect(await count('turns', old.sourceId)).toBe(0);
+    const names = (await listDocuments(alice)).filter((doc) => doc.folderName === 'maj-dossier');
+    expect(
+      names.filter((doc) => doc.ownerUserId === alice.userId).map((doc) => doc.folderId),
+    ).toEqual([again.id, again.id]);
+    for (const kept of [fresh, bobs, other]) expect(await count('turns', kept.sourceId)).toBe(1);
+  });
+
   it('un membre d’une autre organisation ne supprime pas le dossier', async () => {
     const folder = folderOf('dossier', 'a.md');
     const { sourceId } = await upload(alice, 'a.md', folder);

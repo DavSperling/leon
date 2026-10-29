@@ -90,8 +90,8 @@
       "skipped": "{count, plural, one {# ignoré} other {# ignorés}}",
       "failed": "{count, plural, one {# illisible ou refusé} other {# illisibles ou refusés}}"
     },
-    "tooManyFiles": "Un dossier contient {count} fichiers lisibles : le maximum est de {max}. Rien n’a été envoyé. Choisissez un dossier plus petit.",
-    "noReadableFiles": "Aucun fichier lisible dans cette sélection : les fichiers cachés, les dépendances (node_modules…), les dossiers générés, les fichiers de verrouillage, les fichiers vides et ceux de plus de 10 Mo sont laissés de côté.",
+    "tooManyFiles": "Cet envoi contient {count} fichiers lisibles : le maximum est de {max}. Rien n’a été envoyé. Envoyez-les en plusieurs fois.",
+    "noReadableFiles": "Aucun fichier lisible dans cette sélection : les fichiers cachés, les dépendances (node_modules…), les dossiers générés, les fichiers de verrouillage et de secrets, les fichiers vides et ceux de plus de 10 Mo sont laissés de côté.",
     "partial": "Document ajouté, mais indexé en partie : il est trop grand pour être lu en entier.",
     "teamSection": "Documents de l’équipe",
     "teamDescription": "Le texte extrait est indexé dans la mémoire de Leon.",
@@ -110,6 +110,7 @@
       "empty": "Aucun texte lisible dans ce fichier.",
       "too_long": "Ce document contient trop de texte (maximum 1 million de caractères).",
       "folder_full": "Ce dossier a atteint le maximum de 200 fichiers.",
+      "ignored": "Fichier écarté : il contient souvent des mots de passe ou des clés (configuration, clé privée), ou n’est que généré.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
   },

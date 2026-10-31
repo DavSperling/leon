@@ -156,7 +156,6 @@ export function HeroDemo() {
             <button
               type="button"
               onClick={() => setAuto((a) => !a)}
-              aria-pressed={!auto}
               aria-label={auto ? t('pause') : t('play')}
               title={auto ? t('pauseShort') : t('playShort')}
               className="inline-grid size-10 place-items-center rounded-full border border-line bg-glass-3 text-fg-2 backdrop-blur-[12px] transition-colors duration-200 hover:border-line-strong hover:text-fg"

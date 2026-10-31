@@ -5,8 +5,9 @@ import { cn } from '@/lib/verre/cn';
 import { isInstant } from '@/lib/verre/instant';
 
 // Champ de particules en 3D : une nappe de points vue en perspective, soulevée par des ondes lentes, dans les couleurs
-// du thème (accent → sarcelle). Canvas 2D, sans dépendance. Le pointeur décale doucement la caméra. En pause hors de
-// l'écran et quand l'onglet est caché ; une seule image en mouvement réduit.
+// du thème (accent → sarcelle). Canvas 2D, sans dépendance. Le pointeur décale doucement la caméra. 30 images par
+// seconde au plus. En pause hors de l'écran et quand l'onglet est caché ; une seule image en mouvement réduit, quand
+// les animations sont arrêtées, et au doigt (pointer: coarse), où rien ne décale la caméra.
 
 type Rgb = [number, number, number];
 
@@ -54,8 +55,10 @@ export function ParticleField({
     // une liste de points par style (couleur × opacité), réutilisée à chaque image
     let buckets: number[][] = [];
     let raf = 0;
+    let last = 0;
     let visible = true;
     let running = false;
+    const still = () => isInstant() || window.matchMedia('(pointer: coarse)').matches;
     const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
     const start = performance.now();
 
@@ -148,11 +151,14 @@ export function ParticleField({
     };
 
     const loop = (now: number) => {
-      draw(now);
+      if (now - last >= 32) {
+        last = now;
+        draw(now);
+      }
       raf = requestAnimationFrame(loop);
     };
     const play = () => {
-      if (running || isInstant() || !visible || document.hidden) return;
+      if (running || still() || !visible || document.hidden) return;
       running = true;
       raf = requestAnimationFrame(loop);
     };
@@ -173,12 +179,17 @@ export function ParticleField({
       else pause();
     });
     io.observe(canvas);
-    // le thème change : nouvelles couleurs
+    // le thème change : nouvelles couleurs ; « Arrêter les animations » : on s'arrête ou on repart
     const mo = new MutationObserver(() => {
       readColors();
       draw(performance.now());
+      if (still()) pause();
+      else play();
     });
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'data-motion'],
+    });
     const onVisibility = () => (document.hidden ? pause() : play());
     document.addEventListener('visibilitychange', onVisibility);
     const onPointer = (e: PointerEvent) => {

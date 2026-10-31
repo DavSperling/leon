@@ -24,7 +24,7 @@ import './pages.css';
 // CSS d'après les vrais écrans, puis ce qui est prévu. Exemples fictifs, fonctions réelles (état de main).
 
 const PANEL =
-  'relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-4 shadow-panel backdrop-blur-[30px] sm:p-5';
+  'relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-4 shadow-panel sm:p-5';
 const CARD = 'rounded-box border border-line bg-glass-2 shadow-hi';
 
 const CAPTURED: ProviderId[] = [
@@ -402,7 +402,7 @@ function FlowAside() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-ui font-semibold text-fg">{p.kicker}</span>
-                <span className="mt-0.5 block truncate text-label text-muted">{nb(p.title)}</span>
+                <span className="mt-0.5 line-clamp-2 text-label text-muted">{nb(p.title)}</span>
               </span>
               <span
                 aria-hidden="true"

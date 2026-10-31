@@ -80,7 +80,7 @@ export function ConnecteursPage() {
           lead={t('catalogLead')}
         />
         <ConnecteursCatalogue />
-        <p className="mt-6 max-w-[720px] text-label leading-[1.6] text-muted">
+        <p className="mt-6 max-w-[720px] text-label text-pretty leading-[1.6] text-muted">
           {nb(t('betaNote'))}
         </p>
       </PageSection>

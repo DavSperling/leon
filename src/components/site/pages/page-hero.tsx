@@ -116,7 +116,7 @@ export function PageHero({
           <h1
             className={cn(
               'mt-4 font-extrabold tracking-[-0.048em] text-balance text-fg',
-              aside ? 'text-[clamp(36px,4.6vw,60px)]' : 'text-[clamp(38px,5.8vw,72px)]',
+              aside ? 'text-[clamp(36px,4.6vw,60px)]' : 'text-[clamp(38px,5.4vw,64px)]',
               // après la taille : tailwind-merge retirerait sinon l'interligne (text-* le règle aussi)
               'leading-[1.02]',
             )}

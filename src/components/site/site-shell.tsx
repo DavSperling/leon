@@ -1,13 +1,20 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { Aurora, ThinkingProvider } from '@/components/verre/shell/thinking';
-import { SiteFooter } from './site-footer';
+import { SiteFooter, SiteFooterBar } from './site-footer';
 import { SiteHeader } from './site-header';
 import './site.css';
 import './fx/fx.css';
 
 /** Cadre du site public (accueil, cas d'usage, connecteurs…) et des pages de connexion : l'aurore, l'en-tête, le pied. */
-export function SiteShell({ children, footer = true }: { children: ReactNode; footer?: boolean }) {
+export function SiteShell({
+  children,
+  footer = true,
+}: {
+  children: ReactNode;
+  /** false : rien ; 'bar' : seulement la langue et l'arrêt des animations (pages de connexion). */
+  footer?: boolean | 'bar';
+}) {
   const t = useTranslations('site.shell');
   return (
     <ThinkingProvider>
@@ -28,10 +35,16 @@ export function SiteShell({ children, footer = true }: { children: ReactNode; fo
       >
         {children}
       </main>
-      {footer && (
-        <div className="relative z-[1]">
-          <SiteFooter />
+      {footer === 'bar' ? (
+        <div className="relative z-[1] mx-auto w-full max-w-[1200px] px-4 pb-6 sm:px-8">
+          <SiteFooterBar />
         </div>
+      ) : (
+        footer && (
+          <div className="relative z-[1]">
+            <SiteFooter />
+          </div>
+        )
       )}
     </ThinkingProvider>
   );

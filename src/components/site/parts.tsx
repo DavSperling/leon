@@ -318,7 +318,7 @@ export function CtaBand({
   return (
     <section className="py-20 sm:py-28">
       <Container>
-        <div className="site-reveal fx-ring signal-line relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] px-6 py-14 text-center shadow-panel backdrop-blur-[30px] sm:px-12 sm:py-20">
+        <div className="site-reveal fx-ring signal-line relative overflow-hidden rounded-panel border border-line-strong bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] px-6 py-14 text-center shadow-panel sm:px-12 sm:py-20">
           <div aria-hidden="true" className="site-halo pointer-events-none absolute inset-0" />
           <div
             aria-hidden="true"

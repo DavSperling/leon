@@ -721,7 +721,9 @@
       "pricing": "Tarifs",
       "trust": "Confiance",
       "account": "Compte",
-      "language": "Langue"
+      "language": "Langue",
+      "motionOff": "Arrêter les animations",
+      "motionOn": "Relancer les animations"
     },
     "auth": {
       "aside": "Leon en bref",
@@ -744,8 +746,6 @@
           "text": "Leon cherche dans ce qu’il a gardé et cite ses sources."
         }
       },
-      "signUpKicker": "En trois temps",
-      "signInKicker": "Bon retour",
       "signUpTitle": "Créez l’espace, branchez un outil, posez une question.",
       "signInTitle": "Ce qui a été dit ",
       "signInTitleAccent": "reste dit.",
@@ -950,20 +950,20 @@
       "nextLead": "Ce qui suit n’est pas encore construit. Nous l’écrivons ici pour que vous sachiez à quoi vous attendre.",
       "next": {
         "google": {
-          "title": "Google Workspace",
-          "text": "Gmail, Drive et Agenda."
+          "title": "Google Agenda",
+          "text": "Les réunions et leurs invités. Gmail et Google Drive sont déjà relevés."
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive et SharePoint."
+          "text": "Teams, OneDrive et SharePoint. Les mails et l’agenda Outlook sont déjà relevés."
         },
         "files": {
-          "title": "Fichiers",
-          "text": "PDF et documents Office."
+          "title": "Images et PDF scannés",
+          "text": "Les PDF texte, Word, Excel et PowerPoint sont indexés. Les pages scannées et les images demandent une reconnaissance de caractères, pas encore construite."
         },
         "invites": {
-          "title": "Invitations d’équipe",
-          "text": "Rejoindre l’espace de son entreprise."
+          "title": "Export des données",
+          "text": "Exporter les données d’un espace, et les supprimer entièrement depuis l’interface."
         },
         "permissions": {
           "title": "Droits de l’outil d’origine",
@@ -1046,16 +1046,16 @@
       },
       "planned": {
         "google": {
-          "title": "Google Workspace",
-          "text": "Gmail, Drive, Agenda."
+          "title": "Google Agenda",
+          "text": "Les réunions et leurs invités."
         },
         "microsoft": {
           "title": "Microsoft 365",
           "text": "Teams, OneDrive, SharePoint."
         },
         "files": {
-          "title": "Fichiers",
-          "text": "PDF et documents Office."
+          "title": "Images et PDF scannés",
+          "text": "Les pages scannées demandent une reconnaissance de caractères, pas encore construite."
         }
       },
       "heroTitle": "{count} outils branchables, et vos conversations d’IA.",
@@ -1104,7 +1104,7 @@
         "ai": "Vos conversations captées avec vos assistants d’IA",
         "discussions": "Vos discussions avec Leon",
         "notes": "Vos notes gardées par MCP (remember)",
-        "outlook": "Vos mails et votre agenda Outlook, si vous les branchez"
+        "outlook": "Vos mails (Outlook, Gmail), Google Drive et Slack, si vous les branchez"
       },
       "ranking": "3 · le classement, puis la réponse",
       "filter": "2 · le filtre des droits, d’abord",
@@ -1124,7 +1124,7 @@
       "whoKicker": "Qui voit quoi",
       "whoTitle": "Deux règles, faciles à retenir.",
       "teamTitle": "Visible de toute l’équipe",
-      "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf Outlook : une boîte mail et un agenda restent privés à qui les branche.",
+      "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf les mails, Google Drive et Slack : ils restent privés à qui les branche.",
       "youTitle": "Privé, à vous seul",
       "youText": "Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.",
       "frankly": "Franchement",
@@ -1147,17 +1147,17 @@
       "recommended": "Recommandé",
       "heroTitle": "Un prix simple, par personne qui s’en sert.",
       "heroAccent": "par personne qui s’en sert.",
-      "heroLead": "Essayez gratuitement sur une équipe, avec vos vrais outils. Ensuite, seuls les comptes actifs du mois sont comptés.",
+      "heroLead": "Essayez gratuitement sur une équipe, avec vos vrais outils. Ensuite, un prix par personne qui s’en sert, quand la facturation sera en place.",
       "plans": "Les plans",
-      "taxNote": "Prix hors taxes. Aucun engagement.",
+      "taxNote": "Prix hors taxes, proposés : la facturation n’est pas encore en place.",
       "everywhereKicker": "Dans chaque plan",
       "everywhereTitle": "Toutes les fonctions, dans chaque plan.",
       "everywhereLead": "Les plans diffèrent par la taille de l’équipe et par l’hébergement, pas par ce que Leon sait faire.",
       "faqKicker": "Questions",
-      "faqTitle": "Les questions qu’on nous pose.",
+      "faqTitle": "Avant de commencer.",
       "faqLead": "Une autre question ? Créez un espace : le pilote est gratuit, et on y voit vite ce que Leon garde.",
       "ctaTitle": "Commencez par le pilote.",
-      "ctaText": "Trente jours, une équipe de 10 personnes au plus, les {count} connecteurs."
+      "ctaText": "Gratuit, sur une équipe, avec les {count} connecteurs."
     }
   }
 }

@@ -217,6 +217,7 @@ function ProblemVisual({ i }: { i: number }) {
 
 function Problem() {
   const t = useTranslations('site.home');
+  const common = useTranslations('site.common');
   return (
     <section aria-labelledby="probleme" className="py-20 sm:py-28">
       <Container>
@@ -243,6 +244,9 @@ function Problem() {
             </li>
           ))}
         </ul>
+        <p className="mt-4 text-center font-mono text-meta tracking-normal text-muted">
+          {common('fictionalPlural')}
+        </p>
       </Container>
     </section>
   );
@@ -457,6 +461,7 @@ const PROOFS = [
 
 function Proof() {
   const t = useTranslations('site.home');
+  const common = useTranslations('site.common');
   const unknown = useSiteContent().demos[3] as Demo;
   return (
     <section aria-labelledby="preuve" className="py-20 sm:py-28">
@@ -481,6 +486,9 @@ function Proof() {
               </p>
               <p className="mt-2 text-body leading-[1.6] text-fg">
                 <Excerpt text={t('proofUnknown')} />
+              </p>
+              <p className="mt-3 font-mono text-meta tracking-normal text-muted">
+                {common('fictional')}
               </p>
             </div>
           </div>

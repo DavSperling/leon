@@ -8,7 +8,7 @@ import { nb } from '@/lib/verre/nb';
 import { type Demo, TOOL_COUNT, useSiteContent } from './content';
 import { DemoAnswerCard, DemoSourceRow } from './demo-card';
 import { ParticleField, SplitWords, Tilt } from './fx';
-import { Kicker, ToolLogo } from './parts';
+import { ToolLogo } from './parts';
 
 // Panneau à côté du formulaire de connexion ou d'inscription (même mise en page, d'où usePathname) : à la connexion,
 // le point du matin qui attend ; à l'inscription, les trois temps qui suivent la création de l'espace. Décoratif
@@ -50,7 +50,7 @@ function Briefing() {
     <div className="signal-line relative overflow-hidden rounded-box border border-line bg-glass-2 p-5 shadow-hi">
       <div className="flex items-center gap-2">
         <Logo className="size-[18px]" />
-        <span className="text-[13px] font-semibold text-accent">{common('briefing')}</span>
+        <span className="text-ui font-semibold text-accent">{common('briefing')}</span>
         <span className="ml-auto font-mono text-meta tracking-normal text-muted">08:45</span>
       </div>
       <div className="mt-4 grid gap-3.5">
@@ -89,9 +89,8 @@ export function AuthAside() {
 
       <div className="relative isolate max-lg:hidden">
         <div className="pointer-events-none absolute -inset-x-24 top-24 bottom-36 -z-10 opacity-70">
-          <ParticleField density={0.75} height={1.4} />
+          <ParticleField density={0.4} height={1.4} />
         </div>
-        <Kicker>{signUp ? t('signUpKicker') : t('signInKicker')}</Kicker>
         <h2 className="mt-4 max-w-[560px] text-[clamp(32px,3.6vw,48px)] leading-[1.04] font-extrabold tracking-[-0.045em] text-balance text-fg">
           {/* une clé par page : les mots rejouent leur entrée quand on passe de l'une à l'autre */}
           <SplitWords
@@ -107,7 +106,7 @@ export function AuthAside() {
             }
           />
         </h2>
-        <p className="mt-4 max-w-[520px] text-[16.5px] leading-[1.6] text-fg-2">
+        <p className="mt-4 max-w-[520px] text-title leading-[1.6] text-fg-2">
           {nb(taglines.pitch)}
         </p>
 

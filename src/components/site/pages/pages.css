@@ -19,7 +19,7 @@
   transform-style: preserve-3d;
   transform: translateZ(calc(var(--i) * 30px));
   transition:
-    transform 0.55s var(--ease-spring),
+    transform 0.55s var(--ease-out),
     border-color 0.3s,
     box-shadow 0.4s var(--ease-out);
 }
@@ -116,21 +116,35 @@
 
 /* ---------- Schéma des droits en perspective (Sécurité) ---------- */
 .pg-iso {
+  /* écart entre deux plans : assez grand pour que le plan du dessus laisse lire les libellés de celui du dessous */
+  --gap: 192px;
   perspective: 1600px;
+}
+.pg-iso:hover {
+  --gap: 220px;
 }
 .pg-iso-stage {
   transform-style: preserve-3d;
   transform: rotateX(52deg) rotateZ(-32deg);
+  /* la pile monte depuis le plan du bas : on la redescend pour qu'elle reste dans sa cellule */
+  translate: 0 112px;
 }
 .pg-iso-plane {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transform: translateZ(calc(var(--z) * var(--gap, 128px)));
+  transform: translateZ(calc(var(--z) * var(--gap)));
   transition: transform 0.9s var(--ease-spring);
 }
-.pg-iso:hover .pg-iso-plane {
-  --gap: 156px;
+/* en colonne, sur un petit écran : la pile tient dans ses 350 px et ne remonte pas sur les boutons du héros */
+@media (max-width: 639px) {
+  .pg-iso {
+    --gap: 150px;
+  }
+  .pg-iso-stage {
+    scale: 0.8;
+    translate: 0 56px;
+  }
 }
 @supports (animation-timeline: view()) {
   .pg-iso-stage {

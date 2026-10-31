@@ -661,10 +661,9 @@ export const PLANS = [
     id: 'pilote',
     name: 'Pilote',
     price: 'Gratuit',
-    unit: '30 jours',
-    text: 'Pour essayer sur une équipe, avec vos vrais outils.',
+    unit: 'pour une équipe',
+    text: 'Pour essayer avec vos vrais outils.',
     features: [
-      'Une équipe de 10 personnes au plus',
       `Les ${TOOL_COUNT} connecteurs`,
       'Recherche, réponse citée et discussions',
       'Point du matin et serveur MCP',
@@ -679,12 +678,8 @@ export const PLANS = [
     price: '25 €',
     unit: 'HT par utilisateur actif et par mois',
     text: 'Pour toute l’entreprise, sans engagement.',
-    features: [
-      'Tout le pilote, sans limite d’équipe',
-      'Seuls les comptes actifs du mois sont comptés',
-      'Sans engagement, résiliable chaque mois',
-    ],
-    cta: 'Créer un espace',
+    features: ['Tout le pilote, sans limite d’équipe', 'Facturation à venir, sans engagement'],
+    cta: 'Commencer par le pilote',
     featured: true,
   },
   {
@@ -726,7 +721,7 @@ export const FAQ = [
   },
   {
     q: 'Qu’est-ce qu’un utilisateur actif ?',
-    a: 'Une personne qui s’est servie de Leon dans le mois. Un compte resté inactif n’est pas compté.',
+    a: 'Une personne qui s’est servie de Leon dans le mois. Un compte resté inactif ne serait pas compté, quand la facturation sera en place.',
   },
 ] as const;
 
@@ -1274,10 +1269,9 @@ const PLANS_EN: Twin<typeof PLANS> = [
     id: 'pilote',
     name: 'Pilot',
     price: 'Free',
-    unit: '30 days',
-    text: 'Try Leon with one team, on your real tools.',
+    unit: 'for one team',
+    text: 'Try Leon on your real tools.',
     features: [
-      'One team of up to 10 people',
       `All ${TOOL_COUNT} connectors`,
       'Search, cited answers and chat',
       'Morning briefing and MCP server',
@@ -1292,12 +1286,8 @@ const PLANS_EN: Twin<typeof PLANS> = [
     price: '€25',
     unit: 'per active user per month, excl. VAT',
     text: 'For the whole company. No commitment.',
-    features: [
-      'Everything in Pilot, with no team size limit',
-      'Billed only for accounts active that month',
-      'Monthly billing, cancel anytime',
-    ],
-    cta: 'Create a workspace',
+    features: ['Everything in Pilot, with no team size limit', 'Billing to come, no commitment'],
+    cta: 'Start with the pilot',
     featured: true,
   },
   {
@@ -1339,7 +1329,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'What counts as an active user?',
-    a: 'Anyone who used Leon during the billing month. Inactive accounts are not counted.',
+    a: 'Anyone who used Leon during the month. Inactive accounts would not be counted, once billing is in place.',
   },
 ];
 

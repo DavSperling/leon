@@ -286,7 +286,18 @@
   }
 }
 
-/* Mouvement réduit : état final, aucune animation infinie. */
+/* Mouvement réduit : état final, aucune animation infinie. Même coupure quand la personne a cliqué « Arrêter les
+   animations » (<html data-motion="off">, src/lib/verre/instant.ts). */
+[data-motion="off"] *,
+[data-motion="off"] ::before,
+[data-motion="off"] ::after {
+  /* biome-ignore lint/complexity/noImportantStyles: doit l'emporter sur toute animation */
+  animation: none !important;
+  /* biome-ignore lint/complexity/noImportantStyles: doit l'emporter sur toute transition */
+  transition-duration: 0.01ms !important;
+  /* biome-ignore lint/complexity/noImportantStyles: doit l'emporter sur tout défilement doux */
+  scroll-behavior: auto !important;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

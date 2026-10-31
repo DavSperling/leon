@@ -30,7 +30,6 @@
   from {
     opacity: 0;
     transform: translateY(14px);
-    filter: blur(10px);
   }
 }
 
@@ -45,6 +44,10 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+/* en clair, la sarcelle du logo passe sous 3:1 sur le fond : une sarcelle plus sombre pour le texte seulement */
+[data-theme="light"] .site-gradient {
+  --logo-2: #23766d;
 }
 .site-gradient-anim {
   background-size: 200% 100%;

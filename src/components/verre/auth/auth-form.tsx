@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
 import { Field, Input } from '@/components/verre/ui/form';
+import { isInstant } from '@/lib/verre/instant';
 import { enter, exit } from '@/lib/verre/motion';
 import { nb } from '@/lib/verre/nb';
 
@@ -39,13 +40,8 @@ const FIELDS: Record<AuthPage, FieldDef[]> = {
   inscription: [
     { name: 'name', label: 'name', type: 'text', autoComplete: 'name' },
     { name: 'email', label: 'email', type: 'email', autoComplete: 'email' },
-    {
-      name: 'password',
-      label: 'password',
-      type: 'password',
-      autoComplete: 'new-password',
-      hint: 'passwordHint',
-    },
+    // pas d'aide « 8 caractères minimum » : la ligne d'état sous le champ le dit déjà
+    { name: 'password', label: 'password', type: 'password', autoComplete: 'new-password' },
     {
       name: 'confirmation',
       label: 'confirmPassword',
@@ -70,13 +66,7 @@ const FIELDS: Record<AuthPage, FieldDef[]> = {
       autoComplete: 'email',
       hint: 'inviteEmailHint',
     },
-    {
-      name: 'password',
-      label: 'password',
-      type: 'password',
-      autoComplete: 'new-password',
-      hint: 'passwordHint',
-    },
+    { name: 'password', label: 'password', type: 'password', autoComplete: 'new-password' },
     {
       name: 'confirmation',
       label: 'confirmPassword',
@@ -145,6 +135,7 @@ export function AuthForm({
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const pwId = useId();
+  const titleId = useId();
   const formRef = useRef<HTMLFormElement>(null);
   const [pwScope, animate] = useAnimate<HTMLDivElement>();
   const errors = state.errors ?? {};
@@ -163,7 +154,7 @@ export function AuthForm({
     const form = formRef.current;
     if (state.errors.form === wrong) {
       form?.querySelector<HTMLElement>('[name="password"]')?.focus();
-      if (pwScope.current)
+      if (pwScope.current && !isInstant())
         animate(
           pwScope.current,
           { x: [0, -7, 6, -4, 3, -1, 0] },
@@ -176,7 +167,9 @@ export function AuthForm({
     // Passage connexion ↔ inscription : la carte reste (mise en page commune), le contenu entre en fondu (CSS : visible
     // sans JavaScript, le rendu serveur n'attend pas l'hydratation).
     <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t(copy.title)}</h1>
+      <h1 id={titleId} className="text-h1 font-semibold tracking-[-0.025em] text-fg">
+        {t(copy.title)}
+      </h1>
       {invitation && (
         <p className="mt-2 text-ui [overflow-wrap:anywhere] text-muted">
           {nb(t('invitedTo', { name: invitation.organizationName }))}
@@ -185,6 +178,8 @@ export function AuthForm({
 
       <form
         ref={formRef}
+        aria-labelledby={titleId}
+        // tous les champs sont obligatoires (required les signale) ; la validation reste celle du serveur
         noValidate
         action={state.twoFactor ? twoFactorAction : formAction}
         className="mt-6 grid gap-4"
@@ -208,6 +203,7 @@ export function AuthForm({
                 spellCheck={false}
                 autoFocus
                 maxLength={backupCode ? 11 : 6}
+                required
                 className={CONTROL_FIX}
               />
             </Field>
@@ -253,6 +249,7 @@ export function AuthForm({
                       autoComplete={f.autoComplete}
                       value={confirmation}
                       onChange={(event) => setConfirmation(event.target.value)}
+                      required
                       className={CONTROL_FIX}
                     />
                   ) : isPw ? (
@@ -264,6 +261,7 @@ export function AuthForm({
                         spellCheck={false}
                         value={isSignup ? password : undefined}
                         onChange={isSignup ? (event) => setPassword(event.target.value) : undefined}
+                        required
                         className={`pr-[84px] ${CONTROL_FIX}`}
                       />
                       <button
@@ -284,6 +282,7 @@ export function AuthForm({
                       defaultValue={state.values?.[f.name]}
                       // à l'arrivée, le premier champ reçoit le focus
                       autoFocus={i === 0}
+                      required
                       className={CONTROL_FIX}
                       {...(f.type === 'email'
                         ? { inputMode: 'email', autoCapitalize: 'none', spellCheck: false }
@@ -293,6 +292,7 @@ export function AuthForm({
                 </Field>
                 {isPw && isSignup && !isConfirmation && (
                   <p
+                    aria-live="polite"
                     className={`mt-1.5 text-label ${password.length >= 8 ? 'text-success' : 'text-muted'}`}
                   >
                     {password.length >= 8 ? '✓' : '○'} {t('passwordMinLength')}

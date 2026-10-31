@@ -49,12 +49,13 @@ function RightsVisual() {
   const sample = useTranslations('site.sample');
   const common = useTranslations('site.common');
   const plane =
-    'absolute inset-0 rounded-[22px] border p-5 shadow-[0_40px_80px_-40px_rgba(0,0,0,.55),inset_0_1px_0_var(--hi)]';
+    'absolute inset-0 rounded-[22px] border p-5 shadow-[var(--shadow),inset_0_1px_0_var(--hi)]';
   return (
     <figure className="relative overflow-x-clip">
       <div
         aria-hidden="true"
-        className="pg-iso relative grid min-h-[400px] place-items-center sm:min-h-[500px]"
+        // en colonne (sous lg) la pile peut déborder sur les boutons du héros : elle ne capte pas le tap
+        className="pg-iso relative grid min-h-[400px] place-items-center max-lg:pointer-events-none sm:min-h-[500px]"
       >
         <div className="site-halo pointer-events-none absolute inset-0 opacity-80 [mask:radial-gradient(closest-side,#000,transparent)]" />
         <div className="pg-iso-stage relative h-[200px] w-[270px] sm:h-[250px] sm:w-[370px]">
@@ -127,7 +128,7 @@ function RightsVisual() {
           </div>
         </div>
       </div>
-      <figcaption className="-mt-14 text-center font-mono text-meta tracking-normal text-muted sm:-mt-20">
+      <figcaption className="-mt-14 text-center font-mono text-meta tracking-normal text-muted sm:-mt-2">
         <span className="sr-only">{nb(t('visualCaption'))}</span>
         {common('fictional')}
       </figcaption>
@@ -180,7 +181,7 @@ export function SecuritePage() {
                   <h3 className="mt-5 text-ui font-bold tracking-[-0.01em] text-fg">
                     {nb(f.title)}
                   </h3>
-                  <p className="mt-2 text-label leading-[1.6] text-fg-2">{nb(f.text)}</p>
+                  <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(f.text)}</p>
                 </Tilt>
               </li>
             );
@@ -267,7 +268,10 @@ export function SecuritePage() {
                   key={n}
                   className="site-reveal flex items-start gap-4 rounded-box border border-line bg-panel px-4 py-3.5 shadow-hi transition-[translate,border-color] duration-300 ease-out hover:translate-x-1 hover:border-warning-line"
                 >
-                  <span className="mt-0.5 font-mono text-meta tracking-normal text-warning">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 font-mono text-meta tracking-normal text-warning"
+                  >
                     0{i + 1}
                   </span>
                   <span className="text-ui leading-[1.55] text-fg">{nb(n)}</span>

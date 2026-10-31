@@ -73,7 +73,6 @@
   from {
     opacity: 0;
     transform: translateY(0.35em) rotateX(-80deg);
-    filter: blur(8px);
   }
 }
 
@@ -111,6 +110,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
+}
+/* la couche n'est réservée que pendant que la sphère tourne */
+.fx-sphere[data-running] .fx-sphere-item {
   will-change: transform, opacity;
 }
 
@@ -127,7 +129,7 @@
   inset: 0;
   transform-style: preserve-3d;
   transform: translateZ(calc(var(--z) * var(--gap, 104px)));
-  transition: transform 0.9s var(--ease-spring);
+  transition: transform 0.9s var(--ease-out);
 }
 .fx-layers:hover .fx-layer,
 .fx-layers:focus-within .fx-layer {

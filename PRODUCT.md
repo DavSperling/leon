@@ -34,7 +34,7 @@ Rien n'est transformé : le brut est gardé tel quel, pas de fiche, pas de résu
 
 ## Operating Context
 
-- Outils reliés : 39 connecteurs sur le site (Gmail, Drive, Slack, GitHub, GitLab, Linear, Notion, Sentry… ; 48 logos dans `public/logos`), relevés par tâches de fond toutes les 15 minutes environ, dans le processus de l'application.
+- Outils reliés : 42 connecteurs sur le site (Gmail, Drive, Slack, GitHub, GitLab, Linear, Notion, Sentry… ; 48 logos dans `public/logos`), relevés par tâches de fond toutes les 15 minutes environ, dans le processus de l'application.
 - Conversations d'IA : captées par l'extension Chrome (`extension/`) et importées depuis Claude Code par le CLI (`pnpm leon`). Les secrets reconnaissables à leur forme sont masqués avant stockage.
 - Surfaces web : le site public sans session (accueil, produit, cas d'usage par équipe, connecteurs, sécurité, tarifs, connexion, inscription), puis l'application (recherche, discussions, connexions, documents, réglages, tableau admin), et les écrans d'authentification (invitation par lien, 2FA, mot de passe oublié, suppression de compte).
 - Un espace par société ; l'invitation se fait par lien ; un organigramme managers/équipes est en cours (PR #69).

@@ -94,9 +94,9 @@ function TeamCard({ team }: { team: Team }) {
               className="size-5 text-muted transition-[translate,color] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent"
             />
           </span>
-          <span className="relative mt-6 text-title font-bold tracking-[-0.02em] text-fg">
+          <h3 className="relative mt-6 text-title font-bold tracking-[-0.02em] text-fg">
             {team.label}
-          </span>
+          </h3>
           <span className="relative mt-2 text-body leading-[1.55] text-fg-2">{nb(team.pitch)}</span>
           <span className="relative mt-auto flex items-center gap-2 pt-7">
             <span className="flex -space-x-2">
@@ -156,7 +156,14 @@ function SituationsSection({ situations, lead }: { situations: Situation[]; lead
         title={t('situationsTitle')}
         lead={lead}
       />
-      <ul className="mt-10 grid gap-4 md:grid-cols-2">
+      {/* une seule situation : une carte à sa largeur, pas une grille à moitié vide */}
+      <ul
+        className={
+          situations.length > 1
+            ? 'mt-10 grid gap-4 md:grid-cols-2'
+            : 'mt-10 grid max-w-[640px] gap-4'
+        }
+      >
         {situations.map((s) => (
           <SituationCard key={s.id} s={s} />
         ))}
@@ -375,7 +382,7 @@ export function EquipePage({ team }: { team: Team }) {
               {team.tools.map((id) => (
                 <li
                   key={id}
-                  className="flex items-center gap-3 rounded-field border border-line bg-glass-2 px-3 py-2.5 shadow-hi transition-[translate,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-accent-line"
+                  className="flex items-center gap-3 rounded-field border border-line bg-glass-2 px-3 py-2.5 shadow-hi"
                 >
                   <ToolLogo id={id} size={30} />
                   <span className="min-w-0 truncate text-ui font-semibold text-fg-2">

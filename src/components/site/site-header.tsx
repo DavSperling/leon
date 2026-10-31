@@ -194,6 +194,7 @@ export function SiteHeader() {
   const cta = useTranslations('site.cta');
   const { navLinks } = useSiteContent();
   const pathname = usePathname();
+  const onSignUp = pathname === '/inscription';
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -258,19 +259,19 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-1.5 max-[960px]:ml-auto">
           <ThemeButton className="max-[960px]:hidden" />
+          {/* sur /inscription, les deux boutons s'échangent : le principal ne mène jamais à la page courante */}
           <Link
-            href="/connexion"
-            aria-current={pathname === '/connexion' ? 'page' : undefined}
+            href={onSignUp ? '/inscription' : '/connexion'}
+            aria-current={onSignUp || pathname === '/connexion' ? 'page' : undefined}
             className="inline-flex h-10 items-center rounded-full px-4 text-ui font-semibold whitespace-nowrap text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg max-[960px]:hidden"
           >
-            {cta('signIn')}
+            {onSignUp ? cta('create') : cta('signIn')}
           </Link>
           <Link
-            href="/inscription"
-            aria-current={pathname === '/inscription' ? 'page' : undefined}
+            href={onSignUp ? '/connexion' : '/inscription'}
             className="site-cta inline-flex h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-ui font-semibold whitespace-nowrap text-accent-ink transition-[filter,scale] duration-200 hover:brightness-[1.06] active:scale-[.97] max-[420px]:px-3.5"
           >
-            {cta('create')}
+            {onSignUp ? cta('signIn') : cta('create')}
           </Link>
           <div className="min-[960px]:hidden">
             <MobileMenu pathname={pathname} />

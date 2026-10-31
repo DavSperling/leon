@@ -66,15 +66,12 @@ export function TeamTabs({
   const { teams } = useSiteContent();
   return (
     <Tabs.Root defaultValue={teams[0]?.slug} className={cn('site-reveal', className)}>
-      <Tabs.List
-        aria-label={t('list')}
-        className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0"
-      >
+      <Tabs.List aria-label={t('list')} className="flex flex-wrap justify-center gap-2">
         {teams.map((team) => (
           <Tabs.Trigger
             key={team.slug}
             value={team.slug}
-            className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-glass-3 px-4 text-ui font-semibold text-fg-2 backdrop-blur-[12px] transition-[border-color,background-color,color] duration-200 hover:border-line-strong hover:text-fg data-[state=active]:border-accent-line data-[state=active]:bg-accent-soft data-[state=active]:text-accent"
+            className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-glass-3 px-4 text-ui font-semibold text-fg-2 transition-[border-color,background-color,color] duration-200 hover:border-line-strong hover:text-fg data-[state=active]:border-accent-line data-[state=active]:bg-accent-soft data-[state=active]:text-accent"
           >
             <team.icon
               aria-hidden="true"
@@ -88,7 +85,7 @@ export function TeamTabs({
 
       {teams.map((team) => (
         <Tabs.Content key={team.slug} value={team.slug} className="mt-6 rounded-panel">
-          <div className="fade-in grid gap-6 rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-5 shadow-panel backdrop-blur-[30px] sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
+          <div className="fade-in grid gap-6 rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-5 shadow-panel sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
             <div className="flex flex-col">
               <h3 className="text-[clamp(24px,2.8vw,32px)] leading-[1.15] font-bold tracking-[-0.03em] text-balance text-fg">
                 {nb(team.headline)}

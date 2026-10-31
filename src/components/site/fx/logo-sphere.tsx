@@ -10,7 +10,8 @@ import { ToolLogo } from '../parts';
 
 // Sphère des outils en 3D : chaque logo sur une sphère de Fibonacci, qui tourne seule et se lance au doigt ou à la
 // souris (avec de l'élan). Profondeur rendue par la taille, l'opacité et l'ordre d'empilement ; Leon au centre.
-// Seuls transform et opacity changent, une fois par image. En pause hors de l'écran ; figée en mouvement réduit.
+// Seuls transform et opacity changent à chaque image (l'ordre, par tranches, ne change qu'en passant une tranche).
+// En pause hors de l'écran ; figée en mouvement réduit ou quand les animations sont arrêtées.
 // Les lecteurs d'écran lisent la liste des outils (sr-only), pas la sphère.
 
 const fibonacci = (n: number) =>
@@ -75,9 +76,8 @@ export function LogoSphere({
         const depth = (z2 + 1) / 2; // 0 au fond, 1 devant
         const scale = (0.55 + depth * 0.6) * fit;
         node.style.transform = `translate3d(${(x1 * radius).toFixed(1)}px, ${(y2 * radius).toFixed(1)}px, 0) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
-        node.style.opacity = (0.22 + depth * 0.78).toFixed(3);
-        node.style.zIndex = String(Math.round(depth * 100));
-        node.style.filter = depth < 0.35 ? `blur(${((0.35 - depth) * 4).toFixed(2)}px)` : 'none';
+        node.style.opacity = (0.18 + depth * 0.82).toFixed(3);
+        node.style.zIndex = String(Math.round(depth * 4) * 25);
       }
     };
 
@@ -100,10 +100,12 @@ export function LogoSphere({
     const play = () => {
       if (running || isInstant() || !visible || document.hidden) return;
       running = true;
+      el.dataset.running = '';
       raf = requestAnimationFrame(loop);
     };
     const pause = () => {
       running = false;
+      delete el.dataset.running;
       cancelAnimationFrame(raf);
     };
 
@@ -146,6 +148,9 @@ export function LogoSphere({
     io.observe(el);
     const onVisibility = () => (document.hidden ? pause() : play());
     document.addEventListener('visibilitychange', onVisibility);
+    // « Arrêter les animations » : on s'arrête ou on repart
+    const mo = new MutationObserver(() => (isInstant() ? pause() : play()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
     el.addEventListener('pointerdown', down);
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerup', up);
@@ -155,6 +160,7 @@ export function LogoSphere({
       pause();
       ro.disconnect();
       io.disconnect();
+      mo.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
       el.removeEventListener('pointerdown', down);
       el.removeEventListener('pointermove', move);
@@ -192,7 +198,7 @@ export function LogoSphere({
             // placés par l'effet à la première image : rien ne s'empile au centre avant
             style={{ opacity: 0 }}
           >
-            <ToolLogo id={id} size={size} lazy={false} />
+            <ToolLogo id={id} size={size} />
           </div>
         ))}
       </div>

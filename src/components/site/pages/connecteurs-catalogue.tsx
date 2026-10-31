@@ -74,7 +74,7 @@ export function ConnecteursCatalogue() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <fieldset className="min-w-0">
           <legend className="sr-only">{t('family')}</legend>
-          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          <div className="-mx-5 -mt-1 flex gap-2 overflow-x-auto px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             <Pill
               variant={family === 'tous' ? 'active' : 'default'}
               aria-pressed={family === 'tous'}
@@ -82,7 +82,7 @@ export function ConnecteursCatalogue() {
               className={PILL}
             >
               {t('all')}
-              <span className="font-mono text-[11px]">{ALL_TOOLS.length}</span>
+              <span className="font-mono text-label">{ALL_TOOLS.length}</span>
             </Pill>
             {toolGroups.map((g) => (
               <Pill
@@ -93,7 +93,7 @@ export function ConnecteursCatalogue() {
                 className={PILL}
               >
                 {g.label}
-                <span className="font-mono text-[11px]">{g.tools.length}</span>
+                <span className="font-mono text-label">{g.tools.length}</span>
               </Pill>
             ))}
           </div>
@@ -143,16 +143,13 @@ export function ConnecteursCatalogue() {
             const oauth = OAUTH.has(id);
             return (
               <li key={id} className="fade-in min-w-0">
-                <Tilt
-                  max={10}
-                  scale={1.04}
-                  className="group flex h-full min-w-0 items-center gap-3 rounded-box border border-line bg-panel p-3 shadow-hi transition-[border-color,box-shadow] duration-300 hover:border-accent-line hover:shadow-panel sm:flex-col sm:items-start sm:gap-4 sm:p-4"
-                >
+                {/* pas de bordure ni de zoom au survol : la carte ne se clique pas */}
+                <Tilt className="flex h-full min-w-0 items-center gap-3 rounded-box border border-line bg-panel p-3 shadow-hi sm:flex-col sm:items-start sm:gap-4 sm:p-4">
                   <ToolLogo id={id} size={44} className="fx-pop max-sm:size-9!" />
                   {/* sur mobile, l'icône du branchement est en haut à droite : le nom s'arrête avant */}
                   <div className="min-w-0 flex-1 max-sm:pr-5 sm:flex-none">
-                    <p className="truncate text-ui font-semibold text-fg">{toolLabel(id)}</p>
-                    <p className="mt-0.5 font-mono text-meta tracking-normal text-muted">
+                    <p className="text-ui font-semibold text-fg">{toolLabel(id)}</p>
+                    <p className="mt-0.5 font-mono text-label tracking-normal text-muted">
                       {fam ? familyLabels[fam] : ''}
                     </p>
                   </div>

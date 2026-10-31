@@ -721,7 +721,9 @@
       "pricing": "Pricing",
       "trust": "Trust",
       "account": "Account",
-      "language": "Language"
+      "language": "Language",
+      "motionOff": "Stop animations",
+      "motionOn": "Resume animations"
     },
     "auth": {
       "aside": "Leon at a glance",
@@ -744,8 +746,6 @@
           "text": "Leon searches everything it has indexed and cites each source."
         }
       },
-      "signUpKicker": "Three steps",
-      "signInKicker": "Welcome back",
       "signUpTitle": "Create a workspace, connect a tool, ask your first question.",
       "signInTitle": "Everything your team said, ",
       "signInTitleAccent": "on record.",
@@ -1147,17 +1147,17 @@
       "recommended": "Recommended",
       "heroTitle": "€25 per active user per month, after a free pilot.",
       "heroAccent": "after a free pilot.",
-      "heroLead": "Pilot it free with one team, on your real tools. After that, you pay only for accounts active that month.",
+      "heroLead": "Pilot it free with one team, on your real tools. After that, a price per active user, once billing is in place.",
       "plans": "Plans",
-      "taxNote": "Prices exclude VAT. No commitment.",
+      "taxNote": "Proposed prices, excluding VAT: billing is not in place yet.",
       "everywhereKicker": "In every plan",
       "everywhereTitle": "Every feature, on every plan.",
       "everywhereLead": "Plans differ only by team size and hosting.",
       "faqKicker": "Questions",
-      "faqTitle": "Frequently asked questions.",
+      "faqTitle": "Before you start.",
       "faqLead": "Something else? Start the free pilot and see what Leon indexes from your own tools.",
       "ctaTitle": "Start with the pilot.",
-      "ctaText": "30 days, one team of up to 10 people, all {count} connectors."
+      "ctaText": "Free, with one team, on all {count} connectors."
     }
   }
 }

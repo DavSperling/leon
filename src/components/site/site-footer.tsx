@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { setLocaleAction } from '@/app/(app)/reglages/actions';
 import { Brand } from '@/components/verre/shell/brand';
+import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { useSiteContent } from './content';
+import { MotionSwitch } from './motion-switch';
 import { Container } from './parts';
 
 // Chaque langue écrite dans sa langue (et marquée lang=) : « Français » se lit en français, même sur le site anglais.
@@ -35,13 +37,33 @@ function LanguageSwitch() {
   );
 }
 
+/** La dernière ligne du pied : la langue et l'arrêt des animations. Seule sur les pages de connexion. */
+export function SiteFooterBar({ className }: { className?: string }) {
+  const { taglines } = useSiteContent();
+  return (
+    <div
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-3 font-mono text-meta tracking-normal text-muted',
+        className,
+      )}
+    >
+      <span>© 2026 Leon</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <LanguageSwitch />
+        <MotionSwitch />
+      </div>
+      <span>{nb(taglines.source)}</span>
+    </div>
+  );
+}
+
 /** Pied du site : la promesse, quatre colonnes de liens, le grand mot « Leon » en filigrane. */
 export function SiteFooter() {
   const t = useTranslations('site.footer');
   const common = useTranslations('site.common');
   const cta = useTranslations('site.cta');
   const security = useTranslations('site.security');
-  const { taglines, teams } = useSiteContent();
+  const { teams, taglines } = useSiteContent();
   const columns = [
     {
       title: t('product'),
@@ -104,11 +126,7 @@ export function SiteFooter() {
             ))}
           </nav>
         </div>
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 font-mono text-meta tracking-normal text-muted">
-          <span>© 2026 Leon</span>
-          <LanguageSwitch />
-          <span>{nb(taglines.source)}</span>
-        </div>
+        <SiteFooterBar className="mt-14 border-t border-line pt-6" />
       </Container>
       <p
         aria-hidden="true"

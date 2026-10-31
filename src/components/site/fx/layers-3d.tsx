@@ -32,11 +32,11 @@ function Plane({
     <div className="fx-layer" style={{ '--z': z } as CSSProperties}>
       <div
         className={cn(
-          'absolute inset-0 overflow-hidden rounded-[22px] border border-line-strong bg-[linear-gradient(160deg,color-mix(in_srgb,var(--menu)_55%,transparent),color-mix(in_srgb,var(--menu)_28%,transparent))] p-5 shadow-[0_40px_80px_-40px_rgba(0,0,0,.55),inset_0_1px_0_var(--hi),0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)] backdrop-blur-[2px]',
+          'absolute inset-0 overflow-hidden rounded-[22px] border border-line-strong bg-[linear-gradient(160deg,color-mix(in_srgb,var(--menu)_55%,transparent),color-mix(in_srgb,var(--menu)_28%,transparent))] p-5 shadow-[var(--shadow),inset_0_1px_0_var(--hi),0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)] backdrop-blur-[2px]',
           className,
         )}
       >
-        <p className="font-mono text-[11px] tracking-[0.08em] text-accent uppercase">{label}</p>
+        <p className="font-mono text-meta tracking-[0.08em] text-accent uppercase">{label}</p>
         {children}
       </div>
     </div>
@@ -63,7 +63,7 @@ export function Layers3D({ className }: { className?: string }) {
                 <span className="truncate text-label font-semibold text-fg">
                   {nb(sample(title))}
                 </span>
-                <span className="ml-auto font-mono text-[11px] text-fg-2">
+                <span className="ml-auto font-mono text-meta text-fg-2">
                   {kind === 'Ticket' || kind === 'Note' ? kind : sample(kind)}
                 </span>
               </li>
@@ -78,10 +78,10 @@ export function Layers3D({ className }: { className?: string }) {
               </p>
             ))}
             <div className="mt-2 flex gap-2">
-              <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10.5px] text-accent">
+              <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-meta text-accent">
                 {t('fullText')}
               </span>
-              <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-[10.5px] text-accent">
+              <span className="rounded-full border border-accent-line bg-accent-soft px-2.5 py-1 text-meta text-accent">
                 {t('semantic')}
               </span>
             </div>
@@ -92,14 +92,12 @@ export function Layers3D({ className }: { className?: string }) {
             <div className="flex items-center gap-3 rounded-[12px] border border-line bg-glass-3 px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-ok" />
               <span className="text-label font-semibold text-fg">{t('team')}</span>
-              <span className="ml-auto font-mono text-[11px] text-fg-2">{t('teamTools')}</span>
+              <span className="ml-auto font-mono text-meta text-fg-2">{t('teamTools')}</span>
             </div>
             <div className="flex items-center gap-3 rounded-[12px] border border-accent-line bg-accent-soft px-3 py-2.5">
               <span className="size-2.5 rounded-full bg-accent" />
               <span className="text-label font-semibold text-accent">{t('you')}</span>
-              <span className="ml-auto font-mono text-[10.5px] text-muted">
-                {t('aiConversations')}
-              </span>
+              <span className="ml-auto font-mono text-meta text-muted">{t('aiConversations')}</span>
             </div>
           </div>
         </Plane>

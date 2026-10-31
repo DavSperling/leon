@@ -59,7 +59,9 @@ function PlanCard({ plan, i }: { plan: SiteContent['plans'][number]; i: number }
               </span>
             )}
           </div>
-          <p className="relative mt-2 text-body text-fg-2 lg:min-h-[3lh]">{nb(plan.text)}</p>
+          <p className="relative mt-2 text-body text-pretty text-fg-2 lg:min-h-[3lh]">
+            {nb(plan.text)}
+          </p>
           <p className="fx-pop relative mt-7 flex items-baseline gap-2 [--pop:46px]">
             <span
               className={cn(
@@ -125,7 +127,7 @@ export function TarifsPage() {
         <h2 id="plans-titre" className="sr-only">
           {t('plans')}
         </h2>
-        <ul className="mx-auto grid max-w-[1080px] items-stretch gap-4 lg:grid-cols-3">
+        <ul className="mx-auto grid max-w-[520px] items-stretch gap-4 lg:max-w-[1080px] lg:grid-cols-3">
           {plans.map((p, i) => (
             <PlanCard key={p.id} plan={p} i={i} />
           ))}

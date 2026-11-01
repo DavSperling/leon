@@ -10,6 +10,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note (MCP)',
   document: 'Document',
+  passation: 'Passation',
   ...PROVIDER_LABELS,
 };
 

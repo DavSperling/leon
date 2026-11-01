@@ -51,7 +51,7 @@ export const PROVIDER_IDS = [
   'slack',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
-export const SOURCE_KINDS = [...CAPTURE_KINDS, 'document', ...PROVIDER_IDS] as const;
+export const SOURCE_KINDS = [...CAPTURE_KINDS, 'document', 'passation', ...PROVIDER_IDS] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 // Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan du deuxième jet).
 // Elle s'écrit dans `sources.metadata.nature`. Une nature absente (les conversations captées n'en écrivent pas)

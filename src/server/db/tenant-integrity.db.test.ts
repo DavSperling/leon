@@ -93,6 +93,8 @@ const COMPOSITE_KEYS = [
   'passages.source_id → sources',
   'passages.turn_id → turns',
   'passages_a_vectoriser.passage_id → passages',
+  'passation_items.source_id → sources',
+  'passation_liens.source_id → sources',
   'read_log.source_id → sources',
   'turns.source_id → sources',
 ];

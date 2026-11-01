@@ -46,7 +46,7 @@ export type ParsedNote = { resume: string | null; items: ParsedItem[]; noteLinks
 
 const RESUME_HEADING = /^##\s*o[uù]\s+j['’]en\s+suis\s*$/i;
 const ANY_HEADING = /^#{1,6}\s/;
-const ITEM_LINE = /^\s*-\s*\[([^\]]{1,40})\]\s+(.+?)\s*$/;
+const ITEM_LINE = /^\s*-\s*\[([^\]]{1,40})\]\s+(\S.*)$/;
 const LINK_LINE = /^\s*-\s*([\p{L}\p{N}_-]{1,60})\s+\[\[([^\]\n]{1,200})\]\]\s*$/u;
 const LIST_LINE = /^\s*-\s/;
 
@@ -55,19 +55,26 @@ export function parseNote(text: string): ParsedNote {
   const noteLinks: ParsedLink[] = [];
   const resumeLines: string[] = [];
   let inResume = false;
+  let resumeDone = false;
 
-  for (const line of text.split(/\r?\n/)) {
+  // Borné et normalisé : les clients macOS envoient parfois du NFD.
+  for (const line of text.normalize('NFC').slice(0, NOTE_MAX_CHARS).split(/\r?\n/)) {
     if (RESUME_HEADING.test(line.trim())) {
-      inResume = true;
+      // le premier résumé est définitif
+      inResume = !resumeDone;
+      resumeDone = true;
       continue;
     }
-    if (inResume && (ANY_HEADING.test(line) || LIST_LINE.test(line))) inResume = false;
+    if (inResume && (ANY_HEADING.test(line) || LIST_LINE.test(line))) {
+      inResume = false;
+      resumeDone = true;
+    }
     if (inResume) {
       resumeLines.push(line);
       continue;
     }
 
-    const item = ITEM_LINE.exec(line);
+    const item = ITEM_LINE.exec(line.trimEnd());
     const type = item ? TYPE_BY_TAG[item[1]?.trim().toLowerCase() ?? ''] : undefined;
     if (item && type) {
       items.push({

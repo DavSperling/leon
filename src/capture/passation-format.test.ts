@@ -68,6 +68,28 @@ describe('parseNote', () => {
     expect(parseNote(`- [décision] ${long}`).items[0]?.texte).toHaveLength(2000);
   });
 
+  it('reconnaît un tag décomposé (NFD) comme un tag normal', () => {
+    expect(parseNote('- [de\u0301cision] x').items[0]?.type).toBe('decision');
+    expect(parseNote('- [décision] x\n- conce\u0301rne [[D1]]').items[0]?.links[0]?.relation).toBe(
+      'concérne',
+    );
+  });
+
+  it('ignore un élément dont le texte est vide ou fait d’espaces', () => {
+    expect(parseNote('- [décision]   \n- [question]').items).toEqual([]);
+  });
+
+  it('ne regarde que les premiers NOTE_MAX_CHARS et reste rapide sur un million d’espaces', () => {
+    const text = `- [décision] a\n${' '.repeat(1_000_000)}\n- [décision] b`;
+    const debut = Date.now();
+    expect(parseNote(text).items).toHaveLength(1);
+    expect(Date.now() - debut).toBeLessThan(500);
+  });
+
+  it('garde le premier résumé et ignore les suivants', () => {
+    expect(parseNote('## Où j’en suis\nA\n\n## Où j’en suis\nB').resume).toBe('A');
+  });
+
   it('décrit un numéro court', () => {
     expect(NUMERO_PATTERN.test('D12')).toBe(true);
     expect(NUMERO_PATTERN.test('X1')).toBe(false);

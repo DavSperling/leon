@@ -34,9 +34,20 @@ export const SUMMARY_PROMPT = `You are given a condensed Claude Code session on 
 Only facts present in the session. No secrets, nothing personal or sensitive. Omit empty categories.`;
 // Options vérifiées sur `claude --help` (Claude Code 2.1.280, le 01/11/2026) : `--max-turns` n'y figure pas ; sans
 // outil (`--tools ""`), le modèle répond en un seul tour. `--no-session-persistence` : le résumé ne laisse pas de
-// fichier de session, qu'un import ultérieur capterait. `--bare` couperait les crochets mais ne lit pas l'abonnement.
+// fichier de session, qu'un import ultérieur capterait. `--strict-mcp-config` sans `--mcp-config` : aucun serveur MCP,
+// sinon le modèle pourrait appeler passation_ecrire lui-même. `--bare` couperait les crochets mais ne lit pas
+// l'abonnement.
 function summaryArgs(prompt: string): string[] {
-  return ['-p', prompt, '--model', 'haiku', '--tools', '', '--no-session-persistence'];
+  return [
+    '-p',
+    prompt,
+    '--model',
+    'haiku',
+    '--tools',
+    '',
+    '--strict-mcp-config',
+    '--no-session-persistence',
+  ];
 }
 
 export function isFallbackRun(env: Record<string, string | undefined>): boolean {

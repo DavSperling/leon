@@ -72,6 +72,7 @@
     "discussions": "Chat",
     "documents": "Documents",
     "connections": "Connections",
+    "developers": "Developers",
     "settings": "Settings"
   },
   "documents": {
@@ -113,6 +114,25 @@
       "ignored": "File skipped: it often holds passwords or keys (configuration, private key), or is only generated.",
       "failed": "Couldn’t save this document. Try again."
     }
+  },
+  "developers": {
+    "title": "Developers",
+    "subtitle": "Your team’s Claude Code sessions, by repository, and the latest handoff notes.",
+    "reposSection": "Team repositories",
+    "emptyTitle": "No shared session yet.",
+    "emptyDescription": "Claude Code sessions in a GitHub repository show up here once captured.",
+    "noSessions": "No shared session in this repository.",
+    "notes": "Latest handoff notes",
+    "repoSwitch": "Share my sessions on {repo}",
+    "untitled": "Untitled session",
+    "formerMember": "former member",
+    "by": "{name} · {when}",
+    "makePrivate": "Make private",
+    "makePrivateLabel": "Make session {title} private",
+    "share": "Share",
+    "shareLabel": "Share session {title}",
+    "privateSection": "My private sessions",
+    "privateDescription": "Linked to a repository, visible to you only."
   },
   "shell": {
     "skipToContent": "Skip to content",

@@ -919,3 +919,13 @@ describe('le README', () => {
     expect(source).toContain('--bare');
   });
 });
+
+describe('installHooks : ce que voit l’équipe', () => {
+  it('dit que les sessions dans un dépôt GitHub sont visibles par l’équipe, et où les rendre privées', async () => {
+    const { output } = await install({ assumeYes: true });
+
+    expect(output).toContain('visible to your team on Leon');
+    expect(output).toContain('Developers space');
+    expect(output).not.toContain('stays private to its author');
+  });
+});

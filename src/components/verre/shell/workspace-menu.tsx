@@ -20,7 +20,13 @@ import { initialOf } from './brand';
 import { LABEL, railOnly, useRailCollapsed } from './rail';
 
 /** La personne connectée et son organisation (getViewerProfile). */
-export type Viewer = { organizationName: string; userName: string; userEmail: string };
+// `developer` : le membre code (voir isDeveloper) ; la barre et la palette lui montrent « Développeurs ».
+export type Viewer = {
+  organizationName: string;
+  userName: string;
+  userEmail: string;
+  developer?: boolean;
+};
 
 // Repliée, la carte perd son cadre : il reste l'initiale (cible de 40 px), qui ouvre le même menu, à droite.
 const FOLDED =

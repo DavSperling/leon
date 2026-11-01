@@ -3,7 +3,7 @@ import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
 import type { IngestPayload, IngestResult } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
+import { depotsPrives, ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -74,11 +74,12 @@ export async function insertNewTurns(
   return { ids: inserted.map((row) => row.id), lastTs };
 }
 
-// Les tours vides après nettoyage sont ignorés.
+// Les tours vides après nettoyage sont ignorés. Un tour a l'accès de sa source.
 function captureRows(
   ctx: TenantContext,
   sourceId: string,
   payloadTurns: IngestPayload['turns'],
+  acl: string[],
 ): TurnRow[] {
   return payloadTurns.flatMap((turn) => {
     const text = prepareTurnText(turn.text);
@@ -92,7 +93,7 @@ function captureRows(
         text,
         ts: new Date(turn.ts),
         captureMode: turn.capture_mode,
-        acl: [ctx.userId],
+        acl,
       },
     ];
   });
@@ -114,14 +115,52 @@ export async function updateSource(
     await tx.update(sources).set(set).where(eq(sources.id, sourceId));
 }
 
+const isGithubProject = (project: string | null | undefined) =>
+  project?.startsWith('github.com/') === true;
+
 // La clé de projet d'une session captée (C8) va dans `sources.metadata.project`, à côté des autres clés
-// (nature…) : le dernier projet reçu l'emporte, un envoi sans projet ne touche à rien.
-async function recordProject(tx: Tx, sourceId: string, project: string | undefined): Promise<void> {
-  if (project === undefined) return;
+// (nature…) : le dernier projet reçu l'emporte, un envoi sans projet ne touche à rien. Une session Claude Code qui
+// reçoit sa première clé GitHub est partagée à l'organisation, toutes ses lignes comprises (spec du 01/11/2026),
+// sauf si l'auteur a rendu ce dépôt privé. Une session déjà liée à GitHub garde son accès : un retrait tient.
+// Rend l'accès de la source, que ses nouveaux tours et son run recopient.
+async function recordProject(
+  tx: Tx,
+  ctx: TenantContext,
+  sourceId: string,
+  source: IngestPayload['source'],
+): Promise<string[]> {
+  const [before] = await tx
+    .select({ acl: sources.acl, project: sql<string | null>`${sources.metadata} ->> 'project'` })
+    .from(sources)
+    .where(eq(sources.id, sourceId))
+    // Verrouillée jusqu'à la fin : un regler_partage_session concurrent ne peut pas changer l'accès entre cette
+    // lecture et l'insertion des tours qui le recopient.
+    .for('update');
+  if (!before) throw new Error('source introuvable');
+  if (source.project === undefined) return before.acl;
   await tx
     .update(sources)
-    .set({ metadata: sql`${sources.metadata} || ${JSON.stringify({ project })}::jsonb` })
+    .set({
+      metadata: sql`${sources.metadata} || ${JSON.stringify({ project: source.project })}::jsonb`,
+    })
     .where(eq(sources.id, sourceId));
+  if (
+    source.kind !== 'claude_code' ||
+    isGithubProject(before.project) ||
+    !isGithubProject(source.project)
+  ) {
+    return before.acl;
+  }
+  const [hidden] = await tx
+    .select({ project: depotsPrives.project })
+    .from(depotsPrives)
+    .where(and(eq(depotsPrives.userId, ctx.userId), eq(depotsPrives.project, source.project)));
+  if (hidden) return before.acl;
+  // L'ACL des nouveaux tours suit la réponse de la base : si elle refuse, la session reste privée.
+  const { rows } = await tx.execute<{ ok: boolean }>(
+    sql`select regler_partage_session(${sourceId}::uuid, true) as ok`,
+  );
+  return rows[0]?.ok ? [ctx.tenantId] : before.acl;
 }
 
 export async function createIngestRun(
@@ -163,11 +202,14 @@ export async function ingestTurns(
       : maskSecrets(payload.source.title.replaceAll('\u0000', ''));
   const { sourceId, newTurnIds, ingestRunId } = await withTenant(ctx, async (tx) => {
     const sourceId = await upsertSource(tx, ctx, payload.source, title);
-    const { ids, lastTs } = await insertNewTurns(tx, captureRows(ctx, sourceId, payload.turns));
+    const acl = await recordProject(tx, ctx, sourceId, payload.source);
+    const { ids, lastTs } = await insertNewTurns(
+      tx,
+      captureRows(ctx, sourceId, payload.turns, acl),
+    );
     await updateSource(tx, sourceId, title, lastTs);
-    await recordProject(tx, sourceId, payload.source.project);
     if (ids.length === 0) return { sourceId, newTurnIds: ids, ingestRunId: null };
-    const ingestRunId = await createIngestRun(tx, ctx, sourceId, ids, [ctx.userId]);
+    const ingestRunId = await createIngestRun(tx, ctx, sourceId, ids, acl);
     return { sourceId, newTurnIds: ids, ingestRunId };
   });
   if (ingestRunId !== null) await enqueueIndexing(ctx, ingestRunId);

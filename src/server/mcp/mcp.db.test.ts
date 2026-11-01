@@ -9,6 +9,7 @@ import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/
 import { requestBriefingRefreshNow } from '@/server/briefing/queue';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { briefings, passages } from '@/server/db/schema/search';
+import { withTenant } from '@/server/db/with-tenant';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import * as registryModule from '@/server/embeddings/registry';
 import * as ingestModule from '@/server/ingest/ingest-turns';
@@ -128,6 +129,8 @@ describe('serveur MCP', () => {
       'passation_retirer',
       'remember',
       'search',
+      'session_partager',
+      'session_rendre_privee',
     ]);
     const byName = new Map(tools.map((tool) => [tool.name, tool]));
     expect(byName.get('search')?.annotations).toMatchObject({
@@ -157,6 +160,8 @@ describe('serveur MCP', () => {
       'remember',
       'passation_lire',
       'passation_ecrire',
+      'session_rendre_privee',
+      'session_partager',
       'title',
       'tool',
       'date',
@@ -1116,5 +1121,99 @@ describe('outil briefing', () => {
 
     expect(result.text).toBe(BRIEFING_PENDING_MARKDOWN);
     expect(JSON.stringify(result)).not.toContain('point privé de Paul');
+  });
+});
+
+describe('sessions partagées', () => {
+  const APP = 'github.com/acme/app';
+  const codeSession = (owner: TenantContext, title: string, lastTurnAt: Date, project = APP) =>
+    seedRun(owner, {
+      kind: 'claude_code',
+      title,
+      acl: [owner.tenantId],
+      metadata: { project },
+      lastTurnAt,
+    });
+  const visible = async (ctx: TenantContext, sourceId: string) =>
+    (
+      await withTenant(ctx, (tx) =>
+        tx.select({ id: sources.id }).from(sources).where(eq(sources.id, sourceId)),
+      )
+    ).length === 1;
+
+  it('sans argument : rend privée la dernière session partagée, session_partager la rend', async () => {
+    const { paul, marie } = await setupTeam();
+    const old = await codeSession(paul, 'Ancienne', daysAgo(2));
+    const last = await codeSession(paul, 'Dernière', daysAgo(0));
+    const client = await connect(paul);
+
+    const hidden = await call(client, 'session_rendre_privee');
+    expect(hidden.isError).toBeFalsy();
+    expect(hidden.text).toContain('Dernière');
+    expect(await visible(marie, last.sourceId)).toBe(false);
+    expect(await visible(marie, old.sourceId)).toBe(true);
+
+    const shared = await call(client, 'session_partager');
+    expect(shared.text).toContain('Dernière');
+    expect(await visible(marie, last.sourceId)).toBe(true);
+  });
+
+  it('avec session : l’auteur seul', async () => {
+    const { paul, marie } = await setupTeam();
+    const { sourceId } = await codeSession(paul, 'Cache', daysAgo(1));
+
+    const refused = await call(await connect(marie), 'session_rendre_privee', {
+      session: sourceId,
+    });
+    expect(refused.isError).toBe(true);
+    expect(await visible(marie, sourceId)).toBe(true);
+
+    const client = await connect(paul);
+    expect((await call(client, 'session_rendre_privee', { session: sourceId })).text).toContain(
+      'Cache',
+    );
+    expect(await visible(marie, sourceId)).toBe(false);
+    await call(client, 'session_partager', { session: sourceId });
+    expect(await visible(marie, sourceId)).toBe(true);
+  });
+
+  it('avec depot : tout le dépôt, sessions passées et suivantes', async () => {
+    const { paul, marie } = await setupTeam();
+    const first = await codeSession(paul, 'Un', daysAgo(2));
+    const second = await codeSession(paul, 'Deux', daysAgo(1));
+    const elsewhere = await codeSession(paul, 'Ailleurs', daysAgo(1), 'github.com/acme/autre');
+    const client = await connect(paul);
+
+    const hidden = await call(client, 'session_rendre_privee', { depot: 'acme/app' });
+    expect(hidden.isError).toBeFalsy();
+    expect(hidden.text).toContain(APP);
+    expect(await visible(marie, first.sourceId)).toBe(false);
+    expect(await visible(marie, second.sourceId)).toBe(false);
+    expect(await visible(marie, elsewhere.sourceId)).toBe(true);
+    const next = await ingestModule.ingestTurns(paul, {
+      source: { kind: 'claude_code', external_id: `session-${crypto.randomUUID()}`, project: APP },
+      turns: [
+        {
+          external_id: 'm1',
+          role: 'user',
+          text: 'Suite du cache',
+          ts: new Date().toISOString(),
+          capture_mode: 'file',
+        },
+      ],
+    });
+    expect(await visible(marie, next.sourceId)).toBe(false);
+
+    await call(client, 'session_partager', { depot: 'github.com/acme/app' });
+    for (const id of [first.sourceId, second.sourceId, next.sourceId]) {
+      expect(await visible(marie, id)).toBe(true);
+    }
+  });
+
+  it('refuse un dépôt qui n’est pas sur GitHub', async () => {
+    const result = await call(await connect(await setupPaul()), 'session_rendre_privee', {
+      depot: 'dossier:0123456789abcdef',
+    });
+    expect(result.isError).toBe(true);
   });
 });

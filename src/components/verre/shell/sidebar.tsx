@@ -11,7 +11,7 @@ import { cn } from '@/lib/verre/cn';
 import { spring } from '@/lib/verre/motion';
 import type { ChannelHealth } from '@/server/memory/sources';
 import { Brand } from './brand';
-import { NAV, sectionOf } from './nav';
+import { navFor, sectionOf } from './nav';
 import { usePalette } from './palette-context';
 import { EASE, EASE_FOLD, LABEL, railOnly, toggleRail, useRailCollapsed } from './rail';
 import { type Viewer, WorkspaceMenu } from './workspace-menu';
@@ -28,16 +28,18 @@ export const ROW_ICON = 'relative size-4 shrink-0 transition-colors duration-200
 export function NavList({
   onNavigate,
   inkId = 'nav-ink',
+  developer = false,
 }: {
   onNavigate?: () => void;
   inkId?: string;
+  developer?: boolean;
 }) {
   // section active calculée ici : sous l'infobulle (Slot de Radix), une className en fonction serait changée en texte
   const current = sectionOf(usePathname());
   const t = useTranslations('navigation');
   return (
     <ul className="grid grid-cols-[minmax(0,1fr)] gap-0.5">
-      {NAV.map((item) => {
+      {navFor(developer).map((item) => {
         const { href, labelKey, icon: Icon } = item;
         const label = t(labelKey);
         const isActive = item === current;
@@ -199,7 +201,7 @@ export function Sidebar({ stale, className, ...viewer }: SidebarProps) {
         </button>
       </Tooltip>
       <nav aria-label={shellT('primaryNavigation')}>
-        <NavList />
+        <NavList developer={viewer.developer} />
       </nav>
       <MemoryStatus stale={stale} className="mt-auto" />
     </aside>

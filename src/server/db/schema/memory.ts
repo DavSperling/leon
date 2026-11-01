@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, jsonb, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { organizations, users } from './auth';
 
@@ -86,3 +86,17 @@ export const readLog = pgTable('read_log', {
   acl: acl(),
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Les dépôts dont un membre garde ses sessions Claude Code privées (0044). Écrits par regler_partage_depot seule.
+export const depotsPrives = pgTable(
+  'depots_prives',
+  {
+    tenantId: tenantId(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    project: text('project').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [primaryKey({ columns: [table.tenantId, table.userId, table.project] })],
+);

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngestPayload, Turn } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -320,5 +320,95 @@ describe('ingestTurns', () => {
     expect((await readRuns(paul, result.sourceId))[0]?.status).toBe('queued');
     expect(spy).toHaveBeenCalledWith('[leon]', 'ingest.enqueue', expect.any(String));
     spy.mockRestore();
+  });
+});
+
+describe('ingestTurns : partage des sessions Claude Code', () => {
+  const APP = 'github.com/acme/app';
+  const code = (n: number) => newTurn(n, { capture_mode: 'file' });
+
+  it('partage à l’organisation une session liée à un dépôt GitHub, tours et run compris', async () => {
+    const { tenantId, paul, marie, externalId } = await setup();
+
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [code(1)], { kind: 'claude_code', project: APP }),
+    );
+
+    expect(await readSource(marie, sourceId)).toHaveLength(1);
+    expect(await readTurns(marie, sourceId)).toHaveLength(1);
+    expect((await readRuns(paul, sourceId))[0]?.acl).toEqual([tenantId]);
+  });
+
+  it('garde privées une session sans clé GitHub et une session claude_ai', async () => {
+    const { paul, marie } = await setup();
+    const id = () => `conv-${crypto.randomUUID()}`;
+
+    const dossier = await ingestTurns(
+      paul,
+      payload(id(), [code(1)], { kind: 'claude_code', project: 'dossier:0123456789abcdef' }),
+    );
+    const sansCle = await ingestTurns(paul, payload(id(), [code(1)], { kind: 'claude_code' }));
+    const chat = await ingestTurns(
+      paul,
+      payload(id(), [newTurn(1)], { kind: 'claude_ai', project: APP }),
+    );
+
+    for (const { sourceId } of [dossier, sansCle, chat]) {
+      expect(await readSource(marie, sourceId)).toHaveLength(0);
+    }
+  });
+
+  it('partage une session déjà captée quand elle reçoit sa clé GitHub, anciens tours compris', async () => {
+    const { paul, marie, externalId } = await setup();
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [code(1)], { kind: 'claude_code' }),
+    );
+    expect(await readTurns(marie, sourceId)).toHaveLength(0);
+
+    await ingestTurns(paul, payload(externalId, [code(2)], { kind: 'claude_code', project: APP }));
+
+    expect(await readTurns(marie, sourceId)).toHaveLength(2);
+  });
+
+  it('garde privée une session rendue privée qui reçoit de nouveaux tours', async () => {
+    const { paul, marie, externalId } = await setup();
+    const body = (n: number) =>
+      payload(externalId, [code(n)], { kind: 'claude_code', project: APP });
+    const { sourceId } = await ingestTurns(paul, body(1));
+    await withTenant(paul, (tx) =>
+      tx.execute(sql`select regler_partage_session(${sourceId}::uuid, false)`),
+    );
+
+    await ingestTurns(paul, body(2));
+
+    expect(await readTurns(marie, sourceId)).toHaveLength(0);
+    expect(await readTurns(paul, sourceId)).toHaveLength(2);
+  });
+
+  it('garde privées les nouvelles sessions d’un dépôt que l’auteur a rendu privé', async () => {
+    const { paul, marie, externalId } = await setup();
+    await withTenant(paul, (tx) => tx.execute(sql`select regler_partage_depot(${APP}, false)`));
+
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [code(1)], { kind: 'claude_code', project: APP }),
+    );
+
+    expect(await readSource(marie, sourceId)).toHaveLength(0);
+  });
+
+  it('une autre organisation ne voit rien', async () => {
+    const { paul, externalId } = await setup();
+    const other = await createTestTenant(['Zoé']);
+    const zoe = other.members[0] as TenantContext;
+
+    const { sourceId } = await ingestTurns(
+      paul,
+      payload(externalId, [code(1)], { kind: 'claude_code', project: APP }),
+    );
+
+    expect(await readSource(zoe, sourceId)).toHaveLength(0);
   });
 });

@@ -72,6 +72,7 @@
     "discussions": "Discussions",
     "documents": "Documents",
     "connections": "Connexions",
+    "developers": "Développeurs",
     "settings": "Réglages"
   },
   "documents": {
@@ -113,6 +114,25 @@
       "ignored": "Fichier écarté : il contient souvent des mots de passe ou des clés (configuration, clé privée), ou n’est que généré.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
+  },
+  "developers": {
+    "title": "Développeurs",
+    "subtitle": "Les sessions Claude Code de l’équipe, rangées par dépôt, et les dernières notes de passation.",
+    "reposSection": "Dépôts de l’équipe",
+    "emptyTitle": "Aucune session partagée pour l’instant.",
+    "emptyDescription": "Les sessions Claude Code dans un dépôt GitHub apparaissent ici après leur capture.",
+    "noSessions": "Aucune session partagée sur ce dépôt.",
+    "notes": "Dernières notes de passation",
+    "repoSwitch": "Partager mes sessions sur {repo}",
+    "untitled": "Session sans titre",
+    "formerMember": "ancien membre",
+    "by": "{name} · {when}",
+    "makePrivate": "Rendre privée",
+    "makePrivateLabel": "Rendre privée la session {title}",
+    "share": "Partager",
+    "shareLabel": "Partager la session {title}",
+    "privateSection": "Mes sessions privées",
+    "privateDescription": "Liées à un dépôt, visibles de vous seul."
   },
   "shell": {
     "skipToContent": "Aller au contenu",

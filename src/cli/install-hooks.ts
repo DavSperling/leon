@@ -92,7 +92,7 @@ const HOOKS: readonly HookSpec[] = [
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'at the end of every session, sends the text of the exchanges to Leon (secrets masked); the conversation stays private to its author.',
+    role: 'at the end of every session, sends the text of the exchanges to Leon (secrets masked). Your Claude Code sessions in a GitHub repository are visible to your team on Leon; you can make one private, or a whole repository, in the Developers space. Other sessions stay private.',
   },
 ];
 

@@ -22,6 +22,7 @@ export function MobileBar({
   organizationName,
   userName,
   userEmail,
+  developer,
   stale,
 }: Viewer & { stale: ChannelHealth[] }) {
   const t = useTranslations('shell');
@@ -95,7 +96,7 @@ export function MobileBar({
             </span>
           </div>
           <nav aria-label={t('primaryNavigation')}>
-            <NavList inkId="nav-ink-sheet" onNavigate={go} />
+            <NavList inkId="nav-ink-sheet" onNavigate={go} developer={developer} />
           </nav>
           <div className="grid gap-0.5 border-t border-line pt-3">
             <button type="button" onClick={toggle} className={ROW}>

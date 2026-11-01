@@ -20,7 +20,7 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
 import { useTheme } from '@/lib/verre/theme';
-import { NAV } from './nav';
+import { navFor } from './nav';
 import { isDesktop, toggleRail, useRailCollapsed } from './rail';
 
 type Option = {
@@ -40,9 +40,11 @@ type Option = {
 export function CommandPalette({
   open,
   onOpenChange,
+  developer = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  developer?: boolean;
 }) {
   const router = useRouter();
   const navT = useTranslations('navigation');
@@ -80,7 +82,7 @@ export function CommandPalette({
       router.push(to);
     };
     const all: Option[] = [
-      ...NAV.map((n, i) => ({
+      ...navFor(developer).map((n, i) => ({
         id: `n${i}`,
         group: t('goTo'),
         label: navT(n.labelKey),
@@ -147,7 +149,7 @@ export function CommandPalette({
     // liste. Sinon, Entrée lance la recherche telle quelle.
     const named = matches.some((o) => ` ${fold(o.label)}`.includes(` ${f}`));
     return named ? [...matches, free] : [free, ...matches];
-  }, [query, theme, toggle, collapsed, router, onOpenChange, t, navT]);
+  }, [query, theme, toggle, collapsed, router, onOpenChange, t, navT, developer]);
 
   const current = visible[Math.min(active, visible.length - 1)];
 

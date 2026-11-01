@@ -132,7 +132,10 @@ async function recordProject(
   const [before] = await tx
     .select({ acl: sources.acl, project: sql<string | null>`${sources.metadata} ->> 'project'` })
     .from(sources)
-    .where(eq(sources.id, sourceId));
+    .where(eq(sources.id, sourceId))
+    // Verrouillée jusqu'à la fin : un regler_partage_session concurrent ne peut pas changer l'accès entre cette
+    // lecture et l'insertion des tours qui le recopient.
+    .for('update');
   if (!before) throw new Error('source introuvable');
   if (source.project === undefined) return before.acl;
   await tx

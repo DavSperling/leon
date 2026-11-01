@@ -24,7 +24,7 @@ grant select on depots_prives to leon_app;
 -- première : une indexation en cours (lockSources, verrou partagé) finit avant, ou lit l'accès déjà corrigé.
 create function regler_partage_session(p_source uuid, p_partage boolean)
 returns boolean
-language plpgsql volatile security definer set search_path = public as $$
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
   v_acl uuid[];
 begin
@@ -57,7 +57,7 @@ grant execute on function regler_partage_session(uuid, boolean) to leon_app;
 -- l'organisation parmi ses principaux.
 create function regler_partage_depot(p_project text, p_partage boolean)
 returns integer
-language plpgsql volatile security definer set search_path = public as $$
+language plpgsql volatile security definer set search_path = public, pg_temp as $$
 declare
   v_user uuid;
   v_source uuid;
@@ -96,12 +96,17 @@ revoke all on function regler_partage_depot(text, boolean) from public;
 grant execute on function regler_partage_depot(text, boolean) to leon_app;
 
 -- Les sessions déjà captées sont partagées dès le déploiement (choix de Claude dans la spec : l'équipe a la matière
--- tout de suite). Seules celles encore privées à leur auteur changent ; rejouable sans effet. Le test de la migration
--- rejoue ce bloc entre les deux marqueurs.
+-- tout de suite). Seules celles encore privées à leur auteur, membre actif de l'organisation, changent : les sessions
+-- d'un ancien membre (gardées privées par la suppression du compte) restent privées. À ne jouer qu'une fois : rejoué
+-- plus tard, il partagerait de nouveau les sessions rendues privées depuis. Le test de la migration joue ce bloc entre
+-- les deux marqueurs.
 -- début : partage des sessions passées
 update sources set acl = array[tenant_id]
  where kind = 'claude_code' and metadata ->> 'project' like 'github.com/%'
-   and acl = array[owner_user_id];
+   and acl = array[owner_user_id]
+   and exists (select 1 from member m join "user" u on u.id = m."userId"
+                where m."organizationId" = sources.tenant_id and m."userId" = sources.owner_user_id
+                  and u.deleted_at is null);
 update turns t set acl = array[s.tenant_id]
   from sources s
  where t.source_id = s.id and s.kind = 'claude_code'

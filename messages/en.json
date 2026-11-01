@@ -114,6 +114,26 @@
       "failed": "Couldn’t save this document. Try again."
     }
   },
+  "developers": {
+    "title": "Developers",
+    "subtitle": "Your team’s Claude Code sessions, by repository, and the latest handoff notes.",
+    "reposSection": "Team repositories",
+    "emptyTitle": "No shared session yet.",
+    "emptyDescription": "Claude Code sessions in a GitHub repository show up here once captured.",
+    "noSessions": "No shared session in this repository.",
+    "notes": "Latest handoff notes",
+    "repoShared": "My sessions in this repository: shared",
+    "repoPrivate": "My sessions in this repository: private",
+    "untitled": "Untitled session",
+    "formerMember": "former member",
+    "by": "{name} · {when}",
+    "makePrivate": "Make private",
+    "makePrivateLabel": "Make session {title} private",
+    "share": "Share",
+    "shareLabel": "Share session {title}",
+    "privateSection": "My private sessions",
+    "privateDescription": "Linked to a repository, visible to you only."
+  },
   "shell": {
     "skipToContent": "Skip to content",
     "search": "Search",

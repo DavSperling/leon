@@ -114,6 +114,26 @@
       "failed": "Impossible d’enregistrer ce document. Réessayez."
     }
   },
+  "developers": {
+    "title": "Développeurs",
+    "subtitle": "Les sessions Claude Code de l’équipe, rangées par dépôt, et les dernières notes de passation.",
+    "reposSection": "Dépôts de l’équipe",
+    "emptyTitle": "Aucune session partagée pour l’instant.",
+    "emptyDescription": "Les sessions Claude Code dans un dépôt GitHub apparaissent ici après leur capture.",
+    "noSessions": "Aucune session partagée sur ce dépôt.",
+    "notes": "Dernières notes de passation",
+    "repoShared": "Mes sessions sur ce dépôt : partagées",
+    "repoPrivate": "Mes sessions sur ce dépôt : privées",
+    "untitled": "Session sans titre",
+    "formerMember": "ancien membre",
+    "by": "{name} · {when}",
+    "makePrivate": "Rendre privée",
+    "makePrivateLabel": "Rendre privée la session {title}",
+    "share": "Partager",
+    "shareLabel": "Partager la session {title}",
+    "privateSection": "Mes sessions privées",
+    "privateDescription": "Liées à un dépôt, visibles de vous seul."
+  },
   "shell": {
     "skipToContent": "Aller au contenu",
     "search": "Rechercher",

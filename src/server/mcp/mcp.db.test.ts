@@ -115,7 +115,7 @@ describe('serveur MCP', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
   });
 
-  it('annonce exactement search, fetch, briefing et remember, avec leurs annotations', async () => {
+  it('annonce exactement search, fetch, briefing, remember et les outils de passation, avec leurs annotations', async () => {
     const client = await connect(await setupPaul());
 
     const { tools } = await client.listTools();
@@ -123,6 +123,9 @@ describe('serveur MCP', () => {
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'briefing',
       'fetch',
+      'passation_ecrire',
+      'passation_lire',
+      'passation_retirer',
       'remember',
       'search',
     ]);
@@ -147,9 +150,52 @@ describe('serveur MCP', () => {
     expect(Object.keys(byName.get('briefing')?.inputSchema.properties ?? {})).toEqual(['projet']);
     expect(byName.get('briefing')?.inputSchema.required ?? []).toEqual([]);
     const instructions = client.getInstructions() ?? '';
-    for (const word of ['search', 'fetch', 'briefing', 'remember', 'title', 'tool', 'date']) {
+    for (const word of [
+      'search',
+      'fetch',
+      'briefing',
+      'remember',
+      'passation_lire',
+      'passation_ecrire',
+      'title',
+      'tool',
+      'date',
+    ]) {
       expect(instructions).toContain(word);
     }
+  });
+
+  it('passe le relais : Paul écrit une note, Marie la lit, Zoé ne voit rien', async () => {
+    const { paul, marie, zoe } = await setupTeam();
+
+    const written = await call(await connect(paul), 'passation_ecrire', {
+      texte:
+        "## Où j'en suis\nAuth à moitié.\n\n- [décision] Better Auth\n- [prochaine-étape] Page /connexion",
+      depot: 'acme/app',
+      branche: 'auth',
+    });
+    expect(written.isError).toBeFalsy();
+    expect(written.text).toMatch(/D\d+/);
+
+    const read = await call(await connect(marie, 'codex/1.0'), 'passation_lire', {
+      depot: 'acme/app',
+      branche: 'auth',
+    });
+    expect(read.text).toContain('Auth à moitié.');
+    expect(read.text).toContain('Page /connexion');
+
+    const none = await call(await connect(zoe), 'passation_lire', {
+      depot: 'acme/app',
+      branche: 'auth',
+    });
+    expect(none.text).toContain('Aucune note de passation');
+  });
+
+  it('refuse un dépôt invalide', async () => {
+    const result = await call(await connect(await setupPaul()), 'passation_lire', {
+      depot: 'pas un dépôt !',
+    });
+    expect(result.isError).toBe(true);
   });
 
   // Le contrat que ChatGPT impose à `search` et `fetch` : un schéma de sortie, `results`, et un `id` pour `fetch`.

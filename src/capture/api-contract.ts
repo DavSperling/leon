@@ -5,6 +5,8 @@ export const API_PATHS = {
   ingest: '/api/v1/ingest',
   me: '/api/v1/me',
   briefing: '/api/v1/briefing',
+  passation: '/api/v1/passation',
+  passationLast: '/api/v1/passation/derniere',
   mcp: '/api/mcp',
 } as const;
 
@@ -29,3 +31,20 @@ export const BriefingResponseSchema = z.object({
   preparedAt: z.iso.datetime().nullable(),
 });
 export type BriefingResponse = z.infer<typeof BriefingResponseSchema>;
+
+// Les routes de passation (spec du 01/11/2026) : `projet` porte la clé du projet, `branche` la branche git.
+export const PASSATION_BRANCH_PARAM = 'branche';
+export const PassationWriteSchema = z.object({
+  texte: z.string().min(1).max(8000),
+  projet: z.string().min(1).max(200),
+  branche: z
+    .string()
+    .min(1)
+    .max(200)
+    .regex(/^[\w./-]+$/)
+    .nullable(),
+  outil: z.enum(['claude_code', 'codex', 'cursor', 'chatgpt', 'claude_ai', 'autre']),
+});
+export type PassationWrite = z.infer<typeof PassationWriteSchema>;
+export const PassationStateSchema = z.object({ markdown: z.string().nullable() });
+export const PassationLastSchema = z.object({ at: z.iso.datetime().nullable() });

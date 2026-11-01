@@ -1,8 +1,10 @@
+import { spawn } from 'node:child_process';
 import { access, readFile } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { condenseSession } from '../capture/handoff-transcript';
 import { runBriefing } from './briefing';
 import {
   captureSessionFromHook,
@@ -20,6 +22,15 @@ import {
   parseSince,
 } from './import-claude-code';
 import { installHooks } from './install-hooks';
+import {
+  createNoteSender,
+  currentBranch,
+  fetchLastNoteAt,
+  isFallbackRun,
+  runClaudeSummary,
+  shouldSummarize,
+  summarizeAndSend,
+} from './passation';
 import { gitInDirectory } from './project-key';
 
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
@@ -37,6 +48,10 @@ Commands:
   capter-session       Send the session that is ending, with its project (for Claude Code's SessionEnd
                        hook: the hook JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
+  resumer-passation    Summarize an ended session into a handoff note (started by capter-session)
+      --transcript <path>  the session file
+      --projet <key>       the project key
+      --branche <name>     the git branch
   installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
                        settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR), after confirmation
       --oui                do not ask for confirmation
@@ -87,6 +102,8 @@ async function runImport(args: string[]): Promise<number> {
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
 async function runBriefingCommand(): Promise<number> {
   try {
+    // Le `claude -p` du résumé de secours charge aussi les crochets : il ne reçoit pas de point.
+    if (isFallbackRun(process.env)) return 0;
     return await runBriefing({
       stdin: process.stdin,
       env: process.env,
@@ -109,6 +126,8 @@ async function runBriefingCommand(): Promise<number> {
 // standard.
 async function runCaptureSession(args: string[]): Promise<number> {
   try {
+    // Le `claude -p` du résumé de secours charge aussi les crochets : il ne se capte pas lui-même.
+    if (isFallbackRun(process.env)) return 0;
     let env: ServerEnv;
     try {
       env = parseServerEnv(process.env);
@@ -131,6 +150,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
       ...(projectDir ? { projectDir } : {}),
+      onCaptured: (captured) => startPassationFallback(env, captured),
     });
   } catch {
     console.error('Leon: capture failed (unexpected error).');
@@ -138,6 +158,66 @@ async function runCaptureSession(args: string[]): Promise<number> {
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
   }
+}
+
+// Le résumé de secours de passation, quand la session est assez longue et qu'aucune note ne la couvre déjà. Il part
+// détaché, sans shell (aucun argument à citer) : le crochet rend la main tout de suite, le résumé tourne ensuite sur
+// l'abonnement du développeur.
+async function startPassationFallback(
+  env: ServerEnv,
+  captured: { transcriptPath: string; directory: string; projectKey: string },
+): Promise<void> {
+  const session = condenseSession(await readFile(captured.transcriptPath, 'utf8'));
+  const branch = await currentBranch(captured.directory, gitInDirectory);
+  const lastNoteAt = await fetchLastNoteAt(fetch, env, captured.projectKey, branch);
+  if (lastNoteAt === undefined) return;
+  if (!shouldSummarize({ exchanges: session.exchanges, startedAt: session.startedAt, lastNoteAt }))
+    return;
+  const args = [
+    ...process.execArgv,
+    fileURLToPath(import.meta.url),
+    'resumer-passation',
+    '--transcript',
+    captured.transcriptPath,
+    '--projet',
+    captured.projectKey,
+    ...(branch ? ['--branche', branch] : []),
+  ];
+  const child = spawn(process.execPath, args, {
+    cwd: CLI_REPO_DIR,
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.on('error', () => {});
+  child.unref();
+}
+
+// Le résumé de secours, lancé détaché par `capter-session` : condense la session, la résume avec `claude -p` et
+// envoie la note à Leon. Silencieux : personne ne lit sa sortie.
+async function runSummarizePassation(args: string[]): Promise<number> {
+  try {
+    const { values } = parseArgs({
+      args,
+      options: {
+        transcript: { type: 'string' },
+        projet: { type: 'string' },
+        branche: { type: 'string' },
+      },
+      strict: false,
+    });
+    if (typeof values.transcript !== 'string' || typeof values.projet !== 'string') return 0;
+    const env = parseServerEnv(process.env);
+    const branch = typeof values.branche === 'string' ? values.branche : null;
+    const { text } = condenseSession(await readFile(values.transcript, 'utf8'));
+    await summarizeAndSend({
+      condensed: text,
+      runClaude: runClaudeSummary,
+      send: createNoteSender(fetch, env, values.projet, branch),
+    });
+  } catch {
+    // Personne ne lit cette sortie : on s'arrête sans bruit.
+  }
+  return 0;
 }
 
 // Pose une question sur le terminal et rend la ligne tapée, ou une chaîne vide si l'entrée se ferme sans réponse
@@ -188,6 +268,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
+    if (command === 'resumer-passation') return await runSummarizePassation(args);
     if (command === 'installer-crochets') return await runInstallHooks(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.

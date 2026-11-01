@@ -61,6 +61,12 @@ export type CaptureDeps = ImportDeps & {
   // $CLAUDE_PROJECT_DIR, « the project root where the session started » (doc des crochets) : repli quand le
   // fichier de session n'écrit aucun dossier.
   projectDir?: string;
+  // Appelé après une capture réussie (le secours de passation, leon.ts) ; ses erreurs ne remontent jamais.
+  onCaptured?: (input: {
+    transcriptPath: string;
+    directory: string;
+    projectKey: string;
+  }) => Promise<void>;
 };
 
 // Le délai demandé à la commande (`--delai-ms`, réservé aux essais) : il ne fait que raccourcir celui du crochet.
@@ -132,10 +138,8 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   if (session === null) return warn('nothing to send for this session.');
 
   // Le dossier de départ de la session, comme `briefing` : le même projet des deux côtés.
-  const projectKey = await projectKeyFor(
-    startingDirectory(session.cwd, deps.projectDir, input.cwd),
-    deps.git,
-  );
+  const directory = startingDirectory(session.cwd, deps.projectDir, input.cwd);
+  const projectKey = await projectKeyFor(directory, deps.git);
   const summary: ImportSummary = {
     sessions: 1,
     turnsSent: 0,
@@ -151,6 +155,11 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   warn(
     `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
+  try {
+    await deps.onCaptured?.({ transcriptPath: input.transcript_path, directory, projectKey });
+  } catch {
+    // Le secours est facultatif : la capture, elle, a réussi.
+  }
 }
 
 // Le code de sortie vaut toujours 0 : ce crochet ne doit jamais gêner la fin d'une session.

@@ -65,6 +65,12 @@ beforeEach(async () => {
     const chunks: Buffer[] = [];
     request.on('data', (chunk: Buffer) => chunks.push(chunk));
     request.on('end', () => {
+      // Le secours de passation demande la date de la dernière note : aucune ici (sessions trop courtes de toute façon).
+      if (request.method === 'GET') {
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ at: null }));
+        return;
+      }
       received.push({
         url: request.url ?? '',
         authorization: request.headers.authorization,
@@ -242,6 +248,20 @@ describe('leon capter-session : la vraie commande', () => {
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
       expect(outcome.stderr).toMatch(/LEON_TOKEN/);
+      expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "lancée par le `claude -p` du secours (LEON_PASSATION=1) : code 0, rien d'envoyé",
+    async () => {
+      const outcome = await runCommand(hookJson(await writeSession()), {
+        env: { LEON_PASSATION: '1' },
+      });
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe('');
       expect(received).toHaveLength(0);
     },
     TEST_TIMEOUT_MS,

@@ -11,7 +11,8 @@
 //   de Leon, pas le projet. Le projet se calcule donc sur le `cwd` du JSON, sinon sur INIT_CWD (que pnpm pose au
 //   dossier d'où il a été lancé, `--dir` ou non), sinon sur le dossier du processus (voir briefingDirectory).
 // - La sortie standard d'un crochet est plafonnée à 10 000 caractères par Claude Code : le serveur rend un point qui
-//   tient en dessous (BRIEFING_RENDER_MAX_CHARS).
+//   tient en dessous (BRIEFING_RENDER_MAX_CHARS), et l'état de la branche passe devant, le point coupé à ce qui reste
+//   (passation.ts, joinStartOutput).
 //
 // La commande ne bloque jamais une session : entrée standard lue avec un délai court (jamais un terminal), git borné
 // (project-key.ts), serveur 3 secondes au plus, et le code de sortie vaut toujours 0. Au pire, ces trois délais se
@@ -23,6 +24,7 @@ import { z } from 'zod';
 import { API_PATHS, BRIEFING_PROJECT_PARAM, BriefingResponseSchema } from '../capture/api-contract';
 import { readHookStdin } from './capture-session';
 import { parseServerEnv, type ServerEnv } from './env';
+import { currentBranch, fetchPassationState, joinStartOutput } from './passation';
 import { type GitRunner, projectKeyFor } from './project-key';
 
 const TIMEOUT_MS = 3000;
@@ -91,18 +93,27 @@ export type BriefingCommandDeps = {
   err: (text: string) => void;
 };
 
-// La commande `leon briefing`. Seul le point passe sur la sortie standard ; les messages ne citent ni le projet ni
-// l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code.
+// La commande `leon briefing`. Seuls l'état de la branche (passation de l'équipe) et le point passent sur la sortie
+// standard ; les messages ne citent ni le projet ni l'adresse du serveur. Le code de sortie vaut toujours 0, pour
+// ne jamais gêner Claude Code.
 export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
   try {
     const server = parseServerEnv(deps.env);
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
-    const project = await projectKeyFor(briefingDirectory(stdin, deps.env, deps.cwd), deps.git);
-    const text = await fetchBriefingText(deps.fetch, server, project);
-    if (text === null) {
+    const directory = briefingDirectory(stdin, deps.env, deps.cwd);
+    // git et le serveur, chacun en parallèle : le pire cas reste 1 s + 3 s + 3 s (voir l'en-tête).
+    const [project, branch] = await Promise.all([
+      projectKeyFor(directory, deps.git),
+      currentBranch(directory, deps.git),
+    ]);
+    const [text, state] = await Promise.all([
+      fetchBriefingText(deps.fetch, server, project),
+      fetchPassationState(deps.fetch, server, project, branch),
+    ]);
+    if (state === null && text === null) {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {
-      deps.out(text);
+      deps.out(joinStartOutput(state, text));
     }
   } catch (error) {
     // Messages fixes (parseServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.

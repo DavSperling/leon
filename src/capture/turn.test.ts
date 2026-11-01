@@ -153,8 +153,8 @@ describe('listes de types', () => {
     for (const kind of CAPTURE_KINDS) expect(PROVIDER_IDS).not.toContain(kind);
   });
 
-  it('SOURCE_KINDS = les types de capture, le document ajouté à la main, puis les 42 connecteurs, sans doublon', () => {
-    expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, 'document', ...PROVIDER_IDS]);
+  it('SOURCE_KINDS = les types de capture, le document ajouté à la main, la passation, puis les 42 connecteurs, sans doublon', () => {
+    expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, 'document', 'passation', ...PROVIDER_IDS]);
     expect(new Set(SOURCE_KINDS).size).toBe(SOURCE_KINDS.length);
   });
 

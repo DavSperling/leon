@@ -20,6 +20,8 @@ create table passation_items (
   created_at timestamptz not null default now(),
   unique (tenant_id, id),
   unique (tenant_id, numero),
+  unique (tenant_id, source_id, id),
+  check (remplacee_par is null or remplacee_par <> id),
   foreign key (tenant_id, source_id) references sources (tenant_id, id) on delete cascade,
   -- Retirer la note qui remplaçait un élément le rend de nouveau valable (seule la colonne est remise à nul).
   foreign key (tenant_id, remplacee_par) references passation_items (tenant_id, id) on delete set null (remplacee_par)
@@ -35,7 +37,7 @@ create table passation_liens (
   acl uuid[] not null,
   created_at timestamptz not null default now(),
   foreign key (tenant_id, source_id) references sources (tenant_id, id) on delete cascade,
-  foreign key (tenant_id, item_id) references passation_items (tenant_id, id) on delete cascade
+  foreign key (tenant_id, source_id, item_id) references passation_items (tenant_id, source_id, id) on delete cascade
 );
 
 create index passation_items_project_idx on passation_items (tenant_id, project, type, created_at desc);

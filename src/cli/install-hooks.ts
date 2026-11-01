@@ -1,6 +1,7 @@
 // Installateur des crochets de Claude Code : `pnpm leon installer-crochets [--oui] [--depot <chemin>]` écrit, dans les
 // réglages de l'utilisateur, le crochet de démarrage (`leon briefing`) et le crochet de fin de session
-// (`leon capter-session`), après confirmation.
+// (`leon capter-session`), après confirmation ; il ajoute aussi la commande `/passation` si elle manque, et affiche le
+// bloc `AGENTS.md` pour les autres outils.
 //
 // Doc officielle de Claude Code, lue le 2026-10-20 :
 // - Les crochets : https://code.claude.com/docs/en/hooks
@@ -328,6 +329,7 @@ function preview(path: string, changes: HookChange[], backup: BackupPlan): strin
     'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
     'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
     backupLine(backup),
+    `The /passation command (${PASSATION_COMMAND_FILE} next to the settings) is added if it does not exist yet.`,
   );
   return lines;
 }
@@ -348,6 +350,42 @@ const exists = (path: string) =>
     () => true,
     () => false,
   );
+
+export const PASSATION_COMMAND_FILE = join('commands', 'passation.md');
+
+const PASSATION_COMMAND = `---
+description: Écrire la note de passation Leon de ce travail
+---
+Appelle maintenant l'outil passation_ecrire de Leon pour ce dépôt et cette branche (git remote et git branch --show-current) : où en est le travail, les décisions prises, ce qui a été essayé et a échoué, ce qui est en cours, la prochaine étape. Suis le format décrit dans l'outil. Rien de secret ni de personnel. $ARGUMENTS
+`;
+
+// Le bloc à coller dans AGENTS.md pour Codex, Cursor et Copilot, qui n'ont pas les crochets de Claude Code.
+export const AGENTS_MD_BLOCK = `## Passation Leon
+Au démarrage d'un travail sur ce dépôt, appelle l'outil MCP passation_lire de Leon (dépôt et branche).
+En fin de tâche, appelle passation_ecrire dans son format.`;
+
+// La commande /passation : écrite si elle n'existe pas, jamais écrasée (l'utilisateur a pu la modifier).
+async function installPassationCommand(configDir: string): Promise<'ecrite' | 'gardee' | 'echec'> {
+  const path = join(configDir, PASSATION_COMMAND_FILE);
+  if (await exists(path)) return 'gardee';
+  try {
+    await mkdir(join(configDir, 'commands'), { recursive: true, mode: 0o700 });
+    await writeFile(path, PASSATION_COMMAND, { flag: 'wx' });
+    return 'ecrite';
+  } catch {
+    return 'echec';
+  }
+}
+
+async function reportPassation(configDir: string, deps: InstallDeps): Promise<void> {
+  const result = await installPassationCommand(configDir);
+  const path = join(configDir, PASSATION_COMMAND_FILE);
+  if (result === 'ecrite') deps.out(`The /passation command was added (${path}).`);
+  if (result === 'echec') deps.err(`Leon: could not write the /passation command (${path}).`);
+  deps.out(
+    `\nFor Codex, Cursor or Copilot, add this block to the repository's AGENTS.md:\n\n${AGENTS_MD_BLOCK}`,
+  );
+}
 
 // Rend le code de sortie : 0 si les crochets sont en place ou si l'utilisateur a refusé, 1 si les réglages n'ont pas
 // pu être lus ou ont changé en route.
@@ -391,6 +429,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+    await reportPassation(options.configDir, deps);
     return 0;
   }
 
@@ -440,5 +479,6 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   deps.out(
     `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, delete these two entries (${README_HINT}).`,
   );
+  await reportPassation(options.configDir, deps);
   return 0;
 }

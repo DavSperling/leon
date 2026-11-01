@@ -21,6 +21,7 @@ import {
   BACKUP_FILE,
   installHooks,
   isYes,
+  PASSATION_COMMAND_FILE,
   SESSION_END_TIMEOUT_S,
   SESSION_START_TIMEOUT_S,
   SETTINGS_FILE,
@@ -128,7 +129,7 @@ describe('installHooks : écrire les deux crochets', () => {
       'pnpm -s --config.verify-deps-before-run=false --dir /Users/amos/leon leon briefing',
     );
     // Rien à sauvegarder : le fichier n'existait pas. Aucun fichier de travail ne reste.
-    expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+    expect((await readdir(configDir)).sort()).toEqual(['commands', SETTINGS_FILE]);
   });
 
   it('pose les délais de la spec : 10 s au démarrage, 30 s à la fin', () => {
@@ -184,7 +185,7 @@ describe('installHooks : écrire les deux crochets', () => {
     expect(backupPath).toBe(join(configDir, 'settings.json.leon-sauvegarde'));
     expect(await readFile(backupPath, 'utf8')).toBe(original);
     expect((await readSettings()).theme).toBe('dark');
-    expect((await readdir(configDir)).sort()).toEqual([SETTINGS_FILE, BACKUP_FILE]);
+    expect((await readdir(configDir)).sort()).toEqual(['commands', SETTINGS_FILE, BACKUP_FILE]);
   });
 
   it('ne rend pas la sauvegarde lisible par d’autres que le fichier d’origine (elle peut porter des clés)', async () => {
@@ -249,6 +250,30 @@ describe('installHooks : écrire les deux crochets', () => {
     expect(hooks.SessionEnd[0].hooks[0].command).toBe(
       "pnpm -s --config.verify-deps-before-run=false --dir '/Users/amos/Mes projets/l'\\''équipe/leon' leon capter-session",
     );
+  });
+});
+
+describe('installHooks : la commande /passation', () => {
+  it('écrit la commande sans écraser une version modifiée, et affiche le bloc AGENTS.md', async () => {
+    const commandPath = join(configDir, PASSATION_COMMAND_FILE);
+    const first = await install({ assumeYes: true });
+
+    expect(await readFile(commandPath, 'utf8')).toContain('passation_ecrire');
+    expect(first.output).toContain('/passation');
+    expect(first.output).toContain('passation_lire');
+
+    await writeFile(commandPath, 'ma version');
+    const second = await install({ assumeYes: true });
+
+    expect(second.code).toBe(0);
+    expect(await readFile(commandPath, 'utf8')).toBe('ma version');
+    expect(second.output).toContain('passation_lire');
+  });
+
+  it('n’écrit pas la commande quand l’utilisateur refuse', async () => {
+    await install({ answers: ['non'] });
+
+    expect(await exists(join(configDir, PASSATION_COMMAND_FILE))).toBe(false);
   });
 });
 

@@ -156,8 +156,11 @@ async function recordProject(
     .from(depotsPrives)
     .where(and(eq(depotsPrives.userId, ctx.userId), eq(depotsPrives.project, source.project)));
   if (hidden) return before.acl;
-  await tx.execute(sql`select regler_partage_session(${sourceId}::uuid, true)`);
-  return [ctx.tenantId];
+  // L'ACL des nouveaux tours suit la réponse de la base : si elle refuse, la session reste privée.
+  const { rows } = await tx.execute<{ ok: boolean }>(
+    sql`select regler_partage_session(${sourceId}::uuid, true) as ok`,
+  );
+  return rows[0]?.ok ? [ctx.tenantId] : before.acl;
 }
 
 export async function createIngestRun(

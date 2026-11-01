@@ -56,7 +56,7 @@ function RepoSwitch({ project, shared }: { project: string; shared: boolean }) {
     <Switch
       checked={shared}
       disabled={pending}
-      label={t(shared ? 'repoShared' : 'repoPrivate')}
+      label={t('repoSwitch', { repo: project })}
       onCheckedChange={(on) =>
         start(async () => {
           const data = new FormData();

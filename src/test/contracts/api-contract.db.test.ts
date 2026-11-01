@@ -27,6 +27,8 @@ const SERVED = {
   me: ['GET', {}],
   mcp: ['POST', { body: initialize }],
   briefing: ['GET', {}],
+  passation: ['GET', {}],
+  passationLast: ['GET', {}],
 } as const;
 // Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
 const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];

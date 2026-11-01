@@ -65,7 +65,7 @@ export function parseNote(text: string): ParsedNote {
       resumeDone = true;
       continue;
     }
-    if (inResume && (ANY_HEADING.test(line) || LIST_LINE.test(line))) {
+    if (inResume && (ANY_HEADING.test(line.trimStart()) || LIST_LINE.test(line))) {
       inResume = false;
       resumeDone = true;
     }

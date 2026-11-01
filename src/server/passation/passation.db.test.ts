@@ -150,7 +150,8 @@ describe('readBranchState', () => {
 
     const state = await readBranchState(paul, PROJECT, 'auth');
 
-    expect(state).toContain('Better Auth branché.');
+    expect(state).toContain('> Better Auth branché.');
+    expect(state).toMatch(/- D\d+ Better Auth \([^,]+, Codex, \d{4}-\d{2}-\d{2}\)/);
     expect(state).not.toContain('Ancien état.');
     expect(state).toContain('Better Auth');
     expect(state).not.toContain('Garder NextAuth');
@@ -189,6 +190,65 @@ describe('readBranchState', () => {
     expect(await readBranchState(paul, 'github.com/acme/vide', null)).toBeNull();
   });
 
+  it('compte les notes de tout le dépôt sur une branche, pas celles d’une autre branche', async () => {
+    const { paul } = await team();
+    await writePassation(paul, {
+      texte: `## Où j'en suis\nAutre branche.\n\n- [prochaine-étape] Étape ailleurs`,
+      project: PROJECT,
+      branch: 'autre',
+      tool: 'autre',
+    });
+    await writePassation(paul, {
+      texte: `## Où j'en suis\nNote du dépôt.\n\n- [prochaine-étape] Étape du dépôt`,
+      project: PROJECT,
+      branch: null,
+      tool: 'autre',
+    });
+
+    const state = await readBranchState(paul, PROJECT, 'auth');
+    expect(state).toContain('Note du dépôt.');
+    expect(state).toContain('Étape du dépôt');
+    expect(state).not.toContain('Étape ailleurs');
+  });
+
+  it('coupe d’abord les éléments les plus anciens', async () => {
+    const { paul } = await team();
+    const many = Array.from({ length: 15 }, (_, i) => `- [décision] n${i} ${'d'.repeat(400)}`).join(
+      '\n',
+    );
+    const { sourceId } = await writePassation(paul, {
+      texte: `${many}\n- [essai-raté] Essai récent`,
+      project: PROJECT,
+      branch: null,
+      tool: 'autre',
+    });
+    await adminPool.query(
+      "update passation_items set created_at = now() - make_interval(mins => 100 - substring(texte from '^n(\\d+)')::int) where source_id = $1 and texte like 'n%'",
+      [sourceId],
+    );
+
+    const state = (await readBranchState(paul, PROJECT, null)) ?? '';
+    expect(state.length).toBeLessThanOrEqual(STATE_MAX_CHARS);
+    expect(state).toContain(' n14 ');
+    // L'essai raté, le plus récent, survit bien qu'il soit dans la dernière section.
+    expect(state).toContain('Essai récent');
+    expect(state).not.toContain(' n0 ');
+  });
+
+  it('garde de la place pour les éléments quand le résumé est énorme', async () => {
+    const { paul } = await team();
+    await writePassation(paul, {
+      texte: `## Où j'en suis\n${'r'.repeat(6000)}\n\n- [décision] Petite décision`,
+      project: PROJECT,
+      branch: null,
+      tool: 'autre',
+    });
+
+    const state = (await readBranchState(paul, PROJECT, null)) ?? '';
+    expect(state.length).toBeLessThanOrEqual(STATE_MAX_CHARS);
+    expect(state).toContain('Petite décision');
+  });
+
   it('tient sous la limite de caractères', async () => {
     const { paul } = await team();
     const many = Array.from({ length: 60 }, (_, i) => `- [décision] ${'d'.repeat(150)} ${i}`).join(
@@ -220,6 +280,25 @@ describe('lastPassationAt', () => {
       tool: 'autre',
     });
     expect(await lastPassationAt(paul, PROJECT, 'auth')).toBeInstanceOf(Date);
+  });
+
+  it('sans branche, ne compte que les notes écrites sans branche', async () => {
+    const { paul } = await team();
+    await writePassation(paul, {
+      texte: '- [décision] X',
+      project: PROJECT,
+      branch: 'auth',
+      tool: 'autre',
+    });
+
+    expect(await lastPassationAt(paul, PROJECT, null)).toBeNull();
+    await writePassation(paul, {
+      texte: '- [décision] Y',
+      project: PROJECT,
+      branch: null,
+      tool: 'autre',
+    });
+    expect(await lastPassationAt(paul, PROJECT, null)).toBeInstanceOf(Date);
   });
 });
 

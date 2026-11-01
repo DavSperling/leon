@@ -86,6 +86,10 @@ describe('parseNote', () => {
     expect(Date.now() - debut).toBeLessThan(500);
   });
 
+  it('arrête le résumé à un titre indenté', () => {
+    expect(parseNote('## Où j’en suis\nA\n   ## Décisions en vigueur\nB').resume).toBe('A');
+  });
+
   it('garde le premier résumé et ignore les suivants', () => {
     expect(parseNote('## Où j’en suis\nA\n\n## Où j’en suis\nB').resume).toBe('A');
   });

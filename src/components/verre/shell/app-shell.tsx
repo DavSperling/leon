@@ -157,7 +157,11 @@ export function AppShell({ stale, children, ...viewer }: AppShellProps) {
               </main>
             </div>
           </div>
-          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+          <CommandPalette
+            open={paletteOpen}
+            onOpenChange={setPaletteOpen}
+            developer={viewer.developer}
+          />
         </PaletteContext.Provider>
       </ShellContext.Provider>
     </ThinkingProvider>

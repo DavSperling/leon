@@ -1,4 +1,5 @@
 import {
+  Code,
   FileText,
   type LucideIcon,
   MessagesSquare,
@@ -13,7 +14,7 @@ import {
 export type NavItem = {
   href: string;
   label: string;
-  labelKey: 'search' | 'discussions' | 'documents' | 'connections' | 'settings';
+  labelKey: 'search' | 'discussions' | 'documents' | 'connections' | 'developers' | 'settings';
   icon: LucideIcon;
   end?: boolean;
 };
@@ -26,8 +27,21 @@ export const NAV: NavItem[] = [
   { href: '/reglages', label: 'Réglages', labelKey: 'settings', icon: Settings2 },
 ];
 
+// Réservée aux membres qui codent (une session Claude Code ou une note de passation) : hors de NAV, que les guides
+// citent telle quelle.
+export const DEVELOPERS_NAV: NavItem = {
+  href: '/developpeurs',
+  label: 'Développeurs',
+  labelKey: 'developers',
+  icon: Code,
+};
+
+/** Les sections que voit un membre : « Développeurs » avant Réglages, s'il code. */
+export const navFor = (developer: boolean): NavItem[] =>
+  developer ? [...NAV.slice(0, -1), DEVELOPERS_NAV, ...NAV.slice(-1)] : NAV;
+
 /** La section d'une adresse : « /discussions/acme » → Discussions. */
 export const sectionOf = (pathname: string): NavItem | undefined =>
-  NAV.find((n) =>
+  [...NAV, DEVELOPERS_NAV].find((n) =>
     n.end ? pathname === n.href : pathname === n.href || pathname.startsWith(`${n.href}/`),
   );

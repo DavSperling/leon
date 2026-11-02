@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { BriefingResponse } from '@/capture/api-contract';
 import type { SourceKind } from '@/capture/turn';
+import { readOnboardingMember } from '@/server/auth/onboarding';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
@@ -89,7 +90,12 @@ export async function refreshBriefing(
     markdown = renderEmptyBriefing(project, now, BRIEFING_DAYS);
     sourceIds = [];
   } else {
-    const prompt = buildBriefingPrompt(material, now, await readAbout(ctx.userId));
+    const prompt = buildBriefingPrompt(
+      material,
+      now,
+      await readAbout(ctx.userId),
+      await readOnboardingMember(ctx),
+    );
     const body = await writeBody(deps.llm, prompt);
     markdown = renderBriefing({ project, preparedAt: now, body, references: prompt.references });
     // Toutes les sources fournies au modèle, citées ou non : le texte peut en tenir sans les citer.

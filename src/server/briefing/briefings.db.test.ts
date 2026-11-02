@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { users } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { Llm } from '@/server/llm/llm';
@@ -148,6 +148,23 @@ describe('refreshBriefing', () => {
     expect(sent).toMatch(/<session n="1"/);
     expect(sent).toMatch(/<changement n="2"/);
     expect(sent).toMatch(/<mention n="3"/);
+  });
+
+  it('donne au modèle le poste de la personne, en identifiants', async () => {
+    const carla = await createTestUser(tenantId, 'Carla');
+    await adminDb
+      .update(members)
+      .set({ department: 'engineering', job: 'backend', seniority: 5 })
+      .where(and(eq(members.userId, carla.userId), eq(members.organizationId, tenantId)));
+    const seeded = await seedProject(carla);
+    const llm = writes(['Point [1].']);
+
+    await refreshBriefing(carla, seeded.project, { llm });
+
+    const sent = llm.calls[0]?.messages.map((message) => message.content).join('\n') ?? '';
+    expect(sent).toContain(
+      'Son poste : <poste service="engineering" intitule="backend" niveau="senior"/>',
+    );
   });
 
   it('retire les renvois à des numéros qu’on n’a pas fournis', async () => {

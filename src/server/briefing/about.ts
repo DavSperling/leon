@@ -3,7 +3,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { BRIEFING_DELAY_SECONDS, BRIEFING_READ_DAYS, enqueueBriefingRefresh } from './queue';
 
@@ -16,11 +16,16 @@ export async function readAbout(userId: string): Promise<string | null> {
   return row?.about ?? null;
 }
 
-// Un texte vide efface. Comme un signal (signalProjectActivity) : les points de l'utilisateur sont marqués périmés,
-// ceux qu'il a lus dans la semaine se refont dans 30 minutes, les autres à leur prochaine lecture (readBriefing).
-export async function saveAbout(ctx: TenantContext, about: string | null): Promise<void> {
+// Marque périmés les points de la personne, et refait dans 30 minutes ceux qu'elle a lus dans la semaine ; les autres
+// se refont à leur prochaine lecture (readBriefing). Comme un signal (signalProjectActivity). `write` est exécuté dans
+// la même transaction que le marquage : ce qui change le point (le texte « À propos », le poste) et `stale` se posent
+// ensemble. Les points sont sous les droits de la personne : `ctx` est le sien, jamais celui d'un administrateur.
+export async function markBriefingsStale(
+  ctx: TenantContext,
+  write?: (tx: Tx) => Promise<unknown>,
+): Promise<void> {
   const points = await withTenant(ctx, async (tx) => {
-    await tx.update(users).set({ about, updatedAt: new Date() }).where(eq(users.id, ctx.userId));
+    await write?.(tx);
     return tx
       .update(briefings)
       .set({ stale: true })
@@ -36,8 +41,14 @@ export async function saveAbout(ctx: TenantContext, about: string | null): Promi
         { delaySeconds: BRIEFING_DELAY_SECONDS },
       );
     } catch (error) {
-      // Le texte est enregistré : le tic du matin refera le point.
+      // Ce qui a changé est enregistré : le tic du matin refera le point.
       logError('briefing.enqueue_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId });
     }
   }
 }
+
+// Un texte vide efface.
+export const saveAbout = (ctx: TenantContext, about: string | null): Promise<void> =>
+  markBriefingsStale(ctx, (tx) =>
+    tx.update(users).set({ about, updatedAt: new Date() }).where(eq(users.id, ctx.userId)),
+  );

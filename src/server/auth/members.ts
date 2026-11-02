@@ -1,10 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { type AnyColumn, and, asc, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import { markBriefingsStale } from '@/server/briefing/about';
 import { db } from '@/server/db/client';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { logError } from '@/server/log';
 import type { ValidPlacement } from './onboarding';
-import type { TenantContext } from './tenant-context';
+import { resolveTenantContext, type TenantContext } from './tenant-context';
 
 // Les membres d'une organisation, et l'ajout d'un membre par un lien d'invitation (0033) : un propriétaire ou un
 // administrateur crée le lien et l'envoie lui-même. Le lien sert une fois, avant son expiration.
@@ -189,6 +191,19 @@ export async function setMemberPlacement(
         isAdminOf(ctx.userId, ctx.tenantId),
       ),
     )
-    .returning({ id: members.id });
-  return done.length > 0;
+    .returning({ userId: members.userId });
+  const [changed] = done;
+  if (!changed) return false;
+  // Le poste change ce que le point du matin retient : les points de cette personne se refont, sous ses droits (la RLS
+  // ne laisse marquer que les siens). Il est déjà enregistré : un échec ne remonte pas.
+  try {
+    const person = await resolveTenantContext(changed.userId, ctx.tenantId);
+    if (person) await markBriefingsStale(person);
+  } catch (error) {
+    logError('briefing.mark_stale_failed', error, {
+      tenantId: ctx.tenantId,
+      userId: changed.userId,
+    });
+  }
+  return true;
 }

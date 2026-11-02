@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { members } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { dropPoints, pointIsStale, queuedRefreshes, seedPoint } from '@/test/briefing-points';
 import { adminDb } from '@/test/db';
 import { createTestTenant, createTestUser } from '@/test/fixtures';
 import { deleteAccount } from './delete-account';
@@ -272,6 +273,7 @@ describe('le poste porté par un lien', () => {
 });
 
 describe('le poste des membres', () => {
+  const tenantIds: string[] = [];
   let tenantId: string;
   let ana: TenantContext;
   let bob: TenantContext;
@@ -279,9 +281,13 @@ describe('le poste des membres', () => {
   beforeEach(async () => {
     const tenant = await createTestTenant(['Ana', 'Bob']);
     tenantId = tenant.tenantId;
+    tenantIds.push(tenantId);
     [ana, bob] = tenant.members as [TenantContext, TenantContext];
     await setRole(ana, 'admin');
   });
+
+  // Les points marqués périmés touchent le vrai pg-boss de la base de test : on retire leurs travaux à la fin.
+  afterAll(() => dropPoints(tenantIds));
 
   it('listMembers rend le poste de chacun', async () => {
     await adminDb
@@ -326,6 +332,28 @@ describe('le poste des membres', () => {
       goals: [],
       onboardedAt: null,
     });
+  });
+
+  it("le poste de Bob change : ses points sont périmés et remis en file, pas ceux de l'administrateur", async () => {
+    const bobs = await seedPoint(bob);
+    const anas = await seedPoint(ana);
+
+    expect(await setMemberPlacement(ana, await memberIdOf(bob), backend)).toBe(true);
+
+    expect(await pointIsStale(bob, bobs)).toBe(true);
+    expect(await pointIsStale(ana, anas)).toBe(false);
+    const [queued] = await queuedRefreshes(bob, bobs);
+    expect((queued?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
+    expect(await queuedRefreshes(ana, anas)).toEqual([]);
+  });
+
+  it('un refus ne marque aucun point', async () => {
+    const bobs = await seedPoint(bob);
+
+    expect(await setMemberPlacement(bob, await memberIdOf(bob), backend)).toBe(false);
+
+    expect(await pointIsStale(bob, bobs)).toBe(false);
+    expect(await queuedRefreshes(bob, bobs)).toEqual([]);
   });
 
   it('un administrateur fixe aussi son propre poste', async () => {

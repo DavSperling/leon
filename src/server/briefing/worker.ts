@@ -7,6 +7,7 @@ import { listAboutCandidates, proposeAbout } from './about-suggestion';
 import { BRIEFING_TIME_ZONE } from './briefing-prompt';
 import { briefingIsFresh, refreshBriefing } from './briefings';
 import {
+  ABOUT_RETRY_SECONDS,
   AboutJobSchema,
   BRIEFING_QUEUES,
   BRIEFING_READ_DAYS,
@@ -20,9 +21,9 @@ import {
 // you » par personne prête, que lit la file `apropos-proposer`. Sur les files de pg-boss, comme le worker de la
 // recherche (search/worker.ts).
 //
-// Sans modèle (getLlm rend null) : un job de recalcul se termine sans rien faire, sans échec ni reprise. C'est le
-// plus simple : aucune boucle, et le point se refait au prochain signal, à la prochaine lecture ou au tic du matin
-// une fois la clé réglée.
+// Sans modèle (getLlm rend null) : un job de recalcul ou de proposition se termine sans rien faire, sans échec ni
+// reprise. C'est le plus simple : aucune boucle, et le point se refait au prochain signal, à la prochaine lecture ou
+// au tic du matin une fois la clé réglée (le tic ne met alors aucune proposition en file).
 
 export const MORNING_CRON = '0 6 * * *';
 // Le fuseau des dates écrites dans le point (briefing-prompt.ts).
@@ -62,8 +63,9 @@ export async function enqueueMorningRefreshes(): Promise<number> {
 }
 
 // Met en file la proposition « About you » de chaque personne prête (listAboutCandidates). La clé est (organisation,
-// utilisateur) : la file est « stately », une proposition déjà en attente n'est pas doublée. Comme pour les points, un
-// envoi qui échoue n'empêche pas les suivants. Rend le nombre de propositions mises en file.
+// utilisateur) : la file est « stately », une proposition déjà en attente n'est pas doublée, et la fenêtre de trois
+// jours (ABOUT_RETRY_SECONDS) borne les essais payants. Comme pour les points, un envoi qui échoue n'empêche pas les
+// suivants. Rend le nombre de propositions mises en file.
 export async function enqueueAboutProposals(): Promise<number> {
   const candidates = await listAboutCandidates();
   const boss = await getBriefingBoss();
@@ -73,7 +75,7 @@ export async function enqueueAboutProposals(): Promise<number> {
       const id = await boss.send(
         BRIEFING_QUEUES.about,
         { tenantId, userId },
-        { singletonKey: `${tenantId}:${userId}` },
+        { singletonKey: `${tenantId}:${userId}`, singletonSeconds: ABOUT_RETRY_SECONDS },
       );
       if (id !== null) queued += 1;
     } catch (error) {
@@ -145,17 +147,21 @@ async function registerWorkers(
     BRIEFING_QUEUES.morning,
     { batchSize: 1, localConcurrency: 1, ...polling },
     async () => {
-      // Les deux mises en file tournent toujours : l'échec de l'une ne prive pas l'autre de son tic du jour. Chaque
-      // échec est journalisé, puis la première erreur est relancée, pour que pg-boss reprenne le tic.
+      // Les deux mises en file tournent : l'échec de l'une ne prive pas l'autre de son tic du jour. Chaque échec est
+      // journalisé, puis la première erreur est relancée, pour que pg-boss reprenne le tic. Sans modèle, pas de
+      // proposition : le job terminé à vide occuperait la fenêtre de trois jours de chaque personne (ABOUT_RETRY_SECONDS).
       const results = await Promise.allSettled([
         enqueueMorningRefreshes(),
-        enqueueAboutProposals(),
+        deps.llm === null ? 0 : enqueueAboutProposals(),
       ]);
-      const errors = results.flatMap((result) =>
-        result.status === 'rejected' ? [result.reason] : [],
+      const failures = results.flatMap((result, index) =>
+        result.status === 'rejected'
+          ? [{ part: index === 0 ? 'points' : 'about', error: result.reason }]
+          : [],
       );
-      for (const error of errors) logError('briefing.morning_tick_failed', error);
-      if (errors.length > 0) throw new Error(safeErrorSummary(errors[0]));
+      for (const { part, error } of failures)
+        logError('briefing.morning_tick_failed', error, { part });
+      if (failures[0]) throw new Error(safeErrorSummary(failures[0].error));
     },
   );
   await boss.work(

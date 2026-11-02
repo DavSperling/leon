@@ -191,7 +191,7 @@ describe('startBriefingWorker', () => {
 
   it('le tic du matin met en file les points lus dans la semaine, puis les propositions « About you »', async () => {
     mocks.execute.mockResolvedValue({ rows: [] });
-    await startBriefingWorker({ llm: null });
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
 
     await handlerOf('point-matin')();
 
@@ -199,23 +199,48 @@ describe('startBriefingWorker', () => {
     expect(mocks.listAboutCandidates).toHaveBeenCalledOnce();
   });
 
-  it('le tic du matin envoie une proposition par personne prête, avec sa clé', async () => {
-    mocks.listAboutCandidates.mockResolvedValue([
-      { tenantId: ctx.tenantId, userId: ctx.userId },
-      { tenantId: job.tenantId, userId: randomUUID() },
-    ]);
+  // Sans clé, le job d'une proposition se termine sans rien faire, mais il occuperait la fenêtre de trois jours de la
+  // personne (singletonSeconds) : une fois la clé réglée, elle attendrait. Les points, eux, continuent.
+  it('sans modèle, le tic du matin met les points en file mais pas les propositions « About you »', async () => {
+    mocks.execute.mockResolvedValue({
+      rows: [{ tenant_id: ctx.tenantId, user_id: ctx.userId, project: job.project }],
+    });
+    mocks.listAboutCandidates.mockResolvedValue([aboutJob]);
     await startBriefingWorker({ llm: null });
+
+    await expect(handlerOf('point-matin')()).resolves.toBeUndefined();
+
+    expect(mocks.enqueueBriefingRefresh).toHaveBeenCalledOnce();
+    expect(mocks.listAboutCandidates).not.toHaveBeenCalled();
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  // Un échec qui se répète (refus du modèle, réponse vide) garde la personne candidate : sans la fenêtre
+  // `singletonSeconds`, elle serait remise en file, et payée, chaque matin.
+  it('le tic du matin envoie une proposition par personne prête, avec sa clé et sa fenêtre de trois jours', async () => {
+    const tenantId = '11111111-1111-4111-8111-111111111111';
+    const candidates = [
+      { tenantId, userId: '22222222-2222-4222-8222-222222222222' },
+      { tenantId, userId: '33333333-3333-4333-8333-333333333333' },
+    ];
+    mocks.listAboutCandidates.mockResolvedValue(candidates);
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
 
     await handlerOf('point-matin')();
 
     const { calls } = mocks.send.mock;
-    expect(calls).toHaveLength(2);
-    for (const [queue, data, options] of calls) {
-      const { tenantId, userId } = data as typeof aboutJob;
-      expect(queue).toBe('apropos-proposer');
-      expect(options).toEqual({ singletonKey: `${tenantId}:${userId}` });
-    }
-    expect(calls[0]?.[1]).toEqual(aboutJob);
+    expect(calls.map(([queue]) => queue)).toEqual(['apropos-proposer', 'apropos-proposer']);
+    expect(calls.map(([, data]) => data)).toEqual(candidates);
+    expect(calls.map(([, , options]) => options)).toEqual([
+      {
+        singletonKey: '11111111-1111-4111-8111-111111111111:22222222-2222-4222-8222-222222222222',
+        singletonSeconds: 259_200,
+      },
+      {
+        singletonKey: '11111111-1111-4111-8111-111111111111:33333333-3333-4333-8333-333333333333',
+        singletonSeconds: 259_200,
+      },
+    ]);
   });
 
   // Les deux envois tournent toujours : un échec de l'un ne retire pas à l'autre son tic du jour, et l'erreur remonte
@@ -224,12 +249,13 @@ describe('startBriefingWorker', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.execute.mockRejectedValueOnce(new Error('base indisponible'));
     mocks.listAboutCandidates.mockResolvedValue([aboutJob]);
-    await startBriefingWorker({ llm: null });
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
 
     await expect(handlerOf('point-matin')()).rejects.toThrow(/base indisponible/);
 
     expect(mocks.send).toHaveBeenCalledExactlyOnceWith('apropos-proposer', aboutJob, {
       singletonKey: `${aboutJob.tenantId}:${aboutJob.userId}`,
+      singletonSeconds: 259_200,
     });
     expect(log.mock.calls.flat().map(String).join('\n')).toContain('briefing.morning_tick_failed');
   });
@@ -240,24 +266,24 @@ describe('startBriefingWorker', () => {
       rows: [{ tenant_id: ctx.tenantId, user_id: ctx.userId, project: job.project }],
     });
     mocks.listAboutCandidates.mockRejectedValueOnce(new Error('liste indisponible'));
-    await startBriefingWorker({ llm: null });
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
 
     await expect(handlerOf('point-matin')()).rejects.toThrow(/liste indisponible/);
 
     expect(mocks.enqueueBriefingRefresh).toHaveBeenCalledOnce();
   });
 
-  it('le tic du matin relance la première erreur et journalise les deux', async () => {
+  it('le tic du matin relance la première erreur et journalise les deux, chacune avec sa moitié', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.execute.mockRejectedValueOnce(new Error('base indisponible'));
     mocks.listAboutCandidates.mockRejectedValueOnce(new Error('liste indisponible'));
-    await startBriefingWorker({ llm: null });
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
 
     await expect(handlerOf('point-matin')()).rejects.toThrow(/base indisponible/);
 
-    const logged = log.mock.calls.flat().map(String).join('\n');
-    expect(logged).toContain('base indisponible');
-    expect(logged).toContain('liste indisponible');
+    const lines = log.mock.calls.map((call) => call.map(String).join(' '));
+    expect(lines.find((line) => line.includes('base indisponible'))).toContain('"part":"points"');
+    expect(lines.find((line) => line.includes('liste indisponible'))).toContain('"part":"about"');
   });
 });
 
@@ -302,7 +328,7 @@ describe('processAboutJob (file apropos-proposer)', () => {
     expect(mocks.proposeAbout).not.toHaveBeenCalled();
   });
 
-  it('relance à pg-boss une panne du modèle en résumé, journalisée sans son message de base', async () => {
+  it('relance une panne du modèle, que pg-boss reprendra', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.proposeAbout.mockRejectedValueOnce(new LlmError('erreur du modèle'));
     await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
@@ -311,6 +337,30 @@ describe('processAboutJob (file apropos-proposer)', () => {
       /LlmError.*erreur du modèle/,
     );
     expect(log.mock.calls.flat().map(String).join('\n')).toContain('about.propose_failed');
+  });
+
+  // proposeAbout écrit un texte tiré des sources privées de la personne : l'erreur d'une insertion cite ses
+  // paramètres. Elle ne doit sortir ni vers pg-boss (pgboss.job.output) ni vers les journaux.
+  it('relance à pg-boss une erreur de base en résumé, journalisée sans son message de base', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const databaseError = Object.assign(new Error("insert … values ('mot de passe: violet')"), {
+      code: '23514',
+      severity: 'ERROR',
+      constraint: 'about_suggestions_text_check',
+    });
+    mocks.proposeAbout.mockRejectedValueOnce(databaseError);
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
+
+    const failure = await handlerOf('apropos-proposer')([{ data: aboutJob }]).catch(
+      (error: Error) => error,
+    );
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain('about_suggestions_text_check');
+    expect((failure as Error).message).not.toContain('violet');
+    const logged = log.mock.calls.flat().map(String).join('\n');
+    expect(logged).toContain('about.propose_failed');
+    expect(logged).not.toContain('violet');
   });
 });
 

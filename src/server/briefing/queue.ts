@@ -24,6 +24,11 @@ export const BRIEFING_QUEUES = {
 // le recalcul en file dans 30 minutes ; les signaux suivants le trouvent en attente et n'en ajoutent pas.
 export const BRIEFING_DELAY_SECONDS = 30 * 60;
 
+// Au plus une série d'essais (4) de la proposition « About you » par personne tous les trois jours : une personne que
+// le modèle refuse, ou à qui il ne répond rien, reste candidate et serait payée chaque matin. pg-boss garde la fenêtre
+// (`singletonSeconds`) même quand le job est terminé ou échoué ; elle doit rester sous deleteAfterSeconds (7 jours).
+export const ABOUT_RETRY_SECONDS = 3 * 24 * 60 * 60;
+
 // « stately » : un seul job en attente et un seul en cours par clé (organisation, utilisateur, projet). Un second
 // envoi pendant l'attente est ignoré par pg-boss (send rend null) ; une donnée arrivée pendant le recalcul en met
 // un nouveau en file. Un échec (modèle, base) est repris trois fois, de plus en plus tard. La file des propositions

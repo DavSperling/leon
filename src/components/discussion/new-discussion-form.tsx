@@ -2,7 +2,7 @@
 
 import { ArrowUp } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useId, useRef, useState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import { GlassCard, IconButton, Pill, Textarea, useThinking } from '@/components/verre';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
@@ -26,6 +26,7 @@ export function NewDiscussionForm({
   const [question, setQuestion] = useState('');
   const form = useRef<HTMLFormElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
+  const examplesLabel = useId();
   const { setThinking } = useThinking();
   useEffect(() => setThinking(pending), [pending, setThinking]);
   const count = question.length;
@@ -107,16 +108,25 @@ export function NewDiscussionForm({
         </form>
       </GlassCard>
       {!disabled && examples && examples.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <span className="text-label text-muted">{t('examplesLabel')}</span>
+        // biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset)
+        <div
+          role="group"
+          aria-labelledby={examplesLabel}
+          className="flex flex-wrap items-center justify-center gap-2"
+        >
+          <span id={examplesLabel} className="text-label text-muted">
+            {t('examplesLabel')}
+          </span>
           {examples.map((example) => (
             <Pill
               key={example}
+              // pendant l'envoi, un clic ne doit pas remplacer la question si l'envoi échoue
+              disabled={pending}
               onClick={() => {
                 setQuestion(example);
                 field.current?.focus();
               }}
-              className="h-auto min-h-8 whitespace-normal py-1 text-left"
+              className="h-auto min-h-8 max-w-full shrink whitespace-normal py-1 text-left"
             >
               {nb(example)}
             </Pill>

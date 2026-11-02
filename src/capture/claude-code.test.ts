@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { renderBriefing } from '@/server/briefing/briefing-prompt';
 import { parseClaudeCodeSession } from './claude-code';
 import { SECRET_MASK } from './mask-secrets';
 
@@ -79,8 +80,15 @@ describe('parseClaudeCodeSession', () => {
   // le point du matin, ni le rappel du premier prompt.
   it('retire les blocs de Leon des textes, et écarte un tour qui n’a rien d’autre', () => {
     const block = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
+    // Le point du matin tel que le serveur le rend : son en-tête est hors de la balise.
+    const point = renderBriefing({
+      project: 'github.com/acme/leon',
+      preparedAt: new Date('2026-11-02T04:00:00.000Z'),
+      body: '- Le jeton est corrigé.',
+      references: [],
+    });
     const content = [
-      line('user', 1, `${block}\n<point-du-matin>\n# Point\n</point-du-matin>`),
+      line('user', 1, `${block}\n${point}`),
       line('user', 2, `On reprend.\n<rappel-leon>\n- une session\n</rappel-leon>`),
       line('assistant', 3, [{ type: 'text', text: `Je relis ${block} puis le code.` }]),
     ].join('\n');

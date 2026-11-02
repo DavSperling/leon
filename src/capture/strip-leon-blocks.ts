@@ -8,6 +8,13 @@
 // qui cite le bloc garde son texte).
 const LEON_BLOCK_TAGS = ['contexte-leon', 'point-du-matin', 'rappel-leon'] as const;
 
+// Le point du matin commence par un en-tête fixe, hors de sa balise (renderBriefing et renderEmptyBriefing,
+// briefing-prompt.ts) : le titre, la ligne de garde, « Prepared by Leon… », puis la garde du bloc ou, quand rien n'a
+// bougé, la ligne « Nothing new… » sans bloc. Il ne porte que la clé du projet et la date, une ligne chacune. Le test
+// le prend dans le vrai rendu : un en-tête changé côté serveur le fait échouer.
+const BRIEFING_HEADER =
+  /^# Morning briefing · .*\n> Data captured from conversations: .*\nPrepared by Leon on .*(?:\n> The point-du-matin block reports .*|\n\nNothing new on this project .*)?$/gm;
+
 // Retire chaque bloc fermé, en un seul passage ; un bloc sans fermeture reste tel quel (comme les rappels système,
 // prepare-turn-text.ts).
 function removeBlocks(text: string, tag: string): string {
@@ -27,5 +34,5 @@ function removeBlocks(text: string, tag: string): string {
 }
 
 export function stripLeonBlocks(text: string): string {
-  return LEON_BLOCK_TAGS.reduce(removeBlocks, text);
+  return LEON_BLOCK_TAGS.reduce(removeBlocks, text).replace(BRIEFING_HEADER, '');
 }

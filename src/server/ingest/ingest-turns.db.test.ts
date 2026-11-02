@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngestPayload, Turn } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { renderBriefing } from '@/server/briefing/briefing-prompt';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -313,6 +314,13 @@ describe('ingestTurns', () => {
   // ancienne qui ne le retire pas : seulement pour les sessions de code, les seules qui le reçoivent.
   describe('les blocs de Leon', () => {
     const block = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
+    // Le point du matin tel que le serveur le rend : son en-tête est hors de la balise.
+    const point = renderBriefing({
+      project: 'github.com/acme/leon',
+      preparedAt: new Date('2026-11-02T04:00:00.000Z'),
+      body: '- Le jeton est corrigé.',
+      references: [],
+    });
     const storedTexts = async (ctx: TenantContext, sourceId: string) =>
       (await readTurns(ctx, sourceId)).map((turn) => turn.text).sort();
 
@@ -323,10 +331,7 @@ describe('ingestTurns', () => {
         paul,
         payload(
           externalId,
-          [
-            newTurn(1, { text: `${block}\n<point-du-matin>\n# Point\n</point-du-matin>` }),
-            newTurn(2, { text: `Je relis.\n${block}` }),
-          ],
+          [newTurn(1, { text: `${block}\n${point}` }), newTurn(2, { text: `Je relis.\n${block}` })],
           { kind: 'claude_code' },
         ),
       );

@@ -26,6 +26,7 @@ import {
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const HOME = '/home/demo';
 const RESULT: IngestResult = {
   sourceId: crypto.randomUUID(),
   inserted: 2,
@@ -116,6 +117,7 @@ function makeDeps(
     git?: CaptureDeps['git'];
     projectDir?: string;
     facts?: CaptureDeps['facts'];
+    env?: CaptureDeps['env'];
   } = {},
 ) {
   const session = overrides.session ?? sessionWithSecrets();
@@ -132,6 +134,9 @@ function makeDeps(
     out,
     readFile: readSessionFile,
     git,
+    // Jamais l'environnement ni le HOME du lanceur des tests (Cursor, Codex).
+    env: overrides.env ?? {},
+    home: HOME,
     ...(overrides.projectDir === undefined ? {} : { projectDir: overrides.projectDir }),
     ...(overrides.facts === undefined ? {} : { facts: overrides.facts }),
   };
@@ -273,6 +278,55 @@ describe('captureSessionFromHook : le JSON de la doc de Claude Code (SessionEnd)
       expect(send).toHaveBeenCalledTimes(1);
     },
   );
+});
+
+// Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés à
+// sa migration. Leur fichier de session n'est pas au format de Claude Code, et chacun a son propre crochet.
+describe('captureSessionFromHook : lancée par un autre outil que Claude Code', () => {
+  const hookWith = (fields: Record<string, unknown>) =>
+    JSON.stringify({ ...JSON.parse(HOOK), ...fields });
+
+  it.each([
+    ['une entrée Cursor (cursor_version)', hookWith({ cursor_version: '1.7.2' }), {}],
+    ['CURSOR_VERSION posé', HOOK, { CURSOR_VERSION: '1.7.2' }],
+    [
+      'une session Codex sous CODEX_HOME',
+      hookWith({ transcript_path: '/codex/sessions/2026/11/02/rollout-1.jsonl' }),
+      { CODEX_HOME: '/codex' },
+    ],
+    [
+      'une session Codex sous ~/.codex, sans CODEX_HOME',
+      hookWith({ transcript_path: `${HOME}/.codex/sessions/2026/11/02/rollout-1.jsonl` }),
+      {},
+    ],
+  ])('%s : code 0, sans rien lire, envoyer ni écrire', async (_name, stdin, env) => {
+    const { deps, send, readSessionFile, git, out } = makeDeps({ env });
+
+    expect(await captureSessionFromHook(stdin, deps)).toBe(0);
+
+    expect(readSessionFile).not.toHaveBeenCalled();
+    expect(git).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+    expect(out).not.toHaveBeenCalled();
+    expect(stderr).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['une session Claude Code', `${HOME}/.claude/projects/-r/s1.jsonl`, {}],
+    [
+      'une session sous ~/.codex quand CODEX_HOME est ailleurs',
+      `${HOME}/.codex/sessions/s1.jsonl`,
+      { CODEX_HOME: '/codex' },
+    ],
+  ])('%s : la session part, comme d’habitude', async (_name, transcriptPath, env) => {
+    const { deps, send } = makeDeps({ env: { CURSOR_VERSION: '', ...env } });
+
+    expect(await captureSessionFromHook(hookWith({ transcript_path: transcriptPath }), deps)).toBe(
+      0,
+    );
+
+    expect(send).toHaveBeenCalledTimes(1);
+  });
 });
 
 // Le `cwd` du crochet suit Claude (doc : « the worktree root after Claude enters a worktree, and the new directory

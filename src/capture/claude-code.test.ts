@@ -75,6 +75,22 @@ describe('parseClaudeCodeSession', () => {
     ]);
   });
 
+  // Un bloc injecté par Leon n'est jamais recapté (T06 du plan mémoire des sessions) : ni le bloc de démarrage, ni
+  // le point du matin, ni le rappel du premier prompt.
+  it('retire les blocs de Leon des textes, et écarte un tour qui n’a rien d’autre', () => {
+    const block = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
+    const content = [
+      line('user', 1, `${block}\n<point-du-matin>\n# Point\n</point-du-matin>`),
+      line('user', 2, `On reprend.\n<rappel-leon>\n- une session\n</rappel-leon>`),
+      line('assistant', 3, [{ type: 'text', text: `Je relis ${block} puis le code.` }]),
+    ].join('\n');
+
+    expect(parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.text])).toEqual([
+      ['uuid-2', 'On reprend.'],
+      ['uuid-3', 'Je relis  puis le code.'],
+    ]);
+  });
+
   it('renvoie null pour un fichier vide ou sans conversation exploitable', () => {
     expect(parseClaudeCodeSession('')).toBeNull();
     expect(parseClaudeCodeSession('{"type":"mode"}\nn’importe quoi\n')).toBeNull();

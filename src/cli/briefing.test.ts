@@ -475,4 +475,73 @@ describe('runBriefing', () => {
     expect(out).toEqual([]);
     expect(err.join('\n')).toMatch(/LEON_URL/);
   });
+
+  // Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés
+  // à sa migration. Chaque outil reçoit le bloc par son propre crochet : rien en double, et rien ne part.
+  describe('lancée par un autre outil que Claude Code', () => {
+    const hookWith = (fields: Record<string, unknown>) =>
+      JSON.stringify({ ...JSON.parse(hookJson('/projets/leon')), ...fields });
+    // `~` : le HOME de la commande, connu seulement une fois les tests lancés.
+    const transcriptAt = (path: string) => (home: string) =>
+      hookWith({ transcript_path: path.replace(/^~/, home) });
+
+    it.each([
+      ['une entrée Cursor (cursor_version)', () => hookWith({ cursor_version: '1.7.2' }), {}],
+      ['CURSOR_VERSION posé', () => hookJson('/projets/leon'), { CURSOR_VERSION: '1.7.2' }],
+      [
+        'une session Codex sous CODEX_HOME',
+        transcriptAt('/codex/sessions/2026/11/02/rollout-1.jsonl'),
+        { CODEX_HOME: '/codex' },
+      ],
+      [
+        'une session Codex sous ~/.codex, sans CODEX_HOME',
+        transcriptAt('~/.codex/sessions/2026/11/02/rollout-1.jsonl'),
+        {},
+      ],
+    ])('%s : code 0, sans rien écrire ni rien demander', async (_name, stdin, extraEnv) => {
+      const { run, out, err, git, fetchImpl } = setup({
+        stdin: Readable.from([stdin(agreed)]),
+        env: { ...serverEnv, ...extraEnv },
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([]);
+      expect(err).toEqual([]);
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(git).not.toHaveBeenCalled();
+    });
+
+    it('sous Cursor, n’écrit rien même sans LEON_URL', async () => {
+      const { run, out, err } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        env: { CURSOR_VERSION: '1.7.2' },
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([]);
+      expect(err).toEqual([]);
+    });
+
+    it.each([
+      ['une session Claude Code', '~/.claude/projects/-p/s.jsonl', {}],
+      ['un dossier voisin de sessions/', '~/.codex/sessions-copie/s.jsonl', {}],
+      [
+        'une session sous ~/.codex quand CODEX_HOME est ailleurs',
+        '~/.codex/sessions/s.jsonl',
+        { CODEX_HOME: '/codex' },
+      ],
+      ['un chemin relatif', '.codex/sessions/s.jsonl', { CODEX_HOME: '.codex' }],
+    ])('%s : le bloc, comme d’habitude', async (_name, transcriptPath, extraEnv) => {
+      const { run, out } = setup({
+        stdin: Readable.from([transcriptAt(transcriptPath)(agreed)]),
+        env: { ...serverEnv, CURSOR_VERSION: '', ...extraEnv },
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([BLOCK]);
+    });
+  });
 });

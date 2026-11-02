@@ -7,7 +7,8 @@
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
 //   l'entrée standard du crochet un JSON qui porte les champs communs, dont `session_id` et `cwd` (« Current working
-//   directory when the hook is invoked »). Seuls ces deux-là sont lus ici.
+//   directory when the hook is invoked »). Seuls ces deux-là sont lus ici, plus `transcript_path` et
+//   `cursor_version` pour reconnaître un autre outil (isOtherToolHook, capture-session.ts).
 // - Pour SessionStart, Claude Code ajoute la sortie standard au contexte de la session : seul le bloc y passe ; les
 //   messages vont sur la sortie d'erreur, que Claude ne voit pas quand le code de sortie vaut 0.
 // - Le crochet lance `hookCommand(<dépôt de Leon>, 'briefing')` (hook-commands.ts : `pnpm -s
@@ -34,7 +35,7 @@ import {
   ContextRequestSchema,
   ContextResponseSchema,
 } from '../capture/api-contract';
-import { readHookStdin } from './capture-session';
+import { isOtherToolHook, readHookStdin } from './capture-session';
 import { factsConsent } from './consent';
 import { parseServerEnv, type ServerEnv } from './env';
 import { type GitRunner, projectKeyFor } from './project-key';
@@ -156,11 +157,13 @@ export type BriefingCommandDeps = {
 };
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
-// l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code.
+// l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code. Lancée par un autre
+// outil (Cursor, Codex : isOtherToolHook), elle n'écrit rien, pas même un message de configuration.
 export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
   try {
-    const server = parseServerEnv(deps.env);
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
+    if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
+    const server = parseServerEnv(deps.env);
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
     if ((await factsConsent(deps.home, 'claude_code')) === null) {

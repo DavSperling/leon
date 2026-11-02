@@ -14,35 +14,42 @@ type Handler = (jobs?: Array<{ data: unknown }>) => Promise<void>;
 const mocks = vi.hoisted(() => ({
   work: vi.fn(),
   schedule: vi.fn(),
+  send: vi.fn(),
   execute: vi.fn(),
   enqueueBriefingRefresh: vi.fn(),
   refreshBriefing: vi.fn(),
   briefingIsFresh: vi.fn(),
   resolveTenantContext: vi.fn(),
+  listAboutCandidates: vi.fn(),
+  proposeAbout: vi.fn(),
 }));
 
 vi.mock('./queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./queue')>()),
-  getBriefingBoss: async () => ({ work: mocks.work, schedule: mocks.schedule }),
+  getBriefingBoss: async () => ({ work: mocks.work, schedule: mocks.schedule, send: mocks.send }),
   enqueueBriefingRefresh: mocks.enqueueBriefingRefresh,
 }));
 vi.mock('./briefings', () => ({
   refreshBriefing: mocks.refreshBriefing,
   briefingIsFresh: mocks.briefingIsFresh,
 }));
+vi.mock('./about-suggestion', () => ({
+  listAboutCandidates: mocks.listAboutCandidates,
+  proposeAbout: mocks.proposeAbout,
+}));
 vi.mock('@/server/db/client', () => ({ db: { execute: mocks.execute } }));
 vi.mock('@/server/auth/tenant-context', () => ({
   resolveTenantContext: mocks.resolveTenantContext,
 }));
 
-const { enqueueMorningRefreshes, MORNING_READ_DAYS, startBriefingWorker } = await import(
-  './worker'
-);
+const { enqueueAboutProposals, enqueueMorningRefreshes, MORNING_READ_DAYS, startBriefingWorker } =
+  await import('./worker');
 
 const globalForWorker = globalThis as typeof globalThis & { leonBriefingWorker?: Promise<void> };
 
 const ctx: TenantContext = { tenantId: randomUUID(), userId: randomUUID(), principals: [] };
 const job = { tenantId: ctx.tenantId, userId: ctx.userId, project: 'github.com/acme/leon' };
+const aboutJob = { tenantId: ctx.tenantId, userId: ctx.userId };
 
 function handlerOf(queue: string): Handler {
   const call = mocks.work.mock.calls.find(([name]) => name === queue);
@@ -63,6 +70,9 @@ beforeEach(() => {
   mocks.refreshBriefing.mockResolvedValue(undefined);
   mocks.briefingIsFresh.mockResolvedValue(false);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
+  mocks.send.mockResolvedValue('job-id');
+  mocks.listAboutCandidates.mockResolvedValue([]);
+  mocks.proposeAbout.mockResolvedValue(true);
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -89,7 +99,7 @@ describe('startBriefingWorker', () => {
     await startBriefingWorker({ llm: null });
     await startBriefingWorker({ llm: null });
 
-    expect(mocks.work).toHaveBeenCalledTimes(2);
+    expect(mocks.work).toHaveBeenCalledTimes(3);
   });
 
   it('refait le point du job avec le modèle réglé, sous les droits de son utilisateur', async () => {
@@ -172,13 +182,151 @@ describe('startBriefingWorker', () => {
     await expect(handlerOf('point-refresh')([{ data: job }])).rejects.toThrow(/erreur du modèle/);
   });
 
-  it('le tic du matin met en file les points lus dans la semaine', async () => {
+  it('lit la file des propositions « About you », un job à la fois par appel', async () => {
+    await startBriefingWorker({ llm: null });
+
+    expect(optionsOf('apropos-proposer')).toMatchObject({ batchSize: 1, localConcurrency: 1 });
+    expect(optionsOf('apropos-proposer')).not.toHaveProperty('pollingIntervalSeconds');
+  });
+
+  it('le tic du matin met en file les points lus dans la semaine, puis les propositions « About you »', async () => {
     mocks.execute.mockResolvedValue({ rows: [] });
     await startBriefingWorker({ llm: null });
 
     await handlerOf('point-matin')();
 
     expect(mocks.execute).toHaveBeenCalledOnce();
+    expect(mocks.listAboutCandidates).toHaveBeenCalledOnce();
+  });
+
+  it('le tic du matin envoie une proposition par personne prête, avec sa clé', async () => {
+    mocks.listAboutCandidates.mockResolvedValue([
+      { tenantId: ctx.tenantId, userId: ctx.userId },
+      { tenantId: job.tenantId, userId: randomUUID() },
+    ]);
+    await startBriefingWorker({ llm: null });
+
+    await handlerOf('point-matin')();
+
+    const { calls } = mocks.send.mock;
+    expect(calls).toHaveLength(2);
+    for (const [queue, data, options] of calls) {
+      const { tenantId, userId } = data as typeof aboutJob;
+      expect(queue).toBe('apropos-proposer');
+      expect(options).toEqual({ singletonKey: `${tenantId}:${userId}` });
+    }
+    expect(calls[0]?.[1]).toEqual(aboutJob);
+  });
+
+  // Les deux envois tournent toujours : un échec de l'un ne retire pas à l'autre son tic du jour, et l'erreur remonte
+  // quand même, pour que pg-boss reprenne le tic (comme avant les propositions).
+  it('le tic du matin envoie les propositions même si la mise en file des points échoue, et relance l’erreur', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.execute.mockRejectedValueOnce(new Error('base indisponible'));
+    mocks.listAboutCandidates.mockResolvedValue([aboutJob]);
+    await startBriefingWorker({ llm: null });
+
+    await expect(handlerOf('point-matin')()).rejects.toThrow(/base indisponible/);
+
+    expect(mocks.send).toHaveBeenCalledExactlyOnceWith('apropos-proposer', aboutJob, {
+      singletonKey: `${aboutJob.tenantId}:${aboutJob.userId}`,
+    });
+    expect(log.mock.calls.flat().map(String).join('\n')).toContain('briefing.morning_tick_failed');
+  });
+
+  it('le tic du matin met les points en file même si la liste des propositions échoue, et relance l’erreur', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.execute.mockResolvedValue({
+      rows: [{ tenant_id: ctx.tenantId, user_id: ctx.userId, project: job.project }],
+    });
+    mocks.listAboutCandidates.mockRejectedValueOnce(new Error('liste indisponible'));
+    await startBriefingWorker({ llm: null });
+
+    await expect(handlerOf('point-matin')()).rejects.toThrow(/liste indisponible/);
+
+    expect(mocks.enqueueBriefingRefresh).toHaveBeenCalledOnce();
+  });
+
+  it('le tic du matin relance la première erreur et journalise les deux', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.execute.mockRejectedValueOnce(new Error('base indisponible'));
+    mocks.listAboutCandidates.mockRejectedValueOnce(new Error('liste indisponible'));
+    await startBriefingWorker({ llm: null });
+
+    await expect(handlerOf('point-matin')()).rejects.toThrow(/base indisponible/);
+
+    const logged = log.mock.calls.flat().map(String).join('\n');
+    expect(logged).toContain('base indisponible');
+    expect(logged).toContain('liste indisponible');
+  });
+});
+
+describe('processAboutJob (file apropos-proposer)', () => {
+  it('écrit la proposition avec le modèle réglé, sous les droits de la personne', async () => {
+    const llm = createFakeLlm({ texts: ['Proposition.'] });
+    await startBriefingWorker({ llm });
+
+    await handlerOf('apropos-proposer')([{ data: aboutJob }]);
+
+    expect(mocks.resolveTenantContext).toHaveBeenCalledExactlyOnceWith(
+      aboutJob.userId,
+      aboutJob.tenantId,
+    );
+    expect(mocks.proposeAbout).toHaveBeenCalledExactlyOnceWith(ctx, { llm });
+  });
+
+  it('sans modèle, termine le job sans rien appeler et sans échec', async () => {
+    await startBriefingWorker({ llm: null });
+
+    await expect(handlerOf('apropos-proposer')([{ data: aboutJob }])).resolves.toBeUndefined();
+
+    expect(mocks.resolveTenantContext).not.toHaveBeenCalled();
+    expect(mocks.proposeAbout).not.toHaveBeenCalled();
+  });
+
+  it('saute sans erreur une personne partie de l’organisation', async () => {
+    mocks.resolveTenantContext.mockResolvedValue(null);
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
+
+    await expect(handlerOf('apropos-proposer')([{ data: aboutJob }])).resolves.toBeUndefined();
+
+    expect(mocks.proposeAbout).not.toHaveBeenCalled();
+  });
+
+  it('refuse un job qui ne porte pas deux identifiants, sans rien écrire', async () => {
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
+
+    await expect(
+      handlerOf('apropos-proposer')([{ data: { ...aboutJob, userId: 'evil' } }]),
+    ).rejects.toThrow();
+    expect(mocks.proposeAbout).not.toHaveBeenCalled();
+  });
+
+  it('relance à pg-boss une panne du modèle en résumé, journalisée sans son message de base', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.proposeAbout.mockRejectedValueOnce(new LlmError('erreur du modèle'));
+    await startBriefingWorker({ llm: createFakeLlm({ texts: [] }) });
+
+    await expect(handlerOf('apropos-proposer')([{ data: aboutJob }])).rejects.toThrow(
+      /LlmError.*erreur du modèle/,
+    );
+    expect(log.mock.calls.flat().map(String).join('\n')).toContain('about.propose_failed');
+  });
+});
+
+describe('enqueueAboutProposals', () => {
+  it('continue après l’échec d’un envoi, et ne compte que les propositions mises en file', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.listAboutCandidates.mockResolvedValue(
+      Array.from({ length: 3 }, () => ({ tenantId: ctx.tenantId, userId: randomUUID() })),
+    );
+    mocks.send
+      .mockRejectedValueOnce(new Error('pg-boss indisponible'))
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce('job-id');
+
+    expect(await enqueueAboutProposals()).toBe(1);
+    expect(mocks.send).toHaveBeenCalledTimes(3);
   });
 });
 

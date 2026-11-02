@@ -3,9 +3,11 @@ import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import type { Llm } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
+import { listAboutCandidates, proposeAbout } from './about-suggestion';
 import { BRIEFING_TIME_ZONE } from './briefing-prompt';
 import { briefingIsFresh, refreshBriefing } from './briefings';
 import {
+  AboutJobSchema,
   BRIEFING_QUEUES,
   BRIEFING_READ_DAYS,
   BriefingJobSchema,
@@ -14,8 +16,9 @@ import {
 } from './queue';
 
 // Le worker du point du matin (T13) : il lit la file `point-refresh` (un point à refaire) et, chaque jour à 6 h,
-// heure de Paris, le tic `point-matin` remet en file les points lus dans la semaine. Sur les files de pg-boss,
-// comme le worker de la recherche (search/worker.ts).
+// heure de Paris, le tic `point-matin` remet en file les points lus dans la semaine, puis une proposition « About
+// you » par personne prête, que lit la file `apropos-proposer`. Sur les files de pg-boss, comme le worker de la
+// recherche (search/worker.ts).
 //
 // Sans modèle (getLlm rend null) : un job de recalcul se termine sans rien faire, sans échec ni reprise. C'est le
 // plus simple : aucune boucle, et le point se refait au prochain signal, à la prochaine lecture ou au tic du matin
@@ -58,6 +61,28 @@ export async function enqueueMorningRefreshes(): Promise<number> {
   return queued;
 }
 
+// Met en file la proposition « About you » de chaque personne prête (listAboutCandidates). La clé est (organisation,
+// utilisateur) : la file est « stately », une proposition déjà en attente n'est pas doublée. Comme pour les points, un
+// envoi qui échoue n'empêche pas les suivants. Rend le nombre de propositions mises en file.
+export async function enqueueAboutProposals(): Promise<number> {
+  const candidates = await listAboutCandidates();
+  const boss = await getBriefingBoss();
+  let queued = 0;
+  for (const { tenantId, userId } of candidates) {
+    try {
+      const id = await boss.send(
+        BRIEFING_QUEUES.about,
+        { tenantId, userId },
+        { singletonKey: `${tenantId}:${userId}` },
+      );
+      if (id !== null) queued += 1;
+    } catch (error) {
+      logError('about.enqueue_failed', error, { tenantId, userId });
+    }
+  }
+  return queued;
+}
+
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte capté (une
 // erreur de base cite ses paramètres) ; seulement son résumé (safeErrorSummary).
 function rethrowSummary(event: string, error: unknown, ids: Record<string, string> = {}): never {
@@ -83,6 +108,22 @@ async function processRefreshJob(data: unknown, deps: { llm: Llm | null }): Prom
   }
 }
 
+// Même patron que le recalcul d'un point. Sans modèle, le job se termine sans échec : la proposition se remettra en
+// file au prochain tic, une fois la clé réglée. Une panne du modèle remonte (LlmError), et pg-boss reprend le job.
+async function processAboutJob(data: unknown, deps: { llm: Llm | null }): Promise<void> {
+  const { llm } = deps;
+  if (llm === null) return;
+  const job = AboutJobSchema.parse(data);
+  try {
+    const ctx = await resolveTenantContext(job.userId, job.tenantId);
+    // Parti de l'organisation : plus personne à qui proposer quoi que ce soit.
+    if (!ctx) return;
+    await proposeAbout(ctx, { llm });
+  } catch (error) {
+    rethrowSummary('about.propose_failed', error, { tenantId: job.tenantId, userId: job.userId });
+  }
+}
+
 async function registerWorkers(
   deps: { llm: Llm | null },
   pollingIntervalSeconds: number | undefined,
@@ -104,10 +145,23 @@ async function registerWorkers(
     BRIEFING_QUEUES.morning,
     { batchSize: 1, localConcurrency: 1, ...polling },
     async () => {
-      await enqueueMorningRefreshes().catch((error) =>
-        rethrowSummary('briefing.morning_tick_failed', error),
+      // Les deux mises en file tournent toujours : l'échec de l'une ne prive pas l'autre de son tic du jour. Chaque
+      // échec est journalisé, puis la première erreur est relancée, pour que pg-boss reprenne le tic.
+      const results = await Promise.allSettled([
+        enqueueMorningRefreshes(),
+        enqueueAboutProposals(),
+      ]);
+      const errors = results.flatMap((result) =>
+        result.status === 'rejected' ? [result.reason] : [],
       );
+      for (const error of errors) logError('briefing.morning_tick_failed', error);
+      if (errors.length > 0) throw new Error(safeErrorSummary(errors[0]));
     },
+  );
+  await boss.work(
+    BRIEFING_QUEUES.about,
+    { batchSize: 1, localConcurrency: 1, ...polling },
+    async ([job]) => processAboutJob(job?.data, deps),
   );
 }
 

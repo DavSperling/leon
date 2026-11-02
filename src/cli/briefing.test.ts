@@ -1,6 +1,9 @@
 import { createHash } from 'node:crypto';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
@@ -15,6 +18,7 @@ import {
   fetchStartText,
   runBriefing,
 } from './briefing';
+import { writeConsent } from './consent';
 import type { GitRunner } from './project-key';
 
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
@@ -218,6 +222,18 @@ describe('briefingDirectory', () => {
 
 describe('runBriefing', () => {
   const serverEnv = { LEON_URL: env.url, LEON_TOKEN: env.token };
+  // L'accord local (C7), dans des HOME temporaires : jamais le vrai ~/.leon. `agreed` a l'accord en version 2 ;
+  // `notAgreed` n'en a aucun (crochets installés avant ce chantier).
+  let homes: string;
+  let agreed: string;
+  let notAgreed: string;
+  beforeAll(async () => {
+    homes = await mkdtemp(join(tmpdir(), 'leon-point-'));
+    agreed = join(homes, 'accord');
+    notAgreed = join(homes, 'sans-accord');
+    await writeConsent(agreed, 'claude_code', 2);
+  });
+  afterAll(() => rm(homes, { recursive: true, force: true }));
   const hookJson = (cwd: string) =>
     JSON.stringify({
       session_id: SESSION,
@@ -230,6 +246,7 @@ describe('runBriefing', () => {
     stdin: Readable;
     env?: Record<string, string | undefined>;
     cwd?: string;
+    home?: string;
     remotes?: Record<string, string>;
     branches?: Record<string, string>;
     git?: GitRunner;
@@ -249,6 +266,7 @@ describe('runBriefing', () => {
         stdin: input.stdin,
         env: input.env ?? serverEnv,
         cwd: input.cwd ?? '/leon',
+        home: input.home ?? agreed,
         git,
         fetch: asFetch(fetchImpl),
         out: (text) => out.push(text),
@@ -323,6 +341,31 @@ describe('runBriefing', () => {
     expect(await run()).toBe(0);
 
     expect(asked().branche).toBeNull();
+  });
+
+  // Une CLI mise à jour par `git pull` n'envoie rien de plus que ce que l'utilisateur a accepté : la branche, la
+  // session et le bloc de mes sessions attendent l'accord en version 2 (T07).
+  it('sans accord, demande le point du matin seul, comme avant, sans lire ni envoyer la branche ou la session', async () => {
+    const fetchImpl = fetchReturning(Response.json(briefing));
+    const { run, out, err, git } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      home: notAgreed,
+      remotes: { '/projets/leon': 'git@github.com:DavSperling/Leon.git' },
+      branches: { '/projets/leon': 'amos/etude' },
+      fetch: fetchImpl,
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.pathname).toBe(API_PATHS.briefing);
+    expect([...url.searchParams]).toEqual([[BRIEFING_PROJECT_PARAM, PROJECT]]);
+    expect(init.method).toBeUndefined();
+    expect(init.body).toBeUndefined();
+    expect(git).not.toHaveBeenCalledWith(['branch', '--show-current'], expect.anything());
+    expect(out).toEqual([briefing.markdown]);
+    expect(err).toEqual([]);
   });
 
   it('avec un serveur plus ancien que la route du bloc, affiche le point du matin seul, comme avant', async () => {

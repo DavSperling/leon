@@ -6,7 +6,8 @@
 // session).
 //
 // Vie privée : rien ici ne lit les vraies sessions ni les vrais réglages de Claude Code. HOME et CLAUDE_CONFIG_DIR
-// pointent vers un dossier temporaire, et l'environnement du fils ne reprend rien de celui du test.
+// pointent vers un dossier temporaire (l'accord, ~/.leon/accord.json, aussi), et l'environnement du fils ne reprend
+// rien de celui du test.
 import { execFile, spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
@@ -21,6 +22,7 @@ import {
   type BriefingResponse,
   type ContextResponse,
 } from '../capture/api-contract';
+import { consentPath, writeConsent } from './consent';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -89,6 +91,8 @@ beforeEach(async () => {
     ['remote', 'add', 'origin', `https://utilisateur:${REMOTE_TOKEN}@github.com/Acme/Leon.git`],
     { cwd: repo, env: { ...process.env, HOME: home } },
   );
+  // L'accord du bloc (T07) ; le test « sans accord » le retire.
+  await writeConsent(home, 'claude_code', 2);
 
   received = [];
   handle = answerBlock;
@@ -203,6 +207,31 @@ describe('leon briefing : la vraie commande', () => {
       expect(received[1]?.url.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe(
         'github.com/acme/leon',
       );
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Crochets installés avant ce chantier, CLI mise à jour par `git pull` : rien de plus que ce qui a été accepté.
+  it(
+    'sans accord, demande et affiche le point du matin seul, sans envoyer la branche ni la session',
+    async () => {
+      handle = answerBriefingOnly;
+      await rm(consentPath(home));
+
+      const outcome = await runCommand(hookJson(repo));
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe(`${MARKDOWN}\n`);
+      expect(outcome.stderr).toBe('');
+      expect(received).toHaveLength(1);
+      const [request] = received;
+      expect(request?.method).toBe('GET');
+      expect(request?.url.pathname).toBe(API_PATHS.briefing);
+      expect(request?.url.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe('github.com/acme/leon');
+      for (const text of [request?.url.href, request?.body]) {
+        expect(text).not.toContain(BRANCH);
+        expect(text).not.toContain(SESSION);
+      }
     },
     TEST_TIMEOUT_MS,
   );

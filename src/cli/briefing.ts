@@ -1,7 +1,8 @@
 // Crochet de démarrage de Claude Code : affiche le bloc de démarrage du projet de la session (C3 et C4 du plan
 // mémoire des sessions) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur
 // (`/contexte`). Un serveur plus ancien que cette route répond 404 : la commande retombe sur le point du matin seul
-// (`/briefing`), comme avant.
+// (`/briefing`), comme avant. Le bloc envoie la branche et la session, et donne mes sessions au modèle : il attend
+// l'accord local en version 2 (C7, consent.ts). Sans lui (crochets installés avant ce chantier), le point seul.
 //
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
@@ -34,6 +35,7 @@ import {
   ContextResponseSchema,
 } from '../capture/api-contract';
 import { readHookStdin } from './capture-session';
+import { factsConsent } from './consent';
 import { parseServerEnv, type ServerEnv } from './env';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
@@ -146,6 +148,7 @@ export type BriefingCommandDeps = {
   stdin: Parameters<typeof readHookStdin>[0];
   env: Record<string, string | undefined>;
   cwd: string;
+  home: string;
   git: GitRunner;
   fetch: typeof fetch;
   out: (text: string) => void;
@@ -159,16 +162,22 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     const server = parseServerEnv(deps.env);
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
-    // En même temps : git ne retient le démarrage qu'une fois son délai, pas deux.
-    const [projet, branche] = await Promise.all([
-      projectKeyFor(directory, deps.git),
-      currentBranch(directory, deps.git),
-    ]);
-    const text = await fetchStartText(deps.fetch, server, {
-      projet,
-      branche,
-      session: startingSession(stdin),
-    });
+    let text: string | null;
+    if ((await factsConsent(deps.home, 'claude_code')) === null) {
+      // Sans l'accord du bloc : ni branche ni session ne partent, le point du matin seul, comme avant.
+      text = await fetchBriefingText(deps.fetch, server, await projectKeyFor(directory, deps.git));
+    } else {
+      // En même temps : git ne retient le démarrage qu'une fois son délai, pas deux.
+      const [projet, branche] = await Promise.all([
+        projectKeyFor(directory, deps.git),
+        currentBranch(directory, deps.git),
+      ]);
+      text = await fetchStartText(deps.fetch, server, {
+        projet,
+        branche,
+        session: startingSession(stdin),
+      });
+    }
     if (text === null) {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {

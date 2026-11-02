@@ -35,8 +35,8 @@ Commands:
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
       --dry-run            print what would be sent (one JSON line per request), send nothing
-  briefing             Print the morning briefing for the project of the current folder (for Claude Code's
-                       SessionStart hook: the hook JSON is read from standard input)
+  briefing             Print your recent sessions on this repository and the project's morning briefing (for
+                       Claude Code's SessionStart hook: the hook JSON is read from standard input)
   capter-session       Send the session that is ending, with its project (for Claude Code's SessionEnd
                        hook: the hook JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
@@ -92,7 +92,7 @@ async function runImport(args: string[]): Promise<number> {
   return summary.failures > 0 ? 1 : 0;
 }
 
-// Le crochet SessionStart ajoute stdout au contexte de la session : seul le point du matin y passe,
+// Le crochet SessionStart ajoute stdout au contexte de la session : seul le bloc de démarrage y passe,
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
 async function runBriefingCommand(): Promise<number> {
   try {
@@ -100,6 +100,7 @@ async function runBriefingCommand(): Promise<number> {
       stdin: process.stdin,
       env: process.env,
       cwd: process.cwd(),
+      home: homedir(),
       git: gitInDirectory,
       fetch,
       out: console.log,

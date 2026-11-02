@@ -38,6 +38,21 @@ L'[annexe 1](annexes/01-basic-memory.md) décrit le code. Ce qu'on en garde pour
 
 Le principe des deux jets tient : le brut se garde tel quel (`sources`, `turns`), et tout le reste en dérive et peut se refaire.
 
+En technologies, rien de neuf : tout tient dans la stack du deuxième jet. Ni base graphe, ni base vectorielle à part, ni framework de RAG.
+
+| Étape | Avec quoi | Dans Leon aujourd'hui |
+|---|---|---|
+| Déclencher la capture | les crochets de l'outil (`SessionStart`, `SessionEnd`), qui lancent la CLI `leon` (TypeScript) | Claude Code : oui ; Codex : à faire |
+| Lire la session | du TypeScript qui lit le fichier JSONL de la session (`~/.claude/projects/…`, `~/.codex/sessions/…`) | Claude Code : oui (`src/capture/`) |
+| Envoyer et stocker le brut | l'API Leon (Hono, route à jeton), Postgres 17 (`sources`, `turns`) sous RLS | oui |
+| Extraire les gestes | du TypeScript : les appels d'outils se lisent dans le JSON, sans modèle | à faire ; #106 en fait une partie (`condenseSession`) |
+| Faire tourner le travail de fond | pg-boss, la file de tâches qui vit dans Postgres | oui (indexation, point du matin) |
+| Résumer | un appel à l'API Claude (SDK Anthropic, `claude-haiku-5-5`), données balisées par `prompt-guard` | la brique sert la réponse en tête ; la tâche est à faire |
+| Rendre cherchable | le plein texte de Postgres (`tsvector`) et pgvector, avec un fournisseur d'embeddings appelé par `fetch` | oui |
+| Relier (le graphe) | des tables et des jointures SQL, `WITH RECURSIVE` au besoin | à faire |
+| Lire GitHub | l'API de GitHub, par le connecteur existant | oui, à enrichir (lot 1 de #108) |
+| Assembler et livrer | une requête SQL et une mise en forme en TypeScript, que la CLI imprime au démarrage | Claude Code : oui ; Codex : à faire |
+
 ### 3.1 Tout capter, dans tous les outils (code)
 
 - **Claude Code** : `leon installer-crochets` pose déjà les crochets `SessionStart` et `SessionEnd`.

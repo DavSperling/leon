@@ -26,6 +26,17 @@ export type TeammatesStepProps = {
 // `copied` : son lien a été copié au moins une fois.
 type Teammate = { id: number; created: CreatedInvitation | null; copied: boolean };
 
+// Une carte sans nom : le tiret est muet, un lecteur d'écran lit « Sans nom ».
+function NoName() {
+  const tm = useTranslations('onboarding.teammates');
+  return (
+    <>
+      <span aria-hidden="true">—</span>
+      <span className="sr-only">{tm('noName')}</span>
+    </>
+  );
+}
+
 function Node({
   initial,
   name,
@@ -41,7 +52,6 @@ function Node({
   sub?: boolean;
   dim?: boolean;
 }) {
-  const tm = useTranslations('onboarding.teammates');
   return (
     <li className={cn('min-w-0', sub && 'ml-3 border-l border-line pl-3 sm:ml-5 sm:pl-4')}>
       <div className="flex min-w-0 items-center gap-3">
@@ -56,12 +66,7 @@ function Node({
         </span>
         <div className="min-w-0 flex-1">
           <p title={name || undefined} className="truncate text-ui font-semibold text-fg">
-            {name || (
-              <>
-                <span aria-hidden="true">—</span>
-                <span className="sr-only">{tm('noName')}</span>
-              </>
-            )}
+            {name || <NoName />}
           </p>
           {detail && (
             <p className="line-clamp-2 text-label text-muted [overflow-wrap:anywhere]">{detail}</p>
@@ -122,7 +127,7 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
                   <div className="grid gap-3">
                     <div className="min-w-0">
                       <p className="text-body font-semibold text-fg [overflow-wrap:anywhere]">
-                        {created.name || '—'}
+                        {created.name || <NoName />}
                       </p>
                       <p className="text-label text-muted">
                         {describe(placementOf(created), true)}
@@ -189,9 +194,9 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
           >
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="ghost">{tm('stay')}</Button>
+                <Button variant="primary">{tm('stay')}</Button>
               </DialogClose>
-              <Button asChild variant="primary">
+              <Button asChild variant="ghost">
                 <Link href="/">{tm('leave')}</Link>
               </Button>
             </DialogFooter>

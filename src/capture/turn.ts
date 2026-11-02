@@ -103,6 +103,8 @@ export type Turn = z.infer<typeof TurnSchema>;
 // ou, faute de dépôt, le dossier (`dossier:` et 16 hexadécimaux). Jamais une adresse de remote : elle peut porter un jeton.
 export const PROJECT_KEY_PATTERN =
   /^(github\.com\/[a-z0-9._-]+\/[a-z0-9._-]+|dossier:[0-9a-f]{16})$/;
+// Une clé de projet reçue en paramètre (le point du matin, le bloc de démarrage), de la même forme que `source.project`.
+export const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN);
 
 export const IngestPayloadSchema = z
   .object({

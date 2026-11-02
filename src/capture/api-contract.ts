@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { SessionFactsSchema } from './session-facts';
-import { CODE_SESSION_KINDS, PROJECT_KEY_PATTERN } from './turn';
+import { CODE_SESSION_KINDS, PROJECT_KEY_PATTERN, ProjectSchema } from './turn';
 
 // Contrat HTTP partagé avec la CLI et l'extension (décision D1 : aucun import de code serveur ici).
 export const API_PATHS = {
@@ -9,6 +9,7 @@ export const API_PATHS = {
   briefing: '/api/v1/briefing',
   mcp: '/api/mcp',
   faits: '/api/v1/faits',
+  contexte: '/api/v1/contexte',
 } as const;
 
 export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 octets en base64url
@@ -48,3 +49,19 @@ export const SessionFactsPayloadSchema = z
   })
   .strict();
 export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;
+
+// Le bloc de démarrage (C3) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur
+// en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
+// journaux d'URL.
+export const CONTEXT_MAX_BYTES = 8000;
+export const ContextRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    branche: z.string().min(1).max(200).nullable(), // tête détachée : null
+    session: z.string().min(1).max(200), // la session qui démarre, exclue du bloc
+    max: z.number().int().positive().optional(),
+  })
+  .strict();
+export type ContextRequest = z.infer<typeof ContextRequestSchema>;
+export const ContextResponseSchema = z.object({ texte: z.string() });
+export type ContextResponse = z.infer<typeof ContextResponseSchema>;

@@ -23,7 +23,7 @@
 - **Qui écrit quoi :** un membre qui n'est pas propriétaire n'écrit jamais `department`, `job` ni `seniority`. La règle est dans la condition SQL d'écriture, sur le modèle d'`isAdminRole` dans `src/server/auth/members.ts`, pas seulement dans l'interface.
 - **Pas de boucle :** `/bienvenue` lit `getSession()` et `getUserContext()`, jamais `requireUserContext()`.
 - **Aucun droit de lecture ne change :** ni les ACL, ni les politiques RLS sur `sources`, `turns` et `passages`.
-- **Migration :** `0041-onboarding.sql`. `origin/main` a déjà deux 0039 au 28/10 (`journal-outils`, `tableau-admin`) et la #102 (suppression de compte, ouverte) prend 0040. Le migrateur trie par nom de fichier sans exiger de suite continue : 0041 passe après la #102 quel que soit l'ordre de fusion.
+- **Migration :** `0043-onboarding.sql`, le numéro libre au 2/11 (`main` a 0040 à 0042). Le migrateur trie par nom de fichier sans exiger de suite continue.
 - **Base de départ :** `origin/main` à `f5cdb5b` ou plus récent. Le plan tient compte de `noteActivity` dans `getUserContext` (`@/server/admin/stats`).
 - **Git :**
   - branche `amos/onboarding-etape-1`, partie d'`origin/main` après la fusion de la PR de la spec ;
@@ -171,7 +171,7 @@ git commit -m "Onboarding : listes des services, postes, niveaux et attentes"
 ### Tâche 2 : la base et l'écriture des réponses
 
 **Fichiers :**
-- Créer : `src/server/db/migrations/0041-onboarding.sql`
+- Créer : `src/server/db/migrations/0043-onboarding.sql`
 - Modifier : `src/server/db/schema/auth.ts` (`members`, `organizations`)
 - Créer : `src/server/auth/onboarding.ts`
 - Créer : `src/server/auth/onboarding.db.test.ts`
@@ -193,7 +193,7 @@ git commit -m "Onboarding : listes des services, postes, niveaux et attentes"
 La migration :
 
 ```sql
--- 0041-onboarding.sql : ce que l'onboarding demande (docs/specs/2026-10-28-onboarding.md). Le service, le poste,
+-- 0043-onboarding.sql : ce que l'onboarding demande (docs/specs/2026-10-28-onboarding.md). Le service, le poste,
 -- le niveau et les attentes appartiennent à l'appartenance ; la taille, à l'organisation. Des identifiants, jamais
 -- des libellés (src/lib/onboarding.ts). "onboardedAt" nul : l'étape 1 reste à faire (layout de l'appli).
 alter table "member"
@@ -296,7 +296,7 @@ Attendu : tout passe, y compris le test existant « createOrganization en panne 
 - [ ] **Étape 5 : commiter**
 
 ```bash
-git add src/server/db/migrations/0041-onboarding.sql src/server/db/schema/auth.ts src/server/auth/onboarding.ts src/server/auth/onboarding.db.test.ts src/server/auth/sign-up.ts src/server/auth/sign-up.db.test.ts
+git add src/server/db/migrations/0043-onboarding.sql src/server/db/schema/auth.ts src/server/auth/onboarding.ts src/server/auth/onboarding.db.test.ts src/server/auth/sign-up.ts src/server/auth/sign-up.db.test.ts
 git commit -m "Onboarding : service, poste, niveau et attentes enregistrés par l'étape 1"
 ```
 

@@ -24,7 +24,7 @@ export const organizations = pgTable('organization', {
   logo: text('logo'),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull(),
   metadata: text('metadata'),
-  size: text('size', { enum: COMPANY_SIZES }), // onboarding (0041)
+  size: text('size', { enum: COMPANY_SIZES }), // onboarding (0043)
 });
 
 export const members = pgTable('member', {
@@ -37,7 +37,7 @@ export const members = pgTable('member', {
     .references(() => users.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull(),
-  // Onboarding (0041) : des identifiants de src/lib/onboarding.ts ; "onboardedAt" nul = étape 1 à faire.
+  // Onboarding (0043) : des identifiants de src/lib/onboarding.ts ; "onboardedAt" nul = étape 1 à faire.
   department: text('department'),
   job: text('job'),
   seniority: smallint('seniority'),

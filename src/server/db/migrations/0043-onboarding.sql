@@ -1,4 +1,4 @@
--- 0041-onboarding.sql : ce que l'onboarding demande (docs/specs/2026-10-28-onboarding.md). Le service, le poste,
+-- 0043-onboarding.sql : ce que l'onboarding demande (docs/specs/2026-10-28-onboarding.md). Le service, le poste,
 -- le niveau et les attentes appartiennent à l'appartenance ; la taille, à l'organisation. Des identifiants, jamais
 -- des libellés (src/lib/onboarding.ts). "onboardedAt" nul : l'étape 1 reste à faire (layout de l'appli).
 alter table "member"

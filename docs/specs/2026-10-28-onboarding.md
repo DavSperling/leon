@@ -197,7 +197,7 @@ Le bâtisseur choisit les noms et la forme. Les contraintes :
   - la recopie faite par `joinWithInvitation`.
 
   Des tests en base montrent qu'un membre ne peut changer ni les valeurs d'un autre, ni les siennes, même en appelant l'action serveur à la main.
-- **Migration :** `main` en est à 0039 au 28/10 au soir. La #69 de David ajoute aussi une 0036, ce qui fait déjà conflit avec `main`. On prend le numéro libre au moment de fusionner (0041 : la #102 prend 0040), et on vérifie `rls-coverage.db.test.ts`.
+- **Migration :** `main` en est à 0039 au 28/10 au soir. La #69 de David ajoute aussi une 0036, ce qui fait déjà conflit avec `main`. On prend le numéro libre au moment de fusionner (0043 au 2/11), et on vérifie `rls-coverage.db.test.ts`.
 
 ## Comptes existants (mon choix)
 

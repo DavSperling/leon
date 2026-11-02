@@ -22,9 +22,9 @@ import type { ConnectionView } from '@/server/connectors/connections';
 import { connectedTools, recommendedToConnect } from './model';
 import { connState, StateWord, stateDetail } from './parts';
 
-// Catalogue en deux zones : « Vos outils branchés » (une ligne par outil, son état en mot + icône, les problèmes d'abord)
-// puis « À brancher » (tuiles compactes par famille). Un seul filtre, collant. Rien ne bouge au défilement ; seul un outil
-// branché ou retiré passe d'une zone à l'autre.
+// Catalogue en trois zones : « Conseillés pour votre poste » (les outils du service encore à brancher), « Vos outils
+// branchés » (une ligne par outil, son état en mot + icône, les problèmes d'abord) puis « À brancher » (tuiles compactes
+// par famille). Un seul filtre, collant. Rien ne bouge au défilement ; seul un outil branché ou retiré change de zone.
 
 const fadeIn = {
   initial: { opacity: 0 },
@@ -143,14 +143,16 @@ export function Catalogue({
   const advised = recommendedToConnect(catalog, conns, recommended).filter(match);
   // Un outil conseillé n'est plus listé sous « À brancher » ; « Branchés » ne change pas.
   const free = catalog.filter(
-    (p) => !conns.some((c) => c.provider === p.id) && match(p) && !advised.includes(p),
+    (p) =>
+      !conns.some((c) => c.provider === p.id) && match(p) && !advised.some((a) => a.id === p.id),
   );
   const groups = PROVIDER_FAMILIES_ORDER.map((id) => ({
     id,
     label: t(`family.${id}`),
     tools: free.filter((p) => p.family === id),
   })).filter((g) => g.tools.length);
-  const count = new Set([...advised, ...connected, ...free].map((p) => p.id)).size;
+  // les trois zones réunies, un outil conseillé et branché par un collègue compté une fois
+  const count = catalog.filter(match).length;
   const input = useRef<HTMLInputElement>(null);
 
   return (

@@ -17,7 +17,7 @@ import { ReturnNotice } from './return-notice';
 import { ToolDialog } from './tool-dialog';
 
 /*
- * Écran Connexions (/connexions) : le schéma vivant, puis le catalogue en deux zones, et la fenêtre de l'outil.
+ * Écran Connexions (/connexions) : le schéma vivant, puis le catalogue en trois zones, et la fenêtre de l'outil.
  * Le retour de l'éditeur (`?branche=` ou `?erreur=`, lu par oauthNotice côté serveur) s'affiche en tête ; l'outil
  * tout juste branché par le bouton reçoit l'anneau. Une clé testée avec succès : toast « … est branché. », le
  * formulaire se replie ; quand la fenêtre se ferme, le focus va sur le nouveau bouton de l'outil et un anneau bat

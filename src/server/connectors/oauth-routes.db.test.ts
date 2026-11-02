@@ -202,6 +202,21 @@ describe('POST /:outil/debut', () => {
     expect(cookieLine).not.toContain('secret-appli-xyz');
   });
 
+  it("démarre pour une session dont l'organisation active n'est plus la sienne, avec sa première organisation", async () => {
+    const paul = await signUp();
+    const autre = await signUp();
+    await adminPool.query('update "session" set "activeOrganizationId" = $1 where "userId" = $2', [
+      autre.ctx.tenantId,
+      paul.ctx.userId,
+    ]);
+
+    const response = await start(makeApp().app, paul);
+
+    expect(response.status).toBe(303);
+    expect(new URL(location(response) ?? '').origin).toBe('https://github.test');
+    expect(oauthCookieOf(response)).toBeDefined();
+  });
+
   it('renvoie vers la page Connexions quand les champs avant le clic sont invalides', async () => {
     const paul = await signUp();
 

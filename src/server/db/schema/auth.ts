@@ -1,4 +1,6 @@
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { COMPANY_SIZES } from '@/lib/onboarding';
 
 // Tables de Better Auth (0002-auth.sql) : noms de colonnes en camelCase, tels que Better Auth les génère.
 export const users = pgTable('user', {
@@ -22,6 +24,7 @@ export const organizations = pgTable('organization', {
   logo: text('logo'),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull(),
   metadata: text('metadata'),
+  size: text('size', { enum: COMPANY_SIZES }), // onboarding (0043)
 });
 
 export const members = pgTable('member', {
@@ -34,4 +37,10 @@ export const members = pgTable('member', {
     .references(() => users.id, { onDelete: 'cascade' }),
   role: text('role').notNull(),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull(),
+  // Onboarding (0043) : des identifiants de src/lib/onboarding.ts ; "onboardedAt" nul = étape 1 à faire.
+  department: text('department'),
+  job: text('job'),
+  seniority: smallint('seniority'),
+  goals: text('goals').array().notNull().default(sql`'{}'`),
+  onboardedAt: timestamp('onboardedAt', { withTimezone: true }),
 });

@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { noteActivity } from '@/server/admin/stats';
 import { auth } from './auth';
-import { resolveTenantContext, type TenantContext } from './tenant-context';
+import { resolveSessionContext, type TenantContext } from './tenant-context';
 
 // Les en-têtes de la requête, avec les cookies à jour : une server action qui remplace la session (activer ou
 // couper la 2FA) pose un nouveau cookie, mais headers() garde l'ancien jusqu'à la requête suivante, et le rendu
@@ -23,18 +23,32 @@ export async function getSession() {
   return auth.api.getSession({ headers: await requestHeaders() });
 }
 
-// Contexte de l'utilisateur connecté (composants serveur, server actions) ; null sans session valide.
-export async function getUserContext(): Promise<TenantContext | null> {
+// Où l'on renvoie une personne connectée qui n'a pas (ou pas fini) son espace.
+export const ONBOARDING_PATH = '/bienvenue';
+
+// La session et le contexte de l'utilisateur connecté (organisation active, ou à défaut la première : voir
+// resolveSessionContext).
+async function sessionWithContext() {
   const session = await getSession();
-  if (!session) return null;
+  if (!session) return { session: null, ctx: null };
   noteActivity(session.session.id, session.user.id);
-  return resolveTenantContext(session.user.id, session.session.activeOrganizationId ?? null);
+  const ctx = await resolveSessionContext(
+    session.user.id,
+    session.session.activeOrganizationId ?? null,
+  );
+  return { session, ctx };
 }
 
+// Contexte de l'utilisateur connecté (composants serveur, server actions) ; null sans session valide, ou sans organisation.
+export async function getUserContext(): Promise<TenantContext | null> {
+  return (await sessionWithContext()).ctx;
+}
+
+// Sans session : la connexion. Avec une session mais sans organisation : l'onboarding.
 export async function requireUserContext(): Promise<TenantContext> {
-  const ctx = await getUserContext();
-  if (!ctx) redirect('/connexion');
-  return ctx;
+  const { session, ctx } = await sessionWithContext();
+  if (ctx) return ctx;
+  redirect(session ? ONBOARDING_PATH : '/connexion');
 }
 
 // Le cookie de session est posé par le plugin nextCookies.

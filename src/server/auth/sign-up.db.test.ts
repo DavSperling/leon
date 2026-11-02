@@ -7,9 +7,11 @@ import { createTestTenant } from '@/test/fixtures';
 import { auth } from './auth';
 import { createInvitationLink, findInvitation } from './members';
 import {
+  createOrganizationForUser,
   createUserWithInvitation,
   createUserWithOrganization,
   type JoinInput,
+  ORGANIZATION_LOCK_NAMESPACE,
   type SignUpInput,
 } from './sign-up';
 import { resolveTenantContext, type TenantContext } from './tenant-context';
@@ -96,6 +98,107 @@ describe('createUserWithOrganization', () => {
     expect(await createUserWithOrganization(data)).toEqual({ ok: false, error: 'invalide' });
     expect(await adminDb.select().from(users).where(eq(users.email, data.email))).toEqual([]);
     expect((await createUserWithOrganization(data)).ok).toBe(true);
+  });
+});
+
+// Une personne connectée qui n'a pas (ou plus) d'espace : un utilisateur sans appartenance.
+async function userWithoutSpace(): Promise<string> {
+  const [user] = await adminDb
+    .insert(users)
+    .values({ name: 'Léa', email: `lea-${randomUUID()}@example.com`, emailVerified: false })
+    .returning({ id: users.id });
+  if (!user) throw new Error('utilisateur de test non créé');
+  return user.id;
+}
+
+const membershipsOf = (userId: string) =>
+  adminDb.select().from(members).where(eq(members.userId, userId));
+
+describe('createOrganizationForUser', () => {
+  it("crée l'espace d'une personne qui n'en a pas, dont elle devient propriétaire", async () => {
+    const userId = await userWithoutSpace();
+
+    const result = await createOrganizationForUser(userId, 'Acme');
+    if (!result.ok) throw new Error(`création refusée : ${result.error}`);
+
+    expect(await membershipsOf(userId)).toEqual([
+      expect.objectContaining({ organizationId: result.tenantId, role: 'owner' }),
+    ]);
+    const [org] = await adminDb
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, result.tenantId));
+    expect(org?.name).toBe('Acme');
+  });
+
+  it('refuse de créer un deuxième espace (double clic)', async () => {
+    const userId = await userWithoutSpace();
+    expect((await createOrganizationForUser(userId, 'Acme')).ok).toBe(true);
+
+    expect(await createOrganizationForUser(userId, 'Acme')).toEqual({
+      ok: false,
+      error: 'deja_membre',
+    });
+    expect(await membershipsOf(userId)).toHaveLength(1);
+  });
+
+  it('deux envois simultanés (deux onglets) ne créent qu’un espace', async () => {
+    const userId = await userWithoutSpace();
+
+    const [a, b] = await Promise.all([
+      createOrganizationForUser(userId, 'Acme'),
+      createOrganizationForUser(userId, 'Acme'),
+    ]);
+
+    expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1);
+    expect(await membershipsOf(userId)).toHaveLength(1);
+  });
+
+  it('deux envois simultanés de deux personnes créent chacun leur espace', async () => {
+    const [first, second] = [await userWithoutSpace(), await userWithoutSpace()];
+
+    const results = await Promise.all([
+      createOrganizationForUser(first, 'Acme'),
+      createOrganizationForUser(second, 'Beta'),
+    ]);
+
+    expect(results.map((r) => r.ok)).toEqual([true, true]);
+    expect(await membershipsOf(first)).toHaveLength(1);
+    expect(await membershipsOf(second)).toHaveLength(1);
+  });
+
+  it("attend le verrou d'une autre instance, puis rend deja_membre si elle a créé l'espace", async () => {
+    const userId = await userWithoutSpace();
+    const otherInstance = await adminPool.connect();
+    try {
+      const lockKey = [ORGANIZATION_LOCK_NAMESPACE, userId];
+      await otherInstance.query('select pg_advisory_lock($1, hashtext($2))', lockKey);
+      let settled = false;
+      const pending = createOrganizationForUser(userId, 'Acme').finally(() => {
+        settled = true;
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(settled).toBe(false);
+
+      // Ce que l'autre instance a fait sous le verrou : l'espace de la personne.
+      const { tenantId } = await createTestTenant([]);
+      await adminDb
+        .insert(members)
+        .values({ organizationId: tenantId, userId, role: 'owner', createdAt: new Date() });
+      await otherInstance.query('select pg_advisory_unlock($1, hashtext($2))', lockKey);
+
+      expect(await pending).toEqual({ ok: false, error: 'deja_membre' });
+      expect(await membershipsOf(userId)).toHaveLength(1);
+    } finally {
+      otherInstance.release(true); // fermée : un verrou resté pris meurt avec la connexion
+    }
+  });
+
+  it('refuse un nom vide', async () => {
+    const userId = await userWithoutSpace();
+    expect(await createOrganizationForUser(userId, '')).toEqual({ ok: false, error: 'invalide' });
+    expect(await membershipsOf(userId)).toEqual([]);
   });
 });
 

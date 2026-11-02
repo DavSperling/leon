@@ -4,12 +4,14 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { type PreviewView, toPreviewView } from '@/components/search/view-model';
-import { requireUserContext, signOutCurrentUser } from '@/server/auth/session';
+import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
 
+// Seule la session compte : une personne sans organisation (mauvais compte Google, par exemple) doit pouvoir
+// se déconnecter, pas être renvoyée sur /bienvenue.
 export async function signOutAction(): Promise<void> {
-  await requireUserContext();
+  if (!(await getSession())) redirect('/connexion');
   await signOutCurrentUser();
   redirect('/connexion');
 }

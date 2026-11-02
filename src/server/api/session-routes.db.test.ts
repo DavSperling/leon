@@ -161,6 +161,18 @@ describe(`GET ${ANSWER_PATH}`, () => {
     ).toBe(401);
   });
 
+  it("sert une session dont l'organisation active n'est plus la sienne, avec sa première organisation", async () => {
+    fakeModel();
+    const alice = await signUp('Alice');
+    const zoe = await signUp('Zoe');
+    await adminPool.query('update "session" set "activeOrganizationId" = $1 where "userId" = $2', [
+      zoe.ctx.tenantId,
+      alice.ctx.userId,
+    ]);
+
+    expect((await ask(alice, 'clause')).status).toBe(200);
+  });
+
   it('répond 403 à une origine étrangère, même avec une session', async () => {
     const { alice } = await setupTeam();
     const llm = fakeModel();

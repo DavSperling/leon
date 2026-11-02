@@ -7,7 +7,7 @@ import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import { DEFAULT_SINCE, fieldsFromForm, SINCE_VALUES } from '@/lib/connection-form';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { auth } from '@/server/auth/auth';
-import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { resolveSessionContext, type TenantContext } from '@/server/auth/tenant-context';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
 import { accountLabel, sameAccountKey } from './account-label';
@@ -88,7 +88,7 @@ function sameText(a: string, b: string): boolean {
 async function sessionContext(c: Context): Promise<TenantContext | null> {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
   if (!session) return null;
-  return resolveTenantContext(session.user.id, session.session.activeOrganizationId ?? null);
+  return resolveSessionContext(session.user.id, session.session.activeOrganizationId ?? null);
 }
 
 const asProviderId = (value: string | undefined): ProviderId | null =>

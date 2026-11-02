@@ -1,3 +1,5 @@
+import type { ProviderId } from '@/capture/turn';
+import { toolStates } from '@/components/verre/onboarding/tools-model';
 import { canReconnect } from '@/lib/connection-form';
 import { formatDate } from '@/lib/format';
 import type { CatalogItem } from '@/server/connectors/catalog';
@@ -18,6 +20,21 @@ export const connectedTools = <T extends Pick<CatalogItem, 'id'>>(
     .filter((x) => x.r !== Infinity)
     .sort((a, b) => a.r - b.r)
     .map((x) => x.p);
+
+/** Les outils de `ids` (dans leur ordre) que la personne doit encore brancher : disponibles, et ni les siens ni ceux
+ *  qu'un collègue lit déjà pour l'équipe (la règle de `toolStates`, la même qu'à l'étape Vos outils). */
+export const recommendedToConnect = (
+  catalog: CatalogItem[],
+  conns: ConnectionView[],
+  ids: readonly ProviderId[],
+): CatalogItem[] => {
+  const todo = new Map(
+    toolStates(catalog, conns, ids)
+      .filter((s) => s.status === 'free' && s.item.available)
+      .map((s) => [s.item.id, s.item]),
+  );
+  return ids.flatMap((id) => todo.get(id) ?? []);
+};
 
 /** « Clé ••••abcd · branché par Julie le 12 oct. 2026 » (« Jeton » pour OAuth), toujours avec la date, même aujourd'hui. */
 export const secretText = (c: ConnectionView, locale = 'fr'): string =>

@@ -424,6 +424,7 @@
     "soon": "Bientôt",
     "connected": "Vos outils branchés",
     "toConnect": "À brancher",
+    "recommended": "Conseillés pour votre poste",
     "noMatch": "Aucun outil ne correspond.",
     "noMatchQuery": "Rien ne s’appelle « {query} »{scope}.",
     "noFamily": "Aucun outil dans la famille {family}.",

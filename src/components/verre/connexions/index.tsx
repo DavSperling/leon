@@ -26,6 +26,8 @@ import { ToolDialog } from './tool-dialog';
 
 export type ConnexionsProps = {
   catalog: CatalogItem[];
+  /** Les outils du service de la personne (vide si on ne le connaît pas), dans l'ordre conseillé. */
+  recommended: ProviderId[];
   connections: ConnectionView[];
   viewerId: string;
   canConnect: boolean;
@@ -40,6 +42,7 @@ export type ConnexionsProps = {
 
 export function Connexions({
   catalog,
+  recommended,
   connections,
   viewerId,
   canConnect,
@@ -128,6 +131,7 @@ export function Connexions({
         />
         <Catalogue
           catalog={catalog}
+          recommended={recommended}
           conns={connections}
           now={now}
           onOpen={open}

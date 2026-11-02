@@ -424,6 +424,7 @@
     "soon": "Coming soon",
     "connected": "Your connected tools",
     "toConnect": "Connect a tool",
+    "recommended": "Recommended for your role",
     "noMatch": "No matching tools.",
     "noMatchQuery": "Nothing is called “{query}”{scope}.",
     "noFamily": "No tools in the {family} family.",

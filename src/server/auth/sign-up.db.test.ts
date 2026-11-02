@@ -11,6 +11,7 @@ import {
   createUserWithInvitation,
   createUserWithOrganization,
   type JoinInput,
+  ORGANIZATION_LOCK_NAMESPACE,
   type SignUpInput,
 } from './sign-up';
 import { resolveTenantContext, type TenantContext } from './tenant-context';
@@ -164,6 +165,34 @@ describe('createOrganizationForUser', () => {
     expect(results.map((r) => r.ok)).toEqual([true, true]);
     expect(await membershipsOf(first)).toHaveLength(1);
     expect(await membershipsOf(second)).toHaveLength(1);
+  });
+
+  it("attend le verrou d'une autre instance, puis rend deja_membre si elle a créé l'espace", async () => {
+    const userId = await userWithoutSpace();
+    const otherInstance = await adminPool.connect();
+    try {
+      const lockKey = [ORGANIZATION_LOCK_NAMESPACE, userId];
+      await otherInstance.query('select pg_advisory_lock($1, hashtext($2))', lockKey);
+      let settled = false;
+      const pending = createOrganizationForUser(userId, 'Acme').finally(() => {
+        settled = true;
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      expect(settled).toBe(false);
+
+      // Ce que l'autre instance a fait sous le verrou : l'espace de la personne.
+      const { tenantId } = await createTestTenant([]);
+      await adminDb
+        .insert(members)
+        .values({ organizationId: tenantId, userId, role: 'owner', createdAt: new Date() });
+      await otherInstance.query('select pg_advisory_unlock($1, hashtext($2))', lockKey);
+
+      expect(await pending).toEqual({ ok: false, error: 'deja_membre' });
+      expect(await membershipsOf(userId)).toHaveLength(1);
+    } finally {
+      otherInstance.release(true); // fermée : un verrou resté pris meurt avec la connexion
+    }
   });
 
   it('refuse un nom vide', async () => {

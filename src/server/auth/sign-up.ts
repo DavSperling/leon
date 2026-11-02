@@ -3,7 +3,7 @@ import { APIError } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { slugify } from '@/lib/slug';
-import { db } from '@/server/db/client';
+import { db, pool } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
 import { logError } from '@/server/log';
 import { auth } from './auth';
@@ -51,31 +51,28 @@ export type CreateOrganizationResult =
   | { ok: true; tenantId: string }
   | { ok: false; error: 'deja_membre' | 'invalide' };
 
-// Rangé sur globalThis, comme le pool (db/client.ts) : Next compile ce module en plusieurs copies.
-const globalForLocks = globalThis as { leonUserLocks?: Map<string, Promise<unknown>> };
-globalForLocks.leonUserLocks ??= new Map();
-const userLocks = globalForLocks.leonUserLocks;
+// Rangée sur globalThis, comme le pool (db/client.ts) : Next compile ce module en plusieurs copies.
+const globalForQueue = globalThis as { leonOrganizationQueue?: Promise<unknown> };
 
-// Les appels d'un même utilisateur passent l'un après l'autre ; ceux de deux utilisateurs ne s'attendent pas.
-// Aucune connexion du pool n'est tenue pendant l'attente. L'entrée disparaît quand le dernier a fini.
-// shortcut: deux instances (recouvrement d'une mise en ligne) ne partagent pas ce verrou, à passer en base si Leon tourne durablement sur plusieurs instances.
-async function withUserLock<T>(userId: string, run: () => Promise<T>): Promise<T> {
-  const result = (userLocks.get(userId) ?? Promise.resolve()).then(run);
-  const tail = result.then(
+// Dans un processus, les créations d'espace passent l'une après l'autre, sans tenir de connexion pendant l'attente :
+// le détenteur du verrou n'a besoin que d'une seconde connexion, le pool (5) ne peut donc pas se bloquer. D'une
+// instance à l'autre (recouvrement d'une mise en ligne), c'est le verrou Postgres de la personne qui sérialise.
+function inOrganizationQueue<T>(run: () => Promise<T>): Promise<T> {
+  const result = (globalForQueue.leonOrganizationQueue ?? Promise.resolve()).then(run);
+  // la file continue même si `run` échoue
+  globalForQueue.leonOrganizationQueue = result.then(
     () => undefined,
-    () => undefined, // la file continue même si `run` échoue
+    () => undefined,
   );
-  userLocks.set(userId, tail);
-  try {
-    return await result;
-  } finally {
-    if (userLocks.get(userId) === tail) userLocks.delete(userId);
-  }
+  return result;
 }
 
+// Premier entier de la clé des verrous Postgres de cette création (le second est l'identifiant de la personne).
+export const ORGANIZATION_LOCK_NAMESPACE = 41;
+
 // L'espace d'une personne qui n'en a pas (elle en devient propriétaire). Le test « déjà membre » et la création se
-// font sous le verrou de l'utilisateur : le second de deux envois simultanés (deux onglets) attend le premier,
-// puis trouve l'espace créé et rend `deja_membre`.
+// font sous le verrou de la personne : le second de deux envois simultanés (deux onglets, deux instances) attend le
+// premier, puis trouve l'espace créé et rend `deja_membre`.
 export async function createOrganizationForUser(
   userId: string,
   organizationName: string,
@@ -83,16 +80,29 @@ export async function createOrganizationForUser(
   const name = SignUpInputSchema.shape.organizationName.safeParse(organizationName);
   if (!name.success) return { ok: false, error: 'invalide' };
 
-  return withUserLock(userId, async (): Promise<CreateOrganizationResult> => {
-    if (await firstOrganizationId(userId)) return { ok: false, error: 'deja_membre' };
+  return inOrganizationQueue(async (): Promise<CreateOrganizationResult> => {
+    const lockKey = [ORGANIZATION_LOCK_NAMESPACE, userId];
+    const client = await pool.connect();
     try {
-      const org = await auth.api.createOrganization({
-        body: { name: name.data, slug: organizationSlug(name.data), userId },
-      });
-      return { ok: true, tenantId: org.id };
-    } catch (error) {
-      logError('auth.sign_up.organization', error);
-      return { ok: false, error: 'invalide' };
+      await client.query('select pg_advisory_lock($1, hashtext($2))', lockKey);
+      if (await firstOrganizationId(userId)) return { ok: false, error: 'deja_membre' };
+      try {
+        const org = await auth.api.createOrganization({
+          body: { name: name.data, slug: organizationSlug(name.data), userId },
+        });
+        return { ok: true, tenantId: org.id };
+      } catch (error) {
+        logError('auth.sign_up.organization', error);
+        return { ok: false, error: 'invalide' };
+      }
+    } finally {
+      const unlocked = await client
+        .query('select pg_advisory_unlock($1, hashtext($2))', lockKey)
+        .then(
+          () => true,
+          () => false,
+        );
+      client.release(!unlocked); // connexion fermée : le verrou de session meurt avec elle
     }
   });
 }

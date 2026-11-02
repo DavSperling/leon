@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { ReturnNotice } from '@/components/verre/connexions/return-notice';
 import { ToolDialog } from '@/components/verre/connexions/tool-dialog';
@@ -14,13 +14,11 @@ import type { OAuthNotice } from '@/lib/connection-form';
 import { PROVIDER_FAMILIES_ORDER } from '@/lib/providers';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import type { ConnectionView } from '@/server/connectors/connections';
 import { PreviewCard } from './preview';
 import type { ToolState } from './tools-model';
 
 export type ToolsStepProps = {
   states: ToolState[];
-  conns: ConnectionView[];
   viewerId: string;
   now: Date;
   canConnect: boolean;
@@ -78,25 +76,44 @@ function Tile({ state, on, onToggle }: { state: ToolState; on: boolean; onToggle
   );
 }
 
-// Une ligne de l'aperçu : le logo, le nom (et ce qui s'y ajoute), puis l'action ou l'état.
+// Une ligne de l'aperçu : le logo, le nom (et ce qui s'y ajoute), puis l'action ou l'état. `stacked` : l'action passe sous le
+// nom (« GitHub · Connected by Inès » ne tient pas à côté d'un bouton dans 233 px) ; sinon elle suit le nom, et descend
+// seulement si elle ne tient pas.
 function Row({
   id,
   label,
   extra,
+  stacked,
   children,
 }: {
   id: ProviderId;
   label: string;
   extra?: string;
+  stacked?: boolean;
   children: ReactNode;
 }) {
+  const name = (
+    <span className="min-w-0 text-ui text-fg [overflow-wrap:anywhere]">
+      {label}
+      {extra && <span className="text-muted"> · {extra}</span>}
+    </span>
+  );
+  if (stacked)
+    return (
+      <li className="flex min-w-0 items-start gap-3">
+        <ToolIcon kind={id} boxed className="mt-px" />
+        <div className="grid min-w-0 flex-1 justify-items-start gap-2">
+          {name}
+          {children}
+        </div>
+      </li>
+    );
   return (
-    <li className="flex min-w-0 items-center gap-3">
-      <ToolIcon kind={id} boxed />
-      <span className="min-w-0 flex-1 text-ui text-fg [overflow-wrap:anywhere]">
-        {label}
-        {extra && <span className="text-muted"> · {extra}</span>}
-      </span>
+    <li className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex min-w-0 flex-1 basis-28 items-center gap-3">
+        <ToolIcon kind={id} boxed />
+        {name}
+      </div>
       {children}
     </li>
   );
@@ -108,7 +125,6 @@ function Row({
  */
 export function ToolsStep({
   states,
-  conns,
   viewerId,
   now,
   canConnect,
@@ -132,6 +148,12 @@ export function ToolsStep({
   const [shownId, setShownId] = useState<ProviderId | null>(null);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
+  // Une clé branchée dans la fenêtre ne change que la base : on recharge pour que les tuiles et l'aperçu la voient.
+  const [refreshing, startRefresh] = useTransition();
+  // Le bouton qui a ouvert la fenêtre, et la liste « À brancher » pour lui succéder quand il disparaît avec le rechargement.
+  const opener = useRef<HTMLElement | null>(null);
+  const listBox = useRef<HTMLDivElement>(null);
+  const focusPending = useRef(false);
 
   const toggle = (id: ProviderId) =>
     setChecked((set) => {
@@ -140,15 +162,31 @@ export function ToolsStep({
       return next;
     });
   const connect = (id: ProviderId) => {
+    const active = document.activeElement;
+    opener.current = active instanceof HTMLElement && active !== document.body ? active : null;
     setSession((n) => n + 1);
     setShownId(id);
     setOpen(true);
   };
-  // Une clé branchée dans la fenêtre ne change que la base : on recharge pour que les tuiles et l'aperçu la voient.
+  // Pas de signal de réussite côté fenêtre : on recharge à chaque fermeture.
   const onOpenChange = (o: boolean) => {
     setOpen(o);
-    if (!o) router.refresh();
+    if (!o) startRefresh(() => router.refresh());
   };
+  // Le focus attend la fin du rechargement : le bouton d'un outil qui vient d'être branché n'existe plus ensuite.
+  const restoreFocus = () => {
+    focusPending.current = false;
+    (opener.current?.isConnected ? opener.current : listBox.current)?.focus();
+  };
+  const onCloseAutoFocus = (e: Event) => {
+    e.preventDefault();
+    if (refreshing) focusPending.current = true;
+    else restoreFocus();
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: restoreFocus ne lit que des refs
+  useEffect(() => {
+    if (!refreshing && focusPending.current) restoreFocus();
+  }, [refreshing]);
 
   const toConnect = states.filter((s) => s.status === 'free' && checked.has(s.item.id));
   const already = states.filter((s) => s.recommended && s.connectedBy !== null);
@@ -174,7 +212,7 @@ export function ToolsStep({
                   <li key={state.item.id} className="max-w-full min-w-0">
                     <Tile
                       state={state}
-                      on={checked.has(state.item.id)}
+                      on={state.status === 'free' && checked.has(state.item.id)}
                       onToggle={() => toggle(state.item.id)}
                     />
                   </li>
@@ -197,22 +235,24 @@ export function ToolsStep({
       </div>
 
       <div className="grid min-w-0 content-center gap-4 rounded-box border border-line bg-glass p-4 sm:p-6">
-        <PreviewCard title={tt('toConnect')}>
-          {toConnect.length === 0 ? (
-            <p className="text-ui text-muted">{tt('none')}</p>
-          ) : (
-            <ul className="grid gap-2.5">
-              {toConnect.map(({ item }) => (
-                <Row key={item.id} id={item.id} label={item.label}>
-                  <Button size="sm" variant="secondary" onClick={() => connect(item.id)}>
-                    {tt('connect')}
-                    <span className="sr-only"> {item.label}</span>
-                  </Button>
-                </Row>
-              ))}
-            </ul>
-          )}
-        </PreviewCard>
+        <div ref={listBox} tabIndex={-1} className="rounded-box">
+          <PreviewCard title={tt('toConnect')}>
+            {toConnect.length === 0 ? (
+              <p className="text-ui text-muted">{tt('none')}</p>
+            ) : (
+              <ul className="grid gap-2.5">
+                {toConnect.map(({ item }) => (
+                  <Row key={item.id} id={item.id} label={item.label}>
+                    <Button size="sm" variant="secondary" onClick={() => connect(item.id)}>
+                      {tt('connect')}
+                      <span className="sr-only"> {item.label}</span>
+                    </Button>
+                  </Row>
+                ))}
+              </ul>
+            )}
+          </PreviewCard>
+        </div>
 
         {already.length > 0 && (
           <PreviewCard title={tt('alreadyTitle')}>
@@ -222,6 +262,7 @@ export function ToolsStep({
                   key={item.id}
                   id={item.id}
                   label={item.label}
+                  stacked
                   extra={tt('connectedBy', { name: connectedBy ?? '' })}
                 >
                   {status === 'mine' ? (
@@ -253,8 +294,8 @@ export function ToolsStep({
         entry={states.find((s) => s.item.id === shownId)?.item ?? null}
         open={open}
         onOpenChange={onOpenChange}
-        // les siennes seulement : un outil à brancher (ou branché par l'équipe) n'en a aucune
-        conns={conns.filter((c) => c.provider === shownId && c.isCreator)}
+        onCloseAutoFocus={onCloseAutoFocus}
+        conns={[]} // un outil à brancher, ou branché par l'équipe, n'a aucune connexion du lecteur
         viewerId={viewerId}
         now={now}
         canConnect={canConnect}

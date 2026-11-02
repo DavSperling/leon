@@ -129,7 +129,6 @@ describe('page de l’étape Vos outils', () => {
       notice: null,
     });
     expect(element.props.now).toBeInstanceOf(Date);
-    expect(element.props.conns).toEqual([]);
     expect(element.props.states).toEqual([
       {
         item: expect.objectContaining({ id: 'github' }),
@@ -172,6 +171,17 @@ describe('page de l’étape Vos outils', () => {
 
     expect(states[0]).toMatchObject({ status: 'team', connectedBy: 'Inès' });
     expect(listConnections).toHaveBeenCalledWith(CTX);
+  });
+
+  it('n’envoie au client aucune connexion de l’espace, seulement l’état de chaque outil', async () => {
+    vi.mocked(listConnections).mockResolvedValue([
+      { ...teamConnection('github'), secretHint: 'abcd', config: { token: 'x' } },
+    ] as never);
+
+    const { props } = await render();
+
+    expect(props).not.toHaveProperty('conns');
+    expect(JSON.stringify(props)).not.toContain('abcd');
   });
 
   it('un service inconnu ou absent ne conseille rien', async () => {

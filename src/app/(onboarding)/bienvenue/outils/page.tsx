@@ -38,6 +38,7 @@ export default async function ToolsPage({
     member.department !== null && isDepartment(member.department)
       ? DEPARTMENTS[member.department].tools
       : [];
+  // Les connexions de l'espace restent côté serveur (config, indice du secret) : le client ne reçoit que l'état de chaque outil.
   const conns = await listConnections(ctx);
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
@@ -46,7 +47,6 @@ export default async function ToolsPage({
   return (
     <ToolsStep
       states={toolStates(catalog, conns, recommended)}
-      conns={conns}
       viewerId={ctx.userId}
       now={new Date()}
       canConnect={connectorsKey() !== null}

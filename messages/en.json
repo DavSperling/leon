@@ -570,7 +570,6 @@
     "copyToken": "Copy it now; it won’t be shown again.",
     "deviceName": "Device name",
     "invalidTokenName": "Enter a device name of up to 80 characters.",
-    "invitePermission": "Only owners and administrators can invite members.",
     "tabsLabel": "Settings sections",
     "tabProfile": "Profile",
     "tabSecurity": "Security",
@@ -1342,6 +1341,14 @@
       "seniority": "Choose your seniority.",
       "size": "Choose your company size.",
       "company": "Enter a company name (2 to 100 characters).",
+      "form": "Something went wrong. Try again."
+    },
+    "inviteErrors": {
+      "name": "Use 100 characters or fewer.",
+      "department": "Choose a department.",
+      "job": "Choose a role.",
+      "seniority": "Choose a seniority level.",
+      "permission": "Only an owner or an admin can do this.",
       "form": "Something went wrong. Try again."
     }
   }

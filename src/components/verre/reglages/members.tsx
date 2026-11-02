@@ -116,9 +116,18 @@ type State = { error?: string; url?: string; expiresAt?: Date };
 function CreateInvitationContent() {
   const t = useTranslations('settings');
   const locale = useLocale();
+  const errors = useTranslations('onboarding.inviteErrors');
   const [state, formAction, pending] = useActionState(async (): Promise<State> => {
-    const result = await createInvitationAction();
-    return 'error' in result ? { error: result.error } : result;
+    // Provisoire : la tâche suivante remplace ce formulaire par les champs nom, service, poste et niveau.
+    const result = await createInvitationAction({
+      name: '',
+      department: '',
+      job: '',
+      seniority: '',
+    });
+    return 'errors' in result
+      ? { error: errors(Object.values(result.errors)[0] ?? 'form') }
+      : result;
   }, {});
   const { url, expiresAt } = state;
 

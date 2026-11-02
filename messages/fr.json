@@ -570,7 +570,6 @@
     "copyToken": "Copiez-le maintenant : il ne sera plus affiché.",
     "deviceName": "Nom de l’appareil",
     "invalidTokenName": "Donnez un nom à l'appareil (80 caractères au plus).",
-    "invitePermission": "Seuls les propriétaires et les administrateurs peuvent inviter.",
     "tabsLabel": "Sections des réglages",
     "tabProfile": "Profil",
     "tabSecurity": "Sécurité",
@@ -1342,6 +1341,14 @@
       "seniority": "Choisissez votre niveau.",
       "size": "Choisissez la taille de l’entreprise.",
       "company": "Saisissez le nom de l’entreprise (2 à 100 caractères).",
+      "form": "Un problème est survenu. Réessayez."
+    },
+    "inviteErrors": {
+      "name": "100 caractères au plus.",
+      "department": "Choisissez un service.",
+      "job": "Choisissez un poste.",
+      "seniority": "Choisissez un niveau.",
+      "permission": "Seul un propriétaire ou un administrateur peut le faire.",
       "form": "Un problème est survenu. Réessayez."
     }
   }

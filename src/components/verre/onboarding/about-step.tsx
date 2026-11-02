@@ -296,7 +296,7 @@ export function AboutStep({
         )}
 
         <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-          {t('continue')}
+          {steps.length <= 1 ? t('teammates.enter') : t('continue')}
         </Button>
       </form>
 

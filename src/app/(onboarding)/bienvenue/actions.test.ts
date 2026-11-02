@@ -197,10 +197,18 @@ describe('completeAboutStepAction', () => {
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
-    it("continue vers l'appli si l'étape a été validée entre-temps ailleurs", async () => {
+    it("avec une équipe, l'étape validée entre-temps ailleurs mène quand même à l'appli", async () => {
       vi.mocked(completeOwnerStep).mockResolvedValue(false);
+      vi.mocked(isSoleMember).mockResolvedValue(false);
 
       await redirectsTo(run(validOwner), '/');
+    });
+
+    it("seul, l'étape validée entre-temps ailleurs mène quand même à l'étape Vos outils", async () => {
+      vi.mocked(completeOwnerStep).mockResolvedValue(false);
+      vi.mocked(isSoleMember).mockResolvedValue(true);
+
+      await redirectsTo(run(validOwner), '/bienvenue/outils');
     });
   });
 

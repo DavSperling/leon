@@ -1375,6 +1375,30 @@
       "leaveDescription": "Leon shows each link only once. You can create new ones later in Settings › Team.",
       "stay": "Stay",
       "leave": "Leave anyway"
+    },
+    "tools": {
+      "title": "Connect your tools",
+      "lead": "Select the tools you use. The ones recommended for your role are already selected.",
+      "recommended": "Recommended",
+      "toConnect": "To connect",
+      "connect": "Connect",
+      "connected": "Connected",
+      "none": "Nothing selected yet.",
+      "nextTitle": "What happens next",
+      "nextText": "Leon starts reading each source as soon as it’s connected. Your first morning briefing builds on them.",
+      "skip": "I’ll connect them later",
+      "connectedBy": "Connected by {name}",
+      "alreadyTitle": "Already connected for your workspace",
+      "connectOwn": "Connect my account",
+      "ownConnected": "Your account is connected",
+      "ownHint": "Optional. To act under your own name, for example on GitHub."
+    },
+    "done": {
+      "title": "You’re in",
+      "lead": "Leon is reading your first sources. Ask your first question in Chat.",
+      "openChat": "Open Chat",
+      "ownerReady": "Setting up your workspace",
+      "memberReady": "Your workspace is ready"
     }
   }
 }

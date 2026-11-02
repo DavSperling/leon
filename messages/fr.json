@@ -1375,6 +1375,30 @@
       "leaveDescription": "Leon ne montre chaque lien qu’une fois. Vous pourrez en créer d’autres plus tard dans Réglages › Équipe.",
       "stay": "Rester",
       "leave": "Partir quand même"
+    },
+    "tools": {
+      "title": "Branchez vos outils",
+      "lead": "Cochez ceux que vous utilisez. Ceux conseillés pour votre poste sont déjà cochés.",
+      "recommended": "Conseillé",
+      "toConnect": "À brancher",
+      "connect": "Brancher",
+      "connected": "Branché",
+      "none": "Rien de coché pour l’instant.",
+      "nextTitle": "Ensuite",
+      "nextText": "Leon commence à lire chaque source dès qu’elle est branchée. Votre premier point du matin s’appuie dessus.",
+      "skip": "Je brancherai plus tard",
+      "connectedBy": "Branché par {name}",
+      "alreadyTitle": "Déjà branché pour l’espace",
+      "connectOwn": "Brancher mon compte",
+      "ownConnected": "Votre compte est branché",
+      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub."
+    },
+    "done": {
+      "title": "C’est prêt",
+      "lead": "Leon lit vos premières sources. Posez votre première question dans le Chat.",
+      "openChat": "Ouvrir le Chat",
+      "ownerReady": "Votre espace se prépare",
+      "memberReady": "Votre espace est prêt"
     }
   }
 }

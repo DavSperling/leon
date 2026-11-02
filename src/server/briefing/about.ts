@@ -1,8 +1,8 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
-import { briefings } from '@/server/db/schema/search';
+import { aboutSuggestions, briefings } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { BRIEFING_DELAY_SECONDS, BRIEFING_READ_DAYS, enqueueBriefingRefresh } from './queue';
@@ -47,8 +47,15 @@ export async function markBriefingsStale(
   }
 }
 
-// Un texte vide efface.
+// Un texte vide efface. Un texte rempli, d'ici ou de la carte « About you » du Chat, ferme la proposition ouverte dans
+// la même transaction : vidé plus tard, « À propos » ne la fait pas revenir (elle ne s'affiche qu'une fois). Écrit ici
+// et non par closeAboutSuggestion, qui importe ce fichier.
 export const saveAbout = (ctx: TenantContext, about: string | null): Promise<void> =>
-  markBriefingsStale(ctx, (tx) =>
-    tx.update(users).set({ about, updatedAt: new Date() }).where(eq(users.id, ctx.userId)),
-  );
+  markBriefingsStale(ctx, async (tx) => {
+    await tx.update(users).set({ about, updatedAt: new Date() }).where(eq(users.id, ctx.userId));
+    if (about?.trim())
+      await tx
+        .update(aboutSuggestions)
+        .set({ closedAt: sql`now()` })
+        .where(and(eq(aboutSuggestions.userId, ctx.userId), isNull(aboutSuggestions.closedAt)));
+  });

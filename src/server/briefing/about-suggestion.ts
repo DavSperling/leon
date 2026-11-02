@@ -88,7 +88,8 @@ export async function proposeAbout(
     organization?.name ?? '',
   );
   const text = await writeText(deps.llm, prompt);
-  if (text === '') return false;
+  // L'appel au modèle dure jusqu'à 120 s : un compte supprimé entre-temps ne garde pas de texte écrit d'après ses sources.
+  if (text === '' || (await accountIsGone(ctx.userId))) return false;
   const written = await withTenant(ctx, (tx) =>
     tx
       .insert(aboutSuggestions)
@@ -140,7 +141,7 @@ export async function readAboutSuggestion(
   return ((await readAbout(ctx.userId)) ?? '').trim() === '' ? open : null;
 }
 
-// « Save » ou « Not now » : la proposition ne se montre plus. Sans effet si elle est déjà fermée ou absente.
+// « Not now » : la proposition ne se montre plus (« Save » la ferme dans saveAbout). Sans effet si elle est déjà fermée ou absente.
 export async function closeAboutSuggestion(ctx: TenantContext): Promise<void> {
   await withTenant(ctx, (tx) =>
     tx

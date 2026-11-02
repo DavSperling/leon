@@ -225,15 +225,13 @@ describe('deleteDiscussionAction', () => {
 // Réglages (page dynamique, jamais gardée par le routeur) relisent le texte à la visite suivante. Les erreurs sont
 // des codes, traduits à l'affichage.
 describe('saveAboutSuggestionAction', () => {
-  it('enregistre le texte sans ses blancs, ferme la proposition, et ne revalide aucune page', async () => {
+  // La fermeture se fait dans saveAbout, dans la même transaction que le texte : l'action n'y touche plus.
+  it('enregistre le texte sans ses blancs, sans fermer elle-même la proposition, et ne revalide aucune page', async () => {
     await expect(saveAboutSuggestionAction('  Lead back-end.  ')).resolves.toEqual({ ok: true });
 
     expect(saveAbout).toHaveBeenCalledWith(CTX, 'Lead back-end.');
-    expect(closeAboutSuggestion).toHaveBeenCalledWith(CTX);
+    expect(closeAboutSuggestion).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
-    expect(vi.mocked(saveAbout).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(closeAboutSuggestion).mock.invocationCallOrder[0] ?? 0,
-    );
   });
 
   it('refuse 501 caractères sans rien enregistrer ni fermer', async () => {

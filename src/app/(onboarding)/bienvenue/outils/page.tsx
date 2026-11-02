@@ -43,7 +43,8 @@ export default async function ToolsPage({
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
   const notice = oauthNotice(await searchParams, locale);
-  const soleOwner = spaceRole(member.role) === 'owner' && (await isSoleMember(ctx));
+  const owner = spaceRole(member.role) === 'owner';
+  const soleOwner = owner && (await isSoleMember(ctx));
   return (
     <ToolsStep
       states={toolStates(catalog, conns, recommended)}
@@ -52,7 +53,7 @@ export default async function ToolsPage({
       canConnect={connectorsKey() !== null}
       consentUrl={catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null}
       nextHref={nextAfterTools(soleOwner)}
-      steps={onboardingSteps(soleOwner ? 'soleOwner' : 'member')}
+      steps={onboardingSteps(soleOwner ? 'soleOwner' : owner ? 'ownerWithTeam' : 'member')}
       notice={notice}
     />
   );

@@ -146,24 +146,23 @@ describe('page de l’étape Vos outils', () => {
     ]);
   });
 
-  it('un propriétaire qui a une équipe, un administrateur ou un membre vont à la fin, en deux étapes', async () => {
+  it('un propriétaire qui a une équipe va à la fin, avec le seul fil de son parcours', async () => {
     vi.mocked(isSoleMember).mockResolvedValue(false);
-    expect((await render()).props).toMatchObject({
-      nextHref: '/bienvenue/pret',
-      steps: ['about', 'tools'],
-    });
 
-    vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'admin' }));
     expect((await render()).props).toMatchObject({
       nextHref: '/bienvenue/pret',
-      steps: ['about', 'tools'],
+      steps: ['about'],
     });
+  });
 
-    vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member' }));
-    expect((await render()).props).toMatchObject({
-      nextHref: '/bienvenue/pret',
-      steps: ['about', 'tools'],
-    });
+  it('un administrateur ou un membre vont à la fin, en deux étapes', async () => {
+    for (const role of ['admin', 'member']) {
+      vi.mocked(readOnboardingMember).mockResolvedValue(member({ role }));
+      expect((await render()).props).toMatchObject({
+        nextHref: '/bienvenue/pret',
+        steps: ['about', 'tools'],
+      });
+    }
   });
 
   it('ne compte les membres que pour un propriétaire', async () => {

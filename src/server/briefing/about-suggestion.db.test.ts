@@ -9,12 +9,13 @@ import { sources } from '@/server/db/schema/memory';
 import { aboutSuggestions } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
 import { createFakeLlm } from '@/server/llm/fake-llm';
+import type { Llm } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { seedConnection } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
-import { readAbout } from './about';
+import { readAbout, saveAbout } from './about';
 import { gatherAboutMaterial } from './about-material';
 import {
   ABOUT_MIN_SOURCES,
@@ -255,6 +256,27 @@ describe('proposeAbout', () => {
     expect(await proposeAbout(alice, { llm })).toBe(false);
 
     expect(llm.calls).toHaveLength(0);
+    expect(await rowsOf(alice)).toEqual([]);
+  });
+
+  it('n’écrit rien quand le compte est supprimé pendant l’appel au modèle', async () => {
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+    const fake = createFakeLlm({ texts: ['Écrit trop tard.'] });
+    const llm: Llm = {
+      ...fake,
+      async *streamText(request) {
+        await adminDb
+          .update(users)
+          .set({ deletedAt: new Date() })
+          .where(eq(users.id, alice.userId));
+        yield* fake.streamText(request);
+      },
+    };
+
+    expect(await proposeAbout(alice, { llm })).toBe(false);
+
+    expect(fake.calls).toHaveLength(1);
     expect(await rowsOf(alice)).toEqual([]);
   });
 
@@ -502,6 +524,51 @@ const suggest = (
     [ctx.tenantId, ctx.userId, text, sourceIds],
   );
 
+// Les droits de la fonction de 0045, comme ceux des deux fonctions de 0030 : PUBLIC retiré, security definer, schéma
+// public seulement.
+describe('apropos_a_proposer : droits', () => {
+  const SIGNATURE = 'apropos_a_proposer(text[], integer, interval)';
+
+  it('ne s’exécute pas pour public, seulement pour leon_app', async () => {
+    const { rows } = await adminPool.query<{ public_grants: number; app: boolean }>(
+      `select (select count(*)::int
+               from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+              where p.oid = $1::regprocedure and a.grantee = 0
+                and a.privilege_type = 'EXECUTE') as public_grants,
+            has_function_privilege('leon_app', $1::regprocedure, 'EXECUTE') as app`,
+      [SIGNATURE],
+    );
+
+    expect(rows).toEqual([{ public_grants: 0, app: true }]);
+  });
+
+  it('s’exécute avec les droits du propriétaire, sur le schéma public seulement', async () => {
+    const { rows } = await adminPool.query<{ prosecdef: boolean; proconfig: string[] }>(
+      'select prosecdef, proconfig from pg_proc where oid = $1::regprocedure',
+      [SIGNATURE],
+    );
+
+    expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public'] }]);
+  });
+});
+
+describe('saveAbout et la proposition ouverte', () => {
+  it('un texte rempli ferme la proposition de la personne et d’elle seule, un texte vide ou blanc non', async () => {
+    const [alice, bob] = await newPair();
+    await suggest(alice, []);
+    await suggest(bob, [], 'Pour Bob.');
+
+    await saveAbout(alice, null);
+    await saveAbout(alice, ' \n ');
+    expect((await rowsOf(alice))[0]?.closedAt).toBeNull();
+
+    await saveAbout(alice, 'Responsable produit.');
+
+    expect((await rowsOf(alice))[0]?.closedAt).toBeInstanceOf(Date);
+    expect((await rowsOf(bob))[0]?.closedAt).toBeNull();
+  });
+});
+
 describe('readAboutSuggestion et closeAboutSuggestion', () => {
   it('lit la proposition ouverte de la personne, avec les outils de ses sources du plus fréquent au moins fréquent', async () => {
     const [alice, bob] = await newPair();
@@ -581,8 +648,17 @@ describe('readAboutSuggestion et closeAboutSuggestion', () => {
 
     await setAbout(alice, 'Responsable produit.');
     expect(await readAboutSuggestion(alice)).toBeNull();
-    // Elle reste ouverte : seul « Not now » ou « Save » la ferme.
-    expect((await rowsOf(alice))[0]?.closedAt).toBeNull();
+  });
+
+  it('ne revient pas quand « À propos » est rempli par Réglages, puis vidé', async () => {
+    const [alice] = await newPair();
+    await suggest(alice, []);
+
+    await saveAbout(alice, 'Responsable produit.');
+    expect(await readAboutSuggestion(alice)).toBeNull();
+    await saveAbout(alice, null);
+
+    expect(await readAboutSuggestion(alice)).toBeNull();
   });
 
   it('ne se lit plus quand une de ses sources devient invisible pour la personne', async () => {

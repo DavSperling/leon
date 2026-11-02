@@ -9,8 +9,8 @@ import type { CODE_SESSION_KINDS } from '../capture/turn';
 
 type CodeTool = (typeof CODE_SESSION_KINDS)[number];
 
-// Les gestes (C1) partent à partir de cette version.
-const FACTS_VERSION = 2;
+// Les gestes (C1) partent à partir de cette version : celle qu'écrit l'installateur (install-hooks.ts).
+export const FACTS_VERSION = 2;
 
 const ConsentSchema = z.object({
   outils: z.record(

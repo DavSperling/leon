@@ -37,6 +37,9 @@
 //   un lien symbolique vers un fichier absent ;
 // - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
 //   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
+// - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
+//   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
+//   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -62,6 +65,7 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
+import { consentPath, FACTS_VERSION, factsConsent, writeConsent } from './consent';
 import { parseServerEnv } from './env';
 import { type HookSubcommand, hookCommand } from './hook-commands';
 
@@ -85,14 +89,23 @@ const HOOKS: readonly HookSpec[] = [
     event: 'SessionStart',
     subcommand: 'briefing',
     timeout: SESSION_START_TIMEOUT_S,
-    role: "at the start of a session, prints the project's morning briefing: Claude Code adds it to the session context.",
+    role: "at the start of a session, prints your recent sessions on this repository and the project's morning briefing: Claude Code adds them to the session context.",
   },
   {
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'at the end of every session, sends the text of the exchanges to Leon (secrets masked); the conversation stays private to its author.',
+    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session stays private to its author.',
   },
+];
+
+// Ce qui est lu, ce qui part et ce qui est donné au modèle de Claude Code : le texte de l'accord en version 2 (C7),
+// testé mot pour mot (install-hooks.test.ts). Le changer, c'est changer ce que l'utilisateur a accepté.
+const CONSENT_LINES = [
+  'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
+  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
+  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ];
 
 type Json = Record<string, unknown>;
@@ -239,7 +252,13 @@ async function writeAtomically(path: string, loaded: Loaded, text: string): Prom
   }
 }
 
-export type InstallOptions = { repoDir: string; configDir: string; assumeYes: boolean };
+// `home` : le dossier qui porte `.leon/accord.json` (consent.ts).
+export type InstallOptions = {
+  repoDir: string;
+  configDir: string;
+  home: string;
+  assumeYes: boolean;
+};
 export type InstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
@@ -324,7 +343,7 @@ function preview(path: string, changes: HookChange[], backup: BackupPlan): strin
     );
   }
   lines.push(
-    'What will be sent: these hooks are in your personal settings, so at the end of ALL your Claude Code sessions, in ALL your folders (personal ones included), the text of the exchanges is sent to the Leon server (secrets masked). Sessions started by a script (`claude -p`) are sent too, except with `--bare`, which loads no hooks.',
+    ...CONSENT_LINES,
     'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
     'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
     backupLine(backup),
@@ -349,8 +368,24 @@ const exists = (path: string) =>
     () => false,
   );
 
-// Rend le code de sortie : 0 si les crochets sont en place ou si l'utilisateur a refusé, 1 si les réglages n'ont pas
-// pu être lus ou ont changé en route.
+// L'accord s'écrit après les réglages : s'il ne s'écrit pas, les crochets n'envoient que les textes, comme avant lui.
+async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> {
+  const path = consentPath(home);
+  try {
+    await writeConsent(home, 'claude_code', FACTS_VERSION);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException | null)?.code;
+    deps.err(
+      `Leon: could not write ${path}${typeof code === 'string' ? ` (${code})` : ''}: the hooks send only the text of the exchanges, not the actions of each session. Run the command again.`,
+    );
+    return false;
+  }
+  deps.out(`Consent recorded in ${path}.`);
+  return true;
+}
+
+// Rend le code de sortie : 0 si les crochets et l'accord sont en place ou si l'utilisateur a refusé, 1 si les réglages
+// n'ont pas pu être lus ou ont changé en route, ou si l'accord n'a pas pu s'écrire.
 export async function installHooks(options: InstallOptions, deps: InstallDeps): Promise<number> {
   const path = join(options.configDir, SETTINGS_FILE);
   const backup = join(options.configDir, BACKUP_FILE);
@@ -388,10 +423,30 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   }
 
   const alerts = await warnings(settings, options.repoDir);
+  // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
+  const consented = (await factsConsent(options.home, 'claude_code')) !== null;
+  const consentFile = consentPath(options.home);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
-    deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
-    return 0;
+    if (consented) {
+      deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+      return 0;
+    }
+    // Des crochets posés avant l'accord : seul l'accord est demandé, et les réglages ne sont pas touchés.
+    deps.out(
+      `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now they send only the text of the exchanges.`,
+    );
+    for (const line of ['', ...CONSENT_LINES]) deps.out(line);
+    if (!options.assumeYes) {
+      const answer = await deps.ask(
+        `\nRecord this consent in ${consentFile} (${path} is not modified)? [y/N] `,
+      );
+      if (!isYes(answer)) {
+        deps.out('Nothing was written: the hooks keep sending only the text of the exchanges.');
+        return 0;
+      }
+    }
+    return (await recordConsent(options.home, deps)) ? 0 : 1;
   }
 
   const backupPlan: BackupPlan =
@@ -403,7 +458,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   }
   for (const line of alerts) deps.out(`\n${line}`);
   if (!options.assumeYes) {
-    const answer = await deps.ask('\nWrite these hooks? [y/N] ');
+    const answer = await deps.ask(
+      `\nWrite these hooks${consented ? '' : ` and record this consent in ${consentFile}`}? [y/N] `,
+    );
     if (!isYes(answer)) {
       deps.out('Nothing was written.');
       return 0;
@@ -440,5 +497,6 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   deps.out(
     `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, delete these two entries (${README_HINT}).`,
   );
+  if (!consented && !(await recordConsent(options.home, deps))) return 1;
   return 0;
 }

@@ -190,7 +190,7 @@ async function runInstallHooks(args: string[]): Promise<number> {
   const asker = createAsker();
   try {
     return await installHooks(
-      { repoDir, configDir, assumeYes: values.oui ?? false },
+      { repoDir, configDir, home: homedir(), assumeYes: values.oui ?? false },
       { out: console.log, err: console.error, ask: asker.ask },
     );
   } finally {

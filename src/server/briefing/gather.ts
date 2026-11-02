@@ -124,7 +124,7 @@ type MentionRow = SourceRow & {
   text: string;
 };
 
-const sourceOf = (row: SourceRow): SourceInfo =>
+export const sourceOf = (row: SourceRow): SourceInfo =>
   sourceInfoFrom({
     id: row.id,
     kind: row.kind,
@@ -144,7 +144,7 @@ const excerptOf = (
 
 // Les `limit` derniers tours de chacune de ces sources, dans l'ordre de la source. Le texte n'est lu qu'au début :
 // une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400.
-async function lastTurns(
+export async function lastTurns(
   tx: Tx,
   ctx: TenantContext,
   sourceIds: string[],

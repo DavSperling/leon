@@ -180,6 +180,12 @@ describe('deleteAccount', () => {
        values ($1, $2, 'github.com/acme/depot', '# Point', now(), array[$2::uuid])`,
       [tenantId, alice.userId],
     );
+    // La proposition « About you » est faite des sources d'Alice : elle part avec elle, pas celle de Bob.
+    await adminPool.query(
+      `insert into about_suggestions (tenant_id, user_id, text, acl)
+       values ($1, $2, 'Responsable produit.', array[$2::uuid]), ($1, $3, 'Lead back-end.', array[$3::uuid])`,
+      [tenantId, alice.userId, bob.userId],
+    );
     const email = await emailOf(alice);
     expect(await loginTraces(alice.userId)).toEqual({
       accounts: 1,
@@ -247,6 +253,11 @@ describe('deleteAccount', () => {
       [alice.userId],
     );
     expect(kept).toEqual([{ discussions: 1, briefings: 1 }]);
+    const { rows: suggestions } = await adminPool.query(
+      'select user_id from about_suggestions where tenant_id = $1',
+      [tenantId],
+    );
+    expect(suggestions).toEqual([{ user_id: bob.userId }]);
     expect(
       (await adminDb.select().from(connections).where(eq(connections.id, bobConnectionId))).length,
     ).toBe(1);

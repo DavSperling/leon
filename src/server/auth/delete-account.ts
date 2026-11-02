@@ -3,6 +3,7 @@ import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { aboutSuggestions } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
 
@@ -203,6 +204,8 @@ export async function deleteAccount(
         updatedAt: now,
       })
       .where(eq(users.id, ctx.userId));
+    // La proposition « About you » est écrite d'après ses sources : elle part avec son « À propos ».
+    await tx.delete(aboutSuggestions).where(eq(aboutSuggestions.userId, ctx.userId));
     await tx.update(members).set({ role: 'member' }).where(eq(members.userId, ctx.userId));
 
     // Plus de mot de passe, de session, de 2FA, ni de lien de réinitialisation déjà envoyé (sa valeur est l'id).

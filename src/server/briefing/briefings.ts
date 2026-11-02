@@ -66,7 +66,7 @@ async function writeBody(
 
 // Un compte supprimé (0040) garde ses points mais n'en reçoit plus : un recalcul déjà en file ne coûte pas d'appel
 // au modèle. Un utilisateur disparu avec son organisation n'a plus de ligne du tout.
-async function accountIsGone(userId: string): Promise<boolean> {
+export async function accountIsGone(userId: string): Promise<boolean> {
   const [row] = await db
     .select({ deletedAt: users.deletedAt })
     .from(users)

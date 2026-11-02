@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   completeMemberStep,
   completeOwnerStep,
+  isSoleMember,
   type OnboardingMember,
   readOnboardingMember,
 } from '@/server/auth/onboarding';
@@ -24,6 +25,7 @@ vi.mock('@/server/auth/onboarding', async (importOriginal) => ({
   readOnboardingMember: vi.fn(),
   completeOwnerStep: vi.fn(),
   completeMemberStep: vi.fn(),
+  isSoleMember: vi.fn(),
 }));
 vi.mock('@/server/auth/tenant-context', () => ({ resolveTenantContext: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -65,6 +67,12 @@ const validOwner = {
 const run = (fields: Record<string, string | string[]>) =>
   completeAboutStepAction({}, form(fields));
 
+// `rejects.toThrow('NEXT_REDIRECT /')` passerait aussi pour '/bienvenue/collaborateurs' : on compare le chemin entier.
+const redirectsTo = async (result: Promise<unknown>, path: string) => {
+  await expect(result).rejects.toThrow('NEXT_REDIRECT');
+  expect(redirect).toHaveBeenLastCalledWith(path);
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(getSession).mockResolvedValue({ user: { id: USER_ID } } as never);
@@ -72,6 +80,7 @@ beforeEach(() => {
   vi.mocked(readOnboardingMember).mockResolvedValue(member());
   vi.mocked(completeOwnerStep).mockResolvedValue(true);
   vi.mocked(completeMemberStep).mockResolvedValue(true);
+  vi.mocked(isSoleMember).mockResolvedValue(false);
 });
 
 describe('completeAboutStepAction', () => {
@@ -88,7 +97,7 @@ describe('completeAboutStepAction', () => {
 
   describe('propriétaire', () => {
     it("enregistre service, poste, niveau, taille et attentes, puis ouvre l'appli", async () => {
-      await expect(run(validOwner)).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run(validOwner), '/');
 
       expect(completeOwnerStep).toHaveBeenCalledWith(ctx, {
         department: 'engineering',
@@ -97,13 +106,27 @@ describe('completeAboutStepAction', () => {
         size: '11-50',
         goals: ['find', 'briefing'],
       });
-      expect(redirect).toHaveBeenCalledWith('/');
+    });
+
+    it("seul dans l'espace : l'étape Collaborateurs suit", async () => {
+      vi.mocked(isSoleMember).mockResolvedValue(true);
+
+      await redirectsTo(run(validOwner), '/bienvenue/collaborateurs');
+
+      expect(isSoleMember).toHaveBeenCalledWith(ctx);
+      expect(completeOwnerStep).toHaveBeenCalled();
+    });
+
+    it("avec une équipe déjà là : l'appli", async () => {
+      vi.mocked(isSoleMember).mockResolvedValue(false);
+
+      await redirectsTo(run(validOwner), '/');
+
+      expect(isSoleMember).toHaveBeenCalledWith(ctx);
     });
 
     it('accepte un poste « other » et aucune attente', async () => {
-      await expect(run({ ...validOwner, job: 'other', goals: [] })).rejects.toThrow(
-        'NEXT_REDIRECT /',
-      );
+      await redirectsTo(run({ ...validOwner, job: 'other', goals: [] }), '/');
 
       expect(completeOwnerStep).toHaveBeenCalledWith(
         ctx,
@@ -112,9 +135,7 @@ describe('completeAboutStepAction', () => {
     });
 
     it('ne garde qu’une fois une attente répétée', async () => {
-      await expect(run({ ...validOwner, goals: ['find', 'find', 'team'] })).rejects.toThrow(
-        'NEXT_REDIRECT /',
-      );
+      await redirectsTo(run({ ...validOwner, goals: ['find', 'find', 'team'] }), '/');
 
       expect(completeOwnerStep).toHaveBeenCalledWith(
         ctx,
@@ -179,7 +200,7 @@ describe('completeAboutStepAction', () => {
     it("continue vers l'appli si l'étape a été validée entre-temps ailleurs", async () => {
       vi.mocked(completeOwnerStep).mockResolvedValue(false);
 
-      await expect(run(validOwner)).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run(validOwner), '/');
     });
   });
 
@@ -189,7 +210,7 @@ describe('completeAboutStepAction', () => {
       async (role) => {
         vi.mocked(readOnboardingMember).mockResolvedValue(member({ role }));
 
-        await expect(
+        await redirectsTo(
           run({
             ...validOwner,
             department: 'sales',
@@ -197,19 +218,22 @@ describe('completeAboutStepAction', () => {
             seniority: '8',
             goals: ['meetings'],
           }),
-        ).rejects.toThrow('NEXT_REDIRECT /');
+          '/',
+        );
 
         expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['meetings']);
         expect(completeOwnerStep).not.toHaveBeenCalled();
+        expect(isSoleMember).not.toHaveBeenCalled();
       },
     );
 
     it("ne lit pas les champs du propriétaire : un service inconnu n'empêche pas un membre", async () => {
       vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member' }));
 
-      await expect(
+      await redirectsTo(
         run({ department: 'toString', job: 'x', seniority: '99', goals: ['team'] }),
-      ).rejects.toThrow('NEXT_REDIRECT /');
+        '/',
+      );
 
       expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['team']);
     });
@@ -217,7 +241,7 @@ describe('completeAboutStepAction', () => {
     it('accepte des rôles multiples sans propriétaire (« member,admin »)', async () => {
       vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member,admin' }));
 
-      await expect(run({ ...validOwner, goals: ['find'] })).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run({ ...validOwner, goals: ['find'] }), '/');
 
       expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['find']);
       expect(completeOwnerStep).not.toHaveBeenCalled();
@@ -236,9 +260,11 @@ describe('completeAboutStepAction', () => {
   describe('étape déjà validée ou membre introuvable', () => {
     it("ouvre l'appli sans rien réécrire", async () => {
       vi.mocked(readOnboardingMember).mockResolvedValue(member({ onboardedAt: new Date() }));
+      vi.mocked(isSoleMember).mockResolvedValue(true);
 
-      await expect(run(validOwner)).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run(validOwner), '/');
 
+      expect(isSoleMember).not.toHaveBeenCalled();
       expect(completeOwnerStep).not.toHaveBeenCalled();
       expect(completeMemberStep).not.toHaveBeenCalled();
     });
@@ -248,7 +274,7 @@ describe('completeAboutStepAction', () => {
         member({ role: 'member', onboardedAt: new Date() }),
       );
 
-      await expect(run({ goals: ['find'] })).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run({ goals: ['find'] }), '/');
 
       expect(completeMemberStep).not.toHaveBeenCalled();
     });
@@ -275,7 +301,7 @@ describe('completeAboutStepAction', () => {
       vi.mocked(createOrganizationForUser).mockResolvedValue({ ok: true, tenantId: TENANT_ID });
       vi.mocked(resolveTenantContext).mockResolvedValue(ctx);
 
-      await expect(run(newcomer)).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run(newcomer), '/');
 
       expect(createOrganizationForUser).toHaveBeenCalledWith(USER_ID, 'Acme');
       expect(resolveTenantContext).toHaveBeenCalledWith(USER_ID, TENANT_ID);
@@ -289,11 +315,21 @@ describe('completeAboutStepAction', () => {
       });
     });
 
+    it("l'espace créé, l'étape Collaborateurs suit", async () => {
+      vi.mocked(createOrganizationForUser).mockResolvedValue({ ok: true, tenantId: TENANT_ID });
+      vi.mocked(resolveTenantContext).mockResolvedValue(ctx);
+      vi.mocked(isSoleMember).mockResolvedValue(true);
+
+      await redirectsTo(run(newcomer), '/bienvenue/collaborateurs');
+
+      expect(isSoleMember).toHaveBeenCalledWith(ctx);
+    });
+
     it("un double clic poursuit avec l'espace déjà créé", async () => {
       vi.mocked(createOrganizationForUser).mockResolvedValue({ ok: false, error: 'deja_membre' });
       vi.mocked(getUserContext).mockResolvedValueOnce(ctx);
 
-      await expect(run(newcomer)).rejects.toThrow('NEXT_REDIRECT /');
+      await redirectsTo(run(newcomer), '/');
 
       expect(resolveTenantContext).not.toHaveBeenCalled();
       expect(completeOwnerStep).toHaveBeenCalledWith(

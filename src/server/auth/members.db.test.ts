@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { members } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { adminDb } from '@/test/db';
@@ -13,8 +13,11 @@ import {
   getMembership,
   joinWithInvitation,
   listMembers,
+  setMemberPlacement,
 } from './members';
 import type { TenantContext } from './tenant-context';
+
+const backend = { department: 'engineering', job: 'backend', seniority: 3 } as const;
 
 const setRole = (ctx: TenantContext, role: string) =>
   adminDb
@@ -27,7 +30,7 @@ async function tenantWithLink() {
   const { tenantId, members: people } = await createTestTenant(['Amos', 'David']);
   const [owner, member] = people as [TenantContext, TenantContext];
   await setRole(owner, 'owner');
-  const link = await createInvitationLink(owner);
+  const link = await createInvitationLink(owner, { name: '', placement: backend });
   if (!link) throw new Error('lien non créé');
   return { tenantId, owner, member, token: link.token };
 }
@@ -68,11 +71,11 @@ describe('createInvitationLink', () => {
   it("refuse un simple membre, et accepte un administrateur, même parmi d'autres rôles", async () => {
     const { member } = await tenantWithLink();
     expect(await canInvite(member)).toBe(false);
-    expect(await createInvitationLink(member)).toBeNull();
+    expect(await createInvitationLink(member, { name: '', placement: backend })).toBeNull();
 
     await setRole(member, 'member,admin');
     expect(await canInvite(member)).toBe(true);
-    expect(await createInvitationLink(member)).not.toBeNull();
+    expect(await createInvitationLink(member, { name: '', placement: backend })).not.toBeNull();
   });
 });
 
@@ -94,7 +97,8 @@ describe('findInvitation', () => {
       .update(invitationLinks)
       .set({
         createdAt: new Date(Date.now() - 8 * 86_400_000),
-        expiresAt: new Date(Date.now() - 1),
+        // Une minute et non quelques ms : l'horloge de Postgres (Docker) retarde de ~10 ms sur celle de l'hôte.
+        expiresAt: new Date(Date.now() - 60_000),
       })
       .where(eq(invitationLinks.tenantId, tenantId));
 
@@ -153,6 +157,7 @@ describe('listMembers', () => {
       ['Julie', 'member'],
     ]);
     expect(rows.at(-1)?.email).toMatch(/@test\.leon$/);
+    expect(rows.map((r) => r.self)).toEqual([true, false, false]);
   });
 
   it('rend les anciens membres marqués, sans leur adresse', async () => {
@@ -181,5 +186,167 @@ describe('getMembership', () => {
     const { members: people } = await createTestTenant(['Ailleurs']);
     const [stranger] = people as [TenantContext];
     expect(await getMembership({ ...stranger, tenantId: owner.tenantId })).toBeNull();
+  });
+});
+
+const placementOf = async (ctx: TenantContext) =>
+  (
+    await adminDb
+      .select({
+        department: members.department,
+        job: members.job,
+        seniority: members.seniority,
+        role: members.role,
+        goals: members.goals,
+        onboardedAt: members.onboardedAt,
+      })
+      .from(members)
+      .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+  )[0];
+
+const memberIdOf = async (ctx: TenantContext) => {
+  const [row] = await adminDb
+    .select({ id: members.id })
+    .from(members)
+    .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)));
+  if (!row) throw new Error('membre introuvable');
+  return row.id;
+};
+
+const noPlacement = { department: null, job: null, seniority: null };
+
+const linkRow = async (token: string) => {
+  const [row] = await adminDb
+    .select()
+    .from(invitationLinks)
+    .where(eq(invitationLinks.tokenHash, createHash('sha256').update(token).digest('hex')));
+  if (!row) throw new Error('lien introuvable');
+  return row;
+};
+
+const linkFor = async (owner: TenantContext, name: string) => {
+  const link = await createInvitationLink(owner, { name, placement: backend });
+  if (!link) throw new Error('lien non créé');
+  return link;
+};
+
+describe('le poste porté par un lien', () => {
+  it('le lien porte le poste, recopié sur le membre qui rejoint', async () => {
+    const { tenantId, owner } = await tenantWithLink();
+    const link = await linkFor(owner, 'Inès');
+    const inesId = await lonelyUser();
+    expect(await linkRow(link.token)).toMatchObject({ ...backend, inviteeName: 'Inès' });
+    expect((await linkRow((await linkFor(owner, '')).token)).inviteeName).toBeNull();
+
+    expect(await joinWithInvitation(link.token, inesId)).toBe(tenantId);
+
+    const [row] = await adminDb.select().from(members).where(eq(members.userId, inesId));
+    expect(row).toMatchObject({ ...backend, role: 'member', onboardedAt: null });
+    // Le lien garde le poste mais plus le nom saisi.
+    expect(await linkRow(link.token)).toMatchObject({ ...backend, inviteeName: null });
+  });
+
+  it("un lien d'avant ce lot, sans poste, fait toujours entrer", async () => {
+    const { tenantId, owner } = await tenantWithLink();
+    const link = await linkFor(owner, 'Inès');
+    await adminDb
+      .update(invitationLinks)
+      .set({ inviteeName: null, department: null, job: null, seniority: null })
+      .where(eq(invitationLinks.id, (await linkRow(link.token)).id));
+    const inesId = await lonelyUser();
+
+    expect(await joinWithInvitation(link.token, inesId)).toBe(tenantId);
+    const [row] = await adminDb.select().from(members).where(eq(members.userId, inesId));
+    expect(row).toMatchObject(noPlacement);
+  });
+
+  it('la base refuse un niveau hors de 1 à 8 sur un lien', async () => {
+    const { tenantId } = await tenantWithLink();
+    await expect(
+      adminDb
+        .update(invitationLinks)
+        .set({ seniority: 9 })
+        .where(eq(invitationLinks.tenantId, tenantId)),
+    ).rejects.toThrow();
+  });
+});
+
+describe('le poste des membres', () => {
+  let tenantId: string;
+  let ana: TenantContext;
+  let bob: TenantContext;
+
+  beforeEach(async () => {
+    const tenant = await createTestTenant(['Ana', 'Bob']);
+    tenantId = tenant.tenantId;
+    [ana, bob] = tenant.members as [TenantContext, TenantContext];
+    await setRole(ana, 'admin');
+  });
+
+  it('listMembers rend le poste de chacun', async () => {
+    await adminDb
+      .update(members)
+      .set({ department: 'sales', job: 'sdr', seniority: 2 })
+      .where(and(eq(members.userId, bob.userId), eq(members.organizationId, tenantId)));
+
+    const rows = await listMembers(ana);
+    expect(rows.find((r) => r.name === 'Bob')).toMatchObject({
+      department: 'sales',
+      job: 'sdr',
+      seniority: 2,
+    });
+    expect(rows.find((r) => r.name === 'Ana')).toMatchObject(noPlacement);
+  });
+
+  it('listMembers ne rend le poste de personne à un simple membre, le sien compris', async () => {
+    for (const person of [ana, bob]) {
+      await adminDb
+        .update(members)
+        .set({ department: 'sales', job: 'sdr', seniority: 2 })
+        .where(and(eq(members.userId, person.userId), eq(members.organizationId, tenantId)));
+    }
+
+    const seenByMember = await listMembers(bob);
+    expect(seenByMember).toHaveLength(2);
+    expect(seenByMember.every((r) => r.department === null && r.job === null)).toBe(true);
+    expect(seenByMember.every((r) => r.seniority === null)).toBe(true);
+
+    await setRole(bob, 'member,admin');
+    const seenByAdmin = await listMembers(bob);
+    expect(
+      seenByAdmin.every((r) => r.department === 'sales' && r.job === 'sdr' && r.seniority === 2),
+    ).toBe(true);
+  });
+
+  it("un administrateur fixe le poste d'un membre, sans toucher au reste", async () => {
+    expect(await setMemberPlacement(ana, await memberIdOf(bob), backend)).toBe(true);
+    expect(await placementOf(bob)).toEqual({
+      ...backend,
+      role: 'member',
+      goals: [],
+      onboardedAt: null,
+    });
+  });
+
+  it('un administrateur fixe aussi son propre poste', async () => {
+    expect(await setMemberPlacement(ana, await memberIdOf(ana), backend)).toBe(true);
+    expect(await placementOf(ana)).toMatchObject({ ...backend, role: 'admin' });
+  });
+
+  it("un membre ne fixe ni le sien ni celui d'un autre", async () => {
+    const [anaId, bobId] = [await memberIdOf(ana), await memberIdOf(bob)];
+    expect(await setMemberPlacement(bob, bobId, backend)).toBe(false);
+    expect(await setMemberPlacement(bob, anaId, backend)).toBe(false);
+    expect(await placementOf(bob)).toMatchObject(noPlacement);
+    expect(await placementOf(ana)).toMatchObject(noPlacement);
+  });
+
+  it("un administrateur d'un autre espace ne touche pas à ce membre", async () => {
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'admin');
+
+    expect(await setMemberPlacement(zoe, await memberIdOf(bob), backend)).toBe(false);
+    expect(await placementOf(bob)).toMatchObject(noPlacement);
   });
 });

@@ -2,17 +2,12 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import {
-  COMPANY_SIZES,
-  DEPARTMENT_IDS,
-  GOALS,
-  isDepartment,
-  isJobOf,
-  SENIORITY_LEVELS,
-} from '@/lib/onboarding';
+import { COMPANY_SIZES, GOALS } from '@/lib/onboarding';
 import {
   completeMemberStep,
   completeOwnerStep,
+  isSoleMember,
+  PlacementSchema,
   readOnboardingMember,
   spaceRole,
 } from '@/server/auth/onboarding';
@@ -38,19 +33,10 @@ export type AboutStepState = { errors?: AboutStepErrors };
 // `@/lib/onboarding`. Les schémas ne portent aucun message : fieldErrors() pose le code de chaque champ.
 const GoalsSchema = z.array(z.enum(GOALS)).transform((goals) => [...new Set(goals)]);
 const MemberStepSchema = z.object({ goals: GoalsSchema });
-const OwnerStepSchema = z
-  .object({
-    department: z.enum(DEPARTMENT_IDS),
-    job: z.string(),
-    seniority: z.coerce.number().int().min(1).max(SENIORITY_LEVELS.length),
-    size: z.enum(COMPANY_SIZES),
-    goals: GoalsSchema,
-  })
-  // `when` : le poste se vérifie même si un autre champ est faux, pour signaler toutes les erreurs d'un coup.
-  .refine(({ department, job }) => isJobOf(department, job), {
-    path: ['job'],
-    when: ({ value }) => isDepartment(String((value as { department?: unknown }).department)),
-  });
+const OwnerStepSchema = PlacementSchema.safeExtend({
+  size: z.enum(COMPANY_SIZES),
+  goals: GoalsSchema,
+});
 const CompanyNameSchema = SignUpInputSchema.shape.organizationName;
 
 const OWNER_FIELDS = ['department', 'job', 'seniority', 'size'] as const;
@@ -114,11 +100,13 @@ export async function completeAboutStepAction(
   if (member.onboardedAt !== null) redirect('/');
 
   // Seul le propriétaire écrit service, poste, niveau et taille ; tout autre rôle, ses attentes seulement.
-  // Un `false` (étape validée entre-temps par l'autre clic) mène aussi à l'appli, dont la règle de redirection tranche.
+  // Un `false` (étape validée entre-temps par l'autre clic) mène à l'étape suivante, dont la page tranche.
   if (spaceRole(member.role) === 'owner') {
     const owner = OwnerStepSchema.safeParse(values);
     if (!owner.success) return { errors: fieldErrors(owner.error) };
     await completeOwnerStep(ctx, owner.data);
+    // Seul dans l'espace, le propriétaire a des collaborateurs à inviter : l'étape Collaborateurs. Avec une équipe, l'appli.
+    if (await isSoleMember(ctx)) redirect('/bienvenue/collaborateurs');
   } else {
     const goals = MemberStepSchema.safeParse(values);
     if (!goals.success) return { errors: fieldErrors(goals.error) };

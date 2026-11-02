@@ -1,10 +1,10 @@
 'use client';
 
-import { UserPlus } from 'lucide-react';
+import { Pencil, UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useState } from 'react';
-import { createInvitationAction } from '@/app/(app)/reglages/actions';
+import { type FormEvent, useState, useTransition } from 'react';
+import { setMemberPlacementAction } from '@/app/(app)/reglages/actions';
 import {
   Badge,
   Button,
@@ -15,9 +15,13 @@ import {
   DialogFooter,
   DialogTrigger,
   GlassCard,
+  IconButton,
   Notice,
   Section,
 } from '@/components/verre';
+import { InviteForm } from '@/components/verre/onboarding/invite-form';
+import { PlacementFields, usePlacementForm } from '@/components/verre/onboarding/placement-fields';
+import { departmentLabelKey, jobLabelKey, seniorityId } from '@/lib/onboarding';
 import { duration, ease, formatDate, nb } from '@/lib/verre';
 import type { MemberRow } from '@/server/auth/members';
 import { SECTION } from './reglages';
@@ -42,8 +46,20 @@ export function MembersSection({
 }) {
   const [session, setSession] = useState(0);
   const t = useTranslations('settings');
+  const o = useTranslations('onboarding');
   const active = members.filter((m) => !m.former);
   const former = members.filter((m) => m.former);
+
+  // « poste · niveau · service », ce que la personne a de renseigné.
+  const placementOf = (m: MemberRow) => {
+    const level = seniorityId(m.seniority);
+    const parts = [
+      m.job && o(jobLabelKey(m.department, m.job)),
+      level && o(`seniority.${level}`),
+      m.department && o(departmentLabelKey(m.department)),
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(' · ') : t('placementNotSet');
+  };
 
   return (
     <Section
@@ -71,10 +87,16 @@ export function MembersSection({
               <div className="min-w-0 flex-1">
                 <p className="text-body font-medium [overflow-wrap:anywhere] text-fg">{m.name}</p>
                 <p className="mt-0.5 text-label [overflow-wrap:anywhere] text-muted">{m.email}</p>
+                {canInvite && (
+                  <p className="mt-0.5 text-label [overflow-wrap:anywhere] text-muted">
+                    {placementOf(m)}
+                  </p>
+                )}
               </div>
               <Badge>
                 {roleLabel(m.role, { owner: t('owner'), admin: t('admin'), member: t('member') })}
               </Badge>
+              {canInvite && <EditPlacement member={m} />}
             </li>
           ))}
         </ul>
@@ -107,7 +129,7 @@ const step = {
   transition: { duration: duration.enter, ease: ease.out },
 };
 
-type State = { error?: string; url?: string; expiresAt?: Date };
+type Created = { url: string; expiresAt: Date };
 
 /**
  * Création d'un lien d'invitation, en deux étapes, comme celle d'un jeton (create-token.tsx) : à l'étape 2, le lien ne
@@ -116,55 +138,121 @@ type State = { error?: string; url?: string; expiresAt?: Date };
 function CreateInvitationContent() {
   const t = useTranslations('settings');
   const locale = useLocale();
-  const [state, formAction, pending] = useActionState(async (): Promise<State> => {
-    const result = await createInvitationAction();
-    return 'error' in result ? { error: result.error } : result;
-  }, {});
-  const { url, expiresAt } = state;
+  const [created, setCreated] = useState<Created | null>(null);
 
   return (
     <DialogContent
-      size="sm"
+      size={created ? 'sm' : 'md'}
       hideClose
       dismissible={false}
-      onEscapeKeyDown={(e) => url && e.preventDefault()}
-      title={url ? t('inviteCreated') : t('inviteMember')}
-      description={nb(url ? t('inviteCreatedDescription') : t('inviteDescription'))}
+      onEscapeKeyDown={(e) => created && e.preventDefault()}
+      title={created ? t('inviteCreated') : t('inviteMember')}
+      description={nb(created ? t('inviteCreatedDescription') : t('inviteDescription'))}
     >
-      {url && expiresAt ? (
+      {created ? (
         <motion.div key="cree" className="grid gap-4" {...step}>
           <div className="grid gap-2.5">
             <code className="block rounded-field border border-line-strong bg-glass-3 px-3.5 py-3 text-[13px] leading-[1.6] tracking-normal break-all text-fg select-all">
-              {url}
+              {created.url}
             </code>
             <Notice tone="warning" live="status" className="py-2.5">
-              {t('copyInvite')} {t('validUntil')} {formatDate(expiresAt, locale)}.
+              {t('copyInvite')} {t('validUntil')} {formatDate(created.expiresAt, locale)}.
             </Notice>
           </div>
           <DialogFooter>
-            <CopyButton value={url} size="md" autoFocus />
+            <CopyButton value={created.url} size="md" autoFocus />
             <DialogClose asChild>
               <Button variant="primary">{t('done')}</Button>
             </DialogClose>
           </DialogFooter>
         </motion.div>
       ) : (
-        <form noValidate action={formAction} className="grid gap-5">
-          {state.error && (
-            <Notice tone="error" live="alert">
-              {state.error}
-            </Notice>
-          )}
-          <DialogFooter>
+        <InviteForm
+          onCreated={setCreated}
+          secondaryAction={
             <DialogClose asChild>
               <Button variant="ghost">{t('cancel')}</Button>
             </DialogClose>
-            <Button type="submit" variant="primary" loading={pending}>
-              {pending ? t('sending') : t('createInvite')}
-            </Button>
-          </DialogFooter>
-        </form>
+          }
+        />
       )}
     </DialogContent>
+  );
+}
+
+/** Le crayon d'une ligne et sa fenêtre : service, poste et niveau d'un membre. Pour un propriétaire ou un administrateur seulement. */
+function EditPlacement({ member }: { member: MemberRow }) {
+  const t = useTranslations('settings');
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <IconButton
+          icon={Pencil}
+          label={t('editPlacement', { name: member.name })}
+          tooltip={false}
+        />
+      </DialogTrigger>
+      <DialogContent
+        size="md"
+        title={member.name}
+        description={
+          member.self
+            ? t('editOwnPlacementDescription')
+            : t('editPlacementDescription', { name: member.name })
+        }
+      >
+        <EditPlacementForm member={member} onSaved={() => setOpen(false)} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Dans le contenu de la fenêtre : il se démonte à la fermeture, donc chaque ouverture repart du poste enregistré.
+function EditPlacementForm({ member, onSaved }: { member: MemberRow; onSaved: () => void }) {
+  const t = useTranslations('settings');
+  const form = usePlacementForm({
+    department: member.department ?? '',
+    job: member.job ?? '',
+    seniority: member.seniority === null ? '' : String(member.seniority),
+  });
+  const [pending, startTransition] = useTransition();
+  const { department, job, seniority } = form.placement;
+  const ready = Boolean(department && job && seniority);
+  const formError = form.text('form');
+
+  // Pas de `action={…}` : React remet le formulaire à zéro après une action, et les listes (Radix Select) avec lui.
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!ready) return;
+    startTransition(async () => {
+      try {
+        const result = await setMemberPlacementAction(member.id, form.placement);
+        if ('errors' in result) form.reject(result.errors);
+        else onSaved();
+      } catch {
+        form.reject({ form: 'form' });
+      }
+    });
+  };
+
+  return (
+    <form ref={form.formRef} noValidate onSubmit={submit} className="grid gap-5">
+      <PlacementFields {...form.fields} />
+      {formError && (
+        <Notice tone="error" live="alert">
+          {formError}
+        </Notice>
+      )}
+      <DialogFooter>
+        <DialogClose asChild>
+          <Button variant="ghost">{t('cancel')}</Button>
+        </DialogClose>
+        <Button type="submit" variant="primary" loading={pending} disabled={!ready}>
+          {t('save')}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }

@@ -13,8 +13,14 @@ export function CopyButton({
   label,
   size = 'sm',
   variant = 'secondary',
+  onCopied,
   ...props
-}: Omit<ButtonProps, 'onClick' | 'icon'> & { value: string; label?: string }) {
+}: Omit<ButtonProps, 'onClick' | 'icon'> & {
+  value: string;
+  label?: string;
+  /** Appelé une fois la copie faite. */
+  onCopied?: () => void;
+}) {
   const t = useTranslations('common');
   const [done, setDone] = useState(false);
   useEffect(() => {
@@ -23,13 +29,17 @@ export function CopyButton({
     return () => clearTimeout(t);
   }, [done]);
   const copy = async () => {
+    let ok = false;
     try {
       await navigator.clipboard.writeText(value);
       setDone(true);
       toast.success(t('copied'));
+      ok = true;
     } catch {
       toast.error(t('copyFailed'));
     }
+    // Hors du try : un rappel qui échoue ne doit pas faire croire que la copie a échoué.
+    if (ok) onCopied?.();
   };
   return (
     <Button size={size} variant={variant} icon={done ? Check : Copy} onClick={copy} {...props}>

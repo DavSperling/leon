@@ -549,7 +549,11 @@
     "done": "Terminé",
     "cancel": "Annuler",
     "sending": "Envoi…",
-    "createInvite": "Créer le lien",
+    "save": "Enregistrer",
+    "placementNotSet": "Poste non renseigné",
+    "editPlacement": "Modifier le service, le poste et le niveau de {name}",
+    "editPlacementDescription": "Service, poste et niveau. {name} les voit sans pouvoir les changer.",
+    "editOwnPlacementDescription": "Votre service, votre poste et votre niveau. Seul un propriétaire ou un administrateur peut les changer.",
     "tokensTitle": "Jetons personnels",
     "tokenDescription": "Un jeton donne accès à ce que vous voyez. Il n’est montré qu’une fois.",
     "createToken": "Créer un jeton",
@@ -570,7 +574,6 @@
     "copyToken": "Copiez-le maintenant : il ne sera plus affiché.",
     "deviceName": "Nom de l’appareil",
     "invalidTokenName": "Donnez un nom à l'appareil (80 caractères au plus).",
-    "invitePermission": "Seuls les propriétaires et les administrateurs peuvent inviter.",
     "tabsLabel": "Sections des réglages",
     "tabProfile": "Profil",
     "tabSecurity": "Sécurité",
@@ -1343,6 +1346,35 @@
       "size": "Choisissez la taille de l’entreprise.",
       "company": "Saisissez le nom de l’entreprise (2 à 100 caractères).",
       "form": "Un problème est survenu. Réessayez."
+    },
+    "inviteErrors": {
+      "name": "100 caractères au plus.",
+      "department": "Choisissez un service.",
+      "job": "Choisissez un poste.",
+      "seniority": "Choisissez un niveau.",
+      "permission": "Seul un propriétaire ou un administrateur peut le faire.",
+      "form": "Un problème est survenu. Réessayez."
+    },
+    "teammates": {
+      "name": "Nom",
+      "nameHint": "Pour vous y retrouver",
+      "namePlaceholder": "ex. Inès",
+      "createLink": "Créer le lien",
+      "title": "Invitez vos collaborateurs",
+      "lead": "Un lien d’invitation par personne. Vous fixez son service, son poste et son niveau : elle les verra sans pouvoir les changer.",
+      "linkNote": "Envoyez-le vous-même. Il sert une fois et expire dans 7 jours.",
+      "addTeammate": "Ajouter un collaborateur",
+      "enter": "Entrer dans Leon",
+      "skip": "J’inviterai plus tard",
+      "linkCreated": "Lien créé",
+      "draft": "Brouillon",
+      "you": "Vous",
+      "previewLabel": "Aperçu de votre espace",
+      "noName": "Sans nom",
+      "leaveTitle": "{count, plural, one {Partir sans copier votre lien ?} other {Partir sans copier # liens ?}}",
+      "leaveDescription": "Leon ne montre chaque lien qu’une fois. Vous pourrez en créer d’autres plus tard dans Réglages › Équipe.",
+      "stay": "Rester",
+      "leave": "Partir quand même"
     }
   }
 }

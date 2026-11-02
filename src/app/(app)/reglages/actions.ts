@@ -14,7 +14,8 @@ import {
   deleteAccount,
   deleteOrganization,
 } from '@/server/auth/delete-account';
-import { createInvitationLink } from '@/server/auth/members';
+import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
+import { PlacementSchema } from '@/server/auth/onboarding';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
@@ -57,16 +58,59 @@ export async function createTokenAction(
   return { token, hint };
 }
 
-// Comme le jeton : le lien en clair n'existe que dans cette réponse.
-export async function createInvitationAction(): Promise<
-  { url: string; expiresAt: Date } | { error: string }
-> {
+// Les valeurs telles que les listes de `@/lib/onboarding` les donnent : c'est le schéma, côté serveur, qui les valide.
+export type PlacementInput = { department: string; job: string; seniority: string };
+// Un code par champ fautif (`form` pour ce qui ne vise aucun champ, `permission` quand le lecteur n'est ni propriétaire
+// ni administrateur) : une clé de `onboarding.inviteErrors`, que le composant traduit à l'affichage.
+export type InviteErrorCode = 'name' | 'department' | 'job' | 'seniority' | 'permission' | 'form';
+export type InviteErrors = Partial<
+  Record<'name' | 'department' | 'job' | 'seniority' | 'form', InviteErrorCode>
+>;
+
+const InvitationInputSchema = PlacementSchema.safeExtend({ name: z.string().trim().max(100) });
+const INVITE_FIELDS = ['name', 'department', 'job', 'seniority'] as const;
+const isInviteField = (field: string): field is (typeof INVITE_FIELDS)[number] =>
+  (INVITE_FIELDS as readonly string[]).includes(field);
+
+// Les schémas ne portent aucun message : le code de chaque champ est son nom. Un argument qui n'est pas un objet
+// (`null` forgé) n'a pas de champ fautif : `form`.
+function inviteErrors(error: z.ZodError): InviteErrors {
+  const errors: InviteErrors = {};
+  for (const issue of error.issues) {
+    const field = String(issue.path[0]);
+    const key = isInviteField(field) ? field : 'form';
+    errors[key] ??= key;
+  }
+  return errors;
+}
+
+// Comme le jeton : le lien en clair n'existe que dans cette réponse. Tout l'argument est analysé avant d'être lu.
+export async function createInvitationAction(
+  input: PlacementInput & { name: string },
+): Promise<{ url: string; expiresAt: Date } | { errors: InviteErrors }> {
   const ctx = await requireUserContext();
-  const t = await getTranslations('settings');
-  const link = await createInvitationLink(ctx);
-  if (!link) return { error: t('invitePermission') };
+  const parsed = InvitationInputSchema.safeParse(input);
+  if (!parsed.success) return { errors: inviteErrors(parsed.error) };
+  const { name, ...placement } = parsed.data;
+  const link = await createInvitationLink(ctx, { name, placement });
+  if (!link) return { errors: { form: 'permission' } };
   const url = new URL(`/invitation/${link.token}`, env.BETTER_AUTH_URL).toString();
   return { url, expiresAt: link.expiresAt };
+}
+
+export async function setMemberPlacementAction(
+  memberId: string,
+  input: PlacementInput,
+): Promise<{ ok: true } | { errors: InviteErrors }> {
+  const ctx = await requireUserContext();
+  if (!z.uuid().safeParse(memberId).success) return { errors: { form: 'form' } };
+  const parsed = PlacementSchema.safeParse(input);
+  if (!parsed.success) return { errors: inviteErrors(parsed.error) };
+  if (!(await setMemberPlacement(ctx, memberId, parsed.data))) {
+    return { errors: { form: 'permission' } };
+  }
+  revalidatePath('/reglages');
+  return { ok: true };
 }
 
 export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean }> {

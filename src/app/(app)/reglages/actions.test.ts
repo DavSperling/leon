@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { DeletionRefused, deleteAccount, deleteOrganization } from '@/server/auth/delete-account';
-import { createInvitationLink } from '@/server/auth/members';
+import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
@@ -23,6 +23,7 @@ import {
   regenerateBackupCodesAction,
   revokeTokenAction,
   setLocaleAction,
+  setMemberPlacementAction,
   updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
@@ -50,7 +51,10 @@ vi.mock('@/server/auth/auth', () => ({
 }));
 vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiToken: vi.fn() }));
-vi.mock('@/server/auth/members', () => ({ createInvitationLink: vi.fn() }));
+vi.mock('@/server/auth/members', () => ({
+  createInvitationLink: vi.fn(),
+  setMemberPlacement: vi.fn(),
+}));
 vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
 // La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
 // test lisent la même.
@@ -333,24 +337,108 @@ describe('revokeTokenAction', () => {
   });
 });
 
-describe('createInvitationAction', () => {
-  it("rend l'adresse du lien sur l'instance, une seule fois", async () => {
-    const expiresAt = new Date('2026-11-01T10:00:00Z');
-    vi.mocked(createInvitationLink).mockResolvedValue({ token: 'abc_-123', expiresAt });
+const backend = { department: 'engineering', job: 'backend', seniority: '3' };
 
-    await expect(createInvitationAction()).resolves.toEqual({
-      url: 'http://localhost:3000/invitation/abc_-123',
+describe('createInvitationAction', () => {
+  const expiresAt = new Date('2026-11-01T10:00:00Z');
+
+  it('crée un lien qui porte le nom et le poste', async () => {
+    vi.mocked(createInvitationLink).mockResolvedValue({ token: 't'.repeat(43), expiresAt });
+
+    const result = await createInvitationAction({ name: '  Inès ', ...backend });
+
+    expect(createInvitationLink).toHaveBeenCalledWith(ctx, {
+      name: 'Inès',
+      placement: { department: 'engineering', job: 'backend', seniority: 3 },
+    });
+    expect(result).toEqual({
+      url: `http://localhost:3000/invitation/${'t'.repeat(43)}`,
       expiresAt,
     });
-    expect(createInvitationLink).toHaveBeenCalledWith(ctx);
   });
 
-  it("refuse qui n'est ni propriétaire ni administrateur", async () => {
+  it.each([
+    [{ department: 'sales', job: 'backend', seniority: '3' }, 'job'],
+    [{ department: 'toString', job: 'backend', seniority: '3' }, 'department'],
+    [{ ...backend, seniority: '0' }, 'seniority'],
+    [{ ...backend, seniority: '9' }, 'seniority'],
+  ])('refuse un poste incohérent sans rien créer (%o → %s)', async (input, field) => {
+    expect(await createInvitationAction({ name: '', ...input })).toEqual({
+      errors: { [field]: field },
+    });
+    expect(createInvitationLink).not.toHaveBeenCalled();
+  });
+
+  it('refuse un nom de 101 caractères', async () => {
+    expect(await createInvitationAction({ name: 'a'.repeat(101), ...backend })).toEqual({
+      errors: { name: 'name' },
+    });
+    expect(createInvitationLink).not.toHaveBeenCalled();
+  });
+
+  it.each([null, undefined, 'poste'])(
+    'refuse un argument forgé (%o) sans planter ni rien créer',
+    async (input) => {
+      expect(await createInvitationAction(input as never)).toEqual({ errors: { form: 'form' } });
+      expect(createInvitationLink).not.toHaveBeenCalled();
+    },
+  );
+
+  it("signale chaque champ manquant d'un objet incomplet", async () => {
+    expect(await createInvitationAction({} as never)).toEqual({
+      errors: { name: 'name', department: 'department', job: 'job', seniority: 'seniority' },
+    });
+    expect(createInvitationLink).not.toHaveBeenCalled();
+  });
+
+  it("dit qu'il faut être administrateur quand le lien est refusé", async () => {
     vi.mocked(createInvitationLink).mockResolvedValue(null);
 
-    await expect(createInvitationAction()).resolves.toEqual({
-      error: expect.stringContaining('administrateurs'),
+    expect(await createInvitationAction({ name: '', ...backend })).toEqual({
+      errors: { form: 'permission' },
     });
+  });
+});
+
+describe('setMemberPlacementAction', () => {
+  it("fixe le poste d'un membre", async () => {
+    vi.mocked(setMemberPlacement).mockResolvedValue(true);
+
+    expect(await setMemberPlacementAction(TOKEN_ID, backend)).toEqual({ ok: true });
+    expect(setMemberPlacement).toHaveBeenCalledWith(ctx, TOKEN_ID, {
+      department: 'engineering',
+      job: 'backend',
+      seniority: 3,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it("refuse un identifiant de membre qui n'est pas un UUID", async () => {
+    expect(await setMemberPlacementAction('abc', backend)).toEqual({ errors: { form: 'form' } });
+    expect(setMemberPlacement).not.toHaveBeenCalled();
+  });
+
+  it('refuse un poste incohérent sans rien écrire', async () => {
+    expect(await setMemberPlacementAction(TOKEN_ID, { ...backend, department: 'sales' })).toEqual({
+      errors: { job: 'job' },
+    });
+    expect(setMemberPlacement).not.toHaveBeenCalled();
+  });
+
+  it('refuse un argument forgé sans planter ni rien écrire', async () => {
+    expect(await setMemberPlacementAction(TOKEN_ID, null as never)).toEqual({
+      errors: { form: 'form' },
+    });
+    expect(setMemberPlacement).not.toHaveBeenCalled();
+  });
+
+  it("dit qu'il faut être administrateur quand la modification est refusée", async () => {
+    vi.mocked(setMemberPlacement).mockResolvedValue(false);
+
+    expect(await setMemberPlacementAction(TOKEN_ID, backend)).toEqual({
+      errors: { form: 'permission' },
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });
 

@@ -1,11 +1,12 @@
 import { and, eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { members, organizations } from '@/server/db/schema/auth';
+import { members, organizations, users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
-import { createTestTenant } from '@/test/fixtures';
+import { createTestTenant, createTestUser } from '@/test/fixtures';
 import {
   completeMemberStep,
   completeOwnerStep,
+  isSoleMember,
   type OwnerStep,
   readOnboardingMember,
   spaceRole,
@@ -155,5 +156,18 @@ describe('spaceRole', () => {
     expect(spaceRole('admin,owner')).toBe('owner');
     expect(spaceRole('admin')).toBe('admin');
     expect(spaceRole('member')).toBe('member');
+  });
+});
+
+describe('isSoleMember', () => {
+  it('vrai seul, faux à deux, vrai si le second compte est supprimé', async () => {
+    const solo = (await createTestTenant(['Seule'])).members[0] as TenantContext;
+    expect(await isSoleMember(solo)).toBe(true);
+
+    const second = await createTestUser(solo.tenantId, 'Bob');
+    expect(await isSoleMember(solo)).toBe(false);
+
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, second.userId));
+    expect(await isSoleMember(solo)).toBe(true);
   });
 });

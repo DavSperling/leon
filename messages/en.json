@@ -549,7 +549,11 @@
     "done": "Done",
     "cancel": "Cancel",
     "sending": "Sending…",
-    "createInvite": "Create invitation link",
+    "save": "Save",
+    "placementNotSet": "Role not set",
+    "editPlacement": "Edit {name}’s department, role and seniority",
+    "editPlacementDescription": "Department, role and seniority. {name} sees them but can’t change them.",
+    "editOwnPlacementDescription": "Your department, role and seniority. Only an owner or an admin can change them.",
     "tokensTitle": "Personal tokens",
     "tokenDescription": "A token grants access to what you can see. It is shown only once.",
     "createToken": "Create token",
@@ -570,7 +574,6 @@
     "copyToken": "Copy it now; it won’t be shown again.",
     "deviceName": "Device name",
     "invalidTokenName": "Enter a device name of up to 80 characters.",
-    "invitePermission": "Only owners and administrators can invite members.",
     "tabsLabel": "Settings sections",
     "tabProfile": "Profile",
     "tabSecurity": "Security",
@@ -1343,6 +1346,35 @@
       "size": "Choose your company size.",
       "company": "Enter a company name (2 to 100 characters).",
       "form": "Something went wrong. Try again."
+    },
+    "inviteErrors": {
+      "name": "Use 100 characters or fewer.",
+      "department": "Choose a department.",
+      "job": "Choose a role.",
+      "seniority": "Choose a seniority level.",
+      "permission": "Only an owner or an admin can do this.",
+      "form": "Something went wrong. Try again."
+    },
+    "teammates": {
+      "name": "Name",
+      "nameHint": "To tell links apart",
+      "namePlaceholder": "e.g. Inès",
+      "createLink": "Create link",
+      "title": "Invite your teammates",
+      "lead": "One invitation link per person. You set their department, role and seniority. They’ll see them, but can’t change them.",
+      "linkNote": "Send it yourself. It works once and expires in 7 days.",
+      "addTeammate": "Add a teammate",
+      "enter": "Enter Leon",
+      "skip": "I’ll invite people later",
+      "linkCreated": "Link created",
+      "draft": "Draft",
+      "you": "You",
+      "previewLabel": "Preview of your workspace",
+      "noName": "No name",
+      "leaveTitle": "{count, plural, one {Leave without copying your link?} other {Leave without copying # links?}}",
+      "leaveDescription": "Leon shows each link only once. You can create new ones later in Settings › Team.",
+      "stay": "Stay",
+      "leave": "Leave anyway"
     }
   }
 }

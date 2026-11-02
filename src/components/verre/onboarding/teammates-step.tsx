@@ -40,7 +40,7 @@ function Node({
   dim?: boolean;
 }) {
   return (
-    <li className={sub ? 'ml-5 border-l border-line pl-4' : undefined}>
+    <li className={cn('min-w-0', sub && 'ml-3 border-l border-line pl-3 sm:ml-5 sm:pl-4')}>
       <div className="flex min-w-0 items-center gap-3">
         <span
           aria-hidden="true"
@@ -52,8 +52,12 @@ function Node({
           {initial}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-ui font-semibold text-fg">{name}</p>
-          {detail && <p className="truncate text-label text-muted">{detail}</p>}
+          <p title={name} className="truncate text-ui font-semibold text-fg">
+            {name}
+          </p>
+          {detail && (
+            <p className="line-clamp-2 text-label text-muted [overflow-wrap:anywhere]">{detail}</p>
+          )}
         </div>
         {badge}
       </div>
@@ -157,7 +161,7 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
           <h2 className="mb-3 text-meta font-medium tracking-[0.05em] text-muted uppercase [overflow-wrap:anywhere]">
             {organizationName}
           </h2>
-          <ul className="grid gap-3">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
             <Node
               initial={initialOf(you.name)}
               name={you.name}

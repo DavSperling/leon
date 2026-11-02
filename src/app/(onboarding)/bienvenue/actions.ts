@@ -6,6 +6,7 @@ import { COMPANY_SIZES, GOALS } from '@/lib/onboarding';
 import {
   completeMemberStep,
   completeOwnerStep,
+  isSoleMember,
   PlacementSchema,
   readOnboardingMember,
   spaceRole,
@@ -104,6 +105,8 @@ export async function completeAboutStepAction(
     const owner = OwnerStepSchema.safeParse(values);
     if (!owner.success) return { errors: fieldErrors(owner.error) };
     await completeOwnerStep(ctx, owner.data);
+    // Seul dans l'espace, le propriétaire a des collaborateurs à inviter : l'étape Collaborateurs. Avec une équipe, l'appli.
+    if (await isSoleMember(ctx)) redirect('/bienvenue/collaborateurs');
   } else {
     const goals = MemberStepSchema.safeParse(values);
     if (!goals.success) return { errors: fieldErrors(goals.error) };

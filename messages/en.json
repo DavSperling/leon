@@ -1358,7 +1358,16 @@
       "name": "Name",
       "nameHint": "To tell links apart",
       "namePlaceholder": "e.g. Inès",
-      "createLink": "Create link"
+      "createLink": "Create link",
+      "title": "Invite your teammates",
+      "lead": "One invitation link per person. You set their department, role and seniority. They’ll see them, but can’t change them.",
+      "linkNote": "Send it yourself. It works once and expires in 7 days.",
+      "addTeammate": "Add a teammate",
+      "enter": "Enter Leon",
+      "skip": "I’ll invite people later",
+      "linkCreated": "Link created",
+      "draft": "Draft",
+      "you": "You"
     }
   }
 }

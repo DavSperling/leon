@@ -1358,7 +1358,16 @@
       "name": "Nom",
       "nameHint": "Pour vous y retrouver",
       "namePlaceholder": "ex. Inès",
-      "createLink": "Créer le lien"
+      "createLink": "Créer le lien",
+      "title": "Invitez vos collaborateurs",
+      "lead": "Un lien d’invitation par personne. Vous fixez son service, son poste et son niveau : elle les verra sans pouvoir les changer.",
+      "linkNote": "Envoyez-le vous-même. Il sert une fois et expire dans 7 jours.",
+      "addTeammate": "Ajouter un collaborateur",
+      "enter": "Entrer dans Leon",
+      "skip": "J’inviterai plus tard",
+      "linkCreated": "Lien créé",
+      "draft": "Brouillon",
+      "you": "Vous"
     }
   }
 }

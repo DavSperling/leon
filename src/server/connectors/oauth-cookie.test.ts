@@ -20,6 +20,18 @@ describe('cookie de l’aller-retour OAuth', () => {
     expect(openPending(sealPending(pending), NOW + 1000)).toEqual(pending);
   });
 
+  it('garde la page de retour demandée, tirée de la liste fermée', () => {
+    const withReturn: OAuthPending = { ...pending, returnTo: '/bienvenue/outils' };
+    expect(openPending(sealPending(withReturn), NOW + 1000)).toEqual(withReturn);
+  });
+
+  it('refuse un cookie bien signé dont la page de retour est hors de la liste', () => {
+    for (const returnTo of ['https://ailleurs', '//ailleurs', '/bienvenue/outils/', '/autre']) {
+      const cookie = sealPending({ ...pending, returnTo: returnTo as never });
+      expect(openPending(cookie, NOW)).toBeNull();
+    }
+  });
+
   it('refuse une signature modifiée', () => {
     const [body = '', signature = ''] = sealPending(pending).split('.');
     const flipped = `${signature.slice(0, -1)}${signature.endsWith('A') ? 'B' : 'A'}`;

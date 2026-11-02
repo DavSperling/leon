@@ -43,6 +43,7 @@ import {
   canSyncNow,
   DEFAULT_SINCE,
   inputTypeFor,
+  type OAuthReturnPath,
   oauthStartPath,
   otherOwnersNote,
   panelMode,
@@ -250,11 +251,20 @@ function AdminConsent({ url }: { url: string }) {
 
 // « Se connecter avec … » : une navigation vers l'éditeur (formulaire POST), pas une action serveur.
 // Les champs non secrets et la période partent avec ; les jetons, eux, ne passent jamais ici.
-function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLFormElement | null> }) {
+function OAuthForm({
+  entry,
+  ref,
+  returnTo,
+}: {
+  entry: CatalogItem;
+  ref: RefObject<HTMLFormElement | null>;
+  returnTo?: OAuthReturnPath;
+}) {
   const t = useTranslations('connections');
   const en = useLocale() === 'en';
   return (
     <form ref={ref} method="post" action={oauthStartPath(entry.id)} className="grid gap-4">
+      {returnTo && <input type="hidden" name="retour" value={returnTo} />}
       {entry.oauthHelp && <p className="text-ui text-fg-2">{nb(entry.oauthHelp)}</p>}
       {entry.fields
         .filter((x) => entry.oauthPreFields.includes(x.name))
@@ -278,7 +288,15 @@ function OAuthForm({ entry, ref }: { entry: CatalogItem; ref: RefObject<HTMLForm
 }
 
 /** Le bouton d'abord, la clé en secours (« ou coller une clé ») ; la clé seule quand l'appli n'est pas configurée. */
-function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => void }) {
+function AddConnection({
+  entry,
+  onAdded,
+  returnTo,
+}: {
+  entry: CatalogItem;
+  onAdded: () => void;
+  returnTo?: OAuthReturnPath;
+}) {
   const t = useTranslations('connections');
   const mode = panelMode(entry);
   const keyBox = useRef<HTMLDivElement>(null);
@@ -300,7 +318,7 @@ function AddConnection({ entry, onAdded }: { entry: CatalogItem; onAdded: () => 
   if (mode === 'key') return <KeyForm entry={entry} onSuccess={onAdded} />;
   return (
     <div className="grid gap-5">
-      <OAuthForm entry={entry} ref={oauthForm} />
+      <OAuthForm entry={entry} ref={oauthForm} returnTo={returnTo} />
       {mode === 'oauth+key' && (
         <Collapsible onOpenChange={onKeyOpen} className="grid gap-3">
           <CollapsibleTrigger className={cn(LINK, 'group w-fit py-1 text-ui')}>
@@ -351,12 +369,14 @@ function ConnectionCard({
   now,
   canConnect,
   onRemoved,
+  returnTo,
 }: {
   c: ConnectionView;
   entry: CatalogItem;
   now: Date;
   canConnect: boolean;
   onRemoved: () => void;
+  returnTo?: OAuthReturnPath;
 }) {
   const t = useTranslations('connections');
   const locale = useLocale();
@@ -407,6 +427,7 @@ function ConnectionCard({
                 // « Reconnecter » refait le déroulé chez l'éditeur et remplace les jetons de la même connexion
                 <form method="post" action={oauthStartPath(c.provider)}>
                   <input type="hidden" name="reconnect" value={c.id} />
+                  {returnTo && <input type="hidden" name="retour" value={returnTo} />}
                   <Button
                     type="submit"
                     size="sm"
@@ -469,6 +490,7 @@ function Panel({
   now,
   canConnect,
   focusDialog,
+  returnTo,
 }: {
   entry: CatalogItem;
   conns: ConnectionView[];
@@ -476,6 +498,7 @@ function Panel({
   now: Date;
   canConnect: boolean;
   focusDialog: () => void;
+  returnTo?: OAuthReturnPath;
 }) {
   const t = useTranslations('connections');
   const locale = useLocale();
@@ -517,6 +540,7 @@ function Panel({
                 now={now}
                 canConnect={canConnect}
                 onRemoved={focusDialog}
+                returnTo={returnTo}
               />
             ))}
           </AnimatePresence>
@@ -533,7 +557,7 @@ function Panel({
           {others && (
             <p className="text-label text-muted">{nb(`${others} ${t('duplicateWarning')}`)}</p>
           )}
-          <AddConnection entry={entry} onAdded={onAdded} />
+          <AddConnection entry={entry} onAdded={onAdded} returnTo={returnTo} />
         </motion.div>
       )}
       {canConnect && conns.length > 0 && !adding && (
@@ -575,6 +599,7 @@ export function ToolDialog({
   now,
   canConnect,
   session,
+  returnTo,
 }: {
   entry: CatalogItem | null;
   open: boolean;
@@ -587,6 +612,8 @@ export function ToolDialog({
   canConnect: boolean;
   /** Change à chaque ouverture : l'état de la fenêtre repart de zéro. */
   session: number;
+  /** La page où le retour de l'éditeur revient (le formulaire poste `retour`) ; absente : Connexions. */
+  returnTo?: OAuthReturnPath;
 }) {
   const t = useTranslations('connections');
   const content = useRef<HTMLDivElement>(null);
@@ -626,6 +653,7 @@ export function ToolDialog({
           now={now}
           canConnect={canConnect}
           focusDialog={focusDialog}
+          returnTo={returnTo}
         />
       </DialogContent>
     </Dialog>

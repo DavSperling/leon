@@ -6,6 +6,8 @@ import { NewDiscussionForm } from '@/components/discussion/new-discussion-form';
 import { EmptyState, Notice, PageHeader, Section } from '@/components/verre';
 import { DiscussionRows } from '@/components/verre/discussions/list';
 import { formatRelative } from '@/lib/format';
+import { isDepartment } from '@/lib/onboarding';
+import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
 import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
@@ -21,7 +23,17 @@ export default async function DiscussionsPage() {
   const t = await getTranslations('discussions');
   const locale = await getLocale();
   const ctx = await requireUserContext();
-  const discussions = await listDiscussions(ctx);
+  const [discussions, member] = await Promise.all([
+    listDiscussions(ctx),
+    readOnboardingMember(ctx),
+  ]);
+  // Deux questions du service de la personne, tant qu'elle n'a encore rien demandé.
+  const department = member?.department;
+  let examples: string[] | undefined;
+  if (discussions.length === 0 && department && isDepartment(department)) {
+    const asks = await getTranslations('onboarding');
+    examples = [asks(`asks.${department}.one`), asks(`asks.${department}.two`)];
+  }
   const modelAvailable = getLlm(env) !== null;
   const now = new Date();
 
@@ -47,7 +59,7 @@ export default async function DiscussionsPage() {
               {t('modelUnavailable')}
             </Notice>
           )}
-          <NewDiscussionForm disabled={!modelAvailable} />
+          <NewDiscussionForm disabled={!modelAvailable} examples={examples} />
         </div>
       </div>
 

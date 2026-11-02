@@ -230,7 +230,8 @@
     "srDescription": "Leon searches, reads, and answers with cited sources.",
     "composerLabel": "Your question for Leon",
     "keyboardHint": "Press Enter to send, Shift + Enter for a new line.",
-    "privacyHint": "Leon only reads what you have permission to see."
+    "privacyHint": "Leon only reads what you have permission to see.",
+    "examplesLabel": "Try asking"
   },
   "thread": {
     "title": "Discussion",

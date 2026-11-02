@@ -230,7 +230,8 @@
     "srDescription": "Leon cherche, lit et répond en citant ses sources.",
     "composerLabel": "Votre question à Leon",
     "keyboardHint": "Entrée pour envoyer, Maj + Entrée pour passer à la ligne.",
-    "privacyHint": "Leon ne lit que ce que vous avez le droit de voir."
+    "privacyHint": "Leon ne lit que ce que vous avez le droit de voir.",
+    "examplesLabel": "Essayez par exemple"
   },
   "thread": {
     "title": "Discussion",

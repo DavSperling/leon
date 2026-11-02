@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { basename, isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
-import { API_PATHS } from '../capture/api-contract';
+import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
+import { extractClaudeCodeFacts } from '../capture/session-facts';
 import {
   type IngestPayload,
   type IngestResult,
@@ -32,12 +33,16 @@ export type ImportOptions = {
   since?: Date;
   dryRun: boolean;
 };
+export type FactsSender = (payload: SessionFactsPayload) => Promise<void>;
 export type ImportDeps = {
   send: (payload: IngestPayload) => Promise<IngestResult>;
   out: (line: string) => void;
   // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
+  // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
+  // la version transmise au serveur.
+  facts?: { accord: number; send: FactsSender };
 };
 export type ImportSummary = {
   sessions: number;
@@ -66,32 +71,63 @@ export class IngestResponseError extends Error {
   }
 }
 
+// Le message d'un serveur qui ne prend pas les faits : 404, il est plus ancien que leur route ; 400, il ne
+// reconnaît pas l'envoi. Les tours, eux, sont reçus.
+export const FACTS_REFUSED_MESSAGE =
+  'the server does not accept session facts (it may be older than the CLI), only the turns were sent.';
+
+type Sending = { signal?: AbortSignal };
+
 // `signal` borne la durée d'un envoi (réponse comprise) : le crochet de fin de session en a besoin,
 // l'import par lots, non.
+async function post(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  path: string,
+  payload: unknown,
+  { signal }: Sending,
+): Promise<Response> {
+  const response = await fetchImpl(new URL(path, env.url), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    ...(signal ? { signal } : {}),
+  });
+  if (response.status === 401) throw new TokenRefusedError();
+  if (!response.ok) throw new IngestResponseError(response.status);
+  return response;
+}
+
 export function createIngestSender(
   fetchImpl: typeof fetch,
   env: ServerEnv,
-  options: { signal?: AbortSignal } = {},
+  options: Sending = {},
 ): ImportDeps['send'] {
   return async (payload) => {
-    const response = await fetchImpl(new URL(API_PATHS.ingest, env.url), {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      ...(options.signal ? { signal: options.signal } : {}),
-    });
-    if (response.status === 401) throw new TokenRefusedError();
-    if (!response.ok) throw new IngestResponseError(response.status);
+    const response = await post(fetchImpl, env, API_PATHS.ingest, payload, options);
     return IngestResultSchema.parse(await response.json());
   };
 }
 
-// La session filtrée par project et since, ou null s'il ne reste rien à envoyer.
+// Le serveur répond 202, sans corps.
+export function createFactsSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: Sending = {},
+): FactsSender {
+  return async (payload) => {
+    await post(fetchImpl, env, API_PATHS.faits, payload, options);
+  };
+}
+
+// La session filtrée par project et since, avec le contenu du fichier (ses faits), ou null s'il ne reste rien
+// à envoyer.
 async function loadSession(
   file: string,
   options: ImportOptions,
-): Promise<ClaudeCodeSession | null> {
-  const session = parseClaudeCodeSession(await readFile(file, 'utf8'));
+): Promise<{ session: ClaudeCodeSession; content: string } | null> {
+  const content = await readFile(file, 'utf8');
+  const session = parseClaudeCodeSession(content);
   if (!session) return null;
   // Le dossier lui-même ou l'un de ses sous-dossiers, jamais un voisin comme /x/acme-bis.
   const { cwd } = session;
@@ -100,7 +136,7 @@ async function loadSession(
   }
   const { since } = options;
   const turns = since ? session.turns.filter((turn) => new Date(turn.ts) >= since) : session.turns;
-  return turns.length > 0 ? { ...session, turns } : null;
+  return turns.length > 0 ? { session: { ...session, turns }, content } : null;
 }
 
 // Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi.
@@ -139,6 +175,43 @@ export async function importSession(
   }
 }
 
+// Les faits d'une session (C2), après ses tours, quand l'accord le permet (`deps.facts`). `root` est la racine des
+// chemins de fichiers relevés : ceux écrits ailleurs sont retirés (extractClaudeCodeFacts). Rend false quand le
+// serveur ne les prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte.
+// shortcut: la racine est le dossier de départ de la session, pas celle du dépôt : une session ouverte dans un
+// sous-dossier perd les fichiers écrits à côté, prendre `git rev-parse --show-toplevel` (attention aux chemins
+// réels de macOS, /private/var) le jour où ça manque.
+export async function sendSessionFacts(
+  session: ClaudeCodeSession,
+  source: { content: string; root: string; fin: boolean },
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'>,
+  deps: ImportDeps,
+): Promise<boolean> {
+  if (!deps.facts) return true;
+  const payload: SessionFactsPayload = {
+    kind: 'claude_code',
+    external_id: session.sessionId,
+    ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
+    accord: deps.facts.accord,
+    faits: extractClaudeCodeFacts(source.content, source.root),
+    fin: source.fin,
+  };
+  if (options.dryRun) {
+    deps.out(JSON.stringify(payload));
+    return true;
+  }
+  try {
+    await deps.facts.send(payload);
+    return true;
+  } catch (error) {
+    if (error instanceof IngestResponseError && [400, 404].includes(error.status)) return false;
+    throw error;
+  }
+}
+
+// Au rattrapage, une session est finie si son fichier n'a pas bougé depuis 30 min.
+const IDLE_MS = 30 * 60_000;
+
 export async function importClaudeCode(
   options: ImportOptions,
   deps: ImportDeps,
@@ -152,18 +225,25 @@ export async function importClaudeCode(
   };
   // Une session reprise recopie l'historique (mêmes uuid, autre sessionId) : chaque tour n'est envoyé qu'une fois.
   const seen = new Set<string>();
+  // Un serveur qui refuse les faits les refusera pour toutes les sessions : un seul message, plus aucun envoi.
+  let factsRefused = false;
   for (const file of await findSessionFiles(options.baseDir)) {
     try {
       const loaded = await loadSession(file, options);
-      const turns = loaded?.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];
+      const turns = loaded?.session.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];
       if (!loaded || turns.length === 0) continue;
+      const { session, content } = loaded;
       for (const turn of turns) seen.add(turn.external_id);
       summary.sessions += 1;
+      const start = session.cwd !== null && isAbsolute(session.cwd) ? session.cwd : null;
       const projectKey =
-        deps.git && loaded.cwd !== null && isAbsolute(loaded.cwd)
-          ? await projectKeyFor(loaded.cwd, deps.git)
-          : options.projectKey;
-      await importSession({ ...loaded, turns }, { ...options, projectKey }, deps, summary);
+        deps.git && start !== null ? await projectKeyFor(start, deps.git) : options.projectKey;
+      await importSession({ ...session, turns }, { ...options, projectKey }, deps, summary);
+      if (!deps.facts || factsRefused || start === null) continue;
+      const fin = Date.now() - (await stat(file)).mtimeMs >= IDLE_MS;
+      const source = { content, root: start, fin };
+      factsRefused = !(await sendSessionFacts(session, source, { ...options, projectKey }, deps));
+      if (factsRefused) console.error(FACTS_REFUSED_MESSAGE);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

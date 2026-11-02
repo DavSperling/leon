@@ -25,6 +25,10 @@
 //
 // Les textes passent par la même préparation que l'import (masquage des secrets, retrait des rappels système,
 // coupe des tours trop longs : `parseClaudeCodeSession`), puis le serveur la refait à la réception.
+//
+// Après les tours, les faits de la session (ses gestes, C1 du plan mémoire des sessions) partent par leur propre
+// route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts) : c'est une
+// vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
@@ -32,10 +36,12 @@ import type { ServerEnv } from './env';
 import {
   countOf,
   createIngestSender,
+  FACTS_REFUSED_MESSAGE,
   type ImportDeps,
   type ImportSummary,
   IngestResponseError,
   importSession,
+  sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
 import { type GitRunner, projectKeyFor } from './project-key';
@@ -113,9 +119,11 @@ function parseHookInput(stdin: string): z.infer<typeof HookInputSchema> | null {
   }
 }
 
+// Le contenu du fichier sert aussi aux faits.
 async function readSession(path: string, deps: CaptureDeps) {
   try {
-    return parseClaudeCodeSession(await deps.readFile(path));
+    const content = await deps.readFile(path);
+    return { content, session: parseClaudeCodeSession(content) };
   } catch {
     return undefined;
   }
@@ -125,17 +133,16 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   const input = parseHookInput(stdin);
   if (!input) return warn('could not read the hook input, session not captured.');
 
-  const session = await readSession(input.transcript_path, deps);
-  if (session === undefined) {
+  const read = await readSession(input.transcript_path, deps);
+  if (read === undefined) {
     return warn('session file not found or unreadable, session not captured.');
   }
+  const { content, session } = read;
   if (session === null) return warn('nothing to send for this session.');
 
   // Le dossier de départ de la session, comme `briefing` : le même projet des deux côtés.
-  const projectKey = await projectKeyFor(
-    startingDirectory(session.cwd, deps.projectDir, input.cwd),
-    deps.git,
-  );
+  const start = startingDirectory(session.cwd, deps.projectDir, input.cwd);
+  const projectKey = await projectKeyFor(start, deps.git);
   const summary: ImportSummary = {
     sessions: 1,
     turnsSent: 0,
@@ -151,6 +158,14 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   warn(
     `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
+  try {
+    const source = { content, root: start, fin: true };
+    if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
+      warn(FACTS_REFUSED_MESSAGE);
+    }
+  } catch {
+    warn('session facts not sent (server unreachable, too slow or unexpected response).');
+  }
 }
 
 // Le code de sortie vaut toujours 0 : ce crochet ne doit jamais gêner la fin d'une session.

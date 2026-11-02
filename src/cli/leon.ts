@@ -1,4 +1,5 @@
 import { access, readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -10,9 +11,11 @@ import {
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
+import { factsConsent } from './consent';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   countOf,
+  createFactsSender,
   createIngestSender,
   type ImportDeps,
   type ImportSummary,
@@ -60,14 +63,19 @@ async function runImport(args: string[]): Promise<number> {
   });
   const since = parseSince(values.since);
   const dryRun = values['dry-run'] ?? false;
+  const nothingSent = async (): Promise<never> => {
+    throw new Error('Nothing is sent with --dry-run.');
+  };
+  const env = dryRun ? null : parseServerEnv(process.env);
+  // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts).
+  const accord = await factsConsent(homedir(), 'claude_code');
   const deps: ImportDeps = {
     out: console.log,
     git: gitInDirectory,
-    send: dryRun
-      ? async () => {
-          throw new Error('Nothing is sent with --dry-run.');
-        }
-      : createIngestSender(fetch, parseServerEnv(process.env)),
+    send: env ? createIngestSender(fetch, env) : nothingSent,
+    ...(accord === null
+      ? {}
+      : { facts: { accord, send: env ? createFactsSender(fetch, env) : nothingSent } }),
   };
 
   const summary = await importClaudeCode(
@@ -124,9 +132,17 @@ async function runCaptureSession(args: string[]): Promise<number> {
       strict: false,
     });
     const delay = typeof values['delai-ms'] === 'string' ? values['delai-ms'] : undefined;
+    const deadlineMs = parseDeadlineMs(delay);
     const projectDir = process.env.CLAUDE_PROJECT_DIR;
+    // Les faits ne partent que si l'accord local le permet (consent.ts), sous le délai du crochet, lancé en même
+    // temps que celui des tours.
+    const accord = await factsConsent(homedir(), 'claude_code');
+    const signal = AbortSignal.timeout(deadlineMs);
     return await captureSessionFromHook(await readHookStdin(process.stdin), {
-      send: createHookSender(fetch, env, parseDeadlineMs(delay)),
+      send: createHookSender(fetch, env, deadlineMs),
+      ...(accord === null
+        ? {}
+        : { facts: { accord, send: createFactsSender(fetch, env, { signal }) } }),
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),

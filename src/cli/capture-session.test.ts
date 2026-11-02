@@ -4,7 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SessionFactsPayload } from '../capture/api-contract';
 import { SECRET_MASK } from '../capture/mask-secrets';
+import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURNS_PER_BATCH_MAX } from '../capture/turn';
 import {
   type CaptureDeps,
@@ -14,7 +16,13 @@ import {
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
-import { createIngestSender, IngestResponseError, TokenRefusedError } from './import-claude-code';
+import {
+  createFactsSender,
+  createIngestSender,
+  type FactsSender,
+  IngestResponseError,
+  TokenRefusedError,
+} from './import-claude-code';
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -107,6 +115,7 @@ function makeDeps(
     readFile?: CaptureDeps['readFile'];
     git?: CaptureDeps['git'];
     projectDir?: string;
+    facts?: CaptureDeps['facts'];
   } = {},
 ) {
   const session = overrides.session ?? sessionWithSecrets();
@@ -124,6 +133,7 @@ function makeDeps(
     readFile: readSessionFile,
     git,
     ...(overrides.projectDir === undefined ? {} : { projectDir: overrides.projectDir }),
+    ...(overrides.facts === undefined ? {} : { facts: overrides.facts }),
   };
   return { deps, send, readSessionFile, git, out };
 }
@@ -354,6 +364,101 @@ describe('captureSessionFromHook : le projet est celui du dossier de départ de 
     await captureSessionFromHook(hookAt('/tmp'), deps);
 
     expect(sentPayloads(send)[0]?.source.project).toBe('github.com/acme/leon');
+  });
+});
+
+// Les faits partent après les tours, seulement quand l'accord le permet : leon.ts ne pose `facts` qu'à partir de
+// la version 2 (consent.ts). Sans `facts`, tous les tests ci-dessus montrent que seuls les tours partent.
+describe("captureSessionFromHook : les faits de la session, si l'accord le permet", () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+  const GESTES = new URL(
+    '../capture/fixtures/claude-code-faits/session-gestes.jsonl',
+    import.meta.url,
+  );
+
+  it('après les tours, envoie les faits, avec la version de l’accord et une vraie fin', async () => {
+    const content = await readFile(GESTES, 'utf8');
+    const events: string[] = [];
+    const facts = vi.fn<FactsSender>(async () => {
+      events.push('faits');
+    });
+    const { deps } = makeDeps({
+      session: content,
+      remote: 'git@github.com:Acme/Leon.git',
+      send: async () => {
+        events.push('tours');
+        return RESULT;
+      },
+      facts: { accord: 2, send: facts },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(events.at(-1)).toBe('faits');
+    expect(events.filter((event) => event === 'faits')).toHaveLength(1);
+    const [payload] = facts.mock.calls.map(([sent]) => sent);
+    expect(payload).toEqual<SessionFactsPayload>({
+      kind: 'claude_code',
+      external_id: '44444444-4444-4444-8444-444444444444',
+      project: 'github.com/acme/leon',
+      accord: 2,
+      // Les fichiers sont relatifs au dossier de départ de la session, pas à celui du crochet.
+      faits: extractClaudeCodeFacts(content, '/Users/demo/projets/leon'),
+      fin: true,
+    });
+    expect(payload?.faits.fichiers.length).toBeGreaterThan(0);
+  });
+
+  it.each([404, 400])(
+    'un %i sur les faits : code 0, la session reste captée, un message fixe sans le corps de la réponse',
+    async (status) => {
+      const fetchImpl = vi.fn(
+        async () => new Response(JSON.stringify({ error: 'MOT-DU-SERVEUR' }), { status }),
+      );
+      const { deps, send } = makeDeps({
+        facts: { accord: 2, send: createFactsSender(fetchImpl as unknown as typeof fetch, env) },
+      });
+
+      expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(stderrText()).toMatch(/session captured/);
+      expect(stderrText()).toMatch(/does not accept session facts/);
+      expect(stderrText()).not.toContain('MOT-DU-SERVEUR');
+    },
+  );
+
+  it("une autre erreur sur les faits : code 0, un message fixe, rien du texte de l'erreur", async () => {
+    const { deps } = makeDeps({
+      facts: {
+        accord: 2,
+        send: async () => {
+          throw new TypeError(`fetch failed : MOT-DE-L-ERREUR ${SECRETS.anthropic}`);
+        },
+      },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(stderrText()).toMatch(/session captured/);
+    expect(stderrText()).toMatch(/session facts not sent/);
+    expect(stderrText()).not.toContain('MOT-DE-L-ERREUR');
+    expect(stderrText()).not.toContain(SECRETS.anthropic);
+  });
+
+  it('des tours refusés : les faits ne partent pas', async () => {
+    const facts = vi.fn<FactsSender>(async () => {});
+    const { deps } = makeDeps({
+      send: async () => {
+        throw new IngestResponseError(500);
+      },
+      facts: { accord: 2, send: facts },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(facts).not.toHaveBeenCalled();
   });
 });
 

@@ -553,6 +553,7 @@
     "placementNotSet": "Role not set",
     "editPlacement": "Edit {name}’s department, role and seniority",
     "editPlacementDescription": "Department, role and seniority. {name} sees them but can’t change them.",
+    "editOwnPlacementDescription": "Your department, role and seniority. Only an owner or an admin can change them.",
     "tokensTitle": "Personal tokens",
     "tokenDescription": "A token grants access to what you can see. It is shown only once.",
     "createToken": "Create token",
@@ -1367,7 +1368,13 @@
       "skip": "I’ll invite people later",
       "linkCreated": "Link created",
       "draft": "Draft",
-      "you": "You"
+      "you": "You",
+      "previewLabel": "Preview of your workspace",
+      "noName": "No name",
+      "leaveTitle": "{count, plural, one {Leave without copying your link?} other {Leave without copying # links?}}",
+      "leaveDescription": "Leon shows each link only once. You can create new ones later in Settings › Team.",
+      "stay": "Stay",
+      "leave": "Leave anyway"
     }
   }
 }

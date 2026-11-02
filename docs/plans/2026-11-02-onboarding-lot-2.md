@@ -474,3 +474,11 @@ Description de la PR :
 - ce qui change, avec un lien vers la spec et le plan ;
 - les sept choix à valider listés en tête de ce plan ;
 - ce que David doit vérifier : la condition SQL de `setMemberPlacement`, la recopie dans `joinWithInvitation`, le conflit attendu avec la #69.
+
+---
+
+### Finitions demandées par Amos (2/11)
+
+- Réglages › Équipe : sur sa propre ligne, la fenêtre de modification dit « Seul un propriétaire ou un administrateur peut les changer » au lieu de « {name} les voit sans pouvoir les changer » (`MemberRow.self`).
+- Étape 3 : quitter (« Enter Leon », « I’ll invite people later ») avec un lien créé et jamais copié ouvre une confirmation « Partir sans copier ? » (`CopyButton.onCopied`).
+- Étape 3 : l'aperçu est une région étiquetée (« Aperçu de votre espace ») et une carte sans nom se lit « Sans nom » aux lecteurs d'écran.

@@ -22,6 +22,8 @@ export type MemberRow = {
   department: string | null;
   job: string | null;
   seniority: number | null;
+  /** La ligne du lecteur lui-même. */
+  self: boolean;
 };
 
 const hashInvitationToken = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -68,6 +70,7 @@ export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
       department: sql<string | null>`case when ${mayReadPlacement} then ${members.department} end`,
       job: sql<string | null>`case when ${mayReadPlacement} then ${members.job} end`,
       seniority: sql<number | null>`case when ${mayReadPlacement} then ${members.seniority} end`,
+      self: sql<boolean>`${members.userId} = ${ctx.userId}`,
     })
     .from(members)
     .innerJoin(users, eq(users.id, members.userId))

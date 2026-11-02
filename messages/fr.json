@@ -553,6 +553,7 @@
     "placementNotSet": "Poste non renseigné",
     "editPlacement": "Modifier le service, le poste et le niveau de {name}",
     "editPlacementDescription": "Service, poste et niveau. {name} les voit sans pouvoir les changer.",
+    "editOwnPlacementDescription": "Votre service, votre poste et votre niveau. Seul un propriétaire ou un administrateur peut les changer.",
     "tokensTitle": "Jetons personnels",
     "tokenDescription": "Un jeton donne accès à ce que vous voyez. Il n’est montré qu’une fois.",
     "createToken": "Créer un jeton",
@@ -1367,7 +1368,13 @@
       "skip": "J’inviterai plus tard",
       "linkCreated": "Lien créé",
       "draft": "Brouillon",
-      "you": "Vous"
+      "you": "Vous",
+      "previewLabel": "Aperçu de votre espace",
+      "noName": "Sans nom",
+      "leaveTitle": "{count, plural, one {Partir sans copier votre lien ?} other {Partir sans copier # liens ?}}",
+      "leaveDescription": "Leon ne montre chaque lien qu’une fois. Vous pourrez en créer d’autres plus tard dans Réglages › Équipe.",
+      "stay": "Rester",
+      "leave": "Partir quand même"
     }
   }
 }

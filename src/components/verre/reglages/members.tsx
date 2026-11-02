@@ -197,7 +197,11 @@ function EditPlacement({ member }: { member: MemberRow }) {
       <DialogContent
         size="md"
         title={member.name}
-        description={t('editPlacementDescription', { name: member.name })}
+        description={
+          member.self
+            ? t('editOwnPlacementDescription')
+            : t('editPlacementDescription', { name: member.name })
+        }
       >
         <EditPlacementForm member={member} onSaved={() => setOpen(false)} />
       </DialogContent>

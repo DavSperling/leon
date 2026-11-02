@@ -157,6 +157,7 @@ describe('listMembers', () => {
       ['Julie', 'member'],
     ]);
     expect(rows.at(-1)?.email).toMatch(/@test\.leon$/);
+    expect(rows.map((r) => r.self)).toEqual([true, false, false]);
   });
 
   it('rend les anciens membres marqués, sans leur adresse', async () => {

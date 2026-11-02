@@ -13,8 +13,14 @@ export function CopyButton({
   label,
   size = 'sm',
   variant = 'secondary',
+  onCopied,
   ...props
-}: Omit<ButtonProps, 'onClick' | 'icon'> & { value: string; label?: string }) {
+}: Omit<ButtonProps, 'onClick' | 'icon'> & {
+  value: string;
+  label?: string;
+  /** Appelé une fois la copie faite. */
+  onCopied?: () => void;
+}) {
   const t = useTranslations('common');
   const [done, setDone] = useState(false);
   useEffect(() => {
@@ -27,6 +33,7 @@ export function CopyButton({
       await navigator.clipboard.writeText(value);
       setDone(true);
       toast.success(t('copied'));
+      onCopied?.();
     } catch {
       toast.error(t('copyFailed'));
     }

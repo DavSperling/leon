@@ -104,7 +104,9 @@ const EXTERNAL_TOOLS = new Set(['WebFetch', 'WebSearch', 'Agent', 'Task']);
 const EXTERNAL_COMMAND =
   /\b(?:curl|wget)\b|\bgh\s+(?:api|(?:pr|issue|run)\s+view)\b|\bgit\s+clone\b/;
 
-const GIT_COMMIT = /\bgit\s+commit\b/;
+// « git -C <dossier> commit » ou « git -c clé=valeur commit » : l'agent travaille souvent par chemin absolu.
+// Répétition bornée : « git -C git -C … » ne fait pas relire toute la commande depuis chaque « git ».
+const GIT_COMMIT = /\bgit(?:\s+-[Cc]\s+(?:"[^"]*"|'[^']*'|[^\s"']\S*)){0,4}\s+commit\b/;
 // « [branche 1a2b3c4] message », la ligne qu'écrit git commit.
 const COMMIT_LINE = /^\[[^\]\n]* ([0-9a-f]{7,40})\]/gm;
 const GH_PR_CREATE = /\bgh\s+pr\s+create\b/;
@@ -132,8 +134,9 @@ const WITH_SUBCOMMAND = new Set([
 ]);
 const SUBCOMMAND = /^[a-z][a-z0-9:_-]{0,30}$/;
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
-// Un mot de la commande : ni une chaîne entre guillemets ni le masque, qui contient une espace, ne le coupent.
-const WORD = /(?:\[secret masqué\]|"[^"]*"|'[^']*'|\S)+/g;
+// Un mot de la commande : ni une chaîne entre guillemets, ni un échappement (« my\ pass »), ni le masque, qui
+// contient une espace, ne le coupent.
+const WORD = /(?:\[secret masqué\]|"(?:[^"\\]|\\[\s\S])*"|'[^']*'|\\[\s\S]|\S)+/g;
 
 function parseLine(raw: string): Line | null {
   let json: unknown;
@@ -161,9 +164,17 @@ function resultText(content: string | unknown[] | undefined): string {
 // shortcut: seule la première commande d'une suite (« cd x && pnpm test ») est gardée, découper aux opérateurs
 // le jour où le bloc de démarrage en a besoin.
 function reduceCommand(command: string): string {
+  const text = command.replaceAll('\u0000', '');
+  // Les préfixes NOM=valeur se sautent sur la commande brute : masquée, « PGPASSWORD=my\ S3cret » perdrait
+  // l'échappement dans le masque, et « S3cret » deviendrait l'exécutable.
+  let start = text.length;
+  for (const word of text.matchAll(WORD)) {
+    if (ASSIGNMENT.test(word[0])) continue;
+    start = word.index;
+    break;
+  }
   const words: string[] = [];
-  for (const [word] of maskSecrets(command).matchAll(WORD)) {
-    if (words.length === 0 && ASSIGNMENT.test(word)) continue; // préfixe NOM=valeur
+  for (const [word] of maskSecrets(text.slice(start)).matchAll(WORD)) {
     words.push(word);
     if (words.length === 2) break;
   }
@@ -173,7 +184,14 @@ function reduceCommand(command: string): string {
     WITH_SUBCOMMAND.has(executable) && SUBCOMMAND.test(argument)
       ? `${executable} ${argument}`
       : executable;
-  return maskSecrets(kept).slice(0, TEXTE_MAX);
+  return factText(kept, TEXTE_MAX);
+}
+
+// Le texte d'un fait, masqué puis coupé. Un jsonb refuse le caractère nul et la moitié d'emoji qu'une coupe
+// peut laisser : un seul fait qui en porte ferait échouer l'écriture de tous ceux de la session, à chaque
+// rattrapage. Le caractère nul part avant maskSecrets, pour ne pas recoller un secret qu'il coupait.
+function factText(text: string, max = Number.POSITIVE_INFINITY): string {
+  return maskSecrets(text.replaceAll('\u0000', '')).slice(0, max).toWellFormed();
 }
 
 // Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque).
@@ -220,7 +238,10 @@ function recordResult(
     if (GIT_COMMIT.test(command)) {
       for (const [, sha] of output.matchAll(COMMIT_LINE)) if (sha) record.commits.add(sha);
     }
-    if (GH_PR_CREATE.test(command)) {
+    // En erreur, gh pr create n'a rien créé : il rend l'URL de la PR qui existe déjà.
+    // shortcut: « gh pr create && x » où x échoue perd la PR ici (la ligne pr-link la garde pour le dépôt
+    // courant), reconnaître le message « already exists » si une PR d'un autre dépôt manque.
+    if (!error && GH_PR_CREATE.test(command)) {
       for (const [, repo, numero] of output.matchAll(PR_URL)) {
         const pr = PrSchema.safeParse({ repo, numero: Number(numero), par: 'gh-pr-create' });
         if (pr.success) record.created.push(pr.data);
@@ -319,21 +340,21 @@ export function extractClaudeCodeFacts(content: string, root: string): SessionFa
     const key = `${pr.repo.toLowerCase()}#${pr.numero}`;
     if (!prs.has(key)) prs.set(key, pr);
   }
-  // Ce qui reste à faire passe avant ce qui est fait : la borne ne coupe jamais le reste.
+  // Ce qui reste à faire passe avant ce qui est fait : la borne coupe d'abord ce qui est fait.
   const tasks = [...record.tasks.values()];
   const ordered = [
     ...tasks.filter((task) => task.etat !== 'fait'),
     ...tasks.filter((task) => task.etat === 'fait'),
   ];
   return {
-    branche: branch === null || branch === 'HEAD' ? null : maskSecrets(branch),
+    branche: branch === null || branch === 'HEAD' ? null : factText(branch),
     prs: [...prs.values()].slice(0, PRS_MAX),
     commits: [...record.commits].slice(-COMMITS_MAX),
-    fichiers: [...record.files].slice(-FICHIERS_MAX).map((file) => maskSecrets(file)),
+    fichiers: [...record.files].slice(-FICHIERS_MAX).map((file) => factText(file)),
     commandes: record.commands.slice(-COMMANDES_MAX),
     taches: ordered
       .slice(0, TACHES_MAX)
-      .map((task) => ({ texte: maskSecrets(task.texte).slice(0, TEXTE_MAX), etat: task.etat })),
+      .map((task) => ({ texte: factText(task.texte, TEXTE_MAX), etat: task.etat })),
     erreurs: errors,
     externe: external,
     echanges:

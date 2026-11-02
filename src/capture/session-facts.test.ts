@@ -73,6 +73,73 @@ describe('extractClaudeCodeFacts', () => {
     expect(faits).not.toContain('S3cret');
   });
 
+  it.each([
+    ['PGPASSWORD=my\\ S3cret psql -h db', 'psql'],
+    ['MYSQL_PWD="a\\" S3cret" mysql', 'mysql'],
+    ['API_TOKEN=abc\\ S3cret curl x', 'curl'],
+  ])('ne garde rien d’un préfixe NOM=valeur échappé : %s', (command, texte) => {
+    const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.commandes).toEqual([{ texte, erreur: false }]);
+    expect(JSON.stringify(faits)).not.toContain('S3cret');
+  });
+
+  it.each([
+    'git -C sub commit -m x',
+    'git -C "/Users/demo/Mobile Documents/leon" commit -m x',
+    'git -c user.name=demo commit -m x',
+  ])('relève le SHA d’un commit fait par %s', (command) => {
+    const contenu = [appel('c1', 'Bash', { command }), resultat('c1', '[main abcdef1] x')];
+
+    expect(extractClaudeCodeFacts(contenu.join('\n'), RACINE).commits).toEqual(['abcdef1']);
+  });
+
+  it('ne compte pas la PR qu’un gh pr create en erreur dit exister déjà', () => {
+    const contenu = [
+      appel('p1', 'Bash', { command: 'gh pr create --fill' }),
+      JSON.stringify({
+        type: 'user',
+        message: {
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: 'p1',
+              content:
+                'a pull request for branch "x" into branch "main" already exists:\nhttps://github.com/o/r/pull/12',
+              is_error: true,
+            },
+          ],
+        },
+      }),
+    ].join('\n');
+
+    expect(extractClaudeCodeFacts(contenu, RACINE).prs).toEqual([]);
+  });
+
+  // Postgres refuse les deux dans un jsonb : un seul ferait échouer l'écriture des faits (T02).
+  it('ne coupe pas un emoji en deux et retire le caractère nul, sans recoller un secret', () => {
+    const contenu = [
+      appel('t1', 'TodoWrite', {
+        todos: [
+          { content: `${'a'.repeat(199)}😀b`, status: 'pending' },
+          { content: `Clé sk-ant-${'a'.repeat(10)}\u0000${'b'.repeat(15)}`, status: 'pending' },
+        ],
+      }),
+      resultat('t1', 'ok'),
+      appel('b1', 'Bash', { command: `${'x'.repeat(199)}😀 -v` }),
+      resultat('b1', ''),
+    ].join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.taches.map((tache) => tache.texte)).toEqual([
+      `${'a'.repeat(199)}�`,
+      'Clé [secret masqué]',
+    ]);
+    expect(faits.commandes).toEqual([{ texte: `${'x'.repeat(199)}�`, erreur: false }]);
+    expect(JSON.stringify(faits)).not.toMatch(/\\u(?:d[89a-f]|0000)/i);
+  });
+
   it('masque un faux jeton placé en sous-commande d’un outil listé', () => {
     const contenu = [appel('t1', 'Bash', { command: 'npx sk-ant-faux0000000000000000000' })];
     const faits = extractClaudeCodeFacts(

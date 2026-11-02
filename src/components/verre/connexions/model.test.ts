@@ -81,6 +81,12 @@ describe('connexions', () => {
       ]);
     });
 
+    test('mon outil en erreur n’y est pas non plus (il se reconnecte, il ne se rebranche pas)', () => {
+      expect(
+        recommend([conn('github', { isCreator: true, status: 'error' })], ['github', 'linear']),
+      ).toEqual(['linear']);
+    });
+
     test('le GitHub d’un collègue présent n’y est pas', () => {
       expect(recommend([conn('github')], ['github', 'linear'])).toEqual(['linear']);
     });

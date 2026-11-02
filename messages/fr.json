@@ -1399,6 +1399,8 @@
       "toConnect": "À brancher",
       "connect": "Brancher",
       "connected": "Branché",
+      "reconnectNeeded": "À reconnecter",
+      "reconnect": "Reconnecter",
       "none": "Rien de coché pour l’instant.",
       "nextTitle": "Ensuite",
       "nextText": "Leon commence à lire chaque source dès qu’elle est branchée. Votre premier point du matin s’appuie dessus.",

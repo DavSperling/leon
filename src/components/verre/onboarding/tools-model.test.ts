@@ -96,6 +96,25 @@ describe('toolStates', () => {
     expect(stateOf(mineOnly, 'jira')).toMatchObject({ status: 'mine', connectedBy: null });
   });
 
+  it('ma connexion en erreur reste à moi, et c’est elle qui est à rebrancher', () => {
+    const broken = conn('github', { isCreator: true, status: 'error' });
+
+    expect(stateOf([broken], 'github')).toMatchObject({ status: 'mine', broken });
+  });
+
+  it('ma connexion active ou en pause n’est pas à rebrancher', () => {
+    for (const status of ['active', 'paused'] as const)
+      expect(stateOf([conn('jira', { isCreator: true, status })], 'jira').broken).toBeNull();
+  });
+
+  it('la connexion en erreur d’un collègue n’est jamais à rebrancher par moi', () => {
+    expect(stateOf([conn('linear', { status: 'error' })], 'linear').broken).toBeNull();
+    expect(
+      stateOf([conn('github', { isCreator: true }), conn('github', { status: 'error' })], 'github')
+        .broken,
+    ).toBeNull();
+  });
+
   it('les connexions d’un autre outil ne comptent pas', () => {
     expect(stateOf([conn('github')], 'linear')).toMatchObject({
       status: 'free',

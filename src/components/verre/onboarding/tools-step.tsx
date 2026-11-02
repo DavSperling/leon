@@ -31,12 +31,14 @@ export type ToolsStepProps = {
   notice: OAuthNotice | null;
 };
 
-// Une tuile à cocher pour un outil à brancher ; un outil déjà branché (par moi ou par l'équipe) se lit seulement.
+// Une tuile à cocher pour un outil à brancher ; un outil déjà branché (par moi ou par l'équipe) se lit seulement,
+// sauf ma connexion en erreur, qui le dit : elle se reconnecte depuis l'aperçu.
 function Tile({ state, on, onToggle }: { state: ToolState; on: boolean; onToggle: () => void }) {
   const t = useTranslations('onboarding.tools');
-  const { item, status, recommended, connectedBy } = state;
-  const note =
-    status === 'mine'
+  const { item, status, recommended, connectedBy, broken } = state;
+  const note = broken
+    ? t('reconnectNeeded')
+    : status === 'mine'
       ? t('connected')
       : status === 'team'
         ? t('connectedBy', { name: connectedBy ?? '' })
@@ -51,7 +53,14 @@ function Tile({ state, on, onToggle }: { state: ToolState; on: boolean; onToggle
           {item.label}
         </span>
         {note && (
-          <span className="block text-meta text-muted [overflow-wrap:anywhere]">{note}</span>
+          <span
+            className={cn(
+              'block text-meta [overflow-wrap:anywhere]',
+              broken ? 'text-warning' : 'text-muted',
+            )}
+          >
+            {note}
+          </span>
         )}
       </span>
       {on && <Check aria-hidden="true" strokeWidth={2} className="size-4 shrink-0 text-accent" />}
@@ -192,8 +201,13 @@ export function ToolsStep({
     if (!refreshing && focusPending.current) restoreFocus();
   }, [refreshing]);
 
-  const toConnect = states.filter((s) => s.status === 'free' && checked.has(s.item.id));
+  // À reconnecter d'abord (ma connexion ne lit plus rien), puis ce que j'ai coché.
+  const toConnect = [
+    ...states.filter((s) => s.broken),
+    ...states.filter((s) => s.status === 'free' && checked.has(s.item.id)),
+  ];
   const already = states.filter((s) => s.recommended && s.connectedBy !== null);
+  const shown = states.find((s) => s.item.id === shownId);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
@@ -246,10 +260,10 @@ export function ToolsStep({
               <p className="text-ui text-muted">{tt('none')}</p>
             ) : (
               <ul className="grid gap-2.5">
-                {toConnect.map(({ item }) => (
+                {toConnect.map(({ item, broken }) => (
                   <Row key={item.id} id={item.id} label={item.label}>
                     <Button size="sm" variant="secondary" onClick={() => connect(item.id)}>
-                      {tt('connect')}
+                      {broken ? tt('reconnect') : tt('connect')}
                       <span className="sr-only"> {item.label}</span>
                     </Button>
                   </Row>
@@ -296,11 +310,12 @@ export function ToolsStep({
       </div>
 
       <ToolDialog
-        entry={states.find((s) => s.item.id === shownId)?.item ?? null}
+        entry={shown?.item ?? null}
         open={open}
         onOpenChange={onOpenChange}
         onCloseAutoFocus={onCloseAutoFocus}
-        conns={[]} // un outil à brancher, ou branché par l'équipe, n'a aucune connexion du lecteur
+        // Un outil à brancher, ou branché par l'équipe, n'a aucune connexion du lecteur ; la sienne en erreur offre « Reconnecter ».
+        conns={shown?.broken ? [shown.broken] : []}
         viewerId={viewerId}
         now={now}
         canConnect={canConnect}

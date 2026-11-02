@@ -7,8 +7,13 @@ import type { ConnectionView } from '@/server/connectors/connections';
 export type ToolState = {
   item: CatalogItem;
   recommended: boolean;
-  /** mine : branché avec mon compte ; team : branché par un collègue (ma lecture suffit) ; free : à brancher. */
+  /**
+   * mine : branché avec mon compte, même s'il est en erreur (voir `broken`) ; team : branché par un collègue
+   * (ma lecture suffit) ; free : à brancher.
+   */
   status: 'mine' | 'team' | 'free';
+  /** Ma propre connexion de cet outil quand elle est en erreur : elle ne lit plus rien, il faut la reconnecter. Jamais celle d'un collègue. */
+  broken: ConnectionView | null;
   /** Le premier collègue qui l'a branché pour l'espace ; jamais pour un outil dont le texte reste privé à qui le branche. */
   connectedBy: string | null;
 };
@@ -33,7 +38,8 @@ export function toolStates(
       : connectedBy !== null
         ? 'team'
         : 'free';
-    return { item, recommended: recommended.includes(item.id), status, connectedBy };
+    const broken = own.find((conn) => conn.isCreator && conn.status === 'error') ?? null;
+    return { item, recommended: recommended.includes(item.id), status, connectedBy, broken };
   });
 }
 

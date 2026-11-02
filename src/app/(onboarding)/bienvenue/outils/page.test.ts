@@ -136,12 +136,14 @@ describe('page de l’étape Vos outils', () => {
         recommended: true,
         status: 'free',
         connectedBy: null,
+        broken: null,
       },
       {
         item: expect.objectContaining({ id: 'airtable' }),
         recommended: false,
         status: 'free',
         connectedBy: null,
+        broken: null,
       },
     ]);
   });
@@ -190,6 +192,35 @@ describe('page de l’étape Vos outils', () => {
     const { props } = await render();
 
     expect(props).not.toHaveProperty('conns');
+    expect(JSON.stringify(props)).not.toContain('abcd');
+  });
+
+  it('ma connexion en erreur part au client dans `broken`, jamais celle d’un collègue', async () => {
+    const mine = {
+      ...teamConnection('github'),
+      id: 'c1',
+      isCreator: true,
+      status: 'error',
+      secretHint: 'mine',
+    };
+    vi.mocked(listConnections).mockResolvedValue([
+      mine,
+      {
+        ...teamConnection('airtable'),
+        status: 'error',
+        secretHint: 'abcd',
+        config: { token: 'x' },
+      },
+    ] as never);
+
+    const { props } = await render();
+    const states = props.states as { item: { id: string }; broken: unknown }[];
+
+    expect(props).not.toHaveProperty('conns');
+    expect(states.map((s) => [s.item.id, s.broken])).toEqual([
+      ['github', mine],
+      ['airtable', null],
+    ]);
     expect(JSON.stringify(props)).not.toContain('abcd');
   });
 

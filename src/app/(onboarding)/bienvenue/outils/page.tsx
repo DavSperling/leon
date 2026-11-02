@@ -38,7 +38,8 @@ export default async function ToolsPage({
     member.department !== null && isDepartment(member.department)
       ? DEPARTMENTS[member.department].tools
       : [];
-  // Les connexions de l'espace restent côté serveur (config, indice du secret) : le client ne reçoit que l'état de chaque outil.
+  // Les connexions de l'espace restent côté serveur (config, indice du secret) : le client ne reçoit que l'état de chaque outil,
+  // avec ma propre connexion en erreur (`broken`) pour la reconnecter, jamais celle d'un collègue.
   const conns = await listConnections(ctx);
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.

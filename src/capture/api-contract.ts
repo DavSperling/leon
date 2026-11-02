@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { SessionFactsSchema } from './session-facts';
+import { CODE_SESSION_KINDS, PROJECT_KEY_PATTERN } from './turn';
 
 // Contrat HTTP partagé avec la CLI et l'extension (décision D1 : aucun import de code serveur ici).
 export const API_PATHS = {
@@ -6,6 +8,7 @@ export const API_PATHS = {
   me: '/api/v1/me',
   briefing: '/api/v1/briefing',
   mcp: '/api/mcp',
+  faits: '/api/v1/faits',
 } as const;
 
 export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 octets en base64url
@@ -29,3 +32,19 @@ export const BriefingResponseSchema = z.object({
   preparedAt: z.iso.datetime().nullable(),
 });
 export type BriefingResponse = z.infer<typeof BriefingResponseSchema>;
+
+// Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
+// plus ancien perd les faits, jamais les tours. `accord` est la version d'accord de l'outil sur le poste : la CLI
+// n'envoie de faits qu'à partir de la version 2.
+export const FAITS_BODY_MAX_BYTES = 64 * 1024;
+export const SessionFactsPayloadSchema = z
+  .object({
+    kind: z.enum(CODE_SESSION_KINDS),
+    external_id: z.string().min(1).max(200),
+    project: z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN).optional(),
+    accord: z.number().int().min(2),
+    faits: SessionFactsSchema,
+    fin: z.boolean(), // une vraie fin de session (SessionEnd), ou un fichier resté immobile
+  })
+  .strict();
+export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;

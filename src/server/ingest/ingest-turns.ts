@@ -9,7 +9,7 @@ import { logError } from '@/server/log';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 
 // Chaque membre a sa propre source pour une conversation : la relecture ne trouve que la sienne.
-async function upsertSource(
+export async function upsertSource(
   tx: Tx,
   ctx: TenantContext,
   source: IngestPayload['source'],
@@ -116,7 +116,11 @@ export async function updateSource(
 
 // La clé de projet d'une session captée (C8) va dans `sources.metadata.project`, à côté des autres clés
 // (nature…) : le dernier projet reçu l'emporte, un envoi sans projet ne touche à rien.
-async function recordProject(tx: Tx, sourceId: string, project: string | undefined): Promise<void> {
+export async function recordProject(
+  tx: Tx,
+  sourceId: string,
+  project: string | undefined,
+): Promise<void> {
   if (project === undefined) return;
   await tx
     .update(sources)

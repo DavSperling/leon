@@ -6,6 +6,9 @@ import { z } from 'zod';
 // Documents), qui est tout ce que la base accepte.
 export const CAPTURE_KINDS = ['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember'] as const;
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
+// Les sessions d'un outil de code, les seules dont la CLI relève les gestes (route des faits, C2 du plan mémoire
+// des sessions) : chaque outil ajouté à la capture vient aussi ici.
+export const CODE_SESSION_KINDS = ['claude_code'] as const satisfies readonly CaptureKind[];
 export const PROVIDER_IDS = [
   'github',
   'notion',

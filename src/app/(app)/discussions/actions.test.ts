@@ -1,13 +1,18 @@
+import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireUserContext } from '@/server/auth/session';
+import { saveAbout } from '@/server/briefing/about';
+import { closeAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 import {
   continueInDiscussionAction,
   deleteDiscussionAction,
+  dismissAboutSuggestionAction,
   newDiscussionAction,
   readDiscussionMessagesAction,
+  saveAboutSuggestionAction,
 } from './actions';
 
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
@@ -16,6 +21,8 @@ vi.mock('@/server/discussion/discussions', () => ({
   deleteDiscussion: vi.fn(),
   getDiscussion: vi.fn(),
 }));
+vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
+vi.mock('@/server/briefing/about-suggestion', () => ({ closeAboutSuggestion: vi.fn() }));
 vi.mock('@/server/discussion/agent', () => ({ isReplying: vi.fn(() => false) }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
@@ -210,5 +217,80 @@ describe('deleteDiscussionAction', () => {
     vi.mocked(deleteDiscussion).mockRejectedValue(new Error('base'));
     expect(await deleteDiscussionAction(ID)).toEqual({ ok: false });
     expect(logError).toHaveBeenCalledWith('discussion.suppression', expect.any(Error));
+  });
+});
+
+// La carte « About you » en haut du Chat. « Save » ne revalide pas /discussions : la page ôterait la carte avant que
+// le composant ait montré « saved » (c'est lui qui la masque). Les erreurs sont des codes, traduits à l'affichage.
+describe('saveAboutSuggestionAction', () => {
+  it('enregistre le texte sans ses blancs, ferme la proposition, et ne revalide que les Réglages', async () => {
+    await expect(saveAboutSuggestionAction('  Lead back-end.  ')).resolves.toEqual({ ok: true });
+
+    expect(saveAbout).toHaveBeenCalledWith(CTX, 'Lead back-end.');
+    expect(closeAboutSuggestion).toHaveBeenCalledWith(CTX);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+    expect(vi.mocked(saveAbout).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(closeAboutSuggestion).mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it('refuse 501 caractères sans rien enregistrer ni fermer', async () => {
+    await expect(saveAboutSuggestionAction('x'.repeat(501))).resolves.toEqual({
+      error: 'tooLong',
+    });
+    // Les blancs de bord ne comptent pas.
+    await expect(saveAboutSuggestionAction(` ${'x'.repeat(500)} `)).resolves.toEqual({ ok: true });
+
+    expect(saveAbout).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuse un texte vide ou de blancs sans rien enregistrer ni fermer', async () => {
+    for (const text of ['', ' \n ']) {
+      await expect(saveAboutSuggestionAction(text)).resolves.toEqual({ error: 'empty' });
+    }
+
+    expect(saveAbout).not.toHaveBeenCalled();
+    expect(closeAboutSuggestion).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('refuse ce que le navigateur ne doit pas envoyer', async () => {
+    for (const text of [undefined, null, 42, { text: 'x' }]) {
+      await expect(saveAboutSuggestionAction(text as never)).resolves.toEqual({
+        error: 'failed',
+      });
+    }
+
+    expect(saveAbout).not.toHaveBeenCalled();
+    expect(closeAboutSuggestion).not.toHaveBeenCalled();
+  });
+
+  it('rend failed, journalisé, quand la base refuse, et laisse la proposition ouverte', async () => {
+    vi.mocked(saveAbout).mockRejectedValue(new Error('base'));
+
+    await expect(saveAboutSuggestionAction('Lead.')).resolves.toEqual({ error: 'failed' });
+
+    expect(closeAboutSuggestion).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith('apropos.enregistrement', expect.any(Error));
+  });
+});
+
+describe('dismissAboutSuggestionAction', () => {
+  it('ferme la proposition sans rien enregistrer, puis revalide le Chat', async () => {
+    await dismissAboutSuggestionAction();
+
+    expect(closeAboutSuggestion).toHaveBeenCalledWith(CTX);
+    expect(saveAbout).not.toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledWith('/discussions');
+  });
+
+  it('ne plante pas quand la base refuse : la carte revient au prochain chargement', async () => {
+    vi.mocked(closeAboutSuggestion).mockRejectedValue(new Error('base'));
+
+    await expect(dismissAboutSuggestionAction()).resolves.toBeUndefined();
+
+    expect(logError).toHaveBeenCalledWith('apropos.fermeture', expect.any(Error));
   });
 });

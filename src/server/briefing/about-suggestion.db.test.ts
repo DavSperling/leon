@@ -15,7 +15,13 @@ import { seedConnection } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import { gatherAboutMaterial } from './about-material';
-import { ABOUT_MIN_SOURCES, listAboutCandidates, proposeAbout } from './about-suggestion';
+import {
+  ABOUT_MIN_SOURCES,
+  closeAboutSuggestion,
+  listAboutCandidates,
+  proposeAbout,
+  readAboutSuggestion,
+} from './about-suggestion';
 
 // La proposition « About you », de bout en bout sous les droits de la personne : la matière (ses seules sources),
 // un seul appel au faux modèle, la ligne écrite ; puis la liste de qui est prêt, lue hors sécurité par ligne.
@@ -474,5 +480,98 @@ describe('about_suggestions : droits', () => {
         [bob.tenantId, bob.userId, alice.userId],
       ),
     ).rejects.toThrow(/check/);
+  });
+});
+
+// Une proposition posée comme le travail de fond l'écrit : ouverte, avec les sources fournies au modèle.
+const suggest = (
+  ctx: TenantContext,
+  sourceIds: string[],
+  text = 'Responsable produit chez Acme.',
+) =>
+  adminPool.query(
+    `insert into about_suggestions (tenant_id, user_id, text, source_ids, acl) values ($1, $2, $3, $4::uuid[], array[$2::uuid])`,
+    [ctx.tenantId, ctx.userId, text, sourceIds],
+  );
+
+describe('readAboutSuggestion et closeAboutSuggestion', () => {
+  it('lit la proposition ouverte de la personne, avec les outils de ses sources du plus fréquent au moins fréquent', async () => {
+    const [alice, bob] = await newPair();
+    const { githubId, gmailId } = await seedPeople(alice, bob);
+    const second = await seedRun(alice, { kind: 'github', title: '#23 Autre ticket' });
+    await suggest(alice, [gmailId, githubId, second.sourceId]);
+
+    expect(await readAboutSuggestion(alice)).toEqual({
+      text: 'Responsable produit chez Acme.',
+      kinds: ['github', 'gmail'],
+    });
+    expect(await readAboutSuggestion(bob)).toBeNull();
+  });
+
+  it('ne rend que 6 outils, à fréquence égale par ordre alphabétique', async () => {
+    const [alice] = await newPair();
+    const ids: string[] = [];
+    for (const kind of [
+      'github',
+      'gmail',
+      'notion',
+      'linear',
+      'asana',
+      'sentry',
+      'slack',
+    ] as const) {
+      ids.push((await seedRun(alice, { kind })).sourceId);
+    }
+    await suggest(alice, ids);
+
+    expect((await readAboutSuggestion(alice))?.kinds).toEqual([
+      'asana',
+      'github',
+      'gmail',
+      'linear',
+      'notion',
+      'sentry',
+    ]);
+  });
+
+  it('ne se lit plus une fois fermée, et la fermeture ne touche que la ligne de la personne', async () => {
+    const [alice, bob] = await newPair();
+    await suggest(alice, []);
+    await suggest(bob, [], 'Pour Bob.');
+
+    await closeAboutSuggestion(alice);
+
+    expect(await readAboutSuggestion(alice)).toBeNull();
+    expect(await readAboutSuggestion(bob)).toEqual({ text: 'Pour Bob.', kinds: [] });
+    expect((await rowsOf(alice))[0]?.closedAt).toBeInstanceOf(Date);
+    expect((await rowsOf(bob))[0]?.closedAt).toBeNull();
+    await expect(closeAboutSuggestion(alice)).resolves.toBeUndefined();
+  });
+
+  it('ne se lit plus quand « À propos » est rempli ailleurs, sauf de blancs', async () => {
+    const [alice] = await newPair();
+    await suggest(alice, []);
+
+    await setAbout(alice, ' \n ');
+    expect(await readAboutSuggestion(alice)).not.toBeNull();
+
+    await setAbout(alice, 'Responsable produit.');
+    expect(await readAboutSuggestion(alice)).toBeNull();
+    // Elle reste ouverte : seul « Not now » ou « Save » la ferme.
+    expect((await rowsOf(alice))[0]?.closedAt).toBeNull();
+  });
+
+  it('ne se lit plus quand une de ses sources devient invisible pour la personne', async () => {
+    const [alice, bob] = await newPair();
+    const { githubId, gmailId } = await seedPeople(alice, bob);
+    await suggest(alice, [githubId, gmailId]);
+    expect(await readAboutSuggestion(alice)).not.toBeNull();
+
+    await adminDb
+      .update(sources)
+      .set({ acl: [bob.userId] })
+      .where(eq(sources.id, gmailId));
+
+    expect(await readAboutSuggestion(alice)).toBeNull();
   });
 });

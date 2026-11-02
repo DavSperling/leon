@@ -1,9 +1,10 @@
-import { eq, sql } from 'drizzle-orm';
-import { PROVIDER_IDS } from '@/capture/turn';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { organizations } from '@/server/db/schema/auth';
+import { sources } from '@/server/db/schema/memory';
 import { aboutSuggestions } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
 import type { Llm } from '@/server/llm/llm';
@@ -102,4 +103,47 @@ export async function proposeAbout(
       .returning({ id: aboutSuggestions.id }),
   );
   return written.length > 0;
+}
+
+// La carte du Chat montre au plus 6 logos.
+const ABOUT_KINDS_MAX = 6;
+const isProviderId = (kind: string): kind is ProviderId =>
+  (PROVIDER_IDS as readonly string[]).includes(kind);
+
+// La proposition à montrer à la personne : ouverte, son « À propos » encore vide, et toutes ses sources encore visibles
+// pour elle (même contrôle que readBriefing : sous la sécurité par ligne, une source cachée depuis n'est pas comptée,
+// et la proposition, écrite d'après elle, ne se montre plus). `kinds` : les outils de ces sources, les plus fréquents
+// d'abord, 6 au plus.
+export async function readAboutSuggestion(
+  ctx: TenantContext,
+): Promise<{ text: string; kinds: ProviderId[] } | null> {
+  if (((await readAbout(ctx.userId)) ?? '').trim() !== '') return null;
+  return withTenant(ctx, async (tx) => {
+    const [row] = await tx
+      .select({ text: aboutSuggestions.text, sourceIds: aboutSuggestions.sourceIds })
+      .from(aboutSuggestions)
+      .where(and(eq(aboutSuggestions.userId, ctx.userId), isNull(aboutSuggestions.closedAt)));
+    if (!row) return null;
+    const wanted = [...new Set(row.sourceIds)];
+    if (wanted.length === 0) return { text: row.text, kinds: [] };
+    const found = await tx
+      .select({ kind: sources.kind, count: sql<number>`count(*)::int` })
+      .from(sources)
+      .where(inArray(sources.id, wanted))
+      .groupBy(sources.kind)
+      .orderBy(sql`count(*) desc`, sources.kind);
+    if (found.reduce((total, entry) => total + entry.count, 0) < wanted.length) return null;
+    const kinds = found.map((entry) => entry.kind).filter(isProviderId);
+    return { text: row.text, kinds: kinds.slice(0, ABOUT_KINDS_MAX) };
+  });
+}
+
+// « Save » ou « Not now » : la proposition ne se montre plus. Sans effet si elle est déjà fermée ou absente.
+export async function closeAboutSuggestion(ctx: TenantContext): Promise<void> {
+  await withTenant(ctx, (tx) =>
+    tx
+      .update(aboutSuggestions)
+      .set({ closedAt: sql`now()` })
+      .where(and(eq(aboutSuggestions.userId, ctx.userId), isNull(aboutSuggestions.closedAt))),
+  );
 }

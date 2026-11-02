@@ -161,6 +161,19 @@
     "failed": "Échec de l’enregistrement. Réessayez.",
     "tooLong": "{max} caractères au plus."
   },
+  "aboutSuggestion": {
+    "title": "Ce que Leon a compris de vous",
+    "lead": "Corrigez ou complétez : votre point du matin lit ce texte.",
+    "label": "À propos de vous",
+    "hint": "{max} caractères au plus",
+    "notNow": "Plus tard",
+    "save": "Enregistrer",
+    "saved": "Enregistré. Vos prochains points en tiendront compte.",
+    "failed": "Échec de l’enregistrement. Réessayez.",
+    "tooLong": "{max} caractères au plus.",
+    "basedOn": "Tiré de",
+    "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même."
+  },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
     "searchEverything": "Rechercher dans tout ce que Leon a gardé",

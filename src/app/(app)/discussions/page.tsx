@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { NewDiscussionForm } from '@/components/discussion/new-discussion-form';
 import { EmptyState, Notice, PageHeader, Section } from '@/components/verre';
+import { AboutSuggestionCard } from '@/components/verre/discussions/about-suggestion-card';
 import { DiscussionRows } from '@/components/verre/discussions/list';
 import { formatRelative } from '@/lib/format';
 import { isDepartment } from '@/lib/onboarding';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
+import { ABOUT_MAX_CHARS } from '@/server/briefing/about';
+import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
@@ -23,9 +26,10 @@ export default async function DiscussionsPage() {
   const t = await getTranslations('discussions');
   const locale = await getLocale();
   const ctx = await requireUserContext();
-  const [discussions, member] = await Promise.all([
+  const [discussions, member, suggestion] = await Promise.all([
     listDiscussions(ctx),
     readOnboardingMember(ctx),
+    readAboutSuggestion(ctx),
   ]);
   // Deux questions du service de la personne, tant qu'elle n'a encore rien demandé.
   const department = member?.department;
@@ -39,6 +43,14 @@ export default async function DiscussionsPage() {
 
   return (
     <div className="mx-auto max-w-[760px]">
+      {/* La proposition « About you », une seule fois : « Save » ou « Not now » la ferme pour de bon. */}
+      {suggestion && (
+        <AboutSuggestionCard
+          text={suggestion.text}
+          kinds={suggestion.kinds}
+          max={ABOUT_MAX_CHARS}
+        />
+      )}
       {/* La question au centre, comme l'accueil d'un assistant, assez haut pour que les discussions passées
           commencent dans le premier écran. */}
       <div className="pt-[clamp(24px,14dvh,160px)]">

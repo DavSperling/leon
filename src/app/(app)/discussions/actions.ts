@@ -9,6 +9,8 @@ import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/dis
 import { PAGE_SIZE } from '@/lib/search-limits';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
+import { closeAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { isReplying } from '@/server/discussion/agent';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { decideAction } from '@/server/discussion/github-actions';
@@ -139,4 +141,44 @@ export async function decideActionAction(
     logError('action.decision', error);
     return null;
   }
+}
+
+// La carte « About you » en haut du Chat (onboarding, lot 5). Les erreurs sont des codes : le composant les traduit à
+// l'affichage, un changement de langue les suit.
+export type AboutSuggestionResult = { ok: true } | { error: 'tooLong' | 'empty' | 'failed' };
+
+// Même limite que dans Réglages (updateAboutAction), mais ici un texte vide n'efface rien : « Not now » est fait pour
+// écarter la carte.
+const AboutSuggestionSchema = z.string().trim().min(1).max(ABOUT_MAX_CHARS);
+
+// Pas de revalidatePath('/discussions') : la page ôterait la carte avant que le composant ait montré « saved ». C'est
+// lui qui la masque ; les Réglages, eux, doivent relire le texte.
+export async function saveAboutSuggestionAction(text: string): Promise<AboutSuggestionResult> {
+  const ctx = await requireUserContext();
+  const parsed = AboutSuggestionSchema.safeParse(text);
+  if (!parsed.success) {
+    const code = parsed.error.issues[0]?.code;
+    return { error: code === 'too_big' ? 'tooLong' : code === 'too_small' ? 'empty' : 'failed' };
+  }
+  try {
+    await saveAbout(ctx, parsed.data);
+    await closeAboutSuggestion(ctx);
+  } catch (error) {
+    logError('apropos.enregistrement', error);
+    return { error: 'failed' };
+  }
+  revalidatePath('/reglages');
+  return { ok: true };
+}
+
+// « Not now » : la carte ne reviendra pas. Une panne n'empêche pas de la masquer ; elle revient alors au prochain chargement.
+export async function dismissAboutSuggestionAction(): Promise<void> {
+  const ctx = await requireUserContext();
+  try {
+    await closeAboutSuggestion(ctx);
+  } catch (error) {
+    logError('apropos.fermeture', error);
+    return;
+  }
+  revalidatePath('/discussions');
 }

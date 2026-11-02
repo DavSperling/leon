@@ -237,11 +237,17 @@ La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du do
 
 ### Retirer les crochets
 
-Ouvrir `settings.json` et supprimer les deux entrées dont la commande finit par `leon briefing` et `leon capter-session` (avec leur groupe `{ "hooks": [...] }` s'il ne contient plus rien) ; Claude Code reprend le changement tout seul. La commande `/hooks`, dans Claude Code, liste les crochets actifs et dit dans quel fichier chacun est défini. Pour tout éteindre un moment sans rien supprimer : `"disableAllHooks": true` dans `settings.json` (cela éteint aussi vos autres crochets).
+```bash
+pnpm leon retirer-crochets
+```
+
+La commande retire de `settings.json` les seules entrées de Leon, reconnues comme à l'installation (avec leur groupe s'il ne contient plus rien), et garde tout le reste, dans son ordre. Elle n'écrit rien quand il n'y a rien à retirer : on peut la relancer sans risque. Elle passe aussi Claude Code en **version 0** dans `~/.leon/accord.json` : dès lors, plus rien ne part de Claude Code, ni le bloc de démarrage, ni la session à la fin, ni `pnpm leon import-claude-code`. `pnpm leon installer-crochets` redemande l'accord et remet les crochets. Elle ne demande pas de confirmation et ne fait pas de nouvelle copie des réglages ; un `settings.json` illisible n'est pas touché (code 1), mais l'accord est retiré quand même. Claude Code reprend le changement tout seul.
+
+À la main : ouvrir `settings.json` et supprimer les deux entrées dont la commande finit par `leon briefing` et `leon capter-session` (avec leur groupe `{ "hooks": [...] }` s'il ne contient plus rien). La commande `/hooks`, dans Claude Code, liste les crochets actifs et dit dans quel fichier chacun est défini. Pour tout éteindre un moment sans rien supprimer : `"disableAllHooks": true` dans `settings.json` (cela éteint aussi vos autres crochets).
 
 - `settings.json.leon-sauvegarde` est la première copie, celle de vos réglages d'avant la première installation de Leon : la remettre retire Leon, mais annule aussi tous les changements faits dans les réglages depuis. Une fois les crochets retirés, supprimez cette copie, pour qu'une prochaine installation en refasse une à jour.
-- Côté Claude Code, la commande ne lit et ne modifie que vos réglages d'utilisateur : les réglages du projet (`.claude/settings.json` et `.claude/settings.local.json` d'un dossier) ne sont pas touchés. Un crochet de Leon qui s'y trouverait avec une autre commande s'exécuterait en plus de celui-ci (Claude Code ne fusionne que deux gestionnaires strictement identiques), d'où deux envois : `/hooks` montre tous les crochets actifs et leur fichier.
-- L'accord reste dans `~/.leon/accord.json` : sans les crochets, il ne sert plus qu'à `pnpm leon import-claude-code`, qui envoie alors aussi les gestes ; on peut le supprimer.
+- Côté Claude Code, les deux commandes ne lisent et ne modifient que vos réglages d'utilisateur : les réglages du projet (`.claude/settings.json` et `.claude/settings.local.json` d'un dossier) ne sont pas touchés. Un crochet de Leon qui s'y trouverait avec une autre commande s'exécuterait en plus de celui-ci (Claude Code ne fusionne que deux gestionnaires strictement identiques), d'où deux envois ; après le retrait, il reste là mais n'envoie plus rien. `/hooks` montre tous les crochets actifs et leur fichier.
+- Des crochets retirés à la main laissent l'accord tel quel : `pnpm leon import-claude-code` enverrait encore les textes et, en version 2, les gestes. Supprimer `accord.json` ne suffit pas (sans accord, l'import envoie les textes, comme avant lui) : `pnpm leon retirer-crochets` le passe en version 0.
 - Les sessions déjà envoyées restent chez Leon : il n'y a pas encore de bouton pour les effacer.
 
 ## Travailler à deux

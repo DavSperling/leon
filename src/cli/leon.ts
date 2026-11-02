@@ -11,7 +11,7 @@ import {
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
-import { factsConsent } from './consent';
+import { consentWithdrawn, factsConsent } from './consent';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   countOf,
@@ -24,9 +24,16 @@ import {
 } from './import-claude-code';
 import { installHooks } from './install-hooks';
 import { gitInDirectory } from './project-key';
+import { uninstallHooks } from './uninstall-hooks';
 
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
 const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
+
+// Après `leon retirer-crochets`, Claude Code est en version 0 dans l'accord : plus rien ne part, même d'un crochet
+// resté dans les réglages d'un projet (C7).
+const WITHDRAWN =
+  'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.';
+const withdrawn = () => consentWithdrawn(homedir(), 'claude_code');
 
 const HELP = `Usage: pnpm leon <command>
 
@@ -45,6 +52,8 @@ Commands:
                        ~/.leon/accord.json, after confirmation (only the consent when the hooks are already there)
       --oui                do not ask for confirmation
       --depot <path>       Leon repository named in the hook commands (default: the one running this command)
+  retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
+                       ~/.leon/accord.json: from then on, nothing is sent from Claude Code
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need LEON_URL and LEON_TOKEN.`;
 
@@ -64,6 +73,7 @@ async function runImport(args: string[]): Promise<number> {
   });
   const since = parseSince(values.since);
   const dryRun = values['dry-run'] ?? false;
+  if (await withdrawn()) throw new Error(WITHDRAWN);
   const nothingSent = async (): Promise<never> => {
     throw new Error('Nothing is sent with --dry-run.');
   };
@@ -96,6 +106,10 @@ async function runImport(args: string[]): Promise<number> {
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
 async function runBriefingCommand(): Promise<number> {
   try {
+    if (await withdrawn()) {
+      console.error(WITHDRAWN);
+      return 0;
+    }
     return await runBriefing({
       stdin: process.stdin,
       env: process.env,
@@ -119,6 +133,10 @@ async function runBriefingCommand(): Promise<number> {
 // standard.
 async function runCaptureSession(args: string[]): Promise<number> {
   try {
+    if (await withdrawn()) {
+      console.error(WITHDRAWN);
+      return 0;
+    }
     let env: ServerEnv;
     try {
       env = parseServerEnv(process.env);
@@ -200,6 +218,15 @@ async function runInstallHooks(args: string[]): Promise<number> {
   }
 }
 
+// Comme l'installateur, le retrait vise les réglages de CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude. Aucune
+// option : une option inconnue (un `--outil` d'un lot à venir) arrête la commande sans rien retirer.
+async function runUninstallHooks(args: string[]): Promise<number> {
+  parseArgs({ args, options: {} });
+  const configDir = claudeConfigDir(process.env);
+  if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
+  return uninstallHooks({ configDir, home: homedir() }, { out: console.log, err: console.error });
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   try {
@@ -207,6 +234,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
     if (command === 'installer-crochets') return await runInstallHooks(args);
+    if (command === 'retirer-crochets') return await runUninstallHooks(args);
   } catch (error) {
     // Jeton refusé, configuration, option inconnue : ces messages ne citent aucune conversation.
     console.error(error instanceof Error ? error.message : 'Unknown error.');

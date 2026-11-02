@@ -2,7 +2,7 @@ import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/pr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { consentPath, factsConsent, writeConsent } from './consent';
+import { consentPath, consentWithdrawn, factsConsent, writeConsent } from './consent';
 
 // L'accord local (C7), toujours dans un HOME temporaire : jamais le vrai ~/.leon.
 let home: string;
@@ -62,6 +62,18 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
     );
 
     expect(await factsConsent(home, 'claude_code')).toBe(2);
+  });
+});
+
+describe('consentWithdrawn : après `leon retirer-crochets`, plus rien ne part', () => {
+  it('vrai en version 0 seulement : un accord absent garde l’envoi des textes d’avant ce chantier', async () => {
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+
+    await writeConsent(home, 'claude_code', 2);
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+
+    await writeConsent(home, 'claude_code', 0);
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
   });
 });
 

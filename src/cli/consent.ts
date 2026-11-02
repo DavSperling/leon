@@ -1,5 +1,6 @@
 // L'accord local (C7 du plan mémoire des sessions) : `~/.leon/accord.json`, en 0600, une version par outil.
-// 2 : les gestes de la session ; 3 : en plus le résumé par le fournisseur du modèle ; 4 : en plus le prompt envoyé.
+// 0 : retiré, plus rien ne part ; 2 : les gestes de la session ; 3 : en plus le résumé par le fournisseur du modèle ;
+// 4 : en plus le prompt envoyé.
 // La CLI le relit avant chaque envoi : une CLI mise à jour par `git pull` n'envoie rien de plus que ce que
 // l'utilisateur a accepté. Un fichier absent ou illisible ne vaut aucun accord.
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -37,6 +38,12 @@ async function readConsent(home: string): Promise<Consent> {
 export async function factsConsent(home: string, tool: CodeTool): Promise<number | null> {
   const version = (await readConsent(home)).outils[tool]?.version ?? 0;
   return version >= FACTS_VERSION ? version : null;
+}
+
+// Version 0 : l'accord a été retiré (`leon retirer-crochets`, uninstall-hooks.ts) et cet outil n'envoie plus rien,
+// ni textes ni gestes. Un outil absent, lui, garde l'envoi des textes d'avant ce chantier (C7).
+export async function consentWithdrawn(home: string, tool: CodeTool): Promise<boolean> {
+  return (await readConsent(home)).outils[tool]?.version === 0;
 }
 
 // Pose la version d'un outil sans toucher aux autres. Le fichier repasse en 0600 même s'il existait avec plus de

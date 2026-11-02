@@ -84,7 +84,7 @@ type HookSpec = {
   role: string;
 };
 
-const HOOKS: readonly HookSpec[] = [
+export const HOOKS: readonly HookSpec[] = [
   {
     event: 'SessionStart',
     subcommand: 'briefing',
@@ -108,9 +108,9 @@ const CONSENT_LINES = [
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ];
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
 
-const isRecord = (value: unknown): value is Json =>
+export const isRecord = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // Un mot de shell : des caractères sans signification pour lui, ou des morceaux entre apostrophes ou guillemets
@@ -120,9 +120,17 @@ const WORD = String.raw`(?:[^\s'"\\;&|<>()\x60]|'[^']*'|"[^"]*"|\\')+`;
 const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) ${WORD}| --dir=${WORD})`;
 
 // Un crochet de Leon : `pnpm <options de pnpm> leon <sous-commande>`, et rien d'autre. Toute autre commande, même
-// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée.
-function leonCommandPattern(subcommand: HookSubcommand): RegExp {
-  return new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`);
+// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée. Le retrait (uninstall-hooks.ts) reconnaît
+// les crochets de la même façon.
+export function isLeonHandler(
+  handler: unknown,
+  subcommand: HookSubcommand,
+): handler is Json & { command: string } {
+  return (
+    isRecord(handler) &&
+    typeof handler.command === 'string' &&
+    new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(handler.command.trim())
+  );
 }
 
 export type HookChange = {
@@ -141,8 +149,6 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
     command: hookCommand(repoDir, spec.subcommand),
     timeout: spec.timeout,
   };
-  const pattern = leonCommandPattern(spec.subcommand);
-
   const hooksRoot = root.hooks ?? {};
   if (!isRecord(hooksRoot)) throw new SettingsShapeError('the "hooks" key must be an object');
   const groups = hooksRoot[spec.event] ?? [];
@@ -162,11 +168,7 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
     const handlers: unknown[] = [];
     let dropped = false;
     for (const handler of group.hooks) {
-      const isLeon =
-        isRecord(handler) &&
-        typeof handler.command === 'string' &&
-        pattern.test(handler.command.trim());
-      if (!isLeon) {
+      if (!isLeonHandler(handler, spec.subcommand)) {
         handlers.push(handler);
       } else if (found) {
         // Un doublon (une copie à la main du README, un ancien dépôt) : un seul crochet reste.
@@ -212,7 +214,7 @@ type Loaded =
 
 // Les réglages tels qu'ils sont sur le disque : absents, illisibles (accès refusé, dossier, lien symbolique vers un
 // fichier absent…) ou présents.
-async function load(path: string): Promise<Loaded> {
+export async function load(path: string): Promise<Loaded> {
   let realPath: string;
   try {
     realPath = await realpath(path); // à travers un lien symbolique : on écrit le fichier lui-même
@@ -238,7 +240,7 @@ const sameLoaded = (a: Loaded, b: Loaded) =>
   a.kind === b.kind && (a.kind !== 'present' || (b.kind === 'present' && a.text === b.text));
 
 // Écrit dans un fichier voisin puis le renomme : un arrêt en cours d'écriture ne laisse jamais des réglages coupés.
-async function writeAtomically(path: string, loaded: Loaded, text: string): Promise<void> {
+export async function writeAtomically(path: string, loaded: Loaded, text: string): Promise<void> {
   const target = loaded.kind === 'present' ? loaded.realPath : path;
   const mode = loaded.kind === 'present' ? loaded.mode : 0o600;
   const temp = `${target}.leon-tmp-${randomBytes(6).toString('hex')}`;

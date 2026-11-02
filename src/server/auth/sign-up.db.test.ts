@@ -207,7 +207,10 @@ async function invitation(): Promise<{ tenantId: string; token: string }> {
   const { tenantId, members: people } = await createTestTenant(['Amos']);
   const [owner] = people as [TenantContext];
   await adminDb.update(members).set({ role: 'owner' }).where(eq(members.userId, owner.userId));
-  const link = await createInvitationLink(owner);
+  const link = await createInvitationLink(owner, {
+    name: '',
+    placement: { department: 'engineering', job: 'backend', seniority: 3 },
+  });
   if (!link) throw new Error('lien non créé');
   return { tenantId, token: link.token };
 }

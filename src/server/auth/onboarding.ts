@@ -1,7 +1,16 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import type { CompanySize, Department, Goal } from '@/lib/onboarding';
+import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { z } from 'zod';
+import {
+  type CompanySize,
+  DEPARTMENT_IDS,
+  type Department,
+  type Goal,
+  isDepartment,
+  isJobOf,
+  SENIORITY_LEVELS,
+} from '@/lib/onboarding';
 import { db } from '@/server/db/client';
-import { members, organizations } from '@/server/db/schema/auth';
+import { members, organizations, users } from '@/server/db/schema/auth';
 import type { TenantContext } from './tenant-context';
 
 // L'étape 1 de l'onboarding (docs/specs/2026-10-28-onboarding.md) : ce que la personne dit de son poste et de ses
@@ -14,6 +23,22 @@ export type OnboardingMember = Placement & {
   goals: string[];
   onboardedAt: Date | null;
 };
+// Service, poste et niveau d'une personne : l'étape du propriétaire, le lien d'invitation et le choix d'un
+// administrateur vérifient tous les trois contre les listes de `@/lib/onboarding`. Aucun message : le code d'erreur
+// est le champ. `when` : le poste se vérifie même si un autre champ est faux (et résiste à une valeur nulle).
+export const PlacementSchema = z
+  .object({
+    department: z.enum(DEPARTMENT_IDS),
+    job: z.string(),
+    seniority: z.coerce.number().int().min(1).max(SENIORITY_LEVELS.length),
+  })
+  .refine(({ department, job }) => isJobOf(department, job), {
+    path: ['job'],
+    when: ({ value }) =>
+      isDepartment(String((value as { department?: unknown } | null | undefined)?.department)),
+  });
+export type ValidPlacement = z.infer<typeof PlacementSchema>;
+
 export type OwnerStep = {
   department: Department;
   job: string;
@@ -83,4 +108,14 @@ export async function completeMemberStep(ctx: TenantContext, goals: Goal[]): Pro
     .where(pending(ctx))
     .returning({ id: members.id });
   return done.length > 0;
+}
+
+// Vrai si l'espace n'a qu'un membre dont le compte n'est pas supprimé : seul, on n'a personne à inviter encore.
+export async function isSoleMember(ctx: TenantContext): Promise<boolean> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(members)
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(and(eq(members.organizationId, ctx.tenantId), isNull(users.deletedAt)));
+  return row?.n === 1;
 }

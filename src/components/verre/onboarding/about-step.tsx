@@ -13,7 +13,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { setLocaleAction } from '@/app/(app)/reglages/actions';
+import { type PlacementInput, setLocaleAction } from '@/app/(app)/reglages/actions';
 import {
   type AboutStepErrors,
   type AboutStepField,
@@ -23,22 +23,19 @@ import {
 import { Badge } from '@/components/verre/ui/badge';
 import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
-import { Field, Input, Select } from '@/components/verre/ui/form';
+import { Field, Input } from '@/components/verre/ui/form';
 import { Pill } from '@/components/verre/ui/pill';
 import { GlassCard } from '@/components/verre/ui/surfaces';
 import {
   COMPANY_SIZES,
-  DEPARTMENT_IDS,
-  DEPARTMENTS,
   departmentLabelKey,
   GOALS,
-  isDepartment,
   jobLabelKey,
-  SENIORITY_LEVELS,
   seniorityId,
 } from '@/lib/onboarding';
 import { nb } from '@/lib/verre/nb';
 import type { Placement } from '@/server/auth/onboarding';
+import { PlacementFields } from './placement-fields';
 import { AboutPreview } from './preview';
 
 export type AboutStepProps = {
@@ -54,8 +51,6 @@ export type AboutStepProps = {
 
 // Le trait d'union des tailles ('11-50') s'écrit en tiret demi-cadratin ; la valeur envoyée reste l'identifiant.
 const sizeLabel = (size: string) => size.replace('-', '–');
-// Le départ du select du niveau : la valeur gardée en base (indice + 1).
-const levelOptions = SENIORITY_LEVELS.map((id, i) => ({ id, value: String(i + 1) }));
 
 function Group({
   legend,
@@ -125,9 +120,8 @@ export function AboutStep({
   // Les choix vivent ici : l'aperçu les suit sans envoi, et ils résistent à un refus et au changement de langue.
   // Les champs cachés envoient les mêmes valeurs.
   const [company, setCompany] = useState('');
-  const [department, setDepartment] = useState('');
-  const [job, setJob] = useState('');
-  const [seniority, setSeniority] = useState('');
+  const [chosen, setChosen] = useState<PlacementInput>({ department: '', job: '', seniority: '' });
+  const { department, job, seniority } = chosen;
   const [size, setSize] = useState('');
   const [goals, setGoals] = useState<string[]>([]);
 
@@ -159,7 +153,6 @@ export function AboutStep({
 
   const editable = mode !== 'member';
   const orgName = mode === 'newcomer' ? company.trim() : (organizationName ?? '');
-  const jobs: readonly string[] = isDepartment(department) ? DEPARTMENTS[department].jobs : [];
   // L'aperçu montre ce qui est choisi (propriétaire, nouveau venu) ou ce qu'un administrateur a fixé (membre).
   const shown: Placement =
     mode === 'member'
@@ -207,59 +200,19 @@ export function AboutStep({
 
         {editable && (
           <>
-            <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
-              <Field label={t('department')} error={errorOf('department')}>
-                <Select
-                  className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
-                  placeholder={t('choose')}
-                  value={department}
-                  onValueChange={(next) => {
-                    setDepartment(next);
-                    setJob('');
-                    clearErrors('department', 'job');
-                  }}
-                  options={DEPARTMENT_IDS.map((id) => ({
-                    value: id,
-                    label: t(departmentLabelKey(id)),
-                  }))}
-                />
-              </Field>
-              <Field label={t('job')} error={errorOf('job')}>
-                <Select
-                  className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
-                  placeholder={t('choose')}
-                  disabled={jobs.length === 0}
-                  value={job}
-                  onValueChange={(next) => {
-                    setJob(next);
-                    clearErrors('job');
-                  }}
-                  options={jobs.map((id) => ({
-                    value: id,
-                    label: t(jobLabelKey(department, id)),
-                  }))}
-                />
-              </Field>
-            </div>
-
-            <Field
-              label={t('seniorityLabel')}
-              help={t('seniorityHint')}
-              error={errorOf('seniority')}
-            >
-              <Select
-                placeholder={t('choose')}
-                value={seniority}
-                onValueChange={(next) => {
-                  setSeniority(next);
-                  clearErrors('seniority');
-                }}
-                options={levelOptions.map(({ id, value }) => ({
-                  value,
-                  label: t(`seniority.${id}`),
-                }))}
-              />
-            </Field>
+            <PlacementFields
+              value={chosen}
+              onChange={(next, field) => {
+                setChosen(next);
+                clearErrors(field);
+                if (field === 'department') clearErrors('job');
+              }}
+              errors={{
+                department: errorOf('department'),
+                job: errorOf('job'),
+                seniority: errorOf('seniority'),
+              }}
+            />
 
             <Group legend={t('size')} error={errorOf('size')}>
               {COMPANY_SIZES.map((option, i) => (

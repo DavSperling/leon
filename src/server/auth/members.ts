@@ -30,6 +30,14 @@ const hashInvitationToken = (token: string) => createHash('sha256').update(token
 const isAdminRole = (role: SQL | AnyColumn) =>
   sql`string_to_array(${role}, ',') && array['owner', 'admin']`;
 
+// Le lecteur `userId` est propriétaire ou administrateur de l'organisation `tenantId` : la condition SQL de ce qu'un
+// administrateur peut écrire (le poste d'un membre) et lire (le poste de tous), et de la validité d'un lien.
+const isAdminOf = (userId: SQL | AnyColumn | string, tenantId: SQL | AnyColumn | string) =>
+  sql`exists (
+    select 1 from member m
+    where m."userId" = ${userId} and m."organizationId" = ${tenantId}
+      and ${isAdminRole(sql`m.role`)})`;
+
 export async function canInvite(ctx: TenantContext): Promise<boolean> {
   const rows = await db
     .select({ id: members.id })
@@ -45,7 +53,10 @@ export async function canInvite(ctx: TenantContext): Promise<boolean> {
   return rows.length > 0;
 }
 
+// Le poste (service, poste, niveau) ne se lit que d'un propriétaire ou d'un administrateur : pour un simple membre il
+// vaut null sur chaque ligne, la sienne comprise. La condition est dans le SQL, comme celle de l'écriture.
 export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
+  const mayReadPlacement = isAdminOf(ctx.userId, ctx.tenantId);
   return db
     .select({
       id: members.id,
@@ -54,9 +65,9 @@ export async function listMembers(ctx: TenantContext): Promise<MemberRow[]> {
       email: sql<string>`case when ${users.deletedAt} is null then ${users.email} else '' end`,
       role: members.role,
       former: sql<boolean>`${users.deletedAt} is not null`,
-      department: members.department,
-      job: members.job,
-      seniority: members.seniority,
+      department: sql<string | null>`case when ${mayReadPlacement} then ${members.department} end`,
+      job: sql<string | null>`case when ${mayReadPlacement} then ${members.job} end`,
+      seniority: sql<number | null>`case when ${mayReadPlacement} then ${members.seniority} end`,
     })
     .from(members)
     .innerJoin(users, eq(users.id, members.userId))
@@ -106,10 +117,7 @@ const usable = (token: string) =>
     eq(invitationLinks.tokenHash, hashInvitationToken(token)),
     isNull(invitationLinks.usedAt),
     sql`${invitationLinks.expiresAt} > now()`,
-    sql`exists (
-      select 1 from member m
-      where m."userId" = ${invitationLinks.createdBy} and m."organizationId" = ${invitationLinks.tenantId}
-        and ${isAdminRole(sql`m.role`)})`,
+    isAdminOf(invitationLinks.createdBy, invitationLinks.tenantId),
   );
 
 // Le nom de l'organisation d'un lien encore utilisable ; null sinon.
@@ -174,10 +182,7 @@ export async function setMemberPlacement(
       and(
         eq(members.id, memberId),
         eq(members.organizationId, ctx.tenantId),
-        sql`exists (
-          select 1 from member m
-          where m."userId" = ${ctx.userId} and m."organizationId" = ${ctx.tenantId}
-            and ${isAdminRole(sql`m.role`)})`,
+        isAdminOf(ctx.userId, ctx.tenantId),
       ),
     )
     .returning({ id: members.id });

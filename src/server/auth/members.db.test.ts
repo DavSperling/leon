@@ -294,6 +294,24 @@ describe('le poste des membres', () => {
     expect(rows.find((r) => r.name === 'Ana')).toMatchObject(noPlacement);
   });
 
+  it('listMembers ne rend le poste de personne à un simple membre, le sien compris', async () => {
+    for (const person of [ana, bob]) {
+      await adminDb
+        .update(members)
+        .set({ department: 'sales', job: 'sdr', seniority: 2 })
+        .where(and(eq(members.userId, person.userId), eq(members.organizationId, tenantId)));
+    }
+
+    const seenByMember = await listMembers(bob);
+    expect(seenByMember).toHaveLength(2);
+    expect(seenByMember.every((r) => r.department === null && r.job === null)).toBe(true);
+    expect(seenByMember.every((r) => r.seniority === null)).toBe(true);
+
+    await setRole(bob, 'member,admin');
+    const seenByAdmin = await listMembers(bob);
+    expect(seenByAdmin.every((r) => r.department === 'sales' && r.seniority === 2)).toBe(true);
+  });
+
   it("un administrateur fixe le poste d'un membre, sans toucher au reste", async () => {
     expect(await setMemberPlacement(ana, await memberIdOf(bob), backend)).toBe(true);
     expect(await placementOf(bob)).toEqual({

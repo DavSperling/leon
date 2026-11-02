@@ -549,7 +549,10 @@
     "done": "Terminé",
     "cancel": "Annuler",
     "sending": "Envoi…",
-    "createInvite": "Créer le lien",
+    "save": "Enregistrer",
+    "placementNotSet": "Poste non renseigné",
+    "editPlacement": "Modifier le service, le poste et le niveau de {name}",
+    "editPlacementDescription": "Service, poste et niveau. {name} les voit sans pouvoir les changer.",
     "tokensTitle": "Jetons personnels",
     "tokenDescription": "Un jeton donne accès à ce que vous voyez. Il n’est montré qu’une fois.",
     "createToken": "Créer un jeton",
@@ -1350,6 +1353,12 @@
       "seniority": "Choisissez un niveau.",
       "permission": "Seul un propriétaire ou un administrateur peut le faire.",
       "form": "Un problème est survenu. Réessayez."
+    },
+    "teammates": {
+      "name": "Nom",
+      "nameHint": "Pour vous y retrouver",
+      "namePlaceholder": "ex. Inès",
+      "createLink": "Créer le lien"
     }
   }
 }

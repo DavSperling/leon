@@ -549,7 +549,10 @@
     "done": "Done",
     "cancel": "Cancel",
     "sending": "Sending…",
-    "createInvite": "Create invitation link",
+    "save": "Save",
+    "placementNotSet": "Role not set",
+    "editPlacement": "Edit {name}’s department, role and seniority",
+    "editPlacementDescription": "Department, role and seniority. {name} sees them but can’t change them.",
     "tokensTitle": "Personal tokens",
     "tokenDescription": "A token grants access to what you can see. It is shown only once.",
     "createToken": "Create token",
@@ -1350,6 +1353,12 @@
       "seniority": "Choose a seniority level.",
       "permission": "Only an owner or an admin can do this.",
       "form": "Something went wrong. Try again."
+    },
+    "teammates": {
+      "name": "Name",
+      "nameHint": "To tell links apart",
+      "namePlaceholder": "e.g. Inès",
+      "createLink": "Create link"
     }
   }
 }

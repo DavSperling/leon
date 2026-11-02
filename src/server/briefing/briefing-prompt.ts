@@ -181,11 +181,13 @@ export function buildBriefingPrompt(
   const content = [
     `Projet : <projet>${escapeData(material.project)}</projet>`,
     `Aujourd'hui : ${parisDate(now)} (heure de Paris). ${since}`,
+    '',
+    // Avant « À propos » : « About you » peut l'avoir écrit d'après des mails de tiers (about-suggestion.ts).
+    DATA_GUARD_LINE,
     ...(about ? [`Ce qu'il dit de lui : <a-propos>${escapeData(about)}</a-propos>`] : []),
     ...(tag ? [`Son poste : ${tag}`] : []),
     '',
     'Éléments :',
-    DATA_GUARD_LINE,
     ...section("Sessions de l'utilisateur sur ce projet", 'aucune', sessions),
     ...section('Changements dans le dépôt', 'aucun', changes),
     ...section('Mentions', 'aucune', mentions),

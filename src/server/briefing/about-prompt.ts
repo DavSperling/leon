@@ -23,7 +23,7 @@ Le message contient, derrière une ligne de garde :
 - des balises <source> : ses éléments récents dans ses outils (tickets, mails, notes de réunion…), chacun avec ses derniers tours entre balises <tour>.
 
 Comment écrire :
-- En 500 caractères au plus, sans « vous » ni « tu », comme une ligne de profil et non comme une lettre. Par exemple : « Développeur backend senior dans l’équipe Dev d’Acme. Ces deux dernières semaines : migration du service de facturation, revue de la PR #482. »
+- En 350 caractères environ, sans « vous » ni « tu », comme une ligne de profil et non comme une lettre. Par exemple : « Développeur backend senior dans l’équipe Dev d’Acme. Ces deux dernières semaines : migration du service de facturation, revue de la PR #482. »
 - En texte brut : pas de Markdown, pas de liste, pas de renvoi [n]. Un numéro de demande de fusion ou de ticket (#482, LIN-4) est permis.
 - Dans la langue de la majorité de ses sources, en anglais si elle n'est pas claire.
 - Seulement d'après les éléments fournis : rien de ce que tu sais par ailleurs, aucune supposition. Sans poste, ne le devine pas : dis seulement sur quoi elle travaille. Ni adresse e-mail, ni montant, ni donnée personnelle d'un tiers.

@@ -131,13 +131,37 @@ describe('proposeAbout', () => {
     expect(await rowsOf(bob)).toEqual([]);
   });
 
-  it('range un texte de 900 caractères à 500', async () => {
+  it('range un texte de 900 caractères à 500 en reculant jusqu’au dernier mot entier', async () => {
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+
+    await proposeAbout(alice, { llm: createFakeLlm({ texts: ['alpha '.repeat(150)] }) });
+
+    // 500 tombe au milieu du 84e « alpha » (une coupe sèche donnerait « …alpha al »).
+    const stored = (await rowsOf(alice))[0]?.text ?? '';
+    expect(stored.length).toBeLessThanOrEqual(500);
+    expect(stored.endsWith('alpha')).toBe(true);
+    expect(stored).toBe('alpha '.repeat(83).trim());
+  });
+
+  it('coupe net à 500 un texte de 900 caractères sans aucun blanc', async () => {
     const [alice, bob] = await newPair();
     await seedPeople(alice, bob);
 
     await proposeAbout(alice, { llm: createFakeLlm({ texts: ['a'.repeat(900)] }) });
 
     expect((await rowsOf(alice))[0]?.text).toBe('a'.repeat(500));
+  });
+
+  it('retire les NUL de la réponse, que Postgres refuse dans un texte', async () => {
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+
+    await expect(
+      proposeAbout(alice, { llm: createFakeLlm({ texts: ['\u0000Responsable\u0000 produit.'] }) }),
+    ).resolves.toBe(true);
+
+    expect((await rowsOf(alice))[0]?.text).toBe('Responsable produit.');
   });
 
   it('ne coupe pas un émoji en deux à la limite', async () => {
@@ -374,6 +398,46 @@ describe('listAboutCandidates', () => {
 
   it('rend la personne dont « À propos » ne contient que des blancs', async () => {
     expect(await isCandidate(await person({ about: ' \n ' }))).toBe(true);
+  });
+
+  // Alice est membre de deux espaces. La fonction contourne la sécurité par ligne : seul son SQL lie les sources et la
+  // connexion au même espace. Ses 20 sources dans l'un et sa seule connexion dans l'autre ne la rendent candidate nulle part.
+  it.each([
+    ['ses sources dans le premier espace, sa connexion dans le second', false],
+    ['ses sources dans le second espace, sa connexion dans le premier', true],
+  ])('ne rend la personne dans aucun de ses deux espaces avec %s', async (_label, reversed) => {
+    const [alice] = await newPair();
+    const second = await newTeam(['Claire Petit'], tenantIds);
+    await adminDb.insert(members).values({
+      organizationId: second.tenantId,
+      userId: alice.userId,
+      role: 'member',
+      createdAt: new Date(),
+    });
+    await adminDb
+      .update(members)
+      .set({ onboardedAt: new Date() })
+      .where(eq(members.userId, alice.userId));
+    const spaces = [alice.tenantId, second.tenantId];
+    const [withSources, withConnection] = reversed ? spaces.toReversed() : spaces;
+    await adminDb.insert(sources).values(
+      Array.from({ length: ABOUT_MIN_SOURCES }, () => ({
+        tenantId: withSources as string,
+        kind: 'github' as const,
+        externalId: randomUUID(),
+        ownerUserId: alice.userId,
+        acl: [alice.userId],
+      })),
+    );
+    const connectionId = await seedConnection({ ...alice, tenantId: withConnection as string });
+    await adminDb
+      .update(connections)
+      .set({ createdAt: ago(2 * DAY), lastSyncAt: ago(DAY) })
+      .where(eq(connections.id, connectionId));
+
+    for (const tenantId of spaces) {
+      expect(await isCandidate({ ...alice, tenantId })).toBe(false);
+    }
   });
 });
 

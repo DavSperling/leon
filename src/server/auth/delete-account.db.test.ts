@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import type { PipedreamConfig } from '@/server/connectors/pipedream';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
@@ -18,6 +18,14 @@ import {
   formerEmail,
 } from './delete-account';
 import { principalsFor, type TenantContext } from './tenant-context';
+
+// La proposition « About you » de Bob survit à la suppression d'Alice : l'organisation de test reste, sa ligne ne doit pas.
+const suggestionTenants: string[] = [];
+afterAll(async () => {
+  await adminPool.query('delete from about_suggestions where tenant_id = any($1)', [
+    suggestionTenants,
+  ]);
+});
 
 const setRole = (ctx: TenantContext, role: string) =>
   adminDb
@@ -181,6 +189,7 @@ describe('deleteAccount', () => {
       [tenantId, alice.userId],
     );
     // La proposition « About you » est faite des sources d'Alice : elle part avec elle, pas celle de Bob.
+    suggestionTenants.push(tenantId);
     await adminPool.query(
       `insert into about_suggestions (tenant_id, user_id, text, acl)
        values ($1, $2, 'Responsable produit.', array[$2::uuid]), ($1, $3, 'Lead back-end.', array[$3::uuid])`,

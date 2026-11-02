@@ -12,8 +12,8 @@ import { type BriefingExcerpt, lastTurns, sourceOf } from './gather';
 // branchés et les conversations avec les assistants n'y entrent pas (PROVIDER_IDS ne les contient pas).
 
 // Les sources actives depuis moins de 30 jours, les plus récentes d'abord, 40 au plus, et leurs 2 derniers tours.
-export const ABOUT_DAYS = 30;
-export const ABOUT_SOURCES_MAX = 40;
+const ABOUT_DAYS = 30;
+const ABOUT_SOURCES_MAX = 40;
 const ABOUT_TURNS = 2;
 const DAY_MS = 24 * 60 * 60 * 1000;
 

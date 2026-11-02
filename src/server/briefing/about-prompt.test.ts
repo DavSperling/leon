@@ -56,10 +56,10 @@ describe('buildAboutPrompt', () => {
     expect(prompt.system).toBe(other.system);
   });
 
-  it('demande 500 caractères au plus, sans « tu » ni « vous », en texte brut et sans renvoi', () => {
+  it('demande environ 350 caractères, sans « tu » ni « vous », en texte brut et sans renvoi', () => {
     const { system } = buildAboutPrompt(material(), null, SPACE);
 
-    expect(system).toContain('500 caractères');
+    expect(system).toContain('350 caractères environ');
     expect(system).toMatch(/sans « vous » ni « tu »/);
     expect(system).toMatch(/texte brut/);
     expect(system).toMatch(/pas de renvoi/);

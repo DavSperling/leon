@@ -36,8 +36,9 @@ export async function listAboutCandidates(): Promise<Array<{ tenantId: string; u
   return rows.map((row) => ({ tenantId: row.tenant_id, userId: row.user_id }));
 }
 
-// Le texte du modèle, renvois [n] retirés (aucun numéro n'est fourni), rogné, puis coupé à ABOUT_MAX_CHARS unités
-// UTF-16 (ce que compte le .max(500) de zod) sans séparer les deux moitiés d'un émoji.
+// Le texte du modèle, renvois [n] et NUL retirés (Postgres refuse \u0000 dans un text, et pg-boss rejouerait l'appel
+// payant), rogné, puis, s'il dépasse ABOUT_MAX_CHARS unités UTF-16 (ce que compte le .max(500) de zod), coupé au
+// dernier blanc plutôt qu'au milieu d'un mot ; sans aucun blanc, coupe sèche, sans séparer les deux moitiés d'un émoji.
 async function writeText(llm: Llm, prompt: ReturnType<typeof buildAboutPrompt>): Promise<string> {
   const filter = createReferenceFilter(new Set<number>());
   let text = '';
@@ -50,11 +51,13 @@ async function writeText(llm: Llm, prompt: ReturnType<typeof buildAboutPrompt>):
   })) {
     text += filter.push(delta);
   }
-  text = (text + filter.flush()).trim();
+  text = (text + filter.flush()).replaceAll('\u0000', '').trim();
   if (text.length <= ABOUT_MAX_CHARS) return text;
   const high = text.charCodeAt(ABOUT_MAX_CHARS - 1);
   const end = high >= 0xd800 && high <= 0xdbff ? ABOUT_MAX_CHARS - 1 : ABOUT_MAX_CHARS;
-  return text.slice(0, end).trimEnd();
+  // Le caractère juste après la coupe compte : s'il est blanc, le dernier mot est entier.
+  const space = text.slice(0, end + 1).search(/\s\S*$/);
+  return text.slice(0, space > 0 ? space : end).trimEnd();
 }
 
 // Écrit la proposition de la personne et rend true, ou ne fait rien et rend false : compte supprimé, proposition

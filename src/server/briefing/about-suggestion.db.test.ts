@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members, users } from '@/server/db/schema/auth';
@@ -14,6 +14,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { seedConnection } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
+import { readAbout } from './about';
 import { gatherAboutMaterial } from './about-material';
 import {
   ABOUT_MIN_SOURCES,
@@ -22,6 +23,13 @@ import {
   proposeAbout,
   readAboutSuggestion,
 } from './about-suggestion';
+
+// `readAbout` passe par un espion qui rappelle le vrai : un test compte ses appels (la lecture du Chat ne doit pas le
+// lire quand aucune proposition n'est ouverte).
+vi.mock('./about', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./about')>();
+  return { ...actual, readAbout: vi.fn(actual.readAbout) };
+});
 
 // La proposition « About you », de bout en bout sous les droits de la personne : la matière (ses seules sources),
 // un seul appel au faux modèle, la ligne écrite ; puis la liste de qui est prêt, lue hors sécurité par ligne.
@@ -546,6 +554,22 @@ describe('readAboutSuggestion et closeAboutSuggestion', () => {
     expect((await rowsOf(alice))[0]?.closedAt).toBeInstanceOf(Date);
     expect((await rowsOf(bob))[0]?.closedAt).toBeNull();
     await expect(closeAboutSuggestion(alice)).resolves.toBeUndefined();
+  });
+
+  it("ne lit « À propos » que s'il y a une proposition ouverte", async () => {
+    const [alice, bob] = await newPair();
+    vi.mocked(readAbout).mockClear();
+
+    // Rien pour Alice, une proposition fermée pour Bob : aucune lecture.
+    expect(await readAboutSuggestion(alice)).toBeNull();
+    await suggest(bob, []);
+    await closeAboutSuggestion(bob);
+    expect(await readAboutSuggestion(bob)).toBeNull();
+    expect(readAbout).not.toHaveBeenCalled();
+
+    await suggest(alice, [], 'Autre.');
+    expect(await readAboutSuggestion(alice)).toEqual({ text: 'Autre.', kinds: [] });
+    expect(readAbout).toHaveBeenCalledTimes(1);
   });
 
   it('ne se lit plus quand « À propos » est rempli ailleurs, sauf de blancs', async () => {

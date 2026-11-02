@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useEffect, useId, useState, useTransition } from 'react';
+import { useId, useRef, useState, useTransition } from 'react';
 import {
   dismissAboutSuggestionAction,
   saveAboutSuggestionAction,
@@ -11,15 +12,15 @@ import { Button, Field, GlassCard, Notice, Textarea, ToolIcon } from '@/componen
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { nb } from '@/lib/verre/nb';
 
-// Le temps de lire « saved » avant que la carte se masque.
-const SAVED_MS = 5000;
-
 type ErrorCode = 'tooLong' | 'empty' | 'failed';
 
 /**
  * La proposition « About you » (onboarding, lot 5), une seule fois en haut du Chat. Sur le modèle d'AboutSettings :
  * « Save » la stocke comme « À propos » et la ferme, « Not now » la ferme. `max` vient du serveur (about.ts). « Save »
- * ne revalide pas le Chat : c'est cette carte qui se masque, après avoir montré `saved`.
+ * ne revalide rien (Next re-rendrait le Chat, et la carte partirait avant d'avoir montré `saved`) : la carte reste en
+ * `saved` jusqu'à la navigation suivante, sans revenir puisque la proposition est fermée. « Not now » revalide le Chat :
+ * la carte part avec ce rendu, ou par `gone`. Le focus ne tombe jamais sur <body> : il va au titre après « Save »
+ * (le formulaire disparaît), au champ de question du Chat après « Not now ».
  */
 export function AboutSuggestionCard({
   text,
@@ -32,17 +33,12 @@ export function AboutSuggestionCard({
 }) {
   const t = useTranslations('aboutSuggestion');
   const titleId = useId();
+  const title = useRef<HTMLHeadingElement>(null);
   const [value, setValue] = useState(text);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [phase, setPhase] = useState<'editing' | 'saved' | 'gone'>('editing');
   const [saving, startSaving] = useTransition();
   const [dismissing, startDismissing] = useTransition();
-
-  useEffect(() => {
-    if (phase !== 'saved') return;
-    const timer = setTimeout(() => setPhase('gone'), SAVED_MS);
-    return () => clearTimeout(timer);
-  }, [phase]);
 
   if (phase === 'gone') return null;
 
@@ -57,20 +53,33 @@ export function AboutSuggestionCard({
     startSaving(async () => {
       const result = await saveAboutSuggestionAction(value);
       if ('error' in result) setError(result.error);
-      else setPhase('saved');
+      else {
+        // Le bouton « Save » va disparaître avec le formulaire : le focus part avant, sur le titre, d'où se lit « saved ».
+        title.current?.focus();
+        setPhase('saved');
+      }
     });
   };
-  const dismiss = () =>
+  const dismiss = () => {
+    // Le champ de question du Chat (new-discussion-form.tsx) reste monté quand la carte part, par le rendu que l'action
+    // déclenche ou par `gone` : le focus y va d'abord, avant que l'un ou l'autre ôte le bouton.
+    document.getElementById('nouvelle-question')?.focus();
     startDismissing(async () => {
       await dismissAboutSuggestionAction();
       setPhase('gone');
     });
+  };
 
   return (
     <section aria-labelledby={titleId} className="mb-8">
       <GlassCard variant="raised" signal className="grid gap-4 p-5 sm:p-6">
         <div>
-          <h2 id={titleId} className="text-h2 font-semibold tracking-[-0.02em] text-fg">
+          <h2
+            id={titleId}
+            ref={title}
+            tabIndex={-1}
+            className="text-h2 font-semibold tracking-[-0.02em] text-fg"
+          >
             {nb(t('title'))}
           </h2>
           {phase === 'editing' && <p className="mt-1 text-body text-muted">{nb(t('lead'))}</p>}
@@ -141,10 +150,24 @@ export function AboutSuggestionCard({
           </form>
         )}
 
-        {/* Toujours là, pour que le lecteur d'écran annonce le texte quand il arrive. */}
-        <div aria-live="polite" className="empty:hidden">
+        {/* Toujours là, pour que le lecteur d'écran annonce le texte quand il arrive : vide, `sr-only` la garde dans
+            l'arbre d'accessibilité sans lui donner de ligne dans la grille (`hidden` l'en sortirait). */}
+        <div aria-live="polite" className="empty:sr-only">
           {phase === 'saved' && <Notice tone="success">{t('saved')}</Notice>}
         </div>
+
+        <p className="text-label text-muted">
+          {t.rich('whereNext', {
+            link: (chunks) => (
+              <Link
+                href="/reglages#profil"
+                className="rounded-sm text-accent underline decoration-accent-line underline-offset-4 hover:decoration-accent"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </GlassCard>
     </section>
   );

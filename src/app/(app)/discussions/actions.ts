@@ -151,8 +151,9 @@ export type AboutSuggestionResult = { ok: true } | { error: 'tooLong' | 'empty' 
 // écarter la carte.
 const AboutSuggestionSchema = z.string().trim().min(1).max(ABOUT_MAX_CHARS);
 
-// Pas de revalidatePath('/discussions') : la page ôterait la carte avant que le composant ait montré « saved ». C'est
-// lui qui la masque ; les Réglages, eux, doivent relire le texte.
+// Aucun revalidatePath : Next re-rend la route courante dès qu'une action revalide, quel que soit le chemin, et la
+// page (le Chat) ôterait la carte avant que le composant ait montré « saved ». Les Réglages sont dynamiques et le
+// routeur ne les garde pas : ils relisent le texte à la visite suivante.
 export async function saveAboutSuggestionAction(text: string): Promise<AboutSuggestionResult> {
   const ctx = await requireUserContext();
   const parsed = AboutSuggestionSchema.safeParse(text);
@@ -167,7 +168,6 @@ export async function saveAboutSuggestionAction(text: string): Promise<AboutSugg
     logError('apropos.enregistrement', error);
     return { error: 'failed' };
   }
-  revalidatePath('/reglages');
   return { ok: true };
 }
 

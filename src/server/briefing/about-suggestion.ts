@@ -113,12 +113,12 @@ const isProviderId = (kind: string): kind is ProviderId =>
 // La proposition à montrer à la personne : ouverte, son « À propos » encore vide, et toutes ses sources encore visibles
 // pour elle (même contrôle que readBriefing : sous la sécurité par ligne, une source cachée depuis n'est pas comptée,
 // et la proposition, écrite d'après elle, ne se montre plus). `kinds` : les outils de ces sources, les plus fréquents
-// d'abord, 6 au plus.
+// d'abord, 6 au plus. Appelée à chaque chargement du Chat : la ligne se lit d'abord, « À propos » seulement s'il y en
+// a une (presque jamais, passé les premiers jours).
 export async function readAboutSuggestion(
   ctx: TenantContext,
 ): Promise<{ text: string; kinds: ProviderId[] } | null> {
-  if (((await readAbout(ctx.userId)) ?? '').trim() !== '') return null;
-  return withTenant(ctx, async (tx) => {
+  const open = await withTenant(ctx, async (tx) => {
     const [row] = await tx
       .select({ text: aboutSuggestions.text, sourceIds: aboutSuggestions.sourceIds })
       .from(aboutSuggestions)
@@ -136,6 +136,8 @@ export async function readAboutSuggestion(
     const kinds = found.map((entry) => entry.kind).filter(isProviderId);
     return { text: row.text, kinds: kinds.slice(0, ABOUT_KINDS_MAX) };
   });
+  if (!open) return null;
+  return ((await readAbout(ctx.userId)) ?? '').trim() === '' ? open : null;
 }
 
 // « Save » ou « Not now » : la proposition ne se montre plus. Sans effet si elle est déjà fermée ou absente.

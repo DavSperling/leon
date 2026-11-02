@@ -172,7 +172,8 @@
     "failed": "Échec de l’enregistrement. Réessayez.",
     "tooLong": "{max} caractères au plus.",
     "basedOn": "Tiré de",
-    "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même."
+    "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même.",
+    "whereNext": "Vous pourrez le modifier à tout moment dans <link>Réglages › Profil</link>."
   },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",

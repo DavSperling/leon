@@ -15,6 +15,7 @@ import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
+import { logError } from '@/server/log';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('discussions'))('title') };
@@ -29,7 +30,11 @@ export default async function DiscussionsPage() {
   const [discussions, member, suggestion] = await Promise.all([
     listDiscussions(ctx),
     readOnboardingMember(ctx),
-    readAboutSuggestion(ctx),
+    // La carte est facultative : sa panne (par exemple un code déployé avant la migration) ne prive pas du Chat.
+    readAboutSuggestion(ctx).catch((error) => {
+      logError('apropos.lecture', error);
+      return null;
+    }),
   ]);
   // Deux questions du service de la personne, tant qu'elle n'a encore rien demandé.
   const department = member?.department;

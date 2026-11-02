@@ -172,7 +172,8 @@
     "failed": "Couldn’t save. Try again.",
     "tooLong": "{max} characters at most.",
     "basedOn": "Based on",
-    "basedOnNote": "Only from your own sources: nothing you couldn’t open yourself."
+    "basedOnNote": "Only from your own sources: nothing you couldn’t open yourself.",
+    "whereNext": "You can change it anytime in <link>Settings › Profile</link>."
   },
   "search": {
     "memoryLabel": "Search the team’s memory",

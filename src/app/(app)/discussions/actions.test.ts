@@ -220,16 +220,17 @@ describe('deleteDiscussionAction', () => {
   });
 });
 
-// La carte « About you » en haut du Chat. « Save » ne revalide pas /discussions : la page ôterait la carte avant que
-// le composant ait montré « saved » (c'est lui qui la masque). Les erreurs sont des codes, traduits à l'affichage.
+// La carte « About you » en haut du Chat. « Save » ne revalide rien : Next re-rend la route courante dès qu'une action
+// revalide, quel que soit le chemin, et la page ôterait la carte avant que le composant ait montré « saved ». Les
+// Réglages (page dynamique, jamais gardée par le routeur) relisent le texte à la visite suivante. Les erreurs sont
+// des codes, traduits à l'affichage.
 describe('saveAboutSuggestionAction', () => {
-  it('enregistre le texte sans ses blancs, ferme la proposition, et ne revalide que les Réglages', async () => {
+  it('enregistre le texte sans ses blancs, ferme la proposition, et ne revalide aucune page', async () => {
     await expect(saveAboutSuggestionAction('  Lead back-end.  ')).resolves.toEqual({ ok: true });
 
     expect(saveAbout).toHaveBeenCalledWith(CTX, 'Lead back-end.');
     expect(closeAboutSuggestion).toHaveBeenCalledWith(CTX);
-    expect(revalidatePath).toHaveBeenCalledTimes(1);
-    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+    expect(revalidatePath).not.toHaveBeenCalled();
     expect(vi.mocked(saveAbout).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(closeAboutSuggestion).mock.invocationCallOrder[0] ?? 0,
     );

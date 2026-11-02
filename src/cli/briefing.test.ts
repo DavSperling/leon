@@ -1,28 +1,54 @@
 import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, BRIEFING_PROJECT_PARAM, type BriefingResponse } from '../capture/api-contract';
+import {
+  API_PATHS,
+  BRIEFING_PROJECT_PARAM,
+  type BriefingResponse,
+  type ContextRequest,
+} from '../capture/api-contract';
 import {
   BRIEFING_STDIN_TIMEOUT_MS,
   BriefingRouteMissingError,
   briefingDirectory,
   fetchBriefingText,
+  fetchStartText,
   runBriefing,
 } from './briefing';
+import type { GitRunner } from './project-key';
 
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
 const PROJECT = 'github.com/davsperling/leon';
+const SESSION = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 const briefing: BriefingResponse = {
   markdown: '# Point du matin · leon\n- La PR 22 est fusionnée.',
   projet: PROJECT,
   preparedAt: '2026-10-19T06:30:00.000Z',
 };
+const BLOCK = [
+  '<contexte-leon>',
+  '## Mes dernières sessions sur github.com/davsperling/leon',
+  '- 01/11 18:02 · Claude Code · branche main',
+  '</contexte-leon>',
+  '<point-du-matin>',
+  '# Point du matin · leon',
+  '</point-du-matin>',
+].join('\n');
+const request: ContextRequest = { projet: PROJECT, branche: 'amos/etude', session: SESSION };
 
 const fetchReturning = (response: Response) => vi.fn(async () => response);
 const asFetch = (fn: unknown) => fn as typeof fetch;
 const folderKey = (path: string) =>
   `dossier:${createHash('sha256').update(path).digest('hex').slice(0, 16)}`;
+// Un serveur plus ancien que la route du bloc : 404 sur `/contexte`, le point du matin sur `/briefing`.
+const olderServer = () =>
+  vi.fn(async (url: URL) =>
+    url.pathname === API_PATHS.contexte
+      ? new Response('{}', { status: 404 })
+      : Response.json(briefing),
+  );
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -83,6 +109,80 @@ describe('fetchBriefingText', () => {
   });
 });
 
+describe('fetchStartText', () => {
+  it('demande le bloc en POST, projet, branche et session dans le corps, en présentant le jeton', async () => {
+    const fetchImpl = fetchReturning(Response.json({ texte: BLOCK }));
+
+    expect(await fetchStartText(asFetch(fetchImpl), env, request)).toBe(BLOCK);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    // Rien dans l'adresse : la branche n'a rien à faire dans les journaux d'URL.
+    expect(url.href).toBe(new URL(API_PATHS.contexte, env.url).href);
+    expect(init.method).toBe('POST');
+    expect(init.headers).toEqual({
+      Authorization: `Bearer ${env.token}`,
+      'Content-Type': 'application/json',
+    });
+    expect(JSON.parse(String(init.body))).toEqual(request);
+  });
+
+  it('retombe sur le point du matin seul quand le serveur n’a pas la route du bloc (404)', async () => {
+    const fetchImpl = olderServer();
+
+    expect(await fetchStartText(asFetch(fetchImpl), env, request)).toBe(briefing.markdown);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const [url] = fetchImpl.mock.calls[1] as unknown as [URL];
+    expect(url.pathname).toBe(API_PATHS.briefing);
+    expect(url.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe(PROJECT);
+  });
+
+  it('signale une route absente quand ce serveur n’a ni le bloc ni le point du matin', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 404 }));
+
+    await expect(fetchStartText(asFetch(fetchImpl), env, request)).rejects.toThrow(
+      BriefingRouteMissingError,
+    );
+  });
+
+  it.each([
+    ['un 401', new Response('{}', { status: 401 })],
+    ['un 400', new Response('{}', { status: 400 })],
+    ['un 500', new Response('{}', { status: 500 })],
+    ['un corps non conforme', Response.json({ texte: 3 })],
+    ['un corps non JSON', new Response('<html>', { status: 200 })],
+  ])('renvoie null sur %s, sans repli', async (_name, response) => {
+    const fetchImpl = fetchReturning(response);
+
+    expect(await fetchStartText(asFetch(fetchImpl), env, request)).toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('renvoie null sur une erreur réseau', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError('fetch failed');
+    });
+
+    expect(await fetchStartText(asFetch(fetchImpl), env, request)).toBeNull();
+  });
+
+  it('un seul délai de 3 secondes couvre le bloc et le repli sur le point du matin', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
+    const fetchImpl = olderServer();
+
+    await fetchStartText(asFetch(fetchImpl), env, request);
+
+    expect(timeout).toHaveBeenCalledTimes(1);
+    expect(timeout).toHaveBeenCalledWith(3000);
+    const [first, second] = fetchImpl.mock.calls.map(
+      (call) => (call as unknown as [URL, RequestInit])[1].signal,
+    );
+    expect(first).toBeInstanceOf(AbortSignal);
+    expect(second).toBe(first);
+  });
+});
+
 // Le crochet lance `pnpm -s --dir <dépôt de Leon> leon briefing` : le dossier du processus est alors le dépôt de
 // Leon, jamais le projet de l'utilisateur. Le projet vient du JSON du crochet, sinon de INIT_CWD (posé par pnpm :
 // le dossier d'où pnpm a été lancé), sinon du dossier du processus.
@@ -118,18 +218,32 @@ describe('briefingDirectory', () => {
 
 describe('runBriefing', () => {
   const serverEnv = { LEON_URL: env.url, LEON_TOKEN: env.token };
+  const hookJson = (cwd: string) =>
+    JSON.stringify({
+      session_id: SESSION,
+      hook_event_name: 'SessionStart',
+      source: 'startup',
+      cwd,
+    });
 
   function setup(input: {
     stdin: Readable;
     env?: Record<string, string | undefined>;
     cwd?: string;
     remotes?: Record<string, string>;
+    branches?: Record<string, string>;
+    git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
   }) {
     const out: string[] = [];
     const err: string[] = [];
-    const fetchImpl = input.fetch ?? fetchReturning(Response.json(briefing));
-    const git = vi.fn(async (_args: string[], cwd: string) => input.remotes?.[cwd] ?? null);
+    const fetchImpl = input.fetch ?? fetchReturning(Response.json({ texte: BLOCK }));
+    const git =
+      input.git ??
+      vi.fn(
+        async (args: string[], cwd: string) =>
+          (args[0] === 'branch' ? input.branches : input.remotes)?.[cwd] ?? null,
+      );
     const run = () =>
       runBriefing({
         stdin: input.stdin,
@@ -140,54 +254,93 @@ describe('runBriefing', () => {
         out: (text) => out.push(text),
         err: (text) => err.push(text),
       });
-    const askedProject = () => {
-      const [url] = (fetchImpl.mock.calls[0] ?? []) as unknown as [URL];
-      return url?.searchParams.get(BRIEFING_PROJECT_PARAM);
+    // Le corps de la demande du bloc : le projet, la branche et la session.
+    const asked = () => {
+      const [, init] = (fetchImpl.mock.calls[0] ?? []) as unknown as [URL, RequestInit?];
+      return JSON.parse(String(init?.body ?? '{}')) as Partial<ContextRequest>;
     };
-    return { run, out, err, git, fetchImpl, askedProject };
+    return { run, out, err, git, fetchImpl, asked };
   }
 
-  it('affiche le point du projet du JSON du crochet, et sort avec 0', async () => {
-    const stdin = Readable.from([
-      JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: '/projets/leon' }),
-    ]);
-    const { run, out, err, git, askedProject } = setup({
-      stdin,
+  it('affiche le bloc du projet, de la branche et de la session du JSON du crochet, et sort avec 0', async () => {
+    const { run, out, err, git, asked } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
       env: { ...serverEnv, INIT_CWD: '/ailleurs' },
       remotes: { '/projets/leon': 'git@github.com:DavSperling/Leon.git' },
+      branches: { '/projets/leon': 'amos/etude' },
     });
 
     expect(await run()).toBe(0);
 
     expect(git).toHaveBeenCalledWith(['remote', 'get-url', 'origin'], '/projets/leon');
-    expect(askedProject()).toBe(PROJECT);
-    expect(out).toEqual([briefing.markdown]);
+    expect(git).toHaveBeenCalledWith(['branch', '--show-current'], '/projets/leon');
+    expect(asked()).toEqual({ projet: PROJECT, branche: 'amos/etude', session: SESSION });
+    expect(out).toEqual([BLOCK]);
     expect(err).toEqual([]);
   });
 
   it('sans JSON du crochet, prend le dossier d’où pnpm a été lancé (INIT_CWD)', async () => {
-    const { run, askedProject } = setup({
+    const { run, asked } = setup({
       stdin: Readable.from([]),
       env: { ...serverEnv, INIT_CWD: '/projets/sans-depot' },
     });
 
     expect(await run()).toBe(0);
 
-    expect(askedProject()).toBe(folderKey('/projets/sans-depot'));
+    expect(asked().projet).toBe(folderKey('/projets/sans-depot'));
   });
 
   it('sans JSON ni INIT_CWD, prend le dossier du processus', async () => {
-    const { run, askedProject } = setup({ stdin: Readable.from([]), cwd: '/projets/ici' });
+    const { run, asked } = setup({ stdin: Readable.from([]), cwd: '/projets/ici' });
 
     expect(await run()).toBe(0);
 
-    expect(askedProject()).toBe(folderKey('/projets/ici'));
+    expect(asked().projet).toBe(folderKey('/projets/ici'));
+  });
+
+  // Lancée à la main, aucune session ne démarre : il n'y en a aucune à exclure du bloc.
+  it('sans JSON du crochet, envoie un identifiant de session neuf, qui n’exclut aucune session', async () => {
+    const first = setup({ stdin: Readable.from([]) });
+    const second = setup({ stdin: Readable.from([]) });
+
+    await first.run();
+    await second.run();
+
+    expect(first.asked().session).toMatch(UUID);
+    expect(second.asked().session).toMatch(UUID);
+    expect(second.asked().session).not.toBe(first.asked().session);
+  });
+
+  it.each([
+    ['en tête détachée (git ne rend rien)', undefined],
+    ['plus longue que ce que la route accepte', `amos/${'x'.repeat(200)}`],
+  ])('envoie une branche nulle %s', async (_name, branch) => {
+    const { run, asked } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      branches: branch === undefined ? {} : { '/projets/leon': branch },
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(asked().branche).toBeNull();
+  });
+
+  it('avec un serveur plus ancien que la route du bloc, affiche le point du matin seul, comme avant', async () => {
+    const { run, out, err } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      fetch: olderServer(),
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(out).toEqual([briefing.markdown]);
+    expect(err).toEqual([]);
   });
 
   // Lancée à la main dans un terminal : l'entrée standard est le clavier, qui ne se ferme jamais.
   it('lancée à la main dans un terminal, n’attend pas l’entrée standard', async () => {
     const terminal = Object.assign(new Readable({ read() {} }), { isTTY: true });
-    const { run, out, askedProject } = setup({
+    const { run, out, asked } = setup({
       stdin: terminal,
       env: { ...serverEnv, INIT_CWD: '/projets/client' },
     });
@@ -197,8 +350,8 @@ describe('runBriefing', () => {
       expect(await run()).toBe(0);
 
       expect(Date.now() - started).toBeLessThan(BRIEFING_STDIN_TIMEOUT_MS);
-      expect(askedProject()).toBe(folderKey('/projets/client'));
-      expect(out).toEqual([briefing.markdown]);
+      expect(asked().projet).toBe(folderKey('/projets/client'));
+      expect(out).toEqual([BLOCK]);
     } finally {
       terminal.destroy();
     }
@@ -206,7 +359,7 @@ describe('runBriefing', () => {
 
   it('une entrée standard qui ne se ferme jamais ne la retient pas plus que le délai de lecture', async () => {
     const neverCloses = new Readable({ read() {} });
-    const { run, askedProject } = setup({
+    const { run, asked } = setup({
       stdin: neverCloses,
       env: { ...serverEnv, INIT_CWD: '/projets/client' },
     });
@@ -216,11 +369,43 @@ describe('runBriefing', () => {
       expect(await run()).toBe(0);
 
       expect(Date.now() - started).toBeLessThan(BRIEFING_STDIN_TIMEOUT_MS + 1000);
-      expect(askedProject()).toBe(folderKey('/projets/client'));
+      expect(asked().projet).toBe(folderKey('/projets/client'));
     } finally {
       neverCloses.destroy();
     }
   });
+
+  // Le pire cas, en vrai temps : git ne rend rien qu'à son délai (3 s, project-key.ts) ; le serveur dit tard qu'il
+  // n'a pas la route du bloc, puis le point du matin ne répond jamais. La clé et la branche se lisent ensemble, et
+  // un seul délai de 3 s couvre les deux requêtes : 3 s + 3 s. Lues l'une après l'autre, ou avec un délai par
+  // requête, on dépasserait 8,9 s.
+  it('git lent et serveur lent : une sortie en moins de 7,5 s', async () => {
+    const slowGit = vi.fn(() => new Promise<null>((done) => setTimeout(() => done(null), 3000)));
+    const slowServer = vi.fn(
+      (url: URL, init: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+          if (url.pathname === API_PATHS.contexte) {
+            setTimeout(() => resolve(new Response('{}', { status: 404 })), 2900);
+          }
+        }),
+    );
+    const { run, out, err } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      git: slowGit,
+      fetch: slowServer,
+    });
+    const started = Date.now();
+
+    expect(await run()).toBe(0);
+
+    expect(Date.now() - started).toBeLessThan(7500);
+    expect(slowGit).toHaveBeenCalledTimes(2);
+    expect(slowServer).toHaveBeenCalledTimes(2);
+    expect(out).toEqual([]);
+    expect(err).toHaveLength(1);
+    expect(err[0]).toMatch(/^Leon: /);
+  }, 15_000);
 
   it.each([
     ['un serveur injoignable', vi.fn(async () => Promise.reject(new TypeError('fetch failed')))],

@@ -368,7 +368,8 @@ const exists = (path: string) =>
     () => false,
   );
 
-// L'accord s'écrit après les réglages : s'il ne s'écrit pas, les crochets n'envoient que les textes, comme avant lui.
+// L'accord s'écrit après les réglages : s'il ne s'écrit pas, les crochets n'envoient que ce qu'ils envoyaient avant
+// lui (le point du matin, les textes).
 async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> {
   const path = consentPath(home);
   try {
@@ -376,7 +377,7 @@ async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> 
   } catch (error) {
     const code = (error as NodeJS.ErrnoException | null)?.code;
     deps.err(
-      `Leon: could not write ${path}${typeof code === 'string' ? ` (${code})` : ''}: the hooks send only the text of the exchanges, not the actions of each session. Run the command again.`,
+      `Leon: could not write ${path}${typeof code === 'string' ? ` (${code})` : ''}: at the end of each session, the hooks send only the text of the exchanges, not its actions. Run the command again.`,
     );
     return false;
   }
@@ -434,7 +435,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     }
     // Des crochets posés avant l'accord : seul l'accord est demandé, et les réglages ne sont pas touchés.
     deps.out(
-      `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now they send only the text of the exchanges.`,
+      `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
     );
     for (const line of ['', ...CONSENT_LINES]) deps.out(line);
     if (!options.assumeYes) {
@@ -442,7 +443,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
         `\nRecord this consent in ${consentFile} (${path} is not modified)? [y/N] `,
       );
       if (!isYes(answer)) {
-        deps.out('Nothing was written: the hooks keep sending only the text of the exchanges.');
+        deps.out(
+          'Nothing was written: at the end of each session, the hooks keep sending only the text of the exchanges, not its actions.',
+        );
         return 0;
       }
     }

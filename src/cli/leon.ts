@@ -41,7 +41,8 @@ Commands:
                        hook: the hook JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
-                       settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR), after confirmation
+                       settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in
+                       ~/.leon/accord.json, after confirmation (only the consent when the hooks are already there)
       --oui                do not ask for confirmation
       --depot <path>       Leon repository named in the hook commands (default: the one running this command)
 

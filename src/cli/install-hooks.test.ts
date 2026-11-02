@@ -597,7 +597,10 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 
     expect(run.code).toBe(0);
     expect(run.questions).toHaveLength(1);
-    expect(run.output).toContain('Nothing was written');
+    // Ce qui part sans accord, borné à la fin de session : la phrase ne promet rien du démarrage (briefing.ts).
+    expect(run.output).toContain(
+      'Nothing was written: at the end of each session, the hooks keep sending only the text of the exchanges, not its actions.',
+    );
     expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
     expect(await readFile(settingsPath, 'utf8')).toBe(before);
   });

@@ -116,7 +116,7 @@ describe('page de l’étape Vos outils', () => {
     expect(listConnections).not.toHaveBeenCalled();
   });
 
-  it('un propriétaire seul voit l’écran, les outils de son service conseillés, et la suite est les collaborateurs', async () => {
+  it('un propriétaire seul voit l’écran en trois étapes, les outils de son service conseillés, et la suite est les collaborateurs', async () => {
     const element = await render();
 
     expect(redirect).not.toHaveBeenCalled();
@@ -126,6 +126,7 @@ describe('page de l’étape Vos outils', () => {
       canConnect: true,
       consentUrl: null,
       nextHref: '/bienvenue/collaborateurs',
+      steps: ['about', 'tools', 'teammates'],
       notice: null,
     });
     expect(element.props.now).toBeInstanceOf(Date);
@@ -145,15 +146,24 @@ describe('page de l’étape Vos outils', () => {
     ]);
   });
 
-  it('un propriétaire qui a une équipe, un administrateur ou un membre vont à la fin', async () => {
+  it('un propriétaire qui a une équipe, un administrateur ou un membre vont à la fin, en deux étapes', async () => {
     vi.mocked(isSoleMember).mockResolvedValue(false);
-    expect((await render()).props.nextHref).toBe('/bienvenue/pret');
+    expect((await render()).props).toMatchObject({
+      nextHref: '/bienvenue/pret',
+      steps: ['about', 'tools'],
+    });
 
     vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'admin' }));
-    expect((await render()).props.nextHref).toBe('/bienvenue/pret');
+    expect((await render()).props).toMatchObject({
+      nextHref: '/bienvenue/pret',
+      steps: ['about', 'tools'],
+    });
 
     vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member' }));
-    expect((await render()).props.nextHref).toBe('/bienvenue/pret');
+    expect((await render()).props).toMatchObject({
+      nextHref: '/bienvenue/pret',
+      steps: ['about', 'tools'],
+    });
   });
 
   it('ne compte les membres que pour un propriétaire', async () => {

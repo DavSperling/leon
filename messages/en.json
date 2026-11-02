@@ -1393,6 +1393,13 @@
       "ownConnected": "Your account is connected",
       "ownHint": "Optional. To act under your own name, for example on GitHub."
     },
+    "steps": {
+      "label": "Onboarding progress",
+      "about": "About you",
+      "tools": "Your tools",
+      "teammates": "Teammates",
+      "completed": "Completed"
+    },
     "done": {
       "title": "You’re in",
       "lead": "Leon is reading your first sources. Ask your first question in Chat.",

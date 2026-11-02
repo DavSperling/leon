@@ -11,10 +11,12 @@ import { ToolDialog } from '@/components/verre/connexions/tool-dialog';
 import { Button } from '@/components/verre/ui/button';
 import { ToolIcon } from '@/components/verre/ui/chips';
 import type { OAuthNotice } from '@/lib/connection-form';
+import type { OnboardingStepId } from '@/lib/onboarding';
 import { PROVIDER_FAMILIES_ORDER } from '@/lib/providers';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { PreviewCard } from './preview';
+import { OnboardingSteps } from './steps';
 import type { ToolState } from './tools-model';
 
 export type ToolsStepProps = {
@@ -25,6 +27,7 @@ export type ToolsStepProps = {
   /** Lien d'accord de l'administrateur de l'outil du retour : il vient du catalogue, jamais de l'adresse. */
   consentUrl: string | null;
   nextHref: '/bienvenue/collaborateurs' | '/bienvenue/pret';
+  steps: OnboardingStepId[];
   notice: OAuthNotice | null;
 };
 
@@ -130,6 +133,7 @@ export function ToolsStep({
   canConnect,
   consentUrl,
   nextHref,
+  steps,
   notice,
 }: ToolsStepProps) {
   const t = useTranslations('onboarding');
@@ -194,6 +198,7 @@ export function ToolsStep({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
       <div className="grid min-w-0 content-start gap-5">
+        <OnboardingSteps steps={steps} current="tools" />
         <div>
           <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{tt('title')}</h1>
           <p className="mt-2 text-body text-muted">{nb(tt('lead'))}</p>

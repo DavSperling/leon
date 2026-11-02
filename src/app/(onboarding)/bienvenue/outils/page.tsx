@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { nextAfterTools, toolStates } from '@/components/verre/onboarding/tools-model';
 import { ToolsStep } from '@/components/verre/onboarding/tools-step';
 import { oauthNotice } from '@/lib/connection-form';
-import { DEPARTMENTS, isDepartment } from '@/lib/onboarding';
+import { DEPARTMENTS, isDepartment, onboardingSteps } from '@/lib/onboarding';
 import { isSoleMember, readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { listCatalog } from '@/server/connectors/catalog';
@@ -52,6 +52,7 @@ export default async function ToolsPage({
       canConnect={connectorsKey() !== null}
       consentUrl={catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null}
       nextHref={nextAfterTools(soleOwner)}
+      steps={onboardingSteps(soleOwner ? 'soleOwner' : 'member')}
       notice={notice}
     />
   );

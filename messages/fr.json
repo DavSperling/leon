@@ -1393,6 +1393,13 @@
       "ownConnected": "Votre compte est branché",
       "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub."
     },
+    "steps": {
+      "label": "Progression de l’accueil",
+      "about": "Vous",
+      "tools": "Vos outils",
+      "teammates": "Collaborateurs",
+      "completed": "Terminée"
+    },
     "done": {
       "title": "C’est prêt",
       "lead": "Leon lit vos premières sources. Posez votre première question dans le Chat.",

@@ -113,3 +113,16 @@ export const jobLabelKey = (
   isJobOf(department, job)
     ? (`jobs.${department}.${job}` as JobLabelKey)
     : 'other';
+
+// Le fil d'étapes de l'onboarding, selon ce que la personne parcourt : un propriétaire seul passe par les trois, un
+// membre ou un administrateur par les deux premières, un propriétaire qui a déjà une équipe n'a que la première.
+export type OnboardingStepId = 'about' | 'tools' | 'teammates';
+
+export const onboardingSteps = (
+  path: 'soleOwner' | 'member' | 'ownerWithTeam',
+): OnboardingStepId[] =>
+  path === 'soleOwner'
+    ? ['about', 'tools', 'teammates']
+    : path === 'member'
+      ? ['about', 'tools']
+      : ['about'];

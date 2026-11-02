@@ -101,6 +101,7 @@ describe('page de l’étape Collaborateurs', () => {
     expect(redirect).not.toHaveBeenCalled();
     expect(element.type).toBe(TeammatesStep);
     expect(element.props).toEqual({
+      steps: ['about', 'tools', 'teammates'],
       organizationName: 'Acme',
       you: { name: 'Ana', placement: { department: 'engineering', job: 'backend', seniority: 5 } },
     });

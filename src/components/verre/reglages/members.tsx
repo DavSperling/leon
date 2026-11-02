@@ -214,11 +214,14 @@ function EditPlacementForm({ member, onSaved }: { member: MemberRow; onSaved: ()
     seniority: member.seniority === null ? '' : String(member.seniority),
   });
   const [pending, startTransition] = useTransition();
+  const { department, job, seniority } = form.placement;
+  const ready = Boolean(department && job && seniority);
   const formError = form.text('form');
 
   // Pas de `action={…}` : React remet le formulaire à zéro après une action, et les listes (Radix Select) avec lui.
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!ready) return;
     startTransition(async () => {
       try {
         const result = await setMemberPlacementAction(member.id, form.placement);
@@ -242,7 +245,7 @@ function EditPlacementForm({ member, onSaved }: { member: MemberRow; onSaved: ()
         <DialogClose asChild>
           <Button variant="ghost">{t('cancel')}</Button>
         </DialogClose>
-        <Button type="submit" variant="primary" loading={pending}>
+        <Button type="submit" variant="primary" loading={pending} disabled={!ready}>
           {t('save')}
         </Button>
       </DialogFooter>

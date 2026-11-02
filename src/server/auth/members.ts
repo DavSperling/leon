@@ -140,7 +140,8 @@ export async function joinWithInvitation(token: string, userId: string): Promise
   return db.transaction(async (tx) => {
     const [link] = await tx
       .update(invitationLinks)
-      .set({ usedAt: sql`now()` })
+      // Le nom saisi pour s'y retrouver ne sert plus une fois le lien utilisé : on ne le garde pas.
+      .set({ usedAt: sql`now()`, inviteeName: null })
       .where(usable(token))
       .returning({
         tenantId: invitationLinks.tenantId,

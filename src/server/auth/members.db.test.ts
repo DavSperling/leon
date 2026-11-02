@@ -97,7 +97,8 @@ describe('findInvitation', () => {
       .update(invitationLinks)
       .set({
         createdAt: new Date(Date.now() - 8 * 86_400_000),
-        expiresAt: new Date(Date.now() - 1),
+        // Une minute et non quelques ms : l'horloge de Postgres (Docker) retarde de ~10 ms sur celle de l'hôte.
+        expiresAt: new Date(Date.now() - 60_000),
       })
       .where(eq(invitationLinks.tenantId, tenantId));
 
@@ -233,13 +234,15 @@ describe('le poste porté par un lien', () => {
     const { tenantId, owner } = await tenantWithLink();
     const link = await linkFor(owner, 'Inès');
     const inesId = await lonelyUser();
+    expect(await linkRow(link.token)).toMatchObject({ ...backend, inviteeName: 'Inès' });
+    expect((await linkRow((await linkFor(owner, '')).token)).inviteeName).toBeNull();
 
     expect(await joinWithInvitation(link.token, inesId)).toBe(tenantId);
 
     const [row] = await adminDb.select().from(members).where(eq(members.userId, inesId));
     expect(row).toMatchObject({ ...backend, role: 'member', onboardedAt: null });
-    expect(await linkRow(link.token)).toMatchObject({ ...backend, inviteeName: 'Inès' });
-    expect((await linkRow((await linkFor(owner, '')).token)).inviteeName).toBeNull();
+    // Le lien garde le poste mais plus le nom saisi.
+    expect(await linkRow(link.token)).toMatchObject({ ...backend, inviteeName: null });
   });
 
   it("un lien d'avant ce lot, sans poste, fait toujours entrer", async () => {
@@ -309,7 +312,9 @@ describe('le poste des membres', () => {
 
     await setRole(bob, 'member,admin');
     const seenByAdmin = await listMembers(bob);
-    expect(seenByAdmin.every((r) => r.department === 'sales' && r.seniority === 2)).toBe(true);
+    expect(
+      seenByAdmin.every((r) => r.department === 'sales' && r.job === 'sdr' && r.seniority === 2),
+    ).toBe(true);
   });
 
   it("un administrateur fixe le poste d'un membre, sans toucher au reste", async () => {

@@ -100,7 +100,7 @@ export async function completeAboutStepAction(
   if (member.onboardedAt !== null) redirect('/');
 
   // Seul le propriétaire écrit service, poste, niveau et taille ; tout autre rôle, ses attentes seulement.
-  // Un `false` (étape validée entre-temps par l'autre clic) mène aussi à l'appli, dont la règle de redirection tranche.
+  // Un `false` (étape validée entre-temps par l'autre clic) mène à l'étape suivante, dont la page tranche.
   if (spaceRole(member.role) === 'owner') {
     const owner = OwnerStepSchema.safeParse(values);
     if (!owner.success) return { errors: fieldErrors(owner.error) };

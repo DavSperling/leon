@@ -116,7 +116,7 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
                       <code className="min-w-0 flex-1 basis-56 rounded-field border border-line-strong bg-glass-3 px-3 py-2 text-[12.5px] leading-relaxed break-all text-fg-2 select-all">
                         {created.url}
                       </code>
-                      <CopyButton value={created.url} />
+                      <CopyButton value={created.url} autoFocus />
                     </div>
                     <p className="text-label text-muted">{tm('linkNote')}</p>
                   </div>

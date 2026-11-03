@@ -315,7 +315,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 **Fait quand :**
 - des crochets `pnpm … leon briefing|capter-session` sont remplacés sur place par K9 : même groupe, même position, mêmes délais. La sauvegarde `settings.json.leon-sauvegarde` suit la règle d'aujourd'hui (jamais remplacée) ;
 - `accord.json` est gardé tel quel ; s'il est déjà en version 2, rien n'est redemandé ;
-- `setup` dit : « Your hooks used to run Leon from <clone>; they now run ~/.leon/bin/leon. The token in <clone>/.env.local is no longer needed: revoke it in Settings › Connected computers. » Il ne lit jamais ce `.env.local` ;
+- `setup` dit : « Your hooks used to run Leon from <clone>; they now run ~/.leon/bin/leon. The token in <clone>/.env.local is no longer needed: revoke it in Settings › Personal tokens. » Il ne lit jamais ce `.env.local` ;
 - le README remplace la section d'installation (l. 180 à 245 environ) : la commande unique d'abord, puis la forme clone pour les développeurs de Leon.
 
 **Tests :** des réglages avec les anciens crochets et un crochet de l'utilisateur entre eux : ordre gardé, crochet de l'utilisateur intact, plus aucun `pnpm … leon` ; deux passages donnent le même fichier.

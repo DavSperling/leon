@@ -1,56 +1,89 @@
 # La mémoire à disposition : plan d'implémentation
 
-3 novembre 2026 · Amos (avec Claude) · à relire par David · suite du [plan mémoire des sessions](2026-11-02-memoire-sessions.md), dont il reprend les règles, les contraintes, les décisions D1 à D20 et les contrats C1 à C7
+3 novembre 2026 · Amos (avec Claude) · à relire par David · suite du [plan mémoire des sessions](2026-11-02-memoire-sessions.md), dont il reprend les règles, les contraintes, les décisions D1 à D20 et les contrats C1 à C6, amendés comme dit plus bas · s'appuie sur le [plan de la CLI sans clone](2026-11-03-cli-sans-clone.md) (#115, #120 : `leon setup`, `leon login`, le lanceur `~/.leon/bin/leon`) · le connecteur MCP distant est l'objet d'un plan à part (#121)
 
-> **Pour les agents :** même méthode que le plan mémoire des sessions (un sous-agent neuf par tâche, tests d'abord, preuves avant de conclure, commit de ses seuls fichiers). Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés » des **deux** plans, puis sa tâche.
+> **Pour les agents :** même méthode que le plan mémoire des sessions (un sous-agent neuf par tâche, tests d'abord, preuves avant de conclure, commit de ses seuls fichiers). Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés » des **deux** plans, puis sa tâche. En cas de conflit, ce plan prime.
 
 ## En bref
 
 Aujourd'hui, au démarrage d'une session, Leon colle un post-it : mes 4 dernières sessions sur ce dépôt. C'est trop peu, et presque toujours réduit à une ligne.
 
 Ce plan change de logique :
-1. **Leon range toute sa mémoire par fil de travail.** Un fil, c'est un sujet suivi dans le temps, quel que soit l'outil : la page de connexion, le paiement. Il regroupe les sessions (Claude Code, Codex, Cursor, Antigravity), les PR, les tickets, les décisions et leurs raisons. Le rangement se fait en tâche de fond, à la fin de chaque session : RAG, graphe et un appel de modèle.
-2. **Au démarrage, l'agent reçoit un sommaire** : la liste des fils du dépôt, la branche courante d'abord, et la consigne d'aller voir Leon avant de commencer (niveau 1).
+1. **Leon range toute sa mémoire par fil de travail.** Un fil, c'est un dossier par sujet, tenu à jour par Leon : la page de connexion, le paiement. Il relie, quel que soit l'outil :
+   - les sessions de code (Claude Code, Codex, Cursor, Antigravity) ;
+   - les PR et les tickets ;
+   - ce qui en parle dans les connecteurs : un message Slack, une réunion, une note, un mail ;
+   - les décisions et leurs raisons.
+
+   Le rangement se fait en tâche de fond : clés exactes (le graphe), proximité (le RAG), puis un appel de modèle qui écrit l'état du fil.
+2. **Au démarrage, l'agent reçoit un sommaire** : la liste des fils du dépôt, la branche courante d'abord, et la consigne d'aller lire Leon avant de commencer (niveau 1).
 3. **À chaque message, un rappel ciblé** : si le message touche un fil connu, une ligne le signale à l'agent (niveau 2). Leon ne cherche pas à sa place.
-4. **L'agent va lire lui-même**, par le connecteur MCP de Leon : le dossier du dépôt, un fil en entier, ou toute la mémoire.
-5. **La capture devient complète** : en plus des messages et des faits, le raisonnement de l'agent et les échanges des sous-agents.
+4. **L'agent va lire lui-même**, d'abord par une commande que tous les outils savent lancer dans leur terminal (`~/.leon/bin/leon fil …`), qui parle directement à Leon, sans connecteur. Le connecteur MCP, quand il est installé, donne les mêmes lectures.
+5. **La capture devient complète** : en plus des messages et des faits, le raisonnement de l'agent et les échanges des sous-agents (lot 14).
 
-Tout reste dans Leon (serveur, Postgres, RLS) : rien n'est écrit sur le poste, hormis les crochets et l'accord déjà prévus.
+Tout reste dans Leon (serveur, Postgres, RLS) : rien n'est écrit sur le poste, hormis les crochets, l'accord et la connexion de la CLI.
 
-Exemple cible : Amos ouvre Cursor pour la première fois et demande « ajoute le test du mot de passe oublié sur la page de connexion ». Le sommaire lui a montré un fil « amos/login ». Le rappel lui signale que ce fil touche sa demande. Cursor ouvre le fil par le MCP et y lit :
+Exemple cible : Amos ouvre Cursor pour la première fois et demande « ajoute le test du mot de passe oublié sur la page de connexion ». Au premier message, Cursor reçoit le sommaire, où figure le fil « amos/login ». Le rappel lui signale que ce fil touche la demande. Cursor lance `leon fil` et y lit :
 - la page a été faite lundi dans Claude Code ;
 - la PR #120 est fusionnée ;
 - on a choisi Better Auth, et pourquoi ;
 - un essai a échoué à cause du mail de test ;
+- David en a parlé sur Slack ;
 - le test du mot de passe oublié restait à faire.
+
+## Décisions d'Amos du 03/11
+
+1. Toute la mémoire de Leon est en jeu : les sessions de tous les outils, GitHub et les connecteurs, pas un post-it (D21, D22).
+2. Leon range la mémoire (graphe, RAG, un modèle) et la met à disposition ; c'est l'agent qui va chercher (D25, D27).
+3. Rien n'est écrit sur le poste de l'utilisateur, hormis les crochets, l'accord et la connexion (D31).
+4. L'agent lit d'abord par une commande de la CLI, qui parle directement à Leon ; le connecteur MCP est une voie en plus (D27).
+5. Niveaux 1 et 2 par défaut, niveau 3 en option (D24, D26, D28).
+6. La capture est maximale : le raisonnement, les échanges des sous-agents, la logique et les décisions (lot 14).
+7. Ça marche pour Claude Code, Codex, Cursor et Antigravity, et un outil jamais utilisé profite de la mémoire faite avec un autre (D32).
+8. Les corrections de la relecture du 03/11 sont acceptées.
 
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
 |---|---|---|---|
-| 12. Les fils et le dossier | Leon range la mémoire par fil de travail ; le MCP gagne `dossier` et `fil` ; le bloc de démarrage devient un sommaire des fils, avec la consigne de consulter Leon (niveau 1) | T39 à T44 | 4,5 j |
-| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code | T45 et T46 | 1,5 j |
-| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent par la recherche | T47 à T49 | 3 j |
+| 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T47 | 8 j |
+| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code | T48 et T49 | 2 j |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande | T50 à T52 | 4 j |
 
-Changements au plan mémoire des sessions :
-- **Le lot 10 (RAG au premier prompt) est remplacé** par le lot 13 et par la lecture à la demande du lot 12 (D18 n'a plus d'objet). La version 4 de l'accord est redéfinie (C7, ci-dessous).
-- **Le lot 6 (le résumé) nourrit les fils.** Sa liste blanche gagne les décisions et leurs raisons (D8 amendée, voir D25 et la question A9).
-- **Le lot 7 (le filtre `depot`)** sert au MCP du lot 12 : il passe juste avant lui.
-- **Les lots d'outils (4 et 5 Codex, 8 Cursor, 9 Antigravity)** posent chacun, en plus de la capture et du bloc de démarrage, le crochet de rappel de leur outil (même route, même sortie que C5) et l'accès au connecteur MCP (D27).
-- **Le lot 11 (preuve et mesure)** mesure aussi les niveaux 1 et 2, et décide du niveau 3 (D28).
+Changements au plan mémoire des sessions (le détail est dans ses « Amendements du 03/11 ») :
+- **Le lot 10 (RAG au premier prompt) est remplacé** par le lot 13 et par la lecture à la demande du lot 12. D18 n'a plus d'objet.
+- **L'accord ne monte plus une échelle de versions** : chaque usage a son propre consentement (C7 révisé, ci-dessous). Le résumé du lot 6 dépend de l'usage `resume`.
+- **Le lot 6 (le résumé) nourrit les fils.** Sa liste blanche garde les décisions vérifiées (D23). T24 ne met plus de texte du modèle dans le bloc de démarrage.
+- **Le lot 3 (T13)** apporte l'état, la branche, les tickets fermés et l'auteur des PR, dont les lots 6 et 12 ont besoin. La section « L'équipe sur ce dépôt » (T14) se place dans le sommaire.
+- **Le lot 7 (le filtre `depot`)** sert aux lectures du lot 12.
+- **Les lots d'outils (4 et 5 Codex, 8 Cursor, 9 Antigravity)** posent chacun le rappel, les commandes de lecture et la capture complète de leur outil (D32), environ 1 j de plus chacun. Cursor et Antigravity reçoivent le sommaire au premier message par une requête en ligne, sans cache ni fichier sur le poste.
+- **Le lot 11 (preuve et mesure)** mesure aussi les niveaux 1 et 2 (qui ouvre un fil, par quel outil) et décide du niveau 3 (D28).
 
-**Ordre proposé (voir A8) :** 7, 6, 12, 13, 14, puis 2, 3, 4, 5, 8, 9 et 11. Amos travaille chaque jour dans Claude Code, déjà capté : les lots 12 à 14 lui servent tout de suite. Les dépôts d'équipe (2) et l'état du dépôt (3) viennent ensuite, et les outils suivants héritent de tout. Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : les fils se construisent alors sur les faits et les tours, sans état écrit par un modèle.
+**Ordre proposé (voir A8) :** 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11.
+- Le lot 2 ferme une fuite déjà ouverte : des PR de dépôts perso sont relevées avec l'ACL de l'organisation.
+- Le lot 3 apporte ce que les lots 6 et 12 lisent des PR.
+- Les lots 12 à 14 servent ensuite tout de suite dans Claude Code, déjà capté, au bout d'environ 9 jours.
+
+Total du chantier : environ 43 jours, lot 1 compris (fait).
+
+Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : les fils se rangent par clés et par proximité, et leur état est la liste déterministe des sessions et des PR (D23).
 
 ## Architecture
 
-- **Un fil est une source de Leon** (kind `fil`), privée à son auteur, comme ses sessions. Son état est un tour `document` écrit par Leon, que le pipeline existant indexe. La recherche, `fetch`, la RLS et la suppression de compte le traitent donc comme le reste.
-- **Le rangement tourne en tâche de fond** (pg-boss) à chaque fin de session (le champ `fin` de C2), puis à l'arrivée de son résumé (lot 6), et une fois au démarrage d'une session :
-  - d'abord des clés exactes : même branche, même PR, une PR qui ferme un ticket ;
-  - à défaut, la proximité du résumé de la session avec les fils récents du projet ;
-  - enfin, un appel de modèle réécrit l'état court du fil.
+- **Un fil est une source de Leon** (kind `leon_fil`), privée à son auteur et créée par le seul serveur. Son état est un tour `document`, réécrit et réindexé à chaque mise à jour. La recherche, `fetch` et la RLS le traitent comme le reste.
+- **Le rangement tourne en tâche de fond** (pg-boss) :
+  - à la fin d'une session (le champ `fin` de C2, ou 15 min sans faits nouveaux) ;
+  - à l'indexation de son résumé ;
+  - à l'arrivée d'une source de connecteur ou de GitHub ;
+  - une fois au démarrage d'une session.
+- **Le rangement procède dans l'ordre :**
+  1. les clés exactes (le graphe) : branche, PR, ticket cité, URL ou branche citée ;
+  2. la proximité (le RAG), bornée au projet et à 30 jours ;
+  3. un appel de modèle, qui réécrit l'état du fil à partir de ce que l'accord permet.
 - **Le démarrage lit ce qui est prêt**, sans modèle ni vecteur, en moins de 3 s, et met en file une mise à jour sans l'attendre.
-- **Le rappel (niveau 2)** est une recherche plein texte des mots du message dans les titres et les mots-clés des fils du projet, sans modèle ni vecteur. Le message n'est ni stocké ni journalisé.
-- **La lecture** passe par le connecteur MCP existant (src/server/mcp/), authentifié par le jeton d'API de Leon, avec deux outils de plus et deux filtres de plus.
+- **Le rappel (niveau 2)** est une recherche plein texte bornée aux fils de l'auteur, sans modèle ni vecteur. Le message n'est ni stocké ni journalisé.
+- **La lecture** passe d'abord par trois routes à jeton que la CLI expose en commandes (`leon dossier`, `leon fil`, `leon chercher`). Le connecteur MCP existant (`src/server/mcp/`) gagne les mêmes lectures, en deux outils et deux filtres. Son installation dans les outils et sa connexion OAuth relèvent du plan MCP distant (#121).
+- **L'accord** ne monte plus une échelle de versions : chaque usage a son propre consentement (C7 révisé).
 
 ## Décisions
 

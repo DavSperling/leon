@@ -9,6 +9,7 @@ import { PassThrough, Readable, Writable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS, API_TOKEN_PATTERN } from '../capture/api-contract';
+import { authorizePath, parseAuthorizeParams, returnUrl } from '../server/auth/computer-authorize';
 import { connectionPath, readConnection, writeConnection } from './connection';
 import { type LoginDeps, parseLoginArgs, readTokenFromInput, runLogin, runLogout } from './login';
 
@@ -417,6 +418,44 @@ describe('leon login : le parcours par le navigateur', () => {
     expect(await runLogin({}, run.deps)).toBe(0);
     await run.browsed();
     expect(status).toBe(400);
+  });
+});
+
+// Contrat entre la CLI et la page d'autorisation, chacune de son côté du navigateur : l'adresse ouverte par la CLI doit
+// passer la règle de la page (parseAuthorizeParams), et le retour bâti par la page (returnUrl) doit être reçu par la CLI.
+// Le faux navigateur des autres tests bâtit son retour lui-même : sans ceux-ci, les deux côtés pourraient diverger.
+describe('leon login : le contrat avec la page d’autorisation', () => {
+  const pageParams = (address: string) =>
+    parseAuthorizeParams(Object.fromEntries(new URL(address).searchParams));
+
+  it('ouvre une adresse que la page accepte, et reçoit le code de son retour', async () => {
+    let back: Response | undefined;
+    const run = setup(async (_params, address) => {
+      const params = pageParams(address);
+      if (!params) throw new Error('adresse refusée par la page d’autorisation');
+      expect(new URL(address).pathname).toBe(new URL(authorizePath(params), leon.url).pathname);
+      back = await fetch(returnUrl(params, { code: 'le.code' }), { redirect: 'manual' });
+    });
+
+    const code = await runLogin({}, run.deps);
+    await run.browsed();
+
+    expect(code).toBe(0);
+    expect(back?.headers.get('Location')).toBe(`${leon.url}/ordinateur/connecte`);
+    expect(registerCall(leon)?.body).toMatchObject({ code: 'le.code' });
+  });
+
+  it('comprend le refus que la page renvoie', async () => {
+    const run = setup(async (_params, address) => {
+      const params = pageParams(address);
+      if (!params) throw new Error('adresse refusée par la page d’autorisation');
+      await fetch(returnUrl(params, 'refus'), { redirect: 'manual' });
+    });
+
+    expect(await runLogin({}, run.deps)).toBe(1);
+    await run.browsed();
+    expect(await readConnection(home)).toBeNull();
+    expect(leon.calls).toEqual([]);
   });
 });
 

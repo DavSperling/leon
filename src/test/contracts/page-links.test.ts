@@ -99,6 +99,21 @@ describe('liens entre pages', () => {
     expect(matchesRoute(path as string)).toBe(true);
   });
 
+  // La CLI bâtit les adresses de la page d'autorisation et de la page « connecté » sur l'adresse du serveur
+  // (`${origin}/…`) : le balayage des pages ci-dessus ne lit pas src/cli.
+  it('mène chaque page de Leon que la CLI ouvre à une page', () => {
+    const paths = productionSources('src/cli/*.ts').flatMap(({ path, text }) =>
+      [...text.matchAll(/\$\{origin\}(\/[a-z/-]+)/g)].map((match) => ({
+        file: path,
+        path: match[1],
+      })),
+    );
+    expect(paths.map(({ path }) => path).toSorted()).toEqual(
+      expect.arrayContaining(['/ordinateur/autoriser', '/ordinateur/connecte']),
+    );
+    expect(paths.filter(({ path }) => !matchesRoute(path as string))).toEqual([]);
+  });
+
   // Ces adresses passent par une constante ou une fonction : le balayage des href= et redirect(' ci-dessus ne les voit pas.
   it('mène chaque retour OAuth et chaque suite de Vos outils à une page', () => {
     for (const path of [...OAUTH_RETURN_PATHS, nextAfterTools(true), nextAfterTools(false)]) {

@@ -217,118 +217,244 @@ Le rendu passe par `src/server/mcp/tools/render.ts`, avec sa garde. Au MCP, le `
 
 ## Lot 12 : les fils et le dossier
 
-### T39 · Le kind `fil`
+### T39 · Le kind `leon_fil`, sa suppression et sa fusion
 
-**Fichiers :** `src/capture/turn.ts` (`SOURCE_KINDS`), `src/server/db/migrations/NNNN-kind-fil.sql` (nouveau, numéro pris sur main au moment du lot), les libellés de source (interface et MCP).
+**Fichiers :**
+- `src/capture/turn.ts` (`SOURCE_KINDS`), `src/lib/labels.ts`, `src/test/fixtures.ts`, `src/components/search/view-model.ts` ;
+- `src/server/db/migrations/NNNN-supprimer-fil.sql` (nouveau, numéro pris sur main au moment du lot) ;
+- `src/server/auth/delete-account.ts`, `src/server/db/rls-coverage.db.test.ts`.
 
 **Fait quand :**
-- la migration accepte `fil` dans le check de `sources.kind` ;
-- un fil s'affiche et se supprime comme une source privée ;
-- la suppression de compte l'emporte.
+- `leon_fil` est un kind (D21) : hors `CAPTURE_KINDS`, refusé par `remember` et par la route d'ingestion, absent du filtre `outil`, avec la nature `fil_de_travail` ;
+- la migration crée `supprimer_fil(uuid)` (D21), `security definer`, `pg_temp` en dernier, bornée au kind, au tenant et à l'auteur ;
+- la suppression du compte efface les fils de la personne par cette fonction ;
+- `DELETE_ALLOWED` ne change pas.
 
-**Tests :** test db de la migration ; `rls-coverage.db.test.ts` ; une source `fil` d'un autre membre est invisible.
+**Tests :**
+- test db de la migration :
+  - l'auteur supprime son fil ;
+  - refus pour le fil d'un collègue ;
+  - refus pour tout autre kind ;
+- `delete-account.db.test.ts` : plus aucun fil après la suppression ;
+- `ingest-routes.db.test.ts` et le test de `remember` : `leon_fil` refusé ;
+- `rls-coverage.db.test.ts`.
 
-### T40 · Le rangement déterministe
+### T40 · Le rangement des sessions
 
-**Fichiers :** `src/server/sessions/threads.ts` (nouveau), `src/server/sessions/threads-queue.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file à `fin`), `src/instrumentation-node.ts`.
+**Fichiers :** `src/server/sessions/threads.ts` (nouveau), `src/server/sessions/threads-queue.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file), `src/instrumentation-node.ts`.
 
-**Fait quand :** à la réception de faits avec `fin`, une tâche pg-boss (clé unique par session) range la session selon D22 :
-- crée ou met à jour le fil (`metadata`), sous `withTenant` de l'auteur ;
-- fusionne deux fils qui partagent une PR ;
-- est idempotente.
+**Fait quand :**
+- à la réception de faits, une tâche pg-boss range la session selon D22, sous `withTenant` de l'auteur :
+  - la clé de tâche est unique par session ;
+  - avec `fin`, la tâche part tout de suite ; sans `fin`, elle part après 15 min (`startAfter`) ;
+- elle crée ou met à jour le fil (`metadata`, D21), avec un filtre explicite sur l'auteur et sur `CODE_SESSION_KINDS` ;
+- elle fusionne deux fils du même auteur qui partagent une PR, par `supprimer_fil` ;
+- elle est idempotente ;
+- le worker résout le contexte de l'auteur et sort s'il est parti ;
+- les journaux ne citent que des uuid.
 
 **Tests :** `threads.db.test.ts` (nouveau) :
 - même branche, même fil ;
-- même PR sur deux branches : fusion ;
-- `main` sans PR : pas de rattachement sans résumé ;
-- session d'un collègue : jamais dans mon fil ;
-- envoi répété : rien en double.
+- même PR sur deux branches : fusion, un seul fil rendu ;
+- une session de collègue partagée avec moi n'entre jamais dans mon fil ;
+- envoi répété : rien en double ;
+- sans `fin` : rangée après 15 min (file simulée).
 
-### T41 · L'état du fil
+### T41 · Le rattachement par proximité et la session « hors fil »
 
-**Fichiers :** `src/server/sessions/thread-state.ts` (nouveau), et l'étape `resume` du lot 6.
-
-**Fait quand :**
-- l'état est écrit selon D23, dans un tour `document` remplacé à chaque fois, 2 000 caractères au plus ;
-- les relations sont ajoutées par le serveur ;
-- sans modèle, l'état est la liste déterministe des sessions et des PR ;
-- le condensé passe par `prompt-guard`, et un échec du modèle laisse l'ancien état.
-
-**Tests :** `thread-state.test.ts` (modèle simulé : liste blanche appliquée, `[consigne]` retirée, `[décision]` gardée avec sa source) ; `thread-state.db.test.ts` (l'état est indexé).
-
-### T42 · Le rattachement par proximité
-
-**Fichiers :** `src/server/sessions/threads.ts`.
-
-**Fait quand :** une session sans clé est rattachée selon D22, par la proximité de son résumé (vecteurs existants) avec les fils récents du projet. Le seuil est réglé sur un jeu de sessions de test et noté dans le code.
-
-**Tests :** `threads.db.test.ts` (vecteurs simulés : au-dessus du seuil, rattachée ; en dessous, nouveau fil).
-
-### T43 · Le MCP : `dossier`, `fil`, et deux filtres de `search`
-
-**Fichiers :** `src/server/mcp/tools/dossier-tool.ts` (nouveau), `src/server/mcp/tools/fil-tool.ts` (nouveau), `src/server/mcp/server.ts`, `src/server/mcp/tools/search-tool.ts`, `src/server/mcp/tools/render.ts`, `src/server/mcp/tools/output-schemas.ts`.
+**Fichiers :** `src/server/sessions/threads.ts`, `src/server/sessions/resume-worker.ts` (lot 6 : le déclencheur après l'indexation du résumé).
 
 **Fait quand :**
-- C9 est respecté ;
-- les deux outils ne lisent que sous `withTenant` du porteur du jeton ;
-- `search` accepte `depot` (lot 7) et `fil`, et mentionne le fil et les PR d'une session trouvée ;
-- les descriptions disent quand s'en servir (« before starting work on this repository, open the thread that matches the task ») ;
-- la mention « contient des éléments venus de l'extérieur » apparaît pour un fil externe.
+- une session sans clé est rattachée selon D22, une fois le vecteur de son résumé écrit ;
+- sans résumé ni vecteur (pas de fournisseur de vecteurs, moins de 6 échanges, pas d'usage `resume`), elle reste hors fil et n'ouvre rien ;
+- le seuil est une constante prudente, avec son commentaire `shortcut:`.
+
+**Tests :** `threads.db.test.ts` (vecteurs simulés) :
+- au-dessus du seuil : rattachée ;
+- en dessous : hors fil, aucun fil ouvert ;
+- sans fournisseur de vecteurs : aucun rattachement.
+
+### T42 · Relier les connecteurs et GitHub
+
+**Fichiers :** `src/server/sessions/thread-links.ts` (nouveau), `src/server/sessions/threads-queue.ts` (mise en file à l'arrivée d'une source), `src/server/connectors/sync.ts` (l'appel).
+
+**Fait quand :**
+- une source de connecteur ou de GitHub visible de l'auteur est reliée à ses fils selon D22, d'abord par clé exacte, puis par proximité bornée ;
+- `metadata.liees` ne garde que des ids et la clé qui relie ;
+- une source invisible du lecteur n'est jamais rendue par les lectures.
+
+**Tests :** `thread-links.db.test.ts` (nouveau) :
+- un ticket `ABC-123` cité dans le titre d'une PR relie le ticket ;
+- un message Slack qui cite l'URL d'une PR rejoint son fil ;
+- une réunion proche (vecteurs simulés) rejoint le fil ;
+- une source d'un autre membre, invisible de l'auteur : jamais reliée ;
+- aucune copie de texte dans `metadata`.
+
+### T43 · L'état du fil
+
+**Fichiers :** `src/server/sessions/thread-state.ts` (nouveau), `src/server/llm/llm.ts` et `src/server/llm/models.ts` (étape `fil`), la migration du lot 6 (`step` gagne `fil`).
+
+**Fait quand :**
+- l'état est écrit selon D23 : condensé borné aux sessions avec l'usage `resume` et aux sources liées, provenance, décisions vérifiées, `[consigne]` retirée, 2 000 caractères au plus ;
+- la réécriture remplace le texte, supprime les passages et leurs vecteurs, puis met en file l'indexation ;
+- sans modèle, sans usage `resume` ou en cas d'échec, l'état est déterministe, et un échec garde l'ancien ;
+- le condensé passe par `prompt-guard`.
+
+**Tests :**
+- `thread-state.test.ts` (modèle simulé) :
+  - une décision qui ne cite aucun id présent est retirée ;
+  - un rapport piégé ne produit aucune décision ;
+  - `[consigne]` est retirée ;
+  - 2 001 caractères sont coupés ;
+- `thread-state.db.test.ts` :
+  - fil dont aucune session n'a l'usage `resume` : aucun appel de modèle ;
+  - fil mixte : rien de la session sans usage dans le condensé ;
+  - second état : l'ancien n'est plus trouvé par la recherche ;
+  - modèle en échec : ancien état gardé.
+
+### T44 · Les routes et les commandes de lecture
+
+**Fichiers :**
+- `src/capture/api-contract.ts` (C9, C11, `API_PATHS`) ;
+- `src/server/sessions/thread-read.ts` (nouveau : la lecture commune), `src/server/api/read-routes.ts` (nouveau), `src/server/api/app.ts` ;
+- `src/cli/read-commands.ts` (nouveau), `src/cli/leon.ts` (`dossier`, `fil`, `chercher`) ;
+- `src/test/contracts/api-contract.db.test.ts` (`SERVED`).
+
+**Fait quand :**
+- les trois routes suivent C9 et C11, sous `withTenant` du porteur, avec l'usage `lecture` ;
+- `chercher` exige `depot` ;
+- le rendu est gardé (D25) et borné (D27), avec la coupe signalée ;
+- les commandes écrivent sur la sortie standard, rien sur le disque ;
+- un 404 donne un message fixe sur la sortie d'erreur et le code 0 ;
+- chaque lecture est notée (`recordReads`).
+
+**Tests :**
+- `read-routes.db.test.ts` :
+  - 401, 400, 413 ;
+  - sans usage `lecture` : refus ;
+  - le fil d'un collègue est introuvable ;
+  - un titre et un état piégés restent échappés ;
+  - `chercher` sans `depot` : 400 ;
+- `read-commands.test.ts` : serveur ancien (404), serveur absent ;
+- contrat : `api-contract.db.test.ts`.
+
+### T45 · Le MCP : `dossier`, `fil`, et deux filtres de `search`
+
+**Fichiers :**
+- `src/server/mcp/tools/dossier-tool.ts` (nouveau), `src/server/mcp/tools/fil-tool.ts` (nouveau) ;
+- `src/server/mcp/server.ts` (`MCP_INSTRUCTIONS`) ;
+- `src/server/mcp/tools/search-tool.ts`, `src/server/mcp/tools/render.ts`, `src/server/mcp/tools/output-schemas.ts` ;
+- `src/test/contracts/mcp-descriptions.test.ts`.
+
+**Fait quand :**
+- `dossier` et `fil` reprennent la lecture commune de T44 ;
+- leur `structuredContent` ne porte que des clés ;
+- `search` accepte `depot` et `fil`, et mentionne le fil et les PR d'une session trouvée ;
+- `MCP_INSTRUCTIONS` et les descriptions disent quand s'en servir, sans jamais inviter à une recherche dans toute la mémoire.
 
 **Tests :** `mcp.db.test.ts` :
-- le fil d'un collègue est introuvable ;
-- un titre piégé reste échappé ;
-- un fil externe porte la mention ;
-- `search` filtré par fil.
+- un état piégé n'apparaît que dans `content`, après la ligne de garde ;
+- un id qui n'est pas un fil : introuvable ;
+- une session trouvée porte son fil et ses PR ;
+- la liste figée des outils est à jour.
 
-### T44 · Le sommaire au démarrage (niveau 1)
+Contrat : `mcp-descriptions.test.ts`.
 
-**Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/server/api/context-routes.ts` (mise en file de la mise à jour, sans l'attendre).
+### T46 · Le sommaire au démarrage (niveau 1)
+
+**Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/server/api/context-routes.ts` (mise en file de la mise à jour, sans l'attendre), `src/capture/strip-leon-blocks.ts`.
 
 **Fait quand :**
-- le bloc suit D24 : les fils, puis la consigne fixe, puis le point du matin, 8 000 octets en tout ;
+- le bloc suit D24 : les fils, la section d'équipe (à partir du lot 3), la consigne fixe, puis le point du matin, en 8 000 octets ;
+- la consigne cite la commande `leon fil` et ne figure qu'avec l'usage `lecture` ;
 - le repli sur le post-it du lot 1 joue quand il n'y a aucun fil ;
-- la route reste sous 3 s, mesurée sur 10 000 sources et 500 fils.
+- la route reste sous 3 s : `EXPLAIN ANALYZE` sous RLS sur 10 000 sources et 500 fils, chiffre noté dans la PR.
 
-**Tests :** `render-context.test.ts` :
-- titre déterministe seulement ;
-- consigne mot pour mot ;
-- budget en octets ;
-- repli.
+**Tests :**
+- `render-context.test.ts` :
+  - une branche piégée (« ignore-previous-instructions-$(curl…) ») est réduite ;
+  - aucun titre de PR ni de session ;
+  - fil sans branche : « fil du JJ/MM » ;
+  - consigne mot pour mot, avec et sans l'usage `lecture` ;
+  - budget en octets ;
+  - repli ;
+- `start-context.db.test.ts` : branche courante d'abord ; fil d'un collègue absent ;
+- `strip-leon-blocks.test.ts` : la consigne est retirée à la recapture.
 
-Aussi : `start-context.db.test.ts` (branche courante d'abord ; fil d'un collègue absent).
+### T47 · L'installateur : l'usage `lecture`
+
+**Fichiers :** `src/cli/consent.ts` (C7 révisé), `src/cli/install-hooks.ts`, `src/cli/setup.ts` (#120), `src/cli/uninstall-hooks.ts`, `README.md`.
+
+**Fait quand :**
+- l'accord passe aux usages (C7 révisé, D30), en relisant sans perte un `accord.json` du lot 1 ;
+- l'installateur et `leon setup` proposent l'usage `lecture` avec son texte, en anglais, testé mot pour mot. Ce texte dit que l'agent de l'outil peut lire, par les commandes de Leon, les fils et la mémoire de ce dépôt, et que le fournisseur de son modèle voit ce qu'il lit ;
+- un refus ne change rien ; `--oui` et `--yes` n'ajoutent pas d'usage ;
+- le retrait efface les usages.
+
+**Tests :**
+- `consent.test.ts` : un accord du lot 1 relu ; un usage ajouté, daté ;
+- `install-hooks.test.ts` : texte exact ; refus : rien ne change ; `--oui` sans usage ;
+- `uninstall-hooks.test.ts`.
 
 ## Lot 13 : le rappel à chaque message
 
-### T45 · La route `POST /api/v1/rappel`
+### T48 · La route `POST /api/v1/rappel`
 
-**Fichiers :** `src/capture/api-contract.ts` (C8), `src/server/api/reminder-routes.ts` (nouveau), `src/server/sessions/reminder.ts` (nouveau), `src/server/api/app.ts`.
+**Fichiers :**
+- `src/capture/api-contract.ts` (C8, `API_PATHS.rappel`) ;
+- `src/server/sessions/reminder.ts` (nouveau), `src/server/api/reminder-routes.ts` (nouveau), `src/server/api/app.ts` ;
+- `src/server/db/migrations/NNNN-rappels-cites.sql` (nouveau : la table, sa RLS, sa purge) ;
+- `src/server/db/rls-coverage.db.test.ts`, `src/test/contracts/api-contract.db.test.ts`.
 
-**Fait quand :**
-- D26 est respecté ;
-- en dessous de l'accord 4, le texte est vide, sans rien chercher ;
-- le message n'est ni stocké ni journalisé ;
-- un fil déjà cité dans la session n'est plus cité.
+**Fait quand :** D26 et C8 sont respectés :
+- recherche bornée aux fils de l'auteur, sans `searchPassages`, en `websearch_to_tsquery` ;
+- ligne de clés balisée ;
+- fils déjà cités rangés dans `rappels_cites`, purgés après 24 h ;
+- sans l'usage `rappel`, un texte vide sans aucune recherche ;
+- le message n'est ni stocké ni journalisé.
 
 **Tests :** `reminder-routes.db.test.ts` :
-- 401, 400, 413 ;
-- accord 3 : vide ;
+- 401, 400 (sans recopier les valeurs), 413 ;
+- sans usage : vide ;
 - un message qui touche un fil : une ligne ;
-- le même message deux fois : la seconde fois, vide ;
+- le même message deux fois dans la session : la seconde fois, vide ;
+- deux sessions : le même fil cité dans chacune ;
 - aucun fil touché : vide ;
-- fil d'un collègue : jamais cité.
+- fil d'un collègue : jamais cité ;
+- aucune ligne de `turns`, `passages`, `sources.metadata` ni `rappels_cites` ne contient le message ;
+- la console espionnée ne l'a pas reçu.
 
-### T46 · Le crochet de Claude Code
+Contrat : `api-contract.db.test.ts`.
 
-**Fichiers :** `src/cli/reminder.ts` (nouveau, `leon rappel`), `src/cli/leon.ts`, `src/cli/install-hooks.ts` (UserPromptSubmit, délai 5 s), `src/cli/consent.ts` (version 4), `src/cli/uninstall-hooks.ts`, `README.md`.
+### T49 · Le crochet de Claude Code
+
+**Fichiers :**
+- `src/cli/reminder.ts` (nouveau, `leon rappel`), `src/cli/leon.ts` ;
+- `src/cli/hook-commands.ts` (`HookSubcommand`), `src/cli/hook-commands.contrat.test.ts` ;
+- `src/cli/install-hooks.ts` (UserPromptSubmit, délai 5 s, posé seulement avec l'usage `rappel`), `src/cli/consent.ts` (usage `rappel`), `src/cli/uninstall-hooks.ts` ;
+- `README.md`.
 
 **Fait quand :**
-- le crochet lit le message dans l'entrée du crochet, le masque, l'envoie (C8) et imprime la ligne rendue, ou rien ;
-- un serveur lent, absent ou ancien donne le code 0 et rien sur la sortie standard ;
+- le crochet lit le message dans l'entrée du crochet ;
+- sans l'usage `rappel`, il sort sans rien lire du réseau ;
+- sinon il coupe le message à 2 000 caractères, le masque, l'envoie (C8) et imprime la ligne, ou rien ;
+- un serveur lent, absent ou ancien donne une sortie vide en moins de 2 s, avec le code 0 ;
 - les gardes de T06 (Cursor, Codex) s'appliquent ;
-- l'installateur montre le texte de la version 4 et demande sa confirmation, sans jamais sauter une version.
+- l'installateur propose l'usage `rappel` avec son texte : le message part vers Leon seul, ni stocké ni journalisé. Le crochet n'est posé qu'une fois l'usage accepté, et le retrait l'enlève.
 
-**Tests :** `reminder.test.ts` (serveur lent : rien après 5 s ; 404 : rien) ; `install-hooks.test.ts` (texte exact de la version 4) ; `uninstall-hooks.test.ts`.
+**Tests :**
+- `reminder.test.ts` :
+  - sans usage : aucune requête ;
+  - serveur lent : vide en moins de 2 s ;
+  - connexion refusée : vide ;
+  - 404 : vide ;
+  - `cursor_version` : garde ;
+- `install-hooks.test.ts` :
+  - texte exact ;
+  - refus de l'usage : pas de crochet de prompt ;
+  - `--oui` sans l'usage : pas de crochet ;
+- `uninstall-hooks.test.ts` ;
+- contrat : `hook-commands.contrat.test.ts`.
 
 ## Lot 14 : la capture complète
 

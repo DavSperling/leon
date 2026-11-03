@@ -334,8 +334,9 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
   - `--previous` revient à la version précédente ;
 - rien ne touche à `accord.json`, à `connexion.json`, au lanceur ni aux crochets ;
 - `--background` n'écrit rien sur la sortie standard ni sur la sortie d'erreur ; sur le disque, il n'écrit que `maj.json`, `cli/` et `runtime/`, comme `leon update`.
+- les mises à jour automatiques ne se font qu'en https : avec une connexion en `http://localhost`, `scheduleUpdate` ne lance rien et `--background` sort 0 sans rien demander au serveur ni rien écrire (un port local peut être servi par un autre compte de la machine). Une installation reliée à un Leon local se met à jour par `~/.leon/bin/leon update`, à la main, qui garde l'http local.
 
-**Tests :** même version : aucun téléchargement ; empreinte fausse : `actuelle` inchangé, rien de laissé ; `--version` qui échoue : `actuelle` inchangé ; succès : `actuelle` pointe sur la nouvelle et la précédente reste ; forme clone : rien ; `briefing` rend la main sans attendre la mise à jour (sa durée ne bouge pas avec un serveur de mise à jour lent).
+**Tests :** même version : aucun téléchargement ; empreinte fausse : `actuelle` inchangé, rien de laissé ; `--version` qui échoue : `actuelle` inchangé ; succès : `actuelle` pointe sur la nouvelle et la précédente reste ; forme clone : rien ; `briefing` rend la main sans attendre la mise à jour (sa durée ne bouge pas avec un serveur de mise à jour lent) ; connexion en http : ni lancement, ni requête, ni écriture en fond, et `leon update` à la main met à jour.
 
 ## Lot 3 : onboarding et Réglages
 

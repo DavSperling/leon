@@ -181,9 +181,9 @@ const addCli = async (version: string) => {
 };
 
 // Une installation de `curl | sh` : le Node et la CLI posés, les liens, la connexion, l'accord et le lanceur.
-async function install() {
+async function install(url = SERVER) {
   await writeConnection(home, {
-    url: SERVER,
+    url,
     jeton: TOKEN,
     ordinateur: 'MacBook-Pro',
     espace: 'Acme',
@@ -286,7 +286,18 @@ describe('readMaj', () => {
 
 describe('scheduleUpdate', () => {
   const start = vi.fn();
-  beforeEach(() => start.mockClear());
+  const connect = (url: string) =>
+    writeConnection(home, {
+      url,
+      jeton: TOKEN,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
+  beforeEach(async () => {
+    start.mockClear();
+    await connect(SERVER);
+  });
   const writeMaj = async (verified: Date | string) => {
     await mkdir(leon, { recursive: true });
     const date = typeof verified === 'string' ? verified : verified.toISOString();
@@ -336,9 +347,33 @@ describe('scheduleUpdate', () => {
   });
 
   it('n’écrit rien sur le disque', async () => {
+    const before = await snapshot();
+
     await schedule();
 
-    expect(await exists(leon)).toBe(false);
+    expect(await snapshot()).toEqual(before);
+  });
+
+  // Un port local peut être servi par un autre compte de la machine : la mise à jour de fond ne se fait qu'en https.
+  it.each(['http://localhost:3000', 'http://127.0.0.1:3000'])(
+    'ne lance rien avec une connexion en %s, maj.json absent ou périmé',
+    async (url) => {
+      await connect(url);
+      expect(await schedule()).toBe(false);
+      await writeMaj(ago(10 * UPDATE_INTERVAL_MS));
+      expect(await schedule()).toBe(false);
+
+      expect(start).not.toHaveBeenCalled();
+    },
+  );
+
+  it('ne lance rien sans connexion valide', async () => {
+    await rm(join(leon, 'connexion.json'));
+    expect(await schedule()).toBe(false);
+    await writeFile(join(leon, 'connexion.json'), '{');
+    expect(await schedule()).toBe(false);
+
+    expect(start).not.toHaveBeenCalled();
   });
 });
 
@@ -652,6 +687,46 @@ describe('runUpdate', () => {
 
       expect(await snapshot()).toEqual(before); // pas même maj.json : le contrôle sera refait
       expectNothingLeaked(err);
+    });
+
+    // Un port local peut être servi par un autre compte de la machine : la mise à jour de fond, lancée seule par chaque
+    // session, ne se fait qu'en https. Lancée à la main, la même connexion met à jour (le développement).
+    describe.each(['http://localhost:3000', 'http://127.0.0.1:3000'])('connexion en %s', (url) => {
+      it('--background ne demande rien au serveur, n’écrit rien et sort 0, sans rien dire', async () => {
+        await install(url);
+        const before = await snapshot();
+        const server = await serve();
+        const { deps, out, err } = setup({ fetch: server.fetch });
+
+        expect(await runUpdate({ previous: false, background: true }, deps)).toBe(0);
+
+        expect(server.calls).toEqual([]);
+        expect(await snapshot()).toEqual(before); // ni maj.json ni verrou
+        expect([out, err]).toEqual([[], []]);
+      });
+
+      it('à la main, met à jour', async () => {
+        await install(url);
+        const server = await serve();
+        const { deps, out } = setup({ fetch: server.fetch });
+
+        expect(await runUpdate({ previous: false }, deps)).toBe(0);
+
+        expect(server.calls).toEqual(['/cli/version.json', `/cli/leon-${V_NEW}.mjs`]);
+        expect(await current('cli/actuelle')).toBe(V_NEW);
+        expect(out.join('\n')).toContain(`Updated Leon to version ${V_NEW}`);
+      });
+    });
+
+    it('--background en https met à jour comme avant', async () => {
+      await install();
+      const server = await serve();
+
+      expect(
+        await runUpdate({ previous: false, background: true }, setup({ fetch: server.fetch }).deps),
+      ).toBe(0);
+
+      expect(await current('cli/actuelle')).toBe(V_NEW);
     });
 
     it('injoignable : échoue sans rien écrire', async () => {

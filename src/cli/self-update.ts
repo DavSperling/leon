@@ -1,7 +1,7 @@
 // Les mises à jour automatiques de la CLI installée (S12 du plan « CLI sans clone », E8). `leon briefing` lance, une
 // fois sa sortie écrite, `leon update --background` détaché si le dernier contrôle (`~/.leon/maj.json`) a 24 h ou plus,
-// et jamais sous la forme clone : la mise à jour n'est donc jamais sur le chemin d'un crochet. `leon update` lit le
-// manifeste K7 à l'adresse du serveur (K2) et, si une autre version est servie :
+// et jamais sous la forme clone ni avec une connexion en http : la mise à jour n'est donc jamais sur le chemin d'un
+// crochet. `leon update` lit le manifeste K7 à l'adresse du serveur (K2) et, si une autre version est servie :
 // 1. si le Node a changé : l'archive officielle de nodejs.org est téléchargée, vérifiée (empreinte du manifeste),
 //    dépaquetée (seul bin/node), lancée (`--version`), posée dans runtime/node-v<version>/, puis `runtime/actuel`
 //    est remplacé d'un coup ;
@@ -81,7 +81,8 @@ export type CliManifest = z.infer<typeof ManifestSchema>;
 // Une erreur de la mise à jour : son message est fixe et peut être dit tel quel.
 class UpdateError extends Error {}
 
-export type UpdateOptions = { previous: boolean };
+// background : la mise à jour lancée seule par `leon briefing` (`--background`), qui ne se fait qu'en https.
+export type UpdateOptions = { previous: boolean; background?: boolean };
 export type UpdateDeps = {
   home: string;
   // La version de cette CLI (`CLI_VERSION` de leon.ts) : CLONE_VERSION sous la forme clone, qui ne se met pas à jour.
@@ -357,6 +358,10 @@ async function updateServer(home: string): Promise<string> {
   return connection.url;
 }
 
+// Un port local (http://localhost) peut être servi par un autre compte de la machine : la mise à jour de fond, lancée
+// seule à chaque session, ne se fait qu'en https. `leon update` à la main garde l'http local, pour le développement.
+const isHttps = (serverUrl: string) => new URL(serverUrl).protocol === 'https:';
+
 async function update(deps: UpdateDeps, serverUrl: string) {
   const p = paths(deps.home);
   const manifest = await fetchManifest(deps, serverUrl);
@@ -449,6 +454,7 @@ export async function runUpdate(options: UpdateOptions, deps: UpdateDeps): Promi
     const p = paths(deps.home);
     // Avant le verrou : sans connexion, rien n'est écrit. `--previous` ne demande rien au serveur.
     const serverUrl = options.previous ? null : await updateServer(deps.home);
+    if (options.background && serverUrl !== null && !isHttps(serverUrl)) return 0;
     if (!(await takeLock(p))) return 0; // l'autre mise à jour fait le travail
     try {
       await (serverUrl === null ? goBack(deps) : update(deps, serverUrl));
@@ -474,10 +480,13 @@ export type ScheduleDeps = {
   start: () => void;
 };
 
-// Lance la mise à jour de fond si elle est due : jamais sous la forme clone ; due quand maj.json manque, est illisible,
-// a 24 h ou plus, ou date du futur (horloge remise en arrière). N'écrit rien. true : elle a été lancée.
+// Lance la mise à jour de fond si elle est due : jamais sous la forme clone, ni sans connexion en https (isHttps) ; due
+// quand maj.json manque, est illisible, a 24 h ou plus, ou date du futur (horloge remise en arrière). N'écrit rien.
+// true : elle a été lancée.
 export async function scheduleUpdate(deps: ScheduleDeps): Promise<boolean> {
   if (deps.cliVersion === CLONE_VERSION) return false;
+  const connection = await readConnection(deps.home);
+  if (connection === null || !isHttps(connection.url)) return false;
   const { verifie_le: checked } = await readMaj(deps.home);
   const age =
     checked === null ? Number.POSITIVE_INFINITY : deps.now().getTime() - checked.getTime();

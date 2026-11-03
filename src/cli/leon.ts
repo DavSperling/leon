@@ -378,7 +378,7 @@ async function runUpdateCommand(args: string[]): Promise<number> {
   });
   const quiet = values.background ?? false;
   const code = await runUpdate(
-    { previous: values.previous ?? false },
+    { previous: values.previous ?? false, background: quiet },
     {
       home: homedir(),
       cliVersion: CLI_VERSION,

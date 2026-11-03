@@ -1,10 +1,11 @@
 // Contrat des mises à jour automatiques (S12 du plan « CLI sans clone ») avec les vrais processus : le fichier construit
 // par `pnpm build:cli`, lancé comme le fera le lanceur (`runtime/actuel/node cli/actuelle/leon.mjs`), contre un vrai
-// serveur HTTP local. Les tests unitaires (self-update.test.ts) voient les fonctions avec un faux `fetch` ; ceux-ci
+// serveur HTTPS local (un certificat jetable, que les processus fils reçoivent par NODE_EXTRA_CA_CERTS) et, pour la
+// connexion de développement, un serveur HTTP local : la mise à jour de fond ne se fait qu'en https. Les tests unitaires (self-update.test.ts) voient les fonctions avec un faux `fetch` ; ceux-ci
 // gardent ce qu'ils ne voient pas : la mise à jour est vraiment détachée (le crochet rend la main sans l'attendre,
 // même quand le serveur de mise à jour est lent), `--background` ne dit rien, le téléchargement passe par un vrai
 // `fetch`, et la forme clone ne lance rien. Tout se passe dans un HOME temporaire : jamais le vrai ~/.leon. Le test
-// ouvre un port : hors de la sandbox.
+// ouvre un port : hors de la sandbox ; il demande `openssl`.
 import { execFile, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
@@ -19,7 +20,8 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import { createServer, type Server } from 'node:http';
+import { createServer as createHttpServer, type Server } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -58,8 +60,11 @@ let manifest: Manifest; // celui de la vraie construction
 let builtFile: string;
 
 // Le faux serveur de Leon : le bloc de démarrage, le manifeste K7 (que `served` remplace) et ses fichiers.
-let server: Server;
+let server: Server; // https
+let httpServer: Server; // http, la connexion d'un développeur
 let origin: string;
+let httpOrigin: string;
+let certFile: string;
 let hits: string[];
 let versionDelayMs: number;
 let served: { manifest: unknown; files: Record<string, Buffer> } | 'broken';
@@ -85,8 +90,19 @@ const backgroundDone = () =>
     'the background update to finish',
   );
 
-function start(): Promise<void> {
-  server = createServer((req, res) => {
+// Un certificat jetable pour 127.0.0.1 : fait pour que `fetch` des processus fils accepte le serveur https.
+async function makeCertificate(): Promise<{ key: string; cert: string }> {
+  const key = join(dir, 'key.pem');
+  certFile = join(dir, 'cert.pem');
+  await run('openssl', [
+    ...['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-subj', '/CN=127.0.0.1'],
+    ...['-addext', 'subjectAltName=IP:127.0.0.1', '-keyout', key, '-out', certFile],
+  ]);
+  return { key: await readFile(key, 'utf8'), cert: await readFile(certFile, 'utf8') };
+}
+
+async function start(): Promise<void> {
+  const handler: Parameters<typeof createHttpServer>[1] = (req, res) => {
     const url = req.url ?? '';
     hits.push(`${req.method} ${url}`);
     req.resume();
@@ -105,14 +121,18 @@ function start(): Promise<void> {
     const file = served === 'broken' ? undefined : served.files[url];
     if (file) return reply(200, file, 'application/octet-stream');
     reply(404, '{}');
-  });
-  return new Promise((done, fail) => {
-    server.once('error', fail);
-    server.listen(0, '127.0.0.1', () => {
-      origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-      done();
+  };
+  server = createHttpsServer(await makeCertificate(), handler);
+  httpServer = createHttpServer(handler);
+  const listen = (target: Server, scheme: string) =>
+    new Promise<string>((done, fail) => {
+      target.once('error', fail);
+      target.listen(0, '127.0.0.1', () =>
+        done(`${scheme}://127.0.0.1:${(target.address() as AddressInfo).port}`),
+      );
     });
-  });
+  origin = await listen(server, 'https');
+  httpOrigin = await listen(httpServer, 'http');
 }
 
 // Un `node` posé : `--version` donne la version du manifeste, le reste est joué par le vrai Node de la machine.
@@ -120,9 +140,9 @@ const nodeScript = (version: string) =>
   `#!/bin/sh\nif [ "$1" = --version ]; then echo v${version}; else exec ${singleQuote(process.execPath)} "$@"; fi\n`;
 
 // ~/.leon comme `curl | sh` le laisse, avec la CLI construite en version en cours.
-async function install() {
+async function install(url = origin) {
   await writeConnection(home, {
-    url: origin,
+    url,
     jeton: TOKEN,
     ordinateur: 'MacBook-Pro',
     espace: 'Acme',
@@ -160,6 +180,7 @@ function runChild(command: string, args: string[], input: string, cwd?: string):
     PATH: process.env.PATH ?? '',
     HOME: home,
     TMPDIR: tmpdir(),
+    NODE_EXTRA_CA_CERTS: certFile,
   };
   return new Promise((done, fail) => {
     const started = performance.now();
@@ -206,7 +227,7 @@ beforeAll(async () => {
 }, BUILD_TIMEOUT_MS);
 
 afterAll(async () => {
-  await new Promise((done) => server.close(done));
+  await Promise.all([server, httpServer].map((s) => new Promise((done) => s.close(done))));
   await rm(dir, { recursive: true, force: true });
 });
 
@@ -271,7 +292,7 @@ describe('leon briefing installé', () => {
 
 describe('leon update installé', () => {
   it(
-    'installe la version annoncée par HTTP, la vérifie, puis --previous revient en arrière',
+    'installe la version annoncée par HTTPS, la vérifie, puis --previous revient en arrière',
     async () => {
       await install();
       serveNewVersion();
@@ -352,6 +373,45 @@ describe('leon update sans connexion', () => {
       expect(await current('cli/actuelle')).toBe(manifest.version);
       expect(await exists(join(leon, 'maj.json'))).toBe(false);
       expect(await exists(join(leon, 'maj.lock'))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+// Un port local peut être servi par un autre compte de la machine : une connexion en http (un serveur de développement)
+// n'est jamais mise à jour en fond ; `leon update` à la main, si.
+describe('connexion en http', () => {
+  it(
+    'briefing ne lance aucune mise à jour, et --background sort 0 sans rien dire, rien demander ni rien écrire',
+    async () => {
+      await install(httpOrigin);
+      serveNewVersion();
+
+      const briefing = await installed(['briefing'], hook());
+      const background = await installed(['update', '--background']);
+      await sleep(1000); // le temps qu'un processus détaché eût lancé sa requête
+
+      expect(briefing.stdout).toContain(BLOCK);
+      expect(background).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      expect(versionRequests()).toBe(0);
+      expect(await current('cli/actuelle')).toBe(manifest.version);
+      expect(await exists(join(leon, 'maj.json'))).toBe(false);
+      expect(await exists(join(leon, 'maj.lock'))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'leon update à la main met à jour',
+    async () => {
+      await install(httpOrigin);
+      serveNewVersion();
+
+      const updated = await installed(['update']);
+
+      expect(updated.code).toBe(0);
+      expect(updated.stdout).toContain(`Updated Leon to version ${V_NEW}`);
+      expect(await current('cli/actuelle')).toBe(V_NEW);
     },
     TEST_TIMEOUT_MS,
   );

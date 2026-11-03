@@ -54,7 +54,7 @@ Total : environ 5,5 jours.
 - **Connexion :** la CLI attend le retour 5 minutes au plus ; le code signé vit 2 minutes ; le retour local n'accepte qu'une requête.
 - **Fichier de la CLI :** 1 Mo au plus (135 Ko le 03/11). Le manifeste en donne la taille exacte, vérifiée au téléchargement.
 - **Node :** 24 (le champ `engines` de `package.json`), version exacte et empreintes par plateforme dans `src/cli/runtime.json`.
-- **Plateformes :** `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64` (Linux dès la v1, A4). Toute autre plateforme s'arrête avec un message clair, sans rien écrire.
+- **Plateformes :** `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64` (Linux dès la v1, A4), Linux avec la glibc seulement : les archives officielles de Node ne démarrent pas sur musl (Alpine, par exemple). Toute autre plateforme, Linux musl compris, s'arrête avec un message clair, sans rien écrire.
 - **Versions gardées :** la version en cours de la CLI et la précédente ; un seul Node.
 
 ## Décisions prises pour ce plan
@@ -274,7 +274,7 @@ Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `e
 **Fichiers :** `src/server/cli/installer-script.ts` (nouveau : le texte du script, l'adresse et les empreintes en paramètres), `src/app/install/route.ts` (nouveau : `GET /install`, `text/plain`, lit `public/cli/version.json` et `BETTER_AUTH_URL`), `src/server/cli/installer-script.test.ts` (nouveau).
 
 **Fait quand :** le script, en `sh` POSIX avec `set -eu` :
-1. détecte la plateforme (`uname -s`, `uname -m`) ; une autre que celles de K7 s'arrête sans rien écrire ;
+1. détecte la plateforme (`uname -s`, `uname -m`) ; une autre que celles de K7 s'arrête sans rien écrire, comme un Linux musl (un `/lib/ld-musl-*` présent, ou `ldd --version` qui nomme musl) ;
 2. crée `~/.leon` en 0700 ;
 3. si `~/.leon/runtime/node-v<version>/node` manque, télécharge `https://nodejs.org/dist/v<version>/node-v<version>-<plateforme>.tar.xz` dans un dossier temporaire, vérifie son empreinte (`shasum -a 256` sur macOS, `sha256sum` sur Linux) contre celle du script, puis n'en extrait que `bin/node` ;
 4. télécharge `/cli/leon-<version>.mjs` depuis l'adresse du serveur, vérifie empreinte et taille, le pose dans `~/.leon/cli/<version>/`, et remplace `cli/actuelle` ;
@@ -285,6 +285,7 @@ Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `e
 - le texte passe `sh -n`, et `shellcheck` s'il est installé sur le poste ;
 - l'adresse et les empreintes y sont, échappées ;
 - `GET /install` répond `text/plain` ;
+- dans un conteneur Alpine, le script s'arrête sur le message musl et `~/.leon` n'existe pas ;
 - un essai de bout en bout dans un `HOME` temporaire, contre un faux serveur local et une fausse archive Node : tout est posé, en bons modes ; avec une empreinte fausse, rien n'est posé.
 
 ### S10 · `leon setup` : une commande pour tout
@@ -373,7 +374,7 @@ Par Amos, le 03/11 ; il porte ce chantier seul.
 - A1. La connexion par renvoi vers l'ordinateur (un clic), et non le code collé du plan du 28/10.
 - A2. La CLI servie par le serveur, sur un Node posé par Leon dans `~/.leon`.
 - A3. Les mises à jour automatiques.
-- A4. Linux (x64 et arm64) dès la v1.
+- A4. Linux (x64 et arm64, glibc) dès la v1 ; musl (Alpine) refusé avec un message clair.
 - A5. Le bloc « Vos outils de code » pour tous les services, en tête pour ceux qui codent.
 - QD1. Pas de signature hors de Railway en v1 : HTTPS, empreinte et taille du manifeste.
 - QD2. L'adresse publique de l'installation est `BETTER_AUTH_URL`.

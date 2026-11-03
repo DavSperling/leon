@@ -58,7 +58,7 @@ Les crochets vivent avec des délais courts : SessionStart 10 s et SessionEnd 30
 - **Le fichier unique.** Vite, déjà installé, construit `src/cli/leon.ts` et tout ce qu'il importe en un seul fichier `leon.mjs`. L'essai du 03/11, hors du dépôt, donne 135 Ko (42 Ko compressé), et `node leon.mjs help` répond en 50 à 60 ms. Il faudra retirer un import de `drizzle-orm` (par `server/log.ts`) et le dossier `public/` que Vite recopie par défaut.
 - **Node posé par Leon, pas celui de l'ordinateur.** Celui qui utilise Claude Code par son installateur natif, Codex, Cursor ou Antigravity n'a pas besoin de Node, donc souvent ne l'a pas. Et quand il l'a, celui de nvm n'est pas dans le `PATH` d'une application lancée depuis le Dock, et celui de Homebrew change de version tout seul. L'installation pose donc le seul exécutable `node` de la version 24 officielle (27,5 Mo à télécharger pour la 24.22.2 sur Mac M1 et suivants) dans `~/.leon/runtime/`. Son empreinte SHA-256 est écrite dans le dépôt de Leon, pas lue sur nodejs.org au moment de l'installation. Les crochets l'appellent par son chemin absolu : plus de `PATH`.
 - **Servi par le serveur de Leon.** `pnpm build`, que Railway lance déjà à chaque déploiement, construit aussi le fichier unique et un petit manifeste (version, empreinte, taille). Le serveur sert le script (`/install`), le fichier et le manifeste. Ni npm, ni GitHub Releases, ni compte à protéger. La CLI et le serveur sortent donc toujours ensemble : la règle « le serveur avant la CLI » du plan mémoire tient d'elle-même.
-- **Plateformes.** macOS (Apple et Intel) et Linux (x64 et arm64) dès la v1, par le même script (`tar`, `sha256sum`, `xdg-open` sous Linux), Linux vérifié dans un conteneur. Windows plus tard.
+- **Plateformes.** macOS (Apple et Intel) et Linux (x64 et arm64) dès la v1, par le même script (`tar`, `sha256sum`, `xdg-open` sous Linux), Linux vérifié dans un conteneur. Linux avec la glibc seulement : les archives officielles de Node ne démarrent pas sur musl (Alpine), que le script refuse avec un message clair. Windows plus tard.
 
 Le plan du 28/10 gardait le Node de l'ordinateur (22.15 ou plus) et le Mac seul. Il visait des développeurs ; ce chantier vise aussi ceux qui ne le sont pas.
 
@@ -169,7 +169,7 @@ Amos a tranché le 3 novembre ; il porte ce chantier seul.
 - A1. La connexion par renvoi vers l'ordinateur, en un clic, et non le code collé du 28/10.
 - A2. Un Node posé par Leon dans `~/.leon`, et non celui de l'ordinateur.
 - A3. Les mises à jour automatiques.
-- A4. Linux (x64 et arm64) dès la v1.
+- A4. Linux (x64 et arm64, glibc) dès la v1 ; musl (Alpine) refusé avec un message clair.
 - A5. Le bloc « Vos outils de code » montré à tous les services, en tête pour ceux qui codent.
 - QD1. La CLI servie par le serveur de production, sans signature hors de Railway en v1 : HTTPS, empreinte et taille du manifeste.
 - QD2. L'adresse publique de l'installation est celle de `BETTER_AUTH_URL`.

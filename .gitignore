@@ -25,6 +25,9 @@ next-env.d.ts
 *.tsbuildinfo
 .pnpm-store/
 
+# La CLI construite (pnpm build:cli), servie par le serveur sous /cli/
+/public/cli/
+
 # Extension
 extension/.output/
 extension/.wxt/

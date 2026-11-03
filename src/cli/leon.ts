@@ -28,8 +28,14 @@ import { openInBrowser, parseLoginArgs, readTokenFromInput, runLogin, runLogout 
 import { gitInDirectory } from './project-key';
 import { uninstallHooks } from './uninstall-hooks';
 
-// Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
+// Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts). Cette valeur ne vaut que sous la
+// forme clone : dans le fichier construit (vite.cli.config.ts), import.meta.url pointe vers ~/.leon/cli/<version>/,
+// et `installer-crochets` refuse alors ce dossier ("not a Leon repository") tant que --depot n'en désigne pas un.
 const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
+
+// Injectée par la construction (`define`, vite.cli.config.ts) ; absente sous le clone, qui lance le TypeScript.
+declare const __LEON_CLI_VERSION__: string | undefined;
+const CLI_VERSION = typeof __LEON_CLI_VERSION__ === 'string' ? __LEON_CLI_VERSION__ : 'dev';
 
 // Après `leon retirer-crochets`, Claude Code est en version 0 dans l'accord : plus rien ne part, même d'un crochet
 // resté dans les réglages d'un projet (C7). `briefing` le vérifie lui-même (briefing.ts).
@@ -64,6 +70,7 @@ Commands:
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code
       --outil <tool>       the tool to remove: claude_code (the only one for now, and the default)
+  --version            Print the version of this CLI ("dev" when run from a clone)
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
 LEON_URL and LEON_TOKEN.`;
@@ -275,6 +282,10 @@ async function runLoginCommand(args: string[]): Promise<number> {
 
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
+  if (command === '--version') {
+    console.log(CLI_VERSION);
+    return 0;
+  }
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();

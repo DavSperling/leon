@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "pnpm build:cli && next build --webpack",
+    "build:cli": "vite build --config vite.cli.config.ts",
     "start": "next start",
     "typecheck": "tsc --noEmit && tsc --noEmit -p extension",
     "lint": "biome check .",

@@ -1,5 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
-import { basename, isAbsolute, sep } from 'node:path';
+import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
@@ -10,7 +10,6 @@ import {
   IngestResultSchema,
   TURNS_PER_BATCH_MAX,
 } from '../capture/turn';
-import { logError } from '../server/log';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
@@ -252,7 +251,9 @@ export async function importClaudeCode(
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;
-      logError('import_claude_code_session', error, { file: basename(file) });
+      // Message fixe : l'erreur peut citer du texte de conversation, et la CLI construite en un seul fichier
+      // (S06) n'embarque rien de src/server, `logError` compris.
+      console.error('Leon: a session could not be imported (unexpected error).');
     }
   }
   return summary;

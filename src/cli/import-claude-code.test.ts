@@ -222,8 +222,8 @@ describe('importClaudeCode', () => {
     expect(ids).not.toContain(ACME_SESSION);
   });
 
-  it("compte l'échec d'une session sans arrêter les suivantes", async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("compte l'échec d'une session sans arrêter les suivantes, avec un message fixe", async () => {
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { deps, send } = makeDeps(async (payload) => {
       if (payload.source.external_id === ACME_SESSION) throw new Error('réseau coupé');
       return RESULT;
@@ -233,6 +233,11 @@ describe('importClaudeCode', () => {
 
     expect(send).toHaveBeenCalledTimes(3);
     expect(summary).toMatchObject({ sessions: 3, failures: 1, inserted: 4 });
+    // Le message d'une erreur peut citer du texte de conversation : la CLI n'en recopie rien (et n'importe plus
+    // server/log, que le fichier construit n'embarque pas).
+    expect(stderr.mock.calls).toEqual([
+      ['Leon: a session could not be imported (unexpected error).'],
+    ]);
   });
 
   it('arrête tout quand le jeton est refusé', async () => {

@@ -979,7 +979,7 @@ Contrat : `api-contract.db.test.ts`.
 - A3. Mettre à jour Cursor (3.27 ou plus) et Antigravity pour les essais T26 et T31 ? Quel Antigravity utilises-tu (l'app 2.0, l'IDE ou la CLI `agy`), et quel Codex (la CLI, l'app Desktop ou l'extension) ?
 - A4. Les replis par fichier dans le dépôt, exclus par le fichier d'exclusion local de git, si un essai les demande ?
 - A5. Le RAG au premier prompt, éteint tant que tu ne l'allumes pas ?
-- A6. La distribution de la CLI hors d'un clone de Leon, comme chantier à part ? Sans elle, seuls ceux qui ont un clone en profitent.
+- A6. La distribution de la CLI hors d'un clone de Leon, comme chantier à part ? Sans elle, seuls ceux qui ont un clone en profitent. Réponse proposée le 03/11 : l'[étude](../etudes/cli-sans-clone-2026-11/README.md) et le [plan](2026-11-03-cli-sans-clone.md), qui amendent D10 et reprennent le lanceur de T16.
 - A7. Les sessions web (claude.ai, ChatGPT) sans fiche ni résumé dans ce chantier ?
 
 **Pour David :**

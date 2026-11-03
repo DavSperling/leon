@@ -190,6 +190,29 @@ describe('extractClaudeCodeFacts', () => {
     expect(extractClaudeCodeFacts(contenu, RACINE).fichiers).toEqual(['src/a.ts']);
   });
 
+  // Le flux de l'équipe (CLAUDE.md) : la session s'ouvre dans le clone, le travail se fait dans un worktree.
+  it('rend relatif au worktree un fichier écrit dans .claude/worktrees/<nom>/ du clone', () => {
+    const contenu = [
+      appel('w1', 'Write', { file_path: `${RACINE}/.claude/worktrees/sujet/src/a.ts` }),
+      resultat('w1', 'ok'),
+      appel('w2', 'Write', { file_path: `${RACINE}/README.md` }),
+      resultat('w2', 'ok'),
+      appel('w3', 'Edit', { file_path: `${RACINE}-wt/src/b.ts` }),
+      resultat('w3', 'ok'),
+    ].join('\n');
+
+    expect(extractClaudeCodeFacts(contenu, RACINE).fichiers).toEqual(['src/a.ts', 'README.md']);
+  });
+
+  it('sans racine de dépôt (session ouverte hors de tout dépôt), aucun fichier', () => {
+    const contenu = [
+      appel('w1', 'Write', { file_path: '/Users/demo/Documents/perso/notes.md' }),
+      resultat('w1', 'ok'),
+    ].join('\n');
+
+    expect(extractClaudeCodeFacts(contenu, null).fichiers).toEqual([]);
+  });
+
   it('ignore un sous-agent (isSidechain), mais l’appel Agent marque la session externe', () => {
     const sousAgent = { isSidechain: true };
     const contenu = [

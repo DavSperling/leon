@@ -4,14 +4,15 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { CODE_SESSION_KINDS } from '../capture/turn';
 import { runBriefing } from './briefing';
 import {
   captureSessionFromHook,
-  createHookSender,
+  isOtherToolHook,
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
-import { consentWithdrawn, factsConsent } from './consent';
+import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
 import {
   countOf,
@@ -30,9 +31,7 @@ import { uninstallHooks } from './uninstall-hooks';
 const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
 // Après `leon retirer-crochets`, Claude Code est en version 0 dans l'accord : plus rien ne part, même d'un crochet
-// resté dans les réglages d'un projet (C7).
-const WITHDRAWN =
-  'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.';
+// resté dans les réglages d'un projet (C7). `briefing` le vérifie lui-même (briefing.ts).
 const withdrawn = () => consentWithdrawn(homedir(), 'claude_code');
 
 const HELP = `Usage: pnpm leon <command>
@@ -42,10 +41,13 @@ Commands:
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
       --dry-run            print what would be sent (one JSON line per request), send nothing
-  briefing             Print your recent sessions on this repository and the project's morning briefing (for
-                       Claude Code's SessionStart hook: the hook JSON is read from standard input)
-  capter-session       Send the session that is ending, with its project (for Claude Code's SessionEnd
-                       hook: the hook JSON is read from standard input)
+  briefing             Send the project key (plus the current Git branch and the session id, if ~/.leon/accord.json
+                       allows it) and print the block that comes back: your recent sessions on this repository and
+                       the project's morning briefing (for Claude Code's SessionStart hook: the hook JSON is read
+                       from standard input)
+  capter-session       Send the session that is ending: the text of the exchanges, with its project, and the actions
+                       of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
+                       JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
                        settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in
@@ -54,6 +56,7 @@ Commands:
       --depot <path>       Leon repository named in the hook commands (default: the one running this command)
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code
+      --outil <tool>       the tool to remove: claude_code (the only one for now, and the default)
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need LEON_URL and LEON_TOKEN.`;
 
@@ -73,12 +76,13 @@ async function runImport(args: string[]): Promise<number> {
   });
   const since = parseSince(values.since);
   const dryRun = values['dry-run'] ?? false;
-  if (await withdrawn()) throw new Error(WITHDRAWN);
+  if (await withdrawn()) throw new Error(CONSENT_WITHDRAWN_MESSAGE);
   const nothingSent = async (): Promise<never> => {
     throw new Error('Nothing is sent with --dry-run.');
   };
   const env = dryRun ? null : parseServerEnv(process.env);
-  // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts).
+  // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts), et seulement ceux des
+  // fichiers modifiés après lui.
   const accord = await factsConsent(homedir(), 'claude_code');
   const deps: ImportDeps = {
     out: console.log,
@@ -86,7 +90,13 @@ async function runImport(args: string[]): Promise<number> {
     send: env ? createIngestSender(fetch, env) : nothingSent,
     ...(accord === null
       ? {}
-      : { facts: { accord, send: env ? createFactsSender(fetch, env) : nothingSent } }),
+      : {
+          facts: {
+            accord: accord.version,
+            depuis: accord.installe_le,
+            send: env ? createFactsSender(fetch, env) : nothingSent,
+          },
+        }),
   };
 
   const summary = await importClaudeCode(
@@ -106,10 +116,6 @@ async function runImport(args: string[]): Promise<number> {
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
 async function runBriefingCommand(): Promise<number> {
   try {
-    if (await withdrawn()) {
-      console.error(WITHDRAWN);
-      return 0;
-    }
     return await runBriefing({
       stdin: process.stdin,
       env: process.env,
@@ -130,11 +136,14 @@ async function runBriefingCommand(): Promise<number> {
 
 // Le crochet SessionEnd ne doit jamais gêner Claude Code : le code de sortie vaut toujours 0 et les messages
 // ne citent ni la session ni l'adresse du serveur (voir capture-session.ts). Rien n'est écrit sur la sortie
-// standard.
+// standard, et rien du tout quand un autre outil la lance (isOtherToolHook) : la garde passe avant l'accord et la
+// configuration.
 async function runCaptureSession(args: string[]): Promise<number> {
   try {
+    const stdin = await readHookStdin(process.stdin);
+    if (isOtherToolHook(stdin, process.env, homedir())) return 0;
     if (await withdrawn()) {
-      console.error(WITHDRAWN);
+      console.error(CONSENT_WITHDRAWN_MESSAGE);
       return 0;
     }
     let env: ServerEnv;
@@ -154,18 +163,20 @@ async function runCaptureSession(args: string[]): Promise<number> {
     const delay = typeof values['delai-ms'] === 'string' ? values['delai-ms'] : undefined;
     const deadlineMs = parseDeadlineMs(delay);
     const projectDir = process.env.CLAUDE_PROJECT_DIR;
-    // Les faits ne partent que si l'accord local le permet (consent.ts), sous le délai du crochet, lancé en même
-    // temps que celui des tours.
+    // Les faits ne partent que si l'accord local le permet (consent.ts). Un seul délai, lancé une fois l'entrée lue,
+    // borne les tours et les faits ensemble (HOOK_DEADLINE_MS).
     const accord = await factsConsent(homedir(), 'claude_code');
     const signal = AbortSignal.timeout(deadlineMs);
-    return await captureSessionFromHook(await readHookStdin(process.stdin), {
-      send: createHookSender(fetch, env, deadlineMs),
+    return await captureSessionFromHook(stdin, {
+      send: createIngestSender(fetch, env, { signal }),
       ...(accord === null
         ? {}
-        : { facts: { accord, send: createFactsSender(fetch, env, { signal }) } }),
+        : { facts: { accord: accord.version, send: createFactsSender(fetch, env, { signal }) } }),
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
+      env: process.env,
+      home: homedir(),
       ...(projectDir ? { projectDir } : {}),
     });
   } catch {
@@ -218,10 +229,15 @@ async function runInstallHooks(args: string[]): Promise<number> {
   }
 }
 
-// Comme l'installateur, le retrait vise les réglages de CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude. Aucune
-// option : une option inconnue (un `--outil` d'un lot à venir) arrête la commande sans rien retirer.
+// Comme l'installateur, le retrait vise les réglages de CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude.
+// `--outil` n'accepte que les outils que Leon capte (claude_code au lot 1) : un autre, ou une option inconnue,
+// arrête la commande sans rien retirer. Le message ne recopie pas la valeur reçue.
 async function runUninstallHooks(args: string[]): Promise<number> {
-  parseArgs({ args, options: {} });
+  const { values } = parseArgs({ args, options: { outil: { type: 'string' } } });
+  const tools: readonly string[] = CODE_SESSION_KINDS;
+  if (values.outil !== undefined && !tools.includes(values.outil)) {
+    throw new Error(`--outil: unknown tool (the only one for now: ${tools.join(', ')}).`);
+  }
   const configDir = claudeConfigDir(process.env);
   if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
   return uninstallHooks({ configDir, home: homedir() }, { out: console.log, err: console.error });

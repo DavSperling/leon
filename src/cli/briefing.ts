@@ -36,7 +36,7 @@ import {
   ContextResponseSchema,
 } from '../capture/api-contract';
 import { isOtherToolHook, readHookStdin } from './capture-session';
-import { factsConsent } from './consent';
+import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { parseServerEnv, type ServerEnv } from './env';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
@@ -158,11 +158,17 @@ export type BriefingCommandDeps = {
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
 // l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code. Lancée par un autre
-// outil (Cursor, Codex : isOtherToolHook), elle n'écrit rien, pas même un message de configuration.
+// outil (Cursor, Codex : isOtherToolHook), elle n'écrit rien, pas même un message de configuration ou de retrait.
+// L'accord retiré (version 0, consent.ts), elle ne demande rien et ne lance pas git.
 export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
   try {
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
     if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
+    // Après la garde : sous un autre outil, même ce message ne s'écrit pas.
+    if (await consentWithdrawn(deps.home, 'claude_code')) {
+      deps.err(CONSENT_WITHDRAWN_MESSAGE);
+      return 0;
+    }
     const server = parseServerEnv(deps.env);
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;

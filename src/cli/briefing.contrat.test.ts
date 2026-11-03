@@ -236,6 +236,20 @@ describe('leon briefing : la vraie commande', () => {
     TEST_TIMEOUT_MS,
   );
 
+  // Cursor reprend les crochets de Claude Code (T06) : la commande sort sans rien écrire, pas même le retrait.
+  it(
+    "sous Cursor (CURSOR_VERSION posé), avec l'accord retiré : code 0, rien d'écrit ni de demandé",
+    async () => {
+      await writeConsent(home, 'claude_code', 0);
+
+      const outcome = await runCommand(hookJson(repo), { CURSOR_VERSION: '2.4.27' });
+
+      expect(outcome).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
   it(
     'sans JSON du crochet et avec une entrée standard jamais fermée, prend INIT_CWD sans rester suspendue',
     async () => {

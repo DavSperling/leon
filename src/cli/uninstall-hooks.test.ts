@@ -266,6 +266,19 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
     });
   });
 
+  it('un accord.json coupé est réécrit en version 0', async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(consentPath(home), '{"outils": {"claude_code": {"vers');
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(`Consent withdrawn in ${consentPath(home)}`);
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.version).toBe(
+      0,
+    );
+  });
+
   it('un accord qui ne s’écrit pas : message clair et code 1', async () => {
     home = join(dir, 'home-fichier'); // un fichier à la place du dossier personnel : ~/.leon ne se crée pas
     await writeFile(home, '');
@@ -341,14 +354,39 @@ describe('leon retirer-crochets : la vraie commande', () => {
     expect(imported).toEqual({ code: 1, stdout: '', stderr: WITHDRAWN });
   }, 60_000);
 
-  it('refuse une option qu’elle ne connaît pas, sans rien retirer', async () => {
-    const text = await writeSettings({ hooks: { SessionStart: [leonStart()] } });
+  it('accepte --outil claude_code, le seul outil du lot 1', async () => {
+    await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
 
-    const run = await leon(['retirer-crochets', '--outil', 'codex']);
+    const run = await leon(['retirer-crochets', '--outil', 'claude_code']);
 
-    expect(run.code).toBe(1);
-    expect(await readFile(settingsPath, 'utf8')).toBe(text);
-    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+    expect(run.code).toBe(0);
+    expect(run.stdout).toBe(`${removedText()}\n`);
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
+  }, 30_000);
+
+  it.each([[['--outil', 'codex']], [['--outil']], [['--autre']]])(
+    'refuse %j sans rien retirer, par un message fixe',
+    async (options) => {
+      const text = await writeSettings({ hooks: { SessionStart: [leonStart()] } });
+
+      const run = await leon(['retirer-crochets', ...options]);
+
+      expect(run.code).toBe(1);
+      expect(run.stdout).toBe('');
+      expect(await readFile(settingsPath, 'utf8')).toBe(text);
+      expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+    },
+    30_000,
+  );
+
+  it('ne recopie pas l’outil inconnu dans son message', async () => {
+    const run = await leon(['retirer-crochets', '--outil', 'MOT-INCONNU']);
+
+    expect(run).toEqual({
+      code: 1,
+      stdout: '',
+      stderr: '--outil: unknown tool (the only one for now: claude_code).\n',
+    });
   }, 30_000);
 });
 

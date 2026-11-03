@@ -582,7 +582,7 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
     expect(run.code).toBe(0);
     expect(run.questions).toHaveLength(1);
     expect(run.output).toContain(CONSENT_TEXT);
-    expect(await factsConsent(home, 'claude_code')).toBe(2);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
     expect(await readFile(settingsPath, 'utf8')).toBe(before);
     // Ni sauvegarde ni fichier de travail : settings.json n'est pas touché.
     expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
@@ -605,6 +605,30 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
     expect(await readFile(settingsPath, 'utf8')).toBe(before);
   });
 
+  it('crochets en place, accord retiré, réponse « non » : dit que rien ne part, mot pour mot', async () => {
+    await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 0);
+    const consentBefore = await readFile(consentPath(home), 'utf8');
+
+    const run = await install({ answers: ['non'] });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(
+      `Both Leon hooks are already in place in ${settingsPath}, but your consent was withdrawn: for now, they send nothing.`,
+    );
+    expect(run.output).toContain('Nothing was written: the hooks keep sending nothing.');
+    expect(run.output).not.toContain('only the text of the exchanges');
+    expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
+  });
+
+  it('après l’écriture, donne la commande de retrait', async () => {
+    const run = await install({ assumeYes: true });
+
+    expect(run.output).toContain(
+      'To remove them, run `pnpm leon retirer-crochets` (it also withdraws your consent).',
+    );
+  });
+
   it('crochets en place, sans accord, avec --oui : écrit l’accord sans rien demander', async () => {
     await leonHooksInPlace();
 
@@ -612,7 +636,7 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 
     expect(run.questions).toEqual([]);
     expect(run.output).toContain(CONSENT_TEXT);
-    expect(await factsConsent(home, 'claude_code')).toBe(2);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
   });
 
   it('ne rabaisse jamais un accord plus récent', async () => {
@@ -620,7 +644,7 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 
     await install({ assumeYes: true });
 
-    expect(await factsConsent(home, 'claude_code')).toBe(3);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(3);
   });
 
   it('un accord qui ne s’écrit pas : message clair et code 1, les crochets restent en place', async () => {

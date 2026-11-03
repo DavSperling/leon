@@ -18,7 +18,7 @@ import {
   fetchStartText,
   runBriefing,
 } from './briefing';
-import { writeConsent } from './consent';
+import { CONSENT_WITHDRAWN_MESSAGE, writeConsent } from './consent';
 import type { GitRunner } from './project-key';
 
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
@@ -223,15 +223,18 @@ describe('briefingDirectory', () => {
 describe('runBriefing', () => {
   const serverEnv = { LEON_URL: env.url, LEON_TOKEN: env.token };
   // L'accord local (C7), dans des HOME temporaires : jamais le vrai ~/.leon. `agreed` a l'accord en version 2 ;
-  // `notAgreed` n'en a aucun (crochets installés avant ce chantier).
+  // `notAgreed` n'en a aucun (crochets installés avant ce chantier) ; `withdrawn` l'a retiré (version 0).
   let homes: string;
   let agreed: string;
   let notAgreed: string;
+  let withdrawn: string;
   beforeAll(async () => {
     homes = await mkdtemp(join(tmpdir(), 'leon-point-'));
     agreed = join(homes, 'accord');
     notAgreed = join(homes, 'sans-accord');
+    withdrawn = join(homes, 'retire');
     await writeConsent(agreed, 'claude_code', 2);
+    await writeConsent(withdrawn, 'claude_code', 0);
   });
   afterAll(() => rm(homes, { recursive: true, force: true }));
   const hookJson = (cwd: string) =>
@@ -476,6 +479,20 @@ describe('runBriefing', () => {
     expect(err.join('\n')).toMatch(/LEON_URL/);
   });
 
+  it('accord retiré : code 0, le seul message du retrait, sans rien demander ni lancer git', async () => {
+    const { run, out, err, git, fetchImpl } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      home: withdrawn,
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(out).toEqual([]);
+    expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(git).not.toHaveBeenCalled();
+  });
+
   // Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés
   // à sa migration. Chaque outil reçoit le bloc par son propre crochet : rien en double, et rien ne part.
   describe('lancée par un autre outil que Claude Code', () => {
@@ -510,6 +527,20 @@ describe('runBriefing', () => {
       expect(err).toEqual([]);
       expect(fetchImpl).not.toHaveBeenCalled();
       expect(git).not.toHaveBeenCalled();
+    });
+
+    it('sous Cursor, n’écrit rien même avec l’accord retiré', async () => {
+      const { run, out, err, fetchImpl } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        env: { ...serverEnv, CURSOR_VERSION: '1.7.2' },
+        home: withdrawn,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([]);
+      expect(err).toEqual([]);
+      expect(fetchImpl).not.toHaveBeenCalled();
     });
 
     it('sous Cursor, n’écrit rien même sans LEON_URL', async () => {

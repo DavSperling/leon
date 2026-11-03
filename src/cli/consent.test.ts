@@ -1,8 +1,14 @@
-import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { consentPath, consentWithdrawn, factsConsent, writeConsent } from './consent';
+import {
+  consentPath,
+  consentWithdrawn,
+  factsConsent,
+  withdrawalRecorded,
+  writeConsent,
+} from './consent';
 
 // L'accord local (C7), toujours dans un HOME temporaire : jamais le vrai ~/.leon.
 let home: string;
@@ -24,15 +30,18 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
     expect(await factsConsent(home, 'claude_code')).toBeNull();
   });
 
-  it('en version 2, rend la version à transmettre avec les faits', async () => {
-    await writeConsent(home, 'claude_code', 2);
+  it('en version 2, rend la version à transmettre avec les faits, et sa date', async () => {
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
 
-    expect(await factsConsent(home, 'claude_code')).toBe(2);
+    expect(await factsConsent(home, 'claude_code')).toEqual({
+      version: 2,
+      installe_le: new Date('2026-11-02T14:00:00Z'),
+    });
   });
 
   it('une version plus haute est transmise telle quelle, une version sous 2 ne suffit pas', async () => {
     await writeConsent(home, 'claude_code', 3);
-    expect(await factsConsent(home, 'claude_code')).toBe(3);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(3);
 
     await writeConsent(home, 'claude_code', 1);
     expect(await factsConsent(home, 'claude_code')).toBeNull();
@@ -61,7 +70,19 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       '{ "outils": { "claude_code": { "version": 2, "installe_le": "2026-11-02T14:00:00Z" } } }',
     );
 
-    expect(await factsConsent(home, 'claude_code')).toBe(2);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
+  });
+
+  it('lit une date à décalage horaire, et ne regarde que l’entrée de cet outil', async () => {
+    await writeRaw(
+      '{"outils":{"claude_code":{"version":2,"installe_le":"2026-11-02T15:00:00+01:00"},"codex":{"version":"x"}}}',
+    );
+
+    expect(await factsConsent(home, 'claude_code')).toEqual({
+      version: 2,
+      installe_le: new Date('2026-11-02T14:00:00Z'),
+    });
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
   });
 });
 
@@ -74,6 +95,54 @@ describe('consentWithdrawn : après `leon retirer-crochets`, plus rien ne part',
 
     await writeConsent(home, 'claude_code', 0);
     expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
+  });
+
+  it('un ~/.leon qui n’est pas un dossier vaut un accord absent', async () => {
+    await writeFile(join(home, '.leon'), '');
+
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+  });
+
+  it('un fichier sans entrée pour cet outil ne retire rien', async () => {
+    await writeRaw('{"outils":{}}');
+
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+  });
+
+  // Un fichier abîmé (retouché à la main, écriture coupée) ne lève jamais un retrait : il le vaut.
+  it.each([
+    [
+      'la version 0 à côté d’un autre outil hors schéma',
+      '{"outils":{"claude_code":{"version":0,"installe_le":"2026-11-02T14:00:00.000Z"},"codex":{"version":2}}}',
+    ],
+    [
+      'la version 0 avec une date à décalage horaire',
+      '{"outils":{"claude_code":{"version":0,"installe_le":"2026-11-02T15:00:00+01:00"}}}',
+    ],
+    ['la version 0 sans date', '{"outils":{"claude_code":{"version":0}}}'],
+    ['un fichier coupé', '{"outils": {"claude_code": {"vers'],
+    ['un fichier vide', ''],
+    ['sans objet outils', '{}'],
+  ])('%s : retiré, et aucun accord pour les faits', async (_name, content) => {
+    await writeRaw(content);
+
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
+    expect(await factsConsent(home, 'claude_code')).toBeNull();
+  });
+});
+
+describe('withdrawalRecorded : le retrait est bien écrit', () => {
+  it('vrai seulement quand le fichier se lit et que l’outil y est en version 0', async () => {
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
+
+    await writeConsent(home, 'claude_code', 2);
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
+
+    await writeConsent(home, 'claude_code', 0);
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(true);
+
+    await writeRaw('{"outils": {"claude_code": {"vers');
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
   });
 });
 
@@ -109,5 +178,28 @@ describe('writeConsent', () => {
         claude_code: { version: 2, installe_le: '2026-11-02T14:00:00.000Z' },
       },
     });
+  });
+
+  it('garde mot pour mot l’entrée d’un autre outil, même hors schéma', async () => {
+    const codex = { version: 2, installe_le: '2026-11-01T11:00:00+01:00', note: 'à la main' };
+    await writeRaw(JSON.stringify({ outils: { codex } }));
+
+    await writeConsent(home, 'claude_code', 3, new Date('2026-11-02T14:00:00Z'));
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils).toEqual({
+      codex,
+      claude_code: { version: 3, installe_le: '2026-11-02T14:00:00.000Z' },
+    });
+  });
+
+  it('réécrit un fichier coupé avec ce seul outil, sans laisser de fichier voisin', async () => {
+    await writeRaw('{"outils": {"claude_code": {"vers');
+
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-02T14:00:00Z'));
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8'))).toEqual({
+      outils: { claude_code: { version: 0, installe_le: '2026-11-02T14:00:00.000Z' } },
+    });
+    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
   });
 });

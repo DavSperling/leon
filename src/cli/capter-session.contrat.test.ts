@@ -123,7 +123,9 @@ const hookJson = (transcriptPath: string) =>
   });
 
 // Lance `node --import tsx src/cli/leon.ts capter-session` depuis la racine du dépôt de Leon (comme
-// `pnpm --dir <dépôt> leon …`), avec un environnement réduit à ce que la commande demande.
+// `pnpm --dir <dépôt> leon …`), avec un environnement réduit à ce que la commande demande. Pas le vrai pnpm : son
+// script `leon` charge le .env.local du dépôt, dont un LEON_URL réel prendrait la place d'une variable vide ici. La
+// ligne pnpm des crochets est gardée à part, dans un dépôt jetable (hook-commands.contrat.test.ts).
 function runCommand(input: string, extra: { env?: Record<string, string>; args?: string[] } = {}) {
   return new Promise<Outcome>((done, fail) => {
     const started = Date.now();
@@ -295,6 +297,28 @@ describe('leon capter-session : la vraie commande', () => {
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
       expect(outcome.stderr).toMatch(/LEON_TOKEN/);
+      expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Cursor reprend les crochets de Claude Code (T06) : la commande sort sans rien écrire, avant même de lire sa
+  // configuration ou l'accord.
+  it(
+    "sous Cursor (CURSOR_VERSION posé), sans LEON_URL ou avec l'accord retiré : code 0, rien d'écrit ni d'envoyé",
+    async () => {
+      const transcript = await writeSession();
+      const cursor = { CURSOR_VERSION: '2.4.27' };
+
+      const missingUrl = await runCommand(hookJson(transcript), {
+        env: { ...cursor, LEON_URL: '' },
+      });
+      await writeConsent(home, 'claude_code', 0);
+      const withdrawn = await runCommand(hookJson(transcript), { env: cursor });
+
+      for (const outcome of [missingUrl, withdrawn]) {
+        expect(outcome).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      }
       expect(received).toHaveLength(0);
     },
     TEST_TIMEOUT_MS,

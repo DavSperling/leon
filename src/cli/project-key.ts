@@ -79,6 +79,17 @@ function githubOwnerAndRepo(remote: string): string | null {
   return `${owner}/${repo}`;
 }
 
+// La racine du dépôt git d'un dossier, ou null hors de tout dépôt (ou si git manque, échoue). `--show-cdup` est
+// relatif au dossier : la racine garde la forme du chemin reçu, celle des chemins du transcript, là où
+// `--show-toplevel` rendrait le chemin réel (/private/var… sous macOS) et ne correspondrait à aucun d'eux.
+export async function repoRootFor(cwd: string, git: GitRunner): Promise<string | null> {
+  const output = await git(['rev-parse', '--is-inside-work-tree', '--show-cdup'], cwd).catch(
+    () => null,
+  );
+  const [inside, cdup = ''] = output?.split('\n') ?? [];
+  return inside === 'true' ? resolve(cwd, cdup) : null;
+}
+
 // La clé du projet d'un dossier (D9) : le dépôt GitHub de son remote origin (`github.com/<propriétaire>/<dépôt>`,
 // en minuscules), sinon le dossier lui-même (`dossier:` et 16 hexadécimaux du sha256 de son chemin absolu).
 // Ni l'adresse brute du remote ni ce qu'elle contient d'autre que le propriétaire et le dépôt n'en sortent.

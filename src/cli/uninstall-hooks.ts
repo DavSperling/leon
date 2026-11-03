@@ -8,16 +8,18 @@
 // - passe Claude Code en version 0 dans `accord.json` (consent.ts), même quand les réglages n'ont pas pu être lus ou
 //   écrits : plus rien ne part alors (leon.ts), ni d'un crochet resté dans les réglages d'un projet, ni de
 //   `import-claude-code` ;
-// - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie jamais le contenu des réglages dans
-//   ses messages.
+// - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
+//   les commandes de Leon qu'il retire.
 import { join } from 'node:path';
-import { consentPath, consentWithdrawn, writeConsent } from './consent';
+import { consentPath, withdrawalRecorded, writeConsent } from './consent';
 import {
+  errorCode,
   HOOKS,
   isLeonHandler,
   isRecord,
   type Json,
   load,
+  parseSettings,
   SETTINGS_FILE,
   writeAtomically,
 } from './install-hooks';
@@ -63,23 +65,11 @@ export function removeLeonHooks(settings: Json): { settings: Json; removed: Remo
 export type UninstallOptions = { configDir: string; home: string };
 export type UninstallDeps = { out: (text: string) => void; err: (text: string) => void };
 
-const errorCode = (error: unknown): string | undefined => {
-  const code = (error as NodeJS.ErrnoException | null)?.code;
-  return typeof code === 'string' ? code : undefined;
-};
-
 // Rend true si les réglages n'ont plus de crochet de Leon (retirés à l'instant ou absents).
 async function removeFromSettings(path: string, deps: UninstallDeps): Promise<boolean> {
   const loaded = await load(path);
-  let settings: unknown = {};
-  if (loaded.kind === 'present' && loaded.text.trim() !== '') {
-    try {
-      settings = JSON.parse(loaded.text);
-    } catch {
-      settings = null;
-    }
-  }
-  if (loaded.kind === 'unreadable' || !isRecord(settings)) {
+  const settings = parseSettings(loaded);
+  if (settings === null) {
     deps.err(
       `Leon: ${path} is unreadable (not a valid JSON object, or an inaccessible file): no hook was removed. Fix the file and run the command again, or delete the Leon entries by hand (${README_HINT}).`,
     );
@@ -110,7 +100,8 @@ async function removeFromSettings(path: string, deps: UninstallDeps): Promise<bo
 
 async function withdrawConsent(home: string, deps: UninstallDeps): Promise<boolean> {
   const path = consentPath(home);
-  if (await consentWithdrawn(home, 'claude_code')) {
+  // Un fichier illisible vaut déjà un retrait, mais il est réécrit : la version 0 y est alors bien posée.
+  if (await withdrawalRecorded(home, 'claude_code')) {
     deps.out(`Consent already withdrawn in ${path}.`);
     return true;
   }

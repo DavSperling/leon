@@ -11,7 +11,6 @@ import { type IngestPayload, type IngestResult, TURNS_PER_BATCH_MAX } from '../c
 import {
   type CaptureDeps,
   captureSessionFromHook,
-  createHookSender,
   HOOK_DEADLINE_MS,
   parseDeadlineMs,
   readHookStdin,
@@ -125,8 +124,10 @@ function makeDeps(
   const readSessionFile = vi.fn<CaptureDeps['readFile']>(
     overrides.readFile ?? (async () => session),
   );
+  // Par défaut, chaque dossier est la racine d'un dépôt (rev-parse) dont le remote est `remote`.
   const git = vi.fn<CaptureDeps['git']>(
-    overrides.git ?? (async () => (overrides.remote === undefined ? null : overrides.remote)),
+    overrides.git ??
+      (async (args) => (args[0] === 'rev-parse' ? 'true' : (overrides.remote ?? null))),
   );
   const out = vi.fn<(line: string) => void>();
   const deps: CaptureDeps = {
@@ -456,7 +457,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
       external_id: '44444444-4444-4444-8444-444444444444',
       project: 'github.com/acme/leon',
       accord: 2,
-      // Les fichiers sont relatifs au dossier de départ de la session, pas à celui du crochet.
+      // Les fichiers sont relatifs au dépôt du dossier de départ de la session, pas à celui du crochet.
       faits: extractClaudeCodeFacts(content, '/Users/demo/projets/leon'),
       fin: true,
     });
@@ -501,6 +502,50 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     expect(stderrText()).not.toContain(SECRETS.anthropic);
   });
 
+  // Une session qui écrit un fichier à la racine du dépôt, démarrée dans `start`.
+  const writingSession = (start: string) =>
+    [
+      conversationLine(1, 'user', 'Bonjour', start),
+      conversationLine(
+        2,
+        'assistant',
+        [{ type: 'tool_use', id: 'w1', name: 'Write', input: { file_path: '/p/README.md' } }],
+        start,
+      ),
+      conversationLine(
+        3,
+        'user',
+        [{ type: 'tool_result', tool_use_id: 'w1', content: 'ok' }],
+        start,
+      ),
+    ].join('\n');
+  const factsOf = async (git: CaptureDeps['git'], start: string) => {
+    const facts = vi.fn<FactsSender>(async () => {});
+    const { deps } = makeDeps({
+      session: writingSession(start),
+      git,
+      facts: { accord: 2, send: facts },
+    });
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+    return facts.mock.calls[0]?.[0].faits;
+  };
+
+  it('démarrée dans un sous-dossier, garde les fichiers écrits à la racine du dépôt', async () => {
+    const git = vi.fn<CaptureDeps['git']>(async (args, cwd) =>
+      args[0] === 'rev-parse' && cwd === '/p/src' ? 'true\n../' : null,
+    );
+
+    expect((await factsOf(git, '/p/src'))?.fichiers).toEqual(['README.md']);
+    expect(git).toHaveBeenCalledWith(
+      ['rev-parse', '--is-inside-work-tree', '--show-cdup'],
+      '/p/src',
+    );
+  });
+
+  it('hors de tout dépôt (git ne répond rien), n’envoie aucun fichier', async () => {
+    expect((await factsOf(async () => null, '/p'))?.fichiers).toEqual([]);
+  });
+
   it('des tours refusés : les faits ne partent pas', async () => {
     const facts = vi.fn<FactsSender>(async () => {});
     const { deps } = makeDeps({
@@ -526,7 +571,9 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
           status: 400,
         }),
     );
-    const { deps } = makeDeps({ send: createHookSender(refusing as unknown as typeof fetch, env) });
+    const { deps } = makeDeps({
+      send: createIngestSender(refusing as unknown as typeof fetch, env),
+    });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
 
@@ -539,7 +586,9 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
 
   it('une autre réponse en erreur garde le message général', async () => {
     const failing = vi.fn(async () => new Response('', { status: 500 }));
-    const { deps } = makeDeps({ send: createHookSender(failing as unknown as typeof fetch, env) });
+    const { deps } = makeDeps({
+      send: createIngestSender(failing as unknown as typeof fetch, env),
+    });
 
     await captureSessionFromHook(HOOK, deps);
 
@@ -833,7 +882,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
   });
 });
 
-describe('createHookSender : un délai réseau borné', () => {
+describe('le délai réseau du crochet', () => {
   const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
   // Un fetch qui ne répond jamais, sauf pour échouer quand on l'interrompt.
   const hangingFetch = vi.fn(
@@ -852,7 +901,10 @@ describe('createHookSender : un délai réseau borné', () => {
   });
 
   it('interrompt un serveur qui ne répond pas, et la capture sort quand même à 0', async () => {
-    const send = createHookSender(hangingFetch as unknown as typeof fetch, env, 30);
+    // Celui que pose leon.ts, raccourci (`--delai-ms`).
+    const send = createIngestSender(hangingFetch as unknown as typeof fetch, env, {
+      signal: AbortSignal.timeout(30),
+    });
     const { deps } = makeDeps({ send });
     const started = Date.now();
 

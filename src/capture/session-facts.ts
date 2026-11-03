@@ -229,15 +229,19 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
   return maskSecrets(text.replaceAll('\u0000', '')).slice(0, max).toWellFormed();
 }
 
-// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque).
-function repoRelativePath(path: string, root: string): string | null {
+// Un worktree rangé dans le clone (`.claude/worktrees/<nom>/`, le flux de CLAUDE.md) : ses fichiers sont ceux du dépôt.
+const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
+
+// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque) ou s'il n'y a pas de dépôt.
+function repoRelativePath(path: string, root: string | null): string | null {
+  if (root === null) return null;
   const relativePath = relative(root, resolve(root, path));
   const outside =
     relativePath === '' ||
     relativePath === '..' ||
     relativePath.startsWith(`..${sep}`) ||
     isAbsolute(relativePath);
-  return outside ? null : relativePath;
+  return outside ? null : relativePath.replace(CLONE_WORKTREE, '');
 }
 
 function isExternalCall({ name, input }: Call): boolean {
@@ -261,7 +265,7 @@ function recordResult(
   { name, input }: Call,
   output: string,
   error: boolean,
-  root: string,
+  root: string | null,
 ): void {
   if (name === 'Bash') {
     const bash = BashSchema.safeParse(input);
@@ -320,8 +324,9 @@ function recordResult(
 }
 
 // Les gestes d'une session Claude Code, à partir de son JSONL. `root` est la racine du dépôt (chemin absolu) :
-// les fichiers écrits ailleurs sont retirés. Les sous-agents (`isSidechain`) ne sont pas la session.
-export function extractClaudeCodeFacts(content: string, root: string): SessionFacts {
+// les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
+// (`isSidechain`) ne sont pas la session.
+export function extractClaudeCodeFacts(content: string, root: string | null): SessionFacts {
   const calls = new Map<string, Call>();
   const links: Pr[] = [];
   const record: Gathered = {

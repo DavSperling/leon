@@ -30,14 +30,11 @@
 // Après les tours, les faits de la session (ses gestes, C1 du plan mémoire des sessions) partent par leur propre
 // route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts) : c'est une
 // vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
-import { homedir } from 'node:os';
 import { isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
-import type { ServerEnv } from './env';
 import {
   countOf,
-  createIngestSender,
   FACTS_REFUSED_MESSAGE,
   type ImportDeps,
   type ImportSummary,
@@ -46,12 +43,13 @@ import {
   sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
-import { type GitRunner, projectKeyFor } from './project-key';
+import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
 // et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
-// fois, dès la création de l'envoi (lecture de l'entrée, du fichier et de git comprises) : c'est lui qui borne la
-// durée de la commande, d'où l'envoi des lots les plus récents d'abord.
+// fois pour les tours et les faits, une fois l'entrée lue (5 s au plus, STDIN_TIMEOUT_MS), lecture du fichier et
+// de git comprises (leon.ts) : c'est lui qui borne la durée de la commande, d'où l'envoi des lots les plus récents
+// d'abord.
 export const HOOK_DEADLINE_MS = 15_000;
 const STDIN_MAX_CHARS = 64 * 1024;
 const STDIN_TIMEOUT_MS = 5000;
@@ -69,9 +67,10 @@ export type CaptureDeps = ImportDeps & {
   // $CLAUDE_PROJECT_DIR, « the project root where the session started » (doc des crochets) : repli quand le
   // fichier de session n'écrit aucun dossier.
   projectDir?: string;
-  // Pour reconnaître un autre outil (isOtherToolHook) ; absents, ceux du processus.
-  env?: Record<string, string | undefined>;
-  home?: string;
+  // Pour reconnaître un autre outil (isOtherToolHook) : jamais ceux du processus par défaut, qu'un test lancé dans
+  // le terminal de Cursor (CURSOR_VERSION) lirait sans le savoir.
+  env: Record<string, string | undefined>;
+  home: string;
 };
 
 // Les crochets de Claude Code que Leon pose servent parfois à un autre outil (T06 du plan mémoire des sessions) :
@@ -190,8 +189,10 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   warn(
     `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
+  if (!deps.facts) return; // sans accord, pas même git pour la racine du dépôt
   try {
-    const source = { content, root: start, fin: true };
+    // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
+    const source = { content, root: await repoRootFor(start, deps.git), fin: true };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
       warn(FACTS_REFUSED_MESSAGE);
     }
@@ -203,21 +204,12 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
 // Le code de sortie vaut toujours 0 : ce crochet ne doit jamais gêner la fin d'une session.
 export async function captureSessionFromHook(stdin: string, deps: CaptureDeps): Promise<number> {
   try {
-    if (isOtherToolHook(stdin, deps.env ?? process.env, deps.home ?? homedir())) return 0;
+    if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
     await capture(stdin, deps);
   } catch {
     warn('capture failed (unexpected error).');
   }
   return 0;
-}
-
-// L'envoi du crochet : même requête que l'import, mais interrompue après `deadlineMs`.
-export function createHookSender(
-  fetchImpl: typeof fetch,
-  env: ServerEnv,
-  deadlineMs: number = HOOK_DEADLINE_MS,
-): ImportDeps['send'] {
-  return createIngestSender(fetchImpl, env, { signal: AbortSignal.timeout(deadlineMs) });
 }
 
 type HookInputStream = AsyncIterable<string | Uint8Array> & { isTTY?: boolean };

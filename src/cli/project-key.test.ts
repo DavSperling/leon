@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
-import { gitEnvironment, gitRunner, projectKeyFor } from './project-key';
+import { gitEnvironment, gitRunner, projectKeyFor, repoRootFor } from './project-key';
 
 const run = promisify(execFile);
 
@@ -203,6 +203,18 @@ describe('gitRunner : avec le vrai git, dans un dossier temporaire', { timeout: 
     expect(await projectKeyFor(dir, realGit)).toBe(dossierKey(dir));
     const absent = join(dir, 'absent');
     expect(await projectKeyFor(absent, realGit)).toBe(dossierKey(absent));
+  });
+
+  // Sous macOS, le dossier temporaire est un lien (/var → /private/var) : la racine garde la forme reçue.
+  it('repoRootFor : la racine du dépôt, sous la forme du chemin reçu ; null hors de tout dépôt', async () => {
+    const repo = join(dir, 'depot');
+    await run('mkdir', ['-p', join(repo, 'src', 'cli')]);
+    await run('git', ['init', '--quiet'], { cwd: repo });
+
+    expect(await repoRootFor(join(repo, 'src', 'cli'), realGit)).toBe(repo);
+    expect(await repoRootFor(repo, realGit)).toBe(repo);
+    expect(await repoRootFor(dir, realGit)).toBeNull();
+    expect(await repoRootFor(join(dir, 'absent'), realGit)).toBeNull();
   });
 });
 

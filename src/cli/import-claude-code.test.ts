@@ -361,6 +361,23 @@ describe('importClaudeCode : les faits de chaque session', () => {
     expect(factsOf(facts).get(ORION_SESSION)?.fin).toBe(false);
   });
 
+  it('n’envoie que les faits des fichiers modifiés après l’accord ; les tours, eux, partent tous', async () => {
+    const accordDate = new Date(Date.now() - 60 * 60_000);
+    const before = new Date(accordDate.getTime() - 60_000);
+    await utimes(join(projectDir, 'session-simple.jsonl'), before, before);
+    const { deps, facts, events } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, depuis: accordDate },
+    });
+
+    expect(facts).toHaveBeenCalledTimes(2);
+    expect(factsOf(facts).has(ACME_SESSION)).toBe(false);
+    expect(factsOf(facts).has(ORION_SESSION)).toBe(true);
+    expect(events).toContain(`tours ${ACME_SESSION}`);
+  });
+
   it('sans dossier de départ écrit dans la session, envoie les tours sans les faits', async () => {
     await rm(projectDir, { recursive: true });
     await mkdir(projectDir);

@@ -14,7 +14,7 @@ import { logError } from '../server/log';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
-import { type GitRunner, projectKeyFor } from './project-key';
+import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
 export function parseSince(value: string | undefined): Date | undefined {
@@ -41,8 +41,9 @@ export type ImportDeps = {
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
-  // la version transmise au serveur.
-  facts?: { accord: number; send: FactsSender };
+  // la version transmise au serveur. `depuis`, la date de l'accord : au rattrapage, seuls les fichiers modifiés
+  // ensuite envoient leurs faits (vigilance 4 du plan) ; le crochet de fin de session, lui, n'en a pas besoin.
+  facts?: { accord: number; send: FactsSender; depuis?: Date };
 };
 export type ImportSummary = {
   sessions: number;
@@ -175,15 +176,15 @@ export async function importSession(
   }
 }
 
-// Les faits d'une session (C2), après ses tours, quand l'accord le permet (`deps.facts`). `root` est la racine des
-// chemins de fichiers relevés : ceux écrits ailleurs sont retirés (extractClaudeCodeFacts). Rend false quand le
-// serveur ne les prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte.
-// shortcut: la racine est le dossier de départ de la session, pas celle du dépôt : une session ouverte dans un
-// sous-dossier perd les fichiers écrits à côté, prendre `git rev-parse --show-toplevel` (attention aux chemins
-// réels de macOS, /private/var) le jour où ça manque.
+// Les faits d'une session (C2), après ses tours, quand l'accord le permet (`deps.facts`). `root` est la racine du
+// dépôt du dossier de départ (repoRootFor) : les fichiers écrits ailleurs sont retirés, et tous hors de tout dépôt
+// (null), comme le promet le texte de l'accord (« paths in the repository »). Rend false quand le serveur ne les
+// prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte.
+// shortcut: un worktree hors du clone (../leon-wt) perd ses fichiers, seuls ceux de `.claude/worktrees/` du clone
+// sont gardés (extractClaudeCodeFacts) ; prendre la racine du dépôt de chaque fichier le jour où ça manque.
 export async function sendSessionFacts(
   session: ClaudeCodeSession,
-  source: { content: string; root: string; fin: boolean },
+  source: { content: string; root: string | null; fin: boolean },
   options: Pick<ImportOptions, 'dryRun' | 'projectKey'>,
   deps: ImportDeps,
 ): Promise<boolean> {
@@ -240,8 +241,12 @@ export async function importClaudeCode(
         deps.git && start !== null ? await projectKeyFor(start, deps.git) : options.projectKey;
       await importSession({ ...session, turns }, { ...options, projectKey }, deps, summary);
       if (!deps.facts || factsRefused || start === null) continue;
-      const fin = Date.now() - (await stat(file)).mtimeMs >= IDLE_MS;
-      const source = { content, root: start, fin };
+      const { mtimeMs } = await stat(file);
+      if (deps.facts.depuis && mtimeMs < deps.facts.depuis.getTime()) continue;
+      const fin = Date.now() - mtimeMs >= IDLE_MS;
+      // Sans git (essais), la racine reste le dossier de départ.
+      const root = deps.git ? await repoRootFor(start, deps.git) : start;
+      const source = { content, root, fin };
       factsRefused = !(await sendSessionFacts(session, source, { ...options, projectKey }, deps));
       if (factsRefused) console.error(FACTS_REFUSED_MESSAGE);
     } catch (error) {

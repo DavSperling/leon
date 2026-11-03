@@ -2,12 +2,14 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { withTenant } from '@/server/db/with-tenant';
+import { recordReads } from '@/server/memory/read-log';
 import { adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { seedIndexed } from '@/test/seed-indexed';
 
 // Migration 0048 : aligner_sources_github() rend privées à qui les a branchées les sources GitHub hors des dépôts
-// d'équipe, et rend à l'organisation celles d'un dépôt d'équipe, avec leurs tours, passages, vecteurs et runs.
+// d'équipe, et rend à l'organisation celles d'un dépôt d'équipe, avec leurs tours, passages, vecteurs, runs et
+// lectures notées.
 // Fixtures par le propriétaire (hors RLS), l'appel sous withTenant, comme setDepotEquipe.
 
 const tenantIds: string[] = [];
@@ -29,13 +31,17 @@ afterAll(async () => {
   await adminPool.query('delete from sources where tenant_id = any($1)', [tenantIds]);
 });
 
-// Une source relevée avant le lot 2 : visible de toute l'organisation, quel que soit son dépôt.
-const relevee = (ctx: TenantContext, kind: 'github' | 'gitlab', repo: string) =>
-  seedIndexed(ctx, {
+// Une source relevée avant le lot 2 : visible de toute l'organisation, quel que soit son dépôt. Son auteur l'a déjà
+// lue une fois : le journal des lectures en a une ligne, avec l'accès de la source.
+async function relevee(ctx: TenantContext, kind: 'github' | 'gitlab', repo: string) {
+  const { sourceId } = await seedIndexed(ctx, {
     kind,
     acl: [ctx.tenantId],
     metadata: { nature: 'pull_request', origin: { repo } },
-  }).then((seeded) => seeded.sourceId);
+  });
+  await recordReads(ctx, { tool: 'fetch', client: 'claude-code', reads: [{ sourceId }] });
+  return sourceId;
+}
 
 const choose = (ctx: TenantContext, project: string) =>
   adminPool.query(
@@ -56,13 +62,14 @@ async function accessOf(sourceId: string): Promise<Array<[string, string[]]>> {
        union select 'passage_vectors', v.acl
                from passage_vectors v join passages p on p.id = v.passage_id where p.source_id = $1
        union select 'ingest_runs', acl from ingest_runs where source_id = $1
+       union select 'read_log', acl from read_log where source_id = $1
      ) a order by t collate "C"`,
     [sourceId],
   );
   return rows.map((row) => [row.t, row.acl]);
 }
 
-const TABLES = ['ingest_runs', 'passage_vectors', 'passages', 'sources', 'turns'];
+const TABLES = ['ingest_runs', 'passage_vectors', 'passages', 'read_log', 'sources', 'turns'];
 const everywhere = (acl: string[]) => TABLES.map((table): [string, string[]] => [table, acl]);
 
 describe('aligner_sources_github', () => {

@@ -15,6 +15,8 @@ import { createConnection, listConnections, saveOAuthTokens } from './connection
 import { setDepotEquipe } from './github/depots-equipe';
 import { gmailConnector } from './gmail/connector';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
+import { ingestConnectorItems } from './ingest-items';
+import { normalizeItem } from './normalize';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from './pipedream';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
@@ -489,22 +491,24 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
     await adminDb.update(members).set({ role: 'admin' }).where(eq(members.userId, lea.userId));
   });
 
-  // Paul relève une PR de chaque dépôt, comme avant le lot 2 : visible de toute l'équipe.
+  // Paul relève une PR de chaque dépôt, comme avant le lot 2 (l'ingestion seule, sans l'alignement de fin de
+  // passage) : visible de toute l'équipe.
   async function relever(repos: string[]): Promise<void> {
     const item = await oneItem();
-    const items = repos.map((repo) => ({
-      ...item,
-      externalId: `pr:${repo}#1`,
-      origin: { repo },
-      turns: item.turns.map((turn) => ({ ...turn, text: `PR de ${repo}` })),
-    }));
+    const items = repos.flatMap(
+      (repo) =>
+        normalizeItem(
+          {
+            ...item,
+            externalId: `pr:${repo}#1`,
+            origin: { repo },
+            turns: item.turns.map((turn) => ({ ...turn, text: `PR de ${repo}` })),
+          },
+          'github',
+        ) ?? [],
+    );
     const id = await dueConnection();
-    expect(
-      await run(
-        id,
-        inlineConnector(async () => [{ items, cursor: '1' }]),
-      ),
-    ).toBe('ok');
+    await ingestConnectorItems(paul, { id, provider: 'github', createdBy: paul.userId }, items);
   }
 
   // Les PR et les tours que `ctx` voit, sous RLS.
@@ -552,6 +556,46 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
     expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
 
     expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
+  });
+
+  // La relève lit la liste à son début. Léa décoche le dépôt entre deux pages : la PR nouvelle, et le tour nouveau
+  // d'une PR devenue privée, que la page suivante écrit avec l'accès de l'organisation, finissent privés.
+  it('un dépôt décoché en pleine relève : ce que la relève écrit ensuite finit privé', async () => {
+    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+    const item = await oneItem();
+    const pr = (n: number, turn: string) => ({
+      ...item,
+      externalId: `pr:acme/leon#${n}`,
+      origin: { repo: 'acme/leon' },
+      turns: item.turns.map((t) => ({ ...t, externalId: turn, text: `PR ${n}, ${turn}` })),
+    });
+    const connector: AnyConnector = {
+      ...fakeConnector({ items: 0, pageSize: 1 }),
+      async *sync() {
+        yield { items: [pr(1, 'body')], cursor: '1' };
+        expect(await setDepotEquipe(lea, 'acme/leon', false)).toBe('ok');
+        yield { items: [pr(1, 'commentaire'), pr(2, 'body')], cursor: '2' };
+      },
+    };
+
+    expect(await run(await dueConnection(), connector)).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
+    expect((await seenBy(paul)).tours).toEqual(['PR 1, body', 'PR 1, commentaire', 'PR 2, body']);
+  });
+
+  // Au déploiement, l'ancienne version relève encore après 0048 : le passage suivant, même vide, aligne.
+  it('ce qu’une relève a écrit sans suivre la liste devient privé au passage suivant', async () => {
+    await relever(['paul/perso']);
+
+    expect(
+      await run(
+        await dueConnection(),
+        inlineConnector(async () => []),
+      ),
+    ).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
   });
 });
 

@@ -90,19 +90,26 @@ async function readPages(
     ...(connection.provider === 'github' && { depotsEquipe: await teamRepos(ctx) }),
   };
   let read = 0;
-  for await (const page of connector.sync(config, state, http)) {
-    const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
-    if (items.length > 0)
-      await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
-    if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
-    const { id, lockedAt } = connection;
-    const { cursor, depotsConfirmes } = page;
-    if (!(await saveSyncProgress(ctx, id, lockedAt, cursor, items.length, depotsConfirmes)))
-      return 'lost';
-    read += page.items.length;
-    if (read >= SYNC_ITEMS_MAX) return 'soon';
+  try {
+    for await (const page of connector.sync(config, state, http)) {
+      const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
+      if (items.length > 0)
+        await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
+      if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
+      const { id, lockedAt } = connection;
+      const { cursor, depotsConfirmes } = page;
+      if (!(await saveSyncProgress(ctx, id, lockedAt, cursor, items.length, depotsConfirmes)))
+        return 'lost';
+      read += page.items.length;
+      if (read >= SYNC_ITEMS_MAX) return 'soon';
+    }
+    return connector.pipedream ? 'office' : 'later';
+  } finally {
+    // T12 : l'ingestion écrit avec l'accès de l'organisation, selon la liste lue au début. À la fin du passage, même
+    // en erreur, les sources GitHub de l'organisation reprennent l'accès que donne la liste du moment (0048).
+    if (connection.provider === 'github')
+      await withTenant(ctx, (tx) => tx.execute(sql`select aligner_sources_github()`));
   }
-  return connector.pipedream ? 'office' : 'later';
 }
 
 const isOAuth = (connection: LoadedConnection) => connection.config.authMode === 'oauth';

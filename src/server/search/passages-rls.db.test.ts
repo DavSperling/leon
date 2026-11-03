@@ -351,7 +351,7 @@ describe('droits sur les fonctions des tics', () => {
         [signature],
       );
 
-      expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public'] }]);
+      expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public, pg_temp'] }]);
     },
   );
 });

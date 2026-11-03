@@ -7,7 +7,7 @@ import { useState } from 'react';
 import {
   Beam,
   CitationChip,
-  CitedText,
+  CitedMarkdown,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -26,6 +26,9 @@ export type OpenCitation = (
   citation: DiscussionCitation,
   trigger: HTMLElement,
 ) => void;
+
+// Le texte de la réponse : une ligne de lecture confortable, même quand le fil prend toute la largeur.
+const TEXT = 'mt-2.5 max-w-[72ch] text-lead leading-[1.72] break-words';
 
 const titleOf = (citation: DiscussionCitation, fallback: string): string =>
   citation.title?.trim() || fallback;
@@ -156,7 +159,7 @@ export function UserBubble({
 }) {
   const t = useTranslations('discussionView');
   return (
-    <div className="ml-auto w-fit max-w-[88%] rounded-box rounded-br-[6px] border border-accent-line bg-accent-soft px-4 py-3 shadow-hi">
+    <div className="ml-auto w-fit max-w-[min(88%,640px)] rounded-box rounded-br-[6px] border border-accent-line bg-accent-soft px-4 py-3 shadow-hi">
       <p className="sr-only">{t('you')}</p>
       <p className="text-lead leading-[1.6] break-words whitespace-pre-wrap text-fg">{content}</p>
       {seeds.length > 0 && (
@@ -235,20 +238,18 @@ export function LeonCard({
             {live.activity}
           </p>
         ) : live ? (
-          <p className="mt-2.5 max-w-[72ch] text-lead leading-[1.72] break-words whitespace-pre-wrap text-fg">
+          <div className={cn(TEXT, 'text-fg')}>
             {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
-            {live.text}
-            <span className="caret-block" aria-hidden="true" />
-          </p>
+            <CitedMarkdown
+              text={live.text}
+              renderCite={(n) => `[${n}]`}
+              tail={<span className="caret-block" aria-hidden="true" />}
+            />
+          </div>
         ) : (
           main && (
-            <p
-              className={cn(
-                'mt-2.5 max-w-[72ch] text-lead leading-[1.72] break-words whitespace-pre-wrap',
-                fixed ? 'text-fg-2' : 'text-fg',
-              )}
-            >
-              <CitedText
+            <div className={cn(TEXT, fixed ? 'text-fg-2' : 'text-fg')}>
+              <CitedMarkdown
                 text={main}
                 keep={(n) => byN.has(n)}
                 renderCite={(n) => {
@@ -269,7 +270,7 @@ export function LeonCard({
                   );
                 }}
               />
-            </p>
+            </div>
           )
         )}
         {!live && limit && (

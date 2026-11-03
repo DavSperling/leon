@@ -54,8 +54,8 @@ const WAIT_MAX_MS = DISCUSSION_TIMEOUT_MS + 10_000;
 // Avant le premier évènement : pas de libellé inventé, seulement l'indicateur d'attente.
 const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: null };
 
-/** Le texte lu aux lecteurs d'écran une fois la réponse finie : sans les renvois. */
-const spoken = (text: string) => text.replace(/\s?\[\d+\]/g, '');
+/** Le texte lu aux lecteurs d'écran une fois la réponse finie : sans les renvois ni les marques du Markdown. */
+const spoken = (text: string) => text.replace(/\s?\[\d+\]|\*\*|`|^#+\s+/gm, '');
 
 export function DiscussionThread({
   discussionId,
@@ -328,12 +328,10 @@ export function DiscussionThread({
 
   return (
     <div ref={root}>
-      {/* le volet ne prend sa colonne qu'une fois une source ouverte : sinon le fil a toute sa largeur */}
+      {/* le volet ne prend sa colonne qu'une fois une source ouverte : sinon le fil a toute la largeur */}
       <div
         className={
-          wide && opened
-            ? 'grid grid-cols-[minmax(0,880px)_400px] items-start gap-x-8'
-            : 'max-w-[880px]'
+          wide && opened ? 'grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x-8' : undefined
         }
       >
         <div className="min-w-0">

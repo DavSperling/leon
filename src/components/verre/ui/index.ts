@@ -83,5 +83,5 @@ export {
   Spotlight,
   trackSpot,
 } from './surfaces';
-export { CitedText, Highlighted } from './text';
+export { CitedMarkdown, CitedText, Highlighted } from './text';
 export { Toaster, toast } from './toast';

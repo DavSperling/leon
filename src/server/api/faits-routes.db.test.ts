@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
-import type { SessionFacts } from '@/capture/session-facts';
+import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
@@ -212,7 +212,10 @@ describe('POST /api/v1/faits', () => {
         fichiers: [`src/${secret}.ts`, 'src/nul\u0000.ts'],
         commandes: [{ texte: `git ${secret}`, erreur: false }],
         taches: [{ texte: `Coller ${secret}`, etat: 'a_faire' }],
-        prs: [{ repo: `${secret}/leon`, numero: 1, par: 'gh-pr-create' }],
+        prs: [
+          { repo: `${secret}/leon`, numero: 1, par: 'gh-pr-create' },
+          { repo: 'acme/leon', numero: 2, par: 'pr-link' },
+        ],
       }),
     };
 
@@ -226,7 +229,88 @@ describe('POST /api/v1/faits', () => {
       faits: {
         fichiers: [`src/${SECRET_MASK}.ts`, 'src/nul.ts'],
         taches: [{ texte: `Coller ${SECRET_MASK}`, etat: 'a_faire' }],
+        // Un dépôt masqué ne serait plus une clé de PR : la PR est retirée, le reste des faits reste lisible.
+        prs: [{ repo: 'acme/leon', numero: 2, par: 'pr-link' }],
       },
     });
+    expect(SessionFactsSchema.safeParse(stored?.metadata.faits).success).toBe(true);
+  });
+
+  it('ne garde d’une commande hors de la forme réduite que [commande]', async () => {
+    const { paul, paulToken } = await setup();
+    const texts = [
+      'mysql -pS3cret',
+      'PGPASSWORD=S3cret psql',
+      'curl -u a:S3cret https://acme.fr',
+      'git commit',
+      'pnpm',
+      '[commande]',
+    ];
+    const body = {
+      ...validBody(),
+      faits: facts({ commandes: texts.map((texte) => ({ texte, erreur: false })) }),
+    };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    const [stored] = await storedMetadata(paul, body.external_id);
+    expect(JSON.stringify(stored?.metadata)).not.toContain('S3cret');
+    expect(stored?.metadata).toMatchObject({
+      faits: {
+        commandes: [
+          '[commande]',
+          '[commande]',
+          '[commande]',
+          'git commit',
+          'pnpm',
+          '[commande]',
+        ].map((texte) => ({ texte, erreur: false })),
+      },
+    });
+  });
+
+  it('réapplique la borne de 200 caractères après le masque, qui allonge le texte', async () => {
+    const { paul, paulToken } = await setup();
+    const url = ' postgres://u:p@h/db';
+    const texte = `${'x'.repeat(200 - url.length)}${url}`;
+    const body = { ...validBody(), faits: facts({ taches: [{ texte, etat: 'a_faire' }] }) };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    const [stored] = await storedMetadata(paul, body.external_id);
+    const [task] = SessionFactsSchema.parse(stored?.metadata.faits).taches;
+    expect(task?.texte).toHaveLength(200);
+    expect(task?.texte).not.toContain(':p@');
+  });
+
+  it('répond 400 à 31 commandes', async () => {
+    const { paulToken } = await setup();
+    const commandes = Array.from({ length: 31 }, () => ({ texte: 'git status', erreur: false }));
+    const body = { ...validBody(), faits: facts({ commandes }) };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'Invalid request',
+      issues: [{ path: 'faits.commandes', code: 'too_big' }],
+    });
+  });
+
+  it('garde `fin` vrai une fois vu : un rattrapage qui suit le SessionEnd ne l’efface pas', async () => {
+    const { paul, paulToken } = await setup();
+    const first = { ...validBody(), fin: true };
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body: first });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...first, fin: false },
+    });
+
+    expect(response.status).toBe(202);
+    const [stored] = await storedMetadata(paul, first.external_id);
+    expect(stored?.metadata.fin).toBe(true);
   });
 });

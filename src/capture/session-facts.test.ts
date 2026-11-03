@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { extractClaudeCodeFacts, SessionFactsSchema } from './session-facts';
+import { extractClaudeCodeFacts, recheckCommand, SessionFactsSchema } from './session-facts';
 
 // session-gestes vit à part : les tests de la CLI copient tout fixtures/claude-code/ comme dossier de sessions.
 const fixture = (path: string) =>
@@ -71,6 +71,17 @@ describe('extractClaudeCodeFacts', () => {
     );
 
     expect(faits).not.toContain('S3cret');
+  });
+
+  it('recheckCommand, la barrière de la réception, rend telle quelle toute commande réduite', () => {
+    const { commandes } = extractClaudeCodeFacts(
+      fixture('claude-code-faits/session-gestes'),
+      RACINE,
+    );
+
+    expect(commandes.length).toBeGreaterThan(5);
+    for (const { texte } of commandes) expect(recheckCommand(texte)).toBe(texte);
+    expect(recheckCommand('mysql -pS3cret')).toBe('[commande]');
   });
 
   it.each([

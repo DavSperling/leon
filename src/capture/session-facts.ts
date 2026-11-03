@@ -210,10 +210,22 @@ function reduceCommand(command: string): string {
   return factText(kept, TEXTE_MAX);
 }
 
+// À la réception (record-facts.ts), une seconde barrière : une commande qui n'a pas la forme que rend reduceCommand
+// (une CLI plus ancienne, ou qui réduit mal) ne garde que le texte fixe.
+export function recheckCommand(texte: string): string {
+  const [executable = '', subcommand, ...rest] = texte.split(' ');
+  const reduced =
+    EXECUTABLE.test(executable) &&
+    rest.length === 0 &&
+    (subcommand === undefined || SUBCOMMAND.test(subcommand));
+  return reduced ? factText(texte, TEXTE_MAX) : HIDDEN_COMMAND;
+}
+
 // Le texte d'un fait, masqué puis coupé. Un jsonb refuse le caractère nul et la moitié d'emoji qu'une coupe
 // peut laisser : un seul fait qui en porte ferait échouer l'écriture de tous ceux de la session, à chaque
-// rattrapage. Le caractère nul part avant maskSecrets, pour ne pas recoller un secret qu'il coupait.
-function factText(text: string, max = Number.POSITIVE_INFINITY): string {
+// rattrapage. Le caractère nul part avant maskSecrets, pour ne pas recoller un secret qu'il coupait. Repassé à la
+// réception (record-facts.ts) : le masque peut allonger le texte, la borne est réappliquée après.
+export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
   return maskSecrets(text.replaceAll('\u0000', '')).slice(0, max).toWellFormed();
 }
 

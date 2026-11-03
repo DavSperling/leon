@@ -120,7 +120,12 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await rm(configDir, { recursive: true, force: true });
+  await rm(join(home, '.leon'), { recursive: true, force: true });
 });
+
+// L'accord (consent.ts) s'écrit dans le HOME temporaire de l'essai, jamais dans le vrai.
+const readConsent = async () =>
+  JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8'));
 
 afterAll(async () => {
   await rm(dir, { recursive: true, force: true });
@@ -153,6 +158,7 @@ describe('leon installer-crochets', () => {
       } else {
         await expect(readdir(configDir)).rejects.toThrow();
       }
+      await expect(readConsent()).rejects.toThrow();
     },
     TEST_TIMEOUT_MS,
   );
@@ -176,6 +182,7 @@ describe('leon installer-crochets', () => {
       expect(second.stdout).toContain('already');
       expect(await readFile(settingsPath, 'utf8')).toBe(written);
       expect(await readFile(join(configDir, BACKUP_FILE), 'utf8')).toBe(before);
+      expect((await readConsent()).outils.claude_code.version).toBe(2);
     },
     TEST_TIMEOUT_MS,
   );

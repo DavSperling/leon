@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
+import { consentPath, factsConsent, writeConsent } from './consent';
 import {
   addLeonHooks,
   BACKUP_FILE,
@@ -48,6 +49,7 @@ const FAKE_TOKEN = `leon_${'x'.repeat(43)}`;
 const asRoot = process.getuid?.() === 0; // root passe outre les droits : les essais en lecture seule n'ont pas de sens
 
 let dir: string;
+let home: string;
 let configDir: string;
 let settingsPath: string;
 let backupPath: string;
@@ -55,6 +57,7 @@ let locked: string[];
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'leon-install-hooks-'));
+  home = join(dir, 'home'); // l'accord (consent.ts) s'écrit là : jamais dans le vrai ~/.leon
   configDir = join(dir, 'claude');
   settingsPath = join(configDir, SETTINGS_FILE);
   backupPath = join(configDir, BACKUP_FILE);
@@ -100,7 +103,12 @@ async function install(
   const questions: string[] = [];
   const answers = [...(options.answers ?? [])];
   const code = await installHooks(
-    { repoDir: options.repoDir ?? REPO, configDir, assumeYes: options.assumeYes ?? false },
+    {
+      repoDir: options.repoDir ?? REPO,
+      configDir,
+      home,
+      assumeYes: options.assumeYes ?? false,
+    },
     {
       out: (text) => lines.push(text),
       err: (text) => lines.push(text),
@@ -525,6 +533,134 @@ describe('installHooks : le texte du consentement', () => {
   });
 });
 
+// Le texte de l'accord, mot pour mot (plan mémoire des sessions, règle « Consentement ») : ce qui est lu, ce qui
+// part, et ce qui est donné au modèle de Claude Code.
+const CONSENT_TEXT = [
+  'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
+  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
+  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
+].join('\n');
+
+const leonHooksInPlace = () =>
+  writeSettings({ theme: 'dark', hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
+
+describe('installHooks : l’accord (~/.leon/accord.json)', () => {
+  it('montre mot pour mot ce qui part et ce qui est donné au modèle de Claude Code', async () => {
+    const asked = await install({ answers: ['non'] });
+    const forced = await install({ assumeYes: true });
+
+    expect(asked.output).toContain(CONSENT_TEXT);
+    expect(forced.output).toContain(CONSENT_TEXT);
+  });
+
+  it('après la confirmation, écrit l’accord de Claude Code en version 2, en 0600', async () => {
+    const run = await install({ answers: ['oui'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions[0]).toContain(consentPath(home));
+    const written = JSON.parse(await readFile(consentPath(home), 'utf8'));
+    expect(written).toEqual({
+      outils: { claude_code: { version: 2, installe_le: expect.any(String) } },
+    });
+    expect(Number.isNaN(Date.parse(written.outils.claude_code.installe_le))).toBe(false);
+    expect((await stat(consentPath(home))).mode & 0o777).toBe(0o600);
+    expect(run.output).toContain(`Consent recorded in ${consentPath(home)}`);
+  });
+
+  it('sur « non », n’écrit pas l’accord', async () => {
+    await install({ answers: ['non'] });
+
+    expect(await exists(consentPath(home))).toBe(false);
+  });
+
+  it('crochets en place, sans accord, réponse « oui » : accord en version 2, réglages inchangés', async () => {
+    const before = await leonHooksInPlace();
+
+    const run = await install({ answers: ['oui'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(1);
+    expect(run.output).toContain(CONSENT_TEXT);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
+    expect(await readFile(settingsPath, 'utf8')).toBe(before);
+    // Ni sauvegarde ni fichier de travail : settings.json n'est pas touché.
+    expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+  });
+
+  it('crochets en place, accord plus ancien, réponse « non » : rien n’est écrit', async () => {
+    const before = await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 1);
+    const consentBefore = await readFile(consentPath(home), 'utf8');
+
+    const run = await install({ answers: ['non'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(1);
+    // Ce qui part sans accord, borné à la fin de session : la phrase ne promet rien du démarrage (briefing.ts).
+    expect(run.output).toContain(
+      'Nothing was written: at the end of each session, the hooks keep sending only the text of the exchanges, not its actions.',
+    );
+    expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
+    expect(await readFile(settingsPath, 'utf8')).toBe(before);
+  });
+
+  it('crochets en place, accord retiré, réponse « non » : dit que rien ne part, mot pour mot', async () => {
+    await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 0);
+    const consentBefore = await readFile(consentPath(home), 'utf8');
+
+    const run = await install({ answers: ['non'] });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(
+      `Both Leon hooks are already in place in ${settingsPath}, but your consent was withdrawn: for now, they send nothing.`,
+    );
+    expect(run.output).toContain('Nothing was written: the hooks keep sending nothing.');
+    expect(run.output).not.toContain('only the text of the exchanges');
+    expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
+  });
+
+  it('après l’écriture, donne la commande de retrait', async () => {
+    const run = await install({ assumeYes: true });
+
+    expect(run.output).toContain(
+      'To remove them, run `pnpm leon retirer-crochets` (it also withdraws your consent).',
+    );
+  });
+
+  it('crochets en place, sans accord, avec --oui : écrit l’accord sans rien demander', async () => {
+    await leonHooksInPlace();
+
+    const run = await install({ assumeYes: true });
+
+    expect(run.questions).toEqual([]);
+    expect(run.output).toContain(CONSENT_TEXT);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
+  });
+
+  it('ne rabaisse jamais un accord plus récent', async () => {
+    await writeConsent(home, 'claude_code', 3);
+
+    await install({ assumeYes: true });
+
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(3);
+  });
+
+  it('un accord qui ne s’écrit pas : message clair et code 1, les crochets restent en place', async () => {
+    // Un fichier à la place du dossier personnel : la création de ~/.leon échoue, même pour root.
+    home = join(dir, 'home-fichier');
+    await writeFile(home, '');
+
+    const run = await install({ assumeYes: true });
+
+    expect(run.code).toBe(1);
+    expect(run.output).toContain(`could not write ${consentPath(home)}`);
+    expect(run.output).toContain('only the text of the exchanges');
+    expect((await readSettings()).hooks.SessionStart).toEqual([leonStart()]);
+  });
+});
+
 describe('installHooks : les réglages du serveur dans le .env.local du dépôt', () => {
   it('prévient quand le dépôt n’a pas de .env.local : les commandes ne feraient rien', async () => {
     const repoDir = await fakeRepo(null);
@@ -623,6 +759,8 @@ describe('installHooks : une écriture qui échoue', () => {
       expect(run.output).not.toContain('copyfile');
       expect(await readFile(settingsPath, 'utf8')).toBe(original);
       expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+      // Sans crochets écrits, l'accord ne l'est pas non plus.
+      expect(await exists(consentPath(home))).toBe(false);
     },
   );
 
@@ -636,7 +774,7 @@ describe('installHooks : une écriture qui échoue', () => {
 
       const lines: string[] = [];
       const code = await installHooks(
-        { repoDir: REPO, configDir: join(parent, 'claude'), assumeYes: true },
+        { repoDir: REPO, configDir: join(parent, 'claude'), home, assumeYes: true },
         {
           out: (text) => lines.push(text),
           err: (text) => lines.push(text),
@@ -885,6 +1023,14 @@ describe('le README', () => {
     expect(text).toContain('première copie');
     expect(text).toContain('mise en page');
     expect(text).toContain('réglages du projet');
+  });
+
+  it('dit où vit l’accord, ce qu’il permet, et ce qui est donné au modèle de Claude Code', async () => {
+    const text = await readme();
+
+    expect(text).toContain('~/.leon/accord.json');
+    expect(text).toContain('sans toucher à `settings.json`');
+    expect(text).toContain('modèle de Claude Code');
   });
 
   it('le commentaire de capture-session.ts ne dit pas non plus que `claude -p` échappe au crochet', async () => {

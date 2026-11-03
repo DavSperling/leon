@@ -11,12 +11,16 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS } from '../capture/api-contract';
+import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
+import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURN_TEXT_MAX } from '../capture/turn';
 import {
   countOf,
+  createFactsSender,
   createIngestSender,
+  type FactsSender,
   type ImportDeps,
+  IngestResponseError,
   importClaudeCode,
   parseSince,
   TokenRefusedError,
@@ -298,6 +302,193 @@ describe('importClaudeCode', () => {
 
     const empty = await importClaudeCode({ baseDir: join(baseDir, 'absent'), dryRun: true }, deps);
     expect(empty.sessions).toBe(0);
+  });
+});
+
+// Au rattrapage, les faits de chaque session partent après ses tours, seulement quand l'accord le permet
+// (`deps.facts`, posé par leon.ts d'après consent.ts).
+describe('importClaudeCode : les faits de chaque session', () => {
+  const ORION_SESSION = '22222222-2222-4222-8222-222222222222';
+
+  function makeFactsDeps(sendFacts?: FactsSender) {
+    const events: string[] = [];
+    const { deps, out } = makeDeps(async (payload) => {
+      events.push(`tours ${payload.source.external_id}`);
+      return RESULT;
+    });
+    const facts = vi.fn<FactsSender>(
+      sendFacts ??
+        (async (payload) => {
+          events.push(`faits ${payload.external_id}`);
+        }),
+    );
+    return { deps: { ...deps, facts: { accord: 2, send: facts } }, facts, events, out };
+  }
+  const factsOf = (facts: { mock: { calls: Array<[SessionFactsPayload]> } }) =>
+    new Map(facts.mock.calls.map(([payload]) => [payload.external_id, payload]));
+
+  it('envoie les faits de chaque session après ses tours, avec la version de l’accord', async () => {
+    const { deps, facts, events } = makeFactsDeps();
+
+    await importClaudeCode({ ...importOptions(), projectKey: 'github.com/acme/leon' }, deps);
+
+    expect(facts).toHaveBeenCalledTimes(3);
+    for (const id of [ACME_SESSION, ORION_SESSION]) {
+      expect(events.indexOf(`faits ${id}`)).toBeGreaterThan(events.lastIndexOf(`tours ${id}`));
+    }
+    const acme = factsOf(facts).get(ACME_SESSION);
+    const content = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+    expect(acme).toEqual({
+      kind: 'claude_code',
+      external_id: ACME_SESSION,
+      project: 'github.com/acme/leon',
+      accord: 2,
+      faits: extractClaudeCodeFacts(content, '/Users/demo/projets/acme'),
+      fin: false,
+    });
+  });
+
+  it('fin vaut vrai pour un fichier qui n’a pas bougé depuis 30 min, faux sinon', async () => {
+    const old = new Date(Date.now() - 31 * 60_000);
+    await utimes(join(projectDir, 'session-simple.jsonl'), old, old);
+    const recent = new Date(Date.now() - 29 * 60_000);
+    await utimes(join(projectDir, 'session-bruit.jsonl'), recent, recent);
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), deps);
+
+    expect(factsOf(facts).get(ACME_SESSION)?.fin).toBe(true);
+    expect(factsOf(facts).get(ORION_SESSION)?.fin).toBe(false);
+  });
+
+  it('n’envoie que les faits des fichiers modifiés après l’accord ; les tours, eux, partent tous', async () => {
+    const accordDate = new Date(Date.now() - 60 * 60_000);
+    const before = new Date(accordDate.getTime() - 60_000);
+    await utimes(join(projectDir, 'session-simple.jsonl'), before, before);
+    const { deps, facts, events } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, depuis: accordDate },
+    });
+
+    expect(facts).toHaveBeenCalledTimes(2);
+    expect(factsOf(facts).has(ACME_SESSION)).toBe(false);
+    expect(factsOf(facts).has(ORION_SESSION)).toBe(true);
+    expect(events).toContain(`tours ${ACME_SESSION}`);
+  });
+
+  it('sans dossier de départ écrit dans la session, envoie les tours sans les faits', async () => {
+    await rm(projectDir, { recursive: true });
+    await mkdir(projectDir);
+    await writeFile(
+      join(projectDir, 'sans-dossier.jsonl'),
+      JSON.stringify({
+        type: 'user',
+        uuid: 'sd-1',
+        sessionId: 'sans-dossier',
+        timestamp: '2026-10-13T08:00:00.000Z',
+        message: { content: 'Bonjour' },
+      }),
+    );
+    const { deps, facts, events } = makeFactsDeps();
+
+    const summary = await importClaudeCode(importOptions(), deps);
+
+    expect(events).toEqual(['tours sans-dossier']);
+    expect(facts).not.toHaveBeenCalled();
+    expect(summary.failures).toBe(0);
+  });
+
+  it.each([404, 400])(
+    'un %i : un message fixe, une seule fois, plus aucun fait envoyé, et ce n’est pas un échec',
+    async (status) => {
+      const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { deps, facts } = makeFactsDeps(async () => {
+        throw new IngestResponseError(status);
+      });
+
+      const summary = await importClaudeCode(importOptions(), deps);
+
+      expect(facts).toHaveBeenCalledTimes(1);
+      expect(summary).toMatchObject({ sessions: 3, failures: 0 });
+      expect(stderr).toHaveBeenCalledTimes(1);
+      expect(stderr.mock.calls.flat().join('\n')).toMatch(/older than the CLI/);
+      expect(stderr.mock.calls.flat().join('\n')).not.toContain(String(status));
+    },
+  );
+
+  it('une autre erreur des faits compte comme l’échec de la session', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { deps, facts } = makeFactsDeps(async () => {
+      throw new IngestResponseError(500);
+    });
+
+    const summary = await importClaudeCode(importOptions(), deps);
+
+    expect(facts).toHaveBeenCalledTimes(3);
+    expect(summary).toMatchObject({ sessions: 3, failures: 3 });
+  });
+
+  it('arrête tout quand le jeton est refusé à l’envoi des faits', async () => {
+    const { deps, facts } = makeFactsDeps(async () => {
+      throw new TokenRefusedError();
+    });
+
+    await expect(importClaudeCode(importOptions(), deps)).rejects.toBeInstanceOf(TokenRefusedError);
+    expect(facts).toHaveBeenCalledTimes(1);
+  });
+
+  it('en dryRun, écrit aussi la ligne des faits de chaque session, sans rien envoyer', async () => {
+    const { deps, facts, out } = makeFactsDeps();
+
+    await importClaudeCode({ baseDir, dryRun: true }, deps);
+
+    expect(facts).not.toHaveBeenCalled();
+    const lines = out.mock.calls.map(([line]) => JSON.parse(line) as Record<string, unknown>);
+    const factLines = lines.filter((line) => 'faits' in line);
+    expect(factLines.map((line) => line.external_id).sort()).toEqual([
+      ACME_SESSION,
+      ORION_SESSION,
+      '33333333-3333-4333-8333-333333333333',
+    ]);
+    expect(factLines.every((line) => line.accord === 2)).toBe(true);
+  });
+});
+
+describe('createFactsSender', () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+  const payload: SessionFactsPayload = {
+    kind: 'claude_code',
+    external_id: 's1',
+    accord: 2,
+    faits: extractClaudeCodeFacts('', '/r'),
+    fin: true,
+  };
+
+  it('poste les faits sur leur route, avec le jeton, et accepte le 202 sans corps', async () => {
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 202 }));
+    const controller = new AbortController();
+
+    await createFactsSender(fetchImpl as typeof fetch, env, { signal: controller.signal })(payload);
+
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.href).toBe(new URL(API_PATHS.faits, env.url).href);
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it('lève TokenRefusedError sur 401, une erreur qui porte le code sur les autres refus', async () => {
+    const reply = (status: number) =>
+      createFactsSender((async () => new Response('{}', { status })) as typeof fetch, env);
+
+    await expect(reply(401)(payload)).rejects.toBeInstanceOf(TokenRefusedError);
+    await expect(reply(404)(payload)).rejects.toMatchObject({ status: 404 });
+    await expect(reply(400)(payload)).rejects.toBeInstanceOf(IngestResponseError);
   });
 });
 

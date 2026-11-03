@@ -4,20 +4,28 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SessionFactsPayload } from '../capture/api-contract';
 import { SECRET_MASK } from '../capture/mask-secrets';
+import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURNS_PER_BATCH_MAX } from '../capture/turn';
 import {
   type CaptureDeps,
   captureSessionFromHook,
-  createHookSender,
   HOOK_DEADLINE_MS,
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
-import { createIngestSender, IngestResponseError, TokenRefusedError } from './import-claude-code';
+import {
+  createFactsSender,
+  createIngestSender,
+  type FactsSender,
+  IngestResponseError,
+  TokenRefusedError,
+} from './import-claude-code';
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const HOME = '/home/demo';
 const RESULT: IngestResult = {
   sourceId: crypto.randomUUID(),
   inserted: 2,
@@ -107,6 +115,8 @@ function makeDeps(
     readFile?: CaptureDeps['readFile'];
     git?: CaptureDeps['git'];
     projectDir?: string;
+    facts?: CaptureDeps['facts'];
+    env?: CaptureDeps['env'];
   } = {},
 ) {
   const session = overrides.session ?? sessionWithSecrets();
@@ -114,8 +124,10 @@ function makeDeps(
   const readSessionFile = vi.fn<CaptureDeps['readFile']>(
     overrides.readFile ?? (async () => session),
   );
+  // Par défaut, chaque dossier est la racine d'un dépôt (rev-parse) dont le remote est `remote`.
   const git = vi.fn<CaptureDeps['git']>(
-    overrides.git ?? (async () => (overrides.remote === undefined ? null : overrides.remote)),
+    overrides.git ??
+      (async (args) => (args[0] === 'rev-parse' ? 'true' : (overrides.remote ?? null))),
   );
   const out = vi.fn<(line: string) => void>();
   const deps: CaptureDeps = {
@@ -123,7 +135,11 @@ function makeDeps(
     out,
     readFile: readSessionFile,
     git,
+    // Jamais l'environnement ni le HOME du lanceur des tests (Cursor, Codex).
+    env: overrides.env ?? {},
+    home: HOME,
     ...(overrides.projectDir === undefined ? {} : { projectDir: overrides.projectDir }),
+    ...(overrides.facts === undefined ? {} : { facts: overrides.facts }),
   };
   return { deps, send, readSessionFile, git, out };
 }
@@ -265,6 +281,55 @@ describe('captureSessionFromHook : le JSON de la doc de Claude Code (SessionEnd)
   );
 });
 
+// Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés à
+// sa migration. Leur fichier de session n'est pas au format de Claude Code, et chacun a son propre crochet.
+describe('captureSessionFromHook : lancée par un autre outil que Claude Code', () => {
+  const hookWith = (fields: Record<string, unknown>) =>
+    JSON.stringify({ ...JSON.parse(HOOK), ...fields });
+
+  it.each([
+    ['une entrée Cursor (cursor_version)', hookWith({ cursor_version: '1.7.2' }), {}],
+    ['CURSOR_VERSION posé', HOOK, { CURSOR_VERSION: '1.7.2' }],
+    [
+      'une session Codex sous CODEX_HOME',
+      hookWith({ transcript_path: '/codex/sessions/2026/11/02/rollout-1.jsonl' }),
+      { CODEX_HOME: '/codex' },
+    ],
+    [
+      'une session Codex sous ~/.codex, sans CODEX_HOME',
+      hookWith({ transcript_path: `${HOME}/.codex/sessions/2026/11/02/rollout-1.jsonl` }),
+      {},
+    ],
+  ])('%s : code 0, sans rien lire, envoyer ni écrire', async (_name, stdin, env) => {
+    const { deps, send, readSessionFile, git, out } = makeDeps({ env });
+
+    expect(await captureSessionFromHook(stdin, deps)).toBe(0);
+
+    expect(readSessionFile).not.toHaveBeenCalled();
+    expect(git).not.toHaveBeenCalled();
+    expect(send).not.toHaveBeenCalled();
+    expect(out).not.toHaveBeenCalled();
+    expect(stderr).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['une session Claude Code', `${HOME}/.claude/projects/-r/s1.jsonl`, {}],
+    [
+      'une session sous ~/.codex quand CODEX_HOME est ailleurs',
+      `${HOME}/.codex/sessions/s1.jsonl`,
+      { CODEX_HOME: '/codex' },
+    ],
+  ])('%s : la session part, comme d’habitude', async (_name, transcriptPath, env) => {
+    const { deps, send } = makeDeps({ env: { CURSOR_VERSION: '', ...env } });
+
+    expect(await captureSessionFromHook(hookWith({ transcript_path: transcriptPath }), deps)).toBe(
+      0,
+    );
+
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+});
+
 // Le `cwd` du crochet suit Claude (doc : « the worktree root after Claude enters a worktree, and the new directory
 // after Claude runs cd »). La clé du projet doit rester celle du dossier de départ de la session, que voit aussi
 // `briefing` au démarrage : sans remote GitHub, la clé est le hachage du chemin, et trois chemins donnent trois clés.
@@ -357,6 +422,145 @@ describe('captureSessionFromHook : le projet est celui du dossier de départ de 
   });
 });
 
+// Les faits partent après les tours, seulement quand l'accord le permet : leon.ts ne pose `facts` qu'à partir de
+// la version 2 (consent.ts). Sans `facts`, tous les tests ci-dessus montrent que seuls les tours partent.
+describe("captureSessionFromHook : les faits de la session, si l'accord le permet", () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+  const GESTES = new URL(
+    '../capture/fixtures/claude-code-faits/session-gestes.jsonl',
+    import.meta.url,
+  );
+
+  it('après les tours, envoie les faits, avec la version de l’accord et une vraie fin', async () => {
+    const content = await readFile(GESTES, 'utf8');
+    const events: string[] = [];
+    const facts = vi.fn<FactsSender>(async () => {
+      events.push('faits');
+    });
+    const { deps } = makeDeps({
+      session: content,
+      remote: 'git@github.com:Acme/Leon.git',
+      send: async () => {
+        events.push('tours');
+        return RESULT;
+      },
+      facts: { accord: 2, send: facts },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(events.at(-1)).toBe('faits');
+    expect(events.filter((event) => event === 'faits')).toHaveLength(1);
+    const [payload] = facts.mock.calls.map(([sent]) => sent);
+    expect(payload).toEqual<SessionFactsPayload>({
+      kind: 'claude_code',
+      external_id: '44444444-4444-4444-8444-444444444444',
+      project: 'github.com/acme/leon',
+      accord: 2,
+      // Les fichiers sont relatifs au dépôt du dossier de départ de la session, pas à celui du crochet.
+      faits: extractClaudeCodeFacts(content, '/Users/demo/projets/leon'),
+      fin: true,
+    });
+    expect(payload?.faits.fichiers.length).toBeGreaterThan(0);
+  });
+
+  it.each([404, 400])(
+    'un %i sur les faits : code 0, la session reste captée, un message fixe sans le corps de la réponse',
+    async (status) => {
+      const fetchImpl = vi.fn(
+        async () => new Response(JSON.stringify({ error: 'MOT-DU-SERVEUR' }), { status }),
+      );
+      const { deps, send } = makeDeps({
+        facts: { accord: 2, send: createFactsSender(fetchImpl as unknown as typeof fetch, env) },
+      });
+
+      expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(stderrText()).toMatch(/session captured/);
+      expect(stderrText()).toMatch(/does not accept session facts/);
+      expect(stderrText()).not.toContain('MOT-DU-SERVEUR');
+    },
+  );
+
+  it("une autre erreur sur les faits : code 0, un message fixe, rien du texte de l'erreur", async () => {
+    const { deps } = makeDeps({
+      facts: {
+        accord: 2,
+        send: async () => {
+          throw new TypeError(`fetch failed : MOT-DE-L-ERREUR ${SECRETS.anthropic}`);
+        },
+      },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(stderrText()).toMatch(/session captured/);
+    expect(stderrText()).toMatch(/session facts not sent/);
+    expect(stderrText()).not.toContain('MOT-DE-L-ERREUR');
+    expect(stderrText()).not.toContain(SECRETS.anthropic);
+  });
+
+  // Une session qui écrit un fichier à la racine du dépôt, démarrée dans `start`.
+  const writingSession = (start: string) =>
+    [
+      conversationLine(1, 'user', 'Bonjour', start),
+      conversationLine(
+        2,
+        'assistant',
+        [{ type: 'tool_use', id: 'w1', name: 'Write', input: { file_path: '/p/README.md' } }],
+        start,
+      ),
+      conversationLine(
+        3,
+        'user',
+        [{ type: 'tool_result', tool_use_id: 'w1', content: 'ok' }],
+        start,
+      ),
+    ].join('\n');
+  const factsOf = async (git: CaptureDeps['git'], start: string) => {
+    const facts = vi.fn<FactsSender>(async () => {});
+    const { deps } = makeDeps({
+      session: writingSession(start),
+      git,
+      facts: { accord: 2, send: facts },
+    });
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+    return facts.mock.calls[0]?.[0].faits;
+  };
+
+  it('démarrée dans un sous-dossier, garde les fichiers écrits à la racine du dépôt', async () => {
+    const git = vi.fn<CaptureDeps['git']>(async (args, cwd) =>
+      args[0] === 'rev-parse' && cwd === '/p/src' ? 'true\n../' : null,
+    );
+
+    expect((await factsOf(git, '/p/src'))?.fichiers).toEqual(['README.md']);
+    expect(git).toHaveBeenCalledWith(
+      ['rev-parse', '--is-inside-work-tree', '--show-cdup'],
+      '/p/src',
+    );
+  });
+
+  it('hors de tout dépôt (git ne répond rien), n’envoie aucun fichier', async () => {
+    expect((await factsOf(async () => null, '/p'))?.fichiers).toEqual([]);
+  });
+
+  it('des tours refusés : les faits ne partent pas', async () => {
+    const facts = vi.fn<FactsSender>(async () => {});
+    const { deps } = makeDeps({
+      send: async () => {
+        throw new IngestResponseError(500);
+      },
+      facts: { accord: 2, send: facts },
+    });
+
+    expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
+
+    expect(facts).not.toHaveBeenCalled();
+  });
+});
+
 describe('captureSessionFromHook : un 400 du serveur', () => {
   const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
 
@@ -367,7 +571,9 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
           status: 400,
         }),
     );
-    const { deps } = makeDeps({ send: createHookSender(refusing as unknown as typeof fetch, env) });
+    const { deps } = makeDeps({
+      send: createIngestSender(refusing as unknown as typeof fetch, env),
+    });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
 
@@ -380,7 +586,9 @@ describe('captureSessionFromHook : un 400 du serveur', () => {
 
   it('une autre réponse en erreur garde le message général', async () => {
     const failing = vi.fn(async () => new Response('', { status: 500 }));
-    const { deps } = makeDeps({ send: createHookSender(failing as unknown as typeof fetch, env) });
+    const { deps } = makeDeps({
+      send: createIngestSender(failing as unknown as typeof fetch, env),
+    });
 
     await captureSessionFromHook(HOOK, deps);
 
@@ -674,7 +882,7 @@ describe('captureSessionFromHook : ne bloque jamais Claude Code', () => {
   });
 });
 
-describe('createHookSender : un délai réseau borné', () => {
+describe('le délai réseau du crochet', () => {
   const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
   // Un fetch qui ne répond jamais, sauf pour échouer quand on l'interrompt.
   const hangingFetch = vi.fn(
@@ -693,7 +901,10 @@ describe('createHookSender : un délai réseau borné', () => {
   });
 
   it('interrompt un serveur qui ne répond pas, et la capture sort quand même à 0', async () => {
-    const send = createHookSender(hangingFetch as unknown as typeof fetch, env, 30);
+    // Celui que pose leon.ts, raccourci (`--delai-ms`).
+    const send = createIngestSender(hangingFetch as unknown as typeof fetch, env, {
+      signal: AbortSignal.timeout(30),
+    });
     const { deps } = makeDeps({ send });
     const started = Date.now();
 

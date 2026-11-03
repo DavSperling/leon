@@ -3,8 +3,11 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   BriefingResponseSchema,
+  ContextResponseSchema,
+  SessionFactsPayloadSchema,
   ViewerProfileSchema,
 } from '@/capture/api-contract';
+import { extractClaudeCodeFacts } from '@/capture/session-facts';
 import { IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -27,6 +30,8 @@ const SERVED = {
   me: ['GET', {}],
   mcp: ['POST', { body: initialize }],
   briefing: ['GET', {}],
+  faits: ['POST', { body: {} }],
+  contexte: ['POST', { body: {} }],
 } as const;
 // Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
 const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
@@ -104,11 +109,28 @@ describe('routes de l’API', () => {
       `${API_PATHS.briefing}?${new URLSearchParams({ [BRIEFING_PROJECT_PARAM]: 'github.com/acme/leon' })}`,
       { token },
     );
+    const faits = await apiRequest(API_PATHS.faits, {
+      token,
+      body: SessionFactsPayloadSchema.parse({
+        kind: 'claude_code',
+        external_id: `session-${crypto.randomUUID()}`,
+        accord: 2,
+        faits: extractClaudeCodeFacts('', '/'),
+        fin: false,
+      }),
+    });
+    const contexte = await apiRequest(API_PATHS.contexte, {
+      token,
+      body: { projet: 'github.com/acme/leon', branche: null, session: 'session-courante' },
+    });
 
-    expect([me.status, ingest.status, briefing.status]).toEqual([200, 202, 200]);
+    expect([me.status, ingest.status, briefing.status, faits.status, contexte.status]).toEqual([
+      200, 202, 200, 202, 200,
+    ]);
     expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
     expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
+    expect(ContextResponseSchema.parse(await contexte.json()).texte).not.toBe('');
   });
 });
 

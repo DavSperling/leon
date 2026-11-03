@@ -37,6 +37,9 @@
 //   un lien symbolique vers un fichier absent ;
 // - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
 //   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
+// - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
+//   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
+//   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -62,6 +65,13 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
+import {
+  consentPath,
+  consentWithdrawn,
+  FACTS_VERSION,
+  factsConsent,
+  writeConsent,
+} from './consent';
 import { parseServerEnv } from './env';
 import { type HookSubcommand, hookCommand } from './hook-commands';
 
@@ -80,24 +90,33 @@ type HookSpec = {
   role: string;
 };
 
-const HOOKS: readonly HookSpec[] = [
+export const HOOKS: readonly HookSpec[] = [
   {
     event: 'SessionStart',
     subcommand: 'briefing',
     timeout: SESSION_START_TIMEOUT_S,
-    role: "at the start of a session, prints the project's morning briefing: Claude Code adds it to the session context.",
+    role: "at the start of a session, prints your recent sessions on this repository and the project's morning briefing: Claude Code adds them to the session context.",
   },
   {
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'at the end of every session, sends the text of the exchanges to Leon (secrets masked); the conversation stays private to its author.',
+    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session stays private to its author.',
   },
 ];
 
-type Json = Record<string, unknown>;
+// Ce qui est lu, ce qui part et ce qui est donné au modèle de Claude Code : le texte de l'accord en version 2 (C7),
+// testé mot pour mot (install-hooks.test.ts). Le changer, c'est changer ce que l'utilisateur a accepté.
+const CONSENT_LINES = [
+  'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
+  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
+  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
+];
 
-const isRecord = (value: unknown): value is Json =>
+export type Json = Record<string, unknown>;
+
+export const isRecord = (value: unknown): value is Json =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 // Un mot de shell : des caractères sans signification pour lui, ou des morceaux entre apostrophes ou guillemets
@@ -107,9 +126,17 @@ const WORD = String.raw`(?:[^\s'"\\;&|<>()\x60]|'[^']*'|"[^"]*"|\\')+`;
 const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) ${WORD}| --dir=${WORD})`;
 
 // Un crochet de Leon : `pnpm <options de pnpm> leon <sous-commande>`, et rien d'autre. Toute autre commande, même
-// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée.
-function leonCommandPattern(subcommand: HookSubcommand): RegExp {
-  return new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`);
+// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée. Le retrait (uninstall-hooks.ts) reconnaît
+// les crochets de la même façon.
+export function isLeonHandler(
+  handler: unknown,
+  subcommand: HookSubcommand,
+): handler is Json & { command: string } {
+  return (
+    isRecord(handler) &&
+    typeof handler.command === 'string' &&
+    new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(handler.command.trim())
+  );
 }
 
 export type HookChange = {
@@ -128,8 +155,6 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
     command: hookCommand(repoDir, spec.subcommand),
     timeout: spec.timeout,
   };
-  const pattern = leonCommandPattern(spec.subcommand);
-
   const hooksRoot = root.hooks ?? {};
   if (!isRecord(hooksRoot)) throw new SettingsShapeError('the "hooks" key must be an object');
   const groups = hooksRoot[spec.event] ?? [];
@@ -149,11 +174,7 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
     const handlers: unknown[] = [];
     let dropped = false;
     for (const handler of group.hooks) {
-      const isLeon =
-        isRecord(handler) &&
-        typeof handler.command === 'string' &&
-        pattern.test(handler.command.trim());
-      if (!isLeon) {
+      if (!isLeonHandler(handler, spec.subcommand)) {
         handlers.push(handler);
       } else if (found) {
         // Un doublon (une copie à la main du README, un ancien dépôt) : un seul crochet reste.
@@ -199,7 +220,7 @@ type Loaded =
 
 // Les réglages tels qu'ils sont sur le disque : absents, illisibles (accès refusé, dossier, lien symbolique vers un
 // fichier absent…) ou présents.
-async function load(path: string): Promise<Loaded> {
+export async function load(path: string): Promise<Loaded> {
   let realPath: string;
   try {
     realPath = await realpath(path); // à travers un lien symbolique : on écrit le fichier lui-même
@@ -221,11 +242,30 @@ async function load(path: string): Promise<Loaded> {
   }
 }
 
+// Les réglages lus : {} pour un fichier absent ou vide, null pour un fichier illisible ou qui n'est pas un objet JSON
+// (Claude Code lit du JSON strict). Le retrait (uninstall-hooks.ts) les lit de la même façon.
+export function parseSettings(loaded: Loaded): Json | null {
+  if (loaded.kind === 'unreadable') return null;
+  if (loaded.kind === 'absent' || loaded.text.trim() === '') return {};
+  try {
+    const parsed: unknown = JSON.parse(loaded.text);
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+// Le code d'une erreur du système (EACCES, ENOSPC…), seul cité dans les messages.
+export const errorCode = (error: unknown): string | undefined => {
+  const code = (error as NodeJS.ErrnoException | null)?.code;
+  return typeof code === 'string' ? code : undefined;
+};
+
 const sameLoaded = (a: Loaded, b: Loaded) =>
   a.kind === b.kind && (a.kind !== 'present' || (b.kind === 'present' && a.text === b.text));
 
 // Écrit dans un fichier voisin puis le renomme : un arrêt en cours d'écriture ne laisse jamais des réglages coupés.
-async function writeAtomically(path: string, loaded: Loaded, text: string): Promise<void> {
+export async function writeAtomically(path: string, loaded: Loaded, text: string): Promise<void> {
   const target = loaded.kind === 'present' ? loaded.realPath : path;
   const mode = loaded.kind === 'present' ? loaded.mode : 0o600;
   const temp = `${target}.leon-tmp-${randomBytes(6).toString('hex')}`;
@@ -239,7 +279,13 @@ async function writeAtomically(path: string, loaded: Loaded, text: string): Prom
   }
 }
 
-export type InstallOptions = { repoDir: string; configDir: string; assumeYes: boolean };
+// `home` : le dossier qui porte `.leon/accord.json` (consent.ts).
+export type InstallOptions = {
+  repoDir: string;
+  configDir: string;
+  home: string;
+  assumeYes: boolean;
+};
 export type InstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
@@ -324,7 +370,7 @@ function preview(path: string, changes: HookChange[], backup: BackupPlan): strin
     );
   }
   lines.push(
-    'What will be sent: these hooks are in your personal settings, so at the end of ALL your Claude Code sessions, in ALL your folders (personal ones included), the text of the exchanges is sent to the Leon server (secrets masked). Sessions started by a script (`claude -p`) are sent too, except with `--bare`, which loads no hooks.',
+    ...CONSENT_LINES,
     'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
     'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
     backupLine(backup),
@@ -349,8 +395,29 @@ const exists = (path: string) =>
     () => false,
   );
 
-// Rend le code de sortie : 0 si les crochets sont en place ou si l'utilisateur a refusé, 1 si les réglages n'ont pas
-// pu être lus ou ont changé en route.
+// L'accord s'écrit après les réglages : s'il ne s'écrit pas, les crochets n'envoient que ce qu'ils envoyaient avant
+// lui (le point du matin, les textes), ou rien si l'accord était retiré (consent.ts).
+async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> {
+  const path = consentPath(home);
+  const withdrawn = await consentWithdrawn(home, 'claude_code');
+  try {
+    await writeConsent(home, 'claude_code', FACTS_VERSION);
+  } catch (error) {
+    const code = errorCode(error);
+    const meanwhile = withdrawn
+      ? 'your consent stays withdrawn, the hooks send nothing'
+      : 'at the end of each session, the hooks send only the text of the exchanges, not its actions';
+    deps.err(
+      `Leon: could not write ${path}${code ? ` (${code})` : ''}: ${meanwhile}. Run the command again.`,
+    );
+    return false;
+  }
+  deps.out(`Consent recorded in ${path}.`);
+  return true;
+}
+
+// Rend le code de sortie : 0 si les crochets et l'accord sont en place ou si l'utilisateur a refusé, 1 si les réglages
+// n'ont pas pu être lus ou ont changé en route, ou si l'accord n'a pas pu s'écrire.
 export async function installHooks(options: InstallOptions, deps: InstallDeps): Promise<number> {
   const path = join(options.configDir, SETTINGS_FILE);
   const backup = join(options.configDir, BACKUP_FILE);
@@ -362,21 +429,11 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   };
 
   const loaded = await load(path);
-  const unreadable = () =>
-    refuse(
+  const settings = parseSettings(loaded);
+  if (settings === null) {
+    return refuse(
       'is unreadable: it is not a valid JSON object (Claude Code reads strict JSON, with no comments or trailing commas) or the file is inaccessible (permissions, symbolic link to a missing file).',
     );
-  if (loaded.kind === 'unreadable') return unreadable();
-  let settings: Json = {};
-  if (loaded.kind === 'present' && loaded.text.trim() !== '') {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(loaded.text);
-    } catch {
-      return unreadable();
-    }
-    if (!isRecord(parsed)) return unreadable();
-    settings = parsed;
   }
 
   let plan: ReturnType<typeof addLeonHooks>;
@@ -388,10 +445,38 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   }
 
   const alerts = await warnings(settings, options.repoDir);
+  // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
+  const consented = (await factsConsent(options.home, 'claude_code')) !== null;
+  const consentFile = consentPath(options.home);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
-    deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
-    return 0;
+    if (consented) {
+      deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+      return 0;
+    }
+    // Des crochets posés avant l'accord, ou restés après son retrait (retrait des réglages raté, crochets remis à la
+    // main) : seul l'accord est demandé, et les réglages ne sont pas touchés.
+    const withdrawn = await consentWithdrawn(options.home, 'claude_code');
+    deps.out(
+      withdrawn
+        ? `Both Leon hooks are already in place in ${path}, but your consent was withdrawn: for now, they send nothing.`
+        : `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
+    );
+    for (const line of ['', ...CONSENT_LINES]) deps.out(line);
+    if (!options.assumeYes) {
+      const answer = await deps.ask(
+        `\nRecord this consent in ${consentFile} (${path} is not modified)? [y/N] `,
+      );
+      if (!isYes(answer)) {
+        deps.out(
+          withdrawn
+            ? 'Nothing was written: the hooks keep sending nothing.'
+            : 'Nothing was written: at the end of each session, the hooks keep sending only the text of the exchanges, not its actions.',
+        );
+        return 0;
+      }
+    }
+    return (await recordConsent(options.home, deps)) ? 0 : 1;
   }
 
   const backupPlan: BackupPlan =
@@ -403,7 +488,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   }
   for (const line of alerts) deps.out(`\n${line}`);
   if (!options.assumeYes) {
-    const answer = await deps.ask('\nWrite these hooks? [y/N] ');
+    const answer = await deps.ask(
+      `\nWrite these hooks${consented ? '' : ` and record this consent in ${consentFile}`}? [y/N] `,
+    );
     if (!isYes(answer)) {
       deps.out('Nothing was written.');
       return 0;
@@ -428,9 +515,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     await writeAtomically(path, loaded, `${JSON.stringify(plan.settings, null, 2)}\n`);
   } catch (error) {
     if (backupCreated) await unlink(backup).catch(() => {});
-    const code = (error as NodeJS.ErrnoException | null)?.code;
+    const code = errorCode(error);
     deps.err(
-      `Leon: could not write ${path} (permissions or disk space${typeof code === 'string' ? `: ${code}` : ''}). Nothing was modified: add the hooks by hand (${README_HINT}).`,
+      `Leon: could not write ${path} (permissions or disk space${code ? `: ${code}` : ''}). Nothing was modified: add the hooks by hand (${README_HINT}).`,
     );
     return 1;
   }
@@ -438,7 +525,8 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   deps.out(`\nHooks installed in ${path}.`);
   if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
   deps.out(
-    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, delete these two entries (${README_HINT}).`,
+    'Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run `pnpm leon retirer-crochets` (it also withdraws your consent).',
   );
+  if (!consented && !(await recordConsent(options.home, deps))) return 1;
   return 0;
 }

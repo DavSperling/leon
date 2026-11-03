@@ -4,8 +4,9 @@
 // - L'évènement s'appelle `SessionEnd`. Claude Code écrit sur l'entrée standard du crochet un JSON :
 //   les champs communs (`session_id`, `prompt_id`, `transcript_path`, `cwd`, `scratchpad_dir`, `permission_mode`,
 //   `effort`, `hook_event_name`) et `reason` (`clear`, `resume`, `logout`, `prompt_input_exit` ou `other`).
-//   Seuls `transcript_path` et `cwd` sont lus ici, les autres champs sont ignorés : l'identifiant de la source est
-//   celui écrit dans le fichier de session, comme à l'import.
+//   Seuls `transcript_path` et `cwd` sont lus ici (et `cursor_version`, pour reconnaître Cursor : isOtherToolHook),
+//   les autres champs sont ignorés : l'identifiant de la source est celui écrit dans le fichier de session, comme à
+//   l'import.
 // - Ce crochet ne peut ni bloquer la fin de session ni répondre à Claude Code (pas de contrôle de décision).
 // - Délai : 1,5 s par défaut pour SessionEnd ; un `timeout` plus long dans les réglages (jusqu'à 60 s) relève
 //   ce budget. L'installeur de crochets (T14) en pose un de 30 s.
@@ -25,25 +26,30 @@
 //
 // Les textes passent par la même préparation que l'import (masquage des secrets, retrait des rappels système,
 // coupe des tours trop longs : `parseClaudeCodeSession`), puis le serveur la refait à la réception.
-import { isAbsolute } from 'node:path';
+//
+// Après les tours, les faits de la session (ses gestes, C1 du plan mémoire des sessions) partent par leur propre
+// route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts) : c'est une
+// vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
+import { isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
-import type { ServerEnv } from './env';
 import {
   countOf,
-  createIngestSender,
+  FACTS_REFUSED_MESSAGE,
   type ImportDeps,
   type ImportSummary,
   IngestResponseError,
   importSession,
+  sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
-import { type GitRunner, projectKeyFor } from './project-key';
+import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
 // et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
-// fois, dès la création de l'envoi (lecture de l'entrée, du fichier et de git comprises) : c'est lui qui borne la
-// durée de la commande, d'où l'envoi des lots les plus récents d'abord.
+// fois pour les tours et les faits, une fois l'entrée lue (5 s au plus, STDIN_TIMEOUT_MS), lecture du fichier et
+// de git comprises (leon.ts) : c'est lui qui borne la durée de la commande, d'où l'envoi des lots les plus récents
+// d'abord.
 export const HOOK_DEADLINE_MS = 15_000;
 const STDIN_MAX_CHARS = 64 * 1024;
 const STDIN_TIMEOUT_MS = 5000;
@@ -61,7 +67,38 @@ export type CaptureDeps = ImportDeps & {
   // $CLAUDE_PROJECT_DIR, « the project root where the session started » (doc des crochets) : repli quand le
   // fichier de session n'écrit aucun dossier.
   projectDir?: string;
+  // Pour reconnaître un autre outil (isOtherToolHook) : jamais ceux du processus par défaut, qu'un test lancé dans
+  // le terminal de Cursor (CURSOR_VERSION) lirait sans le savoir.
+  env: Record<string, string | undefined>;
+  home: string;
 };
+
+// Les crochets de Claude Code que Leon pose servent parfois à un autre outil (T06 du plan mémoire des sessions) :
+// - Cursor reprend les crochets de Claude Code : son entrée porte `cursor_version`, ou son environnement
+//   CURSOR_VERSION ;
+// - la migration de Codex recopie les crochets de Leon : son fichier de session est sous
+//   `${CODEX_HOME:-~/.codex}/sessions/`.
+// Les commandes au format Claude Code (`briefing`, `capter-session`, puis `contexte-prompt` au lot 10) sortent alors
+// avec le code 0 sans rien écrire : l'outil reçoit le bloc par son propre crochet, et son fichier de session n'est
+// pas celui de Claude Code. Jamais `leon crochet <outil> …`, qui est fait pour eux.
+export function isOtherToolHook(
+  stdin: string,
+  env: Record<string, string | undefined>,
+  home: string,
+): boolean {
+  let input: unknown = null;
+  try {
+    input = JSON.parse(stdin);
+  } catch {
+    // Entrée vide (lancée à la main) ou illisible : l'environnement seul décide.
+  }
+  const fields = typeof input === 'object' && input !== null ? input : {};
+  if (env.CURSOR_VERSION || Object.hasOwn(fields, 'cursor_version')) return true;
+  const path = 'transcript_path' in fields ? fields.transcript_path : null;
+  if (typeof path !== 'string' || !isAbsolute(path)) return false;
+  const sessions = resolve(env.CODEX_HOME || join(home, '.codex'), 'sessions');
+  return resolve(path).startsWith(sessions + sep);
+}
 
 // Le délai demandé à la commande (`--delai-ms`, réservé aux essais) : il ne fait que raccourcir celui du crochet.
 // Une valeur absente, illisible ou nulle laisse le délai du crochet.
@@ -113,9 +150,11 @@ function parseHookInput(stdin: string): z.infer<typeof HookInputSchema> | null {
   }
 }
 
+// Le contenu du fichier sert aussi aux faits.
 async function readSession(path: string, deps: CaptureDeps) {
   try {
-    return parseClaudeCodeSession(await deps.readFile(path));
+    const content = await deps.readFile(path);
+    return { content, session: parseClaudeCodeSession(content) };
   } catch {
     return undefined;
   }
@@ -125,17 +164,16 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   const input = parseHookInput(stdin);
   if (!input) return warn('could not read the hook input, session not captured.');
 
-  const session = await readSession(input.transcript_path, deps);
-  if (session === undefined) {
+  const read = await readSession(input.transcript_path, deps);
+  if (read === undefined) {
     return warn('session file not found or unreadable, session not captured.');
   }
+  const { content, session } = read;
   if (session === null) return warn('nothing to send for this session.');
 
   // Le dossier de départ de la session, comme `briefing` : le même projet des deux côtés.
-  const projectKey = await projectKeyFor(
-    startingDirectory(session.cwd, deps.projectDir, input.cwd),
-    deps.git,
-  );
+  const start = startingDirectory(session.cwd, deps.projectDir, input.cwd);
+  const projectKey = await projectKeyFor(start, deps.git);
   const summary: ImportSummary = {
     sessions: 1,
     turnsSent: 0,
@@ -151,25 +189,27 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   warn(
     `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
+  if (!deps.facts) return; // sans accord, pas même git pour la racine du dépôt
+  try {
+    // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
+    const source = { content, root: await repoRootFor(start, deps.git), fin: true };
+    if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
+      warn(FACTS_REFUSED_MESSAGE);
+    }
+  } catch {
+    warn('session facts not sent (server unreachable, too slow or unexpected response).');
+  }
 }
 
 // Le code de sortie vaut toujours 0 : ce crochet ne doit jamais gêner la fin d'une session.
 export async function captureSessionFromHook(stdin: string, deps: CaptureDeps): Promise<number> {
   try {
+    if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
     await capture(stdin, deps);
   } catch {
     warn('capture failed (unexpected error).');
   }
   return 0;
-}
-
-// L'envoi du crochet : même requête que l'import, mais interrompue après `deadlineMs`.
-export function createHookSender(
-  fetchImpl: typeof fetch,
-  env: ServerEnv,
-  deadlineMs: number = HOOK_DEADLINE_MS,
-): ImportDeps['send'] {
-  return createIngestSender(fetchImpl, env, { signal: AbortSignal.timeout(deadlineMs) });
 }
 
 type HookInputStream = AsyncIterable<string | Uint8Array> & { isTTY?: boolean };

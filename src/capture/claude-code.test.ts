@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { renderBriefing } from '@/server/briefing/briefing-prompt';
 import { parseClaudeCodeSession } from './claude-code';
 import { SECRET_MASK } from './mask-secrets';
 
@@ -72,6 +73,29 @@ describe('parseClaudeCodeSession', () => {
     expect(session?.turns.map((t) => t.text)).toEqual([
       'Lance une recherche sur le fournisseur Delta.',
       'Delta livre en dix jours.',
+    ]);
+  });
+
+  // Un bloc injecté par Leon n'est jamais recapté (T06 du plan mémoire des sessions) : ni le bloc de démarrage, ni
+  // le point du matin, ni le rappel du premier prompt.
+  it('retire les blocs de Leon des textes, et écarte un tour qui n’a rien d’autre', () => {
+    const block = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
+    // Le point du matin tel que le serveur le rend : son en-tête est hors de la balise.
+    const point = renderBriefing({
+      project: 'github.com/acme/leon',
+      preparedAt: new Date('2026-11-02T04:00:00.000Z'),
+      body: '- Le jeton est corrigé.',
+      references: [],
+    });
+    const content = [
+      line('user', 1, `${block}\n${point}`),
+      line('user', 2, `On reprend.\n<rappel-leon>\n- une session\n</rappel-leon>`),
+      line('assistant', 3, [{ type: 'text', text: `Je relis ${block} puis le code.` }]),
+    ].join('\n');
+
+    expect(parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.text])).toEqual([
+      ['uuid-2', 'On reprend.'],
+      ['uuid-3', 'Je relis  puis le code.'],
     ]);
   });
 

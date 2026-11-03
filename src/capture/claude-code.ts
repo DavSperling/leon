@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { maskSecrets } from './mask-secrets';
 import { prepareTurnText } from './prepare-turn-text';
+import { stripLeonBlocks } from './strip-leon-blocks';
 import type { Turn } from './turn';
 
 export type ClaudeCodeSession = {
@@ -76,8 +77,9 @@ function isConversationLine(line: Line): line is ConversationLine {
   );
 }
 
+// Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.
 function toTurn(line: ConversationLine): Turn | null {
-  const text = prepareTurnText(messageText(line.message.content));
+  const text = prepareTurnText(stripLeonBlocks(messageText(line.message.content)));
   if (text === null) return null;
   return {
     external_id: line.uuid,

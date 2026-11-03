@@ -5,7 +5,8 @@
 // standard, le code de sortie, la sortie standard vide et les messages d'erreur.
 //
 // Vie privée : rien ici ne lit les vraies sessions de Claude Code. La session est écrite dans un dossier
-// temporaire, CLAUDE_CONFIG_DIR et HOME y pointent, et l'environnement du fils ne reprend rien de celui du test.
+// temporaire, CLAUDE_CONFIG_DIR et HOME y pointent (l'accord, ~/.leon/accord.json, aussi), et l'environnement du
+// fils ne reprend rien de celui du test.
 import { execFile, type SpawnOptionsWithoutStdio, spawn } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
@@ -14,8 +15,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { API_PATHS } from '../capture/api-contract';
+import { API_PATHS, SessionFactsPayloadSchema } from '../capture/api-contract';
 import type { IngestPayload } from '../capture/turn';
+import { writeConsent } from './consent';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -121,7 +123,9 @@ const hookJson = (transcriptPath: string) =>
   });
 
 // Lance `node --import tsx src/cli/leon.ts capter-session` depuis la racine du dépôt de Leon (comme
-// `pnpm --dir <dépôt> leon …`), avec un environnement réduit à ce que la commande demande.
+// `pnpm --dir <dépôt> leon …`), avec un environnement réduit à ce que la commande demande. Pas le vrai pnpm : son
+// script `leon` charge le .env.local du dépôt, dont un LEON_URL réel prendrait la place d'une variable vide ici. La
+// ligne pnpm des crochets est gardée à part, dans un dépôt jetable (hook-commands.contrat.test.ts).
 function runCommand(input: string, extra: { env?: Record<string, string>; args?: string[] } = {}) {
   return new Promise<Outcome>((done, fail) => {
     const started = Date.now();
@@ -157,6 +161,7 @@ function runCommand(input: string, extra: { env?: Record<string, string>; args?:
 }
 
 describe('leon capter-session : la vraie commande', () => {
+  // Sans accord.json (installé avant ce chantier) : les tours seuls, comme avant.
   it(
     'envoie la session une seule fois, avec la clé du dépôt GitHub, sans rien écrire sur la sortie standard',
     async () => {
@@ -176,6 +181,56 @@ describe('leon capter-session : la vraie commande', () => {
       });
       expect(request?.body.turns.map((turn) => turn.external_id)).toEqual(['u-1', 'u-2', 'u-3']);
       expect(outcome.stderr).toMatch(/session captured/);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "avec l'accord en version 2, envoie les faits après les tours, sur leur route",
+    async () => {
+      await writeConsent(home, 'claude_code', 2);
+
+      const outcome = await runCommand(hookJson(await writeSession()));
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe('');
+      expect(outcome.seconds).toBeLessThan(MAX_SECONDS);
+      expect(received.map((request) => request.url)).toEqual([API_PATHS.ingest, API_PATHS.faits]);
+      const facts = received[1];
+      expect(facts?.authorization).toBe(`Bearer ${TOKEN}`);
+      // Ce que la route du serveur accepte (T02), au champ près.
+      expect(SessionFactsPayloadSchema.safeParse(facts?.body).success).toBe(true);
+      expect(facts?.body).toMatchObject({
+        kind: 'claude_code',
+        external_id: SESSION_ID,
+        project: 'github.com/acme/leon',
+        accord: 2,
+        fin: true,
+        faits: { echanges: 2 },
+      });
+      expect(JSON.stringify(facts?.body)).not.toContain(SECRET_IN_SESSION);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'un serveur sans la route des faits (404) : code 0, un message fixe, les tours captés',
+    async () => {
+      await writeConsent(home, 'claude_code', 2);
+      handle = (request, response) => {
+        if (request.url !== API_PATHS.faits) return answerOk(request, response);
+        response.writeHead(404, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ error: 'MOT-DU-SERVEUR' }));
+      };
+
+      const outcome = await runCommand(hookJson(await writeSession()));
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe('');
+      expect(received).toHaveLength(2);
+      expect(outcome.stderr).toMatch(/session captured/);
+      expect(outcome.stderr).toMatch(/does not accept session facts/);
+      expect(outcome.stderr).not.toContain('MOT-DU-SERVEUR');
     },
     TEST_TIMEOUT_MS,
   );
@@ -242,6 +297,28 @@ describe('leon capter-session : la vraie commande', () => {
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toBe('');
       expect(outcome.stderr).toMatch(/LEON_TOKEN/);
+      expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Cursor reprend les crochets de Claude Code (T06) : la commande sort sans rien écrire, avant même de lire sa
+  // configuration ou l'accord.
+  it(
+    "sous Cursor (CURSOR_VERSION posé), sans LEON_URL ou avec l'accord retiré : code 0, rien d'écrit ni d'envoyé",
+    async () => {
+      const transcript = await writeSession();
+      const cursor = { CURSOR_VERSION: '2.4.27' };
+
+      const missingUrl = await runCommand(hookJson(transcript), {
+        env: { ...cursor, LEON_URL: '' },
+      });
+      await writeConsent(home, 'claude_code', 0);
+      const withdrawn = await runCommand(hookJson(transcript), { env: cursor });
+
+      for (const outcome of [missingUrl, withdrawn]) {
+        expect(outcome).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      }
       expect(received).toHaveLength(0);
     },
     TEST_TIMEOUT_MS,

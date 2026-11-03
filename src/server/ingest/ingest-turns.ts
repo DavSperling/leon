@@ -1,7 +1,8 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
-import type { IngestPayload, IngestResult } from '@/capture/turn';
+import { stripLeonBlocks } from '@/capture/strip-leon-blocks';
+import { CODE_SESSION_KINDS, type IngestPayload, type IngestResult } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -9,7 +10,7 @@ import { logError } from '@/server/log';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 
 // Chaque membre a sa propre source pour une conversation : la relecture ne trouve que la sienne.
-async function upsertSource(
+export async function upsertSource(
   tx: Tx,
   ctx: TenantContext,
   source: IngestPayload['source'],
@@ -74,14 +75,17 @@ export async function insertNewTurns(
   return { ids: inserted.map((row) => row.id), lastTs };
 }
 
-// Les tours vides après nettoyage sont ignorés.
+// Les tours vides après nettoyage sont ignorés. Une session de code perd aussi les blocs de Leon qu'elle a reçus,
+// même envoyés par une CLI qui ne les retire pas (strip-leon-blocks.ts) ; les autres sources gardent leur texte.
 function captureRows(
   ctx: TenantContext,
+  source: IngestPayload['source'],
   sourceId: string,
   payloadTurns: IngestPayload['turns'],
 ): TurnRow[] {
+  const codeSession = (CODE_SESSION_KINDS as readonly string[]).includes(source.kind);
   return payloadTurns.flatMap((turn) => {
-    const text = prepareTurnText(turn.text);
+    const text = prepareTurnText(codeSession ? stripLeonBlocks(turn.text) : turn.text);
     if (text === null) return [];
     return [
       {
@@ -116,7 +120,11 @@ export async function updateSource(
 
 // La clé de projet d'une session captée (C8) va dans `sources.metadata.project`, à côté des autres clés
 // (nature…) : le dernier projet reçu l'emporte, un envoi sans projet ne touche à rien.
-async function recordProject(tx: Tx, sourceId: string, project: string | undefined): Promise<void> {
+export async function recordProject(
+  tx: Tx,
+  sourceId: string,
+  project: string | undefined,
+): Promise<void> {
   if (project === undefined) return;
   await tx
     .update(sources)
@@ -163,7 +171,10 @@ export async function ingestTurns(
       : maskSecrets(payload.source.title.replaceAll('\u0000', ''));
   const { sourceId, newTurnIds, ingestRunId } = await withTenant(ctx, async (tx) => {
     const sourceId = await upsertSource(tx, ctx, payload.source, title);
-    const { ids, lastTs } = await insertNewTurns(tx, captureRows(ctx, sourceId, payload.turns));
+    const { ids, lastTs } = await insertNewTurns(
+      tx,
+      captureRows(ctx, payload.source, sourceId, payload.turns),
+    );
     await updateSource(tx, sourceId, title, lastTs);
     await recordProject(tx, sourceId, payload.source.project);
     if (ids.length === 0) return { sourceId, newTurnIds: ids, ingestRunId: null };

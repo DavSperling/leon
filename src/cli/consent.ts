@@ -6,9 +6,7 @@
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
-import type { CODE_SESSION_KINDS } from '../capture/turn';
-
-type CodeTool = (typeof CODE_SESSION_KINDS)[number];
+import type { CodeSessionKind } from '../capture/turn';
 
 // Les gestes (C1) partent à partir de cette version : celle qu'écrit l'installateur (install-hooks.ts).
 export const FACTS_VERSION = 2;
@@ -35,14 +33,14 @@ async function readConsent(home: string): Promise<Consent> {
 
 // La version à transmettre avec les faits de cet outil (C2), ou null si l'accord ne couvre pas les gestes : seuls
 // les textes partent alors, comme avant ce chantier.
-export async function factsConsent(home: string, tool: CodeTool): Promise<number | null> {
+export async function factsConsent(home: string, tool: CodeSessionKind): Promise<number | null> {
   const version = (await readConsent(home)).outils[tool]?.version ?? 0;
   return version >= FACTS_VERSION ? version : null;
 }
 
 // Version 0 : l'accord a été retiré (`leon retirer-crochets`, uninstall-hooks.ts) et cet outil n'envoie plus rien,
 // ni textes ni gestes. Un outil absent, lui, garde l'envoi des textes d'avant ce chantier (C7).
-export async function consentWithdrawn(home: string, tool: CodeTool): Promise<boolean> {
+export async function consentWithdrawn(home: string, tool: CodeSessionKind): Promise<boolean> {
   return (await readConsent(home)).outils[tool]?.version === 0;
 }
 
@@ -50,7 +48,7 @@ export async function consentWithdrawn(home: string, tool: CodeTool): Promise<bo
 // droits (`mode` ne vaut qu'à la création).
 export async function writeConsent(
   home: string,
-  tool: CodeTool,
+  tool: CodeSessionKind,
   version: number,
   now: Date = new Date(),
 ): Promise<void> {

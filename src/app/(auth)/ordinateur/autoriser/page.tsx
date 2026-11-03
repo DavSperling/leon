@@ -9,10 +9,12 @@ import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { authorizeComputerAction } from './actions';
 
-// L'adresse porte l'etat et l'empreinte : elle ne part dans aucun en-tête Referer et la page n'est pas indexée.
+// L'adresse porte l'etat et l'empreinte : elle ne part dans aucun en-tête Referer vers un autre site et la page n'est pas
+// indexée. « same-origin » et non « no-referrer » : un formulaire natif (avant l'hydratation, ou sans JavaScript) partirait
+// avec « Origin: null », que Next refuse.
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('computer.authorize');
-  return { title: t('title'), referrer: 'no-referrer', robots: { index: false, follow: false } };
+  return { title: t('title'), referrer: 'same-origin', robots: { index: false, follow: false } };
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

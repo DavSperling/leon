@@ -38,7 +38,13 @@ async function bodyOf(request: IncomingMessage): Promise<string> {
 // Le faux Leon : K5 (POST /api/v1/ordinateurs), K6 (DELETE /api/v1/jeton) et /api/v1/me.
 async function startLeon(
   home: string,
-  answers: { register?: number; me?: number; revoke?: number } = {},
+  answers: {
+    register?: number;
+    me?: number;
+    revoke?: number;
+    espace?: string;
+    compte?: string;
+  } = {},
 ): Promise<FakeLeon> {
   const calls: Call[] = [];
   const server: Server = createServer(async (request, response) => {
@@ -55,7 +61,13 @@ async function startLeon(
     if (request.method === 'POST' && request.url === API_PATHS.ordinateurs) {
       const status = answers.register ?? 201;
       const { nom } = JSON.parse(text) as { nom: string };
-      return status === 201 ? json(201, { espace: 'Acme', ordinateur: nom }) : json(status, {});
+      return status === 201
+        ? json(201, {
+            espace: answers.espace ?? 'Acme',
+            ordinateur: nom,
+            compte: answers.compte ?? 'paul@example.com',
+          })
+        : json(status, {});
     }
     if (request.method === 'DELETE' && request.url === API_PATHS.jeton) {
       return answers.revoke === undefined || answers.revoke === 204
@@ -68,8 +80,8 @@ async function startLeon(
             userId: crypto.randomUUID(),
             tenantId: crypto.randomUUID(),
             userName: 'Paul',
-            email: 'paul@example.com',
-            organizationName: 'Acme',
+            email: answers.compte ?? 'paul@example.com',
+            organizationName: answers.espace ?? 'Acme',
           })
         : json(answers.me ?? 401, {});
     }
@@ -112,6 +124,8 @@ const comeBack = (params: Params, query: Record<string, string>, init: RequestIn
 const approve = (params: Params, code = 'charge.signature') =>
   comeBack(params, { code, etat: params.etat });
 
+// Un caractère de contrôle (hors le saut de ligne qui sépare les messages) : le terminal l'interpréterait.
+const hasControl = (text: string) => /\p{Cc}/u.test(text.replaceAll('\n', ''));
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 const tokenOf = (call: Call | undefined) => call?.authorization?.replace('Bearer ', '') ?? '';
 const registerCall = (leon: FakeLeon) => leon.calls.find((call) => call.method === 'POST');
@@ -209,7 +223,31 @@ describe('leon login : le parcours par le navigateur', () => {
     });
     expect(new Date(saved?.cree_le ?? '').toISOString()).toBe(saved?.cree_le);
     expect((await stat(connectionPath(home))).mode & 0o777).toBe(0o600);
-    expect(run.out.join('\n')).toMatch(/Connected to Acme/);
+    // Le compte autorisé est affiché : sur une machine partagée, c'est ce qui trahit une autorisation donnée par un autre.
+    expect(run.out.join('\n')).toContain(
+      `Connected to Acme as paul@example.com (this computer: ${HOSTNAME})`,
+    );
+  });
+
+  it('retire les caractères de contrôle de l’espace et du compte, à l’écran et dans connexion.json', async () => {
+    await leon.close();
+    // Un nom d'espace choisi par un tiers : séquences d'échappement du terminal, retour chariot.
+    leon = await startLeon(home, {
+      espace: 'Ac\u001b[2Jme\r\u0007',
+      compte: 'pa\u001b]0;x\u0007ul@example.com\u0085',
+    });
+    const run = setup(async (params) => void (await approve(params)), {
+      env: { LEON_URL: leon.url },
+    });
+
+    expect(await runLogin({}, run.deps)).toBe(0);
+    await run.browsed();
+
+    expect(run.out.join('\n')).toContain(
+      `Connected to Ac[2Jme as pa]0;xul@example.com (this computer: ${HOSTNAME})`,
+    );
+    expect(hasControl(run.everything())).toBe(false);
+    expect((await readConnection(home))?.espace).toBe('Ac[2Jme');
   });
 
   it('écoute sur 127.0.0.1 seulement, pas sur toutes les interfaces', async () => {
@@ -599,6 +637,27 @@ describe('leon login --with-token', () => {
     });
     expect((await stat(connectionPath(home))).mode & 0o777).toBe(0o600);
     expect(run.everything()).not.toContain(TOKEN);
+    // L'adresse e-mail vient de /api/v1/me.
+    expect(run.out.join('\n')).toContain(
+      `Connected to Acme as paul@example.com (this computer: ${HOSTNAME})`,
+    );
+  });
+
+  it('retire aussi les caractères de contrôle de l’espace et du compte', async () => {
+    await leon.close();
+    leon = await startLeon(home, { espace: 'Ac\u001b[2Jme', compte: 'pa\u0007ul@example.com' });
+    const run = setup(async () => {}, {
+      env: { LEON_URL: leon.url },
+      readToken: async () => TOKEN,
+    });
+
+    expect(await runLogin({ withToken: true }, run.deps)).toBe(0);
+
+    expect(run.out.join('\n')).toContain(
+      `Connected to Ac[2Jme as paul@example.com (this computer: ${HOSTNAME})`,
+    );
+    expect(hasControl(run.everything())).toBe(false);
+    expect((await readConnection(home))?.espace).toBe('Ac[2Jme');
   });
 
   it('jeton refusé par /api/v1/me : rien n’est écrit', async () => {

@@ -152,10 +152,10 @@ describe('page d’autorisation', () => {
     ]);
   });
 
-  it('n’est ni indexée ni citée en référent : l’adresse porte l’etat et l’empreinte', async () => {
+  it('n’est pas indexée et ne sort pas en référent : l’adresse porte l’etat et l’empreinte', async () => {
     expect(await generateMetadata()).toEqual({
       title: fr.computer.authorize.title,
-      referrer: 'no-referrer',
+      referrer: 'same-origin', // pas 'no-referrer' : un formulaire natif partirait avec « Origin: null », que Next refuse
       robots: { index: false, follow: false },
     });
   });

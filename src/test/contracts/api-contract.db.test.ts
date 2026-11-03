@@ -150,11 +150,15 @@ describe('routes de l’API', () => {
       contexte.status,
       ordinateurs.status,
     ]).toEqual([200, 202, 200, 202, 200, 201]);
-    expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
+    const profile = ViewerProfileSchema.parse(await me.json());
+    expect(profile.userId).toBe(paul.userId);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
     expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
     expect(ContextResponseSchema.parse(await contexte.json()).texte).not.toBe('');
-    expect(ComputerResponseSchema.parse(await ordinateurs.json()).ordinateur).toBe('MacBook-Pro');
+    expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({
+      ordinateur: 'MacBook-Pro',
+      compte: profile.email,
+    });
   });
 });
 

@@ -112,7 +112,7 @@ Un paramètre invalide affiche une erreur, sans bouton. « Autoriser » est une 
 - entrée `{ code, nom }` en `.strict()`, 2 Ko au plus ; `nom` : 1 à 60 caractères après retrait des caractères de contrôle, sinon « ordinateur » ;
 - vérifie K4, puis `hashApiToken(jeton) === charge.e`, puis l'adhésion en cours de `charge.u` à `charge.t` (comme `verifyApiToken`) ;
 - crée la ligne `api_tokens` par `registerApiToken` (S01), nommée « Ordinateur : <nom> » ;
-- réponses : 201 `{ espace, ordinateur }` ; 400 (entrée) ; 401 (code faux, expiré, empreinte différente, membre parti), sans dire lequel ; 409 (empreinte déjà en base).
+- réponses : 201 `{ espace, ordinateur, compte }` (`compte` : l'e-mail du compte autorisé, que la CLI affiche) ; 400 (entrée) ; 401 (code faux, expiré, empreinte différente, membre parti), sans dire lequel ; 409 (empreinte déjà en base).
 
 Elle n'est pas montée derrière `requireApiToken`, puisque le jeton n'existe pas encore.
 

@@ -5,8 +5,6 @@ import { API_TOKEN_PATTERN } from '../capture/api-contract';
 import { readConnection } from './connection';
 import { isAllowedServerUrl } from './server-url';
 
-export { isAllowedServerUrl };
-
 const ServerEnvSchema = z.object({
   LEON_URL: z.string().refine(isAllowedServerUrl),
   LEON_TOKEN: z.string().regex(API_TOKEN_PATTERN),

@@ -60,7 +60,17 @@ describe('POST /api/v1/ordinateurs', () => {
 
     expect(response.status).toBe(201);
     const body = await response.json();
-    expect(body).toEqual({ espace: 'Organisation de test', ordinateur: 'MacBook-Pro' });
+    // `compte` : l'e-mail du compte autorisé, que la CLI affiche pour qu'on voie à quel compte l'ordinateur se branche.
+    const [account] = await adminDb
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, paul.userId));
+    expect(account?.email).toMatch(/@test\.leon$/);
+    expect(body).toEqual({
+      espace: 'Organisation de test',
+      ordinateur: 'MacBook-Pro',
+      compte: account?.email,
+    });
     expect(JSON.stringify(body)).not.toContain(token);
     expect(await rowsOf(token)).toMatchObject([
       {

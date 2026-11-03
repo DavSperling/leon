@@ -116,6 +116,10 @@ export async function readTokenFromInput(
 const computerName = (hostname: string) =>
   [...hostname.replace(/\p{Cc}/gu, '').trim()].slice(0, NAME_MAX_CHARS).join('') || 'ordinateur';
 
+// Sans caractères de contrôle : un nom d'espace choisi par un tiers ne doit pas pouvoir piloter le terminal (séquences
+// d'échappement) ni se retrouver tel quel dans connexion.json.
+const plain = (text: string) => text.replace(/\p{Cc}/gu, '');
+
 const timeout = () => AbortSignal.timeout(REQUEST_TIMEOUT_MS);
 
 // K6 avec ce jeton : vrai s'il est révoqué, ou déjà inconnu du serveur (401) ; faux si le serveur n'a pas répondu.
@@ -136,8 +140,11 @@ async function revokeToken(
 }
 
 // Écrit la nouvelle connexion, puis révoque l'ancien jeton de cet ordinateur (jamais celui qu'on vient d'écrire).
+// `compte` (l'e-mail du compte autorisé) n'est que montré, pas écrit : sur une machine où d'autres comptes sont ouverts,
+// c'est lui qui trahit une autorisation donnée depuis le compte d'un autre.
 async function saveConnection(
   next: Connection,
+  compte: string,
   previous: Connection | null,
   deps: LoginDeps,
 ): Promise<number> {
@@ -150,7 +157,7 @@ async function saveConnection(
     return 1;
   }
   deps.out(
-    `Connected to ${next.espace} as ${next.ordinateur}. The connection is saved in ${connectionPath(deps.home)}.`,
+    `Connected to ${next.espace} as ${compte} (this computer: ${next.ordinateur}). The connection is saved in ${connectionPath(deps.home)}.`,
   );
   if (previous && previous.jeton !== next.jeton && !(await revokeToken(previous, deps))) {
     deps.err(
@@ -316,9 +323,10 @@ async function loginWithBrowser(
       url: origin,
       jeton: token,
       ordinateur: registered.ordinateur,
-      espace: registered.espace,
+      espace: plain(registered.espace),
       cree_le: new Date().toISOString(),
     },
+    plain(registered.compte),
     previous,
     deps,
   );
@@ -360,9 +368,10 @@ async function loginWithToken(
       url: origin,
       jeton: token,
       ordinateur: computerName(deps.hostname),
-      espace: profile.data.organizationName,
+      espace: plain(profile.data.organizationName),
       cree_le: new Date().toISOString(),
     },
+    plain(profile.data.email),
     previous,
     deps,
   );

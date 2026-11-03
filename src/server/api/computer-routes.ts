@@ -58,7 +58,7 @@ export const computerRoutes = new Hono<ComputerEnv>()
       if (!ctx) return unauthorized(c);
 
       const ordinateur = cleanName(nom);
-      const { organizationName } = await getViewerProfile(ctx);
+      const { organizationName, email } = await getViewerProfile(ctx);
       let registered: Awaited<ReturnType<typeof registerApiToken>>;
       try {
         registered = await registerApiToken(ctx, `Ordinateur : ${ordinateur}`, c.var.token);
@@ -68,7 +68,7 @@ export const computerRoutes = new Hono<ComputerEnv>()
         return c.json({ error: 'Internal error' }, 500);
       }
       if (!registered) return c.json({ error: 'Token already registered' }, 409);
-      return c.json({ espace: organizationName, ordinateur }, 201);
+      return c.json({ espace: organizationName, ordinateur, compte: email }, 201);
     },
   )
   // `leon logout` : le jeton qui fait la requête, et lui seul. Déjà révoqué entre-temps (deux appels à la fois) :

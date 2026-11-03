@@ -15,9 +15,14 @@ export const API_PATHS = {
 
 export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 octets en base64url
 
-// La réponse 201 de POST /api/v1/ordinateurs (K5 du plan « CLI sans clone ») : le nom de l'espace et celui de
-// l'ordinateur tel que le serveur l'a retenu. `leon login` les écrit dans connexion.json.
-export const ComputerResponseSchema = z.object({ espace: z.string(), ordinateur: z.string() });
+// La réponse 201 de POST /api/v1/ordinateurs (K5 du plan « CLI sans clone ») : le nom de l'espace, celui de
+// l'ordinateur tel que le serveur l'a retenu, et l'e-mail du compte autorisé. `leon login` écrit les deux premiers
+// dans connexion.json et affiche les trois : sur une machine partagée, le compte montre une autorisation donnée par un autre.
+export const ComputerResponseSchema = z.object({
+  espace: z.string(),
+  ordinateur: z.string(),
+  compte: z.string(),
+});
 export type ComputerResponse = z.infer<typeof ComputerResponseSchema>;
 
 export const ViewerProfileSchema = z.object({

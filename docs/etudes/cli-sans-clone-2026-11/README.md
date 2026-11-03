@@ -71,7 +71,7 @@ C'est la question d'Amos du 03/11 : « on peut pas juste le faire avec une autor
 | **a. Jeton créé dans Réglages, collé à la main** (aujourd'hui) | non | non | oui | oui | rien |
 | **b. Code à usage unique dans la commande** (plan du 28/10) | une commande à coller | non : le code y passe, valable 10 min | moyen : une commande partagée peut brancher l'ordinateur d'un autre sur l'espace de celui qui l'a créée | oui | une table, une route |
 | **c. Flux d'appareil** (RFC 8628 : le terminal affiche un code, on le tape dans le navigateur) | un code à taper | oui | faible : l'hameçonnage par code d'appareil est une attaque connue (l'attaquant lance le flux et fait taper son code à la victime) | oui | une table, une route interrogée en boucle, une page |
-| **d. Renvoi vers l'ordinateur** (RFC 8252, le navigateur revient sur `127.0.0.1`) | un clic | oui | oui : l'autorisation ne revient qu'à l'ordinateur dont le navigateur a cliqué | non | une page, deux routes, aucune table |
+| **d. Renvoi vers l'ordinateur** (RFC 8252, le navigateur revient sur `127.0.0.1`) | un clic | oui | oui, sauf sur une machine partagée : l'autorisation revient à la machine dont le navigateur a cliqué, pas forcément à celui qui a lancé la commande (voir les limites) | non | une page, deux routes, aucune table |
 | **e. Serveur OAuth complet** (#56) | un clic | oui | oui | non | trois dépendances, des jetons qui expirent et se renouvellent, à gérer dans la CLI ; #56 attend depuis le 26/10 |
 
 **Recommandation : d**, avec un repli sur a pour qui travaille à distance.
@@ -93,9 +93,10 @@ Pourquoi c'est sûr :
 
 Les limites :
 - **Le navigateur et le terminal doivent être sur la même machine.** En SSH ou dans un conteneur distant, le repli est `leon login --with-token` : on crée un jeton dans Réglages, et la CLI le demande sans l'afficher, jamais en argument. Un flux d'appareil (c) viendra si des utilisateurs travaillent vraiment à distance.
+- **Sur une machine où d'autres comptes sont ouverts en même temps, l'autorisation peut être donnée par un autre.** L'adresse d'autorisation (port, `etat`, empreinte) se lit dans la liste des processus (sous Linux, `/proc/<pid>/cmdline`) ; un autre utilisateur de la machine peut l'ouvrir et l'autoriser avec son propre compte Leon : le jeton de la victime est alors enregistré sur le compte de l'attaquant. Le lien piégé ci-dessus ne protège pas de ce cas : sur une machine partagée, `127.0.0.1` est commun à tous les comptes ouverts, et le code arrive donc quand même à la CLI de la victime. Parade : `leon login` affiche « Connected to <espace> as <compte> » (le serveur renvoie l'e-mail du compte autorisé), à vérifier ; sur une machine partagée, le repli `leon login --with-token` ne passe par aucune adresse d'autorisation.
 - **Les navigateurs pourraient un jour filtrer les navigations vers le réseau local.** Chrome filtre déjà les requêtes d'une page publique vers `127.0.0.1` (« Local Network Access »), mais pas les navigations, que l'explication de la proposition range parmi les « changements possibles ». Le repli est le même.
 
-Le plan du 28/10 avait choisi b, « au plus simple, sans faire ouvrir le navigateur par le terminal ». d coûte à peine plus (ni table ni migration), ne fait rien copier, et ferme l'hameçonnage dans les deux sens.
+Le plan du 28/10 avait choisi b, « au plus simple, sans faire ouvrir le navigateur par le terminal ». d coûte à peine plus (ni table ni migration), ne fait rien copier, et ferme l'hameçonnage dans les deux sens, hors machine partagée (voir les limites).
 
 ## 5. Le lanceur stable `~/.leon/bin/leon`
 

@@ -23,21 +23,21 @@
 | 1. La fiche Claude Code | Claude Code reçoit au démarrage la fiche de mes dernières sessions sur le dépôt | T01 à T08 | **#110** | 4,5 j |
 | 2. Dépôts d'équipe | décision D : l'administrateur choisit les dépôts partagés, et seuls ceux-là restent visibles de l'équipe | T09 à T12 | suivante | 3 j |
 | 3. État du dépôt | décision E : « L'équipe sur ce dépôt » et l'état réel de mes PR | T13 et T14 | suivante | 2,5 j |
-| 4. Codex reçoit | Codex reçoit le même bloc au premier message | T15 à T17 | suivante, après l'essai T15 | 1,5 j |
-| 5. Codex capte | les sessions Codex remontent aussi | T18 à T20 | suivante | 2,5 j |
+| 4. Codex reçoit | Codex reçoit le même bloc au premier message, et le rappel | T15 à T17 | suivante, après l'essai T15 | 2,5 j |
+| 5. Codex capte | les sessions Codex remontent aussi, avec leurs coulisses | T18 à T20 | suivante | 3,5 j |
 | 6. Le résumé | chaque session close reçoit un résumé écrit par Leon, trouvable par la recherche | T21 à T24 | suivante, après l'accord de David (QD1) | 3 j |
 | 7. Recherche par dépôt | le RAG à la demande se borne au dépôt | T25 | suivante | 0,5 j |
-| 8. Cursor | capte et reçoit | T26 à T30 | suivante, après l'essai T26 | 3 j |
-| 9. Antigravity | capte et reçoit | T31 à T35 | suivante, après l'essai T31 | 3 j |
+| 8. Cursor | capte et reçoit, sommaire et rappel au premier message | T26 à T29 | suivante, après l'essai T26 | 4 j |
+| 9. Antigravity | capte et reçoit, sommaire et rappel au premier message | T31 à T34 | suivante, après l'essai T31 | 4 j |
 | ~~10. RAG au premier prompt~~ | remplacé par les lots 12 et 13 ([la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) | — | — | — |
 | 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1 j |
-| 12. Les fils et le dossier | Leon range la mémoire par fil de travail, le MCP gagne `dossier` et `fil`, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T44 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 4,5 j |
-| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2) | T45 et T46 (idem) | suivante | 1,5 j |
-| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent | T47 à T49 (idem) | suivante | 3 j |
+| 12. Les fils et le dossier | Leon range la mémoire par fil (connecteurs et GitHub compris), trois commandes de lecture et les mêmes outils au MCP, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T47 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 8 j |
+| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2) | T48 et T49 (idem) | suivante | 2 j |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent | T50 à T52 (idem) | suivante | 4 j |
 
-Total : environ 34 jours, lot 1 compris (fait).
+Total : environ 43 jours, lot 1 compris (fait).
 
-**Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 7, 6, 12, 13, 14, puis 2, 3, 4, 5, 8, 9 et 11. Les lots 12 à 14 servent tout de suite dans Claude Code, déjà capté ; chaque lot d'outil (4, 5, 8, 9) y ajoute ensuite le crochet de rappel de son outil et l'accès au connecteur MCP.
+**Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
 
 **Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
@@ -123,8 +123,12 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **L'accord se donne par usage** (`lecture`, `rappel`, `resume`, `coulisses`), et non plus par versions cumulatives. D15 et C7 se lisent avec C7 révisé ; le lot 6 dépend de l'usage `resume`.
 - **Rien n'est écrit sur le poste**, hormis les crochets, l'accord et la connexion. D16, T30, T35 et A4 tombent. T28 et T33 donnent le sommaire au premier message par une requête en ligne, sans cache.
 - **Le lot 10 est remplacé** par le lot 13 (le rappel à chaque message) et par la lecture à la demande du lot 12. D18 et A5 tombent. Le crochet de prompt de Claude Code est `leon rappel`.
-- **T24** ne met plus de texte du modèle dans le bloc de démarrage : il garde l'usage `resume` et le résumé indexé.
-- **T14** : la section « L'équipe sur ce dépôt » se place dans le sommaire des fils (D24 du nouveau plan).
+- **T24** ne met plus de texte du modèle dans le bloc de démarrage. Il porte la structure par usage : lecture et écriture de C7 révisé sans perte d'un accord du lot 1, champ `usages` de C2 côté serveur (schéma, `faits-routes.ts`, `record-facts.ts`) et côté CLI (`capture-session.ts`, `import-claude-code.ts`), commentaires de `consent.ts` et `api-contract.ts` ; puis l'usage `resume` et son texte, et le résumé indexé.
+- **T22 et T23** gardent les `[décision]` vérifiées (D23 du nouveau plan) : le prompt les demande avec l'id cité, le condensé porte les ids des tours, PR, commits et messages, la liste blanche ne garde que celles dont l'id est vérifié. T23 lit l'usage `resume` partout où il lisait l'accord 3 (la file, le worker, les tests).
+- **T15, T17, T26, T28, T29, T31, T33 et T34** posent aussi le rappel de leur outil, posé seulement avec l'usage `rappel` (Codex : UserPromptSubmit ; Cursor : beforeSubmitPrompt ; Antigravity : PreInvocation), et citent les commandes de lecture. Pour Cursor et Antigravity, sommaire et rappel arrivent au premier message en une seule sortie, demandés en parallèle sous un même délai de 3 s. Si l'essai refuse l'injection au message, le lot s'arrête à son annexe et Amos décide.
+- **Les mentions des replis par fichier et du cache local** (règles du chantier, « Graphe, RAG et Markdown », vigilance 5, T08, T26, T31) sont caduques : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan). Aux trois migrations de l’en-tête s’ajoutent celles du lot 12 (supprimer-fil, lectures-fil, étape fil) et du lot 13 (rappels-cites).
+- **Les renvois au lot 10** (contraintes du bloc, C4, C5, C6, T06) se lisent avec le lot 13 : `leon rappel`, balise `<rappel-leon>`. L'ordre du bloc devient : sommaire des fils, équipe, consigne, point du matin (D24 du nouveau plan).
+- **T14** : la section « L'équipe sur ce dépôt » se place après « mes sessions » ; T46 du nouveau plan la déplace dans le sommaire des fils.
 - **T37** ajoute le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement ».
 - **T38** mesure aussi qui ouvre un fil ou le dossier, et par quel outil. Il règle le seuil de proximité des fils et décide du niveau 3.
 
@@ -271,7 +275,7 @@ Le bloc du RAG au premier prompt (T36) est balisé `<rappel-leon>…</rappel-leo
 
 **C6. La commande des crochets hors Claude Code** : `<home>/.leon/bin/leon crochet <outil> <evenement>`. Le chemin est absolu, mis entre apostrophes par `shellQuote` quand il l'exige ; `<evenement>` vaut `demarrage`, `prompt`, `tour` ou `fin`. Correspondance avec les évènements natifs :
 
-| Outil | `demarrage` | `prompt` (lot 10) | `tour` | `fin` |
+| Outil | `demarrage` | `prompt` (lot 13) | `tour` | `fin` |
 |---|---|---|---|---|
 | Claude Code | SessionStart (`leon briefing`, inchangé) | UserPromptSubmit (`leon rappel`, lot 13) | — | SessionEnd (`leon capter-session`, inchangé) |
 | Codex | SessionStart | UserPromptSubmit | Stop (async) | SessionEnd |
@@ -284,7 +288,7 @@ Le bloc du RAG au premier prompt (T36) est balisé `<rappel-leon>…</rappel-leo
 { "outils": { "claude_code": { "version": 2, "installe_le": "2026-11-02T14:00:00Z" } } }
 ```
 
-Versions : 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle ; 4, en plus le message envoyé à Leon pour le rappel ; 5, en plus le raisonnement de l'agent et les échanges des sous-agents (versions 4 et 5 redéfinies le 03/11 : voir C7 amendé du plan de la mémoire à disposition). On ne passe à une version qu'après avoir confirmé son texte, sans jamais en sauter une. Un outil en version 0 (après retrait) n'envoie rien. `claude_code` absent (installé avant ce chantier) garde l'envoi des tours d'aujourd'hui, sans faits ; les trois autres outils, absents, n'envoient rien.
+**Remplacé le 03/11 par C7 révisé** du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md) : un usage par permission (`lecture`, `rappel`, `resume`, `coulisses`), la version 2 restant la base et la version 0 le retrait. Texte d'origine, pour l'historique : versions 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle ; 4, en plus le prompt envoyé (RAG) ; on ne passe à une version qu'après avoir confirmé son texte, sans jamais en sauter une.
 
 ## Points de vigilance
 
@@ -439,7 +443,7 @@ Contrat : `api-contract.db.test.ts`.
 **Fichiers :** `src/cli/briefing.ts`, `src/cli/capture-session.ts`, `src/capture/strip-leon-blocks.ts` (nouveau : `stripLeonBlocks`), `src/capture/claude-code.ts`, `src/server/ingest/ingest-turns.ts`.
 
 **Fait quand :**
-- (a) une entrée qui porte `cursor_version`, ou un environnement où `CURSOR_VERSION` est posé (Cursor qui reprend les crochets de Claude Code), fait sortir les commandes au format Claude Code avec le code 0, sans rien écrire. Ces commandes sont `leon briefing` et `leon capter-session`, puis `leon contexte-prompt` (T36). Ces gardes ne visent jamais `leon crochet <outil> …` ;
+- (a) une entrée qui porte `cursor_version`, ou un environnement où `CURSOR_VERSION` est posé (Cursor qui reprend les crochets de Claude Code), fait sortir les commandes au format Claude Code avec le code 0, sans rien écrire. Ces commandes sont `leon briefing` et `leon capter-session`, puis `leon rappel` (T49, lot 13). Ces gardes ne visent jamais `leon crochet <outil> …` ;
 - (b) un `transcript_path` situé sous `${CODEX_HOME:-~/.codex}/sessions/` (crochets Leon recopiés par la migration de Codex) fait sortir `briefing` comme `capter-session` avec le code 0, sans rien écrire sur la sortie standard ;
 - (c) `stripLeonBlocks` retire `<contexte-leon>`, `<point-du-matin>` et `<rappel-leon>`. Elle est appelée par le lecteur de Claude Code (puis par ceux de Codex, Cursor et Antigravity) et par `ingest-turns.ts` pour les `kind` de `CODE_SESSION_KINDS`, jamais dans `prepareTurnText`, qui sert aussi aux connecteurs.
 
@@ -578,7 +582,7 @@ Aussi : `src/server/mcp/tools/render.test.ts`.
 
 ### T14 · « L'équipe sur ce dépôt » et l'état réel de mes PR
 
-> **Amendé le 03/11 :** la section se place dans le sommaire des fils (D24 du nouveau plan), après les fils, 700 octets.
+> **Amendé le 03/11 :** la section se place après « mes sessions », 700 octets ; T46 du nouveau plan la déplace dans le sommaire des fils.
 
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`.
 
@@ -727,7 +731,7 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T23 · La file et le worker : un résumé par session close, indexé
 
-> **Amendé le 03/11 :** le worker lit l'usage `resume` (C7 révisé) là où il lisait la version 3 ; il déclenche aussi le rattachement des fils après l'indexation du résumé (T41 du nouveau plan).
+> **Amendé le 03/11 :** partout où cette tâche dit « accord inférieur à 3 » ou « accord 3 » (la file, le worker, les tests), lire « usage `resume` absent » ou « présent » (C7 révisé). La liste blanche garde les `[décision]` dont l'id est vérifié (D23 du nouveau plan). Le rattachement des fils n'est pas déclenché ici : T41 du nouveau plan le place après l'indexation.
 
 **Fichiers :** `src/server/sessions/resume-queue.ts` (nouveau), `src/server/sessions/resume-worker.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file), `src/server/briefing/gather.ts` (`lastTurns` écarte `external_id like 'leon:resume:%'`), `src/instrumentation-node.ts`.
 
@@ -766,7 +770,7 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T24 · Le résumé dans le bloc ; l'accord en version 3
 
-> **Amendé le 03/11 :** plus de texte du modèle dans le bloc de démarrage (D25 du nouveau plan) : la tâche se réduit à l'usage `resume`, à son texte d'accord et au résumé indexé.
+> **Amendé le 03/11 :** plus de texte du modèle dans le bloc de démarrage (D25 du nouveau plan), et plus de passage en version 3 : la tâche porte la structure par usage (C7 révisé, champ `usages` de C2 côté serveur et CLI, commentaires du code), l'usage `resume` avec son texte, et le résumé indexé.
 
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/cli/install-hooks.ts`, `src/cli/consent.ts`.
 
@@ -823,7 +827,7 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 
 ### T28 · Les crochets Cursor : capter sur `stop`, injecter au démarrage
 
-> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : le sommaire arrive au premier message par une requête en ligne (beforeSubmitPrompt, 5 s), avec le rappel dans une seule sortie.
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par beforeSubmitPrompt (5 s), demandés en parallèle sous un même délai de 3 s, en une seule sortie. Le crochet est posé d'office (plus de « seulement si T26 le valide ») ; si T26 refuse l'injection, le lot s'arrête à son annexe et Amos décide.
 
 **Fichiers :** `src/cli/outils.ts`, `src/cli/capture-session.ts`, `src/cli/start-cache.ts` (nouveau).
 
@@ -900,7 +904,7 @@ L'annexe donne le verdict, et la décision sur le repli.
 
 ### T33 · Les crochets Antigravity : capter sur `Stop` inactif, injecter une fois par conversation
 
-> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : le sommaire arrive au premier message par une requête en ligne (PreInvocation), avec le rappel.
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par PreInvocation, demandés en parallèle sous un même délai de 3 s, en une seule sortie ; si T31 refuse l'injection, le lot s'arrête à son annexe et Amos décide.
 
 **Fichiers :** `src/cli/outils.ts`, `src/cli/start-cache.ts`.
 

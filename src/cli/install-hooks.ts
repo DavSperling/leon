@@ -30,7 +30,8 @@
 //   `<lanceur> capter-session`, K9, ou l'ancienne forme `pnpm … leon <sous-commande>`) et garde tout le reste, dans son
 //   ordre ;
 // - remplace ces entrées sur place (un ancien crochet pnpm devient celui du lanceur) au lieu d'en ajouter une seconde, et
-//   n'écrit rien quand tout est déjà en place ;
+//   n'écrit rien quand tout est déjà en place. Sous la forme installée, il dit alors de quel clone venaient les anciens
+//   crochets : le jeton du `.env.local` de ce clone ne sert plus (formerClones) ; il ne lit jamais ce fichier ;
 // - copie le fichier dans `settings.json.leon-sauvegarde` avant d'écrire, avec les mêmes droits, mais seulement si
 //   cette sauvegarde n'existe pas : la première copie, celle d'avant Leon, n'est jamais remplacée (une mise à jour de
 //   ses crochets y mettrait des crochets de Leon) ;
@@ -126,8 +127,11 @@ export const isRecord = (value: unknown): value is Json =>
 // Un mot de shell : des caractères sans signification pour lui, ou des morceaux entre apostrophes ou guillemets
 // (l'apostrophe d'un chemin s'écrit '\'' : hook-commands.ts).
 const WORD = String.raw`(?:[^\s'"\\;&|<>()\x60]|'[^']*'|"[^"]*"|\\')+`;
-// Les options de pnpm que Leon a écrites un jour dans un crochet (README du premier jet compris).
-const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) ${WORD}| --dir=${WORD})`;
+// Les options de pnpm que Leon a écrites un jour dans un crochet (README du premier jet compris). Le dossier de
+// `--dir` est capturé : c'est le clone d'où le crochet lançait Leon (formerClones).
+const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) (${WORD})| --dir=(${WORD}))`;
+const legacyPattern = (subcommand: HookSubcommand) =>
+  new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`);
 
 // Un crochet de Leon : `<lanceur> <sous-commande>` (K9, hook-commands.ts) ou, comme avant, `pnpm <options de pnpm> leon
 // <sous-commande>`, et rien d'autre. Le lanceur est ~/.leon/bin/leon sous n'importe quel dossier personnel, entre
@@ -147,9 +151,47 @@ export function isLeonHandler(
 ): handler is Json & { command: string } {
   if (!isRecord(handler) || typeof handler.command !== 'string') return false;
   const command = handler.command.trim();
-  if (new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(command)) return true;
+  if (legacyPattern(subcommand).test(command)) return true;
   const launcher = new RegExp(`^(${WORD}) ${subcommand}$`).exec(command)?.[1];
   return launcher !== undefined && unquote(launcher).endsWith(LAUNCHER_SUFFIX);
+}
+
+// Les clones d'où les crochets `pnpm … leon …` d'avant le lanceur lançaient Leon (leur `--dir`, sans les guillemets), une
+// fois chacun, dans l'ordre des réglages ; `null` quand aucun crochet n'a cette forme. Un tableau vide : des crochets
+// sans `--dir`, dont le clone n'est pas connu. Ne lit que les réglages reçus : jamais le `.env.local` de ces clones.
+export function formerClones(settings: Json): string[] | null {
+  const hooks = isRecord(settings.hooks) ? settings.hooks : {};
+  let legacy = false;
+  const clones = new Set<string>();
+  for (const { event, subcommand } of HOOKS) {
+    const groups = Array.isArray(hooks[event]) ? hooks[event] : [];
+    for (const group of groups) {
+      for (const handler of isRecord(group) && Array.isArray(group.hooks) ? group.hooks : []) {
+        if (!isLeonHandler(handler, subcommand)) continue;
+        const command = handler.command.trim();
+        if (!legacyPattern(subcommand).test(command)) continue;
+        legacy = true;
+        for (const [, spaced, equals] of command.matchAll(new RegExp(PNPM_OPTION, 'g'))) {
+          const clone = spaced ?? equals;
+          if (clone) clones.add(unquote(clone));
+        }
+      }
+    }
+  }
+  return legacy ? [...clones] : null;
+}
+
+// Ce que `leon setup` dit une fois les crochets passés au lanceur : le jeton du `.env.local` de l'ancien clone ne sert
+// plus (la connexion de `leon login` le remplace) et se révoque dans Réglages. Seule la forme installée le dit : sous la
+// forme clone, le lanceur lance toujours pnpm dans un clone, dont le `.env.local` sert encore.
+function migrationNotice(clones: string[]): string {
+  if (clones.length === 0) {
+    return 'Your hooks used to run Leon through pnpm; they now run ~/.leon/bin/leon.';
+  }
+  const and = (items: string[]) =>
+    items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items.join('');
+  const many = clones.length > 1;
+  return `Your hooks used to run Leon from ${and(clones)}; they now run ~/.leon/bin/leon. The ${many ? 'tokens' : 'token'} in ${and(clones.map((clone) => join(clone, '.env.local')))} ${many ? 'are' : 'is'} no longer needed: revoke ${many ? 'them' : 'it'} in Settings › Connected computers.`;
 }
 
 export type HookChange = {
@@ -477,6 +519,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     return refuse(`does not have the expected shape (${error.message}).`);
   }
 
+  const former = formerClones(settings);
   const alerts = await warnings(settings, options.repoDir, options.home);
   // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
   const consented = (await factsConsent(options.home, 'claude_code')) !== null;
@@ -557,6 +600,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
 
   deps.out(`\nHooks installed in ${path}.`);
   if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
+  if (former !== null && options.repoDir === undefined) deps.out(migrationNotice(former));
   deps.out(
     `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon'} retirer-crochets\` (it also withdraws your consent).`,
   );

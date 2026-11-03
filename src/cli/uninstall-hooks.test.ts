@@ -59,13 +59,18 @@ async function uninstall(): Promise<{ code: number; output: string }> {
   return { code, output: lines.join('\n') };
 }
 
+// Pour redonner l'accord : `leon setup` sous la forme installée (le lanceur est effacé avec le dernier outil : la commande
+// d'installation le remet), `pnpm leon installer-crochets` depuis un clone.
+const AGAIN =
+  'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).';
+
 const removedText = () =>
   [
     `Leon hooks removed from ${settingsPath}:`,
     `  SessionStart · ${START}`,
     `  SessionEnd · ${END}`,
     'Your other settings and hooks are not touched (their values and order stay; the formatting of the file may change). Claude Code reloads this file by itself.',
-    `Consent withdrawn in ${consentPath(home)}: Leon receives nothing more from Claude Code, not even from \`pnpm leon import-claude-code\`. To give it again, run \`pnpm leon installer-crochets\`.`,
+    `Consent withdrawn in ${consentPath(home)}: Leon receives nothing more from Claude Code, not even from \`leon import-claude-code\`. ${AGAIN}`,
     'The sessions already sent stay in Leon: there is no way to delete them yet.',
   ].join('\n');
 
@@ -494,8 +499,7 @@ function leon(args: string[], input = ''): Promise<Outcome> {
 }
 
 describe('leon retirer-crochets : la vraie commande', () => {
-  const WITHDRAWN =
-    'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.\n';
+  const WITHDRAWN = `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${AGAIN}\n`;
 
   it('retire les crochets et l’accord ; ensuite, ni le démarrage, ni la fin, ni l’import n’envoient rien', async () => {
     await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
@@ -564,5 +568,21 @@ describe('le README', () => {
 
     expect(text).toContain('pnpm leon retirer-crochets');
     expect(text).toContain('version 0');
+  });
+
+  it('dit que le lanceur est effacé avec le dernier outil, et comment tout retirer', async () => {
+    const text = await readFile(`${REPO_ROOT}README.md`, 'utf8');
+    const section = text.slice(text.indexOf('### Retirer les crochets'));
+
+    expect(section).toContain('~/.leon/bin/leon retirer-crochets');
+    expect(section).toMatch(/lanceur[^\n]*effacé avec le dernier outil/);
+    expect(section).toContain('leon logout');
+  });
+
+  it('l’aide de la commande dit la même chose : le lanceur part avec le dernier outil', async () => {
+    const source = await readFile(`${REPO_ROOT}src/cli/leon.ts`, 'utf8');
+    const help = source.slice(source.indexOf('retirer-crochets     Remove'));
+
+    expect(help).toContain('~/.leon/bin/leon goes too, once no tool is left that uses it');
   });
 });

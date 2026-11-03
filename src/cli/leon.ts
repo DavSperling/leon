@@ -57,7 +57,8 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code; Codex,
                        Cursor and Gemini are detected but not supported yet), after showing what is sent and asking.
-                       Run it again at any time: what is in place is left alone
+                       Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
+                       in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
       --depot <path>       run Leon from this clone (pnpm) instead of the installed copy: the launcher is written in
                            its clone form

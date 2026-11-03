@@ -1,4 +1,4 @@
-// Retrait des crochets de Claude Code et de l'accord : `pnpm leon retirer-crochets` (T08). Ce module :
+// Retrait des crochets de Claude Code et de l'accord : `leon retirer-crochets` (T08). Ce module :
 // - ne retire que les entrées de Leon, reconnues comme à l'installation (isLeonHandler, install-hooks.ts : même
 //   évènement, même forme de commande), avec leur groupe s'il ne contient plus rien, puis l'évènement et la clé
 //   `hooks` que ce retrait a vidés : des réglages installés puis retirés reviennent à leur état d'avant. Tout le
@@ -14,7 +14,13 @@
 // - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
 //   les commandes de Leon qu'il retire.
 import { join } from 'node:path';
-import { anyToolInstalled, consentPath, withdrawalRecorded, writeConsent } from './consent';
+import {
+  anyToolInstalled,
+  CONSENT_AGAIN_HINT,
+  consentPath,
+  withdrawalRecorded,
+  writeConsent,
+} from './consent';
 import { launcherPath } from './hook-commands';
 import {
   errorCode,
@@ -120,7 +126,7 @@ async function withdrawConsent(home: string, deps: UninstallDeps): Promise<boole
     return false;
   }
   deps.out(
-    `Consent withdrawn in ${path}: Leon receives nothing more from Claude Code, not even from \`pnpm leon import-claude-code\`. To give it again, run \`pnpm leon installer-crochets\`.`,
+    `Consent withdrawn in ${path}: Leon receives nothing more from Claude Code, not even from \`leon import-claude-code\`. ${CONSENT_AGAIN_HINT}`,
   );
   return true;
 }

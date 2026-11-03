@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type Connection, writeConnection } from './connection';
-import { consentPath, factsConsent } from './consent';
-import { launcherHookCommand, launcherPath } from './hook-commands';
+import { consentPath, factsConsent, writeConsent } from './consent';
+import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
@@ -137,6 +137,69 @@ describe('setup : le lanceur', () => {
     expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
   });
 
+  describe('Leon n’est pas installé dans ~/.leon : la garde cite la commande d’installation', () => {
+    const GENERIC = 'curl -fsSL <address of Leon>/install | sh';
+
+    it('avec l’adresse de --url', async () => {
+      const run = await setup({ url: 'https://leon.example' });
+
+      expect(run.code).toBe(1);
+      expect(run.output).toContain(
+        'Install it with `curl -fsSL https://leon.example/install | sh`',
+      );
+      expect(run.output).toContain('--depot <path>');
+      expect(run.output).not.toContain('shown in Leon');
+    });
+
+    it('avec l’adresse de la connexion enregistrée, réduite à son origine', async () => {
+      await writeConnection(home, { ...CONNECTION, url: 'https://leon.example/app?x=1' });
+
+      const run = await setup();
+
+      expect(run.output).toContain('`curl -fsSL https://leon.example/install | sh`');
+      expect(run.output).not.toContain(FAKE_TOKEN);
+    });
+
+    it('avec LEON_URL (http sur la machine seule compris)', async () => {
+      const run = await setup({}, { env: { LEON_URL: 'http://localhost:3000' } });
+
+      expect(run.output).toContain('`curl -fsSL http://localhost:3000/install | sh`');
+    });
+
+    it('sans adresse connue : la forme générique', async () => {
+      const run = await setup();
+
+      expect(run.output).toContain(`\`${GENERIC}\``);
+    });
+
+    it.each([
+      ['http hors machine', 'http://leon.interne'],
+      ['un autre schéma', 'file:///etc/passwd'],
+      ['un hôte avec une apostrophe', "https://a'b.example"],
+      ['un hôte avec $', 'https://a$b.example'],
+      ['un compte qui cache l’hôte', 'http://localhost:3000@evil.example'],
+      ['du texte qui n’est pas une adresse', "'; rm -rf ~; '"],
+    ])(
+      'n’écrit jamais dans la commande une adresse qui n’est pas simple (%s)',
+      async (_name, url) => {
+        const run = await setup({ url });
+
+        expect(run.output).toContain(`\`${GENERIC}\``);
+        expect(run.output).not.toContain(url);
+      },
+    );
+
+    it('n’écrit rien : ni lanceur, ni réglages', async () => {
+      await hasClaudeCode();
+
+      const run = await setup({ url: 'https://leon.example' });
+
+      expect(run.code).toBe(1);
+      expect(await exists(launcherPath(home))).toBe(false);
+      expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
+    });
+  });
+
   it('--depot : la forme clone, avec le chemin absolu du clone', async () => {
     await connect();
 
@@ -259,6 +322,32 @@ describe('setup : la connexion', () => {
     expect(run.code).toBe(0);
     expect(run.logins).toEqual([]);
     expect(run.output).toContain('already connected');
+  });
+
+  it('ordinateur déjà connecté : nomme le serveur (son origine seulement), jamais le jeton', async () => {
+    await writeConnection(home, { ...CONNECTION, url: 'https://leon.example/app/?x=1#y' });
+
+    const run = await setup();
+
+    expect(run.output).toContain(
+      'This computer is already connected to Leon (https://leon.example).',
+    );
+    expect(run.output).not.toContain(FAKE_TOKEN);
+    expect(run.output).not.toContain('/app');
+    expect(run.output).not.toContain('x=1');
+  });
+
+  it('LEON_URL et LEON_TOKEN posés : nomme ce serveur-là, sans le jeton', async () => {
+    await connect();
+
+    const run = await setup(
+      {},
+      { env: { LEON_URL: 'http://localhost:3000/', LEON_TOKEN: `leon_${'y'.repeat(43)}` } },
+    );
+
+    expect(run.output).toContain('already connected to Leon (http://localhost:3000).');
+    expect(run.output).not.toContain('leon.example');
+    expect(run.output).not.toContain('y'.repeat(43));
   });
 
   it('LEON_URL et LEON_TOKEN posés : l’ordinateur est connecté, pas de login', async () => {
@@ -534,5 +623,113 @@ describe('setup : relancé', () => {
     expect(second.code).toBe(0);
     expect(second.questions).toEqual([]);
     expect(await snapshot()).toEqual(before);
+  });
+});
+
+// Une installation d'avant le lanceur : crochets `pnpm … --dir <clone> leon …` dans les réglages de Claude Code, accord déjà
+// en version 2, et un jeton dans le `.env.local` du clone (que `setup` ne lit jamais).
+describe('setup : migrer une installation d’avant le lanceur', () => {
+  const NEW_START = () => launcherHookCommand(home, 'briefing');
+  const NEW_END = () => launcherHookCommand(home, 'capter-session');
+  let oldClone: string;
+  let envLocal: string;
+  const yours = { type: 'command', command: 'echo à moi' };
+
+  const oldSettings = () => ({
+    theme: 'dark',
+    hooks: {
+      SessionStart: [
+        { hooks: [{ type: 'command', command: hookCommand(oldClone, 'briefing'), timeout: 10 }] },
+      ],
+      PreToolUse: [{ matcher: 'Bash', hooks: [yours] }],
+      SessionEnd: [
+        {
+          hooks: [
+            { type: 'command', command: hookCommand(oldClone, 'capter-session'), timeout: 30 },
+          ],
+        },
+      ],
+    },
+  });
+  const readSettings = async () =>
+    JSON.parse(await readFile(join(claudeDir, SETTINGS_FILE), 'utf8'));
+
+  beforeEach(async () => {
+    await installLeon();
+    await hasClaudeCode();
+    oldClone = join(dir, 'ancien-clone');
+    envLocal = `LEON_URL=https://leon.example\nLEON_TOKEN=${FAKE_TOKEN}\n`;
+    await mkdir(oldClone, { recursive: true });
+    await writeFile(join(oldClone, '.env.local'), envLocal);
+    await writeFile(join(claudeDir, SETTINGS_FILE), `${JSON.stringify(oldSettings(), null, 2)}\n`);
+    await writeConsent(home, 'claude_code', 2, new Date('2026-10-20T08:00:00.000Z'));
+  });
+
+  it('remplace les crochets sur place, garde l’accord tel quel et dit où était le clone', async () => {
+    const consent = await readFile(consentPath(home), 'utf8');
+
+    const run = await setup({}, { answers: ['y'] });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(
+      `Your hooks used to run Leon from ${oldClone}; they now run ~/.leon/bin/leon. The token in ${oldClone}/.env.local is no longer needed: revoke it in Settings › Connected computers.`,
+    );
+    expect(await readSettings()).toEqual({
+      theme: 'dark',
+      hooks: {
+        SessionStart: [{ hooks: [{ type: 'command', command: NEW_START(), timeout: 10 }] }],
+        PreToolUse: [{ matcher: 'Bash', hooks: [yours] }],
+        SessionEnd: [{ hooks: [{ type: 'command', command: NEW_END(), timeout: 30 }] }],
+      },
+    });
+    expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+    // Une seule question, celle des réglages : l’accord en version 2 n’est pas redemandé.
+    expect(run.questions).toHaveLength(1);
+    expect(run.questions[0]).not.toContain('consent');
+    expect(run.output).toContain('Claude Code: hooks installed');
+  });
+
+  it('pas connecté (le jeton n’était que dans le .env.local) : lance leon login, ne lit pas ce fichier', async () => {
+    const run = await setup({ url: 'https://leon.example' }, { answers: ['y'] });
+
+    expect(run.logins).toEqual(['https://leon.example']);
+    expect(run.output).not.toContain(FAKE_TOKEN);
+    expect(await readFile(join(oldClone, '.env.local'), 'utf8')).toBe(envLocal);
+  });
+
+  it('relancée : rien ne change et rien n’est redit', async () => {
+    await connect();
+    await setup({}, { answers: ['y'] });
+    const before = await snapshot();
+
+    const second = await setup();
+
+    expect(second.code).toBe(0);
+    expect(second.questions).toEqual([]);
+    expect(second.output).not.toContain('used to run Leon');
+    expect(second.output).toContain('Claude Code: hooks installed');
+    expect(await snapshot()).toEqual(before);
+  });
+
+  it('sur « non » : les crochets d’avant restent, sans message sur le jeton', async () => {
+    await connect();
+    const text = await readFile(join(claudeDir, SETTINGS_FILE), 'utf8');
+
+    const run = await setup({}, { answers: ['n'] });
+
+    expect(run.output).not.toContain('used to run Leon');
+    expect(await readFile(join(claudeDir, SETTINGS_FILE), 'utf8')).toBe(text);
+    expect(run.output).toContain('Claude Code: skipped');
+  });
+
+  it('--depot : les crochets passent au lanceur, mais le .env.local du clone sert toujours : aucun message sur le jeton', async () => {
+    await connect();
+
+    const run = await setup({ depot: clone, yes: true });
+
+    expect(run.code).toBe(0);
+    expect((await readSettings()).hooks.SessionStart[0].hooks[0].command).toBe(NEW_START());
+    expect(run.output).not.toContain('used to run Leon');
+    expect(run.output).not.toContain('no longer needed');
   });
 });

@@ -2,10 +2,11 @@
 // relance à volonté. Elle fait tout dans cet ordre, et ne demande rien de plus que ce qui suit :
 // 1. écrit le lanceur ~/.leon/bin/leon (launcher.ts, K8) : sous la forme installée, ou, avec `--depot <clone>`, sous la
 //    forme clone. Un autre lanceur est montré à côté du nouveau et ne change que sur confirmation ;
-// 2. si l'ordinateur n'est pas connecté (`resolveServerEnv`), lance `leon login` ;
+// 2. si l'ordinateur n'est pas connecté (`resolveServerEnv`), lance `leon login` ; sinon dit à quel serveur (son origine) ;
 // 3. cherche les outils de code (leur dossier de réglages existe) : ceux dont l'installateur existe sont proposés, les
 //    autres sont dits « not supported yet » et rien n'est écrit chez eux ;
-// 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) ;
+// 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
+//    d'une installation d'avant (`pnpm … leon …`) sont remplacés sur place, l'accord déjà donné est gardé (S11) ;
 // 5. finit par une ligne par outil et le chemin du lanceur.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
 // fichier que Leon n'a pas écrit). Relancée, la commande n'écrit rien de ce qui est déjà en place.
@@ -16,7 +17,7 @@
 import { access, readFile, stat } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { factsConsent } from './consent';
-import { resolveServerEnv } from './env';
+import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
 import {
   addLeonHooks,
@@ -28,6 +29,7 @@ import {
   SETTINGS_FILE,
 } from './install-hooks';
 import { type LauncherForm, launcherScript, writeLauncher } from './launcher';
+import { isAllowedServerUrl } from './server-url';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
 export type SetupDeps = {
@@ -55,6 +57,23 @@ const isDirectory = (path: string) =>
     (info) => info.isDirectory(),
     () => false,
   );
+
+// L'origine d'une adresse de serveur (sans chemin, compte ni jeton), seulement si c'est une adresse simple : https, ou
+// http sur la machine seule, et rien d'autre que des caractères d'hôte (la commande d'installation se copie dans un shell).
+function plainOrigin(address: string | undefined): string | null {
+  if (address === undefined || !isAllowedServerUrl(address)) return null;
+  const { origin } = new URL(address);
+  return /^https?:\/\/[a-z0-9.:[\]-]+$/.test(origin) ? origin : null;
+}
+
+// La commande d'installation de Leon (S09), avec l'adresse connue de l'ordinateur : --url, sinon la connexion ou
+// LEON_URL (resolveServerEnv), sinon LEON_URL seule. Sans adresse simple, la forme générique.
+async function installCommand(options: SetupOptions, deps: SetupDeps): Promise<string> {
+  const server = await resolveServerEnv(deps.env, deps.home).catch(() => null);
+  const origin =
+    plainOrigin(options.url) ?? plainOrigin(server?.url) ?? plainOrigin(deps.env.LEON_URL);
+  return `curl -fsSL ${origin ?? '<address of Leon>'}/install | sh`;
+}
 
 const indent = (text: string) =>
   text
@@ -182,7 +201,7 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
     )
   ) {
     return fail(
-      'Leon is not installed in ~/.leon (there is no Node or no CLI there), so its launcher would not run. Install it with the command shown in Leon, or pass --depot <path> to run Leon from a clone.',
+      `Leon is not installed in ~/.leon (there is no Node or no CLI there), so its launcher would not run. Install it with \`${await installCommand(options, deps)}\`, or pass --depot <path> to run Leon from a clone.`,
     );
   }
 
@@ -190,12 +209,10 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
     repoDir === undefined ? { kind: 'installee' } : { kind: 'clone', repoDir };
   if (!(await ensureLauncher(form, { home, yes: options.yes, out, err, ask }))) return 1;
 
-  const connected = await resolveServerEnv(env, home).then(
-    () => true,
-    () => false,
-  );
-  if (connected) {
-    out('This computer is already connected to Leon.');
+  const server: ServerEnv | null = await resolveServerEnv(env, home).catch(() => null);
+  if (server) {
+    // L'origine seulement : ni le chemin de l'adresse ni, jamais, le jeton.
+    out(`This computer is already connected to Leon (${new URL(server.url).origin}).`);
   } else {
     out('This computer is not connected to Leon yet: running `leon login`.');
     const code = await deps.login(options.url);

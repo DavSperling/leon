@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   anyToolInstalled,
+  CONSENT_AGAIN_HINT,
+  CONSENT_WITHDRAWN_MESSAGE,
   consentPath,
   consentWithdrawn,
   factsConsent,
@@ -235,5 +237,23 @@ describe('writeConsent', () => {
       outils: { claude_code: { version: 0, installe_le: '2026-11-02T14:00:00.000Z' } },
     });
     expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+  });
+});
+
+// Le message de `briefing`, de `capter-session` et de `leon retirer-crochets` : le même texte pour la forme installée
+// (le lanceur ~/.leon/bin/leon) et pour le clone (pnpm), sans commande qui n'existe que dans l'une des deux.
+describe('les messages de l’accord retiré : un texte juste pour les deux formes', () => {
+  it('dit comment redonner l’accord sous la forme installée, puis depuis un clone', () => {
+    expect(CONSENT_AGAIN_HINT).toBe(
+      'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).',
+    );
+    expect(CONSENT_WITHDRAWN_MESSAGE).toBe(
+      `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${CONSENT_AGAIN_HINT}`,
+    );
+  });
+
+  it('n’envoie pas à pnpm celui qui n’a pas de clone', () => {
+    expect(CONSENT_WITHDRAWN_MESSAGE).not.toMatch(/\(pnpm leon retirer-crochets\)/);
+    expect(CONSENT_WITHDRAWN_MESSAGE).not.toMatch(/run pnpm/);
   });
 });

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { launcherHookCommand, launcherPath } from './hook-commands';
+import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript } from './launcher';
 
@@ -139,9 +139,85 @@ describe('leon setup', () => {
 
       expect(outcome.code).toBe(1);
       expect(outcome.stderr).toContain('--depot');
+      // La garde cite la commande d'installation, avec l'adresse du serveur connue (ici LEON_URL).
+      expect(outcome.stderr).toContain('`curl -fsSL http://127.0.0.1:1/install | sh`');
       expect(outcome.stdout).toBe('');
       expect(await exists(join(home, '.leon'))).toBe(false);
       expect(await exists(join(configDir, SETTINGS_FILE))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Une installation d'avant le lanceur : le Node et la CLI sont posés (le script d'installation), les réglages portent les
+  // crochets `pnpm … --dir <clone> leon …` avec un crochet de l'utilisateur entre eux, l'accord est en version 2.
+  it(
+    'migre les crochets pnpm d’avant vers le lanceur, garde l’accord, dit le clone d’avant, puis ne change plus rien',
+    async () => {
+      const oldClone = join(dir, 'ancien-clone');
+      await mkdir(oldClone, { recursive: true });
+      await writeFile(join(oldClone, '.env.local'), `LEON_TOKEN=${FAKE_TOKEN}\n`);
+      await mkdir(join(home, '.leon', 'runtime', 'actuel'), { recursive: true });
+      await writeFile(join(home, '.leon', 'runtime', 'actuel', 'node'), '');
+      await mkdir(join(home, '.leon', 'cli', 'actuelle'), { recursive: true });
+      await writeFile(join(home, '.leon', 'cli', 'actuelle', 'leon.mjs'), '');
+      const consent = `${JSON.stringify({ outils: { claude_code: { version: 2, installe_le: '2026-10-20T08:00:00.000Z' } } }, null, 2)}\n`;
+      await writeFile(join(home, '.leon', 'accord.json'), consent);
+      const yours = { type: 'command', command: 'echo à moi' };
+      await writeFile(
+        join(configDir, SETTINGS_FILE),
+        JSON.stringify({
+          hooks: {
+            SessionStart: [
+              {
+                hooks: [
+                  { type: 'command', command: hookCommand(oldClone, 'briefing'), timeout: 10 },
+                ],
+              },
+            ],
+            PreToolUse: [{ hooks: [yours] }],
+            SessionEnd: [
+              {
+                hooks: [
+                  {
+                    type: 'command',
+                    command: hookCommand(oldClone, 'capter-session'),
+                    timeout: 30,
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+
+      const first = await leon(['setup'], 'y\n');
+      const settings = await readFile(join(configDir, SETTINGS_FILE), 'utf8');
+      const second = await leon(['setup']);
+
+      expect(first.code).toBe(0);
+      expect(first.stdout).toContain('already connected to Leon (http://127.0.0.1:1).');
+      expect(first.stdout).toContain(
+        `Your hooks used to run Leon from ${oldClone}; they now run ~/.leon/bin/leon. The token in ${oldClone}/.env.local is no longer needed: revoke it in Settings › Connected computers.`,
+      );
+      const { hooks } = JSON.parse(settings);
+      expect(hooks.SessionStart[0].hooks[0]).toEqual({
+        type: 'command',
+        command: launcherHookCommand(home, 'briefing'),
+        timeout: 10,
+      });
+      expect(hooks.PreToolUse).toEqual([{ hooks: [yours] }]);
+      expect(hooks.SessionEnd[0].hooks[0]).toEqual({
+        type: 'command',
+        command: launcherHookCommand(home, 'capter-session'),
+        timeout: 30,
+      });
+      expect(settings).not.toContain('pnpm');
+      expect(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).toBe(consent);
+      expect(first.stdout + first.stderr).not.toContain(FAKE_TOKEN);
+
+      expect(second.code).toBe(0);
+      expect(second.stdout).not.toContain('used to run Leon');
+      expect(await readFile(join(configDir, SETTINGS_FILE), 'utf8')).toBe(settings);
     },
     TEST_TIMEOUT_MS,
   );

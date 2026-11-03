@@ -24,9 +24,12 @@ const WithdrawnSchema = z.object({ version: z.literal(0) });
 
 export type FactsConsent = { version: number; installe_le: Date };
 
-// Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts).
-export const CONSENT_WITHDRAWN_MESSAGE =
-  'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.';
+// Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts, uninstall-hooks.ts), juste pour les deux
+// formes de Leon : installée, la commande est `leon setup` par le lanceur ~/.leon/bin/leon, que `retirer-crochets` efface
+// avec le dernier outil (la commande d'installation le remet) ; depuis un clone, c'est `installer-crochets`.
+export const CONSENT_AGAIN_HINT =
+  'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).';
+export const CONSENT_WITHDRAWN_MESSAGE = `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${CONSENT_AGAIN_HINT}`;
 
 export const consentPath = (home: string): string => join(home, '.leon', 'accord.json');
 

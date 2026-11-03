@@ -15,8 +15,8 @@ import {
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const readRepoFile = (path: string) => readFileSync(`${REPO_ROOT}${path}`, 'utf8');
-// Le chemin d'exemple du README.
-const README_REPO = '/chemin/vers/leon';
+// Le dossier personnel d'exemple du README (install-hooks.test.ts compare tout le JSON à ce que l'installateur écrit).
+const README_HOME = '/Users/vous';
 
 describe('hookCommand', () => {
   it('lance la sous-commande par pnpm, sans installation automatique ni bavardage', () => {
@@ -69,9 +69,17 @@ describe('le lanceur des crochets (K8, K9)', () => {
 });
 
 describe('le README et package.json', () => {
-  it('le README cite exactement la commande du crochet de démarrage', () => {
+  it('le README cite exactement les commandes des crochets : celles du lanceur', () => {
+    const readme = readRepoFile('README.md');
+
+    expect(readme).toContain(`"command": "${launcherHookCommand(README_HOME, 'briefing')}"`);
+    expect(readme).toContain(`"command": "${launcherHookCommand(README_HOME, 'capter-session')}"`);
+  });
+
+  // La forme clone du lanceur garde la ligne pnpm : le README la cite pour les développeurs de Leon.
+  it('le README cite la ligne pnpm de la forme clone du lanceur', () => {
     expect(readRepoFile('README.md')).toContain(
-      `"command": "${hookCommand(README_REPO, 'briefing')}"`,
+      'pnpm -s --config.verify-deps-before-run=false --dir <clone> leon',
     );
   });
 

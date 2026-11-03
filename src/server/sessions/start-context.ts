@@ -13,13 +13,14 @@ import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql
 // garde que le lien (jamais le titre, écrit par n'importe qui sur GitHub).
 
 // Contraintes globales du plan : 4 sessions au plus, sur 7 jours.
-export const START_SESSIONS_MAX = 4;
-export const START_SESSIONS_DAYS = 7;
+const START_SESSIONS_MAX = 4;
+const START_SESSIONS_DAYS = 7;
 const GITHUB = 'github' satisfies SourceKind;
 
 export type StartPr = SessionFacts['prs'][number] & { url: string | null };
 export type StartFacts = Omit<SessionFacts, 'prs'> & { prs: StartPr[] };
-// `faits` nul : la session n'a pas de faits lisibles (envoyée sans accord de version 2, ou avant ce chantier).
+// `faits` nul : des faits rangés que le schéma ne lit plus. Une session sans faits (envoyée sans accord de version 2,
+// ou avant ce chantier) n'est pas lue : elle prendrait l'une des 4 places pour n'en montrer que l'outil et la date.
 export type StartSession = { kind: SourceKind; lastTs: Date; faits: StartFacts | null };
 
 type SessionRow = { kind: SourceKind; faits: unknown; last_epoch: string };
@@ -43,6 +44,7 @@ export async function readStartSessions(
       where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
         and s.kind = any(${textArray(CODE_SESSION_KINDS)})
         and s.metadata->>'project' = ${input.projet}
+        and s.metadata->'faits' is not null
         and s.external_id <> ${input.session}
         and l.last_ts >= now() - make_interval(days => ${START_SESSIONS_DAYS})
       order by coalesce(s.metadata->>'branche' = ${input.branche}, false) desc, l.last_ts desc, s.id

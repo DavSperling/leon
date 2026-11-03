@@ -34,24 +34,26 @@ const facts = (extra: Partial<SessionFacts> = {}): SessionFacts => ({
 });
 
 // Une session de code telle que la route des faits la range (T02) : faits, branche et projet dans `metadata`.
+// `faits: null` : une session captée sans accord de version 2, qui n'a que son projet.
 async function seedSession(
   owner: TenantContext,
   input: {
-    faits?: SessionFacts;
+    faits?: SessionFacts | null;
     project?: string;
     externalId?: string;
     lastTurnAt?: Date;
     acl?: string[];
   } = {},
 ) {
-  const faits = input.faits ?? facts();
+  const faits = input.faits === undefined ? facts() : input.faits;
+  const project = input.project ?? PROJECT;
   await adminDb.insert(sources).values({
     tenantId: owner.tenantId,
     kind: 'claude_code',
     externalId: input.externalId ?? crypto.randomUUID(),
     ownerUserId: owner.userId,
     acl: input.acl ?? [owner.userId],
-    metadata: { project: input.project ?? PROJECT, faits, branche: faits.branche, accord: 2 },
+    metadata: faits === null ? { project } : { project, faits, branche: faits.branche, accord: 2 },
     lastTurnAt: input.lastTurnAt ?? new Date(),
   });
 }
@@ -139,6 +141,19 @@ describe('readStartSessions', () => {
       'paul/r2',
       'paul/r3',
     ]);
+    expect(branches(await read(paul, null))).toEqual(['paul/r1', 'paul/r2', 'paul/r3', 'paul/r4']);
+  });
+
+  it('écarte une session sans faits : elle ne prend pas la place d’une session qui en a', async () => {
+    const { paul } = await setup();
+    for (const days of [1, 2, 3, 4]) {
+      await seedSession(paul, {
+        faits: facts({ branche: `paul/r${days}` }),
+        lastTurnAt: daysAgo(days),
+      });
+    }
+    await seedSession(paul, { faits: null });
+
     expect(branches(await read(paul, null))).toEqual(['paul/r1', 'paul/r2', 'paul/r3', 'paul/r4']);
   });
 

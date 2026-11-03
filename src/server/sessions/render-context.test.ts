@@ -195,6 +195,71 @@ describe('renderContext', () => {
     expect(text.endsWith(`\n${BRIEFING_BLOCK_CLOSE}`)).toBe(true);
   });
 
+  it('pose l’en-tête de chaque session avant les détails : une session longue ne cache pas les suivantes', () => {
+    const tasks = Array.from({ length: 20 }, (_, i) => ({
+      texte: `Tâche ${i} ${'x'.repeat(185)}`,
+      etat: 'a_faire' as const,
+    }));
+    const text = renderContext({
+      project: PROJECT,
+      sessions: [
+        session(facts({ branche: 'paul/longue', taches: tasks })),
+        session(facts({ branche: 'paul/deux' })),
+        session(facts({ branche: 'paul/trois' })),
+      ],
+      briefing: '',
+      max: 8000,
+    });
+
+    expect(bytes(text)).toBeLessThanOrEqual(SESSIONS_BYTES_MAX);
+    expect(text.split('\n').filter((line) => line.startsWith('- '))).toEqual([
+      '- 02/11 14:10 · Claude Code · branche paul/longue',
+      '- 02/11 14:10 · Claude Code · branche paul/deux',
+      '- 02/11 14:10 · Claude Code · branche paul/trois',
+    ]);
+    expect(text).toContain('reste : Tâche 0 ');
+  });
+
+  it('saute une session dont l’en-tête ne tient pas, et ne rend pas un bloc vide', () => {
+    const prs = Array.from({ length: 10 }, (_, numero) => ({
+      repo: `acme/${'r'.repeat(400)}`,
+      numero: numero + 1,
+      par: 'pr-link' as const,
+      url: null,
+    }));
+    const huge = session(facts({ branche: 'paul/enorme', prs }));
+
+    const text = renderContext({
+      project: PROJECT,
+      sessions: [huge, session(facts({ branche: 'paul/normale' }))],
+      briefing: '',
+      max: 8000,
+    });
+    const alone = renderContext({
+      project: PROJECT,
+      sessions: [huge],
+      briefing: 'Point.',
+      max: 8000,
+    });
+
+    expect(text).not.toContain('paul/enorme');
+    expect(text).toContain('- 02/11 14:10 · Claude Code · branche paul/normale');
+    expect(alone).toBe('Point.');
+  });
+
+  it('coupe la branche à 200 caractères', () => {
+    const text = renderContext({
+      project: PROJECT,
+      sessions: [session(facts({ branche: 'b'.repeat(4000) })), session(facts())],
+      briefing: '',
+      max: 8000,
+    });
+
+    expect(text).toContain(`branche ${'b'.repeat(200)}\n`);
+    expect(text).not.toContain('b'.repeat(201));
+    expect(text).toContain('branche paul/contexte');
+  });
+
   it('met une tâche sur une ligne : elle ne fabrique pas de fausse section', () => {
     const text = renderContext({
       project: PROJECT,

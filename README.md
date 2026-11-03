@@ -264,6 +264,15 @@ pnpm leon retirer-crochets
 - Des crochets retirés à la main laissent l'accord tel quel : `pnpm leon import-claude-code` enverrait encore les textes et, en version 2, les gestes. Supprimer `accord.json` ne suffit pas (sans accord, l'import envoie les textes, comme avant lui) : `pnpm leon retirer-crochets` le passe en version 0.
 - Les sessions déjà envoyées restent chez Leon : il n'y a pas encore de bouton pour les effacer.
 
+### Changer de version de Node (CLI sans clone)
+
+Le Node que Leon pose sur les ordinateurs est épinglé dans `src/cli/runtime.json` : sa version exacte, et pour chaque plateforme (`darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`) l'empreinte SHA-256 de l'archive officielle `node-v<version>-<plateforme>.tar.xz` de nodejs.org. La construction de la CLI recopie ces valeurs dans `/cli/version.json`. Pour changer de version :
+
+1. télécharger `https://nodejs.org/dist/v<version>/SHASUMS256.txt` et `SHASUMS256.txt.sig` ;
+2. vérifier la signature GPG : `gpg --verify SHASUMS256.txt.sig SHASUMS256.txt`, avec les clés des publieurs de Node (liste dans le README de [nodejs/node](https://github.com/nodejs/node#release-keys)) ;
+3. recopier la version (sans le `v`) et les quatre empreintes dans `runtime.json` ;
+4. lancer `pnpm -s vitest run --project unit src/cli/runtime.test.ts`. Pour une nouvelle version majeure, changer aussi `engines.node` dans `package.json`.
+
 ## Travailler à deux
 
 Les règles (branches, worktrees, PR, synchronisation avec `main`) sont dans [`CLAUDE.md`](CLAUDE.md). À lire avant le premier commit.

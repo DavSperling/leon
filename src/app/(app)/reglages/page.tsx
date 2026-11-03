@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
 import { AboutSettings } from '@/components/verre/reglages/about';
+import { ComputersSection } from '@/components/verre/reglages/computers';
 import {
   DeleteAccountSection,
   DeleteOrganizationSection,
@@ -18,11 +19,12 @@ import {
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
-import { listApiTokens } from '@/server/auth/api-tokens';
+import { COMPUTER_TOKEN_PREFIX, isComputerToken, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
+import { installCommand } from '@/server/cli/install-command';
 import { env } from '@/server/env';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,9 +45,14 @@ export default async function SettingsPage() {
     deletionInfo(ctx),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
-  const tokens = allTokens
+  const live = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
+  // les jetons des ordinateurs connectés par `leon login` ont leur section, sous leur nom sans le préfixe
+  const tokens = live.filter((token) => !isComputerToken(token));
+  const computers = live
+    .filter(isComputerToken)
+    .map((token) => ({ ...token, name: token.name.slice(COMPUTER_TOKEN_PREFIX.length) }));
   const serverUrl = env.BETTER_AUTH_URL;
   const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
@@ -97,6 +104,8 @@ export default async function SettingsPage() {
           ),
           integrations: (
             <>
+              <ComputersSection computers={computers} command={installCommand()} />
+
               <TokensSection tokens={tokens} />
 
               <Section

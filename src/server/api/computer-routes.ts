@@ -2,7 +2,12 @@ import { Hono, type MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
-import { hashApiToken, registerApiToken, revokeApiToken } from '@/server/auth/api-tokens';
+import {
+  COMPUTER_TOKEN_PREFIX,
+  hashApiToken,
+  registerApiToken,
+  revokeApiToken,
+} from '@/server/auth/api-tokens';
 import { verifyComputerCode } from '@/server/auth/computer-code';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
@@ -61,7 +66,11 @@ export const computerRoutes = new Hono<ComputerEnv>()
       const { organizationName, email } = await getViewerProfile(ctx);
       let registered: Awaited<ReturnType<typeof registerApiToken>>;
       try {
-        registered = await registerApiToken(ctx, `Ordinateur : ${ordinateur}`, c.var.token);
+        registered = await registerApiToken(
+          ctx,
+          `${COMPUTER_TOKEN_PREFIX}${ordinateur}`,
+          c.var.token,
+        );
       } catch {
         // L'erreur d'insertion porte dans son message l'empreinte, l'indice et le nom : on ne la journalise pas.
         logError('computer.register_failed', new Error('registerApiToken a échoué'));

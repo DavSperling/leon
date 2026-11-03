@@ -18,6 +18,14 @@ export type ApiTokenRow = {
 
 const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requête
 
+// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5) : Réglages les
+// range dans « Ordinateurs connectés » plutôt que dans les jetons personnels.
+// shortcut: reconnus au préfixe du nom (un jeton manuel nommé « Ordinateur : x » s'y range), une colonne kind dans
+// api_tokens le jour où ça gêne.
+export const COMPUTER_TOKEN_PREFIX = 'Ordinateur : ';
+export const isComputerToken = ({ name }: { name: string }): boolean =>
+  name.startsWith(COMPUTER_TOKEN_PREFIX);
+
 export function generateApiToken(): string {
   return `leon_${randomBytes(32).toString('base64url')}`;
 }

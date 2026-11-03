@@ -29,7 +29,7 @@ import type { ApiTokenRow } from '@/server/auth/api-tokens';
 import { CreateTokenContent } from './create-token';
 import { SECTION } from './reglages';
 
-type Token = Omit<ApiTokenRow, 'revokedAt'>;
+export type Token = Omit<ApiTokenRow, 'revokedAt'>;
 
 /** Section « Jetons personnels » : la liste (jetons non révoqués, lus par la page), la création et la révocation. */
 export function TokensSection({ tokens }: { tokens: Token[] }) {
@@ -115,13 +115,16 @@ export function TokensSection({ tokens }: { tokens: Token[] }) {
   );
 }
 
-function TokenRow({
+/** Une ligne de jeton, avec sa révocation. `computer` : celle d'un ordinateur connecté (computers.tsx), aux mots près. */
+export function TokenRow({
   token: t,
-  fresh,
+  fresh = false,
+  computer = false,
   onGone,
 }: {
   token: Token;
-  fresh: boolean;
+  fresh?: boolean;
+  computer?: boolean;
   onGone: () => void;
 }) {
   const instant = useInstant();
@@ -133,7 +136,7 @@ function TokenRow({
     startTransition(async () => {
       try {
         const { ok } = await revokeTokenAction(t.id);
-        if (ok) toast.success(tr('tokenRevoked'));
+        if (ok) toast.success(tr(computer ? 'computerRevoked' : 'tokenRevoked'));
         else toast.error(tr('tokenAlreadyRevoked'));
         onGone();
       } catch {
@@ -213,7 +216,7 @@ function TokenRow({
             </Button>
           }
           title={tr('revokeNamed', { name: t.name })}
-          description={tr('revokeDescription')}
+          description={tr(computer ? 'computerRevokeDescription' : 'revokeDescription')}
           confirmLabel={tr('revoke')}
           onConfirm={revoke}
         />

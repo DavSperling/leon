@@ -611,6 +611,7 @@
     "depotAddSubmit": "Ajouter",
     "depotInvalid": "Écrivez le dépôt sous la forme propriétaire/dépôt.",
     "depotRefused": "Seul un propriétaire ou un administrateur choisit les dépôts d’équipe.",
+    "depotUnreadable": "Aucune de vos connexions GitHub ne lit ce dépôt : branchez GitHub avec un compte qui y a accès, puis réessayez.",
     "depotFailed": "Impossible d’enregistrer. Réessayez."
   },
   "security": {

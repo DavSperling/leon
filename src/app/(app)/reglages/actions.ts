@@ -115,10 +115,14 @@ export async function setMemberPlacementAction(
 }
 
 const DepotEquipeInputSchema = z.object({ depot: z.string(), coche: z.boolean() });
-const DEPOT_ERRORS = { invalide: 'depotInvalid', refuse: 'depotRefused' } as const;
+const DEPOT_ERRORS = {
+  invalide: 'depotInvalid',
+  refuse: 'depotRefused',
+  illisible: 'depotUnreadable',
+} as const;
 
-// Cocher ou décocher un dépôt d'équipe, ou en saisir un (décision D) : le module valide le dépôt, et refuse qui n'est ni
-// propriétaire ni administrateur.
+// Cocher ou décocher un dépôt d'équipe, ou en saisir un (décision D) : le module valide le dépôt, refuse qui n'est ni
+// propriétaire ni administrateur, et un dépôt qu'aucune de ses connexions GitHub ne lit.
 export async function setDepotEquipeAction(
   depot: string,
   coche: boolean,

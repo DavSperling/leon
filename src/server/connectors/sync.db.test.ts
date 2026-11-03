@@ -489,7 +489,20 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
   beforeEach(async () => {
     lea = await createTestUser(tenantId, 'Léa');
     await adminDb.update(members).set({ role: 'admin' }).where(eq(members.userId, lea.userId));
+    // Léa lit elle-même acme/leon sur GitHub, par sa propre connexion à clé (C03).
+    const id = await seedConnection(lea);
+    await adminPool.query('update connections set config = $1 where id = $2', [
+      { repos: ['acme/leon'] },
+      id,
+    ]);
   });
+
+  const cocher = (depot: string) =>
+    setDepotEquipe(lea, depot, true, {
+      fetchImpl: fakeFetch([
+        { url: `https://api.github.com/repos/${depot}`, json: { permissions: { pull: true } } },
+      ]),
+    });
 
   // Paul relève une PR de chaque dépôt, comme avant le lot 2 (l'ingestion seule, sans l'alignement de fin de
   // passage) : visible de toute l'équipe.
@@ -526,7 +539,7 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
     await relever(['paul/perso', 'acme/leon']);
     expect((await seenBy(lea)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
 
-    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+    expect(await cocher('acme/leon')).toBe('ok');
 
     expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
     expect((await seenBy(paul)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
@@ -535,7 +548,7 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
   it('une PR d’un dépôt d’équipe reste visible de l’équipe', async () => {
     await relever(['Acme/Leon']);
 
-    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+    expect(await cocher('acme/leon')).toBe('ok');
 
     expect(await seenBy(lea)).toEqual({ prs: ['pr:Acme/Leon#1'], tours: ['PR de Acme/Leon'] });
   });
@@ -553,7 +566,7 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
     await relever(['paul/perso', 'acme/leon']);
     await alignAtDeploy();
 
-    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+    expect(await cocher('acme/leon')).toBe('ok');
 
     expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
   });
@@ -561,7 +574,7 @@ describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équi
   // La relève lit la liste à son début. Léa décoche le dépôt entre deux pages : la PR nouvelle, et le tour nouveau
   // d'une PR devenue privée, que la page suivante écrit avec l'accès de l'organisation, finissent privés.
   it('un dépôt décoché en pleine relève : ce que la relève écrit ensuite finit privé', async () => {
-    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+    expect(await cocher('acme/leon')).toBe('ok');
     const item = await oneItem();
     const pr = (n: number, turn: string) => ({
       ...item,

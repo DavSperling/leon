@@ -611,6 +611,7 @@
     "depotAddSubmit": "Add",
     "depotInvalid": "Write the repository as owner/repository.",
     "depotRefused": "Only an owner or an admin can choose team repositories.",
+    "depotUnreadable": "None of your GitHub connections can read this repository: connect GitHub with an account that has access to it, then try again.",
     "depotFailed": "Couldn’t save. Try again."
   },
   "security": {

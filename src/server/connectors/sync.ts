@@ -107,6 +107,10 @@ async function readPages(
   } finally {
     // T12 : l'ingestion écrit avec l'accès de l'organisation, selon la liste lue au début. À la fin du passage, même
     // en erreur, les sources GitHub de l'organisation reprennent l'accès que donne la liste du moment (0048).
+    // shortcut: l'alignement relit à chaque passage, même vide, toutes les lignes GitHub de l'organisation sous le
+    // verrou de ses sources GitHub (environ 2 µs par tour : 40 ms pour 20 000 tours, 2 s pour un million) ; le borner
+    // aux sources que le passage a écrites quand une organisation dépasse 200 000 tours GitHub, avec un job par lots
+    // pour un changement de la liste et le déploiement (voir setDepotEquipe).
     if (connection.provider === 'github')
       await withTenant(ctx, (tx) => tx.execute(sql`select aligner_sources_github()`));
   }

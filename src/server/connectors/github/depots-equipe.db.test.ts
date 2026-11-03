@@ -1,12 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
+import { fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { seedRun } from '@/test/seed-search';
 import { listDepotsEquipe, setDepotEquipe } from './depots-equipe';
 
 // Les réglages des dépôts d'équipe (T10) : Ana administre, Paul est simple membre, Zoé est d'une autre organisation.
-// Les curseurs sont écrits comme la relève GitHub les écrit (connector.ts) : une clé par dépôt lu.
+// Les curseurs sont écrits comme la relève GitHub les écrit (connector.ts) : une clé par dépôt lu. Chaque connexion
+// est à clé, sur ses propres dépôts.
 
 const tenantIds: string[] = [];
 let ana: TenantContext;
@@ -18,8 +20,22 @@ const MARK = { at: '2026-11-01T10:00:00Z', seen: [1] };
 async function seedGithub(ctx: TenantContext, repos: string[]): Promise<void> {
   const id = await seedConnection(ctx);
   const cursor = JSON.stringify(Object.fromEntries(repos.map((repo) => [repo, MARK])));
-  await adminPool.query('update connections set cursor = $1 where id = $2', [cursor, id]);
+  await adminPool.query('update connections set cursor = $1, config = $2 where id = $3', [
+    cursor,
+    { repos },
+    id,
+  ]);
 }
+
+// GitHub tel que le voit la connexion d'Ana : la permission sur chaque dépôt demandé (C03).
+const githubOfAna = (permissions: Record<string, boolean | 404>) => ({
+  fetchImpl: fakeFetch(
+    Object.entries(permissions).map(([repo, pull]) => ({
+      url: `https://api.github.com/repos/${repo}`,
+      ...(pull === 404 ? { status: 404 } : { json: { permissions: { pull } } }),
+    })),
+  ),
+});
 
 const projectsOf = async (tenantId: string) =>
   (
@@ -64,9 +80,10 @@ describe('dépôts d’équipe', () => {
   });
 
   it('range `Org/Repo` saisi en github.com/org/repo, coché pour toute l’équipe, puis le retire', async () => {
-    expect(await setDepotEquipe(ana, ' Org/Repo ', true)).toBe('ok');
+    const github = githubOfAna({ 'Org/Repo': true, 'org/repo': true });
+    expect(await setDepotEquipe(ana, ' Org/Repo ', true, github)).toBe('ok');
     // Cocher deux fois ne change rien.
-    expect(await setDepotEquipe(ana, 'org/repo', true)).toBe('ok');
+    expect(await setDepotEquipe(ana, 'org/repo', true, github)).toBe('ok');
 
     expect(await projectsOf(ana.tenantId)).toEqual([
       { project: 'github.com/org/repo', choisi_par: ana.userId },
@@ -105,10 +122,42 @@ describe('dépôts d’équipe', () => {
         )
       ).rows[0]?.acl;
 
-    expect(await setDepotEquipe(ana, 'acme/outil', true)).toBe('ok');
+    expect(await setDepotEquipe(ana, 'acme/outil', true, githubOfAna({ 'acme/outil': true }))).toBe(
+      'ok',
+    );
     expect(await aclOf()).toEqual([paul.tenantId]);
 
     expect(await setDepotEquipe(ana, 'Acme/Outil', false)).toBe('ok');
     expect(await aclOf()).toEqual([paul.userId]);
+  });
+
+  // C03 : cocher partage avec l'équipe ce qui est déjà relevé du dépôt, puis ce que la relève de chacun en lit. Le
+  // nom d'un dépôt perso ne suffit pas : l'administrateur doit le lire lui-même sur GitHub.
+  it('Ana coche paul/perso sans y avoir accès : refusé, la PR de Paul reste privée', async () => {
+    const { sourceId } = await seedRun(paul, {
+      kind: 'github',
+      acl: [paul.userId],
+      metadata: { origin: { repo: 'paul/perso' } },
+    });
+    const github = githubOfAna({ 'paul/perso': 404, 'Paul/Perso': false });
+
+    expect(await setDepotEquipe(ana, 'paul/perso', true, github)).toBe('illisible');
+    expect(await setDepotEquipe(ana, 'Paul/Perso', true, github)).toBe('illisible');
+
+    expect(github.fetchImpl.calls).toHaveLength(2);
+    expect(await projectsOf(ana.tenantId)).toEqual([]);
+    const { rows } = await adminPool.query<{ acl: string[] }>(
+      'select acl::text[] as acl from sources where id = $1',
+      [sourceId],
+    );
+    expect(rows[0]?.acl).toEqual([paul.userId]);
+  });
+
+  it('décoche sans rien demander à GitHub', async () => {
+    const github = githubOfAna({});
+
+    expect(await setDepotEquipe(ana, 'paul/perso', false, github)).toBe('ok');
+
+    expect(github.fetchImpl.calls).toEqual([]);
   });
 });

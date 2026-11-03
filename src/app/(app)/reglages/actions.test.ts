@@ -460,6 +460,7 @@ describe('setDepotEquipeAction', () => {
   it.each([
     ['invalide', fr.settings.depotInvalid],
     ['refuse', fr.settings.depotRefused],
+    ['illisible', fr.settings.depotUnreadable],
   ] as const)('dit pourquoi le module refuse (%s), sans rafraîchir', async (refus, message) => {
     vi.mocked(setDepotEquipe).mockResolvedValue(refus);
 

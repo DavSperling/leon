@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
 import { collect, type FakeCall, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
@@ -777,7 +777,6 @@ describe('github : sync, dépôts d’équipe (décision D)', () => {
   it('lit un dépôt d’équipe quelle que soit sa casse sur GitHub', async () => {
     const { http, calls } = testHttp(githubConnector, installed, [
       ...installation(['Acme/Leon']),
-      permissionRoute('Acme/Leon'),
       { url: `${API}/repos/Acme/Leon/issues`, json: [] },
     ]);
 
@@ -787,6 +786,49 @@ describe('github : sync, dépôts d’équipe (décision D)', () => {
 
     expect(calls.map((call) => new URL(call.url).pathname)).toContain('/repos/Acme/Leon/issues');
     expect(pages[0]?.depotsConfirmes).toEqual([LEON]);
+  });
+
+  // C12 : l'installation ne rend que les dépôts où le membre a une permission explicite, lecture au moins (doc citée
+  // dans client.ts) : aucune demande de plus par dépôt, à chaque passage. Seuls les dépôts saisis la demandent.
+  it('avec le bouton sans dépôt choisi, ne redemande pas la permission des dépôts installés', async () => {
+    const repos = ['acme/leon', 'acme/site', 'acme/outil'];
+    const { http, calls } = testHttp(githubConnector, installed, [
+      ...installation(repos),
+      ...repos.map((name) => ({ url: `${API}/repos/${name}/issues`, json: [] })),
+    ]);
+
+    const pages = await collect(
+      githubConnector.sync(
+        installed,
+        { cursor: null, since: SINCE, depotsEquipe: teamOf(repos) },
+        http,
+      ),
+    );
+
+    expect(calls.filter(isPermissionCall)).toEqual([]);
+    expect(pages.at(-1)?.depotsConfirmes).toEqual(teamOf(repos));
+  });
+
+  // C13 : non vérifié, GitHub pourrait ne pas rendre `permissions` à un jeton d'appli ou à grain fin. Le dépôt n'est
+  // alors pas lu, comme sans permission, et le journal le dit sans nommer le dépôt : un arrêt de la relève se voit.
+  it('sans `permissions` dans la réponse, ne lit pas le dépôt et le journalise, sans le nommer', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const repos = ['acme/leon', 'acme/site'];
+      const { pages, calls } = await runSync(
+        [{ url: `${API}/repos/acme/leon`, json: repo }, permissionRoute('acme/site', false)],
+        { repos, depotsEquipe: teamOf(repos) },
+      );
+
+      expect(calls.filter((call) => !isPermissionCall(call))).toEqual([]);
+      expect(pages[0]?.depotsConfirmes).toEqual([]);
+      // Un `pull` faux n'est pas une anomalie : un seul message.
+      expect(logged).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify(logged.mock.calls)).toContain('github.permissions_missing');
+      expect(JSON.stringify(logged.mock.calls)).not.toContain('acme/');
+    } finally {
+      logged.mockRestore();
+    }
   });
 
   it('ignore un dépôt d’équipe sur lequel le membre n’a pas de permission (pull faux, 403, 404)', async () => {
@@ -899,7 +941,6 @@ describe('github : connexion par le bouton', () => {
         url: `${API}/user/installations/7/repositories`,
         json: { repositories: [{ full_name: 'acme/leon' }] },
       },
-      permissionRoute('acme/leon'),
       ...firstPassRoutes(),
     ]);
 
@@ -922,7 +963,6 @@ describe('github : connexion par le bouton', () => {
       { url: REPOS_7, json: listed(repos.slice(0, 20)), headers: next(REPOS_7) },
       { url: REPOS_7, json: listed(repos.slice(20, 21)) },
       { url: `${API}/user/installations/8/repositories`, json: listed(repos.slice(21)) },
-      ...repos.map((name) => permissionRoute(name)),
       ...repos.map((name) => ({ url: `${API}/repos/${name}/issues`, json: [] })),
     ]);
 

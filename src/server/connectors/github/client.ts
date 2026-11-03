@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { logError } from '@/server/log';
 import {
   ConnectorAuthError,
   type ConnectorHttp,
@@ -219,8 +220,10 @@ export function githubClient(token: string, http: ConnectorHttp) {
     },
 
     // Décision D : le membre a-t-il une permission sur le dépôt ? Lue dans les permissions du dépôt, avec le jeton
-    // de la connexion, à clé comme par le bouton (pull vaut pour tout rôle). Un 404 ou un 403, comme pour
-    // checkRepo : non. https://docs.github.com/en/rest/repos/repos#get-a-repository
+    // de la connexion, pour les dépôts saisis, à clé comme par le bouton (pull vaut pour tout rôle ; installedRepos
+    // ne rend que des dépôts où il en a une), et pour le dépôt qu'un administrateur coche (depots-equipe.ts). Un 404
+    // ou un 403, comme pour checkRepo : non.
+    // https://docs.github.com/en/rest/repos/repos#get-a-repository
     // shortcut: pull est vrai pour tout compte sur un dépôt public, membre ou non, passer à l'appartenance au
     // dépôt si QD6 le demande.
     async canRead(repo: string): Promise<boolean> {
@@ -229,6 +232,14 @@ export function githubClient(token: string, http: ConnectorHttp) {
           { url: `${API}/repos/${repo}`, headers },
           z.object({ permissions: z.object({ pull: z.boolean().optional() }).optional() }),
         );
+        // Non vérifié pour un jeton d'appli ou à grain fin (connector.ts) : sans le champ, la relève de ce dépôt
+        // s'arrêterait sans rien dire ; le journal le montre, sans le nom du dépôt.
+        if (permissions === undefined) {
+          logError(
+            'github.permissions_missing',
+            new Error('GET /repos/{repo} without permissions'),
+          );
+        }
         return permissions?.pull === true;
       } catch (error) {
         const denied = error instanceof ConnectorAuthError && error.status === 403;

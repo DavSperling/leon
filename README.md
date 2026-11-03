@@ -174,9 +174,9 @@ La vérification pas à pas (GitHub et Linear par bouton, un refus chez l'édite
 
 ## Dépôts d'équipe
 
-Sur GitHub, Leon ne relève que les dépôts que l'équipe partage (décision D du [plan des sessions](docs/plans/2026-11-02-memoire-sessions.md)) : un dépôt perso branché par un membre ne devient jamais visible des autres.
+Sur GitHub, Leon ne relève que les dépôts que l'équipe partage (décision D du [plan des sessions](docs/plans/2026-11-02-memoire-sessions.md)) : un dépôt perso branché par un membre ne devient visible des autres que si un administrateur qui le lit lui-même sur GitHub le coche.
 
-- **Qui coche** : un propriétaire ou un administrateur, dans Réglages, onglet Équipe, section « Dépôts d'équipe ». La liste propose les dépôts lus par ses propres connexions GitHub, jamais ceux des autres membres ; un autre dépôt se saisit sous la forme `propriétaire/dépôt`. La base refuse l'écriture à tout autre membre (`0047-depots-equipe.sql`). Toute l'équipe lit la liste.
+- **Qui coche** : un propriétaire ou un administrateur, dans Réglages, onglet Équipe, section « Dépôts d'équipe ». La liste propose les dépôts lus par ses propres connexions GitHub, jamais ceux des autres membres ; un autre dépôt se saisit sous la forme `propriétaire/dépôt`. Pour cocher un dépôt, il faut le lire soi-même sur GitHub : Leon le vérifie par l'une de ses propres connexions GitHub, et refuse sinon. La base refuse l'écriture à tout autre membre (`0047-depots-equipe.sql`). Toute l'équipe lit la liste.
 - **Sans aucun dépôt coché**, GitHub n'est plus relevé : rien de nouveau n'entre, quelle que soit la connexion. La section le dit à l'administrateur par un bandeau, tant que rien n'est coché. Juste après le déploiement, il faut donc cocher les dépôts.
 - **Ce qui devient privé** : les sources GitHub déjà relevées d'un dépôt qui n'est pas coché ne sont plus visibles que de la personne qui a branché la connexion. Un dépôt coché ensuite redevient visible de toute l'équipe.
 

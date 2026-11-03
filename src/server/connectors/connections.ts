@@ -152,7 +152,8 @@ export async function createConnection(
   return id;
 }
 
-// Aucune colonne `secret` ici : la liste est écrite champ par champ.
+// Aucune colonne `secret` ici : la liste est écrite champ par champ. Les dépôts d'équipe confirmés (décision D) disent
+// ce que le compte GitHub de l'auteur peut lire : la page les enverrait au navigateur de chacun, seul l'auteur les reçoit.
 export async function listConnections(ctx: TenantContext): Promise<ConnectionView[]> {
   const rows = await withTenant(ctx, (tx) =>
     tx
@@ -160,7 +161,10 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         id: connections.id,
         provider: connections.provider,
         label: connections.label,
-        config: connections.config,
+        config: sql<
+          Record<string, unknown>
+        >`case when ${createdByMe(ctx)} then ${connections.config}
+          else ${connections.config} - 'depots_confirmes' end`.mapWith(connections.config),
         secretHint: connections.secretHint,
         status: connections.status,
         since: connections.since,

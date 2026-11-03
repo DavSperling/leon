@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist_Mono, Manrope } from 'next/font/google';
+import { Geist_Mono, Inter, Manrope } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -16,6 +16,13 @@ const geistMono = Geist_Mono({
   display: 'swap',
   variable: '--font-geist-mono',
 });
+// Seulement pour le mot « Leon » du logo (src/components/verre/shell/brand.tsx).
+const inter = Inter({
+  subsets: ['latin'],
+  weight: '500',
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 // Posé avant le premier rendu : pas d'éclair du thème sombre quand le clair est mémorisé ou demandé par le système ;
 // et les animations restent coupées si la personne les a arrêtées (src/lib/verre/instant.ts).
@@ -31,7 +38,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html
       lang={await getLocale()}
       data-theme="dark"
-      className={`${manrope.variable} ${geistMono.variable}`}
+      className={`${manrope.variable} ${geistMono.variable} ${inter.variable}`}
       suppressHydrationWarning
     >
       <head>

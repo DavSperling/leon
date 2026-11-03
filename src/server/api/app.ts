@@ -8,6 +8,7 @@ import { authRoutes } from './auth-routes';
 import { briefingRoutes } from './briefing-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
+import { passationRoutes } from './passation-routes';
 import type { ApiEnv } from './require-api-token';
 import { sessionRoutes } from './session-routes';
 
@@ -24,6 +25,7 @@ app.get('/health', (c) => c.json({ ok: true }));
 app.route('/auth', authRoutes);
 app.route('/v1', ingestRoutes);
 app.route('/v1', briefingRoutes);
+app.route('/v1', passationRoutes);
 // Routes de l'interface, au cookie de session : chacune pose ses propres contrôles (jamais un `use` global,
 // qui s'appliquerait aussi aux routes à jeton montées sous /v1).
 app.route('/v1', sessionRoutes);

@@ -36,7 +36,14 @@ let origin: string;
 let received: Array<{ url: URL; authorization: string | undefined }>;
 let handle: (request: IncomingMessage, response: ServerResponse) => void;
 
-const answerOk = (_request: IncomingMessage, response: ServerResponse) => {
+const STATE = '# Passation · état de la branche';
+
+const answerOk = (request: IncomingMessage, response: ServerResponse) => {
+  if (new URL(request.url ?? '/', 'http://local').pathname === API_PATHS.passation) {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ markdown: STATE }));
+    return;
+  }
   const body: BriefingResponse = {
     markdown: MARKDOWN,
     projet: 'github.com/acme/leon',
@@ -131,11 +138,11 @@ describe('leon briefing : la vraie commande', () => {
       const outcome = await runCommand(hookJson(repo), { INIT_CWD: elsewhere });
 
       expect(outcome.code).toBe(0);
-      expect(outcome.stdout).toBe(`${MARKDOWN}\n`);
+      expect(outcome.stdout).toBe(`${STATE}\n\n${MARKDOWN}\n`);
       expect(outcome.stderr).toBe('');
       expect(outcome.seconds).toBeLessThan(MAX_SECONDS);
-      expect(received).toHaveLength(1);
-      const [request] = received;
+      expect(received).toHaveLength(2);
+      const request = received.find((r) => r.url.pathname === API_PATHS.briefing);
       expect(request?.url.pathname).toBe(API_PATHS.briefing);
       expect(request?.url.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe('github.com/acme/leon');
       expect(request?.authorization).toBe(`Bearer ${TOKEN}`);
@@ -153,7 +160,7 @@ describe('leon briefing : la vraie commande', () => {
       expect(received[0]?.url.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe(
         'github.com/acme/leon',
       );
-      expect(outcome.stdout).toBe(`${MARKDOWN}\n`);
+      expect(outcome.stdout).toBe(`${STATE}\n\n${MARKDOWN}\n`);
     },
     TEST_TIMEOUT_MS,
   );

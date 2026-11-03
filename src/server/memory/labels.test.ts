@@ -12,6 +12,7 @@ describe('labels', () => {
       chatgpt: 'ChatGPT',
       mcp_remember: 'Note (MCP)',
       document: 'Document',
+      passation: 'Passation',
       ...PROVIDER_LABELS,
     });
   });

@@ -93,6 +93,10 @@ const COMPOSITE_KEYS = [
   'passages.source_id → sources',
   'passages.turn_id → turns',
   'passages_a_vectoriser.passage_id → passages',
+  'passation_items.remplacee_par → passation_items',
+  'passation_items.source_id → sources',
+  'passation_liens.item_id → passation_items',
+  'passation_liens.source_id → sources',
   'read_log.source_id → sources',
   'turns.source_id → sources',
 ];
@@ -103,11 +107,11 @@ describe('clés étrangères composées', () => {
       `select c.conrelid::regclass::text as source, pg_get_constraintdef(c.oid) as def
          from pg_constraint c
         where c.contype = 'f'
-          and c.confrelid::regclass::text in ('sources', 'turns', 'ingest_runs', 'passages')`,
+          and c.confrelid::regclass::text in ('sources', 'turns', 'ingest_runs', 'passages', 'passation_items')`,
     );
     const keys = rows.map(({ source, def }) => {
       const match = def.match(
-        /^FOREIGN KEY \(tenant_id, (\w+)\) REFERENCES (\w+)\(tenant_id, id\)/,
+        /^FOREIGN KEY \(tenant_id, (?:source_id, )?(\w+)\) REFERENCES (\w+)\(tenant_id, (?:source_id, )?id\)/,
       );
       expect(match, `${source} : ${def}`).not.toBeNull();
       return `${source}.${match?.[1]} → ${match?.[2]}`;

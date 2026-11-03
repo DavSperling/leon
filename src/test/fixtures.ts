@@ -27,6 +27,7 @@ const CAPTURE_MODE_BY_KIND: Record<SourceKind, TurnCaptureMode> = {
   chatgpt: 'network',
   mcp_remember: 'manual',
   document: 'manual',
+  passation: 'manual',
   ...CONNECTOR_MODES,
 };
 

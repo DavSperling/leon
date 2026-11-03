@@ -1,7 +1,12 @@
 import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, BRIEFING_PROJECT_PARAM, type BriefingResponse } from '../capture/api-contract';
+import {
+  API_PATHS,
+  BRIEFING_PROJECT_PARAM,
+  type BriefingResponse,
+  PASSATION_BRANCH_PARAM,
+} from '../capture/api-contract';
 import {
   BRIEFING_STDIN_TIMEOUT_MS,
   BriefingRouteMissingError,
@@ -128,7 +133,14 @@ describe('runBriefing', () => {
   }) {
     const out: string[] = [];
     const err: string[] = [];
-    const fetchImpl = input.fetch ?? fetchReturning(Response.json(briefing));
+    // Sans note de passation : seul le point sort.
+    const fetchImpl =
+      input.fetch ??
+      vi.fn(async (url: URL) =>
+        url.pathname === API_PATHS.passation
+          ? Response.json({ markdown: null })
+          : Response.json(briefing),
+      );
     const git = vi.fn(async (_args: string[], cwd: string) => input.remotes?.[cwd] ?? null);
     const run = () =>
       runBriefing({
@@ -162,6 +174,50 @@ describe('runBriefing', () => {
     expect(git).toHaveBeenCalledWith(['remote', 'get-url', 'origin'], '/projets/leon');
     expect(askedProject()).toBe(PROJECT);
     expect(out).toEqual([briefing.markdown]);
+    expect(err).toEqual([]);
+  });
+
+  it('colle l’état de la branche avant le point du matin', async () => {
+    const stdin = Readable.from([JSON.stringify({ cwd: '/projets/leon' })]);
+    const fetchImpl = vi.fn(async (url: URL) =>
+      url.pathname === API_PATHS.passation
+        ? Response.json({ markdown: '# Passation · état' })
+        : Response.json(briefing),
+    );
+    const git = vi.fn(async (args: string[]) =>
+      args[0] === 'branch' ? 'auth\n' : 'git@github.com:DavSperling/Leon.git',
+    );
+    const out: string[] = [];
+
+    await runBriefing({
+      stdin,
+      env: serverEnv,
+      cwd: '/leon',
+      git,
+      fetch: asFetch(fetchImpl),
+      out: (text) => out.push(text),
+      err: () => {},
+    });
+
+    expect(out).toEqual([`# Passation · état\n\n${briefing.markdown}`]);
+    const passation = fetchImpl.mock.calls
+      .map(([url]) => url)
+      .find((url) => url.pathname === API_PATHS.passation);
+    expect(passation?.searchParams.get(BRIEFING_PROJECT_PARAM)).toBe(PROJECT);
+    expect(passation?.searchParams.get(PASSATION_BRANCH_PARAM)).toBe('auth');
+  });
+
+  it('affiche l’état seul quand le point manque', async () => {
+    const fetchImpl = vi.fn(async (url: URL) =>
+      url.pathname === API_PATHS.passation
+        ? Response.json({ markdown: '# Passation · état' })
+        : new Response('{}', { status: 500 }),
+    );
+    const { run, out, err } = setup({ stdin: Readable.from([]), fetch: fetchImpl });
+
+    expect(await run()).toBe(0);
+
+    expect(out).toEqual(['# Passation · état']);
     expect(err).toEqual([]);
   });
 

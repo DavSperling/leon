@@ -165,6 +165,36 @@ describe('captureSessionFromHook : une session qui se termine', () => {
     expect(stderrText()).toContain('session captured (1 new turn, 3 already known).');
   });
 
+  it('après une capture réussie, passe la main au secours de passation, dont les erreurs ne remontent pas', async () => {
+    const onCaptured = vi.fn<NonNullable<CaptureDeps['onCaptured']>>(async () => {
+      throw new Error('secours en échec');
+    });
+    const { deps } = makeDeps({ remote: 'git@github.com:Acme/Leon.git' });
+
+    expect(await captureSessionFromHook(HOOK, { ...deps, onCaptured })).toBe(0);
+
+    expect(onCaptured).toHaveBeenCalledWith({
+      transcriptPath: '/t/s1.jsonl',
+      directory: '/r',
+      projectKey: 'github.com/acme/leon',
+    });
+    expect(stderrText()).toContain('session captured');
+    expect(stderrText()).not.toContain('capture failed');
+  });
+
+  it('ne lance pas le secours quand la capture échoue', async () => {
+    const onCaptured = vi.fn<NonNullable<CaptureDeps['onCaptured']>>(async () => {});
+    const { deps } = makeDeps({
+      send: async () => {
+        throw new TokenRefusedError();
+      },
+    });
+
+    await captureSessionFromHook(HOOK, { ...deps, onCaptured });
+
+    expect(onCaptured).not.toHaveBeenCalled();
+  });
+
   it('sans remote, la clé est celle du dossier', async () => {
     const { deps, send } = makeDeps({ remote: null });
 

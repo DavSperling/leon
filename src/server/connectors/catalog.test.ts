@@ -199,8 +199,8 @@ describe('catalogItem : le bouton', () => {
           ...(base.oauth as NonNullable<AnyConnector['oauth']>),
           adminConsent: {
             isConsentError: () => false,
-            url: (clientId, uri) =>
-              `https://login.test/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(uri)}`,
+            url: (clientId, uri, returnTo) =>
+              `https://login.test/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(uri)}${returnTo ? `&state=${returnTo}` : ''}`,
           },
         },
       };
@@ -212,6 +212,13 @@ describe('catalogItem : le bouton', () => {
       const spec = connector().oauth as NonNullable<AnyConnector['oauth']>;
       expect(item.adminConsentUrl).toBe(
         `https://login.test/adminconsent?client_id=id-exemple&redirect_uri=${encodeURIComponent(redirectUri(spec))}`,
+      );
+    });
+
+    it('porte la page où revenir quand elle est demandée', () => {
+      withApp();
+      expect(catalogItem(entry, connector(), 'en', '/bienvenue/outils').adminConsentUrl).toMatch(
+        /&state=\/bienvenue\/outils$/,
       );
     });
 

@@ -43,6 +43,34 @@ export function toolStates(
   });
 }
 
+/** Les outils cochés d'abord : les conseillés encore à brancher. */
+export const defaultChecked = (states: ToolState[]): ReadonlySet<ProviderId> =>
+  new Set(
+    states
+      .filter((s) => s.recommended && s.status === 'free' && s.item.available)
+      .map((s) => s.item.id),
+  );
+
+/**
+ * Les outils cochés gardés dans l'onglet (un branchement OAuth quitte la page) : seulement ceux de la liste ; null
+ * pour une valeur illisible ou absente.
+ */
+export function savedChecked(
+  states: ToolState[],
+  raw: string | null,
+): ReadonlySet<ProviderId> | null {
+  let saved: unknown;
+  try {
+    saved = JSON.parse(raw ?? 'null');
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(saved)) return null;
+  return new Set(
+    states.filter((s) => s.item.available && saved.includes(s.item.id)).map((s) => s.item.id),
+  );
+}
+
 /** Un propriétaire seul invite ses collaborateurs ensuite ; les autres arrivent à la fin. */
 export const nextAfterTools = (
   isSoleOwner: boolean,

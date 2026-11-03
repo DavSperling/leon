@@ -1,4 +1,5 @@
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
+import type { OAuthReturnPath } from '@/lib/connection-form';
 import {
   PROVIDER_FAMILIES,
   PROVIDER_FAMILIES_ORDER,
@@ -144,6 +145,7 @@ export function catalogItem(
   entry: CatalogEntry,
   connector: AnyConnector | null,
   locale = 'en',
+  returnTo?: OAuthReturnPath,
 ): CatalogItem {
   const spec = connector?.oauth;
   const client = spec ? oauthClient(spec.appKey) : null;
@@ -157,13 +159,18 @@ export function catalogItem(
     keyAccepted: entry.keyAccepted ?? true,
     oauthPreFields: spec?.preFields ?? [],
     adminConsentUrl:
-      spec && client ? (spec.adminConsent?.url(client.id, redirectUri(spec)) ?? null) : null,
+      spec && client
+        ? (spec.adminConsent?.url(client.id, redirectUri(spec), returnTo) ?? null)
+        : null,
   };
 }
 
-// Par famille, puis par libellé. `locale` : la langue de l'interface (l'anglais par défaut).
-export function listCatalog(locale = 'en'): CatalogItem[] {
-  return PROVIDER_IDS.map((id) => catalogItem(CATALOG_ENTRIES[id], getConnector(id), locale)).sort(
+// Par famille, puis par libellé. `locale` : la langue de l'interface (l'anglais par défaut). `returnTo` : la page
+// où revient le lien d'accord de l'administrateur, si ce n'est pas Connexions.
+export function listCatalog(locale = 'en', returnTo?: OAuthReturnPath): CatalogItem[] {
+  return PROVIDER_IDS.map((id) =>
+    catalogItem(CATALOG_ENTRIES[id], getConnector(id), locale, returnTo),
+  ).sort(
     (a, b) =>
       PROVIDER_FAMILIES_ORDER.indexOf(a.family) - PROVIDER_FAMILIES_ORDER.indexOf(b.family) ||
       a.label.localeCompare(b.label, locale),

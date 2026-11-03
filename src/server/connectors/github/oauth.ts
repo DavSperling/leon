@@ -57,11 +57,17 @@ export const githubOAuth: OAuthSpec = {
   // collaborateur voit déjà les dépôts de l'installation d'un autre, et ne se voyait jamais proposer
   // les siens. Le nom court de l'appli (github.com/apps/<nom>) n'est pas dans la réponse de GitHub : on
   // le règle. Sans lui, on revient à Leon et l'utilisateur installe l'appli lui-même.
-  async nextStep(config) {
+  // Depuis l'onboarding, la page de départ part dans `state`, et Connexions (la « Setup URL ») renvoie
+  // alors sur l'étape. Doc de GitHub lue le 3/11/2026 : « You can provide a state parameter in an app's
+  // installation URL to preserve the state of the application page ». Non vérifié, sans appel réel :
+  // que GitHub le rende bien à la Setup URL, aussi après « Configure » (« Redirect on update ») ; sinon
+  // la personne reste sur Connexions, comme avant.
+  async nextStep(config, _http, returnTo) {
     const slug = process.env.LEON_OAUTH_GITHUB_APP?.trim();
     const { repos } = config;
     if (!slug || (Array.isArray(repos) && repos.length > 0)) return null;
-    return `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
+    const install = `https://github.com/apps/${encodeURIComponent(slug)}/installations/new`;
+    return returnTo ? `${install}?${new URLSearchParams({ state: returnTo })}` : install;
   },
 
   // Rien à demander avant le clic : les dépôts sont ceux où l'utilisateur installe l'appli sur

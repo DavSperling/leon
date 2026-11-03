@@ -33,7 +33,8 @@ export default async function ToolsPage({
   if (member.onboardedAt === null) redirect('/bienvenue');
 
   const locale = await getLocale();
-  const catalog = listCatalog(locale);
+  // Le lien d'accord de l'administrateur revient ici, comme les branchements.
+  const catalog = listCatalog(locale, '/bienvenue/outils');
   const recommended =
     member.department !== null && isDepartment(member.department)
       ? DEPARTMENTS[member.department].tools

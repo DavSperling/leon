@@ -630,9 +630,10 @@ describe('retour demandé : l’étape Vos outils', () => {
     expect(location(response)).toBe('/connexions?erreur=expire&outil=github');
   });
 
-  it('enchaîne toujours sur la page que l’outil demande (installation de l’appli GitHub)', async () => {
+  it('enchaîne toujours sur la page que l’outil demande, en lui donnant l’étape (installation de l’appli GitHub)', async () => {
     const paul = await signUp();
-    const next = 'https://github.com/apps/leon-memory/installations/new';
+    const next = (returnTo: string | undefined) =>
+      `https://github.com/apps/leon-memory/installations/new?state=${returnTo}`;
 
     const { response } = await fullRound(
       paul,
@@ -640,7 +641,7 @@ describe('retour demandé : l’étape Vos outils', () => {
       form(RETOUR),
     );
 
-    expect(location(response)).toBe(next);
+    expect(location(response)).toBe(next(RETOUR));
   });
 
   it('« champs » avant le clic revient sur l’étape', async () => {
@@ -725,6 +726,42 @@ describe('accord de l’administrateur', () => {
     const response = await back(app, paul, { admin_consent: 'True' }, undefined);
 
     expect(location(response)).toBe('/connexions?erreur=admin_accorde&outil=github');
+  });
+
+  it('revient sur la page de départ que l’éditeur rend dans `state`, accord donné ou refusé', async () => {
+    const paul = await signUp();
+    const { app } = makeApp({ connector: withConsent() });
+    const consent = { admin_consent: 'True', state: '/bienvenue/outils' };
+
+    // Le refus, sous la forme de la doc de Microsoft (v2-admin-consent).
+    const refusal = { error: 'consent_required', error_description: 'AADSTS65004: denied' };
+
+    const granted = await back(app, paul, consent, undefined);
+    const denied = await back(app, paul, { ...consent, ...refusal }, undefined);
+
+    expect(location(granted)).toBe('/bienvenue/outils?erreur=admin_accorde&outil=github');
+    expect(location(denied)).toBe('/bienvenue/outils?erreur=admin&outil=github');
+  });
+
+  it('ne suit pas un `state` hors de la liste fermée, ni celui d’un branchement ordinaire', async () => {
+    const paul = await signUp();
+    const { app } = makeApp({ connector: withConsent() });
+
+    const outside = await back(
+      app,
+      paul,
+      { admin_consent: 'True', state: '//ailleurs' },
+      undefined,
+    );
+    const ordinary = await back(
+      app,
+      paul,
+      { error: 'access_denied', state: '/bienvenue/outils' },
+      undefined,
+    );
+
+    expect(location(outside)).toBe('/connexions?erreur=admin_accorde&outil=github');
+    expect(location(ordinary)).toBe('/connexions?erreur=annule&outil=github');
   });
 });
 

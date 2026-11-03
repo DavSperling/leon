@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
-import { nextAfterTools, toolStates } from './tools-model';
+import { defaultChecked, nextAfterTools, savedChecked, toolStates } from './tools-model';
 
 // Seuls les champs que le modèle lit : le reste du catalogue et des connexions n'entre pas en jeu.
 const tool = (id: string, privateRaw = false) => ({ id, privateRaw }) as unknown as CatalogItem;
@@ -142,5 +142,39 @@ describe('nextAfterTools', () => {
 
   it('tous les autres vont à la fin', () => {
     expect(nextAfterTools(false)).toBe('/bienvenue/pret');
+  });
+});
+
+describe('outils cochés', () => {
+  const available = (id: string) =>
+    ({ id, available: true, privateRaw: false }) as unknown as CatalogItem;
+  const states = toolStates(
+    [
+      available('github'),
+      available('linear'),
+      available('jira'),
+      available('notion'),
+      tool('gitlab'),
+    ],
+    [conn('linear')],
+    ['github', 'linear'] as never,
+  );
+
+  it('coche d’abord les conseillés encore à brancher', () => {
+    expect([...defaultChecked(states)]).toEqual(['github']);
+  });
+
+  it('reprend ceux gardés dans l’onglet, sans un outil hors de la liste ni devenu indisponible', () => {
+    expect([...(savedChecked(states, '["jira","notion","inconnu","gitlab"]') ?? [])]).toEqual([
+      'jira',
+      'notion',
+    ]);
+    expect([...(savedChecked(states, '[]') ?? ['x'])]).toEqual([]);
+  });
+
+  it('ignore une valeur absente ou illisible', () => {
+    expect(savedChecked(states, null)).toBeNull();
+    expect(savedChecked(states, '{"github":true}')).toBeNull();
+    expect(savedChecked(states, 'pas du json')).toBeNull();
   });
 });

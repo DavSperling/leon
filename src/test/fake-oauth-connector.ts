@@ -14,7 +14,8 @@ export function fakeOAuthConnector(
     account?: string;
     accountKey?: string;
     repos?: string[];
-    nextStep?: string | Error; // la page où enchaîner après le branchement, ou l'erreur qu'elle lève
+    // La page où enchaîner après le branchement (selon la page de départ), ou l'erreur qu'elle lève.
+    nextStep?: string | Error | ((returnTo: string | undefined) => string);
   } = {},
 ): AnyConnector {
   const schema = z
@@ -54,9 +55,10 @@ export function fakeOAuthConnector(
       ...(options.nextStep === undefined
         ? {}
         : {
-            async nextStep() {
-              if (options.nextStep instanceof Error) throw options.nextStep;
-              return options.nextStep ?? null;
+            async nextStep(_config, _http, returnTo) {
+              const { nextStep } = options;
+              if (nextStep instanceof Error) throw nextStep;
+              return typeof nextStep === 'function' ? nextStep(returnTo) : (nextStep ?? null);
             },
           }),
       async toConfig(_tokens, preFields, http) {

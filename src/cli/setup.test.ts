@@ -13,6 +13,9 @@ import { runSetup, type SetupDeps, type SetupOptions } from './setup';
 // vrai ~/.claude ni le vrai ~/.leon. Le navigateur de `leon login` est un faux, qui n'ouvre rien.
 
 const INSTALLED = { kind: 'installee' } as const;
+// La dernière ligne du résumé sous la forme installée (I3 de la relecture finale).
+const UPDATES =
+  'Leon updates itself, at most once a day, from the server this computer is connected to. To go back to the previous version: ~/.leon/bin/leon update --previous';
 const FAKE_TOKEN = `leon_${'x'.repeat(43)}`;
 const CONNECTION: Connection = {
   url: 'https://leon.example',
@@ -57,22 +60,32 @@ async function installLeon(): Promise<void> {
 const connect = () => writeConnection(home, CONNECTION);
 const hasClaudeCode = () => mkdir(claudeDir, { recursive: true });
 
-type Run = { code: number; output: string; questions: string[]; logins: Array<string | undefined> };
+type Request = { url: string; authorization: string | null };
+type Run = {
+  code: number;
+  output: string;
+  questions: string[];
+  logins: Array<string | undefined>;
+  requests: Request[];
+};
 
 // `answers` : ce que « tape » l'utilisateur à chaque question ; une question non prévue fait échouer le test.
 // `login` : ce que fait `leon login` ; par défaut il réussit et écrit la connexion, comme le vrai.
+// `me` : ce que répond GET /api/v1/me au jeton de la connexion (200 par défaut) ; 'unreachable' : le serveur ne répond pas.
 async function setup(
   options: Partial<SetupOptions> = {},
   extra: {
     answers?: string[];
     env?: Record<string, string>;
     loginCode?: number;
+    me?: number | 'unreachable';
     whileAsking?: () => Promise<void>;
   } = {},
 ): Promise<Run> {
   const lines: string[] = [];
   const questions: string[] = [];
   const logins: Array<string | undefined> = [];
+  const requests: Request[] = [];
   const answers = [...(extra.answers ?? [])];
   const deps: SetupDeps = {
     home,
@@ -92,9 +105,17 @@ async function setup(
       if (code === 0) await connect();
       return code;
     },
+    fetch: async (input, init) => {
+      requests.push({
+        url: String(input),
+        authorization: new Headers(init?.headers).get('Authorization'),
+      });
+      if (extra.me === 'unreachable') throw new TypeError('fetch failed');
+      return new Response('{}', { status: extra.me ?? 200 });
+    },
   };
   const code = await runSetup({ yes: false, ...options }, deps);
-  return { code, output: lines.join('\n'), questions, logins };
+  return { code, output: lines.join('\n'), questions, logins, requests };
 }
 
 // Tout ce que `setup` laisse sur le disque : chemin → droits, date de modification et contenu (un fichier de travail
@@ -350,14 +371,146 @@ describe('setup : la connexion', () => {
     expect(run.output).not.toContain('y'.repeat(43));
   });
 
-  it('LEON_URL et LEON_TOKEN posés : l’ordinateur est connecté, pas de login', async () => {
+  it('LEON_URL et LEON_TOKEN posés sans connexion enregistrée : lance login, et le dit (un Claude Code lancé du Dock ne voit pas ces variables)', async () => {
     const run = await setup(
       {},
       { env: { LEON_URL: 'http://localhost:3000', LEON_TOKEN: FAKE_TOKEN } },
     );
 
     expect(run.code).toBe(0);
-    expect(run.logins).toEqual([]);
+    expect(run.logins).toEqual([undefined]);
+    expect(run.output).toContain('LEON_URL and LEON_TOKEN');
+    expect(run.output).toContain('~/.leon/bin/leon login');
+    expect(run.output).not.toContain('already connected');
+    expect(run.output).not.toContain(FAKE_TOKEN);
+    expect(run.requests).toEqual([]);
+  });
+
+  describe('l’ordinateur n’est plus connecté : setup le reconnecte', () => {
+    it('jeton révoqué (le serveur répond 401 à /me) : le dit, sans le jeton, et lance login', async () => {
+      await connect();
+
+      const run = await setup({}, { me: 401 });
+
+      expect(run.code).toBe(0);
+      expect(run.requests).toEqual([
+        { url: 'https://leon.example/api/v1/me', authorization: `Bearer ${FAKE_TOKEN}` },
+      ]);
+      expect(run.logins).toEqual([undefined]);
+      expect(run.output).toContain(
+        'This computer was disconnected from Leon (its token was revoked): connecting it again.',
+      );
+      expect(run.output).not.toContain('already connected');
+      expect(run.output).not.toContain(FAKE_TOKEN);
+    });
+
+    it('jeton révoqué : le login suivi des crochets, comme pour un ordinateur neuf', async () => {
+      await connect();
+      await hasClaudeCode();
+
+      const run = await setup({}, { me: 401, answers: ['y'] });
+
+      expect(run.code).toBe(0);
+      expect(run.logins).toHaveLength(1);
+      expect(run.output).toContain('Claude Code: hooks installed');
+    });
+
+    it('jeton révoqué et login qui échoue : setup s’arrête sans poser de crochet', async () => {
+      await connect();
+      await hasClaudeCode();
+
+      const run = await setup({}, { me: 401, loginCode: 1 });
+
+      expect(run.code).toBe(1);
+      expect(run.questions).toEqual([]);
+      expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
+    });
+
+    it('serveur injoignable : l’ordinateur compte comme connecté (une installation hors ligne n’est pas bloquée)', async () => {
+      await connect();
+
+      const run = await setup({}, { me: 'unreachable' });
+
+      expect(run.code).toBe(0);
+      expect(run.requests).toHaveLength(1);
+      expect(run.logins).toEqual([]);
+      expect(run.output).toContain('already connected');
+    });
+
+    it.each([500, 403, 404])(
+      'une autre erreur (%i) compte aussi comme connecté',
+      async (status) => {
+        await connect();
+
+        const run = await setup({}, { me: status });
+
+        expect(run.logins).toEqual([]);
+        expect(run.output).toContain('already connected');
+      },
+    );
+
+    it('--url d’une autre origine : dit les deux origines (jamais le jeton) et lance login avec la nouvelle', async () => {
+      await connect();
+
+      const run = await setup({ url: 'https://autre.example/chemin' });
+
+      expect(run.logins).toEqual(['https://autre.example/chemin']);
+      expect(run.output).toContain('https://leon.example');
+      expect(run.output).toContain('https://autre.example');
+      expect(run.output).not.toContain('/chemin');
+      expect(run.output).not.toContain(FAKE_TOKEN);
+      expect(run.output).not.toContain('already connected');
+      // Le jeton est celui de l'autre serveur : inutile de le lui présenter.
+      expect(run.requests).toEqual([]);
+    });
+
+    it('--url de la même origine (chemin et barre finale en plus) : rien à refaire', async () => {
+      await connect();
+
+      const run = await setup({ url: 'https://leon.example/' });
+
+      expect(run.logins).toEqual([]);
+      expect(run.output).toContain('already connected');
+    });
+
+    it('--url mal formée avec une connexion : login la refuse, setup s’arrête', async () => {
+      await connect();
+      await hasClaudeCode();
+
+      const run = await setup({ url: 'ftp://leon.example' }, { loginCode: 1 });
+
+      expect(run.code).toBe(1);
+      expect(run.logins).toEqual(['ftp://leon.example']);
+      expect(run.output).not.toContain('ftp://');
+      expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
+    });
+
+    it('connexion enregistrée ET variables : le 401 de la connexion se contrôle quand même', async () => {
+      await connect();
+
+      const run = await setup(
+        {},
+        {
+          me: 401,
+          env: { LEON_URL: 'http://localhost:3000', LEON_TOKEN: `leon_${'y'.repeat(43)}` },
+        },
+      );
+
+      expect(run.logins).toHaveLength(1);
+      expect(run.requests).toEqual([
+        { url: 'https://leon.example/api/v1/me', authorization: `Bearer ${FAKE_TOKEN}` },
+      ]);
+    });
+
+    it('connexion illisible : comme pas connecté, et sans rien demander au serveur', async () => {
+      await mkdir(join(home, '.leon'), { recursive: true });
+      await writeFile(join(home, '.leon', 'connexion.json'), '{ pas du json');
+
+      const run = await setup();
+
+      expect(run.logins).toEqual([undefined]);
+      expect(run.requests).toEqual([]);
+    });
   });
 
   it('pas connecté : lance login, avec l’adresse de --url, puis installe les crochets', async () => {
@@ -385,7 +538,8 @@ describe('setup : la connexion', () => {
 
     expect(run.code).toBe(1);
     expect(run.output).toContain('not connected');
-    expect(run.output).toContain('leon setup');
+    expect(run.output).toContain('`~/.leon/bin/leon setup`');
+    expect(run.output).toContain('`~/.leon/bin/leon login`');
     expect(run.questions).toEqual([]);
     expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
     expect(await exists(consentPath(home))).toBe(false);
@@ -566,7 +720,18 @@ describe('setup : les outils de code', () => {
       '  Gemini / Antigravity: not found',
       '',
       'To run Leon later: ~/.leon/bin/leon <command>',
+      UPDATES,
     ]);
+  });
+
+  it('forme clone : ne parle pas de mises à jour automatiques (un clone se met à jour avec git)', async () => {
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true, depot: clone });
+
+    expect(run.output).toContain('To run Leon later: ~/.leon/bin/leon <command>');
+    expect(run.output).not.toContain('updates itself');
+    expect(run.output).not.toContain('update --previous');
   });
 
   it('des réglages de Claude Code illisibles : code 1, rien d’écrit chez lui, et la ligne le dit', async () => {
@@ -672,7 +837,7 @@ describe('setup : migrer une installation d’avant le lanceur', () => {
 
     expect(run.code).toBe(0);
     expect(run.output).toContain(
-      `Your hooks used to run Leon from ${oldClone}; they now run ~/.leon/bin/leon. The token in ${oldClone}/.env.local is no longer needed: revoke it in Settings › Connected computers.`,
+      `Your hooks used to run Leon from ${oldClone}; they now run ~/.leon/bin/leon. The token in ${oldClone}/.env.local is no longer needed: revoke it in Settings › Personal tokens.`,
     );
     expect(await readSettings()).toEqual({
       theme: 'dark',

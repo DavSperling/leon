@@ -104,7 +104,9 @@ describe('resolveServerEnv', () => {
       'LEON_URL is missing or invalid (https, or http on localhost and 127.0.0.1).',
     );
     expect(message).toContain('LEON_TOKEN is missing or invalid');
-    expect(message).toMatch(/not connected: run `leon login`/);
+    expect(message).toContain(
+      'This computer is not connected: run `~/.leon/bin/leon login` (`pnpm leon login` from a clone).',
+    );
   });
 
   it('une connexion illisible vaut « pas connecté », sans recopier le fichier', async () => {
@@ -116,7 +118,7 @@ describe('resolveServerEnv', () => {
 
     const failure = await resolveServerEnv({}, home).catch((error: Error) => error);
 
-    expect((failure as Error).message).toMatch(/run `leon login`/);
+    expect((failure as Error).message).toMatch(/run `~\/\.leon\/bin\/leon login`/);
     expect((failure as Error).message).not.toContain('secret.example');
     expect((failure as Error).message).not.toContain(SAVED_TOKEN);
   });

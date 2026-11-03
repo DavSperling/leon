@@ -112,6 +112,18 @@ describe('node leon.mjs', () => {
   });
 });
 
+// La CLI est servie par le serveur (public/cli) : un déploiement qui ne la reconstruit pas, ou qui construit le site
+// malgré une CLI en échec, publierait une CLI périmée ou absente. Le script `build` du déploiement doit donc la
+// construire d'abord et s'arrêter si elle échoue (`&&`).
+describe('pnpm build', () => {
+  it('construit la CLI avant le site, et s’arrête si la CLI échoue', async () => {
+    const { scripts } = JSON.parse(await readFile(join(REPO_ROOT, 'package.json'), 'utf8'));
+
+    expect(scripts['build:cli']).toMatch(/^vite build --config vite\.cli\.config\.ts$/);
+    expect(scripts.build).toMatch(/^pnpm build:cli && next build(\s|$)/);
+  });
+});
+
 describe('leon --version sous le clone', () => {
   it('rend « dev » : la version n’est injectée que par la construction', async () => {
     const { stdout } = await run(

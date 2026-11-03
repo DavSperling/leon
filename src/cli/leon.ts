@@ -362,6 +362,7 @@ async function runSetupCommand(args: string[]): Promise<number> {
         err: console.error,
         ask: asker.ask,
         login: loginForSetup,
+        fetch,
       },
     );
   } finally {

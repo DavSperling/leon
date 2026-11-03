@@ -332,6 +332,23 @@ async function loginWithBrowser(
   );
 }
 
+// GET /api/v1/me avec ce jeton : ce que `--with-token` vérifie, et ce que `leon setup` demande pour savoir si l'ordinateur
+// est toujours connecté. null : le serveur n'a pas répondu.
+export async function requestMe(
+  origin: string,
+  token: string,
+  fetchImpl: typeof fetch,
+): Promise<Response | null> {
+  try {
+    return await fetchImpl(new URL(API_PATHS.me, origin), {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: timeout(),
+    });
+  } catch {
+    return null;
+  }
+}
+
 async function loginWithToken(
   origin: string,
   previous: Connection | null,
@@ -342,13 +359,8 @@ async function loginWithToken(
     deps.err('That is not a Leon token (it is shaped like leon_…). Create one in Settings.');
     return 1;
   }
-  let response: Response;
-  try {
-    response = await deps.fetch(new URL(API_PATHS.me, origin), {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: timeout(),
-    });
-  } catch {
+  const response = await requestMe(origin, token, deps.fetch);
+  if (response === null) {
     deps.err(UNREACHABLE);
     return 1;
   }

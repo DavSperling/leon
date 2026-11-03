@@ -70,6 +70,25 @@ describe('ComputersSection', () => {
     expect(html).toContain('MacBook');
   });
 
+  // M4 : la phrase de confidentialité ne figure pas dans ce texte neuf ; celle du texte d'accord de la CLI ne change pas.
+  it('ne redit pas que la session reste privée à son auteur, dans les deux langues', () => {
+    expect(en.settings.computersDescription).not.toMatch(/private/i);
+    expect(fr.settings.computersDescription).not.toMatch(/privée/i);
+    expect(render({ computers: [MACBOOK], command: COMMAND })).not.toMatch(/private/i);
+  });
+
+  // La révocation d'un ordinateur dit comment le reconnecter : le lanceur n'est pas dans le PATH.
+  it.each([
+    ['en', en.settings.computerRevokeDescription],
+    ['fr', fr.settings.computerRevokeDescription],
+  ])(
+    'après une révocation (%s), donne le lanceur à lancer, ou la commande à recoller',
+    (_locale, text) => {
+      expect(text).toContain('~/.leon/bin/leon login');
+      expect(text).not.toMatch(/(?<!\/)\bleon login/);
+    },
+  );
+
   it('se lit en français', () => {
     const html = render({ computers: [MACBOOK], command: COMMAND }, 'fr');
 

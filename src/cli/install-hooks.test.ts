@@ -581,7 +581,7 @@ describe('installHooks : migrer les crochets pnpm d’avant le lanceur', () => {
 
   describe('le message sur le clone d’avant (forme installée)', () => {
     const notice = (clone: string) =>
-      `Your hooks used to run Leon from ${clone}; they now run ~/.leon/bin/leon. The token in ${clone}/.env.local is no longer needed: revoke it in Settings › Connected computers.`;
+      `Your hooks used to run Leon from ${clone}; they now run ~/.leon/bin/leon. The token in ${clone}/.env.local is no longer needed: revoke it in Settings › Personal tokens.`;
 
     it('dit le clone d’où les crochets lançaient Leon, mot pour mot, une fois les réglages écrits', async () => {
       await writeSettings(oldSettings());
@@ -672,7 +672,7 @@ describe('installHooks : migrer les crochets pnpm d’avant le lanceur', () => {
       const run = await install({ repoDir: null, assumeYes: true });
 
       expect(run.output).toContain(
-        'Your hooks used to run Leon from /a/leon and /b/leon; they now run ~/.leon/bin/leon. The tokens in /a/leon/.env.local and /b/leon/.env.local are no longer needed: revoke them in Settings › Connected computers.',
+        'Your hooks used to run Leon from /a/leon and /b/leon; they now run ~/.leon/bin/leon. The tokens in /a/leon/.env.local and /b/leon/.env.local are no longer needed: revoke them in Settings › Personal tokens.',
       );
     });
 
@@ -983,7 +983,7 @@ describe('installHooks : les réglages du serveur dans le .env.local du dépôt'
 
     const run = await install({ repoDir, assumeYes: true });
 
-    expect(run.output).toContain('This computer is not connected: run `leon login`');
+    expect(run.output).toContain('This computer is not connected: run `~/.leon/bin/leon login`');
   });
 
   it('ne prévient pas quand l’ordinateur est connecté (leon login), même sans .env.local', async () => {
@@ -1330,7 +1330,9 @@ describe('installHooks : la forme installée, sans clone', () => {
 
     const connected = await install({ repoDir: null, assumeYes: true });
 
-    expect(notConnected.output).toContain('This computer is not connected: run `leon login`');
+    expect(notConnected.output).toContain(
+      'This computer is not connected: run `~/.leon/bin/leon login`',
+    );
     expect(notConnected.output).not.toContain('.env.local');
     expect(connected.output).not.toContain('Warning');
   });
@@ -1490,9 +1492,40 @@ describe('le README', () => {
     const text = await readme();
 
     expect(text).toContain('~/.leon');
-    expect(text).toMatch(/ni dans votre `PATH` ni dans votre profil de shell/);
+    expect(text).toMatch(/rien dans votre `PATH` ni votre profil de shell/);
+    // Elle écrit aussi les réglages des outils de code, après accord : « n'écrit rien d'autre » serait faux.
+    expect(text).toContain(
+      "n'écrit que là, plus les réglages de vos outils de code après votre accord",
+    );
+    expect(text).not.toContain("n'écrit rien d'autre");
     for (const platform of ['macOS', 'Linux']) expect(text).toContain(platform);
     expect(text).toContain('musl');
+  });
+
+  it('dit ce que le script vérifie : Node par son empreinte seulement, la CLI par sa taille et son empreinte', async () => {
+    const text = await readme();
+
+    expect(text).toContain(
+      "vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI",
+    );
+  });
+
+  it('a un paragraphe « Mises à jour » : au plus une fois par jour, depuis le serveur connecté, et --previous', async () => {
+    const text = await readme();
+    const section = text.slice(
+      text.indexOf('#### Mises à jour'),
+      text.indexOf('#### Ce que la commande écrit dans Claude Code'),
+    );
+
+    expect(section).not.toBe('');
+    expect(section).toContain('au plus une fois par jour');
+    expect(section).toContain('connexion.json');
+    expect(section).toContain('~/.leon/bin/leon update --previous');
+    expect(section).toContain("jusqu'à la mise à jour suivante (24 h)");
+    expect(section).toContain('si le serveur sert toujours la même version');
+    // Il fait partie de la section d'installation.
+    expect(text.indexOf('### Installer')).toBeLessThan(text.indexOf('#### Mises à jour'));
+    expect(text.indexOf('#### Mises à jour')).toBeLessThan(text.indexOf('### Ce qui est envoyé'));
   });
 
   it('explique la migration d’une installation d’avant : crochets remplacés, accord gardé, jeton du .env.local à révoquer', async () => {
@@ -1503,7 +1536,9 @@ describe('le README', () => {
     );
 
     expect(section).toContain('used to run Leon from');
-    expect(section).toContain('Connected computers');
+    // Le jeton du .env.local a été créé à la main : il est sous « Personal tokens », pas sous « Connected computers ».
+    expect(section).toContain('Settings › Personal tokens');
+    expect(section).not.toContain('Connected computers');
     expect(section).toContain('.env.local');
     expect(section).toMatch(/jamais lu|ne lit jamais/);
   });

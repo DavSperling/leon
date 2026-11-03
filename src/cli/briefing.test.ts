@@ -491,7 +491,7 @@ describe('runBriefing', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(out).toEqual([]);
     expect(err.join('\n')).toMatch(/LEON_URL/);
-    expect(err.join('\n')).toMatch(/run `leon login`/);
+    expect(err.join('\n')).toMatch(/run `~\/\.leon\/bin\/leon login`/);
   });
 
   it('sans LEON_URL ni LEON_TOKEN, prend la connexion de leon login (~/.leon/connexion.json)', async () => {

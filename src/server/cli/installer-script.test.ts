@@ -62,7 +62,7 @@ describe('installerScript : le texte', () => {
   });
 
   it('porte l’adresse, la CLI et les empreintes de Node, entre apostrophes', () => {
-    expect(script).toContain("LEON_URL='https://leon.example'");
+    expect(script).toContain("LEON_SERVER='https://leon.example'");
     expect(script).toContain("CLI_VERSION='0123456789ab'");
     expect(script).toContain(`CLI_SHA256='${manifest.sha256}'`);
     expect(script).toContain("CLI_SIZE='134981'");
@@ -75,14 +75,41 @@ describe('installerScript : le texte', () => {
 
   it('prend l’origine de l’adresse : sans barre finale, sur un port local en http', () => {
     expect(installerScript('https://leon.example/', manifest)).toContain(
-      "LEON_URL='https://leon.example'",
+      "LEON_SERVER='https://leon.example'",
     );
     expect(installerScript('http://localhost:3000', manifest)).toContain(
-      "LEON_URL='http://localhost:3000'",
+      "LEON_SERVER='http://localhost:3000'",
     );
     expect(installerScript('http://127.0.0.1:3011', manifest)).toContain(
-      "LEON_URL='http://127.0.0.1:3011'",
+      "LEON_SERVER='http://127.0.0.1:3011'",
     );
+  });
+
+  // m11 : `LEON_URL` est le nom que `leon setup` lit dans son environnement. Une variable du script qui s'appelle ainsi
+  // remplacerait celle que la personne a déjà exportée dans son terminal (la valeur change, et setup en hérite).
+  it('n’appelle aucune de ses variables LEON_URL ni LEON_TOKEN (setup les lit dans l’environnement)', () => {
+    expect(script).not.toMatch(/\bLEON_URL\b|\bLEON_TOKEN\b/);
+  });
+
+  // I3 et M2 : l'en-tête, que la personne lit avant de lancer le script, dit les deux choses qu'elle ne devinerait pas.
+  describe('l’en-tête', () => {
+    // Les lignes de commentaire mises bout à bout : les phrases passent d'une ligne à l'autre.
+    const header = script.slice(0, script.indexOf('set -eu')).replaceAll('\n# ', ' ');
+
+    it('annonce les mises à jour automatiques et le retour en arrière', () => {
+      expect(header).toMatch(
+        /updates itself, at most once a day, from the server it is connected to/,
+      );
+      expect(header).toContain('~/.leon/bin/leon update --previous');
+    });
+
+    it('dit tout ce que le script écrit : ~/.leon et, après accord, les réglages des outils de code', () => {
+      expect(header).toMatch(
+        /writes only in ~\/\.leon, plus the settings of your coding tools after you agree/,
+      );
+      expect(header).toMatch(/nothing in your PATH or your shell profile/);
+      expect(header).not.toContain('writes nothing outside');
+    });
   });
 
   it('tient dans une fonction appelée à la dernière ligne : un téléchargement coupé ne lance rien', () => {
@@ -272,7 +299,7 @@ const fakeNode = (version: string) =>
   [
     '#!/bin/sh',
     `if [ "$1" = "--version" ]; then echo v${version}; exit 0; fi`,
-    '{ echo "args: $*"; echo "umask: $(umask)"; if [ -t 0 ]; then echo "stdin: tty"; else echo "stdin: not a tty"; fi; } >> "$FAKE_NODE_LOG"',
+    '{ echo "args: $*"; echo "umask: $(umask)"; echo "LEON_URL: [$LEON_URL]"; if [ -t 0 ]; then echo "stdin: tty"; else echo "stdin: not a tty"; fi; } >> "$FAKE_NODE_LOG"',
     '',
   ].join('\n');
 
@@ -777,11 +804,14 @@ describe.skipIf(HOST_PLATFORM === undefined)('le script lancé par sh', () => {
           REAL_CURL: realCurl,
           FAKE_PORT: String(port),
           FAKE_NODE_LOG: log,
+          // Exportée par la personne dans son terminal : setup l'hérite telle quelle, le script ne la remplace pas.
+          LEON_URL: 'https://autre.example',
         },
       },
     );
 
     const recorded = await readFile(log, 'utf8');
+    expect(recorded).toContain('LEON_URL: [https://autre.example]');
     expect(recorded).toContain(
       `args: ${join(leon(), 'cli', 'actuelle', 'leon.mjs')} setup --url http://127.0.0.1:${port}`,
     );

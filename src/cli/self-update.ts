@@ -352,7 +352,7 @@ async function prune(p: Paths, previous: string | null) {
 async function updateServer(home: string): Promise<string> {
   const connection = await readConnection(home);
   if (connection === null) {
-    throw new UpdateError('this computer is not connected: run `leon login`.');
+    throw new UpdateError('this computer is not connected: run `~/.leon/bin/leon login`.');
   }
   return connection.url;
 }
@@ -388,7 +388,9 @@ async function update(deps: UpdateDeps, serverUrl: string) {
   await prune(p, previous);
   if (nodeChanged) deps.out(`Updated Node to v${manifest.node.version}.`);
   if (cliChanged) {
-    deps.out(`Updated Leon to version ${manifest.version}. To go back: leon update --previous`);
+    deps.out(
+      `Updated Leon to version ${manifest.version}. To go back: ~/.leon/bin/leon update --previous`,
+    );
   }
 }
 

@@ -28,7 +28,7 @@ Total : environ 5,5 jours.
 
 **Ordre :** les lots 1 et 2 sont indépendants et peuvent avancer en parallèle. Ils se croisent sur `src/cli/leon.ts`, `src/cli/briefing.ts`, `src/cli/install-hooks.ts` et `README.md`, par des ajouts voisins : le second à fusionner se rebase sur le premier. S10 (`leon setup`) appelle `leon login` : s'il passe avant le lot 1, il s'arrête sur le message du repli (`--with-token`). Le lot 3 attend le lot 2. Ce plan passe avant le lot 4 du plan mémoire, qui reprend le lanceur de S08 (voir E7).
 
-**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan sont partis dans leur propre PR, sans code (#115) ; Amos a tranché les questions le 03/11.
+**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan sont partis dans leur propre PR, sans code (#115) ; Amos a tranché les questions le 03/11. Les trois lots sont partis dans une seule PR, à la demande d'Amos (03/11).
 
 ## Règles propres à ce chantier
 
@@ -84,8 +84,12 @@ Amos a tranché A1 à A5 et QD1 à QD3 le 03/11 (voir « Questions tranchées »
   cli/actuelle -> <version>                  lien remplacé d'un coup (nouveau lien, puis rename)
   connexion.json                       0600  K2
   accord.json                          0600  C7 du plan mémoire, inchangé
-  maj.json                             0600  { "verifie_le": "<ISO 8601>" }
+  maj.json                             0600  { "verifie_le": "<ISO 8601>", "precedente": "<version de la CLI>" }
+  maj.lock/                            0700  le verrou d'une mise à jour en cours (un dossier : `mkdir` est atomique) ; repris après 15 min
+  .update.<aléa>/                            le dossier de travail d'une mise à jour, effacé à sa fin (le script d'installation a le sien, `.install.<aléa>/`)
 ```
+
+`precedente` est la CLI d'avant la dernière mise à jour, celle que `leon update --previous` remet.
 
 Toute écriture passe par un fichier voisin puis un `rename`, et refuse un lien symbolique là où elle écrit (sauf `cli/actuelle` et `runtime/actuel`, qu'elle crée).
 
@@ -122,11 +126,11 @@ Elle n'est pas montée derrière `requireApiToken`, puisque le jeton n'existe pa
 **K7. `/cli/version.json`** (public) :
 
 ```json
-{ "version": "<12 premiers caractères hexadécimaux de l'empreinte>", "sha256": "<64 hex>", "taille": 134981,
+{ "version": "<12 caractères hexadécimaux, voir ci-dessous>", "sha256": "<64 hex>", "taille": 134981,
   "node": { "version": "24.22.2", "plateformes": { "darwin-arm64": "<64 hex>", "darwin-x64": "…", "linux-x64": "…", "linux-arm64": "…" } } }
 ```
 
-Le fichier est servi à `/cli/leon-<version>.mjs`. `node.plateformes` porte les empreintes des archives `node-v<version>-<plateforme>.tar.xz` de nodejs.org, recopiées de `src/cli/runtime.json`.
+`version` est le début (12 caractères hexadécimaux) du SHA-256 du fichier construit **avec un repère à la place de la version** : elle ne peut pas être un préfixe de `sha256`, puisque le fichier contient sa propre version (`leon --version`). La construction écrit le repère, calcule cette empreinte, puis le remplace par la version. L'intégrité d'un téléchargement ne se vérifie donc pas par `version` mais par `sha256` et `taille`, celles du fichier final. Le fichier est servi à `/cli/leon-<version>.mjs`. `node.plateformes` porte les empreintes des archives `node-v<version>-<plateforme>.tar.xz` de nodejs.org, recopiées de `src/cli/runtime.json`.
 
 **K8. Le lanceur** (`sh`), deux formes, chemins absolus mis entre apostrophes par `shellQuote` :
 
@@ -150,7 +154,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 
 1. **Le navigateur n'est pas sur la machine** (SSH, conteneur distant, Codespaces) : le retour vers `127.0.0.1` n'arrive jamais. Parade : `leon login` le dit après l'ouverture (« If your browser is on another computer, run leon login --with-token »), et `--with-token`.
 2. **Un navigateur qui filtrerait un jour les navigations vers le réseau local.** Parade : le même repli ; l'essai de S05 note le comportement de Safari, Chrome et Firefox.
-3. **`curl | sh` sans terminal** (`/dev/tty` absent) : le script installe Node et la CLI, puis s'arrête en disant de lancer `~/.leon/bin/leon setup` dans un terminal.
+3. **`curl | sh` sans terminal** (`/dev/tty` absent) : le script installe Node et la CLI, puis s'arrête en donnant la commande complète à lancer dans un terminal : `<home>/.leon/runtime/actuel/node <home>/.leon/cli/actuelle/leon.mjs setup --url <adresse>`. Le lanceur `~/.leon/bin/leon` n'existe qu'après `setup`, c'est donc lui qu'on ne peut pas citer.
 4. **Un proxy d'entreprise qui bloque nodejs.org** : le script s'arrête avec l'adresse à autoriser. Servir Node depuis Leon viendra si un client le demande.
 5. **Une mise à jour cassée** : `--version` est lancé avant de basculer ; la version précédente reste sur le disque. Parade manuelle : `leon update --previous`.
 6. **Une PR fusionnée arrive sur tous les ordinateurs** à leur session suivante (QD1). Parade v1 : HTTPS vers l'adresse fixée à la connexion, empreinte et taille du manifeste.
@@ -239,7 +243,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 
 **Fait quand :**
 - Vite construit `src/cli/leon.ts`, tout inclus (`ssr.noExternal: true`), pour `node24`, en un fichier ESM, sans découpage, avec `publicDir: false` ;
-- la construction écrit `public/cli/leon-<version>.mjs` et `public/cli/version.json` (K7), où `version` vient de l'empreinte du fichier et `node` de `src/cli/runtime.json` (S07) ;
+- la construction écrit `public/cli/leon-<version>.mjs` et `public/cli/version.json` (K7), où `version` vient de l'empreinte du fichier construit avec son repère (K7) et `node` de `src/cli/runtime.json` (S07) ;
 - `leon --version` écrit cette version, injectée à la construction (`define`), et `dev` sous le clone ;
 - la CLI n'importe plus rien de `src/server` : `logError` est remplacé, dans `import-claude-code.ts`, par un message fixe sur la sortie d'erreur.
 
@@ -279,7 +283,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 2. crée `~/.leon` en 0700 ;
 3. si `~/.leon/runtime/node-v<version>/node` manque, télécharge `https://nodejs.org/dist/v<version>/node-v<version>-<plateforme>.tar.xz` dans un dossier temporaire, vérifie son empreinte (`shasum -a 256` sur macOS, `sha256sum` sur Linux) contre celle du script, puis n'en extrait que `bin/node` ; puis fait pointer `runtime/actuel` sur `node-v<version>` (nouveau lien puis `rename`), que le lanceur appelle (K8) ;
 4. télécharge `/cli/leon-<version>.mjs` depuis l'adresse du serveur, vérifie empreinte et taille, le pose dans `~/.leon/cli/<version>/`, et remplace `cli/actuelle` ;
-5. si `/dev/tty` s'ouvre, lance `node leon.mjs setup --url <adresse> </dev/tty` ; sinon, dit de lancer `~/.leon/bin/leon setup` dans un terminal ;
+5. si `/dev/tty` s'ouvre, lance `node leon.mjs setup --url <adresse> </dev/tty` ; sinon, donne la commande complète à lancer dans un terminal, `<home>/.leon/runtime/actuel/node <home>/.leon/cli/actuelle/leon.mjs setup --url <adresse>` (le lanceur n'existe qu'après `setup`) ;
 6. une empreinte fausse arrête tout et efface le téléchargement ; rien n'est laissé à moitié écrit.
 
 **Tests :**
@@ -295,14 +299,14 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 
 **Fait quand :** `leon setup`, sans rien demander de plus que ce qui suit :
 1. écrit le lanceur (S08) : forme installée, ou forme clone avec `--depot` (le dossier doit contenir `src/cli/leon.ts`). S'il en existe un autre, montre l'ancienne et la nouvelle forme et demande confirmation ;
-2. si l'ordinateur n'est pas connecté (`resolveServerEnv` échoue), lance `leon login` ;
+2. si l'ordinateur n'est pas (ou plus) connecté, lance `leon login`, en disant pourquoi : ni connexion ni variables ; jeton de K2 révoqué (`GET /api/v1/me` répond 401 : un serveur injoignable ou une autre erreur compte pour connecté, une installation hors ligne n'est pas bloquée) ; `--url` d'une autre origine que celle de K2 ; ou seulement `LEON_URL` et `LEON_TOKEN` (un Claude Code lancé depuis le Dock ne les voit pas) ;
 3. détecte les outils (`~/.claude` ou `CLAUDE_CONFIG_DIR` ; `~/.codex` ou `CODEX_HOME` ; `~/.cursor` ; `~/.gemini`) et ne propose que ceux dont l'installateur existe (Claude Code au lot 1 du plan mémoire ; les autres à leurs lots), en disant les autres « not supported yet » ;
 4. pour chaque outil proposé, montre son texte d'accord, inchangé, et installe ses crochets par `installHooks`, avec les commandes K9 ;
-5. finit par une ligne par outil et le chemin du lanceur (« To run Leon later: ~/.leon/bin/leon <command> »).
+5. finit par une ligne par outil, le chemin du lanceur (« To run Leon later: ~/.leon/bin/leon <command> ») et, sous la forme installée, une ligne sur les mises à jour automatiques (au plus une par jour, depuis le serveur connecté ; `~/.leon/bin/leon update --previous` revient à la version d'avant).
 
 `--yes` accepte tout, sauf le remplacement d'un lanceur pointé vers un autre clone. `installer-crochets` reste, pour la forme clone, et écrit lui aussi les commandes K9.
 
-**Tests :** ordinateur déjà connecté : pas de `login` ; Claude Code absent : rien n'est écrit dans `~/.claude` ; Codex présent : « not supported yet », rien n'est écrit dans `~/.codex` ; l'accord n'est écrit qu'après la confirmation ; relancé, `setup` n'écrit rien (idempotent).
+**Tests :** ordinateur déjà connecté : pas de `login` ; jeton révoqué (401), autre `--url`, variables seules : `login` ; serveur injoignable : pas de `login` ; Claude Code absent : rien n'est écrit dans `~/.claude` ; Codex présent : « not supported yet », rien n'est écrit dans `~/.codex` ; l'accord n'est écrit qu'après la confirmation ; relancé, `setup` n'écrit rien (idempotent).
 
 ### S11 · Migrer les installations actuelles
 
@@ -323,7 +327,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 **Fait quand :**
 - `leon briefing`, une fois sa sortie écrite, lance `leon update --background` détaché (`spawn` avec `detached`, `stdio: 'ignore'`, `unref`) si `maj.json` a plus de 24 h ou manque, et jamais sous la forme clone ;
 - `leon update` :
-  - lit K7 à l'adresse de K2 (HTTPS, ou `http` local en développement) ;
+  - lit K7 à l'adresse de K2 (HTTPS, ou `http` local en développement), **de `connexion.json` seul, jamais des variables** : E5 ne s'applique pas à la mise à jour, parce que cette adresse décide du code qui tournera ensuite sur la machine et qu'un serveur d'essai de l'environnement ne doit pas pouvoir le remplacer. Sans connexion valide, pas de mise à jour ;
   - même version : met `maj.json` à jour, rien d'autre ;
   - sinon : télécharge, vérifie la taille puis l'empreinte, écrit dans `cli/<version>/`, lance `node leon.mjs --version` et compare, puis remplace `cli/actuelle` (nouveau lien puis `rename`) et efface les versions plus anciennes que la précédente ;
   - si `node.version` a changé : même chemin pour Node (archive de nodejs.org, empreinte de K7), avant la CLI : le nouveau Node est posé dans `runtime/node-v<nouvelle>/`, lancé (`--version`), puis `runtime/actuel` est remplacé d'un coup et l'ancien Node effacé ;

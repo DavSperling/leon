@@ -182,8 +182,9 @@ export function formerClones(settings: Json): string[] | null {
 }
 
 // Ce que `leon setup` dit une fois les crochets passés au lanceur : le jeton du `.env.local` de l'ancien clone ne sert
-// plus (la connexion de `leon login` le remplace) et se révoque dans Réglages. Seule la forme installée le dit : sous la
-// forme clone, le lanceur lance toujours pnpm dans un clone, dont le `.env.local` sert encore.
+// plus (la connexion de `leon login` le remplace) et se révoque dans Réglages, sous « Personal tokens » : il a été créé à
+// la main, ce n'est pas un ordinateur connecté. Seule la forme installée le dit : sous la forme clone, le lanceur lance
+// toujours pnpm dans un clone, dont le `.env.local` sert encore.
 function migrationNotice(clones: string[]): string {
   if (clones.length === 0) {
     return 'Your hooks used to run Leon through pnpm; they now run ~/.leon/bin/leon.';
@@ -191,7 +192,7 @@ function migrationNotice(clones: string[]): string {
   const and = (items: string[]) =>
     items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items.join('');
   const many = clones.length > 1;
-  return `Your hooks used to run Leon from ${and(clones)}; they now run ~/.leon/bin/leon. The ${many ? 'tokens' : 'token'} in ${and(clones.map((clone) => join(clone, '.env.local')))} ${many ? 'are' : 'is'} no longer needed: revoke ${many ? 'them' : 'it'} in Settings › Connected computers.`;
+  return `Your hooks used to run Leon from ${and(clones)}; they now run ~/.leon/bin/leon. The ${many ? 'tokens' : 'token'} in ${and(clones.map((clone) => join(clone, '.env.local')))} ${many ? 'are' : 'is'} no longer needed: revoke ${many ? 'them' : 'it'} in Settings › Personal tokens.`;
 }
 
 export type HookChange = {

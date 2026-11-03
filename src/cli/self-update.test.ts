@@ -594,7 +594,9 @@ describe('runUpdate', () => {
 
         expect(server.calls).toEqual([]);
         expect(await snapshot()).toEqual(before); // ni maj.json ni verrou
-        expect(err).toEqual(['Leon: this computer is not connected: run `leon login`.']);
+        expect(err).toEqual([
+          'Leon: this computer is not connected: run `~/.leon/bin/leon login`.',
+        ]);
       },
     );
 

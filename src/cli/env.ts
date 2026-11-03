@@ -42,7 +42,10 @@ export async function resolveServerEnv(
     return parseServerEnv(source);
   } catch (error) {
     const problem = error instanceof Error ? error.message : 'invalid configuration.';
-    throw new Error(`${problem} This computer is not connected: run \`leon login\`.`);
+    // Le lanceur n'est pas dans le PATH ; sous la forme clone, `pnpm leon` marche aussi.
+    throw new Error(
+      `${problem} This computer is not connected: run \`~/.leon/bin/leon login\` (\`pnpm leon login\` from a clone).`,
+    );
   }
 }
 

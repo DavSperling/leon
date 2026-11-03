@@ -280,6 +280,7 @@ describe('leon update installé', () => {
 
       expect(updated.code).toBe(0);
       expect(updated.stdout).toContain(`Updated Leon to version ${V_NEW}`);
+      expect(updated.stdout).toContain('To go back: ~/.leon/bin/leon update --previous');
       expect(updated.stderr).toBe('');
       expect(await current('cli/actuelle')).toBe(V_NEW);
       expect((await installed(['--version'])).stdout.trim()).toBe(V_NEW);
@@ -344,7 +345,9 @@ describe('leon update sans connexion', () => {
       expect(background).toMatchObject({ code: 0, stdout: '', stderr: '' });
       expect(manual.code).toBe(1);
       expect(manual.stdout).toBe('');
-      expect(manual.stderr).toBe('Leon: this computer is not connected: run `leon login`.\n');
+      expect(manual.stderr).toBe(
+        'Leon: this computer is not connected: run `~/.leon/bin/leon login`.\n',
+      );
       expect(hits).toEqual([]);
       expect(await current('cli/actuelle')).toBe(manifest.version);
       expect(await exists(join(leon, 'maj.json'))).toBe(false);

@@ -189,12 +189,12 @@ Une seule commande, sur l'ordinateur où tourne Claude Code (l'adresse est celle
 curl -fsSL <adresse de Leon>/install | sh
 ```
 
-Ni clone, ni pnpm, ni Node à installer d'abord : la commande pose tout dans `~/.leon` et n'écrit rien d'autre, ni dans votre `PATH` ni dans votre profil de shell. Dans l'ordre :
+Ni clone, ni pnpm, ni Node à installer d'abord : la commande pose tout dans `~/.leon` et n'écrit que là, plus les réglages de vos outils de code après votre accord ; rien dans votre `PATH` ni votre profil de shell. Dans l'ordre :
 
-1. elle télécharge le Node officiel de la version que Leon a épinglée et la CLI de Leon (un seul fichier, servi par Leon), vérifie leur taille et leur empreinte SHA-256, puis les pose dans `~/.leon/runtime` et `~/.leon/cli`. Plateformes : macOS (Apple silicon et Intel) et Linux (x64 et arm64) avec la glibc. Windows et Linux musl (Alpine) sont refusés avec un message, avant d'écrire quoi que ce soit ;
+1. elle télécharge le Node officiel de la version que Leon a épinglée et la CLI de Leon (un seul fichier, servi par Leon), vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI, puis les pose dans `~/.leon/runtime` et `~/.leon/cli`. Plateformes : macOS (Apple silicon et Intel) et Linux (x64 et arm64) avec la glibc. Windows et Linux musl (Alpine) sont refusés avec un message, avant d'écrire quoi que ce soit ;
 2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code ; Codex, Cursor et Gemini sont reconnus mais pas encore pris en charge : rien n'est écrit chez eux), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
 
-On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'est pas réécrit (`--yes` ne demande rien, sauf pour remplacer un lanceur qui n'est pas celui de la forme installée ; `--url <adresse>` désigne le serveur de `leon login`). Relancer la commande d'installation met aussi la CLI à la version que sert Leon.
+On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'est pas réécrit (`--yes` ne demande rien, sauf pour remplacer un lanceur qui n'est pas celui de la forme installée ; `--url <adresse>` désigne le serveur de `leon login`). Relancer la commande d'installation met aussi la CLI à la version que sert Leon. `leon setup` relance aussi `leon login` (et le dit) quand l'ordinateur n'est plus connecté : jeton révoqué dans Réglages, `--url` d'un autre serveur que celui de la connexion, ou seulement `LEON_URL` et `LEON_TOKEN` posées dans le terminal (un Claude Code lancé depuis le Dock ne les voit pas). Un serveur qui ne répond pas ne bloque pas l'installation.
 
 #### Connecter l'ordinateur
 
@@ -213,6 +213,10 @@ On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'es
 Une limite : l'adresse d'autorisation (port, `etat`, empreinte) est lisible par les autres comptes d'une machine partagée (sous Linux, dans `/proc/<pid>/cmdline`), et l'un d'eux pourrait l'autoriser avec son propre compte Leon, ce qui enregistrerait votre jeton sur le sien. `leon login` affiche donc le compte connecté (« Connected to <espace> as <compte> ») : sur une machine où d'autres comptes sont ouverts en même temps, vérifiez-le, ou utilisez `leon login --with-token`.
 
 `LEON_URL` et `LEON_TOKEN`, si les deux sont posées (l'environnement, ou le `.env.local` d'un clone : voir `.env.example`), passent avant la connexion enregistrée : c'est le réglage des essais et de qui développe sur Leon, et `leon login` le rappelle. Sans connexion ni variables, les crochets ne font rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas ; la commande d'installation prévient alors « pas connecté » (elle ne recopie jamais les valeurs de la connexion ni d'un `.env.local`).
+
+#### Mises à jour
+
+La CLI se met à jour seule, depuis le serveur de la connexion (`~/.leon/connexion.json`), au plus une fois par jour : au démarrage d'une session, `leon briefing` lance `leon update` en arrière-plan si le dernier contrôle date de 24 h ou plus. La mise à jour vérifie la taille et l'empreinte, lance la nouvelle version avant de basculer, et ne touche ni à la connexion, ni à l'accord, ni au lanceur, ni aux crochets. `~/.leon/bin/leon update` la lance à la main, et `~/.leon/bin/leon update --previous` revient à la version d'avant, sans réseau. Le retour ne tient que jusqu'à la mise à jour suivante (24 h) si le serveur sert toujours la même version : elle remet alors celle du serveur. Sous la forme clone, rien n'est mis à jour : un clone se met à jour avec git.
 
 #### Ce que la commande écrit dans Claude Code
 
@@ -259,7 +263,7 @@ Dans `~/.claude/settings.json` (ou dans `settings.json` du dossier `CLAUDE_CONFI
 
 Relancez la commande d'installation. `leon setup` repère vos anciens crochets (`pnpm … --dir <clone> leon briefing` et `… leon capter-session`) et les **remplace sur place** par ceux du lanceur : même groupe, même position, mêmes délais (10 s au démarrage, 30 s à la fin) ; un crochet à vous, avant, entre ou après, n'est pas touché, et il ne reste aucun `pnpm … leon`. `settings.json.leon-sauvegarde` suit la même règle qu'à la première installation : elle n'est jamais remplacée. `~/.leon/accord.json` est gardé tel quel, et s'il est déjà en version 2 l'accord n'est pas redemandé : seule l'écriture des réglages est confirmée. Comme l'ordinateur n'est pas encore connecté (le jeton n'était que dans le `.env.local`), `leon setup` lance aussi `leon login`.
 
-Une fois les crochets écrits, la commande dit : « Your hooks used to run Leon from <clone>; they now run ~/.leon/bin/leon. The token in <clone>/.env.local is no longer needed: revoke it in Settings › Connected computers. » Elle ne lit jamais ce `.env.local` : elle ne le connaît que par le chemin du clone que citaient les anciens crochets. Révoquez ce jeton comme elle le dit ; le clone et son `.env.local` ne sont pas touchés.
+Une fois les crochets écrits, la commande dit : « Your hooks used to run Leon from <clone>; they now run ~/.leon/bin/leon. The token in <clone>/.env.local is no longer needed: revoke it in Settings › Personal tokens. » Elle ne lit jamais ce `.env.local` : elle ne le connaît que par le chemin du clone que citaient les anciens crochets. Ce jeton a été créé à la main : il est sous « Personal tokens » (« Jetons personnels ») dans Réglages, pas sous « Ordinateurs connectés ». Révoquez-le comme elle le dit ; le clone et son `.env.local` ne sont pas touchés.
 
 #### Depuis un clone de Leon (pour qui développe sur Leon)
 

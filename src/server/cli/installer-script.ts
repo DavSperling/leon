@@ -80,7 +80,7 @@ export function installerScript(url: string, manifest: unknown): string {
   const origin = serverOrigin(url);
   const cli = parseManifest(manifest);
   const values = [
-    `LEON_URL=${singleQuote(origin)}`,
+    `LEON_SERVER=${singleQuote(origin)}`,
     `CLI_VERSION=${singleQuote(cli.version)}`,
     `CLI_SHA256=${singleQuote(cli.sha256)}`,
     `CLI_SIZE=${singleQuote(String(cli.taille))}`,
@@ -92,8 +92,11 @@ export function installerScript(url: string, manifest: unknown): string {
 
 const SCRIPT = `#!/bin/sh
 # Leon installer, served by Leon itself: curl -fsSL <your Leon address>/install | sh
-# It puts Node and the Leon command line in ~/.leon, then runs "leon setup". It writes nothing outside ~/.leon
-# (no PATH change, no shell profile). Every download is checked against the SHA-256 written below.
+# It puts Node and the Leon command line in ~/.leon, then runs "leon setup". It writes only in ~/.leon, plus the
+# settings of your coding tools after you agree; nothing in your PATH or your shell profile. Every download is checked
+# against the SHA-256 written below.
+# Afterwards the command line updates itself, at most once a day, from the server it is connected to;
+# "~/.leon/bin/leon update --previous" goes back to the version before.
 set -eu
 
 @VALUES@
@@ -217,7 +220,7 @@ main() {
 
   # The Leon command line: its size and SHA-256 come from the manifest this script was written with.
   mkdir "$work/cli"
-  download "the Leon command line" "$LEON_URL/cli/leon-$CLI_VERSION.mjs" "$work/cli/leon.mjs" "$LEON_URL"
+  download "the Leon command line" "$LEON_SERVER/cli/leon-$CLI_VERSION.mjs" "$work/cli/leon.mjs" "$LEON_SERVER"
   size=$(wc -c < "$work/cli/leon.mjs" | tr -d ' ')
   if [ "$size" != "$CLI_SIZE" ]; then
     fail "the Leon command line has the wrong size ($size bytes, expected $CLI_SIZE). Nothing was installed."
@@ -268,9 +271,9 @@ main() {
 
   # The setup asks questions: it needs a terminal. With "curl | sh" the standard input is this script, so it reads
   # the answers from /dev/tty.
-  run_setup="'$leon/runtime/actuel/node' '$leon/cli/actuelle/leon.mjs' setup --url '$LEON_URL'"
+  run_setup="'$leon/runtime/actuel/node' '$leon/cli/actuelle/leon.mjs' setup --url '$LEON_SERVER'"
   if (: < /dev/tty) 2>/dev/null; then
-    "$leon/runtime/actuel/node" "$leon/cli/actuelle/leon.mjs" setup --url "$LEON_URL" < /dev/tty \\
+    "$leon/runtime/actuel/node" "$leon/cli/actuelle/leon.mjs" setup --url "$LEON_SERVER" < /dev/tty \\
       || fail "the setup did not finish. To resume it, run: $run_setup"
   else
     say "No terminal is available to ask you questions. To finish, open a terminal and run:"

@@ -14,7 +14,7 @@
 - L'état du dépôt vient de GitHub, pour les seuls dépôts choisis par l'administrateur.
 - Un seul appel de modèle par session close écrit ensuite un résumé, stocké comme un tour de la session, donc indexé par la recherche.
 
-**Stack :** celle du deuxième jet. Aucune dépendance nouvelle. Trois migrations : `0045` (dépôts d'équipe), `0046` (rétro-privatisation), `0047` (étape de modèle `resume`).
+**Stack :** celle du deuxième jet. Aucune dépendance nouvelle. Trois migrations : `0046` (dépôts d'équipe), `0047` (rétro-privatisation), `0048` (étape de modèle `resume`). Leur numéro se recale sur main au moment de chaque lot.
 
 ## Lots, PR et ordre
 
@@ -159,9 +159,9 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
 - **D12. Les essais réels sont des portes.** Les replis par fichier ne viennent que si l'essai les justifie.
 - **D13. La v1 exige des versions d'outils qui écrivent leurs transcripts.** Aucun format interne n'est lu.
 - **D14. Les dépôts d'équipe.**
-  - La table `depots_equipe` (0045) est écrite par les seuls propriétaires et administrateurs, contrôle fait en base.
+  - La table `depots_equipe` (0046) est écrite par les seuls propriétaires et administrateurs, contrôle fait en base.
   - D est appliquée à la relève, avec la permission GitHub du membre.
-  - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0046), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
+  - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0047), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
   - Par défaut, la section d'équipe ne s'affiche qu'au lecteur dont la propre connexion GitHub active porte ce dépôt, confirmée depuis moins de 24 h.
   - Jusqu'à la réponse à QD4, les sources d'un dépôt d'équipe restent lisibles par la recherche de tous les membres.
 - **D15. Le consentement**, versionné par outil :
@@ -304,7 +304,7 @@ Versions : 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle 
    - la section d'équipe limitée aux dépôts d'équipe et aux lecteurs qui y ont accès (D14) ;
    - le reste est la question QD4.
 9. **Arrêt de la relève GitHub et passage en privé.** Au déploiement du lot 2, une organisation qui n'a coché aucun dépôt ne relève plus rien de nouveau, et ses sources GitHub déjà relevées deviennent privées à qui les a branchées. Parades : le bandeau pour l'administrateur (T10), le README, et la description de la PR (« cocher les dépôts juste après le déploiement »).
-10. **Délai de 3 s au démarrage.** Parades : aucun modèle ni vecteur dans la route de contexte ; des lectures courtes ; l'index de 0045 vérifié par `EXPLAIN` sous RLS ; une mesure sur 10 000 sources.
+10. **Délai de 3 s au démarrage.** Parades : aucun modèle ni vecteur dans la route de contexte ; des lectures courtes ; l'index de 0046 vérifié par `EXPLAIN` sous RLS ; une mesure sur 10 000 sources.
 11. **Conflits avec #106** sur `briefing.ts`, `capture-session.ts`, `install-hooks.ts` et `leon.ts`. Parade : des ajouts voisins ; l'assemblage serveur accepte un bloc de plus pour l'état de branche de #106.
 
 ## Lot 1 : la fiche Claude Code (PR #110)
@@ -464,9 +464,9 @@ Au lot 1, la commande couvre Claude Code ; chaque lot d'outil l'étend.
 
 ### T09 · La table des dépôts d'équipe
 
-**Fichiers :** `src/server/db/migrations/0045-depots-equipe.sql` (nouveau), `src/server/db/schema/connections.ts` (`depotsEquipe`), `src/server/db/rls-coverage.db.test.ts` (`DELETE_ALLOWED`).
+**Fichiers :** `src/server/db/migrations/0046-depots-equipe.sql` (nouveau), `src/server/db/schema/connections.ts` (`depotsEquipe`), `src/server/db/rls-coverage.db.test.ts` (`DELETE_ALLOWED`).
 
-**Migration :** `0045-depots-equipe.sql` crée `depots_equipe` :
+**Migration :** `0046-depots-equipe.sql` crée `depots_equipe` :
 - `tenant_id`, `project`, `acl`, `choisi_par` et `created_at` ;
 - `project` porte le check `'^github\.com/[a-z0-9._-]+/[a-z0-9._-]+$'` ;
 - `unique (tenant_id, project)`.
@@ -475,7 +475,7 @@ Lecture : la politique `tenant_acl`. Écriture : des politiques `for insert`, `f
 
 La migration crée aussi l'index `sources (tenant_id, lower(metadata->'origin'->>'repo')) where kind = 'github'`. On vérifie par `EXPLAIN` qu'il sert sous RLS ; sinon on le retire, et on mesure les 3 s sur un jeu réaliste.
 
-**Tests :** `src/server/db/migrations/0045-depots-equipe.db.test.ts` (nouveau) :
+**Tests :** `src/server/db/migrations/0046-depots-equipe.db.test.ts` (nouveau) :
 - un membre lit ;
 - un membre qui écrit reçoit une erreur RLS ;
 - un propriétaire ou un administrateur écrit ;
@@ -515,11 +515,11 @@ Aussi : `src/server/connectors/sync.db.test.ts`.
 
 ### T12 · Rendre privées les sources GitHub hors des dépôts d'équipe
 
-**Fichiers :** `src/server/db/migrations/0046-privatiser-hors-equipe.sql` (nouveau), `src/server/connectors/sync.ts`.
+**Fichiers :** `src/server/db/migrations/0047-privatiser-hors-equipe.sql` (nouveau), `src/server/connectors/sync.ts`.
 
 **Migration :** une fonction `security definer`, sur le modèle de `retirer_sources_connexion`. Elle aligne l'ACL des sources GitHub sur la liste, en une transaction, sur les sources, leurs tours, leurs passages, leurs vecteurs et leurs ingest_runs. Une source dont le dépôt n'est pas dans `depots_equipe` passe à `[owner_user_id]` (la règle de `privateRaw`). Une source dont le dépôt y entre retrouve l'ACL de l'organisation.
 
-**Fait quand :** la fonction est appelée une fois au déploiement de 0046, même sans choix (liste vide : toutes les sources GitHub de l'organisation passent en `[owner_user_id]`), puis à chaque changement de la liste.
+**Fait quand :** la fonction est appelée une fois au déploiement de 0047, même sans choix (liste vide : toutes les sources GitHub de l'organisation passent en `[owner_user_id]`), puis à chaque changement de la liste.
 
 **Tests :** `src/server/connectors/sync.db.test.ts` :
 - une PR d'un dépôt perso déjà relevée devient invisible d'un collègue ;
@@ -694,11 +694,11 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T21 · L'étape de modèle `resume`
 
-**Fichiers :** `src/server/db/migrations/0047-etape-resume.sql` (nouveau), `src/server/llm/llm.ts`, `src/server/llm/models.ts`, `src/server/env.ts` (`LEON_MODEL_RESUME`), `.env.example`, `README.md`, `src/components/verre/admin/index.tsx`.
+**Fichiers :** `src/server/db/migrations/0048-etape-resume.sql` (nouveau), `src/server/llm/llm.ts`, `src/server/llm/models.ts`, `src/server/env.ts` (`LEON_MODEL_RESUME`), `.env.example`, `README.md`, `src/components/verre/admin/index.tsx`.
 
-**Migration :** `0047-etape-resume.sql` remplace le check de `appels_modele.step` par `in ('reponse','discussion','point','resume')`.
+**Migration :** `0048-etape-resume.sql` remplace le check de `appels_modele.step` par `in ('reponse','discussion','point','resume')`.
 
-**Tests :** `src/test/contracts/llm-contract.test.ts`, `src/test/contracts/env-contract.test.ts`, `src/server/llm/models.test.ts`, `src/server/db/migrations/0047-etape-resume.db.test.ts` (nouveau : `resume` accepté, valeur inconnue refusée).
+**Tests :** `src/test/contracts/llm-contract.test.ts`, `src/test/contracts/env-contract.test.ts`, `src/server/llm/models.test.ts`, `src/server/db/migrations/0048-etape-resume.db.test.ts` (nouveau : `resume` accepté, valeur inconnue refusée).
 
 ### T22 · Le format, le condensé et le prompt du résumé
 
@@ -984,7 +984,7 @@ Contrat : `api-contract.db.test.ts`.
 
 **Pour David :**
 - QD1. Le résumé côté serveur ? Le lot 6 l'attend, pour environ 0,002 $ par session.
-- QD2. La « PR 0 » : #106 corrigée, sans le secours `claude -p`, et ses migrations renumérotées après 0047, puisque `0043-passations` et `0044-sessions-partagees` entrent en collision avec `0043-onboarding` et `0044-invitations-poste` de main. Qui la porte ? Et `0043-passations` ou `0044-sessions-partagees` ont-elles été appliquées à `leon_test`, à la base de développement ou à un environnement Railway ?
+- QD2. La « PR 0 » : #106 corrigée, sans le secours `claude -p`, et ses migrations renumérotées après 0048, puisque `0043-passations` et `0044-sessions-partagees` entrent en collision avec `0043-onboarding` et `0044-invitations-poste` de main (et main a déjà `0045-apropos-propose`). Qui la porte ? Et `0043-passations` ou `0044-sessions-partagees` ont-elles été appliquées à `leon_test`, à la base de développement ou à un environnement Railway ?
 - QD3. Le lot 1 de #108 (ici les lots 2 et 3) : on le porte dans ce chantier, ou toi ? Et la section d'équipe : dans `/contexte`, ou dans `readBranchState` ?
 - QD4. Qui lit les sources d'un dépôt d'équipe par la recherche : tous les membres, ou seulement ceux qui y ont accès sur GitHub ? Et les sources GitHub rendues privées hors des dépôts d'équipe (T12) : faut-il en plus les supprimer ?
 - QD5. Seuil de 6 échanges, 15 min sans tour, 60 s après une vraie fin ?

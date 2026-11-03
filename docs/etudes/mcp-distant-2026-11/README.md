@@ -1,6 +1,6 @@
 # Le MCP distant : brancher Claude, ChatGPT et tout LLM à Leon
 
-3 novembre 2026 · Amos (avec Claude) · à trancher par Amos
+3 novembre 2026 · Amos (avec Claude) · tranché par Amos le 3 novembre
 
 Plan d'implémentation : [`docs/plans/2026-11-03-mcp-distant.md`](../../plans/2026-11-03-mcp-distant.md), qui fait foi pour le détail. Point de départ : la PR #56 d'Amos (branche `amos/mcp-cli-local-rag`, ouverte le 26/10). Le plan [CLI sans clone](../../plans/2026-11-03-cli-sans-clone.md) l'a laissée ouverte pour ce chantier (QD3) : « que Claude, ChatGPT et tout autre LLM se branchent à Leon ».
 
@@ -18,7 +18,7 @@ Comment un utilisateur branche-t-il n'importe quel assistant compatible MCP à L
 4. **Côté utilisateur, un clic** : coller l'adresse dans son assistant, se connecter à Leon si besoin, « Autoriser ». La page dit où l'on sera renvoyé. Seules les adresses de retour que publient des clients connus (claude.ai, chatgpt.com, www.cursor.com, vscode.dev, antigravity.google), chemin compris, et l'ordinateur lui-même (`127.0.0.1`, `localhost`) sont acceptés.
 5. **Les outils ne changent pas** (`search`, `fetch`, `briefing`, `remember`), et tournent sous les droits de l'utilisateur : la règle de visibilité des conversations s'applique d'elle-même.
 6. **De #56, on garde l'idée et la page de consentement.** On retire Better Auth comme serveur OAuth (deux paquets, huit tables, des JWT à côté d'`api_tokens`) et `leon chat`, que les assistants branchés au MCP remplacent.
-7. **La connexion de la CLI devient un client de ce même serveur** (recommandé) : une page, un code, une route, au lieu de deux de chaque. Ce chantier passe alors avant le lot 1 de la CLI, qui rétrécit.
+7. **La connexion de la CLI garde son propre écran**, déjà codé (lot 1 du plan CLI). Ce chantier vient après et en reprend le code signé et le retour après connexion. Le chantier CLI des crochets ne s'arrête pas.
 
 ## 1. Aujourd'hui
 
@@ -59,7 +59,7 @@ Elle monte `better-auth` de 1.7.7 à 1.7.13, passe `tsx` dans les dépendances d
 - **Il ajoute une seconde porte vers l'agent de Leon** (`/api/cli/chat`), avec son propre format d'historique et ses limites, où la relecture a déjà trouvé trois défauts.
 - **Il sort du sujet de la CLI**, qui sert aux crochets des outils de code.
 
-Rien n'est fait sur #56 sans l'accord d'Amos (question B1).
+Amos a fermé #56 le 03/11 (B1), en renvoyant à cette étude ; sa branche reste.
 
 ## 4. Le serveur d'autorisation
 
@@ -72,10 +72,10 @@ Un client OAuth qui reçoit le 401 de `/api/mcp` lit les métadonnées de la res
 | **c. Pas d'OAuth** : le jeton collé en en-tête (aujourd'hui) | aucune | rien | rien de neuf | immédiate | rien, mais ni claude.ai, ni Claude Desktop, ni ChatGPT |
 | **d. Un fournisseur d'identité externe** (Auth0, WorkOS, Stytch…) | un SDK | les comptes en double chez lui | les siens | selon lui | un service et un compte de plus, un coût par utilisateur, une seconde source de vérité pour les comptes |
 
-**Recommandation : b.**
+**Retenu : b** (B2 : « le meilleur, le plus propre, le plus carré »).
 
 - **Le protocole se réduit à peu de chose.** Les clients MCP n'utilisent que le code d'autorisation avec PKCE S256 et le renouvellement. Pas de flux implicite, pas de mot de passe, pas d'OpenID Connect, pas de `client_credentials`. Ce sont des métadonnées fixes, une page, deux routes.
-- **Le code signé existe presque déjà.** Le plan CLI (K4, S02) signe un code de deux minutes par HMAC, avec une clé dérivée de `BETTER_AUTH_SECRET`. Le code d'autorisation d'OAuth est le même objet, avec en plus l'empreinte PKCE, le client et l'adresse de retour. Rien à stocker : l'usage unique tient à une colonne unique d'`api_tokens`.
+- **Le code signé existe déjà.** Le lot 1 de la CLI (S02, `computer-code.ts`) signe un code de deux minutes par HMAC, avec une clé dérivée de `BETTER_AUTH_SECRET`. Le code d'autorisation d'OAuth est le même objet, avec en plus l'empreinte PKCE, le client et l'adresse de retour. Rien à stocker : l'usage unique tient à une colonne unique d'`api_tokens`.
 - **Les jetons restent des `leon_`.** `/api/mcp` garde `requireApiToken` ; seul son 401 change, pour indiquer où sont les métadonnées. La révocation agit à l'appel suivant, sans liste noire ni introspection.
 - **Le risque**, à dire clairement : écrire soi-même la partie OAuth d'un serveur d'autorisation. On le borne : clients publics seulement, PKCE S256 obligatoire, adresses de retour comparées caractère par caractère, codes de deux minutes à usage unique, aucune adresse suivie sans vérification, une liste de tests écrite dans le plan, puis `security-review`.
 
@@ -92,7 +92,7 @@ Aujourd'hui, `api_tokens` porte les jetons créés à la main dans Réglages ; l
 | `assistant` | la route des jetons d'OAuth | accès : 1 h | oui, jeton de renouvellement de 90 jours, changé à chaque usage | Assistants connectés |
 
 - **Une ligne par branchement.** Elle garde l'empreinte du jeton d'accès, celle du jeton de renouvellement, leurs dates d'expiration, le client (son nom et l'hôte de son adresse de retour) et l'identifiant du code qui l'a créée. Un renouvellement change les deux empreintes sur place : la ligne, sa date de création et sa dernière utilisation restent.
-- **Pourquoi une heure pour les assistants, et rien pour la CLI.** Le jeton d'un assistant hébergé vit sur les serveurs d'Anthropic ou d'OpenAI. La spécification MCP demande des jetons d'accès courts (« SHOULD ») et, quand on renouvelle, de changer le jeton de renouvellement d'un client public à chaque usage (« MUST »). Le jeton de la CLI reste sur l'ordinateur, en 0600 ; le plan CLI a écarté le renouvellement pour ne pas le gérer dans la CLI. Question B4.
+- **Pourquoi une heure pour les assistants, et rien pour la CLI.** Le jeton d'un assistant hébergé vit sur les serveurs d'Anthropic ou d'OpenAI. La spécification MCP demande des jetons d'accès courts (« SHOULD ») et, quand on renouvelle, de changer le jeton de renouvellement d'un client public à chaque usage (« MUST »). Le jeton de la CLI reste sur l'ordinateur, en 0600 ; le plan CLI a écarté le renouvellement pour ne pas le gérer dans la CLI. Retenu par Amos (B4).
 - **`verifyApiToken` gagne une condition**, `expires_at` nul ou à venir. Il garde le reste : non révoqué, adhésion en cours depuis avant la création, compte non supprimé. Aucune requête de plus par appel MCP.
 - **Un jeton d'assistant ne vaut que pour `/api/mcp`.** La spécification MCP demande au serveur de refuser un jeton qui n'a pas été émis pour lui (« MUST »). Un jeton gardé par OpenAI n'a pas à écrire dans `/api/v1/ingest` : `requireApiToken` refuse le `kind` `assistant` hors de `/api/mcp`. Les jetons `manuel` et `ordinateur` gardent tout ce qu'ils ont aujourd'hui, `/api/mcp` compris.
 - **La colonne `kind`** remplace le préfixe de nom du plan CLI (S14) : son raccourci tombe.
@@ -124,7 +124,9 @@ Vérifié le 03/11 dans la documentation de chaque client (sources en fin d'étu
 - **des réponses en moins de 10 secondes** (30 pour un renouvellement, chez Claude) ;
 - **une adresse publique en IPv4** : claude.ai et ChatGPT appellent depuis leurs serveurs, jamais depuis l'ordinateur. Pour Claude, depuis `160.79.104.0/21` et `153.61.208.0/20`. `pnpm dev` ne leur est pas joignable : on essaie contre la production.
 
-**L'inscription : DCR seule en v1** (question B7). La spécification MCP du 2026-07-28 déprécie DCR au profit de CIMD, mais la garde « pour compatibilité ». Tous les clients du tableau savent encore s'inscrire par DCR, et Cursor, Gemini CLI, Antigravity et Le Chat ne savent faire que ça. CIMD demande au serveur d'aller lire une adresse fournie par le client, avec ce que cela suppose de garde contre les requêtes vers le réseau interne. En v1, l'inscription dynamique ne stocke rien : le `client_id` rendu porte lui-même, signé, le nom et les adresses de retour du client. Claude, qui réinscrit un client à chaque nouvelle connexion, ne remplit donc aucune table. CIMD viendra si un client cesse de proposer DCR ; avec la liste fermée (B5), il n'ira lire que chez les clients de la liste.
+**L'inscription : DCR et CIMD** (B7, au plus propre). La spécification MCP du 2026-07-28 recommande CIMD et déprécie DCR, qu'elle garde « pour compatibilité ». Claude, ChatGPT, Codex et VS Code préfèrent CIMD ; Cursor, Gemini CLI, Antigravity et Le Chat ne savent faire que DCR. Leon accepte donc les deux :
+- **CIMD** : le `client_id` est l'adresse du document du client (`https://chatgpt.com/oauth/client.json`, par exemple), que Leon va lire. D'ordinaire, il faut alors se garder des adresses qui visent le réseau interne. Ici, Leon ne lit que chez les hôtes de la liste fermée (B5), sans suivre de redirection, et chaque adresse de retour du document doit elle-même être dans la liste. Le nom du client vient alors de chez lui, pas d'une déclaration.
+- **DCR** : l'inscription ne stocke rien. Le `client_id` rendu porte lui-même, signés, le nom et les adresses de retour du client. Claude, qui réinscrit un client à chaque nouvelle connexion quand il passe par DCR, ne remplit donc aucune table.
 
 **Le protocole.** La spécification du 2026-07-28 supprime la poignée de main `initialize` et les sessions. Un serveur qui ne parle que cette version fait échouer les clients plus anciens, et Claude ne cite que les spécifications d'autorisation jusqu'au 2025-11-25. Le serveur de main sert déjà les deux époques : `createMcpHandler`, sans option, retombe sur le service sans état pour les clients de 2025. L'exemple de Better Auth (`legacy: 'reject'`) fermerait cette porte : à ne pas suivre.
 
@@ -149,11 +151,11 @@ Vérifié le 03/11 dans la documentation de chaque client (sources en fin d'étu
 
 **La visibilité ne demande aucun code à part.** Le serveur MCP ne lit la base que par le `TenantContext` du jeton, sous la RLS (`acl && app_principals()`). Ce contexte sort de `verifyApiToken`, qui calcule les principals par `principalsFor`, comme pour une session de l'interface. Aujourd'hui, `principalsFor` rend « soi » et « l'équipe ». Le jour où la clé de hiérarchie arrive (la règle du 28/10 : l'auteur, ses managers en remontant, les admins ; pas les égaux), elle change à un seul endroit, et le MCP suit. Le plan l'attache par un test (M06) : avec un jeton obtenu par OAuth, un membre ne trouve par le MCP aucune source qu'il ne trouve pas dans l'interface. La clé de hiérarchie y ajoutera le manager, l'égal et l'admin.
 
-**Une limite à connaître.** Ce que Leon rend arrive dans la conversation de l'assistant. L'extension de Leon capte les conversations de claude.ai et de ChatGPT : elle écarte déjà les blocs d'outil (`extension/lib/parsers/claude-ai.ts` et `chatgpt.ts`), mais garde la réponse de l'assistant, qui peut citer ce que Leon lui a rendu. Un mail privé lu par le MCP puis résumé par Claude devient ainsi une conversation IA, lisible des managers de son auteur. C'est déjà vrai de tout ce que l'utilisateur colle lui-même dans claude.ai. Question B6.
+**Une limite à connaître.** Ce que Leon rend arrive dans la conversation de l'assistant. L'extension de Leon capte les conversations de claude.ai et de ChatGPT : elle écarte déjà les blocs d'outil (`extension/lib/parsers/claude-ai.ts` et `chatgpt.ts`), mais garde la réponse de l'assistant, qui peut citer ce que Leon lui a rendu. Un mail lu par le MCP puis résumé par Claude devient ainsi une conversation IA, lisible des managers de son auteur. **Tranché par Amos (B6) : on capte comme aujourd'hui.** Leon est du B2B ; la boîte reliée est celle du travail. Qui relie sa boîte personnelle à Leon le fait en acceptant les autorisations, à ses risques.
 
 ## 8. L'articulation avec la CLI sans clone
 
-Le plan CLI (lot 1, S01 à S05, pas encore commencé au 03/11) construit sa propre connexion par le navigateur : la CLI tire le jeton et n'en montre que l'empreinte (K3), le serveur signe un code de deux minutes (K4), la CLI l'échange en présentant le jeton (K5). C'est, sous d'autres noms, un code d'autorisation protégé par PKCE avec un retour en bouclage : exactement ce que fait OAuth pour les applications natives (RFC 8252). L'étude CLI avait écarté OAuth (son option e) pour ses trois dépendances et ses jetons qui expirent. Le serveur recommandé à la section 4 n'a ni dépendance, ni jeton qui expire pour la CLI.
+Le plan CLI (lot 1, S01 à S05, codé le 03/11 sur `amos/cli-connexion-navigateur`, pas encore poussé) construit sa propre connexion par le navigateur : la CLI tire le jeton et n'en montre que l'empreinte (K3), le serveur signe un code de deux minutes (K4), la CLI l'échange en présentant le jeton (K5). C'est, sous d'autres noms, un code d'autorisation protégé par PKCE avec un retour en bouclage : exactement ce que fait OAuth pour les applications natives (RFC 8252). L'étude CLI avait écarté OAuth (son option e) pour ses trois dépendances et ses jetons qui expirent. Le serveur recommandé à la section 4 n'a ni dépendance, ni jeton qui expire pour la CLI.
 
 | | **a. Une seule** (la CLI devient un client du serveur d'autorisation) | **b. Deux connexions** (le plan CLI tel quel, puis le MCP à côté) |
 |---|---|---|
@@ -165,7 +167,12 @@ Le plan CLI (lot 1, S01 à S05, pas encore commencé au 03/11) construit sa prop
 | Plan CLI | S01, S02 et S04 tombent (sauf `DELETE /api/v1/jeton`) ; S03 devient la page d'OAuth ; S05 parle OAuth (PKCE au lieu de l'empreinte) ; K3 à K5 sont remplacés | inchangé |
 | Effort total (CLI lot 1 + MCP lot 1) | environ 4 jours | environ 5 jours |
 
-**Recommandation : a** (question B3). A1 reste tel qu'Amos l'a tranché : un clic dans le navigateur, un retour vers `127.0.0.1`, le repli `--with-token`. Seul le protocole sous le clic change, pour devenir le standard. La règle du plan CLI « le jeton naît sur l'ordinateur » devient « le jeton n'apparaît que dans le corps d'une réponse HTTPS, l'en-tête `Authorization` et `~/.leon/connexion.json` ».
+**Retenu : b** (B3). Sur le papier, a coûte un jour de moins. Mais le lot 1 de la CLI était déjà codé et testé le 03/11 : le refaire sur l'écran d'OAuth coûterait plus que deux écrans sur le même modèle, et retarderait la connexion en un clic. Ce chantier part donc du lot 1 de la CLI et en reprend :
+- `computer-code.ts` (S02), dont la signature devient générale (un `purpose` par usage ; la clé de la CLI ne change pas) ;
+- le retour après connexion (S03) : `/connexion` reconnaît la demande, et `pathAfterSignIn` la revalide, double authentification comprise ;
+- les contrats de routes et de liens que le lot 1 a ajoutés (`src/test/contracts/`).
+
+Les deux écrans pourront se réunir plus tard ; rien ne l'impose.
 
 **Ce qui ne bouge pas, dans les deux cas :**
 - `api_tokens` porte tout ; la colonne `kind` range chaque jeton (section 5), et S14 du plan CLI ne reconnaît plus les ordinateurs au préfixe de leur nom ;
@@ -177,12 +184,10 @@ Le plan CLI (lot 1, S01 à S05, pas encore commencé au 03/11) construit sa prop
 
 Le lot 1 de la CLI et ce chantier touchent les mêmes fichiers : `src/server/auth/api-tokens.ts`, `src/server/api/app.ts`, `src/capture/api-contract.ts`, les pages de `src/app/(auth)/` et `messages/*.json`.
 
-**Avec une seule connexion (B3 = a, recommandé) :**
-1. **MCP, lot 1 : le serveur d'autorisation** (M01 à M07). Il porte aussi le côté serveur de la connexion de la CLI.
-2. **CLI, lot 1 réduit** : `leon login` en client OAuth (S05 amendé) et `DELETE /api/v1/jeton`. Le lot 2 de la CLI (installation, lanceur, mises à jour) ne touche que `src/cli`, `vite.cli.config.ts` et `/install` : il peut avancer en même temps que l'étape 1. S10 (`leon setup`) s'arrête sur le repli `--with-token` tant que l'étape 2 n'est pas fusionnée, comme le plan CLI le prévoit déjà.
-3. **Réglages** : « Assistants connectés » (M08) et « Ordinateurs connectés » (S14), l'un après l'autre, puisqu'ils touchent la même page.
-
-**Avec deux connexions (B3 = b) :** le lot 1 de la CLI d'abord, tel quel ; puis ce chantier, rebasé dessus, qui reprend sa signature (S02, avec un `purpose`) et sa connexion sur place (S03). Le lot 2 de la CLI reste libre.
+Rien ne s'arrête côté CLI (Amos, 03/11 : « il ne faut surtout pas mettre en pause le chantier CLI »).
+1. **CLI, lot 1** : poussé et fusionné tel qu'il est codé. Le lot 2 de la CLI (installation, lanceur, crochets, mises à jour) avance aussi, sans attendre ce chantier.
+2. **MCP, lot 1 : le serveur d'autorisation** (M01 à M07), rebasé sur le lot 1 de la CLI.
+3. **Réglages** : « Ordinateurs connectés » (S14) et « Assistants connectés » (M08), l'un après l'autre, puisqu'ils touchent la même page.
 
 Dans les deux cas, ce chantier ne touche pas aux outils MCP : il ne croise pas T25 du plan mémoire (le filtre `depot` sur `search` et `briefing`).
 
@@ -190,45 +195,26 @@ Dans les deux cas, ce chantier ne touche pas aux outils MCP : il ne croise pas T
 
 ## 10. Ce que ça coûte
 
-Deux PR, environ 4 jours, détaillées dans le [plan](../../plans/2026-11-03-mcp-distant.md) :
+Deux PR, un peu plus de 4 jours, détaillées dans le [plan](../../plans/2026-11-03-mcp-distant.md) :
 
 | PR | Ce que ça change | Effort |
 |---|---|---|
-| 1. Le serveur d'autorisation | coller `https://<leon>/api/mcp` dans claude.ai, ChatGPT, Cursor… suffit ; essayé pour de vrai sur chaque client | 3 j |
+| 1. Le serveur d'autorisation | coller `https://<leon>/api/mcp` dans claude.ai, ChatGPT, Cursor… suffit ; DCR et CIMD ; essayé pour de vrai sur chaque client | 3,5 j |
 | 2. Réglages | « Assistants connectés » : l'adresse, la marche à suivre par client, la liste des assistants branchés et « Révoquer » | 0,75 j |
 
-Avec B6 = a, une tâche de plus dans l'extension (0,5 j). Avec B3 = a, le lot 1 de la CLI passe d'environ 2 jours à environ 1 jour.
+Côté serveur : une migration (des colonnes sur `api_tokens`), des métadonnées fixes, une page, deux routes, la lecture des documents CIMD, et la signature du lot 1 de la CLI rendue générale. Aucune dépendance nouvelle : `node:crypto`, `zod`, Hono, et les aides de métadonnées du SDK MCP déjà installé (`@modelcontextprotocol/server`).
 
-Côté serveur : une migration (des colonnes sur `api_tokens`), deux fichiers de métadonnées, une page, deux routes, une fonction de signature. Aucune dépendance nouvelle : `node:crypto`, `zod`, Hono, et les aides de métadonnées du SDK MCP déjà installé (`@modelcontextprotocol/server`).
+## 11. Tranché
 
-## 11. À trancher
+Par Amos, le 03/11 ; il porte ce chantier seul. Pour les choix techniques (B2, B7), sa consigne : « le meilleur, le plus propre, le plus carré ».
 
-**Pour Amos** (il porte ce chantier seul). La première réponse de chaque question est la recommandation.
-
-1. **B1. La PR #56.**
-   a. La fermer maintenant, en renvoyant à cette étude (recommandé) ;
-   b. la fermer à la fusion du lot 1 ;
-   c. la garder ouverte.
-2. **B2. Le serveur d'autorisation.**
-   a. Écrit dans Leon, sur `api_tokens`, sans dépendance (recommandé) ;
-   b. Better Auth, comme #56 ;
-   c. un fournisseur externe.
-3. **B3. La connexion de la CLI.**
-   a. Elle devient un client de ce serveur : une page, un code, une route ; ce chantier passe avant le lot 1 de la CLI, qui rétrécit (recommandé) ;
-   b. elle reste comme le plan CLI la décrit (K3 à K5), et ce chantier vient après.
-4. **B4. La durée des jetons des assistants.**
-   a. Une heure, renouvelée par un jeton de 90 jours changé à chaque usage (recommandé) ;
-   b. sans expiration, comme ceux de la CLI.
-5. **B5. Vers où un assistant peut renvoyer après « Autoriser ».**
-   a. Une liste fermée : les adresses de retour que publient claude.ai, chatgpt.com, www.cursor.com, vscode.dev et antigravity.google, chemin compris, plus l'ordinateur lui-même ; un client de plus, c'est une ligne (recommandé) ;
-   b. n'importe quel hôte, avec un avertissement sur la page.
-6. **B6. Une réponse de Claude ou ChatGPT qui cite ce que Leon lui a rendu, captée par l'extension.**
-   a. L'extension ne capte pas un échange où l'assistant a appelé Leon, si les flux le laissent voir (à vérifier à l'essai, sinon b) (recommandé) ;
-   b. comme aujourd'hui, et la page « Autoriser » le dit ;
-   c. comme aujourd'hui, sans rien dire.
-7. **B7. L'inscription des clients.**
-   a. Par DCR seule en v1, sans rien stocker (recommandé) ;
-   b. DCR et CIMD dès la v1 (environ une demi-journée de plus).
+- **B1. #56 : fermée** le 03/11, avec un renvoi vers cette étude. Sa branche reste.
+- **B2. Le serveur d'autorisation est écrit dans Leon**, sur `api_tokens`, sans dépendance.
+- **B3. La connexion de la CLI garde son propre écran**, déjà codé (lot 1, `amos/cli-connexion-navigateur`). Ce chantier vient après et en reprend le code signé et le retour après connexion. Le chantier CLI (crochets, installation, mises à jour) ne s'arrête pas. Seule l'idée d'un chat Leon au terminal (`leon chat`) est abandonnée.
+- **B4. Une heure** pour le jeton d'un assistant, renouvelé tout seul par un jeton de 90 jours changé à chaque usage.
+- **B5. La liste fermée** : les adresses de retour que publient claude.ai, chatgpt.com, www.cursor.com, vscode.dev et antigravity.google, chemin compris, plus l'ordinateur lui-même.
+- **B6. On capte comme aujourd'hui.** Leon est du B2B : la boîte reliée est celle du travail, et qui relie sa boîte personnelle l'accepte.
+- **B7. DCR et CIMD dès la v1**, CIMD lu seulement chez les hôtes de la liste fermée.
 
 **Pour plus tard, hors de ce chantier :** un bloc « Brancher Claude ou ChatGPT » dans l'onboarding (une ligne à côté de « Vos outils de code », S13 du plan CLI) ; des périmètres plus fins (lecture seule) ; la révocation demandée par le client (RFC 7009).
 

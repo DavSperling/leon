@@ -1,6 +1,6 @@
 # Le MCP distant : plan d'implémentation
 
-3 novembre 2026 · Amos (avec Claude) · à trancher par Amos
+3 novembre 2026 · Amos (avec Claude) · tranché par Amos le 3 novembre
 
 > **Pour les agents :** SOUS-SKILL REQUISE : `superpowers:subagent-driven-development` (recommandé) ou `superpowers:executing-plans`, tâche par tâche. Chaque tâche est exécutée par un sous-agent neuf qui reçoit ce plan et son identifiant de tâche, rien d'autre. Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés », puis **sa** tâche. Tests d'abord (`superpowers:test-driven-development`), preuves avant de conclure (`superpowers:verification-before-completion`). Commiter **seulement ses fichiers**, ajoutés un par un (`git add <fichier>`, jamais `-A` ni `.`), en un commit « Mxx · titre ». Une erreur de type ou de lint dans un fichier qui n'est pas à soi se signale, elle ne se corrige pas.
 
@@ -12,29 +12,27 @@
 - Leon devient son propre serveur d'autorisation OAuth 2.1, réduit au code d'autorisation avec PKCE S256 et au renouvellement : les métadonnées de la ressource (RFC 9728) et du serveur (RFC 8414), une page « Autoriser », une route de jetons, une route d'inscription des clients (RFC 7591).
 - Les jetons sont des lignes d'`api_tokens`, au format `leon_`, rangées par une colonne `kind`. `/api/mcp` garde `requireApiToken` ; son 401 indique où sont les métadonnées. Un jeton `assistant` ne vaut que pour `/api/mcp`.
 - Le code d'autorisation est signé (HMAC, clé dérivée de `BETTER_AUTH_SECRET`), pas stocké ; son usage unique tient à l'unicité de `api_tokens.grant_id`.
-- L'inscription ne stocke rien : le `client_id` rendu porte, signés, le nom et les adresses de retour du client. Les adresses de retour sont limitées à celles que publient les clients de L11, et au bouclage.
+- Un client se fait connaître de deux façons : par l'adresse de son document (CIMD), que Leon ne lit que chez les hôtes de L11 ; ou par une inscription (DCR) qui ne stocke rien, le `client_id` rendu portant, signés, son nom et ses adresses de retour. Dans les deux cas, les adresses de retour sont limitées à celles que publient les clients de L11, et au bouclage.
 - Les outils MCP ne changent pas.
-- (B3 = a) `leon login` devient un client de ce serveur (`leon-cli`) et remplace K3 à K5 du plan CLI.
+- Ce plan part du lot 1 de la CLI (B3), fusionné avant lui : il en reprend `computer-code.ts` (le code signé, rendu général) et le retour après connexion (`pathAfterSignIn`).
 
-**Stack :** celle du deuxième jet. Aucune dépendance nouvelle. Une migration (des colonnes sur `api_tokens`).
+**Stack :** celle du deuxième jet, plus le lot 1 de la CLI. Aucune dépendance nouvelle. Une migration (des colonnes sur `api_tokens`).
 
 ## Lots, PR et ordre
 
 | Lot | Ce que ça change | Tâches | PR | Effort |
 |---|---|---|---|---|
-| 1. Le serveur d'autorisation | coller `https://<leon>/api/mcp` dans claude.ai, ChatGPT, Cursor, Codex… suffit | M01 à M07 | suivante | 3 j |
-| 2. Réglages (et l'extension si B6 = a) | « Assistants connectés » ; l'extension ne capte pas un échange où l'assistant a appelé Leon | M08, M09 | suivante | 0,75 à 1,25 j |
+| 1. Le serveur d'autorisation | coller `https://<leon>/api/mcp` dans claude.ai, ChatGPT, Cursor, Codex… suffit | M01 à M07 | suivante | 3,5 j |
+| 2. Réglages | « Assistants connectés » : l'adresse, la marche à suivre par client, les assistants branchés | M08 | suivante | 0,75 j |
 
-Total : environ 4 jours.
+Total : un peu plus de 4 jours.
 
-**Ordre (B3 = a, recommandé) :**
-1. Le lot 1 de ce plan, en premier. Il porte aussi le côté serveur de la connexion de la CLI (le client `leon-cli`, L10).
-2. Le lot 1 de la CLI, réduit à S05 amendé et `DELETE /api/v1/jeton` (voir « Ce que B3 = a change au plan CLI »). Le lot 2 de la CLI ne touche ni l'authentification ni les routes de ce plan : il avance en même temps que l'étape 1.
+**Ordre :** rien ne s'arrête côté CLI (Amos, 03/11).
+1. Le lot 1 de la CLI (S01 à S05, codé sur `amos/cli-connexion-navigateur`) est poussé et fusionné tel quel. Ses lots 2 et 3 avancent sans attendre ce plan.
+2. Le lot 1 de ce plan part de main après cette fusion. Il touche les mêmes fichiers (`api-tokens.ts`, `app.ts`, `api-contract.ts`, `computer-code.ts`, `connexion/page.tsx`, `actions.ts`) : on ne le commence pas avant.
 3. Le lot 2 de ce plan et le lot 3 de la CLI touchent tous deux `src/app/(app)/reglages/page.tsx` et `tokens.tsx` : l'un après l'autre, le second se rebase.
 
-**Ordre (B3 = b) :** le lot 1 de la CLI d'abord, tel quel ; ce plan se rebase dessus, et M02 reprend `computer-code.ts` (S02) en lui ajoutant un `purpose` au lieu de créer `signed.ts`.
-
-**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan partent dans leur propre PR, sans code, à trancher par Amos avant tout le reste.
+**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan sont partis dans leur propre PR, sans code (#121) ; Amos a tranché B1 à B7 le 03/11.
 
 ## Règles propres à ce chantier
 
@@ -54,9 +52,9 @@ Total : environ 4 jours.
 
 ## Contraintes globales
 
-- **Jetons des assistants :** accès 1 h ; renouvellement 90 jours, reportés à chaque usage, et changé à chaque usage (proposé, B4).
-- **Jetons des ordinateurs** (si B3 = a) : sans expiration ni renouvellement, comme E4 du plan CLI.
+- **Jetons des assistants :** accès 1 h ; renouvellement 90 jours, reportés à chaque usage, et changé à chaque usage (B4).
 - **Code d'autorisation :** 2 minutes, usage unique.
+- **Documents CIMD :** lus en HTTPS chez les hôtes de L11 seulement, sans suivre de redirection, 5 s et 16 Ko au plus ; gardés en mémoire selon leur `Cache-Control`, une heure au plus, une minute sans en-tête.
 - **`code_verifier` :** 43 à 128 caractères `[A-Za-z0-9._~-]` (RFC 7636) ; `code_challenge` : 43 caractères base64url.
 - **Inscription d'un client :** 4 Ko d'entrée au plus ; 1 à 5 adresses de retour de 512 caractères au plus ; nom de 1 à 80 caractères après retrait des caractères de contrôle, sinon « MCP client ».
 - **Route des jetons :** 4 Ko d'entrée au plus.
@@ -66,20 +64,21 @@ Total : environ 4 jours.
 
 ## Décisions prises pour ce plan
 
-Les décisions qui attendent une réponse d'Amos portent « proposé ».
+Amos a tranché B1 à B7 le 03/11 (voir « Questions tranchées »).
 
-- **F1. Leon est son propre serveur d'autorisation (proposé, B2).** Pas Better Auth (`@better-auth/mcp`, `@better-auth/oauth-provider`), pas de fournisseur externe.
-- **F2. Les jetons sont des lignes d'`api_tokens`**, au format `leon_`, de `kind` `manuel`, `ordinateur` ou `assistant` (L9).
-- **F3. Accès d'une heure, renouvellement de 90 jours changé à chaque usage (proposé, B4)**, pour les `assistant` seulement.
-- **F4. Clients publics seulement.** `token_endpoint_auth_methods_supported: ["none"]`, PKCE S256 obligatoire. Une inscription qui demande un secret reçoit `none` (RFC 7591 §3.2.1 permet au serveur de remplacer une valeur).
-- **F5. L'inscription par DCR seule, sans rien stocker (proposé, B7).** Pas de CIMD en v1 : `client_id_metadata_document_supported` n'est pas annoncé, et les clients qui le préfèrent (Claude, ChatGPT, Codex, VS Code) retombent sur DCR.
-- **F6. Une liste fermée d'adresses de retour (proposé, B5)** : celles que les clients de L11 publient, chemin compris, plus le bouclage. Toute autre adresse est refusée à l'inscription, même sur un hôte connu.
+- **F1. Leon est son propre serveur d'autorisation (B2).** Pas Better Auth (`@better-auth/mcp`, `@better-auth/oauth-provider`), pas de fournisseur externe.
+- **F2. Les jetons sont des lignes d'`api_tokens`**, au format `leon_`, de `kind` `manuel`, `ordinateur` ou `assistant` (L9). Le lot 1 de la CLI crée les `ordinateur` (`registerApiToken`) ; ce plan crée les `assistant`.
+- **F3. Accès d'une heure, renouvellement de 90 jours changé à chaque usage (B4)**, pour les `assistant` seulement.
+- **F4. Clients publics seulement.** `token_endpoint_auth_methods_supported: ["none"]`, PKCE S256 obligatoire. Une inscription qui demande un secret reçoit `none` (RFC 7591 §3.2.1 permet au serveur de remplacer une valeur) ; un document CIMD qui en demande un est lu comme public.
+- **F5. DCR et CIMD (B7).** CIMD : `client_id_metadata_document_supported: true`, documents lus chez les hôtes de L11 seulement (L10). DCR : sans rien stocker (L5).
+- **F6. Une liste fermée d'adresses de retour (B5)** : celles que les clients de L11 publient, chemin compris, plus le bouclage. Toute autre adresse est refusée, à l'inscription comme dans un document CIMD, même sur un hôte connu.
 - **F7. Un seul périmètre, `leon`**, qui donne les quatre outils. Pas d'`offline_access` (la spécification demande de ne pas l'annoncer ; le renouvellement est donné sans lui).
 - **F8. Les outils ne changent pas**, ni leur contexte : `verifyApiToken` reste la seule source du `TenantContext` d'un appel MCP.
 - **F9. Audience :** un jeton `assistant` n'ouvre que `/api/mcp` ; `requireApiToken` le refuse partout ailleurs (401).
-- **F10. Une page d'autorisation pour tous les clients (proposé, B3)**, dont le texte dépend du client (`leon-cli` ou assistant), et qui montre toujours l'hôte de retour.
+- **F10. Deux pages d'autorisation sur le même modèle (B3).** `/ordinateur/autoriser` (lot 1 de la CLI) ne change pas ; `/oauth/autoriser` en reprend la forme et le retour après connexion, et montre toujours l'hôte de retour.
 - **F11. Le serveur MCP garde les deux époques du protocole** : `createMcpHandler` sans option `legacy` (son défaut, `'stateless'`), jamais `legacy: 'reject'`.
-- **F12. Hors de ce chantier :** CIMD ; la révocation demandée par le client (RFC 7009) ; OpenID Connect et `/.well-known/openid-configuration` ; les jetons liés (DPoP) ; des périmètres plus fins ; un outil nouveau ; l'onboarding ; le choix de l'espace sur la page (c'est l'espace actif de la session).
+- **F12. L'extension ne change pas (B6).** Elle capte les conversations de claude.ai et de ChatGPT comme aujourd'hui, même quand l'assistant a lu Leon : Leon est du B2B, la boîte reliée est celle du travail.
+- **F13. Hors de ce chantier :** la révocation demandée par le client (RFC 7009) ; OpenID Connect et `/.well-known/openid-configuration` ; les jetons liés (DPoP) ; des périmètres plus fins ; un outil nouveau ; l'onboarding ; le choix de l'espace sur la page (c'est l'espace actif de la session).
 
 ## Contrats partagés
 
@@ -113,8 +112,11 @@ Les autres routes à jeton gardent `WWW-Authenticate: Bearer`. Un jeton `assista
   "code_challenge_methods_supported": ["S256"],
   "token_endpoint_auth_methods_supported": ["none"],
   "scopes_supported": ["leon"],
-  "authorization_response_iss_parameter_supported": true }
+  "authorization_response_iss_parameter_supported": true,
+  "client_id_metadata_document_supported": true }
 ```
+
+Claude ne passe par CIMD que si le document annonce à la fois `client_id_metadata_document_supported: true` et `"none"` dans `token_endpoint_auth_methods_supported` : les deux y sont.
 
 `issuer` est exactement l'origine qui sert ce document (la spécification du 2026-07-28 fait refuser un document dont l'`issuer` diffère). Les aides du SDK MCP déjà installé (`oauthMetadataResponse`, `buildOAuthProtectedResourceMetadata`, `bearerAuthChallengeResponse`) servent L1 à L3 si leur sortie est exactement celle-ci ; sinon, trois objets écrits à la main.
 
@@ -130,17 +132,17 @@ Les autres routes à jeton gardent `WWW-Authenticate: Bearer`. Un jeton `assista
   "token_endpoint_auth_method": "none" }
 ```
 
-**L5. Le `client_id`** : `signPayload('oauth-client', { "v": 1, "n": <nom nettoyé>, "r": [<adresses de retour>], "i": <secondes epoch> })` (M02), sans expiration. Le lire, c'est le vérifier : un `client_id` dont la signature ne passe pas est inconnu. Rien n'est stocké ; `client_host` (L9) est l'hôte de la première adresse de retour, ou `127.0.0.1` pour le bouclage.
+**L5. Le `client_id` d'une inscription (DCR)** : `signPayload('oauth-client', { "v": 1, "n": <nom nettoyé>, "r": [<adresses de retour>], "i": <secondes epoch> })` (M02), sans expiration. Le lire, c'est le vérifier : un `client_id` dont la signature ne passe pas est inconnu. Rien n'est stocké ; `client_host` (L9) est l'hôte de la première adresse de retour, ou `127.0.0.1` pour le bouclage.
 
 `shortcut: un client_id ne se révoque pas (rien n'est stocké) ; les jetons, si. Une table oauth_clients le jour où il faudra bannir un client.`
 
 **L6. La page d'autorisation** : `GET /oauth/autoriser?response_type=code&client_id=…&redirect_uri=…&state=…&code_challenge=…&code_challenge_method=S256&scope=leon&resource=…`.
 
 Dans cet ordre :
-1. `client_id` (L5) et `redirect_uri` sont vérifiés d'abord. `redirect_uri` doit être l'une des adresses de l'inscription, caractère par caractère ; pour une adresse de bouclage (`http://127.0.0.1:<port>/…` ou `http://localhost:<port>/…`), seul le port peut différer (RFC 8252 §7.3). Si `redirect_uri` manque et que l'inscription n'en a qu'une, c'est elle. Un échec ici affiche une erreur, **sans rediriger** (RFC 6749 §4.1.2.1).
+1. `client_id` (L5 ou L10) et `redirect_uri` sont vérifiés d'abord. `redirect_uri` doit être l'une des adresses de l'inscription ou du document, caractère par caractère ; pour une adresse de bouclage (`http://127.0.0.1:<port>/…` ou `http://localhost:<port>/…`), seul le port peut différer (RFC 8252 §7.3). Si `redirect_uri` manque et que l'inscription n'en a qu'une, c'est elle. Un échec ici affiche une erreur, **sans rediriger** (RFC 6749 §4.1.2.1).
 2. Ensuite, toute erreur renvoie vers `redirect_uri` avec `error`, `state` et `iss` : `unsupported_response_type` (autre que `code`), `invalid_request` (`code_challenge` absent ou mal formé, méthode autre que `S256`, `state` de plus de 512 caractères), `invalid_scope` (autre chose que `leon`, ou vide, qui vaut `leon`), `invalid_target` (un `resource` autre que la ressource de L1).
-3. Sans session : le formulaire de connexion sur place, puis la même page.
-4. La page dit : « Autoriser <nom déclaré> à lire votre mémoire Leon dans l'espace <espace> ? », puis, en évidence, « Vous serez renvoyé vers <hôte de retour> », la liste de ce que l'assistant pourra faire (chercher, lire, le point du matin, garder une note), et l'avertissement « Si vous n'êtes pas en train de brancher un assistant vous-même, refusez. » Pour le client `leon-cli` (L10), le texte du plan CLI (S03) : « Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l'espace <espace> ? ».
+3. Sans session : `/connexion`, puis retour sur la même page, comme `/ordinateur/autoriser` (lot 1 de la CLI) ; sans espace, `/bienvenue`.
+4. La page dit : « Autoriser <nom du client> à lire votre mémoire Leon dans l'espace <espace> ? », puis, en évidence, « Vous serez renvoyé vers <hôte de retour> », la liste de ce que l'assistant pourra faire (chercher, lire, le point du matin, garder une note), et l'avertissement « Si vous n'êtes pas en train de brancher un assistant vous-même, refusez. » Le nom vient du document CIMD, ou de l'inscription (alors « nom déclaré »).
 5. « Autoriser » renvoie vers `redirect_uri?code=<L7>&state=<state>&iss=<émetteur>` ; « Refuser » vers `redirect_uri?error=access_denied&state=<state>&iss=<émetteur>`. Les paramètres sont ajoutés à ceux que `redirect_uri` porte déjà, par `URL` et `searchParams`, jamais par concaténation.
 
 La page n'est jamais affichée dans un cadre (`frame-ancestors 'none'`, déjà dans `next.config.ts`).
@@ -151,8 +153,8 @@ La page n'est jamais affichée dans un cadre (`frame-ancestors 'none'`, déjà d
 
 - `grant_type=authorization_code` avec `code`, `redirect_uri`, `client_id`, `code_verifier` :
   - vérifie L7, puis SHA-256(`client_id`) = `c`, `redirect_uri` = `r`, base64url(SHA-256(`code_verifier`)) = `p` en temps constant, puis l'adhésion en cours de `u` à `t` (`resolveTenantContext`) ;
-  - crée la ligne par `createGrant` (M01) : `kind` `assistant` (ou `ordinateur` pour `leon-cli`), `grant_id` = `j`, `client_ref` = `c`, `client_name` et `client_host` tirés de L5, `name` = le nom déclaré (ou « Ordinateur : <nom> ») ;
-  - rend `200 { "access_token": "leon_…", "token_type": "Bearer", "expires_in": 3600, "refresh_token": "leon_…", "scope": "leon" }` ; pour `leon-cli`, sans `expires_in` ni `refresh_token`.
+  - crée la ligne par `createGrant` (M01) : `kind` `assistant`, `grant_id` = `j`, `client_ref` = `c`, `client_name` et `client_host` tirés de L5 ou L10, `name` = le nom du client ;
+  - rend `200 { "access_token": "leon_…", "token_type": "Bearer", "expires_in": 3600, "refresh_token": "leon_…", "scope": "leon" }`.
 - `grant_type=refresh_token` avec `refresh_token`, `client_id` : `refreshGrant` (M01), avec SHA-256(`client_id`) ; même réponse (RFC 6749 §6 : un jeton de renouvellement est lié à son client).
 - Erreurs (400, JSON `{ "error": … }`) : `invalid_request`, `invalid_client` (`client_id` illisible), `invalid_grant` (tout le reste, sans dire quoi), `unsupported_grant_type`. Toutes les réponses portent `Cache-Control: no-store`.
 
@@ -173,9 +175,14 @@ alter table api_tokens
 
 Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, ou par une empreinte.
 
-**L10. Le client `leon-cli`** (si B3 = a) : inscrit d'office, sans passer par L4. Son `client_id` est la chaîne fixe `leon-cli` ; son seul retour, `http://127.0.0.1:<port>/retour`, port quelconque. Il peut joindre `nom` (le nom de la machine, 1 à 60 caractères, nettoyé comme K5 du plan CLI) à sa demande de jeton.
+**L10. Le `client_id` d'un document (CIMD)** : une adresse `https://<hôte>/<chemin>` dont l'hôte est l'un de ceux de L11 (`https://chatgpt.com/oauth/client.json`, `https://claude.ai/oauth/claude-code-client-metadata`…).
+- Leon la lit par `fetch`, avec `redirect: 'error'`, 5 s et 16 Ko au plus (contraintes globales), sans en-tête ni cookie ;
+- le document doit être du JSON, avec `client_id` égal à l'adresse caractère par caractère, `client_name` et `redirect_uris` ; chaque adresse de retour doit être permise par L11, sinon le client est refusé en entier ;
+- un `token_endpoint_auth_method` autre que `none` est ignoré (F4) ;
+- tout échec (réseau, taille, format, hôte hors de L11) vaut « client inconnu » (L6 point 1), avec un compteur, jamais l'adresse dans un journal ;
+- `client_host` est l'hôte de la première adresse de retour ; `client_ref` (L7, L9) est SHA-256 de l'adresse.
 
-**L11. Les clients et leurs adresses de retour** (B5 = a) : `src/server/oauth/clients.ts`, une constante. Ce sont les adresses que chaque client publie dans sa documentation, pas ses hôtes : un autre chemin du même hôte (une redirection ouverte, l'adresse de retour d'un autre service) ne doit jamais recevoir un code.
+**L11. Les clients et leurs adresses de retour** (B5) : `src/server/oauth/clients.ts`, une constante. Ce sont les adresses que chaque client publie dans sa documentation, pas ses hôtes : un autre chemin du même hôte (une redirection ouverte, l'adresse de retour d'un autre service) ne doit jamais recevoir un code.
 
 | Client | Adresse de retour permise à l'inscription |
 |---|---|
@@ -189,12 +196,13 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 - « exactement » : schéma, hôte, port (443), chemin, sans requête ni fragment, comparés caractère par caractère ;
 - le bouclage : `http` seulement, port et chemin quelconques (le code n'y arrive que sur l'ordinateur de la victime), ni identifiant ni mot de passe dans l'adresse, pas de fragment ;
 - aucun autre schéma (`javascript:`, `data:`, schémas d'application) ;
+- un document CIMD (L10) n'est lu que chez les hôtes de cette table ;
 - une adresse de plus, c'est une ligne de cette constante, recopiée de la documentation du client, et son essai réel (M07). Le format de `<id>` chez ChatGPT se vérifie à M07.
 
 ## Points de vigilance
 
-1. **Un nom de client est déclaré, pas vérifié.** N'importe qui peut s'inscrire sous le nom « Claude ». Parade : la page montre l'hôte de retour, et les adresses de retour sont limitées à celles que publient les clients de L11 (B5) : un faux « Claude » ne peut renvoyer que vers le vrai.
-2. **Le consentement par hameçonnage.** Un attaquant lance lui-même un parcours, garde le `code_verifier`, et envoie le lien d'autorisation à sa victime : si elle clique « Autoriser », le code part vers l'adresse de retour inscrite. Parade : seules les adresses de retour publiées de L11, chemin compris, et le bouclage. Un autre chemin d'un hôte connu (une redirection ouverte, l'adresse de retour d'un autre service) est refusé à l'inscription. Avec un retour en bouclage, le code arrive sur l'ordinateur de la victime, où rien de l'attaquant n'attend. Avec un client connu (claude.ai, chatgpt.com…), il arrive dans le navigateur de la victime, chez un client qui lie `state` à la session qui a commencé le parcours : l'attaquant ne le reçoit pas. Plus l'avertissement de la page. Sans la liste fermée (B5 = b), l'attaquant inscrirait sa propre adresse et recevrait le code.
+1. **Avec DCR, un nom de client est déclaré, pas vérifié** (avec CIMD, il vient du document du client). N'importe qui peut s'inscrire sous le nom « Claude ». Parade : la page montre l'hôte de retour, et les adresses de retour sont limitées à celles que publient les clients de L11 (B5) : un faux « Claude » ne peut renvoyer que vers le vrai.
+2. **Le consentement par hameçonnage.** Un attaquant lance lui-même un parcours, garde le `code_verifier`, et envoie le lien d'autorisation à sa victime : si elle clique « Autoriser », le code part vers l'adresse de retour inscrite. Parade : seules les adresses de retour publiées de L11, chemin compris, et le bouclage. Un autre chemin d'un hôte connu (une redirection ouverte, l'adresse de retour d'un autre service) est refusé à l'inscription. Avec un retour en bouclage, le code arrive sur l'ordinateur de la victime, où rien de l'attaquant n'attend. Avec un client connu (claude.ai, chatgpt.com…), il arrive dans le navigateur de la victime, chez un client qui lie `state` à la session qui a commencé le parcours : l'attaquant ne le reçoit pas. Plus l'avertissement de la page. Sans la liste fermée, l'attaquant inscrirait sa propre adresse et recevrait le code.
 3. **Le bouclage** : n'importe quel programme de l'ordinateur peut écouter un port et se faire passer pour un client (la spécification le rappelle). Parade : pour un retour en bouclage, la page dit « Vous serez renvoyé vers une application de cet ordinateur » et répète l'avertissement.
 4. **Deux renouvellements en même temps** pour un même branchement : le second échoue (`invalid_grant`) et l'assistant redemande l'autorisation. Better Auth tolère un renouvellement rejoué pendant 30 s pour cette raison. `shortcut: pas de tolérance en v1 ; garder l'ancienne empreinte de renouvellement 30 s si M07 ou l'usage montre des reconnexions.`
 5. **claude.ai et ChatGPT appellent depuis leurs serveurs.** `pnpm dev` ne leur est pas joignable ; Claude exige une adresse publique en IPv4. Parade : M07 contre la production, après déploiement ; Claude Code et Codex se vérifient d'abord en local (retour en bouclage).
@@ -202,33 +210,36 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 7. **Le protocole du 2026-07-28** fait échouer les clients plus anciens face à un serveur qui ne parle que lui. Parade : F11, et `mcp.db.test.ts` garde un appel `initialize` de l'époque 2025.
 8. **Un membre retiré ou un compte supprimé** : `verifyApiToken` et `refreshGrant` revérifient l'adhésion à chaque appel ; ses assistants s'arrêtent à l'appel suivant.
 9. **Plusieurs espaces** : le jeton suit l'espace actif au moment de « Autoriser », que la page nomme. Pour changer d'espace, on change d'espace dans Leon puis on rebranche l'assistant.
-10. **La connexion sociale** (Google, Microsoft, GitHub, sur la branche `claude/fast-auth-providers-82f1ca`) : quand elle arrivera, son retour devra revenir sur `/oauth/autoriser` avec la demande, comme la connexion par mot de passe (M05).
-11. **Conflits** : la #119 (fusionnée le 03/11) a changé `signInAction` et `auth-form.tsx` (double authentification, adresse non vérifiée) : M05 part de cette version. Le lot 1 de la CLI, si B3 = b, touche `api-tokens.ts`, `app.ts` et `api-contract.ts` : le second à fusionner se rebase. Ce plan ne touche aucun outil MCP : pas de conflit avec T25 du plan mémoire.
-12. **Les journaux** : le `client_id` (L5) contient le nom déclaré et les adresses de retour ; il n'est jamais journalisé, comme les jetons.
+10. **La connexion sociale** (Google, Microsoft, GitHub, sur la branche `claude/fast-auth-providers-82f1ca`) : quand elle arrivera, son retour devra revenir sur `/oauth/autoriser` et `/ordinateur/autoriser` avec la demande, comme la connexion par mot de passe (M05).
+11. **Conflits** : ce plan part de main après la fusion du lot 1 de la CLI, qui touche `api-tokens.ts`, `app.ts`, `api-contract.ts`, `computer-code.ts`, `connexion/page.tsx`, `actions.ts` et `auth-form.tsx`. La #119 (fusionnée le 03/11) a changé `signInAction` (double authentification, adresse non vérifiée) : le lot 1 de la CLI en est parti. Ce plan ne touche aucun outil MCP : pas de conflit avec T25 du plan mémoire.
+12. **Les journaux** : le `client_id` (L5) contient le nom déclaré et les adresses de retour ; l'adresse d'un document (L10) aussi peut être longue. Ni l'un ni l'autre n'est journalisé, comme les jetons.
+13. **Un document CIMD qui change** : Leon le relit à l'expiration de son cache (une heure au plus). Une adresse de retour retirée du document cesse de valoir dès la relecture ; les jetons déjà donnés restent, révocables dans Réglages.
+14. **ChatGPT peut déclarer `private_key_jwt`** dans son document CIMD. Leon ne propose que `none` (L3) ; la documentation d'OpenAI donne `none` comme possible. À vérifier à M07 que ChatGPT s'y range.
 
 ## Lot 1 : le serveur d'autorisation
 
 ### M01 · Les sortes de jetons
 
-**Fichiers :** `src/server/db/migrations/0047-jetons-assistants.sql` (nouveau ; le prochain numéro libre le jour de la tâche) et son test `.db.test.ts`, `src/server/db/schema/api-tokens.ts`, `src/server/auth/api-tokens.ts` (`verifyApiToken`, `listApiTokens`, `createGrant`, `refreshGrant`), `src/server/api/require-api-token.ts` (F9), `src/server/auth/api-tokens.db.test.ts`, `src/server/api/require-api-token.db.test.ts`.
+**Fichiers :** `src/server/db/migrations/0047-jetons-assistants.sql` (nouveau ; le prochain numéro libre le jour de la tâche) et son test `.db.test.ts`, `src/server/db/schema/api-tokens.ts`, `src/server/auth/api-tokens.ts` (`verifyApiToken`, `listApiTokens`, `registerApiToken`, `createGrant`, `refreshGrant`), `src/server/api/require-api-token.ts` (F9), `src/server/auth/api-tokens.db.test.ts`, `src/server/api/require-api-token.db.test.ts`.
 
 **Fait quand :**
-- la migration applique L9 ; les lignes existantes valent `manuel` ;
+- la migration applique L9 ; les lignes existantes valent `manuel`, sauf celles du lot 1 de la CLI (nom en « Ordinateur : … »), qui passent à `ordinateur` ;
+- `registerApiToken` (S01 de la CLI) écrit `kind = 'ordinateur'` ;
 - `verifyApiToken` refuse un jeton dont `expires_at` est passé, garde toutes ses autres conditions, et rend aussi le `kind` ;
 - `requireApiToken` refuse un jeton `assistant` (401, même réponse qu'un jeton inconnu), sauf monté avec l'option qui l'accepte, que seul `/api/mcp` passe (F9) ;
 - `listApiTokens` rend aussi `kind`, `clientName` et `clientHost` ;
-- `createGrant(ctx, { grantId, kind, clientRef, clientName, clientHost, name })` insère la ligne d'un branchement (L8) et rend ses jetons en clair, une seule fois. Pour `assistant` : accès et renouvellement ; pour `ordinateur` : un jeton sans expiration. Si `grant_id` existe déjà (code servi deux fois), il révoque la ligne existante et rend `null`, sans lever ;
+- `createGrant(ctx, { grantId, clientRef, clientName, clientHost, name })` insère la ligne d'un assistant branché (L8, `kind = 'assistant'`) et rend son jeton d'accès et son jeton de renouvellement en clair, une seule fois. Si `grant_id` existe déjà (code servi deux fois), il révoque la ligne existante et rend `null`, sans lever ;
 - `refreshGrant(refreshToken, clientRef)` change les deux empreintes et les deux expirations en une seule requête (`update … where refresh_hash = … returning`), à condition que la ligne ne soit pas révoquée, que le renouvellement n'ait pas expiré, que `client_ref` soit le même et que l'adhésion soit en cours (`currentMembership`). Sinon `null`.
 
-**Tests :** un jeton `assistant` est refusé par `/api/v1/me`, `/api/v1/ingest` et `/api/v1/briefing`, et accepté par `/api/mcp` ; un accès expiré est refusé par `verifyApiToken` ; après un renouvellement, l'ancien accès et l'ancien renouvellement sont refusés, les nouveaux passent ; une ligne révoquée ne se renouvelle plus ; un membre retiré ne se renouvelle plus ; un renouvellement présenté avec un autre `client_id`, même du même hôte, rend `null` ; un `grant_id` servi deux fois révoque la ligne et rend `null` ; `createApiToken` donne toujours un `manuel` sans expiration ; aucun jeton en clair en base.
+**Tests :** un jeton `assistant` est refusé par `/api/v1/me`, `/api/v1/ingest` et `/api/v1/briefing`, et accepté par `/api/mcp` ; un accès expiré est refusé par `verifyApiToken` ; après un renouvellement, l'ancien accès et l'ancien renouvellement sont refusés, les nouveaux passent ; une ligne révoquée ne se renouvelle plus ; un membre retiré ne se renouvelle plus ; un renouvellement présenté avec un autre `client_id`, même du même hôte, rend `null` ; un `grant_id` servi deux fois révoque la ligne et rend `null` ; `createApiToken` donne toujours un `manuel` et `registerApiToken` un `ordinateur`, sans expiration, qui ouvrent `/api/v1/*` comme avant ; aucun jeton en clair en base.
 
 ### M02 · Les signatures
 
-**Fichiers :** `src/server/auth/signed.ts` (nouveau : `signPayload`, `verifyPayload`), `src/server/auth/signed.test.ts` (nouveau).
+**Fichiers :** `src/server/auth/computer-code.ts` (lot 1 de la CLI : `signPayload`, `verifyPayload` en plus), `src/server/auth/computer-code.test.ts`.
 
-**Fait quand :** L7 et L5 passent par ces deux fonctions. `signPayload(purpose, payload)` rend `<charge>.<signature>` en base64url ; la clé est HKDF-SHA256(`BETTER_AUTH_SECRET`, sel vide, info `leon:<purpose>:v1`, 32 octets). `verifyPayload(purpose, value, now)` vérifie en temps constant, puis l'expiration (`x`) si la charge en a une, et rend la charge ou `null`. Avec B3 = a, ce module remplace `computer-code.ts` (S02 du plan CLI), qui n'est jamais écrit.
+**Fait quand :** la signature de `computer-code.ts` devient générale. `signPayload(purpose, payload)` rend `<charge>.<signature>` en base64url, avec la clé HKDF-SHA256(`BETTER_AUTH_SECRET`, sel vide, info `leon:<purpose>:v1`, 32 octets) ; `verifyPayload(purpose, value, now)` vérifie en temps constant, puis l'expiration (`x`) si la charge en a une, et rend la charge ou `null`. `signComputerCode` et `verifyComputerCode` deviennent leurs cas `purpose = 'ordinateur'` : la clé `leon:ordinateur:v1` ne change pas, ni leur contrat (K4 du plan CLI). L5 (`oauth-client`) et L7 (`oauth-code`) passent par ces deux fonctions.
 
-**Tests :** aller-retour ; un octet changé : `null` ; expiré d'une seconde : `null` ; un `client_id` présenté comme code (autre `purpose`) : `null` ; une clé dérivée d'un autre secret : `null`.
+**Tests :** ceux de la CLI restent verts sans changement ; aller-retour ; un octet changé : `null` ; expiré d'une seconde : `null` ; un `client_id` présenté comme code, ou un code d'ordinateur présenté comme code OAuth (autre `purpose`) : `null` ; une clé dérivée d'un autre secret : `null`.
 
 ### M03 · Les métadonnées, et le 401 du MCP
 
@@ -240,9 +251,9 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 
 ### M04 · L'inscription des clients
 
-**Fichiers :** `src/server/oauth/clients.ts` (nouveau : L11, `registerClient`, `readClientId`, `redirectAllowed`), `src/server/api/oauth-routes.ts` (nouveau : la route `/oauth/clients`), `src/server/api/app.ts` (monter `oauthRoutes` sous `/oauth`), `src/server/auth/rate-limit.ts` (deux entrées dans `AUTH_LIMITS`), `src/capture/api-contract.ts` (`API_PATHS.oauthClients`), `src/server/oauth/clients.test.ts`, `src/server/api/oauth-routes.db.test.ts` (nouveaux).
+**Fichiers :** `src/server/oauth/clients.ts` (nouveau : L11, `registerClient`, `readClientId`, `redirectAllowed`), `src/server/oauth/client-document.ts` (nouveau : la lecture de L10 et son cache), `src/server/api/oauth-routes.ts` (nouveau : la route `/oauth/clients`), `src/server/api/app.ts` (monter `oauthRoutes` sous `/oauth`), `src/server/auth/rate-limit.ts` (deux entrées dans `AUTH_LIMITS`), `src/capture/api-contract.ts` (`API_PATHS.oauthClients`), `src/test/contracts/route-guards.db.test.ts` (lot 1 de la CLI : les routes OAuth y entrent), `src/server/oauth/clients.test.ts`, `src/server/oauth/client-document.test.ts`, `src/server/api/oauth-routes.db.test.ts` (nouveaux).
 
-**Fait quand :** L4, L5 et L11. `readClientId(value)` rend `{ name, redirectUris, host }` pour un `client_id` signé, `{ leonCli: true }` pour `leon-cli` (si B3 = a), sinon `null`. `redirectAllowed(clientUris, uri)` applique L6 (exact, ou bouclage au port près). Les routes OAuth ne sont pas montées derrière `requireApiToken` ni derrière la session.
+**Fait quand :** L4, L5, L10 et L11. `readClientId(value)` rend `{ name, redirectUris, host, ref }` pour un `client_id` signé (L5) ou pour l'adresse d'un document (L10), sinon `null`. `redirectAllowed(clientUris, uri)` applique L6 (exact, ou bouclage au port près). Les routes OAuth ne sont pas montées derrière `requireApiToken` ni derrière la session.
 
 **Tests :**
 - inscription de Claude (`https://claude.ai/api/mcp/auth_callback`), de ChatGPT (`https://chatgpt.com/connector/oauth/abc123`), de Claude Code (`http://localhost:3118/callback`), de Cursor (ses deux adresses) : 201, et `readClientId` relit ce qui a été inscrit ;
@@ -251,19 +262,20 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 - `token_endpoint_auth_method: "client_secret_basic"` demandé : 201 avec `none` ;
 - un `client_id` dont un caractère a changé : `null` ;
 - le nom nettoyé : caractères de contrôle retirés, coupé à 80, vide devient « MCP client » ;
-- la limite par adresse IP répond 429 au-delà de son plafond.
+- la limite par adresse IP répond 429 au-delà de son plafond ;
+- CIMD, avec un faux `fetch` : le document de ChatGPT (`https://chatgpt.com/oauth/client.json`) est lu et relu depuis le cache sans nouvel appel ; un `client_id` sur un hôte hors de L11 (`https://evil.example/client.json`, `https://127.0.0.1/c.json`) n'est jamais lu ; une redirection, un document de plus de 16 Ko, une réponse au-delà de 5 s, un JSON invalide, un `client_id` différent de l'adresse, une adresse de retour hors de L11 dans le document : `null`.
 
 ### M05 · La page d'autorisation
 
-**Fichiers :** `src/server/oauth/authorize.ts` (nouveau : `parseAuthorizeRequest`, pur), `src/app/(auth)/oauth/autoriser/page.tsx`, `src/app/(auth)/oauth/autoriser/actions.ts` (nouveaux), `src/app/(auth)/actions.ts` (`signInAction` : le retour vers `/oauth/autoriser`), `src/components/verre/auth/auth-form.tsx` (le champ caché), `messages/en.json`, `messages/fr.json`, leurs tests.
+**Fichiers :** `src/server/oauth/authorize.ts` (nouveau : `parseAuthorizeRequest`, `oauthAuthorizePath`), `src/app/(auth)/oauth/autoriser/page.tsx`, `src/app/(auth)/oauth/autoriser/actions.ts` (nouveaux), `src/server/auth/computer-authorize.ts` (lot 1 de la CLI : `pathAfterSignIn` reconnaît aussi la demande OAuth), `src/app/(auth)/connexion/page.tsx` (le `returnTo` d'une demande OAuth), `messages/en.json`, `messages/fr.json`, `src/test/contracts/page-links.test.ts`, leurs tests.
 
 **Fait quand :** L6. En particulier :
 - `parseAuthorizeRequest(params)` rend `{ erreur: 'client' | 'retour' }` (page d'erreur, aucune redirection), `{ erreur: <code OAuth>, retour }` (redirection avec `error` et `state`), ou la demande validée ;
-- sans session, la page montre le formulaire de connexion sur place (`AuthForm`, comme `/invitation/[token]`), qui porte la demande dans un champ caché de 4 Ko au plus ; l'action de connexion renvoie alors vers `/oauth/autoriser` avec cette demande, et la page la revalide entièrement. Le chemin de retour est fixe, jamais tiré de l'adresse ni du formulaire. Le second écran de la double authentification revient lui aussi sur la demande ; une adresse non vérifiée affiche le message de la #119 (`verifyFirst`), sans rien autoriser. Pas d'inscription sur place : un lien vers `/inscription`, sans retour ;
+- sans session, la page renvoie vers `/connexion` avec la demande, comme `/ordinateur/autoriser`. `/connexion` reconnaît une demande OAuth valide et la passe à `AuthForm` en `returnTo` ; `pathAfterSignIn` la revalide entièrement, à l'aller comme au retour, double authentification comprise (`verifyTwoFactorAction`). Le chemin rendu est rebâti à partir de la demande validée, jamais copié. Une adresse non vérifiée affiche le message de la #119 (`verifyFirst`), sans rien autoriser ;
 - « Autoriser » et « Refuser » sont des actions serveur (POST, même origine) qui revalident tout, relisent la session et l'espace (`getUserContext`), puis signent L7 ou rendent `access_denied` ;
-- la page dit le nom déclaré du client **et** l'hôte de retour, qui seul est vérifié.
+- la page dit le nom du client **et** l'hôte de retour.
 
-**Tests :** sans session, connexion sur place avec et sans double authentification : retour sur la même demande ; `client_id` inconnu ou mal signé : page d'erreur, aucune redirection ; adresse de retour absente de l'inscription : page d'erreur ; `response_type` autre que `code`, `code_challenge_method` autre que `S256`, `code_challenge` absent, `resource` étranger, `scope` inconnu : redirection avec l'erreur et le `state` ; le code produit se vérifie (M02) et porte l'empreinte PKCE reçue ; un `redirect_uri` de bouclage avec un autre port est accepté, un autre hôte non ; les textes en anglais et en français.
+**Tests :** sans session, connexion avec et sans double authentification : retour sur la même demande ; un `retour` trafiqué (autre chemin, `client_id` changé) mène à l'accueil ; `client_id` inconnu ou mal signé : page d'erreur, aucune redirection ; adresse de retour absente de l'inscription : page d'erreur ; `response_type` autre que `code`, `code_challenge_method` autre que `S256`, `code_challenge` absent, `resource` étranger, `scope` inconnu : redirection avec l'erreur et le `state` ; le code produit se vérifie (M02) et porte l'empreinte PKCE reçue ; un `redirect_uri` de bouclage avec un autre port est accepté, un autre hôte non ; les textes en anglais et en français.
 
 ### M06 · La route des jetons
 
@@ -296,31 +308,11 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 
 **Fait quand :**
 - une section « Assistants connectés » (ancre `#assistants`) remplace « Brancher Claude Code » : l'adresse `/api/mcp` avec son bouton Copier, puis une ligne par client de L11 (« claude.ai et Claude Desktop : Réglages › Connecteurs › Ajouter un connecteur personnalisé, collez l'adresse », etc.) ;
-- dessous, la liste des jetons `assistant` non révoqués : nom déclaré, hôte de retour, création, dernière utilisation, « Révoquer » (l'action existante) ;
+- dessous, la liste des jetons `assistant` non révoqués : nom du client, hôte de retour, création, dernière utilisation, « Révoquer » (l'action existante) ;
 - la liste des jetons d'accès ne montre plus que les `manuel` ; avec le plan CLI, « Ordinateurs connectés » (S14) lit `kind = 'ordinateur'` au lieu du préfixe du nom ;
 - aucune requête nouvelle : la page filtre ce que `listApiTokens` rend déjà.
 
 **Tests :** un jeton `assistant` est dans la section, ni dans les jetons d'accès ni dans les ordinateurs ; révoqué, il disparaît et `/api/mcp` le refuse ; la commande à jeton de remplacement n'apparaît plus ; les textes en anglais et en français.
-
-### M09 · L'extension ne capte pas un échange où l'assistant a appelé Leon (si B6 = a)
-
-**Fichiers :** `extension/lib/parsers/claude-ai.ts`, `extension/lib/parsers/chatgpt.ts`, leurs tests et fixtures.
-
-**Fait quand :** d'abord, sur des flux réels enregistrés à M07, on vérifie que l'appel d'un outil MCP y porte le nom du serveur (`leon`) ou son adresse. Si oui : un tour dont la réponse suit un appel à un outil de Leon n'est pas envoyé (ni la question, ni la réponse), et un compteur le note. Si non : la tâche s'arrête, la page « Autoriser » le dit (B6 = b), et la PR le note.
-
-**Tests :** une fixture de chaque site avec un appel à Leon : rien n'est envoyé ; un appel à un autre outil : le tour part comme aujourd'hui ; un tour sans outil : inchangé.
-
-## Ce que B3 = a change au plan CLI
-
-À reporter dans `docs/plans/2026-11-03-cli-sans-clone.md` une fois B3 tranché, dans la même PR que ce plan s'il est fusionné avec B3 = a.
-
-- **S01 tombe.** Le jeton n'est plus tiré par la CLI : `createGrant` (M01) le crée.
-- **S02 tombe.** `signed.ts` (M02) le remplace ; K4 est remplacé par L7.
-- **S03 devient M05.** La page `/oauth/autoriser` porte le texte de S03 pour `leon-cli` ; K3 est remplacé par L6. `/ordinateur/connecte` reste : c'est là que la CLI renvoie le navigateur.
-- **S04 se réduit à K6** (`DELETE /api/v1/jeton`). `POST /api/v1/ordinateurs` (K5) est remplacé par L8.
-- **S05 change de protocole, pas de parcours.** `leon login` tire un `code_verifier` (32 octets en base64url) et `state`, écoute sur `127.0.0.1` port 0, ouvre `/oauth/autoriser?response_type=code&client_id=leon-cli&redirect_uri=http://127.0.0.1:<port>/retour&state=…&code_challenge=…&code_challenge_method=S256&scope=leon`, vérifie `state` et `iss` au retour, échange le code par L8 avec `nom`, puis écrit K2. Les autres points de S05 (délai de 5 minutes, repli `--with-token`, `logout`, aucun secret dans une sortie) ne changent pas.
-- **La règle « Le jeton ne se montre jamais »** devient : « Le jeton n'apparaît que dans le corps de la réponse de L8, dans l'en-tête `Authorization` des requêtes de la CLI et dans `~/.leon/connexion.json` (0600). »
-- **E3** reste (un clic, retour vers `127.0.0.1`, repli `--with-token`) ; seule sa mise en œuvre change. **E4** et **E5** ne changent pas. **S14** lit `kind = 'ordinateur'` au lieu du préfixe du nom ; son raccourci tombe.
 
 ## Bout en bout (avant la PR du lot 2)
 
@@ -332,13 +324,14 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 6. Un égal d'Amos branche son propre Claude : il ne trouve aucune des conversations IA d'Amos ; un admin les trouve (avec la clé de hiérarchie, quand elle sera là).
 7. Le jeton de Claude, présenté à `/api/v1/ingest`, reçoit 401.
 
-## Questions ouvertes
+## Questions tranchées
 
-**Pour Amos (avant le code)**, détaillées à la section 11 de l'étude ; la première réponse est la recommandation :
-- B1. #56 : la fermer maintenant, à la fusion du lot 1, ou la garder ?
-- B2. Le serveur d'autorisation écrit dans Leon, sur `api_tokens` (F1), plutôt que Better Auth ou un fournisseur externe ?
-- B3. a. La connexion de la CLI devient un client de ce serveur, et ce plan passe avant le lot 1 de la CLI ; b. elle reste comme le plan CLI la décrit ?
-- B4. Les jetons des assistants : une heure renouvelée (F3), ou sans expiration ?
-- B5. Les adresses de retour : la liste fermée de L11 (F6), ou tout hôte avec un avertissement ?
-- B6. a. L'extension ne capte pas un échange où l'assistant a appelé Leon (M09) ; b. comme aujourd'hui, en le disant sur la page ; c. comme aujourd'hui ?
-- B7. L'inscription par DCR seule en v1 (F5), ou DCR et CIMD ?
+Par Amos, le 03/11 ; il porte ce chantier seul. Pour les choix techniques, sa consigne : « le meilleur, le plus propre, le plus carré ».
+
+- B1. #56 fermée, avec un renvoi vers l'étude ; sa branche reste.
+- B2. Le serveur d'autorisation est écrit dans Leon, sur `api_tokens` (F1).
+- B3. La connexion de la CLI garde son écran, déjà codé (lot 1 de la CLI) ; ce plan part de lui (F10). Le chantier CLI (crochets, installation, mises à jour) ne s'arrête pas ; seul un chat Leon au terminal est abandonné.
+- B4. Une heure pour le jeton d'un assistant, renouvelé (F3).
+- B5. La liste fermée d'adresses de retour de L11 (F6).
+- B6. L'extension capte comme aujourd'hui (F12).
+- B7. DCR et CIMD (F5, L10).

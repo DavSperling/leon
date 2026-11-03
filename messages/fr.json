@@ -600,7 +600,18 @@
     "tabProfile": "Profil",
     "tabSecurity": "Sécurité",
     "tabTeam": "Équipe",
-    "tabIntegrations": "Intégrations"
+    "tabIntegrations": "Intégrations",
+    "depotsTitle": "Dépôts d’équipe",
+    "depotsDescription": "Leon ne relève sur GitHub que les dépôts cochés, et seuls ceux-là sont visibles de toute l’équipe. La liste vient de vos propres connexions GitHub.",
+    "depotsNone": "Aucun dépôt d’équipe : GitHub n’est plus relevé, et ce qui l’a été est privé à qui l’a branché.",
+    "depotsList": "Dépôts proposés",
+    "depotsEmpty": "Vos connexions GitHub n’ont encore lu aucun dépôt.",
+    "depotAdd": "Ajouter un dépôt",
+    "depotPlaceholder": "propriétaire/dépôt",
+    "depotAddSubmit": "Ajouter",
+    "depotInvalid": "Écrivez le dépôt sous la forme propriétaire/dépôt.",
+    "depotRefused": "Seul un propriétaire ou un administrateur choisit les dépôts d’équipe.",
+    "depotFailed": "Impossible d’enregistrer. Réessayez."
   },
   "security": {
     "profileTitle": "Profil",

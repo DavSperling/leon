@@ -600,7 +600,18 @@
     "tabProfile": "Profile",
     "tabSecurity": "Security",
     "tabTeam": "Team",
-    "tabIntegrations": "Integrations"
+    "tabIntegrations": "Integrations",
+    "depotsTitle": "Team repositories",
+    "depotsDescription": "Leon only syncs the checked repositories from GitHub, and only those are visible to the whole team. The list comes from your own GitHub connections.",
+    "depotsNone": "No team repository: GitHub is no longer synced, and what was synced is private to whoever connected it.",
+    "depotsList": "Suggested repositories",
+    "depotsEmpty": "Your GitHub connections haven’t read any repository yet.",
+    "depotAdd": "Add a repository",
+    "depotPlaceholder": "owner/repository",
+    "depotAddSubmit": "Add",
+    "depotInvalid": "Write the repository as owner/repository.",
+    "depotRefused": "Only an owner or an admin can choose team repositories.",
+    "depotFailed": "Couldn’t save. Try again."
   },
   "security": {
     "profileTitle": "Profile",

@@ -7,6 +7,7 @@ import {
   DeleteAccountSection,
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
+import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
@@ -23,6 +24,7 @@ import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
+import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
 import { env } from '@/server/env';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,15 +35,17 @@ export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership, about, deletion] = await Promise.all([
-    listApiTokens(ctx),
-    listMembers(ctx),
-    canInvite(ctx),
-    getSession(),
-    getMembership(ctx),
-    readAbout(ctx.userId),
-    deletionInfo(ctx),
-  ]);
+  const [allTokens, members, mayInvite, session, membership, about, deletion, depots] =
+    await Promise.all([
+      listApiTokens(ctx),
+      listMembers(ctx),
+      canInvite(ctx),
+      getSession(),
+      getMembership(ctx),
+      readAbout(ctx.userId),
+      deletionInfo(ctx),
+      listDepotsEquipe(ctx),
+    ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const tokens = allTokens
     .filter((token) => !token.revokedAt)
@@ -90,6 +94,7 @@ export default async function SettingsPage() {
           equipe: (
             <>
               <MembersSection members={members} canInvite={mayInvite} />
+              {mayInvite && <DepotsEquipeSection depots={depots} />}
               {deletion.isOwner && (
                 <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
               )}

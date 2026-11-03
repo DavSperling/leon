@@ -25,6 +25,7 @@ import {
 } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
+import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
 import { env } from '@/server/env';
@@ -109,6 +110,25 @@ export async function setMemberPlacementAction(
   if (!(await setMemberPlacement(ctx, memberId, parsed.data))) {
     return { errors: { form: 'permission' } };
   }
+  revalidatePath('/reglages');
+  return { ok: true };
+}
+
+const DepotEquipeInputSchema = z.object({ depot: z.string(), coche: z.boolean() });
+const DEPOT_ERRORS = { invalide: 'depotInvalid', refuse: 'depotRefused' } as const;
+
+// Cocher ou décocher un dépôt d'équipe, ou en saisir un (décision D) : le module valide le dépôt, et refuse qui n'est ni
+// propriétaire ni administrateur.
+export async function setDepotEquipeAction(
+  depot: string,
+  coche: boolean,
+): Promise<{ ok: true } | { error: string }> {
+  const ctx = await requireUserContext();
+  const t = await getTranslations('settings');
+  const parsed = DepotEquipeInputSchema.safeParse({ depot, coche });
+  if (!parsed.success) return { error: t('depotInvalid') };
+  const result = await setDepotEquipe(ctx, parsed.data.depot, parsed.data.coche);
+  if (result !== 'ok') return { error: t(DEPOT_ERRORS[result]) };
   revalidatePath('/reglages');
   return { ok: true };
 }

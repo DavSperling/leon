@@ -138,6 +138,14 @@ export type OAuthReturnPath = (typeof OAUTH_RETURN_PATHS)[number];
 export const isOAuthReturnPath = (value: unknown): value is OAuthReturnPath =>
   OAUTH_RETURN_PATHS.some((path) => path === value);
 
+// GitHub rend à la « Setup URL » (Connexions) le `state` de l'adresse d'installation de l'appli : la page d'où
+// elle a été lancée, à rejoindre avec son `?branche=`. null : rester sur Connexions.
+export function setupReturn(params: Record<string, string | string[] | undefined>): string | null {
+  const { state, branche } = params;
+  if (!isOAuthReturnPath(state) || state === '/connexions') return null;
+  return typeof branche === 'string' ? `${state}?${new URLSearchParams({ branche })}` : state;
+}
+
 // Les codes que le retour de l'éditeur met dans `?erreur=` (voir oauth-routes.ts).
 export const OAUTH_RETURN_CODES = [
   'annule',

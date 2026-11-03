@@ -248,6 +248,17 @@ describe('github : après le branchement', () => {
     expect(calls).toEqual([]);
   });
 
+  it('met la page de départ dans `state`, que GitHub rend à la « Setup URL »', async () => {
+    vi.stubEnv('LEON_OAUTH_GITHUB_APP', 'leon-memory');
+    const { http } = apiHttp([]);
+
+    const next = await githubOAuth.nextStep?.(config, http, '/bienvenue/outils');
+
+    expect(next).toBe(
+      'https://github.com/apps/leon-memory/installations/new?state=%2Fbienvenue%2Foutils',
+    );
+  });
+
   it('revient à Leon sans rien appeler quand le nom de l’appli n’est pas réglé, ou des dépôts sont choisis', async () => {
     vi.stubEnv('LEON_OAUTH_GITHUB_APP', '');
     const { http, calls } = apiHttp([]);

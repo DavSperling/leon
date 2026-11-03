@@ -66,11 +66,13 @@ export const outlookOAuth: OAuthSpec = {
   adminConsent: {
     isConsentError: ({ error, description }) =>
       error === 'consent_required' || ADMIN_CONSENT_CODES.test(description ?? ''),
-    url: (clientId, redirectUri) =>
+    // Microsoft rend `state` au retour, accord donné ou refusé.
+    url: (clientId, redirectUri, returnTo) =>
       `https://login.microsoftonline.com/organizations/v2.0/adminconsent?${new URLSearchParams({
         client_id: clientId,
         scope: 'https://graph.microsoft.com/.default',
         redirect_uri: redirectUri,
+        ...(returnTo && { state: returnTo }),
       }).toString()}`,
   },
 

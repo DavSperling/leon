@@ -17,7 +17,7 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { PreviewCard } from './preview';
 import { OnboardingSteps } from './steps';
-import type { ToolState } from './tools-model';
+import { defaultChecked, savedChecked, type ToolState } from './tools-model';
 
 export type ToolsStepProps = {
   states: ToolState[];
@@ -150,14 +150,7 @@ export function ToolsStep({
   const tm = useTranslations('onboarding.teammates');
   const tf = useTranslations('connections.family');
   const router = useRouter();
-  const [checked, setChecked] = useState<ReadonlySet<ProviderId>>(
-    () =>
-      new Set(
-        states
-          .filter((s) => s.recommended && s.status === 'free' && s.item.available)
-          .map((s) => s.item.id),
-      ),
-  );
+  const [checked, setChecked] = useState(() => defaultChecked(states));
   const [shownId, setShownId] = useState<ProviderId | null>(null);
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState(0);
@@ -168,12 +161,26 @@ export function ToolsStep({
   const listBox = useRef<HTMLDivElement>(null);
   const focusPending = useRef(false);
 
-  const toggle = (id: ProviderId) =>
-    setChecked((set) => {
-      const next = new Set(set);
-      if (!next.delete(id)) next.add(id);
-      return next;
-    });
+  // Les outils cochés restent dans l'onglet : un branchement OAuth quitte la page, qui revient rechargée. Lus après
+  // l'hydratation, pour que le serveur et le client rendent la même chose.
+  const storageKey = `leon.bienvenue.outils.${viewerId}`;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: à l'arrivée seulement ; ensuite, `toggle` écrit
+  useEffect(() => {
+    let raw: string | null = null;
+    try {
+      raw = sessionStorage.getItem(storageKey);
+    } catch {}
+    const saved = savedChecked(states, raw);
+    if (saved) setChecked(saved);
+  }, []);
+  const toggle = (id: ProviderId) => {
+    const next = new Set(checked);
+    if (!next.delete(id)) next.add(id);
+    setChecked(next);
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify([...next]));
+    } catch {}
+  };
   const connect = (id: ProviderId) => {
     const active = document.activeElement;
     opener.current = active instanceof HTMLElement && active !== document.body ? active : null;

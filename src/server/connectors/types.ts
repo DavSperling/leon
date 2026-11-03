@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import type { AuthorSide, ItemNature, ProviderId } from '@/capture/turn';
+import type { OAuthReturnPath } from '@/lib/connection-form';
 import type { ConnectorHttp } from './http';
 import type { OAuthAppKey } from './oauth-env';
 
@@ -68,11 +69,17 @@ export type OAuthSpec = {
   // Refus faute d'accord de l'administrateur (Microsoft), et lien pour le donner.
   adminConsent?: {
     isConsentError(input: { error: string; description: string | null }): boolean;
-    url(clientId: string, redirectUri: string): string;
+    // `returnTo` : la page de Leon où revenir, rendue par l'éditeur dans `state`.
+    url(clientId: string, redirectUri: string, returnTo?: OAuthReturnPath): string;
   };
   // Après le branchement : une page de l'outil où envoyer l'utilisateur au lieu de revenir à Leon
-  // (l'installation de l'appli GitHub quand elle n'ouvre encore aucun dépôt), ou null.
-  nextStep?(config: Record<string, unknown>, http: ConnectorHttp): Promise<string | null>;
+  // (l'installation de l'appli GitHub quand elle n'ouvre encore aucun dépôt), ou null. `returnTo` : la page de
+  // départ, si ce n'est pas Connexions.
+  nextStep?(
+    config: Record<string, unknown>,
+    http: ConnectorHttp,
+    returnTo?: OAuthReturnPath,
+  ): Promise<string | null>;
   // Champs propres à l'outil (cloudId, site, compte…), à partir des jetons et des champs saisis avant le clic.
   toConfig(
     tokens: OAuthTokens,

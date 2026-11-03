@@ -396,7 +396,7 @@ async function connect(
     });
   }
   // Branchée : une étape chez l'outil qui échoue ne la défait pas, on revient simplement à Leon.
-  return (await spec.nextStep?.(config, http).catch(() => null)) ?? null;
+  return (await spec.nextStep?.(config, http, pending.returnTo).catch(() => null)) ?? null;
 }
 
 // Le compte branché chez Pipedream, vérifié auprès de l'outil, puis la connexion créée (ou reconnectée,
@@ -505,7 +505,12 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
   const tool: Record<string, string> = provider ? { outil: provider } : {};
   const params: Record<string, string> =
     typeof outcome === 'object' ? { branche: provider ?? '' } : { erreur: outcome, ...tool };
-  return c.redirect(pageUrl(pending?.returnTo ?? '/connexions', params), 302);
+  // Le retour du lien d'accord de l'administrateur n'a pas de cookie : sa page de départ est dans `state`.
+  const landing =
+    c.req.query('admin_consent') === undefined
+      ? pending?.returnTo
+      : returnPage({ retour: c.req.query('state') ?? '' });
+  return c.redirect(pageUrl(landing ?? '/connexions', params), 302);
 }
 
 // Le retour de Pipedream : le cookie, la même session et le même `state`, puis le compte branché.

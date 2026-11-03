@@ -13,6 +13,7 @@ import {
   otherOwnersNote,
   panelMode,
   resultMessage,
+  setupReturn,
   statusLine,
 } from './connection-form';
 
@@ -326,5 +327,28 @@ describe('oauthNotice', () => {
 
   it('préfère l’erreur à la réussite quand l’adresse porte les deux', () => {
     expect(oauthNotice({ branche: 'linear', erreur: 'expire' })?.tone).toBe('error');
+  });
+});
+
+describe('setupReturn', () => {
+  it('renvoie l’installation GitHub lancée depuis l’étape Vos outils sur l’étape, avec son avis', () => {
+    expect(
+      setupReturn({
+        branche: 'github',
+        installation_id: '42',
+        setup_action: 'install',
+        state: '/bienvenue/outils',
+      }),
+    ).toBe('/bienvenue/outils?branche=github');
+    expect(setupReturn({ state: '/bienvenue/outils' })).toBe('/bienvenue/outils');
+  });
+
+  it.each([
+    ['sans state', { branche: 'github' }],
+    ['depuis Connexions', { branche: 'github', state: '/connexions' }],
+    ['une adresse hors de la liste', { branche: 'github', state: 'https://ailleurs' }],
+    ['un state en double', { branche: 'github', state: ['/bienvenue/outils', '/x'] }],
+  ])('reste sur Connexions %s', (_, params) => {
+    expect(setupReturn(params)).toBeNull();
   });
 });

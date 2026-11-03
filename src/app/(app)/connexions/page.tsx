@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Connexions } from '@/components/verre/connexions';
-import { oauthNotice } from '@/lib/connection-form';
+import { oauthNotice, setupReturn } from '@/lib/connection-form';
 import { DEPARTMENTS, isDepartment } from '@/lib/onboarding';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
@@ -20,6 +21,9 @@ export default async function ConnectionsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const ctx = await requireUserContext();
+  const params = await searchParams;
+  const back = setupReturn(params);
+  if (back) redirect(back);
   const [connections, channels, member] = await Promise.all([
     listConnections(ctx),
     channelHealth(ctx),
@@ -29,7 +33,7 @@ export default async function ConnectionsPage({
   const catalog = listCatalog(locale);
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
-  const notice = oauthNotice(await searchParams, locale);
+  const notice = oauthNotice(params, locale);
   const consentUrl = catalog.find((item) => item.id === notice?.tool)?.adminConsentUrl ?? null;
   const now = new Date();
   // Les outils du service de la personne ; vide tant qu'elle n'a pas dit lequel.

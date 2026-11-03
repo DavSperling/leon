@@ -167,7 +167,7 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - Ils sont rangés comme tours de la session, sous son ACL, avec deux nouveaux rôles, `raisonnement` et `sous_agent` (migration du check de `turns.role`), que la recherche peut filtrer.
   - Masquage : `maskSecrets` sur le poste puis sur le serveur. Chaque bloc est coupé à 20 000 caractères, comme les messages.
   - Accord : l'usage `coulisses` (C7 révisé).
-  - Les constats de la relecture du 03/11 sur ce lot et sur le niveau 3 sont repris dans l'annexe de relecture (voir « Questions ») ; ces deux parties se détaillent quand on y arrive, avec David.
+  - Ce lot et le niveau 3 (D28) se détaillent quand on y arrive, avec David, à partir des constats de la relecture du 03/11 (A10, A11).
 - **D30. L'accord, par usage.** Les versions cumulatives liaient des permissions sans rapport : pour avoir le rappel, il aurait fallu accepter le résumé par le fournisseur du modèle. On les remplace par des usages (C7 révisé).
   - La version 2 (les gestes) reste la base, et la version 0 le retrait.
   - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage.
@@ -458,7 +458,7 @@ Contrat : `api-contract.db.test.ts`.
 
 ## Lot 14 : la capture complète
 
-### T47 · L'essai : la forme du raisonnement et des sous-agents
+### T50 · L'essai : la forme du raisonnement et des sous-agents (porte)
 
 **Fait quand :** sur une session de test créée pour l'occasion (un dépôt jetable, une tâche qui lance un sous-agent), on relève dans le transcript :
 - si les blocs de raisonnement portent leur texte, selon le modèle et la version de Claude Code ;
@@ -467,18 +467,18 @@ Contrat : `api-contract.db.test.ts`.
 
 Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'est lue.
 
-### T48 · La CLI relève les coulisses
+### T52 · La CLI relève les coulisses (après T51 : le serveur avant la CLI)
 
-**Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (version 5).
+**Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
 
 **Fait quand :**
-- avec un accord de version 5, la CLI envoie C10 après les tours et les faits : le raisonnement, la consigne et le rapport de chaque sous-agent, masqués, 20 000 caractères par bloc, 256 Kio par envoi ;
+- avec l'usage `coulisses`, la CLI envoie C10 après les tours et les faits : le raisonnement, la consigne et le rapport de chaque sous-agent, masqués, 20 000 caractères par bloc, 256 Kio par envoi ;
 - les blocs injectés par Leon sont retirés (`stripLeonBlocks`) ;
-- sans la version 5, rien ne change.
+- sans l'usage `coulisses`, rien ne change.
 
-**Tests :** `session-backstage.test.ts` (faux secret masqué, coupe, sous-agent rattaché à son appel, bloc Leon retiré) ; `capture-session.test.ts` (version 4 : rien ; version 5 : envoi).
+**Tests :** `session-backstage.test.ts` (faux secret masqué, coupe, sous-agent rattaché à son appel, bloc Leon retiré) ; `capture-session.test.ts` (sans l'usage : rien ; avec : envoi).
 
-### T49 · Le serveur range les coulisses
+### T51 · Le serveur range les coulisses
 
 **Fichiers :** `src/capture/turn.ts` (`TURN_ROLES`), `src/server/db/migrations/NNNN-roles-coulisses.sql` (nouveau), `src/server/api/backstage-routes.ts` (nouveau), `src/server/api/app.ts`, `src/server/mcp/tools/search-tool.ts` (filtre `type` : raisonnement, sous-agent), `src/server/mcp/tools/render.ts`.
 
@@ -486,7 +486,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 - C10 est respecté ;
 - les blocs deviennent des tours de la session, sous son ACL, masqués de nouveau, indexés par le pipeline existant ;
 - l'envoi répété est idempotent ;
-- le point du matin et le bloc de démarrage n'en reprennent rien ; ils nourrissent le résumé (lot 6) et l'état du fil (T41).
+- le point du matin et le bloc de démarrage n'en reprennent rien ; ils ne nourrissent ni le résumé ni l'état du fil (D23) et se lisent à la demande.
 
 **Tests :** `backstage-routes.db.test.ts` :
 - 202, 400, 401, 413 ;
@@ -496,30 +496,44 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 
 ## Points de vigilance
 
-1. **Le coût.** Un appel de modèle par session close pour le résumé (lot 6), et un par fil touché pour son état (T41). La capture complète multiplie le volume indexé. Parades :
+1. **Le coût.** Un appel de modèle par session close pour le résumé (lot 6), et un par fil touché pour son état (étape `fil`). La capture complète multiplie le volume indexé. Parades :
    - claude-haiku-5-5 en effort low ;
-   - un appel par fil et par session nouvelle au plus ;
-   - des compteurs par organisation dans le tableau admin ;
-   - une mesure du volume par session (compteurs côté serveur) avant d'ouvrir la version 5 à d'autres qu'Amos.
+   - un appel par fil touché et par session nouvelle au plus ;
+   - l'étape `fil` à part, pour compter son coût dans le tableau admin existant ;
+   - une mesure du volume par session (compteurs côté serveur) avant d'ouvrir l'usage `coulisses` à d'autres qu'Amos.
 2. **L'injection durable.** Parades :
-   - D25 : seul le tiré porte du texte écrit par un modèle, et il est rendu comme des données ;
-   - titres déterministes ;
-   - `[consigne]` retirée ;
-   - la mention « venu de l'extérieur ».
+   - seules des clés sont poussées d'office (D25) ;
+   - titres réduits (D24) ;
+   - dans l'état, la provenance, les décisions vérifiées, ni récit externe ni coulisses (D23) ;
+   - des balises partout, retirées à la recapture.
+
+   Limite connue : la consigne du niveau 1 rend la lecture presque systématique.
 3. **Le périmé.** L'état d'un fil vieillit. Parades : des dates partout, l'état GitHub des PR lu à la lecture et non figé dans l'état, la mise à jour au démarrage.
-4. **Le délai.** La route de contexte et celle du rappel n'appellent ni modèle ni vecteur ; le rangement est en tâche de fond.
-5. **La vie privée.** Les fils restent privés à leur auteur en v1. Le message du rappel n'est ni stocké ni journalisé. Le raisonnement et les sous-agents demandent la version 5.
-6. **Les conflits** avec la PR #115 et la session sur les connexions des outils : ce plan ne touche ni à la connexion ni aux jetons (D27).
+4. **Le délai.** La route de contexte et celle du rappel n'appellent ni modèle ni vecteur. Le rappel est coupé à 1,5 s sur le poste. Le rangement est en tâche de fond.
+5. **La vie privée.**
+   - Les fils restent privés à leur auteur en v1.
+   - Le message du rappel n'est ni stocké ni journalisé.
+   - Chaque usage a son propre accord (D30).
+   - Les fils sont effacés à la suppression du compte.
+6. **La portée des lectures.** Un agent de code qui lit la mémoire privée de l'utilisateur et qui a une sortie réseau réunit les conditions d'une fuite. Parades :
+   - les lectures sont bornées au dépôt : `dossier`, `fil`, et `chercher` avec `depot` ;
+   - jamais une recherche dans toute la mémoire ;
+   - une portée « code » du jeton est à étudier avec le plan MCP distant (#121).
+7. **La coordination** avec #120 (`leon setup`, la connexion) et #121 (le MCP distant). Ce plan n'écrit aucun jeton et ne branche aucun connecteur.
 
 ## Questions
 
 Pour Amos :
-- A8. L'ordre : 7, 6, 12, 13, 14, puis 2, 3, 4, 5, 8, 9 et 11 ?
-- A9. Les décisions et leurs raisons dans le résumé et l'état des fils, lisibles par l'agent à la demande, mais jamais poussées d'office (D25) ?
-- A10. La capture complète : le raisonnement et les échanges des sous-agents, mais jamais les sorties brutes des outils (D29) ?
-- A11. Le niveau 3 décidé après la mesure du lot 11 (D28) ?
+- A8. L'ordre : 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11 ? Avancer les lots 12 à 14 laisserait ouverte la fuite que ferme le lot 2, et priverait les fils de l'état des PR, une dizaine de jours de plus.
+- A9. Les décisions vérifiées : gardées dans le résumé et l'état seulement si elles renvoient à un de tes messages, à une PR, à un commit, à un message ou à une réunion (D23) ?
+- A10. La capture complète (D29) : on la détaille quand on arrive au lot 14, avec David, à partir des constats de la relecture du 03/11 ?
+- A11. Le niveau 3 (D28) : construit en option, une fois la mesure du lot 11 faite ?
+- A12. Les fils effacés à la suppression du compte (D21), alors que les sessions sont gardées ?
+- A13. L'accord par usage (D30) : `lecture`, `rappel`, `resume`, `coulisses`, chacun accepté à part ?
 
 Pour David :
-- QD7. Le kind `fil` comme source (D21), plutôt qu'une table à part ?
-- QD8. Le coût du lot 12 en plus du lot 6 : un appel de modèle par fil touché ?
-- QD9. Les rôles de tour `raisonnement` et `sous_agent` (D29) : leur place dans le point du matin et dans la recherche par défaut ?
+- QD7. Le kind `leon_fil` comme source (D21), plutôt qu'une table à part ?
+- QD8. Le coût de l'étape `fil` en plus du résumé : un appel par fil touché ?
+- QD9. Les rôles de tour du lot 14 : exclus par défaut de la recherche et du point du matin ?
+- QD10. La table `rappels_cites` (D26), purgée après 24 h ?
+- QD11. Une portée « code » du jeton pour les outils de code, avec #121 ?

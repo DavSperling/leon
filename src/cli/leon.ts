@@ -24,7 +24,7 @@ import {
   parseSince,
 } from './import-claude-code';
 import { installHooks } from './install-hooks';
-import { openInBrowser, readTokenFromInput, runLogin, runLogout } from './login';
+import { openInBrowser, parseLoginArgs, readTokenFromInput, runLogin, runLogout } from './login';
 import { gitInDirectory } from './project-key';
 import { uninstallHooks } from './uninstall-hooks';
 
@@ -253,27 +253,21 @@ async function runUninstallHooks(args: string[]): Promise<number> {
 
 // `leon login` : Ctrl+C annule l'attente du navigateur sans rien écrire. Sans terminal, --with-token lit une ligne.
 async function runLoginCommand(args: string[]): Promise<number> {
-  const { values } = parseArgs({
-    args,
-    options: { url: { type: 'string' }, 'with-token': { type: 'boolean' } },
-  });
+  const options = parseLoginArgs(args);
   const abort = new AbortController();
   process.once('SIGINT', () => abort.abort());
   try {
-    return await runLogin(
-      { url: values.url, withToken: values['with-token'] ?? false },
-      {
-        home: homedir(),
-        env: process.env,
-        fetch,
-        open: openInBrowser,
-        hostname: hostname(),
-        out: console.log,
-        err: console.error,
-        readToken: () => readTokenFromInput(process.stdin, process.stdout),
-        signal: abort.signal,
-      },
-    );
+    return await runLogin(options, {
+      home: homedir(),
+      env: process.env,
+      fetch,
+      open: openInBrowser,
+      hostname: hostname(),
+      out: console.log,
+      err: console.error,
+      readToken: () => readTokenFromInput(process.stdin, process.stdout),
+      signal: abort.signal,
+    });
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
   }

@@ -1,3 +1,4 @@
+import { type SpawnOptionsWithoutStdio, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server } from 'node:http';
@@ -5,10 +6,11 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PassThrough, Readable, Writable } from 'node:stream';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS, API_TOKEN_PATTERN } from '../capture/api-contract';
 import { connectionPath, readConnection, writeConnection } from './connection';
-import { type LoginDeps, readTokenFromInput, runLogin, runLogout } from './login';
+import { type LoginDeps, parseLoginArgs, readTokenFromInput, runLogin, runLogout } from './login';
 
 // `leon login` et `leon logout` contre un faux serveur de Leon et un faux navigateur, tous deux sur 127.0.0.1. Ces
 // tests ouvrent des ports : hors de la sandbox. La connexion s'écrit toujours dans un HOME temporaire.
@@ -798,4 +800,118 @@ describe('leon logout', () => {
     expect(run.err.join('\n')).toMatch(/LEON_URL and LEON_TOKEN.*still/s);
     expect(run.everything()).not.toContain(OLD_TOKEN);
   });
+});
+
+// Le vrai `leon.ts`, lancé comme `pnpm leon …` : un jeton tapé sur la ligne de commande (`--with-token leon_…` est
+// l'erreur naturelle avec ce nom d'option) ne doit sortir ni sur stdout ni sur stderr, quelle que soit la façon dont
+// les arguments sont refusés. Rien n'est lu ni écrit : ces commandes s'arrêtent avant tout réseau.
+describe('leon : un jeton passé en argument', () => {
+  const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
+  const TYPED = `leon_${'Z'.repeat(43)}`;
+
+  it('parseLoginArgs lit --url et --with-token', () => {
+    expect(parseLoginArgs([])).toEqual({ url: undefined, withToken: false });
+    expect(parseLoginArgs(['--with-token'])).toEqual({ url: undefined, withToken: true });
+    expect(parseLoginArgs(['--url', 'https://leon.example'])).toEqual({
+      url: 'https://leon.example',
+      withToken: false,
+    });
+    expect(parseLoginArgs(['--with-token', '--url=https://leon.example'])).toEqual({
+      url: 'https://leon.example',
+      withToken: true,
+    });
+  });
+
+  it('parseLoginArgs : un argument en position donne un message fixe, qui ne le recopie pas', () => {
+    for (const args of [
+      ['--with-token', TYPED],
+      [TYPED],
+      ['--url', 'https://leon.example', TYPED],
+    ]) {
+      const failure = (() => {
+        try {
+          return parseLoginArgs(args);
+        } catch (error) {
+          return error as Error;
+        }
+      })();
+
+      expect(failure).toBeInstanceOf(Error);
+      const { message } = failure as Error;
+      expect(message).toMatch(/standard input/);
+      expect(message).toMatch(/shell history/);
+      expect(message).toMatch(/revoke it in Settings/);
+      expect(message).not.toContain(TYPED);
+    }
+  });
+
+  it.each([
+    ['une option inconnue avec une valeur', [`--jeton=${TYPED}`]],
+    ['une option courte inconnue', ['-t', TYPED]],
+    ['une valeur collée à --with-token', [`--with-token=${TYPED}`]],
+    ['--url sans valeur', ['--url']],
+  ])('parseLoginArgs : %s donne l’aide, sans rien recopier', (_name, args) => {
+    expect(() => parseLoginArgs(args)).toThrow(
+      'Usage: leon login [--url <address>] [--with-token]',
+    );
+    try {
+      parseLoginArgs(args);
+    } catch (error) {
+      expect((error as Error).message).not.toContain(TYPED);
+    }
+  });
+
+  function runCli(args: string[]) {
+    return new Promise<{ code: number | null; stdout: string; stderr: string }>((done, fail) => {
+      const env: Record<string, string> = {
+        PATH: process.env.PATH ?? '',
+        HOME: home,
+        TMPDIR: tmpdir(),
+      };
+      const options: SpawnOptionsWithoutStdio = { cwd: REPO_ROOT, env: env as NodeJS.ProcessEnv };
+      const child = spawn(
+        process.execPath,
+        ['--import', 'tsx', 'src/cli/leon.ts', ...args],
+        options,
+      );
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (chunk) => {
+        stdout += chunk;
+      });
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk;
+      });
+      child.stdin.end();
+      child.on('error', fail);
+      child.on('close', (code) => done({ code, stdout, stderr }));
+    });
+  }
+
+  it.each([
+    ['en position après --with-token', ['login', '--with-token', TYPED]],
+    ['en position seul', ['login', TYPED]],
+    ['collé à --with-token', ['login', `--with-token=${TYPED}`]],
+    ['en option inconnue', ['login', `--jeton=${TYPED}`]],
+    ['en option courte inconnue', ['login', '-t', TYPED]],
+    ['avec --url', ['login', '--url', 'https://leon.example', '--with-token', TYPED]],
+  ])(
+    'leon login : le jeton %s n’est recopié nulle part',
+    async (_name, args) => {
+      const outcome = await runCli(args);
+
+      expect(outcome.code).toBe(1);
+      expect(outcome.stdout + outcome.stderr).not.toContain(TYPED);
+      expect(outcome.stdout + outcome.stderr).not.toContain(TYPED.slice(5, 25));
+      await expect(stat(connectionPath(home))).rejects.toThrow();
+    },
+    30_000,
+  );
+
+  it('leon logout ne lit aucune option : un argument ne revient dans aucune sortie', async () => {
+    const outcome = await runCli(['logout', TYPED]);
+
+    expect(outcome.code).toBe(0);
+    expect(outcome.stdout + outcome.stderr).not.toContain(TYPED);
+  }, 30_000);
 });

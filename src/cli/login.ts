@@ -16,6 +16,7 @@ import { createServer, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 import { Writable } from 'node:stream';
+import { parseArgs } from 'node:util';
 import {
   API_PATHS,
   API_TOKEN_PATTERN,
@@ -54,6 +55,29 @@ export type LoginDeps = {
   signal?: AbortSignal; // Ctrl+C
 };
 export type LoginOptions = { url?: string; withToken?: boolean };
+const LOGIN_OPTIONS = {
+  url: { type: 'string' },
+  'with-token': { type: 'boolean' },
+} as const;
+
+// Les options de `leon login`. Aucune valeur reçue n'est recopiée dans une erreur : `parseArgs` cite l'argument en
+// position dans la sienne, et `--with-token leon_…` est l'erreur naturelle avec ce nom d'option, qui met le jeton sur
+// la sortie d'erreur. Les messages ci-dessous sont fixes.
+export function parseLoginArgs(args: string[]): LoginOptions {
+  const { values, positionals } = (() => {
+    try {
+      return parseArgs({ args, options: LOGIN_OPTIONS, allowPositionals: true });
+    } catch {
+      throw new Error('Usage: leon login [--url <address>] [--with-token]');
+    }
+  })();
+  if (positionals.length > 0) {
+    throw new Error(
+      '`leon login` takes no argument: --with-token reads the token from the standard input, never from the command line. If you typed a token on this line, it is now in your shell history: revoke it in Settings and create another.',
+    );
+  }
+  return { url: values.url, withToken: values['with-token'] ?? false };
+}
 
 // Ouvre une adresse dans le navigateur de la personne : `open` (macOS) ou `xdg-open` (Linux). Une commande absente
 // ou en échec ne gêne pas : l'adresse est aussi écrite dans le terminal.

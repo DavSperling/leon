@@ -166,25 +166,54 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - Ils passent par leur propre route (`POST /api/v1/coulisses`), pas par le contrat d'ingestion (règle du plan mémoire des sessions).
   - Ils sont rangés comme tours de la session, sous son ACL, avec deux nouveaux rôles, `raisonnement` et `sous_agent` (migration du check de `turns.role`), que la recherche peut filtrer.
   - Masquage : `maskSecrets` sur le poste puis sur le serveur. Chaque bloc est coupé à 20 000 caractères, comme les messages.
-  - Accord : version 5 (C7).
+  - Accord : l'usage `coulisses` (C7 révisé).
+  - Les constats de la relecture du 03/11 sur ce lot et sur le niveau 3 sont repris dans l'annexe de relecture (voir « Questions ») ; ces deux parties se détaillent quand on y arrive, avec David.
+- **D30. L'accord, par usage.** Les versions cumulatives liaient des permissions sans rapport : pour avoir le rappel, il aurait fallu accepter le résumé par le fournisseur du modèle. On les remplace par des usages (C7 révisé).
+  - La version 2 (les gestes) reste la base, et la version 0 le retrait.
+  - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage.
+  - Le serveur vérifie l'usage à chaque emploi : `resume` pour le résumé et l'état des fils, `rappel` pour le rappel, `coulisses` pour le lot 14.
+  - Un refus laisse l'accord et les réglages de l'outil inchangés.
+- **D31. Rien sur le poste.** Aucune mémoire n'est écrite sur le disque de l'utilisateur : ni fichier de règles, ni Markdown, ni cache du bloc. Seuls y vivent les crochets, l'accord et la connexion de la CLI. Le plan mère est amendé en conséquence : D16, T28, T30, T33, T35 et A4.
+- **D32. Les quatre outils.** Chaque lot d'outil apporte, pour son outil :
+  - le sommaire. Pour Cursor et Antigravity, il arrive au premier message, par une requête en ligne, si bien qu'un outil jamais utilisé reçoit la mémoire faite ailleurs ;
+  - le rappel ;
+  - les commandes de lecture, citées dans la consigne ;
+  - la capture complète de son format, selon son essai.
 
-## Contrats partagés (en plus de C1 à C7)
+  Le rangement se déclenche aussi après 15 min sans faits nouveaux, pour les outils sans fin de session.
 
-**C7, amendé.** Versions de l'accord, toujours cumulatives et sans saut :
-- 2, les gestes ;
-- 3, en plus le résumé par le fournisseur du modèle ;
-- 4, en plus le message de l'utilisateur envoyé à Leon pour le rappel (niveau 2). Il n'est envoyé à aucun fournisseur de vecteurs ni de modèle ;
-- 5, en plus le raisonnement de l'agent et les échanges des sous-agents.
+## Contrats partagés (en plus de C1 à C6)
 
-**C8. `POST /api/v1/rappel`** : `{ projet, branche, session, message, accord }` en entrée, `{ texte }` en sortie (une ligne ou vide). Un serveur ancien répond 404 : la CLI ne sort rien, avec le code 0.
+**C7 révisé. L'accord local, par usage** : `~/.leon/accord.json`, en 0600.
 
-**C9. Les outils MCP `dossier` et `fil`** :
-- `dossier { projet, branche? }` rend les fils, de la forme `{ id, titre, outils, derniere_date, prs, etat_court, externe }`, 20 au plus ;
-- `fil { id }` rend `{ titre, etat, sessions, prs, tickets, sources }`.
+```json
+{ "outils": { "claude_code": { "version": 2, "installe_le": "…", "usages": { "lecture": "…", "rappel": "…", "resume": "…" } } } }
+```
 
-Le rendu passe par `src/server/mcp/tools/render.ts`, avec sa garde.
+- `version` garde son sens (2 : les gestes ; 0 : retrait).
+- `usages` liste ce qui a été accepté, avec la date.
+- C2 (`POST /api/v1/faits`) gagne un champ facultatif `usages: string[]`, rangé dans `metadata.usages`. `accord` reste borné à 2..4.
+- Un usage absent vaut refus.
+- Le lot 6 lit `resume` là où il lisait la version 3.
 
-**C10. `POST /api/v1/coulisses`** : `{ kind, external_id, accord, blocs: { role: 'raisonnement' | 'sous_agent', ts, texte }[] }`, `.strict()`, 256 Kio au plus. 202, ou 404 sur un serveur ancien.
+**C8. `POST /api/v1/rappel`** : `{ projet, branche, session, message }`, `.strict()`.
+- `projet` suit `ProjectSchema` ; `branche` et `session` font 200 caractères au plus ; `message`, 2 000 caractères au plus.
+- Sortie : `{ texte }`, une ligne balisée ou vide.
+- Sans l'usage `rappel` (lu dans la dernière metadata connue de l'utilisateur pour cet outil, ou envoyé par la CLI), le texte est vide.
+- Un serveur ancien répond 404 : la CLI ne sort rien, avec le code 0.
+
+**C9. Les lectures** (routes de C11 et outils MCP du même nom) :
+- `dossier { projet, branche? }` rend 20 fils au plus : `{ id, titre, outils, derniere_date, prs, liees, etat_court }` ;
+- `fil { id }` rend `{ titre, etat, sessions, prs, tickets, liees, sources }`, avec les bornes de D27 et la coupe signalée.
+
+Le rendu passe par `src/server/mcp/tools/render.ts`, avec sa garde. Au MCP, le `structuredContent` ne porte que les clés (`id`, `titre`, dates, numéros de PR).
+
+**C10. `POST /api/v1/coulisses`** (lot 14) : `{ kind, external_id, usages, blocs: { role: 'raisonnement' | 'sous_agent', ts, texte }[] }`, `.strict()`, 256 Kio au plus. 202, ou 404 sur un serveur ancien.
+
+**C11. Les routes de lecture** : `POST /api/v1/dossier`, `POST /api/v1/fil` et `POST /api/v1/chercher { projet, depot, requete }`.
+- Elles demandent le jeton et l'usage `lecture`, et sont en `.strict()`, 4 Kio au plus.
+- Elles rendent `{ texte }` (le rendu gardé de C9).
+- Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
 
 ## Lot 12 : les fils et le dossier
 

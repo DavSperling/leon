@@ -119,6 +119,7 @@ const DEPOT_ERRORS = {
   invalide: 'depotInvalid',
   refuse: 'depotRefused',
   illisible: 'depotUnreadable',
+  echec: 'depotFailed',
 } as const;
 
 // Cocher ou décocher un dépôt d'équipe, ou en saisir un (décision D) : le module valide le dépôt, refuse qui n'est ni
@@ -131,7 +132,11 @@ export async function setDepotEquipeAction(
   const t = await getTranslations('settings');
   const parsed = DepotEquipeInputSchema.safeParse({ depot, coche });
   if (!parsed.success) return { error: t('depotInvalid') };
-  const result = await setDepotEquipe(ctx, parsed.data.depot, parsed.data.coche);
+  const result = await setDepotEquipe(ctx, parsed.data.depot, parsed.data.coche).catch((error) => {
+    // Le message d'une erreur de requête porte ses paramètres, dont le dépôt : logError le masque.
+    logError('settings.depot_failed', error);
+    return 'echec' as const;
+  });
   if (result !== 'ok') return { error: t(DEPOT_ERRORS[result]) };
   revalidatePath('/reglages');
   return { ok: true };

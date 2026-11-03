@@ -67,10 +67,25 @@ afterAll(async () => {
 
 describe('dépôts d’équipe', () => {
   it("propose les dépôts du curseur des seules connexions GitHub de l'administrateur", async () => {
-    expect(await listDepotsEquipe(ana)).toEqual([
-      { depot: 'acme/app', coche: false },
-      { depot: 'acme/site', coche: false },
-    ]);
+    expect(await listDepotsEquipe(ana)).toEqual({
+      depots: [
+        { depot: 'acme/app', coche: false },
+        { depot: 'acme/site', coche: false },
+      ],
+      githubBranche: true,
+    });
+  });
+
+  // C17 : le bandeau « Aucun dépôt d'équipe » ne parle qu'à une équipe où quelqu'un a branché GitHub.
+  it("dit si un membre de l'équipe a branché GitHub, sans proposer ses dépôts", async () => {
+    const solo = await createTestTenant(['Léa', 'Marc']);
+    tenantIds.push(solo.tenantId);
+    const [lea, marc] = solo.members as [TenantContext, TenantContext];
+
+    expect(await listDepotsEquipe(lea)).toEqual({ depots: [], githubBranche: false });
+
+    await seedGithub(marc, ['marc/perso']);
+    expect(await listDepotsEquipe(lea)).toEqual({ depots: [], githubBranche: true });
   });
 
   it('refuse un membre ordinaire, sans rien écrire', async () => {
@@ -88,9 +103,9 @@ describe('dépôts d’équipe', () => {
     expect(await projectsOf(ana.tenantId)).toEqual([
       { project: 'github.com/org/repo', choisi_par: ana.userId },
     ]);
-    expect(await listDepotsEquipe(ana)).toContainEqual({ depot: 'org/repo', coche: true });
+    expect((await listDepotsEquipe(ana)).depots).toContainEqual({ depot: 'org/repo', coche: true });
     // Le membre lit la liste cochée, mais jamais les dépôts de l'administrateur.
-    expect(await listDepotsEquipe(paul)).toEqual([
+    expect((await listDepotsEquipe(paul)).depots).toEqual([
       { depot: 'acme/app', coche: false },
       { depot: 'org/repo', coche: true },
       { depot: 'paul/perso', coche: false },

@@ -2,7 +2,7 @@
 
 import { FolderGit2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useActionState, useOptimistic, useTransition } from 'react';
+import { useActionState, useOptimistic, useState, useTransition } from 'react';
 import { setDepotEquipeAction } from '@/app/(app)/reglages/actions';
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   Section,
   toast,
 } from '@/components/verre';
+import { cn } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
 import type { DepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { SECTION } from './reglages';
@@ -24,19 +25,40 @@ const ROW =
 
 type AddState = { depot: string; error?: string };
 
+// Un dépôt décoché que la page ne relit plus (saisi à la main, ou coché par un autre administrateur) garde sa ligne,
+// décochée, à sa place dans l'ordre de la page : sa case garde le focus, et on le recoche sans le ressaisir.
+export const withUnchecked = (depots: DepotEquipe[], unchecked: string[]): DepotEquipe[] =>
+  [
+    ...depots,
+    ...unchecked
+      .filter((depot) => !depots.some((d) => d.depot === depot))
+      .map((depot) => ({ depot, coche: false })),
+  ].sort((a, b) => (a.depot < b.depot ? -1 : 1));
+
 /**
  * Section « Dépôts d'équipe », pour un propriétaire ou un administrateur : les dépôts lus par ses propres connexions
- * GitHub et ceux déjà cochés (lus par la page), à cocher ou décocher, et la saisie d'un autre dépôt.
+ * GitHub et ceux déjà cochés (lus par la page), à cocher ou décocher, et la saisie d'un autre dépôt. Le bandeau
+ * « aucun dépôt » ne paraît que si un membre de l'équipe a branché GitHub (`githubBranche`).
  */
-export function DepotsEquipeSection({ depots }: { depots: DepotEquipe[] }) {
+export function DepotsEquipeSection({
+  depots,
+  githubBranche,
+}: {
+  depots: DepotEquipe[];
+  githubBranche: boolean;
+}) {
   const t = useTranslations('settings');
+  const [unchecked, setUnchecked] = useState<string[]>([]);
   // la case suit le clic tout de suite ; un refus la remet comme la page la relit
-  const [shown, setShown] = useOptimistic(depots, (list, { depot, coche }: DepotEquipe) =>
-    list.map((d) => (d.depot === depot ? { ...d, coche } : d)),
+  const [shown, setShown] = useOptimistic(
+    withUnchecked(depots, unchecked),
+    (list, { depot, coche }: DepotEquipe) =>
+      list.map((d) => (d.depot === depot ? { ...d, coche } : d)),
   );
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
-  const toggle = (depot: string, coche: boolean) =>
+  const toggle = (depot: string, coche: boolean) => {
+    if (!coche) setUnchecked((list) => (list.includes(depot) ? list : [...list, depot]));
     startTransition(async () => {
       setShown({ depot, coche });
       try {
@@ -46,13 +68,17 @@ export function DepotsEquipeSection({ depots }: { depots: DepotEquipe[] }) {
         toast.error(t('depotFailed'));
       }
     });
+  };
 
   const [added, addAction, adding] = useActionState(
     async (_: AddState, data: FormData): Promise<AddState> => {
       const depot = String(data.get('depot') ?? '');
       try {
         const result = await setDepotEquipeAction(depot, true);
-        return 'error' in result ? { depot, error: result.error } : { depot: '' };
+        if ('error' in result) return { depot, error: result.error };
+        // le dépôt arrive à sa place dans la liste, parfois hors de l'écran : on le dit
+        toast.success(t('depotAdded'));
+        return { depot: '' };
       } catch {
         return { depot, error: t('depotFailed') };
       }
@@ -68,10 +94,19 @@ export function DepotsEquipeSection({ depots }: { depots: DepotEquipe[] }) {
       className={SECTION}
     >
       <div className="grid gap-4">
-        {!depots.some((d) => d.coche) && <Notice tone="warning">{t('depotsNone')}</Notice>}
+        {githubBranche && !depots.some((d) => d.coche) && (
+          <Notice tone="warning">{t('depotsNone')}</Notice>
+        )}
         {shown.length > 0 ? (
           <GlassCard className="p-1.5">
-            <ul aria-label={t('depotsList')} className="grid grid-cols-[minmax(0,1fr)]">
+            <ul
+              aria-label={t('depotsList')}
+              aria-busy={pending || undefined}
+              className={cn(
+                'grid grid-cols-[minmax(0,1fr)] transition-opacity duration-300',
+                pending && 'opacity-60',
+              )}
+            >
               {shown.map((d) => (
                 <li key={d.depot} className={ROW}>
                   <Checkbox
@@ -88,7 +123,7 @@ export function DepotsEquipeSection({ depots }: { depots: DepotEquipe[] }) {
           <EmptyState icon={FolderGit2} title={t('depotsEmpty')} className="py-8" />
         )}
         <form noValidate action={addAction} className="mt-2 grid max-w-md gap-4">
-          <Field label={t('depotAdd')} error={added.error}>
+          <Field label={t('depotAdd')} help={t('depotHelp')} error={added.error}>
             <Input
               name="depot"
               autoComplete="off"

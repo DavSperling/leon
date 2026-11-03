@@ -29,21 +29,30 @@ function markedRepos(cursor: string | null): string[] {
 
 // Les candidats : les dépôts marqués dans le curseur des connexions GitHub du lecteur lui-même (toute l'équipe lit
 // les connexions : le filtre sur le créateur écarte les dépôts des autres membres), et les dépôts déjà cochés.
-export async function listDepotsEquipe(ctx: TenantContext): Promise<DepotEquipe[]> {
-  const { mine, chosen } = await withTenant(ctx, async (tx) => ({
+// `githubBranche` : un membre de l'équipe, quel qu'il soit, a une connexion GitHub (sinon, rien n'est à cocher).
+export async function listDepotsEquipe(
+  ctx: TenantContext,
+): Promise<{ depots: DepotEquipe[]; githubBranche: boolean }> {
+  const { mine, chosen, team } = await withTenant(ctx, async (tx) => ({
     mine: await tx
       .select({ cursor: connections.cursor })
       .from(connections)
       .where(and(eq(connections.provider, 'github'), eq(connections.createdBy, ctx.userId))),
     chosen: await tx.select({ project: depotsEquipe.project }).from(depotsEquipe),
+    team: await tx
+      .select({ id: connections.id })
+      .from(connections)
+      .where(eq(connections.provider, 'github'))
+      .limit(1),
   }));
   const coches = new Set(chosen.map(({ project }) => project.slice(PREFIX.length)));
   const marked = mine
     .flatMap(({ cursor }) => markedRepos(cursor))
     .map((repo) => repo.toLowerCase());
-  return [...new Set([...coches, ...marked])]
+  const depots = [...new Set([...coches, ...marked])]
     .sort()
     .map((depot) => ({ depot, coche: coches.has(depot) }));
+  return { depots, githubBranche: team.length > 0 };
 }
 
 // Cocher partage avec toute l'équipe ce qui est déjà relevé du dépôt (0048), puis ce que la relève de chacun en lit.

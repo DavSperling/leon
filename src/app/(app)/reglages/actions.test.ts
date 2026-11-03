@@ -468,6 +468,20 @@ describe('setDepotEquipeAction', () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  // Le message d'une erreur de requête porte ses paramètres, donc le dépôt : il passe par logError, qui le masque.
+  it('rend un message général, et le journal, quand la base échoue', async () => {
+    vi.mocked(setDepotEquipe).mockRejectedValue(
+      new Error('Failed query: params: github.com/acme/app'),
+    );
+
+    expect(await setDepotEquipeAction('acme/app', true)).toEqual({
+      error: fr.settings.depotFailed,
+    });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('settings.depot_failed', expect.any(Error));
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it.each([
     [null, true],
     ['acme/app', 'oui'],

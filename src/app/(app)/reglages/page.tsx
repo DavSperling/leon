@@ -35,7 +35,7 @@ export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership, about, deletion, depots] =
+  const [allTokens, members, mayInvite, session, membership, about, deletion, depotsEquipe] =
     await Promise.all([
       listApiTokens(ctx),
       listMembers(ctx),
@@ -94,7 +94,7 @@ export default async function SettingsPage() {
           equipe: (
             <>
               <MembersSection members={members} canInvite={mayInvite} />
-              {mayInvite && <DepotsEquipeSection depots={depots} />}
+              {mayInvite && <DepotsEquipeSection {...depotsEquipe} />}
               {deletion.isOwner && (
                 <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
               )}

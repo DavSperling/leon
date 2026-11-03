@@ -12,18 +12,35 @@
 //   délai du crochet, en laissant node_modules à moitié écrit, y compris pour `pnpm dev`.
 // - `--dir <dépôt>` : pnpm lance le script dans le dépôt de Leon et pose INIT_CWD au dossier d'où il a été lancé ;
 //   il transmet l'entrée standard (le JSON du crochet) au script.
+//
+// Ces options sont aussi celles de la forme clone du lanceur ~/.leon/bin/leon (launcher.ts) : les crochets de la CLI
+// sans clone n'appellent que lui (`launcherHookCommand`), et c'est lui qui lance pnpm ou le Node posé par Leon.
+
+import { join } from 'node:path';
 
 export const HOOK_PNPM_OPTIONS = ['-s', '--config.verify-deps-before-run=false'] as const;
 
 export type HookSubcommand = 'briefing' | 'capter-session';
 
+// Toujours entre apostrophes, une apostrophe de la valeur devenant '\'' (les chemins du lanceur, K8).
+export const singleQuote = (value: string): string => `'${value.replaceAll("'", `'\\''`)}'`;
+
 // Claude Code lance une commande de crochet par un shell : un chemin qui n'est pas fait que de caractères sûrs est
-// mis entre apostrophes (une apostrophe du chemin devient '\'').
+// mis entre apostrophes.
 export function shellQuote(value: string): string {
-  return /^[A-Za-z0-9_./:@%+=,-]+$/.test(value) ? value : `'${value.replaceAll("'", `'\\''`)}'`;
+  return /^[A-Za-z0-9_./:@%+=,-]+$/.test(value) ? value : singleQuote(value);
 }
 
 // La commande d'un crochet, pour le dépôt de Leon installé dans `repoDir` (chemin absolu).
 export function hookCommand(repoDir: string, subcommand: HookSubcommand): string {
   return ['pnpm', ...HOOK_PNPM_OPTIONS, '--dir', shellQuote(repoDir), 'leon', subcommand].join(' ');
+}
+
+// Le lanceur que tous les crochets appellent (K8 du plan « CLI sans clone », écrit par launcher.ts) : ~/.leon/bin/leon.
+export const launcherPath = (home: string): string => join(home, '.leon', 'bin', 'leon');
+
+// La commande d'un crochet sous la forme du lanceur (K9) : son chemin absolu, mis entre apostrophes s'il le faut, puis
+// la sous-commande. `home` : le dossier qui porte `.leon`.
+export function launcherHookCommand(home: string, subcommand: HookSubcommand): string {
+  return `${shellQuote(launcherPath(home))} ${subcommand}`;
 }

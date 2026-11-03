@@ -6,18 +6,41 @@
 // local (`file:`), le magasin de pnpm est dans le dossier temporaire.
 //
 // Et la CLI de Leon : `leon` connaît bien les deux sous-commandes que lancent les crochets.
+//
+// Puis le vrai lanceur ~/.leon/bin/leon (launcher.ts, K8), écrit dans un dossier personnel qui a une espace et une
+// apostrophe, et lancé par `sh -c` comme Claude Code lance la commande d'un crochet (launcherHookCommand, K9) : sous
+// ses deux formes, il rend `leon --version`, et la forme clone garde les propriétés de la ligne pnpm ci-dessus.
 import { execFile, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { hookCommand } from './hook-commands';
+import {
+  hookCommand,
+  launcherHookCommand,
+  launcherPath,
+  shellQuote,
+  singleQuote,
+} from './hook-commands';
+import { writeLauncher } from './launcher';
+import runtime from './runtime.json';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const TEST_TIMEOUT_MS = 60_000;
+const BUILD_TIMEOUT_MS = 120_000;
 const HOOK_JSON = '{"cwd":"/projets/client","hook_event_name":"SessionStart"}';
 
 // Le script `leon` du dépôt jetable : il recopie sa sous-commande, l'entrée standard et INIT_CWD.
@@ -145,6 +168,80 @@ describe('la CLI de Leon', () => {
 
       expect(stdout).toMatch(/^ {2}briefing /m);
       expect(stdout).toMatch(/^ {2}capter-session /m);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+describe('le lanceur réel', () => {
+  let launcherHome: string;
+  let cliVersion: string;
+
+  // Un Node « quelconque du poste » à la place de celui que Leon pose (un script qui lance celui du test), et la vraie
+  // CLI construite par `pnpm build:cli`, rangée là où le lanceur la cherche (K1 : cli/<version>/leon.mjs et le lien
+  // cli/actuelle).
+  beforeAll(async () => {
+    launcherHome = join(dir, "Léa O'Neil");
+    const built = join(dir, 'cli-construite');
+    await run('pnpm', ['-s', 'build:cli', '--outDir', built, '--emptyOutDir'], { cwd: REPO_ROOT });
+    cliVersion = JSON.parse(await readFile(join(built, 'version.json'), 'utf8')).version;
+    const cliDir = join(launcherHome, '.leon', 'cli', cliVersion);
+    await mkdir(cliDir, { recursive: true });
+    await copyFile(join(built, `leon-${cliVersion}.mjs`), join(cliDir, 'leon.mjs'));
+    await symlink(cliVersion, join(launcherHome, '.leon', 'cli', 'actuelle'));
+    const node = join(launcherHome, '.leon', 'runtime', `node-v${runtime.version}`, 'node');
+    await mkdir(dirname(node), { recursive: true });
+    await writeFile(node, `#!/bin/sh\nexec ${singleQuote(process.execPath)} "$@"\n`, {
+      mode: 0o755,
+    });
+  }, BUILD_TIMEOUT_MS);
+
+  // Un crochet de Claude Code est une commande de shell : le lanceur, puis ses arguments.
+  const hookLine = (args: string) => `${shellQuote(launcherPath(launcherHome))} ${args}`;
+
+  it(
+    'forme installée : le Node posé et la CLI construite rendent leur version',
+    async () => {
+      await writeLauncher(launcherHome, { kind: 'installee' }, () => true);
+
+      const outcome = await runShell(hookLine('--version'), project, '');
+
+      expect(outcome).toEqual({ code: 0, stdout: `${cliVersion}\n`, stderr: '' });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'forme clone : pnpm dans le clone rend « dev », la version du TypeScript lancé tel quel',
+    async () => {
+      await writeLauncher(launcherHome, { kind: 'clone', repoDir: REPO_ROOT }, () => true);
+
+      const outcome = await runShell(hookLine('--version'), project, '');
+
+      expect(outcome).toEqual({ code: 0, stdout: 'dev\n', stderr: '' });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'forme clone, la commande du crochet sur des dépendances périmées : seule la sortie du script, rien d’installé, entrée et INIT_CWD transmis',
+    async () => {
+      await writeLauncher(launcherHome, { kind: 'clone', repoDir: app }, () => true);
+      const manifest = JSON.parse(await readFile(join(app, 'package.json'), 'utf8'));
+      manifest.dependencies['dep-ter'] = 'file:../dep'; // une dépendance de plus, jamais installée
+      await writeFile(join(app, 'package.json'), JSON.stringify(manifest));
+      const before = await installed();
+
+      const outcome = await runShell(
+        launcherHookCommand(launcherHome, 'briefing'),
+        project,
+        HOOK_JSON,
+      );
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toBe(`point|briefing|${HOOK_JSON}|${project}\n`);
+      expect(await installed()).toEqual(before);
+      expect(before).not.toContain('dep-ter');
     },
     TEST_TIMEOUT_MS,
   );

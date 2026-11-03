@@ -18,10 +18,12 @@ import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
 import { writeConnection } from './connection';
 import { consentPath, factsConsent, writeConsent } from './consent';
+import { launcherHookCommand } from './hook-commands';
 import {
   addLeonHooks,
   BACKUP_FILE,
   installHooks,
+  isLeonHandler,
   isYes,
   SESSION_END_TIMEOUT_S,
   SESSION_START_TIMEOUT_S,
@@ -974,6 +976,57 @@ describe('installHooks : les avertissements', () => {
     const run = await install({ assumeYes: true });
 
     expect(run.output).not.toContain('temporary');
+  });
+});
+
+describe('isLeonHandler : la forme du lanceur (K9) et l’ancienne', () => {
+  const handler = (command: string) => ({ type: 'command', command, timeout: 10 });
+
+  it.each([
+    ['le lanceur', launcherHookCommand('/Users/amos', 'briefing')],
+    ['le lanceur entre apostrophes', "'/Users/Léa O Neil/.leon/bin/leon' briefing"],
+    [
+      'le lanceur avec une apostrophe dans le chemin',
+      launcherHookCommand("/Users/Léa O'Neil", 'briefing'),
+    ],
+    ['le lanceur écrit avec ~', '~/.leon/bin/leon briefing'],
+    ['le lanceur avec des espaces autour', '  /Users/amos/.leon/bin/leon briefing  '],
+    ['la forme pnpm d’avant', START],
+  ])('reconnaît %s', (_name, command) => {
+    expect(isLeonHandler(handler(command), 'briefing')).toBe(true);
+  });
+
+  it('reconnaît aussi la fin de session sous la forme du lanceur', () => {
+    expect(
+      isLeonHandler(
+        handler(launcherHookCommand('/Users/amos', 'capter-session')),
+        'capter-session',
+      ),
+    ).toBe(true);
+    expect(
+      isLeonHandler(handler(launcherHookCommand('/Users/amos', 'capter-session')), 'briefing'),
+    ).toBe(false);
+  });
+
+  it.each([
+    'echo /Users/amos/.leon/bin/leon briefing',
+    '/Users/amos/.leon/bin/leon briefing && rm -rf /tmp/rien',
+    '/Users/amos/.leon/bin/leon briefing; echo fini',
+    '/Users/amos/.leon/bin/leon briefing --autre',
+    '/Users/amos/.leon/bin/leon crochet claude-code fin',
+    '/Users/amos/.leon/bin/autre briefing',
+    '/Users/amos/.leon/bin/leon-vieux briefing',
+    '/Users/amos/bin/leon briefing',
+    '/Users/amos/.leon/bin/leon',
+    "'/Users/amos/.leon/bin/leon briefing",
+    'leon briefing',
+  ])('ne reconnaît pas %j : c’est à l’utilisateur', (command) => {
+    expect(isLeonHandler(handler(command), 'briefing')).toBe(false);
+  });
+
+  it('ne reconnaît pas un crochet qui n’a pas de commande', () => {
+    expect(isLeonHandler({ type: 'command' }, 'briefing')).toBe(false);
+    expect(isLeonHandler('briefing', 'briefing')).toBe(false);
   });
 });
 

@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { HOOK_PNPM_OPTIONS, hookCommand, shellQuote } from './hook-commands';
+import {
+  HOOK_PNPM_OPTIONS,
+  hookCommand,
+  launcherHookCommand,
+  launcherPath,
+  shellQuote,
+  singleQuote,
+} from './hook-commands';
 
 // Les commandes des crochets, écrites une fois (hook-commands.ts) : le README les cite telles quelles, et le script
 // `leon` qu'elles lancent existe. Le comportement réel de pnpm avec ces options est dans hook-commands.contrat.test.ts.
@@ -28,6 +35,35 @@ describe('hookCommand', () => {
     expect(shellQuote('/tmp/$(rm -rf ~)')).toBe("'/tmp/$(rm -rf ~)'");
     expect(hookCommand('/Users/amos/Mes projets/leon', 'briefing')).toBe(
       "pnpm -s --config.verify-deps-before-run=false --dir '/Users/amos/Mes projets/leon' leon briefing",
+    );
+  });
+});
+
+describe('le lanceur des crochets (K8, K9)', () => {
+  it('vit dans ~/.leon/bin/leon', () => {
+    expect(launcherPath('/Users/amos')).toBe('/Users/amos/.leon/bin/leon');
+  });
+
+  it('singleQuote met toujours entre apostrophes, même un chemin sans danger', () => {
+    expect(singleQuote('/Users/a/.leon/bin/leon')).toBe("'/Users/a/.leon/bin/leon'");
+    expect(singleQuote("/tmp/l'équipe")).toBe("'/tmp/l'\\''équipe'");
+  });
+
+  it('launcherHookCommand : le chemin du lanceur, puis la sous-commande', () => {
+    expect(launcherHookCommand('/Users/amos', 'briefing')).toBe(
+      '/Users/amos/.leon/bin/leon briefing',
+    );
+    expect(launcherHookCommand('/Users/amos', 'capter-session')).toBe(
+      '/Users/amos/.leon/bin/leon capter-session',
+    );
+  });
+
+  it('met le chemin entre apostrophes quand le dossier personnel a une espace ou une apostrophe', () => {
+    expect(launcherHookCommand('/Users/Léa O Neil', 'briefing')).toBe(
+      "'/Users/Léa O Neil/.leon/bin/leon' briefing",
+    );
+    expect(launcherHookCommand("/Users/Léa O'Neil", 'capter-session')).toBe(
+      "'/Users/Léa O'\\''Neil/.leon/bin/leon' capter-session",
     );
   });
 });

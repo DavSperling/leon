@@ -8,10 +8,14 @@
 // - passe Claude Code en version 0 dans `accord.json` (consent.ts), même quand les réglages n'ont pas pu être lus ou
 //   écrits : plus rien ne part alors (leon.ts), ni d'un crochet resté dans les réglages d'un projet, ni de
 //   `import-claude-code` ;
+// - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json` et
+//   que les réglages et l'accord ont bien été retirés : ses crochets n'en ont plus besoin. Un fichier qui n'est pas un
+//   lanceur écrit par Leon est gardé ;
 // - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
 //   les commandes de Leon qu'il retire.
 import { join } from 'node:path';
-import { consentPath, withdrawalRecorded, writeConsent } from './consent';
+import { anyToolInstalled, consentPath, withdrawalRecorded, writeConsent } from './consent';
+import { launcherPath } from './hook-commands';
 import {
   errorCode,
   HOOKS,
@@ -23,6 +27,7 @@ import {
   SETTINGS_FILE,
   writeAtomically,
 } from './install-hooks';
+import { removeLauncher } from './launcher';
 
 // Le README est en français : la section citée garde son titre exact.
 const README_HINT = `see the README, section "Retirer les crochets"`;
@@ -120,6 +125,23 @@ async function withdrawConsent(home: string, deps: UninstallDeps): Promise<boole
   return true;
 }
 
+// Le lanceur ne part qu'avec le dernier outil, et seulement si tout a été retiré : des réglages restés en place
+// appelleraient un lanceur disparu. Le code de sortie ne change pas : un lanceur qui reste n'est pas un échec.
+async function removeUnusedLauncher(home: string, deps: UninstallDeps): Promise<void> {
+  if (await anyToolInstalled(home)) return;
+  const path = launcherPath(home);
+  try {
+    const outcome = await removeLauncher(home);
+    if (outcome === 'retire') deps.out(`Launcher removed: ${path} (no other tool uses it).`);
+    if (outcome === 'conserve') {
+      deps.out(`${path} was left in place: it is not a launcher written by Leon.`);
+    }
+  } catch (error) {
+    const code = errorCode(error);
+    deps.err(`Leon: could not remove ${path}${code ? ` (${code})` : ''}: delete it by hand.`);
+  }
+}
+
 // Rend le code de sortie : 0 si les crochets et l'accord sont retirés (ou l'étaient déjà), 1 si les réglages n'ont
 // pas pu être lus ou écrits, ou si l'accord n'a pas pu s'écrire.
 export async function uninstallHooks(
@@ -128,6 +150,7 @@ export async function uninstallHooks(
 ): Promise<number> {
   const settingsDone = await removeFromSettings(join(options.configDir, SETTINGS_FILE), deps);
   const consentDone = await withdrawConsent(options.home, deps);
+  if (settingsDone && consentDone) await removeUnusedLauncher(options.home, deps);
   deps.out('The sessions already sent stay in Leon: there is no way to delete them yet.');
   return settingsDone && consentDone ? 0 : 1;
 }

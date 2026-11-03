@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  anyToolInstalled,
   consentPath,
   consentWithdrawn,
   factsConsent,
@@ -143,6 +144,39 @@ describe('withdrawalRecorded : le retrait est bien écrit', () => {
 
     await writeRaw('{"outils": {"claude_code": {"vers');
     expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
+  });
+});
+
+describe('anyToolInstalled : le lanceur sert tant qu’un outil n’est pas retiré', () => {
+  const entry = (version: unknown) => ({ version, installe_le: '2026-11-02T14:00:00.000Z' });
+
+  it('faux sans accord, ou quand tous les outils sont en version 0', async () => {
+    expect(await anyToolInstalled(home)).toBe(false);
+
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(0), codex: { version: 0 } } }));
+    expect(await anyToolInstalled(home)).toBe(false);
+
+    await writeRaw('{"outils":{}}');
+    expect(await anyToolInstalled(home)).toBe(false);
+  });
+
+  it('vrai dès qu’un outil a un accord en cours, quelle que soit sa version', async () => {
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(0), codex: entry(2) } }));
+    expect(await anyToolInstalled(home)).toBe(true);
+
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(3) } }));
+    expect(await anyToolInstalled(home)).toBe(true);
+  });
+
+  // Dans le doute, le lanceur reste : un faux « plus aucun outil » le ferait effacer sous des crochets encore posés.
+  it.each([
+    ['une entrée hors schéma', '{"outils":{"codex":{"version":"2"}}}'],
+    ['un fichier coupé', '{"outils": {"claude_code": {"vers'],
+    ['un fichier qui n’a pas d’objet outils', '[]'],
+  ])('vrai pour %s', async (_name, content) => {
+    await writeRaw(content);
+
+    expect(await anyToolInstalled(home)).toBe(true);
   });
 });
 

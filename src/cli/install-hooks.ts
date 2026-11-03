@@ -25,7 +25,8 @@
 //
 // Les réglages de l'utilisateur sont à lui, et Claude Code peut les réécrire à tout moment. Ce module :
 // - ne touche qu'aux deux entrées de Leon (reconnues à la forme de leur commande, `pnpm … leon briefing` ou
-//   `pnpm … leon capter-session`) et garde tout le reste, dans son ordre ;
+//   `pnpm … leon capter-session`, ou la même sous-commande lancée par ~/.leon/bin/leon, K9 du plan « CLI sans clone »)
+//   et garde tout le reste, dans son ordre ;
 // - met à jour ces entrées quand le dépôt a changé de place, au lieu d'en ajouter une seconde, et n'écrit rien
 //   quand tout est déjà en place ;
 // - copie le fichier dans `settings.json.leon-sauvegarde` avant d'écrire, avec les mêmes droits, mais seulement si
@@ -126,18 +127,27 @@ const WORD = String.raw`(?:[^\s'"\\;&|<>()\x60]|'[^']*'|"[^"]*"|\\')+`;
 // Les options de pnpm que Leon a écrites un jour dans un crochet (README du premier jet compris).
 const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) ${WORD}| --dir=${WORD})`;
 
-// Un crochet de Leon : `pnpm <options de pnpm> leon <sous-commande>`, et rien d'autre. Toute autre commande, même
-// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée. Le retrait (uninstall-hooks.ts) reconnaît
-// les crochets de la même façon.
+// Un crochet de Leon : `<lanceur> <sous-commande>` (K9, hook-commands.ts) ou, comme avant, `pnpm <options de pnpm> leon
+// <sous-commande>`, et rien d'autre. Le lanceur est ~/.leon/bin/leon sous n'importe quel dossier personnel, entre
+// apostrophes ou non. Toute autre commande, même si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée.
+// Le retrait (uninstall-hooks.ts) reconnaît les crochets de la même façon.
+const LAUNCHER_SUFFIX = '/.leon/bin/leon';
+// Le mot du lanceur sans ses apostrophes ni guillemets (celles de `'\''` comprises), pour en lire la fin.
+const unquote = (word: string) =>
+  word.replace(
+    /'([^']*)'|"([^"]*)"|\\(.)/g,
+    (_all, single, double, escaped) => single ?? double ?? escaped,
+  );
+
 export function isLeonHandler(
   handler: unknown,
   subcommand: HookSubcommand,
 ): handler is Json & { command: string } {
-  return (
-    isRecord(handler) &&
-    typeof handler.command === 'string' &&
-    new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(handler.command.trim())
-  );
+  if (!isRecord(handler) || typeof handler.command !== 'string') return false;
+  const command = handler.command.trim();
+  if (new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(command)) return true;
+  const launcher = new RegExp(`^(${WORD}) ${subcommand}$`).exec(command)?.[1];
+  return launcher !== undefined && unquote(launcher).endsWith(LAUNCHER_SUFFIX);
 }
 
 export type HookChange = {

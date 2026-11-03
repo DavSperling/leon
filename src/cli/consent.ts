@@ -74,6 +74,17 @@ export async function withdrawalRecorded(home: string, tool: CodeSessionKind): P
   return entries !== null && WithdrawnSchema.safeParse(entries[tool]).success;
 }
 
+// Reste-t-il un outil dont l'accord n'est pas retiré ? Le lanceur ~/.leon/bin/leon n'est effacé (`leon
+// retirer-crochets`) qu'avec le dernier. Dans le doute, vrai : une entrée hors schéma ou un fichier illisible comptent
+// comme un outil encore installé, pour ne jamais effacer le lanceur sous des crochets en place.
+export async function anyToolInstalled(home: string): Promise<boolean> {
+  const entries = await readEntries(home);
+  return (
+    entries === null ||
+    Object.values(entries).some((entry) => !WithdrawnSchema.safeParse(entry).success)
+  );
+}
+
 // Pose la version d'un outil et garde telles quelles les entrées des autres ; un fichier illisible est réécrit avec
 // ce seul outil. Écrit dans un fichier voisin en 0600 puis le renomme : un arrêt en cours d'écriture ne laisse
 // jamais un accord coupé. (writeAtomically d'install-hooks.ts ferait de même, mais ce module-là importe celui-ci.)

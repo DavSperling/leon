@@ -75,7 +75,7 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **Consentement.**
   - Chaque installation dit ce qui est lu, ce qui part, et ce qui est donné au modèle de l'outil. Ce texte est testé mot pour mot dans `install-hooks.test.ts`.
   - L'accord est local, versionné par outil (C7), et transmis au serveur à chaque envoi (C2). Une CLI mise à jour par `git pull` n'envoie rien de plus que ce que l'utilisateur a accepté.
-  - Le serveur ne résume rien sans un accord de version 3.
+  - Le serveur ne résume rien sans l'usage `resume` (amendé le 03/11 : C7 révisé du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)).
   - `leon retirer-crochets` retire tout (T08).
 - **Codex :** jamais `trusted_hash`, jamais `--dangerously-bypass-hook-trust`. Les groupes de Leon s'ajoutent en fin de liste, sans jamais réordonner. On n'installe que les crochets dont le code existe.
 - **Les essais réels sont des portes.** Pas de code Codex avant T15, ni Cursor avant T26, ni Antigravity avant T31. Chaque essai est noté dans une annexe de l'étude : verdict, version minimale, recette ajustée. Un verdict négatif arrête le lot à son annexe, et c'est Amos qui décide de la suite.
@@ -115,9 +115,18 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 
   La route de contexte répond en moins de 3 s, le délai de la CLI.
 - **L'équipe sur ce dépôt :** les PR fusionnées depuis 72 h et les PR ouvertes modifiées depuis 30 jours, écrites par l'équipe (`cote = equipe`), sans aucun titre écrit par un tiers.
-- **RAG au premier prompt :** une fois par session, 2 000 octets au plus. Le prompt est masqué sur le poste. Le RAG est éteint tant que l'utilisateur ne l'a pas allumé (accord de version 4).
+- **RAG au premier prompt (remplacé le 03/11 par le rappel du lot 13, voir le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :** une fois par session, 2 000 octets au plus. Le prompt est masqué sur le poste. Le RAG est éteint tant que l'utilisateur ne l'a pas allumé (accord de version 4).
 
 ## Décisions prises pour ce plan
+
+**Amendements du 03/11** (le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md) prime en cas de conflit) :
+- **L'accord se donne par usage** (`lecture`, `rappel`, `resume`, `coulisses`), et non plus par versions cumulatives. D15 et C7 se lisent avec C7 révisé ; le lot 6 dépend de l'usage `resume`.
+- **Rien n'est écrit sur le poste**, hormis les crochets, l'accord et la connexion. D16, T30, T35 et A4 tombent. T28 et T33 donnent le sommaire au premier message par une requête en ligne, sans cache.
+- **Le lot 10 est remplacé** par le lot 13 (le rappel à chaque message) et par la lecture à la demande du lot 12. D18 et A5 tombent. Le crochet de prompt de Claude Code est `leon rappel`.
+- **T24** ne met plus de texte du modèle dans le bloc de démarrage : il garde l'usage `resume` et le résumé indexé.
+- **T14** : la section « L'équipe sur ce dépôt » se place dans le sommaire des fils (D24 du nouveau plan).
+- **T37** ajoute le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement ».
+- **T38** mesure aussi qui ouvre un fil ou le dossier, et par quel outil. Il règle le seuil de proximité des fils et décide du niveau 3.
 
 Décisions d'Amos du 02/11 :
 - Leon écrit le résumé.
@@ -169,13 +178,13 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0048), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
   - Par défaut, la section d'équipe ne s'affiche qu'au lecteur dont la propre connexion GitHub active porte ce dépôt, confirmée depuis moins de 24 h.
   - Jusqu'à la réponse à QD4, les sources d'un dépôt d'équipe restent lisibles par la recherche de tous les membres.
-- **D15. Le consentement**, versionné par outil :
+- **D15. Le consentement**, versionné par outil (amendée le 03/11 : par usage, voir C7 révisé du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :
   - 2 : les gestes ;
   - 3 : le résumé par le fournisseur du modèle ;
   - 4 : le prompt envoyé à Leon et au fournisseur de vecteurs.
 
   Il est transmis au serveur à chaque envoi, et `leon retirer-crochets` le retire.
-- **D16. Les replis par fichier (proposé, voir A4)** se font par dépôt ou par espace de travail, en 0600, avec accord. Leon ajoute le chemin à `$(git rev-parse --git-path info/exclude)`, puis vérifie par `git check-ignore -q` (sans `--no-index`) avant chaque écriture. Un fichier déjà suivi par git est refusé. Jamais de fichier global.
+- **D16. Retirée le 03/11** (rien sur le poste : D31 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)). Texte d'origine : **les replis par fichier (proposé, voir A4)** se font par dépôt ou par espace de travail, en 0600, avec accord. Leon ajoute le chemin à `$(git rev-parse --git-path info/exclude)`, puis vérifie par `git check-ignore -q` (sans `--no-index`) avant chaque écriture. Un fichier déjà suivi par git est refusé. Jamais de fichier global.
 - **D17. Les sessions « externes »** ont lu du web, du MCP, un sous-agent ou une commande réseau. Dès le lot 1, le bloc de démarrage n'en montre que les clés : outil, date, branche, PR. Jamais un texte écrit par l'agent. Leur résumé reste trouvable à la demande.
 - **D18. Remplacée le 03/11** par le rappel à chaque message (lot 13) et la lecture à la demande par le MCP (lot 12). Texte d'origine : le RAG au premier prompt (proposé, voir A5) est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
 - **D19. Hors de ce chantier :**
@@ -264,7 +273,7 @@ Le bloc du RAG au premier prompt (T36) est balisé `<rappel-leon>…</rappel-leo
 
 | Outil | `demarrage` | `prompt` (lot 10) | `tour` | `fin` |
 |---|---|---|---|---|
-| Claude Code | SessionStart (`leon briefing`, inchangé) | UserPromptSubmit (`leon contexte-prompt`) | — | SessionEnd (`leon capter-session`, inchangé) |
+| Claude Code | SessionStart (`leon briefing`, inchangé) | UserPromptSubmit (`leon rappel`, lot 13) | — | SessionEnd (`leon capter-session`, inchangé) |
 | Codex | SessionStart | UserPromptSubmit | Stop (async) | SessionEnd |
 | Cursor | sessionStart ; beforeSubmitPrompt, une fois, si T26 le valide | beforeSubmitPrompt (même sortie) | stop | — |
 | Antigravity | SessionStart, sinon PreInvocation, une fois | PreInvocation (même sortie) | Stop si `fullyIdle` | — |
@@ -569,6 +578,8 @@ Aussi : `src/server/mcp/tools/render.test.ts`.
 
 ### T14 · « L'équipe sur ce dépôt » et l'état réel de mes PR
 
+> **Amendé le 03/11 :** la section se place dans le sommaire des fils (D24 du nouveau plan), après les fils, 700 octets.
+
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`.
 
 **Fait quand :**
@@ -716,6 +727,8 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T23 · La file et le worker : un résumé par session close, indexé
 
+> **Amendé le 03/11 :** le worker lit l'usage `resume` (C7 révisé) là où il lisait la version 3 ; il déclenche aussi le rattachement des fils après l'indexation du résumé (T41 du nouveau plan).
+
 **Fichiers :** `src/server/sessions/resume-queue.ts` (nouveau), `src/server/sessions/resume-worker.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file), `src/server/briefing/gather.ts` (`lastTurns` écarte `external_id like 'leon:resume:%'`), `src/instrumentation-node.ts`.
 
 **Fait quand :**
@@ -752,6 +765,8 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 - `src/server/briefing/gather.db.test.ts` : un tour `leon:resume` n'entre pas dans les tours donnés au point du matin.
 
 ### T24 · Le résumé dans le bloc ; l'accord en version 3
+
+> **Amendé le 03/11 :** plus de texte du modèle dans le bloc de démarrage (D25 du nouveau plan) : la tâche se réduit à l'usage `resume`, à son texte d'accord et au résumé indexé.
 
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/cli/install-hooks.ts`, `src/cli/consent.ts`.
 
@@ -808,6 +823,8 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 
 ### T28 · Les crochets Cursor : capter sur `stop`, injecter au démarrage
 
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : le sommaire arrive au premier message par une requête en ligne (beforeSubmitPrompt, 5 s), avec le rappel dans une seule sortie.
+
 **Fichiers :** `src/cli/outils.ts`, `src/cli/capture-session.ts`, `src/cli/start-cache.ts` (nouveau).
 
 **Fait quand :**
@@ -835,6 +852,8 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 **Tests :** `src/cli/install-hooks.test.ts` (forme plate, entrées de l'utilisateur intactes, idempotent, texte exact), `src/cli/catch-up.test.ts`, `src/cli/uninstall-hooks.test.ts`.
 
 ### T30 · Repli par règle `.mdc` (seulement si T26 le demande)
+
+> **Amendé le 03/11 :** tâche retirée : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan).
 
 **Fichiers :** `src/cli/cursor-rule.ts` (nouveau), `src/cli/capture-session.ts`, `src/cli/uninstall-hooks.ts`.
 
@@ -881,6 +900,8 @@ L'annexe donne le verdict, et la décision sur le repli.
 
 ### T33 · Les crochets Antigravity : capter sur `Stop` inactif, injecter une fois par conversation
 
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : le sommaire arrive au premier message par une requête en ligne (PreInvocation), avec le rappel.
+
 **Fichiers :** `src/cli/outils.ts`, `src/cli/start-cache.ts`.
 
 **Fait quand :**
@@ -906,6 +927,8 @@ L'annexe donne le verdict, et la décision sur le repli.
 **Tests :** `src/cli/install-hooks.test.ts` (contrat de la forme exacte ; texte exact), `src/cli/catch-up.test.ts`, `src/cli/uninstall-hooks.test.ts`.
 
 ### T35 · Repli par espace de travail (seulement si T31 le demande)
+
+> **Amendé le 03/11 :** tâche retirée : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan).
 
 **Fichiers :** `src/cli/antigravity-rule.ts` (nouveau), `src/cli/uninstall-hooks.ts`.
 
@@ -963,6 +986,8 @@ Contrat : `api-contract.db.test.ts`.
 
 ### T37 · Passage réel d'un outil à l'autre
 
+> **Amendé le 03/11 :** ajouter le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement » : le sommaire et le fil arrivent dès le premier message.
+
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/06-essai-bout-en-bout.md` (nouveau).
 
 **Fait quand :** un scénario réel enchaîne trois sessions Claude Code en parallèle sur deux branches, puis Codex, Cursor et Antigravity sur le même dépôt. On vérifie :
@@ -974,6 +999,8 @@ Contrat : `api-contract.db.test.ts`.
 
 ### T38 · Mesurer l'ancrage
 
+> **Amendé le 03/11 :** mesurer aussi qui ouvre un fil ou le dossier, par quel outil (lectures notées) ; régler le seuil de proximité des fils ; décider du niveau 3 (D28 du nouveau plan).
+
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/07-mesure-ancrage.md` (nouveau).
 
 **Fait quand :** 10 tâches réelles, dans trois cas : sans bloc, avec le bloc, avec le bloc et le rappel au prompt. Amos les note sans savoir le cas, sur une grille : juste, faux, ou ancré sur un résumé périmé. La conclusion fixe le budget retenu et la recommandation pour T36.
@@ -984,8 +1011,8 @@ Contrat : `api-contract.db.test.ts`.
 - A1. La PR #110 avec l'étude, ce plan et tout le lot 1 (recommandé), ou seulement la capture des faits (T01 à T03, T07 et T08) ?
 - A2. L'ordre : GitHub (lots 2 et 3) avant Codex, comme le veut E, avec Codex vers le 12e jour. Ou Codex d'abord (vers le 6e jour), en reportant E ?
 - A3. Mettre à jour Cursor (3.27 ou plus) et Antigravity pour les essais T26 et T31 ? Quel Antigravity utilises-tu (l'app 2.0, l'IDE ou la CLI `agy`), et quel Codex (la CLI, l'app Desktop ou l'extension) ?
-- A4. Les replis par fichier dans le dépôt, exclus par le fichier d'exclusion local de git, si un essai les demande ?
-- A5. Le RAG au premier prompt, éteint tant que tu ne l'allumes pas ?
+- A4. (Sans objet depuis le 03/11 : rien sur le poste.) Les replis par fichier dans le dépôt, exclus par le fichier d'exclusion local de git, si un essai les demande ?
+- A5. (Sans objet depuis le 03/11 : remplacé par le lot 13.) Le RAG au premier prompt, éteint tant que tu ne l'allumes pas ?
 - A6. La distribution de la CLI hors d'un clone de Leon, comme chantier à part ? Sans elle, seuls ceux qui ont un clone en profitent. Tranché le 03/11 : un chantier à part, avec son [étude](../etudes/cli-sans-clone-2026-11/README.md) et le [plan](2026-11-03-cli-sans-clone.md), qui amendent D10 et reprennent le lanceur de T16.
 - A7. Les sessions web (claude.ai, ChatGPT) sans fiche ni résumé dans ce chantier ?
 

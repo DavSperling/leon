@@ -104,7 +104,7 @@ export function DiscussionThread({
   const wide = useMinWidth(root, 920);
   const bottom = useRef<HTMLDivElement>(null);
   const started = useRef(false);
-  // La réponse en cours a l'identifiant du message qui la remplacera : la carte reste le même nœud.
+  // La réponse en cours a l'identifiant du message qui la remplacera : la réponse reste le même nœud.
   const replyId = useRef('');
   const busy = reply.status === 'flux' || reply.status === 'attente';
   const last = messages.at(-1);
@@ -334,7 +334,8 @@ export function DiscussionThread({
           wide && opened ? 'grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x-8' : undefined
         }
       >
-        <div className="min-w-0">
+        {/* une colonne de lecture centrée, comme dans une conversation : le fil, puis la saisie à la même largeur */}
+        <div className="mx-auto w-full max-w-[46rem] min-w-0">
           <nav aria-label={t('breadcrumb')} className="mb-3">
             <Link
               href="/discussions"
@@ -359,7 +360,7 @@ export function DiscussionThread({
           <ol
             aria-label={t('messages')}
             aria-busy={busy}
-            className="grid grid-cols-[minmax(0,1fr)] gap-5"
+            className="grid grid-cols-[minmax(0,1fr)] gap-8"
           >
             {messages.map((message) => (
               // à l'arrivée, sans entrée ; une question ou une réponse ajoutée ensuite monte

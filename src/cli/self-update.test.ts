@@ -578,6 +578,47 @@ describe('runUpdate', () => {
       },
     );
 
+    // Node et la CLI basculent ensemble, une fois les deux vérifiés : un nouveau Node avec l'ancienne CLI pourrait ne
+    // pas démarrer, et la mise à jour suivante n'est retentée que 24 h plus tard.
+    it.each([
+      ['une CLI à l’empreinte fausse', { manifestSha: 'd'.repeat(64) }, 'SHA-256'],
+      ['une CLI qui ne démarre pas', { body: 'process.exit(3);\n' }, 'does not start'],
+    ] as const)(
+      'Node et la CLI changent, %s : ni runtime/actuel ni cli/actuelle ne bougent, rien n’est laissé',
+      async (_name, release, said) => {
+        await install();
+        const before = await snapshot();
+        const server = await serve({ ...release, node: { version: NODE_NEW } });
+        const { deps, err } = setup({ fetch: server.fetch });
+
+        expect(await runUpdate({ previous: false }, deps)).toBe(1);
+
+        expect(await current('runtime/actuel')).toBe(`node-v${NODE_OLD}`);
+        expect(await current('cli/actuelle')).toBe(V_OLD);
+        expect(apartFromMaj(await snapshot())).toEqual(before);
+        expect(err.join('\n')).toContain(said);
+      },
+    );
+
+    it('seul, avec un Node qui ne lance pas la CLI en place : runtime/actuel ne bouge pas', async () => {
+      await install();
+      const before = await snapshot();
+      const server = await serve({
+        version: V_OLD,
+        node: {
+          version: NODE_NEW,
+          script: `#!/bin/sh\nif [ "$1" = --version ]; then echo v${NODE_NEW}; else exit 3; fi\n`,
+        },
+      });
+      const { deps, err } = setup({ fetch: server.fetch });
+
+      expect(await runUpdate({ previous: false }, deps)).toBe(1);
+
+      expect(await current('runtime/actuel')).toBe(`node-v${NODE_OLD}`);
+      expect(apartFromMaj(await snapshot())).toEqual(before);
+      expect(err.join('\n')).toContain('does not run');
+    });
+
     it('sur une plateforme sans Node officiel : rien n’est écrit, et le message le dit', async () => {
       await install();
       const before = await snapshot();

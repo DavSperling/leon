@@ -252,8 +252,9 @@ async function fetchManifest(deps: UpdateDeps, serverUrl: string): Promise<CliMa
   }
 }
 
-// Pose le Node du manifeste. `staging` : le dossier de travail, effacé par l'appelant.
-async function installNode(deps: UpdateDeps, p: Paths, staging: string, manifest: CliManifest) {
+// Prépare le Node du manifeste dans `staging` (le dossier de travail, effacé par l'appelant) et le vérifie, sans le
+// poser : rend son dossier. Il n'est posé qu'une fois la CLI vérifiée avec lui.
+async function stageNode(deps: UpdateDeps, staging: string, manifest: CliManifest) {
   const platform = deps.platform;
   const expected = platform === null ? undefined : manifest.node.plateformes[platform];
   if (platform === null || expected === undefined) {
@@ -290,19 +291,17 @@ async function installNode(deps: UpdateDeps, p: Paths, staging: string, manifest
   if ((await versionOf(join(dir, 'node'), [])) !== `v${manifest.node.version}`) {
     throw new UpdateError('the new Node does not start on this computer.');
   }
-  await mkdir(p.runtime, { recursive: true, mode: 0o700 });
-  await rm(join(p.runtime, name), { recursive: true, force: true });
-  await rename(dir, join(p.runtime, name));
-  await switchLink(name, p.nodeLink);
+  return dir;
 }
 
-// Pose la CLI du manifeste, vérifiée avec le Node de runtime/actuel : celui que le lanceur va lancer.
-async function installCli(
+// Prépare la CLI du manifeste dans `staging` et la vérifie avec `node`, celui que le lanceur lancera après la
+// bascule, sans la poser : rend son dossier.
+async function stageCli(
   deps: UpdateDeps,
-  p: Paths,
   staging: string,
   manifest: CliManifest,
   serverUrl: string,
+  node: string,
 ) {
   const dir = join(staging, 'cli');
   await mkdir(dir, { mode: 0o700 });
@@ -321,14 +320,17 @@ async function installCli(
     throw new UpdateError('the new Leon command line does not match its SHA-256.');
   }
   await chmod(file, 0o644);
-  if ((await versionOf(join(p.nodeLink, 'node'), [file])) !== manifest.version) {
+  if ((await versionOf(node, [file])) !== manifest.version) {
     throw new UpdateError('the new Leon command line does not start.');
   }
-  await mkdir(p.cli, { recursive: true, mode: 0o700 });
-  const final = join(p.cli, manifest.version);
-  await rm(final, { recursive: true, force: true });
-  await rename(dir, final);
-  await switchLink(manifest.version, p.cliLink);
+  return dir;
+}
+
+// Pose un dossier vérifié à sa place définitive, `parent/name`.
+async function place(dir: string, parent: string, name: string) {
+  await mkdir(parent, { recursive: true, mode: 0o700 });
+  await rm(join(parent, name), { recursive: true, force: true });
+  await rename(dir, join(parent, name));
 }
 
 // Un seul Node et deux versions de la CLI sur le disque, y compris ce qu'une réinstallation par `curl | sh` a laissé.
@@ -379,10 +381,27 @@ async function update(deps: UpdateDeps, serverUrl: string) {
     return;
   }
 
+  const nodeName = `node-v${manifest.node.version}`;
   const staging = await mkdtemp(join(p.leon, '.update.'));
   try {
-    if (nodeChanged) await installNode(deps, p, staging, manifest);
-    if (cliChanged) await installCli(deps, p, staging, manifest, serverUrl);
+    // Tout est vérifié avant de poser quoi que ce soit : le Node, puis la CLI avec le Node que le lanceur lancera
+    // (la CLI en place si seul Node change). Sinon un nouveau Node pourrait rester avec une CLI qu'il ne lance pas.
+    const newNode = nodeChanged ? await stageNode(deps, staging, manifest) : null;
+    const node = join(newNode ?? p.nodeLink, 'node');
+    const newCli = cliChanged ? await stageCli(deps, staging, manifest, serverUrl, node) : null;
+    if (newCli === null && (await versionOf(node, [join(p.cliLink, 'leon.mjs')])) !== cliBefore) {
+      throw new UpdateError('the new Node does not run this version of Leon.');
+    }
+    if (newNode !== null) await place(newNode, p.runtime, nodeName);
+    if (newCli !== null) await place(newCli, p.cli, manifest.version);
+    // Les deux liens basculent à la suite ; si la CLI ne bascule pas, Node revient en arrière.
+    if (newNode !== null) await switchLink(nodeName, p.nodeLink);
+    if (newCli !== null) {
+      await switchLink(manifest.version, p.cliLink).catch(async (error) => {
+        if (newNode !== null && nodeBefore !== '') await switchLink(nodeBefore, p.nodeLink);
+        throw error;
+      });
+    }
   } finally {
     await rm(staging, { recursive: true, force: true });
   }

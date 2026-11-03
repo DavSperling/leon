@@ -1,52 +1,21 @@
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { z } from 'zod';
+import {
+  COMMANDES_MAX,
+  COMMITS_MAX,
+  FICHIERS_MAX,
+  PRS_MAX,
+  PrSchema,
+  type SessionFacts,
+  TACHES_MAX,
+  TEXTE_MAX,
+} from './api-contract';
 import { parseClaudeCodeSession } from './claude-code';
 import { maskSecrets } from './mask-secrets';
 
-// Les bornes des faits d'une session (C1 du plan mémoire des sessions).
-const PRS_MAX = 10;
-const COMMITS_MAX = 20;
-const FICHIERS_MAX = 50;
-const COMMANDES_MAX = 30;
-const TACHES_MAX = 20;
-const TEXTE_MAX = 200;
+// Le schéma vit dans le contrat, sans dépendance Node ; réexporté pour les lecteurs des faits.
+export { type SessionFacts, SessionFactsSchema } from './api-contract';
 
-const PrSchema = z
-  .object({
-    repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/),
-    numero: z.number().int().positive(),
-    par: z.enum(['pr-link', 'gh-pr-create']),
-  })
-  .strict();
-
-// Les gestes d'une session, relevés par du code, sans modèle (C1). L'outil est le `kind` de l'envoi.
-export const SessionFactsSchema = z
-  .object({
-    branche: z.string().nullable(), // tête détachée : null
-    prs: z.array(PrSchema).max(PRS_MAX),
-    commits: z.array(z.string().regex(/^[0-9a-f]{7,40}$/)).max(COMMITS_MAX),
-    fichiers: z.array(z.string()).max(FICHIERS_MAX), // relatifs au dépôt
-    commandes: z
-      .array(z.object({ texte: z.string().max(TEXTE_MAX), erreur: z.boolean() }).strict())
-      .max(COMMANDES_MAX),
-    taches: z
-      .array(
-        z
-          .object({
-            texte: z.string().max(TEXTE_MAX),
-            etat: z.enum(['a_faire', 'en_cours', 'fait']),
-          })
-          .strict(),
-      )
-      .max(TACHES_MAX),
-    erreurs: z.number().int().nonnegative(), // erreurs d'outils
-    externe: z.boolean(), // a lu du web, du MCP, un sous-agent ou une commande réseau
-    echanges: z.number().int().nonnegative(), // messages tapés par l'utilisateur
-    debut: z.iso.datetime({ offset: true }).nullable(),
-    fin: z.iso.datetime({ offset: true }).nullable(),
-  })
-  .strict();
-export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 type Pr = SessionFacts['prs'][number];
 type Tache = SessionFacts['taches'][number];
 
@@ -99,14 +68,53 @@ const ETATS = { pending: 'a_faire', in_progress: 'en_cours', completed: 'fait' }
 // « Task #3 created successfully: … », le résultat de TaskCreate : l'identifiant que TaskUpdate reprend.
 const TASK_ID = /Task #(\d+)/;
 
-// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, un sous-agent, le réseau.
-const EXTERNAL_TOOLS = new Set(['WebFetch', 'WebSearch', 'Agent', 'Task']);
-const EXTERNAL_COMMAND =
-  /\b(?:curl|wget)\b|\bgh\s+(?:api|(?:pr|issue|run)\s+view)\b|\bgit\s+clone\b/;
-
-// « git -C <dossier> commit » ou « git -c clé=valeur commit » : l'agent travaille souvent par chemin absolu.
+// « git -C <dossier> commit » ou « git -c clé=valeur clone » : l'agent travaille souvent par chemin absolu.
 // Répétition bornée : « git -C git -C … » ne fait pas relire toute la commande depuis chaque « git ».
-const GIT_COMMIT = /\bgit(?:\s+-[Cc]\s+(?:"[^"]*"|'[^']*'|[^\s"']\S*)){0,4}\s+commit\b/;
+const GIT_OPTIONS = String.raw`(?:\s+-[Cc]\s+(?:"[^"]*"|'[^']*'|[^\s"']\S*)){0,4}`;
+const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
+
+// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, un sous-agent, le réseau. On
+// échoue fermé : hors Bash, tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe
+// (WebFetch, WebSearch, Agent, Task, tout mcp__*, tout nom inconnu).
+const LOCAL_TOOLS = new Set([
+  'Read',
+  'Write',
+  'Edit',
+  'MultiEdit',
+  'NotebookEdit',
+  'Glob',
+  'Grep',
+  'LS',
+  'TodoWrite',
+  'TaskCreate',
+  'TaskUpdate',
+  'TaskList',
+  'TaskGet',
+  'TaskOutput',
+  'TaskStop',
+  'ExitPlanMode',
+  'EnterPlanMode',
+  'KillShell',
+  'BashOutput',
+  'ToolSearch',
+  'Skill',
+  'AskUserQuestion', // la réponse est celle de l'utilisateur
+]);
+// Dans Bash, un nom réseau en position de commande : au début, ou après « ; », « & », « | », « ( » (donc « $( »),
+// un retour à la ligne ou un accent grave, les préfixes NOM=valeur et quelques mots de lancement sautés. Pas
+// n'importe où : « https » est dans toute URL, « ssh » dans « src/ssh-keys.ts ».
+// Tout gh est externe (il lit du texte de tiers : PR, tickets, recherche), sauf ce qui n'écrit que le nôtre,
+// reconnu après les options -R/--repo ; une forme non reconnue compte comme externe.
+// shortcut: git fetch et git pull restent locaux (trop courants, et leur texte vient de l'équipe) ; un lanceur à
+// arguments (« timeout 5 curl », « xargs -n1 curl ») ou un réseau par un interpréteur (« python -c urllib… ») passe :
+// les compter si une session externe s'y glisse.
+const COMMAND_END = String.raw`(?=[\s;&|)\x60]|$)`;
+const GH_LOCAL = String.raw`(?:\s+(?:-R|--repo)(?:\s+|=)\S+){0,2}\s+(?:pr\s+(?:create|edit|merge|checkout)|auth\s+status)${COMMAND_END}`;
+// La valeur sans guillemets s'arrête aux séparateurs : sinon, chaque « ; » ou « & » relirait la suite (quadratique).
+const EXTERNAL_COMMAND = new RegExp(
+  String.raw`(?:^|[;&|(\n\x60])\s*(?:(?:[A-Za-z_]\w*=(?:"[^"]*"|'[^']*'|[^\s"';&|()\x60]*)|sudo|env|exec|command|nohup|time|xargs|if|then|do|else|!|\{)\s+){0,8}` +
+    String.raw`(?:curl|wget|ssh|sshpass|scp|sftp|rsync|nc|ncat|telnet|https?|xh|aria2c|npm\s+(?:view|info|show|v)|pnpm\s+view|pip\s+download|git${GIT_OPTIONS}\s+clone|gh(?!${GH_LOCAL}))${COMMAND_END}`,
+);
 // « [branche 1a2b3c4] message », la ligne qu'écrit git commit.
 const COMMIT_LINE = /^\[[^\]\n]* ([0-9a-f]{7,40})\]/gm;
 const GH_PR_CREATE = /\bgh\s+pr\s+create\b/;
@@ -133,10 +141,21 @@ const WITH_SUBCOMMAND = new Set([
   'biome',
 ]);
 const SUBCOMMAND = /^[a-z][a-z0-9:_-]{0,30}$/;
+// Un exécutable qui n'a pas cette forme (« "mysql -pX" », « (A=X », « $'…' ») n'est gardé que par ce texte fixe.
+const EXECUTABLE = /^[A-Za-z0-9._+-]{1,40}$/;
+const HIDDEN_COMMAND = '[commande]';
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
-// Un mot de la commande : ni une chaîne entre guillemets, ni un échappement (« my\ pass »), ni le masque, qui
-// contient une espace, ne le coupent.
-const WORD = /(?:\[secret masqué\]|"(?:[^"\\]|\\[\s\S])*"|'[^']*'|\\[\s\S]|\S)+/g;
+// Ce qui ne coupe pas un mot : une chaîne entre guillemets (dans « $'…' », « \' » ne la ferme pas), un échappement
+// (« my\ pass »).
+const QUOTED = String.raw`\$'(?:[^'\\]|\\[\s\S])*'|"(?:[^"\\]|\\[\s\S])*"|'[^']*'|\\[\s\S]`;
+const QUOTED_PARTS = new RegExp(QUOTED, 'g');
+// Un mot de la commande, où le masque, qui contient une espace, ne coupe pas non plus.
+const WORD = new RegExp(String.raw`(?:\[secret masqué\]|${QUOTED}|\S)+`, 'g');
+
+// Un préfixe NOM=valeur dont on ne sait pas où finit la valeur : un guillemet resté ouvert ou un antislash final (que
+// WORD a pris un à un), une substitution « $( » ou « ` ». Le mot qui le suit peut être un morceau du secret.
+const unclosed = (word: string) =>
+  /\$\(|`/.test(word) || /["'\\]/.test(word.replace(QUOTED_PARTS, ''));
 
 function parseLine(raw: string): Line | null {
   let json: unknown;
@@ -169,9 +188,11 @@ function reduceCommand(command: string): string {
   // l'échappement dans le masque, et « S3cret » deviendrait l'exécutable.
   let start = text.length;
   for (const word of text.matchAll(WORD)) {
-    if (ASSIGNMENT.test(word[0])) continue;
-    start = word.index;
-    break;
+    if (!ASSIGNMENT.test(word[0])) {
+      start = word.index;
+      break;
+    }
+    if (unclosed(word[0])) return HIDDEN_COMMAND;
   }
   const words: string[] = [];
   for (const [word] of maskSecrets(text.slice(start)).matchAll(WORD)) {
@@ -180,6 +201,8 @@ function reduceCommand(command: string): string {
   }
   const [path = '', argument = ''] = words;
   const executable = path.split('/').at(-1) ?? '';
+  if (executable === '') return '';
+  if (!EXECUTABLE.test(executable)) return HIDDEN_COMMAND;
   const kept =
     WITH_SUBCOMMAND.has(executable) && SUBCOMMAND.test(argument)
       ? `${executable} ${argument}`
@@ -206,10 +229,10 @@ function repoRelativePath(path: string, root: string): string | null {
 }
 
 function isExternalCall({ name, input }: Call): boolean {
-  if (EXTERNAL_TOOLS.has(name) || name.startsWith('mcp__')) return true;
+  if (name !== 'Bash') return !LOCAL_TOOLS.has(name);
   const bash = BashSchema.safeParse(input);
   // Sur la commande entière, avant la coupe : « cd x && curl … » compte.
-  return name === 'Bash' && bash.success && EXTERNAL_COMMAND.test(bash.data.command);
+  return bash.success && EXTERNAL_COMMAND.test(bash.data.command);
 }
 
 type Gathered = {
@@ -266,9 +289,10 @@ function recordResult(
     }
   }
   const created = name === 'TaskCreate' ? TaskCreateSchema.safeParse(input) : null;
-  const id = TASK_ID.exec(output)?.[1];
-  if (created?.success && id)
-    record.tasks.set(id, { texte: created.data.subject, etat: 'a_faire' });
+  if (created?.success) {
+    const id = TASK_ID.exec(output)?.[1];
+    if (id) record.tasks.set(id, { texte: created.data.subject, etat: 'a_faire' });
+  }
   const update = name === 'TaskUpdate' ? TaskUpdateSchema.safeParse(input) : null;
   const task = update?.success ? record.tasks.get(String(update.data.taskId)) : undefined;
   if (update?.success && task) {
@@ -334,11 +358,12 @@ export function extractClaudeCodeFacts(content: string, root: string): SessionFa
     }
   }
 
-  // Les lignes pr-link d'abord, puis les URL de gh pr create : une PR n'y figure qu'une fois.
+  // Les lignes pr-link d'abord, puis les URL de gh pr create : une PR n'y figure qu'une fois, et garde
+  // « gh-pr-create » quand la session l'a créée (Claude Code écrit aussi sa ligne pr-link).
   const prs = new Map<string, Pr>();
   for (const pr of [...links, ...record.created]) {
     const key = `${pr.repo.toLowerCase()}#${pr.numero}`;
-    if (!prs.has(key)) prs.set(key, pr);
+    if (!prs.has(key) || pr.par === 'gh-pr-create') prs.set(key, pr);
   }
   // Ce qui reste à faire passe avant ce qui est fait : la borne coupe d'abord ce qui est fait.
   const tasks = [...record.tasks.values()];

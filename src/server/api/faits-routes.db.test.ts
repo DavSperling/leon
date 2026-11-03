@@ -139,6 +139,20 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
+  // T23 lira cette version (résumé à partir de 3, prompt à 4) : une version inconnue n'est pas rangée.
+  it.each([1, 5])('répond 400 à la version d’accord %i', async (accord) => {
+    const { paulToken } = await setup();
+    const body = { ...validBody(), accord };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'Invalid request',
+      issues: [{ path: 'accord', code: accord === 1 ? 'too_small' : 'too_big' }],
+    });
+  });
+
   it('répond 400 à un champ inconnu, sans jamais renvoyer les valeurs reçues', async () => {
     const { paulToken } = await setup();
     const body = { ...validBody(), mot_de_passe: 'S3cret-xyz' };

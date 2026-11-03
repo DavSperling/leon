@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { extractClaudeCodeFacts } from '@/capture/session-facts';
 import {
   BRIEFING_BLOCK_CLOSE,
   BRIEFING_BLOCK_OPEN,
@@ -89,6 +91,33 @@ describe('renderContext', () => {
         briefing('- Rien de neuf.'),
       ].join('\n'),
     );
+  });
+
+  // De bout en bout, de la fixture de T01 au bloc : Claude Code écrit aussi une ligne pr-link pour la PR qu'ouvre
+  // gh pr create, qui doit rester dans « fait ». La fixture est externe (curl, Agent) : on la force locale pour voir
+  // les détails.
+  it('met dans « fait » la PR ouverte par la session sur le dépôt courant', () => {
+    const gestes = extractClaudeCodeFacts(
+      readFileSync(
+        new URL('../../capture/fixtures/claude-code-faits/session-gestes.jsonl', import.meta.url),
+        'utf8',
+      ),
+      '/Users/demo/projets/leon',
+    );
+    const text = renderContext({
+      project: 'github.com/demo/leon',
+      sessions: [
+        session({
+          ...gestes,
+          externe: false,
+          prs: gestes.prs.map((pr) => ({ ...pr, url: null })),
+        }),
+      ],
+      briefing: '',
+      max: 8000,
+    });
+
+    expect(text).toContain('  fait : 1 commit, PR #112, PR demo/site#5');
   });
 
   it('une session externe ne montre que son en-tête', () => {

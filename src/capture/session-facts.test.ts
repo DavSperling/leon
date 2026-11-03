@@ -28,7 +28,7 @@ describe('extractClaudeCodeFacts', () => {
     expect(faits).toEqual({
       branche: 'demo/faits',
       prs: [
-        { repo: 'demo/leon', numero: 112, par: 'pr-link' },
+        { repo: 'demo/leon', numero: 112, par: 'gh-pr-create' },
         { repo: 'demo/site', numero: 5, par: 'gh-pr-create' },
       ],
       commits: ['1a2b3c4'],
@@ -77,13 +77,27 @@ describe('extractClaudeCodeFacts', () => {
     ['PGPASSWORD=my\\ S3cret psql -h db', 'psql'],
     ['MYSQL_PWD="a\\" S3cret" mysql', 'mysql'],
     ['API_TOKEN=abc\\ S3cret curl x', 'curl'],
-  ])('ne garde rien d’un préfixe NOM=valeur échappé : %s', (command, texte) => {
-    const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
-    const faits = extractClaudeCodeFacts(contenu, RACINE);
+    ["PGPASSWORD=$'it\\'s S3cret' psql -h db", 'psql'],
+    ["$'mysql -pS3cret' db", '[commande]'],
+    ['"mysql -pS3cret" db', '[commande]'],
+    ['"PGPASSWORD=S3cret" psql -h db', '[commande]'],
+    ['(PGPASSWORD=S3cret psql -h db)', '[commande]'],
+    ['$(PGPASSWORD=S3cret psql -h db)', '[commande]'],
+    ['PGPASSWORD="my S3cret psql -h db', '[commande]'],
+    ["PGPASSWORD='my S3cret psql -h db", '[commande]'],
+    ['PGPASSWORD=$(echo S3cret) psql -h db', '[commande]'],
+    ['PGPASSWORD=`echo S3cret` psql -h db', '[commande]'],
+    ['PGPASSWORD=x \\\n  S3cret -h db', '[commande]'],
+  ])(
+    'ne garde aucun mot de passe de l’exécutable ni de ses préfixes NOM=valeur : %s',
+    (command, texte) => {
+      const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
+      const faits = extractClaudeCodeFacts(contenu, RACINE);
 
-    expect(faits.commandes).toEqual([{ texte, erreur: false }]);
-    expect(JSON.stringify(faits)).not.toContain('S3cret');
-  });
+      expect(faits.commandes).toEqual([{ texte, erreur: false }]);
+      expect(JSON.stringify(faits)).not.toContain('S3cret');
+    },
+  );
 
   it.each([
     'git -C sub commit -m x',
@@ -136,7 +150,8 @@ describe('extractClaudeCodeFacts', () => {
       `${'a'.repeat(199)}�`,
       'Clé [secret masqué]',
     ]);
-    expect(faits.commandes).toEqual([{ texte: `${'x'.repeat(199)}�`, erreur: false }]);
+    // Un exécutable hors de [A-Za-z0-9._+-]{1,40} ne garde que le texte fixe.
+    expect(faits.commandes).toEqual([{ texte: '[commande]', erreur: false }]);
     expect(JSON.stringify(faits)).not.toMatch(/\\u(?:d[89a-f]|0000)/i);
   });
 
@@ -197,18 +212,35 @@ describe('extractClaudeCodeFacts', () => {
     ['Bash', { command: 'gh run view 9' }],
     ['Bash', { command: 'git clone https://github.com/demo/x' }],
     ['Bash', { command: 'cd /tmp && curl -s https://x.example' }],
+    ['ReadMcpResourceTool', {}],
+    ['ListMcpResourcesTool', {}],
+    ['OutilInconnu', {}],
+    ['Bash', { command: 'gh pr list' }],
+    ['Bash', { command: 'gh pr diff 12' }],
+    ['Bash', { command: 'gh -R o/r pr view 12' }],
+    ['Bash', { command: 'gh --repo o/r issue view 4' }],
+    ['Bash', { command: 'git -C /x clone https://github.com/o/r' }],
+    ['Bash', { command: 'ssh host cat notes.txt' }],
+    ['Bash', { command: 'npm view leftpad readme' }],
+    ['Bash', { command: 'pnpm test; http GET https://x.example' }],
+    ['Bash', { command: 'echo "$(TOKEN=x wget -qO- https://x.example)"' }],
   ])('marque la session externe sur %s %j', (name, input) => {
     expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(true);
   });
 
-  it('ne marque pas externe gh pr create, git push ni TaskCreate', () => {
-    const contenu = [
-      appel('e1', 'Bash', { command: 'gh pr create --fill' }),
-      appel('e2', 'Bash', { command: 'git push' }),
-      appel('e3', 'TaskCreate', { subject: 'x' }),
-    ].join('\n');
-
-    expect(extractClaudeCodeFacts(contenu, RACINE).externe).toBe(false);
+  it.each([
+    ['Bash', { command: 'gh pr create --fill' }],
+    ['Bash', { command: 'gh pr create --body "voir https://x"' }],
+    ['Bash', { command: 'gh -R demo/site pr create --fill' }],
+    ['Bash', { command: 'gh auth status' }],
+    ['Bash', { command: 'git push' }],
+    ['Bash', { command: 'git fetch origin' }],
+    ['Bash', { command: 'git commit -m "fix http"' }],
+    ['Bash', { command: 'cat src/ssh-keys.ts' }],
+    ['TaskCreate', { subject: 'x' }],
+    ['Read', { file_path: `${RACINE}/a.ts` }],
+  ])('ne marque pas externe %s %j', (name, input) => {
+    expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(false);
   });
 
   it('prend le dernier état de TodoWrite', () => {

@@ -47,6 +47,30 @@ export async function createApiToken(
   return { id: row.id, token, hint };
 }
 
+// Le jeton naît sur l'ordinateur de l'utilisateur (leon login) : on n'enregistre ici que celui qu'on nous présente,
+// et il n'est jamais renvoyé. null si ce jeton est déjà en base : l'unicité de token_hash fait l'usage unique du
+// code d'autorisation. ON CONFLICT plutôt qu'un 23505 rattrapé, qui abandonnerait une transaction en cours.
+export async function registerApiToken(
+  ctx: TenantContext,
+  name: string,
+  token: string,
+): Promise<{ id: string } | null> {
+  // Le message ne recopie rien du jeton.
+  if (!API_TOKEN_PATTERN.test(token)) throw new Error('jeton mal formé');
+  const [row] = await db
+    .insert(apiTokens)
+    .values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      name,
+      tokenHash: hashApiToken(token),
+      tokenHint: token.slice(-4),
+    })
+    .onConflictDoNothing({ target: apiTokens.tokenHash })
+    .returning({ id: apiTokens.id });
+  return row ?? null;
+}
+
 const ownedBy = (ctx: TenantContext) =>
   and(eq(apiTokens.userId, ctx.userId), eq(apiTokens.tenantId, ctx.tenantId));
 

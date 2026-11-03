@@ -163,6 +163,29 @@ export function AuthForm({
     } else form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [state, wrong, animate, pwScope]);
 
+  // Inscription avec vérification d'e-mail : le lien est parti (actions.ts), on confirme au lieu du formulaire.
+  if (state.message) {
+    return (
+      <div className="fade-in">
+        <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t(copy.title)}</h1>
+        <Notice tone="success" live="status" className="mt-6">
+          {state.message}
+        </Notice>
+        {copy.footer && copy.href && (
+          <p className="mt-6 border-t border-line pt-5 text-ui text-muted">
+            {nb(t(copy.footer))}{' '}
+            <Link
+              href={copy.href}
+              className="rounded-sm font-semibold text-accent underline decoration-accent-line underline-offset-4 transition-colors hover:decoration-accent"
+            >
+              {t(copy.other)}
+            </Link>
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     // Passage connexion ↔ inscription : la carte reste (mise en page commune), le contenu entre en fondu (CSS : visible
     // sans JavaScript, le rendu serveur n'attend pas l'hydratation).

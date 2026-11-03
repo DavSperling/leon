@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { RequestPasswordResetForm } from '@/components/verre/auth/password-reset-form';
-import { passwordResetEnabled } from '@/server/auth/auth';
+import { emailEnabled } from '@/server/auth/auth';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth');
@@ -17,7 +17,7 @@ export default async function ForgotPasswordPage() {
   return (
     <>
       <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('forgotTitle')}</h1>
-      {passwordResetEnabled ? (
+      {emailEnabled ? (
         <>
           <p className="mt-2 text-ui text-muted">{t('forgotIntro')}</p>
           <RequestPasswordResetForm />

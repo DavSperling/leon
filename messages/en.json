@@ -65,7 +65,13 @@
     "resetEmailSubject": "Reset your Leon password",
     "resetEmailIntro": "We received a request to reset your Leon password.",
     "resetEmailAction": "Choose a new password",
-    "resetEmailIgnore": "If you didn’t request this, you can ignore this email."
+    "resetEmailIgnore": "If you didn’t request this, you can ignore this email.",
+    "verifySent": "Your workspace is ready. We’ve emailed you a link — open it to verify your address, then sign in.",
+    "verifyEmailSubject": "Verify your Leon email",
+    "verifyEmailIntro": "Confirm this address to activate your Leon workspace.",
+    "verifyEmailAction": "Verify my email",
+    "verifyEmailIgnore": "If you didn’t create a Leon account, you can ignore this email.",
+    "verifyFirst": "Your email isn’t verified yet. We’ve sent you a fresh link — check your inbox."
   },
   "navigation": {
     "search": "Search",

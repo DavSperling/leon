@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import type { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
-import { auth, passwordResetEnabled } from '@/server/auth/auth';
+import { auth, emailEnabled } from '@/server/auth/auth';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import {
@@ -94,8 +94,13 @@ export async function signInAction(
     return { errors: { form: t('tooManyAttempts') }, values };
   }
 
-  const { ok, twoFactor } = await signInWithPassword(parsed.data.email, parsed.data.password);
+  const { ok, twoFactor, unverified } = await signInWithPassword(
+    parsed.data.email,
+    parsed.data.password,
+  );
   if (twoFactor) return { twoFactor: true, values };
+  // Adresse non vérifiée : le lien vient d'être renvoyé (sendOnSignIn), on invite à ouvrir la boîte mail.
+  if (unverified) return { errors: { form: t('verifyFirst') }, values };
   // Même message pour un e-mail inconnu et un mot de passe faux.
   if (!ok) return { errors: { form: t('wrongCredentials') }, values };
   redirect('/');
@@ -133,7 +138,7 @@ export async function requestPasswordResetAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   const t = await getTranslations('auth');
-  if (!passwordResetEnabled) return { errors: { form: t('emailSendingOff') } };
+  if (!emailEnabled) return { errors: { form: t('emailSendingOff') } };
   const email = String(formData.get('email') ?? '').trim();
   if (!z.email().safeParse(email).success) return { errors: { email: t('invalidEmail') } };
   if (!(await authAttemptAllowed('recuperation', email, await headers()))) {
@@ -218,7 +223,7 @@ export async function signUpAction(
       created.error === 'email_pris' ? { email: t('emailTaken') } : { form: t('signUpFailed') };
     return { errors, values };
   }
-  return signInNewAccount(parsed.data.email, parsed.data.password, values, t);
+  return finishSignUp(parsed.data.email, parsed.data.password, values, t);
 }
 
 // L'inscription par un lien d'invitation : le formulaire porte le secret du lien dans un champ caché.
@@ -248,15 +253,18 @@ export async function joinAction(
           : { form: t('signUpFailed') };
     return { errors, values };
   }
-  return signInNewAccount(parsed.data.email, parsed.data.password, values, t);
+  return finishSignUp(parsed.data.email, parsed.data.password, values, t);
 }
 
-async function signInNewAccount(
+// Après la création du compte. Quand Leon vérifie l'adresse (emailEnabled), le lien de vérification est déjà parti
+// (auth.ts) : on ne connecte pas, on invite à le suivre. Sinon (envoi non configuré), on connecte directement.
+async function finishSignUp(
   email: string,
   password: string,
   values: Record<string, string>,
   t: Translator,
 ): Promise<AuthFormState> {
+  if (emailEnabled) return { message: t('verifySent') };
   const { ok } = await signInWithPassword(email, password);
   if (!ok) return { errors: { form: t('signedUpNotIn') }, values };
   redirect('/');

@@ -16,7 +16,7 @@ vi.mock('@/server/auth/auth', () => ({
   auth: {
     api: { verifyTOTP: vi.fn(), verifyBackupCode: vi.fn(), requestPasswordReset: vi.fn() },
   },
-  get passwordResetEnabled() {
+  get emailEnabled() {
     return resend.configured;
   },
 }));
@@ -134,7 +134,21 @@ describe('signUpAction', () => {
     expect(signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it('connecte le nouvel utilisateur puis va à l’accueil', async () => {
+  it('envoie un lien de vérification sans ouvrir la session (vérification d’e-mail active)', async () => {
+    vi.mocked(createUserWithOrganization).mockResolvedValue({
+      ok: true,
+      userId: 'u',
+      tenantId: 't',
+    });
+
+    const state = await signUpAction({}, form(validSignUp));
+
+    expect(state.message).toBeDefined();
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('connecte le nouvel utilisateur puis va à l’accueil quand l’envoi d’e-mails n’est pas configuré', async () => {
+    resend.configured = false;
     vi.mocked(createUserWithOrganization).mockResolvedValue({
       ok: true,
       userId: 'u',
@@ -155,8 +169,9 @@ describe('signUpAction', () => {
   });
 });
 
-describe('signUpAction, connexion qui échoue après la création', () => {
+describe('signUpAction, connexion qui échoue après la création (sans envoi d’e-mails)', () => {
   it("invite à se connecter à la main au lieu d'aller à l'accueil", async () => {
+    resend.configured = false;
     vi.mocked(createUserWithOrganization).mockResolvedValue({
       ok: true,
       userId: 'u',
@@ -177,6 +192,17 @@ describe('signInAction', () => {
     const state = await signInAction({}, form({ email: 'paul@example.com', password: 'faux' }));
 
     expect(state.errors).toEqual({ form: 'E-mail ou mot de passe incorrect.' });
+  });
+
+  it('invite à vérifier la boîte mail quand l’adresse n’est pas vérifiée', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: false, unverified: true });
+
+    const state = await signInAction(
+      {},
+      form({ email: 'paul@example.com', password: 'bon-mot-de-passe' }),
+    );
+
+    expect(state.errors?.form).toContain('vérifiez votre boîte mail');
   });
 
   it('ne tente pas la connexion avec un e-mail mal formé', async () => {
@@ -222,7 +248,17 @@ describe('joinAction', () => {
     expect(signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it('compte la tentative comme une inscription, puis connecte et va à l’accueil', async () => {
+  it('envoie un lien de vérification au lieu de connecter (vérification d’e-mail active)', async () => {
+    vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: true, userId: 'u', tenantId: 't' });
+
+    const state = await joinAction({}, form(validJoin));
+
+    expect(state.message).toBeDefined();
+    expect(signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('compte la tentative comme une inscription, puis connecte et va à l’accueil (sans envoi d’e-mails)', async () => {
+    resend.configured = false;
     vi.mocked(createUserWithInvitation).mockResolvedValue({ ok: true, userId: 'u', tenantId: 't' });
     vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
 

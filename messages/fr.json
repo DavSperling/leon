@@ -1415,7 +1415,12 @@
       "alreadyTitle": "Déjà branché pour l’espace",
       "connectOwn": "Brancher mon compte",
       "ownConnected": "Votre compte est branché",
-      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub."
+      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub.",
+      "code": {
+        "title": "Vos outils de code",
+        "lead": "Ouvrez un terminal sur votre ordinateur et collez cette commande. Votre navigateur s’ouvrira pour autoriser cet ordinateur.",
+        "whatLeaves": "Ce qui part"
+      }
     },
     "steps": {
       "label": "Progression de l’accueil",

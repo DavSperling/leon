@@ -15,9 +15,10 @@ import type { OnboardingStepId } from '@/lib/onboarding';
 import { PROVIDER_FAMILIES_ORDER } from '@/lib/providers';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
+import { CodeToolsCard } from './code-tools-card';
 import { PreviewCard } from './preview';
 import { OnboardingSteps } from './steps';
-import { defaultChecked, savedChecked, type ToolState } from './tools-model';
+import { codeToolsFirst, defaultChecked, savedChecked, type ToolState } from './tools-model';
 
 export type ToolsStepProps = {
   states: ToolState[];
@@ -29,6 +30,8 @@ export type ToolsStepProps = {
   nextHref: '/bienvenue/collaborateurs' | '/bienvenue/pret';
   steps: OnboardingStepId[];
   notice: OAuthNotice | null;
+  /** `curl -fsSL <leon>/install | sh`, bâtie côté serveur (`installCommand`) ; null quand l'adresse du serveur est refusée : le bloc « Vos outils de code » ne s'affiche pas. */
+  codeCommand: string | null;
 };
 
 // Une tuile à cocher pour un outil à brancher ; un outil déjà branché (par moi ou par l'équipe) se lit seulement,
@@ -144,6 +147,7 @@ export function ToolsStep({
   nextHref,
   steps,
   notice,
+  codeCommand,
 }: ToolsStepProps) {
   const t = useTranslations('onboarding');
   const tt = useTranslations('onboarding.tools');
@@ -215,6 +219,9 @@ export function ToolsStep({
   ];
   const already = states.filter((s) => s.recommended && s.connectedBy !== null);
   const shown = states.find((s) => s.item.id === shownId);
+  // En tête pour un service qui travaille dans un dépôt (GitHub ou GitLab conseillé), à la fin sinon.
+  const codeTools = codeCommand !== null ? <CodeToolsCard command={codeCommand} /> : null;
+  const codeToolsAtTop = codeToolsFirst(states);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
@@ -226,6 +233,8 @@ export function ToolsStep({
         </div>
 
         <ReturnNotice notice={notice} consentUrl={consentUrl} />
+
+        {codeToolsAtTop && codeTools}
 
         {PROVIDER_FAMILIES_ORDER.map((family) => {
           const tools = states.filter((s) => s.item.available && s.item.family === family);
@@ -247,6 +256,8 @@ export function ToolsStep({
             </fieldset>
           );
         })}
+
+        {!codeToolsAtTop && codeTools}
 
         <div className="grid justify-items-center gap-3">
           <Button asChild variant="primary" size="lg" className="w-full">

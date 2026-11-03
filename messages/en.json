@@ -1415,7 +1415,12 @@
       "alreadyTitle": "Already connected for your workspace",
       "connectOwn": "Connect my account",
       "ownConnected": "Your account is connected",
-      "ownHint": "Optional. To act under your own name, for example on GitHub."
+      "ownHint": "Optional. To act under your own name, for example on GitHub.",
+      "code": {
+        "title": "Your coding tools",
+        "lead": "Open a terminal on your computer and paste this command. Your browser will open so you can authorize this computer.",
+        "whatLeaves": "What gets sent"
+      }
     },
     "steps": {
       "label": "Onboarding progress",

@@ -37,7 +37,7 @@ export type CliManifest = z.infer<typeof ManifestSchema>;
 
 // L'adresse du serveur (BETTER_AUTH_URL), réduite à son origine : https, ou http sur la machine seule (le même
 // contrôle que la CLI, `isAllowedServerUrl`), sans compte, chemin, requête ni ancre, et faite de caractères d'hôte.
-function serverOrigin(value: string): string {
+export function serverOrigin(value: string): string {
   const url = URL.canParse(value) ? new URL(value) : null;
   const simple =
     url !== null &&

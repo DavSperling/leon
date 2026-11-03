@@ -329,6 +329,31 @@ describe('leon update installé', () => {
   );
 });
 
+describe('leon update sans connexion', () => {
+  // L'adresse de mise à jour est celle de connexion.json seule : jamais LEON_URL (le serveur d'essai d'un développeur).
+  it(
+    '--background sort 0 sans rien dire ni rien écrire ; à la main, le dit et sort non nul ; aucune requête',
+    async () => {
+      await install();
+      serveNewVersion();
+      await rm(join(leon, 'connexion.json'));
+
+      const background = await installed(['update', '--background']);
+      const manual = await installed(['update']);
+
+      expect(background).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      expect(manual.code).toBe(1);
+      expect(manual.stdout).toBe('');
+      expect(manual.stderr).toBe('Leon: this computer is not connected: run `leon login`.\n');
+      expect(hits).toEqual([]);
+      expect(await current('cli/actuelle')).toBe(manifest.version);
+      expect(await exists(join(leon, 'maj.json'))).toBe(false);
+      expect(await exists(join(leon, 'maj.lock'))).toBe(false);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
 describe('sous la forme clone', () => {
   const clone = (args: string[], input = '') =>
     runChild(process.execPath, ['--import', 'tsx', 'src/cli/leon.ts', ...args], input, REPO_ROOT);

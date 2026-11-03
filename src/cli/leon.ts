@@ -88,7 +88,7 @@ Commands:
       --url <address>      the Leon server (default: LEON_URL, then the saved connection)
       --with-token         paste a token created in Settings instead (for a browser on another computer)
   logout               Revoke this computer's token and remove ~/.leon/connexion.json
-  update               Install the latest version of Leon if the server has one: its command line and, when it changed,
+  update               Install the latest version of Leon if the server of leon login has one: its command line and, when it changed,
                        Node. The old version is kept for leon update --previous. Leon also does it on its own, in
                        the background, at most once a day (when a session starts, after briefing has answered).
                        It touches neither your consent, your connection, the launcher nor the hooks. Not from a
@@ -376,11 +376,10 @@ async function runUpdateCommand(args: string[]): Promise<number> {
     options: { background: { type: 'boolean' }, previous: { type: 'boolean' } },
   });
   const quiet = values.background ?? false;
-  return runUpdate(
+  const code = await runUpdate(
     { previous: values.previous ?? false },
     {
       home: homedir(),
-      env: process.env,
       cliVersion: CLI_VERSION,
       fetch,
       platform: nodePlatform(process.platform, process.arch),
@@ -390,6 +389,7 @@ async function runUpdateCommand(args: string[]): Promise<number> {
       err: quiet ? () => {} : console.error,
     },
   );
+  return quiet ? 0 : code; // personne n'attend le code d'une mise à jour de fond
 }
 
 async function main(argv: string[]): Promise<number> {

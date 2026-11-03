@@ -21,7 +21,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { writeConnection } from './connection';
 import { writeConsent } from './consent';
 import { singleQuote } from './hook-commands';
@@ -64,6 +64,9 @@ beforeAll(async () => {
   base = await realpath(await mkdtemp(join(tmpdir(), 'leon-self-update-')));
 });
 afterAll(() => rm(base, { recursive: true, force: true }));
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 beforeEach(async () => {
   home = await mkdtemp(join(base, 'home-'));
   leon = join(home, '.leon');
@@ -160,7 +163,6 @@ function setup(over: Partial<UpdateDeps> = {}) {
   const err: string[] = [];
   const deps: UpdateDeps = {
     home,
-    env: {},
     cliVersion: V_OLD,
     fetch: noNetwork,
     platform: PLATFORM,
@@ -223,6 +225,15 @@ async function snapshot(dir = leon): Promise<string[]> {
 const apartFromMaj = (lines: string[]) => lines.filter((line) => !line.startsWith('maj.json'));
 
 const current = (link: string) => readlink(join(leon, link));
+// Aucune requête de mise à jour ne porte le jeton : ni en-tête, ni dans l'adresse (le manifeste et la CLI sont publics).
+const expectNoToken = (fetchImpl: typeof fetch) => {
+  const calls = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls;
+  expect(calls.length).toBeGreaterThan(0);
+  for (const [url, init] of calls) {
+    expect(String(url)).not.toContain(TOKEN);
+    expect((init as RequestInit | undefined)?.headers).toBeUndefined();
+  }
+};
 const expectNothingLeaked = (err: string[]) => {
   const said = err.join('\n');
   expect(said).not.toContain(TOKEN);
@@ -563,30 +574,67 @@ describe('runUpdate', () => {
   });
 
   describe('serveur', () => {
-    it('sans connexion : le dit, sans réseau', async () => {
-      await install();
-      await rm(join(leon, 'connexion.json'));
-      const server = await serve();
-      const { deps, err } = setup({ fetch: server.fetch });
+    // E5 (LEON_URL et LEON_TOKEN avant connexion.json) ne vaut pas ici : l'adresse de mise à jour décide du code qui
+    // tournera ensuite sur la machine, un serveur d'essai de l'environnement ne doit pas pouvoir le remplacer.
+    it.each([
+      ['absente', () => rm(join(leon, 'connexion.json'))],
+      ['illisible', () => writeFile(join(leon, 'connexion.json'), '{')],
+    ])(
+      'connexion.json %s : le dit en une phrase, sans réseau et sans rien écrire, même avec LEON_URL et LEON_TOKEN',
+      async (_name, spoil) => {
+        await install();
+        await spoil();
+        vi.stubEnv('LEON_URL', 'http://localhost:3999');
+        vi.stubEnv('LEON_TOKEN', TOKEN);
+        const before = await snapshot();
+        const server = await serve();
+        const { deps, err } = setup({ fetch: server.fetch });
 
-      expect(await runUpdate({ previous: false }, deps)).toBe(1);
+        expect(await runUpdate({ previous: false }, deps)).toBe(1);
+
+        expect(server.calls).toEqual([]);
+        expect(await snapshot()).toEqual(before); // ni maj.json ni verrou
+        expect(err).toEqual(['Leon: this computer is not connected: run `leon login`.']);
+      },
+    );
+
+    it('sans ~/.leon du tout : ne crée rien', async () => {
+      const server = await serve();
+
+      expect(await runUpdate({ previous: false }, setup({ fetch: server.fetch }).deps)).toBe(1);
 
       expect(server.calls).toEqual([]);
-      expect(err.join('\n')).toContain('leon login');
+      expect(await exists(leon)).toBe(false);
     });
 
-    it('LEON_URL et LEON_TOKEN passent avant la connexion enregistrée (E5)', async () => {
+    it('ne suit que connexion.json : le serveur de LEON_URL et LEON_TOKEN n’est jamais interrogé', async () => {
       await install();
-      const server = await serve({ version: V_OLD });
-      const { deps } = setup({
-        fetch: server.fetch,
-        env: { LEON_URL: 'http://localhost:3999', LEON_TOKEN: TOKEN },
-      });
+      vi.stubEnv('LEON_URL', 'http://localhost:3999');
+      vi.stubEnv('LEON_TOKEN', TOKEN);
+      const right = await serve({ version: V_OLD });
+      const other = await serve({ version: V_NEW });
+      const fetchImpl = vi.fn((input: URL | string, init?: RequestInit) =>
+        new URL(String(input)).origin === SERVER
+          ? right.fetch(input, init)
+          : other.fetch(input, init),
+      ) as unknown as typeof fetch;
 
-      await runUpdate({ previous: false }, deps);
+      expect(await runUpdate({ previous: false }, setup({ fetch: fetchImpl }).deps)).toBe(0);
 
-      const [url] = (server.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0] ?? [];
-      expect(String(url)).toBe('http://localhost:3999/cli/version.json');
+      expect(right.calls).toEqual(['/cli/version.json']);
+      expect(other.calls).toEqual([]);
+      expect(await current('cli/actuelle')).toBe(V_OLD);
+      expectNoToken(fetchImpl);
+    });
+
+    it('n’envoie le jeton à aucune requête : le manifeste, la CLI et Node sont publics', async () => {
+      await install();
+      const server = await serve({ node: { version: NODE_NEW } });
+
+      expect(await runUpdate({ previous: false }, setup({ fetch: server.fetch }).deps)).toBe(0);
+
+      expect(server.calls).toHaveLength(3); // le manifeste, l'archive de Node, la CLI
+      expectNoToken(server.fetch);
     });
 
     it.each([

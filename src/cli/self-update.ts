@@ -39,7 +39,7 @@ import { pipeline } from 'node:stream/promises';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import { promisify } from 'node:util';
 import { z } from 'zod';
-import { resolveServerEnv } from './env';
+import { readConnection } from './connection';
 import { errorCode } from './install-hooks';
 
 const run = promisify(execFile);
@@ -84,7 +84,6 @@ class UpdateError extends Error {}
 export type UpdateOptions = { previous: boolean };
 export type UpdateDeps = {
   home: string;
-  env: Record<string, string | undefined>;
   // La version de cette CLI (`CLI_VERSION` de leon.ts) : CLONE_VERSION sous la forme clone, qui ne se met pas à jour.
   cliVersion: string;
   fetch: typeof fetch;
@@ -347,13 +346,20 @@ async function prune(p: Paths, previous: string | null) {
   if (cli !== null) await others(p.cli, CLI_VERSION, [cli, previous]);
 }
 
-async function update(deps: UpdateDeps) {
+// L'adresse de mise à jour : celle de connexion.json (K2), lue sans l'environnement. E5 (LEON_URL et LEON_TOKEN avant
+// connexion.json) ne vaut pas ici : cette adresse décide du code qui tournera ensuite sur la machine, et un serveur
+// d'essai de l'environnement ne doit pas pouvoir le remplacer. Sans connexion valide, pas de mise à jour.
+async function updateServer(home: string): Promise<string> {
+  const connection = await readConnection(home);
+  if (connection === null) {
+    throw new UpdateError('this computer is not connected: run `leon login`.');
+  }
+  return connection.url;
+}
+
+async function update(deps: UpdateDeps, serverUrl: string) {
   const p = paths(deps.home);
-  const server = await resolveServerEnv(deps.env, deps.home).catch((error) => {
-    // Les messages de resolveServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
-    throw new UpdateError(error instanceof Error ? error.message : 'invalid configuration.');
-  });
-  const manifest = await fetchManifest(deps, server.url);
+  const manifest = await fetchManifest(deps, serverUrl);
   const maj = await readMaj(deps.home);
   // Le contrôle est fait : un échec plus loin (téléchargement, empreinte) attend les 24 h au lieu de recommencer à
   // chaque session. Un serveur injoignable, lui, n'a rien contrôlé : il est retenté à la session suivante.
@@ -371,7 +377,7 @@ async function update(deps: UpdateDeps) {
   const staging = await mkdtemp(join(p.leon, '.update.'));
   try {
     if (nodeChanged) await installNode(deps, p, staging, manifest);
-    if (cliChanged) await installCli(deps, p, staging, manifest, server.url);
+    if (cliChanged) await installCli(deps, p, staging, manifest, serverUrl);
   } finally {
     await rm(staging, { recursive: true, force: true });
   }
@@ -439,9 +445,11 @@ export async function runUpdate(options: UpdateOptions, deps: UpdateDeps): Promi
   }
   try {
     const p = paths(deps.home);
+    // Avant le verrou : sans connexion, rien n'est écrit. `--previous` ne demande rien au serveur.
+    const serverUrl = options.previous ? null : await updateServer(deps.home);
     if (!(await takeLock(p))) return 0; // l'autre mise à jour fait le travail
     try {
-      await (options.previous ? goBack(deps) : update(deps));
+      await (serverUrl === null ? goBack(deps) : update(deps, serverUrl));
     } finally {
       await rm(p.lock, { recursive: true, force: true });
     }

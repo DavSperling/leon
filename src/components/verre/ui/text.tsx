@@ -1,4 +1,6 @@
 import { Fragment, type ReactNode } from 'react';
+import { type MdBlock, type MdInline, markdownBlocks, markdownInline } from '@/lib/markdown';
+import { cn } from '@/lib/verre/cn';
 import { referenceSegments, splitHighlights } from '@/lib/verre/text';
 
 /** Rend un extrait marqué (U+E000 … U+E001) avec <mark> ; le texte n'est jamais lu comme du HTML. */
@@ -90,4 +92,103 @@ export function CitedText({
       ))}
     </>
   );
+}
+
+/**
+ * Rend une réponse écrite en Markdown (markdownBlocks) : paragraphes, titres, listes, gras, code. Les renvois [n] y
+ * passent par `renderCite`, comme dans CitedText, sauf dans le code. `tail` (le curseur d'une réponse en cours) suit
+ * le dernier mot.
+ */
+export function CitedMarkdown({
+  text,
+  renderCite,
+  keep,
+  tail,
+}: {
+  text: string;
+  renderCite: (n: number) => ReactNode;
+  keep?: (n: number) => boolean;
+  tail?: ReactNode;
+}) {
+  const inline = (parts: MdInline[]): ReactNode =>
+    parts.map((p, i) => (
+      // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte figé, dans l'ordre
+      <Fragment key={i}>
+        {typeof p === 'string' ? (
+          <CitedText text={p} renderCite={renderCite} keep={keep} />
+        ) : 'code' in p ? (
+          <code className="rounded-[5px] bg-glass-3 px-[5px] py-px font-mono text-[0.86em] shadow-[inset_0_0_0_1px_var(--line)]">
+            {p.code}
+          </code>
+        ) : 'strong' in p ? (
+          <strong className="font-semibold">{inline(p.strong)}</strong>
+        ) : (
+          <em>{inline(p.em)}</em>
+        )}
+      </Fragment>
+    ));
+  // `gap` : l'espace au-dessus d'un bloc qui en suit un autre, plus serré dans une liste
+  const render = (blocks: MdBlock[], end: ReactNode, gap: string): ReactNode =>
+    blocks.map((b, i) => {
+      const last = i === blocks.length - 1 ? end : null;
+      const space = i > 0 && gap;
+      const key = `${i}${b.type}`;
+      if (b.type === 'p')
+        return (
+          <p key={key} className={cn('whitespace-pre-line', space)}>
+            {inline(markdownInline(b.text))}
+            {last}
+          </p>
+        );
+      if (b.type === 'h') {
+        const H = b.level <= 2 ? 'h3' : 'h4';
+        return (
+          <H key={key} className={cn('text-title font-semibold', i > 0 && 'mt-5')}>
+            {inline(markdownInline(b.text))}
+            {last}
+          </H>
+        );
+      }
+      if (b.type === 'list') {
+        const L = b.ordered ? 'ol' : 'ul';
+        return (
+          <L
+            key={key}
+            start={b.ordered && b.start !== 1 ? b.start : undefined}
+            className={cn(
+              'grid gap-1.5 pl-5 marker:text-muted',
+              b.ordered ? 'list-decimal' : 'list-disc',
+              space,
+            )}
+          >
+            {b.items.map((item, j) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: éléments d'un texte figé, dans l'ordre
+              <li key={j} className="pl-1">
+                {render(item, j === b.items.length - 1 ? last : null, 'mt-1.5')}
+              </li>
+            ))}
+          </L>
+        );
+      }
+      if (b.type === 'code')
+        return (
+          <pre
+            key={key}
+            className={cn(
+              'overflow-x-auto rounded-field bg-glass-3 px-3.5 py-3 font-mono text-[13px] leading-[1.6] whitespace-pre shadow-[inset_0_0_0_1px_var(--line)]',
+              space,
+            )}
+          >
+            <code>{b.text}</code>
+            {last}
+          </pre>
+        );
+      return (
+        <Fragment key={key}>
+          <hr className={cn('border-line', i > 0 && 'mt-4', 'mb-1')} />
+          {last}
+        </Fragment>
+      );
+    });
+  return render(markdownBlocks(text), tail, 'mt-3');
 }

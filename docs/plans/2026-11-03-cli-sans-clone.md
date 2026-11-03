@@ -210,7 +210,8 @@ Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `e
 **Fait quand :**
 - `resolveServerEnv(env, home)` applique E5 : les deux variables si elles sont posées, sinon K2, sinon l'erreur fixe d'aujourd'hui, complétée par « run leon login » ;
 - `leon login` :
-  - prend l'adresse de `--url`, sinon de K2, sinon de `LEON_URL` ; elle passe `isAllowedServerUrl` ;
+  - prend l'adresse de `--url`, sinon de `LEON_URL`, sinon de K2 (l'ordre de E5) ; elle passe `isAllowedServerUrl` ;
+  - si `LEON_URL` et `LEON_TOKEN` sont posées toutes les deux, prévient que ces variables continueront de passer avant la connexion enregistrée (E5) ;
   - tire le jeton (`leon_` + 32 octets en base64url) et `etat` (16 octets), calcule l'empreinte ;
   - écoute sur `127.0.0.1`, port 0 (jamais `localhost`, jamais `0.0.0.0`) ;
   - ouvre l'adresse K3 par `open` (macOS) ou `xdg-open` (Linux), et l'écrit aussi dans le terminal ;
@@ -326,7 +327,7 @@ Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `e
   - si `node.version` a changé : même chemin pour Node (archive de nodejs.org, empreinte de K7), avant la CLI ;
   - `--previous` revient à la version précédente ;
 - rien ne touche à `accord.json`, à `connexion.json`, au lanceur ni aux crochets ;
-- `--background` n'écrit rien, nulle part, sauf `maj.json`.
+- `--background` n'écrit rien sur la sortie standard ni sur la sortie d'erreur ; sur le disque, il n'écrit que `maj.json`, `cli/` et `runtime/`, comme `leon update`.
 
 **Tests :** même version : aucun téléchargement ; empreinte fausse : `actuelle` inchangé, rien de laissé ; `--version` qui échoue : `actuelle` inchangé ; succès : `actuelle` pointe sur la nouvelle et la précédente reste ; forme clone : rien ; `briefing` rend la main sans attendre la mise à jour (sa durée ne bouge pas avec un serveur de mise à jour lent).
 

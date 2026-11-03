@@ -12,7 +12,7 @@
 - Leon devient son propre serveur d'autorisation OAuth 2.1, réduit au code d'autorisation avec PKCE S256 et au renouvellement : les métadonnées de la ressource (RFC 9728) et du serveur (RFC 8414), une page « Autoriser », une route de jetons, une route d'inscription des clients (RFC 7591).
 - Les jetons sont des lignes d'`api_tokens`, au format `leon_`, rangées par une colonne `kind`. `/api/mcp` garde `requireApiToken` ; son 401 indique où sont les métadonnées. Un jeton `assistant` ne vaut que pour `/api/mcp`.
 - Le code d'autorisation est signé (HMAC, clé dérivée de `BETTER_AUTH_SECRET`), pas stocké ; son usage unique tient à l'unicité de `api_tokens.grant_id`.
-- L'inscription ne stocke rien : le `client_id` rendu porte, signés, le nom et les adresses de retour du client. Les adresses de retour sont limitées aux hôtes de L11 et au bouclage.
+- L'inscription ne stocke rien : le `client_id` rendu porte, signés, le nom et les adresses de retour du client. Les adresses de retour sont limitées à celles que publient les clients de L11, et au bouclage.
 - Les outils MCP ne changent pas.
 - (B3 = a) `leon login` devient un client de ce serveur (`leon-cli`) et remplace K3 à K5 du plan CLI.
 
@@ -73,7 +73,7 @@ Les décisions qui attendent une réponse d'Amos portent « proposé ».
 - **F3. Accès d'une heure, renouvellement de 90 jours changé à chaque usage (proposé, B4)**, pour les `assistant` seulement.
 - **F4. Clients publics seulement.** `token_endpoint_auth_methods_supported: ["none"]`, PKCE S256 obligatoire. Une inscription qui demande un secret reçoit `none` (RFC 7591 §3.2.1 permet au serveur de remplacer une valeur).
 - **F5. L'inscription par DCR seule, sans rien stocker (proposé, B7).** Pas de CIMD en v1 : `client_id_metadata_document_supported` n'est pas annoncé, et les clients qui le préfèrent (Claude, ChatGPT, Codex, VS Code) retombent sur DCR.
-- **F6. Une liste fermée d'hôtes de retour (proposé, B5)** : ceux de L11, plus le bouclage. Tout autre hôte est refusé à l'inscription.
+- **F6. Une liste fermée d'adresses de retour (proposé, B5)** : celles que les clients de L11 publient, chemin compris, plus le bouclage. Toute autre adresse est refusée à l'inscription, même sur un hôte connu.
 - **F7. Un seul périmètre, `leon`**, qui donne les quatre outils. Pas d'`offline_access` (la spécification demande de ne pas l'annoncer ; le renouvellement est donné sans lui).
 - **F8. Les outils ne changent pas**, ni leur contexte : `verifyApiToken` reste la seule source du `TenantContext` d'un appel MCP.
 - **F9. Audience :** un jeton `assistant` n'ouvre que `/api/mcp` ; `requireApiToken` le refuse partout ailleurs (401).
@@ -175,26 +175,26 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 
 **L10. Le client `leon-cli`** (si B3 = a) : inscrit d'office, sans passer par L4. Son `client_id` est la chaîne fixe `leon-cli` ; son seul retour, `http://127.0.0.1:<port>/retour`, port quelconque. Il peut joindre `nom` (le nom de la machine, 1 à 60 caractères, nettoyé comme K5 du plan CLI) à sa demande de jeton.
 
-**L11. Les clients et leurs hôtes de retour** (B5 = a) : `src/server/oauth/clients.ts`, une constante.
+**L11. Les clients et leurs adresses de retour** (B5 = a) : `src/server/oauth/clients.ts`, une constante. Ce sont les adresses que chaque client publie dans sa documentation, pas ses hôtes : un autre chemin du même hôte (une redirection ouverte, l'adresse de retour d'un autre service) ne doit jamais recevoir un code.
 
 | Client | Adresse de retour permise à l'inscription |
 |---|---|
-| Claude (claude.ai, Desktop, mobile) | `https://claude.ai/…` |
-| ChatGPT | `https://chatgpt.com/…` |
-| Cursor (web) | `https://www.cursor.com/…` |
-| VS Code (web) | `https://vscode.dev/…` |
-| Antigravity | `https://antigravity.google/…` |
-| Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) | `http://127.0.0.1:<port>/…`, `http://localhost:<port>/…` |
+| Claude (claude.ai, Desktop, mobile) | `https://claude.ai/api/mcp/auth_callback`, exactement |
+| ChatGPT | `https://chatgpt.com/connector_platform_oauth_redirect`, exactement ; ou `https://chatgpt.com/connector/oauth/<id>`, où `<id>` est un seul segment `[A-Za-z0-9_-]{1,128}` |
+| Cursor (web) | `https://www.cursor.com/agents/mcp/oauth/callback`, exactement |
+| VS Code (web) | `https://vscode.dev/redirect`, exactement |
+| Antigravity | `https://antigravity.google/oauth-callback`, exactement |
+| Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) | `http://127.0.0.1:<port>/<chemin>`, `http://localhost:<port>/<chemin>` |
 
-- un hôte est comparé exactement (pas de sous-domaine, pas de port autre que 443 en `https`) ;
-- le bouclage : `http` seulement, port quelconque, ni identifiant ni mot de passe dans l'adresse ;
-- aucun autre schéma (`javascript:`, `data:`, schémas d'application) ; aucun fragment (`#`) ;
-- un hôte de plus, c'est une ligne de cette constante et son essai réel (M07).
+- « exactement » : schéma, hôte, port (443), chemin, sans requête ni fragment, comparés caractère par caractère ;
+- le bouclage : `http` seulement, port et chemin quelconques (le code n'y arrive que sur l'ordinateur de la victime), ni identifiant ni mot de passe dans l'adresse, pas de fragment ;
+- aucun autre schéma (`javascript:`, `data:`, schémas d'application) ;
+- une adresse de plus, c'est une ligne de cette constante, recopiée de la documentation du client, et son essai réel (M07). Le format de `<id>` chez ChatGPT se vérifie à M07.
 
 ## Points de vigilance
 
-1. **Un nom de client est déclaré, pas vérifié.** N'importe qui peut s'inscrire sous le nom « Claude ». Parade : la page montre l'hôte de retour, seul élément vérifié, et les hôtes sont limités à L11 (B5).
-2. **Le consentement par hameçonnage.** Un attaquant lance lui-même un parcours, garde le `code_verifier`, et envoie le lien d'autorisation à sa victime : si elle clique « Autoriser », le code part vers l'adresse de retour inscrite. Parade : seuls les hôtes de L11 et le bouclage. Avec un retour en bouclage, le code arrive sur l'ordinateur de la victime, où rien de l'attaquant n'attend. Avec un client connu (claude.ai, chatgpt.com…), il arrive dans le navigateur de la victime, chez un client qui lie `state` à la session qui a commencé le parcours : l'attaquant ne le reçoit pas. Plus l'avertissement de la page. Sans la liste fermée (B5 = b), l'attaquant inscrirait sa propre adresse et recevrait le code.
+1. **Un nom de client est déclaré, pas vérifié.** N'importe qui peut s'inscrire sous le nom « Claude ». Parade : la page montre l'hôte de retour, et les adresses de retour sont limitées à celles que publient les clients de L11 (B5) : un faux « Claude » ne peut renvoyer que vers le vrai.
+2. **Le consentement par hameçonnage.** Un attaquant lance lui-même un parcours, garde le `code_verifier`, et envoie le lien d'autorisation à sa victime : si elle clique « Autoriser », le code part vers l'adresse de retour inscrite. Parade : seules les adresses de retour publiées de L11, chemin compris, et le bouclage. Un autre chemin d'un hôte connu (une redirection ouverte, l'adresse de retour d'un autre service) est refusé à l'inscription. Avec un retour en bouclage, le code arrive sur l'ordinateur de la victime, où rien de l'attaquant n'attend. Avec un client connu (claude.ai, chatgpt.com…), il arrive dans le navigateur de la victime, chez un client qui lie `state` à la session qui a commencé le parcours : l'attaquant ne le reçoit pas. Plus l'avertissement de la page. Sans la liste fermée (B5 = b), l'attaquant inscrirait sa propre adresse et recevrait le code.
 3. **Le bouclage** : n'importe quel programme de l'ordinateur peut écouter un port et se faire passer pour un client (la spécification le rappelle). Parade : pour un retour en bouclage, la page dit « Vous serez renvoyé vers une application de cet ordinateur » et répète l'avertissement.
 4. **Deux renouvellements en même temps** pour un même branchement : le second échoue (`invalid_grant`) et l'assistant redemande l'autorisation. Better Auth tolère un renouvellement rejoué pendant 30 s pour cette raison. `shortcut: pas de tolérance en v1 ; garder l'ancienne empreinte de renouvellement 30 s si M07 ou l'usage montre des reconnexions.`
 5. **claude.ai et ChatGPT appellent depuis leurs serveurs.** `pnpm dev` ne leur est pas joignable ; Claude exige une adresse publique en IPv4. Parade : M07 contre la production, après déploiement ; Claude Code et Codex se vérifient d'abord en local (retour en bouclage).
@@ -246,7 +246,7 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 
 **Tests :**
 - inscription de Claude (`https://claude.ai/api/mcp/auth_callback`), de ChatGPT (`https://chatgpt.com/connector/oauth/abc123`), de Claude Code (`http://localhost:3118/callback`), de Cursor (ses deux adresses) : 201, et `readClientId` relit ce qui a été inscrit ;
-- `https://evil.example/cb`, `https://claude.ai.evil.example/cb`, `https://claude.ai:8443/cb`, `http://claude.ai/cb`, `http://user:pw@127.0.0.1:9/cb`, `javascript:alert(1)`, une adresse avec `#` : `invalid_redirect_uri` ;
+- `https://evil.example/cb`, `https://claude.ai.evil.example/api/mcp/auth_callback`, `https://claude.ai:8443/api/mcp/auth_callback`, `http://claude.ai/api/mcp/auth_callback`, un autre chemin d'un hôte connu (`https://claude.ai/autre`, `https://chatgpt.com/connector/oauth/a/b`, `https://chatgpt.com/connector_platform_oauth_redirect?x=1`), `http://user:pw@127.0.0.1:9/cb`, `javascript:alert(1)`, une adresse avec `#` : `invalid_redirect_uri` ;
 - 6 adresses, une adresse de 513 caractères, plus de 4 Ko d'entrée : 400 ;
 - `token_endpoint_auth_method: "client_secret_basic"` demandé : 201 avec `none` ;
 - un `client_id` dont un caractère a changé : `null` ;

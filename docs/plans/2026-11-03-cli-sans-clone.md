@@ -1,6 +1,6 @@
 # La CLI sans clone : plan d'implémentation
 
-3 novembre 2026 · Amos (avec Claude) · à relire par David
+3 novembre 2026 · Amos (avec Claude) · tranché par Amos le 3 novembre
 
 > **Pour les agents :** SOUS-SKILL REQUISE : `superpowers:subagent-driven-development` (recommandé) ou `superpowers:executing-plans`, tâche par tâche. Chaque tâche est exécutée par un sous-agent neuf qui reçoit ce plan et son identifiant de tâche, rien d'autre. Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés », puis **sa** tâche. Tests d'abord (`superpowers:test-driven-development`), preuves avant de conclure (`superpowers:verification-before-completion`). Commiter **seulement ses fichiers**, ajoutés un par un (`git add <fichier>`, jamais `-A` ni `.`), en un commit « Sxx · titre ». Une erreur de type ou de lint dans un fichier qui n'est pas à soi se signale, elle ne se corrige pas.
 
@@ -28,7 +28,7 @@ Total : environ 5,5 jours.
 
 **Ordre :** les lots 1 et 2 sont indépendants et peuvent avancer en parallèle. Ils se croisent sur `src/cli/leon.ts`, `src/cli/briefing.ts`, `src/cli/install-hooks.ts` et `README.md`, par des ajouts voisins : le second à fusionner se rebase sur le premier. S10 (`leon setup`) appelle `leon login` : s'il passe avant le lot 1, il s'arrête sur le message du repli (`--with-token`). Le lot 3 attend le lot 2. Ce plan passe avant le lot 4 du plan mémoire, qui reprend le lanceur de S08 (voir E7).
 
-**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan partent dans leur propre PR, sans code, à valider par Amos avant tout le reste.
+**Une PR par lot**, conformément au CLAUDE.md. L'étude et ce plan sont partis dans leur propre PR, sans code (#115) ; Amos a tranché les questions le 03/11.
 
 ## Règles propres à ce chantier
 
@@ -54,21 +54,21 @@ Total : environ 5,5 jours.
 - **Connexion :** la CLI attend le retour 5 minutes au plus ; le code signé vit 2 minutes ; le retour local n'accepte qu'une requête.
 - **Fichier de la CLI :** 1 Mo au plus (135 Ko le 03/11). Le manifeste en donne la taille exacte, vérifiée au téléchargement.
 - **Node :** 24 (le champ `engines` de `package.json`), version exacte et empreintes par plateforme dans `src/cli/runtime.json`.
-- **Plateformes :** `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64` (Linux selon la réponse à A4). Toute autre plateforme s'arrête avec un message clair, sans rien écrire.
+- **Plateformes :** `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64` (Linux dès la v1, A4). Toute autre plateforme s'arrête avec un message clair, sans rien écrire.
 - **Versions gardées :** la version en cours de la CLI et la précédente ; un seul Node.
 
 ## Décisions prises pour ce plan
 
-Les décisions qui attendent encore une réponse portent « proposé ».
+Amos a tranché A1 à A5 et QD1 à QD3 le 03/11 (voir « Questions tranchées »).
 
-- **E1. La CLI en un seul fichier, servie par le serveur (proposé, voir A2).** Vite construit `src/cli/leon.ts` en `public/cli/leon-<version>.mjs` et `public/cli/version.json` à chaque `pnpm build`. Ni npm, ni binaire autonome, ni GitHub Releases.
-- **E2. Un Node posé par Leon (proposé, voir A2).** Le seul exécutable `node` de la version officielle épinglée, dans `~/.leon/runtime/node-v<version>/node`, vérifié par l'empreinte écrite dans le dépôt. Jamais le Node de l'ordinateur sous la forme installée.
-- **E3. La connexion par renvoi vers l'ordinateur (proposé, voir A1)**, avec le repli `leon login --with-token`. Pas de flux d'appareil en v1, pas de serveur OAuth (#56).
+- **E1. La CLI en un seul fichier, servie par le serveur (A2).** Vite construit `src/cli/leon.ts` en `public/cli/leon-<version>.mjs` et `public/cli/version.json` à chaque `pnpm build`. Ni npm, ni binaire autonome, ni GitHub Releases.
+- **E2. Un Node posé par Leon (A2).** Le seul exécutable `node` de la version officielle épinglée, dans `~/.leon/runtime/node-v<version>/node`, vérifié par l'empreinte écrite dans le dépôt. Jamais le Node de l'ordinateur sous la forme installée.
+- **E3. La connexion par renvoi vers l'ordinateur (A1)**, avec le repli `leon login --with-token`. Pas de flux d'appareil en v1, pas de serveur OAuth (#56 reste ouverte pour le MCP distant, QD3).
 - **E4. Un jeton par ordinateur**, dans `api_tokens`, nommé « Ordinateur : <nom> » par le serveur. Une nouvelle connexion du même ordinateur révoque l'ancien jeton ; `leon logout` révoque le sien.
 - **E5. Les variables gagnent.** `LEON_URL` et `LEON_TOKEN`, si elles sont posées toutes les deux, passent avant `~/.leon/connexion.json` : les tests et le clone (son `.env.local`) gardent leur réglage.
 - **E6. Tous les crochets appellent le lanceur**, ceux de Claude Code compris : `'<home>/.leon/bin/leon' briefing` et `'<home>/.leon/bin/leon' capter-session`. Les anciens crochets `pnpm … leon …` restent reconnus, pour la migration et le retrait.
 - **E7. D10 du plan mémoire est amendé.** Le lanceur a deux formes : installée (par défaut) et clone (`leon setup --depot <clone>`). Il ne change que par `leon setup`. `launcher.ts` est écrit ici (S08) ; T16 du plan mémoire garde les adaptateurs par outil et y ajoute le détachement de Codex.
-- **E8. Mises à jour automatiques (proposé, voir A3)**, au plus une fois par 24 h, lancées détachées par `leon briefing`, jamais sous la forme clone. Empreinte, taille et `--version` vérifiées avant de basculer.
+- **E8. Mises à jour automatiques (A3)**, au plus une fois par 24 h, lancées détachées par `leon briefing`, jamais sous la forme clone. Empreinte, taille et `--version` vérifiées avant de basculer.
 - **E9. Hors de ce chantier :** Windows ; le trousseau de macOS ; un flux d'appareil pour le travail à distance ; une signature des versions hors de Railway (QD1) ; des jetons aux droits réduits ; un état de santé de chaque ordinateur dans Réglages (dernière capture, échecs).
 
 ## Contrats partagés
@@ -366,16 +366,15 @@ Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `e
 4. Révoquer l'ordinateur dans Réglages : les crochets ne renvoient plus rien (401 sur la sortie d'erreur), Claude Code n'est pas gêné.
 5. `leon logout`, puis `leon retirer-crochets` : plus rien ne part, `~/.leon/bin/leon` est effacé.
 
-## Questions ouvertes
+## Questions tranchées
 
-**Pour Amos (avant le code) :**
-- A1. La connexion par renvoi vers l'ordinateur (un clic) plutôt que le code collé du plan du 28/10 ?
-- A2. La CLI servie par le serveur, sur un Node posé par Leon dans `~/.leon` (27,5 Mo une fois), plutôt qu'un paquet npm ou le Node de l'ordinateur ?
-- A3. Les mises à jour automatiques ?
-- A4. Linux dès la v1 ?
-- A5. Le bloc « Vos outils de code » pour tous les services, en tête pour ceux qui codent ?
+Par Amos, le 03/11 ; il porte ce chantier seul.
 
-**Pour David :**
-- QD1. La CLI servie par le serveur de production : une PR fusionnée arrive sur tous les ordinateurs à leur session suivante. D'accord en v1, ou une signature par une clé hors de Railway d'abord ?
-- QD2. L'adresse publique de l'installation : `BETTER_AUTH_URL` ?
-- QD3. #56 : ce plan ne s'en sert pas. On la ferme, ou elle reste pour le MCP distant ?
+- A1. La connexion par renvoi vers l'ordinateur (un clic), et non le code collé du plan du 28/10.
+- A2. La CLI servie par le serveur, sur un Node posé par Leon dans `~/.leon`.
+- A3. Les mises à jour automatiques.
+- A4. Linux (x64 et arm64) dès la v1.
+- A5. Le bloc « Vos outils de code » pour tous les services, en tête pour ceux qui codent.
+- QD1. Pas de signature hors de Railway en v1 : HTTPS, empreinte et taille du manifeste.
+- QD2. L'adresse publique de l'installation est `BETTER_AUTH_URL`.
+- QD3. #56 reste ouverte : le MCP distant viendra en plus de ce chantier, pour que Claude, ChatGPT et tout autre LLM se branchent à Leon. Ce plan ne l'attend pas.

@@ -37,7 +37,7 @@ import {
 } from '../capture/api-contract';
 import { isOtherToolHook, readHookStdin } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
-import { parseServerEnv, type ServerEnv } from './env';
+import { resolveServerEnv, type ServerEnv } from './env';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
 
@@ -169,7 +169,7 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       deps.err(CONSENT_WITHDRAWN_MESSAGE);
       return 0;
     }
-    const server = parseServerEnv(deps.env);
+    const server = await resolveServerEnv(deps.env, deps.home);
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
     if ((await factsConsent(deps.home, 'claude_code')) === null) {
@@ -193,7 +193,7 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       deps.out(startOutput('claude_code', text));
     }
   } catch (error) {
-    // Messages fixes (parseServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
+    // Messages fixes (resolveServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
     deps.err(`Leon: ${error instanceof Error ? error.message : 'briefing unavailable.'}`);
   }
   return 0;

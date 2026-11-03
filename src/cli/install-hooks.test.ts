@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
+import { writeConnection } from './connection';
 import { consentPath, factsConsent, writeConsent } from './consent';
 import {
   addLeonHooks,
@@ -662,6 +663,35 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 });
 
 describe('installHooks : les réglages du serveur dans le .env.local du dépôt', () => {
+  it('prévient « pas connecté » et dit de lancer leon login quand rien ne donne le serveur', async () => {
+    const repoDir = await fakeRepo(null);
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.output).toContain('This computer is not connected: run `leon login`');
+  });
+
+  it('ne prévient pas quand l’ordinateur est connecté (leon login), même sans .env.local', async () => {
+    const repoDir = await fakeRepo(null);
+    await writeConnection(home, {
+      url: 'https://leon.example',
+      jeton: FAKE_TOKEN,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).not.toContain('Warning');
+    expect(run.output).not.toContain('is missing');
+    // L'aperçu dit d'où viendra le serveur, sans en recopier ni l'adresse ni le jeton.
+    expect(run.output).toContain('leon login');
+    expect(run.output).not.toContain(FAKE_TOKEN);
+    expect(run.output).not.toContain('leon.example');
+  });
+
   it('prévient quand le dépôt n’a pas de .env.local : les commandes ne feraient rien', async () => {
     const repoDir = await fakeRepo(null);
 

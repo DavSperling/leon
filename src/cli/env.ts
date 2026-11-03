@@ -2,19 +2,10 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '../capture/api-contract';
+import { readConnection } from './connection';
+import { isAllowedServerUrl } from './server-url';
 
-const LOCAL_HOSTNAMES = ['localhost', '127.0.0.1'];
-
-// On compare le nom d'hôte calculé par URL, jamais un préfixe de chaîne :
-// « http://localhost:3000@evil.example » a pour hôte evil.example.
-function isAllowedServerUrl(value: string): boolean {
-  if (!URL.canParse(value)) return false;
-  const url = new URL(value);
-  return (
-    url.protocol === 'https:' ||
-    (url.protocol === 'http:' && LOCAL_HOSTNAMES.includes(url.hostname))
-  );
-}
+export { isAllowedServerUrl };
 
 const ServerEnvSchema = z.object({
   LEON_URL: z.string().refine(isAllowedServerUrl),
@@ -37,6 +28,24 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
     throw new Error([...names].map((name) => HINTS[name]).join(' '));
   }
   return { url: result.data.LEON_URL, token: result.data.LEON_TOKEN };
+}
+
+// Le serveur et le jeton des commandes (E5 du plan « CLI sans clone ») : LEON_URL et LEON_TOKEN, si les deux sont
+// posées, passent avant ~/.leon/connexion.json (les tests et le clone gardent leur réglage) ; sinon la connexion de
+// `leon login` ; sinon l'erreur de parseServerEnv, qui dit aussi comment se connecter.
+export async function resolveServerEnv(
+  source: Record<string, string | undefined>,
+  home: string,
+): Promise<ServerEnv> {
+  if (source.LEON_URL && source.LEON_TOKEN) return parseServerEnv(source);
+  const connection = await readConnection(home);
+  if (connection) return { url: connection.url, token: connection.jeton };
+  try {
+    return parseServerEnv(source);
+  } catch (error) {
+    const problem = error instanceof Error ? error.message : 'invalid configuration.';
+    throw new Error(`${problem} This computer is not connected: run \`leon login\`.`);
+  }
 }
 
 export function claudeConfigDir(source: Record<string, string | undefined>): string {

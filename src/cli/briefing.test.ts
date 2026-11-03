@@ -18,6 +18,7 @@ import {
   fetchStartText,
   runBriefing,
 } from './briefing';
+import { writeConnection } from './connection';
 import { CONSENT_WITHDRAWN_MESSAGE, writeConsent } from './consent';
 import type { GitRunner } from './project-key';
 
@@ -228,13 +229,24 @@ describe('runBriefing', () => {
   let agreed: string;
   let notAgreed: string;
   let withdrawn: string;
+  let connected: string; // l'accord en version 2, et une connexion de `leon login`
+  const SAVED = { url: 'https://leon.example', token: `leon_${'s'.repeat(43)}` };
   beforeAll(async () => {
     homes = await mkdtemp(join(tmpdir(), 'leon-point-'));
     agreed = join(homes, 'accord');
     notAgreed = join(homes, 'sans-accord');
     withdrawn = join(homes, 'retire');
+    connected = join(homes, 'connecte');
     await writeConsent(agreed, 'claude_code', 2);
     await writeConsent(withdrawn, 'claude_code', 0);
+    await writeConsent(connected, 'claude_code', 2);
+    await writeConnection(connected, {
+      url: SAVED.url,
+      jeton: SAVED.token,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
   });
   afterAll(() => rm(homes, { recursive: true, force: true }));
   const hookJson = (cwd: string) =>
@@ -477,6 +489,37 @@ describe('runBriefing', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(out).toEqual([]);
     expect(err.join('\n')).toMatch(/LEON_URL/);
+    expect(err.join('\n')).toMatch(/run `leon login`/);
+  });
+
+  it('sans LEON_URL ni LEON_TOKEN, prend la connexion de leon login (~/.leon/connexion.json)', async () => {
+    const { run, out, err, fetchImpl } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      env: {},
+      home: connected,
+    });
+
+    expect(await run()).toBe(0);
+
+    const [address, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(address.origin).toBe(SAVED.url);
+    expect(init.headers).toMatchObject({ Authorization: `Bearer ${SAVED.token}` });
+    expect(out).toEqual([BLOCK]);
+    expect(err).toEqual([]);
+  });
+
+  it('LEON_URL et LEON_TOKEN, posées toutes les deux, passent avant la connexion enregistrée', async () => {
+    const { run, fetchImpl } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      env: serverEnv,
+      home: connected,
+    });
+
+    expect(await run()).toBe(0);
+
+    const [address, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(address.origin).toBe(env.url);
+    expect(init.headers).toMatchObject({ Authorization: `Bearer ${env.token}` });
   });
 
   it('accord retiré : code 0, le seul message du retrait, sans rien demander ni lancer git', async () => {

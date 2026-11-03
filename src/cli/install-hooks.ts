@@ -35,8 +35,9 @@
 //   fichier a changé pendant que l'utilisateur confirmait ;
 // - répond clairement, sans rien modifier, à une écriture impossible (droits, disque plein) ou à un fichier qui est
 //   un lien symbolique vers un fichier absent ;
-// - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
-//   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
+// - prévient quand l'ordinateur n'est pas connecté (`leon login`, ~/.leon/connexion.json) et que le `.env.local` du
+//   dépôt ne donne pas non plus LEON_URL et LEON_TOKEN (sans eux, les commandes ne font rien et ne le disent que sur
+//   la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
@@ -72,7 +73,7 @@ import {
   factsConsent,
   writeConsent,
 } from './consent';
-import { parseServerEnv } from './env';
+import { resolveServerEnv } from './env';
 import { type HookSubcommand, hookCommand } from './hook-commands';
 
 // 7,5 s au pire pour le démarrage (briefing.ts) : 10 s. Pour la fin de session, 30 s sont de la marge sur les 15 s
@@ -302,11 +303,12 @@ const ACTION_LABELS: Record<HookChange['action'], string> = {
 // Le README est en français : la section citée garde son titre exact.
 const README_HINT = `see the README, section "L'IA à jour chaque matin"`;
 
-// Les réglages du serveur que les deux commandes liront à chaque lancement : le `.env.local` du dépôt (le script
-// `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de `pnpm --dir`).
-// On lit le fichier avec le même lecteur que node (`parseEnv`) et on le juge comme la CLI (`parseServerEnv`). Les
-// messages de `parseServerEnv` sont fixes : aucune valeur du fichier n'est jamais recopiée.
-async function serverEnvWarnings(repoDir: string): Promise<string[]> {
+// Les réglages du serveur que les deux commandes liront à chaque lancement : LEON_URL et LEON_TOKEN du `.env.local` du
+// dépôt (le script `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de
+// `pnpm --dir`), sinon la connexion de `leon login`. On lit le fichier avec le même lecteur que node (`parseEnv`) et
+// on le juge comme la CLI (`resolveServerEnv`). Ses messages sont fixes : aucune valeur du fichier ni de la connexion
+// n'est jamais recopiée.
+async function serverEnvWarnings(repoDir: string, home: string): Promise<string[]> {
   const envPath = join(repoDir, '.env.local');
   let values: NodeJS.Dict<string> = {};
   try {
@@ -315,17 +317,17 @@ async function serverEnvWarnings(repoDir: string): Promise<string[]> {
     // Absent ou illisible : traité comme vide.
   }
   try {
-    parseServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN });
+    await resolveServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN }, home);
     return [];
   } catch (error) {
     const problem = error instanceof Error ? error.message : 'invalid server settings.';
     return [
-      `Warning: ${envPath} does not give the commands what they need to reach the server: ${problem} Without these, both commands do nothing and say so only on stderr, which Claude Code does not show (ignore this if you set both variables in the environment that starts Claude Code).`,
+      `Warning: ${envPath} does not give the commands what they need to reach the server: ${problem} Without a connection, both commands do nothing and say so only on stderr, which Claude Code does not show (ignore this if you set both variables in the environment that starts Claude Code).`,
     ];
   }
 }
 
-async function warnings(settings: Json, repoDir: string): Promise<string[]> {
+async function warnings(settings: Json, repoDir: string, home: string): Promise<string[]> {
   const found: string[] = [];
   if (settings.disableAllHooks === true) {
     found.push(
@@ -337,7 +339,7 @@ async function warnings(settings: Json, repoDir: string): Promise<string[]> {
       `Warning: ${repoDir} is a temporary Git worktree: if it is deleted, the hooks will stop working. Run the command from the main Leon clone, or pass that clone with --depot <path>.`,
     );
   }
-  found.push(...(await serverEnvWarnings(repoDir)));
+  found.push(...(await serverEnvWarnings(repoDir, home)));
   return found;
 }
 
@@ -371,7 +373,7 @@ function preview(path: string, changes: HookChange[], backup: BackupPlan): strin
   }
   lines.push(
     ...CONSENT_LINES,
-    'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
+    'Both commands contact the server of the connection made by `leon login` (saved in ~/.leon/connexion.json), unless LEON_URL and LEON_TOKEN are both set: those come first (a repository clone reads them from its .env.local file).',
     'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
     backupLine(backup),
   );
@@ -444,7 +446,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     return refuse(`does not have the expected shape (${error.message}).`);
   }
 
-  const alerts = await warnings(settings, options.repoDir);
+  const alerts = await warnings(settings, options.repoDir, options.home);
   // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
   const consented = (await factsConsent(options.home, 'claude_code')) !== null;
   const consentFile = consentPath(options.home);

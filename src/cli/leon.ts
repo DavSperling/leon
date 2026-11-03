@@ -1,5 +1,5 @@
 import { access, readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { homedir, hostname } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,7 @@ import {
   readHookStdin,
 } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
-import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
+import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import {
   countOf,
   createFactsSender,
@@ -24,6 +24,7 @@ import {
   parseSince,
 } from './import-claude-code';
 import { installHooks } from './install-hooks';
+import { openInBrowser, readTokenFromInput, runLogin, runLogout } from './login';
 import { gitInDirectory } from './project-key';
 import { uninstallHooks } from './uninstall-hooks';
 
@@ -49,6 +50,12 @@ Commands:
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
+  login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
+                       in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
+                       set, take precedence)
+      --url <address>      the Leon server (default: LEON_URL, then the saved connection)
+      --with-token         paste a token created in Settings instead (for a browser on another computer)
+  logout               Revoke this computer's token and remove ~/.leon/connexion.json
   installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
                        settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in
                        ~/.leon/accord.json, after confirmation (only the consent when the hooks are already there)
@@ -58,7 +65,8 @@ Commands:
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code
       --outil <tool>       the tool to remove: claude_code (the only one for now, and the default)
 
-Real uploads (import-claude-code without --dry-run), briefing and capter-session need LEON_URL and LEON_TOKEN.`;
+Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
+LEON_URL and LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'to send' : 'sent';
@@ -80,7 +88,7 @@ async function runImport(args: string[]): Promise<number> {
   const nothingSent = async (): Promise<never> => {
     throw new Error('Nothing is sent with --dry-run.');
   };
-  const env = dryRun ? null : parseServerEnv(process.env);
+  const env = dryRun ? null : await resolveServerEnv(process.env, homedir());
   // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts), et seulement ceux des
   // fichiers modifiés après lui.
   const accord = await factsConsent(homedir(), 'claude_code');
@@ -148,9 +156,9 @@ async function runCaptureSession(args: string[]): Promise<number> {
     }
     let env: ServerEnv;
     try {
-      env = parseServerEnv(process.env);
+      env = await resolveServerEnv(process.env, homedir());
     } catch (error) {
-      // Les messages de parseServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
+      // Les messages de resolveServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
       console.error(`Leon: ${error instanceof Error ? error.message : 'invalid configuration.'}`);
       return 0;
     }
@@ -243,12 +251,50 @@ async function runUninstallHooks(args: string[]): Promise<number> {
   return uninstallHooks({ configDir, home: homedir() }, { out: console.log, err: console.error });
 }
 
+// `leon login` : Ctrl+C annule l'attente du navigateur sans rien écrire. Sans terminal, --with-token lit une ligne.
+async function runLoginCommand(args: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args,
+    options: { url: { type: 'string' }, 'with-token': { type: 'boolean' } },
+  });
+  const abort = new AbortController();
+  process.once('SIGINT', () => abort.abort());
+  try {
+    return await runLogin(
+      { url: values.url, withToken: values['with-token'] ?? false },
+      {
+        home: homedir(),
+        env: process.env,
+        fetch,
+        open: openInBrowser,
+        hostname: hostname(),
+        out: console.log,
+        err: console.error,
+        readToken: () => readTokenFromInput(process.stdin, process.stdout),
+        signal: abort.signal,
+      },
+    );
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
+    if (command === 'login') return await runLoginCommand(args);
+    if (command === 'logout') {
+      return await runLogout({
+        home: homedir(),
+        env: process.env,
+        fetch,
+        out: console.log,
+        err: console.error,
+      });
+    }
     if (command === 'installer-crochets') return await runInstallHooks(args);
     if (command === 'retirer-crochets') return await runUninstallHooks(args);
   } catch (error) {

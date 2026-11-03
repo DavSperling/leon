@@ -6,6 +6,7 @@ import type { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { auth, emailEnabled } from '@/server/auth/auth';
+import { pathAfterSignIn } from '@/server/auth/computer-authorize';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import {
@@ -103,7 +104,8 @@ export async function signInAction(
   if (unverified) return { errors: { form: t('verifyFirst') }, values };
   // Même message pour un e-mail inconnu et un mot de passe faux.
   if (!ok) return { errors: { form: t('wrongCredentials') }, values };
-  redirect('/');
+  // `retour` : l'autorisation d'un ordinateur qui a renvoyé ici (pathAfterSignIn la revalide) ; sinon l'accueil.
+  redirect(pathAfterSignIn(formData.get('retour')));
 }
 
 const TOTP_CODE = /^\d{6}$/;
@@ -130,7 +132,7 @@ export async function verifyTwoFactorAction(
   } catch {
     return { twoFactor: true, errors: { form: t('codeWrong') } };
   }
-  redirect('/');
+  redirect(pathAfterSignIn(formData.get('retour')));
 }
 
 export async function requestPasswordResetAction(

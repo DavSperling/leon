@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { AuthForm } from '@/components/verre/auth/auth-form';
 import { Notice } from '@/components/verre/ui/feedback';
 import { emailEnabled } from '@/server/auth/auth';
+import { authorizePath, parseAuthorizeParams } from '@/server/auth/computer-authorize';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth');
@@ -11,14 +12,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // `?supprime=` : les actions de suppression (réglages/actions.ts) renvoient ici, la session déjà effacée.
+// `?port=&etat=&empreinte=` : /ordinateur/autoriser, sans session. La connexion y revient, par un chemin rebâti à
+// partir des trois paramètres validés (computer-authorize.ts) et non copié de l'adresse.
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ supprime?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   // Rendue à chaque requête : le lien suit la configuration du serveur, pas celle du build.
   await connection();
-  const { supprime } = await searchParams;
+  const query = await searchParams;
+  const { supprime } = query;
+  const authorization = parseAuthorizeParams(query);
   const t = await getTranslations('deleteAccount');
   return (
     <>
@@ -27,7 +32,11 @@ export default async function SignInPage({
           {t(supprime === 'compte' ? 'doneAccount' : 'doneOrganization')}
         </Notice>
       )}
-      <AuthForm page="connexion" canResetPassword={emailEnabled} />
+      <AuthForm
+        page="connexion"
+        canResetPassword={emailEnabled}
+        returnTo={authorization ? authorizePath(authorization) : undefined}
+      />
     </>
   );
 }

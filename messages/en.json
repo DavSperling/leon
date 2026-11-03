@@ -1431,5 +1431,22 @@
       "ownerReady": "Setting up your workspace",
       "memberReady": "Your workspace is ready"
     }
+  },
+  "computer": {
+    "authorize": {
+      "title": "Connect this computer",
+      "question": "Authorize this computer to send your coding sessions to Leon, in the {space} workspace?",
+      "warning": "If you didn’t just run the command yourself in a terminal, cancel.",
+      "allow": "Authorize",
+      "cancel": "Cancel",
+      "invalidTitle": "Link not valid",
+      "invalidText": "This authorization link is incomplete or malformed. Run leon login again in your terminal."
+    },
+    "connected": {
+      "title": "Computer connected",
+      "done": "All set. You can close this tab and go back to the terminal.",
+      "refusedTitle": "Connection cancelled",
+      "refused": "Nothing was authorized."
+    }
   }
 }

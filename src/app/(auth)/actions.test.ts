@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '@/server/auth/auth';
+import { authorizePath } from '@/server/auth/computer-authorize';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { signInWithPassword } from '@/server/auth/session';
 import { createUserWithInvitation, createUserWithOrganization } from '@/server/auth/sign-up';
@@ -218,6 +219,57 @@ describe('signInAction', () => {
     await expect(
       signInAction({}, form({ email: 'paul@example.com', password: 'motdepasse-solide' })),
     ).rejects.toThrow('NEXT_REDIRECT /');
+  });
+});
+
+// `leon login` : la page /ordinateur/autoriser envoie vers /connexion, et la connexion revient à l'autorisation en
+// cours. Le champ `retour` revient d'un navigateur : seul un chemin d'autorisation aux paramètres valides compte.
+describe('retour à l’autorisation d’un ordinateur', () => {
+  const AUTHORIZE = authorizePath({
+    port: 4242,
+    etat: 'AbCdEfGhIjKlMnOpQrStUv',
+    empreinte: 'a1'.repeat(32),
+  });
+  // toThrow(Error) compare le message en entier : "NEXT_REDIRECT /" ne vaut pas "NEXT_REDIRECT /reglages".
+  const redirectsTo = (path: string) => new Error(`NEXT_REDIRECT ${path}`);
+  const signedIn = { email: 'paul@example.com', password: 'motdepasse-solide' };
+
+  it('la connexion revient à la page d’autorisation', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour: AUTHORIZE }))).rejects.toThrow(
+      redirectsTo(AUTHORIZE),
+    );
+  });
+
+  it('la vérification du code (2FA) aussi, avec un code ou un code de secours', async () => {
+    for (const code of ['123456', 'V5qHD-kSFGw']) {
+      await expect(verifyTwoFactorAction({}, form({ code, retour: AUTHORIZE }))).rejects.toThrow(
+        redirectsTo(AUTHORIZE),
+      );
+    }
+  });
+
+  it.each([
+    ['une adresse absolue', `https://evil.example${AUTHORIZE}`],
+    ['une adresse sans schéma', `//evil.example${AUTHORIZE}`],
+    ['une autre page', '/reglages'],
+    ['une autorisation au port invalide', AUTHORIZE.replace('port=4242', 'port=80')],
+  ])('%s : retour à l’accueil', async (_name, retour) => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour }))).rejects.toThrow(redirectsTo('/'));
+    await expect(verifyTwoFactorAction({}, form({ code: '123456', retour }))).rejects.toThrow(
+      redirectsTo('/'),
+    );
+  });
+
+  it('une connexion refusée ne renvoie nulle part', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: false });
+
+    const state = await signInAction({}, form({ ...signedIn, retour: AUTHORIZE }));
+
+    expect(state.errors).toEqual({ form: 'E-mail ou mot de passe incorrect.' });
   });
 });
 

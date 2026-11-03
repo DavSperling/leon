@@ -117,14 +117,18 @@ const CONTROL_FIX = 'pointer-coarse:text-title aria-invalid:focus-visible:outlin
 
 // `invitation` : le secret du lien, renvoyé dans un champ caché, et le nom de l'espace à rejoindre.
 // `canResetPassword` : « Mot de passe oublié ? » n'apparaît que si Leon peut envoyer l'e-mail.
+// `returnTo` : où revenir après la connexion (l'autorisation d'un ordinateur) ; renvoyé dans un champ caché, que
+// signInAction et verifyTwoFactorAction revalident.
 export function AuthForm({
   page,
   invitation,
   canResetPassword = false,
+  returnTo,
 }: {
   page: AuthPage;
   invitation?: { token: string; organizationName: string };
   canResetPassword?: boolean;
+  returnTo?: string;
 }) {
   const t = useTranslations('auth');
   const copy = COPY[page];
@@ -208,6 +212,7 @@ export function AuthForm({
         className="mt-6 grid gap-4"
       >
         {invitation && <input type="hidden" name="token" value={invitation.token} />}
+        {returnTo && <input type="hidden" name="retour" value={returnTo} />}
         {state.twoFactor ? (
           <>
             <p className="text-ui text-muted">

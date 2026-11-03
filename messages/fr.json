@@ -1431,5 +1431,22 @@
       "ownerReady": "Votre espace se prépare",
       "memberReady": "Votre espace est prêt"
     }
+  },
+  "computer": {
+    "authorize": {
+      "title": "Connecter cet ordinateur",
+      "question": "Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace {space} ?",
+      "warning": "Si vous ne venez pas de lancer la commande vous-même dans un terminal, annulez.",
+      "allow": "Autoriser",
+      "cancel": "Annuler",
+      "invalidTitle": "Lien non valide",
+      "invalidText": "Ce lien d’autorisation est incomplet ou mal formé. Relancez leon login dans votre terminal."
+    },
+    "connected": {
+      "title": "Ordinateur connecté",
+      "done": "C’est fait. Vous pouvez fermer cet onglet et revenir au terminal.",
+      "refusedTitle": "Connexion annulée",
+      "refused": "Rien n’a été autorisé."
+    }
   }
 }

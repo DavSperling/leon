@@ -131,9 +131,10 @@ describe('depots_equipe', () => {
          where kind = 'github' and lower(metadata->'origin'->>'repo') = 'acme/depot'`);
     });
 
-    // Le dépôt n'est qu'un filtre (voir 0047) : la condition d'index est l'organisation.
+    // Le dépôt n'est qu'un filtre (voir 0047) : la condition d'index est l'organisation. Index Scan ou Bitmap Index
+    // Scan, selon les statistiques de la base de test.
     expect(rows.map((row) => row['QUERY PLAN']).join('\n')).toMatch(
-      /Index Scan using sources_github_repo_idx .*\n\s*Index Cond: \(tenant_id = /,
+      /Index Scan (?:using|on) sources_github_repo_idx .*\n\s*Index Cond: \(tenant_id = /,
     );
   });
 });

@@ -26,7 +26,7 @@ export type AboutPreviewProps = {
   seniority: number | null;
 };
 
-function PreviewCard({ title, children }: { title: string; children: ReactNode }) {
+export function PreviewCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <GlassCard className="p-4">
       <h2 className="mb-3 text-meta font-medium tracking-[0.05em] text-muted uppercase">{title}</h2>

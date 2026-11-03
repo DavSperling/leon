@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { TeammatesStep } from '@/components/verre/onboarding/teammates-step';
+import { onboardingSteps } from '@/lib/onboarding';
 import { canInvite } from '@/server/auth/members';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
@@ -28,6 +29,7 @@ export default async function TeammatesPage() {
   const profile = await getViewerProfile(ctx);
   return (
     <TeammatesStep
+      steps={onboardingSteps('soleOwner')}
       organizationName={profile.organizationName}
       you={{
         name: profile.userName,

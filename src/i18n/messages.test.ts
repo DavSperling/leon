@@ -22,6 +22,10 @@ function flatten(tree: Tree, prefix = ''): Map<string, string> {
 const params = (message: string) =>
   [...new Set([...message.matchAll(/\{\s*([A-Za-z_]\w*)\s*[,}]/g)].map((m) => m[1]))].sort();
 
+// Les balises d'un message riche : `<link>…</link>`. Elles se lisent avec t.rich, une fonction par balise.
+const tags = (message: string) =>
+  [...new Set([...message.matchAll(/<([A-Za-z_]\w*)>/g)].map((m) => m[1]))].sort();
+
 const FR = flatten(fr);
 const EN = flatten(en);
 
@@ -33,6 +37,7 @@ describe('les messages', () => {
   it('ont les mêmes paramètres dans les deux langues', () => {
     for (const [key, message] of FR) {
       expect(params(EN.get(key) ?? ''), key).toEqual(params(message));
+      expect(tags(EN.get(key) ?? ''), key).toEqual(tags(message));
     }
   });
 
@@ -49,7 +54,10 @@ describe('les messages', () => {
       });
       for (const [key, message] of messages) {
         const values = Object.fromEntries(params(message).map((name) => [name, 2]));
-        t(key as never, values as never);
+        const chunks = Object.fromEntries(
+          tags(message).map((tag) => [tag, (text: unknown) => text]),
+        );
+        t.rich(key as never, { ...values, ...chunks } as never);
       }
 
       expect(errors, locale).toEqual([]);

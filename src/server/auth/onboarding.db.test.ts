@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { members, organizations, users } from '@/server/db/schema/auth';
+import { dropPoints, pointIsStale, queuedRefreshes, seedPoint } from '@/test/briefing-points';
 import { adminDb } from '@/test/db';
 import { createTestTenant, createTestUser } from '@/test/fixtures';
 import {
@@ -23,6 +24,7 @@ const step: OwnerStep = {
 
 // Chaque test a son espace : Ana en est propriétaire, Bob membre. Les updates visent leurs propres lignes
 // (la base de test est partagée entre les workers).
+const tenantIds: string[] = [];
 let tenantId: string;
 let ana: TenantContext;
 let bob: TenantContext;
@@ -39,9 +41,13 @@ const sizeOf = async () =>
 beforeEach(async () => {
   const tenant = await createTestTenant(['Ana', 'Bob']);
   tenantId = tenant.tenantId;
+  tenantIds.push(tenantId);
   [ana, bob] = tenant.members as [TenantContext, TenantContext];
   await setRole(ana, 'owner');
 });
+
+// Les points marqués périmés touchent le vrai pg-boss de la base de test : on retire leurs travaux à la fin.
+afterAll(() => dropPoints(tenantIds));
 
 describe('readOnboardingMember', () => {
   it("un membre neuf n'a ni poste ni étape validée", async () => {
@@ -123,6 +129,33 @@ describe('completeOwnerStep', () => {
     await setRole(bob, 'admin');
     expect(await completeOwnerStep(bob, step)).toBe(false);
     expect(await sizeOf()).toBeNull();
+  });
+});
+
+describe('le point du matin après l’étape 1', () => {
+  it('le propriétaire qui valide son poste voit ses points périmés et remis en file, pas ceux des autres', async () => {
+    const mine = await seedPoint(ana);
+    const theirs = await seedPoint(bob);
+
+    expect(await completeOwnerStep(ana, step)).toBe(true);
+
+    expect(await pointIsStale(ana, mine)).toBe(true);
+    expect(await pointIsStale(bob, theirs)).toBe(false);
+    const [queued] = await queuedRefreshes(ana, mine);
+    expect((queued?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
+    expect(await queuedRefreshes(bob, theirs)).toEqual([]);
+  });
+
+  it('un refus, ou les seules attentes d’un membre, ne touchent à aucun point', async () => {
+    const hers = await seedPoint(ana);
+    const his = await seedPoint(bob);
+
+    expect(await completeOwnerStep(bob, step)).toBe(false);
+    expect(await completeMemberStep(bob, ['find'])).toBe(true);
+
+    expect(await pointIsStale(ana, hers)).toBe(false);
+    expect(await pointIsStale(bob, his)).toBe(false);
+    expect(await queuedRefreshes(bob, his)).toEqual([]);
   });
 });
 

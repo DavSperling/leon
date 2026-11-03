@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
+import { OAUTH_RETURN_PATHS, type OAuthReturnPath } from '@/lib/connection-form';
 import { env } from '@/server/env';
 
 // Le cookie de l'aller-retour chez l'éditeur : ce qu'il faut pour terminer le branchement au retour.
@@ -23,6 +24,8 @@ export type OAuthPending = {
   createdAt: number; // millisecondes depuis 1970
   // Branchement par Pipedream : l'utilisateur Pipedream créé pour cette connexion.
   pipedreamUser?: string;
+  // La page où revenir après le branchement ; absente : Connexions. Toujours tirée d'une liste fermée.
+  returnTo?: OAuthReturnPath;
 };
 
 const PendingSchema = z.object({
@@ -36,6 +39,7 @@ const PendingSchema = z.object({
   reconnectId: z.string().nullable(),
   createdAt: z.number(),
   pipedreamUser: z.string().optional(),
+  returnTo: z.enum(OAUTH_RETURN_PATHS).optional(),
 });
 
 const sign = (body: string) =>

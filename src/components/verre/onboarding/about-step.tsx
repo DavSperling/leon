@@ -31,12 +31,14 @@ import {
   departmentLabelKey,
   GOALS,
   jobLabelKey,
+  type OnboardingStepId,
   seniorityId,
 } from '@/lib/onboarding';
 import { nb } from '@/lib/verre/nb';
 import type { Placement } from '@/server/auth/onboarding';
 import { PlacementFields } from './placement-fields';
 import { AboutPreview } from './preview';
+import { OnboardingSteps } from './steps';
 
 export type AboutStepProps = {
   /** newcomer : connecté sans espace (il nomme son entreprise) ; owner : crée l'espace ; member : invité, son poste est fixé par un administrateur. */
@@ -47,6 +49,8 @@ export type AboutStepProps = {
   organizationName: string | null;
   /** Ce qu'un administrateur a fixé pour un membre. */
   placement: Placement | null;
+  /** Les étapes que cette personne va parcourir ; une seule, et le fil d'étapes disparaît. */
+  steps: OnboardingStepId[];
 };
 
 // Le trait d'union des tailles ('11-50') s'écrit en tiret demi-cadratin ; la valeur envoyée reste l'identifiant.
@@ -85,6 +89,7 @@ export function AboutStep({
   userName,
   organizationName,
   placement,
+  steps,
 }: AboutStepProps) {
   const t = useTranslations('onboarding');
   const languages = useTranslations('preferences');
@@ -163,6 +168,7 @@ export function AboutStep({
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
       <form ref={formRef} noValidate onSubmit={submit} className="grid content-start gap-5">
+        <OnboardingSteps steps={steps} current="about" />
         <div>
           <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">
             {mode === 'member' ? t('memberTitle', { organization: orgName }) : t('title')}
@@ -290,7 +296,7 @@ export function AboutStep({
         )}
 
         <Button type="submit" variant="primary" size="lg" loading={pending} className="w-full">
-          {t('continue')}
+          {steps.length <= 1 ? t('teammates.enter') : t('continue')}
         </Button>
       </form>
 

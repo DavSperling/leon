@@ -19,12 +19,12 @@ import { PROVIDER_FAMILIES_ORDER, type ProviderFamily } from '@/lib/providers';
 import { cn, duration, fold, nb } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
-import { connectedTools } from './model';
+import { connectedTools, recommendedToConnect } from './model';
 import { connState, StateWord, stateDetail } from './parts';
 
-// Catalogue en deux zones : « Vos outils branchés » (une ligne par outil, son état en mot + icône, les problèmes d'abord)
-// puis « À brancher » (tuiles compactes par famille). Un seul filtre, collant. Rien ne bouge au défilement ; seul un outil
-// branché ou retiré passe d'une zone à l'autre.
+// Catalogue en trois zones : « Conseillés pour votre poste » (les outils du service encore à brancher), « Vos outils
+// branchés » (une ligne par outil, son état en mot + icône, les problèmes d'abord) puis « À brancher » (tuiles compactes
+// par famille). Un seul filtre, collant. Rien ne bouge au défilement ; seul un outil branché ou retiré change de zone.
 
 const fadeIn = {
   initial: { opacity: 0 },
@@ -112,6 +112,7 @@ function FreeTile({ p, onOpen }: { p: CatalogItem; onOpen: () => void }) {
 
 export function Catalogue({
   catalog,
+  recommended,
   conns,
   now,
   onOpen,
@@ -120,6 +121,8 @@ export function Catalogue({
   fresh,
 }: {
   catalog: CatalogItem[];
+  /** Les outils du service de la personne : ceux qu'il lui reste à brancher passent en tête. */
+  recommended: ProviderId[];
   conns: ConnectionView[];
   now: Date;
   onOpen: (id: ProviderId) => void;
@@ -137,13 +140,19 @@ export function Catalogue({
     (family === null || p.family === family) &&
     (!q || fold(p.label).includes(q) || fold(t(`family.${p.family}`)).includes(q));
   const connected = connectedTools(catalog, conns).filter(match);
-  const free = catalog.filter((p) => !conns.some((c) => c.provider === p.id) && match(p));
+  const advised = recommendedToConnect(catalog, conns, recommended).filter(match);
+  // Un outil conseillé n'est plus listé sous « À brancher » ; « Branchés » ne change pas.
+  const free = catalog.filter(
+    (p) =>
+      !conns.some((c) => c.provider === p.id) && match(p) && !advised.some((a) => a.id === p.id),
+  );
   const groups = PROVIDER_FAMILIES_ORDER.map((id) => ({
     id,
     label: t(`family.${id}`),
     tools: free.filter((p) => p.family === id),
   })).filter((g) => g.tools.length);
-  const count = connected.length + free.length;
+  // les trois zones réunies, un outil conseillé et branché par un collègue compté une fois
+  const count = catalog.filter(match).length;
   const input = useRef<HTMLInputElement>(null);
 
   return (
@@ -213,6 +222,22 @@ export function Catalogue({
           </Pill>
         ))}
       </div>
+
+      {advised.length > 0 && (
+        <Section
+          id="conseilles"
+          title={t('recommended')}
+          className="mt-8 scroll-mt-[124px] shell:scroll-mt-[84px]"
+        >
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-2">
+            <AnimatePresence initial={false}>
+              {advised.map((p) => (
+                <FreeTile key={p.id} p={p} onOpen={() => onOpen(p.id)} />
+              ))}
+            </AnimatePresence>
+          </ul>
+        </Section>
+      )}
 
       {connected.length > 0 && (
         <Section

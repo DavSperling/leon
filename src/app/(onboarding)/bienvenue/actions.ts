@@ -100,17 +100,17 @@ export async function completeAboutStepAction(
   if (member.onboardedAt !== null) redirect('/');
 
   // Seul le propriétaire écrit service, poste, niveau et taille ; tout autre rôle, ses attentes seulement.
-  // Un `false` (étape validée entre-temps par l'autre clic) mène à l'étape suivante, dont la page tranche.
+  // Un `false` (étape validée entre-temps par l'autre clic) ne change pas la suite : l'appli avec une équipe, Vos outils sinon.
   if (spaceRole(member.role) === 'owner') {
     const owner = OwnerStepSchema.safeParse(values);
     if (!owner.success) return { errors: fieldErrors(owner.error) };
     await completeOwnerStep(ctx, owner.data);
-    // Seul dans l'espace, le propriétaire a des collaborateurs à inviter : l'étape Collaborateurs. Avec une équipe, l'appli.
-    if (await isSoleMember(ctx)) redirect('/bienvenue/collaborateurs');
+    // Avec une équipe déjà là, l'appli : ni Vos outils ni Collaborateurs (spec : « Pas d'étapes 2 et 3 »).
+    if (!(await isSoleMember(ctx))) redirect('/');
   } else {
     const goals = MemberStepSchema.safeParse(values);
     if (!goals.success) return { errors: fieldErrors(goals.error) };
     await completeMemberStep(ctx, goals.data.goals);
   }
-  redirect('/');
+  redirect('/bienvenue/outils');
 }

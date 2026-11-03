@@ -161,6 +161,20 @@
     "failed": "Échec de l’enregistrement. Réessayez.",
     "tooLong": "{max} caractères au plus."
   },
+  "aboutSuggestion": {
+    "title": "Ce que Leon a compris de vous",
+    "lead": "Corrigez ou complétez : votre point du matin lit ce texte.",
+    "label": "À propos de vous",
+    "hint": "{max} caractères au plus",
+    "notNow": "Plus tard",
+    "save": "Enregistrer",
+    "saved": "Enregistré. Vos prochains points en tiendront compte.",
+    "failed": "Échec de l’enregistrement. Réessayez.",
+    "tooLong": "{max} caractères au plus.",
+    "basedOn": "Tiré de",
+    "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même.",
+    "whereNext": "Vous pourrez le modifier à tout moment dans <link>Réglages › Profil</link>."
+  },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
     "searchEverything": "Rechercher dans tout ce que Leon a gardé",
@@ -230,7 +244,8 @@
     "srDescription": "Leon cherche, lit et répond en citant ses sources.",
     "composerLabel": "Votre question à Leon",
     "keyboardHint": "Entrée pour envoyer, Maj + Entrée pour passer à la ligne.",
-    "privacyHint": "Leon ne lit que ce que vous avez le droit de voir."
+    "privacyHint": "Leon ne lit que ce que vous avez le droit de voir.",
+    "examplesLabel": "Essayez par exemple"
   },
   "thread": {
     "title": "Discussion",
@@ -423,6 +438,7 @@
     "soon": "Bientôt",
     "connected": "Vos outils branchés",
     "toConnect": "À brancher",
+    "recommended": "Conseillés pour votre poste",
     "noMatch": "Aucun outil ne correspond.",
     "noMatchQuery": "Rien ne s’appelle « {query} »{scope}.",
     "noFamily": "Aucun outil dans la famille {family}.",
@@ -1375,6 +1391,39 @@
       "leaveDescription": "Leon ne montre chaque lien qu’une fois. Vous pourrez en créer d’autres plus tard dans Réglages › Équipe.",
       "stay": "Rester",
       "leave": "Partir quand même"
+    },
+    "tools": {
+      "title": "Branchez vos outils",
+      "lead": "Cochez ceux que vous utilisez. Ceux conseillés pour votre poste sont déjà cochés.",
+      "recommended": "Conseillé",
+      "toConnect": "À brancher",
+      "connect": "Brancher",
+      "connected": "Branché",
+      "reconnectNeeded": "À reconnecter",
+      "reconnect": "Reconnecter",
+      "none": "Rien de coché pour l’instant.",
+      "nextTitle": "Ensuite",
+      "nextText": "Leon commence à lire chaque source dès qu’elle est branchée. Votre premier point du matin s’appuie dessus.",
+      "skip": "Je brancherai plus tard",
+      "connectedBy": "Branché par {name}",
+      "alreadyTitle": "Déjà branché pour l’espace",
+      "connectOwn": "Brancher mon compte",
+      "ownConnected": "Votre compte est branché",
+      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub."
+    },
+    "steps": {
+      "label": "Progression de l’accueil",
+      "about": "Vous",
+      "tools": "Vos outils",
+      "teammates": "Collaborateurs",
+      "completed": "Terminée"
+    },
+    "done": {
+      "title": "C’est prêt",
+      "lead": "Leon lit vos premières sources. Posez votre première question dans le Chat.",
+      "openChat": "Ouvrir le Chat",
+      "ownerReady": "Votre espace se prépare",
+      "memberReady": "Votre espace est prêt"
     }
   }
 }

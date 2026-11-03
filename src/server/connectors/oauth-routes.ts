@@ -4,7 +4,13 @@ import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
 import { z } from 'zod';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
-import { DEFAULT_SINCE, fieldsFromForm, SINCE_VALUES } from '@/lib/connection-form';
+import {
+  DEFAULT_SINCE,
+  fieldsFromForm,
+  isOAuthReturnPath,
+  type OAuthReturnPath,
+  SINCE_VALUES,
+} from '@/lib/connection-form';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { auth } from '@/server/auth/auth';
 import { resolveSessionContext, type TenantContext } from '@/server/auth/tenant-context';
@@ -74,8 +80,13 @@ type ReturnCode =
 const DAY_MS = 24 * 60 * 60 * 1000;
 const NOT_FOUND = { error: 'Introuvable' };
 
-const connexions = (params: Record<string, string>) =>
-  `/connexions?${new URLSearchParams(params).toString()}`;
+const pageUrl = (page: OAuthReturnPath, params: Record<string, string>) =>
+  `${page}?${new URLSearchParams(params).toString()}`;
+const connexions = (params: Record<string, string>) => pageUrl('/connexions', params);
+
+// La page demandée par le formulaire (`retour`), si elle est dans la liste fermée ; sinon rien.
+const returnPage = (values: Record<string, string>): OAuthReturnPath | undefined =>
+  isOAuthReturnPath(values.retour) ? values.retour : undefined;
 
 // Comparaison en temps constant, longueurs d'abord.
 function sameText(a: string, b: string): boolean {
@@ -174,11 +185,15 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
     return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
 
   const values = stringValues(await c.req.parseBody());
+  const returnTo = returnPage(values);
   const since = z.enum(SINCE_VALUES).safeParse(values.since || DEFAULT_SINCE);
   const start = await startFields(ctx, provider, connector, spec, values);
   if (start === 'absent') return c.json(NOT_FOUND, 404);
   if (!start || !since.success)
-    return c.redirect(connexions({ erreur: 'champs', outil: provider }), 303);
+    return c.redirect(
+      pageUrl(returnTo ?? '/connexions', { erreur: 'champs', outil: provider }),
+      303,
+    );
 
   const pending: OAuthPending = {
     provider,
@@ -189,6 +204,7 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
     since: since.data,
     ...start,
     createdAt: (deps.now ?? Date.now)(),
+    ...(returnTo && { returnTo }),
   };
   setPending(c, pending);
   return c.redirect(authorizeUrl(spec, client, pending), 303);
@@ -211,10 +227,13 @@ async function pipedreamStart(
     return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
 
   const values = stringValues(await c.req.parseBody());
+  const returnTo = returnPage(values);
+  const landing = returnTo ?? '/connexions';
   const since = z.enum(SINCE_VALUES).safeParse(values.since || DEFAULT_SINCE);
   const stored = values.reconnect ? await ownConnection(ctx, provider, values.reconnect) : null;
   if (values.reconnect && !stored) return c.json(NOT_FOUND, 404);
-  if (!since.success) return c.redirect(connexions({ erreur: 'champs', outil: provider }), 303);
+  if (!since.success)
+    return c.redirect(pageUrl(landing, { erreur: 'champs', outil: provider }), 303);
 
   const pending: OAuthPending = {
     provider,
@@ -227,6 +246,7 @@ async function pipedreamStart(
     reconnectId: stored?.id ?? null,
     createdAt: (deps.now ?? Date.now)(),
     pipedreamUser: `leon-${randomUUID()}`,
+    ...(returnTo && { returnTo }),
   };
   const success = new URL(`${OAUTH_COOKIE_PATH}/pipedream/retour`, env.BETTER_AUTH_URL);
   success.searchParams.set('state', pending.state);
@@ -246,7 +266,7 @@ async function pipedreamStart(
     );
   } catch (error) {
     logError('connector.oauth_failed', error, { provider });
-    return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
+    return c.redirect(pageUrl(landing, { erreur: 'indisponible', outil: provider }), 303);
   }
   setPending(c, pending);
   return c.redirect(link, 303);
@@ -485,7 +505,7 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
   const tool: Record<string, string> = provider ? { outil: provider } : {};
   const params: Record<string, string> =
     typeof outcome === 'object' ? { branche: provider ?? '' } : { erreur: outcome, ...tool };
-  return c.redirect(connexions(params), 302);
+  return c.redirect(pageUrl(pending?.returnTo ?? '/connexions', params), 302);
 }
 
 // Le retour de Pipedream : le cookie, la même session et le même `state`, puis le compte branché.
@@ -518,10 +538,15 @@ async function pipedreamReturnHandler(c: Context, deps: OAuthRoutesDeps): Promis
   const pending = cookie ? openPending(cookie, (deps.now ?? Date.now)()) : null;
   const outcome = await finishPipedream(c, deps, pending);
   const provider = pending?.provider ?? null;
-  if (typeof outcome === 'object') return c.redirect(connexions({ branche: provider ?? '' }), 302);
+  const landing = pending?.returnTo ?? '/connexions';
+  if (typeof outcome === 'object')
+    return c.redirect(pageUrl(landing, { branche: provider ?? '' }), 302);
   // Pas branché : l'utilisateur Pipedream de cet essai ne sert plus.
   await forgetPipedreamUser(pending?.pipedreamUser, deps.fetchImpl);
-  return c.redirect(connexions({ erreur: outcome, ...(provider ? { outil: provider } : {}) }), 302);
+  return c.redirect(
+    pageUrl(landing, { erreur: outcome, ...(provider ? { outil: provider } : {}) }),
+    302,
+  );
 }
 
 export function createOAuthRoutes(deps: OAuthRoutesDeps): Hono {

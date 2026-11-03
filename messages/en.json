@@ -161,6 +161,20 @@
     "failed": "Couldn’t save. Try again.",
     "tooLong": "{max} characters at most."
   },
+  "aboutSuggestion": {
+    "title": "Here’s what Leon learned about you",
+    "lead": "Edit it or add details. Your morning briefing reads this.",
+    "label": "About you",
+    "hint": "{max} characters max",
+    "notNow": "Not now",
+    "save": "Save",
+    "saved": "Saved. Your next briefings will take it into account.",
+    "failed": "Couldn’t save. Try again.",
+    "tooLong": "{max} characters at most.",
+    "basedOn": "Based on",
+    "basedOnNote": "Only from your own sources: nothing you couldn’t open yourself.",
+    "whereNext": "You can change it anytime in <link>Settings › Profile</link>."
+  },
   "search": {
     "memoryLabel": "Search the team’s memory",
     "searchEverything": "Search everything Leon has saved",
@@ -230,7 +244,8 @@
     "srDescription": "Leon searches, reads, and answers with cited sources.",
     "composerLabel": "Your question for Leon",
     "keyboardHint": "Press Enter to send, Shift + Enter for a new line.",
-    "privacyHint": "Leon only reads what you have permission to see."
+    "privacyHint": "Leon only reads what you have permission to see.",
+    "examplesLabel": "Try asking"
   },
   "thread": {
     "title": "Discussion",
@@ -423,6 +438,7 @@
     "soon": "Coming soon",
     "connected": "Your connected tools",
     "toConnect": "Connect a tool",
+    "recommended": "Recommended for your role",
     "noMatch": "No matching tools.",
     "noMatchQuery": "Nothing is called “{query}”{scope}.",
     "noFamily": "No tools in the {family} family.",
@@ -1375,6 +1391,39 @@
       "leaveDescription": "Leon shows each link only once. You can create new ones later in Settings › Team.",
       "stay": "Stay",
       "leave": "Leave anyway"
+    },
+    "tools": {
+      "title": "Connect your tools",
+      "lead": "Select the tools you use. The ones recommended for your role are already selected.",
+      "recommended": "Recommended",
+      "toConnect": "To connect",
+      "connect": "Connect",
+      "connected": "Connected",
+      "reconnectNeeded": "Needs reconnecting",
+      "reconnect": "Reconnect",
+      "none": "Nothing selected yet.",
+      "nextTitle": "What happens next",
+      "nextText": "Leon starts reading each source as soon as it’s connected. Your first morning briefing builds on them.",
+      "skip": "I’ll connect them later",
+      "connectedBy": "Connected by {name}",
+      "alreadyTitle": "Already connected for your workspace",
+      "connectOwn": "Connect my account",
+      "ownConnected": "Your account is connected",
+      "ownHint": "Optional. To act under your own name, for example on GitHub."
+    },
+    "steps": {
+      "label": "Onboarding progress",
+      "about": "About you",
+      "tools": "Your tools",
+      "teammates": "Teammates",
+      "completed": "Completed"
+    },
+    "done": {
+      "title": "You’re in",
+      "lead": "Leon is reading your first sources. Ask your first question in Chat.",
+      "openChat": "Open Chat",
+      "ownerReady": "Setting up your workspace",
+      "memberReady": "Your workspace is ready"
     }
   }
 }

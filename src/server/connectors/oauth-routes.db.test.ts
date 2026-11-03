@@ -555,6 +555,139 @@ describe('GET /:appli/retour : ce qui ne crée rien', () => {
   });
 });
 
+describe('retour demandé : l’étape Vos outils', () => {
+  const RETOUR = '/bienvenue/outils';
+  const form = (retour: string) => ({ repos: 'acme/leon', since: '30', retour });
+
+  it('revient sur l’étape après un branchement réussi', async () => {
+    const paul = await signUp();
+
+    const { response } = await fullRound(paul, {}, form(RETOUR));
+
+    expect(response.status).toBe(302);
+    expect(location(response)).toBe(`${RETOUR}?branche=github`);
+    expect(await connectionsOf(paul.ctx.tenantId)).toHaveLength(1);
+  });
+
+  it('revient sur l’étape après un refus chez l’éditeur', async () => {
+    const paul = await signUp();
+    const { app } = makeApp();
+    const go = await start(app, paul, form(RETOUR));
+
+    const response = await back(
+      app,
+      paul,
+      { error: 'access_denied', state: stateOf(go) },
+      oauthCookieOf(go),
+    );
+
+    expect(location(response)).toBe(`${RETOUR}?erreur=annule&outil=github`);
+  });
+
+  it('revient sur l’étape après une reconnexion', async () => {
+    const paul = await signUp();
+    const id = await createConnection(paul.ctx, {
+      provider: 'github',
+      label: 'acme',
+      config: { authMode: 'oauth', accessToken: 'ancien-acces-0000', repos: ['acme/ancien'] },
+      secretFields: [...OAUTH_SECRET_FIELDS, 'token'],
+      since: new Date(),
+    });
+    const { app } = makeApp({ routes: [goodTokens()] });
+
+    const go = await start(app, paul, { reconnect: id, since: '30', retour: RETOUR });
+    const response = await back(app, paul, { code: 'c', state: stateOf(go) }, oauthCookieOf(go));
+
+    expect(location(response)).toBe(`${RETOUR}?branche=github`);
+  });
+
+  it.each([
+    ['une adresse absolue', 'https://ailleurs'],
+    ['une adresse sans protocole', '//ailleurs'],
+    ['un chemin qui remonte', '/bienvenue/outils/../x'],
+    ['une barre finale', '/bienvenue/outils/'],
+    ['une requête', '/bienvenue/outils?x=1'],
+    ['une autre page de Leon', '/discussions'],
+    ['une valeur vide', ''],
+  ])('ne suit pas %s : retour sur Connexions', async (_name, retour) => {
+    const paul = await signUp();
+
+    const { response, go } = await fullRound(paul, {}, form(retour));
+
+    expect(location(response)).toBe('/connexions?branche=github');
+    const cookie = decodeURIComponent(oauthCookieOf(go)?.split('=')[1] ?? '');
+    const body = JSON.parse(Buffer.from(cookie.split('.')[0] ?? '', 'base64url').toString());
+    expect(body).not.toHaveProperty('returnTo');
+  });
+
+  it('revient sur Connexions sans cookie lisible, même après un départ demandé ailleurs', async () => {
+    const paul = await signUp();
+    const { app } = makeApp();
+    const go = await start(app, paul, form(RETOUR));
+
+    const response = await back(app, paul, { code: 'c', state: stateOf(go) }, undefined);
+
+    expect(location(response)).toBe('/connexions?erreur=expire&outil=github');
+  });
+
+  it('enchaîne toujours sur la page que l’outil demande (installation de l’appli GitHub)', async () => {
+    const paul = await signUp();
+    const next = 'https://github.com/apps/leon-memory/installations/new';
+
+    const { response } = await fullRound(
+      paul,
+      { connector: fakeOAuthConnector({ nextStep: next }) },
+      form(RETOUR),
+    );
+
+    expect(location(response)).toBe(next);
+  });
+
+  it('« champs » avant le clic revient sur l’étape', async () => {
+    const paul = await signUp();
+
+    const response = await start(makeApp().app, paul, { repos: '', since: '30', retour: RETOUR });
+
+    expect(response.status).toBe(303);
+    expect(location(response)).toBe(`${RETOUR}?erreur=champs&outil=github`);
+    expect(oauthCookieOf(response)).toBeUndefined();
+  });
+
+  it('« champs » pour une période inconnue revient sur l’étape', async () => {
+    const paul = await signUp();
+
+    const response = await start(makeApp().app, paul, { ...form(RETOUR), since: '12' });
+
+    expect(location(response)).toBe(`${RETOUR}?erreur=champs&outil=github`);
+  });
+
+  it('« champs » avec une adresse refusée revient sur Connexions', async () => {
+    const paul = await signUp();
+
+    const response = await start(makeApp().app, paul, {
+      repos: '',
+      since: '30',
+      retour: 'https://ailleurs',
+    });
+
+    expect(location(response)).toBe('/connexions?erreur=champs&outil=github');
+  });
+
+  it('« champs » au retour (vérification) revient sur l’étape', async () => {
+    const paul = await signUp();
+    const missing: AnyConnector = {
+      ...fakeOAuthConnector(),
+      verify: async () => {
+        throw new ConnectorHttpError(404, 'Repository not accessible: x');
+      },
+    };
+
+    const { response } = await fullRound(paul, { connector: missing }, form(RETOUR));
+
+    expect(location(response)).toBe(`${RETOUR}?erreur=champs&outil=github`);
+  });
+});
+
 describe('accord de l’administrateur', () => {
   const adminConsent = {
     isConsentError: ({ error, description }: { error: string; description: string | null }) =>
@@ -880,7 +1013,11 @@ describe('Pipedream : Gmail par le bouton', () => {
       'state',
     ) ?? '';
 
-  async function connectGmail(person: Person, routes: FakeRoute[], form = { since: '30' }) {
+  async function connectGmail(
+    person: Person,
+    routes: FakeRoute[],
+    form: Record<string, string> = { since: '30' },
+  ) {
     const made = makeApp({ routes: [pdToken(), link(), ...routes], connector: gmailConnector });
     const go = await start(made.app, person, form, {}, 'gmail');
     const response = await back(
@@ -991,6 +1128,89 @@ describe('Pipedream : Gmail par le bouton', () => {
     const { app } = makeApp({ connector: gmailConnector });
 
     expect((await start(app, paul, { since: '30' }, {}, 'gmail')).status).toBe(404);
+  });
+
+  it('revient sur l’étape Vos outils quand elle l’a demandé', async () => {
+    const paul = await signUp();
+    const { response } = await connectGmail(paul, [accounts(['apn_gm1']), profile()], {
+      since: '30',
+      retour: '/bienvenue/outils',
+    });
+
+    expect(location(response)).toBe('/bienvenue/outils?branche=gmail');
+    expect(await connectionsOf(paul.ctx.tenantId)).toHaveLength(1);
+  });
+
+  it('ne suit pas une adresse venue du formulaire : retour sur Connexions', async () => {
+    const paul = await signUp();
+    const { response } = await connectGmail(paul, [accounts(['apn_gm1']), profile()], {
+      since: '30',
+      retour: 'https://ailleurs',
+    });
+
+    expect(location(response)).toBe('/connexions?branche=gmail');
+  });
+
+  it('« annule » revient sur l’étape quand elle l’a demandé', async () => {
+    const paul = await signUp();
+    const { app, fetchImpl } = makeApp({
+      routes: [pdToken(), link(), removal()],
+      connector: gmailConnector,
+    });
+    const go = await start(app, paul, { since: '30', retour: '/bienvenue/outils' }, {}, 'gmail');
+
+    const response = await back(
+      app,
+      paul,
+      { state: pdState(fetchImpl), error: 'access_denied' },
+      oauthCookieOf(go),
+      'pipedream',
+    );
+
+    expect(location(response)).toBe('/bienvenue/outils?erreur=annule&outil=gmail');
+  });
+
+  it('« champs » (période inconnue) revient sur l’étape quand elle l’a demandé', async () => {
+    const paul = await signUp();
+    const { app } = makeApp({ routes: [pdToken(), link()], connector: gmailConnector });
+
+    const response = await start(
+      app,
+      paul,
+      { since: '12', retour: '/bienvenue/outils' },
+      {},
+      'gmail',
+    );
+
+    expect(location(response)).toBe('/bienvenue/outils?erreur=champs&outil=gmail');
+    expect(oauthCookieOf(response)).toBeUndefined();
+  });
+
+  it('« indisponible » quand Pipedream ne donne pas de lien revient sur l’étape', async () => {
+    const paul = await signUp();
+    const down: FakeRoute = { method: 'POST', url: `${CONNECT}/tokens`, status: 500, json: {} };
+    const { app } = makeApp({ routes: [pdToken(), down], connector: gmailConnector });
+
+    const response = await start(
+      app,
+      paul,
+      { since: '30', retour: '/bienvenue/outils' },
+      {},
+      'gmail',
+    );
+
+    expect(location(response)).toBe('/bienvenue/outils?erreur=indisponible&outil=gmail');
+    expect(oauthCookieOf(response)).toBeUndefined();
+  });
+
+  it('« indisponible » sans adresse demandée reste sur Connexions', async () => {
+    const paul = await signUp();
+    const down: FakeRoute = { method: 'POST', url: `${CONNECT}/tokens`, status: 500, json: {} };
+    const { app } = makeApp({ routes: [pdToken(), down], connector: gmailConnector });
+
+    const response = await start(app, paul, { since: '30' }, {}, 'gmail');
+
+    expect(location(response)).toBe('/connexions?erreur=indisponible&outil=gmail');
   });
 
   it('« Reconnecter » garde la connexion, prend le nouveau compte et oublie l’ancien utilisateur', async () => {

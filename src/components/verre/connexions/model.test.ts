@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest';
-import { connectedTools } from './model';
+import type { ProviderId } from '@/capture/turn';
+import type { CatalogItem } from '@/server/connectors/catalog';
+import type { ConnectionView } from '@/server/connectors/connections';
+import { connectedTools, recommendedToConnect } from './model';
 import { keepTogether, stateDetail } from './parts';
 
 const view = {
@@ -41,5 +44,63 @@ describe('connexions', () => {
 
   test('keepTogether : de même en anglais', () => {
     expect(keepTogether('2 hr. ago · 418 items')).toBe('2 hr. ago · 418 items');
+  });
+
+  describe('recommendedToConnect', () => {
+    // Seuls les champs que la règle lit.
+    const tool = (id: string, over: Partial<CatalogItem> = {}) =>
+      ({ id, privateRaw: false, available: true, ...over }) as unknown as CatalogItem;
+    const catalog = [
+      tool('github'),
+      tool('linear'),
+      tool('jira'),
+      tool('notion'),
+      tool('gmail', { privateRaw: true }),
+      tool('slack', { available: false }),
+    ];
+    const conn = (provider: string, over: Partial<ConnectionView> = {}) =>
+      ({
+        provider,
+        status: 'active',
+        createdBy: { id: 'u2', name: 'Inès' },
+        isCreator: false,
+        creatorLeft: false,
+        ...over,
+      }) as unknown as ConnectionView;
+    const ids = (list: CatalogItem[]) => list.map((p) => p.id);
+    const recommend = (conns: ConnectionView[], wanted: string[]) =>
+      ids(recommendedToConnect(catalog, conns, wanted as ProviderId[]));
+
+    test('suit l’ordre du service, pas celui du catalogue', () => {
+      expect(recommend([], ['notion', 'github', 'linear'])).toEqual(['notion', 'github', 'linear']);
+    });
+
+    test('mon outil n’y est pas', () => {
+      expect(recommend([conn('github', { isCreator: true })], ['github', 'linear'])).toEqual([
+        'linear',
+      ]);
+    });
+
+    test('mon outil en erreur n’y est pas non plus (il se reconnecte, il ne se rebranche pas)', () => {
+      expect(
+        recommend([conn('github', { isCreator: true, status: 'error' })], ['github', 'linear']),
+      ).toEqual(['linear']);
+    });
+
+    test('le GitHub d’un collègue présent n’y est pas', () => {
+      expect(recommend([conn('github')], ['github', 'linear'])).toEqual(['linear']);
+    });
+
+    test('le Gmail d’un collègue y reste (texte privé)', () => {
+      expect(recommend([conn('gmail')], ['gmail', 'linear'])).toEqual(['gmail', 'linear']);
+    });
+
+    test('le GitHub d’un ancien membre y reste', () => {
+      expect(recommend([conn('github', { creatorLeft: true })], ['github'])).toEqual(['github']);
+    });
+
+    test('un outil indisponible n’y est pas', () => {
+      expect(recommend([], ['slack', 'jira'])).toEqual(['jira']);
+    });
   });
 });

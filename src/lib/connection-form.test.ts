@@ -5,7 +5,9 @@ import {
   fieldsFromForm,
   inputTypeFor,
   invalidFieldsMessage,
+  isOAuthReturnPath,
   OAUTH_RETURN_CODES,
+  OAUTH_RETURN_PATHS,
   oauthNotice,
   oauthStartPath,
   otherOwnersNote,
@@ -163,6 +165,28 @@ describe('oauthStartPath', () => {
   it('mène au début du déroulé de l’outil', () => {
     expect(oauthStartPath('linear')).toBe('/api/v1/connexions/oauth/linear/debut');
     expect(oauthStartPath('helpscout')).toBe('/api/v1/connexions/oauth/helpscout/debut');
+  });
+});
+
+describe('isOAuthReturnPath', () => {
+  it('accepte exactement les pages de la liste fermée', () => {
+    for (const path of OAUTH_RETURN_PATHS) expect(isOAuthReturnPath(path)).toBe(true);
+    expect([...OAUTH_RETURN_PATHS]).toEqual(['/connexions', '/bienvenue/outils']);
+  });
+
+  it.each([
+    'https://ailleurs',
+    '//ailleurs',
+    '/bienvenue/outils/',
+    '/bienvenue/outils?x=1',
+    '/bienvenue/outils/../x',
+    '/Bienvenue/outils',
+    '',
+    undefined,
+    null,
+    42,
+  ])('refuse %j', (value) => {
+    expect(isOAuthReturnPath(value)).toBe(false);
   });
 });
 

@@ -9,8 +9,10 @@ import {
   isJobOf,
   SENIORITY_LEVELS,
 } from '@/lib/onboarding';
+import { markBriefingsStale } from '@/server/briefing/about';
 import { db } from '@/server/db/client';
 import { members, organizations, users } from '@/server/db/schema/auth';
+import { logError } from '@/server/log';
 import type { TenantContext } from './tenant-context';
 
 // L'étape 1 de l'onboarding (docs/specs/2026-10-28-onboarding.md) : ce que la personne dit de son poste et de ses
@@ -79,7 +81,7 @@ const pending = (ctx: TenantContext) =>
   );
 
 export async function completeOwnerStep(ctx: TenantContext, step: OwnerStep): Promise<boolean> {
-  return db.transaction(async (tx) => {
+  const written = await db.transaction(async (tx) => {
     const done = await tx
       .update(members)
       .set({
@@ -99,6 +101,16 @@ export async function completeOwnerStep(ctx: TenantContext, step: OwnerStep): Pr
       .where(and(eq(organizations.id, ctx.tenantId), isNull(organizations.size)));
     return true;
   });
+  if (written) {
+    // Le poste change ce que le point du matin retient : ses points se refont. Il est déjà enregistré : un échec
+    // ne remonte pas.
+    try {
+      await markBriefingsStale(ctx);
+    } catch (error) {
+      logError('briefing.mark_stale_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId });
+    }
+  }
+  return written;
 }
 
 export async function completeMemberStep(ctx: TenantContext, goals: Goal[]): Promise<boolean> {

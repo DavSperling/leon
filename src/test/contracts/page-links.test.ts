@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { nextAfterTools } from '@/components/verre/onboarding/tools-model';
+import { OAUTH_RETURN_PATHS } from '@/lib/connection-form';
 import { listFiles, productionSources, readText } from './files';
 
 // Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
@@ -95,5 +97,12 @@ describe('liens entre pages', () => {
     )?.[1];
     expect(path).toBeDefined();
     expect(matchesRoute(path as string)).toBe(true);
+  });
+
+  // Ces adresses passent par une constante ou une fonction : le balayage des href= et redirect(' ci-dessus ne les voit pas.
+  it('mène chaque retour OAuth et chaque suite de Vos outils à une page', () => {
+    for (const path of [...OAUTH_RETURN_PATHS, nextAfterTools(true), nextAfterTools(false)]) {
+      expect(matchesRoute(path), path).toBe(true);
+    }
   });
 });

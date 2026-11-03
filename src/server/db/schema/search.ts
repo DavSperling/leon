@@ -118,3 +118,22 @@ export const briefings = pgTable('briefings', {
   stale: boolean('stale').notNull().default(false),
   acl: acl(),
 });
+
+// La proposition « About you » (0045-apropos-propose.sql) : une par personne et par espace, écrite par le travail de
+// fond à partir de ses seules sources, montrée une fois. `closedAt` : enregistrée ou écartée. Privée à la personne
+// (acl = [user_id], contrôlé par la base) ; seul deleteAccount supprime des lignes.
+export const aboutSuggestions = pgTable('about_suggestions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  // Les sources fournies au modèle, citées ou non.
+  sourceIds: uuid('source_ids').array().notNull().default(sql`'{}'::uuid[]`),
+  createdAt: createdAt(),
+  closedAt: timestamp('closed_at', { withTimezone: true }),
+  acl: acl(),
+});

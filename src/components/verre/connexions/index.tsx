@@ -1,23 +1,23 @@
 'use client';
 
 import './connexions.css';
-import { ArrowUpRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
 import { Notice, PageHeader } from '@/components/verre';
 import type { OAuthNotice } from '@/lib/connection-form';
-import { isInstant, nb, rise } from '@/lib/verre';
+import { isInstant, nb } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
 import { CarteConnexions } from './carte';
 import { Catalogue } from './catalogue';
+import { ReturnNotice } from './return-notice';
 import { ToolDialog } from './tool-dialog';
 
 /*
- * Écran Connexions (/connexions) : le schéma vivant, puis le catalogue en deux zones, et la fenêtre de l'outil.
+ * Écran Connexions (/connexions) : le schéma vivant, puis le catalogue en trois zones, et la fenêtre de l'outil.
  * Le retour de l'éditeur (`?branche=` ou `?erreur=`, lu par oauthNotice côté serveur) s'affiche en tête ; l'outil
  * tout juste branché par le bouton reçoit l'anneau. Une clé testée avec succès : toast « … est branché. », le
  * formulaire se replie ; quand la fenêtre se ferme, le focus va sur le nouveau bouton de l'outil et un anneau bat
@@ -26,6 +26,8 @@ import { ToolDialog } from './tool-dialog';
 
 export type ConnexionsProps = {
   catalog: CatalogItem[];
+  /** Les outils du service de la personne (vide si on ne le connaît pas), dans l'ordre conseillé. */
+  recommended: ProviderId[];
   connections: ConnectionView[];
   viewerId: string;
   canConnect: boolean;
@@ -38,56 +40,9 @@ export type ConnexionsProps = {
   now: Date;
 };
 
-function ReturnNotice({
-  notice,
-  consentUrl,
-}: {
-  notice: OAuthNotice | null;
-  consentUrl: string | null;
-}) {
-  const t = useTranslations('connections');
-  return (
-    // initial={false} : l'avis rendu par le serveur (retour de l'éditeur) est visible avant l'hydratation
-    <AnimatePresence mode="wait" initial={false}>
-      {notice && (
-        <motion.div
-          key={notice.text}
-          variants={rise}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className="mb-6"
-        >
-          <Notice tone={notice.tone} live={notice.tone === 'success' ? 'status' : 'alert'}>
-            {nb(notice.text)}
-            {notice.adminConsent && consentUrl && (
-              <>
-                {' '}
-                <a
-                  href={consentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-fg underline decoration-destructive-line underline-offset-4 hover:decoration-destructive"
-                >
-                  {t('adminConsent')}
-                  <ArrowUpRight
-                    aria-hidden="true"
-                    strokeWidth={1.8}
-                    className="ml-0.5 inline size-3.5 align-[-2px]"
-                  />
-                  <span className="sr-only">{t('newTab')}</span>
-                </a>
-              </>
-            )}
-          </Notice>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 export function Connexions({
   catalog,
+  recommended,
   connections,
   viewerId,
   canConnect,
@@ -176,6 +131,7 @@ export function Connexions({
         />
         <Catalogue
           catalog={catalog}
+          recommended={recommended}
           conns={connections}
           now={now}
           onOpen={open}

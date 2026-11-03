@@ -11,17 +11,28 @@ import { getBoss } from '@/server/pipeline/queue';
 
 // Les files du point du matin (T13), à côté de celles de l'indexation (pipeline/queue.ts) : `point-refresh` refait
 // le point d'un utilisateur sur un projet, `point-matin` est le tic de 6 h (worker.ts). Ce module ne dépend d'aucun
-// modèle : l'indexation l'appelle (signalSourceActivity) et doit tourner sans clé Anthropic.
+// modèle : l'indexation l'appelle (signalSourceActivity) et doit tourner sans clé Anthropic. `apropos-proposer`
+// écrit, une fois par personne, la proposition « About you » (about-suggestion.ts), mise en file par le tic de 6 h.
 
-export const BRIEFING_QUEUES = { refresh: 'point-refresh', morning: 'point-matin' } as const;
+export const BRIEFING_QUEUES = {
+  refresh: 'point-refresh',
+  morning: 'point-matin',
+  about: 'apropos-proposer',
+} as const;
 
 // Contraintes globales du plan : un recalcul au plus toutes les 30 minutes par (utilisateur, projet). Un signal met
 // le recalcul en file dans 30 minutes ; les signaux suivants le trouvent en attente et n'en ajoutent pas.
 export const BRIEFING_DELAY_SECONDS = 30 * 60;
 
+// Au plus une série d'essais (4) de la proposition « About you » par personne tous les trois jours : une personne que
+// le modèle refuse, ou à qui il ne répond rien, reste candidate et serait payée chaque matin. pg-boss garde la fenêtre
+// (`singletonSeconds`) même quand le job est terminé ou échoué ; elle doit rester sous deleteAfterSeconds (7 jours).
+export const ABOUT_RETRY_SECONDS = 3 * 24 * 60 * 60;
+
 // « stately » : un seul job en attente et un seul en cours par clé (organisation, utilisateur, projet). Un second
 // envoi pendant l'attente est ignoré par pg-boss (send rend null) ; une donnée arrivée pendant le recalcul en met
-// un nouveau en file. Un échec (modèle, base) est repris trois fois, de plus en plus tard.
+// un nouveau en file. Un échec (modèle, base) est repris trois fois, de plus en plus tard. La file des propositions
+// « About you » a les mêmes règles, avec la clé (organisation, utilisateur).
 const REFRESH_QUEUE = {
   policy: 'stately',
   retryLimit: 3,
@@ -36,6 +47,8 @@ export const BriefingJobSchema = z.object({
   project: z.string().max(200).regex(PROJECT_KEY_PATTERN),
 });
 export type BriefingJob = z.infer<typeof BriefingJobSchema>;
+
+export const AboutJobSchema = z.object({ tenantId: z.uuid(), userId: z.uuid() });
 
 export const briefingKey = (job: BriefingJob): string =>
   `${job.tenantId}:${job.userId}:${job.project}`;
@@ -54,6 +67,7 @@ export function getBriefingBoss(): Promise<PgBoss> {
     const boss = await getBoss();
     await boss.createQueue(BRIEFING_QUEUES.refresh, REFRESH_QUEUE);
     await boss.createQueue(BRIEFING_QUEUES.morning, MORNING_QUEUE);
+    await boss.createQueue(BRIEFING_QUEUES.about, REFRESH_QUEUE);
     return boss;
   })().catch((error) => {
     globalForBriefing.leonBriefingBoss = undefined; // un démarrage raté doit pouvoir être retenté

@@ -10,6 +10,7 @@ import {
   isDepartment,
   isJobOf,
   jobLabelKey,
+  onboardingSteps,
   SENIORITY_LEVELS,
   seniorityId,
 } from './onboarding';
@@ -62,6 +63,7 @@ describe('les listes de l’onboarding', () => {
         asks: Record<string, { one: string; two: string }>;
         seniority: Record<string, string>;
         goals: Record<string, string>;
+        steps: Record<string, string>;
       };
       expect(o.other).toBeTruthy();
       for (const id of DEPARTMENT_IDS) {
@@ -72,6 +74,15 @@ describe('les listes de l’onboarding', () => {
       }
       for (const id of SENIORITY_LEVELS) expect(o.seniority[id], id).toBeTruthy();
       for (const id of GOALS) expect(o.goals[id], id).toBeTruthy();
+      for (const id of onboardingSteps('soleOwner')) expect(o.steps[id], id).toBeTruthy();
     }
+  });
+});
+
+describe('le fil d’étapes', () => {
+  it('suit le parcours : un propriétaire seul en fait trois, un membre deux, qui a une équipe une', () => {
+    expect(onboardingSteps('soleOwner')).toEqual(['about', 'tools', 'teammates']);
+    expect(onboardingSteps('member')).toEqual(['about', 'tools']);
+    expect(onboardingSteps('ownerWithTeam')).toEqual(['about']);
   });
 });

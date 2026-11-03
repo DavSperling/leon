@@ -67,7 +67,7 @@ const validOwner = {
 const run = (fields: Record<string, string | string[]>) =>
   completeAboutStepAction({}, form(fields));
 
-// `rejects.toThrow('NEXT_REDIRECT /')` passerait aussi pour '/bienvenue/collaborateurs' : on compare le chemin entier.
+// `rejects.toThrow('NEXT_REDIRECT /')` passerait aussi pour '/bienvenue/outils' : on compare le chemin entier.
 const redirectsTo = async (result: Promise<unknown>, path: string) => {
   await expect(result).rejects.toThrow('NEXT_REDIRECT');
   expect(redirect).toHaveBeenLastCalledWith(path);
@@ -108,10 +108,10 @@ describe('completeAboutStepAction', () => {
       });
     });
 
-    it("seul dans l'espace : l'étape Collaborateurs suit", async () => {
+    it("seul dans l'espace : l'étape Vos outils suit", async () => {
       vi.mocked(isSoleMember).mockResolvedValue(true);
 
-      await redirectsTo(run(validOwner), '/bienvenue/collaborateurs');
+      await redirectsTo(run(validOwner), '/bienvenue/outils');
 
       expect(isSoleMember).toHaveBeenCalledWith(ctx);
       expect(completeOwnerStep).toHaveBeenCalled();
@@ -197,16 +197,24 @@ describe('completeAboutStepAction', () => {
       expect(completeOwnerStep).not.toHaveBeenCalled();
     });
 
-    it("continue vers l'appli si l'étape a été validée entre-temps ailleurs", async () => {
+    it("avec une équipe, l'étape validée entre-temps ailleurs mène quand même à l'appli", async () => {
       vi.mocked(completeOwnerStep).mockResolvedValue(false);
+      vi.mocked(isSoleMember).mockResolvedValue(false);
 
       await redirectsTo(run(validOwner), '/');
+    });
+
+    it("seul, l'étape validée entre-temps ailleurs mène quand même à l'étape Vos outils", async () => {
+      vi.mocked(completeOwnerStep).mockResolvedValue(false);
+      vi.mocked(isSoleMember).mockResolvedValue(true);
+
+      await redirectsTo(run(validOwner), '/bienvenue/outils');
     });
   });
 
   describe('autres rôles', () => {
     it.each(['member', 'admin'])(
-      "%s : n'enregistre que les attentes, même si le formulaire envoie un poste",
+      "%s : n'enregistre que les attentes, même si le formulaire envoie un poste, puis l'étape Vos outils",
       async (role) => {
         vi.mocked(readOnboardingMember).mockResolvedValue(member({ role }));
 
@@ -218,7 +226,7 @@ describe('completeAboutStepAction', () => {
             seniority: '8',
             goals: ['meetings'],
           }),
-          '/',
+          '/bienvenue/outils',
         );
 
         expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['meetings']);
@@ -232,7 +240,7 @@ describe('completeAboutStepAction', () => {
 
       await redirectsTo(
         run({ department: 'toString', job: 'x', seniority: '99', goals: ['team'] }),
-        '/',
+        '/bienvenue/outils',
       );
 
       expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['team']);
@@ -241,7 +249,7 @@ describe('completeAboutStepAction', () => {
     it('accepte des rôles multiples sans propriétaire (« member,admin »)', async () => {
       vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member,admin' }));
 
-      await redirectsTo(run({ ...validOwner, goals: ['find'] }), '/');
+      await redirectsTo(run({ ...validOwner, goals: ['find'] }), '/bienvenue/outils');
 
       expect(completeMemberStep).toHaveBeenCalledWith(ctx, ['find']);
       expect(completeOwnerStep).not.toHaveBeenCalled();
@@ -315,12 +323,12 @@ describe('completeAboutStepAction', () => {
       });
     });
 
-    it("l'espace créé, l'étape Collaborateurs suit", async () => {
+    it("l'espace créé, l'étape Vos outils suit", async () => {
       vi.mocked(createOrganizationForUser).mockResolvedValue({ ok: true, tenantId: TENANT_ID });
       vi.mocked(resolveTenantContext).mockResolvedValue(ctx);
       vi.mocked(isSoleMember).mockResolvedValue(true);
 
-      await redirectsTo(run(newcomer), '/bienvenue/collaborateurs');
+      await redirectsTo(run(newcomer), '/bienvenue/outils');
 
       expect(isSoleMember).toHaveBeenCalledWith(ctx);
     });

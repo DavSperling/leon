@@ -131,6 +131,13 @@ export const canReconnect = (view: Pick<ConnectionView, 'config'>): boolean =>
 export const canSyncNow = (view: Pick<ConnectionView, 'status' | 'creatorLeft'>): boolean =>
   view.status !== 'paused' && !view.creatorLeft;
 
+// Les pages où le retour de l'éditeur peut revenir : une liste fermée, comparée à l'égalité exacte.
+// Une adresse du formulaire n'est jamais suivie telle quelle.
+export const OAUTH_RETURN_PATHS = ['/connexions', '/bienvenue/outils'] as const;
+export type OAuthReturnPath = (typeof OAUTH_RETURN_PATHS)[number];
+export const isOAuthReturnPath = (value: unknown): value is OAuthReturnPath =>
+  OAUTH_RETURN_PATHS.some((path) => path === value);
+
 // Les codes que le retour de l'éditeur met dans `?erreur=` (voir oauth-routes.ts).
 export const OAUTH_RETURN_CODES = [
   'annule',

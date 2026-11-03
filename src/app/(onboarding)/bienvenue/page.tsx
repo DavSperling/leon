@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { AboutStep } from '@/components/verre/onboarding/about-step';
-import { readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
+import { onboardingSteps } from '@/lib/onboarding';
+import { isSoleMember, readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 
@@ -25,6 +26,7 @@ export default async function WelcomePage() {
         userName={session.user.name}
         organizationName={null}
         placement={null}
+        steps={onboardingSteps('soleOwner')}
       />
     );
   }
@@ -35,6 +37,10 @@ export default async function WelcomePage() {
 
   const role = spaceRole(member.role);
   const profile = await getViewerProfile(ctx);
+  // Seul dans l'espace, un propriétaire a les trois étapes ; avec une équipe, la première seulement.
+  const steps = onboardingSteps(
+    role !== 'owner' ? 'member' : (await isSoleMember(ctx)) ? 'soleOwner' : 'ownerWithTeam',
+  );
   return (
     <AboutStep
       mode={role === 'owner' ? 'owner' : 'member'}
@@ -46,6 +52,7 @@ export default async function WelcomePage() {
           ? null
           : { department: member.department, job: member.job, seniority: member.seniority }
       }
+      steps={steps}
     />
   );
 }

@@ -10,13 +10,20 @@ import { Button } from '@/components/verre/ui/button';
 import { CopyButton } from '@/components/verre/ui/copy';
 import { Dialog, DialogClose, DialogContent, DialogFooter } from '@/components/verre/ui/dialog';
 import { GlassCard } from '@/components/verre/ui/surfaces';
-import { departmentLabelKey, jobLabelKey, seniorityId } from '@/lib/onboarding';
+import {
+  departmentLabelKey,
+  jobLabelKey,
+  type OnboardingStepId,
+  seniorityId,
+} from '@/lib/onboarding';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { Placement } from '@/server/auth/onboarding';
 import { type CreatedInvitation, InviteForm } from './invite-form';
+import { OnboardingSteps } from './steps';
 
 export type TeammatesStepProps = {
+  steps: OnboardingStepId[];
   organizationName: string;
   /** Le propriétaire (ou l'administrateur) qui invite : sa place dans l'organigramme. */
   you: { name: string; placement: Placement };
@@ -82,7 +89,7 @@ function Node({
  * L'étape Collaborateurs de l'onboarding : un lien d'invitation par personne, chacun avec son service, son poste et son
  * niveau. À droite (dessous en dessous de 1024 px), l'organigramme qui se remplit à mesure.
  */
-export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
+export function TeammatesStep({ steps, organizationName, you }: TeammatesStepProps) {
   const t = useTranslations('onboarding');
   const tm = useTranslations('onboarding.teammates');
   const [teammates, setTeammates] = useState<Teammate[]>([{ id: 0, created: null, copied: false }]);
@@ -114,6 +121,7 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
       <div className="grid min-w-0 content-start gap-5">
+        <OnboardingSteps steps={steps} current="teammates" />
         <div>
           <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{tm('title')}</h1>
           <p className="mt-2 text-body text-muted">{nb(tm('lead'))}</p>
@@ -179,10 +187,10 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
 
         <div className="grid justify-items-center gap-3">
           <Button asChild variant="primary" size="lg" className="w-full" onClick={confirmLeave}>
-            <Link href="/">{tm('enter')}</Link>
+            <Link href="/bienvenue/pret">{tm('enter')}</Link>
           </Button>
           <Button asChild variant="link" size="sm" onClick={confirmLeave}>
-            <Link href="/">{tm('skip')}</Link>
+            <Link href="/bienvenue/pret">{tm('skip')}</Link>
           </Button>
         </div>
 
@@ -197,7 +205,7 @@ export function TeammatesStep({ organizationName, you }: TeammatesStepProps) {
                 <Button variant="primary">{tm('stay')}</Button>
               </DialogClose>
               <Button asChild variant="ghost">
-                <Link href="/">{tm('leave')}</Link>
+                <Link href="/bienvenue/pret">{tm('leave')}</Link>
               </Button>
             </DialogFooter>
           </DialogContent>

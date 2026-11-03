@@ -169,13 +169,32 @@ function leastRecentFirst(repos: string[], cursor: Cursor): string[] {
   return [...repos].sort((a, b) => (rank.get(a) ?? -1) - (rank.get(b) ?? -1));
 }
 
+// La clé d'un dépôt dans `depots_equipe` (décision D) ; GitHub écrit le nom avec sa casse.
+const projectOf = (repo: string) => `github.com/${repo.toLowerCase()}`;
+
 async function* syncRepos(
   github: GithubClient,
   repos: string[],
   state: SyncState,
 ): AsyncGenerator<SyncPage> {
   const cursor = readCursor(state.cursor);
-  for (const repo of leastRecentFirst(repos, cursor)) {
+  // Décision D : seuls les dépôts d'équipe sur lesquels le membre a une permission sont lus. Les autres gardent
+  // leur marque, ou en reçoivent une sans aucune lecture, pour rester candidats de leur propriétaire (T10).
+  const team = new Set(state.depotsEquipe ?? []);
+  const toRead: string[] = [];
+  for (const repo of repos) {
+    if (team.has(projectOf(repo)) && (await github.canRead(repo))) toRead.push(repo);
+    else cursor[repo] ??= { at: apiTime(state.since), seen: [] };
+  }
+  // Chaque page porte la liste du passage : la relève la réécrit dans la connexion (T14 s'en sert).
+  const depotsConfirmes = toRead.map(projectOf);
+  const page = (items: ConnectorItem[]): SyncPage => ({
+    items,
+    cursor: JSON.stringify(cursor),
+    depotsConfirmes,
+  });
+  if (toRead.length === 0) yield page([]);
+  for (const repo of leastRecentFirst(toRead, cursor)) {
     const mark = cursor[repo];
     const from = mark ? new Date(Date.parse(mark.at) - 1000) : state.since;
     // Passé en fin d'ordre, avec une marque même si rien ne change (elle garde alors `since`).
@@ -189,11 +208,11 @@ async function* syncRepos(
         cursor[repo] = advance(cursor[repo], issue);
       }
       if (items.length > 0) {
-        yield { items, cursor: JSON.stringify(cursor) };
+        yield page(items);
         saved = true;
       }
     }
-    if (!saved) yield { items: [], cursor: JSON.stringify(cursor) };
+    if (!saved) yield page([]);
   }
 }
 

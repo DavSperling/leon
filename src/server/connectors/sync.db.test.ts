@@ -15,7 +15,7 @@ import { ConnectorAuthError, type ConnectorHttp } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from './pipedream';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
-import type { AnyConnector, ConnectorItem, SyncPage } from './types';
+import type { AnyConnector, ConnectorItem, SyncPage, SyncState } from './types';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -33,6 +33,7 @@ let paul: TenantContext;
 
 afterAll(async () => {
   await adminPool.query('delete from connections where tenant_id = any($1)', [tenantIds]);
+  await adminPool.query('delete from depots_equipe where tenant_id = any($1)', [tenantIds]);
 });
 
 beforeEach(async () => {
@@ -398,6 +399,82 @@ async function oneItem(): Promise<ConnectorItem> {
   const [page] = await collect(connector.sync({ token: 'x' }, state, undefined as never));
   return page?.items[0] as ConnectorItem;
 }
+
+// Décision D (T11) : la relève GitHub reçoit la liste des dépôts d'équipe de l'organisation, et garde dans la
+// configuration de la connexion ceux que le membre a pu lire à ce passage, datés (T14 n'en croit que les récents).
+describe('runConnectorSync : les dépôts d’équipe', () => {
+  const choose = (ctx: TenantContext, project: string) =>
+    adminPool.query(
+      `insert into depots_equipe (tenant_id, project, acl, choisi_par)
+       values ($1, $2, array[$1::uuid], $3)`,
+      [ctx.tenantId, project, ctx.userId],
+    );
+
+  // Le connecteur garde l'état reçu, puis rend les pages du test.
+  function recording(pages: SyncPage[] = [{ items: [], cursor: 'x' }]) {
+    const states: SyncState[] = [];
+    const connector: AnyConnector = {
+      ...fakeConnector({ items: 0, pageSize: 1 }),
+      async *sync(_config, state) {
+        states.push(state);
+        yield* pages;
+      },
+    };
+    return { connector, states };
+  }
+
+  const confirmed = async (id: string) => {
+    const { rows } = await adminPool.query<{ depots: unknown }>(
+      `select config->'depots_confirmes' as depots from connections where id = $1`,
+      [id],
+    );
+    return rows[0]?.depots;
+  };
+
+  it('donne à une connexion GitHub la liste de son organisation, et la sienne seulement', async () => {
+    const other = await createTestTenant(['Zoé']);
+    tenantIds.push(other.tenantId);
+    await choose(paul, 'github.com/acme/leon');
+    await choose(other.members[0] as TenantContext, 'github.com/acme/autre');
+    const id = await dueConnection();
+    const { connector, states } = recording();
+
+    expect(await run(id, connector)).toBe('ok');
+
+    expect(states[0]?.depotsEquipe).toEqual(['github.com/acme/leon']);
+  });
+
+  it('ne lit pas la liste pour un autre outil, et ne touche pas à sa configuration', async () => {
+    await choose(paul, 'github.com/acme/leon');
+    const id = await seedConnection(paul, { provider: 'gitlab', nextSyncAt: DUE });
+    const { connector, states } = recording();
+
+    expect(await run(id, connector)).toBe('ok');
+
+    expect(states[0]).not.toHaveProperty('depotsEquipe');
+    expect(await confirmed(id)).toBeNull();
+  });
+
+  it('écrit les dépôts confirmés, datés du passage, et les réécrit au passage suivant', async () => {
+    const id = await dueConnection();
+    const before = Date.now() - 1000;
+    const page = { items: [], cursor: '1', depotsConfirmes: ['github.com/acme/leon'] };
+
+    expect(await run(id, recording([page]).connector)).toBe('ok');
+
+    const [entry, ...rest] = (await confirmed(id)) as Array<{ depot: string; confirme_le: string }>;
+    expect(rest).toEqual([]);
+    expect(entry?.depot).toBe('github.com/acme/leon');
+    expect(Date.parse(entry?.confirme_le ?? '')).toBeGreaterThanOrEqual(before);
+    expect(Date.parse(entry?.confirme_le ?? '')).toBeLessThanOrEqual(Date.now());
+
+    await makeDue(id);
+    const none = { items: [], cursor: '2', depotsConfirmes: [] };
+    expect(await run(id, recording([none]).connector)).toBe('ok');
+
+    expect(await confirmed(id)).toEqual([]);
+  });
+});
 
 describe('runConnectorSync : une connexion OAuth', () => {
   const TOKEN_URL = 'https://github.test/login/oauth/access_token';

@@ -407,19 +407,26 @@ const stillOurs = (id: string, lockedAt: string) =>
   and(eq(connections.id, id), sql`${connections.lastSyncStartedAt} = ${lockedAt}::timestamptz`);
 
 // Chaque page enregistrée rafraîchit la réservation. false : une autre relève l'a reprise, celle-ci
-// s'arrête.
+// s'arrête. `depotsConfirmes` (GitHub, décision D) remplace `config.depots_confirmes` :
+// `[{ depot, confirme_le }]`, datés de cet enregistrement ; T14 n'en croit que les récents.
 export async function saveSyncProgress(
   ctx: TenantContext,
   id: string,
   lockedAt: string,
   cursor: string,
   itemsAdded: number,
+  depotsConfirmes?: string[],
 ): Promise<boolean> {
+  const confirme_le = new Date().toISOString();
+  const confirmed = depotsConfirmes?.map((depot) => ({ depot, confirme_le }));
   const rows = await withTenant(ctx, (tx) =>
     tx
       .update(connections)
       .set({
         cursor,
+        config: confirmed
+          ? sql`${connections.config} || jsonb_build_object('depots_confirmes', ${JSON.stringify(confirmed)}::jsonb)`
+          : undefined,
         itemsSynced: sql`${connections.itemsSynced} + ${itemsAdded}`,
         syncLockAt: sql`now()`,
         updatedAt: sql`now()`,

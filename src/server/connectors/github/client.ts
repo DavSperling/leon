@@ -218,6 +218,26 @@ export function githubClient(token: string, http: ConnectorHttp) {
       }
     },
 
+    // Décision D : le membre a-t-il une permission sur le dépôt ? Lue dans les permissions du dépôt, avec le jeton
+    // de la connexion, à clé comme par le bouton (pull vaut pour tout rôle). Un 404 ou un 403, comme pour
+    // checkRepo : non. https://docs.github.com/en/rest/repos/repos#get-a-repository
+    // shortcut: pull est vrai pour tout compte sur un dépôt public, membre ou non, passer à l'appartenance au
+    // dépôt si QD6 le demande.
+    async canRead(repo: string): Promise<boolean> {
+      try {
+        const { permissions } = await http.json(
+          { url: `${API}/repos/${repo}`, headers },
+          z.object({ permissions: z.object({ pull: z.boolean().optional() }).optional() }),
+        );
+        return permissions?.pull === true;
+      } catch (error) {
+        const denied = error instanceof ConnectorAuthError && error.status === 403;
+        const missing = error instanceof ConnectorHttpError && error.status === 404;
+        if (denied || missing) return false;
+        throw error;
+      }
+    },
+
     // Tickets et PR modifiés depuis `since` (format AAAA-MM-JJTHH:MM:SSZ), du plus ancien au plus récent.
     issues: (repo: string, since: string) =>
       pages(

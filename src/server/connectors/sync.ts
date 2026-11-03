@@ -3,6 +3,8 @@ import type { ProviderId } from '@/capture/turn';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
+import { depotsEquipe } from '@/server/db/schema/connections';
+import { withTenant } from '@/server/db/with-tenant';
 import { logError, safeErrorSummary } from '@/server/log';
 import { getBoss } from '@/server/pipeline/queue';
 import {
@@ -59,6 +61,15 @@ function prepare(connection: LoadedConnection, deps: SyncDeps): Ready | { messag
   return { connector, config: parsed.data };
 }
 
+// Décision D : les dépôts d'équipe de l'organisation (toute l'équipe lit la liste, sous RLS). La relève GitHub
+// ne lit qu'eux ; les autres outils ne la reçoivent pas.
+async function teamRepos(ctx: TenantContext): Promise<string[]> {
+  const rows = await withTenant(ctx, (tx) =>
+    tx.select({ project: depotsEquipe.project }).from(depotsEquipe),
+  );
+  return rows.map((row) => row.project);
+}
+
 // Une page après l'autre : ingestion, puis curseur. Une reprise après plantage refait au pire la
 // dernière page, l'ingestion ne crée aucun doublon. Renvoie « soon » quand la limite est atteinte,
 // « lost » quand une autre relève a repris la réservation (le passage s'arrête là). Une connexion
@@ -73,7 +84,11 @@ async function readPages(
 ): Promise<Again> {
   const { connector, config } = ready;
   const http = connectorHttp(connection.provider, connector, config, deps);
-  const state = { cursor: connection.cursor, since: connection.since };
+  const state = {
+    cursor: connection.cursor,
+    since: connection.since,
+    ...(connection.provider === 'github' && { depotsEquipe: await teamRepos(ctx) }),
+  };
   let read = 0;
   for await (const page of connector.sync(config, state, http)) {
     const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
@@ -81,7 +96,9 @@ async function readPages(
       await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
     if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
     const { id, lockedAt } = connection;
-    if (!(await saveSyncProgress(ctx, id, lockedAt, page.cursor, items.length))) return 'lost';
+    const { cursor, depotsConfirmes } = page;
+    if (!(await saveSyncProgress(ctx, id, lockedAt, cursor, items.length, depotsConfirmes)))
+      return 'lost';
     read += page.items.length;
     if (read >= SYNC_ITEMS_MAX) return 'soon';
   }

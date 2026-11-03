@@ -32,6 +32,8 @@ const SERVED = {
   briefing: ['GET', {}],
   faits: ['POST', { body: {} }],
   contexte: ['POST', { body: {} }],
+  ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
+  jeton: ['DELETE', {}],
 } as const;
 // Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
 const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];

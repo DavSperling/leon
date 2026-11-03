@@ -9,6 +9,8 @@ export const API_PATHS = {
   mcp: '/api/mcp',
   faits: '/api/v1/faits',
   contexte: '/api/v1/contexte',
+  ordinateurs: '/api/v1/ordinateurs', // POST : leon login échange le code signé contre l'enregistrement du jeton
+  jeton: '/api/v1/jeton', // DELETE : un jeton se révoque lui-même (leon logout)
 } as const;
 
 export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 octets en base64url

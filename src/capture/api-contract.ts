@@ -99,6 +99,7 @@ export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
 // journaux d'URL.
 export const CONTEXT_MAX_BYTES = 8000;
+export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
 export const ContextRequestSchema = z
   .object({
     projet: ProjectSchema,

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { API_PATHS, CONTEXT_MAX_BYTES, ContextResponseSchema } from '@/capture/api-contract';
+import {
+  API_PATHS,
+  CONTEXT_BODY_MAX_BYTES,
+  CONTEXT_MAX_BYTES,
+  ContextResponseSchema,
+} from '@/capture/api-contract';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { BRIEFING_BLOCK_CLOSE, renderBriefing } from '@/server/briefing/briefing-prompt';
 import { sources } from '@/server/db/schema/memory';
@@ -49,6 +54,17 @@ describe('POST /api/v1/contexte', () => {
     const text = await response.text();
     expect(text).not.toContain('jeton@');
     expect(text).not.toContain('S3cret-xyz');
+  });
+
+  it('répond 413 à un corps de 4 Kio + 1 octet', async () => {
+    const { token } = await setup();
+    const envelope = JSON.stringify('');
+    const filler = 'a'.repeat(CONTEXT_BODY_MAX_BYTES + 1 - envelope.length);
+
+    const response = await apiRequest(API_PATHS.contexte, { token, body: filler });
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({ error: 'Request too large' });
   });
 
   it('borne le bloc à 8 000 octets, même quand on en demande plus, et à `max` en dessous', async () => {

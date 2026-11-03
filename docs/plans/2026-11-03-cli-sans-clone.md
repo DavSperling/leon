@@ -277,7 +277,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 **Fait quand :** le script, en `sh` POSIX avec `set -eu` :
 1. détecte la plateforme (`uname -s`, `uname -m`) ; une autre que celles de K7 s'arrête sans rien écrire, comme un Linux musl (un `/lib/ld-musl-*` présent, ou `ldd --version` qui nomme musl) ;
 2. crée `~/.leon` en 0700 ;
-3. si `~/.leon/runtime/node-v<version>/node` manque, télécharge `https://nodejs.org/dist/v<version>/node-v<version>-<plateforme>.tar.xz` dans un dossier temporaire, vérifie son empreinte (`shasum -a 256` sur macOS, `sha256sum` sur Linux) contre celle du script, puis n'en extrait que `bin/node` ;
+3. si `~/.leon/runtime/node-v<version>/node` manque, télécharge `https://nodejs.org/dist/v<version>/node-v<version>-<plateforme>.tar.xz` dans un dossier temporaire, vérifie son empreinte (`shasum -a 256` sur macOS, `sha256sum` sur Linux) contre celle du script, puis n'en extrait que `bin/node` ; puis fait pointer `runtime/actuel` sur `node-v<version>` (nouveau lien puis `rename`), que le lanceur appelle (K8) ;
 4. télécharge `/cli/leon-<version>.mjs` depuis l'adresse du serveur, vérifie empreinte et taille, le pose dans `~/.leon/cli/<version>/`, et remplace `cli/actuelle` ;
 5. si `/dev/tty` s'ouvre, lance `node leon.mjs setup --url <adresse> </dev/tty` ; sinon, dit de lancer `~/.leon/bin/leon setup` dans un terminal ;
 6. une empreinte fausse arrête tout et efface le téléchargement ; rien n'est laissé à moitié écrit.
@@ -326,7 +326,7 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
   - lit K7 à l'adresse de K2 (HTTPS, ou `http` local en développement) ;
   - même version : met `maj.json` à jour, rien d'autre ;
   - sinon : télécharge, vérifie la taille puis l'empreinte, écrit dans `cli/<version>/`, lance `node leon.mjs --version` et compare, puis remplace `cli/actuelle` (nouveau lien puis `rename`) et efface les versions plus anciennes que la précédente ;
-  - si `node.version` a changé : même chemin pour Node (archive de nodejs.org, empreinte de K7), avant la CLI ;
+  - si `node.version` a changé : même chemin pour Node (archive de nodejs.org, empreinte de K7), avant la CLI : le nouveau Node est posé dans `runtime/node-v<nouvelle>/`, lancé (`--version`), puis `runtime/actuel` est remplacé d'un coup et l'ancien Node effacé ;
   - `--previous` revient à la version précédente ;
 - rien ne touche à `accord.json`, à `connexion.json`, au lanceur ni aux crochets ;
 - `--background` n'écrit rien sur la sortie standard ni sur la sortie d'erreur ; sur le disque, il n'écrit que `maj.json`, `cli/` et `runtime/`, comme `leon update`.

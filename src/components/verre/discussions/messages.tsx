@@ -1,24 +1,22 @@
 'use client';
 
-import { ChevronDown, CircleAlert, ExternalLink, Sparkles } from 'lucide-react';
+import { ChevronDown, CircleAlert, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import {
-  Beam,
   CitationChip,
   CitedMarkdown,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-  GlassCard,
 } from '@/components/verre';
 import { type DiscussionCitation, replyParts } from '@/lib/discussion-events';
 import { cn, duration, ease, nb } from '@/lib/verre';
 
-// Un message du fil : la question (bulle à droite) ou la carte « ✦ Leon » : activité, texte en flux, renvois, sources
-// citées. Un renvoi et une source ouvrent l'aperçu du passage cité, sans quitter la page. Le texte vient du modèle :
-// jamais lu comme du HTML.
+// Un message du fil : la question (bulle à droite) ou la réponse de Leon, en texte libre : activité, texte en flux,
+// renvois, sources citées. Un renvoi et une source ouvrent l'aperçu du passage cité, sans quitter la page. Le texte vient
+// du modèle : jamais lu comme du HTML.
 
 /** Ouvre l'aperçu d'une citation : la clé (message:n) éclaire la puce et la ligne liées. */
 export type OpenCitation = (
@@ -27,8 +25,7 @@ export type OpenCitation = (
   trigger: HTMLElement,
 ) => void;
 
-// Le texte de la réponse : une ligne de lecture confortable, même quand le fil prend toute la largeur.
-const TEXT = 'mt-2.5 max-w-[72ch] text-lead leading-[1.72] break-words';
+const TEXT = 'text-lead leading-[1.72] break-words';
 
 const titleOf = (citation: DiscussionCitation, fallback: string): string =>
   citation.title?.trim() || fallback;
@@ -193,7 +190,7 @@ type LeonCardProps = {
   live?: Live;
   /** Réponse qui vient d'arriver : les renvois éclosent, les sources montent. */
   fresh?: boolean;
-  /** La dernière carte de Leon du fil : seule à porter le signal, ses sources ouvertes. */
+  /** La dernière réponse de Leon du fil : ses sources ouvertes. */
   latest?: boolean;
   active: string | null;
   onOpen: OpenCitation;
@@ -219,86 +216,75 @@ export function LeonCard({
   const main = reply.fixed ? t(reply.fixed) : reply.main;
   const limit = reply.limit ? t('limitNote') : null;
   return (
-    <Beam active={Boolean(live)} className="rounded-box">
-      <GlassCard
-        variant="raised"
-        signal={latest}
-        className={cn(
-          'px-5 pt-4 pb-4 transition-[border-color] duration-500 sm:px-6',
-          live && 'border-accent-line',
-        )}
-      >
-        <div className="flex items-center gap-1.5 text-ui font-semibold text-accent">
-          <Sparkles aria-hidden="true" className="size-[15px]" strokeWidth={1.7} />
-          Leon
+    // du texte qui coule, sans carte autour (comme une conversation, pas un formulaire)
+    <div>
+      <p className="sr-only">Leon</p>
+      {live && live.text === '' ? (
+        <p className="flex min-h-[1.7em] items-center gap-2.5 text-body text-fg-2">
+          <span className="spin" aria-hidden="true" />
+          {live.activity}
+        </p>
+      ) : live ? (
+        <div className={cn(TEXT, 'text-fg')}>
+          {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
+          <CitedMarkdown
+            text={live.text}
+            renderCite={(n) => `[${n}]`}
+            tail={<span className="caret-block" aria-hidden="true" />}
+          />
         </div>
-        {live && live.text === '' ? (
-          <p className="mt-2.5 flex min-h-[1.7em] items-center gap-2.5 text-body text-fg-2">
-            <span className="spin" aria-hidden="true" />
-            {live.activity}
-          </p>
-        ) : live ? (
-          <div className={cn(TEXT, 'text-fg')}>
-            {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
+      ) : (
+        main && (
+          <div className={cn(TEXT, fixed ? 'text-fg-2' : 'text-fg')}>
             <CitedMarkdown
-              text={live.text}
-              renderCite={(n) => `[${n}]`}
-              tail={<span className="caret-block" aria-hidden="true" />}
+              text={main}
+              keep={(n) => byN.has(n)}
+              renderCite={(n) => {
+                const c = byN.get(n) as DiscussionCitation;
+                const key = `${id}:${n}`;
+                return (
+                  <CitationChip
+                    n={n}
+                    label={nb(t('sourceLabel', { number: n, title: titleOf(c, t('untitled')) }))}
+                    active={active === key}
+                    animate={fresh}
+                    onClick={(e) => onOpen(key, c, e.currentTarget)}
+                    onMouseEnter={() => onHover(key)}
+                    onMouseLeave={() => onHover(null)}
+                    onFocus={() => onHover(key)}
+                    onBlur={() => onHover(null)}
+                  />
+                );
+              }}
             />
           </div>
-        ) : (
-          main && (
-            <div className={cn(TEXT, fixed ? 'text-fg-2' : 'text-fg')}>
-              <CitedMarkdown
-                text={main}
-                keep={(n) => byN.has(n)}
-                renderCite={(n) => {
-                  const c = byN.get(n) as DiscussionCitation;
-                  const key = `${id}:${n}`;
-                  return (
-                    <CitationChip
-                      n={n}
-                      label={nb(t('sourceLabel', { number: n, title: titleOf(c, t('untitled')) }))}
-                      active={active === key}
-                      animate={fresh}
-                      onClick={(e) => onOpen(key, c, e.currentTarget)}
-                      onMouseEnter={() => onHover(key)}
-                      onMouseLeave={() => onHover(null)}
-                      onFocus={() => onHover(key)}
-                      onBlur={() => onHover(null)}
-                    />
-                  );
-                }}
-              />
-            </div>
-          )
-        )}
-        {!live && limit && (
-          <motion.p
-            initial={fresh ? { opacity: 0, y: 6 } : false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: duration.slow, ease: ease.out, delay: 0.2 }}
-            className="mt-3 flex gap-2.5 rounded-field bg-glass-3 px-3.5 py-2.5 text-ui text-fg-2 shadow-[inset_0_0_0_1px_var(--line)]"
-          >
-            <CircleAlert
-              aria-hidden="true"
-              className="mt-[2px] size-4 shrink-0 text-muted"
-              strokeWidth={1.8}
-            />
-            {nb(limit)}
-          </motion.p>
-        )}
-        {!live && citations.length > 0 && (
-          <CitedSources
-            citations={citations}
-            msgId={id}
-            open={Boolean(latest)}
-            active={active}
-            onOpen={onOpen}
-            fresh={fresh}
+        )
+      )}
+      {!live && limit && (
+        <motion.p
+          initial={fresh ? { opacity: 0, y: 6 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: duration.slow, ease: ease.out, delay: 0.2 }}
+          className="mt-3 flex gap-2.5 rounded-field bg-glass-3 px-3.5 py-2.5 text-ui text-fg-2 shadow-[inset_0_0_0_1px_var(--line)]"
+        >
+          <CircleAlert
+            aria-hidden="true"
+            className="mt-[2px] size-4 shrink-0 text-muted"
+            strokeWidth={1.8}
           />
-        )}
-      </GlassCard>
-    </Beam>
+          {nb(limit)}
+        </motion.p>
+      )}
+      {!live && citations.length > 0 && (
+        <CitedSources
+          citations={citations}
+          msgId={id}
+          open={Boolean(latest)}
+          active={active}
+          onOpen={onOpen}
+          fresh={fresh}
+        />
+      )}
+    </div>
   );
 }

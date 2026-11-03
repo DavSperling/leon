@@ -35,7 +35,7 @@ const INSTALLED = { kind: 'installee' } as const;
 // K8, mot pour mot, pour un dossier personnel /Users/a.
 const INSTALLED_SCRIPT = `#!/bin/sh
 # Written by Leon (leon setup). Installed form.
-exec '/Users/a/.leon/runtime/${NODE_DIR}/node' '/Users/a/.leon/cli/actuelle/leon.mjs' "$@"
+exec '/Users/a/.leon/runtime/actuel/node' '/Users/a/.leon/cli/actuelle/leon.mjs' "$@"
 `;
 const CLONE_SCRIPT = `#!/bin/sh
 # Written by Leon (leon setup --depot). Clone form.
@@ -57,8 +57,13 @@ const modeOf = async (path: string) => (await stat(path)).mode & 0o777;
 const binFiles = () => readdir(join(home, '.leon', 'bin'));
 
 describe('launcherScript : K8, mot pour mot', () => {
-  it('forme installée : le Node posé par Leon et la version en cours de la CLI', () => {
+  it('forme installée : le Node posé par Leon et la version en cours de la CLI, par les liens runtime/actuel et cli/actuelle', () => {
     expect(launcherScript('/Users/a', INSTALLED)).toBe(INSTALLED_SCRIPT);
+  });
+
+  it('la forme installée ne dépend d’aucune version : ni celle de Node, ni celle de la CLI', () => {
+    expect(launcherScript('/Users/a', INSTALLED)).not.toMatch(/node-v|\d+\.\d+\.\d+/);
+    expect(launcherScript('/Users/a', INSTALLED)).not.toContain(runtime.version);
   });
 
   it('forme clone : pnpm dans le clone, avec les options des crochets', () => {
@@ -220,9 +225,11 @@ describe('le lanceur écrit, lancé par sh', () => {
     ).stdout;
 
   it('forme installée : le Node posé, la CLI en cours, puis les arguments du crochet', async () => {
-    const node = join(weirdHome, '.leon', 'runtime', NODE_DIR, 'node');
-    await mkdir(join(node, '..'), { recursive: true });
-    await writeFile(node, FAKE, { mode: 0o755 });
+    // Comme le script d'installation (S09) : le Node dans runtime/node-v<version>, et le lien runtime/actuel.
+    const runtimeDir = join(weirdHome, '.leon', 'runtime');
+    await mkdir(join(runtimeDir, NODE_DIR), { recursive: true });
+    await writeFile(join(runtimeDir, NODE_DIR, 'node'), FAKE, { mode: 0o755 });
+    await symlink(NODE_DIR, join(runtimeDir, 'actuel'));
     await writeLauncher(weirdHome, INSTALLED);
 
     expect(await launch(['briefing', 'avec espace'])).toBe(

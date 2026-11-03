@@ -79,6 +79,7 @@ Amos a tranché A1 à A5 et QD1 à QD3 le 03/11 (voir « Questions tranchées »
 ~/.leon/                               0700
   bin/leon                             0700  le lanceur (K8)
   runtime/node-v24.22.2/node           0755  le Node officiel
+  runtime/actuel -> node-v24.22.2            lien remplacé d'un coup (nouveau lien, puis rename)
   cli/<version>/leon.mjs               0644  la CLI ; la version en cours et la précédente
   cli/actuelle -> <version>                  lien remplacé d'un coup (nouveau lien, puis rename)
   connexion.json                       0600  K2
@@ -86,7 +87,7 @@ Amos a tranché A1 à A5 et QD1 à QD3 le 03/11 (voir « Questions tranchées »
   maj.json                             0600  { "verifie_le": "<ISO 8601>" }
 ```
 
-Toute écriture passe par un fichier voisin puis un `rename`, et refuse un lien symbolique là où elle écrit (sauf `cli/actuelle`, qu'elle crée).
+Toute écriture passe par un fichier voisin puis un `rename`, et refuse un lien symbolique là où elle écrit (sauf `cli/actuelle` et `runtime/actuel`, qu'elle crée).
 
 **K2. `~/.leon/connexion.json`** (0600) :
 
@@ -132,7 +133,7 @@ Le fichier est servi à `/cli/leon-<version>.mjs`. `node.plateformes` porte les 
 ```sh
 #!/bin/sh
 # Written by Leon (leon setup). Installed form.
-exec '/Users/a/.leon/runtime/node-v24.22.2/node' '/Users/a/.leon/cli/actuelle/leon.mjs' "$@"
+exec '/Users/a/.leon/runtime/actuel/node' '/Users/a/.leon/cli/actuelle/leon.mjs' "$@"
 ```
 
 ```sh
@@ -141,7 +142,7 @@ exec '/Users/a/.leon/runtime/node-v24.22.2/node' '/Users/a/.leon/cli/actuelle/le
 exec pnpm -s --config.verify-deps-before-run=false --dir '/Users/a/leon' leon "$@"
 ```
 
-Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `exec`, dans les deux formes.
+Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actuelle` changent, lui non. Le détachement de `crochet codex fin` (T16 du plan mémoire) s'insère avant `exec`, dans les deux formes.
 
 **K9. Les commandes des crochets** : `<lanceur> briefing`, `<lanceur> capter-session`, puis `<lanceur> crochet <outil> <evenement>` (C6 du plan mémoire), où `<lanceur>` est le chemin absolu de `bin/leon`, mis entre apostrophes s'il le faut. `isLeonHandler` reconnaît cette forme et l'ancienne (`pnpm … leon <sous-commande>`).
 

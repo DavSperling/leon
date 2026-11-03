@@ -1,9 +1,11 @@
 // Le lanceur `~/.leon/bin/leon` (K8 du plan « CLI sans clone », S08) : le script `sh` que tous les crochets des outils de
 // code appellent (`launcherHookCommand`, hook-commands.ts). Il a deux formes, et ne change que par `leon setup` (E7) :
-// - installée, par défaut : le Node posé par Leon (runtime.json) et la version en cours de la CLI (`cli/actuelle`) ;
+// - installée, par défaut : le Node posé par Leon (`runtime/actuel`) et la version en cours de la CLI (`cli/actuelle`) ;
 // - clone, pour un développeur (`leon setup --depot <clone>`) : pnpm dans son clone, comme les crochets d'avant.
-// Chaque chemin est mis entre apostrophes (un dossier personnel peut avoir une espace ou une apostrophe), et `exec`
-// laisse le Node ou pnpm recevoir l'entrée standard, le JSON du crochet, et rendre son code de sortie.
+// Le lanceur ne dépend d'aucune version : le script d'installation et la mise à jour changent les liens `runtime/actuel`
+// et `cli/actuelle`, jamais lui. Chaque chemin est mis entre apostrophes (un dossier personnel peut avoir une espace ou
+// une apostrophe), et `exec` laisse le Node ou pnpm recevoir l'entrée standard, le JSON du crochet, et rendre son code
+// de sortie.
 //
 // L'écriture imite connection.ts : un fichier voisin en 0700, puis un `rename`, de sorte qu'un lanceur déjà lancé ou un
 // arrêt en cours d'écriture ne tombe jamais sur un script coupé. Un lien symbolique à la place du lanceur est refusé.
@@ -11,7 +13,6 @@ import { randomBytes } from 'node:crypto';
 import { chmod, lstat, mkdir, readFile, rename, rmdir, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join } from 'node:path';
 import { HOOK_PNPM_OPTIONS, launcherPath, singleQuote } from './hook-commands';
-import runtime from './runtime.json';
 
 export type LauncherForm = { kind: 'installee' } | { kind: 'clone'; repoDir: string };
 
@@ -41,7 +42,7 @@ export function launcherScript(home: string, form: LauncherForm): string {
   const exec =
     form.kind === 'installee'
       ? [
-          singleQuote(join(leon, 'runtime', `node-v${runtime.version}`, 'node')),
+          singleQuote(join(leon, 'runtime', 'actuel', 'node')),
           singleQuote(join(leon, 'cli', 'actuelle', 'leon.mjs')),
         ]
       : ['pnpm', ...HOOK_PNPM_OPTIONS, '--dir', singleQuote(form.repoDir), 'leon'];

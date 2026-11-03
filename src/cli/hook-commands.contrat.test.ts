@@ -18,6 +18,7 @@ import {
   readdir,
   readFile,
   realpath,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -178,8 +179,8 @@ describe('le lanceur réel', () => {
   let cliVersion: string;
 
   // Un Node « quelconque du poste » à la place de celui que Leon pose (un script qui lance celui du test), et la vraie
-  // CLI construite par `pnpm build:cli`, rangée là où le lanceur la cherche (K1 : cli/<version>/leon.mjs et le lien
-  // cli/actuelle).
+  // CLI construite par `pnpm build:cli`, rangés là où le lanceur les cherche (K1 : runtime/node-v<version>/node et le
+  // lien runtime/actuel, cli/<version>/leon.mjs et le lien cli/actuelle).
   beforeAll(async () => {
     launcherHome = join(dir, "Léa O'Neil");
     const built = join(dir, 'cli-construite');
@@ -189,12 +190,17 @@ describe('le lanceur réel', () => {
     await mkdir(cliDir, { recursive: true });
     await copyFile(join(built, `leon-${cliVersion}.mjs`), join(cliDir, 'leon.mjs'));
     await symlink(cliVersion, join(launcherHome, '.leon', 'cli', 'actuelle'));
-    const node = join(launcherHome, '.leon', 'runtime', `node-v${runtime.version}`, 'node');
-    await mkdir(dirname(node), { recursive: true });
-    await writeFile(node, `#!/bin/sh\nexec ${singleQuote(process.execPath)} "$@"\n`, {
-      mode: 0o755,
-    });
+    await installNode(`node-v${runtime.version}`, `exec ${singleQuote(process.execPath)} "$@"`);
+    await symlink(`node-v${runtime.version}`, join(runtimeDir(), 'actuel'));
   }, BUILD_TIMEOUT_MS);
+
+  const runtimeDir = () => join(launcherHome, '.leon', 'runtime');
+  // Un « Node » : le script `body` dans runtime/<name>/node.
+  async function installNode(name: string, body: string): Promise<void> {
+    const node = join(runtimeDir(), name, 'node');
+    await mkdir(dirname(node), { recursive: true });
+    await writeFile(node, `#!/bin/sh\n${body}\n`, { mode: 0o755 });
+  }
 
   // Un crochet de Claude Code est une commande de shell : le lanceur, puis ses arguments.
   const hookLine = (args: string) => `${shellQuote(launcherPath(launcherHome))} ${args}`;
@@ -242,6 +248,25 @@ describe('le lanceur réel', () => {
       expect(outcome.stdout).toBe(`point|briefing|${HOOK_JSON}|${project}\n`);
       expect(await installed()).toEqual(before);
       expect(before).not.toContain('dep-ter');
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Une mise à jour de Node (S12) change le lien runtime/actuel d'un coup, sans toucher au lanceur.
+  it(
+    'forme installée : le lien runtime/actuel change, le lanceur reste le même et lance le nouveau Node',
+    async () => {
+      await writeLauncher(launcherHome, { kind: 'installee' }, () => true);
+      const before = await readFile(launcherPath(launcherHome), 'utf8');
+      await installNode('node-v99.0.0', 'echo node-suivant');
+      await symlink('node-v99.0.0', join(runtimeDir(), 'actuel.neuf'));
+      await rename(join(runtimeDir(), 'actuel.neuf'), join(runtimeDir(), 'actuel'));
+
+      const outcome = await runShell(hookLine('--version'), project, '');
+
+      expect(outcome).toEqual({ code: 0, stdout: 'node-suivant\n', stderr: '' });
+      expect((await writeLauncher(launcherHome, { kind: 'installee' })).etat).toBe('identique');
+      expect(await readFile(launcherPath(launcherHome), 'utf8')).toBe(before);
     },
     TEST_TIMEOUT_MS,
   );

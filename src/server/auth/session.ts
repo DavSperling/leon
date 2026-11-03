@@ -55,7 +55,7 @@ export async function requireUserContext(): Promise<TenantContext> {
 export async function signInWithPassword(
   email: string,
   password: string,
-): Promise<{ ok: boolean; twoFactor?: boolean }> {
+): Promise<{ ok: boolean; twoFactor?: boolean; unverified?: boolean }> {
   try {
     const result = await auth.api.signInEmail({
       body: { email, password },
@@ -65,7 +65,9 @@ export async function signInWithPassword(
       return { ok: false, twoFactor: true };
     return { ok: true };
   } catch (error) {
-    if (error instanceof APIError) return { ok: false };
+    // 403 : adresse pas encore vérifiée (sendOnSignIn a renvoyé le lien) ; distingué pour inviter à vérifier
+    // plutôt que d'afficher « identifiants incorrects ».
+    if (error instanceof APIError) return { ok: false, unverified: error.statusCode === 403 };
     throw error;
   }
 }

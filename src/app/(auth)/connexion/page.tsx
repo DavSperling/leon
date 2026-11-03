@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { AuthForm } from '@/components/verre/auth/auth-form';
 import { Notice } from '@/components/verre/ui/feedback';
-import { passwordResetEnabled } from '@/server/auth/auth';
+import { emailEnabled } from '@/server/auth/auth';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth');
@@ -27,7 +27,7 @@ export default async function SignInPage({
           {t(supprime === 'compte' ? 'doneAccount' : 'doneOrganization')}
         </Notice>
       )}
-      <AuthForm page="connexion" canResetPassword={passwordResetEnabled} />
+      <AuthForm page="connexion" canResetPassword={emailEnabled} />
     </>
   );
 }

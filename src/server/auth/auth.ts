@@ -10,10 +10,26 @@ import { env } from '@/server/env';
 import { logError } from '@/server/log';
 import { firstOrganizationId } from './tenant-context';
 
-// Sans Resend, aucun lien ne part : l'écran de connexion ne propose pas « Mot de passe oublié ? ».
-export const passwordResetEnabled = Boolean(env.RESEND_API_KEY && env.LEON_EMAIL_FROM);
+// Sans Resend, aucun e-mail ne part : l'écran de connexion ne propose pas « Mot de passe oublié ? », et la création
+// d'un espace n'exige pas de vérifier l'adresse (sinon personne ne pourrait se vérifier).
+export const emailEnabled = Boolean(env.RESEND_API_KEY && env.LEON_EMAIL_FROM);
 
-// La langue de la personne qui demande le lien, lue dans sa requête (cookie `leon-locale`) ; l'anglais hors requête.
+// Les quatre lignes d'un e-mail d'authentification, par clé de messages/*.json (espace `auth`).
+type EmailCopy = { subject: string; intro: string; action: string; ignore: string };
+const RESET_EMAIL: EmailCopy = {
+  subject: 'resetEmailSubject',
+  intro: 'resetEmailIntro',
+  action: 'resetEmailAction',
+  ignore: 'resetEmailIgnore',
+};
+const VERIFY_EMAIL: EmailCopy = {
+  subject: 'verifyEmailSubject',
+  intro: 'verifyEmailIntro',
+  action: 'verifyEmailAction',
+  ignore: 'verifyEmailIgnore',
+};
+
+// La langue de la personne, lue dans sa requête (cookie `leon-locale`) ; l'anglais hors requête.
 async function requesterLocale(): Promise<Locale> {
   try {
     return localeOf(await getLocale());
@@ -22,9 +38,14 @@ async function requesterLocale(): Promise<Locale> {
   }
 }
 
-async function sendPasswordReset(email: string, url: string, locale: Locale): Promise<void> {
+async function sendAuthEmail(
+  email: string,
+  url: string,
+  locale: Locale,
+  copy: EmailCopy,
+): Promise<void> {
   if (!env.RESEND_API_KEY || !env.LEON_EMAIL_FROM) {
-    throw new Error('RESEND_API_KEY and LEON_EMAIL_FROM are required to send password reset email');
+    throw new Error('RESEND_API_KEY and LEON_EMAIL_FROM are required to send auth emails');
   }
   const messages = (await import(`../../../messages/${locale}.json`)).default;
   const t = createTranslator({ locale, messages, namespace: 'auth' });
@@ -37,11 +58,19 @@ async function sendPasswordReset(email: string, url: string, locale: Locale): Pr
     body: JSON.stringify({
       from: env.LEON_EMAIL_FROM,
       to: [email],
-      subject: t('resetEmailSubject'),
-      html: `<p>${t('resetEmailIntro')}</p><p><a href="${url}">${t('resetEmailAction')}</a></p><p>${t('resetEmailIgnore')}</p>`,
+      subject: t(copy.subject),
+      html: `<p>${t(copy.intro)}</p><p><a href="${url}">${t(copy.action)}</a></p><p>${t(copy.ignore)}</p>`,
     }),
   });
-  if (!response.ok) throw new Error(`Password reset email failed (${response.status})`);
+  if (!response.ok) throw new Error(`Auth email failed (${response.status})`);
+}
+
+// Envoi détaché : la réponse met le même temps que le compte existe ou non (Leon tourne en continu, l'envoi finit
+// après la réponse). La langue se lit dans l'envoi détaché aussi : l'attendre ici ne retarderait que les envois réels.
+function sendAuthEmailDetached(email: string, url: string, copy: EmailCopy, logKey: string): void {
+  void requesterLocale()
+    .then((locale) => sendAuthEmail(email, url, locale, copy))
+    .catch((error) => logError(logKey, error));
 }
 
 export const auth = betterAuth({
@@ -53,15 +82,22 @@ export const auth = betterAuth({
     enabled: true,
     autoSignIn: false,
     minPasswordLength: 8,
+    // La création d'un espace vérifie l'adresse (emailVerification, plus bas) : tant qu'elle ne l'est pas, la
+    // connexion est refusée. Sans envoi d'e-mail possible, on ne bloque pas, sinon personne ne pourrait se vérifier.
+    requireEmailVerification: emailEnabled,
     revokeSessionsOnPasswordReset: true,
-    // Envoi sans attente : la réponse met le même temps que le compte existe ou non (Leon tourne en continu,
-    // l'envoi finit après la réponse).
-    sendResetPassword: async ({ user, url }) => {
-      // La langue se lit dans l'envoi détaché aussi : l'attendre ici ne retarderait que les comptes qui existent.
-      void requesterLocale()
-        .then((locale) => sendPasswordReset(user.email, url, locale))
-        .catch((error) => logError('auth.password_reset_email', error));
-    },
+    sendResetPassword: async ({ user, url }) =>
+      sendAuthEmailDetached(user.email, url, RESET_EMAIL, 'auth.password_reset_email'),
+  },
+  // Le lien de vérification part dès l'inscription, et repart à chaque tentative de connexion d'une adresse non
+  // vérifiée (sendOnSignIn) : c'est le seul renvoi possible, la route HTTP /send-verification-email étant fermée, et
+  // il reste sous la limite de débit de la connexion. Pas de connexion automatique au clic : suivre le lien n'ouvre
+  // pas la session d'un espace qu'un tiers aurait créé avec cette adresse (pré-détournement de compte).
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    sendVerificationEmail: async ({ user, url }) =>
+      sendAuthEmailDetached(user.email, url, VERIFY_EMAIL, 'auth.verification_email'),
   },
   // La connexion, l'inscription, la demande de lien, le changement de mot de passe et la 2FA passent par les server
   // actions (auth.api.*), sous la limite de débit de rate-limit.ts : les routes HTTP de Better Auth la
@@ -72,6 +108,9 @@ export const auth = betterAuth({
     '/sign-in/email',
     '/sign-up/email',
     '/request-password-reset',
+    // L'envoi (et le renvoi) du lien de vérification passe par l'inscription et la connexion, sous la limite de
+    // débit : la route HTTP la contournerait et laisserait envoyer des e-mails sans compte ni limite.
+    '/send-verification-email',
     '/change-password',
     '/two-factor/enable',
     '/two-factor/disable',

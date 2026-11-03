@@ -65,7 +65,13 @@
     "resetEmailSubject": "Réinitialiser votre mot de passe Leon",
     "resetEmailIntro": "Une demande de réinitialisation de votre mot de passe Leon a été faite.",
     "resetEmailAction": "Choisir un nouveau mot de passe",
-    "resetEmailIgnore": "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail."
+    "resetEmailIgnore": "Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.",
+    "verifySent": "Votre espace est prêt. Nous venons de vous envoyer un lien : ouvrez-le pour vérifier votre adresse, puis connectez-vous.",
+    "verifyEmailSubject": "Vérifiez votre e-mail Leon",
+    "verifyEmailIntro": "Confirmez cette adresse pour activer votre espace Leon.",
+    "verifyEmailAction": "Vérifier mon e-mail",
+    "verifyEmailIgnore": "Si vous n’avez pas créé de compte Leon, ignorez cet e-mail.",
+    "verifyFirst": "Votre adresse e-mail n’est pas encore vérifiée. Nous venons de vous renvoyer un lien : vérifiez votre boîte mail."
   },
   "navigation": {
     "search": "Recherche",

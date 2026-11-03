@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-prompt';
+import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
 import { renderContext } from '@/server/sessions/render-context';
 import { prepareTurnText } from './prepare-turn-text';
 import { stripLeonBlocks } from './strip-leon-blocks';
@@ -35,6 +36,22 @@ describe('stripLeonBlocks', () => {
     expect(prepareTurnText(stripLeonBlocks(empty))).toBeNull();
     expect(stripLeonBlocks(`${empty}\nOn reprend ?`)).toBe('\nOn reprend ?');
   });
+
+  it.each([BRIEFING_PENDING_MARKDOWN, BRIEFING_NO_MODEL_MARKDOWN])(
+    'retire le message du serveur quand aucun point n’est prêt : %s',
+    (message) => {
+      const block = renderContext({
+        project: PROJECT,
+        sessions: [{ kind: 'claude_code', lastTs: PREPARED_AT, faits: null }],
+        briefing: message,
+        max: 8000,
+      });
+
+      expect(prepareTurnText(stripLeonBlocks(message))).toBeNull();
+      expect(prepareTurnText(stripLeonBlocks(block))).toBeNull();
+      expect(stripLeonBlocks(`${message}\nOn reprend ?`)).toBe('\nOn reprend ?');
+    },
+  );
 
   it('retire le point du matin seul, que donne un serveur plus ancien', () => {
     expect(prepareTurnText(stripLeonBlocks(BRIEFING))).toBeNull();

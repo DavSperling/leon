@@ -141,6 +141,12 @@ describe('aligner_sources_github', () => {
       expect(await Promise.race([aligned, waiting])).toBe('en attente');
       await indexation.query('commit');
       await aligned;
+      // Le passage écrit à la main entre dans la file des vecteurs (son vecteur n'est pas celui du modèle de la
+      // file) : on l'en sort, sinon un autre fichier qui vide la file en même temps le vectorise et ses comptes changent.
+      await adminPool.query(
+        'delete from passages_a_vectoriser where passage_id in (select id from passages where source_id = $1)',
+        [sourceId],
+      );
     } finally {
       await indexation.query('rollback');
       indexation.release();

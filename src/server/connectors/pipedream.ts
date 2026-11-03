@@ -12,6 +12,7 @@ import type { AnyConnector } from './types';
 //   https://pipedream.com/docs/connect/api-reference/create-connect-token (success_redirect_uri…)
 //   https://pipedream.com/docs/connect/api-reference/list-accounts-for-external-user
 //   https://pipedream.com/docs/connect/api-reference/delete-external-user
+//   https://pipedream.com/docs/connect/api-reference/list-users (page suivante : page_info.end_cursor)
 //   https://pipedream.com/docs/rest-api/auth (jeton serveur par client_credentials, valable 1 h)
 // Chaque requête au proxy coûte 1 crédit (vérifié : un lot Gmail de 100 mails = 1 crédit).
 
@@ -193,11 +194,43 @@ export async function deleteExternalUser(
   if (!response.ok && response.status !== 404) throw unavailable(response.status);
 }
 
+const LEON_USER_PREFIX = 'leon-';
+
+const UsersSchema = z.object({
+  data: z.array(z.object({ external_id: z.string(), created_at: z.string().nullish() })),
+  page_info: z.object({ end_cursor: z.string().nullish() }).nullish(),
+});
+
+// `createdAt` en millisecondes, NaN quand Pipedream ne la donne pas.
+export type PipedreamUser = { externalId: string; createdAt: number };
+
+// Les utilisateurs Pipedream créés par Leon, toutes pages. Un autre utilisateur du projet (un essai fait à la
+// main) n'est jamais rendu. Le filtre `q` de Pipedream ne trouve pas « leon » (essai du 25/10) : tri ici.
+export async function listLeonUsers(
+  env: PipedreamEnv,
+  fetchImpl: Fetch = fetch,
+): Promise<PipedreamUser[]> {
+  const users: PipedreamUser[] = [];
+  let after: string | null = null;
+  for (;;) {
+    const query = new URLSearchParams({ limit: '100' });
+    if (after) query.set('after', after);
+    const response = await api(env, fetchImpl, `/users?${query}`);
+    if (!response.ok) throw unavailable(response.status);
+    const parsed = UsersSchema.safeParse(await response.json().catch(() => null));
+    if (!parsed.success) throw unavailable(response.status);
+    for (const user of parsed.data.data)
+      if (user.external_id.startsWith(LEON_USER_PREFIX))
+        users.push({ externalId: user.external_id, createdAt: Date.parse(user.created_at ?? '') });
+    const next = parsed.data.page_info?.end_cursor;
+    if (!next || next === after || parsed.data.data.length === 0) return users;
+    after = next;
+  }
+}
+
 // Après une suppression, un échec ou une reconnexion : l'utilisateur Pipedream n'a plus d'usage. Pipedream
-// injoignable n'empêche rien (journalisé) : le compte reste chez lui, sans connexion qui s'en serve.
-// shortcut: restent aussi chez Pipedream les comptes d'un retour jamais revenu (cookie expiré, deux
-// onglets) et ceux d'un membre ou d'un espace supprimé (cascade SQL) ; un balayage périodique des
-// utilisateurs `leon-` sans connexion, avant la production.
+// injoignable n'empêche rien (journalisé) : le compte reste chez lui, sans connexion qui s'en serve. Ceux d'un
+// retour jamais revenu et d'une connexion partie en cascade, le balayage quotidien les retire (sweepPipedreamUsers).
 export async function forgetPipedreamUser(
   externalUserId: unknown,
   fetchImpl: Fetch = fetch,

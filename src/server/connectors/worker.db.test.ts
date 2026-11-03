@@ -34,6 +34,7 @@ beforeAll(async () => {
   // leon_test garde la ligne de cron des lancements précédents : sans ce retrait, le test du
   // calendrier réussirait même si le démarrage ne planifiait plus rien.
   await (await getBoss()).unschedule(CONNECTOR_QUEUES.tick);
+  await (await getBoss()).unschedule(CONNECTOR_QUEUES.pipedreamSweep);
   await startConnectorWorker(
     {
       getConnector: () => connector,
@@ -78,6 +79,14 @@ describe('worker de relève', () => {
     const schedules = await boss.getSchedules(CONNECTOR_QUEUES.tick);
 
     expect(schedules.map((schedule) => schedule.cron)).toContain('* * * * *');
+  });
+
+  it('planifie le balayage des utilisateurs Pipedream une fois par jour', async () => {
+    const boss = await getBoss();
+
+    const schedules = await boss.getSchedules(CONNECTOR_QUEUES.pipedreamSweep);
+
+    expect(schedules.map((schedule) => schedule.cron)).toEqual(['0 4 * * *']);
   });
 
   it('crée la file de relève avec un seul job en attente par connexion et la durée de la réservation', async () => {

@@ -17,7 +17,7 @@ import { ConnectorAuthError, ConnectorHttpError } from './http';
 import { ingestConnectorItems, removeConnectorItems } from './ingest-items';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
-import { connectorHttp } from './pipedream';
+import { connectorHttp, deleteExternalUser, listLeonUsers, pipedreamEnv } from './pipedream';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
 import type { AnyConnector } from './types';
 
@@ -244,4 +244,40 @@ export async function enqueueDueSyncs(): Promise<number> {
     if (jobId) queued += 1;
   }
   return queued;
+}
+
+// Plus d'une heure : un utilisateur plus jeune attend peut-être son retour de Pipedream (OAUTH_COOKIE_MAX_AGE, 10 min).
+const SWEEP_MIN_AGE_MS = 3_600_000;
+
+// Le balayage quotidien : retire chez Pipedream les utilisateurs `leon-` qu'aucune connexion n'utilise plus (retour
+// jamais revenu, connexion partie en cascade avec son membre ou son espace). Les connexions de toutes les
+// organisations sont lues après la liste de Pipedream : un utilisateur branché entre les deux compte comme en service.
+// Seulement avec PIPEDREAM_SWEEP=on : une autre base branchée sur le même projet Pipedream (un poste local, une
+// démo) prendrait les utilisateurs de celle-ci pour des orphelins. Pipedream injoignable : journalisé, rien ne casse,
+// le balayage du lendemain reprend. Rend les utilisateurs retirés.
+export async function sweepPipedreamUsers(
+  fetchImpl: typeof fetch = fetch,
+  now = Date.now(),
+): Promise<string[]> {
+  const env = pipedreamEnv();
+  if (!env || process.env.PIPEDREAM_SWEEP !== 'on') return [];
+  const removed: string[] = [];
+  try {
+    const users = await listLeonUsers(env, fetchImpl);
+    const { rows } = await db.execute<{ external_user_id: string }>(
+      sql`select external_user_id from pipedream_users_en_service()`,
+    );
+    const inUse = new Set(rows.map((row) => row.external_user_id));
+    for (const user of users) {
+      const old = now - user.createdAt >= SWEEP_MIN_AGE_MS; // faux sans date (NaN) : on le garde
+      if (!old || inUse.has(user.externalId)) continue;
+      await deleteExternalUser(env, user.externalId, fetchImpl);
+      removed.push(user.externalId);
+    }
+  } catch (error) {
+    logError('connector.pipedream_sweep_failed', error);
+  }
+  if (removed.length > 0)
+    console.info('[leon]', 'connector.pipedream_sweep', JSON.stringify({ removed }));
+  return removed;
 }

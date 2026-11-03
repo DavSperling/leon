@@ -155,6 +155,9 @@ export type BriefingCommandDeps = {
   fetch: typeof fetch;
   out: (text: string) => void;
   err: (text: string) => void;
+  // La mise à jour automatique (scheduleUpdate, self-update.ts) : elle décide si elle est due et lance le processus
+  // détaché. Absente, rien n'est lancé.
+  scheduleUpdate?: () => Promise<unknown>;
 };
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
@@ -192,6 +195,13 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {
       deps.out(startOutput('claude_code', text));
+    }
+    // Une fois la sortie écrite, la mise à jour automatique (S12) : détachée, elle n'est jamais attendue, et ni son
+    // échec ni sa lenteur ne changent la sortie du crochet.
+    try {
+      await deps.scheduleUpdate?.();
+    } catch {
+      // Rien à dire : le crochet a rendu ce qu'on lui demandait.
     }
   } catch (error) {
     // Messages fixes (resolveServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.

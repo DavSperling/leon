@@ -266,6 +266,7 @@ describe('runBriefing', () => {
     branches?: Record<string, string>;
     git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
+    scheduleUpdate?: () => Promise<unknown>;
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -286,6 +287,7 @@ describe('runBriefing', () => {
         fetch: asFetch(fetchImpl),
         out: (text) => out.push(text),
         err: (text) => err.push(text),
+        ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -534,6 +536,78 @@ describe('runBriefing', () => {
     expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(git).not.toHaveBeenCalled();
+  });
+
+  // La mise à jour automatique (S12, self-update.ts) : `scheduleUpdate` décide (24 h, forme clone) et lance le processus
+  // détaché ; le crochet ne fait que l'appeler, une fois sa sortie écrite, et ne dépend jamais de ce qui en sort.
+  describe('mise à jour automatique', () => {
+    const hook = () => Readable.from([hookJson('/projets/leon')]);
+
+    it('est lancée une fois le bloc écrit, et le crochet rend la même sortie', async () => {
+      const calls: string[] = [];
+      let seen: string[] = [];
+      const harness = setup({
+        stdin: hook(),
+        scheduleUpdate: async () => {
+          calls.push('update');
+          seen = [...harness.out];
+        },
+      });
+
+      expect(await harness.run()).toBe(0);
+
+      expect(calls).toEqual(['update']);
+      expect(seen).toEqual([BLOCK]);
+      expect(harness.out).toEqual([BLOCK]);
+      expect(harness.err).toEqual([]);
+    });
+
+    it('est lancée aussi quand le serveur ne répond pas : le message du crochet ne change pas', async () => {
+      const scheduleUpdate = vi.fn(async () => {});
+      const { run, out, err } = setup({
+        stdin: hook(),
+        fetch: fetchReturning(new Response('{}', { status: 500 })),
+        scheduleUpdate,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(scheduleUpdate).toHaveBeenCalledTimes(1);
+      expect(out).toEqual([]);
+      expect(err).toEqual(['Leon: briefing unavailable (server unreachable or token refused).']);
+    });
+
+    it.each([
+      ['une erreur asynchrone', async () => Promise.reject(new Error('boom'))],
+      [
+        'une erreur synchrone',
+        () => {
+          throw new Error('boom');
+        },
+      ],
+    ])('%s ne change ni la sortie ni le code', async (_name, scheduleUpdate) => {
+      const { run, out, err } = setup({
+        stdin: hook(),
+        scheduleUpdate: scheduleUpdate as () => Promise<unknown>,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([BLOCK]);
+      expect(err).toEqual([]);
+    });
+
+    it.each([
+      ['sans connexion', () => ({ env: {} })],
+      ['accord retiré', () => ({ home: withdrawn })],
+      ['sous Cursor', () => ({ env: { ...serverEnv, CURSOR_VERSION: '1.7.2' } })],
+    ])('n’est pas lancée %s', async (_name, over) => {
+      const scheduleUpdate = vi.fn(async () => {});
+
+      await setup({ stdin: hook(), scheduleUpdate, ...over() }).run();
+
+      expect(scheduleUpdate).not.toHaveBeenCalled();
+    });
   });
 
   // Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés

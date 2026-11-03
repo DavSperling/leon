@@ -33,6 +33,13 @@ import {
   runLogout,
 } from './login';
 import { gitInDirectory } from './project-key';
+import {
+  NODE_DIST,
+  nodePlatform,
+  runUpdate,
+  scheduleUpdate,
+  startBackgroundUpdate,
+} from './self-update';
 import { ensureLauncher, isLeonRepo, runSetup } from './setup';
 import { uninstallHooks } from './uninstall-hooks';
 
@@ -81,6 +88,13 @@ Commands:
       --url <address>      the Leon server (default: LEON_URL, then the saved connection)
       --with-token         paste a token created in Settings instead (for a browser on another computer)
   logout               Revoke this computer's token and remove ~/.leon/connexion.json
+  update               Install the latest version of Leon if the server has one: its command line and, when it changed,
+                       Node. The old version is kept for leon update --previous. Leon also does it on its own, in
+                       the background, at most once a day (when a session starts, after briefing has answered).
+                       It touches neither your consent, your connection, the launcher nor the hooks. Not from a
+                       clone: a clone is updated with git
+      --previous           go back to the previous version of the command line (no network)
+      --background         write nothing on the terminal (what briefing runs)
   installer-crochets   For a clone: write the clone form of the launcher ~/.leon/bin/leon, then the SessionStart
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
@@ -161,6 +175,19 @@ async function runBriefingCommand(): Promise<number> {
       fetch,
       out: console.log,
       err: console.error,
+      // La mise à jour automatique (S12) : décidée et lancée détachée, une fois le bloc écrit.
+      scheduleUpdate: () =>
+        scheduleUpdate({
+          home: homedir(),
+          cliVersion: CLI_VERSION,
+          now: () => new Date(),
+          start: () =>
+            startBackgroundUpdate({
+              node: process.execPath,
+              script: process.argv[1],
+              home: homedir(),
+            }),
+        }),
     });
   } catch {
     console.error('Leon: briefing unavailable (unexpected error).');
@@ -342,6 +369,29 @@ async function runSetupCommand(args: string[]): Promise<number> {
   }
 }
 
+// `leon update` : `--background` (lancé par `leon briefing`) n'écrit rien sur le terminal.
+async function runUpdateCommand(args: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args,
+    options: { background: { type: 'boolean' }, previous: { type: 'boolean' } },
+  });
+  const quiet = values.background ?? false;
+  return runUpdate(
+    { previous: values.previous ?? false },
+    {
+      home: homedir(),
+      env: process.env,
+      cliVersion: CLI_VERSION,
+      fetch,
+      platform: nodePlatform(process.platform, process.arch),
+      nodeDist: NODE_DIST,
+      now: () => new Date(),
+      out: quiet ? () => {} : console.log,
+      err: quiet ? () => {} : console.error,
+    },
+  );
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
   if (command === '--version') {
@@ -353,6 +403,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
     if (command === 'setup') return await runSetupCommand(args);
+    if (command === 'update') return await runUpdateCommand(args);
     if (command === 'login') return await runLoginCommand(args);
     if (command === 'logout') {
       return await runLogout({

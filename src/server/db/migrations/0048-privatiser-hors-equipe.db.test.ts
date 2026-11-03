@@ -105,6 +105,73 @@ describe('aligner_sources_github', () => {
     expect(await accessOf(ailleurs)).toEqual(everywhere([zoe.tenantId]));
   });
 
+  // L'indexation recopie l'accès des tours sur les passages, et celui des passages sur les vecteurs, sous le verrou
+  // partagé de leur source (lockSources). Ici la source est déjà privée, mais la relève, qui a lu la liste avant le
+  // décochage, vient d'en écrire un tour avec l'accès de l'organisation : une indexation l'a recopié, sans valider.
+  it('attend une indexation ouverte : les passages et vecteurs qu’elle écrit après un décochage finissent privés', async () => {
+    const sourceId = await relevee(paul, 'github', 'Paul/Indexe');
+    await align(ana);
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, acl)
+       select tenant_id, source_id, 'apres-decochage', role, 'Écrit après le décochage', ts, capture_mode,
+              array[tenant_id]
+         from turns where source_id = $1 limit 1
+       returning id`,
+      [sourceId],
+    );
+    const indexation = await adminPool.connect();
+    try {
+      await indexation.query('begin');
+      await indexation.query('select id from sources where id = $1 for share', [sourceId]);
+      await indexation.query(
+        `with p as (
+           insert into passages (tenant_id, source_id, turn_id, ord, text, char_start, char_end, ts, acl)
+           select tenant_id, source_id, id, 0, text, 0, length(text), ts, acl from turns where id = $1
+           returning id, tenant_id, acl)
+         insert into passage_vectors (passage_id, tenant_id, model, embedding, acl)
+         select p.id, p.tenant_id, v.model, v.embedding, p.acl
+           from p, (select v.model, v.embedding
+                      from passage_vectors v join passages q on q.id = v.passage_id
+                     where q.source_id = $2 limit 1) v`,
+        [rows[0]?.id, sourceId],
+      );
+
+      const aligned = align(ana).then(() => 'aligné');
+      const waiting = new Promise((resolve) => setTimeout(() => resolve('en attente'), 300));
+      expect(await Promise.race([aligned, waiting])).toBe('en attente');
+      await indexation.query('commit');
+      await aligned;
+    } finally {
+      await indexation.query('rollback');
+      indexation.release();
+    }
+
+    expect(await accessOf(sourceId)).toEqual(everywhere([paul.userId]));
+  });
+
+  // Au déploiement, la boucle aligne toutes les organisations dans une seule transaction : un verrou gardé par
+  // organisation jusqu'à la fin remplirait la table des verrous passé quelques milliers d'organisations.
+  it('aligne une organisation de plus, dans la même transaction, sans garder un verrou de plus', async () => {
+    const client = await adminPool.connect();
+    const locksAfter = async (tenantId: string) => {
+      await client.query(`select set_config('app.tenant', $1, true)`, [tenantId]);
+      await client.query('select aligner_sources_github()');
+      const { rows } = await client.query<{ n: number }>(
+        'select count(*)::int as n from pg_locks where pid = pg_backend_pid()',
+      );
+      return rows[0]?.n;
+    };
+    try {
+      await client.query('begin');
+      await client.query('select txid_current()');
+      const first = await locksAfter(paul.tenantId);
+      expect(await locksAfter(zoe.tenantId)).toBe(first);
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
+  });
+
   it('ne s’exécute pas pour public, seulement pour leon_app, avec les droits du propriétaire', async () => {
     const signature = 'aligner_sources_github()';
     const { rows } = await adminPool.query(

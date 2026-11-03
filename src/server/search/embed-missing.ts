@@ -87,10 +87,11 @@ function withDeadline<T>(call: Promise<T>): Promise<T> {
 }
 
 // Verrou partagé sur ces sources, pris avant de lire l'accès qu'on va recopier. Le recalcul d'un accès (retrait
-// d'une part, T16) met à jour la source avant ses tours, passages et vecteurs : il attend la fin de notre
-// transaction et voit ce qu'elle a écrit ; s'il est déjà passé, on lit l'accès déjà corrigé. Sans ce verrou, un
-// passage ou un vecteur écrit pendant le recalcul garderait l'ancien accès. Les sources se verrouillent dans
-// l'ordre de leur identifiant : deux transactions ne s'attendent jamais l'une l'autre.
+// d'une part, T16) met à jour la source avant ses tours, passages et vecteurs (l'alignement des sources GitHub, 0048,
+// la verrouille avant de les corriger) : il attend la fin de notre transaction et voit ce qu'elle a écrit ; s'il est
+// déjà passé, on lit l'accès déjà corrigé. Sans ce verrou, un passage ou un vecteur écrit pendant le recalcul garderait
+// l'ancien accès. Les sources se verrouillent dans l'ordre de leur identifiant : deux transactions ne s'attendent
+// jamais l'une l'autre.
 export async function lockSources(tx: Tx, sourceIds: string[]): Promise<void> {
   if (sourceIds.length === 0) return;
   await tx

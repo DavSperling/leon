@@ -41,8 +41,8 @@ grant select, insert, delete on depots_equipe to leon_app;
 grant update (choisi_par) on depots_equipe to leon_app;
 
 -- Les sources GitHub d'un dépôt (origin.repo, owner/repo tel que GitHub l'écrit). Sous RLS, seuls tenant_id et kind
--- servent de condition d'index : lower et -> ne sont pas leakproof, le dépôt devient un filtre ; la fonction
--- security definer de la rétro-privatisation (T12) s'en sert en entier.
+-- servent de condition d'index : lower et -> ne sont pas leakproof, le dépôt devient un filtre. La fonction de la
+-- rétro-privatisation (0048) ne se sert pas non plus de la 2e colonne : elle compare 'github.com/' || lower(…).
 -- shortcut: sous RLS le dépôt est filtré ligne à ligne parmi les sources GitHub de l'organisation, passer à une
 -- colonne générée (lower du dépôt, comparée par texteq qui est leakproof) si la section d'équipe dépasse 100 ms.
 create index sources_github_repo_idx on sources (tenant_id, lower(metadata->'origin'->>'repo'))

@@ -8,15 +8,28 @@
 -- administrateur ne peut pas donner à la source d'un autre un accès qu'il n'a pas : seule cette fonction le fait,
 -- pour app_tenant(). Elle n'applique que la liste, que seuls les administrateurs écrivent ; setDepotEquipe l'appelle
 -- à chaque changement, sync.ts à la fin de chaque relève GitHub.
--- shortcut: une relève ou une indexation en cours quand la liste change (ou l'ancienne version, au déploiement)
--- écrit encore des lignes avec l'accès de l'organisation, jusqu'à la fin de la relève GitHub suivante de
--- l'organisation (15 min au plus) ; faire porter l'accès de la liste par l'ingestion elle-même si ce délai gêne.
+-- L'indexation suit le protocole de lockSources (embed-missing.ts) : elle recopie l'accès des tours sur les passages,
+-- et celui des passages sur les vecteurs, sous le verrou partagé de leur source. La fonction verrouille d'abord toutes
+-- les sources GitHub de l'organisation : une indexation en cours finit avant elle, et elle corrige ce que l'indexation
+-- a écrit ; une indexation qui suit l'attend, et recopie des tours déjà corrigés.
+-- shortcut: une relève en cours quand la liste change (ou l'ancienne version, au déploiement) écrit encore des tours
+-- avec l'accès de l'organisation, corrigés au prochain alignement de l'organisation (la fin de cette relève, d'une
+-- autre relève GitHub, ou un changement de la liste) ; donner aux tours l'accès que rend l'upsert de leur source
+-- (ingestConnectorItems) si ce délai gêne.
+-- shortcut: une relève réécrit ses sources dans l'ordre de ses éléments, pas des id : en même temps qu'un alignement,
+-- Postgres peut annuler l'une des deux transactions (interblocage), rien n'est perdu, la relève reprend à son passage
+-- suivant ou le changement de la liste est à refaire ; verrouiller d'abord dans l'ordre des id les sources existantes
+-- de la page si cela arrive.
 create function aligner_sources_github()
 returns void
 language sql volatile security definer set search_path = public, pg_temp as $$
-  -- Deux changements de la liste en même temps : le second attend la fin du premier, puis lit sa liste (chaque
-  -- requête d'une fonction volatile lit ce qui est validé à son début).
-  select pg_advisory_xact_lock(hashtext('aligner_sources_github:' || app_tenant()::text));
+  -- Dans l'ordre des id, comme lockSources : deux transactions qui verrouillent ainsi ne s'attendent jamais l'une
+  -- l'autre. Deux changements de la liste en même temps : le second attend ici la fin du premier, puis lit sa liste
+  -- (chaque requête d'une fonction volatile lit ce qui est validé à son début). Sans source GitHub, rien à aligner.
+  select s.id from sources s
+   where s.tenant_id = app_tenant() and s.kind = 'github'
+   order by s.id
+     for no key update;
 
   with cible as (
     select s.id, case when d.project is null then array[s.owner_user_id] else array[s.tenant_id] end as acl
@@ -59,7 +72,9 @@ revoke all on function aligner_sources_github() from public;
 grant execute on function aligner_sources_github() to leon_app;
 
 -- Au déploiement, une fois pour toutes les organisations, même sans choix : sans dépôt coché, toutes leurs sources
--- GitHub deviennent privées à qui les a branchées, jusqu'à ce que l'administrateur coche ses dépôts.
+-- GitHub deviennent privées à qui les a branchées, jusqu'à ce que l'administrateur coche ses dépôts. Une seule
+-- transaction : les verrous de lignes de la fonction ne prennent pas de place dans la table des verrous, la boucle
+-- tient quel que soit le nombre d'organisations.
 do $$
 declare
   organisation uuid;

@@ -122,7 +122,7 @@ describe('depots_equipe', () => {
     });
   });
 
-  it('les sources GitHub se cherchent par dépôt sous RLS avec leur index', async () => {
+  it("les sources GitHub de l'organisation passent par l'index partiel sous RLS", async () => {
     const { rows } = await withTenant(paul, async (tx) => {
       // La base de test est petite : sans cela, Postgres lirait la table entière.
       await tx.execute(sql`set local enable_seqscan = off`);
@@ -131,6 +131,9 @@ describe('depots_equipe', () => {
          where kind = 'github' and lower(metadata->'origin'->>'repo') = 'acme/depot'`);
     });
 
-    expect(rows.map((row) => row['QUERY PLAN']).join('\n')).toContain('sources_github_repo_idx');
+    // Le dépôt n'est qu'un filtre (voir 0047) : la condition d'index est l'organisation.
+    expect(rows.map((row) => row['QUERY PLAN']).join('\n')).toMatch(
+      /Index Scan using sources_github_repo_idx .*\n\s*Index Cond: \(tenant_id = /,
+    );
   });
 });

@@ -548,7 +548,7 @@ describe('apropos_a_proposer : droits', () => {
       [SIGNATURE],
     );
 
-    expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public'] }]);
+    expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public, pg_temp'] }]);
   });
 });
 

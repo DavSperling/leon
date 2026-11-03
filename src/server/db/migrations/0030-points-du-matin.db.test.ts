@@ -290,7 +290,7 @@ describe('droits sur les fonctions des points du matin', () => {
         [signature],
       );
 
-      expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public'] }]);
+      expect(rows).toEqual([{ prosecdef: true, proconfig: ['search_path=public, pg_temp'] }]);
     },
   );
 });

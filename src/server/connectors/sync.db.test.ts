@@ -1,8 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
+import { sources, turns } from '@/server/db/schema/memory';
+import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { fakeConnector } from '@/test/fake-connector';
@@ -10,6 +12,7 @@ import { collect, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
+import { setDepotEquipe } from './github/depots-equipe';
 import { gmailConnector } from './gmail/connector';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
 import { OAUTH_SECRET_FIELDS } from './oauth';
@@ -473,6 +476,82 @@ describe('runConnectorSync : les dépôts d’équipe', () => {
     expect(await run(id, recording([none]).connector)).toBe('ok');
 
     expect(await confirmed(id)).toEqual([]);
+  });
+});
+
+// Décision D (T12) : les PR déjà relevées suivent la liste des dépôts d'équipe. Hors de la liste, elles deviennent
+// privées à qui a branché GitHub (Paul) ; Léa, administratrice, coche les dépôts.
+describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équipe', () => {
+  let lea: TenantContext;
+
+  beforeEach(async () => {
+    lea = await createTestUser(tenantId, 'Léa');
+    await adminDb.update(members).set({ role: 'admin' }).where(eq(members.userId, lea.userId));
+  });
+
+  // Paul relève une PR de chaque dépôt, comme avant le lot 2 : visible de toute l'équipe.
+  async function relever(repos: string[]): Promise<void> {
+    const item = await oneItem();
+    const items = repos.map((repo) => ({
+      ...item,
+      externalId: `pr:${repo}#1`,
+      origin: { repo },
+      turns: item.turns.map((turn) => ({ ...turn, text: `PR de ${repo}` })),
+    }));
+    const id = await dueConnection();
+    expect(
+      await run(
+        id,
+        inlineConnector(async () => [{ items, cursor: '1' }]),
+      ),
+    ).toBe('ok');
+  }
+
+  // Les PR et les tours que `ctx` voit, sous RLS.
+  const seenBy = (ctx: TenantContext) =>
+    withTenant(ctx, async (tx) => ({
+      prs: (await tx.select({ id: sources.externalId }).from(sources)).map((row) => row.id).sort(),
+      tours: (await tx.select({ text: turns.text }).from(turns)).map((row) => row.text).sort(),
+    }));
+
+  // L'appel que fait la migration 0048, pour chaque organisation, au déploiement.
+  const alignAtDeploy = () =>
+    withTenant(paul, (tx) => tx.execute(sql`select aligner_sources_github()`));
+
+  it('une PR d’un dépôt perso déjà relevée devient invisible d’un collègue, pas de qui l’a relevée', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+    expect((await seenBy(lea)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
+
+    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
+    expect((await seenBy(paul)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
+  });
+
+  it('une PR d’un dépôt d’équipe reste visible de l’équipe', async () => {
+    await relever(['Acme/Leon']);
+
+    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:Acme/Leon#1'], tours: ['PR de Acme/Leon'] });
+  });
+
+  it('sans aucun choix, toutes deviennent privées', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+
+    await alignAtDeploy();
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
+    expect((await seenBy(paul)).tours).toEqual(['PR de acme/leon', 'PR de paul/perso']);
+  });
+
+  it('un dépôt coché ensuite redevient visible de l’équipe', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+    await alignAtDeploy();
+
+    expect(await setDepotEquipe(lea, 'acme/leon', true)).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
   });
 });
 

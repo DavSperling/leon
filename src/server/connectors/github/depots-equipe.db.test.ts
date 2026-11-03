@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
+import { seedRun } from '@/test/seed-search';
 import { listDepotsEquipe, setDepotEquipe } from './depots-equipe';
 
 // Les réglages des dépôts d'équipe (T10) : Ana administre, Paul est simple membre, Zoé est d'une autre organisation.
@@ -45,6 +46,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await adminPool.query('delete from connections where tenant_id = any($1)', [tenantIds]);
+  await adminPool.query('delete from sources where tenant_id = any($1)', [tenantIds]);
 });
 
 describe('dépôts d’équipe', () => {
@@ -87,4 +89,26 @@ describe('dépôts d’équipe', () => {
       expect(await setDepotEquipe(ana, depot, true)).toBe('invalide');
     },
   );
+
+  // T12 : la liste change, les sources GitHub déjà relevées suivent, dans la même transaction (0048).
+  it('décocher un dépôt rend ses PR déjà relevées privées à qui les a relevées', async () => {
+    const { sourceId } = await seedRun(paul, {
+      kind: 'github',
+      acl: [paul.tenantId],
+      metadata: { origin: { repo: 'Acme/Outil' } },
+    });
+    const aclOf = async () =>
+      (
+        await adminPool.query<{ acl: string[] }>(
+          'select acl::text[] as acl from sources where id = $1',
+          [sourceId],
+        )
+      ).rows[0]?.acl;
+
+    expect(await setDepotEquipe(ana, 'acme/outil', true)).toBe('ok');
+    expect(await aclOf()).toEqual([paul.tenantId]);
+
+    expect(await setDepotEquipe(ana, 'Acme/Outil', false)).toBe('ok');
+    expect(await aclOf()).toEqual([paul.userId]);
+  });
 });

@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { canInvite } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -56,13 +56,15 @@ export async function setDepotEquipe(
   if (!REPO_PATTERN.test(repo)) return 'invalide';
   if (!(await canInvite(ctx))) return 'refuse';
   const project = `${PREFIX}${repo.toLowerCase()}`;
-  await withTenant(ctx, (tx) =>
-    coche
+  await withTenant(ctx, async (tx) => {
+    await (coche
       ? tx
           .insert(depotsEquipe)
           .values({ tenantId: ctx.tenantId, project, acl: [ctx.tenantId], choisiPar: ctx.userId })
           .onConflictDoNothing()
-      : tx.delete(depotsEquipe).where(eq(depotsEquipe.project, project)),
-  );
+      : tx.delete(depotsEquipe).where(eq(depotsEquipe.project, project)));
+    // T12 : les sources GitHub déjà relevées suivent la liste, dans la même transaction (0048).
+    await tx.execute(sql`select aligner_sources_github()`);
+  });
   return 'ok';
 }

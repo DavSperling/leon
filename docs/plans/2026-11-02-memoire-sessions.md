@@ -14,7 +14,7 @@
 - L'état du dépôt vient de GitHub, pour les seuls dépôts choisis par l'administrateur.
 - Un seul appel de modèle par session close écrit ensuite un résumé, stocké comme un tour de la session, donc indexé par la recherche.
 
-**Stack :** celle du deuxième jet. Aucune dépendance nouvelle. Trois migrations : `0046` (dépôts d'équipe), `0047` (rétro-privatisation), `0048` (étape de modèle `resume`). Leur numéro se recale sur main au moment de chaque lot.
+**Stack :** celle du deuxième jet. Aucune dépendance nouvelle. Trois migrations : `0047` (dépôts d'équipe), `0048` (rétro-privatisation), `0049` (étape de modèle `resume`). Leur numéro se recale sur main au moment de chaque lot.
 
 ## Lots, PR et ordre
 
@@ -29,12 +29,17 @@
 | 7. Recherche par dépôt | le RAG à la demande se borne au dépôt | T25 | suivante | 0,5 j |
 | 8. Cursor | capte et reçoit | T26 à T30 | suivante, après l'essai T26 | 3 j |
 | 9. Antigravity | capte et reçoit | T31 à T35 | suivante, après l'essai T31 | 3 j |
-| 10. RAG au premier prompt | un rappel tiré de mes sessions, au premier prompt, si je l'allume | T36 | suivante | 1,5 j |
-| 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage | T37 et T38 | suivante (doc) | 1 j |
+| ~~10. RAG au premier prompt~~ | remplacé par les lots 12 et 13 ([la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) | — | — | — |
+| 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1 j |
+| 12. Les fils et le dossier | Leon range la mémoire par fil de travail, le MCP gagne `dossier` et `fil`, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T44 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 4,5 j |
+| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2) | T45 et T46 (idem) | suivante | 1,5 j |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent | T47 à T49 (idem) | suivante | 3 j |
 
-Total : environ 26 jours.
+Total : environ 34 jours, lot 1 compris (fait).
 
-**Ordre (proposé, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
+**Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 7, 6, 12, 13, 14, puis 2, 3, 4, 5, 8, 9 et 11. Les lots 12 à 14 servent tout de suite dans Claude Code, déjà capté ; chaque lot d'outil (4, 5, 8, 9) y ajoute ensuite le crochet de rappel de son outil et l'accès au connecteur MCP.
+
+**Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
 **Une PR par lot**, conformément au CLAUDE.md : un sujet, la plus petite possible. La PR #110 emporte l'étude, ce plan et le lot 1. L'étude et le plan justifient le même sujet, et le lot 1 est la plus petite tranche qui change quelque chose pour l'utilisateur (proposé, voir A1).
 
@@ -140,7 +145,7 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   - Les relations `[[cible]]` d'un résumé sont ajoutées par le serveur à partir des faits, jamais par le modèle.
 - **D6. Un budget unique de 8 000 octets UTF-8**, assemblé par le serveur (`POST /api/v1/contexte`, champ `max`). La CLI ne fait qu'envelopper la sortie au format de chaque outil.
 - **D7. Le démarrage se lit sans modèle ni vecteurs.** « Mes sessions » est un périmètre (moi, ce dépôt, 7 jours), pas un sujet.
-- **D8. Le résumé.**
+- **D8. Le résumé** (amendée le 03/11 par D25 du plan de la mémoire à disposition : `[décision]` est gardée, avec sa source, lisible à la demande et jamais poussée d'office ; `[consigne]` reste retirée).
   - Une nouvelle étape de modèle, `resume`, sur `claude-haiku-5-5`, effort low.
   - Le condensé est fait sur le serveur, à partir des tours, des faits et de l'état des PR liées.
   - La sortie passe par une liste blanche : « ## Où j'en suis » et les types `en-cours`, `prochaine-étape`, `essai-raté` et `question`. Tout le reste est retiré, dont `[décision]`, `[consigne]` et les relations écrites par le modèle.
@@ -159,9 +164,9 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
 - **D12. Les essais réels sont des portes.** Les replis par fichier ne viennent que si l'essai les justifie.
 - **D13. La v1 exige des versions d'outils qui écrivent leurs transcripts.** Aucun format interne n'est lu.
 - **D14. Les dépôts d'équipe.**
-  - La table `depots_equipe` (0046) est écrite par les seuls propriétaires et administrateurs, contrôle fait en base.
+  - La table `depots_equipe` (0047) est écrite par les seuls propriétaires et administrateurs, contrôle fait en base.
   - D est appliquée à la relève, avec la permission GitHub du membre.
-  - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0047), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
+  - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0048), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
   - Par défaut, la section d'équipe ne s'affiche qu'au lecteur dont la propre connexion GitHub active porte ce dépôt, confirmée depuis moins de 24 h.
   - Jusqu'à la réponse à QD4, les sources d'un dépôt d'équipe restent lisibles par la recherche de tous les membres.
 - **D15. Le consentement**, versionné par outil :
@@ -172,7 +177,7 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   Il est transmis au serveur à chaque envoi, et `leon retirer-crochets` le retire.
 - **D16. Les replis par fichier (proposé, voir A4)** se font par dépôt ou par espace de travail, en 0600, avec accord. Leon ajoute le chemin à `$(git rev-parse --git-path info/exclude)`, puis vérifie par `git check-ignore -q` (sans `--no-index`) avant chaque écriture. Un fichier déjà suivi par git est refusé. Jamais de fichier global.
 - **D17. Les sessions « externes »** ont lu du web, du MCP, un sous-agent ou une commande réseau. Dès le lot 1, le bloc de démarrage n'en montre que les clés : outil, date, branche, PR. Jamais un texte écrit par l'agent. Leur résumé reste trouvable à la demande.
-- **D18. Le RAG au premier prompt (proposé, voir A5)** est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
+- **D18. Remplacée le 03/11** par le rappel à chaque message (lot 13) et la lecture à la demande par le MCP (lot 12). Texte d'origine : le RAG au premier prompt (proposé, voir A5) est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
 - **D19. Hors de ce chantier :**
   - les consignes (B et C) ;
   - le filtre `chemin` et les fichiers des PR (lot 1.4 de #108) ;
@@ -270,7 +275,7 @@ Le bloc du RAG au premier prompt (T36) est balisé `<rappel-leon>…</rappel-leo
 { "outils": { "claude_code": { "version": 2, "installe_le": "2026-11-02T14:00:00Z" } } }
 ```
 
-Versions : 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle ; 4, en plus le prompt envoyé (RAG). On ne passe à une version qu'après avoir confirmé son texte, sans jamais en sauter une. Un outil en version 0 (après retrait) n'envoie rien. `claude_code` absent (installé avant ce chantier) garde l'envoi des tours d'aujourd'hui, sans faits ; les trois autres outils, absents, n'envoient rien.
+Versions : 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle ; 4, en plus le message envoyé à Leon pour le rappel ; 5, en plus le raisonnement de l'agent et les échanges des sous-agents (versions 4 et 5 redéfinies le 03/11 : voir C7 amendé du plan de la mémoire à disposition). On ne passe à une version qu'après avoir confirmé son texte, sans jamais en sauter une. Un outil en version 0 (après retrait) n'envoie rien. `claude_code` absent (installé avant ce chantier) garde l'envoi des tours d'aujourd'hui, sans faits ; les trois autres outils, absents, n'envoient rien.
 
 ## Points de vigilance
 
@@ -304,7 +309,7 @@ Versions : 2, les gestes ; 3, en plus le résumé par le fournisseur du modèle 
    - la section d'équipe limitée aux dépôts d'équipe et aux lecteurs qui y ont accès (D14) ;
    - le reste est la question QD4.
 9. **Arrêt de la relève GitHub et passage en privé.** Au déploiement du lot 2, une organisation qui n'a coché aucun dépôt ne relève plus rien de nouveau, et ses sources GitHub déjà relevées deviennent privées à qui les a branchées. Parades : le bandeau pour l'administrateur (T10), le README, et la description de la PR (« cocher les dépôts juste après le déploiement »).
-10. **Délai de 3 s au démarrage.** Parades : aucun modèle ni vecteur dans la route de contexte ; des lectures courtes ; l'index de 0046 vérifié par `EXPLAIN` sous RLS ; une mesure sur 10 000 sources.
+10. **Délai de 3 s au démarrage.** Parades : aucun modèle ni vecteur dans la route de contexte ; des lectures courtes ; l'index de 0047 vérifié par `EXPLAIN` sous RLS ; une mesure sur 10 000 sources.
 11. **Conflits avec #106** sur `briefing.ts`, `capture-session.ts`, `install-hooks.ts` et `leon.ts`. Parade : des ajouts voisins ; l'assemblage serveur accepte un bloc de plus pour l'état de branche de #106.
 
 ## Lot 1 : la fiche Claude Code (PR #110)
@@ -464,9 +469,9 @@ Au lot 1, la commande couvre Claude Code ; chaque lot d'outil l'étend.
 
 ### T09 · La table des dépôts d'équipe
 
-**Fichiers :** `src/server/db/migrations/0046-depots-equipe.sql` (nouveau), `src/server/db/schema/connections.ts` (`depotsEquipe`), `src/server/db/rls-coverage.db.test.ts` (`DELETE_ALLOWED`).
+**Fichiers :** `src/server/db/migrations/0047-depots-equipe.sql` (nouveau), `src/server/db/schema/connections.ts` (`depotsEquipe`), `src/server/db/rls-coverage.db.test.ts` (`DELETE_ALLOWED`).
 
-**Migration :** `0046-depots-equipe.sql` crée `depots_equipe` :
+**Migration :** `0047-depots-equipe.sql` crée `depots_equipe` :
 - `tenant_id`, `project`, `acl`, `choisi_par` et `created_at` ;
 - `project` porte le check `'^github\.com/[a-z0-9._-]+/[a-z0-9._-]+$'` ;
 - `unique (tenant_id, project)`.
@@ -475,7 +480,7 @@ Lecture : la politique `tenant_acl`. Écriture : des politiques `for insert`, `f
 
 La migration crée aussi l'index `sources (tenant_id, lower(metadata->'origin'->>'repo')) where kind = 'github'`. On vérifie par `EXPLAIN` qu'il sert sous RLS ; sinon on le retire, et on mesure les 3 s sur un jeu réaliste.
 
-**Tests :** `src/server/db/migrations/0046-depots-equipe.db.test.ts` (nouveau) :
+**Tests :** `src/server/db/migrations/0047-depots-equipe.db.test.ts` (nouveau) :
 - un membre lit ;
 - un membre qui écrit reçoit une erreur RLS ;
 - un propriétaire ou un administrateur écrit ;
@@ -515,11 +520,11 @@ Aussi : `src/server/connectors/sync.db.test.ts`.
 
 ### T12 · Rendre privées les sources GitHub hors des dépôts d'équipe
 
-**Fichiers :** `src/server/db/migrations/0047-privatiser-hors-equipe.sql` (nouveau), `src/server/connectors/sync.ts`.
+**Fichiers :** `src/server/db/migrations/0048-privatiser-hors-equipe.sql` (nouveau), `src/server/connectors/sync.ts`.
 
 **Migration :** une fonction `security definer`, sur le modèle de `retirer_sources_connexion`. Elle aligne l'ACL des sources GitHub sur la liste, en une transaction, sur les sources, leurs tours, leurs passages, leurs vecteurs et leurs ingest_runs. Une source dont le dépôt n'est pas dans `depots_equipe` passe à `[owner_user_id]` (la règle de `privateRaw`). Une source dont le dépôt y entre retrouve l'ACL de l'organisation.
 
-**Fait quand :** la fonction est appelée une fois au déploiement de 0047, même sans choix (liste vide : toutes les sources GitHub de l'organisation passent en `[owner_user_id]`), puis à chaque changement de la liste.
+**Fait quand :** la fonction est appelée une fois au déploiement de 0048, même sans choix (liste vide : toutes les sources GitHub de l'organisation passent en `[owner_user_id]`), puis à chaque changement de la liste.
 
 **Tests :** `src/server/connectors/sync.db.test.ts` :
 - une PR d'un dépôt perso déjà relevée devient invisible d'un collègue ;
@@ -694,11 +699,11 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T21 · L'étape de modèle `resume`
 
-**Fichiers :** `src/server/db/migrations/0048-etape-resume.sql` (nouveau), `src/server/llm/llm.ts`, `src/server/llm/models.ts`, `src/server/env.ts` (`LEON_MODEL_RESUME`), `.env.example`, `README.md`, `src/components/verre/admin/index.tsx`.
+**Fichiers :** `src/server/db/migrations/0049-etape-resume.sql` (nouveau), `src/server/llm/llm.ts`, `src/server/llm/models.ts`, `src/server/env.ts` (`LEON_MODEL_RESUME`), `.env.example`, `README.md`, `src/components/verre/admin/index.tsx`.
 
-**Migration :** `0048-etape-resume.sql` remplace le check de `appels_modele.step` par `in ('reponse','discussion','point','resume')`.
+**Migration :** `0049-etape-resume.sql` remplace le check de `appels_modele.step` par `in ('reponse','discussion','point','resume')`.
 
-**Tests :** `src/test/contracts/llm-contract.test.ts`, `src/test/contracts/env-contract.test.ts`, `src/server/llm/models.test.ts`, `src/server/db/migrations/0048-etape-resume.db.test.ts` (nouveau : `resume` accepté, valeur inconnue refusée).
+**Tests :** `src/test/contracts/llm-contract.test.ts`, `src/test/contracts/env-contract.test.ts`, `src/server/llm/models.test.ts`, `src/server/db/migrations/0049-etape-resume.db.test.ts` (nouveau : `resume` accepté, valeur inconnue refusée).
 
 ### T22 · Le format, le condensé et le prompt du résumé
 
@@ -916,6 +921,8 @@ L'annexe donne le verdict, et la décision sur le repli.
 
 ## Lot 10 : le RAG au premier prompt
 
+> **Remplacé le 03/11** par les lots 12 et 13 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Gardé ici pour l'historique : ne pas le coder.
+
 ### T36 · Un rappel tiré de mes sessions, au premier prompt
 
 **Fichiers :** `src/server/api/context-routes.ts` (`POST /api/v1/contexte/prompt`), `src/server/sessions/prompt-context.ts` (nouveau), `src/capture/api-contract.ts`, `src/cli/outils.ts`, `src/cli/leon.ts` (`contexte-prompt` pour Claude Code), `src/cli/install-hooks.ts` (`--rag-prompt`), `src/cli/consent.ts`, `src/cli/briefing.ts` (garde de T06 sur `contexte-prompt`).
@@ -984,7 +991,7 @@ Contrat : `api-contract.db.test.ts`.
 
 **Pour David :**
 - QD1. Le résumé côté serveur ? Le lot 6 l'attend, pour environ 0,002 $ par session.
-- QD2. La « PR 0 » : #106 corrigée, sans le secours `claude -p`, et ses migrations renumérotées après 0048, puisque `0043-passations` et `0044-sessions-partagees` entrent en collision avec `0043-onboarding` et `0044-invitations-poste` de main (et main a déjà `0045-apropos-propose`). Qui la porte ? Et `0043-passations` ou `0044-sessions-partagees` ont-elles été appliquées à `leon_test`, à la base de développement ou à un environnement Railway ?
+- QD2. La « PR 0 » : #106 corrigée, sans le secours `claude -p`, et ses migrations renumérotées après 0049, puisque `0043-passations` et `0044-sessions-partagees` entrent en collision avec `0043-onboarding` et `0044-invitations-poste` de main (et main a déjà `0045-apropos-propose` et `0046-pg-temp-en-dernier`). Qui la porte ? Et `0043-passations` ou `0044-sessions-partagees` ont-elles été appliquées à `leon_test`, à la base de développement ou à un environnement Railway ?
 - QD3. Le lot 1 de #108 (ici les lots 2 et 3) : on le porte dans ce chantier, ou toi ? Et la section d'équipe : dans `/contexte`, ou dans `readBranchState` ?
 - QD4. Qui lit les sources d'un dépôt d'équipe par la recherche : tous les membres, ou seulement ceux qui y ont accès sur GitHub ? Et les sources GitHub rendues privées hors des dépôts d'équipe (T12) : faut-il en plus les supprimer ?
 - QD5. Seuil de 6 échanges, 15 min sans tour, 60 s après une vraie fin ?

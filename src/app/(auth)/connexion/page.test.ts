@@ -6,7 +6,7 @@ import SignInPage from './page';
 
 // Le formulaire importe les actions, donc Better Auth : seul ce que la page lui passe se teste ici.
 vi.mock('@/components/verre/auth/auth-form', () => ({ AuthForm: vi.fn() }));
-vi.mock('@/server/auth/auth', () => ({ passwordResetEnabled: true }));
+vi.mock('@/server/auth/auth', () => ({ emailEnabled: true }));
 vi.mock('next/server', () => ({ connection: vi.fn() }));
 
 const PARAMS = { port: '4242', etat: 'AbCdEfGhIjKlMnOpQrStUv', empreinte: 'a1'.repeat(32) };

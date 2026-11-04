@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMBEDDER_IDS } from '@/server/embeddings/embedder';
+import { parseEnv } from '@/server/env';
+import { TEST_ENV } from '@/test/test-env';
 import { productionSources, readText } from './files';
 
 // Gérées par Next, jamais dans .env.example.
@@ -102,5 +104,28 @@ describe('env.ts et les fournisseurs de vecteurs', () => {
       )
       .map(({ path }) => path);
     expect(valueImports).toEqual([]);
+  });
+});
+
+// L'émetteur OAuth (L1) et les adresses des métadonnées (L2, L3) se construisent sur BETTER_AUTH_URL, et un client compare
+// `resource` à l'adresse collée au caractère près : une valeur absente ou sans schéma annoncerait des adresses fausses
+// sans que rien n'échoue au démarrage. metadata.contrat.test.ts moque env ; ici, c'est la validation réelle, et le
+// chemin par lequel le code de l'émetteur la lit.
+describe('BETTER_AUTH_URL, base de l’émetteur OAuth', () => {
+  it.each([undefined, '', 'leon.example', '/api'])(
+    'env.ts refuse BETTER_AUTH_URL = %j',
+    (value) => {
+      expect(() => parseEnv({ ...TEST_ENV, BETTER_AUTH_URL: value })).toThrow(/BETTER_AUTH_URL/);
+    },
+  );
+
+  it('src/server/oauth lit BETTER_AUTH_URL par env (validée), jamais par process.env', () => {
+    const files = productionSources('src/server/oauth/*.ts');
+    const metadata = files.find(({ path }) => path === 'src/server/oauth/metadata.ts');
+
+    expect(metadata?.text).toContain('env.BETTER_AUTH_URL');
+    expect(files.filter(({ text }) => /process\.env/.test(text)).map(({ path }) => path)).toEqual(
+      [],
+    );
   });
 });

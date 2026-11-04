@@ -2,8 +2,8 @@ import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-c
 import { PROVIDER_IDS } from '@/capture/turn';
 import { organizations, users } from './auth';
 
-// Connexions aux outils de l'équipe (0008-connecteurs.sql). Le module n'exporte que la table :
-// le contrat de schéma lit Object.values du module.
+// Connexions aux outils de l'équipe (0008-connecteurs.sql) et dépôts d'équipe (0047-depots-equipe.sql). Le module
+// n'exporte que des tables : le contrat de schéma lit Object.values du module.
 
 const CONNECTION_STATUSES = ['active', 'paused', 'error'] as const;
 
@@ -32,4 +32,19 @@ export const connections = pgTable('connections', {
   acl: uuid('acl').array().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Les dépôts GitHub que l'administrateur partage avec l'équipe (décision D). `project` :
+// `github.com/<propriétaire>/<dépôt>` en minuscules, unique par organisation. Toute l'équipe lit
+// (acl = [tenant_id], contrôlé par la base) ; seuls les propriétaires et administrateurs écrivent.
+export const depotsEquipe = pgTable('depots_equipe', {
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  project: text('project').notNull(),
+  acl: uuid('acl').array().notNull(),
+  choisiPar: uuid('choisi_par')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

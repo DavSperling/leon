@@ -14,13 +14,13 @@ export const githubCatalog: CatalogEntry = {
       label: 'Dépôts',
       kind: 'list',
       placeholder: 'acme/leon',
-      help: 'Un dépôt par ligne, au format propriétaire/nom (20 au plus). Dépôt inaccessible ? Une organisation peut exiger que le jeton soit approuvé par un administrateur.',
+      help: 'Un dépôt par ligne, au format propriétaire/nom (20 au plus). Leon ne relève que les dépôts d’équipe choisis par un administrateur (Réglages, onglet Équipe) ; les autres ne sont pas lus. Dépôt inaccessible ? Une organisation peut exiger que le jeton soit approuvé par un administrateur.',
     },
   ],
   keyHelp:
     'Sur github.com : Settings › Developer settings › Personal access tokens › Fine-grained tokens ; choisissez comme propriétaire le compte ou l’organisation des dépôts, limitez l’accès aux dépôts voulus et donnez-lui la lecture de Issues, Pull requests et Metadata.',
   oauthHelp:
-    'Leon lit les tickets et les pull requests des dépôts où vous installez son appli GitHub. L’accès couvre aussi le code et permet d’y écrire (branches, commits, pull requests, fusion) et d’agir sur GitHub Actions et les fichiers de workflow : relancer ou lancer un workflow peut déployer, et ce droit permet aussi de supprimer des exécutions et des artefacts. Leon ne s’en sert pas encore ; chaque action demandera votre accord.',
+    'Leon lit les tickets et les pull requests des dépôts où vous installez son appli GitHub, s’ils sont parmi les dépôts d’équipe choisis par un administrateur (Réglages, onglet Équipe) ; les autres ne sont pas lus. L’accès couvre aussi le code et permet d’y écrire (branches, commits, pull requests, fusion) et d’agir sur GitHub Actions et les fichiers de workflow : relancer ou lancer un workflow peut déployer, et ce droit permet aussi de supprimer des exécutions et des artefacts. Leon ne s’en sert pas encore ; chaque action demandera votre accord.',
   docsUrl:
     'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
   triedForReal: false,
@@ -29,12 +29,12 @@ export const githubCatalog: CatalogEntry = {
       token: { label: 'Fine-grained access token' },
       repos: {
         label: 'Repositories',
-        help: 'One repository per line, as owner/name (20 max). Repository not accessible? An organization may require the token to be approved by an admin.',
+        help: 'One repository per line, as owner/name (20 max). Leon only syncs the team repositories chosen by an admin (Settings, Team tab); the others aren’t read. Repository not accessible? An organization may require the token to be approved by an admin.',
       },
     },
     keyHelp:
       'On github.com: Settings › Developer settings › Personal access tokens › Fine-grained tokens; choose the account or organization that owns the repositories as the resource owner, limit access to the repositories you want, and give it read access to Issues, Pull requests, and Metadata.',
     oauthHelp:
-      'Leon reads the issues and pull requests of the repositories where you install its GitHub app. The access also covers code and allows writing to them (branches, commits, pull requests, merges) and acting on GitHub Actions and workflow files: rerunning or starting a workflow can deploy, and this access can also delete runs and artifacts. Leon doesn’t use it yet; every action will ask for your approval.',
+      'Leon reads the issues and pull requests of the repositories where you install its GitHub app, if they are among the team repositories chosen by an admin (Settings, Team tab); the others aren’t read. The access also covers code and allows writing to them (branches, commits, pull requests, merges) and acting on GitHub Actions and workflow files: rerunning or starting a workflow can deploy, and this access can also delete runs and artifacts. Leon doesn’t use it yet; every action will ask for your approval.',
   },
 };

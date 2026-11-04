@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { z } from 'zod';
-import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
+import { collect, type FakeCall, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
@@ -57,15 +57,39 @@ function firstPassRoutes(): FakeRoute[] {
   ];
 }
 
+// Décision D : la permission du membre sur un dépôt, lue dans les permissions du dépôt.
+const permissionRoute = (name: string, pull = true): FakeRoute => ({
+  url: `${API}/repos/${name}`,
+  json: { ...repo, full_name: name, permissions: { admin: false, push: false, pull } },
+});
+const isPermissionCall = (call: FakeCall) =>
+  /^\/repos\/[^/]+\/[^/]+$/.test(new URL(call.url).pathname);
+const teamOf = (repos: string[]) => repos.map((name) => `github.com/${name.toLowerCase()}`);
+
+// Sans `depotsEquipe`, tous les dépôts de la configuration sont d'équipe et lisibles par le membre ;
+// `calls` ne garde alors que les lectures (les contrôles de permission sont testés à part, plus bas).
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date; repos?: string[] } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    repos?: string[];
+    depotsEquipe?: string[];
+  } = {},
 ) {
   const cfg = { ...config, repos: overrides.repos ?? config.repos };
-  const { http, calls } = testHttp(githubConnector, cfg, routes);
-  const syncState = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
+  const allowed = overrides.depotsEquipe ? [] : cfg.repos.map((name) => permissionRoute(name));
+  const { http, calls } = testHttp(githubConnector, cfg, [...allowed, ...routes]);
+  const syncState = {
+    cursor: overrides.cursor ?? null,
+    since: overrides.since ?? SINCE,
+    depotsEquipe: overrides.depotsEquipe ?? teamOf(cfg.repos),
+  };
   const pages = await collect(githubConnector.sync(cfg, syncState, http));
-  return { pages, calls };
+  return {
+    pages,
+    calls: overrides.depotsEquipe ? calls : calls.filter((c) => !isPermissionCall(c)),
+  };
 }
 
 const itemsOf = (pages: SyncPage[]): ConnectorItem[] => pages.flatMap((page) => page.items);
@@ -451,7 +475,9 @@ describe('github : sync, reprise', () => {
     expect(sinceOf(calls[0]?.url)).toBe('2026-10-12T13:59:59Z');
     expect(calls).toHaveLength(1);
     // Rien de neuf : une page vide garde le curseur (et l'ordre de lecture des dépôts).
-    expect(pages).toEqual([{ items: [], cursor: first.pages.at(-1)?.cursor }]);
+    expect(pages).toEqual([
+      { items: [], cursor: first.pages.at(-1)?.cursor, depotsConfirmes: ['github.com/acme/leon'] },
+    ]);
   });
 
   it('ignore l’élément déjà rendu au même instant, et rend l’autre', async () => {
@@ -500,12 +526,13 @@ describe('github : sync, reprise', () => {
     const empty = (name: string): FakeRoute => ({ url: `${API}/repos/${name}/issues`, json: [] });
     const cfg = { ...config, repos };
     const cut = testHttp(githubConnector, cfg, [
+      ...repos.map((name) => permissionRoute(name)),
       empty('acme/a'),
       { url: `${API}/repos/acme/b/issues`, status: 404 },
     ]);
     const first: SyncPage[] = [];
     const run = (async () => {
-      const state = { cursor: null, since: SINCE };
+      const state = { cursor: null, since: SINCE, depotsEquipe: teamOf(repos) };
       for await (const page of githubConnector.sync(cfg, state, cut.http)) first.push(page);
     })();
     await expect(run).rejects.toMatchObject({ status: 404 });
@@ -690,6 +717,165 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
   });
 });
 
+// Décision D (T11) : seuls les dépôts d'équipe sur lesquels le membre a une permission sont relevés. Les autres
+// dépôts lisibles gardent une marque dans le curseur, sans aucune lecture, pour rester candidats (T10).
+describe('github : sync, dépôts d’équipe (décision D)', () => {
+  const LEON = 'github.com/acme/leon';
+  const MARK = { at: '2026-09-15T00:00:00Z', seen: [] };
+  const installation = (names: string[]): FakeRoute[] => [
+    { url: `${API}/user/installations`, json: { installations: [{ id: 7 }] } },
+    {
+      url: `${API}/user/installations/7/repositories`,
+      json: { repositories: names.map((full_name) => ({ full_name })) },
+    },
+  ];
+  const installed = { authMode: 'oauth' as const, accessToken: 'ghu_exemple-acces-1', repos: [] };
+
+  it('lit le dépôt d’équipe et ignore le dépôt perso, sans aucune requête, en lui donnant sa marque', async () => {
+    const { pages, calls } = await runSync([permissionRoute('acme/leon'), ...firstPassRoutes()], {
+      repos: ['paul/perso', 'acme/leon'],
+      depotsEquipe: [LEON],
+    });
+
+    expect(idsOf(pages)).toEqual([
+      'issue:acme/leon#12',
+      'pr:acme/leon#13',
+      'issue:acme/leon#14',
+      'issue:acme/leon#15',
+      'issue:acme/leon#16',
+    ]);
+    expect(calls.some((call) => call.url.includes('/paul/perso'))).toBe(false);
+    expect(cursorOf(pages.at(-1))).toEqual({
+      'paul/perso': MARK,
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+    });
+  });
+
+  it('sans aucun choix, ne lit rien mais marque chaque dépôt installé, en gardant une marque déjà posée', async () => {
+    const lu = { at: '2026-10-12T14:00:00Z', seen: [15, 16] };
+    const cursor = JSON.stringify({ 'acme/leon': lu });
+    // Une liste absente vaut une liste vide : jamais tout relever par défaut.
+    for (const depotsEquipe of [[], undefined]) {
+      const { http, calls } = testHttp(githubConnector, installed, [
+        ...installation(['acme/leon', 'paul/perso']),
+      ]);
+      const state = { cursor, since: SINCE, ...(depotsEquipe && { depotsEquipe }) };
+
+      const pages = await collect(githubConnector.sync(installed, state, http));
+
+      expect(calls.map((call) => new URL(call.url).pathname)).toEqual([
+        '/user/installations',
+        '/user/installations/7/repositories',
+      ]);
+      expect(pages).toHaveLength(1);
+      expect(pages[0]?.items).toEqual([]);
+      expect(pages[0]?.depotsConfirmes).toEqual([]);
+      expect(cursorOf(pages[0])).toEqual({ 'acme/leon': lu, 'paul/perso': MARK });
+    }
+  });
+
+  it('lit un dépôt d’équipe quelle que soit sa casse sur GitHub', async () => {
+    const { http, calls } = testHttp(githubConnector, installed, [
+      ...installation(['Acme/Leon']),
+      { url: `${API}/repos/Acme/Leon/issues`, json: [] },
+    ]);
+
+    const pages = await collect(
+      githubConnector.sync(installed, { cursor: null, since: SINCE, depotsEquipe: [LEON] }, http),
+    );
+
+    expect(calls.map((call) => new URL(call.url).pathname)).toContain('/repos/Acme/Leon/issues');
+    expect(pages[0]?.depotsConfirmes).toEqual([LEON]);
+  });
+
+  // C12 : l'installation ne rend que les dépôts où le membre a une permission explicite, lecture au moins (doc citée
+  // dans client.ts) : aucune demande de plus par dépôt, à chaque passage. Seuls les dépôts saisis la demandent.
+  it('avec le bouton sans dépôt choisi, ne redemande pas la permission des dépôts installés', async () => {
+    const repos = ['acme/leon', 'acme/site', 'acme/outil'];
+    const { http, calls } = testHttp(githubConnector, installed, [
+      ...installation(repos),
+      ...repos.map((name) => ({ url: `${API}/repos/${name}/issues`, json: [] })),
+    ]);
+
+    const pages = await collect(
+      githubConnector.sync(
+        installed,
+        { cursor: null, since: SINCE, depotsEquipe: teamOf(repos) },
+        http,
+      ),
+    );
+
+    expect(calls.filter(isPermissionCall)).toEqual([]);
+    expect(pages.at(-1)?.depotsConfirmes).toEqual(teamOf(repos));
+  });
+
+  // C13 : non vérifié, GitHub pourrait ne pas rendre `permissions` à un jeton d'appli ou à grain fin. Le dépôt n'est
+  // alors pas lu, comme sans permission, et le journal le dit sans nommer le dépôt : un arrêt de la relève se voit.
+  it('sans `permissions` dans la réponse, ne lit pas le dépôt et le journalise, sans le nommer', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const repos = ['acme/leon', 'acme/site'];
+      const { pages, calls } = await runSync(
+        [{ url: `${API}/repos/acme/leon`, json: repo }, permissionRoute('acme/site', false)],
+        { repos, depotsEquipe: teamOf(repos) },
+      );
+
+      expect(calls.filter((call) => !isPermissionCall(call))).toEqual([]);
+      expect(pages[0]?.depotsConfirmes).toEqual([]);
+      // Un `pull` faux n'est pas une anomalie : un seul message.
+      expect(logged).toHaveBeenCalledTimes(1);
+      expect(JSON.stringify(logged.mock.calls)).toContain('github.permissions_missing');
+      expect(JSON.stringify(logged.mock.calls)).not.toContain('acme/');
+    } finally {
+      logged.mockRestore();
+    }
+  });
+
+  it('ignore un dépôt d’équipe sur lequel le membre n’a pas de permission (pull faux, 403, 404)', async () => {
+    const repos = ['acme/leon', 'acme/site', 'acme/prive', 'acme/vieux'];
+    const { pages, calls } = await runSync(
+      [
+        permissionRoute('acme/leon'),
+        permissionRoute('acme/site', false),
+        { url: `${API}/repos/acme/prive`, status: 403 },
+        { url: `${API}/repos/acme/vieux`, status: 404 },
+        issuesRoute([]),
+      ],
+      { repos, depotsEquipe: teamOf(repos) },
+    );
+
+    const read = calls.filter((call) => !isPermissionCall(call)).map((call) => call.url);
+    expect(read.map((url) => new URL(url).pathname)).toEqual(['/repos/acme/leon/issues']);
+    expect(pages).toHaveLength(1);
+    expect(pages[0]?.depotsConfirmes).toEqual([LEON]);
+    expect(cursorOf(pages[0])).toEqual({
+      'acme/site': MARK,
+      'acme/prive': MARK,
+      'acme/vieux': MARK,
+      'acme/leon': MARK,
+    });
+  });
+
+  it('rend à chaque page la liste des dépôts d’équipe confirmés, refaite à chaque passage', async () => {
+    const first = await runSync([permissionRoute('acme/leon'), ...firstPassRoutes()], {
+      depotsEquipe: [LEON],
+    });
+
+    expect(first.pages).toHaveLength(2);
+    for (const page of first.pages) expect(page.depotsConfirmes).toEqual([LEON]);
+
+    // Le membre a perdu son accès sur GitHub : le dépôt n'est plus confirmé, ni relu.
+    const second = await runSync([permissionRoute('acme/leon', false)], {
+      cursor: first.pages.at(-1)?.cursor,
+      depotsEquipe: [LEON],
+    });
+
+    expect(second.pages).toEqual([
+      { items: [], cursor: first.pages.at(-1)?.cursor, depotsConfirmes: [] },
+    ]);
+  });
+});
+
 // Le bouton « Se connecter avec GitHub » : une GitHub App, dont le jeton d'accès (ghu_…) s'envoie en
 // Bearer comme un jeton à grain fin.
 describe('github : connexion par le bouton', () => {
@@ -701,6 +887,7 @@ describe('github : connexion par le bouton', () => {
     expiresAt: '2026-10-15T18:00:00.000Z',
     repos: ['acme/leon'],
   };
+  const teamState = { cursor: null, since: SINCE, depotsEquipe: ['github.com/acme/leon'] };
   const schema = githubConnector.configSchema;
   const issuePaths = (input: unknown) =>
     schema.safeParse(input).error?.issues.map((issue) => issue.path.join('.'));
@@ -758,7 +945,7 @@ describe('github : connexion par le bouton', () => {
     ]);
 
     const pages = await collect(
-      githubConnector.sync(schema.parse(installed), { cursor: null, since: SINCE }, http),
+      githubConnector.sync(schema.parse(installed), { ...teamState, cursor: null }, http),
     );
 
     expect(idsOf(pages)).toContain('issue:acme/leon#12');
@@ -780,7 +967,11 @@ describe('github : connexion par le bouton', () => {
     ]);
 
     await collect(
-      githubConnector.sync(schema.parse(installed), { cursor: null, since: SINCE }, http),
+      githubConnector.sync(
+        schema.parse(installed),
+        { cursor: null, since: SINCE, depotsEquipe: teamOf(repos) },
+        http,
+      ),
     );
 
     const read = calls
@@ -841,11 +1032,12 @@ describe('github : connexion par le bouton', () => {
   });
 
   it('sync envoie le jeton d’accès à chaque requête, pages suivantes comprises', async () => {
-    const { http, calls } = testHttp(githubConnector, oauthConfig, firstPassRoutes());
+    const { http, calls } = testHttp(githubConnector, oauthConfig, [
+      permissionRoute('acme/leon'),
+      ...firstPassRoutes(),
+    ]);
 
-    const pages = await collect(
-      githubConnector.sync(oauthConfig, { cursor: null, since: SINCE }, http),
-    );
+    const pages = await collect(githubConnector.sync(oauthConfig, teamState, http));
 
     expect(idsOf(pages)).toEqual([
       'issue:acme/leon#12',
@@ -865,9 +1057,12 @@ describe('github : connexion par le bouton', () => {
   });
 
   it('sync remonte le refus d’authentification d’un jeton expiré (401)', async () => {
-    const { http } = testHttp(githubConnector, oauthConfig, [issuesRoute(null, { status: 401 })]);
+    const { http } = testHttp(githubConnector, oauthConfig, [
+      permissionRoute('acme/leon'),
+      issuesRoute(null, { status: 401 }),
+    ]);
 
-    const run = collect(githubConnector.sync(oauthConfig, { cursor: null, since: SINCE }, http));
+    const run = collect(githubConnector.sync(oauthConfig, teamState, http));
 
     await expect(run).rejects.toBeInstanceOf(ConnectorAuthError);
   });

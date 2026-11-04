@@ -22,10 +22,11 @@ describe('privilèges', () => {
     );
   });
 
+  // Les tests db peuvent changer d'organisation dans une transaction, comme la boucle du déploiement de 0048.
   it('pose le contexte de tenant à un seul endroit : withTenant', () => {
-    expect(offenders(/set_config\(/, (path) => path === 'src/server/db/with-tenant.ts')).toEqual(
-      [],
-    );
+    const allowed = (path: string) =>
+      isTestSupport(path) || path === 'src/server/db/with-tenant.ts';
+    expect(offenders(/set_config\(/, allowed)).toEqual([]);
   });
 
   it('réserve le rôle propriétaire (adminDb, adminPool) aux tests', () => {

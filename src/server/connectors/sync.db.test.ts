@@ -1,8 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
+import { sources, turns } from '@/server/db/schema/memory';
+import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminDb, adminPool } from '@/test/db';
 import { fakeConnector } from '@/test/fake-connector';
@@ -10,12 +12,15 @@ import { collect, fakeFetch } from '@/test/fake-fetch';
 import { fakeOAuthConnector } from '@/test/fake-oauth-connector';
 import { createTestTenant, createTestUser, seedConnection } from '@/test/fixtures';
 import { createConnection, listConnections, saveOAuthTokens } from './connections';
+import { setDepotEquipe } from './github/depots-equipe';
 import { gmailConnector } from './gmail/connector';
 import { ConnectorAuthError, type ConnectorHttp } from './http';
+import { ingestConnectorItems } from './ingest-items';
+import { normalizeItem } from './normalize';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from './pipedream';
 import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
-import type { AnyConnector, ConnectorItem, SyncPage } from './types';
+import type { AnyConnector, ConnectorItem, SyncPage, SyncState } from './types';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -33,6 +38,7 @@ let paul: TenantContext;
 
 afterAll(async () => {
   await adminPool.query('delete from connections where tenant_id = any($1)', [tenantIds]);
+  await adminPool.query('delete from depots_equipe where tenant_id = any($1)', [tenantIds]);
 });
 
 beforeEach(async () => {
@@ -398,6 +404,213 @@ async function oneItem(): Promise<ConnectorItem> {
   const [page] = await collect(connector.sync({ token: 'x' }, state, undefined as never));
   return page?.items[0] as ConnectorItem;
 }
+
+// Décision D (T11) : la relève GitHub reçoit la liste des dépôts d'équipe de l'organisation, et garde dans la
+// configuration de la connexion ceux que le membre a pu lire à ce passage, datés (T14 n'en croit que les récents).
+describe('runConnectorSync : les dépôts d’équipe', () => {
+  const choose = (ctx: TenantContext, project: string) =>
+    adminPool.query(
+      `insert into depots_equipe (tenant_id, project, acl, choisi_par)
+       values ($1, $2, array[$1::uuid], $3)`,
+      [ctx.tenantId, project, ctx.userId],
+    );
+
+  // Le connecteur garde l'état reçu, puis rend les pages du test.
+  function recording(pages: SyncPage[] = [{ items: [], cursor: 'x' }]) {
+    const states: SyncState[] = [];
+    const connector: AnyConnector = {
+      ...fakeConnector({ items: 0, pageSize: 1 }),
+      async *sync(_config, state) {
+        states.push(state);
+        yield* pages;
+      },
+    };
+    return { connector, states };
+  }
+
+  const confirmed = async (id: string) => {
+    const { rows } = await adminPool.query<{ depots: unknown }>(
+      `select config->'depots_confirmes' as depots from connections where id = $1`,
+      [id],
+    );
+    return rows[0]?.depots;
+  };
+
+  it('donne à une connexion GitHub la liste de son organisation, et la sienne seulement', async () => {
+    const other = await createTestTenant(['Zoé']);
+    tenantIds.push(other.tenantId);
+    await choose(paul, 'github.com/acme/leon');
+    await choose(other.members[0] as TenantContext, 'github.com/acme/autre');
+    const id = await dueConnection();
+    const { connector, states } = recording();
+
+    expect(await run(id, connector)).toBe('ok');
+
+    expect(states[0]?.depotsEquipe).toEqual(['github.com/acme/leon']);
+  });
+
+  it('ne lit pas la liste pour un autre outil, et ne touche pas à sa configuration', async () => {
+    await choose(paul, 'github.com/acme/leon');
+    const id = await seedConnection(paul, { provider: 'gitlab', nextSyncAt: DUE });
+    const { connector, states } = recording();
+
+    expect(await run(id, connector)).toBe('ok');
+
+    expect(states[0]).not.toHaveProperty('depotsEquipe');
+    expect(await confirmed(id)).toBeNull();
+  });
+
+  it('écrit les dépôts confirmés, datés du passage, et les réécrit au passage suivant', async () => {
+    const id = await dueConnection();
+    const before = Date.now() - 1000;
+    const page = { items: [], cursor: '1', depotsConfirmes: ['github.com/acme/leon'] };
+
+    expect(await run(id, recording([page]).connector)).toBe('ok');
+
+    const [entry, ...rest] = (await confirmed(id)) as Array<{ depot: string; confirme_le: string }>;
+    expect(rest).toEqual([]);
+    expect(entry?.depot).toBe('github.com/acme/leon');
+    expect(Date.parse(entry?.confirme_le ?? '')).toBeGreaterThanOrEqual(before);
+    expect(Date.parse(entry?.confirme_le ?? '')).toBeLessThanOrEqual(Date.now());
+
+    await makeDue(id);
+    const none = { items: [], cursor: '2', depotsConfirmes: [] };
+    expect(await run(id, recording([none]).connector)).toBe('ok');
+
+    expect(await confirmed(id)).toEqual([]);
+  });
+});
+
+// Décision D (T12) : les PR déjà relevées suivent la liste des dépôts d'équipe. Hors de la liste, elles deviennent
+// privées à qui a branché GitHub (Paul) ; Léa, administratrice, coche les dépôts.
+describe('runConnectorSync : les PR déjà relevées hors des dépôts d’équipe', () => {
+  let lea: TenantContext;
+
+  beforeEach(async () => {
+    lea = await createTestUser(tenantId, 'Léa');
+    await adminDb.update(members).set({ role: 'admin' }).where(eq(members.userId, lea.userId));
+    // Léa lit elle-même acme/leon sur GitHub, par sa propre connexion à clé (C03).
+    const id = await seedConnection(lea);
+    await adminPool.query('update connections set config = $1 where id = $2', [
+      { repos: ['acme/leon'] },
+      id,
+    ]);
+  });
+
+  const cocher = (depot: string) =>
+    setDepotEquipe(lea, depot, true, {
+      fetchImpl: fakeFetch([
+        { url: `https://api.github.com/repos/${depot}`, json: { permissions: { pull: true } } },
+      ]),
+    });
+
+  // Paul relève une PR de chaque dépôt, comme avant le lot 2 (l'ingestion seule, sans l'alignement de fin de
+  // passage) : visible de toute l'équipe.
+  async function relever(repos: string[]): Promise<void> {
+    const item = await oneItem();
+    const items = repos.flatMap(
+      (repo) =>
+        normalizeItem(
+          {
+            ...item,
+            externalId: `pr:${repo}#1`,
+            origin: { repo },
+            turns: item.turns.map((turn) => ({ ...turn, text: `PR de ${repo}` })),
+          },
+          'github',
+        ) ?? [],
+    );
+    const id = await dueConnection();
+    await ingestConnectorItems(paul, { id, provider: 'github', createdBy: paul.userId }, items);
+  }
+
+  // Les PR et les tours que `ctx` voit, sous RLS.
+  const seenBy = (ctx: TenantContext) =>
+    withTenant(ctx, async (tx) => ({
+      prs: (await tx.select({ id: sources.externalId }).from(sources)).map((row) => row.id).sort(),
+      tours: (await tx.select({ text: turns.text }).from(turns)).map((row) => row.text).sort(),
+    }));
+
+  // L'appel que fait la migration 0048, pour chaque organisation, au déploiement.
+  const alignAtDeploy = () =>
+    withTenant(paul, (tx) => tx.execute(sql`select aligner_sources_github()`));
+
+  it('une PR d’un dépôt perso déjà relevée devient invisible d’un collègue, pas de qui l’a relevée', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+    expect((await seenBy(lea)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
+
+    expect(await cocher('acme/leon')).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
+    expect((await seenBy(paul)).prs).toEqual(['pr:acme/leon#1', 'pr:paul/perso#1']);
+  });
+
+  it('une PR d’un dépôt d’équipe reste visible de l’équipe', async () => {
+    await relever(['Acme/Leon']);
+
+    expect(await cocher('acme/leon')).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:Acme/Leon#1'], tours: ['PR de Acme/Leon'] });
+  });
+
+  it('sans aucun choix, toutes deviennent privées', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+
+    await alignAtDeploy();
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
+    expect((await seenBy(paul)).tours).toEqual(['PR de acme/leon', 'PR de paul/perso']);
+  });
+
+  it('un dépôt coché ensuite redevient visible de l’équipe', async () => {
+    await relever(['paul/perso', 'acme/leon']);
+    await alignAtDeploy();
+
+    expect(await cocher('acme/leon')).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: ['pr:acme/leon#1'], tours: ['PR de acme/leon'] });
+  });
+
+  // La relève lit la liste à son début. Léa décoche le dépôt entre deux pages : la PR nouvelle, et le tour nouveau
+  // d'une PR devenue privée, que la page suivante écrit avec l'accès de l'organisation, finissent privés.
+  it('un dépôt décoché en pleine relève : ce que la relève écrit ensuite finit privé', async () => {
+    expect(await cocher('acme/leon')).toBe('ok');
+    const item = await oneItem();
+    const pr = (n: number, turn: string) => ({
+      ...item,
+      externalId: `pr:acme/leon#${n}`,
+      origin: { repo: 'acme/leon' },
+      turns: item.turns.map((t) => ({ ...t, externalId: turn, text: `PR ${n}, ${turn}` })),
+    });
+    const connector: AnyConnector = {
+      ...fakeConnector({ items: 0, pageSize: 1 }),
+      async *sync() {
+        yield { items: [pr(1, 'body')], cursor: '1' };
+        expect(await setDepotEquipe(lea, 'acme/leon', false)).toBe('ok');
+        yield { items: [pr(1, 'commentaire'), pr(2, 'body')], cursor: '2' };
+      },
+    };
+
+    expect(await run(await dueConnection(), connector)).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
+    expect((await seenBy(paul)).tours).toEqual(['PR 1, body', 'PR 1, commentaire', 'PR 2, body']);
+  });
+
+  // Au déploiement, l'ancienne version relève encore après 0048 : le passage suivant, même vide, aligne.
+  it('ce qu’une relève a écrit sans suivre la liste devient privé au passage suivant', async () => {
+    await relever(['paul/perso']);
+
+    expect(
+      await run(
+        await dueConnection(),
+        inlineConnector(async () => []),
+      ),
+    ).toBe('ok');
+
+    expect(await seenBy(lea)).toEqual({ prs: [], tours: [] });
+  });
+});
 
 describe('runConnectorSync : une connexion OAuth', () => {
   const TOKEN_URL = 'https://github.test/login/oauth/access_token';

@@ -35,6 +35,9 @@ vi.mock('@/server/briefing/about', () => ({
   readAbout: vi.fn(async () => null),
 }));
 vi.mock('@/server/cli/install-command', () => ({ installCommand: vi.fn() }));
+vi.mock('@/server/connectors/github/depots-equipe', () => ({
+  listDepotsEquipe: vi.fn(async () => ({ depots: [], githubBranche: false })),
+}));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';

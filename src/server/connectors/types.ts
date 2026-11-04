@@ -38,9 +38,17 @@ export type ConnectorItem = {
   turns: ConnectorTurn[]; // ordre chronologique
 };
 
-export type SyncState = { cursor: string | null; since: Date };
+// `depotsEquipe` (GitHub seulement, décision D) : les dépôts d'équipe de l'organisation, `github.com/owner/repo`
+// en minuscules. Absent vaut vide : rien n'est relevé.
+export type SyncState = { cursor: string | null; since: Date; depotsEquipe?: string[] };
 // `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
-export type SyncPage = { items: ConnectorItem[]; cursor: string; removed?: string[] };
+// `depotsConfirmes` (GitHub) : les dépôts d'équipe que la connexion a pu lire à ce passage, même forme.
+export type SyncPage = {
+  items: ConnectorItem[];
+  cursor: string;
+  removed?: string[];
+  depotsConfirmes?: string[];
+};
 
 // Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
 export type OAuthTokens = {

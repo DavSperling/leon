@@ -37,7 +37,10 @@ import { githubOAuth } from './oauth';
 // doc dit seulement « mis à jour après » : on recule d'une seconde et on écarte les éléments déjà
 // vus) ; que GET /user répond à un jeton à grain fin sans autre permission que Metadata (la doc ne
 // le dit pas) ; la forme des liens `next` (adresses /repositories/<id>/… dans les fixtures,
-// construites d'après la doc, sans exemple).
+// construites d'après la doc, sans exemple) ; que GET /repos/{repo} rend `permissions` à un jeton
+// d'appli GitHub (bouton, dépôts choisis) et à un jeton à grain fin (décision D, canRead) : absent, le
+// dépôt n'est pas lu et logError le dit, sans le nom du dépôt. À vérifier au premier branchement réel,
+// par le bouton et par une clé à grain fin.
 // Limite connue : un élément modifié pendant que les pages d'un même dépôt sont lues peut décaler
 // les pages et en faire manquer un autre, qui ne reviendra qu'à sa prochaine modification.
 
@@ -169,13 +172,35 @@ function leastRecentFirst(repos: string[], cursor: Cursor): string[] {
   return [...repos].sort((a, b) => (rank.get(a) ?? -1) - (rank.get(b) ?? -1));
 }
 
+// La clé d'un dépôt dans `depots_equipe` (décision D) ; GitHub écrit le nom avec sa casse.
+const projectOf = (repo: string) => `github.com/${repo.toLowerCase()}`;
+
+// `installed` : les dépôts viennent de l'installation, qui ne rend que ceux où le membre a une permission explicite
+// (lecture au moins, voir installedRepos) ; sans quoi ce sont les dépôts saisis, 20 au plus, demandés un par un.
 async function* syncRepos(
   github: GithubClient,
   repos: string[],
+  installed: boolean,
   state: SyncState,
 ): AsyncGenerator<SyncPage> {
   const cursor = readCursor(state.cursor);
-  for (const repo of leastRecentFirst(repos, cursor)) {
+  // Décision D : seuls les dépôts d'équipe sur lesquels le membre a une permission sont lus. Les autres gardent
+  // leur marque, ou en reçoivent une sans aucune lecture, pour rester candidats de leur propriétaire (T10).
+  const team = new Set(state.depotsEquipe ?? []);
+  const toRead: string[] = [];
+  for (const repo of repos) {
+    if (team.has(projectOf(repo)) && (installed || (await github.canRead(repo)))) toRead.push(repo);
+    else cursor[repo] ??= { at: apiTime(state.since), seen: [] };
+  }
+  // Chaque page porte la liste du passage : la relève la réécrit dans la connexion (T14 s'en sert).
+  const depotsConfirmes = toRead.map(projectOf);
+  const page = (items: ConnectorItem[]): SyncPage => ({
+    items,
+    cursor: JSON.stringify(cursor),
+    depotsConfirmes,
+  });
+  if (toRead.length === 0) yield page([]);
+  for (const repo of leastRecentFirst(toRead, cursor)) {
     const mark = cursor[repo];
     const from = mark ? new Date(Date.parse(mark.at) - 1000) : state.since;
     // Passé en fin d'ordre, avec une marque même si rien ne change (elle garde alors `since`).
@@ -189,11 +214,11 @@ async function* syncRepos(
         cursor[repo] = advance(cursor[repo], issue);
       }
       if (items.length > 0) {
-        yield { items, cursor: JSON.stringify(cursor) };
+        yield page(items);
         saved = true;
       }
     }
-    if (!saved) yield { items: [], cursor: JSON.stringify(cursor) };
+    if (!saved) yield page([]);
   }
 }
 
@@ -213,6 +238,7 @@ export const githubConnector: Connector<Config> = {
 
   async *sync(config: Config, state: SyncState, http: ConnectorHttp) {
     const github = githubClient(bearerOf(config), http);
-    yield* syncRepos(github, await reposToRead(github, config), state);
+    const installed = config.repos.length === 0;
+    yield* syncRepos(github, await reposToRead(github, config), installed, state);
   },
 };

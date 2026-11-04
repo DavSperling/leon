@@ -164,6 +164,28 @@ describe('listConnections', () => {
 
     expect((await listConnections(zoe)).find((view) => view.id === id)).toBeUndefined();
   });
+
+  // C04 : la liste dit ce que le compte GitHub de son auteur peut lire ; la page l'envoie au navigateur de chacun.
+  it('ne montre les dépôts confirmés d’une connexion GitHub qu’à son auteur', async () => {
+    const id = await seedConnection(paul);
+    await adminPool.query('update connections set config = $1 where id = $2', [
+      { repos: ['acme/leon'] },
+      id,
+    ]);
+    await makeDue(id);
+    const lock = await claimed(paul, id);
+    await saveSyncProgress(paul, id, lock, '{}', 0, ['github.com/acme/leon']);
+    await makeNotDue(id);
+    const configFor = async (ctx: TenantContext) =>
+      (await listConnections(ctx)).find((view) => view.id === id)?.config;
+
+    expect(await configFor(paul)).toMatchObject({
+      repos: ['acme/leon'],
+      depots_confirmes: [{ depot: 'github.com/acme/leon', confirme_le: expect.any(String) }],
+    });
+    expect(await configFor(marie)).toEqual({ repos: ['acme/leon'] });
+    expect(await configFor(bob)).toEqual({ repos: ['acme/leon'] });
+  });
 });
 
 describe('claimConnection', () => {

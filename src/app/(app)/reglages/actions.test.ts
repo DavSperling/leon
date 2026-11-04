@@ -8,6 +8,7 @@ import { createInvitationLink, setMemberPlacement } from '@/server/auth/members'
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
+import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
@@ -22,6 +23,7 @@ import {
   enableTotpAction,
   regenerateBackupCodesAction,
   revokeTokenAction,
+  setDepotEquipeAction,
   setLocaleAction,
   setMemberPlacementAction,
   updateAboutAction,
@@ -67,6 +69,7 @@ vi.mock('@/server/auth/delete-account', () => ({
   deleteAccount: vi.fn(),
   deleteOrganization: vi.fn(),
 }));
+vi.mock('@/server/connectors/github/depots-equipe', () => ({ setDepotEquipe: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
   RESEND_BATCH_MAX: 100,
@@ -439,6 +442,64 @@ describe('setMemberPlacementAction', () => {
       errors: { form: 'permission' },
     });
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe('setDepotEquipeAction', () => {
+  it('coche ou décoche le dépôt pour le lecteur connecté, puis rafraîchit la liste', async () => {
+    vi.mocked(setDepotEquipe).mockResolvedValue('ok');
+
+    expect(await setDepotEquipeAction('Org/Repo', true)).toEqual({ ok: true });
+    expect(await setDepotEquipeAction('org/repo', false)).toEqual({ ok: true });
+
+    expect(setDepotEquipe).toHaveBeenNthCalledWith(1, ctx, 'Org/Repo', true);
+    expect(setDepotEquipe).toHaveBeenNthCalledWith(2, ctx, 'org/repo', false);
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it.each([
+    ['invalide', fr.settings.depotInvalid],
+    ['refuse', fr.settings.depotRefused],
+    ['illisible', fr.settings.depotUnreadable],
+  ] as const)('dit pourquoi le module refuse (%s), sans rafraîchir', async (refus, message) => {
+    vi.mocked(setDepotEquipe).mockResolvedValue(refus);
+
+    expect(await setDepotEquipeAction('acme', true)).toEqual({ error: message });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  // Le message d'une erreur de requête porte ses paramètres, donc le dépôt : il passe par logError, qui le masque.
+  it('rend un message général, et le journal, quand la base échoue', async () => {
+    vi.mocked(setDepotEquipe).mockRejectedValue(
+      new Error('Failed query: params: github.com/acme/app'),
+    );
+
+    expect(await setDepotEquipeAction('acme/app', true)).toEqual({
+      error: fr.settings.depotFailed,
+    });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('settings.depot_failed', expect.any(Error));
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [null, true],
+    ['acme/app', 'oui'],
+  ])('refuse un argument forgé (%o, %o) sans rien écrire', async (depot, coche) => {
+    expect(await setDepotEquipeAction(depot as never, coche as never)).toEqual({
+      error: fr.settings.depotInvalid,
+    });
+    expect(setDepotEquipe).not.toHaveBeenCalled();
+  });
+
+  it('ne fait rien sans session valide', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(setDepotEquipeAction('acme/app', true)).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+
+    expect(setDepotEquipe).not.toHaveBeenCalled();
   });
 });
 

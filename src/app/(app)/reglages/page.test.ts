@@ -45,6 +45,7 @@ vi.mock('@/server/connectors/github/depots-equipe', () => ({
 }));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
+const DAY_MS = 24 * 60 * 60 * 1000;
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
 const INSTRUCTIONS = `Install Leon: ${COMMAND}`;
 const token = (
@@ -52,6 +53,7 @@ const token = (
   name: string,
   kind: ApiTokenRow['kind'] = 'manuel',
   revokedAt: Date | null = null,
+  refreshExpiresAt: Date | null = kind === 'assistant' ? new Date(Date.now() + DAY_MS) : null,
 ): ApiTokenRow => ({
   id,
   name,
@@ -62,6 +64,7 @@ const token = (
   kind,
   clientName: kind === 'assistant' ? name : null,
   clientHost: kind === 'assistant' ? 'claude.ai' : null,
+  refreshExpiresAt,
 });
 
 // Les éléments d'un type donné dans l'arbre que la page rend (fragments compris).
@@ -164,6 +167,17 @@ describe('page de Réglages : jetons, ordinateurs et assistants connectés', () 
     expect(shown.computers).toEqual([]);
     expect(shown.tokens).toEqual([]);
     expect(shown.assistants).toEqual([]);
+  });
+
+  // Un assistant dont le renouvellement a expiré ne se reconnectera plus : il ne reste dans la liste qu'en apparence.
+  it('ne montre un assistant que si son renouvellement n’a pas expiré', async () => {
+    const shown = await integrations([
+      token('a1', 'Claude', 'assistant', null, new Date(Date.now() - 1000)),
+      token('a2', 'ChatGPT', 'assistant', null, new Date(Date.now() + DAY_MS)),
+      token('a3', 'Cursor', 'assistant', null, null),
+    ]);
+
+    expect(shown.assistants?.map((a) => a.name)).toEqual(['ChatGPT']);
   });
 
   // La sorte vient de la colonne `kind`, plus du préfixe du nom : un jeton manuel qui porte le préfixe reste un jeton.

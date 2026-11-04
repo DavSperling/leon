@@ -1,5 +1,18 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, exists, gt, gte, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gt,
+  gte,
+  isNotNull,
+  isNull,
+  lte,
+  notExists,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -17,6 +30,7 @@ export type ApiTokenRow = {
   kind: ApiTokenKind;
   clientName: string | null;
   clientHost: string | null;
+  refreshExpiresAt: Date | null; // un assistant dont le renouvellement est échu ne se reconnectera plus
 };
 
 type ApiTokenKind = (typeof apiTokens.$inferSelect)['kind'];
@@ -149,12 +163,18 @@ export async function createGrant(
   return null;
 }
 
+const REPLAY_TOLERANCE_MS = 30_000;
+
 // Un renouvellement change les deux jetons : l'ancien accès et l'ancien renouvellement ne valent plus. Une seule
 // requête, dont le where tient lieu de compare-and-swap : de deux renouvellements en même temps, le second ne trouve
 // plus l'empreinte qu'il présente. Même adhésion que verifyApiToken ; le jeton doit n'avoir pas été révoqué, ni son
 // renouvellement échu, et le client doit être celui qui l'a reçu (RFC 6749 §6).
-// shortcut: pas de tolérance en v1 ; garder l'ancienne empreinte de renouvellement 30 s si M07 ou l'usage montre des
-// reconnexions.
+// La ligne garde l'ancienne empreinte et l'heure de la rotation. Présenter encore cet ancien jeton, c'est : dans les 30
+// s, le même client qui renouvelle deux fois à la fois (null, rien ne change) ; au-delà, un rejeu, donc une copie
+// volée (RFC 9700 §4.14.2) : la ligne est révoquée, le voleur et le vrai client perdent l'accès, le vrai réautorise.
+// Là aussi une seule requête (revoked_at is null en garde), sans lecture qui précède.
+// shortcut: une seule ancienne empreinte est gardée ; rejouer un jeton d'avant la dernière rotation ne révoque rien
+// (null), à reprendre avec une chaîne de rotations si l'usage montre des vols de ce genre.
 export async function refreshGrant(
   refreshToken: string,
   clientRef: string,
@@ -163,18 +183,22 @@ export async function refreshGrant(
   const accessToken = generateApiToken();
   const next = generateApiToken();
   const now = Date.now();
+  const presented = hashApiToken(refreshToken);
   const [row] = await db
     .update(apiTokens)
     .set({
       tokenHash: hashApiToken(accessToken),
       tokenHint: accessToken.slice(-4),
       expiresAt: new Date(now + ACCESS_TTL_MS),
+      // Dans un UPDATE, le côté droit lit la ligne d'avant : c'est l'empreinte qu'on remplace.
+      previousRefreshHash: apiTokens.refreshHash,
       refreshHash: hashApiToken(next),
+      refreshRotatedAt: new Date(now),
       refreshExpiresAt: new Date(now + REFRESH_TTL_MS),
     })
     .where(
       and(
-        eq(apiTokens.refreshHash, hashApiToken(refreshToken)),
+        eq(apiTokens.refreshHash, presented),
         eq(apiTokens.clientRef, clientRef),
         isNull(apiTokens.revokedAt),
         gt(apiTokens.refreshExpiresAt, new Date(now)),
@@ -182,7 +206,19 @@ export async function refreshGrant(
       ),
     )
     .returning({ id: apiTokens.id });
-  return row ? { accessToken, refreshToken: next } : null;
+  if (row) return { accessToken, refreshToken: next };
+  await db
+    .update(apiTokens)
+    .set({ revokedAt: new Date(now) })
+    .where(
+      and(
+        eq(apiTokens.previousRefreshHash, presented),
+        eq(apiTokens.clientRef, clientRef),
+        isNull(apiTokens.revokedAt),
+        lte(apiTokens.refreshRotatedAt, new Date(now - REPLAY_TOLERANCE_MS)),
+      ),
+    );
+  return null;
 }
 
 // Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.
@@ -198,6 +234,7 @@ export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> 
       kind: apiTokens.kind,
       clientName: apiTokens.clientName,
       clientHost: apiTokens.clientHost,
+      refreshExpiresAt: apiTokens.refreshExpiresAt,
     })
     .from(apiTokens)
     .innerJoin(members, currentMembership)

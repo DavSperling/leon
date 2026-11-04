@@ -122,6 +122,7 @@ describe('jetons personnels', () => {
         kind: 'manuel',
         clientName: null,
         clientHost: null,
+        refreshExpiresAt: null,
       },
     ]);
   });
@@ -385,7 +386,12 @@ describe('createGrant', () => {
     await createGrant(paul, newGrant({ clientName: 'Claude', clientHost: 'claude.ai' }));
 
     expect(await listApiTokens(paul)).toEqual([
-      expect.objectContaining({ kind: 'assistant', clientName: 'Claude', clientHost: 'claude.ai' }),
+      expect.objectContaining({
+        kind: 'assistant',
+        clientName: 'Claude',
+        clientHost: 'claude.ai',
+        refreshExpiresAt: expect.any(Date), // la page ne montre que les assistants qui peuvent encore se renouveler
+      }),
     ]);
   });
 
@@ -592,6 +598,151 @@ describe('refreshGrant', () => {
     expect(await refreshGrant(`${generateApiToken()} `, 'ref')).toBeNull();
 
     expect(update).not.toHaveBeenCalled();
+  });
+
+  // RFC 9700 §4.14.2 : un jeton de renouvellement déjà changé qu'on présente encore trahit une copie volée. Le client
+  // légitime qui renouvelle deux fois en même temps, lui, se rejoue lui-même : 30 s de tolérance.
+  describe('rejeu d’un jeton de renouvellement', () => {
+    // `grant.refreshToken` est l'ancien jeton ; `renewed.refreshToken`, le courant.
+    async function renewedOnce() {
+      const { paul, input, grant } = await granted();
+      const renewed = await refreshGrant(grant.refreshToken, input.clientRef);
+      if (!renewed) throw new Error('renouvellement refusé');
+      return { paul, input, grant, renewed };
+    }
+    const rotatedAgo = (grantId: string, ms: number) =>
+      adminDb
+        .update(apiTokens)
+        .set({ refreshRotatedAt: new Date(Date.now() - ms) })
+        .where(eq(apiTokens.grantId, grantId));
+
+    it('garde l’ancienne empreinte et l’heure de la rotation ; un branchement neuf n’en a pas', async () => {
+      const { input, grant } = await granted();
+      expect(await grantRow(input.grantId)).toMatchObject({
+        previousRefreshHash: null,
+        refreshRotatedAt: null,
+      });
+      const started = Date.now();
+
+      await refreshGrant(grant.refreshToken, input.clientRef);
+
+      const row = await grantRow(input.grantId);
+      expect(row.previousRefreshHash).toBe(sha256(grant.refreshToken));
+      expect(row.refreshRotatedAt?.getTime()).toBeGreaterThanOrEqual(started);
+      expect(row.refreshRotatedAt?.getTime()).toBeLessThanOrEqual(Date.now());
+    });
+
+    it('au-delà de 30 s, révoque la ligne : l’accès en cours et le renouvellement courant ne valent plus', async () => {
+      const { paul, input, grant, renewed } = await renewedOnce();
+      expect(await verifyApiToken(renewed.accessToken)).not.toBeNull();
+      await rotatedAgo(input.grantId, 31_000);
+
+      expect(await refreshGrant(grant.refreshToken, input.clientRef)).toBeNull();
+
+      const row = await grantRow(input.grantId);
+      expect(row.revokedAt).toBeInstanceOf(Date);
+      expect(await verifyApiToken(renewed.accessToken)).toBeNull();
+      expect(await refreshGrant(renewed.refreshToken, input.clientRef)).toBeNull();
+      expect((await listApiTokens(paul))[0]?.revokedAt).toBeInstanceOf(Date);
+      // Un second rejeu ne déplace pas l'heure de la révocation.
+      expect(await refreshGrant(grant.refreshToken, input.clientRef)).toBeNull();
+      expect((await grantRow(input.grantId)).revokedAt).toEqual(row.revokedAt);
+    });
+
+    it('dans les 30 s, rend null sans rien changer : le nouveau jeton marche', async () => {
+      const { paul, input, grant, renewed } = await renewedOnce();
+      await rotatedAgo(input.grantId, 10_000);
+      const before = await grantRow(input.grantId);
+
+      expect(await refreshGrant(grant.refreshToken, input.clientRef)).toBeNull();
+
+      expect(await grantRow(input.grantId)).toEqual(before);
+      expect(await verifyApiToken(renewed.accessToken)).toEqual({
+        tokenId: before.id,
+        ctx: paul,
+        kind: 'assistant',
+      });
+      expect(await refreshGrant(renewed.refreshToken, input.clientRef)).not.toBeNull();
+    });
+
+    it('un autre client_ref qui présente l’ancienne empreinte ne révoque rien', async () => {
+      const { input, grant, renewed } = await renewedOnce();
+      await rotatedAgo(input.grantId, 31_000);
+      const before = await grantRow(input.grantId);
+
+      expect(
+        await refreshGrant(grant.refreshToken, sha256('https://claude.ai/autre-client')),
+      ).toBeNull();
+
+      expect(await grantRow(input.grantId)).toEqual(before);
+      expect(await verifyApiToken(renewed.accessToken)).not.toBeNull();
+    });
+
+    it('ne révoque pas une ligne que le renouvellement a déjà passée plus loin : seule l’ancienne empreinte compte', async () => {
+      const { input, grant, renewed } = await renewedOnce();
+      const second = await refreshGrant(renewed.refreshToken, input.clientRef);
+      expect(second).not.toBeNull();
+      await rotatedAgo(input.grantId, 31_000);
+
+      // grant.refreshToken date d'avant la dernière rotation : il n'est plus l'« ancienne empreinte ».
+      expect(await refreshGrant(grant.refreshToken, input.clientRef)).toBeNull();
+
+      expect((await grantRow(input.grantId)).revokedAt).toBeNull();
+      expect(await verifyApiToken(second?.accessToken ?? '')).not.toBeNull();
+    });
+
+    it('cinq renouvellements en même temps avec le même jeton : un seul passe, la ligne reste vivante', async () => {
+      const { paul, input, grant } = await granted();
+
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () => refreshGrant(grant.refreshToken, input.clientRef)),
+      );
+
+      const winners = results.filter((result) => result !== null);
+      expect(winners).toHaveLength(1);
+      const row = await grantRow(input.grantId);
+      expect(row.revokedAt).toBeNull();
+      expect(await verifyApiToken(winners[0]?.accessToken ?? '')).toEqual({
+        tokenId: row.id,
+        ctx: paul,
+        kind: 'assistant',
+      });
+    });
+
+    it('cinq rejeux en même temps après 30 s : tous null, la ligne est révoquée', async () => {
+      const { input, grant, renewed } = await renewedOnce();
+      await rotatedAgo(input.grantId, 31_000);
+
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () => refreshGrant(grant.refreshToken, input.clientRef)),
+      );
+
+      expect(results).toEqual([null, null, null, null, null]);
+      expect((await grantRow(input.grantId)).revokedAt).toBeInstanceOf(Date);
+      expect(await verifyApiToken(renewed.accessToken)).toBeNull();
+    });
+
+    it('un rejeu et un renouvellement légitime en même temps : jamais deux jetons vivants et révoqués à la fois', async () => {
+      const { input, grant, renewed } = await renewedOnce();
+      await rotatedAgo(input.grantId, 31_000);
+
+      const [replay, legitimate] = await Promise.all([
+        refreshGrant(grant.refreshToken, input.clientRef),
+        refreshGrant(renewed.refreshToken, input.clientRef),
+      ]);
+
+      expect(replay).toBeNull();
+      const row = await grantRow(input.grantId);
+      if (legitimate) {
+        // Le renouvellement est passé avant : l'ancienne empreinte a changé, le rejeu ne trouve plus rien.
+        expect(row.revokedAt).toBeNull();
+        expect(await verifyApiToken(legitimate.accessToken)).not.toBeNull();
+      } else {
+        // Le rejeu est passé avant : la ligne est révoquée, et le renouvellement qui suivait n'a rien donné.
+        expect(row.revokedAt).toBeInstanceOf(Date);
+        expect(await verifyApiToken(renewed.accessToken)).toBeNull();
+      }
+    });
   });
 
   it('ne touche pas aux jetons manuels ni à ceux des ordinateurs', async () => {

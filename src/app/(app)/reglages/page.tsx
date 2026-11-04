@@ -60,7 +60,11 @@ export default async function SettingsPage() {
   const computers = live
     .filter((token) => token.kind === 'ordinateur')
     .map((token) => ({ ...token, name: token.name.slice(COMPUTER_TOKEN_PREFIX.length) }));
-  const assistants = live.filter((token) => token.kind === 'assistant');
+  // Un assistant dont le renouvellement est échu ne se reconnectera plus : il n'est pas listé.
+  const now = new Date();
+  const assistants = live.filter(
+    (token) => token.kind === 'assistant' && token.refreshExpiresAt && token.refreshExpiresAt > now,
+  );
   const serverUrl = env.BETTER_AUTH_URL;
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
   // l'utilisateur, qui le colle lui-même.

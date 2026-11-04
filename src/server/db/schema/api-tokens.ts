@@ -27,4 +27,6 @@ export const apiTokens = pgTable('api_tokens', {
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   refreshHash: text('refresh_hash').unique(),
   refreshExpiresAt: timestamp('refresh_expires_at', { withTimezone: true }),
+  previousRefreshHash: text('previous_refresh_hash').unique(),
+  refreshRotatedAt: timestamp('refresh_rotated_at', { withTimezone: true }),
 });

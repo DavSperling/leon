@@ -29,7 +29,8 @@ import type { ApiTokenRow } from '@/server/auth/api-tokens';
 import { CreateTokenContent } from './create-token';
 import { SECTION } from './reglages';
 
-export type Token = Omit<ApiTokenRow, 'revokedAt'>;
+// Ce que les sections dessinent : ni la révocation ni l'échéance du renouvellement, que la page a déjà jugées.
+export type Token = Omit<ApiTokenRow, 'revokedAt' | 'refreshExpiresAt'>;
 
 /** Section « Jetons personnels » : la liste (jetons non révoqués, lus par la page), la création et la révocation. */
 export function TokensSection({ tokens }: { tokens: Token[] }) {

@@ -41,7 +41,8 @@ describe('colonnes de api_tokens', () => {
     const id = await insertLegacyRow('Mon jeton');
 
     const { rows } = await adminPool.query(
-      `select kind, client_name, client_host, client_ref, grant_id, expires_at, refresh_hash, refresh_expires_at
+      `select kind, client_name, client_host, client_ref, grant_id, expires_at, refresh_hash, refresh_expires_at,
+             previous_refresh_hash, refresh_rotated_at
          from api_tokens where id = $1`,
       [id],
     );
@@ -56,6 +57,8 @@ describe('colonnes de api_tokens', () => {
         expires_at: null,
         refresh_hash: null,
         refresh_expires_at: null,
+        previous_refresh_hash: null,
+        refresh_rotated_at: null,
       },
     ]);
   });
@@ -70,7 +73,7 @@ describe('colonnes de api_tokens', () => {
     ).rejects.toMatchObject({ code: '23514' });
   });
 
-  it.each(['grant_id', 'refresh_hash'])(
+  it.each(['grant_id', 'refresh_hash', 'previous_refresh_hash'])(
     'refuse deux lignes avec le même %s (un code ne sert qu’une fois)',
     async (column) => {
       const value = hash();

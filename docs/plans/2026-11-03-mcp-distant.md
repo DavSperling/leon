@@ -57,8 +57,8 @@ Total : un peu plus de 4 jours.
 - **Documents CIMD :** lus en HTTPS chez les hôtes de L11 seulement, sans suivre de redirection, 5 s et 16 Ko au plus ; gardés en mémoire selon leur `Cache-Control`, une heure au plus, une minute sans en-tête.
 - **`code_verifier` :** 43 à 128 caractères `[A-Za-z0-9._~-]` (RFC 7636) ; `code_challenge` : 43 caractères base64url.
 - **Inscription d'un client :** 4 Ko d'entrée au plus ; 1 à 5 adresses de retour de 512 caractères au plus ; nom de 1 à 80 caractères après retrait des caractères de contrôle, sinon « MCP client ».
-- **Route des jetons :** 4 Ko d'entrée au plus.
-- **Limites par adresse IP** sur l'inscription et la route des jetons, par `authAttemptAllowed` (deux entrées de plus dans `AUTH_LIMITS`).
+- **Route des jetons :** 8 Ko d'entrée au plus (un `client_id` signé au maximum légal fait environ 3,7 Ko à lui seul).
+- **Pas de limite par adresse IP** sur l'inscription ni sur la route des jetons : claude.ai et ChatGPT appellent depuis les adresses d'Anthropic et d'OpenAI, partagées par tous leurs utilisateurs. Les deux routes ne stockent rien et leurs secrets ne se devinent pas ; les plafonds de taille restent.
 - **Un appel MCP** ne fait pas plus de requêtes qu'aujourd'hui : `verifyApiToken` lit déjà la ligne du jeton.
 - **Adresses :** l'émetteur est `BETTER_AUTH_URL` sans barre finale ; la ressource est `<BETTER_AUTH_URL>/api/mcp`, exactement.
 
@@ -78,7 +78,8 @@ Amos a tranché B1 à B7 le 03/11 (voir « Questions tranchées »).
 - **F10. Deux pages d'autorisation sur le même modèle (B3).** `/ordinateur/autoriser` (lot 1 de la CLI) ne change pas ; `/oauth/autoriser` en reprend la forme et le retour après connexion, et montre toujours l'hôte de retour.
 - **F11. Le serveur MCP garde les deux époques du protocole** : `createMcpHandler` sans option `legacy` (son défaut, `'stateless'`), jamais `legacy: 'reject'`.
 - **F12. L'extension ne change pas (B6).** Elle capte les conversations de claude.ai et de ChatGPT comme aujourd'hui, même quand l'assistant a lu Leon : Leon est du B2B, la boîte reliée est celle du travail.
-- **F13. Hors de ce chantier :** la révocation demandée par le client (RFC 7009) ; OpenID Connect et `/.well-known/openid-configuration` ; les jetons liés (DPoP) ; des périmètres plus fins ; un outil nouveau ; l'onboarding ; le choix de l'espace sur la page (c'est l'espace actif de la session).
+- **F13. Pas d'en-têtes CORS en v1** : les clients de L11 appellent depuis leurs serveurs ou une application de bureau. À revoir si un client de navigateur (VS Code web) échoue à M07.
+- **F14. Hors de ce chantier :** la révocation demandée par le client (RFC 7009) ; OpenID Connect et `/.well-known/openid-configuration` ; les jetons liés (DPoP) ; des périmètres plus fins ; un outil nouveau ; l'onboarding ; le choix de l'espace sur la page (c'est l'espace actif de la session).
 
 ## Contrats partagés
 
@@ -139,7 +140,7 @@ Claude ne passe par CIMD que si le document annonce à la fois `client_id_metada
 **L6. La page d'autorisation** : `GET /oauth/autoriser?response_type=code&client_id=…&redirect_uri=…&state=…&code_challenge=…&code_challenge_method=S256&scope=leon&resource=…`.
 
 Dans cet ordre :
-1. `client_id` (L5 ou L10) et `redirect_uri` sont vérifiés d'abord. `redirect_uri` doit être l'une des adresses de l'inscription ou du document, caractère par caractère ; pour une adresse de bouclage (`http://127.0.0.1:<port>/…` ou `http://localhost:<port>/…`), seul le port peut différer (RFC 8252 §7.3). Si `redirect_uri` manque et que l'inscription n'en a qu'une, c'est elle. Un échec ici affiche une erreur, **sans rediriger** (RFC 6749 §4.1.2.1).
+1. `client_id` (L5 ou L10) et `redirect_uri` sont vérifiés d'abord. `redirect_uri` doit être l'une des adresses de l'inscription ou du document, caractère par caractère ; pour une adresse de bouclage (`http://127.0.0.1[:<port>]/…` ou `http://localhost[:<port>]/…`), seul le port peut différer, y compris absent d'un côté (RFC 8252 §7.3). Si `redirect_uri` manque et que l'inscription n'en a qu'une, c'est elle. Un échec ici affiche une erreur, **sans rediriger** (RFC 6749 §4.1.2.1).
 2. Ensuite, toute erreur renvoie vers `redirect_uri` avec `error`, `state` et `iss` : `unsupported_response_type` (autre que `code`), `invalid_request` (`code_challenge` absent ou mal formé, méthode autre que `S256`, `state` de plus de 512 caractères), `invalid_scope` (autre chose que `leon`, ou vide, qui vaut `leon`), `invalid_target` (un `resource` autre que la ressource de L1).
 3. Sans session : `/connexion`, puis retour sur la même page, comme `/ordinateur/autoriser` (lot 1 de la CLI) ; sans espace, `/bienvenue`.
 4. La page dit : « Autoriser <nom du client> à lire votre mémoire Leon dans l'espace <espace> ? », puis, en évidence, « Vous serez renvoyé vers <hôte de retour> », la liste de ce que l'assistant pourra faire (chercher, lire, le point du matin, garder une note), et l'avertissement « Si vous n'êtes pas en train de brancher un assistant vous-même, refusez. » Le nom vient du document CIMD, ou de l'inscription (alors « nom déclaré »).
@@ -149,7 +150,7 @@ La page n'est jamais affichée dans un cadre (`frame-ancestors 'none'`, déjà d
 
 **L7. Le code d'autorisation** : `signPayload('oauth-code', charge)` (M02), avec la charge `{ "v": 1, "j": <16 octets aléatoires, base64url>, "c": <SHA-256 du client_id, hex>, "r": <redirect_uri exacte>, "p": <code_challenge>, "u": <userId>, "t": <tenantId>, "x": <expiration, secondes epoch> }`, expiration à 2 minutes. `j` devient `grant_id` : l'usage unique tient à son unicité en base.
 
-**L8. `POST /api/oauth/jeton`** (`application/x-www-form-urlencoded`, 4 Ko au plus ; pas d'en-tête `Authorization` attendu : clients publics).
+**L8. `POST /api/oauth/jeton`** (`application/x-www-form-urlencoded`, 8 Ko au plus ; pas d'en-tête `Authorization` attendu : clients publics).
 
 - `grant_type=authorization_code` avec `code`, `redirect_uri`, `client_id`, `code_verifier` :
   - vérifie L7, puis SHA-256(`client_id`) = `c`, `redirect_uri` = `r`, base64url(SHA-256(`code_verifier`)) = `p` en temps constant, puis l'adhésion en cours de `u` à `t` (`resolveTenantContext`) ;
@@ -189,12 +190,12 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 | Claude (claude.ai, Desktop, mobile) | `https://claude.ai/api/mcp/auth_callback`, exactement |
 | ChatGPT | `https://chatgpt.com/connector_platform_oauth_redirect`, exactement ; ou `https://chatgpt.com/connector/oauth/<id>`, où `<id>` est un seul segment `[A-Za-z0-9_-]{1,128}` |
 | Cursor (web) | `https://www.cursor.com/agents/mcp/oauth/callback`, exactement |
-| VS Code (web) | `https://vscode.dev/redirect`, exactement |
+| VS Code | `https://vscode.dev/redirect` et `https://insiders.vscode.dev/redirect`, exactement |
 | Antigravity | `https://antigravity.google/oauth-callback`, exactement |
-| Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) | `http://127.0.0.1:<port>/<chemin>`, `http://localhost:<port>/<chemin>` |
+| Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) | `http://127.0.0.1[:<port>]/<chemin>`, `http://localhost[:<port>]/<chemin>` (le document CIMD de Claude Code annonce `http://localhost/callback`, sans port) |
 
 - « exactement » : schéma, hôte, port (443), chemin, sans requête ni fragment, comparés caractère par caractère ;
-- le bouclage : `http` seulement, port et chemin quelconques (le code n'y arrive que sur l'ordinateur de la victime), ni identifiant ni mot de passe dans l'adresse, pas de fragment ;
+- le bouclage : `http` seulement, port facultatif et quelconque, chemin quelconque (le code n'y arrive que sur l'ordinateur de la victime), ni identifiant ni mot de passe dans l'adresse, pas de fragment ; une adresse s'écrit sous sa forme canonique (`new URL(v).href === v`) ;
 - aucun autre schéma (`javascript:`, `data:`, schémas d'application) ;
 - un document CIMD (L10) n'est lu que chez les hôtes de cette table ;
 - une adresse de plus, c'est une ligne de cette constante, recopiée de la documentation du client, et son essai réel (M07). Le format de `<id>` chez ChatGPT se vérifie à M07.

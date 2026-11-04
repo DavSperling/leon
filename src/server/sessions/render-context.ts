@@ -16,9 +16,9 @@ import {
 // Le bloc de démarrage (C4 du plan mémoire des sessions), en `max` octets UTF-8 au plus : mes sessions (3 500 octets
 // au plus), puis l'équipe sur ce dépôt (10 lignes, 700 octets, T14), puis le point du matin, qui garde le reste. Il
 // entre tout seul dans le contexte de l'outil, qui peut lancer des commandes : chaque fait capté ou relevé sur GitHub
-// est mis sur une ligne, échappé (prompt-guard.ts), puis placé dans le bloc balisé, et rien ne peut fermer la balise. Le point du matin, déjà échappé par renderBriefing, ne l'est pas deux
-// fois : il est seulement coupé à une ligne entière. Les octets, pas les caractères : Codex compte en octets
-// (vigilance 1). Module pur : ni base, ni réseau.
+// est mis sur une ligne, échappé (prompt-guard.ts), puis placé dans le bloc balisé, et rien ne peut fermer la balise.
+// Le point du matin, déjà échappé par renderBriefing, ne l'est pas deux fois : il est seulement coupé à une ligne
+// entière. Les octets, pas les caractères : Codex compte en octets (vigilance 1). Module pur : ni base, ni réseau.
 
 export const SESSIONS_BYTES_MAX = 3500;
 const TEAM_BYTES_MAX = 700;

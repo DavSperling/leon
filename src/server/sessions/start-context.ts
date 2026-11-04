@@ -3,7 +3,7 @@ import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
 
 // « Mes sessions » du bloc de démarrage (T04, D7 du plan mémoire des sessions) : un périmètre, pas un sujet. Les
@@ -12,8 +12,9 @@ import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql
 // Le graphe (D5) s'arrête à une jointure : une PR des faits est reliée à sa source GitHub par sa clé exacte, ou à
 // défaut par la branche, et en garde le lien et l'état (T14, les clés d'origine de T13). Son titre, écrit par
 // n'importe qui sur GitHub, n'est gardé que s'il est du lecteur.
-// « L'équipe sur ce dépôt » (T14, décision E) : les PR récentes de l'équipe, lues de la même façon, sans aucun appel
-// à GitHub, et seulement pour un lecteur dont la propre relève GitHub vient de lire ce dépôt d'équipe (D14).
+// « L'équipe sur ce dépôt » (T14, décision E) : les PR récentes de l'équipe, lues de la même façon et dans la même
+// transaction, sans aucun appel à GitHub, et seulement pour un lecteur dont la propre relève GitHub vient de lire ce
+// dépôt d'équipe (D14).
 
 // Contraintes globales du plan : 4 sessions au plus, sur 7 jours ; 10 lignes d'équipe, fusionnées depuis 72 h ou
 // ouvertes et modifiées depuis 30 jours ; un dépôt confirmé depuis moins de 24 h.
@@ -108,10 +109,10 @@ function prInfo(row: PrRow): PrInfo {
   };
 }
 
-export async function readStartSessions(
+export async function readStartContext(
   ctx: TenantContext,
   input: { projet: string; branche: string | null; session: string },
-): Promise<StartSession[]> {
+): Promise<{ sessions: StartSession[]; equipe: TeamPr[] }> {
   return withTenant(ctx, async (tx) => {
     // `owner_user_id` en plus de la sécurité par ligne : la session d'un collègue partagée avec le lecteur n'est
     // pas « mes sessions ».
@@ -183,9 +184,10 @@ export async function readStartSessions(
           byBranch.set(pr.branche, { repo, numero: numberOf(pr.key), ...prInfo(pr) });
       }
     }
-    return sessions.map(({ faits, ...session }) => {
+    const start = sessions.map(({ faits, ...session }) => {
       if (!faits) return { ...session, faits: null };
-      const linked = faits.branche ? byBranch.get(faits.branche) : undefined;
+      const linked =
+        faits.prs.length === 0 && faits.branche ? byBranch.get(faits.branche) : undefined;
       const prs = linked
         ? [{ par: 'branche' as const, ...linked }]
         : faits.prs.map((pr) => ({
@@ -208,57 +210,58 @@ export async function readStartSessions(
         },
       };
     });
+    return { sessions: start, equipe: await readTeamPrs(tx, ctx, input) };
   });
 }
 
 // L'équipe sur ce dépôt : rien hors d'un dépôt d'équipe, ni pour un lecteur dont la propre connexion GitHub, active,
 // n'a pas lu ce dépôt depuis moins de 24 h (`depots_confirmes`, T11) ; sa relève a alors vérifié sa permission. Une
-// seule lecture SQL sous RLS. Le membre est le nom de celui dont une connexion GitHub porte le login de l'auteur.
-export async function readTeamPrs(
+// seule lecture SQL sous RLS, dans la transaction de mes sessions : les deux tiennent une seule connexion du pool.
+// Le membre est le nom de celui dont une connexion GitHub porte le login de l'auteur.
+async function readTeamPrs(
+  tx: Tx,
   ctx: TenantContext,
   input: { projet: string },
 ): Promise<TeamPr[]> {
   const repo = repoOf(input.projet);
   if (!repo) return [];
-  return withTenant(ctx, async (tx) => {
-    const { rows } = await tx.execute<TeamRow>(sql`
-      select p.key, p.origin->>'etat' as etat,
-        case when p.origin->>'etat' = 'merged' then p.origin->>'fini_le' else p.updated end as quand,
-        coalesce((
-          select u.name from connections c
-          join member m on m."userId" = c.created_by and m."organizationId" = c.tenant_id
-          join "user" u on u.id = c.created_by
-          where c.tenant_id = ${ctx.tenantId} and c.provider = ${GITHUB}
-            and lower(c.label) = lower(p.origin->>'auteur')
-          order by c.created_at, c.id limit 1), p.origin->>'auteur') as membre,
-        p.origin->>'branche' as branche, coalesce(p.origin->>'brouillon' = 'oui', false) as brouillon,
-        p.origin->>'ferme' as ferme
-      from (
-        -- La copie la plus récente d'abord, filtrée ensuite : une copie ancienne ne fait pas revenir un état passé.
-        select distinct on (lower(s.external_id)) lower(s.external_id) as key, s.metadata->'origin' as origin,
-          s.metadata->>'updatedAt' as updated
-        from sources s
-        where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
-          and lower(s.metadata->'origin'->>'repo') = ${repo} and s.external_id like 'pr:%'
-        order by lower(s.external_id), ${LATEST_COPY}
-      ) p
-      where exists (
-          select 1 from depots_equipe d where d.tenant_id = ${ctx.tenantId} and d.project = ${input.projet})
-        and exists (
-          select 1 from connections c
-          cross join lateral jsonb_array_elements(case when jsonb_typeof(c.config->'depots_confirmes') = 'array'
-            then c.config->'depots_confirmes' else '[]'::jsonb end) e
-          where c.tenant_id = ${ctx.tenantId} and c.created_by = ${ctx.userId} and c.provider = ${GITHUB}
-            and c.status = 'active' and lower(e->>'depot') = lower(${input.projet})
-            and e->>'confirme_le' >= ${isoAgo(CONFIRMED_MS)})
-        and p.origin->>'cote' = 'equipe'
-        and ((p.origin->>'etat' = 'merged' and p.origin->>'fini_le' >= ${isoAgo(TEAM_MERGED_MS)})
-          or (p.origin->>'etat' = 'open' and p.updated >= ${isoAgo(TEAM_OPEN_MS)}))
-      order by p.origin->>'etat' = 'merged' desc, quand desc, p.key
-      limit ${TEAM_LINES_MAX}`);
-    return rows.flatMap(({ key, quand, ...row }) => {
-      const at = Date.parse(quand);
-      return Number.isNaN(at) ? [] : [{ ...row, numero: numberOf(key), date: new Date(at) }];
-    });
+  const { rows } = await tx.execute<TeamRow>(sql`
+    select p.key, p.origin->>'etat' as etat,
+      case when p.origin->>'etat' = 'merged' then p.origin->>'fini_le' else p.updated end as quand,
+      coalesce((
+        select u.name from connections c
+        join member m on m."userId" = c.created_by and m."organizationId" = c.tenant_id
+        join "user" u on u.id = c.created_by
+        where c.tenant_id = ${ctx.tenantId} and c.provider = ${GITHUB}
+          and lower(c.label) = lower(p.origin->>'auteur')
+        order by c.created_at, c.id limit 1), p.origin->>'auteur') as membre,
+      p.origin->>'branche' as branche, coalesce(p.origin->>'brouillon' = 'oui', false) as brouillon,
+      p.origin->>'ferme' as ferme
+    from (
+      -- La copie la plus récente d'abord, filtrée ensuite : une copie ancienne ne fait pas revenir un état passé.
+      select distinct on (lower(s.external_id)) lower(s.external_id) as key, s.metadata->'origin' as origin,
+        s.metadata->>'updatedAt' as updated
+      from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
+        and lower(s.metadata->'origin'->>'repo') = ${repo} and s.external_id like 'pr:%'
+      order by lower(s.external_id), ${LATEST_COPY}
+    ) p
+    where exists (
+        select 1 from depots_equipe d where d.tenant_id = ${ctx.tenantId} and d.project = ${input.projet})
+      and exists (
+        select 1 from connections c
+        cross join lateral jsonb_array_elements(case when jsonb_typeof(c.config->'depots_confirmes') = 'array'
+          then c.config->'depots_confirmes' else '[]'::jsonb end) e
+        where c.tenant_id = ${ctx.tenantId} and c.created_by = ${ctx.userId} and c.provider = ${GITHUB}
+          and c.status = 'active' and lower(e->>'depot') = lower(${input.projet})
+          and e->>'confirme_le' >= ${isoAgo(CONFIRMED_MS)})
+      and p.origin->>'cote' = 'equipe'
+      and ((p.origin->>'etat' = 'merged' and p.origin->>'fini_le' >= ${isoAgo(TEAM_MERGED_MS)})
+        or (p.origin->>'etat' = 'open' and p.updated >= ${isoAgo(TEAM_OPEN_MS)}))
+    order by p.origin->>'etat' = 'merged' desc, quand desc, p.key
+    limit ${TEAM_LINES_MAX}`);
+  return rows.flatMap(({ key, quand, ...row }) => {
+    const at = Date.parse(quand);
+    return Number.isNaN(at) ? [] : [{ ...row, numero: numberOf(key), date: new Date(at) }];
   });
 }

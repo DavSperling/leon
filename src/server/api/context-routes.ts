@@ -9,7 +9,7 @@ import { briefingResponse } from '@/server/briefing/briefings';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { renderContext } from '@/server/sessions/render-context';
-import { readStartSessions, readTeamPrs } from '@/server/sessions/start-context';
+import { readStartContext } from '@/server/sessions/start-context';
 import { type ApiEnv, requireApiToken } from './require-api-token';
 
 // Le bloc de démarrage (C3), lu par le crochet de démarrage de chaque outil : mes dernières sessions sur ce dépôt,
@@ -28,10 +28,9 @@ export const contextRoutes = new Hono<ApiEnv>().post(
     // Sans les valeurs reçues : une adresse de remote peut porter un jeton.
     if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
     const { projet, branche, session, max } = parsed.data;
-    // Trois transactions indépendantes, en parallèle : le point du matin ouvre la sienne.
-    const [sessions, equipe, briefing] = await Promise.all([
-      readStartSessions(c.var.ctx, { projet, branche, session }),
-      readTeamPrs(c.var.ctx, { projet }),
+    // Deux transactions indépendantes, en parallèle : le point du matin ouvre la sienne.
+    const [{ sessions, equipe }, briefing] = await Promise.all([
+      readStartContext(c.var.ctx, { projet, branche, session }),
       briefingResponse(c.var.ctx, projet, { modelReady: getLlm(env) !== null }),
     ]);
     return c.json({

@@ -9,7 +9,7 @@ import { sources } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { renderContext } from './render-context';
-import { readStartSessions, readTeamPrs } from './start-context';
+import { readStartContext } from './start-context';
 
 const PROJECT = 'github.com/acme/leon';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -145,20 +145,16 @@ const seedTeamRepo = (owner: TenantContext, project = PROJECT) =>
     choisiPar: owner.userId,
   });
 
-const read = (reader: TenantContext, branche: string | null = 'paul/contexte') =>
-  readStartSessions(reader, { projet: PROJECT, branche, session: 'session-courante' });
+const readBoth = (reader: TenantContext, branche: string | null = 'paul/contexte') =>
+  readStartContext(reader, { projet: PROJECT, branche, session: 'session-courante' });
+const read = async (reader: TenantContext, branche?: string | null) =>
+  (await readBoth(reader, branche)).sessions;
 const render = async (reader: TenantContext) =>
-  renderContext({
-    project: PROJECT,
-    sessions: await read(reader),
-    equipe: await readTeamPrs(reader, { projet: PROJECT }),
-    briefing: '',
-    max: 8000,
-  });
+  renderContext({ project: PROJECT, ...(await readBoth(reader)), briefing: '', max: 8000 });
 const branches = (sessions: Awaited<ReturnType<typeof read>>) =>
   sessions.map((session) => session.faits?.branche);
 
-describe('readStartSessions', () => {
+describe('readStartContext', () => {
   it('exclut la session d’un collègue, même quand son ACL contient le lecteur', async () => {
     const { paul, marie } = await setup();
     await seedSession(paul, { faits: facts({ branche: 'paul/a' }) });
@@ -398,6 +394,31 @@ describe('readStartSessions', () => {
     );
   });
 
+  it('deux sessions sur une branche : celle qui a un lien exact garde ses PR, l’autre prend celle de la branche', async () => {
+    const { paul, marie } = await setup();
+    await teamPr(marie, 110, { etat: 'open', branche: 'paul/x' }, daysAgo(1));
+    await teamPr(marie, 150, { etat: 'open', branche: 'paul/x' });
+    await seedSession(paul, {
+      faits: facts({
+        branche: 'paul/x',
+        prs: [
+          { repo: 'acme/leon', numero: 110, par: 'gh-pr-create' },
+          { repo: 'acme/autre', numero: 7, par: 'pr-link' },
+        ],
+      }),
+      lastTurnAt: daysAgo(1),
+    });
+    await seedSession(paul, { faits: facts({ branche: 'paul/x' }), lastTurnAt: daysAgo(2) });
+
+    const sessions = await read(paul);
+
+    expect(
+      sessions.map((session) =>
+        session.faits?.prs.map((pr) => `${pr.par} ${pr.repo}#${pr.numero}`),
+      ),
+    ).toEqual([['gh-pr-create acme/leon#110', 'pr-link acme/autre#7'], ['branche acme/leon#150']]);
+  });
+
   it('PR fusionnée après la session : son reste à faire est « peut-être périmé »', async () => {
     const { paul, marie } = await setup();
     await teamPr(marie, 140, { etat: 'merged', fini_le: daysAgo(1).toISOString() });
@@ -476,7 +497,7 @@ describe('readStartSessions', () => {
     ])('pas de section %s', async (_cas, change) => {
       const { paul } = await teamSetup(change);
 
-      expect(await readTeamPrs(paul, { projet: PROJECT })).toEqual([]);
+      expect((await readBoth(paul)).equipe).toEqual([]);
       expect(await render(paul)).toBe('');
     });
 

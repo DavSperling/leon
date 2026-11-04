@@ -4,6 +4,7 @@ import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import en from '../../../messages/en.json';
 import fr from '../../../messages/fr.json';
 import { claudeCodeInstructions, installCommand, serverAddress } from './install-command';
+import { installerScript } from './installer-script';
 
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
@@ -91,22 +92,57 @@ describe('claudeCodeInstructions', () => {
     },
   );
 
-  // Les quatre consignes de la demande d'Amos, dans les deux langues. Le bouton à cliquer s'appelle comme celui de la
-  // page d'autorisation de Leon.
+  // Les consignes de la demande d'Amos, dans les deux langues. Le bouton à cliquer s'appelle comme celui de la page
+  // d'autorisation de Leon.
   it.each([
-    ['en', en.computer.authorize.allow, 'sandbox', 'explicit agreement'],
-    ['fr', fr.computer.authorize.allow, 'bac à sable', 'accord explicite'],
+    ['en', en.computer.authorize.allow, 'sandbox', 'explicit agreement', 'as is'],
+    ['fr', fr.computer.authorize.allow, 'bac à sable', 'accord explicite', 'tel quel'],
   ] as const)(
     'dit à Claude Code ce qu’il doit faire et demander (%s)',
-    (locale, allow, sandbox, agreement) => {
+    (locale, allow, sandbox, agreement, verbatim) => {
       const text = claudeCodeInstructions(translator(locale), 'https://leon.example') ?? '';
 
       expect(text).toContain('setup --url');
       expect(text).toContain('--yes');
       expect(text).toContain(agreement);
+      expect(text).toContain(verbatim);
       expect(text).toContain('127.0.0.1');
       expect(text).toContain(sandbox);
       expect(text).toMatch(new RegExp(`[“«] ?${allow} ?[”»]`));
+      // Le clic attend 5 minutes, l'outil de Claude Code coupe à 2 : la consigne le dit et demande un délai plus long.
+      expect(text).toContain('5 minutes');
+      expect(text).toContain('2 minutes');
+      // Les deux premiers obstacles de la sandbox : ~/.leon et nodejs.org (le script y écrit et y télécharge).
+      expect(text).toContain('~/.leon');
+      expect(text).toContain('nodejs.org');
+    },
+  );
+
+  // La consigne cite le message que le script d'installation écrit sans terminal, et la fin de la commande qu'il
+  // affiche : ce que Claude Code reconnaît dans la sortie du script doit y être, mot pour mot.
+  it.each(['en', 'fr'] as const)(
+    'cite les mots que le script d’installation écrit sans terminal (%s)',
+    (locale) => {
+      const script = installerScript('https://leon.example', {
+        version: '0123456789ab',
+        sha256: 'a'.repeat(64),
+        taille: 1000,
+        node: {
+          version: '24.0.0',
+          plateformes: {
+            'darwin-arm64': 'b'.repeat(64),
+            'darwin-x64': 'c'.repeat(64),
+            'linux-x64': 'd'.repeat(64),
+            'linux-arm64': 'e'.repeat(64),
+          },
+        },
+      });
+      const text = claudeCodeInstructions(translator(locale), 'https://leon.example') ?? '';
+
+      for (const words of ['No terminal is available to ask you questions', 'setup --url']) {
+        expect(script, words).toContain(words);
+        expect(text, words).toContain(words);
+      }
     },
   );
 

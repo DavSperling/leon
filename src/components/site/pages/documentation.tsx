@@ -232,6 +232,8 @@ export function DocumentationPage({
               {p('problems.platform.text')}
               <h3 className={SUBTITLE}>{nb(t('problems.revoked.title'))}</h3>
               {p('problems.revoked.text')}
+              <h3 className={SUBTITLE}>{nb(t('problems.interrupted.title'))}</h3>
+              {p('problems.interrupted.text')}
             </DocSection>
 
             <DocSection id="clone" title={t('clone.title')}>

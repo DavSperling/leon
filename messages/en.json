@@ -1220,7 +1220,7 @@
       "requirements": {
         "title": "What you need",
         "lead": "Four things, on the computer you want to connect.",
-        "system": "A Mac (Apple silicon or Intel), or a Linux on x64 or arm64 with glibc (Debian, Ubuntu, Fedora…). Windows and Alpine are not supported yet: the command stops before it writes anything.",
+        "system": "A Mac (Apple silicon or Intel), or a Linux on x64 or arm64 with glibc (Debian, Ubuntu, Fedora…). Windows, Alpine and the other Linux systems with musl are not supported: the command stops before it writes anything.",
         "utilities": "<code>curl</code> and <code>tar</code> (on Linux, <code>xz</code> too).",
         "claude": "Claude Code, installed on this computer. It is the only coding tool connected for now: <code>leon setup</code> recognizes Codex, Cursor and Gemini / Antigravity, answers “not supported yet” and writes nothing there.",
         "account": "A Leon account. You sign in in your browser when you authorize the computer."
@@ -1231,10 +1231,10 @@
         "instructionsTitle": "What the instructions say",
         "askTitle": "What Claude Code will ask you",
         "ask1": "Its permission to run the install command.",
-        "ask2": "Probably also to run it outside its sandbox: signing in opens your browser and listens on 127.0.0.1 (your own computer only), which a sandbox may forbid.",
-        "ask3": "Your agreement before it finishes the setup with the <code>--yes</code> option. It must first show you what will be sent (see “What is sent”). Without your explicit agreement, it does not run it.",
-        "ask4": "A click on “Authorize” in your browser, which Claude Code tells you to make.",
-        "end": "At the end, it tells you which coding tools are connected and which Leon account the computer is connected to. The instructions forbid it to ask for, read or show a token.",
+        "ask2": "Probably also to run it outside its sandbox (the isolated zone where it runs its commands), which may forbid writing in <code>~/.leon</code>, downloading from nodejs.org, opening your browser or listening on 127.0.0.1 (your own computer only), which signing in does.",
+        "ask3": "Your agreement before it finishes the setup with the <code>--yes</code> option. It must first copy to you, as is and without summarizing, what will be sent (see “What is sent”). Without your explicit agreement, it does not run it.",
+        "ask4": "A click on “Authorize” in your browser. Claude Code warns you before it runs the command, which waits for that click for 5 minutes at most, and reminds you that it ran it for you.",
+        "end": "At the end, it tells you which coding tools are connected and which Leon account the computer is connected to. The instructions forbid it from asking for, reading or showing a token.",
         "unavailable": "The address of this Leon is not one the install command accepts, so the button is not offered here. The commands below show the address to replace."
       },
       "terminal": {
@@ -1242,39 +1242,39 @@
         "lead": "Open a terminal on the computer you want to connect and paste this command.",
         "leadGeneric": "Open a terminal on the computer you want to connect and paste this command, with the address of your Leon in place of the one shown.",
         "doesTitle": "The command:",
-        "step1": "downloads the official Node of the version Leon pinned and Leon’s command line (a single file, served by Leon), checks their SHA-256 and puts them in <code>~/.leon</code>;",
-        "step2": "runs <code>leon setup</code>: it writes the launcher <code>~/.leon/bin/leon</code>, connects the computer (see “Authorize the computer”), looks for your coding tools, shows you what will be sent, asks for your agreement, then sets up the Claude Code hooks.",
+        "step1": "downloads the official Node of the version Leon pinned and Leon’s command-line tool (a single file, served by Leon), checks their SHA-256 and puts them in <code>~/.leon</code>;",
+        "step2": "runs <code>leon setup</code>: it writes the launcher <code>~/.leon/bin/leon</code>, connects the computer (see “Authorize the computer”), looks for your coding tools, shows you what will be sent, asks for your agreement, then sets up the Claude Code hooks (small programs that Claude Code runs at the start and at the end of each session).",
         "scope": "It writes only in <code>~/.leon</code>, plus the settings of your coding tools after you agree: nothing in your <code>PATH</code>, nothing in your shell profile. The commands below are therefore written with the full path, <code>~/.leon/bin/leon</code>.",
-        "again": "You can run it again at any time: what is already in place is not rewritten, and the command line is brought to the version Leon serves."
+        "again": "You can run it again at any time: what is already in place is not rewritten, and the command-line tool is brought to the version Leon serves."
       },
       "authorize": {
         "title": "Authorize the computer",
-        "p1": "Your browser opens on a Leon page. Sign in if needed: the page then asks “Authorize this computer to send your coding sessions to Leon, in the … workspace?”. Click “Authorize” only if you just ran the command yourself; otherwise click “Cancel”.",
+        "p1": "Your browser opens on a Leon page. Sign in if needed: the page then asks “Authorize this computer to send your coding sessions to Leon, in the … workspace?”. Click “Authorize” only if you just ran the command, yourself or by asking Claude Code to; otherwise click “Cancel”.",
         "p2": "If the browser does not open, the command prints the address to open. It waits 5 minutes at most; Ctrl+C cancels without writing anything.",
-        "p3": "Once the computer is authorized, the command shows the workspace and the account it is connected to (“Connected to … as …”) and keeps the connection in <code>~/.leon/connexion.json</code>, readable by your user only. The token is created on your computer: the browser only sees its fingerprint.",
+        "p3": "Once the computer is authorized, the command shows the workspace and the account it is connected to (“Connected to … as …”) and keeps the connection in <code>~/.leon/connexion.json</code>, readable only by your account on the computer. The token is created on your computer: the browser only sees its fingerprint.",
         "sharedTitle": "A shared computer",
         "shared": "On a computer where several accounts are open at the same time, the other accounts can read the authorization address (on Linux, in <code>/proc</code>), and one of them could authorize it with their own Leon account: your token would then be registered on theirs. So check the account the command shows; if it is not yours, run <code>~/.leon/bin/leon logout</code>. Or use <code>~/.leon/bin/leon login --with-token</code>, which relies on a token created in Settings instead of that address."
       },
       "sent": {
         "title": "What is sent",
-        "lead": "In short, the text <code>leon setup</code> shows you before it writes anything. That text, in your terminal, is what you agree to.",
+        "lead": "In short, the text <code>leon setup</code> shows you before it sets up the hooks (nothing is written in the Claude Code settings before you agree). That is the text you accept, in the terminal or, with Claude Code, by telling it to use <code>--yes</code>.",
         "where": "The hooks go in your personal Claude Code settings: they run in all your sessions, in all your folders, personal ones included. A session started by a script (<code>claude -p</code>) runs them too, except with <code>--bare</code>, which loads no hooks.",
         "end": "At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude’s answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as <code>git</code>, <code>gh</code>, <code>pnpm</code> or <code>docker</code>; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
         "secrets": "Secrets are masked before sending, and again by the server.",
         "start": "At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project’s morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code’s model.",
-        "server": "The hooks contact the server of the connection made by <code>leon login</code>."
+        "server": "The hooks contact the server of the connection made by <code>leon login</code>, unless <code>LEON_URL</code> and <code>LEON_TOKEN</code> are both set (a developer setup): those come first."
       },
       "updates": {
         "title": "Updates",
-        "auto": "Leon’s command line updates itself, at most once a day, when a session starts, from the server of your connection, and only over https. A local Leon (<code>http://localhost</code>) is updated by hand: <code>~/.leon/bin/leon update</code>. An update touches neither your connection, nor your agreement, nor the launcher, nor the hooks.",
+        "auto": "Leon’s command-line tool updates itself, at most once a day, when a session starts, from the server of your connection, and only over https. A local Leon (<code>http://localhost</code>) is updated by hand: <code>~/.leon/bin/leon update</code>. An update touches neither your connection, nor your agreement, nor the launcher, nor the hooks.",
         "previous": "To go back to the previous version, without network:",
-        "previousNote": "If the server still serves the same version, the next update (a day later at most) puts it back."
+        "previousNote": "If the server still serves the same version, the next update, at the first session start after 24 hours, puts it back."
       },
       "disconnect": {
         "title": "Disconnect",
         "fromLeon": "From Leon: {path}. This computer will stop sending your sessions.",
-        "logout": "From the computer: <code>~/.leon/bin/leon logout</code> revokes the token of this computer and removes <code>~/.leon/connexion.json</code>.",
-        "remove": "<code>~/.leon/bin/leon retirer-crochets</code> (French for “remove hooks”) removes Leon’s hooks from the Claude Code settings (your other settings stay as they are), withdraws your agreement (nothing is sent from Claude Code anymore) and deletes the launcher. So run <code>logout</code> first.",
+        "logout": "From the computer: <code>~/.leon/bin/leon logout</code> revokes the token of this computer and removes <code>~/.leon/connexion.json</code>. If the server does not answer, the command says so and removes only the computer’s connection: revoke the computer in Settings then (see above).",
+        "remove": "<code>~/.leon/bin/leon retirer-crochets</code> (French for “remove hooks”) removes Leon’s hooks from the Claude Code settings (your other settings stay as they are), withdraws your agreement (nothing is sent from Claude Code anymore) and deletes the launcher when no other tool uses it. So run <code>logout</code> first.",
         "all": "To leave completely: <code>logout</code>, then <code>retirer-crochets</code>, then delete the <code>~/.leon</code> folder.",
         "kept": "Disconnecting does not delete what was already sent."
       },
@@ -1287,7 +1287,7 @@
         },
         "noTerminal": {
           "title": "“No terminal is available”",
-          "text": "The script put Node and the command line in place, but it has no terminal to ask you its questions (this is the case from Claude Code or from a script). It prints the command that finishes the setup: run it in a terminal."
+          "text": "The script put Node and the command-line tool in place, but it has no terminal to ask you its questions (this is the case from Claude Code or from a script). It prints the command that finishes the setup: run it in a terminal."
         },
         "platform": {
           "title": "Platform refused",
@@ -1296,6 +1296,10 @@
         "revoked": {
           "title": "Computer revoked",
           "text": "If the computer was revoked in Settings, run the install command again, or <code>~/.leon/bin/leon setup</code>: it sees the computer is no longer connected and starts the connection again."
+        },
+        "interrupted": {
+          "title": "You created a workspace or reset your password along the way",
+          "text": "If you had to create a workspace or reset your password while authorizing, start the connection again with <code>~/.leon/bin/leon login</code>, then finish with <code>~/.leon/bin/leon setup</code>."
         }
       },
       "clone": {
@@ -1563,7 +1567,7 @@
     "authorize": {
       "title": "Connect this computer",
       "question": "Authorize this computer to send your coding sessions to Leon, in the {space} workspace?",
-      "warning": "If you didn’t just run the command yourself in a terminal, cancel.",
+      "warning": "If you didn’t run the command yourself, or ask Claude Code to run it, cancel.",
       "allow": "Authorize",
       "cancel": "Cancel",
       "invalidTitle": "Link not valid",
@@ -1583,6 +1587,6 @@
     "withClaude": "With Claude Code",
     "withClaudeLead": "Copy the instructions and paste them into Claude Code. It does the setup with you and tells you when to click “Authorize”.",
     "inTerminal": "In a terminal",
-    "instructions": "Install Leon on this computer and connect it to my coding tools.\n1. Run this command in the terminal: {command}\n2. If the script says it has no terminal to finish, it prints a last command that ends with “setup --url” followed by Leon's address. Before you run it with the --yes option, show me what Leon will send (it is explained here: {docs}) and wait for my agreement. Never run --yes without my explicit agreement.\n3. That command opens my browser to authorize this computer: tell me to click “Authorize”. If your sandbox stops it from opening the browser or listening on 127.0.0.1, ask me for permission to run it outside the sandbox. If the browser does not open, it prints the address to open: give it to me.\n4. At the end, tell me which coding tools are connected and which Leon account this computer is connected to.\nNever ask me for a token, read one or show one: the connection is made through the browser."
+    "instructions": "Install Leon on this computer and connect it to my coding tools.\n1. Run this command in the terminal: {command}\nIf your sandbox blocks writing to ~/.leon or downloading from nodejs.org, ask me for permission to run it outside the sandbox.\n2. If the script ends with “No terminal is available to ask you questions” and prints a last command that ends with “setup --url” followed by Leon's address: before you run it with the --yes option, copy to me, as is and without summarizing it, the text of what Leon will send (it is the section at {docs}) and wait for my explicit agreement. Never run --yes without my explicit agreement. If the script asks you questions instead of saying “No terminal is available…”, answer them with me.\n3. Before you run that command, warn me that it opens my browser and waits for my click on “Authorize”, up to 5 minutes. Run it with a timeout of at least 5 minutes (your tool stops at 2 minutes by default) or in the background. The authorization page asks me to cancel if I did not run the command: remind me that you ran it for me. If your sandbox stops it from opening the browser or listening on 127.0.0.1, ask me for permission to run it outside the sandbox. If the browser does not open, it prints the address to open: give it to me.\n4. At the end, tell me which coding tools are connected and which Leon account this computer is connected to.\nNever ask me for a token, read one or show one: the connection is made through the browser."
   }
 }

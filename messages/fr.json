@@ -1220,7 +1220,7 @@
       "requirements": {
         "title": "Ce qu’il faut",
         "lead": "Quatre choses, sur l’ordinateur à brancher.",
-        "system": "Un Mac (Apple ou Intel), ou un Linux x64 ou arm64 avec la glibc (Debian, Ubuntu, Fedora…). Windows et Alpine ne sont pas encore pris en charge : la commande s’arrête avant d’écrire quoi que ce soit.",
+        "system": "Un Mac (Apple ou Intel), ou un Linux x64 ou arm64 avec la glibc (Debian, Ubuntu, Fedora…). Windows, Alpine et les autres Linux avec musl ne sont pas pris en charge : la commande s’arrête avant d’écrire quoi que ce soit.",
         "utilities": "<code>curl</code> et <code>tar</code> (sous Linux, <code>xz</code> aussi).",
         "claude": "Claude Code, installé sur cet ordinateur. C’est le seul outil de code branché pour l’instant : <code>leon setup</code> reconnaît Codex, Cursor et Gemini / Antigravity, répond « not supported yet » et n’écrit rien chez eux.",
         "account": "Un compte Leon. Vous vous connectez dans le navigateur au moment d’autoriser l’ordinateur."
@@ -1231,9 +1231,9 @@
         "instructionsTitle": "Ce que dit la consigne",
         "askTitle": "Ce que Claude Code vous demandera",
         "ask1": "Sa permission de lancer la commande d’installation.",
-        "ask2": "Sans doute aussi de la lancer hors de son bac à sable : la connexion ouvre votre navigateur et écoute sur 127.0.0.1 (votre ordinateur seul), ce que le bac à sable peut interdire.",
-        "ask3": "Votre accord avant de finir l’installation avec l’option <code>--yes</code>. Il doit d’abord vous montrer ce qui sera envoyé (voir « Ce qui part »). Sans votre accord explicite, il ne la lance pas.",
-        "ask4": "Un clic sur « Autoriser » dans votre navigateur, que Claude Code vous demande de faire.",
+        "ask2": "Sans doute aussi de la lancer hors de son bac à sable (la zone isolée où il lance ses commandes), qui peut interdire d’écrire dans <code>~/.leon</code>, de télécharger depuis nodejs.org, d’ouvrir votre navigateur ou d’écouter sur 127.0.0.1 (votre ordinateur seul), ce que fait la connexion.",
+        "ask3": "Votre accord avant de finir l’installation avec l’option <code>--yes</code>. Il doit d’abord vous recopier tel quel, sans le résumer, ce qui sera envoyé (voir « Ce qui part »). Sans votre accord explicite, il ne la lance pas.",
+        "ask4": "Un clic sur « Autoriser » dans votre navigateur. Claude Code vous prévient avant de lancer la commande, qui attend ce clic 5 minutes au plus, et vous rappelle que c’est lui qui l’a lancée pour vous.",
         "end": "À la fin, il vous dit quels outils de code sont branchés et à quel compte Leon l’ordinateur est connecté. La consigne lui interdit de demander, de lire ou d’afficher un jeton.",
         "unavailable": "L’adresse de ce Leon n’est pas une adresse que la commande d’installation accepte : le bouton n’est pas proposé ici. Les commandes ci-dessous montrent l’adresse à remplacer."
       },
@@ -1242,39 +1242,39 @@
         "lead": "Ouvrez un terminal sur l’ordinateur à brancher et collez cette commande.",
         "leadGeneric": "Ouvrez un terminal sur l’ordinateur à brancher et collez cette commande, avec l’adresse de votre Leon à la place de celle qui est montrée.",
         "doesTitle": "La commande :",
-        "step1": "télécharge le Node officiel de la version que Leon a choisie et la ligne de commande de Leon (un seul fichier, servi par Leon), vérifie leurs empreintes SHA-256, puis les pose dans <code>~/.leon</code> ;",
-        "step2": "lance <code>leon setup</code> : il écrit le lanceur <code>~/.leon/bin/leon</code>, connecte l’ordinateur (voir « Autoriser l’ordinateur »), cherche vos outils de code, vous montre ce qui sera envoyé, demande votre accord, puis pose les crochets de Claude Code.",
-        "scope": "Elle n’écrit que dans <code>~/.leon</code>, plus les réglages de vos outils de code après votre accord : rien dans votre <code>PATH</code>, rien dans votre profil de shell. Les commandes suivantes s’écrivent donc avec le chemin complet, <code>~/.leon/bin/leon</code>.",
-        "again": "On peut la relancer à volonté : ce qui est déjà en place n’est pas réécrit, et la ligne de commande est remise à la version que sert Leon."
+        "step1": "télécharge le Node officiel de la version que Leon a choisie et l’outil en ligne de commande de Leon (un seul fichier, servi par Leon), vérifie leurs empreintes SHA-256, puis les pose dans <code>~/.leon</code> ;",
+        "step2": "lance <code>leon setup</code> : il écrit le lanceur <code>~/.leon/bin/leon</code>, connecte l’ordinateur (voir « Autoriser l’ordinateur »), cherche vos outils de code, vous montre ce qui sera envoyé, demande votre accord, puis pose les crochets de Claude Code (de petits programmes que Claude Code lance au début et à la fin de chaque session).",
+        "scope": "Elle n’écrit que dans <code>~/.leon</code>, plus les réglages de vos outils de code après votre accord : rien dans votre <code>PATH</code>, rien dans le fichier de réglages de votre terminal. Les commandes suivantes s’écrivent donc avec le chemin complet, <code>~/.leon/bin/leon</code>.",
+        "again": "On peut la relancer à volonté : ce qui est déjà en place n’est pas réécrit, et l’outil en ligne de commande est remis à la version que sert Leon."
       },
       "authorize": {
         "title": "Autoriser l’ordinateur",
-        "p1": "Votre navigateur s’ouvre sur une page de Leon. Connectez-vous si besoin : la page demande alors « Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace… ? ». Cliquez sur « Autoriser » seulement si vous venez de lancer la commande vous-même ; sinon, cliquez sur « Annuler ».",
+        "p1": "Votre navigateur s’ouvre sur une page de Leon. Connectez-vous si besoin : la page demande alors « Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace… ? ». Cliquez sur « Autoriser » seulement si vous venez de lancer la commande, vous-même ou en le demandant à Claude Code ; sinon, cliquez sur « Annuler ».",
         "p2": "Si le navigateur ne s’ouvre pas, la commande écrit l’adresse à ouvrir. Elle attend 5 minutes au plus ; Ctrl+C l’annule sans rien écrire.",
-        "p3": "Une fois l’ordinateur autorisé, la commande affiche l’espace et le compte auxquels il est connecté (« Connected to … as … ») et garde la connexion dans <code>~/.leon/connexion.json</code>, lisible par votre seul utilisateur. Le jeton est créé sur votre ordinateur : le navigateur n’en voit que l’empreinte.",
+        "p3": "Une fois l’ordinateur autorisé, la commande affiche l’espace et le compte auxquels il est connecté (« Connected to … as … ») et garde la connexion dans <code>~/.leon/connexion.json</code>, lisible par votre seul compte sur l’ordinateur. Le jeton est créé sur votre ordinateur : le navigateur n’en voit que l’empreinte.",
         "sharedTitle": "Un ordinateur partagé",
         "shared": "Sur une machine où plusieurs comptes sont ouverts en même temps, les autres comptes peuvent lire l’adresse d’autorisation (sous Linux, dans <code>/proc</code>), et l’un d’eux pourrait l’autoriser avec son propre compte Leon : votre jeton serait alors enregistré chez lui. Vérifiez donc le compte que la commande affiche ; s’il n’est pas le vôtre, lancez <code>~/.leon/bin/leon logout</code>. Ou utilisez <code>~/.leon/bin/leon login --with-token</code>, qui passe par un jeton créé dans Réglages plutôt que par cette adresse."
       },
       "sent": {
         "title": "Ce qui part",
-        "lead": "En résumé, le texte que <code>leon setup</code> vous montre avant d’écrire quoi que ce soit. C’est ce texte, dans votre terminal, que vous acceptez.",
+        "lead": "En résumé, le texte que <code>leon setup</code> vous montre avant de poser les crochets (rien n’est écrit dans les réglages de Claude Code avant votre accord). C’est ce texte que vous acceptez, dans le terminal ou, avec Claude Code, en lui disant d’utiliser <code>--yes</code>.",
         "where": "Les crochets se posent dans vos réglages personnels de Claude Code : ils tournent dans toutes vos sessions, dans tous vos dossiers, personnels compris. Une session lancée par un script (<code>claude -p</code>) les lance aussi, sauf avec <code>--bare</code>, qui n’en charge aucun.",
-        "end": "À la fin de chaque session, le serveur de Leon reçoit le texte des échanges (vos messages et les réponses de Claude) et les actions de la session, lues dans sa trace : les fichiers écrits (leurs chemins dans le dépôt), les commandes lancées (seulement leur exécutable, plus la sous-commande pour une liste fermée d’outils de développement comme <code>git</code>, <code>gh</code>, <code>pnpm</code> ou <code>docker</code> ; jamais leurs autres arguments), Git (branche, commits, pull requests), la liste des tâches, et quelques repères (heures de début et de fin, nombre de messages et d’erreurs d’outils, si la session a utilisé le web, un serveur MCP, un sous-agent ou une commande réseau).",
+        "end": "À la fin de chaque session, le serveur de Leon reçoit le texte des échanges (vos messages et les réponses de Claude) et les actions de la session, lues dans la transcription de la session : les fichiers écrits (leurs chemins dans le dépôt), les commandes lancées (seulement leur exécutable, plus la sous-commande pour une liste fermée d’outils de développement comme <code>git</code>, <code>gh</code>, <code>pnpm</code> ou <code>docker</code> ; jamais leurs autres arguments), Git (branche, commits, pull requests), la liste des tâches, et quelques repères (heures de début et de fin, nombre de messages et d’erreurs d’outils, si la session a utilisé le web, un serveur MCP, un sous-agent ou une commande réseau).",
         "secrets": "Les secrets sont masqués avant l’envoi, puis une seconde fois par le serveur.",
         "start": "Au début de chaque session, le serveur reçoit la clé du projet, la branche Git courante et l’identifiant de la session. Il renvoie vos dernières sessions sur ce dépôt (leur branche, pull requests, commits, fichiers et tâches restantes) et le point du matin du projet : Claude Code ajoute ce bloc au contexte de la session, il est donc donné au modèle de Claude Code.",
-        "server": "Les crochets contactent le serveur de la connexion faite par <code>leon login</code>."
+        "server": "Les crochets contactent le serveur de la connexion faite par <code>leon login</code>, sauf si <code>LEON_URL</code> et <code>LEON_TOKEN</code> sont posées toutes les deux (installation de développeur) : elles passent alors avant."
       },
       "updates": {
         "title": "Mises à jour",
-        "auto": "La ligne de commande de Leon se met à jour seule, au plus une fois par jour, au démarrage d’une session, depuis le serveur de votre connexion, et seulement en https. Un Leon local (<code>http://localhost</code>) se met à jour à la main : <code>~/.leon/bin/leon update</code>. Une mise à jour ne touche ni à votre connexion, ni à votre accord, ni au lanceur, ni aux crochets.",
+        "auto": "L’outil en ligne de commande de Leon se met à jour seul, au plus une fois par jour, au démarrage d’une session, depuis le serveur de votre connexion, et seulement en https. Un Leon local (<code>http://localhost</code>) se met à jour à la main : <code>~/.leon/bin/leon update</code>. Une mise à jour ne touche ni à votre connexion, ni à votre accord, ni au lanceur, ni aux crochets.",
         "previous": "Pour revenir à la version d’avant, sans réseau :",
-        "previousNote": "Si le serveur sert toujours la même version, la mise à jour suivante (au plus un jour plus tard) la remet."
+        "previousNote": "Si le serveur sert toujours la même version, la mise à jour suivante, au premier démarrage de session après 24 heures, la remet."
       },
       "disconnect": {
         "title": "Se déconnecter",
         "fromLeon": "Depuis Leon : {path}. Cet ordinateur n’enverra plus vos sessions.",
-        "logout": "Depuis l’ordinateur : <code>~/.leon/bin/leon logout</code> révoque le jeton de cet ordinateur et efface <code>~/.leon/connexion.json</code>.",
-        "remove": "<code>~/.leon/bin/leon retirer-crochets</code> retire les crochets de Leon des réglages de Claude Code (vos autres réglages restent tels quels), retire votre accord (plus rien n’est envoyé depuis Claude Code) et efface le lanceur. Lancez donc <code>logout</code> avant.",
+        "logout": "Depuis l’ordinateur : <code>~/.leon/bin/leon logout</code> révoque le jeton de cet ordinateur et efface <code>~/.leon/connexion.json</code>. Si le serveur ne répond pas, la commande le dit et n’efface que la connexion de l’ordinateur : révoquez alors l’ordinateur dans Réglages (voir ci-dessus).",
+        "remove": "<code>~/.leon/bin/leon retirer-crochets</code> retire les crochets de Leon des réglages de Claude Code (vos autres réglages restent tels quels), retire votre accord (plus rien n’est envoyé depuis Claude Code) et efface le lanceur quand plus aucun outil ne l’utilise. Lancez donc <code>logout</code> avant.",
         "all": "Pour partir complètement : <code>logout</code>, puis <code>retirer-crochets</code>, puis supprimez le dossier <code>~/.leon</code>.",
         "kept": "Se déconnecter n’efface pas ce qui a déjà été envoyé."
       },
@@ -1287,7 +1287,7 @@
         },
         "noTerminal": {
           "title": "« No terminal is available »",
-          "text": "Le script a posé Node et la ligne de commande, mais il n’a pas de terminal pour vous poser ses questions (c’est le cas depuis Claude Code ou depuis un script). Il affiche la commande qui finit l’installation : lancez-la dans un terminal."
+          "text": "Le script a posé Node et l’outil en ligne de commande, mais il n’a pas de terminal pour vous poser ses questions (c’est le cas depuis Claude Code ou depuis un script). Il affiche la commande qui finit l’installation : lancez-la dans un terminal."
         },
         "platform": {
           "title": "Plateforme refusée",
@@ -1296,6 +1296,10 @@
         "revoked": {
           "title": "Ordinateur révoqué",
           "text": "Si l’ordinateur a été révoqué dans Réglages, relancez la commande d’installation, ou <code>~/.leon/bin/leon setup</code> : il voit que l’ordinateur n’est plus connecté et relance la connexion."
+        },
+        "interrupted": {
+          "title": "Espace créé ou mot de passe réinitialisé en route",
+          "text": "Si vous avez dû créer un espace ou réinitialiser votre mot de passe pendant l’autorisation, relancez la connexion avec <code>~/.leon/bin/leon login</code>, puis finissez avec <code>~/.leon/bin/leon setup</code>."
         }
       },
       "clone": {
@@ -1563,7 +1567,7 @@
     "authorize": {
       "title": "Connecter cet ordinateur",
       "question": "Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace {space} ?",
-      "warning": "Si vous ne venez pas de lancer la commande vous-même dans un terminal, annulez.",
+      "warning": "Si vous n’avez pas lancé la commande vous-même, ni demandé à Claude Code de la lancer, annulez.",
       "allow": "Autoriser",
       "cancel": "Annuler",
       "invalidTitle": "Lien non valide",
@@ -1583,6 +1587,6 @@
     "withClaude": "Avec Claude Code",
     "withClaudeLead": "Copiez la consigne et collez-la dans Claude Code. Il fait l’installation avec vous et vous dit quand cliquer sur « Autoriser ».",
     "inTerminal": "Dans un terminal",
-    "instructions": "Installe Leon sur cet ordinateur et branche-le à mes outils de code.\n1. Lance cette commande dans le terminal : {command}\n2. Si le script dit qu'il n'a pas de terminal pour finir, il affiche une dernière commande, qui se termine par « setup --url » suivi de l'adresse de Leon. Avant de la lancer avec l'option --yes, montre-moi ce que Leon va envoyer (c'est expliqué ici : {docs}) et attends mon accord. Ne lance jamais --yes sans mon accord explicite.\n3. Cette commande ouvre mon navigateur pour autoriser l'ordinateur : dis-moi de cliquer sur « Autoriser ». Si ton bac à sable t'empêche d'ouvrir le navigateur ou d'écouter sur 127.0.0.1, demande-moi la permission de la lancer hors du bac à sable. Si le navigateur ne s'ouvre pas, elle écrit l'adresse à ouvrir : donne-la-moi.\n4. À la fin, dis-moi quels outils de code sont branchés et à quel compte Leon l'ordinateur est connecté.\nNe me demande jamais de jeton, n'en lis pas et n'en affiche pas : la connexion se fait par le navigateur."
+    "instructions": "Installe Leon sur cet ordinateur et branche-le à mes outils de code.\n1. Lance cette commande dans le terminal : {command}\nSi ton bac à sable bloque l'écriture dans ~/.leon ou le téléchargement depuis nodejs.org, demande-moi la permission de la lancer hors du bac à sable.\n2. Si le script se termine par « No terminal is available to ask you questions » et affiche une dernière commande, qui se termine par « setup --url » suivi de l'adresse de Leon : avant de la lancer avec l'option --yes, recopie-moi tel quel, sans le résumer, le texte de ce que Leon va envoyer (c'est la section {docs}) et attends mon accord explicite. Ne lance jamais --yes sans mon accord explicite. Si le script te pose des questions au lieu de dire « No terminal is available… », réponds-y avec moi.\n3. Avant de lancer cette commande, préviens-moi qu'elle ouvre mon navigateur et attend mon clic sur « Autoriser » jusqu'à 5 minutes. Lance-la avec un délai d'au moins 5 minutes (ton outil coupe à 2 minutes par défaut) ou en arrière-plan. La page d'autorisation me demande d'annuler si je n'ai pas lancé la commande : rappelle-moi que c'est toi qui l'as lancée pour moi. Si ton bac à sable t'empêche d'ouvrir le navigateur ou d'écouter sur 127.0.0.1, demande-moi la permission de la lancer hors du bac à sable. Si le navigateur ne s'ouvre pas, elle écrit l'adresse à ouvrir : donne-la-moi.\n4. À la fin, dis-moi quels outils de code sont branchés et à quel compte Leon l'ordinateur est connecté.\nNe me demande jamais de jeton, n'en lis pas et n'en affiche pas : la connexion se fait par le navigateur."
   }
 }

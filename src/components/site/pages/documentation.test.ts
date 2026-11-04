@@ -203,6 +203,30 @@ describe('la page Documentation', () => {
     },
   );
 
+  // Le serveur des crochets : celui de `leon login`, sauf LEON_URL et LEON_TOKEN posées toutes les deux (texte d'accord).
+  it.each(LOCALES)(
+    'dit quand LEON_URL et LEON_TOKEN passent avant la connexion (%s)',
+    (_l, messages) => {
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'unless LEON_URL and LEON_TOKEN are both set: those come first',
+      );
+      const { server } = messages.site.documentation.sent;
+
+      expect(server).toContain('<code>LEON_URL</code>');
+      expect(server).toContain('<code>LEON_TOKEN</code>');
+    },
+  );
+
+  // Claude Code lance la commande à la place de la personne : l'écran d'autorisation (avertissement) et cette page
+  // (« Autoriser ») disent la même chose, dans les deux langues.
+  it.each(LOCALES)(
+    'dit, comme l’écran d’autorisation, que la commande peut être lancée par Claude Code (%s)',
+    (_locale, messages) => {
+      expect(messages.computer.authorize.warning).toContain('Claude Code');
+      expect(messages.site.documentation.authorize.p1).toContain('Claude Code');
+    },
+  );
+
   // M4 : le texte neuf ne redit pas la phrase de confidentialité du texte d'accord, il ne promet rien de plus.
   it.each(LOCALES)(
     'ne promet rien sur la confidentialité de plus que le texte d’accord (%s)',

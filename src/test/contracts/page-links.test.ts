@@ -3,7 +3,7 @@ import { nextAfterTools } from '@/components/verre/onboarding/tools-model';
 import { OAUTH_RETURN_PATHS } from '@/lib/connection-form';
 import { listFiles, productionSources, readText } from './files';
 
-// Chemin d'URL d'un page.tsx : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
+// Chemin d'URL d'un page.tsx (ou route.ts) : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
 const routeOf = (file: string): string =>
   `/${file
     .replace(/^src\/app\//, '')
@@ -12,7 +12,11 @@ const routeOf = (file: string): string =>
     .filter((segment) => !/^\(.*\)$/.test(segment))
     .join('/')}`;
 
-const ROUTES = listFiles('src/app/**/page.tsx').map(routeOf);
+// Les pages, et les route handlers hors de l'API (/install, /documentation.md) que des liens visent aussi.
+const ROUTES = [
+  ...listFiles('src/app/**/page.tsx'),
+  ...listFiles('src/app/**/route.ts').filter((file) => !file.startsWith('src/app/api/')),
+].map(routeOf);
 
 // Un segment dynamique [x] de la route accepte n'importe quel segment du lien.
 function matchesRoute(path: string): boolean {

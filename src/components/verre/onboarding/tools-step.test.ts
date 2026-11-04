@@ -13,6 +13,7 @@ vi.mock('@/components/verre/connexions/tool-dialog', () => ({ ToolDialog: () => 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
+const INSTRUCTIONS = `Install Leon: ${COMMAND}`;
 const CARD = 'Your coding tools';
 
 const item = (id: string, family: string) =>
@@ -30,6 +31,7 @@ const step = (recommended: string[], codeCommand: string | null) =>
     steps: ['about', 'tools', 'teammates'],
     notice: null,
     codeCommand,
+    codeInstructions: codeCommand === null ? null : INSTRUCTIONS,
   });
 
 // React 19 remonte les <link rel="preload"> des images en tête du document : ils ne disent rien de l'ordre de l'écran.
@@ -75,7 +77,9 @@ describe('ToolsStep : Vos outils de code', () => {
     for (const recommended of [['github', 'linear'], ['linear']]) {
       const without = render(step(recommended, null));
       const withCard = render(step(recommended, COMMAND));
-      const card = render(createElement(CodeToolsCard, { command: COMMAND }));
+      const card = render(
+        createElement(CodeToolsCard, { command: COMMAND, instructions: INSTRUCTIONS }),
+      );
 
       expect(withCard).toContain(card);
       expect(withCard.replace(card, '')).toBe(without);

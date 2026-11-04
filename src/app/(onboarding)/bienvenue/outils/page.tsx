@@ -7,7 +7,7 @@ import { oauthNotice } from '@/lib/connection-form';
 import { DEPARTMENTS, isDepartment, onboardingSteps } from '@/lib/onboarding';
 import { isSoleMember, readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
-import { installCommand } from '@/server/cli/install-command';
+import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listCatalog } from '@/server/connectors/catalog';
 import { listConnections } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
@@ -59,6 +59,7 @@ export default async function ToolsPage({
       steps={onboardingSteps(soleOwner ? 'soleOwner' : owner ? 'ownerWithTeam' : 'member')}
       notice={notice}
       codeCommand={installCommand()}
+      codeInstructions={claudeCodeInstructions(await getTranslations('claudeCode'))}
     />
   );
 }

@@ -4,7 +4,7 @@ import { ComputersSection } from '@/components/verre/reglages/computers';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { type ApiTokenRow, listApiTokens } from '@/server/auth/api-tokens';
-import { installCommand } from '@/server/cli/install-command';
+import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import SettingsPage from './page';
 
 // La page lit beaucoup de choses ; seul le partage des jetons entre « Jetons personnels » et « Ordinateurs connectés »
@@ -34,13 +34,17 @@ vi.mock('@/server/briefing/about', () => ({
   ABOUT_MAX_CHARS: 1000,
   readAbout: vi.fn(async () => null),
 }));
-vi.mock('@/server/cli/install-command', () => ({ installCommand: vi.fn() }));
+vi.mock('@/server/cli/install-command', () => ({
+  installCommand: vi.fn(),
+  claudeCodeInstructions: vi.fn(),
+}));
 vi.mock('@/server/connectors/github/depots-equipe', () => ({
   listDepotsEquipe: vi.fn(async () => ({ depots: [], githubBranche: false })),
 }));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
+const INSTRUCTIONS = `Install Leon: ${COMMAND}`;
 const token = (id: string, name: string, revokedAt: Date | null = null): ApiTokenRow => ({
   id,
   name,
@@ -71,11 +75,13 @@ async function integrations(tokens: ApiTokenRow[]) {
     tokens: tokenProps?.tokens as { name: string }[] | undefined,
     computers: computerProps?.computers as { name: string }[] | undefined,
     command: computerProps?.command,
+    instructions: computerProps?.instructions,
   };
 }
 
 beforeEach(() => {
   vi.mocked(installCommand).mockReturnValue(COMMAND);
+  vi.mocked(claudeCodeInstructions).mockReturnValue(INSTRUCTIONS);
 });
 
 describe('page de Réglages : jetons et ordinateurs connectés', () => {
@@ -89,11 +95,17 @@ describe('page de Réglages : jetons et ordinateurs connectés', () => {
     expect(shown.tokens?.map((t) => t.name)).toEqual(['Mon script']);
   });
 
-  it('donne à la section la commande d’installation', async () => {
-    expect((await integrations([])).command).toBe(COMMAND);
+  it('donne à la section la commande d’installation et la consigne de Claude Code', async () => {
+    const shown = await integrations([]);
+    expect(shown.command).toBe(COMMAND);
+    expect(shown.instructions).toBe(INSTRUCTIONS);
+    expect(claudeCodeInstructions).toHaveBeenCalledWith(expect.any(Function));
 
     vi.mocked(installCommand).mockReturnValue(null);
-    expect((await integrations([])).command).toBeNull();
+    vi.mocked(claudeCodeInstructions).mockReturnValue(null);
+    const refused = await integrations([]);
+    expect(refused.command).toBeNull();
+    expect(refused.instructions).toBeNull();
   });
 
   it('un ordinateur révoqué disparaît des deux listes', async () => {

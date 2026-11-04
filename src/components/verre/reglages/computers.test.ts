@@ -10,7 +10,21 @@ import type { Token } from './tokens';
 // Les actions importent Better Auth : seul le dessin de la section se teste ici.
 vi.mock('@/app/(app)/reglages/actions', () => ({ revokeTokenAction: vi.fn() }));
 
+// Les boutons « Copier » que la section pose elle-même (pas celui de CodeLine) : ce qu'ils copient et confirment.
+const copies: Record<string, unknown>[] = [];
+vi.mock('@/components/verre/ui/copy', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/components/verre/ui/copy')>();
+  return {
+    ...real,
+    CopyButton: (props: Parameters<typeof real.CopyButton>[0]) => {
+      copies.push(props);
+      return real.CopyButton(props);
+    },
+  };
+});
+
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
+const INSTRUCTIONS = `Install Leon: ${COMMAND}`;
 const MACBOOK: Token = {
   id: 'c1',
   name: 'MacBook',
@@ -21,17 +35,22 @@ const MACBOOK: Token = {
 const NEVER_USED = { ...MACBOOK, id: 'c2', name: 'Linux-bureau', lastUsedAt: null };
 
 const render = (
-  props: { computers: Token[]; command: string | null },
+  props: { computers: Token[]; command: string | null; instructions?: string | null },
   locale: 'en' | 'fr' = 'en',
-) =>
-  renderToStaticMarkup(
+) => {
+  copies.length = 0;
+  return renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
       locale,
       messages: locale === 'en' ? en : fr,
       // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
-      children: createElement(ComputersSection, props),
+      children: createElement(ComputersSection, {
+        instructions: props.command === null ? null : INSTRUCTIONS,
+        ...props,
+      }),
     }),
   );
+};
 
 // S14 : la section « Ordinateurs connectés » de Réglages, ancre #ordinateurs (le lien « Ce qui part » de l'onboarding).
 describe('ComputersSection', () => {
@@ -94,5 +113,52 @@ describe('ComputersSection', () => {
 
     expect(html).toContain('Ordinateurs connectés');
     expect(html).toContain('Révoquer');
+  });
+
+  // Les deux chemins à égalité (même titre, même texte), « Je demande à Claude » d'abord, puis la documentation.
+  it.each([
+    ['en', 'With Claude Code', 'In a terminal', 'Ask Claude'],
+    ['fr', 'Avec Claude Code', 'Dans un terminal', 'Je demande à Claude'],
+  ] as const)(
+    'présente « %s » : Claude Code d’abord, puis le terminal, au même niveau',
+    (locale, withClaude, inTerminal, ask) => {
+      const html = render({ computers: [], command: COMMAND }, locale);
+
+      const claude = html.indexOf(`>${withClaude}</h3>`);
+      const terminal = html.indexOf(`>${inTerminal}</h3>`);
+      expect(claude).toBeGreaterThan(-1);
+      expect(terminal).toBeGreaterThan(claude);
+      expect(html.indexOf(`>${ask}</button>`)).toBeGreaterThan(claude);
+      expect(html.indexOf(`>${ask}</button>`)).toBeLessThan(terminal);
+      expect(html.indexOf(COMMAND)).toBeGreaterThan(terminal);
+      // La documentation s'ouvre dans un autre onglet.
+      expect(html).toMatch(
+        /<a (?=[^>]*target="_blank")[^>]*href="\/documentation"[^>]*>Documentation/,
+      );
+    },
+  );
+
+  it('copie la consigne avec « Je demande à Claude » et confirme où la coller', () => {
+    render({ computers: [MACBOOK], command: COMMAND }, 'fr');
+
+    expect(copies).toEqual([
+      expect.objectContaining({
+        value: INSTRUCTIONS,
+        label: 'Je demande à Claude',
+        copiedMessage: 'Consigne copiée. Collez-la dans Claude Code.',
+      }),
+    ]);
+  });
+
+  it('sans consigne, garde la commande ; sans commande, ne montre ni l’un ni l’autre', () => {
+    const noInstructions = render({ computers: [], command: COMMAND, instructions: null });
+    expect(copies).toEqual([]);
+    expect(noInstructions).not.toContain('Ask Claude');
+    expect(noInstructions).toContain(COMMAND);
+
+    const noCommand = render({ computers: [MACBOOK], command: null });
+    expect(copies).toEqual([]);
+    expect(noCommand).not.toContain('Ask Claude');
+    expect(noCommand).not.toContain('/documentation');
   });
 });

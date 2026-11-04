@@ -128,7 +128,7 @@ describe('page d’autorisation', () => {
       nb('Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace Acme ?'),
     );
     expect(text).toContain(
-      'Si vous ne venez pas de lancer la commande vous-même dans un terminal, annulez.',
+      'Si vous n’avez pas lancé la commande vous-même, ni demandé à Claude Code de la lancer, annulez.',
     );
     const buttons = elements(page).filter((el) => el.type === Button);
     expect(buttons.map((el) => [el.props.name, el.props.value, textOf(el)])).toEqual([
@@ -181,7 +181,7 @@ describe('textes', () => {
 
   it('l’anglais a les autres textes de la page', () => {
     expect(en.computer.authorize).toMatchObject({
-      warning: 'If you didn’t just run the command yourself in a terminal, cancel.',
+      warning: 'If you didn’t run the command yourself, or ask Claude Code to run it, cancel.',
       allow: 'Authorize',
       cancel: 'Cancel',
     });

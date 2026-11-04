@@ -32,6 +32,8 @@ export type ToolsStepProps = {
   notice: OAuthNotice | null;
   /** `curl -fsSL <leon>/install | sh`, bâtie côté serveur (`installCommand`) ; null quand l'adresse du serveur est refusée : le bloc « Vos outils de code » ne s'affiche pas. */
   codeCommand: string | null;
+  /** La consigne de « Je demande à Claude » (`claudeCodeInstructions`) ; null avec la commande. */
+  codeInstructions: string | null;
 };
 
 // Une tuile à cocher pour un outil à brancher ; un outil déjà branché (par moi ou par l'équipe) se lit seulement,
@@ -148,6 +150,7 @@ export function ToolsStep({
   steps,
   notice,
   codeCommand,
+  codeInstructions,
 }: ToolsStepProps) {
   const t = useTranslations('onboarding');
   const tt = useTranslations('onboarding.tools');
@@ -220,7 +223,10 @@ export function ToolsStep({
   const already = states.filter((s) => s.recommended && s.connectedBy !== null);
   const shown = states.find((s) => s.item.id === shownId);
   // En tête pour un service qui travaille dans un dépôt (GitHub ou GitLab conseillé), à la fin sinon.
-  const codeTools = codeCommand !== null ? <CodeToolsCard command={codeCommand} /> : null;
+  const codeTools =
+    codeCommand !== null ? (
+      <CodeToolsCard command={codeCommand} instructions={codeInstructions} />
+    ) : null;
   const codeToolsAtTop = codeToolsFirst(states);
 
   return (

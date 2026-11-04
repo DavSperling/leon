@@ -7,10 +7,11 @@ import { cn } from '@/lib/verre/cn';
 import { Button, type ButtonProps } from './button';
 import { toast } from './toast';
 
-/** « Copier » : copie `value`, puis « Copié. » ; si le presse-papiers refuse, invite à copier à la main. */
+/** « Copier » : copie `value`, puis « Copié. » (ou `copiedMessage`) ; si le presse-papiers refuse, invite à copier à la main. */
 export function CopyButton({
   value,
   label,
+  copiedMessage,
   size = 'sm',
   variant = 'secondary',
   onCopied,
@@ -18,6 +19,8 @@ export function CopyButton({
 }: Omit<ButtonProps, 'onClick' | 'icon'> & {
   value: string;
   label?: string;
+  /** Le message de confirmation, quand « Copié. » ne dit pas assez (où coller ce qui vient d'être copié). */
+  copiedMessage?: string;
   /** Appelé une fois la copie faite. */
   onCopied?: () => void;
 }) {
@@ -33,7 +36,7 @@ export function CopyButton({
     try {
       await navigator.clipboard.writeText(value);
       setDone(true);
-      toast.success(t('copied'));
+      toast.success(copiedMessage ?? t('copied'));
       ok = true;
     } catch {
       toast.error(t('copyFailed'));

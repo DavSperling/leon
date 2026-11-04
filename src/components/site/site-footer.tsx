@@ -73,6 +73,7 @@ export function SiteFooter() {
         { href: '/produit#discute', label: t('discussions') },
         { href: '/connecteurs', label: common('connectors') },
         { href: '/tarifs', label: t('pricing') },
+        { href: '/documentation', label: t('documentation') },
       ],
     },
     {

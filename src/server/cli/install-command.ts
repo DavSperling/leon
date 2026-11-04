@@ -1,13 +1,34 @@
 import { env } from '@/server/env';
 import { serverOrigin } from './installer-script';
 
-// La commande que l'onboarding (S13) et Réglages (S14) donnent à copier : `curl -fsSL <leon>/install | sh`. L'adresse
-// passe par la règle du script d'installation (`serverOrigin`) : elle sera collée dans un terminal, rien d'autre que
-// l'origine du serveur ne peut y entrer. Une adresse refusée ne donne rien à copier (null), plutôt qu'une commande fausse.
-export function installCommand(url: string = env.BETTER_AUTH_URL): string | null {
+// L'adresse du serveur (BETTER_AUTH_URL) telle que le script d'installation la veut : son origine, rien d'autre. Elle
+// sera collée dans un terminal, ou citée à Claude Code. Une adresse refusée ne donne rien (null), plutôt qu'une commande fausse.
+export function serverAddress(url: string = env.BETTER_AUTH_URL): string | null {
   try {
-    return `curl -fsSL ${serverOrigin(url)}/install | sh`;
+    return serverOrigin(url);
   } catch {
     return null;
   }
+}
+
+// La commande que l'onboarding (S13) et Réglages (S14) donnent à copier : `curl -fsSL <leon>/install | sh`.
+export function installCommand(url: string = env.BETTER_AUTH_URL): string | null {
+  const origin = serverAddress(url);
+  return origin === null ? null : `curl -fsSL ${origin}/install | sh`;
+}
+
+// « Je demande à Claude » : la consigne à coller dans Claude Code, qui fait l'installation à la place de la personne.
+// Elle est dans la langue de l'interface (`t` : getTranslations('claudeCode')) et ne porte que deux valeurs, la
+// commande et le lien vers « Ce qui part » de la page /documentation, tous deux sur l'adresse du serveur. Jamais de jeton.
+export function claudeCodeInstructions(
+  t: (key: 'instructions', values: { command: string; docs: string }) => string,
+  url: string = env.BETTER_AUTH_URL,
+): string | null {
+  const origin = serverAddress(url);
+  return origin === null
+    ? null
+    : t('instructions', {
+        command: `curl -fsSL ${origin}/install | sh`,
+        docs: `${origin}/documentation#ce-qui-part`,
+      });
 }

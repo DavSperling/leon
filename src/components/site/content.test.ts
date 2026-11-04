@@ -33,3 +33,19 @@ describe('le site en anglais', () => {
     }
   });
 });
+
+// Le MCP s'ouvre en collant son adresse dans l'assistant puis en l'autorisant dans Leon, plus par un jeton personnel.
+describe('la FAQ du site et le MCP distant', () => {
+  it.each([
+    ['fr', CONTENT_FR, /adresse/, /autoris/, /jeton/i],
+    ['en', CONTENT_EN, /address/, /authorize/, /token/i],
+  ] as const)(
+    'en %s, la réponse sur l’interrogation depuis un assistant dit adresse collée puis autorisation, pas un jeton',
+    (_locale, content, address, authorize, token) => {
+      const answer = content.faq.find((entry) => /MCP/.test(entry.a))?.a ?? '';
+      expect(answer).toMatch(address);
+      expect(answer).toMatch(authorize);
+      expect(answer).not.toMatch(token);
+    },
+  );
+});

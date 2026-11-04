@@ -78,4 +78,12 @@ describe('le site public et le MCP distant', () => {
       expect(EN.get(key), key).toMatch(/authorize/);
     },
   );
+
+  // L'étiquette sous les quatre outils, dans l'illustration du serveur MCP : elle dit comment l'assistant y entre.
+  it('site.product.token dit « autorisé dans Leon », pas un jeton personnel', () => {
+    expect(FR.get('site.product.token')).toMatch(/autoris/);
+    expect(FR.get('site.product.token')).not.toMatch(/jeton/i);
+    expect(EN.get('site.product.token')).toMatch(/authorize/);
+    expect(EN.get('site.product.token')).not.toMatch(/token/i);
+  });
 });

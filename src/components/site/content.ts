@@ -718,7 +718,7 @@ export const FAQ = [
   },
   {
     q: 'Peut-on l’interroger depuis un assistant d’IA ?',
-    a: 'Oui, par MCP, avec un jeton personnel que vous créez et révoquez dans les réglages. L’assistant voit ce que vous voyez, rien de plus.',
+    a: 'Oui, par MCP : collez l’adresse dans votre assistant, autorisez-le dans Leon, et révoquez-le dans les réglages. L’assistant voit ce que vous voyez, rien de plus.',
   },
   {
     q: 'Qu’est-ce qu’un utilisateur actif ?',
@@ -1327,7 +1327,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Can our AI assistant query Leon?',
-    a: 'Yes, over MCP, with a personal token you create and revoke in Settings. The assistant is limited to what you can see.',
+    a: 'Yes, over MCP: paste the address into your assistant, authorize it in Leon, and revoke it in Settings. The assistant is limited to what you can see.',
   },
   {
     q: 'What counts as an active user?',

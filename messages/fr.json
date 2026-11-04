@@ -1587,6 +1587,26 @@
       "refused": "Rien n’a été autorisé."
     }
   },
+  "oauth": {
+    "authorize": {
+      "title": "Brancher un assistant",
+      "question": "Autoriser {client} à lire votre mémoire Leon dans l’espace {space} ?",
+      "declaredName": "Nom déclaré par l’application : Leon ne l’a pas vérifié.",
+      "returnTo": "Vous serez renvoyé vers {host}",
+      "returnToLocal": "Vous serez renvoyé vers une application de cet ordinateur",
+      "can": "L’assistant pourra :",
+      "canSearch": "chercher dans votre mémoire",
+      "canRead": "lire les sources et les passages qu’il trouve",
+      "canBriefing": "lire le point du matin d’un projet",
+      "canRemember": "garder une note que vous lui dictez",
+      "warning": "Si vous n’êtes pas en train de brancher un assistant vous-même, refusez.",
+      "allow": "Autoriser",
+      "deny": "Refuser",
+      "invalidTitle": "Lien non valide",
+      "invalidClient": "Leon ne connaît pas cette application, ou son lien est incomplet. Retournez dans l’assistant et recommencez.",
+      "invalidReturn": "Ce lien renvoie vers une adresse que Leon n’autorise pas pour cette application. Rien n’a été autorisé. Retournez dans l’assistant et recommencez."
+    }
+  },
   "claudeCode": {
     "ask": "Je demande à Claude",
     "copied": "Consigne copiée. Collez-la dans Claude Code.",

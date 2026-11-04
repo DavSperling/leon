@@ -26,7 +26,7 @@ const FIXED_REDIRECTS = [
 ];
 const CHATGPT_CONNECTOR = /^https:\/\/chatgpt\.com\/connector\/oauth\/[A-Za-z0-9_-]{1,128}$/;
 // Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) : http://127.0.0.1[:<port>]/<chemin>, ou localhost.
-const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
+export const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
 // Les hôtes dont un document CIMD est lu (L10) sont ceux de la table : jamais un autre.
 const DOCUMENT_HOSTS = new Set(FIXED_REDIRECTS.map((uri) => new URL(uri).hostname));
 

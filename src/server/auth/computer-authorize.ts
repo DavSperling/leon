@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { oauthReturnPath } from '@/server/oauth/authorize';
+import { AUTHORIZE_PATH } from '@/server/oauth/metadata';
 
 // Les trois paramètres de la page d'autorisation (K3 du plan « CLI sans clone »), qu'on les lise dans l'adresse de la
 // page, dans le formulaire de l'action ou dans le champ de retour de la connexion : une seule règle, partout.
@@ -38,11 +40,18 @@ export function returnUrl({ port, etat }: AuthorizeParams, outcome: { code: stri
 }
 
 // Où va la connexion qui suit une page d'autorisation sans session : le champ `retour` du formulaire revient d'un
-// navigateur, donc il ne vaut rien tel quel. On n'en garde que les trois paramètres, revalidés, et on rebâtit le chemin.
-// Tout autre contenu : l'accueil.
+// navigateur, donc il ne vaut rien tel quel. Pour un ordinateur, on n'en garde que les trois paramètres, revalidés ;
+// pour un assistant (/oauth/autoriser), la forme de la demande (oauthReturnPath, qui ne lit pas le client : la page le
+// fait à chaque affichage). Dans les deux cas le chemin est rebâti. Tout autre contenu : l'accueil.
 export function pathAfterSignIn(value: unknown): string {
+  if (typeof value !== 'string') return '/';
+  const oauth = `${AUTHORIZE_PATH}?`;
+  if (value.startsWith(oauth))
+    return (
+      oauthReturnPath(Object.fromEntries(new URLSearchParams(value.slice(oauth.length)))) ?? '/'
+    );
   const prefix = '/ordinateur/autoriser?';
-  if (typeof value !== 'string' || !value.startsWith(prefix)) return '/';
+  if (!value.startsWith(prefix)) return '/';
   const params = parseAuthorizeParams(
     Object.fromEntries(new URLSearchParams(value.slice(prefix.length))),
   );

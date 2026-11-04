@@ -273,6 +273,83 @@ describe('retour à l’autorisation d’un ordinateur', () => {
   });
 });
 
+// Un assistant (claude.ai, ChatGPT, Claude Code…) : /oauth/autoriser envoie vers /connexion, qui revient à la demande en
+// cours. Le champ `retour` revient d'un navigateur : seul le chemin fixe, aux huit paramètres connus et bornés, compte.
+// Le client et l'adresse de retour, eux, sont jugés par la page à chaque affichage (oauth/autoriser/page.test.ts).
+describe('retour à l’autorisation d’un assistant', () => {
+  const OAUTH = `/oauth/autoriser?${new URLSearchParams({
+    response_type: 'code',
+    client_id: 'un-client-id',
+    redirect_uri: 'https://claude.ai/api/mcp/auth_callback',
+    state: 'etat du client',
+    code_challenge: 'A'.repeat(43),
+    code_challenge_method: 'S256',
+    scope: 'leon',
+    resource: 'http://localhost:3000/api/mcp',
+  })}`;
+  const redirectsTo = (path: string) => new Error(`NEXT_REDIRECT ${path}`);
+  const signedIn = { email: 'paul@example.com', password: 'motdepasse-solide' };
+
+  it('la connexion revient à la même demande', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour: OAUTH }))).rejects.toThrow(
+      redirectsTo(OAUTH),
+    );
+  });
+
+  it('la vérification du code (2FA) aussi, avec un code ou un code de secours', async () => {
+    for (const code of ['123456', 'V5qHD-kSFGw']) {
+      await expect(verifyTwoFactorAction({}, form({ code, retour: OAUTH }))).rejects.toThrow(
+        redirectsTo(OAUTH),
+      );
+    }
+  });
+
+  it('rebâtit le chemin : un paramètre en trop ne le suit pas', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(
+      signInAction({}, form({ ...signedIn, retour: `${OAUTH}&suite=https://evil.example` })),
+    ).rejects.toThrow(redirectsTo(OAUTH));
+  });
+
+  it.each([
+    ['une adresse absolue', `https://evil.example${OAUTH}`],
+    ['une adresse sans schéma', `//evil.example${OAUTH}`],
+    ['une autre page', OAUTH.replace('/oauth/autoriser', '/reglages')],
+    ['un autre chemin de la page', OAUTH.replace('/oauth/autoriser', '/oauth/autoriser/../x')],
+    ['une demande sans client_id', OAUTH.replace('client_id=un-client-id&', '')],
+    ['un client_id de plus de 4 Ko', OAUTH.replace('un-client-id', 'a'.repeat(4097))],
+  ])('%s : retour à l’accueil', async (_name, retour) => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour }))).rejects.toThrow(redirectsTo('/'));
+    await expect(verifyTwoFactorAction({}, form({ code: '123456', retour }))).rejects.toThrow(
+      redirectsTo('/'),
+    );
+  });
+
+  it('une adresse non vérifiée affiche le message de la #119 et ne renvoie nulle part', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: false, unverified: true });
+
+    const state = await signInAction({}, form({ ...signedIn, retour: OAUTH }));
+
+    expect(state.errors?.form).toContain('vérifiez votre boîte mail');
+  });
+
+  it('un mauvais mot de passe ou un code faux ne renvoient nulle part', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: false });
+    vi.mocked(auth.api.verifyTOTP).mockRejectedValueOnce(new Error('faux'));
+
+    const signIn = await signInAction({}, form({ ...signedIn, retour: OAUTH }));
+    const twoFactor = await verifyTwoFactorAction({}, form({ code: '123456', retour: OAUTH }));
+
+    expect(signIn.errors).toEqual({ form: 'E-mail ou mot de passe incorrect.' });
+    expect(twoFactor.errors?.form).toBeDefined();
+  });
+});
+
 describe('joinAction', () => {
   const validJoin = {
     name: 'Julie Petit',

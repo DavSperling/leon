@@ -61,6 +61,20 @@ describe('liens entre pages', () => {
     );
   });
 
+  // La documentation est publique (groupe `(site)`) : le pied du site, « Vos outils de code » de l'onboarding et
+  // « Ordinateurs connectés » de Réglages y mènent.
+  it('mène chaque lien vers /documentation à sa page, depuis le pied du site, l’onboarding et Réglages', () => {
+    expect(ROUTES).toContain('/documentation');
+    const from = writtenPaths()
+      .filter(({ path }) => path === '/documentation')
+      .map(({ file }) => file);
+    expect(from.toSorted()).toEqual([
+      'src/components/site/site-footer.tsx',
+      'src/components/verre/onboarding/code-tools-card.tsx',
+      'src/components/verre/reglages/computers.tsx',
+    ]);
+  });
+
   it('ne garde aucune page retirée : fiches, à vérifier, journal, sources', () => {
     for (const removed of ['/fiches/[id]', '/a-verifier', '/journal', '/sources']) {
       expect(ROUTES).not.toContain(removed);

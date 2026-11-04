@@ -1217,6 +1217,13 @@
       "heroTerminal": "Utiliser le terminal",
       "toc": "Sur cette page",
       "addressPlaceholder": "adresse de votre Leon",
+      "view": {
+        "label": "Mode de lecture",
+        "human": "Pour vous",
+        "agent": "Pour un agent (Markdown)",
+        "copyAll": "Tout copier",
+        "openRaw": "Ouvrir en Markdown brut"
+      },
       "requirements": {
         "title": "Ce qu’il faut",
         "lead": "Quatre choses, sur l’ordinateur à brancher.",
@@ -1587,6 +1594,6 @@
     "withClaude": "Installer avec Claude Code",
     "withClaudeLead": "Copiez la consigne et collez-la dans Claude Code. Il fait l’installation avec vous et vous dit quand cliquer sur « Autoriser ».",
     "inTerminal": "Installer dans un terminal",
-    "instructions": "Installe Leon sur cet ordinateur et branche-le à mes outils de code.\n1. Lance cette commande dans le terminal : {command}\nSi ton bac à sable bloque l'écriture dans ~/.leon ou le téléchargement depuis nodejs.org, demande-moi la permission de la lancer hors du bac à sable.\n2. Si le script se termine par « No terminal is available to ask you questions » et affiche une dernière commande, qui se termine par « setup --url » suivi de l'adresse de Leon : avant de la lancer avec l'option --yes, recopie-moi tel quel, sans le résumer, le texte de ce que Leon va envoyer (c'est la section {docs}) et attends mon accord explicite. Ne lance jamais --yes sans mon accord explicite. Si le script te pose des questions au lieu de dire « No terminal is available… », réponds-y avec moi.\n3. Avant de lancer cette commande, préviens-moi qu'elle ouvre mon navigateur et attend mon clic sur « Autoriser » jusqu'à 5 minutes. Lance-la avec un délai d'au moins 5 minutes (ton outil coupe à 2 minutes par défaut) ou en arrière-plan. La page d'autorisation me demande d'annuler si je n'ai pas lancé la commande : rappelle-moi que c'est toi qui l'as lancée pour moi. Si ton bac à sable t'empêche d'ouvrir le navigateur ou d'écouter sur 127.0.0.1, demande-moi la permission de la lancer hors du bac à sable. Si le navigateur ne s'ouvre pas, elle écrit l'adresse à ouvrir : donne-la-moi.\n4. À la fin, dis-moi quels outils de code sont branchés et à quel compte Leon l'ordinateur est connecté.\nNe me demande jamais de jeton, n'en lis pas et n'en affiche pas : la connexion se fait par le navigateur."
+    "instructions": "Installe Leon sur cet ordinateur et branche-le à mes outils de code.\n1. Lance cette commande dans le terminal : {command}\nSi ton bac à sable bloque l'écriture dans ~/.leon ou le téléchargement depuis nodejs.org, demande-moi la permission de la lancer hors du bac à sable.\n2. Si le script se termine par « No terminal is available to ask you questions » et affiche une dernière commande, qui se termine par « setup --url » suivi de l'adresse de Leon : avant de la lancer avec l'option --yes, recopie-moi tel quel, sans le résumer, le texte de ce que Leon va envoyer (c'est la section « Ce qui part » de {docs}) et attends mon accord explicite. Ne lance jamais --yes sans mon accord explicite. Si le script te pose des questions au lieu de dire « No terminal is available… », réponds-y avec moi.\n3. Avant de lancer cette commande, préviens-moi qu'elle ouvre mon navigateur et attend mon clic sur « Autoriser » jusqu'à 5 minutes. Lance-la avec un délai d'au moins 5 minutes (ton outil coupe à 2 minutes par défaut) ou en arrière-plan. La page d'autorisation me demande d'annuler si je n'ai pas lancé la commande : rappelle-moi que c'est toi qui l'as lancée pour moi. Si ton bac à sable t'empêche d'ouvrir le navigateur ou d'écouter sur 127.0.0.1, demande-moi la permission de la lancer hors du bac à sable. Si le navigateur ne s'ouvre pas, elle écrit l'adresse à ouvrir : donne-la-moi.\n4. À la fin, dis-moi quels outils de code sont branchés et à quel compte Leon l'ordinateur est connecté.\nNe me demande jamais de jeton, n'en lis pas et n'en affiche pas : la connexion se fait par le navigateur."
   }
 }

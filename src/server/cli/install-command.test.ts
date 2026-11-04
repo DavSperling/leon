@@ -58,7 +58,8 @@ describe('installCommand', () => {
 });
 
 // « Je demande à Claude » : la consigne que l'onboarding, Réglages et la page /documentation donnent à copier, dans la
-// langue de l'interface. Elle porte la commande et le lien vers « Ce qui part », tous deux sur l'adresse du serveur.
+// langue de l'interface. Elle porte la commande et le lien vers la documentation en Markdown (c'est Claude Code qui la
+// lit), tous deux sur l'adresse du serveur, et nomme la section « Ce qui part ».
 const translator = (locale: 'en' | 'fr') =>
   createTranslator({
     locale,
@@ -68,14 +69,34 @@ const translator = (locale: 'en' | 'fr') =>
 
 describe('claudeCodeInstructions', () => {
   it.each(['en', 'fr'] as const)(
-    'porte la commande et le lien vers « Ce qui part » (%s)',
+    'porte la commande et le lien vers la documentation en Markdown (%s)',
     (locale) => {
       const text = claudeCodeInstructions(translator(locale), 'https://leon.example');
 
       expect(text).toContain('curl -fsSL https://leon.example/install | sh');
-      expect(text).toContain('https://leon.example/documentation#ce-qui-part');
+      expect(text).toContain('https://leon.example/documentation.md');
+      expect(text).not.toContain('/documentation#');
     },
   );
+
+  // La section que la consigne nomme est celle de la page, dans la langue de la consigne : un renommage sans la
+  // consigne enverrait Claude Code chercher un titre qui n'existe plus.
+  it.each([
+    [
+      'en',
+      en,
+      (title: string) => `the “${title}” section of https://leon.example/documentation.md`,
+    ],
+    [
+      'fr',
+      fr,
+      (title: string) => `la section « ${title} » de https://leon.example/documentation.md`,
+    ],
+  ] as const)('nomme la section « Ce qui part » de la page (%s)', (locale, messages, sentence) => {
+    const text = claudeCodeInstructions(translator(locale), 'https://leon.example') ?? '';
+
+    expect(text).toContain(sentence(messages.site.documentation.sent.title));
+  });
 
   it.each(['en', 'fr'] as const)(
     'ne cite aucune autre adresse, aucun jeton, aucun paramètre resté en plan (%s)',
@@ -84,7 +105,7 @@ describe('claudeCodeInstructions', () => {
 
       const addresses = text.match(/https?:\/\/[^\s)]+/g) ?? [];
       expect(addresses.toSorted()).toEqual([
-        'https://leon.example:8443/documentation#ce-qui-part',
+        'https://leon.example:8443/documentation.md',
         'https://leon.example:8443/install',
       ]);
       expect(text.split(/\s+/).filter((word) => API_TOKEN_PATTERN.test(word))).toEqual([]);

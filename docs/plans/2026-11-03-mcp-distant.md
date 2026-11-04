@@ -60,7 +60,7 @@ Total : un peu plus de 4 jours.
 - **Route des jetons :** 8 Ko d'entrée au plus (un `client_id` signé au maximum légal fait environ 3,7 Ko à lui seul).
 - **Pas de limite par adresse IP** sur l'inscription ni sur la route des jetons : claude.ai et ChatGPT appellent depuis les adresses d'Anthropic et d'OpenAI, partagées par tous leurs utilisateurs. Les deux routes ne stockent rien et leurs secrets ne se devinent pas ; les plafonds de taille restent.
 - **Un appel MCP** ne fait pas plus de requêtes qu'aujourd'hui : `verifyApiToken` lit déjà la ligne du jeton.
-- **Adresses :** l'émetteur est `BETTER_AUTH_URL` sans barre finale ; la ressource est `<BETTER_AUTH_URL>/api/mcp`, exactement.
+- **Adresses :** l'émetteur est l'origine de `BETTER_AUTH_URL` (`new URL(…).origin` : ni barre finale, ni majuscule, ni `:443` écrit) ; la ressource est `<émetteur>/api/mcp`, exactement.
 
 ## Décisions prises pour ce plan
 
@@ -133,7 +133,7 @@ Claude ne passe par CIMD que si le document annonce à la fois `client_id_metada
   "token_endpoint_auth_method": "none" }
 ```
 
-**L5. Le `client_id` d'une inscription (DCR)** : `signPayload('oauth-client', { "v": 1, "n": <nom nettoyé>, "r": [<adresses de retour>], "i": <secondes epoch> })` (M02), sans expiration. Le lire, c'est le vérifier : un `client_id` dont la signature ne passe pas est inconnu. Rien n'est stocké ; `client_host` (L9) est l'hôte de la première adresse de retour, ou `127.0.0.1` pour le bouclage.
+**L5. Le `client_id` d'une inscription (DCR)** : `signPayload('oauth-client', { "v": 1, "n": <nom nettoyé>, "r": [<adresses de retour>], "i": <secondes epoch> })` (M02), sans expiration. Le lire, c'est le vérifier : un `client_id` dont la signature ne passe pas est inconnu. Rien n'est stocké ; `client_host` (L9) est l'hôte de l'adresse de retour du code (`r`), `127.0.0.1` pour le bouclage.
 
 `shortcut: un client_id ne se révoque pas (rien n'est stocké) ; les jetons, si. Une table oauth_clients le jour où il faudra bannir un client.`
 
@@ -157,7 +157,8 @@ La page n'est jamais affichée dans un cadre (`frame-ancestors 'none'`, déjà d
   - crée la ligne par `createGrant` (M01) : `kind` `assistant`, `grant_id` = `j`, `client_ref` = `c`, `client_name` et `client_host` tirés de L5 ou L10, `name` = le nom du client ;
   - rend `200 { "access_token": "leon_…", "token_type": "Bearer", "expires_in": 3600, "refresh_token": "leon_…", "scope": "leon" }`.
 - `grant_type=refresh_token` avec `refresh_token`, `client_id` : `refreshGrant` (M01), avec SHA-256(`client_id`) ; même réponse (RFC 6749 §6 : un jeton de renouvellement est lié à son client).
-- Erreurs (400, JSON `{ "error": … }`) : `invalid_request`, `invalid_client` (`client_id` illisible), `invalid_grant` (tout le reste, sans dire quoi), `unsupported_grant_type`. Toutes les réponses portent `Cache-Control: no-store`.
+- Erreurs (400, JSON `{ "error": … }`) : `invalid_request`, `invalid_client` (`client_id` de plus de 4 Ko ; à l'échange, client illisible une fois le code et PKCE vérifiés ; au renouvellement, client que L11 ne sert plus, pour que le client se réinscrive), `invalid_grant` (tout le reste, sans dire quoi), `unsupported_grant_type`, `invalid_target`. Toutes les réponses portent `Cache-Control: no-store` et `Pragma: no-cache`.
+- Ordre : à l'échange, le code, `c`, `redirect_uri` (s'il est présent), PKCE, puis seulement la lecture du client ; au renouvellement, une vérification du client sur place, sans réseau (`clientStillAllowed`), puis `refreshGrant`.
 
 **L9. `api_tokens`** (la migration de M01) :
 
@@ -171,8 +172,12 @@ alter table api_tokens
   add column grant_id text unique,      -- j de L7 : un code ne sert qu'une fois
   add column expires_at timestamptz,    -- null : n'expire pas
   add column refresh_hash text unique,  -- SHA-256 du jeton de renouvellement
-  add column refresh_expires_at timestamptz;
+  add column refresh_expires_at timestamptz,
+  add column previous_refresh_hash text unique, -- l'empreinte d'avant la dernière rotation : son retour est un rejeu
+  add column refresh_rotated_at timestamptz;      -- l'heure de la dernière rotation (30 s de tolérance)
 ```
+
+Un jeton de renouvellement d'avant la dernière rotation, présenté plus de 30 s après elle, révoque la ligne entière (rejeu, OAuth 2.1 et RFC 9700 §4.14.2) ; dans les 30 s, il est refusé sans rien changer (deux renouvellements simultanés du même client).
 
 Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, ou par une empreinte.
 
@@ -181,7 +186,7 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 - le document doit être du JSON, avec `client_id` égal à l'adresse caractère par caractère, `client_name` et `redirect_uris` ; chaque adresse de retour doit être permise par L11, sinon le client est refusé en entier ;
 - un `token_endpoint_auth_method` autre que `none` est ignoré (F4) ;
 - tout échec (réseau, taille, format, hôte hors de L11) vaut « client inconnu » (L6 point 1), avec un compteur, jamais l'adresse dans un journal ;
-- `client_host` est l'hôte de la première adresse de retour ; `client_ref` (L7, L9) est SHA-256 de l'adresse.
+- `client_ref` (L7, L9) est SHA-256 de l'adresse. `client_host` (L9) est l'hôte de l'adresse de retour du code (`r`), `127.0.0.1` pour le bouclage.
 
 **L11. Les clients et leurs adresses de retour** (B5) : `src/server/oauth/clients.ts`, une constante. Ce sont les adresses que chaque client publie dans sa documentation, pas ses hôtes : un autre chemin du même hôte (une redirection ouverte, l'adresse de retour d'un autre service) ne doit jamais recevoir un code.
 
@@ -205,7 +210,7 @@ Pas de RLS, comme aujourd'hui : toujours filtrée par `user_id` et `tenant_id`, 
 1. **Avec DCR, un nom de client est déclaré, pas vérifié** (avec CIMD, il vient du document du client). N'importe qui peut s'inscrire sous le nom « Claude ». Parade : la page montre l'hôte de retour, et les adresses de retour sont limitées à celles que publient les clients de L11 (B5) : un faux « Claude » ne peut renvoyer que vers le vrai.
 2. **Le consentement par hameçonnage.** Un attaquant lance lui-même un parcours, garde le `code_verifier`, et envoie le lien d'autorisation à sa victime : si elle clique « Autoriser », le code part vers l'adresse de retour inscrite. Parade : seules les adresses de retour publiées de L11, chemin compris, et le bouclage. Un autre chemin d'un hôte connu (une redirection ouverte, l'adresse de retour d'un autre service) est refusé à l'inscription. Avec un retour en bouclage, le code arrive sur l'ordinateur de la victime, où rien de l'attaquant n'attend. Avec un client connu (claude.ai, chatgpt.com…), il arrive dans le navigateur de la victime, chez un client qui lie `state` à la session qui a commencé le parcours : l'attaquant ne le reçoit pas. Plus l'avertissement de la page. Sans la liste fermée, l'attaquant inscrirait sa propre adresse et recevrait le code.
 3. **Le bouclage** : n'importe quel programme de l'ordinateur peut écouter un port et se faire passer pour un client (la spécification le rappelle). Parade : pour un retour en bouclage, la page dit « Vous serez renvoyé vers une application de cet ordinateur » et répète l'avertissement.
-4. **Deux renouvellements en même temps** pour un même branchement : le second échoue (`invalid_grant`) et l'assistant redemande l'autorisation. Better Auth tolère un renouvellement rejoué pendant 30 s pour cette raison. `shortcut: pas de tolérance en v1 ; garder l'ancienne empreinte de renouvellement 30 s si M07 ou l'usage montre des reconnexions.`
+4. **Deux renouvellements en même temps** pour un même branchement : le second reçoit `invalid_grant` sans que la ligne change, s'il arrive dans les 30 s de la rotation (L9). Au-delà, l'ancienne empreinte est un rejeu et révoque la ligne.
 5. **claude.ai et ChatGPT appellent depuis leurs serveurs.** `pnpm dev` ne leur est pas joignable ; Claude exige une adresse publique en IPv4. Parade : M07 contre la production, après déploiement ; Claude Code et Codex se vérifient d'abord en local (retour en bouclage).
 6. **L'adresse à coller** doit être exactement `<BETTER_AUTH_URL>/api/mcp` : Claude compare `resource` à ce que l'utilisateur a tapé. Parade : le bouton Copier de Réglages (M08).
 7. **Le protocole du 2026-07-28** fait échouer les clients plus anciens face à un serveur qui ne parle que lui. Parade : F11, et `mcp.db.test.ts` garde un appel `initialize` de l'époque 2025.

@@ -5,7 +5,12 @@ import { z } from 'zod';
 import { ACCESS_TTL_MS, createGrant, refreshGrant } from '@/server/auth/api-tokens';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { CLIENT_ID_MAX, readAuthorizationCode } from '@/server/oauth/authorize';
-import { readClientId, registerClient } from '@/server/oauth/clients';
+import {
+  clientRef,
+  clientStillAllowed,
+  readClientId,
+  registerClient,
+} from '@/server/oauth/clients';
 import { OAUTH_SCOPE, RESOURCE } from '@/server/oauth/metadata';
 
 // Les routes publiques du serveur d'autorisation OAuth : ni jeton ni session, par nature (un client qui s'inscrit, ou
@@ -66,10 +71,6 @@ function pkceMatches(verifier: string, challenge: string): boolean {
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-// L'empreinte que ClientInfo.ref (clients.ts) porte, sans lire le client : le code (`c`) et la ligne de l'assistant
-// (`client_ref`) lient le client_id reçu, et seulement lui.
-const clientRef = (clientId: string) => createHash('sha256').update(clientId).digest('hex');
-
 // Le code d'abord, puis tout ce qu'il lie (client_id, adresse, verifier), et seulement ensuite le client : lire son
 // document est un appel réseau, qu'une requête au code faux ne doit pas provoquer. 'invalid_grant' dit tout ce qui ne va
 // pas, sans dire quoi (code faux, expiré ou d'un autre client, adresse ou verifier qui ne correspondent pas, membre
@@ -112,9 +113,13 @@ async function grantTokens(form: Record<string, string>): Promise<Tokens | Token
   if (grant.resource !== undefined && grant.resource !== RESOURCE) return 'invalid_target';
   if (grant.client_id.length > CLIENT_ID_MAX) return 'invalid_client';
   const ref = clientRef(grant.client_id);
-  // Un renouvellement ne lit pas le client (aucun appel réseau) : refreshGrant ne compare que client_ref.
-  if (grant.grant_type === 'refresh_token')
+  if (grant.grant_type === 'refresh_token') {
+    // Aucune lecture du document du client pendant un renouvellement (une panne de claude.ai ou de chatgpt.com ne
+    // coupe personne), mais le jugement local de readClientId : un client que L11 ne sert plus perd son renouvellement.
+    // invalid_grant, sur lequel les assistants réautorisent.
+    if (!clientStillAllowed(grant.client_id)) return 'invalid_grant';
     return (await refreshGrant(grant.refresh_token, ref)) ?? 'invalid_grant';
+  }
   return exchangeCode(grant, ref);
 }
 

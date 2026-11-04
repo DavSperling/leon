@@ -83,6 +83,10 @@ function cleanName(raw: unknown): string {
   return name.trim() || NAME_FALLBACK;
 }
 
+// L'empreinte d'un client_id : ClientInfo.ref, le « c » du code d'autorisation (L7) et le client_ref de la ligne de
+// l'assistant (L9). Sa seule source : un renouvellement la calcule sans lire le client.
+export const clientRef = (clientId: string) => createHash('sha256').update(clientId).digest('hex');
+
 export type ClientInfo = {
   name: string;
   redirectUris: string[];
@@ -97,7 +101,7 @@ function describeClient(clientId: string, name: string, uris: string[]): ClientI
     name,
     redirectUris: uris,
     host: loopback(first) ? '127.0.0.1' : new URL(first).hostname,
-    ref: createHash('sha256').update(clientId).digest('hex'),
+    ref: clientRef(clientId),
   };
 }
 
@@ -217,4 +221,12 @@ export async function readClientId(
   options?: DocumentReadOptions,
 ): Promise<ClientInfo | null> {
   return value.startsWith('https://') ? readDocument(value, options) : readRegistered(value);
+}
+
+// Leon sert-il encore ce client_id ? Le jugement local de readClientId, sans réseau : un client inscrit, par sa signature
+// et ses adresses de retour encore permises par L11 ; une adresse de document, par sa forme et son hôte encore dans L11,
+// sans lire le document (ni compter un refus : rien n'est refusé ici, c'est l'appelant qui juge). Au renouvellement, il
+// retire leurs jetons aux clients que L11 ne sert plus.
+export function clientStillAllowed(value: string): boolean {
+  return value.startsWith('https://') ? documentUrl(value) : readRegistered(value) !== null;
 }

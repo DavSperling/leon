@@ -1,7 +1,13 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { signComputerCode, signPayload } from '@/server/auth/computer-code';
-import { readClientId, redirectAllowed, registerClient } from './clients';
+import {
+  clientRef,
+  clientStillAllowed,
+  readClientId,
+  redirectAllowed,
+  registerClient,
+} from './clients';
 
 const CLAUDE = 'https://claude.ai/api/mcp/auth_callback';
 const CHATGPT = 'https://chatgpt.com/connector/oauth/abc123';
@@ -337,6 +343,98 @@ describe('readClientId : un client_id inscrit (L5)', () => {
     await readClientId(id);
     await readClientId(`${id}x`);
     expect(spies.flatMap((spy) => spy.mock.calls)).toEqual([]);
+    vi.restoreAllMocks();
+  });
+});
+
+describe('clientRef : l’empreinte d’un client_id', () => {
+  it('est le SHA-256 hexadécimal du client_id, celui que readClientId rend en ref, pour un client inscrit comme pour un document', async () => {
+    const id = registered(register([CLAUDE])).client_id;
+    const document = 'https://claude.ai/oauth/claude-code-client-metadata';
+    const fetch = async () =>
+      Response.json({ client_id: document, client_name: 'Claude Code', redirect_uris: [CLAUDE] });
+
+    expect(clientRef(id)).toBe(createHash('sha256').update(id).digest('hex'));
+    expect((await readClientId(id))?.ref).toBe(clientRef(id));
+    expect((await readClientId(document, { fetch, cache: new Map() }))?.ref).toBe(
+      clientRef(document),
+    );
+  });
+});
+
+// Le jugement local de readClientId, sans réseau : au renouvellement, il retire leurs jetons aux clients que L11 ne sert plus.
+describe('clientStillAllowed : un client_id que Leon sert encore, sans rien lire', () => {
+  const clientId = () => registered(register([CLAUDE], { client_name: 'Claude' })).client_id;
+
+  it.each([
+    ['un client inscrit', () => clientId()],
+    ['un document de Claude Code', () => 'https://claude.ai/oauth/claude-code-client-metadata'],
+    ['un document de ChatGPT', () => 'https://chatgpt.com/oauth/client.json'],
+  ])('accepte %s', (_what, build) => {
+    expect(clientStillAllowed(build())).toBe(true);
+  });
+
+  it.each([
+    [
+      'un client_id falsifié',
+      () => `${clientId().slice(0, -1)}${clientId().endsWith('A') ? 'B' : 'A'}`,
+    ],
+    ['une valeur qui n’a pas la forme d’un client_id', () => 'abc'],
+    ['une valeur vide', () => ''],
+    [
+      'un client signé par un autre secret',
+      () =>
+        signPayload(
+          'oauth-client',
+          { v: 1, n: 'Claude', r: [CLAUDE], i: 1 },
+          { secret: 'un-autre-secret-un-autre-secret-0002' },
+        ),
+    ],
+    [
+      'un client signé pour un autre but',
+      () => signPayload('oauth-code', { v: 1, n: 'Claude', r: [CLAUDE], i: 1 }),
+    ],
+    [
+      'un client signé dont l’adresse de retour n’est plus dans L11',
+      () =>
+        signPayload('oauth-client', { v: 1, n: 'Ancien', r: ['https://evil.example/cb'], i: 1 }),
+    ],
+    [
+      'un client signé dont une seule adresse sur deux n’est plus dans L11',
+      () =>
+        signPayload('oauth-client', {
+          v: 1,
+          n: 'Ancien',
+          r: [CLAUDE, 'https://claude.ai/autre'],
+          i: 1,
+        }),
+    ],
+    ['un document hors des hôtes de L11', () => 'https://evil.example/client.json'],
+    [
+      'un document dont l’hôte ressemble à celui d’un client',
+      () => 'https://claude.ai.evil.example/client.json',
+    ],
+    ['un document sans chemin', () => 'https://claude.ai/'],
+    ['un document avec une requête', () => 'https://claude.ai/client.json?x=1'],
+    ['un document sur un autre port', () => 'https://claude.ai:8443/client.json'],
+    ['un document en http', () => 'http://claude.ai/client.json'],
+    ['un document de plus de 512 caractères', () => `https://claude.ai/${'a'.repeat(512)}`],
+  ])('refuse %s', (_what, build) => {
+    expect(clientStillAllowed(build())).toBe(false);
+  });
+
+  it('ne lit aucun document et ne journalise rien', () => {
+    const fetched = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau'));
+    const logged = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation(() => {}),
+    );
+
+    clientStillAllowed('https://claude.ai/oauth/claude-code-client-metadata');
+    clientStillAllowed('https://evil.example/client.json');
+    clientStillAllowed(clientId());
+
+    expect(fetched).not.toHaveBeenCalled();
+    expect(logged.flatMap((spy) => spy.mock.calls)).toEqual([]);
     vi.restoreAllMocks();
   });
 });

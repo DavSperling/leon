@@ -4,12 +4,12 @@ import { and, DrizzleQueryError, eq } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, API_TOKEN_PATTERN } from '@/capture/api-contract';
 import * as apiTokensModule from '@/server/auth/api-tokens';
-import { signComputerCode } from '@/server/auth/computer-code';
+import { signComputerCode, signPayload } from '@/server/auth/computer-code';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members } from '@/server/db/schema/auth';
 import { codeRedirect, parseAuthorizeRequest } from '@/server/oauth/authorize';
-import { readClientId } from '@/server/oauth/clients';
+import { clientRef, readClientId } from '@/server/oauth/clients';
 import { OAUTH_SCOPE, RESOURCE } from '@/server/oauth/metadata';
 import { searchPassages } from '@/server/search/search';
 import { apiRequest } from '@/test/api-request';
@@ -688,6 +688,72 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
     await expectError(await renew('https://claude.ai/oauth/inconnu.json'), 'invalid_grant');
     await expectError(await renew('a'.repeat(4097)), 'invalid_client');
     expect(await mcpStatus(tokens.access_token)).toBe(200);
+  });
+
+  describe('revérifie le client sur place, sans réseau : un client que L11 ne sert plus perd son renouvellement', () => {
+    const signed = (r: string[]) => signPayload('oauth-client', { v: 1, n: 'Ancien', r, i: 1 });
+    const falsified = () => {
+      const id = signed([CLAUDE]);
+      return `${id.slice(0, -1)}${id.endsWith('A') ? 'B' : 'A'}`;
+    };
+
+    // La ligne que l'échange du code aurait créée pour ce client_id, du temps où L11 le servait.
+    async function grantFor(member: TenantContext, clientId: string): Promise<Tokens> {
+      const granted = await apiTokensModule.createGrant(member, {
+        grantId: randomBytes(16).toString('base64url'),
+        clientRef: clientRef(clientId),
+        clientName: 'Ancien client',
+        clientHost: 'claude.ai',
+        name: 'Ancien client',
+      });
+      if (!granted) throw new Error('ligne non créée');
+      return { access_token: granted.accessToken, refresh_token: granted.refreshToken };
+    }
+
+    it.each([
+      ['une adresse de retour retirée de L11', () => signed(['https://evil.example/cb'])],
+      ['une adresse sur deux retirée de L11', () => signed([CLAUDE, 'https://claude.ai/autre'])],
+      ['un client_id signé falsifié', falsified],
+      ['un document sur un hôte hors de L11', () => 'https://evil.example/client.json'],
+      ['un document dont l’adresse n’a plus la forme attendue', () => 'https://claude.ai/'],
+    ])('%s : invalid_grant, la ligne est inchangée', async (_what, build) => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const clientId = build();
+      const tokens = await grantFor(paul, clientId);
+      const before = await rowsOf(paul);
+      const fetched = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau'));
+
+      await expectError(
+        await exchange({
+          grant_type: 'refresh_token',
+          refresh_token: tokens.refresh_token,
+          client_id: clientId,
+        }),
+        'invalid_grant',
+      );
+
+      expect(await rowsOf(paul)).toEqual(before);
+      expect(fetched).not.toHaveBeenCalled();
+      expect(await mcpStatus(tokens.access_token)).toBe(200);
+    });
+
+    it('le même client que L11 sert encore renouvelle, sans aucune lecture', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const clientId = signed([CLAUDE]);
+      const tokens = await grantFor(paul, clientId);
+      const fetched = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau'));
+
+      const response = await exchange({
+        grant_type: 'refresh_token',
+        refresh_token: tokens.refresh_token,
+        client_id: clientId,
+      });
+
+      expect(response.status).toBe(200);
+      expect(fetched).not.toHaveBeenCalled();
+    });
   });
 
   it('ne lit pas le client : le document CIMD est injoignable et le renouvellement réussit quand même', async () => {

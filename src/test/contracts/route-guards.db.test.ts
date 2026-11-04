@@ -16,20 +16,22 @@ import { app } from '@/server/api/app';
 // (`leon login`) n'a ni l'un ni l'autre, le jeton de la CLI n'étant pas encore en base. Elle est gardée par le code signé
 // (K4) et par la forme du jeton, et répond 401 sans l'un ni l'autre ; ses cas sont dans computer-routes.db.test.ts.
 //
-// Le serveur d'autorisation OAuth du MCP distant (/api/oauth/…) est public lui aussi : l'inscription d'un assistant
-// (claude.ai, ChatGPT…) et l'échange de son code contre des jetons se font sans jeton ni session, par nature, puisqu'il
-// n'a encore rien. Ses routes ont leurs propres contrôles (adresses de retour de la liste fermée L11, code signé à usage
-// unique et PKCE, 4 puis 8 Ko d'entrée) ; leurs cas sont dans oauth-routes.db.test.ts, et api-contract.db.test.ts garde
-// les deux routes (400 à un POST sans corps valide, ni 401 ni 404).
+// Le serveur d'autorisation OAuth du MCP distant (/api/oauth/clients et /api/oauth/jeton, une liste fermée) est public
+// lui aussi : l'inscription d'un assistant (claude.ai, ChatGPT…) et l'échange de son code contre des jetons se font
+// sans jeton ni session, par nature, puisqu'il n'a encore rien. Ses routes ont leurs propres contrôles (adresses de
+// retour de la liste fermée L11, code signé à usage unique et PKCE, 4 puis 8 Ko d'entrée) ; leurs cas sont dans
+// oauth-routes.db.test.ts, et api-contract.db.test.ts garde les deux routes (400 à un POST sans corps valide, ni 401 ni 404).
 const PUBLIC = [
   /^\/api\/health$/,
   /^\/api\/auth\//,
   /^\/api\/v1\/connexions\/oauth\//,
-  /^\/api\/oauth\//,
+  /^\/api\/oauth\/(clients|jeton)$/, // liste fermée : une route OAuth de plus se garde, ou s'ajoute ici à la main
 ];
 
+const isPublic = (path: string) => PUBLIC.some((pattern) => pattern.test(path));
+
 const guarded = [...new Set(app.routes.map((route) => `${route.method} ${route.path}`))].filter(
-  (route) => !PUBLIC.some((pattern) => pattern.test(route.split(' ')[1] ?? '')),
+  (route) => !isPublic(route.split(' ')[1] ?? ''),
 );
 
 describe('gardes des routes de l’API', () => {
@@ -43,6 +45,14 @@ describe('gardes des routes de l’API', () => {
         'POST /api/v1/ordinateurs',
       ]),
     );
+  });
+
+  // Liste fermée : une route de plus sous /api/oauth/ doit entrer ici à la main, sinon elle est gardée comme les autres.
+  it('seules l’inscription et la route des jetons de OAuth sont publiques', () => {
+    expect(['/api/oauth/clients', '/api/oauth/jeton'].every(isPublic)).toBe(true);
+    for (const path of ['/api/oauth/autre', '/api/oauth/', '/api/oauth/jeton/x', '/api/oauth']) {
+      expect(isPublic(path)).toBe(false);
+    }
   });
 
   it.each(guarded)('%s répond 401 ou 403 sans identité', async (route) => {

@@ -28,8 +28,16 @@ export const IssueSchema = z.object({
   author_association: Association,
   updated_at: z.string(),
   comments: z.number().optional(), // nombre de commentaires : 0 évite une requête
-  pull_request: z.looseObject({}).nullish(), // présent seulement pour une PR
+  // L'état (T13) : open ou closed, et pourquoi (completed, not_planned, reopened…) ; GitHub n'en donne pas pour une PR.
+  state: z.string(),
+  state_reason: z.string().nullish(),
+  closed_at: z.string().nullish(),
+  assignees: z.array(z.object({ login: z.string() })).nullish(),
+  // Présent seulement pour une PR ; `merged_at` nul tant qu'elle n'est pas fusionnée.
+  pull_request: z.looseObject({ merged_at: z.string().nullish() }).nullish(),
 });
+// La liste des PR donne la date de fusion au premier niveau, et pas de `pull_request`.
+const PullListSchema = IssueSchema.extend({ merged_at: z.string().nullish() });
 export const CommentSchema = z.object({
   id: z.number(),
   body: z.string().nullish(),
@@ -80,7 +88,12 @@ const PullSchema = z.object({
   merged: z.boolean(),
   draft: z.boolean().optional(),
   user: Author,
-  head: z.object({ ref: z.string(), sha: z.string().optional() }),
+  // `repo` : le dépôt de la tête, nul quand le fork a été supprimé ; une PR venue d'un fork le dit (T13).
+  head: z.object({
+    ref: z.string(),
+    sha: z.string().optional(),
+    repo: z.object({ full_name: z.string() }).nullish(),
+  }),
   base: z.object({ ref: z.string() }),
   mergeable_state: z.string().optional(),
   body: z.string().nullish(),
@@ -133,6 +146,7 @@ type IssueWrite = { title?: string; body?: string; labels?: string[]; assignees?
 
 export type ChangedFile = z.infer<typeof ChangedFileSchema>;
 export type Issue = z.infer<typeof IssueSchema>;
+export type Pull = z.infer<typeof PullSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 export type Review = z.infer<typeof ReviewSchema>;
 export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
@@ -270,7 +284,8 @@ export function githubClient(token: string, http: ConnectorHttp) {
     // la plus récente) : pour un dépôt dont les tickets sont désactivés. La liste des PR n'a pas de
     // paramètre `since` : on la lit de la plus récente à la plus ancienne, on s'arrête à la première
     // plus ancienne que `since`, puis on remet l'ordre. Elle n'a ni `comments` ni `pull_request` :
-    // le second est ajouté, le premier reste absent (les commentaires sont alors toujours demandés).
+    // le second est ajouté, avec la date de fusion, le premier reste absent (les commentaires sont
+    // alors toujours demandés).
     async *pullRequests(repo: string, since: string): AsyncGenerator<Issue[]> {
       const limit = Date.parse(since);
       const request = {
@@ -279,10 +294,10 @@ export function githubClient(token: string, http: ConnectorHttp) {
         query: { state: 'all', sort: 'updated', direction: 'desc', per_page: ISSUES_PER_PAGE },
       };
       const recent: Issue[] = [];
-      read: for await (const page of pages(request, z.array(IssueSchema))) {
-        for (const pull of page) {
+      read: for await (const page of pages(request, z.array(PullListSchema))) {
+        for (const { merged_at, ...pull } of page) {
           if (Date.parse(pull.updated_at) < limit) break read;
-          recent.push({ ...pull, pull_request: {} });
+          recent.push({ ...pull, pull_request: { merged_at } });
         }
       }
       recent.reverse();

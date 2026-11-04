@@ -6,6 +6,7 @@ import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
+import type { Issue } from './client';
 import { githubConnector } from './connector';
 import issueComments12Page1 from './fixtures/issue-comments-12-page1.json';
 import issueComments12Page2 from './fixtures/issue-comments-12-page2.json';
@@ -13,6 +14,7 @@ import issueComments13 from './fixtures/issue-comments-13.json';
 import issuesDisabled from './fixtures/issues-disabled-410.json';
 import issuesPage1 from './fixtures/issues-page1.json';
 import issuesPage2 from './fixtures/issues-page2.json';
+import pull13 from './fixtures/pull-13.json';
 import pullComments13 from './fixtures/pull-comments-13.json';
 import pullReviews13 from './fixtures/pull-reviews-13.json';
 import pullsPage1 from './fixtures/pulls-page1.json';
@@ -53,6 +55,7 @@ function firstPassRoutes(): FakeRoute[] {
     { url: `${API}/repos/acme/leon/issues/13/comments`, json: issueComments13 },
     { url: `${API}/repos/acme/leon/pulls/13/reviews`, json: pullReviews13 },
     { url: `${API}/repos/acme/leon/pulls/13/comments`, json: pullComments13 },
+    { url: `${API}/repos/acme/leon/pulls/13`, json: pull13 },
     { url: ISSUES_PAGE_2, json: issuesPage2 },
   ];
 }
@@ -258,7 +261,7 @@ describe('github : sync, premier passage', () => {
       title: '#12 Choisir la durée de relève',
       url: 'https://github.com/acme/leon/issues/12',
       updatedAt: '2026-10-10T09:00:00Z',
-      origin: { repo: 'acme/leon' },
+      origin: { repo: 'acme/leon', etat: 'open', auteur: 'marie-durand', cote: 'equipe' },
       turns: [
         {
           externalId: 'body',
@@ -305,7 +308,16 @@ describe('github : sync, premier passage', () => {
       title: '#13 Ajouter la relève périodique',
       url: 'https://github.com/acme/leon/pull/13',
       updatedAt: '2026-10-11T08:30:00Z',
-      origin: { repo: 'acme/leon' },
+    });
+    // « Ferme #12. » est en français : GitHub ne le lit pas, Leon non plus (pas de clé `ferme`).
+    expect(pr?.origin).toEqual({
+      repo: 'acme/leon',
+      etat: 'open',
+      auteur: 'paul-martin',
+      cote: 'equipe',
+      branche: 'paul/releve-periodique',
+      tete: 'acme/leon',
+      brouillon: 'oui',
     });
     expect(
       pr?.turns.map((turn) => [turn.externalId, turn.role, turn.author.name, turn.ts]),
@@ -323,6 +335,7 @@ describe('github : sync, premier passage', () => {
       expect.arrayContaining([
         '/repos/acme/leon/pulls/13/reviews',
         '/repos/acme/leon/pulls/13/comments',
+        '/repos/acme/leon/pulls/13',
       ]),
     );
   });
@@ -347,7 +360,7 @@ describe('github : sync, premier passage', () => {
     ]);
     expect(pages[0]?.items[2]?.turns).toEqual([]);
     expect(cursorOf(pages[0])).toEqual({
-      'acme/leon': { at: '2026-10-11T08:45:00Z', seen: [14] },
+      'acme/leon': { at: '2026-10-11T08:45:00Z', seen: [14], details: true },
     });
     expect(calls.some((call) => call.url.includes('/issues/14'))).toBe(false);
   });
@@ -357,7 +370,7 @@ describe('github : sync, premier passage', () => {
 
     expect(idsOf(pages.slice(1))).toEqual(['issue:acme/leon#15', 'issue:acme/leon#16']);
     expect(cursorOf(pages[1])).toEqual({
-      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
     });
     const pageTwo = calls.find((call) => call.url.startsWith(`${ISSUES_PAGE_2}?`));
     expect(pageTwo?.url).toBe(`${ISSUES_PAGE_2}?page=2`);
@@ -418,6 +431,7 @@ describe('github : sync, premier passage', () => {
         user: { login: 'inconnu' },
         author_association: association,
         updated_at: '2026-10-10T09:00:00Z',
+        state: 'open',
       },
       {
         comments: [
@@ -453,6 +467,102 @@ describe('github : sync, premier passage', () => {
   });
 });
 
+// T13 : l'état d'un ticket ou d'une PR, gardé dans `origin` (spec #108, section 1.1), jamais dans un tour.
+describe('github : les faits dans origin', () => {
+  const AT = '2026-10-12T14:00:00Z';
+  const ISSUE: Issue = {
+    number: 1,
+    title: 'Titre',
+    body: 'Texte',
+    html_url: 'https://github.com/acme/leon/issues/1',
+    user: { login: 'marie-durand' },
+    author_association: 'MEMBER',
+    updated_at: AT,
+    state: 'open',
+  };
+  const NONE = { comments: [], reviews: [], reviewComments: [] };
+  const originOf = (fields: Partial<Issue>) =>
+    toItem('acme/leon', { ...ISSUE, ...fields }, NONE).origin;
+
+  it.each([
+    ['ouvert', { state: 'open' }, { etat: 'open' }],
+    ['rouvert', { state: 'open', state_reason: 'reopened' }, { etat: 'open' }],
+    [
+      'fermé, terminé',
+      { state: 'closed', state_reason: 'completed', closed_at: AT },
+      { etat: 'closed:completed', fini_le: AT },
+    ],
+    [
+      'fermé, abandonné',
+      { state: 'closed', state_reason: 'not_planned', closed_at: AT },
+      { etat: 'closed:not_planned' },
+    ],
+    [
+      'fermé sans raison',
+      { state: 'closed', state_reason: null, closed_at: AT },
+      { etat: 'closed' },
+    ],
+    [
+      'PR fusionnée',
+      { state: 'closed', closed_at: AT, pull_request: { merged_at: AT } },
+      { etat: 'merged', fini_le: AT },
+    ],
+    [
+      'PR fermée sans fusion',
+      { state: 'closed', closed_at: AT, pull_request: { merged_at: null } },
+      { etat: 'closed' },
+    ],
+  ] as const)('l’état « %s » donne ses clés', (_, fields, facts) => {
+    expect(originOf(fields)).toEqual({
+      repo: 'acme/leon',
+      auteur: 'marie-durand',
+      cote: 'equipe',
+      ...facts,
+    });
+  });
+
+  it('dit le côté extérieur, et rien sans auteur ni lien avec le dépôt', () => {
+    expect(originOf({ author_association: 'NONE' }).cote).toBe('exterieur');
+    expect(originOf({ user: null, author_association: null })).toEqual({
+      repo: 'acme/leon',
+      etat: 'open',
+    });
+  });
+
+  it('lit les tickets qu’une PR ferme dans son texte, sans les renvois vers un autre dépôt', () => {
+    const body =
+      'Closes #12, fixes #14 et Resolved #12.\nRéférence #20, ferme #21, unfixes #22, fix acme/autre#23';
+
+    expect(originOf({ body, pull_request: {} }).ferme).toBe('#12 #14');
+    // Un ticket ne ferme rien.
+    expect(originOf({ body }).ferme).toBeUndefined();
+  });
+
+  it('garde les assignés, et coupe à 300 caractères sur un séparateur', () => {
+    const logins = Array.from({ length: 10 }, (_, i) => ({ login: `${'x'.repeat(36)}-${i}` }));
+    const names = logins.map((assignee) => assignee.login);
+
+    expect(originOf({ assignees: logins.slice(0, 2) }).assignes).toBe(names.slice(0, 2).join(','));
+    // 10 logins de 38 caractères : 389 avec les virgules. Les 7 premiers tiennent (272), le 8e non.
+    expect(originOf({ assignees: logins }).assignes).toBe(names.slice(0, 7).join(','));
+  });
+
+  it('donne à une PR sans corps un tour signé par son auteur, son titre pour texte', () => {
+    const item = toItem('acme/leon', { ...ISSUE, body: '  ', pull_request: {} }, NONE);
+
+    expect(item.turns).toEqual([
+      {
+        externalId: 'body',
+        role: 'document',
+        author: { name: 'marie-durand', email: null },
+        side: 'team',
+        text: 'Titre',
+        ts: AT,
+      },
+    ]);
+  });
+});
+
 describe('github : sync, reprise', () => {
   it('reprend juste après le curseur de la première page', async () => {
     const first = await runSync(firstPassRoutes());
@@ -481,13 +591,15 @@ describe('github : sync, reprise', () => {
   });
 
   it('ignore l’élément déjà rendu au même instant, et rend l’autre', async () => {
-    const cursor = JSON.stringify({ 'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15] } });
+    const cursor = JSON.stringify({
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15], details: true },
+    });
 
     const { pages } = await runSync([issuesRoute(issuesPage2)], { cursor });
 
     expect(idsOf(pages)).toEqual(['issue:acme/leon#16']);
     expect(cursorOf(pages[0])).toEqual({
-      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
     });
   });
 
@@ -499,7 +611,9 @@ describe('github : sync, reprise', () => {
   });
 
   it('suit chaque dépôt avec son propre curseur', async () => {
-    const cursor = JSON.stringify({ 'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] } });
+    const cursor = JSON.stringify({
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
+    });
     const site = issuesPage2.map((issue) => ({ ...issue, number: issue.number + 100 }));
 
     const { pages, calls } = await runSync(
@@ -516,8 +630,8 @@ describe('github : sync, reprise', () => {
     expect(sinceOf(calls[1]?.url)).toBe('2026-10-12T13:59:59Z');
     expect(idsOf(pages)).toEqual(['issue:acme/site#115', 'issue:acme/site#116']);
     expect(cursorOf(pages[0])).toEqual({
-      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
-      'acme/site': { at: '2026-10-12T14:00:00Z', seen: [115, 116] },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
+      'acme/site': { at: '2026-10-12T14:00:00Z', seen: [115, 116], details: true },
     });
   });
 
@@ -547,6 +661,28 @@ describe('github : sync, reprise', () => {
     ]);
     expect(sinceOf(calls[2]?.url)).toBe('2026-09-14T23:59:59Z');
   });
+
+  // Spec #108, 1.6 : une marque d'avant T13 n'a pas `details`, ses PR n'ont pas leurs faits. Le dépôt se relit
+  // depuis since, et un passage coupé à 200 éléments (sync.ts) reprend là où il s'est arrêté.
+  it('rattrape depuis since un dépôt à la marque ancienne, puis reprend après une coupe', async () => {
+    const old = JSON.stringify({ 'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] } });
+
+    const first = await runSync(firstPassRoutes(), { cursor: old });
+
+    expect(sinceOf(first.calls[0]?.url)).toBe('2026-09-15T00:00:00Z');
+    expect(idsOf(first.pages)).toContain('pr:acme/leon#13');
+    expect(cursorOf(first.pages[0])).toEqual({
+      'acme/leon': { at: '2026-10-11T08:45:00Z', seen: [14], details: true },
+    });
+
+    // La relève s'est arrêtée après la première page : elle a gardé son curseur.
+    const { pages, calls } = await runSync([issuesRoute(issuesPage2)], {
+      cursor: first.pages[0]?.cursor,
+    });
+
+    expect(sinceOf(calls[0]?.url)).toBe('2026-10-11T08:44:59Z');
+    expect(idsOf(pages)).toEqual(['issue:acme/leon#15', 'issue:acme/leon#16']);
+  });
 });
 
 describe('github : sync, erreurs', () => {
@@ -559,6 +695,7 @@ describe('github : sync, erreurs', () => {
         { url: `${API}/repos/acme/leon/issues/13/comments`, json: issueComments13 },
         { url: `${API}/repos/acme/leon/pulls/13/reviews`, status: 403 },
         { url: `${API}/repos/acme/leon/pulls/13/comments`, json: pullComments13 },
+        { url: `${API}/repos/acme/leon/pulls/13`, status: 403 },
       ]),
     );
 
@@ -569,6 +706,13 @@ describe('github : sync, erreurs', () => {
       'comment:410',
       'review-comment:501',
     ]);
+    // Le détail refusé : la PR garde les faits de la liste, sans sa branche.
+    expect(pr?.origin).toEqual({
+      repo: 'acme/leon',
+      etat: 'open',
+      auteur: 'paul-martin',
+      cote: 'equipe',
+    });
   });
 
   it('remonte un jeton rejeté (401) sur une ressource secondaire', async () => {
@@ -604,11 +748,18 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
   const SITE = `${API}/repos/acme/site`;
   const PULLS_PAGE_2 = `${API}/repositories/1296270/pulls`;
   const issuesOff = (): FakeRoute => ({ url: `${SITE}/issues`, status: 410, json: issuesDisabled });
-  // Les trois lectures d'une PR ; par défaut sans aucun commentaire.
+  // Les quatre lectures d'une PR ; par défaut sans aucun commentaire. Le détail ne dit rien de la fusion.
+  const detail = (number: number) => ({
+    ...pull13,
+    number,
+    draft: false,
+    head: { ...pull13.head, ref: `site-${number}`, repo: { id: 1296270, full_name: 'acme/site' } },
+  });
   const quiet = (number: number, comments: unknown[] = []): FakeRoute[] => [
     { url: `${SITE}/issues/${number}/comments`, json: comments },
     { url: `${SITE}/pulls/${number}/reviews`, json: [] },
     { url: `${SITE}/pulls/${number}/comments`, json: [] },
+    { url: `${SITE}/pulls/${number}`, json: detail(number) },
   ];
   const comment = {
     id: 601,
@@ -638,9 +789,19 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
     const pr21 = itemsOf(pages).find((item) => item.externalId === 'pr:acme/site#21');
     expect(pr21?.title).toBe('#21 Ajouter la page des tarifs');
     expect(pr21?.turns.map((turn) => turn.externalId)).toEqual(['body', 'comment:601']);
+    // La date de fusion, donnée au premier niveau par la liste des PR, est gardée.
+    expect(pr21?.origin).toEqual({
+      repo: 'acme/site',
+      etat: 'merged',
+      fini_le: '2026-10-13T09:00:00Z',
+      auteur: 'marie-durand',
+      cote: 'equipe',
+      branche: 'site-21',
+      tete: 'acme/site',
+    });
     expect(pages).toHaveLength(1);
     expect(cursorOf(pages[0])).toEqual({
-      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22], details: true },
     });
     // Après le 410, la liste des PR : du plus récent au plus ancien, sans paramètre since.
     const urls = calls.map((call) => call.url);
@@ -658,7 +819,9 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
   });
 
   it('reprend après le curseur : ignore la PR déjà lue et ne remonte pas plus loin que lui', async () => {
-    const cursor = JSON.stringify({ 'acme/site': { at: '2026-10-13T09:00:00Z', seen: [21] } });
+    const cursor = JSON.stringify({
+      'acme/site': { at: '2026-10-13T09:00:00Z', seen: [21], details: true },
+    });
 
     const { pages, calls } = await runSync([issuesOff(), ...pullPages(), ...quiet(22)], {
       ...siteOnly,
@@ -668,7 +831,7 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
     expect(sinceOf(calls[0]?.url)).toBe('2026-10-13T08:59:59Z');
     expect(idsOf(pages)).toEqual(['pr:acme/site#22']);
     expect(cursorOf(pages[0])).toEqual({
-      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22], details: true },
     });
     expect(calls.some((call) => /\/(issues|pulls)\/(20|21)\//.test(call.url))).toBe(false);
     expect(calls.some((call) => call.url.includes('page=3'))).toBe(false);
@@ -695,8 +858,8 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
       'issue:acme/leon#16',
     ]);
     expect(cursorOf(pages.at(-1))).toEqual({
-      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22] },
-      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+      'acme/site': { at: '2026-10-14T10:00:00Z', seen: [22], details: true },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
     });
   });
 
@@ -747,7 +910,7 @@ describe('github : sync, dépôts d’équipe (décision D)', () => {
     expect(calls.some((call) => call.url.includes('/paul/perso'))).toBe(false);
     expect(cursorOf(pages.at(-1))).toEqual({
       'paul/perso': MARK,
-      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16] },
+      'acme/leon': { at: '2026-10-12T14:00:00Z', seen: [15, 16], details: true },
     });
   });
 
@@ -852,7 +1015,7 @@ describe('github : sync, dépôts d’équipe (décision D)', () => {
       'acme/site': MARK,
       'acme/prive': MARK,
       'acme/vieux': MARK,
-      'acme/leon': MARK,
+      'acme/leon': { ...MARK, details: true },
     });
   });
 

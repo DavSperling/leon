@@ -107,6 +107,28 @@ describe('renderSearch', () => {
   });
 });
 
+// T13 : les faits de GitHub (github/map.ts) se lisent « clé : valeur », dans un ordre fixe, après les valeurs seules.
+describe('origine', () => {
+  const origin = {
+    ferme: '#12',
+    etat: 'merged',
+    repo: 'acme/api',
+    cote: 'equipe',
+    auteur: 'paul-martin',
+    fini_le: '2026-10-18T09:00:00Z',
+  };
+  const expected =
+    'acme/api · etat : merged · fini_le : 2026-10-18T09:00:00Z · auteur : paul-martin · cote : equipe · ferme : #12';
+
+  it('écrit la même origine dans search et dans fetch', () => {
+    expect(renderSearch(page([hit({ origin })]), 1)).toContain(`origine="${expected}"`);
+    expect(
+      fetchStructured({ source: { ...SOURCE, origin }, turns: TURNS, truncated: false }).metadata
+        .origine,
+    ).toBe(expected);
+  });
+});
+
 describe('searchStructured', () => {
   // Le contrat de ChatGPT (deep research) : `results` avec id, titre et lien ; il cite quand le lien n'est pas vide.
   it('rend aussi results {id, title, url}, un résultat par source, dans l’ordre', () => {

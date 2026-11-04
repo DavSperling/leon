@@ -1,5 +1,5 @@
 import type { ConnectorItem, ConnectorTurn } from '../types';
-import type { Comment, Issue, Review, ReviewComment } from './client';
+import type { Comment, Issue, Pull, Review, ReviewComment } from './client';
 
 // De la réponse de GitHub à un élément du socle : le corps est le tour `document`, daté de la
 // dernière modification ; chaque commentaire, avis ou commentaire de revue garde sa propre date.
@@ -55,10 +55,49 @@ function isTurn(value: ConnectorTurn | null): value is ConnectorTurn {
   return value !== null;
 }
 
+// Les tickets qu'une PR ferme, d'après les mots-clés de GitHub suivis de #n, dans l'ordre, sans doublon.
+// shortcut: les renvois vers un autre dépôt (propriétaire/dépôt#n) et par adresse sont ignorés, à ajouter si on en voit.
+const CLOSING = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/gi;
+const closedIssues = (body: string | null | undefined): string =>
+  [...new Set([...(body ?? '').matchAll(CLOSING)].map((match) => `#${match[1]}`))].join(' ');
+
+// Une valeur d'origine tient en 300 caractères (ce que la lecture garde, filters-sql.ts), coupée sur un séparateur.
+const ORIGIN_VALUE_MAX = 300;
+function cut(value: string): string {
+  if (value.length <= ORIGIN_VALUE_MAX) return value;
+  const head = value.slice(0, ORIGIN_VALUE_MAX + 1);
+  const at = Math.max(head.lastIndexOf(' '), head.lastIndexOf(','));
+  return at > 0 ? head.slice(0, at) : head.slice(0, ORIGIN_VALUE_MAX);
+}
+
+// L'état d'un ticket ou d'une PR (T13, section 1.1 de la spec #108), en texte, à côté du dépôt. Il ne va jamais
+// dans un tour : chaque transition en créerait un nouveau. `pull` : le détail d'une PR, null s'il n'a pas été lu.
+function facts(issue: Issue, pull: Pull | null): Record<string, string> {
+  const mergedAt = issue.pull_request?.merged_at;
+  const closed = issue.state_reason ? `closed:${issue.state_reason}` : 'closed';
+  const etat = issue.state === 'open' ? 'open' : mergedAt ? 'merged' : closed;
+  const side = sideOf(issue.author_association);
+  const entries: [string, string | null | undefined][] = [
+    ['etat', etat],
+    ['fini_le', mergedAt ?? (etat === 'closed:completed' ? issue.closed_at : null)],
+    ['auteur', issue.user?.login],
+    ['cote', side && (side === 'team' ? 'equipe' : 'exterieur')],
+    ['assignes', issue.assignees?.map((assignee) => assignee.login).join(',')],
+    ['branche', pull?.head.ref],
+    ['tete', pull?.head.repo?.full_name],
+    ['brouillon', pull?.draft ? 'oui' : null],
+    ['ferme', issue.pull_request ? closedIssues(issue.body) : null],
+  ];
+  return Object.fromEntries(
+    entries.flatMap(([key, value]) => (value ? [[key, cut(value)] as const] : [])),
+  );
+}
+
 export function toItem(
   repo: string,
   issue: Issue,
   { comments, reviews, reviewComments }: Discussion,
+  pull: Pull | null = null,
 ): ConnectorItem {
   const replies = [
     ...comments.map((c) => turn(`comment:${c.id}`, 'participant', c, c.created_at)),
@@ -75,13 +114,19 @@ export function toItem(
   ]
     .filter(isTurn)
     .sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
+  // Une PR sans description existe quand même, avec ses faits : son titre lui tient lieu de corps (spec #108, 1.2).
+  const body =
+    turn('body', 'document', issue, issue.updated_at) ??
+    (issue.pull_request
+      ? turn('body', 'document', { ...issue, body: issue.title }, issue.updated_at)
+      : null);
   return {
     externalId: `${issue.pull_request ? 'pr' : 'issue'}:${repo}#${issue.number}`,
     nature: 'ticket',
     title: `#${issue.number} ${issue.title}`,
     url: issue.html_url,
     updatedAt: issue.updated_at,
-    origin: { repo },
-    turns: [turn('body', 'document', issue, issue.updated_at), ...replies].filter(isTurn),
+    origin: { repo, ...facts(issue, pull) },
+    turns: [body, ...replies].filter(isTurn),
   };
 }

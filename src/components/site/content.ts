@@ -29,6 +29,7 @@ export const NAV_LINKS = [
   { href: '/connecteurs', label: 'Connecteurs' },
   { href: '/securite', label: 'Sécurité' },
   { href: '/tarifs', label: 'Tarifs' },
+  { href: '/documentation', label: 'Documentation' },
 ] as const;
 
 export const TAGLINES = {
@@ -738,6 +739,7 @@ const NAV_LINKS_EN: Twin<typeof NAV_LINKS> = [
   { href: '/connecteurs', label: 'Connectors' },
   { href: '/securite', label: 'Security' },
   { href: '/tarifs', label: 'Pricing' },
+  { href: '/documentation', label: 'Documentation' },
 ];
 
 const TAGLINES_EN: Twin<typeof TAGLINES> = {

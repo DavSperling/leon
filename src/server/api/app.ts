@@ -11,6 +11,7 @@ import { contextRoutes } from './context-routes';
 import { faitsRoutes } from './faits-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
+import { oauthRoutes } from './oauth-routes';
 import type { ApiEnv } from './require-api-token';
 import { sessionRoutes } from './session-routes';
 
@@ -34,6 +35,8 @@ app.route('/v1', computerRoutes);
 // qui s'appliquerait aussi aux routes à jeton montées sous /v1).
 app.route('/v1', sessionRoutes);
 app.route('/mcp', mcpRoutes);
+// L'inscription des clients OAuth : publique par nature, ni jeton ni session.
+app.route('/oauth', oauthRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));
 app.onError(handleApiError);

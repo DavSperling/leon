@@ -38,16 +38,19 @@ const SERVED = {
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
 } as const;
-// L'inscription des clients OAuth (M04) et la route des jetons (M06) : annoncées par les métadonnées du serveur
-// d'autorisation (M03) avant d'être servies. Un chemin ajouté au contrat avant sa route vient ici.
-const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['oauthClients', 'oauthJeton'];
+// Publiques par nature (L4) : l'inscription d'un client OAuth se fait sans jeton ni session. Sa sonde est un POST sans
+// corps valide, qui répond 400 : la route existe (ni 404) et ne demande rien (ni 401).
+const PUBLIC = ['oauthClients'] as const;
+// La route des jetons (M06) : annoncée par les métadonnées du serveur d'autorisation (M03) avant d'être servie.
+// Un chemin ajouté au contrat avant sa route vient ici.
+const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['oauthJeton'];
 
 // Seule /api/mcp dit au client où trouver le serveur d'autorisation (L2) ; les autres routes à jeton gardent le défi nu.
 const MCP_CHALLENGE = `Bearer resource_metadata="${TEST_ENV.BETTER_AUTH_URL}/.well-known/oauth-protected-resource/api/mcp", scope="leon"`;
 
 describe('routes de l’API', () => {
-  it('chaque chemin de API_PATHS est servi ou déclaré pas encore servi', () => {
-    expect([...Object.keys(SERVED), ...NOT_YET_SERVED].sort()).toEqual(
+  it('chaque chemin de API_PATHS est servi, public ou déclaré pas encore servi', () => {
+    expect([...Object.keys(SERVED), ...PUBLIC, ...NOT_YET_SERVED].sort()).toEqual(
       Object.keys(API_PATHS).sort(),
     );
   });
@@ -58,6 +61,12 @@ describe('routes de l’API', () => {
     expect(response.headers.get('WWW-Authenticate')).toBe(
       name === 'mcp' ? MCP_CHALLENGE : 'Bearer',
     );
+  });
+
+  it.each(PUBLIC)('%s répond 400 à un corps invalide, sans jeton ni session', async (name) => {
+    const response = await apiRequest(API_PATHS[name], { body: {} });
+    expect(response.status).toBe(400);
+    expect(response.headers.get('WWW-Authenticate')).toBeNull();
   });
 
   it.skipIf(NOT_YET_SERVED.length === 0).each(NOT_YET_SERVED)(

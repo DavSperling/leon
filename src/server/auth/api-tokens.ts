@@ -27,13 +27,11 @@ const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requêt
 export const ACCESS_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
-// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5) : Réglages les
-// range dans « Ordinateurs connectés » plutôt que dans les jetons personnels.
-// shortcut: reconnus au préfixe du nom (un jeton manuel nommé « Ordinateur : x » s'y range), une colonne kind dans
-// api_tokens le jour où ça gêne.
+// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5). Réglages les
+// range dans « Ordinateurs connectés » par leur `kind`, et retire ce préfixe à l'affichage.
+// shortcut: l'affichage retire le préfixe sans le vérifier (tout jeton `ordinateur` le porte : la migration 0049 et
+// computer-routes) ; un autre appelant de registerApiToken devra le porter aussi, ou on rangera le nom seul.
 export const COMPUTER_TOKEN_PREFIX = 'Ordinateur : ';
-export const isComputerToken = ({ name }: { name: string }): boolean =>
-  name.startsWith(COMPUTER_TOKEN_PREFIX);
 
 export function generateApiToken(): string {
   return `leon_${randomBytes(32).toString('base64url')}`;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { nextAfterTools } from '@/components/verre/onboarding/tools-model';
+import { tabOf } from '@/components/verre/reglages/settings-tabs';
 import { OAUTH_RETURN_PATHS } from '@/lib/connection-form';
 import { AUTHORIZE_PATH } from '@/server/oauth/metadata';
 import { listFiles, productionSources, readText } from './files';
@@ -83,6 +84,29 @@ describe('liens entre pages', () => {
   it('ne garde aucune page retirée : fiches, à vérifier, journal, sources', () => {
     for (const removed of ['/fiches/[id]', '/a-verifier', '/journal', '/sources']) {
       expect(ROUTES).not.toContain(removed);
+    }
+  });
+
+  // Une ancre ne casse aucun test quand sa section disparaît : #claude-code a survécu ainsi à « Brancher Claude Code ».
+  it('mène chaque ancre /reglages#… à un onglet de Réglages et à une section qui existe', () => {
+    const anchors = new Set(
+      productionSources('src/**/*.{ts,tsx}').flatMap(({ text }) =>
+        [...text.matchAll(/\/reglages#([a-z-]+)/g)].map((match) => match[1] as string),
+      ),
+    );
+    const sections = productionSources(
+      'src/components/verre/reglages/*.tsx',
+      'src/app/(app)/reglages/page.tsx',
+    )
+      .map(({ text }) => text)
+      .join('\n');
+
+    expect(anchors).toContain('assistants');
+    for (const anchor of anchors) {
+      const tab = tabOf(`#${anchor}`);
+      expect(tab, anchor).toBeDefined();
+      // un onglet porte son propre nom ; toute autre ancre est l'id d'une section
+      if (tab !== anchor) expect(sections, anchor).toContain(`id="${anchor}"`);
     }
   });
 

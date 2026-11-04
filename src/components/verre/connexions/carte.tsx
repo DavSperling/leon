@@ -52,12 +52,13 @@ type Centre = {
   ly: MotionValue<number>;
 };
 
-// L'endroit des Réglages où chaque canal se branche.
+// L'endroit des Réglages où chaque canal se branche : les sessions de Claude Code se captent par les crochets que
+// pose la commande d'installation des ordinateurs ; `remember` (MCP) vient d'un assistant branché.
 const CANAL_REGLAGE: Record<CaptureKind, string> = {
-  claude_code: '/reglages#claude-code',
+  claude_code: '/reglages#ordinateurs',
   claude_ai: '/reglages#extension',
   chatgpt: '/reglages#extension',
-  mcp_remember: '/reglages#jetons',
+  mcp_remember: '/reglages#assistants',
 };
 
 const STROKES: Record<Etat, { stroke: string; width: number; dash?: string; opacity: number }> = {

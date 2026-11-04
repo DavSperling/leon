@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import { API_PATHS } from '@/capture/api-contract';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
 import { AboutSettings } from '@/components/verre/reglages/about';
+import { AssistantsSection } from '@/components/verre/reglages/assistants';
 import { ComputersSection } from '@/components/verre/reglages/computers';
 import {
   DeleteAccountSection,
@@ -11,7 +11,7 @@ import {
 import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
-import { CommandBlock, INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
+import { INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import {
   PasswordSettings,
   ProfileSettings,
@@ -20,7 +20,7 @@ import {
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
-import { COMPUTER_TOKEN_PREFIX, isComputerToken, listApiTokens } from '@/server/auth/api-tokens';
+import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
@@ -28,6 +28,7 @@ import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
 import { env } from '@/server/env';
+import { RESOURCE } from '@/server/oauth/metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('settings'))('title') };
@@ -53,18 +54,17 @@ export default async function SettingsPage() {
   const live = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
-  // les jetons des ordinateurs connectés par `leon login` ont leur section, sous leur nom sans le préfixe
-  const tokens = live.filter((token) => !isComputerToken(token));
+  // Trois listes, une par sorte de jeton : les ordinateurs connectés par `leon login` (sous leur nom sans le préfixe),
+  // les assistants branchés par OAuth, et les jetons personnels (les autres).
+  const tokens = live.filter((token) => token.kind === 'manuel');
   const computers = live
-    .filter(isComputerToken)
+    .filter((token) => token.kind === 'ordinateur')
     .map((token) => ({ ...token, name: token.name.slice(COMPUTER_TOKEN_PREFIX.length) }));
+  const assistants = live.filter((token) => token.kind === 'assistant');
   const serverUrl = env.BETTER_AUTH_URL;
-  const mcpUrl = new URL(API_PATHS.mcp, serverUrl).toString();
   // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
   // l'utilisateur, qui le colle lui-même.
   const extensionPrompt = t('extensionPrompt', { serverUrl });
-  const placeholder = `<${t('tokenPlaceholder')}>`;
-  const command = `claude mcp add --transport http leon ${mcpUrl} --header "Authorization: Bearer ${placeholder}"`;
 
   return (
     // 1008 px : la colonne des onglets (200), son écart (48) et le contenu (760, comme les autres pages)
@@ -118,14 +118,7 @@ export default async function SettingsPage() {
 
               <TokensSection tokens={tokens} />
 
-              <Section
-                id="claude-code"
-                title={t('claudeTitle')}
-                description={t('claudeDescription')}
-                className={SECTION}
-              >
-                <CommandBlock command={command} placeholder={placeholder} />
-              </Section>
+              <AssistantsSection address={RESOURCE} assistants={assistants} />
 
               <Section
                 id="extension"

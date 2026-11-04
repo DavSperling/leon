@@ -23,7 +23,7 @@ const SECTIONS: Record<string, Tab> = {
   membres: 'equipe',
   ordinateurs: 'integrations',
   jetons: 'integrations',
-  'claude-code': 'integrations',
+  assistants: 'integrations',
   extension: 'integrations',
 };
 export const tabOf = (hash: string): Tab | undefined => {

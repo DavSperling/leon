@@ -7,7 +7,9 @@ import {
   createApiToken,
   createGrant,
   generateApiToken,
+  listApiTokens,
   registerApiToken,
+  revokeApiToken,
 } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
@@ -166,10 +168,9 @@ describe('jeton assistant', () => {
     expect(await response.json()).toEqual({ error: 'Missing or invalid token' });
   });
 
-  it('est accepté par /api/mcp', async () => {
-    const token = await assistantToken(await signUp());
-
-    const response = await app.request(API_PATHS.mcp, {
+  // Un appel `initialize` à /api/mcp avec ce jeton d'accès.
+  const initialize = (token: string) =>
+    app.request(API_PATHS.mcp, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -188,7 +189,25 @@ describe('jeton assistant', () => {
       }),
     });
 
-    expect(response.status).toBe(200);
+  it('est accepté par /api/mcp', async () => {
+    const token = await assistantToken(await signUp());
+
+    expect((await initialize(token)).status).toBe(200);
+  });
+
+  // M08 : « Révoquer » dans Assistants connectés (revokeTokenAction → revokeApiToken) coupe l'assistant à l'appel suivant.
+  it('est refusé par /api/mcp une fois révoqué dans Réglages', async () => {
+    const paul = await signUp();
+    const token = await assistantToken(paul);
+    expect((await initialize(token)).status).toBe(200);
+
+    const [row] = await listApiTokens(paul);
+    expect(row).toMatchObject({ kind: 'assistant', clientName: 'Claude', clientHost: 'claude.ai' });
+    expect(await revokeApiToken(paul, row?.id ?? '')).toBe(true);
+
+    const response = await initialize(token);
+    expect(response.status).toBe(401);
+    expect(response.headers.get('WWW-Authenticate')).toContain('resource_metadata=');
   });
 
   it('est refusé par /api/mcp sans jeton', async () => {

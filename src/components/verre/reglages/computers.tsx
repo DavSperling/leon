@@ -81,7 +81,7 @@ export function ComputersSection({
           <ul aria-label={t('yourComputers')} className="grid grid-cols-[minmax(0,1fr)]">
             <AnimatePresence initial={false}>
               {computers.map((c) => (
-                <TokenRow key={c.id} token={c} computer onGone={() => focusAfter(c.id)} />
+                <TokenRow key={c.id} token={c} onGone={() => focusAfter(c.id)} />
               ))}
             </AnimatePresence>
           </ul>

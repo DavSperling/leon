@@ -12,12 +12,21 @@ export function unauthorized(c: Context) {
   return c.json({ error: 'Missing or invalid token' }, 401);
 }
 
-// Jeton personnel en Bearer ; le jeton n'est jamais journalisé ni renvoyé.
-export const requireApiToken: MiddlewareHandler<ApiEnv> = async (c, next) => {
-  const token = BEARER.exec(c.req.header('Authorization') ?? '')?.[1];
-  const verified = token ? await verifyApiToken(token) : null;
-  if (!verified) return unauthorized(c);
-  c.set('ctx', verified.ctx);
-  c.set('tokenId', verified.tokenId);
-  await next();
-};
+// Jeton en Bearer ; le jeton n'est jamais journalisé ni renvoyé. Un jeton d'assistant (OAuth) n'ouvre que la route
+// montée avec `assistant: true`, seule /api/mcp (F9) : ailleurs, le même 401 qu'un jeton inconnu.
+export function apiTokenGuard({
+  assistant = false,
+}: {
+  assistant?: boolean;
+} = {}): MiddlewareHandler<ApiEnv> {
+  return async (c, next) => {
+    const token = BEARER.exec(c.req.header('Authorization') ?? '')?.[1];
+    const verified = token ? await verifyApiToken(token) : null;
+    if (!verified || (verified.kind === 'assistant' && !assistant)) return unauthorized(c);
+    c.set('ctx', verified.ctx);
+    c.set('tokenId', verified.tokenId);
+    await next();
+  };
+}
+
+export const requireApiToken = apiTokenGuard();

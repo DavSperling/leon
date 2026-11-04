@@ -5,7 +5,7 @@ import { getEmbedder } from '@/server/embeddings/registry';
 import { env } from '@/server/env';
 import { clientLabelFromUserAgent } from '@/server/mcp/client-label';
 import { createLeonMcpServer } from '@/server/mcp/server';
-import { type ApiEnv, requireApiToken } from './require-api-token';
+import { type ApiEnv, apiTokenGuard } from './require-api-token';
 
 const McpAuthExtraSchema = z.object({
   ctx: z.object({
@@ -21,7 +21,7 @@ const mcpHandler = createMcpHandler(({ authInfo }) => {
   return createLeonMcpServer(ctx, client, { embedder: getEmbedder(env) });
 });
 
-export const mcpRoutes = new Hono<ApiEnv>().all('/', requireApiToken, (c) =>
+export const mcpRoutes = new Hono<ApiEnv>().all('/', apiTokenGuard({ assistant: true }), (c) =>
   mcpHandler.fetch(c.req.raw, {
     // Jamais le jeton en clair dans authInfo : seulement son id.
     authInfo: {

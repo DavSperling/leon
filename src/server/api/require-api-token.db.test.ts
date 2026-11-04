@@ -2,20 +2,32 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createApiToken } from '@/server/auth/api-tokens';
+import { API_PATHS } from '@/capture/api-contract';
+import {
+  createApiToken,
+  createGrant,
+  generateApiToken,
+  registerApiToken,
+} from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { createUserWithOrganization } from '@/server/auth/sign-up';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
+import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
 import { TEST_ENV } from '@/test/test-env';
 import { app } from './app';
-import { type ApiEnv, requireApiToken } from './require-api-token';
+import { type ApiEnv, apiTokenGuard, requireApiToken } from './require-api-token';
 
 afterEach(() => vi.restoreAllMocks());
 
 const testApp = new Hono<ApiEnv>()
   .use(requireApiToken)
+  .get('/', (c) => c.json({ ctx: c.var.ctx, tokenId: c.var.tokenId }));
+
+// La route montée avec l'option qui accepte les jetons des assistants (seul /api/mcp la passe).
+const assistantApp = new Hono<ApiEnv>()
+  .use(apiTokenGuard({ assistant: true }))
   .get('/', (c) => c.json({ ctx: c.var.ctx, tokenId: c.var.tokenId }));
 
 const password = 'motdepasse-solide';
@@ -72,6 +84,116 @@ describe('requireApiToken', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ctx: paul, tokenId: id });
     expect(calls().join('\n')).not.toContain(token.slice(5));
+  });
+});
+
+// F9 : un jeton assistant n'ouvre que /api/mcp ; partout ailleurs, le même 401 qu'un jeton inconnu.
+describe('jeton assistant', () => {
+  const grantInput = () => ({
+    grantId: randomUUID(),
+    clientRef: 'a'.repeat(64),
+    clientName: 'Claude',
+    clientHost: 'claude.ai',
+    name: 'Claude',
+  });
+
+  async function assistantToken(ctx: TenantContext): Promise<string> {
+    const grant = await createGrant(ctx, grantInput());
+    if (!grant) throw new Error('branchement non créé');
+    return grant.accessToken;
+  }
+
+  it('est refusé par requireApiToken, avec la même réponse qu’un jeton inconnu', async () => {
+    const token = await assistantToken(await signUp());
+    const get = (bearer: string) =>
+      testApp.request('/', { headers: { Authorization: `Bearer ${bearer}` } });
+
+    const refused = await get(token);
+    const unknown = await get(generateApiToken());
+
+    expect(refused.status).toBe(401);
+    expect(refused.status).toBe(unknown.status);
+    expect(refused.headers.get('WWW-Authenticate')).toBe(unknown.headers.get('WWW-Authenticate'));
+    expect(await refused.json()).toEqual(await unknown.json());
+  });
+
+  it('est accepté quand la route est montée avec l’option, comme les autres sortes de jetons', async () => {
+    const paul = await signUp();
+    const manual = (await createApiToken(paul, 'CLI')).token;
+    const computerToken = generateApiToken();
+    await registerApiToken(paul, 'Ordinateur : MacBook', computerToken);
+
+    for (const token of [await assistantToken(paul), manual, computerToken]) {
+      const response = await assistantApp.request('/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as { ctx: TenantContext }).ctx).toEqual(paul);
+    }
+  });
+
+  it('reste refusé quand il est expiré, même sur la route qui l’accepte', async () => {
+    const paul = await signUp();
+    const token = await assistantToken(paul);
+    await adminDb
+      .update(apiTokens)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(apiTokens.userId, paul.userId));
+
+    const response = await assistantApp.request('/', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(response.status).toBe(401);
+  });
+
+  it.each([
+    ['GET', API_PATHS.me],
+    ['POST', API_PATHS.ingest],
+    ['GET', `${API_PATHS.briefing}?projet=github.com/acme/projet`],
+    ['POST', API_PATHS.faits],
+    ['POST', API_PATHS.contexte],
+    ['DELETE', API_PATHS.jeton],
+  ])('%s %s répond 401 à un jeton assistant', async (method, path) => {
+    const token = await assistantToken(await signUp());
+
+    const response = await app.request(path, {
+      method,
+      headers: { Authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: method === 'GET' ? undefined : '{}',
+    });
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'Missing or invalid token' });
+  });
+
+  it('est accepté par /api/mcp', async () => {
+    const token = await assistantToken(await signUp());
+
+    const response = await app.request(API_PATHS.mcp, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'initialize',
+        params: {
+          protocolVersion: '2025-03-26',
+          capabilities: {},
+          clientInfo: { name: 'test', version: '1.0.0' },
+        },
+      }),
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('est refusé par /api/mcp sans jeton', async () => {
+    const response = await app.request(API_PATHS.mcp, { method: 'POST', body: '{}' });
+    expect(response.status).toBe(401);
   });
 });
 

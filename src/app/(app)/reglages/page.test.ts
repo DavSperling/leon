@@ -52,6 +52,9 @@ const token = (id: string, name: string, revokedAt: Date | null = null): ApiToke
   createdAt: new Date('2026-11-01T10:00:00Z'),
   lastUsedAt: null,
   revokedAt,
+  kind: 'manuel',
+  clientName: null,
+  clientHost: null,
 });
 
 // Les éléments d'un type donné dans l'arbre que la page rend (fragments compris).

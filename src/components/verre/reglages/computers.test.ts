@@ -117,8 +117,8 @@ describe('ComputersSection', () => {
 
   // Les deux chemins à égalité (même titre, même texte), « Je demande à Claude » d'abord, puis la documentation.
   it.each([
-    ['en', 'With Claude Code', 'In a terminal', 'Ask Claude'],
-    ['fr', 'Avec Claude Code', 'Dans un terminal', 'Je demande à Claude'],
+    ['en', 'Install with Claude Code', 'Install in a terminal', 'Ask Claude'],
+    ['fr', 'Installer avec Claude Code', 'Installer dans un terminal', 'Je demande à Claude'],
   ] as const)(
     'présente « %s » : Claude Code d’abord, puis le terminal, au même niveau',
     (locale, withClaude, inTerminal, ask) => {

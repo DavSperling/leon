@@ -86,8 +86,8 @@ describe('CodeToolsCard', () => {
 
   // Les deux chemins à égalité (même titre, même texte), « Je demande à Claude » d'abord.
   it.each([
-    ['en', en, 'With Claude Code', 'In a terminal', 'Ask Claude'],
-    ['fr', fr, 'Avec Claude Code', 'Dans un terminal', 'Je demande à Claude'],
+    ['en', en, 'Install with Claude Code', 'Install in a terminal', 'Ask Claude'],
+    ['fr', fr, 'Installer avec Claude Code', 'Installer dans un terminal', 'Je demande à Claude'],
   ] as const)(
     'présente « %s » : Claude Code d’abord, puis le terminal, au même niveau',
     (locale, messages, withClaude, inTerminal, ask) => {
@@ -120,7 +120,7 @@ describe('CodeToolsCard', () => {
 
     expect(copies).toEqual([]);
     expect(html).not.toContain('Ask Claude');
-    expect(html).not.toContain('With Claude Code');
+    expect(html).not.toContain('Install with Claude Code');
     expect(html).toContain(`>${COMMAND}</code>`);
   });
 });

@@ -21,7 +21,7 @@ export const OAUTH_PARAMS = [
   'resource',
 ] as const;
 
-const CLIENT_ID_MAX = 4096; // 4 Ko : un client_id d'inscription porte un nom et jusqu'à 5 adresses (L4)
+export const CLIENT_ID_MAX = 4096; // 4 Ko : un client_id d'inscription porte un nom et jusqu'à 5 adresses (L4)
 const VALUE_MAX = 512; // redirect_uri (L11), state (L6) ; borne de forme des autres valeurs au retour de la connexion
 const CODE_TTL_SECONDS = 120;
 const CHALLENGE = /^[A-Za-z0-9_-]{43}$/; // SHA-256 en base64url, sans remplissage

@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { and, DrizzleQueryError, eq } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
@@ -244,6 +244,20 @@ const exchange = (fields: Record<string, string>, headers: Record<string, string
 async function team(...names: string[]): Promise<TenantContext[]> {
   return (await newTeam(names, tenantIds)).members;
 }
+
+// Un client CIMD (L10) : l'adresse de son document, que `fetch` rend sans le garder en mémoire (no-store). Chaque appel
+// de `fetch` est un appel réseau que Leon aurait fait : les tests s'en servent pour montrer quand il n'en fait aucun.
+const cimdUrl = () => `https://claude.ai/oauth/m06-${randomUUID()}.json`;
+const serveDocument = (url: string) =>
+  vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({ client_id: url, client_name: 'Claude Code', redirect_uris: [CLAUDE] }),
+          { status: 200, headers: { 'cache-control': 'no-store' } },
+        ),
+    );
 
 async function register(redirectUri = CLAUDE, name = 'Claude'): Promise<string> {
   const response = await post({ client_name: name, redirect_uris: [redirectUri] });
@@ -498,20 +512,85 @@ describe('POST /api/oauth/jeton : authorization_code (L8)', () => {
     });
   });
 
-  it('invalid_client pour un client_id illisible ou inconnu, avant même de regarder le code', async () => {
-    const [paul] = await team('Paul');
-    if (!paul) throw new Error('membre de test manquant');
-    const granted = await authorize(paul);
+  describe('le client n’est lu qu’après le code, son client_id, son adresse et son verifier', () => {
+    it('un client_id inconnu, illisible ou d’un autre client : invalid_grant, sans aucune lecture', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const granted = await authorize(paul);
+      const fetched = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau'));
 
-    for (const client_id of [
-      'pas-un-client',
-      `${granted.clientId}x`,
-      'https://claude.ai/oauth/inconnu.json',
-      'https://evil.example/client.json',
-    ]) {
-      await expectError(await exchange(codeGrant(granted, { client_id })), 'invalid_client');
-    }
-    expect(await rowsOf(paul)).toEqual([]);
+      for (const client_id of [
+        'pas-un-client',
+        `${granted.clientId}x`,
+        'https://claude.ai/oauth/inconnu.json',
+        'https://evil.example/client.json',
+      ]) {
+        await expectError(await exchange(codeGrant(granted, { client_id })), 'invalid_grant');
+      }
+
+      expect(fetched).not.toHaveBeenCalled();
+      expect(await rowsOf(paul)).toEqual([]);
+    });
+
+    it('un code faux, un client_id qui n’est pas celui du code, une adresse ou un verifier faux : le document n’est pas lu', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const url = cimdUrl();
+      const fetched = serveDocument(url);
+      const forCimd = await authorize(paul, { clientId: url });
+      const forOther = await authorize(paul);
+      fetched.mockClear();
+
+      for (const fields of [
+        codeGrant(forCimd, { code: 'abc' }),
+        codeGrant(forCimd, { code: forOther.code }), // un code signé, mais pour un autre client
+        codeGrant(forOther, { client_id: url }),
+        codeGrant(forCimd, { redirect_uri: `${CLAUDE}/` }),
+        codeGrant(forCimd, { code_verifier: newVerifier() }),
+      ]) {
+        await expectError(await exchange(fields), 'invalid_grant');
+      }
+      expect(fetched).not.toHaveBeenCalled();
+      expect(await rowsOf(paul)).toEqual([]);
+
+      // Le même client avec un bon code : cette fois le document est lu, une fois, pour le nom et l’hôte.
+      expect((await exchange(codeGrant(forCimd))).status).toBe(200);
+      expect(fetched).toHaveBeenCalledTimes(1);
+      expect(await rowsOf(paul)).toMatchObject([
+        { clientName: 'Claude Code', clientHost: 'claude.ai' },
+      ]);
+    });
+
+    it('invalid_client quand le code est bon mais que le document du client ne se lit plus ; ni adresse ni nom dans les journaux', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const url = cimdUrl();
+      const fetched = serveDocument(url);
+      const granted = await authorize(paul, { clientId: url });
+      fetched.mockRejectedValue(new Error('réseau coupé'));
+      const logged = spyConsole();
+
+      await expectError(await exchange(codeGrant(granted)), 'invalid_client');
+
+      expect(fetched).toHaveBeenCalledTimes(2);
+      expect(await rowsOf(paul)).toEqual([]);
+      expect(logged().join('\n')).not.toContain(url);
+    });
+
+    it('invalid_client pour un client_id de plus de 4 Ko, sans rien lire', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const granted = await authorize(paul);
+      const fetched = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('réseau'));
+
+      await expectError(
+        await exchange(codeGrant(granted, { client_id: `https://claude.ai/${'a'.repeat(4096)}` })),
+        'invalid_client',
+      );
+
+      expect(fetched).not.toHaveBeenCalled();
+      expect(await rowsOf(paul)).toEqual([]);
+    });
   });
 
   it('le même code deux fois : la seconde invalid_grant, et le jeton de la première ne marche plus', async () => {
@@ -598,19 +677,38 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
     await expectError(await renew(tokens.refresh_token), 'invalid_grant');
   });
 
-  it('invalid_client pour un client_id illisible', async () => {
+  it('un client_id illisible ou inconnu : invalid_grant ; de plus de 4 Ko : invalid_client', async () => {
     const [paul] = await team('Paul');
     if (!paul) throw new Error('membre de test manquant');
     const { tokens } = await tokensFor(paul);
+    const renew = (client_id: string) =>
+      exchange({ grant_type: 'refresh_token', refresh_token: tokens.refresh_token, client_id });
 
-    await expectError(
-      await exchange({
-        grant_type: 'refresh_token',
-        refresh_token: tokens.refresh_token,
-        client_id: 'pas-un-client',
-      }),
-      'invalid_client',
-    );
+    await expectError(await renew('pas-un-client'), 'invalid_grant');
+    await expectError(await renew('https://claude.ai/oauth/inconnu.json'), 'invalid_grant');
+    await expectError(await renew('a'.repeat(4097)), 'invalid_client');
+    expect(await mcpStatus(tokens.access_token)).toBe(200);
+  });
+
+  it('ne lit pas le client : le document CIMD est injoignable et le renouvellement réussit quand même', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const url = cimdUrl();
+    const fetched = serveDocument(url);
+    const { tokens } = await tokensFor(paul, { clientId: url }); // l'échange du code lit le document
+    expect(fetched).toHaveBeenCalled();
+    fetched.mockClear();
+    fetched.mockRejectedValue(new Error('réseau coupé'));
+
+    const response = await exchange({
+      grant_type: 'refresh_token',
+      refresh_token: tokens.refresh_token,
+      client_id: url,
+    });
+
+    expect(response.status).toBe(200);
+    expect(await mcpStatus(((await response.json()) as Tokens).access_token)).toBe(200);
+    expect(fetched).not.toHaveBeenCalled();
   });
 });
 

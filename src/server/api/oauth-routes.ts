@@ -4,8 +4,8 @@ import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ACCESS_TTL_MS, createGrant, refreshGrant } from '@/server/auth/api-tokens';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
-import { readAuthorizationCode } from '@/server/oauth/authorize';
-import { type ClientInfo, readClientId, registerClient } from '@/server/oauth/clients';
+import { CLIENT_ID_MAX, readAuthorizationCode } from '@/server/oauth/authorize';
+import { readClientId, registerClient } from '@/server/oauth/clients';
 import { OAUTH_SCOPE, RESOURCE } from '@/server/oauth/metadata';
 
 // Les routes publiques du serveur d'autorisation OAuth : ni jeton ni session, par nature (un client qui s'inscrit, ou
@@ -66,47 +66,56 @@ function pkceMatches(verifier: string, challenge: string): boolean {
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-// null : tout ce qui ne va pas, sans dire quoi (code faux, expiré ou d'un autre client, adresse ou verifier qui ne
-// correspondent pas, membre parti, code déjà servi).
+// L'empreinte que ClientInfo.ref (clients.ts) porte, sans lire le client : le code (`c`) et la ligne de l'assistant
+// (`client_ref`) lient le client_id reçu, et seulement lui.
+const clientRef = (clientId: string) => createHash('sha256').update(clientId).digest('hex');
+
+// Le code d'abord, puis tout ce qu'il lie (client_id, adresse, verifier), et seulement ensuite le client : lire son
+// document est un appel réseau, qu'une requête au code faux ne doit pas provoquer. 'invalid_grant' dit tout ce qui ne va
+// pas, sans dire quoi (code faux, expiré ou d'un autre client, adresse ou verifier qui ne correspondent pas, membre
+// parti, code déjà servi).
 async function exchangeCode(
-  grant: { code: string; code_verifier: string; redirect_uri?: string },
-  client: ClientInfo,
-): Promise<Tokens | null> {
+  grant: { client_id: string; code: string; code_verifier: string; redirect_uri?: string },
+  ref: string,
+): Promise<Tokens | TokenError> {
   const code = readAuthorizationCode(grant.code);
   if (
     !code ||
-    code.c !== client.ref ||
+    code.c !== ref ||
     (grant.redirect_uri !== undefined && grant.redirect_uri !== code.r) ||
     !pkceMatches(grant.code_verifier, code.p)
   )
-    return null;
+    return 'invalid_grant';
+  // Le nom et l'hôte que la ligne de l'assistant garde, et que Réglages montre : ils viennent du client, pas du code.
+  const client = await readClientId(grant.client_id);
+  if (!client) return 'invalid_client';
   // L'adhésion de maintenant, pas celle du moment où l'utilisateur a cliqué.
   const ctx = await resolveTenantContext(code.u, code.t);
-  if (!ctx) return null;
-  return createGrant(ctx, {
+  if (!ctx) return 'invalid_grant';
+  const tokens = await createGrant(ctx, {
     grantId: code.j,
-    clientRef: client.ref,
+    clientRef: ref,
     clientName: client.name,
     clientHost: client.host,
     name: client.name,
   });
+  return tokens ?? 'invalid_grant';
 }
 
 async function grantTokens(form: Record<string, string>): Promise<Tokens | TokenError> {
   if (form.grant_type !== undefined && !GRANT_TYPES.includes(form.grant_type))
     return 'unsupported_grant_type';
-  // Les paramètres d'abord : une requête mal formée ne coûte pas la lecture d'un client.
+  // Les paramètres d'abord : une requête mal formée ne coûte rien.
   const parsed = GrantSchema.safeParse(form);
   if (!parsed.success) return 'invalid_request';
   const grant = parsed.data;
   if (grant.resource !== undefined && grant.resource !== RESOURCE) return 'invalid_target';
-  const client = await readClientId(grant.client_id);
-  if (!client) return 'invalid_client';
-  const tokens =
-    grant.grant_type === 'refresh_token'
-      ? await refreshGrant(grant.refresh_token, client.ref)
-      : await exchangeCode(grant, client);
-  return tokens ?? 'invalid_grant';
+  if (grant.client_id.length > CLIENT_ID_MAX) return 'invalid_client';
+  const ref = clientRef(grant.client_id);
+  // Un renouvellement ne lit pas le client (aucun appel réseau) : refreshGrant ne compare que client_ref.
+  if (grant.grant_type === 'refresh_token')
+    return (await refreshGrant(grant.refresh_token, ref)) ?? 'invalid_grant';
+  return exchangeCode(grant, ref);
 }
 
 export const oauthRoutes = new Hono()

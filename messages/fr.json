@@ -718,6 +718,8 @@
       "productDescription": "Leon se branche sur vos outils et vos assistants d’IA, garde chaque élément tel quel, et répond en citant ses sources.",
       "securityTitle": "Sécurité",
       "securityDescription": "Leon voit ce que vous voyez : isolation par entreprise, droits appliqués avant le classement, conversations privées, clés chiffrées. Et ce qui n’est pas encore là.",
+      "documentationTitle": "Documentation",
+      "documentationDescription": "Brancher Leon à vos outils de code, en demandant à Claude Code ou avec une commande dans un terminal. Ce qu’il faut, ce qui part, comment se déconnecter.",
       "pricingTitle": "Tarifs",
       "pricingDescription": "Un pilote gratuit de 30 jours, puis un prix par utilisateur actif et par mois, sans engagement.",
       "teamTitle": "{team} · Cas d’usage"
@@ -765,6 +767,7 @@
       "search": "Recherche et réponse citée",
       "discussions": "Discussions et point du matin",
       "pricing": "Tarifs",
+      "documentation": "Documentation",
       "trust": "Confiance",
       "account": "Compte",
       "language": "Langue",
@@ -1204,6 +1207,104 @@
       "faqLead": "Une autre question ? Créez un espace : le pilote est gratuit, et on y voit vite ce que Leon garde.",
       "ctaTitle": "Commencez par le pilote.",
       "ctaText": "Gratuit, sur une équipe, avec les {count} connecteurs."
+    },
+    "documentation": {
+      "kicker": "Documentation",
+      "heroTitle": "Brancher Leon à vos outils de code.",
+      "heroAccent": "vos outils de code.",
+      "heroLead": "Deux façons de faire : demander à Claude Code de l’installer, ou coller une commande dans un terminal. Dans les deux cas, vous autorisez l’ordinateur dans votre navigateur.",
+      "heroClaude": "Demander à Claude Code",
+      "heroTerminal": "Utiliser le terminal",
+      "toc": "Sur cette page",
+      "addressPlaceholder": "adresse de votre Leon",
+      "requirements": {
+        "title": "Ce qu’il faut",
+        "lead": "Quatre choses, sur l’ordinateur à brancher.",
+        "system": "Un Mac (Apple ou Intel), ou un Linux x64 ou arm64 avec la glibc (Debian, Ubuntu, Fedora…). Windows et Alpine ne sont pas encore pris en charge : la commande s’arrête avant d’écrire quoi que ce soit.",
+        "utilities": "<code>curl</code> et <code>tar</code> (sous Linux, <code>xz</code> aussi).",
+        "claude": "Claude Code, installé sur cet ordinateur. C’est le seul outil de code branché pour l’instant : <code>leon setup</code> reconnaît Codex, Cursor et Gemini / Antigravity, répond « not supported yet » et n’écrit rien chez eux.",
+        "account": "Un compte Leon. Vous vous connectez dans le navigateur au moment d’autoriser l’ordinateur."
+      },
+      "claude": {
+        "title": "Demander à Claude Code",
+        "lead": "Le plus simple. Le bouton copie une consigne : collez-la dans Claude Code, il fait l’installation avec vous.",
+        "instructionsTitle": "Ce que dit la consigne",
+        "askTitle": "Ce que Claude Code vous demandera",
+        "ask1": "Sa permission de lancer la commande d’installation.",
+        "ask2": "Sans doute aussi de la lancer hors de son bac à sable : la connexion ouvre votre navigateur et écoute sur 127.0.0.1 (votre ordinateur seul), ce que le bac à sable peut interdire.",
+        "ask3": "Votre accord avant de finir l’installation avec l’option <code>--yes</code>. Il doit d’abord vous montrer ce qui sera envoyé (voir « Ce qui part »). Sans votre accord explicite, il ne la lance pas.",
+        "ask4": "Un clic sur « Autoriser » dans votre navigateur, que Claude Code vous demande de faire.",
+        "end": "À la fin, il vous dit quels outils de code sont branchés et à quel compte Leon l’ordinateur est connecté. La consigne lui interdit de demander, de lire ou d’afficher un jeton.",
+        "unavailable": "L’adresse de ce Leon n’est pas une adresse que la commande d’installation accepte : le bouton n’est pas proposé ici. Les commandes ci-dessous montrent l’adresse à remplacer."
+      },
+      "terminal": {
+        "title": "Dans un terminal",
+        "lead": "Ouvrez un terminal sur l’ordinateur à brancher et collez cette commande.",
+        "leadGeneric": "Ouvrez un terminal sur l’ordinateur à brancher et collez cette commande, avec l’adresse de votre Leon à la place de celle qui est montrée.",
+        "doesTitle": "La commande :",
+        "step1": "télécharge le Node officiel de la version que Leon a choisie et la ligne de commande de Leon (un seul fichier, servi par Leon), vérifie leurs empreintes SHA-256, puis les pose dans <code>~/.leon</code> ;",
+        "step2": "lance <code>leon setup</code> : il écrit le lanceur <code>~/.leon/bin/leon</code>, connecte l’ordinateur (voir « Autoriser l’ordinateur »), cherche vos outils de code, vous montre ce qui sera envoyé, demande votre accord, puis pose les crochets de Claude Code.",
+        "scope": "Elle n’écrit que dans <code>~/.leon</code>, plus les réglages de vos outils de code après votre accord : rien dans votre <code>PATH</code>, rien dans votre profil de shell. Les commandes suivantes s’écrivent donc avec le chemin complet, <code>~/.leon/bin/leon</code>.",
+        "again": "On peut la relancer à volonté : ce qui est déjà en place n’est pas réécrit, et la ligne de commande est remise à la version que sert Leon."
+      },
+      "authorize": {
+        "title": "Autoriser l’ordinateur",
+        "p1": "Votre navigateur s’ouvre sur une page de Leon. Connectez-vous si besoin : la page demande alors « Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace… ? ». Cliquez sur « Autoriser » seulement si vous venez de lancer la commande vous-même ; sinon, cliquez sur « Annuler ».",
+        "p2": "Si le navigateur ne s’ouvre pas, la commande écrit l’adresse à ouvrir. Elle attend 5 minutes au plus ; Ctrl+C l’annule sans rien écrire.",
+        "p3": "Une fois l’ordinateur autorisé, la commande affiche l’espace et le compte auxquels il est connecté (« Connected to … as … ») et garde la connexion dans <code>~/.leon/connexion.json</code>, lisible par votre seul utilisateur. Le jeton est créé sur votre ordinateur : le navigateur n’en voit que l’empreinte.",
+        "sharedTitle": "Un ordinateur partagé",
+        "shared": "Sur une machine où plusieurs comptes sont ouverts en même temps, les autres comptes peuvent lire l’adresse d’autorisation (sous Linux, dans <code>/proc</code>), et l’un d’eux pourrait l’autoriser avec son propre compte Leon : votre jeton serait alors enregistré chez lui. Vérifiez donc le compte que la commande affiche ; s’il n’est pas le vôtre, lancez <code>~/.leon/bin/leon logout</code>. Ou utilisez <code>~/.leon/bin/leon login --with-token</code>, qui passe par un jeton créé dans Réglages plutôt que par cette adresse."
+      },
+      "sent": {
+        "title": "Ce qui part",
+        "lead": "En résumé, le texte que <code>leon setup</code> vous montre avant d’écrire quoi que ce soit. C’est ce texte, dans votre terminal, que vous acceptez.",
+        "where": "Les crochets se posent dans vos réglages personnels de Claude Code : ils tournent dans toutes vos sessions, dans tous vos dossiers, personnels compris. Une session lancée par un script (<code>claude -p</code>) les lance aussi, sauf avec <code>--bare</code>, qui n’en charge aucun.",
+        "end": "À la fin de chaque session, le serveur de Leon reçoit le texte des échanges (vos messages et les réponses de Claude) et les actions de la session, lues dans sa trace : les fichiers écrits (leurs chemins dans le dépôt), les commandes lancées (seulement leur exécutable, plus la sous-commande pour une liste fermée d’outils de développement comme <code>git</code>, <code>gh</code>, <code>pnpm</code> ou <code>docker</code> ; jamais leurs autres arguments), Git (branche, commits, pull requests), la liste des tâches, et quelques repères (heures de début et de fin, nombre de messages et d’erreurs d’outils, si la session a utilisé le web, un serveur MCP, un sous-agent ou une commande réseau).",
+        "secrets": "Les secrets sont masqués avant l’envoi, puis une seconde fois par le serveur.",
+        "start": "Au début de chaque session, le serveur reçoit la clé du projet, la branche Git courante et l’identifiant de la session. Il renvoie vos dernières sessions sur ce dépôt (leur branche, pull requests, commits, fichiers et tâches restantes) et le point du matin du projet : Claude Code ajoute ce bloc au contexte de la session, il est donc donné au modèle de Claude Code.",
+        "server": "Les crochets contactent le serveur de la connexion faite par <code>leon login</code>."
+      },
+      "updates": {
+        "title": "Mises à jour",
+        "auto": "La ligne de commande de Leon se met à jour seule, au plus une fois par jour, au démarrage d’une session, depuis le serveur de votre connexion, et seulement en https. Un Leon local (<code>http://localhost</code>) se met à jour à la main : <code>~/.leon/bin/leon update</code>. Une mise à jour ne touche ni à votre connexion, ni à votre accord, ni au lanceur, ni aux crochets.",
+        "previous": "Pour revenir à la version d’avant, sans réseau :",
+        "previousNote": "Si le serveur sert toujours la même version, la mise à jour suivante (au plus un jour plus tard) la remet."
+      },
+      "disconnect": {
+        "title": "Se déconnecter",
+        "fromLeon": "Depuis Leon : {path}. Cet ordinateur n’enverra plus vos sessions.",
+        "logout": "Depuis l’ordinateur : <code>~/.leon/bin/leon logout</code> révoque le jeton de cet ordinateur et efface <code>~/.leon/connexion.json</code>.",
+        "remove": "<code>~/.leon/bin/leon retirer-crochets</code> retire les crochets de Leon des réglages de Claude Code (vos autres réglages restent tels quels), retire votre accord (plus rien n’est envoyé depuis Claude Code) et efface le lanceur. Lancez donc <code>logout</code> avant.",
+        "all": "Pour partir complètement : <code>logout</code>, puis <code>retirer-crochets</code>, puis supprimez le dossier <code>~/.leon</code>.",
+        "kept": "Se déconnecter n’efface pas ce qui a déjà été envoyé."
+      },
+      "problems": {
+        "title": "En cas de problème",
+        "browser": {
+          "title": "Le navigateur est sur un autre ordinateur",
+          "text": "Par exemple en SSH ou dans un conteneur distant : le retour vers 127.0.0.1 n’arrive jamais. Créez un jeton dans {path}, puis, sur l’ordinateur à brancher :",
+          "after": "Collez le jeton quand la commande le demande (il ne s’affiche pas), puis finissez avec <code>~/.leon/bin/leon setup</code>."
+        },
+        "noTerminal": {
+          "title": "« No terminal is available »",
+          "text": "Le script a posé Node et la ligne de commande, mais il n’a pas de terminal pour vous poser ses questions (c’est le cas depuis Claude Code ou depuis un script). Il affiche la commande qui finit l’installation : lancez-la dans un terminal."
+        },
+        "platform": {
+          "title": "Plateforme refusée",
+          "text": "Le script répond « not supported yet » (Windows, une autre architecture) ou dit que votre Linux utilise musl (Alpine). Il s’arrête avant d’écrire quoi que ce soit. Il faut un Mac, ou un Linux avec la glibc."
+        },
+        "revoked": {
+          "title": "Ordinateur révoqué",
+          "text": "Si l’ordinateur a été révoqué dans Réglages, relancez la commande d’installation, ou <code>~/.leon/bin/leon setup</code> : il voit que l’ordinateur n’est plus connecté et relance la connexion."
+        }
+      },
+      "clone": {
+        "title": "Depuis un clone de Leon",
+        "lead": "Pour qui développe Leon. Le lanceur lance alors votre clone, avec pnpm, au lieu de la copie installée ; les crochets sont les mêmes.",
+        "setup": "Le lanceur (forme clone), la connexion et les crochets, comme la commande unique.",
+        "hooks": "Le lanceur (forme clone) et les crochets de Claude Code seulement, après confirmation (<code>--oui</code> pour ne pas la demander).",
+        "note": "Lancez-les depuis le clone principal, pas depuis un dossier de travail Git temporaire : s’il est supprimé, les crochets cessent de marcher. Sous cette forme, rien ne se met à jour tout seul : un clone se met à jour avec git."
+      }
     }
   },
   "onboarding": {

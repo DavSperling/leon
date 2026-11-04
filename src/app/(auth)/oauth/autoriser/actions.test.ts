@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getUserContext } from '@/server/auth/session';
 import {
   oauthAuthorizePath,
@@ -170,6 +170,89 @@ describe('« Refuser »', () => {
       expect(url.searchParams.get('error')).toBe('access_denied');
       expect(url.searchParams.has('code')).toBe(false);
     }
+    expect(getUserContext).not.toHaveBeenCalled();
+  });
+});
+
+// Un client_id en https:// est un document que Leon irait lire chez le client : sans session, ni « Autoriser » ni
+// « Refuser » ne le lisent, c'est la page rebâtie qui renvoie vers la connexion (même levier anonyme que la page).
+describe('un client_id CIMD (https://) et la session', () => {
+  let count = 0;
+  const cimd = () => {
+    const url = `https://chatgpt.com/oauth/action-${count++}.json`;
+    const redirect_uri = 'https://chatgpt.com/connector/oauth/abc123';
+    const fetched = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ client_id: url, client_name: 'ChatGPT', redirect_uris: [redirect_uri] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+    );
+    vi.stubGlobal('fetch', fetched);
+    return { fetched, fields: { ...FIELDS, client_id: url, redirect_uri } };
+  };
+  // La page rebâtie : le chemin de oauthReturnPath, les huit paramètres connus seulement (ni « space » ni la décision).
+  const pageOf = (fields: Record<string, string | undefined>) => {
+    const { space: _, ...params } = fields;
+    return `${ASSISTANT}?${new URLSearchParams(params as Record<string, string>)}`;
+  };
+  const ASSISTANT = '/oauth/autoriser';
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each(['allow', 'deny'])(
+    'sans session, « %s » ne lit pas le document et renvoie vers la page rebâtie',
+    async (decision) => {
+      vi.mocked(getUserContext).mockResolvedValue(null);
+      const { fetched, fields } = cimd();
+
+      expect(await target({ ...fields, decision, redirect_to: 'https://evil.example' })).toBe(
+        pageOf(fields),
+      );
+
+      expect(fetched).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sans session et avec une valeur hors forme : la page, sans rien lire', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(null);
+    const { fetched, fields } = cimd();
+
+    expect(await target({ ...fields, state: 'x'.repeat(513), decision: 'deny' })).toBe(ASSISTANT);
+
+    expect(fetched).not.toHaveBeenCalled();
+  });
+
+  it('avec une session, « Autoriser » est inchangé : le document est lu, le code signé, la session lue une seule fois', async () => {
+    const { fetched, fields } = cimd();
+
+    const url = new URL(await target({ ...fields, decision: 'allow' }));
+
+    expect(url.origin + url.pathname).toBe(fields.redirect_uri);
+    expect(readAuthorizationCode(url.searchParams.get('code') ?? '')).toMatchObject({
+      u: 'u1',
+      t: 't1',
+    });
+    expect(fetched).toHaveBeenCalledOnce();
+    expect(getUserContext).toHaveBeenCalledTimes(1);
+  });
+
+  it('avec une session, « Refuser » est inchangé : access_denied vers l’adresse vérifiée', async () => {
+    const { fetched, fields } = cimd();
+
+    const url = new URL(await target({ ...fields, decision: 'deny' }));
+
+    expect(url.origin + url.pathname).toBe(fields.redirect_uri);
+    expect(url.searchParams.get('error')).toBe('access_denied');
+    expect(fetched).toHaveBeenCalledOnce();
+  });
+
+  it('un client_id signé garde l’ordre d’avant : « Refuser » sans session renvoie au client, sans lire la session', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(null);
+
+    const url = new URL(await target({ ...FIELDS, decision: 'deny' }));
+
+    expect(url.searchParams.get('error')).toBe('access_denied');
     expect(getUserContext).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
+import { ORIGIN_VALUE_MAX } from '@/server/search/filters-sql';
 import type { ConnectorItem, ConnectorTurn } from '../types';
-import type { Comment, Issue, Pull, Review, ReviewComment } from './client';
+import type { Comment, Issue, PullFacts, Review, ReviewComment } from './client';
 
 // De la réponse de GitHub à un élément du socle : le corps est le tour `document`, daté de la
 // dernière modification ; chaque commentaire, avis ou commentaire de revue garde sa propre date.
@@ -55,14 +56,14 @@ function isTurn(value: ConnectorTurn | null): value is ConnectorTurn {
   return value !== null;
 }
 
-// Les tickets qu'une PR ferme, d'après les mots-clés de GitHub suivis de #n, dans l'ordre, sans doublon.
+// Les tickets qu'une PR ferme, d'après les mots-clés de GitHub suivis de #n (deux-points permis), dans l'ordre,
+// sans doublon.
 // shortcut: les renvois vers un autre dépôt (propriétaire/dépôt#n) et par adresse sont ignorés, à ajouter si on en voit.
-const CLOSING = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/gi;
+const CLOSING = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+#(\d+)\b/gi;
 const closedIssues = (body: string | null | undefined): string =>
   [...new Set([...(body ?? '').matchAll(CLOSING)].map((match) => `#${match[1]}`))].join(' ');
 
-// Une valeur d'origine tient en 300 caractères (ce que la lecture garde, filters-sql.ts), coupée sur un séparateur.
-const ORIGIN_VALUE_MAX = 300;
+// Une valeur d'origine tient en ORIGIN_VALUE_MAX caractères (ce que la lecture garde), coupée sur un séparateur.
 function cut(value: string): string {
   if (value.length <= ORIGIN_VALUE_MAX) return value;
   const head = value.slice(0, ORIGIN_VALUE_MAX + 1);
@@ -70,26 +71,44 @@ function cut(value: string): string {
   return at > 0 ? head.slice(0, at) : head.slice(0, ORIGIN_VALUE_MAX);
 }
 
+// Les clés de l'état, dans l'ordre où la recherche et la discussion les montrent « clé : valeur » (mcp/tools/render.ts).
+export const GITHUB_FACT_KEYS = [
+  'etat',
+  'fini_le',
+  'auteur',
+  'cote',
+  'assignes',
+  'branche',
+  'tete',
+  'brouillon',
+  'ferme',
+] as const;
+
 // L'état d'un ticket ou d'une PR (T13, section 1.1 de la spec #108), en texte, à côté du dépôt. Il ne va jamais
-// dans un tour : chaque transition en créerait un nouveau. `pull` : le détail d'une PR, null s'il n'a pas été lu.
-function facts(issue: Issue, pull: Pull | null): Record<string, string> {
+// dans un tour : chaque transition en créerait un nouveau. `pull` : les faits d'une PR, null s'ils n'ont pas été lus.
+function facts(issue: Issue, pull: PullFacts | null): Record<string, string> {
   const mergedAt = issue.pull_request?.merged_at;
   const closed = issue.state_reason ? `closed:${issue.state_reason}` : 'closed';
   const etat = issue.state === 'open' ? 'open' : mergedAt ? 'merged' : closed;
   const side = sideOf(issue.author_association);
-  const entries: [string, string | null | undefined][] = [
-    ['etat', etat],
-    ['fini_le', mergedAt ?? (etat === 'closed:completed' ? issue.closed_at : null)],
-    ['auteur', issue.user?.login],
-    ['cote', side && (side === 'team' ? 'equipe' : 'exterieur')],
-    ['assignes', issue.assignees?.map((assignee) => assignee.login).join(',')],
-    ['branche', pull?.head.ref],
-    ['tete', pull?.head.repo?.full_name],
-    ['brouillon', pull?.draft ? 'oui' : null],
-    ['ferme', issue.pull_request ? closedIssues(issue.body) : null],
-  ];
+  // GitHub ne lit les mots-clés que dans une PR vers la branche par défaut ; sans les faits, on ne sait pas.
+  const toDefault = pull !== null && pull.base.ref === pull.base.repo?.default_branch;
+  const values: Record<(typeof GITHUB_FACT_KEYS)[number], string | null | undefined> = {
+    etat,
+    fini_le: mergedAt ?? (etat === 'closed:completed' ? issue.closed_at : null),
+    auteur: issue.user?.login,
+    cote: side && (side === 'team' ? 'equipe' : 'exterieur'),
+    assignes: issue.assignees?.map((assignee) => assignee.login).join(','),
+    branche: pull?.head.ref,
+    tete: pull?.head.repo?.full_name,
+    brouillon: pull?.draft ? 'oui' : null,
+    ferme: toDefault ? closedIssues(issue.body) : null,
+  };
   return Object.fromEntries(
-    entries.flatMap(([key, value]) => (value ? [[key, cut(value)] as const] : [])),
+    GITHUB_FACT_KEYS.flatMap((key) => {
+      const value = values[key];
+      return value ? [[key, cut(value)] as const] : [];
+    }),
   );
 }
 
@@ -97,7 +116,7 @@ export function toItem(
   repo: string,
   issue: Issue,
   { comments, reviews, reviewComments }: Discussion,
-  pull: Pull | null = null,
+  pull: PullFacts | null = null,
 ): ConnectorItem {
   const replies = [
     ...comments.map((c) => turn(`comment:${c.id}`, 'participant', c, c.created_at)),

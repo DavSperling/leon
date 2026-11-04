@@ -6,7 +6,7 @@ import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
-import type { Issue } from './client';
+import type { Issue, PullFacts } from './client';
 import { githubConnector } from './connector';
 import issueComments12Page1 from './fixtures/issue-comments-12-page1.json';
 import issueComments12Page2 from './fixtures/issue-comments-12-page2.json';
@@ -481,8 +481,13 @@ describe('github : les faits dans origin', () => {
     state: 'open',
   };
   const NONE = { comments: [], reviews: [], reviewComments: [] };
-  const originOf = (fields: Partial<Issue>) =>
-    toItem('acme/leon', { ...ISSUE, ...fields }, NONE).origin;
+  const originOf = (fields: Partial<Issue>, pull: PullFacts | null = null) =>
+    toItem('acme/leon', { ...ISSUE, ...fields }, NONE, pull).origin;
+  // Le détail d'une PR vers la branche par défaut du dépôt.
+  const TO_MAIN: PullFacts = {
+    head: { ref: 'amos/sujet' },
+    base: { ref: 'main', repo: { default_branch: 'main' } },
+  };
 
   it.each([
     ['ouvert', { state: 'open' }, { etat: 'open' }],
@@ -529,13 +534,23 @@ describe('github : les faits dans origin', () => {
     });
   });
 
-  it('lit les tickets qu’une PR ferme dans son texte, sans les renvois vers un autre dépôt', () => {
+  it('lit les tickets qu’une PR ferme dans son texte, deux-points compris, sans les renvois vers un autre dépôt', () => {
     const body =
-      'Closes #12, fixes #14 et Resolved #12.\nRéférence #20, ferme #21, unfixes #22, fix acme/autre#23';
+      'Closes #12, fixes #14 et Resolved #12.\nRéférence #20, ferme #21, unfixes #22, fix acme/autre#23\nCloses: #30';
 
-    expect(originOf({ body, pull_request: {} }).ferme).toBe('#12 #14');
+    expect(originOf({ body, pull_request: {} }, TO_MAIN).ferme).toBe('#12 #14 #30');
     // Un ticket ne ferme rien.
     expect(originOf({ body }).ferme).toBeUndefined();
+  });
+
+  it('ne lit pas les tickets fermés d’une PR qui ne vise pas la branche par défaut, ni sans son détail', () => {
+    const body = 'Closes #104';
+    const stacked = { ...TO_MAIN, base: { ref: 'amos/parent', repo: { default_branch: 'main' } } };
+
+    // GitHub ignore ces mots-clés hors de la branche par défaut (une PR empilée) : #104 reste ouvert.
+    expect(originOf({ body, pull_request: {} }, stacked).ferme).toBeUndefined();
+    // Sans le détail (refusé), on ne sait pas vers quelle branche va la PR.
+    expect(originOf({ body, pull_request: {} }).ferme).toBeUndefined();
   });
 
   it('garde les assignés, et coupe à 300 caractères sur un séparateur', () => {
@@ -748,18 +763,12 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
   const SITE = `${API}/repos/acme/site`;
   const PULLS_PAGE_2 = `${API}/repositories/1296270/pulls`;
   const issuesOff = (): FakeRoute => ({ url: `${SITE}/issues`, status: 410, json: issuesDisabled });
-  // Les quatre lectures d'une PR ; par défaut sans aucun commentaire. Le détail ne dit rien de la fusion.
-  const detail = (number: number) => ({
-    ...pull13,
-    number,
-    draft: false,
-    head: { ...pull13.head, ref: `site-${number}`, repo: { id: 1296270, full_name: 'acme/site' } },
-  });
+  // Les trois lectures d'une PR ; par défaut sans aucun commentaire. Pas de détail : la liste des PR donne déjà
+  // la branche, la tête, le brouillon et la base.
   const quiet = (number: number, comments: unknown[] = []): FakeRoute[] => [
     { url: `${SITE}/issues/${number}/comments`, json: comments },
     { url: `${SITE}/pulls/${number}/reviews`, json: [] },
     { url: `${SITE}/pulls/${number}/comments`, json: [] },
-    { url: `${SITE}/pulls/${number}`, json: detail(number) },
   ];
   const comment = {
     id: 601,
@@ -816,6 +825,8 @@ describe('github : sync, dépôt dont les tickets sont désactivés (410)', () =
     });
     expect(urls.some((url) => url.includes('page=3'))).toBe(false);
     expect(urls.some((url) => /\/(issues|pulls)\/19\//.test(url))).toBe(false);
+    // Aucune PR n'est relue en détail.
+    expect(urls.some((url) => /\/pulls\/\d+$/.test(new URL(url).pathname))).toBe(false);
   });
 
   it('reprend après le curseur : ignore la PR déjà lue et ne remonte pas plus loin que lui', async () => {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
-import { type GithubClient, githubClient, type Issue } from './client';
+import { type GithubClient, githubClient, type Issue, type Listed } from './client';
 import { type Discussion, toItem } from './map';
 import { githubOAuth } from './oauth';
 
@@ -23,8 +23,9 @@ import { githubOAuth } from './oauth';
 // Un 403 sur les commentaires, les avis ou les commentaires de revue (jeton sans « Pull requests »
 // ou « Issues ») est attrapé : l'élément sort sans ces tours. Un avis en brouillon est ignoré.
 // Un ticket sans texte sort sans tours (le socle l'écarte) pour que le curseur avance ; une PR sans texte a son
-// titre pour corps (T13). Chaque PR nouvelle ou modifiée est lue en détail (GET /repos/{repo}/pulls/{n}) pour sa
-// branche, sa tête et son brouillon : une requête de plus par PR, attrapée sur un 403 comme les commentaires.
+// titre pour corps (T13). Chaque PR nouvelle ou modifiée venue de la liste des tickets est lue en détail
+// (GET /repos/{repo}/pulls/{n}) pour sa branche, sa tête, son brouillon et sa base : une requête de plus par PR,
+// attrapée sur un 403 comme les commentaires. La liste des PR (dépôt sans tickets) les donne déjà : pas de détail.
 // Un dépôt dont les tickets sont désactivés : un 410 sur la liste des tickets fait lire les PR seules
 // (GET /repos/{repo}/pulls, de la plus récente à la plus ancienne, arrêt à la première plus ancienne
 // que le curseur : cette liste n'a pas de paramètre `since`), puis les mêmes lectures de commentaires
@@ -139,7 +140,7 @@ async function optional<T>(read: () => Promise<T>, denied: T): Promise<T> {
   }
 }
 
-async function readItem(github: GithubClient, repo: string, issue: Issue): Promise<ConnectorItem> {
+async function readItem(github: GithubClient, repo: string, issue: Listed): Promise<ConnectorItem> {
   const { number } = issue;
   const discussion: Discussion = { comments: [], reviews: [], reviewComments: [] };
   if (issue.comments !== 0) {
@@ -148,8 +149,9 @@ async function readItem(github: GithubClient, repo: string, issue: Issue): Promi
   if (!issue.pull_request) return toItem(repo, issue, discussion);
   discussion.reviews = await optional(() => github.reviews(repo, number), []);
   discussion.reviewComments = await optional(() => github.reviewComments(repo, number), []);
-  // Seuls les dépôts d'équipe sont lus (décision D) : toute PR relevée reçoit sa branche.
-  const pull = await optional(() => github.pull(repo, number), null);
+  // Seuls les dépôts d'équipe sont lus (décision D) : toute PR relevée reçoit sa branche, de la liste des PR
+  // quand elle l'a donnée, sinon de son détail.
+  const pull = issue.pull ?? (await optional(() => github.pull(repo, number), null));
   return toItem(repo, issue, discussion, pull);
 }
 
@@ -161,7 +163,7 @@ function isIssuesDisabled(error: unknown): boolean {
 
 // Les tickets et PR modifiés depuis `from`, du plus ancien au plus récent ; les PR seules quand les
 // tickets du dépôt sont désactivés.
-async function* changed(github: GithubClient, repo: string, from: Date): AsyncGenerator<Issue[]> {
+async function* changed(github: GithubClient, repo: string, from: Date): AsyncGenerator<Listed[]> {
   const since = apiTime(from);
   try {
     yield* github.issues(repo, since);

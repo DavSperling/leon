@@ -14,6 +14,18 @@
     "updated_at": "2026-10-02T08:00:00Z",
     "closed_at": "2026-10-02T08:00:00Z",
     "merged_at": null,
+    "head": {
+      "label": "acme:site-20",
+      "ref": "site-20",
+      "sha": "2020202020202020202020202020202020202020",
+      "repo": { "id": 1296270, "full_name": "acme/site", "default_branch": "main" }
+    },
+    "base": {
+      "label": "acme:main",
+      "ref": "main",
+      "sha": "b2c3d4e5f60718293a4b5c6d7e8f901234567890",
+      "repo": { "id": 1296270, "full_name": "acme/site", "default_branch": "main" }
+    },
     "author_association": "NONE"
   },
   {
@@ -31,6 +43,18 @@
     "updated_at": "2026-09-10T08:00:00Z",
     "closed_at": "2026-09-10T08:00:00Z",
     "merged_at": null,
+    "head": {
+      "label": "acme:site-19",
+      "ref": "site-19",
+      "sha": "1919191919191919191919191919191919191919",
+      "repo": { "id": 1296270, "full_name": "acme/site", "default_branch": "main" }
+    },
+    "base": {
+      "label": "acme:main",
+      "ref": "main",
+      "sha": "b2c3d4e5f60718293a4b5c6d7e8f901234567890",
+      "repo": { "id": 1296270, "full_name": "acme/site", "default_branch": "main" }
+    },
     "author_association": "MEMBER"
   }
 ]

@@ -78,7 +78,8 @@ export function epochToDate(epoch: string | number): Date {
 const NATURES = new Set<string>(ITEM_NATURES);
 
 const ORIGIN_KEYS_MAX = 20;
-const ORIGIN_VALUE_MAX = 300;
+// Ce qu'une valeur d'origine garde à la lecture ; un connecteur coupe la sienne d'avance (github/map.ts).
+export const ORIGIN_VALUE_MAX = 300;
 
 function origin(value: unknown): Record<string, string> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return {};

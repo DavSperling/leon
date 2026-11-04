@@ -1,7 +1,20 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS } from '@/capture/api-contract';
+import { createHash, randomBytes } from 'node:crypto';
+import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
+import { and, DrizzleQueryError, eq } from 'drizzle-orm';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { API_PATHS, API_TOKEN_PATTERN } from '@/capture/api-contract';
+import * as apiTokensModule from '@/server/auth/api-tokens';
+import { signComputerCode } from '@/server/auth/computer-code';
+import type { TenantContext } from '@/server/auth/tenant-context';
+import { apiTokens } from '@/server/db/schema/api-tokens';
+import { members } from '@/server/db/schema/auth';
+import { codeRedirect, parseAuthorizeRequest } from '@/server/oauth/authorize';
 import { readClientId } from '@/server/oauth/clients';
+import { OAUTH_SCOPE, RESOURCE } from '@/server/oauth/metadata';
+import { searchPassages } from '@/server/search/search';
 import { apiRequest } from '@/test/api-request';
+import { adminDb } from '@/test/db';
+import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { app } from './app';
 
 afterEach(() => vi.restoreAllMocks());
@@ -203,5 +216,626 @@ describe('POST /api/oauth/clients (L4)', () => {
   it('ne répond qu’au POST', async () => {
     const response = await apiRequest(API_PATHS.oauthClients);
     expect(response.status).toBe(404);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------------------------
+// POST /api/oauth/jeton (L8). Le parcours est celui d'un assistant : il s'inscrit (route), l'utilisateur voit la page
+// (parseAuthorizeRequest) et clique « Autoriser » (codeRedirect : une action Next ne se lance pas depuis un test),
+// puis l'assistant échange le code contre les jetons.
+
+const CLAUDE = 'https://claude.ai/api/mcp/auth_callback';
+const CHATGPT = 'https://chatgpt.com/connector_platform_oauth_redirect';
+const FORM = 'application/x-www-form-urlencoded';
+
+const tenantIds: string[] = [];
+afterAll(() => dropTeams(tenantIds));
+
+const challengeOf = (verifier: string) => createHash('sha256').update(verifier).digest('base64url');
+const newVerifier = () => randomBytes(32).toString('base64url');
+
+const exchange = (fields: Record<string, string>, headers: Record<string, string> = {}) =>
+  app.request(API_PATHS.oauthJeton, {
+    method: 'POST',
+    headers: { 'content-type': FORM, ...headers },
+    body: new URLSearchParams(fields).toString(),
+  });
+
+async function team(...names: string[]): Promise<TenantContext[]> {
+  return (await newTeam(names, tenantIds)).members;
+}
+
+async function register(redirectUri = CLAUDE, name = 'Claude'): Promise<string> {
+  const response = await post({ client_name: name, redirect_uris: [redirectUri] });
+  return (await response.json()).client_id;
+}
+
+type Authorization = { clientId: string; verifier: string; code: string; redirectUri: string };
+
+async function authorize(
+  member: TenantContext,
+  over: { clientId?: string; verifier?: string; challenge?: string; now?: number } = {},
+): Promise<Authorization> {
+  const clientId = over.clientId ?? (await register());
+  const verifier = over.verifier ?? newVerifier();
+  const request = await parseAuthorizeRequest({
+    response_type: 'code',
+    client_id: clientId,
+    redirect_uri: CLAUDE,
+    state: 'etat-du-client',
+    code_challenge: over.challenge ?? challengeOf(verifier),
+    code_challenge_method: 'S256',
+    scope: OAUTH_SCOPE,
+    resource: RESOURCE,
+  });
+  if ('erreur' in request) throw new Error(`demande refusée : ${request.erreur}`);
+  const code = new URL(codeRedirect(request, member, over.now)).searchParams.get('code');
+  if (!code) throw new Error('code manquant');
+  return { clientId, verifier, code, redirectUri: request.redirectUri };
+}
+
+const codeGrant = (granted: Authorization, over: Record<string, string> = {}) => ({
+  grant_type: 'authorization_code',
+  code: granted.code,
+  redirect_uri: granted.redirectUri,
+  client_id: granted.clientId,
+  code_verifier: granted.verifier,
+  ...over,
+});
+
+type Tokens = { access_token: string; refresh_token: string };
+
+async function tokensFor(member: TenantContext, over?: Parameters<typeof authorize>[1]) {
+  const granted = await authorize(member, over);
+  const response = await exchange(codeGrant(granted));
+  expect(response.status).toBe(200);
+  return { granted, tokens: (await response.json()) as Tokens };
+}
+
+const rowsOf = (member: TenantContext) =>
+  adminDb
+    .select()
+    .from(apiTokens)
+    .where(and(eq(apiTokens.userId, member.userId), eq(apiTokens.tenantId, member.tenantId)));
+
+async function expectError(response: Response, error: string) {
+  expect(response.status).toBe(400);
+  expect(response.headers.get('content-type')).toContain('application/json');
+  expect(response.headers.get('cache-control')).toBe('no-store');
+  // Jamais un mot de plus : ni error_description ni la vérification qui a échoué.
+  expect(await response.json()).toEqual({ error });
+}
+
+// L'état de /api/mcp pour ce jeton : 401 s'il est refusé, 200 sinon (un `initialize` que le serveur accepte).
+const mcpStatus = async (token: string) =>
+  (
+    await app.request(API_PATHS.mcp, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+    })
+  ).status;
+
+const clients: Client[] = [];
+afterEach(async () => {
+  await Promise.all(clients.splice(0).map((client) => client.close()));
+});
+
+async function connect(token: string): Promise<Client> {
+  const transport = new StreamableHTTPClientTransport(
+    new URL(`http://localhost:3000${API_PATHS.mcp}`),
+    {
+      fetch: async (url, init) => app.request(url.toString(), init),
+      requestInit: { headers: { Authorization: `Bearer ${token}` } },
+    },
+  );
+  const client = new Client({ name: 'test', version: '1.0.0' });
+  await client.connect(transport);
+  clients.push(client);
+  return client;
+}
+
+async function call(client: Client, name: string, args: Record<string, unknown>) {
+  const result = (await client.callTool({ name, arguments: args })) as {
+    isError?: boolean;
+    content: Array<{ type: string; text?: string }>;
+    structuredContent?: { hits?: unknown[] };
+  };
+  return { ...result, text: result.content.map((block) => block.text ?? '').join('\n') };
+}
+
+describe('POST /api/oauth/jeton : authorization_code (L8)', () => {
+  it('parcours complet : inscription, page, code, jeton, puis /api/mcp rend les quatre outils', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+
+    const response = await exchange(codeGrant(granted));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('pragma')).toBe('no-cache');
+    const body = await response.json();
+    expect(body).toEqual({
+      access_token: expect.stringMatching(API_TOKEN_PATTERN),
+      token_type: 'Bearer',
+      expires_in: 3600,
+      refresh_token: expect.stringMatching(API_TOKEN_PATTERN),
+      scope: 'leon',
+    });
+    expect(body.access_token).not.toBe(body.refresh_token);
+
+    const [row, ...others] = await rowsOf(paul);
+    expect(others).toEqual([]);
+    expect(row).toMatchObject({
+      kind: 'assistant',
+      name: 'Claude',
+      clientName: 'Claude',
+      clientHost: 'claude.ai',
+      clientRef: (await readClientId(granted.clientId))?.ref,
+      revokedAt: null,
+    });
+    expect(row?.tokenHash).toBe(apiTokensModule.hashApiToken(body.access_token));
+    expect(row?.refreshHash).toBe(apiTokensModule.hashApiToken(body.refresh_token));
+    expect(Math.abs((row?.expiresAt?.getTime() ?? 0) - (Date.now() + 3_600_000))).toBeLessThan(
+      10_000,
+    );
+
+    const client = await connect(body.access_token);
+    const { tools } = await client.listTools();
+    expect(tools.map((tool) => tool.name).sort()).toEqual([
+      'briefing',
+      'fetch',
+      'remember',
+      'search',
+    ]);
+    // F9 : un jeton d'assistant n'ouvre que /api/mcp.
+    expect((await apiRequest(API_PATHS.me, { token: body.access_token })).status).toBe(401);
+  });
+
+  it('accepte le vecteur de l’annexe B de la RFC 7636, un redirect_uri omis, un charset et une casse inhabituelle du type', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
+    const granted = await authorize(paul, {
+      verifier,
+      challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+    });
+    const { redirect_uri: _omitted, ...withoutRedirect } = codeGrant(granted);
+
+    const response = await exchange(withoutRedirect, {
+      'content-type': 'Application/X-WWW-Form-Urlencoded; charset=UTF-8',
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('ne demande ni cookie ni en-tête Authorization : un faux jeton ou un faux cookie n’y change rien', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+
+    const response = await exchange(codeGrant(await authorize(paul)), {
+      authorization: 'Bearer leon_pas-un-vrai-jeton',
+      cookie: 'better-auth.session_token=faux',
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  describe('invalid_grant : aucune ligne, et la même réponse quelle que soit la vérification qui échoue', () => {
+    const refusals: Array<[string, (member: TenantContext) => Promise<Record<string, string>>]> = [
+      [
+        'code_verifier faux',
+        async (m) => codeGrant(await authorize(m), { code_verifier: newVerifier() }),
+      ],
+      [
+        'code_verifier trop court',
+        async (m) => codeGrant(await authorize(m), { code_verifier: 'court' }),
+      ],
+      [
+        'code_verifier avec un caractère interdit',
+        async (m) => {
+          const verifier = `${newVerifier()}+`;
+          return codeGrant(await authorize(m, { verifier }));
+        },
+      ],
+      [
+        'redirect_uri différent',
+        async (m) => codeGrant(await authorize(m), { redirect_uri: `${CLAUDE}/` }),
+      ],
+      [
+        'client_id d’un autre client',
+        async (m) => codeGrant(await authorize(m), { client_id: await register(CLAUDE, 'Autre') }),
+      ],
+      ['code expiré', async (m) => codeGrant(await authorize(m, { now: Date.now() - 200_000 }))],
+      [
+        'code modifié',
+        async (m) => {
+          const granted = await authorize(m);
+          // Un caractère de la signature change, quel qu'il fût.
+          const last = granted.code.slice(-1) === 'A' ? 'B' : 'A';
+          return codeGrant(granted, { code: `${granted.code.slice(0, -1)}${last}` });
+        },
+      ],
+      ['code qui n’en est pas un', async (m) => codeGrant(await authorize(m), { code: 'abc' })],
+    ];
+
+    it.each(refusals)('%s', async (_what, build) => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+
+      await expectError(await exchange(await build(paul)), 'invalid_grant');
+
+      expect(await rowsOf(paul)).toEqual([]);
+    });
+
+    it('un code de la CLI (autre but de signature) n’est pas un code d’autorisation', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const granted = await authorize(paul);
+      const code = signComputerCode({ e: 'a'.repeat(64), u: paul.userId, t: paul.tenantId });
+
+      await expectError(await exchange(codeGrant(granted, { code })), 'invalid_grant');
+      expect(await rowsOf(paul)).toEqual([]);
+    });
+
+    it('un membre retiré entre la page et l’échange', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const granted = await authorize(paul);
+      await adminDb
+        .delete(members)
+        .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
+
+      await expectError(await exchange(codeGrant(granted)), 'invalid_grant');
+
+      expect(await rowsOf(paul)).toEqual([]);
+    });
+  });
+
+  it('invalid_client pour un client_id illisible ou inconnu, avant même de regarder le code', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+
+    for (const client_id of [
+      'pas-un-client',
+      `${granted.clientId}x`,
+      'https://claude.ai/oauth/inconnu.json',
+      'https://evil.example/client.json',
+    ]) {
+      await expectError(await exchange(codeGrant(granted, { client_id })), 'invalid_client');
+    }
+    expect(await rowsOf(paul)).toEqual([]);
+  });
+
+  it('le même code deux fois : la seconde invalid_grant, et le jeton de la première ne marche plus', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+    const first = await exchange(codeGrant(granted));
+    const { access_token, refresh_token } = (await first.json()) as Tokens;
+    expect(await mcpStatus(access_token)).toBe(200);
+
+    await expectError(await exchange(codeGrant(granted)), 'invalid_grant');
+
+    expect(await mcpStatus(access_token)).toBe(401);
+    expect(await rowsOf(paul)).toHaveLength(1);
+    const renewal = await exchange({
+      grant_type: 'refresh_token',
+      refresh_token,
+      client_id: granted.clientId,
+    });
+    await expectError(renewal, 'invalid_grant');
+  });
+
+  it('un code servi deux fois à la fois n’en sert qu’un', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+
+    const responses = await Promise.all([
+      exchange(codeGrant(granted)),
+      exchange(codeGrant(granted)),
+    ]);
+
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 400]);
+  });
+});
+
+describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
+  it('rend de nouveaux jetons, et l’ancien accès comme l’ancien renouvellement ne valent plus', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const { granted, tokens } = await tokensFor(paul);
+    const renew = (refresh_token: string, client_id = granted.clientId) =>
+      exchange({ grant_type: 'refresh_token', refresh_token, client_id });
+
+    const response = await renew(tokens.refresh_token);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const next = await response.json();
+    expect(next).toEqual({
+      access_token: expect.stringMatching(API_TOKEN_PATTERN),
+      token_type: 'Bearer',
+      expires_in: 3600,
+      refresh_token: expect.stringMatching(API_TOKEN_PATTERN),
+      scope: 'leon',
+    });
+    expect(next.access_token).not.toBe(tokens.access_token);
+    expect(next.refresh_token).not.toBe(tokens.refresh_token);
+    expect(await mcpStatus(tokens.access_token)).toBe(401);
+    expect(await mcpStatus(next.access_token)).toBe(200);
+    await expectError(await renew(tokens.refresh_token), 'invalid_grant');
+    expect((await renew(next.refresh_token)).status).toBe(200);
+    expect(await rowsOf(paul)).toHaveLength(1);
+  });
+
+  it('invalid_grant pour un jeton inconnu, un jeton d’accès, un autre client ou un membre retiré', async () => {
+    const [paul, marie] = await team('Paul', 'Marie');
+    if (!paul || !marie) throw new Error('membre de test manquant');
+    const { granted, tokens } = await tokensFor(paul);
+    const other = await register(CHATGPT, 'Autre');
+    const renew = (refresh_token: string, client_id = granted.clientId) =>
+      exchange({ grant_type: 'refresh_token', refresh_token, client_id });
+
+    await expectError(await renew(`leon_${'A'.repeat(43)}`), 'invalid_grant');
+    await expectError(await renew('pas-un-jeton'), 'invalid_grant');
+    await expectError(await renew(tokens.access_token), 'invalid_grant');
+    await expectError(await renew(tokens.refresh_token, other), 'invalid_grant');
+    // Rien de tout cela n'a changé les jetons : le bon client renouvelle encore.
+    expect(await mcpStatus(tokens.access_token)).toBe(200);
+
+    await adminDb
+      .delete(members)
+      .where(and(eq(members.userId, paul.userId), eq(members.organizationId, paul.tenantId)));
+    await expectError(await renew(tokens.refresh_token), 'invalid_grant');
+  });
+
+  it('invalid_client pour un client_id illisible', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const { tokens } = await tokensFor(paul);
+
+    await expectError(
+      await exchange({
+        grant_type: 'refresh_token',
+        refresh_token: tokens.refresh_token,
+        client_id: 'pas-un-client',
+      }),
+      'invalid_client',
+    );
+  });
+});
+
+describe('POST /api/oauth/jeton : la forme de la requête', () => {
+  it.each([
+    'password',
+    'client_credentials',
+    'implicit',
+    'urn:ietf:params:oauth:grant-type:device_code',
+    '',
+  ])('grant_type « %s » : unsupported_grant_type', async (grant_type) => {
+    await expectError(
+      await exchange({ grant_type, username: 'paul', password: 'secret', client_id: 'x' }),
+      'unsupported_grant_type',
+    );
+  });
+
+  it('invalid_request : grant_type absent, ou paramètre obligatoire absent ou en double', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+    const { code: _code, ...withoutCode } = codeGrant(granted);
+    const { code_verifier: _verifier, ...withoutVerifier } = codeGrant(granted);
+    const { client_id: _client, ...withoutClient } = codeGrant(granted);
+    const { grant_type: _type, ...withoutType } = codeGrant(granted);
+    const doubled = (name: string) =>
+      app.request(API_PATHS.oauthJeton, {
+        method: 'POST',
+        headers: { 'content-type': FORM },
+        body: `${new URLSearchParams(codeGrant(granted))}&${name}=${encodeURIComponent(codeGrant(granted)[name as 'code'])}`,
+      });
+
+    for (const fields of [withoutCode, withoutVerifier, withoutClient, withoutType, {}]) {
+      await expectError(await exchange(fields), 'invalid_request');
+    }
+    await expectError(
+      await exchange({ grant_type: 'refresh_token', client_id: granted.clientId }),
+      'invalid_request',
+    );
+    await expectError(
+      await exchange({ grant_type: 'refresh_token', refresh_token: 'leon_x' }),
+      'invalid_request',
+    );
+    for (const name of ['grant_type', 'code', 'client_id', 'code_verifier', 'redirect_uri']) {
+      await expectError(await doubled(name), 'invalid_request');
+    }
+    // Aucun de ces refus n'a consommé le code.
+    expect((await exchange(codeGrant(granted))).status).toBe(200);
+  });
+
+  it('invalid_target pour une ressource autre que celle de Leon, pour les deux grant_type ; la bonne passe', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+
+    await expectError(
+      await exchange(codeGrant(granted, { resource: 'https://autre.example/api/mcp' })),
+      'invalid_target',
+    );
+    await expectError(
+      await exchange({
+        grant_type: 'refresh_token',
+        refresh_token: `leon_${'A'.repeat(43)}`,
+        client_id: granted.clientId,
+        resource: `${RESOURCE}/`,
+      }),
+      'invalid_target',
+    );
+    expect((await exchange(codeGrant(granted, { resource: RESOURCE }))).status).toBe(200);
+  });
+
+  it('refuse le JSON, le multipart, le texte et l’absence de type : 400 invalid_request, code intact', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+    const fields = codeGrant(granted);
+    const send = (headers: Record<string, string>, body: string) =>
+      app.request(API_PATHS.oauthJeton, { method: 'POST', headers, body });
+
+    await expectError(
+      await send({ 'content-type': 'application/json' }, JSON.stringify(fields)),
+      'invalid_request',
+    );
+    await expectError(
+      await send(
+        { 'content-type': 'multipart/form-data; boundary=x' },
+        '--x\r\ncontent-disposition: form-data; name="grant_type"\r\n\r\nauthorization_code\r\n--x--',
+      ),
+      'invalid_request',
+    );
+    await expectError(
+      await send({ 'content-type': 'text/plain' }, new URLSearchParams(fields).toString()),
+      'invalid_request',
+    );
+    await expectError(await send({}, new URLSearchParams(fields).toString()), 'invalid_request');
+    expect((await exchange(fields)).status).toBe(200);
+  });
+
+  describe('au plus 8 Ko d’entrée', () => {
+    const padded = (fields: Record<string, string>, size: number) => {
+      const base = `${new URLSearchParams(fields)}&pad=`;
+      return base + 'a'.repeat(size - base.length);
+    };
+
+    it('accepte 8 Ko pile', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const body = padded(codeGrant(await authorize(paul)), 8192);
+      expect(body).toHaveLength(8192);
+
+      const response = await app.request(API_PATHS.oauthJeton, {
+        method: 'POST',
+        headers: { 'content-type': FORM },
+        body,
+      });
+
+      expect(response.status).toBe(200);
+    });
+
+    it('refuse 8 Ko + 1 octet : 400, que la taille soit annoncée ou non, code intact', async () => {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const granted = await authorize(paul);
+      const text = padded(codeGrant(granted), 8193);
+      const declared = await app.request(API_PATHS.oauthJeton, {
+        method: 'POST',
+        headers: { 'content-type': FORM, 'content-length': String(text.length) },
+        body: text,
+      });
+      const streamed = await app.request(API_PATHS.oauthJeton, {
+        method: 'POST',
+        headers: { 'content-type': FORM },
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode(text));
+            controller.close();
+          },
+        }),
+        // @ts-expect-error duplex est requis par Node pour un corps en flux
+        duplex: 'half',
+      });
+
+      await expectError(declared, 'invalid_request');
+      await expectError(streamed, 'invalid_request');
+      expect((await exchange(codeGrant(granted))).status).toBe(200);
+    });
+  });
+
+  it('ne répond qu’au POST', async () => {
+    expect((await apiRequest(API_PATHS.oauthJeton)).status).toBe(404);
+  });
+
+  it('Cache-Control: no-store aussi sur une erreur inattendue (500), sans rien journaliser du corps', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const granted = await authorize(paul);
+    const logged = spyConsole();
+    vi.spyOn(apiTokensModule, 'createGrant').mockRejectedValue(
+      new DrizzleQueryError('insert into api_tokens … $1', [granted.code], new Error('x')),
+    );
+
+    const response = await exchange(codeGrant(granted));
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual({ error: 'Internal error' });
+    expect(logged().length).toBeGreaterThan(0);
+    expect(logged().join('')).not.toContain(granted.code);
+  });
+});
+
+describe('POST /api/oauth/jeton : ce qu’un assistant voit', () => {
+  it('avec un jeton obtenu par le parcours, un membre ne trouve la source privée d’un autre ni par search ni par fetch', async () => {
+    const [paul, marie] = await team('Paul', 'Marie');
+    if (!paul || !marie) throw new Error('membre de test manquant');
+    const { sourceId } = await seedIndexed(paul, {
+      kind: 'claude_code',
+      title: 'Conversation de Paul',
+      turns: [{ text: 'le mot de passe du coffre est ouistitigris' }],
+    });
+    const asPaul = await connect((await tokensFor(paul)).tokens.access_token);
+    const asMarie = await connect((await tokensFor(marie)).tokens.access_token);
+
+    const own = await call(asPaul, 'search', { query: 'ouistitigris' });
+    const theirs = await call(asMarie, 'search', { query: 'ouistitigris' });
+    const fetched = await call(asMarie, 'fetch', { sourceId });
+
+    expect(own.structuredContent?.hits).toHaveLength(1);
+    // Exactement ce que rend la recherche pour le contexte de session de Marie.
+    expect((await searchPassages(marie, { query: 'ouistitigris' })).hits).toEqual([]);
+    expect(theirs.structuredContent?.hits).toEqual([]);
+    expect(JSON.stringify(theirs)).not.toContain('coffre');
+    expect(fetched.isError).toBe(true);
+    expect(fetched.text).toContain('not found');
+    expect(fetched.text).not.toContain('coffre');
+  });
+});
+
+describe('POST /api/oauth/jeton : journaux', () => {
+  it('ne journalise ni jeton, ni code, ni code_verifier, ni client_id, succès comme refus', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const logged = spyConsole();
+    const { granted, tokens } = await tokensFor(paul);
+    const again = await authorize(paul);
+    await exchange(codeGrant(again, { code_verifier: newVerifier() }));
+    await exchange(codeGrant(granted)); // code déjà servi
+    await exchange({
+      grant_type: 'refresh_token',
+      refresh_token: tokens.refresh_token,
+      client_id: granted.clientId,
+    });
+    await exchange({ grant_type: 'password', client_id: granted.clientId });
+    await exchange({}, { 'content-type': 'application/json' });
+
+    const secrets = [
+      granted.code,
+      granted.verifier,
+      granted.clientId,
+      again.code,
+      tokens.access_token,
+      tokens.refresh_token,
+    ];
+    const output = logged().join('\n');
+    for (const secret of secrets) expect(output).not.toContain(secret);
+    expect(logged()).toEqual([]);
   });
 });

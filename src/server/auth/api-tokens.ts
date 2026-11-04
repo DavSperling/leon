@@ -22,8 +22,9 @@ export type ApiTokenRow = {
 type ApiTokenKind = (typeof apiTokens.$inferSelect)['kind'];
 
 const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requête
-// Les jetons des assistants : accès d'une heure, renouvellement de 90 jours (reporté, et changé, à chaque usage).
-const ACCESS_TTL_MS = 60 * 60 * 1000;
+// Les jetons des assistants : accès d'une heure (exporté : `expires_in` de la route des jetons), renouvellement de
+// 90 jours (reporté, et changé, à chaque usage).
+export const ACCESS_TTL_MS = 60 * 60 * 1000;
 const REFRESH_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 // Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5) : Réglages les
@@ -154,6 +155,8 @@ export async function createGrant(
 // requête, dont le where tient lieu de compare-and-swap : de deux renouvellements en même temps, le second ne trouve
 // plus l'empreinte qu'il présente. Même adhésion que verifyApiToken ; le jeton doit n'avoir pas été révoqué, ni son
 // renouvellement échu, et le client doit être celui qui l'a reçu (RFC 6749 §6).
+// shortcut: pas de tolérance en v1 ; garder l'ancienne empreinte de renouvellement 30 s si M07 ou l'usage montre des
+// reconnexions.
 export async function refreshGrant(
   refreshToken: string,
   clientRef: string,

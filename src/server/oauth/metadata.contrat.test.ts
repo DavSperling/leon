@@ -94,4 +94,12 @@ describe('métadonnées OAuth du MCP distant', () => {
     expect(pathExists(`src/app${RESOURCE_METADATA_PATH}${API_PATHS.mcp}/route.ts`)).toBe(true);
     expect(pathExists(`src/app${SERVER_METADATA_PATH}/route.ts`)).toBe(true);
   });
+
+  // authorization_endpoint est une page, dans le groupe de routes (auth) : son dossier est l'adresse annoncée. Les deux
+  // autres adresses annoncées sont des routes de l'API, vérifiées par api-contract.db.test.ts (400 à un POST vide).
+  it('authorization_endpoint est une page qui existe', async () => {
+    const { pathname } = new URL((await serverMetadata().json()).authorization_endpoint);
+    expect(pathname).toBe(AUTHORIZE_PATH);
+    expect(pathExists(`src/app/(auth)${AUTHORIZE_PATH}/page.tsx`)).toBe(true);
+  });
 });

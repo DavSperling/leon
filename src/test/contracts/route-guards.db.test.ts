@@ -16,10 +16,11 @@ import { app } from '@/server/api/app';
 // (`leon login`) n'a ni l'un ni l'autre, le jeton de la CLI n'étant pas encore en base. Elle est gardée par le code signé
 // (K4) et par la forme du jeton, et répond 401 sans l'un ni l'autre ; ses cas sont dans computer-routes.db.test.ts.
 //
-// Le serveur d'autorisation OAuth du MCP distant (/api/oauth/…) est public lui aussi : la découverte et l'inscription
-// d'un assistant (claude.ai, ChatGPT…) se font sans jeton ni session, par nature, puisqu'il n'a encore rien. Ses routes
-// ont leurs propres contrôles (adresses de retour de la liste fermée L11, 4 Ko d'entrée, code signé) ; leurs cas sont
-// dans oauth-routes.db.test.ts, et api-contract.db.test.ts garde la route d'inscription (400, ni 401 ni 404).
+// Le serveur d'autorisation OAuth du MCP distant (/api/oauth/…) est public lui aussi : l'inscription d'un assistant
+// (claude.ai, ChatGPT…) et l'échange de son code contre des jetons se font sans jeton ni session, par nature, puisqu'il
+// n'a encore rien. Ses routes ont leurs propres contrôles (adresses de retour de la liste fermée L11, code signé à usage
+// unique et PKCE, 4 puis 8 Ko d'entrée) ; leurs cas sont dans oauth-routes.db.test.ts, et api-contract.db.test.ts garde
+// les deux routes (400 à un POST sans corps valide, ni 401 ni 404).
 const PUBLIC = [
   /^\/api\/health$/,
   /^\/api\/auth\//,

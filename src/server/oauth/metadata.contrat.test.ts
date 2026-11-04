@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET as serverMetadata } from '@/app/.well-known/oauth-authorization-server/route';
 import { GET as mcpResourceMetadata } from '@/app/.well-known/oauth-protected-resource/api/mcp/route';
 import { GET as resourceMetadata } from '@/app/.well-known/oauth-protected-resource/route';
@@ -101,5 +101,34 @@ describe('métadonnées OAuth du MCP distant', () => {
     const { pathname } = new URL((await serverMetadata().json()).authorization_endpoint);
     expect(pathname).toBe(AUTHORIZE_PATH);
     expect(pathExists(`src/app/(auth)${AUTHORIZE_PATH}/page.tsx`)).toBe(true);
+  });
+});
+
+// Ce que les clients normalisent : une majuscule dans l'hôte ou un « :443 » écrit ne change ni l'émetteur ni la ressource.
+describe('l’émetteur est l’origine de BETTER_AUTH_URL', () => {
+  afterEach(() => {
+    vi.doUnmock('@/server/env');
+    vi.resetModules();
+  });
+
+  it.each([
+    ['https://Leon.Example', 'https://leon.example'],
+    ['https://leon.example:443/', 'https://leon.example'],
+    ['https://LEON.example:8443/', 'https://leon.example:8443'],
+    ['http://localhost:3000/', 'http://localhost:3000'],
+  ])('%s donne %s', async (written, origin) => {
+    vi.resetModules();
+    vi.doMock('@/server/env', () => ({ env: { BETTER_AUTH_URL: written } }));
+
+    const metadata = await import('./metadata');
+
+    expect(metadata.ISSUER).toBe(origin);
+    expect(metadata.RESOURCE).toBe(`${origin}/api/mcp`);
+    expect(metadata.AUTHORIZATION_SERVER_METADATA.issuer).toBe(origin);
+    expect(metadata.PROTECTED_RESOURCE_METADATA).toMatchObject({
+      resource: `${origin}/api/mcp`,
+      authorization_servers: [origin],
+    });
+    expect(metadata.MCP_CHALLENGE).toContain(`resource_metadata="${origin}/.well-known/`);
   });
 });

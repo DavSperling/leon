@@ -7,9 +7,10 @@ import { env } from '@/server/env';
 // bearer_methods_supported, `bearerAuthChallengeResponse` ajoute error et error_description au défi, et
 // `oauthMetadataResponse` ne pose pas Cache-Control.
 
-// L'émetteur est BETTER_AUTH_URL sans barre finale ; la ressource, exactement <émetteur>/api/mcp : Claude compare
-// `resource` à l'adresse que l'utilisateur a collée.
-export const ISSUER = env.BETTER_AUTH_URL.replace(/\/+$/, '');
+// L'émetteur est l'origine de BETTER_AUTH_URL, comme les clients la normalisent (hôte en minuscules, ni « :443 » ni
+// barre finale) ; la ressource, exactement <émetteur>/api/mcp : Claude compare `resource` à l'adresse que
+// l'utilisateur a collée.
+export const ISSUER = new URL(env.BETTER_AUTH_URL).origin;
 export const RESOURCE = `${ISSUER}${API_PATHS.mcp}`;
 export const OAUTH_SCOPE = 'leon';
 

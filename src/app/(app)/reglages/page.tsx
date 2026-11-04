@@ -25,7 +25,7 @@ import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
-import { installCommand } from '@/server/cli/install-command';
+import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
 import { env } from '@/server/env';
 
@@ -36,6 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SettingsPage() {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
+  const claude = await getTranslations('claudeCode');
   const ctx = await requireUserContext();
   const [allTokens, members, mayInvite, session, membership, about, deletion, depotsEquipe] =
     await Promise.all([
@@ -109,7 +110,11 @@ export default async function SettingsPage() {
           ),
           integrations: (
             <>
-              <ComputersSection computers={computers} command={installCommand()} />
+              <ComputersSection
+                computers={computers}
+                command={installCommand()}
+                instructions={claudeCodeInstructions(claude)}
+              />
 
               <TokensSection tokens={tokens} />
 

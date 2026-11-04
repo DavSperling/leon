@@ -1,10 +1,10 @@
 'use client';
 
-import { Terminal } from 'lucide-react';
+import { ArrowUpRight, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/verre/ui/button';
-import { CodeLine } from '@/components/verre/ui/copy';
+import { CodeLine, CopyButton } from '@/components/verre/ui/copy';
 import { nb } from '@/lib/verre/nb';
 import { PreviewCard } from './preview';
 
@@ -17,13 +17,25 @@ const TOOLS = [
   { name: 'Antigravity', logo: null },
 ] as const;
 
+const PATH_TITLE = 'mb-1 text-label font-semibold text-fg-2';
+
 /**
- * « Vos outils de code » dans l'étape Vos outils : la commande qui installe la CLI (`curl -fsSL <leon>/install | sh`,
- * bâtie côté serveur par `installCommand`) et le lien vers ce qui part, dans Réglages (S14). Elle ne touche ni aux cases
- * cochées ni au bouton Continuer.
+ * « Vos outils de code » dans l'étape Vos outils : deux chemins à égalité pour installer la CLI, « Je demande à Claude »
+ * (la consigne `instructions` à coller dans Claude Code, bâtie côté serveur par `claudeCodeInstructions`) d'abord, puis
+ * la commande (`curl -fsSL <leon>/install | sh`, `installCommand`). Les liens mènent à ce qui part, dans Réglages (S14),
+ * et à la documentation (dans un autre onglet : l'étape garde ses cases cochées). Elle ne touche ni aux cases cochées ni
+ * au bouton Continuer.
  */
-export function CodeToolsCard({ command }: { command: string }) {
+export function CodeToolsCard({
+  command,
+  instructions,
+}: {
+  command: string;
+  instructions: string | null;
+}) {
   const t = useTranslations('onboarding.tools.code');
+  const c = useTranslations('claudeCode');
+  const common = useTranslations('common');
   return (
     <PreviewCard title={t('title')}>
       <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-2">
@@ -50,11 +62,32 @@ export function CodeToolsCard({ command }: { command: string }) {
           </li>
         ))}
       </ul>
-      <p className="mb-3 text-ui text-muted">{nb(t('lead'))}</p>
-      <CodeLine code={command} wrap />
-      <Button asChild variant="link" size="sm" className="mt-3">
-        <Link href="/reglages#ordinateurs">{t('whatLeaves')}</Link>
-      </Button>
+      <div className="grid gap-4">
+        {instructions !== null && (
+          <div>
+            <h3 className={PATH_TITLE}>{c('withClaude')}</h3>
+            <p className="mb-3 text-ui text-muted">{nb(c('withClaudeLead'))}</p>
+            <CopyButton value={instructions} label={c('ask')} copiedMessage={c('copied')} />
+          </div>
+        )}
+        <div>
+          <h3 className={PATH_TITLE}>{c('inTerminal')}</h3>
+          <p className="mb-3 text-ui text-muted">{nb(t('lead'))}</p>
+          <CodeLine code={command} wrap />
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        <Button asChild variant="link" size="sm">
+          <Link href="/reglages#ordinateurs">{t('whatLeaves')}</Link>
+        </Button>
+        <Button asChild variant="link" size="sm">
+          <Link href="/documentation" target="_blank">
+            {c('docs')}
+            <ArrowUpRight aria-hidden="true" strokeWidth={1.8} />
+            <span className="sr-only">{common('newTab')}</span>
+          </Link>
+        </Button>
+      </div>
     </PreviewCard>
   );
 }

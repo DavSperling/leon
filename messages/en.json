@@ -1479,6 +1479,9 @@
     "ask": "Ask Claude",
     "copied": "Instructions copied. Paste them into Claude Code.",
     "docs": "Documentation",
+    "withClaude": "With Claude Code",
+    "withClaudeLead": "Copy the instructions and paste them into Claude Code. It does the setup with you and tells you when to click “Authorize”.",
+    "inTerminal": "In a terminal",
     "instructions": "Install Leon on this computer and connect it to my coding tools.\n1. Run this command in the terminal: {command}\n2. If the script says it has no terminal to finish, it prints a last command that ends with “setup --url” followed by Leon's address. Before you run it with the --yes option, show me what Leon will send (it is explained here: {docs}) and wait for my agreement. Never run --yes without my explicit agreement.\n3. That command opens my browser to authorize this computer: tell me to click “Authorize”. If your sandbox stops it from opening the browser or listening on 127.0.0.1, ask me for permission to run it outside the sandbox. If the browser does not open, it prints the address to open: give it to me.\n4. At the end, tell me which coding tools are connected and which Leon account this computer is connected to.\nNever ask me for a token, read one or show one: the connection is made through the browser."
   }
 }

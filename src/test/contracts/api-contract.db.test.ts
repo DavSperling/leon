@@ -15,6 +15,7 @@ import { signComputerCode } from '@/server/auth/computer-code';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { createTestTenant } from '@/test/fixtures';
+import { TEST_ENV } from '@/test/test-env';
 import { productionSources } from './files';
 
 vi.mock('@/server/pipeline/queue');
@@ -37,8 +38,12 @@ const SERVED = {
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
 } as const;
-// Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
-const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
+// L'inscription des clients OAuth (M04) et la route des jetons (M06) : annoncées par les métadonnées du serveur
+// d'autorisation (M03) avant d'être servies. Un chemin ajouté au contrat avant sa route vient ici.
+const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['oauthClients', 'oauthJeton'];
+
+// Seule /api/mcp dit au client où trouver le serveur d'autorisation (L2) ; les autres routes à jeton gardent le défi nu.
+const MCP_CHALLENGE = `Bearer resource_metadata="${TEST_ENV.BETTER_AUTH_URL}/.well-known/oauth-protected-resource/api/mcp", scope="leon"`;
 
 describe('routes de l’API', () => {
   it('chaque chemin de API_PATHS est servi ou déclaré pas encore servi', () => {
@@ -50,7 +55,9 @@ describe('routes de l’API', () => {
   it.each(Object.entries(SERVED))('%s répond 401 sans jeton', async (name, [method, init]) => {
     const response = await apiRequest(API_PATHS[name as keyof typeof SERVED], { method, ...init });
     expect(response.status).toBe(401);
-    expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
+    expect(response.headers.get('WWW-Authenticate')).toBe(
+      name === 'mcp' ? MCP_CHALLENGE : 'Bearer',
+    );
   });
 
   it.skipIf(NOT_YET_SERVED.length === 0).each(NOT_YET_SERVED)(

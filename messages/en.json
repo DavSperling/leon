@@ -537,12 +537,12 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Profile, security, team, and assistant connections",
-    "claudeTitle": "Connect Claude Code",
-    "claudeDescription": "Run this command in a terminal and replace the token with one of yours.",
+    "claudeTitle": "Leon’s tools in Claude Code (MCP)",
+    "claudeDescription": "So that Claude Code can search Leon during a session. Run this command in a terminal and replace the token with one of yours.",
     "tokenPlaceholder": "your token",
     "extensionTitle": "Browser extension",
     "extensionDescription": "Copy this prompt and paste it into Claude Code in the Leon repository to build and load the extension, or follow the steps manually.",
-    "askClaude": "Ask Claude to do it",
+    "askClaude": "Ask Claude to install the extension",
     "step2": "In Chrome, open",
     "developerMode": "turn on developer mode, then choose",
     "loadUnpacked": "“Load unpacked”",
@@ -1584,9 +1584,9 @@
     "ask": "Ask Claude",
     "copied": "Instructions copied. Paste them into Claude Code.",
     "docs": "Documentation",
-    "withClaude": "With Claude Code",
+    "withClaude": "Install with Claude Code",
     "withClaudeLead": "Copy the instructions and paste them into Claude Code. It does the setup with you and tells you when to click “Authorize”.",
-    "inTerminal": "In a terminal",
+    "inTerminal": "Install in a terminal",
     "instructions": "Install Leon on this computer and connect it to my coding tools.\n1. Run this command in the terminal: {command}\nIf your sandbox blocks writing to ~/.leon or downloading from nodejs.org, ask me for permission to run it outside the sandbox.\n2. If the script ends with “No terminal is available to ask you questions” and prints a last command that ends with “setup --url” followed by Leon's address: before you run it with the --yes option, copy to me, as is and without summarizing it, the text of what Leon will send (it is the section at {docs}) and wait for my explicit agreement. Never run --yes without my explicit agreement. If the script asks you questions instead of saying “No terminal is available…”, answer them with me.\n3. Before you run that command, warn me that it opens my browser and waits for my click on “Authorize”, up to 5 minutes. Run it with a timeout of at least 5 minutes (your tool stops at 2 minutes by default) or in the background. The authorization page asks me to cancel if I did not run the command: remind me that you ran it for me. If your sandbox stops it from opening the browser or listening on 127.0.0.1, ask me for permission to run it outside the sandbox. If the browser does not open, it prints the address to open: give it to me.\n4. At the end, tell me which coding tools are connected and which Leon account this computer is connected to.\nNever ask me for a token, read one or show one: the connection is made through the browser."
   }
 }

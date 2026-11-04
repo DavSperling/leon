@@ -10,6 +10,7 @@ import {
   clientStillAllowed,
   readClientId,
   registerClient,
+  returnHost,
 } from '@/server/oauth/clients';
 import { OAUTH_SCOPE, RESOURCE } from '@/server/oauth/metadata';
 
@@ -87,7 +88,8 @@ async function exchangeCode(
     !pkceMatches(grant.code_verifier, code.p)
   )
     return 'invalid_grant';
-  // Le nom et l'hôte que la ligne de l'assistant garde, et que Réglages montre : ils viennent du client, pas du code.
+  // Le nom que la ligne de l'assistant garde, et que Réglages montre, vient du client ; l'hôte, de l'adresse où le code
+  // est parti (code.r), pas de la première adresse inscrite.
   const client = await readClientId(grant.client_id);
   if (!client) return 'invalid_client';
   // L'adhésion de maintenant, pas celle du moment où l'utilisateur a cliqué.
@@ -97,7 +99,7 @@ async function exchangeCode(
     grantId: code.j,
     clientRef: ref,
     clientName: client.name,
-    clientHost: client.host,
+    clientHost: returnHost(code.r),
     name: client.name,
   });
   return tokens ?? 'invalid_grant';
@@ -116,8 +118,8 @@ async function grantTokens(form: Record<string, string>): Promise<Tokens | Token
   if (grant.grant_type === 'refresh_token') {
     // Aucune lecture du document du client pendant un renouvellement (une panne de claude.ai ou de chatgpt.com ne
     // coupe personne), mais le jugement local de readClientId : un client que L11 ne sert plus perd son renouvellement.
-    // invalid_grant, sur lequel les assistants réautorisent.
-    if (!clientStillAllowed(grant.client_id)) return 'invalid_grant';
+    // invalid_client, et non invalid_grant : le SDK MCP jette alors le client et se réinscrit.
+    if (!clientStillAllowed(grant.client_id)) return 'invalid_client';
     return (await refreshGrant(grant.refresh_token, ref)) ?? 'invalid_grant';
   }
   return exchangeCode(grant, ref);

@@ -268,14 +268,20 @@ type Authorization = { clientId: string; verifier: string; code: string; redirec
 
 async function authorize(
   member: TenantContext,
-  over: { clientId?: string; verifier?: string; challenge?: string; now?: number } = {},
+  over: {
+    clientId?: string;
+    verifier?: string;
+    challenge?: string;
+    now?: number;
+    redirectUri?: string;
+  } = {},
 ): Promise<Authorization> {
   const clientId = over.clientId ?? (await register());
   const verifier = over.verifier ?? newVerifier();
   const request = await parseAuthorizeRequest({
     response_type: 'code',
     client_id: clientId,
-    redirect_uri: CLAUDE,
+    redirect_uri: over.redirectUri ?? CLAUDE,
     state: 'etat-du-client',
     code_challenge: over.challenge ?? challengeOf(verifier),
     code_challenge_method: 'S256',
@@ -410,6 +416,33 @@ describe('POST /api/oauth/jeton : authorization_code (L8)', () => {
     ]);
     // F9 : un jeton d'assistant n'ouvre que /api/mcp.
     expect((await apiRequest(API_PATHS.me, { token: body.access_token })).status).toBe(401);
+  });
+
+  // L'hôte que Réglages montre est celui où le code est parti, pas celui de la première adresse que le client a inscrite.
+  describe('client_host', () => {
+    async function hostAfter(registered: string[], returned: string): Promise<string | null> {
+      const [paul] = await team('Paul');
+      if (!paul) throw new Error('membre de test manquant');
+      const clientId = (
+        await (await post({ client_name: 'Claude', redirect_uris: registered })).json()
+      ).client_id;
+      const granted = await authorize(paul, { clientId, redirectUri: returned });
+      expect((await exchange(codeGrant(granted))).status).toBe(200);
+      return (await rowsOf(paul))[0]?.clientHost ?? null;
+    }
+
+    it('est l’hôte de l’adresse de retour du code, pas celui de la première adresse inscrite', async () => {
+      expect(await hostAfter([CLAUDE, CHATGPT], CHATGPT)).toBe('chatgpt.com');
+    });
+
+    it('est 127.0.0.1 pour un retour en bouclage, quel que soit le port ou l’écriture de l’adresse inscrite', async () => {
+      expect(await hostAfter(['http://localhost:1111/cb'], 'http://localhost:5555/cb')).toBe(
+        '127.0.0.1',
+      );
+      expect(
+        await hostAfter([CLAUDE, 'http://127.0.0.1:1111/cb'], 'http://127.0.0.1:5555/cb'),
+      ).toBe('127.0.0.1');
+    });
   });
 
   it('accepte le vecteur de l’annexe B de la RFC 7636, un redirect_uri omis, un charset et une casse inhabituelle du type', async () => {
@@ -656,6 +689,27 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
     expect(await rowsOf(paul)).toHaveLength(1);
   });
 
+  // RFC 9700 §4.14.2 : dans les 30 s c'est le même client qui renouvelle deux fois ; au-delà, une copie volée.
+  it('rejouer l’ancien renouvellement au-delà de 30 s révoque le branchement, y compris l’accès en cours', async () => {
+    const [paul] = await team('Paul');
+    if (!paul) throw new Error('membre de test manquant');
+    const { granted, tokens } = await tokensFor(paul);
+    const renew = (refresh_token: string) =>
+      exchange({ grant_type: 'refresh_token', refresh_token, client_id: granted.clientId });
+    const next = (await (await renew(tokens.refresh_token)).json()) as Tokens;
+
+    await expectError(await renew(tokens.refresh_token), 'invalid_grant');
+    expect(await mcpStatus(next.access_token)).toBe(200); // dans les 30 s : rien ne bouge
+    await adminDb
+      .update(apiTokens)
+      .set({ refreshRotatedAt: new Date(Date.now() - 31_000) })
+      .where(eq(apiTokens.userId, paul.userId));
+    await expectError(await renew(tokens.refresh_token), 'invalid_grant');
+
+    expect(await mcpStatus(next.access_token)).toBe(401);
+    await expectError(await renew(next.refresh_token), 'invalid_grant');
+  });
+
   it('invalid_grant pour un jeton inconnu, un jeton d’accès, un autre client ou un membre retiré', async () => {
     const [paul, marie] = await team('Paul', 'Marie');
     if (!paul || !marie) throw new Error('membre de test manquant');
@@ -677,14 +731,15 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
     await expectError(await renew(tokens.refresh_token), 'invalid_grant');
   });
 
-  it('un client_id illisible ou inconnu : invalid_grant ; de plus de 4 Ko : invalid_client', async () => {
+  it('un client_id illisible : invalid_client, comme de plus de 4 Ko ; une adresse de document inconnue : invalid_grant', async () => {
     const [paul] = await team('Paul');
     if (!paul) throw new Error('membre de test manquant');
     const { tokens } = await tokensFor(paul);
     const renew = (client_id: string) =>
       exchange({ grant_type: 'refresh_token', refresh_token: tokens.refresh_token, client_id });
 
-    await expectError(await renew('pas-un-client'), 'invalid_grant');
+    await expectError(await renew('pas-un-client'), 'invalid_client');
+    // Une adresse que L11 sert encore, mais qui n'est pas celle de ce branchement : le jeton n'est pas à ce client.
     await expectError(await renew('https://claude.ai/oauth/inconnu.json'), 'invalid_grant');
     await expectError(await renew('a'.repeat(4097)), 'invalid_client');
     expect(await mcpStatus(tokens.access_token)).toBe(200);
@@ -716,7 +771,7 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
       ['un client_id signé falsifié', falsified],
       ['un document sur un hôte hors de L11', () => 'https://evil.example/client.json'],
       ['un document dont l’adresse n’a plus la forme attendue', () => 'https://claude.ai/'],
-    ])('%s : invalid_grant, la ligne est inchangée', async (_what, build) => {
+    ])('%s : invalid_client, la ligne est inchangée', async (_what, build) => {
       const [paul] = await team('Paul');
       if (!paul) throw new Error('membre de test manquant');
       const clientId = build();
@@ -730,7 +785,7 @@ describe('POST /api/oauth/jeton : refresh_token (L8)', () => {
           refresh_token: tokens.refresh_token,
           client_id: clientId,
         }),
-        'invalid_grant',
+        'invalid_client',
       );
 
       expect(await rowsOf(paul)).toEqual(before);

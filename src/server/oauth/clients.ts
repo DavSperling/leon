@@ -94,15 +94,14 @@ export type ClientInfo = {
   ref: string; // SHA-256 du client_id (L7 « c », L9 client_ref)
 };
 
+// L'hôte d'une adresse de retour permise par L11 : 127.0.0.1 pour le bouclage. Celui qu'une ligne d'assistant garde
+// (client_host), pris à l'adresse où le code est parti.
+export const returnHost = (uri: string) => (loopback(uri) ? '127.0.0.1' : new URL(uri).hostname);
+
 // `uris` est non vide et permise par L11 (permittedUris).
 function describeClient(clientId: string, name: string, uris: string[]): ClientInfo {
   const [first = ''] = uris;
-  return {
-    name,
-    redirectUris: uris,
-    host: loopback(first) ? '127.0.0.1' : new URL(first).hostname,
-    ref: clientRef(clientId),
-  };
+  return { name, redirectUris: uris, host: returnHost(first), ref: clientRef(clientId) };
 }
 
 const RegistrationSchema = z.looseObject({

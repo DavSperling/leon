@@ -16,6 +16,8 @@ export type DocumentCache = Map<string, CacheEntry>;
 // shortcut: mémoire du processus (chaque instance relit pour elle-même), 100 adresses au plus, la plus ancienne sortie
 // la première ; une table partagée le jour où il y aura plusieurs instances à ménager.
 const CACHE: DocumentCache = new Map();
+// Les lectures en cours, par adresse : deux demandes en même temps pour la même adresse font une seule requête sortante.
+const PENDING = new Map<string, Promise<unknown>>();
 
 // L'injection ne sert qu'aux tests : un faux fetch, un faux cache, l'heure, une durée courte. Par défaut, le vrai.
 export type DocumentReadOptions = {
@@ -90,6 +92,20 @@ async function download(
   }
 }
 
+// Un refus (result null) n'évince jamais un document accepté : une adresse qui varie ne chasse pas ChatGPT de la mémoire.
+// Au plafond, le plus ancien refus part d'abord ; sans refus, le plus ancien document, sauf devant un refus, qui n'est
+// alors pas gardé.
+function remember(cache: DocumentCache, url: string, entry: CacheEntry): void {
+  cache.delete(url);
+  if (cache.size >= MAX_ENTRIES) {
+    const refused = [...cache].find(([, kept]) => kept.result === null)?.[0];
+    const victim = refused ?? (entry.result === null ? undefined : cache.keys().next().value);
+    if (victim === undefined) return;
+    cache.delete(victim);
+  }
+  cache.set(url, entry);
+}
+
 // null : lecture impossible ou document refusé par `validate`, une minute en mémoire au plus.
 export async function readClientDocument<T>(
   url: string,
@@ -103,13 +119,17 @@ export async function readClientDocument<T>(
 ): Promise<T | null> {
   const cached = cache.get(url);
   if (cached && cached.expires > now) return cached.result as T | null;
-  const downloaded = await download(url, fetchDocument, timeoutMs);
-  const result = downloaded === null ? null : validate(downloaded.document);
-  const ttl = downloaded === null || result === null ? DEFAULT_TTL_SECONDS : downloaded.ttl;
-  if (ttl > 0) {
-    const oldest = cache.keys().next().value;
-    if (cache.size >= MAX_ENTRIES && oldest !== undefined) cache.delete(oldest);
-    cache.set(url, { result, expires: now + ttl * 1000 });
-  }
-  return result;
+  const pending = PENDING.get(url);
+  if (pending) return pending as Promise<T | null>;
+
+  const read = async (): Promise<T | null> => {
+    const downloaded = await download(url, fetchDocument, timeoutMs);
+    const result = downloaded === null ? null : validate(downloaded.document);
+    const ttl = downloaded === null || result === null ? DEFAULT_TTL_SECONDS : downloaded.ttl;
+    if (ttl > 0) remember(cache, url, { result, expires: now + ttl * 1000 });
+    return result;
+  };
+  const reading = read().finally(() => PENDING.delete(url));
+  PENDING.set(url, reading);
+  return reading;
 }

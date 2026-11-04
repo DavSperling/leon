@@ -526,6 +526,104 @@ describe('le cache des documents', () => {
     expect(cache.size).toBeLessThanOrEqual(100);
   });
 
+  // Un faux serveur : chaque adresse sert son propre document, sauf celles de `refused`, en 404.
+  const serving = (refused: (url: string) => boolean = () => false) =>
+    vi.fn<typeof globalThis.fetch>(async (input) => {
+      const url = String(input);
+      return refused(url) ? new Response('', { status: 404 }) : ok(documentOf(url));
+    });
+
+  it('cent refus de suite ne chassent pas un document accepté', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = serving((url) => url.includes('/refus-'));
+    const cache = new Map() as DocumentCache;
+    expect(await at(fetch, cache, 0)).toMatchObject({ name: 'ChatGPT' });
+
+    for (let i = 0; i < 250; i++) {
+      await readClientId(`https://chatgpt.com/oauth/refus-${i}.json`, { fetch, cache, now: T0 });
+    }
+
+    expect(cache.size).toBeLessThanOrEqual(100);
+    fetch.mockClear();
+    expect(await at(fetch, cache, 1)).toMatchObject({ name: 'ChatGPT' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('une mémoire pleine de documents acceptés n’en perd aucun pour un refus ; un document accepté de plus chasse le plus ancien', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = serving((url) => url.includes('/refus-'));
+    const cache = new Map() as DocumentCache;
+    const accepted = (i: number) => `https://chatgpt.com/oauth/ok-${i}.json`;
+    for (let i = 0; i < 100; i++) await readClientId(accepted(i), { fetch, cache, now: T0 });
+    expect(cache.size).toBe(100);
+
+    await readClientId('https://chatgpt.com/oauth/refus-1.json', { fetch, cache, now: T0 });
+    expect(cache.size).toBe(100);
+    expect([...cache.keys()]).toContain(accepted(0));
+    expect(cache.has('https://chatgpt.com/oauth/refus-1.json')).toBe(false);
+
+    await readClientId(accepted(100), { fetch, cache, now: T0 });
+    expect(cache.size).toBe(100);
+    expect(cache.has(accepted(0))).toBe(false);
+    expect(cache.has(accepted(100))).toBe(true);
+  });
+
+  describe('lectures simultanées', () => {
+    it('deux lectures de la même adresse partagent une seule requête sortante', async () => {
+      let release = () => {};
+      const fetch = vi.fn<typeof globalThis.fetch>(
+        () =>
+          new Promise((resolve) => {
+            release = () => resolve(ok(documentOf(CHATGPT_URL)));
+          }),
+      );
+      const cache = new Map() as DocumentCache;
+
+      const first = readClientId(CHATGPT_URL, { fetch, cache, now: T0 });
+      const second = readClientId(CHATGPT_URL, { fetch, cache, now: T0 });
+      release();
+
+      expect(await Promise.all([first, second])).toEqual([
+        expect.objectContaining({ name: 'ChatGPT' }),
+        expect.objectContaining({ name: 'ChatGPT' }),
+      ]);
+      expect(fetch).toHaveBeenCalledOnce();
+    });
+
+    it('deux adresses différentes ne se partagent pas ; la lecture finie, l’expiration relit', async () => {
+      const fetch = serving();
+      const cache = new Map() as DocumentCache;
+      const a = 'https://chatgpt.com/oauth/a.json';
+      const b = 'https://chatgpt.com/oauth/b.json';
+
+      await Promise.all([a, b].map((url) => readClientId(url, { fetch, cache, now: T0 })));
+      expect(fetch).toHaveBeenCalledTimes(2);
+
+      await readClientId(a, { fetch, cache, now: T0 + 61 * 60 * 1000 });
+      expect(fetch).toHaveBeenCalledTimes(3);
+    });
+
+    it('un échec partagé n’est pas gardé comme une lecture en cours : la suivante relit', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockRejectedValueOnce(new Error('réseau'))
+        .mockImplementation(async () => ok(documentOf(CHATGPT_URL)));
+      const cache = new Map() as DocumentCache;
+
+      const failed = await Promise.all([
+        readClientId(CHATGPT_URL, { fetch, cache, now: T0 }),
+        readClientId(CHATGPT_URL, { fetch, cache, now: T0 }),
+      ]);
+      expect(failed).toEqual([null, null]);
+      expect(fetch).toHaveBeenCalledOnce();
+
+      // le refus est gardé une minute ; passé ce délai, rien ne reste en cours et le document se lit
+      expect(await at(fetch, cache, 61)).toMatchObject({ name: 'ChatGPT' });
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('ne garde rien pour une adresse qu’il ne lit pas', async () => {
     const fetch = cached();
     const cache = new Map() as DocumentCache;

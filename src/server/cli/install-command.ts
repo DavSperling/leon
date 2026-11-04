@@ -19,7 +19,8 @@ export function installCommand(url: string = env.BETTER_AUTH_URL): string | null
 
 // « Je demande à Claude » : la consigne à coller dans Claude Code, qui fait l'installation à la place de la personne.
 // Elle est dans la langue de l'interface (`t` : getTranslations('claudeCode')) et ne porte que deux valeurs, la
-// commande et le lien vers « Ce qui part » de la page /documentation, tous deux sur l'adresse du serveur. Jamais de jeton.
+// commande et l'adresse de la documentation en Markdown (/documentation.md, que lit Claude Code ; le message nomme la
+// section « Ce qui part »), toutes deux sur l'adresse du serveur. Jamais de jeton.
 export function claudeCodeInstructions(
   t: (key: 'instructions', values: { command: string; docs: string }) => string,
   url: string = env.BETTER_AUTH_URL,
@@ -29,6 +30,6 @@ export function claudeCodeInstructions(
     ? null
     : t('instructions', {
         command: `curl -fsSL ${origin}/install | sh`,
-        docs: `${origin}/documentation#ce-qui-part`,
+        docs: `${origin}/documentation.md`,
       });
 }

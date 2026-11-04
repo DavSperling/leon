@@ -2,10 +2,11 @@ import { NextIntlClientProvider } from 'next-intl';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { readText } from '@/test/contracts/files';
+import { pathExists, readText } from '@/test/contracts/files';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DocumentationPage } from './documentation';
+import { documentationMarkdown } from './documentation-markdown';
 
 // Les boutons « Copier » que la page pose elle-même (pas ceux de CodeLine) : ce qu'ils copient et confirment.
 const copies: Record<string, unknown>[] = [];
@@ -22,7 +23,7 @@ vi.mock('@/components/verre/ui/copy', async (importOriginal) => {
 
 const ADDRESS = 'https://leon.example';
 const COMMAND = `curl -fsSL ${ADDRESS}/install | sh`;
-const INSTRUCTIONS = `Install Leon: ${COMMAND} (${ADDRESS}/documentation#ce-qui-part)`;
+const INSTRUCTIONS = `Install Leon: ${COMMAND} (${ADDRESS}/documentation.md)`;
 const LOCALES = [
   ['en', en],
   ['fr', fr],
@@ -237,15 +238,23 @@ describe('la page Documentation', () => {
     },
   );
 
-  // La consigne de « Je demande à Claude » renvoie à « Ce qui part » de cette page (installCommand, côté serveur).
-  it('a l’ancre que vise la consigne de « Je demande à Claude »', () => {
-    const anchor = /\/documentation#([a-z-]+)/.exec(
-      readText('src/server/cli/install-command.ts'),
-    )?.[1];
+  // La consigne de « Je demande à Claude » renvoie à /documentation.md (installCommand, côté serveur) : c'est Claude Code
+  // qui la lit, il lui faut le Markdown. Cette adresse existe, et elle a la section que la consigne nomme.
+  it.each(LOCALES)(
+    'a, sur /documentation.md, la section que nomme la consigne de « Je demande à Claude » (%s)',
+    (locale, messages) => {
+      const path = /docs: `\$\{origin\}(\/[a-z.]+)`/.exec(
+        readText('src/server/cli/install-command.ts'),
+      )?.[1];
+      const { title } = messages.site.documentation.sent;
 
-    expect(anchor).toBe('ce-qui-part');
-    expect(render('en')).toContain(`<section id="${anchor}"`);
-  });
+      expect(path).toBe('/documentation.md');
+      expect(pathExists('src/app/documentation.md/route.ts')).toBe(true);
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        `\n## ${title} {#ce-qui-part}\n`,
+      );
+    },
+  );
 
   it('ne cite aucune adresse de Leon autre que celle du serveur', () => {
     for (const [locale] of LOCALES) {

@@ -25,19 +25,22 @@
 | 3. État du dépôt | décision E : « L'équipe sur ce dépôt » et l'état réel de mes PR | T13 et T14 | suivante | 2,5 j |
 | 4. Codex reçoit | Codex reçoit le même bloc au premier message, et le rappel | T15 à T17 | suivante, après l'essai T15 | 2,5 j |
 | 5. Codex capte | les sessions Codex remontent aussi, avec leurs coulisses | T18 à T20 | suivante | 3,5 j |
-| 6. Le résumé | chaque session close reçoit un résumé écrit par Leon, trouvable par la recherche | T21 à T24 | suivante, après l'accord de David (QD1) | 3 j |
+| 6. Le résumé | chaque session close reçoit un résumé écrit par Leon, trouvable par la recherche | T21 à T24 | suivante, après l'accord de David (QD1) | 3,5 j |
 | 7. Recherche par dépôt | le RAG à la demande se borne au dépôt | T25 | suivante | 0,5 j |
 | 8. Cursor | capte et reçoit, sommaire et rappel au premier message | T26 à T29 | suivante, après l'essai T26 | 4 j |
 | 9. Antigravity | capte et reçoit, sommaire et rappel au premier message | T31 à T34 | suivante, après l'essai T31 | 4 j |
 | ~~10. RAG au premier prompt~~ | remplacé par les lots 12 et 13 ([la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) | — | — | — |
-| 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1 j |
-| 12. Les fils et le dossier | Leon range la mémoire par fil (connecteurs et GitHub compris), trois commandes de lecture et les mêmes outils au MCP, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T47 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 8 j |
-| 13. Le rappel à chaque message | une ligne de rappel quand un message touche un fil connu (niveau 2) | T48 et T49 (idem) | suivante | 2 j |
+| 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1,5 j |
+| 12. Les fils et le dossier | Leon range la mémoire par fil (connecteurs et GitHub compris), trois commandes de lecture et les mêmes outils au MCP, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T47, T53 et T54 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 10,5 j |
+| 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2) ; les leçons acceptées dans le bloc ; le brouillon privé de l'agent | T48, T49, T55 à T57 (idem) | suivante | 4,5 j |
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent | T50 à T52 (idem) | suivante | 4 j |
+| 15. Le rêve perso par règles | chaque nuit, sans modèle, des propositions de leçons et de clôture, que l'humain accepte ou rejette ; puis la mesure refaite | T58 à T62 (idem) | suivante | 5,5 j |
 
-Total : environ 43 jours, lot 1 compris (fait).
+Total : environ 54,5 jours, lot 1 compris (fait). Il était de 43 jours le 03/11.
 
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
+
+> **Amendé le 04/11 :** l'ordre est tranché : 1 (fait), 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Le lot 15, le rêve perso par règles (environ 5 j), est décrit dans le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Ce plan décrit aussi ce qui s'ajoute aux lots 12 et 13. Les efforts et le total sont dans le tableau ci-dessus. Voir ses « Décisions d'Amos du 04/11 ».
 
 **Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
@@ -93,6 +96,8 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **Bloc de démarrage :** 8 000 octets UTF-8 au plus, pour tous les outils, assemblé par le serveur.
   - C'est sous les 10 000 caractères de Claude Code et sous les 10 000 octets environ de Codex, sans régler `additionalContextLimit`.
   - Ordre : mes sessions (3 500 octets au plus), puis l'équipe sur ce dépôt (10 lignes, 700 octets), puis le point du matin, coupé à une ligne entière, balise fermante gardée.
+
+  > **Amendé le 04/11 :** la mémoire passe avant le point du matin, toujours en 8 000 octets. D'abord le sommaire des fils (3 500 octets), avec l'équipe sur ce dépôt (700 octets). Puis les leçons acceptées (2 000 octets), dans l'ordre de D37 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Puis la consigne. Puis le point du matin, qui prend le reste, coupé à une ligne entière.
 - **Mes sessions :** 4 au plus, sur 7 jours, sur le même dépôt, la branche courante d'abord, la session courante exclue.
   - L'en-tête de chaque session porte l'outil, la date, la branche et les PR (numéro et URL, puis leur état GitHub à partir du lot 3).
   - « Fait » : le nombre de commits, les PR créées, puis 5 fichiers au plus.
@@ -128,6 +133,8 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **T15, T17, T26, T28, T29, T31, T33 et T34** posent aussi le rappel de leur outil, posé seulement avec l'usage `rappel` (Codex : UserPromptSubmit ; Cursor : beforeSubmitPrompt ; Antigravity : PreInvocation), et citent les commandes de lecture. Pour Cursor et Antigravity, sommaire et rappel arrivent au premier message en une seule sortie, demandés en parallèle sous un même délai de 3 s. Si l'essai refuse l'injection au message, le lot s'arrête à son annexe et Amos décide.
 - **Les mentions des replis par fichier et du cache local** (règles du chantier, « Graphe, RAG et Markdown », vigilance 5, T08, T26, T31) sont caduques : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan). Aux trois migrations de l’en-tête s’ajoutent celles du lot 12 (supprimer-fil, lectures-fil, étape fil) et du lot 13 (rappels-cites).
 - **Les renvois au lot 10** (contraintes du bloc, C4, C5, C6, T06) se lisent avec le lot 13 : `leon rappel`, balise `<rappel-leon>`. L'ordre du bloc devient : sommaire des fils, équipe, consigne, point du matin (D24 du nouveau plan).
+
+  > **Amendé le 04/11 :** s'ajoutent les migrations du lot 12 (versions-memoire), du lot 13 (lecons, supprimer-notes) et du lot 15 (propositions-memoire). L'ordre du bloc devient : sommaire des fils, équipe, leçons acceptées, consigne, point du matin (D37 du nouveau plan).
 - **T14** : la section « L'équipe sur ce dépôt » se place après « mes sessions » ; T46 du nouveau plan la déplace dans le sommaire des fils.
 - **T37** ajoute le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement ».
 - **T38** mesure aussi qui ouvre un fil ou le dossier, et par quel outil. Il règle le seuil de proximité des fils et décide du niveau 3.
@@ -190,6 +197,8 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   Il est transmis au serveur à chaque envoi, et `leon retirer-crochets` le retire.
 - **D16. Retirée le 03/11** (rien sur le poste : D31 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)). Texte d'origine : **les replis par fichier (proposé, voir A4)** se font par dépôt ou par espace de travail, en 0600, avec accord. Leon ajoute le chemin à `$(git rev-parse --git-path info/exclude)`, puis vérifie par `git check-ignore -q` (sans `--no-index`) avant chaque écriture. Un fichier déjà suivi par git est refusé. Jamais de fichier global.
 - **D17. Les sessions « externes »** ont lu du web, du MCP, un sous-agent ou une commande réseau. Dès le lot 1, le bloc de démarrage n'en montre que les clés : outil, date, branche, PR. Jamais un texte écrit par l'agent. Leur résumé reste trouvable à la demande.
+
+  > **Amendé le 04/11 (D36 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :** « a lu du MCP » ne compte plus les lectures de Leon retenues par D36 : les commandes `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon. D36 y propose `leon lecons`, `leon versions`, leurs outils et `leon noter`. Ça vaut pour les quatre outils de code (T18, T27, T32).
 - **D18. Remplacée le 03/11** par le rappel à chaque message (lot 13) et la lecture à la demande par le MCP (lot 12). Texte d'origine : le RAG au premier prompt (proposé, voir A5) est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
 - **D19. Hors de ce chantier :**
   - les consignes (B et C) ;
@@ -238,6 +247,8 @@ type SessionFacts = {
   fin: string | null;
 };
 ```
+
+> **Amendé le 04/11 :** C1 gagne `outils_en_erreur: { outil: string; nombre: number }[]` (T58 du nouveau plan), relevé par les quatre lecteurs. `externe` ne compte plus les lectures de Leon retenues par D36 du nouveau plan (voir D17).
 
 L'outil est le `kind` de C2.
 
@@ -670,6 +681,8 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T18 · Lire une session Codex ; les « sessions de code » au lieu de `claude_code`
 
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+
 **Fichiers :**
 - `src/capture/codex.ts` (nouveau) ;
 - les fixtures `src/capture/fixtures/codex/rollout-git.jsonl`, `rollout-sans-git.jsonl` et `rollout-history-base.jsonl` (nouvelles, tirées de T15) ;
@@ -732,6 +745,18 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 ### T23 · La file et le worker : un résumé par session close, indexé
 
 > **Amendé le 03/11 :** partout où cette tâche dit « accord inférieur à 3 » ou « accord 3 » (la file, le worker, les tests), lire « usage `resume` absent » ou « présent » (C7 révisé). La liste blanche garde les `[décision]` dont l'id est vérifié (D23 du nouveau plan). Le rattachement des fils n'est pas déclenché ici : T41 du nouveau plan le place après l'indexation.
+
+> **Amendé le 04/11 :**
+> - `metadata.resume` s'écrit par fusion atomique en SQL (`metadata || jsonb_build_object`), comme `record-facts.ts`, jamais lu puis réécrit en JavaScript. L'usage `resume` est relu juste avant l'écriture ;
+> - un nouveau résumé remplace les passages du précédent : les passages et les vecteurs des `leon:resume:*` précédents de la session sont supprimés. Leurs tours restent, datés, comme des versions de la session, hors de la recherche. Ils ne vont pas dans `versions_memoire`, qui n'arrive qu'au lot 12 ;
+> - `fetchSource` et `fetchPassageContext` (`src/server/search/context.ts`) écartent les `leon:resume:*` autres que le dernier : les anciens ne sont pas non plus dans `fetch`, ni par la source, ni comme tours voisins d'un passage ;
+> - `writePassages` (`src/server/search/index-run.ts`) saute un tour `leon:resume:*` qui n'est plus le dernier de sa session : un run de l'ancien résumé repris ou rejoué (`claimRun` reprend tout run qui n'est pas `done`) ne recrée aucun passage ;
+> - tests de plus :
+>   - après un second résumé, `searchPassages` et `fetch` de la session ne rendent que lui ;
+>   - `fetch` par le `passageId` d'un tour voisin d'un ancien résumé ne rend pas cet ancien résumé ;
+>   - le run de l'ancien résumé rejoué après le second ne recrée aucun passage ;
+>   - si des faits arrivent pendant l'écriture du résumé, ni le résumé ni les faits ne sont perdus ;
+> - effort du lot 6 : 3 j deviennent 3,5 j.
 
 **Fichiers :** `src/server/sessions/resume-queue.ts` (nouveau), `src/server/sessions/resume-worker.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file), `src/server/briefing/gather.ts` (`lastTurns` écarte `external_id like 'leon:resume:%'`), `src/instrumentation-node.ts`.
 
@@ -813,6 +838,8 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 
 ### T27 · Lire une session Cursor
 
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+
 **Fichiers :** `src/capture/cursor.ts` (nouveau), `src/capture/fixtures/cursor/transcript-simple.jsonl` (nouveau, tiré de T26), `src/capture/turn.ts` (`'cursor'` dans `CAPTURE_KINDS` et `CODE_SESSION_KINDS`), `src/lib/labels.ts`, `src/components/verre/ui/chips.tsx`, `src/components/verre/connexions/carte.tsx`, `src/test/fixtures.ts`.
 
 **Fait quand :**
@@ -888,6 +915,8 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 L'annexe donne le verdict, et la décision sur le repli.
 
 ### T32 · Lire une session Antigravity
+
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un `CALL_MCP_TOOL` externe. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
 
 **Fichiers :** `src/capture/antigravity.ts` (nouveau), `src/capture/fixtures/antigravity/transcript-simple.jsonl` (nouveau, tiré de T31), `src/capture/turn.ts` (`'antigravity'` dans `CAPTURE_KINDS` et `CODE_SESSION_KINDS`), `src/lib/labels.ts`, `src/components/verre/ui/chips.tsx`, `src/components/verre/connexions/carte.tsx`, `src/test/fixtures.ts`.
 
@@ -1004,6 +1033,12 @@ Contrat : `api-contract.db.test.ts`.
 ### T38 · Mesurer l'ancrage
 
 > **Amendé le 03/11 :** mesurer aussi qui ouvre un fil ou le dossier, par quel outil (lectures notées) ; régler le seuil de proximité des fils ; décider du niveau 3 (D28 du nouveau plan).
+
+> **Amendé le 04/11 :**
+> - mesurer aussi, pour chaque tâche, les tokens et la durée, avec et sans la mémoire (sans bloc ni lecture, puis avec le sommaire, les leçons, le rappel et les lectures). Ils se relèvent dans le champ `usage` (les tokens) des transcripts de sessions de test : c'est le gain que le talk annonce ;
+> - garder 5 des 10 tâches, pour les refaire après le lot 15 (T62 du nouveau plan) ;
+> - relever les compteurs côté serveur, sans texte ni id de fil, que posent T53 et T44 du nouveau plan : les versions écrites, les écritures abandonnées pour conflit, les restaurations, les états masqués par la règle de lecture. Relever aussi la part de sessions externes (A14 du nouveau plan) ;
+> - effort du lot 11 : 1 j devient 1,5 j.
 
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/07-mesure-ancrage.md` (nouveau).
 

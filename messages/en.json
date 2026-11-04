@@ -1217,6 +1217,13 @@
       "heroTerminal": "Use the terminal",
       "toc": "On this page",
       "addressPlaceholder": "address of your Leon",
+      "view": {
+        "label": "Reading mode",
+        "human": "For you",
+        "agent": "For an agent (Markdown)",
+        "copyAll": "Copy all",
+        "openRaw": "Open as raw Markdown"
+      },
       "requirements": {
         "title": "What you need",
         "lead": "Four things, on the computer you want to connect.",

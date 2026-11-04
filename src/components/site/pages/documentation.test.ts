@@ -21,6 +21,24 @@ vi.mock('@/components/verre/ui/copy', async (importOriginal) => {
   };
 });
 
+// L'interrupteur « Pour vous » / « Pour un agent » : ses deux pastilles, et le routeur qu'un clic appelle.
+const pills: Record<string, unknown>[] = [];
+vi.mock('@/components/verre/ui/pill', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/components/verre/ui/pill')>();
+  return {
+    ...real,
+    Pill: (props: Parameters<typeof real.Pill>[0]) => {
+      pills.push({ ...props });
+      return real.Pill(props);
+    },
+  };
+});
+const replace = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace }),
+  usePathname: () => '/documentation',
+}));
+
 const ADDRESS = 'https://leon.example';
 const COMMAND = `curl -fsSL ${ADDRESS}/install | sh`;
 const INSTRUCTIONS = `Install Leon: ${COMMAND} (${ADDRESS}/documentation.md)`;
@@ -32,17 +50,23 @@ type Props = { command: string | null; address: string | null; instructions: str
 const GIVEN: Props = { command: COMMAND, address: ADDRESS, instructions: INSTRUCTIONS };
 const GENERIC: Props = { command: null, address: null, instructions: null };
 
-const render = (locale: 'en' | 'fr', props: Props = GIVEN) => {
+const render = (locale: 'en' | 'fr', props: Props = GIVEN, view: 'human' | 'agent' = 'human') => {
   copies.length = 0;
+  pills.length = 0;
+  const messages = locale === 'en' ? en : fr;
+  const markdown = documentationMarkdown({ locale, messages, ...props });
   return renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
       locale,
-      messages: locale === 'en' ? en : fr,
+      messages,
       // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
-      children: createElement(DocumentationPage, props),
+      children: createElement(DocumentationPage, { ...props, view, markdown }),
     }),
   );
 };
+
+// Un clic sur une pastille de l'interrupteur (ses props, capturées au rendu).
+const click = (index: number) => (pills[index]?.onClick as (() => void) | undefined)?.();
 
 const decode = (html: string) =>
   html
@@ -262,5 +286,111 @@ describe('la page Documentation', () => {
       expect(urls.length).toBeGreaterThan(2);
       for (const url of urls) expect(url).toMatch(/^https?:\/\/(leon\.example|localhost)/);
     }
+  });
+
+  // L'interrupteur du haut de page : deux choix, l'état annoncé par aria-pressed, l'icône de terminal sur le second.
+  describe('l’interrupteur « Pour vous » / « Pour un agent (Markdown) »', () => {
+    const group = (html: string, label: string) =>
+      new RegExp(`<div role="group" aria-label="${label}"[^>]*>(.*?)</div>`, 's').exec(html)?.[1] ??
+      '';
+    const buttons = (html: string) =>
+      [...html.matchAll(/<button[^>]*aria-pressed="(true|false)"[^>]*>(.*?)<\/button>/gs)].map(
+        (match) => ({
+          pressed: match[1],
+          html: match[2] ?? '',
+          text: textOf(match[2] ?? '').trim(),
+        }),
+      );
+
+    it.each(LOCALES)(
+      'propose deux choix, « Pour vous » étant choisi par défaut (%s)',
+      (locale, messages) => {
+        const { view } = messages.site.documentation;
+        const choices = buttons(group(render(locale), view.label));
+
+        expect(choices.map(({ text, pressed }) => [text, pressed])).toEqual([
+          [view.human, 'true'],
+          [view.agent, 'false'],
+        ]);
+      },
+    );
+
+    it.each(LOCALES)(
+      'bascule sur « Pour un agent » : l’autre choix est annoncé choisi (%s)',
+      (locale, messages) => {
+        const { view } = messages.site.documentation;
+        const choices = buttons(group(render(locale, GIVEN, 'agent'), view.label));
+
+        expect(choices.map(({ pressed }) => pressed)).toEqual(['false', 'true']);
+      },
+    );
+
+    it('porte une icône de terminal cachée aux lecteurs d’écran, devant le libellé de « Pour un agent »', () => {
+      const [human, agent] = buttons(group(render('en'), en.site.documentation.view.label));
+
+      expect(human?.html).not.toContain('<svg');
+      expect(agent?.html).toMatch(/^<svg[^>]*lucide-terminal[^>]*aria-hidden="true"[^>]*>/);
+      expect(agent?.html.indexOf('</svg>')).toBeLessThan(agent?.html.indexOf('For an agent') ?? 0);
+    });
+
+    // Le choix est dans l'adresse (?vue=agent) : on peut partager le lien, et la page le relit côté serveur.
+    it('met le choix dans l’adresse, sans remonter la page', () => {
+      replace.mockClear();
+      render('en');
+      click(1);
+      expect(replace).toHaveBeenLastCalledWith('/documentation?vue=agent', { scroll: false });
+
+      render('en', GIVEN, 'agent');
+      click(0);
+      expect(replace).toHaveBeenLastCalledWith('/documentation', { scroll: false });
+    });
+  });
+
+  describe('le mode « Pour un agent »', () => {
+    it.each(LOCALES)(
+      'montre tout le Markdown à police fixe, avec « Tout copier » et le lien brut (%s)',
+      (locale, messages) => {
+        const markdown = documentationMarkdown({ locale, messages, ...GIVEN });
+        const html = render(locale, GIVEN, 'agent');
+        const { view } = messages.site.documentation;
+
+        // dans un <pre> (police fixe) qui garde les retours à la ligne : le texte, tel quel, avec ses \n
+        const shown = /<pre[^>]*whitespace-pre-wrap[^>]*><code>(.*?)<\/code><\/pre>/s.exec(
+          html,
+        )?.[1];
+        expect(decode(shown ?? '')).toBe(markdown);
+        expect(html).toMatch(/<pre[^>]*font-mono/);
+        expect(copies).toEqual([expect.objectContaining({ value: markdown, label: view.copyAll })]);
+        expect(html).toContain(`>${view.copyAll}</button>`);
+        expect(html).toMatch(
+          new RegExp(`<a [^>]*href="/documentation.md"[^>]*>.*?${view.openRaw}</a>`, 's'),
+        );
+      },
+    );
+
+    it.each(LOCALES)(
+      'retire le plan et les sections de la page, et garde un seul titre (%s)',
+      (locale, messages) => {
+        const human = render(locale);
+        const html = render(locale, GIVEN, 'agent');
+
+        expect(human).toContain(`aria-label="${messages.site.documentation.toc}"`);
+        expect(html).not.toContain(`aria-label="${messages.site.documentation.toc}"`);
+        expect(html).not.toContain('<section id=');
+        expect(html).not.toContain('href="#claude-code"');
+        expect(html.match(/<h1/g)).toHaveLength(1);
+      },
+    );
+
+    it('n’ajoute pas de lien brut à la page pour vous', () => {
+      expect(render('en')).not.toContain('href="/documentation.md"');
+    });
+
+    it('montre la forme générique quand l’adresse est refusée', () => {
+      const html = decode(render('en', GENERIC, 'agent'));
+
+      expect(html).toContain('curl -fsSL <address of your Leon>/install | sh');
+      expect(html).not.toContain('https://');
+    });
   });
 });

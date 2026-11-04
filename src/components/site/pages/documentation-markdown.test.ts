@@ -1,11 +1,17 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DocumentationPage } from './documentation';
 import { documentationMarkdown, SECTIONS } from './documentation-markdown';
+
+// L'interrupteur de la page lit le routeur ; ici, la page ne sert qu'à comparer ses commandes.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: () => '/documentation',
+}));
 
 const ADDRESS = 'https://leon.example';
 const COMMAND = `curl -fsSL ${ADDRESS}/install | sh`;
@@ -28,7 +34,7 @@ const page = (locale: 'en' | 'fr', props: Props = GIVEN) =>
       locale,
       messages: locale === 'en' ? en : fr,
       // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
-      children: createElement(DocumentationPage, props),
+      children: createElement(DocumentationPage, { ...props, view: 'human', markdown: '' }),
     }),
   );
 const decode = (html: string) =>

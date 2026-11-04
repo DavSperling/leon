@@ -1217,6 +1217,13 @@
       "heroTerminal": "Utiliser le terminal",
       "toc": "Sur cette page",
       "addressPlaceholder": "adresse de votre Leon",
+      "view": {
+        "label": "Mode de lecture",
+        "human": "Pour vous",
+        "agent": "Pour un agent (Markdown)",
+        "copyAll": "Tout copier",
+        "openRaw": "Ouvrir en Markdown brut"
+      },
       "requirements": {
         "title": "Ce qu’il faut",
         "lead": "Quatre choses, sur l’ordinateur à brancher.",

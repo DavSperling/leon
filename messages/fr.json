@@ -1474,5 +1474,11 @@
       "refusedTitle": "Connexion annulée",
       "refused": "Rien n’a été autorisé."
     }
+  },
+  "claudeCode": {
+    "ask": "Je demande à Claude",
+    "copied": "Consigne copiée. Collez-la dans Claude Code.",
+    "docs": "Documentation",
+    "instructions": "Installe Leon sur cet ordinateur et branche-le à mes outils de code.\n1. Lance cette commande dans le terminal : {command}\n2. Si le script dit qu'il n'a pas de terminal pour finir, il affiche une dernière commande, qui se termine par « setup --url » suivi de l'adresse de Leon. Avant de la lancer avec l'option --yes, montre-moi ce que Leon va envoyer (c'est expliqué ici : {docs}) et attends mon accord. Ne lance jamais --yes sans mon accord explicite.\n3. Cette commande ouvre mon navigateur pour autoriser l'ordinateur : dis-moi de cliquer sur « Autoriser ». Si ton bac à sable t'empêche d'ouvrir le navigateur ou d'écouter sur 127.0.0.1, demande-moi la permission de la lancer hors du bac à sable. Si le navigateur ne s'ouvre pas, elle écrit l'adresse à ouvrir : donne-la-moi.\n4. À la fin, dis-moi quels outils de code sont branchés et à quel compte Leon l'ordinateur est connecté.\nNe me demande jamais de jeton, n'en lis pas et n'en affiche pas : la connexion se fait par le navigateur."
   }
 }

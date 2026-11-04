@@ -51,13 +51,14 @@ describe('readClientId : un document CIMD (L10)', () => {
       ok(
         documentOf(CLAUDE_CODE_URL, {
           client_name: 'Claude Code',
-          redirect_uris: ['http://localhost:3118/callback', 'http://127.0.0.1:3118/callback'],
+          redirect_uris: ['http://localhost/callback', 'http://127.0.0.1/callback'],
         }),
       ),
     );
 
     expect(await read(CLAUDE_CODE_URL, fetch)).toMatchObject({
       name: 'Claude Code',
+      redirectUris: ['http://localhost/callback', 'http://127.0.0.1/callback'],
       host: '127.0.0.1',
     });
   });
@@ -135,15 +136,19 @@ describe('readClientId : les adresses qu’il ne lit jamais', () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it.each(['claude.ai', 'chatgpt.com', 'www.cursor.com', 'vscode.dev', 'antigravity.google'])(
-    'lit chez %s, un hôte de L11',
-    async (host) => {
-      const url = `https://${host}/oauth/client.json`;
-      const fetch = fakeFetch(() => ok(documentOf(url)));
-      expect(await read(url, fetch)).not.toBeNull();
-      expect(fetch).toHaveBeenCalledOnce();
-    },
-  );
+  it.each([
+    'claude.ai',
+    'chatgpt.com',
+    'www.cursor.com',
+    'vscode.dev',
+    'insiders.vscode.dev',
+    'antigravity.google',
+  ])('lit chez %s, un hôte de L11', async (host) => {
+    const url = `https://${host}/oauth/client.json`;
+    const fetch = fakeFetch(() => ok(documentOf(url)));
+    expect(await read(url, fetch)).not.toBeNull();
+    expect(fetch).toHaveBeenCalledOnce();
+  });
 });
 
 describe('readClientId : tout échec vaut « client inconnu »', () => {
@@ -482,6 +487,34 @@ describe('le cache des documents', () => {
     expect((await at(fetch, cache, 30))?.redirectUris).toEqual(two);
     expect((await at(fetch, cache, 61))?.redirectUris).toEqual([CHATGPT_REDIRECT]);
   });
+
+  it.each([
+    ['un client_id différent de l’adresse', { client_id: 'https://chatgpt.com/oauth/autre.json' }],
+    ['une adresse de retour hors de L11', { redirect_uris: ['https://evil.example/cb'] }],
+    ['un champ manquant', { client_name: undefined }],
+  ])(
+    'un document lu mais refusé (%s) n’est gardé qu’une minute, compté une fois, et le document corrigé passe ensuite',
+    async (_case, change) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      let served = documentOf(CHATGPT_URL, change);
+      const fetch = fakeFetch(() => ok(served, { 'cache-control': 'max-age=3600' }));
+      const cache = new Map() as DocumentCache;
+
+      expect(await at(fetch, cache, 0)).toBeNull();
+      served = documentOf(CHATGPT_URL); // le client corrige son document
+      expect(await at(fetch, cache, 30)).toBeNull();
+      expect(await at(fetch, cache, 59)).toBeNull();
+      expect(fetch).toHaveBeenCalledOnce();
+      expect(warn).toHaveBeenCalledOnce(); // le refus gardé en mémoire ne se recompte pas
+
+      expect(await at(fetch, cache, 61)).toMatchObject({ name: 'ChatGPT' });
+      expect(fetch).toHaveBeenCalledTimes(2);
+      expect(warn).toHaveBeenCalledOnce();
+      // le document corrigé, lui, est gardé selon son Cache-Control (une heure)
+      expect(await at(fetch, cache, 3000)).toMatchObject({ name: 'ChatGPT' });
+      expect(fetch).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it('ne garde pas plus de 100 documents : une adresse qui varie ne fait pas grossir la mémoire', async () => {
     const fetch = fakeFetch(() => new Response('', { status: 404 }));

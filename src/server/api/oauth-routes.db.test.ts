@@ -21,6 +21,17 @@ describe('POST /api/oauth/clients (L4)', () => {
     ['ChatGPT', 'ChatGPT', ['https://chatgpt.com/connector/oauth/abc123'], 'chatgpt.com'],
     ['Claude Code', 'Claude Code', ['http://localhost:3118/callback'], '127.0.0.1'],
     [
+      'VS Code (bureau)',
+      'Visual Studio Code',
+      [
+        'http://127.0.0.1/',
+        'http://127.0.0.1:33418/',
+        'https://vscode.dev/redirect',
+        'https://insiders.vscode.dev/redirect',
+      ],
+      '127.0.0.1',
+    ],
+    [
       'Cursor',
       'Cursor',
       ['https://www.cursor.com/agents/mcp/oauth/callback', 'http://127.0.0.1:54321/oauth/callback'],

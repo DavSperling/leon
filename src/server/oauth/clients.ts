@@ -21,10 +21,11 @@ const FIXED_REDIRECTS = [
   'https://chatgpt.com/connector_platform_oauth_redirect', // ChatGPT
   'https://www.cursor.com/agents/mcp/oauth/callback', // Cursor (web)
   'https://vscode.dev/redirect', // VS Code (web)
+  'https://insiders.vscode.dev/redirect', // VS Code (web, Insiders) : VS Code bureau inscrit les deux
   'https://antigravity.google/oauth-callback', // Antigravity
 ];
 const CHATGPT_CONNECTOR = /^https:\/\/chatgpt\.com\/connector\/oauth\/[A-Za-z0-9_-]{1,128}$/;
-// Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) : http://127.0.0.1:<port>/<chemin>, ou localhost.
+// Claude Code, Codex, Cursor, VS Code, Gemini CLI (bureau) : http://127.0.0.1[:<port>]/<chemin>, ou localhost.
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost']);
 // Les hôtes dont un document CIMD est lu (L10) sont ceux de la table : jamais un autre.
 const DOCUMENT_HOSTS = new Set(FIXED_REDIRECTS.map((uri) => new URL(uri).hostname));
@@ -43,12 +44,11 @@ function parse(value: string): URL | null {
   }
 }
 
-// Le bouclage : http seulement, hôte 127.0.0.1 ou localhost, un port et un chemin quelconques.
+// Le bouclage : http seulement, hôte 127.0.0.1 ou localhost, un chemin quelconque, un port facultatif (la forme
+// canonique refuse le port par défaut écrit, « :80 »).
 function loopback(value: string): URL | null {
   const url = parse(value);
-  return url?.protocol === 'http:' && LOOPBACK_HOSTS.has(url.hostname) && url.port !== ''
-    ? url
-    : null;
+  return url?.protocol === 'http:' && LOOPBACK_HOSTS.has(url.hostname) ? url : null;
 }
 
 const redirectPermitted = (uri: string) =>
@@ -187,14 +187,10 @@ function documentUrl(value: string): boolean {
   );
 }
 
-// L10. Un token_endpoint_auth_method du document, quel qu'il soit, est ignoré : le client est public (F4).
-async function readDocument(
-  url: string,
-  options?: DocumentReadOptions,
-): Promise<ClientInfo | null> {
-  if (!documentUrl(url)) return refuseDocument('address');
-  const raw = await readClientDocument(url, options);
-  if (raw === null) return null; // l'échec de la lecture est déjà compté
+// Le jugement du document, rendu une seule fois à la lecture et gardé tel quel par le cache : un refus n'y reste pas plus
+// d'une minute et ne se recompte pas. Un token_endpoint_auth_method du document, quel qu'il soit, est ignoré : le
+// client est public (F4).
+function judgeDocument(url: string, raw: unknown): ClientInfo | null {
   const document = DocumentSchema.safeParse(raw);
   if (
     !document.success ||
@@ -203,6 +199,15 @@ async function readDocument(
   )
     return refuseDocument('document');
   return describeClient(url, cleanName(document.data.client_name), document.data.redirect_uris);
+}
+
+// L10.
+async function readDocument(
+  url: string,
+  options?: DocumentReadOptions,
+): Promise<ClientInfo | null> {
+  if (!documentUrl(url)) return refuseDocument('address');
+  return readClientDocument(url, (raw) => judgeDocument(url, raw), options);
 }
 
 // Un client_id signé (L5) ou l'adresse d'un document (L10) ; sinon null. Asynchrone : CIMD lit un document.

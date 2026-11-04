@@ -28,9 +28,27 @@ describe('registerClient : les clients de L11', () => {
       'chatgpt.com',
     ],
     ['Claude Code', [CLAUDE_CODE], '127.0.0.1'],
+    // celles que le document CIMD de Claude Code annonce : le bouclage sans port (RFC 8252 §7.3)
+    [
+      'Claude Code (document CIMD)',
+      ['http://localhost/callback', 'http://127.0.0.1/callback'],
+      '127.0.0.1',
+    ],
     ['Codex', ['http://127.0.0.1:1455/auth/callback'], '127.0.0.1'],
     ['Cursor (ses deux adresses)', [CURSOR_WEB, CURSOR_DESKTOP], 'www.cursor.com'],
     ['VS Code (web)', ['https://vscode.dev/redirect'], 'vscode.dev'],
+    ['VS Code (web, Insiders)', ['https://insiders.vscode.dev/redirect'], 'insiders.vscode.dev'],
+    // ce que VS Code bureau inscrit, ensemble : une seule adresse refusée ferait échouer l'inscription entière
+    [
+      'VS Code (bureau)',
+      [
+        'http://127.0.0.1/',
+        'http://127.0.0.1:33418/',
+        'https://vscode.dev/redirect',
+        'https://insiders.vscode.dev/redirect',
+      ],
+      '127.0.0.1',
+    ],
     ['Antigravity', ['https://antigravity.google/oauth-callback'], 'antigravity.google'],
   ])('inscrit %s, et readClientId relit ce qui a été inscrit', async (_name, uris, host) => {
     const client = registered(register(uris, { client_name: 'Un client' }));
@@ -100,12 +118,18 @@ describe('registerClient : les refus', () => {
     `https://chatgpt.com/connector/oauth/${'x'.repeat(129)}`,
     'https://chatgpt.com/connector/oauth/abc?next=https://evil.example',
     'https://chatgpt.com/connector_platform_oauth_redirect?x=1',
-    // le bouclage : http seulement, hôte exact, un port et un chemin, ni identifiant ni fragment
+    'https://insiders.vscode.dev/autre',
+    'https://insiders.vscode.dev/redirect/',
+    'https://insiders.vscode.dev:8443/redirect',
+    'https://sub.insiders.vscode.dev/redirect',
+    'https://vscode.dev/redirect?x=1',
+    // le bouclage : http seulement, hôte exact, un chemin, ni identifiant ni fragment ; le port est facultatif
     'http://user:pw@127.0.0.1:9/cb',
     'http://127.0.0.1:9/cb#x',
     'http://127.0.0.1:9\\@evil.example/cb',
     'https://127.0.0.1:9/cb',
-    'http://127.0.0.1/cb',
+    'http://127.0.0.1:80/cb', // le port par défaut ne s'écrit pas : la forme canonique l'omet
+    'http://127.0.0.1',
     'http://127.0.0.1:9',
     'http://localhost.evil.example:9/cb',
     'http://127.0.0.1.evil.example:9/cb',
@@ -358,6 +382,11 @@ describe('redirectAllowed (L6, RFC 8252 §7.3)', () => {
       ['http://127.0.0.1:1455/auth/callback', 'http://127.0.0.1:65535/auth/callback'],
       ['http://localhost:3118/callback?a=b', 'http://localhost:4000/callback?a=b'],
       ['http://localhost:3118/callback', 'http://localhost:3118/callback'],
+      // sans port à l'inscription (le document CIMD de Claude Code, VS Code bureau), n'importe quel port à la demande
+      ['http://localhost/callback', 'http://localhost:51234/callback'],
+      ['http://127.0.0.1/callback', 'http://127.0.0.1:51234/callback'],
+      ['http://127.0.0.1/', 'http://127.0.0.1:33418/'],
+      ['http://localhost:3118/callback', 'http://localhost/callback'],
     ])('%s accepte %s', (registered, requested) => {
       expect(redirectAllowed([registered], requested)).toBe(true);
     });
@@ -369,8 +398,8 @@ describe('redirectAllowed (L6, RFC 8252 §7.3)', () => {
       'http://localhost:51234/Callback',
       'http://127.0.0.1:51234/callback', // l'autre nom de l'hôte
       'https://localhost:51234/callback',
-      'http://localhost/callback',
       'http://localhost:51234',
+      'http://localhost:80/callback',
       'http://localhost:51234/callback#x',
       'http://user:pw@localhost:51234/callback',
       'http://localhost.evil.example:51234/callback',
@@ -380,6 +409,18 @@ describe('redirectAllowed (L6, RFC 8252 §7.3)', () => {
       'http://LOCALHOST:51234/callback',
     ])('refuse « %s » pour un client inscrit avec http://localhost:3118/callback', (requested) => {
       expect(redirectAllowed(['http://localhost:3118/callback'], requested)).toBe(false);
+    });
+
+    it('garde le chemin et l’hôte quand l’inscription n’a pas de port', () => {
+      for (const requested of [
+        'http://localhost:51234/autre',
+        'http://127.0.0.1:51234/callback', // l'autre nom de l'hôte
+        'https://localhost:51234/callback',
+        'http://localhost:51234/callback#x',
+        'http://user:pw@localhost:51234/callback',
+      ]) {
+        expect(redirectAllowed(['http://localhost/callback'], requested)).toBe(false);
+      }
     });
 
     it('ne donne aucune latitude de port à une adresse qui n’est pas du bouclage', () => {

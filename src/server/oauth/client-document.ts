@@ -1,6 +1,7 @@
 // La lecture du document d'un client (CIMD, L10 du plan « MCP distant ») : un GET sur l'adresse du client_id, et la
 // mémoire qui évite de le refaire. Elle ne juge pas l'adresse : l'appelant (clients.ts) ne l'appelle que pour un hôte
-// de L11, en https, port 443, avec un chemin ; ni ce qu'il y a dans le document.
+// de L11, en https, port 443, avec un chemin. Il juge le contenu par `validate`, appelé une fois à la lecture : le cache
+// garde le résultat jugé, un refus n'y reste donc pas plus d'une minute.
 // Sans en-tête ni cookie, sans suivre de redirection, 5 s et 16 Ko au plus. Tout échec rend null.
 
 const TIMEOUT_MS = 5000;
@@ -9,7 +10,7 @@ const MAX_TTL_SECONDS = 60 * 60; // une heure au plus, quoi que dise Cache-Contr
 const DEFAULT_TTL_SECONDS = 60; // sans max-age, et pour un échec
 const MAX_ENTRIES = 100;
 
-type CacheEntry = { document: unknown; expires: number };
+type CacheEntry = { result: unknown; expires: number };
 export type DocumentCache = Map<string, CacheEntry>;
 
 // shortcut: mémoire du processus (chaque instance relit pour elle-même), 100 adresses au plus, la plus ancienne sortie
@@ -53,16 +54,13 @@ async function readCapped(response: Response): Promise<Buffer | null> {
   return Buffer.concat(chunks);
 }
 
-// Le document (le JSON lu, pas encore jugé) et sa durée de garde en secondes ; document null pour un échec.
+// Le JSON lu (pas encore jugé) et sa durée de garde en secondes ; null pour un échec, déjà compté.
 async function download(
   url: string,
   fetchDocument: typeof fetch,
   timeoutMs: number,
-): Promise<{ document: unknown; ttl: number }> {
-  const failure = (reason: string) => ({
-    document: refuseDocument(reason),
-    ttl: DEFAULT_TTL_SECONDS,
-  });
+): Promise<{ document: unknown; ttl: number } | null> {
+  const failure = (reason: string) => refuseDocument(reason);
   try {
     const response = await fetchDocument(url, {
       redirect: 'error',
@@ -92,22 +90,26 @@ async function download(
   }
 }
 
-export async function readClientDocument(
+// null : lecture impossible ou document refusé par `validate`, une minute en mémoire au plus.
+export async function readClientDocument<T>(
   url: string,
+  validate: (document: unknown) => T | null,
   {
     fetch: fetchDocument = fetch,
     cache = CACHE,
     now = Date.now(),
     timeoutMs = TIMEOUT_MS,
   }: DocumentReadOptions = {},
-): Promise<unknown> {
+): Promise<T | null> {
   const cached = cache.get(url);
-  if (cached && cached.expires > now) return cached.document;
-  const { document, ttl } = await download(url, fetchDocument, timeoutMs);
+  if (cached && cached.expires > now) return cached.result as T | null;
+  const downloaded = await download(url, fetchDocument, timeoutMs);
+  const result = downloaded === null ? null : validate(downloaded.document);
+  const ttl = downloaded === null || result === null ? DEFAULT_TTL_SECONDS : downloaded.ttl;
   if (ttl > 0) {
     const oldest = cache.keys().next().value;
     if (cache.size >= MAX_ENTRIES && oldest !== undefined) cache.delete(oldest);
-    cache.set(url, { document, expires: now + ttl * 1000 });
+    cache.set(url, { result, expires: now + ttl * 1000 });
   }
-  return document;
+  return result;
 }

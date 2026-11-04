@@ -13,7 +13,7 @@ import { AUTHORIZE_PATH } from '@/server/oauth/metadata';
 
 // « Autoriser » et « Refuser » de /oauth/autoriser (L6 point 5). Le formulaire ne vaut rien : la demande est
 // revalidée en entier ici (client, adresse de retour, paramètres), et l'utilisateur comme l'espace viennent de la
-// session, jamais des champs. Seul « allow » signe un code ; toute autre décision, y compris absente, est un refus.
+// session, jamais des champs (le champ « space » ne sert qu'à vérifier que l'espace affiché est encore celui-là). Seul « allow » signe un code ; toute autre décision, y compris absente, est un refus.
 // Rien n'est journalisé : ni le code, ni l'état, ni le client.
 export async function authorizeOAuthAction(formData: FormData): Promise<void> {
   const request = await parseAuthorizeRequest(
@@ -27,5 +27,8 @@ export async function authorizeOAuthAction(formData: FormData): Promise<void> {
   const ctx = await getUserContext();
   // Session perdue entre l'affichage et le clic : la page choisit entre la connexion et l'accueil.
   if (!ctx) redirect(oauthAuthorizePath(request));
+  // L'espace que la page a nommé n'est plus celui de la session (changé dans un autre onglet) : rien n'est signé, la page
+  // se réaffiche avec le bon. Le champ ne sert qu'à cette comparaison, jamais de source : le code porte ctx.tenantId.
+  if (formData.get('space') !== ctx.tenantId) redirect(oauthAuthorizePath(request));
   redirect(codeRedirect(request, ctx));
 }

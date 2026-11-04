@@ -213,13 +213,17 @@ async function readDocument(
   return readClientDocument(url, (raw) => judgeDocument(url, raw), options);
 }
 
+// L'adresse d'un document (L10) plutôt qu'un client_id signé (L5) : le lire est un appel réseau. Le seul critère, pour
+// que la page d'autorisation sache à l'avance si lire le client coûte un appel.
+export const isDocumentClientId = (value: string) => value.startsWith('https://');
+
 // Un client_id signé (L5) ou l'adresse d'un document (L10) ; sinon null. Asynchrone : CIMD lit un document.
 // Les `options` servent aux tests (un faux fetch, un faux cache, l'heure).
 export async function readClientId(
   value: string,
   options?: DocumentReadOptions,
 ): Promise<ClientInfo | null> {
-  return value.startsWith('https://') ? readDocument(value, options) : readRegistered(value);
+  return isDocumentClientId(value) ? readDocument(value, options) : readRegistered(value);
 }
 
 // Leon sert-il encore ce client_id ? Le jugement local de readClientId, sans réseau : un client inscrit, par sa signature
@@ -227,5 +231,5 @@ export async function readClientId(
 // sans lire le document (ni compter un refus : rien n'est refusé ici, c'est l'appelant qui juge). Au renouvellement, il
 // retire leurs jetons aux clients que L11 ne sert plus.
 export function clientStillAllowed(value: string): boolean {
-  return value.startsWith('https://') ? documentUrl(value) : readRegistered(value) !== null;
+  return isDocumentClientId(value) ? documentUrl(value) : readRegistered(value) !== null;
 }

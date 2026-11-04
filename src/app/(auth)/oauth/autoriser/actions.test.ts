@@ -37,6 +37,7 @@ const FIELDS = {
   code_challenge_method: 'S256',
   scope: 'leon',
   resource: `${ISSUER}/api/mcp`,
+  space: CTX.tenantId, // l'espace que la page a nommé
 };
 
 const form = (fields: Record<string, string | undefined>) => {
@@ -82,7 +83,14 @@ describe('« Autoriser »', () => {
     vi.mocked(getUserContext).mockResolvedValue({ ...CTX, userId: 'u2', tenantId: 't2' });
 
     const url = new URL(
-      await target({ ...FIELDS, decision: 'allow', u: 'pirate', t: 'autre-espace', userId: 'x' }),
+      await target({
+        ...FIELDS,
+        space: 't2',
+        decision: 'allow',
+        u: 'pirate',
+        t: 'autre-espace',
+        userId: 'x',
+      }),
     );
 
     expect(readAuthorizationCode(url.searchParams.get('code') ?? '')).toMatchObject({
@@ -98,6 +106,31 @@ describe('« Autoriser »', () => {
     if ('erreur' in request) throw new Error('demande refusée');
 
     expect(await target({ ...FIELDS, decision: 'allow' })).toBe(oauthAuthorizePath(request));
+  });
+
+  // L'espace consenti est l'espace signé : le champ de la page ne sert qu'à vérifier que l'espace n'a pas changé depuis.
+  it.each([
+    ['un autre espace que celui de la session', { space: 't2' }],
+    ['aucun espace', { space: undefined }],
+    ['un espace vide', { space: '' }],
+  ])(
+    '%s : ne signe rien et renvoie vers la page rebâtie, qui nomme le bon espace',
+    async (_name, over) => {
+      const request = await parseAuthorizeRequest(FIELDS);
+      if ('erreur' in request) throw new Error('demande refusée');
+
+      const next = await target({ ...FIELDS, ...over, decision: 'allow' });
+
+      expect(next).toBe(oauthAuthorizePath(request));
+      expect(next).not.toContain('code=');
+      expect(getUserContext).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('le champ ne sert jamais de source : même un espace du formulaire différent, le code porte celui de la session', async () => {
+    const url = new URL(await target({ ...FIELDS, decision: 'allow' }));
+
+    expect(readAuthorizationCode(url.searchParams.get('code') ?? '')).toMatchObject({ t: 't1' });
   });
 
   it('un bouclage : renvoie au port demandé, qui peut différer de l’inscription', async () => {

@@ -189,6 +189,79 @@ describe('sans session ou sans espace', () => {
   });
 });
 
+// Un client_id en https:// est un document que Leon irait lire chez le client : jamais pour quelqu'un qui n'a pas de session.
+describe('un client_id CIMD (https://) et la session', () => {
+  let count = 0;
+  const cimd = () => {
+    const url = `https://chatgpt.com/oauth/page-${count++}.json`;
+    const redirect_uri = 'https://chatgpt.com/connector/oauth/abc123';
+    const fetched = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({ client_id: url, client_name: 'ChatGPT', redirect_uris: [redirect_uri] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        ),
+    );
+    vi.stubGlobal('fetch', fetched);
+    return { url, redirect_uri, fetched, params: { ...PARAMS, client_id: url, redirect_uri } };
+  };
+
+  it('sans session : renvoie vers /connexion avec la demande rebâtie, sans lire le document', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+    const { fetched, params } = cimd();
+
+    await redirectsTo(
+      { ...params, scope: '', retour: 'https://evil.example' },
+      `/connexion?${new URLSearchParams({ ...params, scope: '' })}`,
+    );
+
+    expect(fetched).not.toHaveBeenCalled();
+    expect(getUserContext).not.toHaveBeenCalled();
+  });
+
+  it('sans session, même une demande qui serait refusée ensuite n’en lit pas : rien ne part vers le client', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+    const { fetched, params } = cimd();
+
+    await redirectsTo(
+      { ...params, response_type: 'token', redirect_uri: 'https://evil.example/cb' },
+      `/connexion?${new URLSearchParams({ ...params, response_type: 'token', redirect_uri: 'https://evil.example/cb' })}`,
+    );
+
+    expect(fetched).not.toHaveBeenCalled();
+  });
+
+  it('sans session et sans demande qu’on puisse rebâtir : la page le dit, sans rien lire ni rediriger', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+    const { fetched, params } = cimd();
+
+    const page = await render({ ...params, state: ['a', 'b'] });
+
+    expect(textOf(page)).toContain(fr.oauth.authorize.invalidTitle);
+    expect(fetched).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('avec une session : inchangé, le document est lu et la page se montre', async () => {
+    const { fetched, params } = cimd();
+
+    const page = await render(params);
+
+    expect(fetched).toHaveBeenCalledOnce();
+    expect(textOf(page)).toContain(nb('Autoriser ChatGPT à lire votre mémoire Leon'));
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('un client_id signé garde l’ordre d’avant : jugé sur place, puis la session', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+    const { fetched } = cimd();
+
+    await redirectsTo(PARAMS, `/connexion?${new URLSearchParams(PARAMS)}`);
+
+    expect(fetched).not.toHaveBeenCalled(); // rien à lire : la signature suffit
+  });
+});
+
 describe('page d’autorisation (L6 point 4)', () => {
   it('pose la question avec le nom du client et celui de l’espace, puis « Autoriser » et « Refuser »', async () => {
     const page = await render();
@@ -243,6 +316,7 @@ describe('page d’autorisation (L6 point 4)', () => {
   it('dit ce que l’assistant pourra faire, et l’avertissement', async () => {
     const text = textOf(await render());
 
+    expect(text).toContain(nb(fr.oauth.authorize.can));
     for (const key of ['canSearch', 'canRead', 'canBriefing', 'canRemember'] as const) {
       expect(text).toContain(fr.oauth.authorize[key]);
     }
@@ -252,7 +326,7 @@ describe('page d’autorisation (L6 point 4)', () => {
   });
 
   it('un nom inscrit à la main est dit « déclaré » ; celui d’un document CIMD ne l’est pas', async () => {
-    expect(textOf(await render())).toContain(fr.oauth.authorize.declaredName);
+    expect(textOf(await render())).toContain(nb(fr.oauth.authorize.declaredName));
 
     const url = 'https://chatgpt.com/oauth/client.json';
     const redirect_uri = 'https://chatgpt.com/connector/oauth/abc123';
@@ -287,16 +361,18 @@ describe('page d’autorisation (L6 point 4)', () => {
     expect(textOf(page)).toContain(nb('Autoriser <b>Claude</b> {space} à lire'));
   });
 
-  it('envoie la demande validée à l’action serveur, huit champs cachés, rien d’autre', async () => {
+  it('envoie la demande validée à l’action serveur, huit champs cachés et l’espace affiché, rien d’autre', async () => {
     const page = await render({ ...PARAMS, retour: 'https://evil.example', scope: '' });
 
     const forms = elements(page).filter((el) => el.type === 'form');
     expect(forms).toHaveLength(1);
     expect(forms[0]?.props.action).toBe(authorizeOAuthAction);
     const hidden = elements(forms[0]).filter((el) => el.type === 'input');
-    expect(hidden.map((el) => [el.props.type, el.props.name, el.props.value])).toEqual(
-      Object.entries(PARAMS).map(([name, value]) => ['hidden', name, value]),
-    );
+    expect(hidden.map((el) => [el.props.type, el.props.name, el.props.value])).toEqual([
+      ...Object.entries(PARAMS).map(([name, value]) => ['hidden', name, value]),
+      // l'espace que la page a nommé : l'action vérifie que c'est encore celui de la session
+      ['hidden', 'space', CTX.tenantId],
+    ]);
     // et l'action relit exactement ce que la page a écrit
     const sent = Object.fromEntries(hidden.map((el) => [el.props.name as string, el.props.value]));
     expect('erreur' in (await parseAuthorizeRequest(sent))).toBe(false);

@@ -62,4 +62,20 @@ describe('guides de vérification', () => {
     );
     for (const name of cited) expect(registered, `${path} cite l'outil ${name}`).toContain(name);
   });
+
+  // L'essai réel du MCP distant (M07) est la seule vérification des adresses de retour chez les tiers : une adresse
+  // ajoutée à FIXED_REDIRECTS (L11) sans être dans le guide échapperait à son essai.
+  it('le guide des essais du MCP distant cite chaque adresse de retour fixe de L11', () => {
+    const block = /const FIXED_REDIRECTS = \[([^\]]*)\]/.exec(
+      readText('src/server/oauth/clients.ts'),
+    );
+    const fixed = [...(block?.[1] ?? '').matchAll(/'(https:\/\/[^']+)'/g)].map(
+      (m) => m[1] as string,
+    );
+    const guide = readText('docs/guides/mcp-distant-essais.md');
+
+    expect(fixed.length).toBeGreaterThanOrEqual(5);
+    for (const address of fixed)
+      expect(guide, `le guide ne cite pas ${address}`).toContain(address);
+  });
 });

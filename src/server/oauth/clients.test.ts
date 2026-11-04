@@ -377,7 +377,10 @@ describe('clientStillAllowed : un client_id que Leon sert encore, sans rien lire
   it.each([
     [
       'un client_id falsifié',
-      () => `${clientId().slice(0, -1)}${clientId().endsWith('A') ? 'B' : 'A'}`,
+      () => {
+        const id = clientId(); // un seul appel : le client_id porte l'heure, deux appels peuvent différer
+        return `${id.slice(0, -1)}${id.endsWith('A') ? 'B' : 'A'}`;
+      },
     ],
     ['une valeur qui n’a pas la forme d’un client_id', () => 'abc'],
     ['une valeur vide', () => ''],

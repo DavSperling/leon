@@ -1,6 +1,8 @@
-// Installateur des crochets de Claude Code : `pnpm leon installer-crochets [--oui] [--depot <chemin>]` écrit, dans les
-// réglages de l'utilisateur, le crochet de démarrage (`leon briefing`) et le crochet de fin de session
-// (`leon capter-session`), après confirmation.
+// Installateur des crochets de Claude Code : `pnpm leon installer-crochets [--oui] [--depot <chemin>]` (forme clone) et
+// `leon setup` (setup.ts) écrivent, dans les réglages de l'utilisateur, le crochet de démarrage (`leon briefing`) et le
+// crochet de fin de session (`leon capter-session`), après confirmation. Les deux commandes appellent le lanceur
+// ~/.leon/bin/leon (K9 du plan « CLI sans clone », launcher.ts), jamais pnpm ni le Node de l'ordinateur : c'est lui qui
+// sait où est la CLI, installée ou clone.
 //
 // Doc officielle de Claude Code, lue le 2026-10-20 :
 // - Les crochets : https://code.claude.com/docs/en/hooks
@@ -24,10 +26,12 @@
 //     fichier qu'on ne sait pas lire n'est donc jamais réécrit.
 //
 // Les réglages de l'utilisateur sont à lui, et Claude Code peut les réécrire à tout moment. Ce module :
-// - ne touche qu'aux deux entrées de Leon (reconnues à la forme de leur commande, `pnpm … leon briefing` ou
-//   `pnpm … leon capter-session`) et garde tout le reste, dans son ordre ;
-// - met à jour ces entrées quand le dépôt a changé de place, au lieu d'en ajouter une seconde, et n'écrit rien
-//   quand tout est déjà en place ;
+// - ne touche qu'aux deux entrées de Leon (reconnues à la forme de leur commande, `<lanceur> briefing` ou
+//   `<lanceur> capter-session`, K9, ou l'ancienne forme `pnpm … leon <sous-commande>`) et garde tout le reste, dans son
+//   ordre ;
+// - remplace ces entrées sur place (un ancien crochet pnpm devient celui du lanceur) au lieu d'en ajouter une seconde, et
+//   n'écrit rien quand tout est déjà en place. Sous la forme installée, il dit alors de quel clone venaient les anciens
+//   crochets : le jeton du `.env.local` de ce clone ne sert plus (formerClones) ; il ne lit jamais ce fichier ;
 // - copie le fichier dans `settings.json.leon-sauvegarde` avant d'écrire, avec les mêmes droits, mais seulement si
 //   cette sauvegarde n'existe pas : la première copie, celle d'avant Leon, n'est jamais remplacée (une mise à jour de
 //   ses crochets y mettrait des crochets de Leon) ;
@@ -35,8 +39,9 @@
 //   fichier a changé pendant que l'utilisateur confirmait ;
 // - répond clairement, sans rien modifier, à une écriture impossible (droits, disque plein) ou à un fichier qui est
 //   un lien symbolique vers un fichier absent ;
-// - prévient quand le `.env.local` du dépôt ne donne pas LEON_URL et LEON_TOKEN (sans eux, les commandes ne font
-//   rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
+// - prévient quand l'ordinateur n'est pas connecté (`leon login`, ~/.leon/connexion.json) et, sous la forme clone, que le
+//   `.env.local` du dépôt ne donne pas non plus LEON_URL et LEON_TOKEN (sans eux, les commandes ne font rien et ne le
+//   disent que sur la sortie d'erreur, que Claude Code ne montre pas avec le code de sortie 0) ;
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
@@ -72,8 +77,8 @@ import {
   factsConsent,
   writeConsent,
 } from './consent';
-import { parseServerEnv } from './env';
-import { type HookSubcommand, hookCommand } from './hook-commands';
+import { resolveServerEnv } from './env';
+import { type HookSubcommand, launcherHookCommand } from './hook-commands';
 
 // 7,5 s au pire pour le démarrage (briefing.ts) : 10 s. Pour la fin de session, 30 s sont de la marge sur les 15 s
 // de l'envoi (HOOK_DEADLINE_MS) et restent sous le maximum de 60 s de Claude Code.
@@ -122,21 +127,72 @@ export const isRecord = (value: unknown): value is Json =>
 // Un mot de shell : des caractères sans signification pour lui, ou des morceaux entre apostrophes ou guillemets
 // (l'apostrophe d'un chemin s'écrit '\'' : hook-commands.ts).
 const WORD = String.raw`(?:[^\s'"\\;&|<>()\x60]|'[^']*'|"[^"]*"|\\')+`;
-// Les options de pnpm que Leon a écrites un jour dans un crochet (README du premier jet compris).
-const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) ${WORD}| --dir=${WORD})`;
+// Les options de pnpm que Leon a écrites un jour dans un crochet (README du premier jet compris). Le dossier de
+// `--dir` est capturé : c'est le clone d'où le crochet lançait Leon (formerClones).
+const PNPM_OPTION = String.raw`(?: -s| --silent| --config\.[A-Za-z-]+=[A-Za-z0-9-]+| (?:--dir|-C) (${WORD})| --dir=(${WORD}))`;
+const legacyPattern = (subcommand: HookSubcommand) =>
+  new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`);
 
-// Un crochet de Leon : `pnpm <options de pnpm> leon <sous-commande>`, et rien d'autre. Toute autre commande, même
-// si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée. Le retrait (uninstall-hooks.ts) reconnaît
-// les crochets de la même façon.
+// Un crochet de Leon : `<lanceur> <sous-commande>` (K9, hook-commands.ts) ou, comme avant, `pnpm <options de pnpm> leon
+// <sous-commande>`, et rien d'autre. Le lanceur est ~/.leon/bin/leon sous n'importe quel dossier personnel, entre
+// apostrophes ou non. Toute autre commande, même si elle cite `leon briefing`, est à l'utilisateur et n'est pas touchée.
+// Le retrait (uninstall-hooks.ts) reconnaît les crochets de la même façon.
+const LAUNCHER_SUFFIX = '/.leon/bin/leon';
+// Le mot du lanceur sans ses apostrophes ni guillemets (celles de `'\''` comprises), pour en lire la fin.
+const unquote = (word: string) =>
+  word.replace(
+    /'([^']*)'|"([^"]*)"|\\(.)/g,
+    (_all, single, double, escaped) => single ?? double ?? escaped,
+  );
+
 export function isLeonHandler(
   handler: unknown,
   subcommand: HookSubcommand,
 ): handler is Json & { command: string } {
-  return (
-    isRecord(handler) &&
-    typeof handler.command === 'string' &&
-    new RegExp(`^pnpm${PNPM_OPTION}* leon ${subcommand}$`).test(handler.command.trim())
-  );
+  if (!isRecord(handler) || typeof handler.command !== 'string') return false;
+  const command = handler.command.trim();
+  if (legacyPattern(subcommand).test(command)) return true;
+  const launcher = new RegExp(`^(${WORD}) ${subcommand}$`).exec(command)?.[1];
+  return launcher !== undefined && unquote(launcher).endsWith(LAUNCHER_SUFFIX);
+}
+
+// Les clones d'où les crochets `pnpm … leon …` d'avant le lanceur lançaient Leon (leur `--dir`, sans les guillemets), une
+// fois chacun, dans l'ordre des réglages ; `null` quand aucun crochet n'a cette forme. Un tableau vide : des crochets
+// sans `--dir`, dont le clone n'est pas connu. Ne lit que les réglages reçus : jamais le `.env.local` de ces clones.
+export function formerClones(settings: Json): string[] | null {
+  const hooks = isRecord(settings.hooks) ? settings.hooks : {};
+  let legacy = false;
+  const clones = new Set<string>();
+  for (const { event, subcommand } of HOOKS) {
+    const groups = Array.isArray(hooks[event]) ? hooks[event] : [];
+    for (const group of groups) {
+      for (const handler of isRecord(group) && Array.isArray(group.hooks) ? group.hooks : []) {
+        if (!isLeonHandler(handler, subcommand)) continue;
+        const command = handler.command.trim();
+        if (!legacyPattern(subcommand).test(command)) continue;
+        legacy = true;
+        for (const [, spaced, equals] of command.matchAll(new RegExp(PNPM_OPTION, 'g'))) {
+          const clone = spaced ?? equals;
+          if (clone) clones.add(unquote(clone));
+        }
+      }
+    }
+  }
+  return legacy ? [...clones] : null;
+}
+
+// Ce que `leon setup` dit une fois les crochets passés au lanceur : le jeton du `.env.local` de l'ancien clone ne sert
+// plus (la connexion de `leon login` le remplace) et se révoque dans Réglages, sous « Personal tokens » : il a été créé à
+// la main, ce n'est pas un ordinateur connecté. Seule la forme installée le dit : sous la forme clone, le lanceur lance
+// toujours pnpm dans un clone, dont le `.env.local` sert encore.
+function migrationNotice(clones: string[]): string {
+  if (clones.length === 0) {
+    return 'Your hooks used to run Leon through pnpm; they now run ~/.leon/bin/leon.';
+  }
+  const and = (items: string[]) =>
+    items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items.join('');
+  const many = clones.length > 1;
+  return `Your hooks used to run Leon from ${and(clones)}; they now run ~/.leon/bin/leon. The ${many ? 'tokens' : 'token'} in ${and(clones.map((clone) => join(clone, '.env.local')))} ${many ? 'are' : 'is'} no longer needed: revoke ${many ? 'them' : 'it'} in Settings › Personal tokens.`;
 }
 
 export type HookChange = {
@@ -149,10 +205,10 @@ export type HookChange = {
 // Réglages dont la forme n'est pas celle de la doc : on n'y écrit rien. Le message est fixe, sans contenu du fichier.
 export class SettingsShapeError extends Error {}
 
-function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
+function applyHook(root: Json, spec: HookSpec, home: string): HookChange {
   const wanted = {
     type: 'command',
-    command: hookCommand(repoDir, spec.subcommand),
+    command: launcherHookCommand(home, spec.subcommand),
     timeout: spec.timeout,
   };
   const hooksRoot = root.hooks ?? {};
@@ -197,15 +253,15 @@ function applyHook(root: Json, spec: HookSpec, repoDir: string): HookChange {
   return { event: spec.event, action, command: wanted.command, timeout: spec.timeout };
 }
 
-// Les réglages avec les deux crochets de Leon, sans modifier l'objet reçu. Lance SettingsShapeError si la clé
-// `hooks` ou les évènements SessionStart et SessionEnd n'ont pas la forme de la doc (les autres évènements, eux,
-// ne nous regardent pas).
+// Les réglages avec les deux crochets de Leon, sans modifier l'objet reçu. Les commandes sont celles du lanceur du
+// dossier personnel `home` (K9). Lance SettingsShapeError si la clé `hooks` ou les évènements SessionStart et
+// SessionEnd n'ont pas la forme de la doc (les autres évènements, eux, ne nous regardent pas).
 export function addLeonHooks(
   settings: Json,
-  repoDir: string,
+  home: string,
 ): { settings: Json; changes: HookChange[] } {
   const next = structuredClone(settings);
-  const changes = HOOKS.map((spec) => applyHook(next, spec, repoDir));
+  const changes = HOOKS.map((spec) => applyHook(next, spec, home));
   return { settings: next, changes };
 }
 
@@ -279,9 +335,11 @@ export async function writeAtomically(path: string, loaded: Loaded, text: string
   }
 }
 
-// `home` : le dossier qui porte `.leon/accord.json` (consent.ts).
+// `home` : le dossier qui porte `.leon` : l'accord (consent.ts) et le lanceur que les crochets appellent.
+// `repoDir` : le clone de Leon sous la forme clone ; absent sous la forme installée, où ni pnpm ni `.env.local` ne sont
+// en jeu et où il n'y a pas de clone dont avertir.
 export type InstallOptions = {
-  repoDir: string;
+  repoDir?: string;
   configDir: string;
   home: string;
   assumeYes: boolean;
@@ -302,42 +360,50 @@ const ACTION_LABELS: Record<HookChange['action'], string> = {
 // Le README est en français : la section citée garde son titre exact.
 const README_HINT = `see the README, section "L'IA à jour chaque matin"`;
 
-// Les réglages du serveur que les deux commandes liront à chaque lancement : le `.env.local` du dépôt (le script
-// `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de `pnpm --dir`).
-// On lit le fichier avec le même lecteur que node (`parseEnv`) et on le juge comme la CLI (`parseServerEnv`). Les
-// messages de `parseServerEnv` sont fixes : aucune valeur du fichier n'est jamais recopiée.
-async function serverEnvWarnings(repoDir: string): Promise<string[]> {
-  const envPath = join(repoDir, '.env.local');
+// Les réglages du serveur que les deux commandes liront à chaque lancement : LEON_URL et LEON_TOKEN du `.env.local` du
+// dépôt (le script `leon` de package.json le charge avec `node --env-file-if-exists=.env.local`, depuis le dossier de
+// `pnpm --dir`), sinon la connexion de `leon login`. On lit le fichier avec le même lecteur que node (`parseEnv`) et
+// on le juge comme la CLI (`resolveServerEnv`). Ses messages sont fixes : aucune valeur du fichier ni de la connexion
+// n'est jamais recopiée.
+async function serverEnvWarnings(repoDir: string | undefined, home: string): Promise<string[]> {
+  const envPath = repoDir && join(repoDir, '.env.local');
   let values: NodeJS.Dict<string> = {};
   try {
-    values = parseEnv(await readFile(envPath, 'utf8'));
+    if (envPath) values = parseEnv(await readFile(envPath, 'utf8'));
   } catch {
     // Absent ou illisible : traité comme vide.
   }
   try {
-    parseServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN });
+    await resolveServerEnv({ LEON_URL: values.LEON_URL, LEON_TOKEN: values.LEON_TOKEN }, home);
     return [];
   } catch (error) {
     const problem = error instanceof Error ? error.message : 'invalid server settings.';
+    const source = envPath
+      ? `${envPath} does not give the commands what they need to reach the server`
+      : 'the commands cannot reach the server';
     return [
-      `Warning: ${envPath} does not give the commands what they need to reach the server: ${problem} Without these, both commands do nothing and say so only on stderr, which Claude Code does not show (ignore this if you set both variables in the environment that starts Claude Code).`,
+      `Warning: ${source}: ${problem} Without a connection, both commands do nothing and say so only on stderr, which Claude Code does not show (ignore this if you set both variables in the environment that starts Claude Code).`,
     ];
   }
 }
 
-async function warnings(settings: Json, repoDir: string): Promise<string[]> {
+async function warnings(
+  settings: Json,
+  repoDir: string | undefined,
+  home: string,
+): Promise<string[]> {
   const found: string[] = [];
   if (settings.disableAllHooks === true) {
     found.push(
       'Warning: "disableAllHooks" is true in these settings; as long as it stays that way, Claude Code runs no hooks.',
     );
   }
-  if (repoDir.includes('/.claude/worktrees/')) {
+  if (repoDir?.includes('/.claude/worktrees/')) {
     found.push(
       `Warning: ${repoDir} is a temporary Git worktree: if it is deleted, the hooks will stop working. Run the command from the main Leon clone, or pass that clone with --depot <path>.`,
     );
   }
-  found.push(...(await serverEnvWarnings(repoDir)));
+  found.push(...(await serverEnvWarnings(repoDir, home)));
   return found;
 }
 
@@ -358,7 +424,12 @@ function backupLine(backup: BackupPlan): string {
   return `${untouched}; the old file is copied to ${backup.path}.`;
 }
 
-function preview(path: string, changes: HookChange[], backup: BackupPlan): string[] {
+function preview(
+  path: string,
+  changes: HookChange[],
+  backup: BackupPlan,
+  cloneForm: boolean,
+): string[] {
   const lines = [`Leon hooks for ${path}:`, ''];
   for (const change of changes) {
     const spec = HOOKS.find((hook) => hook.event === change.event);
@@ -371,8 +442,13 @@ function preview(path: string, changes: HookChange[], backup: BackupPlan): strin
   }
   lines.push(
     ...CONSENT_LINES,
-    'Both commands contact the server at LEON_URL, with LEON_TOKEN, both read from the .env.local file of the repository.',
-    'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
+    `Both commands contact the server of the connection made by \`leon login\` (saved in ~/.leon/connexion.json), unless LEON_URL and LEON_TOKEN are both set: those come first${cloneForm ? ' (a repository clone reads them from its .env.local file)' : ''}.`,
+    // Sous la forme installée, le lanceur lance son propre Node : rien à demander au PATH de Claude Code.
+    ...(cloneForm
+      ? [
+          'They need `pnpm` (the version pinned in the "packageManager" field of package.json: another version would try to download the right one and exceed the timeout) and `node` 24 or later on the PATH that Claude Code sees, which a Claude Code started from an editor or an app does not always have.',
+        ]
+      : []),
     backupLine(backup),
   );
   return lines;
@@ -438,13 +514,14 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
 
   let plan: ReturnType<typeof addLeonHooks>;
   try {
-    plan = addLeonHooks(settings, options.repoDir);
+    plan = addLeonHooks(settings, options.home);
   } catch (error) {
     if (!(error instanceof SettingsShapeError)) throw error;
     return refuse(`does not have the expected shape (${error.message}).`);
   }
 
-  const alerts = await warnings(settings, options.repoDir);
+  const former = formerClones(settings);
+  const alerts = await warnings(settings, options.repoDir, options.home);
   // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
   const consented = (await factsConsent(options.home, 'claude_code')) !== null;
   const consentFile = consentPath(options.home);
@@ -483,7 +560,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     loaded.kind !== 'present'
       ? { kind: 'none' }
       : { kind: (await exists(backup)) ? 'keep' : 'copy', path: backup };
-  for (const line of preview(path, plan.changes, backupPlan)) {
+  for (const line of preview(path, plan.changes, backupPlan, options.repoDir !== undefined)) {
     deps.out(line);
   }
   for (const line of alerts) deps.out(`\n${line}`);
@@ -524,8 +601,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
 
   deps.out(`\nHooks installed in ${path}.`);
   if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
+  if (former !== null && options.repoDir === undefined) deps.out(migrationNotice(former));
   deps.out(
-    'Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run `pnpm leon retirer-crochets` (it also withdraws your consent).',
+    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon'} retirer-crochets\` (it also withdraws your consent).`,
   );
   if (!consented && !(await recordConsent(options.home, deps))) return 1;
   return 0;

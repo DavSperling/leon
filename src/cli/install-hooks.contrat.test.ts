@@ -2,16 +2,17 @@
 // faux dossier de configuration de Claude Code (CLAUDE_CONFIG_DIR, et HOME vers un autre dossier temporaire : jamais
 // le vrai ~/.claude) et sur un faux dépôt de Leon dont le chemin porte une espace et une apostrophe.
 // Ce qu'on vérifie : la commande s'arrête sur « non » comme sur une entrée fermée, écrit avec --oui, refuse un dépôt
-// qui n'en est pas un, et les commandes qu'elle écrit, lancées comme le fait Claude Code (un shell, le JSON du
-// crochet sur l'entrée standard, le dossier du projet pour dossier courant), atteignent le script `leon` du dépôt
-// avec le JSON intact et le dossier du projet dans INIT_CWD, d'où `leon briefing` tire le projet.
+// qui n'en est pas un, et les commandes qu'elle écrit (celles du lanceur ~/.leon/bin/leon, K9, que la commande écrit
+// aussi, sous sa forme clone), lancées comme le fait Claude Code (un shell, le JSON du crochet sur l'entrée standard,
+// le dossier du projet pour dossier courant), atteignent le script `leon` du dépôt avec le JSON intact et le dossier du
+// projet dans INIT_CWD, d'où `leon briefing` tire le projet.
 import { spawn } from 'node:child_process';
 import { mkdir, mkdtemp, readdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { hookCommand, shellQuote } from './hook-commands';
+import { launcherHookCommand, launcherPath, singleQuote } from './hook-commands';
 import { BACKUP_FILE, SETTINGS_FILE } from './install-hooks';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -148,7 +149,7 @@ describe('leon installer-crochets', () => {
 
       for (const outcome of [refused, closed]) {
         expect(outcome.code).toBe(0);
-        expect(outcome.stdout).toContain(hookCommand(fakeRepo, 'briefing'));
+        expect(outcome.stdout).toContain(launcherHookCommand(home, 'briefing'));
         expect(outcome.stdout).toContain('[y/N]');
         expect(outcome.stdout).toContain('Nothing was written');
       }
@@ -195,8 +196,14 @@ describe('leon installer-crochets', () => {
       expect(outcome.code).toBe(0);
       const { hooks } = JSON.parse(await readFile(settingsPath, 'utf8'));
       const here = resolve(REPO_ROOT);
-      expect(hooks.SessionStart[0].hooks[0].command).toBe(hookCommand(here, 'briefing'));
-      expect(hooks.SessionEnd[0].hooks[0].command).toBe(hookCommand(here, 'capter-session'));
+      expect(hooks.SessionStart[0].hooks[0].command).toBe(launcherHookCommand(home, 'briefing'));
+      expect(hooks.SessionEnd[0].hooks[0].command).toBe(
+        launcherHookCommand(home, 'capter-session'),
+      );
+      // Le dépôt est dans le lanceur, en chemin absolu, et non dans les réglages.
+      expect(await readFile(launcherPath(home), 'utf8')).toContain(
+        `--dir ${singleQuote(here)} leon`,
+      );
       expect(here).toMatch(/^\//);
     },
     TEST_TIMEOUT_MS,
@@ -288,7 +295,9 @@ describe('leon installer-crochets', () => {
       const { hooks } = JSON.parse(await readFile(settingsPath, 'utf8'));
       const start: string = hooks.SessionStart[0].hooks[0].command;
       const end: string = hooks.SessionEnd[0].hooks[0].command;
-      expect(start).toContain(shellQuote(resolve(REPO_ROOT)));
+      expect(await readFile(launcherPath(home), 'utf8')).toContain(
+        `--dir ${singleQuote(resolve(REPO_ROOT))} leon`,
+      );
       const hookEnv = { LEON_URL: 'http://127.0.0.1:1', LEON_TOKEN: fakeToken };
       const endJson = JSON.stringify({
         session_id: 's1',
@@ -321,7 +330,9 @@ describe('leon installer-crochets', () => {
       const { hooks } = JSON.parse(await readFile(settingsPath, 'utf8'));
       const start: string = hooks.SessionStart[0].hooks[0].command;
       const end: string = hooks.SessionEnd[0].hooks[0].command;
-      expect(start).toContain(shellQuote(fakeRepo));
+      expect(await readFile(launcherPath(home), 'utf8')).toContain(
+        `--dir ${singleQuote(fakeRepo)} leon`,
+      );
 
       const started = await runShell(start, START_JSON);
       const ended = await runShell(end, END_JSON);

@@ -16,11 +16,14 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
+import { writeConnection } from './connection';
 import { consentPath, factsConsent, writeConsent } from './consent';
+import { hookCommand, launcherHookCommand } from './hook-commands';
 import {
   addLeonHooks,
   BACKUP_FILE,
   installHooks,
+  isLeonHandler,
   isYes,
   SESSION_END_TIMEOUT_S,
   SESSION_START_TIMEOUT_S,
@@ -31,11 +34,12 @@ import {
 // sont ceux de la doc officielle, https://code.claude.com/docs/en/hooks (voir l'en-tête d'install-hooks.ts).
 
 const REPO = '/Users/amos/leon';
-const START = `pnpm -s --config.verify-deps-before-run=false --dir ${REPO} leon briefing`;
-const END = `pnpm -s --config.verify-deps-before-run=false --dir ${REPO} leon capter-session`;
+// Les commandes des crochets sont celles du lanceur ~/.leon/bin/leon (K9) du HOME temporaire, posées par beforeEach.
+let START: string;
+let END: string;
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
-// Le chemin d'exemple du README.
-const README_REPO = '/chemin/vers/leon';
+// Le dossier personnel d'exemple du README.
+const README_HOME = '/Users/vous';
 
 const leonStart = (command = START, timeout = 10) => ({
   hooks: [{ type: 'command', command, timeout }],
@@ -58,6 +62,8 @@ let locked: string[];
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'leon-install-hooks-'));
   home = join(dir, 'home'); // l'accord (consent.ts) s'écrit là : jamais dans le vrai ~/.leon
+  START = launcherHookCommand(home, 'briefing');
+  END = launcherHookCommand(home, 'capter-session');
   configDir = join(dir, 'claude');
   settingsPath = join(configDir, SETTINGS_FILE);
   backupPath = join(configDir, BACKUP_FILE);
@@ -95,8 +101,9 @@ const exists = (path: string) =>
 type Run = { code: number; output: string; questions: string[] };
 
 // `answers` : ce que « tape » l'utilisateur à chaque question ; une question non prévue fait échouer le test.
+// `repoDir` : le clone de la forme clone (REPO par défaut) ; `null`, la forme installée, qui n'a pas de clone.
 async function install(
-  options: { repoDir?: string; assumeYes?: boolean; answers?: string[] } = {},
+  options: { repoDir?: string | null; home?: string; assumeYes?: boolean; answers?: string[] } = {},
   hook?: () => Promise<void>,
 ): Promise<Run> {
   const lines: string[] = [];
@@ -104,9 +111,9 @@ async function install(
   const answers = [...(options.answers ?? [])];
   const code = await installHooks(
     {
-      repoDir: options.repoDir ?? REPO,
+      repoDir: options.repoDir === null ? undefined : (options.repoDir ?? REPO),
       configDir,
-      home,
+      home: options.home ?? home,
       assumeYes: options.assumeYes ?? false,
     },
     {
@@ -125,16 +132,18 @@ async function install(
 }
 
 describe('installHooks : écrire les deux crochets', () => {
-  it('crée les réglages et le dossier s’ils n’existent pas, avec le chemin absolu du dépôt', async () => {
+  it('crée les réglages et le dossier s’ils n’existent pas, avec les commandes du lanceur (K9)', async () => {
     const run = await install({ assumeYes: true });
 
     expect(run.code).toBe(0);
     expect(await readSettings()).toEqual({
       hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] },
     });
-    expect(START).toBe(
-      'pnpm -s --config.verify-deps-before-run=false --dir /Users/amos/leon leon briefing',
-    );
+    expect(START).toBe(`${home}/.leon/bin/leon briefing`);
+    expect(END).toBe(`${home}/.leon/bin/leon capter-session`);
+    // Ni le clone ni pnpm ne figurent dans les réglages : c'est le lanceur qui sait où est la CLI.
+    expect(await readFile(settingsPath, 'utf8')).not.toContain('pnpm');
+    expect(await readFile(settingsPath, 'utf8')).not.toContain(REPO);
     // Rien à sauvegarder : le fichier n'existait pas. Aucun fichier de travail ne reste.
     expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
   });
@@ -247,16 +256,18 @@ describe('installHooks : écrire les deux crochets', () => {
     });
   });
 
-  it('cite proprement un chemin avec espace et apostrophe, qu’un shell couperait', async () => {
-    await install({ repoDir: "/Users/amos/Mes projets/l'équipe/leon", assumeYes: true });
+  it('cite proprement un dossier personnel avec espace et apostrophe, qu’un shell couperait', async () => {
+    const odd = join(dir, 'Mes projets', "l'équipe");
+
+    await install({ home: odd, assumeYes: true });
 
     const { hooks } = await readSettings();
-    expect(hooks.SessionStart[0].hooks[0].command).toBe(
-      "pnpm -s --config.verify-deps-before-run=false --dir '/Users/amos/Mes projets/l'\\''équipe/leon' leon briefing",
-    );
-    expect(hooks.SessionEnd[0].hooks[0].command).toBe(
-      "pnpm -s --config.verify-deps-before-run=false --dir '/Users/amos/Mes projets/l'\\''équipe/leon' leon capter-session",
-    );
+    const start = hooks.SessionStart[0].hooks[0].command;
+    expect(start).toBe(launcherHookCommand(odd, 'briefing'));
+    expect(start).toBe(`'${join(odd, '.leon', 'bin', 'leon').replaceAll("'", "'\\''")}' briefing`);
+    expect(hooks.SessionEnd[0].hooks[0].command).toBe(launcherHookCommand(odd, 'capter-session'));
+    // Reconnu au passage suivant : rien n'est ajouté.
+    expect((await install({ home: odd, assumeYes: true })).output).toContain('already in place');
   });
 });
 
@@ -278,16 +289,24 @@ describe('installHooks : un second passage', () => {
     expect(hooks.SessionEnd).toHaveLength(1);
   });
 
-  it('garde la sauvegarde d’avant Leon quand le dépôt change de place (la mise à jour ne l’écrase pas)', async () => {
+  it('garde la sauvegarde d’avant Leon quand un ancien crochet pnpm passe à la forme du lanceur (la mise à jour ne l’écrase pas)', async () => {
     const original = await writeSettings({ theme: 'dark' });
-    await install({ repoDir: '/ancien/leon', assumeYes: true });
+    await install({ assumeYes: true });
+    await writeSettings({
+      theme: 'dark',
+      hooks: {
+        SessionStart: [leonStart(hookCommand('/ancien/leon', 'briefing'))],
+        SessionEnd: [leonEnd(hookCommand('/ancien/leon', 'capter-session'))],
+      },
+    });
     expect(await readFile(settingsPath, 'utf8')).toContain('/ancien/leon');
 
-    const run = await install({ repoDir: '/nouveau/leon', assumeYes: true });
+    const run = await install({ assumeYes: true });
 
     expect(run.code).toBe(0);
     expect(run.output).toContain('update');
-    expect(await readFile(settingsPath, 'utf8')).toContain('/nouveau/leon');
+    expect(await readFile(settingsPath, 'utf8')).toContain(START);
+    expect(await readFile(settingsPath, 'utf8')).not.toContain('/ancien/leon');
     // Remettre la sauvegarde retire bien Leon : elle ne contient aucun de ses crochets.
     expect(await readFile(backupPath, 'utf8')).toBe(original);
     expect(await readFile(backupPath, 'utf8')).not.toContain('leon');
@@ -315,10 +334,14 @@ describe('installHooks : un second passage', () => {
     expect(run.questions).toEqual([]);
   });
 
-  it('met à jour les crochets de Leon quand le dépôt a changé de place, sans en ajouter un second', async () => {
+  it('remplace sur place un ancien crochet pnpm par celui du lanceur, sans en ajouter un second', async () => {
     const other = { type: 'command', command: 'echo bonjour' };
-    await writeSettings({ hooks: { SessionStart: [{ hooks: [other] }] } });
-    await install({ repoDir: '/old/leon', assumeYes: true });
+    await writeSettings({
+      hooks: {
+        SessionStart: [{ hooks: [other] }, leonStart(hookCommand('/old/leon', 'briefing'))],
+        SessionEnd: [leonEnd(hookCommand('/old/leon', 'capter-session'))],
+      },
+    });
 
     const run = await install({ assumeYes: true });
 
@@ -393,6 +416,298 @@ describe('installHooks : un second passage', () => {
     // Le crochet « capter-session » rangé sous SessionStart par l'utilisateur n'est pas touché.
     expect(hooks.SessionStart).toEqual([{ hooks: mine }, leonStart()]);
     expect(hooks.SessionEnd).toEqual([leonEnd()]);
+  });
+});
+
+// Les installations d'avant le lanceur (S11) : des crochets `pnpm … --dir <clone> leon briefing|capter-session`, un jeton
+// dans le `.env.local` du clone et, souvent, l'accord déjà en version 2. `leon setup` (forme installée) les remplace par
+// ceux du lanceur (K9), sans rien demander de plus que l'écriture des réglages.
+describe('installHooks : migrer les crochets pnpm d’avant le lanceur', () => {
+  const OLD_CLONE = '/Users/amos/leon';
+  const oldStart = (clone = OLD_CLONE, timeout = 10) => ({
+    type: 'command',
+    command: hookCommand(clone, 'briefing'),
+    timeout,
+  });
+  const oldEnd = (clone = OLD_CLONE, timeout = 30) => ({
+    type: 'command',
+    command: hookCommand(clone, 'capter-session'),
+    timeout,
+  });
+  const yours = [
+    { type: 'command', command: 'echo avant' },
+    { type: 'command', command: 'echo entre', timeout: 5, statusMessage: 'Un instant' },
+    { type: 'command', command: 'echo après' },
+  ];
+  const handler = (command: string, timeout: number) => ({ type: 'command', command, timeout });
+
+  // Des réglages d'avant : un crochet de l'utilisateur dans le groupe, un autre entre les deux évènements de Leon.
+  const oldSettings = () => ({
+    theme: 'dark',
+    hooks: {
+      SessionStart: [
+        { matcher: 'startup', hooks: [yours[0], oldStart(), yours[1]] },
+        { hooks: [yours[2]] },
+      ],
+      PreToolUse: [{ matcher: 'Bash', hooks: [yours[1]] }],
+      SessionEnd: [{ hooks: [yours[0]] }, { matcher: '', hooks: [oldEnd(), yours[2]] }],
+    },
+  });
+
+  it('remplace les deux crochets sur place : même groupe, même position, mêmes délais ; ceux de l’utilisateur ne bougent pas', async () => {
+    await writeSettings(oldSettings());
+
+    const run = await install({ repoDir: null, assumeYes: true });
+
+    expect(run.code).toBe(0);
+    const settings = await readSettings();
+    expect(Object.keys(settings.hooks)).toEqual(['SessionStart', 'PreToolUse', 'SessionEnd']);
+    expect(settings).toEqual({
+      theme: 'dark',
+      hooks: {
+        SessionStart: [
+          { matcher: 'startup', hooks: [yours[0], handler(START, 10), yours[1]] },
+          { hooks: [yours[2]] },
+        ],
+        PreToolUse: [{ matcher: 'Bash', hooks: [yours[1]] }],
+        SessionEnd: [{ hooks: [yours[0]] }, { matcher: '', hooks: [handler(END, 30), yours[2]] }],
+      },
+    });
+    expect(JSON.stringify(settings)).not.toMatch(/pnpm/);
+  });
+
+  it('un doublon séparé du crochet par un crochet de l’utilisateur disparaît, le crochet de l’utilisateur reste', async () => {
+    await writeSettings({
+      hooks: {
+        SessionStart: [{ hooks: [oldStart(), yours[1], oldStart('/Users/amos/autre-clone')] }],
+      },
+    });
+
+    await install({ repoDir: null, assumeYes: true });
+
+    expect((await readSettings()).hooks.SessionStart).toEqual([
+      { hooks: [handler(START, 10), yours[1]] },
+    ]);
+  });
+
+  it('deux passages donnent le même fichier, sans question ni message de migration au second', async () => {
+    await writeSettings(oldSettings());
+    const first = await install({ repoDir: null, assumeYes: true });
+    const afterFirst = await readFile(settingsPath, 'utf8');
+
+    const second = await install({ repoDir: null, answers: [] });
+
+    expect(first.output).toContain('used to run Leon from');
+    expect(second.code).toBe(0);
+    expect(second.questions).toEqual([]);
+    expect(second.output).not.toContain('used to run Leon');
+    expect(await readFile(settingsPath, 'utf8')).toBe(afterFirst);
+  });
+
+  it('garde la sauvegarde d’avant Leon telle quelle (elle existe déjà), et le dit', async () => {
+    await writeSettings(oldSettings());
+    await writeFile(backupPath, '{"theme":"copie-d-avant-leon"}\n');
+
+    const run = await install({ repoDir: null, answers: ['y'] });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('already exists');
+    expect(await readFile(backupPath, 'utf8')).toBe('{"theme":"copie-d-avant-leon"}\n');
+  });
+
+  it('sans sauvegarde, copie une fois les réglages d’avant la migration, et ne la refait pas ensuite', async () => {
+    const text = await writeSettings(oldSettings());
+
+    await install({ repoDir: null, assumeYes: true });
+    expect(await readFile(backupPath, 'utf8')).toBe(text);
+    await writeSettings(oldSettings()); // des crochets pnpm de nouveau (Claude Code ou l’utilisateur a réécrit le fichier)
+    await install({ repoDir: null, assumeYes: true });
+
+    expect(await readFile(backupPath, 'utf8')).toBe(text);
+  });
+
+  describe('l’accord (~/.leon/accord.json)', () => {
+    it('déjà en version 2 : gardé tel quel, octet pour octet, et rien n’est redemandé', async () => {
+      await writeConsent(home, 'claude_code', 2, new Date('2026-10-20T08:00:00.000Z'));
+      const consent = await readFile(consentPath(home), 'utf8');
+      await writeSettings(oldSettings());
+
+      const run = await install({ repoDir: null, answers: ['y'] });
+
+      expect(run.code).toBe(0);
+      // Une seule question : écrire les réglages. L’accord n’est ni redemandé ni réécrit.
+      expect(run.questions).toHaveLength(1);
+      expect(run.questions[0]).not.toContain('consent');
+      expect(run.output).not.toContain('Consent recorded');
+      expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+      expect(
+        JSON.parse(await readFile(settingsPath, 'utf8')).hooks.SessionStart[0].hooks[1],
+      ).toEqual(handler(START, 10));
+    });
+
+    it('avec --yes : aucune question, accord intact', async () => {
+      await writeConsent(home, 'claude_code', 2, new Date('2026-10-20T08:00:00.000Z'));
+      const consent = await readFile(consentPath(home), 'utf8');
+      await writeSettings(oldSettings());
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.code).toBe(0);
+      expect(run.questions).toEqual([]);
+      expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+    });
+
+    it('plus récent que la version 2 : jamais rabaissé', async () => {
+      await writeConsent(home, 'claude_code', 4, new Date('2026-10-20T08:00:00.000Z'));
+      const consent = await readFile(consentPath(home), 'utf8');
+      await writeSettings(oldSettings());
+
+      await install({ repoDir: null, assumeYes: true });
+
+      expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+      expect((await factsConsent(home, 'claude_code'))?.version).toBe(4);
+    });
+
+    it('absent (crochets posés avant l’accord) : il est demandé avec les réglages, une seule fois', async () => {
+      await writeSettings(oldSettings());
+
+      const run = await install({ repoDir: null, answers: ['y'] });
+
+      expect(run.questions).toHaveLength(1);
+      expect(run.questions[0]).toContain(`record this consent in ${consentPath(home)}`);
+      expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
+    });
+  });
+
+  describe('le message sur le clone d’avant (forme installée)', () => {
+    const notice = (clone: string) =>
+      `Your hooks used to run Leon from ${clone}; they now run ~/.leon/bin/leon. The token in ${clone}/.env.local is no longer needed: revoke it in Settings › Personal tokens.`;
+
+    it('dit le clone d’où les crochets lançaient Leon, mot pour mot, une fois les réglages écrits', async () => {
+      await writeSettings(oldSettings());
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.output).toContain(notice(OLD_CLONE));
+      expect(run.output.indexOf('Hooks installed in')).toBeLessThan(
+        run.output.indexOf('used to run Leon'),
+      );
+    });
+
+    it('ne le dit pas si l’utilisateur répond « non » : les crochets sont toujours ceux d’avant', async () => {
+      const text = await writeSettings(oldSettings());
+
+      const run = await install({ repoDir: null, answers: ['n'] });
+
+      expect(run.output).not.toContain('used to run Leon');
+      expect(await readFile(settingsPath, 'utf8')).toBe(text);
+    });
+
+    it('ne le dit pas quand rien n’est écrit (réglages illisibles)', async () => {
+      await writeSettings('{ pas du json');
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.code).toBe(1);
+      expect(run.output).not.toContain('used to run Leon');
+    });
+
+    it('ne le dit pas pour une première installation, ni pour des crochets déjà ceux du lanceur', async () => {
+      const fresh = await install({ repoDir: null, assumeYes: true });
+      await writeSettings({ hooks: { SessionStart: [leonStart('~/.leon/bin/leon briefing')] } });
+      const launcher = await install({ repoDir: null, assumeYes: true });
+
+      expect(fresh.output).not.toContain('used to run Leon');
+      expect(launcher.output).not.toContain('used to run Leon');
+    });
+
+    it('ne le dit pas sous la forme clone : le .env.local du clone sert toujours', async () => {
+      await writeSettings(oldSettings());
+
+      const run = await install({ assumeYes: true });
+
+      expect(run.output).not.toContain('used to run Leon');
+      expect(run.output).not.toContain('no longer needed');
+    });
+
+    it.each([
+      ['--dir <dossier>', 'pnpm -s --dir /Users/amos/leon leon briefing', '/Users/amos/leon'],
+      ['--dir=<dossier>', 'pnpm -s --dir=/Users/amos/leon leon briefing', '/Users/amos/leon'],
+      ['-C <dossier>', 'pnpm -C /Users/amos/leon leon briefing', '/Users/amos/leon'],
+      [
+        'les options du crochet d’avant',
+        hookCommand('/Users/amos/leon', 'briefing'),
+        '/Users/amos/leon',
+      ],
+      [
+        'un dossier entre guillemets, avec une espace',
+        'pnpm -s --dir "/Users/amos/Mes projets/leon" leon briefing',
+        '/Users/amos/Mes projets/leon',
+      ],
+      [
+        'un dossier entre apostrophes, avec une apostrophe',
+        hookCommand("/Users/Léa O'Neil/leon", 'briefing'),
+        "/Users/Léa O'Neil/leon",
+      ],
+      ['un dossier écrit avec ~', 'pnpm --dir ~/leon leon briefing', '~/leon'],
+    ])('lit le clone dans %s', async (_name, command, clone) => {
+      await writeSettings({ hooks: { SessionStart: [leonStart(command)] } });
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.output).toContain(notice(clone));
+    });
+
+    it('nomme chaque clone une fois quand les crochets venaient de plusieurs, au pluriel', async () => {
+      await writeSettings({
+        hooks: {
+          SessionStart: [leonStart(hookCommand('/a/leon', 'briefing'))],
+          SessionEnd: [
+            leonEnd(hookCommand('/b/leon', 'capter-session')),
+            leonEnd(hookCommand('/a/leon', 'capter-session')),
+          ],
+        },
+      });
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.output).toContain(
+        'Your hooks used to run Leon from /a/leon and /b/leon; they now run ~/.leon/bin/leon. The tokens in /a/leon/.env.local and /b/leon/.env.local are no longer needed: revoke them in Settings › Personal tokens.',
+      );
+    });
+
+    it('sans --dir, ne cite aucun .env.local (le clone n’est pas connu)', async () => {
+      await writeSettings({ hooks: { SessionStart: [leonStart('pnpm leon briefing')] } });
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.output).toContain(
+        'Your hooks used to run Leon through pnpm; they now run ~/.leon/bin/leon.',
+      );
+      expect(run.output).not.toContain('.env.local');
+    });
+
+    it('ne lit ni ne recopie jamais le .env.local de ce clone, et ne le touche pas', async () => {
+      const clone = join(dir, 'ancien-clone');
+      await mkdir(clone, { recursive: true });
+      const envLocal = `LEON_URL=https://leon.example\nLEON_TOKEN=${FAKE_TOKEN}\n`;
+      await writeFile(join(clone, '.env.local'), envLocal, { mode: 0o640 });
+      await writeSettings({
+        hooks: {
+          SessionStart: [leonStart(hookCommand(clone, 'briefing'))],
+          SessionEnd: [leonEnd(hookCommand(clone, 'capter-session'))],
+        },
+      });
+
+      const run = await install({ repoDir: null, assumeYes: true });
+
+      expect(run.output).toContain(notice(clone));
+      expect(run.output).not.toContain(FAKE_TOKEN);
+      expect(run.output).not.toContain('leon.example');
+      expect(await readFile(join(clone, '.env.local'), 'utf8')).toBe(envLocal);
+      expect((await stat(join(clone, '.env.local'))).mode & 0o777).toBe(0o640);
+      expect(await readFile(settingsPath, 'utf8')).not.toContain(FAKE_TOKEN);
+    });
   });
 });
 
@@ -651,6 +966,7 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
     // Un fichier à la place du dossier personnel : la création de ~/.leon échoue, même pour root.
     home = join(dir, 'home-fichier');
     await writeFile(home, '');
+    START = launcherHookCommand(home, 'briefing');
 
     const run = await install({ assumeYes: true });
 
@@ -662,6 +978,35 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 });
 
 describe('installHooks : les réglages du serveur dans le .env.local du dépôt', () => {
+  it('prévient « pas connecté » et dit de lancer leon login quand rien ne donne le serveur', async () => {
+    const repoDir = await fakeRepo(null);
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.output).toContain('This computer is not connected: run `~/.leon/bin/leon login`');
+  });
+
+  it('ne prévient pas quand l’ordinateur est connecté (leon login), même sans .env.local', async () => {
+    const repoDir = await fakeRepo(null);
+    await writeConnection(home, {
+      url: 'https://leon.example',
+      jeton: FAKE_TOKEN,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
+
+    const run = await install({ repoDir, assumeYes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).not.toContain('Warning');
+    expect(run.output).not.toContain('is missing');
+    // L'aperçu dit d'où viendra le serveur, sans en recopier ni l'adresse ni le jeton.
+    expect(run.output).toContain('leon login');
+    expect(run.output).not.toContain(FAKE_TOKEN);
+    expect(run.output).not.toContain('leon.example');
+  });
+
   it('prévient quand le dépôt n’a pas de .env.local : les commandes ne feraient rien', async () => {
     const repoDir = await fakeRepo(null);
 
@@ -947,21 +1292,146 @@ describe('installHooks : les avertissements', () => {
   });
 });
 
+// La forme installée n'a pas de clone (`repoDir` absent) : le lanceur lance le Node posé par Leon, donc ni pnpm ni
+// `.env.local` ne sont en jeu. La forme clone (`installer-crochets`) garde ses avertissements.
+describe('installHooks : la forme installée, sans clone', () => {
+  it('écrit les mêmes commandes du lanceur que la forme clone', async () => {
+    const installed = await install({ repoDir: null, assumeYes: true });
+    const installedSettings = await readFile(settingsPath, 'utf8');
+    await rm(configDir, { recursive: true, force: true });
+    await install({ assumeYes: true });
+
+    expect(installed.code).toBe(0);
+    expect(installedSettings).toBe(await readFile(settingsPath, 'utf8'));
+  });
+
+  it('n’annonce ni pnpm ni Node dans le PATH de Claude Code, et ne cite aucun .env.local', async () => {
+    const run = await install({ repoDir: null, answers: ['non'] });
+    const lines = run.output.split('\n').join(' ');
+
+    expect(lines).not.toContain('packageManager');
+    expect(lines).not.toContain('node` 24');
+    expect(lines).not.toContain('.env.local');
+    // Le reste du texte d'accord est inchangé.
+    expect(lines).toContain('ALL your Claude Code sessions');
+    expect(lines).toContain('formatting');
+  });
+
+  it('prévient « pas connecté » sans nommer de fichier du clone, et se tait quand l’ordinateur est connecté', async () => {
+    const notConnected = await install({ repoDir: null, assumeYes: true });
+    await rm(configDir, { recursive: true, force: true });
+    await writeConnection(home, {
+      url: 'https://leon.example',
+      jeton: FAKE_TOKEN,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
+
+    const connected = await install({ repoDir: null, assumeYes: true });
+
+    expect(notConnected.output).toContain(
+      'This computer is not connected: run `~/.leon/bin/leon login`',
+    );
+    expect(notConnected.output).not.toContain('.env.local');
+    expect(connected.output).not.toContain('Warning');
+  });
+
+  it('ne prévient pas du worktree, qu’il n’y a pas', async () => {
+    const run = await install({ repoDir: null, assumeYes: true });
+
+    expect(run.output).not.toContain('temporary');
+  });
+
+  it('donne la commande de retrait du lanceur ; la forme clone garde celle de pnpm', async () => {
+    const installed = await install({ repoDir: null, assumeYes: true });
+    await rm(configDir, { recursive: true, force: true });
+    const clone = await install({ assumeYes: true });
+
+    expect(installed.output).toContain(
+      'To remove them, run `~/.leon/bin/leon retirer-crochets` (it also withdraws your consent).',
+    );
+    expect(clone.output).toContain('To remove them, run `pnpm leon retirer-crochets`');
+  });
+});
+
+describe('isLeonHandler : la forme du lanceur (K9) et l’ancienne', () => {
+  const handler = (command: string) => ({ type: 'command', command, timeout: 10 });
+
+  it.each([
+    ['le lanceur', launcherHookCommand('/Users/amos', 'briefing')],
+    ['le lanceur entre apostrophes', "'/Users/Léa O Neil/.leon/bin/leon' briefing"],
+    [
+      'le lanceur avec une apostrophe dans le chemin',
+      launcherHookCommand("/Users/Léa O'Neil", 'briefing'),
+    ],
+    ['le lanceur écrit avec ~', '~/.leon/bin/leon briefing'],
+    ['le lanceur avec des espaces autour', '  /Users/amos/.leon/bin/leon briefing  '],
+    ['la forme pnpm d’avant', hookCommand(REPO, 'briefing')],
+  ])('reconnaît %s', (_name, command) => {
+    expect(isLeonHandler(handler(command), 'briefing')).toBe(true);
+  });
+
+  it('reconnaît aussi la fin de session sous la forme du lanceur', () => {
+    expect(
+      isLeonHandler(
+        handler(launcherHookCommand('/Users/amos', 'capter-session')),
+        'capter-session',
+      ),
+    ).toBe(true);
+    expect(
+      isLeonHandler(handler(launcherHookCommand('/Users/amos', 'capter-session')), 'briefing'),
+    ).toBe(false);
+  });
+
+  it.each([
+    'echo /Users/amos/.leon/bin/leon briefing',
+    '/Users/amos/.leon/bin/leon briefing && rm -rf /tmp/rien',
+    '/Users/amos/.leon/bin/leon briefing; echo fini',
+    '/Users/amos/.leon/bin/leon briefing --autre',
+    '/Users/amos/.leon/bin/leon crochet claude-code fin',
+    '/Users/amos/.leon/bin/autre briefing',
+    '/Users/amos/.leon/bin/leon-vieux briefing',
+    '/Users/amos/bin/leon briefing',
+    '/Users/amos/.leon/bin/leon',
+    "'/Users/amos/.leon/bin/leon briefing",
+    'leon briefing',
+  ])('ne reconnaît pas %j : c’est à l’utilisateur', (command) => {
+    expect(isLeonHandler(handler(command), 'briefing')).toBe(false);
+  });
+
+  it('ne reconnaît pas un crochet qui n’a pas de commande', () => {
+    expect(isLeonHandler({ type: 'command' }, 'briefing')).toBe(false);
+    expect(isLeonHandler('briefing', 'briefing')).toBe(false);
+  });
+});
+
 describe('addLeonHooks', () => {
+  it('écrit les commandes du lanceur (K9) du dossier personnel reçu, entre apostrophes s’il le faut', () => {
+    const { settings } = addLeonHooks({}, "/Users/Léa O'Neil");
+
+    expect(settings).toEqual({
+      hooks: {
+        SessionStart: [leonStart("'/Users/Léa O'\\''Neil/.leon/bin/leon' briefing")],
+        SessionEnd: [leonEnd("'/Users/Léa O'\\''Neil/.leon/bin/leon' capter-session")],
+      },
+    });
+  });
+
   it('ne modifie pas l’objet reçu', () => {
     const settings = { hooks: { SessionStart: [{ hooks: [] }] } };
     const copy = structuredClone(settings);
 
-    const result = addLeonHooks(settings, REPO);
+    const result = addLeonHooks(settings, home);
 
     expect(settings).toEqual(copy);
     expect(result.changes.map((change) => change.action)).toEqual(['ajout', 'ajout']);
   });
 
   it('dit pour chaque évènement ce qu’il fait', () => {
-    const first = addLeonHooks({}, REPO).settings;
-    const again = addLeonHooks(first, REPO);
-    const moved = addLeonHooks(first, '/ailleurs/leon');
+    const first = addLeonHooks({}, home).settings;
+    const again = addLeonHooks(first, home);
+    const moved = addLeonHooks(first, '/ailleurs');
 
     expect(again.changes).toEqual([
       { event: 'SessionStart', action: 'inchange', command: START, timeout: 10 },
@@ -975,11 +1445,102 @@ describe('addLeonHooks', () => {
 describe('le README', () => {
   const readme = async () => readFile(`${REPO_ROOT}README.md`, 'utf8');
 
-  it('montre exactement ce que l’installateur écrit sur des réglages vides', async () => {
-    await install({ repoDir: README_REPO, assumeYes: true });
-    const written = await readSettings();
+  // Ce que l'installateur écrit vraiment, pour un dossier personnel de test, avec le dossier d'exemple du README à sa
+  // place : le README montre les commandes du lanceur (K9), plus la ligne pnpm d'avant.
+  it('montre les crochets exactement comme l’installateur les écrit (K9)', async () => {
+    await install({ repoDir: null, assumeYes: true });
+    const written = (await readFile(settingsPath, 'utf8')).trimEnd().replaceAll(home, README_HOME);
 
-    expect(await readme()).toContain(JSON.stringify(written, null, 2));
+    expect(written).toContain(launcherHookCommand(README_HOME, 'briefing'));
+    expect(await readme()).toContain(written);
+  });
+
+  it('ne montre plus les crochets pnpm d’avant comme ce que l’installateur écrit', async () => {
+    const text = await readme();
+
+    expect(text).not.toContain('"command": "pnpm');
+    expect(text).not.toContain('/chemin/vers/leon');
+  });
+
+  it('commence par la commande unique, puis la connexion, puis la forme clone des développeurs de Leon', async () => {
+    const text = await readme();
+    const section = text.slice(
+      text.indexOf('### Installer'),
+      text.indexOf('### Ce qui est envoyé'),
+    );
+    const order = [
+      'curl -fsSL <adresse de Leon>/install | sh',
+      '~/.leon/bin/leon login',
+      '~/.leon/bin/leon logout',
+      'pnpm leon setup --depot <clone>',
+      'pnpm leon installer-crochets',
+    ].map((marker) => section.indexOf(marker));
+
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it('garde la limite des machines partagées et le repli --with-token de la connexion', async () => {
+    const text = await readme();
+
+    expect(text).toContain('/proc/<pid>/cmdline');
+    expect(text).toContain('--with-token');
+    expect(text).toContain('Connected to <espace> as <compte>');
+  });
+
+  it('dit ce que fait la commande unique : ~/.leon seulement, ni PATH ni profil de shell, les plateformes', async () => {
+    const text = await readme();
+
+    expect(text).toContain('~/.leon');
+    expect(text).toMatch(/rien dans votre `PATH` ni votre profil de shell/);
+    // Elle écrit aussi les réglages des outils de code, après accord : « n'écrit rien d'autre » serait faux.
+    expect(text).toContain(
+      "n'écrit que là, plus les réglages de vos outils de code après votre accord",
+    );
+    expect(text).not.toContain("n'écrit rien d'autre");
+    for (const platform of ['macOS', 'Linux']) expect(text).toContain(platform);
+    expect(text).toContain('musl');
+  });
+
+  it('dit ce que le script vérifie : Node par son empreinte seulement, la CLI par sa taille et son empreinte', async () => {
+    const text = await readme();
+
+    expect(text).toContain(
+      "vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI",
+    );
+  });
+
+  it('a un paragraphe « Mises à jour » : au plus une fois par jour, depuis le serveur connecté, et --previous', async () => {
+    const text = await readme();
+    const section = text.slice(
+      text.indexOf('#### Mises à jour'),
+      text.indexOf('#### Ce que la commande écrit dans Claude Code'),
+    );
+
+    expect(section).not.toBe('');
+    expect(section).toContain('au plus une fois par jour');
+    expect(section).toContain('connexion.json');
+    expect(section).toContain('~/.leon/bin/leon update --previous');
+    expect(section).toContain("jusqu'à la mise à jour suivante (24 h)");
+    expect(section).toContain('si le serveur sert toujours la même version');
+    // Il fait partie de la section d'installation.
+    expect(text.indexOf('### Installer')).toBeLessThan(text.indexOf('#### Mises à jour'));
+    expect(text.indexOf('#### Mises à jour')).toBeLessThan(text.indexOf('### Ce qui est envoyé'));
+  });
+
+  it('explique la migration d’une installation d’avant : crochets remplacés, accord gardé, jeton du .env.local à révoquer', async () => {
+    const text = await readme();
+    const section = text.slice(
+      text.indexOf('### Installer'),
+      text.indexOf('### Ce qui est envoyé'),
+    );
+
+    expect(section).toContain('used to run Leon from');
+    // Le jeton du .env.local a été créé à la main : il est sous « Personal tokens », pas sous « Connected computers ».
+    expect(section).toContain('Settings › Personal tokens');
+    expect(section).not.toContain('Connected computers');
+    expect(section).toContain('.env.local');
+    expect(section).toMatch(/jamais lu|ne lit jamais/);
   });
 
   it("a la section « L'IA à jour chaque matin » et plus l'ancienne", async () => {
@@ -1031,6 +1592,13 @@ describe('le README', () => {
     expect(text).toContain('~/.leon/accord.json');
     expect(text).toContain('sans toucher à `settings.json`');
     expect(text).toContain('modèle de Claude Code');
+  });
+
+  it('le commentaire de briefing.ts décrit le crochet du lanceur, pas la ligne pnpm', async () => {
+    const source = await readFile(`${REPO_ROOT}src/cli/briefing.ts`, 'utf8');
+
+    expect(source).toContain('launcherHookCommand');
+    expect(source).not.toContain('Le crochet lance `hookCommand(');
   });
 
   it('le commentaire de capture-session.ts ne dit pas non plus que `claude -p` échappe au crochet', async () => {

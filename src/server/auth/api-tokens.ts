@@ -18,6 +18,14 @@ export type ApiTokenRow = {
 
 const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requête
 
+// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5) : Réglages les
+// range dans « Ordinateurs connectés » plutôt que dans les jetons personnels.
+// shortcut: reconnus au préfixe du nom (un jeton manuel nommé « Ordinateur : x » s'y range), une colonne kind dans
+// api_tokens le jour où ça gêne.
+export const COMPUTER_TOKEN_PREFIX = 'Ordinateur : ';
+export const isComputerToken = ({ name }: { name: string }): boolean =>
+  name.startsWith(COMPUTER_TOKEN_PREFIX);
+
 export function generateApiToken(): string {
   return `leon_${randomBytes(32).toString('base64url')}`;
 }
@@ -45,6 +53,30 @@ export async function createApiToken(
     .returning({ id: apiTokens.id });
   if (!row) throw new Error('jeton non créé');
   return { id: row.id, token, hint };
+}
+
+// Le jeton naît sur l'ordinateur de l'utilisateur (leon login) : on n'enregistre ici que celui qu'on nous présente,
+// et il n'est jamais renvoyé. null si ce jeton est déjà en base : l'unicité de token_hash fait l'usage unique du
+// code d'autorisation. ON CONFLICT plutôt qu'un 23505 rattrapé, qui abandonnerait une transaction en cours.
+export async function registerApiToken(
+  ctx: TenantContext,
+  name: string,
+  token: string,
+): Promise<{ id: string } | null> {
+  // Le message ne recopie rien du jeton.
+  if (!API_TOKEN_PATTERN.test(token)) throw new Error('jeton mal formé');
+  const [row] = await db
+    .insert(apiTokens)
+    .values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      name,
+      tokenHash: hashApiToken(token),
+      tokenHint: token.slice(-4),
+    })
+    .onConflictDoNothing({ target: apiTokens.tokenHash })
+    .returning({ id: apiTokens.id });
+  return row ?? null;
 }
 
 const ownedBy = (ctx: TenantContext) =>

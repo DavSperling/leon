@@ -3,13 +3,15 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   BriefingResponseSchema,
+  ComputerResponseSchema,
   ContextResponseSchema,
   SessionFactsPayloadSchema,
   ViewerProfileSchema,
 } from '@/capture/api-contract';
 import { extractClaudeCodeFacts } from '@/capture/session-facts';
 import { IngestResultSchema } from '@/capture/turn';
-import { createApiToken } from '@/server/auth/api-tokens';
+import { createApiToken, generateApiToken, hashApiToken } from '@/server/auth/api-tokens';
+import { signComputerCode } from '@/server/auth/computer-code';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { createTestTenant } from '@/test/fixtures';
@@ -32,6 +34,8 @@ const SERVED = {
   briefing: ['GET', {}],
   faits: ['POST', { body: {} }],
   contexte: ['POST', { body: {} }],
+  ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
+  jeton: ['DELETE', {}],
 } as const;
 // Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
 const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
@@ -124,13 +128,37 @@ describe('routes de l’API', () => {
       body: { projet: 'github.com/acme/leon', branche: null, session: 'session-courante' },
     });
 
-    expect([me.status, ingest.status, briefing.status, faits.status, contexte.status]).toEqual([
-      200, 202, 200, 202, 200,
-    ]);
-    expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
+    // `leon login` : le jeton que la CLI vient de tirer, enregistré contre le code signé que la page d'autorisation lui a rendu.
+    const computerToken = generateApiToken();
+    const ordinateurs = await apiRequest(API_PATHS.ordinateurs, {
+      token: computerToken,
+      body: {
+        code: signComputerCode({
+          e: hashApiToken(computerToken),
+          u: paul.userId,
+          t: paul.tenantId,
+        }),
+        nom: 'MacBook-Pro',
+      },
+    });
+
+    expect([
+      me.status,
+      ingest.status,
+      briefing.status,
+      faits.status,
+      contexte.status,
+      ordinateurs.status,
+    ]).toEqual([200, 202, 200, 202, 200, 201]);
+    const profile = ViewerProfileSchema.parse(await me.json());
+    expect(profile.userId).toBe(paul.userId);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
     expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
     expect(ContextResponseSchema.parse(await contexte.json()).texte).not.toBe('');
+    expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({
+      ordinateur: 'MacBook-Pro',
+      compte: profile.email,
+    });
   });
 });
 

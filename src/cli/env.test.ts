@@ -1,7 +1,9 @@
-import { homedir } from 'node:os';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { claudeConfigDir, parseServerEnv } from './env';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { connectionPath, writeConnection } from './connection';
+import { claudeConfigDir, parseServerEnv, resolveServerEnv } from './env';
 
 const TOKEN = `leon_${'a'.repeat(43)}`;
 
@@ -43,6 +45,90 @@ describe('parseServerEnv', () => {
       /LEON_TOKEN/,
     );
     expect(() => parseServerEnv({ LEON_URL: '', LEON_TOKEN: TOKEN })).toThrow(/LEON_URL/);
+  });
+});
+
+// E5 : LEON_URL et LEON_TOKEN, si les deux sont posées, passent avant ~/.leon/connexion.json. Toujours dans un HOME
+// temporaire : jamais le vrai ~/.leon.
+describe('resolveServerEnv', () => {
+  const SAVED_TOKEN = `leon_${'s'.repeat(43)}`;
+  const SAVED = { url: 'https://leon.example', token: SAVED_TOKEN };
+  let home: string;
+
+  beforeEach(async () => {
+    home = await mkdtemp(join(tmpdir(), 'leon-env-'));
+  });
+  afterEach(async () => {
+    await rm(home, { recursive: true, force: true });
+  });
+
+  const saveConnection = () =>
+    writeConnection(home, {
+      url: SAVED.url,
+      jeton: SAVED.token,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
+
+  it('les deux variables passent avant la connexion enregistrée', async () => {
+    await saveConnection();
+
+    expect(
+      await resolveServerEnv({ LEON_URL: 'http://localhost:3000', LEON_TOKEN: TOKEN }, home),
+    ).toEqual({ url: 'http://localhost:3000', token: TOKEN });
+  });
+
+  it('sans variables, la connexion enregistrée', async () => {
+    await saveConnection();
+
+    expect(await resolveServerEnv({}, home)).toEqual(SAVED);
+  });
+
+  it('une seule variable posée (ou une vide) ne compte pas : la connexion enregistrée', async () => {
+    await saveConnection();
+
+    expect(await resolveServerEnv({ LEON_URL: 'http://localhost:3000' }, home)).toEqual(SAVED);
+    expect(await resolveServerEnv({ LEON_TOKEN: TOKEN }, home)).toEqual(SAVED);
+    expect(
+      await resolveServerEnv({ LEON_URL: 'http://localhost:3000', LEON_TOKEN: '' }, home),
+    ).toEqual(SAVED);
+  });
+
+  it('ni variables ni connexion : l’erreur d’aujourd’hui, complétée par « leon login »', async () => {
+    const failure = await resolveServerEnv({}, home).catch((error: Error) => error);
+
+    expect(failure).toBeInstanceOf(Error);
+    const { message } = failure as Error;
+    expect(message).toContain(
+      'LEON_URL is missing or invalid (https, or http on localhost and 127.0.0.1).',
+    );
+    expect(message).toContain('LEON_TOKEN is missing or invalid');
+    expect(message).toContain(
+      'This computer is not connected: run `~/.leon/bin/leon login` (`pnpm leon login` from a clone).',
+    );
+  });
+
+  it('une connexion illisible vaut « pas connecté », sans recopier le fichier', async () => {
+    await saveConnection();
+    await writeFile(
+      connectionPath(home),
+      `{"url":"http://secret.example","jeton":"${SAVED_TOKEN}"`,
+    );
+
+    const failure = await resolveServerEnv({}, home).catch((error: Error) => error);
+
+    expect((failure as Error).message).toMatch(/run `~\/\.leon\/bin\/leon login`/);
+    expect((failure as Error).message).not.toContain('secret.example');
+    expect((failure as Error).message).not.toContain(SAVED_TOKEN);
+  });
+
+  it('deux variables posées mais invalides : l’erreur des variables, pas un repli silencieux sur la connexion', async () => {
+    await saveConnection();
+
+    await expect(
+      resolveServerEnv({ LEON_URL: 'http://localhost:3000', LEON_TOKEN: 'leon_trop-court' }, home),
+    ).rejects.toThrow(/LEON_TOKEN is missing or invalid/);
   });
 });
 

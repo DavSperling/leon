@@ -5,7 +5,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { consentPath, consentWithdrawn, factsConsent, writeConsent } from './consent';
+import { launcherHookCommand, launcherPath } from './hook-commands';
 import { installHooks, SETTINGS_FILE } from './install-hooks';
+import { launcherScript, writeLauncher } from './launcher';
 import { uninstallHooks } from './uninstall-hooks';
 
 // Le retrait des crochets et de l'accord (T08), toujours sur des dossiers temporaires : jamais le vrai ~/.claude ni
@@ -57,13 +59,18 @@ async function uninstall(): Promise<{ code: number; output: string }> {
   return { code, output: lines.join('\n') };
 }
 
+// Pour redonner l'accord : `leon setup` sous la forme installée (le lanceur est effacé avec le dernier outil : la commande
+// d'installation le remet), `pnpm leon installer-crochets` depuis un clone.
+const AGAIN =
+  'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).';
+
 const removedText = () =>
   [
     `Leon hooks removed from ${settingsPath}:`,
     `  SessionStart · ${START}`,
     `  SessionEnd · ${END}`,
     'Your other settings and hooks are not touched (their values and order stay; the formatting of the file may change). Claude Code reloads this file by itself.',
-    `Consent withdrawn in ${consentPath(home)}: Leon receives nothing more from Claude Code, not even from \`pnpm leon import-claude-code\`. To give it again, run \`pnpm leon installer-crochets\`.`,
+    `Consent withdrawn in ${consentPath(home)}: Leon receives nothing more from Claude Code, not even from \`leon import-claude-code\`. ${AGAIN}`,
     'The sessions already sent stay in Leon: there is no way to delete them yet.',
   ].join('\n');
 
@@ -233,6 +240,172 @@ describe('uninstallHooks : retirer les crochets de Leon', () => {
   );
 });
 
+describe('uninstallHooks : les crochets de la forme du lanceur (K9)', () => {
+  it('retire les deux crochets, et rend les réglages de l’utilisateur intacts, dans leur ordre', async () => {
+    const before = {
+      theme: 'dark',
+      hooks: {
+        PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: './garde.sh' }] }],
+        SessionStart: [
+          { matcher: 'startup', hooks: [{ type: 'command', command: 'echo bonjour' }] },
+        ],
+        Stop: [{ hooks: [{ type: 'command', command: 'say fini' }] }],
+      },
+    };
+    const home = "/Users/Léa O'Neil";
+    const start = launcherHookCommand(home, 'briefing');
+    const end = launcherHookCommand(home, 'capter-session');
+    await writeSettings({
+      ...before,
+      hooks: {
+        ...before.hooks,
+        SessionStart: [
+          ...before.hooks.SessionStart,
+          { hooks: [{ type: 'command', command: start, timeout: 10 }] },
+        ],
+        SessionEnd: [{ hooks: [{ type: 'command', command: end, timeout: 30 }] }],
+      },
+    });
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(`  SessionStart · ${start}`);
+    expect(run.output).toContain(`  SessionEnd · ${end}`);
+    const after = await readSettings();
+    expect(after).toEqual(before);
+    expect(Object.keys(after.hooks)).toEqual(['PreToolUse', 'SessionStart', 'Stop']);
+  });
+
+  it('une commande de l’utilisateur qui cite le lanceur n’est pas retirée', async () => {
+    const mine = [
+      `echo ${launcherHookCommand('/Users/amos', 'briefing')}`,
+      `${launcherHookCommand('/Users/amos', 'briefing')} && rm -rf /tmp/rien`,
+    ].map((command) => ({ type: 'command', command }));
+    await writeSettings({ hooks: { SessionStart: [{ hooks: mine }] } });
+
+    const run = await uninstall();
+
+    expect(run.output).toContain('nothing to remove');
+    expect((await readSettings()).hooks).toEqual({ SessionStart: [{ hooks: mine }] });
+  });
+});
+
+describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
+  const CLONE = { kind: 'clone', repoDir: '/Users/amos/leon' } as const;
+  const withCodex = async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(
+      consentPath(home),
+      '{"outils":{"codex":{"version":2,"installe_le":"2026-11-01T10:00:00.000Z"}}}',
+    );
+  };
+
+  it('plus aucun outil dans accord.json : le lanceur est effacé, et le dit', async () => {
+    await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
+    await writeConsent(home, 'claude_code', 2);
+    await writeLauncher(home, CLONE);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toBe(
+      removedText().replace(
+        'The sessions already sent',
+        `Launcher removed: ${launcherPath(home)} (no other tool uses it).\nThe sessions already sent`,
+      ),
+    );
+    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+  });
+
+  it('sans réglages à retirer non plus : l’accord est retiré, donc le lanceur ne sert plus', async () => {
+    await writeLauncher(home, CLONE);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+  });
+
+  it('un autre outil garde son accord : le lanceur reste, sans un mot de plus', async () => {
+    await withCodex();
+    await writeLauncher(home, CLONE);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).not.toContain('auncher');
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(launcherScript(home, CLONE));
+  });
+
+  it('l’autre outil est lui aussi retiré (version 0) : le lanceur part', async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(
+      consentPath(home),
+      '{"outils":{"codex":{"version":0,"installe_le":"2026-11-01T10:00:00.000Z"}}}',
+    );
+    await writeLauncher(home, CLONE);
+
+    await uninstall();
+
+    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+  });
+
+  it('une entrée d’un autre outil que le schéma ne connaît pas compte comme installée : le lanceur reste', async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(consentPath(home), '{"outils":{"codex":{"version":"2"}}}');
+    await writeLauncher(home, CLONE);
+
+    await uninstall();
+
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(launcherScript(home, CLONE));
+  });
+
+  it('des réglages illisibles gardent le lanceur : leurs crochets en ont encore besoin', async () => {
+    await writeSettings('{\n// mon thème\n"hooks": {}}');
+    await writeLauncher(home, CLONE);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(1);
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(launcherScript(home, CLONE));
+  });
+
+  it.skipIf(asRoot)('un accord qui ne s’écrit pas garde le lanceur', async () => {
+    await writeLauncher(home, CLONE);
+    await chmod(join(home, '.leon'), 0o500);
+    locked.push(join(home, '.leon'));
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(1);
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(launcherScript(home, CLONE));
+  });
+
+  it('un fichier qui n’est pas un lanceur de Leon est gardé, et le dit', async () => {
+    await mkdir(join(home, '.leon', 'bin'), { recursive: true });
+    await writeFile(launcherPath(home), '#!/bin/sh\necho à moi\n');
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(
+      `${launcherPath(home)} was left in place: it is not a launcher written by Leon.`,
+    );
+    expect(await readFile(launcherPath(home), 'utf8')).toBe('#!/bin/sh\necho à moi\n');
+  });
+
+  it('est idempotent : un second passage ne dit rien du lanceur', async () => {
+    await writeLauncher(home, CLONE);
+    await uninstall();
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toBe(nothingLeftText());
+  });
+});
+
 describe('uninstallHooks : l’accord passe en version 0', () => {
   it.each([2, 3])('depuis la version %i : version 0, en 0600', async (version) => {
     await writeConsent(home, 'claude_code', version);
@@ -326,8 +499,7 @@ function leon(args: string[], input = ''): Promise<Outcome> {
 }
 
 describe('leon retirer-crochets : la vraie commande', () => {
-  const WITHDRAWN =
-    'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.\n';
+  const WITHDRAWN = `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${AGAIN}\n`;
 
   it('retire les crochets et l’accord ; ensuite, ni le démarrage, ni la fin, ni l’import n’envoient rien', async () => {
     await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
@@ -396,5 +568,21 @@ describe('le README', () => {
 
     expect(text).toContain('pnpm leon retirer-crochets');
     expect(text).toContain('version 0');
+  });
+
+  it('dit que le lanceur est effacé avec le dernier outil, et comment tout retirer', async () => {
+    const text = await readFile(`${REPO_ROOT}README.md`, 'utf8');
+    const section = text.slice(text.indexOf('### Retirer les crochets'));
+
+    expect(section).toContain('~/.leon/bin/leon retirer-crochets');
+    expect(section).toMatch(/lanceur[^\n]*effacé avec le dernier outil/);
+    expect(section).toContain('leon logout');
+  });
+
+  it('l’aide de la commande dit la même chose : le lanceur part avec le dernier outil', async () => {
+    const source = await readFile(`${REPO_ROOT}src/cli/leon.ts`, 'utf8');
+    const help = source.slice(source.indexOf('retirer-crochets     Remove'));
+
+    expect(help).toContain('~/.leon/bin/leon goes too, once no tool is left that uses it');
   });
 });

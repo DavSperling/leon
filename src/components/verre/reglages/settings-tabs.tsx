@@ -21,11 +21,12 @@ const ICONS = { profil: UserRound, securite: ShieldCheck, equipe: Users, integra
 // Les ancres des sections (liens de Connexions, « un jeton créé ci-dessus ») ouvrent l'onglet qui les contient.
 const SECTIONS: Record<string, Tab> = {
   membres: 'equipe',
+  ordinateurs: 'integrations',
   jetons: 'integrations',
   'claude-code': 'integrations',
   extension: 'integrations',
 };
-const tabOf = (hash: string): Tab | undefined => {
+export const tabOf = (hash: string): Tab | undefined => {
   const anchor = decodeURIComponent(hash.slice(1));
   return TABS.find((tab) => tab === anchor) ?? SECTIONS[anchor];
 };

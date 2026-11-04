@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { DEPARTMENT_IDS, DEPARTMENTS } from '@/lib/onboarding';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
-import { defaultChecked, nextAfterTools, savedChecked, toolStates } from './tools-model';
+import {
+  codeToolsFirst,
+  defaultChecked,
+  nextAfterTools,
+  savedChecked,
+  toolStates,
+} from './tools-model';
 
 // Seuls les champs que le modèle lit : le reste du catalogue et des connexions n'entre pas en jeu.
 const tool = (id: string, privateRaw = false) => ({ id, privateRaw }) as unknown as CatalogItem;
@@ -176,5 +183,31 @@ describe('outils cochés', () => {
     expect(savedChecked(states, null)).toBeNull();
     expect(savedChecked(states, '{"github":true}')).toBeNull();
     expect(savedChecked(states, 'pas du json')).toBeNull();
+  });
+});
+
+// A5 : « Vos outils de code » vient en tête pour un service dont les outils conseillés comprennent GitHub ou GitLab.
+describe('codeToolsFirst', () => {
+  const catalog = ['github', 'gitlab', 'linear', 'slack', 'drive'].map((id) => tool(id));
+  const firstFor = (recommended: readonly string[]) =>
+    codeToolsFirst(toolStates(catalog, [], recommended as never));
+
+  it('en tête quand GitHub ou GitLab est conseillé, à la fin sinon', () => {
+    expect(firstFor(['github', 'linear'])).toBe(true);
+    expect(firstFor(['linear', 'gitlab'])).toBe(true);
+    expect(firstFor(['linear', 'slack'])).toBe(false);
+    expect(firstFor([])).toBe(false);
+  });
+
+  it('suit les outils conseillés de chaque service : l’ingénierie et la data en tête, les autres à la fin', () => {
+    const first = DEPARTMENT_IDS.filter((department) => firstFor(DEPARTMENTS[department].tools));
+
+    expect(first).toEqual(['engineering', 'data']);
+  });
+
+  it('un GitHub branché ou coché ne change rien : seul le conseil compte', () => {
+    const states = toolStates(catalog, [conn('github', { isCreator: true })], ['linear'] as never);
+
+    expect(codeToolsFirst(states)).toBe(false);
   });
 });

@@ -18,6 +18,7 @@ import {
   fetchStartText,
   runBriefing,
 } from './briefing';
+import { writeConnection } from './connection';
 import { CONSENT_WITHDRAWN_MESSAGE, writeConsent } from './consent';
 import type { GitRunner } from './project-key';
 
@@ -228,13 +229,24 @@ describe('runBriefing', () => {
   let agreed: string;
   let notAgreed: string;
   let withdrawn: string;
+  let connected: string; // l'accord en version 2, et une connexion de `leon login`
+  const SAVED = { url: 'https://leon.example', token: `leon_${'s'.repeat(43)}` };
   beforeAll(async () => {
     homes = await mkdtemp(join(tmpdir(), 'leon-point-'));
     agreed = join(homes, 'accord');
     notAgreed = join(homes, 'sans-accord');
     withdrawn = join(homes, 'retire');
+    connected = join(homes, 'connecte');
     await writeConsent(agreed, 'claude_code', 2);
     await writeConsent(withdrawn, 'claude_code', 0);
+    await writeConsent(connected, 'claude_code', 2);
+    await writeConnection(connected, {
+      url: SAVED.url,
+      jeton: SAVED.token,
+      ordinateur: 'MacBook-Pro',
+      espace: 'Acme',
+      cree_le: '2026-11-03T10:00:00.000Z',
+    });
   });
   afterAll(() => rm(homes, { recursive: true, force: true }));
   const hookJson = (cwd: string) =>
@@ -254,6 +266,7 @@ describe('runBriefing', () => {
     branches?: Record<string, string>;
     git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
+    scheduleUpdate?: () => Promise<unknown>;
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -274,6 +287,7 @@ describe('runBriefing', () => {
         fetch: asFetch(fetchImpl),
         out: (text) => out.push(text),
         err: (text) => err.push(text),
+        ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -477,6 +491,37 @@ describe('runBriefing', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(out).toEqual([]);
     expect(err.join('\n')).toMatch(/LEON_URL/);
+    expect(err.join('\n')).toMatch(/run `~\/\.leon\/bin\/leon login`/);
+  });
+
+  it('sans LEON_URL ni LEON_TOKEN, prend la connexion de leon login (~/.leon/connexion.json)', async () => {
+    const { run, out, err, fetchImpl } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      env: {},
+      home: connected,
+    });
+
+    expect(await run()).toBe(0);
+
+    const [address, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(address.origin).toBe(SAVED.url);
+    expect(init.headers).toMatchObject({ Authorization: `Bearer ${SAVED.token}` });
+    expect(out).toEqual([BLOCK]);
+    expect(err).toEqual([]);
+  });
+
+  it('LEON_URL et LEON_TOKEN, posées toutes les deux, passent avant la connexion enregistrée', async () => {
+    const { run, fetchImpl } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      env: serverEnv,
+      home: connected,
+    });
+
+    expect(await run()).toBe(0);
+
+    const [address, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(address.origin).toBe(env.url);
+    expect(init.headers).toMatchObject({ Authorization: `Bearer ${env.token}` });
   });
 
   it('accord retiré : code 0, le seul message du retrait, sans rien demander ni lancer git', async () => {
@@ -491,6 +536,78 @@ describe('runBriefing', () => {
     expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(git).not.toHaveBeenCalled();
+  });
+
+  // La mise à jour automatique (S12, self-update.ts) : `scheduleUpdate` décide (24 h, forme clone) et lance le processus
+  // détaché ; le crochet ne fait que l'appeler, une fois sa sortie écrite, et ne dépend jamais de ce qui en sort.
+  describe('mise à jour automatique', () => {
+    const hook = () => Readable.from([hookJson('/projets/leon')]);
+
+    it('est lancée une fois le bloc écrit, et le crochet rend la même sortie', async () => {
+      const calls: string[] = [];
+      let seen: string[] = [];
+      const harness = setup({
+        stdin: hook(),
+        scheduleUpdate: async () => {
+          calls.push('update');
+          seen = [...harness.out];
+        },
+      });
+
+      expect(await harness.run()).toBe(0);
+
+      expect(calls).toEqual(['update']);
+      expect(seen).toEqual([BLOCK]);
+      expect(harness.out).toEqual([BLOCK]);
+      expect(harness.err).toEqual([]);
+    });
+
+    it('est lancée aussi quand le serveur ne répond pas : le message du crochet ne change pas', async () => {
+      const scheduleUpdate = vi.fn(async () => {});
+      const { run, out, err } = setup({
+        stdin: hook(),
+        fetch: fetchReturning(new Response('{}', { status: 500 })),
+        scheduleUpdate,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(scheduleUpdate).toHaveBeenCalledTimes(1);
+      expect(out).toEqual([]);
+      expect(err).toEqual(['Leon: briefing unavailable (server unreachable or token refused).']);
+    });
+
+    it.each([
+      ['une erreur asynchrone', async () => Promise.reject(new Error('boom'))],
+      [
+        'une erreur synchrone',
+        () => {
+          throw new Error('boom');
+        },
+      ],
+    ])('%s ne change ni la sortie ni le code', async (_name, scheduleUpdate) => {
+      const { run, out, err } = setup({
+        stdin: hook(),
+        scheduleUpdate: scheduleUpdate as () => Promise<unknown>,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([BLOCK]);
+      expect(err).toEqual([]);
+    });
+
+    it.each([
+      ['sans connexion', () => ({ env: {} })],
+      ['accord retiré', () => ({ home: withdrawn })],
+      ['sous Cursor', () => ({ env: { ...serverEnv, CURSOR_VERSION: '1.7.2' } })],
+    ])('n’est pas lancée %s', async (_name, over) => {
+      const scheduleUpdate = vi.fn(async () => {});
+
+      await setup({ stdin: hook(), scheduleUpdate, ...over() }).run();
+
+      expect(scheduleUpdate).not.toHaveBeenCalled();
+    });
   });
 
   // Les crochets de Claude Code lancés par un autre outil (T06) : Cursor qui les reprend, Codex qui les a recopiés

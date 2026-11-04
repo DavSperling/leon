@@ -1,6 +1,6 @@
-import { access, readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { homedir, hostname } from 'node:os';
+import { isAbsolute, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -13,7 +13,7 @@ import {
   readHookStdin,
 } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
-import { claudeConfigDir, parseServerEnv, type ServerEnv } from './env';
+import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import {
   countOf,
   createFactsSender,
@@ -24,19 +24,52 @@ import {
   parseSince,
 } from './import-claude-code';
 import { installHooks } from './install-hooks';
+import {
+  type LoginDeps,
+  openInBrowser,
+  parseLoginArgs,
+  readTokenFromInput,
+  runLogin,
+  runLogout,
+} from './login';
 import { gitInDirectory } from './project-key';
+import {
+  NODE_DIST,
+  nodePlatform,
+  runUpdate,
+  scheduleUpdate,
+  startBackgroundUpdate,
+} from './self-update';
+import { ensureLauncher, isLeonRepo, runSetup } from './setup';
 import { uninstallHooks } from './uninstall-hooks';
 
-// Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts).
+// Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts). Cette valeur ne vaut que sous la
+// forme clone : dans le fichier construit (vite.cli.config.ts), import.meta.url pointe vers ~/.leon/cli/<version>/,
+// et `installer-crochets` refuse alors ce dossier tant que --depot n'en désigne pas un. `leon setup` n'en dépend pas :
+// sa forme clone vient de --depot seul.
 const CLI_REPO_DIR = resolve(fileURLToPath(new URL('../../', import.meta.url)));
+
+// Injectée par la construction (`define`, vite.cli.config.ts) ; absente sous le clone, qui lance le TypeScript.
+declare const __LEON_CLI_VERSION__: string | undefined;
+const CLI_VERSION = typeof __LEON_CLI_VERSION__ === 'string' ? __LEON_CLI_VERSION__ : 'dev';
 
 // Après `leon retirer-crochets`, Claude Code est en version 0 dans l'accord : plus rien ne part, même d'un crochet
 // resté dans les réglages d'un projet (C7). `briefing` le vérifie lui-même (briefing.ts).
 const withdrawn = () => consentWithdrawn(homedir(), 'claude_code');
 
-const HELP = `Usage: pnpm leon <command>
+const HELP = `Usage: leon <command>
+       (~/.leon/bin/leon <command> once Leon is installed; pnpm leon <command> from a clone)
 
 Commands:
+  setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
+                       login) if it is not yet, then put the hooks in the code tools found here (Claude Code; Codex,
+                       Cursor and Gemini are detected but not supported yet), after showing what is sent and asking.
+                       Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
+                       in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
+      --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
+      --depot <path>       run Leon from this clone (pnpm) instead of the installed copy: the launcher is written in
+                           its clone form
+      --yes                do not ask for confirmation (a launcher that points to a clone is still asked about)
   import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
@@ -49,16 +82,33 @@ Commands:
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
-  installer-crochets   Write the SessionStart (briefing) and SessionEnd (capter-session) hooks into Claude Code's
-                       settings (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in
-                       ~/.leon/accord.json, after confirmation (only the consent when the hooks are already there)
-      --oui                do not ask for confirmation
-      --depot <path>       Leon repository named in the hook commands (default: the one running this command)
+  login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
+                       in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
+                       set, take precedence)
+      --url <address>      the Leon server (default: LEON_URL, then the saved connection)
+      --with-token         paste a token created in Settings instead (for a browser on another computer)
+  logout               Revoke this computer's token and remove ~/.leon/connexion.json
+  update               Install the latest version of Leon if the server of leon login has one: its command line and, when it changed,
+                       Node. The old version is kept for leon update --previous. Leon also does it on its own, in
+                       the background, at most once a day (when a session starts, after briefing has answered).
+                       It touches neither your consent, your connection, the launcher nor the hooks. Not from a
+                       clone: a clone is updated with git
+      --previous           go back to the previous version of the command line (no network)
+      --background         write nothing on the terminal (what briefing runs)
+  installer-crochets   For a clone: write the clone form of the launcher ~/.leon/bin/leon, then the SessionStart
+                       (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
+                       (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
+                       after confirmation (only the consent when the hooks are already there)
+      --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
+      --depot <path>       Leon repository the launcher runs (default: the one running this command)
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
-                       ~/.leon/accord.json: from then on, nothing is sent from Claude Code
+                       ~/.leon/accord.json: from then on, nothing is sent from Claude Code. The launcher
+                       ~/.leon/bin/leon goes too, once no tool is left that uses it
       --outil <tool>       the tool to remove: claude_code (the only one for now, and the default)
+  --version            Print the version of this CLI ("dev" when run from a clone)
 
-Real uploads (import-claude-code without --dry-run), briefing and capter-session need LEON_URL and LEON_TOKEN.`;
+Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
+LEON_URL and LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'to send' : 'sent';
@@ -80,7 +130,7 @@ async function runImport(args: string[]): Promise<number> {
   const nothingSent = async (): Promise<never> => {
     throw new Error('Nothing is sent with --dry-run.');
   };
-  const env = dryRun ? null : parseServerEnv(process.env);
+  const env = dryRun ? null : await resolveServerEnv(process.env, homedir());
   // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts), et seulement ceux des
   // fichiers modifiés après lui.
   const accord = await factsConsent(homedir(), 'claude_code');
@@ -125,6 +175,19 @@ async function runBriefingCommand(): Promise<number> {
       fetch,
       out: console.log,
       err: console.error,
+      // La mise à jour automatique (S12) : décidée et lancée détachée, une fois le bloc écrit.
+      scheduleUpdate: () =>
+        scheduleUpdate({
+          home: homedir(),
+          cliVersion: CLI_VERSION,
+          now: () => new Date(),
+          start: () =>
+            startBackgroundUpdate({
+              node: process.execPath,
+              script: process.argv[1],
+              home: homedir(),
+            }),
+        }),
     });
   } catch {
     console.error('Leon: briefing unavailable (unexpected error).');
@@ -148,9 +211,9 @@ async function runCaptureSession(args: string[]): Promise<number> {
     }
     let env: ServerEnv;
     try {
-      env = parseServerEnv(process.env);
+      env = await resolveServerEnv(process.env, homedir());
     } catch (error) {
-      // Les messages de parseServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
+      // Les messages de resolveServerEnv sont fixes : ils ne recopient jamais la valeur reçue.
       console.error(`Leon: ${error instanceof Error ? error.message : 'invalid configuration.'}`);
       return 0;
     }
@@ -210,20 +273,23 @@ async function runInstallHooks(args: string[]): Promise<number> {
     options: { oui: { type: 'boolean' }, depot: { type: 'string' } },
   });
   const repoDir = values.depot ? resolve(values.depot) : CLI_REPO_DIR;
-  const isLeonRepo = await access(join(repoDir, 'src', 'cli', 'leon.ts')).then(
-    () => true,
-    () => false,
-  );
-  if (!isLeonRepo) throw new Error('--depot: this folder is not a Leon repository.');
+  if (!(await isLeonRepo(repoDir))) {
+    throw new Error(
+      values.depot
+        ? '--depot: this folder is not a Leon repository.'
+        : 'This Leon does not run from a clone: pass --depot <path> to name your Leon repository.',
+    );
+  }
   // La commande tourne dans le dépôt de Leon (`pnpm --dir`), pas dans le dossier où l'utilisateur a posé la variable.
   const configDir = claudeConfigDir(process.env);
   if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
   const asker = createAsker();
   try {
-    return await installHooks(
-      { repoDir, configDir, home: homedir(), assumeYes: values.oui ?? false },
-      { out: console.log, err: console.error, ask: asker.ask },
-    );
+    // Les crochets appellent le lanceur (K9) : sous la forme clone, il lance pnpm dans ce dépôt (setup.ts).
+    const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
+    const assumeYes = values.oui ?? false;
+    if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
+    return await installHooks({ repoDir, configDir, home: io.home, assumeYes }, io);
   } finally {
     asker.close();
   }
@@ -243,12 +309,112 @@ async function runUninstallHooks(args: string[]): Promise<number> {
   return uninstallHooks({ configDir, home: homedir() }, { out: console.log, err: console.error });
 }
 
+const loginDeps = (signal: AbortSignal): LoginDeps => ({
+  home: homedir(),
+  env: process.env,
+  fetch,
+  open: openInBrowser,
+  hostname: hostname(),
+  out: console.log,
+  err: console.error,
+  readToken: () => readTokenFromInput(process.stdin, process.stdout),
+  signal,
+});
+
+// `leon login` : Ctrl+C annule l'attente du navigateur sans rien écrire. Sans terminal, --with-token lit une ligne.
+async function runLoginCommand(args: string[]): Promise<number> {
+  const options = parseLoginArgs(args);
+  const abort = new AbortController();
+  process.once('SIGINT', () => abort.abort());
+  try {
+    return await runLogin(options, loginDeps(abort.signal));
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
+// `leon setup` : la même connexion par le navigateur, mais l'entrée standard reste ouverte pour les questions qui
+// suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin.
+async function loginForSetup(url: string | undefined): Promise<number> {
+  const abort = new AbortController();
+  const cancel = () => abort.abort();
+  process.once('SIGINT', cancel);
+  try {
+    return await runLogin({ url, withToken: false }, loginDeps(abort.signal));
+  } finally {
+    process.off('SIGINT', cancel);
+  }
+}
+
+async function runSetupCommand(args: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args,
+    options: { url: { type: 'string' }, depot: { type: 'string' }, yes: { type: 'boolean' } },
+  });
+  const asker = createAsker();
+  try {
+    return await runSetup(
+      { url: values.url, depot: values.depot, yes: values.yes ?? false },
+      {
+        home: homedir(),
+        env: process.env,
+        out: console.log,
+        err: console.error,
+        ask: asker.ask,
+        login: loginForSetup,
+        fetch,
+      },
+    );
+  } finally {
+    asker.close();
+  }
+}
+
+// `leon update` : `--background` (lancé par `leon briefing`) n'écrit rien sur le terminal.
+async function runUpdateCommand(args: string[]): Promise<number> {
+  const { values } = parseArgs({
+    args,
+    options: { background: { type: 'boolean' }, previous: { type: 'boolean' } },
+  });
+  const quiet = values.background ?? false;
+  const code = await runUpdate(
+    { previous: values.previous ?? false, background: quiet },
+    {
+      home: homedir(),
+      cliVersion: CLI_VERSION,
+      fetch,
+      platform: nodePlatform(process.platform, process.arch),
+      nodeDist: NODE_DIST,
+      now: () => new Date(),
+      out: quiet ? () => {} : console.log,
+      err: quiet ? () => {} : console.error,
+    },
+  );
+  return quiet ? 0 : code; // personne n'attend le code d'une mise à jour de fond
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...args] = argv;
+  if (command === '--version') {
+    console.log(CLI_VERSION);
+    return 0;
+  }
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
+    if (command === 'setup') return await runSetupCommand(args);
+    if (command === 'update') return await runUpdateCommand(args);
+    if (command === 'login') return await runLoginCommand(args);
+    if (command === 'logout') {
+      return await runLogout({
+        home: homedir(),
+        env: process.env,
+        fetch,
+        out: console.log,
+        err: console.error,
+      });
+    }
     if (command === 'installer-crochets') return await runInstallHooks(args);
     if (command === 'retirer-crochets') return await runUninstallHooks(args);
   } catch (error) {

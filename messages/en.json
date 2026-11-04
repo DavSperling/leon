@@ -591,6 +591,13 @@
     "revoke": "Revoke",
     "revokeNamed": "Revoke “{name}”?",
     "revokeDescription": "Tools using it will lose access.",
+    "computersTitle": "Connected computers",
+    "computersDescription": "Each computer connected here sends Leon the coding sessions you accepted: the text of the exchanges and the actions of the session, with secrets masked.",
+    "computersLead": "To connect a computer, open a terminal on it and paste this command. Your browser will open so you can authorize it.",
+    "yourComputers": "Your computers",
+    "noComputers": "No computer connected yet.",
+    "computerRevoked": "Computer disconnected.",
+    "computerRevokeDescription": "This computer will stop sending your sessions to Leon. To connect it again, run ~/.leon/bin/leon login on it, or paste the command above again.",
     "tokenCreated": "Token created",
     "pasteToken": "Paste it into the tool you’re connecting.",
     "copyToken": "Copy it now; it won’t be shown again.",
@@ -1429,7 +1436,12 @@
       "alreadyTitle": "Already connected for your workspace",
       "connectOwn": "Connect my account",
       "ownConnected": "Your account is connected",
-      "ownHint": "Optional. To act under your own name, for example on GitHub."
+      "ownHint": "Optional. To act under your own name, for example on GitHub.",
+      "code": {
+        "title": "Your coding tools",
+        "lead": "Open a terminal on your computer and paste this command. Your browser will open so you can authorize this computer.",
+        "whatLeaves": "What gets sent"
+      }
     },
     "steps": {
       "label": "Onboarding progress",
@@ -1444,6 +1456,23 @@
       "openChat": "Open Chat",
       "ownerReady": "Setting up your workspace",
       "memberReady": "Your workspace is ready"
+    }
+  },
+  "computer": {
+    "authorize": {
+      "title": "Connect this computer",
+      "question": "Authorize this computer to send your coding sessions to Leon, in the {space} workspace?",
+      "warning": "If you didn’t just run the command yourself in a terminal, cancel.",
+      "allow": "Authorize",
+      "cancel": "Cancel",
+      "invalidTitle": "Link not valid",
+      "invalidText": "This authorization link is incomplete or malformed. Run leon login again in your terminal."
+    },
+    "connected": {
+      "title": "Computer connected",
+      "done": "All set. You can close this tab and go back to the terminal.",
+      "refusedTitle": "Connection cancelled",
+      "refused": "Nothing was authorized."
     }
   }
 }

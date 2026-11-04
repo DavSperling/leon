@@ -9,6 +9,7 @@ import {
   readOnboardingMember,
 } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
+import { installCommand } from '@/server/cli/install-command';
 import { listCatalog } from '@/server/connectors/catalog';
 import { listConnections } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
@@ -22,6 +23,7 @@ vi.mock('@/server/auth/onboarding', () => ({
   spaceRole: (role: string) =>
     role.includes('owner') ? 'owner' : role.includes('admin') ? 'admin' : 'member',
 }));
+vi.mock('@/server/cli/install-command', () => ({ installCommand: vi.fn() }));
 vi.mock('@/server/connectors/catalog', () => ({ listCatalog: vi.fn() }));
 vi.mock('@/server/connectors/connections', () => ({ listConnections: vi.fn() }));
 vi.mock('@/server/connectors/crypto', () => ({ connectorsKey: vi.fn() }));
@@ -81,6 +83,7 @@ beforeEach(() => {
   vi.mocked(listCatalog).mockReturnValue([catalogItem('github'), catalogItem('airtable')] as never);
   vi.mocked(listConnections).mockResolvedValue([]);
   vi.mocked(connectorsKey).mockReturnValue(Buffer.alloc(32));
+  vi.mocked(installCommand).mockReturnValue('curl -fsSL https://leon.example/install | sh');
 });
 
 describe('page de l’étape Vos outils', () => {
@@ -232,6 +235,15 @@ describe('page de l’étape Vos outils', () => {
     vi.mocked(readOnboardingMember).mockResolvedValue(member({ department: 'toString' }));
     const unknown = (await render()).props.states as { recommended: boolean }[];
     expect(unknown.some((s) => s.recommended)).toBe(false);
+  });
+
+  // S13 : la commande est bâtie côté serveur (installCommand) ; sans adresse de serveur acceptée, le bloc ne s'affiche pas.
+  it('donne à l’étape la commande d’installation bâtie côté serveur, ou null quand l’adresse est refusée', async () => {
+    expect((await render()).props.codeCommand).toBe('curl -fsSL https://leon.example/install | sh');
+
+    vi.mocked(installCommand).mockReturnValue(null);
+
+    expect((await render()).props.codeCommand).toBeNull();
   });
 
   it('sans clé de chiffrement, on ne peut pas brancher', async () => {

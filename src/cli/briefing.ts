@@ -11,10 +11,11 @@
 //   `cursor_version` pour reconnaître un autre outil (isOtherToolHook, capture-session.ts).
 // - Pour SessionStart, Claude Code ajoute la sortie standard au contexte de la session : seul le bloc y passe ; les
 //   messages vont sur la sortie d'erreur, que Claude ne voit pas quand le code de sortie vaut 0.
-// - Le crochet lance `hookCommand(<dépôt de Leon>, 'briefing')` (hook-commands.ts : `pnpm -s
-//   --config.verify-deps-before-run=false --dir <dépôt> leon briefing`) : le dossier du processus est alors le dépôt
-//   de Leon, pas le projet. Le projet se calcule donc sur le `cwd` du JSON, sinon sur INIT_CWD (que pnpm pose au
-//   dossier d'où il a été lancé, `--dir` ou non), sinon sur le dossier du processus (voir briefingDirectory).
+// - Le crochet lance le lanceur (`launcherHookCommand(<dossier personnel>, 'briefing')`, hook-commands.ts : `~/.leon/bin/leon
+//   briefing`, K9). Sous la forme installée, il lance le Node et la CLI posés par Leon ; sous la forme clone, `pnpm -s
+//   --config.verify-deps-before-run=false --dir <dépôt> leon briefing` : le dossier du processus est alors le dépôt de
+//   Leon, pas le projet. Le projet se calcule donc sur le `cwd` du JSON, sinon sur INIT_CWD (que pnpm pose au dossier
+//   d'où il a été lancé, `--dir` ou non), sinon sur le dossier du processus (voir briefingDirectory).
 // - La sortie standard d'un crochet est plafonnée à 10 000 caractères par Claude Code : le serveur rend un bloc de
 //   8 000 octets au plus (CONTEXT_MAX_BYTES), et un point qui tient en dessous (BRIEFING_RENDER_MAX_CHARS).
 //
@@ -37,7 +38,7 @@ import {
 } from '../capture/api-contract';
 import { isOtherToolHook, readHookStdin } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
-import { parseServerEnv, type ServerEnv } from './env';
+import { resolveServerEnv, type ServerEnv } from './env';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
 
@@ -154,6 +155,9 @@ export type BriefingCommandDeps = {
   fetch: typeof fetch;
   out: (text: string) => void;
   err: (text: string) => void;
+  // La mise à jour automatique (scheduleUpdate, self-update.ts) : elle décide si elle est due et lance le processus
+  // détaché. Absente, rien n'est lancé.
+  scheduleUpdate?: () => Promise<unknown>;
 };
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
@@ -169,7 +173,7 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       deps.err(CONSENT_WITHDRAWN_MESSAGE);
       return 0;
     }
-    const server = parseServerEnv(deps.env);
+    const server = await resolveServerEnv(deps.env, deps.home);
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
     if ((await factsConsent(deps.home, 'claude_code')) === null) {
@@ -192,8 +196,15 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     } else {
       deps.out(startOutput('claude_code', text));
     }
+    // Une fois la sortie écrite, la mise à jour automatique (S12) : détachée, elle n'est jamais attendue, et ni son
+    // échec ni sa lenteur ne changent la sortie du crochet.
+    try {
+      await deps.scheduleUpdate?.();
+    } catch {
+      // Rien à dire : le crochet a rendu ce qu'on lui demandait.
+    }
   } catch (error) {
-    // Messages fixes (parseServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
+    // Messages fixes (resolveServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
     deps.err(`Leon: ${error instanceof Error ? error.message : 'briefing unavailable.'}`);
   }
   return 0;

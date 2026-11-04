@@ -185,19 +185,51 @@ Sur GitHub, Leon ne relève que les dépôts que l'équipe partage (décision D 
 
 Deux crochets de Claude Code font le travail, sans rien demander en séance :
 
-- **au démarrage d'une session** (`SessionStart`), `pnpm leon briefing` affiche vos dernières sessions sur ce dépôt (4 au plus, sur 7 jours, la branche courante d'abord : branche, PR, commits, fichiers, reste à faire ; avec l'accord en version 2 seulement, voir plus bas), puis le point du matin du projet du dossier courant : ce qu'on a fait dans ses dernières sessions, ce qui a bougé depuis (le dépôt, les tickets, les messages qui nous mentionnent) et ce qui reste ouvert, avec ses sources, en 250 mots au plus. Claude Code l'ajoute au contexte de la session. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « No briefing for this project yet: it will be ready at your next session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session (3 secondes au serveur au plus) et sort toujours avec le code 0.
-- **à la fin d'une session** (`SessionEnd`), `pnpm leon capter-session` envoie la conversation et ses gestes à Leon avec son projet, pour qu'ils servent au bloc de démarrage, au point du matin et à la recherche. Elle sort aussi toujours avec le code 0.
+- **au démarrage d'une session** (`SessionStart`), `leon briefing` affiche vos dernières sessions sur ce dépôt (4 au plus, sur 7 jours, la branche courante d'abord : branche, PR, commits, fichiers, reste à faire ; avec l'accord en version 2 seulement, voir plus bas), puis le point du matin du projet du dossier courant : ce qu'on a fait dans ses dernières sessions, ce qui a bougé depuis (le dépôt, les tickets, les messages qui nous mentionnent) et ce qui reste ouvert, avec ses sources, en 250 mots au plus. Claude Code l'ajoute au contexte de la session. Le serveur prépare le point à l'avance, avec le modèle réglé (`ANTHROPIC_API_KEY`) : la commande affiche le dernier point prêt, sinon « No briefing for this project yet: it will be ready at your next session. », ou, sans modèle sur le serveur, un message qui le dit. Elle ne bloque jamais la session (3 secondes au serveur au plus) et sort toujours avec le code 0.
+- **à la fin d'une session** (`SessionEnd`), `leon capter-session` envoie la conversation et ses gestes à Leon avec son projet, pour qu'ils servent au bloc de démarrage, au point du matin et à la recherche. Elle sort aussi toujours avec le code 0.
+
+Les commandes s'écrivent `leon <commande>` : une fois Leon installé, c'est `~/.leon/bin/leon <commande>` (Leon n'ajoute rien à votre `PATH`) ; depuis un clone de Leon, `pnpm leon <commande>`.
 
 ### Installer
 
+Une seule commande, sur l'ordinateur où tourne Claude Code (l'adresse est celle de votre Leon) :
+
 ```bash
-pnpm leon installer-crochets          # montre ce qui sera écrit, puis demande confirmation [y/N]
-pnpm leon installer-crochets --oui    # écrit sans demander
+curl -fsSL <adresse de Leon>/install | sh
 ```
 
-Avant : `LEON_URL` et `LEON_TOKEN` dans le `.env.local` du dépôt (voir `.env.example` ; le jeton se crée dans Réglages). Les crochets les lisent là à chaque lancement ; sans eux, ils ne font rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas. La commande d'installation prévient quand ces deux réglages manquent ou sont invalides (elle ne recopie jamais leurs valeurs). Les crochets lancent `pnpm` puis `node` (24 au moins) avec le `PATH` de Claude Code, qui n'est pas toujours celui de votre terminal quand il est lancé depuis un éditeur ou une application. `pnpm` doit être de la version du champ `packageManager` de `package.json` : une autre version irait chercher la bonne sur le réseau avant de lancer la commande, ce qui dépasse le délai du crochet. Lancer la commande depuis le **clone principal** de Leon : un dossier de travail Git temporaire (`.claude/worktrees/…`) est supprimé après la fusion, et les crochets cesseraient de marcher (la commande prévient). `--depot <chemin>` désigne un autre dépôt.
+Ni clone, ni pnpm, ni Node à installer d'abord : la commande pose tout dans `~/.leon` et n'écrit que là, plus les réglages de vos outils de code après votre accord ; rien dans votre `PATH` ni votre profil de shell. Dans l'ordre :
 
-La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du dossier `CLAUDE_CONFIG_DIR` quand cette variable est posée), avec le chemin absolu du dépôt à la place de `/chemin/vers/leon` :
+1. elle télécharge le Node officiel de la version que Leon a épinglée et la CLI de Leon (un seul fichier, servi par Leon), vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI, puis les pose dans `~/.leon/runtime` et `~/.leon/cli`. Plateformes : macOS (Apple silicon et Intel) et Linux (x64 et arm64) avec la glibc. Windows et Linux musl (Alpine) sont refusés avec un message, avant d'écrire quoi que ce soit ;
+2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code ; Codex, Cursor et Gemini sont reconnus mais pas encore pris en charge : rien n'est écrit chez eux), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
+
+On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'est pas réécrit (`--yes` ne demande rien, sauf pour remplacer un lanceur qui n'est pas celui de la forme installée ; `--url <adresse>` désigne le serveur de `leon login`). Relancer la commande d'installation met aussi la CLI à la version que sert Leon. `leon setup` relance aussi `leon login` (et le dit) quand l'ordinateur n'est plus connecté : jeton révoqué dans Réglages, `--url` d'un autre serveur que celui de la connexion, ou seulement `LEON_URL` et `LEON_TOKEN` posées dans le terminal (un Claude Code lancé depuis le Dock ne les voit pas). Un serveur qui ne répond pas ne bloque pas l'installation.
+
+#### Connecter l'ordinateur
+
+`leon setup` lance la connexion tout seul. On peut aussi la faire ou la défaire à la main :
+
+```bash
+~/.leon/bin/leon login --url https://<votre-leon>   # ouvre le navigateur ; sans --url : LEON_URL, puis la connexion enregistrée
+~/.leon/bin/leon logout                             # révoque le jeton de cet ordinateur et efface la connexion
+```
+
+`leon login` ouvre la page d'autorisation de Leon (connexion si besoin, puis « Autoriser »). La commande tire un jeton sur votre ordinateur, n'en montre que l'empreinte au navigateur, reçoit le retour sur `127.0.0.1` et écrit `~/.leon/connexion.json` (en 0600) : l'adresse du serveur et le jeton, que lisent les crochets et `import-claude-code`. Elle attend le navigateur 5 minutes au plus ; Ctrl+C l'annule sans rien écrire. Le jeton ne passe jamais dans une adresse, un argument de commande ni un message. Chaque ordinateur a son jeton (« Ordinateur : <nom> » dans Réglages) : se reconnecter révoque l'ancien. Deux cas demandent autre chose :
+
+- **Le navigateur n'est pas sur cet ordinateur** (SSH, conteneur distant) : le retour vers `127.0.0.1` n'arrive jamais. `leon login --with-token` colle à la place un jeton créé dans Réglages (sans écho dans un terminal, sinon une ligne lue sur l'entrée) et le vérifie auprès du serveur.
+- **Vous avez dû créer un espace ou réinitialiser votre mot de passe en chemin** : l'autorisation en cours est perdue, relancez `leon login`.
+
+Une limite : l'adresse d'autorisation (port, `etat`, empreinte) est lisible par les autres comptes d'une machine partagée (sous Linux, dans `/proc/<pid>/cmdline`), et l'un d'eux pourrait l'autoriser avec son propre compte Leon, ce qui enregistrerait votre jeton sur le sien. `leon login` affiche donc le compte connecté (« Connected to <espace> as <compte> ») : sur une machine où d'autres comptes sont ouverts en même temps, vérifiez-le, ou utilisez `leon login --with-token`.
+
+`LEON_URL` et `LEON_TOKEN`, si les deux sont posées (l'environnement, ou le `.env.local` d'un clone : voir `.env.example`), passent avant la connexion enregistrée : c'est le réglage des essais et de qui développe sur Leon, et `leon login` le rappelle. Sans connexion ni variables, les crochets ne font rien et ne le disent que sur la sortie d'erreur, que Claude Code ne montre pas ; la commande d'installation prévient alors « pas connecté » (elle ne recopie jamais les valeurs de la connexion ni d'un `.env.local`).
+
+#### Mises à jour
+
+La CLI se met à jour seule, depuis le serveur de la connexion (`~/.leon/connexion.json`), au plus une fois par jour : au démarrage d'une session, `leon briefing` lance `leon update` en arrière-plan si le dernier contrôle date de 24 h ou plus. La mise à jour vérifie la taille et l'empreinte, lance la nouvelle version avant de basculer, et ne touche ni à la connexion, ni à l'accord, ni au lanceur, ni aux crochets. `~/.leon/bin/leon update` la lance à la main, et `~/.leon/bin/leon update --previous` revient à la version d'avant, sans réseau. Le retour ne tient que jusqu'à la mise à jour suivante (24 h) si le serveur sert toujours la même version : elle remet alors celle du serveur. Les mises à jour automatiques ne se font qu'en https ; une installation reliée à un Leon local (http://localhost) se met à jour par `~/.leon/bin/leon update`. Sous la forme clone, rien n'est mis à jour : un clone se met à jour avec git.
+
+#### Ce que la commande écrit dans Claude Code
+
+Dans `~/.claude/settings.json` (ou dans `settings.json` du dossier `CLAUDE_CONFIG_DIR` quand cette variable est posée), avec `/Users/vous` à la place de votre dossier personnel (le chemin est mis entre apostrophes s'il a une espace ou une apostrophe) :
 
 ```json
 {
@@ -207,7 +239,7 @@ La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du do
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm -s --config.verify-deps-before-run=false --dir /chemin/vers/leon leon briefing",
+            "command": "/Users/vous/.leon/bin/leon briefing",
             "timeout": 10
           }
         ]
@@ -218,7 +250,7 @@ La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du do
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm -s --config.verify-deps-before-run=false --dir /chemin/vers/leon leon capter-session",
+            "command": "/Users/vous/.leon/bin/leon capter-session",
             "timeout": 30
           }
         ]
@@ -228,36 +260,66 @@ La commande écrit dans `~/.claude/settings.json` (ou dans `settings.json` du do
 }
 ```
 
+- Les deux crochets appellent le lanceur `~/.leon/bin/leon`, qui sait où est la CLI : le Node posé par Leon, ou un clone (voir plus bas). Ils ne dépendent donc ni de pnpm ni du `PATH` de Claude Code.
 - Vos autres réglages et crochets restent tels quels : leurs valeurs et l'ordre des clés ne changent pas, mais le fichier est réécrit avec une indentation de 2 espaces, donc sa mise en page peut changer. Avant d'écrire, la commande copie le fichier dans `settings.json.leon-sauvegarde`, à côté, **seulement si cette copie n'existe pas encore** : c'est la première copie, celle d'avant Leon, et elle n'est jamais remplacée (une mise à jour de vos crochets n'y met donc pas ceux de Leon). La commande dit quand elle garde une copie existante.
 - Si l'écriture échoue (droits, disque plein), la commande le dit, ne modifie rien (la copie qu'elle venait de faire est retirée) et sort avec le code 1 : on peut alors coller le JSON ci-dessus à la main.
-- **L'accord** : après la confirmation, la commande écrit aussi `~/.leon/accord.json` (droits 0600), `{ "outils": { "claude_code": { "version": 2, "installe_le": "…" } } }`. La version 2 couvre les gestes de chaque session et, au démarrage, le bloc de vos dernières sessions (voir « Ce qui est envoyé ») ; la CLI relit ce fichier avant chaque envoi, donc une CLI mise à jour par `git pull` n'envoie rien de plus que ce que vous avez accepté. Sans accord (crochets installés avant lui), les crochets n'envoient que ce qu'ils envoyaient avant lui : la clé du projet au démarrage, pour le point du matin seul, et le texte des échanges à la fin. Si les crochets sont déjà en place mais que l'accord manque ou est plus ancien, la commande montre ce qui part, demande la confirmation, puis écrit seulement `accord.json`, sans toucher à `settings.json`. Un accord plus récent n'est jamais rabaissé. Si `accord.json` ne peut pas s'écrire, les crochets restent en place et la commande sort avec le code 1 : tant qu'on ne l'a pas relancée, seul le texte des échanges part à la fin de session. Un `accord.json` présent mais illisible (retouché à la main) vaut un retrait : plus rien ne part tant que la commande ne l'a pas réécrit.
-- Relancer la commande ne change rien quand les crochets et l'accord sont en place (« déjà en place ») ; si le dépôt a changé de place, elle met à jour ses deux entrées au lieu d'en ajouter d'autres.
+- **L'accord** : après la confirmation, la commande écrit aussi `~/.leon/accord.json` (droits 0600), `{ "outils": { "claude_code": { "version": 2, "installe_le": "…" } } }`. La version 2 couvre les gestes de chaque session et, au démarrage, le bloc de vos dernières sessions (voir « Ce qui est envoyé ») ; la CLI relit ce fichier avant chaque envoi, donc une CLI plus récente n'envoie rien de plus que ce que vous avez accepté. Sans accord (crochets installés avant lui), les crochets n'envoient que ce qu'ils envoyaient avant lui : la clé du projet au démarrage, pour le point du matin seul, et le texte des échanges à la fin. Si les crochets sont déjà en place mais que l'accord manque ou est plus ancien, la commande montre ce qui part, demande la confirmation, puis écrit seulement `accord.json`, sans toucher à `settings.json`. Un accord plus récent n'est jamais rabaissé. Si `accord.json` ne peut pas s'écrire, les crochets restent en place et la commande sort avec le code 1 : tant qu'on ne l'a pas relancée, seul le texte des échanges part à la fin de session. Un `accord.json` présent mais illisible (retouché à la main) vaut un retrait : plus rien ne part tant que la commande ne l'a pas réécrit.
+- Relancer la commande ne change rien quand les crochets et l'accord sont en place (« déjà en place ») ; si le lanceur a changé de place (autre dossier personnel), elle met à jour ses deux entrées au lieu d'en ajouter d'autres.
 - Un `settings.json` illisible (Claude Code lit du JSON strict : ni commentaire ni virgule finale) n'est pas touché : la commande dit pourquoi et s'arrête. On peut alors coller le JSON ci-dessus à la main.
-- `--config.verify-deps-before-run=false` empêche pnpm d'installer les dépendances avant la commande quand elles ne correspondent plus au verrou (après un `git pull`) : cette installation écrirait dans le contexte de la session et serait coupée au bout du délai du crochet.
 - Les délais sont en secondes : 10 au démarrage, 30 à la fin (Claude Code n'en laisse que 1,5 par défaut à un crochet de fin de session ; l'envoi s'interrompt de lui-même au bout de 15 secondes).
+
+#### Si Leon était déjà installé avant (clone, pnpm, jeton dans `.env.local`)
+
+Relancez la commande d'installation. `leon setup` repère vos anciens crochets (`pnpm … --dir <clone> leon briefing` et `… leon capter-session`) et les **remplace sur place** par ceux du lanceur : même groupe, même position, mêmes délais (10 s au démarrage, 30 s à la fin) ; un crochet à vous, avant, entre ou après, n'est pas touché, et il ne reste aucun `pnpm … leon`. `settings.json.leon-sauvegarde` suit la même règle qu'à la première installation : elle n'est jamais remplacée. `~/.leon/accord.json` est gardé tel quel, et s'il est déjà en version 2 l'accord n'est pas redemandé : seule l'écriture des réglages est confirmée. Comme l'ordinateur n'est pas encore connecté (le jeton n'était que dans le `.env.local`), `leon setup` lance aussi `leon login`.
+
+Une fois les crochets écrits, la commande dit : « Your hooks used to run Leon from <clone>; they now run ~/.leon/bin/leon. The token in <clone>/.env.local is no longer needed: revoke it in Settings › Personal tokens. » Elle ne lit jamais ce `.env.local` : elle ne le connaît que par le chemin du clone que citaient les anciens crochets. Ce jeton a été créé à la main : il est sous « Personal tokens » (« Jetons personnels ») dans Réglages, pas sous « Ordinateurs connectés ». Révoquez-le comme elle le dit ; le clone et son `.env.local` ne sont pas touchés.
+
+#### Depuis un clone de Leon (pour qui développe sur Leon)
+
+Le lanceur a alors sa forme clone : au lieu du Node posé par Leon, il lance `pnpm -s --config.verify-deps-before-run=false --dir <clone> leon …`, donc le code de votre clone. Les crochets, eux, sont les mêmes : ils appellent `~/.leon/bin/leon`.
+
+```bash
+pnpm leon setup --depot <clone>       # le lanceur (forme clone), la connexion et les crochets, comme la commande unique
+pnpm leon installer-crochets          # le lanceur (forme clone) et les crochets de Claude Code seulement ; montre ce qui sera écrit, puis demande confirmation [y/N]
+pnpm leon installer-crochets --oui    # écrit sans demander
+```
+
+(`--depot <chemin>` désigne le clone ; sans lui, `installer-crochets` prend celui qui lance la commande.) Les crochets lancent `pnpm` puis `node` (24 au moins) avec le `PATH` de Claude Code, qui n'est pas toujours celui de votre terminal quand il est lancé depuis un éditeur ou une application. `pnpm` doit être de la version du champ `packageManager` de `package.json` : une autre version irait chercher la bonne sur le réseau avant de lancer la commande, ce qui dépasse le délai du crochet. Lancer la commande depuis le **clone principal** de Leon : un dossier de travail Git temporaire (`.claude/worktrees/…`) est supprimé après la fusion, et les crochets cesseraient de marcher (la commande prévient). Sous cette forme, `LEON_URL` et `LEON_TOKEN` du `.env.local` du clone servent toujours, et la commande prévient s'ils manquent sans connexion.
+
+`--config.verify-deps-before-run=false` empêche pnpm d'installer les dépendances avant la commande quand elles ne correspondent plus au verrou (après un `git pull`) : cette installation écrirait dans le contexte de la session et serait coupée au bout du délai du crochet.
 
 ### Ce qui est envoyé
 
 - **Au démarrage** : la clé du projet et le jeton, rien de la conversation ; avec l'accord en version 2, aussi la branche Git courante et l'identifiant de la session. La clé est `github.com/<propriétaire>/<dépôt>`, tirée du `remote origin` du dossier de la session, sinon `dossier:` suivi de 16 caractères calculés à partir de son chemin. En retour, le serveur rend le point du matin et, avec l'accord, vos dernières sessions sur ce dépôt : Claude Code ajoute ce bloc au contexte de la session, il est donc donné au **modèle de Claude Code**.
-- **À la fin** : le texte des échanges (vos messages et les réponses de Claude), sans les pensées, les appels et les sorties d'outils, ni les images, avec la clé du projet. Avant l'envoi, les secrets reconnaissables (clés d'API, jetons, clés privées…) sont masqués, les rappels du système retirés et chaque message est coupé à 20 000 caractères ; le serveur refait le masquage. Tout part vers le serveur de `LEON_URL`. La conversation est **privée à son auteur** : personne d'autre ne la voit.
-- **Les gestes**, à la fin aussi, avec l'accord en version 2 : relevés dans le transcript par la CLI, sans modèle. Ce sont les fichiers écrits (chemins relatifs à la racine du dépôt du dossier de départ, ceux d'un worktree de `.claude/worktrees/` compris ; aucun pour une session ouverte hors de tout dépôt), les commandes lancées réduites à leur exécutable (et, pour une liste fermée d'outils comme git, gh, pnpm ou docker, à leur sous-commande ; jamais leurs autres arguments), la branche, les commits et les PR, la liste des tâches, et quelques repères (début et fin, nombre de messages et d'erreurs d'outils, si la session a lu du web, un serveur MCP, un sous-agent ou une commande réseau). Les secrets sont masqués sur le poste, puis de nouveau par le serveur ; les gestes restent privés à leur auteur, comme la conversation. `pnpm leon import-claude-code` n'envoie les gestes que des sessions dont le fichier a bougé après l'accord (`installe_le`).
+- **À la fin** : le texte des échanges (vos messages et les réponses de Claude), sans les pensées, les appels et les sorties d'outils, ni les images, avec la clé du projet. Avant l'envoi, les secrets reconnaissables (clés d'API, jetons, clés privées…) sont masqués, les rappels du système retirés et chaque message est coupé à 20 000 caractères ; le serveur refait le masquage. Tout part vers le serveur de votre connexion (`leon login`, ou `LEON_URL`). La conversation est **privée à son auteur** : personne d'autre ne la voit.
+- **Les gestes**, à la fin aussi, avec l'accord en version 2 : relevés dans le transcript par la CLI, sans modèle. Ce sont les fichiers écrits (chemins relatifs à la racine du dépôt du dossier de départ, ceux d'un worktree de `.claude/worktrees/` compris ; aucun pour une session ouverte hors de tout dépôt), les commandes lancées réduites à leur exécutable (et, pour une liste fermée d'outils comme git, gh, pnpm ou docker, à leur sous-commande ; jamais leurs autres arguments), la branche, les commits et les PR, la liste des tâches, et quelques repères (début et fin, nombre de messages et d'erreurs d'outils, si la session a lu du web, un serveur MCP, un sous-agent ou une commande réseau). Les secrets sont masqués sur le poste, puis de nouveau par le serveur ; les gestes restent privés à leur auteur, comme la conversation. `leon import-claude-code` n'envoie les gestes que des sessions dont le fichier a bougé après l'accord (`installe_le`).
 - **De quels dossiers** : de tous. Les crochets sont dans vos réglages d'utilisateur : toutes vos sessions Claude Code, dans tous vos dossiers (personnels compris), sont envoyées à Leon, pas seulement celles du travail. En session interactive, Claude Code ne lance les crochets d'un dossier qu'une fois ce dossier approuvé (la fenêtre de confiance qu'il montre à la première ouverture) ; une session `claude -p` ne montre jamais cette fenêtre et tient le dossier pour approuvé.
-- **Quand** : à la fin de chaque session, soit à la sortie de Claude Code, après `/clear` et au `/resume` interactif. Les sessions lancées par un script, une automatisation ou un agent (`claude -p`) sont envoyées elles aussi : sans `--bare`, `claude -p` charge les crochets de `~/.claude` comme une session interactive ; seul `claude -p --bare` n'en charge aucun. Une session tuée brutalement, un terminal fermé de force ou un plantage peuvent ne pas l'être (la doc de Claude Code ne dit pas ce qu'il advient du crochet de fin dans ces cas) ; `pnpm leon import-claude-code` les rattrape (`--dry-run` montre ce qui serait envoyé, sans rien envoyer).
+- **Quand** : à la fin de chaque session, soit à la sortie de Claude Code, après `/clear` et au `/resume` interactif. Les sessions lancées par un script, une automatisation ou un agent (`claude -p`) sont envoyées elles aussi : sans `--bare`, `claude -p` charge les crochets de `~/.claude` comme une session interactive ; seul `claude -p --bare` n'en charge aucun. Une session tuée brutalement, un terminal fermé de force ou un plantage peuvent ne pas l'être (la doc de Claude Code ne dit pas ce qu'il advient du crochet de fin dans ces cas) ; `leon import-claude-code` les rattrape (`--dry-run` montre ce qui serait envoyé, sans rien envoyer).
 
 ### Retirer les crochets
 
 ```bash
-pnpm leon retirer-crochets
+~/.leon/bin/leon retirer-crochets     # depuis un clone : pnpm leon retirer-crochets
 ```
 
-(`--outil claude_code` revient au même : c'est le seul outil pour l'instant, et tout autre est refusé.) La commande retire de `settings.json` les seules entrées de Leon, reconnues comme à l'installation (avec leur groupe s'il ne contient plus rien), et garde tout le reste, dans son ordre. Elle n'écrit rien quand il n'y a rien à retirer : on peut la relancer sans risque. Elle passe aussi Claude Code en **version 0** dans `~/.leon/accord.json` : dès lors, plus rien ne part de Claude Code, ni le bloc de démarrage, ni la session à la fin, ni `pnpm leon import-claude-code`. `pnpm leon installer-crochets` redemande l'accord et remet les crochets. Elle ne demande pas de confirmation et ne fait pas de nouvelle copie des réglages ; un `settings.json` illisible n'est pas touché (code 1), mais l'accord est retiré quand même. Claude Code reprend le changement tout seul.
+(`--outil claude_code` revient au même : c'est le seul outil pour l'instant, et tout autre est refusé.) La commande retire de `settings.json` les seules entrées de Leon, reconnues comme à l'installation (avec leur groupe s'il ne contient plus rien), et garde tout le reste, dans son ordre. Elle n'écrit rien quand il n'y a rien à retirer : on peut la relancer sans risque. Elle passe aussi Claude Code en **version 0** dans `~/.leon/accord.json` : dès lors, plus rien ne part de Claude Code, ni le bloc de démarrage, ni la session à la fin, ni `leon import-claude-code`. Elle ne demande pas de confirmation et ne fait pas de nouvelle copie des réglages ; un `settings.json` illisible n'est pas touché (code 1), mais l'accord est retiré quand même. Claude Code reprend le changement tout seul. Pour remettre les crochets : `leon setup` (depuis un clone : `pnpm leon installer-crochets`), qui redemande l'accord ; si le lanceur a été effacé (voir plus bas), relancez d'abord la commande d'installation.
 
 À la main : ouvrir `settings.json` et supprimer les deux entrées dont la commande finit par `leon briefing` et `leon capter-session` (avec leur groupe `{ "hooks": [...] }` s'il ne contient plus rien). La commande `/hooks`, dans Claude Code, liste les crochets actifs et dit dans quel fichier chacun est défini. Pour tout éteindre un moment sans rien supprimer : `"disableAllHooks": true` dans `settings.json` (cela éteint aussi vos autres crochets).
 
 - `settings.json.leon-sauvegarde` est la première copie, celle de vos réglages d'avant la première installation de Leon : la remettre retire Leon, mais annule aussi tous les changements faits dans les réglages depuis. Une fois les crochets retirés, supprimez cette copie, pour qu'une prochaine installation en refasse une à jour.
 - Côté Claude Code, les deux commandes ne lisent et ne modifient que vos réglages d'utilisateur : les réglages du projet (`.claude/settings.json` et `.claude/settings.local.json` d'un dossier) ne sont pas touchés. Un crochet de Leon qui s'y trouverait avec une autre commande s'exécuterait en plus de celui-ci (Claude Code ne fusionne que deux gestionnaires strictement identiques), d'où deux envois ; après le retrait, il reste là mais n'envoie plus rien. `/hooks` montre tous les crochets actifs et leur fichier.
-- Des crochets retirés à la main laissent l'accord tel quel : `pnpm leon import-claude-code` enverrait encore les textes et, en version 2, les gestes. Supprimer `accord.json` ne suffit pas (sans accord, l'import envoie les textes, comme avant lui) : `pnpm leon retirer-crochets` le passe en version 0.
+- Des crochets retirés à la main laissent l'accord tel quel : `leon import-claude-code` enverrait encore les textes et, en version 2, les gestes. Supprimer `accord.json` ne suffit pas (sans accord, l'import envoie les textes, comme avant lui) : `leon retirer-crochets` le passe en version 0.
+- **Le lanceur** `~/.leon/bin/leon` est effacé avec le dernier outil dont l'accord est retiré (Claude Code est le seul pour l'instant), et seulement si les réglages et l'accord ont bien été retirés : des crochets restés en place appelleraient un lanceur disparu. Un fichier qui n'est pas un lanceur écrit par Leon est gardé. Le Node, la CLI et la connexion (`~/.leon/runtime`, `~/.leon/cli`, `connexion.json`) restent. Pour partir complètement : `leon logout` d'abord (il révoque le jeton de cet ordinateur), puis `leon retirer-crochets`, puis supprimez le dossier `~/.leon`.
 - Les sessions déjà envoyées restent chez Leon : il n'y a pas encore de bouton pour les effacer.
+
+### Changer de version de Node (CLI sans clone)
+
+Le Node que Leon pose sur les ordinateurs est épinglé dans `src/cli/runtime.json` : sa version exacte, et pour chaque plateforme (`darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`) l'empreinte SHA-256 de l'archive officielle `node-v<version>-<plateforme>.tar.xz` de nodejs.org. La construction de la CLI recopie ces valeurs dans `/cli/version.json`. Pour changer de version :
+
+1. télécharger `https://nodejs.org/dist/v<version>/SHASUMS256.txt` et `SHASUMS256.txt.sig` ;
+2. vérifier la signature GPG : `gpg --verify SHASUMS256.txt.sig SHASUMS256.txt`, avec les clés des publieurs de Node (liste dans le README de [nodejs/node](https://github.com/nodejs/node#release-keys)) ;
+3. recopier la version (sans le `v`) et les quatre empreintes dans `runtime.json` ;
+4. lancer `pnpm -s vitest run --project unit src/cli/runtime.test.ts`. Pour une nouvelle version majeure, changer aussi `engines.node` dans `package.json`.
 
 ## Travailler à deux
 

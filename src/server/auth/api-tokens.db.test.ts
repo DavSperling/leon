@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, count, eq, sql } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -10,6 +10,7 @@ import {
   createApiToken,
   generateApiToken,
   listApiTokens,
+  registerApiToken,
   revokeApiToken,
   verifyApiToken,
 } from './api-tokens';
@@ -182,5 +183,91 @@ describe('jetons personnels', () => {
   it("renvoie false pour un id de jeton qui n'est pas un UUID", async () => {
     const paul = await signUp('Paul');
     expect(await revokeApiToken(paul, 'pas-un-uuid')).toBe(false);
+  });
+});
+
+// Le jeton naît sur l'ordinateur de l'utilisateur (leon login) : le serveur n'enregistre que celui qu'on lui présente.
+describe('registerApiToken', () => {
+  it('enregistre le jeton reçu : nom et indice gardés, seul son SHA-256 en base, et il passe verifyApiToken', async () => {
+    const paul = await signUp('Paul');
+    const token = generateApiToken();
+
+    const registered = await registerApiToken(paul, 'Ordinateur : MacBook Paul', token);
+
+    expect(registered).toEqual({ id: expect.any(String) });
+    const [row] = await adminDb
+      .select()
+      .from(apiTokens)
+      .where(eq(apiTokens.id, registered?.id ?? ''));
+    expect(row).toMatchObject({
+      tenantId: paul.tenantId,
+      userId: paul.userId,
+      name: 'Ordinateur : MacBook Paul',
+      tokenHash: createHash('sha256').update(token).digest('hex'),
+      tokenHint: token.slice(-4),
+      revokedAt: null,
+    });
+    expect(JSON.stringify(row)).not.toContain(token.slice(5));
+    expect(await verifyApiToken(token)).toEqual({ tokenId: registered?.id, ctx: paul });
+  });
+
+  it('ne renvoie jamais le jeton', async () => {
+    const paul = await signUp('Paul');
+    const token = generateApiToken();
+
+    const registered = await registerApiToken(paul, 'Ordinateur : MacBook Paul', token);
+
+    expect(Object.keys(registered ?? {})).toEqual(['id']);
+    expect(JSON.stringify(registered)).not.toContain(token);
+  });
+
+  it('rend null, sans lever ni rien ajouter, quand le jeton est déjà en base', async () => {
+    const { paul, marie } = await paulAndMarie();
+    const token = generateApiToken();
+    const first = await registerApiToken(paul, 'Ordinateur : MacBook Paul', token);
+    expect(first).not.toBeNull();
+    // Marie est dans l'organisation de Paul : toutes les lignes possibles de l'essai y sont.
+    const total = async () =>
+      (
+        await adminDb
+          .select({ n: count() })
+          .from(apiTokens)
+          .where(eq(apiTokens.tenantId, paul.tenantId))
+      )[0]?.n;
+    const before = await total();
+
+    // Même utilisateur, ou autre membre de l'organisation : le jeton appartient à celui qui l'a enregistré.
+    expect(await registerApiToken(paul, 'Ordinateur : autre nom', token)).toBeNull();
+    expect(await registerApiToken(marie, 'Ordinateur : MacBook Marie', token)).toBeNull();
+
+    expect(await total()).toBe(before);
+    expect(await verifyApiToken(token)).toEqual({ tokenId: first?.id, ctx: paul });
+  });
+
+  it('rend null aussi pour un jeton que createApiToken a déjà créé', async () => {
+    const paul = await signUp('Paul');
+    const created = await createApiToken(paul, 'Extension');
+
+    expect(await registerApiToken(paul, 'Ordinateur : MacBook Paul', created.token)).toBeNull();
+  });
+
+  it('refuse un jeton mal formé, sans rien écrire ni recopier le jeton dans l’erreur', async () => {
+    const paul = await signUp('Paul');
+    const insert = vi.spyOn(db, 'insert');
+    const valid = generateApiToken();
+
+    for (const bad of [
+      '',
+      'leon_court',
+      `${valid} `,
+      `${valid}x`,
+      valid.replace('leon_', 'autre_'),
+    ]) {
+      const error = await registerApiToken(paul, 'Ordinateur : MacBook Paul', bad).catch((e) => e);
+      expect(error).toBeInstanceOf(Error);
+      if (bad) expect(String(error.message)).not.toContain(bad);
+    }
+
+    expect(insert).not.toHaveBeenCalled();
   });
 });

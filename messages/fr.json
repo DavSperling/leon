@@ -591,6 +591,13 @@
     "revoke": "Révoquer",
     "revokeNamed": "Révoquer « {name} » ?",
     "revokeDescription": "Les outils qui l’utilisent perdront l’accès.",
+    "computersTitle": "Ordinateurs connectés",
+    "computersDescription": "Chaque ordinateur connecté ici envoie à Leon les sessions de code que vous avez acceptées : le texte des échanges et les actions de la session, secrets masqués.",
+    "computersLead": "Pour connecter un ordinateur, ouvrez un terminal dessus et collez cette commande. Votre navigateur s’ouvrira pour l’autoriser.",
+    "yourComputers": "Vos ordinateurs",
+    "noComputers": "Aucun ordinateur connecté pour l’instant.",
+    "computerRevoked": "Ordinateur déconnecté.",
+    "computerRevokeDescription": "Cet ordinateur n’enverra plus vos sessions à Leon. Pour le reconnecter, lancez ~/.leon/bin/leon login dessus, ou collez de nouveau la commande ci-dessus.",
     "tokenCreated": "Jeton créé",
     "pasteToken": "Collez-le dans l’outil à brancher.",
     "copyToken": "Copiez-le maintenant : il ne sera plus affiché.",
@@ -1429,7 +1436,12 @@
       "alreadyTitle": "Déjà branché pour l’espace",
       "connectOwn": "Brancher mon compte",
       "ownConnected": "Votre compte est branché",
-      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub."
+      "ownHint": "Facultatif. Pour agir en votre nom, par exemple sur GitHub.",
+      "code": {
+        "title": "Vos outils de code",
+        "lead": "Ouvrez un terminal sur votre ordinateur et collez cette commande. Votre navigateur s’ouvrira pour autoriser cet ordinateur.",
+        "whatLeaves": "Ce qui part"
+      }
     },
     "steps": {
       "label": "Progression de l’accueil",
@@ -1444,6 +1456,23 @@
       "openChat": "Ouvrir le Chat",
       "ownerReady": "Votre espace se prépare",
       "memberReady": "Votre espace est prêt"
+    }
+  },
+  "computer": {
+    "authorize": {
+      "title": "Connecter cet ordinateur",
+      "question": "Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace {space} ?",
+      "warning": "Si vous ne venez pas de lancer la commande vous-même dans un terminal, annulez.",
+      "allow": "Autoriser",
+      "cancel": "Annuler",
+      "invalidTitle": "Lien non valide",
+      "invalidText": "Ce lien d’autorisation est incomplet ou mal formé. Relancez leon login dans votre terminal."
+    },
+    "connected": {
+      "title": "Ordinateur connecté",
+      "done": "C’est fait. Vous pouvez fermer cet onglet et revenir au terminal.",
+      "refusedTitle": "Connexion annulée",
+      "refused": "Rien n’a été autorisé."
     }
   }
 }

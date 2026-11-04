@@ -9,9 +9,21 @@ export const API_PATHS = {
   mcp: '/api/mcp',
   faits: '/api/v1/faits',
   contexte: '/api/v1/contexte',
+  ordinateurs: '/api/v1/ordinateurs', // POST : leon login échange le code signé contre l'enregistrement du jeton
+  jeton: '/api/v1/jeton', // DELETE : un jeton se révoque lui-même (leon logout)
 } as const;
 
 export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 octets en base64url
+
+// La réponse 201 de POST /api/v1/ordinateurs (K5 du plan « CLI sans clone ») : le nom de l'espace, celui de
+// l'ordinateur tel que le serveur l'a retenu, et l'e-mail du compte autorisé. `leon login` écrit les deux premiers
+// dans connexion.json et affiche les trois : sur une machine partagée, le compte montre une autorisation donnée par un autre.
+export const ComputerResponseSchema = z.object({
+  espace: z.string(),
+  ordinateur: z.string(),
+  compte: z.string(),
+});
+export type ComputerResponse = z.infer<typeof ComputerResponseSchema>;
 
 export const ViewerProfileSchema = z.object({
   userId: z.uuid(),

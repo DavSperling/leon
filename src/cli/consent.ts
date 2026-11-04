@@ -24,9 +24,12 @@ const WithdrawnSchema = z.object({ version: z.literal(0) });
 
 export type FactsConsent = { version: number; installe_le: Date };
 
-// Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts).
-export const CONSENT_WITHDRAWN_MESSAGE =
-  'Leon: your consent for Claude Code was withdrawn (pnpm leon retirer-crochets): nothing is sent. To give it again, run pnpm leon installer-crochets.';
+// Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts, uninstall-hooks.ts), juste pour les deux
+// formes de Leon : installée, la commande est `leon setup` par le lanceur ~/.leon/bin/leon, que `retirer-crochets` efface
+// avec le dernier outil (la commande d'installation le remet) ; depuis un clone, c'est `installer-crochets`.
+export const CONSENT_AGAIN_HINT =
+  'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).';
+export const CONSENT_WITHDRAWN_MESSAGE = `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${CONSENT_AGAIN_HINT}`;
 
 export const consentPath = (home: string): string => join(home, '.leon', 'accord.json');
 
@@ -72,6 +75,17 @@ export async function consentWithdrawn(home: string, tool: CodeSessionKind): Pro
 export async function withdrawalRecorded(home: string, tool: CodeSessionKind): Promise<boolean> {
   const entries = await readEntries(home);
   return entries !== null && WithdrawnSchema.safeParse(entries[tool]).success;
+}
+
+// Reste-t-il un outil dont l'accord n'est pas retiré ? Le lanceur ~/.leon/bin/leon n'est effacé (`leon
+// retirer-crochets`) qu'avec le dernier. Dans le doute, vrai : une entrée hors schéma ou un fichier illisible comptent
+// comme un outil encore installé, pour ne jamais effacer le lanceur sous des crochets en place.
+export async function anyToolInstalled(home: string): Promise<boolean> {
+  const entries = await readEntries(home);
+  return (
+    entries === null ||
+    Object.values(entries).some((entry) => !WithdrawnSchema.safeParse(entry).success)
+  );
 }
 
 // Pose la version d'un outil et garde telles quelles les entrées des autres ; un fichier illisible est réécrit avec

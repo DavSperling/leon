@@ -11,6 +11,10 @@ import { app } from '@/server/api/app';
 // déroulé OAuth des connecteurs, qui garde ses propres contrôles (formulaire posté de la même origine, puis la
 // session, sinon renvoi vers /connexion ; retour lié à un cookie signé et à la même session), vérifiés par
 // oauth-routes.db.test.ts.
+//
+// Une exception à la règle « requireApiToken ou requireSession », qui reste pourtant sous ce test : POST /api/v1/ordinateurs
+// (`leon login`) n'a ni l'un ni l'autre, le jeton de la CLI n'étant pas encore en base. Elle est gardée par le code signé
+// (K4) et par la forme du jeton, et répond 401 sans l'un ni l'autre ; ses cas sont dans computer-routes.db.test.ts.
 const PUBLIC = [/^\/api\/health$/, /^\/api\/auth\//, /^\/api\/v1\/connexions\/oauth\//];
 
 const guarded = [...new Set(app.routes.map((route) => `${route.method} ${route.path}`))].filter(
@@ -25,6 +29,7 @@ describe('gardes des routes de l’API', () => {
         'GET /api/v1/me',
         'ALL /api/mcp',
         'GET /api/v1/recherche/reponse',
+        'POST /api/v1/ordinateurs',
       ]),
     );
   });

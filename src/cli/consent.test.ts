@@ -3,6 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  anyToolInstalled,
+  CONSENT_AGAIN_HINT,
+  CONSENT_WITHDRAWN_MESSAGE,
   consentPath,
   consentWithdrawn,
   factsConsent,
@@ -146,6 +149,39 @@ describe('withdrawalRecorded : le retrait est bien écrit', () => {
   });
 });
 
+describe('anyToolInstalled : le lanceur sert tant qu’un outil n’est pas retiré', () => {
+  const entry = (version: unknown) => ({ version, installe_le: '2026-11-02T14:00:00.000Z' });
+
+  it('faux sans accord, ou quand tous les outils sont en version 0', async () => {
+    expect(await anyToolInstalled(home)).toBe(false);
+
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(0), codex: { version: 0 } } }));
+    expect(await anyToolInstalled(home)).toBe(false);
+
+    await writeRaw('{"outils":{}}');
+    expect(await anyToolInstalled(home)).toBe(false);
+  });
+
+  it('vrai dès qu’un outil a un accord en cours, quelle que soit sa version', async () => {
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(0), codex: entry(2) } }));
+    expect(await anyToolInstalled(home)).toBe(true);
+
+    await writeRaw(JSON.stringify({ outils: { claude_code: entry(3) } }));
+    expect(await anyToolInstalled(home)).toBe(true);
+  });
+
+  // Dans le doute, le lanceur reste : un faux « plus aucun outil » le ferait effacer sous des crochets encore posés.
+  it.each([
+    ['une entrée hors schéma', '{"outils":{"codex":{"version":"2"}}}'],
+    ['un fichier coupé', '{"outils": {"claude_code": {"vers'],
+    ['un fichier qui n’a pas d’objet outils', '[]'],
+  ])('vrai pour %s', async (_name, content) => {
+    await writeRaw(content);
+
+    expect(await anyToolInstalled(home)).toBe(true);
+  });
+});
+
 describe('writeConsent', () => {
   it('écrit ~/.leon/accord.json en 0600, dans un dossier en 0700', async () => {
     await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
@@ -201,5 +237,23 @@ describe('writeConsent', () => {
       outils: { claude_code: { version: 0, installe_le: '2026-11-02T14:00:00.000Z' } },
     });
     expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+  });
+});
+
+// Le message de `briefing`, de `capter-session` et de `leon retirer-crochets` : le même texte pour la forme installée
+// (le lanceur ~/.leon/bin/leon) et pour le clone (pnpm), sans commande qui n'existe que dans l'une des deux.
+describe('les messages de l’accord retiré : un texte juste pour les deux formes', () => {
+  it('dit comment redonner l’accord sous la forme installée, puis depuis un clone', () => {
+    expect(CONSENT_AGAIN_HINT).toBe(
+      'To give it again, run `~/.leon/bin/leon setup` (if that file is gone, run the install command of Leon again: `curl -fsSL <address of Leon>/install | sh`; from a Leon clone: `pnpm leon installer-crochets`).',
+    );
+    expect(CONSENT_WITHDRAWN_MESSAGE).toBe(
+      `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${CONSENT_AGAIN_HINT}`,
+    );
+  });
+
+  it('n’envoie pas à pnpm celui qui n’a pas de clone', () => {
+    expect(CONSENT_WITHDRAWN_MESSAGE).not.toMatch(/\(pnpm leon retirer-crochets\)/);
+    expect(CONSENT_WITHDRAWN_MESSAGE).not.toMatch(/run pnpm/);
   });
 });

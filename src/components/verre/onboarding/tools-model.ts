@@ -43,6 +43,10 @@ export function toolStates(
   });
 }
 
+/** « Vos outils de code » vient en tête pour un service dont les outils conseillés comprennent GitHub ou GitLab (il travaille dans un dépôt), à la fin sinon. */
+export const codeToolsFirst = (states: ToolState[]): boolean =>
+  states.some((s) => s.recommended && (s.item.id === 'github' || s.item.id === 'gitlab'));
+
 /** Les outils cochés d'abord : les conseillés encore à brancher. */
 export const defaultChecked = (states: ToolState[]): ReadonlySet<ProviderId> =>
   new Set(

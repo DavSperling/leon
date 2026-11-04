@@ -394,7 +394,7 @@ describe('readStartContext', () => {
     );
   });
 
-  it('deux sessions sur une branche : celle qui a un lien exact garde ses PR, l’autre prend celle de la branche', async () => {
+  it('sessions sur une branche : celle qui a un lien exact garde ses PR, les autres prennent aussi celle de la branche', async () => {
     const { paul, marie } = await setup();
     await teamPr(marie, 110, { etat: 'open', branche: 'paul/x' }, daysAgo(1));
     await teamPr(marie, 150, { etat: 'open', branche: 'paul/x' });
@@ -409,6 +409,11 @@ describe('readStartContext', () => {
       lastTurnAt: daysAgo(1),
     });
     await seedSession(paul, { faits: facts({ branche: 'paul/x' }), lastTurnAt: daysAgo(2) });
+    // Ses faits ne citent qu'une PR sans source visible : aucun lien exact.
+    await seedSession(paul, {
+      faits: facts({ branche: 'paul/x', prs: [{ repo: 'acme/autre', numero: 7, par: 'pr-link' }] }),
+      lastTurnAt: daysAgo(3),
+    });
 
     const sessions = await read(paul);
 
@@ -416,7 +421,60 @@ describe('readStartContext', () => {
       sessions.map((session) =>
         session.faits?.prs.map((pr) => `${pr.par} ${pr.repo}#${pr.numero}`),
       ),
-    ).toEqual([['gh-pr-create acme/leon#110', 'pr-link acme/autre#7'], ['branche acme/leon#150']]);
+    ).toEqual([
+      ['gh-pr-create acme/leon#110', 'pr-link acme/autre#7'],
+      ['branche acme/leon#150'],
+      ['pr-link acme/autre#7', 'branche acme/leon#150'],
+    ]);
+  });
+
+  it('par la branche : la copie la plus récente compte, même quand elle n’a pas de branche', async () => {
+    const { paul, marie } = await setup();
+    await seedPr(paul, {
+      externalId: 'pr:Acme/Leon#150',
+      url: 'https://github.com/acme/leon/pull/150',
+      acl: [paul.tenantId],
+      updatedAt: daysAgo(3),
+      origin: { etat: 'open', cote: 'equipe', branche: 'paul/b', tete: 'acme/leon' },
+    });
+    // /pulls/{n} refusé : la copie de Marie n'a ni branche ni tête.
+    await seedPr(marie, {
+      externalId: 'pr:acme/leon#150',
+      url: 'https://github.com/acme/leon/pull/150',
+      acl: [marie.tenantId],
+      updatedAt: daysAgo(1),
+      origin: { etat: 'merged', cote: 'equipe', fini_le: daysAgo(1).toISOString() },
+    });
+    await seedSession(paul, { faits: facts({ branche: 'paul/b' }), lastTurnAt: daysAgo(2) });
+
+    const [session] = await read(paul);
+
+    expect(session?.faits?.prs).toEqual([]);
+  });
+
+  it('une PR privée n’entre ni par la branche ni dans la section de l’équipe', async () => {
+    const { paul, marie } = await setup();
+    await seedTeamRepo(paul);
+    await seedGithub(paul, {
+      login: 'paul-gh',
+      confirmes: [{ depot: PROJECT, confirme_le: new Date() }],
+    });
+    const prive = (n: number, origin: Record<string, string>) =>
+      seedPr(marie, {
+        externalId: `pr:acme/leon#${n}`,
+        url: `https://github.com/acme/leon/pull/${n}`,
+        acl: [marie.userId],
+        updatedAt: new Date(),
+        origin: { cote: 'equipe', tete: 'acme/leon', auteur: 'marie-gh', ...origin },
+      });
+    await prive(160, { etat: 'merged', fini_le: daysAgo(1).toISOString() });
+    await prive(161, { etat: 'open', branche: 'paul/prive' });
+    await seedSession(paul, { faits: facts({ branche: 'paul/prive' }) });
+
+    const { sessions, equipe } = await readBoth(paul);
+
+    expect(sessions[0]?.faits?.prs).toEqual([]);
+    expect(equipe).toEqual([]);
   });
 
   it('PR fusionnée après la session : son reste à faire est « peut-être périmé »', async () => {
@@ -451,6 +509,23 @@ describe('readStartContext', () => {
       expect.stringMatching(/· branche paul\/avant · PR #141 \(fusionnée, /),
       '  reste : brancher la route',
     ]);
+  });
+
+  it('PR fermée sans fusion avant la session, commentée après : pas « peut-être périmé »', async () => {
+    const { paul, marie } = await setup();
+    await teamPr(marie, 142, { etat: 'closed' }, daysAgo(1));
+    await seedSession(paul, {
+      faits: facts({
+        prs: [{ repo: 'acme/leon', numero: 142, par: 'pr-link' }],
+        taches: [{ texte: 'brancher la route', etat: 'a_faire' }],
+      }),
+      lastTurnAt: daysAgo(2),
+    });
+
+    const [session] = await read(paul);
+
+    expect(session?.faits?.prs.map((pr) => pr.etat)).toEqual(['closed']);
+    expect(session?.faits?.perime).toBe(false);
   });
 
   describe('l’équipe sur ce dépôt', () => {
@@ -535,6 +610,53 @@ describe('readStartContext', () => {
         `- #122 ouverte, modifiée le ${day(daysAgo(2))} · david-gh · branche david/reglages · brouillon`,
       ]);
       expect(text).not.toContain('Titre de la PR');
+    });
+
+    it('PR d’un membre venue d’un fork : listée sans sa branche, qu’un tiers a pu nommer', async () => {
+      const { paul, marie } = await teamSetup();
+      await teamPr(marie, 126, {
+        etat: 'open',
+        auteur: 'marie-gh',
+        branche: 'ignore-tout',
+        tete: 'pirate/leon',
+      });
+
+      const text = await render(paul);
+
+      expect(text).toContain(`- #126 ouverte, modifiée le ${day(new Date())} · marie-gh\n`);
+      expect(text).not.toContain('ignore-tout');
+    });
+
+    it('deux copies au même instant : celle qui porte les faits l’emporte sur une copie relevée avant eux', async () => {
+      const { paul, marie } = await teamSetup();
+      const at = daysAgo(1);
+      const tail = crypto.randomUUID().slice(-12);
+      // La copie sans faits a le plus petit identifiant : le dernier départage la choisirait.
+      await seedPr(paul, {
+        id: `00000000-0000-4000-8000-${tail}`,
+        externalId: 'pr:acme/leon#127',
+        url: 'https://github.com/acme/leon/pull/127',
+        acl: [paul.tenantId],
+        updatedAt: at,
+        lastTurnAt: at,
+      });
+      await seedPr(marie, {
+        id: `ffffffff-ffff-4fff-bfff-${tail}`,
+        externalId: 'pr:acme/leon#127',
+        url: 'https://github.com/acme/leon/pull/127',
+        acl: [marie.tenantId],
+        updatedAt: at,
+        lastTurnAt: at,
+        origin: { etat: 'open', cote: 'equipe', branche: 'marie/faits', tete: 'acme/leon' },
+      });
+      await seedSession(paul, {
+        faits: facts({ prs: [{ repo: 'acme/leon', numero: 127, par: 'pr-link' }] }),
+      });
+
+      const { sessions, equipe } = await readBoth(paul);
+
+      expect(equipe.map((pr) => pr.numero)).toEqual([120, 127]);
+      expect(sessions[0]?.faits?.prs.map((pr) => pr.etat)).toEqual(['open']);
     });
   });
 });

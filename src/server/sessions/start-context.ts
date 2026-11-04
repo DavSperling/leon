@@ -1,10 +1,11 @@
 import { sql } from 'drizzle-orm';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
-import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
+import { CODE_SESSION_KINDS, repoOf, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
+import { TEAM_LINES_MAX } from './render-context';
 
 // « Mes sessions » du bloc de démarrage (T04, D7 du plan mémoire des sessions) : un périmètre, pas un sujet. Les
 // sessions de code du lecteur sur ce dépôt, lues par leurs métadonnées (les faits rangés par la route des faits,
@@ -20,7 +21,6 @@ import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql
 // ouvertes et modifiées depuis 30 jours ; un dépôt confirmé depuis moins de 24 h.
 const START_SESSIONS_MAX = 4;
 const START_SESSIONS_DAYS = 7;
-export const TEAM_LINES_MAX = 10;
 const HOUR_MS = 3_600_000;
 const TEAM_MERGED_MS = 72 * HOUR_MS;
 const TEAM_OPEN_MS = 30 * 24 * HOUR_MS;
@@ -62,37 +62,38 @@ type PrRow = {
   titre: string | null;
 };
 type BranchRow = PrRow & { branche: string };
-type TeamRow = {
-  key: string;
-  etat: 'merged' | 'open';
-  quand: string;
-  membre: string | null;
-  branche: string | null;
-  brouillon: boolean;
-  ferme: string | null;
-};
+type TeamRow = Omit<TeamPr, 'numero' | 'date'> & { key: string; quand: string };
 type PrInfo = Pick<StartPr, 'url' | 'etat' | 'titre'> & { fini: number };
 
 // La clé de la source GitHub d'une PR (connectors/github/map.ts), sans la casse : celle du dépôt varie selon qui l'écrit.
 // Les noms de dépôt GitHub sont en ASCII : `toLowerCase` vaut le `lower` de Postgres.
 const prKey = (pr: SessionFacts['prs'][number]) => `pr:${pr.repo}#${pr.numero}`.toLowerCase();
 const numberOf = (key: string) => Number(key.slice(key.lastIndexOf('#') + 1));
-// Le dépôt GitHub d'une clé de projet (déjà en minuscules, PROJECT_KEY_PATTERN) ; null pour un dossier.
-const repoOf = (projet: string) =>
-  projet.startsWith('github.com/') ? projet.slice('github.com/'.length) : null;
 // Les dates rangées par GitHub et par saveSyncProgress sont en ISO 8601, en UTC : elles se comparent en texte, et une
 // valeur mal formée ne fait pas échouer la lecture (un transtypage en timestamptz la ferait échouer).
 const isoAgo = (ms: number) => new Date(Date.now() - ms).toISOString();
 
-// Une PR relevée par deux membres a deux copies : la plus récemment modifiée sur GitHub donne le lien et l'état.
-const LATEST_COPY = sql`s.metadata->>'updatedAt' desc nulls last, ${LAST_TS_SQL} desc, s.id`;
+// Une PR relevée par deux membres a deux copies : la plus récemment modifiée sur GitHub donne le lien et l'état ; à
+// date égale, celle qui porte les faits de T13, pas une copie relevée avant eux et jamais rattrapée.
+const LATEST_COPY = sql`s.metadata->>'updatedAt' desc nulls last,
+  (s.metadata->'origin'->>'etat' is not null) desc, ${LAST_TS_SQL} desc, s.id`;
 
-// Ce que la source d'une PR dit d'elle (T13). `fini` : la fusion, sinon (une PR fermée n'a pas de `fini_le`) la
-// dernière modification. Le titre n'entre que s'il est du lecteur, de l'équipe : `auteur` est le login de sa propre
-// connexion GitHub (l'intitulé de la connexion, oauth-routes.ts).
+// La copie la plus récente de chaque PR du dépôt, filtrée ensuite : une copie ancienne ne fait pas revenir un état
+// passé. Sous la sécurité par ligne, une PR que le lecteur ne voit pas n'en fait pas partie.
+const latestPrs = (ctx: TenantContext, repo: string) => sql`
+  select distinct on (lower(s.external_id)) lower(s.external_id) as key, s.tenant_id, s.title, s.metadata,
+    s.metadata->'origin' as origin, s.metadata->>'updatedAt' as updated
+  from sources s
+  where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
+    and lower(s.metadata->'origin'->>'repo') = ${repo} and s.external_id like 'pr:%'
+  order by lower(s.external_id), ${LATEST_COPY}`;
+
+// Ce que la source d'une PR dit d'elle (T13). `fini` : la fusion. Le titre n'entre que s'il est du lecteur, de
+// l'équipe : `auteur` est le login de sa propre connexion GitHub (l'intitulé de la connexion, oauth-routes.ts).
+// shortcut: une PR fermée sans fusion n'a pas de date de fin, elle ne rend jamais « peut-être périmé » ; ranger
+// closed_at dans l'origin (T13) si l'on veut ce marquage.
 const prColumns = (ctx: TenantContext) => sql`
-  s.metadata->>'url' as url, s.metadata->'origin'->>'etat' as etat,
-  coalesce(s.metadata->'origin'->>'fini_le', s.metadata->>'updatedAt') as fini,
+  s.metadata->>'url' as url, s.metadata->'origin'->>'etat' as etat, s.metadata->'origin'->>'fini_le' as fini,
   case when s.metadata->'origin'->>'cote' = 'equipe' and exists (
     select 1 from connections c
     where c.tenant_id = s.tenant_id and c.created_by = ${ctx.userId} and c.provider = ${GITHUB}
@@ -151,13 +152,15 @@ export async function readStartContext(
         order by lower(s.external_id), ${LATEST_COPY}`);
       for (const pr of prs) exact.set(pr.key, prInfo(pr));
     }
-    // À défaut de lien exact, la branche : seulement une PR de l'équipe dont la tête est dans le dépôt (pas un fork,
-    // qui peut porter n'importe quel nom de branche), et jamais la branche par défaut, que tout le monde partage.
+    // À défaut de lien exact (aucune PR des faits n'a de source visible), la branche : seulement une PR de l'équipe
+    // dont la tête est dans le dépôt (pas un fork, qui peut porter n'importe quel nom de branche), et jamais la branche
+    // par défaut, que tout le monde partage. Les PR des faits restent dans l'en-tête, avant celle de la branche.
+    const unresolved = (faits: SessionFacts) => faits.prs.every((pr) => !exact.has(prKey(pr)));
     const repo = repoOf(input.projet);
     const branches = [
       ...new Set(
         sessions.flatMap(({ faits }) =>
-          faits?.prs.length === 0 && faits.branche && !DEFAULT_BRANCHES.has(faits.branche)
+          faits && unresolved(faits) && faits.branche && !DEFAULT_BRANCHES.has(faits.branche)
             ? [faits.branche]
             : [],
         ),
@@ -166,18 +169,11 @@ export async function readStartContext(
     const byBranch = new Map<string, Pick<StartPr, 'repo' | 'numero'> & PrInfo>();
     if (repo && branches.length > 0) {
       const { rows: prs } = await tx.execute<BranchRow>(sql`
-        select p.* from (
-          select distinct on (lower(s.external_id)) lower(s.external_id) as key, ${prColumns(ctx)},
-            s.metadata->'origin'->>'branche' as branche, s.metadata->'origin' as origin,
-            s.metadata->>'updatedAt' as updated
-          from sources s
-          where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
-            and lower(s.metadata->'origin'->>'repo') = ${repo} and s.external_id like 'pr:%'
-            and s.metadata->'origin'->>'branche' = any(${textArray(branches)})
-          order by lower(s.external_id), ${LATEST_COPY}
-        ) p
-        where p.origin->>'cote' = 'equipe' and lower(p.origin->>'tete') = ${repo}
-        order by p.updated desc nulls last, p.key`);
+        select s.key, ${prColumns(ctx)}, s.origin->>'branche' as branche
+        from (${latestPrs(ctx, repo)}) s
+        where s.origin->>'branche' = any(${textArray(branches)})
+          and s.origin->>'cote' = 'equipe' and lower(s.origin->>'tete') = ${repo}
+        order by s.updated desc nulls last, s.key`);
       // La plus récemment modifiée, quand une branche a servi à plusieurs PR.
       for (const pr of prs) {
         if (!byBranch.has(pr.branche))
@@ -186,18 +182,18 @@ export async function readStartContext(
     }
     const start = sessions.map(({ faits, ...session }) => {
       if (!faits) return { ...session, faits: null };
-      const linked =
-        faits.prs.length === 0 && faits.branche ? byBranch.get(faits.branche) : undefined;
-      const prs = linked
-        ? [{ par: 'branche' as const, ...linked }]
-        : faits.prs.map((pr) => ({
-            ...pr,
-            url: null,
-            etat: null,
-            titre: null,
-            fini: Number.NaN,
-            ...exact.get(prKey(pr)),
-          }));
+      const linked = unresolved(faits) && faits.branche ? byBranch.get(faits.branche) : undefined;
+      const prs = [
+        ...faits.prs.map((pr) => ({
+          ...pr,
+          url: null,
+          etat: null,
+          titre: null,
+          fini: Number.NaN,
+          ...exact.get(prKey(pr)),
+        })),
+        ...(linked ? [{ par: 'branche' as const, ...linked }] : []),
+      ];
       const after = session.lastTs.getTime();
       return {
         ...session,
@@ -210,21 +206,21 @@ export async function readStartContext(
         },
       };
     });
-    return { sessions: start, equipe: await readTeamPrs(tx, ctx, input) };
+    return { sessions: start, equipe: repo ? await readTeamPrs(tx, ctx, input.projet, repo) : [] };
   });
 }
 
 // L'équipe sur ce dépôt : rien hors d'un dépôt d'équipe, ni pour un lecteur dont la propre connexion GitHub, active,
 // n'a pas lu ce dépôt depuis moins de 24 h (`depots_confirmes`, T11) ; sa relève a alors vérifié sa permission. Une
 // seule lecture SQL sous RLS, dans la transaction de mes sessions : les deux tiennent une seule connexion du pool.
-// Le membre est le nom de celui dont une connexion GitHub porte le login de l'auteur.
+// Le membre est le nom de celui dont une connexion GitHub porte le login de l'auteur. La branche d'une PR venue d'un
+// fork, qu'un tiers a pu nommer, n'est pas montrée.
 async function readTeamPrs(
   tx: Tx,
   ctx: TenantContext,
-  input: { projet: string },
+  projet: string,
+  repo: string,
 ): Promise<TeamPr[]> {
-  const repo = repoOf(input.projet);
-  if (!repo) return [];
   const { rows } = await tx.execute<TeamRow>(sql`
     select p.key, p.origin->>'etat' as etat,
       case when p.origin->>'etat' = 'merged' then p.origin->>'fini_le' else p.updated end as quand,
@@ -235,25 +231,17 @@ async function readTeamPrs(
         where c.tenant_id = ${ctx.tenantId} and c.provider = ${GITHUB}
           and lower(c.label) = lower(p.origin->>'auteur')
         order by c.created_at, c.id limit 1), p.origin->>'auteur') as membre,
-      p.origin->>'branche' as branche, coalesce(p.origin->>'brouillon' = 'oui', false) as brouillon,
-      p.origin->>'ferme' as ferme
-    from (
-      -- La copie la plus récente d'abord, filtrée ensuite : une copie ancienne ne fait pas revenir un état passé.
-      select distinct on (lower(s.external_id)) lower(s.external_id) as key, s.metadata->'origin' as origin,
-        s.metadata->>'updatedAt' as updated
-      from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
-        and lower(s.metadata->'origin'->>'repo') = ${repo} and s.external_id like 'pr:%'
-      order by lower(s.external_id), ${LATEST_COPY}
-    ) p
+      case when lower(p.origin->>'tete') = ${repo} then p.origin->>'branche' end as branche,
+      coalesce(p.origin->>'brouillon' = 'oui', false) as brouillon, p.origin->>'ferme' as ferme
+    from (${latestPrs(ctx, repo)}) p
     where exists (
-        select 1 from depots_equipe d where d.tenant_id = ${ctx.tenantId} and d.project = ${input.projet})
+        select 1 from depots_equipe d where d.tenant_id = ${ctx.tenantId} and d.project = ${projet})
       and exists (
         select 1 from connections c
         cross join lateral jsonb_array_elements(case when jsonb_typeof(c.config->'depots_confirmes') = 'array'
           then c.config->'depots_confirmes' else '[]'::jsonb end) e
         where c.tenant_id = ${ctx.tenantId} and c.created_by = ${ctx.userId} and c.provider = ${GITHUB}
-          and c.status = 'active' and lower(e->>'depot') = lower(${input.projet})
+          and c.status = 'active' and lower(e->>'depot') = ${projet}
           and e->>'confirme_le' >= ${isoAgo(CONFIRMED_MS)})
       and p.origin->>'cote' = 'equipe'
       and ((p.origin->>'etat' = 'merged' and p.origin->>'fini_le' >= ${isoAgo(TEAM_MERGED_MS)})

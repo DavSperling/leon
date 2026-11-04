@@ -5,13 +5,7 @@ import {
 } from '@/server/briefing/briefing-prompt';
 import { escapeData } from '@/server/llm/prompt-guard';
 import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
-import {
-  type StartFacts,
-  type StartPr,
-  type StartSession,
-  TEAM_LINES_MAX,
-  type TeamPr,
-} from './start-context';
+import type { StartFacts, StartPr, StartSession, TeamPr } from './start-context';
 
 // Le bloc de démarrage (C4 du plan mémoire des sessions), en `max` octets UTF-8 au plus : mes sessions (3 500 octets
 // au plus), puis l'équipe sur ce dépôt (10 lignes, 700 octets, T14), puis le point du matin, qui garde le reste. Il
@@ -21,6 +15,7 @@ import {
 // entière. Les octets, pas les caractères : Codex compte en octets (vigilance 1). Module pur : ni base, ni réseau.
 
 export const SESSIONS_BYTES_MAX = 3500;
+export const TEAM_LINES_MAX = 10;
 const TEAM_BYTES_MAX = 700;
 const TEAM_HEADING = "## L'équipe sur ce dépôt";
 const CONTEXT_BLOCK_OPEN = '<contexte-leon>';
@@ -32,7 +27,12 @@ const FILES_SHOWN = 5;
 const BRANCH_SHOWN = 200;
 
 const bytes = (text: string) => Buffer.byteLength(text, 'utf8');
-const field = (text: string) => escapeData(oneLine(text));
+// Sans les caractères de format (\p{Cf} : « tag », sens d'écriture, largeur nulle) : invisibles pour qui relit le
+// bloc, ils restent lus par le modèle. oneLine, partagé, les garde : ailleurs, un émoji a besoin de ses ZWJ.
+const field = (text: string) => escapeData(oneLine(text).replace(/\p{Cf}/gu, ''));
+
+const wrap = (inner: string[]) =>
+  [CONTEXT_BLOCK_OPEN, CONTEXT_GUARD_LINE, ...inner, CONTEXT_BLOCK_CLOSE].join('\n');
 
 const PARIS_TIME = new Intl.DateTimeFormat('fr-FR', {
   timeZone: BRIEFING_TIME_ZONE,
@@ -116,12 +116,8 @@ function details(project: string, faits: StartFacts, fits: (line: string) => boo
 // Mes sessions, leur titre de section compris, pour un bloc balisé de `limit` octets au plus ; rien quand aucun en-tête
 // ne tient. Les en-têtes d'abord : les détails d'une session ne prennent que la place que laissent ceux des suivantes.
 function renderSessions(project: string, sessions: StartSession[], limit: number): string[] {
-  const lines = [
-    CONTEXT_BLOCK_OPEN,
-    CONTEXT_GUARD_LINE,
-    `## Mes dernières sessions sur ${field(project)}`,
-  ];
-  const size = (more: string[]) => bytes([...lines, ...more, CONTEXT_BLOCK_CLOSE].join('\n'));
+  const lines = [`## Mes dernières sessions sur ${field(project)}`];
+  const size = (more: string[]) => bytes(wrap([...lines, ...more]));
   const shown: Array<{ session: StartSession; top: string }> = [];
   for (const session of sessions) {
     const top = header(project, session);
@@ -135,7 +131,7 @@ function renderSessions(project: string, sessions: StartSession[], limit: number
     const line = details(project, session.faits, (more) => size([more, ...next]) <= limit);
     if (line.trim() !== '') lines.push(line);
   }
-  return lines.slice(2);
+  return lines;
 }
 
 // Une ligne d'équipe : le numéro, l'état, la date et le membre, jamais un titre ; les tickets qu'une PR fusionnée
@@ -158,7 +154,8 @@ function renderTeam(team: TeamPr[], fits: (lines: string[]) => boolean): string[
   let lines = [TEAM_HEADING];
   for (const pr of team.slice(0, TEAM_LINES_MAX)) {
     const next = [...lines, teamLine(pr)];
-    if (bytes(next.join('\n')) <= TEAM_BYTES_MAX && fits(next)) lines = next;
+    if (bytes(next.join('\n')) > TEAM_BYTES_MAX || !fits(next)) break;
+    lines = next;
   }
   return lines.length > 1 ? lines : [];
 }
@@ -181,9 +178,6 @@ function cutBriefing(markdown: string, room: number): string {
   if (kept.length === 0 || (closed && !kept.includes(BRIEFING_BLOCK_OPEN))) return '';
   return [...kept, ...tail].join('\n');
 }
-
-const wrap = (inner: string[]) =>
-  [CONTEXT_BLOCK_OPEN, CONTEXT_GUARD_LINE, ...inner, CONTEXT_BLOCK_CLOSE].join('\n');
 
 export function renderContext(input: {
   project: string;

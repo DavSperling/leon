@@ -31,6 +31,8 @@ export async function GET(request: NextRequest): Promise<Response> {
   return new Response(markdown, {
     headers: {
       'content-type': 'text/markdown; charset=utf-8',
+      // affichée dans l'onglet plutôt que téléchargée, si un navigateur ne connaît pas text/markdown
+      'content-disposition': 'inline',
       'cache-control': 'no-store',
       'x-content-type-options': 'nosniff',
     },

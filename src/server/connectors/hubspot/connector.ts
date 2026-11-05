@@ -28,6 +28,13 @@ import type { Person } from './schemas';
 //     gratuit ou Starter, 190 en Professional et Enterprise ; 429 avec « policyName »)
 //   /docs/apps/legacy-apps/private-apps/overview (Legacy apps › Create legacy app › Private ;
 //     onglet Scopes, onglet Auth › Show token ; en-tête « Authorization: Bearer »)
+// Lu le 05/11/2026 : /changelog/legacy-private-app-creation-sunset (plus aucune appli privée créée
+//   depuis le 28/09/2026 pour les comptes récents, le 26/10/2026 pour les autres ; celles qui existent
+//   « continue to work as-is ») ; /docs/apps/developer-platform/build-apps/authentication/
+//   account-service-keys et /changelog/service-keys (la clé de service les remplace : même en-tête
+//   « Authorization: Bearer pat-na1-… », mêmes limites que les applis privées, portées choisies à la
+//   création parmi celles de son auteur ; réservée aux super administrateurs et à l'accès « Developer
+//   tools » ; pas de webhooks, dont Leon ne se sert pas).
 //   /docs/developer-tooling/platform/versioning (les adresses /v3 et /v4 restent « supportées » sans
 //     date de fin ; HubSpot annonce que v4 devient « unsupported » le 30/03/2027)
 // Le bouton « Se connecter avec HubSpot » (jeton OAuth, même en-tête « Bearer ») : voir oauth.ts.
@@ -52,18 +59,19 @@ import type { Person } from './schemas';
 // auteur ou sans fiche liée. Un 403 sur la recherche d'une sorte d'activité remonte : sinon des appels ou
 // des e-mails manqueraient sans que personne le sache.
 //
-// Non vérifié (aucune clé réelle) : que le jeton d'une appli privée (« legacy app ») passe sur les adresses
-// datées ; les portées exactes (la doc de chaque activité cite crm.objects.contacts.read, celle des
+// Non vérifié (aucune clé réelle) : que le jeton d'une appli privée (« legacy app ») ou une clé de service
+// passe sur les adresses datées (l'exemple de la doc des clés de service appelle /crm/v3) ; les portées exactes (la doc de chaque activité cite crm.objects.contacts.read, celle des
 // e-mails sales-email-read en plus ; crm.objects.owners.read pour les propriétaires) ; que `sorts` accepte
 // ASCENDING (la doc n'en montre que DESCENDING) ; que le filtre accepte des millisecondes en chaîne (la
 // doc n'en montre qu'un exemple) ; la forme de hs_email_headers (la doc dit seulement qu'il porte
 // l'expéditeur et les destinataires) ; qu'une modification du texte fait avancer hs_lastmodifieddate ;
-// que le compte est lisible avec un jeton d'appli privée (portée « oauth » dans la doc) ; qu'un
+// que le compte est lisible avec une clé collée (portée « oauth » dans la doc) ; qu'un
 // propriétaire sans fiche (équipe, ancien compte) n'apparaît qu'en archivé ; le plafond de 100 fiches
 // par lecture groupée (la doc ne le donne pas). Ni les pièces jointes ni les transcriptions d'appel ne
 // sont lues.
 
-// Deux façons de se brancher : la clé collée (`token`, jeton d'appli privée) ou le bouton
+// Deux façons de se brancher : la clé collée (`token` : clé de service, ou jeton d'appli privée
+// d'avant leur fermeture, tous deux en « pat-… ») ou le bouton
 // (`accessToken`, que le socle OAuth renouvelle). Une connexion enregistrée avant le bouton n'a pas
 // d'`authMode` : c'est une clé. Un `z.object` raffiné : le catalogue lit `.shape`.
 const ConfigSchema = z

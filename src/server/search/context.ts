@@ -5,7 +5,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { epochToDate, sourceInfoFrom } from './filters-sql';
+import { epochToDate, notOldResume, sourceInfoFrom } from './filters-sql';
 import type { ContextTurn, SourceInfo } from './types';
 
 // Lire une source, ou le passage d'une source dans son contexte : les tours voisins, sous les droits du lecteur.
@@ -17,6 +17,8 @@ const WINDOW_MAX = 20;
 
 // L'ordre des tours d'une source : leur date, puis l'ordre d'écriture, puis l'identifiant (un ordre stable).
 const TURN_ORDER = sql`t.ts, t.created_at, t.id`;
+// Un ancien résumé de session (T23) n'est ni lu, ni voisin d'un passage.
+const CURRENT_TURN = notOldResume(sql`t.external_id`, sql`t.source_id`);
 
 async function loadSource(tx: Tx, sourceId: string): Promise<SourceInfo | null> {
   const [row] = await tx
@@ -88,7 +90,7 @@ export async function fetchPassageContext(
       with ordered as (
         select t.id, row_number() over (order by ${TURN_ORDER}) as n
         from turns t
-        where t.tenant_id = ${ctx.tenantId} and t.source_id = ${hit.sourceId}
+        where t.tenant_id = ${ctx.tenantId} and t.source_id = ${hit.sourceId} and ${CURRENT_TURN}
       ), hit_at as (select n from ordered where id = ${hit.turnId})
       select t.id, t.role, t.author_name, extract(epoch from t.ts) as epoch, t.text
       from ordered o
@@ -122,7 +124,7 @@ export async function fetchSource(
         select t.id, t.role, t.author_name, t.ts, t.created_at, t.text,
                sum(char_length(t.text)) over (order by ${TURN_ORDER}) as running
         from turns t
-        where t.tenant_id = ${ctx.tenantId} and t.source_id = ${sourceId}
+        where t.tenant_id = ${ctx.tenantId} and t.source_id = ${sourceId} and ${CURRENT_TURN}
       ) ordered
       where running - char_length(text) <= ${maxChars}
       order by ts, created_at, id`);

@@ -110,6 +110,76 @@ function prInfo(row: PrRow): PrInfo {
   };
 }
 
+// Les PR de chaque liste de faits, reliées à leur source GitHub (D5) : par leur clé exacte, ou à défaut par la branche,
+// avec le lien, l'état et le titre gardé (prColumns). `fini` : la date de fusion, en millisecondes (NaN sans). Sous
+// la sécurité par ligne de `tx` : une PR que le lecteur ne voit pas n'est pas reliée. Partagé par « mes sessions » et
+// le résumé d'une session (T23).
+export async function linkPrs(
+  tx: Tx,
+  ctx: TenantContext,
+  projet: string,
+  list: Array<SessionFacts | null>,
+): Promise<Array<Array<StartPr & { fini: number }>>> {
+  const keys = [...new Set(list.flatMap((faits) => faits?.prs.map(prKey) ?? []))];
+  const exact = new Map<string, PrInfo>();
+  if (keys.length > 0) {
+    // Sous la sécurité par ligne, une PR que le lecteur ne voit pas n'est pas reliée.
+    // shortcut: aucun index sur lower(external_id), la lecture parcourt les sources (10 ms sur 10 000 sous RLS) ;
+    // ajouter un index (tenant_id, kind, lower(external_id)) quand la mesure du démarrage dépasse 100 ms.
+    // shortcut: une seule jointure (D5), ni WITH RECURSIVE ni table de liens ; à revoir si un lien de profondeur 3 sert.
+    const { rows: prs } = await tx.execute<PrRow>(sql`
+      select distinct on (lower(s.external_id)) lower(s.external_id) as key, ${prColumns(ctx)}
+      from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
+        and lower(s.external_id) = any(${textArray(keys)})
+      order by lower(s.external_id), ${LATEST_COPY}`);
+    for (const pr of prs) exact.set(pr.key, prInfo(pr));
+  }
+  // À défaut de lien exact (aucune PR des faits n'a de source visible), la branche : seulement une PR de l'équipe
+  // dont la tête est dans le dépôt (pas un fork, qui peut porter n'importe quel nom de branche), et jamais la branche
+  // par défaut, que tout le monde partage. Les PR des faits restent dans l'en-tête, avant celle de la branche.
+  const unresolved = (faits: SessionFacts) => faits.prs.every((pr) => !exact.has(prKey(pr)));
+  const repo = repoOf(projet);
+  const branches = [
+    ...new Set(
+      list.flatMap((faits) =>
+        faits && unresolved(faits) && faits.branche && !DEFAULT_BRANCHES.has(faits.branche)
+          ? [faits.branche]
+          : [],
+      ),
+    ),
+  ];
+  const byBranch = new Map<string, Pick<StartPr, 'repo' | 'numero'> & PrInfo>();
+  if (repo && branches.length > 0) {
+    const { rows: prs } = await tx.execute<BranchRow>(sql`
+      select s.key, ${prColumns(ctx)}, s.origin->>'branche' as branche
+      from (${latestPrs(ctx, repo)}) s
+      where s.origin->>'branche' = any(${textArray(branches)})
+        and s.origin->>'cote' = 'equipe' and lower(s.origin->>'tete') = ${repo}
+      order by s.updated desc nulls last, s.key`);
+    // La plus récemment modifiée, quand une branche a servi à plusieurs PR.
+    for (const pr of prs) {
+      if (!byBranch.has(pr.branche))
+        byBranch.set(pr.branche, { repo, numero: numberOf(pr.key), ...prInfo(pr) });
+    }
+  }
+  return list.map((faits) => {
+    if (!faits) return [];
+    const linked = unresolved(faits) && faits.branche ? byBranch.get(faits.branche) : undefined;
+    return [
+      ...faits.prs.map((pr) => ({
+        ...pr,
+        url: null,
+        etat: null,
+        titre: null,
+        fini: Number.NaN,
+        ...exact.get(prKey(pr)),
+      })),
+      ...(linked ? [{ par: 'branche' as const, ...linked }] : []),
+    ];
+  });
+}
+
 export async function readStartContext(
   ctx: TenantContext,
   input: { projet: string; branche: string | null; session: string },
@@ -137,63 +207,15 @@ export async function readStartContext(
         faits: faits.success ? faits.data : null,
       };
     });
-    const keys = [...new Set(sessions.flatMap((session) => session.faits?.prs.map(prKey) ?? []))];
-    const exact = new Map<string, PrInfo>();
-    if (keys.length > 0) {
-      // Sous la sécurité par ligne, une PR que le lecteur ne voit pas n'est pas reliée.
-      // shortcut: aucun index sur lower(external_id), la lecture parcourt les sources (10 ms sur 10 000 sous RLS) ;
-      // ajouter un index (tenant_id, kind, lower(external_id)) quand la mesure du démarrage dépasse 100 ms.
-      // shortcut: une seule jointure (D5), ni WITH RECURSIVE ni table de liens ; à revoir si un lien de profondeur 3 sert.
-      const { rows: prs } = await tx.execute<PrRow>(sql`
-        select distinct on (lower(s.external_id)) lower(s.external_id) as key, ${prColumns(ctx)}
-        from sources s
-        where s.tenant_id = ${ctx.tenantId} and s.kind = ${GITHUB}
-          and lower(s.external_id) = any(${textArray(keys)})
-        order by lower(s.external_id), ${LATEST_COPY}`);
-      for (const pr of prs) exact.set(pr.key, prInfo(pr));
-    }
-    // À défaut de lien exact (aucune PR des faits n'a de source visible), la branche : seulement une PR de l'équipe
-    // dont la tête est dans le dépôt (pas un fork, qui peut porter n'importe quel nom de branche), et jamais la branche
-    // par défaut, que tout le monde partage. Les PR des faits restent dans l'en-tête, avant celle de la branche.
-    const unresolved = (faits: SessionFacts) => faits.prs.every((pr) => !exact.has(prKey(pr)));
-    const repo = repoOf(input.projet);
-    const branches = [
-      ...new Set(
-        sessions.flatMap(({ faits }) =>
-          faits && unresolved(faits) && faits.branche && !DEFAULT_BRANCHES.has(faits.branche)
-            ? [faits.branche]
-            : [],
-        ),
-      ),
-    ];
-    const byBranch = new Map<string, Pick<StartPr, 'repo' | 'numero'> & PrInfo>();
-    if (repo && branches.length > 0) {
-      const { rows: prs } = await tx.execute<BranchRow>(sql`
-        select s.key, ${prColumns(ctx)}, s.origin->>'branche' as branche
-        from (${latestPrs(ctx, repo)}) s
-        where s.origin->>'branche' = any(${textArray(branches)})
-          and s.origin->>'cote' = 'equipe' and lower(s.origin->>'tete') = ${repo}
-        order by s.updated desc nulls last, s.key`);
-      // La plus récemment modifiée, quand une branche a servi à plusieurs PR.
-      for (const pr of prs) {
-        if (!byBranch.has(pr.branche))
-          byBranch.set(pr.branche, { repo, numero: numberOf(pr.key), ...prInfo(pr) });
-      }
-    }
-    const start = sessions.map(({ faits, ...session }) => {
+    const linked = await linkPrs(
+      tx,
+      ctx,
+      input.projet,
+      sessions.map((session) => session.faits),
+    );
+    const start = sessions.map(({ faits, ...session }, index) => {
       if (!faits) return { ...session, faits: null };
-      const linked = unresolved(faits) && faits.branche ? byBranch.get(faits.branche) : undefined;
-      const prs = [
-        ...faits.prs.map((pr) => ({
-          ...pr,
-          url: null,
-          etat: null,
-          titre: null,
-          fini: Number.NaN,
-          ...exact.get(prKey(pr)),
-        })),
-        ...(linked ? [{ par: 'branche' as const, ...linked }] : []),
-      ];
+      const prs = linked[index] ?? [];
       const after = session.lastTs.getTime();
       return {
         ...session,
@@ -206,6 +228,7 @@ export async function readStartContext(
         },
       };
     });
+    const repo = repoOf(input.projet);
     return { sessions: start, equipe: repo ? await readTeamPrs(tx, ctx, input.projet, repo) : [] };
   });
 }

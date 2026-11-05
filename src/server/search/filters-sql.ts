@@ -1,4 +1,4 @@
-import { type SQL, sql } from 'drizzle-orm';
+import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
 import { CODE_SESSION_KINDS, ITEM_NATURES, type ItemNature, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { SearchFilters, SourceInfo } from './types';
@@ -13,6 +13,16 @@ export function textArray(values: readonly string[]): SQL {
   if (values.length === 0) return sql`'{}'::text[]`;
   const items = values.map((value) => sql`${value}`);
   return sql`array[${sql.join(items, sql`, `)}]::text[]`;
+}
+
+// Les résumés d'une session écrits par Leon (T23) : des tours `leon:resume:<n>` de la session. Seul le dernier, que
+// nomme `metadata.resume.tour` de sa source, se lit et s'indexe ; les précédents restent des tours, datés, comme des
+// versions de la session, hors de la recherche et de la lecture.
+export const RESUME_EXTERNAL_PREFIX = 'leon:resume:';
+export const RESUME_LIKE = `${RESUME_EXTERNAL_PREFIX}%`;
+export function notOldResume(externalId: SQLWrapper, sourceId: SQLWrapper): SQL {
+  return sql`(${externalId} not like ${RESUME_LIKE} or ${externalId} = ${RESUME_EXTERNAL_PREFIX}
+    || (select r.metadata->'resume'->>'tour' from sources r where r.id = ${sourceId}))`;
 }
 
 function allOf(conditions: SQL[]): SQL {

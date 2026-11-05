@@ -1,5 +1,5 @@
-import { and, eq } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
+import { and, eq, sql } from 'drizzle-orm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
@@ -9,6 +9,14 @@ import { sources } from '@/server/db/schema/memory';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
+
+// La file du résumé (T23) est simulée : le vrai pg-boss est vérifié dans resume-queue.db.test.ts.
+const { enqueueResume } = vi.hoisted(() => ({ enqueueResume: vi.fn() }));
+vi.mock('@/server/sessions/resume-queue', () => ({ enqueueResume }));
+beforeEach(() => {
+  enqueueResume.mockReset();
+  enqueueResume.mockResolvedValue(undefined);
+});
 
 async function setup() {
   const { members } = await createTestTenant(['Paul', 'Marie']);
@@ -139,7 +147,7 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
-  // T23 lira cette version (résumé à partir de 3, prompt à 4) : une version inconnue n'est pas rangée.
+  // Le résumé suit l'usage `resume`, pas la version (C7 révisé) : 3 et 4 restent acceptées, une version inconnue non.
   it.each([1, 5])('répond 400 à la version d’accord %i', async (accord) => {
     const { paulToken } = await setup();
     const body = { ...validBody(), accord };
@@ -312,5 +320,63 @@ describe('POST /api/v1/faits', () => {
     expect(response.status).toBe(202);
     const [stored] = await storedMetadata(paul, first.external_id);
     expect(stored?.metadata.fin).toBe(true);
+  });
+
+  // L'usage `resume` (C7 révisé) n'arrive dans le corps qu'avec T24 : il est rangé ici à la main.
+  async function grantResume(owner: TenantContext, externalId: string) {
+    await adminDb
+      .update(sources)
+      .set({ metadata: sql`${sources.metadata} || '{"usages":["resume"]}'::jsonb` })
+      .where(and(eq(sources.ownerUserId, owner.userId), eq(sources.externalId, externalId)));
+  }
+
+  it('fin sans l’usage resume : aucun job', async () => {
+    const { paulToken } = await setup();
+    const body = { ...validBody(), accord: 3, fin: true };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    expect(enqueueResume).not.toHaveBeenCalled();
+  });
+
+  it('avec l’usage resume : met la session en file, avec sa fin', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    await grantResume(paul, body.external_id);
+    const [source] = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, paul.userId), eq(sources.externalId, body.external_id)));
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    const job = { tenantId: paul.tenantId, sourceId: source?.id, ownerUserId: paul.userId };
+    expect(enqueueResume.mock.calls).toEqual([
+      [job, { fin: false }],
+      [job, { fin: true }],
+    ]);
+  });
+
+  it('une file indisponible ne fait pas perdre les faits : 202', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    await grantResume(paul, body.external_id);
+    enqueueResume.mockRejectedValue(new Error('pg-boss en panne'));
+
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    expect((await storedMetadata(paul, body.external_id))[0]?.metadata.fin).toBe(true);
   });
 });

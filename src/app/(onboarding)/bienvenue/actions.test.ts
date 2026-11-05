@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -10,7 +11,7 @@ import {
 import { getSession, getUserContext } from '@/server/auth/session';
 import { createOrganizationForUser } from '@/server/auth/sign-up';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
-import { completeAboutStepAction } from './actions';
+import { chooseToolsAction, completeAboutStepAction } from './actions';
 
 // sign-up.ts importe auth.ts, qui ouvrirait Better Auth sur la base : inutile ici.
 vi.mock('@/server/auth/auth', () => ({ auth: { api: {} } }));
@@ -28,6 +29,7 @@ vi.mock('@/server/auth/onboarding', async (importOriginal) => ({
   isSoleMember: vi.fn(),
 }));
 vi.mock('@/server/auth/tenant-context', () => ({ resolveTenantContext: vi.fn() }));
+vi.mock('next/headers', () => ({ cookies: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -396,5 +398,31 @@ describe('completeAboutStepAction', () => {
       expect(state.errors).toEqual({ organizationName: 'company', size: 'size' });
       expect(createOrganizationForUser).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('chooseToolsAction', () => {
+  const set = vi.fn();
+  beforeEach(() => vi.mocked(cookies).mockResolvedValue({ set } as never));
+
+  it('garde le choix au nom de la personne, sans identifiant inconnu, puis ouvre la file', async () => {
+    await redirectsTo(
+      chooseToolsAction(form({ outils: ['gmail', 'inconnu', 'github', 'gmail'] })),
+      '/bienvenue/outils?etape=brancher',
+    );
+
+    expect(set).toHaveBeenCalledWith(
+      'leon_outils',
+      `${USER_ID}:github,gmail`,
+      expect.objectContaining({ path: '/bienvenue', httpOnly: true, sameSite: 'lax' }),
+    );
+  });
+
+  it('sans session → /connexion, rien de gardé', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+
+    await redirectsTo(chooseToolsAction(form({ outils: 'gmail' })), '/connexion');
+
+    expect(set).not.toHaveBeenCalled();
   });
 });

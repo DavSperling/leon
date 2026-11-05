@@ -262,8 +262,22 @@ function OAuthForm({
 }) {
   const t = useTranslations('connections');
   const en = useLocale() === 'en';
+  // Le départ chez l'éditeur prend une seconde (Pipedream crée d'abord un lien) : le bouton le dit. Un retour arrière
+  // peut rendre la page gardée en mémoire par le navigateur, bouton compris : `pageshow` le remet à zéro.
+  const [leaving, setLeaving] = useState(false);
+  useEffect(() => {
+    const reset = () => setLeaving(false);
+    window.addEventListener('pageshow', reset);
+    return () => window.removeEventListener('pageshow', reset);
+  }, []);
   return (
-    <form ref={ref} method="post" action={oauthStartPath(entry.id)} className="grid gap-4">
+    <form
+      ref={ref}
+      method="post"
+      action={oauthStartPath(entry.id)}
+      onSubmit={() => setLeaving(true)}
+      className="grid gap-4"
+    >
       {returnTo && <input type="hidden" name="retour" value={returnTo} />}
       {entry.oauthHelp && <p className="text-ui text-fg-2">{nb(entry.oauthHelp)}</p>}
       {entry.fields
@@ -273,7 +287,7 @@ function OAuthForm({
         ))}
       <PeriodField />
       <div>
-        <Button type="submit" variant="primary" icon={LogIn} data-autofocus>
+        <Button type="submit" variant="primary" icon={LogIn} loading={leaving} data-autofocus>
           {t('connectWith', { provider: entry.label })}
         </Button>
       </div>
@@ -287,8 +301,8 @@ function OAuthForm({
   );
 }
 
-/** Le bouton d'abord, la clé en secours (« ou coller une clé ») ; la clé seule quand l'appli n'est pas configurée. */
-function AddConnection({
+/** Le bouton d'abord, la clé en secours (« ou coller une clé ») ; la clé seule quand l'appli n'est pas configurée. Aussi dans la file de l'onboarding. */
+export function AddConnection({
   entry,
   onAdded,
   returnTo,

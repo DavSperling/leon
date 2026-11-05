@@ -1,7 +1,10 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { PROVIDER_IDS } from '@/capture/turn';
+import { TOOLS_COOKIE, toolsCookieValue } from '@/components/verre/onboarding/tools-model';
 import { COMPANY_SIZES, GOALS } from '@/lib/onboarding';
 import {
   completeMemberStep,
@@ -113,4 +116,20 @@ export async function completeAboutStepAction(
     await completeMemberStep(ctx, goals.data.goals);
   }
   redirect('/bienvenue/outils');
+}
+
+// Le choix de l'étape Vos outils, puis la file « Branchez-les un par un ». Un identifiant inconnu ne vient que d'un
+// formulaire truqué : il est ignoré ; la page ne garde ensuite que les outils qu'elle propose.
+export async function chooseToolsAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) redirect('/connexion');
+  const ids = PROVIDER_IDS.filter((id) => formData.getAll('outils').includes(id));
+  (await cookies()).set(TOOLS_COOKIE, toolsCookieValue(session.user.id, ids), {
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/bienvenue',
+    sameSite: 'lax',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  });
+  redirect('/bienvenue/outils?etape=brancher');
 }

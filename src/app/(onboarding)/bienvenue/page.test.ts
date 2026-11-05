@@ -9,6 +9,7 @@ import {
 } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
+import { listCatalog } from '@/server/connectors/catalog';
 import WelcomePage from './page';
 
 vi.mock('@/server/auth/session', () => ({ getSession: vi.fn(), getUserContext: vi.fn() }));
@@ -20,6 +21,7 @@ vi.mock('@/server/auth/onboarding', () => ({
     role.includes('owner') ? 'owner' : role.includes('admin') ? 'admin' : 'member',
 }));
 vi.mock('@/server/auth/viewer', () => ({ getViewerProfile: vi.fn() }));
+vi.mock('@/server/connectors/catalog', () => ({ listCatalog: vi.fn() }));
 // Le composant client importe les actions de Réglages, donc Better Auth : seule la règle de la page se teste ici.
 vi.mock('@/components/verre/onboarding/about-step', () => ({ AboutStep: vi.fn() }));
 vi.mock('next-intl/server', () => ({
@@ -54,6 +56,12 @@ beforeEach(() => {
     userName: 'Ana',
     email: 'ana@example.com',
   } as never);
+  // Gmail et Notion se branchent en un clic (Notion sans vrai essai) : l'aperçu peut annoncer ces deux-là.
+  vi.mocked(listCatalog).mockReturnValue([
+    { id: 'gmail', available: true, triedForReal: true, oauthReady: true },
+    { id: 'notion', available: true, triedForReal: false, oauthReady: true },
+    { id: 'linear', available: true, triedForReal: true, oauthReady: false },
+  ] as never);
 });
 
 describe('page de l’étape Vous', () => {
@@ -99,6 +107,13 @@ describe('page de l’étape Vous', () => {
     vi.mocked(isSoleMember).mockResolvedValue(false);
 
     expect((await render()).props).toMatchObject({ mode: 'owner', steps: ['about'] });
+  });
+
+  it('l’aperçu n’annonce que les outils que l’étape suivante propose', async () => {
+    expect((await render()).props).toMatchObject({ readyTools: ['gmail', 'notion'] });
+
+    vi.mocked(getUserContext).mockResolvedValue(null);
+    expect((await render()).props).toMatchObject({ readyTools: ['gmail', 'notion'] });
   });
 
   it.each(['member', 'admin'])('%s : deux étapes, sans compter les membres', async (role) => {

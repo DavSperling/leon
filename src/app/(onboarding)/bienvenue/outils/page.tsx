@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { nextAfterTools, toolStates } from '@/components/verre/onboarding/tools-model';
+import {
+  chosenTools,
+  nextAfterTools,
+  TOOLS_COOKIE,
+  toolStates,
+} from '@/components/verre/onboarding/tools-model';
 import { ToolsStep } from '@/components/verre/onboarding/tools-step';
 import { oauthNotice } from '@/lib/connection-form';
 import { DEPARTMENTS, isDepartment, onboardingSteps } from '@/lib/onboarding';
@@ -45,7 +51,8 @@ export default async function ToolsPage({
   const conns = await listConnections(ctx);
   // Le retour de l'éditeur (`?branche=` ou `?erreur=`). Le lien d'accord de l'administrateur vient du
   // catalogue, jamais de l'adresse.
-  const notice = oauthNotice(await searchParams, locale);
+  const params = await searchParams;
+  const notice = oauthNotice(params, locale);
   const owner = spaceRole(member.role) === 'owner';
   const soleOwner = owner && (await isSoleMember(ctx));
   return (
@@ -58,6 +65,9 @@ export default async function ToolsPage({
       nextHref={nextAfterTools(soleOwner)}
       steps={onboardingSteps(soleOwner ? 'soleOwner' : owner ? 'ownerWithTeam' : 'member')}
       notice={notice}
+      // La file « Branchez-les un par un » : après le choix, et au retour de l'éditeur.
+      connecting={params.etape === 'brancher' || notice !== null}
+      chosen={chosenTools((await cookies()).get(TOOLS_COOKIE)?.value, ctx.userId)}
       codeCommand={installCommand()}
       codeInstructions={claudeCodeInstructions(await getTranslations('claudeCode'))}
     />

@@ -112,7 +112,7 @@ Les 42 outils branchables. « Essayé en réel » : quelqu'un de l'équipe l'a b
 
 | Outil | Famille | Essayé en réel |
 | --- | --- | --- |
-| GitHub | Dev | non |
+| GitHub | Dev | oui |
 | GitLab | Dev | non |
 | Linear | Dev | non |
 | Notion | Dev | non |

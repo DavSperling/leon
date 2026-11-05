@@ -20,6 +20,7 @@ import {
   type AboutStepState,
   completeAboutStepAction,
 } from '@/app/(onboarding)/bienvenue/actions';
+import type { ProviderId } from '@/capture/turn';
 import { Badge } from '@/components/verre/ui/badge';
 import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
@@ -51,6 +52,8 @@ export type AboutStepProps = {
   placement: Placement | null;
   /** Les étapes que cette personne va parcourir ; une seule, et le fil d'étapes disparaît. */
   steps: OnboardingStepId[];
+  /** Les outils que l'étape Vos outils propose (`onboardingReady`) : l'aperçu n'annonce qu'eux. */
+  readyTools: ProviderId[];
 };
 
 // Le trait d'union des tailles ('11-50') s'écrit en tiret demi-cadratin ; la valeur envoyée reste l'identifiant.
@@ -90,6 +93,7 @@ export function AboutStep({
   organizationName,
   placement,
   steps,
+  readyTools,
 }: AboutStepProps) {
   const t = useTranslations('onboarding');
   const languages = useTranslations('preferences');
@@ -307,6 +311,7 @@ export function AboutStep({
         department={shown.department ?? ''}
         job={shown.job ?? ''}
         seniority={shown.seniority}
+        readyTools={readyTools}
       />
     </div>
   );

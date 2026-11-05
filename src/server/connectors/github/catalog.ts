@@ -23,7 +23,7 @@ export const githubCatalog: CatalogEntry = {
     'Leon lit les tickets et les pull requests des dépôts où vous installez son appli GitHub, s’ils sont parmi les dépôts d’équipe choisis par un administrateur (Réglages, onglet Équipe) ; les autres ne sont pas lus. L’accès couvre aussi le code et permet d’y écrire (branches, commits, pull requests, fusion) et d’agir sur GitHub Actions et les fichiers de workflow : relancer ou lancer un workflow peut déployer, et ce droit permet aussi de supprimer des exécutions et des artefacts. Leon ne s’en sert pas encore ; chaque action demandera votre accord.',
   docsUrl:
     'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens',
-  triedForReal: false,
+  triedForReal: true, // branché en production (relèves réussies, novembre 2026)
   en: {
     fields: {
       token: { label: 'Fine-grained access token' },

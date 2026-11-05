@@ -158,6 +158,7 @@ async function finir(owner: TenantContext, sourceId: string) {
     external_id: externalId,
     project: PROJECT,
     accord: 2,
+    usages: ['resume'],
     faits: facts(),
     fin: true,
   });
@@ -567,6 +568,7 @@ describe('summarizeSession', () => {
           external_id: externalId,
           project: PROJECT,
           accord: 2,
+          usages: ['resume'],
           faits: facts({ branche: 'paul/pendant' }),
           fin: true,
         });

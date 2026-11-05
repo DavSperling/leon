@@ -102,8 +102,15 @@ type Run = { code: number; output: string; questions: string[] };
 
 // `answers` : ce que « tape » l'utilisateur à chaque question ; une question non prévue fait échouer le test.
 // `repoDir` : le clone de la forme clone (REPO par défaut) ; `null`, la forme installée, qui n'a pas de clone.
+// `interactive` : l'entrée est un terminal (faux par défaut, comme `echo oui | pnpm leon …`).
 async function install(
-  options: { repoDir?: string | null; home?: string; assumeYes?: boolean; answers?: string[] } = {},
+  options: {
+    repoDir?: string | null;
+    home?: string;
+    assumeYes?: boolean;
+    interactive?: boolean;
+    answers?: string[];
+  } = {},
   hook?: () => Promise<void>,
 ): Promise<Run> {
   const lines: string[] = [];
@@ -115,6 +122,7 @@ async function install(
       configDir,
       home: options.home ?? home,
       assumeYes: options.assumeYes ?? false,
+      interactive: options.interactive ?? false,
     },
     {
       out: (text) => lines.push(text),
@@ -975,6 +983,137 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
     expect(run.output).toContain('only the text of the exchanges');
     expect((await readSettings()).hooks.SessionStart).toEqual([leonStart()]);
   });
+});
+
+// L'usage `resume` (C7 révisé, D30 du plan de la mémoire à disposition), mot pour mot : demandé à part, après l'accord
+// de base, jamais coché d'avance, jamais donné par --oui ni par une réponse lue hors d'un terminal.
+const RESUME_TEXT = [
+  'Session summaries (usage "resume", optional, asked separately):',
+  "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
+  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session.",
+].join('\n');
+
+describe('installHooks : l’usage resume', () => {
+  const usages = async () => (await factsConsent(home, 'claude_code'))?.usages;
+
+  it('montre son texte mot pour mot après l’accord de base, puis le demande à part, en [y/N]', async () => {
+    const run = await install({ interactive: true, answers: ['oui', 'non'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(2);
+    expect(run.questions[1]).toContain('[y/N]');
+    expect(run.questions[1]).toContain(consentPath(home));
+    expect(run.output.indexOf(RESUME_TEXT)).toBeGreaterThan(run.output.indexOf(CONSENT_TEXT));
+    expect(run.output).toContain('Nothing was added: no session is summarized.');
+    expect(await usages()).toEqual([]);
+  });
+
+  it('accepté : l’usage s’ajoute, daté, à l’accord en version 2', async () => {
+    const run = await install({ interactive: true, answers: ['oui', 'oui'] });
+
+    expect(run.code).toBe(0);
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8'))).toEqual({
+      outils: {
+        claude_code: {
+          version: 2,
+          installe_le: expect.any(String),
+          usages: { resume: expect.any(String) },
+        },
+      },
+    });
+    expect(run.output).toContain(`Session summaries recorded in ${consentPath(home)}.`);
+  });
+
+  it.each(['', 'n', 'peut-être'])('la réponse %j n’ajoute rien', async (answer) => {
+    await install({ interactive: true, answers: ['oui', answer] });
+
+    expect(await usages()).toEqual([]);
+  });
+
+  it('hors terminal, il n’est pas demandé : une réponse lue d’un tube n’en donne aucun', async () => {
+    const run = await install({ answers: ['oui', 'oui'] });
+
+    expect(run.questions).toHaveLength(1);
+    expect(run.output).not.toContain(RESUME_TEXT);
+    expect(await usages()).toEqual([]);
+  });
+
+  it('avec --oui, ni question ni usage, même dans un terminal', async () => {
+    const run = await install({ interactive: true, assumeYes: true });
+
+    expect(run.questions).toEqual([]);
+    expect(await usages()).toEqual([]);
+  });
+
+  it('l’accord de base refusé : l’usage n’est pas demandé', async () => {
+    const run = await install({ interactive: true, answers: ['non'] });
+
+    expect(run.questions).toHaveLength(1);
+    expect(await exists(consentPath(home))).toBe(false);
+  });
+
+  it('crochets et accord en place, sans l’usage : il est proposé, settings.json n’est pas touché', async () => {
+    const before = await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
+
+    const run = await install({ interactive: true, answers: ['oui'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(1);
+    expect(run.output).toContain(`Both Leon hooks are already in place in ${settingsPath}.`);
+    expect(run.output).not.toContain('nothing to do');
+    expect(run.output).toContain(RESUME_TEXT);
+    // La date de l'accord, qui borne le rattrapage, ne bouge pas.
+    expect(await factsConsent(home, 'claude_code')).toEqual({
+      version: 2,
+      installe_le: new Date('2026-11-02T14:00:00Z'),
+      usages: ['resume'],
+    });
+    expect(await readFile(settingsPath, 'utf8')).toBe(before);
+    expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+  });
+
+  it('crochets en place sans accord : l’accord de base, puis l’usage', async () => {
+    await leonHooksInPlace();
+
+    const run = await install({ interactive: true, answers: ['oui', 'oui'] });
+
+    expect(run.questions).toHaveLength(2);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      version: 2,
+      usages: ['resume'],
+    });
+  });
+
+  it('tout en place, l’usage compris : rien n’est demandé', async () => {
+    await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 2);
+    await install({ interactive: true, answers: ['oui'] });
+
+    const run = await install({ interactive: true, answers: [] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([]);
+    expect(run.output).toContain('nothing to do');
+  });
+
+  it.skipIf(asRoot)(
+    'un usage qui ne s’écrit pas : message clair et code 1, l’accord de base gardé',
+    async () => {
+      await leonHooksInPlace();
+      await writeConsent(home, 'claude_code', 2);
+      const consentBefore = await readFile(consentPath(home), 'utf8');
+      await chmod(join(home, '.leon'), 0o500);
+      locked.push(join(home, '.leon'));
+
+      const run = await install({ interactive: true, answers: ['oui'] });
+
+      expect(run.code).toBe(1);
+      expect(run.output).toContain(`could not write ${consentPath(home)}`);
+      expect(run.output).toContain('no session is summarized');
+      expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
+    },
+  );
 });
 
 describe('installHooks : les réglages du serveur dans le .env.local du dépôt', () => {

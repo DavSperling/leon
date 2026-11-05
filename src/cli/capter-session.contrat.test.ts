@@ -17,7 +17,7 @@ import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS, SessionFactsPayloadSchema } from '../capture/api-contract';
 import type { IngestPayload } from '../capture/turn';
-import { writeConsent } from './consent';
+import { addUsage, writeConsent } from './consent';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -208,7 +208,25 @@ describe('leon capter-session : la vraie commande', () => {
         fin: true,
         faits: { echanges: 2 },
       });
+      // Sans usage, le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
+      expect(facts?.body).not.toHaveProperty('usages');
       expect(JSON.stringify(facts?.body)).not.toContain(SECRET_IN_SESSION);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "avec l'usage resume dans l'accord (C7 révisé), les faits le portent (C2)",
+    async () => {
+      await writeConsent(home, 'claude_code', 2);
+      await addUsage(home, 'claude_code', 'resume');
+
+      const outcome = await runCommand(hookJson(await writeSession()));
+
+      expect(outcome.code).toBe(0);
+      const facts = received.find((request) => request.url === API_PATHS.faits);
+      expect(SessionFactsPayloadSchema.safeParse(facts?.body).success).toBe(true);
+      expect(facts?.body).toMatchObject({ accord: 2, usages: ['resume'] });
     },
     TEST_TIMEOUT_MS,
   );

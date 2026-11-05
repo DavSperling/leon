@@ -143,6 +143,7 @@ async function runImport(args: string[]): Promise<number> {
       : {
           facts: {
             accord: accord.version,
+            usages: accord.usages,
             depuis: accord.installe_le,
             send: env ? createFactsSender(fetch, env) : nothingSent,
           },
@@ -234,7 +235,13 @@ async function runCaptureSession(args: string[]): Promise<number> {
       send: createIngestSender(fetch, env, { signal }),
       ...(accord === null
         ? {}
-        : { facts: { accord: accord.version, send: createFactsSender(fetch, env, { signal }) } }),
+        : {
+            facts: {
+              accord: accord.version,
+              usages: accord.usages,
+              send: createFactsSender(fetch, env, { signal }),
+            },
+          }),
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
@@ -289,7 +296,10 @@ async function runInstallHooks(args: string[]): Promise<number> {
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
-    return await installHooks({ repoDir, configDir, home: io.home, assumeYes }, io);
+    return await installHooks(
+      { repoDir, configDir, home: io.home, assumeYes, interactive: process.stdin.isTTY === true },
+      io,
+    );
   } finally {
     asker.close();
   }
@@ -361,6 +371,7 @@ async function runSetupCommand(args: string[]): Promise<number> {
         out: console.log,
         err: console.error,
         ask: asker.ask,
+        interactive: process.stdin.isTTY === true,
         login: loginForSetup,
         fetch,
       },

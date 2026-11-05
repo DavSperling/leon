@@ -93,9 +93,17 @@ export const SessionFactsSchema = z
   .strict();
 export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 
+// Les usages de l'accord (C7 révisé du plan de la mémoire à disposition) : chacun accepté à part, daté, par outil, sur
+// le poste (cli/consent.ts). Le serveur vérifie l'usage à chaque emploi ; un usage absent vaut refus. Tous ceux du plan
+// sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
+export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
+export type Usage = (typeof USAGES)[number];
+
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
 // plus ancien perd les faits, jamais les tours. `accord` est la version d'accord de l'outil sur le poste : la CLI
-// n'envoie de faits qu'à partir de la version 2, et les versions connues s'arrêtent à 4 (C7).
+// n'envoie de faits qu'à partir de la version 2, la seule qu'elle écrit ; 3 et 4, jamais émises, restent acceptées par
+// prudence (C7 révisé). `usages` : ceux que l'outil a acceptés, rangés dans `metadata.usages` à chaque envoi ; la CLI
+// ne l'envoie que s'il y en a, et un envoi sans lui n'en donne aucun.
 export const FAITS_BODY_MAX_BYTES = 64 * 1024;
 export const SessionFactsPayloadSchema = z
   .object({
@@ -103,6 +111,7 @@ export const SessionFactsPayloadSchema = z
     external_id: z.string().min(1).max(200),
     project: ProjectSchema.optional(),
     accord: z.number().int().min(2).max(4),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
     faits: SessionFactsSchema,
     fin: z.boolean(), // une vraie fin de session (SessionEnd), ou un fichier resté immobile
   })

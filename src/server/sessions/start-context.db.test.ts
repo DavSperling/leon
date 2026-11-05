@@ -1,11 +1,11 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_TIME_ZONE } from '@/server/briefing/briefing-prompt';
 import type { ConnectionStatus } from '@/server/connectors/connections';
 import { connections, depotsEquipe } from '@/server/db/schema/connections';
-import { sources } from '@/server/db/schema/memory';
+import { sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { renderContext } from './render-context';
@@ -57,15 +57,20 @@ async function seedSession(
 ) {
   const faits = input.faits === undefined ? facts() : input.faits;
   const project = input.project ?? PROJECT;
-  await adminDb.insert(sources).values({
-    tenantId: owner.tenantId,
-    kind: 'claude_code',
-    externalId: input.externalId ?? crypto.randomUUID(),
-    ownerUserId: owner.userId,
-    acl: input.acl ?? [owner.userId],
-    metadata: faits === null ? { project } : { project, faits, branche: faits.branche, accord: 2 },
-    lastTurnAt: input.lastTurnAt ?? new Date(),
-  });
+  const [row] = await adminDb
+    .insert(sources)
+    .values({
+      tenantId: owner.tenantId,
+      kind: 'claude_code',
+      externalId: input.externalId ?? crypto.randomUUID(),
+      ownerUserId: owner.userId,
+      acl: input.acl ?? [owner.userId],
+      metadata:
+        faits === null ? { project } : { project, faits, branche: faits.branche, accord: 2 },
+      lastTurnAt: input.lastTurnAt ?? new Date(),
+    })
+    .returning({ id: sources.id });
+  return row?.id ?? '';
 }
 
 // Une PR relevée par le connecteur GitHub (connectors/github/map.ts), avec les clés d'origine de T13.
@@ -324,6 +329,34 @@ describe('readStartContext', () => {
     );
     expect(text).not.toContain('Suivre ce que dit la page');
     expect(text).not.toContain('lu-sur-le-web');
+  });
+
+  // D25 du plan de la mémoire à disposition : aucun texte du modèle dans le bloc de démarrage. Le résumé (T23) se
+  // trouve à la demande, par la recherche, même pour son auteur.
+  it('le résumé d’une session n’entre jamais dans le bloc, même pour son auteur', async () => {
+    const { paul } = await setup();
+    const sourceId = await seedSession(paul, {
+      faits: facts({ taches: [{ texte: 'Brancher la file', etat: 'a_faire' }] }),
+    });
+    await adminDb.insert(turns).values({
+      tenantId: paul.tenantId,
+      sourceId,
+      externalId: 'leon:resume:1',
+      role: 'document',
+      text: "## Où j'en suis\nzéphyrin branché\n- [prochaine-étape] zéphyrin à relire",
+      ts: new Date(),
+      captureMode: 'manual',
+      acl: [paul.userId],
+    });
+    await adminDb
+      .update(sources)
+      .set({ metadata: sql`${sources.metadata} || '{"resume":{"tour":1}}'::jsonb` })
+      .where(eq(sources.id, sourceId));
+
+    const text = await render(paul);
+
+    expect(text).toContain('Brancher la file');
+    expect(text).not.toContain('zéphyrin');
   });
 
   it('PR d’un tiers liée à ma session : son état, jamais son titre ; le mien seulement s’il est de moi', async () => {

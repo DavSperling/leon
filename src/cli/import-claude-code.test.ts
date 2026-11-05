@@ -353,6 +353,23 @@ describe('importClaudeCode : les faits de chaque session', () => {
     });
   });
 
+  // C2 : les usages de l'accord partent avec les faits ; sans usage, le corps reste celui qu'un serveur d'avant accepte.
+  it('envoie les usages de l’accord avec les faits, et rien quand il n’y en a pas', async () => {
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, usages: ['resume'] },
+    });
+    await importClaudeCode(importOptions(), { ...deps, facts: { ...deps.facts, usages: [] } });
+
+    const sent = facts.mock.calls.map(([payload]) => payload);
+    expect(sent.filter((payload) => payload.external_id === ACME_SESSION)).toEqual([
+      expect.objectContaining({ usages: ['resume'] }),
+      expect.not.objectContaining({ usages: expect.anything() }),
+    ]);
+  });
+
   it('fin vaut vrai pour un fichier qui n’a pas bougé depuis 30 min, faux sinon', async () => {
     const old = new Date(Date.now() - 31 * 60_000);
     await utimes(join(projectDir, 'session-simple.jsonl'), old, old);

@@ -44,6 +44,8 @@ export type SetupDeps = {
   err: (text: string) => void;
   // Pose la question et rend la ligne tapée ; une chaîne vide si l'entrée est fermée.
   ask: (question: string) => Promise<string>;
+  // L'entrée standard est un terminal : seul il fait demander un usage (installHooks).
+  interactive?: boolean;
   // `leon login` (leon.ts) : rend son code de sortie. `url` : l'option --url de `leon setup`.
   login: (url: string | undefined) => Promise<number>;
   // Pour demander à GET /api/v1/me si le jeton de la connexion vaut encore.
@@ -150,11 +152,17 @@ type InstallContext = {
   home: string;
   repoDir: string | undefined;
   yes: boolean;
-} & Pick<SetupDeps, 'out' | 'err' | 'ask'>;
+} & Pick<SetupDeps, 'out' | 'err' | 'ask' | 'interactive'>;
 
 async function installClaudeCode(configDir: string, ctx: InstallContext): Promise<Installed> {
   const code = await installHooks(
-    { repoDir: ctx.repoDir, configDir, home: ctx.home, assumeYes: ctx.yes },
+    {
+      repoDir: ctx.repoDir,
+      configDir,
+      home: ctx.home,
+      assumeYes: ctx.yes,
+      interactive: ctx.interactive,
+    },
     { out: ctx.out, err: ctx.err, ask: ctx.ask },
   );
   if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
@@ -278,7 +286,15 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
       summary.push(`${tool.label}: not supported yet`);
     } else {
       out(`${tool.label} found in ${dir}.`);
-      const result = await tool.install(dir, { home, repoDir, yes: options.yes, out, err, ask });
+      const result = await tool.install(dir, {
+        home,
+        repoDir,
+        yes: options.yes,
+        out,
+        err,
+        ask,
+        interactive: deps.interactive,
+      });
       failed ||= result.failed;
       summary.push(`${tool.label}: ${result.status}`);
     }

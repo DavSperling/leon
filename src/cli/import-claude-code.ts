@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
-import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
+import { API_PATHS, type SessionFactsPayload, type Usage } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import {
@@ -40,9 +40,10 @@ export type ImportDeps = {
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
-  // la version transmise au serveur. `depuis`, la date de l'accord : au rattrapage, seuls les fichiers modifiés
-  // ensuite envoient leurs faits (vigilance 4 du plan) ; le crochet de fin de session, lui, n'en a pas besoin.
-  facts?: { accord: number; send: FactsSender; depuis?: Date };
+  // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
+  // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; le
+  // crochet de fin de session, lui, n'en a pas besoin.
+  facts?: { accord: number; usages?: Usage[]; send: FactsSender; depuis?: Date };
 };
 export type ImportSummary = {
   sessions: number;
@@ -193,6 +194,8 @@ export async function sendSessionFacts(
     external_id: session.sessionId,
     ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
     accord: deps.facts.accord,
+    // Sans usage, pas de champ : le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
+    ...(deps.facts.usages?.length ? { usages: deps.facts.usages } : {}),
     faits: extractClaudeCodeFacts(source.content, source.root),
     fin: source.fin,
   };

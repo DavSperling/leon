@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
@@ -87,11 +87,41 @@ describe('POST /api/v1/faits', () => {
           faits: facts(),
           branche: 'paul/faits',
           accord: 3,
+          usages: [],
           fin: true,
           fin_le: expect.any(String),
         },
       },
     ]);
+  });
+
+  // C2 et C7 révisé : les usages de l'outil sur le poste, rangés à chaque envoi ; absents, aucun (un usage absent vaut
+  // refus), comme ceux d'une CLI d'avant eux.
+  it('range les usages reçus, et les remplace à chaque envoi', async () => {
+    const { paul, paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume', 'lecture'] };
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const [first] = await storedMetadata(paul, body.external_id);
+    const { usages: _usages, ...withoutUsages } = body;
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body: withoutUsages });
+
+    expect(response.status).toBe(202);
+    expect(first?.metadata.usages).toEqual(['resume', 'lecture']);
+    expect((await storedMetadata(paul, body.external_id))[0]?.metadata.usages).toEqual([]);
+  });
+
+  it('répond 400 à un usage inconnu', async () => {
+    const { paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume', 'tout'] };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'Invalid request',
+      issues: [{ path: 'usages.1', code: 'invalid_value' }],
+    });
   });
 
   it.each([
@@ -207,6 +237,7 @@ describe('POST /api/v1/faits', () => {
       faits: { ...second.faits, externe: true },
       branche: 'paul/suite',
       accord: 3,
+      usages: [],
       fin: false,
     });
   });
@@ -326,33 +357,23 @@ describe('POST /api/v1/faits', () => {
     expect(stored?.metadata.fin_le).toBe(closed?.metadata.fin_le);
   });
 
-  // L'usage `resume` (C7 révisé) n'arrive dans le corps qu'avec T24 : il est rangé ici à la main.
-  async function grantResume(owner: TenantContext, externalId: string) {
-    await adminDb
-      .update(sources)
-      .set({ metadata: sql`${sources.metadata} || '{"usages":["resume"]}'::jsonb` })
-      .where(and(eq(sources.ownerUserId, owner.userId), eq(sources.externalId, externalId)));
-  }
-
-  it('fin sans l’usage resume : aucun job', async () => {
+  it('fin sans l’usage resume : aucun job, même s’il était là à l’envoi d’avant', async () => {
     const { paulToken } = await setup();
-    const body = { ...validBody(), accord: 3, fin: true };
+    const body = { ...validBody(), accord: 3, usages: ['resume'] };
 
-    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, usages: ['lecture'], fin: true },
+    });
 
     expect(response.status).toBe(202);
-    expect(enqueueResume).not.toHaveBeenCalled();
+    expect(enqueueResume.mock.calls.map(([, options]) => options)).toEqual([{ fin: false }]);
   });
 
   it('avec l’usage resume : met la session en file, avec sa fin', async () => {
     const { paul, paulToken } = await setup();
-    const body = validBody();
-    await apiRequest(API_PATHS.faits, { token: paulToken, body });
-    await grantResume(paul, body.external_id);
-    const [source] = await adminDb
-      .select({ id: sources.id })
-      .from(sources)
-      .where(and(eq(sources.ownerUserId, paul.userId), eq(sources.externalId, body.external_id)));
+    const body = { ...validBody(), usages: ['resume'] };
 
     await apiRequest(API_PATHS.faits, { token: paulToken, body });
     const response = await apiRequest(API_PATHS.faits, {
@@ -361,6 +382,10 @@ describe('POST /api/v1/faits', () => {
     });
 
     expect(response.status).toBe(202);
+    const [source] = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, paul.userId), eq(sources.externalId, body.external_id)));
     const job = { tenantId: paul.tenantId, sourceId: source?.id, ownerUserId: paul.userId };
     expect(enqueueResume.mock.calls).toEqual([
       [job, { fin: false }],
@@ -370,9 +395,7 @@ describe('POST /api/v1/faits', () => {
 
   it('une file indisponible ne fait pas perdre les faits : 202', async () => {
     const { paul, paulToken } = await setup();
-    const body = validBody();
-    await apiRequest(API_PATHS.faits, { token: paulToken, body });
-    await grantResume(paul, body.external_id);
+    const body = { ...validBody(), usages: ['resume'] };
     enqueueResume.mockRejectedValue(new Error('pg-boss en panne'));
 
     const response = await apiRequest(API_PATHS.faits, {

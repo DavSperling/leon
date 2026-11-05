@@ -28,8 +28,8 @@
 // coupe des tours trop longs : `parseClaudeCodeSession`), puis le serveur la refait à la réception.
 //
 // Après les tours, les faits de la session (ses gestes, C1 du plan mémoire des sessions) partent par leur propre
-// route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts) : c'est une
-// vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
+// route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts, avec ses usages) :
+// c'est une vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
 import { isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';

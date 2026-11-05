@@ -65,6 +65,7 @@ export const TEST_ENV = {
   LEON_MODEL_REPONSE: '',
   LEON_MODEL_DISCUSSION: '',
   LEON_MODEL_POINT: '',
+  LEON_MODEL_RESUME: '',
   // Une clé Resend exportée dans le shell ferait partir de vrais e-mails pendant les tests.
   RESEND_API_KEY: '',
   LEON_EMAIL_FROM: '',

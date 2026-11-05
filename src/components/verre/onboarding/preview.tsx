@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import type { ProviderId } from '@/capture/turn';
 import { initialOf } from '@/components/verre/shell/brand';
 import { Badge } from '@/components/verre/ui/badge';
 import { ToolIcon } from '@/components/verre/ui/chips';
@@ -24,6 +25,8 @@ export type AboutPreviewProps = {
   department: string;
   job: string;
   seniority: number | null;
+  /** Les outils que l'étape suivante propose : un outil conseillé qui n'y est pas encore ne s'annonce pas. */
+  readyTools: readonly ProviderId[];
 };
 
 export function PreviewCard({ title, children }: { title: string; children: ReactNode }) {
@@ -43,11 +46,13 @@ export function AboutPreview({
   department,
   job,
   seniority,
+  readyTools,
 }: AboutPreviewProps) {
   const t = useTranslations('onboarding');
   const level = seniorityId(seniority);
   // Les outils et les exemples n'existent que pour un service de la liste.
   const listed = isDepartment(department) ? department : null;
+  const tools = listed ? DEPARTMENTS[listed].tools.filter((tool) => readyTools.includes(tool)) : [];
   // Tant que rien n'est choisi, la fiche ne montre que le nom.
   const chosen = department !== '' || job !== '' || level !== null;
   return (
@@ -84,16 +89,18 @@ export function AboutPreview({
 
       {listed && (
         <>
-          <PreviewCard title={t('preview.connect')}>
-            <ul className="flex flex-wrap gap-2">
-              {DEPARTMENTS[listed].tools.map((tool) => (
-                <li key={tool} title={PROVIDER_LABELS[tool]}>
-                  <ToolIcon kind={tool} boxed />
-                  <span className="sr-only">{PROVIDER_LABELS[tool]}</span>
-                </li>
-              ))}
-            </ul>
-          </PreviewCard>
+          {tools.length > 0 && (
+            <PreviewCard title={t('preview.connect')}>
+              <ul className="flex flex-wrap gap-2">
+                {tools.map((tool) => (
+                  <li key={tool} title={PROVIDER_LABELS[tool]}>
+                    <ToolIcon kind={tool} boxed />
+                    <span className="sr-only">{PROVIDER_LABELS[tool]}</span>
+                  </li>
+                ))}
+              </ul>
+            </PreviewCard>
+          )}
           <PreviewCard title={t('preview.ask')}>
             <ul className="grid gap-2">
               <li className="border-l-2 border-accent-line py-0.5 pl-2.5 text-ui text-fg-2">

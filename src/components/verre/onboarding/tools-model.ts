@@ -1,4 +1,4 @@
-import type { ProviderId } from '@/capture/turn';
+import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 
@@ -16,7 +16,13 @@ export type ToolState = {
   broken: ConnectionView | null;
   /** Le premier collègue qui l'a branché pour l'espace ; jamais pour un outil dont le texte reste privé à qui le branche. */
   connectedBy: string | null;
+  /** Proposé à l'onboarding : branchable en un clic, ou déjà branché ; sinon « Bientôt ». */
+  ready: boolean;
 };
+
+/** Un outil qui se branche en un clic sur ce serveur, essayé en vrai ou non (choix de David, 05/11). */
+export const onboardingReady = (item: Pick<CatalogItem, 'available' | 'oauthReady'>): boolean =>
+  item.available && item.oauthReady;
 
 /**
  * Où en est chaque outil pour le lecteur, dans l'ordre du catalogue. Une connexion en pause compte pour l'espace ;
@@ -39,7 +45,14 @@ export function toolStates(
         ? 'team'
         : 'free';
     const broken = own.find((conn) => conn.isCreator && conn.status === 'error') ?? null;
-    return { item, recommended: recommended.includes(item.id), status, connectedBy, broken };
+    return {
+      item,
+      recommended: recommended.includes(item.id),
+      status,
+      connectedBy,
+      broken,
+      ready: status !== 'free' || onboardingReady(item),
+    };
   });
 }
 
@@ -47,32 +60,35 @@ export function toolStates(
 export const codeToolsFirst = (states: ToolState[]): boolean =>
   states.some((s) => s.recommended && (s.item.id === 'github' || s.item.id === 'gitlab'));
 
-/** Les outils cochés d'abord : les conseillés encore à brancher. */
+/** Les outils cochés d'abord : les conseillés encore à brancher, parmi ceux qu'on propose. */
 export const defaultChecked = (states: ToolState[]): ReadonlySet<ProviderId> =>
   new Set(
-    states
-      .filter((s) => s.recommended && s.status === 'free' && s.item.available)
-      .map((s) => s.item.id),
+    states.filter((s) => s.recommended && s.status === 'free' && s.ready).map((s) => s.item.id),
   );
 
 /**
- * Les outils cochés gardés dans l'onglet (un branchement OAuth quitte la page) : seulement ceux de la liste ; null
- * pour une valeur illisible ou absente.
+ * La file « Branchez-les un par un », dans l'ordre du catalogue : mes outils déjà branchés (faits, ou à reconnecter)
+ * et ceux que j'ai choisis parmi les outils proposés.
  */
-export function savedChecked(
-  states: ToolState[],
-  raw: string | null,
-): ReadonlySet<ProviderId> | null {
-  let saved: unknown;
-  try {
-    saved = JSON.parse(raw ?? 'null');
-  } catch {
-    return null;
-  }
-  if (!Array.isArray(saved)) return null;
-  return new Set(
-    states.filter((s) => s.item.available && saved.includes(s.item.id)).map((s) => s.item.id),
+export const connectQueue = (states: ToolState[], chosen: ReadonlySet<ProviderId>): ToolState[] =>
+  states.filter(
+    (s) => s.status === 'mine' || (s.status === 'free' && s.ready && chosen.has(s.item.id)),
   );
+
+// Le choix survit au départ chez l'éditeur (le retour recharge la page) : un cookie lu par la page, au nom de la
+// personne pour qu'un autre compte du même navigateur ne le reprenne pas. Rien n'est gardé en base.
+export const TOOLS_COOKIE = 'leon_outils';
+
+export const toolsCookieValue = (userId: string, ids: readonly ProviderId[]): string =>
+  `${userId}:${ids.join(',')}`;
+
+/** Le choix gardé pour cette personne ; null s'il n'y en a pas (ou qu'il est à quelqu'un d'autre). */
+export function chosenTools(raw: string | undefined, userId: string): ProviderId[] | null {
+  if (!raw) return null;
+  const at = raw.lastIndexOf(':');
+  if (at < 0 || raw.slice(0, at) !== userId) return null;
+  const ids = raw.slice(at + 1).split(',');
+  return PROVIDER_IDS.filter((id) => ids.includes(id));
 }
 
 /** Un propriétaire seul invite ses collaborateurs ensuite ; les autres arrivent à la fin. */

@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { ReactElement } from 'react';
@@ -36,6 +37,7 @@ vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async () => (key: string) => key),
   getLocale: vi.fn(async () => 'en'),
 }));
+vi.mock('next/headers', () => ({ cookies: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -57,9 +59,13 @@ const catalogItem = (id: string, extra: object = {}) => ({
   label: id,
   privateRaw: false,
   available: true,
+  triedForReal: true,
+  oauthReady: true,
   adminConsentUrl: null,
   ...extra,
 });
+const cookieJar = (value?: string) =>
+  ({ get: (name: string) => (value && name === 'leon_outils' ? { value } : undefined) }) as never;
 const teamConnection = (provider: string) => ({
   provider,
   status: 'active',
@@ -88,6 +94,7 @@ beforeEach(() => {
   vi.mocked(connectorsKey).mockReturnValue(Buffer.alloc(32));
   vi.mocked(installCommand).mockReturnValue('curl -fsSL https://leon.example/install | sh');
   vi.mocked(claudeCodeInstructions).mockReturnValue('Install Leon');
+  vi.mocked(cookies).mockResolvedValue(cookieJar());
 });
 
 describe('page de l’étape Vos outils', () => {
@@ -135,6 +142,8 @@ describe('page de l’étape Vos outils', () => {
       nextHref: '/bienvenue/collaborateurs',
       steps: ['about', 'tools', 'teammates'],
       notice: null,
+      connecting: false,
+      chosen: null,
     });
     expect(element.props.now).toBeInstanceOf(Date);
     expect(element.props.states).toEqual([
@@ -144,6 +153,7 @@ describe('page de l’étape Vos outils', () => {
         status: 'free',
         connectedBy: null,
         broken: null,
+        ready: true,
       },
       {
         item: expect.objectContaining({ id: 'airtable' }),
@@ -151,6 +161,7 @@ describe('page de l’étape Vos outils', () => {
         status: 'free',
         connectedBy: null,
         broken: null,
+        ready: true,
       },
     ]);
   });
@@ -275,6 +286,21 @@ describe('page de l’étape Vos outils', () => {
 
     expect(notice).toMatchObject({ tone: 'error', tool: 'outlook', adminConsent: true });
     expect(consentUrl).toBe('https://login.example/consent');
+  });
+
+  it('la file « Branchez-les un par un » : après le choix (`?etape=brancher`) et au retour de l’éditeur', async () => {
+    expect((await render({ etape: 'brancher' })).props.connecting).toBe(true);
+    expect((await render({ branche: 'github' })).props.connecting).toBe(true);
+    expect((await render({ erreur: 'annule', outil: 'github' })).props.connecting).toBe(true);
+    expect((await render({ etape: 'autre' })).props.connecting).toBe(false);
+  });
+
+  it('reprend le choix gardé dans le cookie, pour cette personne seulement', async () => {
+    vi.mocked(cookies).mockResolvedValue(cookieJar('u1:gmail,github'));
+    expect((await render()).props.chosen).toEqual(['github', 'gmail']);
+
+    vi.mocked(cookies).mockResolvedValue(cookieJar('u2:gmail'));
+    expect((await render()).props.chosen).toBeNull();
   });
 
   it('le titre de l’onglet vient de onboarding.tools', async () => {

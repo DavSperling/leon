@@ -3,11 +3,14 @@ import { DEPARTMENT_IDS, DEPARTMENTS } from '@/lib/onboarding';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import {
+  chosenTools,
   codeToolsFirst,
+  connectQueue,
   defaultChecked,
   nextAfterTools,
-  savedChecked,
+  onboardingReady,
   toolStates,
+  toolsCookieValue,
 } from './tools-model';
 
 // Seuls les champs que le modèle lit : le reste du catalogue et des connexions n'entre pas en jeu.
@@ -152,37 +155,91 @@ describe('nextAfterTools', () => {
   });
 });
 
-describe('outils cochés', () => {
-  const available = (id: string) =>
-    ({ id, available: true, privateRaw: false }) as unknown as CatalogItem;
+describe('outils proposés', () => {
+  // Branchable en un clic sur ce serveur : c'est tout ce que l'onboarding propose.
+  const ready = (id: string, over: object = {}) =>
+    ({
+      id,
+      available: true,
+      triedForReal: true,
+      oauthReady: true,
+      privateRaw: false,
+      ...over,
+    }) as unknown as CatalogItem;
+
+  it('onboardingReady demande un connecteur et le bouton configuré, pas un vrai essai', () => {
+    expect(onboardingReady(ready('gmail'))).toBe(true);
+    expect(onboardingReady(ready('notion', { triedForReal: false }))).toBe(true);
+    for (const missing of ['available', 'oauthReady'])
+      expect(onboardingReady(ready('gmail', { [missing]: false }))).toBe(false);
+  });
+
+  it('un outil pas encore proposé mais déjà branché (par moi ou l’équipe) reste proposé', () => {
+    const states = toolStates(
+      [ready('notion', { available: false }), ready('linear', { oauthReady: false })],
+      [conn('notion', { isCreator: true }), conn('linear')],
+      [],
+    );
+
+    expect(states.map((s) => [s.item.id, s.status, s.ready])).toEqual([
+      ['notion', 'mine', true],
+      ['linear', 'team', true],
+    ]);
+  });
+
   const states = toolStates(
     [
-      available('github'),
-      available('linear'),
-      available('jira'),
-      available('notion'),
-      tool('gitlab'),
+      ready('github'),
+      ready('gmail', { privateRaw: true }),
+      ready('drive', { privateRaw: true }),
+      ready('notion', { oauthReady: false }),
+      ready('jira'),
     ],
-    [conn('linear')],
-    ['github', 'linear'] as never,
+    [conn('jira'), conn('drive', { isCreator: true })],
+    ['github', 'gmail', 'notion', 'jira'] as never,
   );
 
-  it('coche d’abord les conseillés encore à brancher', () => {
-    expect([...defaultChecked(states)]).toEqual(['github']);
+  it('coche d’abord les conseillés proposés et encore à brancher', () => {
+    expect([...defaultChecked(states)]).toEqual(['github', 'gmail']);
   });
 
-  it('reprend ceux gardés dans l’onglet, sans un outil hors de la liste ni devenu indisponible', () => {
-    expect([...(savedChecked(states, '["jira","notion","inconnu","gitlab"]') ?? [])]).toEqual([
-      'jira',
-      'notion',
+  it('la file : mes outils branchés, puis le choix parmi les outils proposés et libres', () => {
+    const queue = connectQueue(states, new Set(['gmail', 'notion', 'jira'] as const));
+
+    // Notion n'est pas proposé, Jira est déjà branché par l'équipe, GitHub n'est pas choisi.
+    expect(queue.map((s) => s.item.id)).toEqual(['gmail', 'drive']);
+  });
+
+  it('ma connexion en erreur entre dans la file, même sans être choisie', () => {
+    const broken = toolStates(
+      [ready('github')],
+      [conn('github', { isCreator: true, status: 'error' })],
+      [],
+    );
+
+    expect(connectQueue(broken, new Set()).map((s) => [s.item.id, s.broken !== null])).toEqual([
+      ['github', true],
     ]);
-    expect([...(savedChecked(states, '[]') ?? ['x'])]).toEqual([]);
+  });
+});
+
+describe('le choix gardé dans un cookie', () => {
+  it('se relit pour la même personne, dans l’ordre des outils, sans identifiant inconnu', () => {
+    const raw = `${toolsCookieValue('u1', ['gmail', 'github'])},inconnu`;
+
+    expect(chosenTools(raw, 'u1')).toEqual(['github', 'gmail']);
+    expect(chosenTools(toolsCookieValue('u1', []), 'u1')).toEqual([]);
   });
 
-  it('ignore une valeur absente ou illisible', () => {
-    expect(savedChecked(states, null)).toBeNull();
-    expect(savedChecked(states, '{"github":true}')).toBeNull();
-    expect(savedChecked(states, 'pas du json')).toBeNull();
+  it('ne se relit pas pour une autre personne du même navigateur', () => {
+    expect(chosenTools(toolsCookieValue('u1', ['gmail']), 'u2')).toBeNull();
+    expect(chosenTools(toolsCookieValue('u1:x', ['gmail']), 'u1')).toBeNull();
+  });
+
+  it('ignore un cookie absent ou illisible', () => {
+    expect(chosenTools(undefined, 'u1')).toBeNull();
+    expect(chosenTools('', 'u1')).toBeNull();
+    expect(chosenTools('gmail', 'u1')).toBeNull();
   });
 });
 

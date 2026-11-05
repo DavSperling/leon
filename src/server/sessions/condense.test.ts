@@ -122,6 +122,22 @@ describe('condenseSession', () => {
     expect(preuves.has(big.id)).toBe(true);
   });
 
+  // Un demi-emoji ferait refuser le corps de l'appel par l'API du modèle (« no low surrogate in string »).
+  it('reste bien formé quand une coupe tombe dans un emoji : la branche, un champ, le plus ancien tour', () => {
+    for (const pad of ['', 'p']) {
+      const { texte } = condenseSession({
+        faits: facts({
+          branche: `a${'🚀'.repeat(100)}`,
+          taches: [{ texte: `&${'🚀'.repeat(99)}`, etat: 'a_faire' }],
+        }),
+        turns: [turn({ text: `${'🚀'.repeat(2000)}${pad}` }), turn({ text: 'r'.repeat(39_000) })],
+      });
+
+      expect(texte.isWellFormed()).toBe(true);
+      expect(texte.length).toBeLessThanOrEqual(CONDENSE_MAX_CHARS);
+    }
+  });
+
   it('tient la borne avec des faits au plus large, et garde le dernier tour', () => {
     const long = 'z'.repeat(5000);
     const { texte } = condenseSession({

@@ -370,6 +370,24 @@ describe('importClaudeCode : les faits de chaque session', () => {
     ]);
   });
 
+  // Vigilance 4 du plan : accepter `resume` puis rattraper ne fait pas résumer les sessions finies avant ce oui.
+  it('n’envoie un usage qu’avec les sessions modifiées après sa date ; les faits, eux, partent', async () => {
+    const usageDate = new Date(Date.now() - 60 * 60_000);
+    const before = new Date(usageDate.getTime() - 60_000);
+    await utimes(join(projectDir, 'session-simple.jsonl'), before, before);
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, usages: ['resume'], usagesDepuis: { resume: usageDate } },
+    });
+
+    const acme = factsOf(facts).get(ACME_SESSION);
+    expect(acme).toBeDefined();
+    expect(acme).not.toHaveProperty('usages');
+    expect(factsOf(facts).get(ORION_SESSION)?.usages).toEqual(['resume']);
+  });
+
   it('fin vaut vrai pour un fichier qui n’a pas bougé depuis 30 min, faux sinon', async () => {
     const old = new Date(Date.now() - 31 * 60_000);
     await utimes(join(projectDir, 'session-simple.jsonl'), old, old);

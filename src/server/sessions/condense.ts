@@ -12,7 +12,7 @@ import { oneLine } from '@/server/memory/labels';
 // la borne compte ce que lit le modèle. Module pur : ni base, ni réseau.
 // shortcut: la capture ne pose pas encore `injecte` (colonne `turns.injecte`, partie capture de T43) ; un tour injecté
 // non marqué compte comme message de l'utilisateur. En attendant, le worker du résumé n'accepte aucun tour comme
-// preuve (resume-worker.ts).
+// preuve (resume-worker.ts), et le prompt dit qu'un tour de="utilisateur" n'est pas toujours écrit par la personne.
 
 export const CONDENSE_MAX_CHARS = 40_000;
 // Les faits ne prennent pas plus de la moitié : la fin de la session est ce qui se résume.
@@ -37,13 +37,15 @@ export type CondenseTurn = {
 };
 export type Condense = { texte: string; preuves: Set<string> };
 
-const field = (text: string) => escapeData(oneLine(text)).slice(0, FIELD_MAX_CHARS);
+// Une coupe ne laisse jamais un demi-emoji : l'API du modèle refuse un corps qui en porte. toWellFormed garde la
+// longueur, donc la borne.
+const field = (text: string) => escapeData(oneLine(text)).slice(0, FIELD_MAX_CHARS).toWellFormed();
 
 export function condenseSession(input: { faits: CondenseFacts; turns: CondenseTurn[] }): Condense {
   const { faits } = input;
   const preuves = new Set<string>();
   const open = `<faits${dataAttributes([
-    ['branche', faits.branche?.slice(0, FIELD_MAX_CHARS)],
+    ['branche', faits.branche?.slice(0, FIELD_MAX_CHARS).toWellFormed()],
     ['debut', faits.debut],
     ['fin', faits.fin],
   ])}>`;
@@ -98,7 +100,7 @@ export function condenseSession(input: { faits: CondenseFacts; turns: CondenseTu
     const body = escapeData(turn.text);
     const room = CONDENSE_MAX_CHARS - used - tag.length - TURN_CLOSE.length - 1;
     if (room <= 0) break;
-    kept.unshift(`${tag}${body.slice(-room)}${TURN_CLOSE}`);
+    kept.unshift(`${tag}${body.slice(-room).toWellFormed()}${TURN_CLOSE}`);
     used += tag.length + Math.min(body.length, room) + TURN_CLOSE.length + 1;
     if (user) preuves.add(turn.id);
     if (body.length > room) break;

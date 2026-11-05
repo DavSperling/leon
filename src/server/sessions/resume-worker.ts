@@ -42,7 +42,8 @@ import { linkPrs } from './start-context';
 //   file.
 // - Un appel par (session, dernier tour résumé) : `metadata.resume` vaut `{ dernier_tour, tour }`, le dernier tour
 //   capté que le résumé couvre et le n de son tour `leon:resume:<n>`. Une session qui reprend est résumée à nouveau ;
-//   les passages de l'ancien résumé sont supprimés, son tour reste, hors de la lecture (filters-sql.ts).
+//   les passages de l'ancien résumé sont supprimés, son tour reste, hors de la lecture (filters-sql.ts). Si la reprise
+//   n'a « rien à retenir », l'ancien est retiré de même, sans nouveau résumé (QD5).
 // - Le résumé ne compte ni comme tour de la session (`lastTurnAt` n'avance pas, il est daté du dernier tour résumé),
 //   ni dans le report, ni dans le condensé suivant, ni dans le point du matin (gather.ts). Il est à son auteur seul.
 // - La réponse passe par la liste blanche (D8 amendée) : « ## Où j'en suis » et les types de la passation, une
@@ -52,6 +53,12 @@ import { linkPrs } from './start-context';
 // shortcut: la capture ne marque pas encore les tours `user` injectés (T43) : en attendant, aucun tour ne prouve une
 // `[décision]`, seulement une PR ou un commit du condensé (D23, D36). Quand `turns.injecte` existe (lot 12), passer
 // `injecte` à condenseSession et garder ses preuves telles quelles.
+// shortcut: le retrait (`leon retirer-crochets`) ne se fait que sur le poste ; l'usage relu ici est celui du dernier
+// envoi de faits (`metadata.usages`). Un résumé déjà en file peut donc encore s'écrire, dans les 30 min (15 min, plus
+// les reprises) : RESUME_LINES le dit. Faire vider `usages` par le serveur au retrait le jour où ce délai gêne.
+// shortcut: aucun plafond par membre ni par organisation, seulement des bornes par appel : un porteur du jeton du poste
+// peut multiplier les sessions, donc les appels, et retarder ceux des autres (file commune). appels_modele compte le
+// coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.
 
 export const RESUME_MIN_ECHANGES = 6;
 const RESUME_MAX_CHARS = 1200;
@@ -226,13 +233,6 @@ async function writeResume(
 ): Promise<string | null> {
   const where = sql`s.tenant_id = ${ctx.tenantId} and s.id = ${sourceId}
     and s.owner_user_id = ${ctx.userId} and ${USAGE_RESUME}`;
-  if (texte === null) {
-    // Rien à retenir : le dernier tour est noté (pas de second appel), l'ancien résumé reste le dernier.
-    await tx.execute(sql`update sources s set metadata = s.metadata || jsonb_build_object('resume',
-        coalesce(s.metadata->'resume', '{}'::jsonb) || jsonb_build_object('dernier_tour', ${last.id}::text))
-      where ${where}`);
-    return null;
-  }
   // Le n suivant, après ceux déjà écrits (un tour au nom forgé par le poste, `leon:resume:x`, ne le gêne pas). La
   // position est typée : sans `::int`, Postgres lirait substring(texte from motif), une expression régulière.
   const {
@@ -243,14 +243,21 @@ async function writeResume(
     where t.tenant_id = ${ctx.tenantId} and t.source_id = ${sourceId}
       and t.external_id ~ ${`^${RESUME_EXTERNAL_PREFIX}[0-9]{1,9}$`}`);
   const n = next?.n ?? 1;
+  // Rien à retenir : le dernier tour est noté (pas de second appel), et un ancien résumé, dépassé, n'est plus le
+  // dernier (QD5 : il est remplacé, même par rien) ; sans `tour`, aucun `leon:resume:*` ne se lit (filters-sql.ts).
+  const resume =
+    texte === null
+      ? sql`jsonb_build_object('dernier_tour', ${last.id}::text)`
+      : sql`jsonb_build_object('dernier_tour', ${last.id}::text, 'tour', ${n}::int)`;
   const { rows: updated } = await tx.execute(sql`update sources s set metadata = s.metadata
-      || jsonb_build_object('resume', jsonb_build_object('dernier_tour', ${last.id}::text, 'tour', ${n}::int))
+      || jsonb_build_object('resume', ${resume})
     where ${where} returning s.id`);
   if (updated.length === 0) return null;
   // Les passages des résumés précédents, et leurs vecteurs (on delete cascade) : la recherche ne trouve que le dernier.
   await tx.execute(sql`delete from passages p using turns t
     where p.tenant_id = ${ctx.tenantId} and p.source_id = ${sourceId} and t.id = p.turn_id
       and t.external_id like ${RESUME_LIKE}`);
+  if (texte === null) return null;
   const { ids } = await insertNewTurns(tx, [
     {
       tenantId: ctx.tenantId,

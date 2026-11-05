@@ -41,6 +41,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       version: 2,
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
+      usages_le: {},
     });
   });
 
@@ -87,6 +88,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       version: 2,
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
+      usages_le: {},
     });
     expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
   });
@@ -100,6 +102,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       version: 2,
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: ['resume'],
+      usages_le: { resume: new Date('2026-11-05T09:00:00Z') },
     });
   });
 
@@ -116,6 +119,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       version: 2,
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
+      usages_le: {},
     });
   });
 });

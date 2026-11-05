@@ -12,7 +12,8 @@ import { PageHero, PageSection } from './page-hero';
 
 // Page « Documentation » : brancher Leon à ses outils de code (le chemin « Je demande à Claude », puis le terminal) et
 // ce qu'il faut en savoir. Chaque commande et chaque option citée existe dans src/cli (documentation.test.ts le vérifie) ;
-// « Ce qui part » résume le texte d'accord de `leon setup` (CONSENT_LINES, install-hooks.ts), sans rien promettre de plus.
+// « Ce qui part » résume le texte d'accord de `leon setup` (CONSENT_LINES, puis l'usage `resume`, RESUME_LINES,
+// install-hooks.ts), sans rien promettre de plus.
 // Le mode « Pour un agent » montre la même page en Markdown (documentation-markdown.ts, aussi servi sur /documentation.md) ;
 // SECTIONS (les ancres du plan et leur clé dans site.documentation) est commune aux deux.
 
@@ -211,7 +212,7 @@ export function DocumentationPage({
               <DocSection id="ce-qui-part" title={t('sent.title')}>
                 {p('sent.lead')}
                 <ul className={cn(LIST, 'list-disc')}>
-                  {(['where', 'end', 'secrets', 'start'] as const).map((item) => (
+                  {(['where', 'end', 'secrets', 'start', 'resume'] as const).map((item) => (
                     <li key={item}>{rich(`sent.${item}`)}</li>
                   ))}
                 </ul>

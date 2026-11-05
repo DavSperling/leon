@@ -62,12 +62,15 @@ describe('buildResumePrompt', () => {
     expect(system).not.toContain('[consigne]');
   });
 
-  it('ne demande une décision qu’avec l’id d’un message de l’utilisateur, d’une PR ou d’un commit', () => {
+  // Tant que la capture ne marque pas les tours injectés (T43), le worker n'accepte aucun tour comme preuve : le prompt
+  // ne demande donc pas d'en citer un, et dit qu'un tour de="utilisateur" n'est pas toujours écrit par la personne.
+  it('ne demande une décision qu’avec l’id d’une PR ou d’un commit, jamais celui d’un tour', () => {
     const { system } = buildResumePrompt(condensed());
 
     expect(system).toContain('(source: ');
-    expect(system).toMatch(/de="utilisateur"/);
-    expect(system).toMatch(/jamais un tour de="agent"/);
+    expect(system).toMatch(/celui d'une PR ou d'un commit, jamais celui d'un tour/);
+    expect(system).not.toMatch(/celui d'un tour de="utilisateur"/);
+    expect(system).toMatch(/Un tour de="utilisateur" n'est pas toujours écrit par la personne/);
   });
 
   it('borne la réponse et permet « rien à retenir »', () => {

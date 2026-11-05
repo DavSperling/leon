@@ -124,7 +124,9 @@ async function arrived(sourceId: string, ago: number) {
     .where(eq(turns.sourceId, sourceId));
 }
 
-// Un tour capté de plus, arrivé il y a `ago` (à l'instant par défaut).
+// Un tour capté de plus, arrivé il y a `ago` (à l'instant par défaut), daté après le précédent : deux tours de la même
+// milliseconde se trieraient par leur uuid (resume-worker.ts lit `ts, created_at, id`).
+let tick = 0;
 async function addTurn(
   owner: TenantContext,
   sourceId: string,
@@ -140,7 +142,7 @@ async function addTurn(
       externalId: `tour-${crypto.randomUUID()}`,
       role,
       text,
-      ts: new Date(),
+      ts: new Date(Date.now() + ++tick),
       captureMode: 'file',
       acl: [owner.userId],
       createdAt: new Date(Date.now() - ago),
@@ -363,6 +365,57 @@ describe('summarizeSession', () => {
     expect((await sourceRow(seeded.sourceId))?.metadata.resume).toEqual({
       dernier_tour: seeded.turnIds.at(-1),
     });
+  });
+
+  // QD5 : une session qui reprend est résumée à nouveau, et l'ancien résumé remplacé, même par rien.
+  it('une session qui reprend, puis « rien à retenir » : l’ancien résumé n’est plus ni lu ni trouvé', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    await summarizeSession(seeded.job, { llm: answer(SUMMARY) });
+    await indexRuns(paul);
+    const [first] = await resumeTurns(seeded.sourceId);
+    await addTurn(paul, seeded.sourceId, 'On reprend la session.');
+    const newLast = await addTurn(paul, seeded.sourceId, 'Reprise terminée.', 'assistant');
+    await finir(paul, seeded.sourceId);
+
+    expect(await summarizeSession(seeded.job, { llm: answer('Rien à retenir.') })).toBe('rien');
+
+    expect((await sourceRow(seeded.sourceId))?.metadata.resume).toEqual({ dernier_tour: newLast });
+    expect(
+      await adminDb
+        .select()
+        .from(passages)
+        .where(eq(passages.turnId, first?.id ?? '')),
+    ).toEqual([]);
+    expect((await searchPassages(paul, { query: 'zéphyrin', embedder: null })).hits).toEqual([]);
+    const fetched = await fetchSource(paul, seeded.sourceId);
+    expect(fetched?.turns.map((turn) => turn.text).join('\n')).not.toContain('zéphyrin');
+    expect(mocks.runs).toEqual([]);
+  });
+
+  it('une réponse vide n’est pas « rien à retenir » : le job échoue, rien n’est noté', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+
+    await expect(summarizeSession(seeded.job, { llm: answer('') })).rejects.toThrow();
+
+    expect((await sourceRow(seeded.sourceId))?.metadata.resume).toBeUndefined();
+    expect(await resumeTurns(seeded.sourceId)).toEqual([]);
+  });
+
+  // Une vraie fin couvre les tours arrivés jusqu'à 60 s après elle ; au-delà, la session a repris (15 min sans tour).
+  it.each([
+    ['30 s', 'ecrit', 30_000],
+    ['90 s', 'reporte', 90_000],
+  ])('un tour arrivé %s après la fin, il y a 2 min : %s', async (_cas, expected, afterEnd) => {
+    const { paul } = await team();
+    const arrivedAgo = 2 * MINUTE;
+    const seeded = await session(paul, {
+      arrivedAgo,
+      metadata: { fin_le: new Date(Date.now() - arrivedAgo - afterEnd).toISOString() },
+    });
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe(expected);
   });
 
   it('un second fin sans tour nouveau ne rappelle pas le modèle', async () => {

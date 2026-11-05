@@ -30,7 +30,14 @@ const EntrySchema = z.object({
 });
 const WithdrawnSchema = z.object({ version: z.literal(0) });
 
-export type FactsConsent = { version: number; installe_le: Date; usages: Usage[] };
+// `usages_le` : la date de chaque usage accepté ; au rattrapage, un usage ne part qu'avec les sessions modifiées après
+// elle (import-claude-code.ts).
+export type FactsConsent = {
+  version: number;
+  installe_le: Date;
+  usages: Usage[];
+  usages_le: Partial<Record<Usage, Date>>;
+};
 
 // Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts, uninstall-hooks.ts), juste pour les deux
 // formes de Leon : installée, la commande est `leon setup` par le lanceur ~/.leon/bin/leon, que `retirer-crochets` efface
@@ -67,10 +74,14 @@ export async function factsConsent(
 ): Promise<FactsConsent | null> {
   const entry = EntrySchema.safeParse((await readEntries(home))?.[tool]);
   if (!entry.success || entry.data.version < FACTS_VERSION) return null;
+  const usages = USAGES.filter((usage) => entry.data.usages?.[usage] !== undefined);
   return {
     version: entry.data.version,
     installe_le: new Date(entry.data.installe_le),
-    usages: USAGES.filter((usage) => entry.data.usages?.[usage] !== undefined),
+    usages,
+    usages_le: Object.fromEntries(
+      usages.map((usage) => [usage, new Date(entry.data.usages?.[usage] ?? 0)]),
+    ),
   };
 }
 

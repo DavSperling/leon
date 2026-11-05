@@ -41,9 +41,16 @@ export type ImportDeps = {
   git?: GitRunner;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
   // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
-  // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; le
-  // crochet de fin de session, lui, n'en a pas besoin.
-  facts?: { accord: number; usages?: Usage[]; send: FactsSender; depuis?: Date };
+  // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; de
+  // même, `usagesDepuis` : un usage ne part qu'avec les fichiers modifiés après sa date (`resume` accepté ce jour ne
+  // fait pas résumer les sessions finies avant). Le crochet de fin de session, lui, n'en a pas besoin.
+  facts?: {
+    accord: number;
+    usages?: Usage[];
+    send: FactsSender;
+    depuis?: Date;
+    usagesDepuis?: Partial<Record<Usage, Date>>;
+  };
 };
 export type ImportSummary = {
   sessions: number;
@@ -244,12 +251,22 @@ export async function importClaudeCode(
       await importSession({ ...session, turns }, { ...options, projectKey }, deps, summary);
       if (!deps.facts || factsRefused || start === null) continue;
       const { mtimeMs } = await stat(file);
-      if (deps.facts.depuis && mtimeMs < deps.facts.depuis.getTime()) continue;
+      const { depuis, usagesDepuis } = deps.facts;
+      if (depuis && mtimeMs < depuis.getTime()) continue;
+      const usages = deps.facts.usages?.filter(
+        (usage) => mtimeMs >= (usagesDepuis?.[usage]?.getTime() ?? 0),
+      );
       const fin = Date.now() - mtimeMs >= IDLE_MS;
       // Sans git (essais), la racine reste le dossier de départ.
       const root = deps.git ? await repoRootFor(start, deps.git) : start;
       const source = { content, root, fin };
-      factsRefused = !(await sendSessionFacts(session, source, { ...options, projectKey }, deps));
+      const factsDeps = { ...deps, facts: { ...deps.facts, usages } };
+      factsRefused = !(await sendSessionFacts(
+        session,
+        source,
+        { ...options, projectKey },
+        factsDeps,
+      ));
       if (factsRefused) console.error(FACTS_REFUSED_MESSAGE);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;

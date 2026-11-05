@@ -132,7 +132,7 @@ async function runImport(args: string[]): Promise<number> {
   };
   const env = dryRun ? null : await resolveServerEnv(process.env, homedir());
   // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts), et seulement ceux des
-  // fichiers modifiés après lui.
+  // fichiers modifiés après lui ; chaque usage, seulement avec les fichiers modifiés après sa propre date.
   const accord = await factsConsent(homedir(), 'claude_code');
   const deps: ImportDeps = {
     out: console.log,
@@ -145,6 +145,7 @@ async function runImport(args: string[]): Promise<number> {
             accord: accord.version,
             usages: accord.usages,
             depuis: accord.installe_le,
+            usagesDepuis: accord.usages_le,
             send: env ? createFactsSender(fetch, env) : nothingSent,
           },
         }),

@@ -228,6 +228,24 @@ describe('la page Documentation', () => {
     },
   );
 
+  // `leon setup` propose aussi l'usage `resume` (RESUME_LINES) : la page dit qu'il est à part, ce qu'il envoie, à qui.
+  it.each(LOCALES)(
+    'dit ce que l’usage resume envoie, et qu’il est demandé à part (%s)',
+    (locale, messages) => {
+      const { resume } = messages.site.documentation.sent;
+
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'usage "resume", optional, asked separately',
+      );
+      expect(resume).toContain('<code>resume</code>');
+      expect(resume).toContain('<code>--yes</code>');
+      expect(resume).toContain(
+        locale === 'en' ? 'Leon’s model provider' : 'fournisseur du modèle de Leon',
+      );
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
   // Le serveur des crochets : celui de `leon login`, sauf LEON_URL et LEON_TOKEN posées toutes les deux (texte d'accord).
   it.each(LOCALES)(
     'dit quand LEON_URL et LEON_TOKEN passent avant la connexion (%s)',

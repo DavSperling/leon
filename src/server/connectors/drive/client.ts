@@ -98,14 +98,24 @@ export function driveClient(http: ConnectorHttp) {
         return null;
       }
       if (!('parse' in how)) return new TextDecoder().decode(answer.bytes);
-      try {
-        return (await extractText(how.parse, answer.bytes)).text;
-      } catch (error) {
-        // Ni le nom ni le contenu du fichier : le code de l'erreur d'officeparser.
-        const reason = (error as OfficeError).officeIssue?.code ?? (error as Error).name;
-        logError('connector.drive_unreadable', error, { reason });
-        return null;
-      }
+      return fileText(how.parse, answer.bytes, 'connector.drive_unreadable');
     },
   };
+}
+
+// Le texte d'un fichier passé à l'extraction de l'import manuel (PDF, Office, texte), ou null s'il est illisible
+// (protégé, abîmé). Partagé avec OneDrive.
+export async function fileText(
+  extension: string,
+  bytes: Uint8Array,
+  event: string,
+): Promise<string | null> {
+  try {
+    return (await extractText(extension, bytes)).text;
+  } catch (error) {
+    // Ni le nom ni le contenu du fichier : le code de l'erreur d'officeparser.
+    const reason = (error as OfficeError).officeIssue?.code ?? (error as Error).name;
+    logError(event, error, { reason });
+    return null;
+  }
 }

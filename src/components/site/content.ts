@@ -47,7 +47,7 @@ export const TOOL_COUNT = Object.keys(PROVIDER_LABELS).length;
 
 export type ToolGroup = { family: ProviderFamily; label: string; tools: ProviderId[] };
 
-/** Les 42 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
+/** Les 43 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
 const groupsOf = (labels: Record<ProviderFamily, string>): ToolGroup[] =>
   PROVIDER_FAMILIES_ORDER.map((family) => ({
     family,
@@ -437,7 +437,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Ce qui est privé le reste',
-        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte Outlook ; les conversations d’IA, discussions et notes de chacun ne sont visibles que de lui.',
+        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf les mails, Google Drive, OneDrive et Slack ; les conversations d’IA, discussions et notes de chacun ne sont visibles que de lui.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -649,7 +649,7 @@ export const SECURITY_FACTS = [
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
+  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, privés à qui les branche.',
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
@@ -706,7 +706,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
+    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, privés à qui les branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -1079,7 +1079,7 @@ const TEAMS_EN: Team[] = [
       },
       {
         title: 'Clear privacy rules',
-        text: 'Content from shared connections is visible to the team, except email, Google Drive and Slack. Each person’s AI conversations, chats and notes are visible only to them.',
+        text: 'Content from shared connections is visible to the team, except email, Google Drive, OneDrive and Slack. Each person’s AI conversations, chats and notes are visible only to them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1260,7 +1260,7 @@ const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
 ];
 
 const NOT_YET_EN: Twin<typeof NOT_YET> = [
-  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
+  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which stay private to whoever connects them.',
   'A secret written in plain prose (“the password is…”) can slip past redaction.',
   'No data export yet, and no full account deletion from the interface.',
   'No ISO 27001 or SOC 2 certification yet.',
@@ -1315,7 +1315,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them. AI assistant conversations, chats and notes are visible only to their author.',
+    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which stay private to whoever connects them. AI assistant conversations, chats and notes are visible only to their author.',
   },
   {
     q: 'What happens when Leon doesn’t know?',

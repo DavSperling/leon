@@ -33,6 +33,7 @@ const OAUTH = new Set<ProviderId>([
   'miro',
   'monday',
   'notion',
+  'onedrive',
   'outlook',
   'productboard',
   'slack',

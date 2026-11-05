@@ -19,6 +19,7 @@ export const OAUTH_APP_KEYS = [
   'MIRO',
   'PRODUCTBOARD',
   'OUTLOOK',
+  'ONEDRIVE',
 ] as const;
 export type OAuthAppKey = (typeof OAUTH_APP_KEYS)[number];
 
@@ -44,6 +45,7 @@ const PAIRS: Record<OAuthAppKey, () => Pair> = {
     process.env.LEON_OAUTH_PRODUCTBOARD_SECRET,
   ],
   OUTLOOK: () => [process.env.LEON_OAUTH_OUTLOOK_ID, process.env.LEON_OAUTH_OUTLOOK_SECRET],
+  ONEDRIVE: () => [process.env.LEON_OAUTH_ONEDRIVE_ID, process.env.LEON_OAUTH_ONEDRIVE_SECRET],
 };
 
 // Une chaîne vide vaut une variable absente ; une paire incomplète est ignorée.

@@ -1,6 +1,6 @@
 import type { ProviderId } from '@/capture/turn';
 
-// Libellés et familles des 42 outils branchables. Données pures : lues par l'interface et les libellés.
+// Libellés et familles des 43 outils branchables. Données pures : lues par l'interface et les libellés.
 
 export const PROVIDER_FAMILIES_ORDER = [
   'dev',
@@ -74,6 +74,7 @@ export const PROVIDER_LABELS: Record<ProviderId, string> = {
   gmail: 'Gmail',
   drive: 'Google Drive',
   slack: 'Slack',
+  onedrive: 'OneDrive / SharePoint',
 };
 
 export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
@@ -119,4 +120,5 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   gmail: 'mails',
   drive: 'projet',
   slack: 'mails',
+  onedrive: 'projet',
 };

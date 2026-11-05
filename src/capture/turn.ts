@@ -53,6 +53,7 @@ export const PROVIDER_IDS = [
   'gmail',
   'drive',
   'slack',
+  'onedrive',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 export const SOURCE_KINDS = [...CAPTURE_KINDS, 'document', ...PROVIDER_IDS] as const;

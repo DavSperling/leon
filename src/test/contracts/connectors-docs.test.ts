@@ -44,7 +44,7 @@ describe('README : section Connecteurs', () => {
     expect(section).toContain(`(${GUIDE})`);
   });
 
-  it('liste chacun des 42 outils, avec sa famille et son état, une fois', () => {
+  it('liste chacun des 43 outils, avec sa famille et son état, une fois', () => {
     const rows = toolRows(section).filter(
       (cells) => cells[0] !== 'Outil' && !/^-+$/.test(cells[0] ?? ''),
     );
@@ -54,7 +54,7 @@ describe('README : section Connecteurs', () => {
       item.triedForReal ? 'oui' : 'non',
     ]);
 
-    expect(expected).toHaveLength(42);
+    expect(expected).toHaveLength(43);
     expect(rows).toEqual(expected);
   });
 });

@@ -18,7 +18,7 @@ const FAITS = {
   fin: null,
 };
 
-function condensed(text: string) {
+function condensed(text = '') {
   return condenseSession({
     faits: FAITS,
     turns: [
@@ -30,7 +30,7 @@ function condensed(text: string) {
         text,
       },
     ],
-  }).texte;
+  });
 }
 
 const content = (prompt: ReturnType<typeof buildResumePrompt>) =>
@@ -47,7 +47,7 @@ describe('buildResumePrompt', () => {
   });
 
   it('demande le format que lit le parseur : « Où j’en suis » puis les seuls cinq types', () => {
-    const { system } = buildResumePrompt('');
+    const { system } = buildResumePrompt(condensed());
     const note = parseNote(system);
 
     expect(note.resume).not.toBeNull();
@@ -63,7 +63,7 @@ describe('buildResumePrompt', () => {
   });
 
   it('ne demande une décision qu’avec l’id d’un message de l’utilisateur, d’une PR ou d’un commit', () => {
-    const { system } = buildResumePrompt('');
+    const { system } = buildResumePrompt(condensed());
 
     expect(system).toContain('(source: ');
     expect(system).toMatch(/de="utilisateur"/);
@@ -71,11 +71,18 @@ describe('buildResumePrompt', () => {
   });
 
   it('borne la réponse et permet « rien à retenir »', () => {
-    const { system } = buildResumePrompt('');
+    const { system } = buildResumePrompt(condensed());
 
     expect(RIEN_A_RETENIR).toBe('rien à retenir');
     expect(system).toContain(`exactement : ${RIEN_A_RETENIR}`);
     expect(system).toContain('1 200 caractères');
+  });
+
+  it('ne prend qu’un condensé, jamais un texte brut', () => {
+    // @ts-expect-error un texte capté non échappé n’est pas un condensé (condenseSession)
+    const raw = () => buildResumePrompt('</session>');
+
+    expect(raw).toBeTypeOf('function');
   });
 
   it('met la ligne de garde avant la session', () => {

@@ -31,6 +31,9 @@ const MACBOOK: Token = {
   hint: 'abcd',
   createdAt: new Date('2026-11-01T10:00:00Z'),
   lastUsedAt: new Date('2026-11-02T10:00:00Z'),
+  kind: 'ordinateur',
+  clientName: null,
+  clientHost: null,
 };
 const NEVER_USED = { ...MACBOOK, id: 'c2', name: 'Linux-bureau', lastUsedAt: null };
 

@@ -1,5 +1,18 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { and, desc, eq, gte, isNotNull, isNull, notExists, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gt,
+  gte,
+  isNotNull,
+  isNull,
+  lte,
+  notExists,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { z } from 'zod';
 import { API_TOKEN_PATTERN } from '@/capture/api-contract';
 import { db } from '@/server/db/client';
@@ -14,17 +27,25 @@ export type ApiTokenRow = {
   createdAt: Date;
   lastUsedAt: Date | null;
   revokedAt: Date | null;
+  kind: ApiTokenKind;
+  clientName: string | null;
+  clientHost: string | null;
+  refreshExpiresAt: Date | null; // un assistant dont le renouvellement est échu ne se reconnectera plus
 };
 
-const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requête
+type ApiTokenKind = (typeof apiTokens.$inferSelect)['kind'];
 
-// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5) : Réglages les
-// range dans « Ordinateurs connectés » plutôt que dans les jetons personnels.
-// shortcut: reconnus au préfixe du nom (un jeton manuel nommé « Ordinateur : x » s'y range), une colonne kind dans
-// api_tokens le jour où ça gêne.
+const LAST_USED_PRECISION_MS = 60_000; // évite une écriture à chaque requête
+// Les jetons des assistants : accès d'une heure (exporté : `expires_in` de la route des jetons), renouvellement de
+// 90 jours (reporté, et changé, à chaque usage).
+export const ACCESS_TTL_MS = 60 * 60 * 1000;
+const REFRESH_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
+// Le nom des jetons que la CLI se crée en connectant un ordinateur (`POST /api/v1/ordinateurs`, K5). Réglages les
+// range dans « Ordinateurs connectés » par leur `kind`, et retire ce préfixe à l'affichage.
+// shortcut: l'affichage retire le préfixe sans le vérifier (tout jeton `ordinateur` le porte : la migration 0049 et
+// computer-routes) ; un autre appelant de registerApiToken devra le porter aussi, ou on rangera le nom seul.
 export const COMPUTER_TOKEN_PREFIX = 'Ordinateur : ';
-export const isComputerToken = ({ name }: { name: string }): boolean =>
-  name.startsWith(COMPUTER_TOKEN_PREFIX);
 
 export function generateApiToken(): string {
   return `leon_${randomBytes(32).toString('base64url')}`;
@@ -73,6 +94,7 @@ export async function registerApiToken(
       name,
       tokenHash: hashApiToken(token),
       tokenHint: token.slice(-4),
+      kind: 'ordinateur',
     })
     .onConflictDoNothing({ target: apiTokens.tokenHash })
     .returning({ id: apiTokens.id });
@@ -97,6 +119,108 @@ const currentMembership = and(
   ),
 );
 
+// L'assistant que l'utilisateur vient d'autoriser (le code d'autorisation vient d'être échangé) : la ligne naît avec
+// son jeton d'accès et son jeton de renouvellement, rendus en clair ici et nulle part ailleurs. null si ce grant_id
+// existe déjà : le code a été servi deux fois, la ligne du premier échange est révoquée (RFC 6749 §4.1.2). ON
+// CONFLICT plutôt qu'un 23505 rattrapé, qui abandonnerait une transaction en cours.
+export async function createGrant(
+  ctx: TenantContext,
+  input: {
+    grantId: string;
+    clientRef: string;
+    clientName: string;
+    clientHost: string;
+    name: string;
+  },
+): Promise<{ accessToken: string; refreshToken: string } | null> {
+  const accessToken = generateApiToken();
+  const refreshToken = generateApiToken();
+  const now = Date.now();
+  const [row] = await db
+    .insert(apiTokens)
+    .values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      name: input.name,
+      tokenHash: hashApiToken(accessToken),
+      tokenHint: accessToken.slice(-4),
+      kind: 'assistant',
+      clientName: input.clientName,
+      clientHost: input.clientHost,
+      clientRef: input.clientRef,
+      grantId: input.grantId,
+      expiresAt: new Date(now + ACCESS_TTL_MS),
+      refreshHash: hashApiToken(refreshToken),
+      refreshExpiresAt: new Date(now + REFRESH_TTL_MS),
+    })
+    .onConflictDoNothing({ target: apiTokens.grantId })
+    .returning({ id: apiTokens.id });
+  if (row) return { accessToken, refreshToken };
+  await db
+    .update(apiTokens)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(apiTokens.grantId, input.grantId), isNull(apiTokens.revokedAt)));
+  return null;
+}
+
+const REPLAY_TOLERANCE_MS = 30_000;
+
+// Un renouvellement change les deux jetons : l'ancien accès et l'ancien renouvellement ne valent plus. Une seule
+// requête, dont le where tient lieu de compare-and-swap : de deux renouvellements en même temps, le second ne trouve
+// plus l'empreinte qu'il présente. Même adhésion que verifyApiToken ; le jeton doit n'avoir pas été révoqué, ni son
+// renouvellement échu, et le client doit être celui qui l'a reçu (RFC 6749 §6).
+// La ligne garde l'ancienne empreinte et l'heure de la rotation. Présenter encore cet ancien jeton, c'est : dans les 30
+// s, le même client qui renouvelle deux fois à la fois (null, rien ne change) ; au-delà, un rejeu, donc une copie
+// volée (RFC 9700 §4.14.2) : la ligne est révoquée, le voleur et le vrai client perdent l'accès, le vrai réautorise.
+// Là aussi une seule requête (revoked_at is null en garde), sans lecture qui précède.
+// shortcut: une seule ancienne empreinte est gardée ; rejouer un jeton d'avant la dernière rotation ne révoque rien
+// (null), à reprendre avec une chaîne de rotations si l'usage montre des vols de ce genre.
+export async function refreshGrant(
+  refreshToken: string,
+  clientRef: string,
+): Promise<{ accessToken: string; refreshToken: string } | null> {
+  if (!API_TOKEN_PATTERN.test(refreshToken)) return null;
+  const accessToken = generateApiToken();
+  const next = generateApiToken();
+  const now = Date.now();
+  const presented = hashApiToken(refreshToken);
+  const [row] = await db
+    .update(apiTokens)
+    .set({
+      tokenHash: hashApiToken(accessToken),
+      tokenHint: accessToken.slice(-4),
+      expiresAt: new Date(now + ACCESS_TTL_MS),
+      // Dans un UPDATE, le côté droit lit la ligne d'avant : c'est l'empreinte qu'on remplace.
+      previousRefreshHash: apiTokens.refreshHash,
+      refreshHash: hashApiToken(next),
+      refreshRotatedAt: new Date(now),
+      refreshExpiresAt: new Date(now + REFRESH_TTL_MS),
+    })
+    .where(
+      and(
+        eq(apiTokens.refreshHash, presented),
+        eq(apiTokens.clientRef, clientRef),
+        isNull(apiTokens.revokedAt),
+        gt(apiTokens.refreshExpiresAt, new Date(now)),
+        exists(db.select({ one: sql`1` }).from(members).where(currentMembership)),
+      ),
+    )
+    .returning({ id: apiTokens.id });
+  if (row) return { accessToken, refreshToken: next };
+  await db
+    .update(apiTokens)
+    .set({ revokedAt: new Date(now) })
+    .where(
+      and(
+        eq(apiTokens.previousRefreshHash, presented),
+        eq(apiTokens.clientRef, clientRef),
+        isNull(apiTokens.revokedAt),
+        lte(apiTokens.refreshRotatedAt, new Date(now - REPLAY_TOLERANCE_MS)),
+      ),
+    );
+  return null;
+}
+
 // Les jetons de l'adhésion en cours : ceux d'une ancienne adhésion, refusés par verifyApiToken, ne sont pas listés.
 export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> {
   return db
@@ -107,6 +231,10 @@ export async function listApiTokens(ctx: TenantContext): Promise<ApiTokenRow[]> 
       createdAt: apiTokens.createdAt,
       lastUsedAt: apiTokens.lastUsedAt,
       revokedAt: apiTokens.revokedAt,
+      kind: apiTokens.kind,
+      clientName: apiTokens.clientName,
+      clientHost: apiTokens.clientHost,
+      refreshExpiresAt: apiTokens.refreshExpiresAt,
     })
     .from(apiTokens)
     .innerJoin(members, currentMembership)
@@ -125,27 +253,34 @@ export async function revokeApiToken(ctx: TenantContext, tokenId: string): Promi
   return rows.length > 0;
 }
 
-// Jeton non révoqué dont l'utilisateur est toujours membre de l'organisation, depuis avant la création du
-// jeton, revérifié à chaque appel.
+// Jeton non révoqué et non échu dont l'utilisateur est toujours membre de l'organisation, depuis avant la création
+// du jeton, revérifié à chaque appel. `kind` dit à la route qui le reçoit de quelle sorte il est (F9).
 export async function verifyApiToken(
   token: string,
-): Promise<{ tokenId: string; ctx: TenantContext } | null> {
+): Promise<{ tokenId: string; ctx: TenantContext; kind: ApiTokenKind } | null> {
   if (!API_TOKEN_PATTERN.test(token)) return null;
+  const now = new Date();
   const [row] = await db
     .select({
       id: apiTokens.id,
       userId: apiTokens.userId,
       tenantId: apiTokens.tenantId,
       lastUsedAt: apiTokens.lastUsedAt,
+      kind: apiTokens.kind,
     })
     .from(apiTokens)
     // Un membre retiré puis réinvité ne retrouve pas les jetons de son ancienne adhésion.
     .innerJoin(members, currentMembership)
-    .where(and(eq(apiTokens.tokenHash, hashApiToken(token)), isNull(apiTokens.revokedAt)))
+    .where(
+      and(
+        eq(apiTokens.tokenHash, hashApiToken(token)),
+        isNull(apiTokens.revokedAt),
+        or(isNull(apiTokens.expiresAt), gt(apiTokens.expiresAt, now)),
+      ),
+    )
     .limit(1);
   if (!row) return null;
 
-  const now = new Date();
   if (!row.lastUsedAt || now.getTime() - row.lastUsedAt.getTime() > LAST_USED_PRECISION_MS) {
     await db.update(apiTokens).set({ lastUsedAt: now }).where(eq(apiTokens.id, row.id));
   }
@@ -154,5 +289,5 @@ export async function verifyApiToken(
     userId: row.userId,
     principals: principalsFor(row.userId, row.tenantId),
   };
-  return { tokenId: row.id, ctx };
+  return { tokenId: row.id, ctx, kind: row.kind };
 }

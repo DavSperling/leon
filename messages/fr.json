@@ -537,9 +537,23 @@
   "settings": {
     "title": "Réglages",
     "subtitle": "Profil, sécurité, équipe et branchement des assistants",
-    "claudeTitle": "Les outils de Leon dans Claude Code (MCP)",
-    "claudeDescription": "Pour que Claude Code puisse chercher dans Leon pendant une session. Lancez cette commande dans un terminal, en remplaçant le jeton par l’un des vôtres.",
-    "tokenPlaceholder": "votre jeton",
+    "assistantsTitle": "Assistants connectés",
+    "assistantsDescription": "Un assistant branché cherche et lit dans Leon avec vos droits d’accès, et peut garder une note. Vous autorisez chaque branchement dans Leon et le révoquez ici.",
+    "assistantsLead": "Collez cette adresse dans l’assistant. Leon vous demande de l’autoriser.",
+    "clientClaudeAiName": "claude.ai et Claude Desktop",
+    "clientClaudeAiHow": "Personnaliser › Connecteurs › Ajouter un connecteur personnalisé, puis collez l’adresse.",
+    "clientChatgptName": "ChatGPT",
+    "clientChatgptHow": "Plugins › Add custom MCP server, puis collez l’adresse.",
+    "clientClaudeCodeName": "Claude Code",
+    "clientClaudeCodeHow": "Lancez cette commande. Aucun jeton à coller.",
+    "clientCodexName": "Codex",
+    "clientCodexHow": "Lancez ces deux commandes.",
+    "clientCursorName": "Cursor et VS Code",
+    "clientCursorHow": "Ajoutez l’adresse comme url d’un serveur dans mcp.json.",
+    "yourAssistants": "Vos assistants",
+    "noAssistants": "Aucun assistant connecté pour l’instant.",
+    "assistantRevoked": "Assistant déconnecté.",
+    "assistantRevokeDescription": "Cet assistant n’aura plus accès à Leon. Pour le reconnecter, ajoutez de nouveau l’adresse dans l’assistant.",
     "extensionTitle": "Extension navigateur",
     "extensionDescription": "Copiez la demande et collez-la dans Claude Code, ouvert dans le dépôt Leon : il construit et charge l’extension pour vous. Ou suivez les étapes à la main.",
     "askClaude": "Demander à Claude d’installer l’extension",
@@ -937,7 +951,7 @@
       },
       "assistantKicker": "Dans votre assistant",
       "assistantTitle": "Votre assistant d’IA connaît enfin le contexte de l’équipe.",
-      "assistantLead": "Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Avec un jeton personnel, révocable à tout moment : il voit ce que vous voyez, rien de plus.",
+      "assistantLead": "Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Collez son adresse dans votre assistant et autorisez-le dans Leon : révocable à tout moment, il voit ce que vous voyez, rien de plus.",
       "assistantPoints": {
         "briefing": "Le point du matin vous attend au démarrage de votre assistant de code.",
         "sessions": "Chaque session de code est gardée à sa fin, texte seul.",
@@ -994,7 +1008,7 @@
       "discussionPrivate": "Discussion · privée",
       "theBriefing": "Le point du matin",
       "mcpServer": "Serveur MCP",
-      "token": "jeton personnel, révocable",
+      "token": "autorisé dans Leon, révocable",
       "nextTitle": "Ce qui arrive ensuite.",
       "nextLead": "Ce qui suit n’est pas encore construit. Nous l’écrivons ici pour que vous sachiez à quoi vous attendre.",
       "next": {
@@ -1087,7 +1101,7 @@
         },
         "mcp": {
           "title": "Serveur MCP",
-          "text": "Dans l’autre sens : votre assistant interroge Leon, avec un jeton personnel que vous révoquez quand vous voulez.",
+          "text": "Dans l’autre sens : votre assistant interroge Leon. Collez l’adresse dans votre assistant, autorisez-le dans Leon, et révoquez-le quand vous voulez.",
           "p1": "search, fetch, briefing, remember",
           "p2": "Les mêmes droits que vous",
           "p3": "Un journal de ce qui a été lu"
@@ -1607,6 +1621,26 @@
       "done": "C’est fait. Vous pouvez fermer cet onglet et revenir au terminal.",
       "refusedTitle": "Connexion annulée",
       "refused": "Rien n’a été autorisé."
+    }
+  },
+  "oauth": {
+    "authorize": {
+      "title": "Brancher un assistant",
+      "question": "Autoriser {client} à lire votre mémoire Leon dans l’espace {space} ?",
+      "declaredName": "Nom déclaré par l’application : Leon ne l’a pas vérifié.",
+      "returnTo": "Vous serez renvoyé vers {host}",
+      "returnToLocal": "Vous serez renvoyé vers une application de cet ordinateur",
+      "can": "L’assistant pourra :",
+      "canSearch": "chercher dans votre mémoire",
+      "canRead": "lire les sources et les passages qu’il trouve",
+      "canBriefing": "lire le point du matin d’un projet",
+      "canRemember": "garder une note que vous lui dictez",
+      "warning": "Si vous n’êtes pas en train de brancher un assistant vous-même, refusez.",
+      "allow": "Autoriser",
+      "deny": "Refuser",
+      "invalidTitle": "Lien non valide",
+      "invalidClient": "Leon ne connaît pas cette application, ou son lien est incomplet. Retournez dans l’assistant et recommencez.",
+      "invalidReturn": "Ce lien renvoie vers une adresse que Leon n’autorise pas pour cette application. Rien n’a été autorisé. Retournez dans l’assistant et recommencez."
     }
   },
   "claudeCode": {

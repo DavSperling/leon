@@ -112,7 +112,8 @@ describe('serveur MCP', () => {
   it('répond 401 sans jeton', async () => {
     const response = await apiRequest(API_PATHS.mcp, { method: 'POST', body: {} });
     expect(response.status).toBe(401);
-    expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
+    // Le défi complet (L2) est vérifié par api-contract.db.test.ts.
+    expect(response.headers.get('WWW-Authenticate')).toContain('resource_metadata="');
   });
 
   it('annonce exactement search, fetch, briefing et remember, avec leurs annotations', async () => {

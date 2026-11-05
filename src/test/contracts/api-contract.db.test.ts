@@ -12,9 +12,11 @@ import { extractClaudeCodeFacts } from '@/capture/session-facts';
 import { IngestResultSchema } from '@/capture/turn';
 import { createApiToken, generateApiToken, hashApiToken } from '@/server/auth/api-tokens';
 import { signComputerCode } from '@/server/auth/computer-code';
+import { AUTHORIZATION_SERVER_METADATA } from '@/server/oauth/metadata';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
 import { createTestTenant } from '@/test/fixtures';
+import { TEST_ENV } from '@/test/test-env';
 import { productionSources } from './files';
 
 vi.mock('@/server/pipeline/queue');
@@ -37,12 +39,20 @@ const SERVED = {
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
 } as const;
-// Aucun chemin en attente depuis T13 (le point du matin) : un chemin ajouté au contrat avant sa route vient ici.
+// Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
+// jeton ni session. Leur sonde est un POST sans corps valide, qui répond 400 : la route existe (ni 404) et ne demande
+// rien (ni 401).
+const PUBLIC = ['oauthClients', 'oauthJeton'] as const;
+// Un chemin ajouté au contrat avant sa route vient ici (les métadonnées du serveur d'autorisation peuvent l'annoncer
+// avant qu'il soit servi).
 const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
 
+// Seule /api/mcp dit au client où trouver le serveur d'autorisation (L2) ; les autres routes à jeton gardent le défi nu.
+const MCP_CHALLENGE = `Bearer resource_metadata="${TEST_ENV.BETTER_AUTH_URL}/.well-known/oauth-protected-resource/api/mcp", scope="leon"`;
+
 describe('routes de l’API', () => {
-  it('chaque chemin de API_PATHS est servi ou déclaré pas encore servi', () => {
-    expect([...Object.keys(SERVED), ...NOT_YET_SERVED].sort()).toEqual(
+  it('chaque chemin de API_PATHS est servi, public ou déclaré pas encore servi', () => {
+    expect([...Object.keys(SERVED), ...PUBLIC, ...NOT_YET_SERVED].sort()).toEqual(
       Object.keys(API_PATHS).sort(),
     );
   });
@@ -50,8 +60,27 @@ describe('routes de l’API', () => {
   it.each(Object.entries(SERVED))('%s répond 401 sans jeton', async (name, [method, init]) => {
     const response = await apiRequest(API_PATHS[name as keyof typeof SERVED], { method, ...init });
     expect(response.status).toBe(401);
-    expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
+    expect(response.headers.get('WWW-Authenticate')).toBe(
+      name === 'mcp' ? MCP_CHALLENGE : 'Bearer',
+    );
   });
+
+  it.each(PUBLIC)('%s répond 400 à un corps invalide, sans jeton ni session', async (name) => {
+    const response = await apiRequest(API_PATHS[name], { body: {} });
+    expect(response.status).toBe(400);
+    expect(response.headers.get('WWW-Authenticate')).toBeNull();
+  });
+
+  // Chaque adresse que les métadonnées du serveur d'autorisation (L3) annoncent répond : les deux routes à un POST sans
+  // corps valide par 400 (ni 404 ni 401), la page d'autorisation par son fichier (metadata.contrat.test.ts).
+  it.each(['registration_endpoint', 'token_endpoint'] as const)(
+    '%s des métadonnées répond 400 à un POST sans corps valide',
+    async (field) => {
+      const { pathname } = new URL(AUTHORIZATION_SERVER_METADATA[field]);
+      expect(pathname).toBe(API_PATHS[field === 'token_endpoint' ? 'oauthJeton' : 'oauthClients']);
+      expect((await apiRequest(pathname, { body: {} })).status).toBe(400);
+    },
+  );
 
   it.skipIf(NOT_YET_SERVED.length === 0).each(NOT_YET_SERVED)(
     '%s répond 404 : sa route n’existe pas encore (une fois servie, la retirer de NOT_YET_SERVED)',

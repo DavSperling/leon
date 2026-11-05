@@ -29,7 +29,8 @@ import type { ApiTokenRow } from '@/server/auth/api-tokens';
 import { CreateTokenContent } from './create-token';
 import { SECTION } from './reglages';
 
-export type Token = Omit<ApiTokenRow, 'revokedAt'>;
+// Ce que les sections dessinent : ni la révocation ni l'échéance du renouvellement, que la page a déjà jugées.
+export type Token = Omit<ApiTokenRow, 'revokedAt' | 'refreshExpiresAt'>;
 
 /** Section « Jetons personnels » : la liste (jetons non révoqués, lus par la page), la création et la révocation. */
 export function TokensSection({ tokens }: { tokens: Token[] }) {
@@ -115,28 +116,38 @@ export function TokensSection({ tokens }: { tokens: Token[] }) {
   );
 }
 
-/** Une ligne de jeton, avec sa révocation. `computer` : celle d'un ordinateur connecté (computers.tsx), aux mots près. */
+// Les mots de la révocation selon la sorte du jeton : le message de succès, et ce que la confirmation annonce.
+const REVOKE_WORDS = {
+  manuel: ['tokenRevoked', 'revokeDescription'],
+  ordinateur: ['computerRevoked', 'computerRevokeDescription'],
+  assistant: ['assistantRevoked', 'assistantRevokeDescription'],
+} as const;
+
+/**
+ * Une ligne de jeton, avec sa révocation. Les mots changent avec la sorte (`kind`) du jeton : ordinateur connecté
+ * (computers.tsx), assistant connecté (assistants.tsx), dont la ligne montre l'hôte de retour à la place de l'indice
+ * du jeton d'accès, qui change à chaque renouvellement.
+ */
 export function TokenRow({
   token: t,
   fresh = false,
-  computer = false,
   onGone,
 }: {
   token: Token;
   fresh?: boolean;
-  computer?: boolean;
   onGone: () => void;
 }) {
   const instant = useInstant();
   const tr = useTranslations('settings');
   const locale = useLocale();
   const [revoking, startTransition] = useTransition();
+  const [revokedKey, descriptionKey] = REVOKE_WORDS[t.kind];
 
   const revoke = () =>
     startTransition(async () => {
       try {
         const { ok } = await revokeTokenAction(t.id);
-        if (ok) toast.success(tr(computer ? 'computerRevoked' : 'tokenRevoked'));
+        if (ok) toast.success(tr(revokedKey));
         else toast.error(tr('tokenAlreadyRevoked'));
         onGone();
       } catch {
@@ -175,7 +186,9 @@ export function TokenRow({
             <span className="min-w-0 text-body font-medium [overflow-wrap:anywhere] text-fg">
               {t.name}
             </span>
-            <code className="font-mono text-[12px] tracking-normal text-muted">leon_…{t.hint}</code>
+            <code className="font-mono text-[12px] tracking-normal text-muted">
+              {t.kind === 'assistant' ? t.clientHost : `leon_…${t.hint}`}
+            </code>
           </p>
           {/* les morceaux ne se coupent pas en leur milieu (« 12 oct. / 2026 ») : la ligne passe à la ligne entre eux */}
           <p className="mt-0.5 flex flex-wrap gap-x-1.5 text-label text-muted [&>span]:whitespace-nowrap">
@@ -216,7 +229,7 @@ export function TokenRow({
             </Button>
           }
           title={tr('revokeNamed', { name: t.name })}
-          description={tr(computer ? 'computerRevokeDescription' : 'revokeDescription')}
+          description={tr(descriptionKey)}
           confirmLabel={tr('revoke')}
           onConfirm={revoke}
         />

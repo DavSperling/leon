@@ -64,3 +64,26 @@ describe('les messages', () => {
     }
   });
 });
+
+// Le MCP distant s'ouvre en collant son adresse dans l'assistant puis en l'autorisant dans Leon, plus par un jeton personnel.
+describe('le site public et le MCP distant', () => {
+  it.each(['site.home.assistantLead', 'site.connectors.channels.mcp.text'])(
+    '%s dit « adresse collée, puis autorisée dans Leon », pas un jeton personnel',
+    (key) => {
+      expect(FR.get(key), key).not.toMatch(/jeton/i);
+      expect(FR.get(key), key).toMatch(/adresse/);
+      expect(FR.get(key), key).toMatch(/autoris/);
+      expect(EN.get(key), key).not.toMatch(/token/i);
+      expect(EN.get(key), key).toMatch(/address/);
+      expect(EN.get(key), key).toMatch(/authorize/);
+    },
+  );
+
+  // L'étiquette sous les quatre outils, dans l'illustration du serveur MCP : elle dit comment l'assistant y entre.
+  it('site.product.token dit « autorisé dans Leon », pas un jeton personnel', () => {
+    expect(FR.get('site.product.token')).toMatch(/autoris/);
+    expect(FR.get('site.product.token')).not.toMatch(/jeton/i);
+    expect(EN.get('site.product.token')).toMatch(/authorize/);
+    expect(EN.get('site.product.token')).not.toMatch(/token/i);
+  });
+});

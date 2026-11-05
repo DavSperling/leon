@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { oauthReturnPath } from '@/server/oauth/authorize';
 import {
   authorizePath,
   authorizeQuery,
@@ -128,5 +129,49 @@ describe('pathAfterSignIn', () => {
     ['un chemin qui remonte', `/ordinateur/autoriser/../reglages?${authorizeQuery(PARAMS)}`],
   ])('va à l’accueil pour %s', (_name, value) => {
     expect(pathAfterSignIn(value)).toBe('/');
+  });
+});
+
+// La demande OAuth d'un assistant (M05) : seule la forme est revalidée ici (chemin fixe, huit paramètres connus,
+// bornés, rebâtis). La page revalide le client et l'adresse de retour à chaque affichage.
+describe('pathAfterSignIn : la demande OAuth d’un assistant', () => {
+  const REQUEST = {
+    response_type: 'code',
+    client_id: 'un-client-id',
+    redirect_uri: 'https://claude.ai/api/mcp/auth_callback',
+    state: 'etat du client',
+    code_challenge: 'A'.repeat(43),
+    code_challenge_method: 'S256',
+    scope: 'leon',
+    resource: 'http://localhost:3000/api/mcp',
+  };
+  const OAUTH = `/oauth/autoriser?${new URLSearchParams(REQUEST)}`;
+
+  it('renvoie à la demande en cours, rebâtie', () => {
+    expect(pathAfterSignIn(OAUTH)).toBe(OAUTH);
+    expect(pathAfterSignIn(OAUTH)).toBe(oauthReturnPath(REQUEST));
+  });
+
+  it('rebâtit le chemin : un paramètre en trop disparaît', () => {
+    expect(pathAfterSignIn(`${OAUTH}&suite=https://evil.example&port=4242`)).toBe(OAUTH);
+  });
+
+  it.each([
+    ['une adresse absolue', `https://evil.example${OAUTH}`],
+    ['une adresse sans schéma', `//evil.example${OAUTH}`],
+    ['une autre page de Leon', OAUTH.replace('/oauth/autoriser', '/reglages')],
+    ['un chemin qui remonte', OAUTH.replace('/oauth/autoriser', '/oauth/autoriser/../../reglages')],
+    ['la page, sans paramètres', '/oauth/autoriser'],
+    ['la page, sans client_id', OAUTH.replace(/client_id=[^&]*&/, '')],
+    ['un client_id de plus de 4 Ko', OAUTH.replace('un-client-id', 'a'.repeat(4097))],
+    ['un état de plus de 512 caractères', OAUTH.replace('etat+du+client', 'a'.repeat(513))],
+    ['la page sans le « ? »', `/oauth/autoriser&client_id=x`],
+  ])('va à l’accueil pour %s', (_name, value) => {
+    expect(pathAfterSignIn(value)).toBe('/');
+  });
+
+  it('une demande d’ordinateur et une demande OAuth ne se mélangent pas', () => {
+    expect(pathAfterSignIn(`/ordinateur/autoriser?${new URLSearchParams(REQUEST)}`)).toBe('/');
+    expect(pathAfterSignIn(authorizePath(PARAMS))).toBe(authorizePath(PARAMS));
   });
 });

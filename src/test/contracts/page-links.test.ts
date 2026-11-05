@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { nextAfterTools } from '@/components/verre/onboarding/tools-model';
+import { tabOf } from '@/components/verre/reglages/settings-tabs';
 import { OAUTH_RETURN_PATHS } from '@/lib/connection-form';
+import { AUTHORIZE_PATH } from '@/server/oauth/metadata';
 import { listFiles, productionSources, readText } from './files';
 
 // Chemin d'URL d'un page.tsx (ou route.ts) : sans « src/app », sans groupe de routes (x), sans « page.tsx ».
@@ -85,6 +87,29 @@ describe('liens entre pages', () => {
     }
   });
 
+  // Une ancre ne casse aucun test quand sa section disparaît : #claude-code a survécu ainsi à « Brancher Claude Code ».
+  it('mène chaque ancre /reglages#… à un onglet de Réglages et à une section qui existe', () => {
+    const anchors = new Set(
+      productionSources('src/**/*.{ts,tsx}').flatMap(({ text }) =>
+        [...text.matchAll(/\/reglages#([a-z-]+)/g)].map((match) => match[1] as string),
+      ),
+    );
+    const sections = productionSources(
+      'src/components/verre/reglages/*.tsx',
+      'src/app/(app)/reglages/page.tsx',
+    )
+      .map(({ text }) => text)
+      .join('\n');
+
+    expect(anchors).toContain('assistants');
+    for (const anchor of anchors) {
+      const tab = tabOf(`#${anchor}`);
+      expect(tab, anchor).toBeDefined();
+      // un onglet porte son propre nom ; toute autre ancre est l'id d'une section
+      if (tab !== anchor) expect(sections, anchor).toContain(`id="${anchor}"`);
+    }
+  });
+
   it('trouve les liens écrits dans le code', () => {
     expect(writtenPaths().length).toBeGreaterThan(15);
   });
@@ -130,6 +155,12 @@ describe('liens entre pages', () => {
       expect.arrayContaining(['/ordinateur/autoriser', '/ordinateur/connecte']),
     );
     expect(paths.filter(({ path }) => !matchesRoute(path as string))).toEqual([]);
+  });
+
+  // L'adresse d'autorisation que les métadonnées OAuth annoncent aux assistants (authorization_endpoint) passe par
+  // une constante : le balayage des liens ci-dessus ne la voit pas.
+  it('mène AUTHORIZE_PATH, l’adresse annoncée aux assistants, à une page', () => {
+    expect(matchesRoute(AUTHORIZE_PATH)).toBe(true);
   });
 
   // Ces adresses passent par une constante ou une fonction : le balayage des href= et redirect(' ci-dessus ne les voit pas.

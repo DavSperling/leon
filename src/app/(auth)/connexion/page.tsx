@@ -5,6 +5,7 @@ import { AuthForm } from '@/components/verre/auth/auth-form';
 import { Notice } from '@/components/verre/ui/feedback';
 import { emailEnabled } from '@/server/auth/auth';
 import { authorizePath, parseAuthorizeParams } from '@/server/auth/computer-authorize';
+import { oauthReturnPath } from '@/server/oauth/authorize';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth');
@@ -14,6 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 // `?supprime=` : les actions de suppression (réglages/actions.ts) renvoient ici, la session déjà effacée.
 // `?port=&etat=&empreinte=` : /ordinateur/autoriser, sans session. La connexion y revient, par un chemin rebâti à
 // partir des trois paramètres validés (computer-authorize.ts) et non copié de l'adresse.
+// `?response_type=&client_id=…` : /oauth/autoriser (un assistant), sans session ; même retour, rebâti à partir des
+// huit paramètres connus (oauthReturnPath : la forme seulement, la page d'autorisation juge le reste).
 export default async function SignInPage({
   searchParams,
 }: {
@@ -35,7 +38,9 @@ export default async function SignInPage({
       <AuthForm
         page="connexion"
         canResetPassword={emailEnabled}
-        returnTo={authorization ? authorizePath(authorization) : undefined}
+        returnTo={
+          authorization ? authorizePath(authorization) : (oauthReturnPath(query) ?? undefined)
+        }
       />
     </>
   );

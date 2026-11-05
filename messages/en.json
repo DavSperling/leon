@@ -537,9 +537,23 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Profile, security, team, and assistant connections",
-    "claudeTitle": "Leon’s tools in Claude Code (MCP)",
-    "claudeDescription": "So that Claude Code can search Leon during a session. Run this command in a terminal and replace the token with one of yours.",
-    "tokenPlaceholder": "your token",
+    "assistantsTitle": "Connected assistants",
+    "assistantsDescription": "An assistant you connect searches and reads Leon with your access rights, and can keep a note. You approve each connection in Leon and revoke it here.",
+    "assistantsLead": "Paste this address into the assistant. Leon asks you to authorize it.",
+    "clientClaudeAiName": "claude.ai and Claude Desktop",
+    "clientClaudeAiHow": "Customize › Connectors › Add custom connector, then paste the address.",
+    "clientChatgptName": "ChatGPT",
+    "clientChatgptHow": "Plugins › Add custom MCP server, then paste the address.",
+    "clientClaudeCodeName": "Claude Code",
+    "clientClaudeCodeHow": "Run this command. No token to paste.",
+    "clientCodexName": "Codex",
+    "clientCodexHow": "Run these two commands.",
+    "clientCursorName": "Cursor and VS Code",
+    "clientCursorHow": "Add the address as the url of a server in mcp.json.",
+    "yourAssistants": "Your assistants",
+    "noAssistants": "No assistant connected yet.",
+    "assistantRevoked": "Assistant disconnected.",
+    "assistantRevokeDescription": "This assistant will lose access to Leon. To connect it again, add the address again in the assistant.",
     "extensionTitle": "Browser extension",
     "extensionDescription": "Copy this prompt and paste it into Claude Code in the Leon repository to build and load the extension, or follow the steps manually.",
     "askClaude": "Ask Claude to install the extension",
@@ -937,7 +951,7 @@
       },
       "assistantKicker": "MCP server",
       "assistantTitle": "Give your AI assistant your team’s context.",
-      "assistantLead": "Leon’s MCP server exposes four tools to any MCP client: search, fetch a source, get the morning briefing, save a note. It authenticates with a revocable personal token and inherits your permissions exactly.",
+      "assistantLead": "Leon’s MCP server exposes four tools to any MCP client: search, fetch a source, get the morning briefing, save a note. Paste its address into your assistant and authorize it in Leon: the access is revocable and inherits your permissions exactly.",
       "assistantPoints": {
         "briefing": "Your coding assistant opens each session with the morning briefing.",
         "sessions": "Coding sessions are captured when they end, text only.",
@@ -994,7 +1008,7 @@
       "discussionPrivate": "Chat · private",
       "theBriefing": "The morning briefing",
       "mcpServer": "MCP server",
-      "token": "personal token · revocable",
+      "token": "authorized in Leon · revocable",
       "nextTitle": "Known limits.",
       "nextLead": "None of this is in the product today. We list it so you can plan around it.",
       "next": {
@@ -1087,7 +1101,7 @@
         },
         "mcp": {
           "title": "MCP server",
-          "text": "The reverse direction: your AI assistant queries Leon over MCP with a personal token you can revoke at any time.",
+          "text": "The reverse direction: your AI assistant queries Leon over MCP. Paste the address into your assistant, authorize it in Leon, and revoke it at any time.",
           "p1": "search, fetch, briefing, remember",
           "p2": "Scoped to your permissions",
           "p3": "Audit log of the sources it opens"
@@ -1607,6 +1621,26 @@
       "done": "All set. You can close this tab and go back to the terminal.",
       "refusedTitle": "Connection cancelled",
       "refused": "Nothing was authorized."
+    }
+  },
+  "oauth": {
+    "authorize": {
+      "title": "Connect an assistant",
+      "question": "Authorize {client} to read your Leon memory in the {space} workspace?",
+      "declaredName": "Name declared by the application: Leon hasn’t checked it.",
+      "returnTo": "You will be sent to {host}",
+      "returnToLocal": "You will be sent to an application on this computer",
+      "can": "The assistant will be able to:",
+      "canSearch": "search your memory",
+      "canRead": "read the sources and passages it finds",
+      "canBriefing": "read the morning briefing of a project",
+      "canRemember": "keep a note that you dictate to it",
+      "warning": "If you aren’t connecting an assistant yourself, refuse.",
+      "allow": "Authorize",
+      "deny": "Refuse",
+      "invalidTitle": "Link not valid",
+      "invalidClient": "Leon doesn’t know this application, or its link is incomplete. Go back to the assistant and try again.",
+      "invalidReturn": "This link points to an address Leon doesn’t allow for this application. Nothing was authorized. Go back to the assistant and try again."
     }
   },
   "claudeCode": {

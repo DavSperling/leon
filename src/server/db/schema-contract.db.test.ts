@@ -32,6 +32,23 @@ async function databaseColumns(table: string): Promise<string[]> {
   return rows.map((row) => row.column_name);
 }
 
+// Le type et la nullité de chaque colonne, tels que la base les a (celui de `format_type`, comme `getSQLType()` de Drizzle).
+async function databaseColumnShapes(table: string): Promise<Map<string, string>> {
+  const { rows } = await adminPool.query<{ name: string; shape: string }>(
+    `select a.attname as name,
+            format_type(a.atttypid, a.atttypmod) || case when a.attnotnull then ' not null' else '' end as shape
+       from pg_attribute a
+       join pg_class c on c.oid = a.attrelid
+       join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public' and c.relname = $1 and c.relkind = 'r' and a.attnum > 0 and not a.attisdropped`,
+    [table],
+  );
+  return new Map(rows.map((row) => [row.name, row.shape]));
+}
+
+// Colonnes que Postgres calcule et que Drizzle ne déclare pas exprès (search.ts : la recherche lit `tsv` en SQL).
+const COMPUTED_BY_POSTGRES = new Set(['passages.tsv']);
+
 // Valeurs autorisées par le CHECK « colonne in (...) », lues dans le catalogue de Postgres.
 async function checkValues(table: string, column: string): Promise<string[] | undefined> {
   const { rows } = await adminPool.query<{ def: string }>(
@@ -87,6 +104,30 @@ describe('schéma Drizzle ↔ migrations', () => {
       const actual = await databaseColumns(name);
       expect(actual).not.toHaveLength(0);
       for (const column of expected) expect(actual, `${name}.${column}`).toContain(column);
+    },
+  );
+
+  // L'inverse, et la forme : une colonne `not null` que Drizzle ne déclare pas fait échouer chaque insertion qu'il écrit
+  // (23502), un type ou une nullité qui diffèrent fait mentir les types de la lecture. api_tokens a reçu dix colonnes de
+  // la 0049 : rien ne dit, sans ce test, que les dix sont celles du schéma.
+  it.each(tables.map((table) => [getTableConfig(table).name, table] as const))(
+    'les colonnes de %s en base sont celles de Drizzle, du même type et de la même nullité',
+    async (name, table) => {
+      const declared = new Map(
+        getTableConfig(table).columns.map((column) => [
+          column.name,
+          `${column.getSQLType()}${column.notNull ? ' not null' : ''}`,
+        ]),
+      );
+      const actual = await databaseColumnShapes(name);
+      const undeclared = [...actual.keys()].filter(
+        (column) => !declared.has(column) && !COMPUTED_BY_POSTGRES.has(`${name}.${column}`),
+      );
+      const differing = [...declared]
+        .filter(([column, shape]) => actual.has(column) && actual.get(column) !== shape)
+        .map(([column, shape]) => `${column} : Drizzle ${shape}, base ${actual.get(column)}`);
+
+      expect({ undeclared, differing }).toEqual({ undeclared: [], differing: [] });
     },
   );
 

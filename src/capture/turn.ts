@@ -107,6 +107,29 @@ export const PROJECT_KEY_PATTERN =
 // Une clé de projet reçue en paramètre (le point du matin, le bloc de démarrage), de la même forme que `source.project`.
 export const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN);
 
+const PROJECT_KEY_MAX_CHARS = 200;
+const OWNER_AND_REPO = /^[a-z0-9._-]+\/[a-z0-9._-]+$/;
+
+// La clé du projet (D9) d'après ce qu'écrit l'utilisateur ou son assistant (outils `briefing` et `search` du MCP) :
+// la clé elle-même, « propriétaire/dépôt », ou l'adresse https du dépôt. Null pour tout le reste (un autre
+// hébergeur, une adresse avec identifiants).
+export function projectKeyFromInput(raw: string): string | null {
+  const text = raw.trim().toLowerCase();
+  const path = text
+    .replace(/^https?:\/\/github\.com\//, '')
+    .replace(/^github\.com\//, '')
+    .replace(/\/+$/, '')
+    .replace(/\.git$/, '');
+  const key = text.startsWith('dossier:')
+    ? text
+    : OWNER_AND_REPO.test(path) && !path.split('/').some((part) => part === '.' || part === '..')
+      ? `github.com/${path}`
+      : null;
+  return key !== null && key.length <= PROJECT_KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(key)
+    ? key
+    : null;
+}
+
 export const IngestPayloadSchema = z
   .object({
     source: z

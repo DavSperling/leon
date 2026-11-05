@@ -63,6 +63,21 @@ describe('description de search', () => {
     }
   });
 
+  // T25 : les formes que la description de depot propose sont celles que la recherche lit ; une autre est refusée.
+  it('décrit depot par les formes de dépôt que la recherche lit', () => {
+    const text = description(SearchInputSchema.shape.depot);
+
+    for (const form of ['github.com/owner/repo', 'owner/repo']) {
+      expect(text).toContain(form);
+      expect(readToolFilters({ depot: form }, new Date())).toEqual({
+        filters: { depot: 'github.com/owner/repo' },
+      });
+    }
+    const refused = readToolFilters({ depot: 'gitlab.com/owner/repo' }, new Date());
+    expect(refused).toHaveProperty('error');
+    expect('error' in refused ? refused.error : '').toContain('github.com/owner/repo');
+  });
+
   it('annonce le nombre de sources par page et la dernière page de la recherche', () => {
     expect(description(SearchInputSchema.shape.page)).toContain(`${PAGE_SIZE} sources per page`);
 

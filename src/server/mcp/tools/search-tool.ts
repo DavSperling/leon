@@ -66,6 +66,13 @@ export const SearchInputSchema = z.object({
     .max(FILTER_MAX_CHARS)
     .nullish()
     .describe('Limit to what one person wrote: their name, email or username in the tool.'),
+  depot: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe(
+      'Limit to one code repository: its coding sessions, their summaries, and its GitHub pull requests and issues. Write github.com/owner/repo or owner/repo.',
+    ),
   page: z
     .number()
     .int()
@@ -77,9 +84,13 @@ export const SearchInputSchema = z.object({
 
 // Les paramètres qui filtrent, tels que MCP_INSTRUCTIONS les nomme : un nom qui n'est pas un paramètre de
 // l'outil ne compile pas.
-export const SEARCH_FILTERS = ['outil', 'type', 'depuis', 'de'] as const satisfies ReadonlyArray<
-  keyof z.input<typeof SearchInputSchema>
->;
+export const SEARCH_FILTERS = [
+  'outil',
+  'type',
+  'depuis',
+  'de',
+  'depot',
+] as const satisfies ReadonlyArray<keyof z.input<typeof SearchInputSchema>>;
 
 export const SEARCH_DESCRIPTION =
   "Searches the company's whole raw memory (AI conversations, tickets, pages, meetings, emails, files) by keywords and by meaning. Returns sources with their best passages, tool, title, date and link. Only returns what the user is allowed to see. To read a passage or a source: fetch.";
@@ -104,9 +115,9 @@ export function registerSearchTool(
       outputSchema: SearchOutputSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    guarded('search', async ({ query, outil, type, depuis, de, page }) => {
+    guarded('search', async ({ query, outil, type, depuis, de, depot, page }) => {
       const now = new Date();
-      const read = readToolFilters({ outil, type, depuis }, now);
+      const read = readToolFilters({ outil, type, depuis, depot }, now);
       if ('error' in read) return refusal(read.error);
       // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe.
       const text = queryWithPerson(query, de);

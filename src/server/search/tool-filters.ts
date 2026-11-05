@@ -1,11 +1,12 @@
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, projectKeyFromInput, SOURCE_KINDS } from '@/capture/turn';
 import { NATURE_LABELS_EN } from '@/lib/labels';
 import { parseQuery } from './parse-query';
 import type { SearchFilters } from './types';
 
 // Les filtres qu'un assistant écrit dans les paramètres d'un outil (`outil`, `type`, `depuis`, `de`), lus comme la
-// barre les lit (identifiant ou libellé d'outil, nature au singulier ou au pluriel, durées). Partagé par l'outil
-// `search` du MCP (T07) et les outils de l'agent de discussion (T11). Pur : ni base, ni réseau.
+// barre les lit (identifiant ou libellé d'outil, nature au singulier ou au pluriel, durées), et `depot`, lu comme le
+// projet de l'outil `briefing` (projectKeyFromInput). Partagé par l'outil `search` du MCP (T07) et les outils de
+// l'agent de discussion (T11). Pur : ni base, ni réseau.
 
 // La requête, décrite à l'assistant (outil `search` du MCP, outil `chercher` de la discussion). Quand la recherche
 // trouve peu de sources qui contiennent tous les mots, elle ajoute celles qui n'en contiennent qu'une partie (passe
@@ -29,7 +30,12 @@ export function cleanFilterValue(value: string | null | undefined): string {
 // Un filtre que Leon ne comprend pas n'est pas ignoré en silence : l'assistant croirait avoir cherché dans un
 // outil, et chercherait partout. Il reçoit un message qui dit quoi écrire.
 export function readToolFilters(
-  input: { outil?: string | null; type?: string | null; depuis?: string | null },
+  input: {
+    outil?: string | null;
+    type?: string | null;
+    depuis?: string | null;
+    depot?: string | null;
+  },
   now: Date,
 ): { filters: SearchFilters } | { error: string } {
   const filters: SearchFilters = {};
@@ -58,6 +64,16 @@ export function readToolFilters(
       };
     }
     filters.since = since;
+  }
+  const depot = cleanFilterValue(input.depot);
+  if (depot !== '') {
+    const key = projectKeyFromInput(depot);
+    if (!key) {
+      return {
+        error: `Unknown repository for depot: "${depot}". Write github.com/owner/repo or owner/repo.`,
+      };
+    }
+    filters.depot = key;
   }
   return { filters };
 }

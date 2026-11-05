@@ -66,23 +66,30 @@ Elles suivent le talk de Lamis (Applied AI, Anthropic, AI DevCon) sur le context
 
 ## Décisions d'Amos du 05/11
 
-Ce sont ses réponses à A14 et A15.
+Ce sont ses réponses à A14, A15 et A16.
 
 1. Les sous-agents. D'abord le tri : la capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]` (T43). Ensuite, dès le lot 14, un sous-agent qui ne lit que le dépôt ne rend plus la session externe. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe (D36, T63). Seules les sessions captées après le lot 14 en profitent : une session déjà marquée externe le reste.
 2. Les lectures. `leon lecons`, `leon versions`, `leon noter`, et les outils MCP `lecons`, `versions` et `remember` ne rendent pas la session externe. `search` et `fetch` du MCP restent externes. L'écart entre `remember` et `leon noter` disparaît (D36).
 3. La leçon sans preuve : toutes ses preuves ont plus de 90 jours. Le rêve propose de la retirer, l'humain décide. Jamais pour une leçon écrite à la main (D39).
 4. Le budget des leçons au démarrage : pas de chiffre fixe. Les leçons prennent toute la place que le sommaire laisse, dans les 8 000 octets. Le point du matin ne prend que ce qui reste après elles (D37).
 5. Les versions sont archivées et toujours accessibles : sur le site, par `leon versions` et par l'outil `versions`. Hors la suppression du compte (D21, A12), aucune n'est effacée. La restauration se fait sur le site seulement, par l'auteur, et crée une nouvelle version (D33, C12).
-6. L'usage `noter` est à part, proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2. L'utilisateur peut le décocher (D30). Or T47 et T49 ne cochent pas encore `lecture` ni `rappel` : l'installateur demande aujourd'hui `[y/N]`. C'est posé à Amos (A16).
+6. L'usage `noter` est à part, proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2. L'utilisateur peut le décocher (D30). `lecture` et `rappel` le sont aussi : voir le point 9.
 7. La fusion garde le fil absorbé, masqué, et ses versions restent lisibles (D21).
 8. Une connexion de moins d'une heure pour accepter, écrire ou remettre une leçon, et pour remettre une version (D37, T55).
+
+Ses réponses à A16 :
+
+9. Les usages `lecture`, `rappel` et `noter` sont cochés par défaut. Quand un agent installe Leon pour l'utilisateur (`--yes`, le bouton « Je demande à Claude »), les cases s'affichent, cochées, sur la page « Autoriser » du navigateur, où c'est l'humain qui clique. L'agent ne coche jamais rien à sa place : `--yes` n'ajoute toujours aucun usage par lui-même. Ce sont les cases de la page qui les donnent (D30, T64).
+10. Décocher `noter` bloque aussi `remember` au MCP. Le serveur garde ce choix dans un réglage du compte, que `remember` lit, et que l'installateur et la page « Autoriser » tiennent à jour. Qui n'a jamais décoché `noter` garde `remember`, même sans avoir jamais installé la CLI (claude.ai, ChatGPT) (D30, C16, T65).
+11. Dans le bloc de démarrage, la place de la consigne est réservée : la consigne (lire son fil avant de commencer), l'en-tête des leçons et la ligne « N autres leçons » passent toujours. Les leçons prennent le reste, puis le point du matin (D37).
+12. Une ligne de l'état qui ne s'appuie que sur des notes de l'agent est gardée, marquée « agent ». Elle n'est jamais preuve d'une `[décision]`, et reste visible de l'auteur seul, comme le fil (D23, D36).
 
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
 |---|---|---|---|
-| 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1). Depuis le 04/11 : l'état du fil versionné et hors recherche, un verrou par fil, l'historique (`leon versions`, l'outil `versions`) | T39 à T47, T53 et T54 | 10,5 j (le 05/11 retire la restauration de T54 et ajoute la marque « injecté » à T43 : effort à confirmer) |
-| 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`). Depuis le 05/11 : l'historique sur le site, « Remettre cette version » et la connexion récente (T55) | T48, T49, T55 à T57 | 4,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes ; le 05/11 y déplace la restauration retirée de T54, et ajoute l'historique des fils sur le site et la connexion récente) |
+| 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1). Depuis le 04/11 : l'état du fil versionné et hors recherche, un verrou par fil, l'historique (`leon versions`, l'outil `versions`). Depuis le 05/11 : les usages cochés par défaut, et leurs cases sur la page « Autoriser » (T64) | T39 à T47, T53, T54 et T64 | 12 j (le 05/11 retire la restauration de T54 et ajoute la marque « injecté » à T43 : effort à confirmer ; puis 1,5 j pour T64, après A16, estimation du rédacteur, à confirmer) |
+| 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`). Depuis le 05/11 : l'historique sur le site, « Remettre cette version » et la connexion récente (T55) ; décocher `noter` coupe aussi `remember` (T65) | T48, T49, T55 à T57 et T65 | 5,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes ; le 05/11 y déplace la restauration retirée de T54, et ajoute l'historique des fils sur le site et la connexion récente ; puis 1 j pour T65, après A16) |
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande. Depuis le 05/11 : un sous-agent qui ne lit que le dépôt ne rend plus la session externe (T63) | T50 à T52, T63 | 4,5 j |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite | T58 à T62 | 5,5 j (5 j pour le rêve, 0,5 j pour T62) |
 
@@ -100,6 +107,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - **Le 04/11, les lots d'outils** suivent D36 : les lectures de Leon retenues par D36 ne rendent pas une session Codex, Cursor ou Antigravity externe (D17, T18, T27 et T32 amendés dans le plan mère). Leurs lecteurs relèvent aussi `outils_en_erreur` (T58).
 - **Le 04/11, C1** gagne `outils_en_erreur` (T58), sous l'accord de base.
 - **Le 05/11, le lot 14** gagne T63 (4,5 j). D17, C1, T18, T27 et T32 suivent D36 tranché : les lectures, et un sous-agent qui ne lit que le dépôt, pour Claude Code au lot 14 et pour les autres outils dans leur lot. Les contraintes globales suivent D37 : les leçons sans chiffre fixe.
+- **Le 05/11, après A16**, le lot 12 gagne T64 (1,5 j) et le lot 13 T65 (1 j), estimations du rédacteur, à confirmer. `lecture`, `rappel` et `noter` sont cochés par défaut, dans le terminal comme sur la page « Autoriser ». Les installateurs des lots d'outils (T17, T20, T29, T34) les proposent de même. Les contraintes globales suivent D37 : la place de la consigne est réservée.
 
 **Ordre (tranché le 04/11, voir A8) :** 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15.
 - Le lot 2, fusionné, a fermé une fuite : des PR de dépôts perso étaient relevées avec l'ACL de l'organisation.
@@ -108,7 +116,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - Les lots 12 à 14 servent ensuite tout de suite dans Claude Code, déjà capté.
 - Le lot 15 vient en dernier. Il lit des semaines de sessions de tous les outils. Le lot 11 mesure avant lui une référence sans rêve.
 
-Total du chantier : environ 54,5 jours, lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63). La version avec modèle du rêve (environ 3 j) viendrait en plus, si David accepte QD1.
+Total du chantier : environ 57 jours, lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), estimations du rédacteur, à confirmer. La version avec modèle du rêve (environ 3 j) viendrait en plus, si David accepte QD1.
 
 Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
@@ -127,7 +135,7 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
 - **Le démarrage lit ce qui est prêt**, sans modèle ni vecteur, en moins de 3 s, et met en file une mise à jour sans l'attendre.
 - **Le rappel (niveau 2)** est une recherche plein texte bornée aux fils de l'auteur, sans modèle ni vecteur. Le message n'est ni stocké ni journalisé.
 - **La lecture** passe d'abord par trois routes à jeton que la CLI expose en commandes (`leon dossier`, `leon fil`, `leon chercher`). Le connecteur MCP existant (`src/server/mcp/`) gagne les mêmes lectures, en deux outils et deux filtres. Son installation dans les outils et sa connexion OAuth relèvent du plan MCP distant (#121).
-- **L'accord** ne monte plus une échelle de versions : chaque usage a son propre consentement (C7 révisé).
+- **L'accord** ne monte plus une échelle de versions : chaque usage a son propre consentement (C7 révisé). Depuis le 05/11 : `lecture`, `rappel` et `noter` sont cochés par défaut. Quand un agent installe, ils se donnent sur la page « Autoriser » du navigateur (T64). Un réglage du compte garde le refus de `noter`, que `remember` lit (C16, T65).
 - **Depuis le 04/11 :** les leçons, relues et acceptées par un humain, passent dans le bloc avant le point du matin (D37). L'agent écrit des notes privées par `leon noter` (D38). Chaque nuit, un rêve par règles propose des leçons et la clôture des fils dormants, que l'humain accepte ou rejette (lot 15, D39).
 
 ## Décisions
@@ -176,13 +184,14 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
     - Une `[décision]` n'est gardée que si elle cite l'id d'un tour de l'utilisateur, d'une PR ou d'un commit de l'équipe, d'un message ou d'une réunion présents dans le condensé. Le serveur vérifie l'id, et retire la décision sinon. Amendé le 04/11 par D36 : le tour de l'utilisateur est un tour `user` d'une session de code de l'auteur, jamais une note `remember` ni `leon noter`, ni un tour `user` injecté.
     - `[consigne]` est retirée. Les relations sont ajoutées par le serveur.
     - Amendé le 04/11 par D36 : chaque ligne de la sortie, quelle que soit sa balise, cite au moins un id du condensé. Le serveur retire les lignes sans id valide. Il écrit lui-même la provenance de chaque ligne d'après ses ids (toi, agent, équipe, connecteur) ; celle qu'écrit le modèle est ignorée.
+    - Tranché le 05/11 (A16) : une ligne qui ne s'appuie que sur des notes de l'agent est gardée, avec la provenance « agent ». Elle n'est jamais preuve d'une `[décision]` (D36). L'état reste visible de l'auteur seul, comme le fil (`acl` du fil, C12).
   - **La réécriture.** En une transaction : le texte du tour d'état est remplacé, ses passages et leurs vecteurs sont supprimés (DELETE permis sur `passages`), puis une indexation est mise en file. La recherche ne trouve jamais l'ancien état. Amendé le 04/11 par D33 à D35 : plus de tour réécrit ni de passages supprimés ; l'état s'écrit en nouvelle version, en compare-and-set, hors de la recherche.
   - **Sans modèle, sans aucune session avec l'usage `resume`, ou en cas d'échec**, l'état est la liste déterministe des sessions, des PR et des sources liées. Un échec garde l'ancien état, sauf après la disparition d'une source : l'état redevient alors déterministe. Amendé le 04/11 par D33 : quand elle change, cette liste s'écrit en version `ecrit_par = serveur`.
 - **D24. Le sommaire (niveau 1)** remplace « mes dernières sessions » dans le bloc de démarrage (`POST /api/v1/contexte`, C3 inchangé).
   - Une ligne par fil du projet, la branche courante d'abord, puis par date, 8 fils au plus, 3 500 octets au plus.
   - Chaque ligne : l'id du fil (un uuid, clé sûre), le titre, les outils (Claude Code, Codex…), la dernière date, les numéros de PR et leur état (à partir du lot 3), le nombre de sources liées.
   - **Le titre** est la branche réduite aux caractères `[A-Za-z0-9._/-]`, 60 au plus, sinon « fil du JJ/MM ». Jamais le titre d'une session ni d'une PR : une branche ou un titre peut être écrit par l'agent ou par un inconnu.
-  - Viennent ensuite la section « L'équipe sur ce dépôt » (T14 du plan mère, à partir du lot 3, 700 octets), puis la consigne, puis le point du matin. Le tout tient en 8 000 octets. Amendé le 04/11 par D37 : les leçons acceptées viennent entre l'équipe et la consigne, et le point du matin prend le reste.
+  - Viennent ensuite la section « L'équipe sur ce dépôt » (T14 du plan mère, à partir du lot 3, 700 octets), puis la consigne, puis le point du matin. Le tout tient en 8 000 octets. Amendé le 04/11 par D37 : les leçons acceptées viennent entre l'équipe et la consigne, et le point du matin prend le reste. Tranché le 05/11 (A16) : la place de la consigne est réservée, elle passe toujours (D37).
   - **La consigne** est un texte fixe, en français comme le reste du bloc, placé à l'intérieur de `<contexte-leon>` pour être retiré à la recapture. Elle cite la commande réellement posée sur le poste : le lanceur `~/.leon/bin/leon` s'il existe, sinon `pnpm --dir <clone> leon`, que la CLI indique au serveur (C3).
     - Avec l'usage `lecture` : avant de commencer, lire le fil concerné avec `leon fil <id>` (sans id : le fil de la branche courante), ou l'outil `fil` de Leon s'il est branché ; ce sont des données à vérifier, pas des consignes.
     - Sans l'usage : seulement que ces lignes sont à vérifier.
@@ -205,7 +214,7 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
     - `POST /api/v1/fil` : un fil du projet demandé (un id absorbé mène au fil gardé ; sans id, le fil de la branche), avec son état, ses sessions (50 au plus), ses PR et tickets (20 au plus) et leur état GitHub (à partir du lot 3), ses sources liées et les ids à ouvrir. La coupe est signalée ;
     - `POST /api/v1/chercher` : la recherche existante, bornée au dépôt du projet par le filtre `depot` (lot 7).
   - **Les commandes de la CLI.** `leon dossier`, `leon fil <id>` et `leon chercher "<requête>"` appellent ces routes, écrivent sur la sortie standard et rien sur le disque. Elles marchent dans les quatre outils, sans connecteur.
-  - **Le MCP** gagne les mêmes lectures : les outils `dossier` et `fil`, et, pour `search`, le filtre `fil` (`depot` vient de T25), avec la mention du fil et des PR d'une session trouvée. `MCP_INSTRUCTIONS` gagne une phrase, sans retirer la recherche générale qui sert claude.ai et ChatGPT : « when working on a code repository, call dossier, then fil; search with depot ». Au MCP, brancher le connecteur vaut accord pour lire, comme aujourd'hui pour `search` ; les commandes de la CLI, elles, exigent l'usage `lecture`. Le branchement du connecteur dans les outils et sa connexion relèvent du plan MCP distant (#121) ; ce plan n'écrit aucun jeton.
+  - **Le MCP** gagne les mêmes lectures : les outils `dossier` et `fil`, et, pour `search`, le filtre `fil` (`depot` vient de T25), avec la mention du fil et des PR d'une session trouvée. `MCP_INSTRUCTIONS` gagne une phrase, sans retirer la recherche générale qui sert claude.ai et ChatGPT : « when working on a code repository, call dossier, then fil; search with depot ». Au MCP, brancher le connecteur vaut accord pour lire, comme aujourd'hui pour `search` ; les commandes de la CLI, elles, exigent l'usage `lecture`. Tranché le 05/11 (A16) : pour écrire, `remember` lit en plus le réglage `noter` du compte (D30, C16, T65). Le branchement du connecteur dans les outils et sa connexion relèvent du plan MCP distant (#121) ; ce plan n'écrit aucun jeton.
   - **La consigne du bloc et les commandes de la CLI** ne citent que `dossier`, `fil` et la recherche bornée au dépôt, jamais une recherche dans toute la mémoire (vigilance 6).
   - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe.
   - **Chaque lecture d'un fil ou du dossier est notée** par `recordReads`, avec l'outil et la session quand ils sont connus, pour la mesure du lot 11. Il faut pour cela étendre le check de `read_log.tool` et ajouter une colonne `session` (T44).
@@ -223,14 +232,30 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - Ce lot et le niveau 3 (D28) se détaillent quand on y arrive, avec David, à partir des constats de la relecture du 03/11 (A10, A11).
 - **D30. L'accord, par usage.** Les versions cumulatives liaient des permissions sans rapport : pour avoir le rappel, il aurait fallu accepter le résumé par le fournisseur du modèle. On les remplace par des usages (C7 révisé).
   - La version 2 (les gestes) reste la base, et la version 0 le retrait.
-  - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage.
+  - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage. Tranché le 05/11 (A16) : `lecture`, `rappel` et `noter` sont cochés par défaut, `resume` et `coulisses` non (ci-dessous).
   - Le serveur vérifie l'usage à chaque emploi : `lecture` pour les routes de lecture et la consigne, `resume` pour le résumé et l'état des fils, `rappel` pour le rappel, `coulisses` pour le lot 14. La CLI envoie ses usages (C2, C3, C8, C11). `lecture` vaut pour les commandes du poste dès qu'un outil l'a accepté ; la consigne n'apparaît que dans un outil qui l'a accepté.
   - Amendé le 04/11 par D38, tranché le 05/11 : un cinquième usage, `noter`, à part, avec son propre texte. Il est proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2 ; l'utilisateur peut le décocher. La restauration ne passe plus par le jeton (D33) : il ne sert plus qu'à `POST /api/v1/noter` (et à `remember`, qui prend le même chemin), et à la phrase de la consigne qui cite `leon noter`. Un accord `lecture` ne permet jamais d'écrire, et son texte ne change pas.
-    - Coché par défaut se lit ainsi : dans un terminal interactif, Entrée l'accepte. Sans terminal, ou avec `--oui` et `--yes`, il n'est pas ajouté, comme tout usage (ci-dessus). Le chemin « Je demande à Claude », qui lance `setup --yes`, ne l'ajoute donc pas. T47 et T49 ne cochent pas encore `lecture` ni `rappel` (l'installateur demande `[y/N]`) : la parité dite par Amos est posée en A16.
-    - Limite connue pour `remember` : au MCP, il n'y a pas d'usages du poste, et brancher le connecteur vaut accord (D27). Décocher `noter` n'empêche donc pas un outil de code où le connecteur Leon est branché d'écrire par `remember`. Le texte de `noter` ne promet pas le contraire. L'empêcher demanderait de transmettre les usages au MCP (#121) : posé en A16.
+    - Coché par défaut se lit ainsi, pour `lecture`, `rappel` et `noter` (tranché le 05/11, A16) :
+      - dans un terminal interactif, la question est `[Y/n]` : Entrée l'accepte. Interactif veut dire `process.stdin.isTTY` ; le script d'installation lance `setup` avec `< /dev/tty`, il le reste. Une entrée fermée (Ctrl+D) n'est pas une réponse et n'accepte rien : `ask` rend alors `null` ;
+      - hors terminal (`echo | leon setup`, `yes '' | leon setup`), aucune réponse lue ne donne un usage, même « y » ;
+      - sur la page « Autoriser » du navigateur, que `leon login` ouvre, les cases demandées s'affichent, cochées, et c'est l'humain qui clique sur « Autoriser » (T64). C'est le chemin « Je demande à Claude » : l'agent lance `setup --yes`, et la page s'ouvre dans le navigateur de l'utilisateur ;
+      - la CLI n'ajoute jamais un usage d'elle-même : sans terminal, ou avec `--oui` et `--yes`, seules les cases de la page en donnent. L'agent ne coche jamais rien à la place de l'utilisateur.
+    - **Les cases de la page reviennent à la CLI** par le code signé (T64, C16).
+      - `leon setup` demande les cases par un paramètre de l'adresse de la page, `usages` (K3), validé comme les trois autres et gardé à la connexion. Il n'y met que les usages cochés par défaut qui manquent et n'ont jamais été refusés, pour les outils de ce passage. Sans ce paramètre, la page ne montre aucune case : `leon login` lancé seul, et une CLI d'avant T64, n'en voient pas.
+      - Chaque case montrée est cochée, sauf `noter` quand le réglage du compte est daté (ci-dessous).
+      - L'action met les cases montrées (`m`) et cochées (`g`) dans la charge signée du code. Elles ne sont jamais en paramètre à part de l'adresse de retour ; dans la charge du code, qui y passe, elles sont lisibles mais non modifiables.
+      - `POST /api/v1/ordinateurs` rend dans sa 201 les usages cochés (`usages`) et les refusés (`refus`). `leon login` les rend à `leon setup`, qui les passe à `installHooks` : il écrit les deux dans `accord.json`, datés, pour chaque outil du passage auquel ils manquaient. Un usage tranché sur la page, coché ou non, n'est pas redemandé dans le même passage.
+      - Lancé seul, `leon login` ne demande aucune case et n'écrit rien dans `accord.json` : seul `installHooks` y écrit, comme le dit l'en-tête de `setup.ts`.
+    - **Décocher `noter` bloque aussi `remember`** (tranché le 05/11, A16, T65). Au MCP, il n'y a pas d'usages du poste. Le serveur garde donc le refus dans un réglage du compte : une colonne datée de `member`, `noterRefuseLe`, nulle par défaut, comme l'interrupteur du rêve (C15, C16).
+      - `remember` lit cette colonne, sur la ligne `member` du porteur du jeton (tenant et utilisateur de `ctx`), avant d'écrire. Nulle : il écrit. Datée : il refuse, sans rien écrire, et son message dit où rouvrir les notes (la section Mémoire du site).
+      - La page « Autoriser » et l'installateur la tiennent à jour. La page passe par `POST /api/v1/ordinateurs`, une fois le jeton enregistré : `noter` montré et décoché la date, montré et coché la remet à nul, non montré ne la touche pas. Un échange qui échoue ne change donc rien. L'installateur ne fait que la dater, sur un « non » dans le terminal.
+      - Rouvrir `remember` passe toujours par le navigateur. Le jeton d'un ordinateur est lisible de tout agent du poste : la route à jeton n'accepte qu'un refus (C16). Un « oui » à `noter` dans le terminal ne rouvre donc pas `remember` : l'installateur le dit, en une ligne fixe, et renvoie à la section Mémoire du site. Celle-ci montre le réglage et le change, sous la session du navigateur, comme l'interrupteur du rêve (choix du rédacteur : sinon un refus de `noter` ne se défait plus).
+      - Qui n'a jamais installé la CLI (claude.ai, ChatGPT) n'a jamais décoché `noter` : la colonne reste nulle, et il garde `remember`. Les comptes déjà là aussi.
+      - `leon noter` suit, lui, l'usage `noter` de l'outil (C14). Le texte de `noter` dit que le décocher coupe aussi `remember` dans tous les assistants branchés à cet espace : la colonne est par membre, donc par espace.
   - La structure par usage arrive avec le lot 6 (T24 amendé) ; T47 n'ajoute que `lecture`. Les commentaires de `consent.ts` et d'`api-contract.ts` suivent.
-  - Un utilisateur déjà installé se voit proposer, un à un, les usages manquants à la prochaine installation : plus de « nothing to do ».
-  - Un refus laisse l'accord et les réglages de l'outil inchangés.
+  - Un utilisateur déjà installé se voit proposer, un à un, les usages manquants et jamais refusés à la prochaine installation : plus de « nothing to do ». Avec `--yes`, quand un outil à installer a un tel usage, `leon setup` relance `leon login`, même sur un ordinateur connecté, avec ces usages dans `usages`, pour que la page montre les cases (T64, choix du rédacteur). Le jeton de l'ordinateur est alors remplacé, et l'ancien révoqué (K6).
+    - Pas de relance quand la connexion vient de `--with-token`, ce que `connexion.json` note alors (`par`, choix du rédacteur) : un poste sans navigateur attendrait 5 minutes une page que personne n'ouvre. `leon setup` dit seulement, sur la sortie, de lancer `leon setup` dans un terminal pour choisir les usages.
+  - Un refus laisse les réglages de l'outil inchangés. Depuis le 05/11, il s'écrit daté dans `accord.json` (`refus`, C7), qu'il vienne du terminal ou de la page : l'usage n'est plus proposé, ni dans le terminal ni sur la page. Pour revenir sur un refus : `leon retirer-crochets`, qui efface usages et refus, puis `leon setup` (choix du rédacteur). Un refus de `noter` date aussi le réglage du compte (T65).
 - **D31. Aucune mémoire sur le poste.** Ni texte capté, ni bloc, ni état de fil n'est écrit sur le disque de l'utilisateur : pas de fichier de règles, de Markdown ni de cache. Restent les crochets, le lanceur, l'accord, la connexion et des marqueurs techniques (curseurs de T19, témoins de conversation de T28 et T33). Le plan mère est amendé en conséquence (D16, T28, T30, T33, T35, A4).
 - **D32. Les quatre outils.** Chaque lot d'outil apporte, pour son outil :
   - le sommaire. Pour Cursor et Antigravity, il arrive au premier message, par une requête en ligne, en une seule sortie avec le rappel (les deux requêtes en parallèle, sous un même délai de 3 s), si bien qu'un outil jamais utilisé reçoit la mémoire faite ailleurs ;
@@ -295,7 +320,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
     - Un message de l'utilisateur est un tour `user` d'une session de code de l'auteur (`CODE_SESSION_KINDS`).
     - Une note n'en est jamais un, même rangée en role `user` (`src/server/mcp/tools/remember-tool.ts:35`).
     - Un tour `user` injecté dans le transcript n'en est jamais un non plus : le rapport d'un sous-agent en tâche de fond, une notification de tâche, le message d'un autre agent, la sortie d'un crochet, le texte d'un script d'orchestration. La capture le marque, et le vérificateur l'écarte (T43).
-  - Dans le condensé, les tours de l'agent restent marqués « agent », et une note « agent (note, <outil>) ».
+  - Dans le condensé, les tours de l'agent restent marqués « agent », et une note « agent (note, <outil>) ». Tranché le 05/11 (A16) : une ligne de l'état qui ne s'appuie que sur des notes est gardée, marquée « agent » (D23).
   - Limite connue : un texte de tiers lu par `leon fil` ou `leon chercher` peut revenir dans le récit de l'agent, donc dans l'état suivant, y compris dans les lignes `[en-cours]`, `[prochaine-étape]`, `[question]` et `[essai-raté]`. Il y entre marqué « agent » par le serveur, et ne fait jamais une décision sans id vérifié. Une ligne qui ne cite aucun id du condensé est retirée (D23). Les sources lues comptent parmi les entrées de l'état (D35).
 - **D37. Les leçons, et l'ordre du bloc** (amende D24 et D25).
   - **Une leçon** est un texte court (300 caractères), relu et accepté par un humain : écrit à la main sur le site, ou proposé par le rêve (lot 15) puis accepté.
@@ -309,7 +334,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
       - Retirer une leçon, rejeter une proposition, et accepter une proposition qui retire une leçon ou clôt un fil ne l'exigent pas. C'est la lecture des mots d'Amos : accepter, écrire et remettre une leçon, et remettre une version. Aucun de ces gestes n'écrit un texte poussé.
   - **Le bloc de démarrage** tient toujours en 8 000 octets, sous les plafonds de Claude Code (10 000 caractères) et de Codex (environ 10 000 octets). Dans l'ordre :
     1. le sommaire des fils (3 500 octets), avec « L'équipe sur ce dépôt » (700 octets) ;
-    2. les leçons acceptées, sans chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse dans les 8 000 octets. Celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes, coupées à la leçon entière. Quand toutes ne tiennent pas, suit « N autres leçons : <commande> lecons », avec la commande réellement posée sur le poste (C3 `commande`, comme la consigne). Ajout du rédacteur, à confirmer par Amos (A16) : la place de la consigne, de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir. Sinon, des leçons nombreuses pousseraient la consigne hors du bloc, et la ligne « N autres », connue après la coupe, pourrait passer les 8 000 octets ;
+    2. les leçons acceptées, sans chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse dans les 8 000 octets. Celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes, coupées à la leçon entière. Quand toutes ne tiennent pas, suit « N autres leçons : <commande> lecons », avec la commande réellement posée sur le poste (C3 `commande`, comme la consigne). Tranché le 05/11 (A16) : la place de la consigne (lire son fil avant de commencer), de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir. Ils passent toujours ; les leçons prennent le reste. Leur taille est bornée : ils ne recopient du poste que `commande` (200 octets au plus, C3) et la session (200 caractères). Des leçons nombreuses ne poussent donc jamais la consigne hors du bloc, et la ligne « N autres », connue après la coupe, ne passe jamais les 8 000 octets ;
     3. la consigne ;
     4. le point du matin, qui ne prend que ce qui reste après elles. Quand les leçons sont nombreuses, il peut ne plus avoir de place : c'est voulu par Amos (QD15).
   - Les leçons candidates sont celles du dépôt et celles sans dépôt, non retirées, dont la dernière version est lisible ; jamais une version plus ancienne à sa place. Une leçon d'un autre dépôt n'est jamais poussée.
@@ -357,9 +382,10 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
 ```
 
 - `version` garde son sens (2 : les gestes ; 0 : retrait).
-- `usages` liste ce qui a été accepté, avec la date. Amendé le 04/11 : `noter` s'y ajoute (D30, tranché le 05/11).
+- `usages` liste ce qui a été accepté, avec la date. Amendé le 04/11 : `noter` s'y ajoute (D30, tranché le 05/11). Depuis le 05/11 (A16), un usage s'y écrit aussi depuis une case cochée de la page « Autoriser » (T64).
+- Depuis le 05/11 (A16), `refus` liste, de même, les usages refusés, avec la date, dans le terminal ou sur la page : ils ne sont plus proposés. `refus` n'ouvre rien : un usage absent de `usages` reste un refus. Le retrait efface `usages` et `refus`. Le nom du champ est un choix du rédacteur.
 - C2 (`POST /api/v1/faits`) gagne un champ facultatif `usages: string[]` (valeurs connues seulement), rangé dans `metadata.usages`. `accord` vaut 2 ; 3 et 4, jamais émises, restent acceptées par prudence.
-- C3 (`POST /api/v1/contexte`) gagne `usages` et `commande` (la forme de la commande Leon posée sur le poste).
+- C3 (`POST /api/v1/contexte`) gagne `usages` et `commande` (la forme de la commande Leon posée sur le poste). Depuis le 05/11 (A16), `commande` est bornée : 200 octets au plus, en caractères de chemin seulement (lettres, chiffres, espace, `._/~-`), sans saut de ligne ni `<` ; sinon 400. La CLI dont la commande sortirait de cette forme (un clone sous un chemin trop long ou exotique) envoie `leon` (choix du rédacteur). C'est un texte du poste recopié dans le bloc, jusqu'à trois fois : la place réservée de D37 reste ainsi bornée.
 - Un usage absent vaut refus.
 - Le lot 6 lit `resume` là où il lisait la version 3.
 
@@ -415,7 +441,7 @@ Contrats du 04/11 :
   - `outil` : un kind de `CODE_SESSION_KINDS` ; `session` : 200 caractères au plus, une indication déclarée ;
   - sans `note`, une note neuve (v1) ; avec `note` et `version`, la version suivante, en compare-and-set, seulement si la dernière vient du même outil. Quand la dernière est une restauration du site (`humain`), on compare à l'outil de la note (`metadata.outil`, D38).
 - Elle rend 201 `{ id, n }`, ou 409 si la version est dépassée ou vient d'un autre outil. Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
-- `remember` gagne `note` et `version`, facultatifs, et prend le même chemin, avec `mcp:<libellé>` pour `outil` (le libellé du client, au motif de `read_log.client`). `writeNote` valide les deux formes de `outil`. `remember` ne demande pas `noter` : au MCP, il n'y a pas d'usages du poste (D27). Voir la limite de D30 (A16).
+- `remember` gagne `note` et `version`, facultatifs, et prend le même chemin, avec `mcp:<libellé>` pour `outil` (le libellé du client, au motif de `read_log.client`). `writeNote` valide les deux formes de `outil`. `remember` ne demande pas `noter` dans un corps : au MCP, il n'y a pas d'usages du poste (D27). Tranché le 05/11 (A16) : il lit le réglage `noter` du compte, et refuse quand il est daté (C16, T65).
 - La route d'ingestion (`POST /api/v1/ingest`) n'accepte plus le kind `mcp_remember`, par un enum propre à la route ; `SOURCE_KINDS` ne change pas.
 - C3 gagne `outil`, pour que la consigne cite `leon noter` avec l'outil et la session déjà remplis.
 
@@ -431,6 +457,20 @@ Contrats du 04/11 :
 - RLS `tenant_acl`. `grant select, insert, delete` (la suppression ne sert qu'à `deleteAccount`) et `grant update (decision, decide_le)`.
 - `reves_a_faire()`, en `security definer` avec `pg_temp` en dernier, rend les couples (organisation, utilisateur) à traiter : des identifiants seulement, comme `apropos_a_proposer` (0045).
 - Aucune route à jeton ni aucun outil MCP : la décision passe par les actions serveur du site. Accepter une proposition qui écrit une leçon exige la connexion récente (D37, T61).
+
+Contrat du 05/11 :
+
+**C16. Les usages de la page « Autoriser » et le réglage `noter` du compte** (D30 ; T64, T65).
+- **Le paramètre `usages` de la page** (K3 du plan de la CLI sans clone) : facultatif, des valeurs séparées par des virgules, parmi `lecture`, `rappel` et `noter`. `parseAuthorizeParams` le valide avec les trois autres ; une valeur inconnue est écartée. `authorizeQuery` et `pathAfterSignIn` le gardent, si bien qu'il survit à la connexion. Sans lui, la page ne montre aucune case.
+- **Le code signé** de la page (`signComputerCode`, K4) gagne `m` et `g`, facultatifs : les usages montrés, puis ceux cochés parmi eux, valeurs connues seulement. Un code sans eux vaut `[]`. Le code part dans l'adresse de retour (`/retour?code&etat`) : sa charge, du JSON en base64url, est lisible de qui voit l'adresse, mais non modifiable.
+- **La 201 de `POST /api/v1/ordinateurs`** gagne `usages` (les valeurs de `g`) et `refus` (celles de `m` hors de `g`), deux `string[]`. `ComputerResponseSchema` les prend facultatifs : un serveur ancien ne les rend pas, et la CLI n'écrit alors ni usage ni refus. La CLI les lit comme `string[]` et ignore une valeur qu'elle ne connaît pas, sans jamais en faire une erreur : une CLI du lot 12 qui reçoit `noter` d'un serveur du lot 13 se connecte quand même.
+- **La colonne `member."noterRefuseLe"`** (`timestamptz`, nulle par défaut, ajoutée par sa migration) : nulle, `remember` écrit ; datée, il refuse. Elle s'écrit :
+  - par `POST /api/v1/ordinateurs`, une fois le jeton enregistré (201), sur la ligne de `claims.u` et `claims.t` : `noter` dans `g`, nulle ; dans `m` sans `g`, datée ; hors de `m`, inchangée. Un 401 ou un 409 n'y touche pas. L'action de la page ne l'écrit pas ;
+  - par la route à jeton ci-dessous, pour un refus seulement ;
+  - par l'action de la section Mémoire du site, sous la session du navigateur, dans les deux sens.
+  La page la lit pour décocher `noter` quand elle est datée.
+- **`POST /api/v1/usages { noter: false }`**, en `.strict()`, 1 Kio au plus, avec un jeton d'ordinateur ou manuel ; un jeton d'assistant reçoit le 401 commun (F9). Elle date la colonne et rend 204. `{ noter: true }` rend 400 : un refus peut venir de partout, rouvrir `remember` passe par le navigateur. Un serveur ancien répond 404 : l'installateur le dit sur la sortie d'erreur et continue. Le nom de la route est un choix du rédacteur.
+- **`connexion.json`** (K2) gagne `par`, facultatif : `"jeton"` quand `leon login --with-token` l'a écrit. `leon setup` ne relance pas alors `leon login` sous `--yes` (D30). Le nom du champ est un choix du rédacteur.
 
 ## Lot 12 : les fils et le dossier
 
@@ -575,6 +615,7 @@ Contrats du 04/11 :
 > - le vérificateur des `[décision]` n'accepte comme message de l'utilisateur qu'un tour `user` d'une session de code de l'auteur, jamais une note ni un tour `user` injecté. `parseClaudeCodeSession` marque à la capture les tours injectés (rapport de sous-agent, notification de tâche, message d'un agent, sortie de crochet, texte d'orchestration), dans la forme relevée sur une session de test créée pour l'occasion, jamais sur une vraie conversation. C'est le tri tranché le 05/11 (A14, D36) : un rapport de sous-agent n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`. Il vient avant tout assouplissement du signal externe (T63) ;
 > - la marque va jusqu'au serveur, où tourne le vérificateur : un champ facultatif du tour, `injecte: true`, envoyé pour un tour marqué seulement. `TurnSchema` (`src/capture/turn.ts`) est aujourd'hui en `.strict()`, avec `role: user | assistant` et aucun autre champ. Le tour est rangé avec une colonne `turns.injecte` (`boolean not null default false`). Le serveur avant la CLI, comme T58 : le schéma accepte le champ avant que la CLI ne l'envoie, sinon la route rendrait 400 et toute la capture de la session échouerait ;
 > - un tour injecté entre au condensé marqué « agent », jamais « toi » : une ligne qui ne cite que lui a la provenance « agent » (D23) ;
+> - tranché le 05/11 (A16) : une ligne qui ne s'appuie que sur des notes de l'agent est gardée, avec la provenance « agent ». Elle n'est jamais preuve d'une `[décision]`, et l'état reste visible de l'auteur seul, comme le fil (D23) ;
 > - fichiers en plus : `src/server/memory/versions.ts` (lu), `src/capture/claude-code.ts` et son test, avec une fixture inventée ; `src/capture/turn.ts` (`TurnSchema`), `src/server/api/ingest-routes.ts`, `src/server/ingest/ingest-turns.ts`, `src/server/db/schema/memory.ts`, `src/server/db/migrations/NNNN-tours-injectes.sql` (nouveau) et son test db, `src/test/contracts/api-contract.db.test.ts` ;
 > - tests de plus :
 >   - deux écritures concurrentes donnent une seule v(n+1) ;
@@ -585,6 +626,7 @@ Contrats du 04/11 :
 >   - une source lue par `leon chercher` dans une session, puis rendue privée par `aligner_sources_github()`, et l'état n'est plus rendu ;
 >   - une décision qui cite le rapport d'un sous-agent, rangé en tour `user` et lu marqué par `turns.injecte`, est retirée ;
 >   - une ligne `[prochaine-étape]` qui ne cite que le rapport d'un sous-agent a la provenance « agent », jamais « toi » ;
+>   - une ligne `[prochaine-étape]` qui ne cite que des notes est gardée, avec la provenance « agent » ; l'état qui la porte est introuvable pour un collègue ;
 >   - `claude-code.test.ts`, sur la fixture inventée : le rapport d'un sous-agent et une notification de tâche sont marqués injectés ; un vrai message de l'utilisateur ne l'est pas ;
 >   - `ingest-routes.db.test.ts` : un tour envoyé avec `injecte: true` est rangé marqué, un tour sans le champ ne l'est pas ; `api-contract.db.test.ts` : le champ est au contrat ;
 >   - sans modèle, une session de plus écrit une version `ecrit_par = serveur` ;
@@ -721,6 +763,7 @@ Contrat : `mcp-descriptions.test.ts`.
 **Fait quand :**
 - le bloc suit D24 : les fils (chaque ligne porte son id), la section d'équipe déplacée depuis T14 (à partir du lot 3), la consigne fixe, puis le point du matin, en 8 000 octets ;
 - la consigne, en français, cite la commande réellement posée (C3 `commande`) et ne figure qu'avec l'usage `lecture` ;
+- `commande` suit la borne de C3 (amendé le 05/11, A16) : 200 octets au plus, caractères de chemin seulement, sans saut de ligne ni `<`, sinon 400 ; la CLI envoie `leon` quand la sienne sort de cette forme ;
 - le repli sur le post-it du lot 1 joue quand il n'y a aucun fil ;
 - la route reste sous 3 s : `EXPLAIN ANALYZE` sous RLS sur 10 000 sources et 500 fils, chiffre noté dans la PR.
 
@@ -734,9 +777,17 @@ Contrat : `mcp-descriptions.test.ts`.
   - budget en octets ;
   - repli ;
 - `start-context.db.test.ts` : branche courante d'abord ; fil d'un collègue absent ;
+- `context-routes.db.test.ts` : une `commande` de plus de 200 octets, avec un saut de ligne ou avec `<`, rend 400 ;
 - `strip-leon-blocks.test.ts` : la consigne est retirée à la recapture.
 
 ### T47 · L'installateur : l'usage `lecture`
+
+> **Amendé le 05/11 (A16) :**
+> - `lecture` est coché par défaut. Dans un terminal interactif, la question est `[Y/n]` : Entrée l'accepte. Interactif veut dire `process.stdin.isTTY` : le script d'installation lance `setup` avec `< /dev/tty`, il le reste. Hors terminal, aucune réponse lue ne donne un usage, même « y » : `echo | leon setup` et `yes '' | leon setup` n'en ajoutent aucun. Sur main, `ask` (`createAsker`) lit l'entrée standard même hors terminal, et rend `''` quand elle se ferme, comme pour Entrée : il rend désormais `null` à la fermeture, qui n'accepte rien. La réponse gardée d'`echo oui | pnpm leon <commande>` vaut toujours pour l'accord de base (version 2), jamais pour un usage ;
+> - quand un agent installe (`--yes`), il se donne par sa case de la page « Autoriser » (T64). `--oui` et `--yes` n'ajoutent toujours aucun usage d'eux-mêmes (D30) ;
+> - un refus s'écrit daté dans `refus` (C7) : l'usage n'est plus proposé, ni dans le terminal ni sur la page, jusqu'au retrait. Les usages proposés un à un sont donc les manquants jamais refusés ;
+> - fichiers en plus : `src/cli/leon.ts` (`createAsker`), le type de `SetupDeps.ask` (`src/cli/setup.ts`) et celui de l'`ask` d'`installHooks` (`string | null`) ;
+> - tests de plus : `install-hooks.test.ts` : proposé en `[Y/n]`, Entrée sur un terminal l'accepte ; fermeture (`null`) : rien n'est ajouté ; hors terminal, `''` et `'y'` n'ajoutent rien ; un refus est écrit daté et n'est plus proposé ; un usage tranché sur la page n'est pas redemandé ; `setup.test.ts` : `echo | leon setup` et `printf 'y\n' | leon setup` n'ajoutent aucun usage ; `uninstall-hooks.test.ts` : le retrait efface aussi `refus`.
 
 **Fichiers :** `src/cli/consent.ts` (C7 révisé), `src/cli/install-hooks.ts`, `src/cli/setup.ts` (S10 du plan de la CLI sans clone), `src/cli/uninstall-hooks.ts`, `README.md`.
 
@@ -753,9 +804,59 @@ Contrat : `mcp-descriptions.test.ts`.
 - `setup.test.ts` : `--yes` n'ajoute aucun usage ;
 - `uninstall-hooks.test.ts`.
 
+### T64 · Les usages sur la page « Autoriser » (après T47)
+
+Tranché le 05/11 (A16, D30). Quand un agent installe Leon (`--yes`, « Je demande à Claude »), les usages cochés par défaut s'affichent, cochés, sur la page « Autoriser » du navigateur. C'est l'humain qui clique. La tâche pose le mécanisme avec la case `lecture` ; T49 ajoute `rappel`, T57 `noter`. Effort : 1,5 j (estimation du rédacteur, à confirmer).
+
+Le chemin sur main : `leon login` (`src/cli/login.ts`) ouvre `/ordinateur/autoriser?port&etat&empreinte`. « Autoriser » signe un code (`authorizeComputerAction`, `signComputerCode`) et renvoie le navigateur vers `http://127.0.0.1:<port>/retour?code&etat`. La CLI échange le code contre l'enregistrement de son jeton (`POST /api/v1/ordinateurs`, `computer-routes.ts`), puis écrit `connexion.json`. `leon setup` lance `leon login` avant de poser les crochets (`installHooks`). Les usages suivent ce chemin (C16).
+
+**Fichiers :**
+- `src/server/auth/computer-authorize.ts` (`parseAuthorizeParams`, `authorizeQuery` et `pathAfterSignIn` gardent le paramètre `usages`, K3) et `computer-authorize.test.ts` ;
+- `src/app/(auth)/ordinateur/autoriser/page.tsx` (les cases demandées, cochées, avec leur texte), `actions.ts` (les cases montrées et cochées dans le code), et leurs tests ;
+- `messages/fr.json`, `messages/en.json` : `computer.authorize` (les cases et leurs textes) ; la documentation : `site.documentation.authorize` (la page et ses cases), `site.documentation.sent` (« Ce qui part », les usages et leurs textes), dont `sent.lead`, qui dit aujourd'hui qu'on accepte « en lui disant d'utiliser --yes » ; `claudeCode.instructions` et `claudeCode.withClaudeLead` (« Je demande à Claude », onboarding), qui disent que les cases sont à l'utilisateur et que l'agent ne clique pas à sa place ;
+- `src/components/site/pages/documentation.tsx`, et `src/components/site/pages/documentation-markdown.ts`, qui liste en dur les clés de `sent` (`where`, `end`, `secrets`, `start`) : une clé nouvelle s'y ajoute ;
+- `src/server/auth/computer-code.ts` (la charge gagne `m` et `g`) et son test ;
+- `src/server/api/computer-routes.ts` (la 201 rend `usages` et `refus`) et `computer-routes.db.test.ts` ;
+- `src/capture/api-contract.ts` (`ComputerResponseSchema` gagne `usages` et `refus`, facultatifs, en `string[]`) ;
+- `src/cli/login.ts` (le paramètre `usages` dans l'adresse ; rend usages et refus à son appelant, valeurs connues seulement ; `--with-token` note `par`) et `login.test.ts`, `src/cli/connection.ts` (`par`, K2), `src/cli/leon.ts` ;
+- `src/cli/setup.ts` (lit les outils et `accord.json` avant `leon login`, pour savoir quelles cases demander ; `SetupDeps.login` prend ces usages et rend usages et refus ; avec `--yes`, relance `leon login` quand il en manque, sauf après `--with-token`) et `setup.test.ts` ;
+- `src/cli/install-hooks.ts` et `src/cli/consent.ts` (écrire les usages et les refus donnés par la page ; `[Y/n]` pour les usages cochés par défaut) ;
+- `src/test/contracts/api-contract.db.test.ts`.
+
+**Fait quand :**
+- la page ne montre que les cases demandées par le paramètre `usages`, valeurs connues à ce lot, chacune cochée (`defaultChecked`), avec son texte, au-dessus d'« Autoriser ». Sans le paramètre, aucune case : `leon login` seul et une CLI d'avant T64 n'en voient pas ;
+- le paramètre survit à la connexion : sans session, la page renvoie vers la connexion avec les quatre paramètres, et revient avec eux ;
+- l'action revalide le paramètre et met dans la charge signée les cases montrées (`m`) et cochées (`g`), valeurs connues seulement. Jamais en paramètre à part de l'adresse de retour ; dans la charge du code, qui y passe, elles sont lisibles mais non modifiables. « Annuler » ne signe rien ;
+- `POST /api/v1/ordinateurs` rend `usages` et `refus` dans sa 201 (C16) ;
+- `leon setup` ne met dans le paramètre que les usages cochés par défaut qui manquent et n'ont jamais été refusés, pour les outils de ce passage. `leon login` lui rend usages et refus, qu'il passe à `installHooks`. Les deux s'écrivent dans `accord.json`, datés, pour chaque outil du passage auquel ils manquaient. Un usage tranché sur la page, coché ou non, n'est pas redemandé dans le même passage ;
+- lancé seul, `leon login` ne demande aucune case et n'écrit rien dans `accord.json`. L'en-tête de `setup.ts` reste vrai : rien n'y touche hors de `installHooks`, et `rappel` ne s'écrit jamais sans que T49 pose son crochet ;
+- la CLI lit `usages` et `refus` comme `string[]` et ignore une valeur qu'elle ne connaît pas, sans jamais en faire une erreur ;
+- avec `--yes`, quand un outil à installer a un usage coché par défaut, manquant et jamais refusé, `leon setup` relance `leon login`, même sur un ordinateur connecté (choix du rédacteur) ; sans quoi l'ordinateur déjà connecté, cas de tous les utilisateurs actuels, n'aurait jamais les cases. Si cette relance échoue (annulée, refusée, délai passé), l'ancienne connexion reste et l'installation continue, sans usage de plus. Un refus étant gardé, le `setup --yes` suivant ne relance pas pour lui. `--yes` n'ajoute jamais un usage de lui-même (D30) ;
+- une connexion faite par `--with-token` (`par` dans `connexion.json`) n'est pas relancée : `leon setup` dit seulement, sur la sortie, de lancer `leon setup` dans un terminal pour choisir les usages ;
+- `--with-token` et un serveur ancien (201 sans `usages`) ne donnent ni usage ni refus : restent les questions du terminal ;
+- dans un terminal interactif (`process.stdin.isTTY`), un usage coché par défaut, manquant et jamais refusé se propose en `[Y/n]` ; une entrée fermée n'accepte rien ; hors terminal, aucune réponse lue n'en donne (T47) ;
+- les textes anglais des cases (`en.json`) sont ceux de l'installateur, mot pour mot.
+
+**Tests :**
+- `computer-authorize.test.ts` : `usages` validé, une valeur inconnue écartée ; `pathAfterSignIn` le garde ;
+- `page.test.ts` : les cases demandées s'affichent cochées ; sans paramètre `usages`, aucune case ; sans session, la connexion garde les quatre paramètres ;
+- `actions.test.ts` : une case montrée et décochée est dans `m`, pas dans `g` ; une valeur inconnue est écartée ; « Annuler » ne signe rien et ne porte aucun usage ;
+- `computer-code.test.ts` : `m` et `g` sont signés ; un `g` retouché casse la signature ; un code sans eux se vérifie encore ;
+- `computer-routes.db.test.ts` : la 201 rend les usages et les refus du code ;
+- `login.test.ts` : usages et refus reviennent ; une 201 avec une valeur inconnue connecte quand même, et ne rend que les valeurs connues ; serveur ancien : aucun ; `--with-token` : aucun, et `par` est écrit ; seul, `leon login` n'ouvre aucune case et n'écrit rien dans `accord.json` ;
+- `setup.test.ts` :
+  - `--yes` sur un ordinateur non connecté : les usages cochés sur la page sont écrits, les décochés écrits en refus, aucun autre ;
+  - `--yes` sur un ordinateur connecté auquel manque `lecture` : `leon login` est relancé avec `usages=lecture` ; avec tous les usages : il ne l'est pas ; une relance en échec garde la connexion, et les crochets sont posés sans usage ;
+  - un refus sur la page n'entraîne pas de relance au `setup --yes` suivant ;
+  - un usage décoché sur la page n'est pas redemandé dans le terminal du même passage ;
+  - connexion par `--with-token` : pas de relance, une ligne sur la sortie ;
+  - un faux `leon login` qui ne rend aucun usage : aucun usage ni refus n'est écrit ;
+- `install-hooks.test.ts` : `[Y/n]`, Entrée sur un terminal accepte ; fermeture : rien ; hors terminal : rien ; un usage tranché par la page n'est pas redemandé ;
+- contrats : les textes anglais des cases et ceux de l'installateur sont les mêmes ; la documentation Markdown porte les clés nouvelles de `sent` ; `api-contract.db.test.ts`.
+
 ## Lot 13 : le rappel à chaque message, les leçons et les notes de l'agent
 
-Depuis le 04/11, ce lot porte aussi les leçons (T55, T56) et le brouillon de l'agent (T57). T48 et T49 ne changent pas.
+Depuis le 04/11, ce lot porte aussi les leçons (T55, T56) et le brouillon de l'agent (T57). T48 ne change pas. Depuis le 05/11 (A16), T49 propose `rappel` coché par défaut, et T65 fait suivre `remember` au réglage `noter` du compte.
 
 ### T48 · La route `POST /api/v1/rappel`
 
@@ -791,6 +892,8 @@ Depuis le 04/11, ce lot porte aussi les leçons (T55, T56) et le brouillon de l'
 Contrat : `api-contract.db.test.ts`.
 
 ### T49 · Le crochet de Claude Code
+
+> **Amendé le 05/11 (A16) :** `rappel` est coché par défaut. Dans un terminal interactif (`process.stdin.isTTY`), la question est `[Y/n]` : Entrée l'accepte, une entrée fermée n'accepte rien, et hors terminal aucune réponse lue ne le donne (T47). Un refus s'écrit daté et n'est plus proposé (C7). Quand un agent installe (`--yes`), il se donne par sa case de la page « Autoriser », que T49 ajoute à T64. `--oui` et `--yes` n'ajoutent toujours aucun usage d'eux-mêmes (D30). Le crochet n'est posé qu'une fois l'usage donné, dans le terminal ou sur la page. Fichiers en plus : `src/app/(auth)/ordinateur/autoriser/page.tsx`, `messages/fr.json` et `messages/en.json` (la case `rappel` et son texte). Tests de plus : `install-hooks.test.ts` : proposé en `[Y/n]`, Entrée l'accepte ; entrée fermée : ni usage ni crochet ; `rappel` donné par la page : le crochet est posé ; `rappel` décoché sur la page : ni usage ni crochet, un refus écrit ; `page.test.ts` : la case `rappel`, cochée quand elle est demandée.
 
 **Fichiers :**
 - `src/cli/reminder.ts` (nouveau, `leon rappel`), `src/cli/leon.ts` ;
@@ -881,7 +984,7 @@ Contrat : `api-contract.db.test.ts`.
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/capture/strip-leon-blocks.ts` et leurs tests.
 
 **Fait quand :**
-- le bloc suit D37 : le sommaire des fils et l'équipe, puis les leçons, puis la consigne, puis le point du matin, en 8 000 octets. Les leçons n'ont pas de chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse. La place de la consigne, de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir (ajout du rédacteur, à confirmer par Amos, A16). Le point du matin ne prend que ce qui reste après elles, et peut ne plus avoir de place ;
+- le bloc suit D37 : le sommaire des fils et l'équipe, puis les leçons, puis la consigne, puis le point du matin, en 8 000 octets. Les leçons n'ont pas de chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse. La place de la consigne, de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir (tranché le 05/11, A16) : ils passent toujours, et les leçons prennent le reste. Le point du matin ne prend que ce qui reste après elles, et peut ne plus avoir de place ;
 - les leçons sont celles du dépôt et sans dépôt, non retirées, dont la dernière version est lisible (D33) ; celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes ;
 - chacune tient sur une ligne, échappée, avec « acceptée par toi le JJ/MM », coupée à la leçon entière ; puis « N autres leçons : <commande> lecons » s'il en reste, avec la commande de C3 (`commande`) ;
 - la ligne d'en-tête dit qu'elles ont été acceptées par toi, et qu'elles restent des données à vérifier contre le code ;
@@ -894,7 +997,8 @@ Contrat : `api-contract.db.test.ts`.
   - les leçons prennent la place que le sommaire laisse : un sommaire court leur en laisse plus, un sommaire plein moins ; accents comptés en octets, coupe à la leçon entière, « N autres leçons » avec le lanceur et avec `pnpm --dir` ;
   - une leçon piégée reste échappée ;
   - le point du matin prend ce qui reste après les leçons, coupé à une ligne entière ;
-  - beaucoup de leçons : plus aucune ligne du point du matin, la consigne entière, la ligne « N autres leçons » présente, et le bloc tient en 8 000 octets ;
+  - beaucoup de leçons : plus aucune ligne du point du matin, la consigne entière, l'en-tête des leçons et la ligne « N autres leçons » présents, et le bloc tient en 8 000 octets ;
+  - le pire cas (amendé le 05/11, A16) : sommaire et équipe pleins (3 500 et 700 octets), `commande` à 200 octets, session à 200 caractères, avec l'usage `noter`, et beaucoup de leçons. La consigne entière, l'en-tête des leçons et la ligne « N autres leçons » sont présents, et le bloc tient en 8 000 octets ;
 - `start-context.db.test.ts` :
   - la leçon d'un collègue est absente ;
   - une leçon d'un autre dépôt est absente ;
@@ -912,6 +1016,7 @@ Contrat : `api-contract.db.test.ts`.
 - `src/cli/note-command.ts` (nouveau), `src/cli/leon.ts` (`noter`), `src/cli/briefing.ts` (envoie `outil` dans C3) ;
 - `src/lib/labels.ts` (« Note ») ;
 - `src/server/sessions/render-context.ts` (une phrase de la consigne), `src/cli/consent.ts`, `src/cli/install-hooks.ts` et `src/cli/setup.ts` (l'usage `noter` et son texte, D30) ;
+- `src/app/(auth)/ordinateur/autoriser/page.tsx`, `messages/fr.json` et `messages/en.json` (la case `noter` de T64 et son texte, depuis le 05/11) ;
 - `src/components/verre/reglages/memoire.tsx` et `src/app/(app)/reglages/actions.ts` (les notes, leurs versions et leur restauration sur le site) ;
 - `src/server/db/migrations/NNNN-supprimer-notes.sql` (nouveau : `supprimer_notes_du_compte()`, `security definer`, `pg_temp` en dernier, bornée au kind `mcp_remember`, au tenant et à l'auteur courants), `src/server/auth/delete-account.ts` ;
 - `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts`.
@@ -926,7 +1031,7 @@ Contrat : `api-contract.db.test.ts`.
 - la note n'entre jamais dans le bloc ni dans le rappel, et n'est jamais preuve d'une `[décision]` (D36) ;
 - elle est reliée à un fil par proximité (D22, T42) ;
 - avec l'usage `noter`, la consigne gagne une phrase : pour garder une note privée, la commande `leon noter`, avec l'outil et la session déjà remplis (C3 `outil`) ;
-- l'installateur et `leon setup` proposent l'usage `noter` (tranché le 05/11), déjà coché par défaut, comme les niveaux 1 et 2 ; l'utilisateur peut le décocher. Coché, il s'accepte par Entrée dans un terminal interactif ; sans terminal, ou avec `--oui` et `--yes`, il n'est pas ajouté (D30). T47 et T49 ne cochent pas encore `lecture` ni `rappel` (A16). Il a son propre texte (D30) : l'agent peut écrire des notes privées par Leon. Le texte ne promet pas que décocher `noter` empêche `remember` (D30). En anglais, testé mot pour mot. Le texte de `lecture` (T47) ne change pas. T57 ajoute `noter` aux usages connus du serveur ;
+- l'installateur et `leon setup` proposent l'usage `noter` (tranché le 05/11), déjà coché par défaut, comme `lecture` et `rappel` (A16) ; l'utilisateur peut le décocher. Dans un terminal interactif, Entrée l'accepte (`[Y/n]`) ; quand un agent installe, il se donne par sa case de la page « Autoriser », que T57 ajoute à T64 ; sans terminal, ou avec `--oui` et `--yes`, la CLI ne l'ajoute jamais d'elle-même (D30). Il a son propre texte (D30) : l'agent peut écrire des notes privées par Leon, et le décocher coupe aussi `remember` dans tous les assistants branchés à cet espace (T65). En anglais, testé mot pour mot. Le texte de `lecture` (T47) ne change pas. T57 ajoute `noter` aux usages connus du serveur ;
 - la suppression du compte efface les notes et leurs versions (proposé, A12) ;
 - `leon noter` écrit l'id et le numéro sur la sortie standard, rien sur le disque ; un 404 donne un message fixe sur la sortie d'erreur et le code 0.
 
@@ -947,8 +1052,51 @@ Contrat : `api-contract.db.test.ts`.
 - `render-context.test.ts` : la consigne mot pour mot, avec et sans l'usage `noter` ;
 - `actions.test.ts` : remettre une note sur le site ; avec une session de plus d'une heure, « reconnexion » et rien d'écrit ;
 - `install-hooks.test.ts` : le texte exact de `noter` ; proposé coché, Entrée l'accepte dans un terminal interactif, et un refus ne l'ajoute pas ; sans terminal, il n'est pas ajouté ; `--oui` ne l'ajoute pas ;
-- `setup.test.ts` : `--yes` n'ajoute pas `noter` ;
+- `setup.test.ts` : `--yes` n'ajoute pas `noter` de lui-même ; `noter` coché sur la page est écrit ;
+- `page.test.ts` : la case `noter`, cochée quand elle est demandée ;
 - `delete-account.db.test.ts` : plus aucune note ni version ;
+- contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`.
+
+### T65 · `remember` suit le réglage `noter` du compte (après T57 et T64)
+
+Tranché le 05/11 (A16, D30, C16). Décocher `noter` bloque aussi `remember` au MCP. Effort : 1 j (estimation du rédacteur, à confirmer).
+
+Le chemin sur main : `/api/mcp` (`mcp-routes.ts`) passe par `apiTokenGuard({ assistant: true })`, qui accepte un jeton d'ordinateur, manuel ou d'assistant (OAuth du MCP distant, #130). Il donne `ctx` (tenant, utilisateur) et le libellé du client à `createLeonMcpServer`. Aucun usage du poste n'y arrive. Le réglage vit donc sur le compte, et `remember` le lit avec `ctx`.
+
+**Fichiers :**
+- `src/server/db/migrations/NNNN-noter-refuse.sql` (nouveau : `member` gagne `"noterRefuseLe" timestamptz`, nulle par défaut, comme `onboardedAt` en 0043) et son test db ; `src/server/db/schema/auth.ts` (`members.noterRefuseLe`) ;
+- `src/server/auth/members.ts` (lire et écrire le réglage, bornés à la ligne de `ctx`, comme `onboarding.ts`) ;
+- `src/server/mcp/tools/remember-tool.ts` (la lecture avant d'écrire), `src/server/mcp/mcp.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts` ;
+- `src/server/api/computer-routes.ts` (la colonne écrite d'après `m` et `g`, une fois le jeton enregistré ; `POST /api/v1/usages`, à côté de `/ordinateurs` et `/jeton`, choix du rédacteur) et `computer-routes.db.test.ts` ; `src/capture/api-contract.ts` (C16, `API_PATHS.usages`) ;
+- `src/app/(auth)/ordinateur/autoriser/page.tsx` (la case `noter` décochée quand la colonne est datée) et son test ;
+- `src/components/verre/reglages/memoire.tsx` et `src/app/(app)/reglages/actions.ts` (le réglage montré et changé, sous la session du navigateur), `messages/fr.json` et `messages/en.json` (son texte) ;
+- `src/cli/install-hooks.ts` (un « non » à `noter` dans le terminal appelle C16 ; un « oui » donne une ligne fixe) et son test ;
+- `src/test/contracts/api-contract.db.test.ts` (`SERVED`).
+
+**Fait quand :**
+- `member."noterRefuseLe"` est nulle par défaut : les comptes déjà là, et tout compte qui n'a jamais installé la CLI (claude.ai, ChatGPT), gardent `remember` ;
+- `remember` lit, avant d'écrire, la colonne de la ligne `member` du porteur (tenant et utilisateur de `ctx`), que le jeton soit d'un ordinateur, manuel ou d'un assistant. Nulle : il écrit par `writeNote` (T57). Datée : il rend `isError`, sans rien écrire, avec un message fixe en anglais : les notes sont coupées pour ce compte, et se rouvrent dans la section Mémoire des réglages du site. Il ne recopie pas le texte reçu ;
+- l'outil `remember` reste dans la liste des outils, et `MCP_INSTRUCTIONS` ne change pas ;
+- `POST /api/v1/ordinateurs`, une fois le jeton enregistré, écrit la colonne d'après la charge du code, sur la ligne de `claims.u` et `claims.t` : `noter` dans `g`, nulle ; dans `m` sans `g`, datée ; hors de `m`, inchangée. Un 401 ou un 409 n'y touche pas. L'action de la page ne l'écrit pas : un échange qui échoue (code expiré, 409, CLI fermée, délai passé) ne change rien ;
+- la page « Autoriser » montre la case `noter` décochée quand la colonne est datée ;
+- dans un terminal interactif, un « non » à `noter` appelle `POST /api/v1/usages { noter: false }` (C16), qui date la colonne. Un « oui » ne la rouvre pas : la route n'accepte qu'un refus. L'installateur dit alors, en une ligne fixe, que des notes coupées pour le compte se rouvrent dans la section Mémoire du site. Un serveur ancien (404) ou muet : un message fixe sur la sortie d'erreur, et l'installation continue ;
+- la section Mémoire du site montre le réglage (« les assistants branchés à cet espace peuvent écrire des notes par `remember` ») et le change, sous la session du navigateur, comme l'interrupteur du rêve (choix du rédacteur) ;
+- `POST /api/v1/noter` ne lit pas la colonne : `leon noter` suit l'usage `noter` de l'outil (C14) ;
+- le retrait des crochets (`leon retirer-crochets`) ne touche pas la colonne (choix du rédacteur) : il retire l'accord du poste, pas celui du connecteur.
+
+**Tests :**
+- test db de la migration : la colonne est nulle pour un membre déjà là et pour un membre neuf ;
+- `mcp.db.test.ts` :
+  - sans réglage, `remember` écrit, avec un jeton d'assistant comme avec un jeton d'ordinateur ;
+  - colonne datée : `isError`, aucune source ni version créée, le message dit où rouvrir et ne recopie pas le texte ;
+  - remise à nul : il écrit de nouveau ;
+  - la colonne d'un collègue, ou la sienne dans un autre espace, ne compte pas ;
+- `computer-routes.db.test.ts` :
+  - `noter` montré et coché : nulle ; montré et décoché : datée ; non montré : inchangée ; 409 et 401 : inchangée ;
+  - `POST /api/v1/usages` : `{ noter: false }` rend 204 et date la colonne ; `{ noter: true }` rend 400 et ne la touche pas ; 401 sans jeton et avec un jeton d'assistant ; 400 hors schéma (`.strict()`) ; 413 ;
+- `page.test.ts` de la page « Autoriser » : colonne datée, la case `noter` décochée ;
+- `actions.test.ts` des réglages : le réglage se coupe et se rouvre sous la session du navigateur ; sans session, rien ne change ;
+- `install-hooks.test.ts` : un « non » appelle C16 avec `false` ; un « oui » ne l'appelle pas et donne la ligne fixe ; un 404 n'arrête pas l'installation ;
 - contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`.
 
 ## Lot 14 : la capture complète
@@ -1142,15 +1290,17 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
    Limite connue : la consigne du niveau 1 rend la lecture presque systématique. Depuis le 04/11, une session qui lit Leon n'est plus externe : un texte lu par `leon fil` ou `leon chercher` peut revenir, marqué « agent », dans l'état suivant, sans jamais faire une décision sans id vérifié (D36). Il peut aussi toucher les lignes `[en-cours]`, `[prochaine-étape]`, `[question]` et `[essai-raté]` : chacune cite alors un id du condensé, et sa provenance est écrite par le serveur, pas par le modèle (D23).
 
-   Autre limite : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté peut écrire ou accepter une leçon (D37). Depuis le 05/11, ces gestes exigent une connexion de moins d'une heure (T55, T61) : la fenêtre se réduit, sans se fermer. Une fois la connexion sociale fusionnée, GitHub ne sait pas forcer une nouvelle saisie : un navigateur déjà connecté à GitHub obtient une session neuve en un clic, et le contrôle d'une heure ne réduit plus rien sur ce chemin (D37).
+   Autre limite : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté peut écrire ou accepter une leçon (D37). Depuis le 05/11, ces gestes exigent une connexion de moins d'une heure (T55, T61) : la fenêtre se réduit, sans se fermer. Une fois la connexion sociale fusionnée, GitHub ne sait pas forcer une nouvelle saisie : un navigateur déjà connecté à GitHub obtient une session neuve en un clic, et le contrôle d'une heure ne réduit plus rien sur ce chemin (D37). Il en va de même des cases de la page « Autoriser » (T64) et du réglage `noter` de la section Mémoire (T65) : un agent qui pilote le navigateur connecté pourrait cliquer à la place de l'utilisateur. La consigne « Je demande à Claude » le lui interdit, sans l'empêcher.
 
-   Autre limite : `noter` est coché par défaut, et `leon noter` et `remember` ne rendent plus la session externe (D36). Par défaut, un agent sous injection peut donc écrire une note. Reliée au fil par proximité (D22), elle entre au condensé marquée « agent (note, <outil>) ». Une ligne `[prochaine-étape]` peut la citer, puisqu'une ligne n'a qu'à citer un id du condensé, et revenir à chaque session par `leon fil`, que la consigne fait lire. Elle n'y fait jamais une décision (D36), et sa provenance reste « agent ». Retirer une ligne qui ne cite que des notes est posé à Amos (A16).
+   Autre limite : `noter` est coché par défaut, et `leon noter` et `remember` ne rendent plus la session externe (D36). Par défaut, un agent sous injection peut donc écrire une note. Reliée au fil par proximité (D22), elle entre au condensé marquée « agent (note, <outil>) ». Une ligne `[prochaine-étape]` peut la citer, puisqu'une ligne n'a qu'à citer un id du condensé, et revenir à chaque session par `leon fil`, que la consigne fait lire. Elle n'y fait jamais une décision (D36), et sa provenance reste « agent ». Tranché le 05/11 (A16) : une telle ligne est gardée, marquée « agent ». Elle n'est jamais preuve d'une `[décision]`, et reste visible de l'auteur seul, comme le fil (D23). Décocher `noter` coupe `leon noter` dans l'outil, et `remember` dans tous les assistants branchés à cet espace (T65).
+
+   Autre limite : le poste n'est pas une frontière. Le jeton de l'ordinateur est dans `~/.leon/connexion.json`, et l'accord dans `~/.leon/accord.json`, lisibles et modifiables par tout agent qui tourne sous le compte de l'utilisateur. Un agent sous injection peut donc retoucher `accord.json` pour s'ajouter un usage, ou appeler les routes avec les usages qu'il veut : le serveur croit les usages que le poste envoie (D30). Depuis le 05/11, il ne peut pas rouvrir `remember` à l'échelle du compte : la route à jeton n'accepte qu'un refus, et rouvrir passe par le navigateur (C16).
 3. **Le périmé.** L'état d'un fil vieillit. Parades : des dates partout, l'état GitHub des PR lu à la lecture et non figé dans l'état, la mise à jour au démarrage. Depuis le 04/11, le rêve propose de clore un fil dormant et de retirer une leçon sans preuve récente (D39).
 4. **Le délai.** La route de contexte et celle du rappel n'appellent ni modèle ni vecteur. Le rappel est coupé à 1,5 s sur le poste. Le rangement est en tâche de fond.
 5. **La vie privée.**
    - Les fils restent privés à leur auteur en v1.
    - Le message du rappel n'est ni stocké ni journalisé.
-   - Chaque usage a son propre accord (D30).
+   - Chaque usage a son propre accord (D30). Depuis le 05/11, `lecture`, `rappel` et `noter` sont cochés par défaut. Quand un agent installe, c'est l'humain qui les donne, sur la page « Autoriser » (T64). Un refus est gardé, daté, et n'est plus proposé (C7).
    - Les fils sont effacés à la suppression du compte.
    - Depuis le 04/11, les versions, les leçons et les propositions du rêve le sont aussi, et les notes de l'agent (proposé, A12).
    - Une version n'est rendue que si le lecteur voit toutes ses entrées, sources lues pendant les sessions comprises : un état tiré d'une source devenue privée (0048) ne se lit plus (D35). Les mots d'une source devenue invisible ne servent plus au rappel (D21).
@@ -1160,7 +1310,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - les lectures sont bornées au projet : `dossier`, `fil` et `chercher`, et depuis le 04/11 `lecons` et `versions`, en commande comme au MCP ; seules des sources de connecteurs sans projet peuvent être liées à un fil par proximité, et elles restent lues sous la RLS du lecteur ;
    - la consigne et les commandes ne proposent jamais une recherche dans toute la mémoire (le MCP la garde, pour claude.ai et ChatGPT) ;
    - une portée « code » du jeton est à étudier avec le plan MCP distant (#121).
-7. **La coordination** avec le plan de la CLI sans clone (`leon setup`, la connexion, le lanceur) et #121 (le MCP distant). Ce plan n'écrit aucun jeton et ne branche aucun connecteur. Ses lots 1 et 2 sont fusionnés (#124), et son `--yes` ne doit ajouter aucun usage : à reporter dans son plan (S10).
+7. **La coordination** avec le plan de la CLI sans clone (`leon setup`, la connexion, le lanceur) et #121 (le MCP distant). Ce plan n'écrit aucun jeton et ne branche aucun connecteur. Ses lots 1 et 2 sont fusionnés (#124), et son `--yes` ne doit ajouter aucun usage : à reporter dans son plan (S10). Depuis le 05/11 (A16), ses pages et commandes portent les usages : les cases de la page « Autoriser » (S03), le code signé (K4), la 201 de `POST /api/v1/ordinateurs` (K5), `leon login` (S05) et `leon setup --yes`, qui relance `leon login` quand ils manquent (S10). S'y ajoutent le paramètre `usages` de la page (K3) et le champ `par` de `connexion.json` (K2). T64 les change ; à reporter aussi dans son plan. Le MCP distant (#130) ne change que par `remember` (T65).
 
 ## Questions
 
@@ -1182,11 +1332,11 @@ Pour Amos :
   - un geste « effacer » sur le site, pour retirer une version où est passé un secret (D33) ? Tu as dit que restaurer n'efface rien. Tranché le 05/11 : non, aucune version n'est effacée ; un secret passé reste, masqué par `maskSecrets` seulement.
   - une connexion récente pour écrire ou accepter une leçon, puisqu'un agent peut piloter le navigateur (D37) ? Tranché le 05/11 : oui, moins d'une heure pour accepter, écrire ou remettre une leçon, et pour remettre une version (T55, T61).
   - le budget des leçons au démarrage : 2 000 octets sur 8 000, le reste dans `leon lecons` (D37). Tu as tranché que la mémoire passe avant le point du matin, pas ce chiffre. D'accord ? Tranché le 05/11 : pas de chiffre fixe ; les leçons prennent toute la place que le sommaire laisse, le point du matin ce qui reste.
-- A16. Quatre suites du 05/11, relevées à la relecture :
-  - `noter` coché « comme les niveaux 1 et 2 » : T47 et T49 ne cochent pas `lecture` ni `rappel`, et l'installateur demande `[y/N]`. Faut-il les cocher aussi par défaut ? Et un usage coché s'ajoute-t-il avec `--yes`, que lance « Je demande à Claude » ? Le plan garde pour l'instant la règle de D30 : non ;
-  - `remember` et `noter` : au MCP, il n'y a pas d'usages du poste. Décocher `noter` n'empêche pas `remember` dans un outil de code où le connecteur Leon est branché (D30). On le laisse ainsi, ou on transmet les usages au MCP (#121) ?
-  - le bloc de démarrage : la place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant les leçons (D37). C'est un ajout du rédacteur. D'accord ?
-  - une ligne de l'état qui ne cite que des notes de l'agent : on la garde, marquée « agent », ou on la retire (vigilance 2) ?
+- A16 (tranchée le 05/11). Quatre suites du 05/11, relevées à la relecture :
+  - `noter` coché « comme les niveaux 1 et 2 » : T47 et T49 ne cochent pas `lecture` ni `rappel`, et l'installateur demande `[y/N]`. Faut-il les cocher aussi par défaut ? Et un usage coché s'ajoute-t-il avec `--yes`, que lance « Je demande à Claude » ? Le plan garde pour l'instant la règle de D30 : non. Tranché le 05/11 : les trois sont cochés par défaut ; quand un agent installe, les cases s'affichent, cochées, sur la page « Autoriser », où l'humain clique ; `--yes` n'en ajoute aucun de lui-même (D30, T64).
+  - `remember` et `noter` : au MCP, il n'y a pas d'usages du poste. Décocher `noter` n'empêche pas `remember` dans un outil de code où le connecteur Leon est branché (D30). On le laisse ainsi, ou on transmet les usages au MCP (#121) ? Tranché le 05/11 : décocher `noter` bloque aussi `remember`, par un réglage du compte que `remember` lit ; qui ne l'a jamais décoché, même sans la CLI, garde `remember` (C16, T65).
+  - le bloc de démarrage : la place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant les leçons (D37). C'est un ajout du rédacteur. D'accord ? Tranché le 05/11 : oui, ils passent toujours ; les leçons prennent le reste, puis le point du matin (D37, T56).
+  - une ligne de l'état qui ne cite que des notes de l'agent : on la garde, marquée « agent », ou on la retire (vigilance 2) ? Tranché le 05/11 : gardée, marquée « agent », jamais preuve d'une `[décision]`, visible de l'auteur seul comme le fil (D23, T43).
 
 Pour David :
 - QD7. Le kind `leon_fil` comme source (D21), plutôt qu'une table à part ?

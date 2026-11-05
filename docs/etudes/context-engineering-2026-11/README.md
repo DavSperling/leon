@@ -142,7 +142,7 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
    - Le bloc reste à 8 000 octets. Claude Code coupe à 10 000 caractères, et Codex vers 10 000 octets.
    - L'ordre : le sommaire des fils, avec l'équipe sur ce dépôt ; puis les leçons acceptées ; puis le point du matin, qui prend le reste.
    - Toutes les leçons sont gardées et consultables, par `leon lecons` et par le MCP.
-   - Au démarrage, les leçons n'ont pas de chiffre fixe (tranché le 05/11). Elles prennent toute la place que le sommaire laisse. Le point du matin ne prend que ce qui reste après elles : quand les leçons sont nombreuses, il peut ne plus avoir de place. C'est voulu par Amos. La place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant elles : c'est un ajout du rédacteur, à confirmer par Amos (A16 du plan).
+   - Au démarrage, les leçons n'ont pas de chiffre fixe (tranché le 05/11). Elles prennent toute la place que le sommaire laisse. Le point du matin ne prend que ce qui reste après elles : quand les leçons sont nombreuses, il peut ne plus avoir de place. C'est voulu par Amos. La place de la consigne est réservée (tranché le 05/11, A16 du plan) : la consigne (lire son fil avant de commencer), l'en-tête des leçons et la ligne « N autres leçons » passent toujours. Les leçons prennent le reste, puis le point du matin.
    - Celles du dépôt passent d'abord, puis les plus fréquentes, puis les plus récentes, coupées à la leçon entière. Quand toutes ne tiennent pas, une dernière ligne dit combien d'autres leçons attendent dans `leon lecons`.
    - Les leçons sont rendues comme des données, échappées et balisées. Chacune porte « acceptée par toi le JJ/MM ».
    - Seul un texte relu et accepté par un humain entre dans ce qui est poussé. C'est l'exception à D25.
@@ -150,8 +150,11 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
 5. **L'agent de code écrit un brouillon privé.**
    - C'est une commande `leon noter`. L'outil MCP `remember` prend le même chemin, et reçoit enfin le client.
    - La note n'est visible que de son auteur. Elle est marquée de l'outil et de la session, et versionnée.
-   - Elle demande un usage à part, `noter` (tranché le 05/11). Il est proposé à l'installation et déjà coché, comme les niveaux 1 et 2. On peut le décocher. Un accord de lecture ne permet jamais d'écrire. Deux points restent à Amos (A16 du plan) : `lecture` et `rappel` ne sont pas encore cochés par défaut, et au MCP, décocher `noter` n'empêche pas `remember`.
+   - Elle demande un usage à part, `noter` (tranché le 05/11). Il est proposé à l'installation et déjà coché, comme les niveaux 1 et 2. On peut le décocher. Un accord de lecture ne permet jamais d'écrire.
+   - Les cases cochées par défaut (tranché le 05/11, A16 du plan). `lecture`, `rappel` et `noter` sont cochés par défaut. Quand un agent installe Leon pour l'utilisateur (`--yes`, « Je demande à Claude »), les cases s'affichent, cochées, sur la page « Autoriser » du navigateur, où c'est l'humain qui clique. L'agent ne coche jamais rien à sa place : `--yes` n'ajoute aucun usage par lui-même, et hors terminal aucune réponse lue n'en donne. Un refus est gardé, et n'est plus proposé.
+   - Décocher `noter` bloque aussi `remember` au MCP (tranché le 05/11, A16 du plan). Le serveur garde ce choix dans un réglage du compte, que `remember` lit. La page « Autoriser » et l'installateur le tiennent à jour. Un refus peut venir de partout ; rouvrir `remember` passe par le navigateur, sur la page « Autoriser » ou dans la section Mémoire du site, jamais par un jeton du poste. Qui n'a jamais décoché `noter` garde `remember`, même sans avoir installé la CLI (claude.ai, ChatGPT).
    - Elle n'est jamais poussée telle quelle. Elle n'est jamais preuve d'une `[décision]`.
+   - Une ligne de l'état qui ne s'appuie que sur des notes de l'agent est gardée, marquée « agent » (tranché le 05/11, A16 du plan). Elle n'est jamais preuve d'une `[décision]`, et reste visible de l'auteur seul, comme le fil.
    - Le rêve la lit, et peut proposer d'en faire une leçon.
    - Elle est reliée à un fil par proximité, comme `remember` (D22).
    - Le partage avec l'équipe passe par la passation de David (#106, branche `origin/david/passation-equipe`), après relecture. C'est une question à David.
@@ -167,8 +170,7 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
 - **QD13 (David).** La passation : partager une note `leon noter` avec l'équipe passe-t-il par #106 ?
 - **QD14 (David).** Les versions dans une table à part, `versions_memoire`, plutôt qu'en tours de la source.
 - **QD15 (David).** Le bloc de démarrage : la mémoire avant le point du matin, et les leçons sans chiffre fixe (tranché par Amos). Le point du matin peut ne plus avoir de place quand les leçons sont nombreuses : c'est voulu par Amos.
-- **A16 (Amos).** Quatre suites du 05/11 : `lecture` et `rappel` cochés par défaut comme `noter`, et `--yes` ; `noter` et `remember` au MCP ; la place réservée de la consigne dans le bloc ; une ligne de l'état qui ne cite que des notes de l'agent.
 
-A14 et A15 (Amos) sont tranchées le 05/11 : voir la section 5.
+A14, A15 et A16 (Amos) sont tranchées le 05/11 : voir la section 5.
 
 Le détail est dans le [plan](../../plans/2026-11-03-memoire-a-disposition.md) : ses décisions D33 et suivantes, et le lot 15.

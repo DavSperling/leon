@@ -33,10 +33,10 @@
 | 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1,5 j |
 | 12. Les fils et le dossier | Leon range la mémoire par fil (connecteurs et GitHub compris), trois commandes de lecture et les mêmes outils au MCP, le bloc de démarrage devient un sommaire des fils (niveau 1) ; depuis le 05/11, les usages cochés par défaut et leurs cases sur la page « Autoriser » | T39 à T47, T53, T54 et T64 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 12 j |
 | 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2) ; les leçons acceptées dans le bloc ; le brouillon privé de l'agent ; depuis le 05/11, décocher `noter` coupe aussi `remember` | T48, T49, T55 à T57 et T65 (idem) | suivante | 5,5 j |
-| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent ; depuis le 05/11, un sous-agent qui ne lit que le dépôt ne rend plus la session externe | T50 à T52 et T63 (idem) | suivante | 4,5 j |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent ; depuis le 05/11, un sous-agent qui ne lit que le dépôt ne rend plus la session externe ; après la relecture, les appels d'outils réduits remontent aussi | T50 à T52 et T63 (idem) | suivante | 5 j |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, des propositions de leçons et de clôture, que l'humain accepte ou rejette ; puis la mesure refaite | T58 à T62 (idem) | suivante | 5,5 j |
 
-Total : environ 57 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63), puis, après A16 du nouveau plan, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), estimations du rédacteur, à confirmer.
+Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63), puis, après A16 du nouveau plan, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils réduits, T52), estimations du rédacteur, à confirmer.
 
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
 
@@ -98,6 +98,8 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
   - Ordre : mes sessions (3 500 octets au plus), puis l'équipe sur ce dépôt (10 lignes, 700 octets), puis le point du matin, coupé à une ligne entière, balise fermante gardée.
 
   > **Amendé le 04/11 :** la mémoire passe avant le point du matin, toujours en 8 000 octets. D'abord le sommaire des fils (3 500 octets), avec l'équipe sur ce dépôt (700 octets). Puis les leçons acceptées, dans l'ordre de D37 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Tranché le 05/11 : sans chiffre fixe, elles prennent toute la place que le sommaire laisse. La place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant de remplir (tranché le 05/11, A16 du nouveau plan) : ils passent toujours, et les leçons prennent le reste. Puis la consigne. Puis le point du matin, qui ne prend que ce qui reste après elles, coupé à une ligne entière : il peut ne plus avoir de place.
+
+  > **Amendé le 05/11 (relecture du nouveau plan) :** cet ordre ne vaut que dans un outil qui a accepté l'usage `lecture`. Sommaire, leçons et consigne sont du niveau 1 (D24, D30 et D37 du nouveau plan). Sans l'usage, l'ordre d'origine reste : mes sessions, puis l'équipe sur ce dépôt, puis le point du matin. Seule la phrase de `leon noter`, avec l'usage `noter`, passe avant le point du matin, à place réservée (T57 du nouveau plan).
 - **Mes sessions :** 4 au plus, sur 7 jours, sur le même dépôt, la branche courante d'abord, la session courante exclue.
   - L'en-tête de chaque session porte l'outil, la date, la branche et les PR (numéro et URL, puis leur état GitHub à partir du lot 3).
   - « Fait » : le nombre de commits, les PR créées, puis 5 fichiers au plus.
@@ -132,11 +134,11 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **Le lot 10 est remplacé** par le lot 13 (le rappel à chaque message) et par la lecture à la demande du lot 12. D18 et A5 tombent. Le crochet de prompt de Claude Code est `leon rappel`.
 - **T24** ne met plus de texte du modèle dans le bloc de démarrage. Il porte la structure par usage : lecture et écriture de C7 révisé sans perte d'un accord du lot 1, champ `usages` de C2 côté serveur (schéma, `faits-routes.ts`, `record-facts.ts`) et côté CLI (`capture-session.ts`, `import-claude-code.ts`), commentaires de `consent.ts` et `api-contract.ts` ; puis l'usage `resume` et son texte, et le résumé indexé.
 - **T22 et T23** gardent les `[décision]` vérifiées (D23 du nouveau plan) : le prompt les demande avec l'id cité, le condensé porte les ids des tours, PR, commits et messages, la liste blanche ne garde que celles dont l'id est vérifié. T23 lit l'usage `resume` partout où il lisait l'accord 3 (la file, le worker, les tests).
-- **T15, T17, T26, T28, T29, T31, T33 et T34** posent aussi le rappel de leur outil, posé seulement avec l'usage `rappel` (Codex : UserPromptSubmit ; Cursor : beforeSubmitPrompt ; Antigravity : PreInvocation), et citent les commandes de lecture. Pour Cursor et Antigravity, sommaire et rappel arrivent au premier message en une seule sortie, demandés en parallèle sous un même délai de 3 s. Si l'essai refuse l'injection au message, le lot s'arrête à son annexe et Amos décide.
+- **T15, T17, T26, T28, T29, T31, T33 et T34** posent aussi le rappel de leur outil, posé seulement avec l'usage `rappel` (Codex : UserPromptSubmit ; Cursor : beforeSubmitPrompt ; Antigravity : PreInvocation), et citent les commandes de lecture. Pour Cursor et Antigravity, sommaire et rappel arrivent au premier message en une seule sortie, demandés en parallèle sous un même délai de 3 s. Amendé le 05/11 (relecture) : le sommaire avec l'usage `lecture` de l'outil (D24, D30 du nouveau plan), sinon le bloc de main. Si l'essai refuse l'injection au message, le lot s'arrête à son annexe et Amos décide.
 - **Les mentions des replis par fichier et du cache local** (règles du chantier, « Graphe, RAG et Markdown », vigilance 5, T08, T26, T31) sont caduques : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan). Aux trois migrations de l’en-tête s’ajoutent celles du lot 12 (supprimer-fil, lectures-fil, étape fil) et du lot 13 (rappels-cites).
 - **Les renvois au lot 10** (contraintes du bloc, C4, C5, C6, T06) se lisent avec le lot 13 : `leon rappel`, balise `<rappel-leon>`. L'ordre du bloc devient : sommaire des fils, équipe, consigne, point du matin (D24 du nouveau plan).
 
-  > **Amendé le 04/11 :** s'ajoutent les migrations du lot 12 (versions-memoire), du lot 13 (lecons, supprimer-notes) et du lot 15 (propositions-memoire). Le 05/11, après A16, s'y ajoute celle du lot 13 qui donne à `member` le réglage `noter` (noter-refuse, T65). L'ordre du bloc devient : sommaire des fils, équipe, leçons acceptées, consigne, point du matin (D37 du nouveau plan).
+  > **Amendé le 04/11 :** s'ajoutent les migrations du lot 12 (versions-memoire), du lot 13 (lecons, supprimer-notes) et du lot 15 (propositions-memoire). Le 05/11, après A16, s'y ajoute celle du lot 13 qui donne à `member` le réglage `noter` (noter-refuse, T65). L'ordre du bloc devient : sommaire des fils, équipe, leçons acceptées, consigne, point du matin (D37 du nouveau plan). Le 05/11, après la relecture : avec l'usage `lecture` de l'outil seulement ; sans lui, mes sessions, équipe, la phrase de `leon noter` avec l'usage `noter`, point du matin.
 - **T14** : la section « L'équipe sur ce dépôt » se place après « mes sessions » ; T46 du nouveau plan la déplace dans le sommaire des fils.
 - **T37** ajoute le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement ».
 - **T38** mesure aussi qui ouvre un fil ou le dossier, et par quel outil. Il règle le seuil de proximité des fils et décide du niveau 3.
@@ -860,7 +862,7 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 
 ### T28 · Les crochets Cursor : capter sur `stop`, injecter au démarrage
 
-> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par beforeSubmitPrompt (5 s), demandés en parallèle sous un même délai de 3 s, en une seule sortie. Le crochet est posé d'office (plus de « seulement si T26 le valide ») ; si T26 refuse l'injection, le lot s'arrête à son annexe et Amos décide.
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par beforeSubmitPrompt (5 s), demandés en parallèle sous un même délai de 3 s, en une seule sortie. Le crochet est posé d'office (plus de « seulement si T26 le valide ») ; si T26 refuse l'injection, le lot s'arrête à son annexe et Amos décide. Amendé le 05/11 (relecture du nouveau plan) : le sommaire avec l'usage `lecture` de l'outil, sinon le bloc de main (D24).
 
 **Fichiers :** `src/cli/outils.ts`, `src/cli/capture-session.ts`, `src/cli/start-cache.ts` (nouveau).
 
@@ -941,7 +943,7 @@ L'annexe donne le verdict, et la décision sur le repli.
 
 ### T33 · Les crochets Antigravity : capter sur `Stop` inactif, injecter une fois par conversation
 
-> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par PreInvocation, demandés en parallèle sous un même délai de 3 s, en une seule sortie ; si T31 refuse l'injection, le lot s'arrête à son annexe et Amos décide.
+> **Amendé le 03/11 :** pas de cache du bloc sur le poste (D31 du nouveau plan) : ni `start-cache.ts` ni son test. Le sommaire et le rappel arrivent au premier message par PreInvocation, demandés en parallèle sous un même délai de 3 s, en une seule sortie ; si T31 refuse l'injection, le lot s'arrête à son annexe et Amos décide. Amendé le 05/11 (relecture du nouveau plan) : le sommaire avec l'usage `lecture` de l'outil, sinon le bloc de main (D24).
 
 **Fichiers :** `src/cli/outils.ts`, `src/cli/start-cache.ts`.
 
@@ -1028,6 +1030,8 @@ Contrat : `api-contract.db.test.ts`.
 ### T37 · Passage réel d'un outil à l'autre
 
 > **Amendé le 03/11 :** ajouter le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement » : le sommaire et le fil arrivent dès le premier message.
+
+> **Amendé le 05/11 (relecture du nouveau plan) :** dans ce scénario, Cursor est installé avec l'usage `lecture`. S'ajoute le cas sans `lecture` : au premier message, le bloc de main, sans sommaire, ni leçons, ni consigne de lecture (D24 du nouveau plan).
 
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/06-essai-bout-en-bout.md` (nouveau).
 

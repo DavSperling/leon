@@ -1,6 +1,6 @@
 # Context engineering : ce que le talk de Lamis change à la mémoire de Leon
 
-4 novembre 2026 · Amos (avec Claude) · tranché par Amos le 4 novembre · à relire par David
+4 novembre 2026 · Amos (avec Claude) · tranché par Amos les 4 et 5 novembre · à relire par David
 
 Plan d'implémentation : [`docs/plans/2026-11-03-memoire-a-disposition.md`](../../plans/2026-11-03-memoire-a-disposition.md) (PR #122), qui fait foi pour le détail. Les décisions de cette étude y sont portées par D33 et les suivantes, et par le lot 15. Cette étude fait suite à [la mémoire des sessions](../memoire-sessions-2026-11/README.md).
 
@@ -48,11 +48,11 @@ Le talk retrace une année de travail sur le contexte des agents. Son fil : fair
 
 | Idée du talk | Ce que Leon avait déjà | Ce que Leon fait autrement | Ce que Leon ajoute |
 |---|---|---|---|
-| Fichier injecté au démarrage | Le bloc de démarrage, poussé par le crochet `SessionStart` : le sommaire des fils (D24), 8 000 octets en tout | Le serveur assemble le bloc, et rien n'est écrit sur le poste (D31). Le bloc ne pousse que des clés (D25) | Les leçons acceptées, après le sommaire et avant le point du matin, dans 2 000 octets |
+| Fichier injecté au démarrage | Le bloc de démarrage, poussé par le crochet `SessionStart` : le sommaire des fils (D24), 8 000 octets en tout | Le serveur assemble le bloc, et rien n'est écrit sur le poste (D31). Le bloc ne pousse que des clés (D25) | Les leçons acceptées, après le sommaire et avant le point du matin, dans toute la place que le sommaire laisse |
 | Mémoire écrite par l'agent | L'outil MCP `remember`, qui écrit une note privée | Leon capte les sessions et écrit lui-même. Seul le serveur écrit un fil | `leon noter`, un brouillon privé et versionné, jamais poussé tel quel |
 | Divulgation progressive | Cinq étages : le sommaire, le rappel, `leon dossier`, `leon fil`, puis `fetch` | L'en-tête d'un fil est sa branche réduite, jamais un texte écrit par l'agent ou par un tiers | Au démarrage, une ligne renvoie aux leçons restantes (`leon lecons`) |
 | Mémoire comme fichiers | La recherche hybride sous RLS. Des commandes lancées du terminal, sans connecteur | Postgres sous RLS, pas de fichiers : ni sur le poste, ni en arborescence | Rien : l'arborescence est écartée (section 4) |
-| Versions | Aucune : l'état d'un fil était remplacé en place | Les anciennes versions sont rangées à part, hors recherche et hors `fetch` | v1, v2, v3 pour chaque état de fil, leçon et note, avec leur provenance. Un historique visible, et la restauration |
+| Versions | Aucune : l'état d'un fil était remplacé en place | Les anciennes versions sont rangées à part, hors recherche et hors `fetch` | v1, v2, v3 pour chaque état de fil, leçon et note, avec leur provenance. Un historique visible sur le site, par `leon versions` et au MCP. La restauration sur le site seulement |
 | Concurrence | Une file stately pour le point du matin et le résumé. Rien par fil | Un numéro de version tient lieu d'empreinte | Un verrou sur la ligne du fil, une file par fil, un compare-and-set sur le numéro de version (C-a) |
 | Permissions | La RLS. Un fil privé à son auteur, écrit par le serveur seul | Aucune mémoire d'organisation n'est écrite par un agent | L'état n'est rendu que si toutes ses entrées restent visibles (C-b). Le brouillon de l'agent, visible de son auteur seul |
 | Portabilité | Trois routes à jeton, en commandes et en outils MCP du même nom. Les quatre outils de code | La mémoire reste dans Leon, jamais chez un tiers | `leon lecons`, et les leçons au MCP |
@@ -109,23 +109,30 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
 - **une mémoire écrite par l'agent et relue à chaque session sans relecture humaine.** Ce serait une injection durable : un texte injecté une fois serait relu par toutes les sessions suivantes ;
 - **l'API mémoire et rêve des Managed Agents d'Anthropic.** Les données sortiraient de Leon.
 
-## 5. Les décisions d'Amos du 04/11
+## 5. Les décisions d'Amos du 04/11 et du 05/11
 
 1. **Lire Leon ne rend plus la session « externe ».** C'est contre la recommandation de Claude.
    - Les lectures de Leon ne marquent plus la session : `leon fil`, `leon dossier`, `leon chercher`, et les outils `fil` et `dossier` du MCP.
-   - D36 du plan y propose aussi `leon lecons`, `leon versions`, leurs outils MCP et `leon noter`. C'est posé à Amos (A14).
+   - Tranché le 05/11 (A14) : `leon lecons`, `leon versions`, `leon noter`, et les outils `lecons`, `versions` et `remember` du MCP non plus. `search` et `fetch` du MCP la marquent toujours. L'écart entre `remember` et `leon noter` disparaît.
    - Le garde-fou reste. Une `[décision]` n'entre dans l'état que si elle cite l'id d'un message de l'utilisateur. La `[décision]` peut aussi citer une PR, un commit, un message de connecteur ou une réunion, vérifiés par le serveur. Une note `remember` ou `leon noter` n'est jamais un message de l'utilisateur.
    - Les tours de l'agent restent marqués « agent » dans le condensé.
-   - Les autres signaux externes ne changent pas : `Agent`, `Task`, les autres outils `mcp__*`, `gh` en lecture.
-   - Une question est posée à Amos (A14). Toutes ses sessions récentes sont marquées externes dans le bloc, à cause des sous-agents.
+   - Les autres signaux externes ne changent pas : les autres outils `mcp__*`, `gh` en lecture.
+   - **Les sous-agents** (tranché le 05/11, A14). Toutes les sessions récentes d'Amos étaient marquées externes à cause d'eux.
+     - D'abord le tri. La capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`.
+     - Ensuite, dès le lot 14, un sous-agent qui ne lit que le dépôt ne rend plus la session externe : lecture de fichiers, recherche dans le dépôt, commandes locales. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe.
+     - Seules les sessions captées après le lot 14 en profitent : une session déjà marquée externe le reste. Codex, Cursor et Antigravity suivent dans leur lot, après le tri de leur lecteur.
 2. **Le rêve perso, par règles et sans modèle.**
    - C'est un nouveau lot 15, d'environ 5 jours, placé après le lot 11.
    - La version avec modèle, d'environ 3 jours, vient si David accepte QD1.
    - Le rêve d'équipe vient dans un lot suivant. Il lui faut d'abord la hiérarchie des managers, et une lecture à l'échelle de l'équipe.
+   - Une leçon sans preuve (tranché le 05/11) : toutes ses preuves ont plus de 90 jours. Le rêve propose de la retirer, l'humain décide. Jamais pour une leçon écrite à la main.
 3. **Une mémoire à jour en tout temps, et versionnée : v1, v2, v3.**
    - Chaque fil (son état), chaque leçon et chaque note `leon noter` garde ses versions.
    - Chaque version porte sa date et sa provenance : les sessions, les sources et les tours qui l'ont produite, l'outil, et qui l'a écrite. Ce peut être le serveur, une étape de modèle avec son modèle, un agent avec son outil, ou un humain.
-   - L'historique est visible. On peut restaurer une version : cela crée une nouvelle version, et rien n'est effacé.
+   - L'historique est visible : sur le site, par `leon versions` et par l'outil `versions`. Les versions sont archivées et toujours accessibles.
+   - On peut restaurer une version : cela crée une nouvelle version, et rien n'est effacé. Tranché le 05/11 : sur le site seulement, par un bouton « Remettre cette version » réservé à l'auteur. Ni le terminal, ni un jeton, ni le MCP ne restaurent.
+   - Hors la suppression du compte, aucune version n'est effacée (tranché le 05/11). Un secret passé dans une version y reste, masqué seulement par `maskSecrets`.
+   - Une fusion de deux fils garde le fil absorbé, masqué. Ses versions restent lisibles (tranché le 05/11).
    - L'agent lit la dernière version. Il peut en demander une ancienne.
    - L'écriture se fait en compare-and-set sur le numéro de version : on écrit v(n+1) seulement si la dernière est encore vn. C'est la protection du talk contre deux écritures simultanées.
    - Les anciennes versions sont rangées à part. Elles ne sont jamais dans la recherche ni dans `fetch`.
@@ -135,12 +142,15 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
    - Le bloc reste à 8 000 octets. Claude Code coupe à 10 000 caractères, et Codex vers 10 000 octets.
    - L'ordre : le sommaire des fils, avec l'équipe sur ce dépôt ; puis les leçons acceptées ; puis le point du matin, qui prend le reste.
    - Toutes les leçons sont gardées et consultables, par `leon lecons` et par le MCP.
-   - Au démarrage, les leçons tiennent dans un budget de 2 000 octets (proposé, A15). Celles du dépôt passent d'abord, puis les plus fréquentes, puis les plus récentes. Une dernière ligne dit combien d'autres leçons attendent dans `leon lecons`.
+   - Au démarrage, les leçons n'ont pas de chiffre fixe (tranché le 05/11). Elles prennent toute la place que le sommaire laisse. Le point du matin ne prend que ce qui reste après elles : quand les leçons sont nombreuses, il peut ne plus avoir de place. C'est voulu par Amos. La place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant elles : c'est un ajout du rédacteur, à confirmer par Amos (A16 du plan).
+   - Celles du dépôt passent d'abord, puis les plus fréquentes, puis les plus récentes, coupées à la leçon entière. Quand toutes ne tiennent pas, une dernière ligne dit combien d'autres leçons attendent dans `leon lecons`.
    - Les leçons sont rendues comme des données, échappées et balisées. Chacune porte « acceptée par toi le JJ/MM ».
    - Seul un texte relu et accepté par un humain entre dans ce qui est poussé. C'est l'exception à D25.
+   - Une connexion récente (tranché le 05/11). Pour accepter, écrire ou remettre une leçon, et pour remettre une version, le site exige une connexion de moins d'une heure. Sinon il redemande la connexion : par mot de passe tant que la connexion sociale n'est pas fusionnée, puis avec une reconnexion forcée chez le fournisseur quand il sait la forcer (GitHub ne le sait pas). Un agent peut piloter le navigateur : ça réduit la fenêtre, sans la fermer.
 5. **L'agent de code écrit un brouillon privé.**
    - C'est une commande `leon noter`. L'outil MCP `remember` prend le même chemin, et reçoit enfin le client.
    - La note n'est visible que de son auteur. Elle est marquée de l'outil et de la session, et versionnée.
+   - Elle demande un usage à part, `noter` (tranché le 05/11). Il est proposé à l'installation et déjà coché, comme les niveaux 1 et 2. On peut le décocher. Un accord de lecture ne permet jamais d'écrire. Deux points restent à Amos (A16 du plan) : `lecture` et `rappel` ne sont pas encore cochés par défaut, et au MCP, décocher `noter` n'empêche pas `remember`.
    - Elle n'est jamais poussée telle quelle. Elle n'est jamais preuve d'une `[décision]`.
    - Le rêve la lit, et peut proposer d'en faire une leçon.
    - Elle est reliée à un fil par proximité, comme `remember` (D22).
@@ -153,11 +163,12 @@ Chacun a été vérifié sur le code de main ou dans le plan. Sa correction est 
 
 ## 6. Ce qui reste ouvert
 
-- **A14 (Amos).** Que faire des sessions marquées externes à cause des sous-agents ?
 - **QD1 (David).** Le résumé côté serveur. Il conditionne le rêve avec modèle.
-- **A15 (Amos).** Les choix du plan qui ne viennent pas d'Amos : le sens de la règle « leçon sans preuve », le lieu de la restauration, l'usage `noter`, la fusion qui garde le fil absorbé, un geste « effacer », une connexion récente pour accepter une leçon, le budget des leçons au démarrage.
 - **QD13 (David).** La passation : partager une note `leon noter` avec l'équipe passe-t-il par #106 ?
 - **QD14 (David).** Les versions dans une table à part, `versions_memoire`, plutôt qu'en tours de la source.
-- **QD15 (David).** Le bloc de démarrage : la mémoire avant le point du matin (tranché par Amos), et 2 000 octets pour les leçons (proposé, A15).
+- **QD15 (David).** Le bloc de démarrage : la mémoire avant le point du matin, et les leçons sans chiffre fixe (tranché par Amos). Le point du matin peut ne plus avoir de place quand les leçons sont nombreuses : c'est voulu par Amos.
+- **A16 (Amos).** Quatre suites du 05/11 : `lecture` et `rappel` cochés par défaut comme `noter`, et `--yes` ; `noter` et `remember` au MCP ; la place réservée de la consigne dans le bloc ; une ligne de l'état qui ne cite que des notes de l'agent.
+
+A14 et A15 (Amos) sont tranchées le 05/11 : voir la section 5.
 
 Le détail est dans le [plan](../../plans/2026-11-03-memoire-a-disposition.md) : ses décisions D33 et suivantes, et le lot 15.

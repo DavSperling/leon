@@ -46,7 +46,7 @@ Exemple cible : Amos ouvre Cursor pour la première fois et demande « ajoute le
 
 Elles suivent le talk de Lamis (Applied AI, Anthropic, AI DevCon) sur le context engineering, la mémoire et le « rêve ». L'analyse et ce qu'on en retient sont dans la [note d'étude](../etudes/context-engineering-2026-11/README.md).
 
-1. Lire Leon ne rend plus la session « externe », contre la recommandation de Claude. Le garde-fou reste : une `[décision]` n'entre dans l'état que si elle cite un id vérifié par le serveur, jamais une note (D36). Les autres signaux externes ne changent pas (A14).
+1. Lire Leon ne rend plus la session « externe », contre la recommandation de Claude. Le garde-fou reste : une `[décision]` n'entre dans l'état que si elle cite un id vérifié par le serveur, jamais une note (D36). Les autres signaux externes ne changent pas (A14, tranchée le 05/11 : voir plus bas).
 2. Un rêve perso par règles, sans modèle : le lot 15, environ 5 j, après le lot 11 (D39). La version avec modèle (environ 3 j) vient si David accepte QD1. Le rêve d'équipe vient dans un lot suivant.
 3. Une mémoire à jour en tout temps, et versionnée. L'état de chaque fil, chaque leçon et chaque note gardent leurs versions, avec leur provenance et leur date (D33). L'historique se lit, et une version se restaure. L'écriture se fait en compare-and-set sur le numéro de version (D34).
 4. La mémoire passe avant le point du matin dans le bloc de démarrage, toujours en 8 000 octets : le sommaire des fils, puis les leçons acceptées, puis le point du matin (D37). Seul un texte relu et accepté par un humain est poussé.
@@ -64,13 +64,26 @@ Elles suivent le talk de Lamis (Applied AI, Anthropic, AI DevCon) sur le context
    - l'API mémoire et rêve des Managed Agents d'Anthropic : les données sortiraient de Leon.
 8. L'ordre : 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15.
 
+## Décisions d'Amos du 05/11
+
+Ce sont ses réponses à A14 et A15.
+
+1. Les sous-agents. D'abord le tri : la capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]` (T43). Ensuite, dès le lot 14, un sous-agent qui ne lit que le dépôt ne rend plus la session externe. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe (D36, T63). Seules les sessions captées après le lot 14 en profitent : une session déjà marquée externe le reste.
+2. Les lectures. `leon lecons`, `leon versions`, `leon noter`, et les outils MCP `lecons`, `versions` et `remember` ne rendent pas la session externe. `search` et `fetch` du MCP restent externes. L'écart entre `remember` et `leon noter` disparaît (D36).
+3. La leçon sans preuve : toutes ses preuves ont plus de 90 jours. Le rêve propose de la retirer, l'humain décide. Jamais pour une leçon écrite à la main (D39).
+4. Le budget des leçons au démarrage : pas de chiffre fixe. Les leçons prennent toute la place que le sommaire laisse, dans les 8 000 octets. Le point du matin ne prend que ce qui reste après elles (D37).
+5. Les versions sont archivées et toujours accessibles : sur le site, par `leon versions` et par l'outil `versions`. Hors la suppression du compte (D21, A12), aucune n'est effacée. La restauration se fait sur le site seulement, par l'auteur, et crée une nouvelle version (D33, C12).
+6. L'usage `noter` est à part, proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2. L'utilisateur peut le décocher (D30). Or T47 et T49 ne cochent pas encore `lecture` ni `rappel` : l'installateur demande aujourd'hui `[y/N]`. C'est posé à Amos (A16).
+7. La fusion garde le fil absorbé, masqué, et ses versions restent lisibles (D21).
+8. Une connexion de moins d'une heure pour accepter, écrire ou remettre une leçon, et pour remettre une version (D37, T55).
+
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
 |---|---|---|---|
-| 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1). Depuis le 04/11 : l'état du fil versionné et hors recherche, un verrou par fil, l'historique et la restauration | T39 à T47, T53 et T54 | 10,5 j |
-| 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`) | T48, T49, T55 à T57 | 4,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes) |
-| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande | T50 à T52 | 4 j |
+| 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1). Depuis le 04/11 : l'état du fil versionné et hors recherche, un verrou par fil, l'historique (`leon versions`, l'outil `versions`) | T39 à T47, T53 et T54 | 10,5 j (le 05/11 retire la restauration de T54 et ajoute la marque « injecté » à T43 : effort à confirmer) |
+| 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`). Depuis le 05/11 : l'historique sur le site, « Remettre cette version » et la connexion récente (T55) | T48, T49, T55 à T57 | 4,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes ; le 05/11 y déplace la restauration retirée de T54, et ajoute l'historique des fils sur le site et la connexion récente) |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande. Depuis le 05/11 : un sous-agent qui ne lit que le dépôt ne rend plus la session externe (T63) | T50 à T52, T63 | 4,5 j |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite | T58 à T62 | 5,5 j (5 j pour le rêve, 0,5 j pour T62) |
 
 Changements au plan mémoire des sessions (le détail est dans ses « Amendements du 03/11 ») :
@@ -86,6 +99,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - **Le 04/11, le bloc de démarrage** met la mémoire avant le point du matin (D37, contraintes globales amendées le 04/11).
 - **Le 04/11, les lots d'outils** suivent D36 : les lectures de Leon retenues par D36 ne rendent pas une session Codex, Cursor ou Antigravity externe (D17, T18, T27 et T32 amendés dans le plan mère). Leurs lecteurs relèvent aussi `outils_en_erreur` (T58).
 - **Le 04/11, C1** gagne `outils_en_erreur` (T58), sous l'accord de base.
+- **Le 05/11, le lot 14** gagne T63 (4,5 j). D17, C1, T18, T27 et T32 suivent D36 tranché : les lectures, et un sous-agent qui ne lit que le dépôt, pour Claude Code au lot 14 et pour les autres outils dans leur lot. Les contraintes globales suivent D37 : les leçons sans chiffre fixe.
 
 **Ordre (tranché le 04/11, voir A8) :** 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15.
 - Le lot 2, fusionné, a fermé une fuite : des PR de dépôts perso étaient relevées avec l'ACL de l'organisation.
@@ -94,7 +108,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - Les lots 12 à 14 servent ensuite tout de suite dans Claude Code, déjà capté.
 - Le lot 15 vient en dernier. Il lit des semaines de sessions de tous les outils. Le lot 11 mesure avant lui une référence sans rêve.
 
-Total du chantier : environ 54,5 jours, lot 1 compris (fait). Ce sont les 43 jours du 03/11, plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11 et 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62). La version avec modèle du rêve (environ 3 j) viendrait en plus, si David accepte QD1.
+Total du chantier : environ 54,5 jours, lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63). La version avec modèle du rêve (environ 3 j) viendrait en plus, si David accepte QD1.
 
 Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
@@ -139,7 +153,7 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - **Suppression et fusion.** `leon_app` n'a pas de DELETE sur `sources`. Une fonction `security definer` `supprimer_fil(uuid)`, sur le modèle de `supprimer_document` (0042), avec `pg_temp` en dernier (0046), supprime un fil, bornée au kind `leon_fil`, au tenant et à l'auteur courants. Elle sert :
     - à la fusion : le fil gardé reçoit d'abord les `sessions`, `prs` et `liees` de l'autre, et son id dans `absorbes` ;
     - à la suppression du compte : les fils, dérivés et privés, sont effacés. Les sessions suivent la règle actuelle (gardées, invisibles de tous).
-    - Amendé le 04/11 par D33 (proposé, A15) : la fusion ne supprime plus le fil absorbé, qui emporterait ses versions. Elle le marque (`absorbe_par`). Le rangement, le sommaire, le dossier et le rappel le sautent, `fil` mène au fil gardé, et `leon versions` lit encore son historique. Il part avec le compte, par `supprimer_fil`.
+    - Amendé le 04/11 par D33, tranché le 05/11 : la fusion ne supprime plus le fil absorbé, qui emporterait ses versions. Elle le garde et le masque (`absorbe_par`). Le rangement, le sommaire, le dossier et le rappel le sautent, `fil` mène au fil gardé, et `leon versions` et le site lisent encore son historique. Il part avec le compte, par `supprimer_fil`, qui ne sert plus qu'à la suppression du compte.
 - **D22. Le rangement : le graphe d'abord, le RAG ensuite.**
   - **Les sessions.** Seules celles de l'auteur sont rangées : filtre explicite `owner_user_id`, kind dans `CODE_SESSION_KINDS`, jamais celle d'un collègue, même partagée avec lui.
     - Une session rejoint le fil de sa branche (hors `main` et `master`), sinon celui d'une de ses PR. Deux fils du même auteur qui partagent une PR fusionnent.
@@ -156,7 +170,7 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - **Ce qui entre dans le condensé**, relu juste avant l'appel :
     - les sessions dont l'accord porte l'usage `resume` (C7 révisé), avec leurs faits, leur résumé et l'état GitHub de leurs PR ;
     - les sources liées visibles de l'auteur.
-  - **Ce qui n'y entre jamais :** les sessions sans l'usage `resume`, seulement listées ; le récit d'une session externe, seulement ses clés ; les coulisses du lot 14. Amendé le 04/11 : D36 dit quelles lectures de Leon ne rendent plus la session externe.
+  - **Ce qui n'y entre jamais :** les sessions sans l'usage `resume`, seulement listées ; le récit d'une session externe, seulement ses clés ; les coulisses du lot 14. Amendé le 04/11 : D36 dit quelles lectures de Leon ne rendent plus la session externe, et, depuis le 05/11, quels sous-agents (T63).
   - **Chaque élément porte sa provenance** : toi, l'agent, l'équipe ou un connecteur.
   - **La sortie** suit le format du résumé (« ## Où j'en suis », `[en-cours]`, `[prochaine-étape]`, `[essai-raté]`, `[question]`, `[décision]`).
     - Une `[décision]` n'est gardée que si elle cite l'id d'un tour de l'utilisateur, d'une PR ou d'un commit de l'équipe, d'un message ou d'une réunion présents dans le condensé. Le serveur vérifie l'id, et retire la décision sinon. Amendé le 04/11 par D36 : le tour de l'utilisateur est un tour `user` d'une session de code de l'auteur, jamais une note `remember` ni `leon noter`, ni un tour `user` injecté.
@@ -193,9 +207,9 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - **Les commandes de la CLI.** `leon dossier`, `leon fil <id>` et `leon chercher "<requête>"` appellent ces routes, écrivent sur la sortie standard et rien sur le disque. Elles marchent dans les quatre outils, sans connecteur.
   - **Le MCP** gagne les mêmes lectures : les outils `dossier` et `fil`, et, pour `search`, le filtre `fil` (`depot` vient de T25), avec la mention du fil et des PR d'une session trouvée. `MCP_INSTRUCTIONS` gagne une phrase, sans retirer la recherche générale qui sert claude.ai et ChatGPT : « when working on a code repository, call dossier, then fil; search with depot ». Au MCP, brancher le connecteur vaut accord pour lire, comme aujourd'hui pour `search` ; les commandes de la CLI, elles, exigent l'usage `lecture`. Le branchement du connecteur dans les outils et sa connexion relèvent du plan MCP distant (#121) ; ce plan n'écrit aucun jeton.
   - **La consigne du bloc et les commandes de la CLI** ne citent que `dossier`, `fil` et la recherche bornée au dépôt, jamais une recherche dans toute la mémoire (vigilance 6).
-  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. D36 y propose aussi `leon lecons`, `leon versions`, leurs outils et `leon noter` (A14). `search`, `fetch` et `remember` de Leon au MCP la rendent toujours externe.
+  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe.
   - **Chaque lecture d'un fil ou du dossier est notée** par `recordReads`, avec l'outil et la session quand ils sont connus, pour la mesure du lot 11. Il faut pour cela étendre le check de `read_log.tool` et ajouter une colonne `session` (T44).
-  - Aucune écriture de plus. Amendé le 04/11 par D38 et D33 : hormis `leon noter`, le brouillon privé de l'agent, et la restauration d'une version par le poste, toutes deux sous l'usage `noter` (D30).
+  - Aucune écriture de plus. Amendé le 04/11 par D38 : hormis `leon noter`, le brouillon privé de l'agent, sous l'usage `noter` (D30). Tranché le 05/11 : la restauration d'une version ne passe plus par le poste, seulement par le site (D33).
 - **D28. Le niveau 3 (passage obligé) n'est pas construit ici.** Le lot 11 mesure d'abord si les niveaux 1 et 2 suffisent. S'il le faut, un lot à part le conçoit, en option éteinte par défaut, avec son propre accord.
 - **D29. La capture complète.**
   - En plus des messages et des faits, la CLI envoie :
@@ -211,7 +225,9 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
   - La version 2 (les gestes) reste la base, et la version 0 le retrait.
   - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage.
   - Le serveur vérifie l'usage à chaque emploi : `lecture` pour les routes de lecture et la consigne, `resume` pour le résumé et l'état des fils, `rappel` pour le rappel, `coulisses` pour le lot 14. La CLI envoie ses usages (C2, C3, C8, C11). `lecture` vaut pour les commandes du poste dès qu'un outil l'a accepté ; la consigne n'apparaît que dans un outil qui l'a accepté.
-  - Amendé le 04/11 par D38 (proposé, A15) : un cinquième usage, `noter`, éteint par défaut, avec son propre texte. Il est exigé par `POST /api/v1/noter`, par la restauration d'une version (C12) et par la phrase de la consigne qui cite `leon noter`. Un accord `lecture` ne vaut jamais pour écrire, et son texte ne change pas.
+  - Amendé le 04/11 par D38, tranché le 05/11 : un cinquième usage, `noter`, à part, avec son propre texte. Il est proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2 ; l'utilisateur peut le décocher. La restauration ne passe plus par le jeton (D33) : il ne sert plus qu'à `POST /api/v1/noter` (et à `remember`, qui prend le même chemin), et à la phrase de la consigne qui cite `leon noter`. Un accord `lecture` ne permet jamais d'écrire, et son texte ne change pas.
+    - Coché par défaut se lit ainsi : dans un terminal interactif, Entrée l'accepte. Sans terminal, ou avec `--oui` et `--yes`, il n'est pas ajouté, comme tout usage (ci-dessus). Le chemin « Je demande à Claude », qui lance `setup --yes`, ne l'ajoute donc pas. T47 et T49 ne cochent pas encore `lecture` ni `rappel` (l'installateur demande `[y/N]`) : la parité dite par Amos est posée en A16.
+    - Limite connue pour `remember` : au MCP, il n'y a pas d'usages du poste, et brancher le connecteur vaut accord (D27). Décocher `noter` n'empêche donc pas un outil de code où le connecteur Leon est branché d'écrire par `remember`. Le texte de `noter` ne promet pas le contraire. L'empêcher demanderait de transmettre les usages au MCP (#121) : posé en A16.
   - La structure par usage arrive avec le lot 6 (T24 amendé) ; T47 n'ajoute que `lecture`. Les commentaires de `consent.ts` et d'`api-contract.ts` suivent.
   - Un utilisateur déjà installé se voit proposer, un à un, les usages manquants à la prochaine installation : plus de « nothing to do ».
   - Un refus laisse l'accord et les réglages de l'outil inchangés.
@@ -234,30 +250,30 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
     - qui l'a écrite (`ecrit_par`), avec l'étape et le modèle pour un modèle, l'outil et la session pour l'agent :
       - `serveur` : la liste déterministe d'un fil (ci-dessous) ;
       - `modele` : l'état d'un fil écrit par l'étape `fil` ;
-      - `agent` : une note, ou une restauration demandée par le poste ;
-      - `humain` : une action du site, sous la session du navigateur ;
+      - `agent` : une note ;
+      - `humain` : une action du site, sous la session du navigateur, restauration comprise ;
     - son motif (rangement, note, correction, acceptation, restauration) et sa date.
   - Tout texte écrit dans `versions_memoire` passe par `maskSecrets`, leçons comprises.
   - **L'état sans modèle.** Le serveur écrit une version `ecrit_par = serveur`, en compare-and-set, quand la liste déterministe d'un fil change (une session, une PR ou une source liée en plus ou en moins) et que sa dernière version n'est pas une version lisible du modèle. Son texte est cette liste, en clés ; ses entrées, les ids listés. L'état GitHub des PR reste lu à la lecture (vigilance 3). Un fil sans modèle (QD1 refusé) ou sans session `resume` garde ainsi son historique.
-  - **La lecture.** L'agent lit la dernière, et peut demander une ancienne (`leon versions`, l'outil `versions`, C12).
+  - **La lecture.** L'agent lit la dernière, et peut demander une ancienne (`leon versions`, l'outil `versions`, C12). Tranché le 05/11 : les versions sont archivées et toujours accessibles, sous la règle ci-dessous. L'auteur les lit aussi sur le site (T55).
     - Une version n'est rendue que si le lecteur voit toutes ses sources sous RLS. C'est la règle de `readAboutSuggestion` (`src/server/briefing/about-suggestion.ts`).
     - Pour un état écrit par le modèle, d'après les résumés, les sessions parmi ses entrées doivent aussi garder l'usage `resume`. Une leçon, une note ou une liste du serveur n'a pas cette condition : son texte n'est pas tiré d'un résumé.
     - Sinon, rien de cette version, ni d'une plus ancienne à sa place : l'agent lit la dernière ou rien. Un fil rend alors son état déterministe, calculé à la lecture sur ses seules sources visibles, jusqu'à sa prochaine version (une session `resume` nouvelle, ou un changement de la liste). Une leçon ne se montre pas.
   - **Rangées à part.** Une version n'a ni tour, ni passage, ni vecteur : ni la recherche ni `fetch` ne la voient. Seule la lecture commune (`src/server/memory/versions.ts`) la lit.
   - **Restaurer** crée une nouvelle version, avec le texte et les entrées de la version choisie, si elle est encore lisible. Rien n'est effacé.
-    - Sur le poste (proposé, A15), `leon versions <id> --restaurer <n>` refuse sans terminal interactif, fait retaper le numéro et demande l'usage `noter` (D30). La version écrite porte `ecrit_par = agent`, avec l'outil et la session : le poste ne prouve pas un humain.
-    - Une leçon, et une note sans projet (venue de `remember`), ne se restaurent que sur le site (D37, T57), avec `ecrit_par = humain`. Jamais par le MCP.
+    - Tranché le 05/11 : sur le site seulement. Un bouton « Remettre cette version » dans l'historique, réservé à l'auteur, pour un fil, une leçon ou une note (T55, T57). La version écrite porte `ecrit_par = humain`. Le site exige une connexion récente (D37).
+    - Ni le terminal, ni un jeton, ni le MCP ne restaurent : `leon versions --restaurer` et la route à jeton sont retirés. La restauration n'accepte qu'une session du site (C12).
     - Restaurer une note passe par `writeNote` (D38) : son tour indexé prend le texte restauré, dans la même transaction.
-    - `shortcut:` le terminal interactif n'est vérifié que sur le poste ; un agent qui le contournerait ne reprendrait qu'un texte déjà écrit et encore lisible.
-  - **Effacées avec le compte**, comme les fils. Une fusion ne les efface pas : le fil absorbé reste, marqué, avec ses versions (D21).
-  - **Effacer une version (proposé, A15).** Un secret ou une donnée personnelle passé dans une version y resterait, lisible et restaurable. On propose un geste du site, « effacer », qui supprime une version, ou une leçon ou une note avec toutes ses versions. Il passerait par une fonction `security definer` bornée au tenant et à l'auteur, sur le modèle de `supprimer_document` (0042). C'est à trancher : Amos a dit que restaurer n'efface rien.
-  - Toutes les versions sont gardées, sans limite, dans cette première livraison (`shortcut:` le lot 11 dira s'il faut couper).
+    - Une version restaurée garde l'origine de son texte : `restaure_de` pointe vers la version d'origine. Pour la condition `resume` de la lecture et pour l'état sans modèle, la restauration d'une version du modèle compte comme une version du modèle, quel que soit `ecrit_par`. Sinon, retirer `resume` laisserait lisible un texte tiré des résumés, et la liste du serveur écraserait l'état remis au premier changement (T53).
+  - **Effacées avec le compte**, comme les fils. Une fusion ne les efface pas : le fil absorbé reste, masqué, avec ses versions (D21).
+  - **Hors la suppression du compte, aucune version n'est effacée** (tranché le 05/11). Le geste « effacer » n'est pas retenu. Limite connue : un secret ou une donnée personnelle passé dans une version y reste, lisible et restaurable, masqué seulement par `maskSecrets` à l'écriture.
+  - Toutes les versions sont gardées, sans limite. Le lot 11 mesure le volume ; couper demanderait une nouvelle décision d'Amos.
 - **D34. La concurrence.** Deux mises à jour du même fil en même temps ne s'écrasent plus.
   - Le rangement (T40 à T42) prend `for update` sur la ligne du fil avant de relire puis réécrire son `metadata`. Une fusion prend les deux lignes dans l'ordre des ids, comme `lockSources`.
   - La mise à jour de l'état passe par une file pg-boss `fil-maj`, en politique stately, avec la clé singleton du fil (organisation et fil), pas de la session.
   - Toute écriture d'une version est un compare-and-set : on écrit v(n+1) seulement si la dernière est encore vn.
     - Une tâche lit vn avant de bâtir son condensé. Si une autre écriture est passée, elle n'écrit rien, et la tâche déjà en file refait avec des données fraîches.
-    - Une route (C12, C14) ou une action du site répond « modifiée entre-temps » (409).
+    - Une route (C14) ou une action du site répond « modifiée entre-temps » (409).
   - C'est la protection du talk contre deux écritures simultanées, avec un numéro au lieu d'une empreinte.
 - **D35. L'état hors de la recherche** (amende D21).
   - L'état n'est plus un tour indexé `leon:fil:etat`. C'est la dernière version du fil, si le lecteur peut la lire, sinon l'état déterministe, jamais une version plus ancienne (D33). Il est lu par `leon fil`, `leon dossier` et leurs outils MCP.
@@ -269,9 +285,11 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - Ce qu'on perd : la recherche ne trouve plus un fil par le texte de son état. Elle trouve les résumés et les sources qui le nourrissent, et T45 y mentionne le fil.
 - **D36. Lire Leon ne rend plus la session externe** (amende D23 et D27). Amos l'a décidé contre la recommandation de Claude.
   - Ne marquent plus la session, selon la décision d'Amos : `leon dossier`, `leon fil`, `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon.
-  - Proposé (A14) : les lectures ajoutées le 04/11 (`leon lecons`, `leon versions`, les outils `lecons` et `versions`) ne la marquent pas non plus. `leon noter` non plus : il ne rend qu'un id et un numéro, aucun texte.
-  - Les autres signaux ne changent pas : `Agent`, `Task`, les autres `mcp__*` (dont `search`, `fetch` et `remember` de Leon), `WebFetch`, les commandes réseau, `gh` en lecture. Une question est posée à Amos (A14).
-    - `remember` reste externe, comme tout autre `mcp__*` (décision d'Amos), bien qu'il ne rende qu'un id, comme `leon noter`. L'écart est posé à Amos (A14).
+  - Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember` du serveur MCP de Leon, ne la marquent pas non plus. `leon noter` et `remember` ne rendent qu'un id et un numéro, aucun texte : l'écart entre les deux disparaît.
+  - Les autres signaux ne changent pas : les autres `mcp__*` (dont `search` et `fetch` de Leon), `WebFetch`, les commandes réseau, `gh` en lecture. `Agent` et `Task` aussi, jusqu'au lot 14.
+  - **Les sous-agents** (tranché le 05/11, A14).
+    - D'abord le tri (T43) : la capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport de sous-agent n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`.
+    - Ensuite, dès le lot 14 (T63) : un sous-agent qui ne lit que le dépôt (lecture de fichiers, recherche dans le dépôt, commandes locales) ne rend plus la session externe. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe. Un sous-agent dont on ne lit pas les échanges, ou qui n'a pas rendu son rapport final, aussi. Seules les sessions captées après le lot 14 en profitent.
   - Un outil de Leon se reconnaît à son nom complet exact (`mcp__<serveur>__fil`), jamais à un suffixe. Il ne compte que si la configuration de ce serveur pointe vers l'URL de Leon posée par l'installation (#121). Sinon, la session reste externe (T44).
   - **Le garde-fou reste.** Une `[décision]` n'entre dans l'état que si elle cite l'id d'un message de l'utilisateur, ou d'une PR, d'un commit, d'un message de connecteur ou d'une réunion, vérifié par le serveur.
     - Un message de l'utilisateur est un tour `user` d'une session de code de l'auteur (`CODE_SESSION_KINDS`).
@@ -285,12 +303,15 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
     - Toutes les leçons sont gardées et consultables : `leon lecons`, et l'outil MCP `lecons`.
     - Écrire, corriger, retirer et restaurer se fait sur le site seulement, par la session du navigateur. Jamais par jeton ni par MCP.
     - Le texte d'une leçon passe par `maskSecrets` à l'écriture : il part ensuite vers le fournisseur de chaque outil de code.
-    - Limite connue : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté (une extension, Playwright) peut écrire ou accepter une leçon. Une connexion récente exigée pour ces gestes est proposée à Amos (A15).
+    - Limite connue : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté (une extension, Playwright) peut écrire ou accepter une leçon.
+    - **La connexion récente** (tranché le 05/11). Pour accepter, écrire ou remettre une leçon, et pour remettre une version, le site exige une connexion de moins d'une heure. Sinon il redemande la connexion (mot de passe, ou Google, GitHub, Microsoft). Ça réduit la fenêtre sans prouver un humain : un agent qui pilote le navigateur dans l'heure qui suit une connexion passe encore (T55, T61).
+      - La reconnexion se fait par mot de passe, avec la 2FA si elle est active, tant que la connexion sociale n'est pas sur main (`src/server/auth/auth.ts` n'a pas de `socialProviders`). Une fois fusionnée, Google, GitHub et Microsoft demandent une reconnexion forcée chez le fournisseur, quand il sait la forcer (`prompt=login` ou `max_age=0` d'OpenID Connect, à vérifier pour chacun). Sinon, un navigateur déjà connecté chez lui repasse en un clic, sans rien taper : c'est le cas de GitHub, limite connue (vigilance 2).
+      - Retirer une leçon, rejeter une proposition, et accepter une proposition qui retire une leçon ou clôt un fil ne l'exigent pas. C'est la lecture des mots d'Amos : accepter, écrire et remettre une leçon, et remettre une version. Aucun de ces gestes n'écrit un texte poussé.
   - **Le bloc de démarrage** tient toujours en 8 000 octets, sous les plafonds de Claude Code (10 000 caractères) et de Codex (environ 10 000 octets). Dans l'ordre :
     1. le sommaire des fils (3 500 octets), avec « L'équipe sur ce dépôt » (700 octets) ;
-    2. les leçons acceptées, autant qu'en tient un budget de 2 000 octets : celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes. Suit « N autres leçons : <commande> lecons », avec la commande réellement posée sur le poste (C3 `commande`, comme la consigne) ;
+    2. les leçons acceptées, sans chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse dans les 8 000 octets. Celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes, coupées à la leçon entière. Quand toutes ne tiennent pas, suit « N autres leçons : <commande> lecons », avec la commande réellement posée sur le poste (C3 `commande`, comme la consigne). Ajout du rédacteur, à confirmer par Amos (A16) : la place de la consigne, de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir. Sinon, des leçons nombreuses pousseraient la consigne hors du bloc, et la ligne « N autres », connue après la coupe, pourrait passer les 8 000 octets ;
     3. la consigne ;
-    4. le point du matin, qui prend le reste.
+    4. le point du matin, qui ne prend que ce qui reste après elles. Quand les leçons sont nombreuses, il peut ne plus avoir de place : c'est voulu par Amos (QD15).
   - Les leçons candidates sont celles du dépôt et celles sans dépôt, non retirées, dont la dernière version est lisible ; jamais une version plus ancienne à sa place. Une leçon d'un autre dépôt n'est jamais poussée.
   - Elles sont rendues comme des données : une ligne chacune, échappée (`escapeData`), dans `<contexte-leon>`, avec « acceptée par toi le JJ/MM ».
   - **C'est l'exception à D25** : seul un texte relu et accepté par un humain entre dans ce qui est poussé. Le reste reste en clés.
@@ -301,8 +322,8 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
     - `metadata.outil` est un kind de `CODE_SESSION_KINDS` pour `leon noter`, ou `mcp:<libellé>` pour `remember` (le libellé du client, au motif de `read_log.client`).
     - L'outil et la session sont déclarés par le client. La session n'est qu'une indication, que le rêve vérifie (D39).
   - Elle est versionnée (D33). Sa dernière version est aussi son tour indexé : la recherche la trouve, et D22 la relie à un fil par proximité, comme `remember`. Les anciennes sont hors recherche et hors `fetch`.
-    - Une nouvelle version n'est acceptée que si la dernière vient du même outil (le même kind, ou le même `mcp:<libellé>`), sinon 409. Un assistant web ne réécrit donc jamais la note d'un outil de code.
-    - Une restauration passe par le même chemin (`writeNote`).
+    - Une nouvelle version n'est acceptée que si la dernière vient du même outil (le même kind, ou le même `mcp:<libellé>`), sinon 409. Un assistant web ne réécrit donc jamais la note d'un outil de code. Après une restauration sur le site (`ecrit_par = humain`), c'est l'outil de la note (`metadata.outil`) qui compte.
+    - Une restauration passe par le même chemin (`writeNote`), depuis le site seulement (D33).
     - Une note `remember` écrite avant ce lot n'a pas de version. Sa v1 est créée depuis le texte de son tour, à sa première nouvelle version ou restauration.
   - `writeNote` est le seul chemin qui crée une note : la route d'ingestion n'accepte plus le kind `mcp_remember` (T57).
   - Elle n'est jamais poussée telle quelle, et jamais preuve d'une `[décision]` (D36).
@@ -314,7 +335,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - **Les règles :**
     - une même commande ou un même outil en échec dans au moins 3 sessions distinctes sur 14 jours, dans les quatre outils de code (T58) : une leçon à compléter ;
     - un fil dormant, dont toutes les PR sont fusionnées ou fermées, sans session depuis 14 jours : le clore ;
-    - une leçon sans preuve récente (proposé, A15) : toutes ses preuves ont plus de 90 jours. La retirer. Jamais pour une leçon écrite à la main. Une leçon dont une preuve a disparu ou est devenue invisible ne se montre déjà plus (D33) : la règle ne la propose pas ;
+    - une leçon sans preuve récente (tranché le 05/11) : toutes ses preuves ont plus de 90 jours. Le rêve propose de la retirer, l'humain décide. Jamais pour une leçon écrite à la main. Une leçon dont une preuve a disparu ou est devenue invisible ne se montre déjà plus (D33) : la règle ne la propose pas ;
     - des notes `leon noter` proches, dans au moins 3 sessions distinctes et vérifiées : en faire une leçon. Une session ne compte que si elle existe comme session de code de la personne (le kind de `outil`, l'`external_id` de `session`, le même auteur). Une note sans session vérifiée, et toute note `remember`, ne compte pas. La proposition laisse vide le texte de la leçon : les notes sont montrées comme preuves, marquées « écrit par l'agent », et l'humain écrit la leçon.
   - **Les preuves** (10 ids de sources au plus) sont vérifiées par le serveur, visibles de la personne. **La fréquence** est calculée par le serveur : les sessions touchées sur les sessions de la période.
   - Les propositions vont dans `propositions_memoire` (C15), sur le modèle de `about_suggestions`.
@@ -336,7 +357,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
 ```
 
 - `version` garde son sens (2 : les gestes ; 0 : retrait).
-- `usages` liste ce qui a été accepté, avec la date. Amendé le 04/11 : `noter` s'y ajoute (D30, proposé).
+- `usages` liste ce qui a été accepté, avec la date. Amendé le 04/11 : `noter` s'y ajoute (D30, tranché le 05/11).
 - C2 (`POST /api/v1/faits`) gagne un champ facultatif `usages: string[]` (valeurs connues seulement), rangé dans `metadata.usages`. `accord` vaut 2 ; 3 et 4, jamais émises, restent acceptées par prudence.
 - C3 (`POST /api/v1/contexte`) gagne `usages` et `commande` (la forme de la commande Leon posée sur le poste).
 - Un usage absent vaut refus.
@@ -365,7 +386,7 @@ Amendé le 04/11 : `etat` et `etat_court` viennent de la dernière version, si l
 
 Contrats du 04/11 :
 
-**C12. Les versions** (D33, D34 ; T53, T54).
+**C12. Les versions** (D33, D34 ; T53, T54, T55).
 - **La table `versions_memoire`** :
   - `id` ; `tenant_id` (`references organization(id) on delete cascade`) et `owner_user_id` (`references "user"(id) on delete cascade`), comme 0045 ; `acl` avec `check (acl = array[owner_user_id])` ;
   - la cible : `source_id` (un fil ou une note), ou `lecon_id` (ajouté par T55), exactement l'une des deux, en `on delete cascade` ;
@@ -375,8 +396,8 @@ Contrats du 04/11 :
   - `motif` ; `restaure_de`, facultatif ; `cree_le`.
   - RLS `tenant_acl`. `grant select, insert, delete` ; la suppression ne sert qu'à `deleteAccount`, comme pour 0045. Aucune mise à jour.
 - **`POST /api/v1/versions { projet, id, n?, session?, outil?, usages }`** rend `{ texte }` : sans `n`, la liste des versions lisibles (n, date, qui, motif, première ligne) ; avec `n`, le texte de cette version, si elle est lisible.
-- **`POST /api/v1/versions/restaurer { projet, id, n, depuis, session?, outil?, usages }`** écrit v(depuis+1) avec le texte et les entrées de la version `n`, si la dernière est encore `depuis` et que `n` est lisible. La version écrite porte `ecrit_par = agent`, avec l'outil et la session. Elle rend 200 `{ n }`, ou 409. Elle refuse une leçon et une note sans projet (le site seul, D33, D37).
-- Les deux routes sont en `.strict()`, 4 Kio au plus, avec le jeton. La lecture demande `lecture` dans les `usages`, la restauration `noter` (D30). L'id est un fil ou une note du projet, ou une leçon du projet ou sans dépôt ; tout autre id est introuvable. Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
+- **La restauration n'a pas de route à jeton** (tranché le 05/11) : `POST /api/v1/versions/restaurer` est retirée. Elle passe par une action serveur du site (T55), qui n'accepte qu'une session du navigateur, connectée depuis moins d'une heure (D37). Elle écrit v(depuis+1) avec le texte et les entrées de la version `n`, si la dernière est encore `depuis` et que `n` est lisible, en `ecrit_par = humain`. Sinon elle répond « modifiée entre-temps ». Une note passe par `writeNote` (D38).
+- La route de lecture est en `.strict()`, 4 Kio au plus, avec le jeton et `lecture` dans les `usages`. L'id est un fil ou une note du projet, ou une leçon du projet ou sans dépôt ; tout autre id est introuvable. Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
 - L'outil MCP `versions { projet, id, n? }` fait la même lecture, bornée au projet comme `fil`. Il ne restaure jamais.
 
 **C13. Les leçons** (D37 ; T55, T56).
@@ -384,7 +405,7 @@ Contrats du 04/11 :
   - `tenant_id` et `owner_user_id` en clés étrangères `on delete cascade`, comme 0045.
   - `grant select, insert, delete` (la suppression ne sert qu'à `deleteAccount`) et `grant update (acceptee_le, retiree_le, frequence)`.
   - `read_log` gagne `lecon_id`, facultatif, et `source_id` devient facultatif, avec un check « exactement une cible » : une lecture de leçon est notée comme les autres.
-- Les actions serveur du site, sous la session du navigateur, écrivent, corrigent, retirent et restaurent. Aucune route à jeton ni aucun outil MCP n'écrit une leçon.
+- Les actions serveur du site, sous la session du navigateur, écrivent, corrigent, retirent et restaurent. Écrire, corriger et restaurer exigent une connexion de moins d'une heure (D37, tranché le 05/11). Aucune route à jeton ni aucun outil MCP n'écrit une leçon.
 - **`POST /api/v1/lecons { projet, id?, session?, outil?, usages }`** rend `{ texte }` : sans id, les leçons lisibles et non retirées, du dépôt et sans dépôt, dans l'ordre de D37 ; avec id, une leçon. `.strict()`, 4 Kio au plus, avec le jeton et `lecture`. Un serveur ancien répond 404, comme C11.
 - L'outil MCP `lecons { projet, id? }` fait la même lecture, bornée au projet comme `fil` : les leçons du dépôt et celles sans dépôt.
 
@@ -392,9 +413,9 @@ Contrats du 04/11 :
 - **`POST /api/v1/noter { projet, outil, session?, texte, note?, version?, usages }`**, en `.strict()`, 16 Kio au plus, avec le jeton et `noter` (D30).
   - `texte` : 4 000 caractères au plus, masqué sur le poste puis sur le serveur (`maskSecrets`) ;
   - `outil` : un kind de `CODE_SESSION_KINDS` ; `session` : 200 caractères au plus, une indication déclarée ;
-  - sans `note`, une note neuve (v1) ; avec `note` et `version`, la version suivante, en compare-and-set, seulement si la dernière vient du même outil.
+  - sans `note`, une note neuve (v1) ; avec `note` et `version`, la version suivante, en compare-and-set, seulement si la dernière vient du même outil. Quand la dernière est une restauration du site (`humain`), on compare à l'outil de la note (`metadata.outil`, D38).
 - Elle rend 201 `{ id, n }`, ou 409 si la version est dépassée ou vient d'un autre outil. Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
-- `remember` gagne `note` et `version`, facultatifs, et prend le même chemin, avec `mcp:<libellé>` pour `outil` (le libellé du client, au motif de `read_log.client`). `writeNote` valide les deux formes de `outil`.
+- `remember` gagne `note` et `version`, facultatifs, et prend le même chemin, avec `mcp:<libellé>` pour `outil` (le libellé du client, au motif de `read_log.client`). `writeNote` valide les deux formes de `outil`. `remember` ne demande pas `noter` : au MCP, il n'y a pas d'usages du poste (D27). Voir la limite de D30 (A16).
 - La route d'ingestion (`POST /api/v1/ingest`) n'accepte plus le kind `mcp_remember`, par un enum propre à la route ; `SOURCE_KINDS` ne change pas.
 - C3 gagne `outil`, pour que la consigne cite `leon noter` avec l'outil et la session déjà remplis.
 
@@ -409,7 +430,7 @@ Contrats du 04/11 :
 - **L'interrupteur du rêve** : une colonne datée de `member`, comme `onboardedAt` (0043), nulle par défaut, écrite par l'action du site. `reves_a_faire()` saute ceux qui l'ont coupé.
 - RLS `tenant_acl`. `grant select, insert, delete` (la suppression ne sert qu'à `deleteAccount`) et `grant update (decision, decide_le)`.
 - `reves_a_faire()`, en `security definer` avec `pg_temp` en dernier, rend les couples (organisation, utilisateur) à traiter : des identifiants seulement, comme `apropos_a_proposer` (0045).
-- Aucune route à jeton ni aucun outil MCP : la décision passe par les actions serveur du site.
+- Aucune route à jeton ni aucun outil MCP : la décision passe par les actions serveur du site. Accepter une proposition qui écrit une leçon exige la connexion récente (D37, T61).
 
 ## Lot 12 : les fils et le dossier
 
@@ -450,7 +471,7 @@ Contrats du 04/11 :
 - `writeVersion` prend `for update` sur la ligne de la cible, et n'écrit v(n+1) que si la dernière est encore celle attendue ; sinon il rend « dépassée » (D34). Il passe `maskSecrets` sur le texte ;
 - `readVersion` et `listVersions` ne rendent une version que si le lecteur voit toutes ses sources (`entrees`) sous RLS, et, pour un état écrit par le modèle, que les sessions parmi elles portent l'usage `resume` (D33). Les `tours` ne sont jamais lus par cette règle ;
 - la lecture de l'état rend la dernière version si elle est lisible, sinon l'état déterministe, jamais une version plus ancienne (D33) ;
-- `restoreVersion` écrit v(n+1) avec le texte et les entrées d'une version encore lisible, avec le motif restauration et `restaure_de`. Par jeton, la version porte `ecrit_par = agent`. Une note se restaure par `writeNote`, que T57 branche ici ;
+- `restoreVersion` écrit v(n+1) avec le texte et les entrées d'une version encore lisible, avec le motif restauration et `restaure_de`. Seule l'action du site l'appelle (T55, tranché le 05/11) : la version porte `ecrit_par = humain`. `restaure_de` pointe vers la version d'origine du texte (celle de la version choisie, si elle est elle-même restaurée). La restauration d'une version du modèle suit les règles d'une version du modèle : la condition `resume` à la lecture, et l'état sans modèle ne l'écrase pas (D33). Une note se restaure par `writeNote`, que T57 branche ici ;
 - aucune version n'a de tour, de passage ni de vecteur ;
 - des compteurs côté serveur, sans texte ni id : versions écrites, écritures dépassées, restaurations (relevés par T38) ;
 - la suppression du compte efface les versions de la personne ; `supprimer_fil` les emporte par la cascade.
@@ -470,15 +491,18 @@ Contrats du 04/11 :
   - les compteurs avancent d'une écriture, d'une dépassée et d'une restauration ;
   - restaurer v1 après v3 donne v4, et v2 et v3 restent ;
   - restaurer une version illisible : refus ;
+  - restaurer une version du modèle, puis retirer `resume` d'une session d'entrée : la version restaurée n'est plus rendue ;
+  - une source de plus après la restauration d'une version du modèle : aucune version `serveur` ne l'écrase ;
   - `searchPassages` et `fetchSource` ne rendent aucune version ;
 - `delete-account.db.test.ts` : plus aucune version de la personne ;
 - `rls-coverage.db.test.ts`.
 
 ### T40 · Le rangement des sessions
 
-> **Amendé le 04/11 (D34) :** toute écriture du `metadata` d'un fil se fait dans une transaction, après `for update` sur sa ligne. À la création, l'insertion passe par la contrainte unique de `sources` (`on conflict do nothing`), puis prend le verrou. Une fusion prend les deux lignes dans l'ordre des ids. Elle ne supprime plus le fil absorbé : elle le marque (`absorbe_par`, D21), et le rangement le saute. Le rangement reste par session, mais n'écrit plus l'état : il met en file `fil-maj`, stately par fil (T43). Tests de plus :
+> **Amendé le 04/11 (D34) :** toute écriture du `metadata` d'un fil se fait dans une transaction, après `for update` sur sa ligne. À la création, l'insertion passe par la contrainte unique de `sources` (`on conflict do nothing`), puis prend le verrou. Une fusion prend les deux lignes dans l'ordre des ids. Elle ne supprime plus le fil absorbé : elle le marque (`absorbe_par`, D21), et le rangement le saute. Le rangement reste par session, mais n'écrit plus l'état : il met en file `fil-maj`, stately par fil (T43). Dans le « Fait quand », « par `supprimer_fil` » se lit : par `absorbe_par` ; `supprimer_fil` ne sert plus qu'à la suppression du compte (tranché le 05/11). Tests de plus :
 > - deux sessions de deux outils sur la même branche, faits reçus au même moment : un seul fil, et aucune session ni source liée perdue ;
-> - après une fusion, l'historique des deux fils reste lisible par `listVersions`, et une session de plus rejoint le fil gardé.
+> - après une fusion, l'historique des deux fils reste lisible par `listVersions`, et une session de plus rejoint le fil gardé ;
+> - une fusion ne supprime aucune ligne de `versions_memoire`.
 
 **Fichiers :** `src/server/sessions/threads.ts` (nouveau), `src/server/sessions/threads-queue.ts` (nouveau), `src/server/api/faits-routes.ts` (mise en file), `src/instrumentation-node.ts`.
 
@@ -548,8 +572,10 @@ Contrats du 04/11 :
 > - la tâche est la file `fil-maj`, stately par fil. Elle lit vn avant de bâtir le condensé, relit l'usage `resume` juste avant d'écrire, et n'écrit v(n+1) que si la dernière est encore vn. Sinon elle s'arrête, et la tâche en attente refait ;
 > - une session qui a lu Leon n'est plus externe (D36) : son récit entre au condensé, les tours de l'agent marqués « agent ». Les entrées de la version comprennent les sources lues pendant les sessions du condensé (`read_log.session`, D35) ;
 > - chaque ligne de la sortie cite au moins un id du condensé. Le serveur retire les autres, et écrit lui-même la provenance de chaque ligne d'après ses ids (D23 amendé) ;
-> - le vérificateur des `[décision]` n'accepte comme message de l'utilisateur qu'un tour `user` d'une session de code de l'auteur, jamais une note ni un tour `user` injecté. `parseClaudeCodeSession` marque à la capture les tours injectés (rapport de sous-agent, notification de tâche, message d'un agent, sortie de crochet, texte d'orchestration), dans la forme relevée sur une session de test créée pour l'occasion, jamais sur une vraie conversation ;
-> - fichiers en plus : `src/server/memory/versions.ts` (lu), `src/capture/claude-code.ts` et son test, avec une fixture inventée ;
+> - le vérificateur des `[décision]` n'accepte comme message de l'utilisateur qu'un tour `user` d'une session de code de l'auteur, jamais une note ni un tour `user` injecté. `parseClaudeCodeSession` marque à la capture les tours injectés (rapport de sous-agent, notification de tâche, message d'un agent, sortie de crochet, texte d'orchestration), dans la forme relevée sur une session de test créée pour l'occasion, jamais sur une vraie conversation. C'est le tri tranché le 05/11 (A14, D36) : un rapport de sous-agent n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`. Il vient avant tout assouplissement du signal externe (T63) ;
+> - la marque va jusqu'au serveur, où tourne le vérificateur : un champ facultatif du tour, `injecte: true`, envoyé pour un tour marqué seulement. `TurnSchema` (`src/capture/turn.ts`) est aujourd'hui en `.strict()`, avec `role: user | assistant` et aucun autre champ. Le tour est rangé avec une colonne `turns.injecte` (`boolean not null default false`). Le serveur avant la CLI, comme T58 : le schéma accepte le champ avant que la CLI ne l'envoie, sinon la route rendrait 400 et toute la capture de la session échouerait ;
+> - un tour injecté entre au condensé marqué « agent », jamais « toi » : une ligne qui ne cite que lui a la provenance « agent » (D23) ;
+> - fichiers en plus : `src/server/memory/versions.ts` (lu), `src/capture/claude-code.ts` et son test, avec une fixture inventée ; `src/capture/turn.ts` (`TurnSchema`), `src/server/api/ingest-routes.ts`, `src/server/ingest/ingest-turns.ts`, `src/server/db/schema/memory.ts`, `src/server/db/migrations/NNNN-tours-injectes.sql` (nouveau) et son test db, `src/test/contracts/api-contract.db.test.ts` ;
 > - tests de plus :
 >   - deux écritures concurrentes donnent une seule v(n+1) ;
 >   - si l'usage `resume` est retiré pendant l'appel, rien n'est écrit ;
@@ -557,7 +583,10 @@ Contrats du 04/11 :
 >   - dans une session qui a lu `leon fil`, les tours de l'utilisateur entrent au condensé, et ceux de l'agent sont marqués ;
 >   - une ligne `[en-cours]` sans id du condensé est retirée, et une provenance écrite par le modèle est remplacée par celle du serveur ;
 >   - une source lue par `leon chercher` dans une session, puis rendue privée par `aligner_sources_github()`, et l'état n'est plus rendu ;
->   - une décision qui cite le rapport d'un sous-agent, rangé en tour `user`, est retirée ;
+>   - une décision qui cite le rapport d'un sous-agent, rangé en tour `user` et lu marqué par `turns.injecte`, est retirée ;
+>   - une ligne `[prochaine-étape]` qui ne cite que le rapport d'un sous-agent a la provenance « agent », jamais « toi » ;
+>   - `claude-code.test.ts`, sur la fixture inventée : le rapport d'un sous-agent et une notification de tâche sont marqués injectés ; un vrai message de l'utilisateur ne l'est pas ;
+>   - `ingest-routes.db.test.ts` : un tour envoyé avec `injecte: true` est rangé marqué, un tour sans le champ ne l'est pas ; `api-contract.db.test.ts` : le champ est au contrat ;
 >   - sans modèle, une session de plus écrit une version `ecrit_par = serveur` ;
 >   - les tests « second état » et « modèle en échec » se lisent avec les versions : l'état n'est jamais dans la recherche, et un échec n'écrit aucune version.
 
@@ -591,10 +620,10 @@ Contrats du 04/11 :
 
 > **Amendé le 04/11 (D33, D35, D36) :**
 > - la lecture commune rend la dernière version de l'état, si le lecteur peut la lire, avec sa date et son numéro ; sinon l'état déterministe, jamais une version plus ancienne (D33). L'état reste déterministe jusqu'à la prochaine version : rien n'est mis en file. `etat_court` suit la même règle ;
-> - le signal externe : aucune commande `leon` n'entre dans les commandes réseau, et `session-facts.ts` compte les outils `dossier`, `fil`, `lecons` et `versions` du serveur MCP de Leon parmi les outils locaux (`lecons` et `versions` : proposé, A14). Le nom du serveur est celui que pose son installation (#121). Il se compare au nom complet exact (`mcp__<serveur>__fil`), jamais à un suffixe. Le serveur n'est reconnu que si sa configuration pointe vers l'URL de Leon posée par l'installation, lue par la CLI au moment des faits ; sinon, la session reste externe ;
+> - le signal externe : aucune commande `leon` n'entre dans les commandes réseau, et `session-facts.ts` compte les outils `dossier`, `fil`, `lecons`, `versions` et `remember` du serveur MCP de Leon parmi les outils locaux (`lecons`, `versions` et `remember` : tranché le 05/11, A14). Le nom du serveur est celui que pose son installation (#121). Il se compare au nom complet exact (`mcp__<serveur>__fil`), jamais à un suffixe. Le serveur n'est reconnu que si sa configuration pointe vers l'URL de Leon posée par l'installation, lue par la CLI au moment des faits ; sinon, la session reste externe ;
 > - le check de `read_log.tool` gagne aussi `versions` ;
 > - un compteur côté serveur, sans texte ni id, des états masqués par la règle de lecture (relevé par T38) ;
-> - le test de `session-facts` devient : `leon fil`, `leon chercher`, `leon dossier`, `leon lecons`, `leon versions`, `leon noter` et les outils `fil`, `dossier`, `lecons` et `versions` de Leon ne rendent pas la session externe ; `search` ou `remember` de Leon, un autre `mcp__*`, `Agent`, ou un serveur du même nom déclaré par le projet vers une autre URL, si ;
+> - le test de `session-facts` devient : `leon fil`, `leon chercher`, `leon dossier`, `leon lecons`, `leon versions`, `leon noter` et les outils `fil`, `dossier`, `lecons`, `versions` et `remember` de Leon ne rendent pas la session externe ; `search` ou `fetch` de Leon, un autre `mcp__*`, `Agent` (jusqu'à T63), ou un serveur du même nom déclaré par le projet vers une autre URL, si ;
 > - fichiers en plus : `src/server/memory/versions.ts` (lu), `src/cli/capture-session.ts` (l'URL du serveur MCP de Leon, lue dans sa configuration) ;
 > - tests de plus :
 >   - une source liée rendue privée (comme par 0048), ou un usage `resume` retiré, et l'ancien texte n'est rendu par aucune lecture ;
@@ -661,16 +690,15 @@ Contrat : `mcp-descriptions.test.ts`.
 
 **Fichiers :**
 - `src/capture/api-contract.ts` (C12, `API_PATHS`) ;
-- `src/server/api/read-routes.ts` (`POST /api/v1/versions` et `POST /api/v1/versions/restaurer`) ;
+- `src/server/api/read-routes.ts` (`POST /api/v1/versions`) ;
 - `src/cli/read-commands.ts`, `src/cli/leon.ts` (`versions`) ;
 - `src/server/mcp/tools/versions-tool.ts` (nouveau), `src/server/mcp/server.ts`, `src/test/contracts/mcp-descriptions.test.ts` ;
 - `src/test/contracts/api-contract.db.test.ts` (`SERVED`).
 
 **Fait quand :**
-- les deux routes suivent C12, sous `withTenant` du porteur, bornées au projet : la lecture avec l'usage `lecture`, la restauration avec l'usage `noter`. T54 ajoute `noter` aux usages connus du serveur ; l'installateur ne le propose qu'avec T57 ;
+- la route suit C12, sous `withTenant` du porteur, bornée au projet, avec l'usage `lecture` ;
 - `leon versions <id>` liste les versions lisibles ; `--lire <n>` en rend une ;
-- `--restaurer <n>` refuse sans terminal interactif (`isTTY`, comme `src/cli/login.ts`), fait retaper le numéro, puis envoie `depuis` ; il porte le commentaire `shortcut:` de D33. La version écrite porte `ecrit_par = agent`, avec l'outil et la session ;
-- la route de restauration ne connaît que les fils et les notes du projet (T55 y ajoute le refus d'une leçon) ;
+- rien ne restaure par le poste (tranché le 05/11) : ni option de `leon versions`, ni route à jeton. La restauration se fait sur le site seulement (T55) ;
 - l'outil MCP `versions` lit, borné au projet, et ne restaure jamais ; son `structuredContent` ne porte que des clés ;
 - le texte rendu passe par la garde (D25) ;
 - chaque lecture est notée (`recordReads`, outil `versions`) ;
@@ -680,11 +708,9 @@ Contrat : `mcp-descriptions.test.ts`.
 - `read-routes.db.test.ts` :
   - 401, 400, 413 ; sans usage `lecture` : refus ;
   - l'id d'un collègue ou d'un autre projet : introuvable ;
-  - restaurer sans l'usage `noter` : refus ; une version restaurée porte `ecrit_par = agent`, jamais `humain` ;
-  - restaurer depuis une version dépassée : 409 ;
-- `read-commands.test.ts` : `--restaurer` sans terminal, aucune requête ; numéro mal retapé, rien ; serveur ancien (404), code 0 ;
+- `read-commands.test.ts` : serveur ancien (404), code 0 ;
 - `mcp.db.test.ts` : l'outil `versions` n'offre aucune restauration ; un fil ou une note d'un autre projet est introuvable ; un texte piégé n'apparaît qu'après la ligne de garde ;
-- contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`.
+- contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts` ; aucune route de `API_PATHS` ni aucun outil MCP ne restaure une version.
 
 ### T46 · Le sommaire au démarrage (niveau 1)
 
@@ -798,6 +824,20 @@ Contrat : `api-contract.db.test.ts`.
 
 ### T55 · Les leçons : la table, la section Mémoire du site, `leon lecons` et l'outil `lecons`
 
+> **Amendé le 05/11 (A15, D33, D37) :**
+> - **L'historique sur le site.** La section « Mémoire » montre aussi les fils de l'auteur, absorbés compris (D21). Pour chaque fil et chaque leçon, elle montre ses versions lisibles (n, date, qui, motif), par la lecture commune (`listVersions`, D33), et ouvre le texte d'une version lisible, sous la règle de lecture de D33. Un bouton « Remettre cette version », réservé à l'auteur, appelle `restoreVersion` : une nouvelle version, `ecrit_par = humain`, en compare-and-set. Rien n'est effacé. C'est le seul lieu de restauration (C12). T57 y ajoute les notes.
+> - **La connexion récente.** Écrire ou corriger une leçon, et remettre une version, exigent une connexion de moins d'une heure (D37). Sinon l'action rend « reconnexion » sans rien écrire. Le site redemande la connexion, puis ramène à la section Mémoire. Pour l'instant par mot de passe, avec la 2FA si elle est active ; Google, GitHub et Microsoft une fois la connexion sociale fusionnée, avec la reconnexion forcée de D37, et le retour vers la section Mémoire vaut aussi pour eux. T61 reprend le même contrôle pour accepter une leçon.
+>   - Better Auth (1.7.7) a déjà une notion de session fraîche : l'option `session.freshAge`, 24 h par défaut, que `src/server/auth/auth.ts` ne règle pas. Son `freshSessionMiddleware` compare l'heure à `session.createdAt`, mais seulement sur `/list-sessions` et `/unlink-account`, que Leon n'appelle pas. `/delete-user` fait son propre contrôle, et Leon ne s'en sert pas : sa suppression est dans `delete-account.ts`. Nos gestes sont des actions serveur : le contrôle lit le même champ, `session.session.createdAt` de `getSession()`. On ne baisse pas `freshAge`, qui changerait ces routes.
+>   - Le rafraîchissement de la session (`updateAge`) ne touche que `expiresAt` et `updatedAt` : `createdAt` reste l'heure de la connexion.
+>   - « Une session du site seulement » tient parce que `auth.ts` n'a pas le plugin `bearer` : `getSession()` ne lit que le cookie, et un jeton ne peut pas appeler une action serveur. Un test de contrat le garde.
+> - **Fichiers en plus :** `src/server/auth/session.ts` (`signedInRecently`) et `src/server/auth/session.test.ts` ; `src/server/auth/computer-authorize.ts` (`pathAfterSignIn` accepte le retour vers la section Mémoire) et son test ; `src/app/(auth)/connexion/page.tsx` (qui ne bâtit `returnTo` aujourd'hui que depuis une autorisation d'ordinateur), `src/app/(auth)/actions.ts` (la redirection, lignes 108 et 135) et `src/app/(auth)/actions.test.ts` ; `src/server/auth/auth.ts`, `src/server/memory/versions.ts` et `src/server/sessions/thread-read.ts` (lus).
+> - **Tests en plus :**
+>   - `session.test.ts` : une session créée il y a 59 min passe ; à 61 min, refus ; une session ancienne mais rafraîchie (`updatedAt` récent) est refusée ;
+>   - `actions.test.ts` : écrire, corriger une leçon ou remettre une version avec une session de plus d'une heure donne « reconnexion », et rien n'est écrit ; remettre v1 d'un fil après v3 donne v4, `ecrit_par = humain`, et v2 et v3 restent ; la version d'un collègue est introuvable ; depuis une version dépassée, « modifiée entre-temps » ; l'historique d'un fil absorbé se lit sur le site ; le texte d'une version lisible s'ouvre, celui d'une version illisible non ;
+>   - `computer-authorize.test.ts` : le retour vers la section Mémoire est accepté, un retour vers un autre site est refusé ;
+>   - `src/app/(auth)/actions.test.ts` : une connexion lancée depuis la section Mémoire y revient ; un `retour` inconnu mène à l'accueil ;
+>   - contrat : la configuration de Better Auth n'a pas le plugin `bearer`.
+
 **Fichiers :**
 - `src/server/db/migrations/NNNN-lecons.sql` (nouveau : `lecons`, ses clés étrangères, ses droits et sa RLS ; `versions_memoire` gagne `lecon_id` et le check « une seule cible » ; le check de `read_log.tool` gagne `lecons`, et `read_log` gagne `lecon_id`, C13) et son test db ;
 - `src/server/db/schema/memory.ts`, `src/server/memory/read-log.ts` (`recordReads` accepte une leçon) ;
@@ -810,7 +850,8 @@ Contrat : `api-contract.db.test.ts`.
 **Fait quand :**
 - `lecons` suit C13 ;
 - les réglages gagnent une section « Mémoire », en français : écrire une leçon (300 caractères, dépôt facultatif), la corriger (une nouvelle version), la retirer, voir ses versions, en restaurer une ;
-- ces gestes passent par la session du navigateur seulement : aucune route à jeton ni aucun outil MCP n'écrit, ne corrige, ne retire ni ne restaure une leçon. La route de restauration (T54) refuse une leçon ;
+- ces gestes passent par la session du navigateur seulement : aucune route à jeton ni aucun outil MCP n'écrit, ne corrige, ne retire ni ne restaure une leçon. Aucune route à jeton ne restaure (T54) ;
+- depuis le 05/11 : écrire ou corriger une leçon, et remettre une version, exigent une connexion de moins d'une heure (`signedInRecently`) ; la section Mémoire montre les fils, absorbés compris, et leurs versions ;
 - le texte d'une leçon passe par `maskSecrets` à l'écriture (D37) ;
 - une correction est un compare-and-set (D34) : un second onglet resté sur une ancienne version reçoit « modifiée entre-temps » ;
 - `leon lecons` liste les leçons lisibles et non retirées, du dépôt d'abord, puis les plus fréquentes, puis les plus récentes ; `leon lecons <id>` en lit une ; l'outil MCP `lecons`, borné au projet, fait de même ;
@@ -830,7 +871,7 @@ Contrat : `api-contract.db.test.ts`.
   - un faux secret dans une leçon est masqué en base et dans le bloc ;
   - `leon lecons` laisse une ligne de journal ;
 - `actions.test.ts` : écrire, corriger, retirer, restaurer ;
-- `read-routes.db.test.ts` : sans usage `lecture`, refus ; aucune écriture possible par jeton ; restaurer une leçon par la route : refus ;
+- `read-routes.db.test.ts` : sans usage `lecture`, refus ; aucune écriture ni restauration possible par jeton ;
 - `mcp.db.test.ts` : l'outil `lecons` ne fait que lire ; une leçon d'un autre dépôt est introuvable ; un texte piégé reste échappé ;
 - `delete-account.db.test.ts` : plus aucune leçon ; `deleteOrganization` d'une organisation qui a des leçons et des versions passe, et ne laisse aucune ligne ;
 - contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`, `rls-coverage.db.test.ts`.
@@ -840,7 +881,7 @@ Contrat : `api-contract.db.test.ts`.
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/capture/strip-leon-blocks.ts` et leurs tests.
 
 **Fait quand :**
-- le bloc suit D37 : le sommaire des fils et l'équipe, puis les leçons (2 000 octets), puis la consigne, puis le point du matin, qui prend le reste, en 8 000 octets ;
+- le bloc suit D37 : le sommaire des fils et l'équipe, puis les leçons, puis la consigne, puis le point du matin, en 8 000 octets. Les leçons n'ont pas de chiffre fixe (tranché le 05/11) : elles prennent toute la place que le sommaire laisse. La place de la consigne, de l'en-tête des leçons, de la ligne « N autres leçons » et de la balise fermante est réservée avant de remplir (ajout du rédacteur, à confirmer par Amos, A16). Le point du matin ne prend que ce qui reste après elles, et peut ne plus avoir de place ;
 - les leçons sont celles du dépôt et sans dépôt, non retirées, dont la dernière version est lisible (D33) ; celles du dépôt d'abord, puis les plus fréquentes, puis les plus récentes ;
 - chacune tient sur une ligne, échappée, avec « acceptée par toi le JJ/MM », coupée à la leçon entière ; puis « N autres leçons : <commande> lecons » s'il en reste, avec la commande de C3 (`commande`) ;
 - la ligne d'en-tête dit qu'elles ont été acceptées par toi, et qu'elles restent des données à vérifier contre le code ;
@@ -850,9 +891,10 @@ Contrat : `api-contract.db.test.ts`.
 **Tests :**
 - `render-context.test.ts` :
   - l'ordre ;
-  - le budget de 2 000 octets, accents comptés en octets, coupe à la leçon entière, « N autres leçons » avec le lanceur et avec `pnpm --dir` ;
+  - les leçons prennent la place que le sommaire laisse : un sommaire court leur en laisse plus, un sommaire plein moins ; accents comptés en octets, coupe à la leçon entière, « N autres leçons » avec le lanceur et avec `pnpm --dir` ;
   - une leçon piégée reste échappée ;
-  - le point du matin prend le reste, coupé à une ligne entière ;
+  - le point du matin prend ce qui reste après les leçons, coupé à une ligne entière ;
+  - beaucoup de leçons : plus aucune ligne du point du matin, la consigne entière, la ligne « N autres leçons » présente, et le bloc tient en 8 000 octets ;
 - `start-context.db.test.ts` :
   - la leçon d'un collègue est absente ;
   - une leçon d'un autre dépôt est absente ;
@@ -876,15 +918,15 @@ Contrat : `api-contract.db.test.ts`.
 
 **Fait quand :**
 - `leon noter "<texte>"` et `remember` passent par `writeNote` : une source `mcp_remember` privée, avec `metadata.outil`, `metadata.session` quand elle est connue, et `metadata.project` pour `leon noter` ; v1 dans `versions_memoire`, `ecrit_par = agent`. `metadata.outil` est un kind de `CODE_SESSION_KINDS` (la route) ou `mcp:<libellé>` (`remember`), validé par `writeNote` ;
-- `--note <id> --version <n>` (et `note`, `version` de `remember`) écrit la version suivante en compare-and-set : dans la même transaction, le tour indexé prend le nouveau texte, ses passages sont supprimés et l'indexation est mise en file. Une version dépassée, ou une dernière version écrite par un autre outil, donne 409 ;
+- `--note <id> --version <n>` (et `note`, `version` de `remember`) écrit la version suivante en compare-and-set : dans la même transaction, le tour indexé prend le nouveau texte, ses passages sont supprimés et l'indexation est mise en file. Une version dépassée, ou une dernière version écrite par un autre outil, donne 409. Après une restauration du site (`humain`), on compare à l'outil de la note (`metadata.outil`, D38) ;
 - `restoreVersion` sur une note passe par `writeNote` : dans la même transaction, le tour prend le texte restauré, ses passages sont supprimés et l'indexation est mise en file ;
 - une note sans version (écrite avant ce lot) reçoit sa v1, depuis le texte de son tour, à sa première nouvelle version ou restauration ;
-- la section « Mémoire » du site liste les notes de l'auteur, avec leurs versions, et en restaure une (`ecrit_par = humain`). C'est le seul lieu pour une note sans projet (proposé, A15) ;
+- la section « Mémoire » du site liste les notes de l'auteur, avec leurs versions, et en remet une (« Remettre cette version », `ecrit_par = humain`), avec la connexion récente de T55. C'est le seul lieu de restauration (tranché le 05/11). Après une restauration, l'outil de la note (`metadata.outil`) écrit encore la version suivante (D38) ;
 - la route d'ingestion refuse le kind `mcp_remember` : `writeNote` est le seul chemin qui crée une note ;
 - la note n'entre jamais dans le bloc ni dans le rappel, et n'est jamais preuve d'une `[décision]` (D36) ;
 - elle est reliée à un fil par proximité (D22, T42) ;
 - avec l'usage `noter`, la consigne gagne une phrase : pour garder une note privée, la commande `leon noter`, avec l'outil et la session déjà remplis (C3 `outil`) ;
-- l'installateur et `leon setup` proposent l'usage `noter` (proposé, A15), éteint par défaut, avec son propre texte (D30) : l'agent peut écrire des notes privées par Leon et restaurer une version. En anglais, testé mot pour mot. Le texte de `lecture` (T47) ne change pas ;
+- l'installateur et `leon setup` proposent l'usage `noter` (tranché le 05/11), déjà coché par défaut, comme les niveaux 1 et 2 ; l'utilisateur peut le décocher. Coché, il s'accepte par Entrée dans un terminal interactif ; sans terminal, ou avec `--oui` et `--yes`, il n'est pas ajouté (D30). T47 et T49 ne cochent pas encore `lecture` ni `rappel` (A16). Il a son propre texte (D30) : l'agent peut écrire des notes privées par Leon. Le texte ne promet pas que décocher `noter` empêche `remember` (D30). En anglais, testé mot pour mot. Le texte de `lecture` (T47) ne change pas. T57 ajoute `noter` aux usages connus du serveur ;
 - la suppression du compte efface les notes et leurs versions (proposé, A12) ;
 - `leon noter` écrit l'id et le numéro sur la sortie standard, rien sur le disque ; un 404 donne un message fixe sur la sortie d'erreur et le code 0.
 
@@ -896,14 +938,16 @@ Contrat : `api-contract.db.test.ts`.
   - après v2, ni `searchPassages` ni `fetchSource` ne rendent v1 ;
   - après une restauration de v1 depuis v2, ni `searchPassages` ni `fetchSource` ne rendent plus v2 ;
   - une note sans version reçoit sa v1 depuis son tour ;
+  - après une restauration sur le site (`ecrit_par = humain`), le même outil écrit la version suivante, et un autre outil reçoit 409 ;
 - le test de `remember` : le client est rangé en `mcp:<libellé>` ; `remember` venu de claude.ai est accepté ; `remember` avec l'id d'une note `leon noter` est refusé, et la note garde sa version ; `leon_fil` reste refusé ;
 - `notes-routes.db.test.ts` : 401, 400, 413 ; sans usage `noter`, refus, même avec `lecture` ; 409 ;
 - `ingest-routes.db.test.ts` : `kind: mcp_remember` rend 400 ;
 - `note-command.test.ts` : serveur ancien (404), code 0 ; rien sur le disque ;
 - `thread-state.test.ts` : une note citée comme preuve, la décision est retirée ;
 - `render-context.test.ts` : la consigne mot pour mot, avec et sans l'usage `noter` ;
-- `actions.test.ts` : restaurer une note sur le site ;
-- `install-hooks.test.ts` : le texte exact de `noter` ; `--oui` ne l'ajoute pas ;
+- `actions.test.ts` : remettre une note sur le site ; avec une session de plus d'une heure, « reconnexion » et rien d'écrit ;
+- `install-hooks.test.ts` : le texte exact de `noter` ; proposé coché, Entrée l'accepte dans un terminal interactif, et un refus ne l'ajoute pas ; sans terminal, il n'est pas ajouté ; `--oui` ne l'ajoute pas ;
+- `setup.test.ts` : `--yes` n'ajoute pas `noter` ;
 - `delete-account.db.test.ts` : plus aucune note ni version ;
 - contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`.
 
@@ -944,6 +988,35 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 - la session d'un collègue reste intacte ;
 - un secret glissé est masqué en base ;
 - `search` filtré par `raisonnement`.
+
+### T63 · Le sous-agent qui ne lit que le dépôt (après T43 et T50)
+
+Ajoutée le 05/11 (A14, D36). Effort : 0,5 j.
+
+**Fichiers :** `src/capture/session-facts.ts` et son test, une fixture inventée dans la forme relevée par T50, `src/cli/import-claude-code.ts` (si T50 trouve les échanges des sous-agents dans des fichiers à part, la CLI les lit avec la session), `src/server/sessions/thread-state.test.ts`.
+
+**Fait quand :**
+- le tri de T43 est en place : un rapport de sous-agent n'est jamais un message de l'utilisateur ;
+- un appel `Agent` ou `Task` ne rend plus la session externe à lui seul. Les appels de son sous-agent passent par la même règle que ceux de la session (`isExternalCall`, D36 compris) :
+  - lecture de fichiers, recherche dans le dépôt, commandes locales : la session reste non externe ;
+  - le web, un `mcp__*` hors D36, une commande réseau : la session est externe ;
+- un sous-agent lancé par un sous-agent suit la même règle, sur ses propres échanges ;
+- on échoue fermé : un appel `Agent` ou `Task` dont on ne retrouve pas les échanges, ou dont la forme est inconnue, rend la session externe, comme aujourd'hui ;
+- un sous-agent sans rapport final dans ses échanges (inachevé, arrêté, ou encore en tâche de fond quand la CLI calcule les faits) rend la session externe : ses appels suivants ne seraient pas vus ;
+- c'est sous l'accord de base : rien de plus n'est envoyé, seul le booléen `externe` change. Le texte des sous-agents ne part qu'avec l'usage `coulisses` (T52) ;
+- dans une session restée non externe, c'est la copie du rapport captée dans le transcript principal, un tour `user` marqué injecté (T43), qui entre au condensé, marquée « agent », sous l'accord de base. Le bloc `sous_agent` de C10 n'y entre jamais (D23, T51) ;
+- une session déjà marquée externe le reste : le serveur garde l'ancien OU le nouveau (T02 du plan mère, `src/server/ingest/record-facts.ts`). La règle vaut pour les sessions captées après cette tâche ;
+- pour Codex, Cursor et Antigravity, la règle suit dans leur lot (T18, T27 et T32 du plan mère, amendés), après le tri de leur lecteur et si leur essai montre les échanges du sous-agent ; sinon, un sous-agent y reste externe.
+
+**Tests :**
+- `session-facts.test.ts`, sur la fixture inventée :
+  - un sous-agent qui ne fait que `Read`, `Grep` et `pnpm test` : session non externe ;
+  - un sous-agent qui appelle `WebFetch`, `curl` ou un `mcp__*` hors D36 : externe ;
+  - un sous-agent dont les échanges manquent : externe ;
+  - un sous-agent dont le fichier s'arrête avant son rapport : externe ;
+  - un sous-agent lancé par un sous-agent, qui appelle `WebSearch` : externe ;
+  - un sous-agent qui lance `leon fil` : non externe (D36) ;
+- `thread-state.test.ts` : dans une session restée non externe, le rapport du sous-agent capté dans le transcript principal entre au condensé marqué « agent », et une décision qui le cite est retirée ; aucun bloc `sous_agent` n'y entre.
 
 ## Lot 15 : le rêve perso par règles
 
@@ -1015,12 +1088,13 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
 ### T61 · Accepter ou rejeter
 
-**Fichiers :** `src/server/memory/proposals.ts` (nouveau : lire, accepter, rejeter) et `src/server/memory/proposals.db.test.ts` (nouveau), `src/components/verre/reglages/memoire.tsx`, `src/app/(app)/reglages/actions.ts` et son test, `src/server/sessions/threads.ts` (réouverture d'un fil clos), `src/server/sessions/start-context.ts` (un fil clos quitte le sommaire), `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts`.
+**Fichiers :** `src/server/memory/proposals.ts` (nouveau : lire, accepter, rejeter) et `src/server/memory/proposals.db.test.ts` (nouveau), `src/components/verre/reglages/memoire.tsx`, `src/app/(app)/reglages/actions.ts` et son test, `src/server/auth/session.ts` (lu : la connexion récente de T55), `src/server/sessions/threads.ts` (réouverture d'un fil clos), `src/server/sessions/start-context.ts` (un fil clos quitte le sommaire), `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts`.
 
 **Fait quand :**
 - la section « Mémoire » des réglages montre les propositions ouvertes : le texte (modifiable avant d'accepter, 300 caractères), l'action, la fréquence (« 4 sessions sur 9 ») et les preuves (outil, date, branche, 200 caractères du tour cité ; une note y est marquée « écrit par l'agent »), lues sous la RLS de la personne ;
 - une proposition dont une preuve est devenue invisible ne se montre plus (règle de `readAboutSuggestion`) ;
 - **Accepter** est un compare-and-set (`where decision is null`). Sous le verrou de la cible, il écrit, si `version_cible` est encore la dernière : une leçon (v1, ou la version suivante, `ecrit_par = humain`), une leçon retirée, ou un fil clos (`metadata.clos_le`). Sinon la proposition passe « dépassée », et rien n'est écrit. Une leçon acceptée reçoit `lecons.frequence = sessions_touchees`. Un texte vide (la règle des notes) doit être écrit avant d'accepter ;
+- accepter une proposition qui écrit une leçon exige la connexion récente de T55 (tranché le 05/11, D37) : sinon « reconnexion », la proposition reste ouverte, et rien n'est écrit ;
 - **Rejeter** pose `decision = rejetee` : la proposition n'est jamais reproposée ;
 - l'interrupteur du rêve vit dans la même section (D39), rangé dans `member` (C15) ;
 - un fil clos quitte le sommaire, reste lisible par `leon fil`, et se rouvre à la session suivante de sa branche ;
@@ -1035,7 +1109,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
   - un texte modifié avant d'accepter : la leçon porte le texte modifié ;
   - deux acceptations de fréquences différentes : l'ordre de D37 suit `frequence` ;
   - une proposition des notes au texte vide : refusée tant que le texte n'est pas écrit ;
-- `actions.test.ts` : accepter, rejeter, couper le rêve ;
+- `actions.test.ts` : accepter, rejeter, couper le rêve ; accepter une leçon avec une session de plus d'une heure : « reconnexion », la proposition reste ouverte ;
 - `start-context.db.test.ts` : un fil clos est absent du sommaire, puis rouvert après une session de sa branche ;
 - contrats : aucune route de `API_PATHS` ni aucun outil MCP ne décide d'une proposition.
 
@@ -1055,7 +1129,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - l'étape `fil` à part, pour compter son coût dans le tableau admin existant ;
    - une mesure du volume par session (compteurs côté serveur) avant d'ouvrir l'usage `coulisses` à d'autres qu'Amos.
 
-   Depuis le 04/11 : le rêve par règles (lot 15) n'appelle aucun modèle. Les versions ajoutent une ligne par écriture (4 000 caractères au plus), toutes gardées dans cette première livraison ; le lot 11 dira s'il faut couper. La version avec modèle du rêve, après QD1, aura sa propre étape, pour compter son coût à part.
+   Depuis le 04/11 : le rêve par règles (lot 15) n'appelle aucun modèle. Les versions ajoutent une ligne par écriture (4 000 caractères au plus), toutes gardées, sans limite. Le lot 11 mesure le volume ; couper demanderait une nouvelle décision d'Amos. La version avec modèle du rêve, après QD1, aura sa propre étape, pour compter son coût à part.
 2. **L'injection durable.** Parades :
    - seules des clés sont poussées d'office (D25) ;
    - titres réduits (D24) ;
@@ -1068,7 +1142,9 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
    Limite connue : la consigne du niveau 1 rend la lecture presque systématique. Depuis le 04/11, une session qui lit Leon n'est plus externe : un texte lu par `leon fil` ou `leon chercher` peut revenir, marqué « agent », dans l'état suivant, sans jamais faire une décision sans id vérifié (D36). Il peut aussi toucher les lignes `[en-cours]`, `[prochaine-étape]`, `[question]` et `[essai-raté]` : chacune cite alors un id du condensé, et sa provenance est écrite par le serveur, pas par le modèle (D23).
 
-   Autre limite : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté peut écrire ou accepter une leçon (D37). Une connexion récente pour ces gestes est proposée (A15).
+   Autre limite : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté peut écrire ou accepter une leçon (D37). Depuis le 05/11, ces gestes exigent une connexion de moins d'une heure (T55, T61) : la fenêtre se réduit, sans se fermer. Une fois la connexion sociale fusionnée, GitHub ne sait pas forcer une nouvelle saisie : un navigateur déjà connecté à GitHub obtient une session neuve en un clic, et le contrôle d'une heure ne réduit plus rien sur ce chemin (D37).
+
+   Autre limite : `noter` est coché par défaut, et `leon noter` et `remember` ne rendent plus la session externe (D36). Par défaut, un agent sous injection peut donc écrire une note. Reliée au fil par proximité (D22), elle entre au condensé marquée « agent (note, <outil>) ». Une ligne `[prochaine-étape]` peut la citer, puisqu'une ligne n'a qu'à citer un id du condensé, et revenir à chaque session par `leon fil`, que la consigne fait lire. Elle n'y fait jamais une décision (D36), et sa provenance reste « agent ». Retirer une ligne qui ne cite que des notes est posé à Amos (A16).
 3. **Le périmé.** L'état d'un fil vieillit. Parades : des dates partout, l'état GitHub des PR lu à la lecture et non figé dans l'état, la mise à jour au démarrage. Depuis le 04/11, le rêve propose de clore un fil dormant et de retirer une leçon sans preuve récente (D39).
 4. **Le délai.** La route de contexte et celle du rappel n'appellent ni modèle ni vecteur. Le rappel est coupé à 1,5 s sur le poste. Le rangement est en tâche de fond.
 5. **La vie privée.**
@@ -1078,7 +1154,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - Les fils sont effacés à la suppression du compte.
    - Depuis le 04/11, les versions, les leçons et les propositions du rêve le sont aussi, et les notes de l'agent (proposé, A12).
    - Une version n'est rendue que si le lecteur voit toutes ses entrées, sources lues pendant les sessions comprises : un état tiré d'une source devenue privée (0048) ne se lit plus (D35). Les mots d'une source devenue invisible ne servent plus au rappel (D21).
-   - Un secret passé dans une version y reste tant qu'on ne peut pas l'effacer : le geste « effacer » est proposé (D33, A15). Tout texte de version passe d'abord par `maskSecrets`.
+   - Un secret passé dans une version y reste : hors la suppression du compte, aucune version n'est effacée, et le geste « effacer » n'est pas retenu (tranché le 05/11, D33). Tout texte de version passe d'abord par `maskSecrets`, seul masque. Il part avec le compte.
    - Le rêve ne lit que les données de la personne, sous ses droits, et rien ne sort de Leon (D39).
 6. **La portée des lectures.** Un agent de code qui lit la mémoire privée de l'utilisateur et qui a une sortie réseau réunit les conditions d'une fuite. Parades :
    - les lectures sont bornées au projet : `dossier`, `fil` et `chercher`, et depuis le 04/11 `lecons` et `versions`, en commande comme au MCP ; seules des sources de connecteurs sans projet peuvent être liées à un fil par proximité, et elles restent lues sous la RLS du lecteur ;
@@ -1095,17 +1171,22 @@ Pour Amos :
 - A11. Le niveau 3 (D28) : construit en option, une fois la mesure du lot 11 faite ?
 - A12. Les fils effacés à la suppression du compte (D21), alors que les sessions sont gardées ? Depuis le 04/11 (proposé) : les notes de l'agent aussi, avec leurs versions (D38). Aujourd'hui, une note `remember` est gardée et devient invisible.
 - A13. L'accord par usage (D30) : `lecture`, `rappel`, `resume`, `coulisses`, chacun accepté à part ?
-- A14. Les sous-agents rendent toute session externe. Toutes tes sessions récentes sont marquées externes dans le bloc, parce qu'elles lancent des sous-agents (`Agent`, `Task`). Lire Leon ne compte déjà plus (D36). Faut-il revoir ce signal, par exemple pour un sous-agent qui ne lit que le dépôt ? Avant tout assouplissement, il faut séparer les vrais messages humains : le rapport d'un sous-agent arrive dans le transcript comme un message `user`, et deviendrait sinon la preuve d'une `[décision]` (D36, T43). Deux points liés :
-  - D36 propose aussi `leon lecons`, `leon versions`, leurs outils MCP et `leon noter` comme lectures qui ne marquent pas la session. D'accord ?
-  - `remember` reste externe, comme les autres `mcp__*`, alors que `leon noter` ne l'est pas. Les deux ne rendent qu'un id. On les aligne, et dans quel sens ?
-- A15. Les choix du 04/11 qui ne viennent pas de toi :
-  - la règle « leçon sans preuve » : on l'a lue comme une leçon dont toutes les preuves ont plus de 90 jours (D39). Une autre lecture serait une `[décision]` retirée par le vérificateur et proposée à l'humain. Laquelle ?
-  - où restaurer : sur le poste, par `leon versions --restaurer` (terminal interactif, usage `noter`, version marquée `agent`), et sur le site pour une leçon ou une note sans projet (D33). D'accord ?
-  - l'usage `noter`, à part de `lecture`, éteint par défaut (D30) ?
-  - la fusion de deux fils garde le fil absorbé, marqué, pour ne rien effacer de ses versions (D21) ?
-  - un geste « effacer » sur le site, pour retirer une version où est passé un secret (D33) ? Tu as dit que restaurer n'efface rien.
-  - une connexion récente pour écrire ou accepter une leçon, puisqu'un agent peut piloter le navigateur (D37) ?
-  - le budget des leçons au démarrage : 2 000 octets sur 8 000, le reste dans `leon lecons` (D37). Tu as tranché que la mémoire passe avant le point du matin, pas ce chiffre. D'accord ?
+- A14 (tranchées le 05/11). Les sous-agents rendent toute session externe. Toutes tes sessions récentes sont marquées externes dans le bloc, parce qu'elles lancent des sous-agents (`Agent`, `Task`). Lire Leon ne compte déjà plus (D36). Faut-il revoir ce signal, par exemple pour un sous-agent qui ne lit que le dépôt ? Avant tout assouplissement, il faut séparer les vrais messages humains : le rapport d'un sous-agent arrive dans le transcript comme un message `user`, et deviendrait sinon la preuve d'une `[décision]` (D36, T43). Tranché le 05/11 : d'abord le tri (T43), puis, dès le lot 14, un sous-agent qui ne lit que le dépôt ne rend plus la session externe, un sous-agent qui va sur le web ou le réseau si (T63). Seules les sessions captées après le lot 14 en profitent : tes sessions déjà marquées externes le restent. Deux points liés :
+  - D36 propose aussi `leon lecons`, `leon versions`, leurs outils MCP et `leon noter` comme lectures qui ne marquent pas la session. D'accord ? Tranché le 05/11 : oui pour tout, `remember` compris ; `search` et `fetch` du MCP restent externes.
+  - `remember` reste externe, comme les autres `mcp__*`, alors que `leon noter` ne l'est pas. Les deux ne rendent qu'un id. On les aligne, et dans quel sens ? Tranché le 05/11 : alignés, aucun des deux ne rend la session externe.
+- A15 (tranchées le 05/11). Les choix du 04/11 qui ne viennent pas de toi :
+  - la règle « leçon sans preuve » : on l'a lue comme une leçon dont toutes les preuves ont plus de 90 jours (D39). Une autre lecture serait une `[décision]` retirée par le vérificateur et proposée à l'humain. Laquelle ? Tranché le 05/11 : toutes ses preuves ont plus de 90 jours ; le rêve propose de la retirer, l'humain décide ; jamais pour une leçon écrite à la main.
+  - où restaurer : sur le poste, par `leon versions --restaurer` (terminal interactif, usage `noter`, version marquée `agent`), et sur le site pour une leçon ou une note sans projet (D33). D'accord ? Tranché le 05/11 : sur le site seulement, « Remettre cette version », réservé à l'auteur, `ecrit_par = humain` ; ni terminal, ni jeton, ni MCP.
+  - l'usage `noter`, à part de `lecture`, éteint par défaut (D30) ? Tranché le 05/11 : à part, proposé à l'installation et déjà coché, comme les niveaux 1 et 2 ; on peut le décocher.
+  - la fusion de deux fils garde le fil absorbé, marqué, pour ne rien effacer de ses versions (D21) ? Tranché le 05/11 : oui, gardé et masqué, ses versions lisibles.
+  - un geste « effacer » sur le site, pour retirer une version où est passé un secret (D33) ? Tu as dit que restaurer n'efface rien. Tranché le 05/11 : non, aucune version n'est effacée ; un secret passé reste, masqué par `maskSecrets` seulement.
+  - une connexion récente pour écrire ou accepter une leçon, puisqu'un agent peut piloter le navigateur (D37) ? Tranché le 05/11 : oui, moins d'une heure pour accepter, écrire ou remettre une leçon, et pour remettre une version (T55, T61).
+  - le budget des leçons au démarrage : 2 000 octets sur 8 000, le reste dans `leon lecons` (D37). Tu as tranché que la mémoire passe avant le point du matin, pas ce chiffre. D'accord ? Tranché le 05/11 : pas de chiffre fixe ; les leçons prennent toute la place que le sommaire laisse, le point du matin ce qui reste.
+- A16. Quatre suites du 05/11, relevées à la relecture :
+  - `noter` coché « comme les niveaux 1 et 2 » : T47 et T49 ne cochent pas `lecture` ni `rappel`, et l'installateur demande `[y/N]`. Faut-il les cocher aussi par défaut ? Et un usage coché s'ajoute-t-il avec `--yes`, que lance « Je demande à Claude » ? Le plan garde pour l'instant la règle de D30 : non ;
+  - `remember` et `noter` : au MCP, il n'y a pas d'usages du poste. Décocher `noter` n'empêche pas `remember` dans un outil de code où le connecteur Leon est branché (D30). On le laisse ainsi, ou on transmet les usages au MCP (#121) ?
+  - le bloc de démarrage : la place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant les leçons (D37). C'est un ajout du rédacteur. D'accord ?
+  - une ligne de l'état qui ne cite que des notes de l'agent : on la garde, marquée « agent », ou on la retire (vigilance 2) ?
 
 Pour David :
 - QD7. Le kind `leon_fil` comme source (D21), plutôt qu'une table à part ?
@@ -1116,4 +1197,4 @@ Pour David :
 - QD12. L'usage `lecture` partagé entre les outils d'un même poste (D30) ?
 - QD13. `leon noter` et ta passation (#106, `origin/david/passation-equipe`) : la note de l'agent reste privée (D38), et le partage avec l'équipe passe par ta passation, après relecture. Ça te va ? Sous quelle forme : une note promue en passation, ou une passation qui cite la note ?
 - QD14. Les versions dans une table à part, `versions_memoire` (D33, C12), plutôt qu'en tours de la source ? `fetch` rend tous les tours d'une source (`src/server/search/context.ts`) : une ancienne version y serait lisible. Ça touche QD7 : un fil n'a plus de tour, il reste une source pour ses clés et sa RLS.
-- QD15. Le bloc de démarrage : Amos a tranché le 04/11 que la mémoire passe avant le point du matin, qui prend le reste (D37). Le budget de 2 000 octets pour les leçons est proposé (A15). Quand tout est plein, le point du matin tombe sous 2 000 octets. Y vois-tu un problème pour le point du matin ?
+- QD15. Le bloc de démarrage : Amos a tranché le 04/11 que la mémoire passe avant le point du matin (D37). Le 05/11, il a tranché que les leçons n'ont pas de chiffre fixe : elles prennent toute la place que le sommaire laisse, et le point du matin seulement ce qui reste après elles. Quand les leçons sont nombreuses, le point du matin peut ne plus avoir de place du tout. C'est voulu par Amos. Y vois-tu un problème pour le point du matin ?

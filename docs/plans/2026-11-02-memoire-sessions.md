@@ -33,14 +33,14 @@
 | 11. Preuve et mesure | passage réel d'un outil à l'autre, mesure de l'ancrage ; mesure aussi les niveaux 1 et 2 et décide du niveau 3 | T37 et T38 | suivante (doc) | 1,5 j |
 | 12. Les fils et le dossier | Leon range la mémoire par fil (connecteurs et GitHub compris), trois commandes de lecture et les mêmes outils au MCP, le bloc de démarrage devient un sommaire des fils (niveau 1) | T39 à T47, T53 et T54 ([plan à part](2026-11-03-memoire-a-disposition.md)) | suivante | 10,5 j |
 | 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2) ; les leçons acceptées dans le bloc ; le brouillon privé de l'agent | T48, T49, T55 à T57 (idem) | suivante | 4,5 j |
-| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent | T50 à T52 (idem) | suivante | 4 j |
+| 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent ; depuis le 05/11, un sous-agent qui ne lit que le dépôt ne rend plus la session externe | T50 à T52 et T63 (idem) | suivante | 4,5 j |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, des propositions de leçons et de clôture, que l'humain accepte ou rejette ; puis la mesure refaite | T58 à T62 (idem) | suivante | 5,5 j |
 
-Total : environ 54,5 jours, lot 1 compris (fait). Il était de 43 jours le 03/11.
+Total : environ 54,5 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63).
 
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
 
-> **Amendé le 04/11 :** l'ordre est tranché : 1 (fait), 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Le lot 15, le rêve perso par règles (environ 5 j), est décrit dans le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Ce plan décrit aussi ce qui s'ajoute aux lots 12 et 13. Les efforts et le total sont dans le tableau ci-dessus. Voir ses « Décisions d'Amos du 04/11 ».
+> **Amendé le 04/11 :** l'ordre est tranché : 1 (fait), 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Le lot 15, le rêve perso par règles (environ 5 j), est décrit dans le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Ce plan décrit aussi ce qui s'ajoute aux lots 12 et 13. Les efforts et le total sont dans le tableau ci-dessus. Voir ses « Décisions d'Amos » du 04/11 et du 05/11.
 
 **Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
@@ -97,7 +97,7 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
   - C'est sous les 10 000 caractères de Claude Code et sous les 10 000 octets environ de Codex, sans régler `additionalContextLimit`.
   - Ordre : mes sessions (3 500 octets au plus), puis l'équipe sur ce dépôt (10 lignes, 700 octets), puis le point du matin, coupé à une ligne entière, balise fermante gardée.
 
-  > **Amendé le 04/11 :** la mémoire passe avant le point du matin, toujours en 8 000 octets. D'abord le sommaire des fils (3 500 octets), avec l'équipe sur ce dépôt (700 octets). Puis les leçons acceptées (2 000 octets), dans l'ordre de D37 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Puis la consigne. Puis le point du matin, qui prend le reste, coupé à une ligne entière.
+  > **Amendé le 04/11 :** la mémoire passe avant le point du matin, toujours en 8 000 octets. D'abord le sommaire des fils (3 500 octets), avec l'équipe sur ce dépôt (700 octets). Puis les leçons acceptées, dans l'ordre de D37 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Tranché le 05/11 : sans chiffre fixe, elles prennent toute la place que le sommaire laisse. La place de la consigne, de l'en-tête des leçons et de la ligne « N autres leçons » est réservée avant de remplir (ajout du rédacteur, à confirmer par Amos, A16 du nouveau plan). Puis la consigne. Puis le point du matin, qui ne prend que ce qui reste après elles, coupé à une ligne entière : il peut ne plus avoir de place.
 - **Mes sessions :** 4 au plus, sur 7 jours, sur le même dépôt, la branche courante d'abord, la session courante exclue.
   - L'en-tête de chaque session porte l'outil, la date, la branche et les PR (numéro et URL, puis leur état GitHub à partir du lot 3).
   - « Fait » : le nombre de commits, les PR créées, puis 5 fichiers au plus.
@@ -198,7 +198,7 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
 - **D16. Retirée le 03/11** (rien sur le poste : D31 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)). Texte d'origine : **les replis par fichier (proposé, voir A4)** se font par dépôt ou par espace de travail, en 0600, avec accord. Leon ajoute le chemin à `$(git rev-parse --git-path info/exclude)`, puis vérifie par `git check-ignore -q` (sans `--no-index`) avant chaque écriture. Un fichier déjà suivi par git est refusé. Jamais de fichier global.
 - **D17. Les sessions « externes »** ont lu du web, du MCP, un sous-agent ou une commande réseau. Dès le lot 1, le bloc de démarrage n'en montre que les clés : outil, date, branche, PR. Jamais un texte écrit par l'agent. Leur résumé reste trouvable à la demande.
 
-  > **Amendé le 04/11 (D36 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :** « a lu du MCP » ne compte plus les lectures de Leon retenues par D36 : les commandes `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon. D36 y propose `leon lecons`, `leon versions`, leurs outils et `leon noter`. Ça vaut pour les quatre outils de code (T18, T27, T32).
+  > **Amendé le 04/11 (D36 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :** « a lu du MCP » ne compte plus les lectures de Leon retenues par D36 : les commandes `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon. Tranché le 05/11 : aussi `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`. Ça vaut pour les quatre outils de code (T18, T27, T32). Tranché aussi le 05/11 : « un sous-agent » ne compte plus un sous-agent qui ne lit que le dépôt ; un sous-agent qui va sur le web ou appelle un outil réseau compte toujours. C'est pour Claude Code dès le lot 14 (T63 du nouveau plan), et pour Codex, Cursor et Antigravity seulement dans leur lot, après le tri de leur lecteur (T18, T27, T32).
 - **D18. Remplacée le 03/11** par le rappel à chaque message (lot 13) et la lecture à la demande par le MCP (lot 12). Texte d'origine : le RAG au premier prompt (proposé, voir A5) est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
 - **D19. Hors de ce chantier :**
   - les consignes (B et C) ;
@@ -248,7 +248,7 @@ type SessionFacts = {
 };
 ```
 
-> **Amendé le 04/11 :** C1 gagne `outils_en_erreur: { outil: string; nombre: number }[]` (T58 du nouveau plan), relevé par les quatre lecteurs. `externe` ne compte plus les lectures de Leon retenues par D36 du nouveau plan (voir D17).
+> **Amendé le 04/11 :** C1 gagne `outils_en_erreur: { outil: string; nombre: number }[]` (T58 du nouveau plan), relevé par les quatre lecteurs. `externe` ne compte plus les lectures de Leon retenues par D36 du nouveau plan (voir D17), ni un sous-agent qui ne lit que le dépôt : pour Claude Code dès le lot 14 (T63), pour les autres outils dans leur lot, après le tri de leur lecteur.
 
 L'outil est le `kind` de C2.
 
@@ -681,7 +681,9 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 ### T18 · Lire une session Codex ; les « sessions de code » au lieu de `claude_code`
 
-> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, tranché le 05/11, `lecons`, `versions` et `remember`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+>
+> **Amendé le 05/11 (T63 du nouveau plan) :** le lecteur fait d'abord le tri : un rapport de sous-agent, ou tout tour injecté, n'est jamais un message de l'utilisateur et part marqué `injecte` (T43). Ensuite, si l'essai de l'outil montre les échanges du sous-agent, un sous-agent qui ne lit que le dépôt ne marque pas la session, et un sous-agent inachevé ou dont on ne lit pas les échanges la marque. Sinon, tout sous-agent reste externe. Tests de plus, si l'essai le permet : un sous-agent qui ne fait que lire le dépôt ne marque pas la session, un sous-agent qui va sur le web la marque.
 
 **Fichiers :**
 - `src/capture/codex.ts` (nouveau) ;
@@ -838,7 +840,9 @@ L'annexe donne le verdict, la version minimale, et la décision sur le repli `.m
 
 ### T27 · Lire une session Cursor
 
-> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, tranché le 05/11, `lecons`, `versions` et `remember`) ne comptent pas comme un appel MCP. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+>
+> **Amendé le 05/11 (T63 du nouveau plan) :** le lecteur fait d'abord le tri : un rapport de sous-agent, ou tout tour injecté, n'est jamais un message de l'utilisateur et part marqué `injecte` (T43). Ensuite, si l'essai de l'outil montre les échanges du sous-agent, un sous-agent qui ne lit que le dépôt ne marque pas la session, et un sous-agent inachevé ou dont on ne lit pas les échanges la marque. Sinon, tout sous-agent reste externe. Tests de plus, si l'essai le permet : un sous-agent qui ne fait que lire le dépôt ne marque pas la session, un sous-agent qui va sur le web la marque.
 
 **Fichiers :** `src/capture/cursor.ts` (nouveau), `src/capture/fixtures/cursor/transcript-simple.jsonl` (nouveau, tiré de T26), `src/capture/turn.ts` (`'cursor'` dans `CAPTURE_KINDS` et `CODE_SESSION_KINDS`), `src/lib/labels.ts`, `src/components/verre/ui/chips.tsx`, `src/components/verre/connexions/carte.tsx`, `src/test/fixtures.ts`.
 
@@ -916,7 +920,9 @@ L'annexe donne le verdict, et la décision sur le repli.
 
 ### T32 · Lire une session Antigravity
 
-> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, si Amos accepte la proposition de D36, `lecons` et `versions`) ne comptent pas comme un `CALL_MCP_TOOL` externe. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+> **Amendé le 04/11 (D36 du nouveau plan) :** les lectures de Leon retenues par D36 ne rendent pas la session externe : la commande `leon` n'entre pas dans les commandes réseau, et les outils `dossier` et `fil` du serveur MCP de Leon (et, tranché le 05/11, `lecons`, `versions` et `remember`) ne comptent pas comme un `CALL_MCP_TOOL` externe. Le serveur se reconnaît à son nom complet exact et à l'URL posée par l'installation (T44 du nouveau plan). Test de plus : un appel à chacun de ces outils ne marque pas la session ; `search` de Leon, si.
+>
+> **Amendé le 05/11 (T63 du nouveau plan) :** le lecteur fait d'abord le tri : un rapport de sous-agent, ou tout tour injecté, n'est jamais un message de l'utilisateur et part marqué `injecte` (T43). Ensuite, si l'essai de l'outil montre les échanges du sous-agent, un sous-agent qui ne lit que le dépôt ne marque pas la session, et un sous-agent inachevé ou dont on ne lit pas les échanges la marque. Sinon, tout sous-agent reste externe. Tests de plus, si l'essai le permet : un sous-agent qui ne fait que lire le dépôt ne marque pas la session, un sous-agent qui va sur le web la marque.
 
 **Fichiers :** `src/capture/antigravity.ts` (nouveau), `src/capture/fixtures/antigravity/transcript-simple.jsonl` (nouveau, tiré de T31), `src/capture/turn.ts` (`'antigravity'` dans `CAPTURE_KINDS` et `CODE_SESSION_KINDS`), `src/lib/labels.ts`, `src/components/verre/ui/chips.tsx`, `src/components/verre/connexions/carte.tsx`, `src/test/fixtures.ts`.
 
@@ -1037,7 +1043,7 @@ Contrat : `api-contract.db.test.ts`.
 > **Amendé le 04/11 :**
 > - mesurer aussi, pour chaque tâche, les tokens et la durée, avec et sans la mémoire (sans bloc ni lecture, puis avec le sommaire, les leçons, le rappel et les lectures). Ils se relèvent dans le champ `usage` (les tokens) des transcripts de sessions de test : c'est le gain que le talk annonce ;
 > - garder 5 des 10 tâches, pour les refaire après le lot 15 (T62 du nouveau plan) ;
-> - relever les compteurs côté serveur, sans texte ni id de fil, que posent T53 et T44 du nouveau plan : les versions écrites, les écritures abandonnées pour conflit, les restaurations, les états masqués par la règle de lecture. Relever aussi la part de sessions externes (A14 du nouveau plan) ;
+> - relever les compteurs côté serveur, sans texte ni id de fil, que posent T53 et T44 du nouveau plan : les versions écrites, les écritures abandonnées pour conflit, les restaurations, les états masqués par la règle de lecture. Relever aussi la part de sessions externes (A14 du nouveau plan, tranchée le 05/11, T63) ;
 > - effort du lot 11 : 1 j devient 1,5 j.
 
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/07-mesure-ancrage.md` (nouveau).

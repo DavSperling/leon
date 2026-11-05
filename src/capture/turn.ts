@@ -106,6 +106,9 @@ export const PROJECT_KEY_PATTERN =
   /^(github\.com\/[a-z0-9._-]+\/[a-z0-9._-]+|dossier:[0-9a-f]{16})$/;
 // Une clé de projet reçue en paramètre (le point du matin, le bloc de démarrage), de la même forme que `source.project`.
 export const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN);
+// Le dépôt d'une clé de projet GitHub (« propriétaire/dépôt », en minuscules), ou null pour un projet de dossier.
+export const repoOf = (project: string): string | null =>
+  project.startsWith('github.com/') ? project.slice('github.com/'.length) : null;
 
 export const IngestPayloadSchema = z
   .object({

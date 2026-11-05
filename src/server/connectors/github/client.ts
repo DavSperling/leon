@@ -28,7 +28,13 @@ export const IssueSchema = z.object({
   author_association: Association,
   updated_at: z.string(),
   comments: z.number().optional(), // nombre de commentaires : 0 évite une requête
-  pull_request: z.looseObject({}).nullish(), // présent seulement pour une PR
+  // L'état (T13) : open ou closed, et pourquoi (completed, not_planned, reopened…) ; GitHub n'en donne pas pour une PR.
+  state: z.string(),
+  state_reason: z.string().nullish(),
+  closed_at: z.string().nullish(),
+  assignees: z.array(z.object({ login: z.string() })).nullish(),
+  // Présent seulement pour une PR ; `merged_at` nul tant qu'elle n'est pas fusionnée.
+  pull_request: z.looseObject({ merged_at: z.string().nullish() }).nullish(),
 });
 export const CommentSchema = z.object({
   id: z.number(),
@@ -80,10 +86,27 @@ const PullSchema = z.object({
   merged: z.boolean(),
   draft: z.boolean().optional(),
   user: Author,
-  head: z.object({ ref: z.string(), sha: z.string().optional() }),
-  base: z.object({ ref: z.string() }),
+  // `repo` : le dépôt de la tête, nul quand le fork a été supprimé ; une PR venue d'un fork le dit (T13).
+  head: z.object({
+    ref: z.string(),
+    sha: z.string().optional(),
+    repo: z.object({ full_name: z.string() }).nullish(),
+  }),
+  // `repo` : le dépôt de la base ; GitHub ne lit « Closes #n » que dans une PR vers sa branche par défaut (T13).
+  base: z.object({
+    ref: z.string(),
+    repo: z.object({ default_branch: z.string() }).nullish(),
+  }),
   mergeable_state: z.string().optional(),
   body: z.string().nullish(),
+});
+// La liste des PR donne la date de fusion au premier niveau, et pas de `pull_request` ; elle donne aussi la
+// branche, la tête, le brouillon et la base, que la relève garde sans relire le détail.
+const PullListSchema = IssueSchema.extend({
+  merged_at: z.string().nullish(),
+  draft: PullSchema.shape.draft,
+  head: PullSchema.shape.head,
+  base: PullSchema.shape.base,
 });
 const CheckRunsSchema = z.object({
   total_count: z.number(),
@@ -133,6 +156,10 @@ type IssueWrite = { title?: string; body?: string; labels?: string[]; assignees?
 
 export type ChangedFile = z.infer<typeof ChangedFileSchema>;
 export type Issue = z.infer<typeof IssueSchema>;
+export type Pull = z.infer<typeof PullSchema>;
+// Ce que la relève lit d'une PR au-delà de la liste des tickets (T13) ; `Listed` le porte quand la liste des PR l'a donné.
+export type PullFacts = Pick<Pull, 'head' | 'draft' | 'base'>;
+export type Listed = Issue & { pull?: PullFacts };
 export type Comment = z.infer<typeof CommentSchema>;
 export type Review = z.infer<typeof ReviewSchema>;
 export type ReviewComment = z.infer<typeof ReviewCommentSchema>;
@@ -270,19 +297,20 @@ export function githubClient(token: string, http: ConnectorHttp) {
     // la plus récente) : pour un dépôt dont les tickets sont désactivés. La liste des PR n'a pas de
     // paramètre `since` : on la lit de la plus récente à la plus ancienne, on s'arrête à la première
     // plus ancienne que `since`, puis on remet l'ordre. Elle n'a ni `comments` ni `pull_request` :
-    // le second est ajouté, le premier reste absent (les commentaires sont alors toujours demandés).
-    async *pullRequests(repo: string, since: string): AsyncGenerator<Issue[]> {
+    // le second est ajouté, avec la date de fusion, le premier reste absent (les commentaires sont
+    // alors toujours demandés). Ses faits de PR vont dans `pull`.
+    async *pullRequests(repo: string, since: string): AsyncGenerator<Listed[]> {
       const limit = Date.parse(since);
       const request = {
         url: `${API}/repos/${repo}/pulls`,
         headers,
         query: { state: 'all', sort: 'updated', direction: 'desc', per_page: ISSUES_PER_PAGE },
       };
-      const recent: Issue[] = [];
-      read: for await (const page of pages(request, z.array(IssueSchema))) {
-        for (const pull of page) {
-          if (Date.parse(pull.updated_at) < limit) break read;
-          recent.push({ ...pull, pull_request: {} });
+      const recent: Listed[] = [];
+      read: for await (const page of pages(request, z.array(PullListSchema))) {
+        for (const { merged_at, draft, head, base, ...issue } of page) {
+          if (Date.parse(issue.updated_at) < limit) break read;
+          recent.push({ ...issue, pull_request: { merged_at }, pull: { draft, head, base } });
         }
       }
       recent.reverse();

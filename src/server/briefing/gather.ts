@@ -1,5 +1,5 @@
 import { type SQL, sql } from 'drizzle-orm';
-import { CAPTURE_KINDS, type SourceKind, type TurnRole } from '@/capture/turn';
+import { CAPTURE_KINDS, repoOf, type SourceKind, type TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, sourceInfoFrom, textArray } from '@/server/search/filters-sql';
@@ -88,11 +88,6 @@ function cut(text: string): string {
   const high = text.charCodeAt(TURN_CHARS - 1);
   const end = high >= 0xd800 && high <= 0xdbff ? TURN_CHARS - 1 : TURN_CHARS;
   return `${text.slice(0, end).trimEnd()}…`;
-}
-
-// Le dépôt d'une clé de projet GitHub (« propriétaire/dépôt », en minuscules), ou null pour un projet de dossier.
-function repoOf(project: string): string | null {
-  return project.startsWith('github.com/') ? project.slice('github.com/'.length) : null;
 }
 
 const uuids = (ids: readonly string[]): SQL => sql`${textArray(ids)}::uuid[]`;

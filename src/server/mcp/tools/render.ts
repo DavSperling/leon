@@ -1,4 +1,5 @@
 import { stripHighlightMarks } from '@/lib/highlight';
+import { GITHUB_FACT_KEYS } from '@/server/connectors/github/map';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import {
@@ -17,7 +18,16 @@ import type { FetchOutput, SearchOutput } from './output-schemas';
 // réponse en tête et la discussion partagent). Les outils de l'agent de discussion (T11) reprennent ces blocs
 // (`renderHit`, `renderTurn`, `sourceAttributes`) avec leur propre numérotation.
 
-const originText = (origin: Record<string, string>): string => Object.values(origin).join(' · ');
+// L'état d'un ticket ou d'une PR (github/map.ts) se lit « clé : valeur », dans son ordre : `merged · equipe` ne dirait
+// pas ce qu'est chaque valeur. Les autres clés (repo, board, list…) gardent leur valeur seule, en tête.
+const FACT_KEYS: readonly string[] = GITHUB_FACT_KEYS;
+const originText = (origin: Record<string, string>): string =>
+  [
+    ...Object.entries(origin)
+      .filter(([key]) => !FACT_KEYS.includes(key))
+      .map(([, value]) => value),
+    ...FACT_KEYS.flatMap((key) => (origin[key] === undefined ? [] : [`${key} : ${origin[key]}`])),
+  ].join(' · ');
 
 export function sourceAttributes(source: SourceInfo, n?: number): string {
   return dataAttributes([

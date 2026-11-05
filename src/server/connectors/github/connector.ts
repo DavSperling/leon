@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from '../http';
 import type { Connector, ConnectorItem, SyncPage, SyncState } from '../types';
-import { type GithubClient, githubClient, type Issue } from './client';
+import { type GithubClient, githubClient, type Issue, type Listed } from './client';
 import { type Discussion, toItem } from './map';
 import { githubOAuth } from './oauth';
 
@@ -22,7 +22,10 @@ import { githubOAuth } from './oauth';
 // aucun champ lu ici.
 // Un 403 sur les commentaires, les avis ou les commentaires de revue (jeton sans « Pull requests »
 // ou « Issues ») est attrapé : l'élément sort sans ces tours. Un avis en brouillon est ignoré.
-// Un ticket sans texte sort sans tours (le socle l'écarte) pour que le curseur avance.
+// Un ticket sans texte sort sans tours (le socle l'écarte) pour que le curseur avance ; une PR sans texte a son
+// titre pour corps (T13). Chaque PR nouvelle ou modifiée venue de la liste des tickets est lue en détail
+// (GET /repos/{repo}/pulls/{n}) pour sa branche, sa tête, son brouillon et sa base : une requête de plus par PR,
+// attrapée sur un 403 comme les commentaires. La liste des PR (dépôt sans tickets) les donne déjà : pas de détail.
 // Un dépôt dont les tickets sont désactivés : un 410 sur la liste des tickets fait lire les PR seules
 // (GET /repos/{repo}/pulls, de la plus récente à la plus ancienne, arrêt à la première plus ancienne
 // que le curseur : cette liste n'a pas de paramètre `since`), puis les mêmes lectures de commentaires
@@ -89,10 +92,11 @@ export const liveGithub = (config: Record<string, unknown>, http: ConnectorHttp)
   return { github, repos: () => reposToRead(github, parsed) };
 };
 
-// Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant.
+// Par dépôt : l'instant du dernier élément lu et les numéros déjà lus à cet instant. `details` (T13) : le dépôt
+// est lu avec les faits de chaque PR ; une marque qui ne l'a pas est d'avant, et le dépôt se relit depuis `since`.
 const CursorSchema = z.record(
   z.string(),
-  z.object({ at: z.iso.datetime(), seen: z.array(z.number()) }),
+  z.object({ at: z.iso.datetime(), seen: z.array(z.number()), details: z.boolean().optional() }),
 );
 type Cursor = z.infer<typeof CursorSchema>;
 type Mark = Cursor[string];
@@ -116,34 +120,39 @@ function isDone(mark: Mark | undefined, issue: Issue): boolean {
 
 function advance(mark: Mark | undefined, issue: Issue): Mark {
   const elapsed = mark === undefined ? 1 : Date.parse(issue.updated_at) - Date.parse(mark.at);
-  if (mark === undefined || elapsed > 0) return { at: issue.updated_at, seen: [issue.number] };
+  if (mark === undefined || elapsed > 0) {
+    return { ...mark, at: issue.updated_at, seen: [issue.number] };
+  }
   if (elapsed < 0 || mark.seen.includes(issue.number)) return mark;
-  return { at: mark.at, seen: [...mark.seen, issue.number] };
+  return { ...mark, seen: [...mark.seen, issue.number] };
 }
 
 // GitHub veut AAAA-MM-JJTHH:MM:SSZ, sans millisecondes.
 const apiTime = (date: Date): string => date.toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-async function optional<T>(read: () => Promise<T[]>): Promise<T[]> {
+// Une lecture refusée (403) rend `denied` : l'élément sort sans elle.
+async function optional<T>(read: () => Promise<T>, denied: T): Promise<T> {
   try {
     return await read();
   } catch (error) {
-    if (error instanceof ConnectorAuthError && error.status === 403) return [];
+    if (error instanceof ConnectorAuthError && error.status === 403) return denied;
     throw error;
   }
 }
 
-async function readItem(github: GithubClient, repo: string, issue: Issue): Promise<ConnectorItem> {
+async function readItem(github: GithubClient, repo: string, issue: Listed): Promise<ConnectorItem> {
   const { number } = issue;
   const discussion: Discussion = { comments: [], reviews: [], reviewComments: [] };
   if (issue.comments !== 0) {
-    discussion.comments = await optional(() => github.issueComments(repo, number));
+    discussion.comments = await optional(() => github.issueComments(repo, number), []);
   }
-  if (issue.pull_request) {
-    discussion.reviews = await optional(() => github.reviews(repo, number));
-    discussion.reviewComments = await optional(() => github.reviewComments(repo, number));
-  }
-  return toItem(repo, issue, discussion);
+  if (!issue.pull_request) return toItem(repo, issue, discussion);
+  discussion.reviews = await optional(() => github.reviews(repo, number), []);
+  discussion.reviewComments = await optional(() => github.reviewComments(repo, number), []);
+  // Seuls les dépôts d'équipe sont lus (décision D) : toute PR relevée reçoit sa branche, de la liste des PR
+  // quand elle l'a donnée, sinon de son détail.
+  const pull = issue.pull ?? (await optional(() => github.pull(repo, number), null));
+  return toItem(repo, issue, discussion, pull);
 }
 
 // GitHub répond 410 « Issues are disabled for this repo » à la liste des tickets d'un dépôt qui les a
@@ -154,7 +163,7 @@ function isIssuesDisabled(error: unknown): boolean {
 
 // Les tickets et PR modifiés depuis `from`, du plus ancien au plus récent ; les PR seules quand les
 // tickets du dépôt sont désactivés.
-async function* changed(github: GithubClient, repo: string, from: Date): AsyncGenerator<Issue[]> {
+async function* changed(github: GithubClient, repo: string, from: Date): AsyncGenerator<Listed[]> {
   const since = apiTime(from);
   try {
     yield* github.issues(repo, since);
@@ -201,11 +210,13 @@ async function* syncRepos(
   });
   if (toRead.length === 0) yield page([]);
   for (const repo of leastRecentFirst(toRead, cursor)) {
-    const mark = cursor[repo];
+    // Rattrapage (spec #108, 1.6) : une marque sans `details` compte pour aucune, le dépôt se relit depuis `since`.
+    // Un passage coupé reprend ensuite après la nouvelle marque, qui garde `details`.
+    const mark = cursor[repo]?.details ? cursor[repo] : undefined;
     const from = mark ? new Date(Date.parse(mark.at) - 1000) : state.since;
     // Passé en fin d'ordre, avec une marque même si rien ne change (elle garde alors `since`).
     delete cursor[repo];
-    cursor[repo] = mark ?? { at: apiTime(state.since), seen: [] };
+    cursor[repo] = mark ?? { at: apiTime(state.since), seen: [], details: true };
     let saved = false;
     for await (const issues of changed(github, repo, from)) {
       const items: ConnectorItem[] = [];

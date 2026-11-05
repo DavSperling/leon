@@ -1,4 +1,6 @@
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
+import { sourceConditions } from '@/server/search/filters-sql';
 import { readText } from './files';
 
 // Deux réglages de la requête de recherche (src/server/search/search.ts) qui ne changent aucun résultat, donc
@@ -30,5 +32,16 @@ describe('requête de la recherche', () => {
 
   it('calcule la passe élargie une seule fois', () => {
     expect(body).toContain('wide as materialized (');
+  });
+});
+
+// T25 : la clé du dépôt n'entre jamais dans le texte de la requête (la casse du dépôt GitHub : search.db.test.ts).
+describe('filtre depot', () => {
+  it('passe la clé en paramètre', () => {
+    const key = "github.com/acme/leon' or true --";
+    const query = new PgDialect().sqlToQuery(sourceConditions({ depot: key }));
+
+    expect(query.sql).not.toContain('acme');
+    expect(query.params).toContain(key);
   });
 });

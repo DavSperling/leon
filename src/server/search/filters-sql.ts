@@ -1,5 +1,5 @@
 import { type SQL, sql } from 'drizzle-orm';
-import { ITEM_NATURES, type ItemNature, type SourceKind } from '@/capture/turn';
+import { CODE_SESSION_KINDS, ITEM_NATURES, type ItemNature, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { SearchFilters, SourceInfo } from './types';
 
@@ -37,12 +37,23 @@ function validDate(date: Date | undefined): Date | null {
   return date && !Number.isNaN(date.getTime()) ? date : null;
 }
 
-// Les conditions sur la source (alias `s`) : l'outil et la nature.
+// Les conditions sur la source (alias `s`) : l'outil, la nature et le dépôt. Le dépôt garde les sessions de code
+// qui y ont été faites, avec leurs résumés (des tours de la session), et les sources GitHub du dépôt, dont
+// `origin.repo` garde la casse de GitHub ; rien des autres outils. Une clé `dossier:` n'est le dépôt d'aucune source
+// GitHub. Pour GitHub, la comparaison de projectIsKnown (briefings.ts) ; les sessions sont ici celles de
+// CODE_SESSION_KINDS, là-bas les seules claude_code. Sous RLS, elle se fait ligne à ligne parmi les sources de
+// l'organisation (sources_github_repo_idx n'y sert pas, voir 0047).
 export function sourceConditions(filters: SearchFilters): SQL {
   const conditions: SQL[] = [];
   if (filters.tools?.length) conditions.push(sql`s.kind = any(${textArray(filters.tools)})`);
   if (filters.natures?.length) {
     conditions.push(sql`${NATURE_SQL} = any(${textArray(filters.natures)})`);
+  }
+  if (filters.depot) {
+    conditions.push(
+      sql`(s.kind = any(${textArray(CODE_SESSION_KINDS)}) and s.metadata->>'project' = ${filters.depot})
+        or (s.kind = 'github' and 'github.com/' || lower(s.metadata->'origin'->>'repo') = ${filters.depot})`,
+    );
   }
   return allOf(conditions);
 }

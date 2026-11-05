@@ -110,6 +110,29 @@ export const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTER
 export const repoOf = (project: string): string | null =>
   project.startsWith('github.com/') ? project.slice('github.com/'.length) : null;
 
+// Ce que les outils `briefing` et `search` lisent comme projet : l'adresse https d'un dépôt au nom long (39
+// caractères de propriétaire, 100 de dépôt sur GitHub) dépasse les 200 de la clé.
+export const PROJECT_INPUT_MAX_CHARS = 300;
+const OWNER_AND_REPO = /^[a-z0-9._-]+\/[a-z0-9._-]+$/;
+
+// La clé du projet (D9) d'après ce qu'écrit l'utilisateur ou son assistant (outils `briefing` et `search` du MCP) :
+// la clé elle-même, « propriétaire/dépôt », ou l'adresse https du dépôt. Null pour tout le reste (un autre
+// hébergeur, une adresse avec identifiants).
+export function projectKeyFromInput(raw: string): string | null {
+  const text = raw.trim().toLowerCase();
+  const path = text
+    .replace(/^https?:\/\/github\.com\//, '')
+    .replace(/^github\.com\//, '')
+    .replace(/\/+$/, '')
+    .replace(/\.git$/, '');
+  const key = text.startsWith('dossier:')
+    ? text
+    : OWNER_AND_REPO.test(path) && !path.split('/').some((part) => part === '.' || part === '..')
+      ? `github.com/${path}`
+      : null;
+  return key !== null && ProjectSchema.safeParse(key).success ? key : null;
+}
+
 export const IngestPayloadSchema = z
   .object({
     source: z

@@ -175,6 +175,7 @@ describe('serveur MCP', () => {
     ]);
     expect(Object.keys(search?.inputSchema.properties ?? {}).sort()).toEqual([
       'de',
+      'depot',
       'depuis',
       'outil',
       'page',
@@ -360,7 +361,7 @@ describe('outil search', () => {
     expect(found(result)).toMatchObject({ mode: 'plein-texte', page: 1, totalSources: 1 });
   });
 
-  it('applique les filtres outil, type, depuis et de', async () => {
+  it('applique les filtres outil, type, depuis, de et depot', async () => {
     const { tenantId, paul, julie } = await setupTeam();
     const julieMail = await emailOf(julie);
     const word = 'blorptastic';
@@ -368,7 +369,7 @@ describe('outil search', () => {
       kind: 'github',
       acl: [tenantId],
       title: 'Ticket récent',
-      metadata: { nature: 'ticket' },
+      metadata: { nature: 'ticket', origin: { repo: 'Acme/Leon' } },
       turns: [{ text: `${word} ticket`, ts: daysAgo(1), authorName: 'paul-dev' }],
     });
     await seedIndexed(paul, {
@@ -408,6 +409,9 @@ describe('outil search', () => {
       titlesOf(await search({ depuis: '2026-01-01', outil: 'github', type: 'ticket' })).sort(),
     ).toEqual(['Ticket ancien', 'Ticket récent']);
     expect(titlesOf(await search({ de: 'julie' }))).toEqual(['Réunion de Julie']);
+    expect(titlesOf(await search({ depot: 'https://github.com/Acme/Leon' }))).toEqual([
+      'Ticket récent',
+    ]);
   });
 
   it('une requête vide avec un filtre rend les sources les plus récentes', async () => {
@@ -551,6 +555,7 @@ describe('outil search', () => {
     const tool = await call(client, 'search', { query: 'flibustier', outil: 'outil-fantome' });
     const nature = await call(client, 'search', { query: 'flibustier', type: 'fantome' });
     const since = await call(client, 'search', { query: 'flibustier', depuis: 'hier' });
+    const depot = await call(client, 'search', { query: 'flibustier', depot: 'gitlab.com/a/b' });
 
     expect(tool).toMatchObject({ isError: true });
     expect(tool.text).toContain('Unknown tool');
@@ -560,6 +565,9 @@ describe('outil search', () => {
     expect(nature.text).toContain('meeting');
     expect(since).toMatchObject({ isError: true });
     expect(since.text).toContain('depuis');
+    expect(depot).toMatchObject({ isError: true });
+    expect(depot.text).toContain('depot');
+    expect(depot.text).not.toContain('gitlab');
   });
 
   it("dit qu'une personne est inconnue plutôt que de chercher chez tout le monde", async () => {

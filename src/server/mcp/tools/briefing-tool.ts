@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { BriefingResponseSchema } from '@/capture/api-contract';
-import { PROJECT_KEY_PATTERN } from '@/capture/turn';
+import { PROJECT_INPUT_MAX_CHARS, projectKeyFromInput } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { briefingResponse, latestBriefingProject } from '@/server/briefing/briefings';
 import { env } from '@/server/env';
@@ -13,10 +13,6 @@ import { guarded } from './guarded';
 // droits du porteur du jeton : le dernier point prêt, ou le message d'attente (le recalcul est alors mis en file), ou,
 // sans modèle sur ce serveur, le message qui dit qu'aucun point n'est préparé. Le point rendu est noté au journal des
 // lectures, une ligne par source fournie au modèle.
-
-const PROJECT_INPUT_MAX_CHARS = 300;
-const KEY_MAX_CHARS = 200;
-const OWNER_AND_REPO = /^[a-z0-9._-]+\/[a-z0-9._-]+$/;
 
 const InputSchema = z.object({
   projet: z
@@ -33,23 +29,6 @@ export const BRIEFING_DESCRIPTION =
 
 const INVALID_PROJECT =
   'Invalid project: give its GitHub repository (github.com/owner/repo or owner/repo).';
-
-// La clé du projet (D9) d'après ce qu'écrit l'utilisateur : la clé elle-même, « propriétaire/dépôt », ou l'adresse
-// https du dépôt. Null pour tout le reste (un autre hébergeur, une adresse avec identifiants).
-export function projectKeyFromInput(raw: string): string | null {
-  const text = raw.trim().toLowerCase();
-  const path = text
-    .replace(/^https?:\/\/github\.com\//, '')
-    .replace(/^github\.com\//, '')
-    .replace(/\/+$/, '')
-    .replace(/\.git$/, '');
-  const key = text.startsWith('dossier:')
-    ? text
-    : OWNER_AND_REPO.test(path) && !path.split('/').some((part) => part === '.' || part === '..')
-      ? `github.com/${path}`
-      : null;
-  return key !== null && key.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(key) ? key : null;
-}
 
 export function registerBriefingTool(server: McpServer, ctx: TenantContext, client: string): void {
   server.registerTool(

@@ -6,6 +6,7 @@ import {
   ITEM_NATURES,
   PROJECT_KEY_PATTERN,
   PROVIDER_IDS,
+  projectKeyFromInput,
   SOURCE_KINDS,
   TURN_TEXT_MAX,
   TURNS_PER_BATCH_MAX,
@@ -132,6 +133,23 @@ describe('IngestPayloadSchema : source.project (C8)', () => {
     expect(PROJECT_KEY_PATTERN.source).toBe(
       String.raw`^(github\.com\/[a-z0-9._-]+\/[a-z0-9._-]+|dossier:[0-9a-f]{16})$`,
     );
+  });
+});
+
+// Ce qu'écrit l'assistant pour `projet` (briefing) et `depot` (search) : une clé de projet, ou rien.
+describe('projectKeyFromInput', () => {
+  it.each([
+    ['Acme/Leon/', 'github.com/acme/leon'],
+    ['https://github.com/acme/leon.git', 'github.com/acme/leon'],
+    ['GITHUB.COM/acme/leon', 'github.com/acme/leon'],
+    ['DOSSIER:0123456789ABCDEF', 'dossier:0123456789abcdef'],
+    ['acme/..', null],
+    ['./leon', null],
+    ['https://u:t@github.com/a/b', null],
+    ['gitlab.com/a/b', null],
+    ['dossier:xyz', null],
+  ])('%s → %s', (input, key) => {
+    expect(projectKeyFromInput(input)).toBe(key);
   });
 });
 

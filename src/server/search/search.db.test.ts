@@ -733,6 +733,79 @@ describe('filtres', () => {
     expect(titles(await search(alice, 'depuis:5j'))).toEqual(['PR 15', 'Call migration']);
   });
 
+  // T25 : le dépôt borne aux sessions qui y ont été faites (leurs résumés sont des tours de la même source) et aux
+  // sources GitHub du dépôt, dont le dépôt d'origine est écrit avec sa casse. Rien des autres outils.
+  it('restreignent au dépôt : ses sessions, leurs résumés et ses sources GitHub, sous les droits du lecteur', async () => {
+    const { tenantId, alice, bob } = await team();
+    const acl = [tenantId];
+    const word = 'gloubiboulga';
+    const LEON = 'github.com/acme/leon';
+    const DOSSIER = 'dossier:0123456789abcdef';
+    await seedIndexed(alice, {
+      title: 'Session leon',
+      metadata: { project: LEON },
+      turns: [
+        { text: `${word} dans la session` },
+        { role: 'document', text: 'Résumé : barbapapa' },
+      ],
+    });
+    await seedIndexed(alice, {
+      title: 'Session autre',
+      metadata: { project: 'github.com/acme/autre' },
+      turns: [{ text: word }],
+    });
+    await seedIndexed(alice, {
+      title: 'Session dossier',
+      metadata: { project: DOSSIER },
+      turns: [{ text: word }],
+    });
+    await seedIndexed(bob, {
+      title: 'Session privée de Bob',
+      metadata: { project: LEON },
+      turns: [{ text: word }],
+    });
+    await seedIndexed(alice, {
+      kind: 'github',
+      acl,
+      title: 'PR leon',
+      metadata: { nature: 'ticket', origin: { repo: 'Acme/Leon' } },
+      turns: [{ text: word }],
+    });
+    await seedIndexed(alice, {
+      kind: 'github',
+      acl,
+      title: 'PR autre',
+      metadata: { nature: 'ticket', origin: { repo: 'Acme/Autre' } },
+      turns: [{ text: word }],
+    });
+    await seedIndexed(alice, {
+      kind: 'slack',
+      acl,
+      title: 'Fil leon',
+      metadata: { nature: 'fil', project: LEON, origin: { repo: 'Acme/Leon' } },
+      turns: [{ text: word }],
+    });
+    const inDepot = async (depot: string, query = word, embedder: Embedder | null = null) =>
+      sorted(await search(alice, query, { filters: { depot }, embedder }));
+
+    expect(await inDepot(LEON)).toEqual(['PR leon', 'Session leon']);
+    expect(await inDepot(LEON, word, factice)).toEqual(['PR leon', 'Session leon']);
+    expect(await inDepot(LEON, 'barbapapa')).toEqual(['Session leon']);
+    expect(await inDepot(LEON, '')).toEqual(['PR leon', 'Session leon']);
+    // Une clé de dossier : aucune source GitHub n'a ce projet.
+    expect(await inDepot(DOSSIER)).toEqual(['Session dossier']);
+    expect(await inDepot('github.com/acme/inconnu')).toEqual([]);
+    // Croisé avec un outil : `outil and (session or github)`, et non `(outil and session) or github`.
+    expect(
+      sorted(await search(alice, word, { filters: { depot: LEON, tools: ['claude_code'] } })),
+    ).toEqual(['Session leon']);
+    // Bob voit sa propre session du dépôt.
+    expect(titles(await search(bob, word, { filters: { depot: LEON } })).toSorted()).toEqual([
+      'PR leon',
+      'Session privée de Bob',
+    ]);
+  });
+
   it('nomment les personnes que personne ne porte, et ne devinent pas', async () => {
     const { alice } = await seedFilterable();
     const unknown = await search(alice, 'zebuline de:inconnu');

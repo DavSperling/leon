@@ -10,11 +10,14 @@ export type SearchFilters = {
   authorNames?: { kind: SourceKind; name: string }[]; // de: sur un identifiant d'outil (T19)
   since?: Date; // depuis: (inclus)
   until?: Date; // avant: (exclu)
+  // Une clé de projet (PROJECT_KEY_PATTERN, lue par projectKeyFromInput) : les sessions du dépôt, leurs résumés et ses
+  // sources GitHub (T25). Paramètre des outils seulement, la barre n'a pas de `depot:`.
+  depot?: string;
 };
 
 export type ParsedQuery = {
   text: string;
-  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames'>;
+  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot'>;
   people: string[];
 };
 

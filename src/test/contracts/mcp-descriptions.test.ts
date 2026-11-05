@@ -63,6 +63,34 @@ describe('description de search', () => {
     }
   });
 
+  // T25 : les formes que la description de depot propose sont celles que la recherche lit ; une autre est refusée.
+  it('décrit depot par les formes de dépôt que la recherche lit', () => {
+    const text = description(SearchInputSchema.shape.depot);
+
+    for (const form of ['github.com/owner/repo', 'owner/repo']) {
+      expect(text).toContain(form);
+      expect(readToolFilters({ depot: form }, new Date())).toEqual({
+        filters: { depot: 'github.com/owner/repo' },
+      });
+    }
+    // Refusée sans être recopiée : une adresse de remote peut porter un jeton.
+    const refused = readToolFilters({ depot: 'gitlab.com/owner/repo' }, new Date());
+    expect(refused).toHaveProperty('error');
+    expect('error' in refused ? refused.error : '').toContain('github.com/owner/repo');
+    expect('error' in refused ? refused.error : '').not.toContain('gitlab');
+  });
+
+  // Sur GitHub, un propriétaire fait jusqu'à 39 caractères et un dépôt jusqu'à 100 : l'outil prend son adresse https.
+  it('accepte depot pour un dépôt au nom le plus long que permet GitHub', () => {
+    const repo = `${'o'.repeat(39)}/${'r'.repeat(100)}`;
+    const url = `https://github.com/${repo}.git`;
+
+    expect(SearchInputSchema.shape.depot.safeParse(url).success).toBe(true);
+    expect(readToolFilters({ depot: url }, new Date())).toEqual({
+      filters: { depot: `github.com/${repo}` },
+    });
+  });
+
   it('annonce le nombre de sources par page et la dernière page de la recherche', () => {
     expect(description(SearchInputSchema.shape.page)).toContain(`${PAGE_SIZE} sources per page`);
 

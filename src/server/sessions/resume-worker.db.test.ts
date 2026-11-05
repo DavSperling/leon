@@ -69,8 +69,8 @@ async function team(): Promise<{ paul: TenantContext; marie: TenantContext }> {
   return { paul, marie };
 }
 
-// Une session de Paul, close, avec l'usage `resume` et 6 échanges, sauf ce que `metadata` remplace. Ses tours ont
-// été captés il y a 20 min (`arrivedAgo`), datés de la veille.
+// Une session de Paul, close (sa vraie fin, `fin_le`, reçue avec ses derniers tours), avec l'usage `resume` et
+// 6 échanges, sauf ce que `metadata` remplace. Ses tours ont été captés il y a 20 min (`arrivedAgo`), datés de la veille.
 async function session(
   owner: TenantContext,
   input: {
@@ -80,6 +80,7 @@ async function session(
   } = {},
 ) {
   const start = Date.now() - 24 * 60 * MINUTE;
+  const arrivedAgo = input.arrivedAgo ?? 20 * MINUTE;
   const texts = [
     'On résume les sessions avec Haiku.',
     'Je branche le worker.',
@@ -97,6 +98,7 @@ async function session(
       faits: facts(),
       usages: ['resume'],
       fin: true,
+      fin_le: new Date(Date.now() - arrivedAgo).toISOString(),
       ...input.metadata,
     },
     turns: texts.map((text, index) => ({
@@ -106,7 +108,7 @@ async function session(
     })),
     lastTurnAt: new Date(start + (texts.length - 1) * MINUTE),
   });
-  await arrived(seeded.sourceId, input.arrivedAgo ?? 20 * MINUTE);
+  await arrived(seeded.sourceId, arrivedAgo);
   const job: ResumeJob = {
     tenantId: owner.tenantId,
     sourceId: seeded.sourceId,
@@ -122,12 +124,13 @@ async function arrived(sourceId: string, ago: number) {
     .where(eq(turns.sourceId, sourceId));
 }
 
-// Un tour capté de plus, arrivé à l'instant.
+// Un tour capté de plus, arrivé il y a `ago` (à l'instant par défaut).
 async function addTurn(
   owner: TenantContext,
   sourceId: string,
   text: string,
   role: 'user' | 'assistant' = 'user',
+  ago = 0,
 ) {
   const [row] = await adminDb
     .insert(turns)
@@ -140,9 +143,24 @@ async function addTurn(
       ts: new Date(),
       captureMode: 'file',
       acl: [owner.userId],
+      createdAt: new Date(Date.now() - ago),
     })
     .returning({ id: turns.id });
   return row?.id ?? '';
+}
+
+// Une vraie fin reçue à l'instant, par la route des faits (record-facts.ts), qui date `fin_le`.
+async function finir(owner: TenantContext, sourceId: string) {
+  const externalId = `session-${crypto.randomUUID()}`;
+  await adminDb.update(sources).set({ externalId }).where(eq(sources.id, sourceId));
+  await recordFacts(owner, {
+    kind: 'claude_code',
+    external_id: externalId,
+    project: PROJECT,
+    accord: 2,
+    faits: facts(),
+    fin: true,
+  });
 }
 
 const answer = (text: string) => createFakeLlm({ texts: [text] });
@@ -278,7 +296,10 @@ describe('summarizeSession', () => {
 
   it('report : sans fin, un tour arrivé il y a 5 min remet le résumé en file dans 10 min, sans appel', async () => {
     const { paul } = await team();
-    const seeded = await session(paul, { metadata: { fin: false }, arrivedAgo: 5 * MINUTE });
+    const seeded = await session(paul, {
+      metadata: { fin: false, fin_le: null },
+      arrivedAgo: 5 * MINUTE,
+    });
     const llm = answer(SUMMARY);
 
     expect(await summarizeSession(seeded.job, { llm })).toBe('reporte');
@@ -294,12 +315,38 @@ describe('summarizeSession', () => {
 
   it('sans fin, après 15 min sans tour : le résumé est écrit', async () => {
     const { paul } = await team();
-    const seeded = await session(paul, { metadata: { fin: false }, arrivedAgo: 16 * MINUTE });
+    const seeded = await session(paul, {
+      metadata: { fin: false, fin_le: null },
+      arrivedAgo: 16 * MINUTE,
+    });
     const llm = answer(SUMMARY);
 
     expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');
 
     expect(mocks.enqueueResume).not.toHaveBeenCalled();
+  });
+
+  it('une session close qui reprend : sans nouvelle fin, un tour arrivé il y a 5 min la remet en file ; une nouvelle fin la fait résumer', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const llm = answer(SUMMARY);
+    expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');
+    await addTurn(paul, seeded.sourceId, 'On reprend la session.', 'user', 5 * MINUTE);
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('reporte');
+    expect(llm.calls).toHaveLength(1);
+    const [, options] = mocks.enqueueResume.mock.calls[0] ?? [];
+    expect(options.fin).toBe(false);
+    expect(options.delaySeconds).toBeGreaterThan(9 * 60);
+    expect(options.delaySeconds).toBeLessThanOrEqual(10 * 60);
+
+    await finir(paul, seeded.sourceId);
+    expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');
+    expect(llm.calls).toHaveLength(2);
+    expect((await resumeTurns(seeded.sourceId)).map((turn) => turn.externalId)).toEqual([
+      'leon:resume:1',
+      'leon:resume:2',
+    ]);
   });
 
   it('« rien à retenir » : aucun tour, et la fin suivante sans tour nouveau ne rappelle pas le modèle', async () => {
@@ -329,12 +376,21 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toHaveLength(1);
   });
 
-  it('liste blanche : seuls les types connus et les décisions sourcées restent, les relations viennent des faits', async () => {
+  // Tant que la capture ne marque pas les tours `user` injectés (T43), aucun tour ne prouve une `[décision]` : une
+  // notification de tâche ou le rapport d'un sous-agent, captés en tour `user`, ne passent pas pour l'utilisateur.
+  it('liste blanche : seuls les types connus et les décisions prouvées par une PR ou un commit restent, les relations viennent des faits', async () => {
     const { paul } = await team();
     const seeded = await session(paul, {
       metadata: { faits: facts({ branche: 'paul/[secret masqué]' }) },
     });
     const [userTurn, agentTurn] = seeded.turnIds;
+    const injected = await addTurn(
+      paul,
+      seeded.sourceId,
+      '<task-notification>Le sous-agent a fini : passer à Sonnet.</task-notification>',
+      'user',
+      20 * MINUTE,
+    );
     const llm = answer(
       [
         "## Où j'en suis",
@@ -350,6 +406,8 @@ describe('summarizeSession', () => {
         '- [décision] tout réécrire (source: inconnu)',
         '- [décision] sans source',
         '- [décision] la PR suffit (source: acme/leon#110)',
+        '- [décision] le commit suffit (source: 1a2b3c4)',
+        `- [décision] passer à Sonnet (source: ${injected})`,
         '## Autre titre',
         '- [question] garder la file ?',
       ].join('\n'),
@@ -367,8 +425,8 @@ describe('summarizeSession', () => {
         '- commit [[1a2b3c4]]',
         '- [en-cours] écrire les tests',
         '- [prochaine-étape] brancher l’indexation',
-        `- [décision] garder Haiku (source: ${userTurn})`,
         '- [décision] la PR suffit (source: acme/leon#110)',
+        '- [décision] le commit suffit (source: 1a2b3c4)',
         '- [question] garder la file ?',
       ].join('\n'),
     );
@@ -418,6 +476,7 @@ describe('summarizeSession', () => {
     const lastBefore = seeded.turnIds.at(-1) ?? '';
     await addTurn(paul, seeded.sourceId, 'On reprend la session.');
     const newLast = await addTurn(paul, seeded.sourceId, 'Reprise terminée.', 'assistant');
+    await finir(paul, seeded.sourceId);
     const llm = answer("## Où j'en suis\nLa reprise aquilon est faite.");
 
     expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');

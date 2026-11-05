@@ -24,6 +24,7 @@ import { buildResumePrompt, RIEN_A_RETENIR } from './resume-prompt';
 import {
   enqueueResume,
   getResumeBoss,
+  RESUME_END_SECONDS,
   RESUME_IDLE_SECONDS,
   RESUME_QUEUE,
   type ResumeJob,
@@ -36,8 +37,9 @@ import { linkPrs } from './start-context';
 // sous les droits de son auteur, puis un tour `leon:resume:<n>` de la session, indexé : la recherche trouve les
 // résumés. Rien sans l'usage `resume` de l'outil (C7 révisé), relu avant l'appel et à l'écriture.
 //
-// - Une session est close après une vraie fin (60 s, resume-queue.ts) ou 15 min sans tour : sans fin, un tour arrivé
-//   depuis moins de 15 min remet le résumé en file.
+// - Une session est close après une vraie fin (60 s, resume-queue.ts) ou 15 min sans tour : sans fin, ou après une
+//   fin suivie d'un tour plus tardif (la session a repris), un tour arrivé depuis moins de 15 min remet le résumé en
+//   file.
 // - Un appel par (session, dernier tour résumé) : `metadata.resume` vaut `{ dernier_tour, tour }`, le dernier tour
 //   capté que le résumé couvre et le n de son tour `leon:resume:<n>`. Une session qui reprend est résumée à nouveau ;
 //   les passages de l'ancien résumé sont supprimés, son tour reste, hors de la lecture (filters-sql.ts).
@@ -47,8 +49,9 @@ import { linkPrs } from './start-context';
 //   `[décision]` seulement si sa source est un id vérifié du condensé (D23) ; les relations viennent des faits.
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
-// shortcut: la capture ne marque pas encore les tours `user` injectés (T43) : le condensé les compte comme messages de
-// l'utilisateur, donc comme preuves d'une `[décision]`. Passer `injecte` à condenseSession quand la colonne existe.
+// shortcut: la capture ne marque pas encore les tours `user` injectés (T43) : en attendant, aucun tour ne prouve une
+// `[décision]`, seulement une PR ou un commit du condensé (D23, D36). Quand `turns.injecte` existe (lot 12), passer
+// `injecte` à condenseSession et garder ses preuves telles quelles.
 
 export const RESUME_MIN_ECHANGES = 6;
 const RESUME_MAX_CHARS = 1200;
@@ -63,7 +66,7 @@ export type ResumeOutcome = 'ecrit' | 'rien' | 'reporte' | 'sans-objet';
 type SourceRow = {
   project: string | null;
   faits: unknown;
-  fin: boolean;
+  fin_epoch: string | null;
   dernier: string | null;
   resume: boolean;
 };
@@ -93,7 +96,7 @@ async function readSession(
     rows: [source],
   } = await tx.execute<SourceRow>(sql`
     select s.metadata->>'project' as project, s.metadata->'faits' as faits,
-      coalesce(s.metadata->'fin' = 'true'::jsonb, false) as fin,
+      extract(epoch from (s.metadata->>'fin_le')::timestamptz) as fin_epoch,
       s.metadata->'resume'->>'dernier_tour' as dernier, ${USAGE_RESUME} as resume
     from sources s
     where s.tenant_id = ${ctx.tenantId} and s.id = ${sourceId} and s.owner_user_id = ${ctx.userId}
@@ -126,8 +129,13 @@ async function readSession(
   }));
   const last = turns.at(-1);
   if (!last || last.id === source.dernier) return null;
-  const idleMs = Date.now() - epochToDate(rows[0]?.arrived_epoch ?? 0).getTime();
-  if (!source.fin && idleMs < RESUME_IDLE_SECONDS * 1000) {
+  const arrivedMs = epochToDate(rows[0]?.arrived_epoch ?? 0).getTime();
+  // Une vraie fin couvre les tours arrivés jusqu'à 60 s après elle ; un tour plus tardif : la session a repris.
+  const closed =
+    source.fin_epoch !== null &&
+    arrivedMs <= epochToDate(source.fin_epoch).getTime() + RESUME_END_SECONDS * 1000;
+  const idleMs = Date.now() - arrivedMs;
+  if (!closed && idleMs < RESUME_IDLE_SECONDS * 1000) {
     return { reportSeconds: Math.ceil(RESUME_IDLE_SECONDS - idleMs / 1000) };
   }
 
@@ -276,7 +284,10 @@ export async function summarizeSession(
   }
   const condense = condenseSession({ faits: read.condenseFacts, turns: read.turns });
   const answer = await askModel(llm, condense);
-  const texte = isNothing(answer) ? null : filterResume(answer, condense.preuves, read.faits);
+  // Sans la marque des tours injectés, seules les PR et les commits prouvent (voir le shortcut en tête).
+  const turnIds = new Set(read.turns.map((turn) => turn.id));
+  const preuves = new Set([...condense.preuves].filter((id) => !turnIds.has(id)));
+  const texte = isNothing(answer) ? null : filterResume(answer, preuves, read.faits);
   const runId = await withTenant(ctx, (tx) => writeResume(tx, ctx, job.sourceId, read.last, texte));
   if (runId === null) return texte === null ? 'rien' : 'sans-objet';
   await enqueueIndexing(ctx, runId);

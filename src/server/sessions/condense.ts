@@ -11,7 +11,8 @@ import { oneLine } from '@/server/memory/labels';
 // injecté (D36). Chaque champ capté est mis sur une ligne et échappé (prompt-guard.ts), ici et non dans le prompt :
 // la borne compte ce que lit le modèle. Module pur : ni base, ni réseau.
 // shortcut: la capture ne pose pas encore `injecte` (colonne `turns.injecte`, partie capture de T43) ; un tour injecté
-// non marqué compte comme message de l'utilisateur. À brancher avant que T23 ne passe les tours.
+// non marqué compte comme message de l'utilisateur. En attendant, le worker du résumé n'accepte aucun tour comme
+// preuve (resume-worker.ts).
 
 export const CONDENSE_MAX_CHARS = 40_000;
 // Les faits ne prennent pas plus de la moitié : la fin de la session est ce qui se résume.

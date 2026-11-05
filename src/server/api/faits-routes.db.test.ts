@@ -88,6 +88,7 @@ describe('POST /api/v1/faits', () => {
           branche: 'paul/faits',
           accord: 3,
           fin: true,
+          fin_le: expect.any(String),
         },
       },
     ]);
@@ -307,11 +308,13 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
-  it('garde `fin` vrai une fois vu : un rattrapage qui suit le SessionEnd ne l’efface pas', async () => {
+  it('garde `fin` vrai une fois vu, et sa date : un rattrapage qui suit le SessionEnd ne les efface pas', async () => {
     const { paul, paulToken } = await setup();
     const first = { ...validBody(), fin: true };
 
     await apiRequest(API_PATHS.faits, { token: paulToken, body: first });
+    const [closed] = await storedMetadata(paul, first.external_id);
+    expect(Date.parse(String(closed?.metadata.fin_le))).toBeGreaterThan(Date.now() - 60_000);
     const response = await apiRequest(API_PATHS.faits, {
       token: paulToken,
       body: { ...first, fin: false },
@@ -320,6 +323,7 @@ describe('POST /api/v1/faits', () => {
     expect(response.status).toBe(202);
     const [stored] = await storedMetadata(paul, first.external_id);
     expect(stored?.metadata.fin).toBe(true);
+    expect(stored?.metadata.fin_le).toBe(closed?.metadata.fin_le);
   });
 
   // L'usage `resume` (C7 révisé) n'arrive dans le corps qu'avec T24 : il est rangé ici à la main.

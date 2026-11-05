@@ -1,9 +1,10 @@
-import { and, count, desc, eq, inArray, max, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, max, notLike, or, sql } from 'drizzle-orm';
 import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
+import { RESUME_LIKE } from '@/server/search/filters-sql';
 import { SOURCE_KIND_LABELS } from './labels';
 import type { ChannelHealth } from './stale';
 
@@ -64,7 +65,8 @@ export async function listSources(
         : await tx
             .select({ sourceId: turns.sourceId, turnCount: count() })
             .from(turns)
-            .where(inArray(turns.sourceId, ids))
+            // Sans les résumés de Leon (T23) : ni des tours de la session, ni son dernier run.
+            .where(and(inArray(turns.sourceId, ids), notLike(turns.externalId, RESUME_LIKE)))
             .groupBy(turns.sourceId);
     const runs =
       ids.length === 0
@@ -77,7 +79,13 @@ export async function listSources(
               updatedAt: ingestRuns.updatedAt,
             })
             .from(ingestRuns)
-            .where(inArray(ingestRuns.sourceId, ids))
+            .where(
+              and(
+                inArray(ingestRuns.sourceId, ids),
+                sql`not exists (select 1 from turns t
+                  where t.id = any(${ingestRuns.turnIds}) and t.external_id like ${RESUME_LIKE})`,
+              ),
+            )
             .orderBy(ingestRuns.sourceId, desc(ingestRuns.createdAt), desc(ingestRuns.id));
 
     const countBySource = new Map(turnCounts.map((row) => [row.sourceId, row.turnCount]));

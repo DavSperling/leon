@@ -27,8 +27,10 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
 // Les faits d'une session vont dans `sources.metadata` de la source du porteur (D4), créée si elle manque :
 // jamais dans celle d'un collègue, même partagée avec lui (upsertSource filtre sur le propriétaire). L'envoi
 // est idempotent : les faits sont remplacés, sauf `externe` et `fin`, qui restent vrais une fois vus (un
-// rattrapage peu après le SessionEnd envoie `fin: false`, le fichier venant de changer). Rend la source, et si son
-// outil a l'usage `resume` (C7 révisé, rangé dans `metadata.usages`) : la route met alors le résumé en file (T23).
+// rattrapage peu après le SessionEnd envoie `fin: false`, le fichier venant de changer). `fin_le` date la dernière
+// vraie fin : un tour arrivé après elle dit au résumé que la session a repris (resume-worker.ts). Rend la source, et
+// si son outil a l'usage `resume` (C7 révisé, rangé dans `metadata.usages`) : la route met alors le résumé en file
+// (T23).
 export async function recordFacts(
   ctx: TenantContext,
   payload: SessionFactsPayload,
@@ -44,6 +46,7 @@ export async function recordFacts(
     await recordProject(tx, sourceId, payload.project);
     const externe = sql`(${faits.externe}::boolean or coalesce(${sources.metadata} #> '{faits,externe}' = 'true'::jsonb, false))`;
     const fin = sql`(${payload.fin}::boolean or coalesce(${sources.metadata} -> 'fin' = 'true'::jsonb, false))`;
+    const finLe = payload.fin ? sql`jsonb_build_object('fin_le', now())` : sql`'{}'::jsonb`;
     const [updated] = await tx
       .update(sources)
       .set({
@@ -51,7 +54,7 @@ export async function recordFacts(
           'faits', ${JSON.stringify(faits)}::jsonb || jsonb_build_object('externe', ${externe}),
           'branche', ${faits.branche}::text,
           'accord', ${payload.accord}::int,
-          'fin', ${fin})`,
+          'fin', ${fin}) || ${finLe}`,
       })
       .where(eq(sources.id, sourceId))
       .returning({

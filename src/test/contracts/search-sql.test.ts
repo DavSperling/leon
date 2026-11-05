@@ -35,16 +35,13 @@ describe('requête de la recherche', () => {
   });
 });
 
-// T25 : la clé du dépôt n'entre jamais dans le texte de la requête, et le dépôt d'une source GitHub, écrit avec sa
-// casse, se compare en minuscules.
+// T25 : la clé du dépôt n'entre jamais dans le texte de la requête (la casse du dépôt GitHub : search.db.test.ts).
 describe('filtre depot', () => {
-  it('passe la clé en paramètre et compare le dépôt GitHub en minuscules', () => {
+  it('passe la clé en paramètre', () => {
     const key = "github.com/acme/leon' or true --";
     const query = new PgDialect().sqlToQuery(sourceConditions({ depot: key }));
 
     expect(query.sql).not.toContain('acme');
     expect(query.params).toContain(key);
-    expect(query.sql).toContain("lower(s.metadata->'origin'->>'repo')");
-    expect(query.sql).toContain("s.metadata->>'project'");
   });
 });

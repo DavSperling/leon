@@ -567,6 +567,7 @@ describe('outil search', () => {
     expect(since.text).toContain('depuis');
     expect(depot).toMatchObject({ isError: true });
     expect(depot.text).toContain('depot');
+    expect(depot.text).not.toContain('gitlab');
   });
 
   it("dit qu'une personne est inconnue plutôt que de chercher chez tout le monde", async () => {

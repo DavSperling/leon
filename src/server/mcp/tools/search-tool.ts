@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import type { SourceKind } from '@/capture/turn';
+import { PROJECT_INPUT_MAX_CHARS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { recordReads } from '@/server/memory/read-log';
@@ -68,7 +68,7 @@ export const SearchInputSchema = z.object({
     .describe('Limit to what one person wrote: their name, email or username in the tool.'),
   depot: z
     .string()
-    .max(FILTER_MAX_CHARS)
+    .max(PROJECT_INPUT_MAX_CHARS)
     .nullish()
     .describe(
       'Limit to one code repository: its coding sessions, their summaries, and its GitHub pull requests and issues. Write github.com/owner/repo or owner/repo.',

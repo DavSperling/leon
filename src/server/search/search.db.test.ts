@@ -795,9 +795,10 @@ describe('filtres', () => {
     // Une clé de dossier : aucune source GitHub n'a ce projet.
     expect(await inDepot(DOSSIER)).toEqual(['Session dossier']);
     expect(await inDepot('github.com/acme/inconnu')).toEqual([]);
+    // Croisé avec un outil : `outil and (session or github)`, et non `(outil and session) or github`.
     expect(
-      sorted(await search(alice, word, { filters: { depot: LEON, tools: ['github'] } })),
-    ).toEqual(['PR leon']);
+      sorted(await search(alice, word, { filters: { depot: LEON, tools: ['claude_code'] } })),
+    ).toEqual(['Session leon']);
     // Bob voit sa propre session du dépôt.
     expect(titles(await search(bob, word, { filters: { depot: LEON } })).toSorted()).toEqual([
       'PR leon',

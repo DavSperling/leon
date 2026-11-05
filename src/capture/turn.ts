@@ -107,7 +107,9 @@ export const PROJECT_KEY_PATTERN =
 // Une clé de projet reçue en paramètre (le point du matin, le bloc de démarrage), de la même forme que `source.project`.
 export const ProjectSchema = z.string().min(1).max(200).regex(PROJECT_KEY_PATTERN);
 
-const PROJECT_KEY_MAX_CHARS = 200;
+// Ce que les outils `briefing` et `search` lisent comme projet : l'adresse https d'un dépôt au nom long (39
+// caractères de propriétaire, 100 de dépôt sur GitHub) dépasse les 200 de la clé.
+export const PROJECT_INPUT_MAX_CHARS = 300;
 const OWNER_AND_REPO = /^[a-z0-9._-]+\/[a-z0-9._-]+$/;
 
 // La clé du projet (D9) d'après ce qu'écrit l'utilisateur ou son assistant (outils `briefing` et `search` du MCP) :
@@ -125,9 +127,7 @@ export function projectKeyFromInput(raw: string): string | null {
     : OWNER_AND_REPO.test(path) && !path.split('/').some((part) => part === '.' || part === '..')
       ? `github.com/${path}`
       : null;
-  return key !== null && key.length <= PROJECT_KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(key)
-    ? key
-    : null;
+  return key !== null && ProjectSchema.safeParse(key).success ? key : null;
 }
 
 export const IngestPayloadSchema = z

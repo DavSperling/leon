@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { BriefingResponseSchema } from '@/capture/api-contract';
-import { projectKeyFromInput } from '@/capture/turn';
+import { PROJECT_INPUT_MAX_CHARS, projectKeyFromInput } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { briefingResponse, latestBriefingProject } from '@/server/briefing/briefings';
 import { env } from '@/server/env';
@@ -13,8 +13,6 @@ import { guarded } from './guarded';
 // droits du porteur du jeton : le dernier point prêt, ou le message d'attente (le recalcul est alors mis en file), ou,
 // sans modèle sur ce serveur, le message qui dit qu'aucun point n'est préparé. Le point rendu est noté au journal des
 // lectures, une ligne par source fournie au modèle.
-
-const PROJECT_INPUT_MAX_CHARS = 300;
 
 const InputSchema = z.object({
   projet: z

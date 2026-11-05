@@ -68,10 +68,9 @@ export function readToolFilters(
   const depot = cleanFilterValue(input.depot);
   if (depot !== '') {
     const key = projectKeyFromInput(depot);
+    // Sans recopier l'entrée : une adresse de remote peut porter un jeton.
     if (!key) {
-      return {
-        error: `Unknown repository for depot: "${depot}". Write github.com/owner/repo or owner/repo.`,
-      };
+      return { error: 'Unknown repository for depot. Write github.com/owner/repo or owner/repo.' };
     }
     filters.depot = key;
   }

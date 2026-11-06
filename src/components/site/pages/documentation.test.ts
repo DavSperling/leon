@@ -242,6 +242,9 @@ describe('la page Documentation', () => {
       expect(resume).toContain(
         locale === 'en' ? 'Leon’s model provider' : 'fournisseur du modèle de Leon',
       );
+      // Le même usage couvrira l'état des fils (lot 12, D23) : le texte d'accord le dit déjà, la page aussi.
+      expect(readText('src/cli/install-hooks.ts')).toContain('the state of your work threads');
+      expect(resume).toContain(locale === 'en' ? 'your work threads' : 'vos fils de travail');
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
     },
   );

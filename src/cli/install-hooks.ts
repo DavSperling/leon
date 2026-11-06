@@ -128,11 +128,13 @@ const CONSENT_LINES = [
 
 // Le texte de l'usage `resume` (C7 révisé), testé mot pour mot : ce que le serveur envoie au fournisseur du modèle de
 // Leon (le condensé de T22, à partir de 6 échanges, après la clôture de D9), et où va le résumé (T23 : à l'auteur seul,
-// indexé ; jamais dans le bloc de démarrage, D25), et la limite du retrait (resume-worker.ts).
+// indexé ; jamais dans le bloc de démarrage, D25), et la limite du retrait (resume-worker.ts). Au futur, l'état des fils
+// du lot 12 (D23, D30 : l'usage `resume` le couvre aussi), pour que le lot 12 n'ait pas à redemander l'accord.
 const RESUME_LINES = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
   "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries; one already planned may still be written within an hour.",
+  "  - Later, the same usage will also keep the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server will send the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see to Leon's model provider, which will write that state. It will stay private to you, like the summary.",
 ];
 
 export type Json = Record<string, unknown>;

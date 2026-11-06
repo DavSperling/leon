@@ -14,6 +14,7 @@ import {
 } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
+import { OUTILS, type Outil } from './hook-commands';
 import {
   countOf,
   createFactsSender,
@@ -23,6 +24,7 @@ import {
   importClaudeCode,
   parseSince,
 } from './import-claude-code';
+import { codexHome, installCodexHook, uninstallCodexHook } from './install-codex';
 import { installHooks } from './install-hooks';
 import {
   type LoginDeps,
@@ -62,7 +64,7 @@ const HELP = `Usage: leon <command>
 
 Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
-                       login) if it is not yet, then put the hooks in the code tools found here (Claude Code; Codex,
+                       login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex;
                        Cursor and Gemini are detected but not supported yet), after showing what is sent and asking.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
@@ -82,6 +84,10 @@ Commands:
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
+  crochet <tool> <event>
+                       The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
+                       input). For now: \`crochet codex demarrage\`, which prints the same block as briefing, in the
+                       format Codex expects. Any other tool or event prints nothing
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -101,10 +107,11 @@ Commands:
                        after confirmation (only the consent when the hooks are already there)
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
+      --outil codex        Codex instead: its SessionStart hook in \${CODEX_HOME:-~/.codex}/hooks.json
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code. The launcher
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
-      --outil <tool>       the tool to remove: claude_code (the only one for now, and the default)
+      --outil <tool>       the tool to remove: claude_code (the default) or codex
   --version            Print the version of this CLI ("dev" when run from a clone)
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
@@ -167,9 +174,10 @@ async function runImport(args: string[]): Promise<number> {
 
 // Le crochet SessionStart ajoute stdout au contexte de la session : seul le bloc de démarrage y passe,
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
-async function runBriefingCommand(): Promise<number> {
+async function runBriefingCommand(outil?: Outil): Promise<number> {
   try {
     return await runBriefing({
+      ...(outil ? { outil } : {}),
       stdin: process.stdin,
       env: process.env,
       cwd: process.cwd(),
@@ -280,8 +288,11 @@ function createAsker(): { ask: (question: string) => Promise<string | null>; clo
 async function runInstallHooks(args: string[]): Promise<number> {
   const { values } = parseArgs({
     args,
-    options: { oui: { type: 'boolean' }, depot: { type: 'string' } },
+    options: { oui: { type: 'boolean' }, depot: { type: 'string' }, outil: { type: 'string' } },
   });
+  if (values.outil !== undefined && values.outil !== 'claude_code' && values.outil !== 'codex') {
+    throw new Error('--outil: unknown tool (claude_code or codex).');
+  }
   const repoDir = values.depot ? resolve(values.depot) : CLI_REPO_DIR;
   if (!(await isLeonRepo(repoDir))) {
     throw new Error(
@@ -299,6 +310,12 @@ async function runInstallHooks(args: string[]): Promise<number> {
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
+    if (values.outil === 'codex') {
+      return await installCodexHook(
+        { codexDir: codexHome(io.home, process.env), home: io.home, assumeYes },
+        io,
+      );
+    }
     return await installHooks(
       { repoDir, configDir, home: io.home, assumeYes, interactive: process.stdin.isTTY === true },
       io,
@@ -313,9 +330,15 @@ async function runInstallHooks(args: string[]): Promise<number> {
 // arrête la commande sans rien retirer. Le message ne recopie pas la valeur reçue.
 async function runUninstallHooks(args: string[]): Promise<number> {
   const { values } = parseArgs({ args, options: { outil: { type: 'string' } } });
-  const tools: readonly string[] = CODE_SESSION_KINDS;
+  const tools: readonly string[] = [...CODE_SESSION_KINDS, ...OUTILS];
   if (values.outil !== undefined && !tools.includes(values.outil)) {
-    throw new Error(`--outil: unknown tool (the only one for now: ${tools.join(', ')}).`);
+    throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
+  }
+  if (values.outil === 'codex') {
+    return uninstallCodexHook(
+      { codexDir: codexHome(homedir(), process.env), home: homedir() },
+      { out: console.log, err: console.error },
+    );
   }
   const configDir = claudeConfigDir(process.env);
   if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
@@ -417,6 +440,13 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
+    // Les crochets des autres outils (C6) : au lot 4, le démarrage de Codex. Le reste ne fait rien et sort avec 0, pour
+    // qu'un crochet d'une version plus récente ne gêne jamais l'outil.
+    if (command === 'crochet') {
+      const [outil, evenement] = args;
+      if (outil === 'codex' && evenement === 'demarrage') return await runBriefingCommand(outil);
+      return 0;
+    }
     if (command === 'setup') return await runSetupCommand(args);
     if (command === 'update') return await runUpdateCommand(args);
     if (command === 'login') return await runLoginCommand(args);

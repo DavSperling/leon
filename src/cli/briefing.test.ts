@@ -230,6 +230,7 @@ describe('runBriefing', () => {
   let notAgreed: string;
   let withdrawn: string;
   let connected: string; // l'accord en version 2, et une connexion de `leon login`
+  let codex: string; // l'accord de Codex en version 2 (T17), et pas celui de Claude Code
   const SAVED = { url: 'https://leon.example', token: `leon_${'s'.repeat(43)}` };
   beforeAll(async () => {
     homes = await mkdtemp(join(tmpdir(), 'leon-point-'));
@@ -237,6 +238,8 @@ describe('runBriefing', () => {
     notAgreed = join(homes, 'sans-accord');
     withdrawn = join(homes, 'retire');
     connected = join(homes, 'connecte');
+    codex = join(homes, 'codex');
+    await writeConsent(codex, 'codex', 2);
     await writeConsent(agreed, 'claude_code', 2);
     await writeConsent(withdrawn, 'claude_code', 0);
     await writeConsent(connected, 'claude_code', 2);
@@ -267,6 +270,7 @@ describe('runBriefing', () => {
     git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
     scheduleUpdate?: () => Promise<unknown>;
+    outil?: 'codex';
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -288,6 +292,7 @@ describe('runBriefing', () => {
         out: (text) => out.push(text),
         err: (text) => err.push(text),
         ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
+        ...(input.outil ? { outil: input.outil } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -312,6 +317,50 @@ describe('runBriefing', () => {
     expect(asked()).toEqual({ projet: PROJECT, branche: 'amos/etude', session: SESSION });
     expect(out).toEqual([BLOCK]);
     expect(err).toEqual([]);
+  });
+
+  it('pour Codex (crochet codex demarrage), enveloppe le bloc dans la sortie JSON de C5, même sous ~/.codex', async () => {
+    const { run, out, err, asked } = setup({
+      stdin: Readable.from([
+        JSON.stringify({
+          session_id: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
+          transcript_path: join(codex, '.codex', 'sessions', '2026', '11', '06', 'rollout.jsonl'),
+          cwd: '/projets/leon',
+          hook_event_name: 'SessionStart',
+          source: 'startup',
+        }),
+      ]),
+      home: codex,
+      outil: 'codex',
+      remotes: { '/projets/leon': 'git@github.com:DavSperling/Leon.git' },
+      branches: { '/projets/leon': 'main' },
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(asked()).toEqual({
+      projet: PROJECT,
+      branche: 'main',
+      session: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
+    });
+    expect(out.map((text) => JSON.parse(text))).toEqual([
+      { hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: BLOCK } },
+    ]);
+    expect(err).toEqual([]);
+  });
+
+  it('pour Codex, sans son accord à lui, n’envoie rien et n’écrit rien sur la sortie standard', async () => {
+    const { run, out, fetchImpl, git } = setup({
+      stdin: Readable.from([hookJson('/projets/leon')]),
+      home: agreed, // l'accord de Claude Code seul
+      outil: 'codex',
+    });
+
+    expect(await run()).toBe(0);
+
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(git).not.toHaveBeenCalled();
+    expect(out).toEqual([]);
   });
 
   it('sans JSON du crochet, prend le dossier d’où pnpm a été lancé (INIT_CWD)', async () => {

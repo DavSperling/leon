@@ -14,6 +14,10 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { USAGES, type Usage } from '../capture/api-contract';
 import type { CodeSessionKind } from '../capture/turn';
+import type { Outil } from './hook-commands';
+
+// Les outils qui ont une entrée : ceux que Leon capte, et ceux dont il pose seulement les crochets (Codex au lot 4).
+export type ConsentTool = CodeSessionKind | Outil;
 
 // Les gestes (C1) partent à partir de cette version : celle qu'écrit l'installateur (install-hooks.ts).
 export const FACTS_VERSION = 2;
@@ -73,10 +77,7 @@ async function readEntries(home: string): Promise<Record<string, unknown> | null
 
 // La version à transmettre avec les faits de cet outil (C2), la date de l'accord et ses usages connus, ou null si
 // l'accord ne couvre pas les gestes : seuls les textes partent alors, comme avant ce chantier.
-export async function factsConsent(
-  home: string,
-  tool: CodeSessionKind,
-): Promise<FactsConsent | null> {
+export async function factsConsent(home: string, tool: ConsentTool): Promise<FactsConsent | null> {
   const entry = EntrySchema.safeParse((await readEntries(home))?.[tool]);
   if (!entry.success || entry.data.version < FACTS_VERSION) return null;
   const usages = USAGES.filter((usage) => entry.data.usages?.[usage] !== undefined);
@@ -94,14 +95,14 @@ export async function factsConsent(
 // Version 0 (`leon retirer-crochets`, uninstall-hooks.ts) ou fichier illisible : cet outil n'envoie plus rien, ni
 // textes ni gestes. Un outil absent d'un fichier lisible, ou un fichier absent, garde l'envoi des textes d'avant ce
 // chantier (C7).
-export async function consentWithdrawn(home: string, tool: CodeSessionKind): Promise<boolean> {
+export async function consentWithdrawn(home: string, tool: ConsentTool): Promise<boolean> {
   const entries = await readEntries(home);
   return entries === null || WithdrawnSchema.safeParse(entries[tool]).success;
 }
 
 // Le retrait est bien écrit : le fichier se lit et l'outil y est en version 0. Sinon, `leon retirer-crochets`
 // l'écrit (et répare ainsi un fichier coupé).
-export async function withdrawalRecorded(home: string, tool: CodeSessionKind): Promise<boolean> {
+export async function withdrawalRecorded(home: string, tool: ConsentTool): Promise<boolean> {
   const entries = await readEntries(home);
   return entries !== null && WithdrawnSchema.safeParse(entries[tool]).success;
 }
@@ -137,7 +138,7 @@ async function writeEntries(home: string, outils: Record<string, unknown>): Prom
 // les entrées des autres ; un fichier illisible est réécrit avec ce seul outil.
 export async function writeConsent(
   home: string,
-  tool: CodeSessionKind,
+  tool: ConsentTool,
   version: number,
   now: Date = new Date(),
 ): Promise<void> {
@@ -152,7 +153,7 @@ export async function writeConsent(
 // un accord qui couvre les gestes : sans lui, rien n'est écrit et l'appel échoue.
 async function addDated(
   home: string,
-  tool: CodeSessionKind,
+  tool: ConsentTool,
   field: 'usages' | 'refus',
   usage: Usage,
   now: Date,
@@ -171,9 +172,9 @@ async function addDated(
   });
 }
 
-export const addUsage = (home: string, tool: CodeSessionKind, usage: Usage, now = new Date()) =>
+export const addUsage = (home: string, tool: ConsentTool, usage: Usage, now = new Date()) =>
   addDated(home, tool, 'usages', usage, now);
 
 // Un refus (C7 révisé, A16) : l'usage n'est plus proposé, jusqu'au retrait.
-export const addRefusal = (home: string, tool: CodeSessionKind, usage: Usage, now = new Date()) =>
+export const addRefusal = (home: string, tool: ConsentTool, usage: Usage, now = new Date()) =>
   addDated(home, tool, 'refus', usage, now);

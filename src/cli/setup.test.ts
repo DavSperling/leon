@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type Connection, writeConnection } from './connection';
 import { addUsage, consentPath, factsConsent, writeConsent } from './consent';
-import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
+import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
@@ -721,7 +721,6 @@ describe('setup : les outils de code', () => {
   });
 
   it.each([
-    ['Codex', '.codex'],
     ['Cursor', '.cursor'],
     ['Gemini / Antigravity', '.gemini'],
   ] as const)(
@@ -741,16 +740,30 @@ describe('setup : les outils de code', () => {
     },
   );
 
+  it('Codex présent : son crochet de démarrage est posé et son accord écrit', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.codex'));
+
+    const run = await setup({ yes: true });
+
+    expect(run.code).toBe(0);
+    const { hooks } = JSON.parse(await readFile(join(home, '.codex', 'hooks.json'), 'utf8'));
+    expect(hooks.SessionStart[0].hooks[0].command).toBe(
+      launcherCommand(home, 'codex', 'demarrage'),
+    );
+    expect(run.output).toContain('Codex: hook installed (approve it with /hooks in Codex)');
+  });
+
   it('CODEX_HOME remplace ~/.codex : c’est ce dossier qu’on cherche', async () => {
     const elsewhere = join(dir, 'codex-ailleurs');
     await mkdir(join(home, '.codex'));
 
     const absent = await setup({}, { env: { CODEX_HOME: elsewhere } });
     await mkdir(elsewhere);
-    const present = await setup({}, { env: { CODEX_HOME: elsewhere } });
+    const present = await setup({}, { env: { CODEX_HOME: elsewhere }, answers: ['n'] });
 
     expect(absent.output).toContain('Codex: not found');
-    expect(present.output).toContain('Codex: not supported yet');
+    expect(present.output).toContain('Codex: skipped (not confirmed)');
     expect(await readdir(elsewhere)).toEqual([]);
     expect(await readdir(join(home, '.codex'))).toEqual([]);
   });
@@ -766,7 +779,7 @@ describe('setup : les outils de code', () => {
     expect(summary).toEqual([
       'Summary',
       '  Claude Code: hooks installed',
-      '  Codex: not supported yet',
+      '  Codex: hook installed (approve it with /hooks in Codex)',
       '  Cursor: not found',
       '  Gemini / Antigravity: not found',
       '',
@@ -814,7 +827,7 @@ describe('setup : relancé', () => {
     await installLeon();
     await hasClaudeCode();
     await mkdir(join(home, '.codex'));
-    const first = await setup({}, { answers: ['y'] });
+    const first = await setup({}, { answers: ['y', 'y'] });
     expect(first.code).toBe(0);
     const before = await snapshot();
 

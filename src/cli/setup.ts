@@ -23,6 +23,7 @@ import { type Connection, readConnection } from './connection';
 import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
+import { addCodexHook, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
 import {
   addLeonHooks,
   errorCode,
@@ -170,13 +171,30 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
   return { failed: false, status: inPlace ? 'hooks installed' : 'skipped (not confirmed)' };
 }
 
+// Le crochet de Codex (T17), comme celui de Claude Code : la ligne finale distingue un « non » d'une installation.
+async function installCodex(codexDir: string, ctx: InstallContext): Promise<Installed> {
+  const code = await installCodexHook({ codexDir, home: ctx.home, assumeYes: ctx.yes }, ctx);
+  if (code !== 0) return { failed: true, status: 'hook NOT installed (see above)' };
+  const settings = parseSettings(await load(join(codexDir, CODEX_HOOKS_FILE)));
+  const inPlace =
+    settings !== null &&
+    addCodexHook(settings, ctx.home)?.action === 'inchange' &&
+    (await factsConsent(ctx.home, 'codex')) !== null;
+  return {
+    failed: false,
+    status: inPlace
+      ? 'hook installed (approve it with /hooks in Codex)'
+      : 'skipped (not confirmed)',
+  };
+}
+
 // Le dossier de réglages de Claude Code (CLAUDE_CONFIG_DIR, sinon ~/.claude), comme claudeConfigDir (env.ts), mais sous
 // le dossier personnel reçu : les tests n'ont pas le vrai.
 const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
 // Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire ; Codex, Cursor et Gemini à leurs lots) :
+// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex au lot 4 ; Cursor et Gemini à leurs lots) :
 // les autres sont détectés mais dits « not supported yet ».
 const TOOLS: {
   label: string;
@@ -188,7 +206,7 @@ const TOOLS: {
     dir: claudeDir,
     install: installClaudeCode,
   },
-  { label: 'Codex', dir: (home, env) => env.CODEX_HOME || join(home, '.codex') },
+  { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
   { label: 'Cursor', dir: (home) => join(home, '.cursor') },
   { label: 'Gemini / Antigravity', dir: (home) => join(home, '.gemini') },
 ];

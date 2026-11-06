@@ -133,7 +133,7 @@ async function withdrawConsent(home: string, deps: UninstallDeps): Promise<boole
 
 // Le lanceur ne part qu'avec le dernier outil, et seulement si tout a été retiré : des réglages restés en place
 // appelleraient un lanceur disparu. Le code de sortie ne change pas : un lanceur qui reste n'est pas un échec.
-async function removeUnusedLauncher(home: string, deps: UninstallDeps): Promise<void> {
+export async function removeUnusedLauncher(home: string, deps: UninstallDeps): Promise<void> {
   if (await anyToolInstalled(home)) return;
   const path = launcherPath(home);
   try {

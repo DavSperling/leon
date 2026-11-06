@@ -10,12 +10,19 @@ import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 
-// La file du résumé (T23) est simulée : le vrai pg-boss est vérifié dans resume-queue.db.test.ts.
-const { enqueueResume } = vi.hoisted(() => ({ enqueueResume: vi.fn() }));
+// Les files du résumé (T23) et du rangement (T40) sont simulées : le vrai pg-boss est vérifié dans
+// resume-queue.db.test.ts et threads-queue.db.test.ts.
+const { enqueueResume, enqueueRangement } = vi.hoisted(() => ({
+  enqueueResume: vi.fn(),
+  enqueueRangement: vi.fn(),
+}));
 vi.mock('@/server/sessions/resume-queue', () => ({ enqueueResume }));
+vi.mock('@/server/sessions/threads-queue', () => ({ enqueueRangement }));
 beforeEach(() => {
   enqueueResume.mockReset();
   enqueueResume.mockResolvedValue(undefined);
+  enqueueRangement.mockReset();
+  enqueueRangement.mockResolvedValue(undefined);
 });
 
 async function setup() {
@@ -421,10 +428,34 @@ describe('POST /api/v1/faits', () => {
     ]);
   });
 
+  it('sans aucun usage : met la session en file de rangement, avec sa fin (T40)', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    const [source] = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, paul.userId), eq(sources.externalId, body.external_id)));
+    const job = { tenantId: paul.tenantId, sourceId: source?.id, ownerUserId: paul.userId };
+    expect(enqueueRangement.mock.calls).toEqual([
+      [job, { fin: false }],
+      [job, { fin: true }],
+    ]);
+    expect(enqueueResume).not.toHaveBeenCalled();
+  });
+
   it('une file indisponible ne fait pas perdre les faits : 202', async () => {
     const { paul, paulToken } = await setup();
     const body = { ...validBody(), usages: ['resume'] };
     enqueueResume.mockRejectedValue(new Error('pg-boss en panne'));
+    enqueueRangement.mockRejectedValue(new Error('pg-boss en panne'));
 
     const response = await apiRequest(API_PATHS.faits, {
       token: paulToken,

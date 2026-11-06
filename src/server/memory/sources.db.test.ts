@@ -6,7 +6,7 @@ import { CAPTURE_KINDS } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
-import { createTestTenant, seedSource } from '@/test/fixtures';
+import { createTestTenant, seedSource, seedThread } from '@/test/fixtures';
 import { channelHealth, listSources } from './sources';
 
 const lastCapture = (channels: Array<{ kind: string; lastCaptureAt: Date | null }>, kind: string) =>
@@ -82,6 +82,15 @@ describe('listSources', () => {
       turnCount: 1,
       lastRun: { status: 'queued', step: 'index' },
     });
+  });
+
+  it('ne donne pas les fils de travail de Paul : ce ne sont pas ses sources (T40)', async () => {
+    const { paul, ids } = await seedRightsScenario();
+    await seedThread(paul);
+
+    const { sources: rows } = await listSources(paul);
+
+    expect(rows.map((row) => row.id)).toEqual([ids.paulSource]);
   });
 
   it('ne compte pas le résumé de Leon parmi les tours, ni son indexation comme dernier run (T23)', async () => {

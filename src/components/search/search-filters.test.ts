@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, OFFERED_NATURES, TOOL_KINDS } from '@/capture/turn';
 import { parseQuery } from '@/server/search/parse-query';
 import { EXAMPLES, EXAMPLES_EN, SYNTAX, SYNTAX_EN } from './examples';
 import { buildActiveChips, buildMenus } from './search-filters';
@@ -136,7 +136,7 @@ describe('les entrées des menus de filtre', () => {
   it('écrivent chacune un seul filtre, que la recherche reconnaît', () => {
     const options = buildMenus('').flatMap((menu) => menu.options.map((o) => ({ menu, o })));
 
-    expect(options.length).toBeGreaterThan(SOURCE_KINDS.length + ITEM_NATURES.length);
+    expect(options.length).toBeGreaterThan(TOOL_KINDS.length + ITEM_NATURES.length);
     for (const { menu, o } of options) {
       const where = `${menu.name} · ${o.label}`;
       const q = queryOf(o.href);
@@ -160,14 +160,17 @@ describe('les entrées des menus de filtre', () => {
   it('proposent chaque outil et chaque type du code, avec leur propre identifiant', () => {
     const [outils, types] = buildMenus('');
 
-    for (const kind of SOURCE_KINDS) {
+    // Les outils seulement : le fil de travail n'est l'outil de personne (T39), il a sa nature dans `type`.
+    for (const kind of TOOL_KINDS) {
       expect(parseQuery(`outil:${kind}`, NOW).filters.tools, kind).toEqual([kind]);
     }
     for (const nature of ITEM_NATURES) {
       expect(parseQuery(`type:${nature}`, NOW).filters.natures, nature).toEqual([nature]);
     }
-    expect(outils?.options).toHaveLength(SOURCE_KINDS.length);
-    expect(types?.options).toHaveLength(ITEM_NATURES.length);
+    expect(outils?.options).toHaveLength(TOOL_KINDS.length);
+    // Le fil de travail est accepté par le filtre, pas proposé : la recherche ne le rend jamais (D35).
+    expect(types?.options).toHaveLength(OFFERED_NATURES.length);
+    expect(types?.options.map((option) => option.label)).not.toContain('Fil de travail');
   });
 
   it('ne donnent jamais deux fois le même libellé dans un menu', () => {

@@ -1,4 +1,5 @@
-import { boolean, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { organizations, users } from './auth';
 
@@ -85,4 +86,33 @@ export const readLog = pgTable('read_log', {
   passageId: uuid('passage_id'),
   acl: acl(),
   at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Les versions de la mémoire (0052-versions-memoire.sql, C12 du plan de la mémoire à disposition) : l'état d'un fil
+// ou une note, v1, v2, v3, en ajout seul, privés à leur auteur (acl = [owner_user_id], contrôlé par la base). Seul
+// deleteAccount supprime des lignes. Ni tour, ni passage : seule src/server/memory/versions.ts les lit.
+export const versionsMemoire = pgTable('versions_memoire', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: tenantId(),
+  ownerUserId: uuid('owner_user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // Un fil ou une note ; clé étrangère composée (tenant_id, source_id) en SQL, on delete cascade.
+  sourceId: uuid('source_id').notNull(),
+  n: integer('n').notNull(),
+  texte: text('texte').notNull(),
+  entrees: uuid('entrees').array().notNull().default(sql`'{}'::uuid[]`),
+  tours: uuid('tours').array().notNull().default(sql`'{}'::uuid[]`),
+  ecritPar: text('ecrit_par', { enum: ['serveur', 'modele', 'agent', 'humain'] }).notNull(),
+  etape: text('etape'),
+  modele: text('modele'),
+  outil: text('outil'),
+  session: text('session'),
+  motif: text('motif', {
+    enum: ['rangement', 'note', 'correction', 'acceptation', 'restauration'],
+  }).notNull(),
+  // Clé étrangère composée (tenant_id, source_id, restaure_de) en SQL : une version de la même cible.
+  restaureDe: uuid('restaure_de'),
+  creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+  acl: acl(),
 });

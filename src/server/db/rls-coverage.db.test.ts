@@ -15,6 +15,8 @@ const RLS_EXCEPTIONS = [
 
 // Tables à `tenant_id` dont l'app peut supprimer des lignes : une décision par table, jamais un défaut.
 // Un droit de plus se décide avec le plan (voir C2, C12, C13 du plan du deuxième jet) et s'ajoute ici.
+// Jamais `sources` : seules des fonctions bornées en retirent (retirer_sources_connexion, supprimer_document,
+// supprimer_fil).
 const DELETE_ALLOWED = [
   'connections', // « Supprimer » une connexion
   'passages', // réindexation d'une source (0011)
@@ -24,6 +26,7 @@ const DELETE_ALLOWED = [
   'discussions', // l'auteur supprime ses discussions, les messages partent en cascade (0031)
   'about_suggestions', // seule deleteAccount les efface, avec le reste de la personne (0045)
   'depots_equipe', // l'administrateur décoche un dépôt d'équipe ; un membre ordinaire ne peut pas (0047)
+  'versions_memoire', // seule deleteAccount les efface, avec le reste de la personne (0052)
 ];
 
 const TENANT_TABLES = `

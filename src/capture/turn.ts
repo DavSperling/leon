@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Contrat des tours captés, partagé avec la CLI et l'extension (décision D1 : imports relatifs seulement).
 // Trois listes de types : ceux de la capture (seuls admis par la route publique d'envoi), ceux des
 // connecteurs (écrits par la tâche de fond), et leur réunion avec les documents ajoutés à la main (écran
-// Documents), qui est tout ce que la base accepte.
+// Documents) : les outils. La base accepte en plus le fil de travail, que seul le serveur crée.
 export const CAPTURE_KINDS = ['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember'] as const;
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
 // Les sessions d'un outil de code, les seules dont la CLI relève les gestes (route des faits, C2 du plan mémoire
@@ -55,7 +55,12 @@ export const PROVIDER_IDS = [
   'slack',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
-export const SOURCE_KINDS = [...CAPTURE_KINDS, 'document', ...PROVIDER_IDS] as const;
+// Les types d'outils, ceux que le filtre `outil` de la recherche connaît.
+export const TOOL_KINDS = [...CAPTURE_KINDS, 'document', ...PROVIDER_IDS] as const;
+export type ToolKind = (typeof TOOL_KINDS)[number];
+// `leon_fil` : le fil de travail (D21 du plan de la mémoire à disposition), une source sans tour, privée à son auteur,
+// que seul le serveur crée. Ni la route d'envoi ni `remember` ne l'acceptent, et ce n'est l'outil de personne.
+export const SOURCE_KINDS = [...TOOL_KINDS, 'leon_fil'] as const;
 export type SourceKind = (typeof SOURCE_KINDS)[number];
 // Ce que la source est : une conversation avec un assistant, ou un élément d'un outil (C4 du plan du deuxième jet).
 // Elle s'écrit dans `sources.metadata.nature`. Une nature absente (les conversations captées n'en écrivent pas)
@@ -71,8 +76,13 @@ export const ITEM_NATURES = [
   'fichier',
   'evenement',
   'commit',
+  // Celle du fil de travail, que donne son type `leon_fil` (filters-sql.ts) ; « fil » est le fil d'un connecteur.
+  'fil_de_travail',
 ] as const;
 export type ItemNature = (typeof ITEM_NATURES)[number];
+// Les natures proposées par les menus et les descriptions des outils : un fil de travail n'a ni tour ni passage (D35),
+// la recherche ne le rend jamais. Le filtre `type` l'accepte quand même (T39).
+export const OFFERED_NATURES = ITEM_NATURES.filter((nature) => nature !== 'fil_de_travail');
 export const CAPTURE_MODES = ['file', 'network', 'dom', 'manual'] as const;
 export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.

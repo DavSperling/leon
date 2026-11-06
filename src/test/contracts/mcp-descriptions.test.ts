@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SOURCE_KINDS } from '@/capture/turn';
+import { TOOL_KINDS } from '@/capture/turn';
 import { MCP_INSTRUCTIONS } from '@/server/mcp/server';
 import {
   FETCH_DESCRIPTION,
@@ -51,7 +51,18 @@ describe('description de search', () => {
     const tools = listed?.split(', ') ?? [];
 
     expect(tools.length).toBeGreaterThan(0);
-    for (const tool of tools) expect(SOURCE_KINDS).toContain(tool);
+    for (const tool of tools) expect(TOOL_KINDS).toContain(tool);
+  });
+
+  // T39 : le fil de travail n'est pas un outil (D21) ; l'assistant ne le voit ni accepté ni proposé.
+  it('refuse outil leon_fil, sans le citer parmi les outils connus, et accepte la nature fil_de_travail', () => {
+    const refused = readToolFilters({ outil: 'leon_fil' }, new Date());
+    const known = 'error' in refused ? refused.error.split('Known tools:')[1] : undefined;
+    expect(known).toContain('github');
+    expect(known).not.toContain('leon_fil');
+    expect(readToolFilters({ type: 'fil_de_travail' }, new Date())).toEqual({
+      filters: { natures: ['fil_de_travail'] },
+    });
   });
 
   it('liste les natures du code, par des noms que la recherche lit', () => {

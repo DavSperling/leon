@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ITEM_NATURES } from '@/capture/turn';
+import { OFFERED_NATURES } from '@/capture/turn';
 import type { DiscussionCitation } from '@/lib/discussion-events';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -121,7 +121,7 @@ const optionalFilter = (description: string) =>
 const TOOL_DESCRIPTION = {
   outil:
     'Limite à un outil, par son identifiant ou son nom : github, linear, notion, outlook, claude_code, fathom…',
-  type: `Limite à une nature : ${ITEM_NATURES.join(', ')}.`,
+  type: `Limite à une nature : ${OFFERED_NATURES.join(', ')}.`,
   de: "Limite à ce qu'une personne a écrit : son nom, son e-mail ou son identifiant d'outil.",
   depuis: 'Limite aux éléments récents : 7j (jours), 2s (semaines), 3m (mois) ou AAAA-MM-JJ.',
 };

@@ -1,10 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import {
-  PROVIDER_IDS,
-  type ProviderId,
-  type SourceKind,
-  type TurnCaptureMode,
-} from '@/capture/turn';
+import { PROVIDER_IDS, type ProviderId, type ToolKind, type TurnCaptureMode } from '@/capture/turn';
 import { principalsFor, type TenantContext } from '@/server/auth/tenant-context';
 import type { ConnectionStatus } from '@/server/connectors/connections';
 import { encryptSecret } from '@/server/connectors/crypto';
@@ -21,7 +16,7 @@ const CONNECTOR_MODES = Object.fromEntries(PROVIDER_IDS.map((id) => [id, 'connec
   'connector'
 >;
 
-const CAPTURE_MODE_BY_KIND: Record<SourceKind, TurnCaptureMode> = {
+const CAPTURE_MODE_BY_KIND: Record<ToolKind, TurnCaptureMode> = {
   claude_code: 'file',
   claude_ai: 'network',
   chatgpt: 'network',
@@ -59,7 +54,7 @@ export async function createTestTenant(
 // Une source privée à son auteur et un tour.
 export async function seedSource(
   ctx: TenantContext,
-  input: { kind?: SourceKind; title?: string; text?: string } = {},
+  input: { kind?: ToolKind; title?: string; text?: string } = {},
 ): Promise<{ sourceId: string; turnId: string }> {
   const kind = input.kind ?? 'claude_code';
   const ts = new Date();
@@ -92,6 +87,22 @@ export async function seedSource(
     .returning({ id: turns.id });
   if (!turn) throw new Error('tour de test non créé');
   return { sourceId: source.id, turnId: turn.id };
+}
+
+// Un fil de travail (D21 du plan de la mémoire à disposition) : une source sans tour, privée à son auteur.
+export async function seedThread(ctx: TenantContext): Promise<string> {
+  const [thread] = await adminDb
+    .insert(sources)
+    .values({
+      tenantId: ctx.tenantId,
+      kind: 'leon_fil',
+      externalId: `leon:fil:github.com/acme/leon:${randomUUID()}`,
+      ownerUserId: ctx.userId,
+      acl: [ctx.userId],
+    })
+    .returning({ id: sources.id });
+  if (!thread) throw new Error('fil de test non créé');
+  return thread.id;
 }
 
 // Une connexion de test, secret chiffré comme en production (clé de TEST_ENV). Elle n'est pas due

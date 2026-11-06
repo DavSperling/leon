@@ -1,4 +1,4 @@
-import { type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { type ItemNature, SOURCE_KINDS, type SourceKind, TOOL_KINDS } from '@/capture/turn';
 import { formatNumber } from '@/lib/format';
 import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PAGE_MAX, PAGE_SIZE } from '@/lib/search-limits';
@@ -19,6 +19,7 @@ export const NATURE_LABELS: Record<ItemNature, string> = {
   fichier: 'Fichier',
   evenement: 'Évènement',
   commit: 'Modification de code',
+  fil_de_travail: 'Fil de travail',
 };
 
 export type ResultPassageView = {
@@ -204,7 +205,7 @@ export function unknownPeopleMessage(names: string[], locale = 'fr'): string | n
 
 // Les outils du menu de filtre : l'identifiant s'écrit dans la requête (`outil:claude_code`), le libellé s'affiche.
 export function toolOptions(): Array<{ value: SourceKind; label: string }> {
-  return SOURCE_KINDS.map((value) => ({ value, label: SOURCE_KIND_LABELS[value] })).sort((a, b) =>
+  return TOOL_KINDS.map((value) => ({ value, label: SOURCE_KIND_LABELS[value] })).sort((a, b) =>
     a.label.localeCompare(b.label, 'fr', { sensitivity: 'base' }),
   );
 }

@@ -70,19 +70,23 @@ describe('POST /api/v1/ingest', () => {
     });
   });
 
-  it("répond 400 au type d'un connecteur : un jeton d'appareil ne fabrique pas de source github", async () => {
-    const { paulToken } = await setup();
-    const body = validBody();
-    const bad = { ...body, source: { ...body.source, kind: 'github' } };
+  // Ni un connecteur ni un fil de travail (T39 : seul le serveur crée un fil, D21).
+  it.each(['github', 'leon_fil'])(
+    "répond 400 au type %s : un jeton d'appareil ne fabrique pas cette source",
+    async (kind) => {
+      const { paulToken } = await setup();
+      const body = validBody();
+      const bad = { ...body, source: { ...body.source, kind } };
 
-    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+      const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
 
-    expect(response.status).toBe(400);
-    expect(JSON.parse(await response.text())).toEqual({
-      error: 'Invalid request',
-      issues: [{ path: 'source.kind', code: 'invalid_value' }],
-    });
-  });
+      expect(response.status).toBe(400);
+      expect(JSON.parse(await response.text())).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'source.kind', code: 'invalid_value' }],
+      });
+    },
+  );
 
   it('range la clé de projet dans metadata.project de la source', async () => {
     const { paul, paulToken } = await setup();

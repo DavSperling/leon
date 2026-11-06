@@ -13,6 +13,7 @@ describe('labels', () => {
       mcp_remember: 'Note (MCP)',
       document: 'Document',
       ...PROVIDER_LABELS,
+      leon_fil: 'Leon',
     });
   });
 

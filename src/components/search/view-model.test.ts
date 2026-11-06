@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { ITEM_NATURES, SOURCE_KINDS, type SourceKind, TOOL_KINDS } from '@/capture/turn';
 import { PAGE_MAX } from '@/lib/search-limits';
 import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 import {
@@ -242,8 +242,9 @@ describe('libellés', () => {
   it('propose chaque outil une fois, avec son identifiant et son libellé, par ordre alphabétique', () => {
     const options = toolOptions();
 
-    expect(options).toHaveLength(SOURCE_KINDS.length);
-    expect(new Set(options.map((o) => o.value))).toEqual(new Set(SOURCE_KINDS));
+    // Sans le fil de travail (T39) : ce n'est l'outil de personne, le filtre `outil` ne le connaît pas.
+    expect(options).toHaveLength(TOOL_KINDS.length);
+    expect(new Set(options.map((o) => o.value))).toEqual(new Set(TOOL_KINDS));
     expect(options.find((o) => o.value === 'claude_code')?.label).toBe('Claude Code');
     const labels = options.map((o) => o.label);
     expect(labels).toEqual(

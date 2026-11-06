@@ -163,6 +163,7 @@ describe('listSources', () => {
       'Claude Code',
       'Codex',
       'Cursor',
+      'Antigravity',
       'claude.ai',
       'ChatGPT',
       'Note (MCP)',

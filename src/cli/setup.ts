@@ -23,6 +23,11 @@ import { type Connection, readConnection } from './connection';
 import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
+import {
+  addAntigravityHooks,
+  antigravityHooksPath,
+  installAntigravityHooks,
+} from './install-antigravity';
 import { addCodexHooks, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
 import { addCursorHooks, cursorHooksPath, installCursorHooks } from './install-cursor';
 import {
@@ -43,7 +48,7 @@ import {
   writeLauncher,
 } from './launcher';
 import { requestMe } from './login';
-import { cursorHome } from './outils';
+import { cursorHome, geminiHome } from './outils';
 import { isAllowedServerUrl } from './server-url';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
@@ -206,7 +211,7 @@ async function installCodex(codexDir: string, ctx: InstallContext): Promise<Inst
 // capture est écrit.
 async function toolInstalled(
   code: number,
-  outil: 'cursor',
+  outil: 'cursor' | 'antigravity',
   path: string,
   plan: (settings: Json) => ToolHookPlan | null,
   ctx: InstallContext,
@@ -231,15 +236,25 @@ async function installCursor(_dir: string, ctx: InstallContext): Promise<Install
   );
 }
 
+async function installAntigravity(_dir: string, ctx: InstallContext): Promise<Installed> {
+  const code = await installAntigravityHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  return toolInstalled(
+    code,
+    'antigravity',
+    antigravityHooksPath(ctx.home),
+    (settings) => addAntigravityHooks(settings, ctx.home),
+    ctx,
+  );
+}
+
 // Le dossier de réglages de Claude Code (CLAUDE_CONFIG_DIR, sinon ~/.claude), comme claudeConfigDir (env.ts), mais sous
 // le dossier personnel reçu : les tests n'ont pas le vrai.
 const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
 // Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8 ;
-// Antigravity à son lot) :
-// les autres sont détectés mais dits « not supported yet ».
+// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8,
+// Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
 const TOOLS: {
   label: string;
   dir: (home: string, env: SetupDeps['env']) => string;
@@ -252,7 +267,7 @@ const TOOLS: {
   },
   { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
   { label: 'Cursor', dir: (home) => cursorHome(home), install: installCursor },
-  { label: 'Gemini / Antigravity', dir: (home) => join(home, '.gemini') },
+  { label: 'Gemini / Antigravity', dir: (home) => geminiHome(home), install: installAntigravity },
 ];
 
 // Pourquoi l'ordinateur est à reconnecter, ou null s'il est connecté. Seules les adresses de serveur se disent, par leur

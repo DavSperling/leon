@@ -284,7 +284,7 @@ describe('readBriefing', () => {
     expect(await jobsFor(alice, seeded.project)).toHaveLength(1);
   });
 
-  it.each(['claude_code', 'codex', 'cursor'] as const)(
+  it.each(['claude_code', 'codex', 'cursor', 'antigravity'] as const)(
     'sans point : null, et le point est mis en file tout de suite (session %s)',
     async (kind) => {
       const project = `github.com/${uniqueRepo()}`;

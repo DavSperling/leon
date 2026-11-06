@@ -101,3 +101,48 @@ describe('cursorSlug', () => {
     expect(cursorSlug('/Users/demo/mon-projet/')).toBe('Users-demo-mon-projet');
   });
 });
+
+// T33 : Antigravity, écrit avant l'essai T31 (forme d'`agy` 1.4). shortcut: rejouer les entrées relevées à T31.
+describe('ADAPTATEURS.antigravity', () => {
+  const agy = ADAPTATEURS.antigravity;
+  const HOME = '/Users/demo';
+  const BRAIN = '/Users/demo/.gemini/antigravity/brain';
+
+  it('enveloppe le bloc en injectSteps, et ne répond que {} sans bloc', () => {
+    expect(JSON.parse(agy.injection('Bloc', 'prompt'))).toStrictEqual({
+      injectSteps: [{ systemMessage: { systemMessage: 'Bloc' } }],
+    });
+    expect(agy.injection('Bloc', 'demarrage')).toBe(agy.injection('Bloc', 'prompt'));
+    for (const evenement of ['demarrage', 'prompt', 'tour', 'fin'] as const) {
+      expect(agy.vide(evenement)).toBe('{}');
+    }
+    expect(agy.uneFois).toBe(true);
+  });
+
+  it('lit la conversation, l’espace de travail, et préfère transcript_full.jsonl', () => {
+    const transcript = `${BRAIN}/conv-1/.system_generated/logs/transcript.jsonl`;
+    expect(
+      agy.entree(
+        {
+          conversationId: 'conv-1',
+          transcriptPath: transcript,
+          workspacePaths: ['/Users/demo/projets/leon'],
+          fullyIdle: true,
+        },
+        HOME,
+        {},
+      ),
+    ).toEqual({
+      session: 'conv-1',
+      dossier: '/Users/demo/projets/leon',
+      fichiers: [`${BRAIN}/conv-1/.system_generated/logs/transcript_full.jsonl`, transcript],
+      inactif: true,
+    });
+  });
+
+  it('rien n’est capté tant que fullyIdle est faux ; un transcript hors de brain n’est pas lu', () => {
+    expect(agy.entree({ fullyIdle: false }, HOME, {}).inactif).toBe(false);
+    expect(agy.entree({}, HOME, {}).inactif).toBe(true);
+    expect(agy.entree({ transcriptPath: '/tmp/transcript.jsonl' }, HOME, {}).fichiers).toEqual([]);
+  });
+});

@@ -145,3 +145,30 @@ async function withStats(paths: string[]): Promise<SessionFile[]> {
     .flat()
     .sort((a, b) => a.mtimeMs - b.mtimeMs || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
 }
+
+// Les dossiers d'Antigravity sous ~/.gemini : l'app, l'IDE et la CLI `agy`.
+export const ANTIGRAVITY_VARIANTS = ['antigravity', 'antigravity-ide', 'antigravity-cli'] as const;
+
+// Les transcripts d'Antigravity : `<~/.gemini>/<variante>/brain/<conversation>/.system_generated/logs/` ;
+// `transcript_full.jsonl` d'abord, s'il existe, sinon `transcript.jsonl` (T34), un seul par conversation. Les `.pb` et
+// les `.db` ne sont jamais ouverts.
+export async function findAntigravitySessionFiles(geminiDir: string): Promise<SessionFile[]> {
+  const paths = await Promise.all(
+    ANTIGRAVITY_VARIANTS.map(async (variant) => {
+      const brain = join(geminiDir, variant, 'brain');
+      const conversations = (await listDirectory(brain)).filter((entry) => entry.isDirectory());
+      const found = await Promise.all(
+        conversations.map(async (conversation) => {
+          const logs = join(brain, conversation.name, '.system_generated', 'logs');
+          for (const name of ['transcript_full.jsonl', 'transcript.jsonl']) {
+            if ((await stat(join(logs, name)).catch(() => null))?.isFile())
+              return [join(logs, name)];
+          }
+          return [];
+        }),
+      );
+      return found.flat();
+    }),
+  );
+  return withStats(paths.flat());
+}

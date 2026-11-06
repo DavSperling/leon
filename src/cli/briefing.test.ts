@@ -271,7 +271,7 @@ describe('runBriefing', () => {
     fetch?: ReturnType<typeof vi.fn>;
     scheduleUpdate?: () => Promise<unknown>;
     scheduleCatchUp?: () => Promise<unknown>;
-    outil?: 'codex' | 'cursor';
+    outil?: 'codex' | 'cursor' | 'antigravity';
     evenement?: 'demarrage' | 'prompt';
   }) {
     const out: string[] = [];
@@ -684,6 +684,46 @@ describe('runBriefing', () => {
       await harness.run();
       expect(harness.out).toEqual([]);
       expect(harness.fetchImpl).not.toHaveBeenCalled();
+    });
+  });
+
+  // T33 : Antigravity reçoit le bloc par SessionStart, sinon par PreInvocation, une seule fois par conversation.
+  describe('Antigravity : SessionStart puis PreInvocation, un seul bloc', () => {
+    const agyJson = (event: string) =>
+      Readable.from([
+        JSON.stringify({
+          conversationId: 'agy-1',
+          hook_event_name: event,
+          workspacePaths: ['/projets/leon'],
+          invocationNum: 1,
+        }),
+      ]);
+
+    it('le bloc en injectSteps au démarrage ; PreInvocation ensuite : {} sans rien demander', async () => {
+      const agyHome = await mkdtemp(join(homes, 'agy-'));
+      await writeConsent(agyHome, 'antigravity', 2);
+
+      const start = setup({
+        stdin: agyJson('SessionStart'),
+        home: agyHome,
+        outil: 'antigravity',
+        evenement: 'demarrage',
+      });
+      await start.run();
+      expect(start.out.map((line) => JSON.parse(line))).toEqual([
+        { injectSteps: [{ systemMessage: { systemMessage: BLOCK } }] },
+      ]);
+      expect(start.asked()).toMatchObject({ session: 'agy-1' });
+
+      const next = setup({
+        stdin: agyJson('PreInvocation'),
+        home: agyHome,
+        outil: 'antigravity',
+        evenement: 'prompt',
+      });
+      await next.run();
+      expect(next.out).toEqual(['{}']);
+      expect(next.fetchImpl).not.toHaveBeenCalled();
     });
   });
 

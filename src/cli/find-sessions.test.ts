@@ -2,7 +2,12 @@ import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findCodexSessionFiles, findCursorSessionFiles, findSessionFiles } from './find-sessions';
+import {
+  findAntigravitySessionFiles,
+  findCodexSessionFiles,
+  findCursorSessionFiles,
+  findSessionFiles,
+} from './find-sessions';
 
 let baseDir: string;
 let projectDir: string;
@@ -113,5 +118,30 @@ describe('findCursorSessionFiles', () => {
     const found = (await findCursorSessionFiles(baseDir)).map((file) => file.path).sort();
 
     expect(found).toEqual([own, flat].sort());
+  });
+});
+
+describe('findAntigravitySessionFiles', () => {
+  const transcript = async (relative: string) => {
+    const path = join(baseDir, relative);
+    await mkdir(join(path, '..'), { recursive: true });
+    await writeFile(path, '{}\n');
+    return path;
+  };
+
+  it('un transcript par conversation, transcript_full.jsonl d’abord, dans l’app, l’IDE et la CLI', async () => {
+    const full = await transcript(
+      'antigravity/brain/c1/.system_generated/logs/transcript_full.jsonl',
+    );
+    await transcript('antigravity/brain/c1/.system_generated/logs/transcript.jsonl');
+    const cli = await transcript(
+      'antigravity-cli/brain/c2/.system_generated/logs/transcript.jsonl',
+    );
+    await transcript('antigravity/conversations/c1.pb');
+    await transcript('antigravity/brain/c3/task.md');
+
+    const found = (await findAntigravitySessionFiles(baseDir)).map((file) => file.path).sort();
+
+    expect(found).toEqual([full, cli].sort());
   });
 });

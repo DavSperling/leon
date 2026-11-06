@@ -525,3 +525,101 @@ describe('Cursor : capter à chaque stop, rattraper', () => {
     expect(readSpy).not.toHaveBeenCalled();
   });
 });
+
+// T33, T34 : Antigravity. Stop ne capte qu'une conversation inactive ; le rattrapage retrouve l'espace de travail dans
+// history.jsonl.
+describe('Antigravity : capter quand la conversation est inactive, rattraper', () => {
+  const AGY_FIXTURE = new URL(
+    '../capture/fixtures/antigravity/transcript-simple.jsonl',
+    import.meta.url,
+  );
+  const CONVERSATION = 'a1b2c3d4-0000-4000-8000-000000000001';
+
+  async function transcript(modified: Date, name = 'transcript.jsonl'): Promise<string> {
+    const folder = join(
+      home,
+      '.gemini',
+      'antigravity',
+      'brain',
+      CONVERSATION,
+      '.system_generated',
+      'logs',
+    );
+    await mkdir(folder, { recursive: true });
+    const path = join(folder, name);
+    await copyFile(AGY_FIXTURE, path);
+    await utimes(path, modified, modified);
+    return path;
+  }
+  const stopJson = (path: string, fullyIdle: boolean) =>
+    JSON.stringify({
+      conversationId: CONVERSATION,
+      transcriptPath: path,
+      workspacePaths: ['/Users/demo/projets/leon'],
+      executionNum: 1,
+      fullyIdle,
+    });
+
+  it('Stop pendant que l’agent travaille : rien ; une fois inactive : les tours sous le kind antigravity', async () => {
+    const path = await transcript(MAINTENANT);
+    const deps = { ...captureDeps(), env };
+
+    await captureToolHook('antigravity', 'tour', stopJson(path, false), deps);
+    expect(sent).toEqual([]);
+
+    await captureToolHook('antigravity', 'tour', stopJson(path, true), deps);
+    expect(sent[0]?.source).toMatchObject({
+      kind: 'antigravity',
+      external_id: CONVERSATION,
+      project: 'github.com/demo/leon',
+    });
+    expect(facts[0]?.faits.commits).toEqual(['5e6f7a8']);
+  });
+
+  it('lit transcript_full.jsonl d’abord, à côté de celui que nomme le crochet', async () => {
+    const path = await transcript(MAINTENANT);
+    const full = await transcript(MAINTENANT, 'transcript_full.jsonl');
+    const readSpy = vi.fn((file: string) => readFile(file, 'utf8'));
+
+    await captureToolHook('antigravity', 'tour', stopJson(path, true), {
+      ...captureDeps({ readFile: readSpy }),
+      env,
+    });
+
+    expect(readSpy).toHaveBeenCalledWith(full);
+  });
+
+  it('le rattrapage prend l’espace de travail de history.jsonl quand le transcript n’en dit rien', async () => {
+    await writeConsent(home, 'antigravity', 2, INSTALLE);
+    await recordCapture(home, 'antigravity', INSTALLE);
+    const folder = join(
+      home,
+      '.gemini',
+      'antigravity',
+      'brain',
+      CONVERSATION,
+      '.system_generated',
+      'logs',
+    );
+    await mkdir(folder, { recursive: true });
+    const path = join(folder, 'transcript.jsonl');
+    await writeFile(
+      path,
+      `${JSON.stringify({ step_index: 0, source: 'USER_EXPLICIT', type: 'USER_INPUT', created_at: '2026-11-06T10:00:00Z', content: '<USER_REQUEST>Salut</USER_REQUEST>' })}\n`,
+    );
+    await utimes(path, MAINTENANT, MAINTENANT);
+    const workspace = join(dir, 'espace');
+    await writeFile(
+      join(home, '.gemini', 'antigravity', 'history.jsonl'),
+      `${JSON.stringify({ conversationId: CONVERSATION, workspace: `file://${workspace}` })}\n`,
+    );
+    const directories: string[] = [];
+    const spyGit = vi.fn<ToolCaptureDeps['git']>(async (args, cwd) => {
+      directories.push(cwd);
+      return git(args, cwd);
+    });
+
+    expect(await catchUp(catchUpDeps({ git: spyGit }))).toEqual({ sessions: 1, failures: 0 });
+    expect(new Set(directories)).toEqual(new Set([workspace]));
+  });
+});

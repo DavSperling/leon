@@ -11,6 +11,7 @@ import {
   consentPath,
   consentWithdrawn,
   factsConsent,
+  recordCapture,
   withdrawalRecorded,
   writeConsent,
 } from './consent';
@@ -274,6 +275,68 @@ describe('addRefusal : un usage refusé, daté (C7 révisé)', () => {
       version: 0,
       installe_le: '2026-11-05T10:00:00.000Z',
     });
+  });
+});
+
+// T19 : l'accord de capture d'un outil hors Claude Code, à part de l'accord du lot 4 (le bloc de démarrage seul).
+describe('recordCapture : l’accord de capture, daté', () => {
+  it('ajoute capture_le sans toucher à la version, à sa date, aux usages ni aux autres outils', async () => {
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-01T10:00:00Z'));
+    await writeConsent(home, 'codex', 2, new Date('2026-11-02T10:00:00Z'));
+    await addUsage(home, 'codex', 'lecture', new Date('2026-11-03T10:00:00Z'));
+
+    await recordCapture(home, 'codex', new Date('2026-11-06T10:00:00Z'));
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8'))).toEqual({
+      outils: {
+        claude_code: { version: 2, installe_le: '2026-11-01T10:00:00.000Z' },
+        codex: {
+          version: 2,
+          installe_le: '2026-11-02T10:00:00.000Z',
+          usages: { lecture: '2026-11-03T10:00:00.000Z' },
+          capture_le: '2026-11-06T10:00:00.000Z',
+        },
+      },
+    });
+    expect((await factsConsent(home, 'codex'))?.capture_le).toEqual(
+      new Date('2026-11-06T10:00:00Z'),
+    );
+    expect((await factsConsent(home, 'claude_code'))?.capture_le).toBeUndefined();
+  });
+
+  it('garde la première date : elle borne le rattrapage', async () => {
+    await writeConsent(home, 'codex', 2);
+    await recordCapture(home, 'codex', new Date('2026-11-06T10:00:00Z'));
+    await recordCapture(home, 'codex', new Date('2026-11-07T10:00:00Z'));
+
+    expect((await factsConsent(home, 'codex'))?.capture_le).toEqual(
+      new Date('2026-11-06T10:00:00Z'),
+    );
+  });
+
+  it('sans accord des gestes, rien n’est écrit et l’appel échoue', async () => {
+    await expect(recordCapture(home, 'codex')).rejects.toThrow(/no consent for codex/);
+    await writeConsent(home, 'codex', 0);
+    await expect(recordCapture(home, 'codex')).rejects.toThrow(/no consent for codex/);
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.codex).not.toHaveProperty(
+      'capture_le',
+    );
+  });
+
+  it('le retrait l’efface, et une date illisible n’en donne aucune', async () => {
+    await writeConsent(home, 'codex', 2);
+    await recordCapture(home, 'codex');
+    await writeConsent(home, 'codex', 0);
+    await writeConsent(home, 'codex', 2);
+    expect((await factsConsent(home, 'codex'))?.capture_le).toBeUndefined();
+
+    await writeRaw(
+      JSON.stringify({
+        outils: { codex: { version: 2, installe_le: '2026-11-02T10:00:00Z', capture_le: 'hier' } },
+      }),
+    );
+    expect(await factsConsent(home, 'codex')).toMatchObject({ version: 2 });
+    expect((await factsConsent(home, 'codex'))?.capture_le).toBeUndefined();
   });
 });
 

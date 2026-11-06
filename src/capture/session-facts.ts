@@ -17,7 +17,7 @@ import { maskSecrets } from './mask-secrets';
 export { type SessionFacts, SessionFactsSchema } from './api-contract';
 
 type Pr = SessionFacts['prs'][number];
-type Tache = SessionFacts['taches'][number];
+export type Tache = SessionFacts['taches'][number];
 
 // Schéma minimal d'une ligne du fichier de session, comme dans claude-code.ts : les champs inconnus sont
 // ignorés, une ligne qui ne le respecte pas est écartée.
@@ -244,14 +244,19 @@ function repoRelativePath(path: string, root: string | null): string | null {
   return outside ? null : relativePath.replace(CLONE_WORKTREE, '');
 }
 
+// Une commande de shell qui fait entrer du texte d'ailleurs (D17), sur la commande entière, avant la coupe : « cd x &&
+// curl … » compte. Commune aux lecteurs des outils de code (codex.ts).
+export const isExternalCommand = (command: string): boolean => EXTERNAL_COMMAND.test(command);
+
 function isExternalCall({ name, input }: Call): boolean {
   if (name !== 'Bash') return !LOCAL_TOOLS.has(name);
   const bash = BashSchema.safeParse(input);
-  // Sur la commande entière, avant la coupe : « cd x && curl … » compte.
-  return bash.success && EXTERNAL_COMMAND.test(bash.data.command);
+  return bash.success && isExternalCommand(bash.data.command);
 }
 
-type Gathered = {
+// Ce que les appels d'outils d'une session apprennent, avant les bornes de C1 (buildFacts). Commun aux lecteurs des
+// outils de code : chacun lit son format, et passe ici ses commandes, ses fichiers et ses tâches.
+export type FactsRecord = {
   created: Pr[];
   commits: Set<string>;
   files: Set<string>;
@@ -259,9 +264,54 @@ type Gathered = {
   tasks: Map<string, Tache>;
 };
 
-// Ce que le résultat d'un appel d'outil apprend sur la session.
+export const newFactsRecord = (): FactsRecord => ({
+  created: [],
+  commits: new Set(),
+  files: new Set(),
+  commands: [],
+  tasks: new Map(),
+});
+
+// Une commande de shell et ce qu'elle a écrit : la commande réduite (reduceCommand), les SHA d'un `git commit`, les PR
+// d'un `gh pr create` réussi.
+export function recordCommand(
+  record: FactsRecord,
+  command: string,
+  output: string,
+  error: boolean,
+): void {
+  const texte = reduceCommand(command);
+  if (texte !== '') record.commands.push({ texte, erreur: error });
+  // « git commit && git push » peut échouer après le commit : la sortie compte malgré l'erreur.
+  if (GIT_COMMIT.test(command)) {
+    for (const [, sha] of output.matchAll(COMMIT_LINE)) if (sha) record.commits.add(sha);
+  }
+  // En erreur, gh pr create n'a rien créé : il rend l'URL de la PR qui existe déjà.
+  // shortcut: « gh pr create && x » où x échoue perd la PR ici (la ligne pr-link la garde pour le dépôt
+  // courant), reconnaître le message « already exists » si une PR d'un autre dépôt manque.
+  if (!error && GH_PR_CREATE.test(command)) {
+    for (const [, repo, numero] of output.matchAll(PR_URL)) {
+      const pr = PrSchema.safeParse({ repo, numero: Number(numero), par: 'gh-pr-create' });
+      if (pr.success) record.created.push(pr.data);
+    }
+  }
+}
+
+// Un fichier écrit par la session, gardé s'il est dans le dépôt (repoRelativePath).
+export function recordFile(record: FactsRecord, path: string, root: string | null): void {
+  const kept = repoRelativePath(path, root);
+  if (kept !== null) record.files.add(kept);
+}
+
+// Toute la liste des tâches, réécrite d'un coup (TodoWrite de Claude Code, update_plan de Codex).
+export function replaceTasks(record: FactsRecord, tasks: Tache[]): void {
+  record.tasks.clear();
+  for (const [index, task] of tasks.entries()) record.tasks.set(`todo:${index}`, task);
+}
+
+// Ce que le résultat d'un appel d'outil de Claude Code apprend sur la session.
 function recordResult(
-  record: Gathered,
+  record: FactsRecord,
   { name, input }: Call,
   output: string,
   error: boolean,
@@ -269,23 +319,7 @@ function recordResult(
 ): void {
   if (name === 'Bash') {
     const bash = BashSchema.safeParse(input);
-    if (!bash.success) return;
-    const { command } = bash.data;
-    const texte = reduceCommand(command);
-    if (texte !== '') record.commands.push({ texte, erreur: error });
-    // « git commit && git push » peut échouer après le commit : la sortie compte malgré l'erreur.
-    if (GIT_COMMIT.test(command)) {
-      for (const [, sha] of output.matchAll(COMMIT_LINE)) if (sha) record.commits.add(sha);
-    }
-    // En erreur, gh pr create n'a rien créé : il rend l'URL de la PR qui existe déjà.
-    // shortcut: « gh pr create && x » où x échoue perd la PR ici (la ligne pr-link la garde pour le dépôt
-    // courant), reconnaître le message « already exists » si une PR d'un autre dépôt manque.
-    if (!error && GH_PR_CREATE.test(command)) {
-      for (const [, repo, numero] of output.matchAll(PR_URL)) {
-        const pr = PrSchema.safeParse({ repo, numero: Number(numero), par: 'gh-pr-create' });
-        if (pr.success) record.created.push(pr.data);
-      }
-    }
+    if (bash.success) recordCommand(record, bash.data.command, output, error);
     return;
   }
   // Les autres outils n'ont rien changé s'ils ont échoué.
@@ -293,16 +327,15 @@ function recordResult(
   if (FILE_TOOLS.has(name)) {
     const file = FilePathSchema.safeParse(input);
     const path = file.success ? (file.data.file_path ?? file.data.notebook_path) : undefined;
-    const kept = path === undefined ? null : repoRelativePath(path, root);
-    if (kept !== null) record.files.add(kept);
+    if (path !== undefined) recordFile(record, path, root);
   }
   // TodoWrite réécrit toute la liste ; TaskCreate et TaskUpdate la modifient tâche par tâche.
   const todo = name === 'TodoWrite' ? TodoWriteSchema.safeParse(input) : null;
   if (todo?.success) {
-    record.tasks.clear();
-    for (const [index, { content, status }] of todo.data.todos.entries()) {
-      record.tasks.set(`todo:${index}`, { texte: content, etat: ETATS[status] });
-    }
+    replaceTasks(
+      record,
+      todo.data.todos.map(({ content, status }) => ({ texte: content, etat: ETATS[status] })),
+    );
   }
   const created = name === 'TaskCreate' ? TaskCreateSchema.safeParse(input) : null;
   if (created?.success) {
@@ -329,13 +362,7 @@ function recordResult(
 export function extractClaudeCodeFacts(content: string, root: string | null): SessionFacts {
   const calls = new Map<string, Call>();
   const links: Pr[] = [];
-  const record: Gathered = {
-    created: [],
-    commits: new Set(),
-    files: new Set(),
-    commands: [],
-    tasks: new Map(),
-  };
+  const record = newFactsRecord();
   let branch: string | null = null;
   let errors = 0;
   let external = false;
@@ -375,10 +402,38 @@ export function extractClaudeCodeFacts(content: string, root: string | null): Se
     }
   }
 
+  return buildFacts(record, {
+    links,
+    branch,
+    errors,
+    external,
+    echanges:
+      parseClaudeCodeSession(content)?.turns.filter(
+        (turn) => turn.role === 'user' && typedByUser(turn.text),
+      ).length ?? 0,
+    start,
+    end,
+  });
+}
+
+// Les faits d'une session (C1), bornés, à partir de ce que son lecteur a relevé. `links` : les PR que l'outil écrit
+// lui-même (pr-link de Claude Code), avant celles de gh pr create.
+export function buildFacts(
+  record: FactsRecord,
+  session: {
+    links: Pr[];
+    branch: string | null;
+    errors: number;
+    external: boolean;
+    echanges: number;
+    start: string | null;
+    end: string | null;
+  },
+): SessionFacts {
   // Les lignes pr-link d'abord, puis les URL de gh pr create : une PR n'y figure qu'une fois, et garde
   // « gh-pr-create » quand la session l'a créée (Claude Code écrit aussi sa ligne pr-link).
   const prs = new Map<string, Pr>();
-  for (const pr of [...links, ...record.created]) {
+  for (const pr of [...session.links, ...record.created]) {
     const key = `${pr.repo.toLowerCase()}#${pr.numero}`;
     if (!prs.has(key) || pr.par === 'gh-pr-create') prs.set(key, pr);
   }
@@ -388,6 +443,7 @@ export function extractClaudeCodeFacts(content: string, root: string | null): Se
     ...tasks.filter((task) => task.etat !== 'fait'),
     ...tasks.filter((task) => task.etat === 'fait'),
   ];
+  const { branch } = session;
   return {
     branche: branch === null || branch === 'HEAD' ? null : factText(branch),
     prs: [...prs.values()].slice(0, PRS_MAX),
@@ -397,13 +453,10 @@ export function extractClaudeCodeFacts(content: string, root: string | null): Se
     taches: ordered
       .slice(0, TACHES_MAX)
       .map((task) => ({ texte: factText(task.texte, TEXTE_MAX), etat: task.etat })),
-    erreurs: errors,
-    externe: external,
-    echanges:
-      parseClaudeCodeSession(content)?.turns.filter(
-        (turn) => turn.role === 'user' && typedByUser(turn.text),
-      ).length ?? 0,
-    debut: start,
-    fin: end,
+    erreurs: session.errors,
+    externe: session.external,
+    echanges: session.echanges,
+    debut: session.start,
+    fin: session.end,
   };
 }

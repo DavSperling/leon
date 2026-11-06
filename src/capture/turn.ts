@@ -4,12 +4,24 @@ import { z } from 'zod';
 // Trois listes de types : ceux de la capture (seuls admis par la route publique d'envoi), ceux des
 // connecteurs (écrits par la tâche de fond), et leur réunion avec les documents ajoutés à la main (écran
 // Documents) : les outils. La base accepte en plus le fil de travail, que seul le serveur crée.
-export const CAPTURE_KINDS = ['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember'] as const;
+export const CAPTURE_KINDS = [
+  'claude_code',
+  'codex',
+  'claude_ai',
+  'chatgpt',
+  'mcp_remember',
+] as const;
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
 // Les sessions d'un outil de code, les seules dont la CLI relève les gestes (route des faits, C2 du plan mémoire
-// des sessions) : chaque outil ajouté à la capture vient aussi ici.
-export const CODE_SESSION_KINDS = ['claude_code'] as const satisfies readonly CaptureKind[];
+// des sessions) : chaque outil ajouté à la capture vient aussi ici. Ce sont aussi les sessions que lisent le point du
+// matin et le bloc de démarrage (T18) : « mes sessions », tous outils confondus.
+export const CODE_SESSION_KINDS = [
+  'claude_code',
+  'codex',
+] as const satisfies readonly CaptureKind[];
 export type CodeSessionKind = (typeof CODE_SESSION_KINDS)[number];
+export const isCodeSessionKind = (kind: string): kind is CodeSessionKind =>
+  (CODE_SESSION_KINDS as readonly string[]).includes(kind);
 export const PROVIDER_IDS = [
   'github',
   'notion',

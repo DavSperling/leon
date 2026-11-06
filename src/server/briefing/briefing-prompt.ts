@@ -1,4 +1,4 @@
-import type { SourceKind } from '@/capture/turn';
+import { isCodeSessionKind } from '@/capture/turn';
 import { seniorityId } from '@/lib/onboarding';
 import type { Placement } from '@/server/auth/onboarding';
 import type { ChatMessage } from '@/server/llm/llm';
@@ -41,19 +41,15 @@ const BLOCK_GUARD_LINE =
 // et 2 h ne dit pas la date de la veille.
 export const BRIEFING_TIME_ZONE = 'Europe/Paris';
 
-// Le seul outil dont le titre est recopié dans la liste des sources (sourceLine). Typé, pour qu'un nom qui n'est
-// plus dans SOURCE_KINDS ne compile pas.
-const CLAUDE_CODE_KIND = 'claude_code' satisfies SourceKind;
-
 // Un élément numéroté : le numéro que le modèle cite, et la source d'où vient l'élément.
 export type BriefingReference = { n: number; source: SourceInfo };
 
 const SECTION_LIST = BRIEFING_SECTIONS.map((section) => `"## ${section}"`).join(', ');
 
-const SYSTEM = `Tu es Leon, la mémoire de l'entreprise. Tu prépares le point du matin d'un membre de l'équipe sur un projet : le texte que sa nouvelle session de Claude Code (son assistant de code) reçoit au démarrage, pour reprendre le travail là où il l'a laissé.
+const SYSTEM = `Tu es Leon, la mémoire de l'entreprise. Tu prépares le point du matin d'un membre de l'équipe sur un projet : le texte que sa nouvelle session de code (Claude Code, Codex : son assistant de code) reçoit au démarrage, pour reprendre le travail là où il l'a laissé.
 
 Le message contient la clé du projet, entre balises <projet>, puis des éléments, chacun entre balises avec un numéro, l'attribut n :
-- <session> : ses dernières sessions Claude Code sur ce projet, ses demandes et les réponses de l'assistant, dans l'ordre ;
+- <session> : ses dernières sessions de code sur ce projet, tous outils confondus, ses demandes et les réponses de l'assistant, dans l'ordre ;
 - <changement> : les tickets et demandes de fusion du dépôt du projet qui ont bougé depuis sa dernière session, avec leurs derniers messages ;
 - <mention> : des passages des outils de l'équipe qui le mentionnent, depuis sa dernière session.
 
@@ -218,16 +214,15 @@ function cutEscaped(text: string, max: number): string {
     .trimEnd()} …`;
 }
 
-// Une ligne de la liste des sources. Le point entre tout seul dans le contexte de Claude Code : le titre d'une source
-// écrite par un tiers (une demande de fusion, un mail) n'y est jamais recopié ; l'outil, la date et le lien suffisent à
-// la retrouver. Seul reste le titre d'une session Claude Code : elles sont privées à leur auteur, donc à la personne
+// Une ligne de la liste des sources. Le point entre tout seul dans le contexte de l'outil de code : le titre d'une
+// source écrite par un tiers (une demande de fusion, un mail) n'y est jamais recopié ; l'outil, la date et le lien
+// suffisent à la retrouver. Seul reste le titre d'une session de code (CODE_SESSION_KINDS) : elles sont privées à leur auteur, donc à la personne
 // qui lit le point. Il est coupé, mis sur une ligne et cité entre guillemets, pour se lire comme un titre.
 function sourceLine(reference: BriefingReference): string {
   const { source } = reference;
-  const title =
-    source.kind === CLAUDE_CODE_KIND
-      ? shortTitle(source.title, SOURCE_TITLE_MAX_CHARS)?.trim()
-      : undefined;
+  const title = isCodeSessionKind(source.kind)
+    ? shortTitle(source.title, SOURCE_TITLE_MAX_CHARS)?.trim()
+    : undefined;
   const parts = [
     toolLabel(source),
     title ? `"${title}"` : null,

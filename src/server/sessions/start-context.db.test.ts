@@ -53,6 +53,7 @@ async function seedSession(
     externalId?: string;
     lastTurnAt?: Date;
     acl?: string[];
+    kind?: 'claude_code' | 'codex';
   } = {},
 ) {
   const faits = input.faits === undefined ? facts() : input.faits;
@@ -61,7 +62,7 @@ async function seedSession(
     .insert(sources)
     .values({
       tenantId: owner.tenantId,
-      kind: 'claude_code',
+      kind: input.kind ?? 'claude_code',
       externalId: input.externalId ?? crypto.randomUUID(),
       ownerUserId: owner.userId,
       acl: input.acl ?? [owner.userId],
@@ -169,6 +170,20 @@ describe('readStartContext', () => {
     });
 
     expect(branches(await read(paul))).toEqual(['paul/a']);
+  });
+
+  // T18 : « mes sessions », tous outils de code confondus.
+  it('une session Codex entre dans « mes sessions », avec son outil', async () => {
+    const { paul } = await setup();
+    await seedSession(paul, { faits: facts({ branche: 'paul/claude' }), lastTurnAt: daysAgo(1) });
+    await seedSession(paul, { faits: facts({ branche: 'paul/codex' }), kind: 'codex' });
+
+    const sessions = await read(paul, null);
+    expect(sessions.map((session) => [session.kind, session.faits?.branche])).toEqual([
+      ['codex', 'paul/codex'],
+      ['claude_code', 'paul/claude'],
+    ]);
+    expect(await render(paul)).toContain(' · Codex · ');
   });
 
   it('exclut un autre dépôt', async () => {

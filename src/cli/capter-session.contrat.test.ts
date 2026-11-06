@@ -8,7 +8,7 @@
 // temporaire, CLAUDE_CONFIG_DIR et HOME y pointent (l'accord, ~/.leon/accord.json, aussi), et l'environnement du
 // fils ne reprend rien de celui du test.
 import { execFile, type SpawnOptionsWithoutStdio, spawn } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -17,7 +17,7 @@ import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS, SessionFactsPayloadSchema } from '../capture/api-contract';
 import type { IngestPayload } from '../capture/turn';
-import { addUsage, writeConsent } from './consent';
+import { addUsage, recordCapture, writeConsent } from './consent';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -126,7 +126,10 @@ const hookJson = (transcriptPath: string) =>
 // `pnpm --dir <dépôt> leon …`), avec un environnement réduit à ce que la commande demande. Pas le vrai pnpm : son
 // script `leon` charge le .env.local du dépôt, dont un LEON_URL réel prendrait la place d'une variable vide ici. La
 // ligne pnpm des crochets est gardée à part, dans un dépôt jetable (hook-commands.contrat.test.ts).
-function runCommand(input: string, extra: { env?: Record<string, string>; args?: string[] } = {}) {
+function runCommand(
+  input: string,
+  extra: { env?: Record<string, string>; args?: string[]; command?: string[] } = {},
+) {
   return new Promise<Outcome>((done, fail) => {
     const started = Date.now();
     const env: Record<string, string> = {
@@ -141,7 +144,13 @@ function runCommand(input: string, extra: { env?: Record<string, string>; args?:
     const options: SpawnOptionsWithoutStdio = { cwd: REPO_ROOT, env: env as NodeJS.ProcessEnv };
     const child = spawn(
       process.execPath,
-      ['--import', 'tsx', 'src/cli/leon.ts', 'capter-session', ...(extra.args ?? [])],
+      [
+        '--import',
+        'tsx',
+        'src/cli/leon.ts',
+        ...(extra.command ?? ['capter-session']),
+        ...(extra.args ?? []),
+      ],
       options,
     );
     let stdout = '';
@@ -352,6 +361,119 @@ describe('leon capter-session : la vraie commande', () => {
         expect(outcome.stderr).toMatch(/^Leon: /m);
       }
       expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+// T19 : le crochet Stop de Codex, `leon crochet codex tour`, contre le même faux serveur. Le rollout est la fixture
+// inventée de T18, copiée sous un CODEX_HOME temporaire ; son dossier de session est remplacé par le dépôt de test.
+describe('leon crochet codex tour : la vraie commande', () => {
+  const FIXTURE = new URL('../capture/fixtures/codex/rollout-git.jsonl', import.meta.url);
+  const THREAD = '019a5e10-0000-7000-8000-000000000001';
+
+  async function writeRollout(): Promise<{ codexHome: string; path: string }> {
+    const codexHome = join(dir, 'codex');
+    const folder = join(codexHome, 'sessions', '2026', '11', '06');
+    await mkdir(folder, { recursive: true });
+    const path = join(folder, `rollout-2026-11-06T09-00-00-${THREAD}.jsonl`);
+    await copyFile(FIXTURE, path);
+    const { readFile } = await import('node:fs/promises');
+    await writeFile(
+      path,
+      (await readFile(path, 'utf8')).replaceAll('/Users/demo/projets/leon', repo),
+    );
+    return { codexHome, path };
+  }
+  const stopJson = (transcriptPath: string) =>
+    JSON.stringify({
+      session_id: THREAD,
+      transcript_path: transcriptPath,
+      cwd: home,
+      hook_event_name: 'Stop',
+      turn_id: 'tour-1',
+      stop_hook_active: false,
+      last_assistant_message: 'Test ajouté.',
+    });
+
+  it(
+    'avec l’accord de capture : les tours puis les faits, sous le kind codex, rien sur la sortie standard ; au Stop suivant, rien de neuf',
+    async () => {
+      await writeConsent(home, 'codex', 2);
+      await recordCapture(home, 'codex');
+      const { codexHome, path } = await writeRollout();
+      const command = ['crochet', 'codex', 'tour'];
+
+      const outcome = await runCommand(stopJson(path), { env: { CODEX_HOME: codexHome }, command });
+
+      expect(outcome).toMatchObject({ code: 0, stdout: '', stderr: '' });
+      expect(outcome.seconds).toBeLessThan(MAX_SECONDS);
+      expect(received.map((request) => request.url)).toEqual([API_PATHS.ingest, API_PATHS.faits]);
+      expect(received[0]?.body.source).toMatchObject({
+        kind: 'codex',
+        external_id: THREAD,
+        project: 'github.com/acme/leon',
+      });
+      expect(received[0]?.body.turns).toHaveLength(4);
+      expect(SessionFactsPayloadSchema.safeParse(received[1]?.body).success).toBe(true);
+      expect(received[1]?.body).toMatchObject({
+        kind: 'codex',
+        fin: false,
+        faits: { echanges: 2 },
+      });
+      expect(await readdir(join(home, '.leon', 'curseurs', 'codex'))).toHaveLength(1);
+
+      received = [];
+      const again = await runCommand(stopJson(path), { env: { CODEX_HOME: codexHome }, command });
+      expect(again.code).toBe(0);
+      // Plus aucun tour nouveau : seuls les faits, recalculés sur tout le rollout.
+      expect(received.map((request) => request.url)).toEqual([API_PATHS.faits]);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'sans l’accord de capture (celui du lot 4, le démarrage seul) : rien d’envoyé, un message fixe',
+    async () => {
+      await writeConsent(home, 'codex', 2);
+      const { codexHome, path } = await writeRollout();
+
+      const outcome = await runCommand(stopJson(path), {
+        env: { CODEX_HOME: codexHome },
+        command: ['crochet', 'codex', 'tour'],
+      });
+
+      expect(outcome).toMatchObject({ code: 0, stdout: '' });
+      expect(outcome.stderr).toBe(
+        'Leon: no consent recorded for the capture of Codex: nothing is sent.\n',
+      );
+      expect(received).toHaveLength(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  it(
+    '`crochet codex fin --entree` : lit l’entrée copiée par le lanceur, l’efface, et envoie une vraie fin',
+    async () => {
+      await writeConsent(home, 'codex', 2);
+      await recordCapture(home, 'codex');
+      const { codexHome, path } = await writeRollout();
+      const entries = join(home, '.leon', 'entrees');
+      await mkdir(entries, { recursive: true });
+      const entry = join(entries, 'fin.abcdef');
+      await writeFile(entry, stopJson(path));
+
+      const outcome = await runCommand('', {
+        env: { CODEX_HOME: codexHome },
+        command: ['crochet', 'codex', 'fin', '--entree', entry],
+      });
+
+      expect(outcome).toMatchObject({ code: 0, stdout: '' });
+      expect(await readdir(entries)).toEqual([]);
+      expect(received.find((request) => request.url === API_PATHS.faits)?.body).toMatchObject({
+        kind: 'codex',
+        fin: true,
+      });
     },
     TEST_TIMEOUT_MS,
   );

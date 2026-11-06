@@ -33,7 +33,13 @@ let lastSessionStart: Date;
 
 async function session(
   owner: TenantContext,
-  input: { title: string; project?: string; startedAgo: number; texts?: string[] },
+  input: {
+    title: string;
+    project?: string;
+    startedAgo: number;
+    texts?: string[];
+    kind?: 'claude_code' | 'codex';
+  },
 ) {
   const start = ago(input.startedAgo);
   const texts = input.texts ?? [`Début de ${input.title}`, `Fin de ${input.title}`];
@@ -43,7 +49,7 @@ async function session(
     ts: new Date(start.getTime() + index * 60_000),
   }));
   return seedRun(owner, {
-    kind: 'claude_code',
+    kind: input.kind ?? 'claude_code',
     title: input.title,
     metadata: { project: input.project ?? PROJECT },
     turns,
@@ -254,6 +260,20 @@ describe('gatherBriefingMaterial', () => {
     expect(material.sessions).toEqual([]);
     expect(material.changes).toEqual([]);
     expect(material.mentions).toEqual([]);
+  });
+
+  // T18 : « mes sessions », tous outils de code confondus.
+  it('rend aussi les sessions Codex de l’utilisateur sur le projet, avec celles de Claude Code', async () => {
+    const project = 'github.com/acme/leon-codex';
+    await session(alice, { title: 'Session Claude Code', project, startedAgo: 2 * HOUR });
+    await session(alice, { title: 'Session Codex', project, startedAgo: HOUR, kind: 'codex' });
+
+    const material = await gatherBriefingMaterial(alice, project, new Date());
+
+    expect(material.sessions.map((entry) => [entry.source.kind, entry.source.title])).toEqual([
+      ['codex', 'Session Codex'],
+      ['claude_code', 'Session Claude Code'],
+    ]);
   });
 
   it('sans session sur le projet, compte depuis 14 jours ; un projet de dossier n’a pas de dépôt', async () => {

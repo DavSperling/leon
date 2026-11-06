@@ -270,6 +270,7 @@ describe('runBriefing', () => {
     git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
     scheduleUpdate?: () => Promise<unknown>;
+    scheduleCatchUp?: () => Promise<unknown>;
     outil?: 'codex';
   }) {
     const out: string[] = [];
@@ -292,6 +293,7 @@ describe('runBriefing', () => {
         out: (text) => out.push(text),
         err: (text) => err.push(text),
         ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
+        ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
         ...(input.outil ? { outil: input.outil } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
@@ -585,6 +587,61 @@ describe('runBriefing', () => {
     expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(git).not.toHaveBeenCalled();
+  });
+
+  // Le rattrapage (T19, catch-up.ts) : lancé détaché au démarrage de tout outil, une fois la sortie écrite, avant la mise
+  // à jour automatique ; son échec ne change rien au crochet.
+  describe('rattrapage', () => {
+    const hook = () => Readable.from([hookJson('/projets/leon')]);
+
+    it('est lancé une fois le bloc écrit, avant la mise à jour, et le crochet rend la même sortie', async () => {
+      const calls: string[] = [];
+      const harness = setup({
+        stdin: hook(),
+        scheduleCatchUp: async () => {
+          calls.push(`rattrapage après ${harness.out.length} sortie`);
+        },
+        scheduleUpdate: async () => {
+          calls.push('mise à jour');
+        },
+      });
+
+      expect(await harness.run()).toBe(0);
+
+      expect(calls).toEqual(['rattrapage après 1 sortie', 'mise à jour']);
+      expect(harness.out).toEqual([BLOCK]);
+    });
+
+    it('est lancé aussi au démarrage de Codex ; une erreur ne change ni la sortie ni la mise à jour', async () => {
+      const scheduleUpdate = vi.fn(async () => {});
+      const { run, out, err } = setup({
+        stdin: hook(),
+        home: codex,
+        outil: 'codex',
+        scheduleCatchUp: async () => {
+          throw new Error('boom');
+        },
+        scheduleUpdate,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toHaveLength(1);
+      expect(err).toEqual([]);
+      expect(scheduleUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('n’est pas lancé sous un autre outil qui a recopié les crochets de Claude Code', async () => {
+      const scheduleCatchUp = vi.fn(async () => {});
+
+      await setup({
+        stdin: hook(),
+        env: { ...serverEnv, CURSOR_VERSION: '1.7.2' },
+        scheduleCatchUp,
+      }).run();
+
+      expect(scheduleCatchUp).not.toHaveBeenCalled();
+    });
   });
 
   // La mise à jour automatique (S12, self-update.ts) : `scheduleUpdate` décide (24 h, forme clone) et lance le processus

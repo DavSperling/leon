@@ -6,6 +6,7 @@ import { PROVIDER_LABELS } from '@/lib/providers';
 // Des noms qui se lisent pareil en français et en anglais : le serveur les calcule sans connaître la langue du lecteur.
 export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_code: 'Claude Code',
+  codex: 'Codex',
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note (MCP)',

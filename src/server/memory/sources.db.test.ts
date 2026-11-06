@@ -161,6 +161,7 @@ describe('listSources', () => {
     expect(channels.map((channel) => channel.kind)).toEqual([...CAPTURE_KINDS]);
     expect(channels.map((channel) => channel.kindLabel)).toEqual([
       'Claude Code',
+      'Codex',
       'claude.ai',
       'ChatGPT',
       'Note (MCP)',

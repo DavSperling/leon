@@ -7,6 +7,11 @@
 // une apostrophe), et `exec` laisse le Node ou pnpm recevoir l'entrée standard, le JSON du crochet, et rendre son code
 // de sortie.
 //
+// La fin de session d'un outil (`crochet <outil> fin`, D11 du plan mémoire des sessions) se détache ici, avant node :
+// Codex coupe SessionEnd à 3 s. Le lanceur copie l'entrée du crochet dans un fichier 0600 de `~/.leon/entrees/` (mktemp),
+// relance la commande avec `--entree <fichier>` sous nohup, sans entrée ni sortie, puis sort avec 0 sans l'attendre.
+// La commande lit puis efface ce fichier (catch-up.ts).
+//
 // L'écriture imite connection.ts : un fichier voisin en 0700, puis un `rename`, de sorte qu'un lanceur déjà lancé ou un
 // arrêt en cours d'écriture ne tombe jamais sur un script coupé. Un lien symbolique à la place du lanceur est refusé.
 import { randomBytes } from 'node:crypto';
@@ -48,7 +53,36 @@ export function launcherScript(home: string, form: LauncherForm): string {
       : ['pnpm', ...HOOK_PNPM_OPTIONS, '--dir', singleQuote(form.repoDir), 'leon'];
   const origin =
     form.kind === 'installee' ? 'leon setup). Installed form.' : 'leon setup --depot). Clone form.';
-  return `#!/bin/sh\n${MARK}${origin}\nexec ${exec.join(' ')} "$@"\n`;
+  const command = exec.join(' ');
+  const entries = singleQuote(join(leon, 'entrees'));
+  return `#!/bin/sh
+${MARK}${origin}
+if [ "$#" -eq 3 ] && [ "$1" = crochet ] && [ "$3" = fin ]; then
+  entrees=${entries}
+  if (umask 077 && mkdir -p "$entrees") && entree=$(mktemp "$entrees/fin.XXXXXX") && cat > "$entree"; then
+    nohup ${command} crochet "$2" fin --entree "$entree" </dev/null >/dev/null 2>&1 &
+  fi
+  exit 0
+fi
+exec ${command} "$@"
+`;
+}
+
+// Les textes des versions précédentes du lanceur de Leon, pour cette forme : `leon setup --yes` (setup.ts) remplace
+// sans le demander un lanceur de la forme installée qu'il a lui-même écrit, celui d'avant comme celui d'aujourd'hui.
+// La première version (lot 4) n'avait pas la fin détachée.
+export function previousLauncherScripts(home: string, form: LauncherForm): string[] {
+  const leon = join(home, '.leon');
+  const exec =
+    form.kind === 'installee'
+      ? [
+          singleQuote(join(leon, 'runtime', 'actuel', 'node')),
+          singleQuote(join(leon, 'cli', 'actuelle', 'leon.mjs')),
+        ]
+      : ['pnpm', ...HOOK_PNPM_OPTIONS, '--dir', singleQuote(form.repoDir), 'leon'];
+  const origin =
+    form.kind === 'installee' ? 'leon setup). Installed form.' : 'leon setup --depot). Clone form.';
+  return [`#!/bin/sh\n${MARK}${origin}\nexec ${exec.join(' ')} "$@"\n`];
 }
 
 // null : le fichier n'existe pas (ou ~/.leon n'est pas un dossier). Toute autre erreur (droits…) remonte.

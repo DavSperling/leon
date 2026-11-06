@@ -22,9 +22,10 @@ import {
 // Le rangement des sessions en fils de travail (T40 et T41 ; D21, D22 et D34 du plan de la mémoire à disposition), sans
 // modèle. Pour une session de code de l'auteur, sous ses droits (withTenant), en une transaction :
 // - la session rejoint le fil de sa branche (hors main et master), sinon celui d'une de ses PR, ouvert s'il manque ;
-// - sans branche ni PR, elle reste dans le fil qui l'a déjà, sinon rejoint le fil le plus proche par le vecteur de son
-//   résumé (nearestFil), et n'en ouvre jamais. Sans résumé, sans vecteur ou sans fournisseur, elle reste hors fil ;
-//   l'écriture des vecteurs d'un résumé la remet à ranger (embed-missing.ts) ;
+// - sans branche ni PR, elle reste dans un fil qui l'a déjà (le premier par id, sans fusion), sinon rejoint le fil le
+//   plus proche par le vecteur de son résumé (nearestFil), et n'en ouvre jamais. Sans résumé, sans l'usage `resume`,
+//   sans vecteur ou sans fournisseur, elle reste hors fil ; l'écriture des vecteurs d'un résumé la remet à ranger
+//   (embed-missing.ts) ;
 // - les fils de l'auteur qui ont sa branche ou une de ses PR fusionnent dans le plus ancien. L'absorbé reste, marqué
 //   `absorbe_par`, avec ses listes et ses versions (D21, tranché le 05/11) ; le rangement le saute ;
 // - un fil qui change est mis en file `fil-maj` (T43) : le rangement n'écrit jamais l'état.
@@ -53,7 +54,13 @@ type Liste = 'branches' | 'prs' | 'sessions' | 'fichiers' | 'liees' | 'absorbes'
 export type FilingOutcome = 'range' | 'inchange' | 'hors-fil' | 'sans-objet';
 
 type Fil = { id: string; metadata: Record<string, unknown> };
-type SessionRow = { kind: string; project: string | null; faits: unknown; last_epoch: string };
+type SessionRow = {
+  kind: string;
+  project: string | null;
+  faits: unknown;
+  last_epoch: string;
+  resume: boolean;
+};
 
 // `leon:fil:<projet>:<clé>` (D21) : un condensé de la branche, jamais la branche, ou un uuid pour un fil sans branche.
 const filKey = (project: string, branch: string | null) =>
@@ -99,6 +106,8 @@ async function lockAuthor(tx: Tx, ctx: TenantContext): Promise<boolean> {
 }
 
 // La session de l'auteur : le filtre `owner_user_id` en plus de la sécurité par ligne, et un kind de session de code.
+// `resume` : l'usage du dernier envoi de faits, comme à la lecture de l'état (versions.ts) ; retiré, l'ancien résumé
+// garde ses passages mais ne rattache plus.
 async function readSession(
   tx: Tx,
   ctx: TenantContext,
@@ -108,7 +117,8 @@ async function readSession(
     rows: [row],
   } = await tx.execute<SessionRow>(sql`
     select s.kind, s.metadata->>'project' as project, s.metadata->'faits' as faits,
-      extract(epoch from ${LAST_TS_SQL}) as last_epoch
+      extract(epoch from ${LAST_TS_SQL}) as last_epoch,
+      coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false) as resume
     from sources s
     where s.tenant_id = ${ctx.tenantId} and s.id = ${sessionId} and s.owner_user_id = ${ctx.userId}
       and s.kind = any(${textArray(CODE_SESSION_KINDS)})`);
@@ -219,9 +229,10 @@ async function range(
 
   let ids: string[];
   if (branch === null && prs.length === 0) {
-    // Sans clé (T41) : le fil qui l'a déjà, sinon le plus proche, jamais un fil ouvert.
-    ids = await findFils(tx, ctx, project, [has('sessions', { id: sessionId })]);
-    if (ids.length === 0 && model !== null) {
+    // Sans clé (T41) : un fil qui l'a déjà, sinon le plus proche, jamais un fil ouvert. Un seul : deux fils qui l'ont
+    // (elle a changé de branche) ne partagent ni branche ni PR, et ne fusionnent pas (D22).
+    ids = (await findFils(tx, ctx, project, [has('sessions', { id: sessionId })])).slice(0, 1);
+    if (ids.length === 0 && model !== null && session.resume) {
       const nearest = await nearestFil(tx, ctx, sessionId, project, model);
       if (nearest !== null) ids = [nearest];
     }

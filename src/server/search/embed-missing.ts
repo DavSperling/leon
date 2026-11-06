@@ -156,8 +156,10 @@ async function resumedSessions(tx: Tx, passageIds: string[]): Promise<string[]> 
 }
 
 // Une session dont le résumé a ses vecteurs est remise à ranger : sans clé, elle rejoint alors le fil le plus proche
-// (T41). Les vecteurs sont écrits : une file indisponible ne fait rien échouer, et le prochain envoi de faits de la
-// session la remet en file.
+// (T41). Les vecteurs sont écrits : une file indisponible ne fait rien échouer, elle est seulement journalisée.
+// shortcut: rien ne reprend un signal perdu ; une session close n'envoie plus de faits et reste hors fil jusqu'à son
+// prochain résumé. Une session sans clé déjà vectorisée n'est pas non plus réévaluée quand un fil voisin reçoit plus
+// tard les vecteurs de son propre résumé. Reprendre par le tic des vecteurs le jour où ça se voit.
 async function signalRangement(ctx: TenantContext, sessionIds: string[]): Promise<void> {
   for (const sourceId of sessionIds) {
     try {

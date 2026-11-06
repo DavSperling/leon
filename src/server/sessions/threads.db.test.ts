@@ -94,8 +94,9 @@ const factice = createFakeEmbedder();
 const file = (owner: TenantContext, sourceId: string, embedder: Embedder | null = factice) =>
   fileSession(jobOf(owner, sourceId), { embedder });
 
-// Le résumé de la session, comme l'écrit le worker du résumé (un tour `leon:resume:1`, que nomme `metadata.resume`, et
-// son run), puis indexé avec ce fournisseur de vecteurs, comme par le worker de la recherche.
+// Le résumé de la session, comme l'écrit le worker du résumé pour un outil qui a l'usage `resume` (un tour
+// `leon:resume:1`, que nomme `metadata.resume`, et son run), puis indexé avec ce fournisseur de vecteurs, comme par le
+// worker de la recherche.
 async function summarize(
   owner: TenantContext,
   sourceId: string,
@@ -105,7 +106,9 @@ async function summarize(
   const ingestRunId = await withTenant(owner, async (tx) => {
     await tx
       .update(sources)
-      .set({ metadata: sql`${sources.metadata} || '{"resume": {"tour": 1}}'::jsonb` })
+      .set({
+        metadata: sql`${sources.metadata} || '{"resume": {"tour": 1}, "usages": ["resume"]}'::jsonb`,
+      })
       .where(eq(sources.id, sourceId));
     const { ids } = await insertNewTurns(tx, [
       {
@@ -425,13 +428,19 @@ describe('fileSession, une session sans clé (T41)', () => {
     expect(await file(paul, onMain, null)).toBe('inchange');
   });
 
-  it('en dessous du seuil, ou sur un autre projet : hors fil, et aucun fil ouvert', async () => {
+  it('en dessous du seuil, sur un autre projet ou sans l’usage resume : hors fil, et aucun fil ouvert', async () => {
     const { paul, marie } = await team();
     const onBranch = await session(paul);
     await file(paul, onBranch);
     await summarize(paul, onBranch, NEAR);
     const far = await session(paul, { branche: 'main' });
     await summarize(paul, far, 'Une recette de crêpes bretonnes au sarrasin');
+    // L'usage `resume` retiré sur le poste : le dernier envoi de faits ne l'a plus, l'ancien résumé et ses vecteurs
+    // restent.
+    const withdrawnId = `session-${randomUUID()}`;
+    const withdrawn = await session(paul, { branche: 'main' }, withdrawnId);
+    await summarize(paul, withdrawn, `${NEAR}, suite`);
+    await session(paul, { branche: 'main' }, withdrawnId);
     const { sourceId: elsewhere } = await recordFacts(paul, {
       kind: 'claude_code',
       external_id: `session-${randomUUID()}`,
@@ -448,6 +457,7 @@ describe('fileSession, une session sans clé (T41)', () => {
 
     expect(await file(paul, far)).toBe('hors-fil');
     expect(await file(paul, elsewhere)).toBe('hors-fil');
+    expect(await file(paul, withdrawn)).toBe('hors-fil');
     expect(await file(marie, alone)).toBe('hors-fil');
 
     const fils = await filsOf(paul);
@@ -455,6 +465,70 @@ describe('fileSession, une session sans clé (T41)', () => {
     expect(sessionIds(fils[0])).toEqual([onBranch]);
     expect(await filsOf(marie)).toEqual([]);
     expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+
+  it('un résumé proche de plus de 30 jours : hors fil', async () => {
+    const { paul } = await team();
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, NEAR);
+    await adminDb
+      .update(passages)
+      .set({ ts: sql`${passages.ts} - interval '40 days'` })
+      .where(eq(passages.sourceId, onBranch));
+    const onMain = await session(paul, { branche: 'main' });
+    await summarize(paul, onMain, `${NEAR}, suite`);
+
+    expect(await file(paul, onMain)).toBe('hors-fil');
+    expect(sessionIds((await filsOf(paul))[0])).toEqual([onBranch]);
+  });
+
+  it('après une fusion, une session proche d’une session des deux fils rejoint le fil gardé, jamais l’absorbé', async () => {
+    const { paul } = await team();
+    const pr = { repo: 'acme/leon', numero: 150, par: 'pr-link' } as const;
+    await file(paul, await session(paul, { branche: 'paul/a', prs: [pr] }));
+    // Passée de la branche a à la branche b, elle est dans les deux fils (T40).
+    const externalId = `session-${randomUUID()}`;
+    await file(paul, await session(paul, { branche: 'paul/a' }, externalId));
+    const common = await session(paul, { branche: 'paul/b' }, externalId);
+    await file(paul, common);
+    await summarize(paul, common, NEAR);
+    // Le plus ancien est gardé : on vieillit celui dont l'id est le plus grand. À distance égale, `f.id` choisirait
+    // alors l'absorbé s'il n'était pas sauté.
+    const older = (await filsOf(paul)).map((fil) => fil.id).sort()[1] ?? '';
+    await adminDb
+      .update(sources)
+      .set({ createdAt: sql`${sources.createdAt} - interval '1 day'` })
+      .where(eq(sources.id, older));
+    await file(paul, await session(paul, { branche: 'paul/b', prs: [pr] }));
+    const [keeper, absorbed] = await filsOf(paul);
+    expect(keeper?.id).toBe(older);
+    expect(absorbed?.metadata.absorbe_par).toBe(older);
+    expect(sessionIds(absorbed)).toContain(common);
+
+    const onMain = await session(paul, { branche: 'main' });
+    await summarize(paul, onMain, `${NEAR}, suite`);
+    expect(await file(paul, onMain)).toBe('range');
+
+    const [keeperAfter, absorbedAfter] = await filsOf(paul);
+    expect(sessionIds(keeperAfter)).toContain(onMain);
+    expect(sessionIds(absorbedAfter)).not.toContain(onMain);
+  });
+
+  it('une session passée de la branche a à la branche b, puis sur main : les deux fils gardés, aucune fusion', async () => {
+    const { paul } = await team();
+    const externalId = `session-${randomUUID()}`;
+    let sourceId = '';
+    for (const branche of ['paul/a', 'paul/b', 'main']) {
+      sourceId = await session(paul, { branche }, externalId);
+      await file(paul, sourceId, null);
+    }
+
+    const fils = await filsOf(paul);
+    expect(fils.map((fil) => fil.metadata.absorbe_par)).toEqual([undefined, undefined]);
+    expect(fils.map((fil) => fil.metadata.branches)).toEqual([['paul/a'], ['paul/b']]);
+    expect(fils.map((fil) => fil.metadata.absorbes)).toEqual([[], []]);
+    expect(fils.map(sessionIds)).toEqual([[sourceId], [sourceId]]);
   });
 
   it('sans fournisseur de vecteurs : aucun rattachement', async () => {

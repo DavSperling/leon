@@ -8,6 +8,7 @@ describe('labels', () => {
   it('nomme les sources', () => {
     expect(SOURCE_KIND_LABELS).toEqual({
       claude_code: 'Claude Code',
+      codex: 'Codex',
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
       mcp_remember: 'Note (MCP)',

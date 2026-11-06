@@ -19,6 +19,7 @@ import { launcherPath } from './hook-commands';
 import {
   LauncherNotReplacedError,
   launcherScript,
+  previousLauncherScripts,
   removeLauncher,
   writeLauncher,
 } from './launcher';
@@ -32,14 +33,26 @@ const NODE_DIR = `node-v${runtime.version}`;
 const CLONE = { kind: 'clone', repoDir: '/Users/a/leon' } as const;
 const INSTALLED = { kind: 'installee' } as const;
 
-// K8, mot pour mot, pour un dossier personnel /Users/a.
-const INSTALLED_SCRIPT = `#!/bin/sh
-# Written by Leon (leon setup). Installed form.
-exec '/Users/a/.leon/runtime/actuel/node' '/Users/a/.leon/cli/actuelle/leon.mjs' "$@"
+// K8, mot pour mot, pour un dossier personnel /Users/a, avec la fin détachée avant node (T19, D11).
+const INSTALLED_EXEC = `'/Users/a/.leon/runtime/actuel/node' '/Users/a/.leon/cli/actuelle/leon.mjs'`;
+const CLONE_EXEC = `pnpm -s --config.verify-deps-before-run=false --dir '/Users/a/leon' leon`;
+const script = (origin: string, exec: string) => `#!/bin/sh
+# Written by Leon (${origin}
+if [ "$#" -eq 3 ] && [ "$1" = crochet ] && [ "$3" = fin ]; then
+  entrees='/Users/a/.leon/entrees'
+  if (umask 077 && mkdir -p "$entrees") && entree=$(mktemp "$entrees/fin.XXXXXX") && cat > "$entree"; then
+    nohup ${exec} crochet "$2" fin --entree "$entree" </dev/null >/dev/null 2>&1 &
+  fi
+  exit 0
+fi
+exec ${exec} "$@"
 `;
-const CLONE_SCRIPT = `#!/bin/sh
-# Written by Leon (leon setup --depot). Clone form.
-exec pnpm -s --config.verify-deps-before-run=false --dir '/Users/a/leon' leon "$@"
+const INSTALLED_SCRIPT = script('leon setup). Installed form.', INSTALLED_EXEC);
+const CLONE_SCRIPT = script('leon setup --depot). Clone form.', CLONE_EXEC);
+// La version du lot 4, sans la fin détachée : `leon setup --yes` la remplace sans demander (setup.ts).
+const INSTALLED_SCRIPT_V1 = `#!/bin/sh
+# Written by Leon (leon setup). Installed form.
+exec ${INSTALLED_EXEC} "$@"
 `;
 
 let dir: string;
@@ -68,6 +81,11 @@ describe('launcherScript : K8, mot pour mot', () => {
 
   it('forme clone : pnpm dans le clone, avec les options des crochets', () => {
     expect(launcherScript('/Users/a', CLONE)).toBe(CLONE_SCRIPT);
+  });
+
+  it('les versions précédentes : celle du lot 4, sans la fin détachée', () => {
+    expect(previousLauncherScripts('/Users/a', INSTALLED)).toEqual([INSTALLED_SCRIPT_V1]);
+    expect(previousLauncherScripts('/Users/a', INSTALLED)).not.toContain(INSTALLED_SCRIPT);
   });
 
   it('refuse un clone indiqué par un chemin relatif, sans rien écrire', async () => {
@@ -235,6 +253,57 @@ describe('le lanceur écrit, lancé par sh', () => {
     expect(await launch(['briefing', 'avec espace'])).toBe(
       `${join(weirdHome, '.leon', 'cli', 'actuelle', 'leon.mjs')}\nbriefing\navec espace\n`,
     );
+  });
+
+  // T19 : Codex coupe SessionEnd à 3 s. Le faux Node attend 2 s puis écrit ses arguments et l'entrée qu'il lit.
+  it('la fin rend la main en moins d’une seconde, l’entrée copiée en 0600 dans ~/.leon/entrees', async () => {
+    const SLOW = `#!/bin/sh\nsleep 2\n{ for arg in "$@"; do echo "$arg"; done; cat "$4"; } > "$HOME/fini"\n`;
+    const runtimeDir = join(weirdHome, '.leon', 'runtime');
+    await mkdir(join(runtimeDir, NODE_DIR), { recursive: true });
+    await writeFile(join(runtimeDir, NODE_DIR, 'node'), SLOW.replace('"$4"', '"$6"'), {
+      mode: 0o755,
+    });
+    await symlink(NODE_DIR, join(runtimeDir, 'actuel'));
+    await writeLauncher(weirdHome, INSTALLED);
+
+    const started = Date.now();
+    const child = execFile(
+      '/bin/sh',
+      [
+        '-c',
+        `printf '%s' '{"transcript_path":"/x"}' | '${launcherPath(weirdHome).replaceAll("'", `'\\''`)}' crochet codex fin`,
+      ],
+      { env },
+    );
+    const code = await new Promise<number | null>((done) => child.on('close', done));
+    expect(code).toBe(0);
+    expect(Date.now() - started).toBeLessThan(1000);
+
+    const entrees = join(weirdHome, '.leon', 'entrees');
+    const [entry] = await readdir(entrees);
+    expect(entry).toMatch(/^fin\./);
+    expect(await modeOf(join(entrees, entry ?? ''))).toBe(0o600);
+    expect(await modeOf(entrees)).toBe(0o700);
+    expect(await readFile(join(entrees, entry ?? ''), 'utf8')).toBe('{"transcript_path":"/x"}');
+
+    await expect
+      .poll(() => readFile(join(weirdHome, 'fini'), 'utf8').catch(() => ''), { timeout: 5000 })
+      .toBe(
+        `${join(weirdHome, '.leon', 'cli', 'actuelle', 'leon.mjs')}\ncrochet\ncodex\nfin\n--entree\n${join(entrees, entry ?? '')}\n{"transcript_path":"/x"}`,
+      );
+  }, 10_000);
+
+  it('les autres commandes, même `crochet codex fin` avec une option, passent par exec comme avant', async () => {
+    const runtimeDir = join(weirdHome, '.leon', 'runtime');
+    await mkdir(join(runtimeDir, NODE_DIR), { recursive: true });
+    await writeFile(join(runtimeDir, NODE_DIR, 'node'), FAKE, { mode: 0o755 });
+    await symlink(NODE_DIR, join(runtimeDir, 'actuel'));
+    await writeLauncher(weirdHome, INSTALLED);
+
+    expect(await launch(['crochet', 'codex', 'fin', '--entree', '/f'])).toBe(
+      `${join(weirdHome, '.leon', 'cli', 'actuelle', 'leon.mjs')}\ncrochet\ncodex\nfin\n--entree\n/f\n`,
+    );
+    expect(await launch(['crochet', 'codex', 'tour'])).toContain('tour');
   });
 
   it('forme clone : pnpm, ses options, le clone, puis les arguments du crochet', async () => {

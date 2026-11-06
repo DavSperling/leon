@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { homedir, hostname } from 'node:os';
 import { isAbsolute, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -8,11 +8,15 @@ import { CODE_SESSION_KINDS } from '../capture/turn';
 import { runBriefing } from './briefing';
 import {
   captureSessionFromHook,
+  captureToolHook,
+  HOOK_DEADLINE_MS,
   isOtherToolHook,
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
+import { captureTools, catchUp, readEntryFile } from './catch-up';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
+import { startDetached } from './detach';
 import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import { OUTILS, type Outil } from './hook-commands';
 import {
@@ -34,6 +38,7 @@ import {
   runLogin,
   runLogout,
 } from './login';
+import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
 import {
   NODE_DIST,
@@ -86,8 +91,15 @@ Commands:
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   crochet <tool> <event>
                        The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
-                       input). For now: \`crochet codex demarrage\`, which prints the same block as briefing, in the
-                       format Codex expects. Any other tool or event prints nothing
+                       input). For now, Codex: \`crochet codex demarrage\` prints the same block as briefing, in the
+                       format Codex expects; \`crochet codex tour\` (each Stop) and \`crochet codex fin\` (SessionEnd)
+                       send the new exchanges of the session, and its actions, if ~/.leon/accord.json allows the
+                       capture of Codex; they print nothing. Any other tool or event prints nothing
+      --entree <file>      (fin) read the hook JSON from this file of ~/.leon/entrees instead, then delete it (what
+                           the launcher ~/.leon/bin/leon passes once it has handed control back to Codex)
+  rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex): send what their
+                       hooks missed since the last capture (a session left with /quit, a failed upload). Only the
+                       files changed since that consent are read. Started in the background when a session starts
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -186,6 +198,10 @@ async function runBriefingCommand(outil?: Outil): Promise<number> {
       fetch,
       out: console.log,
       err: console.error,
+      // Le rattrapage des outils dont la capture est acceptée (T19), détaché lui aussi.
+      scheduleCatchUp: async () => {
+        if ((await captureTools(homedir())).length > 0) startDetached(['rattraper']);
+      },
       // La mise à jour automatique (S12) : décidée et lancée détachée, une fois le bloc écrit.
       scheduleUpdate: () =>
         scheduleUpdate({
@@ -267,6 +283,83 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
+// Un délai par requête, pour le rattrapage qui n'a pas de crochet pour le borner.
+const REQUEST_TIMEOUT_MS = 30_000;
+const timedFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+
+// Les crochets d'un tour et de la fin d'un outil hors Claude Code (T19) : rien sur la sortie standard, le code de sortie
+// vaut toujours 0. L'entrée vient du fichier que le lanceur a copié (`--entree`, lu puis effacé avant tout le reste), sinon
+// de l'entrée standard. Rien ne part sans l'accord de capture de l'outil (`capture_le`, consent.ts).
+async function runToolCapture(
+  outil: Outil,
+  evenement: 'tour' | 'fin',
+  args: string[],
+): Promise<number> {
+  try {
+    const { values } = parseArgs({ args, options: { entree: { type: 'string' } }, strict: false });
+    const input =
+      typeof values.entree === 'string'
+        ? await readEntryFile(homedir(), values.entree)
+        : await readHookStdin(process.stdin);
+    const consent = await factsConsent(homedir(), outil);
+    if (!consent?.capture_le) {
+      console.error(
+        `Leon: no consent recorded for the capture of ${ADAPTATEURS[outil].label}: nothing is sent.`,
+      );
+      return 0;
+    }
+    let env: ServerEnv;
+    try {
+      env = await resolveServerEnv(process.env, homedir());
+    } catch (error) {
+      console.error(`Leon: ${error instanceof Error ? error.message : 'invalid configuration.'}`);
+      return 0;
+    }
+    const signal = AbortSignal.timeout(HOOK_DEADLINE_MS);
+    return await captureToolHook(outil, evenement, input, {
+      send: createIngestSender(fetch, env, { signal }),
+      facts: {
+        accord: consent.version,
+        usages: consent.usages,
+        send: createFactsSender(fetch, env, { signal }),
+      },
+      out: () => {},
+      git: gitInDirectory,
+      readFile: (path) => readFile(path, 'utf8'),
+      stat: (path) => stat(path),
+      home: homedir(),
+      env: process.env,
+    });
+  } catch {
+    console.error('Leon: capture failed (unexpected error).');
+    return 0;
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
+// `leon rattraper` (T19), lancé détaché au démarrage d'une session : sans outil dont la capture est acceptée, rien.
+async function runCatchUp(): Promise<number> {
+  if ((await captureTools(homedir())).length === 0) return 0;
+  const env = await resolveServerEnv(process.env, homedir());
+  const summary = await catchUp({
+    send: createIngestSender(timedFetch, env),
+    sendFacts: createFactsSender(timedFetch, env),
+    out: () => {},
+    git: gitInDirectory,
+    readFile: (path) => readFile(path, 'utf8'),
+    stat: (path) => stat(path),
+    home: homedir(),
+    env: process.env,
+    now: () => new Date(),
+  });
+  console.error(
+    `Leon: ${countOf(summary.sessions, 'session')} caught up, ${countOf(summary.failures, 'failure')}.`,
+  );
+  return summary.failures > 0 ? 1 : 0;
+}
+
 // Pose une question sur le terminal et rend la ligne tapée, ou null si l'entrée se ferme sans réponse (Ctrl+D, ou
 // commande lancée sans terminal) : ce n'est pas une réponse, on n'écrit alors rien (D30). L'itérateur est créé tout de
 // suite : une réponse déjà arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent
@@ -330,7 +423,7 @@ async function runInstallHooks(args: string[]): Promise<number> {
 // arrête la commande sans rien retirer. Le message ne recopie pas la valeur reçue.
 async function runUninstallHooks(args: string[]): Promise<number> {
   const { values } = parseArgs({ args, options: { outil: { type: 'string' } } });
-  const tools: readonly string[] = [...CODE_SESSION_KINDS, ...OUTILS];
+  const tools: readonly string[] = [...new Set([...CODE_SESSION_KINDS, ...OUTILS])];
   if (values.outil !== undefined && !tools.includes(values.outil)) {
     throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
   }
@@ -440,13 +533,17 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
-    // Les crochets des autres outils (C6) : au lot 4, le démarrage de Codex. Le reste ne fait rien et sort avec 0, pour
-    // qu'un crochet d'une version plus récente ne gêne jamais l'outil.
+    // Les crochets des autres outils (C6) : le démarrage de Codex (lot 4), son tour et sa fin (lot 5). Le reste ne fait
+    // rien et sort avec 0, pour qu'un crochet d'une version plus récente ne gêne jamais l'outil.
     if (command === 'crochet') {
-      const [outil, evenement] = args;
+      const [outil, evenement, ...rest] = args;
       if (outil === 'codex' && evenement === 'demarrage') return await runBriefingCommand(outil);
+      if (outil === 'codex' && (evenement === 'tour' || evenement === 'fin')) {
+        return await runToolCapture(outil, evenement, rest);
+      }
       return 0;
     }
+    if (command === 'rattraper') return await runCatchUp();
     if (command === 'setup') return await runSetupCommand(args);
     if (command === 'update') return await runUpdateCommand(args);
     if (command === 'login') return await runLoginCommand(args);

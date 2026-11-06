@@ -23,7 +23,7 @@ import { type Connection, readConnection } from './connection';
 import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
-import { addCodexHook, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
+import { addCodexHooks, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
 import {
   addLeonHooks,
   errorCode,
@@ -33,7 +33,12 @@ import {
   parseSettings,
   SETTINGS_FILE,
 } from './install-hooks';
-import { type LauncherForm, launcherScript, writeLauncher } from './launcher';
+import {
+  type LauncherForm,
+  launcherScript,
+  previousLauncherScripts,
+  writeLauncher,
+} from './launcher';
 import { requestMe } from './login';
 import { isAllowedServerUrl } from './server-url';
 
@@ -99,11 +104,14 @@ export async function ensureLauncher(
   io: { home: string; yes: boolean } & Pick<SetupDeps, 'out' | 'err' | 'ask'>,
 ): Promise<boolean> {
   const path = launcherPath(io.home);
-  const installed = launcherScript(io.home, { kind: 'installee' });
+  const installed = [
+    launcherScript(io.home, { kind: 'installee' }),
+    ...previousLauncherScripts(io.home, { kind: 'installee' }),
+  ];
   const confirm = async (old: string): Promise<boolean> => {
-    // --yes ne vaut que pour le lanceur de la forme installée, que Leon a écrit : celui d'un clone (qu'on perdrait de
-    // vue) ou d'un autre auteur se montre et se demande toujours.
-    if (!(io.yes && old === installed)) {
+    // --yes ne vaut que pour le lanceur de la forme installée, que Leon a écrit (aujourd'hui ou dans une version
+    // précédente) : celui d'un clone (qu'on perdrait de vue) ou d'un autre auteur se montre et se demande toujours.
+    if (!(io.yes && installed.includes(old))) {
       io.out(
         `${path} already exists and is different.\n  Now:\n${indent(old)}\n  Replaced by:\n${indent(launcherScript(io.home, form))}`,
       );
@@ -174,16 +182,18 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
 // Le crochet de Codex (T17), comme celui de Claude Code : la ligne finale distingue un « non » d'une installation.
 async function installCodex(codexDir: string, ctx: InstallContext): Promise<Installed> {
   const code = await installCodexHook({ codexDir, home: ctx.home, assumeYes: ctx.yes }, ctx);
-  if (code !== 0) return { failed: true, status: 'hook NOT installed (see above)' };
+  if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
   const settings = parseSettings(await load(join(codexDir, CODEX_HOOKS_FILE)));
   const inPlace =
     settings !== null &&
-    addCodexHook(settings, ctx.home)?.action === 'inchange' &&
-    (await factsConsent(ctx.home, 'codex')) !== null;
+    (addCodexHooks(settings, ctx.home)?.changes ?? []).every(
+      (change) => change.action === 'inchange',
+    ) &&
+    (await factsConsent(ctx.home, 'codex'))?.capture_le !== undefined;
   return {
     failed: false,
     status: inPlace
-      ? 'hook installed (approve it with /hooks in Codex)'
+      ? 'hooks installed (approve them with /hooks in Codex)'
       : 'skipped (not confirmed)',
   };
 }

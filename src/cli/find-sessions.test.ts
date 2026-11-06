@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findSessionFiles } from './find-sessions';
+import { findCodexSessionFiles, findSessionFiles } from './find-sessions';
 
 let baseDir: string;
 let projectDir: string;
@@ -56,5 +56,41 @@ describe('findSessionFiles', () => {
       new Date(2026, 9, 15),
     );
     expect(await findSessionFiles(baseDir)).toEqual([original, resumed]);
+  });
+});
+
+describe('findCodexSessionFiles', () => {
+  const rollout = async (relative: string, modified: Date) => {
+    const path = join(baseDir, 'sessions', relative);
+    await mkdir(join(path, '..'), { recursive: true });
+    await writeFile(path, '{}\n');
+    await utimes(path, modified, modified);
+    return path;
+  };
+
+  it('rend les rollouts de sessions/AAAA/MM/JJ, du moins récemment modifié au plus récent', async () => {
+    const recent = await rollout(
+      '2026/11/06/rollout-2026-11-06T09-00-00-b.jsonl',
+      new Date('2026-11-06T10:00:00Z'),
+    );
+    const ancien = await rollout(
+      '2026/10/30/rollout-2026-10-30T09-00-00-a.jsonl',
+      new Date('2026-11-01T10:00:00Z'),
+    );
+
+    const found = await findCodexSessionFiles(baseDir);
+
+    expect(found.map((file) => file.path)).toEqual([ancien, recent]);
+    expect(found[1]?.mtimeMs).toBe(new Date('2026-11-06T10:00:00Z').getTime());
+    expect(found[1]?.size).toBe(3);
+  });
+
+  it('ignore un rollout compressé, un autre fichier, un dossier trop profond, un dossier absent', async () => {
+    await rollout('2026/11/06/rollout-2026-11-06T09-00-00-c.jsonl.zst', new Date());
+    await rollout('2026/11/06/notes.jsonl', new Date());
+    await rollout('2026/11/06/x/rollout-2026-11-06T09-00-00-d.jsonl', new Date());
+
+    expect(await findCodexSessionFiles(baseDir)).toEqual([]);
+    expect(await findCodexSessionFiles(join(baseDir, 'absent'))).toEqual([]);
   });
 });

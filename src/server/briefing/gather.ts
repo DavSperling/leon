@@ -1,5 +1,11 @@
 import { type SQL, sql } from 'drizzle-orm';
-import { CAPTURE_KINDS, repoOf, type SourceKind, type TurnRole } from '@/capture/turn';
+import {
+  CAPTURE_KINDS,
+  CODE_SESSION_KINDS,
+  repoOf,
+  type SourceKind,
+  type TurnRole,
+} from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
@@ -43,7 +49,6 @@ const CHANGE_TURNS = 2;
 export const MENTIONS_MAX = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Les outils lus par nom dans les requêtes : typés, pour qu'un nom qui n'est plus dans SOURCE_KINDS ne compile pas.
-const CLAUDE_CODE = 'claude_code' satisfies SourceKind;
 const GITHUB = 'github' satisfies SourceKind;
 
 // Un extrait de la matière : un tour ou un passage, son texte déjà coupé.
@@ -54,7 +59,7 @@ export type BriefingExcerpt = {
   text: string;
 };
 
-// Une session Claude Code de l'utilisateur sur le projet, avec ses derniers tours.
+// Une session de code de l'utilisateur sur le projet, avec ses derniers tours.
 export type BriefingSession = { source: SourceInfo; turns: BriefingExcerpt[] };
 // Une source du dépôt du projet qui a bougé depuis la dernière session, avec ses derniers tours.
 export type BriefingChange = { source: SourceInfo; turns: BriefingExcerpt[] };
@@ -173,7 +178,7 @@ export async function lastTurns(
   return bySource;
 }
 
-// Les dernières sessions Claude Code du lecteur sur ce projet, actives depuis `cutoff`, la plus récente d'abord.
+// Les dernières sessions de code du lecteur sur ce projet (Claude Code, Codex), actives depuis `cutoff`, la plus récente d'abord.
 async function readSessions(tx: Tx, ctx: TenantContext, project: string, cutoff: Date) {
   const { rows } = await tx.execute<SessionRow>(sql`
     select s.id, s.kind, s.title, s.metadata, extract(epoch from l.last_ts) as last_epoch,
@@ -181,7 +186,8 @@ async function readSessions(tx: Tx, ctx: TenantContext, project: string, cutoff:
                                where t.tenant_id = s.tenant_id and t.source_id = s.id)) as first_epoch
     from sources s
     cross join lateral (select ${LAST_TS_SQL} as last_ts) l
-    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${CLAUDE_CODE}
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+      and s.kind = any(${textArray(CODE_SESSION_KINDS)})
       and s.metadata->>'project' = ${project}
       and l.last_ts >= ${cutoff.toISOString()}::timestamptz
     order by l.last_ts desc, s.id

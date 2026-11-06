@@ -1,14 +1,21 @@
 import { readFile, stat } from 'node:fs/promises';
 import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
-import { API_PATHS, type SessionFactsPayload, type Usage } from '../capture/api-contract';
+import {
+  API_PATHS,
+  type SessionFacts,
+  type SessionFactsPayload,
+  type Usage,
+} from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import {
+  type CodeSessionKind,
   type IngestPayload,
   type IngestResult,
   IngestResultSchema,
   TURNS_PER_BATCH_MAX,
+  type Turn,
 } from '../capture/turn';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
 import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
@@ -151,13 +158,20 @@ async function loadSession(
   return turns.length > 0 ? { session: { ...session, turns }, content } : null;
 }
 
-// Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi.
+// Ce que l'envoi lit d'une session de code, quel que soit l'outil (claude-code.ts, codex.ts).
+export type CodeSession = Pick<ClaudeCodeSession, 'sessionId' | 'title'> & { turns: Turn[] };
+
+// Envoie une session déjà lue, par lots ; le crochet de fin de session s'en sert aussi. `kind` : l'outil de la session
+// (Claude Code par défaut).
 // `newestFirst` : les lots partent du plus récent au plus ancien (les tours restent dans l'ordre à l'intérieur
 // de chaque lot). Le crochet, borné par un délai, s'en sert pour qu'une session reprise, dont l'historique est
 // déjà connu, atteigne d'abord ses tours nouveaux ; le serveur lit les tours par date, pas par ordre d'arrivée.
 export async function importSession(
-  session: ClaudeCodeSession,
-  options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { newestFirst?: boolean },
+  session: CodeSession,
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & {
+    newestFirst?: boolean;
+    kind?: CodeSessionKind;
+  },
   deps: ImportDeps,
   summary: ImportSummary,
 ): Promise<void> {
@@ -169,7 +183,7 @@ export async function importSession(
   for (const turns of batches) {
     const payload: IngestPayload = {
       source: {
-        kind: 'claude_code',
+        kind: options.kind ?? 'claude_code',
         external_id: session.sessionId,
         title: session.title ?? undefined,
         ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
@@ -190,24 +204,25 @@ export async function importSession(
 // Les faits d'une session (C2), après ses tours, quand l'accord le permet (`deps.facts`). `root` est la racine du
 // dépôt du dossier de départ (repoRootFor) : les fichiers écrits ailleurs sont retirés, et tous hors de tout dépôt
 // (null), comme le promet le texte de l'accord (« paths in the repository »). Rend false quand le serveur ne les
-// prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte.
+// prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte. Sans `faits`, ceux d'une session Claude Code, lus
+// dans `content` ; un autre outil donne les siens (`kind`, `faits`), relevés par son lecteur.
 // shortcut: un worktree hors du clone (../leon-wt) perd ses fichiers, seuls ceux de `.claude/worktrees/` du clone
 // sont gardés (extractClaudeCodeFacts) ; prendre la racine du dépôt de chaque fichier le jour où ça manque.
 export async function sendSessionFacts(
-  session: ClaudeCodeSession,
-  source: { content: string; root: string | null; fin: boolean },
-  options: Pick<ImportOptions, 'dryRun' | 'projectKey'>,
+  session: Pick<CodeSession, 'sessionId'>,
+  source: { content: string; root: string | null; fin: boolean; faits?: SessionFacts },
+  options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { kind?: CodeSessionKind },
   deps: ImportDeps,
 ): Promise<boolean> {
   if (!deps.facts) return true;
   const payload: SessionFactsPayload = {
-    kind: 'claude_code',
+    kind: options.kind ?? 'claude_code',
     external_id: session.sessionId,
     ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
     accord: deps.facts.accord,
     // Sans usage, pas de champ : le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
     ...(deps.facts.usages?.length ? { usages: deps.facts.usages } : {}),
-    faits: extractClaudeCodeFacts(source.content, source.root),
+    faits: source.faits ?? extractClaudeCodeFacts(source.content, source.root),
     fin: source.fin,
   };
   if (options.dryRun) {
@@ -223,8 +238,9 @@ export async function sendSessionFacts(
   }
 }
 
-// Au rattrapage, une session est finie si son fichier n'a pas bougé depuis 30 min.
-const IDLE_MS = 30 * 60_000;
+// Au rattrapage, une session est finie si son fichier n'a pas bougé depuis 30 min (le rattrapage des autres outils
+// aussi, catch-up.ts).
+export const IDLE_MS = 30 * 60_000;
 
 export async function importClaudeCode(
   options: ImportOptions,

@@ -160,6 +160,8 @@ export type BriefingCommandDeps = {
   // La mise à jour automatique (scheduleUpdate, self-update.ts) : elle décide si elle est due et lance le processus
   // détaché. Absente, rien n'est lancé.
   scheduleUpdate?: () => Promise<unknown>;
+  // Le rattrapage des outils dont la capture est acceptée (T19 : `leon rattraper`, lancé détaché). Absent, rien.
+  scheduleCatchUp?: () => Promise<unknown>;
   // Le crochet de démarrage d'un autre outil (`leon crochet <outil> demarrage`, C6) ; absent : Claude Code.
   outil?: Outil;
 };
@@ -207,12 +209,14 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     } else {
       deps.out(outil ? ADAPTATEURS[outil].demarrage(text) : startOutput('claude_code', text));
     }
-    // Une fois la sortie écrite, la mise à jour automatique (S12) : détachée, elle n'est jamais attendue, et ni son
-    // échec ni sa lenteur ne changent la sortie du crochet.
-    try {
-      await deps.scheduleUpdate?.();
-    } catch {
-      // Rien à dire : le crochet a rendu ce qu'on lui demandait.
+    // Une fois la sortie écrite, le rattrapage (T19) et la mise à jour automatique (S12) : détachés, ils ne sont jamais
+    // attendus, et ni leur échec ni leur lenteur ne changent la sortie du crochet.
+    for (const schedule of [deps.scheduleCatchUp, deps.scheduleUpdate]) {
+      try {
+        await schedule?.();
+      } catch {
+        // Rien à dire : le crochet a rendu ce qu'on lui demandait.
+      }
     }
   } catch (error) {
     // Messages fixes (resolveServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.

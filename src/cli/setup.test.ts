@@ -6,7 +6,7 @@ import { type Connection, writeConnection } from './connection';
 import { addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
-import { launcherScript, writeLauncher } from './launcher';
+import { launcherScript, previousLauncherScripts, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
 
 // `leon setup` (S10 du plan « CLI sans clone »), toujours dans un HOME et un CLAUDE_CONFIG_DIR temporaires : jamais le
@@ -243,6 +243,22 @@ describe('setup : le lanceur', () => {
     expect(run.code).toBe(1);
     expect(run.output).toContain('not a Leon repository');
     expect(await exists(launcherPath(home))).toBe(false);
+  });
+
+  // T19 : le lanceur gagne la fin détachée ; celui du lot 4, écrit par Leon, se remplace sans question avec --yes.
+  it('--yes remplace sans demander le lanceur installé d’une version précédente de Leon', async () => {
+    await installLeon();
+    await connect();
+    await hasClaudeCode();
+    const [previous] = previousLauncherScripts(home, INSTALLED);
+    await mkdir(join(home, '.leon', 'bin'), { recursive: true });
+    await writeFile(launcherPath(home), previous ?? '', { mode: 0o700 });
+
+    const run = await setup({ yes: true });
+
+    expect(run.questions.filter((question) => question.includes('Replace it?'))).toEqual([]);
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(launcherScript(home, INSTALLED));
+    expect(run.output).toContain(`Launcher replaced: ${launcherPath(home)}`);
   });
 
   describe('un autre lanceur est déjà là', () => {
@@ -751,7 +767,7 @@ describe('setup : les outils de code', () => {
     expect(hooks.SessionStart[0].hooks[0].command).toBe(
       launcherCommand(home, 'codex', 'demarrage'),
     );
-    expect(run.output).toContain('Codex: hook installed (approve it with /hooks in Codex)');
+    expect(run.output).toContain('Codex: hooks installed (approve them with /hooks in Codex)');
   });
 
   it('CODEX_HOME remplace ~/.codex : c’est ce dossier qu’on cherche', async () => {
@@ -779,7 +795,7 @@ describe('setup : les outils de code', () => {
     expect(summary).toEqual([
       'Summary',
       '  Claude Code: hooks installed',
-      '  Codex: hook installed (approve it with /hooks in Codex)',
+      '  Codex: hooks installed (approve them with /hooks in Codex)',
       '  Cursor: not found',
       '  Gemini / Antigravity: not found',
       '',

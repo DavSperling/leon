@@ -17,4 +17,10 @@ describe('startOutput', () => {
 
     expect(startOutput('claude_code', block)).toBe(block);
   });
+
+  it('rend à Codex le bloc dans la forme JSON de son crochet', () => {
+    expect(JSON.parse(startOutput('codex', 'Bloc'))).toEqual({
+      hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'Bloc' },
+    });
+  });
 });

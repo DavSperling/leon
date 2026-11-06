@@ -1,0 +1,448 @@
+import {
+  appendFile,
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SessionFactsPayload } from '../capture/api-contract';
+import type { IngestPayload, IngestResult } from '../capture/turn';
+import {
+  captureToolFile,
+  captureToolHook,
+  cursorPath,
+  readCursor,
+  type ToolCaptureDeps,
+  turnsAfter,
+} from './capture-session';
+import {
+  type CatchUpDeps,
+  captureTools,
+  catchUp,
+  ENTRY_MAX_AGE_MS,
+  entriesDir,
+  purgeOldEntries,
+  readEntryFile,
+} from './catch-up';
+import { addUsage, recordCapture, writeConsent } from './consent';
+import { IngestResponseError, TokenRefusedError } from './import-claude-code';
+
+// Toujours dans un HOME temporaire, avec CODEX_HOME à côté : jamais les vraies sessions de Codex ni le vrai ~/.leon.
+const FIXTURE = new URL('../capture/fixtures/codex/rollout-git.jsonl', import.meta.url);
+const SANS_GIT = new URL('../capture/fixtures/codex/rollout-sans-git.jsonl', import.meta.url);
+const THREAD = '019a5e10-0000-7000-8000-000000000001';
+const RESULT: IngestResult = {
+  sourceId: crypto.randomUUID(),
+  inserted: 2,
+  skipped: 0,
+  ingestRunId: null,
+};
+const INSTALLE = new Date('2026-11-05T00:00:00Z');
+const MAINTENANT = new Date('2026-11-06T12:00:00Z');
+
+let dir: string;
+let home: string;
+let codexDir: string;
+let env: Record<string, string | undefined>;
+let sent: IngestPayload[];
+let facts: SessionFactsPayload[];
+
+beforeEach(async () => {
+  dir = await mkdtemp(join(tmpdir(), 'leon-rattrapage-'));
+  home = join(dir, 'home');
+  codexDir = join(dir, 'codex');
+  env = { CODEX_HOME: codexDir };
+  sent = [];
+  facts = [];
+});
+afterEach(async () => {
+  await rm(dir, { recursive: true, force: true });
+});
+
+// Un rollout copié de la fixture sous sessions/2026/11/06, daté de `modified`.
+async function rollout(name: string, modified: Date, from: URL = FIXTURE): Promise<string> {
+  const folder = join(codexDir, 'sessions', '2026', '11', '06');
+  await mkdir(folder, { recursive: true });
+  const path = join(folder, `rollout-2026-11-06T09-00-00-${name}.jsonl`);
+  await copyFile(from, path);
+  await utimes(path, modified, modified);
+  return path;
+}
+
+// git : le dépôt GitHub demo/leon pour tout dossier, sa racine est le dossier lui-même.
+const git = vi.fn<ToolCaptureDeps['git']>(async (args, cwd) => {
+  if (args[0] === 'remote') return 'https://github.com/demo/leon.git';
+  if (args[0] === 'rev-parse') return 'true\n';
+  if (args[0] === 'branch') return 'branche-lue';
+  return cwd;
+});
+
+function captureDeps(overrides: Partial<ToolCaptureDeps> = {}): ToolCaptureDeps {
+  return {
+    send: async (payload) => {
+      sent.push(payload);
+      return RESULT;
+    },
+    facts: {
+      accord: 2,
+      send: async (payload) => {
+        facts.push(payload);
+      },
+    },
+    out: () => {},
+    git,
+    readFile: (path) => readFile(path, 'utf8'),
+    stat: (path) => stat(path),
+    home,
+    ...overrides,
+  };
+}
+
+function catchUpDeps(overrides: Partial<CatchUpDeps> = {}): CatchUpDeps {
+  const { facts: _facts, ...capture } = captureDeps();
+  return {
+    ...capture,
+    sendFacts: async (payload) => {
+      facts.push(payload);
+    },
+    env,
+    now: () => MAINTENANT,
+    ...overrides,
+  };
+}
+
+const sentIds = () => sent.flatMap((payload) => payload.turns.map((turn) => turn.external_id));
+
+async function consentToCapture(when = INSTALLE) {
+  await writeConsent(home, 'codex', 2, INSTALLE);
+  await recordCapture(home, 'codex', when);
+}
+
+describe('turnsAfter : le curseur', () => {
+  const tours = ['a', 'b', 'c'].map((id) => ({
+    external_id: id,
+    role: 'user' as const,
+    text: id,
+    ts: '2026-11-06T09:00:00.000Z',
+    capture_mode: 'file' as const,
+  }));
+  const curseur = (n: number, dernier: string | null) => ({
+    tours: n,
+    dernier,
+    mtime: 0,
+    taille: 0,
+  });
+
+  it('rend les tours d’après le dernier envoyé', () => {
+    expect(turnsAfter(tours, curseur(2, 'b')).map((t) => t.external_id)).toEqual(['c']);
+    expect(turnsAfter(tours, curseur(3, 'c'))).toEqual([]);
+  });
+
+  it('sans curseur, ou un fichier qui ne commence plus pareil, rend tout', () => {
+    expect(turnsAfter(tours, null)).toHaveLength(3);
+    expect(turnsAfter(tours, curseur(2, 'x'))).toHaveLength(3);
+    expect(turnsAfter(tours, curseur(5, 'e'))).toHaveLength(3);
+  });
+});
+
+describe('captureToolFile : Codex, à chaque Stop', () => {
+  it('envoie les tours une fois, avec le projet ; au Stop suivant, seulement les nouveaux', async () => {
+    const path = await rollout('1', MAINTENANT);
+
+    expect(await captureToolFile('codex', path, { fin: false }, captureDeps())).toBe('capte');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.source).toEqual({
+      kind: 'codex',
+      external_id: THREAD,
+      title: 'Ajoute le lecteur des sessions Codex, puis ouvre la PR.',
+      project: 'github.com/demo/leon',
+    });
+    expect(sentIds()).toHaveLength(4);
+
+    await appendFile(
+      path,
+      `${JSON.stringify({
+        timestamp: '2026-11-06T09:05:00.000Z',
+        ordinal: 27,
+        type: 'response_item',
+        payload: {
+          type: 'message',
+          role: 'user',
+          content: [{ type: 'input_text', text: 'Et la doc ?' }],
+        },
+      })}\n`,
+    );
+    sent = [];
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+
+    expect(sentIds()).toEqual(['o27@2026-11-06T09:05:00.000Z']);
+  });
+
+  it('les faits, à chaque fois, sur tout le fichier : le second Stop rend encore les commandes du premier', async () => {
+    const path = await rollout('1', MAINTENANT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+    await captureToolFile('codex', path, { fin: true }, captureDeps());
+
+    expect(facts.map((payload) => [payload.kind, payload.external_id, payload.fin])).toEqual([
+      ['codex', THREAD, false],
+      ['codex', THREAD, true],
+    ]);
+    expect(facts[1]?.faits.commandes).toHaveLength(4);
+    expect(facts[1]?.faits.branche).toBe('demo/codex-faits');
+    expect(facts[1]?.project).toBe('github.com/demo/leon');
+  });
+
+  it('sans branche dans le rollout, prend celle que lit git à la capture', async () => {
+    const path = await rollout('2', MAINTENANT, SANS_GIT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+
+    expect(facts[0]?.faits.branche).toBe('branche-lue');
+  });
+
+  it('sans accord des gestes (`facts` absent), les tours seuls', async () => {
+    const path = await rollout('1', MAINTENANT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps({ facts: undefined }));
+
+    expect(sent).toHaveLength(1);
+    expect(facts).toEqual([]);
+  });
+
+  it('un envoi refusé n’avance pas le curseur : le Stop suivant renvoie tout', async () => {
+    const path = await rollout('1', MAINTENANT);
+    const failing = captureDeps({
+      send: async () => {
+        throw new IngestResponseError(500);
+      },
+    });
+
+    await expect(captureToolFile('codex', path, { fin: false }, failing)).rejects.toThrow();
+    expect(await readCursor(home, 'codex', path)).toBeNull();
+
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+    expect(sentIds()).toHaveLength(4);
+  });
+
+  it('le curseur ne garde aucun texte de la session, en 0600', async () => {
+    const path = await rollout('1', MAINTENANT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+
+    const file = cursorPath(home, 'codex', path);
+    const text = await readFile(file, 'utf8');
+    expect(JSON.parse(text)).toEqual({
+      tours: 4,
+      dernier: 'o26@2026-11-06T09:02:05.000Z',
+      mtime: MAINTENANT.getTime(),
+      taille: (await stat(path)).size,
+    });
+    expect(text).not.toContain('Ajoute');
+    expect((await stat(file)).mode & 0o777).toBe(0o600);
+  });
+});
+
+describe('captureToolHook', () => {
+  const hook = (transcript_path: unknown) =>
+    JSON.stringify({
+      session_id: THREAD,
+      transcript_path,
+      cwd: '/ailleurs',
+      hook_event_name: 'Stop',
+    });
+
+  it('lit le rollout que nomme le crochet, sous le dossier des sessions de Codex', async () => {
+    const path = await rollout('1', MAINTENANT);
+
+    expect(await captureToolHook('codex', 'tour', hook(path), { ...captureDeps(), env })).toBe(0);
+    expect(sent).toHaveLength(1);
+  });
+
+  it('ne lit jamais un fichier hors du dossier des sessions, ni une entrée illisible', async () => {
+    const outside = join(dir, 'secret.jsonl');
+    await copyFile(FIXTURE, outside);
+    const readSpy = vi.fn(async () => '');
+    const deps = { ...captureDeps({ readFile: readSpy }), env };
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    for (const input of [
+      hook(outside),
+      hook(join(codexDir, 'sessions', '..', 'secret.jsonl')),
+      hook('sessions/relatif.jsonl'),
+      hook(null),
+      'pas du json',
+    ]) {
+      expect(await captureToolHook('codex', 'tour', input, deps)).toBe(0);
+    }
+    expect(readSpy).not.toHaveBeenCalled();
+    expect(stderr).toHaveBeenCalledWith(
+      'Leon: could not read the hook input, session not captured.',
+    );
+    stderr.mockRestore();
+  });
+
+  it('un jeton refusé : un message fixe, le code 0', async () => {
+    const path = await rollout('1', MAINTENANT);
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const deps = {
+      ...captureDeps({
+        send: async () => {
+          throw new TokenRefusedError();
+        },
+      }),
+      env,
+    };
+
+    expect(await captureToolHook('codex', 'fin', hook(path), deps)).toBe(0);
+    expect(stderr).toHaveBeenCalledWith('Leon: token refused by the server, session not captured.');
+    stderr.mockRestore();
+  });
+});
+
+describe('l’entrée du crochet de fin', () => {
+  it('lue puis effacée : après la fin, le fichier d’entrée n’existe plus', async () => {
+    await mkdir(entriesDir(home), { recursive: true });
+    const entry = join(entriesDir(home), 'fin.abc123');
+    await writeFile(entry, '{"transcript_path":"/x"}');
+
+    expect(await readEntryFile(home, entry)).toBe('{"transcript_path":"/x"}');
+    await expect(stat(entry)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('effacée même quand elle ne se lit pas (trop grosse)', async () => {
+    await mkdir(entriesDir(home), { recursive: true });
+    const entry = join(entriesDir(home), 'fin.big');
+    await writeFile(entry, 'x'.repeat(70 * 1024));
+
+    expect(await readEntryFile(home, entry)).toBe('');
+    await expect(stat(entry)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('un fichier hors de ~/.leon/entrees n’est ni lu ni effacé', async () => {
+    const other = join(dir, 'autre.json');
+    await writeFile(other, 'garde-moi');
+
+    expect(await readEntryFile(home, other)).toBe('');
+    expect(await readFile(other, 'utf8')).toBe('garde-moi');
+  });
+
+  it('le rattrapage efface les entrées de plus de 24 h, garde les autres', async () => {
+    await mkdir(entriesDir(home), { recursive: true });
+    const vieille = join(entriesDir(home), 'fin.vieille');
+    const recente = join(entriesDir(home), 'fin.recente');
+    await writeFile(vieille, '{}');
+    await writeFile(recente, '{}');
+    const old = new Date(MAINTENANT.getTime() - ENTRY_MAX_AGE_MS - 60_000);
+    await utimes(vieille, old, old);
+    await utimes(recente, MAINTENANT, MAINTENANT);
+
+    await purgeOldEntries(home, MAINTENANT);
+
+    await expect(stat(vieille)).rejects.toMatchObject({ code: 'ENOENT' });
+    expect((await stat(recente)).isFile()).toBe(true);
+  });
+});
+
+describe('catchUp : le rattrapage', () => {
+  it('sans accord de capture, aucun rollout n’est ouvert (crochets de Leon recopiés par Codex, accord du lot 4)', async () => {
+    await rollout('1', MAINTENANT);
+    const readSpy = vi.fn(async () => '');
+
+    expect(await catchUp(catchUpDeps({ readFile: readSpy }))).toEqual({ sessions: 0, failures: 0 });
+    // L'accord du lot 4 : le bloc de démarrage seul, sans `capture_le`.
+    await writeConsent(home, 'codex', 2, INSTALLE);
+    expect(await captureTools(home)).toEqual([]);
+    expect(await catchUp(catchUpDeps({ readFile: readSpy }))).toEqual({ sessions: 0, failures: 0 });
+
+    expect(readSpy).not.toHaveBeenCalled();
+    expect(sent).toEqual([]);
+  });
+
+  it('accord retiré (version 0) : rien non plus', async () => {
+    await consentToCapture();
+    await writeConsent(home, 'codex', 0);
+    await rollout('1', MAINTENANT);
+
+    expect(await catchUp(catchUpDeps())).toEqual({ sessions: 0, failures: 0 });
+    expect(sent).toEqual([]);
+  });
+
+  it('ignore un fichier modifié avant l’accord de capture', async () => {
+    await consentToCapture(new Date('2026-11-06T08:00:00Z'));
+    await rollout('ancien', new Date('2026-11-06T07:00:00Z'));
+    const recent = await rollout('recent', new Date('2026-11-06T11:00:00Z'), SANS_GIT);
+
+    expect(await catchUp(catchUpDeps())).toEqual({ sessions: 1, failures: 0 });
+    expect(sent.map((payload) => payload.source.external_id)).toEqual([
+      '019a5e10-0000-7000-8000-000000000002',
+    ]);
+    expect(await readCursor(home, 'codex', recent)).not.toBeNull();
+  });
+
+  it('ne relit pas un fichier inchangé depuis sa dernière capture ; relit un fichier qui a bougé', async () => {
+    await consentToCapture();
+    const path = await rollout('1', MAINTENANT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+    sent = [];
+    const readSpy = vi.fn((file: string) => readFile(file, 'utf8'));
+
+    expect(await catchUp(catchUpDeps({ readFile: readSpy }))).toEqual({ sessions: 0, failures: 0 });
+    expect(readSpy).not.toHaveBeenCalled();
+
+    const later = new Date(MAINTENANT.getTime() + 60_000);
+    await utimes(path, later, later);
+    expect(await catchUp(catchUpDeps({ readFile: readSpy }))).toEqual({ sessions: 1, failures: 0 });
+    expect(sent).toEqual([]); // rien de nouveau : aucun tour renvoyé
+  });
+
+  it('une session restée immobile 30 min est finie ; les usages ne partent qu’avec les fichiers modifiés après leur date', async () => {
+    await consentToCapture();
+    await addUsage(home, 'codex', 'resume', new Date('2026-11-06T11:30:00Z'));
+    await rollout('immobile', new Date('2026-11-06T11:00:00Z'));
+    await rollout('active', new Date('2026-11-06T11:50:00Z'), SANS_GIT);
+
+    await catchUp(catchUpDeps());
+
+    expect(facts.map((payload) => [payload.external_id, payload.fin, payload.usages])).toEqual([
+      [THREAD, true, undefined],
+      ['019a5e10-0000-7000-8000-000000000002', false, ['resume']],
+    ]);
+  });
+
+  it('un échec compte, sans arrêter les autres sessions ; un jeton refusé arrête tout', async () => {
+    await consentToCapture();
+    await rollout('a', MAINTENANT);
+    await rollout('b', MAINTENANT, SANS_GIT);
+    let calls = 0;
+    const flaky = async (payload: IngestPayload) => {
+      calls += 1;
+      if (calls === 1) throw new IngestResponseError(500);
+      sent.push(payload);
+      return RESULT;
+    };
+
+    expect(await catchUp(catchUpDeps({ send: flaky }))).toEqual({ sessions: 1, failures: 1 });
+
+    const refused = async () => {
+      throw new TokenRefusedError();
+    };
+    await expect(catchUp(catchUpDeps({ send: refused }))).rejects.toBeInstanceOf(TokenRefusedError);
+  });
+
+  it('un seul rattrapage à la fois : le second s’arrête tout de suite', async () => {
+    await consentToCapture();
+    await rollout('1', MAINTENANT);
+    await mkdir(join(home, '.leon', 'curseurs'), { recursive: true });
+    await writeFile(join(home, '.leon', 'curseurs', 'rattrapage.verrou'), 'en cours');
+
+    expect(await catchUp(catchUpDeps({ now: () => new Date() }))).toEqual({
+      sessions: 0,
+      failures: 0,
+    });
+    expect(sent).toEqual([]);
+  });
+});

@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { BriefingResponse } from '@/capture/api-contract';
-import type { SourceKind } from '@/capture/turn';
+import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
@@ -12,6 +12,7 @@ import { type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
 import { recordReads } from '@/server/memory/read-log';
+import { textArray } from '@/server/search/filters-sql';
 import { readAbout } from './about';
 import { buildBriefingPrompt, renderBriefing, renderEmptyBriefing } from './briefing-prompt';
 import {
@@ -142,10 +143,9 @@ async function requestRefresh(ctx: TenantContext, project: string): Promise<void
   }
 }
 
-const CLAUDE_CODE = 'claude_code' satisfies SourceKind;
 const GITHUB = 'github' satisfies SourceKind;
 
-// Le projet a de quoi faire un point pour ce lecteur : une de ses sessions Claude Code, ou un élément GitHub du dépôt
+// Le projet a de quoi faire un point pour ce lecteur : une de ses sessions de code, ou un élément GitHub du dépôt
 // qu'il voit. Sans cela, une clé de projet inventée (la route et l'outil MCP acceptent toute clé bien formée) mettrait
 // en file un appel au modèle à chaque lecture.
 async function projectIsKnown(tx: Tx, ctx: TenantContext, project: string): Promise<boolean> {
@@ -153,7 +153,7 @@ async function projectIsKnown(tx: Tx, ctx: TenantContext, project: string): Prom
     select exists (
       select 1 from sources s
       where s.tenant_id = ${ctx.tenantId}
-        and ((s.owner_user_id = ${ctx.userId} and s.kind = ${CLAUDE_CODE} and s.metadata->>'project' = ${project})
+        and ((s.owner_user_id = ${ctx.userId} and s.kind = any(${textArray(CODE_SESSION_KINDS)}) and s.metadata->>'project' = ${project})
           or (s.kind = ${GITHUB} and 'github.com/' || lower(s.metadata->'origin'->>'repo') = ${project}))
     ) as known`);
   return rows[0]?.known === true;

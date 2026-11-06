@@ -254,6 +254,17 @@ describe('projectOfSource', () => {
     ).toEqual({ project: 'dossier:0123456789abcdef', extraUserIds: [owner] });
   });
 
+  it('une session Codex : comme une session Claude Code (T18)', () => {
+    expect(
+      projectOfSource({
+        kind: 'codex',
+        ownerUserId: owner,
+        metadata: { project: 'github.com/acme/leon' },
+      }),
+    ).toEqual({ project: 'github.com/acme/leon', extraUserIds: [owner] });
+    expect(projectOfSource({ kind: 'codex', ownerUserId: owner, metadata: {} })).toBeNull();
+  });
+
   it('un élément GitHub : la clé de son dépôt, en minuscules', () => {
     expect(
       projectOfSource({
@@ -293,6 +304,15 @@ describe('signalSourceActivity', () => {
   it('signale le projet d’une session Claude Code à son propriétaire', async () => {
     const project = uniqueProject();
     const { sourceId } = await seedRun(carol, { kind: 'claude_code', metadata: { project } });
+
+    await signalSourceActivity(carol, sourceId);
+
+    expect(await jobsFor(carol, project)).toHaveLength(1);
+  });
+
+  it('signale le projet d’une session Codex à son propriétaire', async () => {
+    const project = uniqueProject();
+    const { sourceId } = await seedRun(carol, { kind: 'codex', metadata: { project } });
 
     await signalSourceActivity(carol, sourceId);
 

@@ -83,3 +83,37 @@ export async function findSessionFiles(configDir: string): Promise<string[]> {
     )
     .map(({ path }) => path);
 }
+
+export type SessionFile = { path: string; mtimeMs: number; size: number };
+
+// Les rollouts de Codex : `<dossier de Codex>/sessions/AAAA/MM/JJ/rollout-<date>-<id>.jsonl`, du moins récemment modifié
+// au plus récent. Tout le dossier est parcouru : un fil repris peut écrire dans le fichier d'un autre jour.
+// shortcut: un rollout que Codex a compressé (`.jsonl.zst`, après 7 jours sans écriture) n'est pas lu : il a été capté
+// par ses Stop ou par un rattrapage avant ; le lire (zstd) si une session s'y perd.
+const ROLLOUT_FILE = /^rollout-.+\.jsonl$/;
+const ROLLOUT_DEPTH = 3;
+
+async function rolloutsUnder(directory: string, depth: number): Promise<string[]> {
+  const entries = await listDirectory(directory);
+  const found = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return depth > 0 ? rolloutsUnder(path, depth - 1) : [];
+      return entry.isFile() && ROLLOUT_FILE.test(entry.name) ? [path] : [];
+    }),
+  );
+  return found.flat();
+}
+
+export async function findCodexSessionFiles(codexDir: string): Promise<SessionFile[]> {
+  const paths = await rolloutsUnder(join(codexDir, 'sessions'), ROLLOUT_DEPTH);
+  const files = await Promise.all(
+    paths.map(async (path) => {
+      const info = await stat(path).catch(() => null);
+      return info ? [{ path, mtimeMs: info.mtimeMs, size: info.size }] : [];
+    }),
+  );
+  return files
+    .flat()
+    .sort((a, b) => a.mtimeMs - b.mtimeMs || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}

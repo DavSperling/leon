@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
@@ -49,6 +49,14 @@ const validBody = (externalId = `session-${crypto.randomUUID()}`) => ({
   faits: facts(),
   fin: false,
 });
+
+// L'heure de Postgres, qui date `faits_le` et `fin_le` (now()) : celle de Node peut s'en écarter (base dans Docker).
+async function dbNow(): Promise<number> {
+  const { rows } = await adminDb.execute<{ ms: number }>(
+    sql`select (extract(epoch from now()) * 1000)::float8 as ms`,
+  );
+  return Number(rows[0]?.ms);
+}
 
 // Les métadonnées des sources que ce membre possède pour cette session, lues hors RLS.
 async function storedMetadata(owner: TenantContext, externalId: string) {
@@ -102,7 +110,7 @@ describe('POST /api/v1/faits', () => {
     const body = validBody();
     await apiRequest(API_PATHS.faits, { token: paulToken, body });
     const [first] = await storedMetadata(paul, body.external_id);
-    expect(Date.parse(String(first?.metadata.faits_le))).toBeGreaterThan(Date.now() - 60_000);
+    expect(Date.parse(String(first?.metadata.faits_le))).toBeGreaterThan((await dbNow()) - 60_000);
     await adminDb
       .update(sources)
       .set({ metadata: { ...first?.metadata, faits_le: '2026-11-01T10:00:00+00:00' } })
@@ -111,7 +119,7 @@ describe('POST /api/v1/faits', () => {
     await apiRequest(API_PATHS.faits, { token: paulToken, body });
 
     const [stored] = await storedMetadata(paul, body.external_id);
-    expect(Date.parse(String(stored?.metadata.faits_le))).toBeGreaterThan(Date.now() - 60_000);
+    expect(Date.parse(String(stored?.metadata.faits_le))).toBeGreaterThan((await dbNow()) - 60_000);
   });
 
   // C2 et C7 révisé : les usages de l'outil sur le poste, rangés à chaque envoi ; absents, aucun (un usage absent vaut
@@ -365,7 +373,7 @@ describe('POST /api/v1/faits', () => {
 
     await apiRequest(API_PATHS.faits, { token: paulToken, body: first });
     const [closed] = await storedMetadata(paul, first.external_id);
-    expect(Date.parse(String(closed?.metadata.fin_le))).toBeGreaterThan(Date.now() - 60_000);
+    expect(Date.parse(String(closed?.metadata.fin_le))).toBeGreaterThan((await dbNow()) - 60_000);
     const response = await apiRequest(API_PATHS.faits, {
       token: paulToken,
       body: { ...first, fin: false },

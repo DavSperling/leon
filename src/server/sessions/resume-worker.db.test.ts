@@ -119,6 +119,17 @@ async function session(
   return { ...seeded, pipelineJob: seeded.job, job };
 }
 
+// `faits_le` posé à l'horloge de Postgres, celle que le worker lit (now()) : celle de Node peut s'en écarter (base dans
+// Docker), et les bornes de 59 et 61 min n'ont qu'une minute de marge.
+async function faitsIlYa(sourceId: string, minutes: number) {
+  await adminDb
+    .update(sources)
+    .set({
+      metadata: sql`${sources.metadata} || jsonb_build_object('faits_le', now() - make_interval(mins => ${minutes}::int))`,
+    })
+    .where(eq(sources.id, sourceId));
+}
+
 async function arrived(sourceId: string, ago: number) {
   await adminDb
     .update(turns)
@@ -271,7 +282,8 @@ describe('summarizeSession', () => {
   // La borne du retrait : l'usage relu est celui du dernier envoi de faits, qui doit dater de moins d'une heure.
   it('des faits envoyés il y a plus d’une heure : aucun appel, rien d’écrit', async () => {
     const { paul } = await team();
-    const seeded = await session(paul, { arrivedAgo: 61 * MINUTE });
+    const seeded = await session(paul);
+    await faitsIlYa(seeded.sourceId, 61);
     const llm = answer(SUMMARY);
 
     expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
@@ -284,7 +296,8 @@ describe('summarizeSession', () => {
 
   it('des faits envoyés il y a 59 min : le résumé est écrit', async () => {
     const { paul } = await team();
-    const seeded = await session(paul, { arrivedAgo: 59 * MINUTE });
+    const seeded = await session(paul);
+    await faitsIlYa(seeded.sourceId, 59);
 
     expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
 
@@ -297,12 +310,7 @@ describe('summarizeSession', () => {
     const llm: Llm = {
       ...answer(SUMMARY),
       async *streamText() {
-        await adminDb
-          .update(sources)
-          .set({
-            metadata: sql`${sources.metadata} || jsonb_build_object('faits_le', now() - interval '61 minutes')`,
-          })
-          .where(eq(sources.id, seeded.sourceId));
+        await faitsIlYa(seeded.sourceId, 61);
         yield SUMMARY;
       },
     };

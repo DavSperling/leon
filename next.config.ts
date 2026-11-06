@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
@@ -22,4 +23,14 @@ const nextConfig: NextConfig = {
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-export default withNextIntl(nextConfig);
+// Sans SENTRY_AUTH_TOKEN au build, aucune carte de sources n'est générée ni envoyée : le build passe, mais les piles
+// de production restent illisibles (code empaqueté). Avec lui, les cartes sont envoyées puis supprimées du disque.
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: 'cheron-inc',
+  project: 'leon',
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN, deleteSourcemapsAfterUpload: true },
+  release: { name: process.env.RAILWAY_GIT_COMMIT_SHA },
+  telemetry: false,
+  silent: !process.env.CI,
+});

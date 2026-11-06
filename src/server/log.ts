@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { DrizzleQueryError } from 'drizzle-orm';
 
 const MESSAGE_MAX_CHARS = 200;
@@ -26,6 +27,15 @@ export function safeErrorSummary(error: unknown): string {
   return `${head}: ${error.message.slice(0, MESSAGE_MAX_CHARS)}`;
 }
 
+// Ce que Sentry reçoit à la place du message : les champs de diagnostic, plus le message quand il est sûr.
+export function safeErrorDetail(error: Error): string {
+  const parts = diagnostics(error);
+  if (!hidesMessage(error)) parts.push(error.message.slice(0, MESSAGE_MAX_CHARS));
+  return parts.join(' ');
+}
+
 export function logError(event: string, error: unknown, ids: Record<string, string> = {}): void {
   console.error('[leon]', event, JSON.stringify({ ...ids, error: safeErrorSummary(error) }));
+  // Les ids sont des identifiants (run, source…), jamais du texte ; le message est masqué par scrubEvent.
+  Sentry.captureException(error, { tags: { event }, extra: ids });
 }

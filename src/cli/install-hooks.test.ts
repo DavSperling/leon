@@ -100,7 +100,8 @@ const exists = (path: string) =>
 
 type Run = { code: number; output: string; questions: string[] };
 
-// `answers` : ce que « tape » l'utilisateur à chaque question ; une question non prévue fait échouer le test.
+// `answers` : ce que « tape » l'utilisateur à chaque question (`null` : l'entrée se ferme, Ctrl+D) ; une question non
+// prévue fait échouer le test.
 // `repoDir` : le clone de la forme clone (REPO par défaut) ; `null`, la forme installée, qui n'a pas de clone.
 // `interactive` : l'entrée est un terminal (faux par défaut, comme `echo oui | pnpm leon …`).
 async function install(
@@ -109,7 +110,7 @@ async function install(
     home?: string;
     assumeYes?: boolean;
     interactive?: boolean;
-    answers?: string[];
+    answers?: (string | null)[];
   } = {},
   hook?: () => Promise<void>,
 ): Promise<Run> {
@@ -994,9 +995,11 @@ const RESUME_TEXT = [
   "  - Later, the same usage will also keep the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server will send the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see to Leon's model provider, which will write that state. It will stay private to you, like the summary.",
 ].join('\n');
 
-// Après un refus, la ligne fixe qui dit comment revenir dessus (C7 révisé, A16).
-const REFUSED_LINE =
-  'This answer is kept: you will not be asked again. To change it, run `leon retirer-crochets` (it also removes the hooks and withdraws your consent), then `leon setup`.';
+// Après un refus, la ligne fixe qui dit comment revenir dessus (C7 révisé, A16), avec la commande de la forme de Leon :
+// le clone par défaut ici. Le retrait dit lui-même comment redonner l'accord (CONSENT_AGAIN_HINT).
+const refusedLine = (leon = 'pnpm leon') =>
+  `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`;
+const REFUSED_LINE = refusedLine();
 
 describe('installHooks : l’usage resume', () => {
   const usages = async () => (await factsConsent(home, 'claude_code'))?.usages;
@@ -1034,6 +1037,13 @@ describe('installHooks : l’usage resume', () => {
     expect(run.output).toContain(`Session summaries recorded in ${consentPath(home)}.`);
   });
 
+  // Forme installée : rien de Leon dans le PATH, la commande passe par le lanceur.
+  it('refusé sous la forme installée : la commande du retrait passe par le lanceur', async () => {
+    const run = await install({ repoDir: null, interactive: true, answers: ['oui', 'non'] });
+
+    expect(run.output).toContain(refusedLine('~/.leon/bin/leon'));
+  });
+
   it.each(['', 'n', 'peut-être'])(
     'la réponse %j n’ajoute aucun usage, et le refus s’écrit, daté',
     async (answer) => {
@@ -1043,6 +1053,21 @@ describe('installHooks : l’usage resume', () => {
       expect((await rawEntry()).refus).toEqual({ resume: expect.any(String) });
     },
   );
+
+  // D30 : une entrée fermée (Ctrl+D) n'est pas une réponse. Rien n'est gardé, la question reviendra.
+  it('l’entrée fermée : ni usage ni refus, et la question revient au passage suivant', async () => {
+    const run = await install({ interactive: true, answers: ['oui', null] });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('Nothing was added: no session is summarized.');
+    expect(run.output).not.toContain('This answer is kept');
+    expect(await rawEntry()).toEqual({ version: 2, installe_le: expect.any(String) });
+
+    const again = await install({ interactive: true, answers: ['non'] });
+
+    expect(again.questions).toHaveLength(1);
+    expect(await refus()).toEqual(['resume']);
+  });
 
   it('refusé : plus jamais proposé, ni par installer-crochets ni par un nouveau passage', async () => {
     await install({ interactive: true, answers: ['oui', 'non'] });

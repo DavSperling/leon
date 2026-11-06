@@ -283,8 +283,8 @@ export function addLeonHooks(
   return { settings: next, changes };
 }
 
-export function isYes(answer: string): boolean {
-  return /^(?:o|oui|y|yes)$/i.test(answer.trim());
+export function isYes(answer: string | null): boolean {
+  return answer !== null && /^(?:o|oui|y|yes)$/i.test(answer.trim());
 }
 
 type Loaded =
@@ -367,8 +367,8 @@ export type InstallOptions = {
 export type InstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
-  // Pose la question et rend la ligne tapée ; une chaîne vide si l'entrée est fermée.
-  ask: (question: string) => Promise<string>;
+  // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse (D30).
+  ask: (question: string) => Promise<string | null>;
 };
 
 const ACTION_LABELS: Record<HookChange['action'], string> = {
@@ -521,9 +521,14 @@ const offersResume = (options: InstallOptions, consent: FactsConsent | null): bo
   !consent.usages.includes('resume') &&
   !consent.refus.includes('resume');
 
-// Après un refus, comment revenir dessus (choix du plan) : le retrait efface usages et refus.
-const REFUSED_LINE =
-  'This answer is kept: you will not be asked again. To change it, run `leon retirer-crochets` (it also removes the hooks and withdraws your consent), then `leon setup`.';
+// La commande `leon` de cette forme : rien de Leon n'est dans le PATH, la forme installée passe par son lanceur.
+const leonCommand = (options: InstallOptions): string =>
+  options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon';
+
+// Après un refus, comment revenir dessus (choix du plan) : le retrait efface usages et refus, et dit lui-même comment
+// redonner l'accord (CONSENT_AGAIN_HINT, le lanceur ayant pu partir avec lui).
+const refusedLine = (options: InstallOptions): string =>
+  `This answer is kept: you will not be asked again. To change it, run \`${leonCommand(options)} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`;
 
 // Propose l'usage `resume`, après l'accord de base, avec son texte, en [y/N] : jamais coché d'avance. Un refus (non, ou
 // rien) ne change pas ce qui part ; il s'écrit daté, pour ne plus être redemandé. Rend false si l'usage accepté n'a pas
@@ -537,6 +542,8 @@ async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<
   );
   if (!isYes(answer)) {
     deps.out('Nothing was added: no session is summarized.');
+    // Une entrée fermée (Ctrl+D) n'est pas une réponse (D30) : rien n'est gardé, la question reviendra.
+    if (answer === null) return true;
     try {
       await addRefusal(options.home, 'claude_code', 'resume');
     } catch (error) {
@@ -546,7 +553,7 @@ async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<
       );
       return true;
     }
-    deps.out(REFUSED_LINE);
+    deps.out(refusedLine(options));
     return true;
   }
   try {
@@ -678,7 +685,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
   if (former !== null && options.repoDir === undefined) deps.out(migrationNotice(former));
   deps.out(
-    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon'} retirer-crochets\` (it also withdraws your consent).`,
+    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${leonCommand(options)} retirer-crochets\` (it also withdraws your consent).`,
   );
   if (!consented && !(await recordConsent(options.home, deps))) return 1;
   return (await offerResume(options, deps)) ? 0 : 1;

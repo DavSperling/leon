@@ -258,17 +258,18 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
-// Pose une question sur le terminal et rend la ligne tapée, ou une chaîne vide si l'entrée se ferme sans réponse
-// (commande lancée sans terminal : on n'écrit alors rien). L'itérateur est créé tout de suite : une réponse déjà
-// arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent est gardée, pas perdue.
-function createAsker(): { ask: (question: string) => Promise<string>; close: () => void } {
+// Pose une question sur le terminal et rend la ligne tapée, ou null si l'entrée se ferme sans réponse (Ctrl+D, ou
+// commande lancée sans terminal) : ce n'est pas une réponse, on n'écrit alors rien (D30). L'itérateur est créé tout de
+// suite : une réponse déjà arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent
+// est gardée, pas perdue.
+function createAsker(): { ask: (question: string) => Promise<string | null>; close: () => void } {
   const lines = createInterface({ input: process.stdin });
   const answers = lines[Symbol.asyncIterator]();
   return {
     ask: async (question) => {
       process.stdout.write(question);
       const next = await answers.next();
-      return next.done ? '' : next.value;
+      return next.done ? null : next.value;
     },
     close: () => lines.close(),
   };

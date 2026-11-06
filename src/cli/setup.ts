@@ -42,8 +42,8 @@ export type SetupDeps = {
   env: Record<string, string | undefined>;
   out: (text: string) => void;
   err: (text: string) => void;
-  // Pose la question et rend la ligne tapée ; une chaîne vide si l'entrée est fermée.
-  ask: (question: string) => Promise<string>;
+  // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse.
+  ask: (question: string) => Promise<string | null>;
   // L'entrée standard est un terminal : seul il fait demander un usage (installHooks).
   interactive?: boolean;
   // `leon login` (leon.ts) : rend son code de sortie. `url` : l'option --url de `leon setup`.

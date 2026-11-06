@@ -33,6 +33,7 @@ import {
 } from './catch-up';
 import { addUsage, recordCapture, writeConsent } from './consent';
 import { IngestResponseError, TokenRefusedError } from './import-claude-code';
+import { cursorSlug as cursorSlugOf } from './outils';
 
 // Toujours dans un HOME temporaire, avec CODEX_HOME à côté : jamais les vraies sessions de Codex ni le vrai ~/.leon.
 const FIXTURE = new URL('../capture/fixtures/codex/rollout-git.jsonl', import.meta.url);
@@ -240,6 +241,7 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
       dernier: 'o26@2026-11-06T09:02:05.000Z',
       mtime: MAINTENANT.getTime(),
       taille: (await stat(path)).size,
+      dossier: '/Users/demo/projets/leon',
     });
     expect(text).not.toContain('Ajoute');
     expect((await stat(file)).mode & 0o777).toBe(0o600);
@@ -444,5 +446,82 @@ describe('catchUp : le rattrapage', () => {
       failures: 0,
     });
     expect(sent).toEqual([]);
+  });
+});
+
+// T28, T29 : Cursor. Son transcript ne dit ni le dossier ni l'heure : le crochet donne le dossier, le fichier son heure.
+describe('Cursor : capter à chaque stop, rattraper', () => {
+  const CURSOR_FIXTURE = new URL(
+    '../capture/fixtures/cursor/transcript-simple.jsonl',
+    import.meta.url,
+  );
+  const CONVERSATION = 'c0ffee00-0000-4000-8000-000000000001';
+
+  async function transcript(slug: string, modified: Date): Promise<string> {
+    const folder = join(home, '.cursor', 'projects', slug, 'agent-transcripts', CONVERSATION);
+    await mkdir(folder, { recursive: true });
+    const path = join(folder, `${CONVERSATION}.jsonl`);
+    await copyFile(CURSOR_FIXTURE, path);
+    await utimes(path, modified, modified);
+    return path;
+  }
+  const stopJson = (workspace: string) =>
+    JSON.stringify({
+      conversation_id: CONVERSATION,
+      generation_id: 'g',
+      hook_event_name: 'stop',
+      status: 'completed',
+      workspace_roots: [workspace],
+      cursor_version: '3.27.0',
+    });
+
+  it('le crochet stop : le transcript déduit du dossier, les tours sous le kind cursor, le projet du dossier', async () => {
+    const workspace = join(dir, 'projets', 'leon');
+    await mkdir(workspace, { recursive: true });
+    const path = await transcript(cursorSlugOf(workspace), MAINTENANT);
+
+    expect(
+      await captureToolHook('cursor', 'tour', stopJson(workspace), { ...captureDeps(), env }),
+    ).toBe(0);
+
+    expect(sent[0]?.source).toMatchObject({
+      kind: 'cursor',
+      external_id: CONVERSATION,
+      project: 'github.com/demo/leon',
+    });
+    expect(sentIds()).toHaveLength(5);
+    expect(facts[0]).toMatchObject({
+      kind: 'cursor',
+      fin: false,
+      faits: { branche: 'branche-lue' },
+    });
+    // Le dossier du crochet est gardé pour le rattrapage.
+    expect((await readCursor(home, 'cursor', path))?.dossier).toBe(workspace);
+  });
+
+  it('le rattrapage retrouve le dossier d’une conversation qu’aucun crochet n’a vue, par son slug', async () => {
+    await writeConsent(home, 'cursor', 2, INSTALLE);
+    await recordCapture(home, 'cursor', INSTALLE);
+    const workspace = join(dir, 'mon-projet', 'leon');
+    await mkdir(workspace, { recursive: true });
+    await transcript(cursorSlugOf(workspace), MAINTENANT);
+    const directories: string[] = [];
+    const spyGit = vi.fn<ToolCaptureDeps['git']>(async (args, cwd) => {
+      directories.push(cwd);
+      return git(args, cwd);
+    });
+
+    expect(await catchUp(catchUpDeps({ git: spyGit }))).toEqual({ sessions: 1, failures: 0 });
+    expect(sent[0]?.source.kind).toBe('cursor');
+    expect(new Set(directories)).toEqual(new Set([workspace]));
+  });
+
+  it('sans accord de capture de Cursor, aucun transcript n’est ouvert', async () => {
+    await transcript('Users-x', MAINTENANT);
+    const readSpy = vi.fn(async () => '');
+
+    await catchUp(catchUpDeps({ readFile: readSpy }));
+
+    expect(readSpy).not.toHaveBeenCalled();
   });
 });

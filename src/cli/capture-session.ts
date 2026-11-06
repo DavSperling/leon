@@ -47,7 +47,7 @@ import {
   sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
-import { ADAPTATEURS, sessionPathFrom } from './outils';
+import { ADAPTATEURS, sessionFileFrom } from './outils';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
@@ -258,13 +258,22 @@ export async function readHookStdin(
 // aucun texte de la session : le nombre de tours déjà envoyés, l'identifiant du dernier, et la date et la taille du
 // fichier lu. Perdu ou illisible, tout repart : le serveur ignore les tours qu'il connaît.
 
-export type Curseur = { tours: number; dernier: string | null; mtime: number; taille: number };
+// `dossier` : le dossier de travail que le crochet a donné (Cursor ne l'écrit pas dans son transcript), repris par le
+// rattrapage.
+export type Curseur = {
+  tours: number;
+  dernier: string | null;
+  mtime: number;
+  taille: number;
+  dossier?: string | null;
+};
 
 const CurseurSchema = z.object({
   tours: z.number().int().nonnegative(),
   dernier: z.string().nullable(),
   mtime: z.number(),
   taille: z.number(),
+  dossier: z.string().nullable().optional(),
 });
 
 export const cursorPath = (home: string, outil: Outil, file: string): string =>
@@ -336,22 +345,27 @@ async function branchAtCapture(directory: string, git: GitRunner): Promise<strin
 }
 
 // Capte un fichier de session d'un outil hors Claude Code : ses tours nouveaux, puis, si l'accord le permet
-// (`deps.facts`), ses faits sur tout le fichier. `fin` : une vraie fin de session, ou un fichier resté immobile. Le
-// curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi remontent (TokenRefusedError, IngestResponseError).
+// (`deps.facts`), ses faits sur tout le fichier. `fin` : une vraie fin de session, ou un fichier resté immobile.
+// `dossier` : le dossier de travail que donne le crochet, pris quand le fichier n'en dit rien (Cursor) ; sinon celui du
+// curseur, puis celui que l'adaptateur retrouve. Le curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi
+// remontent (TokenRefusedError, IngestResponseError).
 export async function captureToolFile(
   outil: Outil,
   file: string,
-  options: { fin: boolean },
+  options: { fin: boolean; dossier?: string | null },
   deps: ToolCaptureDeps,
 ): Promise<ToolCapture> {
   const adapter = ADAPTATEURS[outil];
   const { mtimeMs, size } = await deps.stat(file);
   const content = await deps.readFile(file);
-  const session = adapter.lire(content);
+  const fichier = { path: file, mtime: new Date(mtimeMs) };
+  const session = adapter.lire(content, fichier);
   if (session === null) return 'rien';
   const cursor = await readCursor(deps.home, outil, file);
   const turns = turnsAfter(session.turns, cursor);
-  const start = session.cwd !== null && isAbsolute(session.cwd) ? session.cwd : null;
+  const candidates = [session.cwd, options.dossier ?? null, cursor?.dossier ?? null];
+  let start = candidates.find((dir): dir is string => dir !== null && isAbsolute(dir)) ?? null;
+  if (start === null && adapter.dossierDe) start = await adapter.dossierDe(file);
   const projectKey = start === null ? undefined : await projectKeyFor(start, deps.git);
   const summary: ImportSummary = {
     sessions: 1,
@@ -369,20 +383,22 @@ export async function captureToolFile(
     dernier: session.turns.at(-1)?.external_id ?? null,
     mtime: mtimeMs,
     taille: size,
+    dossier: start,
   });
   if (!deps.facts) return 'capte';
   // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
   const root = start === null ? null : await repoRootFor(start, deps.git);
   const branch =
     session.branche === null && start !== null ? await branchAtCapture(start, deps.git) : null;
-  const faits = adapter.faits(content, root, branch);
+  const faits = adapter.faits(content, fichier, root, branch);
   const source = { content, root, fin: options.fin, faits };
   if (!(await sendSessionFacts(session, source, sending, deps))) warn(FACTS_REFUSED_MESSAGE);
   return 'capte';
 }
 
-// Le crochet d'un tour ou de la fin d'un outil hors Claude Code (`leon crochet <outil> tour|fin`). Rien sur la sortie
-// standard ; le code de sortie vaut toujours 0, pour ne jamais gêner l'outil. Les messages sont fixes.
+// Le crochet d'un tour ou de la fin d'un outil hors Claude Code (`leon crochet <outil> tour|fin`). Le code de sortie vaut
+// toujours 0, pour ne jamais gêner l'outil. Les messages sont fixes. Ce que l'outil attend sur la sortie standard
+// (Cursor, Antigravity : `{}`) est écrit par leon.ts, quoi qu'il arrive ici.
 export async function captureToolHook(
   outil: Outil,
   evenement: 'tour' | 'fin',
@@ -394,14 +410,17 @@ export async function captureToolHook(
     try {
       parsed = JSON.parse(input);
     } catch {
-      // illisible : sessionPathFrom rend null
+      // illisible : aucun fichier possible
     }
-    const file = sessionPathFrom(outil, parsed, deps.home, deps.env);
+    const entree = ADAPTATEURS[outil].entree(parsed, deps.home, deps.env);
+    // L'outil travaille encore (Antigravity, `fullyIdle` faux) : le tour suivant captera.
+    if (!entree.inactif) return 0;
+    const file = await sessionFileFrom(entree);
     if (file === null) {
       warn('could not read the hook input, session not captured.');
       return 0;
     }
-    await captureToolFile(outil, file, { fin: evenement === 'fin' }, deps);
+    await captureToolFile(outil, file, { fin: evenement === 'fin', dossier: entree.dossier }, deps);
   } catch (error) {
     warn(failureMessage(error));
   }

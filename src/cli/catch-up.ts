@@ -1,4 +1,4 @@
-// Le rattrapage des outils hors Claude Code (T19 du plan mémoire des sessions) : `leon rattraper`, lancé en tâche
+// Le rattrapage des outils hors Claude Code (T19, T29 et T34 du plan mémoire des sessions) : `leon rattraper`, lancé en tâche
 // détachée au démarrage de tout outil (detach.ts). Il relit les fichiers de session modifiés depuis leur dernière
 // capture réussie (le curseur de capture-session.ts) : une session Codex quittée par `/quit` (pas de SessionEnd), ou
 // dont un Stop a échoué, part ainsi au démarrage suivant.
@@ -23,6 +23,7 @@ import {
   TokenRefusedError,
 } from './import-claude-code';
 import { ADAPTATEURS } from './outils';
+import { purgeOldTemoins } from './temoins';
 
 export const entriesDir = (home: string): string => join(home, '.leon', 'entrees');
 export const ENTRY_MAX_AGE_MS = 24 * 60 * 60_000;
@@ -99,6 +100,7 @@ export async function catchUp(deps: CatchUpDeps): Promise<CatchUpSummary> {
   const summary: CatchUpSummary = { sessions: 0, failures: 0 };
   const now = deps.now();
   await purgeOldEntries(deps.home, now);
+  await purgeOldTemoins(deps.home, now);
   const tools = await captureTools(deps.home);
   if (tools.length === 0 || !(await takeLock(deps.home, now))) return summary;
   try {

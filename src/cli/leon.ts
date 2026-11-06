@@ -29,6 +29,7 @@ import {
   parseSince,
 } from './import-claude-code';
 import { codexHome, installCodexHook, uninstallCodexHook } from './install-codex';
+import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
 import { installHooks } from './install-hooks';
 import {
   type LoginDeps,
@@ -69,8 +70,8 @@ const HELP = `Usage: leon <command>
 
 Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
-                       login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex;
-                       Cursor and Gemini are detected but not supported yet), after showing what is sent and asking.
+                       login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
+                       Cursor; Gemini is detected but not supported yet), after showing what is sent and asking.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -91,13 +92,14 @@ Commands:
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   crochet <tool> <event>
                        The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
-                       input). For now, Codex: \`crochet codex demarrage\` prints the same block as briefing, in the
-                       format Codex expects; \`crochet codex tour\` (each Stop) and \`crochet codex fin\` (SessionEnd)
-                       send the new exchanges of the session, and its actions, if ~/.leon/accord.json allows the
-                       capture of Codex; they print nothing. Any other tool or event prints nothing
+                       input), for codex or cursor: \`demarrage\` (start of a session) and \`prompt\` (first message of a
+                       conversation, once: Cursor) print the same block as briefing, in the format of the tool;
+                       \`tour\` (after each turn) and \`fin\` (end of a session) send the new exchanges of the session,
+                       and its actions, if ~/.leon/accord.json allows the capture of this tool, and print only what the
+                       tool expects (Cursor: \`{}\`). Any other tool or event prints nothing
       --entree <file>      (fin) read the hook JSON from this file of ~/.leon/entrees instead, then delete it (what
                            the launcher ~/.leon/bin/leon passes once it has handed control back to Codex)
-  rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex): send what their
+  rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex, Cursor): send what their
                        hooks missed since the last capture (a session left with /quit, a failed upload). Only the
                        files changed since that consent are read. Started in the background when a session starts
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
@@ -119,11 +121,11 @@ Commands:
                        after confirmation (only the consent when the hooks are already there)
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
-      --outil codex        Codex instead: its SessionStart hook in \${CODEX_HOME:-~/.codex}/hooks.json
+      --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code. The launcher
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
-      --outil <tool>       the tool to remove: claude_code (the default) or codex
+      --outil <tool>       the tool to remove: claude_code (the default), codex or cursor
   --version            Print the version of this CLI ("dev" when run from a clone)
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
@@ -186,10 +188,13 @@ async function runImport(args: string[]): Promise<number> {
 
 // Le crochet SessionStart ajoute stdout au contexte de la session : seul le bloc de démarrage y passe,
 // et le code de sortie vaut toujours 0 pour ne jamais gêner Claude Code (voir briefing.ts).
-async function runBriefingCommand(outil?: Outil): Promise<number> {
+async function runBriefingCommand(
+  outil?: Outil,
+  evenement: 'demarrage' | 'prompt' = 'demarrage',
+): Promise<number> {
   try {
     return await runBriefing({
-      ...(outil ? { outil } : {}),
+      ...(outil ? { outil, evenement } : {}),
       stdin: process.stdin,
       env: process.env,
       cwd: process.cwd(),
@@ -297,6 +302,16 @@ async function runToolCapture(
   args: string[],
 ): Promise<number> {
   try {
+    return await toolCapture(outil, evenement, args);
+  } finally {
+    // Ce que l'outil attend sur la sortie standard (Cursor, Antigravity : `{}`), quoi qu'il soit arrivé.
+    const empty = ADAPTATEURS[outil].vide(evenement);
+    if (empty !== null) console.log(empty);
+  }
+}
+
+async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string[]) {
+  try {
     const { values } = parseArgs({ args, options: { entree: { type: 'string' } }, strict: false });
     const input =
       typeof values.entree === 'string'
@@ -383,8 +398,9 @@ async function runInstallHooks(args: string[]): Promise<number> {
     args,
     options: { oui: { type: 'boolean' }, depot: { type: 'string' }, outil: { type: 'string' } },
   });
-  if (values.outil !== undefined && values.outil !== 'claude_code' && values.outil !== 'codex') {
-    throw new Error('--outil: unknown tool (claude_code or codex).');
+  const tools: readonly string[] = ['claude_code', ...OUTILS];
+  if (values.outil !== undefined && !tools.includes(values.outil)) {
+    throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
   }
   const repoDir = values.depot ? resolve(values.depot) : CLI_REPO_DIR;
   if (!(await isLeonRepo(repoDir))) {
@@ -403,6 +419,9 @@ async function runInstallHooks(args: string[]): Promise<number> {
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
+    if (values.outil === 'cursor') {
+      return await installCursorHooks({ home: io.home, assumeYes }, io);
+    }
     if (values.outil === 'codex') {
       return await installCodexHook(
         { codexDir: codexHome(io.home, process.env), home: io.home, assumeYes },
@@ -426,6 +445,9 @@ async function runUninstallHooks(args: string[]): Promise<number> {
   const tools: readonly string[] = [...new Set([...CODE_SESSION_KINDS, ...OUTILS])];
   if (values.outil !== undefined && !tools.includes(values.outil)) {
     throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
+  }
+  if (values.outil === 'cursor') {
+    return uninstallCursorHooks({ home: homedir() }, { out: console.log, err: console.error });
   }
   if (values.outil === 'codex') {
     return uninstallCodexHook(
@@ -533,14 +555,18 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
-    // Les crochets des autres outils (C6) : le démarrage de Codex (lot 4), son tour et sa fin (lot 5). Le reste ne fait
-    // rien et sort avec 0, pour qu'un crochet d'une version plus récente ne gêne jamais l'outil.
+    // Les crochets des autres outils (C6) : le démarrage et le premier message (le bloc), le tour et la fin (la capture).
+    // Un outil ou un évènement inconnu ne fait rien et sort avec 0, pour qu'un crochet d'une version plus récente ne
+    // gêne jamais l'outil.
     if (command === 'crochet') {
       const [outil, evenement, ...rest] = args;
-      if (outil === 'codex' && evenement === 'demarrage') return await runBriefingCommand(outil);
-      if (outil === 'codex' && (evenement === 'tour' || evenement === 'fin')) {
-        return await runToolCapture(outil, evenement, rest);
+      if (!(OUTILS as readonly string[]).includes(outil ?? '')) return 0;
+      const tool = outil as Outil;
+      if (evenement === 'demarrage' || evenement === 'prompt') {
+        return await runBriefingCommand(tool, evenement);
       }
+      if (evenement === 'tour' || evenement === 'fin')
+        return await runToolCapture(tool, evenement, rest);
       return 0;
     }
     if (command === 'rattraper') return await runCatchUp();

@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
@@ -271,7 +271,8 @@ describe('runBriefing', () => {
     fetch?: ReturnType<typeof vi.fn>;
     scheduleUpdate?: () => Promise<unknown>;
     scheduleCatchUp?: () => Promise<unknown>;
-    outil?: 'codex';
+    outil?: 'codex' | 'cursor';
+    evenement?: 'demarrage' | 'prompt';
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -295,6 +296,7 @@ describe('runBriefing', () => {
         ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
         ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
         ...(input.outil ? { outil: input.outil } : {}),
+        ...(input.evenement ? { evenement: input.evenement } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -587,6 +589,102 @@ describe('runBriefing', () => {
     expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(git).not.toHaveBeenCalled();
+  });
+
+  // T28 : Cursor reçoit le bloc au premier message d'une conversation (beforeSubmitPrompt), une seule fois.
+  describe('Cursor : le bloc au premier message, une fois par conversation', () => {
+    const promptJson = (conversation: string) =>
+      Readable.from([
+        JSON.stringify({
+          conversation_id: conversation,
+          generation_id: 'g',
+          hook_event_name: 'beforeSubmitPrompt',
+          prompt: 'Bonjour',
+          workspace_roots: ['/projets/leon'],
+          cursor_version: '3.27.0',
+        }),
+      ]);
+    let cursorHome: string;
+    beforeEach(async () => {
+      cursorHome = await mkdtemp(join(homes, 'cursor-'));
+      await writeConsent(cursorHome, 'cursor', 2);
+    });
+
+    it('au premier message : le bloc dans la forme de Cursor, la conversation exclue ; au second : rien d’autre', async () => {
+      const first = setup({
+        stdin: promptJson('conv-1'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+        remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+      });
+      expect(await first.run()).toBe(0);
+      expect(first.out.map((line) => JSON.parse(line))).toEqual([
+        { continue: true, additional_context: BLOCK },
+      ]);
+      expect(first.asked()).toMatchObject({ projet: 'github.com/acme/leon', session: 'conv-1' });
+
+      const second = setup({
+        stdin: promptJson('conv-1'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      expect(await second.run()).toBe(0);
+      expect(second.out).toEqual(['{"continue":true}']);
+      expect(second.fetchImpl).not.toHaveBeenCalled();
+
+      const other = setup({
+        stdin: promptJson('conv-2'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await other.run();
+      expect(JSON.parse(other.out[0] ?? '{}')).toHaveProperty('additional_context', BLOCK);
+    });
+
+    it('sans accord, ou serveur en panne : {"continue":true}, jamais un message bloqué', async () => {
+      const without = setup({
+        stdin: promptJson('conv-3'),
+        home: notAgreed,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await without.run();
+      expect(without.out).toEqual(['{"continue":true}']);
+
+      const failing = setup({
+        stdin: promptJson('conv-4'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+        fetch: fetchReturning(new Response('{}', { status: 500 })),
+      });
+      await failing.run();
+      expect(failing.out).toEqual(['{"continue":true}']);
+      // Rien n'a été donné : le message suivant réessaie.
+      const retry = setup({
+        stdin: promptJson('conv-4'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await retry.run();
+      expect(JSON.parse(retry.out[0] ?? '{}')).toHaveProperty('additional_context', BLOCK);
+    });
+
+    it('le premier message de Codex ne reçoit rien : son bloc vient au démarrage', async () => {
+      const harness = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home: codex,
+        outil: 'codex',
+        evenement: 'prompt',
+      });
+      await harness.run();
+      expect(harness.out).toEqual([]);
+      expect(harness.fetchImpl).not.toHaveBeenCalled();
+    });
   });
 
   // Le rattrapage (T19, catch-up.ts) : lancé détaché au démarrage de tout outil, une fois la sortie écrite, avant la mise

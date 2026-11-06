@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findCodexSessionFiles, findSessionFiles } from './find-sessions';
+import { findCodexSessionFiles, findCursorSessionFiles, findSessionFiles } from './find-sessions';
 
 let baseDir: string;
 let projectDir: string;
@@ -92,5 +92,26 @@ describe('findCodexSessionFiles', () => {
 
     expect(await findCodexSessionFiles(baseDir)).toEqual([]);
     expect(await findCodexSessionFiles(join(baseDir, 'absent'))).toEqual([]);
+  });
+});
+
+describe('findCursorSessionFiles', () => {
+  const transcript = async (relative: string) => {
+    const path = join(baseDir, 'projects', relative);
+    await mkdir(join(path, '..'), { recursive: true });
+    await writeFile(path, '{}\n');
+    return path;
+  };
+
+  it('rend les transcripts des conversations, pas ceux des sous-agents ni la base de Cursor', async () => {
+    const own = await transcript('Users-demo-leon/agent-transcripts/c1/c1.jsonl');
+    const flat = await transcript('Users-demo-leon/agent-transcripts/c2.jsonl');
+    await transcript('Users-demo-leon/agent-transcripts/c1/subagents/s1.jsonl');
+    await transcript('Users-demo-leon/agent-transcripts/c3/autre.jsonl');
+    await transcript('Users-demo-leon/state.vscdb');
+
+    const found = (await findCursorSessionFiles(baseDir)).map((file) => file.path).sort();
+
+    expect(found).toEqual([own, flat].sort());
   });
 });

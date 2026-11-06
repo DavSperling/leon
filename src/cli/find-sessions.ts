@@ -106,7 +106,35 @@ async function rolloutsUnder(directory: string, depth: number): Promise<string[]
 }
 
 export async function findCodexSessionFiles(codexDir: string): Promise<SessionFile[]> {
-  const paths = await rolloutsUnder(join(codexDir, 'sessions'), ROLLOUT_DEPTH);
+  return withStats(await rolloutsUnder(join(codexDir, 'sessions'), ROLLOUT_DEPTH));
+}
+
+// Les transcripts de Cursor : `<dossier de Cursor>/projects/<slug>/agent-transcripts/<conversation>/<conversation>.jsonl`
+// (et `agent-transcripts/<conversation>.jsonl`, une forme plus ancienne), du moins récemment modifié au plus récent.
+// Les sous-agents (`<conversation>/subagents/`) ne sont pas des sessions : ils ne sont pas lus. `state.vscdb` jamais.
+export async function findCursorSessionFiles(cursorDir: string): Promise<SessionFile[]> {
+  const projectsDir = join(cursorDir, 'projects');
+  const projects = (await listDirectory(projectsDir)).filter((entry) => entry.isDirectory());
+  const paths = await Promise.all(
+    projects.map(async (project) => {
+      const transcripts = join(projectsDir, project.name, 'agent-transcripts');
+      const entries = await listDirectory(transcripts);
+      const found = await Promise.all(
+        entries.map(async (entry) => {
+          if (entry.isFile() && entry.name.endsWith('.jsonl'))
+            return [join(transcripts, entry.name)];
+          if (!entry.isDirectory()) return [];
+          const own = join(transcripts, entry.name, `${entry.name}.jsonl`);
+          return (await stat(own).catch(() => null))?.isFile() ? [own] : [];
+        }),
+      );
+      return found.flat();
+    }),
+  );
+  return withStats(paths.flat());
+}
+
+async function withStats(paths: string[]): Promise<SessionFile[]> {
   const files = await Promise.all(
     paths.map(async (path) => {
       const info = await stat(path).catch(() => null);

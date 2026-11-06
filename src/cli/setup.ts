@@ -24,15 +24,18 @@ import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
 import { addCodexHooks, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
+import { addCursorHooks, cursorHooksPath, installCursorHooks } from './install-cursor';
 import {
   addLeonHooks,
   errorCode,
   installHooks,
   isYes,
+  type Json,
   load,
   parseSettings,
   SETTINGS_FILE,
 } from './install-hooks';
+import type { ToolHookPlan } from './install-outil';
 import {
   type LauncherForm,
   launcherScript,
@@ -40,6 +43,7 @@ import {
   writeLauncher,
 } from './launcher';
 import { requestMe } from './login';
+import { cursorHome } from './outils';
 import { isAllowedServerUrl } from './server-url';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
@@ -198,13 +202,43 @@ async function installCodex(codexDir: string, ctx: InstallContext): Promise<Inst
   };
 }
 
+// Les crochets d'un outil installé par install-outil.ts : en place quand le plan ne change plus rien et que l'accord de
+// capture est écrit.
+async function toolInstalled(
+  code: number,
+  outil: 'cursor',
+  path: string,
+  plan: (settings: Json) => ToolHookPlan | null,
+  ctx: InstallContext,
+): Promise<Installed> {
+  if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
+  const settings = parseSettings(await load(path));
+  const inPlace =
+    settings !== null &&
+    (plan(settings)?.changes ?? []).every((change) => change.action === 'inchange') &&
+    (await factsConsent(ctx.home, outil))?.capture_le !== undefined;
+  return { failed: false, status: inPlace ? 'hooks installed' : 'skipped (not confirmed)' };
+}
+
+async function installCursor(_dir: string, ctx: InstallContext): Promise<Installed> {
+  const code = await installCursorHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  return toolInstalled(
+    code,
+    'cursor',
+    cursorHooksPath(ctx.home),
+    (settings) => addCursorHooks(settings, ctx.home),
+    ctx,
+  );
+}
+
 // Le dossier de réglages de Claude Code (CLAUDE_CONFIG_DIR, sinon ~/.claude), comme claudeConfigDir (env.ts), mais sous
 // le dossier personnel reçu : les tests n'ont pas le vrai.
 const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
 // Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex au lot 4 ; Cursor et Gemini à leurs lots) :
+// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8 ;
+// Antigravity à son lot) :
 // les autres sont détectés mais dits « not supported yet ».
 const TOOLS: {
   label: string;
@@ -217,7 +251,7 @@ const TOOLS: {
     install: installClaudeCode,
   },
   { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
-  { label: 'Cursor', dir: (home) => join(home, '.cursor') },
+  { label: 'Cursor', dir: (home) => cursorHome(home), install: installCursor },
   { label: 'Gemini / Antigravity', dir: (home) => join(home, '.gemini') },
 ];
 

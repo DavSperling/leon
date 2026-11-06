@@ -516,6 +516,35 @@ describe('linkSource, par proximité', () => {
     expect(metadata.mots_cles).toEqual([]);
   });
 
+  it('des notes de collègues plus proches ne prennent pas la place de ma note dans la limite de proximité', async () => {
+    const { paul, marie } = await team();
+    const session = await filed(paul);
+    await summarize(paul, session, NEAR);
+    // Plus proches que la note de Paul, visibles de lui, mais jamais reliées à son fil : elles ne comptent pas.
+    for (let i = 0; i < 21; i += 1) {
+      await item(marie, {
+        kind: 'mcp_remember',
+        title: NEAR,
+        texts: [NEAR],
+        acl: [marie.tenantId],
+        role: 'user',
+      });
+    }
+    const note = await item(paul, {
+      kind: 'mcp_remember',
+      title: 'Note sur le rangement',
+      texts: [`${NEAR}, à retenir`],
+      acl: [paul.userId],
+      role: 'user',
+    });
+    const { id } = await onlyFil(paul);
+
+    // Depuis le fil, par la proximité de son résumé.
+    expect(await link(paul, session)).toEqual([id]);
+
+    expect((await onlyFil(paul)).metadata.liees).toEqual([{ id: note, cle: 'proximite' }]);
+  });
+
   it('une note écrite avant le premier résumé du fil le rejoint quand les vecteurs du résumé sont écrits', async () => {
     const { paul } = await team();
     const session = await filed(paul);

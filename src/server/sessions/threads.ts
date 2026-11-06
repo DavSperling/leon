@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { and, asc, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
-import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
+import { CAPTURE_KINDS, CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { organizations, users } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
@@ -300,6 +300,8 @@ export async function nearSources(
     join passage_vectors ov on ov.passage_id = op.id and ov.model = ${model}
     where f.tenant_id = ${ctx.tenantId} and f.id = ${filId} and ${anchor(ctx)}
       and o.kind = any(${textArray([...LINKED_KINDS])})
+      -- Une capture d'un collègue n'est jamais reliée (readSource) : écartée avant la limite, pour ne pas en prendre la place.
+      and (o.kind <> all(${textArray(CAPTURE_KINDS)}) or o.owner_user_id = ${ctx.userId})
       and not coalesce(f.metadata->'liees', '[]'::jsonb) @> jsonb_build_array(jsonb_build_object('id', o.id))
     group by o.id
     having min(v.embedding <=> ov.embedding) < ${PROCHE_MAX_DISTANCE}

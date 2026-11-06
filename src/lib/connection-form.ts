@@ -167,7 +167,7 @@ export type OAuthNotice = {
   adminConsent: boolean; // la page joint le lien d'accord administrateur de l'outil
 };
 
-// Dit au retour d'Outlook (`admin`) et avant son bouton.
+// Dit au retour d'un outil Microsoft (`admin`) et avant son bouton.
 export const ADMIN_CONSENT_MESSAGE =
   "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.";
 export const ADMIN_CONSENT_MESSAGE_EN =
@@ -197,7 +197,7 @@ function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
     case 'admin':
       return ADMIN_CONSENT_MESSAGE;
     case 'admin_accorde':
-      return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
+      return `Accord donné : cliquez de nouveau sur Se connecter avec ${object}.`;
     case 'autre_compte':
       return `Reconnectez ${object} avec le même compte et le même site, ou ajoutez une autre connexion.`;
     case 'vide':
@@ -227,7 +227,7 @@ function errorTextEn(code: OAuthReturnCode, tool: ProviderId | null): string {
     case 'admin':
       return ADMIN_CONSENT_MESSAGE_EN;
     case 'admin_accorde':
-      return 'Consent granted: click Continue with Outlook again.';
+      return `Consent granted: click Continue with ${object} again.`;
     case 'autre_compte':
       return `Reconnect ${object} with the same account and site, or add another connection.`;
     case 'vide':

@@ -257,7 +257,7 @@ describe('oauthNotice', () => {
       "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.",
     );
     expect(text('admin_accorde')).toBe(
-      'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.',
+      'Accord donné : cliquez de nouveau sur Se connecter avec Linear.',
     );
     expect(text('vide')).toBe(
       "Leon est connecté à Linear, mais n'y a accès à rien pour l'instant.",

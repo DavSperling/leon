@@ -165,13 +165,13 @@ describe('TurnSchema', () => {
 });
 
 describe('listes de types', () => {
-  it('donne 42 connecteurs, sans doublon ni recouvrement avec la capture', () => {
-    expect(PROVIDER_IDS).toHaveLength(42);
-    expect(new Set(PROVIDER_IDS).size).toBe(42);
+  it('donne 43 connecteurs, sans doublon ni recouvrement avec la capture', () => {
+    expect(PROVIDER_IDS).toHaveLength(43);
+    expect(new Set(PROVIDER_IDS).size).toBe(43);
     for (const kind of CAPTURE_KINDS) expect(PROVIDER_IDS).not.toContain(kind);
   });
 
-  it('SOURCE_KINDS = les types de capture, le document ajouté à la main, puis les 42 connecteurs, sans doublon', () => {
+  it('SOURCE_KINDS = les types de capture, le document ajouté à la main, puis les 43 connecteurs, sans doublon', () => {
     expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, 'document', ...PROVIDER_IDS]);
     expect(new Set(SOURCE_KINDS).size).toBe(SOURCE_KINDS.length);
   });

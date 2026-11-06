@@ -430,7 +430,7 @@
   },
   "connections": {
     "title": "Connections",
-    "subtitle": "What Leon reads in your tools is visible to the team, except email, Google Drive, and Slack message content, which stays private.",
+    "subtitle": "What Leon reads in your tools is visible to the team, except email, Google Drive, OneDrive, and Slack message content, which stays private.",
     "adminConsent": "Admin consent link",
     "newTab": " (opens in a new tab)",
     "serverSetup": "Connectors aren’t configured on this server: the LEON_CONNECTORS_KEY variable, which encrypts tool keys, is missing. Generate it with",
@@ -568,7 +568,7 @@
     "step1": "Build the extension with",
     "extensionPrompt": "Install the Leon browser extension from this repository:\n1. Build it with WXT_PUBLIC_LEON_URL={serverUrl} pnpm ext:build.\n2. In Chrome, open chrome://extensions, turn on developer mode, click “Load unpacked”, and choose the extension/.output/chrome-mv3 folder.\n3. Then open the extension options and let me paste my Leon token myself.",
     "membersTitle": "Members",
-    "membersDescription": "Everyone can see what Leon reads in team tools. Assistant conversations, email, Google Drive, and Slack messages stay with their owner.",
+    "membersDescription": "Everyone can see what Leon reads in team tools. Assistant conversations, email, Google Drive, OneDrive, and Slack messages stay with their owner.",
     "membersList": "Workspace members",
     "formerMembersTitle": "Former members",
     "formerMember": "{name} (former member)",
@@ -1018,7 +1018,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive and SharePoint. Outlook mail and calendar are already supported."
+          "text": "Teams. Outlook mail and calendar, OneDrive and SharePoint are already supported."
         },
         "files": {
           "title": "Images and scanned PDFs",
@@ -1167,7 +1167,7 @@
         "ai": "Your AI assistant conversations",
         "discussions": "Your chats with Leon",
         "notes": "Notes you save over MCP (remember)",
-        "outlook": "Your email (Outlook, Gmail), Google Drive and Slack, if you connect them"
+        "outlook": "Your email (Outlook, Gmail), Google Drive, OneDrive and Slack, if you connect them"
       },
       "ranking": "3 · ranking and answer",
       "filter": "2 · permission filter, first",
@@ -1187,7 +1187,7 @@
       "whoKicker": "Access model",
       "whoTitle": "Two visibility rules cover everything Leon stores.",
       "teamTitle": "Shared with the team",
-      "teamText": "Content from shared connections, as in the source tool. Email, Google Drive and Slack are the exception: they stay private to whoever connects them.",
+      "teamText": "Content from shared connections, as in the source tool. Email, Google Drive, OneDrive and Slack are the exception: they stay private to whoever connects them.",
       "youTitle": "Private to you",
       "youText": "No one else sees it, in search results or in answers.",
       "frankly": "Known gaps",

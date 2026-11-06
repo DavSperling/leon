@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs';
-import { scrubEvent } from '@/server/sentry-scrub';
+import { maskPath, scrubBreadcrumb, scrubEvent, scrubSpan } from '@/server/sentry-scrub';
 
 // Sans SENTRY_DSN (local, tests), le SDK ne fait rien. Chargé par instrumentation.ts, runtime Node seulement.
 Sentry.init({
@@ -24,4 +24,12 @@ Sentry.init({
     stackFrameVariables: false,
   },
   beforeSend: scrubEvent,
+  beforeSendSpan: scrubSpan,
+  beforeBreadcrumb: scrubBreadcrumb,
+});
+
+// Le contexte d'échantillonnage (en-tête de chaque enveloppe, baggage des appels sortants) répète le nom de la
+// transaction, donc le jeton d'une adresse brute.
+Sentry.getClient()?.on('createDsc', (dsc) => {
+  if (dsc.transaction) dsc.transaction = maskPath(dsc.transaction);
 });

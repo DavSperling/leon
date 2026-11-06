@@ -44,3 +44,27 @@ export const launcherPath = (home: string): string => join(home, '.leon', 'bin',
 export function launcherHookCommand(home: string, subcommand: HookSubcommand): string {
   return `${shellQuote(launcherPath(home))} ${subcommand}`;
 }
+
+// Les outils hors Claude Code dont Leon pose les crochets (C6 du plan mémoire des sessions) : Codex au lot 4, Cursor et
+// Antigravity à leurs lots. Leurs crochets passent tous par `leon crochet <outil> <evenement>`.
+export const OUTILS = ['codex'] as const;
+export type Outil = (typeof OUTILS)[number];
+export const EVENEMENTS = ['demarrage', 'prompt', 'tour', 'fin'] as const;
+export type Evenement = (typeof EVENEMENTS)[number];
+
+// La commande d'un crochet hors Claude Code (C6) : le lanceur, mis entre apostrophes s'il le faut, puis la sous-commande.
+export function launcherCommand(home: string, outil: Outil, evenement: Evenement): string {
+  return `${shellQuote(launcherPath(home))} crochet ${outil} ${evenement}`;
+}
+
+// Une commande écrite par launcherCommand, sous n'importe quel dossier personnel (C6, vérifiée le 02/11, plus
+// l'apostrophe d'un dossier personnel, écrite '\'' par singleQuote) : les installateurs s'en servent pour rester
+// idempotents et le retrait pour ne retirer que les crochets de Leon. Rend l'outil et l'évènement, ou null.
+const LEON_LAUNCHER_COMMAND =
+  /^(?:'(?:[^']|'\\'')*\/\.leon\/bin\/leon'|\/\S*\/\.leon\/bin\/leon) crochet (codex|cursor|antigravity) (demarrage|prompt|tour|fin)$/;
+export function isLeonLauncherCommand(
+  command: string,
+): { outil: string; evenement: Evenement } | null {
+  const match = LEON_LAUNCHER_COMMAND.exec(command.trim());
+  return match ? { outil: match[1] as string, evenement: match[2] as Evenement } : null;
+}

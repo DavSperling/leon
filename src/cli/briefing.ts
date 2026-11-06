@@ -39,6 +39,8 @@ import {
 import { isOtherToolHook, readHookStdin } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
+import type { Outil } from './hook-commands';
+import { ADAPTATEURS } from './outils';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
 
@@ -158,6 +160,8 @@ export type BriefingCommandDeps = {
   // La mise à jour automatique (scheduleUpdate, self-update.ts) : elle décide si elle est due et lance le processus
   // détaché. Absente, rien n'est lancé.
   scheduleUpdate?: () => Promise<unknown>;
+  // Le crochet de démarrage d'un autre outil (`leon crochet <outil> demarrage`, C6) ; absent : Claude Code.
+  outil?: Outil;
 };
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
@@ -167,16 +171,23 @@ export type BriefingCommandDeps = {
 export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
   try {
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
-    if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
-    // Après la garde : sous un autre outil, même ce message ne s'écrit pas.
-    if (await consentWithdrawn(deps.home, 'claude_code')) {
-      deps.err(CONSENT_WITHDRAWN_MESSAGE);
+    const outil = deps.outil;
+    if (outil === undefined) {
+      if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
+      // Après la garde : sous un autre outil, même ce message ne s'écrit pas.
+      if (await consentWithdrawn(deps.home, 'claude_code')) {
+        deps.err(CONSENT_WITHDRAWN_MESSAGE);
+        return 0;
+      }
+    } else if ((await factsConsent(deps.home, outil)) === null) {
+      // Un autre outil n'a pas d'« avant ce chantier » : sans son accord (retiré, ou jamais donné), rien ne part.
+      deps.err(`Leon: no consent recorded for ${ADAPTATEURS[outil].label}: nothing is sent.`);
       return 0;
     }
     const server = await resolveServerEnv(deps.env, deps.home);
     const directory = briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
-    if ((await factsConsent(deps.home, 'claude_code')) === null) {
+    if (outil === undefined && (await factsConsent(deps.home, 'claude_code')) === null) {
       // Sans l'accord du bloc : ni branche ni session ne partent, le point du matin seul, comme avant.
       text = await fetchBriefingText(deps.fetch, server, await projectKeyFor(directory, deps.git));
     } else {
@@ -194,7 +205,7 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     if (text === null) {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {
-      deps.out(startOutput('claude_code', text));
+      deps.out(outil ? ADAPTATEURS[outil].demarrage(text) : startOutput('claude_code', text));
     }
     // Une fois la sortie écrite, la mise à jour automatique (S12) : détachée, elle n'est jamais attendue, et ni son
     // échec ni sa lenteur ne changent la sortie du crochet.

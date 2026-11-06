@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   HOOK_PNPM_OPTIONS,
   hookCommand,
+  isLeonLauncherCommand,
+  launcherCommand,
   launcherHookCommand,
   launcherPath,
   shellQuote,
@@ -65,6 +67,34 @@ describe('le lanceur des crochets (K8, K9)', () => {
     expect(launcherHookCommand("/Users/Léa O'Neil", 'capter-session')).toBe(
       "'/Users/Léa O'\\''Neil/.leon/bin/leon' capter-session",
     );
+  });
+});
+
+describe('launcherCommand et isLeonLauncherCommand (C6)', () => {
+  it('écrit la commande du lanceur pour un outil et un évènement, et la reconnaît', () => {
+    const command = launcherCommand('/Users/amos', 'codex', 'demarrage');
+    expect(command).toBe('/Users/amos/.leon/bin/leon crochet codex demarrage');
+    expect(isLeonLauncherCommand(command)).toEqual({ outil: 'codex', evenement: 'demarrage' });
+  });
+
+  it('un dossier personnel avec une espace ou une apostrophe : la commande écrite est reconnue', () => {
+    for (const home of ['/Users/Léa Martin', "/Users/Léa O'Neil"]) {
+      const command = launcherCommand(home, 'codex', 'demarrage');
+      expect(command.startsWith("'")).toBe(true);
+      expect(isLeonLauncherCommand(command)).toEqual({ outil: 'codex', evenement: 'demarrage' });
+    }
+  });
+
+  it('ne reconnaît pas les autres commandes', () => {
+    for (const command of [
+      '/Users/amos/.leon/bin/leon briefing',
+      '/Users/amos/.leon/bin/leon crochet codex demarrage; rm -rf ~',
+      '/Users/amos/.leon/bin/leon crochet vim demarrage',
+      '/usr/local/bin/leon crochet codex demarrage',
+      'python3 ~/.codex/hooks/session_start.py',
+    ]) {
+      expect(isLeonLauncherCommand(command)).toBeNull();
+    }
   });
 });
 

@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { writeConnection } from './connection';
+import { factsConsent } from './consent';
 import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript } from './launcher';
@@ -144,6 +145,26 @@ describe('leon setup', () => {
       expect(accepted.code).toBe(0);
       expect(accepted.stdout).toContain('Claude Code: hooks installed');
       expect(await exists(join(configDir, SETTINGS_FILE))).toBe(true);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // La porte de D30 (`interactive: process.stdin.isTTY === true`, leon.ts) : une réponse lue d'un tube peut venir d'un
+  // agent. Le « y » d'après l'accord de base n'est donc jamais lu comme un usage, ni la question posée.
+  it(
+    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et l’usage resume n’est pas montré',
+    async () => {
+      await connect();
+
+      const outcome = await leon(['setup', '--depot', clone], 'y\ny\n');
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).toContain('Claude Code: hooks installed');
+      expect(outcome.stdout).not.toContain('usage "resume"');
+      expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
+      expect(
+        JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils.claude_code,
+      ).toEqual({ version: 2, installe_le: expect.any(String) });
     },
     TEST_TIMEOUT_MS,
   );

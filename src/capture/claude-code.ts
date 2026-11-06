@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { maskSecrets } from './mask-secrets';
-import { prepareTurnText } from './prepare-turn-text';
+import { prepareTurnText, removeBlocks } from './prepare-turn-text';
 import { stripLeonBlocks } from './strip-leon-blocks';
 import type { Turn } from './turn';
 
@@ -53,6 +53,26 @@ function messageText(content: string | unknown[]): string {
     return parsed.success ? [parsed.data.text] : [];
   });
   return texts.join('\n\n');
+}
+
+// Ce que Claude Code range en `user` sans que la personne l'ait tapé : la notification d'une tâche de fond, la sortie
+// d'une commande locale (`/…`, `!…`), une interruption. Le tour reste capté ; il ne compte pas comme un échange (C1),
+// le seuil du résumé (« 6 de vos messages », resume-worker.ts) compris.
+// shortcut: les formes connues de Claude Code au 06/11 ; une forme nouvelle compterait encore. La marque des tours
+// injectés (`injecte`, T43 du lot 12) remplacera cette liste.
+const INJECTED_TAGS = [
+  'task-notification',
+  'local-command-stdout',
+  'local-command-stderr',
+  'local-command-caveat',
+  'bash-stdout',
+  'bash-stderr',
+];
+const INTERRUPTED = /^\[Request interrupted by user[^\]]*\]$/;
+
+export function typedByUser(text: string): boolean {
+  const rest = INJECTED_TAGS.reduce((kept, tag) => removeBlocks(kept, tag), text).trim();
+  return rest !== '' && !INTERRUPTED.test(rest);
 }
 
 type ConversationLine = Line & {

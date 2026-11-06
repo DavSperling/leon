@@ -10,7 +10,7 @@ import {
   TACHES_MAX,
   TEXTE_MAX,
 } from './api-contract';
-import { parseClaudeCodeSession } from './claude-code';
+import { parseClaudeCodeSession, typedByUser } from './claude-code';
 import { maskSecrets } from './mask-secrets';
 
 // Le schéma vit dans le contrat, sans dépendance Node ; réexporté pour les lecteurs des faits.
@@ -400,7 +400,9 @@ export function extractClaudeCodeFacts(content: string, root: string | null): Se
     erreurs: errors,
     externe: external,
     echanges:
-      parseClaudeCodeSession(content)?.turns.filter((turn) => turn.role === 'user').length ?? 0,
+      parseClaudeCodeSession(content)?.turns.filter(
+        (turn) => turn.role === 'user' && typedByUser(turn.text),
+      ).length ?? 0,
     debut: start,
     fin: end,
   };

@@ -245,6 +245,12 @@ describe('la page Documentation', () => {
       // Le même usage couvrira l'état des fils (lot 12, D23) : le texte d'accord le dit déjà, la page aussi.
       expect(readText('src/cli/install-hooks.ts')).toContain('the state of your work threads');
       expect(resume).toContain(locale === 'en' ? 'your work threads' : 'vos fils de travail');
+      // Un refus est gardé (A16) : la page dit qu'il n'est plus redemandé, comment revenir dessus, et le délai du
+      // retrait que dit RESUME_LINES.
+      expect(resume).toContain(locale === 'en' ? 'A refusal is kept' : 'Un refus est gardé');
+      expect(resume).toContain('<code>~/.leon/bin/leon retirer-crochets</code>');
+      expect(readText('src/cli/install-hooks.ts')).toContain('may still be written within an hour');
+      expect(resume).toContain(locale === 'en' ? 'within an hour' : 'dans l’heure');
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
     },
   );

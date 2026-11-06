@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, TOOL_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, OFFERED_NATURES, TOOL_KINDS } from '@/capture/turn';
 import { parseQuery } from '@/server/search/parse-query';
 import { EXAMPLES, EXAMPLES_EN, SYNTAX, SYNTAX_EN } from './examples';
 import { buildActiveChips, buildMenus } from './search-filters';
@@ -168,7 +168,9 @@ describe('les entrées des menus de filtre', () => {
       expect(parseQuery(`type:${nature}`, NOW).filters.natures, nature).toEqual([nature]);
     }
     expect(outils?.options).toHaveLength(TOOL_KINDS.length);
-    expect(types?.options).toHaveLength(ITEM_NATURES.length);
+    // Le fil de travail est accepté par le filtre, pas proposé : la recherche ne le rend jamais (D35).
+    expect(types?.options).toHaveLength(OFFERED_NATURES.length);
+    expect(types?.options.map((option) => option.label)).not.toContain('Fil de travail');
   });
 
   it('ne donnent jamais deux fois le même libellé dans un menu', () => {

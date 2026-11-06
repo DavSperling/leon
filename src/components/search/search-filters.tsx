@@ -1,7 +1,7 @@
 import { TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { ITEM_NATURES } from '@/capture/turn';
+import { OFFERED_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
@@ -164,7 +164,7 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
     {
       name: 'type',
       label: 'Type',
-      options: ITEM_NATURES.map((nature) =>
+      options: OFFERED_NATURES.map((nature) =>
         en
           ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
           : option(q, 'type', nature, NATURE_LABELS[nature]),

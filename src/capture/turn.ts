@@ -80,6 +80,9 @@ export const ITEM_NATURES = [
   'fil_de_travail',
 ] as const;
 export type ItemNature = (typeof ITEM_NATURES)[number];
+// Les natures proposées par les menus et les descriptions des outils : un fil de travail n'a ni tour ni passage (D35),
+// la recherche ne le rend jamais. Le filtre `type` l'accepte quand même (T39).
+export const OFFERED_NATURES = ITEM_NATURES.filter((nature) => nature !== 'fil_de_travail');
 export const CAPTURE_MODES = ['file', 'network', 'dom', 'manual'] as const;
 export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.

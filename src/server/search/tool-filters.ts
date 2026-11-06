@@ -1,4 +1,4 @@
-import { ITEM_NATURES, projectKeyFromInput, TOOL_KINDS } from '@/capture/turn';
+import { OFFERED_NATURES, projectKeyFromInput, TOOL_KINDS } from '@/capture/turn';
 import { NATURE_LABELS_EN } from '@/lib/labels';
 import { parseQuery } from './parse-query';
 import type { SearchFilters } from './types';
@@ -19,7 +19,9 @@ export const QUERY_SYNTAX_DESCRIPTION_EN =
 
 // Les natures que l'outil accepte, nommées en anglais (`meeting`, `email`…) : la recherche les lit comme leur
 // identifiant (parse-query.ts).
-export const NATURE_NAMES_EN = ITEM_NATURES.map((nature) => NATURE_LABELS_EN[nature].toLowerCase());
+export const NATURE_NAMES_EN = OFFERED_NATURES.map((nature) =>
+  NATURE_LABELS_EN[nature].toLowerCase(),
+);
 
 // Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
 // guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.

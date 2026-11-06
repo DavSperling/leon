@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type Connection, writeConnection } from './connection';
-import { consentPath, factsConsent, writeConsent } from './consent';
+import { addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
@@ -633,6 +633,28 @@ describe('setup : les outils de code', () => {
 
     expect(run.questions.length).toBeLessThanOrEqual(1);
     expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
+    expect((await factsConsent(home, 'claude_code'))?.refus).toEqual([]);
+  });
+
+  // C7 révisé, A16 : un refus s'écrit daté ; setup relancé ne le propose plus, et ne fait perdre ni usage ni refus.
+  it('dans un terminal, un refus de l’usage resume s’écrit ; relancée, setup ne le redemande pas et garde l’accord tel quel', async () => {
+    await hasClaudeCode();
+    const first = await setup({}, { interactive: true, answers: ['y', 'n'] });
+    expect(first.questions).toHaveLength(2);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      version: 2,
+      usages: [],
+      refus: ['resume'],
+    });
+    await addUsage(home, 'claude_code', 'lecture');
+    const consent = await readFile(consentPath(home), 'utf8');
+
+    const second = await setup({}, { interactive: true });
+
+    expect(second.code).toBe(0);
+    expect(second.questions).toEqual([]);
+    expect(second.output).toContain('Claude Code: hooks installed');
+    expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
   });
 
   it('installée : n’annonce pas que les crochets ont besoin de pnpm et de Node dans le PATH', async () => {

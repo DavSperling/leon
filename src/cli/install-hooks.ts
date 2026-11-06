@@ -45,9 +45,10 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
-// - une fois l'accord de base en place, propose à part l'usage `resume` (C7 révisé) s'il manque, avec son texte, et
-//   seulement dans un terminal sans --oui : une réponse lue d'un tube peut venir d'un agent, qui ne donne jamais un
-//   usage à la place de l'utilisateur (D30 du plan de la mémoire à disposition) ;
+// - une fois l'accord de base en place, propose à part l'usage `resume` (C7 révisé) s'il n'est ni accepté ni refusé,
+//   avec son texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube peut venir d'un agent, qui ne
+//   donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à disposition). Un refus s'écrit daté
+//   (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -74,6 +75,7 @@ import {
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
 import {
+  addRefusal,
   addUsage,
   consentPath,
   consentWithdrawn,
@@ -508,15 +510,22 @@ async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> 
   return true;
 }
 
-// L'usage `resume` est-il à proposer ? Seulement sur l'accord de base, dans un terminal, sans --oui (D30).
+// L'usage `resume` est-il à proposer ? Seulement sur l'accord de base, dans un terminal, sans --oui (D30), et s'il n'a
+// été ni accepté ni refusé (A16).
 const offersResume = (options: InstallOptions, consent: FactsConsent | null): boolean =>
   !options.assumeYes &&
   options.interactive === true &&
   consent !== null &&
-  !consent.usages.includes('resume');
+  !consent.usages.includes('resume') &&
+  !consent.refus.includes('resume');
 
-// Propose l'usage `resume`, après l'accord de base, avec son texte, en [y/N] : jamais coché d'avance. Un refus ne
-// change rien. Rend false si l'usage accepté n'a pas pu s'écrire.
+// Après un refus, comment revenir dessus (choix du plan) : le retrait efface usages et refus.
+const REFUSED_LINE =
+  'This answer is kept: you will not be asked again. To change it, run `leon retirer-crochets` (it also removes the hooks and withdraws your consent), then `leon setup`.';
+
+// Propose l'usage `resume`, après l'accord de base, avec son texte, en [y/N] : jamais coché d'avance. Un refus (non, ou
+// rien) ne change pas ce qui part ; il s'écrit daté, pour ne plus être redemandé. Rend false si l'usage accepté n'a pas
+// pu s'écrire ; un refus qui ne s'écrit pas n'est qu'une question qui reviendra.
 async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
   if (!offersResume(options, await factsConsent(options.home, 'claude_code'))) return true;
   const path = consentPath(options.home);
@@ -526,6 +535,16 @@ async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<
   );
   if (!isYes(answer)) {
     deps.out('Nothing was added: no session is summarized.');
+    try {
+      await addRefusal(options.home, 'claude_code', 'resume');
+    } catch (error) {
+      const code = errorCode(error);
+      deps.err(
+        `Leon: could not write ${path}${code ? ` (${code})` : ''}: your answer is not kept, the question will come back.`,
+      );
+      return true;
+    }
+    deps.out(REFUSED_LINE);
     return true;
   }
   try {

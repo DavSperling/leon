@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  addRefusal,
   addUsage,
   anyToolInstalled,
   CONSENT_AGAIN_HINT,
@@ -42,6 +43,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
       usages_le: {},
+      refus: [],
     });
   });
 
@@ -89,6 +91,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
       usages_le: {},
+      refus: [],
     });
     expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
   });
@@ -103,6 +106,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: ['resume'],
       usages_le: { resume: new Date('2026-11-05T09:00:00Z') },
+      refus: [],
     });
   });
 
@@ -120,6 +124,7 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       installe_le: new Date('2026-11-02T14:00:00Z'),
       usages: [],
       usages_le: {},
+      refus: [],
     });
   });
 });
@@ -166,6 +171,102 @@ describe('addUsage : un usage accepté à part, daté (C7 révisé)', () => {
   it('le retrait (version 0) efface les usages', async () => {
     await writeConsent(home, 'claude_code', 2);
     await addUsage(home, 'claude_code', 'resume');
+
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-05T10:00:00Z'));
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
+      version: 0,
+      installe_le: '2026-11-05T10:00:00.000Z',
+    });
+  });
+});
+
+// C7 révisé, A16 : un refus s'écrit daté, comme un usage, et n'ouvre rien.
+describe('addRefusal : un usage refusé, daté (C7 révisé)', () => {
+  it('ajoute le refus sans toucher à la version, à sa date, aux usages ni aux autres outils', async () => {
+    const codex = { version: 2, installe_le: '2026-11-01T10:00:00.000Z', note: 'à la main' };
+    await writeRaw(
+      JSON.stringify({
+        outils: {
+          codex,
+          claude_code: {
+            version: 2,
+            installe_le: '2026-11-02T14:00:00.000Z',
+            usages: { lecture: '2026-11-04T09:00:00.000Z' },
+          },
+        },
+      }),
+    );
+
+    await addRefusal(home, 'claude_code', 'resume', new Date('2026-11-05T09:00:00Z'));
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8'))).toEqual({
+      outils: {
+        codex,
+        claude_code: {
+          version: 2,
+          installe_le: '2026-11-02T14:00:00.000Z',
+          usages: { lecture: '2026-11-04T09:00:00.000Z' },
+          refus: { resume: '2026-11-05T09:00:00.000Z' },
+        },
+      },
+    });
+    expect(await factsConsent(home, 'claude_code')).toEqual({
+      version: 2,
+      installe_le: new Date('2026-11-02T14:00:00Z'),
+      usages: ['lecture'],
+      usages_le: { lecture: new Date('2026-11-04T09:00:00Z') },
+      refus: ['resume'],
+    });
+    expect((await stat(consentPath(home))).mode & 0o777).toBe(0o600);
+  });
+
+  it('un refus n’ouvre rien : l’usage refusé n’est pas accepté', async () => {
+    await writeConsent(home, 'claude_code', 2);
+
+    await addRefusal(home, 'claude_code', 'resume');
+
+    expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
+  });
+
+  it.each([
+    ['sans accord', null],
+    ['après le retrait', 0],
+  ])('refuse %s, et n’écrit rien', async (_name, version) => {
+    if (version !== null) await writeConsent(home, 'claude_code', version);
+    const before = version === null ? null : await readFile(consentPath(home), 'utf8');
+
+    await expect(addRefusal(home, 'claude_code', 'resume')).rejects.toThrow();
+
+    if (before === null) expect(await readdir(home)).toEqual([]);
+    else expect(await readFile(consentPath(home), 'utf8')).toBe(before);
+  });
+
+  // Une retouche à la main des refus ne fait perdre ni l'accord ni les usages : elle se lit comme aucun refus.
+  it.each([
+    ['des refus en liste', '["resume"]'],
+    ['un refus sans date', '{ "resume": true }'],
+  ])(
+    'des refus illisibles (%s) : aucun refus, l’accord et les usages gardés',
+    async (_n, refus) => {
+      await writeRaw(
+        `{"outils":{"claude_code":{"version":2,"installe_le":"2026-11-02T14:00:00Z","usages":{"resume":"2026-11-05T09:00:00Z"},"refus":${refus}}}}`,
+      );
+
+      expect(await factsConsent(home, 'claude_code')).toEqual({
+        version: 2,
+        installe_le: new Date('2026-11-02T14:00:00Z'),
+        usages: ['resume'],
+        usages_le: { resume: new Date('2026-11-05T09:00:00Z') },
+        refus: [],
+      });
+    },
+  );
+
+  it('le retrait (version 0) efface les usages et les refus', async () => {
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    await addRefusal(home, 'claude_code', 'resume');
 
     await writeConsent(home, 'claude_code', 0, new Date('2026-11-05T10:00:00Z'));
 

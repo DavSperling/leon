@@ -242,7 +242,9 @@ describe("refus d'écriture", () => {
   });
 });
 
-// Toute table du brut, y compris une table ajoutée plus tard à ce fichier de schéma.
+// Toute table du brut, y compris une table ajoutée plus tard à ce fichier de schéma. Les versions de la mémoire n'en
+// sont pas : écrites d'après lui, seule deleteAccount les efface (C12 ; DELETE_ALLOWED, rls-coverage.db.test.ts).
+const DELETED_WITH_ACCOUNT = ['versions_memoire'];
 describe('RLS et droits de leon_app sur le brut', () => {
   it.each(Object.values(memorySchema).map((table) => getTableConfig(table).name))(
     '%s : RLS active, ni delete ni truncate',
@@ -254,7 +256,9 @@ describe('RLS et droits de leon_app sur le brut', () => {
            from pg_class where relname = $1 and relkind = 'r'`,
         [name],
       );
-      expect(rows).toEqual([{ rls: true, can_delete: false, can_truncate: false }]);
+      expect(rows).toEqual([
+        { rls: true, can_delete: DELETED_WITH_ACCOUNT.includes(name), can_truncate: false },
+      ]);
     },
   );
 });

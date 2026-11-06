@@ -204,6 +204,15 @@ describe('deleteAccount', () => {
        values ($1, $2, 'Responsable produit.', array[$2::uuid]), ($1, $3, 'Lead back-end.', array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
+    // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas
+    // celles de Bob (C12).
+    await adminPool.query(
+      `insert into versions_memoire (tenant_id, owner_user_id, source_id, n, texte, ecrit_par, motif, acl)
+       values ($1, $2, $3, 1, 'Fil.', 'serveur', 'rangement', array[$2::uuid]),
+              ($1, $2, $4, 1, 'Note.', 'agent', 'note', array[$2::uuid]),
+              ($1, $5, $6, 1, 'Fil de Bob.', 'serveur', 'rangement', array[$5::uuid])`,
+      [tenantId, alice.userId, aliceThread, privateSource.sourceId, bob.userId, bobThread],
+    );
     const email = await emailOf(alice);
     expect(await loginTraces(alice.userId)).toEqual({
       accounts: 1,
@@ -282,6 +291,11 @@ describe('deleteAccount', () => {
       [tenantId],
     );
     expect(suggestions).toEqual([{ user_id: bob.userId }]);
+    const { rows: versions } = await adminPool.query(
+      'select owner_user_id from versions_memoire where tenant_id = $1',
+      [tenantId],
+    );
+    expect(versions).toEqual([{ owner_user_id: bob.userId }]);
     expect(
       (await adminDb.select().from(connections).where(eq(connections.id, bobConnectionId))).length,
     ).toBe(1);

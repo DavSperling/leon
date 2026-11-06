@@ -26,6 +26,7 @@ const DELETE_ALLOWED = [
   'discussions', // l'auteur supprime ses discussions, les messages partent en cascade (0031)
   'about_suggestions', // seule deleteAccount les efface, avec le reste de la personne (0045)
   'depots_equipe', // l'administrateur décoche un dépôt d'équipe ; un membre ordinaire ne peut pas (0047)
+  'versions_memoire', // seule deleteAccount les efface, avec le reste de la personne (0052)
 ];
 
 const TENANT_TABLES = `

@@ -95,6 +95,7 @@ const COMPOSITE_KEYS = [
   'passages_a_vectoriser.passage_id → passages',
   'read_log.source_id → sources',
   'turns.source_id → sources',
+  'versions_memoire.source_id → sources',
 ];
 
 describe('clés étrangères composées', () => {

@@ -3,6 +3,7 @@ import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { versionsMemoire } from '@/server/db/schema/memory';
 import { aboutSuggestions } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
@@ -206,6 +207,8 @@ export async function deleteAccount(
       .where(eq(users.id, ctx.userId));
     // La proposition « About you » est écrite d'après ses sources : elle part avec son « À propos ».
     await tx.delete(aboutSuggestions).where(eq(aboutSuggestions.userId, ctx.userId));
+    // Ses versions (C12), celles de ses notes comprises : ses sources restent, pas ce qui a été écrit d'après elles.
+    await tx.delete(versionsMemoire).where(eq(versionsMemoire.ownerUserId, ctx.userId));
     // Ses fils de travail, tirés de sa mémoire et privés, partent avec elle (D21) ; ses sessions restent, invisibles.
     // L'app ne supprime pas de source : supprimer_fil (0051) le fait, borné à ses fils.
     await tx.execute(sql`

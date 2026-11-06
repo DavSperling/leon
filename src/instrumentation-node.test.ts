@@ -33,8 +33,10 @@ vi.mock('@/server/connectors/worker', () => ({
   }),
 }));
 vi.mock('@/server/connectors/oauth-env', () => ({ warnIncompleteOAuthPairs: vi.fn() }));
+vi.mock('@/server/db/client', () => ({ assertRlsRole: vi.fn(async () => {}) }));
 
 const { startNodeInstrumentation } = await import('./instrumentation-node');
+const { assertRlsRole } = await import('@/server/db/client');
 const { startConnectorWorker } = await import('@/server/connectors/worker');
 const { startSearchWorker } = await import('@/server/search/worker');
 const { startBriefingWorker } = await import('@/server/briefing/worker');
@@ -55,6 +57,7 @@ beforeEach(() => {
   vi.mocked(startBriefingWorker).mockClear();
   vi.mocked(startConnectorWorker).mockClear();
   vi.mocked(warnIncompleteOAuthPairs).mockClear();
+  vi.mocked(assertRlsRole).mockClear();
 });
 
 afterEach(() => {
@@ -130,6 +133,20 @@ describe('démarrage des tâches de fond', () => {
     mocks.env.ANTHROPIC_API_KEY = 'cle-anthropic-de-test';
 
     await startNodeInstrumentation();
+
+    expect(mocks.order).toEqual([]);
+    expect(warnIncompleteOAuthPairs).not.toHaveBeenCalled();
+    expect(assertRlsRole).not.toHaveBeenCalled();
+  });
+
+  // Le propriétaire des tables passe outre la RLS sans erreur : aucun worker ne démarre avec lui.
+  it('échoue franchement sans rien lancer quand DATABASE_URL passe outre la RLS', async () => {
+    mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
+    vi.mocked(assertRlsRole).mockRejectedValueOnce(
+      new Error('« leon_owner », qui possède les tables'),
+    );
+
+    await expect(startNodeInstrumentation()).rejects.toThrow('leon_owner');
 
     expect(mocks.order).toEqual([]);
     expect(warnIncompleteOAuthPairs).not.toHaveBeenCalled();

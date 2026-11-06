@@ -28,9 +28,10 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
 // jamais dans celle d'un collègue, même partagée avec lui (upsertSource filtre sur le propriétaire). L'envoi
 // est idempotent : les faits sont remplacés, sauf `externe` et `fin`, qui restent vrais une fois vus (un
 // rattrapage peu après le SessionEnd envoie `fin: false`, le fichier venant de changer). `fin_le` date la dernière
-// vraie fin : un tour arrivé après elle dit au résumé que la session a repris (resume-worker.ts). Les usages de l'outil
-// (C7 révisé) sont remplacés eux aussi : absents du corps, aucun. Rend la source, et si son outil a l'usage `resume` :
-// la route met alors le résumé en file (T23).
+// vraie fin : un tour arrivé après elle dit au résumé que la session a repris (resume-worker.ts). `faits_le` date
+// chaque envoi (le now() de Postgres, comme `fin_le`) : le résumé ne s'écrit que dans l'heure qui suit le dernier. Les
+// usages de l'outil (C7 révisé) sont remplacés eux aussi : absents du corps, aucun. Rend la source, et si son outil a
+// l'usage `resume` : la route met alors le résumé en file (T23).
 export async function recordFacts(
   ctx: TenantContext,
   payload: SessionFactsPayload,
@@ -55,7 +56,8 @@ export async function recordFacts(
           'branche', ${faits.branche}::text,
           'accord', ${payload.accord}::int,
           'usages', ${JSON.stringify(payload.usages ?? [])}::jsonb,
-          'fin', ${fin}) || ${finLe}`,
+          'fin', ${fin},
+          'faits_le', now()) || ${finLe}`,
       })
       .where(eq(sources.id, sourceId))
       .returning({

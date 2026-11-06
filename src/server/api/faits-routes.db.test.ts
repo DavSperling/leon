@@ -90,9 +90,28 @@ describe('POST /api/v1/faits', () => {
           usages: [],
           fin: true,
           fin_le: expect.any(String),
+          faits_le: expect.any(String),
         },
       },
     ]);
+  });
+
+  // `faits_le` date chaque envoi, avec ou sans fin : le résumé ne s'écrit que dans l'heure qui suit (resume-worker.ts).
+  it('date chaque envoi de faits, même sans fin', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const [first] = await storedMetadata(paul, body.external_id);
+    expect(Date.parse(String(first?.metadata.faits_le))).toBeGreaterThan(Date.now() - 60_000);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { ...first?.metadata, faits_le: '2026-11-01T10:00:00+00:00' } })
+      .where(eq(sources.externalId, body.external_id));
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    const [stored] = await storedMetadata(paul, body.external_id);
+    expect(Date.parse(String(stored?.metadata.faits_le))).toBeGreaterThan(Date.now() - 60_000);
   });
 
   // C2 et C7 révisé : les usages de l'outil sur le poste, rangés à chaque envoi ; absents, aucun (un usage absent vaut
@@ -239,6 +258,7 @@ describe('POST /api/v1/faits', () => {
       accord: 3,
       usages: [],
       fin: false,
+      faits_le: expect.any(String),
     });
   });
 

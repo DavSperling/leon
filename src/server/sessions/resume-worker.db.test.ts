@@ -69,8 +69,9 @@ async function team(): Promise<{ paul: TenantContext; marie: TenantContext }> {
   return { paul, marie };
 }
 
-// Une session de Paul, close (sa vraie fin, `fin_le`, reçue avec ses derniers tours), avec l'usage `resume` et
-// 6 échanges, sauf ce que `metadata` remplace. Ses tours ont été captés il y a 20 min (`arrivedAgo`), datés de la veille.
+// Une session de Paul, close (sa vraie fin, `fin_le`, reçue avec ses derniers tours et ses faits, `faits_le`), avec
+// l'usage `resume` et 6 échanges, sauf ce que `metadata` remplace. Ses tours ont été captés il y a 20 min
+// (`arrivedAgo`), datés de la veille.
 async function session(
   owner: TenantContext,
   input: {
@@ -99,6 +100,7 @@ async function session(
       usages: ['resume'],
       fin: true,
       fin_le: new Date(Date.now() - arrivedAgo).toISOString(),
+      faits_le: new Date(Date.now() - arrivedAgo).toISOString(),
       ...input.metadata,
     },
     turns: texts.map((text, index) => ({
@@ -251,6 +253,7 @@ describe('summarizeSession', () => {
 
   it.each([
     ['sans l’usage resume', { usages: [] }],
+    ['sans faits_le (des faits d’avant lui)', { faits_le: null }],
     ['sous 6 échanges', { faits: facts({ echanges: 5 }) }],
     ['avec des faits illisibles', { faits: { echanges: 'beaucoup' } }],
   ])('%s : aucun appel, aucun tour', async (_cas, metadata) => {
@@ -263,6 +266,66 @@ describe('summarizeSession', () => {
     expect(llm.calls).toEqual([]);
     expect(await resumeTurns(seeded.sourceId)).toEqual([]);
     expect(mocks.runs).toEqual([]);
+  });
+
+  // La borne du retrait : l'usage relu est celui du dernier envoi de faits, qui doit dater de moins d'une heure.
+  it('des faits envoyés il y a plus d’une heure : aucun appel, rien d’écrit', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul, { arrivedAgo: 61 * MINUTE });
+    const llm = answer(SUMMARY);
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+
+    expect(llm.calls).toEqual([]);
+    expect(await resumeTurns(seeded.sourceId)).toEqual([]);
+    expect((await sourceRow(seeded.sourceId))?.metadata.resume).toBeUndefined();
+    expect(mocks.runs).toEqual([]);
+  });
+
+  it('des faits envoyés il y a 59 min : le résumé est écrit', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul, { arrivedAgo: 59 * MINUTE });
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
+
+    expect(await resumeTurns(seeded.sourceId)).toHaveLength(1);
+  });
+
+  it('l’heure passe pendant l’appel : la relecture à l’écriture le voit, rien n’est écrit', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const llm: Llm = {
+      ...answer(SUMMARY),
+      async *streamText() {
+        await adminDb
+          .update(sources)
+          .set({
+            metadata: sql`${sources.metadata} || jsonb_build_object('faits_le', now() - interval '61 minutes')`,
+          })
+          .where(eq(sources.id, seeded.sourceId));
+        yield SUMMARY;
+      },
+    };
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+
+    expect(await resumeTurns(seeded.sourceId)).toEqual([]);
+    expect((await sourceRow(seeded.sourceId))?.metadata.resume).toBeUndefined();
+    expect(mocks.runs).toEqual([]);
+  });
+
+  // Rattrapage : un résumé manqué (faits trop vieux) s'écrit au prochain envoi de faits de la session.
+  it('un prochain envoi de faits rattrape le résumé manqué', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul, { arrivedAgo: 2 * 60 * MINUTE });
+    const llm = answer(SUMMARY);
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+
+    await finir(paul, seeded.sourceId);
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');
+    expect(llm.calls).toHaveLength(1);
+    expect(await resumeTurns(seeded.sourceId)).toHaveLength(1);
   });
 
   it('auteur parti de l’organisation : aucun appel', async () => {

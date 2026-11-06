@@ -54,8 +54,10 @@ import { linkPrs } from './start-context';
 // `[décision]`, seulement une PR ou un commit du condensé (D23, D36). Quand `turns.injecte` existe (lot 12), passer
 // `injecte` à condenseSession et garder ses preuves telles quelles.
 // shortcut: le retrait (`leon retirer-crochets`) ne se fait que sur le poste ; l'usage relu ici est celui du dernier
-// envoi de faits (`metadata.usages`). Un résumé déjà en file peut donc encore s'écrire, dans les 30 min (15 min, plus
-// les reprises) : RESUME_LINES le dit. Faire vider `usages` par le serveur au retrait le jour où ce délai gêne.
+// envoi de faits (`metadata.usages`), et cet envoi doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel
+// comme à l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais
+// après : RESUME_LINES le dit. Un résumé qui attend plus longtemps (file chargée, serveur arrêté, reprises) n'est écrit
+// qu'au prochain envoi de faits de la session. Faire vider `usages` par le serveur au retrait le jour où ce délai gêne.
 // shortcut: aucun plafond par membre ni par organisation, seulement des bornes par appel : un porteur du jeton du poste
 // peut multiplier les sessions, donc les appels, et retarder ceux des autres (file commune). appels_modele compte le
 // coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.
@@ -66,7 +68,10 @@ const RESUME_MAX_CHARS = 1200;
 const RESUME_MAX_TOKENS = 4000;
 const RESUME_TIMEOUT_MS = 60_000;
 const RESUME_CONCURRENCY = 2;
-const USAGE_RESUME = sql`coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false)`;
+// L'usage `resume` du dernier envoi de faits, s'il date de moins d'une heure (`faits_le`, record-facts.ts). Sans
+// `faits_le` (des faits d'avant lui), rien : coalesce rend faux.
+const USAGE_RESUME = sql`coalesce(s.metadata->'usages' @> '["resume"]'::jsonb
+  and (s.metadata->>'faits_le')::timestamptz > now() - interval '1 hour', false)`;
 
 export type ResumeOutcome = 'ecrit' | 'rien' | 'reporte' | 'sans-objet';
 

@@ -1,6 +1,6 @@
 # Mémoire des sessions : plan d'implémentation
 
-2 novembre 2026 · Amos (avec Claude) · à relire par David
+2 novembre 2026 · Amos (avec Claude) · tranché par Amos, seul sur ce chantier depuis le 05/11
 
 > **Pour les agents :** SOUS-SKILL REQUISE : `superpowers:subagent-driven-development` (recommandé) ou `superpowers:executing-plans`, tâche par tâche. Chaque tâche est exécutée par un sous-agent neuf qui reçoit ce plan et son identifiant de tâche, rien d'autre. Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés », puis **sa** tâche. Tests d'abord (`superpowers:test-driven-development`), preuves avant de conclure (`superpowers:verification-before-completion`). Commiter **seulement ses fichiers**, ajoutés un par un (`git add <fichier>`, jamais `-A` ni `.`), en un commit « Txx · titre ». Une erreur de type ou de lint dans un fichier qui n'est pas à soi se signale, elle ne se corrige pas.
 
@@ -21,12 +21,12 @@
 | Lot | Ce que ça change | Tâches | PR | Effort |
 |---|---|---|---|---|
 | 1. La fiche Claude Code | Claude Code reçoit au démarrage la fiche de mes dernières sessions sur le dépôt | T01 à T08 | **#110** | 4,5 j |
-| 2. Dépôts d'équipe | décision D : l'administrateur choisit les dépôts partagés, et seuls ceux-là restent visibles de l'équipe | T09 à T12 | suivante | 3 j |
-| 3. État du dépôt | décision E : « L'équipe sur ce dépôt » et l'état réel de mes PR | T13 et T14 | suivante | 2,5 j |
+| 2. Dépôts d'équipe | décision D : l'administrateur choisit les dépôts partagés, et seuls ceux-là restent visibles de l'équipe | T09 à T12 | #123 (fusionnée) | 3 j |
+| 3. État du dépôt | décision E : « L'équipe sur ce dépôt » et l'état réel de mes PR | T13 et T14 | #129 (fusionnée) | 2,5 j |
 | 4. Codex reçoit | Codex reçoit le même bloc au premier message, et le rappel | T15 à T17 | suivante, après l'essai T15 | 2,5 j |
 | 5. Codex capte | les sessions Codex remontent aussi, avec leurs coulisses | T18 à T20 | suivante | 3,5 j |
-| 6. Le résumé | chaque session close reçoit un résumé écrit par Leon, trouvable par la recherche | T21 à T24 | suivante, après l'accord de David (QD1) | 3,5 j |
-| 7. Recherche par dépôt | le RAG à la demande se borne au dépôt | T25 | suivante | 0,5 j |
+| 6. Le résumé | chaque session close reçoit un résumé écrit par Leon, trouvable par la recherche | T21 à T24 | à ouvrir : c'est le lot suivant, lancé le 05/11 (QD1 tranchée par Amos) | 3,5 j |
+| 7. Recherche par dépôt | le RAG à la demande se borne au dépôt | T25 | #134 (fusionnée) | 0,5 j |
 | 8. Cursor | capte et reçoit, sommaire et rappel au premier message | T26 à T29 | suivante, après l'essai T26 | 4 j |
 | 9. Antigravity | capte et reçoit, sommaire et rappel au premier message | T31 à T34 | suivante, après l'essai T31 | 4 j |
 | ~~10. RAG au premier prompt~~ | remplacé par les lots 12 et 13 ([la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) | — | — | — |
@@ -41,8 +41,10 @@ Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
 
 > **Amendé le 04/11 :** l'ordre est tranché : 1 (fait), 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Le lot 15, le rêve perso par règles (environ 5 j), est décrit dans le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Ce plan décrit aussi ce qui s'ajoute aux lots 12 et 13. Les efforts et le total sont dans le tableau ci-dessus. Voir ses « Décisions d'Amos » du 04/11 et du 05/11.
+>
+> **Amendé le 05/11 :** 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
 
-**Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Le lot 6 attend l'accord de David. Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
+**Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Amendé le 05/11 : le lot 6 n'attend plus l'accord de David (QD1 tranchée par Amos). Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
 **Une PR par lot**, conformément au CLAUDE.md : un sujet, la plus petite possible. La PR #110 emporte l'étude, ce plan et le lot 1. L'étude et le plan justifient le même sujet, et le lot 1 est la plus petite tranche qui change quelque chose pour l'utilisateur (proposé, voir A1).
 
@@ -105,7 +107,7 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
   - « Fait » : le nombre de commits, les PR créées, puis 5 fichiers au plus.
   - « Reste » : les tâches à faire, puis celles en cours, coupées à la tâche entière.
 - **Faits d'une session :** 50 fichiers, 30 commandes (l'exécutable, et la sous-commande pour la liste fermée de T01 ; 200 caractères), 10 PR, 20 commits, 20 tâches (200 caractères chacune), et 64 Ko par envoi.
-- **Résumé (proposé, voir QD5) :**
+- **Résumé (tranché le 05/11 par Amos, QD5 : comme ci-dessous) :**
   - seuil de 6 échanges ;
   - condensé de 40 000 caractères au plus, la fin gardée ;
   - un appel par (session, dernier tour résumé) ;
@@ -173,7 +175,7 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   - Une nouvelle étape de modèle, `resume`, sur `claude-haiku-5-5`, effort low.
   - Le condensé est fait sur le serveur, à partir des tours, des faits et de l'état des PR liées.
   - La sortie passe par une liste blanche : « ## Où j'en suis » et les types `en-cours`, `prochaine-étape`, `essai-raté` et `question`. Tout le reste est retiré, dont `[décision]`, `[consigne]` et les relations écrites par le modèle.
-- **D9. La clôture d'une session (proposé, voir QD5).**
+- **D9. La clôture d'une session (tranché le 05/11 par Amos, QD5 : comme ci-dessous).**
   - Une vraie fin (SessionEnd de Claude Code ou de Codex) avance le résumé à 60 s.
   - Sinon, la clôture vient de 15 min sans nouveau tour, côté serveur : le Stop de Codex, le stop de Cursor et Antigravity.
   - Cursor ne pose pas de sessionEnd, qui n'est pas fiable.
@@ -192,7 +194,7 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
   - D est appliquée à la relève, avec la permission GitHub du membre.
   - Les sources GitHub déjà relevées hors des dépôts d'équipe sont rendues privées (0048), dès le déploiement : sans aucun choix, toutes le deviennent, jusqu'à ce que l'administrateur coche ses dépôts.
   - Par défaut, la section d'équipe ne s'affiche qu'au lecteur dont la propre connexion GitHub active porte ce dépôt, confirmée depuis moins de 24 h.
-  - Jusqu'à la réponse à QD4, les sources d'un dépôt d'équipe restent lisibles par la recherche de tous les membres.
+  - Amendé le 05/11 (QD4, tranché par Amos) : les sources d'un dépôt d'équipe sont lues par la recherche de tous les membres, comme codé au lot 2. Les sources GitHub d'un dépôt perso restent privées à qui a branché GitHub (T12), sans suppression.
 - **D15. Le consentement**, versionné par outil (amendée le 03/11 : par usage, voir C7 révisé du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :
   - 2 : les gestes ;
   - 3 : le résumé par le fournisseur du modèle ;
@@ -335,7 +337,7 @@ Le bloc du RAG au premier prompt (T36) est balisé `<rappel-leon>…</rappel-leo
 8. **Fuite par l'état du dépôt.** Des PR de dépôts perso sont déjà relevées avec l'ACL de l'organisation. Parades :
    - D à la relève (T11) et la rétro-privatisation (T12) ;
    - la section d'équipe limitée aux dépôts d'équipe et aux lecteurs qui y ont accès (D14) ;
-   - le reste est la question QD4.
+   - le reste est tranché le 05/11 par Amos (QD4) : tous les membres lisent les sources d'un dépôt d'équipe, et celles d'un dépôt perso restent privées, sans suppression.
 9. **Arrêt de la relève GitHub et passage en privé.** Au déploiement du lot 2, une organisation qui n'a coché aucun dépôt ne relève plus rien de nouveau, et ses sources GitHub déjà relevées deviennent privées à qui les a branchées. Parades : le bandeau pour l'administrateur (T10), le README, et la description de la PR (« cocher les dépôts juste après le déploiement »).
 10. **Délai de 3 s au démarrage.** Parades : aucun modèle ni vecteur dans la route de contexte ; des lectures courtes ; l'index de 0047 vérifié par `EXPLAIN` sous RLS ; une mesure sur 10 000 sources.
 11. **Conflits avec #106** sur `briefing.ts`, `capture-session.ts`, `install-hooks.ts` et `leon.ts`. Parade : des ajouts voisins ; l'assemblage serveur accepte un bloc de plus pour l'état de branche de #106.
@@ -529,7 +531,7 @@ Aussi : `rls-coverage.db.test.ts`, `schema-contract.db.test.ts`.
 
 ### T11 · Appliquer D à la relève GitHub
 
-**Fichiers :** `src/server/connectors/types.ts` (`SyncState.depotsEquipe?: string[]`), `src/server/connectors/sync.ts` (le remplit), `src/server/connectors/github/connector.ts` (`syncRepos`), `src/server/connectors/github/client.ts` (la permission du membre sur le dépôt, lue dans les installations ou dans les permissions du dépôt), `src/server/connectors/connections.ts` (écriture de `depots_confirmes`).
+**Fichiers :** `src/server/connectors/types.ts` (`SyncState.depotsEquipe?: string[]`), `src/server/connectors/sync.ts` (le remplit), `src/server/connectors/github/connector.ts` (`syncRepos`), `src/server/connectors/github/client.ts` (la permission du membre sur le dépôt, lue dans les permissions du dépôt : tranché le 05/11 par Amos, QD6, comme codé au lot 2), `src/server/connectors/connections.ts` (écriture de `depots_confirmes`).
 
 **Fait quand :**
 - seuls sont relevés les dépôts d'équipe sur lesquels la connexion du membre a une permission ;
@@ -562,7 +564,9 @@ Aussi : `src/server/connectors/sync.db.test.ts`.
 
 ## Lot 3 : l'état du dépôt (décision E)
 
-À coordonner avec David, puisque c'est le lot 1 de sa spec #108 (QD3).
+À coordonner avec David, puisque c'est le lot 1 de sa spec #108 (QD3). Amendé le 05/11 : fait, le lot 3 est fusionné (#129).
+
+> **Amendé le 05/11 :** QD3 est réglée par les faits. Les lots 2 et 3 sont fusionnés (#123, #129), et la section d'équipe est dans `/contexte`.
 
 ### T13 · GitHub garde l'état de ses PR et de ses tickets
 
@@ -729,7 +733,9 @@ Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
 **Tests :** `src/cli/install-hooks.test.ts`, `src/cli/uninstall-hooks.test.ts`. Contrat : `src/cli/install-hooks.contrat.test.ts`.
 
-## Lot 6 : le résumé écrit par Leon (après l'accord de David)
+## Lot 6 : le résumé écrit par Leon
+
+> **Amendé le 05/11 :** QD1 est tranchée par Amos : oui, le résumé côté serveur (Claude Haiku). Le lot 6 est lancé, sans attendre l'accord de David.
 
 ### T21 · L'étape de modèle `resume`
 
@@ -1058,6 +1064,8 @@ Contrat : `api-contract.db.test.ts`.
 
 ## Questions ouvertes
 
+Amos est seul sur ce chantier : le 05/11, il a tranché les questions écrites « pour David », sauf QD2 (et QD13 du nouveau plan), qui touchent la PR #106 de David (passation) et restent ouvertes pour lui.
+
 **Pour Amos (avant le code) :**
 - A1. La PR #110 avec l'étude, ce plan et tout le lot 1 (recommandé), ou seulement la capture des faits (T01 à T03, T07 et T08) ?
 - A2. L'ordre : GitHub (lots 2 et 3) avant Codex, comme le veut E, avec Codex vers le 12e jour. Ou Codex d'abord (vers le 6e jour), en reportant E ?
@@ -1068,9 +1076,9 @@ Contrat : `api-contract.db.test.ts`.
 - A7. Les sessions web (claude.ai, ChatGPT) sans fiche ni résumé dans ce chantier ?
 
 **Pour David :**
-- QD1. Le résumé côté serveur ? Le lot 6 l'attend, pour environ 0,002 $ par session.
+- QD1. Le résumé côté serveur ? Le lot 6 l'attend, pour environ 0,002 $ par session. Tranché le 05/11 par Amos : oui, le résumé côté serveur (Claude Haiku). Le lot 6 est lancé.
 - QD2. La « PR 0 » : #106 corrigée, sans le secours `claude -p`, et ses migrations renumérotées après 0049, puisque `0043-passations` et `0044-sessions-partagees` entrent en collision avec `0043-onboarding` et `0044-invitations-poste` de main (et main a déjà `0045-apropos-propose` et `0046-pg-temp-en-dernier`). Qui la porte ? Et `0043-passations` ou `0044-sessions-partagees` ont-elles été appliquées à `leon_test`, à la base de développement ou à un environnement Railway ?
-- QD3. Le lot 1 de #108 (ici les lots 2 et 3) : on le porte dans ce chantier, ou toi ? Et la section d'équipe : dans `/contexte`, ou dans `readBranchState` ?
-- QD4. Qui lit les sources d'un dépôt d'équipe par la recherche : tous les membres, ou seulement ceux qui y ont accès sur GitHub ? Et les sources GitHub rendues privées hors des dépôts d'équipe (T12) : faut-il en plus les supprimer ?
-- QD5. Seuil de 6 échanges, 15 min sans tour, 60 s après une vraie fin ?
-- QD6. Le contrôle « membre du dépôt sur GitHub » : par les installations, ou par les permissions du dépôt ?
+- QD3. Le lot 1 de #108 (ici les lots 2 et 3) : on le porte dans ce chantier, ou toi ? Et la section d'équipe : dans `/contexte`, ou dans `readBranchState` ? Tranché le 05/11 par Amos : réglée par les faits. Les lots 2 et 3 sont fusionnés (#123, #129), et la section d'équipe est dans `/contexte`.
+- QD4. Qui lit les sources d'un dépôt d'équipe par la recherche : tous les membres, ou seulement ceux qui y ont accès sur GitHub ? Et les sources GitHub rendues privées hors des dépôts d'équipe (T12) : faut-il en plus les supprimer ? Tranché le 05/11 par Amos : les sources d'un dépôt d'équipe sont lues par tous les membres, comme codé au lot 2 ; les sources GitHub d'un dépôt perso restent privées à qui a branché GitHub, sans suppression.
+- QD5. Seuil de 6 échanges, 15 min sans tour, 60 s après une vraie fin ? Tranché le 05/11 par Amos : comme le plan, 6 échanges ; 60 s après une vraie fin, ou 15 min sans tour.
+- QD6. Le contrôle « membre du dépôt sur GitHub » : par les installations, ou par les permissions du dépôt ? Tranché le 05/11 par Amos : par les permissions du dépôt, comme codé au lot 2. Limite connue, gardée : sur un dépôt public, tout compte GitHub a `pull`, membre ou non.

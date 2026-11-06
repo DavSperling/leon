@@ -1,6 +1,6 @@
 # La mémoire à disposition : plan d'implémentation
 
-3 novembre 2026 · Amos (avec Claude) · à relire par David · suite du [plan mémoire des sessions](2026-11-02-memoire-sessions.md), dont il reprend les règles, les contraintes, les décisions D1 à D20 et les contrats C1 à C6, amendés comme dit plus bas · s'appuie sur le [plan de la CLI sans clone](2026-11-03-cli-sans-clone.md) (#115, questions tranchées en #120 : `leon login` en S05, le lanceur `~/.leon/bin/leon` en S08, `leon setup` en S10, codés et fusionnés depuis (#124)) · le connecteur MCP distant est l'objet d'un plan à part (#121)
+3 novembre 2026 · Amos (avec Claude) · tranché par Amos, seul sur ce chantier depuis le 05/11 · suite du [plan mémoire des sessions](2026-11-02-memoire-sessions.md), dont il reprend les règles, les contraintes, les décisions D1 à D20 et les contrats C1 à C6, amendés comme dit plus bas · s'appuie sur le [plan de la CLI sans clone](2026-11-03-cli-sans-clone.md) (#115, questions tranchées en #120 : `leon login` en S05, le lanceur `~/.leon/bin/leon` en S08, `leon setup` en S10, codés et fusionnés depuis (#124)) · le connecteur MCP distant est l'objet d'un plan à part (#121)
 
 > **Pour les agents :** même méthode que le plan mémoire des sessions (un sous-agent neuf par tâche, tests d'abord, preuves avant de conclure, commit de ses seuls fichiers). Lire en entier l'en-tête, les « Règles », les « Contraintes globales », les « Décisions » et les « Contrats partagés » des **deux** plans, puis sa tâche. En cas de conflit, ce plan prime.
 
@@ -47,7 +47,7 @@ Exemple cible : Amos ouvre Cursor pour la première fois et demande « ajoute le
 Elles suivent le talk de Lamis (Applied AI, Anthropic, AI DevCon) sur le context engineering, la mémoire et le « rêve ». L'analyse et ce qu'on en retient sont dans la [note d'étude](../etudes/context-engineering-2026-11/README.md).
 
 1. Lire Leon ne rend plus la session « externe », contre la recommandation de Claude. Le garde-fou reste : une `[décision]` n'entre dans l'état que si elle cite un id vérifié par le serveur, jamais une note (D36). Les autres signaux externes ne changent pas (A14, tranchée le 05/11 : voir plus bas).
-2. Un rêve perso par règles, sans modèle : le lot 15, environ 5 j, après le lot 11 (D39). La version avec modèle (environ 3 j) vient si David accepte QD1. Le rêve d'équipe vient dans un lot suivant.
+2. Un rêve perso par règles, sans modèle : le lot 15, environ 5 j, après le lot 11 (D39). La version avec modèle (environ 3 j) vient si David accepte QD1. Amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos. Le rêve d'équipe vient dans un lot suivant.
 3. Une mémoire à jour en tout temps, et versionnée. L'état de chaque fil, chaque leçon et chaque note gardent leurs versions, avec leur provenance et leur date (D33). L'historique se lit, et une version se restaure. L'écriture se fait en compare-and-set sur le numéro de version (D34).
 4. La mémoire passe avant le point du matin dans le bloc de démarrage, toujours en 8 000 octets : le sommaire des fils, puis les leçons acceptées, puis le point du matin (D37). Seul un texte relu et accepté par un humain est poussé.
 5. L'agent de code écrit un brouillon privé, `leon noter`, par le même chemin que `remember` (D38). Le partage avec l'équipe passera par la passation de David (#106), après relecture (QD13).
@@ -117,9 +117,11 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - Les lots 12 à 14 servent ensuite tout de suite dans Claude Code, déjà capté.
 - Le lot 15 vient en dernier. Il lit des semaines de sessions de tous les outils. Le lot 11 mesure avant lui une référence sans rêve.
 
-Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. La version avec modèle du rêve (environ 3 j) viendrait en plus, si David accepte QD1.
+Amendé le 05/11 : 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
 
-Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
+Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos).
+
+Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est accepté et le lot 6 est lancé. Pour une session sans l'usage `resume`, ou sans modèle réglé, le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
 ## Architecture
 
@@ -231,9 +233,10 @@ Si David refuse le résumé côté serveur (QD1), le lot 12 tient quand même : 
       - Les lots d'outils (Codex, Cursor, Antigravity) relèvent les appels de leur outil dans la même forme, selon la forme relevée à leur essai (T15, T26, T31). Un appel de forme inconnue ne part pas : rien plutôt qu'un argument brut.
   - Ils passent par leur propre route (`POST /api/v1/coulisses`), pas par le contrat d'ingestion (règle du plan mémoire des sessions).
   - Ils sont rangés comme tours de la session, sous son ACL, avec deux nouveaux rôles, `raisonnement` et `sous_agent` (migration du check de `turns.role`), que la recherche peut filtrer. Amendé le 05/11 (relecture) : trois rôles, avec `appel_outil`, dans la même migration.
+    - Tranché le 05/11 par Amos (QD9) : ces trois rôles sont exclus du point du matin et, comme tout texte du modèle ou capté, du bloc de démarrage. Ils restent toujours visibles dans la recherche, sans filtre : Amos veut toujours pouvoir les voir quand il cherche. Le filtre `type` (raisonnement, sous-agent, appel d'outil) du MCP permet de les cibler. `leon chercher` les rend aussi, sans ce filtre (C11).
   - Masquage : `maskSecrets` sur le poste puis sur le serveur. Chaque bloc est coupé à 20 000 caractères, comme les messages.
   - Accord : l'usage `coulisses` (C7 révisé).
-  - Ce lot et le niveau 3 (D28) se détaillent quand on y arrive, avec David, à partir des constats de la relecture du 03/11 (A10, A11).
+  - Ce lot et le niveau 3 (D28) se détaillent quand on y arrive, avec Amos (seul sur ce chantier depuis le 05/11), à partir des constats de la relecture du 03/11 (A10, A11).
 - **D30. L'accord, par usage.** Les versions cumulatives liaient des permissions sans rapport : pour avoir le rappel, il aurait fallu accepter le résumé par le fournisseur du modèle. On les remplace par des usages (C7 révisé).
   - La version 2 (les gestes) reste la base, et la version 0 le retrait.
   - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage. Tranché le 05/11 (A16) : `lecture`, `rappel` et `noter` sont cochés par défaut, `resume` et `coulisses` non (ci-dessous).
@@ -284,7 +287,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
       - `humain` : une action du site, sous la session du navigateur, restauration comprise ;
     - son motif (rangement, note, correction, acceptation, restauration) et sa date.
   - Tout texte écrit dans `versions_memoire` passe par `maskSecrets`, leçons comprises.
-  - **L'état sans modèle.** Le serveur écrit une version `ecrit_par = serveur`, en compare-and-set, quand la liste déterministe d'un fil change (une session, une PR ou une source liée en plus ou en moins) et que sa dernière version n'est pas une version lisible du modèle. Son texte est cette liste, en clés ; ses entrées, les ids listés. L'état GitHub des PR reste lu à la lecture (vigilance 3). Un fil sans modèle (QD1 refusé) ou sans session `resume` garde ainsi son historique.
+  - **L'état sans modèle.** Le serveur écrit une version `ecrit_par = serveur`, en compare-and-set, quand la liste déterministe d'un fil change (une session, une PR ou une source liée en plus ou en moins) et que sa dernière version n'est pas une version lisible du modèle. Son texte est cette liste, en clés ; ses entrées, les ids listés. L'état GitHub des PR reste lu à la lecture (vigilance 3). Un fil sans modèle (aucun modèle réglé ; amendé le 05/11 : QD1 tranchée oui par Amos) ou sans session `resume` garde ainsi son historique.
   - **La lecture.** L'agent lit la dernière, et peut demander une ancienne (`leon versions`, l'outil `versions`, C12). Tranché le 05/11 : les versions sont archivées et toujours accessibles, sous la règle ci-dessous. L'auteur les lit aussi sur le site (T55).
     - Une version n'est rendue que si le lecteur voit toutes ses sources sous RLS. C'est la règle de `readAboutSuggestion` (`src/server/briefing/about-suggestion.ts`).
     - Pour un état écrit par le modèle, d'après les résumés, les sessions parmi ses entrées doivent aussi garder l'usage `resume`. Une leçon, une note ou une liste du serveur n'a pas cette condition : son texte n'est pas tiré d'un résumé.
@@ -377,7 +380,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - 3 propositions nouvelles par nuit au plus, 10 ouvertes au plus, pour éviter d'accepter sans lire.
   - **Clore un fil** (`metadata.clos_le`) le retire du sommaire. Il reste lisible par `leon fil`, et se rouvre à la session suivante de sa branche.
   - **L'accord (proposé) :** aucun usage de plus. Rien ne sort de Leon, ni vers un modèle ni vers un fournisseur. Un interrupteur dans la section Mémoire des réglages coupe le rêve. Il est rangé dans `member` (C15).
-  - **Ensuite :** la version avec modèle (environ 3 j) si David accepte QD1 ; le rêve d'équipe dans un lot suivant, une fois la hiérarchie des managers codée et une lecture à l'échelle de l'équipe conçue.
+  - **Ensuite :** la version avec modèle (environ 3 j) si David accepte QD1 (amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos) ; le rêve d'équipe dans un lot suivant, une fois la hiérarchie des managers codée et une lecture à l'échelle de l'équipe conçue.
 
 ## Contrats partagés (en plus de C1 à C6)
 
@@ -423,10 +426,13 @@ Amendé le 05/11 (relecture, D29) : un bloc peut aussi être un appel d'outil r�
 - `statut` : `ok`, `erreur` (le `is_error` de son `tool_result`), ou `sans_resultat` (aucun `tool_result` : appel interrompu, refusé, ou encore en cours).
 - Jamais la sortie de l'appel (`tool_result`) ni son entrée brute. `cible` passe par `maskSecrets` sur le poste. Le serveur revérifie `outil` et `cible`, puis repasse `maskSecrets` et la borne. Il repasse `outil` par la même réduction, `mcp__` testé avant `EXECUTABLE` : une CLI qui ne réduit pas ne fait donc jamais passer `mcp__linear__get_issue`, rangé `mcp:linear`. Un `mcp:<serveur>` déjà réduit reste tel quel, et tout autre nom hors de la forme devient `[outil]`. Une cible `Bash` hors de la forme rendue par `reduceCommand` devient `[commande]` (`recheckCommand`). Un chemin absolu, ou qui contient `..`, est retiré : l'appel est rangé sans cible.
 
+Tranché le 05/11 par Amos (QD9, D29) : les tours rangés par cette route, des trois rôles, restent dans la recherche sans filtre `type`. Ils n'entrent ni au point du matin ni au bloc de démarrage.
+
 **C11. Les routes de lecture** : `POST /api/v1/dossier`, `POST /api/v1/fil` (les corps de C9) et `POST /api/v1/chercher { projet, requete, session?, outil? }`, le dépôt se déduisant de `projet`. Chaque corps porte aussi `usages`.
 - Elles demandent le jeton et `lecture` dans les `usages` envoyés, et sont en `.strict()`, 4 Kio au plus.
 - Elles rendent `{ texte }` (le rendu gardé de C9).
 - Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
+- Amendé le 05/11 (tranché par Amos, QD9) : `chercher` rend aussi les tours `raisonnement`, `sous_agent` et `appel_outil`, sans filtre `type`.
 
 Contrats du 04/11 :
 
@@ -704,6 +710,7 @@ Contrat du 05/11 :
 **Fait quand :**
 - les trois routes suivent C9 et C11, sous `withTenant` du porteur, avec l'usage `lecture` ;
 - `chercher` se borne au dépôt du projet ; `leon fil` sans id ouvre le fil de la branche courante ; un id absorbé mène au fil gardé ;
+- amendé le 05/11 (tranché par Amos, QD9) : `chercher` rend aussi les tours `raisonnement`, `sous_agent` et `appel_outil`, sans filtre `type` ; ces rôles n'existent qu'au lot 14, le test est dans T51 ;
 - le signal externe suit D27 ;
 - le rendu est gardé (D25) et borné (D27), avec la coupe signalée ;
 - les commandes écrivent sur la sortie standard, rien sur le disque ;
@@ -1156,6 +1163,8 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - un appel d'un sous-agent est relevé dans la même forme ;
 > - et dans `capture-session.test.ts` : sans l'usage `coulisses`, aucun appel n'est envoyé.
 
+> **Amendé le 05/11 (tranché par Amos, QD9) :** le texte de l'usage `coulisses` (`consent.ts`) dit que le raisonnement, les échanges des sous-agents et les appels d'outils se retrouvent toujours par la recherche de Leon, sans filtre, et jamais dans le point du matin ni le bloc de démarrage (choix du rédacteur). Test de plus, dans `install-hooks.test.ts` : le texte exact de `coulisses`.
+
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
 
 **Fait quand :**
@@ -1169,7 +1178,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 
 > **Amendé le 05/11 (relecture, D29, C10) :** `TURN_ROLES` et la migration gagnent aussi `appel_outil`.
 > - Le serveur revérifie chaque appel selon C10, écrit lui-même le texte du tour sur une ligne, le masque de nouveau, puis l'indexe comme les autres blocs.
-> - Comme `raisonnement` et `sous_agent` : hors du point du matin, du bloc de démarrage, du résumé et de l'état du fil (D23) ; hors de la recherche par défaut (proposé, QD9) ; trouvé par le filtre `type` (appel d'outil). L'envoi répété reste idempotent.
+> - Comme `raisonnement` et `sous_agent` : hors du point du matin, du bloc de démarrage, du résumé et de l'état du fil (D23) ; toujours dans la recherche, sans filtre (tranché le 05/11 par Amos, QD9) ; ciblé par le filtre `type` (appel d'outil). L'envoi répété reste idempotent.
 > - Le nom passe par `reduceToolName` de T52 (C10) : `mcp__linear__get_issue`, envoyé tel quel par une CLI qui ne réduit pas, est rangé `mcp:linear`.
 > - Fichiers en plus : `src/capture/api-contract.ts` (C10) et `src/server/sessions/thread-state.test.ts`.
 > - Tests de plus, dans `backstage-routes.db.test.ts` :
@@ -1177,7 +1186,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - une cible `Bash` hors de la forme réduite est rangée `[commande]` ; un chemin absolu ou qui sort du dépôt est rangé sans cible ;
 >   - `mcp__linear__get_issue` reçu tel quel est rangé `mcp:linear` ; un nom hors forme, `[outil]` ;
 >   - un faux secret glissé dans une cible est masqué en base ;
->   - `search` filtré par `appel_outil` le trouve ; `search` sans filtre `type` ne rend aucun tour `appel_outil` (proposé, QD9) ; ni le point du matin ni le bloc de démarrage n'en reprennent rien ;
+>   - `search` filtré par `appel_outil` le trouve ; `search` sans filtre `type` le rend aussi (amendé le 05/11 : tranché par Amos, QD9) ; ni le point du matin ni le bloc de démarrage n'en reprennent rien ;
 > - et dans `thread-state.test.ts` : aucun bloc `appel_outil` n'entre au condensé (D23).
 
 **Fichiers :** `src/capture/turn.ts` (`TURN_ROLES`), `src/server/db/migrations/NNNN-roles-coulisses.sql` (nouveau), `src/server/api/backstage-routes.ts` (nouveau), `src/server/api/app.ts`, `src/server/mcp/tools/search-tool.ts` (filtre `type` : raisonnement, sous-agent, appel d'outil, amendé le 05/11), `src/server/mcp/tools/render.ts`.
@@ -1186,13 +1195,16 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 - C10 est respecté ;
 - les blocs deviennent des tours de la session, sous son ACL, masqués de nouveau, indexés par le pipeline existant ;
 - l'envoi répété est idempotent ;
-- le point du matin et le bloc de démarrage n'en reprennent rien ; ils ne nourrissent ni le résumé ni l'état du fil (D23) et se lisent à la demande.
+- le point du matin et le bloc de démarrage n'en reprennent rien ; ils ne nourrissent ni le résumé ni l'état du fil (D23) et se lisent à la demande ;
+- amendé le 05/11 (tranché par Amos, QD9) : `search` les rend toujours, sans filtre `type`.
 
 **Tests :** `backstage-routes.db.test.ts` :
 - 202, 400, 401, 413 ;
 - la session d'un collègue reste intacte ;
 - un secret glissé est masqué en base ;
-- `search` filtré par `raisonnement`.
+- `search` filtré par `raisonnement` ;
+- amendé le 05/11 (QD9) : `search` sans filtre `type` rend aussi les tours `raisonnement`, `sous_agent` et `appel_outil` ;
+- amendé le 05/11 (QD9, C11) : `chercher` rend un tour `raisonnement` de la session.
 
 ### T63 · Le sous-agent qui ne lit que le dépôt (après T43 et T50)
 
@@ -1326,7 +1338,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
 **Fait quand :** les 5 tâches gardées par T38 du plan mère sont refaites, dans les mêmes cas, le rêve en marche depuis au moins 14 jours. Les tokens, la durée et la justesse sont notés dans l'annexe 07, à côté de la référence sans rêve, avec les compteurs de T44 et T53. Effort : 0,5 j.
 
-**Après ce lot.** La version avec modèle (environ 3 j) vient si David accepte QD1 : une étape de modèle `reve`, qui lit aussi les résumés du lot 6 et propose des leçons, toujours vérifiées et relues de la même façon. Le rêve d'équipe vient dans un lot suivant : il faut d'abord la hiérarchie des managers et une lecture à l'échelle de l'équipe.
+**Après ce lot.** La version avec modèle (environ 3 j) vient si David accepte QD1 : une étape de modèle `reve`, qui lit aussi les résumés du lot 6 et propose des leçons, toujours vérifiées et relues de la même façon. Le rêve d'équipe vient dans un lot suivant : il faut d'abord la hiérarchie des managers et une lecture à l'échelle de l'équipe. Amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos.
 
 ## Points de vigilance
 
@@ -1337,6 +1349,8 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - une mesure du volume par session (compteurs côté serveur) avant d'ouvrir l'usage `coulisses` à d'autres qu'Amos.
 
    Depuis le 04/11 : le rêve par règles (lot 15) n'appelle aucun modèle. Les versions ajoutent une ligne par écriture (4 000 caractères au plus), toutes gardées, sans limite. Le lot 11 mesure le volume ; couper demanderait une nouvelle décision d'Amos. La version avec modèle du rêve, après QD1, aura sa propre étape, pour compter son coût à part.
+
+   Tranché le 05/11 par Amos (QD9) : les coulisses restent dans la recherche, sans filtre. Le volume indexé ne change pas, puisqu'elles étaient déjà indexées. Limite connue : les appels d'outils, nombreux et courts, peuvent prendre la place d'autres passages dans les résultats de `search` et de `leon chercher`. Le filtre `type` au MCP permet de les cibler ; `leon chercher` n'a pas ce filtre.
 2. **L'injection durable.** Parades :
    - seules des clés sont poussées d'office (D25) ;
    - titres réduits (D24) ;
@@ -1347,7 +1361,7 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - une proposition du rêve ne devient une leçon que par un geste humain, avec ses preuves sous les yeux (D39) ;
    - les anciennes versions restent hors de la recherche et de `fetch` (D33).
 
-   Limite connue : la consigne du niveau 1 rend la lecture presque systématique. Depuis le 04/11, une session qui lit Leon n'est plus externe : un texte lu par `leon fil` ou `leon chercher` peut revenir, marqué « agent », dans l'état suivant, sans jamais faire une décision sans id vérifié (D36). Il peut aussi toucher les lignes `[en-cours]`, `[prochaine-étape]`, `[question]` et `[essai-raté]` : chacune cite alors un id du condensé, et sa provenance est écrite par le serveur, pas par le modèle (D23).
+   Limite connue : la consigne du niveau 1 rend la lecture presque systématique. Depuis le 04/11, une session qui lit Leon n'est plus externe : un texte lu par `leon fil` ou `leon chercher` (coulisses comprises depuis QD9) peut revenir, marqué « agent », dans l'état suivant, sans jamais faire une décision sans id vérifié (D36). Il peut aussi toucher les lignes `[en-cours]`, `[prochaine-étape]`, `[question]` et `[essai-raté]` : chacune cite alors un id du condensé, et sa provenance est écrite par le serveur, pas par le modèle (D23).
 
    Autre limite : la session du navigateur ne prouve pas un humain. Un agent qui pilote le navigateur connecté peut écrire ou accepter une leçon (D37). Depuis le 05/11, ces gestes exigent une connexion de moins d'une heure (T55, T61) : la fenêtre se réduit, sans se fermer. Une fois la connexion sociale fusionnée, GitHub ne sait pas forcer une nouvelle saisie : un navigateur déjà connecté à GitHub obtient une session neuve en un clic, et le contrôle d'une heure ne réduit plus rien sur ce chemin (D37). Il en va de même des cases de la page « Autoriser » (T64) et du réglage `noter` de la section Mémoire (T65) : un agent qui pilote le navigateur connecté pourrait cliquer à la place de l'utilisateur. La consigne « Je demande à Claude » le lui interdit, sans l'empêcher.
 
@@ -1367,16 +1381,19 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - Le rêve ne lit que les données de la personne, sous ses droits, et rien ne sort de Leon (D39).
 6. **La portée des lectures.** Un agent de code qui lit la mémoire privée de l'utilisateur et qui a une sortie réseau réunit les conditions d'une fuite. Parades :
    - les lectures sont bornées au projet : `dossier`, `fil` et `chercher`, et depuis le 04/11 `lecons` et `versions`, en commande comme au MCP ; seules des sources de connecteurs sans projet peuvent être liées à un fil par proximité, et elles restent lues sous la RLS du lecteur ;
-   - la consigne et les commandes ne proposent jamais une recherche dans toute la mémoire (le MCP la garde, pour claude.ai et ChatGPT) ;
-   - une portée « code » du jeton est à étudier avec le plan MCP distant (#121).
+   - la consigne et les commandes ne proposent jamais une recherche dans toute la mémoire (le MCP la garde, pour claude.ai et ChatGPT).
+
+   Limite connue, choisie par Amos (QD11) : pas de portée « code » du jeton (tranché le 05/11 par Amos). Le jeton d'un ordinateur reste complet, comme aujourd'hui. Un agent de code qui le tient peut donc lire, par le MCP, toute la mémoire que son porteur voit, et l'envoyer par sa sortie réseau. Les deux parades ci-dessus bornent la consigne et les commandes, pas le jeton.
 7. **La coordination** avec le plan de la CLI sans clone (`leon setup`, la connexion, le lanceur) et #121 (le MCP distant). Ce plan n'écrit aucun jeton et ne branche aucun connecteur. Ses lots 1 et 2 sont fusionnés (#124), et son `--yes` ne doit ajouter aucun usage : à reporter dans son plan (S10). Depuis le 05/11 (A16), ses pages et commandes portent les usages : les cases de la page « Autoriser » (S03), le code signé (K4), la 201 de `POST /api/v1/ordinateurs` (K5), `leon login` (S05) et `leon setup --yes`, qui relance `leon login` quand ils manquent (S10). S'y ajoutent le paramètre `usages` de la page (K3) et le champ `par` de `connexion.json` (K2). T64 les change ; à reporter aussi dans son plan. Le MCP distant (#130) ne change que par `remember` (T65).
 
 ## Questions
 
+Amos est seul sur ce chantier : le 05/11, il a tranché les questions écrites « pour David », sauf QD13 (et QD2 du plan mère), qui touchent la PR #106 de David (passation) et restent ouvertes pour lui.
+
 Pour Amos :
-- A8. L'ordre : 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11 ? Avancer les lots 12 à 14 laisserait ouverte la fuite que ferme le lot 2, et priverait les fils de l'état des PR, une dizaine de jours de plus. Les lots 1 et 2 de la CLI sans clone passent avant le lot 12. Tranché le 04/11 : 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15.
+- A8. L'ordre : 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11 ? Avancer les lots 12 à 14 laisserait ouverte la fuite que ferme le lot 2, et priverait les fils de l'état des PR, une dizaine de jours de plus. Les lots 1 et 2 de la CLI sans clone passent avant le lot 12. Tranché le 04/11 : 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Amendé le 05/11 : 3 et 7 fusionnés (#129, #134), le lot 6 sans PR pour l'instant.
 - A9. Les décisions vérifiées : gardées dans le résumé et l'état seulement si elles renvoient à un de tes messages, à une PR, à un commit, à un message ou à une réunion (D23) ? Tranché le 04/11 : oui, et une note n'en est jamais la preuve (D36).
-- A10. La capture complète (D29) : on la détaille quand on arrive au lot 14, avec David, à partir des constats de la relecture du 03/11 ?
+- A10. La capture complète (D29) : on la détaille quand on arrive au lot 14, avec David, à partir des constats de la relecture du 03/11 ? Tranché le 05/11 par Amos : oui, sans David, puisqu'il est seul sur ce chantier.
 - A11. Le niveau 3 (D28) : construit en option, une fois la mesure du lot 11 faite ?
 - A12. Les fils effacés à la suppression du compte (D21), alors que les sessions sont gardées ? Depuis le 04/11 (proposé) : les notes de l'agent aussi, avec leurs versions (D38). Aujourd'hui, une note `remember` est gardée et devient invisible.
 - A13. L'accord par usage (D30) : `lecture`, `rappel`, `resume`, `coulisses`, chacun accepté à part ?
@@ -1398,12 +1415,12 @@ Pour Amos :
   - une ligne de l'état qui ne cite que des notes de l'agent : on la garde, marquée « agent », ou on la retire (vigilance 2) ? Tranché le 05/11 : gardée, marquée « agent », jamais preuve d'une `[décision]`, visible de l'auteur seul comme le fil (D23, T43).
 
 Pour David :
-- QD7. Le kind `leon_fil` comme source (D21), plutôt qu'une table à part ?
-- QD8. Le coût de l'étape `fil` en plus du résumé : un appel par fil touché ?
-- QD9. Les rôles de tour du lot 14 : exclus par défaut de la recherche et du point du matin ? Depuis le 05/11 (relecture), ils sont trois : `raisonnement`, `sous_agent` et `appel_outil` (C10).
-- QD10. La table `rappels_cites` (D26), purgée après 24 h ?
-- QD11. Une portée « code » du jeton pour les outils de code, avec #121 ?
-- QD12. L'usage `lecture` partagé entre les outils d'un même poste (D30) ?
+- QD7. Le kind `leon_fil` comme source (D21), plutôt qu'une table à part ? Tranché le 05/11 par Amos : le kind `leon_fil` comme source.
+- QD8. Le coût de l'étape `fil` en plus du résumé : un appel par fil touché ? Tranché le 05/11 par Amos : un appel de modèle par fil touché, comme le plan.
+- QD9. Les rôles de tour du lot 14 : exclus par défaut de la recherche et du point du matin ? Depuis le 05/11 (relecture), ils sont trois : `raisonnement`, `sous_agent` et `appel_outil` (C10). Tranché le 05/11 par Amos, autrement que la proposition : exclus du point du matin et, comme tout texte du modèle ou capté, du bloc de démarrage, mais toujours visibles dans la recherche, sans filtre. Le filtre `type` (raisonnement, sous-agent, appel d'outil) permet de les cibler (D29, C10, T51, T52).
+- QD10. La table `rappels_cites` (D26), purgée après 24 h ? Tranché le 05/11 par Amos : oui, purgée après 24 h, comme le plan.
+- QD11. Une portée « code » du jeton pour les outils de code, avec #121 ? Tranché le 05/11 par Amos : non. Le jeton d'un ordinateur reste complet, comme aujourd'hui ; le risque est gardé comme limite connue (vigilance 6).
+- QD12. L'usage `lecture` partagé entre les outils d'un même poste (D30) ? Tranché le 05/11 par Amos : oui, comme D30.
 - QD13. `leon noter` et ta passation (#106, `origin/david/passation-equipe`) : la note de l'agent reste privée (D38), et le partage avec l'équipe passe par ta passation, après relecture. Ça te va ? Sous quelle forme : une note promue en passation, ou une passation qui cite la note ?
-- QD14. Les versions dans une table à part, `versions_memoire` (D33, C12), plutôt qu'en tours de la source ? `fetch` rend tous les tours d'une source (`src/server/search/context.ts`) : une ancienne version y serait lisible. Ça touche QD7 : un fil n'a plus de tour, il reste une source pour ses clés et sa RLS.
-- QD15. Le bloc de démarrage : Amos a tranché le 04/11 que la mémoire passe avant le point du matin (D37). Le 05/11, il a tranché que les leçons n'ont pas de chiffre fixe : elles prennent toute la place que le sommaire laisse, et le point du matin seulement ce qui reste après elles. Quand les leçons sont nombreuses, le point du matin peut ne plus avoir de place du tout. C'est voulu par Amos. Y vois-tu un problème pour le point du matin ?
+- QD14. Les versions dans une table à part, `versions_memoire` (D33, C12), plutôt qu'en tours de la source ? `fetch` rend tous les tours d'une source (`src/server/search/context.ts`) : une ancienne version y serait lisible. Ça touche QD7 : un fil n'a plus de tour, il reste une source pour ses clés et sa RLS. Tranché le 05/11 par Amos : les versions dans une table à part, `versions_memoire`, comme le plan.
+- QD15. Le bloc de démarrage : Amos a tranché le 04/11 que la mémoire passe avant le point du matin (D37). Le 05/11, il a tranché que les leçons n'ont pas de chiffre fixe : elles prennent toute la place que le sommaire laisse, et le point du matin seulement ce qui reste après elles. Quand les leçons sont nombreuses, le point du matin peut ne plus avoir de place du tout. C'est voulu par Amos. Y vois-tu un problème pour le point du matin ? Tranché le 05/11 par Amos : information close, c'est son choix ; rien à trancher.

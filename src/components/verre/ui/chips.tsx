@@ -20,6 +20,7 @@ const CHANNEL_ICONS: Record<CaptureKind | 'interface' | 'other', LucideIcon> = {
   claude_code: Terminal,
   codex: Terminal,
   cursor: Terminal,
+  antigravity: Terminal,
   claude_ai: Globe,
   chatgpt: Globe,
   mcp_remember: PenLine,

@@ -28,6 +28,7 @@ import {
   importClaudeCode,
   parseSince,
 } from './import-claude-code';
+import { installAntigravityHooks, uninstallAntigravityHooks } from './install-antigravity';
 import { codexHome, installCodexHook, uninstallCodexHook } from './install-codex';
 import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
 import { installHooks } from './install-hooks';
@@ -71,7 +72,7 @@ const HELP = `Usage: leon <command>
 Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
-                       Cursor; Gemini is detected but not supported yet), after showing what is sent and asking.
+                       Cursor, Antigravity), after showing what is sent and asking.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -92,16 +93,18 @@ Commands:
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   crochet <tool> <event>
                        The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
-                       input), for codex or cursor: \`demarrage\` (start of a session) and \`prompt\` (first message of a
-                       conversation, once: Cursor) print the same block as briefing, in the format of the tool;
+                       input), for codex, cursor or antigravity: \`demarrage\` (start of a session) and \`prompt\` (first
+                       message of a conversation, once: Cursor, Antigravity) print the same block as briefing, in the
+                       format of the tool;
                        \`tour\` (after each turn) and \`fin\` (end of a session) send the new exchanges of the session,
                        and its actions, if ~/.leon/accord.json allows the capture of this tool, and print only what the
-                       tool expects (Cursor: \`{}\`). Any other tool or event prints nothing
+                       tool expects (Cursor, Antigravity: \`{}\`). Any other tool or event prints nothing
       --entree <file>      (fin) read the hook JSON from this file of ~/.leon/entrees instead, then delete it (what
                            the launcher ~/.leon/bin/leon passes once it has handed control back to Codex)
-  rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex, Cursor): send what their
-                       hooks missed since the last capture (a session left with /quit, a failed upload). Only the
-                       files changed since that consent are read. Started in the background when a session starts
+  rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex, Cursor, Antigravity):
+                       send what their hooks missed since the last capture (a session left with /quit, a failed
+                       upload). Only the files changed since that consent are read. Started in the background when a
+                       session starts
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -121,11 +124,12 @@ Commands:
                        after confirmation (only the consent when the hooks are already there)
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
-      --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json
+      --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
+                           antigravity: the entry "leon" of ~/.gemini/config/hooks.json
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code. The launcher
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
-      --outil <tool>       the tool to remove: claude_code (the default), codex or cursor
+      --outil <tool>       the tool to remove: claude_code (the default), codex, cursor or antigravity
   --version            Print the version of this CLI ("dev" when run from a clone)
 
 Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
@@ -422,6 +426,9 @@ async function runInstallHooks(args: string[]): Promise<number> {
     if (values.outil === 'cursor') {
       return await installCursorHooks({ home: io.home, assumeYes }, io);
     }
+    if (values.outil === 'antigravity') {
+      return await installAntigravityHooks({ home: io.home, assumeYes }, io);
+    }
     if (values.outil === 'codex') {
       return await installCodexHook(
         { codexDir: codexHome(io.home, process.env), home: io.home, assumeYes },
@@ -448,6 +455,9 @@ async function runUninstallHooks(args: string[]): Promise<number> {
   }
   if (values.outil === 'cursor') {
     return uninstallCursorHooks({ home: homedir() }, { out: console.log, err: console.error });
+  }
+  if (values.outil === 'antigravity') {
+    return uninstallAntigravityHooks({ home: homedir() }, { out: console.log, err: console.error });
   }
   if (values.outil === 'codex') {
     return uninstallCodexHook(

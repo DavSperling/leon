@@ -753,22 +753,20 @@ describe('setup : les outils de code', () => {
     expect((await factsConsent(home, 'cursor'))?.capture_le).toBeInstanceOf(Date);
   });
 
-  it.each([['Gemini / Antigravity', '.gemini']] as const)(
-    '%s présent : « not supported yet », rien n’est écrit chez lui',
-    async (label, folder) => {
-      await hasClaudeCode();
-      const toolDir = join(home, folder);
-      await mkdir(toolDir);
+  it('Antigravity présent : son entrée `leon` est posée et son accord de capture écrit', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.gemini'));
 
-      const run = await setup({ yes: true });
+    const run = await setup({ yes: true });
 
-      expect(run.code).toBe(0);
-      expect(run.output).toContain(`${label}: not supported yet`);
-      expect(await readdir(toolDir)).toEqual([]);
-      // Claude Code, lui, est installé.
-      expect(run.output).toContain('Claude Code: hooks installed');
-    },
-  );
+    expect(run.code).toBe(0);
+    const { leon } = JSON.parse(
+      await readFile(join(home, '.gemini', 'config', 'hooks.json'), 'utf8'),
+    );
+    expect(leon.Stop[0].command).toBe(launcherCommand(home, 'antigravity', 'tour'));
+    expect(run.output).toContain('Gemini / Antigravity: hooks installed');
+    expect((await factsConsent(home, 'antigravity'))?.capture_le).toBeInstanceOf(Date);
+  });
 
   it('Codex présent : son crochet de démarrage est posé et son accord écrit', async () => {
     await hasClaudeCode();

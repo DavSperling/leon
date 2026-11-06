@@ -38,11 +38,12 @@ describe('IngestPayloadSchema', () => {
     expect(IngestPayloadSchema.safeParse(payload).success).toBe(true);
   });
 
-  it('accepte les six types de capture', () => {
+  it('accepte les sept types de capture', () => {
     expect(CAPTURE_KINDS).toEqual([
       'claude_code',
       'codex',
       'cursor',
+      'antigravity',
       'claude_ai',
       'chatgpt',
       'mcp_remember',
@@ -192,10 +193,15 @@ describe('listes de types', () => {
   });
 
   // T18 : Codex rejoint Claude Code parmi les sessions de code, celles dont la CLI relève les gestes.
-  it('CODE_SESSION_KINDS = Claude Code, Codex et Cursor, des types de capture ; isCodeSessionKind les reconnaît seuls', () => {
-    expect(CODE_SESSION_KINDS).toEqual(['claude_code', 'codex', 'cursor']);
+  it('CODE_SESSION_KINDS = Claude Code, Codex, Cursor et Antigravity, des types de capture ; isCodeSessionKind les reconnaît seuls', () => {
+    expect(CODE_SESSION_KINDS).toEqual(['claude_code', 'codex', 'cursor', 'antigravity']);
     for (const kind of CODE_SESSION_KINDS) expect(CAPTURE_KINDS).toContain(kind);
-    expect(CAPTURE_KINDS.filter(isCodeSessionKind)).toEqual(['claude_code', 'codex', 'cursor']);
+    expect(CAPTURE_KINDS.filter(isCodeSessionKind)).toEqual([
+      'claude_code',
+      'codex',
+      'cursor',
+      'antigravity',
+    ]);
     expect(isCodeSessionKind('github')).toBe(false);
   });
 

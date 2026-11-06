@@ -201,7 +201,7 @@ curl -fsSL <adresse de Leon>/install | sh
 Ni clone, ni pnpm, ni Node à installer d'abord : la commande pose tout dans `~/.leon` et n'écrit que là, plus les réglages de vos outils de code après votre accord ; rien dans votre `PATH` ni votre profil de shell. Dans l'ordre :
 
 1. elle télécharge le Node officiel de la version que Leon a épinglée et la CLI de Leon (un seul fichier, servi par Leon), vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI, puis les pose dans `~/.leon/runtime` et `~/.leon/cli`. Plateformes : macOS (Apple silicon et Intel) et Linux (x64 et arm64) avec la glibc. Windows et Linux musl (Alpine) sont refusés avec un message, avant d'écrire quoi que ce soit ;
-2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code, Codex et Cursor ; Gemini est reconnu mais pas encore pris en charge : rien n'est écrit chez lui), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
+2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code, Codex, Cursor et Antigravity), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
 
 On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'est pas réécrit (`--yes` ne demande rien, sauf pour remplacer un lanceur qui n'est pas celui de la forme installée ; `--url <adresse>` désigne le serveur de `leon login`). Relancer la commande d'installation met aussi la CLI à la version que sert Leon. `leon setup` relance aussi `leon login` (et le dit) quand l'ordinateur n'est plus connecté : jeton révoqué dans Réglages, `--url` d'un autre serveur que celui de la connexion, ou seulement `LEON_URL` et `LEON_TOKEN` posées dans le terminal (un Claude Code lancé depuis le Dock ne les voit pas). Un serveur qui ne répond pas ne bloque pas l'installation.
 
@@ -312,6 +312,18 @@ pnpm leon installer-crochets --oui    # écrit sans demander
 - Ce qu'un crochet a manqué part au démarrage suivant d'une session, par `leon rattraper`, pour les seules conversations modifiées depuis l'accord de capture.
 - L'accord s'écrit dans `~/.leon/accord.json` sous `cursor`, avec la date de l'accord de capture.
 - Retirer : `~/.leon/bin/leon retirer-crochets --outil cursor` (depuis un clone : `pnpm leon retirer-crochets --outil cursor`).
+
+### Antigravity
+
+`leon setup` propose aussi Antigravity quand il trouve `~/.gemini` ; depuis un clone : `pnpm leon installer-crochets --outil antigravity`. Antigravity **reçoit** le bloc de démarrage une fois par conversation, et ses conversations **sont captées**, sous l'outil « Antigravity ».
+
+> Écrit avant l'essai réel d'Antigravity (T31 du plan) : la forme des crochets vient de celle d'`agy` 1.4, celle des transcripts d'un lecteur public. L'essai les confirmera ou les corrigera, en particulier la forme du bloc injecté (`systemMessage`, ou `ephemeralMessage` à défaut).
+
+- La commande écrit dans `~/.gemini/config/hooks.json` une seule entrée, nommée `leon` : `SessionStart` et `PreInvocation` (10 s) lancent `~/.leon/bin/leon crochet antigravity demarrage` et `… prompt`, qui donnent le bloc (`injectSteps`) au début de la conversation, une seule fois (un témoin vide dans `~/.leon/temoins/antigravity/`) ; `Stop` (30 s) lance `crochet antigravity tour`, qui capte la conversation une fois inactive (`fullyIdle`). Les autres entrées du fichier ne bougent pas, et un fichier que `JSON.parse` refuse (des commentaires) n'est jamais réécrit. Relancez Antigravity pour qu'il relise le fichier.
+- **Ce qui part** : les échanges nouveaux (vos demandes et les réponses de l'agent) et les gestes, relevés dans `~/.gemini/{antigravity,antigravity-ide,antigravity-cli}/brain/<conversation>/.system_generated/logs/transcript_full.jsonl` (ou `transcript.jsonl`) : fichiers écrits, commandes réduites à leur exécutable, commits, branche, et si la conversation a cherché sur le web, appelé un serveur MCP, un sous-agent ou une commande réseau. Les conversations `.pb` et les bases d'Antigravity ne sont jamais lues.
+- Ce qu'un crochet a manqué part au démarrage suivant d'une session, par `leon rattraper`, pour les seules conversations modifiées depuis l'accord de capture.
+- L'accord s'écrit dans `~/.leon/accord.json` sous `antigravity`, avec la date de l'accord de capture.
+- Retirer : `~/.leon/bin/leon retirer-crochets --outil antigravity` (depuis un clone : `pnpm leon retirer-crochets --outil antigravity`) retire l'entrée `leon`.
 
 ### Ce qui est envoyé
 

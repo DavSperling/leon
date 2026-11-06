@@ -12,13 +12,27 @@
 // Cursor, et sa validation l'a refusé dans des versions récentes. La sortie de beforeSubmitPrompt garde toujours
 // `continue: true` : sans lui, le message de la personne pourrait être bloqué. stop ne rend que `{}`, jamais
 // `followup_message` (il serait envoyé comme message suivant et ferait boucler).
-import { stat } from 'node:fs/promises';
+//
+// Antigravity (T32, T33) : shortcut: écrit avant l'essai réel T31, d'après le plan et la forme des crochets d'`agy` 1.4
+// (alexherrero/crickets, `scripts/agy_hook_adapter.py`) ; à recaler sur l'annexe 05. L'entrée porte `conversationId`,
+// `transcriptPath` et `workspacePaths` ; Stop porte `fullyIdle`, et rien n'est capté tant qu'il est faux. Le bloc
+// arrive par SessionStart, sinon par PreInvocation (avant chaque appel au modèle), une seule fois par conversation
+// (témoin), dans la première forme de C5 : `{"injectSteps":[{"systemMessage":{"systemMessage":…}}]}`. Sans bloc, la
+// réponse est `{}` : jamais `decision`, qui ferait continuer Stop.
+import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
+import { extractAntigravityFacts, parseAntigravitySession } from '../capture/antigravity';
 import type { SessionFacts } from '../capture/api-contract';
 import { extractCodexFacts, parseCodexSession } from '../capture/codex';
 import { extractCursorFacts, parseCursorSession } from '../capture/cursor';
 import type { CodeSessionKind, Turn } from '../capture/turn';
-import { findCodexSessionFiles, findCursorSessionFiles, type SessionFile } from './find-sessions';
+import {
+  ANTIGRAVITY_VARIANTS,
+  findAntigravitySessionFiles,
+  findCodexSessionFiles,
+  findCursorSessionFiles,
+  type SessionFile,
+} from './find-sessions';
 import type { Evenement, Outil } from './hook-commands';
 
 // Ce que la capture lit d'une session de l'outil.
@@ -78,6 +92,10 @@ export type Adaptateur = {
 export const codexHome = (home: string, env: Env): string => env.CODEX_HOME || join(home, '.codex');
 // Le dossier de Cursor : ~/.cursor.
 export const cursorHome = (home: string): string => join(home, '.cursor');
+// Le dossier d'Antigravity et de Gemini : ~/.gemini.
+export const geminiHome = (home: string): string => join(home, '.gemini');
+const antigravityBrains = (home: string) =>
+  ANTIGRAVITY_VARIANTS.map((variant) => join(geminiHome(home), variant, 'brain'));
 
 const field = (input: unknown, key: string): unknown =>
   typeof input === 'object' && input !== null && key in input
@@ -215,7 +233,56 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       return cursorDirectoryOf(basename(dirname(directory)));
     },
   },
+  antigravity: {
+    label: 'Antigravity',
+    kind: 'antigravity',
+    injection: (texte) =>
+      JSON.stringify({ injectSteps: [{ systemMessage: { systemMessage: texte } }] }),
+    vide: () => '{}',
+    uneFois: true,
+    racines: (home) => antigravityBrains(home),
+    entree: (input, home) => {
+      const transcript = absolute(field(input, 'transcriptPath'));
+      // `transcript_full.jsonl` d'abord, à côté du transcript que nomme le crochet (T32).
+      const full = transcript === null ? null : join(dirname(transcript), 'transcript_full.jsonl');
+      return {
+        session: text(field(input, 'conversationId')),
+        dossier: absolute(first(field(input, 'workspacePaths'))),
+        fichiers: under([full, transcript], antigravityBrains(home)),
+        inactif: field(input, 'fullyIdle') !== false,
+      };
+    },
+    lire: (contenu, fichier) => parseAntigravitySession(contenu, fichier),
+    faits: (contenu, fichier, racine, brancheLue) =>
+      extractAntigravityFacts(contenu, fichier, racine, brancheLue),
+    trouver: (home) => findAntigravitySessionFiles(geminiHome(home)),
+    // `<variante>/history.jsonl` relie une conversation à son espace de travail.
+    dossierDe: (fichier) => antigravityWorkspace(fichier),
+  },
 };
+
+// L'espace de travail d'une conversation d'Antigravity, d'après `<variante>/history.jsonl` (`conversationId`,
+// `workspace`, éventuellement en `file://`). null s'il n'y figure pas.
+async function antigravityWorkspace(fichier: string): Promise<string | null> {
+  // `<variante>/brain/<conversation>/.system_generated/logs/<transcript>`
+  const conversationDir = dirname(dirname(dirname(fichier)));
+  const variantDir = dirname(dirname(conversationDir));
+  const conversation = basename(conversationDir);
+  const history = await readFile(join(variantDir, 'history.jsonl'), 'utf8').catch(() => '');
+  for (const line of history.split('\n').reverse()) {
+    try {
+      const entry = JSON.parse(line) as { conversationId?: unknown; workspace?: unknown };
+      if (entry.conversationId !== conversation || typeof entry.workspace !== 'string') continue;
+      const workspace = entry.workspace.startsWith('file://')
+        ? decodeURIComponent(new URL(entry.workspace).pathname)
+        : entry.workspace;
+      return isAbsolute(workspace) ? workspace : null;
+    } catch {
+      // ligne illisible
+    }
+  }
+  return null;
+}
 
 // Le fichier de session que nomme l'entrée d'un crochet : le premier des fichiers possibles qui existe, ou null.
 export async function sessionFileFrom(entree: EntreeCrochet): Promise<string | null> {

@@ -10,6 +10,7 @@ describe('labels', () => {
       claude_code: 'Claude Code',
       codex: 'Codex',
       cursor: 'Cursor',
+      antigravity: 'Antigravity',
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
       mcp_remember: 'Note (MCP)',

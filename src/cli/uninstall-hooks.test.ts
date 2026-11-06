@@ -578,7 +578,7 @@ describe('leon retirer-crochets : la vraie commande', () => {
     expect(run).toEqual({
       code: 1,
       stdout: '',
-      stderr: '--outil: unknown tool (one of: claude_code, codex, cursor).\n',
+      stderr: '--outil: unknown tool (one of: claude_code, codex, cursor, antigravity).\n',
     });
   }, 30_000);
 });

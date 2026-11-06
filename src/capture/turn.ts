@@ -8,6 +8,7 @@ export const CAPTURE_KINDS = [
   'claude_code',
   'codex',
   'cursor',
+  'antigravity',
   'claude_ai',
   'chatgpt',
   'mcp_remember',
@@ -20,6 +21,7 @@ export const CODE_SESSION_KINDS = [
   'claude_code',
   'codex',
   'cursor',
+  'antigravity',
 ] as const satisfies readonly CaptureKind[];
 export type CodeSessionKind = (typeof CODE_SESSION_KINDS)[number];
 export const isCodeSessionKind = (kind: string): kind is CodeSessionKind =>

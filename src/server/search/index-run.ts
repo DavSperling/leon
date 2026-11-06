@@ -1,12 +1,13 @@
 import { and, eq, inArray, ne } from 'drizzle-orm';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { signalSourceActivity } from '@/server/briefing/queue';
-import { ingestRuns, turns } from '@/server/db/schema/memory';
+import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { logError } from '@/server/log';
 import type { PipelineJob } from '@/server/pipeline/queue';
+import { enqueueLiaison, LINKED_KINDS } from '@/server/sessions/threads-queue';
 import { chunkText } from './chunk';
 import { embedPassages, lockSources, passagesWithoutVector } from './embed-missing';
 import { notOldResume } from './filters-sql';
@@ -105,6 +106,22 @@ async function signalBriefings(ctx: TenantContext, sourceId: string): Promise<vo
   }
 }
 
+// Une source qu'un fil peut relier (T42), ses passages écrits, est mise à relier : par ses clés exactes, même sans
+// vecteur (ceux d'un résumé ou d'une source la remettent à relier, embedPassages). Comme le signal du point, il ne fait
+// jamais échouer l'indexation : la prochaine indexation de la source la remet en file.
+async function signalLiaison(ctx: TenantContext, sourceId: string): Promise<void> {
+  try {
+    const [source] = await withTenant(ctx, (tx) =>
+      tx.select({ kind: sources.kind }).from(sources).where(eq(sources.id, sourceId)),
+    );
+    if (source && LINKED_KINDS.has(source.kind)) {
+      await enqueueLiaison({ tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId });
+    }
+  } catch (error) {
+    logError('search.liaison_enqueue', error, { sourceId });
+  }
+}
+
 // Rend « indexe » une fois le run traité, « absent » quand il n'y a rien à faire (inconnu, invisible, déjà
 // terminé). Une panne de base remonte : le worker marque le run « failed » et pg-boss relance le job.
 // Une panne du fournisseur de vecteurs, elle, ne fait pas échouer le run : les passages sont écrits, les
@@ -134,5 +151,6 @@ export async function indexIngestRun(
       .where(eq(ingestRuns.id, job.ingestRunId)),
   );
   await signalBriefings(ctx, scope.sourceId);
+  await signalLiaison(ctx, scope.sourceId);
   return 'indexe';
 }

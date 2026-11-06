@@ -30,6 +30,8 @@ export async function seedRun(
   input: {
     turns?: SeedTurn[];
     kind?: SourceKind;
+    // L'identifiant de l'élément chez son outil (`pr:<dépôt>#<n>` pour une PR GitHub), aléatoire par défaut.
+    externalId?: string;
     acl?: string[];
     status?: 'queued' | 'running' | 'done' | 'failed';
     updatedAt?: Date;
@@ -45,7 +47,7 @@ export async function seedRun(
     .values({
       tenantId: owner.tenantId,
       kind: input.kind ?? 'claude_code',
-      externalId: randomUUID(),
+      externalId: input.externalId ?? randomUUID(),
       ownerUserId: owner.userId,
       title: input.title === undefined ? 'Source de test' : input.title,
       acl,

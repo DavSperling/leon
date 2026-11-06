@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, max, notLike, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, max, ne, notLike, or, sql } from 'drizzle-orm';
 import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -51,8 +51,14 @@ export async function listSources(
       .from(sources)
       // Les conversations restent à leur propriétaire, même posées avec une ACL d'équipe ; les
       // sources d'outils sont celles que la RLS laisse voir. Pas `connection_id` : il devient nul
-      // quand la connexion est supprimée.
-      .where(or(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, PROVIDER_IDS)))
+      // quand la connexion est supprimée. Un fil de travail n'est pas une source de l'utilisateur :
+      // la section Mémoire du site les montre (T55).
+      .where(
+        and(
+          ne(sources.kind, 'leon_fil'),
+          or(eq(sources.ownerUserId, ctx.userId), inArray(sources.kind, PROVIDER_IDS)),
+        ),
+      )
       .orderBy(sql`${sources.lastTurnAt} desc nulls last`, desc(sources.id))
       // Une de plus que la page : elle dit seulement s'il en reste.
       .limit(SOURCES_PAGE_SIZE + 1)

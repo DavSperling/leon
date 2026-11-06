@@ -4,6 +4,7 @@ import { FAITS_BODY_MAX_BYTES, SessionFactsPayloadSchema } from '@/capture/api-c
 import { recordFacts } from '@/server/ingest/record-facts';
 import { logError } from '@/server/log';
 import { enqueueResume } from '@/server/sessions/resume-queue';
+import { enqueueRangement } from '@/server/sessions/threads-queue';
 import { type ApiEnv, requireApiToken } from './require-api-token';
 
 export const faitsRoutes = new Hono<ApiEnv>()
@@ -28,14 +29,18 @@ export const faitsRoutes = new Hono<ApiEnv>()
       }
       const { ctx } = c.var;
       const { sourceId, resume } = await recordFacts(ctx, parsed.data);
-      // Le résumé (T23), seulement avec l'usage `resume`. Les faits sont rangés : une file indisponible ne les fait
-      // pas perdre, et l'envoi suivant remet la session en file.
+      const job = { tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId };
+      // Le rangement en fils (T40), sans condition d'usage : il ne lit que les clés des faits, rien ne sort de Leon.
+      // Les faits sont rangés : une file indisponible ne les fait pas perdre, et l'envoi suivant remet la session en
+      // file. De même pour le résumé (T23), seulement avec l'usage `resume`.
+      try {
+        await enqueueRangement(job, { fin: parsed.data.fin });
+      } catch (error) {
+        logError('faits.rangement_enqueue', error, { sourceId });
+      }
       if (resume) {
         try {
-          await enqueueResume(
-            { tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId },
-            { fin: parsed.data.fin },
-          );
+          await enqueueResume(job, { fin: parsed.data.fin });
         } catch (error) {
           logError('faits.resume_enqueue', error, { sourceId });
         }

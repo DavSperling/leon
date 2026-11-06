@@ -27,8 +27,9 @@ const TEAM_OPEN_MS = 30 * 24 * HOUR_MS;
 const CONFIRMED_MS = 24 * HOUR_MS;
 const GITHUB = 'github' satisfies SourceKind;
 // shortcut: la branche par défaut n'est pas relevée (aucun appel à GitHub ici), main et master seulement ; ranger
-// `default_branch` dans l'origin des PR (T13) quand un dépôt d'équipe en a une autre.
-const DEFAULT_BRANCHES = new Set(['main', 'master']);
+// `default_branch` dans l'origin des PR (T13) quand un dépôt d'équipe en a une autre. Le rangement en fils les saute
+// aussi (threads.ts).
+export const DEFAULT_BRANCHES = new Set(['main', 'master']);
 
 type PrState = 'open' | 'merged' | 'closed';
 export type StartPr = Omit<SessionFacts['prs'][number], 'par'> & {

@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { ProviderId } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
@@ -10,6 +10,7 @@ import {
   updateSource,
 } from '@/server/ingest/ingest-turns';
 import { textArray } from '@/server/search/filters-sql';
+import { unlinkSources } from '@/server/sessions/thread-links';
 import type { NormalizedItem } from './normalize';
 
 export type ConnectionRef = {
@@ -98,16 +99,30 @@ export async function ingestConnectorItems(
 // Retire les sources que la connexion signale (un événement devenu privé), par la fonction de 0019 (0020) :
 // seulement celles de son outil et de son créateur (`ctx`), y compris celles relevées par une connexion supprimée
 // depuis. Tours, passages, vecteurs, runs et journal des
-// lectures partent avec elles (clés en cascade). L'app n'a pas d'autre droit de supprimer du brut.
+// lectures partent avec elles (clés en cascade). L'app n'a pas d'autre droit de supprimer du brut. Elles quittent
+// ensuite les fils qui les reliaient (T42).
 export async function removeConnectorItems(
   ctx: TenantContext,
   connection: ConnectionRef,
   externalIds: string[],
 ): Promise<number> {
-  const result = await withTenant(ctx, (tx) =>
-    tx.execute<{ n: number }>(
+  const { removed, ids } = await withTenant(ctx, async (tx) => {
+    const gone = await tx
+      .select({ id: sources.id })
+      .from(sources)
+      .where(
+        and(
+          eq(sources.tenantId, ctx.tenantId),
+          eq(sources.ownerUserId, connection.createdBy),
+          eq(sources.kind, connection.provider),
+          inArray(sources.externalId, externalIds),
+        ),
+      );
+    const result = await tx.execute<{ n: number }>(
       sql`select retirer_sources_connexion(${connection.id}, ${textArray(externalIds)}) as n`,
-    ),
-  );
-  return result.rows[0]?.n ?? 0;
+    );
+    return { removed: result.rows[0]?.n ?? 0, ids: gone.map((row) => row.id) };
+  });
+  await unlinkSources(ctx.tenantId, ids);
+  return removed;
 }

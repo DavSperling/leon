@@ -27,8 +27,12 @@ import {
   insertNewTurns,
   updateSource,
 } from '@/server/ingest/ingest-turns';
+import { unlinkSources } from '@/server/sessions/thread-links';
 
 const MAX_TEXT_CHARS = 1_000_000;
+// Ce que supprimer_document rend pour chaque document qu'on lui passe.
+type Removed = { id: string; deleted: boolean };
+const removedIds = (rows: Removed[]) => rows.filter((row) => row.deleted).map((row) => row.id);
 const NULL_CHAR = String.fromCharCode(0);
 // Lus tels quels : officeparser ne les décode qu'en UTF-8.
 const PLAIN_TEXT: ReadonlySet<string> = new Set(TEXT_EXTENSIONS);
@@ -172,6 +176,7 @@ export async function addDocument(
   const metadata = folder
     ? { nature: 'fichier', folder: { id: folder.id, name: folderName } }
     : { nature: 'fichier' };
+  const replaced: string[] = [];
   const runId = await withTenant(ctx, async (tx) => {
     // La page s'arrête déjà au plafond ; on le tient aussi ici, elle peut être contournée. Il vaut par auteur : le
     // dossier d'un autre membre ne compte pas, même avec le même identifiant.
@@ -194,10 +199,11 @@ export async function addDocument(
       // Le premier fichier d'un dossier remplace le dossier du même nom que l'auteur a déjà envoyé : renvoyer un
       // dossier le met à jour au lieu de le doubler. Dans la transaction : si ce fichier n'entre pas, l'ancien reste.
       if (row?.total === 0) {
-        await tx.execute(sql`
-          select supprimer_document(id) from sources
+        const { rows: removed } = await tx.execute<Removed>(sql`
+          select id, supprimer_document(id) as deleted from sources
           where tenant_id = ${ctx.tenantId} and kind = 'document' and owner_user_id = ${ctx.userId}
             and metadata->'folder'->>'name' = ${folderName} and metadata->'folder'->>'id' <> ${folder.id}`);
+        replaced.push(...removedIds(removed));
       }
     }
     const [source] = await tx
@@ -231,6 +237,7 @@ export async function addDocument(
     return runId;
   });
   await enqueueIndexing(ctx, runId);
+  await unlinkSources(ctx.tenantId, replaced);
   return { partial };
 }
 
@@ -257,22 +264,27 @@ export async function listDocuments(ctx: TenantContext) {
 
 // L'app n'a pas le droit de supprimer du brut : la fonction de 0034 ne retire qu'un document de l'organisation
 // courante, et seulement pour son auteur ou, celui d'un ancien membre, pour un administrateur (0042). Tours, passages, vecteurs et runs partent avec lui (clés en cascade).
+// Il quitte ensuite les fils qui le reliaient (T42), comme les suppressions ci-dessous.
 export async function deleteDocument(ctx: TenantContext, id: string): Promise<boolean> {
   const result = await withTenant(ctx, (tx) =>
     tx.execute<{ deleted: boolean }>(sql`select supprimer_document(${id}) as deleted`),
   );
-  return result.rows[0]?.deleted === true;
+  const deleted = result.rows[0]?.deleted === true;
+  if (deleted) await unlinkSources(ctx.tenantId, [id]);
+  return deleted;
 }
 
 // Les documents d'un dossier, d'un coup, par la même fonction : chacun est supprimé s'il est de l'auteur. Rend le
 // nombre de documents partis.
 export async function deleteFolder(ctx: TenantContext, folderId: string): Promise<number> {
   const result = await withTenant(ctx, (tx) =>
-    tx.execute<{ deleted: number }>(sql`
-      select count(*) filter (where supprimer_document(id))::int as deleted
+    tx.execute<Removed>(sql`
+      select id, supprimer_document(id) as deleted
       from sources
       where tenant_id = ${ctx.tenantId} and kind = 'document' and owner_user_id = ${ctx.userId}
         and metadata->'folder'->>'id' = ${folderId}`),
   );
-  return result.rows[0]?.deleted ?? 0;
+  const ids = removedIds(result.rows);
+  await unlinkSources(ctx.tenantId, ids);
+  return ids.length;
 }

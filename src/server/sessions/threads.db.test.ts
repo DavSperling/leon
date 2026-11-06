@@ -1,24 +1,36 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
 import { sources, versionsMemoire } from '@/server/db/schema/memory';
+import { passages } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
+import { type Embedder, EmbedderError } from '@/server/embeddings/embedder';
+import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
+import { createIngestRun, insertNewTurns } from '@/server/ingest/ingest-turns';
 import { recordFacts } from '@/server/ingest/record-facts';
 import { listVersions, writeVersion } from '@/server/memory/versions';
-import { adminDb } from '@/test/db';
+import { embedMissingBatch } from '@/server/search/embed-missing';
+import { indexIngestRun } from '@/server/search/index-run';
+import { adminDb, adminPool } from '@/test/db';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import type { ThreadJob } from './threads-queue';
 
-// Le rangement des sessions en fils (T40 ; D21, D22 et D34 du plan de la mémoire à disposition), sur la base de test.
-// Les files sont simulées (threads-queue.db.test.ts vérifie les vraies) : les fils mis en file `fil-maj` sont notés.
+// Le rangement des sessions en fils (T40 et T41 ; D21, D22 et D34 du plan de la mémoire à disposition), sur la base de
+// test. Les files sont simulées (threads-queue.db.test.ts vérifie les vraies) : les fils mis en file `fil-maj` et les
+// sessions remises à ranger sont notés. Les vecteurs viennent du fournisseur factice.
 
-const mocks = vi.hoisted(() => ({ enqueueFilMaj: vi.fn(), work: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  enqueueFilMaj: vi.fn(),
+  enqueueRangement: vi.fn(),
+  work: vi.fn(),
+}));
 vi.mock('./threads-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./threads-queue')>()),
   enqueueFilMaj: mocks.enqueueFilMaj,
+  enqueueRangement: mocks.enqueueRangement,
   getThreadsBoss: async () => ({ work: mocks.work }),
 }));
 
@@ -30,6 +42,8 @@ const tenantIds: string[] = [];
 beforeEach(() => {
   mocks.enqueueFilMaj.mockReset();
   mocks.enqueueFilMaj.mockResolvedValue(undefined);
+  mocks.enqueueRangement.mockReset();
+  mocks.enqueueRangement.mockResolvedValue(undefined);
 });
 afterAll(() => dropTeams(tenantIds));
 
@@ -76,7 +90,42 @@ const jobOf = (owner: TenantContext, sourceId: string): ThreadJob => ({
   sourceId,
   ownerUserId: owner.userId,
 });
-const file = (owner: TenantContext, sourceId: string) => fileSession(jobOf(owner, sourceId));
+const factice = createFakeEmbedder();
+const file = (owner: TenantContext, sourceId: string, embedder: Embedder | null = factice) =>
+  fileSession(jobOf(owner, sourceId), { embedder });
+
+// Le résumé de la session, comme l'écrit le worker du résumé (un tour `leon:resume:1`, que nomme `metadata.resume`, et
+// son run), puis indexé avec ce fournisseur de vecteurs, comme par le worker de la recherche.
+async function summarize(
+  owner: TenantContext,
+  sourceId: string,
+  text: string,
+  embedder: Embedder | null = factice,
+): Promise<void> {
+  const ingestRunId = await withTenant(owner, async (tx) => {
+    await tx
+      .update(sources)
+      .set({ metadata: sql`${sources.metadata} || '{"resume": {"tour": 1}}'::jsonb` })
+      .where(eq(sources.id, sourceId));
+    const { ids } = await insertNewTurns(tx, [
+      {
+        tenantId: owner.tenantId,
+        sourceId,
+        externalId: 'leon:resume:1',
+        role: 'document',
+        text,
+        ts: new Date(),
+        captureMode: 'manual',
+        acl: [owner.userId],
+      },
+    ]);
+    return createIngestRun(tx, owner, sourceId, ids, [owner.userId]);
+  });
+  const job = { ingestRunId, tenantId: owner.tenantId, userId: owner.userId };
+  expect(await indexIngestRun(job, { embedder })).toBe('indexe');
+}
+
+const NEAR = 'Rangement des fils de travail par la proximité des résumés de session';
 
 type Fil = { id: string; externalId: string; acl: string[]; metadata: Record<string, unknown> };
 
@@ -345,6 +394,129 @@ describe('fileSession', () => {
   });
 });
 
+describe('fileSession, une session sans clé (T41)', () => {
+  it('au-dessus du seuil : rattachée au fil le plus proche, qui est mis en file, et rien n’est ouvert', async () => {
+    const { paul } = await team();
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, NEAR);
+    const onMain = await session(paul, {
+      branche: 'main',
+      fichiers: ['src/server/search/embed-missing.ts'],
+    });
+    await summarize(paul, onMain, `${NEAR}, suite`);
+    // Les vecteurs de son résumé écrits, l'indexation l'a remise à ranger.
+    expect(mocks.enqueueRangement).toHaveBeenCalledWith(jobOf(paul, onMain), { fin: true });
+    mocks.enqueueFilMaj.mockClear();
+
+    expect(await file(paul, onMain)).toBe('range');
+
+    const fils = await filsOf(paul);
+    expect(fils).toHaveLength(1);
+    expect(sessionIds(fils[0])).toEqual([onBranch, onMain].sort());
+    expect(fils[0]?.metadata).toMatchObject({
+      branches: ['paul/fils'],
+      prs: [],
+      fichiers: ['src/server/sessions/threads.ts', 'src/server/search/embed-missing.ts'],
+    });
+    expect(mocks.enqueueFilMaj.mock.calls).toEqual([[jobOf(paul, fils[0]?.id ?? '')]]);
+    // Rangée de nouveau (faits renvoyés) : elle reste dans son fil, sans doublon, même sans fournisseur.
+    expect(await file(paul, onMain)).toBe('inchange');
+    expect(await file(paul, onMain, null)).toBe('inchange');
+  });
+
+  it('en dessous du seuil, ou sur un autre projet : hors fil, et aucun fil ouvert', async () => {
+    const { paul, marie } = await team();
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, NEAR);
+    const far = await session(paul, { branche: 'main' });
+    await summarize(paul, far, 'Une recette de crêpes bretonnes au sarrasin');
+    const { sourceId: elsewhere } = await recordFacts(paul, {
+      kind: 'claude_code',
+      external_id: `session-${randomUUID()}`,
+      project: 'github.com/acme/autre',
+      accord: 2,
+      faits: facts({ branche: 'main' }),
+      fin: true,
+    });
+    await summarize(paul, elsewhere, NEAR);
+    // Sans aucun fil : rien à rejoindre.
+    const alone = await session(marie, { branche: 'main' });
+    await summarize(marie, alone, NEAR);
+    mocks.enqueueFilMaj.mockClear();
+
+    expect(await file(paul, far)).toBe('hors-fil');
+    expect(await file(paul, elsewhere)).toBe('hors-fil');
+    expect(await file(marie, alone)).toBe('hors-fil');
+
+    const fils = await filsOf(paul);
+    expect(fils).toHaveLength(1);
+    expect(sessionIds(fils[0])).toEqual([onBranch]);
+    expect(await filsOf(marie)).toEqual([]);
+    expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+
+  it('sans fournisseur de vecteurs : aucun rattachement', async () => {
+    const { paul } = await team();
+    const onBranch = await session(paul);
+    await file(paul, onBranch, null);
+    await summarize(paul, onBranch, NEAR, null);
+    const onMain = await session(paul, { branche: 'main' });
+    await summarize(paul, onMain, NEAR, null);
+
+    expect(await file(paul, onMain, null)).toBe('hors-fil');
+
+    expect(mocks.enqueueRangement).not.toHaveBeenCalled();
+    const fils = await filsOf(paul);
+    expect(fils).toHaveLength(1);
+    expect(sessionIds(fils[0])).toEqual([onBranch]);
+  });
+
+  it('résumé indexé sans vecteur : le rattachement attend la reprise des vecteurs, qui le relance', async () => {
+    const { paul } = await team();
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    // La base de test est partagée : le fournisseur de la reprise ne répond qu'aux textes de ce test (son jeton), comme
+    // dans embed-missing.db.test.ts.
+    const token = `jeton${randomUUID().replaceAll('-', '')}`;
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, `${NEAR} ${token}`);
+    const onMain = await session(paul, { branche: 'main' });
+    const down: Embedder = {
+      model: factice.model,
+      embed: () => Promise.reject(new EmbedderError('fournisseur indisponible (503)')),
+    };
+    await summarize(paul, onMain, `${NEAR} ${token}`, down);
+
+    expect(mocks.enqueueRangement).not.toHaveBeenCalledWith(jobOf(paul, onMain), expect.anything());
+    expect(await file(paul, onMain)).toBe('hors-fil');
+
+    // La reprise (le tic des vecteurs) ne prend que les passages de plus de 2 minutes : ceux du résumé sont vieillis.
+    const left = await adminDb
+      .select({ id: passages.id })
+      .from(passages)
+      .where(eq(passages.sourceId, onMain));
+    await adminPool.query(
+      `update passages_a_vectoriser set created_at = now() - interval '5 minutes' where passage_id = any($1)`,
+      [left.map((row) => row.id)],
+    );
+    const reprise: Embedder = {
+      model: factice.model,
+      embed: (texts, kind) =>
+        texts.every((text) => text.includes(token))
+          ? factice.embed(texts, kind)
+          : Promise.reject(new EmbedderError('texte refusé')),
+    };
+    await embedMissingBatch({ embedder: reprise }, 10_000);
+    log.mockRestore();
+
+    expect(mocks.enqueueRangement).toHaveBeenCalledWith(jobOf(paul, onMain), { fin: true });
+    expect(await file(paul, onMain)).toBe('range');
+    expect(sessionIds((await filsOf(paul))[0])).toEqual([onBranch, onMain].sort());
+  });
+});
+
 describe('startThreadsWorker', () => {
   it('range la session du job, et ses journaux ne citent que des uuid', async () => {
     const { paul } = await team();
@@ -360,7 +532,7 @@ describe('startThreadsWorker', () => {
       vi.spyOn(console, 'info').mockImplementation(() => undefined),
     ];
 
-    await startThreadsWorker();
+    await startThreadsWorker({ embedder: null });
     const handler = mocks.work.mock.calls[0]?.at(-1) as (
       jobs: Array<{ data: unknown }>,
     ) => Promise<void>;

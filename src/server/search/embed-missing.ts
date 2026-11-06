@@ -1,7 +1,7 @@
-import { and, asc, eq, inArray, lt, ne, notExists, type SQL, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, like, lt, ne, notExists, type SQL, sql } from 'drizzle-orm';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
-import { ingestRuns, sources } from '@/server/db/schema/memory';
+import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages, passageVectors } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
@@ -12,7 +12,8 @@ import {
 } from '@/server/embeddings/embedder';
 import { logError } from '@/server/log';
 import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
-import { textArray } from './filters-sql';
+import { enqueueRangement } from '@/server/sessions/threads-queue';
+import { RESUME_LIKE, textArray } from './filters-sql';
 
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
 // - embedMissingBatch complète les vecteurs qui manquent (fournisseur en panne pendant l'indexation, fournisseur
@@ -143,6 +144,33 @@ async function embedOneByOne(
   return { vectors, timedOut: false };
 }
 
+// Les sessions dont ces passages sont le résumé (T23) : seul le dernier résumé d'une session a des passages.
+async function resumedSessions(tx: Tx, passageIds: string[]): Promise<string[]> {
+  if (passageIds.length === 0) return [];
+  const rows = await tx
+    .selectDistinct({ sourceId: passages.sourceId })
+    .from(passages)
+    .innerJoin(turns, eq(turns.id, passages.turnId))
+    .where(and(inArray(passages.id, passageIds), like(turns.externalId, RESUME_LIKE)));
+  return rows.map((row) => row.sourceId);
+}
+
+// Une session dont le résumé a ses vecteurs est remise à ranger : sans clé, elle rejoint alors le fil le plus proche
+// (T41). Les vecteurs sont écrits : une file indisponible ne fait rien échouer, et le prochain envoi de faits de la
+// session la remet en file.
+async function signalRangement(ctx: TenantContext, sessionIds: string[]): Promise<void> {
+  for (const sourceId of sessionIds) {
+    try {
+      await enqueueRangement(
+        { tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId },
+        { fin: true },
+      );
+    } catch (error) {
+      logError('search.rangement_enqueue', error, { sourceId });
+    }
+  }
+}
+
 // Fabrique et écrit les vecteurs de ces passages, 64 textes à la fois. Le fournisseur est appelé hors de
 // toute transaction (un appel réseau ne retient pas de connexion à la base), avec un délai (EMBED_TIMEOUT_MS).
 // Rend le nombre de vecteurs écrits, `failed` si le fournisseur a échoué (le lot en cours et les suivants sont
@@ -165,6 +193,9 @@ async function embedOneByOne(
 // Le vecteur prend l'accès que son passage a au moment de l'écriture (sous le verrou de sa source, voir
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
 // Un passage supprimé pendant l'appel est laissé de côté.
+//
+// Les vecteurs d'un résumé de session écrits, la session est remise à ranger (signalRangement), par l'indexation comme
+// par la reprise.
 export async function embedPassages(
   ctx: TenantContext,
   embedder: Embedder,
@@ -216,15 +247,22 @@ export async function embedPassages(
           sql`select sortir_de_la_file(${embedder.model}, ${textArray(refused)}::uuid[])`,
         );
       }
-      if (values.length === 0) return [];
+      if (values.length === 0) return { stored: 0, resumed: [] };
       const inserted = await tx
         .insert(passageVectors)
         .values(values)
         .onConflictDoNothing()
         .returning({ passageId: passageVectors.passageId });
-      return inserted;
+      return {
+        stored: inserted.length,
+        resumed: await resumedSessions(
+          tx,
+          inserted.map((row) => row.passageId),
+        ),
+      };
     });
-    stored += written.length;
+    stored += written.stored;
+    await signalRangement(ctx, written.resumed);
   }
   return { stored, failed: false, timedOut: false };
 }

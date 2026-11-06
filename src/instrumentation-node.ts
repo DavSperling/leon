@@ -32,9 +32,10 @@ export async function startNodeInstrumentation() {
   // Le résumé des sessions (T23) : comme le point du matin, sans modèle chaque job finit sans rien faire.
   const { startResumeWorker } = await import('@/server/sessions/resume-worker');
   await startResumeWorker({ llm });
-  // Le rangement des sessions en fils (T40) : par les clés de leurs faits, sans modèle ni vecteur.
+  // Le rangement des sessions en fils (T40, T41) : par les clés de leurs faits, sinon par le vecteur de leur résumé avec
+  // le fournisseur de l'indexation ; sans modèle.
   const { startThreadsWorker } = await import('@/server/sessions/threads');
-  await startThreadsWorker();
+  await startThreadsWorker({ embedder });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

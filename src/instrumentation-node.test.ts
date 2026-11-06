@@ -43,6 +43,7 @@ const { startNodeInstrumentation } = await import('./instrumentation-node');
 const { startConnectorWorker } = await import('@/server/connectors/worker');
 const { startSearchWorker } = await import('@/server/search/worker');
 const { startBriefingWorker } = await import('@/server/briefing/worker');
+const { startThreadsWorker } = await import('@/server/sessions/threads');
 const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
 
 const NO_KEY = 'LEON_CONNECTORS_KEY absente';
@@ -58,6 +59,7 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {});
   vi.mocked(startSearchWorker).mockClear();
   vi.mocked(startBriefingWorker).mockClear();
+  vi.mocked(startThreadsWorker).mockClear();
   vi.mocked(startConnectorWorker).mockClear();
   vi.mocked(warnIncompleteOAuthPairs).mockClear();
 });
@@ -160,6 +162,8 @@ describe('fournisseur de vecteurs', () => {
 
     const [deps] = vi.mocked(startSearchWorker).mock.calls[0] ?? [];
     expect(deps?.embedder?.model).toBe('factice-1024');
+    // Le rangement compare les résumés avec les vecteurs de l'indexation (T41).
+    expect(vi.mocked(startThreadsWorker).mock.calls[0]?.[0]?.embedder).toBe(deps?.embedder);
   });
 
   // Voyage, Mistral et bge-m3 arrivent en T30 : d'ici là l'environnement est valide mais le fournisseur n'existe

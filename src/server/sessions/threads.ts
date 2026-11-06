@@ -1,14 +1,15 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { organizations, users } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
+import type { Embedder } from '@/server/embeddings/embedder';
 import { logError, safeErrorSummary } from '@/server/log';
 import { lockTarget } from '@/server/memory/versions';
-import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
+import { epochToDate, LAST_TS_SQL, RESUME_LIKE, textArray } from '@/server/search/filters-sql';
 import { DEFAULT_BRANCHES } from './start-context';
 import {
   enqueueFilMaj,
@@ -18,10 +19,12 @@ import {
   ThreadJobSchema,
 } from './threads-queue';
 
-// Le rangement des sessions en fils de travail (T40 ; D21, D22 et D34 du plan de la mémoire à disposition), sans
-// modèle ni vecteur. Pour une session de code de l'auteur, sous ses droits (withTenant), en une transaction :
-// - la session rejoint le fil de sa branche (hors main et master), sinon celui d'une de ses PR, ouvert s'il manque.
-//   Sans branche ni PR, elle reste hors fil : T41 la rattachera par proximité ;
+// Le rangement des sessions en fils de travail (T40 et T41 ; D21, D22 et D34 du plan de la mémoire à disposition), sans
+// modèle. Pour une session de code de l'auteur, sous ses droits (withTenant), en une transaction :
+// - la session rejoint le fil de sa branche (hors main et master), sinon celui d'une de ses PR, ouvert s'il manque ;
+// - sans branche ni PR, elle reste dans le fil qui l'a déjà, sinon rejoint le fil le plus proche par le vecteur de son
+//   résumé (nearestFil), et n'en ouvre jamais. Sans résumé, sans vecteur ou sans fournisseur, elle reste hors fil ;
+//   l'écriture des vecteurs d'un résumé la remet à ranger (embed-missing.ts) ;
 // - les fils de l'auteur qui ont sa branche ou une de ses PR fusionnent dans le plus ancien. L'absorbé reste, marqué
 //   `absorbe_par`, avec ses listes et ses versions (D21, tranché le 05/11) ; le rangement le saute ;
 // - un fil qui change est mis en file `fil-maj` (T43) : le rangement n'écrit jamais l'état.
@@ -37,13 +40,18 @@ import {
 const FIL = 'leon_fil' satisfies SourceKind;
 const FICHIERS_MAX = 50;
 const RANGEMENT_CONCURRENCY = 2;
+// La distance cosinus (0 : même sens, 1 : sans rapport) sous laquelle deux résumés sont du même travail, et l'écart
+// qu'ils peuvent avoir au plus (D22).
+// shortcut: une valeur prudente, deux fois plus stricte que celle de la recherche (MAX_VECTOR_DISTANCE, mesurée avec
+// voyage-4 sur des passages, pas sur des résumés) ; le lot 11 (T38) la règle sur des cas réels.
+const PROCHE_MAX_DISTANCE = 0.3;
+const PROCHE_JOURS = 30;
 // Les listes du `metadata` d'un fil (D21) que le rangement écrit et qu'une fusion réunit. `liees` vient de T42, qui
 // ajoute ici ses autres listes.
 type Liste = 'branches' | 'prs' | 'sessions' | 'fichiers' | 'liees' | 'absorbes';
 
 export type FilingOutcome = 'range' | 'inchange' | 'hors-fil' | 'sans-objet';
 
-type Pr = { repo: string; numero: number };
 type Fil = { id: string; metadata: Record<string, unknown> };
 type SessionRow = { kind: string; project: string | null; faits: unknown; last_epoch: string };
 
@@ -132,18 +140,17 @@ async function createFil(
   return created?.id ?? null;
 }
 
-// Les fils de l'auteur sur ce projet, hors absorbés, qui ont la branche ou une des PR, dans l'ordre des ids (D34).
+// Une clé d'un fil : cet élément dans une de ses listes.
+const has = (name: Liste, item: unknown) =>
+  sql`s.metadata->${name}::text @> ${JSON.stringify([item])}::jsonb`;
+
+// Les fils de l'auteur sur ce projet, hors absorbés, qui ont une de ces clés, dans l'ordre des ids (D34).
 async function findFils(
   tx: Tx,
   ctx: TenantContext,
   project: string,
-  branch: string | null,
-  prs: Pr[],
+  keys: SQL[],
 ): Promise<string[]> {
-  const keys = [
-    ...(branch === null ? [] : [sql`s.metadata->'branches' @> ${JSON.stringify([branch])}::jsonb`]),
-    ...prs.map((pr) => sql`s.metadata->'prs' @> ${JSON.stringify([pr])}::jsonb`),
-  ];
   const { rows } = await tx.execute<{ id: string }>(sql`
     select s.id from sources s
     where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
@@ -153,10 +160,52 @@ async function findFils(
   return rows.map((row) => row.id);
 }
 
+// Le fil de l'auteur sur ce projet le plus proche de la session (D22) : la plus petite distance entre un passage de son
+// résumé et un passage du résumé d'une autre de ses sessions du fil, datés à PROCHE_JOURS au plus l'un de l'autre, sous
+// le seuil. Seul le dernier résumé d'une session a des passages (resume-worker.ts, index-run.ts). Rend null sans
+// vecteur de ce modèle pour le résumé, ou sans fil assez proche.
+async function nearestFil(
+  tx: Tx,
+  ctx: TenantContext,
+  sessionId: string,
+  project: string,
+  model: string,
+): Promise<string | null> {
+  const {
+    rows: [nearest],
+  } = await tx.execute<{ id: string }>(sql`
+    select f.id, min(v.embedding <=> m.embedding) as dist
+    from sources f
+    cross join lateral jsonb_array_elements(f.metadata->'sessions') e
+    join sources s on s.tenant_id = f.tenant_id and s.id = (e->>'id')::uuid
+    join passages p on p.tenant_id = s.tenant_id and p.source_id = s.id
+    join turns t on t.tenant_id = p.tenant_id and t.id = p.turn_id
+    join passage_vectors v on v.passage_id = p.id and v.model = ${model}
+    join (
+      select mp.ts, mv.embedding
+      from passages mp
+      join turns mt on mt.tenant_id = mp.tenant_id and mt.id = mp.turn_id
+      join passage_vectors mv on mv.passage_id = mp.id and mv.model = ${model}
+      where mp.tenant_id = ${ctx.tenantId} and mp.source_id = ${sessionId}
+        and mt.external_id like ${RESUME_LIKE}
+    ) m on p.ts between m.ts - make_interval(days => ${PROCHE_JOURS})
+      and m.ts + make_interval(days => ${PROCHE_JOURS})
+    where f.tenant_id = ${ctx.tenantId} and f.owner_user_id = ${ctx.userId} and f.kind = ${FIL}
+      and f.metadata->>'project' = ${project} and f.metadata->>'absorbe_par' is null
+      and s.id <> ${sessionId} and s.owner_user_id = ${ctx.userId}
+      and s.kind = any(${textArray(CODE_SESSION_KINDS)}) and t.external_id like ${RESUME_LIKE}
+    group by f.id
+    having min(v.embedding <=> m.embedding) < ${PROCHE_MAX_DISTANCE}
+    order by dist, f.id
+    limit 1`);
+  return nearest?.id ?? null;
+}
+
 async function range(
   tx: Tx,
   ctx: TenantContext,
   sessionId: string,
+  model: string | null,
 ): Promise<Exclude<FilingOutcome, 'range'> | { fil: string }> {
   if (!(await lockAuthor(tx, ctx))) return 'sans-objet';
   const session = await readSession(tx, ctx, sessionId);
@@ -166,16 +215,30 @@ async function range(
     faits.branche !== null && !DEFAULT_BRANCHES.has(faits.branche) ? faits.branche : null;
   // Comme les clés des PR de GitHub : le dépôt sans la casse (start-context.ts).
   const prs = faits.prs.map((pr) => ({ repo: pr.repo.toLowerCase(), numero: pr.numero }));
-  if (project === null || (branch === null && prs.length === 0)) return 'hors-fil';
+  if (project === null) return 'hors-fil';
 
-  // Le fil d'une branche existe dès qu'elle a été vue, même absorbé : sa clé ne s'ouvre qu'une fois, et le fil gardé
-  // reprend ses branches.
-  if (branch !== null) await createFil(tx, ctx, project, branch);
-  let ids = await findFils(tx, ctx, project, branch, prs);
-  if (ids.length === 0) {
-    const created = branch === null ? await createFil(tx, ctx, project, null) : null;
-    if (created === null) throw new Error('fil de la branche introuvable');
-    ids = [created];
+  let ids: string[];
+  if (branch === null && prs.length === 0) {
+    // Sans clé (T41) : le fil qui l'a déjà, sinon le plus proche, jamais un fil ouvert.
+    ids = await findFils(tx, ctx, project, [has('sessions', { id: sessionId })]);
+    if (ids.length === 0 && model !== null) {
+      const nearest = await nearestFil(tx, ctx, sessionId, project, model);
+      if (nearest !== null) ids = [nearest];
+    }
+    if (ids.length === 0) return 'hors-fil';
+  } else {
+    // Le fil d'une branche existe dès qu'elle a été vue, même absorbé : sa clé ne s'ouvre qu'une fois, et le fil gardé
+    // reprend ses branches.
+    if (branch !== null) await createFil(tx, ctx, project, branch);
+    ids = await findFils(tx, ctx, project, [
+      ...(branch === null ? [] : [has('branches', branch)]),
+      ...prs.map((pr) => has('prs', pr)),
+    ]);
+    if (ids.length === 0) {
+      const created = branch === null ? await createFil(tx, ctx, project, null) : null;
+      if (created === null) throw new Error('fil de la branche introuvable');
+      ids = [created];
+    }
   }
   for (const id of ids) {
     if (!(await lockTarget(tx, ctx, id))) throw new Error('fil introuvable');
@@ -230,12 +293,17 @@ async function range(
   return { fil: keeper.id };
 }
 
-// Range la session du job. Idempotent : un envoi répété ne change rien, et rien ne part en file.
-export async function fileSession(job: ThreadJob): Promise<FilingOutcome> {
+// Range la session du job. Idempotent : un envoi répété ne change rien, et rien ne part en file. Sans fournisseur de
+// vecteurs, une session sans clé n'est jamais rattachée.
+export async function fileSession(
+  job: ThreadJob,
+  deps: { embedder: Embedder | null },
+): Promise<FilingOutcome> {
   const ctx = await resolveTenantContext(job.ownerUserId, job.tenantId);
   // Parti de l'organisation : plus personne sous les droits de qui ranger.
   if (!ctx) return 'sans-objet';
-  const result = await withTenant(ctx, (tx) => range(tx, ctx, job.sourceId));
+  const model = deps.embedder?.model ?? null;
+  const result = await withTenant(ctx, (tx) => range(tx, ctx, job.sourceId, model));
   if (typeof result === 'string') return result;
   // Après la validation, pour que la mise à jour lise le fil rangé. Une file indisponible ne défait pas le rangement :
   // le prochain changement du fil le remet en file.
@@ -249,10 +317,10 @@ export async function fileSession(job: ThreadJob): Promise<FilingOutcome> {
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer une branche (une erreur
 // de base cite ses paramètres) ; seulement son résumé (safeErrorSummary).
-async function processThreadJob(data: unknown): Promise<void> {
+async function processThreadJob(data: unknown, deps: { embedder: Embedder | null }): Promise<void> {
   const job = ThreadJobSchema.parse(data);
   try {
-    await fileSession(job);
+    await fileSession(job, deps);
   } catch (error) {
     logError('threads.failed', error, { tenantId: job.tenantId, sourceId: job.sourceId });
     throw new Error(safeErrorSummary(error));
@@ -262,13 +330,13 @@ async function processThreadJob(data: unknown): Promise<void> {
 const globalForWorker = globalThis as typeof globalThis & { leonThreadsWorker?: Promise<void> };
 
 // Idempotent : le rechargement à chaud de Next réexécute `register()`.
-export function startThreadsWorker(): Promise<void> {
+export function startThreadsWorker(deps: { embedder: Embedder | null }): Promise<void> {
   globalForWorker.leonThreadsWorker ??= (async () => {
     const boss = await getThreadsBoss();
     await boss.work(
       RANGEMENT_QUEUE,
       { batchSize: 1, localConcurrency: RANGEMENT_CONCURRENCY },
-      async ([job]) => processThreadJob(job?.data),
+      async ([job]) => processThreadJob(job?.data, deps),
     );
   })().catch((error) => {
     globalForWorker.leonThreadsWorker = undefined; // un démarrage raté doit pouvoir être retenté

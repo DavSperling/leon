@@ -6,7 +6,7 @@ import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
-import { type WriteInput, writeVersion } from '@/server/memory/versions';
+import { lockTarget, type WriteInput, writeVersion } from '@/server/memory/versions';
 import { adminDb, adminPool } from '@/test/db';
 import {
   createTestTenant,
@@ -580,8 +580,8 @@ describe('deleteAccount : ce que le dialogue a montré', () => {
   });
 });
 
-// Une écriture de version tient la cible, puis l'organisation et la personne (clés étrangères) : la suppression du
-// compte prend ses cibles avant l'organisation, et l'écriture qui l'attend voit ensuite le compte supprimé.
+// Une écriture de version prend l'organisation, puis la cible (lockTarget), comme les deux suppressions : l'une attend
+// l'autre sans s'interbloquer, et l'écriture qui attend voit ensuite le compte ou l'organisation supprimés.
 describe('deleteAccount : une version écrite au même instant', () => {
   const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
   const version = (sourceId: string): WriteInput => ({
@@ -605,10 +605,10 @@ describe('deleteAccount : une version écrite au même instant', () => {
     let leaving: Promise<unknown> = Promise.resolve();
 
     const written = await withTenant(alice, async (tx) => {
-      await tx.select({ id: sources.id }).from(sources).where(eq(sources.id, thread)).for('update');
+      expect(await lockTarget(tx, alice, thread)).toBe(true);
       leaving = deleteAccount(alice, null, false);
       await pause();
-      // Avec l'ancien ordre, cette insertion attend l'organisation que la suppression tient, qui attend ce fil.
+      // La cible d'abord, et cette insertion attendrait l'organisation que la suppression tient, qui attend ce fil.
       return writeVersion(tx, alice, version(thread));
     });
 
@@ -642,6 +642,56 @@ describe('deleteAccount : une version écrite au même instant', () => {
 
     expect(await adminDb.select().from(sources).where(eq(sources.id, note))).toHaveLength(1);
     expect(await versionsOf(alice.userId)).toEqual([]);
+  });
+
+  it("ne se bloque pas avec la suppression de l'organisation, quand une version du fil d'un membre s'écrit", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, bob] = people as [TenantContext, TenantContext];
+    const thread = await seedThread(bob);
+    let removing: Promise<unknown> = Promise.resolve();
+
+    const written = await withTenant(bob, async (tx) => {
+      expect(await lockTarget(tx, bob, thread)).toBe(true);
+      removing = deleteOrganization(owner);
+      await pause();
+      return writeVersion(tx, bob, version(thread));
+    });
+
+    expect(written).toEqual({ n: 1 });
+    await expect(removing).resolves.toMatchObject({ organizationDeleted: true });
+    expect(await adminDb.select().from(sources).where(eq(sources.id, thread))).toEqual([]);
+    const { rows } = await adminPool.query('select id from versions_memoire where tenant_id = $1', [
+      tenantId,
+    ]);
+    expect(rows).toEqual([]);
+  });
+
+  it("une version qui attend la suppression de l'organisation n'écrit rien", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, bob] = people as [TenantContext, TenantContext];
+    const thread = await seedThread(bob);
+    // Retient la suppression au milieu, l'organisation déjà prise.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from member where "userId" = $1 for update', [bob.userId]);
+      const removing = deleteOrganization(owner);
+      await pause();
+      const writing = withTenant(bob, (tx) => writeVersion(tx, bob, version(thread)));
+      await pause();
+      await holding.query('commit');
+
+      await expect(removing).resolves.toMatchObject({ organizationDeleted: true });
+      expect(await writing).toBe('introuvable');
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+
+    const { rows } = await adminPool.query('select id from versions_memoire where tenant_id = $1', [
+      tenantId,
+    ]);
+    expect(rows).toEqual([]);
   });
 });
 

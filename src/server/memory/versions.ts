@@ -2,7 +2,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { factText } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { users } from '@/server/db/schema/auth';
+import { organizations, users } from '@/server/db/schema/auth';
 import { sources, versionsMemoire } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { textArray } from '@/server/search/filters-sql';
@@ -115,6 +115,33 @@ async function readable(tx: Tx, ctx: TenantContext, sourceId: string, n: number)
   return rows[0] ? toVersion(rows[0]) : null;
 }
 
+// Le verrou d'un fil ou d'une note de l'auteur (D34), toujours dans cet ordre : l'organisation, en FOR KEY SHARE (ce que
+// l'insertion d'une version prend par sa clé étrangère), puis la cible. C'est l'ordre des deux suppressions
+// (lockMembers prend l'organisation, puis la cascade ou supprimer_fil prend les fils) : la cible d'abord, et l'écriture
+// tiendrait le fil en attendant l'organisation que la suppression tient en attendant le fil. Tout verrou d'un fil
+// passe par ici, le rangement (T40) et l'état (T43) compris. Rend false si la cible n'est pas à l'auteur, ou partie.
+export async function lockTarget(tx: Tx, ctx: TenantContext, sourceId: string): Promise<boolean> {
+  const [organization] = await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, ctx.tenantId))
+    .for('key share');
+  if (!organization) return false;
+  const [target] = await tx
+    .select({ id: sources.id })
+    .from(sources)
+    .where(
+      and(
+        eq(sources.tenantId, ctx.tenantId),
+        eq(sources.id, sourceId),
+        eq(sources.ownerUserId, ctx.userId),
+        inArray(sources.kind, CIBLES),
+      ),
+    )
+    .for('update');
+  return target !== undefined;
+}
+
 // Écrit v(attendue+1), dans la transaction de l'appelant (T43, T57 et restoreVersion écrivent par elle). La cible est
 // un fil ou une note de l'auteur, verrouillée jusqu'à la fin de la transaction.
 export async function writeVersion(
@@ -122,19 +149,7 @@ export async function writeVersion(
   ctx: TenantContext,
   input: WriteInput,
 ): Promise<WriteResult> {
-  const [target] = await tx
-    .select({ id: sources.id })
-    .from(sources)
-    .where(
-      and(
-        eq(sources.tenantId, ctx.tenantId),
-        eq(sources.id, input.sourceId),
-        eq(sources.ownerUserId, ctx.userId),
-        inArray(sources.kind, CIBLES),
-      ),
-    )
-    .for('update');
-  if (!target) return 'introuvable';
+  if (!(await lockTarget(tx, ctx, input.sourceId))) return 'introuvable';
   // Après le verrou, qu'une suppression du compte prend aussi (deleteAccount) : elle est validée ou pas commencée.
   // Un compte supprimé n'écrit plus, sa note restée comprise.
   const [author] = await tx

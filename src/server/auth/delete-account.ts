@@ -3,10 +3,9 @@ import { apiTokens } from '@/server/db/schema/api-tokens';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
-import { sources, versionsMemoire } from '@/server/db/schema/memory';
+import { versionsMemoire } from '@/server/db/schema/memory';
 import { aboutSuggestions } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { CIBLES } from '@/server/memory/versions';
 import type { TenantContext } from './tenant-context';
 
 // Supprimer son compte (0040) : la personne part, pas son travail. La ligne `user` reste, vidée et verrouillée, car
@@ -165,21 +164,8 @@ export async function deleteAccount(
   organizationToo: boolean,
 ): Promise<DeletionResult> {
   return withTenant(ctx, async (tx) => {
-    // Ses fils et ses notes d'abord, dans l'ordre de writeVersion (la cible, puis l'organisation et la personne par
-    // ses clés étrangères) : sinon l'un tient le fil en attendant l'organisation que l'autre tient en attendant le
-    // fil. Une version en cours est validée avant et part avec les autres ; celle qui attend voit le compte supprimé.
-    await tx
-      .select({ id: sources.id })
-      .from(sources)
-      .where(
-        and(
-          eq(sources.tenantId, ctx.tenantId),
-          eq(sources.ownerUserId, ctx.userId),
-          inArray(sources.kind, CIBLES),
-        ),
-      )
-      .orderBy(asc(sources.id))
-      .for('update');
+    // L'organisation d'abord, puis ses fils (supprimer_fil) : l'ordre de writeVersion (lockTarget). Une version en
+    // cours est validée avant et part avec les autres ; celle qui attend voit ensuite le compte supprimé.
     await lockMembers(tx, ctx.tenantId);
     const state = await readState(tx, ctx);
     if (!state.me) throw new Error('Membre actif introuvable');
@@ -266,6 +252,7 @@ export async function deleteAccount(
 // Réservé au propriétaire actif : tout part, pour tout le monde.
 export async function deleteOrganization(ctx: TenantContext): Promise<DeletionResult> {
   return withTenant(ctx, async (tx) => {
+    // L'organisation, puis ses fils par la cascade : l'ordre de writeVersion (lockTarget).
     await lockMembers(tx, ctx.tenantId);
     return removeOrganization(tx, ctx, await readState(tx, ctx));
   });

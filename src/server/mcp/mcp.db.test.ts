@@ -212,6 +212,23 @@ describe('serveur MCP', () => {
     });
   });
 
+  // T39 : seul le serveur crée un fil de travail (D21) ; remember n'a pas de type à choisir.
+  it('remember ne dépose jamais un fil de travail, même prié de le faire', async () => {
+    const paul = await setupPaul();
+
+    const result = await call(await connect(paul), 'remember', {
+      text: 'Le délai de livraison passe à trois semaines.',
+      kind: 'leon_fil',
+    });
+
+    const { sourceId } = result.structuredContent as { sourceId: string };
+    const kinds = await adminDb
+      .select({ id: sources.id, kind: sources.kind })
+      .from(sources)
+      .where(eq(sources.ownerUserId, paul.userId));
+    expect(kinds).toEqual([{ id: sourceId, kind: 'mcp_remember' }]);
+  });
+
   it('remember puis search : la note est retrouvée une fois le run indexé', async () => {
     const paul = await setupPaul();
     const client = await connect(paul);

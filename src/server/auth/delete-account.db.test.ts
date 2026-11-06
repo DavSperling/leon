@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { PipedreamConfig } from '@/server/connectors/pipedream';
 import { members, organizations, users } from '@/server/db/schema/auth';
@@ -7,7 +7,13 @@ import { connections } from '@/server/db/schema/connections';
 import { sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { adminDb, adminPool } from '@/test/db';
-import { createTestTenant, createTestUser, seedConnection, seedSource } from '@/test/fixtures';
+import {
+  createTestTenant,
+  createTestUser,
+  seedConnection,
+  seedSource,
+  seedThread,
+} from '@/test/fixtures';
 import { createApiToken, verifyApiToken } from './api-tokens';
 import { auth } from './auth';
 import {
@@ -174,6 +180,9 @@ describe('deleteAccount', () => {
     const bobConnectionId = await seedConnection(bob);
     const privateSource = await seedSource(alice, { title: 'Privée' });
     const sharedSource = await seedSource(alice, { title: 'Partagée' });
+    // Ses fils de travail sont tirés de sa mémoire et privés : ils partent avec elle (D21), pas ceux de Bob.
+    const aliceThread = await seedThread(alice);
+    const bobThread = await seedThread(bob);
     await shareWithTeam(alice, sharedSource.sourceId);
     await adminDb
       .update(sources)
@@ -251,6 +260,12 @@ describe('deleteAccount', () => {
         { id: sharedSource.sourceId, connectionId: null },
       ].toSorted((a, b) => a.id.localeCompare(b.id)),
     );
+    expect(
+      await adminDb
+        .select({ id: sources.id })
+        .from(sources)
+        .where(inArray(sources.id, [aliceThread, bobThread])),
+    ).toEqual([{ id: bobThread }]);
     const turnCount = await adminDb
       .select({ id: turns.id })
       .from(turns)

@@ -8,6 +8,7 @@ import {
   PROVIDER_IDS,
   projectKeyFromInput,
   SOURCE_KINDS,
+  TOOL_KINDS,
   TURN_TEXT_MAX,
   TURNS_PER_BATCH_MAX,
   TurnSchema,
@@ -48,6 +49,11 @@ describe('IngestPayloadSchema', () => {
       const body = { ...payload, source: { ...payload.source, kind } };
       expect(IngestPayloadSchema.safeParse(body).success, kind).toBe(false);
     }
+  });
+
+  it('refuse le fil de travail : seul le serveur crée un fil (D21)', () => {
+    const body = { ...payload, source: { ...payload.source, kind: 'leon_fil' } };
+    expect(IngestPayloadSchema.safeParse(body).success).toBe(false);
   });
 
   it('refuse un tour de rôle tool', () => {
@@ -171,12 +177,19 @@ describe('listes de types', () => {
     for (const kind of CAPTURE_KINDS) expect(PROVIDER_IDS).not.toContain(kind);
   });
 
-  it('SOURCE_KINDS = les types de capture, le document ajouté à la main, puis les 42 connecteurs, sans doublon', () => {
-    expect(SOURCE_KINDS).toEqual([...CAPTURE_KINDS, 'document', ...PROVIDER_IDS]);
-    expect(new Set(SOURCE_KINDS).size).toBe(SOURCE_KINDS.length);
+  it('TOOL_KINDS = les types de capture, le document ajouté à la main, puis les 42 connecteurs, sans doublon', () => {
+    expect(TOOL_KINDS).toEqual([...CAPTURE_KINDS, 'document', ...PROVIDER_IDS]);
+    expect(new Set(TOOL_KINDS).size).toBe(TOOL_KINDS.length);
   });
 
-  it('ITEM_NATURES : les dix natures de source (C4), dans cet ordre, sans doublon', () => {
+  // T39 : le fil de travail est un type de source que seul le serveur crée (D21) ; aucun outil ne le dépose.
+  it('SOURCE_KINDS = les types des outils, puis le fil de travail, hors de la capture', () => {
+    expect(SOURCE_KINDS).toEqual([...TOOL_KINDS, 'leon_fil']);
+    expect(CAPTURE_KINDS).not.toContain('leon_fil');
+    expect(TOOL_KINDS).not.toContain('leon_fil');
+  });
+
+  it('ITEM_NATURES : les onze natures de source (C4, puis le fil de travail de D21), dans cet ordre, sans doublon', () => {
     expect(ITEM_NATURES).toEqual([
       'conversation',
       'reunion',
@@ -188,6 +201,7 @@ describe('listes de types', () => {
       'fichier',
       'evenement',
       'commit',
+      'fil_de_travail',
     ]);
     expect(new Set(ITEM_NATURES).size).toBe(ITEM_NATURES.length);
   });

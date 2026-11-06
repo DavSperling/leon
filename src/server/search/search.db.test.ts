@@ -1,12 +1,17 @@
 import { randomUUID } from 'node:crypto';
+import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import type { ItemNature } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START, splitHighlights } from '@/lib/highlight';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { withTenant } from '@/server/db/with-tenant';
 import { EMBEDDING_DIMS, type Embedder, EmbedderError } from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
+import { seedSource, seedThread } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedPassages } from '@/test/seed-search';
 import { listActivity } from './activity';
+import { sourceConditions, textArray } from './filters-sql';
 import { EMBED_QUERY_TIMEOUT_MS, searchPassages } from './search';
 import type { SearchFilters, SearchPage } from './types';
 
@@ -804,6 +809,24 @@ describe('filtres', () => {
       'PR leon',
       'Session privée de Bob',
     ]);
+  });
+
+  // T39 : un fil de travail a la nature fil_de_travail par son type (D21), et `type` le filtre comme les autres. Il n'a
+  // ni tour ni passage, la recherche ne le rend donc jamais : la condition se vérifie sur la source.
+  it('donnent au fil de travail la nature fil_de_travail, que filtre type', async () => {
+    const { alice } = await team();
+    const thread = await seedThread(alice);
+    const { sourceId: other } = await seedSource(alice, { kind: 'github' });
+    const matching = (natures: ItemNature[]) =>
+      withTenant(alice, async (tx) => {
+        const { rows } = await tx.execute<{ id: string }>(sql`
+          select s.id from sources s
+          where s.id = any(${textArray([thread, other])}::uuid[]) and ${sourceConditions({ natures })}`);
+        return rows.map((row) => row.id);
+      });
+
+    expect(await matching(['fil_de_travail'])).toEqual([thread]);
+    expect(await matching(['conversation'])).toEqual([other]);
   });
 
   it('nomment les personnes que personne ne porte, et ne devinent pas', async () => {

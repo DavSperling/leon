@@ -1,4 +1,4 @@
-import { ITEM_NATURES, type ItemNature, SOURCE_KINDS, type SourceKind } from '@/capture/turn';
+import { ITEM_NATURES, type ItemNature, type SourceKind, TOOL_KINDS } from '@/capture/turn';
 import { stripHighlightMarks } from '@/lib/highlight';
 import { FILTER_ALIASES, NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
@@ -37,8 +37,9 @@ function squash(text: string): string {
     .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
+// Les outils seulement : un fil de travail n'est l'outil de personne, il se filtre par sa nature (`type:`).
 const KIND_BY_NAME = new Map<string, SourceKind>();
-for (const kind of SOURCE_KINDS) {
+for (const kind of TOOL_KINDS) {
   KIND_BY_NAME.set(squash(kind), kind);
   KIND_BY_NAME.set(squash(SOURCE_KIND_LABELS[kind]), kind);
 }

@@ -11,6 +11,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   mcp_remember: 'Note (MCP)',
   document: 'Document',
   ...PROVIDER_LABELS,
+  leon_fil: 'Leon',
 };
 
 // L'interface en anglais : les types de source, que la recherche lit aussi dans la barre (`type:meeting`).
@@ -25,6 +26,7 @@ export const NATURE_LABELS_EN: Record<ItemNature, string> = {
   fichier: 'File',
   evenement: 'Event',
   commit: 'Code change',
+  fil_de_travail: 'Work thread',
 };
 
 // Les filtres anglais de la barre, lus comme leur équivalent français : `from:` vaut `de:`. Ici pour que la

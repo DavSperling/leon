@@ -1,4 +1,4 @@
-import { ITEM_NATURES, projectKeyFromInput, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, projectKeyFromInput, TOOL_KINDS } from '@/capture/turn';
 import { NATURE_LABELS_EN } from '@/lib/labels';
 import { parseQuery } from './parse-query';
 import type { SearchFilters } from './types';
@@ -43,7 +43,7 @@ export function readToolFilters(
   if (outil !== '') {
     const tools = parseQuery(`outil:"${outil}"`, now).filters.tools;
     if (!tools) {
-      return { error: `Unknown tool: "${outil}". Known tools: ${SOURCE_KINDS.join(', ')}.` };
+      return { error: `Unknown tool: "${outil}". Known tools: ${TOOL_KINDS.join(', ')}.` };
     }
     filters.tools = tools;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ITEM_NATURES, SOURCE_KINDS } from '@/capture/turn';
+import { ITEM_NATURES, TOOL_KINDS } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
 import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { parseQuery } from './parse-query';
@@ -163,7 +163,7 @@ describe('parseQuery : les entrées bizarres', () => {
 // serait le même (un outil ajouté au catalogue) se confondraient, et `outil:x` filtrerait le mauvais. Le
 // parcours de tout le catalogue le garde.
 describe('parseQuery : le catalogue des outils et des types', () => {
-  it.each(SOURCE_KINDS.map((kind) => [kind]))(
+  it.each(TOOL_KINDS.map((kind) => [kind]))(
     'outil:%s se retrouve par son identifiant comme par son libellé, et par eux seuls',
     (kind) => {
       const label = SOURCE_KIND_LABELS[kind];
@@ -174,6 +174,13 @@ describe('parseQuery : le catalogue des outils et des types', () => {
       ]);
     },
   );
+
+  // T39 : un fil de travail n'est l'outil de personne (D21) ; il se filtre par sa nature, `type:fil_de_travail`.
+  it("outil:leon_fil n'est pas un filtre, ni par son identifiant ni par son libellé", () => {
+    expect(parse('outil:leon_fil').filters.tools).toBeUndefined();
+    expect(parse(`outil:"${SOURCE_KIND_LABELS.leon_fil}"`).filters.tools).toBeUndefined();
+    expect(parse('type:fil_de_travail').filters.natures).toEqual(['fil_de_travail']);
+  });
 
   it.each(ITEM_NATURES.map((nature) => [nature]))(
     'type:%s se retrouve au singulier comme au pluriel, et par lui seul',

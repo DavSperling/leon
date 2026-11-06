@@ -1,6 +1,6 @@
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
-import { sourceConditions } from '@/server/search/filters-sql';
+import { sourceConditions, sourceInfoFrom } from '@/server/search/filters-sql';
 import { readText } from './files';
 
 // Deux réglages de la requête de recherche (src/server/search/search.ts) qui ne changent aucun résultat, donc
@@ -43,5 +43,19 @@ describe('filtre depot', () => {
 
     expect(query.sql).not.toContain('acme');
     expect(query.params).toContain(key);
+  });
+});
+
+// T39 : un fil de travail a sa nature par son type, que seul le serveur écrit (D21), quoi que dise son `metadata`.
+describe('nature du fil de travail', () => {
+  it('vient du type leon_fil', () => {
+    const row = { id: 's1', title: null, lastTs: new Date(0) };
+
+    expect(sourceInfoFrom({ ...row, kind: 'leon_fil', metadata: {} }).nature).toBe(
+      'fil_de_travail',
+    );
+    expect(
+      sourceInfoFrom({ ...row, kind: 'leon_fil', metadata: { nature: 'ticket' } }).nature,
+    ).toBe('fil_de_travail');
   });
 });

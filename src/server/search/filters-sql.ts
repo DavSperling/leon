@@ -34,9 +34,11 @@ function allOf(conditions: SQL[]): SQL {
 }
 
 // Sans nature écrite, ou avec une nature que le code ne connaît pas : une conversation (la nature d'une source
-// de capture n'est écrite nulle part ; celle d'un connecteur est dans `metadata`, voir ingest-items.ts).
-export const NATURE_SQL = sql`(case when s.metadata->>'nature' = any(${textArray(ITEM_NATURES)})
-  then s.metadata->>'nature' else 'conversation' end)`;
+// de capture n'est écrite nulle part ; celle d'un connecteur est dans `metadata`, voir ingest-items.ts). Un fil de
+// travail a la sienne par son type (D21).
+const THREAD_KIND = 'leon_fil' satisfies SourceKind;
+export const NATURE_SQL = sql`(case when s.kind = ${THREAD_KIND} then 'fil_de_travail'
+  when s.metadata->>'nature' = any(${textArray(ITEM_NATURES)}) then s.metadata->>'nature' else 'conversation' end)`;
 
 // Dernière activité de la source : la date du dernier tour que l'ingestion a notée, à défaut celle du plus
 // récent des tours, à défaut celle de la création de la source.
@@ -124,10 +126,12 @@ export function sourceInfoFrom(row: {
     typeof row.metadata === 'object' && row.metadata !== null
       ? (row.metadata as Record<string, unknown>)
       : {};
-  const nature =
-    typeof metadata.nature === 'string' && NATURES.has(metadata.nature)
-      ? (metadata.nature as ItemNature)
-      : 'conversation';
+  const nature: ItemNature =
+    row.kind === THREAD_KIND
+      ? 'fil_de_travail'
+      : typeof metadata.nature === 'string' && NATURES.has(metadata.nature)
+        ? (metadata.nature as ItemNature)
+        : 'conversation';
   return {
     sourceId: row.id,
     kind: row.kind as SourceKind,

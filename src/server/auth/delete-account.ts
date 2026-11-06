@@ -206,6 +206,11 @@ export async function deleteAccount(
       .where(eq(users.id, ctx.userId));
     // La proposition « About you » est écrite d'après ses sources : elle part avec son « À propos ».
     await tx.delete(aboutSuggestions).where(eq(aboutSuggestions.userId, ctx.userId));
+    // Ses fils de travail, tirés de sa mémoire et privés, partent avec elle (D21) ; ses sessions restent, invisibles.
+    // L'app ne supprime pas de source : supprimer_fil (0051) le fait, borné à ses fils.
+    await tx.execute(sql`
+      select supprimer_fil(id) from sources
+      where tenant_id = ${ctx.tenantId} and kind = 'leon_fil' and owner_user_id = ${ctx.userId}`);
     await tx.update(members).set({ role: 'member' }).where(eq(members.userId, ctx.userId));
 
     // Plus de mot de passe, de session, de 2FA, ni de lien de réinitialisation déjà envoyé (sa valeur est l'id).

@@ -15,6 +15,7 @@ import {
   enqueueFilMaj,
   enqueueLiaison,
   getThreadsBoss,
+  LINKED_KINDS,
   RANGEMENT_QUEUE,
   type ThreadJob,
   ThreadJobSchema,
@@ -28,18 +29,22 @@ import {
 //   sans vecteur ou sans fournisseur, elle reste hors fil ; l'écriture des vecteurs d'un résumé la remet à ranger
 //   (embed-missing.ts) ;
 // - les fils de l'auteur qui ont sa branche ou une de ses PR fusionnent dans le plus ancien. L'absorbé reste, marqué
-//   `absorbe_par`, avec ses listes et ses versions (D21, tranché le 05/11) ; le rangement le saute ;
+//   `absorbe_par`, avec ses listes et ses versions (D21, tranché le 05/11) ; le rangement le saute. Une session passée
+//   d'une branche à l'autre garde dans ses faits les PR de la première : une PR qu'elle a déjà rangée dans un autre de
+//   ses fils, sans la branche courante, ne fait ni chercher ni fusionner, et n'entre pas dans le fil de la nouvelle ;
 // - un fil qui change est mis en file `fil-maj` (T43) : le rangement n'écrit jamais l'état. Il est aussi mis à relier
 //   (thread-links.ts, T42) : une PR ou un ticket relevé avant que le fil ait sa clé le rejoint alors.
 // Seul le filtre de l'auteur et de CODE_SESSION_KINDS choisit la session : jamais celle d'un collègue, même partagée.
 // Les journaux ne citent que des uuid, jamais une branche, un fichier ni une PR.
 //
 // Les verrous, toujours dans cet ordre : celui de l'auteur (consultatif, pour la transaction), l'organisation en FOR
-// KEY SHARE, puis les fils par lockTarget (versions.ts), dans l'ordre des ids, la fusion comprise. Un fil de branche
-// s'ouvre par la contrainte unique de `sources` (on conflict do nothing), puis se verrouille (D34). Le verrou de
-// l'auteur sérialise ses rangements : sans lui, deux sessions de branches neuves qui partagent une PR, rangées au même
-// moment, ouvriraient chacune son fil sans voir l'autre. Le rangement et la liaison des sources (thread-links.ts) le
-// prennent, toujours en premier : une fusion ne perd pas une source reliée au même moment.
+// KEY SHARE, puis les fils par lockTarget (versions.ts). Le rangement prend les siens dans l'ordre des ids, la fusion
+// comprise ; la liaison (thread-links.ts) non. Un fil de branche s'ouvre par la contrainte unique de `sources` (on
+// conflict do nothing), puis se verrouille (D34). Le verrou de l'auteur sérialise ses rangements et ses liaisons : sans
+// lui, deux sessions de branches neuves qui partagent une PR, rangées au même moment, ouvriraient chacune son fil sans
+// voir l'autre, et une source reliée pendant une fusion le serait au fil absorbé. C'est aussi lui qui ordonne les
+// verrous de plusieurs fils dans une transaction : un code qui en verrouille deux doit le prendre d'abord. Écrire une
+// version (writeVersion) ne prend qu'un fil.
 
 export const FIL = 'leon_fil' satisfies SourceKind;
 const FICHIERS_MAX = 50;
@@ -52,7 +57,9 @@ const RANGEMENT_CONCURRENCY = 2;
 // shortcut: une valeur prudente, deux fois plus stricte que celle de la recherche (MAX_VECTOR_DISTANCE, mesurée avec
 // voyage-4 sur des passages, pas sur des résumés) ; le lot 11 (T38) la règle sur des cas réels.
 const PROCHE_MAX_DISTANCE = 0.3;
-const PROCHE_JOURS = 30;
+export const PROCHE_JOURS = 30;
+// Les sources qu'un fil fait relier par la proximité de ses résumés, au plus (nearSources).
+const PROCHE_SOURCES_MAX = 20;
 // Les listes du `metadata` d'un fil (D21) que le rangement écrit et qu'une fusion réunit. `liees`, `tickets` et
 // `mots_cles` viennent de la liaison (thread-links.ts, T42).
 export type Liste =
@@ -133,7 +140,7 @@ export async function lockAuthor(tx: Tx, ctx: TenantContext): Promise<boolean> {
 
 // La session de l'auteur : le filtre `owner_user_id` en plus de la sécurité par ligne, et un kind de session de code.
 // `resume` : l'usage du dernier envoi de faits, comme à la lecture de l'état (versions.ts) ; retiré, l'ancien résumé
-// garde ses passages mais ne rattache plus.
+// garde ses passages mais ne rattache plus, ni la session ni d'autres par elle (anchor).
 async function readSession(
   tx: Tx,
   ctx: TenantContext,
@@ -198,24 +205,31 @@ export async function writeLists(
 }
 
 // Une clé d'un fil : cet élément dans une de ses listes.
-const has = (name: Liste, item: unknown) =>
+export const has = (name: Liste, item: unknown) =>
   sql`s.metadata->${name}::text @> ${JSON.stringify([item])}::jsonb`;
 
-// Les fils de l'auteur sur ce projet, hors absorbés, qui ont une de ces clés, dans l'ordre des ids (D34).
-async function findFils(
+// Les fils de l'auteur sur ce projet (null : sur tous), hors absorbés, qui ont une de ces clés, dans l'ordre des ids
+// (D34).
+export async function findFils(
   tx: Tx,
   ctx: TenantContext,
-  project: string,
+  project: string | null,
   keys: SQL[],
-): Promise<string[]> {
-  const { rows } = await tx.execute<{ id: string }>(sql`
-    select s.id from sources s
+): Promise<Fil[]> {
+  const { rows } = await tx.execute<Fil>(sql`
+    select s.id, s.metadata from sources s
     where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-      and s.metadata->>'project' = ${project} and s.metadata->>'absorbe_par' is null
-      and (${sql.join(keys, sql` or `)})
+      ${project === null ? sql`` : sql`and s.metadata->>'project' = ${project}`}
+      and s.metadata->>'absorbe_par' is null and (${sql.join(keys, sql` or `)})
     order by s.id`);
-  return rows.map((row) => row.id);
+  return rows;
 }
+
+// L'ancre de la proximité (D22), `s` et `t` : un passage du résumé d'une session de code de l'auteur qui garde l'usage
+// `resume`, comme readSession.
+const anchor = (ctx: TenantContext) => sql`s.owner_user_id = ${ctx.userId}
+  and s.kind = any(${textArray(CODE_SESSION_KINDS)}) and t.external_id like ${RESUME_LIKE}
+  and coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false)`;
 
 // Le fil de l'auteur le plus proche d'une source (D22) : la plus petite distance entre un de ses passages (ceux de son
 // résumé pour une session, `resumeOnly`) et un passage du résumé d'une autre de ses sessions du fil, datés à
@@ -251,13 +265,47 @@ export async function nearestFil(
       and m.ts + make_interval(days => ${PROCHE_JOURS})
     where f.tenant_id = ${ctx.tenantId} and f.owner_user_id = ${ctx.userId} and f.kind = ${FIL}
       ${project === null ? sql`` : sql`and f.metadata->>'project' = ${project}`}
-      and f.metadata->>'absorbe_par' is null and s.id <> ${sourceId} and s.owner_user_id = ${ctx.userId}
-      and s.kind = any(${textArray(CODE_SESSION_KINDS)}) and t.external_id like ${RESUME_LIKE}
+      and f.metadata->>'absorbe_par' is null and s.id <> ${sourceId} and ${anchor(ctx)}
     group by f.id
     having min(v.embedding <=> m.embedding) < ${PROCHE_MAX_DISTANCE}
     order by dist, f.id
     limit 1`);
   return nearest?.id ?? null;
+}
+
+// Dans l'autre sens : les sources que la proximité peut relier (LINKED_KINDS), visibles de l'auteur (RLS), pas encore
+// liées à ce fil, dont un passage est sous le seuil d'un passage du résumé d'une session du fil, à PROCHE_JOURS au
+// plus, les plus proches d'abord. Une note ou une réunion relevée avant le premier résumé du fil le rejoint ainsi ; la
+// liaison (linkOne) lui choisit ensuite son fil, le plus proche.
+// shortcut: toutes les paires de passages des 30 jours sont comparées, sans l'index hnsw ; passer par l'index, comme
+// searchPassages, quand une organisation aura des dizaines de milliers de passages par mois.
+export async function nearSources(
+  tx: Tx,
+  ctx: TenantContext,
+  filId: string,
+  model: string,
+): Promise<string[]> {
+  const { rows } = await tx.execute<{ id: string }>(sql`
+    select o.id
+    from sources f
+    cross join lateral jsonb_array_elements(f.metadata->'sessions') e
+    join sources s on s.tenant_id = f.tenant_id and s.id = (e->>'id')::uuid
+    join passages p on p.tenant_id = s.tenant_id and p.source_id = s.id
+    join turns t on t.tenant_id = p.tenant_id and t.id = p.turn_id
+    join passage_vectors v on v.passage_id = p.id and v.model = ${model}
+    join passages op on op.tenant_id = p.tenant_id
+      and op.ts between p.ts - make_interval(days => ${PROCHE_JOURS})
+      and p.ts + make_interval(days => ${PROCHE_JOURS})
+    join sources o on o.tenant_id = op.tenant_id and o.id = op.source_id
+    join passage_vectors ov on ov.passage_id = op.id and ov.model = ${model}
+    where f.tenant_id = ${ctx.tenantId} and f.id = ${filId} and ${anchor(ctx)}
+      and o.kind = any(${textArray([...LINKED_KINDS])})
+      and not coalesce(f.metadata->'liees', '[]'::jsonb) @> jsonb_build_array(jsonb_build_object('id', o.id))
+    group by o.id
+    having min(v.embedding <=> ov.embedding) < ${PROCHE_MAX_DISTANCE}
+    order by min(v.embedding <=> ov.embedding), o.id
+    limit ${PROCHE_SOURCES_MAX}`);
+  return rows.map((row) => row.id);
 }
 
 async function range(
@@ -270,17 +318,27 @@ async function range(
   const session = await readSession(tx, ctx, sessionId);
   if (!session) return 'sans-objet';
   const { faits, project } = session;
+  if (project === null) return 'hors-fil';
   const branch =
     faits.branche !== null && !DEFAULT_BRANCHES.has(faits.branche) ? faits.branche : null;
-  // Comme les clés des PR de GitHub : le dépôt sans la casse (start-context.ts).
-  const prs = faits.prs.map((pr) => ({ repo: pr.repo.toLowerCase(), numero: pr.numero }));
-  if (project === null) return 'hors-fil';
+  // Les PR que la session a rangées dans un autre de ses fils, qui n'a pas sa branche : elle a changé de branche depuis.
+  const elsewhere = new Set(
+    (branch === null ? [] : await findFils(tx, ctx, project, [has('sessions', { id: sessionId })]))
+      .filter((fil) => !listOf(fil, 'branches').includes(branch))
+      .flatMap((fil) => listOf(fil, 'prs').map(keyOf)),
+  );
+  // Comme les clés des PR de GitHub : le dépôt sans la casse (start-context.ts). Rangées comme C1.
+  const prs = faits.prs
+    .map((pr) => ({ ...pr, repo: pr.repo.toLowerCase() }))
+    .filter((pr) => !elsewhere.has(keyOf(pr)));
 
   let ids: string[];
   if (branch === null && prs.length === 0) {
     // Sans clé (T41) : un fil qui l'a déjà, sinon le plus proche, jamais un fil ouvert. Un seul : deux fils qui l'ont
     // (elle a changé de branche) ne partagent ni branche ni PR, et ne fusionnent pas (D22).
-    ids = (await findFils(tx, ctx, project, [has('sessions', { id: sessionId })])).slice(0, 1);
+    ids = (await findFils(tx, ctx, project, [has('sessions', { id: sessionId })]))
+      .slice(0, 1)
+      .map((fil) => fil.id);
     if (ids.length === 0 && model !== null && session.resume) {
       const nearest = await nearestFil(tx, ctx, sessionId, project, model, true);
       if (nearest !== null) ids = [nearest];
@@ -290,10 +348,12 @@ async function range(
     // Le fil d'une branche existe dès qu'elle a été vue, même absorbé : sa clé ne s'ouvre qu'une fois, et le fil gardé
     // reprend ses branches.
     if (branch !== null) await createFil(tx, ctx, project, branch);
-    ids = await findFils(tx, ctx, project, [
-      ...(branch === null ? [] : [has('branches', branch)]),
-      ...prs.map((pr) => has('prs', pr)),
-    ]);
+    ids = (
+      await findFils(tx, ctx, project, [
+        ...(branch === null ? [] : [has('branches', branch)]),
+        ...prs.map((pr) => has('prs', { repo: pr.repo, numero: pr.numero })),
+      ])
+    ).map((fil) => fil.id);
     if (ids.length === 0) {
       const created = branch === null ? await createFil(tx, ctx, project, null) : null;
       if (created === null) throw new Error('fil de la branche introuvable');
@@ -318,9 +378,14 @@ async function range(
   };
   const merged = (name: Liste) =>
     union(listOf(keeper, name), ...others.map((fil) => listOf(fil, name)));
+  const knownPrs = new Set(merged('prs').map(keyOf));
   const lists: Record<Liste, unknown[]> = {
     branches: union(merged('branches'), branch === null ? [] : [branch]),
-    prs: union(merged('prs'), prs),
+    // Une PR déjà dans le fil garde son entrée : `par` peut changer d'une session à l'autre.
+    prs: union(
+      merged('prs'),
+      prs.filter((pr) => !knownPrs.has(keyOf(pr))),
+    ),
     sessions: union(merged('sessions'), [entry]),
     fichiers: union(merged('fichiers'), faits.fichiers).slice(-FICHIERS_MAX),
     liees: merged('liees'),

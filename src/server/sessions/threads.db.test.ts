@@ -133,6 +133,8 @@ async function summarize(
 }
 
 const NEAR = 'Rangement des fils de travail par la proximité des résumés de session';
+// Le temps qu'une transaction lancée atteigne le verrou que le test retient, comme dans delete-account.db.test.ts.
+const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
 
 type Fil = { id: string; externalId: string; acl: string[]; metadata: Record<string, unknown> };
 
@@ -232,7 +234,8 @@ describe('fileSession', () => {
     const fils = await filsOf(paul);
     expect(fils).toHaveLength(1);
     expect(sessionIds(fils[0])).toEqual([onBranch, onMain].sort());
-    expect(fils[0]?.metadata.prs).toEqual([{ repo: 'acme/leon', numero: 140 }]);
+    // Le dépôt sans la casse ; une PR déjà dans le fil garde son entrée (C1).
+    expect(fils[0]?.metadata.prs).toEqual([{ repo: 'acme/leon', numero: 140, par: 'pr-link' }]);
   });
 
   it('une session sans branche dont aucun fil n’a la PR ouvre le fil de cette PR', async () => {
@@ -274,13 +277,36 @@ describe('fileSession', () => {
     expect(absorbed?.metadata.branches).toEqual(['paul/b']);
     expect(keeper?.metadata.absorbes).toEqual([absorbed?.id]);
     expect(keeper?.metadata.branches).toEqual(['paul/a', 'paul/b']);
-    expect(keeper?.metadata.prs).toEqual([{ repo: 'acme/leon', numero: 110 }]);
+    expect(keeper?.metadata.prs).toEqual([pr]);
     expect(keeper?.metadata.fichiers).toEqual([
       'src/server/sessions/threads.ts',
       'src/server/sessions/threads-queue.ts',
     ]);
     expect(sessionIds(keeper)).toEqual([onA, onB].sort());
     expect(mocks.enqueueFilMaj.mock.calls).toEqual([[jobOf(paul, keeper?.id ?? '')]]);
+  });
+
+  it('une session passée de sa branche et de sa PR à une autre branche : les deux fils restent, sans fusion', async () => {
+    const { paul } = await team();
+    const pr = { repo: 'acme/leon', numero: 112, par: 'gh-pr-create' } as const;
+    // Le fil de la branche b vient d'un autre travail.
+    const other = await session(paul, { branche: 'paul/b' });
+    await file(paul, other);
+    const externalId = `session-${randomUUID()}`;
+    const moving = await session(paul, { branche: 'paul/a', prs: [pr] }, externalId);
+    await file(paul, moving);
+
+    // Ses faits gardent la PR de la branche a : elle ne fait ni chercher ni fusionner le fil de b.
+    expect(await session(paul, { branche: 'paul/b', prs: [pr] }, externalId)).toBe(moving);
+    expect(await file(paul, moving)).toBe('range');
+    expect(await file(paul, moving)).toBe('inchange');
+
+    const fils = await filsOf(paul);
+    expect(fils.map((fil) => fil.metadata.absorbe_par)).toEqual([undefined, undefined]);
+    const [filB, filA] = fils;
+    expect(filA?.metadata).toMatchObject({ branches: ['paul/a'], prs: [pr], absorbes: [] });
+    expect(filB?.metadata).toMatchObject({ branches: ['paul/b'], prs: [], absorbes: [] });
+    expect(sessionIds(filB)).toEqual([other, moving].sort());
   });
 
   it('après une fusion, l’historique des deux fils reste lisible, aucune version n’est supprimée, et une session de plus rejoint le fil gardé', async () => {
@@ -403,6 +429,29 @@ describe('fileSession', () => {
     expect(await file(paul, sourceId)).toBe('sans-objet');
     expect(await filsOf(paul)).toEqual([]);
   });
+
+  it('le compte supprimé entre la résolution de l’auteur et le rangement : rien n’est rangé', async () => {
+    const { paul } = await team();
+    const sourceId = await session(paul);
+    // Retient la suppression du compte au milieu, comme deleteAccount : l'organisation prise, l'auteur marqué supprimé.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from organization where id = $1 for update', [paul.tenantId]);
+      await holding.query('update "user" set deleted_at = now() where id = $1', [paul.userId]);
+      const filing = file(paul, sourceId);
+      await pause();
+      await holding.query('commit');
+
+      expect(await filing).toBe('sans-objet');
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+    expect(await filsOf(paul)).toEqual([]);
+    expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+    expect(mocks.enqueueLiaison).not.toHaveBeenCalled();
+  });
 });
 
 describe('fileSession, une session sans clé (T41)', () => {
@@ -473,6 +522,23 @@ describe('fileSession, une session sans clé (T41)', () => {
     expect(sessionIds(fils[0])).toEqual([onBranch]);
     expect(await filsOf(marie)).toEqual([]);
     expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+
+  it('le résumé d’une session qui a perdu l’usage resume ne rattache plus : hors fil', async () => {
+    const { paul } = await team();
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, NEAR);
+    // Retiré sur le poste : son ancien résumé et ses vecteurs restent.
+    await adminDb
+      .update(sources)
+      .set({ metadata: sql`${sources.metadata} || '{"usages": []}'::jsonb` })
+      .where(eq(sources.id, onBranch));
+    const onMain = await session(paul, { branche: 'main' });
+    await summarize(paul, onMain, `${NEAR}, suite`);
+
+    expect(await file(paul, onMain)).toBe('hors-fil');
+    expect(sessionIds((await filsOf(paul))[0])).toEqual([onBranch]);
   });
 
   it('un résumé proche de plus de 30 jours : hors fil', async () => {

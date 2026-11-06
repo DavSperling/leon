@@ -1,5 +1,5 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
-import { PROVIDER_IDS, repoOf } from '@/capture/turn';
+import { CAPTURE_KINDS, CODE_SESSION_KINDS, PROVIDER_IDS, repoOf } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { projectOfSource } from '@/server/briefing/queue';
 import { db } from '@/server/db/client';
@@ -14,10 +14,14 @@ import {
   boundMots,
   FIL,
   type Fil,
+  findFils,
+  has,
   keyOf,
   listOf,
   lockAuthor,
   nearestFil,
+  nearSources,
+  PROCHE_JOURS,
   TICKETS_MAX,
   union,
   writeLists,
@@ -33,22 +37,27 @@ import {
 
 // Relier les sources aux fils de travail (T42 ; D21, D22, D34 et D35 du plan de la mémoire à disposition), sans
 // modèle. Une source qu'un fil peut relier (LINKED_KINDS) l'est aux fils de chaque membre qui la voit, sous ses droits
-// (withTenant), une transaction par membre :
+// (withTenant), une transaction par membre. Une note ou une conversation ne l'est qu'aux fils de son auteur, même
+// posée avec une ACL d'équipe (comme listSources) : une note d'une collègue ne parle jamais pour mon agent (D36).
 // - un outil (connecteur ou GitHub) d'abord par clé exacte (cleOf) : une PR par son numéro ou par sa branche (jamais
 //   celle d'un fork), un ticket par l'identifiant (ABC-123) qui ouvre son titre, cité par une branche du fil ou par le
 //   titre, le corps ou la branche d'une PR reliée, et un message qui cite l'URL d'une PR ou une branche du fil ;
 // - sinon, et toujours pour une note, un document ou une conversation web, par proximité (nearestFil) : le fil le plus
 //   proche, sur le projet de la source quand elle en a un, à 30 jours au plus, sous le seuil ;
 // - profondeur 2 au plus (D22) : une PR reliée fait relier les tickets qu'elle cite, et rien plus loin.
-// Un fil qui change (le rangement, T40) est relié de l'autre côté : les PR et les tickets visibles de ses clés.
-// `liees` ne garde que l'id et ce qui relie (`cle`), `mots_cles` les mots du titre d'un outil (D21) : jamais le texte
-// d'un tour. Une source devenue invisible reste dans `liees`, les lectures font la jointure sous RLS (D35) ; une source
-// retirée de son outil en sort (unlinkSources). Un fil qui change est mis en file `fil-maj` (T43) : la liaison n'écrit
-// jamais l'état. Les verrous sont ceux du rangement : l'auteur (lockAuthor), puis chaque fil par lockTarget. Les
-// journaux ne citent que des uuid.
+// Un fil qui change (le rangement, T40), ou dont une session a les vecteurs de son résumé, est relié de l'autre côté
+// (linkFil) : une source relevée avant que le fil ait la clé ou le résumé qui la relie le rejoint alors.
+// `liees` ne garde que l'id et ce qui relie (`cle`), `mots_cles` les mots du titre d'une source liée (D21), sauf d'une
+// note, dont le titre est le début du texte : jamais le texte d'un tour. Une source devenue invisible reste dans
+// `liees`, les lectures font la jointure sous RLS (D35) ; une source retirée de son outil ou un document supprimé en
+// sort (unlinkSources). Un fil qui change est mis en file `fil-maj` (T43) : la liaison n'écrit jamais l'état. Les
+// verrous : l'auteur (lockAuthor), puis chaque fil par lockTarget, pas dans l'ordre des ids ; c'est le verrou de
+// l'auteur, pris d'abord, qui les ordonne (threads.ts). Les journaux ne citent que des uuid.
 
 const LIAISON_CONCURRENCY = 2;
 const TOOLS: ReadonlySet<string> = new Set(PROVIDER_IDS);
+const CAPTURES: ReadonlySet<string> = new Set(CAPTURE_KINDS);
+const CODE_SESSIONS: ReadonlySet<string> = new Set(CODE_SESSION_KINDS);
 // Un identifiant de ticket (Linear, Jira…) cité dans un texte, et celui qui ouvre le titre d'un ticket.
 const TICKET = /\b[A-Z][A-Z0-9]{1,9}-\d{1,7}\b/g;
 const LEADING_TICKET = /^([A-Z][A-Z0-9]{1,9}-\d{1,7})(?:\D|$)/;
@@ -87,11 +96,14 @@ const citedPrs = (text: string): Pr[] =>
     numero: Number(match[2]),
   }));
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-// Une branche citée telle quelle, pas un morceau d'une autre (paul/fils n'est pas dans paul/fils-2).
 // shortcut: seulement une branche à séparateur (/, - ou _) : « dev » ou « test » se lisent dans n'importe quel message ;
 // revoir si une équipe nomme ses branches d'un seul mot.
+const citable = (branch: string) => /[/_-]/.test(branch);
+// Une branche citée telle quelle, pas un morceau d'une autre (paul/fils n'est pas dans paul/fils-2).
 const cites = (text: string, branch: string) =>
-  /[/_-]/.test(branch) && new RegExp(`(^|[^\\w./-])${escapeRegExp(branch)}($|[^\\w/-])`).test(text);
+  citable(branch) && new RegExp(`(^|[^\\w./-])${escapeRegExp(branch)}($|[^\\w/-])`).test(text);
+// Un texte à chercher tel quel dans un motif LIKE.
+const likeText = (text: string) => text.replace(/[\\%_]/g, '\\$&');
 // Les mots d'un titre d'outil, sans ponctuation, MOTS_MAX caractères au plus (D21).
 const motsOf = (title: string | null) =>
   (title?.match(/[\p{L}\p{N}][\p{L}\p{N}._-]*/gu) ?? []).join(' ').slice(0, MOTS_MAX);
@@ -164,19 +176,22 @@ async function readFil(tx: Tx, ctx: TenantContext, id: string): Promise<Fil | nu
   return row ? { id, metadata: row.metadata } : null;
 }
 
-// La source, si l'auteur la voit (RLS) et qu'un fil peut la relier.
+// La source, si l'auteur la voit (RLS) et qu'un fil peut la relier. Une note ou une conversation : seulement la sienne.
 async function readSource(tx: Tx, ctx: TenantContext, sourceId: string): Promise<Source | null> {
-  const [row] = await tx
+  const [found] = await tx
     .select({
       id: sources.id,
       kind: sources.kind,
       externalId: sources.externalId,
       title: sources.title,
       metadata: sources.metadata,
+      ownerUserId: sources.ownerUserId,
     })
     .from(sources)
     .where(and(eq(sources.tenantId, ctx.tenantId), eq(sources.id, sourceId)));
-  if (!row || !LINKED_KINDS.has(row.kind)) return null;
+  if (!found || !LINKED_KINDS.has(found.kind)) return null;
+  const { ownerUserId, ...row } = found;
+  if (CAPTURES.has(row.kind) && ownerUserId !== ctx.userId) return null;
   // Les clés exactes ne valent que pour un outil : seuls ses tours sont lus.
   const rows = TOOLS.has(row.kind)
     ? await tx
@@ -204,16 +219,18 @@ async function readFils(tx: Tx, ctx: TenantContext): Promise<Keys[]> {
 }
 
 // Les outils visibles de l'auteur que ces clés d'un fil relient : une PR par son numéro ou par sa branche, un ticket par
-// l'identifiant qui ouvre son titre. cleOf décide ensuite, comme pour une source indexée.
-// shortcut: un message qui cite une PR ou une branche n'est relié qu'à son indexation, pas quand un fil prend cette clé
-// plus tard (il faudrait relire tous les tours) ; une source proche non plus, quand un fil reçoit plus tard un résumé.
-// Les relire par le tic des vecteurs le jour où ça se voit.
+// l'identifiant qui ouvre son titre, et, des PROCHE_JOURS derniers jours, un message dont un passage cite une URL de PR
+// ou une branche du fil. cleOf décide ensuite, comme pour une source indexée.
 async function keySources(
   tx: Tx,
   ctx: TenantContext,
   keys: { prs: Pr[]; branches: string[]; repo: string | null; tickets: string[] },
 ): Promise<string[]> {
   const prIds = keys.prs.map((pr) => `pr:${pr.repo}#${pr.numero}`);
+  const cited = [
+    ...keys.prs.map((pr) => `%github.com/${likeText(pr.repo)}/pull/${pr.numero}%`),
+    ...keys.branches.filter(citable).map((branch) => `%${likeText(branch)}%`),
+  ];
   const { rows } = await tx.execute<{ id: string }>(sql`
     select s.id from sources s
     where s.tenant_id = ${ctx.tenantId} and s.kind = any(${textArray(PROVIDER_IDS)}) and (
@@ -221,7 +238,15 @@ async function keySources(
       or (s.kind = 'github' and s.external_id like 'pr:%'
         and lower(s.metadata->'origin'->>'tete') = ${keys.repo}
         and s.metadata->'origin'->>'branche' = any(${textArray(keys.branches)}))
-      or substring(s.title from ${LEADING_TICKET_SQL}) = any(${textArray(keys.tickets)}))
+      or substring(s.title from ${LEADING_TICKET_SQL}) = any(${textArray(keys.tickets)})
+      ${
+        cited.length === 0
+          ? sql``
+          : sql`or s.id in (
+        select p.source_id from passages p
+        where p.tenant_id = ${ctx.tenantId} and p.ts > now() - make_interval(days => ${PROCHE_JOURS})
+          and p.text ilike any(${textArray(cited)}))`
+      })
     order by s.id
     limit ${KEY_SOURCES_MAX}`);
   return rows.map((row) => row.id);
@@ -242,8 +267,8 @@ async function attach(
   if (!fil || fil.metadata.absorbe_par !== undefined) return null;
   const known = listOf(fil, 'tickets');
   const added = tickets.filter((ticket) => !known.includes(ticket));
-  // Seul le titre d'un outil donne des mots : celui d'une note est le début de son texte (remember-tool.ts).
-  const mots = TOOLS.has(source.kind) ? motsOf(source.title) : '';
+  // Le titre d'une note est le début de son texte (remember-tool.ts) : il ne donne pas de mots.
+  const mots = source.kind === 'mcp_remember' ? '' : motsOf(source.title);
   const changed = await writeLists(tx, filId, {
     liees: union(listOf(fil, 'liees'), [{ id: source.id, cle }]),
     mots_cles: boundMots(
@@ -288,11 +313,13 @@ async function linkOne(
   }
 }
 
-// Un fil qui change (le rangement) : les tickets de ses branches, puis les outils que ses clés relient.
+// Un fil qui change (le rangement) : les tickets de ses branches, les outils que ses clés relient, puis, avec un
+// fournisseur de vecteurs, les sources proches de ses résumés.
 async function linkFil(
   tx: Tx,
   ctx: TenantContext,
   filId: string,
+  model: string | null,
   changed: Set<string>,
 ): Promise<void> {
   if (!(await lockTarget(tx, ctx, filId))) return;
@@ -305,6 +332,10 @@ async function linkFil(
   const repo = keys.project === null ? null : repoOf(keys.project);
   for (const id of await keySources(tx, ctx, { ...keys, repo })) {
     await linkOne(tx, ctx, id, null, 1, changed);
+  }
+  if (model === null) return;
+  for (const id of await nearSources(tx, ctx, filId, model)) {
+    await linkOne(tx, ctx, id, model, 1, changed);
   }
 }
 
@@ -329,8 +360,9 @@ async function queueFilMaj(ctx: TenantContext, filId: string): Promise<void> {
 }
 
 // Relie la source ou le fil du job (D22), et met en file `fil-maj` chaque fil changé, qu'elle rend. Un fil se relie
-// pour son auteur ; une source, pour chaque membre de l'organisation qui la voit. Idempotent : relancée, elle ne change
-// rien. Sans fournisseur de vecteurs, rien n'est relié par proximité.
+// pour son auteur, comme les fils d'une session de code (les vecteurs de son résumé écrits) ; une source, pour chaque
+// membre de l'organisation qui la voit. Idempotent : relancée, elle ne change rien. Sans fournisseur de vecteurs, rien
+// n'est relié par proximité.
 // shortcut: chaque membre est relu, même sans aucun fil ; lister les auteurs de fils par une fonction (comme
 // briefings_du_projet) quand une organisation dépasse quelques dizaines de membres.
 export async function linkSource(
@@ -351,15 +383,20 @@ export async function linkSource(
   );
   if (!source) return [];
   const isFil = source.kind === FIL;
+  const isSession = CODE_SESSIONS.has(source.kind);
   const changed: string[] = [];
-  for (const userId of isFil ? [job.ownerUserId] : await memberIds(job.tenantId)) {
+  for (const userId of isFil || isSession ? [job.ownerUserId] : await memberIds(job.tenantId)) {
     const ctx = await resolveTenantContext(userId, job.tenantId);
     if (!ctx) continue;
     const fils = await withTenant(ctx, async (tx) => {
       const set = new Set<string>();
       if (!(await lockAuthor(tx, ctx))) return set;
-      if (isFil) await linkFil(tx, ctx, job.sourceId, set);
-      else await linkOne(tx, ctx, job.sourceId, model, 1, set);
+      if (isFil) await linkFil(tx, ctx, job.sourceId, model, set);
+      else if (isSession) {
+        for (const fil of await findFils(tx, ctx, null, [has('sessions', { id: job.sourceId })])) {
+          await linkFil(tx, ctx, fil.id, model, set);
+        }
+      } else await linkOne(tx, ctx, job.sourceId, model, 1, set);
       return set;
     });
     for (const fil of fils) {
@@ -370,16 +407,21 @@ export async function linkSource(
   return changed;
 }
 
-// Des sources retirées de leur outil (removeConnectorItems) quittent les fils qui les relient, et ces fils sont mis en
-// file `fil-maj` (D22) : une version dont une entrée a disparu ne se lit déjà plus (D33). Les sources sont parties : un
-// échec est journalisé, il ne les fait pas revenir.
-// shortcut: seul le retrait d'un connecteur est suivi ; un document supprimé (supprimer_document) reste dans `liees`,
-// invisible de toute lecture (D35), jusqu'à ce que sa suppression appelle aussi cette fonction.
+// Des sources retirées de leur outil (removeConnectorItems) ou des documents supprimés (documents.ts) quittent les
+// fils qui les relient, et ces fils sont mis en file `fil-maj` (D22) : une version dont une entrée a disparu ne se lit
+// déjà plus (D33). Les sources sont parties : un échec est journalisé, il ne les fait pas revenir, et ne remonte pas.
 export async function unlinkSources(tenantId: string, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
   const gone = new Set(ids);
   const kept = (list: unknown[]) => list.filter((item) => !gone.has(keyOf(item)));
-  for (const userId of await memberIds(tenantId)) {
+  let userIds: string[];
+  try {
+    userIds = await memberIds(tenantId);
+  } catch (error) {
+    logError('thread_links.unlink_failed', error, { tenantId });
+    return;
+  }
+  for (const userId of userIds) {
     try {
       const ctx = await resolveTenantContext(userId, tenantId);
       if (!ctx) continue;

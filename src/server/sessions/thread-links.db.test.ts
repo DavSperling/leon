@@ -7,11 +7,13 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { removeConnectorItems } from '@/server/connectors/ingest-items';
 import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
+import { addDocument, deleteDocument, deleteFolder } from '@/server/documents/documents';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { createIngestRun, insertNewTurns } from '@/server/ingest/ingest-turns';
 import { recordFacts } from '@/server/ingest/record-facts';
 import { listVersions, readLatest, readVersion, writeVersion } from '@/server/memory/versions';
+import type { PipelineJob } from '@/server/pipeline/queue';
 import { indexIngestRun } from '@/server/search/index-run';
 import { searchPassages } from '@/server/search/search';
 import { adminDb, adminPool } from '@/test/db';
@@ -28,7 +30,13 @@ const mocks = vi.hoisted(() => ({
   enqueueFilMaj: vi.fn(),
   enqueueRangement: vi.fn(),
   enqueueLiaison: vi.fn(),
+  enqueuePipelineStep: vi.fn(),
   work: vi.fn(),
+}));
+// L'envoi d'un document met en file son indexation : le test la lance à la main.
+vi.mock('@/server/pipeline/queue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/server/pipeline/queue')>()),
+  enqueuePipelineStep: mocks.enqueuePipelineStep,
 }));
 vi.mock('./threads-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./threads-queue')>()),
@@ -46,7 +54,12 @@ const tenantIds: string[] = [];
 const factice = createFakeEmbedder();
 
 beforeEach(() => {
-  for (const mock of [mocks.enqueueFilMaj, mocks.enqueueRangement, mocks.enqueueLiaison]) {
+  for (const mock of [
+    mocks.enqueueFilMaj,
+    mocks.enqueueRangement,
+    mocks.enqueueLiaison,
+    mocks.enqueuePipelineStep,
+  ]) {
     mock.mockReset();
     mock.mockResolvedValue(undefined);
   }
@@ -68,11 +81,15 @@ const jobOf = (owner: TenantContext, sourceId: string): ThreadJob => ({
   ownerUserId: owner.userId,
 });
 
-// Une session de code de Claude Code, rangée dans son fil comme par le worker du rangement.
-async function filed(owner: TenantContext, extra: Partial<SessionFacts> = {}): Promise<string> {
+// Une session de code de Claude Code, ses faits reçus.
+async function sessionOf(
+  owner: TenantContext,
+  extra: Partial<SessionFacts> = {},
+  externalId = `session-${randomUUID()}`,
+): Promise<string> {
   const { sourceId } = await recordFacts(owner, {
     kind: 'claude_code',
-    external_id: `session-${randomUUID()}`,
+    external_id: externalId,
     project: PROJECT,
     accord: 2,
     faits: {
@@ -91,6 +108,16 @@ async function filed(owner: TenantContext, extra: Partial<SessionFacts> = {}): P
     },
     fin: true,
   });
+  return sourceId;
+}
+
+// Une session rangée dans son fil comme par le worker du rangement.
+async function filed(
+  owner: TenantContext,
+  extra: Partial<SessionFacts> = {},
+  externalId?: string,
+): Promise<string> {
+  const sourceId = await sessionOf(owner, extra, externalId);
   await fileSession(jobOf(owner, sourceId), { embedder: factice });
   return sourceId;
 }
@@ -163,6 +190,25 @@ const pr = (owner: TenantContext, numero: number, branche: string, title: string
 
 const link = (indexer: TenantContext, sourceId: string, embedder: Embedder | null = factice) =>
   linkSource(jobOf(indexer, sourceId), { embedder });
+
+// Un document envoyé par le site, indexé comme par le worker de la recherche ; rend sa source.
+async function upload(
+  owner: TenantContext,
+  name: string,
+  text: string,
+  folder?: { id: string; name: string; path: string },
+): Promise<string> {
+  await addDocument(owner, new File([text], name), folder);
+  const job = mocks.enqueuePipelineStep.mock.lastCall?.[1] as PipelineJob;
+  expect(await indexIngestRun(job, { embedder: factice })).toBe('indexe');
+  const { rows } = await adminPool.query('select source_id from ingest_runs where id = $1', [
+    job.ingestRunId,
+  ]);
+  return rows[0].source_id as string;
+}
+
+// Le temps qu'une transaction lancée atteigne le verrou que le test retient, comme dans delete-account.db.test.ts.
+const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
 
 type Fil = { id: string; metadata: Record<string, unknown> };
 
@@ -332,6 +378,73 @@ describe('linkSource, par clé exacte', () => {
     expect((await onlyFil(paul)).metadata.liees).toEqual([]);
     expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
   });
+
+  it('une note ou une conversation d’une collègue n’entre jamais dans mon fil, même visible de moi', async () => {
+    const { paul, marie } = await team();
+    const session = await filed(paul);
+    await summarize(paul, session, NEAR);
+    const note = await item(marie, {
+      kind: 'mcp_remember',
+      title: NEAR,
+      texts: [`${NEAR}, à retenir`],
+      acl: [marie.tenantId],
+      role: 'user',
+    });
+    const conversation = await item(marie, {
+      kind: 'claude_ai',
+      title: 'Les fils',
+      texts: [`${NEAR}, en conversation`],
+      acl: [marie.userId, paul.userId],
+      role: 'user',
+    });
+    const { id } = await onlyFil(paul);
+    mocks.enqueueFilMaj.mockClear();
+
+    expect(await link(marie, note)).toEqual([]);
+    expect(await link(marie, conversation)).toEqual([]);
+    // Ni depuis le fil, par la proximité de son résumé.
+    expect(await link(paul, id)).toEqual([]);
+
+    expect((await onlyFil(paul)).metadata.liees).toEqual([]);
+    expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+
+  it('un message relevé avant que le fil ait la branche ou la PR qu’il cite le rejoint quand le fil la prend', async () => {
+    const { paul, marie } = await team();
+    const byBranch = await item(marie, {
+      kind: 'slack',
+      title: '#produit, 06/11/2026',
+      texts: ['Je reprends paul/fils-neuf demain.'],
+    });
+    const byUrl = await item(marie, {
+      kind: 'slack',
+      title: '#dev, 06/11/2026',
+      texts: ['Relis https://github.com/Acme/Leon/pull/151 avant demain.'],
+    });
+    // Aucun fil n'a encore ces clés.
+    expect(await link(marie, byBranch)).toEqual([]);
+    expect(await link(marie, byUrl)).toEqual([]);
+    const externalId = `session-${randomUUID()}`;
+    await filed(paul, { branche: 'paul/fils-neuf' }, externalId);
+    const { id } = await onlyFil(paul);
+
+    expect(await link(paul, id)).toEqual([id]);
+    expect((await onlyFil(paul)).metadata.liees).toEqual([{ id: byBranch, cle: 'lien' }]);
+
+    // La session ouvre ensuite sa PR : le fil prend la clé, et le rangement le met à relier.
+    await filed(
+      paul,
+      { branche: 'paul/fils-neuf', prs: [{ repo: 'acme/leon', numero: 151, par: 'gh-pr-create' }] },
+      externalId,
+    );
+    expect(mocks.enqueueLiaison).toHaveBeenLastCalledWith(jobOf(paul, id));
+    expect(await link(paul, id)).toEqual([id]);
+
+    expect((await onlyFil(paul)).metadata.liees).toEqual([
+      { id: byBranch, cle: 'lien' },
+      { id: byUrl, cle: 'lien' },
+    ]);
+  });
 });
 
 describe('linkSource, par proximité', () => {
@@ -339,8 +452,8 @@ describe('linkSource, par proximité', () => {
     const { paul } = await team();
     const session = await filed(paul);
     await summarize(paul, session, NEAR);
-    // Une session de code n'est jamais mise à relier : elle se range (T40, T41).
-    expect(mocks.enqueueLiaison).not.toHaveBeenCalledWith(jobOf(paul, session));
+    // Les vecteurs de son résumé écrits, la session est remise à relier : ses fils, par proximité.
+    expect(mocks.enqueueLiaison).toHaveBeenCalledWith(jobOf(paul, session));
     const meeting = await item(paul, {
       kind: 'granola',
       title: 'Point du jeudi',
@@ -364,7 +477,9 @@ describe('linkSource, par proximité', () => {
 
   it('une note remember proche rejoint le fil, sans ses mots ; une note ne se relie jamais par clé', async () => {
     const { paul } = await team();
+    // La branche porte le ticket ABC-9.
     const session = await filed(paul, {
+      branche: 'paul/abc-9-x',
       prs: [{ repo: 'acme/leon', numero: 145, par: 'gh-pr-create' }],
     });
     await summarize(paul, session, NEAR);
@@ -383,14 +498,45 @@ describe('linkSource, par proximité', () => {
       acl: [paul.userId],
       role: 'user',
     });
+    const byTicket = await item(paul, {
+      kind: 'mcp_remember',
+      title: 'ABC-9 à reprendre',
+      texts: ['Une recette de crêpes bretonnes au sarrasin'],
+      acl: [paul.userId],
+      role: 'user',
+    });
     const { id } = await onlyFil(paul);
 
     expect(await link(paul, note)).toEqual([id]);
     expect(await link(paul, byKey)).toEqual([]);
+    expect(await link(paul, byTicket)).toEqual([]);
 
     const { metadata } = await onlyFil(paul);
     expect(metadata.liees).toEqual([{ id: note, cle: 'proximite' }]);
     expect(metadata.mots_cles).toEqual([]);
+  });
+
+  it('une note écrite avant le premier résumé du fil le rejoint quand les vecteurs du résumé sont écrits', async () => {
+    const { paul } = await team();
+    const session = await filed(paul);
+    const note = await item(paul, {
+      kind: 'mcp_remember',
+      title: 'Note sur le rangement',
+      texts: [`${NEAR}, à retenir`],
+      acl: [paul.userId],
+      role: 'user',
+    });
+    // Aucun résumé dans le fil : rien de proche.
+    expect(await link(paul, note)).toEqual([]);
+    await summarize(paul, session, NEAR);
+    // Les vecteurs du résumé écrits, la session est remise à relier.
+    expect(mocks.enqueueLiaison).toHaveBeenCalledWith(jobOf(paul, session));
+    const { id } = await onlyFil(paul);
+
+    expect(await link(paul, session)).toEqual([id]);
+
+    expect((await onlyFil(paul)).metadata.liees).toEqual([{ id: note, cle: 'proximite' }]);
+    expect(await link(paul, session)).toEqual([]);
   });
 });
 
@@ -439,6 +585,89 @@ describe('une source liée qui disparaît', () => {
     expect(await listVersions(paul, id)).toEqual([]);
     expect((await searchPassages(paul, { query: 'zorglubrangement' })).hits).toEqual([]);
   });
+
+  it('document supprimé, dossier supprimé ou remplacé : ils quittent le fil, qui est mis en file, et l’ancien état n’est rendu par aucune lecture', async () => {
+    const { paul } = await team();
+    const session = await filed(paul);
+    await summarize(paul, session, NEAR);
+    const folderA = { id: randomUUID(), name: 'dossier-a', path: 'notes.md' };
+    const folderB = { id: randomUUID(), name: 'dossier-b', path: 'notes.md' };
+    const single = await upload(paul, 'rangement.md', `${NEAR}, document`);
+    const inFolder = await upload(paul, 'notes.md', `${NEAR}, dossier`, folderA);
+    const replaced = await upload(paul, 'notes.md', `${NEAR}, ancien dossier`, folderB);
+    const { id } = await onlyFil(paul);
+    for (const doc of [single, inFolder, replaced]) expect(await link(paul, doc)).toEqual([id]);
+    // Les mots d'un document : son titre.
+    expect((await onlyFil(paul)).metadata.mots_cles).toContainEqual({
+      id: inFolder,
+      mots: 'dossier-a notes.md',
+    });
+    await withTenant(paul, (tx) =>
+      writeVersion(tx, paul, {
+        sourceId: id,
+        attendue: 0,
+        texte: 'Les trois documents.',
+        entrees: [session, single, inFolder, replaced],
+        ecritPar: 'serveur',
+        motif: 'rangement',
+      }),
+    );
+    mocks.enqueueFilMaj.mockClear();
+
+    expect(await deleteDocument(paul, single)).toBe(true);
+    expect(await deleteFolder(paul, folderA.id)).toBe(1);
+    // Le premier fichier d'un dossier du même nom remplace l'ancien envoi.
+    await addDocument(paul, new File(['Nouveau plan.'], 'notes.md'), {
+      ...folderB,
+      id: randomUUID(),
+    });
+
+    const { metadata } = await onlyFil(paul);
+    expect(metadata.liees).toEqual([]);
+    expect(metadata.mots_cles).toEqual([]);
+    expect(mocks.enqueueFilMaj.mock.calls).toEqual([
+      [jobOf(paul, id)],
+      [jobOf(paul, id)],
+      [jobOf(paul, id)],
+    ]);
+    expect(await readLatest(paul, id)).toEqual({ n: 1, version: null });
+    expect(await listVersions(paul, id)).toEqual([]);
+  });
+
+  it('source liée rendue privée : l’ancien état n’est rendu par aucune lecture', async () => {
+    const { paul, marie } = await team();
+    const session = await filed(paul, {
+      prs: [{ repo: 'acme/leon', numero: 152, par: 'gh-pr-create' }],
+    });
+    const message = await item(marie, {
+      kind: 'slack',
+      title: '#dev, 06/11/2026',
+      texts: ['Relis https://github.com/acme/leon/pull/152.'],
+    });
+    const { id } = await onlyFil(paul);
+    expect(await link(marie, message)).toEqual([id]);
+    await withTenant(paul, (tx) =>
+      writeVersion(tx, paul, {
+        sourceId: id,
+        attendue: 0,
+        texte: 'Relire la PR 152.',
+        entrees: [session, message],
+        ecritPar: 'serveur',
+        motif: 'rangement',
+      }),
+    );
+    expect((await readLatest(paul, id)).version?.n).toBe(1);
+
+    // Rendue privée à Marie, comme 0048 rend privée une PR.
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId] })
+      .where(eq(sources.id, message));
+
+    expect(await readLatest(paul, id)).toEqual({ n: 1, version: null });
+    expect(await readVersion(paul, id, 1)).toBeNull();
+    expect(await listVersions(paul, id)).toEqual([]);
+  });
 });
 
 describe('la fusion de deux fils', () => {
@@ -469,6 +698,42 @@ describe('la fusion de deux fils', () => {
       message,
       pull,
     ]);
+  });
+});
+
+describe('une liaison pendant une fusion', () => {
+  it('une source reliée pendant la fusion de son fil n’est pas perdue : le fil gardé la reprend, avec ses mots', async () => {
+    const { paul } = await team();
+    const shared = { repo: 'acme/leon', numero: 153, par: 'pr-link' } as const;
+    const onA = await filed(paul, { branche: 'paul/a', prs: [shared] });
+    const onB = await filed(paul, { branche: 'paul/abc-1-b' });
+    const [, filB] = await kept(paul);
+    const pull = await pr(paul, 154, 'paul/abc-1-b', 'Branche b');
+    const merging = await sessionOf(paul, { branche: 'paul/abc-1-b', prs: [shared] });
+    // Retient la fusion sur le fil b, pendant que la PR de la branche b se relie.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from sources where id = $1 for update', [filB?.id]);
+      const filing = fileSession(jobOf(paul, merging), { embedder: factice });
+      await pause();
+      const linking = link(paul, pull);
+      await pause();
+      await holding.query('commit');
+
+      expect(await filing).toBe('range');
+      await linking;
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+
+    const { metadata } = await onlyFil(paul);
+    expect(metadata.liees).toEqual([{ id: pull, cle: 'branche' }]);
+    expect((metadata.mots_cles as Array<{ id: string }>).map((entry) => entry.id)).toEqual([pull]);
+    expect((metadata.sessions as Array<{ id: string }>).map((entry) => entry.id).sort()).toEqual(
+      [onA, onB, merging].sort(),
+    );
   });
 });
 

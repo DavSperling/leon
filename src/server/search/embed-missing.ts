@@ -168,7 +168,8 @@ async function vectorizedSources(
 }
 
 // Une session dont le résumé a ses vecteurs est remise à ranger : sans clé, elle rejoint alors le fil le plus proche
-// (T41). Une source qu'un fil peut relier est remise à relier : par proximité, cette fois (T42). Les vecteurs sont
+// (T41). Elle est aussi remise à relier : ses fils, par la proximité de ce résumé, relient les sources relevées avant
+// lui (T42). Une source qu'un fil peut relier est remise à relier : par proximité, cette fois (T42). Les vecteurs sont
 // écrits : une file indisponible ne fait rien échouer, elle est seulement journalisée.
 // shortcut: rien ne reprend un signal perdu ; une session close n'envoie plus de faits et reste hors fil jusqu'à son
 // prochain résumé. Une session sans clé déjà vectorisée n'est pas non plus réévaluée quand un fil voisin reçoit plus
@@ -187,7 +188,7 @@ async function signalThreads(
       logError('search.rangement_enqueue', error, { sourceId });
     }
   }
-  for (const sourceId of linked) {
+  for (const sourceId of [...resumed, ...linked]) {
     try {
       await enqueueLiaison({ tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId });
     } catch (error) {

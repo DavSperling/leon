@@ -9,6 +9,7 @@ import { logError } from '@/server/log';
 import type { PipelineJob } from '@/server/pipeline/queue';
 import { chunkText } from './chunk';
 import { embedPassages, lockSources, passagesWithoutVector } from './embed-missing';
+import { notOldResume } from './filters-sql';
 
 // L'indexation d'un run (C5) : découpe les tours qu'il nomme en passages, puis demande leurs vecteurs au
 // fournisseur s'il y en a un. Le plein texte n'a besoin de rien d'autre : la recherche marche dès que les
@@ -52,7 +53,14 @@ async function writePassages(tx: Tx, ctx: TenantContext, scope: RunScope, turnId
       acl: turns.acl,
     })
     .from(turns)
-    .where(and(inArray(turns.id, turnIds), eq(turns.sourceId, scope.sourceId)));
+    .where(
+      and(
+        inArray(turns.id, turnIds),
+        eq(turns.sourceId, scope.sourceId),
+        // Le run d'un ancien résumé de session (T23), repris ou rejoué, ne recrée aucun passage.
+        notOldResume(turns.externalId, turns.sourceId),
+      ),
+    );
   const values = rows.flatMap((turn) =>
     chunkText(turn.text).map((chunk) => ({
       tenantId: ctx.tenantId,

@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { turns as turnsTable } from '@/server/db/schema/memory';
+import { adminDb } from '@/test/db';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import {
@@ -287,6 +289,29 @@ describe('gatherBriefingMaterial : bornes', () => {
     const last = turns.at(-1)?.text ?? '';
     expect(last.length).toBeLessThanOrEqual(TURN_CHARS + 1);
     expect(last.endsWith('…')).toBe(true);
+  });
+
+  it('ne donne pas au point du matin le résumé d’une session écrit par Leon (T23)', async () => {
+    const team = await newTeam(['Gaby'], local);
+    const [gaby] = team.members as [TenantContext];
+    const seeded = await session(gaby, { title: 'Session résumée', startedAgo: 2 * HOUR });
+    await adminDb.insert(turnsTable).values({
+      tenantId: gaby.tenantId,
+      sourceId: seeded.sourceId,
+      externalId: 'leon:resume:1',
+      role: 'document',
+      text: '## Où j’en suis\nRésumé de Leon',
+      ts: ago(HOUR),
+      captureMode: 'manual',
+      acl: [gaby.userId],
+    });
+
+    const material = await gatherBriefingMaterial(gaby, PROJECT, new Date());
+
+    expect(material.sessions[0]?.turns.map((turn) => turn.text)).toEqual([
+      'Début de Session résumée',
+      'Fin de Session résumée',
+    ]);
   });
 
   it(`rend ${MENTIONS_MAX} mentions au plus, les plus récentes d’abord`, async () => {

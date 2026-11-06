@@ -27,10 +27,17 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
 // Les faits d'une session vont dans `sources.metadata` de la source du porteur (D4), créée si elle manque :
 // jamais dans celle d'un collègue, même partagée avec lui (upsertSource filtre sur le propriétaire). L'envoi
 // est idempotent : les faits sont remplacés, sauf `externe` et `fin`, qui restent vrais une fois vus (un
-// rattrapage peu après le SessionEnd envoie `fin: false`, le fichier venant de changer).
-export async function recordFacts(ctx: TenantContext, payload: SessionFactsPayload): Promise<void> {
+// rattrapage peu après le SessionEnd envoie `fin: false`, le fichier venant de changer). `fin_le` date la dernière
+// vraie fin : un tour arrivé après elle dit au résumé que la session a repris (resume-worker.ts). `faits_le` date
+// chaque envoi (le now() de Postgres, comme `fin_le`) : le résumé ne s'écrit que dans l'heure qui suit le dernier. Les
+// usages de l'outil (C7 révisé) sont remplacés eux aussi : absents du corps, aucun. Rend la source, et si son outil a
+// l'usage `resume` : la route met alors le résumé en file (T23).
+export async function recordFacts(
+  ctx: TenantContext,
+  payload: SessionFactsPayload,
+): Promise<{ sourceId: string; resume: boolean }> {
   const faits = cleanFacts(payload.faits);
-  await withTenant(ctx, async (tx) => {
+  return withTenant(ctx, async (tx) => {
     const sourceId = await upsertSource(
       tx,
       ctx,
@@ -40,16 +47,22 @@ export async function recordFacts(ctx: TenantContext, payload: SessionFactsPaylo
     await recordProject(tx, sourceId, payload.project);
     const externe = sql`(${faits.externe}::boolean or coalesce(${sources.metadata} #> '{faits,externe}' = 'true'::jsonb, false))`;
     const fin = sql`(${payload.fin}::boolean or coalesce(${sources.metadata} -> 'fin' = 'true'::jsonb, false))`;
-    // shortcut: `fin` est seulement rangé, la file du résumé le lira au lot 6 (T23).
-    await tx
+    const finLe = payload.fin ? sql`jsonb_build_object('fin_le', now())` : sql`'{}'::jsonb`;
+    const [updated] = await tx
       .update(sources)
       .set({
         metadata: sql`${sources.metadata} || jsonb_build_object(
           'faits', ${JSON.stringify(faits)}::jsonb || jsonb_build_object('externe', ${externe}),
           'branche', ${faits.branche}::text,
           'accord', ${payload.accord}::int,
-          'fin', ${fin})`,
+          'usages', ${JSON.stringify(payload.usages ?? [])}::jsonb,
+          'fin', ${fin},
+          'faits_le', now()) || ${finLe}`,
       })
-      .where(eq(sources.id, sourceId));
+      .where(eq(sources.id, sourceId))
+      .returning({
+        resume: sql<boolean>`coalesce(${sources.metadata} -> 'usages' @> '["resume"]'::jsonb, false)`,
+      });
+    return { sourceId, resume: updated?.resume === true };
   });
 }

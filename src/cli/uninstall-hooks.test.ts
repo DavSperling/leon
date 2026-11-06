@@ -4,7 +4,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { consentPath, consentWithdrawn, factsConsent, writeConsent } from './consent';
+import {
+  addRefusal,
+  addUsage,
+  consentPath,
+  consentWithdrawn,
+  factsConsent,
+  writeConsent,
+} from './consent';
 import { launcherHookCommand, launcherPath } from './hook-commands';
 import { installHooks, SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
@@ -416,6 +423,20 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
     expect(written.outils.claude_code.version).toBe(0);
     expect((await stat(consentPath(home))).mode & 0o777).toBe(0o600);
     expect(await factsConsent(home, 'claude_code')).toBeNull();
+  });
+
+  // C7 révisé, A16 : le retrait efface les usages et les refus ; un `leon setup` suivant les propose de nouveau.
+  it('efface les usages et les refus', async () => {
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    await addRefusal(home, 'claude_code', 'resume');
+
+    await uninstall();
+
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
+      version: 0,
+      installe_le: expect.any(String),
+    });
   });
 
   it('sans accord (crochets d’avant lui) : version 0 aussi, pour que plus rien ne parte', async () => {

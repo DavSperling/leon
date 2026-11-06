@@ -22,6 +22,11 @@ vi.mock('@/server/briefing/worker', () => ({
     mocks.order.push('point');
   }),
 }));
+vi.mock('@/server/sessions/resume-worker', () => ({
+  startResumeWorker: vi.fn(async () => {
+    mocks.order.push('resume');
+  }),
+}));
 vi.mock('@/server/connectors/worker', () => ({
   startConnectorWorker: vi.fn(async () => {
     mocks.order.push('connecteurs');
@@ -58,13 +63,13 @@ afterEach(() => {
 });
 
 describe('démarrage des tâches de fond', () => {
-  it('lance l’indexation, le point du matin puis la relève des connecteurs, même sans clé Anthropic', async () => {
+  it('lance l’indexation, le point du matin, le résumé des sessions puis la relève des connecteurs, même sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
 
     await startNodeInstrumentation();
 
     // L'indexation d'abord : la relève met des jobs dans sa file dès son premier passage.
-    expect(mocks.order).toEqual(['recherche', 'point', 'connecteurs']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'connecteurs']);
   });
 
   // Le tri par modèle n'existe plus : la clé Anthropic ne change que le modèle donné au point du matin.
@@ -80,7 +85,7 @@ describe('démarrage des tâches de fond', () => {
     await startNodeInstrumentation();
 
     expect(mocks.order).toEqual(without);
-    expect(mocks.order).toEqual(['recherche', 'point', 'connecteurs']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'connecteurs']);
   });
 
   it('lance l’indexation et le point du matin sans clé des connecteurs ni clé Anthropic', async () => {
@@ -88,7 +93,7 @@ describe('démarrage des tâches de fond', () => {
 
     await startNodeInstrumentation();
 
-    expect(mocks.order).toEqual(['recherche', 'point']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume']);
   });
 
   it("ne prévient pas de l'absence de clé Anthropic", async () => {
@@ -108,7 +113,7 @@ describe('démarrage des tâches de fond', () => {
 
     expect(startConnectorWorker).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(NO_KEY));
-    expect(mocks.order).toEqual(['recherche', 'point']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume']);
   });
 
   it('signale les paires OAuth incomplètes au démarrage', async () => {

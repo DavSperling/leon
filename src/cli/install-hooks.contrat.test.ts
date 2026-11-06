@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { factsConsent } from './consent';
 import { launcherHookCommand, launcherPath, singleQuote } from './hook-commands';
 import { BACKUP_FILE, SETTINGS_FILE } from './install-hooks';
 
@@ -184,6 +185,24 @@ describe('leon installer-crochets', () => {
       expect(await readFile(settingsPath, 'utf8')).toBe(written);
       expect(await readFile(join(configDir, BACKUP_FILE), 'utf8')).toBe(before);
       expect((await readConsent()).outils.claude_code.version).toBe(2);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // La porte de D30 (`interactive: process.stdin.isTTY === true`, leon.ts) : une réponse lue d'un tube peut venir d'un
+  // agent. Le « y » d'après l'accord de base n'est donc jamais lu comme un usage, ni la question posée.
+  it(
+    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et l’usage resume n’est pas montré',
+    async () => {
+      const outcome = await leon(['installer-crochets', '--depot', fakeRepo], 'y\ny\n');
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).not.toContain('usage "resume"');
+      expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
+      expect((await readConsent()).outils.claude_code).toEqual({
+        version: 2,
+        installe_le: expect.any(String),
+      });
     },
     TEST_TIMEOUT_MS,
   );

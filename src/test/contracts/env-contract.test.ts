@@ -77,7 +77,12 @@ describe('variables d’environnement', () => {
   });
 
   it('laisse vides les modèles par étape dans .env.example : le défaut vit dans le code', () => {
-    for (const variable of ['LEON_MODEL_REPONSE', 'LEON_MODEL_DISCUSSION', 'LEON_MODEL_POINT']) {
+    for (const variable of [
+      'LEON_MODEL_REPONSE',
+      'LEON_MODEL_DISCUSSION',
+      'LEON_MODEL_POINT',
+      'LEON_MODEL_RESUME',
+    ]) {
       expect(readText('.env.example')).toMatch(new RegExp(`^${variable}=$`, 'm'));
     }
   });

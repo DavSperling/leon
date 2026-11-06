@@ -298,6 +298,32 @@ describe('extractClaudeCodeFacts', () => {
     ]);
   });
 
+  it('ne compte comme échanges que les messages tapés par la personne', () => {
+    const user = (n: number, content: unknown) =>
+      JSON.stringify({
+        type: 'user',
+        uuid: `u${n}`,
+        sessionId: 's1',
+        timestamp: `2026-11-06T10:0${n}:00.000Z`,
+        message: { content },
+      });
+    const contenu = [
+      user(1, 'Corrige le test.'),
+      user(
+        2,
+        '<task-notification>\n<task-id>t1</task-id>\n<status>completed</status>\n</task-notification>',
+      ),
+      user(3, '<local-command-stdout>Compacted</local-command-stdout>'),
+      user(4, '<bash-stdout>ok</bash-stdout><bash-stderr></bash-stderr>'),
+      user(5, '[Request interrupted by user for tool use]'),
+      user(6, '<command-name>/review</command-name>\n<command-message>review</command-message>'),
+      user(7, [{ type: 'text', text: 'Le bloc <task-notification> sert à quoi ?' }]),
+    ].join('\n');
+
+    // 1, 6 (une commande tapée) et 7 (un message qui parle d'un bloc sans en être un).
+    expect(extractClaudeCodeFacts(contenu, RACINE).echanges).toBe(3);
+  });
+
   it('ignore une ligne illisible', () => {
     const contenu = [
       'ceci n’est pas du JSON',

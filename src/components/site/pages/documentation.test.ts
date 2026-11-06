@@ -228,6 +228,33 @@ describe('la page Documentation', () => {
     },
   );
 
+  // `leon setup` propose aussi l'usage `resume` (RESUME_LINES) : la page dit qu'il est à part, ce qu'il envoie, à qui.
+  it.each(LOCALES)(
+    'dit ce que l’usage resume envoie, et qu’il est demandé à part (%s)',
+    (locale, messages) => {
+      const { resume } = messages.site.documentation.sent;
+
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'usage "resume", optional, asked separately',
+      );
+      expect(resume).toContain('<code>resume</code>');
+      expect(resume).toContain('<code>--yes</code>');
+      expect(resume).toContain(
+        locale === 'en' ? 'Leon’s model provider' : 'fournisseur du modèle de Leon',
+      );
+      // Le même usage couvrira l'état des fils (lot 12, D23) : le texte d'accord le dit déjà, la page aussi.
+      expect(readText('src/cli/install-hooks.ts')).toContain('the state of your work threads');
+      expect(resume).toContain(locale === 'en' ? 'your work threads' : 'vos fils de travail');
+      // Un refus est gardé (A16) : la page dit qu'il n'est plus redemandé, comment revenir dessus, et le délai du
+      // retrait que dit RESUME_LINES.
+      expect(resume).toContain(locale === 'en' ? 'A refusal is kept' : 'Un refus est gardé');
+      expect(resume).toContain('<code>~/.leon/bin/leon retirer-crochets</code>');
+      expect(readText('src/cli/install-hooks.ts')).toContain('may still be written within an hour');
+      expect(resume).toContain(locale === 'en' ? 'within an hour' : 'dans l’heure');
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
   // Le serveur des crochets : celui de `leon login`, sauf LEON_URL et LEON_TOKEN posées toutes les deux (texte d'accord).
   it.each(LOCALES)(
     'dit quand LEON_URL et LEON_TOKEN passent avant la connexion (%s)',

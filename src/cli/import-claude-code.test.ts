@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURN_TEXT_MAX } from '../capture/turn';
+import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import {
   countOf,
   createFactsSender,
@@ -353,6 +354,41 @@ describe('importClaudeCode : les faits de chaque session', () => {
     });
   });
 
+  // C2 : les usages de l'accord partent avec les faits ; sans usage, le corps reste celui qu'un serveur d'avant accepte.
+  it('envoie les usages de l’accord avec les faits, et rien quand il n’y en a pas', async () => {
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, usages: ['resume'] },
+    });
+    await importClaudeCode(importOptions(), { ...deps, facts: { ...deps.facts, usages: [] } });
+
+    const sent = facts.mock.calls.map(([payload]) => payload);
+    expect(sent.filter((payload) => payload.external_id === ACME_SESSION)).toEqual([
+      expect.objectContaining({ usages: ['resume'] }),
+      expect.not.objectContaining({ usages: expect.anything() }),
+    ]);
+  });
+
+  // Vigilance 4 du plan : accepter `resume` puis rattraper ne fait pas résumer les sessions finies avant ce oui.
+  it('n’envoie un usage qu’avec les sessions modifiées après sa date ; les faits, eux, partent', async () => {
+    const usageDate = new Date(Date.now() - 60 * 60_000);
+    const before = new Date(usageDate.getTime() - 60_000);
+    await utimes(join(projectDir, 'session-simple.jsonl'), before, before);
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), {
+      ...deps,
+      facts: { ...deps.facts, usages: ['resume'], usagesDepuis: { resume: usageDate } },
+    });
+
+    const acme = factsOf(facts).get(ACME_SESSION);
+    expect(acme).toBeDefined();
+    expect(acme).not.toHaveProperty('usages');
+    expect(factsOf(facts).get(ORION_SESSION)?.usages).toEqual(['resume']);
+  });
+
   it('fin vaut vrai pour un fichier qui n’a pas bougé depuis 30 min, faux sinon', async () => {
     const old = new Date(Date.now() - 31 * 60_000);
     await utimes(join(projectDir, 'session-simple.jsonl'), old, old);
@@ -433,6 +469,19 @@ describe('importClaudeCode : les faits de chaque session', () => {
 
     expect(facts).toHaveBeenCalledTimes(3);
     expect(summary).toMatchObject({ sessions: 3, failures: 3 });
+  });
+
+  // Le retrait relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import l'arrête.
+  it('un retrait écrit entre deux sessions : plus rien ne part, ni tours ni faits', async () => {
+    const { deps, facts, events } = makeFactsDeps();
+    const withdrawn = async () => events.length > 0;
+
+    await expect(importClaudeCode(importOptions(), { ...deps, withdrawn })).rejects.toThrow(
+      CONSENT_WITHDRAWN_MESSAGE,
+    );
+
+    expect(facts).toHaveBeenCalledTimes(1);
+    expect(new Set(events.map((event) => event.split(' ')[1])).size).toBe(1);
   });
 
   it('arrête tout quand le jeton est refusé à l’envoi des faits', async () => {

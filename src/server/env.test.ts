@@ -214,33 +214,29 @@ describe('parseEnv', () => {
       parseEnv({ ...TEST_ENV, NODE_ENV: 'production', ANTHROPIC_API_KEY: 'cle-de-test' }),
     ).not.toThrow();
   });
-  describe.each(['LEON_MODEL_REPONSE', 'LEON_MODEL_DISCUSSION', 'LEON_MODEL_POINT'])(
-    'modèle réglé par %s',
-    (variable) => {
-      it.each(['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'])(
-        'accepte %s',
-        (model) => {
-          expect(() => parseEnv({ ...TEST_ENV, [variable]: model })).not.toThrow();
-        },
-      );
+  describe.each([
+    'LEON_MODEL_REPONSE',
+    'LEON_MODEL_DISCUSSION',
+    'LEON_MODEL_POINT',
+    'LEON_MODEL_RESUME',
+  ])('modèle réglé par %s', (variable) => {
+    it.each(['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'])('accepte %s', (model) => {
+      expect(() => parseEnv({ ...TEST_ENV, [variable]: model })).not.toThrow();
+    });
 
-      // Haiku 4.5 refuse l'effort, d'autres modèles ne reçoivent pas le repli serveur que le code enverrait :
-      // chaque appel échouerait en 400, la réponse tomberait en « indisponible » sans que l'app refuse de démarrer.
-      it.each([
-        'claude-haiku-4-5',
-        'claude-sonnet-4-6',
-        'claude-opus-4-8',
-        'claude-sonnet-5',
-        'gpt',
-      ])('refuse %s au démarrage, avec un message en français qui nomme la variable', (model) => {
+    // Haiku 4.5 refuse l'effort, d'autres modèles ne reçoivent pas le repli serveur que le code enverrait :
+    // chaque appel échouerait en 400, la réponse tomberait en « indisponible » sans que l'app refuse de démarrer.
+    it.each(['claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-8', 'claude-sonnet-5', 'gpt'])(
+      'refuse %s au démarrage, avec un message en français qui nomme la variable',
+      (model) => {
         expect(() => parseEnv({ ...TEST_ENV, [variable]: model })).toThrow(
           new RegExp(`${variable}.*modèle pris en charge.*claude-haiku-5-5`, 's'),
         );
-      });
+      },
+    );
 
-      it('traite la valeur vide comme une absence, pas comme un modèle inconnu', () => {
-        expect(() => parseEnv({ ...TEST_ENV, [variable]: '' })).not.toThrow();
-      });
-    },
-  );
+    it('traite la valeur vide comme une absence, pas comme un modèle inconnu', () => {
+      expect(() => parseEnv({ ...TEST_ENV, [variable]: '' })).not.toThrow();
+    });
+  });
 });

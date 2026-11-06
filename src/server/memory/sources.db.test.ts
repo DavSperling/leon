@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { SourceKind } from '@/capture/turn';
 import { CAPTURE_KINDS } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { ingestRuns, sources } from '@/server/db/schema/memory';
+import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
 import { channelHealth, listSources } from './sources';
@@ -82,6 +82,35 @@ describe('listSources', () => {
       turnCount: 1,
       lastRun: { status: 'queued', step: 'index' },
     });
+  });
+
+  it('ne compte pas le résumé de Leon parmi les tours, ni son indexation comme dernier run (T23)', async () => {
+    const { paul, ids } = await seedRightsScenario();
+    const [resume] = await adminDb
+      .insert(turns)
+      .values({
+        tenantId: paul.tenantId,
+        sourceId: ids.paulSource,
+        externalId: 'leon:resume:1',
+        role: 'document',
+        text: "## Où j'en suis",
+        ts: new Date(),
+        captureMode: 'manual',
+        acl: [paul.userId],
+      })
+      .returning({ id: turns.id });
+    await adminDb.insert(ingestRuns).values({
+      tenantId: paul.tenantId,
+      sourceId: ids.paulSource,
+      turnIds: [resume?.id ?? ''],
+      acl: [paul.userId],
+      status: 'done',
+      step: 'done',
+    });
+
+    const { sources: rows } = await listSources(paul);
+
+    expect(rows[0]).toMatchObject({ turnCount: 1, lastRun: { status: 'queued', step: 'index' } });
   });
 
   it('ne donne à Marie que sa source, sans indexation, et rien de celle de Paul', async () => {

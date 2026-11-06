@@ -2,7 +2,13 @@ import { type SQL, sql } from 'drizzle-orm';
 import { CAPTURE_KINDS, repoOf, type SourceKind, type TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { epochToDate, LAST_TS_SQL, sourceInfoFrom, textArray } from '@/server/search/filters-sql';
+import {
+  epochToDate,
+  LAST_TS_SQL,
+  RESUME_LIKE,
+  sourceInfoFrom,
+  textArray,
+} from '@/server/search/filters-sql';
 import { myAddresses } from '@/server/search/people';
 import type { SourceInfo } from '@/server/search/types';
 
@@ -138,7 +144,8 @@ const excerptOf = (
 });
 
 // Les `limit` derniers tours de chacune de ces sources, dans l'ordre de la source. Le texte n'est lu qu'au début :
-// une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400.
+// une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400. Sans les résumés de Leon
+// (T23) : le point du matin lit ce qui s'est passé, pas ce que le modèle en a dit.
 export async function lastTurns(
   tx: Tx,
   ctx: TenantContext,
@@ -154,6 +161,7 @@ export async function lastTurns(
              row_number() over (partition by t.source_id order by t.ts desc, t.created_at desc, t.id desc) as n
       from turns t
       where t.tenant_id = ${ctx.tenantId} and t.source_id = any(${uuids(sourceIds)})
+        and t.external_id not like ${RESUME_LIKE}
     ) recent
     where n <= ${limit}
     order by source_id, ts, created_at, id`);

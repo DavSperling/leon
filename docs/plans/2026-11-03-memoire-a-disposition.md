@@ -650,6 +650,8 @@ Contrat du 05/11 :
 >   - sans modèle, une session de plus écrit une version `ecrit_par = serveur` ;
 >   - les tests « second état » et « modèle en échec » se lisent avec les versions : l'état n'est jamais dans la recherche, et un échec n'écrit aucune version.
 
+> **Amendé le 06/11 (relecture du lot 6) :** « relit l'usage `resume` » ne peut pas se fier à `metadata.usages` des sessions seul. Le retrait (`leon retirer-crochets`) ne se fait que sur le poste : le serveur n'en sait rien, et `usages` garde `resume` pour toujours sur les sessions déjà envoyées. Au résumé, la borne d'une heure (`faits_le`, lot 6) en tient lieu, mais l'état d'un fil relit des sessions anciennes par nature, où elle ne joue pas. Condition préalable de cette tâche, pas une option : le retrait atteint d'abord le serveur (par exemple, il fait vider `usages` des sources de l'outil). Sinon, revoir avant tout la phrase du retrait de RESUME_LINES (« Withdrawing your consent stops new summaries; one already planned may still be written within an hour »), qu'un lecteur comprend comme valant pour tout l'usage. Test de plus : après un retrait, une session envoyée avant lui, même ancienne, n'entre plus au condensé du fil.
+
 **Fichiers :** `src/server/sessions/thread-state.ts` (nouveau), `src/server/llm/llm.ts` et `src/server/llm/models.ts` (étape `fil`), `src/server/db/migrations/NNNN-etape-fil.sql` (nouveau : le check gagne `fil`) et son test db, `src/components/verre/admin/index.tsx` (libellé), `models.test.ts`, `llm-contract.test.ts` ; si le code exige une variable par étape, `src/server/env.ts` (`LEON_MODEL_FIL`), `.env.example` et `env-contract.test.ts`.
 
 **Fait quand :**

@@ -29,6 +29,9 @@ export async function startNodeInstrumentation() {
   }
   const { startBriefingWorker } = await import('@/server/briefing/worker');
   await startBriefingWorker({ llm });
+  // Le résumé des sessions (T23) : comme le point du matin, sans modèle chaque job finit sans rien faire.
+  const { startResumeWorker } = await import('@/server/sessions/resume-worker');
+  await startResumeWorker({ llm });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

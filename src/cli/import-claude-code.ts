@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
-import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
+import { API_PATHS, type SessionFactsPayload, type Usage } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import {
@@ -11,6 +11,7 @@ import {
   TURNS_PER_BATCH_MAX,
 } from '../capture/turn';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
+import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
@@ -39,10 +40,21 @@ export type ImportDeps = {
   // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
+  // L'accord retiré (consent.ts), relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import
+  // l'arrête, sans autre envoi. La borne d'une heure du résumé (resume-worker.ts) en dépend.
+  withdrawn?: () => Promise<boolean>;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
-  // la version transmise au serveur. `depuis`, la date de l'accord : au rattrapage, seuls les fichiers modifiés
-  // ensuite envoient leurs faits (vigilance 4 du plan) ; le crochet de fin de session, lui, n'en a pas besoin.
-  facts?: { accord: number; send: FactsSender; depuis?: Date };
+  // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
+  // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; de
+  // même, `usagesDepuis` : un usage ne part qu'avec les fichiers modifiés après sa date (`resume` accepté ce jour ne
+  // fait pas résumer les sessions finies avant). Le crochet de fin de session, lui, n'en a pas besoin.
+  facts?: {
+    accord: number;
+    usages?: Usage[];
+    send: FactsSender;
+    depuis?: Date;
+    usagesDepuis?: Partial<Record<Usage, Date>>;
+  };
 };
 export type ImportSummary = {
   sessions: number;
@@ -193,6 +205,8 @@ export async function sendSessionFacts(
     external_id: session.sessionId,
     ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
     accord: deps.facts.accord,
+    // Sans usage, pas de champ : le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
+    ...(deps.facts.usages?.length ? { usages: deps.facts.usages } : {}),
     faits: extractClaudeCodeFacts(source.content, source.root),
     fin: source.fin,
   };
@@ -228,6 +242,7 @@ export async function importClaudeCode(
   // Un serveur qui refuse les faits les refusera pour toutes les sessions : un seul message, plus aucun envoi.
   let factsRefused = false;
   for (const file of await findSessionFiles(options.baseDir)) {
+    if (await deps.withdrawn?.()) throw new Error(CONSENT_WITHDRAWN_MESSAGE);
     try {
       const loaded = await loadSession(file, options);
       const turns = loaded?.session.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];
@@ -241,12 +256,22 @@ export async function importClaudeCode(
       await importSession({ ...session, turns }, { ...options, projectKey }, deps, summary);
       if (!deps.facts || factsRefused || start === null) continue;
       const { mtimeMs } = await stat(file);
-      if (deps.facts.depuis && mtimeMs < deps.facts.depuis.getTime()) continue;
+      const { depuis, usagesDepuis } = deps.facts;
+      if (depuis && mtimeMs < depuis.getTime()) continue;
+      const usages = deps.facts.usages?.filter(
+        (usage) => mtimeMs >= (usagesDepuis?.[usage]?.getTime() ?? 0),
+      );
       const fin = Date.now() - mtimeMs >= IDLE_MS;
       // Sans git (essais), la racine reste le dossier de départ.
       const root = deps.git ? await repoRootFor(start, deps.git) : start;
       const source = { content, root, fin };
-      factsRefused = !(await sendSessionFacts(session, source, { ...options, projectKey }, deps));
+      const factsDeps = { ...deps, facts: { ...deps.facts, usages } };
+      factsRefused = !(await sendSessionFacts(
+        session,
+        source,
+        { ...options, projectKey },
+        factsDeps,
+      ));
       if (factsRefused) console.error(FACTS_REFUSED_MESSAGE);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;

@@ -16,6 +16,16 @@ describe('modelForStep', () => {
     expect(modelForStep('reponse', env)).toBe('claude-haiku-5-5');
   });
 
+  it('prend Haiku 5.5 pour le résumé d’une session (D8)', () => {
+    expect(modelForStep('resume', env)).toBe('claude-haiku-5-5');
+  });
+
+  it('suit LEON_MODEL_RESUME', () => {
+    const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_RESUME: 'claude-sonnet-5-5' });
+    expect(modelForStep('resume', reglee)).toBe('claude-sonnet-5-5');
+    expect(modelForStep('reponse', reglee)).toBe('claude-haiku-5-5');
+  });
+
   it('prend Sonnet 5.5 pour la discussion et pour le point du matin', () => {
     expect(modelForStep('discussion', env)).toBe('claude-sonnet-5-5');
     expect(modelForStep('point', env)).toBe('claude-sonnet-5-5');
@@ -46,7 +56,12 @@ describe('modelForStep', () => {
 
 describe('EFFORT_BY_STEP', () => {
   it('fixe l’effort de chaque étape : son défaut varie selon le modèle', () => {
-    expect(EFFORT_BY_STEP).toEqual({ reponse: 'low', discussion: 'medium', point: 'medium' });
+    expect(EFFORT_BY_STEP).toEqual({
+      reponse: 'low',
+      discussion: 'medium',
+      point: 'medium',
+      resume: 'low',
+    });
   });
 });
 

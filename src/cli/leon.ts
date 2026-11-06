@@ -132,18 +132,21 @@ async function runImport(args: string[]): Promise<number> {
   };
   const env = dryRun ? null : await resolveServerEnv(process.env, homedir());
   // Les faits de chaque session ne partent que si l'accord local le permet (consent.ts), et seulement ceux des
-  // fichiers modifiés après lui.
+  // fichiers modifiés après lui ; chaque usage, seulement avec les fichiers modifiés après sa propre date.
   const accord = await factsConsent(homedir(), 'claude_code');
   const deps: ImportDeps = {
     out: console.log,
     git: gitInDirectory,
+    withdrawn,
     send: env ? createIngestSender(fetch, env) : nothingSent,
     ...(accord === null
       ? {}
       : {
           facts: {
             accord: accord.version,
+            usages: accord.usages,
             depuis: accord.installe_le,
+            usagesDepuis: accord.usages_le,
             send: env ? createFactsSender(fetch, env) : nothingSent,
           },
         }),
@@ -234,7 +237,13 @@ async function runCaptureSession(args: string[]): Promise<number> {
       send: createIngestSender(fetch, env, { signal }),
       ...(accord === null
         ? {}
-        : { facts: { accord: accord.version, send: createFactsSender(fetch, env, { signal }) } }),
+        : {
+            facts: {
+              accord: accord.version,
+              usages: accord.usages,
+              send: createFactsSender(fetch, env, { signal }),
+            },
+          }),
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
@@ -250,17 +259,18 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
-// Pose une question sur le terminal et rend la ligne tapée, ou une chaîne vide si l'entrée se ferme sans réponse
-// (commande lancée sans terminal : on n'écrit alors rien). L'itérateur est créé tout de suite : une réponse déjà
-// arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent est gardée, pas perdue.
-function createAsker(): { ask: (question: string) => Promise<string>; close: () => void } {
+// Pose une question sur le terminal et rend la ligne tapée, ou null si l'entrée se ferme sans réponse (Ctrl+D, ou
+// commande lancée sans terminal) : ce n'est pas une réponse, on n'écrit alors rien (D30). L'itérateur est créé tout de
+// suite : une réponse déjà arrivée sur l'entrée standard (`echo oui | pnpm leon …`) pendant que les réglages se lisent
+// est gardée, pas perdue.
+function createAsker(): { ask: (question: string) => Promise<string | null>; close: () => void } {
   const lines = createInterface({ input: process.stdin });
   const answers = lines[Symbol.asyncIterator]();
   return {
     ask: async (question) => {
       process.stdout.write(question);
       const next = await answers.next();
-      return next.done ? '' : next.value;
+      return next.done ? null : next.value;
     },
     close: () => lines.close(),
   };
@@ -289,7 +299,10 @@ async function runInstallHooks(args: string[]): Promise<number> {
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
-    return await installHooks({ repoDir, configDir, home: io.home, assumeYes }, io);
+    return await installHooks(
+      { repoDir, configDir, home: io.home, assumeYes, interactive: process.stdin.isTTY === true },
+      io,
+    );
   } finally {
     asker.close();
   }
@@ -361,6 +374,7 @@ async function runSetupCommand(args: string[]): Promise<number> {
         out: console.log,
         err: console.error,
         ask: asker.ask,
+        interactive: process.stdin.isTTY === true,
         login: loginForSetup,
         fetch,
       },

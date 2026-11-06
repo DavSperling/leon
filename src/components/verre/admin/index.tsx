@@ -31,6 +31,7 @@ const STEPS: Record<string, string> = {
   reponse: 'Réponses de la recherche',
   discussion: 'Discussions',
   point: 'Points du matin',
+  resume: 'Résumés de session',
 };
 
 function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {

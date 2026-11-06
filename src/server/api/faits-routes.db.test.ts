@@ -1,5 +1,5 @@
-import { and, eq } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
+import { and, eq, sql } from 'drizzle-orm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
@@ -9,6 +9,14 @@ import { sources } from '@/server/db/schema/memory';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
+
+// La file du résumé (T23) est simulée : le vrai pg-boss est vérifié dans resume-queue.db.test.ts.
+const { enqueueResume } = vi.hoisted(() => ({ enqueueResume: vi.fn() }));
+vi.mock('@/server/sessions/resume-queue', () => ({ enqueueResume }));
+beforeEach(() => {
+  enqueueResume.mockReset();
+  enqueueResume.mockResolvedValue(undefined);
+});
 
 async function setup() {
   const { members } = await createTestTenant(['Paul', 'Marie']);
@@ -41,6 +49,14 @@ const validBody = (externalId = `session-${crypto.randomUUID()}`) => ({
   faits: facts(),
   fin: false,
 });
+
+// L'heure de Postgres, qui date `faits_le` et `fin_le` (now()) : celle de Node peut s'en écarter (base dans Docker).
+async function dbNow(): Promise<number> {
+  const { rows } = await adminDb.execute<{ ms: number }>(
+    sql`select (extract(epoch from now()) * 1000)::float8 as ms`,
+  );
+  return Number(rows[0]?.ms);
+}
 
 // Les métadonnées des sources que ce membre possède pour cette session, lues hors RLS.
 async function storedMetadata(owner: TenantContext, externalId: string) {
@@ -79,10 +95,60 @@ describe('POST /api/v1/faits', () => {
           faits: facts(),
           branche: 'paul/faits',
           accord: 3,
+          usages: [],
           fin: true,
+          fin_le: expect.any(String),
+          faits_le: expect.any(String),
         },
       },
     ]);
+  });
+
+  // `faits_le` date chaque envoi, avec ou sans fin : le résumé ne s'écrit que dans l'heure qui suit (resume-worker.ts).
+  it('date chaque envoi de faits, même sans fin', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const [first] = await storedMetadata(paul, body.external_id);
+    expect(Date.parse(String(first?.metadata.faits_le))).toBeGreaterThan((await dbNow()) - 60_000);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { ...first?.metadata, faits_le: '2026-11-01T10:00:00+00:00' } })
+      .where(eq(sources.externalId, body.external_id));
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    const [stored] = await storedMetadata(paul, body.external_id);
+    expect(Date.parse(String(stored?.metadata.faits_le))).toBeGreaterThan((await dbNow()) - 60_000);
+  });
+
+  // C2 et C7 révisé : les usages de l'outil sur le poste, rangés à chaque envoi ; absents, aucun (un usage absent vaut
+  // refus), comme ceux d'une CLI d'avant eux.
+  it('range les usages reçus, et les remplace à chaque envoi', async () => {
+    const { paul, paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume', 'lecture'] };
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const [first] = await storedMetadata(paul, body.external_id);
+    const { usages: _usages, ...withoutUsages } = body;
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body: withoutUsages });
+
+    expect(response.status).toBe(202);
+    expect(first?.metadata.usages).toEqual(['resume', 'lecture']);
+    expect((await storedMetadata(paul, body.external_id))[0]?.metadata.usages).toEqual([]);
+  });
+
+  it('répond 400 à un usage inconnu', async () => {
+    const { paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume', 'tout'] };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: 'Invalid request',
+      issues: [{ path: 'usages.1', code: 'invalid_value' }],
+    });
   });
 
   it.each([
@@ -139,7 +205,7 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
-  // T23 lira cette version (résumé à partir de 3, prompt à 4) : une version inconnue n'est pas rangée.
+  // Le résumé suit l'usage `resume`, pas la version (C7 révisé) : 3 et 4 restent acceptées, une version inconnue non.
   it.each([1, 5])('répond 400 à la version d’accord %i', async (accord) => {
     const { paulToken } = await setup();
     const body = { ...validBody(), accord };
@@ -198,7 +264,9 @@ describe('POST /api/v1/faits', () => {
       faits: { ...second.faits, externe: true },
       branche: 'paul/suite',
       accord: 3,
+      usages: [],
       fin: false,
+      faits_le: expect.any(String),
     });
   });
 
@@ -299,11 +367,13 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
-  it('garde `fin` vrai une fois vu : un rattrapage qui suit le SessionEnd ne l’efface pas', async () => {
+  it('garde `fin` vrai une fois vu, et sa date : un rattrapage qui suit le SessionEnd ne les efface pas', async () => {
     const { paul, paulToken } = await setup();
     const first = { ...validBody(), fin: true };
 
     await apiRequest(API_PATHS.faits, { token: paulToken, body: first });
+    const [closed] = await storedMetadata(paul, first.external_id);
+    expect(Date.parse(String(closed?.metadata.fin_le))).toBeGreaterThan((await dbNow()) - 60_000);
     const response = await apiRequest(API_PATHS.faits, {
       token: paulToken,
       body: { ...first, fin: false },
@@ -312,5 +382,56 @@ describe('POST /api/v1/faits', () => {
     expect(response.status).toBe(202);
     const [stored] = await storedMetadata(paul, first.external_id);
     expect(stored?.metadata.fin).toBe(true);
+    expect(stored?.metadata.fin_le).toBe(closed?.metadata.fin_le);
+  });
+
+  it('fin sans l’usage resume : aucun job, même s’il était là à l’envoi d’avant', async () => {
+    const { paulToken } = await setup();
+    const body = { ...validBody(), accord: 3, usages: ['resume'] };
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, usages: ['lecture'], fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    expect(enqueueResume.mock.calls.map(([, options]) => options)).toEqual([{ fin: false }]);
+  });
+
+  it('avec l’usage resume : met la session en file, avec sa fin', async () => {
+    const { paul, paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume'] };
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    const [source] = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(and(eq(sources.ownerUserId, paul.userId), eq(sources.externalId, body.external_id)));
+    const job = { tenantId: paul.tenantId, sourceId: source?.id, ownerUserId: paul.userId };
+    expect(enqueueResume.mock.calls).toEqual([
+      [job, { fin: false }],
+      [job, { fin: true }],
+    ]);
+  });
+
+  it('une file indisponible ne fait pas perdre les faits : 202', async () => {
+    const { paul, paulToken } = await setup();
+    const body = { ...validBody(), usages: ['resume'] };
+    enqueueResume.mockRejectedValue(new Error('pg-boss en panne'));
+
+    const response = await apiRequest(API_PATHS.faits, {
+      token: paulToken,
+      body: { ...body, fin: true },
+    });
+
+    expect(response.status).toBe(202);
+    expect((await storedMetadata(paul, body.external_id))[0]?.metadata.fin).toBe(true);
   });
 });

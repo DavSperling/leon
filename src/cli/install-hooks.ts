@@ -45,6 +45,10 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
+// - une fois l'accord de base en place, propose à part l'usage `resume` (C7 révisé) s'il n'est ni accepté ni refusé,
+//   avec son texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube peut venir d'un agent, qui ne
+//   donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à disposition). Un refus s'écrit daté
+//   (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -71,9 +75,12 @@ import {
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
 import {
+  addRefusal,
+  addUsage,
   consentPath,
   consentWithdrawn,
   FACTS_VERSION,
+  type FactsConsent,
   factsConsent,
   writeConsent,
 } from './consent';
@@ -117,6 +124,17 @@ const CONSENT_LINES = [
   "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
   '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
+];
+
+// Le texte de l'usage `resume` (C7 révisé), testé mot pour mot : ce que le serveur envoie au fournisseur du modèle de
+// Leon (le condensé de T22, à partir de 6 échanges, après la clôture de D9), et où va le résumé (T23 : à l'auteur seul,
+// indexé ; jamais dans le bloc de démarrage, D25), et la limite du retrait (resume-worker.ts). Au futur, l'état des fils
+// du lot 12 (D23, D30 : l'usage `resume` le couvre aussi), pour que le lot 12 n'ait pas à redemander l'accord.
+const RESUME_LINES = [
+  'Session summaries (usage "resume", optional, asked separately):',
+  "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
+  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries; one already planned may still be written within an hour.",
+  "  - Later, the same usage will also keep the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server will send to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider will write that state. It will stay private to you, like the summary.",
 ];
 
 export type Json = Record<string, unknown>;
@@ -265,8 +283,8 @@ export function addLeonHooks(
   return { settings: next, changes };
 }
 
-export function isYes(answer: string): boolean {
-  return /^(?:o|oui|y|yes)$/i.test(answer.trim());
+export function isYes(answer: string | null): boolean {
+  return answer !== null && /^(?:o|oui|y|yes)$/i.test(answer.trim());
 }
 
 type Loaded =
@@ -338,17 +356,19 @@ export async function writeAtomically(path: string, loaded: Loaded, text: string
 // `home` : le dossier qui porte `.leon` : l'accord (consent.ts) et le lanceur que les crochets appellent.
 // `repoDir` : le clone de Leon sous la forme clone ; absent sous la forme installée, où ni pnpm ni `.env.local` ne sont
 // en jeu et où il n'y a pas de clone dont avertir.
+// `interactive` : l'entrée standard est un terminal (`process.stdin.isTTY`). Sans lui, aucun usage n'est demandé.
 export type InstallOptions = {
   repoDir?: string;
   configDir: string;
   home: string;
   assumeYes: boolean;
+  interactive?: boolean;
 };
 export type InstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
-  // Pose la question et rend la ligne tapée ; une chaîne vide si l'entrée est fermée.
-  ask: (question: string) => Promise<string>;
+  // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse (D30).
+  ask: (question: string) => Promise<string | null>;
 };
 
 const ACTION_LABELS: Record<HookChange['action'], string> = {
@@ -492,6 +512,63 @@ async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> 
   return true;
 }
 
+// L'usage `resume` est-il à proposer ? Seulement sur l'accord de base, dans un terminal, sans --oui (D30), et s'il n'a
+// été ni accepté ni refusé (A16).
+const offersResume = (options: InstallOptions, consent: FactsConsent | null): boolean =>
+  !options.assumeYes &&
+  options.interactive === true &&
+  consent !== null &&
+  !consent.usages.includes('resume') &&
+  !consent.refus.includes('resume');
+
+// La commande `leon` de cette forme : rien de Leon n'est dans le PATH, la forme installée passe par son lanceur.
+const leonCommand = (options: InstallOptions): string =>
+  options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon';
+
+// Après un refus, comment revenir dessus (choix du plan) : le retrait efface usages et refus, et dit lui-même comment
+// redonner l'accord (CONSENT_AGAIN_HINT, le lanceur ayant pu partir avec lui).
+const refusedLine = (options: InstallOptions): string =>
+  `This answer is kept: you will not be asked again. To change it, run \`${leonCommand(options)} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`;
+
+// Propose l'usage `resume`, après l'accord de base, avec son texte, en [y/N] : jamais coché d'avance. Un refus (non, ou
+// rien) ne change pas ce qui part ; il s'écrit daté, pour ne plus être redemandé. Rend false si l'usage accepté n'a pas
+// pu s'écrire ; un refus qui ne s'écrit pas n'est qu'une question qui reviendra.
+async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
+  if (!offersResume(options, await factsConsent(options.home, 'claude_code'))) return true;
+  const path = consentPath(options.home);
+  for (const line of ['', ...RESUME_LINES]) deps.out(line);
+  const answer = await deps.ask(
+    `\nAlso let Leon's model provider write a summary of each session (recorded in ${path})? [y/N] `,
+  );
+  if (!isYes(answer)) {
+    deps.out('Nothing was added: no session is summarized.');
+    // Une entrée fermée (Ctrl+D) n'est pas une réponse (D30) : rien n'est gardé, la question reviendra.
+    if (answer === null) return true;
+    try {
+      await addRefusal(options.home, 'claude_code', 'resume');
+    } catch (error) {
+      const code = errorCode(error);
+      deps.err(
+        `Leon: could not write ${path}${code ? ` (${code})` : ''}: your answer is not kept, the question will come back.`,
+      );
+      return true;
+    }
+    deps.out(refusedLine(options));
+    return true;
+  }
+  try {
+    await addUsage(options.home, 'claude_code', 'resume');
+  } catch (error) {
+    const code = errorCode(error);
+    deps.err(
+      `Leon: could not write ${path}${code ? ` (${code})` : ''}: no session is summarized. Run the command again.`,
+    );
+    return false;
+  }
+  deps.out(`Session summaries recorded in ${path}.`);
+  return true;
+}
+
 // Rend le code de sortie : 0 si les crochets et l'accord sont en place ou si l'utilisateur a refusé, 1 si les réglages
 // n'ont pas pu être lus ou ont changé en route, ou si l'accord n'a pas pu s'écrire.
 export async function installHooks(options: InstallOptions, deps: InstallDeps): Promise<number> {
@@ -523,13 +600,18 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   const former = formerClones(settings);
   const alerts = await warnings(settings, options.repoDir, options.home);
   // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
-  const consented = (await factsConsent(options.home, 'claude_code')) !== null;
+  const consent = await factsConsent(options.home, 'claude_code');
+  const consented = consent !== null;
   const consentFile = consentPath(options.home);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
-      deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
-      return 0;
+      if (!offersResume(options, consent)) {
+        deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+        return 0;
+      }
+      deps.out(`Both Leon hooks are already in place in ${path}.`);
+      return (await offerResume(options, deps)) ? 0 : 1;
     }
     // Des crochets posés avant l'accord, ou restés après son retrait (retrait des réglages raté, crochets remis à la
     // main) : seul l'accord est demandé, et les réglages ne sont pas touchés.
@@ -553,7 +635,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
         return 0;
       }
     }
-    return (await recordConsent(options.home, deps)) ? 0 : 1;
+    return (await recordConsent(options.home, deps)) && (await offerResume(options, deps)) ? 0 : 1;
   }
 
   const backupPlan: BackupPlan =
@@ -603,8 +685,8 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (backupCreated) deps.out(`The old file was copied to ${backup}.`);
   if (former !== null && options.repoDir === undefined) deps.out(migrationNotice(former));
   deps.out(
-    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon'} retirer-crochets\` (it also withdraws your consent).`,
+    `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${leonCommand(options)} retirer-crochets\` (it also withdraws your consent).`,
   );
   if (!consented && !(await recordConsent(options.home, deps))) return 1;
-  return 0;
+  return (await offerResume(options, deps)) ? 0 : 1;
 }

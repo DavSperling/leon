@@ -13,6 +13,7 @@ import { epochToDate, LAST_TS_SQL, RESUME_LIKE, textArray } from '@/server/searc
 import { DEFAULT_BRANCHES } from './start-context';
 import {
   enqueueFilMaj,
+  enqueueLiaison,
   getThreadsBoss,
   RANGEMENT_QUEUE,
   type ThreadJob,
@@ -28,7 +29,8 @@ import {
 //   (embed-missing.ts) ;
 // - les fils de l'auteur qui ont sa branche ou une de ses PR fusionnent dans le plus ancien. L'absorbé reste, marqué
 //   `absorbe_par`, avec ses listes et ses versions (D21, tranché le 05/11) ; le rangement le saute ;
-// - un fil qui change est mis en file `fil-maj` (T43) : le rangement n'écrit jamais l'état.
+// - un fil qui change est mis en file `fil-maj` (T43) : le rangement n'écrit jamais l'état. Il est aussi mis à relier
+//   (thread-links.ts, T42) : une PR ou un ticket relevé avant que le fil ait sa clé le rejoint alors.
 // Seul le filtre de l'auteur et de CODE_SESSION_KINDS choisit la session : jamais celle d'un collègue, même partagée.
 // Les journaux ne citent que des uuid, jamais une branche, un fichier ni une PR.
 //
@@ -36,10 +38,14 @@ import {
 // KEY SHARE, puis les fils par lockTarget (versions.ts), dans l'ordre des ids, la fusion comprise. Un fil de branche
 // s'ouvre par la contrainte unique de `sources` (on conflict do nothing), puis se verrouille (D34). Le verrou de
 // l'auteur sérialise ses rangements : sans lui, deux sessions de branches neuves qui partagent une PR, rangées au même
-// moment, ouvriraient chacune son fil sans voir l'autre. Seul le rangement le prend, et toujours en premier.
+// moment, ouvriraient chacune son fil sans voir l'autre. Le rangement et la liaison des sources (thread-links.ts) le
+// prennent, toujours en premier : une fusion ne perd pas une source reliée au même moment.
 
-const FIL = 'leon_fil' satisfies SourceKind;
+export const FIL = 'leon_fil' satisfies SourceKind;
 const FICHIERS_MAX = 50;
+export const TICKETS_MAX = 50;
+// `mots_cles` (D21) : les mots des sources liées, 2 000 caractères au plus en tout.
+const MOTS_CLES_MAX = 2000;
 const RANGEMENT_CONCURRENCY = 2;
 // La distance cosinus (0 : même sens, 1 : sans rapport) sous laquelle deux résumés sont du même travail, et l'écart
 // qu'ils peuvent avoir au plus (D22).
@@ -47,13 +53,21 @@ const RANGEMENT_CONCURRENCY = 2;
 // voyage-4 sur des passages, pas sur des résumés) ; le lot 11 (T38) la règle sur des cas réels.
 const PROCHE_MAX_DISTANCE = 0.3;
 const PROCHE_JOURS = 30;
-// Les listes du `metadata` d'un fil (D21) que le rangement écrit et qu'une fusion réunit. `liees` vient de T42, qui
-// ajoute ici ses autres listes.
-type Liste = 'branches' | 'prs' | 'sessions' | 'fichiers' | 'liees' | 'absorbes';
+// Les listes du `metadata` d'un fil (D21) que le rangement écrit et qu'une fusion réunit. `liees`, `tickets` et
+// `mots_cles` viennent de la liaison (thread-links.ts, T42).
+export type Liste =
+  | 'branches'
+  | 'prs'
+  | 'sessions'
+  | 'fichiers'
+  | 'liees'
+  | 'tickets'
+  | 'mots_cles'
+  | 'absorbes';
 
 export type FilingOutcome = 'range' | 'inchange' | 'hors-fil' | 'sans-objet';
 
-type Fil = { id: string; metadata: Record<string, unknown> };
+export type Fil = { id: string; metadata: Record<string, unknown> };
 type SessionRow = {
   kind: string;
   project: string | null;
@@ -67,7 +81,7 @@ const filKey = (project: string, branch: string | null) =>
   `leon:fil:${project}:${branch === null ? randomUUID() : createHash('sha256').update(branch).digest('hex').slice(0, 32)}`;
 
 // La clé d'un élément de liste : un texte, l'id d'une session ou d'une source liée, ou une PR sans la casse.
-function keyOf(item: unknown): string {
+export function keyOf(item: unknown): string {
   if (typeof item === 'string') return item;
   const { id, repo, numero } = (item ?? {}) as Record<string, unknown>;
   if (typeof id === 'string') return id;
@@ -75,20 +89,32 @@ function keyOf(item: unknown): string {
   return JSON.stringify(item);
 }
 // Des listes réunies sans doublon : un élément garde sa place et prend sa dernière valeur (Map garde l'ordre).
-function union(...lists: unknown[][]): unknown[] {
+export function union(...lists: unknown[][]): unknown[] {
   const byKey = new Map<string, unknown>();
   for (const list of lists) for (const item of list) byKey.set(keyOf(item), item);
   return [...byKey.values()];
 }
-const listOf = (fil: Fil, name: Liste): unknown[] => {
+export const listOf = (fil: Fil, name: Liste): unknown[] => {
   const value = fil.metadata[name];
   return Array.isArray(value) ? value : [];
 };
+// Les mots des sources liées les plus récentes, dans MOTS_CLES_MAX caractères (D21).
+export function boundMots(list: unknown[]): unknown[] {
+  let room = MOTS_CLES_MAX;
+  const kept: unknown[] = [];
+  for (const entry of list.toReversed()) {
+    const { mots } = (entry ?? {}) as { mots?: unknown };
+    room -= typeof mots === 'string' ? mots.length : 0;
+    if (room < 0) break;
+    kept.unshift(entry);
+  }
+  return kept;
+}
 
 // Avant tout fil : le verrou de l'auteur, puis l'organisation en FOR KEY SHARE, comme lockTarget. Une suppression du
 // compte est alors validée avant (l'auteur se lit supprimé, rien n'est rangé), ou attend la fin du rangement et
 // emporte le fil (supprimer_fil).
-async function lockAuthor(tx: Tx, ctx: TenantContext): Promise<boolean> {
+export async function lockAuthor(tx: Tx, ctx: TenantContext): Promise<boolean> {
   await tx.execute(
     sql`select pg_advisory_xact_lock(hashtextextended(${`leon:fils:${ctx.tenantId}:${ctx.userId}`}, 0))`,
   );
@@ -150,6 +176,27 @@ async function createFil(
   return created?.id ?? null;
 }
 
+// Écrit ces listes du fil, verrouillé, et `maj_le`, s'il change. Rien de changé (jsonb compare sans l'ordre des clés) :
+// rien n'est écrit, et rend false.
+export async function writeLists(
+  tx: Tx,
+  filId: string,
+  lists: Partial<Record<Liste, unknown[]>>,
+): Promise<boolean> {
+  const patch = sql`${JSON.stringify(lists)}::jsonb`;
+  const updated = await tx
+    .update(sources)
+    .set({ metadata: sql`${sources.metadata} || ${patch} || jsonb_build_object('maj_le', now())` })
+    .where(
+      and(
+        eq(sources.id, filId),
+        sql`${sources.metadata} || ${patch} is distinct from ${sources.metadata}`,
+      ),
+    )
+    .returning({ id: sources.id });
+  return updated.length > 0;
+}
+
 // Une clé d'un fil : cet élément dans une de ses listes.
 const has = (name: Liste, item: unknown) =>
   sql`s.metadata->${name}::text @> ${JSON.stringify([item])}::jsonb`;
@@ -170,16 +217,18 @@ async function findFils(
   return rows.map((row) => row.id);
 }
 
-// Le fil de l'auteur sur ce projet le plus proche de la session (D22) : la plus petite distance entre un passage de son
-// résumé et un passage du résumé d'une autre de ses sessions du fil, datés à PROCHE_JOURS au plus l'un de l'autre, sous
-// le seuil. Seul le dernier résumé d'une session a des passages (resume-worker.ts, index-run.ts). Rend null sans
-// vecteur de ce modèle pour le résumé, ou sans fil assez proche.
-async function nearestFil(
+// Le fil de l'auteur le plus proche d'une source (D22) : la plus petite distance entre un de ses passages (ceux de son
+// résumé pour une session, `resumeOnly`) et un passage du résumé d'une autre de ses sessions du fil, datés à
+// PROCHE_JOURS au plus l'un de l'autre, sous le seuil. Seul le dernier résumé d'une session a des passages
+// (resume-worker.ts, index-run.ts). Sur ce projet, ou sur tous ceux de l'auteur (null : une source sans projet, T42).
+// Rend null sans vecteur de ce modèle pour la source, ou sans fil assez proche.
+export async function nearestFil(
   tx: Tx,
   ctx: TenantContext,
-  sessionId: string,
-  project: string,
+  sourceId: string,
+  project: string | null,
   model: string,
+  resumeOnly: boolean,
 ): Promise<string | null> {
   const {
     rows: [nearest],
@@ -196,13 +245,13 @@ async function nearestFil(
       from passages mp
       join turns mt on mt.tenant_id = mp.tenant_id and mt.id = mp.turn_id
       join passage_vectors mv on mv.passage_id = mp.id and mv.model = ${model}
-      where mp.tenant_id = ${ctx.tenantId} and mp.source_id = ${sessionId}
-        and mt.external_id like ${RESUME_LIKE}
+      where mp.tenant_id = ${ctx.tenantId} and mp.source_id = ${sourceId}
+        ${resumeOnly ? sql`and mt.external_id like ${RESUME_LIKE}` : sql``}
     ) m on p.ts between m.ts - make_interval(days => ${PROCHE_JOURS})
       and m.ts + make_interval(days => ${PROCHE_JOURS})
     where f.tenant_id = ${ctx.tenantId} and f.owner_user_id = ${ctx.userId} and f.kind = ${FIL}
-      and f.metadata->>'project' = ${project} and f.metadata->>'absorbe_par' is null
-      and s.id <> ${sessionId} and s.owner_user_id = ${ctx.userId}
+      ${project === null ? sql`` : sql`and f.metadata->>'project' = ${project}`}
+      and f.metadata->>'absorbe_par' is null and s.id <> ${sourceId} and s.owner_user_id = ${ctx.userId}
       and s.kind = any(${textArray(CODE_SESSION_KINDS)}) and t.external_id like ${RESUME_LIKE}
     group by f.id
     having min(v.embedding <=> m.embedding) < ${PROCHE_MAX_DISTANCE}
@@ -233,7 +282,7 @@ async function range(
     // (elle a changé de branche) ne partagent ni branche ni PR, et ne fusionnent pas (D22).
     ids = (await findFils(tx, ctx, project, [has('sessions', { id: sessionId })])).slice(0, 1);
     if (ids.length === 0 && model !== null && session.resume) {
-      const nearest = await nearestFil(tx, ctx, sessionId, project, model);
+      const nearest = await nearestFil(tx, ctx, sessionId, project, model, true);
       if (nearest !== null) ids = [nearest];
     }
     if (ids.length === 0) return 'hors-fil';
@@ -275,24 +324,15 @@ async function range(
     sessions: union(merged('sessions'), [entry]),
     fichiers: union(merged('fichiers'), faits.fichiers).slice(-FICHIERS_MAX),
     liees: merged('liees'),
+    tickets: merged('tickets').slice(-TICKETS_MAX),
+    mots_cles: boundMots(merged('mots_cles')),
     absorbes: union(
       merged('absorbes'),
       others.map((fil) => fil.id),
     ),
   };
-  // Rien de changé (jsonb compare sans l'ordre des clés) : rien n'est écrit. Une fusion change toujours `absorbes`.
-  const patch = sql`${JSON.stringify(lists)}::jsonb`;
-  const updated = await tx
-    .update(sources)
-    .set({ metadata: sql`${sources.metadata} || ${patch} || jsonb_build_object('maj_le', now())` })
-    .where(
-      and(
-        eq(sources.id, keeper.id),
-        sql`${sources.metadata} || ${patch} is distinct from ${sources.metadata}`,
-      ),
-    )
-    .returning({ id: sources.id });
-  if (updated.length === 0) return 'inchange';
+  // Une fusion change toujours `absorbes`.
+  if (!(await writeLists(tx, keeper.id, lists))) return 'inchange';
   for (const fil of others) {
     await tx
       .update(sources)
@@ -316,12 +356,18 @@ export async function fileSession(
   const model = deps.embedder?.model ?? null;
   const result = await withTenant(ctx, (tx) => range(tx, ctx, job.sourceId, model));
   if (typeof result === 'string') return result;
-  // Après la validation, pour que la mise à jour lise le fil rangé. Une file indisponible ne défait pas le rangement :
-  // le prochain changement du fil le remet en file.
+  // Après la validation, pour que la mise à jour et la liaison lisent le fil rangé. Une file indisponible ne défait pas
+  // le rangement : le prochain changement du fil le remet en file.
+  const fil = { tenantId: ctx.tenantId, sourceId: result.fil, ownerUserId: ctx.userId };
   try {
-    await enqueueFilMaj({ tenantId: ctx.tenantId, sourceId: result.fil, ownerUserId: ctx.userId });
+    await enqueueFilMaj(fil);
   } catch (error) {
     logError('threads.fil_maj_enqueue', error, { tenantId: ctx.tenantId, sourceId: result.fil });
+  }
+  try {
+    await enqueueLiaison(fil);
+  } catch (error) {
+    logError('threads.liaison_enqueue', error, { tenantId: ctx.tenantId, sourceId: result.fil });
   }
   return 'range';
 }

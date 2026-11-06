@@ -2,9 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   enqueueFilMaj,
+  enqueueLiaison,
   enqueueRangement,
   FIL_MAJ_QUEUE,
   getThreadsBoss,
+  LIAISON_QUEUE,
   RANGEMENT_IDLE_SECONDS,
   RANGEMENT_QUEUE,
   type ThreadJob,
@@ -45,10 +47,11 @@ afterAll(async () => {
 });
 
 describe('enqueueRangement', () => {
-  it('crée les deux files en politique stately', async () => {
+  it('crée les trois files en politique stately', async () => {
     const boss = await getThreadsBoss();
     expect((await boss.getQueue(RANGEMENT_QUEUE))?.policy).toBe('stately');
     expect((await boss.getQueue(FIL_MAJ_QUEUE))?.policy).toBe('stately');
+    expect((await boss.getQueue(LIAISON_QUEUE))?.policy).toBe('stately');
   });
 
   it('sans fin : rangée dans 15 min, et les envois suivants n’en ajoutent pas', async () => {
@@ -95,5 +98,20 @@ describe('enqueueFilMaj', () => {
     const jobs = await queued(FIL_MAJ_QUEUE, job);
     expect(jobs).toHaveLength(1);
     expect(jobs[0]?.data).toEqual(job);
+  });
+});
+
+describe('enqueueLiaison', () => {
+  it('une seule liaison attend par source ou par fil, tout de suite', async () => {
+    const job = newJob();
+    const before = Date.now();
+
+    await enqueueLiaison(job);
+    await enqueueLiaison(job);
+
+    const jobs = await queued(LIAISON_QUEUE, job);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.data).toEqual(job);
+    expect(delayOf(jobs[0]?.startAfter, before)).toBeLessThan(10);
   });
 });

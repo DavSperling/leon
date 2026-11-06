@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, like, lt, ne, notExists, type SQL, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, lt, ne, notExists, type SQL, sql } from 'drizzle-orm';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
@@ -12,7 +12,7 @@ import {
 } from '@/server/embeddings/embedder';
 import { logError } from '@/server/log';
 import { enqueuePipelineStep, INDEX_PRIORITY } from '@/server/pipeline/queue';
-import { enqueueRangement } from '@/server/sessions/threads-queue';
+import { enqueueLiaison, enqueueRangement, LINKED_KINDS } from '@/server/sessions/threads-queue';
 import { RESUME_LIKE, textArray } from './filters-sql';
 
 // Les deux reprises de l'indexation (C5), lancées par le tic du worker de la recherche :
@@ -144,24 +144,40 @@ async function embedOneByOne(
   return { vectors, timedOut: false };
 }
 
-// Les sessions dont ces passages sont le résumé (T23) : seul le dernier résumé d'une session a des passages.
-async function resumedSessions(tx: Tx, passageIds: string[]): Promise<string[]> {
-  if (passageIds.length === 0) return [];
+// Les sources de ces passages : les sessions dont ils sont le résumé (T23 ; seul le dernier résumé d'une session a des
+// passages), et celles qu'un fil peut relier (T42).
+async function vectorizedSources(
+  tx: Tx,
+  passageIds: string[],
+): Promise<{ resumed: string[]; linked: string[] }> {
+  if (passageIds.length === 0) return { resumed: [], linked: [] };
   const rows = await tx
-    .selectDistinct({ sourceId: passages.sourceId })
+    .selectDistinct({
+      sourceId: passages.sourceId,
+      kind: sources.kind,
+      resume: sql<boolean>`${turns.externalId} like ${RESUME_LIKE}`,
+    })
     .from(passages)
     .innerJoin(turns, eq(turns.id, passages.turnId))
-    .where(and(inArray(passages.id, passageIds), like(turns.externalId, RESUME_LIKE)));
-  return rows.map((row) => row.sourceId);
+    .innerJoin(sources, eq(sources.id, passages.sourceId))
+    .where(inArray(passages.id, passageIds));
+  const ids = (keep: (row: (typeof rows)[number]) => boolean) => [
+    ...new Set(rows.filter(keep).map((row) => row.sourceId)),
+  ];
+  return { resumed: ids((row) => row.resume), linked: ids((row) => LINKED_KINDS.has(row.kind)) };
 }
 
 // Une session dont le résumé a ses vecteurs est remise à ranger : sans clé, elle rejoint alors le fil le plus proche
-// (T41). Les vecteurs sont écrits : une file indisponible ne fait rien échouer, elle est seulement journalisée.
+// (T41). Une source qu'un fil peut relier est remise à relier : par proximité, cette fois (T42). Les vecteurs sont
+// écrits : une file indisponible ne fait rien échouer, elle est seulement journalisée.
 // shortcut: rien ne reprend un signal perdu ; une session close n'envoie plus de faits et reste hors fil jusqu'à son
 // prochain résumé. Une session sans clé déjà vectorisée n'est pas non plus réévaluée quand un fil voisin reçoit plus
 // tard les vecteurs de son propre résumé. Reprendre par le tic des vecteurs le jour où ça se voit.
-async function signalRangement(ctx: TenantContext, sessionIds: string[]): Promise<void> {
-  for (const sourceId of sessionIds) {
+async function signalThreads(
+  ctx: TenantContext,
+  { resumed, linked }: { resumed: string[]; linked: string[] },
+): Promise<void> {
+  for (const sourceId of resumed) {
     try {
       await enqueueRangement(
         { tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId },
@@ -169,6 +185,13 @@ async function signalRangement(ctx: TenantContext, sessionIds: string[]): Promis
       );
     } catch (error) {
       logError('search.rangement_enqueue', error, { sourceId });
+    }
+  }
+  for (const sourceId of linked) {
+    try {
+      await enqueueLiaison({ tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId });
+    } catch (error) {
+      logError('search.liaison_enqueue', error, { sourceId });
     }
   }
 }
@@ -196,8 +219,8 @@ async function signalRangement(ctx: TenantContext, sessionIds: string[]): Promis
 // lockSources), pas celui qu'on a lu avant l'appel au fournisseur : un accès retiré entre-temps ne revient pas.
 // Un passage supprimé pendant l'appel est laissé de côté.
 //
-// Les vecteurs d'un résumé de session écrits, la session est remise à ranger (signalRangement), par l'indexation comme
-// par la reprise.
+// Les vecteurs d'un résumé de session écrits, la session est remise à ranger, et une source qu'un fil peut relier
+// remise à relier (signalThreads), par l'indexation comme par la reprise.
 export async function embedPassages(
   ctx: TenantContext,
   embedder: Embedder,
@@ -249,7 +272,7 @@ export async function embedPassages(
           sql`select sortir_de_la_file(${embedder.model}, ${textArray(refused)}::uuid[])`,
         );
       }
-      if (values.length === 0) return { stored: 0, resumed: [] };
+      if (values.length === 0) return { stored: 0, sources: { resumed: [], linked: [] } };
       const inserted = await tx
         .insert(passageVectors)
         .values(values)
@@ -257,14 +280,14 @@ export async function embedPassages(
         .returning({ passageId: passageVectors.passageId });
       return {
         stored: inserted.length,
-        resumed: await resumedSessions(
+        sources: await vectorizedSources(
           tx,
           inserted.map((row) => row.passageId),
         ),
       };
     });
     stored += written.stored;
-    await signalRangement(ctx, written.resumed);
+    await signalThreads(ctx, written.sources);
   }
   return { stored, failed: false, timedOut: false };
 }

@@ -36,6 +36,9 @@ export async function startNodeInstrumentation() {
   // le fournisseur de l'indexation ; sans modèle.
   const { startThreadsWorker } = await import('@/server/sessions/threads');
   await startThreadsWorker({ embedder });
+  // La liaison des sources aux fils (T42) : par leurs clés exactes, sinon par la proximité de leurs vecteurs.
+  const { startThreadLinksWorker } = await import('@/server/sessions/thread-links');
+  await startThreadLinksWorker({ embedder });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

@@ -1,8 +1,9 @@
 import type { PgBoss } from 'pg-boss';
 import { z } from 'zod';
+import { CODE_SESSION_KINDS, TOOL_KINDS } from '@/capture/turn';
 import { getBoss } from '@/server/pipeline/queue';
 
-// Les deux files des fils de travail (T40 ; D22 et D34 du plan de la mémoire à disposition) :
+// Les trois files des fils de travail (T40 et T42 ; D22 et D34 du plan de la mémoire à disposition) :
 // - `ranger-session` : la route des faits y met chaque session de code reçue, et le worker (threads.ts) la range dans
 //   le fil de sa branche ou de ses PR. « stately », clé (organisation, session) : un seul rangement en attente et un
 //   seul en cours par session. Avec `fin`, il part tout de suite ; sans, dans 15 min, et les envois suivants le
@@ -10,14 +11,18 @@ import { getBoss } from '@/server/pipeline/queue';
 // - `fil-maj` : le rangement y met un fil qui change, pour que son état soit refait (T43). « stately », clé
 //   (organisation, fil), jamais la session (D34) : une mise à jour en attente et une en cours par fil. Son worker
 //   vient avec T43 ; d'ici là, au plus un job attend par fil.
+// - `relier-source` : l'indexation y met une source qu'un fil peut relier (LINKED_KINDS), et le rangement un fil qui
+//   change ; le worker (thread-links.ts) les relie selon D22. « stately », clé (organisation, source ou fil), tout de
+//   suite : une liaison en attente et une en cours par clé.
 
 export const RANGEMENT_QUEUE = 'ranger-session';
 export const FIL_MAJ_QUEUE = 'fil-maj';
+export const LIAISON_QUEUE = 'relier-source';
 export const RANGEMENT_IDLE_SECONDS = 15 * 60;
 
 const QUEUE = { policy: 'stately', retryLimit: 3, retryDelay: 60, retryBackoff: true } as const;
 
-// `sourceId` : la session à ranger, ou le fil à mettre à jour.
+// `sourceId` : la session à ranger, le fil à mettre à jour, ou la source ou le fil à relier.
 export const ThreadJobSchema = z.object({
   tenantId: z.uuid(),
   sourceId: z.uuid(),
@@ -35,6 +40,7 @@ export function getThreadsBoss(): Promise<PgBoss> {
     const boss = await getBoss();
     await boss.createQueue(RANGEMENT_QUEUE, QUEUE);
     await boss.createQueue(FIL_MAJ_QUEUE, QUEUE);
+    await boss.createQueue(LIAISON_QUEUE, QUEUE);
     return boss;
   })().catch((error) => {
     globalForThreads.leonThreadsBoss = undefined; // un démarrage raté doit pouvoir être retenté
@@ -60,4 +66,16 @@ export async function enqueueRangement(job: ThreadJob, options: { fin: boolean }
 export async function enqueueFilMaj(job: ThreadJob): Promise<void> {
   const data = ThreadJobSchema.parse(job);
   await (await getThreadsBoss()).send(FIL_MAJ_QUEUE, data, { singletonKey: threadKey(data) });
+}
+
+// Ce qu'un fil relie (D22) : tout outil sauf une session de code, qui se range dans son fil (T40, T41). Le fil lui-même
+// n'en est pas un.
+const CODE_SESSIONS: ReadonlySet<string> = new Set(CODE_SESSION_KINDS);
+export const LINKED_KINDS: ReadonlySet<string> = new Set(
+  TOOL_KINDS.filter((kind) => !CODE_SESSIONS.has(kind)),
+);
+
+export async function enqueueLiaison(job: ThreadJob): Promise<void> {
+  const data = ThreadJobSchema.parse(job);
+  await (await getThreadsBoss()).send(LIAISON_QUEUE, data, { singletonKey: threadKey(data) });
 }

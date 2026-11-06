@@ -25,12 +25,14 @@ import type { ThreadJob } from './threads-queue';
 const mocks = vi.hoisted(() => ({
   enqueueFilMaj: vi.fn(),
   enqueueRangement: vi.fn(),
+  enqueueLiaison: vi.fn(),
   work: vi.fn(),
 }));
 vi.mock('./threads-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./threads-queue')>()),
   enqueueFilMaj: mocks.enqueueFilMaj,
   enqueueRangement: mocks.enqueueRangement,
+  enqueueLiaison: mocks.enqueueLiaison,
   getThreadsBoss: async () => ({ work: mocks.work }),
 }));
 
@@ -44,6 +46,8 @@ beforeEach(() => {
   mocks.enqueueFilMaj.mockResolvedValue(undefined);
   mocks.enqueueRangement.mockReset();
   mocks.enqueueRangement.mockResolvedValue(undefined);
+  mocks.enqueueLiaison.mockReset();
+  mocks.enqueueLiaison.mockResolvedValue(undefined);
 });
 afterAll(() => dropTeams(tenantIds));
 
@@ -180,6 +184,9 @@ describe('fileSession', () => {
       prs: [],
       fichiers: ['src/server/sessions/threads.ts'],
       absorbes: [],
+      liees: [],
+      tickets: [],
+      mots_cles: [],
     });
     expect(sessionIds(fil)).toEqual([first, second].sort());
     expect(fil?.metadata.sessions).toContainEqual({
@@ -188,11 +195,12 @@ describe('fileSession', () => {
       date: expect.any(String),
     });
     expect(typeof fil?.metadata.maj_le).toBe('string');
-    // Chaque changement met le fil en file `fil-maj` (T43), jamais la session.
+    // Chaque changement met le fil en file `fil-maj` (T43), jamais la session, et le met à relier à ses sources (T42).
     expect(mocks.enqueueFilMaj.mock.calls).toEqual([
       [jobOf(paul, fil?.id ?? '')],
       [jobOf(paul, fil?.id ?? '')],
     ]);
+    expect(mocks.enqueueLiaison.mock.calls).toEqual(mocks.enqueueFilMaj.mock.calls);
   });
 
   it('sur main ou master, sans PR : hors fil, aucun fil ouvert', async () => {

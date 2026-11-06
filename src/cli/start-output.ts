@@ -7,7 +7,8 @@ import { ADAPTATEURS } from './outils';
 
 const ENVELOPES: Record<CodeSessionKind, (text: string) => string> = {
   claude_code: (text) => text,
-  codex: ADAPTATEURS.codex.demarrage,
+  codex: (text) => ADAPTATEURS.codex.injection(text, 'demarrage'),
+  cursor: (text) => ADAPTATEURS.cursor.injection(text, 'demarrage'),
 };
 
 export function startOutput(kind: CodeSessionKind, text: string): string {

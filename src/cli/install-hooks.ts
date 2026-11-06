@@ -287,7 +287,7 @@ export function isYes(answer: string | null): boolean {
   return answer !== null && /^(?:o|oui|y|yes)$/i.test(answer.trim());
 }
 
-type Loaded =
+export type Loaded =
   | { kind: 'absent' }
   | { kind: 'unreadable' }
   | { kind: 'present'; text: string; realPath: string; mode: number };

@@ -736,10 +736,24 @@ describe('setup : les outils de code', () => {
     expect(await exists(join(claudeDir, SETTINGS_FILE))).toBe(false);
   });
 
-  it.each([
-    ['Cursor', '.cursor'],
-    ['Gemini / Antigravity', '.gemini'],
-  ] as const)(
+  it('Cursor présent : ses crochets sont posés (forme plate) et son accord de capture écrit', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.cursor'));
+
+    const run = await setup({ yes: true });
+
+    expect(run.code).toBe(0);
+    const { version, hooks } = JSON.parse(
+      await readFile(join(home, '.cursor', 'hooks.json'), 'utf8'),
+    );
+    expect(version).toBe(1);
+    expect(hooks.beforeSubmitPrompt[0].command).toBe(launcherCommand(home, 'cursor', 'prompt'));
+    expect(hooks.stop[0].command).toBe(launcherCommand(home, 'cursor', 'tour'));
+    expect(run.output).toContain('Cursor: hooks installed');
+    expect((await factsConsent(home, 'cursor'))?.capture_le).toBeInstanceOf(Date);
+  });
+
+  it.each([['Gemini / Antigravity', '.gemini']] as const)(
     '%s présent : « not supported yet », rien n’est écrit chez lui',
     async (label, folder) => {
       await hasClaudeCode();

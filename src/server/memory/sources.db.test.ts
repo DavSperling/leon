@@ -162,6 +162,7 @@ describe('listSources', () => {
     expect(channels.map((channel) => channel.kindLabel)).toEqual([
       'Claude Code',
       'Codex',
+      'Cursor',
       'claude.ai',
       'ChatGPT',
       'Note (MCP)',

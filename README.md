@@ -201,7 +201,7 @@ curl -fsSL <adresse de Leon>/install | sh
 Ni clone, ni pnpm, ni Node à installer d'abord : la commande pose tout dans `~/.leon` et n'écrit que là, plus les réglages de vos outils de code après votre accord ; rien dans votre `PATH` ni votre profil de shell. Dans l'ordre :
 
 1. elle télécharge le Node officiel de la version que Leon a épinglée et la CLI de Leon (un seul fichier, servi par Leon), vérifie l'empreinte SHA-256 de Node et la taille et l'empreinte SHA-256 de la CLI, puis les pose dans `~/.leon/runtime` et `~/.leon/cli`. Plateformes : macOS (Apple silicon et Intel) et Linux (x64 et arm64) avec la glibc. Windows et Linux musl (Alpine) sont refusés avec un message, avant d'écrire quoi que ce soit ;
-2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code et Codex ; Cursor et Gemini sont reconnus mais pas encore pris en charge : rien n'est écrit chez eux), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
+2. elle lance `leon setup` sur votre terminal : il écrit le lanceur `~/.leon/bin/leon`, **connecte l'ordinateur** (il ouvre le navigateur, voir plus bas), cherche vos outils de code (Claude Code, Codex et Cursor ; Gemini est reconnu mais pas encore pris en charge : rien n'est écrit chez lui), montre pour chacun ce qui part et ce qui est donné au modèle, demande confirmation, puis pose les crochets et l'accord. Sans terminal, elle s'arrête après l'étape 1 et dit la commande à lancer dans un terminal.
 
 On peut relancer `~/.leon/bin/leon setup` à volonté : ce qui est en place n'est pas réécrit (`--yes` ne demande rien, sauf pour remplacer un lanceur qui n'est pas celui de la forme installée ; `--url <adresse>` désigne le serveur de `leon login`). Relancer la commande d'installation met aussi la CLI à la version que sert Leon. `leon setup` relance aussi `leon login` (et le dit) quand l'ordinateur n'est plus connecté : jeton révoqué dans Réglages, `--url` d'un autre serveur que celui de la connexion, ou seulement `LEON_URL` et `LEON_TOKEN` posées dans le terminal (un Claude Code lancé depuis le Dock ne les voit pas). Un serveur qui ne répond pas ne bloque pas l'installation.
 
@@ -300,6 +300,18 @@ pnpm leon installer-crochets --oui    # écrit sans demander
 - L'accord s'écrit dans `~/.leon/accord.json` sous `codex`, avec la date de l'accord de capture (`capture_le`). Sans elle (l'accord d'avant, qui ne couvrait que le démarrage), rien n'est capté.
 - Retirer : `~/.leon/bin/leon retirer-crochets --outil codex` (depuis un clone : `pnpm leon retirer-crochets --outil codex`) retire les entrées de Leon de `hooks.json` et passe Codex en version 0 : plus rien ne part, ni ne revient.
 - Ce que l'essai réel a établi : [annexe 3 de l'étude mémoire des sessions](docs/etudes/memoire-sessions-2026-11/annexes/03-essai-codex.md).
+
+### Cursor
+
+`leon setup` propose aussi Cursor quand il trouve `~/.cursor` ; depuis un clone : `pnpm leon installer-crochets --outil cursor`. Cursor **reçoit** le bloc de démarrage au premier message de chaque conversation, et ses conversations **sont captées**, sous l'outil « Cursor ».
+
+> Écrit avant l'essai réel de Cursor (T26 du plan) : les noms de champs et d'outils viennent de la doc de Cursor et des relevés publics de ses transcripts. L'essai les confirmera ou les corrigera.
+
+- La commande ajoute à `~/.cursor/hooks.json` (forme plate, `version: 1`) deux entrées, chacune en fin de la liste de son évènement : `beforeSubmitPrompt` (5 s) lance `~/.leon/bin/leon crochet cursor prompt`, qui donne le bloc au premier message de la conversation, une seule fois (un témoin vide dans `~/.leon/temoins/cursor/`), et répond toujours `"continue": true` ; `stop` (30 s) lance `crochet cursor tour`, qui capte le tour et ne répond que `{}`. Vos autres entrées ne bougent pas.
+- **Ce qui part** : à chaque tour, les échanges nouveaux de la conversation (vos messages et les réponses de l'agent, pas les messages que Cursor écrit lui-même) et ses gestes, relevés dans son transcript `~/.cursor/projects/<projet>/agent-transcripts/<conversation>/<conversation>.jsonl` : fichiers écrits, commandes réduites à leur exécutable, branche, liste de tâches, et si la conversation est allée sur le web, sur un serveur MCP, dans un sous-agent ou sur le réseau. Le transcript n'écrit ni la sortie des outils ni l'heure des réponses : pas de commit ni de PR relevés, et les tours sont datés à l'heure du fichier. Les bases internes de Cursor (`state.vscdb`) ne sont jamais lues.
+- Ce qu'un crochet a manqué part au démarrage suivant d'une session, par `leon rattraper`, pour les seules conversations modifiées depuis l'accord de capture.
+- L'accord s'écrit dans `~/.leon/accord.json` sous `cursor`, avec la date de l'accord de capture.
+- Retirer : `~/.leon/bin/leon retirer-crochets --outil cursor` (depuis un clone : `pnpm leon retirer-crochets --outil cursor`).
 
 ### Ce qui est envoyé
 

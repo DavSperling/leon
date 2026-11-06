@@ -7,6 +7,7 @@ import { PROVIDER_LABELS } from '@/lib/providers';
 export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   claude_code: 'Claude Code',
   codex: 'Codex',
+  cursor: 'Cursor',
   claude_ai: 'claude.ai',
   chatgpt: 'ChatGPT',
   mcp_remember: 'Note (MCP)',

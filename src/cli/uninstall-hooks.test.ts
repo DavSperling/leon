@@ -557,7 +557,7 @@ describe('leon retirer-crochets : la vraie commande', () => {
     expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
   }, 30_000);
 
-  it.each([[['--outil', 'cursor']], [['--outil']], [['--autre']]])(
+  it.each([[['--outil', 'windsurf']], [['--outil']], [['--autre']]])(
     'refuse %j sans rien retirer, par un message fixe',
     async (options) => {
       const text = await writeSettings({ hooks: { SessionStart: [leonStart()] } });
@@ -578,7 +578,7 @@ describe('leon retirer-crochets : la vraie commande', () => {
     expect(run).toEqual({
       code: 1,
       stdout: '',
-      stderr: '--outil: unknown tool (one of: claude_code, codex).\n',
+      stderr: '--outil: unknown tool (one of: claude_code, codex, cursor).\n',
     });
   }, 30_000);
 });

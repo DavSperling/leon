@@ -1,14 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  type AnyPgColumn,
-  boolean,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { organizations, users } from './auth';
 
@@ -120,7 +111,8 @@ export const versionsMemoire = pgTable('versions_memoire', {
   motif: text('motif', {
     enum: ['rangement', 'note', 'correction', 'acceptation', 'restauration'],
   }).notNull(),
-  restaureDe: uuid('restaure_de').references((): AnyPgColumn => versionsMemoire.id),
+  // Clé étrangère composée (tenant_id, source_id, restaure_de) en SQL : une version de la même cible.
+  restaureDe: uuid('restaure_de'),
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   acl: acl(),
 });

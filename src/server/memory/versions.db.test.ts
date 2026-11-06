@@ -111,10 +111,35 @@ describe('writeVersion', () => {
     const [alice, paul] = await pair();
     const { sourceId: own } = await seedSource(alice);
     const theirs = await seedThread(paul);
+    // Une note de Paul que l'équipe voit : la RLS la montre à Alice, seul le filtre de l'auteur la refuse.
+    const { sourceId: teamNote } = await seedSource(paul, { kind: 'mcp_remember' });
+    await adminDb
+      .update(sources)
+      .set({ acl: [paul.tenantId] })
+      .where(eq(sources.id, teamNote));
 
     expect(await write(alice, { sourceId: own, attendue: 0 })).toBe('introuvable');
     expect(await write(alice, { sourceId: theirs, attendue: 0 })).toBe('introuvable');
-    expect([...(await stored(own)), ...(await stored(theirs))]).toEqual([]);
+    expect(await write(alice, { sourceId: teamNote, attendue: 0 })).toBe('introuvable');
+    expect([
+      ...(await stored(own)),
+      ...(await stored(theirs)),
+      ...(await stored(teamNote)),
+    ]).toEqual([]);
+  });
+
+  it('le masque allonge un texte à la borne : la version est coupée à 4 000 caractères, pas refusée', async () => {
+    const [alice] = await pair();
+    const thread = await seedThread(alice);
+    const texte = 'DB_PASSWORD=ab\n'.repeat(266);
+    expect(texte.length).toBeLessThanOrEqual(4000);
+
+    expect(await write(alice, { sourceId: thread, attendue: 0, texte })).toEqual({ n: 1 });
+
+    const [row] = await stored(thread);
+    expect(row?.texte).toHaveLength(4000);
+    expect(row?.texte.startsWith(`DB_PASSWORD=${SECRET_MASK}\n`)).toBe(true);
+    expect(row?.texte).not.toContain('=ab');
   });
 
   it('les compteurs avancent d’une écriture, d’une dépassée et d’une restauration, sans texte ni id', async () => {
@@ -153,7 +178,7 @@ describe('la lecture des versions', () => {
     expect(await readLatest(alice, thread)).toEqual({ n: 1, version: null });
   });
 
-  it("v2 illisible et v1 lisible : la lecture de l'état rend l'état déterministe, jamais v1", async () => {
+  it("v2 illisible et v1 lisible : aucune version rendue (l'appelant rend l'état déterministe), jamais v1", async () => {
     const [alice, paul] = await pair();
     const thread = await seedThread(alice);
     const pr = await teamPr(paul);
@@ -297,6 +322,39 @@ describe('restoreVersion', () => {
 
     expect(await readLatest(alice, thread)).toEqual({ n: 3, version: null });
     expect(await readVersion(alice, thread, 3)).toBeNull();
+  });
+
+  it("une restauration dont la version d'origine est invisible n'est pas rendue", async () => {
+    const [alice, paul] = await pair();
+    const thread = await seedThread(alice);
+    const code = await session(alice, false);
+    // Posées hors de writeVersion : une origine du modèle au nom de Paul, qu'Alice ne voit pas sous RLS.
+    const version = (ownerUserId: string, values: Partial<typeof versionsMemoire.$inferInsert>) =>
+      adminDb
+        .insert(versionsMemoire)
+        .values({
+          tenantId: alice.tenantId,
+          ownerUserId,
+          sourceId: thread,
+          n: 1,
+          texte: 'Tiré du résumé.',
+          entrees: [code],
+          ecritPar: 'modele',
+          motif: 'rangement',
+          acl: [ownerUserId],
+          ...values,
+        })
+        .returning({ id: versionsMemoire.id });
+    const [origin] = await version(paul.userId, {});
+    await version(alice.userId, {
+      n: 2,
+      ecritPar: 'humain',
+      motif: 'restauration',
+      restaureDe: origin?.id,
+    });
+
+    expect(await readLatest(alice, thread)).toEqual({ n: 2, version: null });
+    expect(await listVersions(alice, thread)).toEqual([]);
   });
 
   it('une source de plus après la restauration d’une version du modèle : aucune version serveur ne l’écrase', async () => {

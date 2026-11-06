@@ -22,15 +22,18 @@ create table versions_memoire (
   outil text,
   session text,
   motif text not null check (motif in ('rangement', 'note', 'correction', 'acceptation', 'restauration')),
-  -- La version d'origine du texte restauré, jamais une restauration.
-  restaure_de uuid references versions_memoire(id),
+  -- La version d'origine du texte restauré, jamais une restauration ; de la même cible (clé ci-dessous).
+  restaure_de uuid,
   cree_le timestamptz not null default now(),
   -- Privée à son auteur, quoi qu'écrive le code : l'accès ne peut être que [owner_user_id].
   acl uuid[] not null check (acl = array[owner_user_id]),
   -- Un état du modèle sans entrée échapperait à la règle de lecture.
   check (ecrit_par <> 'modele' or cardinality(entrees) > 0),
   foreign key (tenant_id, source_id) references sources (tenant_id, id) on delete cascade,
-  unique (source_id, n)
+  unique (source_id, n),
+  -- Une restauration ne pointe que dans sa cible et son organisation : la règle de lecture suit l'origine.
+  unique (tenant_id, source_id, id),
+  foreign key (tenant_id, source_id, restaure_de) references versions_memoire (tenant_id, source_id, id)
 );
 
 alter table versions_memoire enable row level security;

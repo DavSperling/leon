@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { versionsMemoire } from '@/server/db/schema/memory';
@@ -14,26 +14,39 @@ async function pair(): Promise<[TenantContext, TenantContext]> {
   return members as [TenantContext, TenantContext];
 }
 
-// Une version posée par le propriétaire (hors RLS), comme l'écrirait writeVersion.
-const insertVersion = (
+// Une version posée par le propriétaire (hors RLS), comme l'écrirait writeVersion. Rend son id.
+const insertVersion = async (
   ctx: TenantContext,
   sourceId: string,
-  values: { acl?: string[]; ecritPar?: string; entrees?: string[] } = {},
+  values: {
+    n?: number;
+    acl?: string[];
+    ecritPar?: string;
+    entrees?: string[];
+    restaureDe?: string;
+  } = {},
 ) =>
-  adminPool.query(
-    `insert into versions_memoire (tenant_id, owner_user_id, source_id, n, texte, entrees, ecrit_par, motif, acl)
-     values ($1, $2, $3, 1, 'Où j''en suis.', $4::uuid[], $5, 'rangement', $6::uuid[])`,
-    [
-      ctx.tenantId,
-      ctx.userId,
-      sourceId,
-      values.entrees ?? [],
-      values.ecritPar ?? 'serveur',
-      values.acl ?? [ctx.userId],
-    ],
-  );
+  (
+    await adminPool.query<{ id: string }>(
+      `insert into versions_memoire
+         (tenant_id, owner_user_id, source_id, n, texte, entrees, ecrit_par, motif, acl, restaure_de)
+       values ($1, $2, $3, $4, 'Où j''en suis.', $5::uuid[], $6, 'rangement', $7::uuid[], $8)
+       returning id`,
+      [
+        ctx.tenantId,
+        ctx.userId,
+        sourceId,
+        values.n ?? 1,
+        values.entrees ?? [],
+        values.ecritPar ?? 'serveur',
+        values.acl ?? [ctx.userId],
+        values.restaureDe ?? null,
+      ],
+    )
+  ).rows[0]?.id;
 
 const CHECK_VIOLATION = { code: '23514' };
+const FOREIGN_KEY_VIOLATION = { code: '23503' };
 
 describe('versions_memoire', () => {
   it("la version d'un collègue est introuvable", async () => {
@@ -88,5 +101,34 @@ describe('versions_memoire', () => {
     await expect(
       insertVersion(alice, thread, { ecritPar: 'modele', entrees: [session] }),
     ).resolves.toBeDefined();
+  });
+
+  it("restaure_de ne mène qu'à une version de la même cible", async () => {
+    const [alice] = await pair();
+    const thread = await seedThread(alice);
+    const other = await seedThread(alice);
+    const origin = await insertVersion(alice, thread);
+
+    await expect(insertVersion(alice, other, { restaureDe: origin })).rejects.toMatchObject(
+      FOREIGN_KEY_VIOLATION,
+    );
+    await expect(insertVersion(alice, thread, { n: 2, restaureDe: origin })).resolves.toBeDefined();
+  });
+
+  it('supprimer_fil emporte les versions du fil, restauration comprise', async () => {
+    const [alice] = await pair();
+    const thread = await seedThread(alice);
+    const origin = await insertVersion(alice, thread);
+    await insertVersion(alice, thread, { n: 2, restaureDe: origin });
+
+    const { rows } = await withTenant(alice, (tx) =>
+      tx.execute<{ deleted: boolean }>(sql`select supprimer_fil(${thread}) as deleted`),
+    );
+
+    expect(rows).toEqual([{ deleted: true }]);
+    const left = await adminPool.query('select id from versions_memoire where source_id = $1', [
+      thread,
+    ]);
+    expect(left.rows).toEqual([]);
   });
 });

@@ -1,7 +1,8 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { maskSecrets } from '@/capture/mask-secrets';
+import { factText } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { users } from '@/server/db/schema/auth';
 import { sources, versionsMemoire } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { textArray } from '@/server/search/filters-sql';
@@ -23,7 +24,9 @@ export type EcritPar = (typeof versionsMemoire.$inferSelect)['ecritPar'];
 export type Motif = (typeof versionsMemoire.$inferSelect)['motif'];
 
 // Ce qui a des versions : un fil (D21) ou une note (D38). Jamais la session d'un outil.
-const CIBLES = ['leon_fil', 'mcp_remember'] as const;
+export const CIBLES = ['leon_fil', 'mcp_remember'] as const;
+// C12, comme le check de 0052.
+const TEXTE_MAX = 4000;
 
 export type Version = {
   id: string;
@@ -65,9 +68,11 @@ const FROM = (ctx: TenantContext, sourceId: string) => sql`
   from versions_memoire v left join versions_memoire o on o.id = v.restaure_de
   where v.tenant_id = ${ctx.tenantId} and v.source_id = ${sourceId}`;
 const DU_MODELE = sql`coalesce(o.ecrit_par, v.ecrit_par) = 'modele'`;
-// La règle de lecture de D33, celle de readAboutSuggestion : sous RLS, une source cachée n'est pas vue.
+// La règle de lecture de D33, celle de readAboutSuggestion : sous RLS, une source cachée n'est pas vue. Une origine
+// invisible ne dit pas si le texte vient du modèle : la version ne se lit pas.
 const LISIBLE = sql`(
-  not exists (
+  (v.restaure_de is null or o.id is not null)
+  and not exists (
     select 1 from unnest(v.entrees) e(id) where not exists (select 1 from sources s where s.id = e.id))
   and (not ${DU_MODELE} or not exists (
     select 1 from sources s
@@ -130,6 +135,13 @@ export async function writeVersion(
     )
     .for('update');
   if (!target) return 'introuvable';
+  // Après le verrou, qu'une suppression du compte prend aussi (deleteAccount) : elle est validée ou pas commencée.
+  // Un compte supprimé n'écrit plus, sa note restée comprise.
+  const [author] = await tx
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, ctx.userId));
+  if (!author || author.deletedAt) return 'introuvable';
   const last = await latest(tx, ctx, input.sourceId);
   if ((last?.n ?? 0) !== input.attendue) {
     count('depassee');
@@ -142,7 +154,8 @@ export async function writeVersion(
     ownerUserId: ctx.userId,
     sourceId: input.sourceId,
     n,
-    texte: maskSecrets(input.texte),
+    // Le masque peut allonger le texte : la borne se réapplique après, comme pour les faits.
+    texte: factText(input.texte, TEXTE_MAX),
     entrees: input.entrees,
     tours: input.tours ?? [],
     ecritPar: input.ecritPar,

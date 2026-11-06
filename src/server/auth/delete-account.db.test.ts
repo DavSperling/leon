@@ -4,8 +4,9 @@ import { afterAll, describe, expect, it } from 'vitest';
 import type { PipedreamConfig } from '@/server/connectors/pipedream';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
-import { sources, turns } from '@/server/db/schema/memory';
+import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
+import { type WriteInput, writeVersion } from '@/server/memory/versions';
 import { adminDb, adminPool } from '@/test/db';
 import {
   createTestTenant,
@@ -576,6 +577,71 @@ describe('deleteAccount : ce que le dialogue a montré', () => {
     }
 
     expect((await deletionInfo(member)).activeMembers).toBe(2);
+  });
+});
+
+// Une écriture de version tient la cible, puis l'organisation et la personne (clés étrangères) : la suppression du
+// compte prend ses cibles avant l'organisation, et l'écriture qui l'attend voit ensuite le compte supprimé.
+describe('deleteAccount : une version écrite au même instant', () => {
+  const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+  const version = (sourceId: string): WriteInput => ({
+    sourceId,
+    attendue: 0,
+    texte: 'Où j’en suis.',
+    entrees: [],
+    ecritPar: 'serveur',
+    motif: 'rangement',
+  });
+  const versionsOf = (userId: string) =>
+    adminDb
+      .select({ id: versionsMemoire.id })
+      .from(versionsMemoire)
+      .where(eq(versionsMemoire.ownerUserId, userId));
+
+  it("ne se bloque pas avec l'écriture d'une version du fil qui tient déjà le fil", async () => {
+    const { people } = await team(['owner', 'member']);
+    const [, alice] = people as [TenantContext, TenantContext];
+    const thread = await seedThread(alice);
+    let leaving: Promise<unknown> = Promise.resolve();
+
+    const written = await withTenant(alice, async (tx) => {
+      await tx.select({ id: sources.id }).from(sources).where(eq(sources.id, thread)).for('update');
+      leaving = deleteAccount(alice, null, false);
+      await pause();
+      // Avec l'ancien ordre, cette insertion attend l'organisation que la suppression tient, qui attend ce fil.
+      return writeVersion(tx, alice, version(thread));
+    });
+
+    expect(written).toEqual({ n: 1 });
+    await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+    expect(await adminDb.select().from(sources).where(eq(sources.id, thread))).toEqual([]);
+    expect(await versionsOf(alice.userId)).toEqual([]);
+  });
+
+  it('une note écrite pendant la suppression ne garde aucune version', async () => {
+    const { people } = await team(['owner', 'member']);
+    const [, alice] = people as [TenantContext, TenantContext];
+    const { sourceId: note } = await seedSource(alice, { kind: 'mcp_remember' });
+    // Retient la suppression au milieu, l'organisation déjà prise.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from member where "userId" = $1 for update', [alice.userId]);
+      const leaving = deleteAccount(alice, null, false);
+      await pause();
+      const writing = withTenant(alice, (tx) => writeVersion(tx, alice, version(note)));
+      await pause();
+      await holding.query('commit');
+
+      await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+      expect(await writing).toBe('introuvable');
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+
+    expect(await adminDb.select().from(sources).where(eq(sources.id, note))).toHaveLength(1);
+    expect(await versionsOf(alice.userId)).toEqual([]);
   });
 });
 

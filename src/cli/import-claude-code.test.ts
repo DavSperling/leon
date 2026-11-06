@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURN_TEXT_MAX } from '../capture/turn';
+import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import {
   countOf,
   createFactsSender,
@@ -468,6 +469,19 @@ describe('importClaudeCode : les faits de chaque session', () => {
 
     expect(facts).toHaveBeenCalledTimes(3);
     expect(summary).toMatchObject({ sessions: 3, failures: 3 });
+  });
+
+  // Le retrait relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import l'arrête.
+  it('un retrait écrit entre deux sessions : plus rien ne part, ni tours ni faits', async () => {
+    const { deps, facts, events } = makeFactsDeps();
+    const withdrawn = async () => events.length > 0;
+
+    await expect(importClaudeCode(importOptions(), { ...deps, withdrawn })).rejects.toThrow(
+      CONSENT_WITHDRAWN_MESSAGE,
+    );
+
+    expect(facts).toHaveBeenCalledTimes(1);
+    expect(new Set(events.map((event) => event.split(' ')[1])).size).toBe(1);
   });
 
   it('arrête tout quand le jeton est refusé à l’envoi des faits', async () => {

@@ -11,6 +11,7 @@ import {
   TURNS_PER_BATCH_MAX,
 } from '../capture/turn';
 import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
+import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
@@ -39,6 +40,9 @@ export type ImportDeps = {
   // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
+  // L'accord retiré (consent.ts), relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import
+  // l'arrête, sans autre envoi. La borne d'une heure du résumé (resume-worker.ts) en dépend.
+  withdrawn?: () => Promise<boolean>;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
   // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
   // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; de
@@ -238,6 +242,7 @@ export async function importClaudeCode(
   // Un serveur qui refuse les faits les refusera pour toutes les sessions : un seul message, plus aucun envoi.
   let factsRefused = false;
   for (const file of await findSessionFiles(options.baseDir)) {
+    if (await deps.withdrawn?.()) throw new Error(CONSENT_WITHDRAWN_MESSAGE);
     try {
       const loaded = await loadSession(file, options);
       const turns = loaded?.session.turns.filter((turn) => !seen.has(turn.external_id)) ?? [];

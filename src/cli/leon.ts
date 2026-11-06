@@ -137,6 +137,7 @@ async function runImport(args: string[]): Promise<number> {
   const deps: ImportDeps = {
     out: console.log,
     git: gitInDirectory,
+    withdrawn,
     send: env ? createIngestSender(fetch, env) : nothingSent,
     ...(accord === null
       ? {}

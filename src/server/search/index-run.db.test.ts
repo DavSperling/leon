@@ -600,6 +600,10 @@ describe('indexIngestRun', () => {
     });
   });
 
+  // La machine de la CI (2 cœurs, 4 fichiers de tests en parallèle) va plus lentement que le poste : la borne s'y
+  // desserre, elle attrape encore un découpage devenu quadratique.
+  const MAX_SECONDS = process.env.CI ? 25 : 10;
+
   // Vigilance 2 : un document énorme se découpe sans saturer la mémoire ni bloquer la file.
   it('indexe en moins de 10 s une source de 2 Mo de texte (250 tours de 8 000), en un nombre borné de passages', async () => {
     const run = await seedRun(alice, {
@@ -612,7 +616,7 @@ describe('indexIngestRun', () => {
     const seconds = (performance.now() - started) / 1000;
 
     expect(result).toBe('indexe');
-    expect(seconds).toBeLessThan(10);
+    expect(seconds).toBeLessThan(MAX_SECONDS);
     const rows = await readPassages(alice, run.sourceId);
     expect(rows.length).toBeGreaterThanOrEqual(1250);
     expect(rows.length).toBeLessThanOrEqual(2000);
@@ -630,7 +634,7 @@ describe('indexIngestRun', () => {
     const seconds = (performance.now() - started) / 1000;
 
     const rows = await readPassages(alice, run.sourceId);
-    expect(seconds).toBeLessThan(10);
+    expect(seconds).toBeLessThan(MAX_SECONDS);
     expect(
       await readVectors(
         alice,

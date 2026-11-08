@@ -304,7 +304,8 @@ describe('le lanceur écrit, lancé par sh', () => {
       `${join(weirdHome, '.leon', 'cli', 'actuelle', 'leon.mjs')}\ncrochet\ncodex\nfin\n--entree\n/f\n`,
     );
     expect(await launch(['crochet', 'codex', 'tour'])).toContain('tour');
-  });
+    // Deux lancements de sh à la suite : sous la charge de toute la suite, 5 s ne suffisent pas toujours.
+  }, 10_000);
 
   it('forme clone : pnpm, ses options, le clone, puis les arguments du crochet', async () => {
     await writeLauncher(weirdHome, { kind: 'clone', repoDir: join(weirdHome, 'mon leon') });

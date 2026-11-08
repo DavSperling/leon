@@ -1,0 +1,75 @@
+# Les vérifications de chaque PR et de chaque poussée sur main : les types, le lint, les tests unitaires et le
+# build de production, puis les tests en base sur un Postgres jetable, monté comme celui de docker compose.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Une nouvelle poussée sur une PR annule la passe précédente, devenue inutile. Sur main, chaque commit garde
+# sa passe : c'est ce que Railway déploie.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  code:
+    name: Types, lint, tests unitaires et build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # version lue dans packageManager
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test:unit
+      # Le build que lance Railway : env.ts valide l'environnement pendant `next build`. Valeurs factices, pas
+      # des secrets ; aucune connexion à la base n'est ouverte au build.
+      - run: pnpm build
+        env:
+          DATABASE_URL: postgres://leon_app:leon_app@127.0.0.1:54329/leon_test
+          BETTER_AUTH_SECRET: ci-build-secret-ci-build-secret-000000
+          BETTER_AUTH_URL: http://localhost:3000
+
+  base:
+    name: Tests en base
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Le port de docker compose : les tests se connectent à 127.0.0.1:54329 (src/test/test-env.ts).
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      # La base est jetable : les migrations qui suppriment des tables peuvent s'appliquer à leon_test.
+      LEON_TEST_ACCEPTE_MIGRATIONS_DESTRUCTIVES: oui
+    steps:
+      - uses: actions/checkout@v7
+      # Les rôles, les bases et l'extension vector, comme au premier lancement de docker compose.
+      - run: psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 54329 -U postgres -f docker/postgres/init.sql
+        env:
+          PGPASSWORD: postgres
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:db

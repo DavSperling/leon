@@ -671,7 +671,9 @@ describe.skipIf(HOST_PLATFORM === undefined)('le script lancé par sh', () => {
         `case "$1" in -s) echo '${os}' ;; -m) echo '${arch}' ;; *) echo '${os}' ;; esac`,
       );
       await fake('sysctl', `echo ${rosetta ? 1 : 0}`);
-      await fake('xz', 'exit 0');
+      // Le tar GNU de Linux, lui, appelle xz pour décompresser : le faux renvoie au vrai quand il existe.
+      const realXz = execFileSync('sh', ['-c', 'command -v xz || true']).toString().trim();
+      await fake('xz', realXz ? `exec ${realXz} "$@"` : 'exit 0');
       if (ldd) await fake('ldd', `cat >&2 <<'EOF'\n${ldd.text}\nEOF\nexit ${ldd.exit}`);
       return `${fakes}:${shim}`;
     }

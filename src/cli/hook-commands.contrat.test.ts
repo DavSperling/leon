@@ -224,7 +224,12 @@ describe('le lanceur réel', () => {
 
       const outcome = await runShell(hookLine('--version'), project, '');
 
-      expect(outcome).toEqual({ code: 0, stdout: 'dev\n', stderr: '' });
+      // Un clone sans .env.local (la CI, un worktree neuf) : Node le signale sur stderr, et rien d'autre ne doit y être.
+      const stderr = outcome.stderr.replace(
+        /^\.env\.local not found\. Continuing without it\.\n/,
+        '',
+      );
+      expect({ ...outcome, stderr }).toEqual({ code: 0, stdout: 'dev\n', stderr: '' });
     },
     TEST_TIMEOUT_MS,
   );

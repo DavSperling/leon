@@ -1,14 +1,13 @@
 // Installateur et retrait des crochets de Cursor (T29 du plan mémoire des sessions) : `leon setup` (setup.ts),
 // `leon installer-crochets --outil cursor` et `leon retirer-crochets --outil cursor`.
 //
-// shortcut: écrit avant l'essai réel T26, d'après la doc de Cursor (relevée le 02/11, annexe 02 de l'étude) et le forum ;
-// à recaler sur l'annexe 04 (délais, champs acceptés, approbation) :
+// D'après la doc de Cursor (relevée le 02/11, annexe 02 de l'étude), confirmée par l'essai réel T26 du 08/11 (annexe 04) :
 // - les crochets de l'utilisateur sont dans `~/.cursor/hooks.json`, forme plate : `{ "version": 1, "hooks": { "<évènement>":
 //   [ { "command", "timeout" } ] } }`, une liste d'entrées par évènement, sans groupe ;
 // - beforeSubmitPrompt (5 s, `crochet cursor prompt`) : le bloc de démarrage, une fois par conversation (D32 amendé : le
-//   premier message, pas sessionStart, que Cursor n'attend pas et que sa validation a refusé) ;
-// - stop (30 s, `crochet cursor tour`) : la capture, à chaque tour. Pas de sessionEnd, peu fiable (D9) ;
-// - aucune approbation documentée ; Cursor relit le fichier tout seul.
+//   premier message ; sessionStart n'est pas attendu par Cursor, l'essai l'a vu ne passer qu'avec un délai ailleurs) ;
+// - stop (30 s, `crochet cursor tour`) : la capture, à chaque tour. Pas de sessionEnd, jamais appelé pendant l'essai ;
+// - aucune approbation : Cursor a lu le fichier, `timeout` compris, sans rien demander.
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { type Evenement, isLeonLauncherCommand, launcherCommand } from './hook-commands';

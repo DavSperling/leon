@@ -3,8 +3,8 @@
 // le retrait. Comme install-codex.ts : seules les entrées de Leon sont touchées, un fichier illisible n'est jamais
 // réécrit, l'écriture est atomique et refusée si le fichier a changé pendant la question, l'accord (`outils.<outil>`,
 // version 2, et `capture_le`) s'écrit après la confirmation.
-import { mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { mkdir, readFile } from 'node:fs/promises';
+import { dirname, join, resolve, sep } from 'node:path';
 import {
   consentPath,
   FACTS_VERSION,
@@ -13,7 +13,7 @@ import {
   withdrawalRecorded,
   writeConsent,
 } from './consent';
-import type { Outil } from './hook-commands';
+import { launcherPath, type Outil } from './hook-commands';
 import {
   errorCode,
   type InstallDeps,
@@ -48,6 +48,29 @@ export type ToolInstall = {
 
 const LABELS = { ajout: 'add', 'mise-a-jour': 'update', inchange: 'already in place' } as const;
 
+// macOS refuse à une app (Cursor, Antigravity) de lancer un script rangé dans ces dossiers sans une autorisation
+// expresse (essai T26 : EPERM, le crochet ne démarre pas). Le lanceur `~/.leon/bin/leon` convient ; sous la forme clone,
+// il lance pnpm dans le clone : un clone rangé là ne marche pas.
+const MACOS_PROTECTED = ['Documents', 'Desktop', 'Downloads'];
+
+// Un avertissement quand le lanceur, sous la forme clone, pointe vers un dossier protégé de macOS ; null sinon.
+export async function protectedCloneWarning(
+  home: string,
+  label: string,
+  platform: NodeJS.Platform = process.platform,
+): Promise<string | null> {
+  if (platform !== 'darwin') return null;
+  const script = await readFile(launcherPath(home), 'utf8').catch(() => '');
+  const clone = /--dir '((?:[^']|'\\'')*)'/.exec(script)?.[1]?.replaceAll(`'\\''`, "'");
+  if (!clone) return null;
+  const inside = MACOS_PROTECTED.find((name) =>
+    `${resolve(clone)}${sep}`.startsWith(`${join(home, name)}${sep}`),
+  );
+  return inside
+    ? `Warning: the launcher runs Leon from a clone in ~/${inside} (${clone}), a folder macOS does not let ${label} run scripts from: its hooks would fail. Move the clone elsewhere, or use the installed form (\`leon setup\` without --depot).`
+    : null;
+}
+
 // Rend le code de sortie : 0 si les crochets et l'accord (capture comprise) sont en place, ou si l'utilisateur a refusé ;
 // 1 sinon.
 export async function installToolHooks(install: ToolInstall, deps: InstallDeps): Promise<number> {
@@ -63,6 +86,8 @@ export async function installToolHooks(install: ToolInstall, deps: InstallDeps):
   }
   const consentFile = consentPath(home);
   const consent = await factsConsent(home, outil);
+  const warning = await protectedCloneWarning(home, ADAPTATEURS[outil].label);
+  if (warning) deps.out(warning);
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   if (unchanged && consent?.capture_le) {
     deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);

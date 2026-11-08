@@ -1,9 +1,10 @@
 // Le lecteur des sessions de Cursor (T27 du plan mémoire des sessions) : ses tours et ses gestes, à partir du transcript
 // `~/.cursor/projects/<slug>/agent-transcripts/<conversation>/<conversation>.jsonl`.
 //
-// shortcut: écrit avant l'essai réel T26, d'après les relevés publics du format (Cursor 3.13, sonde
-// Einsia/agent-git `docs/mechanism-probing/cursor-kiro-formats.md` : 104 transcripts ; adaptateurs d'agit et d'engram).
-// À recaler sur l'annexe 04 de l'essai (noms d'outils, champs de leurs entrées, forme du bloc de Leon) :
+// D'après les relevés publics du format (Cursor 3.13, sonde Einsia/agent-git `docs/mechanism-probing/cursor-kiro-formats.md` :
+// 104 transcripts ; adaptateurs d'agit et d'engram), confirmés par l'essai réel T26 du 08/11 (annexe 04 : la forme seule de
+// trois transcripts ; outils vus : Shell `command`, `description` ; Grep `path`, `pattern` ; Glob `glob_pattern`,
+// `target_directory`) :
 // - deux formes de ligne : `{ role, message: { content: [...] } }` (rôles `user` et `assistant`) et
 //   `{ type: "turn_ended", status }` (depuis la 3.13 ; `status` vaut `success`, `error` ou `aborted`) ;
 // - blocs : `{ type: "text", text }`, et `{ type: "tool_use", name, input }` côté assistant. Aucune sortie d'outil n'est
@@ -13,6 +14,7 @@
 //   après une interruption (le seul sans `<user_query>`) ;
 // - aucune heure côté assistant, ni dossier, ni identifiant dans les lignes : la conversation est le nom du fichier,
 //   les tours sont datés à l'heure du fichier (T27), et le dossier vient du crochet (`workspace_roots`) ;
+// - le texte que Leon injecte au premier message n'apparaît pas dans le transcript ;
 // - les sous-agents écrivent sous `<conversation>/subagents/` : ce ne sont pas des sessions.
 import { basename } from 'node:path';
 import { z } from 'zod';
@@ -242,7 +244,8 @@ const PATCH_FILE = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/
 // Les gestes d'une session Cursor, à partir de son transcript. `root` est la racine du dépôt ; `brancheLue`, la
 // branche que lit git à la capture (le transcript n'en porte pas). Sans sortie d'outil dans le transcript, une commande
 // n'est jamais marquée en erreur, et ni commit ni PR ne se relèvent : les erreurs sont les tours finis en erreur.
-// shortcut: si l'essai T26 trouve les sorties d'outils (ailleurs que dans le transcript), relever commits et PR.
+// shortcut: l'essai T26 n'a trouvé aucune sortie d'outil dans le transcript ; relever commits et PR le jour où Cursor
+// les écrit.
 export function extractCursorFacts(
   content: string,
   file: CursorFile,

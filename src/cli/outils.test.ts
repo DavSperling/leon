@@ -85,6 +85,46 @@ describe('ADAPTATEURS.cursor', () => {
     expect(outside.fichiers).toEqual([]);
   });
 
+  // L'entrée de stop relevée à T26 (Cursor 3.29.9), identifiants et e-mail remplacés.
+  it('lit l’entrée de stop relevée à l’essai : son transcript_path, son dossier ; ni e-mail ni modèle', () => {
+    const transcript = `${PROJECTS}/Users-demo-essai/agent-transcripts/conv-9/conv-9.jsonl`;
+    const entree = cursor.entree(
+      {
+        conversation_id: 'conv-9',
+        generation_id: 'gen-9',
+        model: 'grok-4.7-medium',
+        status: 'completed',
+        loop_count: 0,
+        input_tokens: 18439,
+        session_id: 'conv-9',
+        hook_event_name: 'stop',
+        cursor_version: '3.29.9',
+        workspace_roots: ['/Users/demo/essai'],
+        user_email: 'personne@example.com',
+        transcript_path: transcript,
+      },
+      HOME,
+      {},
+    );
+
+    expect(entree.session).toBe('conv-9');
+    expect(entree.dossier).toBe('/Users/demo/essai');
+    expect(entree.fichiers[0]).toBe(transcript);
+    expect(JSON.stringify(entree)).not.toContain('personne@example.com');
+  });
+
+  it('sans conversation_id, prend session_id ; sans transcript_path (beforeSubmitPrompt), le déduit', () => {
+    const entree = cursor.entree(
+      { session_id: 'conv-8', transcript_path: null, workspace_roots: ['/Users/demo/essai'] },
+      HOME,
+      {},
+    );
+    expect(entree.session).toBe('conv-8');
+    expect(entree.fichiers[0]).toBe(
+      `${PROJECTS}/Users-demo-essai/agent-transcripts/conv-8/conv-8.jsonl`,
+    );
+  });
+
   it('une entrée illisible ne donne ni session, ni dossier, ni fichier', () => {
     expect(cursor.entree(null, HOME, {})).toEqual({
       session: null,

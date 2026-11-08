@@ -6,12 +6,22 @@
 // arrive au modèle au premier message, rôle developer, sans autre champ (Codex refuse un champ inconnu). Jamais
 // `continue: false`, qui arrêterait la session. Ses rollouts se lisent par capture/codex.ts (T18).
 //
-// Cursor (T27, T28) : shortcut: écrit avant l'essai réel T26, d'après la doc et les relevés publics (annexe 02 de
-// l'étude, forum de Cursor) ; à recaler sur l'annexe 04. Le bloc arrive au premier message d'une conversation, par
-// beforeSubmitPrompt (`crochet cursor prompt`), une seule fois (témoin, temoins.ts) : sessionStart n'est pas attendu par
-// Cursor, et sa validation l'a refusé dans des versions récentes. La sortie de beforeSubmitPrompt garde toujours
-// `continue: true` : sans lui, le message de la personne pourrait être bloqué. stop ne rend que `{}`, jamais
-// `followup_message` (il serait envoyé comme message suivant et ferait boucler).
+// Cursor (T27, T28), recalé sur l'essai réel T26 du 08/11 (Cursor 3.29.9 pour ses crochets,
+// docs/etudes/memoire-sessions-2026-11/annexes/04-essai-cursor.md) :
+// - le bloc arrive au premier message d'une conversation, par beforeSubmitPrompt (`crochet cursor prompt`), une seule
+//   fois (témoin, temoins.ts) : `{"continue":true,"additional_context":…}` atteint le modèle, et il le voit encore aux
+//   messages suivants. Cursor attend ce crochet (essai à 3 s). sessionStart, lui, ne passe qu'au gré des temps de
+//   réponse : Cursor ne semble pas l'attendre. La sortie garde toujours `continue: true`, sans quoi le message de la
+//   personne pourrait être bloqué ;
+// - l'entrée porte `conversation_id` (et `session_id`, le même), `workspace_roots`, `cursor_version`, et
+//   `transcript_path`, qui n'est rempli qu'à stop (aussi dans CURSOR_TRANSCRIPT_PATH). Elle porte aussi l'e-mail de la
+//   personne, que Leon ne lit pas. Le crochet tourne depuis `~/.cursor`, pas depuis le dossier de travail ;
+// - stop part à chaque tour ; il ne rend que `{}`, jamais `followup_message` (il serait envoyé comme message suivant et
+//   ferait boucler). sessionEnd n'a jamais été appelé ;
+// - Cursor lance aussi les crochets de Claude Code (`~/.claude/settings.json`) : `leon briefing` et `leon capter-session`
+//   s'y taisent (isOtherToolHook, `cursor_version` et CURSOR_VERSION), le bloc n'arrive donc pas deux fois ;
+// - macOS refuse à Cursor de lancer un script rangé dans Documents, Bureau ou Téléchargements : le lanceur
+//   (`~/.leon/bin/leon`) convient, un clone de Leon rangé là ne convient pas (install-outil.ts le signale).
 //
 // Antigravity (T32, T33), recalé sur l'essai réel T31 du 08/11 dans l'appli 2.0.1
 // (docs/etudes/memoire-sessions-2026-11/annexes/05-essai-antigravity.md) :
@@ -198,7 +208,8 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
     uneFois: true,
     racines: (home) => [join(cursorHome(home), 'projects')],
     entree: (input, home, env) => {
-      const conversation = text(field(input, 'conversation_id'));
+      const conversation =
+        text(field(input, 'conversation_id')) ?? text(field(input, 'session_id'));
       const dossier = absolute(first(field(input, 'workspace_roots')));
       const projects = join(cursorHome(home), 'projects');
       // Le transcript : celui du crochet, sinon CURSOR_TRANSCRIPT_PATH, sinon le chemin déduit du dossier (T28).

@@ -10,6 +10,8 @@ import {
   installCursorHooks,
   uninstallCursorHooks,
 } from './install-cursor';
+import { protectedCloneWarning } from './install-outil';
+import { writeLauncher } from './launcher';
 
 // L'installateur et le retrait des crochets de Cursor (T29), toujours dans un HOME temporaire : jamais le vrai ~/.cursor.
 
@@ -157,5 +159,25 @@ describe('uninstallCursorHooks', () => {
     expect(code).toBe(0);
     expect(out).toContain('nothing to remove');
     expect(await consentWithdrawn(home, 'cursor')).toBe(true);
+  });
+});
+
+// T26 : macOS refuse à Cursor de lancer un script rangé dans Documents, Bureau ou Téléchargements.
+describe('protectedCloneWarning', () => {
+  it('prévient quand le lanceur lance un clone rangé dans un dossier protégé de macOS', async () => {
+    await writeLauncher(home, { kind: 'clone', repoDir: join(home, 'Documents', 'leon') });
+
+    expect(await protectedCloneWarning(home, 'Cursor', 'darwin')).toContain(
+      'a clone in ~/Documents',
+    );
+    expect(await protectedCloneWarning(home, 'Cursor', 'linux')).toBeNull();
+  });
+
+  it('rien pour un clone ailleurs, ni pour la forme installée', async () => {
+    await writeLauncher(home, { kind: 'clone', repoDir: join(home, 'code', 'leon') });
+    expect(await protectedCloneWarning(home, 'Cursor', 'darwin')).toBeNull();
+
+    await writeLauncher(home, { kind: 'installee' }, () => true);
+    expect(await protectedCloneWarning(home, 'Cursor', 'darwin')).toBeNull();
   });
 });

@@ -42,6 +42,10 @@ describe('réinitialisation du mot de passe', () => {
     await expect(
       auth.api.resetPassword({ body: { token, newPassword: 'autre-motdepasse' } }),
     ).rejects.toThrow();
+    // Resend configuré : la connexion exige une adresse vérifiée (#119). Paul a suivi le lien de vérification.
+    await adminPool.query('update "user" set "emailVerified" = true where id = $1', [
+      created.userId,
+    ]);
     await expect(
       auth.api.signInEmail({ body: { email, password: 'nouveau-motdepasse' } }),
     ).resolves.toMatchObject({ user: { email } });

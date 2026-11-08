@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   CAPTURE_KINDS,
+  CODE_SESSION_KINDS,
   type IngestPayload,
   IngestPayloadSchema,
   ITEM_NATURES,
+  isCodeSessionKind,
   PROJECT_KEY_PATTERN,
   PROVIDER_IDS,
   projectKeyFromInput,
@@ -36,8 +38,16 @@ describe('IngestPayloadSchema', () => {
     expect(IngestPayloadSchema.safeParse(payload).success).toBe(true);
   });
 
-  it('accepte les quatre types de capture', () => {
-    expect(CAPTURE_KINDS).toEqual(['claude_code', 'claude_ai', 'chatgpt', 'mcp_remember']);
+  it('accepte les sept types de capture', () => {
+    expect(CAPTURE_KINDS).toEqual([
+      'claude_code',
+      'codex',
+      'cursor',
+      'antigravity',
+      'claude_ai',
+      'chatgpt',
+      'mcp_remember',
+    ]);
     for (const kind of CAPTURE_KINDS) {
       const body = { ...payload, source: { ...payload.source, kind } };
       expect(IngestPayloadSchema.safeParse(body).success, kind).toBe(true);
@@ -180,6 +190,19 @@ describe('listes de types', () => {
   it('TOOL_KINDS = les types de capture, le document ajouté à la main, puis les 42 connecteurs, sans doublon', () => {
     expect(TOOL_KINDS).toEqual([...CAPTURE_KINDS, 'document', ...PROVIDER_IDS]);
     expect(new Set(TOOL_KINDS).size).toBe(TOOL_KINDS.length);
+  });
+
+  // T18 : Codex rejoint Claude Code parmi les sessions de code, celles dont la CLI relève les gestes.
+  it('CODE_SESSION_KINDS = Claude Code, Codex, Cursor et Antigravity, des types de capture ; isCodeSessionKind les reconnaît seuls', () => {
+    expect(CODE_SESSION_KINDS).toEqual(['claude_code', 'codex', 'cursor', 'antigravity']);
+    for (const kind of CODE_SESSION_KINDS) expect(CAPTURE_KINDS).toContain(kind);
+    expect(CAPTURE_KINDS.filter(isCodeSessionKind)).toEqual([
+      'claude_code',
+      'codex',
+      'cursor',
+      'antigravity',
+    ]);
+    expect(isCodeSessionKind('github')).toBe(false);
   });
 
   // T39 : le fil de travail est un type de source que seul le serveur crée (D21) ; aucun outil ne le dépose.

@@ -23,18 +23,32 @@ import { type Connection, readConnection } from './connection';
 import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
-import { addCodexHook, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
+import {
+  addAntigravityHooks,
+  antigravityHooksPath,
+  installAntigravityHooks,
+} from './install-antigravity';
+import { addCodexHooks, CODEX_HOOKS_FILE, codexHome, installCodexHook } from './install-codex';
+import { addCursorHooks, cursorHooksPath, installCursorHooks } from './install-cursor';
 import {
   addLeonHooks,
   errorCode,
   installHooks,
   isYes,
+  type Json,
   load,
   parseSettings,
   SETTINGS_FILE,
 } from './install-hooks';
-import { type LauncherForm, launcherScript, writeLauncher } from './launcher';
+import type { ToolHookPlan } from './install-outil';
+import {
+  type LauncherForm,
+  launcherScript,
+  previousLauncherScripts,
+  writeLauncher,
+} from './launcher';
 import { requestMe } from './login';
+import { cursorHome, geminiHome } from './outils';
 import { isAllowedServerUrl } from './server-url';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
@@ -99,11 +113,14 @@ export async function ensureLauncher(
   io: { home: string; yes: boolean } & Pick<SetupDeps, 'out' | 'err' | 'ask'>,
 ): Promise<boolean> {
   const path = launcherPath(io.home);
-  const installed = launcherScript(io.home, { kind: 'installee' });
+  const installed = [
+    launcherScript(io.home, { kind: 'installee' }),
+    ...previousLauncherScripts(io.home, { kind: 'installee' }),
+  ];
   const confirm = async (old: string): Promise<boolean> => {
-    // --yes ne vaut que pour le lanceur de la forme installée, que Leon a écrit : celui d'un clone (qu'on perdrait de
-    // vue) ou d'un autre auteur se montre et se demande toujours.
-    if (!(io.yes && old === installed)) {
+    // --yes ne vaut que pour le lanceur de la forme installée, que Leon a écrit (aujourd'hui ou dans une version
+    // précédente) : celui d'un clone (qu'on perdrait de vue) ou d'un autre auteur se montre et se demande toujours.
+    if (!(io.yes && installed.includes(old))) {
       io.out(
         `${path} already exists and is different.\n  Now:\n${indent(old)}\n  Replaced by:\n${indent(launcherScript(io.home, form))}`,
       );
@@ -174,18 +191,60 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
 // Le crochet de Codex (T17), comme celui de Claude Code : la ligne finale distingue un « non » d'une installation.
 async function installCodex(codexDir: string, ctx: InstallContext): Promise<Installed> {
   const code = await installCodexHook({ codexDir, home: ctx.home, assumeYes: ctx.yes }, ctx);
-  if (code !== 0) return { failed: true, status: 'hook NOT installed (see above)' };
+  if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
   const settings = parseSettings(await load(join(codexDir, CODEX_HOOKS_FILE)));
   const inPlace =
     settings !== null &&
-    addCodexHook(settings, ctx.home)?.action === 'inchange' &&
-    (await factsConsent(ctx.home, 'codex')) !== null;
+    (addCodexHooks(settings, ctx.home)?.changes ?? []).every(
+      (change) => change.action === 'inchange',
+    ) &&
+    (await factsConsent(ctx.home, 'codex'))?.capture_le !== undefined;
   return {
     failed: false,
     status: inPlace
-      ? 'hook installed (approve it with /hooks in Codex)'
+      ? 'hooks installed (approve them with /hooks in Codex)'
       : 'skipped (not confirmed)',
   };
+}
+
+// Les crochets d'un outil installé par install-outil.ts : en place quand le plan ne change plus rien et que l'accord de
+// capture est écrit.
+async function toolInstalled(
+  code: number,
+  outil: 'cursor' | 'antigravity',
+  path: string,
+  plan: (settings: Json) => ToolHookPlan | null,
+  ctx: InstallContext,
+): Promise<Installed> {
+  if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
+  const settings = parseSettings(await load(path));
+  const inPlace =
+    settings !== null &&
+    (plan(settings)?.changes ?? []).every((change) => change.action === 'inchange') &&
+    (await factsConsent(ctx.home, outil))?.capture_le !== undefined;
+  return { failed: false, status: inPlace ? 'hooks installed' : 'skipped (not confirmed)' };
+}
+
+async function installCursor(_dir: string, ctx: InstallContext): Promise<Installed> {
+  const code = await installCursorHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  return toolInstalled(
+    code,
+    'cursor',
+    cursorHooksPath(ctx.home),
+    (settings) => addCursorHooks(settings, ctx.home),
+    ctx,
+  );
+}
+
+async function installAntigravity(_dir: string, ctx: InstallContext): Promise<Installed> {
+  const code = await installAntigravityHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  return toolInstalled(
+    code,
+    'antigravity',
+    antigravityHooksPath(ctx.home),
+    (settings) => addAntigravityHooks(settings, ctx.home),
+    ctx,
+  );
 }
 
 // Le dossier de réglages de Claude Code (CLAUDE_CONFIG_DIR, sinon ~/.claude), comme claudeConfigDir (env.ts), mais sous
@@ -194,8 +253,8 @@ const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
 // Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex au lot 4 ; Cursor et Gemini à leurs lots) :
-// les autres sont détectés mais dits « not supported yet ».
+// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8,
+// Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
 const TOOLS: {
   label: string;
   dir: (home: string, env: SetupDeps['env']) => string;
@@ -207,8 +266,8 @@ const TOOLS: {
     install: installClaudeCode,
   },
   { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
-  { label: 'Cursor', dir: (home) => join(home, '.cursor') },
-  { label: 'Gemini / Antigravity', dir: (home) => join(home, '.gemini') },
+  { label: 'Cursor', dir: (home) => cursorHome(home), install: installCursor },
+  { label: 'Gemini / Antigravity', dir: (home) => geminiHome(home), install: installAntigravity },
 ];
 
 // Pourquoi l'ordinateur est à reconnecter, ou null s'il est connecté. Seules les adresses de serveur se disent, par leur

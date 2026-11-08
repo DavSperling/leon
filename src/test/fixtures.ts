@@ -18,6 +18,9 @@ const CONNECTOR_MODES = Object.fromEntries(PROVIDER_IDS.map((id) => [id, 'connec
 
 const CAPTURE_MODE_BY_KIND: Record<ToolKind, TurnCaptureMode> = {
   claude_code: 'file',
+  codex: 'file',
+  cursor: 'file',
+  antigravity: 'file',
   claude_ai: 'network',
   chatgpt: 'network',
   mcp_remember: 'manual',

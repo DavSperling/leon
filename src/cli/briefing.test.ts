@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
@@ -270,7 +270,9 @@ describe('runBriefing', () => {
     git?: GitRunner;
     fetch?: ReturnType<typeof vi.fn>;
     scheduleUpdate?: () => Promise<unknown>;
-    outil?: 'codex';
+    scheduleCatchUp?: () => Promise<unknown>;
+    outil?: 'codex' | 'cursor' | 'antigravity';
+    evenement?: 'demarrage' | 'prompt';
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -292,7 +294,9 @@ describe('runBriefing', () => {
         out: (text) => out.push(text),
         err: (text) => err.push(text),
         ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
+        ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
         ...(input.outil ? { outil: input.outil } : {}),
+        ...(input.evenement ? { evenement: input.evenement } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -585,6 +589,204 @@ describe('runBriefing', () => {
     expect(err).toEqual([CONSENT_WITHDRAWN_MESSAGE]);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(git).not.toHaveBeenCalled();
+  });
+
+  // T28 : Cursor reçoit le bloc au premier message d'une conversation (beforeSubmitPrompt), une seule fois.
+  describe('Cursor : le bloc au premier message, une fois par conversation', () => {
+    const promptJson = (conversation: string) =>
+      Readable.from([
+        JSON.stringify({
+          conversation_id: conversation,
+          generation_id: 'g',
+          hook_event_name: 'beforeSubmitPrompt',
+          prompt: 'Bonjour',
+          workspace_roots: ['/projets/leon'],
+          cursor_version: '3.27.0',
+        }),
+      ]);
+    let cursorHome: string;
+    beforeEach(async () => {
+      cursorHome = await mkdtemp(join(homes, 'cursor-'));
+      await writeConsent(cursorHome, 'cursor', 2);
+    });
+
+    it('au premier message : le bloc dans la forme de Cursor, la conversation exclue ; au second : rien d’autre', async () => {
+      const first = setup({
+        stdin: promptJson('conv-1'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+        remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+      });
+      expect(await first.run()).toBe(0);
+      expect(first.out.map((line) => JSON.parse(line))).toEqual([
+        { continue: true, additional_context: BLOCK },
+      ]);
+      expect(first.asked()).toMatchObject({ projet: 'github.com/acme/leon', session: 'conv-1' });
+
+      const second = setup({
+        stdin: promptJson('conv-1'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      expect(await second.run()).toBe(0);
+      expect(second.out).toEqual(['{"continue":true}']);
+      expect(second.fetchImpl).not.toHaveBeenCalled();
+
+      const other = setup({
+        stdin: promptJson('conv-2'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await other.run();
+      expect(JSON.parse(other.out[0] ?? '{}')).toHaveProperty('additional_context', BLOCK);
+    });
+
+    it('sans accord, ou serveur en panne : {"continue":true}, jamais un message bloqué', async () => {
+      const without = setup({
+        stdin: promptJson('conv-3'),
+        home: notAgreed,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await without.run();
+      expect(without.out).toEqual(['{"continue":true}']);
+
+      const failing = setup({
+        stdin: promptJson('conv-4'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+        fetch: fetchReturning(new Response('{}', { status: 500 })),
+      });
+      await failing.run();
+      expect(failing.out).toEqual(['{"continue":true}']);
+      // Rien n'a été donné : le message suivant réessaie.
+      const retry = setup({
+        stdin: promptJson('conv-4'),
+        home: cursorHome,
+        outil: 'cursor',
+        evenement: 'prompt',
+      });
+      await retry.run();
+      expect(JSON.parse(retry.out[0] ?? '{}')).toHaveProperty('additional_context', BLOCK);
+    });
+
+    it('le premier message de Codex ne reçoit rien : son bloc vient au démarrage', async () => {
+      const harness = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home: codex,
+        outil: 'codex',
+        evenement: 'prompt',
+      });
+      await harness.run();
+      expect(harness.out).toEqual([]);
+      expect(harness.fetchImpl).not.toHaveBeenCalled();
+    });
+  });
+
+  // T33, recalé sur l'essai T31 : Antigravity reçoit le bloc par PreInvocation, une seule fois par conversation, alors que
+  // le crochet part avant chaque appel au modèle (`invocationNum` repart à 0 à chaque message).
+  describe('Antigravity : le bloc au premier PreInvocation, une seule fois', () => {
+    const agyJson = (invocationNum: number) =>
+      Readable.from([
+        JSON.stringify({
+          artifactDirectoryPath: '/Users/demo/.gemini/antigravity/brain/agy-1',
+          conversationId: 'agy-1',
+          initialNumSteps: 1,
+          invocationNum,
+          transcriptPath:
+            '/Users/demo/.gemini/antigravity/brain/agy-1/.system_generated/logs/transcript.jsonl',
+          workspacePaths: ['/projets/leon'],
+        }),
+      ]);
+
+    it('le bloc en ephemeralMessage au premier appel ; aux suivants, même à invocationNum 0 : {} sans rien demander', async () => {
+      const agyHome = await mkdtemp(join(homes, 'agy-'));
+      await writeConsent(agyHome, 'antigravity', 2);
+
+      const first = setup({
+        stdin: agyJson(0),
+        home: agyHome,
+        outil: 'antigravity',
+        evenement: 'prompt',
+        remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+      });
+      await first.run();
+      expect(first.out.map((line) => JSON.parse(line))).toEqual([
+        { injectSteps: [{ ephemeralMessage: BLOCK }] },
+      ]);
+      expect(first.asked()).toMatchObject({ projet: 'github.com/acme/leon', session: 'agy-1' });
+
+      for (const invocationNum of [1, 0]) {
+        const next = setup({
+          stdin: agyJson(invocationNum),
+          home: agyHome,
+          outil: 'antigravity',
+          evenement: 'prompt',
+        });
+        await next.run();
+        expect(next.out).toEqual(['{}']);
+        expect(next.fetchImpl).not.toHaveBeenCalled();
+      }
+    });
+  });
+
+  // Le rattrapage (T19, catch-up.ts) : lancé détaché au démarrage de tout outil, une fois la sortie écrite, avant la mise
+  // à jour automatique ; son échec ne change rien au crochet.
+  describe('rattrapage', () => {
+    const hook = () => Readable.from([hookJson('/projets/leon')]);
+
+    it('est lancé une fois le bloc écrit, avant la mise à jour, et le crochet rend la même sortie', async () => {
+      const calls: string[] = [];
+      const harness = setup({
+        stdin: hook(),
+        scheduleCatchUp: async () => {
+          calls.push(`rattrapage après ${harness.out.length} sortie`);
+        },
+        scheduleUpdate: async () => {
+          calls.push('mise à jour');
+        },
+      });
+
+      expect(await harness.run()).toBe(0);
+
+      expect(calls).toEqual(['rattrapage après 1 sortie', 'mise à jour']);
+      expect(harness.out).toEqual([BLOCK]);
+    });
+
+    it('est lancé aussi au démarrage de Codex ; une erreur ne change ni la sortie ni la mise à jour', async () => {
+      const scheduleUpdate = vi.fn(async () => {});
+      const { run, out, err } = setup({
+        stdin: hook(),
+        home: codex,
+        outil: 'codex',
+        scheduleCatchUp: async () => {
+          throw new Error('boom');
+        },
+        scheduleUpdate,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toHaveLength(1);
+      expect(err).toEqual([]);
+      expect(scheduleUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('n’est pas lancé sous un autre outil qui a recopié les crochets de Claude Code', async () => {
+      const scheduleCatchUp = vi.fn(async () => {});
+
+      await setup({
+        stdin: hook(),
+        env: { ...serverEnv, CURSOR_VERSION: '1.7.2' },
+        scheduleCatchUp,
+      }).run();
+
+      expect(scheduleCatchUp).not.toHaveBeenCalled();
+    });
   });
 
   // La mise à jour automatique (S12, self-update.ts) : `scheduleUpdate` décide (24 h, forme clone) et lance le processus

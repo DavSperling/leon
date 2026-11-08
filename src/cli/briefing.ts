@@ -43,6 +43,7 @@ import type { Outil } from './hook-commands';
 import { ADAPTATEURS } from './outils';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
+import { hasTemoin, writeTemoin } from './temoins';
 
 const TIMEOUT_MS = 3000;
 // Claude Code écrit son JSON puis ferme l'entrée : une seconde suffit largement. Au-delà (une entrée laissée
@@ -160,18 +161,47 @@ export type BriefingCommandDeps = {
   // La mise à jour automatique (scheduleUpdate, self-update.ts) : elle décide si elle est due et lance le processus
   // détaché. Absente, rien n'est lancé.
   scheduleUpdate?: () => Promise<unknown>;
+  // Le rattrapage des outils dont la capture est acceptée (T19 : `leon rattraper`, lancé détaché). Absent, rien.
+  scheduleCatchUp?: () => Promise<unknown>;
   // Le crochet de démarrage d'un autre outil (`leon crochet <outil> demarrage`, C6) ; absent : Claude Code.
   outil?: Outil;
+  // L'évènement de cet outil : le démarrage, ou le premier message (`prompt` : Cursor, Antigravity, une fois par
+  // conversation). Absent : le démarrage.
+  evenement?: 'demarrage' | 'prompt';
 };
+
+// Le JSON de l'entrée, ou null s'il est vide ou illisible.
+function parseInput(stdin: string): unknown {
+  try {
+    return JSON.parse(stdin);
+  } catch {
+    return null;
+  }
+}
 
 // La commande `leon briefing`. Seul le bloc passe sur la sortie standard ; les messages ne citent ni le projet ni
 // l'adresse du serveur. Le code de sortie vaut toujours 0, pour ne jamais gêner Claude Code. Lancée par un autre
 // outil (Cursor, Codex : isOtherToolHook), elle n'écrit rien, pas même un message de configuration ou de retrait.
 // L'accord retiré (version 0, consent.ts), elle ne demande rien et ne lance pas git.
+//
+// Sous un autre outil (`leon crochet <outil> demarrage|prompt`) : l'entrée se lit par son adaptateur (outils.ts), et le
+// bloc s'enveloppe dans sa forme. Quand l'outil attend une réponse même sans bloc (Cursor : `{"continue":true}`), elle
+// s'écrit dans tous les cas. Pour un outil qui reçoit le bloc au premier message, un témoin le garde d'arriver deux fois
+// dans la même conversation (temoins.ts) : déjà reçu, la commande ne demande rien au serveur.
 export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
+  const outil = deps.outil;
+  const evenement = deps.evenement ?? 'demarrage';
+  const adapter = outil === undefined ? undefined : ADAPTATEURS[outil];
+  let answered = false;
+  const answer = (text: string) => {
+    answered = true;
+    deps.out(text);
+  };
   try {
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
-    const outil = deps.outil;
+    const entree = adapter && outil ? adapter.entree(parseInput(stdin), deps.home, deps.env) : null;
+    // Le premier message d'un outil qui reçoit le bloc au démarrage : rien (le rappel du lot 13 viendra ici).
+    if (adapter && evenement === 'prompt' && !adapter.uneFois) return 0;
     if (outil === undefined) {
       if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
       // Après la garde : sous un autre outil, même ce message ne s'écrit pas.
@@ -184,8 +214,12 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       deps.err(`Leon: no consent recorded for ${ADAPTATEURS[outil].label}: nothing is sent.`);
       return 0;
     }
+    const conversation = entree?.session ?? null;
+    if (outil && adapter?.uneFois && conversation !== null) {
+      if (await hasTemoin(deps.home, outil, conversation)) return 0;
+    }
     const server = await resolveServerEnv(deps.env, deps.home);
-    const directory = briefingDirectory(stdin, deps.env, deps.cwd);
+    const directory = entree?.dossier ?? briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
     if (outil === undefined && (await factsConsent(deps.home, 'claude_code')) === null) {
       // Sans l'accord du bloc : ni branche ni session ne partent, le point du matin seul, comme avant.
@@ -199,24 +233,32 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
       text = await fetchStartText(deps.fetch, server, {
         projet,
         branche,
-        session: startingSession(stdin),
+        session: conversation ?? startingSession(stdin),
       });
     }
     if (text === null) {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
     } else {
-      deps.out(outil ? ADAPTATEURS[outil].demarrage(text) : startOutput('claude_code', text));
+      answer(adapter ? adapter.injection(text, evenement) : startOutput('claude_code', text));
+      if (outil && adapter?.uneFois && conversation !== null) {
+        await writeTemoin(deps.home, outil, conversation);
+      }
     }
-    // Une fois la sortie écrite, la mise à jour automatique (S12) : détachée, elle n'est jamais attendue, et ni son
-    // échec ni sa lenteur ne changent la sortie du crochet.
-    try {
-      await deps.scheduleUpdate?.();
-    } catch {
-      // Rien à dire : le crochet a rendu ce qu'on lui demandait.
+    // Une fois la sortie écrite, le rattrapage (T19) et la mise à jour automatique (S12) : détachés, ils ne sont jamais
+    // attendus, et ni leur échec ni leur lenteur ne changent la sortie du crochet.
+    for (const schedule of [deps.scheduleCatchUp, deps.scheduleUpdate]) {
+      try {
+        await schedule?.();
+      } catch {
+        // Rien à dire : le crochet a rendu ce qu'on lui demandait.
+      }
     }
   } catch (error) {
     // Messages fixes (resolveServerEnv, route absente) : ils ne recopient ni le jeton ni une adresse.
     deps.err(`Leon: ${error instanceof Error ? error.message : 'briefing unavailable.'}`);
+  } finally {
+    const empty = adapter?.vide(evenement) ?? null;
+    if (!answered && empty !== null) deps.out(empty);
   }
   return 0;
 }

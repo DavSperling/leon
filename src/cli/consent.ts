@@ -4,6 +4,11 @@
 // usage (`usages`, chacun accepté à part, avec sa date : `resume`, puis `lecture`, `rappel`, `coulisses`, `noter`) ; un
 // usage absent vaut refus. `refus` date les usages refusés, qui ne sont plus proposés (A16) ; il n'ouvre rien. Le
 // retrait efface usages et refus. Une entrée du lot 1, sans `usages`, garde son accord.
+// `capture_le` (T19 du plan mémoire des sessions) date l'accord de capture d'un outil hors Claude Code : ses échanges et
+// ses gestes partent à chaque tour et au rattrapage. L'accord du lot 4 de Codex ne couvrait que le bloc de démarrage
+// (« Nothing is captured from Codex sessions for now ») : sans `capture_le`, rien n'est capté de cet outil, et le
+// rattrapage ne lit que les fichiers modifiés après cette date. Claude Code n'en a pas besoin : sa capture date du
+// lot 1. Le retrait l'efface, comme le reste.
 // La CLI le relit avant chaque envoi : une CLI mise à jour par `git pull` n'envoie rien de plus que ce que
 // l'utilisateur a accepté. Un fichier absent ne vaut aucun accord (les textes partent, comme avant ce chantier) ; un
 // fichier présent mais illisible vaut un retrait : il ne peut venir que d'une retouche à la main, l'écriture étant
@@ -35,6 +40,7 @@ const EntrySchema = z.object({
   installe_le: z.iso.datetime({ offset: true }),
   usages: DatedSchema,
   refus: DatedSchema,
+  capture_le: z.iso.datetime({ offset: true }).optional().catch(undefined),
 });
 const WithdrawnSchema = z.object({ version: z.literal(0) });
 
@@ -46,6 +52,8 @@ export type FactsConsent = {
   usages: Usage[];
   usages_le: Partial<Record<Usage, Date>>;
   refus: Usage[];
+  // L'accord de capture (outils hors Claude Code), absent s'il n'a pas été donné.
+  capture_le?: Date;
 };
 
 // Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts, uninstall-hooks.ts), juste pour les deux
@@ -89,6 +97,7 @@ export async function factsConsent(home: string, tool: ConsentTool): Promise<Fac
       usages.map((usage) => [usage, new Date(entry.data.usages?.[usage] ?? 0)]),
     ),
     refus: USAGES.filter((usage) => entry.data.refus?.[usage] !== undefined),
+    ...(entry.data.capture_le ? { capture_le: new Date(entry.data.capture_le) } : {}),
   };
 }
 
@@ -169,6 +178,25 @@ async function addDated(
       ...(entries[tool] as object),
       [field]: { ...entry.data[field], [usage]: now.toISOString() },
     },
+  });
+}
+
+// L'accord de capture d'un outil hors Claude Code (`capture_le`), daté, sans toucher au reste de son entrée. Comme
+// addDated : seulement sur un accord qui couvre les gestes ; une date déjà là est gardée (elle borne le rattrapage).
+export async function recordCapture(
+  home: string,
+  tool: ConsentTool,
+  now: Date = new Date(),
+): Promise<void> {
+  const entries = await readEntries(home);
+  const entry = EntrySchema.safeParse(entries?.[tool]);
+  if (entries === null || !entry.success || entry.data.version < FACTS_VERSION) {
+    throw new Error(`no consent for ${tool} to record the capture in`);
+  }
+  if (entry.data.capture_le) return;
+  await writeEntries(home, {
+    ...entries,
+    [tool]: { ...(entries[tool] as object), capture_le: now.toISOString() },
   });
 }
 

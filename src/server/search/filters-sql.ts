@@ -52,8 +52,8 @@ function validDate(date: Date | undefined): Date | null {
 // Les conditions sur la source (alias `s`) : l'outil, la nature et le dépôt. Le dépôt garde les sessions de code
 // qui y ont été faites, avec leurs résumés (des tours de la session), et les sources GitHub du dépôt, dont
 // `origin.repo` garde la casse de GitHub ; rien des autres outils. Une clé `dossier:` n'est le dépôt d'aucune source
-// GitHub. Pour GitHub, la comparaison de projectIsKnown (briefings.ts) ; les sessions sont ici celles de
-// CODE_SESSION_KINDS, là-bas les seules claude_code. Sous RLS, elle se fait ligne à ligne parmi les sources de
+// GitHub. Pour GitHub, la comparaison de projectIsKnown (briefings.ts) ; les sessions, celles de CODE_SESSION_KINDS,
+// ici comme là-bas. Sous RLS, elle se fait ligne à ligne parmi les sources de
 // l'organisation (sources_github_repo_idx n'y sert pas, voir 0047).
 export function sourceConditions(filters: SearchFilters): SQL {
   const conditions: SQL[] = [];

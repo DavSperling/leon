@@ -52,10 +52,13 @@ type Centre = {
   ly: MotionValue<number>;
 };
 
-// L'endroit des Réglages où chaque canal se branche : les sessions de Claude Code se captent par les crochets que
-// pose la commande d'installation des ordinateurs ; `remember` (MCP) vient d'un assistant branché.
+// L'endroit des Réglages où chaque canal se branche : les sessions des outils de code (Claude Code, Codex, Cursor,
+// Antigravity) se captent par les crochets que pose la commande d'installation des ordinateurs ; `remember` (MCP) vient d'un assistant branché.
 const CANAL_REGLAGE: Record<CaptureKind, string> = {
   claude_code: '/reglages#ordinateurs',
+  codex: '/reglages#ordinateurs',
+  cursor: '/reglages#ordinateurs',
+  antigravity: '/reglages#ordinateurs',
   claude_ai: '/reglages#extension',
   chatgpt: '/reglages#extension',
   mcp_remember: '/reglages#assistants',

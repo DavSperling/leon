@@ -12,7 +12,7 @@ import {
 } from './install-codex';
 import { writeLauncher } from './launcher';
 
-// L'installateur et le retrait du crochet de Codex (T17), toujours sur des dossiers temporaires : jamais le vrai
+// L'installateur et le retrait des crochets de Codex (T17, T20), toujours sur des dossiers temporaires : jamais le vrai
 // ~/.codex ni le vrai ~/.leon.
 
 let dir: string;
@@ -33,6 +33,23 @@ const leonHandler = () => ({
   command: launcherCommand(home, 'codex', 'demarrage'),
   timeout: 10,
   additionalContextLimit: 8000,
+});
+// T20 : Stop en tâche de fond (60 s), SessionEnd (3 s, le plafond de Codex).
+const tourHandler = () => ({
+  type: 'command',
+  command: launcherCommand(home, 'codex', 'tour'),
+  timeout: 60,
+  async: true,
+});
+const finHandler = () => ({
+  type: 'command',
+  command: launcherCommand(home, 'codex', 'fin'),
+  timeout: 3,
+});
+const allLeonHooks = () => ({
+  SessionStart: [{ hooks: [leonHandler()] }],
+  Stop: [{ hooks: [tourHandler()] }],
+  SessionEnd: [{ hooks: [finHandler()] }],
 });
 const userGroup = {
   matcher: 'startup|resume',
@@ -76,10 +93,11 @@ async function uninstall() {
 }
 
 describe('installCodexHook', () => {
-  it('ajoute le groupe de Leon en fin de liste, garde ceux de l’utilisateur tels quels, et écrit l’accord', async () => {
+  it('ajoute les groupes de Leon en fin de liste, garde ceux de l’utilisateur tels quels, et écrit l’accord', async () => {
+    const userStop = { hooks: [{ type: 'command', command: 'x' }] };
     await writeHooks({
       description: 'mes crochets',
-      hooks: { SessionStart: [userGroup], Stop: [{ hooks: [{ type: 'command', command: 'x' }] }] },
+      hooks: { SessionStart: [userGroup], Stop: [userStop] },
     });
 
     const { code, out } = await install();
@@ -88,25 +106,58 @@ describe('installCodexHook', () => {
     const hooks = await readHooks();
     expect(hooks.description).toBe('mes crochets');
     expect(hooks.hooks.SessionStart).toEqual([userGroup, { hooks: [leonHandler()] }]);
-    expect(hooks.hooks.Stop).toEqual([{ hooks: [{ type: 'command', command: 'x' }] }]);
-    expect(out).toContain('type /hooks and approve the Leon hook');
+    expect(hooks.hooks.Stop).toEqual([userStop, { hooks: [tourHandler()] }]);
+    expect(hooks.hooks.SessionEnd).toEqual([{ hooks: [finHandler()] }]);
+    expect(out).toContain('type /hooks and approve the Leon hooks');
     const consent = await factsConsent(home, 'codex');
     expect(consent?.version).toBe(2);
+    expect(consent?.capture_le).toBeInstanceOf(Date);
     // Seul Codex a un accord : celui de Claude Code n'est pas touché.
     expect(await factsConsent(home, 'claude_code')).toBeNull();
   });
 
   it('crée le fichier absent', async () => {
     expect((await install()).code).toBe(0);
-    expect(await readHooks()).toEqual({ hooks: { SessionStart: [{ hooks: [leonHandler()] }] } });
+    expect(await readHooks()).toEqual({ hooks: allLeonHooks() });
   });
 
-  it('montre le texte exact de l’accord avant de demander', async () => {
+  it('montre chaque crochet, et le texte exact de l’accord, avant de demander', async () => {
     const { out, asked } = await install(['non']);
 
     for (const line of CODEX_CONSENT_LINES) expect(out).toContain(line);
-    expect(CODEX_CONSENT_LINES.join('\n')).toContain("so it is given to Codex's model");
+    expect(out).toContain('  SessionStart · timeout 10 s · add');
+    expect(out).toContain('  Stop · timeout 60 s · in the background · add');
+    expect(out).toContain('  SessionEnd · timeout 3 s · add');
+    expect(out).toContain(`    ${launcherCommand(home, 'codex', 'fin')}`);
+    const text = CODEX_CONSENT_LINES.join('\n');
+    expect(text).toContain("so it is given to Codex's model");
+    expect(text).toContain('the new exchanges of the session');
+    expect(text).toContain('never their other arguments');
+    expect(text).toContain('only Codex sessions changed after you accept');
+    expect(text).not.toContain('Nothing is captured');
     expect(asked).toHaveLength(1);
+  });
+
+  // T20 : après le lot 4, le crochet de démarrage est déjà approuvé ; seuls Stop et SessionEnd s'ajoutent.
+  it('après le lot 4 : le démarrage garde sa place (donc son approbation), la capture s’ajoute et se date à part', async () => {
+    await writeHooks({ hooks: { SessionStart: [userGroup, { hooks: [leonHandler()] }] } });
+    await writeConsent(home, 'codex', 2, new Date('2026-11-06T10:00:00Z'));
+
+    const { code, out, asked } = await install();
+
+    expect(code).toBe(0);
+    expect(out).toContain('  SessionStart · timeout 10 s · already in place');
+    expect(asked[0]).toContain('and record this consent');
+    expect(await readHooks()).toEqual({
+      hooks: {
+        SessionStart: [userGroup, { hooks: [leonHandler()] }],
+        Stop: [{ hooks: [tourHandler()] }],
+        SessionEnd: [{ hooks: [finHandler()] }],
+      },
+    });
+    const consent = await factsConsent(home, 'codex');
+    expect(consent?.installe_le).toEqual(new Date('2026-11-06T10:00:00Z'));
+    expect(consent?.capture_le).toBeInstanceOf(Date);
   });
 
   it('un refus n’écrit rien', async () => {
@@ -126,7 +177,7 @@ describe('installCodexHook', () => {
 
     expect(again.code).toBe(0);
     expect(again.asked).toEqual([]);
-    expect(again.out).toContain('already in place');
+    expect(again.out).toContain('The Leon hooks are already in place');
     expect(await readFile(hooksPath, 'utf8')).toBe(before);
   });
 
@@ -143,6 +194,7 @@ describe('installCodexHook', () => {
     expect((await install()).code).toBe(0);
 
     expect((await readHooks()).hooks.SessionStart).toEqual([{ hooks: [leonHandler()] }, userGroup]);
+    expect((await readHooks()).hooks.Stop).toEqual([{ hooks: [tourHandler()] }]);
   });
 
   it('ne réécrit jamais un fichier illisible', async () => {
@@ -181,14 +233,26 @@ describe('installCodexHook', () => {
     expect((await install(['non'])).out).not.toContain('[[hooks.*]]');
   });
 
-  it('crochet en place sans accord : ne demande que l’accord, sans toucher au fichier', async () => {
-    const text = await writeHooks({ hooks: { SessionStart: [{ hooks: [leonHandler()] }] } });
+  it('crochets en place sans accord : ne demande que l’accord, sans toucher au fichier', async () => {
+    const text = await writeHooks({ hooks: allLeonHooks() });
 
-    const { code } = await install();
+    const { code, out } = await install();
 
     expect(code).toBe(0);
+    expect(out).not.toContain('Hooks installed');
     expect(await readFile(hooksPath, 'utf8')).toBe(text);
     expect((await factsConsent(home, 'codex'))?.version).toBe(2);
+    expect((await factsConsent(home, 'codex'))?.capture_le).toBeInstanceOf(Date);
+  });
+
+  it('un refus de la capture laisse l’accord du lot 4 tel quel', async () => {
+    await writeHooks({ hooks: { SessionStart: [{ hooks: [leonHandler()] }] } });
+    await writeConsent(home, 'codex', 2);
+
+    expect((await install(['non'])).code).toBe(0);
+
+    expect((await factsConsent(home, 'codex'))?.capture_le).toBeUndefined();
+    expect((await readHooks()).hooks.Stop).toBeUndefined();
   });
 });
 
@@ -197,7 +261,8 @@ describe('uninstallCodexHook', () => {
     await writeHooks({
       hooks: {
         SessionStart: [userGroup, { hooks: [leonHandler()] }],
-        Stop: [{ hooks: [{ type: 'command', command: launcherCommand(home, 'codex', 'tour') }] }],
+        Stop: [{ hooks: [tourHandler()] }],
+        SessionEnd: [{ hooks: [finHandler()] }],
       },
     });
     await writeConsent(home, 'codex', 2);

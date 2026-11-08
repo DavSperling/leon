@@ -45,9 +45,9 @@ export function launcherHookCommand(home: string, subcommand: HookSubcommand): s
   return `${shellQuote(launcherPath(home))} ${subcommand}`;
 }
 
-// Les outils hors Claude Code dont Leon pose les crochets (C6 du plan mémoire des sessions) : Codex au lot 4, Cursor et
-// Antigravity à leurs lots. Leurs crochets passent tous par `leon crochet <outil> <evenement>`.
-export const OUTILS = ['codex'] as const;
+// Les outils hors Claude Code dont Leon pose les crochets (C6 du plan mémoire des sessions) : Codex (lots 4 et 5), Cursor
+// (lot 8), Antigravity (lot 9). Leurs crochets passent tous par `leon crochet <outil> <evenement>`.
+export const OUTILS = ['codex', 'cursor', 'antigravity'] as const;
 export type Outil = (typeof OUTILS)[number];
 export const EVENEMENTS = ['demarrage', 'prompt', 'tour', 'fin'] as const;
 export type Evenement = (typeof EVENEMENTS)[number];

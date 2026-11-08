@@ -284,17 +284,20 @@ describe('readBriefing', () => {
     expect(await jobsFor(alice, seeded.project)).toHaveLength(1);
   });
 
-  it('sans point : null, et le point est mis en file tout de suite', async () => {
-    const project = `github.com/${uniqueRepo()}`;
-    await seedRun(alice, { kind: 'claude_code', metadata: { project } });
+  it.each(['claude_code', 'codex', 'cursor', 'antigravity'] as const)(
+    'sans point : null, et le point est mis en file tout de suite (session %s)',
+    async (kind) => {
+      const project = `github.com/${uniqueRepo()}`;
+      await seedRun(alice, { kind, metadata: { project } });
 
-    expect(await readBriefing(alice, project)).toBeNull();
+      expect(await readBriefing(alice, project)).toBeNull();
 
-    const jobs = await jobsFor(alice, project);
-    expect(jobs).toHaveLength(1);
-    expect(jobs[0]?.data).toEqual({ tenantId, userId: alice.userId, project });
-    expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
-  });
+      const jobs = await jobsFor(alice, project);
+      expect(jobs).toHaveLength(1);
+      expect(jobs[0]?.data).toEqual({ tenantId, userId: alice.userId, project });
+      expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+    },
+  );
 
   // Un signal a mis le recalcul dans 30 minutes (file `stately` : un seul job en attente par clé). Une lecture qui
   // ne trouve rien à montrer l'avance à maintenant, au lieu d'être ignorée par la file.

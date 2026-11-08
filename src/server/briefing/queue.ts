@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { PgBoss } from 'pg-boss';
 import { z } from 'zod';
-import { PROJECT_KEY_PATTERN, type SourceKind } from '@/capture/turn';
+import { isCodeSessionKind, PROJECT_KEY_PATTERN, type SourceKind } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
@@ -55,7 +55,6 @@ export const briefingKey = (job: BriefingJob): string =>
 
 // Les outils rattachés à un projet (projectOfSource) : typés, pour qu'un nom qui n'est plus dans SOURCE_KINDS ne
 // compile pas.
-const CLAUDE_CODE = 'claude_code' satisfies SourceKind;
 const GITHUB = 'github' satisfies SourceKind;
 
 // Les files sont créées une fois par processus (createQueue ne fait rien quand elles existent). Sur globalThis :
@@ -151,8 +150,8 @@ export async function signalProjectActivity(
   }
 }
 
-// Le projet que touche une source, et qui le signaler en plus des membres qui y ont un point : une session Claude
-// Code (sa clé de projet, C8 ; son propriétaire), un élément GitHub (la clé de son dépôt). Les autres sources ne
+// Le projet que touche une source, et qui le signaler en plus des membres qui y ont un point : une session de code
+// (Claude Code, Codex : sa clé de projet, C8 ; son propriétaire), un élément GitHub (la clé de son dépôt). Les autres sources ne
 // sont rattachées à aucun projet : ce qui y mentionne quelqu'un entre dans son point au tic du matin.
 export function projectOfSource(source: {
   kind: string;
@@ -164,7 +163,7 @@ export function projectOfSource(source: {
       ? (source.metadata as Record<string, unknown>)
       : {};
   const valid = (key: string) => key.length <= 200 && PROJECT_KEY_PATTERN.test(key);
-  if (source.kind === CLAUDE_CODE) {
+  if (isCodeSessionKind(source.kind)) {
     const { project } = metadata;
     return typeof project === 'string' && valid(project)
       ? { project, extraUserIds: [source.ownerUserId] }

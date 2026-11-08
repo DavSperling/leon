@@ -83,3 +83,92 @@ export async function findSessionFiles(configDir: string): Promise<string[]> {
     )
     .map(({ path }) => path);
 }
+
+export type SessionFile = { path: string; mtimeMs: number; size: number };
+
+// Les rollouts de Codex : `<dossier de Codex>/sessions/AAAA/MM/JJ/rollout-<date>-<id>.jsonl`, du moins récemment modifié
+// au plus récent. Tout le dossier est parcouru : un fil repris peut écrire dans le fichier d'un autre jour.
+// shortcut: un rollout que Codex a compressé (`.jsonl.zst`, après 7 jours sans écriture) n'est pas lu : il a été capté
+// par ses Stop ou par un rattrapage avant ; le lire (zstd) si une session s'y perd.
+const ROLLOUT_FILE = /^rollout-.+\.jsonl$/;
+const ROLLOUT_DEPTH = 3;
+
+async function rolloutsUnder(directory: string, depth: number): Promise<string[]> {
+  const entries = await listDirectory(directory);
+  const found = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return depth > 0 ? rolloutsUnder(path, depth - 1) : [];
+      return entry.isFile() && ROLLOUT_FILE.test(entry.name) ? [path] : [];
+    }),
+  );
+  return found.flat();
+}
+
+export async function findCodexSessionFiles(codexDir: string): Promise<SessionFile[]> {
+  return withStats(await rolloutsUnder(join(codexDir, 'sessions'), ROLLOUT_DEPTH));
+}
+
+// Les transcripts de Cursor : `<dossier de Cursor>/projects/<slug>/agent-transcripts/<conversation>/<conversation>.jsonl`
+// (et `agent-transcripts/<conversation>.jsonl`, une forme plus ancienne), du moins récemment modifié au plus récent.
+// Les sous-agents (`<conversation>/subagents/`) ne sont pas des sessions : ils ne sont pas lus. `state.vscdb` jamais.
+export async function findCursorSessionFiles(cursorDir: string): Promise<SessionFile[]> {
+  const projectsDir = join(cursorDir, 'projects');
+  const projects = (await listDirectory(projectsDir)).filter((entry) => entry.isDirectory());
+  const paths = await Promise.all(
+    projects.map(async (project) => {
+      const transcripts = join(projectsDir, project.name, 'agent-transcripts');
+      const entries = await listDirectory(transcripts);
+      const found = await Promise.all(
+        entries.map(async (entry) => {
+          if (entry.isFile() && entry.name.endsWith('.jsonl'))
+            return [join(transcripts, entry.name)];
+          if (!entry.isDirectory()) return [];
+          const own = join(transcripts, entry.name, `${entry.name}.jsonl`);
+          return (await stat(own).catch(() => null))?.isFile() ? [own] : [];
+        }),
+      );
+      return found.flat();
+    }),
+  );
+  return withStats(paths.flat());
+}
+
+async function withStats(paths: string[]): Promise<SessionFile[]> {
+  const files = await Promise.all(
+    paths.map(async (path) => {
+      const info = await stat(path).catch(() => null);
+      return info ? [{ path, mtimeMs: info.mtimeMs, size: info.size }] : [];
+    }),
+  );
+  return files
+    .flat()
+    .sort((a, b) => a.mtimeMs - b.mtimeMs || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}
+
+// Les dossiers d'Antigravity sous ~/.gemini : l'app, l'IDE et la CLI `agy`.
+export const ANTIGRAVITY_VARIANTS = ['antigravity', 'antigravity-ide', 'antigravity-cli'] as const;
+
+// Les transcripts d'Antigravity : `<~/.gemini>/<variante>/brain/<conversation>/.system_generated/logs/` ;
+// `transcript_full.jsonl` d'abord, s'il existe, sinon `transcript.jsonl` (T34), un seul par conversation. Les `.pb` et
+// les `.db` ne sont jamais ouverts.
+export async function findAntigravitySessionFiles(geminiDir: string): Promise<SessionFile[]> {
+  const paths = await Promise.all(
+    ANTIGRAVITY_VARIANTS.map(async (variant) => {
+      const brain = join(geminiDir, variant, 'brain');
+      const conversations = (await listDirectory(brain)).filter((entry) => entry.isDirectory());
+      const found = await Promise.all(
+        conversations.map(async (conversation) => {
+          const logs = join(brain, conversation.name, '.system_generated', 'logs');
+          for (const name of ['transcript_full.jsonl', 'transcript.jsonl']) {
+            if ((await stat(join(logs, name)).catch(() => null))?.isFile())
+              return [join(logs, name)];
+          }
+          return [];
+        }),
+      );
+      return found.flat();
+    }),
+  );
+  return withStats(paths.flat());
+}

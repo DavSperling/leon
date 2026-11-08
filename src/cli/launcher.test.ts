@@ -256,7 +256,7 @@ describe('le lanceur écrit, lancé par sh', () => {
   });
 
   // T19 : Codex coupe SessionEnd à 3 s. Le faux Node attend 2 s puis écrit ses arguments et l'entrée qu'il lit.
-  it('la fin rend la main en moins d’une seconde, l’entrée copiée en 0600 dans ~/.leon/entrees', async () => {
+  it('la fin rend la main sans attendre Node, l’entrée copiée en 0600 dans ~/.leon/entrees', async () => {
     const SLOW = `#!/bin/sh\nsleep 2\n{ for arg in "$@"; do echo "$arg"; done; cat "$4"; } > "$HOME/fini"\n`;
     const runtimeDir = join(weirdHome, '.leon', 'runtime');
     await mkdir(join(runtimeDir, NODE_DIR), { recursive: true });
@@ -277,7 +277,8 @@ describe('le lanceur écrit, lancé par sh', () => {
     );
     const code = await new Promise<number | null>((done) => child.on('close', done));
     expect(code).toBe(0);
-    expect(Date.now() - started).toBeLessThan(1000);
+    // Sous les 2 s du faux Node : le lanceur ne l'a pas attendu. (1 s ratait de peu quand toute la suite tourne.)
+    expect(Date.now() - started).toBeLessThan(1800);
 
     const entrees = join(weirdHome, '.leon', 'entrees');
     const [entry] = await readdir(entrees);

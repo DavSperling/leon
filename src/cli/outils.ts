@@ -13,12 +13,19 @@
 // `continue: true` : sans lui, le message de la personne pourrait être bloqué. stop ne rend que `{}`, jamais
 // `followup_message` (il serait envoyé comme message suivant et ferait boucler).
 //
-// Antigravity (T32, T33) : shortcut: écrit avant l'essai réel T31, d'après le plan et la forme des crochets d'`agy` 1.4
-// (alexherrero/crickets, `scripts/agy_hook_adapter.py`) ; à recaler sur l'annexe 05. L'entrée porte `conversationId`,
-// `transcriptPath` et `workspacePaths` ; Stop porte `fullyIdle`, et rien n'est capté tant qu'il est faux. Le bloc
-// arrive par SessionStart, sinon par PreInvocation (avant chaque appel au modèle), une seule fois par conversation
-// (témoin), dans la première forme de C5 : `{"injectSteps":[{"systemMessage":{"systemMessage":…}}]}`. Sans bloc, la
-// réponse est `{}` : jamais `decision`, qui ferait continuer Stop.
+// Antigravity (T32, T33), recalé sur l'essai réel T31 du 08/11 dans l'appli 2.0.1
+// (docs/etudes/memoire-sessions-2026-11/annexes/05-essai-antigravity.md) :
+// - l'entrée porte `conversationId`, `transcriptPath`, `workspacePaths` et `artifactDirectoryPath` ; la conversation
+//   est aussi dans la variable ANTIGRAVITY_CONVERSATION_ID. Le crochet tourne depuis `~/.gemini/config`, pas depuis le
+//   dossier de travail : celui-ci vient de `workspacePaths` ;
+// - SessionStart n'est jamais appelé : le bloc arrive par PreInvocation (avant chaque appel au modèle), une seule fois
+//   par conversation (témoin, sur `conversationId` : `invocationNum` repart à 0 à chaque message). La forme qui atteint
+//   le modèle est `{"injectSteps":[{"ephemeralMessage":…}]}` (la seconde de C5) ; `systemMessage` n'a pas pu être
+//   essayée, faute de SessionStart. Le message injecté ne laisse aucune trace dans le transcript ;
+// - Stop part une fois par message, avec `fullyIdle: true` ; rien n'est capté tant qu'il est faux. Sans bloc, la réponse
+//   est `{}` : jamais `decision`, qui ferait continuer Stop.
+// shortcut: la durée de vie d'un `ephemeralMessage` (le modèle le voit-il encore au message suivant ?), l'IDE 2.5.5 et
+// `agy` restent à essayer.
 import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { extractAntigravityFacts, parseAntigravitySession } from '../capture/antigravity';
@@ -236,17 +243,16 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
   antigravity: {
     label: 'Antigravity',
     kind: 'antigravity',
-    injection: (texte) =>
-      JSON.stringify({ injectSteps: [{ systemMessage: { systemMessage: texte } }] }),
+    injection: (texte) => JSON.stringify({ injectSteps: [{ ephemeralMessage: texte }] }),
     vide: () => '{}',
     uneFois: true,
     racines: (home) => antigravityBrains(home),
-    entree: (input, home) => {
+    entree: (input, home, env) => {
       const transcript = absolute(field(input, 'transcriptPath'));
       // `transcript_full.jsonl` d'abord, à côté du transcript que nomme le crochet (T32).
       const full = transcript === null ? null : join(dirname(transcript), 'transcript_full.jsonl');
       return {
-        session: text(field(input, 'conversationId')),
+        session: text(field(input, 'conversationId')) ?? text(env.ANTIGRAVITY_CONVERSATION_ID),
         dossier: absolute(first(field(input, 'workspacePaths'))),
         fichiers: under([full, transcript], antigravityBrains(home)),
         inactif: field(input, 'fullyIdle') !== false,

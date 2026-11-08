@@ -687,43 +687,50 @@ describe('runBriefing', () => {
     });
   });
 
-  // T33 : Antigravity reçoit le bloc par SessionStart, sinon par PreInvocation, une seule fois par conversation.
-  describe('Antigravity : SessionStart puis PreInvocation, un seul bloc', () => {
-    const agyJson = (event: string) =>
+  // T33, recalé sur l'essai T31 : Antigravity reçoit le bloc par PreInvocation, une seule fois par conversation, alors que
+  // le crochet part avant chaque appel au modèle (`invocationNum` repart à 0 à chaque message).
+  describe('Antigravity : le bloc au premier PreInvocation, une seule fois', () => {
+    const agyJson = (invocationNum: number) =>
       Readable.from([
         JSON.stringify({
+          artifactDirectoryPath: '/Users/demo/.gemini/antigravity/brain/agy-1',
           conversationId: 'agy-1',
-          hook_event_name: event,
+          initialNumSteps: 1,
+          invocationNum,
+          transcriptPath:
+            '/Users/demo/.gemini/antigravity/brain/agy-1/.system_generated/logs/transcript.jsonl',
           workspacePaths: ['/projets/leon'],
-          invocationNum: 1,
         }),
       ]);
 
-    it('le bloc en injectSteps au démarrage ; PreInvocation ensuite : {} sans rien demander', async () => {
+    it('le bloc en ephemeralMessage au premier appel ; aux suivants, même à invocationNum 0 : {} sans rien demander', async () => {
       const agyHome = await mkdtemp(join(homes, 'agy-'));
       await writeConsent(agyHome, 'antigravity', 2);
 
-      const start = setup({
-        stdin: agyJson('SessionStart'),
-        home: agyHome,
-        outil: 'antigravity',
-        evenement: 'demarrage',
-      });
-      await start.run();
-      expect(start.out.map((line) => JSON.parse(line))).toEqual([
-        { injectSteps: [{ systemMessage: { systemMessage: BLOCK } }] },
-      ]);
-      expect(start.asked()).toMatchObject({ session: 'agy-1' });
-
-      const next = setup({
-        stdin: agyJson('PreInvocation'),
+      const first = setup({
+        stdin: agyJson(0),
         home: agyHome,
         outil: 'antigravity',
         evenement: 'prompt',
+        remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
       });
-      await next.run();
-      expect(next.out).toEqual(['{}']);
-      expect(next.fetchImpl).not.toHaveBeenCalled();
+      await first.run();
+      expect(first.out.map((line) => JSON.parse(line))).toEqual([
+        { injectSteps: [{ ephemeralMessage: BLOCK }] },
+      ]);
+      expect(first.asked()).toMatchObject({ projet: 'github.com/acme/leon', session: 'agy-1' });
+
+      for (const invocationNum of [1, 0]) {
+        const next = setup({
+          stdin: agyJson(invocationNum),
+          home: agyHome,
+          outil: 'antigravity',
+          evenement: 'prompt',
+        });
+        await next.run();
+        expect(next.out).toEqual(['{}']);
+        expect(next.fetchImpl).not.toHaveBeenCalled();
+      }
     });
   });
 

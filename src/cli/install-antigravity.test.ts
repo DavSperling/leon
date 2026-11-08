@@ -32,7 +32,6 @@ const handler = (evenement: 'demarrage' | 'prompt' | 'tour', timeout: number) =>
 });
 const leonEntry = () => ({
   enabled: true,
-  SessionStart: [handler('demarrage', 10)],
   PreInvocation: [handler('prompt', 10)],
   Stop: [handler('tour', 30)],
 });
@@ -77,8 +76,8 @@ describe('installAntigravityHooks', () => {
 
     expect(code).toBe(0);
     expect(await readHooks()).toEqual({ ...userEntry, leon: leonEntry() });
-    expect(out).toContain('  SessionStart · timeout 10 s · add');
     expect(out).toContain('  PreInvocation · timeout 10 s · add');
+    expect(out).not.toContain('SessionStart');
     expect(out).toContain('  Stop · timeout 30 s · add');
     expect(out).toContain('restart the app');
     expect((await factsConsent(home, 'antigravity'))?.capture_le).toBeInstanceOf(Date);
@@ -108,6 +107,15 @@ describe('installAntigravityHooks', () => {
     expect(again.asked).toEqual([]);
     expect(again.out).toContain('already in place');
     expect(await readFile(hooksPath, 'utf8')).toBe(before);
+  });
+
+  // T31 : l'appli 2.0.1 n'appelle jamais SessionStart ; une entrée d'avant l'essai le perd à la mise à jour.
+  it('retire le SessionStart d’une entrée `leon` posée avant l’essai', async () => {
+    await writeHooks({ leon: { ...leonEntry(), SessionStart: [handler('demarrage', 10)] } });
+
+    expect((await install()).code).toBe(0);
+
+    expect((await readHooks()).leon).toEqual(leonEntry());
   });
 
   it('ne réécrit jamais un fichier que JSON.parse refuse (des commentaires), et le dit', async () => {

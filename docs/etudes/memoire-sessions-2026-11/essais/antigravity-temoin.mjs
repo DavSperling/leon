@@ -178,6 +178,7 @@ async function report() {
     const steps = (await readFile(file.path, 'utf8')).split('\n').filter(Boolean);
     const types = new Map();
     const tools = new Map();
+    const argKeys = new Map(); // les noms des arguments de chaque outil, jamais leurs valeurs
     const keys = new Set();
     const witnesses = [];
     for (const raw of steps) {
@@ -189,7 +190,20 @@ async function report() {
       }
       for (const key of Object.keys(step)) keys.add(key);
       types.set(step.type, (types.get(step.type) ?? 0) + 1);
-      for (const call of step.tool_calls ?? []) tools.set(call.name, (tools.get(call.name) ?? 0) + 1);
+      for (const call of step.tool_calls ?? []) {
+        tools.set(call.name, (tools.get(call.name) ?? 0) + 1);
+        let args = call.args;
+        if (typeof args === 'string') {
+          try {
+            args = JSON.parse(args);
+          } catch {
+            args = null;
+          }
+        }
+        const names = argKeys.get(call.name) ?? new Set();
+        for (const name of Object.keys(args && typeof args === 'object' ? args : {})) names.add(name);
+        argKeys.set(call.name, names);
+      }
       for (const word of Object.values(WORDS)) {
         if (raw.includes(word)) witnesses.push(`${word} dans une étape ${step.type} (source ${step.source})`);
       }
@@ -198,6 +212,7 @@ async function report() {
     console.log(`clés des étapes : ${[...keys].join(', ')}`);
     console.log(`types d'étapes : ${[...types].map(([t, n]) => `${t} ×${n}`).join(', ')}`);
     console.log(`outils appelés : ${[...tools].map(([t, n]) => `${t} ×${n}`).join(', ') || 'aucun'}`);
+    for (const [tool, names] of argKeys) console.log(`  arguments de ${tool} : ${[...names].join(', ') || 'aucun'}`);
     console.log(`mots témoins dans le transcript : ${witnesses.join(' ; ') || 'aucun'}\n`);
   }
 }

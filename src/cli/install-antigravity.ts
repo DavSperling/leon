@@ -1,13 +1,15 @@
 // Installateur et retrait des crochets d'Antigravity (T34 du plan mémoire des sessions) : `leon setup` (setup.ts),
 // `leon installer-crochets --outil antigravity` et `leon retirer-crochets --outil antigravity`.
 //
-// shortcut: écrit avant l'essai réel T31, d'après le plan, l'annexe 02 de l'étude et la forme des `hooks.json` d'`agy`
-// 1.4 (alexherrero/crickets) ; à recaler sur l'annexe 05 (évènements présents, délais, approbation) :
-// - `~/.gemini/config/hooks.json` est un objet d'entrées nommées : `{ "<nom>": { "<Évènement>": [ { "type": "command",
-//   "command", "timeout" } ], "enabled": true } }`. Seule l'entrée nommée `leon` est touchée ;
-// - SessionStart (10 s, `crochet antigravity demarrage`) et PreInvocation (10 s, `crochet antigravity prompt`) donnent le
-//   bloc, une fois par conversation : SessionStart manquait au binaire 2.0.6, PreInvocation le remplace alors ;
+// D'après la forme des `hooks.json` d'`agy` 1.4 (alexherrero/crickets), confirmée par l'essai réel T31 du 08/11 dans
+// l'appli 2.0.1 (annexe 05) : l'appli lit `~/.gemini/config/hooks.json` sans approbation, après une relance.
+// - le fichier est un objet d'entrées nommées : `{ "<nom>": { "<Évènement>": [ { "type": "command", "command",
+//   "timeout" } ], "enabled": true } }`. Seule l'entrée nommée `leon` est touchée ;
+// - PreInvocation (10 s, `crochet antigravity prompt`) donne le bloc, une fois par conversation. Pas de SessionStart :
+//   l'appli 2.0.1 ne l'appelle jamais. Une entrée `leon` d'avant l'essai, qui le portait, perd ce crochet à la mise à jour ;
 // - Stop (30 s, `crochet antigravity tour`) capte, une fois la conversation inactive (`fullyIdle`) ;
+// - les crochets observés tournent en moins de 10 ms ; PreToolUse et PostToolUse n'ont pas tourné, Leon ne s'en sert pas ;
+// shortcut: l'IDE 2.5.5 et `agy` restent à essayer (SessionStart y existe peut-être) ;
 // - une entrée mal formée a fait ignorer tout le fichier par `agy` 1.4 (relevé par la communauté) : celle de Leon a
 //   toujours la forme complète, et un fichier que `JSON.parse` refuse (du JSON avec commentaires) n'est jamais réécrit.
 import { join } from 'node:path';
@@ -32,14 +34,14 @@ export const ANTIGRAVITY_CONSENT_LINES = [
   "  - When a conversation is idle again (Stop), the Leon server receives its new exchanges (your requests and the agent's answers, not the context Antigravity adds itself) and its actions, read from its transcript file: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), the current Git branch, and a few markers (start and end times, number of messages and failed commands, whether the conversation searched the web, used an MCP server, a subagent or a network command).",
   '  - What a hook missed is sent when a Claude Code, Codex, Cursor or Antigravity session starts on this computer, in the background: only Antigravity conversations changed after you accept, from now on. The conversation files of Antigravity (.pb) and its databases are never read.',
   '  - Secrets are masked before sending, and again by the server. Each conversation stays private to its author.',
-  "  - At the start of each conversation (SessionStart, or before the first model call: PreInvocation), the server receives the project key, the current Git branch and the conversation id. It sends back your recent sessions on this repository, from all your tools (their branch, pull requests, commits, files and remaining tasks), and the project's morning briefing: Antigravity adds this block to the conversation, so it is given to Antigravity's model. It is sent once per conversation.",
+  "  - Before the first model call of each conversation (PreInvocation), the server receives the project key, the current Git branch and the conversation id. It sends back your recent sessions on this repository, from all your tools (their branch, pull requests, commits, files and remaining tasks), and the project's morning briefing: Antigravity adds this block to the conversation, so it is given to Antigravity's model. It is sent once per conversation.",
 ];
 
 const AFTER_WRITE = [
   'Antigravity reads this file when it starts: restart the app, the IDE or `agy` for the Leon hooks to run.',
 ];
 
-type AntigravityEvent = 'SessionStart' | 'PreInvocation' | 'Stop';
+type AntigravityEvent = 'PreInvocation' | 'Stop';
 
 export function antigravityHooks(home: string): {
   event: AntigravityEvent;
@@ -52,11 +54,6 @@ export function antigravityHooks(home: string): {
     timeout,
   });
   return [
-    {
-      event: 'SessionStart',
-      evenement: 'demarrage',
-      handler: handler('demarrage', ANTIGRAVITY_START_TIMEOUT_S),
-    },
     {
       event: 'PreInvocation',
       evenement: 'prompt',

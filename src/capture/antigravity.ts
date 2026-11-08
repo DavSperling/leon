@@ -2,9 +2,19 @@
 // transcript `~/.gemini/{antigravity,antigravity-ide,antigravity-cli}/brain/<conversation>/.system_generated/logs/
 // transcript_full.jsonl` (ou `transcript.jsonl`).
 //
-// shortcut: écrit avant l'essai réel T31, d'après le plan et un lecteur public de ce format (MoonCaves/rawclaw,
-// `internal/source/antigravity`, et ses tests) ; à recaler sur l'annexe 05 de l'essai (types d'étapes, noms d'outils,
-// forme du bloc de Leon) :
+// D'après le plan et un lecteur public de ce format (MoonCaves/rawclaw, `internal/source/antigravity`), confirmé par
+// l'essai réel T31 du 08/11 (annexe 05 : la forme seule de quatre transcripts, jamais leur contenu) :
+// - l'appli 2.0.1 écrit `~/.gemini/antigravity/…/transcript.jsonl` seulement ; l'IDE écrit sous
+//   `~/.gemini/antigravity-ide/` un `transcript.jsonl` coupé (champ `truncated_fields`) et un `transcript_full.jsonl`
+//   entier, lu d'abord ;
+// - clés des étapes vues : `step_index`, `source`, `type`, `status`, `created_at`, `content`, `thinking`, `tool_calls`,
+//   `exit_code` (les commandes, dans l'IDE) ;
+// - types d'étapes vus : USER_INPUT, PLANNER_RESPONSE, CONVERSATION_HISTORY, KNOWLEDGE_ARTIFACTS, CHECKPOINT,
+//   SYSTEM_MESSAGE, GENERIC, RUN_COMMAND, VIEW_FILE, CODE_ACTION, GREP_SEARCH, LIST_DIRECTORY ; outils vus : run_command,
+//   view_file, write_to_file, replace_file_content, grep_search, list_dir, manage_task, schedule ;
+// - le message que le crochet injecte (`ephemeralMessage`) n'y laisse aucune trace.
+// shortcut: `manage_task` (la liste de tâches de l'agent) n'est pas encore lu, faute d'avoir relevé la forme de ses
+// arguments ; à relever au prochain essai (le rapport du témoin la donne) pour remplir `taches`.
 // - une étape par ligne : `{ step_index, source, type, created_at, content, thinking?, tool_calls? }`, où `tool_calls`
 //   est une liste `{ name, args }` (`args` en objet ou en chaîne JSON) ;
 // - `USER_INPUT` (source `USER_EXPLICIT`) : le message de la personne, entre `<USER_REQUEST>` et `</USER_REQUEST>`, à
@@ -50,6 +60,7 @@ const StepSchema = z.object({
   created_at: z.iso.datetime({ offset: true }).optional().catch(undefined),
   content: z.string().optional(),
   tool_calls: z.array(z.unknown()).optional(),
+  exit_code: z.number().int().optional().catch(undefined),
 });
 type Step = z.infer<typeof StepSchema>;
 const ToolCallSchema = z.object({ name: z.string(), args: z.unknown().optional() });
@@ -206,7 +217,8 @@ export function extractAntigravityFacts(
       const command = pending.shift();
       if (command === undefined) continue;
       const output = step.content ?? '';
-      const code = EXIT_CODE.exec(output)?.[1];
+      // Le code de sortie de l'étape (l'IDE l'écrit), sinon celui que cite la sortie.
+      const code = step.exit_code ?? EXIT_CODE.exec(output)?.[1];
       const error = code !== undefined && Number(code) !== 0;
       if (error) errors += 1;
       recordCommand(record, command, output, error);

@@ -148,6 +148,25 @@ describe('extractAntigravityFacts', () => {
     });
   });
 
+  // T31 : l'IDE écrit le code de sortie d'une commande dans l'étape (`exit_code`).
+  it('le code de sortie de l’étape RUN_COMMAND compte avant celui que cite la sortie', () => {
+    const faits = extractAntigravityFacts(
+      [
+        call('run_command', { CommandLine: 'pnpm test' }),
+        step({ type: 'RUN_COMMAND', content: 'FAIL', exit_code: 1 }),
+        call('run_command', { CommandLine: 'git status' }),
+        step({ type: 'RUN_COMMAND', content: 'exit code: 1 (cité, pas réel)', exit_code: 0 }),
+      ].join('\n'),
+      FILE,
+      RACINE,
+    );
+    expect(faits.commandes).toEqual([
+      { texte: 'pnpm test', erreur: true },
+      { texte: 'git status', erreur: false },
+    ]);
+    expect(faits.erreurs).toBe(1);
+  });
+
   it('un fichier lu ou hors du dépôt n’est pas un fichier écrit', () => {
     const faits = extractAntigravityFacts(
       [

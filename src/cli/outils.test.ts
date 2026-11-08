@@ -108,9 +108,9 @@ describe('ADAPTATEURS.antigravity', () => {
   const HOME = '/Users/demo';
   const BRAIN = '/Users/demo/.gemini/antigravity/brain';
 
-  it('enveloppe le bloc en injectSteps, et ne répond que {} sans bloc', () => {
+  it('enveloppe le bloc en ephemeralMessage, la forme que l’essai T31 a vue arriver au modèle, et ne répond que {} sans bloc', () => {
     expect(JSON.parse(agy.injection('Bloc', 'prompt'))).toStrictEqual({
-      injectSteps: [{ systemMessage: { systemMessage: 'Bloc' } }],
+      injectSteps: [{ ephemeralMessage: 'Bloc' }],
     });
     expect(agy.injection('Bloc', 'demarrage')).toBe(agy.injection('Bloc', 'prompt'));
     for (const evenement of ['demarrage', 'prompt', 'tour', 'fin'] as const) {
@@ -119,15 +119,18 @@ describe('ADAPTATEURS.antigravity', () => {
     expect(agy.uneFois).toBe(true);
   });
 
+  // L'entrée de PreInvocation relevée à T31 (appli 2.0.1), identifiants remplacés.
   it('lit la conversation, l’espace de travail, et préfère transcript_full.jsonl', () => {
     const transcript = `${BRAIN}/conv-1/.system_generated/logs/transcript.jsonl`;
     expect(
       agy.entree(
         {
+          artifactDirectoryPath: `${BRAIN}/conv-1`,
           conversationId: 'conv-1',
+          initialNumSteps: 1,
+          invocationNum: 0,
           transcriptPath: transcript,
           workspacePaths: ['/Users/demo/projets/leon'],
-          fullyIdle: true,
         },
         HOME,
         {},
@@ -138,6 +141,12 @@ describe('ADAPTATEURS.antigravity', () => {
       fichiers: [`${BRAIN}/conv-1/.system_generated/logs/transcript_full.jsonl`, transcript],
       inactif: true,
     });
+  });
+
+  it('sans conversationId dans l’entrée, prend ANTIGRAVITY_CONVERSATION_ID', () => {
+    expect(agy.entree({}, HOME, { ANTIGRAVITY_CONVERSATION_ID: 'conv-env' }).session).toBe(
+      'conv-env',
+    );
   });
 
   it('rien n’est capté tant que fullyIdle est faux ; un transcript hors de brain n’est pas lu', () => {

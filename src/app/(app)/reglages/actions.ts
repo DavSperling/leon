@@ -6,6 +6,13 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { LOCALE_COOKIE, localeOf, locales } from '@/i18n/request';
+import {
+  applyImport,
+  type DirectoryError,
+  directoryLinkUrl,
+  directoryProviders,
+  readDirectory,
+} from '@/server/auth/annuaire';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import {
@@ -204,6 +211,33 @@ export async function setManagerAction(
     revalidatePath('/equipe');
   }
   return { result };
+}
+
+// « Importer l'organigramme » (annuaire.ts) : la personne part chez Google ou Microsoft ouvrir l'annuaire à Leon, et
+// revient sur /reglages?annuaire=…, où la page montre l'aperçu. Un refus revient sur /reglages?annuaire=refus.
+export async function startDirectoryImportAction(formData: FormData): Promise<void> {
+  const ctx = await requireUserContext();
+  const url = await directoryLinkUrl(ctx, String(formData.get('provider') ?? '')).catch((error) => {
+    logError('settings.directory_start', error);
+    return null;
+  });
+  redirect(url ?? '/reglages?annuaire=refus#equipe');
+}
+
+// « Appliquer » : l'annuaire relu, l'aperçu refait et écrit (réservé aux propriétaires et administrateurs).
+export async function applyDirectoryImportAction(
+  provider: string,
+): Promise<{ count: number } | { error: DirectoryError | 'refus' }> {
+  const ctx = await requireUserContext();
+  const chosen = directoryProviders().find((one) => one === provider);
+  if (!chosen) return { error: 'refus' };
+  const people = await readDirectory(chosen);
+  if (typeof people === 'string') return { error: people };
+  const count = await applyImport(ctx, people);
+  if (count === null) return { error: 'refus' };
+  revalidatePath('/reglages');
+  revalidatePath('/equipe');
+  return { count };
 }
 
 // Les managers lisent-ils le privé des gens sous eux (0057) : un propriétaire ou un administrateur en décide.

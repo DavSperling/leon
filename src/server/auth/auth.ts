@@ -109,6 +109,9 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   database: pool,
   socialProviders,
+  // Jetons Google et Microsoft chiffrés en base (clé BETTER_AUTH_SECRET) : celui d'un administrateur peut lire
+  // l'annuaire de son entreprise (import de l'organigramme, annuaire.ts). Un jeton déjà enregistré en clair reste lu.
+  account: { encryptOAuthTokens: true },
   // Un compte existant (même adresse) n'est relié à Google, Microsoft ou un SSO que si les deux côtés ont vérifié
   // l'adresse (défaut de Better Auth, requireLocalEmailVerified) : un compte créé avec l'adresse d'autrui, jamais
   // vérifié, ne reçoit pas la connexion de son vrai titulaire.

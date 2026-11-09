@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
 import { AboutSettings } from '@/components/verre/reglages/about';
+import { DirectorySection } from '@/components/verre/reglages/annuaire';
 import { AssistantsSection } from '@/components/verre/reglages/assistants';
 import { ComputersSection } from '@/components/verre/reglages/computers';
 import {
@@ -23,6 +24,7 @@ import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { SsoSection } from '@/components/verre/reglages/sso';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
+import { directoryState } from '@/server/auth/annuaire';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { listGroups } from '@/server/auth/groupes';
@@ -40,7 +42,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('settings'))('title') };
 }
 
-export default async function SettingsPage() {
+// ?annuaire=… et ?error=… : le retour de Google ou de Microsoft après « Importer l'organigramme » (annuaire.ts).
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ annuaire?: string | string[]; error?: string | string[] }>;
+}) {
   const t = await getTranslations('settings');
   const s = await getTranslations('security');
   const claude = await getTranslations('claudeCode');
@@ -70,6 +77,9 @@ export default async function SettingsPage() {
     listGroups(ctx),
     managersSeeAll(ctx),
   ]);
+  const { annuaire, error } = await searchParams;
+  const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  const directory = mayInvite ? await directoryState(ctx, one(annuaire), one(error)) : null;
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
     .filter((token) => !token.revokedAt)
@@ -126,6 +136,9 @@ export default async function SettingsPage() {
           equipe: (
             <>
               <MembersSection members={members} canInvite={mayInvite} />
+              {directory && directory.providers.length > 0 && (
+                <DirectorySection state={directory} />
+              )}
               {mayInvite && <ManagersSection on={seeAll} />}
               {mayInvite && (
                 <GroupsSection

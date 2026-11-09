@@ -45,9 +45,12 @@ vi.mock('@/server/connectors/github/depots-equipe', () => ({
 }));
 vi.mock('@/server/auth/groupes', () => ({ listGroups: vi.fn(async () => []) }));
 vi.mock('@/server/auth/organisation', () => ({ managersSeeAll: vi.fn(async () => true) }));
+vi.mock('@/server/auth/annuaire', () => ({ directoryState: vi.fn() }));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Sans retour de Google ou de Microsoft (?annuaire=…).
+const PROPS = { searchParams: Promise.resolve({}) };
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
 const INSTRUCTIONS = `Install Leon: ${COMMAND}`;
 const token = (
@@ -81,7 +84,7 @@ function findAll(node: ReactNode, type: unknown): ReactElement<Record<string, un
 
 async function integrations(tokens: ApiTokenRow[]) {
   vi.mocked(listApiTokens).mockResolvedValue(tokens);
-  const page = (await SettingsPage()) as ReactElement;
+  const page = (await SettingsPage(PROPS)) as ReactElement;
   const [tabs] = findAll(page, SettingsTabs);
   const panels = tabs?.props.panels as Record<string, ReactNode>;
   const tokenProps = findAll(panels.integrations, TokensSection)[0]?.props;
@@ -134,7 +137,7 @@ describe('page de Réglages : jetons, ordinateurs et assistants connectés', () 
   });
 
   it('ne montre plus la commande à jeton de « Brancher Claude Code »', async () => {
-    const page = (await SettingsPage()) as ReactElement;
+    const page = (await SettingsPage(PROPS)) as ReactElement;
     const [tabs] = findAll(page, SettingsTabs);
     const props = JSON.stringify(tabs?.props.panels, (_, value) =>
       typeof value === 'function' ? undefined : value,

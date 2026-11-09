@@ -44,6 +44,7 @@ vi.mock('@/server/connectors/github/depots-equipe', () => ({
   listDepotsEquipe: vi.fn(async () => ({ depots: [], githubBranche: false })),
 }));
 vi.mock('@/server/auth/groupes', () => ({ listGroups: vi.fn(async () => []) }));
+vi.mock('@/server/auth/organisation', () => ({ managersSeeAll: vi.fn(async () => true) }));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
 const DAY_MS = 24 * 60 * 60 * 1000;

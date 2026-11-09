@@ -5,6 +5,7 @@ import {
   PROVIDER_FAMILIES,
   PROVIDER_FAMILIES_ORDER,
   PROVIDER_LABELS,
+  toolsOfFamilies,
 } from './providers';
 
 const ofFamily = (family: string): ProviderId[] =>
@@ -85,5 +86,11 @@ describe('providers', () => {
       'Support',
       'Mails, chat et agenda',
     ]);
+  });
+
+  it('donne les outils des familles suivies, documents et mails compris (0057)', () => {
+    expect(toolsOfFamilies(['crm', 'documents'])).toEqual([...ofFamily('crm'), 'document']);
+    expect(toolsOfFamilies(['mails'])).toEqual(ofFamily('mails'));
+    expect(toolsOfFamilies([])).toEqual([]);
   });
 });

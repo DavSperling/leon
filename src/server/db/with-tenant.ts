@@ -10,6 +10,7 @@ const TenantContextSchema = z.object({
   tenantId: z.uuid(),
   userId: z.uuid(),
   principals: z.array(z.uuid()).min(1),
+  equipe: z.boolean().optional(),
 });
 
 // Ouvre une transaction, pose app.tenant, app.user (app_user(), 0055) et app.principals (set_config(…, true) =
@@ -20,6 +21,10 @@ export async function withTenant<T>(ctx: TenantContext, fn: (tx: Tx) => Promise<
     await tx.execute(sql`select set_config('app.tenant', ${valid.tenantId}, true),
                                 set_config('app.user', ${valid.userId}, true),
                                 set_config('app.principals', ${`{${valid.principals.join(',')}}`}, true)`);
+    // En plus, en lecture : le privé des gens sous la personne (0057). Une seconde requête : equipe_visible lit
+    // app.tenant et app.user, posés juste avant.
+    if (valid.equipe)
+      await tx.execute(sql`select set_config('app.vus', equipe_visible()::text, true)`);
     return fn(tx);
   });
 }

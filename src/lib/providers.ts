@@ -1,4 +1,4 @@
-import type { ProviderId } from '@/capture/turn';
+import { PROVIDER_IDS, type ProviderId, type SourceKind } from '@/capture/turn';
 
 // Libellés et familles des 42 outils branchables. Données pures : lues par l'interface et les libellés.
 
@@ -120,3 +120,24 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   drive: 'projet',
   slack: 'mails',
 };
+
+// Ce qu'un manager peut suivre chez les gens sous lui (écran « Mon équipe ») : chaque famille d'outils, et les documents
+// ajoutés à la main. Il n'en lit que ce que ses droits lui ouvrent, et leur privé s'il le lit (0057).
+export const FOLLOW_FAMILIES = [
+  'dev',
+  'reunions',
+  'projet',
+  'crm',
+  'support',
+  'mails',
+  'documents',
+] as const;
+export type FollowFamily = (typeof FOLLOW_FAMILIES)[number];
+
+export function toolsOfFamilies(families: readonly FollowFamily[]): SourceKind[] {
+  const tools: SourceKind[] = PROVIDER_IDS.filter((id) =>
+    families.some((family) => family === PROVIDER_FAMILIES[id]),
+  );
+  if (families.includes('documents')) tools.push('document');
+  return tools;
+}

@@ -8,6 +8,9 @@ export type TenantContext = {
   readonly tenantId: string;
   readonly userId: string;
   readonly principals: readonly string[];
+  // Lire aussi le privé des gens sous la personne (0057) : seulement pour la recherche, l'aperçu et « Mon équipe »,
+  // qui n'écrivent rien.
+  readonly equipe?: boolean;
 };
 
 const UuidSchema = z.uuid();

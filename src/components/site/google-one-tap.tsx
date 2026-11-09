@@ -1,0 +1,63 @@
+'use client';
+
+import { useEffect } from 'react';
+import { oneTapAction } from '@/app/(auth)/actions';
+
+type GoogleId = {
+  initialize(options: {
+    client_id: string;
+    callback: (response: { credential: string }) => void;
+    cancel_on_tap_outside?: boolean;
+    itp_support?: boolean;
+    use_fedcm_for_prompt?: boolean;
+  }): void;
+  prompt(): void;
+  cancel(): void;
+};
+declare global {
+  interface Window {
+    google?: { accounts: { id: GoogleId } };
+  }
+}
+
+const SCRIPT = 'https://accounts.google.com/gsi/client';
+
+/**
+ * La fenêtre « Continuer en tant que… » de Google, en haut à droite du site, pour qui n'a pas de session Leon et a
+ * un compte Google ouvert dans le navigateur. Google seul décide de l'afficher (refus récents, navigateur…).
+ */
+export function GoogleOneTap({ clientId }: { clientId: string }) {
+  useEffect(() => {
+    let stopped = false;
+    const start = async () => {
+      // Une personne déjà connectée à Leon ne se voit rien proposer.
+      const session = await fetch('/api/auth/get-session', { credentials: 'same-origin' })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (stopped || session) return;
+      const show = () => {
+        if (stopped || !window.google) return;
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: ({ credential }) => void oneTapAction(credential),
+          cancel_on_tap_outside: true,
+          itp_support: true,
+          use_fedcm_for_prompt: true,
+        });
+        window.google.accounts.id.prompt();
+      };
+      if (window.google) return show();
+      const script = document.createElement('script');
+      script.src = SCRIPT;
+      script.async = true;
+      script.onload = show;
+      document.head.append(script);
+    };
+    void start();
+    return () => {
+      stopped = true;
+      window.google?.accounts.id.cancel();
+    };
+  }, [clientId]);
+  return null;
+}

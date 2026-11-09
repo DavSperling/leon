@@ -8,6 +8,7 @@ import { createUserWithInvitation, createUserWithOrganization } from '@/server/a
 import {
   joinAction,
   joinWithSessionAction,
+  oneTapAction,
   requestPasswordResetAction,
   signInAction,
   signUpAction,
@@ -25,6 +26,7 @@ vi.mock('@/server/auth/auth', () => ({
       requestPasswordReset: vi.fn(),
       signInSocial: vi.fn(),
       signInSSO: vi.fn(),
+      oneTapCallback: vi.fn(),
     },
   },
   socialProviders: { google: {} },
@@ -498,6 +500,23 @@ describe('requestPasswordResetAction', () => {
 const TOKEN = 'A'.repeat(43);
 
 describe('Google, Microsoft et SSO', () => {
+  it('One Tap : la session ouverte, l’accueil (qui mène un nouveau compte à l’onboarding)', async () => {
+    vi.mocked(auth.api.oneTapCallback).mockResolvedValue({} as never);
+    await expect(oneTapAction('jeton-google')).rejects.toThrow('NEXT_REDIRECT /');
+    expect(vi.mocked(auth.api.oneTapCallback).mock.calls[0]?.[0]?.body).toEqual({
+      idToken: 'jeton-google',
+    });
+  });
+
+  it('One Tap : un jeton refusé ou un compte non lié renvoie à la connexion avec son message', async () => {
+    vi.mocked(auth.api.oneTapCallback).mockRejectedValueOnce(new Error('invalid id token'));
+    await expect(oneTapAction('x')).rejects.toThrow('NEXT_REDIRECT /connexion?error=one_tap');
+    vi.mocked(auth.api.oneTapCallback).mockRejectedValueOnce(new Error('account not linked'));
+    await expect(oneTapAction('x')).rejects.toThrow(
+      'NEXT_REDIRECT /connexion?error=account_not_linked',
+    );
+  });
+
   it('refuse un fournisseur non réglé, sans appeler Better Auth', async () => {
     await expect(socialSignInAction(form({ provider: 'microsoft' }))).rejects.toThrow(
       'NEXT_REDIRECT /connexion',

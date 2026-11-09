@@ -1,6 +1,7 @@
 import { sso } from '@better-auth/sso';
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
+import { oneTap } from 'better-auth/plugins/one-tap';
 import { organization } from 'better-auth/plugins/organization';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { createTranslator } from 'next-intl';
@@ -165,6 +166,8 @@ export const auth = betterAuth({
     '/sso/get-provider',
     '/sso/request-domain-verification',
     '/sso/verify-domain',
+    // Google One Tap : le jeton de Google passe par une server action (oneTapAction), comme les autres débuts.
+    '/one-tap/callback',
   ],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {
@@ -195,6 +198,8 @@ export const auth = betterAuth({
     // l'adresse invitée rejoint l'organisation (aucun e-mail n'est vérifié dans ce jet).
     organization({ disableOrganizationDeletion: true, requireEmailVerificationOnInvitation: true }),
     twoFactor({ issuer: 'Leon', totpOptions: { digits: 6, period: 30 } }),
+    // La fenêtre « Continuer en tant que… » de Google : le jeton est vérifié contre GOOGLE_CLIENT_ID.
+    oneTap(),
     // SSO d'entreprise (OIDC ou SAML : Okta, Entra, Google Workspace…). Aucune connexion tant que l'espace n'a pas
     // prouvé, par un enregistrement DNS, qu'il possède le domaine : sinon un espace pourrait déclarer le domaine
     // d'un autre et se connecter à la place de ses employés. Qui se connecte par le SSO entre dans l'espace.

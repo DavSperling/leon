@@ -99,7 +99,7 @@
     "add": "Add document",
     "chooseFolder": "Choose a folder",
     "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, text, Markdown and code (JSON, YAML, TypeScript, Python, SQL…) · 10 MB max per file, 200 files per folder.",
-    "dropHint": "You can also drag files, or a whole folder, onto this area. Everything you add is visible to your team.",
+    "dropHint": "You can also drag files, or a whole folder, onto this area.",
     "sending": "Sending: {done} / {total}",
     "report": {
       "added": "{count, plural, one {# file added} other {# files added}}",
@@ -129,7 +129,15 @@
       "folder_full": "This folder has reached the maximum of 200 files.",
       "ignored": "File skipped: it often holds passwords or keys (configuration, private key), or is only generated.",
       "failed": "Couldn’t save this document. Try again."
-    }
+    },
+    "shareWith": "Visible to",
+    "shareTeam": "Whole team",
+    "shareMe": "Only me",
+    "shareGroup": "A group",
+    "shareLabel": "Who sees {title}",
+    "shareFolderLabel": "Who sees the folder {name}",
+    "shareSaved": "Sharing saved.",
+    "shareFailed": "Sharing was not saved. Try again."
   },
   "shell": {
     "skipToContent": "Skip to content",
@@ -681,7 +689,27 @@
     "ssoRemove": "Remove SSO",
     "ssoRemoveConfirm": "Remove SSO? Accounts stay; they’ll sign in another way.",
     "ssoRemoved": "SSO removed.",
-    "ssoRemoveFailed": "SSO couldn’t be removed."
+    "ssoRemoveFailed": "SSO couldn’t be removed.",
+    "groupsTitle": "Groups",
+    "groupsDescription": "Share a document with a group instead of the whole team. Each department is a group on its own; create others for a project or leadership.",
+    "groupsEmpty": "No groups",
+    "groupsEmptyHelp": "Set each member’s department in the member list, or create a group.",
+    "groupNew": "New group",
+    "groupEdit": "Edit",
+    "groupEditTitle": "Edit {name}",
+    "groupDelete": "Delete",
+    "groupDeleteNamed": "Delete {name}",
+    "groupDeleteTitle": "Delete {name}?",
+    "groupDeleteDescription": "Documents shared with this group will only be visible to their author, or to the other groups they were shared with.",
+    "groupDeleted": "Group {name} deleted.",
+    "groupService": "Department",
+    "groupCount": "{count, plural, one {# person} other {# people}}",
+    "groupName": "Name",
+    "groupMembersLegend": "Members",
+    "groupSaved": "Group saved.",
+    "groupInvalid": "Give the group a name (80 characters at most).",
+    "groupNameTaken": "A group already has this name.",
+    "groupRefused": "Only an owner or an admin manages groups."
   },
   "security": {
     "profileTitle": "Profile",

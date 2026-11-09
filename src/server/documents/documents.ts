@@ -14,11 +14,13 @@ import {
   FOLDER_MAX_FILES,
   isIgnoredPath,
   OFFICE_EXTENSIONS,
+  type Partage,
   TEXT_EXTENSIONS,
 } from '@/lib/documents';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { CONNECTOR_TURN_MAX, splitText } from '@/server/connectors/normalize';
 import { users } from '@/server/db/schema/auth';
+import { groupes } from '@/server/db/schema/groupes';
 import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import {
@@ -160,6 +162,9 @@ export async function readDocument(
   };
 }
 
+const aclOf = (ctx: TenantContext, partage: Partage): string[] =>
+  partage === 'equipe' ? [ctx.tenantId] : partage === 'moi' ? [ctx.userId] : [ctx.userId, partage];
+
 // `folder` : le dossier d'où vient le fichier (`path` : son chemin sous le dossier, racine exclue). Le titre est
 // alors le chemin complet `${folder.name}/${path}`, et la source garde l'identifiant du dossier pour que la liste
 // les regroupe.
@@ -167,7 +172,9 @@ export async function addDocument(
   ctx: TenantContext,
   file: File,
   folder?: { id: string; name: string; path: string },
+  partage: Partage = 'equipe',
 ): Promise<{ partial: boolean }> {
+  const acl = aclOf(ctx, partage);
   const { title, parts, partial } = await readDocument(
     file,
     folder ? `${folder.name}/${folder.path}` : file.name,
@@ -178,6 +185,14 @@ export async function addDocument(
     : { nature: 'fichier' };
   const replaced: string[] = [];
   const runId = await withTenant(ctx, async (tx) => {
+    // Un groupe d'une autre organisation, ou supprimé entre-temps, n'est pas lisible ici.
+    if (acl.length > 1) {
+      const [groupe] = await tx
+        .select({ id: groupes.id })
+        .from(groupes)
+        .where(eq(groupes.id, partage));
+      if (!groupe) throw new DocumentError('failed', 'groupe');
+    }
     // La page s'arrête déjà au plafond ; on le tient aussi ici, elle peut être contournée. Il vaut par auteur : le
     // dossier d'un autre membre ne compte pas, même avec le même identifiant.
     // shortcut: compter puis insérer sans verrou, des envois simultanés peuvent dépasser le plafond de quelques
@@ -214,7 +229,7 @@ export async function addDocument(
         externalId: `upload:${randomUUID()}`,
         ownerUserId: ctx.userId,
         title,
-        acl: [ctx.tenantId],
+        acl,
         metadata,
       })
       .returning({ id: sources.id });
@@ -229,11 +244,11 @@ export async function addDocument(
       text,
       ts: now,
       captureMode: 'manual' as const,
-      acl: [ctx.tenantId],
+      acl,
     }));
     const inserted = await insertNewTurns(tx, rows);
     await updateSource(tx, source.id, title, inserted.lastTs);
-    const runId = await createIngestRun(tx, ctx, source.id, inserted.ids, [ctx.tenantId]);
+    const runId = await createIngestRun(tx, ctx, source.id, inserted.ids, acl);
     return runId;
   });
   await enqueueIndexing(ctx, runId);
@@ -254,6 +269,10 @@ export async function listDocuments(ctx: TenantContext) {
         folderId: sql<string | null>`${sources.metadata}->'folder'->>'id'`,
         folderName: sql<string | null>`${sources.metadata}->'folder'->>'name'`,
         ownerFormer: sql<boolean>`${users.deletedAt} is not null`,
+        // Le partage, sous la forme de PartageSchema : un seul groupe se lit (l'écran n'en propose qu'un).
+        partage: sql<string>`case when ${sources.acl} = array[${sources.tenantId}] then 'equipe'
+          when ${sources.acl} = array[${sources.ownerUserId}] then 'moi'
+          else (${sources.acl})[2]::text end`,
       })
       .from(sources)
       .innerJoin(users, eq(users.id, sources.ownerUserId))
@@ -272,6 +291,26 @@ export async function deleteDocument(ctx: TenantContext, id: string): Promise<bo
   const deleted = result.rows[0]?.deleted === true;
   if (deleted) await unlinkSources(ctx.tenantId, [id]);
   return deleted;
+}
+
+// L'auteur change qui voit son document, ou tous ceux d'un de ses dossiers (`folderId`) : partager_document (0055)
+// réécrit l'ACL de chacun et de tout ce qui en descend. Rend le nombre de documents changés.
+export async function shareDocuments(
+  ctx: TenantContext,
+  target: { id: string } | { folderId: string },
+  partage: Partage,
+): Promise<number> {
+  const acl = `{${aclOf(ctx, partage).join(',')}}`;
+  const which =
+    'id' in target ? sql`id = ${target.id}` : sql`metadata->'folder'->>'id' = ${target.folderId}`;
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<{ shared: boolean }>(sql`
+      select partager_document(id, ${acl}::uuid[]) as shared
+      from sources
+      where tenant_id = ${ctx.tenantId} and kind = 'document' and owner_user_id = ${ctx.userId} and ${which}
+      order by id`),
+  );
+  return rows.filter((row) => row.shared).length;
 }
 
 // Les documents d'un dossier, d'un coup, par la même fonction : chacun est supprimé s'il est de l'auteur. Rend le

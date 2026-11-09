@@ -23,8 +23,9 @@ async function signUp(name: string): Promise<{ userId: string; tenantId: string 
 }
 
 describe('principalsFor', () => {
-  it("renvoie soi puis l'équipe", () => {
-    expect(principalsFor('u', 't')).toEqual(['u', 't']);
+  it("renvoie soi puis l'équipe, sans groupe pour qui n'a ni service ni groupe libre", async () => {
+    const paul = await signUp('Paul');
+    expect(await principalsFor(paul.userId, paul.tenantId)).toEqual([paul.userId, paul.tenantId]);
   });
 });
 

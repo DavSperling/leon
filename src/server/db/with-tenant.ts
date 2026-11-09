@@ -12,12 +12,13 @@ const TenantContextSchema = z.object({
   principals: z.array(z.uuid()).min(1),
 });
 
-// Ouvre une transaction, pose app.tenant et app.principals (set_config(…, true) = SET LOCAL), exécute fn.
-// Le contexte disparaît avec la transaction : la connexion rendue au pool n'en garde rien.
+// Ouvre une transaction, pose app.tenant, app.user (app_user(), 0055) et app.principals (set_config(…, true) =
+// SET LOCAL), exécute fn. Le contexte disparaît avec la transaction : la connexion rendue au pool n'en garde rien.
 export async function withTenant<T>(ctx: TenantContext, fn: (tx: Tx) => Promise<T>): Promise<T> {
   const valid = TenantContextSchema.parse(ctx);
   return db.transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.tenant', ${valid.tenantId}, true),
+                                set_config('app.user', ${valid.userId}, true),
                                 set_config('app.principals', ${`{${valid.principals.join(',')}}`}, true)`);
     return fn(tx);
   });

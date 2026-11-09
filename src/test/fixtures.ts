@@ -38,7 +38,7 @@ export async function createTestUser(tenantId: string, name: string): Promise<Te
   await adminDb
     .insert(members)
     .values({ organizationId: tenantId, userId: user.id, role: 'member', createdAt: new Date() });
-  return { tenantId, userId: user.id, principals: principalsFor(user.id, tenantId) };
+  return { tenantId, userId: user.id, principals: await principalsFor(user.id, tenantId) };
 }
 
 export async function createTestTenant(

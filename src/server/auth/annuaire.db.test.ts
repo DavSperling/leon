@@ -5,6 +5,7 @@ import { reportingLines } from '@/server/db/schema/organisation';
 import { adminDb } from '@/test/db';
 import { dropTeams, emailOf, newTeam } from '@/test/seed-indexed';
 import { applyImport, type Person, previewImport } from './annuaire';
+import { deleteAccount } from './delete-account';
 import { setManager } from './organisation';
 import type { TenantContext } from './tenant-context';
 
@@ -49,7 +50,8 @@ async function company() {
     ines: await memberIdOf(ines),
     paul: await memberIdOf(paul),
   };
-  return { claire, marc, ids, directory };
+  const emails = { claire: c as string, marc: m as string, ines: i as string, paul: p as string };
+  return { claire, marc, paul, ids, emails, directory };
 }
 
 const lines = async (tenantId: string) =>
@@ -99,5 +101,42 @@ describe("import de l'organigramme", () => {
     const { claire, marc, directory } = await company();
     expect(await applyImport(marc, directory)).toBeNull();
     expect(await lines(claire.tenantId)).toEqual({});
+  });
+
+  it("ne laisse qu'un propriétaire changer qui est au-dessus d'un propriétaire", async () => {
+    const { claire, marc, ids, emails } = await company();
+    await adminDb
+      .update(members)
+      .set({ role: 'admin' })
+      .where(and(eq(members.userId, marc.userId), eq(members.organizationId, marc.tenantId)));
+    // Claire, propriétaire, est sous Paul ; l'annuaire met Paul et Inès sous Marc, administrateur.
+    expect(await setManager(claire, ids.claire, ids.paul)).toBe('ok');
+    const directory: Person[] = [
+      { emails: [emails.marc], manager: null },
+      { emails: [emails.paul], manager: emails.marc },
+      { emails: [emails.ines], manager: emails.marc },
+    ];
+    expect(await applyImport(marc, directory)).toBe(1);
+    expect(await lines(claire.tenantId)).toEqual({
+      [ids.claire]: ids.paul,
+      [ids.ines]: ids.marc,
+    });
+    expect(await applyImport(claire, directory)).toBe(1);
+    expect((await lines(claire.tenantId))[ids.paul]).toBe(ids.marc);
+  });
+
+  it('voit les comptes supprimés, qui gardent leur place : pas de boucle à travers eux', async () => {
+    const { claire, paul, ids, emails } = await company();
+    // À la main, Inès sous Paul, sous Marc ; puis Paul supprime son compte.
+    expect(await setManager(claire, ids.paul, ids.marc)).toBe('ok');
+    expect(await setManager(claire, ids.ines, ids.paul)).toBe('ok');
+    await deleteAccount(paul, null, false);
+    // Marc sous Inès fermerait la boucle Inès → Paul → Marc → Inès.
+    const directory: Person[] = [
+      { emails: [emails.marc], manager: emails.ines },
+      { emails: [emails.ines], manager: null },
+    ];
+    expect(await applyImport(claire, directory)).toBe(0);
+    expect(await lines(claire.tenantId)).toEqual({ [ids.paul]: ids.marc, [ids.ines]: ids.paul });
   });
 });

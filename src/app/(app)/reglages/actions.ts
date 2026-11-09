@@ -203,7 +203,7 @@ export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean 
 export async function setManagerAction(
   memberId: string,
   managerId: string | null,
-): Promise<{ result: 'ok' | 'refuse' | 'boucle' }> {
+): Promise<{ result: 'ok' | 'refuse' | 'boucle' | 'proprietaire' }> {
   const ctx = await requireUserContext();
   const result = await setManager(ctx, memberId, managerId);
   if (result === 'ok') {

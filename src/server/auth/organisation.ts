@@ -59,7 +59,11 @@ function treeOrder(rows: Report[]): Report[] {
   for (const row of rows)
     children.set(row.managerId, [...(children.get(row.managerId) ?? []), row]);
   const ordered: Report[] = [];
+  // Une boucle écrite hors de setManager (en base, ou par un ancien import) ne fait pas tourner l'écran sans fin.
+  const seen = new Set<string>();
   const visit = (row: Report) => {
+    if (seen.has(row.memberId)) return;
+    seen.add(row.memberId);
     ordered.push(row);
     for (const child of (children.get(row.memberId) ?? []).sort(byName)) visit(child);
   };
@@ -177,12 +181,14 @@ export async function lockOrganigramme(tx: Tx, ctx: TenantContext): Promise<void
 }
 
 // Rattache un membre à son manager (null : à personne). Réservé aux propriétaires et administrateurs ; refuse une
-// boucle (le manager est déjà sous ce membre). Fait à la main : l'import de l'annuaire n'y touchera plus (0058).
+// boucle (le manager est déjà sous ce membre). Seul un propriétaire change qui est au-dessus d'un propriétaire : un
+// administrateur qui s'y placerait lirait son privé (0057). Fait à la main : l'import de l'annuaire n'y touchera plus
+// (0058).
 export async function setManager(
   ctx: TenantContext,
   memberId: string,
   managerId: string | null,
-): Promise<'ok' | 'refuse' | 'boucle'> {
+): Promise<'ok' | 'refuse' | 'boucle' | 'proprietaire'> {
   const ids = managerId === null ? [memberId] : [memberId, managerId];
   if (!ids.every((id) => MemberIdSchema.safeParse(id).success)) return 'refuse';
   if (memberId === managerId) return 'boucle';
@@ -194,19 +200,27 @@ export async function setManager(
       .where(and(eq(members.organizationId, ctx.tenantId), inArray(members.id, ids)));
     if (found.length !== ids.length) return 'refuse';
     await lockOrganigramme(tx, ctx);
+    // Le membre et les gens sous lui : le manager choisi parmi eux ferait une boucle ; un propriétaire parmi eux
+    // changerait de managers.
+    const { rows } = await tx.execute<{ boucle: boolean; proprietaire: boolean; moi: boolean }>(sql`
+      with recursive under (id, depth) as (
+        select ${memberId}::uuid, 0
+        union
+        select r.member_id, u.depth + 1 from reporting_lines r
+        join under u on r.manager_id = u.id
+        where u.depth < ${MAX_DEPTH}
+      )
+      select coalesce(bool_or(u.id = ${managerId}::uuid), false) as boucle,
+             coalesce(bool_or(string_to_array(m.role, ',') && array['owner']), false) as proprietaire,
+             coalesce((select string_to_array(role, ',') && array['owner'] from member
+                        where id = ${myMemberId(ctx)}), false) as moi
+        from under u join member m on m.id = u.id`);
+    const [check] = rows;
+    if (check?.boucle) return 'boucle';
+    if (check?.proprietaire && !check.moi) return 'proprietaire';
     if (managerId === null) {
       await tx.delete(reportingLines).where(eq(reportingLines.memberId, memberId));
     } else {
-      const { rows } = await tx.execute(sql`
-        with recursive under (id, depth) as (
-          select ${memberId}::uuid, 0
-          union
-          select r.member_id, u.depth + 1 from reporting_lines r
-          join under u on r.manager_id = u.id
-          where u.depth < ${MAX_DEPTH}
-        )
-        select 1 from under where id = ${managerId}::uuid limit 1`);
-      if (rows.length > 0) return 'boucle';
       await tx
         .insert(reportingLines)
         .values({ tenantId: ctx.tenantId, memberId, managerId })

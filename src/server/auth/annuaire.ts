@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { ConnectorAuthError, createConnectorHttp } from '@/server/connectors/http';
 import { members, users } from '@/server/db/schema/auth';
@@ -130,6 +130,7 @@ export type ImportMember = {
   email: string;
   managerId: string | null;
   byHand: boolean;
+  locked?: boolean; // un propriétaire ou l'un de ses managers, et l'import n'est pas d'un propriétaire : jamais déplacé
 };
 export type ImportChange = {
   memberId: string;
@@ -168,7 +169,7 @@ export function planImport(people: readonly Person[], inLeon: readonly ImportMem
   const wanted = new Map<string, string | null>();
   let kept = 0;
   for (const member of inLeon) {
-    if (!person.has(member.email)) continue; // absent de l'annuaire : rien ne change
+    if (member.locked || !person.has(member.email)) continue; // verrouillé, ou absent de l'annuaire : rien ne change
     const boss = bossOf(member);
     if (boss === member.managerId) continue;
     if (member.byHand) kept += 1;
@@ -207,19 +208,34 @@ export function planImport(people: readonly Person[], inLeon: readonly ImportMem
   };
 }
 
+// Les membres, anciens compris : un compte supprimé garde sa place dans l'organigramme, et la garde contre les boucles
+// doit la voir ; son adresse (ancien-…@leon.invalid) n'est dans aucun annuaire, l'import ne le déplace jamais. Comme
+// setManager, seul un propriétaire change qui est au-dessus d'un propriétaire : pour un autre lecteur, chaque
+// propriétaire et ses managers, directs et indirects, sont verrouillés.
 async function membersIn(tx: Tx, ctx: TenantContext): Promise<ImportMember[]> {
-  return tx
+  const rows = await tx
     .select({
       id: members.id,
       name: users.name,
       email: sql<string>`lower(${users.email})`,
       managerId: reportingLines.managerId,
       byHand: members.rattachementManuel,
+      owner: sql<boolean>`string_to_array(${members.role}, ',') && array['owner']`,
+      reader: sql<boolean>`${members.userId} = ${ctx.userId}`,
     })
     .from(members)
     .innerJoin(users, eq(users.id, members.userId))
     .leftJoin(reportingLines, eq(reportingLines.memberId, members.id))
-    .where(and(eq(members.organizationId, ctx.tenantId), isNull(users.deletedAt)));
+    .where(eq(members.organizationId, ctx.tenantId));
+  const managerOf = new Map(rows.map((row) => [row.id, row.managerId]));
+  const locked = new Set<string>();
+  if (!rows.some((row) => row.reader && row.owner)) {
+    for (const owner of rows.filter((row) => row.owner)) {
+      for (let at: string | null = owner.id; at && !locked.has(at); at = managerOf.get(at) ?? null)
+        locked.add(at);
+    }
+  }
+  return rows.map(({ owner, reader, ...member }) => ({ ...member, locked: locked.has(member.id) }));
 }
 
 export async function previewImport(

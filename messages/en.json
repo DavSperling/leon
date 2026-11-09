@@ -768,6 +768,7 @@
     "reportsTo": "Reports to {name}",
     "managerSaved": "Manager saved",
     "managerLoop": "Not possible: this person is already above the chosen manager.",
+    "managerOwner": "Only an owner can change who is above an owner.",
     "roleSaved": "Role saved",
     "remove": "Remove",
     "removeNamed": "Remove {name} from the workspace?",

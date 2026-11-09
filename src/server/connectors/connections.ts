@@ -312,7 +312,8 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
 }
 
 // Le créateur choisit qui voit ce que la connexion relève, et tout ce qu'elle a déjà relevé suit (partager_connexion).
-// Faux pour un autre membre, ou pour un groupe d'une autre organisation.
+// Faux pour un autre membre, pour un groupe d'une autre organisation, ou pour GitHub : la fin de chaque relève y remet
+// l'accès que donnent les dépôts d'équipe (aligner_sources_github, 0048).
 export async function shareConnection(
   ctx: TenantContext,
   id: string,
@@ -321,7 +322,8 @@ export async function shareConnection(
   const acl = `{${aclOf(ctx, partage).join(',')}}`;
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<{ shared: boolean }>(
-      sql`select partager_connexion(${id}, ${acl}::uuid[]) as shared`,
+      sql`select partager_connexion(${id}, ${acl}::uuid[]) as shared
+           where not exists (select 1 from connections where id = ${id} and provider = 'github')`,
     ),
   );
   return rows[0]?.shared === true;

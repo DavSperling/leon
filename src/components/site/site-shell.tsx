@@ -1,6 +1,8 @@
 import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { Aurora, ThinkingProvider } from '@/components/verre/shell/thinking';
+import { socialProviders } from '@/server/auth/auth';
+import { GoogleOneTap } from './google-one-tap';
 import { SiteFooter, SiteFooterBar } from './site-footer';
 import { SiteHeader } from './site-header';
 import './site.css';
@@ -26,6 +28,7 @@ export function SiteShell({
         {t('skip')}
       </a>
       <SiteHeader />
+      {socialProviders.google && <GoogleOneTap clientId={socialProviders.google.clientId} />}
       {/* z-[2] : au-dessus du pied (z-[1]).
           overflow-x-clip : un décor qui déborde (particules, 3D) ne fait jamais défiler la page de côté. */}
       <main

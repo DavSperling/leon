@@ -305,6 +305,24 @@ export async function socialSignInAction(formData: FormData): Promise<void> {
   redirect(url ?? '/connexion');
 }
 
+// Google One Tap : le jeton signé par Google arrive du navigateur ; Better Auth le vérifie, ouvre la session (cookie
+// posé par nextCookies), et l'accueil mène un nouveau compte à l'onboarding (requireUserContext).
+export async function oneTapAction(idToken: string): Promise<void> {
+  if (!socialProviders.google || typeof idToken !== 'string' || idToken.length > 4096) {
+    redirect('/connexion');
+  }
+  try {
+    await auth.api.oneTapCallback({ body: { idToken }, headers: await headers() });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    // Même message que le bouton : « account not linked » quand un compte par mot de passe non vérifié existe.
+    redirect(
+      `/connexion?error=${/not[_ ]linked/i.test(message) ? 'account_not_linked' : 'one_tap'}`,
+    );
+  }
+  redirect('/');
+}
+
 // « SSO d'entreprise » : le domaine de l'adresse désigne l'espace et son fournisseur (vérifié par DNS, auth.ts).
 export async function ssoSignInAction(
   _previous: AuthFormState,

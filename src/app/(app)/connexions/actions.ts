@@ -10,6 +10,7 @@ import {
   invalidFieldsMessage,
   SINCE_VALUES,
 } from '@/lib/connection-form';
+import { PartageSchema } from '@/lib/documents';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -22,6 +23,7 @@ import {
   replaceConnectionSecret,
   requestSyncNow,
   setConnectionPaused,
+  shareConnection,
 } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
 import {
@@ -199,6 +201,12 @@ export async function syncNowAction(id: string): Promise<{ ok: boolean }> {
 
 export async function setPausedAction(id: string, paused: boolean): Promise<{ ok: boolean }> {
   return manage(id, (ctx, uuid) => setConnectionPaused(ctx, uuid, paused === true));
+}
+
+export async function shareConnectionAction(id: string, partage: string): Promise<{ ok: boolean }> {
+  const parsed = PartageSchema.safeParse(partage);
+  if (!parsed.success) return { ok: false };
+  return manage(id, (ctx, uuid) => shareConnection(ctx, uuid, parsed.data));
 }
 
 // Une connexion Pipedream supprimée : Pipedream oublie aussi le compte et ses jetons.

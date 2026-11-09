@@ -17,6 +17,7 @@ import {
   deleteConnectionAction,
   replaceKeyAction,
   setPausedAction,
+  shareConnectionAction,
   syncNowAction,
 } from '@/app/(app)/connexions/actions';
 import {
@@ -54,6 +55,7 @@ import {
 import { cn, duration, ease, isInstant, nb, unfilter } from '@/lib/verre';
 import type { CatalogField, CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
+import { type GroupOption, ShareSelect, usePartageLabel } from '../documents/partage';
 import { secretText } from './model';
 import { ConnStatus, StatusText } from './parts';
 
@@ -384,6 +386,7 @@ function ConnectionCard({
   canConnect,
   onRemoved,
   returnTo,
+  groups,
 }: {
   c: ConnectionView;
   entry: CatalogItem;
@@ -391,8 +394,13 @@ function ConnectionCard({
   canConnect: boolean;
   onRemoved: () => void;
   returnTo?: OAuthReturnPath;
+  groups?: GroupOption[];
 }) {
   const t = useTranslations('connections');
+  const d = useTranslations('documents');
+  const partageLabel = usePartageLabel(groups ?? []);
+  // Sans choix enregistré, celui de l'outil : privé à qui branche (boîte mail, Drive, Slack), sinon toute l'équipe.
+  const partage = c.partage ?? (entry.privateRaw ? 'moi' : 'equipe');
   const locale = useLocale();
   const [replacing, setReplacing] = useState(false);
   const { pending, run } = useManage();
@@ -411,6 +419,23 @@ function ConnectionCard({
         <ConnStatus c={c} now={now} />
         <p className="font-mono text-meta tracking-normal text-muted">{secretText(c, locale)}</p>
       </div>
+      {groups && (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label text-muted">
+          <span>{d('shareWith')}</span>
+          {c.isCreator ? (
+            <ShareSelect
+              share={(next) => shareConnectionAction(c.id, next)}
+              value={partage}
+              groups={groups}
+              label={d('shareLabel', { title: c.label })}
+            />
+          ) : (
+            <span className="text-fg-2">
+              {partage === 'moi' ? c.createdBy.name : partageLabel(partage)}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap gap-1">
         <Button
           size="sm"
@@ -505,6 +530,7 @@ function Panel({
   canConnect,
   focusDialog,
   returnTo,
+  groups,
 }: {
   entry: CatalogItem;
   conns: ConnectionView[];
@@ -513,6 +539,7 @@ function Panel({
   canConnect: boolean;
   focusDialog: () => void;
   returnTo?: OAuthReturnPath;
+  groups?: GroupOption[];
 }) {
   const t = useTranslations('connections');
   const locale = useLocale();
@@ -555,6 +582,7 @@ function Panel({
                 canConnect={canConnect}
                 onRemoved={focusDialog}
                 returnTo={returnTo}
+                groups={groups}
               />
             ))}
           </AnimatePresence>
@@ -614,6 +642,7 @@ export function ToolDialog({
   canConnect,
   session,
   returnTo,
+  groups,
 }: {
   entry: CatalogItem | null;
   open: boolean;
@@ -628,6 +657,8 @@ export function ToolDialog({
   session: number;
   /** La page où le retour de l'éditeur revient (le formulaire poste `retour`) ; absente : Connexions. */
   returnTo?: OAuthReturnPath;
+  /** Les groupes de l'organisation : avec eux, chaque connexion dit qui voit ce qu'elle relève, et son créateur le change. */
+  groups?: GroupOption[];
 }) {
   const t = useTranslations('connections');
   const content = useRef<HTMLDivElement>(null);
@@ -668,6 +699,7 @@ export function ToolDialog({
           canConnect={canConnect}
           focusDialog={focusDialog}
           returnTo={returnTo}
+          groups={groups}
         />
       </DialogContent>
     </Dialog>

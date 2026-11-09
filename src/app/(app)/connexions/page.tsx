@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Connexions } from '@/components/verre/connexions';
 import { oauthNotice, setupReturn } from '@/lib/connection-form';
 import { DEPARTMENTS, isDepartment } from '@/lib/onboarding';
+import { listGroups } from '@/server/auth/groupes';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
 import { listCatalog } from '@/server/connectors/catalog';
@@ -24,10 +25,11 @@ export default async function ConnectionsPage({
   const params = await searchParams;
   const back = setupReturn(params);
   if (back) redirect(back);
-  const [connections, channels, member] = await Promise.all([
+  const [connections, channels, member, groups] = await Promise.all([
     listConnections(ctx),
     channelHealth(ctx),
     readOnboardingMember(ctx),
+    listGroups(ctx),
   ]);
   const locale = await getLocale();
   const catalog = listCatalog(locale);
@@ -53,6 +55,7 @@ export default async function ConnectionsPage({
       channels={channels}
       stale={staleChannels(channels, now).map((channel) => channel.kind)}
       now={now}
+      groups={groups.map(({ id, service, nom }) => ({ id, service, nom }))}
     />
   );
 }

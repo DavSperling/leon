@@ -30,6 +30,8 @@ export const connections = pgTable('connections', {
   lastError: text('last_error'),
   itemsSynced: integer('items_synced').notNull().default(0),
   acl: uuid('acl').array().notNull(),
+  // Qui voit ce qu'elle relève (0056) ; nul : le choix de l'outil. Ne s'écrit que par partager_connexion.
+  partage: uuid('partage').array(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { ProviderId } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { connections } from '@/server/db/schema/connections';
 import { sources } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
@@ -20,16 +21,16 @@ export type ConnectionRef = {
   privateRaw?: boolean; // texte brut privé au créateur (voir Connector.privateRaw)
 };
 
-// Une source par élément, au nom du créateur de la connexion, visible de toute l'équipe (sauf
-// texte brut privé) : la source garde son origine (outil, nature, lien, espace) pour la future
-// couche de droits.
+// Une source par élément, au nom du créateur de la connexion, à l'accès que la connexion donne : la source garde son
+// origine (outil, nature, lien, espace). Une source déjà là garde son accès (seul partager_connexion le change) : ses
+// nouveaux tours prennent le sien, rendu ici.
 async function upsertItemSource(
   tx: Tx,
   ctx: TenantContext,
   connection: ConnectionRef,
   item: NormalizedItem,
   acl: string[],
-): Promise<string> {
+): Promise<{ id: string; acl: string[] }> {
   const title = item.title || null;
   const metadata = {
     nature: item.nature,
@@ -53,9 +54,9 @@ async function upsertItemSource(
       target: [sources.tenantId, sources.ownerUserId, sources.kind, sources.externalId],
       set: { title, metadata, connectionId: connection.id },
     })
-    .returning({ id: sources.id });
+    .returning({ id: sources.id, acl: sources.acl });
   if (!source) throw new Error('source non créée');
-  return source.id;
+  return source;
 }
 
 // `ctx` est celui du créateur de la connexion. Les éléments d'un appel entrent dans une seule
@@ -66,11 +67,24 @@ export async function ingestConnectorItems(
   connection: ConnectionRef,
   items: NormalizedItem[],
 ): Promise<{ sources: number; turns: number; runs: string[] }> {
-  const acl = connection.privateRaw ? [connection.createdBy] : [ctx.tenantId];
   const created = await withTenant(ctx, async (tx) => {
+    // Le partage choisi (0056), sous verrou partagé : partager_connexion attend la fin de cette relève, ou passe avant.
+    const [chosen] = await tx
+      .select({ partage: connections.partage })
+      .from(connections)
+      .where(eq(connections.id, connection.id))
+      .for('share');
+    const acl =
+      chosen?.partage ?? (connection.privateRaw ? [connection.createdBy] : [ctx.tenantId]);
     const result = { turns: 0, runs: [] as string[] };
     for (const item of items) {
-      const sourceId = await upsertItemSource(tx, ctx, connection, item, acl);
+      const { id: sourceId, acl: sourceAcl } = await upsertItemSource(
+        tx,
+        ctx,
+        connection,
+        item,
+        acl,
+      );
       const rows = item.turns.map((turn) => ({
         tenantId: ctx.tenantId,
         sourceId,
@@ -83,12 +97,13 @@ export async function ingestConnectorItems(
         authorEmail: turn.authorEmail,
         authorSide: turn.authorSide,
         internalNote: turn.internalNote,
-        acl,
+        acl: sourceAcl,
       }));
       const { ids, lastTs } = await insertNewTurns(tx, rows);
       await updateSource(tx, sourceId, undefined, lastTs);
       result.turns += ids.length;
-      if (ids.length > 0) result.runs.push(await createIngestRun(tx, ctx, sourceId, ids, acl));
+      if (ids.length > 0)
+        result.runs.push(await createIngestRun(tx, ctx, sourceId, ids, sourceAcl));
     }
     return result;
   });

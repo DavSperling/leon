@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { useTransition } from 'react';
-import { shareDocumentAction } from '@/app/(app)/documents/actions';
 import { Select, type SelectOption, toast } from '@/components/verre';
 import { departmentLabelKey } from '@/lib/onboarding';
 
@@ -30,14 +29,14 @@ export function usePartageLabel(groups: GroupOption[]): (partage: string) => str
   return (partage) => options.find((o) => o.value === partage)?.label ?? t('shareGroup');
 }
 
-// L'auteur change qui voit un document, ou tous ceux d'un de ses dossiers.
+// L'auteur change qui voit un document, tous ceux d'un de ses dossiers, ou ce qu'une de ses connexions relève.
 export function ShareSelect({
-  target,
+  share,
   value,
   groups,
   label,
 }: {
-  target: { id: string } | { folderId: string };
+  share: (partage: string) => Promise<{ ok: boolean }>;
   value: string;
   groups: GroupOption[];
   label: string;
@@ -48,7 +47,7 @@ export function ShareSelect({
   const change = (partage: string) =>
     startTransition(async () => {
       try {
-        const { ok } = await shareDocumentAction(target, partage);
+        const { ok } = await share(partage);
         if (ok) toast.success(t('shareSaved'));
         else toast.error(t('shareFailed'));
       } catch {

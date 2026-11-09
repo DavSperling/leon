@@ -13,6 +13,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import { createFakeEmbedder } from '@/server/embeddings/fake-embedder';
 import { searchPassages } from '@/server/search/search';
 import { adminDb } from '@/test/db';
+import { seedConnection } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { listMembers, removeMember, setMemberRole } from './members';
 import {
@@ -160,6 +161,25 @@ describe('reportActivity', () => {
     expect((await listReports(claire))[0]?.voitTout).toBe(false);
     expect(await setFollowed(claire, ids.marc, [])).toBe(true);
     expect(await titles()).toEqual([]);
+  });
+
+  it('retrouve ce que la personne a signé sur GitHub, sous le login du compte qu’elle a branché', async () => {
+    const { claire, marc, tenantId } = await orgChart();
+    await seedConnection(marc, { provider: 'github', label: 'marc-dev' });
+    const pr = (title: string, authorName: string) =>
+      seedIndexed(claire, {
+        kind: 'github',
+        acl: [tenantId],
+        title,
+        turns: [{ text: 'p', authorName }],
+      });
+    await pr('PR de Marc', 'marc-dev');
+    await pr('PR de Paul', 'paul-dev');
+    const [report] = await listReports(claire);
+    if (!report) throw new Error('Marc absent');
+    expect((await reportActivity(claire, report)).hits.map((hit) => hit.title)).toEqual([
+      'PR de Marc',
+    ]);
   });
 
   it('refuse de suivre quelqu’un qui n’est pas sous le lecteur', async () => {

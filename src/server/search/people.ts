@@ -1,12 +1,15 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { members, users } from '@/server/db/schema/auth';
+import { connections } from '@/server/db/schema/connections';
+import { withTenant } from '@/server/db/with-tenant';
+import { textArray } from './filters-sql';
 
-// Qui est qui (D12 du plan du deuxième jet). Cette première version rapproche par l'adresse e-mail et par le
-// nom des membres de l'organisation ; T19 y ajoute les comptes des connexions personnelles et les identifiants
-// que chacun déclare (GitHub, Linear…), c'est-à-dire `authorNames`.
+// Qui est qui (D12 du plan du deuxième jet). On rapproche par l'adresse e-mail et par le nom des membres de
+// l'organisation ; sur GitHub et Slack, dont les auteurs n'ont pas d'adresse, par les comptes que chacun y a
+// branchés (`authorNames`, T19). Les identifiants que chacun déclarerait à la main (T19) n'existent pas encore.
 
 // Sans casse, sans accent, avec des espaces simples : « Éloïse  Roy » et « eloise roy » se confondent.
 function normalize(text: string): string {
@@ -55,7 +58,7 @@ export async function resolvePeople(
       if (found.length === 0) unknown.push(person);
     }
   }
-  return { authorEmails: [...emails], authorNames: [], unknown };
+  return { authorEmails: [...emails], authorNames: await toolNames(ctx, [...emails]), unknown };
 }
 
 // Les adresses et les noms d'outil du lecteur : de quoi savoir ce qu'il a écrit.
@@ -63,5 +66,48 @@ export async function myAddresses(
   ctx: TenantContext,
 ): Promise<{ emails: string[]; names: { kind: SourceKind; name: string }[] }> {
   const [row] = await db.select({ email: users.email }).from(users).where(eq(users.id, ctx.userId));
-  return { emails: row ? [row.email.toLowerCase()] : [], names: [] };
+  const emails = row ? [row.email.toLowerCase()] : [];
+  return { emails, names: await toolNames(ctx, emails) };
+}
+
+// Les noms d'auteur que GitHub et Slack donnent aux personnes de ces adresses : ceux des comptes qu'elles y ont
+// branchés, parmi les connexions de l'organisation du lecteur. Une connexion GitHub porte le login ; une connexion
+// Slack « pseudo (espace) », avec « équipe:utilisateur » dans `accountKey` (leurs `verify`). Un message Slack est
+// signé du pseudo, ou de l'identifiant quand le pseudo manque : les deux comptent.
+// shortcut: qui n'a pas branché son propre GitHub ou Slack y reste inconnu ; à revoir avec les identifiants
+// déclarés à la main (T19).
+export async function toolNames(
+  ctx: TenantContext,
+  emails: string[],
+): Promise<{ kind: SourceKind; name: string }[]> {
+  if (emails.length === 0) return [];
+  const lowered = emails.map((email) => email.toLowerCase());
+  const rows = await withTenant(ctx, (tx) =>
+    tx
+      .select({
+        provider: connections.provider,
+        label: connections.label,
+        key: sql<string | null>`${connections.config}->>'accountKey'`,
+      })
+      .from(connections)
+      .innerJoin(users, eq(users.id, connections.createdBy))
+      .where(
+        and(
+          inArray(connections.provider, ['github', 'slack']),
+          sql`lower(${users.email}) = any(${textArray(lowered)})`,
+        ),
+      ),
+  );
+  const names = new Map<string, { kind: SourceKind; name: string }>();
+  const add = (kind: SourceKind, name: string | undefined) => {
+    if (name) names.set(`${kind}:${name.toLowerCase()}`, { kind, name });
+  };
+  for (const row of rows) {
+    if (row.provider === 'github') add('github', row.label);
+    else {
+      add('slack', /^(\S+) \(/.exec(row.label)?.[1]); // un pseudo n'a pas d'espace ; l'espace peut en avoir
+      add('slack', row.key?.split(':')[1]);
+    }
+  }
+  return [...names.values()];
 }

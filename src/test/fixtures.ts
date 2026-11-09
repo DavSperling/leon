@@ -112,7 +112,13 @@ export async function seedThread(ctx: TenantContext): Promise<string> {
 // par défaut (`nextSyncAt` nul) : voir « Connexions dans les tests » dans le plan des connecteurs.
 export async function seedConnection(
   ctx: TenantContext,
-  input: { provider?: ProviderId; status?: ConnectionStatus; nextSyncAt?: Date | null } = {},
+  input: {
+    provider?: ProviderId;
+    status?: ConnectionStatus;
+    nextSyncAt?: Date | null;
+    label?: string;
+    config?: Record<string, unknown>;
+  } = {},
 ): Promise<string> {
   const id = randomUUID();
   const secret = encryptSecret(
@@ -124,7 +130,8 @@ export async function seedConnection(
     tenantId: ctx.tenantId,
     createdBy: ctx.userId,
     provider: input.provider ?? 'github',
-    label: 'Connexion de test',
+    label: input.label ?? 'Connexion de test',
+    config: input.config ?? {},
     secret,
     secretHint: 'test',
     status: input.status ?? 'active',

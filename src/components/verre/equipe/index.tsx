@@ -26,7 +26,7 @@ import { type ChartMember, OrgChart } from './org-chart';
 type Activity = { hits: SourceHit[]; total: number };
 
 /**
- * « Mon équipe » : l'organigramme de toute l'organisation, puis les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
+ * « Mon équipe » : l'organigramme centré sur le lecteur, puis les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
  * (?personne=…) ce qu'il suit d'elle et son activité récente, privé compris s'il le lit (0057). L'interrupteur de ce
  * privé ne paraît que si l'organisation le permet (`seeAllAllowed`).
  */

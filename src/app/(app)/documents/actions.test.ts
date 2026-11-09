@@ -47,7 +47,7 @@ describe('addFileAction', () => {
   it('ajoute un fichier seul, sans dossier, et ne rafraîchit pas la liste', async () => {
     await expect(addFileAction(form({ file }))).resolves.toEqual({ error: null, partial: false });
 
-    expect(addDocument).toHaveBeenCalledWith(ctx, file, undefined);
+    expect(addDocument).toHaveBeenCalledWith(ctx, file, undefined, 'equipe');
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
@@ -57,11 +57,12 @@ describe('addFileAction', () => {
     );
 
     expect(state).toEqual({ error: null, partial: false });
-    expect(addDocument).toHaveBeenCalledWith(ctx, file, {
-      id: folderId,
-      name: 'chantier-lebrun',
-      path: 'lots/plomberie.md',
-    });
+    expect(addDocument).toHaveBeenCalledWith(
+      ctx,
+      file,
+      { id: folderId, name: 'chantier-lebrun', path: 'lots/plomberie.md' },
+      'equipe',
+    );
   });
 
   it('refuse sans fichier', async () => {

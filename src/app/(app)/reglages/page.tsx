@@ -9,6 +9,7 @@ import {
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
 import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
+import { GroupsSection } from '@/components/verre/reglages/groups';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
@@ -23,6 +24,7 @@ import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
+import { listGroups } from '@/server/auth/groupes';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
@@ -41,18 +43,29 @@ export default async function SettingsPage() {
   const s = await getTranslations('security');
   const claude = await getTranslations('claudeCode');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership, about, deletion, depotsEquipe, sso] =
-    await Promise.all([
-      listApiTokens(ctx),
-      listMembers(ctx),
-      canInvite(ctx),
-      getSession(),
-      getMembership(ctx),
-      readAbout(ctx.userId),
-      deletionInfo(ctx),
-      listDepotsEquipe(ctx),
-      readSsoSetup(ctx),
-    ]);
+  const [
+    allTokens,
+    members,
+    mayInvite,
+    session,
+    membership,
+    about,
+    deletion,
+    depotsEquipe,
+    sso,
+    groups,
+  ] = await Promise.all([
+    listApiTokens(ctx),
+    listMembers(ctx),
+    canInvite(ctx),
+    getSession(),
+    getMembership(ctx),
+    readAbout(ctx.userId),
+    deletionInfo(ctx),
+    listDepotsEquipe(ctx),
+    readSsoSetup(ctx),
+    listGroups(ctx),
+  ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
     .filter((token) => !token.revokedAt)
@@ -109,6 +122,12 @@ export default async function SettingsPage() {
           equipe: (
             <>
               <MembersSection members={members} canInvite={mayInvite} />
+              {mayInvite && (
+                <GroupsSection
+                  groups={groups}
+                  members={members.filter((m) => !m.former).map(({ id, name }) => ({ id, name }))}
+                />
+              )}
               {mayInvite && <DepotsEquipeSection {...depotsEquipe} />}
               {mayInvite && <SsoSection setup={sso} />}
               {deletion.isOwner && (

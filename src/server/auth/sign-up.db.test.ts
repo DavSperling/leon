@@ -240,7 +240,8 @@ describe('createUserWithInvitation', () => {
     expect(await resolveTenantContext(result.userId, null)).toEqual({
       tenantId,
       userId: result.userId,
-      principals: [result.userId, tenantId],
+      // le groupe de son service, que porte le lien (0055)
+      principals: [result.userId, tenantId, expect.any(String)],
     });
 
     // La session qui suit l'inscription s'ouvre dans l'organisation du lien.

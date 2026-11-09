@@ -14,6 +14,7 @@ import {
   deleteAccount,
   deleteOrganization,
 } from '@/server/auth/delete-account';
+import { deleteGroup, saveGroup, setGroupMembers } from '@/server/auth/groupes';
 import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
 import { PlacementSchema } from '@/server/auth/onboarding';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
@@ -141,6 +142,39 @@ export async function setDepotEquipeAction(
   if (result !== 'ok') return { error: t(DEPOT_ERRORS[result]) };
   revalidatePath('/reglages');
   return { ok: true };
+}
+
+const GroupInputSchema = z.object({
+  id: z.uuid().nullable(),
+  nom: z.string(),
+  membres: z.array(z.uuid()).max(500),
+});
+
+// Crée ou modifie un groupe libre : son nom, puis ses membres. Le nom d'abord : un nom déjà pris n'écrit rien.
+export async function saveGroupAction(
+  id: string | null,
+  nom: string,
+  membres: string[],
+): Promise<{ ok: true } | { error: string }> {
+  const ctx = await requireUserContext();
+  const t = await getTranslations('settings');
+  const parsed = GroupInputSchema.safeParse({ id, nom, membres });
+  if (!parsed.success) return { error: t('groupInvalid') };
+  const saved = await saveGroup(ctx, parsed.data.id, parsed.data.nom);
+  if (saved === 'nom_pris') return { error: t('groupNameTaken') };
+  if (saved === 'refuse') return { error: t('groupRefused') };
+  const ok = await setGroupMembers(ctx, saved.id, parsed.data.membres);
+  revalidatePath('/reglages');
+  revalidatePath('/documents');
+  return ok ? { ok: true } : { error: t('groupRefused') };
+}
+
+export async function deleteGroupAction(id: string): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await deleteGroup(ctx, id);
+  revalidatePath('/reglages');
+  revalidatePath('/documents');
+  return { ok };
 }
 
 export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean }> {

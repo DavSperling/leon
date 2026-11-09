@@ -48,7 +48,7 @@ describe('supprimer_fil', () => {
     const outside = {
       tenantId: elsewhere.tenantId,
       userId: alice.userId,
-      principals: principalsFor(alice.userId, elsewhere.tenantId),
+      principals: await principalsFor(alice.userId, elsewhere.tenantId),
     };
 
     expect(await supprimerFil(outside, thread)).toBe(false);

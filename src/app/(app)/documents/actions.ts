@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import type { DocumentErrorCode } from '@/lib/documents';
+import { type DocumentErrorCode, type Partage, PartageSchema } from '@/lib/documents';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import {
@@ -10,19 +10,27 @@ import {
   DocumentError,
   deleteDocument,
   deleteFolder,
+  shareDocuments,
 } from '@/server/documents/documents';
 import { logError } from '@/server/log';
 
 // `partial` : une partie du fichier n'a pas été lue (plafond de cellules, de PDF), le reste est indexé.
 export type DocumentActionState = { error: DocumentErrorCode | null; partial: boolean };
 
+// Le partage choisi sur la page ; sans champ, toute l'équipe, comme avant les groupes.
+function readPartage(formData: FormData): Partage | null {
+  const parsed = PartageSchema.safeParse(formData.get('partage') ?? 'equipe');
+  return parsed.success ? parsed.data : null;
+}
+
 async function storeFile(
   ctx: TenantContext,
   file: File,
+  partage: Partage,
   folder?: { id: string; name: string; path: string },
 ): Promise<DocumentActionState> {
   try {
-    const { partial } = await addDocument(ctx, file, folder);
+    const { partial } = await addDocument(ctx, file, folder, partage);
     return { error: null, partial };
   } catch (error) {
     // Ni le nom ni le contenu du fichier : le code de l'erreur, et la raison d'un échec de lecture.
@@ -38,8 +46,9 @@ export async function uploadDocumentAction(
 ): Promise<DocumentActionState> {
   const ctx = await requireUserContext();
   const file = formData.get('file');
-  if (!(file instanceof File)) return { error: 'missing', partial: false };
-  const state = await storeFile(ctx, file);
+  const partage = readPartage(formData);
+  if (!(file instanceof File) || !partage) return { error: 'missing', partial: false };
+  const state = await storeFile(ctx, file, partage);
   if (!state.error) revalidatePath('/documents');
   return state;
 }
@@ -60,17 +69,18 @@ const folderFields = z.object({
 export async function addFileAction(formData: FormData): Promise<DocumentActionState> {
   const ctx = await requireUserContext();
   const file = formData.get('file');
-  if (!(file instanceof File)) return { error: 'missing', partial: false };
+  const partage = readPartage(formData);
+  if (!(file instanceof File) || !partage) return { error: 'missing', partial: false };
   const fields = {
     folderId: formData.get('folderId'),
     folderName: formData.get('folderName'),
     path: formData.get('path'),
   };
-  if (Object.values(fields).every((value) => value === null)) return storeFile(ctx, file);
+  if (Object.values(fields).every((value) => value === null)) return storeFile(ctx, file, partage);
   const folder = folderFields.safeParse(fields);
   if (!folder.success) return { error: 'missing', partial: false };
   const { folderId, folderName, path } = folder.data;
-  return storeFile(ctx, file, { id: folderId, name: folderName, path });
+  return storeFile(ctx, file, partage, { id: folderId, name: folderName, path });
 }
 
 export async function deleteDocumentAction(formData: FormData): Promise<void> {
@@ -87,4 +97,20 @@ export async function deleteFolderAction(formData: FormData): Promise<void> {
   if (!id.success) return;
   await deleteFolder(ctx, id.data);
   revalidatePath('/documents');
+}
+
+// L'auteur change qui voit un document, ou tous les siens d'un dossier. Faux si rien n'a changé.
+export async function shareDocumentAction(
+  target: { id: string } | { folderId: string },
+  partage: string,
+): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const parsedTarget = z
+    .union([z.object({ id: z.uuid() }), z.object({ folderId: z.uuid() })])
+    .safeParse(target);
+  const parsedPartage = PartageSchema.safeParse(partage);
+  if (!parsedTarget.success || !parsedPartage.success) return { ok: false };
+  const changed = await shareDocuments(ctx, parsedTarget.data, parsedPartage.data);
+  if (changed > 0) revalidatePath('/documents');
+  return { ok: changed > 0 };
 }

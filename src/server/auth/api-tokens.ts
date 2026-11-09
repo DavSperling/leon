@@ -287,7 +287,7 @@ export async function verifyApiToken(
   const ctx = {
     tenantId: row.tenantId,
     userId: row.userId,
-    principals: principalsFor(row.userId, row.tenantId),
+    principals: await principalsFor(row.userId, row.tenantId),
   };
   return { tokenId: row.id, ctx, kind: row.kind };
 }

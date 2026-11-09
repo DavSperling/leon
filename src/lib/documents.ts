@@ -2,6 +2,12 @@
 // de taille (vérifié des deux côtés), les formats lus, ce qu'un dossier laisse de côté et les codes d'erreur que
 // l'action renvoie vivent ici ; la page les traduit.
 
+import { z } from 'zod';
+
+// Qui voit un document : toute l'équipe, son auteur seul, ou un groupe de l'organisation (0055), auteur compris.
+export const PartageSchema = z.union([z.enum(['equipe', 'moi']), z.uuid()]);
+export type Partage = z.infer<typeof PartageSchema>;
+
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 // Chaque fichier passe ensuite par l'indexation : un dossier en apporte 200 au plus.
 export const FOLDER_MAX_FILES = 200;

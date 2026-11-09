@@ -99,7 +99,7 @@
     "add": "Ajouter le document",
     "chooseFolder": "Choisir un dossier",
     "formats": "PDF, Word, Excel, PowerPoint, OpenDocument, CSV, texte, Markdown et code (JSON, YAML, TypeScript, Python, SQL…) · 10 Mo maximum par fichier, 200 fichiers par dossier.",
-    "dropHint": "Vous pouvez aussi glisser des fichiers, ou un dossier entier, sur cette zone. Tout ce que vous ajoutez est visible de l’équipe.",
+    "dropHint": "Vous pouvez aussi glisser des fichiers, ou un dossier entier, sur cette zone.",
     "sending": "Envoi : {done} / {total}",
     "report": {
       "added": "{count, plural, one {# fichier ajouté} other {# fichiers ajoutés}}",
@@ -129,7 +129,15 @@
       "folder_full": "Ce dossier a atteint le maximum de 200 fichiers.",
       "ignored": "Fichier écarté : il contient souvent des mots de passe ou des clés (configuration, clé privée), ou n’est que généré.",
       "failed": "Impossible d’enregistrer ce document. Réessayez."
-    }
+    },
+    "shareWith": "Visible par",
+    "shareTeam": "Toute l’équipe",
+    "shareMe": "Moi seul",
+    "shareGroup": "Un groupe",
+    "shareLabel": "Qui voit {title}",
+    "shareFolderLabel": "Qui voit le dossier {name}",
+    "shareSaved": "Partage enregistré.",
+    "shareFailed": "Le partage n’a pas été enregistré. Réessayez."
   },
   "shell": {
     "skipToContent": "Aller au contenu",
@@ -681,7 +689,27 @@
     "ssoRemove": "Retirer le SSO",
     "ssoRemoveConfirm": "Retirer le SSO ? Les comptes restent ; ils se connecteront autrement.",
     "ssoRemoved": "SSO retiré.",
-    "ssoRemoveFailed": "Le SSO n’a pas pu être retiré."
+    "ssoRemoveFailed": "Le SSO n’a pas pu être retiré.",
+    "groupsTitle": "Groupes",
+    "groupsDescription": "Partagez un document à un groupe plutôt qu’à toute l’équipe. Chaque service est un groupe tout seul ; créez-en d’autres pour un projet ou la direction.",
+    "groupsEmpty": "Aucun groupe",
+    "groupsEmptyHelp": "Indiquez le service de chacun dans la liste des membres, ou créez un groupe.",
+    "groupNew": "Nouveau groupe",
+    "groupEdit": "Modifier",
+    "groupEditTitle": "Modifier {name}",
+    "groupDelete": "Supprimer",
+    "groupDeleteNamed": "Supprimer {name}",
+    "groupDeleteTitle": "Supprimer {name} ?",
+    "groupDeleteDescription": "Les documents partagés à ce groupe ne seront plus visibles que de leur auteur, ou des autres groupes avec qui il les a partagés.",
+    "groupDeleted": "Groupe {name} supprimé.",
+    "groupService": "Service",
+    "groupCount": "{count, plural, one {# personne} other {# personnes}}",
+    "groupName": "Nom",
+    "groupMembersLegend": "Membres",
+    "groupSaved": "Groupe enregistré.",
+    "groupInvalid": "Donnez un nom au groupe (80 caractères au plus).",
+    "groupNameTaken": "Un groupe porte déjà ce nom.",
+    "groupRefused": "Seul un propriétaire ou un administrateur gère les groupes."
   },
   "security": {
     "profileTitle": "Profil",

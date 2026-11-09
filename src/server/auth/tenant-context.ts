@@ -1,7 +1,8 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/server/db/client';
 import { members, users } from '@/server/db/schema/auth';
+import { withTenant } from '@/server/db/with-tenant';
 
 export type TenantContext = {
   readonly tenantId: string;
@@ -11,9 +12,21 @@ export type TenantContext = {
 
 const UuidSchema = z.uuid();
 
-// Soi + « l'équipe » (le principal de l'organisation).
-export function principalsFor(userId: string, tenantId: string): string[] {
-  return [userId, tenantId];
+// Soi + « l'équipe » (le principal de l'organisation) + ses groupes (0055) : son service, et les groupes libres où un
+// administrateur l'a mis. Lus sous RLS, dans l'organisation seulement. Soi d'abord : rien ne doit dépendre de l'ordre,
+// mais un message d'erreur ou un test le lit plus facilement.
+export async function principalsFor(userId: string, tenantId: string): Promise<string[]> {
+  const base = [userId, tenantId];
+  const { rows } = await withTenant({ tenantId, userId, principals: base }, (tx) =>
+    tx.execute<{ id: string }>(sql`
+      select g.id from groupes g
+      join member m on m."organizationId" = g.tenant_id and m."userId" = ${userId}
+      where g.tenant_id = ${tenantId}
+        and (g.service = m.department
+             or exists (select 1 from membres_groupe mg where mg.groupe_id = g.id and mg.member_id = m.id))
+      order by g.id`),
+  );
+  return [...base, ...rows.map((row) => row.id)];
 }
 
 // Un ancien membre (compte supprimé, 0040) garde son adhésion mais n'entre plus : une session ouverte pendant la
@@ -67,7 +80,7 @@ export async function resolveTenantContext(
         ? tenantId
         : null;
   if (resolved === null) return null;
-  return { tenantId: resolved, userId, principals: principalsFor(userId, resolved) };
+  return { tenantId: resolved, userId, principals: await principalsFor(userId, resolved) };
 }
 
 // Le contexte d'une session. Un membre retiré garde son ancienne organisation active (Better Auth ne la remet pas à

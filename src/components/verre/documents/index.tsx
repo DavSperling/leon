@@ -17,7 +17,16 @@ import {
   deleteFolderAction,
   uploadDocumentAction,
 } from '@/app/(app)/documents/actions';
-import { Button, EmptyState, GlassCard, Notice, PageHeader, Section } from '@/components/verre';
+import {
+  Button,
+  EmptyState,
+  Field,
+  GlassCard,
+  Notice,
+  PageHeader,
+  Section,
+  Select,
+} from '@/components/verre';
 import {
   DOCUMENT_ACCEPT,
   DOCUMENT_MAX_BYTES,
@@ -28,6 +37,7 @@ import { formatRelative } from '@/lib/format';
 import { nb } from '@/lib/verre';
 import { cn } from '@/lib/verre/cn';
 import { type PickedFile, type PickedFolder, readDropped, readPicked } from './dropped-files';
+import { type GroupOption, ShareSelect, usePartageLabel, usePartageOptions } from './partage';
 
 type DocumentRow = {
   id: string;
@@ -38,6 +48,7 @@ type DocumentRow = {
   folderId: string | null;
   folderName: string | null;
   ownerFormer: boolean;
+  partage: string; // 'equipe', 'moi' ou l'id d'un groupe (listDocuments)
 };
 
 // Les fichiers d'un même dossier (et d'un même auteur), regroupés sur une ligne de la liste.
@@ -76,8 +87,11 @@ function FormatIcon({ title }: { title: string | null }) {
 
 type Report = { tone: 'success' | 'warning' | 'error'; text: string };
 
-function UploadForm() {
+function UploadForm({ groups }: { groups: GroupOption[] }) {
   const t = useTranslations('documents');
+  const partageOptions = usePartageOptions(groups);
+  // Le partage vaut pour tout l'envoi : le formulaire le poste, les fichiers d'un dossier le portent un par un.
+  const [partage, setPartage] = useState('equipe');
   const router = useRouter();
   const [state, action, pending] = useActionState(uploadDocumentAction, {
     error: null,
@@ -139,6 +153,7 @@ function UploadForm() {
       for (const [index, { file, folder }] of uploads.entries()) {
         const body = new FormData();
         body.set('file', file);
+        body.set('partage', partage);
         if (folder) {
           body.set('folderId', folder.id);
           body.set('folderName', folder.name);
@@ -210,6 +225,15 @@ function UploadForm() {
             className="block w-full rounded-field border border-line bg-glass-2 px-3 py-2 text-ui text-fg file:mr-3 file:rounded-full file:border-0 file:bg-glass-3 file:px-3 file:py-1.5 file:text-label file:font-medium file:text-fg"
           />
         </label>
+        <Field label={t('shareWith')} className="w-44">
+          <Select
+            name="partage"
+            value={partage}
+            onValueChange={setPartage}
+            disabled={sending || pending}
+            options={partageOptions}
+          />
+        </Field>
         <Button type="submit" icon={Upload} variant="primary" loading={pending} disabled={sending}>
           {t('add')}
         </Button>
@@ -268,16 +292,20 @@ function DocumentItem({
   document,
   viewerId,
   admin,
+  groups,
   path,
 }: {
   document: DocumentRow;
   viewerId: string;
   admin: boolean;
+  groups: GroupOption[];
   path?: string;
 }) {
   const t = useTranslations('documents');
   const tSettings = useTranslations('settings');
   const locale = useLocale();
+  const partageLabel = usePartageLabel(groups);
+  const owner = document.ownerUserId === viewerId;
   const full = document.title || t('untitled');
   const title = path ?? full;
   return (
@@ -297,10 +325,19 @@ function DocumentItem({
                 when: formatRelative(document.createdAt, new Date(), locale),
               }),
             )}
+            {!owner && ` · ${partageLabel(document.partage)}`}
           </p>
         )}
       </div>
-      {(document.ownerUserId === viewerId || (admin && document.ownerFormer)) && (
+      {owner && !path && (
+        <ShareSelect
+          target={{ id: document.id }}
+          value={document.partage}
+          groups={groups}
+          label={t('shareLabel', { title: full })}
+        />
+      )}
+      {(owner || (admin && document.ownerFormer)) && (
         <form action={deleteDocumentAction}>
           <input type="hidden" name="id" value={document.id} />
           <Button
@@ -323,13 +360,16 @@ function FolderItem({
   folder,
   viewerId,
   admin,
+  groups,
 }: {
   folder: FolderGroup;
   viewerId: string;
   admin: boolean;
+  groups: GroupOption[];
 }) {
   const t = useTranslations('documents');
   const locale = useLocale();
+  const partageLabel = usePartageLabel(groups);
   // La liste va du plus récent au plus ancien : le premier fichier dit l'auteur et la date du dossier.
   const [latest] = folder.documents;
   const prefix = `${folder.name}/`;
@@ -363,7 +403,7 @@ function FolderItem({
                 `${t('folderFiles', { count: files.length })} · ${t('addedBy', {
                   name: latest?.ownerName ?? '',
                   when: latest ? formatRelative(latest.createdAt, new Date(), locale) : '',
-                })}`,
+                })} · ${partageLabel(latest?.partage ?? 'equipe')}`,
               )}
             </span>
           </span>
@@ -372,6 +412,18 @@ function FolderItem({
             className="size-4 shrink-0 text-muted transition-transform group-open:rotate-90"
           />
         </summary>
+        {/* Le dossier se partage d'un bloc : ses fichiers suivent tous le même choix. */}
+        {owner && latest && (
+          <div className="mt-3 ml-4 flex flex-wrap items-center gap-3 sm:ml-11">
+            <span className="text-label font-medium text-fg-2">{t('shareWith')}</span>
+            <ShareSelect
+              target={{ folderId: folder.id }}
+              value={latest.partage}
+              groups={groups}
+              label={t('shareFolderLabel', { name: folder.name })}
+            />
+          </div>
+        )}
         <ul className="mt-1 ml-4 sm:ml-11">
           {files.map(({ document, path }) => (
             <DocumentItem
@@ -379,6 +431,7 @@ function FolderItem({
               document={document}
               viewerId={viewerId}
               admin={admin}
+              groups={groups}
               path={path}
             />
           ))}
@@ -429,17 +482,19 @@ export function Documents({
   documents,
   viewerId,
   admin,
+  groups,
 }: {
   documents: DocumentRow[];
   viewerId: string;
   admin: boolean;
+  groups: GroupOption[];
 }) {
   const t = useTranslations('documents');
   return (
     <div className="mx-auto max-w-[760px]">
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
       <Section title={t('addSection')} className="mt-0">
-        <UploadForm />
+        <UploadForm groups={groups} />
       </Section>
       <Section title={t('teamSection')} description={t('teamDescription')}>
         {documents.length === 0 ? (
@@ -449,9 +504,21 @@ export function Documents({
             <ul>
               {groupDocuments(documents).map((row) =>
                 'documents' in row ? (
-                  <FolderItem key={row.key} folder={row} viewerId={viewerId} admin={admin} />
+                  <FolderItem
+                    key={row.key}
+                    folder={row}
+                    viewerId={viewerId}
+                    admin={admin}
+                    groups={groups}
+                  />
                 ) : (
-                  <DocumentItem key={row.id} document={row} viewerId={viewerId} admin={admin} />
+                  <DocumentItem
+                    key={row.id}
+                    document={row}
+                    viewerId={viewerId}
+                    admin={admin}
+                    groups={groups}
+                  />
                 ),
               )}
             </ul>

@@ -315,7 +315,7 @@ describe('deleteAccount', () => {
     await adminDb
       .insert(members)
       .values({ organizationId: tenantId, userId: user.id, role: 'member', createdAt: new Date() });
-    const paul = { tenantId, userId: user.id, principals: principalsFor(user.id, tenantId) };
+    const paul = { tenantId, userId: user.id, principals: await principalsFor(user.id, tenantId) };
     await expect(auth.api.signInEmail({ body: { email, password } })).resolves.toBeDefined();
     const { token } = await createApiToken(paul, 'cli');
     expect(await verifyApiToken(token)).not.toBeNull();
@@ -455,7 +455,11 @@ describe('deleteAccount', () => {
 
     await expect(
       deleteAccount(
-        { tenantId, userId: stranger.userId, principals: principalsFor(stranger.userId, tenantId) },
+        {
+          tenantId,
+          userId: stranger.userId,
+          principals: await principalsFor(stranger.userId, tenantId),
+        },
         null,
         false,
       ),

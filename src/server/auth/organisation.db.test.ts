@@ -77,6 +77,18 @@ describe('setManager', () => {
     expect(await setManager(claire, ids.claire, ids.ines)).toBe('boucle');
   });
 
+  it("ne laisse qu'un propriétaire changer qui est au-dessus d'un propriétaire, qu'un administrateur lirait", async () => {
+    const { claire, ines, paul, ids } = await orgChart();
+    await setRole(paul, 'admin');
+    expect(await setManager(paul, ids.claire, ids.paul)).toBe('proprietaire');
+    expect(await setManager(paul, ids.paul, ids.claire)).toBe('ok');
+    // Inès, propriétaire elle aussi, est sous Marc, sous Claire : Paul ne déplace pas Marc, même pour le détacher.
+    await setRole(ines, 'owner');
+    expect(await setManager(paul, ids.marc, ids.paul)).toBe('proprietaire');
+    expect(await setManager(paul, ids.marc, null)).toBe('proprietaire');
+    expect(await setManager(claire, ids.marc, ids.paul)).toBe('ok');
+  });
+
   it("refuse un membre d'une autre organisation", async () => {
     const { claire, ids } = await orgChart();
     const other = await orgChart();
@@ -104,6 +116,15 @@ describe('listReports', () => {
     ]);
     expect((await listReports(marc)).map((r) => r.name)).toEqual(['Inès']);
     expect(await listReports(paul)).toEqual([]);
+  });
+
+  it('survit à une boucle écrite hors de setManager, chacun une fois', async () => {
+    const { claire, ids } = await orgChart();
+    // Claire sous Inès, écrit en base : Claire → Marc → Inès → Claire.
+    await adminDb
+      .insert(reportingLines)
+      .values({ tenantId: claire.tenantId, memberId: ids.claire, managerId: ids.ines });
+    expect((await listReports(claire)).map((r) => r.name)).toEqual(['Marc', 'Inès', 'Claire']);
   });
 });
 

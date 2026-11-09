@@ -768,6 +768,7 @@
     "reportsTo": "Manager : {name}",
     "managerSaved": "Manager enregistré",
     "managerLoop": "Impossible : cette personne est déjà au-dessus du manager choisi.",
+    "managerOwner": "Seul un propriétaire peut changer qui est au-dessus d’un propriétaire.",
     "roleSaved": "Rôle enregistré",
     "remove": "Retirer",
     "removeNamed": "Retirer {name} de l’espace ?",

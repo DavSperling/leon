@@ -166,7 +166,13 @@ function MemberItem({
     run(async () => {
       const { result } = await setManagerAction(m.id, value === NO_MANAGER ? null : value);
       if (result === 'ok') return { ok: true, message: t('managerSaved') };
-      return { ok: false, message: result === 'boucle' ? t('managerLoop') : t('memberFailed') };
+      const why =
+        result === 'boucle'
+          ? 'managerLoop'
+          : result === 'proprietaire'
+            ? 'managerOwner'
+            : 'memberFailed';
+      return { ok: false, message: t(why) };
     });
   const changeRole = (role: string) =>
     run(async () => {

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useAnimate } from 'motion/react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useActionState, useEffect, useId, useRef, useState } from 'react';
+import { type ReactNode, useActionState, useEffect, useId, useRef, useState } from 'react';
 import {
   type AuthFormState,
   joinAction,
@@ -119,16 +119,19 @@ const CONTROL_FIX = 'pointer-coarse:text-title aria-invalid:focus-visible:outlin
 // `canResetPassword` : « Mot de passe oublié ? » n'apparaît que si Leon peut envoyer l'e-mail.
 // `returnTo` : où revenir après la connexion (l'autorisation d'un ordinateur) ; renvoyé dans un champ caché, que
 // signInAction et verifyTwoFactorAction revalident.
+// `alternatives` : Google, Microsoft et le SSO (OtherSignIn), au-dessus des champs, cachés pendant l'étape du code.
 export function AuthForm({
   page,
   invitation,
   canResetPassword = false,
   returnTo,
+  alternatives,
 }: {
   page: AuthPage;
   invitation?: { token: string; organizationName: string };
   canResetPassword?: boolean;
   returnTo?: string;
+  alternatives?: ReactNode;
 }) {
   const t = useTranslations('auth');
   const copy = COPY[page];
@@ -202,6 +205,7 @@ export function AuthForm({
           {nb(t('invitedTo', { name: invitation.organizationName }))}
         </p>
       )}
+      {!state.twoFactor && alternatives}
 
       <form
         ref={formRef}

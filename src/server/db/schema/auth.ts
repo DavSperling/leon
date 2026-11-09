@@ -44,3 +44,16 @@ export const members = pgTable('member', {
   goals: text('goals').array().notNull().default(sql`'{}'`),
   onboardedAt: timestamp('onboardedAt', { withTimezone: true }),
 });
+
+// SSO d'entreprise d'un espace (0053, plugin @better-auth/sso) : lu ici pour l'écran des réglages, écrit par Better Auth.
+export const ssoProviders = pgTable('ssoProvider', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  issuer: text('issuer').notNull(),
+  oidcConfig: text('oidcConfig'),
+  samlConfig: text('samlConfig'),
+  userId: uuid('userId').notNull(),
+  providerId: text('providerId').notNull().unique(),
+  organizationId: text('organizationId'),
+  domain: text('domain').notNull(),
+  domainVerified: boolean('domainVerified'),
+});

@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { AuthForm } from '@/components/verre/auth/auth-form';
+import { OtherSignIn, type SocialProvider } from '@/components/verre/auth/other-sign-in';
 import { Notice } from '@/components/verre/ui/feedback';
-import { emailEnabled } from '@/server/auth/auth';
+import { emailEnabled, socialProviders } from '@/server/auth/auth';
 import { authorizePath, parseAuthorizeParams } from '@/server/auth/computer-authorize';
+import { anyVerifiedSso } from '@/server/auth/sso';
 import { oauthReturnPath } from '@/server/oauth/authorize';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,9 +27,13 @@ export default async function SignInPage({
   // Rendue à chaque requête : le lien suit la configuration du serveur, pas celle du build.
   await connection();
   const query = await searchParams;
-  const { supprime } = query;
+  const { supprime, error } = query;
   const authorization = parseAuthorizeParams(query);
+  const returnTo = authorization
+    ? authorizePath(authorization)
+    : (oauthReturnPath(query) ?? undefined);
   const t = await getTranslations('deleteAccount');
+  const a = await getTranslations('auth');
   return (
     <>
       {(supprime === 'compte' || supprime === 'organisation') && (
@@ -35,11 +41,22 @@ export default async function SignInPage({
           {t(supprime === 'compte' ? 'doneAccount' : 'doneOrganization')}
         </Notice>
       )}
+      {/* `?error=` : Better Auth revient ici quand Google, Microsoft ou le SSO n'a pas abouti. */}
+      {typeof error === 'string' && (
+        <Notice tone="error" live="alert" className="mb-6">
+          {a(/not[_ ]linked/.test(error) ? 'socialNotLinked' : 'socialFailed')}
+        </Notice>
+      )}
       <AuthForm
         page="connexion"
         canResetPassword={emailEnabled}
-        returnTo={
-          authorization ? authorizePath(authorization) : (oauthReturnPath(query) ?? undefined)
+        returnTo={returnTo}
+        alternatives={
+          <OtherSignIn
+            providers={Object.keys(socialProviders) as SocialProvider[]}
+            sso={await anyVerifiedSso()}
+            returnTo={returnTo}
+          />
         }
       />
     </>

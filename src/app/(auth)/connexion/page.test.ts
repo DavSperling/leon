@@ -7,7 +7,9 @@ import SignInPage from './page';
 
 // Le formulaire importe les actions, donc Better Auth : seul ce que la page lui passe se teste ici.
 vi.mock('@/components/verre/auth/auth-form', () => ({ AuthForm: vi.fn() }));
-vi.mock('@/server/auth/auth', () => ({ emailEnabled: true }));
+vi.mock('@/components/verre/auth/other-sign-in', () => ({ OtherSignIn: vi.fn() }));
+vi.mock('@/server/auth/auth', () => ({ emailEnabled: true, socialProviders: {} }));
+vi.mock('@/server/auth/sso', () => ({ anyVerifiedSso: vi.fn(async () => false) }));
 vi.mock('next/server', () => ({ connection: vi.fn() }));
 
 const PARAMS = { port: '4242', etat: 'AbCdEfGhIjKlMnOpQrStUv', empreinte: 'a1'.repeat(32) };

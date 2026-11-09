@@ -18,12 +18,14 @@ import {
   SecuritySettings,
 } from '@/components/verre/reglages/security-settings';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
+import { SsoSection } from '@/components/verre/reglages/sso';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { nb } from '@/lib/verre/nb';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { getSession, requireUserContext } from '@/server/auth/session';
+import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
@@ -39,7 +41,7 @@ export default async function SettingsPage() {
   const s = await getTranslations('security');
   const claude = await getTranslations('claudeCode');
   const ctx = await requireUserContext();
-  const [allTokens, members, mayInvite, session, membership, about, deletion, depotsEquipe] =
+  const [allTokens, members, mayInvite, session, membership, about, deletion, depotsEquipe, sso] =
     await Promise.all([
       listApiTokens(ctx),
       listMembers(ctx),
@@ -49,6 +51,7 @@ export default async function SettingsPage() {
       readAbout(ctx.userId),
       deletionInfo(ctx),
       listDepotsEquipe(ctx),
+      readSsoSetup(ctx),
     ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
@@ -107,6 +110,7 @@ export default async function SettingsPage() {
             <>
               <MembersSection members={members} canInvite={mayInvite} />
               {mayInvite && <DepotsEquipeSection {...depotsEquipe} />}
+              {mayInvite && <SsoSection setup={sso} />}
               {deletion.isOwner && (
                 <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
               )}

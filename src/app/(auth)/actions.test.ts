@@ -1,22 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '@/server/auth/auth';
 import { authorizePath } from '@/server/auth/computer-authorize';
+import { joinWithInvitation } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
-import { signInWithPassword } from '@/server/auth/session';
+import { getSession, getUserContext, signInWithPassword } from '@/server/auth/session';
 import { createUserWithInvitation, createUserWithOrganization } from '@/server/auth/sign-up';
 import {
   joinAction,
+  joinWithSessionAction,
   requestPasswordResetAction,
   signInAction,
   signUpAction,
+  socialSignInAction,
+  ssoSignInAction,
   verifyTwoFactorAction,
 } from './actions';
 
 const resend = vi.hoisted(() => ({ configured: true }));
 vi.mock('@/server/auth/auth', () => ({
   auth: {
-    api: { verifyTOTP: vi.fn(), verifyBackupCode: vi.fn(), requestPasswordReset: vi.fn() },
+    api: {
+      verifyTOTP: vi.fn(),
+      verifyBackupCode: vi.fn(),
+      requestPasswordReset: vi.fn(),
+      signInSocial: vi.fn(),
+      signInSSO: vi.fn(),
+    },
   },
+  socialProviders: { google: {} },
   get emailEnabled() {
     return resend.configured;
   },
@@ -26,7 +37,13 @@ vi.mock('@/server/auth/sign-up', async (importOriginal) => ({
   createUserWithOrganization: vi.fn(),
   createUserWithInvitation: vi.fn(),
 }));
-vi.mock('@/server/auth/session', () => ({ signInWithPassword: vi.fn() }));
+vi.mock('@/server/auth/session', () => ({
+  signInWithPassword: vi.fn(),
+  getSession: vi.fn(),
+  getUserContext: vi.fn(),
+  ONBOARDING_PATH: '/bienvenue',
+}));
+vi.mock('@/server/auth/members', () => ({ joinWithInvitation: vi.fn() }));
 vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
 vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
 vi.mock('next/navigation', () => ({
@@ -475,5 +492,76 @@ describe('requestPasswordResetAction', () => {
     expect(state.message).toBeUndefined();
     expect(state.errors?.form).toContain('pas configuré');
     expect(auth.api.requestPasswordReset).not.toHaveBeenCalled();
+  });
+});
+
+const TOKEN = 'A'.repeat(43);
+
+describe('Google, Microsoft et SSO', () => {
+  it('refuse un fournisseur non réglé, sans appeler Better Auth', async () => {
+    await expect(socialSignInAction(form({ provider: 'microsoft' }))).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+    await expect(socialSignInAction(form({ provider: 'constructor' }))).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+    expect(auth.api.signInSocial).not.toHaveBeenCalled();
+  });
+
+  it('part chez Google, et revient sur le lien d’invitation qui l’a lancé', async () => {
+    vi.mocked(auth.api.signInSocial).mockResolvedValue({
+      url: 'https://accounts.google.com/x',
+    } as never);
+    await expect(socialSignInAction(form({ provider: 'google', token: TOKEN }))).rejects.toThrow(
+      'NEXT_REDIRECT https://accounts.google.com/x',
+    );
+    expect(vi.mocked(auth.api.signInSocial).mock.calls[0]?.[0]?.body).toEqual({
+      provider: 'google',
+      callbackURL: `/invitation/${TOKEN}`,
+      newUserCallbackURL: `/invitation/${TOKEN}`,
+      errorCallbackURL: '/connexion',
+    });
+  });
+
+  it('un retour forgé ne sort pas de Leon ; un compte neuf passe par l’onboarding', async () => {
+    vi.mocked(auth.api.signInSocial).mockResolvedValue({
+      url: 'https://accounts.google.com/x',
+    } as never);
+    await expect(
+      socialSignInAction(
+        form({ provider: 'google', retour: 'https://evil.example', token: 'court' }),
+      ),
+    ).rejects.toThrow('NEXT_REDIRECT');
+    expect(vi.mocked(auth.api.signInSocial).mock.calls[0]?.[0]?.body).toMatchObject({
+      callbackURL: '/',
+      newUserCallbackURL: '/bienvenue',
+    });
+  });
+
+  it('SSO : une adresse sans SSO reçoit le même message, sans rien dire de l’espace', async () => {
+    vi.mocked(auth.api.signInSSO).mockRejectedValue(new Error('No provider found'));
+    const state = await ssoSignInAction({}, form({ email: 'jeanne@acme.com' }));
+    expect(state.errors?.email).toMatch(/Aucun SSO/);
+  });
+
+  it('SSO : passe par la limite de débit', async () => {
+    vi.mocked(authAttemptAllowed).mockResolvedValue(false);
+    const state = await ssoSignInAction({}, form({ email: 'jeanne@acme.com' }));
+    expect(state.errors?.form).toBe(TOO_MANY_ATTEMPTS);
+    expect(auth.api.signInSSO).not.toHaveBeenCalled();
+  });
+
+  it('rejoindre par le lien après Google : seulement sans espace', async () => {
+    vi.mocked(getSession).mockResolvedValue({ user: { id: 'u1' } } as never);
+    vi.mocked(getUserContext).mockResolvedValue({ tenantId: 't0' } as never);
+    await expect(joinWithSessionAction(form({ token: TOKEN }))).rejects.toThrow('NEXT_REDIRECT /');
+    expect(joinWithInvitation).not.toHaveBeenCalled();
+
+    vi.mocked(getUserContext).mockResolvedValue(null);
+    vi.mocked(joinWithInvitation).mockResolvedValue('t1');
+    await expect(joinWithSessionAction(form({ token: TOKEN }))).rejects.toThrow(
+      'NEXT_REDIRECT /bienvenue',
+    );
+    expect(joinWithInvitation).toHaveBeenCalledWith(TOKEN, 'u1');
   });
 });

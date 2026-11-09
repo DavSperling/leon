@@ -5,10 +5,16 @@ import { redirect } from 'next/navigation';
 import type { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
-import { auth, emailEnabled } from '@/server/auth/auth';
+import { auth, emailEnabled, type SocialProviderId, socialProviders } from '@/server/auth/auth';
 import { pathAfterSignIn } from '@/server/auth/computer-authorize';
+import { joinWithInvitation } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
-import { signInWithPassword } from '@/server/auth/session';
+import {
+  getSession,
+  getUserContext,
+  ONBOARDING_PATH,
+  signInWithPassword,
+} from '@/server/auth/session';
 import {
   createUserWithInvitation,
   createUserWithOrganization,
@@ -270,4 +276,67 @@ async function finishSignUp(
   const { ok } = await signInWithPassword(email, password);
   if (!ok) return { errors: { form: t('signedUpNotIn') }, values };
   redirect('/');
+}
+
+const INVITATION_TOKEN = /^[A-Za-z0-9_-]{43}$/; // le secret d'un lien d'invitation (members.ts)
+
+// Où revenir après Google, Microsoft ou le SSO : la page du lien d'invitation, qui fait rejoindre son espace ; sinon
+// le retour revalidé (un ordinateur, un assistant) ou l'accueil, et l'onboarding pour un compte tout neuf. Une erreur
+// revient sur /connexion?error=…, que la page traduit.
+function returnPaths(formData: FormData) {
+  const token = String(formData.get('token') ?? '');
+  const invitation = INVITATION_TOKEN.test(token) ? `/invitation/${token}` : null;
+  return {
+    callbackURL: invitation ?? pathAfterSignIn(formData.get('retour')),
+    newUserCallbackURL: invitation ?? ONBOARDING_PATH,
+    errorCallbackURL: '/connexion',
+  };
+}
+
+// « Continuer avec Google / Microsoft » : Better Auth rend l'adresse du fournisseur (son cookie d'état est posé par
+// nextCookies), le navigateur y part.
+export async function socialSignInAction(formData: FormData): Promise<void> {
+  const provider = String(formData.get('provider') ?? '');
+  if (!Object.hasOwn(socialProviders, provider)) redirect('/connexion');
+  const { url } = await auth.api.signInSocial({
+    body: { provider: provider as SocialProviderId, ...returnPaths(formData) },
+    headers: await headers(),
+  });
+  redirect(url ?? '/connexion');
+}
+
+// « SSO d'entreprise » : le domaine de l'adresse désigne l'espace et son fournisseur (vérifié par DNS, auth.ts).
+export async function ssoSignInAction(
+  _previous: AuthFormState,
+  formData: FormData,
+): Promise<AuthFormState> {
+  const t = await getTranslations('auth');
+  const email = String(formData.get('email') ?? '').trim();
+  const values = { email };
+  if (!z.email().safeParse(email).success) return { errors: { email: t('invalidEmail') }, values };
+  if (!(await authAttemptAllowed('connexion', email, await headers()))) {
+    return { errors: { form: t('tooManyAttempts') }, values };
+  }
+  let url: string;
+  try {
+    ({ url } = await auth.api.signInSSO({
+      body: { email, ...returnPaths(formData) },
+      headers: await headers(),
+    }));
+  } catch {
+    // Domaine sans SSO, ou pas encore vérifié : le même message, rien n'est dit de l'espace.
+    return { errors: { email: t('ssoNotFound') }, values };
+  }
+  redirect(url);
+}
+
+// Revenu de Google, Microsoft ou du SSO sur la page d'un lien d'invitation, sans espace : le lien le fait entrer.
+export async function joinWithSessionAction(formData: FormData): Promise<void> {
+  const token = String(formData.get('token') ?? '');
+  const session = await getSession();
+  if (!session) redirect('/connexion');
+  // Déjà dans un espace : un compte n'en rejoint pas un second par un lien (comme l'inscription par invitation).
+  if (await getUserContext()) redirect('/');
+  const tenantId = await joinWithInvitation(token, session.user.id);
+  redirect(tenantId ? ONBOARDING_PATH : `/invitation/${token}`);
 }

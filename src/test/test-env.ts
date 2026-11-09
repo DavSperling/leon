@@ -69,6 +69,11 @@ export const TEST_ENV = {
   // Une clé Resend exportée dans le shell ferait partir de vrais e-mails pendant les tests.
   RESEND_API_KEY: '',
   LEON_EMAIL_FROM: '',
+  // Les boutons Google et Microsoft : des clés du poste ne changent pas l'écran que voient les tests.
+  GOOGLE_CLIENT_ID: '',
+  GOOGLE_CLIENT_SECRET: '',
+  MICROSOFT_CLIENT_ID: '',
+  MICROSOFT_CLIENT_SECRET: '',
   // L'en-tête où le proxy de confiance pose l'adresse du client (rate-limit.ts), comme Caddy en production.
   LEON_IP_HEADER: 'x-real-ip',
   // Les admins de /admin : le défaut de env.ts, jamais la liste du poste.

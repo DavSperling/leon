@@ -23,6 +23,7 @@ import {
   requireUserContext,
   signOutCurrentUser,
 } from '@/server/auth/session';
+import { registerSso, removeSso, SsoInputSchema, verifySsoDomain } from '@/server/auth/sso';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
@@ -379,4 +380,50 @@ export async function deleteOrganizationAction(
     (ctx) => deleteOrganization(ctx),
     '/connexion?supprime=organisation',
   );
+}
+
+export type SsoFormState = { error?: string; values?: Record<string, string> };
+const SSO_ERRORS = {
+  refuse: 'ssoRefused',
+  deja: 'ssoAlready',
+  decouverte: 'ssoDiscoveryFailed',
+  invalide: 'ssoInvalid',
+} as const;
+
+// Régler le SSO d'entreprise de l'espace (sso.ts) ; le secret OIDC n'est jamais renvoyé au formulaire.
+export async function registerSsoAction(
+  _previous: SsoFormState,
+  formData: FormData,
+): Promise<SsoFormState> {
+  const ctx = await requireUserContext();
+  const t = await getTranslations('settings');
+  const fields = Object.fromEntries(
+    ['protocol', 'domain', 'issuer', 'clientId', 'clientSecret', 'entryPoint', 'metadata'].map(
+      (name) => [name, String(formData.get(name) ?? '')],
+    ),
+  );
+  const { clientSecret: _secret, ...values } = fields;
+  const parsed = SsoInputSchema.safeParse(fields);
+  if (!parsed.success) return { error: t('ssoInvalid'), values };
+  const result = await registerSso(ctx, parsed.data);
+  if (!result.ok) return { error: t(SSO_ERRORS[result.error]), values };
+  revalidatePath('/reglages');
+  return {};
+}
+
+export async function verifySsoDomainAction(): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await verifySsoDomain(ctx);
+  revalidatePath('/reglages');
+  return { ok };
+}
+
+export async function removeSsoAction(): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await removeSso(ctx).catch((error) => {
+    logError('settings.sso_remove', error);
+    return false;
+  });
+  revalidatePath('/reglages');
+  return { ok };
 }

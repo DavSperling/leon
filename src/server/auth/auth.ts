@@ -1,3 +1,4 @@
+import { sso } from '@better-auth/sso';
 import { betterAuth } from 'better-auth';
 import { nextCookies } from 'better-auth/next-js';
 import { organization } from 'better-auth/plugins/organization';
@@ -13,6 +14,34 @@ import { firstOrganizationId } from './tenant-context';
 // Sans Resend, aucun e-mail ne part : l'écran de connexion ne propose pas « Mot de passe oublié ? », et la création
 // d'un espace n'exige pas de vérifier l'adresse (sinon personne ne pourrait se vérifier).
 export const emailEnabled = Boolean(env.RESEND_API_KEY && env.LEON_EMAIL_FROM);
+
+// « Continuer avec Google / Microsoft » : un fournisseur n'est proposé que si ses deux clés sont posées. Choix du
+// compte à chaque fois : sinon le navigateur reprend en silence le compte déjà ouvert (le piège de GitHub, PR #85).
+export const socialProviders = {
+  ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: env.GOOGLE_CLIENT_ID,
+          clientSecret: env.GOOGLE_CLIENT_SECRET,
+          prompt: 'select_account' as const,
+        },
+      }
+    : {}),
+  ...(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET
+    ? {
+        microsoft: {
+          clientId: env.MICROSOFT_CLIENT_ID,
+          clientSecret: env.MICROSOFT_CLIENT_SECRET,
+          tenantId: 'common',
+          prompt: 'select_account' as const,
+        },
+      }
+    : {}),
+};
+export type SocialProviderId = keyof typeof socialProviders;
+
+// Préfixe de l'enregistrement DNS qui prouve qu'un espace possède le domaine de son SSO d'entreprise.
+export const SSO_DNS_PREFIX = 'leon-verification';
 
 // Les quatre lignes d'un e-mail d'authentification, par clé de messages/*.json (espace `auth`).
 type EmailCopy = { subject: string; intro: string; action: string; ignore: string };
@@ -78,6 +107,10 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   database: pool,
+  socialProviders,
+  // Un compte existant (même adresse) n'est relié à Google, Microsoft ou un SSO que si les deux côtés ont vérifié
+  // l'adresse (défaut de Better Auth, requireLocalEmailVerified) : un compte créé avec l'adresse d'autrui, jamais
+  // vérifié, ne reçoit pas la connexion de son vrai titulaire.
   emailAndPassword: {
     enabled: true,
     autoSignIn: false,
@@ -120,6 +153,18 @@ export const auth = betterAuth({
     '/two-factor/verify-backup-code',
     '/two-factor/send-otp',
     '/two-factor/verify-otp',
+    // Les débuts de connexion par Google, Microsoft ou SSO passent par les server actions (sso.ts) ; les retours des
+    // fournisseurs (/callback/*, /sso/callback/*, /sso/saml2/*) restent ouverts.
+    '/sign-in/social',
+    '/sign-in/sso',
+    // Le réglage du SSO d'un espace : server actions seulement, réservées à son propriétaire ou administrateur.
+    '/sso/register',
+    '/sso/update-provider',
+    '/sso/delete-provider',
+    '/sso/providers',
+    '/sso/get-provider',
+    '/sso/request-domain-verification',
+    '/sso/verify-domain',
   ],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {
@@ -150,6 +195,14 @@ export const auth = betterAuth({
     // l'adresse invitée rejoint l'organisation (aucun e-mail n'est vérifié dans ce jet).
     organization({ disableOrganizationDeletion: true, requireEmailVerificationOnInvitation: true }),
     twoFactor({ issuer: 'Leon', totpOptions: { digits: 6, period: 30 } }),
+    // SSO d'entreprise (OIDC ou SAML : Okta, Entra, Google Workspace…). Aucune connexion tant que l'espace n'a pas
+    // prouvé, par un enregistrement DNS, qu'il possède le domaine : sinon un espace pourrait déclarer le domaine
+    // d'un autre et se connecter à la place de ses employés. Qui se connecte par le SSO entre dans l'espace.
+    sso({
+      domainVerification: { enabled: true, tokenPrefix: SSO_DNS_PREFIX },
+      organizationProvisioning: { defaultRole: 'member' },
+      saml: { requireTimestamps: true },
+    }),
     nextCookies(), // en dernier : cookies posés par les server actions
   ],
 });

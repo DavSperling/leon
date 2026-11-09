@@ -37,6 +37,18 @@ describe('queryTerms : les mots outils', () => {
     expect(queryTerms('Combien coûte l’hébergement d’Acme ?').text).toBe('coûte hébergement Acme');
   });
 
+  it('retire aussi les mots outils anglais, contractions comprises, et garde l’IT et les US', () => {
+    expect(queryTerms('What did Marc say about the Acme invoice?')).toEqual({
+      text: 'Marc Acme invoice',
+      words: ['Marc', 'Acme', 'invoice'],
+      phrases: [],
+      negated: [],
+    });
+    expect(queryTerms("What's the status of the OVH migration?").text).toBe('status OVH migration');
+    expect(queryTerms('Don’t we have an invoice from Acme?').text).toBe('invoice Acme');
+    expect(queryTerms('IT budget for the US office').text).toBe('IT budget US office');
+  });
+
   it('retire les verbes vides au présent, et garde les mots qui leur ressemblent', () => {
     expect(queryTerms('Que fait Julie sur le projet ?').text).toBe('Julie projet');
     expect(queryTerms('Que dit le contrat ?').text).toBe('contrat');
@@ -272,8 +284,23 @@ describe('FUNCTION_WORDS', () => {
       'bien',
       'dû',
       'sûr',
+      'it',
+      'us',
+      'may',
+      'but',
+      'done',
+      'up',
+      'down',
+      'out',
+      'off',
     ]) {
       expect(FUNCTION_WORDS.has(word), word).toBe(false);
+    }
+  });
+
+  it('contient les mots outils anglais', () => {
+    for (const word of ['what', 'the', 'of', 'about', 'is', 'did', 'what’s', 'don’t']) {
+      expect(FUNCTION_WORDS.has(word), word).toBe(true);
     }
   });
 

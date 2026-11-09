@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import {
   FAMILY_LABELS,
-  FOLLOW_FAMILIES,
   PROVIDER_FAMILIES,
   PROVIDER_FAMILIES_ORDER,
   PROVIDER_LABELS,
@@ -89,9 +88,9 @@ describe('providers', () => {
     ]);
   });
 
-  it('donne les outils des familles suivies, documents compris, jamais les mails', () => {
+  it('donne les outils des familles suivies, documents et mails compris (0057)', () => {
     expect(toolsOfFamilies(['crm', 'documents'])).toEqual([...ofFamily('crm'), 'document']);
-    expect(toolsOfFamilies([...FOLLOW_FAMILIES])).not.toContain('gmail');
+    expect(toolsOfFamilies(['mails'])).toEqual(ofFamily('mails'));
     expect(toolsOfFamilies([])).toEqual([]);
   });
 });

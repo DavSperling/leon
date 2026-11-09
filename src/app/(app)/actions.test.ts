@@ -74,12 +74,12 @@ describe('previewPassageAction', () => {
     ],
   };
 
-  it('rend l’aperçu du passage sous les droits de l’utilisateur connecté', async () => {
+  it('rend l’aperçu du passage sous les droits de l’utilisateur connecté, comme la recherche', async () => {
     vi.mocked(fetchPassageContext).mockResolvedValue(context);
 
     const result = await previewPassageAction(PASSAGE);
 
-    expect(fetchPassageContext).toHaveBeenCalledWith(CTX, PASSAGE);
+    expect(fetchPassageContext).toHaveBeenCalledWith({ ...CTX, equipe: true }, PASSAGE);
     expect(result).toMatchObject({
       ok: true,
       preview: {

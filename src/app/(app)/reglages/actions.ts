@@ -22,7 +22,7 @@ import {
   setMemberRole,
 } from '@/server/auth/members';
 import { PlacementSchema } from '@/server/auth/onboarding';
-import { setManager } from '@/server/auth/organisation';
+import { setManager, setManagersSeeAll } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
@@ -204,6 +204,17 @@ export async function setManagerAction(
     revalidatePath('/equipe');
   }
   return { result };
+}
+
+// Les managers lisent-ils le privé des gens sous eux (0057) : un propriétaire ou un administrateur en décide.
+export async function setManagersSeeAllAction(on: boolean): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = z.boolean().safeParse(on).success && (await setManagersSeeAll(ctx, on));
+  if (ok) {
+    revalidatePath('/reglages');
+    revalidatePath('/equipe');
+  }
+  return { ok };
 }
 
 export async function setMemberRoleAction(

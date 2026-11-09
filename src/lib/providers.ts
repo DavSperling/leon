@@ -121,14 +121,15 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   slack: 'mails',
 };
 
-// Ce qu'un manager peut suivre chez les gens sous lui (écran « Mon équipe ») : les familles dont le texte est visible
-// de toute l'équipe, et les documents ajoutés à la main. Mails, chat et agenda restent privés : ils n'en sont pas.
+// Ce qu'un manager peut suivre chez les gens sous lui (écran « Mon équipe ») : chaque famille d'outils, et les documents
+// ajoutés à la main. Il n'en lit que ce que ses droits lui ouvrent, et leur privé s'il le lit (0057).
 export const FOLLOW_FAMILIES = [
   'dev',
   'reunions',
   'projet',
   'crm',
   'support',
+  'mails',
   'documents',
 ] as const;
 export type FollowFamily = (typeof FOLLOW_FAMILIES)[number];

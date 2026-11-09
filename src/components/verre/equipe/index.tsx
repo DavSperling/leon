@@ -4,7 +4,7 @@ import { Check, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useOptimistic, useTransition } from 'react';
-import { setFollowedAction } from '@/app/(app)/equipe/actions';
+import { setFollowedAction, setSeeAllAction } from '@/app/(app)/equipe/actions';
 import { NATURE_LABELS } from '@/components/search/view-model';
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   PageHeader,
   SourceChip,
   SourceLink,
+  Switch,
   toast,
 } from '@/components/verre';
 import { NATURE_LABELS_EN } from '@/lib/labels';
@@ -26,18 +27,21 @@ type Activity = { hits: SourceHit[]; total: number };
 
 /**
  * « Mon équipe » : l'organigramme de toute l'organisation, puis les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
- * (?personne=…) ce qu'il suit d'elle et son activité récente. Seulement ce que toute l'équipe voit déjà.
+ * (?personne=…) ce qu'il suit d'elle et son activité récente, privé compris s'il le lit (0057). L'interrupteur de ce
+ * privé ne paraît que si l'organisation le permet (`seeAllAllowed`).
  */
 export function Team({
   reports,
   selected,
   activity,
   chart,
+  seeAllAllowed,
 }: {
   reports: Report[];
   selected: Report | null;
   activity: Activity | null;
   chart: ChartMember[];
+  seeAllAllowed: boolean;
 }) {
   const t = useTranslations('team');
   return (
@@ -59,7 +63,12 @@ export function Team({
         <div className="grid gap-6 md:grid-cols-[minmax(0,250px)_minmax(0,1fr)] md:items-start">
           <People reports={reports} selectedId={selected.memberId} />
           {/* clé : une autre personne repart de ses propres familles, sans l'état optimiste de la précédente */}
-          <Person key={selected.memberId} report={selected} activity={activity} />
+          <Person
+            key={selected.memberId}
+            report={selected}
+            activity={activity}
+            seeAllAllowed={seeAllAllowed}
+          />
         </div>
       )}
     </div>
@@ -110,11 +119,31 @@ function People({ reports, selectedId }: { reports: Report[]; selectedId: string
   );
 }
 
-function Person({ report, activity }: { report: Report; activity: Activity | null }) {
+function Person({
+  report,
+  activity,
+  seeAllAllowed,
+}: {
+  report: Report;
+  activity: Activity | null;
+  seeAllAllowed: boolean;
+}) {
   const t = useTranslations('team');
   const family = useTranslations('connections.family');
   const [families, setFamilies] = useOptimistic(report.families);
+  const [seeAll, setSeeAll] = useOptimistic(report.voitTout);
   const [saving, startTransition] = useTransition();
+
+  const toggleSeeAll = (on: boolean) =>
+    startTransition(async () => {
+      setSeeAll(on);
+      try {
+        const { ok } = await setSeeAllAction(report.memberId, on);
+        if (!ok) toast.error(t('followFailed'));
+      } catch {
+        toast.error(t('followFailed'));
+      }
+    });
 
   const toggle = (picked: FollowFamily) =>
     startTransition(async () => {
@@ -142,6 +171,19 @@ function Person({ report, activity }: { report: Report; activity: Activity | nul
             {report.depth > 1 && ` · ${t('reportsTo', { name: report.managerName })}`}
           </p>
         </div>
+        {seeAllAllowed && (
+          <div className="grid gap-1.5">
+            <Switch
+              label={t('seeAll')}
+              checked={seeAll}
+              onCheckedChange={toggleSeeAll}
+              aria-describedby="voir-tout-aide"
+            />
+            <p id="voir-tout-aide" className="text-label text-muted">
+              {nb(t('seeAllHelp', { name: report.name }))}
+            </p>
+          </div>
+        )}
         <fieldset className="grid min-w-0 gap-2.5" aria-describedby="suivi-aide">
           <legend className="mb-2.5 text-label font-semibold text-fg-2">{t('following')}</legend>
           <div className="flex flex-wrap gap-2">

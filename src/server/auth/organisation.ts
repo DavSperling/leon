@@ -2,7 +2,11 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { FOLLOW_FAMILIES, type FollowFamily, toolsOfFamilies } from '@/lib/providers';
 import { members } from '@/server/db/schema/auth';
-import { managerFollows, reportingLines } from '@/server/db/schema/organisation';
+import {
+  managerFollows,
+  reglagesOrganisation,
+  reportingLines,
+} from '@/server/db/schema/organisation';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { recentSources } from '@/server/search/activity';
 import type { SourceHit } from '@/server/search/types';
@@ -11,7 +15,7 @@ import type { TenantContext } from './tenant-context';
 
 // L'organigramme (0054) et l'écran « Mon équipe ». Un propriétaire ou un administrateur rattache chaque membre à son
 // manager ; un manager voit les gens sous lui, directs et indirects, et choisit par personne les familles d'outils
-// qu'il suit. Rien de privé n'y entre : seules les sources visibles de toute l'équipe sont lues, sous ses droits.
+// qu'il suit. Il lit aussi leur privé (0057), sauf si l'organisation l'a coupé ou s'il l'a coupé pour une personne.
 
 const MemberIdSchema = z.uuid();
 // Garde-fou des requêtes récursives : setManager refuse les boucles, aucune chaîne réelle n'est aussi longue.
@@ -27,6 +31,7 @@ export type Report = {
   managerName: string;
   depth: number; // 1 : rattaché directement au lecteur
   families: FollowFamily[];
+  voitTout: boolean; // faux : le lecteur a coupé la lecture de son privé
 };
 
 type ReportRow = {
@@ -37,6 +42,7 @@ type ReportRow = {
   email: string;
   manager_name: string;
   families: string[] | null;
+  voit_tout: boolean | null;
 };
 
 const myMemberId = (ctx: TenantContext) =>
@@ -70,7 +76,8 @@ async function reportsIn(tx: Tx, ctx: TenantContext): Promise<Report[]> {
       join under u on r.manager_id = u.member_id
       where u.depth < ${MAX_DEPTH}
     )
-    select u.member_id, u.manager_id, u.depth, usr.name, usr.email, boss.name as manager_name, f.families
+    select u.member_id, u.manager_id, u.depth, usr.name, usr.email, boss.name as manager_name, f.families,
+           f.voit_tout
     from under u
     join member m on m.id = u.member_id
     join "user" usr on usr.id = m."userId"
@@ -86,6 +93,7 @@ async function reportsIn(tx: Tx, ctx: TenantContext): Promise<Report[]> {
       managerName: row.manager_name,
       depth: Number(row.depth),
       families: followed(row.families),
+      voitTout: row.voit_tout ?? true,
     })),
   );
 }
@@ -95,45 +103,71 @@ export async function listReports(ctx: TenantContext): Promise<Report[]> {
   return withTenant(ctx, (tx) => reportsIn(tx, ctx));
 }
 
-// L'activité récente d'une personne de `listReports` : les sources visibles de toute l'équipe (jamais celles qui ne
-// sont qu'à elle ou au lecteur), d'un outil des familles suivies, dont un passage est d'elle.
+// L'activité récente d'une personne de `listReports` : ce que le lecteur en lit, privé compris (0057), d'un outil des
+// familles suivies, dont un passage est d'elle.
 export async function reportActivity(
   ctx: TenantContext,
   report: Report,
 ): Promise<{ hits: SourceHit[]; total: number }> {
   const tools = toolsOfFamilies(report.families);
   if (tools.length === 0) return { hits: [], total: 0 };
-  return withTenant(ctx, (tx) =>
+  return withTenant({ ...ctx, equipe: true }, (tx) =>
     recentSources(
       tx,
       ctx,
       { tools, authorEmails: [report.email] },
       { limit: REPORT_ACTIVITY_LIMIT, offset: 0 },
-      sql`true`,
-      sql`s.acl @> array[${ctx.tenantId}]::uuid[]`,
     ),
   );
 }
 
-// Seulement pour une personne sous le lecteur ; false sinon.
-export async function setFollowed(
+// Ce que le lecteur suit d'une personne sous lui, ou s'il lit son privé ; false si elle n'est pas sous lui.
+async function follow(
   ctx: TenantContext,
   memberId: string,
-  families: readonly string[],
+  set: { families: string[] } | { voitTout: boolean },
 ): Promise<boolean> {
   if (!MemberIdSchema.safeParse(memberId).success) return false;
-  const kept = FOLLOW_FAMILIES.filter((f) => families.includes(f));
   return withTenant(ctx, async (tx) => {
     if (!(await reportsIn(tx, ctx)).some((report) => report.memberId === memberId)) return false;
     await tx
       .insert(managerFollows)
-      .values({ tenantId: ctx.tenantId, managerId: myMemberId(ctx), memberId, families: kept })
-      .onConflictDoUpdate({
-        target: [managerFollows.managerId, managerFollows.memberId],
-        set: { families: kept },
-      });
+      .values({ tenantId: ctx.tenantId, managerId: myMemberId(ctx), memberId, ...set })
+      .onConflictDoUpdate({ target: [managerFollows.managerId, managerFollows.memberId], set });
     return true;
   });
+}
+
+export const setFollowed = (ctx: TenantContext, memberId: string, families: readonly string[]) =>
+  follow(ctx, memberId, { families: FOLLOW_FAMILIES.filter((f) => families.includes(f)) });
+
+export const setSeeAll = (ctx: TenantContext, memberId: string, on: boolean) =>
+  follow(ctx, memberId, { voitTout: on });
+
+// Les managers de l'organisation lisent-ils le privé des gens sous eux (0057) ? Oui sans réglage.
+export async function managersSeeAll(ctx: TenantContext): Promise<boolean> {
+  const [row] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ on: reglagesOrganisation.managersVoientTout })
+      .from(reglagesOrganisation)
+      .where(eq(reglagesOrganisation.tenantId, ctx.tenantId)),
+  );
+  return row?.on ?? true;
+}
+
+// Réservé aux propriétaires et administrateurs (la RLS le redit) ; false sinon.
+export async function setManagersSeeAll(ctx: TenantContext, on: boolean): Promise<boolean> {
+  if (!(await canInvite(ctx))) return false;
+  await withTenant(ctx, (tx) =>
+    tx
+      .insert(reglagesOrganisation)
+      .values({ tenantId: ctx.tenantId, managersVoientTout: on })
+      .onConflictDoUpdate({
+        target: reglagesOrganisation.tenantId,
+        set: { managersVoientTout: on },
+      }),
+  );
+  return true;
 }
 
 // Rattache un membre à son manager (null : à personne). Réservé aux propriétaires et administrateurs ; refuse une

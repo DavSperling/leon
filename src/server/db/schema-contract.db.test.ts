@@ -295,7 +295,7 @@ describe('passages et vecteurs (0011)', () => {
     }
   });
 
-  it('leon_app lit, écrit et supprime passages et vecteurs, sous la politique tenant_acl', async () => {
+  it('leon_app lit, écrit et supprime passages et vecteurs sous tenant_acl, et ne fait que lire sous equipe_lit', async () => {
     for (const table of ['passages', 'passage_vectors']) {
       for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
         const { rows } = await adminPool.query<{ granted: boolean }>(
@@ -305,14 +305,17 @@ describe('passages et vecteurs (0011)', () => {
         expect(rows, `${privilege} sur ${table}`).toEqual([{ granted: true }]);
       }
     }
-    const { rows } = await adminPool.query<{ tablename: string; policyname: string }>(
-      `select tablename, policyname from pg_policies
+    const { rows } = await adminPool.query<{ tablename: string; policyname: string; cmd: string }>(
+      `select tablename, policyname, cmd from pg_policies
         where schemaname = 'public' and tablename in ('passages', 'passage_vectors')
-        order by tablename`,
+        order by tablename, policyname`,
     );
+    // equipe_lit (0057) : le privé des gens sous le lecteur, en lecture seulement.
     expect(rows).toEqual([
-      { tablename: 'passage_vectors', policyname: 'tenant_acl' },
-      { tablename: 'passages', policyname: 'tenant_acl' },
+      { tablename: 'passage_vectors', policyname: 'equipe_lit', cmd: 'SELECT' },
+      { tablename: 'passage_vectors', policyname: 'tenant_acl', cmd: 'ALL' },
+      { tablename: 'passages', policyname: 'equipe_lit', cmd: 'SELECT' },
+      { tablename: 'passages', policyname: 'tenant_acl', cmd: 'ALL' },
     ]);
   });
 });

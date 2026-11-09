@@ -23,14 +23,17 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('runSearch', () => {
-  it('cherche sous les droits de l’utilisateur, avec le fournisseur de vecteurs réglé', async () => {
+  it('cherche sous les droits de l’utilisateur, plus le privé des gens sous lui, avec le fournisseur de vecteurs réglé', async () => {
     const embedder: Embedder = { model: 'factice-1024', embed: vi.fn() };
     vi.mocked(getEmbedder).mockReturnValue(embedder);
     vi.mocked(searchPassages).mockResolvedValue(PAGE);
 
     expect(await runSearch(CTX, 'contrat', 2)).toBe(PAGE);
 
-    expect(searchPassages).toHaveBeenCalledWith(CTX, { query: 'contrat', page: 2, embedder });
+    expect(searchPassages).toHaveBeenCalledWith(
+      { ...CTX, equipe: true },
+      { query: 'contrat', page: 2, embedder },
+    );
   });
 
   it('cherche aussi sans fournisseur de vecteurs', async () => {
@@ -39,7 +42,10 @@ describe('runSearch', () => {
 
     expect(await runSearch(CTX, 'contrat', 1)).toBe(PAGE);
 
-    expect(searchPassages).toHaveBeenCalledWith(CTX, { query: 'contrat', page: 1, embedder: null });
+    expect(searchPassages).toHaveBeenCalledWith(
+      { ...CTX, equipe: true },
+      { query: 'contrat', page: 1, embedder: null },
+    );
   });
 
   it('rend null quand la recherche échoue, et ne journalise ni la requête ni le vecteur', async () => {

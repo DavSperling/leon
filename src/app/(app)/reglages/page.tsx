@@ -10,6 +10,7 @@ import {
 } from '@/components/verre/reglages/delete-account';
 import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
 import { GroupsSection } from '@/components/verre/reglages/groups';
+import { ManagersSection } from '@/components/verre/reglages/managers';
 import { MembersSection } from '@/components/verre/reglages/members';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
@@ -26,6 +27,7 @@ import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { listGroups } from '@/server/auth/groupes';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
+import { managersSeeAll } from '@/server/auth/organisation';
 import { getSession, requireUserContext } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
@@ -54,6 +56,7 @@ export default async function SettingsPage() {
     depotsEquipe,
     sso,
     groups,
+    seeAll,
   ] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
@@ -65,6 +68,7 @@ export default async function SettingsPage() {
     listDepotsEquipe(ctx),
     readSsoSetup(ctx),
     listGroups(ctx),
+    managersSeeAll(ctx),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
@@ -122,6 +126,7 @@ export default async function SettingsPage() {
           equipe: (
             <>
               <MembersSection members={members} canInvite={mayInvite} />
+              {mayInvite && <ManagersSection on={seeAll} />}
               {mayInvite && (
                 <GroupsSection
                   groups={groups}

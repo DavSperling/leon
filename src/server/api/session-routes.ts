@@ -109,8 +109,9 @@ export const sessionRoutes = new Hono<SessionEnv>()
     const resultIds = parseAnswerResults(c.req.query(ANSWER_RESULTS_PARAM));
     if (resultIds === null) return c.json({ error: 'Invalid result list' }, 400);
     const leaving = new AbortController();
+    // Les mêmes droits que la page de résultats, privé des gens sous le lecteur compris (0057) : elle ne fait que lire.
     const events = answerStream(
-      c.var.ctx,
+      { ...c.var.ctx, equipe: true },
       { query, resultIds },
       { llm: getLlm(env), embedder: getEmbedder(env), signal: leaving.signal },
     );

@@ -8,6 +8,7 @@ import {
 } from 'officeparser';
 import { maskSecrets } from '@/capture/mask-secrets';
 import {
+  aclOf,
   DOCUMENT_MAX_BYTES,
   type DocumentErrorCode,
   documentExtension,
@@ -161,9 +162,6 @@ export async function readDocument(
     partial: extracted.partial,
   };
 }
-
-const aclOf = (ctx: TenantContext, partage: Partage): string[] =>
-  partage === 'equipe' ? [ctx.tenantId] : partage === 'moi' ? [ctx.userId] : [ctx.userId, partage];
 
 // `folder` : le dossier d'où vient le fichier (`path` : son chemin sous le dossier, racine exclue). Le titre est
 // alors le chemin complet `${folder.name}/${path}`, et la source garde l'identifiant du dossier pour que la liste

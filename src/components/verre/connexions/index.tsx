@@ -11,6 +11,7 @@ import { isInstant, nb } from '@/lib/verre';
 import type { CatalogItem } from '@/server/connectors/catalog';
 import type { ConnectionView } from '@/server/connectors/connections';
 import type { ChannelHealth } from '@/server/memory/stale';
+import type { GroupOption } from '../documents/partage';
 import { CarteConnexions } from './carte';
 import { Catalogue } from './catalogue';
 import { ReturnNotice } from './return-notice';
@@ -38,6 +39,8 @@ export type ConnexionsProps = {
   /** Les canaux de capture en retard (staleChannels), par type. */
   stale: string[];
   now: Date;
+  /** Les groupes de l'organisation, pour dire et choisir qui voit ce qu'une connexion relève. */
+  groups: GroupOption[];
 };
 
 export function Connexions({
@@ -51,6 +54,7 @@ export function Connexions({
   channels,
   stale,
   now,
+  groups,
 }: ConnexionsProps) {
   const t = useTranslations('connections');
   const [openId, setOpenId] = useState<ProviderId | null>(null);
@@ -149,6 +153,7 @@ export function Connexions({
           now={now}
           canConnect={canConnect}
           session={session}
+          groups={groups}
         />
       </div>
     </AnimatePresence>

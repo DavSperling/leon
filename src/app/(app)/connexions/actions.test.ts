@@ -11,6 +11,7 @@ import {
   replaceConnectionSecret,
   requestSyncNow,
   setConnectionPaused,
+  shareConnection,
 } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
 import { githubCatalog } from '@/server/connectors/github/catalog';
@@ -27,6 +28,7 @@ import {
   deleteConnectionAction,
   replaceKeyAction,
   setPausedAction,
+  shareConnectionAction,
   syncNowAction,
 } from './actions';
 
@@ -39,6 +41,7 @@ vi.mock('@/server/connectors/connections', () => ({
   replaceConnectionSecret: vi.fn(),
   requestSyncNow: vi.fn(),
   setConnectionPaused: vi.fn(),
+  shareConnection: vi.fn(),
 }));
 vi.mock('@/server/connectors/registry', () => ({ getConnector: vi.fn() }));
 vi.mock('@/server/connectors/catalog', () => ({ listCatalog: vi.fn() }));
@@ -501,6 +504,12 @@ describe.each([
     deleteConnection,
     [ctx, ID],
   ],
+  [
+    'shareConnectionAction',
+    (id: string) => shareConnectionAction(id, 'equipe'),
+    shareConnection,
+    [ctx, ID, 'equipe'],
+  ],
 ] as const)('%s', (_name, run, write, args) => {
   it('agit pour le lecteur connecté puis rafraîchit la page', async () => {
     vi.mocked(write).mockResolvedValue(true);
@@ -538,5 +547,13 @@ describe.each([
     await expect(run(ID)).rejects.toThrow('NEXT_REDIRECT /connexion');
 
     expect(write).not.toHaveBeenCalled();
+  });
+});
+
+describe('shareConnectionAction', () => {
+  it("rend { ok: false } pour un partage qui n'est ni l'équipe, ni soi, ni un groupe, sans rien écrire", async () => {
+    await expect(shareConnectionAction(ID, 'tout-le-monde')).resolves.toEqual({ ok: false });
+
+    expect(shareConnection).not.toHaveBeenCalled();
   });
 });

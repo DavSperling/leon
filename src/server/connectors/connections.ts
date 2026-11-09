@@ -14,6 +14,7 @@ import {
 } from 'drizzle-orm';
 import { z } from 'zod';
 import type { ProviderId } from '@/capture/turn';
+import { aclOf, type Partage } from '@/lib/documents';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
@@ -41,6 +42,7 @@ export type ConnectionView = {
   canManage: boolean; // pause, suppression : créateur ou administrateur
   isCreator: boolean; // clé, reconnexion : créateur seul (le secret est celui de son compte)
   creatorLeft: boolean; // le créateur n'est plus membre : la relève saute la connexion
+  partage: Partage | null; // qui voit ce qu'elle relève (0056) ; nul : le choix de l'outil (catalogue, privateRaw)
 };
 
 // Configuration fusionnée, secrets compris : réservée à la relève et au test de la connexion.
@@ -178,6 +180,10 @@ export async function listConnections(ctx: TenantContext): Promise<ConnectionVie
         canManage: sql<boolean>`${manageable(ctx)}`,
         isCreator: sql<boolean>`${createdByMe(ctx)}`,
         creatorLeft: sql<boolean>`not ${creatorIsMember}`,
+        partage: sql<Partage | null>`case when ${connections.partage} is null then null
+          when ${connections.partage} = array[${connections.tenantId}] then 'equipe'
+          when cardinality(${connections.partage}) = 1 then 'moi'
+          else (${connections.partage})[2]::text end`,
       })
       .from(connections)
       .innerJoin(users, eq(users.id, connections.createdBy))
@@ -303,6 +309,22 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
       .returning({ id: connections.id }),
   );
   return rows.length > 0;
+}
+
+// Le créateur choisit qui voit ce que la connexion relève, et tout ce qu'elle a déjà relevé suit (partager_connexion).
+// Faux pour un autre membre, ou pour un groupe d'une autre organisation.
+export async function shareConnection(
+  ctx: TenantContext,
+  id: string,
+  partage: Partage,
+): Promise<boolean> {
+  const acl = `{${aclOf(ctx, partage).join(',')}}`;
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<{ shared: boolean }>(
+      sql`select partager_connexion(${id}, ${acl}::uuid[]) as shared`,
+    ),
+  );
+  return rows[0]?.shared === true;
 }
 
 // Les sources déjà captées restent : leur `connection_id` passe à nul (clé étrangère).

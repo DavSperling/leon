@@ -15,6 +15,7 @@ import {
   addFileAction,
   deleteDocumentAction,
   deleteFolderAction,
+  shareDocumentAction,
   uploadDocumentAction,
 } from '@/app/(app)/documents/actions';
 import {
@@ -331,7 +332,7 @@ function DocumentItem({
       </div>
       {owner && !path && (
         <ShareSelect
-          target={{ id: document.id }}
+          share={(partage) => shareDocumentAction({ id: document.id }, partage)}
           value={document.partage}
           groups={groups}
           label={t('shareLabel', { title: full })}
@@ -417,7 +418,7 @@ function FolderItem({
           <div className="mt-3 ml-4 flex flex-wrap items-center gap-3 sm:ml-11">
             <span className="text-label font-medium text-fg-2">{t('shareWith')}</span>
             <ShareSelect
-              target={{ folderId: folder.id }}
+              share={(partage) => shareDocumentAction({ folderId: folder.id }, partage)}
               value={latest.partage}
               groups={groups}
               label={t('shareFolderLabel', { name: folder.name })}

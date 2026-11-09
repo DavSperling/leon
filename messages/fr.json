@@ -162,6 +162,8 @@
     "nothingRecentHelp": "Leon relie un élément à une personne par son adresse e-mail : ce qu’elle écrit sous une autre adresse n’apparaît pas ici.",
     "untitled": "Sans titre",
     "chartTitle": "Organigramme",
+    "chartReports": "{count, plural, one {# personne} other {# personnes}}",
+    "chartBack": "Revenir à moi",
     "you": "vous"
   },
   "shell": {

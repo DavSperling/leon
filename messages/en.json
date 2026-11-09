@@ -162,6 +162,8 @@
     "nothingRecentHelp": "Leon links an item to a person by email address: what they write under another address does not show here.",
     "untitled": "Untitled",
     "chartTitle": "Org chart",
+    "chartReports": "{count, plural, one {# person} other {# people}}",
+    "chartBack": "Back to me",
     "you": "you"
   },
   "shell": {

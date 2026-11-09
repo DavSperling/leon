@@ -4,6 +4,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { users } from '@/server/db/schema/auth';
 import { adminDb } from '@/test/db';
+import { seedConnection } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam } from '@/test/seed-indexed';
 import { myAddresses, resolvePeople } from './people';
 
@@ -38,8 +39,9 @@ async function people() {
   await setEmail(eloise, mail('eloise'));
   // Une autre organisation, qui compte aussi une Julie : elle ne se confond jamais avec les nôtres.
   const other = await newTeam(['Julie Autre'], tenantIds);
-  await setEmail(other.members[0] as TenantContext, mail('julie.autre'));
-  return { alice, julieM, julieD, bob, eloise, mail };
+  const autre = other.members[0] as TenantContext;
+  await setEmail(autre, mail('julie.autre'));
+  return { alice, julieM, julieD, bob, eloise, autre, mail };
 }
 
 describe('resolvePeople', () => {
@@ -114,5 +116,43 @@ describe('myAddresses', () => {
       names: [],
     });
     expect((await myAddresses(julieM)).emails).toEqual([mail('julie.martin')]);
+  });
+});
+
+describe('les noms d’auteur GitHub et Slack (T19)', () => {
+  const sorted = (names: { kind: string; name: string }[]) =>
+    names.map(({ kind, name }) => `${kind}:${name}`).toSorted();
+
+  it('viennent des comptes que chacun a branchés, trouvé par son nom, son adresse, ou soi-même', async () => {
+    const { alice, julieM, julieD, bob, mail } = await people();
+    await seedConnection(julieM, { provider: 'github', label: 'jmartin' });
+    await seedConnection(julieM, {
+      provider: 'slack',
+      label: 'julie.m (Acme (France))',
+      config: { accountKey: 'T1:U1' },
+    });
+    // Sans pseudo dans le libellé, l'identifiant Slack seul ; un autre outil ne donne rien.
+    await seedConnection(bob, {
+      provider: 'slack',
+      label: 'Acme',
+      config: { accountKey: 'T1:U2' },
+    });
+    await seedConnection(julieD, { provider: 'notion', label: 'julie.d' });
+
+    const julie = ['github:jmartin', 'slack:U1', 'slack:julie.m'];
+    expect(sorted((await resolvePeople(alice, ['julie'])).authorNames)).toEqual(julie);
+    expect(sorted((await resolvePeople(alice, [mail('julie.martin')])).authorNames)).toEqual(julie);
+    expect(sorted((await myAddresses(julieM)).names)).toEqual(julie);
+    expect((await resolvePeople(alice, ['bob'])).authorNames).toEqual([
+      { kind: 'slack', name: 'U2' },
+    ]);
+    expect((await myAddresses(alice)).names).toEqual([]);
+  });
+
+  it('ne se lisent jamais dans une autre organisation', async () => {
+    const { alice, autre, mail } = await people();
+    await seedConnection(autre, { provider: 'github', label: 'jautre' });
+    expect((await resolvePeople(alice, [mail('julie.autre')])).authorNames).toEqual([]);
+    expect((await myAddresses(autre)).names).toEqual([{ kind: 'github', name: 'jautre' }]);
   });
 });

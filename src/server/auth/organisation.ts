@@ -9,6 +9,7 @@ import {
 } from '@/server/db/schema/organisation';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { recentSources } from '@/server/search/activity';
+import { toolNames } from '@/server/search/people';
 import type { SourceHit } from '@/server/search/types';
 import { canInvite } from './members';
 import type { TenantContext } from './tenant-context';
@@ -115,11 +116,12 @@ export async function reportActivity(
 ): Promise<{ hits: SourceHit[]; total: number }> {
   const tools = toolsOfFamilies(report.families);
   if (tools.length === 0) return { hits: [], total: 0 };
+  const authorNames = await toolNames(ctx, [report.email]);
   return withTenant({ ...ctx, equipe: true }, (tx) =>
     recentSources(
       tx,
       ctx,
-      { tools, authorEmails: [report.email] },
+      { tools, authorEmails: [report.email], authorNames },
       { limit: REPORT_ACTIVITY_LIMIT, offset: 0 },
     ),
   );

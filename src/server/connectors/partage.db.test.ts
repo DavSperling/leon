@@ -8,7 +8,7 @@ import { enqueuePipelineStep, type PipelineJob } from '@/server/pipeline/queue';
 import { indexIngestRun } from '@/server/search/index-run';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { listConnections, shareConnection } from './connections';
+import { deleteConnection, listConnections, shareConnection } from './connections';
 import { type ConnectionRef, ingestConnectorItems } from './ingest-items';
 import { normalizeItem } from './normalize';
 
@@ -132,8 +132,8 @@ describe('partager une connexion (0056)', () => {
 
   it('le créateur la partage à un groupe : le déjà relevé suit, et la relève suivante aussi', async () => {
     const connection: ConnectionRef = {
-      id: await seedConnection(ben),
-      provider: 'github',
+      id: await seedConnection(ben, { provider: 'linear' }),
+      provider: 'linear',
       createdBy: ben.userId,
     };
     const before = await ingest(ben, connection, 'a1');
@@ -163,8 +163,8 @@ describe('partager une connexion (0056)', () => {
 
   it("personne d'autre que le créateur ne la partage, pas même un administrateur", async () => {
     const connection: ConnectionRef = {
-      id: await seedConnection(ben),
-      provider: 'github',
+      id: await seedConnection(ben, { provider: 'linear' }),
+      provider: 'linear',
       createdBy: ben.userId,
     };
     const source = await ingest(ben, connection, 'b1');
@@ -198,8 +198,8 @@ describe('partager une connexion (0056)', () => {
       ),
     ).toBe(true);
     const connection: ConnectionRef = {
-      id: await seedConnection(ben),
-      provider: 'github',
+      id: await seedConnection(ben, { provider: 'linear' }),
+      provider: 'linear',
       createdBy: ben.userId,
     };
     const source = await ingest(ben, connection, 'c1');
@@ -210,5 +210,33 @@ describe('partager une connexion (0056)', () => {
     expect(await partageOf(ben, connection.id)).toBe('moi');
     // La relève suivante écrit aussi à l'accès réduit.
     expect(await aclsBelow(await ingest(ben, connection, 'c2'))).toEqual([[ben.userId]]);
+  });
+
+  it("GitHub ne se partage pas : la fin de chaque relève remet l'accès des dépôts d'équipe (0048)", async () => {
+    const github: ConnectionRef = {
+      id: await seedConnection(ben),
+      provider: 'github',
+      createdBy: ben.userId,
+    };
+    const source = await ingest(ben, github, 'h1');
+    expect(await shareConnection(await fresh(ben), github.id, 'moi')).toBe(false);
+    expect(await aclsBelow(source)).toEqual([[ben.tenantId]]);
+    expect(await partageOf(ben, github.id)).toBeNull();
+  });
+
+  it("un outil rebranché ne garde pas l'accès de l'ancienne connexion", async () => {
+    // Ben ouvre sa boîte mail à l'équipe, la débranche, puis la rebranche sans rien choisir : privée à lui.
+    const before: ConnectionRef = {
+      id: await seedConnection(ben, { provider: 'gmail' }),
+      provider: 'gmail',
+      createdBy: ben.userId,
+      privateRaw: true,
+    };
+    const mail = await ingest(ben, before, 'm3');
+    expect(await shareConnection(await fresh(ben), before.id, 'equipe')).toBe(true);
+    expect(await deleteConnection(await fresh(ben), before.id)).toBe(true);
+    const after = { ...before, id: await seedConnection(ben, { provider: 'gmail' }) };
+    expect(await ingest(ben, after, 'm3')).toBe(mail);
+    expect(await aclsBelow(mail)).toEqual([[ben.userId]]);
   });
 });

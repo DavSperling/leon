@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { ProviderId } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { connections } from '@/server/db/schema/connections';
@@ -22,14 +22,16 @@ export type ConnectionRef = {
 };
 
 // Une source par élément, au nom du créateur de la connexion, à l'accès que la connexion donne : la source garde son
-// origine (outil, nature, lien, espace). Une source déjà là garde son accès (seul partager_connexion le change) : ses
-// nouveaux tours prennent le sien, rendu ici.
+// origine (outil, nature, lien, espace). Une source déjà là garde son accès (seul partager_connexion le change), sauf
+// une source reprise d'une connexion supprimée, qui prend celui de la connexion : ses nouveaux tours prennent le sien,
+// rendu ici.
 async function upsertItemSource(
   tx: Tx,
   ctx: TenantContext,
   connection: ConnectionRef,
   item: NormalizedItem,
   acl: string[],
+  reprise: boolean,
 ): Promise<{ id: string; acl: string[] }> {
   const title = item.title || null;
   const metadata = {
@@ -52,7 +54,7 @@ async function upsertItemSource(
     })
     .onConflictDoUpdate({
       target: [sources.tenantId, sources.ownerUserId, sources.kind, sources.externalId],
-      set: { title, metadata, connectionId: connection.id },
+      set: { title, metadata, connectionId: connection.id, ...(reprise ? { acl } : {}) },
     })
     .returning({ id: sources.id, acl: sources.acl });
   if (!source) throw new Error('source non créée');
@@ -76,6 +78,24 @@ export async function ingestConnectorItems(
       .for('share');
     const acl =
       chosen?.partage ?? (connection.privateRaw ? [connection.createdBy] : [ctx.tenantId]);
+    // Les sources d'une connexion supprimée depuis, que celle-ci relit (l'outil rebranché) : elles prennent son accès,
+    // et tout ce qui en descend avec, au lieu de garder celui de l'ancienne.
+    const reprises = await tx
+      .select({ id: sources.id, externalId: sources.externalId })
+      .from(sources)
+      .where(
+        and(
+          eq(sources.tenantId, ctx.tenantId),
+          eq(sources.ownerUserId, connection.createdBy),
+          eq(sources.kind, connection.provider),
+          inArray(
+            sources.externalId,
+            items.map((item) => item.externalId),
+          ),
+          isNull(sources.connectionId),
+        ),
+      );
+    const repris = new Set(reprises.map((row) => row.externalId));
     const result = { turns: 0, runs: [] as string[] };
     for (const item of items) {
       const { id: sourceId, acl: sourceAcl } = await upsertItemSource(
@@ -84,6 +104,7 @@ export async function ingestConnectorItems(
         connection,
         item,
         acl,
+        repris.has(item.externalId),
       );
       const rows = item.turns.map((turn) => ({
         tenantId: ctx.tenantId,
@@ -104,6 +125,10 @@ export async function ingestConnectorItems(
       result.turns += ids.length;
       if (ids.length > 0)
         result.runs.push(await createIngestRun(tx, ctx, sourceId, ids, sourceAcl));
+    }
+    if (reprises.length > 0) {
+      const ids = textArray(reprises.map((row) => row.id));
+      await tx.execute(sql`select recopier_acl_mes_sources(${ids}::uuid[])`);
     }
     return result;
   });

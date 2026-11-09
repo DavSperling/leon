@@ -399,8 +399,10 @@ function ConnectionCard({
   const t = useTranslations('connections');
   const d = useTranslations('documents');
   const partageLabel = usePartageLabel(groups ?? []);
+  // GitHub : un administrateur coche les dépôts d'équipe, visibles de toute l'équipe (0048) ; pas de choix ici.
+  const github = c.provider === 'github';
   // Sans choix enregistré, celui de l'outil : privé à qui branche (boîte mail, Drive, Slack), sinon toute l'équipe.
-  const partage = c.partage ?? (entry.privateRaw ? 'moi' : 'equipe');
+  const partage = github ? 'equipe' : (c.partage ?? (entry.privateRaw ? 'moi' : 'equipe'));
   const locale = useLocale();
   const [replacing, setReplacing] = useState(false);
   const { pending, run } = useManage();
@@ -422,7 +424,7 @@ function ConnectionCard({
       {groups && (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-label text-muted">
           <span>{d('shareWith')}</span>
-          {c.isCreator ? (
+          {c.isCreator && !github ? (
             <ShareSelect
               share={(next) => shareConnectionAction(c.id, next)}
               value={partage}

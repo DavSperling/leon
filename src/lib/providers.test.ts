@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { PROVIDER_IDS, type ProviderId } from '@/capture/turn';
 import {
   FAMILY_LABELS,
+  FOLLOW_FAMILIES,
   PROVIDER_FAMILIES,
   PROVIDER_FAMILIES_ORDER,
   PROVIDER_LABELS,
+  toolsOfFamilies,
 } from './providers';
 
 const ofFamily = (family: string): ProviderId[] =>
@@ -85,5 +87,11 @@ describe('providers', () => {
       'Support',
       'Mails, chat et agenda',
     ]);
+  });
+
+  it('donne les outils des familles suivies, documents compris, jamais les mails', () => {
+    expect(toolsOfFamilies(['crm', 'documents'])).toEqual([...ofFamily('crm'), 'document']);
+    expect(toolsOfFamilies([...FOLLOW_FAMILIES])).not.toContain('gmail');
+    expect(toolsOfFamilies([])).toEqual([]);
   });
 });

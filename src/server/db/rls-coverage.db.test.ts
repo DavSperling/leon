@@ -28,6 +28,7 @@ const DELETE_ALLOWED = [
   'depots_equipe', // l'administrateur décoche un dépôt d'équipe ; un membre ordinaire ne peut pas (0047)
   'versions_memoire', // seule deleteAccount les efface, avec le reste de la personne (0052)
   'membres_groupe', // un administrateur retire quelqu'un d'un groupe libre (0055)
+  'reporting_lines', // un administrateur détache un membre de son manager (0054)
 ];
 
 const TENANT_TABLES = `

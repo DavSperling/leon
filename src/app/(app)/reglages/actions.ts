@@ -15,8 +15,14 @@ import {
   deleteOrganization,
 } from '@/server/auth/delete-account';
 import { deleteGroup, saveGroup, setGroupMembers } from '@/server/auth/groupes';
-import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
+import {
+  createInvitationLink,
+  removeMember,
+  setMemberPlacement,
+  setMemberRole,
+} from '@/server/auth/members';
 import { PlacementSchema } from '@/server/auth/onboarding';
+import { setManager } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
@@ -182,6 +188,42 @@ export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean 
   if (!z.uuid().safeParse(tokenId).success) return { ok: false };
   const ok = await revokeApiToken(ctx, tokenId);
   revalidatePath('/reglages');
+  return { ok };
+}
+
+// Organigramme et membres (0054) : réservés aux propriétaires et administrateurs, ce que members.ts et organisation.ts
+// vérifient, avec les identifiants reçus du navigateur.
+export async function setManagerAction(
+  memberId: string,
+  managerId: string | null,
+): Promise<{ result: 'ok' | 'refuse' | 'boucle' }> {
+  const ctx = await requireUserContext();
+  const result = await setManager(ctx, memberId, managerId);
+  if (result === 'ok') {
+    revalidatePath('/reglages');
+    revalidatePath('/equipe');
+  }
+  return { result };
+}
+
+export async function setMemberRoleAction(
+  memberId: string,
+  role: string,
+): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const parsed = z.enum(['admin', 'member']).safeParse(role);
+  const ok = parsed.success && (await setMemberRole(ctx, memberId, parsed.data));
+  if (ok) revalidatePath('/reglages');
+  return { ok };
+}
+
+export async function removeMemberAction(memberId: string): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await removeMember(ctx, memberId);
+  if (ok) {
+    revalidatePath('/reglages');
+    revalidatePath('/equipe');
+  }
   return { ok };
 }
 

@@ -170,8 +170,14 @@ export async function setManagersSeeAll(ctx: TenantContext, on: boolean): Promis
   return true;
 }
 
+// Une écriture de l'organigramme à la fois dans l'organisation : deux simultanées pourraient fermer une boucle sans
+// que l'une voie l'autre, ou l'import de l'annuaire écraser un rattachement fait à la main pendant qu'il lisait.
+export async function lockOrganigramme(tx: Tx, ctx: TenantContext): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`organigramme:${ctx.tenantId}`}))`);
+}
+
 // Rattache un membre à son manager (null : à personne). Réservé aux propriétaires et administrateurs ; refuse une
-// boucle (le manager est déjà sous ce membre).
+// boucle (le manager est déjà sous ce membre). Fait à la main : l'import de l'annuaire n'y touchera plus (0058).
 export async function setManager(
   ctx: TenantContext,
   memberId: string,
@@ -187,28 +193,26 @@ export async function setManager(
       .from(members)
       .where(and(eq(members.organizationId, ctx.tenantId), inArray(members.id, ids)));
     if (found.length !== ids.length) return 'refuse';
+    await lockOrganigramme(tx, ctx);
     if (managerId === null) {
       await tx.delete(reportingLines).where(eq(reportingLines.memberId, memberId));
-      return 'ok';
+    } else {
+      const { rows } = await tx.execute(sql`
+        with recursive under (id, depth) as (
+          select ${memberId}::uuid, 0
+          union
+          select r.member_id, u.depth + 1 from reporting_lines r
+          join under u on r.manager_id = u.id
+          where u.depth < ${MAX_DEPTH}
+        )
+        select 1 from under where id = ${managerId}::uuid limit 1`);
+      if (rows.length > 0) return 'boucle';
+      await tx
+        .insert(reportingLines)
+        .values({ tenantId: ctx.tenantId, memberId, managerId })
+        .onConflictDoUpdate({ target: reportingLines.memberId, set: { managerId } });
     }
-    // Deux rattachements simultanés pourraient fermer une boucle sans que l'un voie l'autre : un à la fois.
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(hashtext(${`organigramme:${ctx.tenantId}`}))`,
-    );
-    const { rows } = await tx.execute(sql`
-      with recursive under (id, depth) as (
-        select ${memberId}::uuid, 0
-        union
-        select r.member_id, u.depth + 1 from reporting_lines r
-        join under u on r.manager_id = u.id
-        where u.depth < ${MAX_DEPTH}
-      )
-      select 1 from under where id = ${managerId}::uuid limit 1`);
-    if (rows.length > 0) return 'boucle';
-    await tx
-      .insert(reportingLines)
-      .values({ tenantId: ctx.tenantId, memberId, managerId })
-      .onConflictDoUpdate({ target: reportingLines.memberId, set: { managerId } });
+    await tx.update(members).set({ rattachementManuel: true }).where(eq(members.id, memberId));
     return 'ok';
   });
 }

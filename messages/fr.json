@@ -150,7 +150,9 @@
     "nothingFollowedHelp": "Cochez une famille d’outils ci-dessus pour voir son activité.",
     "nothingRecent": "Rien de récent dans ce que vous suivez",
     "nothingRecentHelp": "Leon relie un élément à une personne par son adresse e-mail : ce qu’elle écrit sous une autre adresse n’apparaît pas ici.",
-    "untitled": "Sans titre"
+    "untitled": "Sans titre",
+    "chartTitle": "Organigramme",
+    "you": "vous"
   },
   "shell": {
     "skipToContent": "Aller au contenu",

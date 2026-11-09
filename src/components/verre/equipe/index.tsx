@@ -20,26 +20,30 @@ import { FOLLOW_FAMILIES, type FollowFamily } from '@/lib/providers';
 import { cn, nb } from '@/lib/verre';
 import type { Report } from '@/server/auth/organisation';
 import type { SourceHit } from '@/server/search/types';
+import { type ChartMember, OrgChart } from './org-chart';
 
 type Activity = { hits: SourceHit[]; total: number };
 
 /**
- * « Mon équipe » : les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
+ * « Mon équipe » : l'organigramme de toute l'organisation, puis les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
  * (?personne=…) ce qu'il suit d'elle et son activité récente. Seulement ce que toute l'équipe voit déjà.
  */
 export function Team({
   reports,
   selected,
   activity,
+  chart,
 }: {
   reports: Report[];
   selected: Report | null;
   activity: Activity | null;
+  chart: ChartMember[];
 }) {
   const t = useTranslations('team');
   return (
     <div className="mx-auto max-w-[1040px]">
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <OrgChart members={chart} under={reports.map((r) => r.memberId)} />
       {selected === null ? (
         <EmptyState
           icon={Users}

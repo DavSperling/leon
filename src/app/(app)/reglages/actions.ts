@@ -157,7 +157,7 @@ export async function revokeTokenAction(tokenId: string): Promise<{ ok: boolean 
   return { ok };
 }
 
-// Organigramme et membres (0053) : réservés aux propriétaires et administrateurs, ce que members.ts et organisation.ts
+// Organigramme et membres (0054) : réservés aux propriétaires et administrateurs, ce que members.ts et organisation.ts
 // vérifient, avec les identifiants reçus du navigateur.
 export async function setManagerAction(
   memberId: string,

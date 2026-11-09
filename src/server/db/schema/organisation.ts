@@ -1,7 +1,7 @@
 import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { members, organizations } from './auth';
 
-// Qui est le manager de qui, et ce que chaque manager suit des gens sous lui (0053). RLS : l'organisation courante.
+// Qui est le manager de qui, et ce que chaque manager suit des gens sous lui (0054). RLS : l'organisation courante.
 export const reportingLines = pgTable('reporting_lines', {
   tenantId: uuid('tenant_id')
     .notNull()

@@ -748,6 +748,71 @@
       transform: translateY(-4px);
     }
   }
+
+  /* ---------- Organigramme : boîtes et traits, sans librairie. Chaque <li> trace sa moitié du trait horizontal qui
+     relie ses frères, et le trait qui descend vers lui ; le <ul> d'enfants trace le trait qui descend du parent. */
+  .org-tree,
+  .org-tree ul {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .org-tree ul {
+    padding-top: 20px;
+  }
+  .org-tree ul::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 20px;
+    border-left: 1px solid var(--line-strong);
+  }
+  .org-tree li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 6px 0;
+  }
+  .org-tree > li {
+    padding-top: 0;
+  }
+  .org-tree ul > li::before,
+  .org-tree ul > li::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 20px;
+    border-top: 1px solid var(--line-strong);
+  }
+  .org-tree ul > li::after {
+    right: auto;
+    left: 50%;
+    border-left: 1px solid var(--line-strong);
+  }
+  .org-tree ul > li:only-child::before {
+    display: none;
+  }
+  .org-tree ul > li:only-child::after {
+    border-top: 0;
+  }
+  .org-tree ul > li:first-child::before,
+  .org-tree ul > li:last-child::after {
+    border-top: 0;
+  }
+  .org-tree ul > li:last-child:not(:only-child)::before {
+    border-right: 1px solid var(--line-strong);
+    border-radius: 0 6px 0 0;
+  }
+  .org-tree ul > li:first-child:not(:only-child)::after {
+    border-radius: 6px 0 0 0;
+  }
+  .org-tree ul > li:last-child:not(:only-child)::after {
+    border-left: 0;
+  }
 }
 
 /* Panneau principal : complet (trait, rayon, fond, flou, ombre), en @utility pour écrire « shell:glass-panel ».

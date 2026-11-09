@@ -9,7 +9,7 @@ import type { SourceHit } from '@/server/search/types';
 import { canInvite } from './members';
 import type { TenantContext } from './tenant-context';
 
-// L'organigramme (0053) et l'écran « Mon équipe ». Un propriétaire ou un administrateur rattache chaque membre à son
+// L'organigramme (0054) et l'écran « Mon équipe ». Un propriétaire ou un administrateur rattache chaque membre à son
 // manager ; un manager voit les gens sous lui, directs et indirects, et choisit par personne les familles d'outils
 // qu'il suit. Rien de privé n'y entre : seules les sources visibles de toute l'équipe sont lues, sous ses droits.
 

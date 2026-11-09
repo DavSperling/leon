@@ -30,7 +30,7 @@ export type MemberRow = {
   seniority: number | null;
   /** La ligne du lecteur lui-même. */
   self: boolean;
-  managerId: string | null; // membre auquel il est rattaché (0053)
+  managerId: string | null; // membre auquel il est rattaché (0054)
 };
 
 const hashInvitationToken = (token: string) => createHash('sha256').update(token).digest('hex');

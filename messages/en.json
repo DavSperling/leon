@@ -150,7 +150,9 @@
     "nothingFollowedHelp": "Tick a tool family above to see their activity.",
     "nothingRecent": "Nothing recent in what you follow",
     "nothingRecentHelp": "Leon links an item to a person by email address: what they write under another address does not show here.",
-    "untitled": "Untitled"
+    "untitled": "Untitled",
+    "chartTitle": "Org chart",
+    "you": "you"
   },
   "shell": {
     "skipToContent": "Skip to content",

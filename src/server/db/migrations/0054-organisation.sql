@@ -1,4 +1,4 @@
--- 0053-organisation.sql : qui est le manager de qui, et ce que chaque manager suit des gens sous lui (écran
+-- 0054-organisation.sql : qui est le manager de qui, et ce que chaque manager suit des gens sous lui (écran
 -- « Mon équipe »). Aucun droit sur la mémoire ne change : un manager ne lit que ce que toute l'équipe voit déjà,
 -- sous ses propres droits (0003). Les lignes partent avec le membre (clés vers member, en cascade).
 

@@ -31,19 +31,21 @@ let carol: TenantContext;
 let zoe: TenantContext;
 
 const uniqueProject = () => `github.com/acme/projet-${crypto.randomUUID().slice(0, 8)}`;
+const HOUR = 3_600_000;
 
-// Un point lu à l'instant, sauf `lastReadAt` donné (null : jamais lu).
+// Un point préparé il y a une heure puis lu à l'instant, sauf `lastReadAt` donné (null : jamais lu).
 async function seedBriefing(
   owner: TenantContext,
   project: string,
   lastReadAt: Date | null = new Date(),
+  preparedAt = new Date(Date.now() - HOUR),
 ): Promise<void> {
   await adminDb.insert(briefings).values({
     tenantId: owner.tenantId,
     userId: owner.userId,
     project,
     markdown: '# Point du matin',
-    preparedAt: new Date(),
+    preparedAt,
     lastReadAt,
     acl: [owner.userId],
   });
@@ -153,6 +155,25 @@ describe('signalProjectActivity', () => {
       expect(await jobsFor(member, project)).toEqual([]);
       expect(await staleOf(member, project)).toBe(true);
     }
+  });
+
+  // La facture du point : un dépôt actif ne paie plus un point toutes les 30 minutes pour un lecteur absent.
+  it('ne refait pas un point dont personne n’a lu la version actuelle : il le marque périmé', async () => {
+    const project = uniqueProject();
+    // Lu il y a deux heures, refait depuis : la version actuelle n'a pas été lue.
+    await seedBriefing(
+      alice,
+      project,
+      new Date(Date.now() - 2 * HOUR),
+      new Date(Date.now() - HOUR),
+    );
+    await seedBriefing(bob, project);
+
+    await signalProjectActivity(alice, project, []);
+
+    expect(await jobsFor(alice, project)).toEqual([]);
+    expect(await staleOf(alice, project)).toBe(true);
+    expect(await jobsFor(bob, project)).toHaveLength(1);
   });
 
   it('ne prépare pas d’avance le premier point d’un simple dossier', async () => {

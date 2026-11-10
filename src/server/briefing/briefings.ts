@@ -21,7 +21,12 @@ import {
   isEmptyMaterial,
   materialSourceIds,
 } from './gather';
-import { BRIEFING_READ_DAYS, requestBriefingRefreshNow } from './queue';
+import {
+  BRIEFING_DELAY_SECONDS,
+  enqueueBriefingRefresh,
+  refreshOnSignal,
+  requestBriefingRefreshNow,
+} from './queue';
 
 // Le point du matin (T13) : préparé à l'avance par un seul appel au modèle (D8 du plan du deuxième jet), gardé dans
 // `briefings`, et lu par le crochet de démarrage de Claude Code, la route `GET /api/v1/briefing` et l'outil MCP
@@ -42,6 +47,11 @@ export const BRIEFING_NO_MODEL_MARKDOWN =
 const BRIEFING_MAX_TOKENS = 8000;
 // Le recalcul tourne dans un job, pas devant l'utilisateur : il a le temps, mais pas indéfiniment.
 const BRIEFING_TIMEOUT_MS = 120_000;
+// Le plafond de dépense : au plus 20 points écrits par le modèle par personne et par jour (UTC, reserver_point,
+// 0060), toutes organisations et tous projets confondus. Du 3 au 10/11/2026, la production en a payé 1 à 6 par
+// jour pour deux personnes, 3,6 centimes au plus chacun : 20 points coûtent au plus 0,72 $ par personne et par jour.
+// Au-delà, le point reste tel quel jusqu'au lendemain.
+export const BRIEFING_DAILY_CAP = 20;
 
 // Le texte du modèle, renvois filtrés : seuls les numéros fournis restent.
 async function writeBody(
@@ -77,6 +87,7 @@ export async function accountIsGone(userId: string): Promise<boolean> {
 
 // Refait le point de l'utilisateur sur ce projet. Sans rien de neuf (ni session, ni changement, ni mention), le
 // point le dit sans appeler le modèle. Une panne du modèle remonte (LlmError) et laisse le point précédent tel quel.
+// Passé le plafond du jour (BRIEFING_DAILY_CAP), rien n'est écrit : le point reste périmé, sans appel au modèle.
 export async function refreshBriefing(
   ctx: TenantContext,
   project: string,
@@ -91,6 +102,13 @@ export async function refreshBriefing(
     markdown = renderEmptyBriefing(project, now, BRIEFING_DAYS);
     sourceIds = [];
   } else {
+    const { rows } = await db.execute<{ ok: boolean }>(
+      sql`select reserver_point(${ctx.userId}, ${BRIEFING_DAILY_CAP}) as ok`,
+    );
+    if (rows[0]?.ok !== true) {
+      console.warn('[leon]', 'briefing.daily_cap', JSON.stringify({ userId: ctx.userId }));
+      return;
+    }
     const prompt = buildBriefingPrompt(
       material,
       now,
@@ -134,10 +152,17 @@ export async function briefingIsFresh(ctx: TenantContext, project: string): Prom
   return row !== undefined && !row.stale;
 }
 
-// Met le recalcul en file, tout de suite, sans jamais faire échouer la lecture : le crochet attend sa réponse.
-async function requestRefresh(ctx: TenantContext, project: string): Promise<void> {
+// Met le recalcul en file sans jamais faire échouer la lecture : le crochet attend sa réponse. `now` avance à
+// maintenant un recalcul retardé déjà en file ; un délai ne met en file que si rien n'attend.
+async function requestRefresh(
+  ctx: TenantContext,
+  project: string,
+  when: 'now' | { delaySeconds: number },
+): Promise<void> {
+  const job = { tenantId: ctx.tenantId, userId: ctx.userId, project };
   try {
-    await requestBriefingRefreshNow({ tenantId: ctx.tenantId, userId: ctx.userId, project });
+    if (when === 'now') await requestBriefingRefreshNow(job);
+    else await enqueueBriefingRefresh(job, when);
   } catch (error) {
     logError('briefing.enqueue_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId });
   }
@@ -159,12 +184,12 @@ async function projectIsKnown(tx: Tx, ctx: TenantContext, project: string): Prom
   return rows[0]?.known === true;
 }
 
-// Le dernier point de l'utilisateur sur ce projet, même périmé (un recalcul est déjà en file), et l'heure de la
-// lecture notée (le tic du matin refait les points lus dans la semaine). Rend null quand il n'y a pas de point ou
-// qu'une des sources fournies au modèle n'est plus visible de l'utilisateur (droits retirés, source supprimée) : ce
-// point-là n'est plus montré, et son recalcul est mis en file tout de suite, sauf `refresh: false` (aucun modèle
-// pour le faire) ou projet sans rien de connu du lecteur (projectIsKnown). Un point périmé qu'on ne lisait plus est
-// rendu, et son recalcul mis en file tout de suite.
+// Le dernier point de l'utilisateur sur ce projet, même périmé (son recalcul est en file, ou le sera par cette
+// lecture), et l'heure de la lecture notée (le tic du matin refait les points lus dans la semaine). Rend null quand
+// il n'y a pas de point ou qu'une des sources fournies au modèle n'est plus visible de l'utilisateur (droits retirés,
+// source supprimée) : ce point-là n'est plus montré, et son recalcul est mis en file tout de suite, sauf
+// `refresh: false` (aucun modèle pour le faire) ou projet sans rien de connu du lecteur (projectIsKnown). Un point
+// périmé dont aucun recalcul n'est en file (refreshOnSignal) est rendu, et remis en file.
 export async function readBriefing(
   ctx: TenantContext,
   project: string,
@@ -182,7 +207,12 @@ export async function readBriefing(
       })
       .from(briefings)
       .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project)));
-    if (!row) return { read: null, refresh: await projectIsKnown(tx, ctx, project) };
+    if (!row) {
+      return {
+        read: null,
+        refresh: (await projectIsKnown(tx, ctx, project)) ? ('now' as const) : null,
+      };
+    }
     await tx.update(briefings).set({ lastReadAt: sql`now()` }).where(eq(briefings.id, row.id));
     const wanted = [...new Set(row.sourceIds)];
     if (wanted.length > 0) {
@@ -193,18 +223,22 @@ export async function readBriefing(
         .where(inArray(sources.id, wanted));
       if (visible < wanted.length) {
         await tx.update(briefings).set({ stale: true }).where(eq(briefings.id, row.id));
-        return { read: null, refresh: true };
+        return { read: null, refresh: 'now' as const };
       }
     }
-    // Périmé alors qu'il n'était plus lu : le signal l'a seulement marqué (queue.ts), rien n'est en file pour lui.
-    const unreadSince = new Date(Date.now() - BRIEFING_READ_DAYS * 24 * 60 * 60 * 1000);
-    const forgotten = row.stale && (row.lastReadAt === null || row.lastReadAt <= unreadSince);
+    // Périmé, et le signal l'a seulement marqué (refreshOnSignal) : personne n'avait lu sa version actuelle, ou plus
+    // depuis une semaine. Cette lecture le remet en file, 30 minutes au plus tôt après sa préparation : des lectures
+    // et des signaux en rafale (une session lancée en boucle) ne paient pas plus d'un point par demi-heure.
+    const nextAt = row.preparedAt.getTime() + BRIEFING_DELAY_SECONDS * 1000;
     return {
       read: { markdown: row.markdown, preparedAt: row.preparedAt, sourceIds: wanted },
-      refresh: forgotten,
+      refresh:
+        row.stale && !refreshOnSignal(row)
+          ? { delaySeconds: Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) }
+          : null,
     };
   });
-  if (refresh && options.refresh !== false) await requestRefresh(ctx, project);
+  if (refresh !== null && options.refresh !== false) await requestRefresh(ctx, project, refresh);
   return read;
 }
 

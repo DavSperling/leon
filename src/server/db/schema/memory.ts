@@ -46,6 +46,8 @@ export const turns = pgTable('turns', {
   // Le côté de l'auteur d'après l'outil (nul : l'outil ne le dit pas), et une note que seule l'équipe voit.
   authorSide: text('author_side', { enum: AUTHOR_SIDES }),
   internalNote: boolean('internal_note').notNull().default(false),
+  // Tour `user` injecté (true), tapé par la personne (false), ou inconnu (null : capté avant la marque, T43).
+  injecte: boolean('injecte'),
   acl: acl(),
   createdAt: createdAt(),
 });

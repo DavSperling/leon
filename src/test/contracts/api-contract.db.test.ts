@@ -133,6 +133,15 @@ describe('routes de l’API', () => {
           ts: '2026-10-13T09:00:00+02:00',
           capture_mode: 'network',
         },
+        // La marque des tours injectés (T43) est au contrat : le serveur l'accepte avant que la CLI ne l'envoie.
+        {
+          external_id: 'msg-2',
+          role: 'user',
+          text: 'Rapport du sous-agent',
+          ts: '2026-10-13T09:01:00+02:00',
+          capture_mode: 'network',
+          injecte: true,
+        },
       ],
     };
 
@@ -181,7 +190,7 @@ describe('routes de l’API', () => {
     ]).toEqual([200, 202, 200, 202, 200, 201]);
     const profile = ViewerProfileSchema.parse(await me.json());
     expect(profile.userId).toBe(paul.userId);
-    expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
+    expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(2);
     expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
     expect(ContextResponseSchema.parse(await contexte.json()).texte).not.toBe('');
     expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({

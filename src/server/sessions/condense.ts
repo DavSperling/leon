@@ -8,11 +8,10 @@ import { oneLine } from '@/server/memory/labels';
 // plus, la fin gardée. Chaque tour, PR et commit porte son id : une `[décision]` du résumé doit en citer un, que le
 // serveur vérifie (D23 et D25 du plan de la mémoire à disposition). `preuves` sont ces ids, ceux qui sont restés
 // dans le condensé : un message de l'utilisateur, une PR ou un commit, jamais un tour de l'agent ni un tour `user`
-// injecté (D36). Chaque champ capté est mis sur une ligne et échappé (prompt-guard.ts), ici et non dans le prompt :
-// la borne compte ce que lit le modèle. Module pur : ni base, ni réseau.
-// shortcut: la capture ne pose pas encore `injecte` (colonne `turns.injecte`, partie capture de T43) ; un tour injecté
-// non marqué compte comme message de l'utilisateur. En attendant, le worker du résumé n'accepte aucun tour comme
-// preuve (resume-worker.ts), et le prompt dit qu'un tour de="utilisateur" n'est pas toujours écrit par la personne.
+// injecté (D36). Un message de l'utilisateur est un tour `user` marqué tapé par la personne (`injecte` false, T43),
+// rendu avec preuve="oui" ; un tour injecté est rendu comme l'agent ; un tour sans la marque (capté avant elle) reste
+// rendu comme l'utilisateur, sans rien prouver. Chaque champ capté est mis sur une ligne et échappé (prompt-guard.ts),
+// ici et non dans le prompt : la borne compte ce que lit le modèle. Module pur : ni base, ni réseau.
 
 export const CONDENSE_MAX_CHARS = 40_000;
 // Les faits ne prennent pas plus de la moitié : la fin de la session est ce qui se résume.
@@ -32,8 +31,9 @@ export type CondenseTurn = {
   role: TurnRole;
   ts: Date;
   text: string;
-  // Un tour `user` que l'utilisateur n'a pas écrit : rapport de sous-agent, notification de tâche, message d'un agent.
-  injecte?: boolean;
+  // `turns.injecte` : un tour `user` que l'utilisateur n'a pas écrit (rapport de sous-agent, notification de tâche,
+  // message d'un agent) vaut true, un tour tapé par lui false, un tour capté avant la marque null.
+  injecte: boolean | null;
 };
 export type Condense = { texte: string; preuves: Set<string> };
 
@@ -91,10 +91,12 @@ export function condenseSession(input: { faits: CondenseFacts; turns: CondenseTu
   for (let i = turns.length - 1; i >= 0; i -= 1) {
     const turn = turns[i];
     if (!turn) continue;
-    const user = turn.role === 'user' && !turn.injecte;
+    const user = turn.role === 'user' && turn.injecte !== true;
+    const proof = user && turn.injecte === false;
     const tag = `<tour${dataAttributes([
       ['id', turn.id],
       ['de', user ? 'utilisateur' : 'agent'],
+      ['preuve', proof ? 'oui' : undefined],
       ['date', turn.ts.toISOString()],
     ])}>`;
     const body = escapeData(turn.text);
@@ -102,7 +104,7 @@ export function condenseSession(input: { faits: CondenseFacts; turns: CondenseTu
     if (room <= 0) break;
     kept.unshift(`${tag}${body.slice(-room).toWellFormed()}${TURN_CLOSE}`);
     used += tag.length + Math.min(body.length, room) + TURN_CLOSE.length + 1;
-    if (user) preuves.add(turn.id);
+    if (proof) preuves.add(turn.id);
     if (body.length > room) break;
   }
 

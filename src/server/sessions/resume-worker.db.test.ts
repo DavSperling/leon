@@ -138,7 +138,8 @@ async function arrived(sourceId: string, ago: number) {
 }
 
 // Un tour capté de plus, arrivé il y a `ago` (à l'instant par défaut), daté après le précédent : deux tours de la même
-// milliseconde se trieraient par leur uuid (resume-worker.ts lit `ts, created_at, id`).
+// milliseconde se trieraient par leur uuid (resume-worker.ts lit `ts, created_at, id`). `injecte` : sa marque (T43),
+// inconnue par défaut, comme celle des tours captés avant elle.
 let tick = 0;
 async function addTurn(
   owner: TenantContext,
@@ -146,6 +147,7 @@ async function addTurn(
   text: string,
   role: 'user' | 'assistant' = 'user',
   ago = 0,
+  injecte: boolean | null = null,
 ) {
   const [row] = await adminDb
     .insert(turns)
@@ -159,6 +161,7 @@ async function addTurn(
       captureMode: 'file',
       acl: [owner.userId],
       createdAt: new Date(Date.now() - ago),
+      injecte,
     })
     .returning({ id: turns.id });
   return row?.id ?? '';
@@ -501,20 +504,25 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toHaveLength(1);
   });
 
-  // Tant que la capture ne marque pas les tours `user` injectés (T43), aucun tour ne prouve une `[décision]` : une
-  // notification de tâche ou le rapport d'un sous-agent, captés en tour `user`, ne passent pas pour l'utilisateur.
-  it('liste blanche : seuls les types connus et les décisions prouvées par une PR ou un commit restent, les relations viennent des faits', async () => {
+  // Seul un tour `user` marqué tapé par la personne (injecte = false, T43) prouve une `[décision]`, avec une PR ou un
+  // commit : ni une notification de tâche ou le rapport d'un sous-agent, marqués injectés, ni un tour sans la marque.
+  it('liste blanche : seuls les types connus et les décisions prouvées par un tour tapé, une PR ou un commit restent, les relations viennent des faits', async () => {
     const { paul } = await team();
     const seeded = await session(paul, {
       metadata: { faits: facts({ branche: 'paul/[secret masqué]' }) },
     });
-    const [userTurn, agentTurn] = seeded.turnIds;
+    const [userTurn, agentTurn, unknownTurn] = seeded.turnIds;
+    await adminDb
+      .update(turns)
+      .set({ injecte: false })
+      .where(eq(turns.id, userTurn ?? ''));
     const injected = await addTurn(
       paul,
       seeded.sourceId,
       '<task-notification>Le sous-agent a fini : passer à Sonnet.</task-notification>',
       'user',
       20 * MINUTE,
+      true,
     );
     const llm = answer(
       [
@@ -533,6 +541,7 @@ describe('summarizeSession', () => {
         '- [décision] la PR suffit (source: acme/leon#110)',
         '- [décision] le commit suffit (source: 1a2b3c4)',
         `- [décision] passer à Sonnet (source: ${injected})`,
+        `- [décision] garder MySQL (source: ${unknownTurn})`,
         '## Autre titre',
         '- [question] garder la file ?',
       ].join('\n'),
@@ -550,6 +559,7 @@ describe('summarizeSession', () => {
         '- commit [[1a2b3c4]]',
         '- [en-cours] écrire les tests',
         '- [prochaine-étape] brancher l’indexation',
+        `- [décision] garder Haiku (source: ${userTurn})`,
         '- [décision] la PR suffit (source: acme/leon#110)',
         '- [décision] le commit suffit (source: 1a2b3c4)',
         '- [question] garder la file ?',

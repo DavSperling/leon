@@ -48,11 +48,10 @@ import { linkPrs } from './start-context';
 //   ni dans le report, ni dans le condensé suivant, ni dans le point du matin (gather.ts). Il est à son auteur seul.
 // - La réponse passe par la liste blanche (D8 amendée) : « ## Où j'en suis » et les types de la passation, une
 //   `[décision]` seulement si sa source est un id vérifié du condensé (D23) ; les relations viennent des faits.
+// - Un tour `user` ne prouve une `[décision]` que marqué tapé par la personne (`turns.injecte` false, T43) : un tour
+//   injecté entre au condensé comme l'agent, un tour capté avant la marque comme l'utilisateur, sans rien prouver.
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
-// shortcut: la capture ne marque pas encore les tours `user` injectés (T43) : en attendant, aucun tour ne prouve une
-// `[décision]`, seulement une PR ou un commit du condensé (D23, D36). Quand `turns.injecte` existe (lot 12), passer
-// `injecte` à condenseSession et garder ses preuves telles quelles.
 // shortcut: le retrait (`leon retirer-crochets`) ne se fait que sur le poste ; l'usage relu ici est celui du dernier
 // envoi de faits (`metadata.usages`), et cet envoi doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel
 // comme à l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais
@@ -90,6 +89,7 @@ type TailRow = {
   id: string;
   external_id: string;
   role: TurnRole;
+  injecte: boolean | null;
   epoch: string;
   text: string;
   arrived_epoch: string;
@@ -124,10 +124,10 @@ async function readSession(
   // La fin des tours, sans les résumés, en CONDENSE_MAX_CHARS caractères au plus (le condensé n'en garde pas plus) :
   // une session de 5 000 tours n'est pas lue en entier. `arrived` : le dernier tour capté, sur toute la session.
   const { rows } = await tx.execute<TailRow>(sql`
-    select id, external_id, role, extract(epoch from ts) as epoch, text,
+    select id, external_id, role, injecte, extract(epoch from ts) as epoch, text,
       extract(epoch from arrived) as arrived_epoch
     from (
-      select t.id, t.external_id, t.role, t.ts, t.created_at, t.text,
+      select t.id, t.external_id, t.role, t.injecte, t.ts, t.created_at, t.text,
         sum(char_length(t.text)) over (order by t.ts desc, t.created_at desc, t.id desc) as running,
         max(t.created_at) over () as arrived
       from turns t
@@ -142,6 +142,7 @@ async function readSession(
     role: row.role,
     ts: epochToDate(row.epoch),
     text: row.text,
+    injecte: row.injecte,
   }));
   const last = turns.at(-1);
   if (!last || last.id === source.dernier) return null;
@@ -300,10 +301,7 @@ export async function summarizeSession(
   }
   const condense = condenseSession({ faits: read.condenseFacts, turns: read.turns });
   const answer = await askModel(llm, condense);
-  // Sans la marque des tours injectés, seules les PR et les commits prouvent (voir le shortcut en tête).
-  const turnIds = new Set(read.turns.map((turn) => turn.id));
-  const preuves = new Set([...condense.preuves].filter((id) => !turnIds.has(id)));
-  const texte = isNothing(answer) ? null : filterResume(answer, preuves, read.faits);
+  const texte = isNothing(answer) ? null : filterResume(answer, condense.preuves, read.faits);
   const runId = await withTenant(ctx, (tx) => writeResume(tx, ctx, job.sourceId, read.last, texte));
   if (runId === null) return texte === null ? 'rien' : 'sans-objet';
   await enqueueIndexing(ctx, runId);

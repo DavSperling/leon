@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { type Context, Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie';
 import { csrf } from 'hono/csrf';
 import { z } from 'zod';
@@ -554,12 +555,19 @@ async function pipedreamReturnHandler(c: Context, deps: OAuthRoutesDeps): Promis
   );
 }
 
+const START_BODY_MAX_BYTES = 64 * 1024;
+
 export function createOAuthRoutes(deps: OAuthRoutesDeps): Hono {
   const routes = new Hono();
   // Un lien piégé ne doit pas brancher un outil à l'insu de l'utilisateur : seul un formulaire
   // posté depuis Leon démarre le déroulé.
   const sameOrigin = csrf({ origin: new URL(env.BETTER_AUTH_URL).origin });
-  routes.post('/:provider/debut', sameOrigin, (c) => startHandler(c, deps));
+  // Le formulaire tient en quelques Ko : sans plafond, sa lecture prendrait n'importe quelle taille en mémoire.
+  const smallForm = bodyLimit({
+    maxSize: START_BODY_MAX_BYTES,
+    onError: (c) => c.text('Request too large', 413),
+  });
+  routes.post('/:provider/debut', sameOrigin, smallForm, (c) => startHandler(c, deps));
   // Avant `/:app/retour`, qui la prendrait pour une appli OAuth.
   routes.get('/pipedream/retour', (c) => pipedreamReturnHandler(c, deps));
   routes.get('/:app/retour', (c) => returnHandler(c, deps));

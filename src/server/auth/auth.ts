@@ -4,10 +4,12 @@ import { nextCookies } from 'better-auth/next-js';
 import { oneTap } from 'better-auth/plugins/one-tap';
 import { organization } from 'better-auth/plugins/organization';
 import { twoFactor } from 'better-auth/plugins/two-factor';
+import { eq } from 'drizzle-orm';
 import { createTranslator } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { DEFAULT_LOCALE, type Locale, localeOf } from '@/i18n/request';
-import { pool } from '@/server/db/client';
+import { db, pool } from '@/server/db/client';
+import { ssoProviders } from '@/server/db/schema/auth';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
 import { firstOrganizationId } from './tenant-context';
@@ -103,6 +105,20 @@ function sendAuthEmailDetached(email: string, url: string, copy: EmailCopy, logK
     .catch((error) => logError(logKey, error));
 }
 
+// Le SSO d'un espace ne vaut que pour les adresses de son domaine prouvé et de ses sous-domaines. Sinon Better Auth
+// tient seulement le fournisseur pour « non fiable » et crée quand même le compte d'une adresse d'autrui : son vrai
+// titulaire ne pourrait plus s'inscrire, et le fournisseur de l'espace garderait l'accès à ce compte.
+async function outsideSsoDomain(providerId: string, email: string | undefined): Promise<boolean> {
+  const [provider] = await db
+    .select({ domain: ssoProviders.domain })
+    .from(ssoProviders)
+    .where(eq(ssoProviders.providerId, providerId));
+  if (!provider || !email?.includes('@')) return true;
+  const host = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+  const domain = provider.domain.toLowerCase();
+  return host !== domain && !host.endsWith(`.${domain}`);
+}
+
 export const auth = betterAuth({
   appName: 'Leon',
   baseURL: env.BETTER_AUTH_URL,
@@ -112,6 +128,17 @@ export const auth = betterAuth({
   // Jetons Google et Microsoft chiffrés en base (clé BETTER_AUTH_SECRET) : celui d'un administrateur peut lire
   // l'annuaire de son entreprise (import de l'organigramme, annuaire.ts). Un jeton déjà enregistré en clair reste lu.
   account: { encryptOAuthTokens: true },
+  // Better Auth l'appelle à la création du compte, à sa liaison et à chaque connexion par un fournisseur ; le SSO
+  // seul est contrôlé ici.
+  user: {
+    validateUserInfo: async ({ user, source }) =>
+      source.sso && (await outsideSsoDomain(source.sso.providerId, user.email))
+        ? {
+            error: 'email_domain_mismatch',
+            errorDescription: 'Email address outside the SSO domain',
+          }
+        : undefined,
+  },
   // Un compte existant (même adresse) n'est relié à Google, Microsoft ou un SSO que si les deux côtés ont vérifié
   // l'adresse (défaut de Better Auth, requireLocalEmailVerified) : un compte créé avec l'adresse d'autrui, jamais
   // vérifié, ne reçoit pas la connexion de son vrai titulaire.
@@ -171,6 +198,12 @@ export const auth = betterAuth({
     '/sso/verify-domain',
     // Google One Tap : le jeton de Google passe par une server action (oneTapAction), comme les autres débuts.
     '/one-tap/callback',
+    // Les jetons Google et Microsoft de la personne, dont celui qui lit l'annuaire de l'entreprise : jamais par HTTP,
+    // où une session volée suffirait à les emporter. Seul l'import de l'organigramme les lit, côté serveur.
+    '/get-access-token',
+    '/refresh-token',
+    '/list-accounts',
+    '/account-info',
   ],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {

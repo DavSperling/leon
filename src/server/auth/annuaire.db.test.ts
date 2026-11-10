@@ -5,6 +5,7 @@ import { reportingLines } from '@/server/db/schema/organisation';
 import { adminDb } from '@/test/db';
 import { dropTeams, emailOf, newTeam } from '@/test/seed-indexed';
 import { applyImport, type Person, previewImport } from './annuaire';
+import { auth } from './auth';
 import { deleteAccount } from './delete-account';
 import { setManager } from './organisation';
 import type { TenantContext } from './tenant-context';
@@ -63,6 +64,26 @@ const lines = async (tenantId: string) =>
         .where(eq(reportingLines.tenantId, tenantId))
     ).map((row) => [row.member, row.manager]),
   );
+
+describe("le jeton qui lit l'annuaire", () => {
+  it('ne sort jamais par HTTP : les routes des jetons de Better Auth sont fermées', async () => {
+    for (const [method, path] of [
+      ['POST', '/get-access-token'],
+      ['POST', '/refresh-token'],
+      ['GET', '/list-accounts'],
+      ['GET', '/account-info'],
+    ] as const) {
+      const response = await auth.handler(
+        new Request(`http://localhost:3000/api/auth${path}`, {
+          method,
+          headers: { 'content-type': 'application/json', origin: 'http://localhost:3000' },
+          ...(method === 'POST' ? { body: '{}' } : {}),
+        }),
+      );
+      expect(response.status, path).toBe(404);
+    }
+  });
+});
 
 describe("import de l'organigramme", () => {
   it("montre l'aperçu sans rien écrire, puis l'écrit", async () => {

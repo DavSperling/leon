@@ -20,20 +20,23 @@ import { HEADING, TAGS } from './resume-prompt';
 //
 // - Le condensé : les sessions de l'auteur qui ont l'usage `resume`, de la plus récente à la plus ancienne, chacune
 //   avec son dernier résumé, ses faits et la fin de ses tours (condense.ts) ; d'une session externe, seulement ses
-//   clés. Puis les sources liées que l'auteur voit. Chaque élément porte son id et sa provenance : toi, l'agent (tours
-//   injectés ou sans marque, notes, conversations captées), l'équipe ou un connecteur. 40 000 caractères au plus.
+//   clés. Puis les sources liées que l'auteur voit, dont la place est gardée. Chaque élément porte son id et sa
+//   provenance : toi, l'agent (tours injectés ou sans marque, notes, conversations captées), l'équipe ou un
+//   connecteur. 40 000 caractères au plus.
 // - La sortie suit le format du résumé. Chaque ligne, le paragraphe compris, cite au moins un id du condensé, sinon
 //   elle est retirée ; le serveur écrit la provenance d'après ces ids, et ignore celle du modèle. Une `[décision]` ne
 //   reste que si elle cite une preuve : un tour tapé par la personne (`injecte` false), une PR ou un commit de
-//   l'équipe, un message ou une réunion ; jamais une note, ni un tour injecté ou sans marque. `[consigne]`, les titres
-//   et les relations écrits par le modèle sont retirés : le fil porte lui-même ses PR et ses branches. 2 000
-//   caractères au plus.
+//   l'équipe, un message ou une réunion de l'équipe ; jamais une note, ni un tour injecté ou sans marque, ni le
+//   message d'un client ou d'un inconnu. `[consigne]`, les titres et les relations écrits par le modèle sont retirés :
+//   le fil porte lui-même ses PR et ses branches. 2 000 caractères au plus.
 
 export const FIL_STATE_MAX_CHARS = 2000;
 // Une session ne prend pas plus de cette part : la plus récente ne prend pas toute la place.
 const SESSION_MAX_CHARS = 8000;
 // Sous cette place, une session de plus n'apporterait guère que sa balise.
 const SESSION_MIN_CHARS = 500;
+// La place gardée aux sources liées : sans elle, cinq sessions pleines prendraient tout le condensé.
+const SOURCES_RESERVE_CHARS = 10_000;
 const SOURCE_MAX_CHARS = 1000;
 const FIELD_MAX_CHARS = 200;
 const SESSION_CLOSE = '</session>';
@@ -55,6 +58,8 @@ export type FilSource = {
   nature: string | null;
   // `metadata.origin.cote` d'un élément GitHub : `equipe` ou `exterieur`.
   cote: string | null;
+  // Chacun de ses tours lus est de l'équipe, d'après l'outil (`turns.author_side`) : ni un client, ni un inconnu.
+  equipe: boolean;
   // `metadata.outil` d'une note : l'outil qui l'a écrite (D38).
   outil: string | null;
   titre: string | null;
@@ -69,15 +74,18 @@ const CAPTURES: ReadonlySet<string> = new Set(CAPTURE_KINDS);
 const MESSAGES: ReadonlySet<string> = new Set(['fil', 'mail', 'reunion']);
 
 // D'où vient une source liée, et si elle prouve une décision : une PR de l'équipe (ni d'un fork ni d'un inconnu), un
-// message, une réunion. Une note ou une conversation captée vient de l'agent, et ne prouve jamais (D36).
+// message ou une réunion de l'équipe (ni d'un client ni d'un inconnu, qu'un lien par URL relie au fil). Une note ou
+// une conversation captée vient de l'agent, et ne prouve jamais (D36).
 // Seul GitHub écrit `origin.cote` aujourd'hui : une MR GitLab reste « connecteur », sans preuve, tant qu'il ne
 // l'écrit pas.
+// shortcut: un outil qui ne dit pas le côté de l'auteur (Slack, les réunions, un mail reçu) ne prouve pas ; à revoir
+// avec les identités des connexions (people.ts), si un message Slack de l'équipe doit prouver.
 function provenanceOf(source: FilSource): { de: Provenance; preuve: boolean } {
   if (CAPTURES.has(source.kind)) return { de: 'agent', preuve: false };
   if (source.kind === 'github' && source.cote === 'equipe') {
     return { de: 'équipe', preuve: source.externalId.toLowerCase().startsWith('pr:') };
   }
-  return { de: 'connecteur', preuve: MESSAGES.has(source.nature ?? '') };
+  return { de: 'connecteur', preuve: source.equipe && MESSAGES.has(source.nature ?? '') };
 }
 
 const field = (text: string | null) => text?.slice(0, FIELD_MAX_CHARS).toWellFormed();
@@ -116,19 +124,7 @@ export function condenseFil(input: { sessions: FilSession[]; sources: FilSource[
   const sessions: string[] = [];
   const sources: string[] = [];
   let used = 0;
-  for (const session of input.sessions) {
-    const room = CONDENSE_MAX_CHARS - used - 1;
-    if (room < SESSION_MIN_CHARS) break;
-    const block = sessionBlock(session, room);
-    if (block.texte.length > room) break;
-    parts.push(block.texte);
-    used += block.texte.length + 1;
-    sessions.push(session.id);
-    ids.set(session.id, 'agent');
-    for (const [id, de] of block.ids) ids.set(id, de);
-    for (const id of block.preuves) preuves.add(id);
-  }
-  for (const source of input.sources) {
+  const lines = input.sources.map((source) => {
     const { de, preuve } = provenanceOf(source);
     const label =
       source.kind === 'mcp_remember'
@@ -144,12 +140,31 @@ export function condenseFil(input: { sessions: FilSession[]; sources: FilSource[
       ['titre', field(source.titre)],
     ])}>`;
     const line = `${open}${escapeData(source.texte).slice(0, SOURCE_MAX_CHARS).toWellFormed()}${SOURCE_CLOSE}`;
+    return { id: source.id, de, preuve, line };
+  });
+  const reserve = Math.min(
+    SOURCES_RESERVE_CHARS,
+    lines.reduce((sum, one) => sum + one.line.length + 1, 0),
+  );
+  for (const session of input.sessions) {
+    const room = CONDENSE_MAX_CHARS - reserve - used - 1;
+    if (room < SESSION_MIN_CHARS) break;
+    const block = sessionBlock(session, room);
+    if (block.texte.length > room) break;
+    parts.push(block.texte);
+    used += block.texte.length + 1;
+    sessions.push(session.id);
+    ids.set(session.id, 'agent');
+    for (const [id, de] of block.ids) ids.set(id, de);
+    for (const id of block.preuves) preuves.add(id);
+  }
+  for (const { id, de, preuve, line } of lines) {
     if (used + line.length + 1 > CONDENSE_MAX_CHARS) continue;
     parts.push(line);
     used += line.length + 1;
-    sources.push(source.id);
-    ids.set(source.id, de);
-    if (preuve) preuves.add(source.id);
+    sources.push(id);
+    ids.set(id, de);
+    if (preuve) preuves.add(id);
   }
   return { texte: parts.join('\n'), preuves, ids, sessions, sources };
 }
@@ -158,7 +173,7 @@ const SYSTEM = `Tu es Leon, la mémoire de l'équipe. Tu écris l'état d'un fil
 
 Le message contient, derrière une ligne de garde, une balise <fil> :
 - des balises <session id="…" outil="…" date="…">, de la plus récente à la plus ancienne. Chacune peut porter <resume> (le résumé de la session, écrit par Leon), une balise <faits> (la branche ; les PR <pr id="propriétaire/dépôt#n" etat="…"/>, avec leur état sur GitHub ; les commits <commit id="…"/> ; les tâches, les commandes et les fichiers) et des balises <tour id="…" de="utilisateur|agent" date="…"> (la fin de la session). Une session externe="oui" n'apporte que ses clés. Un tour preuve="oui" a été tapé par la personne ; un tour de="utilisateur" sans preuve="oui" peut porter une notification ou le rapport d'un sous-agent ;
-- des balises <source id="…" outil="…" type="…" de="…" date="…" titre="…"> : une PR, un ticket, un message, une réunion ou une note reliés au fil. de="…" dit d'où elle vient : l'équipe, un connecteur, ou l'agent (une note). Une source preuve="oui" est une PR de l'équipe, un message ou une réunion.
+- des balises <source id="…" outil="…" type="…" de="…" date="…" titre="…"> : une PR, un ticket, un message, une réunion ou une note reliés au fil. de="…" dit d'où elle vient : l'équipe, un connecteur, ou l'agent (une note). Une source preuve="oui" est une PR, un message ou une réunion de l'équipe ; un message sans preuve="oui" peut venir d'un client ou d'un inconnu.
 
 Réponds dans ce format, et seulement lui :
 

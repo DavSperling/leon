@@ -57,7 +57,7 @@ import {
 // partir au modèle de l'état les sessions déjà envoyées. instrumentation-node.ts le démarre donc sans modèle ; la PR 3b
 // lui donne le modèle, avec l'appel de la route et le rattrapage des retraits faits avant elle.
 // shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
-// la colonne vient avec T44, qui les y ajoute.
+// la colonne vient avec T44, qui les y ajoute (T44 amendé le 10/11).
 
 export type FilStateOutcome = 'modele' | 'serveur' | 'inchange' | 'depassee' | 'sans-objet';
 
@@ -65,8 +65,10 @@ const FIL_STATE_CONCURRENCY = 2;
 // Borne le texte ET la réflexion du modèle (llm.ts) : 2 000 caractères en prennent environ 700, l'effort low peu.
 const FIL_MAX_TOKENS = 6000;
 const FIL_TIMEOUT_MS = 60_000;
-// Les sessions `resume` les plus récentes qu'on lit pour le condensé, au plus : il n'en garde pas davantage.
+// Les sessions `resume` et les sources liées les plus récentes qu'on lit pour le condensé, au plus : il n'en garde pas
+// davantage (une source y prend environ 1 250 caractères sur 40 000).
 const CONDENSE_SESSIONS_MAX = 20;
+const CONDENSE_SOURCES_MAX = 40;
 // La fin des tours d'une session, et le début d'une source liée, lus au plus (thread-state.ts n'en garde pas plus).
 const SESSION_TAIL_CHARS = 8000;
 const SOURCE_TURNS_MAX = 20;
@@ -80,7 +82,6 @@ type SessionRow = {
   faits: unknown;
   resume: boolean;
   last_epoch: string;
-  resume_texte: string | null;
   // Le numéro de son dernier résumé (`metadata.resume.tour`), null sans résumé : `etat_session` le garde.
   resume_tour: string | null;
   nouveau: boolean;
@@ -95,6 +96,7 @@ type SourceRow = {
   outil: string | null;
   last_epoch: string | null;
   texte: string | null;
+  equipe: boolean;
 };
 type TailRow = {
   id: string;
@@ -109,7 +111,12 @@ type EtatSession = Record<string, string>;
 type Read = {
   list: Parameters<typeof deterministicState>[0];
   // Le condensé à faire, quand un résumé est nouveau depuis le dernier état.
-  model: { input: { sessions: FilSession[]; sources: FilSource[] }; tours: EtatSession } | null;
+  // `prs` : les sources GitHub des PR dont l'état entre au condensé, des entrées de la version (D33).
+  model: {
+    input: { sessions: FilSession[]; sources: FilSource[] };
+    tours: EtatSession;
+    prs: string[];
+  } | null;
 };
 
 const ids = (fil: Fil, name: 'sessions' | 'liees') =>
@@ -147,7 +154,8 @@ async function readTail(
 }
 
 // Le fil de l'auteur, hors absorbé, ses sessions de code et ses sources liées qu'il voit ; avec `withModel`, et un
-// résumé nouveau, de quoi faire le condensé.
+// résumé nouveau, de quoi faire le condensé. Les textes (résumés, sources liées) ne se lisent que pour lui : l'état
+// déterministe n'a besoin que des ids.
 async function readFil(
   tx: Tx,
   ctx: TenantContext,
@@ -165,7 +173,7 @@ async function readFil(
   const pris = (row.metadata.etat_session as { tours?: unknown } | undefined)?.tours ?? {};
   const { rows: sessions } = await tx.execute<SessionRow>(sql`
     select s.id, s.kind, s.metadata->'faits' as faits, ${USAGE_RESUME} as resume,
-      extract(epoch from ${LAST_TS_SQL}) as last_epoch, r.text as resume_texte,
+      extract(epoch from ${LAST_TS_SQL}) as last_epoch,
       case when r.id is not null then s.metadata->'resume'->>'tour' end as resume_tour,
       (r.id is not null
         and (s.metadata->'resume'->>'tour') is distinct from (${JSON.stringify(pris)}::jsonb ->> s.id::text)) as nouveau
@@ -177,15 +185,8 @@ async function readFil(
       and s.id = any(${textArray(ids(fil, 'sessions'))}::uuid[])
     order by ${LAST_TS_SQL} desc, s.id`);
   // Une note ou une conversation captée : seulement celle de l'auteur, comme la liaison (thread-links.ts).
-  const { rows: linked } = await tx.execute<SourceRow>(sql`
-    select s.id, s.kind, s.external_id, s.title, s.metadata->>'nature' as nature,
-      s.metadata->'origin'->>'cote' as cote, s.metadata->>'outil' as outil,
-      extract(epoch from ${LAST_TS_SQL}) as last_epoch,
-      (select string_agg(x.text, E'\\n' order by x.ts, x.id) from (
-        select t.id, t.ts, left(t.text, ${SOURCE_TEXT_CHARS}) as text from turns t
-        where t.tenant_id = s.tenant_id and t.source_id = s.id
-        order by t.ts, t.id limit ${SOURCE_TURNS_MAX}) x) as texte
-    from sources s
+  const { rows: linked } = await tx.execute<{ id: string }>(sql`
+    select s.id from sources s
     where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(ids(fil, 'liees'))}::uuid[])
       and s.kind = any(${textArray([...LINKED_KINDS])})
       and (s.kind <> all(${textArray(CAPTURE_KINDS)}) or s.owner_user_id = ${ctx.userId})
@@ -210,6 +211,12 @@ async function readFil(
   );
 
   const kept = withResume.slice(0, CONDENSE_SESSIONS_MAX);
+  const { rows: resumes } = await tx.execute<{ id: string; text: string }>(sql`
+    select s.id, r.text from sources s
+    join turns r on r.tenant_id = s.tenant_id and r.source_id = s.id
+      and r.external_id = ${RESUME_EXTERNAL_PREFIX} || (s.metadata->'resume'->>'tour')
+    where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(kept.map((one) => one.id))}::uuid[])`);
+  const resumeOf = new Map(resumes.map((one) => [one.id, one.text]));
   const project = typeof row.metadata.project === 'string' ? row.metadata.project : '';
   const states = await linkPrs(
     tx,
@@ -217,6 +224,14 @@ async function readFil(
     project,
     kept.map((one): SessionFacts => one.faits),
   );
+  // Toutes les copies visibles d'une PR dont l'état entre au condensé : l'une rendue privée (0048), l'état se cache.
+  const prKeys = states
+    .flat()
+    .flatMap((pr) => (pr.etat === null ? [] : [`pr:${pr.repo}#${pr.numero}`.toLowerCase()]));
+  const { rows: prSources } = await tx.execute<{ id: string }>(sql`
+    select s.id from sources s
+    where s.tenant_id = ${ctx.tenantId} and s.kind = 'github'
+      and lower(s.external_id) = any(${textArray([...new Set(prKeys)])})`);
   const input: FilSession[] = [];
   for (const [index, one] of kept.entries()) {
     input.push({
@@ -231,17 +246,34 @@ async function readFil(
           etat: pr.etat,
         })),
       },
-      resume: one.resume_texte,
+      resume: resumeOf.get(one.id) ?? null,
       turns: one.faits.externe ? [] : await readTail(tx, ctx, one.id, SESSION_TAIL_CHARS),
     });
   }
-  const sources = linked.map(
+  // `equipe` : chacun des tours lus est de l'équipe d'après l'outil ; un tour sans côté (l'outil ne le dit pas) non.
+  const { rows: linkedRows } = await tx.execute<SourceRow>(sql`
+    select s.id, s.kind, s.external_id, s.title, s.metadata->>'nature' as nature,
+      s.metadata->'origin'->>'cote' as cote, s.metadata->>'outil' as outil,
+      extract(epoch from ${LAST_TS_SQL}) as last_epoch, x.texte, x.equipe
+    from sources s
+    cross join lateral (
+      select left(string_agg(lus.text, E'\\n' order by lus.ts, lus.id), ${SOURCE_TEXT_CHARS}) as texte,
+        coalesce(bool_and(lus.author_side is not distinct from 'team'), false) as equipe
+      from (
+        select t.id, t.ts, left(t.text, ${SOURCE_TEXT_CHARS}) as text, t.author_side from turns t
+        where t.tenant_id = s.tenant_id and t.source_id = s.id
+        order by t.ts, t.id limit ${SOURCE_TURNS_MAX}) lus) x
+    where s.tenant_id = ${ctx.tenantId}
+      and s.id = any(${textArray(list.sources.slice(0, CONDENSE_SOURCES_MAX))}::uuid[])
+    order by ${LAST_TS_SQL} desc, s.id`);
+  const sources = linkedRows.map(
     (one): FilSource => ({
       id: one.id,
       kind: one.kind,
       externalId: one.external_id,
       nature: one.nature,
       cote: one.cote,
+      equipe: one.equipe,
       outil: one.outil,
       titre: one.title,
       date: one.last_epoch === null ? null : epochToDate(one.last_epoch),
@@ -250,7 +282,7 @@ async function readFil(
   );
   return {
     list,
-    model: { input: { sessions: input, sources }, tours },
+    model: { input: { sessions: input, sources }, tours, prs: prSources.map((one) => one.id) },
   };
 }
 
@@ -270,7 +302,19 @@ async function askModel(llm: Llm, condense: FilCondense): Promise<string> {
   return answer;
 }
 
-// L'état du modèle, sous le verrou du fil (lockTarget, D34), dans une transaction : l'usage `resume` des sessions du
+// Le verrou du fil (lockTarget, D34), puis `absorbe_par` relu sous lui, comme la liaison (thread-links.ts) : un fil
+// absorbé par une fusion validée pendant l'appel au modèle ne change plus.
+async function lockFil(tx: Tx, ctx: TenantContext, filId: string): Promise<boolean> {
+  if (!(await lockTarget(tx, ctx, filId))) return false;
+  const {
+    rows: [row],
+  } = await tx.execute<{ libre: boolean }>(sql`
+    select s.metadata->>'absorbe_par' is null as libre from sources s
+    where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
+  return row?.libre === true;
+}
+
+// L'état du modèle, sous le verrou du fil (lockFil, D34), dans une transaction : l'usage `resume` des sessions du
 // condensé relu, la version écrite en compare-and-set, puis `etat_session`. Sans rien de gardé, seul `etat_session`
 // avance (pas de second appel pour le même résumé), et rend null : l'appelant passe à l'état déterministe.
 async function writeModelState(
@@ -280,9 +324,9 @@ async function writeModelState(
   attendue: number,
   condense: FilCondense,
   kept: { texte: string; cites: string[] } | null,
-  tours: EtatSession,
+  model: { tours: EtatSession; prs: string[] },
 ): Promise<FilStateOutcome | null> {
-  if (!(await lockTarget(tx, ctx, filId))) return 'sans-objet';
+  if (!(await lockFil(tx, ctx, filId))) return 'sans-objet';
   const {
     rows: [still],
   } = await tx.execute<{ n: number }>(sql`
@@ -292,7 +336,7 @@ async function writeModelState(
       and s.id = any(${textArray(condense.sessions)}::uuid[]) and ${USAGE_RESUME}`);
   if (still?.n !== condense.sessions.length) return 'sans-objet';
   if (kept !== null) {
-    const entrees = [...condense.sessions, ...condense.sources];
+    const entrees = [...new Set([...condense.sessions, ...condense.sources, ...model.prs])];
     const written = await writeVersion(tx, ctx, {
       sourceId: filId,
       attendue,
@@ -309,7 +353,7 @@ async function writeModelState(
     if (typeof written !== 'object') return 'sans-objet';
   }
   await tx.execute(sql`update sources s set metadata = s.metadata
-      || jsonb_build_object('etat_session', jsonb_build_object('tours', ${JSON.stringify(tours)}::jsonb))
+      || jsonb_build_object('etat_session', jsonb_build_object('tours', ${JSON.stringify(model.tours)}::jsonb))
     where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
   return kept === null ? null : 'modele';
 }
@@ -329,24 +373,26 @@ export async function updateFilState(
     const condense = condenseFil(read.model.input);
     if (condense.sessions.length > 0) {
       const kept = filterFilState(await askModel(llm, condense), condense);
-      const { tours } = read.model;
+      const { model } = read;
       const written = await withTenant(ctx, (tx) =>
-        writeModelState(tx, ctx, job.sourceId, n, condense, kept, tours),
+        writeModelState(tx, ctx, job.sourceId, n, condense, kept, model),
       );
       if (written !== null) return written;
     }
   }
   const list = deterministicState(read.list);
   if (list.texte === '' || version?.texte === list.texte) return 'inchange';
-  const written = await withTenant(ctx, (tx) =>
-    writeVersion(tx, ctx, {
-      sourceId: job.sourceId,
-      attendue: n,
-      texte: list.texte,
-      entrees: list.entrees,
-      ecritPar: 'serveur',
-      motif: 'rangement',
-    }),
+  const written = await withTenant(ctx, async (tx) =>
+    (await lockFil(tx, ctx, job.sourceId))
+      ? writeVersion(tx, ctx, {
+          sourceId: job.sourceId,
+          attendue: n,
+          texte: list.texte,
+          entrees: list.entrees,
+          ecritPar: 'serveur',
+          motif: 'rangement',
+        })
+      : 'introuvable',
   );
   if (typeof written === 'object') return 'serveur';
   if (written === 'gardee') return 'inchange';

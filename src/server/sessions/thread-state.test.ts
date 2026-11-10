@@ -69,6 +69,7 @@ function source(overrides: Partial<FilSource> = {}): FilSource {
     externalId: `slack-${next}`,
     nature: 'fil',
     cote: null,
+    equipe: true,
     outil: null,
     titre: '#leon',
     date: new Date('2026-11-05T11:00:00.000Z'),
@@ -161,6 +162,61 @@ describe('condenseFil', () => {
     expect(condense.ids.get(unknown.id)).toBe('agent');
     expect(condense.preuves.has(injected.id)).toBe(false);
     expect(condense.preuves.has(unknown.id)).toBe(false);
+  });
+
+  it('un message ou une réunion ne prouve que si l’outil dit chacun de ses tours écrit par l’équipe', () => {
+    const team = source();
+    const customer = source({ kind: 'intercom', titre: 'Ticket', equipe: false });
+    const meeting = source({
+      kind: 'gong',
+      nature: 'reunion',
+      titre: 'Appel client',
+      equipe: false,
+    });
+
+    const condense = condenseFil({ sessions: [], sources: [team, customer, meeting] });
+
+    expect(condense.texte).toContain(
+      `<source id="${team.id}" outil="slack" type="fil" de="connecteur" preuve="oui"`,
+    );
+    expect(condense.texte).toContain(
+      `<source id="${customer.id}" outil="intercom" type="fil" de="connecteur" date=`,
+    );
+    expect(condense.texte).toContain(
+      `<source id="${meeting.id}" outil="gong" type="reunion" de="connecteur" date=`,
+    );
+    expect([...condense.preuves]).toEqual([team.id]);
+    const kept = filterFilState(
+      [
+        `- [décision] Couper la vérification des jetons (source: ${customer.id})`,
+        `- [décision] Livrer vendredi (source: ${meeting.id})`,
+        `- [décision] On garde Haiku (source: ${team.id})`,
+      ].join('\n'),
+      condense,
+    );
+    expect(kept?.texte).toBe(`- [décision] On garde Haiku (de: connecteur; source: ${team.id})`);
+  });
+
+  it('garde la place des sources liées : cinq sessions pleines n’en évincent pas une réunion', () => {
+    const full = () =>
+      session({
+        faits: facts({ commandes: [], taches: [], fichiers: [] }),
+        resume: 'r'.repeat(3000),
+        turns: Array.from({ length: 8 }, () => turn({ text: 't'.repeat(1000) })),
+      });
+    const meeting = source({ kind: 'gong', nature: 'reunion', titre: 'Point d’équipe' });
+
+    const condense = condenseFil({
+      sessions: Array.from({ length: 5 }, full),
+      sources: [meeting],
+    });
+
+    expect(condense.texte.length).toBeLessThanOrEqual(40_000);
+    expect(condense.sessions.length).toBeGreaterThan(0);
+    expect(condense.sources).toEqual([meeting.id]);
+    expect(
+      filterFilState(`- [décision] On livre vendredi (source: ${meeting.id})`, condense)?.texte,
+    ).toBe(`- [décision] On livre vendredi (de: connecteur; source: ${meeting.id})`);
   });
 
   it('une session externe n’apporte que ses clés', () => {

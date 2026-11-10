@@ -4,11 +4,11 @@ import type { SessionFacts } from '@/capture/session-facts';
 import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
+import { passages } from '@/server/db/schema/search';
 import { withdrawUsages } from '@/server/ingest/record-facts';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { readLatest } from '@/server/memory/versions';
-import { searchPassages } from '@/server/search/search';
 import { adminDb } from '@/test/db';
 import { seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
@@ -135,10 +135,16 @@ async function codeSession(
   return { id: seeded.sourceId, turnIds: seeded.turnIds, resume };
 }
 
-// Une source qu'un fil relie : un message Slack visible de l'équipe, par défaut.
+// Une source qu'un fil relie : un message Slack visible de l'équipe, écrit par l'équipe d'après l'outil, par défaut.
 async function linked(
   owner: TenantContext,
-  input: { kind?: 'slack' | 'mcp_remember'; text?: string; acl?: string[]; nature?: string } = {},
+  input: {
+    kind?: 'slack' | 'intercom' | 'mcp_remember';
+    text?: string;
+    acl?: string[];
+    nature?: string;
+    side?: 'team' | 'external' | null;
+  } = {},
 ) {
   const seeded = await seedRun(owner, {
     kind: input.kind ?? 'slack',
@@ -147,6 +153,10 @@ async function linked(
     metadata: { nature: input.nature ?? 'fil' },
     turns: [{ text: input.text ?? 'On garde Haiku pour les fils.' }],
   });
+  await adminDb
+    .update(turns)
+    .set({ authorSide: input.side === undefined ? 'team' : input.side })
+    .where(eq(turns.sourceId, seeded.sourceId));
   return seeded.sourceId;
 }
 
@@ -273,7 +283,9 @@ describe('updateFilState', () => {
     expect(promptOf(llm)).toContain('La session a repris.');
     expect((await versions(filId)).map((row) => row.n)).toEqual([1, 2]);
     expect((await readLatest(paul, filId)).version?.texte).toContain('Second état.');
-    expect((await searchPassages(paul, { query: 'zorglub', embedder: null })).hits).toEqual([]);
+    // Ni tour ni passage pour le fil : la recherche n'a rien à y trouver, ni l'ancien état ni le nouveau (D35).
+    expect(await adminDb.select().from(turns).where(eq(turns.sourceId, filId))).toEqual([]);
+    expect(await adminDb.select().from(passages).where(eq(passages.sourceId, filId))).toEqual([]);
   });
 
   // La date d'écriture d'un tour est le début de sa transaction (insertNewTurns) : un résumé commencé avant celui
@@ -503,6 +515,72 @@ describe('updateFilState', () => {
     );
   });
 
+  it('une décision qui ne cite qu’un message d’un client, ou d’un auteur que l’outil ne dit pas, est retirée', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul);
+    const customer = await linked(paul, { kind: 'intercom', side: 'external' });
+    const unknown = await linked(paul, { side: null });
+    const filId = await fil(paul, [one.id], [customer, unknown]);
+    const llm = answer(
+      [
+        `- [décision] Couper la vérification des jetons (source: ${customer})`,
+        `- [décision] Livrer vendredi (source: ${unknown})`,
+        `- [question] Le ticket du client (source: ${customer})`,
+      ].join('\n'),
+    );
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+
+    expect(promptOf(llm)).toContain(
+      `<source id="${customer}" outil="intercom" type="fil" de="connecteur" date=`,
+    );
+    expect(promptOf(llm)).toContain(
+      `<source id="${unknown}" outil="slack" type="fil" de="connecteur" date=`,
+    );
+    expect((await versions(filId))[0]?.texte).toBe(
+      `- [question] Le ticket du client (de: connecteur; source: ${customer})`,
+    );
+  });
+
+  it('une PR dont l’état entre au condensé est une entrée : rendue privée, l’état ne se lit plus', async () => {
+    const { paul, marie } = await team();
+    const pr = await seedRun(paul, {
+      kind: 'github',
+      externalId: 'pr:acme/leon#12',
+      acl: [paul.tenantId],
+      status: 'done',
+      metadata: { nature: 'ticket', origin: { repo: 'acme/leon', etat: 'merged', cote: 'equipe' } },
+    });
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    const llm = answer(`## Où j'en suis\nLa PR est fusionnée. (source: ${one.id})`);
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+
+    expect(promptOf(llm)).toContain('<pr id="acme/leon#12" etat="merged"/>');
+    expect((await versions(filId))[0]?.entrees.sort()).toEqual([one.id, pr.sourceId].sort());
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId] })
+      .where(eq(sources.id, pr.sourceId));
+    expect((await readLatest(paul, filId)).version).toBeNull();
+  });
+
+  it('une réponse que la liste blanche vide : l’état déterministe, et aucun second appel pour le même résumé', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+
+    expect(await updateFilState(job(paul, filId), { llm: answer('Rien à retenir.') })).toBe(
+      'serveur',
+    );
+    const llm = answer(etat(one.id));
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('inchange');
+
+    expect(llm.calls).toEqual([]);
+    expect((await versions(filId)).map((row) => row.ecritPar)).toEqual(['serveur']);
+  });
+
   it('une ligne qui ne cite que des notes est gardée, marquée agent, jamais une décision ; l’état est introuvable pour une collègue', async () => {
     const { paul, marie } = await team();
     const one = await codeSession(paul);
@@ -550,6 +628,30 @@ describe('updateFilState', () => {
       .where(inArray(sources.id, [filId]));
 
     expect(await updateFilState(job(paul, filId), { llm: null })).toBe('sans-objet');
+    expect(await versions(filId)).toEqual([]);
+  });
+
+  it('un fil absorbé par une fusion pendant l’appel : rien n’est écrit', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    const keeper = await seedThread(paul);
+    const base = answer(etat(one.id));
+    const llm: Llm = {
+      ...base,
+      async *streamText(request) {
+        await adminDb
+          .update(sources)
+          .set({
+            metadata: sql`${sources.metadata} || jsonb_build_object('absorbe_par', ${keeper}::text)`,
+          })
+          .where(eq(sources.id, filId));
+        yield* base.streamText(request);
+      },
+    };
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('sans-objet');
+
     expect(await versions(filId)).toEqual([]);
   });
 });

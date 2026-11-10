@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { PROJECT_INPUT_MAX_CHARS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
-import { recordReads } from '@/server/memory/read-log';
+import { type ReadTool, recordReads } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import {
   NATURE_NAMES_EN,
@@ -11,7 +11,7 @@ import {
   queryWithPerson,
   readToolFilters,
 } from '@/server/search/tool-filters';
-import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
+import { PAGE_MAX, PAGE_SIZE, type SearchPage } from '@/server/search/types';
 import { guarded } from './guarded';
 import { SearchOutputSchema } from './output-schemas';
 import { renderSearch, searchStructured } from './render';
@@ -95,6 +95,25 @@ export const SEARCH_FILTERS = [
 export const SEARCH_DESCRIPTION =
   "Searches the company's whole raw memory (AI conversations, tickets, pages, meetings, emails, files) by keywords and by meaning. Returns sources with their best passages, tool, title, date and link. Only returns what the user is allowed to see. To read a passage or a source: fetch.";
 
+// Note chaque passage rendu au journal (une source rendue sans passage : une ligne sans passage), puis retire de la page
+// les sources que Leon n'a pas pu noter, devenues invisibles entre-temps : comme `fetch`, elles ne sont pas rendues.
+// Partagé avec la route /chercher (read-routes.ts).
+export async function logHits(
+  ctx: TenantContext,
+  page: SearchPage,
+  journal: { tool: ReadTool; client: string; session?: string | null },
+): Promise<void> {
+  const logged = await recordReads(ctx, {
+    ...journal,
+    reads: page.hits.flatMap((hit) =>
+      hit.passages.length > 0
+        ? hit.passages.map((passage) => ({ sourceId: hit.sourceId, passageId: passage.passageId }))
+        : [{ sourceId: hit.sourceId }],
+    ),
+  });
+  page.hits = page.hits.filter((hit) => logged.has(hit.sourceId));
+}
+
 const refusal = (text: string) => ({
   isError: true as const,
   content: [{ type: 'text' as const, text }],
@@ -129,20 +148,7 @@ export function registerSearchTool(
         embedder: deps.embedder,
         now,
       });
-      const logged = await recordReads(ctx, {
-        tool: 'search',
-        client,
-        reads: result.hits.flatMap((hit) =>
-          hit.passages.length > 0
-            ? hit.passages.map((passage) => ({
-                sourceId: hit.sourceId,
-                passageId: passage.passageId,
-              }))
-            : [{ sourceId: hit.sourceId }],
-        ),
-      });
-      // Comme `fetch` : une source que Leon n'a pas pu noter (devenue invisible entre-temps) n'est pas rendue.
-      result.hits = result.hits.filter((hit) => logged.has(hit.sourceId));
+      await logHits(ctx, result, { tool: 'search', client });
       return {
         content: [{ type: 'text', text: renderSearch(result, pageNumber) }],
         structuredContent: searchStructured(result, pageNumber),

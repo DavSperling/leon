@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
 
-// Migration 0060 : turns.injecte, la marque des tours `user` que la personne n'a pas tapés (T43 du plan de la mémoire
+// Migration 0061 : turns.injecte, la marque des tours `user` que la personne n'a pas tapés (T43 du plan de la mémoire
 // à disposition). Nulle et sans défaut : un tour capté avant la marque reste « inconnu », jamais « tapé par la personne ».
 
 describe('turns.injecte', () => {

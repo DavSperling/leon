@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { adminPool } from '@/test/db';
 
-// Migration 0061 : appels_modele accepte l'étape `fil`, l'état d'un fil de travail écrit par Leon (T43, D23).
+// Migration 0062 : appels_modele accepte l'étape `fil`, l'état d'un fil de travail écrit par Leon (T43, D23).
 
 // Insère un appel de l'étape donnée, puis annule : le tableau des admins ne compte pas ces lignes d'essai.
 async function insertStep(step: string): Promise<void> {

@@ -1,10 +1,11 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, describe, expect, it, vi } from 'vitest';
-import type { SessionFacts } from '@/capture/session-facts';
+import { extractClaudeCodeFacts, type SessionFacts } from '@/capture/session-facts';
 import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
+import { readLog, sources, turns, versionsMemoire } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
+import { withTenant } from '@/server/db/with-tenant';
 import { withdrawUsages } from '@/server/ingest/record-facts';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type Llm, LlmError } from '@/server/llm/llm';
@@ -101,6 +102,7 @@ async function codeSession(
     externe?: boolean;
     tours?: Tour[];
     resume?: string | null;
+    faits?: SessionFacts;
   } = {},
 ) {
   const tours = input.tours ?? TOURS;
@@ -110,7 +112,7 @@ async function codeSession(
     status: 'done',
     metadata: {
       project: PROJECT,
-      faits: facts({ externe: input.externe ?? false }),
+      faits: input.faits ?? facts({ externe: input.externe ?? false }),
       usages: input.usages ?? ['resume'],
     },
     turns: tours.map((tour, index) => ({
@@ -712,6 +714,136 @@ describe('updateFilState', () => {
     expect(await updateFilState(job(paul, filId), { llm })).toBe('sans-objet');
 
     expect(await versions(filId)).toEqual([]);
+  });
+});
+
+// Les sources lues pendant les sessions du condensé (T44 ; D35, décision du 10/11) : entre le premier et le dernier tour
+// d'une session (ici 09:00, et 10:00 pour son résumé, le 05/11), à 10 minutes près, ou notées avec son id, elles
+// entrent aux entrées de l'état du modèle. Rendues invisibles, l'état ne se lit plus.
+describe('updateFilState : les sources lues pendant les sessions', () => {
+  const at = (iso: string) => new Date(iso);
+  const IN_WINDOW = at('2026-11-05T09:05:00.000Z');
+  // Une lecture au journal, comme recordReads l'écrit (ACL de la source), à la date voulue.
+  const read = async (
+    reader: TenantContext,
+    sourceId: string,
+    input: { tool?: string; when?: Date; session?: string | null; acl?: string[] } = {},
+  ) => {
+    await adminDb.insert(readLog).values({
+      tenantId: reader.tenantId,
+      userId: reader.userId,
+      client: 'cli',
+      tool: (input.tool ?? 'search') as 'search',
+      sourceId,
+      acl: input.acl ?? [reader.tenantId],
+      session: input.session ?? null,
+      at: input.when ?? IN_WINDOW,
+    });
+  };
+  const sessionExternalId = async (id: string) =>
+    (await adminDb.select({ id: sources.externalId }).from(sources).where(eq(sources.id, id)))[0]
+      ?.id ?? '';
+
+  it('les lectures de l’auteur dans la fenêtre de la session, de chaque outil qui rend du texte, entrent aux entrées', async () => {
+    const { paul, marie } = await team();
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    const lues: Record<string, string> = {};
+    for (const tool of ['search', 'fetch', 'thread', 'threads', 'versions', 'briefing']) {
+      lues[tool] = await linked(paul);
+      await read(paul, lues[tool] ?? '', { tool });
+    }
+    const early = await linked(paul);
+    await read(paul, early, { when: at('2026-11-05T08:49:00.000Z') });
+    const late = await linked(paul);
+    await read(paul, late, { when: at('2026-11-05T10:11:00.000Z') });
+    const edge = await linked(paul);
+    await read(paul, edge, { when: at('2026-11-05T10:10:00.000Z') });
+    const byMarie = await linked(marie);
+    await read(marie, byMarie);
+
+    expect(await updateFilState(job(paul, filId), { llm: answer(etat(one.id)) })).toBe('modele');
+
+    const [version] = await versions(filId);
+    expect(version?.entrees.sort()).toEqual([one.id, edge, ...Object.values(lues)].sort());
+  });
+
+  it('une lecture notée avec l’id de la session entre aussi, même hors de la fenêtre', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    const lue = await linked(paul);
+    await read(paul, lue, {
+      tool: 'thread',
+      when: at('2026-11-06T12:00:00.000Z'),
+      session: await sessionExternalId(one.id),
+    });
+
+    expect(await updateFilState(job(paul, filId), { llm: answer(etat(one.id)) })).toBe('modele');
+
+    expect((await versions(filId))[0]?.entrees.sort()).toEqual([one.id, lue].sort());
+  });
+
+  // Repris de T43 : une source lue par `leon search`, rendue privée par aligner_sources_github() (0048), avant que
+  // l'état s'écrive (le journal ne se lit plus sous RLS) ou après.
+  it.each(['avant', 'après'])(
+    'une source lue par `leon search` puis rendue privée %s l’écriture de l’état : l’état du modèle ne se lit plus',
+    async (moment) => {
+      const { paul, marie } = await team();
+      const perso = await seedRun(marie, {
+        kind: 'github',
+        externalId: 'pr:marie/perso#3',
+        acl: [marie.tenantId],
+        status: 'done',
+        metadata: { nature: 'ticket', origin: { repo: 'marie/perso', cote: 'equipe' } },
+      });
+      const one = await codeSession(paul);
+      const filId = await fil(paul, [one.id]);
+      await read(paul, perso.sourceId);
+      const privatize = () =>
+        withTenant(marie, (tx) => tx.execute(sql`select aligner_sources_github()`));
+
+      if (moment === 'avant') await privatize();
+      expect(await updateFilState(job(paul, filId), { llm: answer(etat(one.id)) })).toBe('modele');
+      if (moment === 'après') await privatize();
+
+      expect((await versions(filId))[0]?.entrees).toContain(perso.sourceId);
+      expect((await readLatest(paul, filId)).version).toBeNull();
+    },
+  );
+
+  // Repris de T43 : lire Leon ne rend pas la session externe (D36), son récit entre au condensé.
+  it('dans une session qui a lu `leon thread` et l’outil thread de Leon, les tours de l’utilisateur entrent au condensé, ceux de l’agent marqués', async () => {
+    const { paul } = await team();
+    const transcript = [
+      {
+        type: 'assistant',
+        message: {
+          content: [
+            {
+              type: 'tool_use',
+              id: 'b1',
+              name: 'Bash',
+              input: { command: '~/.leon/bin/leon thread' },
+            },
+            { type: 'tool_use', id: 'm1', name: 'mcp__leon__thread', input: { projet: PROJECT } },
+          ],
+        },
+      },
+    ]
+      .map((line) => JSON.stringify(line))
+      .join('\n');
+    const faits = extractClaudeCodeFacts(transcript, null, true);
+    expect(faits.externe).toBe(false);
+    const one = await codeSession(paul, { faits: { ...facts(), externe: faits.externe } });
+    const filId = await fil(paul, [one.id]);
+    const [typed, agent] = one.turnIds;
+    const llm = answer(etat(one.id));
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+
+    expect(promptOf(llm)).toContain(`<tour id="${typed}" de="utilisateur" preuve="oui"`);
+    expect(promptOf(llm)).toContain(`<tour id="${agent}" de="agent"`);
   });
 });
 

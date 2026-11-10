@@ -68,8 +68,9 @@ import {
 // envoyées par une CLI à jour partent encore au modèle de l'état (RESUME_LINES le dit). Rappeler la route pour chaque
 // connexion qui a reçu des faits avec `resume` le jour où un poste change de serveur ou d'organisation (T43 amendé le
 // 10/11).
-// shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
-// la colonne vient avec T44, qui les y ajoute (T44 amendé le 10/11).
+// - Les sources que l'auteur a lues pendant les sessions du condensé (D35, T44) entrent aux entrées de l'état du
+//   modèle, par la date ou par l'id de la session (sources_lues_pendant, 0064) : l'une rendue invisible, l'état se
+//   cache. Le texte qu'elles ont apporté n'entre au condensé que par le récit de la session.
 
 export type FilStateOutcome = 'modele' | 'serveur' | 'inchange' | 'depassee' | 'sans-objet';
 
@@ -388,7 +389,17 @@ async function writeModelState(
       and s.id = any(${textArray(condense.sessions)}::uuid[]) and ${USAGE_RESUME}`);
   if (still?.n !== condense.sessions.length) return 'sans-objet';
   if (kept !== null) {
-    const entrees = [...new Set([...condense.sessions, ...condense.sources, ...model.prs])];
+    const { rows: lues } = await tx.execute<{ id: string }>(
+      sql`select sources_lues_pendant(${textArray(condense.sessions)}::uuid[]) as id`,
+    );
+    const entrees = [
+      ...new Set([
+        ...condense.sessions,
+        ...condense.sources,
+        ...model.prs,
+        ...lues.map((one) => one.id),
+      ]),
+    ];
     const written = await writeVersion(tx, ctx, {
       sourceId: filId,
       attendue,

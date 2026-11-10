@@ -1,6 +1,12 @@
-import { beforeAll, describe, expect, it } from 'vitest';
-import { adminPool } from '@/test/db';
+import { sql } from 'drizzle-orm';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { TenantContext } from '@/server/auth/tenant-context';
+import { readLog } from '@/server/db/schema/memory';
+import { withTenant } from '@/server/db/with-tenant';
+import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
+import { dropTeams, newTeam } from '@/test/seed-indexed';
+import { seedRun } from '@/test/seed-search';
 
 // Migration 0064 : read_log note les lectures des fils (`threads`, `thread`, T44) et des versions (`versions`, T54),
 // et la session de l'outil où chacune a eu lieu, quand elle est connue (D27, D35).
@@ -58,5 +64,60 @@ describe('read_log.session', () => {
     ['de 201 caractères', 's'.repeat(201)],
   ])('refuse une session %s', async (_label, session) => {
     await expect(insertRead('thread', session)).rejects.toThrow(/read_log_session_check/);
+  });
+});
+
+// sources_lues_pendant : les sources que la personne courante a lues pendant ses propres sessions (D35), même devenues
+// invisibles pour elle, jamais les lectures d'une autre.
+describe('sources_lues_pendant', () => {
+  const tenantIds: string[] = [];
+  afterAll(() => dropTeams(tenantIds));
+
+  it('rend les lectures de la personne dans la fenêtre de sa session, jamais celles d’une autre ni d’une session d’une autre', async () => {
+    const { members } = await newTeam(['Paul', 'Marie'], tenantIds);
+    const [paul, marie] = members as [TenantContext, TenantContext];
+    const session = async (owner: TenantContext) =>
+      (
+        await seedRun(owner, {
+          turns: [{ text: 'x', ts: new Date('2026-11-05T09:00:00.000Z') }],
+        })
+      ).sourceId;
+    const [mine, hers] = [await session(paul), await session(marie)];
+    const lue = (await seedRun(marie, { kind: 'slack', acl: [marie.userId] })).sourceId;
+    const autre = (await seedRun(marie, { kind: 'slack', acl: [marie.userId] })).sourceId;
+    const at = new Date('2026-11-05T09:05:00.000Z');
+    await adminDb.insert(readLog).values([
+      // une source que Paul ne voit plus : sa lecture a pris l'accès de la source
+      {
+        tenantId: paul.tenantId,
+        userId: paul.userId,
+        client: 'cli',
+        tool: 'search',
+        sourceId: lue,
+        acl: [marie.userId],
+        at,
+      },
+      {
+        tenantId: marie.tenantId,
+        userId: marie.userId,
+        client: 'cli',
+        tool: 'search',
+        sourceId: autre,
+        acl: [marie.userId],
+        at,
+      },
+    ]);
+    const lues = (as: TenantContext, sessions: string[]) =>
+      withTenant(as, async (tx) =>
+        (
+          await tx.execute<{ id: string }>(
+            sql`select sources_lues_pendant(${`{${sessions.join(',')}}`}::uuid[]) as id`,
+          )
+        ).rows.map((row) => row.id),
+      );
+
+    expect(await lues(paul, [mine])).toEqual([lue]);
+    expect(await lues(paul, [hers])).toEqual([]);
+    expect(await lues(marie, [hers])).toEqual([autre]);
   });
 });

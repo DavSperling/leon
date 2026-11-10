@@ -12,6 +12,10 @@ export const API_PATHS = {
   ordinateurs: '/api/v1/ordinateurs', // POST : leon login échange le code signé contre l'enregistrement du jeton
   jeton: '/api/v1/jeton', // DELETE : un jeton se révoque lui-même (leon logout)
   retrait: '/api/v1/retrait', // POST : le retrait de l'accord d'un outil atteint le serveur (leon retirer-crochets)
+  dossier: '/api/v1/dossier', // POST : les fils du projet (leon threads)
+  fil: '/api/v1/fil', // POST : un fil, sans id celui de la branche (leon thread)
+  chercher: '/api/v1/chercher', // POST : la recherche bornée au dépôt du projet (leon search)
+  versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -154,3 +158,34 @@ export const ContextRequestSchema = z
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;
 export const ContextResponseSchema = z.object({ texte: z.string() });
 export type ContextResponse = z.infer<typeof ContextResponseSchema>;
+
+// Les lectures (C9, C11, C12) : POST, pour que la branche et la requête n'aillent pas dans les journaux d'URL. Chaque corps
+// porte les usages de l'outil : sans `lecture`, le serveur refuse. `session` et `outil` vont au journal des lectures
+// quand ils sont connus (D35) ; sans outil, la lecture vient de la CLI seule.
+export const READ_BODY_MAX_BYTES = 4 * 1024;
+const ReadBase = {
+  projet: ProjectSchema,
+  session: z.string().min(1).max(200).optional(),
+  outil: z.enum(CODE_SESSION_KINDS).optional(),
+  usages: z.array(z.enum(USAGES)).max(USAGES.length),
+};
+const Branche = z.string().min(1).max(200).nullable().optional(); // tête détachée : null
+export const DossierRequestSchema = z.object({ ...ReadBase, branche: Branche }).strict();
+export type DossierRequest = z.infer<typeof DossierRequestSchema>;
+// Sans id : le fil de la branche.
+export const FilRequestSchema = z
+  .object({ ...ReadBase, id: z.uuid().optional(), branche: Branche })
+  .strict();
+export type FilRequest = z.infer<typeof FilRequestSchema>;
+// `requete` n'a pas de borne propre, comme l'outil `search` : les 4 Kio du corps suffisent.
+export const ChercherRequestSchema = z.object({ ...ReadBase, requete: z.string().min(1) }).strict();
+export type ChercherRequest = z.infer<typeof ChercherRequestSchema>;
+// L'historique d'un fil (C12) : sans `n`, ses versions lisibles ; avec `n`, le texte de l'une. Rien ne restaure par le
+// poste (D33) : la restauration se fait sur le site (T55).
+export const VersionsRequestSchema = z
+  .object({ ...ReadBase, id: z.uuid(), n: z.number().int().positive().optional() })
+  .strict();
+export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
+// Le rendu gardé (D25), le même que celui du MCP.
+export const ReadResponseSchema = z.object({ texte: z.string() });
+export type ReadResponse = z.infer<typeof ReadResponseSchema>;

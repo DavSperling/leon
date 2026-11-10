@@ -3,9 +3,9 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { readLog, sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 
-// Journal : qui a lu quelle source (et quel passage), avec quel assistant et quel outil MCP. Pas encore d'écran qui
-// le lise ; sous la RLS, une lecture dont l'ACL (celle de la source au moment de la lecture) n'est pas visible est
-// omise.
+// Journal : qui a lu quelle source (et quel passage), avec quel assistant, quel outil, et dans quelle session quand
+// elle est connue. Pas encore d'écran qui le lise ; sous la RLS, une lecture dont l'ACL (celle de la source au moment
+// de la lecture) n'est pas visible est omise.
 
 export type ReadTool = (typeof readLog.tool.enumValues)[number];
 
@@ -19,6 +19,7 @@ export async function recordReads(
   input: {
     tool: ReadTool;
     client: string;
+    session?: string | null;
     reads: ReadonlyArray<{ sourceId: string; passageId?: string | null }>;
     whole?: boolean;
   },
@@ -41,6 +42,7 @@ export async function recordReads(
               userId: ctx.userId,
               client: input.client,
               tool: input.tool,
+              session: input.session ?? null,
               sourceId: read.sourceId,
               passageId: read.passageId ?? null,
               acl,

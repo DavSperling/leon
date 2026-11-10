@@ -47,7 +47,7 @@ const SERVED = {
 const PUBLIC = ['oauthClients', 'oauthJeton'] as const;
 // Un chemin ajouté au contrat avant sa route vient ici (les métadonnées du serveur d'autorisation peuvent l'annoncer
 // avant qu'il soit servi).
-const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = [];
+const NOT_YET_SERVED: Array<keyof typeof API_PATHS> = ['dossier', 'fil', 'chercher', 'versions'];
 
 // Seule /api/mcp dit au client où trouver le serveur d'autorisation (L2) ; les autres routes à jeton gardent le défi nu.
 const MCP_CHALLENGE = `Bearer resource_metadata="${TEST_ENV.BETTER_AUTH_URL}/.well-known/oauth-protected-resource/api/mcp", scope="leon"`;

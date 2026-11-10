@@ -86,6 +86,7 @@ const ANCHORS = [
   'terminal',
   'autoriser',
   'ce-qui-part',
+  'lire',
   'mises-a-jour',
   'deconnecter',
   'problemes',
@@ -93,7 +94,7 @@ const ANCHORS = [
 ];
 
 describe('la page Documentation', () => {
-  it.each(LOCALES)('a ses neuf sections et son plan, avec une ancre chacune (%s)', (locale) => {
+  it.each(LOCALES)('a ses dix sections et son plan, avec une ancre chacune (%s)', (locale) => {
     const html = render(locale);
 
     for (const id of ANCHORS) {
@@ -184,7 +185,16 @@ describe('la page Documentation', () => {
     // `--bare` et `claude -p` sont ceux de Claude Code, cités par le texte d'accord de `leon setup`.
     const flags = new Set(codes.flatMap((code) => code.match(/--[a-z-]+/g) ?? []));
     expect([...flags].toSorted()).toEqual(
-      ['--bare', '--depot', '--oui', '--previous', '--url', '--with-token', '--yes'].toSorted(),
+      [
+        '--bare',
+        '--depot',
+        '--oui',
+        '--previous',
+        '--read',
+        '--url',
+        '--with-token',
+        '--yes',
+      ].toSorted(),
     );
     for (const flag of flags) if (flag !== '--bare') expect(cli, flag).toContain(flag);
     // Les mots seuls, sans « leon » devant, sont aussi des commandes de la CLI.

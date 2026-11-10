@@ -18,11 +18,20 @@ export const SECTIONS = [
   { id: 'terminal', key: 'terminal' },
   { id: 'autoriser', key: 'authorize' },
   { id: 'ce-qui-part', key: 'sent' },
+  { id: 'lire', key: 'read' },
   { id: 'mises-a-jour', key: 'updates' },
   { id: 'deconnecter', key: 'disconnect' },
   { id: 'problemes', key: 'problems' },
   { id: 'clone', key: 'clone' },
 ] as const;
+
+// Les commandes de lecture du poste (read-commands.ts), dans les deux langues : la CLI est en anglais.
+export const READ_COMMANDS = [
+  '~/.leon/bin/leon threads',
+  '~/.leon/bin/leon thread [id]',
+  '~/.leon/bin/leon search "<query>"',
+  '~/.leon/bin/leon versions <id> --read <n>',
+].join('\n');
 
 /** Le chemin d'un écran de Réglages, « Réglages › Intégrations › … » : le même sur la page et dans le Markdown. */
 export const settingsPath = (
@@ -99,6 +108,11 @@ export function documentationMarkdown({
         ),
       ),
       md('sent.server'),
+    ],
+    read: [
+      md('read.lead'),
+      fence('sh', READ_COMMANDS),
+      list((['output', 'consent', 'external'] as const).map((k) => md(`read.${k}`))),
     ],
     updates: [
       md('updates.auto'),

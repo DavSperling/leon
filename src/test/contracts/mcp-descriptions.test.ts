@@ -36,10 +36,32 @@ describe('instructions du serveur MCP', () => {
     for (const filter of named) expect(searchProperties).toContain(filter);
   });
 
-  it('nomment les quatre outils et le rôle de chacun', () => {
-    for (const tool of ['search', 'fetch', 'briefing', 'remember']) {
+  it('nomment les sept outils et le rôle de chacun', () => {
+    for (const tool of [
+      'search',
+      'fetch',
+      'threads',
+      'thread',
+      'versions',
+      'briefing',
+      'remember',
+    ]) {
       expect(MCP_INSTRUCTIONS).toContain(tool);
     }
+  });
+
+  // D27 : sur un dépôt, les fils d'abord, puis la recherche bornée au dépôt ; la recherche générale reste.
+  it('disent de lire les fils sur un dépôt, sans retirer la recherche générale', () => {
+    expect(MCP_INSTRUCTIONS).toContain(
+      'When working on a code repository, call threads, then thread; search with depot.',
+    );
+    expect(MCP_INSTRUCTIONS).toContain('search first with search');
+  });
+});
+
+describe('description du filtre fil de search', () => {
+  it('nomme l’outil qui donne l’id d’un fil', () => {
+    expect(description(SearchInputSchema.shape.fil)).toContain('threads');
   });
 });
 

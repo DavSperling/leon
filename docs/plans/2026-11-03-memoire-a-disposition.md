@@ -748,6 +748,17 @@ Contrat du 05/11 :
 
 > **Amendé le 04/11 (D35) :** l'état n'étant plus indexé, `search` ne trouve aucun fil. `fetch` d'un id de fil rend le texte de l'outil `fil`, par la lecture commune (fichier en plus : `src/server/mcp/tools/fetch-tool.ts`). Test de plus : `fetch` d'un fil dont une entrée est devenue privée ne rend pas l'ancien état.
 
+> **Amendé le 10/11 (PR 4 du lot 12, décisions d'Amos) :**
+> - les outils s'appellent `threads` et `thread` (et `versions`, T54), en anglais comme `search` et `fetch` ; leurs paramètres gardent les noms de C9 (`projet`, `branche`, `id`, `n`), comme `briefing`. Ils sont dans un seul fichier, `src/server/mcp/tools/thread-tools.ts`, comme les quatre routes dans `read-routes.ts` ;
+> - `projet` est obligatoire et passe par `projectKeyFromInput`, sinon le refus de `briefing`. Au MCP, ni `session` ni `outil` : l'outil est l'assistant du User-Agent, et le lien d'une lecture à sa session se fait par la date (T44) ;
+> - introuvable (un id qui n'est pas un fil, le fil d'un collègue ou d'un autre projet, `thread` sans id ni branche, ou sur `main`) : un refus `isError` avec le texte fixe « No thread found. », sans ligne au journal ;
+> - le `structuredContent` : `threads` rend `{ threads: [{ id, titre, date, prs: [{ repo, numero }] }], total }` ; `thread` rend `{ id, titre, version: { n, date } | null, sessions: [{ id, date }], prs, liees: [id] }`. Ni état, ni première ligne, ni titre de source liée, ni ticket, ni état de PR ;
+> - `fetch` d'un id de fil rend le texte gardé de `thread`, ligne de garde en tête, dans `content` comme dans `text` (le contrat de ChatGPT), sans tour. Il passe par la lecture commune sur tout projet (`fetch` n'en a pas), et note `fetch` au journal. Un fil que la lecture commune ne rend pas est introuvable, jamais une source vide ;
+> - le filtre `fil` de `search` garde son nom français, comme `outil`, `type`, `depuis`, `de` et `depot`. L'outil le résout par la lecture commune (`threadSources`) : les sessions et les sources liées visibles du fil de l'auteur, un id absorbé menant au fil gardé. Un fil introuvable (d'un collègue, un id mal formé) ne rend aucun résultat ;
+> - une session de code trouvée par `search` (et par `/chercher`) cite le fil de l'auteur qui la tient (`fil`) et les PR de ses faits (`prs`, « dépôt#numéro »), en attributs de sa balise et en `structuredContent` (`thread`, `prs`). Une session dans deux fils cite le premier par id ;
+> - `MCP_INSTRUCTIONS` gagne « When working on a code repository, call threads, then thread; search with depot. The past states of a thread are read with versions. », sans retirer la recherche générale ;
+> - les listes figées et les textes du site passent à sept outils (`mcp.db.test.ts`, `oauth-routes.db.test.ts`, `mcp-descriptions.test.ts`, `produit.tsx`, `messages/*.json`).
+
 **Fichiers :**
 - `src/server/mcp/tools/dossier-tool.ts` (nouveau), `src/server/mcp/tools/fil-tool.ts` (nouveau) ;
 - `src/server/mcp/server.ts` (`MCP_INSTRUCTIONS`) ;
@@ -771,6 +782,8 @@ Contrat du 05/11 :
 Contrat : `mcp-descriptions.test.ts`.
 
 ### T54 · L'historique : `leon versions` et l'outil `versions` (après T45)
+
+> **Amendé le 10/11 (PR 4 du lot 12, le MCP) :** l'outil `versions { projet, id, n? }` est dans `thread-tools.ts` (T45). Son `structuredContent` : `{ id, titre, versions: [{ n, date, par }] }`, sans motif ni première ligne. Introuvable (un fil d'un autre projet ou d'un collègue, une note) : refus `isError`, « No thread found. ». Une version illisible ou absente n'est pas un refus : le texte fixe de la route, et `versions: []`. Ni sa description ni ses paramètres ne parlent de restaurer.
 
 **Fichiers :**
 - `src/capture/api-contract.ts` (C12, `API_PATHS`) ;

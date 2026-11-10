@@ -1090,7 +1090,7 @@
       },
       "assistantKicker": "MCP server",
       "assistantTitle": "Give your AI assistant your team’s context.",
-      "assistantLead": "Leon’s MCP server exposes four tools to any MCP client: search, fetch a source, get the morning briefing, save a note. Paste its address into your assistant and authorize it in Leon: the access is revocable and inherits your permissions exactly.",
+      "assistantLead": "Leon’s MCP server exposes seven tools to any MCP client: search, fetch a source, list your threads of work on a repository, read one, read its past states, get the morning briefing, save a note. Paste its address into your assistant and authorize it in Leon: the access is revocable and inherits your permissions exactly.",
       "assistantPoints": {
         "briefing": "Your coding assistant opens each session with the morning briefing.",
         "sessions": "Coding sessions are captured when they end, text only.",
@@ -1138,10 +1138,13 @@
       "mcp": {
         "search": "hybrid search",
         "fetch": "full source text",
+        "threads": "threads of work on a repository",
+        "thread": "where a thread stands",
+        "versions": "a thread’s past states",
         "briefing": "morning briefing",
         "remember": "save a private note"
       },
-      "discussCaption": "Illustration: a chat where Leon answers with cited sources, the three-part morning briefing, and the four tools the MCP server exposes.",
+      "discussCaption": "Illustration: a chat where Leon answers with cited sources, the three-part morning briefing, and the seven tools the MCP server exposes.",
       "discussLabel": "chat and morning briefing",
       "discussChip": "morning briefing · 08:45",
       "discussionPrivate": "Chat · private",
@@ -1241,7 +1244,7 @@
         "mcp": {
           "title": "MCP server",
           "text": "The reverse direction: your AI assistant queries Leon over MCP. Paste the address into your assistant, authorize it in Leon, and revoke it at any time.",
-          "p1": "search, fetch, briefing, remember",
+          "p1": "search, fetch, threads, thread, versions, briefing, remember",
           "p2": "Scoped to your permissions",
           "p3": "Audit log of the sources it opens"
         }

@@ -27,7 +27,7 @@ const InputSchema = z.object({
 export const BRIEFING_DESCRIPTION =
   'The morning briefing on a project, prepared ahead of time by Leon: what the user did there in their latest Claude Code sessions, what changed since (pull requests, issues, messages that mention them) and what is still open, with sources. Read it when starting work on that project.';
 
-const INVALID_PROJECT =
+export const INVALID_PROJECT =
   'Invalid project: give its GitHub repository (github.com/owner/repo or owner/repo).';
 
 export function registerBriefingTool(server: McpServer, ctx: TenantContext, client: string): void {

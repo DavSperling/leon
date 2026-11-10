@@ -1,17 +1,19 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { PROJECT_INPUT_MAX_CHARS, type SourceKind } from '@/capture/turn';
+import { CODE_SESSION_KINDS, PROJECT_INPUT_MAX_CHARS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import {
+  cleanFilterValue,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
   queryWithPerson,
   readToolFilters,
 } from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE, type SearchPage } from '@/server/search/types';
+import { sessionThreads, threadSources } from '@/server/sessions/thread-read';
 import { guarded } from './guarded';
 import { SearchOutputSchema } from './output-schemas';
 import { renderSearch, searchStructured } from './render';
@@ -19,7 +21,8 @@ import { renderSearch, searchStructured } from './render';
 // L'outil `search` : la recherche de la barre de Leon (passages, filtres), sans la réponse de l'agent, puisque
 // l'IA du client est elle-même un agent. Les mêmes droits que dans l'interface : la recherche tourne sous ceux
 // du porteur du jeton, et rien d'autre ne lit la base ici. Chaque passage rendu est noté au journal des lectures,
-// comme une lecture de `fetch` (une source rendue sans passage : une ligne sans passage).
+// comme une lecture de `fetch` (une source rendue sans passage : une ligne sans passage). Le filtre `fil` borne aux
+// sources d'un fil de l'auteur, et une session trouvée cite son fil et ses PR (T45, D35).
 
 const FILTER_MAX_CHARS = 100;
 
@@ -73,6 +76,13 @@ export const SearchInputSchema = z.object({
     .describe(
       'Limit to one code repository: its coding sessions, their summaries, and its GitHub pull requests and issues. Write github.com/owner/repo or owner/repo.',
     ),
+  fil: z
+    .string()
+    .max(FILTER_MAX_CHARS)
+    .nullish()
+    .describe(
+      'Limit to one thread of work, by an id returned by threads: its coding sessions and the sources linked to it.',
+    ),
   page: z
     .number()
     .int()
@@ -90,6 +100,7 @@ export const SEARCH_FILTERS = [
   'depuis',
   'de',
   'depot',
+  'fil',
 ] as const satisfies ReadonlyArray<keyof z.input<typeof SearchInputSchema>>;
 
 export const SEARCH_DESCRIPTION =
@@ -114,6 +125,17 @@ export async function logHits(
   page.hits = page.hits.filter((hit) => logged.has(hit.sourceId));
 }
 
+// Pour chaque session de code de la page, son fil et ses PR, en clés (D35 : la recherche ne trouve pas un fil, elle le
+// cite). Partagé avec la route /chercher. Sans session dans la page, aucune requête.
+export async function mentionThreads(ctx: TenantContext, page: SearchPage): Promise<void> {
+  const kinds: readonly SourceKind[] = CODE_SESSION_KINDS;
+  const found = await sessionThreads(
+    ctx,
+    page.hits.filter((hit) => kinds.includes(hit.kind)).map((hit) => hit.sourceId),
+  );
+  page.hits = page.hits.map((hit) => ({ ...hit, ...found.get(hit.sourceId) }));
+}
+
 const refusal = (text: string) => ({
   isError: true as const,
   content: [{ type: 'text' as const, text }],
@@ -134,10 +156,13 @@ export function registerSearchTool(
       outputSchema: SearchOutputSchema,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    guarded('search', async ({ query, outil, type, depuis, de, depot, page }) => {
+    guarded('search', async ({ query, outil, type, depuis, de, depot, fil, page }) => {
       const now = new Date();
       const read = readToolFilters({ outil, type, depuis, depot }, now);
       if ('error' in read) return refusal(read.error);
+      // Un fil introuvable (d'un collègue, un id mal formé) ne borne à rien : aucun résultat.
+      const thread = cleanFilterValue(fil);
+      if (thread !== '') read.filters.fil = await threadSources(ctx, thread);
       // `de` passe par la syntaxe de la barre, qui rapproche un nom des membres de l'équipe.
       const text = queryWithPerson(query, de);
       const pageNumber = page ?? 1;
@@ -149,6 +174,7 @@ export function registerSearchTool(
         now,
       });
       await logHits(ctx, result, { tool: 'search', client });
+      await mentionThreads(ctx, result);
       return {
         content: [{ type: 'text', text: renderSearch(result, pageNumber) }],
         structuredContent: searchStructured(result, pageNumber),

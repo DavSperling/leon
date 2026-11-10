@@ -290,6 +290,24 @@ describe('POST /api/v1/chercher', () => {
       new Set(['search codex']),
     );
   });
+
+  it('une session trouvée cite son fil et ses PR, comme au MCP', async () => {
+    const [paul] = await team();
+    const word = 'brindacule';
+    const { sourceId } = await seedIndexed(paul, {
+      title: 'Session du fil',
+      metadata: {
+        project: PROJECT,
+        faits: { prs: [{ repo: 'acme/leon', numero: 12, par: 'pr-link' }] },
+      },
+      turns: [{ text: `${word} dans le dépôt` }],
+    });
+    const id = await fil(paul, { sessions: [sourceId] });
+
+    const text = await texte(await post(API_PATHS.chercher, paul.token, { requete: word }));
+
+    expect(text).toContain(`fil="${id}" prs="acme/leon#12">`);
+  });
 });
 
 describe('POST /api/v1/versions', () => {

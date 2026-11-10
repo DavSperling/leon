@@ -19,7 +19,7 @@ import {
   renderVersions,
   THREAD_NOT_FOUND,
 } from '@/server/mcp/tools/render';
-import { logHits } from '@/server/mcp/tools/search-tool';
+import { logHits, mentionThreads } from '@/server/mcp/tools/search-tool';
 import type { ReadTool } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import { type Journal, readDossier, readThread, readVersions } from '@/server/sessions/thread-read';
@@ -33,7 +33,8 @@ import { type ApiEnv, requireApiToken } from './require-api-token';
 // - Un usage absent : 403. Un fil introuvable : 200 et un texte fixe, jamais 404, que la CLI lit comme un serveur
 //   ancien (C11).
 // - /chercher : la recherche existante, bornée au dépôt du projet par le filtre `depot`, qui ne vient que des
-//   paramètres (search.ts) : la requête ne peut pas l'élargir. Sans filtre `type` (QD9), une page, sans pages.
+//   paramètres (search.ts) : la requête ne peut pas l'élargir. Sans filtre `type` (QD9), une page, sans pages. Une
+//   session trouvée cite son fil et ses PR, comme au MCP.
 // - /versions : l'historique d'un fil, sans aucune restauration (D33, T55 la fera sur le site).
 
 type ReadBody = { session?: string; outil?: CodeSessionKind; usages: string[] };
@@ -79,6 +80,7 @@ export const readRoutes = new Hono<ApiEnv>()
         embedder: getEmbedder(env),
       });
       await logHits(c.var.ctx, page, journal);
+      await mentionThreads(c.var.ctx, page);
       return renderSearch(page, 1, false);
     }),
   )

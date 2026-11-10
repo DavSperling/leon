@@ -1,10 +1,11 @@
 import { sql } from 'drizzle-orm';
-import type { SourceKind } from '@/capture/turn';
+import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { oneLine } from '@/server/memory/labels';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
 import { latestIn, listVersions, readVersion, type Version } from '@/server/memory/versions';
+import { textArray } from '@/server/search/filters-sql';
 import { HEADING } from './resume-prompt';
 import { DEFAULT_BRANCHES, type PrState, prStates } from './start-context';
 import { deterministicState } from './thread-state';
@@ -140,6 +141,9 @@ const boundedLast = <T>(items: T[], max: number): Bounded<T> => ({
 // Un état dont une entrée n'a pas été notée redevient l'état déterministe.
 const allLogged = (ids: string[], logged: Set<string>) => ids.every((id) => logged.has(id));
 
+// Les clés d'un fil par son id : lui-même, ou le fil gardé qui l'a absorbé. Null pour un id qui n'est pas un uuid.
+const byId = (id: string) => (UUID.test(id) ? [sql`s.id = ${id}`, has('absorbes', id)] : null);
+
 // Un fil de l'auteur, par son id (un id absorbé mène au fil gardé) ou, sans id, par sa branche ; hors main et
 // master, qui n'ont jamais de fil (threads.ts). `projet` null : sur tout projet (le `fetch` du MCP n'en a pas).
 // Introuvable : null, sans rien noter.
@@ -150,9 +154,7 @@ export async function readThread(
 ): Promise<ThreadRead | null> {
   const keys =
     input.id !== undefined
-      ? UUID.test(input.id)
-        ? [sql`s.id = ${input.id}`, has('absorbes', input.id)]
-        : null
+      ? byId(input.id)
       : input.branche && !DEFAULT_BRANCHES.has(input.branche)
         ? [has('branches', input.branche)]
         : null;
@@ -309,4 +311,54 @@ export async function readVersions(
     n: input.n ?? null,
     versions: versions.filter((one) => allLogged(one.entrees, logged)),
   };
+}
+
+// Les sources d'un fil de l'auteur, pour le filtre `fil` de `search` (T45) : ses sessions et ses sources liées
+// visibles, comme les lit readFil ; un id absorbé mène au fil gardé. Introuvable (un collègue, un id mal formé) :
+// aucune, donc aucun résultat. Rien n'est noté ici : la recherche note ce qu'elle rend.
+export async function threadSources(ctx: TenantContext, id: string): Promise<string[]> {
+  const keys = byId(id);
+  if (keys === null) return [];
+  return withTenant(ctx, async (tx) => {
+    const [fil] = await findFils(tx, ctx, null, keys);
+    const read = fil ? await readFil(tx, ctx, fil.id, false) : null;
+    return read ? [...read.list.sessions, ...read.list.sources] : [];
+  });
+}
+
+type PrKey = { repo: string; numero: number };
+// Le fil de l'auteur et les PR des faits de chaque session de code parmi ces sources (T45, D35) : des clés seulement
+// (D25), pour la mention d'une session trouvée par `search`. Une session dans deux fils (elle a changé de branche)
+// cite le premier par id, comme findFils. Une source sans fil ni PR n'est pas dans la liste.
+export async function sessionThreads(
+  ctx: TenantContext,
+  ids: string[],
+): Promise<Map<string, { thread?: string; prs?: PrKey[] }>> {
+  if (ids.length === 0) return new Map();
+  const rows = await withTenant(ctx, async (tx) => {
+    const { rows } = await tx.execute<{ id: string; fil: string | null; prs: unknown }>(sql`
+      select s.id, s.metadata->'faits'->'prs' as prs, (
+        select f.id from sources f
+        where f.tenant_id = s.tenant_id and f.owner_user_id = ${ctx.userId} and f.kind = ${FIL}
+          and f.metadata->>'absorbe_par' is null
+          and f.metadata->'sessions' @> jsonb_build_array(jsonb_build_object('id', s.id::text))
+        order by f.id limit 1) as fil
+      from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(ids)}::uuid[])
+        and s.kind = any(${textArray(CODE_SESSION_KINDS)})`);
+    return rows;
+  });
+  const found = new Map<string, { thread?: string; prs?: PrKey[] }>();
+  for (const row of rows) {
+    const prs = (Array.isArray(row.prs) ? row.prs : []).flatMap((pr) => {
+      const { repo, numero } = (pr ?? {}) as Record<string, unknown>;
+      return typeof repo === 'string' && typeof numero === 'number' ? [{ repo, numero }] : [];
+    });
+    if (row.fil === null && prs.length === 0) continue;
+    found.set(row.id, {
+      ...(row.fil === null ? {} : { thread: row.fil }),
+      ...(prs.length === 0 ? {} : { prs }),
+    });
+  }
+  return found;
 }

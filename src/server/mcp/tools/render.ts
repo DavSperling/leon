@@ -10,7 +10,13 @@ import {
   type SourceInfo,
 } from '@/server/search/types';
 import type { Bounded, Dossier, ThreadRead, VersionsRead } from '@/server/sessions/thread-read';
-import type { FetchOutput, SearchOutput } from './output-schemas';
+import type {
+  FetchOutput,
+  SearchOutput,
+  ThreadOutput,
+  ThreadsOutput,
+  VersionsOutput,
+} from './output-schemas';
 
 // Ce que les outils `search` et `fetch` rendent au client MCP : un texte pour l'assistant et un
 // `structuredContent` pour le code. Tout ce qui vient de la mémoire (titres, extraits, noms, liens, texte des
@@ -45,7 +51,14 @@ export function sourceAttributes(source: SourceInfo, n?: number): string {
   ]);
 }
 
+const prKey = (pr: { repo: string; numero: number }) => `${pr.repo}#${pr.numero}`;
+
 export function renderHit(hit: SourceHit, n: number): string {
+  // Une session de code : son fil et ses PR, en clés (T45).
+  const thread = dataAttributes([
+    ['fil', hit.thread],
+    ['prs', hit.prs?.map(prKey).join(', ')],
+  ]);
   const passages = hit.passages.map(
     (passage) =>
       `<passage${dataAttributes([
@@ -54,7 +67,7 @@ export function renderHit(hit: SourceHit, n: number): string {
         ['auteur', passage.authorName],
       ])}>${escapeData(stripHighlightMarks(passage.snippet))}</passage>`,
   );
-  return [`<source${sourceAttributes(hit, n)}>`, ...passages, '</source>'].join('\n');
+  return [`<source${sourceAttributes(hit, n)}${thread}>`, ...passages, '</source>'].join('\n');
 }
 
 const plural = (count: number, word: string): string => `${count} ${word}${count > 1 ? 's' : ''}`;
@@ -124,6 +137,8 @@ export function searchStructured(page: SearchPage, pageNumber: number): SearchOu
         ts: iso(passage.ts),
         authorName: passage.authorName,
       })),
+      ...(hit.thread === undefined ? {} : { thread: hit.thread }),
+      ...(hit.prs === undefined ? {} : { prs: hit.prs }),
     })),
   };
 }
@@ -199,7 +214,7 @@ export function fetchStructured(fetched: Fetched): FetchOutput {
 export const THREAD_NOT_FOUND = 'No thread found.';
 
 const prText = (pr: ThreadRead['prs']['items'][number]) =>
-  `${pr.repo}#${pr.numero}${pr.etat === null ? '' : ` ${pr.etat}`}`;
+  `${prKey(pr)}${pr.etat === null ? '' : ` ${pr.etat}`}`;
 // Une liste coupée le dit (D27) : les éléments rendus sont les plus récents.
 const cut = (list: Bounded<unknown>, word: string): string[] =>
   list.total > list.items.length
@@ -310,4 +325,70 @@ export function renderVersions(read: VersionsRead): string {
     '</fil>',
     'To read one version, ask for it by its number.',
   ].join('\n');
+}
+
+// Le `structuredContent` des lectures des fils au MCP (C9, D25) : des clés seulement. L'état, la première ligne d'une
+// version et le titre d'une source liée ne vont que dans le texte gardé.
+const prKeys = (prs: Array<{ repo: string; numero: number }>) =>
+  prs.map(({ repo, numero }) => ({ repo, numero }));
+
+export function threadsStructured(dossier: Dossier): ThreadsOutput {
+  return {
+    total: dossier.total,
+    threads: dossier.fils.map((fil) => ({
+      id: fil.id,
+      titre: fil.titre,
+      date: fil.derniereDate === null ? null : iso(fil.derniereDate),
+      prs: prKeys(fil.prs),
+    })),
+  };
+}
+
+export function threadStructured(read: ThreadRead): ThreadOutput {
+  return {
+    id: read.id,
+    titre: read.titre,
+    version: read.version === null ? null : { n: read.version.n, date: iso(read.version.creeLe) },
+    sessions: read.sessions.items.map((one) => ({ id: one.id, date: iso(one.date) })),
+    prs: prKeys(read.prs.items),
+    liees: read.liees.items.map((one) => one.id),
+  };
+}
+
+export function versionsStructured(read: VersionsRead): VersionsOutput {
+  return {
+    id: read.id,
+    titre: read.titre,
+    versions: read.versions.map((one) => ({ n: one.n, date: iso(one.creeLe), par: one.ecritPar })),
+  };
+}
+
+// `fetch` d'un id de fil (D35) : le contrat de ChatGPT, avec dans `text` le texte gardé de `thread`, ligne de garde en
+// tête (décision d'Amos du 10/11). Un fil n'a pas de tour. Sa date : sa dernière session, à défaut sa version.
+export function threadFetchStructured(read: ThreadRead): FetchOutput {
+  const last = read.sessions.items[0]?.date ?? read.version?.creeLe;
+  const label = SOURCE_KIND_LABELS.leon_fil;
+  return {
+    id: read.id,
+    title: read.titre,
+    text: renderFil(read),
+    url: '',
+    metadata: {
+      outil: label,
+      nature: 'fil_de_travail',
+      ...(last === undefined ? {} : { date: isoDate(last) }),
+    },
+    source: {
+      sourceId: read.id,
+      kind: 'leon_fil',
+      kindLabel: label,
+      nature: 'fil_de_travail',
+      title: read.titre,
+      url: null,
+      origin: {},
+      lastTs: last === undefined ? '' : iso(last),
+    },
+    truncated: false,
+    turns: [],
+  };
 }

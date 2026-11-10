@@ -167,9 +167,8 @@ export function parseAntigravitySession(
       text: prepared,
       ts: step.created_at ?? file.mtime.toISOString(),
       capture_mode: 'file',
-      ...(role === 'user'
-        ? { injecte: step.source !== undefined && step.source !== 'USER_EXPLICIT' }
-        : {}),
+      // Échec fermé : une étape sans `source`, format inconnu, ne passe jamais pour un message tapé.
+      ...(role === 'user' ? { injecte: step.source !== 'USER_EXPLICIT' } : {}),
     });
   }
   const firstUserText = turns.find(isTypedTurn)?.text;

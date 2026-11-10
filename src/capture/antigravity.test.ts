@@ -84,6 +84,16 @@ describe('parseAntigravitySession', () => {
     expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(1);
   });
 
+  // Échec fermé : seul `USER_EXPLICIT` dit le message tapé ; une étape sans `source` est un format inconnu.
+  it('marque injecté un message sans `source`, qui ne compte pas comme échange', () => {
+    const lines = JSON.stringify({
+      type: 'USER_INPUT',
+      content: '<USER_REQUEST>Sans source</USER_REQUEST>',
+    });
+    expect(parseAntigravitySession(lines, FILE)?.turns.map((t) => t.injecte)).toEqual([true]);
+    expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(0);
+  });
+
   it('retire les blocs de Leon ; sans date, un tour prend l’heure du fichier', () => {
     const session = parseAntigravitySession(
       [

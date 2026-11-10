@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { renderBriefing } from '@/server/briefing/briefing-prompt';
 import { parseClaudeCodeSession } from './claude-code';
 import { SECRET_MASK } from './mask-secrets';
+import { extractClaudeCodeFacts } from './session-facts';
 
 const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/claude-code/${name}.jsonl`, import.meta.url), 'utf8');
@@ -136,6 +137,28 @@ describe('parseClaudeCodeSession', () => {
     ]);
     // Le titre vient du premier message tapé, jamais d'un tour injecté.
     expect(session?.title).toBe('Corrige le test.');
+  });
+
+  // La coupe à TURN_TEXT_MAX perd la balise fermante : la marque se lit avant elle.
+  it('marque injectées une longue sortie `!` et une longue notification de tâche, même coupées', () => {
+    const longue = 'x'.repeat(25_000);
+    const content = [
+      line('user', 1, `<bash-stdout>${longue}</bash-stdout><bash-stderr></bash-stderr>`),
+      line('user', 2, `<task-notification>\n<result>${longue}</result>\n</task-notification>`),
+      line('user', 3, '<bash-stdout>ok</bash-stdout><system-reminder>Rappel.</system-reminder>'),
+      line('user', 4, 'Corrige le test.'),
+    ].join('\n');
+
+    const session = parseClaudeCodeSession(content);
+
+    expect(session?.turns.map((t) => [t.external_id, t.injecte, t.text.length])).toEqual([
+      ['uuid-1', true, 20_000],
+      ['uuid-2', true, 20_000],
+      ['uuid-3', true, '<bash-stdout>ok</bash-stdout>'.length],
+      ['uuid-4', false, 'Corrige le test.'.length],
+    ]);
+    expect(session?.title).toBe('Corrige le test.');
+    expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
   });
 
   it('renvoie null pour un fichier vide ou sans conversation exploitable', () => {

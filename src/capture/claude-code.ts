@@ -60,7 +60,9 @@ function messageText(content: string | unknown[]): string {
 // d'outil, que messageText écarte. Le tour part marqué `injecte` (T43) : il ne compte pas comme un échange (C1), le
 // seuil du résumé (« 6 de vos messages », resume-worker.ts) compris, et ne prouve jamais une `[décision]`.
 // shortcut: les formes connues de Claude Code au 06/11, vérifiées sur une fixture inventée, jamais sur une vraie
-// conversation ; une forme nouvelle partirait marquée tapée, à relever sur une session de test créée pour l'occasion.
+// conversation. Le message d'un agent ou d'une autre session, la sortie d'un crochet, le texte d'orchestration (T43,
+// amendé le 04/11) ne sont pas relevés : ils partiraient marqués tapés, donc preuve d'une `[décision]`. À relever sur
+// une session de test créée pour l'occasion avant de se fier à cette preuve.
 const INJECTED_TAGS = [
   'task-notification',
   'local-command-stdout',
@@ -71,8 +73,13 @@ const INJECTED_TAGS = [
 ];
 const INTERRUPTED = /^\[Request interrupted by user[^\]]*\]$/;
 
-function injected(text: string): boolean {
-  const rest = INJECTED_TAGS.reduce((kept, tag) => removeBlocks(kept, tag), text).trim();
+// Lue sur le texte d'avant prepareTurnText : sa coupe à TURN_TEXT_MAX perdrait la balise fermante d'une longue sortie
+// `!` ou d'un long rapport de tâche, qui partirait marqué tapé. Les rappels système y sont retirés de même.
+function injected(raw: string): boolean {
+  const rest = INJECTED_TAGS.reduce(
+    (kept, tag) => removeBlocks(kept, tag),
+    removeBlocks(raw, 'system-reminder'),
+  ).trim();
   return rest === '' || INTERRUPTED.test(rest);
 }
 
@@ -100,7 +107,8 @@ function isConversationLine(line: Line): line is ConversationLine {
 
 // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.
 function toTurn(line: ConversationLine): Turn | null {
-  const text = prepareTurnText(stripLeonBlocks(messageText(line.message.content)));
+  const raw = stripLeonBlocks(messageText(line.message.content));
+  const text = prepareTurnText(raw);
   if (text === null) return null;
   return {
     external_id: line.uuid,
@@ -108,7 +116,7 @@ function toTurn(line: ConversationLine): Turn | null {
     text,
     ts: line.timestamp,
     capture_mode: 'file',
-    ...(line.type === 'user' ? { injecte: injected(text) } : {}),
+    ...(line.type === 'user' ? { injecte: injected(raw) } : {}),
   };
 }
 

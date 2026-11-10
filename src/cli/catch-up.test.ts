@@ -543,8 +543,9 @@ describe('catchUp : les retraits que le serveur n’a pas appris', () => {
     expect(told).toEqual([]);
   });
 
-  // Un envoi de faits arrivé au serveur après la route du retrait y remettrait l'usage `resume` (record-facts.ts) :
-  // l'accord est relu juste avant.
+  // Le serveur n'ignore les usages des faits partis sous l'ancien accord qu'une fois le retrait appris (record-facts.ts) :
+  // avant (poste hors ligne, envoi du retrait pas encore fait), ils y remettraient l'usage `resume`. L'accord est relu
+  // juste avant.
   it('un retrait écrit pendant l’envoi des tours : les faits ne partent pas', async () => {
     await consentToCapture();
     await rollout('1', MAINTENANT);

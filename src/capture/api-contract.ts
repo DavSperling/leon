@@ -108,6 +108,12 @@ export type Usage = (typeof USAGES)[number];
 // de l'outil sur le poste (`installe_le`). Le serveur ignore les usages s'il n'est pas postérieur au dernier retrait de
 // l'outil sur ce jeton, ou s'il manque après un retrait (T43, le retrait daté).
 export const FAITS_BODY_MAX_BYTES = 64 * 1024;
+// Une date du poste que Postgres lit en timestamptz (`accord_le`, `retire_le`, et l'`installe_le` d'accord.json qui les
+// donne) : z.iso.datetime laisse passer l'an 0000 et les décalages de ±16:00 à ±23:59, que `::timestamptz` refuse
+// (22008, 22009). Pas de borne haute : le serveur n'a pas l'horloge du poste.
+export const DatePosteSchema = z.iso
+  .datetime({ offset: true })
+  .refine((date) => !date.startsWith('0000') && !/[+-](1[6-9]|2\d):\d\d$/.test(date));
 export const SessionFactsPayloadSchema = z
   .object({
     kind: z.enum(CODE_SESSION_KINDS),
@@ -115,7 +121,7 @@ export const SessionFactsPayloadSchema = z
     project: ProjectSchema.optional(),
     accord: z.number().int().min(2).max(4),
     usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
-    accord_le: z.iso.datetime({ offset: true }).optional(),
+    accord_le: DatePosteSchema.optional(),
     faits: SessionFactsSchema,
     fin: z.boolean(), // une vraie fin de session (SessionEnd), ou un fichier resté immobile
   })
@@ -128,7 +134,7 @@ export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;
 // postérieur rouvrent les usages, jamais des faits partis avant le retrait et arrivés après lui.
 export const RETRAIT_BODY_MAX_BYTES = 1024;
 export const RetraitRequestSchema = z
-  .object({ outil: z.enum(CODE_SESSION_KINDS), retire_le: z.iso.datetime({ offset: true }) })
+  .object({ outil: z.enum(CODE_SESSION_KINDS), retire_le: DatePosteSchema })
   .strict();
 export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 

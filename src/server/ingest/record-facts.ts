@@ -4,6 +4,7 @@ import { maskSecrets } from '@/capture/mask-secrets';
 import { factText, recheckCommand, type SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { apiTokens } from '@/server/db/schema/api-tokens';
+import { organizations } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { recordProject, upsertSource } from './ingest-turns';
@@ -37,8 +38,12 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
 // `accord_le`, ou sous un accord qui ne lui est pas postérieur, arrivent sans usage. Le jeton est lu FOR SHARE avant
 // la source : un retrait en cours (il tient la ligne) fait attendre ces faits, qui lisent ensuite sa date ; des faits
 // en cours font attendre le retrait, qui vide ensuite leurs usages. FOR KEY SHARE ne suffirait pas : l'UPDATE du
-// retrait ne touche aucune clé et passerait. Les deux prennent le jeton, puis les sources : pas d'interblocage entre
-// eux. verifyApiToken écrit last_used_at hors de toute transaction, avant : il ne tient rien en attendant.
+// retrait ne touche aucune clé et passerait. verifyApiToken écrit last_used_at hors de toute transaction, avant : il ne
+// tient rien en attendant.
+// L'ordre des verrous : l'organisation (FOR KEY SHARE, comme lockTarget), puis le jeton, puis les sources. Les
+// suppressions (lockMembers) prennent l'organisation d'abord, puis révoquent les jetons : sans elle en premier, ces faits
+// tiendraient le jeton en attendant l'organisation (la clé étrangère d'une source neuve) que la suppression tient en
+// attendant le jeton. Le retrait ne prend pas l'organisation : il prend le jeton, puis les sources.
 export async function recordFacts(
   ctx: TenantContext,
   payload: SessionFactsPayload,
@@ -46,6 +51,14 @@ export async function recordFacts(
 ): Promise<{ sourceId: string; resume: boolean }> {
   const faits = cleanFacts(payload.faits);
   return withTenant(ctx, async (tx) => {
+    await tx
+      .select({ id: organizations.id })
+      .from(organizations)
+      .where(eq(organizations.id, ctx.tenantId))
+      .for('key share');
+    // shortcut: la marque vaut pour le jeton qui a dit le retrait ; un même jeton posé sur deux ordinateurs
+    // (--with-token, LEON_TOKEN partagé) coupe aussi les usages de l'autre jusqu'à un nouvel accord sur celui-ci, passer
+    // à un identifiant d'ordinateur si on veut ce cas.
     const [token] = await tx
       .select({
         retire: sql<boolean | null>`(${apiTokens.retraits} ->> ${payload.kind})::timestamptz
@@ -90,6 +103,8 @@ export async function recordFacts(
 // restent ; un envoi de faits sous un accord postérieur au retrait remplace les usages (recordFacts).
 // D'abord, dans la même transaction, la date du retrait sur la ligne du jeton (amendé le 10/11) : la plus grande des
 // deux, une date plus ancienne redite ne rouvre rien. L'UPDATE prend le verrou de la ligne (voir recordFacts).
+// shortcut: le vidage retire aussi les usages des sessions déjà envoyées par un autre ordinateur qui garde son accord,
+// jusqu'à leur prochain envoi ; filtrer par jeton quand les sources garderont le jeton qui les a envoyées.
 export async function withdrawUsages(
   ctx: TenantContext,
   tokenId: string,

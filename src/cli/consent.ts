@@ -24,7 +24,7 @@ import { randomBytes } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { USAGES, type Usage } from '../capture/api-contract';
+import { DatePosteSchema, USAGES, type Usage } from '../capture/api-contract';
 import { CODE_SESSION_KINDS, type CodeSessionKind } from '../capture/turn';
 import type { Outil } from './hook-commands';
 
@@ -44,7 +44,8 @@ const DatedSchema = z
   .catch(undefined);
 const EntrySchema = z.object({
   version: z.number().int().nonnegative(),
-  installe_le: z.iso.datetime({ offset: true }),
+  // Elle part en `accord_le` : une date que Postgres refuse rend l'accord illisible, au lieu d'un 400 à chaque envoi.
+  installe_le: DatePosteSchema,
   usages: DatedSchema,
   refus: DatedSchema,
   capture_le: z.iso.datetime({ offset: true }).optional().catch(undefined),
@@ -144,8 +145,10 @@ const withdrawalDate = (entry: unknown): string => {
 };
 
 // La date d'un retrait à dire au serveur (`retire_le`, T43, le retrait daté) : celle de l'entrée en version 0 de cet
-// outil, relue au moment d'envoyer ; null s'il n'est plus en version 0 (un nouvel accord est écrit). Une date absente
-// ou illisible (retouchée à la main) vaut l'heure du moment : le retrait part quand même.
+// outil, relue au moment d'envoyer ; null s'il n'est plus en version 0 (un nouvel accord est écrit). Une date absente,
+// illisible ou que Postgres refuse (retouchée à la main) vaut l'heure du moment : le retrait part quand même. Une date à
+// venir aussi, mesurée par la même horloge : le serveur la garderait (greatest) et fermerait ce jeton au-delà d'un
+// nouvel accord.
 export async function withdrawalToTell(
   home: string,
   tool: CodeSessionKind,
@@ -153,8 +156,8 @@ export async function withdrawalToTell(
 ): Promise<string | null> {
   const entries = await readEntries(home);
   if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return null;
-  const date = z.iso.datetime({ offset: true }).safeParse(withdrawalDate(entries[tool]));
-  return date.success ? date.data : now.toISOString();
+  const date = DatePosteSchema.safeParse(withdrawalDate(entries[tool]));
+  return date.success && new Date(date.data) <= now ? date.data : now.toISOString();
 }
 
 // Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un accord illisible n'en donne

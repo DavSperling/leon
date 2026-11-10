@@ -10,7 +10,8 @@
 //   `import-claude-code` ;
 // - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des sessions
 //   de l'outil déjà envoyées, et garde la date du retrait pour ce jeton : des faits partis avant lui, sous l'accord
-//   d'avant, n'y remettent aucun usage. Seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
+//   d'avant, n'y remettent aucun usage (aux deux connexions du poste quand leurs jetons diffèrent :
+//   connectionWithdrawal). Seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
 //   appris (retraits-serveur.json, consent.ts). Les retraits d'autres outils restés en attente partent avec. Un échec
 //   (pas de connexion, serveur injoignable ou plus ancien que la route, jeton refusé) n'est qu'une ligne : le retrait
 //   sur le poste reste fait et le code de sortie ne change pas. Le rattrapage (`leon rattraper`, lancé au démarrage
@@ -26,6 +27,7 @@
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CodeSessionKind } from '../capture/turn';
+import { readConnection } from './connection';
 import {
   anyToolInstalled,
   CONSENT_AGAIN_HINT,
@@ -104,17 +106,29 @@ export type UninstallDeps = {
 const WITHDRAWAL_TIMEOUT_MS = 15_000;
 
 // La route du retrait au serveur de la connexion du moment, relue à chaque appel : sans connexion, l'appel échoue comme
-// un serveur injoignable.
+// un serveur injoignable. Les crochets lancés hors du terminal (Dock) lisent connexion.json, la commande lit d'abord
+// LEON_URL et LEON_TOKEN : la date du retrait se pose sur chaque jeton (T43), donc sur les deux quand ils diffèrent. Le
+// premier échec lève : rien n'est noté, et le retrait se redit en entier, sans risque (le serveur garde la plus grande
+// date).
 export const connectionWithdrawal =
   (
     fetchImpl: typeof fetch,
     env: Record<string, string | undefined>,
     home: string,
   ): WithdrawalSender =>
-  async (outil, retireLe) =>
-    createWithdrawalSender(fetchImpl, await resolveServerEnv(env, home), {
-      signal: AbortSignal.timeout(WITHDRAWAL_TIMEOUT_MS),
-    })(outil, retireLe);
+  async (outil, retireLe) => {
+    const first = await resolveServerEnv(env, home);
+    const saved = await readConnection(home);
+    const servers =
+      saved && saved.jeton !== first.token
+        ? [first, { url: saved.url, token: saved.jeton }]
+        : [first];
+    for (const server of servers) {
+      await createWithdrawalSender(fetchImpl, server, {
+        signal: AbortSignal.timeout(WITHDRAWAL_TIMEOUT_MS),
+      })(outil, retireLe);
+    }
+  };
 
 // Messages fixes : ni l'adresse du serveur ni le jeton. Le premier quand un outil garde ses crochets (son démarrage
 // lance le rattrapage), le second pour le dernier outil, le troisième quand le serveur refuse le jeton (ordinateur

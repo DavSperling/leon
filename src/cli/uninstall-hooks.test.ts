@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { writeConnection } from './connection';
 import {
   addRefusal,
   addUsage,
@@ -19,6 +20,7 @@ import { installHooks, SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
 import {
   catchUpWithdrawals,
+  connectionWithdrawal,
   type UninstallDeps,
   uninstallHooks,
   WITHDRAWAL_NOT_TOLD_LAST_MESSAGE,
@@ -724,6 +726,54 @@ describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le po
     expect(await catchUpWithdrawals(home, server.withdraw)).toBe('told');
 
     expect(server.told).toEqual(['claude_code']);
+  });
+});
+
+// Les crochets lancés hors du terminal (Dock) lisent connexion.json ; la commande lit d'abord LEON_URL et LEON_TOKEN.
+describe('connectionWithdrawal : le retrait se dit à chaque connexion que les crochets peuvent prendre', () => {
+  const SAVED = `leon_${'a'.repeat(43)}`;
+  const TERMINAL = `leon_${'b'.repeat(43)}`;
+  const RETIRE_LE = '2026-11-10T09:00:00.000Z';
+  type Request = { url: string; authorization: string | null; body: unknown };
+
+  async function withdrawWith(env: Record<string, string>): Promise<Request[]> {
+    await writeConnection(home, {
+      url: 'http://127.0.0.1:4000',
+      jeton: SAVED,
+      ordinateur: 'portable',
+      espace: 'acme',
+      cree_le: '2026-11-01T10:00:00.000Z',
+    });
+    const requests: Request[] = [];
+    const fetchImpl = (async (url: URL | RequestInfo, init?: RequestInit) => {
+      requests.push({
+        url: String(url),
+        authorization: new Headers(init?.headers).get('Authorization'),
+        body: JSON.parse(String(init?.body)),
+      });
+      return new Response(null, { status: 204 });
+    }) as typeof fetch;
+    await connectionWithdrawal(fetchImpl, env, home)('claude_code', RETIRE_LE);
+    return requests;
+  }
+
+  it('deux jetons : aux deux, à la même date', async () => {
+    const requests = await withdrawWith({
+      LEON_URL: 'http://127.0.0.1:5000',
+      LEON_TOKEN: TERMINAL,
+    });
+
+    const body = { outil: 'claude_code', retire_le: RETIRE_LE };
+    expect(requests).toEqual([
+      { url: 'http://127.0.0.1:5000/api/v1/retrait', authorization: `Bearer ${TERMINAL}`, body },
+      { url: 'http://127.0.0.1:4000/api/v1/retrait', authorization: `Bearer ${SAVED}`, body },
+    ]);
+  });
+
+  it('un seul jeton : une fois', async () => {
+    const requests = await withdrawWith({ LEON_URL: 'http://127.0.0.1:4000', LEON_TOKEN: SAVED });
+
+    expect(requests.map((request) => request.authorization)).toEqual([`Bearer ${SAVED}`]);
   });
 });
 

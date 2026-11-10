@@ -16,6 +16,7 @@ import {
   recordServerWithdrawal,
   serverWithdrawalsPath,
   withdrawalRecorded,
+  withdrawalToTell,
   writeConsent,
 } from './consent';
 
@@ -71,6 +72,15 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       '{"outils":{"claude_code":{"version":"2","installe_le":"2026-11-02T14:00:00Z"}}}',
     ],
     ['sans date', '{"outils":{"claude_code":{"version":2}}}'],
+    // Des dates que Postgres refuse : envoyées en `accord_le`, le serveur répondrait 400 à chaque envoi.
+    [
+      'en l’an 0000',
+      '{"outils":{"claude_code":{"version":2,"installe_le":"0000-01-01T00:00:00Z"}}}',
+    ],
+    [
+      'à un décalage de +16:00',
+      '{"outils":{"claude_code":{"version":2,"installe_le":"2026-11-02T14:00:00+16:00"}}}',
+    ],
   ])('un fichier illisible (%s) ne vaut aucun accord', async (_name, content) => {
     await writeRaw(content);
 
@@ -462,6 +472,30 @@ describe('pendingServerWithdrawals et recordServerWithdrawal : le retrait que le
     await writeFile(serverWithdrawalsPath(home), '{"outils": {"claude');
 
     expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+  });
+});
+
+// `retire_le` (T43, le retrait daté) : la date de l'entrée en version 0, mesurée par l'horloge de l'accord.
+describe('withdrawalToTell : la date du retrait à dire au serveur', () => {
+  const now = new Date('2026-11-10T12:00:00Z');
+  const withdrawnAt = (installe_le: string) =>
+    writeRaw(JSON.stringify({ outils: { claude_code: { version: 0, installe_le } } }));
+
+  it('la date de l’entrée en version 0, telle quelle ; rien pour un outil qui n’y est plus', async () => {
+    await withdrawnAt('2026-11-10T11:00:00+01:00');
+    expect(await withdrawalToTell(home, 'claude_code', now)).toBe('2026-11-10T11:00:00+01:00');
+    expect(await withdrawalToTell(home, 'codex', now)).toBeNull();
+  });
+
+  // Postgres refuse les deux premières (400 à la route), et une date à venir fermerait ce jeton au-delà d'un nouvel
+  // accord : toutes valent l'heure du moment, comme une date illisible.
+  it.each([
+    ['l’an 0000', '0000-01-01T00:00:00Z'],
+    ['un décalage de +20:00', '2026-11-10T10:00:00+20:00'],
+    ['une date à venir', '2099-01-01T00:00:00Z'],
+  ])('une date retouchée à la main (%s) vaut l’heure du moment', async (_name, date) => {
+    await withdrawnAt(date);
+    expect(await withdrawalToTell(home, 'claude_code', now)).toBe(now.toISOString());
   });
 });
 

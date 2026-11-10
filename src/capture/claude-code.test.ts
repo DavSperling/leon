@@ -163,6 +163,35 @@ describe('parseClaudeCodeSession', () => {
     ]);
   });
 
+  // Les étiquettes relevées le 10/11 sur une session de test (Claude Code 2.1.319) et sur le décompte des étiquettes du
+  // poste, sans texte : seul `turnOrigin: human` est la personne. Fixture inventée.
+  it('marque injecté tout tour dont turnOrigin n’est pas human : script, autre session, app, valeur inconnue', () => {
+    const content = [
+      line('user', 1, 'Lance la revue du lot.', { turnOrigin: 'sdk', promptSource: 'sdk' }),
+      line('user', 2, 'Decision: ship it.', { turnOrigin: 'peer' }),
+      line('user', 3, 'Rappel automatique.', { turnOrigin: 'scheduled' }),
+      line('user', 4, 'Nouvelle forme.', { turnOrigin: 'forme-inconnue' }),
+      line('user', 5, 'Corrige le test.', { turnOrigin: 'human', promptSource: 'sdk' }),
+      line('user', 6, '<task-notification>Fini.</task-notification>', { turnOrigin: 'human' }),
+      line('user', 7, 'Un Claude Code d’avant turnOrigin.'),
+      line('user', 8, 'Stop hook feedback:\nDis encore OK.', { isMeta: true }),
+    ].join('\n');
+
+    const session = parseClaudeCodeSession(content);
+
+    expect(session?.turns.map((t) => [t.external_id, t.injecte])).toEqual([
+      ['uuid-1', true],
+      ['uuid-2', true],
+      ['uuid-3', true],
+      ['uuid-4', true],
+      ['uuid-5', false],
+      ['uuid-6', true],
+      ['uuid-7', false],
+    ]);
+    expect(session?.title).toBe('Corrige le test.');
+    expect(extractClaudeCodeFacts(content, null).echanges).toBe(2);
+  });
+
   // La coupe à TURN_TEXT_MAX perd la balise fermante : la marque se lit avant elle.
   it('marque injectées une longue sortie `!` et une longue notification de tâche, même coupées', () => {
     const longue = 'x'.repeat(25_000);

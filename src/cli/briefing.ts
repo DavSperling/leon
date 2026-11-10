@@ -126,7 +126,7 @@ function startingSession(stdin: string): string {
 
 // La branche courante du projet ; null en tête détachée, hors d'un dépôt, si git échoue, ou si la route ne
 // l'accepterait pas (trop longue).
-async function currentBranch(directory: string, git: GitRunner): Promise<string | null> {
+export async function currentBranch(directory: string, git: GitRunner): Promise<string | null> {
   const branch = await git(['branch', '--show-current'], directory).catch(() => null);
   return ContextRequestSchema.shape.branche.safeParse(branch).success ? branch : null;
 }

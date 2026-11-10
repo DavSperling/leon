@@ -255,6 +255,40 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
     ]);
   });
 
+  // Lire Leon par son serveur MCP (T44, D36) : reconnu à l'URL de `config.toml`, lue à la capture.
+  it('un outil local du serveur MCP de Leon, reconnu à l’URL de config.toml : la session n’est pas externe', async () => {
+    const MCP = 'http://localhost:3000/api/mcp';
+    const path = await rollout('1', MAINTENANT);
+    await appendFile(
+      path,
+      `${JSON.stringify({
+        timestamp: '2026-11-06T09:05:00.000Z',
+        ordinal: 27,
+        type: 'event_msg',
+        payload: {
+          type: 'item_completed',
+          item: {
+            type: 'McpToolCall',
+            id: 'm1',
+            server: 'leon',
+            tool: 'thread',
+            status: 'completed',
+          },
+        },
+      })}\n`,
+    );
+    const externe = async (url: string, mcpUrl: string | undefined) => {
+      await writeFile(join(codexDir, 'config.toml'), `[mcp_servers.leon]\nurl = "${url}"\n`);
+      facts = [];
+      await captureToolFile('codex', path, { fin: false }, captureDeps({ env, mcpUrl }));
+      return facts[0]?.faits.externe;
+    };
+
+    expect(await externe(MCP, MCP)).toBe(false);
+    expect(await externe('https://autre.example/api/mcp', MCP)).toBe(true);
+    expect(await externe(MCP, undefined)).toBe(true);
+  });
+
   it('sans branche dans le rollout, prend celle que lit git à la capture', async () => {
     const path = await rollout('2', MAINTENANT, SANS_GIT);
     await captureToolFile('codex', path, { fin: false }, captureDeps());

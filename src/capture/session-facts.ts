@@ -76,7 +76,8 @@ const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
 
 // Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, un sous-agent, le réseau. On
 // échoue fermé : hors Bash, tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe
-// (WebFetch, WebSearch, Agent, Task, tout mcp__*, tout nom inconnu).
+// (WebFetch, WebSearch, Agent, Task, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande
+// `leon` n'est une commande réseau (D36).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -101,6 +102,15 @@ const LOCAL_TOOLS = new Set([
   'Skill',
   'AskUserQuestion', // la réponse est celle de l'utilisateur
 ]);
+// Le serveur MCP de Leon, sous le nom que pose son installation (#121 : `claude mcp add … leon`, `codex mcp add leon`),
+// et ceux de ses outils qui ne rendent que la mémoire de l'auteur (D36, A14) : ils ne rendent pas la session externe
+// quand la CLI a reconnu le serveur à l'URL de sa configuration (leon-mcp.ts). `search`, `fetch` et `briefing` rendent
+// des sources de connecteurs : ils comptent. Chaque outil se compare à son nom complet exact, jamais à un suffixe.
+export const LEON_MCP_SERVER = 'leon';
+export const LEON_LOCAL_TOOLS: readonly string[] = ['threads', 'thread', 'versions', 'remember'];
+const LEON_CLAUDE_TOOLS = new Set(
+  LEON_LOCAL_TOOLS.map((tool) => `mcp__${LEON_MCP_SERVER}__${tool}`),
+);
 // Dans Bash, un nom réseau en position de commande : au début, ou après « ; », « & », « | », « ( » (donc « $( »),
 // un retour à la ligne ou un accent grave, les préfixes NOM=valeur et quelques mots de lancement sautés. Pas
 // n'importe où : « https » est dans toute URL, « ssh » dans « src/ssh-keys.ts ».
@@ -249,8 +259,8 @@ function repoRelativePath(path: string, root: string | null): string | null {
 // curl … » compte. Commune aux lecteurs des outils de code (codex.ts).
 export const isExternalCommand = (command: string): boolean => EXTERNAL_COMMAND.test(command);
 
-function isExternalCall({ name, input }: Call): boolean {
-  if (name !== 'Bash') return !LOCAL_TOOLS.has(name);
+function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
+  if (name !== 'Bash') return !LOCAL_TOOLS.has(name) && !(leonMcp && LEON_CLAUDE_TOOLS.has(name));
   const bash = BashSchema.safeParse(input);
   return bash.success && isExternalCommand(bash.data.command);
 }
@@ -359,8 +369,13 @@ function recordResult(
 
 // Les gestes d'une session Claude Code, à partir de son JSONL. `root` est la racine du dépôt (chemin absolu) :
 // les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
-// (`isSidechain`) ne sont pas la session.
-export function extractClaudeCodeFacts(content: string, root: string | null): SessionFacts {
+// (`isSidechain`) ne sont pas la session. `leonMcp` : le serveur `leon` de la configuration de Claude Code est celui de
+// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte.
+export function extractClaudeCodeFacts(
+  content: string,
+  root: string | null,
+  leonMcp = false,
+): SessionFacts {
   const calls = new Map<string, Call>();
   const links: Pr[] = [];
   const record = newFactsRecord();
@@ -391,7 +406,7 @@ export function extractClaudeCodeFacts(content: string, root: string | null): Se
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {
         calls.set(call.data.id, call.data);
-        external ||= isExternalCall(call.data);
+        external ||= isExternalCall(call.data, leonMcp);
       }
       const result = ToolResultSchema.safeParse(block);
       if (!result.success) continue;

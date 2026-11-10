@@ -35,6 +35,7 @@ import { chmod, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promi
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
+import { extractClaudeCodeFacts } from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
 import {
@@ -47,6 +48,7 @@ import {
   sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
+import { leonMcpRecognized } from './leon-mcp';
 import { ADAPTATEURS, sessionFileFrom } from './outils';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
 
@@ -76,6 +78,9 @@ export type CaptureDeps = ImportDeps & {
   // le terminal de Cursor (CURSOR_VERSION) lirait sans le savoir.
   env: Record<string, string | undefined>;
   home: string;
+  // Le serveur MCP de la connexion (`new URL(API_PATHS.mcp, <serveur>)`) : ses outils locaux ne rendent pas la session
+  // externe si la configuration de l'outil y mène (leon-mcp.ts). Absent, tout outil MCP compte.
+  mcpUrl?: string;
 };
 
 // Les crochets de Claude Code que Leon pose servent parfois à un autre outil (T06 du plan mémoire des sessions) :
@@ -199,7 +204,14 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   if (!deps.facts) return; // sans accord, pas même git pour la racine du dépôt
   try {
     // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
-    const source = { content, root: await repoRootFor(start, deps.git), fin: true };
+    const root = await repoRootFor(start, deps.git);
+    const leonMcp = await leonMcpRecognized('claude_code', {
+      ...deps,
+      dirs: root === null ? [start] : [start, root],
+      url: deps.mcpUrl,
+    });
+    const faits = extractClaudeCodeFacts(content, root, leonMcp);
+    const source = { content, root, fin: true, faits };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
       warn(FACTS_REFUSED_MESSAGE);
     }
@@ -338,6 +350,9 @@ export type ToolCaptureDeps = ImportDeps & {
   readFile: (path: string) => Promise<string>;
   stat: (path: string) => Promise<{ mtimeMs: number; size: number }>;
   home: string;
+  // CODEX_HOME, pour la configuration MCP de Codex ; et le serveur MCP de la connexion, comme CaptureDeps.
+  env?: Record<string, string | undefined>;
+  mcpUrl?: string;
 };
 
 export type ToolCapture = 'capte' | 'rien';
@@ -394,7 +409,14 @@ export async function captureToolFile(
   const root = start === null ? null : await repoRootFor(start, deps.git);
   const branch =
     session.branche === null && start !== null ? await branchAtCapture(start, deps.git) : null;
-  const faits = adapter.faits(content, fichier, root, branch);
+  const leonMcp = await leonMcpRecognized(adapter.kind, {
+    home: deps.home,
+    env: deps.env ?? {},
+    dirs: [start, root].filter((dir): dir is string => dir !== null),
+    url: deps.mcpUrl,
+    readFile: deps.readFile,
+  });
+  const faits = adapter.faits(content, fichier, root, branch, leonMcp);
   const source = { content, root, fin: options.fin, faits };
   if (!(await sendSessionFacts(session, source, sending, deps))) warn(FACTS_REFUSED_MESSAGE);
   return 'capte';

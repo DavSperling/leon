@@ -4,6 +4,7 @@ import { isAbsolute, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { API_PATHS } from '../capture/api-contract';
 import { CODE_SESSION_KINDS } from '../capture/turn';
 import { runBriefing } from './briefing';
 import {
@@ -42,6 +43,7 @@ import {
 } from './login';
 import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
+import { runReadCommand } from './read-commands';
 import {
   NODE_DIST,
   nodePlatform,
@@ -110,6 +112,15 @@ Commands:
                        send what their hooks missed since the last capture (a session left with /quit, a failed
                        upload). Only the files changed since that consent are read. Started in the background when a
                        session starts
+  threads              Print the threads of this repository (the work of your sessions, grouped by branch), the
+                       current branch first
+  thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the
+                       current branch)
+  search <query>       Search Leon, within this repository only
+  versions <id>        List the readable versions of a thread's state
+      --read <n>           print version n instead (nothing is restored: only the site does that)
+                       These four print to standard output and write nothing on disk. They need a connection and
+                       the reading consent (\`lecture\`) of one of your code tools, which leon setup does not offer yet
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -139,8 +150,8 @@ Commands:
       --outil <tool>       the tool to remove: claude_code (the default), codex, cursor or antigravity
   --version            Print the version of this CLI ("dev" when run from a clone)
 
-Real uploads (import-claude-code without --dry-run), briefing and capter-session need a connection (leon login), or
-LEON_URL and LEON_TOKEN.`;
+Real uploads (import-claude-code without --dry-run), briefing, capter-session and the reading commands need a
+connection (leon login), or LEON_URL and LEON_TOKEN.`;
 
 function summaryLine(summary: ImportSummary, dryRun: boolean): string {
   const sent = dryRun ? 'to send' : 'sent';
@@ -242,6 +253,10 @@ async function runBriefingCommand(
   }
 }
 
+// Le serveur MCP de la connexion : le serveur `leon` de la configuration d'un outil n'est reconnu que s'il y mène
+// (leon-mcp.ts, T44).
+const mcpUrlOf = (env: ServerEnv) => new URL(API_PATHS.mcp, env.url).href;
+
 // Le crochet SessionEnd ne doit jamais gêner Claude Code : le code de sortie vaut toujours 0 et les messages
 // ne citent ni la session ni l'adresse du serveur (voir capture-session.ts). Rien n'est écrit sur la sortie
 // standard, et rien du tout quand un autre outil la lance (isOtherToolHook) : la garde passe avant l'accord et la
@@ -294,6 +309,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
       readFile: (path) => readFile(path, 'utf8'),
       env: process.env,
       home: homedir(),
+      mcpUrl: mcpUrlOf(env),
       ...(projectDir ? { projectDir } : {}),
     });
   } catch {
@@ -363,6 +379,7 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
       stat: (path) => stat(path),
       home: homedir(),
       env: process.env,
+      mcpUrl: mcpUrlOf(env),
     });
   } catch {
     console.error('Leon: capture failed (unexpected error).');
@@ -388,6 +405,7 @@ async function runCatchUp(): Promise<number> {
     stat: (path) => stat(path),
     home: homedir(),
     env: process.env,
+    mcpUrl: mcpUrlOf(env),
     now: () => new Date(),
   });
   console.error(
@@ -605,6 +623,22 @@ async function main(argv: string[]): Promise<number> {
       return 0;
     }
     if (command === 'rattraper') return await runCatchUp();
+    if (
+      command === 'threads' ||
+      command === 'thread' ||
+      command === 'search' ||
+      command === 'versions'
+    ) {
+      return await runReadCommand(command, args, {
+        env: process.env,
+        home: homedir(),
+        cwd: process.cwd(),
+        git: gitInDirectory,
+        fetch,
+        out: console.log,
+        err: console.error,
+      });
+    }
     if (command === 'setup') return await runSetupCommand(args);
     if (command === 'update') return await runUpdateCommand(args);
     if (command === 'login') return await runLoginCommand(args);

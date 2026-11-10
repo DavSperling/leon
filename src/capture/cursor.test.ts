@@ -140,6 +140,26 @@ describe('extractCursorFacts', () => {
       expect(externe(tool('Shell', { command: 'cd x && curl -s https://example.com' }))).toBe(true);
     });
 
+    // Lire Leon (T44 ; D36, A14) : les outils locaux du serveur `leon`, quand la CLI l'a reconnu à son URL.
+    it('un outil local du serveur MCP de Leon reconnu : non ; search, un autre serveur, ou non reconnu : oui', () => {
+      const mcp = (name: string, leon: boolean) =>
+        extractCursorFacts(line('assistant', tool(name, {})), FILE, RACINE, null, leon).externe;
+      for (const name of ['threads', 'thread', 'versions', 'remember']) {
+        expect(mcp(`mcp_leon_${name}`, true), name).toBe(false);
+        expect(mcp(`mcp_leon_${name}`, false), name).toBe(true);
+      }
+      for (const name of [
+        'mcp_leon_search',
+        'mcp_leon_fetch',
+        'mcp_leon_briefing',
+        'mcp_autre_thread',
+      ]) {
+        expect(mcp(name, true), name).toBe(true);
+      }
+      expect(mcp('mcp__leon__thread', true)).toBe(true);
+      expect(mcp('leon_thread', true)).toBe(true);
+    });
+
     it('lire, écrire, chercher dans le dépôt, les commandes locales, `leon` : non', () => {
       expect(
         externe(
@@ -148,7 +168,8 @@ describe('extractCursorFacts', () => {
           tool('Glob', { glob_pattern: '*.ts' }),
           tool('Write', { path: `${RACINE}/a.ts` }),
           tool('Shell', { command: 'pnpm test' }),
-          tool('Shell', { command: '~/.leon/bin/leon fil' }),
+          tool('Shell', { command: '~/.leon/bin/leon thread' }),
+          tool('Shell', { command: 'leon search "route des faits"' }),
           tool('run_terminal_cmd', { command: 'git status' }),
           tool('edit_file', { target_file: 'b.ts' }),
         ),

@@ -94,11 +94,13 @@ export type Adaptateur = {
   racines: (home: string, env: Env) => string[];
   entree: (input: unknown, home: string, env: Env) => EntreeCrochet;
   lire: (contenu: string, fichier: FichierSession) => SessionOutil | null;
+  // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts).
   faits: (
     contenu: string,
     fichier: FichierSession,
     racine: string | null,
     brancheLue: string | null,
+    leonMcp: boolean,
   ) => SessionFacts;
   trouver: (home: string, env: Env) => Promise<SessionFile[]>;
   // Le dossier de travail d'un fichier de session que son contenu ne dit pas (le rattrapage, sans crochet).
@@ -191,8 +193,8 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       inactif: true,
     }),
     lire: (contenu) => parseCodexSession(contenu),
-    faits: (contenu, _fichier, racine, brancheLue) =>
-      extractCodexFacts(contenu, racine, brancheLue),
+    faits: (contenu, _fichier, racine, brancheLue, leonMcp) =>
+      extractCodexFacts(contenu, racine, brancheLue, leonMcp),
     trouver: (home, env) => findCodexSessionFiles(codexHome(home, env)),
   },
   cursor: {
@@ -241,8 +243,8 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       };
     },
     lire: (contenu, fichier) => parseCursorSession(contenu, fichier),
-    faits: (contenu, fichier, racine, brancheLue) =>
-      extractCursorFacts(contenu, fichier, racine, brancheLue),
+    faits: (contenu, fichier, racine, brancheLue, leonMcp) =>
+      extractCursorFacts(contenu, fichier, racine, brancheLue, leonMcp),
     trouver: (home) => findCursorSessionFiles(cursorHome(home)),
     // `projects/<slug>/agent-transcripts/[<conversation>/]<conversation>.jsonl`
     dossierDe: async (fichier) => {

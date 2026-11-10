@@ -218,8 +218,8 @@ describe('la page Documentation', () => {
       const start = source.indexOf('const CONSENT_LINES = [');
       const block = source.slice(start, source.indexOf('\n];', start));
       const quoted = [...block.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-      const tools = /such as (.+?);/.exec(block)?.[1]?.split(/, | or /);
-      expect(quoted).toEqual(['claude -p', '--bare']);
+      const tools = /developer tools such as (.+?);/.exec(block)?.[1]?.split(/, | or /);
+      expect(quoted).toEqual(['claude -p', '--bare', '!', '/', '!']);
       expect(tools).toEqual(['git', 'gh', 'pnpm', 'docker']);
 
       const sent = Object.values(messages.site.documentation.sent).join('\n');
@@ -227,6 +227,25 @@ describe('la page Documentation', () => {
         expect(sent, term).toContain(`<code>${term}</code>`);
     },
   );
+
+  // `leon setup` branche aussi Codex, Cursor et Antigravity (setup.ts) : la page le dit, avec ce que leurs textes d'accord
+  // disent des messages que l'outil écrit lui-même (T43, décision d'Amos du 10/11).
+  it.each(LOCALES)('dit ce qui part des autres outils de code (%s)', (locale, messages) => {
+    const { tools } = messages.site.documentation.sent;
+    const { claude } = messages.site.documentation.requirements;
+
+    for (const tool of ['Codex', 'Cursor', 'Gemini / Antigravity']) {
+      expect(tools).toContain(tool);
+      expect(claude).toContain(tool);
+    }
+    expect(tools).toContain('<code>!</code>');
+    expect(tools).toContain(
+      locale === 'en'
+        ? 'labeled as written by the tool, not by you'
+        : 'marqués comme écrits par l’outil et non par vous',
+    );
+    expect(claude).not.toContain('not supported yet');
+  });
 
   // `leon setup` propose aussi l'usage `resume` (RESUME_LINES) : la page dit qu'il est à part, ce qu'il envoie, à qui.
   it.each(LOCALES)(

@@ -152,6 +152,33 @@ describe('turnsAfter : le curseur', () => {
     expect(turnsAfter(tours, curseur(3, 'c'))).toEqual([]);
   });
 
+  // Une CLI d'avant la marque écartait les tours injectés, et son curseur ne les comptait pas. Les renvoyer maintenant
+  // les daterait, chez Cursor, de l'heure du fichier : ils passeraient après les tours tapés qui les suivent.
+  it('reprend après le dernier envoyé un curseur qui ne comptait pas les tours injectés', () => {
+    const tour = (id: string, injecte?: boolean) => ({
+      external_id: id,
+      role: 'user' as const,
+      text: id,
+      ts: '2026-11-06T09:00:00.000Z',
+      capture_mode: 'file' as const,
+      ...(injecte === undefined ? {} : { injecte }),
+    });
+    const avecInjectes = [
+      tour('a', false),
+      tour('i1', true),
+      tour('b'),
+      tour('i2', true),
+      tour('c', false),
+    ];
+
+    expect(turnsAfter(avecInjectes, curseur(2, 'b')).map((t) => t.external_id)).toEqual([
+      'i2',
+      'c',
+    ]);
+    expect(turnsAfter(avecInjectes, curseur(3, 'c'))).toEqual([]);
+    expect(turnsAfter(avecInjectes, curseur(2, 'x'))).toHaveLength(5);
+  });
+
   it('sans curseur, ou un fichier qui ne commence plus pareil, rend tout', () => {
     expect(turnsAfter(tours, null)).toHaveLength(3);
     expect(turnsAfter(tours, curseur(2, 'x'))).toHaveLength(3);

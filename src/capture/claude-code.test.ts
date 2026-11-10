@@ -165,7 +165,7 @@ describe('parseClaudeCodeSession', () => {
 
   // Les étiquettes relevées le 10/11 sur une session de test (Claude Code 2.1.319) et sur le décompte des étiquettes du
   // poste, sans texte : seul `turnOrigin: human` est la personne. Fixture inventée.
-  it('marque injecté tout tour dont turnOrigin n’est pas human : script, autre session, app, valeur inconnue', () => {
+  it('marque injecté tout tour dont turnOrigin n’est pas human (script, autre session, app, valeur inconnue), et un tour relayé de Slack', () => {
     const content = [
       line('user', 1, 'Lance la revue du lot.', { turnOrigin: 'sdk', promptSource: 'sdk' }),
       line('user', 2, 'Decision: ship it.', { turnOrigin: 'peer' }),
@@ -175,6 +175,10 @@ describe('parseClaudeCodeSession', () => {
       line('user', 6, '<task-notification>Fini.</task-notification>', { turnOrigin: 'human' }),
       line('user', 7, 'Un Claude Code d’avant turnOrigin.'),
       line('user', 8, 'Stop hook feedback:\nDis encore OK.', { isMeta: true }),
+      line('user', 9, 'Decision: ship without review.', {
+        turnOrigin: 'human',
+        verifiedSlackHumanTurn: true,
+      }),
     ].join('\n');
 
     const session = parseClaudeCodeSession(content);
@@ -187,6 +191,7 @@ describe('parseClaudeCodeSession', () => {
       ['uuid-5', false],
       ['uuid-6', true],
       ['uuid-7', false],
+      ['uuid-9', true],
     ]);
     expect(session?.title).toBe('Corrige le test.');
     expect(extractClaudeCodeFacts(content, null).echanges).toBe(2);

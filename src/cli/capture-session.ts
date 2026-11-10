@@ -326,9 +326,11 @@ export async function writeCursor(
 // fichier au même chemin) repart de zéro.
 export function turnsAfter(turns: Turn[], cursor: Curseur | null): Turn[] {
   if (cursor === null || cursor.tours === 0 || cursor.tours > turns.length) return turns;
-  return turns[cursor.tours - 1]?.external_id === cursor.dernier
-    ? turns.slice(cursor.tours)
-    : turns;
+  if (turns[cursor.tours - 1]?.external_id === cursor.dernier) return turns.slice(cursor.tours);
+  // Le curseur d'une CLI d'avant la marque (T43) : elle écartait les tours injectés, et ne les comptait pas. Ceux d'avant
+  // son dernier tour restent sur le poste ; renvoyés, Cursor les daterait de l'heure du fichier, après les suivants.
+  const last = turns.filter((turn) => turn.injecte !== true)[cursor.tours - 1];
+  return last?.external_id === cursor.dernier ? turns.slice(turns.indexOf(last) + 1) : turns;
 }
 
 export type ToolCaptureDeps = ImportDeps & {

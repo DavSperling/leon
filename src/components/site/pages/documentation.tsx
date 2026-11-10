@@ -212,9 +212,11 @@ export function DocumentationPage({
               <DocSection id="ce-qui-part" title={t('sent.title')}>
                 {p('sent.lead')}
                 <ul className={cn(LIST, 'list-disc')}>
-                  {(['where', 'end', 'secrets', 'start', 'resume'] as const).map((item) => (
-                    <li key={item}>{rich(`sent.${item}`)}</li>
-                  ))}
+                  {(['where', 'end', 'tools', 'secrets', 'start', 'resume'] as const).map(
+                    (item) => (
+                      <li key={item}>{rich(`sent.${item}`)}</li>
+                    ),
+                  )}
                 </ul>
                 {p('sent.server')}
               </DocSection>

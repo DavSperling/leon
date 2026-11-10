@@ -29,6 +29,8 @@ const LineSchema = z.object({
   // Qui a mis ce tour `user` (Claude Code récent) : `human` pour la personne ; `sdk`, `peer`, `task_notification`,
   // `scheduled`, `auto_continuation`, `host_synthetic`, `system`, `unknown` sinon.
   turnOrigin: z.string().optional(),
+  // Un tour relayé d'un fil Slack ou Teams, ou d'un e-mail : Claude Code le dit `human`, mais c'est un tiers.
+  verifiedSlackHumanTurn: z.boolean().optional(),
   aiTitle: z.string().optional(),
   customTitle: z.string().optional(),
   message: z.object({ content: z.union([z.string(), z.array(z.unknown())]) }).optional(),
@@ -64,7 +66,8 @@ function messageText(content: string | unknown[]): string {
 // des sessions du poste, sans leur texte :
 // - `turnOrigin` dit qui a mis le tour : seul `human` est la personne. Le prompt d'un script (`claude -p`, le SDK) porte
 //   `sdk`, comme ce que l'app de bureau injecte (évènements, rappels) ; le message d'une autre session, `peer`. Une
-//   valeur inconnue compte comme injectée.
+//   valeur inconnue compte comme injectée. Un tour relayé d'un fil Slack, de Teams ou d'un e-mail est aussi `human`, mais
+//   porte `verifiedSlackHumanTurn` (lu dans le programme, Claude Code 2.1.319) : il n'est pas de la personne.
 // - la réponse d'un crochet `Stop` est en `isMeta`, et le résumé d'une compaction en `isCompactSummary` : ces lignes sont
 //   écartées (isConversationLine). Les autres sorties de crochet sont des lignes `attachment`, jamais lues.
 // - les balises ci-dessous (la notification d'une tâche de fond, la sortie d'une commande locale `/…` ou `!…`, le
@@ -102,6 +105,7 @@ function hasBlock(text: string, tag: string): boolean {
 // partirait comme preuve. Lue sur le texte d'avant prepareTurnText : sa coupe à TURN_TEXT_MAX perdrait la balise
 // fermante d'une longue sortie `!` ou d'un long rapport de tâche. Les rappels système y sont retirés de même.
 function injected(line: ConversationLine, raw: string): boolean {
+  if (line.verifiedSlackHumanTurn === true) return true;
   if (line.turnOrigin !== undefined && line.turnOrigin !== 'human') return true;
   const text = removeBlocks(raw, 'system-reminder');
   return INJECTED_TAGS.some((tag) => hasBlock(text, tag)) || INTERRUPTED.test(text.trim());

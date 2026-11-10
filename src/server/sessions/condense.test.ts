@@ -32,6 +32,7 @@ function turn(overrides: Partial<CondenseTurn> = {}): CondenseTurn {
     role: 'user',
     ts: new Date(Date.UTC(2026, 10, 5, 9, 0, next)),
     text: `Tour ${next}`,
+    injecte: false,
     ...overrides,
   };
 }
@@ -60,7 +61,7 @@ describe('condenseSession', () => {
     expect(texte).toContain('<commande erreur="oui">pnpm test</commande>');
     expect(texte).toContain('<tache etat="a_faire">Écrire la page de connexion</tache>');
     expect(texte).toContain(
-      `<tour id="${first.id}" de="utilisateur" date="${first.ts.toISOString()}">On passe à Better Auth.</tour>`,
+      `<tour id="${first.id}" de="utilisateur" preuve="oui" date="${first.ts.toISOString()}">On passe à Better Auth.</tour>`,
     );
     expect(texte).toContain(`<tour id="${second.id}" de="agent"`);
     expect(texte.indexOf('</faits>')).toBeLessThan(texte.indexOf('<tour'));
@@ -181,10 +182,51 @@ describe('condenseSession', () => {
     });
     const { texte, preuves } = condenseSession({ faits: facts(), turns: [user, injected] });
 
-    expect(texte).toContain(`<tour id="${user.id}" de="utilisateur"`);
-    expect(texte).toContain(`<tour id="${injected.id}" de="agent"`);
+    expect(texte).toContain(`<tour id="${user.id}" de="utilisateur" preuve="oui"`);
+    expect(texte).toContain(`<tour id="${injected.id}" de="agent" date=`);
     expect(preuves.has(user.id)).toBe(true);
     expect(preuves.has(injected.id)).toBe(false);
+  });
+
+  // Un tour capté avant la marque, ou par une CLI qui ne la pose pas : rendu comme avant elle, il ne prouve rien.
+  it('rend un tour user sans marque comme l’utilisateur, sans preuve="oui", et jamais comme preuve', () => {
+    const unknown = turn({ role: 'user', injecte: null, text: 'On garde Postgres.' });
+    const { texte, preuves } = condenseSession({ faits: facts(), turns: [unknown] });
+
+    expect(texte).toContain(
+      `<tour id="${unknown.id}" de="utilisateur" date="${unknown.ts.toISOString()}">On garde Postgres.</tour>`,
+    );
+    expect(preuves.has(unknown.id)).toBe(false);
+  });
+
+  // L'état d'un fil (T43) cite ces ids, et le serveur en écrit la provenance (D23, D36).
+  it('rend la provenance de chaque id gardé : toi pour un tour tapé, l’agent sinon, l’équipe pour une PR et un commit', () => {
+    const typed = turn({ role: 'user' });
+    const agent = turn({ role: 'assistant' });
+    const injected = turn({ role: 'user', injecte: true });
+    const unknown = turn({ role: 'user', injecte: null });
+    const { ids } = condenseSession({
+      faits: facts({ prs: [PR_12], commits: ['abc1234'] }),
+      turns: [typed, agent, injected, unknown],
+    });
+
+    expect(Object.fromEntries(ids)).toEqual({
+      'acme/leon#12': 'équipe',
+      abc1234: 'équipe',
+      [typed.id]: 'toi',
+      [agent.id]: 'agent',
+      [injected.id]: 'agent',
+      [unknown.id]: 'agent',
+    });
+  });
+
+  it('tient dans la borne qu’on lui donne, en gardant la fin', () => {
+    const turns = Array.from({ length: 10 }, () => turn({ text: 'x'.repeat(1000) }));
+    const { texte, ids } = condenseSession({ faits: facts(), turns }, 3000);
+
+    expect(texte.length).toBeLessThanOrEqual(3000);
+    expect(texte).toContain(`id="${turns.at(-1)?.id}"`);
+    expect(ids.has(turns[0]?.id ?? '')).toBe(false);
   });
 
   it('échappe l’état d’une tâche hors de la liste, comme tout attribut', () => {

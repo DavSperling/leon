@@ -53,12 +53,14 @@ export function modelSpec(model: string): ModelSpec | undefined {
 
 // Choix de la spec du deuxième jet : la réponse en tête est appelée à chaque recherche, elle doit coûter peu
 // et répondre vite ; la discussion et le point du matin ont besoin de plus de jugement. Le résumé d'une session
-// (D8 du plan de la mémoire des sessions) est écrit à chaque session close : il doit coûter peu.
+// (D8 du plan de la mémoire des sessions) est écrit à chaque session close : il doit coûter peu. L'état d'un fil
+// (D23 du plan de la mémoire à disposition) est réécrit après chaque résumé : de même.
 const DEFAULT_MODEL_BY_STEP = {
   reponse: 'claude-haiku-5-5',
   discussion: 'claude-sonnet-5-5',
   point: 'claude-sonnet-5-5',
   resume: 'claude-haiku-5-5',
+  fil: 'claude-haiku-5-5',
 } as const satisfies Record<LlmStep, SupportedModel>;
 
 // Variable d'environnement qui remplace le modèle de chaque étape.
@@ -67,6 +69,7 @@ export const SETTING_BY_STEP = {
   discussion: 'LEON_MODEL_DISCUSSION',
   point: 'LEON_MODEL_POINT',
   resume: 'LEON_MODEL_RESUME',
+  fil: 'LEON_MODEL_FIL',
 } as const satisfies Record<LlmStep, keyof Env>;
 
 // L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots sur Haiku n'a
@@ -76,6 +79,7 @@ export const EFFORT_BY_STEP = {
   discussion: 'medium',
   point: 'medium',
   resume: 'low',
+  fil: 'low',
 } as const satisfies Record<LlmStep, 'low' | 'medium' | 'high'>;
 
 export function modelForStep(step: LlmStep, env: Env): SupportedModel {

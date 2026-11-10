@@ -1,6 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
+import { API_PATHS, FAITS_BODY_MAX_BYTES, RETRAIT_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { createApiToken } from '@/server/auth/api-tokens';
@@ -464,5 +464,76 @@ describe('POST /api/v1/faits', () => {
 
     expect(response.status).toBe(202);
     expect((await storedMetadata(paul, body.external_id))[0]?.metadata.fin).toBe(true);
+  });
+});
+
+// Le retrait de l'accord atteint le serveur (T43, amendé le 06/11) : il vide les usages de toutes les sessions de
+// l'outil dont le porteur est l'auteur. Le résumé et l'état du fil relisent l'usage : plus rien ne part au modèle.
+describe('POST /api/v1/retrait', () => {
+  // Une session de ce membre pour cet outil, envoyée par la route des faits avec ces usages.
+  async function sent(token: string, kind: string, usages: string[]) {
+    const body = { ...validBody(), kind, usages };
+    expect((await apiRequest(API_PATHS.faits, { token, body })).status).toBe(202);
+    return body;
+  }
+
+  it('répond 401 sans jeton', async () => {
+    const response = await apiRequest(API_PATHS.retrait, { body: { outil: 'claude_code' } });
+    expect(response.status).toBe(401);
+    expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
+  });
+
+  it.each([[{ outil: 'claude_ai' }], [{ outil: 'claude_code', tout: true }], [{}]])(
+    'répond 400 à %j',
+    async (body) => {
+      const { paulToken } = await setup();
+      const response = await apiRequest(API_PATHS.retrait, { token: paulToken, body });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: 'Invalid request' });
+    },
+  );
+
+  it('répond 413 à un corps de 1 Kio + 1 octet', async () => {
+    const { paulToken } = await setup();
+    const envelope = JSON.stringify('');
+    const filler = 'a'.repeat(RETRAIT_BODY_MAX_BYTES + 1 - envelope.length);
+
+    const response = await apiRequest(API_PATHS.retrait, { token: paulToken, body: filler });
+
+    expect(response.status).toBe(413);
+  });
+
+  it('vide les usages des sessions de l’outil du porteur, ni d’un autre outil ni d’un collègue', async () => {
+    const { paul, marie, paulToken } = await setup();
+    const { token: marieToken } = await createApiToken(marie, 'test');
+    const first = await sent(paulToken, 'claude_code', ['resume', 'lecture']);
+    const second = await sent(paulToken, 'claude_code', ['resume']);
+    const codex = await sent(paulToken, 'codex', ['resume']);
+    const hers = await sent(marieToken, 'claude_code', ['resume']);
+    // Sa session partagée avec Paul : il la lit, elle reste à elle.
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId, paul.userId] })
+      .where(eq(sources.externalId, hers.external_id));
+
+    const response = await apiRequest(API_PATHS.retrait, {
+      token: paulToken,
+      body: { outil: 'claude_code' },
+    });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe('');
+    const usages = async (owner: TenantContext, externalId: string) =>
+      (await storedMetadata(owner, externalId))[0]?.metadata.usages;
+    expect(await usages(paul, first.external_id)).toEqual([]);
+    expect(await usages(paul, second.external_id)).toEqual([]);
+    expect(await usages(paul, codex.external_id)).toEqual(['resume']);
+    expect(await usages(marie, hers.external_id)).toEqual(['resume']);
+    // Les faits restent : seul l'accord est retiré.
+    expect((await storedMetadata(paul, first.external_id))[0]?.metadata.faits).toEqual(facts());
+
+    // Un nouvel accord : l'envoi de faits suivant rouvre la session (record-facts.ts remplace les usages).
+    await apiRequest(API_PATHS.faits, { token: paulToken, body: first });
+    expect(await usages(paul, first.external_id)).toEqual(['resume', 'lecture']);
   });
 });

@@ -122,6 +122,10 @@ export const TurnSchema = z
     text: z.string().min(1).max(TURN_TEXT_MAX),
     ts: z.iso.datetime({ offset: true }),
     capture_mode: z.enum(CAPTURE_MODES),
+    // Un tour `user` que la personne n'a pas tapé (rapport de sous-agent, notification de tâche, sortie de crochet…) :
+    // true ; tapé par elle : false. Absent, il est rangé « inconnu » (null) : une CLI d'avant la marque (T43). Seul un
+    // tour `user` marqué false prouve une `[décision]`.
+    injecte: z.boolean().optional(),
   })
   .strict();
 export type Turn = z.infer<typeof TurnSchema>;

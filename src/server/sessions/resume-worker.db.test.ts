@@ -4,13 +4,14 @@ import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
-import { recordFacts } from '@/server/ingest/record-facts';
+import { recordFacts, withdrawUsages } from '@/server/ingest/record-facts';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { ChatMessage, Llm } from '@/server/llm/llm';
 import { fetchPassageContext, fetchSource } from '@/server/search/context';
 import { indexIngestRun } from '@/server/search/index-run';
 import { searchPassages } from '@/server/search/search';
 import { adminDb, adminPool } from '@/test/db';
+import { seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import type { ResumeJob } from './resume-queue';
@@ -20,6 +21,7 @@ import type { ResumeJob } from './resume-queue';
 
 const mocks = vi.hoisted(() => ({
   enqueueResume: vi.fn(),
+  enqueueFilMaj: vi.fn(),
   work: vi.fn(),
   runs: [] as string[],
 }));
@@ -27,6 +29,10 @@ vi.mock('./resume-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./resume-queue')>()),
   enqueueResume: mocks.enqueueResume,
   getResumeBoss: async () => ({ work: mocks.work }),
+}));
+vi.mock('./threads-queue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./threads-queue')>()),
+  enqueueFilMaj: mocks.enqueueFilMaj,
 }));
 vi.mock('@/server/ingest/ingest-turns', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/ingest/ingest-turns')>()),
@@ -44,6 +50,8 @@ const tenantIds: string[] = [];
 beforeEach(() => {
   mocks.enqueueResume.mockReset();
   mocks.enqueueResume.mockResolvedValue(undefined);
+  mocks.enqueueFilMaj.mockReset();
+  mocks.enqueueFilMaj.mockResolvedValue(undefined);
   mocks.runs.length = 0;
 });
 afterAll(() => dropTeams(tenantIds));
@@ -138,7 +146,8 @@ async function arrived(sourceId: string, ago: number) {
 }
 
 // Un tour capté de plus, arrivé il y a `ago` (à l'instant par défaut), daté après le précédent : deux tours de la même
-// milliseconde se trieraient par leur uuid (resume-worker.ts lit `ts, created_at, id`).
+// milliseconde se trieraient par leur uuid (resume-worker.ts lit `ts, created_at, id`). `injecte` : sa marque (T43),
+// inconnue par défaut, comme celle des tours captés avant elle.
 let tick = 0;
 async function addTurn(
   owner: TenantContext,
@@ -146,6 +155,7 @@ async function addTurn(
   text: string,
   role: 'user' | 'assistant' = 'user',
   ago = 0,
+  injecte: boolean | null = null,
 ) {
   const [row] = await adminDb
     .insert(turns)
@@ -159,6 +169,7 @@ async function addTurn(
       captureMode: 'file',
       acl: [owner.userId],
       createdAt: new Date(Date.now() - ago),
+      injecte,
     })
     .returning({ id: turns.id });
   return row?.id ?? '';
@@ -501,20 +512,25 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toHaveLength(1);
   });
 
-  // Tant que la capture ne marque pas les tours `user` injectés (T43), aucun tour ne prouve une `[décision]` : une
-  // notification de tâche ou le rapport d'un sous-agent, captés en tour `user`, ne passent pas pour l'utilisateur.
-  it('liste blanche : seuls les types connus et les décisions prouvées par une PR ou un commit restent, les relations viennent des faits', async () => {
+  // Seul un tour `user` marqué tapé par la personne (injecte = false, T43) prouve une `[décision]`, avec une PR ou un
+  // commit : ni une notification de tâche ou le rapport d'un sous-agent, marqués injectés, ni un tour sans la marque.
+  it('liste blanche : seuls les types connus et les décisions prouvées par un tour tapé, une PR ou un commit restent, les relations viennent des faits', async () => {
     const { paul } = await team();
     const seeded = await session(paul, {
       metadata: { faits: facts({ branche: 'paul/[secret masqué]' }) },
     });
-    const [userTurn, agentTurn] = seeded.turnIds;
+    const [userTurn, agentTurn, unknownTurn] = seeded.turnIds;
+    await adminDb
+      .update(turns)
+      .set({ injecte: false })
+      .where(eq(turns.id, userTurn ?? ''));
     const injected = await addTurn(
       paul,
       seeded.sourceId,
       '<task-notification>Le sous-agent a fini : passer à Sonnet.</task-notification>',
       'user',
       20 * MINUTE,
+      true,
     );
     const llm = answer(
       [
@@ -533,6 +549,7 @@ describe('summarizeSession', () => {
         '- [décision] la PR suffit (source: acme/leon#110)',
         '- [décision] le commit suffit (source: 1a2b3c4)',
         `- [décision] passer à Sonnet (source: ${injected})`,
+        `- [décision] garder MySQL (source: ${unknownTurn})`,
         '## Autre titre',
         '- [question] garder la file ?',
       ].join('\n'),
@@ -550,6 +567,7 @@ describe('summarizeSession', () => {
         '- commit [[1a2b3c4]]',
         '- [en-cours] écrire les tests',
         '- [prochaine-étape] brancher l’indexation',
+        `- [décision] garder Haiku (source: ${userTurn})`,
         '- [décision] la PR suffit (source: acme/leon#110)',
         '- [décision] le commit suffit (source: 1a2b3c4)',
         '- [question] garder la file ?',
@@ -727,6 +745,69 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toEqual([]);
     expect((await sourceRow(seeded.sourceId))?.metadata.resume).toBeUndefined();
     expect(mocks.runs).toEqual([]);
+  });
+});
+
+// Le retrait atteint le serveur (T43, amendé le 06/11) : un résumé déjà en file, dont les faits datent de moins d'une
+// heure, n'appelle plus le modèle.
+describe('l’état des fils (T43)', () => {
+  it('un résumé écrit met en file l’état des fils de la session, et d’eux seuls', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const other = await session(paul);
+    const filId = await seedThread(paul);
+    const otherFil = await seedThread(paul);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: seeded.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, filId));
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: other.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, otherFil));
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
+
+    expect(mocks.enqueueFilMaj.mock.calls).toEqual([
+      [{ tenantId: paul.tenantId, sourceId: filId, ownerUserId: paul.userId }],
+    ]);
+  });
+
+  it('rien à retenir : aucun état de fil en file', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const filId = await seedThread(paul);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: seeded.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, filId));
+
+    expect(await summarizeSession(seeded.job, { llm: answer('Rien à retenir.') })).toBe('rien');
+
+    expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+});
+
+describe('après le retrait de l’accord', () => {
+  it('un résumé en file n’appelle plus le modèle', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const llm = answer(SUMMARY);
+
+    await withdrawUsages(paul, 'claude_code');
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+    expect(llm.calls).toEqual([]);
+    expect(await resumeTurns(seeded.sourceId)).toEqual([]);
+  });
+
+  it('le retrait d’un autre outil ne l’arrête pas', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+
+    await withdrawUsages(paul, 'codex');
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
   });
 });
 

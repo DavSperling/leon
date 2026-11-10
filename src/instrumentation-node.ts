@@ -39,6 +39,12 @@ export async function startNodeInstrumentation() {
   // La liaison des sources aux fils (T42) : par leurs clés exactes, sinon par la proximité de leurs vecteurs.
   const { startThreadLinksWorker } = await import('@/server/sessions/thread-links');
   await startThreadLinksWorker({ embedder });
+  // L'état des fils (T43) : par le modèle après un résumé nouveau ; sans modèle, la liste déterministe.
+  // shortcut: démarré sans modèle, la liste déterministe seule : tant que `leon retirer-crochets` n'appelle pas la
+  // route du retrait, une session retirée sur le poste seul garde l'usage `resume` ici. La PR 3b du lot 12 lui donne
+  // `llm`, avec l'appel de la route et le rattrapage des retraits faits avant elle.
+  const { startFilStateWorker } = await import('@/server/sessions/thread-state-worker');
+  await startFilStateWorker({ llm: null });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

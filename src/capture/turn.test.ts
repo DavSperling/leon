@@ -178,6 +178,16 @@ describe('TurnSchema', () => {
   it('refuse le mode de capture connector', () => {
     expect(TurnSchema.safeParse({ ...turn, capture_mode: 'connector' }).success).toBe(false);
   });
+
+  // La marque des tours injectés (T43) : facultative, une CLI d'avant elle ne l'envoie pas.
+  it('accepte la marque injecte, vraie ou fausse, ou son absence, et rien d’autre qu’un booléen', () => {
+    expect(TurnSchema.parse({ ...turn, injecte: true }).injecte).toBe(true);
+    expect(TurnSchema.parse({ ...turn, injecte: false }).injecte).toBe(false);
+    expect(TurnSchema.parse(turn)).not.toHaveProperty('injecte');
+    for (const injecte of ['oui', 1, null]) {
+      expect(TurnSchema.safeParse({ ...turn, injecte }).success, String(injecte)).toBe(false);
+    }
+  });
 });
 
 describe('listes de types', () => {

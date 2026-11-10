@@ -96,6 +96,8 @@ function captureRows(
         text,
         ts: new Date(turn.ts),
         captureMode: turn.capture_mode,
+        // Sans la marque, le tour est « inconnu » : il ne prouve jamais une décision (T43).
+        injecte: turn.injecte ?? null,
         acl: [ctx.userId],
       },
     ];

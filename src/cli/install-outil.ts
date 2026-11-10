@@ -216,7 +216,7 @@ export async function uninstallToolHooks(
       consentDone = false;
     }
   }
-  if (consentDone) await withdrawOnServer(home, outil, deps);
+  if (consentDone) await withdrawOnServer(home, deps);
   if (hooksDone && consentDone) await removeUnusedLauncher(home, deps);
   return hooksDone && consentDone ? 0 : 1;
 }

@@ -14,7 +14,12 @@
 import { lstat, mkdir, readdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { captureToolFile, readCursor, type ToolCaptureDeps } from './capture-session';
-import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
+import {
+  CONSENT_WITHDRAWN_MESSAGE,
+  consentWithdrawn,
+  factsConsent,
+  pendingServerWithdrawals,
+} from './consent';
 import { OUTILS, type Outil } from './hook-commands';
 import {
   type FactsSender,
@@ -59,13 +64,19 @@ export async function purgeOldEntries(home: string, now: Date): Promise<void> {
   }
 }
 
-// Les outils dont l'accord porte la capture : ceux que le rattrapage lit. Le démarrage n'en lance un que s'il y en a.
+// Les outils dont l'accord porte la capture : ceux que le rattrapage lit.
 export async function captureTools(home: string): Promise<Outil[]> {
   const tools: Outil[] = [];
   for (const outil of OUTILS) {
     if ((await factsConsent(home, outil))?.capture_le) tools.push(outil);
   }
   return tools;
+}
+
+// Le démarrage ne lance `leon rattraper` (scheduleCatchUp, leon.ts), et il ne travaille, que s'il y a un outil à capter
+// ou un retrait que le serveur n'a pas appris (T43) : celui-ci ne dépend d'aucune capture.
+export async function catchUpNeeded(home: string): Promise<boolean> {
+  return (await captureTools(home)).length > 0 || (await pendingServerWithdrawals(home)).length > 0;
 }
 
 // Un seul rattrapage à la fois : deux sessions ouvertes ensemble en lancent deux. Un verrou de plus de 10 min est

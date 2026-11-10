@@ -11,7 +11,8 @@
 // lot 1. Le retrait l'efface, comme le reste.
 // `retrait_serveur_le` (T43), sur une entrée en version 0 seulement : la date où le serveur de la connexion a appris le
 // retrait (POST /api/v1/retrait). Sans elle, la commande de retrait ou le rattrapage le lui redit ; un nouvel accord
-// (writeConsent) réécrit l'entrée et l'efface.
+// (writeConsent) réécrit l'entrée et l'efface : `leon setup` et `installer-crochets` le disent donc d'abord
+// (tellBeforeConsent, uninstall-hooks.ts).
 // La CLI le relit avant chaque envoi : une CLI mise à jour par `git pull` n'envoie rien de plus que ce que
 // l'utilisateur a accepté. Un fichier absent ne vaut aucun accord (les textes partent, comme avant ce chantier) ; un
 // fichier présent mais illisible vaut un retrait : il ne peut venir que d'une retouche à la main, l'écriture étant

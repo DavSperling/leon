@@ -26,12 +26,13 @@ import {
   type CatchUpDeps,
   captureTools,
   catchUp,
+  catchUpNeeded,
   ENTRY_MAX_AGE_MS,
   entriesDir,
   purgeOldEntries,
   readEntryFile,
 } from './catch-up';
-import { addUsage, recordCapture, writeConsent } from './consent';
+import { addUsage, recordCapture, recordServerWithdrawal, writeConsent } from './consent';
 import { IngestResponseError, TokenRefusedError } from './import-claude-code';
 import { cursorSlug as cursorSlugOf } from './outils';
 
@@ -366,6 +367,29 @@ describe('l’entrée du crochet de fin', () => {
 
     await expect(stat(vieille)).rejects.toMatchObject({ code: 'ENOENT' });
     expect((await stat(recente)).isFile()).toBe(true);
+  });
+});
+
+// La condition qui fait lancer `leon rattraper` au démarrage d'une session (scheduleCatchUp, leon.ts) et le fait
+// travailler : une capture acceptée (T19), ou un retrait que le serveur n'a pas appris (T43), même sans aucune capture.
+describe('catchUpNeeded : le rattrapage a-t-il quelque chose à faire', () => {
+  it('rien d’accepté ni de retiré : non', async () => {
+    expect(await catchUpNeeded(home)).toBe(false);
+    await writeConsent(home, 'claude_code', 2);
+    expect(await catchUpNeeded(home)).toBe(false);
+  });
+
+  it('une capture acceptée : oui', async () => {
+    await consentToCapture();
+    expect(await catchUpNeeded(home)).toBe(true);
+  });
+
+  it('un retrait que le serveur n’a pas appris, sans aucune capture : oui, puis non une fois appris', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    expect(await catchUpNeeded(home)).toBe(true);
+
+    await recordServerWithdrawal(home, 'claude_code');
+    expect(await catchUpNeeded(home)).toBe(false);
   });
 });
 

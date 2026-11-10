@@ -356,7 +356,7 @@ export async function uninstallCodexHook(
       consentDone = false;
     }
   }
-  if (consentDone) await withdrawOnServer(options.home, 'codex', deps);
+  if (consentDone) await withdrawOnServer(options.home, deps);
   if (hooksDone && consentDone) await removeUnusedLauncher(options.home, deps);
   return hooksDone && consentDone ? 0 : 1;
 }

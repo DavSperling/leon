@@ -256,7 +256,32 @@ describe('la page Documentation', () => {
       expect(resume).toContain(
         locale === 'en' ? 'tells the Leon server' : 'prévient le serveur de Leon',
       );
+      // Seulement le serveur et le compte de la connexion du moment (T43 amendé le 10/11).
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'only that server and account: one this computer used before is not told',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'only that server and account: one this computer used before is not told'
+          : 'ce serveur et ce compte seulement : un autre que cet ordinateur a utilisé avant n’en sait rien',
+      );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
+  // Partir : le retrait d'abord, tant que la connexion lui permet de prévenir le serveur ; `logout` l'effacerait, et le
+  // lanceur qui le lance part avec le dernier outil.
+  it.each(LOCALES)(
+    'dit de retirer les crochets avant de révoquer l’ordinateur (%s)',
+    (locale, messages) => {
+      const { remove, all } = messages.site.documentation.disconnect;
+
+      expect(remove).not.toContain(locale === 'en' ? 'logout</code> first' : 'logout</code> avant');
+      expect(all).toMatch(
+        locale === 'en'
+          ? /^To leave completely: <code>retirer-crochets<\/code>, then revoke the computer in Settings/
+          : /^Pour partir complètement : <code>retirer-crochets<\/code>, puis révoquez l’ordinateur dans Réglages/,
+      );
     },
   );
 

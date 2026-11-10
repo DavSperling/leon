@@ -11,7 +11,7 @@ import {
   uninstallCodexHook,
 } from './install-codex';
 import { writeLauncher } from './launcher';
-import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_MESSAGE } from './uninstall-hooks';
+import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
 // L'installateur et le retrait des crochets de Codex (T17, T20), toujours sur des dossiers temporaires : jamais le vrai
 // ~/.codex ni le vrai ~/.leon.
@@ -320,7 +320,7 @@ describe('uninstallCodexHook', () => {
     });
 
     expect(code).toBe(0);
-    expect(err).toBe(WITHDRAWAL_NOT_TOLD_MESSAGE);
+    expect(err).toBe(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE);
     expect(await consentWithdrawn(home, 'codex')).toBe(true);
     expect(await pendingServerWithdrawals(home)).toEqual(['codex']);
   });

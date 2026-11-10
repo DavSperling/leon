@@ -14,13 +14,8 @@ import {
   parseDeadlineMs,
   readHookStdin,
 } from './capture-session';
-import { captureTools, catchUp, readEntryFile } from './catch-up';
-import {
-  CONSENT_WITHDRAWN_MESSAGE,
-  consentWithdrawn,
-  factsConsent,
-  pendingServerWithdrawals,
-} from './consent';
+import { catchUp, catchUpNeeded, readEntryFile } from './catch-up';
+import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { startDetached } from './detach';
 import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import { OUTILS, type Outil } from './hook-commands';
@@ -56,7 +51,13 @@ import {
   startBackgroundUpdate,
 } from './self-update';
 import { ensureLauncher, isLeonRepo, runSetup } from './setup';
-import { catchUpWithdrawals, type UninstallDeps, uninstallHooks } from './uninstall-hooks';
+import {
+  catchUpWithdrawals,
+  connectionWithdrawal,
+  tellBeforeConsent,
+  type UninstallDeps,
+  uninstallHooks,
+} from './uninstall-hooks';
 
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts). Cette valeur ne vaut que sous la
 // forme clone : dans le fichier construit (vite.cli.config.ts), import.meta.url pointe vers ~/.leon/cli/<version>/,
@@ -136,6 +137,7 @@ Commands:
                        ~/.leon/accord.json: from then on, nothing is sent from Claude Code, and the Leon
                        server of the connection is told. The launcher
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
+                       and the server was told
       --outil <tool>       the tool to remove: claude_code (the default), codex, cursor or antigravity
   --version            Print the version of this CLI ("dev" when run from a clone)
 
@@ -217,13 +219,7 @@ async function runBriefingCommand(
       // Le rattrapage des outils dont la capture est acceptée (T19), et des retraits que le serveur n'a pas appris
       // (T43), détaché lui aussi.
       scheduleCatchUp: async () => {
-        const home = homedir();
-        if (
-          (await captureTools(home)).length > 0 ||
-          (await pendingServerWithdrawals(home)).length > 0
-        ) {
-          startDetached(['rattraper']);
-        }
+        if (await catchUpNeeded(homedir())) startDetached(['rattraper']);
       },
       // La mise à jour automatique (S12) : décidée et lancée détachée, une fois le bloc écrit.
       scheduleUpdate: () =>
@@ -306,7 +302,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
-// Un délai par requête, pour le rattrapage et le retrait, qu'aucun crochet ne borne.
+// Un délai par requête, pour le rattrapage, qu'aucun crochet ne borne.
 const REQUEST_TIMEOUT_MS = 30_000;
 const timedFetch: typeof fetch = (input, init) =>
   fetch(input, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
@@ -375,8 +371,7 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
 // `leon rattraper` (T19), lancé détaché au démarrage d'une session : sans outil dont la capture est acceptée ni retrait
 // que le serveur n'a pas appris (T43), rien. Les retraits d'abord : ils ne dépendent d'aucune capture.
 async function runCatchUp(): Promise<number> {
-  const withdrawals = await pendingServerWithdrawals(homedir());
-  if ((await captureTools(homedir())).length === 0 && withdrawals.length === 0) return 0;
+  if (!(await catchUpNeeded(homedir()))) return 0;
   const env = await resolveServerEnv(process.env, homedir());
   await catchUpWithdrawals(homedir(), createWithdrawalSender(timedFetch, env));
   const summary = await catchUp({
@@ -440,6 +435,8 @@ async function runInstallHooks(args: string[]): Promise<number> {
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
+    // Un retrait que le serveur n'a pas appris se dit avant le nouvel accord, qui effacerait son attente (T43).
+    await tellBeforeConsent(io.home, uninstallDeps());
     if (values.outil === 'cursor') {
       return await installCursorHooks({ home: io.home, assumeYes }, io);
     }
@@ -466,8 +463,7 @@ async function runInstallHooks(args: string[]): Promise<number> {
 const uninstallDeps = (): UninstallDeps => ({
   out: console.log,
   err: console.error,
-  withdraw: async (outil) =>
-    createWithdrawalSender(timedFetch, await resolveServerEnv(process.env, homedir()))(outil),
+  withdraw: connectionWithdrawal(fetch, process.env, homedir()),
 });
 
 // Comme l'installateur, le retrait vise les réglages de CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude.

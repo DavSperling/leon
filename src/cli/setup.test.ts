@@ -2,12 +2,14 @@ import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { API_PATHS } from '../capture/api-contract';
 import { type Connection, writeConnection } from './connection';
 import { addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, previousLauncherScripts, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
+import { EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE } from './uninstall-hooks';
 
 // `leon setup` (S10 du plan « CLI sans clone »), toujours dans un HOME et un CLAUDE_CONFIG_DIR temporaires : jamais le
 // vrai ~/.claude ni le vrai ~/.leon. Le navigateur de `leon login` est un faux, qui n'ouvre rien.
@@ -80,6 +82,8 @@ async function setup(
     loginCode?: number;
     me?: number | 'unreachable';
     whileAsking?: () => Promise<void>;
+    // Appelé à chaque requête, avant sa réponse : ce que le disque porte à ce moment-là.
+    whileFetching?: (url: string, init?: RequestInit) => Promise<void>;
     interactive?: boolean;
   } = {},
 ): Promise<Run> {
@@ -112,6 +116,7 @@ async function setup(
         url: String(input),
         authorization: new Headers(init?.headers).get('Authorization'),
       });
+      await extra.whileFetching?.(String(input), init);
       if (extra.me === 'unreachable') throw new TypeError('fetch failed');
       return new Response('{}', { status: extra.me ?? 200 });
     },
@@ -847,6 +852,54 @@ describe('setup : les outils de code', () => {
     expect(hooks.SessionStart[0].hooks[0].command).toBe(launcherHookCommand(home, 'briefing'));
     expect(await readFile(launcherPath(home), 'utf8')).toContain(`--dir '${clone}' leon`);
     expect(run.output).toContain('pnpm');
+  });
+});
+
+// Un retrait que le serveur n'a pas appris (fait avant la route, ou hors ligne) : `leon setup` le lui dit avant d'écrire
+// un nouvel accord, qui effacerait son attente (T43).
+describe('setup : un retrait que le serveur n’a pas appris', () => {
+  beforeEach(async () => {
+    await installLeon();
+    await connect();
+    await hasClaudeCode();
+    await writeConsent(home, 'claude_code', 0);
+  });
+
+  it('le dit au serveur de la connexion avant d’écrire la version 2', async () => {
+    const versions: number[] = [];
+
+    const run = await setup(
+      { yes: true },
+      {
+        whileFetching: async (url, init) => {
+          if (!url.endsWith(API_PATHS.retrait)) return;
+          expect(JSON.parse(String(init?.body))).toEqual({ outil: 'claude_code' });
+          versions.push(
+            JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.version,
+          );
+        },
+      },
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.requests).toContainEqual({
+      url: `${CONNECTION.url}${API_PATHS.retrait}`,
+      authorization: `Bearer ${FAKE_TOKEN}`,
+    });
+    expect(versions).toEqual([0]);
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
+    expect(run.output).not.toContain(EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE);
+  });
+
+  it('un serveur qui ne l’apprend pas : une ligne, et l’installation continue', async () => {
+    const run = await setup({ yes: true }, { me: 'unreachable' });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE);
+    expect(EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE).toBe(
+      'Leon: the Leon server could not be told of an earlier withdrawal of your consent (no connection, server unreachable, older than this CLI, or token refused): if you give your consent again now, the sessions sent before that withdrawal keep, on that server, the usages you had accepted for them.',
+    );
+    expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
   });
 });
 

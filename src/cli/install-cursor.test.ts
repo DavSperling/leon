@@ -12,7 +12,7 @@ import {
 } from './install-cursor';
 import { protectedCloneWarning } from './install-outil';
 import { writeLauncher } from './launcher';
-import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_MESSAGE } from './uninstall-hooks';
+import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
 // L'installateur et le retrait des crochets de Cursor (T29), toujours dans un HOME temporaire : jamais le vrai ~/.cursor.
 
@@ -171,7 +171,7 @@ describe('uninstallCursorHooks', () => {
       throw new Error('fetch failed');
     });
     expect(failed.code).toBe(0);
-    expect(failed.err).toBe(WITHDRAWAL_NOT_TOLD_MESSAGE);
+    expect(failed.err).toBe(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE);
     expect(await consentWithdrawn(home, 'cursor')).toBe(true);
 
     await uninstall(async (outil) => {

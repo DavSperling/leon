@@ -56,13 +56,14 @@ import { enqueueFilMaj } from './threads-queue';
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
 // Le retrait atteint le serveur (T43, amendé le 06/11) : la route du retrait (faits-routes.ts) vide `metadata.usages`
-// des sessions de l'outil, et l'usage relu ici n'y est plus.
-// shortcut: `leon retirer-crochets` n'appelle pas encore la route (PR 3b du lot 12) ; d'ici là, l'usage relu est celui
-// du dernier envoi de faits, qui doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel comme à
-// l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais après :
-// RESUME_LINES le dit. Un résumé qui attend plus longtemps (file chargée, serveur arrêté, reprises) n'est écrit qu'au
-// prochain envoi de faits de la session. Revoir la borne et la phrase du retrait de RESUME_LINES quand la CLI appelle
-// la route.
+// des sessions de l'outil, et l'usage relu ici n'y est plus. `leon retirer-crochets` l'appelle, et le poste la rappelle
+// plus tard s'il n'a pas pu (catchUpWithdrawals, uninstall-hooks.ts).
+// shortcut: un retrait que le serveur n'a pas encore appris (poste hors ligne, connexion d'avant) laisse l'usage dans
+// `metadata.usages` : l'usage relu doit donc aussi venir du dernier envoi de faits, qui doit dater de moins d'une heure
+// (`metadata.faits_le`), avant l'appel comme à l'écriture. Un résumé déjà en file peut ainsi encore s'écrire dans
+// l'heure qui suit le dernier envoi, jamais après : RESUME_LINES le dit. Un résumé qui attend plus longtemps (file
+// chargée, serveur arrêté, reprises) n'est écrit qu'au prochain envoi de faits de la session. La borne reste tant qu'un
+// retrait peut manquer le serveur.
 // shortcut: aucun plafond par membre ni par organisation, seulement des bornes par appel : un porteur du jeton du poste
 // peut multiplier les sessions, donc les appels, et retarder ceux des autres (file commune). appels_modele compte le
 // coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.

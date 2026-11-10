@@ -53,9 +53,10 @@ import {
 //   modèle n'est pas écrasée (D33). Un modèle en échec n'écrit rien : l'ancien état reste, et pg-boss reprend le job.
 // shortcut: l'usage se lit dans `metadata.usages` des sessions, que la route du retrait vide (faits-routes.ts, T43
 // amendé le 06/11), sans la borne d'une heure du résumé : l'état relit des sessions anciennes par nature. `leon
-// retirer-crochets` n'appelle la route qu'à la PR 3b du lot 12 : d'ici là, un retrait sur le poste seul laisserait
-// partir au modèle de l'état les sessions déjà envoyées. instrumentation-node.ts le démarre donc sans modèle ; la PR 3b
-// lui donne le modèle, avec l'appel de la route et le rattrapage des retraits faits avant elle.
+// retirer-crochets` appelle la route, et le poste la rappelle plus tard s'il n'a pas pu (catchUpWithdrawals,
+// uninstall-hooks.ts) : d'ici là, et pour une connexion d'avant, que le retrait ne joint pas, les sessions déjà
+// envoyées partent encore au modèle de l'état (RESUME_LINES le dit). Rappeler la route pour chaque connexion qui a reçu
+// des faits avec `resume` le jour où un poste change de serveur ou d'organisation (T43 amendé le 10/11).
 // shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
 // la colonne vient avec T44, qui les y ajoute (T44 amendé le 10/11).
 

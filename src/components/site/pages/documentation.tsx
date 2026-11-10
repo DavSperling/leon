@@ -13,7 +13,7 @@ import { PageHero, PageSection } from './page-hero';
 // Page « Documentation » : brancher Leon à ses outils de code (le chemin « Je demande à Claude », puis le terminal) et
 // ce qu'il faut en savoir. Chaque commande et chaque option citée existe dans src/cli (documentation.test.ts le vérifie) ;
 // « Ce qui part » résume le texte d'accord de `leon setup` (CONSENT_LINES, puis l'usage `resume`, RESUME_LINES,
-// install-hooks.ts, état des fils à venir compris), sans rien promettre de plus.
+// install-hooks.ts, état des fils compris), sans rien promettre de plus.
 // Le mode « Pour un agent » montre la même page en Markdown (documentation-markdown.ts, aussi servi sur /documentation.md) ;
 // SECTIONS (les ancres du plan et leur clé dans site.documentation) est commune aux deux.
 

@@ -242,9 +242,25 @@ describe('la page Documentation', () => {
       expect(resume).toContain(
         locale === 'en' ? 'Leon’s model provider' : 'fournisseur du modèle de Leon',
       );
-      // Le même usage couvrira l'état des fils (lot 12, D23) : le texte d'accord le dit déjà, la page aussi.
-      expect(readText('src/cli/install-hooks.ts')).toContain('the state of your work threads');
-      expect(resume).toContain(locale === 'en' ? 'your work threads' : 'vos fils de travail');
+      // Le même usage tient à jour l'état des fils (lot 12, D23), au présent : le texte d'accord le dit, la page aussi,
+      // avec ce que le retrait en arrête.
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'The same usage also keeps the state of your work threads up to date',
+      );
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'Withdrawing your consent stops this too, once the Leon server is told.',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'The same usage also keeps the state of your work threads up to date'
+          : 'Le même usage sert aussi à tenir à jour l’état de vos fils de travail',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'Withdrawing your consent stops this too, once the Leon server is told.'
+          : 'Le retrait de votre accord l’arrête aussi, une fois le serveur de Leon prévenu.',
+      );
+      expect(resume).not.toContain(locale === 'en' ? 'Later' : 'Plus tard');
       // Un refus est gardé (A16) : la page dit qu'il n'est plus redemandé, comment revenir dessus, et le délai du
       // retrait que dit RESUME_LINES.
       expect(resume).toContain(locale === 'en' ? 'A refusal is kept' : 'Un refus est gardé');

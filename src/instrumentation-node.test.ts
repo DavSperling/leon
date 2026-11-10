@@ -273,12 +273,21 @@ describe('point du matin', () => {
   });
 });
 
-// L'état des fils (T43) : tant que les commandes de retrait du poste n'appellent pas la route du retrait (PR 3b du
-// lot 12), une session retirée sur le poste seul garde l'usage `resume` sur le serveur. Le modèle n'est pas donné.
+// L'état des fils (T43) : le même modèle que le point du matin et le résumé. Le retrait atteint le serveur (la route du
+// retrait, appelée par `leon retirer-crochets` et rattrapée ensuite) : une session retirée ne part plus au modèle.
 describe('état des fils', () => {
-  it('démarre son worker sans modèle, même avec le modèle réglé', async () => {
+  it('démarre son worker avec le modèle réglé, le même que celui des autres workers', async () => {
     mocks.env.LEON_LLM = 'factice';
 
+    await startNodeInstrumentation();
+
+    expect(startFilStateWorker).toHaveBeenCalledOnce();
+    const [deps] = vi.mocked(startFilStateWorker).mock.calls[0] ?? [];
+    expect(typeof deps?.llm?.streamText).toBe('function');
+    expect(deps?.llm).toBe(vi.mocked(startBriefingWorker).mock.calls[0]?.[0]?.llm);
+  });
+
+  it('démarre son worker sans modèle quand aucun n’est réglé', async () => {
     await startNodeInstrumentation();
 
     expect(startFilStateWorker).toHaveBeenCalledExactlyOnceWith({ llm: null });

@@ -286,7 +286,8 @@ describe('updateFilState', () => {
       .select({ metadata: sources.metadata })
       .from(sources)
       .where(eq(sources.id, filId));
-    const pris = (row?.metadata.etat_session as { tours: Record<string, string> }).tours;
+    const pris =
+      (row?.metadata.etat_session as { tours?: Record<string, string> } | undefined)?.tours ?? {};
     expect(Object.keys(pris).sort()).toEqual(recent.map((one) => one.id).sort());
 
     // La seule session nouvelle n'entre pas au condensé : aucun appel.

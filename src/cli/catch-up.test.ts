@@ -200,6 +200,21 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
     expect(facts[1]?.project).toBe('github.com/demo/leon');
   });
 
+  it('envoie les tours injectés avec leur marque, et les messages tapés marqués false (T43)', async () => {
+    const path = await rollout('2', MAINTENANT, SANS_GIT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+
+    expect(
+      sent
+        .flatMap((payload) => payload.turns)
+        .map((turn) => [turn.role, 'injecte' in turn ? turn.injecte : 'sans marque']),
+    ).toEqual([
+      ['user', false],
+      ['user', true],
+      ['assistant', 'sans marque'],
+    ]);
+  });
+
   it('sans branche dans le rollout, prend celle que lit git à la capture', async () => {
     const path = await rollout('2', MAINTENANT, SANS_GIT);
     await captureToolFile('codex', path, { fin: false }, captureDeps());
@@ -489,7 +504,8 @@ describe('Cursor : capter à chaque stop, rattraper', () => {
       external_id: CONVERSATION,
       project: 'github.com/demo/leon',
     });
-    expect(sentIds()).toHaveLength(5);
+    // Cinq tours, et les deux messages que Cursor écrit lui-même, marqués (T43).
+    expect(sentIds()).toHaveLength(7);
     expect(facts[0]).toMatchObject({
       kind: 'cursor',
       fin: false,

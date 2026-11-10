@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { maskSecrets } from './mask-secrets';
 import { prepareTurnText, removeBlocks } from './prepare-turn-text';
 import { stripLeonBlocks } from './strip-leon-blocks';
-import type { Turn } from './turn';
+import { isTypedTurn, type Turn } from './turn';
 
 export type ClaudeCodeSession = {
   sessionId: string;
@@ -56,10 +56,11 @@ function messageText(content: string | unknown[]): string {
 }
 
 // Ce que Claude Code range en `user` sans que la personne l'ait tapé : la notification d'une tâche de fond, la sortie
-// d'une commande locale (`/…`, `!…`), une interruption. Le tour reste capté ; il ne compte pas comme un échange (C1),
-// le seuil du résumé (« 6 de vos messages », resume-worker.ts) compris.
-// shortcut: les formes connues de Claude Code au 06/11 ; une forme nouvelle compterait encore. La marque des tours
-// injectés (`injecte`, T43 du lot 12) remplacera cette liste.
+// d'une commande locale (`/…`, `!…`), une interruption. Le rapport d'un sous-agent au premier plan est un résultat
+// d'outil, que messageText écarte. Le tour part marqué `injecte` (T43) : il ne compte pas comme un échange (C1), le
+// seuil du résumé (« 6 de vos messages », resume-worker.ts) compris, et ne prouve jamais une `[décision]`.
+// shortcut: les formes connues de Claude Code au 06/11, vérifiées sur une fixture inventée, jamais sur une vraie
+// conversation ; une forme nouvelle partirait marquée tapée, à relever sur une session de test créée pour l'occasion.
 const INJECTED_TAGS = [
   'task-notification',
   'local-command-stdout',
@@ -70,9 +71,9 @@ const INJECTED_TAGS = [
 ];
 const INTERRUPTED = /^\[Request interrupted by user[^\]]*\]$/;
 
-export function typedByUser(text: string): boolean {
+function injected(text: string): boolean {
   const rest = INJECTED_TAGS.reduce((kept, tag) => removeBlocks(kept, tag), text).trim();
-  return rest !== '' && !INTERRUPTED.test(rest);
+  return rest === '' || INTERRUPTED.test(rest);
 }
 
 type ConversationLine = Line & {
@@ -107,10 +108,11 @@ function toTurn(line: ConversationLine): Turn | null {
     text,
     ts: line.timestamp,
     capture_mode: 'file',
+    ...(line.type === 'user' ? { injecte: injected(text) } : {}),
   };
 }
 
-// Titre : customTitle, sinon aiTitle, sinon le début du premier texte utilisateur.
+// Titre : customTitle, sinon aiTitle, sinon le début du premier message tapé par la personne.
 function sessionTitle(
   customTitle: string | undefined,
   aiTitle: string | undefined,
@@ -120,7 +122,7 @@ function sessionTitle(
     .map((title) => maskSecrets(title ?? '').trim())
     .find((title) => title !== '');
   if (given) return given.slice(0, TITLE_MAX);
-  const firstUserText = turns.find((turn) => turn.role === 'user')?.text;
+  const firstUserText = turns.find(isTypedTurn)?.text;
   return firstUserText ? firstUserText.slice(0, TITLE_FROM_TEXT_MAX) : null;
 }
 

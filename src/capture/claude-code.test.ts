@@ -99,6 +99,45 @@ describe('parseClaudeCodeSession', () => {
     ]);
   });
 
+  // Fixture inventée sur les formes connues de Claude Code, jamais une vraie conversation (T43).
+  it('marque injectés une notification de tâche, une sortie de commande, une interruption ; un vrai message, non', () => {
+    const content = [
+      line(
+        'user',
+        1,
+        '<task-notification>\n<task-id>t1</task-id>\n<status>completed</status>\n<summary>Le sous-agent a fini.</summary>\n</task-notification>',
+      ),
+      line('user', 2, '<local-command-stdout>Compacted</local-command-stdout>'),
+      line('user', 3, '<bash-stdout>ok</bash-stdout><bash-stderr></bash-stderr>'),
+      line('user', 4, '[Request interrupted by user for tool use]'),
+      line('user', 5, 'Corrige le test.'),
+      line(
+        'user',
+        6,
+        '<command-name>/review</command-name>\n<command-message>review</command-message>',
+      ),
+      line('user', 7, [{ type: 'text', text: 'Le bloc <task-notification> sert à quoi ?' }]),
+      line('assistant', 8, [{ type: 'text', text: 'À prévenir la session.' }]),
+    ].join('\n');
+
+    const session = parseClaudeCodeSession(content);
+
+    expect(
+      session?.turns.map((t) => [t.external_id, 'injecte' in t ? t.injecte : 'sans marque']),
+    ).toEqual([
+      ['uuid-1', true],
+      ['uuid-2', true],
+      ['uuid-3', true],
+      ['uuid-4', true],
+      ['uuid-5', false],
+      ['uuid-6', false],
+      ['uuid-7', false],
+      ['uuid-8', 'sans marque'],
+    ]);
+    // Le titre vient du premier message tapé, jamais d'un tour injecté.
+    expect(session?.title).toBe('Corrige le test.');
+  });
+
   it('renvoie null pour un fichier vide ou sans conversation exploitable', () => {
     expect(parseClaudeCodeSession('')).toBeNull();
     expect(parseClaudeCodeSession('{"type":"mode"}\nn’importe quoi\n')).toBeNull();

@@ -130,6 +130,11 @@ export const TurnSchema = z
   .strict();
 export type Turn = z.infer<typeof TurnSchema>;
 
+// Un message tapé par la personne : un tour `user` marqué false. Les lecteurs des outils de code posent la marque sur
+// chaque tour `user` ; seuls ceux-là comptent comme échanges (C1) et donnent le titre d'une session.
+export const isTypedTurn = (turn: Pick<Turn, 'role' | 'injecte'>): boolean =>
+  turn.role === 'user' && turn.injecte === false;
+
 // La clé du projet d'une session (C8) : un dépôt GitHub (`github.com/<propriétaire>/<dépôt>`, en minuscules)
 // ou, faute de dépôt, le dossier (`dossier:` et 16 hexadécimaux). Jamais une adresse de remote : elle peut porter un jeton.
 export const PROJECT_KEY_PATTERN =

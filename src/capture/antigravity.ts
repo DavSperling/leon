@@ -36,16 +36,15 @@ import {
   recordFile,
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
-import type { Turn } from './turn';
+import { isTypedTurn, type Turn } from './turn';
 
 export type AntigravitySession = {
   sessionId: string; // la conversation (le dossier `brain/<conversation>`)
   cwd: string | null;
   title: string | null;
+  // Les messages d'utilisateur qu'Antigravity écrit lui-même, jamais un message de la personne (T63), partent marqués
+  // `injecte` (T43), comme tout tour `user`.
   turns: Turn[];
-  // Les messages d'utilisateur qu'Antigravity écrit lui-même : jamais un message de la personne (T63), ils partiront
-  // marqués `injecte` (T43). shortcut: ils ne partent pas d'ici là.
-  injectes: number;
   branche: null; // le transcript n'en porte pas : la capture la lit par git
 };
 
@@ -148,15 +147,10 @@ export function parseAntigravitySession(
   const steps = parseSteps(content);
   if (conversation === '' || conversation === '.' || isSubagent(steps)) return null;
   const turns: Turn[] = [];
-  let injectes = 0;
   for (const [index, step] of steps.entries()) {
     let role: 'user' | 'assistant';
     let text: string;
     if (step.type === 'USER_INPUT') {
-      if (step.source !== undefined && step.source !== 'USER_EXPLICIT') {
-        injectes += 1;
-        continue;
-      }
       role = 'user';
       text = userText(step.content ?? '');
     } else if (step.type === 'PLANNER_RESPONSE') {
@@ -173,29 +167,39 @@ export function parseAntigravitySession(
       text: prepared,
       ts: step.created_at ?? file.mtime.toISOString(),
       capture_mode: 'file',
+      ...(role === 'user'
+        ? { injecte: step.source !== undefined && step.source !== 'USER_EXPLICIT' }
+        : {}),
     });
   }
-  const firstUserText = turns.find((turn) => turn.role === 'user')?.text;
+  const firstUserText = turns.find(isTypedTurn)?.text;
   return {
     sessionId: conversation,
     cwd: workingDirectory(steps),
     title: firstUserText ? firstUserText.slice(0, TITLE_FROM_TEXT_MAX) : null,
     turns,
-    injectes,
     branche: null,
   };
 }
 
 // --- Les gestes (C1) -----------------------------------------------------------------------------------------------
 
-// Ce qui fait entrer du texte d'ailleurs (D17), d'après le plan (T32) : la recherche web, un outil MCP, une page web, le
-// navigateur, un sous-agent, une commande réseau. Liste d'étapes et d'outils connus, pas un échec fermé : les noms
-// d'Antigravity ne sont pas encore relevés par un essai.
-// shortcut: à fermer (tout outil inconnu externe) une fois la liste des outils locaux relevée à T31 ; un outil du
-// serveur MCP de Leon compte encore, jusqu'à T44.
+// Les outils d'Antigravity relevés à l'essai T31 qui n'apportent rien d'ailleurs (D17). On échoue fermé, comme
+// Cursor (#160) : tout autre outil (la recherche web, un outil MCP, une page web, le navigateur, un sous-agent, un outil
+// inconnu) rend la session externe, une commande aussi si elle va sur le réseau. Les étapes connues de ces outils
+// (EXTERNAL_STEPS) la rendent externe même sans leur appel.
+// shortcut: `schedule` compte comme externe tant qu'on ne sait pas ce qu'il fait, à revoir au prochain essai ; un outil
+// du serveur MCP de Leon compte encore, jusqu'à T44.
+const LOCAL_TOOLS = new Set([
+  'run_command',
+  'view_file',
+  'write_to_file',
+  'replace_file_content',
+  'grep_search',
+  'list_dir',
+  'manage_task',
+]);
 const EXTERNAL_STEPS = /^(?:SEARCH_WEB|CALL_MCP_TOOL|READ_URL_CONTENT|INVOKE_SUBAGENT|BROWSER_.*)$/;
-const EXTERNAL_TOOLS =
-  /^(?:search_web|read_url_content|call_mcp_tool|invoke_subagent|browser_.*|mcp_.*)$/;
 // Les outils qui lisent sans écrire : leurs chemins ne sont pas des fichiers écrits.
 const READ_TOOLS = /^(?:view_.*|list_.*|grep_.*|find_.*|codebase_search|search_.*|read_.*)$/;
 const EXIT_CODE = /exit code[:\s]+(-?\d+)/i;
@@ -225,7 +229,7 @@ export function extractAntigravityFacts(
       continue;
     }
     for (const { name, args } of calls(step)) {
-      if (EXTERNAL_TOOLS.test(name)) external = true;
+      if (!LOCAL_TOOLS.has(name)) external = true;
       const commandLine = args?.CommandLine;
       if (typeof commandLine === 'string') {
         external ||= isExternalCommand(commandLine);
@@ -248,7 +252,7 @@ export function extractAntigravityFacts(
     branch: brancheLue,
     errors,
     external,
-    echanges: session?.turns.filter((turn) => turn.role === 'user').length ?? 0,
+    echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start: dates[0] ?? null,
     end: dates.at(-1) ?? file.mtime.toISOString(),
   });

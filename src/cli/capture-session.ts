@@ -135,8 +135,10 @@ function warn(message: string): void {
 function failureMessage(error: unknown): string {
   if (error instanceof TokenRefusedError)
     return 'token refused by the server, session not captured.';
-  // Le serveur valide strictement la source : un serveur sans la tâche T12 refuse `source.project` par un 400.
-  // Ordre de déploiement : le serveur d'abord, la CLI ensuite.
+  // Le serveur valide strictement la source et les tours : un serveur sans la tâche T12 refuse `source.project` par un
+  // 400, un serveur d'avant la marque des tours injectés (T43), `injecte`. Le fichier reste sur le poste : le curseur
+  // d'un autre outil n'avance pas, Claude Code se rattrape par `leon import-claude-code`. Ordre de déploiement : le
+  // serveur d'abord, la CLI ensuite.
   if (error instanceof IngestResponseError && error.status === 400) {
     return 'the server does not recognize this upload (it may be older than the CLI), session not captured.';
   }

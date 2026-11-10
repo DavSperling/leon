@@ -170,6 +170,34 @@ describe('captureSessionFromHook : une session qui se termine', () => {
     expect(payload?.turns.map((turn) => turn.external_id)).toEqual(['u-1', 'u-2', 'u-4']);
   });
 
+  // La marque des tours injectés va jusqu'au serveur, où seul un tour `user` marqué false prouve une décision (T43).
+  it('envoie la marque de chaque tour `user` telle quelle ; un tour de l’assistant n’en porte pas', async () => {
+    const { deps, send } = makeDeps({
+      session: [
+        conversationLine(
+          1,
+          'user',
+          '<task-notification>\n<status>completed</status>\n</task-notification>',
+        ),
+        conversationLine(2, 'user', 'Corrige le test.'),
+        conversationLine(3, 'assistant', [{ type: 'text', text: 'Corrigé.' }]),
+      ].join('\n'),
+    });
+
+    await captureSessionFromHook(HOOK, deps);
+
+    expect(
+      sentPayloads(send)[0]?.turns.map((turn) => [
+        turn.external_id,
+        'injecte' in turn ? turn.injecte : 'sans marque',
+      ]),
+    ).toEqual([
+      ['u-1', true],
+      ['u-2', false],
+      ['u-3', 'sans marque'],
+    ]);
+  });
+
   it('dit combien de tours sont nouveaux, au pluriel comme au singulier', async () => {
     const many = makeDeps();
     await captureSessionFromHook(HOOK, many.deps);

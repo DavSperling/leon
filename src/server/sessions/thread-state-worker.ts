@@ -1,6 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
-import { CAPTURE_KINDS, CODE_SESSION_KINDS, type TurnRole } from '@/capture/turn';
+import {
+  CAPTURE_KINDS,
+  CODE_SESSION_KINDS,
+  type CodeSessionKind,
+  type SourceKind,
+  type TurnRole,
+} from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { env } from '@/server/env';
@@ -88,7 +94,7 @@ const USAGE_RESUME = sql`(coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, 
 
 type SessionRow = {
   id: string;
-  kind: string;
+  kind: CodeSessionKind;
   faits: unknown;
   resume: boolean;
   last_epoch: string;
@@ -118,8 +124,15 @@ type TailRow = {
 };
 // Les résumés pris en compte (D21) : pour chaque session, le numéro de son dernier résumé.
 type EtatSession = Record<string, string>;
-type Read = {
+export type Read = {
+  fil: Fil;
   list: Parameters<typeof deterministicState>[0];
+  // Ce que la lecture commune rend de chaque élément de `list` (thread-read.ts) : l'outil et la date d'une session,
+  // l'outil et le titre d'une source liée.
+  shown: {
+    sessions: Array<{ id: string; kind: SourceKind; date: Date }>;
+    sources: Array<{ id: string; kind: SourceKind; title: string | null }>;
+  };
   // Le condensé à faire, quand un résumé est nouveau depuis le dernier état.
   // `prs` : les sources GitHub des PR dont l'état entre au condensé, des entrées de la version (D33).
   model: {
@@ -168,8 +181,8 @@ async function readTail(
 
 // Le fil de l'auteur, hors absorbé, ses sessions de code et ses sources liées qu'il voit ; avec `withModel`, et un
 // résumé nouveau, de quoi faire le condensé. Les textes (résumés, sources liées) ne se lisent que pour lui : l'état
-// déterministe n'a besoin que des ids.
-async function readFil(
+// déterministe n'a besoin que des ids. La lecture commune (thread-read.ts) la reprend sans le modèle.
+export async function readFil(
   tx: Tx,
   ctx: TenantContext,
   filId: string,
@@ -198,8 +211,12 @@ async function readFil(
       and s.id = any(${textArray(ids(fil, 'sessions'))}::uuid[])
     order by ${LAST_TS_SQL} desc, s.id`);
   // Une note ou une conversation captée : seulement celle de l'auteur, comme la liaison (thread-links.ts).
-  const { rows: linked } = await tx.execute<{ id: string }>(sql`
-    select s.id from sources s
+  const { rows: linked } = await tx.execute<{
+    id: string;
+    kind: SourceKind;
+    title: string | null;
+  }>(sql`
+    select s.id, s.kind, s.title from sources s
     where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(ids(fil, 'liees'))}::uuid[])
       and s.kind = any(${textArray([...LINKED_KINDS])})
       and (s.kind <> all(${textArray(CAPTURE_KINDS)}) or s.owner_user_id = ${ctx.userId})
@@ -213,12 +230,21 @@ async function readFil(
     prs,
     sources: linked.map((one) => one.id),
   };
+  const shown = {
+    sessions: sessions.map((one) => ({
+      id: one.id,
+      kind: one.kind,
+      date: epochToDate(one.last_epoch),
+    })),
+    sources: linked,
+  };
 
   const withResume = sessions.flatMap((one) => {
     const faits = SessionFactsSchema.safeParse(one.faits);
     return one.resume && faits.success ? [{ ...one, faits: faits.data }] : [];
   });
-  if (!withModel || !withResume.some((one) => one.nouveau)) return { list, model: null };
+  if (!withModel || !withResume.some((one) => one.nouveau))
+    return { fil, list, shown, model: null };
   const tours: EtatSession = Object.fromEntries(
     withResume.flatMap((one) => (one.resume_tour === null ? [] : [[one.id, one.resume_tour]])),
   );
@@ -294,7 +320,9 @@ async function readFil(
     }),
   );
   return {
+    fil,
     list,
+    shown,
     model: {
       input: { sessions: input, sources },
       tours,

@@ -39,8 +39,16 @@ export type Version = {
   motif: Motif;
   restaureDe: string | null;
   creeLe: Date;
+  // Un texte du modèle, écrit par lui ou restauré d'une de ses versions : la règle `resume` lui vaut (D33).
+  duModele: boolean;
 };
-export type VersionInfo = Pick<Version, 'n' | 'ecritPar' | 'motif' | 'creeLe'>;
+// `debut` : les premiers caractères du texte, de quoi en tirer la première ligne (C12).
+export type VersionInfo = Pick<
+  Version,
+  'n' | 'ecritPar' | 'motif' | 'creeLe' | 'entrees' | 'duModele'
+> & { debut: string };
+// Assez pour le titre « Où j'en suis » et 200 caractères de la ligne qui le suit (thread-read.ts).
+const DEBUT_CHARS = 600;
 
 export type WriteInput = {
   sourceId: string;
@@ -80,7 +88,8 @@ const LISIBLE = sql`(
     select 1 from sources s
     where s.id = any(v.entrees) and s.kind = any(${textArray(CODE_SESSION_KINDS)})
       and not coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false))))`;
-const COLUMNS = sql`v.id, v.n, v.texte, v.entrees, v.ecrit_par, v.motif, v.restaure_de, v.cree_le`;
+const COLUMNS = sql`v.id, v.n, v.texte, v.entrees, v.ecrit_par, v.motif, v.restaure_de, v.cree_le,
+  ${DU_MODELE} as du_modele`;
 
 type Row = {
   id: string;
@@ -90,7 +99,9 @@ type Row = {
   ecrit_par: EcritPar;
   motif: Motif;
   restaure_de: string | null;
-  cree_le: Date;
+  // Le pilote rend une date en texte à une requête brute.
+  cree_le: string;
+  du_modele: boolean;
 };
 const toVersion = (row: Row): Version => ({
   id: row.id,
@@ -100,12 +111,13 @@ const toVersion = (row: Row): Version => ({
   ecritPar: row.ecrit_par,
   motif: row.motif,
   restaureDe: row.restaure_de,
-  creeLe: row.cree_le,
+  creeLe: new Date(row.cree_le),
+  duModele: row.du_modele,
 });
 
 async function latest(tx: Tx, ctx: TenantContext, sourceId: string) {
-  const { rows } = await tx.execute<Row & { du_modele: boolean; lisible: boolean }>(sql`
-    select ${COLUMNS}, ${DU_MODELE} as du_modele, ${LISIBLE} as lisible
+  const { rows } = await tx.execute<Row & { lisible: boolean }>(sql`
+    select ${COLUMNS}, ${LISIBLE} as lisible
     ${FROM(ctx, sourceId)}
     order by v.n desc limit 1`);
   return rows[0];
@@ -200,15 +212,24 @@ export async function readVersion(
 // L'historique : les versions lisibles, de la plus ancienne à la plus récente.
 export async function listVersions(ctx: TenantContext, sourceId: string): Promise<VersionInfo[]> {
   const { rows } = await withTenant(ctx, (tx) =>
-    tx.execute<Pick<Row, 'n' | 'ecrit_par' | 'motif' | 'cree_le'>>(sql`
-      select v.n, v.ecrit_par, v.motif, v.cree_le ${FROM(ctx, sourceId)} and ${LISIBLE}
+    tx.execute<
+      Pick<Row, 'n' | 'ecrit_par' | 'motif' | 'cree_le' | 'entrees' | 'du_modele'> & {
+        debut: string;
+      }
+    >(sql`
+      select v.n, v.ecrit_par, v.motif, v.cree_le, v.entrees, ${DU_MODELE} as du_modele,
+        left(v.texte, ${DEBUT_CHARS}) as debut
+      ${FROM(ctx, sourceId)} and ${LISIBLE}
       order by v.n`),
   );
   return rows.map((row) => ({
     n: row.n,
     ecritPar: row.ecrit_par,
     motif: row.motif,
-    creeLe: row.cree_le,
+    creeLe: new Date(row.cree_le),
+    entrees: row.entrees,
+    duModele: row.du_modele,
+    debut: row.debut,
   }));
 }
 
@@ -219,7 +240,16 @@ export async function readLatest(
   ctx: TenantContext,
   sourceId: string,
 ): Promise<{ n: number; version: Version | null }> {
-  const last = await withTenant(ctx, (tx) => latest(tx, ctx, sourceId));
+  return withTenant(ctx, (tx) => latestIn(tx, ctx, sourceId));
+}
+
+// La même lecture, dans la transaction de l'appelant : la lecture commune lit le fil et son état d'un seul coup.
+export async function latestIn(
+  tx: Tx,
+  ctx: TenantContext,
+  sourceId: string,
+): Promise<{ n: number; version: Version | null }> {
+  const last = await latest(tx, ctx, sourceId);
   return { n: last?.n ?? 0, version: last?.lisible ? toVersion(last) : null };
 }
 

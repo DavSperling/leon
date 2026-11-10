@@ -31,7 +31,7 @@ const GITHUB = 'github' satisfies SourceKind;
 // aussi (threads.ts).
 export const DEFAULT_BRANCHES = new Set(['main', 'master']);
 
-type PrState = 'open' | 'merged' | 'closed';
+export type PrState = 'open' | 'merged' | 'closed';
 export type StartPr = Omit<SessionFacts['prs'][number], 'par'> & {
   par: SessionFacts['prs'][number]['par'] | 'branche';
   url: string | null;
@@ -68,7 +68,8 @@ type PrInfo = Pick<StartPr, 'url' | 'etat' | 'titre'> & { fini: number };
 
 // La clé de la source GitHub d'une PR (connectors/github/map.ts), sans la casse : celle du dépôt varie selon qui l'écrit.
 // Les noms de dépôt GitHub sont en ASCII : `toLowerCase` vaut le `lower` de Postgres.
-const prKey = (pr: SessionFacts['prs'][number]) => `pr:${pr.repo}#${pr.numero}`.toLowerCase();
+const prKey = (pr: Pick<SessionFacts['prs'][number], 'repo' | 'numero'>) =>
+  `pr:${pr.repo}#${pr.numero}`.toLowerCase();
 const numberOf = (key: string) => Number(key.slice(key.lastIndexOf('#') + 1));
 // Les dates rangées par GitHub et par saveSyncProgress sont en ISO 8601, en UTC : elles se comparent en texte, et une
 // valeur mal formée ne fait pas échouer la lecture (un transtypage en timestamptz la ferait échouer).
@@ -111,20 +112,16 @@ function prInfo(row: PrRow): PrInfo {
   };
 }
 
-// Les PR de chaque liste de faits, reliées à leur source GitHub (D5) : par leur clé exacte, ou à défaut par la branche,
-// avec le lien, l'état et le titre gardé (prColumns). `fini` : la date de fusion, en millisecondes (NaN sans). Sous
-// la sécurité par ligne de `tx` : une PR que le lecteur ne voit pas n'est pas reliée. Partagé par « mes sessions » et
-// le résumé d'une session (T23).
-export async function linkPrs(
+// Ce que la source GitHub de chaque PR dit d'elle, par sa clé exacte (D5), sous la sécurité par ligne de `tx` : une PR
+// que le lecteur ne voit pas n'y est pas.
+async function prInfos(
   tx: Tx,
   ctx: TenantContext,
-  projet: string,
-  list: Array<SessionFacts | null>,
-): Promise<Array<Array<StartPr & { fini: number }>>> {
-  const keys = [...new Set(list.flatMap((faits) => faits?.prs.map(prKey) ?? []))];
+  list: Array<Pick<SessionFacts['prs'][number], 'repo' | 'numero'>>,
+): Promise<Map<string, PrInfo>> {
+  const keys = [...new Set(list.map(prKey))];
   const exact = new Map<string, PrInfo>();
   if (keys.length > 0) {
-    // Sous la sécurité par ligne, une PR que le lecteur ne voit pas n'est pas reliée.
     // shortcut: aucun index sur lower(external_id), la lecture parcourt les sources (10 ms sur 10 000 sous RLS) ;
     // ajouter un index (tenant_id, kind, lower(external_id)) quand la mesure du démarrage dépasse 100 ms.
     // shortcut: une seule jointure (D5), ni WITH RECURSIVE ni table de liens ; à revoir si un lien de profondeur 3 sert.
@@ -136,6 +133,35 @@ export async function linkPrs(
       order by lower(s.external_id), ${LATEST_COPY}`);
     for (const pr of prs) exact.set(pr.key, prInfo(pr));
   }
+  return exact;
+}
+
+// L'état GitHub des PR d'un fil, lu à la lecture (D33, vigilance 3), null sans source visible : la lecture commune
+// (thread-read.ts). Jamais leur titre (D25).
+export async function prStates(
+  tx: Tx,
+  ctx: TenantContext,
+  list: Array<Pick<SessionFacts['prs'][number], 'repo' | 'numero'>>,
+): Promise<Array<PrState | null>> {
+  const exact = await prInfos(tx, ctx, list);
+  return list.map((pr) => exact.get(prKey(pr))?.etat ?? null);
+}
+
+// Les PR de chaque liste de faits, reliées à leur source GitHub (D5) : par leur clé exacte, ou à défaut par la branche,
+// avec le lien, l'état et le titre gardé (prColumns). `fini` : la date de fusion, en millisecondes (NaN sans). Sous
+// la sécurité par ligne de `tx` : une PR que le lecteur ne voit pas n'est pas reliée. Partagé par « mes sessions » et
+// le résumé d'une session (T23).
+export async function linkPrs(
+  tx: Tx,
+  ctx: TenantContext,
+  projet: string,
+  list: Array<SessionFacts | null>,
+): Promise<Array<Array<StartPr & { fini: number }>>> {
+  const exact = await prInfos(
+    tx,
+    ctx,
+    list.flatMap((faits) => faits?.prs ?? []),
+  );
   // À défaut de lien exact (aucune PR des faits n'a de source visible), la branche : seulement une PR de l'équipe
   // dont la tête est dans le dépôt (pas un fork, qui peut porter n'importe quel nom de branche), et jamais la branche
   // par défaut, que tout le monde partage. Les PR des faits restent dans l'en-tête, avant celle de la branche.

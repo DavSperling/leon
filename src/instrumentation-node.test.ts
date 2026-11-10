@@ -54,6 +54,7 @@ const { startConnectorWorker } = await import('@/server/connectors/worker');
 const { startSearchWorker } = await import('@/server/search/worker');
 const { startBriefingWorker } = await import('@/server/briefing/worker');
 const { startThreadsWorker } = await import('@/server/sessions/threads');
+const { startFilStateWorker } = await import('@/server/sessions/thread-state-worker');
 const { warnIncompleteOAuthPairs } = await import('@/server/connectors/oauth-env');
 
 const NO_KEY = 'LEON_CONNECTORS_KEY absente';
@@ -70,6 +71,7 @@ beforeEach(() => {
   vi.mocked(startSearchWorker).mockClear();
   vi.mocked(startBriefingWorker).mockClear();
   vi.mocked(startThreadsWorker).mockClear();
+  vi.mocked(startFilStateWorker).mockClear();
   vi.mocked(startConnectorWorker).mockClear();
   vi.mocked(warnIncompleteOAuthPairs).mockClear();
 });
@@ -268,5 +270,17 @@ describe('point du matin', () => {
     await startNodeInstrumentation();
 
     expect(startBriefingWorker).not.toHaveBeenCalled();
+  });
+});
+
+// L'état des fils (T43) : tant que les commandes de retrait du poste n'appellent pas la route du retrait (PR 3b du
+// lot 12), une session retirée sur le poste seul garde l'usage `resume` sur le serveur. Le modèle n'est pas donné.
+describe('état des fils', () => {
+  it('démarre son worker sans modèle, même avec le modèle réglé', async () => {
+    mocks.env.LEON_LLM = 'factice';
+
+    await startNodeInstrumentation();
+
+    expect(startFilStateWorker).toHaveBeenCalledExactlyOnceWith({ llm: null });
   });
 });

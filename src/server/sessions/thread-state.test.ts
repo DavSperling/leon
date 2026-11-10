@@ -247,6 +247,7 @@ describe('filterFilState', () => {
       `Le worker de l'état est branché. (source: ${one.id})`,
       '',
       `- [en-cours] Les tests en base (de: toi; source: ${agent.id})`,
+      `- [essai-raté] Le premier essai (de: toi) (source: ${agent.id})`,
       `- [prochaine-étape] La CLI (source: ${typed.id}, acme/leon#12)`,
       `- [question] Le modèle de l'étape (source: ${message.id})`,
       `- [décision] L'état s'écrit en versions (source: ${typed.id})`,
@@ -260,6 +261,8 @@ describe('filterFilState', () => {
         `Le worker de l'état est branché. (de: agent; source: ${one.id})`,
         '',
         `- [en-cours] Les tests en base (de: agent; source: ${agent.id})`,
+        // Une provenance du modèle au milieu de la ligne est retirée, elle aussi.
+        `- [essai-raté] Le premier essai (de: agent; source: ${agent.id})`,
         `- [prochaine-étape] La CLI (de: toi, équipe; source: ${typed.id}, acme/leon#12)`,
         `- [question] Le modèle de l'étape (de: connecteur; source: ${message.id})`,
         `- [décision] L'état s'écrit en versions (de: toi; source: ${typed.id})`,

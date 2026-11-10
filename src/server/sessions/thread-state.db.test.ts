@@ -58,7 +58,13 @@ const TOURS: Tour[] = [
 ];
 
 // Un résumé de plus pour la session : le tour `leon:resume:<n>`, que `metadata.resume.tour` désigne (resume-worker.ts).
-async function addResume(owner: TenantContext, sourceId: string, n: number, text: string) {
+async function addResume(
+  owner: TenantContext,
+  sourceId: string,
+  n: number,
+  text: string,
+  createdAt?: Date,
+) {
   const [row] = await adminDb
     .insert(turns)
     .values({
@@ -70,6 +76,7 @@ async function addResume(owner: TenantContext, sourceId: string, n: number, text
       ts: new Date('2026-11-05T10:00:00.000Z'),
       captureMode: 'manual',
       acl: [owner.userId],
+      ...(createdAt ? { createdAt } : {}),
     })
     .returning({ id: turns.id });
   await adminDb
@@ -267,6 +274,29 @@ describe('updateFilState', () => {
     expect((await versions(filId)).map((row) => row.n)).toEqual([1, 2]);
     expect((await readLatest(paul, filId)).version?.texte).toContain('Second état.');
     expect((await searchPassages(paul, { query: 'zorglub', embedder: null })).hits).toEqual([]);
+  });
+
+  // La date d'écriture d'un tour est le début de sa transaction (insertNewTurns) : un résumé commencé avant celui
+  // d'une autre session, mais validé après que le worker l'a lu, a une date plus ancienne et reste nouveau.
+  it('un résumé daté d’avant le dernier pris en compte, mais nouveau : un appel', async () => {
+    const { paul } = await team();
+    const late = await codeSession(paul, { resume: null });
+    const first = await codeSession(paul);
+    const filId = await fil(paul, [late.id, first.id]);
+    await updateFilState(job(paul, filId), { llm: answer(etat(first.id)) });
+    await addResume(
+      paul,
+      late.id,
+      1,
+      "## Où j'en suis\nLe résumé validé en retard.",
+      new Date('2026-01-01T00:00:00.000Z'),
+    );
+    const llm = answer(etat(late.id));
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+
+    expect(llm.calls).toHaveLength(1);
+    expect(promptOf(llm)).toContain('Le résumé validé en retard.');
   });
 
   it('fil dont aucune session n’a l’usage resume : aucun appel, l’état déterministe écrit par le serveur', async () => {

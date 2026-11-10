@@ -44,16 +44,18 @@ import {
 //   la dernière est encore vn (compare-and-set, D34). Sinon il s'arrête : la tâche en file refait, avec des données
 //   fraîches.
 // - L'appel au modèle (étape `fil`) ne part que pour un résumé nouveau depuis le dernier état : celui d'une session
-//   avec l'usage `resume` écrit après le dernier pris en compte (`etat_session`, D21). Une session ou une source liée de
-//   plus ne change que l'état déterministe.
+//   avec l'usage `resume` dont le numéro (`metadata.resume.tour`) n'est pas celui pris en compte (`etat_session`, D21).
+//   Le numéro, pas la date : un tour est daté du début de sa transaction, et un résumé validé après la lecture d'un
+//   autre peut être plus ancien que lui. Une session ou une source liée de plus ne change que l'état déterministe.
 // - L'usage `resume` est relu sous le verrou du fil, juste avant d'écrire : retiré pendant l'appel, rien n'est écrit.
 // - Sans modèle, sans résumé nouveau, ou quand la liste blanche ne garde rien, l'état est la liste déterministe des
 //   sessions, des PR et des sources liées visibles, écrite par le serveur quand elle change ; une version lisible du
 //   modèle n'est pas écrasée (D33). Un modèle en échec n'écrit rien : l'ancien état reste, et pg-boss reprend le job.
 // shortcut: l'usage se lit dans `metadata.usages` des sessions, que la route du retrait vide (faits-routes.ts, T43
 // amendé le 06/11), sans la borne d'une heure du résumé : l'état relit des sessions anciennes par nature. `leon
-// retirer-crochets` n'appelle la route qu'à la PR 3b du lot 12 : d'ici là, un retrait sur le poste seul laisse partir au
-// modèle de l'état les sessions déjà envoyées. Ne pas mettre ce worker en production sans la PR 3b.
+// retirer-crochets` n'appelle la route qu'à la PR 3b du lot 12 : d'ici là, un retrait sur le poste seul laisserait
+// partir au modèle de l'état les sessions déjà envoyées. instrumentation-node.ts le démarre donc sans modèle ; la PR 3b
+// lui donne le modèle, avec l'appel de la route et le rattrapage des retraits faits avant elle.
 // shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
 // la colonne vient avec T44, qui les y ajoute.
 
@@ -79,8 +81,8 @@ type SessionRow = {
   resume: boolean;
   last_epoch: string;
   resume_texte: string | null;
-  // La date d'écriture de son dernier résumé, en ISO à la microseconde (to_jsonb) : `etat_session` la garde.
-  resume_le: string | null;
+  // Le numéro de son dernier résumé (`metadata.resume.tour`), null sans résumé : `etat_session` le garde.
+  resume_tour: string | null;
   nouveau: boolean;
 };
 type SourceRow = {
@@ -102,12 +104,12 @@ type TailRow = {
   epoch: string;
   text: string;
 };
-// Le dernier résumé pris en compte (D21) : sa session, et sa date d'écriture.
-type EtatSession = { id: string; le: string };
+// Les résumés pris en compte (D21) : pour chaque session, le numéro de son dernier résumé.
+type EtatSession = Record<string, string>;
 type Read = {
   list: Parameters<typeof deterministicState>[0];
   // Le condensé à faire, quand un résumé est nouveau depuis le dernier état.
-  model: { input: { sessions: FilSession[]; sources: FilSource[] }; newest: EtatSession } | null;
+  model: { input: { sessions: FilSession[]; sources: FilSource[] }; tours: EtatSession } | null;
 };
 
 const ids = (fil: Fil, name: 'sessions' | 'liees') =>
@@ -160,12 +162,13 @@ async function readFil(
       and s.kind = ${FIL} and s.metadata->>'absorbe_par' is null`);
   if (!row) return null;
   const fil: Fil = { id: filId, metadata: row.metadata };
-  const { le } = (row.metadata.etat_session ?? {}) as { le?: unknown };
+  const pris = (row.metadata.etat_session as { tours?: unknown } | undefined)?.tours ?? {};
   const { rows: sessions } = await tx.execute<SessionRow>(sql`
     select s.id, s.kind, s.metadata->'faits' as faits, ${USAGE_RESUME} as resume,
       extract(epoch from ${LAST_TS_SQL}) as last_epoch, r.text as resume_texte,
-      to_jsonb(r.created_at) #>> '{}' as resume_le,
-      coalesce(r.created_at > ${typeof le === 'string' ? le : null}::timestamptz, r.id is not null) as nouveau
+      case when r.id is not null then s.metadata->'resume'->>'tour' end as resume_tour,
+      (r.id is not null
+        and (s.metadata->'resume'->>'tour') is distinct from (${JSON.stringify(pris)}::jsonb ->> s.id::text)) as nouveau
     from sources s
     left join turns r on r.tenant_id = s.tenant_id and r.source_id = s.id
       and r.external_id = ${RESUME_EXTERNAL_PREFIX} || (s.metadata->'resume'->>'tour')
@@ -201,12 +204,10 @@ async function readFil(
     const faits = SessionFactsSchema.safeParse(one.faits);
     return one.resume && faits.success ? [{ ...one, faits: faits.data }] : [];
   });
-  const newest = withResume
-    .filter((one) => one.resume_le !== null)
-    .toSorted((a, b) => Date.parse(b.resume_le ?? '') - Date.parse(a.resume_le ?? ''))[0];
-  if (!withModel || !newest?.resume_le || !withResume.some((one) => one.nouveau && one.resume_le)) {
-    return { list, model: null };
-  }
+  if (!withModel || !withResume.some((one) => one.nouveau)) return { list, model: null };
+  const tours: EtatSession = Object.fromEntries(
+    withResume.flatMap((one) => (one.resume_tour === null ? [] : [[one.id, one.resume_tour]])),
+  );
 
   const kept = withResume.slice(0, CONDENSE_SESSIONS_MAX);
   const project = typeof row.metadata.project === 'string' ? row.metadata.project : '';
@@ -249,7 +250,7 @@ async function readFil(
   );
   return {
     list,
-    model: { input: { sessions: input, sources }, newest: { id: newest.id, le: newest.resume_le } },
+    model: { input: { sessions: input, sources }, tours },
   };
 }
 
@@ -279,7 +280,7 @@ async function writeModelState(
   attendue: number,
   condense: FilCondense,
   kept: { texte: string; cites: string[] } | null,
-  newest: EtatSession,
+  tours: EtatSession,
 ): Promise<FilStateOutcome | null> {
   if (!(await lockTarget(tx, ctx, filId))) return 'sans-objet';
   const {
@@ -308,7 +309,7 @@ async function writeModelState(
     if (typeof written !== 'object') return 'sans-objet';
   }
   await tx.execute(sql`update sources s set metadata = s.metadata
-      || jsonb_build_object('etat_session', jsonb_build_object('id', ${newest.id}::text, 'le', ${newest.le}::text))
+      || jsonb_build_object('etat_session', jsonb_build_object('tours', ${JSON.stringify(tours)}::jsonb))
     where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
   return kept === null ? null : 'modele';
 }
@@ -328,9 +329,9 @@ export async function updateFilState(
     const condense = condenseFil(read.model.input);
     if (condense.sessions.length > 0) {
       const kept = filterFilState(await askModel(llm, condense), condense);
-      const { newest } = read.model;
+      const { tours } = read.model;
       const written = await withTenant(ctx, (tx) =>
-        writeModelState(tx, ctx, job.sourceId, n, condense, kept, newest),
+        writeModelState(tx, ctx, job.sourceId, n, condense, kept, tours),
       );
       if (written !== null) return written;
     }

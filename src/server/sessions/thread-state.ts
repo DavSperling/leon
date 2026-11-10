@@ -70,6 +70,8 @@ const MESSAGES: ReadonlySet<string> = new Set(['fil', 'mail', 'reunion']);
 
 // D'où vient une source liée, et si elle prouve une décision : une PR de l'équipe (ni d'un fork ni d'un inconnu), un
 // message, une réunion. Une note ou une conversation captée vient de l'agent, et ne prouve jamais (D36).
+// Seul GitHub écrit `origin.cote` aujourd'hui : une MR GitLab reste « connecteur », sans preuve, tant qu'il ne
+// l'écrit pas.
 function provenanceOf(source: FilSource): { de: Provenance; preuve: boolean } {
   if (CAPTURES.has(source.kind)) return { de: 'agent', preuve: false };
   if (source.kind === 'github' && source.cote === 'equipe') {
@@ -188,13 +190,15 @@ export function buildFilPrompt(condense: FilCondense): { system: string; message
 // Les ids qu'une ligne cite, à sa fin : « (source: a, b) », ou « (de: …; source: a, b) » quand le modèle a écrit une
 // provenance, que le serveur remplace par la sienne.
 const CITED = /\s*\((?:de\s*:[^;()]*;\s*)?sources?\s*:\s*([^()]*)\)\s*$/iu;
+// Une provenance écrite par le modèle ailleurs dans la ligne : « (de: toi) ». Le serveur l'ignore (D23 amendé).
+const MODEL_DE = /\s*\(de\s*:[^()]*\)/giu;
 const ORDER: Provenance[] = ['toi', 'équipe', 'connecteur', 'agent'];
 
 function cite(text: string, condense: FilCondense) {
   const match = CITED.exec(text);
   if (!match) return null;
   const ids = [...new Set((match[1] ?? '').split(/[\s,;]+/))].filter((id) => condense.ids.has(id));
-  const body = text.slice(0, match.index).trim();
+  const body = text.slice(0, match.index).replace(MODEL_DE, '').trim();
   if (ids.length === 0 || body === '') return null;
   const de = ORDER.filter((one) => ids.some((id) => condense.ids.get(id) === one));
   return { body, ids, suffix: `(de: ${de.join(', ')}; source: ${ids.join(', ')})` };

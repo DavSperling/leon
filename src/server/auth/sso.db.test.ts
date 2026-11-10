@@ -137,6 +137,38 @@ describe('SSO d’entreprise', () => {
     expect(rows).toHaveLength(0);
   });
 
+  it('n’ouvre de compte qu’aux adresses du domaine prouvé et de ses sous-domaines', async () => {
+    const { owner } = await workspace();
+    const { providerId, domain } = await insertProvider(owner, true);
+    const check = (email: string, method = 'sso-oidc') =>
+      auth.options.user?.validateUserInfo?.({
+        user: { email },
+        source: { action: 'create-user', method, sso: { providerId } },
+      });
+    expect(await check(`alice@${domain}`)).toBeUndefined();
+    expect(await check(`alice@eu.${domain}`, 'sso-saml')).toBeUndefined();
+    for (const email of [
+      'alice@victime.example',
+      `alice@pas${domain}`,
+      `alice@${domain}.victime.example`,
+      `alice@${domain}@victime.example`,
+    ]) {
+      expect(await check(email), email).toMatchObject({ error: 'email_domain_mismatch' });
+    }
+    // Google et Microsoft n'ont pas de domaine à contrôler.
+    const google = {
+      action: 'create-user',
+      method: 'oauth',
+      oauth: { providerId: 'google' },
+    } as const;
+    expect(
+      await auth.options.user?.validateUserInfo?.({
+        user: { email: 'alice@victime.example' },
+        source: google,
+      }),
+    ).toBeUndefined();
+  });
+
   it('les routes HTTP du réglage et des débuts de connexion sont fermées', async () => {
     for (const path of ['/sso/register', '/sso/verify-domain', '/sign-in/sso', '/sign-in/social']) {
       const response = await auth.handler(

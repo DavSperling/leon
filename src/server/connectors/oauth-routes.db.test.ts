@@ -164,6 +164,12 @@ describe('POST /:outil/debut', () => {
     expect((await start(noButton, paul)).status).toBe(404);
   });
 
+  it('refuse un formulaire trop gros avant de le lire', async () => {
+    const response = await start(makeApp().app, null, { repos: 'x'.repeat(70 * 1024) });
+
+    expect(response.status).toBe(413);
+  });
+
   it("refuse un formulaire venu d'un autre site, sans poser de cookie", async () => {
     const paul = await signUp();
 

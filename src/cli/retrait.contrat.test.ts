@@ -2,7 +2,7 @@
 // `leon retirer-crochets` et `leon installer-crochets`, lancées comme le script `leon` (sans pnpm ni .env.local), contre
 // un faux serveur local, avec un vrai `fetch`. Les tests d'uninstall-hooks.test.ts et de setup.test.ts injectent
 // l'envoi ; celui-ci garde ce qu'ils ne voient pas : la condition qui fait travailler `rattraper`, la route, le jeton,
-// et la date écrite dans accord.json.
+// et ce que le serveur a appris, écrit dans retraits-serveur.json.
 //
 // Vie privée : HOME et CLAUDE_CONFIG_DIR pointent vers un dossier temporaire, et l'environnement du fils ne reprend
 // rien de celui du test.
@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS } from '../capture/api-contract';
-import { consentPath, factsConsent, writeConsent } from './consent';
+import { consentPath, factsConsent, serverWithdrawalsPath, writeConsent } from './consent';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const TOKEN = `leon_${'x'.repeat(43)}`;
@@ -110,7 +110,7 @@ const told = (outil: string, version: unknown = 0): Received => ({
 });
 
 const toldAt = async () =>
-  JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.retrait_serveur_le;
+  JSON.parse(await readFile(serverWithdrawalsPath(home), 'utf8')).outils.claude_code;
 
 describe('le retrait atteint le serveur : les vraies commandes', () => {
   // Un retrait fait avant la route (ou hors ligne), et aucun outil dont la capture est acceptée : `rattraper` travaille

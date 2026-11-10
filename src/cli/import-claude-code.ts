@@ -48,8 +48,9 @@ export type ImportDeps = {
   // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
-  // L'accord retiré (consent.ts), relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import
-  // l'arrête, sans autre envoi. La borne d'une heure du résumé (resume-worker.ts) en dépend.
+  // L'accord retiré (consent.ts), relu avant chaque session et avant ses faits (sendSessionFacts) : un `leon
+  // retirer-crochets` lancé pendant un long import l'arrête, sans autre envoi. La borne d'une heure du résumé
+  // (resume-worker.ts) en dépend. Les crochets de fin et le rattrapage le donnent aussi, pour les faits.
   withdrawn?: () => Promise<boolean>;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
   // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
@@ -241,6 +242,11 @@ export async function sendSessionFacts(
     deps.out(JSON.stringify(payload));
     return true;
   }
+  // L'accord relu juste avant : des faits arrivés au serveur après la route du retrait (T43) y remettraient les usages
+  // (record-facts.ts), `resume` compris, sans que le poste le redise jamais.
+  // shortcut: une requête déjà partie quand le retrait s'écrit arrive encore après lui ; à fermer côté serveur par une
+  // date de retrait par outil et par porteur, que recordFacts respecte, le jour où cette fenêtre compte.
+  if (await deps.withdrawn?.()) return true;
   try {
     await deps.facts.send(payload);
     return true;

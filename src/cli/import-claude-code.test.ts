@@ -472,8 +472,9 @@ describe('importClaudeCode : les faits de chaque session', () => {
     expect(summary).toMatchObject({ sessions: 3, failures: 3 });
   });
 
-  // Le retrait relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import l'arrête.
-  it('un retrait écrit entre deux sessions : plus rien ne part, ni tours ni faits', async () => {
+  // Le retrait relu avant chaque session, et avant les faits : un `leon retirer-crochets` lancé pendant un long import
+  // l'arrête, et des faits arrivés après la route du retrait n'y remettent pas l'usage `resume` (record-facts.ts).
+  it('un retrait écrit pendant l’envoi des tours : ni les faits de la session, ni rien ensuite', async () => {
     const { deps, facts, events } = makeFactsDeps();
     const withdrawn = async () => events.length > 0;
 
@@ -481,7 +482,7 @@ describe('importClaudeCode : les faits de chaque session', () => {
       CONSENT_WITHDRAWN_MESSAGE,
     );
 
-    expect(facts).toHaveBeenCalledTimes(1);
+    expect(facts).not.toHaveBeenCalled();
     expect(new Set(events.map((event) => event.split(' ')[1])).size).toBe(1);
   });
 

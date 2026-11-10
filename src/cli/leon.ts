@@ -52,7 +52,6 @@ import {
 } from './self-update';
 import { ensureLauncher, isLeonRepo, runSetup } from './setup';
 import {
-  catchUpWithdrawals,
   connectionWithdrawal,
   tellBeforeConsent,
   type UninstallDeps,
@@ -278,6 +277,8 @@ async function runCaptureSession(args: string[]): Promise<number> {
     const signal = AbortSignal.timeout(deadlineMs);
     return await captureSessionFromHook(stdin, {
       send: createIngestSender(fetch, env, { signal }),
+      // Relu avant les faits (sendSessionFacts) : un retrait écrit pendant l'envoi des tours les arrête.
+      withdrawn,
       ...(accord === null
         ? {}
         : {
@@ -348,6 +349,7 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
     const signal = AbortSignal.timeout(HOOK_DEADLINE_MS);
     return await captureToolHook(outil, evenement, input, {
       send: createIngestSender(fetch, env, { signal }),
+      withdrawn: () => consentWithdrawn(homedir(), outil),
       facts: {
         accord: consent.version,
         usages: consent.usages,
@@ -369,14 +371,14 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
 }
 
 // `leon rattraper` (T19), lancé détaché au démarrage d'une session : sans outil dont la capture est acceptée ni retrait
-// que le serveur n'a pas appris (T43), rien. Les retraits d'abord : ils ne dépendent d'aucune capture.
+// que le serveur n'a pas appris (T43), rien. catchUp dit les retraits d'abord, sous son verrou.
 async function runCatchUp(): Promise<number> {
   if (!(await catchUpNeeded(homedir()))) return 0;
   const env = await resolveServerEnv(process.env, homedir());
-  await catchUpWithdrawals(homedir(), createWithdrawalSender(timedFetch, env));
   const summary = await catchUp({
     send: createIngestSender(timedFetch, env),
     sendFacts: createFactsSender(timedFetch, env),
+    withdraw: createWithdrawalSender(timedFetch, env),
     out: () => {},
     git: gitInDirectory,
     readFile: (path) => readFile(path, 'utf8'),

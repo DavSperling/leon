@@ -33,7 +33,8 @@ describe('parseCursorSession', () => {
       title: 'Ajoute le lecteur des sessions Cursor.',
       branche: null,
     });
-    // Les messages que Cursor écrit lui-même (retour d'un sous-agent, reprise après interruption) partent marqués.
+    // Les messages que Cursor écrit lui-même (retour d'un sous-agent, reprise après interruption) sont marqués par le
+    // lecteur ; ils restent sur le poste (captureToolFile).
     expect(session?.turns.map((t) => [t.external_id, t.role, t.text, t.injecte])).toEqual([
       [`${CONVERSATION}:000001`, 'user', 'Ajoute le lecteur des sessions Cursor.', false],
       [`${CONVERSATION}:000002`, 'assistant', 'Je regarde le format.', undefined],

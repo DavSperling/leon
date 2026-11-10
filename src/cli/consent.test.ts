@@ -14,6 +14,7 @@ import {
   pendingServerWithdrawals,
   recordCapture,
   recordServerWithdrawal,
+  serverWithdrawalsPath,
   withdrawalRecorded,
   writeConsent,
 } from './consent';
@@ -402,49 +403,65 @@ describe('withdrawalRecorded : le retrait est bien écrit', () => {
   });
 });
 
-// Le retrait atteint le serveur (T43) : la date de sa réponse évite de le lui redire, et un nouvel accord l'efface.
+// Le retrait atteint le serveur (T43) : ce qu'il a appris s'écrit à part (retraits-serveur.json), jamais dans
+// accord.json, que le rattrapage, lancé en tâche de fond, ne doit pas réécrire sous une commande de retrait.
 describe('pendingServerWithdrawals et recordServerWithdrawal : le retrait que le serveur n’a pas appris', () => {
-  it('un outil en version 0 sans date est en attente ; daté, il ne l’est plus', async () => {
-    await writeConsent(home, 'claude_code', 0);
+  it('un outil en version 0 non appris est en attente ; appris, il ne l’est plus', async () => {
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T08:00:00Z'));
     await writeConsent(home, 'codex', 2);
 
     expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
 
-    await recordServerWithdrawal(home, 'claude_code', new Date('2026-11-10T09:00:00Z'));
+    await recordServerWithdrawal(home, 'claude_code');
 
     expect(await pendingServerWithdrawals(home)).toEqual([]);
-    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
-      version: 0,
-      installe_le: expect.any(String),
-      retrait_serveur_le: '2026-11-10T09:00:00.000Z',
+    expect(JSON.parse(await readFile(serverWithdrawalsPath(home), 'utf8'))).toEqual({
+      outils: { claude_code: '2026-11-10T08:00:00.000Z' },
     });
+    expect((await stat(serverWithdrawalsPath(home))).mode & 0o777).toBe(0o600);
     expect(await withdrawalRecorded(home, 'claude_code')).toBe(true);
   });
 
-  it('un nouvel accord efface la date : le retrait suivant est de nouveau en attente', async () => {
-    await writeConsent(home, 'cursor', 0);
+  it('ne réécrit jamais accord.json : un retrait écrit au même moment reste tel quel', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    const before = await stat(consentPath(home));
+    const text = await readFile(consentPath(home), 'utf8');
+
+    await recordServerWithdrawal(home, 'claude_code');
+
+    expect((await stat(consentPath(home))).ino).toBe(before.ino);
+    expect(await readFile(consentPath(home), 'utf8')).toBe(text);
+  });
+
+  it('un nouvel accord met fin à l’attente ; le retrait suivant est de nouveau en attente', async () => {
+    await writeConsent(home, 'cursor', 0, new Date('2026-11-10T09:00:00Z'));
     await recordServerWithdrawal(home, 'cursor');
 
     await writeConsent(home, 'cursor', 2, new Date('2026-11-10T10:00:00Z'));
-    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.cursor).toEqual({
-      version: 2,
-      installe_le: '2026-11-10T10:00:00.000Z',
-    });
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
 
-    await writeConsent(home, 'cursor', 0);
+    await writeConsent(home, 'cursor', 0, new Date('2026-11-10T11:00:00Z'));
     expect(await pendingServerWithdrawals(home)).toEqual(['cursor']);
   });
 
-  it('ne date pas un accord en cours, et ne voit rien dans un fichier absent ou illisible', async () => {
+  it('n’apprend pas un accord en cours, et ne voit rien dans un accord absent ou illisible', async () => {
     expect(await pendingServerWithdrawals(home)).toEqual([]);
 
     await writeConsent(home, 'codex', 2);
-    const before = await readFile(consentPath(home), 'utf8');
     await recordServerWithdrawal(home, 'codex');
-    expect(await readFile(consentPath(home), 'utf8')).toBe(before);
+    await writeConsent(home, 'codex', 0);
+    expect(await pendingServerWithdrawals(home)).toEqual(['codex']);
 
     await writeRaw('{"outils": {"claude_code": {"vers');
     expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  it('un retraits-serveur.json illisible ne vaut rien : le retrait est de nouveau en attente', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await recordServerWithdrawal(home, 'claude_code');
+    await writeFile(serverWithdrawalsPath(home), '{"outils": {"claude');
+
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
   });
 });
 

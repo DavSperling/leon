@@ -363,7 +363,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
         `Launcher removed: ${launcherPath(home)} (no other tool uses it).\nThe sessions already sent`,
       ),
     );
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('sans réglages à retirer non plus : l’accord est retiré, donc le lanceur ne sert plus', async () => {
@@ -372,7 +376,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
     const run = await uninstall();
 
     expect(run.code).toBe(0);
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('un autre outil garde son accord : le lanceur reste, sans un mot de plus', async () => {
@@ -396,7 +404,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
 
     await uninstall();
 
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('une entrée d’un autre outil que le schéma ne connaît pas compte comme installée : le lanceur reste', async () => {
@@ -477,7 +489,6 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
     expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
       version: 0,
       installe_le: expect.any(String),
-      retrait_serveur_le: expect.any(String),
     });
   });
 
@@ -558,7 +569,7 @@ describe('uninstallHooks : le serveur apprend le retrait', () => {
       ),
     );
     expect(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE).toBe(
-      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online.',
+      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online. If this computer is not connected, run `leon login` first.',
     );
     expect(await readFile(launcherPath(home), 'utf8')).toBe(
       launcherScript(home, { kind: 'clone', repoDir: REPO }),
@@ -586,7 +597,7 @@ describe('uninstallHooks : le serveur apprend le retrait', () => {
 
     expect(run.output).toContain(WITHDRAWAL_NOT_TOLD_MESSAGE);
     expect(WITHDRAWAL_NOT_TOLD_MESSAGE).toBe(
-      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again.',
+      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again. If this computer is not connected, run `leon login` first.',
     );
   });
 
@@ -652,16 +663,16 @@ describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le po
     expect(server.told).toEqual(['claude_code', 'codex']);
   });
 
-  it('un échec garde l’outil en attente pour le rattrapage suivant ; un nouvel accord efface la date', async () => {
-    await writeConsent(home, 'antigravity', 0);
+  it('un échec garde l’outil en attente pour le rattrapage suivant ; un nouveau retrait l’est de nouveau', async () => {
+    await writeConsent(home, 'antigravity', 0, new Date('2026-11-10T09:00:00Z'));
     server.fails = true;
     expect(await catchUpWithdrawals(home, server.withdraw)).toBe('failed');
     server.fails = false;
     expect(await catchUpWithdrawals(home, server.withdraw)).toBe('told');
     expect(server.told).toEqual(['antigravity']);
 
-    await writeConsent(home, 'antigravity', 2);
-    await writeConsent(home, 'antigravity', 0);
+    await writeConsent(home, 'antigravity', 2, new Date('2026-11-10T10:00:00Z'));
+    await writeConsent(home, 'antigravity', 0, new Date('2026-11-10T11:00:00Z'));
     await catchUpWithdrawals(home, server.withdraw);
 
     expect(server.told).toEqual(['antigravity', 'antigravity']);

@@ -281,6 +281,16 @@ describe('la page Documentation', () => {
           ? 'only that server and account: one this computer used before is not told'
           : 'ce serveur et ce compte seulement : un autre que cet ordinateur a utilisé avant n’en sait rien',
       );
+      // Un retrait resté en attente se dit au serveur de la connexion du moment où il part : après un changement de
+      // connexion, l'ancien serveur n'en sait rien.
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'Leon later tells the server this computer is connected to by then',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'Leon later tells the server the computer is connected to by then'
+          : 'Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté',
+      );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
     },
   );
@@ -293,10 +303,17 @@ describe('la page Documentation', () => {
       const { remove, all } = messages.site.documentation.disconnect;
 
       expect(remove).not.toContain(locale === 'en' ? 'logout</code> first' : 'logout</code> avant');
-      expect(all).toMatch(
+      // Le lanceur reste tant que le serveur n'a pas appris chaque retrait (removeUnusedLauncher), et révoquer avant
+      // rendrait le retrait impossible à dire (401).
+      expect(remove).toContain(
         locale === 'en'
-          ? /^To leave completely: <code>retirer-crochets<\/code>, then revoke the computer in Settings/
-          : /^Pour partir complètement : <code>retirer-crochets<\/code>, puis révoquez l’ordinateur dans Réglages/,
+          ? 'deletes the launcher once no other tool uses it and the server was told of each withdrawal'
+          : 'efface le lanceur une fois qu’aucun outil ne l’utilise plus et que le serveur a appris chaque retrait',
+      );
+      expect(all).toBe(
+        locale === 'en'
+          ? 'To leave completely: <code>retirer-crochets</code> (run it again until it no longer says the Leon server could not be told), then revoke the computer in Settings, then delete the <code>~/.leon</code> folder.'
+          : 'Pour partir complètement : <code>retirer-crochets</code> (relancez-le tant qu’il dit que le serveur de Leon n’a pas pu être prévenu), puis révoquez l’ordinateur dans Réglages, puis supprimez le dossier <code>~/.leon</code>.',
       );
     },
   );

@@ -56,13 +56,14 @@ function messageText(content: string | unknown[]): string {
 }
 
 // Ce que Claude Code range en `user` sans que la personne l'ait tapé : la notification d'une tâche de fond, la sortie
-// d'une commande locale (`/…`, `!…`), une interruption. Le rapport d'un sous-agent au premier plan est un résultat
-// d'outil, que messageText écarte. Le tour part marqué `injecte` (T43) : il ne compte pas comme un échange (C1), le
-// seuil du résumé (« 6 de vos messages », resume-worker.ts) compris, et ne prouve jamais une `[décision]`.
-// shortcut: les formes connues de Claude Code au 06/11, vérifiées sur une fixture inventée, jamais sur une vraie
-// conversation. Le message d'un agent ou d'une autre session, la sortie d'un crochet, le texte d'orchestration (T43,
-// amendé le 04/11) ne sont pas relevés : ils partiraient marqués tapés, donc preuve d'une `[décision]`. À relever sur
-// une session de test créée pour l'occasion avant de se fier à cette preuve.
+// d'une commande locale (`/…`, `!…`), le message d'un autre agent de l'équipe, une interruption. Le rapport d'un
+// sous-agent au premier plan est un résultat d'outil, que messageText écarte. Le tour part marqué `injecte` (T43) : il ne
+// compte pas comme un échange (C1), le seuil du résumé (« 6 de vos messages », resume-worker.ts) compris, et ne prouve
+// jamais une `[décision]`.
+// shortcut: les formes connues de Claude Code au 10/11, vérifiées sur une fixture inventée, jamais sur une vraie
+// conversation. La sortie d'un crochet, le texte d'orchestration (le prompt d'un `claude -p` lancé par un script) et le
+// message d'une autre session (T43, amendé le 04/11) ne sont pas relevés : ils partent marqués tapés, donc preuve d'une
+// `[décision]`, dans le résumé comme dans l'état des fils. À relever sur une session de test créée pour l'occasion.
 const INJECTED_TAGS = [
   'task-notification',
   'local-command-stdout',
@@ -70,17 +71,30 @@ const INJECTED_TAGS = [
   'local-command-caveat',
   'bash-stdout',
   'bash-stderr',
+  'teammate-message',
 ];
 const INTERRUPTED = /^\[Request interrupted by user[^\]]*\]$/;
 
-// Lue sur le texte d'avant prepareTurnText : sa coupe à TURN_TEXT_MAX perdrait la balise fermante d'une longue sortie
-// `!` ou d'un long rapport de tâche, qui partirait marqué tapé. Les rappels système y sont retirés de même.
+// Un bloc complet de la balise, attributs compris (`<teammate-message teammate_id="…">`) : une ouverture avant la
+// dernière fermeture.
+function hasBlock(text: string, tag: string): boolean {
+  const close = text.lastIndexOf(`</${tag}>`);
+  for (
+    let at = text.indexOf(`<${tag}`);
+    at !== -1 && at < close;
+    at = text.indexOf(`<${tag}`, at + 1)
+  ) {
+    if (/[\s>]/.test(text.charAt(at + tag.length + 1))) return true;
+  }
+  return false;
+}
+
+// Comme Codex (userTextKind, codex.ts) : un seul bloc injecté suffit, même suivi de quelques mots, sinon son texte
+// partirait comme preuve. Lue sur le texte d'avant prepareTurnText : sa coupe à TURN_TEXT_MAX perdrait la balise
+// fermante d'une longue sortie `!` ou d'un long rapport de tâche. Les rappels système y sont retirés de même.
 function injected(raw: string): boolean {
-  const rest = INJECTED_TAGS.reduce(
-    (kept, tag) => removeBlocks(kept, tag),
-    removeBlocks(raw, 'system-reminder'),
-  ).trim();
-  return rest === '' || INTERRUPTED.test(rest);
+  const text = removeBlocks(raw, 'system-reminder');
+  return INJECTED_TAGS.some((tag) => hasBlock(text, tag)) || INTERRUPTED.test(text.trim());
 }
 
 type ConversationLine = Line & {

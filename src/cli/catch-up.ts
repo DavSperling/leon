@@ -29,6 +29,7 @@ import {
 } from './import-claude-code';
 import { ADAPTATEURS } from './outils';
 import { purgeOldTemoins } from './temoins';
+import { catchUpWithdrawals, type WithdrawalSender } from './uninstall-hooks';
 
 export const entriesDir = (home: string): string => join(home, '.leon', 'entrees');
 export const ENTRY_MAX_AGE_MS = 24 * 60 * 60_000;
@@ -102,19 +103,24 @@ export type CatchUpDeps = Omit<ToolCaptureDeps, 'facts'> & {
   env: Record<string, string | undefined>;
   now: () => Date;
   sendFacts: FactsSender;
+  // La route du retrait (T43), pour les retraits que le serveur n'a pas appris.
+  withdraw: WithdrawalSender;
 };
 
 export type CatchUpSummary = { sessions: number; failures: number };
 
-// Le rattrapage de tous les outils qui l'ont accepté. Un jeton refusé l'arrête.
+// Le rattrapage de tous les outils qui l'ont accepté. Un jeton refusé l'arrête. Les retraits que le serveur n'a pas
+// appris d'abord, sous le même verrou : deux rattrapages lancés ensemble ne les disent qu'une fois, et ils ne
+// dépendent d'aucune capture.
 export async function catchUp(deps: CatchUpDeps): Promise<CatchUpSummary> {
   const summary: CatchUpSummary = { sessions: 0, failures: 0 };
   const now = deps.now();
   await purgeOldEntries(deps.home, now);
   await purgeOldTemoins(deps.home, now);
   const tools = await captureTools(deps.home);
-  if (tools.length === 0 || !(await takeLock(deps.home, now))) return summary;
+  if (!(await catchUpNeeded(deps.home)) || !(await takeLock(deps.home, now))) return summary;
   try {
+    await catchUpWithdrawals(deps.home, deps.withdraw);
     for (const outil of tools) await catchUpTool(outil, deps, summary);
   } finally {
     await unlink(lockPath(deps.home)).catch(() => {});
@@ -141,9 +147,13 @@ async function catchUpTool(outil: Outil, deps: CatchUpDeps, summary: CatchUpSumm
       usages,
       send: deps.sendFacts,
     };
+    const withdrawn = () => consentWithdrawn(deps.home, outil);
     try {
       const fin = deps.now().getTime() - file.mtimeMs >= IDLE_MS;
-      if ((await captureToolFile(outil, file.path, { fin }, { ...deps, facts })) === 'capte') {
+      if (
+        (await captureToolFile(outil, file.path, { fin }, { ...deps, facts, withdrawn })) ===
+        'capte'
+      ) {
         summary.sessions += 1;
       }
     } catch (error) {

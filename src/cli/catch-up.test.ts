@@ -55,6 +55,7 @@ let codexDir: string;
 let env: Record<string, string | undefined>;
 let sent: IngestPayload[];
 let facts: SessionFactsPayload[];
+let told: string[];
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'leon-rattrapage-'));
@@ -63,6 +64,7 @@ beforeEach(async () => {
   env = { CODEX_HOME: codexDir };
   sent = [];
   facts = [];
+  told = [];
 });
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
@@ -113,6 +115,9 @@ function catchUpDeps(overrides: Partial<CatchUpDeps> = {}): CatchUpDeps {
     ...capture,
     sendFacts: async (payload) => {
       facts.push(payload);
+    },
+    withdraw: async (outil) => {
+      told.push(outil);
     },
     env,
     now: () => MAINTENANT,
@@ -490,6 +495,46 @@ describe('catchUp : le rattrapage', () => {
       failures: 0,
     });
     expect(sent).toEqual([]);
+  });
+});
+
+// Les retraits que le serveur n'a pas appris (T43) se disent sous le verrou du rattrapage, avant les captures : deux
+// `leon rattraper` lancés ensemble ne les disent qu'une fois.
+describe('catchUp : les retraits que le serveur n’a pas appris', () => {
+  it('les dit une fois, même sans aucune capture acceptée', async () => {
+    await writeConsent(home, 'claude_code', 0);
+
+    await catchUp(catchUpDeps());
+    await catchUp(catchUpDeps());
+
+    expect(told).toEqual(['claude_code']);
+  });
+
+  it('verrou déjà pris par un autre rattrapage : rien n’est dit', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await mkdir(join(home, '.leon', 'curseurs'), { recursive: true });
+    await writeFile(join(home, '.leon', 'curseurs', 'rattrapage.verrou'), 'en cours');
+
+    await catchUp(catchUpDeps({ now: () => new Date() }));
+
+    expect(told).toEqual([]);
+  });
+
+  // Un envoi de faits arrivé au serveur après la route du retrait y remettrait l'usage `resume` (record-facts.ts) :
+  // l'accord est relu juste avant.
+  it('un retrait écrit pendant l’envoi des tours : les faits ne partent pas', async () => {
+    await consentToCapture();
+    await rollout('1', MAINTENANT);
+    const send: CatchUpDeps['send'] = async (payload) => {
+      sent.push(payload);
+      await writeConsent(home, 'codex', 0);
+      return RESULT;
+    };
+
+    await catchUp(catchUpDeps({ send }));
+
+    expect(sent).not.toEqual([]);
+    expect(facts).toEqual([]);
   });
 });
 

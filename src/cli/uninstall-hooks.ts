@@ -10,12 +10,12 @@
 //   `import-claude-code` ;
 // - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des
 //   sessions de l'outil déjà envoyées : seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
-//   appris (`retrait_serveur_le`, consent.ts). Les retraits d'autres outils restés en attente partent avec. Un échec
+//   appris (retraits-serveur.json, consent.ts). Les retraits d'autres outils restés en attente partent avec. Un échec
 //   (pas de connexion, serveur injoignable ou plus ancien que la route, jeton refusé) n'est qu'une ligne : le retrait
 //   sur le poste reste fait et le code de sortie ne change pas. Le rattrapage (`leon rattraper`, lancé au démarrage
 //   d'une session d'un outil qui garde ses crochets) le redit plus tard, comme pour les retraits faits avant la route ;
 //   pour le dernier outil, aucun crochet ne reste : la ligne dit de relancer la commande. `leon setup` et
-//   `installer-crochets` le redisent aussi avant d'écrire un nouvel accord, qui effacerait l'attente
+//   `installer-crochets` le redisent aussi avant d'écrire un nouvel accord, qui mettrait fin à l'attente
 //   (tellBeforeConsent) ;
 // - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json`, que
 //   les réglages et l'accord ont bien été retirés et que le serveur a appris chaque retrait : ses crochets n'en ont plus
@@ -115,11 +115,13 @@ export const connectionWithdrawal =
 
 // Messages fixes : ni l'adresse du serveur ni le jeton. Le premier quand un outil garde ses crochets (son démarrage
 // lance le rattrapage), le second pour le dernier outil, le troisième quand le serveur refuse le jeton (ordinateur
-// révoqué dans Réglages) : relancer ne suffit pas, il faut d'abord se reconnecter.
+// révoqué dans Réglages) : relancer ne suffit pas, il faut d'abord se reconnecter. Sans connexion non plus (`leon
+// logout`, pas de connexion.json) : ni le démarrage (runBriefing s'arrête sur resolveServerEnv) ni la commande relancée
+// ne joignent le serveur avant `leon login`, que les deux premiers disent donc.
 export const WITHDRAWAL_NOT_TOLD_MESSAGE =
-  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again.';
+  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again. If this computer is not connected, run `leon login` first.';
 export const WITHDRAWAL_NOT_TOLD_LAST_MESSAGE =
-  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online.';
+  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online. If this computer is not connected, run `leon login` first.';
 export const WITHDRAWAL_REFUSED_MESSAGE =
   'Leon: the Leon server refused the token of this computer, so it could not be told of this withdrawal. Your consent is withdrawn on this computer all the same; run `leon login`, then this command again.';
 // Avant un nouvel accord (tellBeforeConsent) : l'accord réécrit l'entrée, et le retrait n'attend plus.

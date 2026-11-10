@@ -9,10 +9,13 @@
 // (« Nothing is captured from Codex sessions for now ») : sans `capture_le`, rien n'est capté de cet outil, et le
 // rattrapage ne lit que les fichiers modifiés après cette date. Claude Code n'en a pas besoin : sa capture date du
 // lot 1. Le retrait l'efface, comme le reste.
-// `retrait_serveur_le` (T43), sur une entrée en version 0 seulement : la date où le serveur de la connexion a appris le
-// retrait (POST /api/v1/retrait). Sans elle, la commande de retrait ou le rattrapage le lui redit ; un nouvel accord
-// (writeConsent) réécrit l'entrée et l'efface : `leon setup` et `installer-crochets` le disent donc d'abord
-// (tellBeforeConsent, uninstall-hooks.ts).
+// Ce que le serveur de la connexion a appris des retraits (POST /api/v1/retrait, T43) s'écrit à part, dans
+// `~/.leon/retraits-serveur.json` : pour chaque outil, la date (`installe_le`) de l'entrée en version 0 dont il a appris
+// le retrait. Le rattrapage, lancé en tâche de fond, l'écrit : il ne réécrit donc jamais accord.json, qu'une commande de
+// retrait écrit peut-être au même moment. Un retrait dont la date n'y est pas est en attente : la commande de retrait ou
+// le rattrapage le redit. Un nouvel accord (writeConsent) met fin à l'attente sans que le serveur l'ait appris : `leon
+// setup` et `installer-crochets` le disent donc d'abord (tellBeforeConsent, uninstall-hooks.ts) ; un retrait suivant a
+// une autre date. Ce fichier illisible ne vaut rien : le serveur réapprend ce qu'il savait.
 // La CLI le relit avant chaque envoi : une CLI mise à jour par `git pull` n'envoie rien de plus que ce que
 // l'utilisateur a accepté. Un fichier absent ne vaut aucun accord (les textes partent, comme avant ce chantier) ; un
 // fichier présent mais illisible vaut un retrait : il ne peut venir que d'une retouche à la main, l'écriture étant
@@ -47,7 +50,6 @@ const EntrySchema = z.object({
   capture_le: z.iso.datetime({ offset: true }).optional().catch(undefined),
 });
 const WithdrawnSchema = z.object({ version: z.literal(0) });
-const UntoldSchema = WithdrawnSchema.extend({ retrait_serveur_le: z.undefined().optional() });
 
 // `usages_le` : la date de chaque usage accepté ; au rattrapage, un usage ne part qu'avec les sessions modifiées après
 // elle (import-claude-code.ts). `refus` : les usages refusés, que l'installateur ne propose plus.
@@ -69,6 +71,8 @@ export const CONSENT_AGAIN_HINT =
 export const CONSENT_WITHDRAWN_MESSAGE = `Leon: your consent for Claude Code was withdrawn (\`leon retirer-crochets\`): nothing is sent. ${CONSENT_AGAIN_HINT}`;
 
 export const consentPath = (home: string): string => join(home, '.leon', 'accord.json');
+export const serverWithdrawalsPath = (home: string): string =>
+  join(home, '.leon', 'retraits-serveur.json');
 
 // Les entrées brutes par outil : {} si le fichier est absent (ENOTDIR : ~/.leon n'est pas un dossier), null s'il est
 // présent mais illisible (lecture refusée, pas du JSON, pas d'objet `outils`).
@@ -121,27 +125,47 @@ export async function withdrawalRecorded(home: string, tool: ConsentTool): Promi
   return entries !== null && WithdrawnSchema.safeParse(entries[tool]).success;
 }
 
-// Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un fichier illisible n'en donne
+// Les retraits que le serveur a appris, `{ outil: date du retrait }` : {} si le fichier est absent ou illisible.
+async function readServerWithdrawals(home: string): Promise<Record<string, unknown>> {
+  try {
+    const parsed = ConsentFileSchema.safeParse(
+      JSON.parse(await readFile(serverWithdrawalsPath(home), 'utf8')),
+    );
+    return parsed.success ? parsed.data.outils : {};
+  } catch {
+    return {};
+  }
+}
+
+// La date d'un retrait : l'`installe_le` que writeConsent pose aussi en version 0 ('' sur une entrée retouchée à la main).
+const withdrawalDate = (entry: unknown): string => {
+  const date = (entry as { installe_le?: unknown }).installe_le;
+  return typeof date === 'string' ? date : '';
+};
+
+// Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un accord illisible n'en donne
 // aucun : il vaut un retrait sur le poste, sans dire de quels outils.
 export async function pendingServerWithdrawals(home: string): Promise<CodeSessionKind[]> {
   const entries = await readEntries(home);
   if (entries === null) return [];
-  return CODE_SESSION_KINDS.filter((tool) => UntoldSchema.safeParse(entries[tool]).success);
+  const learned = await readServerWithdrawals(home);
+  return CODE_SESSION_KINDS.filter(
+    (tool) =>
+      WithdrawnSchema.safeParse(entries[tool]).success &&
+      learned[tool] !== withdrawalDate(entries[tool]),
+  );
 }
 
-// Date la réponse du serveur au retrait, seulement sur une entrée encore en version 0 : un nouvel accord écrit entre
-// l'envoi et sa réponse est gardé tel quel.
-export async function recordServerWithdrawal(
-  home: string,
-  tool: CodeSessionKind,
-  now: Date = new Date(),
-): Promise<void> {
+// Note que le serveur a appris le retrait de cet outil, seulement s'il est encore en version 0 : un nouvel accord écrit
+// entre l'envoi et sa réponse est gardé tel quel. accord.json n'est que lu.
+export async function recordServerWithdrawal(home: string, tool: CodeSessionKind): Promise<void> {
   const entries = await readEntries(home);
   if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return;
-  await writeEntries(home, {
-    ...entries,
-    [tool]: { ...(entries[tool] as object), retrait_serveur_le: now.toISOString() },
-  });
+  await writeEntries(
+    home,
+    { ...(await readServerWithdrawals(home)), [tool]: withdrawalDate(entries[tool]) },
+    serverWithdrawalsPath(home),
+  );
 }
 
 // Reste-t-il un outil dont l'accord n'est pas retiré ? Le lanceur ~/.leon/bin/leon n'est effacé (`leon
@@ -157,8 +181,11 @@ export async function anyToolInstalled(home: string): Promise<boolean> {
 
 // Écrit dans un fichier voisin en 0600 puis le renomme : un arrêt en cours d'écriture ne laisse jamais un accord coupé.
 // (writeAtomically d'install-hooks.ts ferait de même, mais ce module-là importe celui-ci.)
-async function writeEntries(home: string, outils: Record<string, unknown>): Promise<void> {
-  const path = consentPath(home);
+async function writeEntries(
+  home: string,
+  outils: Record<string, unknown>,
+  path = consentPath(home),
+): Promise<void> {
   await mkdir(join(home, '.leon'), { recursive: true, mode: 0o700 });
   const temp = `${path}.leon-tmp-${randomBytes(6).toString('hex')}`;
   try {

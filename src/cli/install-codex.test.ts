@@ -132,6 +132,7 @@ describe('installCodexHook', () => {
     expect(out).toContain('  SessionEnd · timeout 3 s · add');
     expect(out).toContain(`    ${launcherCommand(home, 'codex', 'fin')}`);
     const text = CODEX_CONSENT_LINES.join('\n');
+    expect(text).toContain('labeled as written by Codex, not by you');
     expect(text).toContain("so it is given to Codex's model");
     expect(text).toContain('the new exchanges of the session');
     expect(text).toContain('never their other arguments');

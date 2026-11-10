@@ -35,8 +35,8 @@ export type CursorSession = {
   sessionId: string; // la conversation (le nom du fichier)
   cwd: string | null; // jamais dans le transcript : le crochet le donne
   title: string | null;
-  // Les messages que Cursor injecte en rôle `user`, jamais un message de la personne (T63), sont marqués `injecte`
-  // (T43), comme tout tour `user`, et restent sur le poste (captureToolFile).
+  // Les messages que Cursor injecte en rôle `user`, jamais un message de la personne (T63), partent marqués `injecte`
+  // (T43), comme tout tour `user`.
   turns: Turn[];
   branche: null; // le transcript n'en porte pas : la capture la lit par git
 };

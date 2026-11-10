@@ -88,6 +88,7 @@ describe('installAntigravityHooks', () => {
 
     for (const line of ANTIGRAVITY_CONSENT_LINES) expect(out).toContain(line);
     const text = ANTIGRAVITY_CONSENT_LINES.join('\n');
+    expect(text).toContain('labeled as written by Antigravity, not by you');
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
     expect(asked).toHaveLength(1);

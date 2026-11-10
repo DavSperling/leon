@@ -104,6 +104,7 @@ describe('installCursorHooks', () => {
 
     for (const line of CURSOR_CONSENT_LINES) expect(out).toContain(line);
     const text = CURSOR_CONSENT_LINES.join('\n');
+    expect(text).toContain('labeled as written by Cursor, not by you');
     expect(text).toContain("so it is given to Cursor's model");
     expect(text).toContain('state.vscdb) are never read');
     expect(text).toContain('once per conversation');

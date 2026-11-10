@@ -361,13 +361,8 @@ export async function captureToolFile(
   const { mtimeMs, size } = await deps.stat(file);
   const content = await deps.readFile(file);
   const fichier = { path: file, mtime: new Date(mtimeMs) };
-  const lue = adapter.lire(content, fichier);
-  if (lue === null) return 'rien';
-  // L'accord de ces outils promet que ce qu'ils écrivent eux-mêmes en `user` ne part pas (CONSENT_LINES) : les tours
-  // marqués `injecte` restent sur le poste, curseur compris, comme avant la marque.
-  // shortcut: à envoyer marqués (T43) une fois les trois textes d'accord changés et tranché, par Amos, ce que couvrent
-  // les accords déjà donnés.
-  const session = { ...lue, turns: lue.turns.filter((turn) => turn.injecte !== true) };
+  const session = adapter.lire(content, fichier);
+  if (session === null) return 'rien';
   const cursor = await readCursor(deps.home, outil, file);
   const turns = turnsAfter(session.turns, cursor);
   const candidates = [session.cwd, options.dossier ?? null, cursor?.dossier ?? null];

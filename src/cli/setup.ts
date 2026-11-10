@@ -22,6 +22,7 @@ import { isAbsolute, join, resolve } from 'node:path';
 import { type Connection, readConnection } from './connection';
 import { factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
+import { ANTIGRAVITY_VARIANTS } from './find-sessions';
 import { launcherPath } from './hook-commands';
 import {
   addAntigravityHooks,
@@ -81,6 +82,11 @@ const isDirectory = (path: string) =>
     (info) => info.isDirectory(),
     () => false,
   );
+
+async function firstDirectory(paths: string[]): Promise<string | null> {
+  for (const path of paths) if (await isDirectory(path)) return path;
+  return null;
+}
 
 // L'origine d'une adresse de serveur (sans chemin, compte ni jeton), seulement si c'est une adresse simple : https, ou
 // http sur la machine seule, et rien d'autre que des caractères d'hôte (la commande d'installation se copie dans un shell).
@@ -252,22 +258,27 @@ async function installAntigravity(_dir: string, ctx: InstallContext): Promise<In
 const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
-// Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8,
-// Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
+// Les outils de code que Leon sait capter, et les dossiers qui prouvent qu'ils sont là : le premier qui existe. `install`
+// n'existe que pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5,
+// Cursor au lot 8, Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
 const TOOLS: {
   label: string;
-  dir: (home: string, env: SetupDeps['env']) => string;
+  dirs: (home: string, env: SetupDeps['env']) => string[];
   install?: (configDir: string, ctx: InstallContext) => Promise<Installed>;
 }[] = [
   {
     label: 'Claude Code',
-    dir: claudeDir,
+    dirs: (home, env) => [claudeDir(home, env)],
     install: installClaudeCode,
   },
-  { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
-  { label: 'Cursor', dir: (home) => cursorHome(home), install: installCursor },
-  { label: 'Gemini / Antigravity', dir: (home) => geminiHome(home), install: installAntigravity },
+  { label: 'Codex', dirs: (home, env) => [codexHome(home, env)], install: installCodex },
+  { label: 'Cursor', dirs: (home) => [cursorHome(home)], install: installCursor },
+  // ~/.gemini est aussi le dossier de Gemini CLI : seuls ceux de l'appli, de l'IDE et d'`agy` prouvent Antigravity.
+  {
+    label: 'Antigravity',
+    dirs: (home) => ANTIGRAVITY_VARIANTS.map((variant) => join(geminiHome(home), variant)),
+    install: installAntigravity,
+  },
 ];
 
 // Pourquoi l'ordinateur est à reconnecter, ou null s'il est connecté. Seules les adresses de serveur se disent, par leur
@@ -355,8 +366,8 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
   const summary: string[] = [];
   let failed = false;
   for (const tool of TOOLS) {
-    const dir = tool.dir(home, env);
-    if (!(await isDirectory(dir))) {
+    const dir = await firstDirectory(tool.dirs(home, env));
+    if (dir === null) {
       summary.push(`${tool.label}: not found`);
     } else if (!tool.install) {
       out(`${tool.label} found in ${dir}: not supported yet, nothing is written there.`);

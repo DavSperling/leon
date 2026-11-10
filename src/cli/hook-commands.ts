@@ -52,6 +52,12 @@ export type Outil = (typeof OUTILS)[number];
 export const EVENEMENTS = ['demarrage', 'prompt', 'tour', 'fin'] as const;
 export type Evenement = (typeof EVENEMENTS)[number];
 
+// Quand part le rattrapage, dit à l'identique dans le texte d'accord de chaque outil : le crochet de démarrage de
+// n'importe quel outil lance `leon rattraper` (scheduleCatchUp, briefing.ts), qui rattrape tous les outils dont la
+// capture est acceptée (catch-up.ts). Un outil de plus se dit ici, une seule fois.
+export const CATCH_UP_WHEN =
+  "is sent in the background the next time Leon's start hook runs on this computer, in any of your tools: at the start of a Claude Code or Codex session, or at the first message of a Cursor or Antigravity conversation";
+
 // La commande d'un crochet hors Claude Code (C6) : le lanceur, mis entre apostrophes s'il le faut, puis la sous-commande.
 export function launcherCommand(home: string, outil: Outil, evenement: Evenement): string {
   return `${shellQuote(launcherPath(home))} crochet ${outil} ${evenement}`;

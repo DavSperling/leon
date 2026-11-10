@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  CATCH_UP_WHEN,
   HOOK_PNPM_OPTIONS,
   hookCommand,
   isLeonLauncherCommand,
@@ -96,6 +97,14 @@ describe('launcherCommand et isLeonLauncherCommand (C6)', () => {
       expect(isLeonLauncherCommand(command)).toBeNull();
     }
   });
+});
+
+// Mot pour mot : c'est le texte qu'accepte l'utilisateur de Codex, de Cursor et d'Antigravity (leurs tests vérifient
+// qu'il est dans leur accord). Les quatre outils y sont, et le moment exact de chacun (scheduleCatchUp, briefing.ts).
+it('CATCH_UP_WHEN : quand part le rattrapage, pour les quatre outils', () => {
+  expect(CATCH_UP_WHEN).toBe(
+    "is sent in the background the next time Leon's start hook runs on this computer, in any of your tools: at the start of a Claude Code or Codex session, or at the first message of a Cursor or Antigravity conversation",
+  );
 });
 
 describe('le README et package.json', () => {

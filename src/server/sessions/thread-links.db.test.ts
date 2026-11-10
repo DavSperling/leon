@@ -87,27 +87,32 @@ async function sessionOf(
   extra: Partial<SessionFacts> = {},
   externalId = `session-${randomUUID()}`,
 ): Promise<string> {
-  const { sourceId } = await recordFacts(owner, {
-    kind: 'claude_code',
-    external_id: externalId,
-    project: PROJECT,
-    accord: 2,
-    faits: {
-      branche: 'paul/fils',
-      prs: [],
-      commits: [],
-      fichiers: ['src/server/sessions/thread-links.ts'],
-      commandes: [],
-      taches: [],
-      erreurs: 0,
-      externe: false,
-      echanges: 3,
-      debut: '2026-11-06T09:00:00.000Z',
-      fin: '2026-11-06T10:00:00.000Z',
-      ...extra,
+  // Le dernier argument : un jeton sans ligne, sans date de retrait (record-facts.ts).
+  const { sourceId } = await recordFacts(
+    owner,
+    {
+      kind: 'claude_code',
+      external_id: externalId,
+      project: PROJECT,
+      accord: 2,
+      faits: {
+        branche: 'paul/fils',
+        prs: [],
+        commits: [],
+        fichiers: ['src/server/sessions/thread-links.ts'],
+        commandes: [],
+        taches: [],
+        erreurs: 0,
+        externe: false,
+        echanges: 3,
+        debut: '2026-11-06T09:00:00.000Z',
+        fin: '2026-11-06T10:00:00.000Z',
+        ...extra,
+      },
+      fin: true,
     },
-    fin: true,
-  });
+    crypto.randomUUID(),
+  );
   return sourceId;
 }
 

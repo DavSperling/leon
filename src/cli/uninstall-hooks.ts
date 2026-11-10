@@ -8,8 +8,9 @@
 // - passe Claude Code en version 0 dans `accord.json` (consent.ts), même quand les réglages n'ont pas pu être lus ou
 //   écrits : plus rien ne part alors (leon.ts), ni d'un crochet resté dans les réglages d'un projet, ni de
 //   `import-claude-code` ;
-// - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des
-//   sessions de l'outil déjà envoyées : seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
+// - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des sessions
+//   de l'outil déjà envoyées, et garde la date du retrait pour ce jeton : des faits partis avant lui, sous l'accord
+//   d'avant, n'y remettent aucun usage. Seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
 //   appris (retraits-serveur.json, consent.ts). Les retraits d'autres outils restés en attente partent avec. Un échec
 //   (pas de connexion, serveur injoignable ou plus ancien que la route, jeton refusé) n'est qu'une ligne : le retrait
 //   sur le poste reste fait et le code de sortie ne change pas. Le rattrapage (`leon rattraper`, lancé au démarrage
@@ -32,6 +33,7 @@ import {
   pendingServerWithdrawals,
   recordServerWithdrawal,
   withdrawalRecorded,
+  withdrawalToTell,
   writeConsent,
 } from './consent';
 import { resolveServerEnv } from './env';
@@ -89,8 +91,9 @@ export function removeLeonHooks(settings: Json): { settings: Json; removed: Remo
 }
 
 export type UninstallOptions = { configDir: string; home: string };
-// `withdraw` : l'appel de la route du retrait, au serveur de la connexion du moment (connectionWithdrawal).
-export type WithdrawalSender = (outil: CodeSessionKind) => Promise<void>;
+// `withdraw` : l'appel de la route du retrait, au serveur de la connexion du moment (connectionWithdrawal), avec la
+// date du retrait sur le poste (`retire_le`).
+export type WithdrawalSender = (outil: CodeSessionKind, retireLe: string) => Promise<void>;
 export type UninstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
@@ -108,10 +111,10 @@ export const connectionWithdrawal =
     env: Record<string, string | undefined>,
     home: string,
   ): WithdrawalSender =>
-  async (outil) =>
+  async (outil, retireLe) =>
     createWithdrawalSender(fetchImpl, await resolveServerEnv(env, home), {
       signal: AbortSignal.timeout(WITHDRAWAL_TIMEOUT_MS),
-    })(outil);
+    })(outil, retireLe);
 
 // Messages fixes : ni l'adresse du serveur ni le jeton. Le premier quand un outil garde ses crochets (son démarrage
 // lance le rattrapage), le second pour le dernier outil, le troisième quand le serveur refuse le jeton (ordinateur
@@ -132,13 +135,17 @@ export const EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE =
 export type Told = 'told' | 'refused' | 'failed';
 
 // Une date qui ne s'écrit pas fait seulement redire le retrait au serveur, qui le prend autant de fois qu'on le lui dit.
+// La date du retrait est relue juste avant l'envoi : un outil qu'un nouvel accord a sorti de la version 0 n'attend plus
+// rien du serveur (pendingServerWithdrawals ne le cite plus), et ne part pas.
 async function tellServer(
   home: string,
   outil: CodeSessionKind,
   send: WithdrawalSender,
 ): Promise<Told> {
+  const retireLe = await withdrawalToTell(home, outil);
+  if (retireLe === null) return 'told';
   try {
-    await send(outil);
+    await send(outil, retireLe);
   } catch (error) {
     return error instanceof TokenRefusedError ? 'refused' : 'failed';
   }

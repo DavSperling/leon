@@ -177,6 +177,7 @@ async function runImport(args: string[]): Promise<number> {
       : {
           facts: {
             accord: accord.version,
+            accordLe: accord.installe_le,
             usages: accord.usages,
             depuis: accord.installe_le,
             usagesDepuis: accord.usages_le,
@@ -284,6 +285,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
         : {
             facts: {
               accord: accord.version,
+              accordLe: accord.installe_le,
               usages: accord.usages,
               send: createFactsSender(fetch, env, { signal }),
             },
@@ -352,6 +354,7 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
       withdrawn: () => consentWithdrawn(homedir(), outil),
       facts: {
         accord: consent.version,
+        accordLe: consent.installe_le,
         usages: consent.usages,
         send: createFactsSender(fetch, env, { signal }),
       },

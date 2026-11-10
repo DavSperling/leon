@@ -66,9 +66,10 @@ async function writeSettings(content: unknown): Promise<string> {
 
 const readSettings = async () => JSON.parse(await readFile(settingsPath, 'utf8'));
 
-// Le serveur de la connexion, simulé : il note les outils dont il apprend le retrait, et peut échouer.
+// Le serveur de la connexion, simulé : il note les outils dont il apprend le retrait, avec sa date, et peut échouer.
 type FakeServer = {
   told: string[];
+  dates: string[];
   fails: boolean;
   refuses: boolean;
   withdraw: UninstallDeps['withdraw'];
@@ -76,14 +77,16 @@ type FakeServer = {
 function fakeServer(): FakeServer {
   const server: FakeServer = {
     told: [],
+    dates: [],
     fails: false,
     refuses: false,
-    withdraw: async (outil) => {
+    withdraw: async (outil, retireLe) => {
       // Le retrait local est déjà écrit quand le serveur l'apprend.
       expect(await consentWithdrawn(home, outil)).toBe(true);
       if (server.fails) throw new Error('fetch failed');
       if (server.refuses) throw new TokenRefusedError();
       server.told.push(outil);
+      server.dates.push(retireLe);
     },
   };
   return server;
@@ -676,6 +679,51 @@ describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le po
     await catchUpWithdrawals(home, server.withdraw);
 
     expect(server.told).toEqual(['antigravity', 'antigravity']);
+  });
+
+  // T43, le retrait daté : le serveur ignore ensuite les usages des faits envoyés sous un accord qui ne suit pas cette
+  // date, mesurée par la même horloge que celle de l'accord (writeConsent).
+  it('dit au serveur la date de l’entrée en version 0, relue au moment d’envoyer', async () => {
+    await writeConsent(home, 'codex', 0, new Date('2026-11-10T09:00:00Z'));
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['codex']);
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z']);
+  });
+
+  it('une date retouchée à la main, absente ou illisible, vaut l’heure du moment', async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(
+      consentPath(home),
+      JSON.stringify({
+        outils: { codex: { version: 0 }, cursor: { version: 0, installe_le: 'hier' } },
+      }),
+    );
+    const before = Date.now();
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['codex', 'cursor']);
+    for (const date of server.dates) {
+      expect(Date.parse(date)).toBeGreaterThanOrEqual(before);
+      expect(Date.parse(date)).toBeLessThanOrEqual(Date.now());
+    }
+  });
+
+  it('un outil qui n’est plus en version 0 au moment d’envoyer ne part pas', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await writeConsent(home, 'codex', 0);
+    const withdraw = server.withdraw;
+    // Un nouvel accord de Codex, écrit pendant l'envoi du retrait de Claude Code.
+    server.withdraw = async (outil, retireLe) => {
+      await withdraw(outil, retireLe);
+      await writeConsent(home, 'codex', 2);
+    };
+
+    expect(await catchUpWithdrawals(home, server.withdraw)).toBe('told');
+
+    expect(server.told).toEqual(['claude_code']);
   });
 });
 

@@ -96,6 +96,7 @@ function captureDeps(overrides: Partial<ToolCaptureDeps> = {}): ToolCaptureDeps 
     },
     facts: {
       accord: 2,
+      accordLe: INSTALLE,
       send: async (payload) => {
         facts.push(payload);
       },

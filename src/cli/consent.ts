@@ -143,6 +143,20 @@ const withdrawalDate = (entry: unknown): string => {
   return typeof date === 'string' ? date : '';
 };
 
+// La date d'un retrait à dire au serveur (`retire_le`, T43, le retrait daté) : celle de l'entrée en version 0 de cet
+// outil, relue au moment d'envoyer ; null s'il n'est plus en version 0 (un nouvel accord est écrit). Une date absente
+// ou illisible (retouchée à la main) vaut l'heure du moment : le retrait part quand même.
+export async function withdrawalToTell(
+  home: string,
+  tool: CodeSessionKind,
+  now: Date = new Date(),
+): Promise<string | null> {
+  const entries = await readEntries(home);
+  if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return null;
+  const date = z.iso.datetime({ offset: true }).safeParse(withdrawalDate(entries[tool]));
+  return date.success ? date.data : now.toISOString();
+}
+
 // Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un accord illisible n'en donne
 // aucun : il vaut un retrait sur le poste, sans dire de quels outils.
 export async function pendingServerWithdrawals(home: string): Promise<CodeSessionKind[]> {

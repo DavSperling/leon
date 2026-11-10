@@ -102,12 +102,16 @@ function leon(args: string[]): Promise<Outcome> {
   });
 }
 
-const told = (outil: string, version: unknown = 0): Received => ({
+// `retire_le` : la date de l'entrée en version 0 de l'outil dans accord.json (T43, le retrait daté).
+const told = (outil: string, retireLe: string, version: unknown = 0): Received => ({
   url: API_PATHS.retrait,
   authorization: `Bearer ${TOKEN}`,
-  body: { outil },
+  body: { outil, retire_le: retireLe },
   version,
 });
+const RETIRE_LE = new Date('2026-11-10T09:00:00.000Z');
+const installedAt = async () =>
+  JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.installe_le;
 
 const toldAt = async () =>
   JSON.parse(await readFile(serverWithdrawalsPath(home), 'utf8')).outils.claude_code;
@@ -118,12 +122,12 @@ describe('le retrait atteint le serveur : les vraies commandes', () => {
   it(
     'leon rattraper dit au serveur un retrait qu’il n’a pas appris, date sa réponse, puis ne le redit plus',
     async () => {
-      await writeConsent(home, 'claude_code', 0);
+      await writeConsent(home, 'claude_code', 0, RETIRE_LE);
 
       const first = await leon(['rattraper']);
 
       expect(first.code).toBe(0);
-      expect(received).toEqual([told('claude_code')]);
+      expect(received).toEqual([told('claude_code', RETIRE_LE.toISOString())]);
       expect(await toldAt()).toEqual(expect.any(String));
 
       const second = await leon(['rattraper']);
@@ -143,7 +147,7 @@ describe('le retrait atteint le serveur : les vraies commandes', () => {
 
       expect(run.code).toBe(0);
       expect(run.stderr).toBe('');
-      expect(received).toEqual([told('claude_code')]);
+      expect(received).toEqual([told('claude_code', await installedAt())]);
       expect(await toldAt()).toEqual(expect.any(String));
     },
     TEST_TIMEOUT_MS,
@@ -153,12 +157,12 @@ describe('le retrait atteint le serveur : les vraies commandes', () => {
   it(
     'leon installer-crochets dit au serveur un retrait qu’il n’a pas appris avant d’écrire le nouvel accord',
     async () => {
-      await writeConsent(home, 'claude_code', 0);
+      await writeConsent(home, 'claude_code', 0, RETIRE_LE);
 
       const run = await leon(['installer-crochets', '--oui']);
 
       expect(run.code).toBe(0);
-      expect(received).toEqual([told('claude_code', 0)]);
+      expect(received).toEqual([told('claude_code', RETIRE_LE.toISOString(), 0)]);
       expect((await factsConsent(home, 'claude_code'))?.version).toBe(2);
     },
     TEST_TIMEOUT_MS,

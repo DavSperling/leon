@@ -15,6 +15,10 @@ import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import { FIL_MAJ_QUEUE, type ThreadJob } from './threads-queue';
 
+// Le retrait de la route (faits-routes.ts), daté de maintenant, sous un jeton sans ligne : seuls les usages sont vidés.
+const withdraw = (ctx: TenantContext, outil: CodeSessionKind) =>
+  withdrawUsages(ctx, crypto.randomUUID(), { outil, retire_le: new Date().toISOString() });
+
 // L'état d'un fil (T43 ; D23, D33 à D36 du plan de la mémoire à disposition), avec un modèle simulé, sur la base de
 // test : le worker de la file `fil-maj`. La file est simulée (threads-queue.db.test.ts vérifie la vraie).
 
@@ -387,7 +391,7 @@ describe('updateFilState', () => {
     });
     const fresh = await codeSession(paul);
     const filId = await fil(paul, [old.id, fresh.id]);
-    await withdrawUsages(paul, 'codex');
+    await withdraw(paul, 'codex');
     const llm = answer(etat(fresh.id));
 
     expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
@@ -430,7 +434,7 @@ describe('updateFilState', () => {
     const llm: Llm = {
       ...base,
       async *streamText(request) {
-        await withdrawUsages(paul, 'claude_code');
+        await withdraw(paul, 'claude_code');
         yield* base.streamText(request);
       },
     };

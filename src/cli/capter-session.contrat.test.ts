@@ -219,6 +219,7 @@ describe('leon capter-session : la vraie commande', () => {
       });
       // Sans usage, le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
       expect(facts?.body).not.toHaveProperty('usages');
+      expect(facts?.body).not.toHaveProperty('accord_le');
       expect(JSON.stringify(facts?.body)).not.toContain(SECRET_IN_SESSION);
     },
     TEST_TIMEOUT_MS,
@@ -227,7 +228,7 @@ describe('leon capter-session : la vraie commande', () => {
   it(
     "avec l'usage resume dans l'accord (C7 révisé), les faits le portent (C2)",
     async () => {
-      await writeConsent(home, 'claude_code', 2);
+      await writeConsent(home, 'claude_code', 2, new Date('2026-11-10T08:00:00.000Z'));
       await addUsage(home, 'claude_code', 'resume');
 
       const outcome = await runCommand(hookJson(await writeSession()));
@@ -235,7 +236,12 @@ describe('leon capter-session : la vraie commande', () => {
       expect(outcome.code).toBe(0);
       const facts = received.find((request) => request.url === API_PATHS.faits);
       expect(SessionFactsPayloadSchema.safeParse(facts?.body).success).toBe(true);
-      expect(facts?.body).toMatchObject({ accord: 2, usages: ['resume'] });
+      // Avec la date de l'accord (installe_le) : le serveur la compare au dernier retrait (T43, le retrait daté).
+      expect(facts?.body).toMatchObject({
+        accord: 2,
+        usages: ['resume'],
+        accord_le: '2026-11-10T08:00:00.000Z',
+      });
     },
     TEST_TIMEOUT_MS,
   );

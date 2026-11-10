@@ -30,6 +30,9 @@ import {
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const ACME_SESSION = '11111111-1111-4111-8111-111111111111';
+// La date de l'accord (installe_le) et celle d'un retrait, lues dans accord.json par leon.ts et uninstall-hooks.ts.
+const ACCORD_LE = new Date('2026-11-01T10:00:00.000Z');
+const RETIRE_LE = '2026-11-10T10:00:00.000Z';
 const RESULT: IngestResult = {
   sourceId: crypto.randomUUID(),
   inserted: 2,
@@ -329,7 +332,12 @@ describe('importClaudeCode : les faits de chaque session', () => {
           events.push(`faits ${payload.external_id}`);
         }),
     );
-    return { deps: { ...deps, facts: { accord: 2, send: facts } }, facts, events, out };
+    return {
+      deps: { ...deps, facts: { accord: 2, accordLe: ACCORD_LE, send: facts } },
+      facts,
+      events,
+      out,
+    };
   }
   const factsOf = (facts: { mock: { calls: Array<[SessionFactsPayload]> } }) =>
     new Map(facts.mock.calls.map(([payload]) => [payload.external_id, payload]));
@@ -355,8 +363,10 @@ describe('importClaudeCode : les faits de chaque session', () => {
     });
   });
 
-  // C2 : les usages de l'accord partent avec les faits ; sans usage, le corps reste celui qu'un serveur d'avant accepte.
-  it('envoie les usages de l’accord avec les faits, et rien quand il n’y en a pas', async () => {
+  // C2 : les usages de l'accord partent avec les faits, et la date de l'accord avec eux (T43, le retrait daté : le
+  // serveur ignore les usages d'un accord qui ne suit pas le dernier retrait). Sans usage, ni l'un ni l'autre : le
+  // corps reste celui qu'un serveur d'avant accepte.
+  it('envoie les usages de l’accord et sa date avec les faits, et rien quand il n’y en a pas', async () => {
     const { deps, facts } = makeFactsDeps();
 
     await importClaudeCode(importOptions(), {
@@ -366,10 +376,11 @@ describe('importClaudeCode : les faits de chaque session', () => {
     await importClaudeCode(importOptions(), { ...deps, facts: { ...deps.facts, usages: [] } });
 
     const sent = facts.mock.calls.map(([payload]) => payload);
-    expect(sent.filter((payload) => payload.external_id === ACME_SESSION)).toEqual([
-      expect.objectContaining({ usages: ['resume'] }),
-      expect.not.objectContaining({ usages: expect.anything() }),
-    ]);
+    const acme = sent.filter((payload) => payload.external_id === ACME_SESSION);
+    expect(acme).toHaveLength(2);
+    expect(acme[0]).toMatchObject({ usages: ['resume'], accord_le: ACCORD_LE.toISOString() });
+    expect(acme[1]).not.toHaveProperty('usages');
+    expect(acme[1]).not.toHaveProperty('accord_le');
   });
 
   // Vigilance 4 du plan : accepter `resume` puis rattraper ne fait pas résumer les sessions finies avant ce oui.
@@ -387,6 +398,7 @@ describe('importClaudeCode : les faits de chaque session', () => {
     const acme = factsOf(facts).get(ACME_SESSION);
     expect(acme).toBeDefined();
     expect(acme).not.toHaveProperty('usages');
+    expect(acme).not.toHaveProperty('accord_le');
     expect(factsOf(facts).get(ORION_SESSION)?.usages).toEqual(['resume']);
   });
 
@@ -555,14 +567,14 @@ describe('createWithdrawalSender', () => {
   it('poste l’outil sur la route du retrait, avec le jeton, et accepte le 204 sans corps', async () => {
     const fetchImpl = vi.fn(async () => new Response(null, { status: 204 }));
 
-    await createWithdrawalSender(fetchImpl as typeof fetch, env)('codex');
+    await createWithdrawalSender(fetchImpl as typeof fetch, env)('codex', RETIRE_LE);
 
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
     expect(url.href).toBe(new URL(API_PATHS.retrait, env.url).href);
     expect(init).toMatchObject({
       method: 'POST',
       headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ outil: 'codex' }),
+      body: JSON.stringify({ outil: 'codex', retire_le: RETIRE_LE }),
     });
   });
 
@@ -570,8 +582,8 @@ describe('createWithdrawalSender', () => {
     const reply = (status: number) =>
       createWithdrawalSender((async () => new Response('{}', { status })) as typeof fetch, env);
 
-    await expect(reply(404)('claude_code')).rejects.toMatchObject({ status: 404 });
-    await expect(reply(401)('claude_code')).rejects.toBeInstanceOf(TokenRefusedError);
+    await expect(reply(404)('claude_code', RETIRE_LE)).rejects.toMatchObject({ status: 404 });
+    await expect(reply(401)('claude_code', RETIRE_LE)).rejects.toBeInstanceOf(TokenRefusedError);
   });
 });
 

@@ -144,6 +144,7 @@ async function catchUpTool(outil: Outil, deps: CatchUpDeps, summary: CatchUpSumm
     );
     const facts: ImportDeps['facts'] = {
       accord: consent.version,
+      accordLe: consent.installe_le,
       usages,
       send: deps.sendFacts,
     };

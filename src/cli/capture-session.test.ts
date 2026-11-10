@@ -26,6 +26,7 @@ import {
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const HOME = '/home/demo';
+const ACCORD_LE = new Date('2026-11-01T10:00:00.000Z'); // la date de l'accord (installe_le, consent.ts)
 const RESULT: IngestResult = {
   sourceId: crypto.randomUUID(),
   inserted: 2,
@@ -472,7 +473,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
         events.push('tours');
         return RESULT;
       },
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
@@ -499,7 +500,11 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
         async () => new Response(JSON.stringify({ error: 'MOT-DU-SERVEUR' }), { status }),
       );
       const { deps, send } = makeDeps({
-        facts: { accord: 2, send: createFactsSender(fetchImpl as unknown as typeof fetch, env) },
+        facts: {
+          accord: 2,
+          accordLe: ACCORD_LE,
+          send: createFactsSender(fetchImpl as unknown as typeof fetch, env),
+        },
       });
 
       expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
@@ -516,6 +521,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     const { deps } = makeDeps({
       facts: {
         accord: 2,
+        accordLe: ACCORD_LE,
         send: async () => {
           throw new TypeError(`fetch failed : MOT-DE-L-ERREUR ${SECRETS.anthropic}`);
         },
@@ -552,7 +558,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     const { deps } = makeDeps({
       session: writingSession(start),
       git,
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
     return facts.mock.calls[0]?.[0].faits;
@@ -580,7 +586,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
       send: async () => {
         throw new IngestResponseError(500);
       },
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);

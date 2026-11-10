@@ -873,10 +873,13 @@ describe('setup : un retrait que le serveur n’a pas appris', () => {
       {
         whileFetching: async (url, init) => {
           if (!url.endsWith(API_PATHS.retrait)) return;
-          expect(JSON.parse(String(init?.body))).toEqual({ outil: 'claude_code' });
-          versions.push(
-            JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.version,
-          );
+          const entry = JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code;
+          // Avec la date de l'entrée en version 0 (T43, le retrait daté).
+          expect(JSON.parse(String(init?.body))).toEqual({
+            outil: 'claude_code',
+            retire_le: entry.installe_le,
+          });
+          versions.push(entry.version);
         },
       },
     );
